@@ -26,7 +26,7 @@
 /**
  * Default constructor
  */
-MobileDevice::MobileDevice() : super()
+MobileDevice::MobileDevice() : super(Pollable::NONE)
 {
    m_commProtocol[0] = 0;
 	m_lastReportTime = 0;
@@ -39,7 +39,7 @@ MobileDevice::MobileDevice() : super()
 /**
  * Constructor for creating new mobile device object
  */
-MobileDevice::MobileDevice(const TCHAR *name, const TCHAR *deviceId) : super(name), m_deviceId(deviceId)
+MobileDevice::MobileDevice(const TCHAR *name, const TCHAR *deviceId) : super(name, Pollable::NONE), m_deviceId(deviceId)
 {
    m_commProtocol[0] = 0;
 	m_lastReportTime = 0;
@@ -262,8 +262,8 @@ DataCollectionError MobileDevice::getInternalMetric(const TCHAR *name, TCHAR *bu
    DataCollectionError rc = super::getInternalMetric(name, buffer, size);
 	if (rc != DCE_NOT_SUPPORTED)
 		return rc;
-	rc = DCE_SUCCESS;
 
+	rc = DCE_SUCCESS;
    if (!_tcsicmp(name, _T("MobileDevice.Altitude")))
    {
       _sntprintf(buffer, size, _T("%d"), m_altitude);

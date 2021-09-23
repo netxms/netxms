@@ -87,8 +87,7 @@ DataCollectionError GetPerfDataStorageDriverMetric(const TCHAR *driver, const TC
 /**
  * Node class default constructor
  */
-Node::Node() : super(), m_discoveryPollState(_T("discovery")),
-         m_topologyPollState(_T("topology")), m_routingPollState(_T("routing")), m_icmpPollState(_T("icmp)"))
+Node::Node() : super(Pollable::STATUS | Pollable::CONFIGURATION | Pollable::DISCOVERY | Pollable::TOPOLOGY | Pollable::ROUTING_TABLE | Pollable::ICMP)
 {
    m_status = STATUS_UNKNOWN;
    m_type = NODE_TYPE_UNKNOWN;
@@ -195,8 +194,7 @@ Node::Node() : super(), m_discoveryPollState(_T("discovery")),
 /**
  * Create new node from new node data
  */
-Node::Node(const NewNodeData *newNodeData, UINT32 flags)  : super(), m_discoveryPollState(_T("discovery")),
-         m_topologyPollState(_T("topology")), m_routingPollState(_T("routing")), m_icmpPollState(_T("icmp)"))
+Node::Node(const NewNodeData *newNodeData, UINT32 flags) : super(Pollable::STATUS | Pollable::CONFIGURATION | Pollable::DISCOVERY | Pollable::TOPOLOGY | Pollable::ROUTING_TABLE | Pollable::ICMP)
 {
    m_runtimeFlags |= ODF_CONFIGURATION_POLL_PENDING;
    m_primaryHostName = newNodeData->ipAddr.toString();
@@ -364,6 +362,12 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    {
       DbgPrintf(2, _T("Cannot load common properties for node object %d"), dwId);
       return false;
+   }
+
+   if (Pollable::loadFromDatabase(hdb, m_id))
+   {
+      if (static_cast<uint32_t>(time(nullptr) - m_configurationPollState.getLastCompleted()) < g_configurationPollingInterval)
+         m_runtimeFlags |= ODF_CONFIGURATION_POLL_PASSED;
    }
 
    DB_STATEMENT hStmt = DBPrepare(hdb,
@@ -1952,6 +1956,146 @@ static void BackgroundDeleteNode(const shared_ptr<Node>& node)
 }
 
 /**
+ * Lock node for status poll
+ */
+bool Node::lockForStatusPoll()
+{
+   bool success = false;
+
+   lockProperties();
+   if (!m_isDeleted && !m_isDeleteInitiated)
+   {
+      if (m_runtimeFlags & ODF_FORCE_STATUS_POLL)
+      {
+         success = m_statusPollState.schedule();
+         if (success)
+            m_runtimeFlags &= ~ODF_FORCE_STATUS_POLL;
+      }
+      else if ((m_status != STATUS_UNMANAGED) &&
+               !(m_flags & DCF_DISABLE_STATUS_POLL) &&
+               (getMyCluster() == nullptr) &&
+               !(m_runtimeFlags & ODF_CONFIGURATION_POLL_PENDING) &&
+               (static_cast<uint32_t>(time(nullptr) - m_statusPollState.getLastCompleted()) > g_statusPollingInterval) &&
+               !isAgentRestarting() && !isProxyAgentRestarting())
+      {
+         success = m_statusPollState.schedule();
+      }
+   }
+   unlockProperties();
+   return success;
+}
+
+/**
+ * Lock object for configuration poll
+ */
+bool Node::lockForConfigurationPoll()
+{
+   bool success = false;
+
+   lockProperties();
+   if (!m_isDeleted && !m_isDeleteInitiated)
+   {
+      if (m_runtimeFlags & ODF_FORCE_CONFIGURATION_POLL)
+      {
+         success = m_configurationPollState.schedule();
+         if (success)
+            m_runtimeFlags &= ~ODF_FORCE_CONFIGURATION_POLL;
+      }
+      else if ((m_status != STATUS_UNMANAGED) &&
+               !(m_flags & DCF_DISABLE_CONF_POLL) &&
+               (static_cast<uint32_t>(time(nullptr) - m_configurationPollState.getLastCompleted()) > g_configurationPollingInterval) &&
+               !isAgentRestarting() && !isProxyAgentRestarting())
+      {
+         success = m_configurationPollState.schedule();
+      }
+   }
+   unlockProperties();
+   return success;
+}
+
+/**
+ * Lock node for discovery poll
+ */
+bool Node::lockForDiscoveryPoll()
+{
+   bool success = false;
+   lockProperties();
+   if (!m_isDeleted && !m_isDeleteInitiated &&
+       (g_flags & AF_PASSIVE_NETWORK_DISCOVERY) &&
+       (m_status != STATUS_UNMANAGED) &&
+       !(m_flags & NF_DISABLE_DISCOVERY_POLL) &&
+       (m_runtimeFlags & ODF_CONFIGURATION_POLL_PASSED) &&
+       (static_cast<uint32_t>(time(nullptr) - m_discoveryPollState.getLastCompleted()) > g_discoveryPollingInterval) &&
+       !isAgentRestarting() && !isProxyAgentRestarting())
+   {
+      success = m_discoveryPollState.schedule();
+   }
+   unlockProperties();
+   return success;
+}
+
+/**
+ * Lock node for routing table poll
+ */
+bool Node::lockForRoutingTablePoll()
+{
+   bool success = false;
+   lockProperties();
+   if (!m_isDeleted && !m_isDeleteInitiated &&
+       (m_status != STATUS_UNMANAGED) &&
+       !(m_flags & NF_DISABLE_ROUTE_POLL) &&
+       (m_runtimeFlags & ODF_CONFIGURATION_POLL_PASSED) &&
+       (static_cast<uint32_t>(time(nullptr) - m_routingPollState.getLastCompleted()) > g_routingTableUpdateInterval) &&
+       !isAgentRestarting() && !isProxyAgentRestarting())
+   {
+      success = m_routingPollState.schedule();
+   }
+   unlockProperties();
+   return success;
+}
+
+/**
+ * Lock node for topology poll
+ */
+bool Node::lockForTopologyPoll()
+{
+   bool success = false;
+   lockProperties();
+   if (!m_isDeleted && !m_isDeleteInitiated &&
+       (m_status != STATUS_UNMANAGED) &&
+       !(m_flags & NF_DISABLE_TOPOLOGY_POLL) &&
+       (m_runtimeFlags & ODF_CONFIGURATION_POLL_PASSED) &&
+       (static_cast<uint32_t>(time(nullptr) - m_topologyPollState.getLastCompleted()) > g_topologyPollingInterval) &&
+       !isAgentRestarting() && !isProxyAgentRestarting())
+   {
+      success = m_topologyPollState.schedule();
+   }
+   unlockProperties();
+   return success;
+}
+
+/*
+ * Lock node for ICMP poll
+ */
+bool Node::lockForIcmpPoll()
+{
+   bool success = false;
+
+   lockProperties();
+   if (!m_isDeleted && !m_isDeleteInitiated &&
+       (m_status != STATUS_UNMANAGED) &&
+       isIcmpStatCollectionEnabled() &&
+       !(m_runtimeFlags & ODF_CONFIGURATION_POLL_PENDING) &&
+       (static_cast<uint32_t>(time(nullptr) - m_icmpPollState.getLastCompleted()) > g_icmpPollingInterval) &&
+       !isProxyAgentRestarting())
+   {
+      success = m_icmpPollState.schedule();
+   }
+   unlockProperties();
+   return success;
+}
+
+/**
  * Perform status poll on node
  */
 void Node::statusPoll(PollerInfo *poller, ClientSession *pSession, UINT32 rqId)
@@ -2951,8 +3095,7 @@ NetworkPathCheckResult Node::checkNetworkPathLayer2(uint32_t requestId, bool sec
                {
                   nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("Node::checkNetworkPath(%s [%d]): forced status poll on node %s [%d]"),
                               m_name, m_id, node->getName(), node->getId());
-                  node->startForcedStatusPoll();
-                  node->statusPollWorkerEntry(RegisterPoller(PollerType::STATUS, node), nullptr, 0);
+                  node->getAsPollable()->doForcedStatusPoll(RegisterPoller(PollerType::STATUS, node));
                }
             }
 
@@ -6631,54 +6774,6 @@ DataCollectionError Node::getInternalMetric(const TCHAR *name, TCHAR *buffer, si
          rc = DCE_NOT_SUPPORTED;
       }
    }
-   else if (!_tcsicmp(name, _T("PollTime.RoutingTable.Average")))
-   {
-      lockProperties();
-      _sntprintf(buffer, size, INT64_FMT, m_routingPollState.getTimerAverage());
-      unlockProperties();
-   }
-   else if (!_tcsicmp(name, _T("PollTime.RoutingTable.Last")))
-   {
-      lockProperties();
-      _sntprintf(buffer, size, INT64_FMT, m_routingPollState.getTimerLast());
-      unlockProperties();
-   }
-   else if (!_tcsicmp(name, _T("PollTime.RoutingTable.Max")))
-   {
-      lockProperties();
-      _sntprintf(buffer, size, INT64_FMT, m_routingPollState.getTimerMax());
-      unlockProperties();
-   }
-   else if (!_tcsicmp(name, _T("PollTime.RoutingTable.Min")))
-   {
-      lockProperties();
-      _sntprintf(buffer, size, INT64_FMT, m_routingPollState.getTimerMin());
-      unlockProperties();
-   }
-   else if (!_tcsicmp(name, _T("PollTime.Topology.Average")))
-   {
-      lockProperties();
-      _sntprintf(buffer, size, INT64_FMT, m_topologyPollState.getTimerAverage());
-      unlockProperties();
-   }
-   else if (!_tcsicmp(name, _T("PollTime.Topology.Last")))
-   {
-      lockProperties();
-      _sntprintf(buffer, size, INT64_FMT, m_topologyPollState.getTimerLast());
-      unlockProperties();
-   }
-   else if (!_tcsicmp(name, _T("PollTime.Topology.Max")))
-   {
-      lockProperties();
-      _sntprintf(buffer, size, INT64_FMT, m_topologyPollState.getTimerMax());
-      unlockProperties();
-   }
-   else if (!_tcsicmp(name, _T("PollTime.Topology.Min")))
-   {
-      lockProperties();
-      _sntprintf(buffer, size, INT64_FMT, m_topologyPollState.getTimerMin());
-      unlockProperties();
-   }
    else if (!_tcsicmp(name, _T("ReceivedSNMPTraps")))
    {
       lockProperties();
@@ -8393,24 +8488,6 @@ bool Node::getNextHop(const InetAddress& srcAddr, const InetAddress& destAddr, I
 }
 
 /**
- * Entry point for routing table poller
- */
-void Node::routingTablePollWorkerEntry(PollerInfo *poller)
-{
-   routingTablePollWorkerEntry(poller, nullptr, 0);
-}
-
-/**
- * Entry point for routing table poller
- */
-void Node::routingTablePollWorkerEntry(PollerInfo *poller, ClientSession *session, UINT32 rqId)
-{
-   poller->startExecution();
-   routingTablePoll(poller, session, rqId);
-   delete poller;
-}
-
-/**
  * Routing table poll
  */
 void Node::routingTablePoll(PollerInfo *poller, ClientSession *session, UINT32 rqId)
@@ -8878,24 +8955,6 @@ shared_ptr<NetworkMapObjectList> Node::buildL2Topology(uint32_t *status, int rad
    }
    MutexUnlock(m_mutexTopoAccess);
    return result;
-}
-
-/**
- * Entry point for topology poller
- */
-void Node::topologyPollWorkerEntry(PollerInfo *poller)
-{
-   topologyPollWorkerEntry(poller, nullptr, 0);
-}
-
-/**
- * Entry point for topology poller
- */
-void Node::topologyPollWorkerEntry(PollerInfo *poller, ClientSession *session, UINT32 rqId)
-{
-   poller->startExecution();
-   topologyPoll(poller, session, rqId);
-   delete poller;
 }
 
 /**
@@ -10705,29 +10764,6 @@ json_t *Node::toJson()
    json_object_set_new(root, "chassisPlacementConfig", json_string_t(m_chassisPlacementConf));
    unlockProperties();
    return root;
-}
-
-/**
- * Reset poll timers
- */
-void Node::resetPollTimers()
-{
-   super::resetPollTimers();
-
-   m_topologyPollState.resetTimer();
-   m_discoveryPollState.resetTimer();
-   m_routingPollState.resetTimer();
-   m_icmpPollState.resetTimer();
-}
-
-/**
- * Entry point for ICMP poll worker thread
- */
-void Node::icmpPollWorkerEntry(PollerInfo *poller)
-{
-   poller->startExecution();
-   icmpPoll(poller);
-   delete poller;
 }
 
 /**

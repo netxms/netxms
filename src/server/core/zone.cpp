@@ -32,7 +32,7 @@ void DumpIndex(CONSOLE_CTX pCtx, InetAddressIndex *index);
 /**
  * Zone class default constructor
  */
-Zone::Zone() : super()
+Zone::Zone() : super(), Pollable(this, Pollable::STATUS)
 {
    m_id = 0;
    m_uin = 0;
@@ -48,7 +48,7 @@ Zone::Zone() : super()
 /**
  * Constructor for new zone object
  */
-Zone::Zone(int32_t uin, const TCHAR *name) : super()
+Zone::Zone(int32_t uin, const TCHAR *name) : super(), Pollable(this, Pollable::STATUS)
 {
    m_id = 0;
    m_uin = uin;
@@ -658,11 +658,31 @@ void Zone::migrateProxyLoad(ZoneProxy *source, ZoneProxy *target)
 }
 
 /**
+ * Lock zone for zone health poll
+ */
+bool Zone::lockForStatusPoll()
+{
+   bool success = false;
+   lockProperties();
+   if (!m_isDeleted && !m_isDeleteInitiated)
+   {
+      if ((m_status != STATUS_UNMANAGED) &&
+          !m_lockedForHealthCheck &&
+          ((UINT32)(time(nullptr) - m_lastHealthCheck) >= g_statusPollingInterval))
+      {
+         m_lockedForHealthCheck = true;
+         success = true;
+      }
+   }
+   unlockProperties();
+   return success;
+}
+
+/**
  * Do zone health check
  */
-void Zone::healthCheck(PollerInfo *poller)
+void Zone::statusPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId)
 {
-   poller->startExecution();
    nxlog_debug_tag(DEBUG_TAG_ZONE_PROXY, 6, _T("ZoneHealthCheck(%s [%u]): started"), m_name, m_uin);
 
    unique_ptr<SharedObjectArray<ZoneProxy>> proxyNodes = m_proxyNodes.getAll();
@@ -756,7 +776,6 @@ void Zone::healthCheck(PollerInfo *poller)
    unlockProperties();
 
    nxlog_debug_tag(DEBUG_TAG_ZONE_PROXY, 6, _T("ZoneHealthCheck(%s [%u]): completed"), m_name, m_uin);
-   delete poller;
 }
 
 /**

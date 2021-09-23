@@ -194,7 +194,6 @@ ClientSession::ClientSession(SOCKET hSocket, const InetAddress& addr) : m_downlo
    m_mutexSendAlarms = MutexCreate();
    m_mutexSendActions = MutexCreate();
    m_mutexSendAuditLog = MutexCreate();
-   m_mutexPollerInit = MutexCreate();
    m_subscriptionLock = MutexCreateFast();
    m_flags = 0;
 	m_clientType = CLIENT_TYPE_DESKTOP;
@@ -245,7 +244,6 @@ ClientSession::~ClientSession()
    MutexDestroy(m_mutexSendAlarms);
    MutexDestroy(m_mutexSendActions);
    MutexDestroy(m_mutexSendAuditLog);
-   MutexDestroy(m_mutexPollerInit);
    MutexDestroy(m_subscriptionLock);
    if (m_ppEPPRuleList != nullptr)
    {
@@ -6894,50 +6892,44 @@ void ClientSession::sendAllActions(UINT32 dwRqId)
  */
 void ClientSession::forcedNodePoll(NXCPMessage *pRequest)
 {
-   MutexLock(m_mutexPollerInit);
-
    NXCPMessage response(CMD_REQUEST_COMPLETED, pRequest->getId());
 
    int pollType = pRequest->getFieldAsUInt16(VID_POLL_TYPE);
+   bool isValidPoll = false;
 
    // Find object to be polled
    shared_ptr<NetObj> object = FindObjectById(pRequest->getFieldAsUInt32(VID_OBJECT_ID));
    if (object != nullptr)
    {
-      // We can do polls for node, sensor, cluster objects
-      bool isValidNodePoll = object->getObjectClass() == OBJECT_NODE && (pollType == POLL_CONFIGURATION_FULL || pollType == POLL_TOPOLOGY || pollType == POLL_INTERFACE_NAMES);
-      bool isValidDataCollectionTargetPoll = object->isDataCollectionTarget() && (pollType == POLL_STATUS || pollType == POLL_CONFIGURATION_NORMAL || pollType == POLL_INSTANCE_DISCOVERY);
-      bool isValidBusinessServicePoll = object->getObjectClass() == OBJECT_BUSINESS_SERVICE && (pollType == POLL_STATUS || pollType == POLL_CONFIGURATION_NORMAL);
-      bool isValidBusinessServicePrototypePoll = object->getObjectClass() == OBJECT_BUSINESS_SERVICE_PROTOTYPE && pollType == POLL_INSTANCE_DISCOVERY;
-      if (isValidNodePoll || isValidDataCollectionTargetPoll || isValidBusinessServicePoll || isValidBusinessServicePrototypePoll)
+      if (pollType == POLL_STATUS)
+         isValidPoll = object->getAsPollable()->isStatusPollAvailable();
+      else if (pollType == POLL_CONFIGURATION_FULL)
+         isValidPoll = (object->getAsPollable()->isConfigurationPollAvailable() && object->getObjectClass() == OBJECT_NODE);
+      else if (pollType == POLL_CONFIGURATION_NORMAL)
+         isValidPoll = object->getAsPollable()->isConfigurationPollAvailable();
+      else if (pollType == POLL_INSTANCE_DISCOVERY)
+         isValidPoll = object->getAsPollable()->isInstanceDiscoveryPollAvailable();
+      else if (pollType == POLL_TOPOLOGY)
+         isValidPoll = object->getAsPollable()->isTopologyPollAvailable();
+      else if (pollType == POLL_ROUTING_TABLE)
+         isValidPoll = object->getAsPollable()->isRoutingTablePollAvailable();
+      else if (pollType == POLL_DISCOVERY)
+         isValidPoll = object->getAsPollable()->isDiscoveryPollAvailable();
+      else if (pollType == POLL_INTERFACE_NAMES)
+         isValidPoll = (object->getObjectClass() == OBJECT_NODE);
+
+      if (isValidPoll)
       {
          // Check access rights
          if (((pollType == POLL_CONFIGURATION_FULL) && object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY)) ||
                ((pollType != POLL_CONFIGURATION_FULL) && object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ)))
          {
-            InterlockedIncrement(&m_refCount);
-
-            if (isValidNodePoll || isValidDataCollectionTargetPoll)
-            {
-               ThreadPoolExecute(g_clientThreadPool, this, &ClientSession::pollerThread,
-                     object, pollType, pRequest->getId());
-            }
-            else
-            {
-               ThreadPoolExecute(g_clientThreadPool, this, &ClientSession::pollerThread,
-                     object, pollType, pRequest->getId());
-            }
-
-
-            NXCPMessage msg(CMD_POLLING_INFO, pRequest->getId());
-            msg.setField(VID_RCC, RCC_OPERATION_IN_PROGRESS);
-            msg.setField(VID_POLLER_MESSAGE, _T("Poll request accepted, waiting for outstanding polling requests to complete...\r\n"));
-            sendMessage(&msg);
-
+            sendPollerMsg(pRequest->getId(), _T("Poll request accepted, waiting for outstanding polling requests to complete...\r\n"));
             response.setField(VID_RCC, RCC_SUCCESS);
          }
          else
          {
+            isValidPoll = false;
             response.setField(VID_RCC, RCC_ACCESS_DENIED);
          }
       }
@@ -6953,7 +6945,49 @@ void ClientSession::forcedNodePoll(NXCPMessage *pRequest)
 
    // Send response
    sendMessage(&response);
-   MutexUnlock(m_mutexPollerInit);
+
+   if (isValidPoll)
+   {
+      switch(pollType)
+      {
+         case POLL_STATUS:
+            object->getAsPollable()->doForcedStatusPoll(RegisterPoller(PollerType::STATUS, object), this, pRequest->getId());
+            break;
+         case POLL_CONFIGURATION_FULL:
+            if (object->getObjectClass() == OBJECT_NODE)
+               static_cast<Node&>(*object).setRecheckCapsFlag();
+            // intentionally no break here
+         case POLL_CONFIGURATION_NORMAL:
+            object->getAsPollable()->doForcedConfigurationPoll(RegisterPoller(PollerType::CONFIGURATION, object), this, pRequest->getId());
+            break;
+         case POLL_INSTANCE_DISCOVERY:
+            object->getAsPollable()->doForcedInstanceDiscoveryPoll(RegisterPoller(PollerType::INSTANCE_DISCOVERY, object), this, pRequest->getId());
+            break;
+         case POLL_TOPOLOGY:
+            object->getAsPollable()->doForcedTopologyPoll(RegisterPoller(PollerType::TOPOLOGY, object), this, pRequest->getId());
+            break;
+         case POLL_ROUTING_TABLE:
+            object->getAsPollable()->doForcedRoutingTablePoll(RegisterPoller(PollerType::ROUTING_TABLE, object), this, pRequest->getId());
+            break;
+         case POLL_DISCOVERY:
+            object->getAsPollable()->doForcedDiscoveryPoll(RegisterPoller(PollerType::DISCOVERY, object), this, pRequest->getId());
+            break;
+         case POLL_INTERFACE_NAMES:
+            if (object->getObjectClass() == OBJECT_NODE)
+            {
+               static_cast<Node&>(*object).updateInterfaceNames(this, pRequest->getId());
+            }
+            break;
+         default:
+            sendPollerMsg(pRequest->getId(), _T("Invalid poll type requested\r\n"));
+            break;
+      }
+
+      NXCPMessage msg(CMD_POLLING_INFO, pRequest->getId());
+      msg.setField(VID_RCC, RCC_SUCCESS);
+      sendMessage(&msg);
+   }
+
 }
 
 /**
@@ -6965,81 +6999,6 @@ void ClientSession::sendPollerMsg(uint32_t requestId, const TCHAR *text)
    msg.setField(VID_RCC, RCC_OPERATION_IN_PROGRESS);
    msg.setField(VID_POLLER_MESSAGE, text);
    sendMessage(&msg);
-}
-
-/**
- * Node poller thread
- */
-void ClientSession::pollerThread(shared_ptr<NetObj> object, int pollType, uint32_t requestId)
-{
-   // Wait while parent thread finishes initialization
-   MutexLock(m_mutexPollerInit);
-   MutexUnlock(m_mutexPollerInit);
-   switch(pollType)
-   {
-      case POLL_STATUS:
-         if (object->getObjectClass() == OBJECT_BUSINESS_SERVICE)
-         {
-            static_cast<BusinessService&>(*object).startForcedStatusPoll();
-            static_cast<BusinessService&>(*object).statusPollWorkerEntry(RegisterPoller(PollerType::STATUS, object), this, requestId);
-         }
-         else
-         {
-            static_cast<DataCollectionTarget&>(*object).startForcedStatusPoll();
-            static_cast<DataCollectionTarget&>(*object).statusPollWorkerEntry(RegisterPoller(PollerType::STATUS, object), this, requestId);
-         }
-         break;
-      case POLL_CONFIGURATION_FULL:
-         if (object->getObjectClass() == OBJECT_NODE)
-            static_cast<Node&>(*object).setRecheckCapsFlag();
-         // intentionally no break here
-      case POLL_CONFIGURATION_NORMAL:
-         if (object->getObjectClass() == OBJECT_BUSINESS_SERVICE)
-         {
-            static_cast<BusinessService&>(*object).startForcedConfigurationPoll();
-            static_cast<BusinessService&>(*object).configurationPollWorkerEntry(RegisterPoller(PollerType::CONFIGURATION, object), this, requestId);
-         }
-         else
-         {
-            static_cast<DataCollectionTarget&>(*object).startForcedConfigurationPoll();
-            static_cast<DataCollectionTarget&>(*object).configurationPollWorkerEntry(RegisterPoller(PollerType::CONFIGURATION, object), this, requestId);
-         }
-         break;
-      case POLL_INSTANCE_DISCOVERY:
-         if (object->getObjectClass() == OBJECT_BUSINESS_SERVICE_PROTOTYPE)
-         {
-            static_cast<BusinessServicePrototype&>(*object).startForcedDiscoveryPoll();
-            static_cast<BusinessServicePrototype&>(*object).instanceDiscoveryPoll(RegisterPoller(PollerType::INSTANCE_DISCOVERY, object), this, requestId);
-         }
-         else
-         {
-            static_cast<DataCollectionTarget&>(*object).startForcedInstancePoll();
-            static_cast<DataCollectionTarget&>(*object).instanceDiscoveryPollWorkerEntry(RegisterPoller(PollerType::INSTANCE_DISCOVERY, object), this, requestId);
-         }
-         break;
-      case POLL_TOPOLOGY:
-         if (object->getObjectClass() == OBJECT_NODE)
-         {
-            static_cast<Node&>(*object).startForcedTopologyPoll();
-            static_cast<Node&>(*object).topologyPollWorkerEntry(RegisterPoller(PollerType::TOPOLOGY, object), this, requestId);
-         }
-         break;
-      case POLL_INTERFACE_NAMES:
-         if (object->getObjectClass() == OBJECT_NODE)
-         {
-            static_cast<Node&>(*object).updateInterfaceNames(this, requestId);
-         }
-         break;
-      default:
-         sendPollerMsg(requestId, _T("Invalid poll type requested\r\n"));
-         break;
-   }
-
-   NXCPMessage msg(CMD_POLLING_INFO, requestId);
-   msg.setField(VID_RCC, RCC_SUCCESS);
-   sendMessage(&msg);
-
-   decRefCount();
 }
 
 /**

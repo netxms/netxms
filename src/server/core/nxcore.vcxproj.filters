@@ -306,6 +306,9 @@
     <ClCompile Include="poll.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="pollable.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="ps.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

@@ -67,6 +67,28 @@ static bool BSCommonDeleteObject(uint32_t id)
 }
 
 /**
+ * Upgrade from 40.71 to 40.72
+ */
+static bool H_UpgradeFromV71()
+{
+   CHK_EXEC(CreateTable(
+         _T("CREATE TABLE pollable_objects (")
+         _T("  id integer not null,")
+         _T("  config_poll_timestamp integer not null,")
+         _T("  instance_poll_timestamp integer not null,")
+         _T("PRIMARY KEY(id))")));
+
+   static const TCHAR *batch =
+      _T("INSERT INTO pollable_objects (id,config_poll_timestamp,instance_poll_timestamp) SELECT id,config_poll_timestamp,instance_poll_timestamp FROM dc_targets\n")
+      _T("ALTER TABLE dc_targets DROP COLUMN config_poll_timestamp\n")
+      _T("ALTER TABLE dc_targets DROP COLUMN instance_poll_timestamp\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(SetMinorSchemaVersion(72));
+   return true;
+}
+
+/**
  * Upgrade from 40.70 to 40.71
  */
 static bool H_UpgradeFromV70()
@@ -2399,6 +2421,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 71, 40, 72, H_UpgradeFromV71 },
    { 70, 40, 71, H_UpgradeFromV70 },
    { 69, 40, 70, H_UpgradeFromV69 },
    { 68, 40, 69, H_UpgradeFromV68 },

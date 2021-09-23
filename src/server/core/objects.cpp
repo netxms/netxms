@@ -1481,7 +1481,8 @@ bool LoadObjects()
                DBCacheTable(cachedb, mainDB, _T("icmp_target_address_list"), _T("node_id,ip_addr"), _T("*"), intColumns) &&
                DBCacheTable(cachedb, mainDB, _T("software_inventory"), _T("node_id,name,version"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("hardware_inventory"), _T("node_id,category,component_index"), _T("*")) &&
-               DBCacheTable(cachedb, mainDB, _T("versionable_object"), _T("object_id"), _T("*"));
+               DBCacheTable(cachedb, mainDB, _T("versionable_object"), _T("object_id"), _T("*")) &&
+               DBCacheTable(cachedb, mainDB, _T("pollable_objects"), _T("id"), _T("*"), intColumns);
 
       if (success)
       {
@@ -2237,7 +2238,8 @@ StructArray<DependentNode> *GetNodeDependencies(uint32_t nodeId)
  */
 static void ResetPollTimers(NetObj *object, void *data)
 {
-   static_cast<DataCollectionTarget*>(object)->resetPollTimers();
+   if (object->isPollable())
+      object->getAsPollable()->resetPollTimers();
 }
 
 /**
@@ -2246,7 +2248,7 @@ static void ResetPollTimers(NetObj *object, void *data)
 void ResetObjectPollTimers(const shared_ptr<ScheduledTaskParameters>& parameters)
 {
    nxlog_debug_tag(_T("poll.system"), 2, _T("Resetting object poll timers"));
-   g_idxNodeById.forEach(ResetPollTimers, nullptr);
+   g_idxNodeById.forEach(ResetPollTimers, nullptr); //FIXME: maybe we can use g_idxObjectById here now?
    g_idxClusterById.forEach(ResetPollTimers, nullptr);
    g_idxMobileDeviceById.forEach(ResetPollTimers, nullptr);
    g_idxSensorById.forEach(ResetPollTimers, nullptr);

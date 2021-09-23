@@ -25,7 +25,7 @@
 /**
  * Default constructor
  */
-ConditionObject::ConditionObject() : super(), m_dciList(0, 8)
+ConditionObject::ConditionObject() : super(), Pollable(this, Pollable::STATUS), m_dciList(0, 8)
 {
    m_scriptSource = nullptr;
    m_script = nullptr;
@@ -42,7 +42,7 @@ ConditionObject::ConditionObject() : super(), m_dciList(0, 8)
 /**
  * Constructor for new objects
  */
-ConditionObject::ConditionObject(bool hidden) : super(), m_dciList(0, 8)
+ConditionObject::ConditionObject(bool hidden) : super(), Pollable(this, Pollable::STATUS), m_dciList(0, 8)
 {
    m_scriptSource = nullptr;
    m_script = nullptr;
@@ -306,23 +306,27 @@ UINT32 ConditionObject::modifyFromMessageInternal(NXCPMessage *pRequest)
 /**
  * Lock for polling
  */
-void ConditionObject::lockForPoll()
+bool ConditionObject::lockForStatusPoll()
 {
-   m_queuedForPolling = true;
+   if ((m_status != STATUS_UNMANAGED) && (!m_queuedForPolling) && (!m_isDeleted) && (static_cast<uint32_t>(time(nullptr) - m_lastPoll) > g_conditionPollingInterval))
+   {
+      m_queuedForPolling = true;
+      return true;
+   }
+
+   return false;
 }
 
 /**
  * Poller entry point
  */
-void ConditionObject::doPoll(PollerInfo *poller)
+void ConditionObject::statusPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId)
 {
-   poller->startExecution();
    check();
    lockProperties();
    m_queuedForPolling = false;
    m_lastPoll = time(nullptr);
    unlockProperties();
-   delete poller;
 }
 
 /**

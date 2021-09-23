@@ -106,6 +106,7 @@ NetObj::NetObj() : NObject(), m_dashboards(0, 8), m_urls(0, 8, Ownership::True)
    m_mutexResponsibleUsers = MutexCreate();
    m_creationTime = 0;
    m_categoryId = 0;
+   m_asPollable = nullptr;
 }
 
 /**
@@ -213,6 +214,11 @@ bool NetObj::saveToDatabase(DB_HANDLE hdb)
 
    if (success)
       success = saveACLToDB(hdb);
+
+   if (success && isPollable())
+   {
+      success = getAsPollable()->saveToDatabase(hdb);
+   }
 
    if (!success)
       return false;
@@ -506,6 +512,11 @@ bool NetObj::deleteFromDatabase(DB_HANDLE hdb)
    if (success)
    {
       success = executeQueryOnObject(hdb, _T("DELETE FROM responsible_users WHERE object_id=?"));
+   }
+
+   if (success && isPollable())
+   {
+      success = executeQueryOnObject(hdb, _T("DELETE FROM pollable_objects WHERE id=?"));
    }
 
    return success;
@@ -2177,15 +2188,6 @@ bool NetObj::isDataCollectionTarget() const
 {
    return false;
 }
-
-/**
- * Must return true if object is possible to poll
- */
-bool NetObj::isPollable() const
-{
-   return getObjectClass() == OBJECT_BUSINESS_SERVICE;
-}
-
 
 /**
  * Get module data

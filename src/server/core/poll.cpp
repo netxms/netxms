@@ -85,7 +85,7 @@ PollerInfo *RegisterPoller(PollerType type, const shared_ptr<NetObj>& object, bo
  */
 static EnumerationCallbackResult ShowPollerInfo(const uint64_t& key, PollerInfo *poller, ServerConsole *console)
 {
-   static const TCHAR *pollerType[] = { _T("STAT"), _T("CONF"), _T("INST"), _T("ROUT"), _T("DISC"), _T("BSVC"), _T("COND"), _T("TOPO"), _T("ZONE"), _T("ICMP") };
+   static const TCHAR *pollerType[] = { _T("STAT"), _T("CONF"), _T("INST"), _T("ROUT"), _T("DISC"), _T("TOPO"), _T("ICMP") };
 
    NetObj *o = poller->getObject();
 
@@ -130,8 +130,7 @@ static void CreateManagementNode(const InetAddress& addr)
    NetObjInsert(node, true, false);
 	node->setName(GetLocalHostName(buffer, 256, false));
 
-	node->startForcedConfigurationPoll();
-	node->configurationPollWorkerEntry(RegisterPoller(PollerType::CONFIGURATION, node->self()));
+   node->getAsPollable()->doForcedConfigurationPoll(RegisterPoller(PollerType::CONFIGURATION, node));
 
    node->unhide();
    g_dwMgmtNode = node->getId();   // Set local management node ID
@@ -732,102 +731,54 @@ static void QueueForPolling(NetObj *object, void *data)
    if (object->isHidden())
       return;
 
+   Pollable* pollableObject = object->getAsPollable();
+   if (pollableObject == nullptr)
+      return;
+
    TCHAR threadKey[32];
    _sntprintf(threadKey, 32, _T("POLL_%u"), object->getId());
 
-   if (object->isDataCollectionTarget())
+   if (pollableObject->isStatusPollAvailable() && pollableObject->lockForStatusPoll())
    {
-      auto target = static_cast<DataCollectionTarget*>(object);
-      if (target->lockForStatusPoll())
-      {
-         nxlog_debug_tag(DEBUG_TAG_POLL_MANAGER, 6, _T("Data collection target %s [%u] queued for status poll"), target->getName(), target->getId());
-         ThreadPoolExecuteSerialized(g_pollerThreadPool, threadKey, target, &DataCollectionTarget::statusPollWorkerEntry, RegisterPoller(PollerType::STATUS, target->self()));
-      }
-      if (target->lockForConfigurationPoll())
-      {
-         nxlog_debug_tag(DEBUG_TAG_POLL_MANAGER, 6, _T("Data collection target %s [%u] queued for configuration poll"), target->getName(), target->getId());
-         ThreadPoolExecuteSerialized(g_pollerThreadPool, threadKey, target, &DataCollectionTarget::configurationPollWorkerEntry, RegisterPoller(PollerType::CONFIGURATION, target->self()));
-      }
-      if (target->lockForInstancePoll())
-      {
-         nxlog_debug_tag(DEBUG_TAG_POLL_MANAGER, 6, _T("Data collection target %s [%u] queued for instance discovery poll"), target->getName(), target->getId());
-         ThreadPoolExecuteSerialized(g_pollerThreadPool, threadKey, target, &DataCollectionTarget::instanceDiscoveryPollWorkerEntry, RegisterPoller(PollerType::INSTANCE_DISCOVERY, target->self()));
-      }
+      nxlog_debug_tag(DEBUG_TAG_POLL_MANAGER, 6, _T("%s %s [%u] queued for status poll"), object->getObjectClassName(), object->getName(), object->getId());
+      ThreadPoolExecuteSerialized(g_pollerThreadPool, threadKey, pollableObject, &Pollable::doStatusPoll, RegisterPoller(PollerType::STATUS, object->self()));
    }
 
-	switch(object->getObjectClass())
-	{
-		case OBJECT_NODE:
-			{
-				auto node = static_cast<Node*>(object);
-				if (node->lockForRoutePoll())
-				{
-					nxlog_debug_tag(DEBUG_TAG_POLL_MANAGER, 6, _T("Node %s [%u] queued for routing table poll"), node->getName(), node->getId());
-					ThreadPoolExecuteSerialized(g_pollerThreadPool, threadKey, node, &Node::routingTablePollWorkerEntry, RegisterPoller(PollerType::ROUTING_TABLE, node->self()));
-				}
-				if (node->lockForDiscoveryPoll())
-				{
-					nxlog_debug_tag(DEBUG_TAG_POLL_MANAGER, 6, _T("Node %s [%u] queued for discovery poll"), node->getName(), node->getId());
-					ThreadPoolExecuteSerialized(g_pollerThreadPool, threadKey, DiscoveryPoller, RegisterPoller(PollerType::DISCOVERY, node->self()));
-				}
-				if (node->lockForTopologyPoll())
-				{
-					nxlog_debug_tag(DEBUG_TAG_POLL_MANAGER, 6, _T("Node %s [%u] queued for topology poll"), node->getName(), node->getId());
-					ThreadPoolExecuteSerialized(g_pollerThreadPool, threadKey, node, &Node::topologyPollWorkerEntry, RegisterPoller(PollerType::TOPOLOGY, node->self()));
-				}
-		      if (node->lockForIcmpPoll())
-		      {
-		         nxlog_debug_tag(DEBUG_TAG_POLL_MANAGER, 6, _T("Node %s [%u] queued for ICMP poll"), node->getName(), node->getId());
-		         ThreadPoolExecuteSerialized(g_pollerThreadPool, threadKey, node, &Node::icmpPollWorkerEntry, RegisterPoller(PollerType::ICMP, node->self()));
-		      }
-			}
-			break;
-		case OBJECT_CONDITION:
-			{
-			   auto cond = static_cast<ConditionObject*>(object);
-				if (cond->isReadyForPoll())
-				{
-					cond->lockForPoll();
-					nxlog_debug_tag(DEBUG_TAG_POLL_MANAGER, 6, _T("Condition %d \"%s\" queued for poll"), (int)object->getId(), object->getName());
-					ThreadPoolExecuteSerialized(g_pollerThreadPool, threadKey, cond, &ConditionObject::doPoll, RegisterPoller(PollerType::CONDITION, cond->self()));
-				}
-			}
-			break;
-		case OBJECT_BUSINESS_SERVICE:
-			{
-				auto service = static_cast<BusinessService*>(object);
-            if (service->lockForStatusPoll())
-            {
-               nxlog_debug_tag(DEBUG_TAG_POLL_MANAGER, 6, _T("Business service %d \"%s\" queued for status poll"), (int)object->getId(), object->getName());
-					ThreadPoolExecuteSerialized(g_pollerThreadPool, threadKey, static_cast<BusinessService*>(service), &BusinessService::statusPollWorkerEntry, RegisterPoller(PollerType::STATUS, service->self()));
-            }
-            if (service->lockForConfigurationPoll())
-            {
-               nxlog_debug_tag(DEBUG_TAG_POLL_MANAGER, 6, _T("Business service %d \"%s\" queued for configuration poll"), (int)object->getId(), object->getName());
-					ThreadPoolExecuteSerialized(g_pollerThreadPool, threadKey, static_cast<BusinessService*>(service), &BusinessService::configurationPollWorkerEntry, RegisterPoller(PollerType::CONFIGURATION, service->self()));
-            }
-			}
-			break;
-      case OBJECT_BUSINESS_SERVICE_PROTOTYPE:
-			{
-				auto service = static_cast<BusinessServicePrototype*>(object);
-            if (service->lockForDiscoveryPoll())
-            {
-               nxlog_debug_tag(DEBUG_TAG_POLL_MANAGER, 6, _T("Business service prototype %d \"%s\" queued for instance discovery poll"), (int)object->getId(), object->getName());
-					ThreadPoolExecuteSerialized(g_pollerThreadPool, threadKey, static_cast<BusinessServicePrototype*>(service), &BusinessServicePrototype::instanceDiscoveryPollWorkerEntry, RegisterPoller(PollerType::INSTANCE_DISCOVERY, service->self()));
-            }
-			}
-			break;
-		case OBJECT_ZONE:
-         if (static_cast<Zone*>(object)->lockForHealthCheck())
-         {
-            nxlog_debug_tag(DEBUG_TAG_POLL_MANAGER, 6, _T("Zone %s [%u] queued for health check"), object->getName(), object->getId());
-            ThreadPoolExecuteSerialized(g_pollerThreadPool, threadKey, static_cast<Zone*>(object), &Zone::healthCheck, RegisterPoller(PollerType::ZONE_HEALTH, object->self()));
-         }
-		   break;
-		default:
-			break;
-	}
+   if (pollableObject->isConfigurationPollAvailable() && pollableObject->lockForConfigurationPoll())
+   {
+      nxlog_debug_tag(DEBUG_TAG_POLL_MANAGER, 6, _T("%s %s [%u] queued for configuration poll"), object->getObjectClassName(), object->getName(), object->getId());
+      ThreadPoolExecuteSerialized(g_pollerThreadPool, threadKey, pollableObject, &Pollable::doConfigurationPoll, RegisterPoller(PollerType::CONFIGURATION, object->self()));
+   }
+
+   if (pollableObject->isInstanceDiscoveryPollAvailable() && pollableObject->lockForInstanceDiscoveryPoll())
+   {
+      nxlog_debug_tag(DEBUG_TAG_POLL_MANAGER, 6, _T("%s %s [%u] queued for instance discovery poll"), object->getObjectClassName(), object->getName(), object->getId());
+      ThreadPoolExecuteSerialized(g_pollerThreadPool, threadKey, pollableObject, &Pollable::doInstanceDiscoveryPoll, RegisterPoller(PollerType::INSTANCE_DISCOVERY, object->self()));
+   }
+
+   if (pollableObject->isTopologyPollAvailable() && pollableObject->lockForTopologyPoll())
+   {
+      nxlog_debug_tag(DEBUG_TAG_POLL_MANAGER, 6, _T("%s %s [%u] queued for topology poll"), object->getObjectClassName(), object->getName(), object->getId());
+      ThreadPoolExecuteSerialized(g_pollerThreadPool, threadKey, pollableObject, &Pollable::doTopologyPoll, RegisterPoller(PollerType::TOPOLOGY, object->self()));
+   }
+
+   if (pollableObject->isRoutingTablePollAvailable() && pollableObject->lockForRoutingTablePoll())
+   {
+      nxlog_debug_tag(DEBUG_TAG_POLL_MANAGER, 6, _T("%s %s [%u] queued for routing table poll"), object->getObjectClassName(), object->getName(), object->getId());
+      ThreadPoolExecuteSerialized(g_pollerThreadPool, threadKey, pollableObject, &Pollable::doRoutingTablePoll, RegisterPoller(PollerType::ROUTING_TABLE, object->self()));
+   }
+
+   if (pollableObject->isDiscoveryPollAvailable() && pollableObject->lockForDiscoveryPoll())
+   {
+      nxlog_debug_tag(DEBUG_TAG_POLL_MANAGER, 6, _T("%s %s [%u] queued for discovery poll"), object->getObjectClassName(), object->getName(), object->getId());
+      ThreadPoolExecuteSerialized(g_pollerThreadPool, threadKey, pollableObject, &Pollable::doDiscoveryPoll, RegisterPoller(PollerType::DISCOVERY, object->self()));
+   }
+
+   if (pollableObject->isIcmpPollAvailable() && pollableObject->lockForIcmpPoll())
+   {
+      nxlog_debug_tag(DEBUG_TAG_POLL_MANAGER, 6, _T("%s %s [%u] queued for ICMP poll"), object->getObjectClassName(), object->getName(), object->getId());
+      ThreadPoolExecuteSerialized(g_pollerThreadPool, threadKey, pollableObject, &Pollable::doIcmpPoll, RegisterPoller(PollerType::ICMP, object->self()));
+   }
 }
 
 /**

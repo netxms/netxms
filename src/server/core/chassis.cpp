@@ -25,7 +25,7 @@
 /**
  * Default constructor
  */
-Chassis::Chassis() : super()
+Chassis::Chassis() : super(Pollable::NONE)
 {
    m_controllerId = 0;
    m_rackId = 0;
@@ -37,7 +37,7 @@ Chassis::Chassis() : super()
 /**
  * Create new chassis object
  */
-Chassis::Chassis(const TCHAR *name, UINT32 controllerId) : super(name)
+Chassis::Chassis(const TCHAR *name, UINT32 controllerId) : super(name, Pollable::NONE)
 {
    m_controllerId = controllerId;
    m_rackId = 0;

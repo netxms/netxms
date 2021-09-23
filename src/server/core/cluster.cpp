@@ -28,7 +28,7 @@
 /**
  * Cluster class default constructor
  */
-Cluster::Cluster() : super(), AutoBindTarget(this)
+Cluster::Cluster() : super(Pollable::STATUS | Pollable::CONFIGURATION), AutoBindTarget(this)
 {
 	m_dwClusterType = 0;
    m_syncNetworks = new ObjectArray<InetAddress>(8, 8, Ownership::True);
@@ -40,7 +40,7 @@ Cluster::Cluster() : super(), AutoBindTarget(this)
 /**
  * Cluster class new object constructor
  */
-Cluster::Cluster(const TCHAR *pszName, int32_t zoneUIN) : super(pszName),  AutoBindTarget(this)
+Cluster::Cluster(const TCHAR *pszName, int32_t zoneUIN) : super(pszName, Pollable::STATUS | Pollable::CONFIGURATION),  AutoBindTarget(this)
 {
 	m_dwClusterType = 0;
    m_syncNetworks = new ObjectArray<InetAddress>(8, 8, Ownership::True);
@@ -75,6 +75,12 @@ bool Cluster::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    {
       nxlog_debug(2, _T("Cannot load common properties for cluster object %d"), dwId);
       return false;
+   }
+
+   if (Pollable::loadFromDatabase(hdb, m_id))
+   {
+      if (static_cast<uint32_t>(time(nullptr) - m_configurationPollState.getLastCompleted()) < g_configurationPollingInterval)
+         m_runtimeFlags |= ODF_CONFIGURATION_POLL_PASSED;
    }
 
 	_sntprintf(szQuery, 256, _T("SELECT cluster_type,zone_guid FROM clusters WHERE id=%d"), (int)m_id);
@@ -199,11 +205,8 @@ bool Cluster::saveToDatabase(DB_HANDLE hdb)
 
    if (success && (m_modified & MODIFY_OTHER))
    {
-      DB_STATEMENT hStmt;
-      if (IsDatabaseRecordExist(hdb, _T("clusters"), _T("id"), m_id))
-         hStmt = DBPrepare(hdb, _T("UPDATE clusters SET cluster_type=?,zone_guid=? WHERE id=?"));
-      else
-         hStmt = DBPrepare(hdb, _T("INSERT INTO clusters (cluster_type,zone_guid,id) VALUES (?,?,?)"));
+      static const TCHAR *columns[] = { _T("cluster_type"), _T("zone_guid"), nullptr };
+      DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("clusters"), _T("id"), m_id, columns);
       if (hStmt != nullptr)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_dwClusterType);
@@ -541,16 +544,16 @@ void Cluster::statusPoll(PollerInfo *poller, ClientSession *pSession, UINT32 dwR
    UINT32 modified = 0;
 
    // Create polling list
-	SharedObjectArray<DataCollectionTarget> pollList(getChildList().size(), 16);
+	SharedObjectArray<NetObj> pollList(getChildList().size(), 16);
    readLockChildList();
    int i;
    for(i = 0; i < getChildList().size(); i++)
    {
       shared_ptr<NetObj> object = getChildList().getShared(i);
-      if ((object->getStatus() != STATUS_UNMANAGED) && object->isDataCollectionTarget())
+      if ((object->getStatus() != STATUS_UNMANAGED) && object->isPollable() && object->getAsPollable()->isStatusPollAvailable())
       {
-         static_cast<DataCollectionTarget*>(object.get())->lockForStatusPoll();
-         pollList.add(static_pointer_cast<DataCollectionTarget>(object));
+         object->getAsPollable()->lockForStatusPoll();
+         pollList.add(object);
       }
    }
    unlockChildList();
@@ -564,8 +567,9 @@ void Cluster::statusPoll(PollerInfo *poller, ClientSession *pSession, UINT32 dwR
 	bool allDown = true;
 	for(i = 0; i < pollList.size(); i++)
 	{
-	   DataCollectionTarget *object = pollList.get(i);
-		object->statusPollPollerEntry(poller, pSession, dwRqId);
+		NetObj *object = pollList.get(i);
+		poller->setStatus(_T("child poll"));
+		object->getAsPollable()->doStatusPoll(poller, pSession, dwRqId);
 		if ((object->getObjectClass() == OBJECT_NODE) && !static_cast<Node*>(object)->isDown())
 			allDown = false;
 	}

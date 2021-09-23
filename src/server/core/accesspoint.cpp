@@ -24,7 +24,7 @@
 /**
  * Default constructor
  */
-AccessPoint::AccessPoint() : super(), m_macAddr(MacAddress::ZERO)
+AccessPoint::AccessPoint() : super(Pollable::CONFIGURATION), m_macAddr(MacAddress::ZERO)
 {
 	m_nodeId = 0;
    m_index = 0;
@@ -39,7 +39,7 @@ AccessPoint::AccessPoint() : super(), m_macAddr(MacAddress::ZERO)
 /**
  * Constructor for creating new access point object
  */
-AccessPoint::AccessPoint(const TCHAR *name, uint32_t index, const MacAddress& macAddr) : super(name), m_macAddr(macAddr)
+AccessPoint::AccessPoint(const TCHAR *name, uint32_t index, const MacAddress& macAddr) : super(name, Pollable::CONFIGURATION), m_macAddr(macAddr)
 {
 	m_nodeId = 0;
    m_index = index;
@@ -74,6 +74,12 @@ bool AccessPoint::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    {
       DbgPrintf(2, _T("Cannot load common properties for access point object %d"), dwId);
       return false;
+   }
+
+   if (Pollable::loadFromDatabase(hdb, m_id))
+   {
+      if (static_cast<uint32_t>(time(nullptr) - m_configurationPollState.getLastCompleted()) < g_configurationPollingInterval)
+         m_runtimeFlags |= ODF_CONFIGURATION_POLL_PASSED;
    }
 
 	TCHAR query[256];
@@ -134,11 +140,8 @@ bool AccessPoint::saveToDatabase(DB_HANDLE hdb)
    // Lock object's access
    if (success && (m_modified & MODIFY_OTHER))
    {
-      DB_STATEMENT hStmt;
-      if (IsDatabaseRecordExist(hdb, _T("access_points"), _T("id"), m_id))
-         hStmt = DBPrepare(hdb, _T("UPDATE access_points SET mac_address=?,vendor=?,model=?,serial_number=?,node_id=?,ap_state=?,ap_index=? WHERE id=?"));
-      else
-         hStmt = DBPrepare(hdb, _T("INSERT INTO access_points (mac_address,vendor,model,serial_number,node_id,ap_state,ap_index,id) VALUES (?,?,?,?,?,?,?,?)"));
+      static const TCHAR *columns[] = { _T("mac_address"), _T("vendor"), _T("model"), _T("serial_number"), _T("node_id"), _T("ap_state"), _T("ap_index"), nullptr };
+      DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("access_points"), _T("id"), m_id, columns);
       if (hStmt != nullptr)
       {
          lockProperties();
@@ -526,7 +529,7 @@ void AccessPoint::statusPollFromController(ClientSession *session, UINT32 rqId, 
 }
 
 /**
- * Perform configuration poll on this data collection target. Default implementation do nothing.
+ * Perform configuration poll on this access point.
  */
 void AccessPoint::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId)
 {

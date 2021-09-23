@@ -41,7 +41,6 @@ uint32_t BindAgentTunnel(uint32_t tunnelId, uint32_t nodeId, uint32_t userId);
 uint32_t UnbindAgentTunnel(uint32_t nodeId, uint32_t userId);
 int64_t GetEventLogWriterQueueSize();
 int64_t GetEventProcessorQueueSize();
-void DiscoveryPoller(PollerInfo *poller);
 void RangeScanCallback(const InetAddress& addr, int32_t zoneUIN, const Node *proxy, uint32_t rtt, ServerConsole *console, void *context);
 void CheckRange(const InetAddressListElement& range, void(*callback)(const InetAddress&, int32_t, const Node *, uint32_t, ServerConsole *, void *), ServerConsole *console, void *context);
 void ShowSyncerStats(ServerConsole *console);
@@ -194,6 +193,117 @@ static EnumerationCallbackResult ShowDiscoveryQueueElement(const DiscoveredAddre
    ConsolePrintf(console, _T("%-40s %-10s %s\n"),
             address->ipAddr.toString(ipAddrText), sourceTypes[address->sourceType], nodeInfo);
    return _CONTINUE;
+}
+
+/**
+ * Poll command processing
+ */
+void ProcessPollCommand(const TCHAR *pArg, TCHAR *szBuffer, CONSOLE_CTX pCtx)
+{
+   pArg = ExtractWord(pArg, szBuffer);
+   if (szBuffer[0] != 0)
+   {
+      int pollType = 0;
+      if (IsCommand(_T("STATUS"), szBuffer, 1))
+      {
+         pollType = POLL_STATUS;
+      }
+      else if (IsCommand(_T("CONFIGURATION"), szBuffer, 1))
+      {
+         pollType = POLL_CONFIGURATION_NORMAL;
+      }
+      else if (IsCommand(_T("DISCOVERY"), szBuffer, 1))
+      {
+         pollType = POLL_DISCOVERY;
+      }
+      else if (IsCommand(_T("INSTANCE"), szBuffer, 1))
+      {
+         pollType = POLL_INSTANCE_DISCOVERY;
+      }
+      else if (IsCommand(_T("ROUTING-TABLE"), szBuffer, 1))
+      {
+         pollType = POLL_ROUTING_TABLE;
+      }
+      else if (IsCommand(_T("TOPOLOGY"), szBuffer, 1))
+      {
+         pollType = POLL_TOPOLOGY;
+      }
+
+      if (pollType > 0)
+      {
+         ExtractWord(pArg, szBuffer);
+         UINT32 id = _tcstoul(szBuffer, nullptr, 0);
+         if (id != 0)
+         {
+            shared_ptr<NetObj> object = FindObjectById(id);
+            if ((object != nullptr) && object->isPollable())
+            {
+               Pollable* pollableObject = object->getAsPollable();
+               switch(pollType)
+               {
+                  case POLL_STATUS:
+                  if (pollableObject->isStatusPollAvailable())
+                     ThreadPoolExecute(g_pollerThreadPool, pollableObject, &Pollable::doForcedStatusPoll, RegisterPoller(PollerType::STATUS, object));
+                  break;
+                  case POLL_CONFIGURATION_NORMAL:
+                     if (pollableObject->isConfigurationPollAvailable())
+                        ThreadPoolExecute(g_pollerThreadPool, pollableObject, &Pollable::doForcedConfigurationPoll, RegisterPoller(PollerType::CONFIGURATION, object));
+                     break;
+                  case POLL_TOPOLOGY:
+                     if (pollableObject->isTopologyPollAvailable())
+                     {
+                        ThreadPoolExecute(g_pollerThreadPool, pollableObject, &Pollable::doForcedTopologyPoll, RegisterPoller(PollerType::TOPOLOGY, object));
+                     }
+                     else
+                     {
+                        ConsolePrintf(pCtx, _T("ERROR: this poll type can only be initiated for node objects\n\n"));
+                     }
+                     break;
+                  case POLL_ROUTING_TABLE:
+                     if (pollableObject->isRoutingTablePollAvailable())
+                     {
+                        ThreadPoolExecute(g_pollerThreadPool, pollableObject, &Pollable::doForcedRoutingTablePoll, RegisterPoller(PollerType::ROUTING_TABLE, object));
+                     }
+                     else
+                     {
+                        ConsolePrintf(pCtx, _T("ERROR: this poll type can only be initiated for node objects\n\n"));
+                     }
+                     break;
+                  case POLL_INSTANCE_DISCOVERY:
+                     if (pollableObject->isInstanceDiscoveryPollAvailable())
+                        ThreadPoolExecute(g_pollerThreadPool, pollableObject, &Pollable::doForcedInstanceDiscoveryPoll, RegisterPoller(PollerType::INSTANCE_DISCOVERY, object));
+                     break;
+                  case POLL_DISCOVERY:
+                     if (pollableObject->isDiscoveryPollAvailable())
+                     {
+                        ThreadPoolExecute(g_pollerThreadPool, pollableObject, &Pollable::doDiscoveryPoll, RegisterPoller(PollerType::DISCOVERY, object));
+                     }
+                     else
+                     {
+                        ConsolePrintf(pCtx, _T("ERROR: this poll type can only be initiated for node objects\n\n"));
+                     }
+                     break;
+               }
+            }
+            else
+            {
+               ConsolePrintf(pCtx, _T("ERROR: data collection target with ID %d does not exist\n\n"), id);
+            }
+         }
+         else
+         {
+            ConsoleWrite(pCtx, _T("ERROR: Invalid or missing object ID\n\n"));
+         }
+      }
+      else
+      {
+         ConsoleWrite(pCtx, _T("Usage POLL [CONFIGURATION|DISCOVERY|STATUS|TOPOLOGY|INSTANCE|ROUTING-TABLE] <object>\n"));
+      }
+   }
+   else
+   {
+      ConsoleWrite(pCtx, _T("Usage POLL [CONFIGURATION|DISCOVERY|STATUS|TOPOLOGY|INSTANCE|ROUTING-TABLE] <node>\n"));
+   }
 }
 
 /**
@@ -494,157 +604,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
    }
    else if (IsCommand(_T("POLL"), szBuffer, 2))
    {
-      pArg = ExtractWord(pArg, szBuffer);
-      if (szBuffer[0] != 0)
-      {
-         int pollType;
-         if (IsCommand(_T("CONFIGURATION"), szBuffer, 1))
-         {
-            pollType = 1;
-         }
-         else if (IsCommand(_T("DISCOVERY"), szBuffer, 1))
-         {
-            pollType = 6;
-         }
-         else if (IsCommand(_T("INSTANCE"), szBuffer, 1))
-         {
-            pollType = 5;
-         }
-         else if (IsCommand(_T("ROUTING-TABLE"), szBuffer, 1))
-         {
-            pollType = 4;
-         }
-         else if (IsCommand(_T("STATUS"), szBuffer, 1))
-         {
-            pollType = 2;
-         }
-         else if (IsCommand(_T("TOPOLOGY"), szBuffer, 1))
-         {
-            pollType = 3;
-         }
-         else
-         {
-            pollType = 0;
-         }
-
-         if (pollType > 0)
-         {
-            ExtractWord(pArg, szBuffer);
-            UINT32 id = _tcstoul(szBuffer, nullptr, 0);
-            if (id != 0)
-            {
-               shared_ptr<NetObj> object = FindObjectById(id);
-               if ((object != nullptr) && (object->isDataCollectionTarget() || object->isPollable()))
-               {
-                  switch(pollType)
-                  {
-                     case 1:
-                        if (object->getObjectClass() == OBJECT_BUSINESS_SERVICE)
-                        {
-                        static_cast<BusinessService*>(object.get())->startForcedConfigurationPoll();
-                        ThreadPoolExecute(g_pollerThreadPool, static_pointer_cast<BusinessService>(object),
-                                 &BusinessService::configurationPollWorkerEntry,
-                                 RegisterPoller(PollerType::CONFIGURATION, object));
-                        }
-                        else
-                        {
-                        static_cast<DataCollectionTarget*>(object.get())->startForcedConfigurationPoll();
-                        ThreadPoolExecute(g_pollerThreadPool, static_pointer_cast<DataCollectionTarget>(object),
-                                 &DataCollectionTarget::configurationPollWorkerEntry,
-                                 RegisterPoller(PollerType::CONFIGURATION, object));
-                        }
-                        break;
-                     case 2:
-                        if (object->getObjectClass() == OBJECT_BUSINESS_SERVICE)
-                        {
-                        static_cast<BusinessService*>(object.get())->startForcedStatusPoll();
-                        ThreadPoolExecute(g_pollerThreadPool, static_pointer_cast<BusinessService>(object),
-                                 &BusinessService::statusPollWorkerEntry,
-                                 RegisterPoller(PollerType::STATUS, object));
-                        }
-                        else
-                        {
-                        static_cast<DataCollectionTarget*>(object.get())->startForcedStatusPoll();
-                        ThreadPoolExecute(g_pollerThreadPool, static_pointer_cast<DataCollectionTarget>(object),
-                                 &DataCollectionTarget::statusPollWorkerEntry,
-                                 RegisterPoller(PollerType::STATUS, object));
-                        }
-                        break;
-                     case 3:
-                        if (object->getObjectClass() == OBJECT_NODE)
-                        {
-                           static_cast<Node*>(object.get())->startForcedTopologyPoll();
-                           ThreadPoolExecute(g_pollerThreadPool, static_pointer_cast<Node>(object),
-                                    &Node::topologyPollWorkerEntry,
-                                    RegisterPoller(PollerType::TOPOLOGY, object));
-                        }
-                        else
-                        {
-                           ConsolePrintf(pCtx, _T("ERROR: this poll type can only be initiated for node objects\n\n"));
-                        }
-                        break;
-                     case 4:
-                        if (object->getObjectClass() == OBJECT_NODE)
-                        {
-                           static_cast<Node*>(object.get())->startForcedRoutePoll();
-                           ThreadPoolExecute(g_pollerThreadPool, static_pointer_cast<Node>(object),
-                                    &Node::routingTablePollWorkerEntry,
-                                    RegisterPoller(PollerType::ROUTING_TABLE, object));
-                        }
-                        else
-                        {
-                           ConsolePrintf(pCtx, _T("ERROR: this poll type can only be initiated for node objects\n\n"));
-                        }
-                        break;
-                     case 5:
-                        if (object->getObjectClass() == OBJECT_BUSINESS_SERVICE)
-                        {
-                        static_cast<BusinessServicePrototype*>(object.get())->startForcedDiscoveryPoll();
-                        ThreadPoolExecute(g_pollerThreadPool, static_pointer_cast<BusinessServicePrototype>(object),
-                                 &BusinessServicePrototype::instanceDiscoveryPollWorkerEntry,
-                                 RegisterPoller(PollerType::INSTANCE_DISCOVERY, object));
-                        }
-                        else
-                        {
-                        static_cast<DataCollectionTarget*>(object.get())->startForcedInstancePoll();
-                        ThreadPoolExecute(g_pollerThreadPool, static_pointer_cast<DataCollectionTarget>(object),
-                                 &DataCollectionTarget::instanceDiscoveryPollWorkerEntry,
-                                 RegisterPoller(PollerType::INSTANCE_DISCOVERY, object));
-                        }
-
-                        break;
-                     case 6:
-                        if (object->getObjectClass() == OBJECT_NODE)
-                        {
-                           static_cast<Node*>(object.get())->startForcedDiscoveryPoll();
-                           ThreadPoolExecute(g_pollerThreadPool, DiscoveryPoller, RegisterPoller(PollerType::DISCOVERY, object));
-                        }
-                        else
-                        {
-                           ConsolePrintf(pCtx, _T("ERROR: this poll type can only be initiated for node objects\n\n"));
-                        }
-                        break;
-                  }
-               }
-               else
-               {
-                  ConsolePrintf(pCtx, _T("ERROR: data collection target with ID %d does not exist\n\n"), id);
-               }
-            }
-            else
-            {
-               ConsoleWrite(pCtx, _T("ERROR: Invalid or missing object ID\n\n"));
-            }
-         }
-         else
-         {
-            ConsoleWrite(pCtx, _T("Usage POLL [CONFIGURATION|DISCOVERY|STATUS|TOPOLOGY|INSTANCE|ROUTING-TABLE] <object>\n"));
-         }
-      }
-      else
-      {
-         ConsoleWrite(pCtx, _T("Usage POLL [CONFIGURATION|DISCOVERY|STATUS|TOPOLOGY|INSTANCE|ROUTING-TABLE] <node>\n"));
-      }
+      ProcessPollCommand(pArg, szBuffer, pCtx);
    }
    else if (IsCommand(_T("SCAN"), szBuffer, 4))
    {

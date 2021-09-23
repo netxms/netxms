@@ -57,11 +57,9 @@ extern ThreadPool *g_pollerThreadPool;
 /**
  * Default constructor
  */
-DataCollectionTarget::DataCollectionTarget() : super(), m_statusPollState(_T("status")),
-         m_configurationPollState(_T("configuration")), m_instancePollState(_T("instance")),
+DataCollectionTarget::DataCollectionTarget(uint32_t pollableFlags) : super(), Pollable(this, pollableFlags | Pollable::INSTANCE_DISCOVERY ),
          m_deletedItems(0, 32), m_deletedTables(0, 32), m_geoAreas(0, 16), m_proxyLoadFactor(0)
 {
-   m_hPollerMutex = MutexCreate();
    m_geoLocationControlMode = GEOLOCATION_NO_CONTROL;
    m_geoLocationRestrictionsViolated = false;
    m_instanceDiscoveryPending = false;
@@ -70,22 +68,12 @@ DataCollectionTarget::DataCollectionTarget() : super(), m_statusPollState(_T("st
 /**
  * Constructor for creating new data collection capable objects
  */
-DataCollectionTarget::DataCollectionTarget(const TCHAR *name) : super(name), m_statusPollState(_T("status")),
-         m_configurationPollState(_T("configuration")), m_instancePollState(_T("instance")),
+DataCollectionTarget::DataCollectionTarget(const TCHAR *name, uint32_t pollableFlags) : super(name), Pollable(this, pollableFlags | Pollable::INSTANCE_DISCOVERY ),
          m_deletedItems(0, 32), m_deletedTables(0, 32), m_geoAreas(0, 16), m_proxyLoadFactor(0)
 {
-   m_hPollerMutex = MutexCreate();
    m_geoLocationControlMode = GEOLOCATION_NO_CONTROL;
    m_geoLocationRestrictionsViolated = false;
    m_instanceDiscoveryPending = false;
-}
-
-/**
- * Destructor
- */
-DataCollectionTarget::~DataCollectionTarget()
-{
-   MutexDestroy(m_hPollerMutex);
 }
 
 /**
@@ -185,17 +173,15 @@ UINT32 DataCollectionTarget::modifyFromMessageInternal(NXCPMessage *request)
 bool DataCollectionTarget::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
 {
    TCHAR query[512];
-   _sntprintf(query, 512, _T("SELECT config_poll_timestamp,instance_poll_timestamp,geolocation_ctrl_mode,geo_areas FROM dc_targets WHERE id=%u"), m_id);
+   _sntprintf(query, 512, _T("SELECT geolocation_ctrl_mode,geo_areas FROM dc_targets WHERE id=%u"), m_id);
    DB_RESULT hResult = DBSelect(hdb, query);
    if (hResult == nullptr)
       return false;
 
-   m_configurationPollState.setLastCompleted(DBGetFieldLong(hResult, 0, 0));
-   m_instancePollState.setLastCompleted(DBGetFieldLong(hResult, 0, 1));
-   m_geoLocationControlMode = static_cast<GeoLocationControlMode>(DBGetFieldLong(hResult, 0, 2));
+   m_geoLocationControlMode = static_cast<GeoLocationControlMode>(DBGetFieldLong(hResult, 0, 0));
 
    TCHAR areas[2000];
-   DBGetField(hResult, 0, 3, areas, 2000);
+   DBGetField(hResult, 0, 1, areas, 2000);
    Trim(areas);
    if (*areas != 0)
    {
@@ -218,10 +204,6 @@ bool DataCollectionTarget::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
    }
 
    DBFreeResult(hResult);
-
-   if (static_cast<uint32_t>(time(nullptr) - m_configurationPollState.getLastCompleted()) < g_configurationPollingInterval)
-      m_runtimeFlags |= ODF_CONFIGURATION_POLL_PASSED;
-
    return true;
 }
 
@@ -234,7 +216,7 @@ bool DataCollectionTarget::saveToDatabase(DB_HANDLE hdb)
 
    if (success && (m_modified & MODIFY_DC_TARGET))
    {
-      static const TCHAR *columns[] = { _T("config_poll_timestamp"), _T("instance_poll_timestamp"), _T("geolocation_ctrl_mode"), _T("geo_areas"), nullptr };
+      static const TCHAR *columns[] = {_T("geolocation_ctrl_mode"), _T("geo_areas"), nullptr };
       DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("dc_targets"), _T("id"), m_id, columns);
       if (hStmt != nullptr)
       {
@@ -248,11 +230,9 @@ bool DataCollectionTarget::saveToDatabase(DB_HANDLE hdb)
          unlockProperties();
          areas.shrink();
 
-         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_configurationPollState.getLastCompleted()));
-         DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_instancePollState.getLastCompleted()));
-         DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, static_cast<int32_t>(m_geoLocationControlMode));
-         DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, areas, DB_BIND_STATIC);
-         DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, m_id);
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, static_cast<int32_t>(m_geoLocationControlMode));
+         DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, areas, DB_BIND_STATIC);
+         DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_id);
          success = DBExecute(hStmt);
          DBFreeStatement(hStmt);
       }
@@ -1005,57 +985,15 @@ DataCollectionError DataCollectionTarget::getInternalTable(const TCHAR *name, sh
  */
 DataCollectionError DataCollectionTarget::getInternalMetric(const TCHAR *name, TCHAR *buffer, size_t size)
 {
-   DataCollectionError error = DCE_SUCCESS;
+   if (isPollable())
+   {
+      DataCollectionError rc = getAsPollable()->getInternalMetric(name, buffer, size);
+      if (rc != DCE_NOT_SUPPORTED)
+		   return rc;
+   }
 
-   if (!_tcsicmp(name, _T("PollTime.Configuration.Average")))
-   {
-      _sntprintf(buffer, size, INT64_FMT, m_configurationPollState.getTimerAverage());
-   }
-   else if (!_tcsicmp(name, _T("PollTime.Configuration.Last")))
-   {
-      _sntprintf(buffer, size, INT64_FMT, m_configurationPollState.getTimerLast());
-   }
-   else if (!_tcsicmp(name, _T("PollTime.Configuration.Max")))
-   {
-      _sntprintf(buffer, size, INT64_FMT, m_configurationPollState.getTimerMax());
-   }
-   else if (!_tcsicmp(name, _T("PollTime.Configuration.Min")))
-   {
-      _sntprintf(buffer, size, INT64_FMT, m_configurationPollState.getTimerMin());
-   }
-   else if (!_tcsicmp(name, _T("PollTime.Instance.Average")))
-   {
-      _sntprintf(buffer, size, INT64_FMT, m_instancePollState.getTimerAverage());
-   }
-   else if (!_tcsicmp(name, _T("PollTime.Instance.Last")))
-   {
-      _sntprintf(buffer, size, INT64_FMT, m_instancePollState.getTimerLast());
-   }
-   else if (!_tcsicmp(name, _T("PollTime.Instance.Max")))
-   {
-      _sntprintf(buffer, size, INT64_FMT, m_instancePollState.getTimerMax());
-   }
-   else if (!_tcsicmp(name, _T("PollTime.Instance.Min")))
-   {
-      _sntprintf(buffer, size, INT64_FMT, m_instancePollState.getTimerMin());
-   }
-   else if (!_tcsicmp(name, _T("PollTime.Status.Average")))
-   {
-      _sntprintf(buffer, size, INT64_FMT, m_statusPollState.getTimerAverage());
-   }
-   else if (!_tcsicmp(name, _T("PollTime.Status.Last")))
-   {
-      _sntprintf(buffer, size, INT64_FMT, m_statusPollState.getTimerLast());
-   }
-   else if (!_tcsicmp(name, _T("PollTime.Status.Max")))
-   {
-      _sntprintf(buffer, size, INT64_FMT, m_statusPollState.getTimerMax());
-   }
-   else if (!_tcsicmp(name, _T("PollTime.Status.Min")))
-   {
-      _sntprintf(buffer, size, INT64_FMT, m_statusPollState.getTimerMin());
-   }
-   else if (!_tcsicmp(name, _T("Status")))
+   DataCollectionError error = DCE_SUCCESS;
+   if (!_tcsicmp(name, _T("Status")))
    {
       _sntprintf(buffer, size, _T("%d"), m_status);
    }
@@ -1844,10 +1782,9 @@ void DataCollectionTarget::leaveMaintenanceMode(uint32_t userId)
 
    if (forcePoll)
    {
-      startForcedStatusPoll();
       TCHAR threadKey[32];
       _sntprintf(threadKey, 32, _T("POLL_%u"), getId());
-      ThreadPoolExecuteSerialized(g_pollerThreadPool, threadKey, self(), &DataCollectionTarget::statusPollWorkerEntry, RegisterPoller(PollerType::STATUS, self()));
+      ThreadPoolExecuteSerialized(g_pollerThreadPool, threadKey, getAsPollable(), &Pollable::doForcedStatusPoll, RegisterPoller(PollerType::STATUS, self()));
    }
 }
 
@@ -2152,80 +2089,23 @@ json_t *DataCollectionTarget::toJson()
 }
 
 /**
- * Entry point for status poll worker thread
+ * Lock object for instance discovery poll
  */
-void DataCollectionTarget::statusPollWorkerEntry(PollerInfo *poller)
+bool DataCollectionTarget::lockForInstanceDiscoveryPoll()
 {
-   statusPollWorkerEntry(poller, nullptr, 0);
-}
-
-/**
- * Entry point for status poll worker thread
- */
-void DataCollectionTarget::statusPollWorkerEntry(PollerInfo *poller, ClientSession *session, UINT32 rqId)
-{
-   poller->startExecution();
-   statusPoll(poller, session, rqId);
-   delete poller;
-}
-
-/**
- * Entry point for second level status poll (called by parent object)
- */
-void DataCollectionTarget::statusPollPollerEntry(PollerInfo *poller, ClientSession *session, UINT32 rqId)
-{
-   poller->setStatus(_T("child poll"));
-   statusPoll(poller, session, rqId);
-}
-
-/**
- * Perform status poll on this data collection target. Default implementation do nothing.
- */
-void DataCollectionTarget::statusPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId)
-{
-}
-
-/**
- * Entry point for configuration poll worker thread
- */
-void DataCollectionTarget::configurationPollWorkerEntry(PollerInfo *poller)
-{
-   configurationPollWorkerEntry(poller, nullptr, 0);
-}
-
-/**
- * Entry point for configuration poll worker thread
- */
-void DataCollectionTarget::configurationPollWorkerEntry(PollerInfo *poller, ClientSession *session, UINT32 rqId)
-{
-   poller->startExecution();
-   configurationPoll(poller, session, rqId);
-   delete poller;
-}
-
-/**
- * Perform configuration poll on this data collection target. Default implementation do nothing.
- */
-void DataCollectionTarget::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId)
-{
-}
-
-/**
- * Entry point for instance discovery poll worker thread
- */
-void DataCollectionTarget::instanceDiscoveryPollWorkerEntry(PollerInfo *poller)
-{
-   instanceDiscoveryPollWorkerEntry(poller, nullptr, 0);
-}
-
-/**
- * Entry point for instance discovery poll worker thread
- */
-void DataCollectionTarget::instanceDiscoveryPollWorkerEntry(PollerInfo *poller, ClientSession *session, UINT32 requestId)
-{
-   poller->startExecution();
-   instanceDiscoveryPoll(poller, session, requestId);
-   delete poller;
+   bool success = false;
+   lockProperties();
+   if (!m_isDeleted && !m_isDeleteInitiated &&
+       (m_status != STATUS_UNMANAGED) &&
+       (!(m_flags & DCF_DISABLE_CONF_POLL)) &&
+       (m_runtimeFlags & ODF_CONFIGURATION_POLL_PASSED) &&
+       (m_instanceDiscoveryPending || (static_cast<uint32_t>(time(nullptr) - m_instancePollState.getLastCompleted()) > g_instancePollingInterval)))
+   {
+      success = m_instancePollState.schedule();
+      m_instanceDiscoveryPending = false;
+   }
+   unlockProperties();
+   return success;
 }
 
 /**
@@ -2628,16 +2508,6 @@ void DataCollectionTarget::calculateProxyLoad()
    unlockDciAccess();
 
    m_proxyLoadFactor.store(loadFactor);
-}
-
-/**
- * Reset poll timers
- */
-void DataCollectionTarget::resetPollTimers()
-{
-   m_statusPollState.resetTimer();
-   m_configurationPollState.resetTimer();
-   m_instancePollState.resetTimer();
 }
 
 /**

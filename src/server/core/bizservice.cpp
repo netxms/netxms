@@ -351,43 +351,39 @@ bool BaseBusinessService::saveToDatabase(DB_HANDLE hdb)
 /**
  * Constructor for new service object
  */
-BusinessService::BusinessService() : m_statusPollState(_T("status")), m_configurationPollState(_T("configuration"))
+BusinessService::BusinessService() : Pollable(this, Pollable::STATUS | Pollable::CONFIGURATION)
 {
-   m_hPollerMutex = MutexCreate();
 }
 
 /**
  * Constructor for new service object
  */
-BusinessService::BusinessService(const TCHAR *name) : BaseBusinessService(name), m_statusPollState(_T("status")), m_configurationPollState(_T("configuration"))
+BusinessService::BusinessService(const TCHAR *name) : BaseBusinessService(name), Pollable(this, Pollable::STATUS | Pollable::CONFIGURATION)
 {
-   m_hPollerMutex = MutexCreate();
 }
 
 /**
  * Create new business service from prototype
  */
-BusinessService::BusinessService(BaseBusinessService *prototype, const TCHAR *name, const TCHAR *instance) : BaseBusinessService(prototype, name, instance), m_statusPollState(_T("status")), m_configurationPollState(_T("configuration"))
+BusinessService::BusinessService(BaseBusinessService *prototype, const TCHAR *name, const TCHAR *instance) : BaseBusinessService(prototype, name, instance), Pollable(this, Pollable::STATUS | Pollable::CONFIGURATION)
 {
-   m_hPollerMutex = MutexCreate();
 }
 
 /**
- * Destructor
+ * Load Business service from database
  */
-BusinessService::~BusinessService()
+bool BusinessService::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
 {
-   MutexDestroy(m_hPollerMutex);
-}
+   if (!super::loadFromDatabase(hdb, id))
+      return false;
 
-/**
- * Entry point for status poll worker thread
- */
-void BusinessService::statusPollWorkerEntry(PollerInfo *poller, ClientSession *session, UINT32 rqId)
-{
-   poller->startExecution();
-   statusPoll(poller, session, rqId);
-   delete poller;
+   if (Pollable::loadFromDatabase(hdb, m_id))
+   {
+      if (static_cast<uint32_t>(time(nullptr) - m_configurationPollState.getLastCompleted()) < g_configurationPollingInterval)
+         m_runtimeFlags |= ODF_CONFIGURATION_POLL_PASSED;
+   }
+
+   return true;
 }
 
 /**
@@ -517,16 +513,6 @@ void BusinessService::addChildTicket(BusinessServiceTicketData *data)
       DBExecute(hStmt);
       DBFreeStatement(hStmt);
    }
-}
-
-/**
- * Configuration poll worker entry
- */
-void BusinessService::configurationPollWorkerEntry(PollerInfo *poller, ClientSession *session, UINT32 rqId)
-{
-   poller->startExecution();
-   configurationPoll(poller, session, rqId);
-   delete poller;
 }
 
 /**
@@ -678,7 +664,7 @@ void BusinessService::validateAutomaticDCIChecks()
 }
 
 /**
- * Lock node for status poll
+ * Lock business service for status poll
  */
 bool BusinessService::lockForStatusPoll()
 {
@@ -694,7 +680,7 @@ bool BusinessService::lockForStatusPoll()
 }
 
 /**
- * Lock object for configuration poll
+ * Lock business service for configuration poll
  */
 bool BusinessService::lockForConfigurationPoll()
 {
@@ -719,7 +705,7 @@ bool BusinessService::lockForConfigurationPoll()
 /**
  * Business service prototype constructor
  */
-BusinessServicePrototype::BusinessServicePrototype() : m_discoveryPollState(_T("discovery"))
+BusinessServicePrototype::BusinessServicePrototype() : Pollable(this, Pollable::INSTANCE_DISCOVERY)
 {
    m_pCompiledInstanceDiscoveryFilterScript = nullptr;
 }
@@ -727,7 +713,7 @@ BusinessServicePrototype::BusinessServicePrototype() : m_discoveryPollState(_T("
 /**
  * Business service prototype constructor
  */
-BusinessServicePrototype::BusinessServicePrototype(const TCHAR *name, uint32_t instanceDiscoveryMethod) : BaseBusinessService(name), m_discoveryPollState(_T("discovery"))
+BusinessServicePrototype::BusinessServicePrototype(const TCHAR *name, uint32_t instanceDiscoveryMethod) : BaseBusinessService(name), Pollable(this, Pollable::INSTANCE_DISCOVERY)
 {
    m_instanceDiscoveryMethod = instanceDiscoveryMethod;
    m_pCompiledInstanceDiscoveryFilterScript = nullptr;
@@ -748,6 +734,8 @@ bool BusinessServicePrototype::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
 {
    if (!super::loadFromDatabase(hdb, id))
       return false;
+
+   Pollable::loadFromDatabase(hdb, m_id);
 
    delete_and_null(m_pCompiledInstanceDiscoveryFilterScript);
    compileInstanceDiscoveryFilterScript();
@@ -946,12 +934,29 @@ unique_ptr<SharedObjectArray<BusinessService>> BusinessServicePrototype::getServ
  */
 void BusinessServicePrototype::instanceDiscoveryPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId)
 {
+   lockProperties();
+   if (m_isDeleteInitiated || IsShutdownInProgress())
+   {
+      m_instancePollState.complete(0);
+      unlockProperties();
+      return;
+   }
+   unlockProperties();
+
+   poller->setStatus(_T("wait for lock"));
+   pollerLock(instance);
+
+   if (IsShutdownInProgress())
+   {
+      pollerUnlock();
+      return;
+   }
+
    m_pollRequestor = session;
    m_pollRequestId = rqId;
 
    sendPollerMsg(_T("Started instance discovery poll for business service prototype \"%s\"\r\n"), m_name);
 
-   poller->startExecution();
    unique_ptr<StringMap> instances = getInstances();
    sendPollerMsg(_T("   Found %d instances\r\n"), instances->size());
    unique_ptr<SharedObjectArray<BusinessService>> services = getServices();
@@ -986,21 +991,20 @@ void BusinessServicePrototype::instanceDiscoveryPoll(PollerInfo *poller, ClientS
       service->unhide();
       sendPollerMsg(_T("   Business service \"%s\" created\r\n"), service->getName());
    }
-
-   delete poller;
+   pollerUnlock();
 }
 
 /**
- * Lock object for configuration poll
+ * Lock object for instance discovery poll
  */
-bool BusinessServicePrototype::lockForDiscoveryPoll()
+bool BusinessServicePrototype::lockForInstanceDiscoveryPoll()
 {
    bool success = false;
 
    lockProperties();
-   if (static_cast<uint32_t>(time(nullptr) - m_discoveryPollState.getLastCompleted()) > g_discoveryPollingInterval)
+   if (static_cast<uint32_t>(time(nullptr) - m_instancePollState.getLastCompleted()) > g_instancePollingInterval)
    {
-      success = m_discoveryPollState.schedule();
+      success = m_instancePollState.schedule();
    }
    unlockProperties();
    return success;

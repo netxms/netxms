@@ -98,6 +98,8 @@
 #define POLL_TOPOLOGY               4
 #define POLL_CONFIGURATION_NORMAL   5
 #define POLL_INSTANCE_DISCOVERY     6
+#define POLL_ROUTING_TABLE          7
+#define POLL_DISCOVERY              8
 
 /**
  * Object types

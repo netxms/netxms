@@ -537,7 +537,6 @@ private:
    MUTEX m_mutexSendAlarms;
    MUTEX m_mutexSendActions;
 	MUTEX m_mutexSendAuditLog;
-   MUTEX m_mutexPollerInit;
 	InetAddress m_clientAddr;
 	TCHAR m_workstation[64];       // IP address or name of connected host in textual form
    TCHAR m_webServerAddress[64];  // IP address or name of web server for web sessions
@@ -579,8 +578,6 @@ private:
    bool readSocket();
    MessageReceiverResult readMessage(bool allowSocketRead);
    void finalize();
-   //void pollerThread(shared_ptr<DataCollectionTarget> object, int pollType, uint32_t requestId);
-   void pollerThread(shared_ptr<NetObj> object, int pollType, uint32_t requestId);
 
    void processRequest(NXCPMessage *request);
    void processFileTransferMessage(NXCPMessage *msg);

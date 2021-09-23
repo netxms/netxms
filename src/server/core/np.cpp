@@ -218,8 +218,7 @@ shared_ptr<Node> NXCORE_EXPORTABLE PollNewNode(NewNodeData *newNodeData)
 
 	if (newNodeData->doConfPoll)
    {
-	   node->startForcedConfigurationPoll();
-	   node->configurationPollWorkerEntry(RegisterPoller(PollerType::CONFIGURATION, node, true));
+      node->getAsPollable()->doForcedConfigurationPoll(RegisterPoller(PollerType::CONFIGURATION, node));
    }
 
    node->unhide();

@@ -24,7 +24,7 @@
 /**
  * Default empty Sensor class constructior
  */
-Sensor::Sensor() : super()
+Sensor::Sensor() : super(Pollable::STATUS | Pollable::CONFIGURATION)
 {
    m_proxyNodeId = 0;
 	m_flags = 0;
@@ -48,7 +48,7 @@ Sensor::Sensor() : super()
 /**
  * Constructor with all fields for Sensor class
  */
-Sensor::Sensor(const TCHAR *name, const NXCPMessage *request) : super(name)
+Sensor::Sensor(const TCHAR *name, const NXCPMessage *request) : super(Pollable::STATUS | Pollable::CONFIGURATION)
 {
    m_runtimeFlags |= ODF_CONFIGURATION_POLL_PENDING;
    m_flags = request->getFieldAsUInt32(VID_SENSOR_FLAGS);
@@ -196,6 +196,12 @@ bool Sensor::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
       return false;
    }
 
+   if (Pollable::loadFromDatabase(hdb, m_id))
+   {
+      if (static_cast<uint32_t>(time(nullptr) - m_configurationPollState.getLastCompleted()) < g_configurationPollingInterval)
+         m_runtimeFlags |= ODF_CONFIGURATION_POLL_PASSED;
+   }
+
 	TCHAR query[512];
 	_sntprintf(query, 512, _T("SELECT mac_address,device_class,vendor,communication_protocol,xml_config,serial_number,device_address,")
                           _T("meta_type,description,last_connection_time,frame_count,signal_strenght,signal_noise,frequency,proxy_node,xml_reg_config FROM sensors WHERE id=%d"), m_id);
@@ -238,6 +244,7 @@ bool Sensor::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
 bool Sensor::saveToDatabase(DB_HANDLE hdb)
 {
    bool success = super::saveToDatabase(hdb);
+
    if (success && (m_modified & MODIFY_SENSOR_PROPERTIES))
    {
       DB_STATEMENT hStmt;

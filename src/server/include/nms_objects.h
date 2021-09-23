@@ -205,16 +205,13 @@ template class NXCORE_EXPORTABLE shared_ptr<AgentConnectionEx>;
  */
 enum class PollerType
 {
-   STATUS = 0,
-   CONFIGURATION = 1,
-   INSTANCE_DISCOVERY = 2,
-   ROUTING_TABLE = 3,
-   DISCOVERY = 4,
-   BUSINESS_SERVICE = 5,
-   CONDITION = 6,
-   TOPOLOGY = 7,
-   ZONE_HEALTH = 8,
-   ICMP = 9
+   STATUS               = 0,
+   CONFIGURATION        = 1,
+   INSTANCE_DISCOVERY   = 2,
+   ROUTING_TABLE        = 3,
+   DISCOVERY            = 4,
+   TOPOLOGY             = 5,
+   ICMP                 = 6
 };
 
 /**
@@ -227,7 +224,7 @@ class NXCORE_EXPORTABLE PollerInfo
 private:
    PollerType m_type;
    shared_ptr<NetObj> m_object;
-   bool m_objectCreation;
+   bool m_objectCreation; //FIXME: this member is never used
    TCHAR m_status[128];
 
    PollerInfo(PollerType type, const shared_ptr<NetObj>& object, bool objectCreation) : m_object(object)
@@ -941,11 +938,258 @@ template class NXCORE_EXPORTABLE ObjectArray<ObjectUrl>;
 #endif
 
 /**
+ * Poll state information
+ */
+class NXCORE_EXPORTABLE PollState
+{
+private:
+   VolatileCounter m_pollerCount;
+   time_t m_lastCompleted;
+   ManualGauge64 *m_timer;
+   MUTEX m_lock;
+
+public:
+   PollState(const TCHAR *name)
+   {
+      m_pollerCount = 0;
+      m_lastCompleted = TIMESTAMP_NEVER;
+      m_timer = new ManualGauge64(name, 1, 1000);
+      m_lock = MutexCreateFast();
+   }
+
+   ~PollState()
+   {
+      delete m_timer;
+      MutexDestroy(m_lock);
+   }
+
+   /**
+    * Check if poll is pending
+    */
+   bool isPending()
+   {
+      bool pending = (InterlockedIncrement(&m_pollerCount) > 1);
+      InterlockedDecrement(&m_pollerCount);
+      return pending;
+   }
+
+   /**
+    * Schedule execution if there are no active/queued pollers
+    */
+   bool schedule()
+   {
+      if (InterlockedIncrement(&m_pollerCount) > 1)
+      {
+         InterlockedDecrement(&m_pollerCount);
+         return false;
+      }
+      return true;
+   }
+
+   /**
+    * Notify about manual poller start
+    */
+   void manualStart()
+   {
+      InterlockedIncrement(&m_pollerCount);
+   }
+
+   /**
+    * Notify about poller completion
+    */
+   void complete(int64_t elapsed)
+   {
+      MutexLock(m_lock);
+      m_lastCompleted = time(nullptr);
+      m_timer->update(elapsed);
+      InterlockedDecrement(&m_pollerCount);
+      MutexUnlock(m_lock);
+   }
+
+   /**
+    * Set last completed time (intended only for reading from database)
+    */
+   void setLastCompleted(time_t lastCompleted)
+   {
+      m_lastCompleted = lastCompleted;
+   }
+
+   /**
+    * Reset poll timer
+    */
+   void resetTimer()
+   {
+      MutexLock(m_lock);
+      m_timer->reset();
+      MutexUnlock(m_lock);
+   }
+
+   /**
+    * Get timestamp of last completed poll
+    */
+   time_t getLastCompleted()
+   {
+      MutexLock(m_lock);
+      time_t t = m_lastCompleted;
+      MutexUnlock(m_lock);
+      return t;
+   }
+
+   /**
+    * Get timer average value
+    */
+   int64_t getTimerAverage()
+   {
+      MutexLock(m_lock);
+      int64_t v = static_cast<int64_t>(m_timer->getAverage());
+      MutexUnlock(m_lock);
+      return v;
+   }
+
+   /**
+    * Get timer minimum value
+    */
+   int64_t getTimerMin()
+   {
+      MutexLock(m_lock);
+      int64_t v = m_timer->getMin();
+      MutexUnlock(m_lock);
+      return v;
+   }
+
+   /**
+    * Get timer maximum value
+    */
+   int64_t getTimerMax()
+   {
+      MutexLock(m_lock);
+      int64_t v = m_timer->getMax();
+      MutexUnlock(m_lock);
+      return v;
+   }
+
+   /**
+    * Get last timer value
+    */
+   int64_t getTimerLast()
+   {
+      MutexLock(m_lock);
+      int64_t v = m_timer->getCurrent();
+      MutexUnlock(m_lock);
+      return v;
+   }
+};
+
+/**
+ * Generic pollable class. Intended to be used only as secondary class in multi-inheritance with primary class derived from NetObj.
+ */
+class NXCORE_EXPORTABLE Pollable
+{
+protected:
+   NetObj* m_this;
+
+   uint32_t m_acceptablePolls;
+   PollState m_statusPollState;
+   PollState m_configurationPollState;
+   PollState m_instancePollState;
+   PollState m_discoveryPollState;
+   PollState m_topologyPollState;
+   PollState m_routingPollState;
+   PollState m_icmpPollState;
+
+   MUTEX m_hPollerMutex;
+
+   virtual void statusPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) {}
+   virtual void configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) {}
+   virtual void instanceDiscoveryPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) {}
+   virtual void topologyPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) {}
+   virtual void routingTablePoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) {}
+   virtual void icmpPoll(PollerInfo *poller) {}
+
+   void _pollerLock() { MutexLock(m_hPollerMutex); }
+   void _pollerUnlock() { MutexUnlock(m_hPollerMutex); }
+
+   bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
+
+public:
+   Pollable(NetObj *_this, uint32_t acceptablePolls);
+   virtual ~Pollable();
+
+   static constexpr uint32_t NONE               = 0;
+   static constexpr uint32_t STATUS             = (1 << 0);
+   static constexpr uint32_t CONFIGURATION      = (1 << 1);
+   static constexpr uint32_t INSTANCE_DISCOVERY = (1 << 2);
+   static constexpr uint32_t TOPOLOGY           = (1 << 3);
+   static constexpr uint32_t ROUTING_TABLE      = (1 << 4);
+   static constexpr uint32_t DISCOVERY          = (1 << 5);
+   static constexpr uint32_t ICMP               = (1 << 6);
+
+   // Status poll
+   bool isStatusPollAvailable() const { return m_acceptablePolls & Pollable::STATUS; }
+   void doForcedStatusPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId);
+   void doForcedStatusPoll(PollerInfo *poller) { doForcedStatusPoll(poller, nullptr, 0); }
+   void doStatusPoll(PollerInfo *parentPoller, ClientSession *session, uint32_t rqId);
+   void doStatusPoll(PollerInfo *poller);
+   virtual void startForcedStatusPoll() { m_statusPollState.manualStart(); }
+   virtual bool lockForStatusPoll();
+
+   // Configuration poll
+   bool isConfigurationPollAvailable() const { return m_acceptablePolls & Pollable::CONFIGURATION; }
+   void doForcedConfigurationPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId);
+   void doForcedConfigurationPoll(PollerInfo *poller) { doForcedConfigurationPoll(poller, nullptr, 0); }
+   void doConfigurationPoll(PollerInfo *poller);
+   virtual void startForcedConfigurationPoll() { m_configurationPollState.manualStart(); }
+   virtual bool lockForConfigurationPoll();
+
+   // Instance Discovery
+   bool isInstanceDiscoveryPollAvailable() const { return m_acceptablePolls & Pollable::INSTANCE_DISCOVERY; }
+   void doForcedInstanceDiscoveryPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId);
+   void doForcedInstanceDiscoveryPoll(PollerInfo *poller) { doForcedInstanceDiscoveryPoll(poller, nullptr, 0); }
+   void doInstanceDiscoveryPoll(PollerInfo *poller);
+   virtual void startForcedInstanceDiscoveryPoll() { m_instancePollState.manualStart(); }
+   virtual bool lockForInstanceDiscoveryPoll() { return false; }
+
+   // Topology
+   bool isTopologyPollAvailable() const { return m_acceptablePolls & Pollable::TOPOLOGY ; }
+   void doForcedTopologyPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId);
+   void doForcedTopologyPoll(PollerInfo *poller) { doForcedTopologyPoll(poller, nullptr, 0); }
+   void doTopologyPoll(PollerInfo *poller);
+   virtual void startForcedTopologyPoll() { m_topologyPollState.manualStart(); }
+   virtual bool lockForTopologyPoll() { return false; }
+
+   // Routing Table
+   bool isRoutingTablePollAvailable() const { return m_acceptablePolls & Pollable::ROUTING_TABLE; }
+   void doForcedRoutingTablePoll(PollerInfo *poller, ClientSession *session, uint32_t rqId);
+   void doForcedRoutingTablePoll(PollerInfo *poller) { doForcedRoutingTablePoll(poller, nullptr, 0); }
+   void doRoutingTablePoll(PollerInfo *poller);
+   virtual void startForcedRoutingTablePoll() { m_routingPollState.manualStart(); }
+   virtual bool lockForRoutingTablePoll() { return false; }
+
+   // Discovery
+   bool isDiscoveryPollAvailable() const { return m_acceptablePolls & Pollable::DISCOVERY; }
+   void doForcedDiscoveryPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId);
+   void doForcedDiscoveryPoll(PollerInfo *poller) { doForcedDiscoveryPoll(poller, nullptr, 0); }
+   void doDiscoveryPoll(PollerInfo *poller);
+   virtual void startForcedDiscoveryPoll() { m_discoveryPollState.manualStart(); }
+   virtual bool lockForDiscoveryPoll() { return false; }
+   
+   // ICMP
+   bool isIcmpPollAvailable() const { return m_acceptablePolls & Pollable::ICMP; }
+   void doIcmpPoll(PollerInfo *poller);
+   virtual bool lockForIcmpPoll() { return false; }
+
+   void resetPollTimers();
+   DataCollectionError getInternalMetric(const TCHAR *name, TCHAR *buffer, size_t size);
+   bool saveToDatabase(DB_HANDLE hdb);
+};
+
+/**
  * Base class for network objects
  */
 class NXCORE_EXPORTABLE NetObj : public NObject
 {
    friend class AutoBindTarget;
+   friend class Pollable;
    friend class VersionableObject;
 
    DISABLE_COPY_CTOR(NetObj)
@@ -1012,6 +1256,8 @@ protected:
 
    StructArray<ResponsibleUser> *m_responsibleUsers;
    MUTEX m_mutexResponsibleUsers;
+
+   Pollable* m_asPollable; // Only changed in Pollable class constructor
 
    const SharedObjectArray<NetObj> &getChildList() const { return reinterpret_cast<const SharedObjectArray<NetObj>&>(super::getChildList()); }
    const SharedObjectArray<NetObj> &getParentList() const { return reinterpret_cast<const SharedObjectArray<NetObj>&>(super::getParentList()); }
@@ -1185,7 +1431,8 @@ public:
    virtual bool showThresholdSummary() const;
    virtual bool isEventSource() const;
    virtual bool isDataCollectionTarget() const;
-   virtual bool isPollable() const;
+   bool isPollable() { return m_asPollable != nullptr; }
+   virtual Pollable* getAsPollable() { return m_asPollable; }
 
    void setStatusCalculation(int method, int arg1 = 0, int arg2 = 0, int arg3 = 0, int arg4 = 0);
    void setStatusPropagation(int method, int arg1 = 0, int arg2 = 0, int arg3 = 0, int arg4 = 0);
@@ -1922,149 +2169,6 @@ struct ProxyInfo
 };
 
 /**
- * Poll state information
- */
-class NXCORE_EXPORTABLE PollState
-{
-private:
-   VolatileCounter m_pollerCount;
-   time_t m_lastCompleted;
-   ManualGauge64 *m_timer;
-   MUTEX m_lock;
-
-public:
-   PollState(const TCHAR *name)
-   {
-      m_pollerCount = 0;
-      m_lastCompleted = TIMESTAMP_NEVER;
-      m_timer = new ManualGauge64(name, 1, 1000);
-      m_lock = MutexCreateFast();
-   }
-
-   ~PollState()
-   {
-      delete m_timer;
-      MutexDestroy(m_lock);
-   }
-
-   /**
-    * Check if poll is pending
-    */
-   bool isPending()
-   {
-      bool pending = (InterlockedIncrement(&m_pollerCount) > 1);
-      InterlockedDecrement(&m_pollerCount);
-      return pending;
-   }
-
-   /**
-    * Schedule execution if there are no active/queued pollers
-    */
-   bool schedule()
-   {
-      if (InterlockedIncrement(&m_pollerCount) > 1)
-      {
-         InterlockedDecrement(&m_pollerCount);
-         return false;
-      }
-      return true;
-   }
-
-   /**
-    * Notify about manual poller start
-    */
-   void manualStart()
-   {
-      InterlockedIncrement(&m_pollerCount);
-   }
-
-   /**
-    * Notify about poller completion
-    */
-   void complete(int64_t elapsed)
-   {
-      MutexLock(m_lock);
-      m_lastCompleted = time(nullptr);
-      m_timer->update(elapsed);
-      InterlockedDecrement(&m_pollerCount);
-      MutexUnlock(m_lock);
-   }
-
-   /**
-    * Set last completed time (intended only for reading from database)
-    */
-   void setLastCompleted(time_t lastCompleted)
-   {
-      m_lastCompleted = lastCompleted;
-   }
-
-   /**
-    * Reset poll timer
-    */
-   void resetTimer()
-   {
-      MutexLock(m_lock);
-      m_timer->reset();
-      MutexUnlock(m_lock);
-   }
-
-   /**
-    * Get timestamp of last completed poll
-    */
-   time_t getLastCompleted()
-   {
-      MutexLock(m_lock);
-      time_t t = m_lastCompleted;
-      MutexUnlock(m_lock);
-      return t;
-   }
-
-   /**
-    * Get timer average value
-    */
-   int64_t getTimerAverage()
-   {
-      MutexLock(m_lock);
-      int64_t v = static_cast<int64_t>(m_timer->getAverage());
-      MutexUnlock(m_lock);
-      return v;
-   }
-
-   /**
-    * Get timer minimum value
-    */
-   int64_t getTimerMin()
-   {
-      MutexLock(m_lock);
-      int64_t v = m_timer->getMin();
-      MutexUnlock(m_lock);
-      return v;
-   }
-
-   /**
-    * Get timer maximum value
-    */
-   int64_t getTimerMax()
-   {
-      MutexLock(m_lock);
-      int64_t v = m_timer->getMax();
-      MutexUnlock(m_lock);
-      return v;
-   }
-
-   /**
-    * Get last timer value
-    */
-   int64_t getTimerLast()
-   {
-      MutexLock(m_lock);
-      int64_t v = m_timer->getCurrent();
-      MutexUnlock(m_lock);
-      return v;
-   }
-};
-
-/**
  * Geolocation control mode for objects
  */
 enum GeoLocationControlMode
@@ -2077,7 +2181,7 @@ enum GeoLocationControlMode
 /**
  * Common base class for all objects capable of collecting data
  */
-class NXCORE_EXPORTABLE DataCollectionTarget : public DataCollectionOwner
+class NXCORE_EXPORTABLE DataCollectionTarget : public DataCollectionOwner, public Pollable
 {
 private:
    typedef DataCollectionOwner super;
@@ -2090,10 +2194,7 @@ protected:
    IntegerArray<uint32_t> m_geoAreas;
    bool m_geoLocationRestrictionsViolated;
    bool m_instanceDiscoveryPending;
-   PollState m_statusPollState;
-   PollState m_configurationPollState;
-   PollState m_instancePollState;
-   MUTEX m_hPollerMutex;
+
    atomic<double> m_proxyLoadFactor;
 
    virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId) override;
@@ -2105,10 +2206,7 @@ protected:
    virtual void onInstanceDiscoveryChange() override;
    virtual bool isDataCollectionDisabled();
 
-   virtual void statusPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId);
-   virtual void configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId);
-   virtual void instanceDiscoveryPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId);
-
+   virtual void instanceDiscoveryPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) override;
    virtual StringMap *getInstanceList(DCObject *dco);
    void doInstanceDiscovery(UINT32 requestId);
    bool updateInstances(DCObject *root, StringObjectMap<InstanceDiscoveryData> *instances, UINT32 requestId);
@@ -2116,9 +2214,6 @@ protected:
    void updateDataCollectionTimeIntervals();
 
    void updateGeoLocation(const GeoLocation& geoLocation);
-
-   void _pollerLock() { MutexLock(m_hPollerMutex); }
-   void _pollerUnlock() { MutexUnlock(m_hPollerMutex); }
 
    shared_ptr<NetObj> objectFromParameter(const TCHAR *param) const;
 
@@ -2144,9 +2239,8 @@ protected:
    void loadDCIListForCleanup(DB_HANDLE hdb);
 
 public:
-   DataCollectionTarget();
-   DataCollectionTarget(const TCHAR *name);
-   virtual ~DataCollectionTarget();
+   DataCollectionTarget(uint32_t pollableFlags);
+   DataCollectionTarget(const TCHAR *name, uint32_t pollableFlags);
 
    shared_ptr<DataCollectionTarget> self() { return static_pointer_cast<DataCollectionTarget>(NObject::self()); }
    shared_ptr<const DataCollectionTarget> self() const { return static_pointer_cast<const DataCollectionTarget>(NObject::self()); }
@@ -2209,103 +2303,14 @@ public:
 
    int getMostCriticalDCIStatus();
 
-   void statusPollWorkerEntry(PollerInfo *poller);
-   void statusPollWorkerEntry(PollerInfo *poller, ClientSession *session, UINT32 rqId);
-   void statusPollPollerEntry(PollerInfo *poller, ClientSession *session, UINT32 rqId);
-   virtual bool lockForStatusPoll();
-   void startForcedStatusPoll() { m_statusPollState.manualStart(); }
-
-   void configurationPollWorkerEntry(PollerInfo *poller);
-   void configurationPollWorkerEntry(PollerInfo *poller, ClientSession *session, UINT32 rqId);
-   virtual bool lockForConfigurationPoll();
-   void startForcedConfigurationPoll() { m_configurationPollState.manualStart(); }
-
-   void instanceDiscoveryPollWorkerEntry(PollerInfo *poller);
-   void instanceDiscoveryPollWorkerEntry(PollerInfo *poller, ClientSession *session, UINT32 rqId);
-   virtual bool lockForInstancePoll();
-   void startForcedInstancePoll() { m_instancePollState.manualStart(); }
-
-   virtual void resetPollTimers();
-
    uint64_t getCacheMemoryUsage();
 
    static void removeTemplate(const shared_ptr<ScheduledTaskParameters>& parameters);
 
    int getDciThreshold(uint32_t dciId);
+
+   virtual bool lockForInstanceDiscoveryPoll() override;
 };
-
-/**
- * Lock object for instance discovery poll
- */
-inline bool DataCollectionTarget::lockForInstancePoll()
-{
-   bool success = false;
-   lockProperties();
-   if (!m_isDeleted && !m_isDeleteInitiated &&
-       (m_status != STATUS_UNMANAGED) &&
-       (!(m_flags & DCF_DISABLE_CONF_POLL)) &&
-       (m_runtimeFlags & ODF_CONFIGURATION_POLL_PASSED) &&
-       (m_instanceDiscoveryPending || (static_cast<uint32_t>(time(nullptr) - m_instancePollState.getLastCompleted()) > g_instancePollingInterval)))
-   {
-      success = m_instancePollState.schedule();
-      m_instanceDiscoveryPending = false;
-   }
-   unlockProperties();
-   return success;
-}
-
-/**
- * Lock object for configuration poll
- */
-inline bool DataCollectionTarget::lockForConfigurationPoll()
-{
-   bool success = false;
-   lockProperties();
-   if (!m_isDeleted && !m_isDeleteInitiated)
-   {
-      if (m_runtimeFlags & ODF_FORCE_CONFIGURATION_POLL)
-      {
-         success = m_configurationPollState.schedule();
-         if (success)
-            m_runtimeFlags &= ~ODF_FORCE_CONFIGURATION_POLL;
-      }
-      else if ((m_status != STATUS_UNMANAGED) &&
-               (!(m_flags & DCF_DISABLE_CONF_POLL)) &&
-               (static_cast<uint32_t>(time(nullptr) - m_configurationPollState.getLastCompleted()) > g_configurationPollingInterval))
-      {
-         success = m_configurationPollState.schedule();
-      }
-   }
-   unlockProperties();
-   return success;
-}
-
-/**
- * Lock object for status poll
- */
-inline bool DataCollectionTarget::lockForStatusPoll()
-{
-   bool success = false;
-   lockProperties();
-   if (!m_isDeleted && !m_isDeleteInitiated)
-   {
-      if (m_runtimeFlags & ODF_FORCE_STATUS_POLL)
-      {
-         success = m_statusPollState.schedule();
-         if (success)
-            m_runtimeFlags &= ~ODF_FORCE_STATUS_POLL;
-      }
-      else if ((m_status != STATUS_UNMANAGED) &&
-               !(m_flags & DCF_DISABLE_STATUS_POLL) &&
-               !(m_runtimeFlags & ODF_CONFIGURATION_POLL_PENDING) &&
-               (static_cast<uint32_t>(time(nullptr) - m_statusPollState.getLastCompleted()) > g_statusPollingInterval))
-      {
-         success = m_statusPollState.schedule();
-      }
-   }
-   unlockProperties();
-   return success;
-}
 
 /**
  * Mobile device system information
@@ -2411,10 +2416,6 @@ public:
    int32_t getAltitude() const { return GetAttributeWithLock(m_altitude, m_mutexProperties); }
 
    virtual DataCollectionError getInternalMetric(const TCHAR *name, TCHAR *buffer, size_t size) override;
-
-   virtual bool lockForStatusPoll() override { return false; }
-   virtual bool lockForConfigurationPoll() override { return false; }
-   virtual bool lockForInstancePoll() override { return false; }
 };
 
 /**
@@ -2485,9 +2486,6 @@ public:
    void updateRadioInterfaces(const ObjectArray<RadioInterfaceInfo> *ri);
    void updateInfo(const TCHAR *vendor, const TCHAR *model, const TCHAR *serialNumber);
    void updateState(AccessPointState state);
-
-   virtual bool lockForStatusPoll() override { return false; }
-   virtual bool lockForInstancePoll() override { return false; }
 };
 
 /**
@@ -2509,11 +2507,10 @@ protected:
    virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest) override;
 
    virtual void onDataCollectionChange() override;
+   UINT32 getResourceOwnerInternal(UINT32 id, const TCHAR *name);
 
    virtual void statusPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) override;
    virtual void configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) override;
-
-   UINT32 getResourceOwnerInternal(UINT32 id, const TCHAR *name);
 
 public:
    Cluster();
@@ -2529,14 +2526,9 @@ public:
    virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
    virtual bool showThresholdSummary() const override;
 
-   virtual bool lockForInstancePoll() override { return false; }
-
    virtual void onTemplateRemove(const shared_ptr<DataCollectionOwner>& templateObject, bool removeDCI) override;
-
    virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;
-
    virtual int32_t getZoneUIN() const override { return m_zoneUIN; }
-
    virtual json_t *toJson() override;
 
    bool isSyncAddr(const InetAddress& addr);
@@ -2608,10 +2600,6 @@ public:
    virtual void linkObjects() override;
    virtual bool showThresholdSummary() const override;
    virtual uint32_t getEffectiveSourceNode(DCObject *dco) override;
-
-   virtual bool lockForStatusPoll() override { return false; }
-   virtual bool lockForConfigurationPoll() override { return false; }
-   virtual bool lockForInstancePoll() override { return false; }
 
    virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;
 
@@ -3003,10 +2991,6 @@ protected:
    ObjectArray<AgentParameterDefinition> *m_agentParameters; // List of metrics supported by agent
    ObjectArray<AgentTableDefinition> *m_agentTables; // List of supported tables
    ObjectArray<AgentParameterDefinition> *m_driverParameters; // List of metrics supported by driver
-   PollState m_discoveryPollState;
-   PollState m_topologyPollState;
-   PollState m_routingPollState;
-   PollState m_icmpPollState;
    time_t m_failTimeAgent;
    time_t m_failTimeSNMP;
    time_t m_failTimeEtherNetIP;
@@ -3082,13 +3066,6 @@ protected:
    uint16_t m_cipStatus;
    uint8_t m_cipState;
    uint16_t m_cipVendorCode;
-
-   virtual void statusPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) override;
-   virtual void configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) override;
-
-   void topologyPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId);
-   void routingTablePoll(PollerInfo *poller, ClientSession *session, UINT32 rqId);
-   void icmpPoll(PollerInfo *poller);
 
    virtual bool isDataCollectionDisabled() override;
    virtual void collectProxyInfo(ProxyInfo *info) override;
@@ -3167,6 +3144,12 @@ protected:
 
    void updateClusterMembership();
 
+   virtual void statusPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) override;
+   virtual void configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) override;
+   virtual void topologyPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) override;
+   virtual void routingTablePoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) override;
+   virtual void icmpPoll(PollerInfo *poller) override;
+
 public:
    Node();
    Node(const NewNodeData *newNodeData, UINT32 flags);
@@ -3185,14 +3168,10 @@ public:
 
    virtual bool lockForStatusPoll() override;
    virtual bool lockForConfigurationPoll() override;
-
-   bool lockForDiscoveryPoll();
-   bool lockForRoutePoll();
-   bool lockForTopologyPoll();
-   bool lockForIcmpPoll();
-   void startForcedDiscoveryPoll() { m_discoveryPollState.manualStart(); }
-   void startForcedRoutePoll() { m_routingPollState.manualStart(); }
-   void startForcedTopologyPoll() { m_topologyPollState.manualStart(); }
+   virtual bool lockForDiscoveryPoll() override;
+   virtual bool lockForRoutingTablePoll() override;
+   virtual bool lockForTopologyPoll() override;
+   virtual bool lockForIcmpPoll() override;
 
    void completeDiscoveryPoll(INT64 elapsedTime) { m_discoveryPollState.complete(elapsedTime); }
 
@@ -3357,16 +3336,10 @@ public:
    void showLLDPInfo(CONSOLE_CTX console);
 
    void setRecheckCapsFlag() { lockProperties(); m_runtimeFlags |= NDF_RECHECK_CAPABILITIES; unlockProperties(); }
-   void topologyPollWorkerEntry(PollerInfo *poller);
-   void topologyPollWorkerEntry(PollerInfo *poller, ClientSession *session, UINT32 rqId);
    void resolveVlanPorts(VlanList *vlanList);
    void updateInterfaceNames(ClientSession *pSession, UINT32 dwRqId);
-   void routingTablePollWorkerEntry(PollerInfo *poller);
-   void routingTablePollWorkerEntry(PollerInfo *poller, ClientSession *session, UINT32 rqId);
-   void icmpPollWorkerEntry(PollerInfo *poller);
    void checkSubnetBinding();
    AccessPointState getAccessPointState(AccessPoint *ap, SNMP_Transport *snmpTransport, const ObjectArray<RadioInterfaceInfo> *radioInterfaces);
-   virtual void resetPollTimers() override;
 
    void forceConfigurationPoll() { lockProperties(); m_runtimeFlags |= ODF_FORCE_CONFIGURATION_POLL; unlockProperties(); }
 
@@ -3473,146 +3446,6 @@ public:
    void setAgentRestartTime() { m_agentRestartTime = time(nullptr); }
    time_t getAgentRestartTime() { return m_agentRestartTime; }
 };
-
-/**
- * Lock node for status poll
- */
-inline bool Node::lockForStatusPoll()
-{
-   bool success = false;
-
-   lockProperties();
-   if (!m_isDeleted && !m_isDeleteInitiated)
-   {
-      if (m_runtimeFlags & ODF_FORCE_STATUS_POLL)
-      {
-         success = m_statusPollState.schedule();
-         if (success)
-            m_runtimeFlags &= ~ODF_FORCE_STATUS_POLL;
-      }
-      else if ((m_status != STATUS_UNMANAGED) &&
-               !(m_flags & DCF_DISABLE_STATUS_POLL) &&
-               (getMyCluster() == nullptr) &&
-               !(m_runtimeFlags & ODF_CONFIGURATION_POLL_PENDING) &&
-               (static_cast<uint32_t>(time(nullptr) - m_statusPollState.getLastCompleted()) > g_statusPollingInterval) &&
-               !isAgentRestarting() && !isProxyAgentRestarting())
-      {
-         success = m_statusPollState.schedule();
-      }
-   }
-   unlockProperties();
-   return success;
-}
-
-/**
- * Lock object for configuration poll
- */
-inline bool Node::lockForConfigurationPoll()
-{
-   bool success = false;
-
-   lockProperties();
-   if (!m_isDeleted && !m_isDeleteInitiated)
-   {
-      if (m_runtimeFlags & ODF_FORCE_CONFIGURATION_POLL)
-      {
-         success = m_configurationPollState.schedule();
-         if (success)
-            m_runtimeFlags &= ~ODF_FORCE_CONFIGURATION_POLL;
-      }
-      else if ((m_status != STATUS_UNMANAGED) &&
-               !(m_flags & DCF_DISABLE_CONF_POLL) &&
-               (static_cast<uint32_t>(time(nullptr) - m_configurationPollState.getLastCompleted()) > g_configurationPollingInterval) &&
-               !isAgentRestarting() && !isProxyAgentRestarting())
-      {
-         success = m_configurationPollState.schedule();
-      }
-   }
-   unlockProperties();
-   return success;
-}
-
-/**
- * Lock node for discovery poll
- */
-inline bool Node::lockForDiscoveryPoll()
-{
-   bool success = false;
-   lockProperties();
-   if (!m_isDeleted && !m_isDeleteInitiated &&
-       (g_flags & AF_PASSIVE_NETWORK_DISCOVERY) &&
-       (m_status != STATUS_UNMANAGED) &&
-       !(m_flags & NF_DISABLE_DISCOVERY_POLL) &&
-       (m_runtimeFlags & ODF_CONFIGURATION_POLL_PASSED) &&
-       (static_cast<uint32_t>(time(nullptr) - m_discoveryPollState.getLastCompleted()) > g_discoveryPollingInterval) &&
-       !isAgentRestarting() && !isProxyAgentRestarting())
-   {
-      success = m_discoveryPollState.schedule();
-   }
-   unlockProperties();
-   return success;
-}
-
-/**
- * Lock node for routing table poll
- */
-inline bool Node::lockForRoutePoll()
-{
-   bool success = false;
-   lockProperties();
-   if (!m_isDeleted && !m_isDeleteInitiated &&
-       (m_status != STATUS_UNMANAGED) &&
-       !(m_flags & NF_DISABLE_ROUTE_POLL) &&
-       (m_runtimeFlags & ODF_CONFIGURATION_POLL_PASSED) &&
-       (static_cast<uint32_t>(time(nullptr) - m_routingPollState.getLastCompleted()) > g_routingTableUpdateInterval) &&
-       !isAgentRestarting() && !isProxyAgentRestarting())
-   {
-      success = m_routingPollState.schedule();
-   }
-   unlockProperties();
-   return success;
-}
-
-/**
- * Lock node for topology poll
- */
-inline bool Node::lockForTopologyPoll()
-{
-   bool success = false;
-   lockProperties();
-   if (!m_isDeleted && !m_isDeleteInitiated &&
-       (m_status != STATUS_UNMANAGED) &&
-       !(m_flags & NF_DISABLE_TOPOLOGY_POLL) &&
-       (m_runtimeFlags & ODF_CONFIGURATION_POLL_PASSED) &&
-       (static_cast<uint32_t>(time(nullptr) - m_topologyPollState.getLastCompleted()) > g_topologyPollingInterval) &&
-       !isAgentRestarting() && !isProxyAgentRestarting())
-   {
-      success = m_topologyPollState.schedule();
-   }
-   unlockProperties();
-   return success;
-}
-
-/*
- * Lock node for ICMP poll
- */
-inline bool Node::lockForIcmpPoll()
-{
-   bool success = false;
-
-   lockProperties();
-   if (!m_isDeleted && !m_isDeleteInitiated &&
-       (m_status != STATUS_UNMANAGED) &&
-       isIcmpStatCollectionEnabled() &&
-       !(m_runtimeFlags & ODF_CONFIGURATION_POLL_PENDING) &&
-       (static_cast<uint32_t>(time(nullptr) - m_icmpPollState.getLastCompleted()) > g_icmpPollingInterval) &&
-       !isProxyAgentRestarting())
-   {
-      success = m_icmpPollState.schedule();
-   }
-   unlockProperties();
-   return success;
-}
 
 /**
  * Subnet
@@ -3955,7 +3788,7 @@ template class NXCORE_EXPORTABLE SharedPointerIndex<ZoneProxy>;
 /**
  * Zone object
  */
-class NXCORE_EXPORTABLE Zone : public NetObj
+class NXCORE_EXPORTABLE Zone : public NetObj, public Pollable
 {
 protected:
    typedef NetObj super;
@@ -3970,13 +3803,14 @@ protected:
    time_t m_lastHealthCheck;
    bool m_lockedForHealthCheck;
 
-   virtual void fillMessageInternal(NXCPMessage *msg, UINT32 userId) override;
-   virtual void fillMessageInternalStage2(NXCPMessage *msg, UINT32 userId) override;
-   virtual UINT32 modifyFromMessageInternal(NXCPMessage *request) override;
-   virtual UINT32 modifyFromMessageInternalStage2(NXCPMessage *request) override;
+   virtual void fillMessageInternal(NXCPMessage *msg, uint32_t userId) override;
+   virtual void fillMessageInternalStage2(NXCPMessage *msg, uint32_t userId) override;
+   virtual uint32_t modifyFromMessageInternal(NXCPMessage *request) override;
+   virtual uint32_t modifyFromMessageInternalStage2(NXCPMessage *request) override;
 
    void updateProxyLoadData(shared_ptr<Node> node);
    void migrateProxyLoad(ZoneProxy *source, ZoneProxy *target);
+   virtual void statusPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId) override;
 
 public:
    Zone();
@@ -4012,8 +3846,7 @@ public:
    void addProxy(const Node& node);
    void updateProxyStatus(const shared_ptr<Node>& node, bool activeMode);
 
-   bool lockForHealthCheck();
-   void healthCheck(PollerInfo *poller);
+   virtual bool lockForStatusPoll() override;
 
    void addSubnet(const shared_ptr<Subnet>& subnet) { addChild(subnet); subnet->addParent(self()); }
    void addToIndex(const shared_ptr<Subnet>& subnet) { m_idxSubnetByAddr->put(subnet->getIpAddress(), subnet); }
@@ -4042,24 +3875,6 @@ public:
    void dumpNodeIndex(ServerConsole *console) const;
    void dumpSubnetIndex(ServerConsole *console) const;
 };
-
-inline bool Zone::lockForHealthCheck()
-{
-   bool success = false;
-   lockProperties();
-   if (!m_isDeleted && !m_isDeleteInitiated)
-   {
-      if ((m_status != STATUS_UNMANAGED) &&
-          !m_lockedForHealthCheck &&
-          ((UINT32)(time(nullptr) - m_lastHealthCheck) >= g_statusPollingInterval))
-      {
-         m_lockedForHealthCheck = true;
-         success = true;
-      }
-   }
-   unlockProperties();
-   return success;
-}
 
 /**
  * Entire network
@@ -4092,7 +3907,7 @@ template class NXCORE_EXPORTABLE StructArray<INPUT_DCI>;
 /**
  * Condition
  */
-class NXCORE_EXPORTABLE ConditionObject : public NetObj
+class NXCORE_EXPORTABLE ConditionObject : public NetObj, public Pollable
 {
 protected:
    typedef NetObj super;
@@ -4112,6 +3927,8 @@ protected:
 
    virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId) override;
    virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest) override;
+   virtual void statusPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId) override;
+   void check();
 
 public:
    ConditionObject();
@@ -4129,16 +3946,7 @@ public:
 
    virtual json_t *toJson() override;
 
-   void lockForPoll();
-   void doPoll(PollerInfo *poller);
-   void check();
-
-   bool isReadyForPoll()
-   {
-      return ((m_status != STATUS_UNMANAGED) &&
-              (!m_queuedForPolling) && (!m_isDeleted) &&
-              (static_cast<uint32_t>(time(nullptr) - m_lastPoll) > g_conditionPollingInterval));
-   }
+   virtual bool lockForStatusPoll() override;
 
    int getCacheSizeForDCI(UINT32 itemId, bool noLock);
 };
@@ -4457,6 +4265,7 @@ protected:
    TCHAR* m_instanceDiscoveryData;
    TCHAR* m_instanceDiscoveryFilter;
    uint32_t m_instanceSource;
+   MUTEX m_checkMutex;
 
    bool loadChecksFromDatabase(DB_HANDLE hdb);
    void deleteCheckFromDatabase(uint32_t checkId);
@@ -4480,42 +4289,29 @@ public:
 /**
  * Business service object
  */
-class NXCORE_EXPORTABLE BusinessService : public BaseBusinessService
+class NXCORE_EXPORTABLE BusinessService : public BaseBusinessService, public Pollable
 {
    typedef BaseBusinessService super;
 protected:
-   PollState m_statusPollState;
-   PollState m_configurationPollState;
-   MUTEX m_hPollerMutex;
-
    void validateAutomaticObjectChecks();
    void validateAutomaticDCIChecks();
 
-   void configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId);
-   void statusPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId);
-
-   void _pollerLock() { MutexLock(m_hPollerMutex); }
-   void _pollerUnlock() { MutexUnlock(m_hPollerMutex); }
+   virtual void configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) override;
+   virtual void statusPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) override;
 
 public:
    BusinessService(const TCHAR *name);
    BusinessService(BaseBusinessService *prototype, const TCHAR *name, const TCHAR *instance);
    BusinessService();
-   virtual ~BusinessService();
 
    virtual int getObjectClass() const override { return OBJECT_BUSINESS_SERVICE; }
 
    uint32_t getPrototypeId() const { return m_prototypeId; }
    const TCHAR* getInstance() const { return m_instance; }
+   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
 
-   void startForcedStatusPoll() { m_statusPollState.manualStart(); }
-   void statusPollWorkerEntry(PollerInfo *poller) { statusPollWorkerEntry(poller, nullptr, 0); }
-   void statusPollWorkerEntry(PollerInfo *poller, ClientSession *session, UINT32 rqId);
-   void startForcedConfigurationPoll() { m_configurationPollState.manualStart(); }
-   void configurationPollWorkerEntry(PollerInfo *poller) { configurationPollWorkerEntry(poller, nullptr, 0); }
-   void configurationPollWorkerEntry(PollerInfo *poller, ClientSession *session, UINT32 rqId);
-   bool lockForStatusPoll();
-   bool lockForConfigurationPoll();
+   virtual bool lockForStatusPoll() override;
+   virtual bool lockForConfigurationPoll() override;
 
    void addChildTicket(BusinessServiceTicketData* data);
 };
@@ -4523,17 +4319,17 @@ public:
 /**
  * Business service prototype
  */
-class NXCORE_EXPORTABLE BusinessServicePrototype : public BaseBusinessService
+class NXCORE_EXPORTABLE BusinessServicePrototype : public BaseBusinessService, public Pollable
 {
    typedef BaseBusinessService super;
 protected:
    NXSL_Program *m_pCompiledInstanceDiscoveryFilterScript;
-   PollState m_discoveryPollState;
 
    virtual uint32_t modifyFromMessageInternal(NXCPMessage *pRequest) override;
    void compileInstanceDiscoveryFilterScript();
    unique_ptr<StringMap> getInstances();
    unique_ptr<SharedObjectArray<BusinessService>> getServices();
+   virtual void instanceDiscoveryPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) override;
 
 public:
    BusinessServicePrototype(const TCHAR *name, uint32_t method);
@@ -4542,10 +4338,8 @@ public:
 
    virtual int getObjectClass() const override { return OBJECT_BUSINESS_SERVICE_PROTOTYPE; }
    virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
-   void startForcedDiscoveryPoll() { m_discoveryPollState.manualStart(); }
-   void instanceDiscoveryPollWorkerEntry(PollerInfo *poller) { instanceDiscoveryPoll(poller, nullptr, 0); }
-   void instanceDiscoveryPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId);
-   bool lockForDiscoveryPoll();
+
+   virtual bool lockForInstanceDiscoveryPoll() override;
 };
 
 /**
