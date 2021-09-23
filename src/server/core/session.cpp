@@ -2241,7 +2241,7 @@ void ClientSession::login(const NXCPMessage& request)
       _tcscpy(m_webServerAddress, m_workstation);
       if (request.isFieldExist(VID_CLIENT_ADDRESS))
       {
-         request.getFieldAsString(VID_CLIENT_ADDRESS, m_workstation, 256);
+         request.getFieldAsString(VID_CLIENT_ADDRESS, m_workstation, 64);
          debugPrintf(5, _T("Real web client address is %s"), m_workstation);
       }
    }

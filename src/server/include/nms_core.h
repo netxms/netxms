@@ -539,11 +539,11 @@ private:
 	MUTEX m_mutexSendAuditLog;
    MUTEX m_mutexPollerInit;
 	InetAddress m_clientAddr;
-	TCHAR m_workstation[256];      // IP address or name of connected host in textual form
-   TCHAR m_webServerAddress[256]; // IP address or name of web server for web sessions
+	TCHAR m_workstation[64];       // IP address or name of connected host in textual form
+   TCHAR m_webServerAddress[64];  // IP address or name of web server for web sessions
    TCHAR m_loginName[MAX_USER_NAME];
    TCHAR m_sessionName[MAX_SESSION_NAME];   // String in form login_name@host
-   TCHAR m_clientInfo[96];  // Client app info string
+   TCHAR m_clientInfo[96];    // Client app info string
    TCHAR m_language[8];       // Client's desired language
    time_t m_loginTime;
    SynchronizedHashSet<uint32_t> m_openDataCollectionConfigurations; // List of nodes with DCI lists open
