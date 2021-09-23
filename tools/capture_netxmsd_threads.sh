@@ -47,7 +47,7 @@ fi
 if [ "$DEBUGGER" = "dbx" ]; then
 	echo "thread" > $cmdfile
 	echo "detach" >> $cmdfile
-	dbx -a $pid -c $cmdfile | awk '$1 ~ /\$t/ { gsub(/\$t/,"", $1); gsub(/\>/, "", $1); print $1 }' >$outputfile.ids 2>/dev/nul
+	dbx -a $pid -c $cmdfile | awk '$1 ~ /\$t/ { gsub(/\$t/,"", $1); gsub(/\>/, "", $1); print $1 }' >$outputfile.ids 2>/dev/null
 
 	rm -f $cmdfile
 	for i in `cat $outputfile.ids`; do
@@ -57,7 +57,7 @@ if [ "$DEBUGGER" = "dbx" ]; then
 		i=$(($i+1))
 	done
 	echo "detach" >> $cmdfile
-	dbx -a $pid -c $cmdfile >$outputfile 2>/dev/nul
+	dbx -a $pid -c $cmdfile >$outputfile 2>/dev/null
 
 	rm -f $outputfile.ids
 fi
