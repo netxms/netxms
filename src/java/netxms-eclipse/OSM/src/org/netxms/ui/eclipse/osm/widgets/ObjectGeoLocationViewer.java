@@ -59,7 +59,8 @@ public class ObjectGeoLocationViewer extends AbstractGeoMapViewer implements Mou
    private static final int OBJECT_TOOLTIP_Y_MARGIN = 6;
    private static final int OBJECT_TOOLTIP_SPACING = 6;
 
-   private static final Color ACTIVE_BORDER_COLOR = new Color(Display.getCurrent(), 255, 255, 255);
+   private static final Color INNER_BORDER_COLOR = new Color(Display.getCurrent(), 255, 255, 255);
+   private static final Color SELECTION_COLOR = new Color(Display.getCurrent(), 0, 148, 255);
    
    private List<AbstractObject> objects = new ArrayList<AbstractObject>();
    private AbstractObject currentObject = null;
@@ -323,50 +324,34 @@ public class ObjectGeoLocationViewer extends AbstractGeoMapViewer implements Mou
    private void drawObject(GC gc, int x, int y, AbstractObject object) 
    {
       boolean selected = (currentObject != null) && (currentObject.getObjectId() == object.getObjectId());
-      
+
       Image image = labelProvider.getImage(object);
       if (image == null)
          image = SharedIcons.IMG_UNKNOWN_OBJECT;
-      
-      int w = image.getImageData().width + LABEL_X_MARGIN * 2;
-      int h = image.getImageData().height+ LABEL_Y_MARGIN * 2;
-      Rectangle rect = new Rectangle(x - w / 2 - 1, y - LABEL_ARROW_HEIGHT - h, w, h);
-      
-      Color bgColor = ColorConverter.adjustColor(StatusDisplayInfo.getStatusColor(object.getStatus()), new RGB(255, 255, 255),  0.5f, colorCache);
-      
-      gc.setBackground(bgColor);
-      gc.fillRoundRectangle(rect.x, rect.y, rect.width, rect.height, 4, 4);
-      if (selected)
-      {
-         gc.setLineWidth(3);
-         gc.setForeground(ACTIVE_BORDER_COLOR);
-         gc.drawRoundRectangle(rect.x, rect.y, rect.width, rect.height, 4, 4);
-      }
-      gc.setLineWidth(1);
-      gc.setForeground(BORDER_COLOR);
-      gc.drawRoundRectangle(rect.x, rect.y, rect.width, rect.height, 4, 4);
-      
-      final int[] arrow = new int[] { x - 4, rect.y + rect.height, x, y, x + 4, rect.y + rect.height };
 
-      gc.fillPolygon(arrow);
-      gc.setForeground(bgColor);
-      gc.drawPolygon(arrow);
-      if (selected)
-      {
-         gc.drawLine(arrow[0], arrow[1] - 1, arrow[4], arrow[5] - 1);
-         gc.setLineWidth(3);
-         gc.setForeground(ACTIVE_BORDER_COLOR);
-         gc.drawPolyline(arrow);
-      }
+      int w = image.getImageData().width + LABEL_X_MARGIN * 2;
+      int h = image.getImageData().height + LABEL_Y_MARGIN * 2;
+      Rectangle rect = new Rectangle(x - w / 2 - 1, y - LABEL_ARROW_HEIGHT - h, w, h);
+
+      Color bgColor = selected ? SELECTION_COLOR : ColorConverter.adjustColor(StatusDisplayInfo.getStatusColor(object.getStatus()), new RGB(0, 0, 0), 0.2f, colorCache);
+
+      gc.setBackground(bgColor);
+      gc.fillArc(rect.x, rect.y, rect.width, rect.height, 0, 360);
+      gc.setLineWidth(2);
+      gc.setForeground(INNER_BORDER_COLOR);
+      gc.drawArc(rect.x + 4, rect.y + 4, rect.width - 8, rect.height - 8, 0, 360);
       gc.setLineWidth(1);
       gc.setForeground(BORDER_COLOR);
-      gc.drawPolyline(arrow);
+
+      final int[] arrow = new int[] { rect.x + rect.width / 2 - 3, rect.y + rect.height - 1, x, y, rect.x + rect.width / 2 + 4, rect.y + rect.height - 1 };
+      gc.fillPolygon(arrow);
+      gc.setForeground(BORDER_COLOR);
 
       gc.drawImage(image, rect.x + LABEL_X_MARGIN, rect.y + LABEL_Y_MARGIN);
       
       objectIcons.add(new ObjectIcon(object, rect, x, y));
    }
-   
+
    /**
     * Draw tooltip for current object
     * 
