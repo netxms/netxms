@@ -1396,12 +1396,6 @@ template<typename T> static void LoadObjectsFromTable(const TCHAR* className, DB
 }
 
 /**
- * Convert macro value to string
- */
-#define __TO_STRING(x) _T(#x)
-#define TO_STRING(x) __TO_STRING(x)
-
-/**
  * Load objects from database at stratup
  */
 bool LoadObjects()
@@ -1599,13 +1593,13 @@ bool LoadObjects()
    LoadObjectsFromTable<Template>(_T("template"), hdb, _T("templates"), nullptr, [](const shared_ptr<Template>& t) { t->calculateCompoundStatus(); });
    LoadObjectsFromTable<NetworkMap>(_T("network map"), hdb, _T("network_maps"));
    g_idxNetMapById.setStartupMode(false);
-   LoadObjectsFromTable<Container>(_T("container"), hdb, _T("object_containers WHERE object_class=") TO_STRING(OBJECT_CONTAINER));
-   LoadObjectsFromTable<TemplateGroup>(_T("template group"), hdb, _T("object_containers WHERE object_class=") TO_STRING(OBJECT_TEMPLATEGROUP));
-   LoadObjectsFromTable<NetworkMapGroup>(_T("map group"), hdb, _T("object_containers WHERE object_class=") TO_STRING(OBJECT_NETWORKMAPGROUP));
+   LoadObjectsFromTable<Container>(_T("container"), hdb, _T("object_containers WHERE object_class=") AS_STRING(OBJECT_CONTAINER));
+   LoadObjectsFromTable<TemplateGroup>(_T("template group"), hdb, _T("object_containers WHERE object_class=") AS_STRING(OBJECT_TEMPLATEGROUP));
+   LoadObjectsFromTable<NetworkMapGroup>(_T("map group"), hdb, _T("object_containers WHERE object_class=") AS_STRING(OBJECT_NETWORKMAPGROUP));
    LoadObjectsFromTable<Dashboard>(_T("dashboard"), hdb, _T("dashboards"));
-   LoadObjectsFromTable<DashboardGroup>(_T("dashboard group"), hdb, _T("object_containers WHERE object_class=") TO_STRING(OBJECT_DASHBOARDGROUP));
-   LoadObjectsFromTable<BusinessService>(_T("business service"), hdb, _T("object_containers WHERE object_class=") TO_STRING(OBJECT_BUSINESS_SERVICE));
-   LoadObjectsFromTable<BusinessServicePrototype>(_T("business service prototype"), hdb, _T("object_containers WHERE object_class=") TO_STRING(OBJECT_BUSINESS_SERVICE_PROTOTYPE));
+   LoadObjectsFromTable<DashboardGroup>(_T("dashboard group"), hdb, _T("object_containers WHERE object_class=") AS_STRING(OBJECT_DASHBOARDGROUP));
+   LoadObjectsFromTable<BusinessService>(_T("business service"), hdb, _T("object_containers WHERE object_class=") AS_STRING(OBJECT_BUSINESS_SERVICE));
+   LoadObjectsFromTable<BusinessServicePrototype>(_T("business service prototype"), hdb, _T("object_containers WHERE object_class=") AS_STRING(OBJECT_BUSINESS_SERVICE_PROTOTYPE));
    g_idxObjectById.setStartupMode(false);
 
 	// Load custom object classes provided by modules
