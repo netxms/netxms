@@ -140,7 +140,6 @@ LogParser::LogParser() : m_rules(0, 16, Ownership::True)
    m_keepFileOpen = true;
    m_ignoreMTime = false;
    m_rescan = false;
-	m_traceLevel = 0;
 	m_status = LPS_INIT;
 #ifdef _WIN32
    m_marker = nullptr;
@@ -195,7 +194,6 @@ LogParser::LogParser(const LogParser *src) : m_rules(src->m_rules.size(), 16, Ow
    m_keepFileOpen = src->m_keepFileOpen;
    m_ignoreMTime = src->m_ignoreMTime;
    m_rescan = src->m_rescan;
-	m_traceLevel = src->m_traceLevel;
 	m_status = LPS_INIT;
 #ifdef _WIN32
    m_marker = MemCopyString(src->m_marker);
@@ -225,9 +223,6 @@ LogParser::~LogParser()
  */
 void LogParser::trace(int level, const TCHAR *format, ...)
 {
-	if (level > m_traceLevel)
-		return;
-
    va_list args;
    va_start(args, format);
 	nxlog_debug_tag2(DEBUG_TAG _T(".parser"), level, format, args);
@@ -433,7 +428,6 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 	{
 		ps->state = XML_STATE_PARSER;
 		ps->parser->setProcessAllFlag(XMLGetAttrBoolean(attrs, "processAll", false));
-		ps->parser->setTraceLevel(XMLGetAttrInt(attrs, "trace", 0));
       ps->parser->setFileCheckInterval(XMLGetAttrUInt32(attrs, "checkInterval", 10000));
 		const char *name = XMLGetAttr(attrs, "name");
 		if (name != NULL)
