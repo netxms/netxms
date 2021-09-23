@@ -283,7 +283,6 @@ private:
    bool m_rescan;
 	bool m_processAllRules;
    bool m_suspended;
-	int m_traceLevel;
 	LogParserStatus m_status;
 #ifdef _WIN32
    TCHAR *m_marker;
@@ -376,9 +375,6 @@ public:
 
 	int getProcessedRecordsCount() const { return m_recordsProcessed; }
 	int getMatchedRecordsCount() const { return m_recordsMatched; }
-
-	int getTraceLevel() const { return m_traceLevel; }
-	void setTraceLevel(int level) { m_traceLevel = level; }
 
    off_t scanFile(int fh, off_t startOffset);
 	bool monitorFile(off_t startOffset);

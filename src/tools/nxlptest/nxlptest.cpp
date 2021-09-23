@@ -48,7 +48,6 @@ static TCHAR m_helpText[] =
 #ifdef _WIN32
    _T("   -s         : Use VSS snapshots (overrides parser settings)\n")
 #endif
-   _T("   -t level   : Set trace level (overrides parser settings)\n")
    _T("   -v         : Show version and exit\n")
    _T("\n");
 
@@ -98,7 +97,7 @@ static void OnBreak(int sig)
  */
 int main(int argc, char *argv[])
 {
-	int rc = 0, ch, traceLevel = -1;
+	int rc = 0;
 	TCHAR *inputFile = nullptr;
    off_t startOffset = -1;
 #ifdef _WIN32
@@ -109,7 +108,8 @@ int main(int argc, char *argv[])
 
    // Parse command line
    opterr = 1;
-	while((ch = getopt(argc, argv, "D:f:hio:st:v")) != -1)
+   int ch;
+	while((ch = getopt(argc, argv, "D:f:hio:sv")) != -1)
    {
 		switch(ch)
 		{
@@ -138,9 +138,6 @@ int main(int argc, char *argv[])
             vssSnapshots = true;
             break;
 #endif
-			case 't':
-				traceLevel = strtol(optarg, nullptr, 0);
-				break;
          case '?':
             return 1;
          default:
@@ -173,8 +170,6 @@ int main(int argc, char *argv[])
          LogParser *parser = parsers->get(0);
          for(int i = 1; i < parsers->size(); i++)
             delete parsers->get(i);
-			if (traceLevel != -1)
-				parser->setTraceLevel(traceLevel);
 			parser->setCallback(ParserCallback);
 			if (inputFile != nullptr)
 				parser->setFileName(inputFile);
@@ -185,8 +180,7 @@ int main(int argc, char *argv[])
 
 			THREAD thread = ThreadCreateEx(ParserThread, parser, startOffset);
 #ifdef _WIN32
-			_tprintf(_T("Parser started. Press ESC to stop.\nFile: %s\nTrace level: %d\n\n"),
-               parser->getFileName(), parser->getTraceLevel());
+			_tprintf(_T("Parser started. Press ESC to stop.\nFile: %s\nDebug level: %d\n\n"), parser->getFileName(), nxlog_get_debug_level());
 			while(1)
 			{
 				ch = _getch();
@@ -194,8 +188,7 @@ int main(int argc, char *argv[])
 					break;
 			}
 #else
-			_tprintf(_T("Parser started. Press Ctrl+C to stop.\nFile: %s\nTrace level: %d\n\n"),
-				      parser->getFileName(), parser->getTraceLevel());
+			_tprintf(_T("Parser started. Press Ctrl+C to stop.\nFile: %s\nDebug level: %d\n\n"), parser->getFileName(), nxlog_get_debug_level());
 
          signal(SIGINT, OnBreak);
 
