@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,7 +22,6 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
 import org.netxms.base.GeoLocation;
-import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.osm.Messages;
 import org.netxms.ui.eclipse.osm.widgets.AbstractGeoMapViewer;
@@ -37,20 +36,20 @@ public class LocationMap extends AbstractGeolocationView
 	public static final String ID = "org.netxms.ui.eclipse.osm.views.LocationMap"; //$NON-NLS-1$
 	
 	private AbstractObject object;
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
-	 */
+
+   /**
+    * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
+    */
 	@Override
 	public void init(IViewSite site) throws PartInitException
 	{
 		super.init(site);
-		
+
 		try
 		{
 			long id = Long.parseLong(site.getSecondaryId());
-			object = ((NXCSession)ConsoleSharedData.getSession()).findObjectById(id);
-			setPartName(Messages.get().LocationMap_PartNamePrefix + object.getObjectName());
+         object = ConsoleSharedData.getSession().findObjectById(id);
+         setPartName(Messages.get().LocationMap_PartNamePrefix + object.getNameWithAlias());
 		}
 		catch(Exception e)
 		{
@@ -60,7 +59,7 @@ public class LocationMap extends AbstractGeolocationView
 			throw new PartInitException(Messages.get().LocationMap_InitError2);
 	}
 
-	/* (non-Javadoc)
+   /**
     * @see org.netxms.ui.eclipse.osm.views.AbstractGeolocationView#createMapViewer(org.eclipse.swt.widgets.Composite, int)
     */
    @Override
@@ -69,18 +68,18 @@ public class LocationMap extends AbstractGeolocationView
       return new ObjectGeoLocationViewer(parent, style);
    }
 
-   /* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.osm.views.AbstractGeolocationView#getInitialCenterPoint()
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.osm.views.AbstractGeolocationView#getInitialCenterPoint()
+    */
 	@Override
 	protected GeoLocation getInitialCenterPoint()
 	{
 		return object.getGeolocation();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.osm.views.AbstractGeolocationView#getInitialZoomLevel()
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.osm.views.AbstractGeolocationView#getInitialZoomLevel()
+    */
 	@Override
 	protected int getInitialZoomLevel()
 	{

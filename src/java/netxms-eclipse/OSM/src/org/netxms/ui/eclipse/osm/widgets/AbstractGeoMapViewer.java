@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -68,9 +68,9 @@ import org.netxms.ui.eclipse.tools.FontTools;
 public abstract class AbstractGeoMapViewer extends Canvas implements PaintListener, GeoLocationCacheListener, MouseWheelListener, MouseListener, MouseMoveListener
 {
    protected static final String[] TITLE_FONTS = { "Segoe UI", "Liberation Sans", "DejaVu Sans", "Verdana", "Arial" };
-   
+
    protected static final Color BORDER_COLOR = new Color(Display.getCurrent(), 0, 0, 0);
-   
+
 	protected static final int LABEL_ARROW_HEIGHT = 5;
 	protected static final int LABEL_X_MARGIN = 4;
 	protected static final int LABEL_Y_MARGIN = 4;
@@ -106,7 +106,7 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 	private Rectangle zoomControlRect = null;
    private Font mapTitleFont;
    private boolean enableControls = true;
-	
+
 	/**
 	 * @param parent
 	 * @param style
@@ -114,9 +114,9 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 	public AbstractGeoMapViewer(Composite parent, int style)
 	{
 		super(parent, style | SWT.NO_BACKGROUND | SWT.DOUBLE_BUFFERED);
-		
+
 		colorCache = new ColorCache(this);
-		
+
 		imageZoomIn = Activator.getImageDescriptor("icons/map_zoom_in.png").createImage(); //$NON-NLS-1$
       imageZoomOut = Activator.getImageDescriptor("icons/map_zoom_out.png").createImage(); //$NON-NLS-1$
       
@@ -528,7 +528,7 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
       gc.dispose();
       e.gc.drawImage(bufferImage, 0, 0);      
 	}
-	
+
 	/**
 	 * Draw content over map
 	 * 
@@ -539,13 +539,10 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 	 */
 	protected abstract void drawContent(GC gc, GeoLocation currentLocation, int imgW, int imgH);
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.netxms.ui.eclipse.osm.GeoLocationCacheListener#geoLocationCacheChanged
-	 * (org.netxms.client.objects.AbstractObject, org.netxms.client.GeoLocation)
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.osm.GeoLocationCacheListener#geoLocationCacheChanged(org.netxms.client.objects.AbstractObject,
+    *      org.netxms.base.GeoLocation)
+    */
 	@Override
 	public void geoLocationCacheChanged(final AbstractObject object, final GeoLocation prevLocation)
 	{

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -76,9 +76,9 @@ import org.netxms.ui.eclipse.tools.FontTools;
 public abstract class AbstractGeoMapViewer extends Canvas implements PaintListener, GeoLocationCacheListener, MouseListener, MouseMoveListener
 {
    protected static final String[] TITLE_FONTS = { "Segoe UI", "Liberation Sans", "DejaVu Sans", "Verdana", "Arial" };
-   
+
    protected static final Color BORDER_COLOR = new Color(Display.getCurrent(), 0, 0, 0);
-   
+
 	protected static final int LABEL_ARROW_HEIGHT = 5;
 	protected static final int LABEL_X_MARGIN = 4;
 	protected static final int LABEL_Y_MARGIN = 4;
@@ -113,7 +113,7 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
    private Font mapTitleFont;
    private boolean enableControls = true;
    private RAPDragTracker tracker;
-	
+
 	/**
 	 * @param parent
 	 * @param style
@@ -121,9 +121,9 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 	public AbstractGeoMapViewer(Composite parent, int style)
 	{
 		super(parent, style | SWT.NO_BACKGROUND | SWT.DOUBLE_BUFFERED);
-		
+
 		colorCache = new ColorCache(this);
-		
+
 		imageZoomIn = Activator.getImageDescriptor("icons/map_zoom_in.png").createImage(); //$NON-NLS-1$
       imageZoomOut = Activator.getImageDescriptor("icons/map_zoom_out.png").createImage(); //$NON-NLS-1$
       
@@ -482,30 +482,30 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 		}
 		
 		// Draw zoom control
-		if (enableControls)
-		{
-   		gc.setFont(JFaceResources.getHeaderFont());
-   		text = Integer.toString(accessor.getZoom());
-   		textSize = gc.textExtent(text);
-   		
+      if (enableControls)
+      {
+         gc.setFont(JFaceResources.getHeaderFont());
+         text = Integer.toString(accessor.getZoom());
+         textSize = gc.textExtent(text);
+
          rect = getClientArea();
          rect.x = 10;
          rect.y = 10;
          rect.width = 80;
          rect.height = 47 + textSize.y;
-   
+
          gc.setBackground(INFO_BLOCK_BACKGROUND);
          gc.setForeground(INFO_BLOCK_TEXT);
          gc.setAlpha(128);
          gc.fillRoundRectangle(rect.x, rect.y, rect.width, rect.height, 8, 8);
          gc.setAlpha(255);
-         
+
          gc.drawText(text, rect.x + rect.width / 2 - textSize.x / 2, rect.y + 5, true);
          gc.drawImage(imageZoomIn, rect.x + 5, rect.y + rect.height - 37);
          gc.drawImage(imageZoomOut, rect.x + 42, rect.y + rect.height - 37);
 
          zoomControlRect = rect;
-		}      
+      }
 	}
 
 	/**
@@ -518,13 +518,10 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 	 */
 	protected abstract void drawContent(GC gc, GeoLocation currentLocation, int imgW, int imgH);
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.netxms.ui.eclipse.osm.GeoLocationCacheListener#geoLocationCacheChanged
-	 * (org.netxms.client.objects.AbstractObject, org.netxms.client.GeoLocation)
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.osm.GeoLocationCacheListener#geoLocationCacheChanged(org.netxms.client.objects.AbstractObject,
+    *      org.netxms.base.GeoLocation)
+    */
 	@Override
 	public void geoLocationCacheChanged(final AbstractObject object, final GeoLocation prevLocation)
 	{
