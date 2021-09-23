@@ -25,10 +25,13 @@ import java.util.Comparator;
 import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseTrackListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.GC;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Composite;
@@ -41,6 +44,7 @@ import org.netxms.client.constants.TimeFrameType;
 import org.netxms.client.constants.TimeUnit;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.console.resources.RegionalSettings;
+import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.osm.Activator;
 import org.netxms.ui.eclipse.osm.GeoLocationCache;
@@ -50,26 +54,24 @@ import org.netxms.ui.eclipse.osm.tools.QuadTree;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
- * Geo location viewer for object location history
+ * Geolocation viewer for object location history
  */
 public class GeoLocationHistoryViewer extends AbstractGeoMapViewer implements MouseTrackListener
 {
    private static final int START = 1;
    private static final int END = 2;
-   private static final String pointInformation[] = { Messages.get().GeoMapViewer_Start, Messages.get().GeoMapViewer_End };
-   
-   private static final int LABEL_ARROW_OFFSET = 10;
-   
-   private static final Color LABEL_BACKGROUND = new Color(Display.getCurrent(), 240, 254, 192);
-   private static final Color LABEL_TEXT = new Color(Display.getCurrent(), 0, 0, 0);
+
+   private static final Color INNER_BORDER_COLOR = new Color(Display.getCurrent(), 255, 255, 255);
    private static final Color TRACK_COLOR = new Color(Display.getCurrent(), 163, 73, 164);
-   
+
    private AbstractObject historyObject = null;
    private List<GeoLocation> points = new ArrayList<GeoLocation>();
    private TimePeriod timePeriod = new TimePeriod();
    private ToolTip pointToolTip = null;
    private QuadTree<GeoLocation> locationTree = new QuadTree<GeoLocation>();
    private int selectedPoint = -1;
+   private Image imageStart;
+   private Image imageFinish;
 
    /**
     * @param parent
@@ -82,11 +84,20 @@ public class GeoLocationHistoryViewer extends AbstractGeoMapViewer implements Mo
       this.historyObject = object;
       pointToolTip = new ToolTip(getShell(), SWT.BALLOON);
       addMouseTrackListener(this);
+
+      imageStart = Activator.getImageDescriptor("icons/start.png").createImage();
+      imageFinish = Activator.getImageDescriptor("icons/finish.png").createImage();
+      addDisposeListener(new DisposeListener() {
+         @Override
+         public void widgetDisposed(DisposeEvent e)
+         {
+            imageStart.dispose();
+            imageFinish.dispose();
+         }
+      });
    }
 
-   /*
-    * (non-Javadoc)
-    * 
+   /**
     * @see org.netxms.ui.eclipse.osm.widgets.AbstractGeoMapViewer#onMapLoad()
     */
    @Override
@@ -95,7 +106,7 @@ public class GeoLocationHistoryViewer extends AbstractGeoMapViewer implements Mo
       updateHistory();
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.ui.eclipse.osm.widgets.AbstractGeoMapViewer#onCacheChange(org.netxms.client.objects.AbstractObject, org.netxms.base.GeoLocation)
     */
    @Override
@@ -105,7 +116,7 @@ public class GeoLocationHistoryViewer extends AbstractGeoMapViewer implements Mo
          updateHistory();
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.swt.events.MouseTrackListener#mouseHover(org.eclipse.swt.events.MouseEvent)
     */
    @Override
@@ -121,7 +132,7 @@ public class GeoLocationHistoryViewer extends AbstractGeoMapViewer implements Mo
       redraw();
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.swt.events.MouseTrackListener#mouseEnter(org.eclipse.swt.events.MouseEvent)
     */
    @Override
@@ -129,7 +140,7 @@ public class GeoLocationHistoryViewer extends AbstractGeoMapViewer implements Mo
    {
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.swt.events.MouseTrackListener#mouseExit(org.eclipse.swt.events.MouseEvent)
     */
    @Override
@@ -140,7 +151,7 @@ public class GeoLocationHistoryViewer extends AbstractGeoMapViewer implements Mo
       redraw();
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.ui.eclipse.osm.widgets.AbstractGeoMapViewer#mouseMove(org.eclipse.swt.events.MouseEvent)
     */
    @Override
@@ -199,7 +210,7 @@ public class GeoLocationHistoryViewer extends AbstractGeoMapViewer implements Mo
       
       return locations;
    }
-   
+
    /**
     * Updates points for historical view
     */
@@ -334,41 +345,29 @@ public class GeoLocationHistoryViewer extends AbstractGeoMapViewer implements Mo
             gc.setLineWidth(3);
             gc.drawLine(x, y, prevX, prevY);
          }
-         
+
          gc.setBackground(getDisplay().getSystemColor(color)); 
          gc.fillOval(x - 5, y -5, 10, 10);
          
-         final String text = pointInformation[flag -1];
-         final Point textSize = gc.textExtent(text);
-         
-         Rectangle rect = new Rectangle(x - LABEL_ARROW_OFFSET, y - LABEL_ARROW_HEIGHT - textSize.y, textSize.x
-               + LABEL_X_MARGIN * 2 + LABEL_SPACING, textSize.y + LABEL_Y_MARGIN * 2);
-         
-         gc.setBackground(LABEL_BACKGROUND);
+         Image image = (flag == START) ? imageStart : imageFinish;
+         if (image == null)
+            image = SharedIcons.IMG_EMPTY;
 
-         gc.setForeground(BORDER_COLOR);
-         gc.setLineWidth(4);
-         gc.fillRoundRectangle(rect.x, rect.y, rect.width, rect.height, 8, 8);
-         gc.drawRoundRectangle(rect.x, rect.y, rect.width, rect.height, 8, 8);
-         
+         int w = image.getImageData().width + LABEL_X_MARGIN * 2;
+         int h = image.getImageData().height + LABEL_Y_MARGIN * 2;
+         Rectangle rect = new Rectangle(x - w / 2 - 1, y - LABEL_ARROW_HEIGHT - h, w, h);
+
+         gc.setBackground(TRACK_COLOR);
+         gc.fillArc(rect.x, rect.y, rect.width, rect.height, 0, 360);
          gc.setLineWidth(2);
-         gc.fillRoundRectangle(rect.x, rect.y, rect.width, rect.height, 8, 8);
-         gc.drawRoundRectangle(rect.x, rect.y, rect.width, rect.height, 8, 8);
-         final int[] arrow = new int[] { rect.x + LABEL_ARROW_OFFSET - 4, rect.y + rect.height, x, y, rect.x + LABEL_ARROW_OFFSET + 4,
-               rect.y + rect.height };
+         gc.setForeground(INNER_BORDER_COLOR);
+         gc.drawArc(rect.x + 4, rect.y + 4, rect.width - 8, rect.height - 8, 0, 360);
+         gc.setLineWidth(1);
 
-         gc.setLineWidth(4);
-         gc.setForeground(BORDER_COLOR);
-         gc.drawPolyline(arrow);
-
+         final int[] arrow = new int[] { rect.x + rect.width / 2 - 3, rect.y + rect.height - 1, x, y, rect.x + rect.width / 2 + 4, rect.y + rect.height - 1 };
          gc.fillPolygon(arrow);
-         gc.setForeground(LABEL_BACKGROUND);
-         gc.setLineWidth(2);
-         gc.drawLine(arrow[0], arrow[1], arrow[4], arrow[5]);
-         gc.drawPolyline(arrow);
 
-         gc.setForeground(LABEL_TEXT);
-         gc.drawText(text, rect.x + LABEL_X_MARGIN + LABEL_SPACING, rect.y + LABEL_Y_MARGIN);
+         gc.drawImage(image, rect.x + LABEL_X_MARGIN, rect.y + LABEL_Y_MARGIN);
       }
       else 
       {
@@ -380,7 +379,7 @@ public class GeoLocationHistoryViewer extends AbstractGeoMapViewer implements Mo
       }      
    }  
 
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.ui.eclipse.osm.widgets.AbstractGeoMapViewer#getObjectAtPoint(org.eclipse.swt.graphics.Point)
     */
    @Override
