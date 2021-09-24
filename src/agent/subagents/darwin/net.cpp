@@ -20,6 +20,7 @@
 
 #include <nms_common.h>
 #include <nms_agent.h>
+#include <interface_types.h>
 
 #include <sys/ioctl.h>
 #include <sys/sysctl.h>
