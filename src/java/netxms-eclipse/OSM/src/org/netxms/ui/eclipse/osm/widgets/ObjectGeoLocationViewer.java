@@ -31,9 +31,11 @@ import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.Path;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.graphics.Rectangle;
+import org.eclipse.swt.graphics.Transform;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.base.GeoLocation;
@@ -68,8 +70,10 @@ public class ObjectGeoLocationViewer extends AbstractGeoMapViewer implements Mou
    private Point objectToolTipLocation = null;
    private Rectangle objectTooltipRectangle = null;
    private Font objectToolTipHeaderFont;
+   private Font objectLabelFont;
    private long rootObjectId = 0;
    private boolean singleObjectMode = false;
+   private boolean showObjectNames = true;
    private String filterString = null;
 
    /**
@@ -82,6 +86,7 @@ public class ObjectGeoLocationViewer extends AbstractGeoMapViewer implements Mou
       addMouseTrackListener(this);
 
       objectToolTipHeaderFont = FontTools.createFont(TITLE_FONTS, 1, SWT.BOLD);
+      objectLabelFont = FontTools.createFont(TITLE_FONTS, 0, SWT.BOLD);
       
       final SessionListener listener = new SessionListener() {
          @Override
@@ -108,6 +113,7 @@ public class ObjectGeoLocationViewer extends AbstractGeoMapViewer implements Mou
          {
             ConsoleSharedData.getSession().removeListener(listener);
             objectToolTipHeaderFont.dispose();
+            objectLabelFont.dispose();
          }
       });
    }
@@ -142,6 +148,22 @@ public class ObjectGeoLocationViewer extends AbstractGeoMapViewer implements Mou
    public void setSingleObjectMode(boolean singleObjectMode)
    {
       this.singleObjectMode = singleObjectMode;
+   }
+
+   /**
+    * @return the showObjectNames
+    */
+   public boolean isShowObjectNames()
+   {
+      return showObjectNames;
+   }
+
+   /**
+    * @param showObjectNames the showObjectNames to set
+    */
+   public void setShowObjectNames(boolean showObjectNames)
+   {
+      this.showObjectNames = showObjectNames;
    }
 
    /**
@@ -348,7 +370,33 @@ public class ObjectGeoLocationViewer extends AbstractGeoMapViewer implements Mou
       gc.setForeground(BORDER_COLOR);
 
       gc.drawImage(image, rect.x + LABEL_X_MARGIN, rect.y + LABEL_Y_MARGIN);
-      
+
+      if (showObjectNames)
+      {
+         String text = object.getObjectName();
+         if (!object.getAlias().isEmpty())
+            text += "\n" + object.getAlias();
+
+         gc.setFont(objectLabelFont);
+         Point textSize = gc.textExtent(text);
+
+         Transform tr = new Transform(getDisplay());
+         tr.translate(rect.x + rect.width + 3, rect.y + rect.height / 2 - textSize.y / 2);
+         gc.setTransform(tr);
+
+         Path path = new Path(getDisplay());
+         path.addString(text, 0, 0, objectLabelFont);
+
+         gc.setBackground(bgColor);
+         gc.setForeground(getDisplay().getSystemColor(SWT.COLOR_WHITE));
+         gc.drawPath(path);
+         gc.fillPath(path);
+
+         gc.setTransform(null);
+         path.dispose();
+         tr.dispose();
+      }
+
       objectIcons.add(new ObjectIcon(object, rect, x, y));
    }
 
@@ -512,7 +560,7 @@ public class ObjectGeoLocationViewer extends AbstractGeoMapViewer implements Mou
       objectTooltipRectangle = rect;
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.ui.eclipse.osm.widgets.AbstractGeoMapViewer#getObjectAtPoint(org.eclipse.swt.graphics.Point)
     */
    @Override
@@ -542,8 +590,8 @@ public class ObjectGeoLocationViewer extends AbstractGeoMapViewer implements Mou
          this.object = object;
          arrow = new Polygon();
          arrow.addPoint(x, y);
-         arrow.addPoint(x - 4, rect.y + rect.height);
-         arrow.addPoint(x + 4, rect.y + rect.height);
+         arrow.addPoint(rect.x + rect.width / 2 - 3, rect.y + rect.height - 1);
+         arrow.addPoint(rect.x + rect.width / 2 + 4, rect.y + rect.height - 1);
       }
       
       public boolean contains(Point p)
