@@ -26,6 +26,7 @@ import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
+import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.ISelectionProvider;
@@ -37,6 +38,7 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.contexts.IContextService;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.base.GeoLocation;
@@ -44,11 +46,13 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.objectbrowser.api.ObjectContextMenu;
+import org.netxms.ui.eclipse.objectview.views.TabbedObjectView;
 import org.netxms.ui.eclipse.osm.Messages;
 import org.netxms.ui.eclipse.osm.tools.MapAccessor;
 import org.netxms.ui.eclipse.osm.widgets.AbstractGeoMapViewer;
 import org.netxms.ui.eclipse.osm.widgets.helpers.GeoMapListener;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
  * Base class for all geographical views
@@ -63,6 +67,7 @@ public abstract class AbstractGeolocationView extends ViewPart implements ISelec
 	private int zoomLevel = 15;
 	private Action actionZoomIn;
 	private Action actionZoomOut;
+   private Action actionShowObjectDetails;
 	private ISelection selection;
 	private Set<ISelectionChangedListener> selectionChangeListeners = new HashSet<ISelectionChangedListener>();
 	
@@ -183,6 +188,14 @@ public abstract class AbstractGeolocationView extends ViewPart implements ISelec
 			}
 		};
 		actionZoomOut.setImageDescriptor(SharedIcons.ZOOM_OUT);
+
+      actionShowObjectDetails = new Action("Show object details") {
+         @Override
+         public void run()
+         {
+            showObjectDetails();
+         }
+      };
 	}
 
 	/**
@@ -254,6 +267,8 @@ public abstract class AbstractGeolocationView extends ViewPart implements ISelec
 		if (!selection.isEmpty())
 		{
 		   ObjectContextMenu.fill(manager, getSite(), this);
+         manager.add(new Separator());
+         manager.add(actionShowObjectDetails);
 		}
 		else
 		{
@@ -289,6 +304,26 @@ public abstract class AbstractGeolocationView extends ViewPart implements ISelec
 		actionZoomOut.setEnabled(zoomLevel > MapAccessor.MIN_MAP_ZOOM);
 	}
 
+   /**
+    * Show details for selected object
+    */
+   private void showObjectDetails()
+   {
+      AbstractObject object = map.getObjectAtPoint(map.getCurrentPoint());
+      if (object != null)
+      {
+         try
+         {
+            TabbedObjectView view = (TabbedObjectView)PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().showView(TabbedObjectView.ID);
+            view.setObject(object);
+         }
+         catch(PartInitException e)
+         {
+            MessageDialogHelper.openError(getSite().getShell(), "Error", String.format("Cannot open object view: ", e.getLocalizedMessage()));
+         }
+      }
+   }
+
 	/**
 	 * @return the mapAccessor
 	 */
@@ -296,7 +331,7 @@ public abstract class AbstractGeolocationView extends ViewPart implements ISelec
 	{
 		return mapAccessor;
 	}
-	
+
 	/**
 	 * Fire selection changed listeners
 	 */
