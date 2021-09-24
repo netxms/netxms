@@ -42,6 +42,7 @@ public class LocationMap extends AbstractGeolocationView
 	
 	private AbstractObject object;
    private Action actionHideOtherObjects;
+   private Action actionShowObjectNames;
 
    /**
     * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
@@ -73,6 +74,7 @@ public class LocationMap extends AbstractGeolocationView
    protected AbstractGeoMapViewer createMapViewer(Composite parent, int style)
    {
       ObjectGeoLocationViewer mapViewer = new ObjectGeoLocationViewer(parent, style);
+      mapViewer.setShowObjectNames(!Activator.getDefault().getDialogSettings().getBoolean("LocationMap.HideObjectNames"));
       if (Activator.getDefault().getDialogSettings().getBoolean("LocationMap.HideOtherObjects"))
       {
          mapViewer.setRootObjectId(object.getObjectId());
@@ -119,6 +121,18 @@ public class LocationMap extends AbstractGeolocationView
       };
       actionHideOtherObjects.setImageDescriptor(Activator.getImageDescriptor("icons/hide_other_objects.png"));
       actionHideOtherObjects.setChecked(Activator.getDefault().getDialogSettings().getBoolean("LocationMap.HideOtherObjects"));
+
+      actionShowObjectNames = new Action("Show object &names", Action.AS_CHECK_BOX) {
+         @Override
+         public void run()
+         {
+            Activator.getDefault().getDialogSettings().put("LocationMap.HideObjectNames", !isChecked());
+            ((ObjectGeoLocationViewer)map).setShowObjectNames(isChecked());
+            map.reloadMap();
+         }
+      };
+      actionShowObjectNames.setImageDescriptor(Activator.getImageDescriptor("icons/show_names.png"));
+      actionShowObjectNames.setChecked(!Activator.getDefault().getDialogSettings().getBoolean("LocationMap.HideObjectNames"));
    }
 
    /**
@@ -128,6 +142,7 @@ public class LocationMap extends AbstractGeolocationView
    protected void fillLocalPullDown(IMenuManager manager)
    {
       manager.add(actionHideOtherObjects);
+      manager.add(actionShowObjectNames);
       manager.add(new Separator());
       super.fillLocalPullDown(manager);
    }
@@ -139,6 +154,7 @@ public class LocationMap extends AbstractGeolocationView
    protected void fillLocalToolBar(IToolBarManager manager)
    {
       manager.add(actionHideOtherObjects);
+      manager.add(actionShowObjectNames);
       manager.add(new Separator());
       super.fillLocalToolBar(manager);
    }
