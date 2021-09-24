@@ -2328,9 +2328,30 @@ void NXSL_VM::doBinaryOperation(int nOpCode)
                   {
                      pRes = createValue(pVal2->getValueAsArray()->contains(pVal1));
                   }
+                  else if (pVal2->isHashMap())
+                  {
+                     if (pVal1->isString())
+                        pRes = createValue(pVal2->getValueAsHashMap()->contains(pVal1->getValueAsCString()));
+                     else
+                        error(NXSL_ERR_NOT_STRING);
+                  }
+                  else if (pVal2->isString())
+                  {
+                     if (pVal1->isString())
+                     {
+                        uint32_t len1, len2;
+                        const TCHAR *s1 = pVal1->getValueAsString(&len1);
+                        const TCHAR *s2 = pVal2->getValueAsString(&len2);
+                        pRes = createValue((len1 <= len2) && (memmem(s2, len2 * sizeof(TCHAR), s1, len1 * sizeof(TCHAR)) != nullptr));
+                     }
+                     else
+                     {
+                        error(NXSL_ERR_NOT_STRING);
+                     }
+                  }
                   else
                   {
-                     error(NXSL_ERR_NOT_ARRAY);
+                     error(NXSL_ERR_NOT_CONTAINER);
                   }
                   break;
                case OPCODE_ADD:

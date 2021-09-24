@@ -7,6 +7,7 @@ s = "string";
 n = null;
 o = new TIME();
 a = %(1, 2, 3);
+m = %{ "one":1, "two":2 };
 
 assert(typeof(i32) == "int32");
 assert(typeof(i64) == "int64");
@@ -16,6 +17,7 @@ assert(typeof(n) == "null");
 assert(typeof(o) == "object");
 assert(classof(o) == "TIME");
 assert(typeof(a) == "array");
+assert(typeof(m) == "hashmap");
 
 assert(typeof(i32 . s) == "string");
 assert(typeof(string(n)) == "string");

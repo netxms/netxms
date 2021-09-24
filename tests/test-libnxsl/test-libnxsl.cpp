@@ -145,6 +145,7 @@ int main(int argc, char *argv[])
    RunTestScript(_T("control.nxsl"));
    RunTestScript(_T("gethost.nxsl"));
    RunTestScript(_T("globals.nxsl"));
+   RunTestScript(_T("hashmap.nxsl"));
    RunTestScript(_T("json.nxsl"));
    RunTestScript(_T("like.nxsl"));
    RunTestScript(_T("math.nxsl"));

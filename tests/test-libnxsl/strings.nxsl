@@ -8,6 +8,11 @@ assert(s3 == "Helloworld");
 
 s3 = s1 . ", " . s2;
 assert(s3 == "Hello, world");
+assert("Hello" in s3);
+assert("world" in s3);
+assert("Hello, world" in s3);
+assert("llo, w" in s3);
+assert(!("world!" in s3));
 
 assert(upper(s1) == "HELLO");
 assert(lower(s1) == "hello");

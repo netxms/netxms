@@ -18,6 +18,7 @@ nxsltest_DATA = \
 	control.nxsl \
 	gethost.nxsl \
 	globals.nxsl \
+	hashmap.nxsl \
 	json.nxsl \
 	like.nxsl \
 	math.nxsl \

@@ -1,0 +1,16 @@
+/* Check hash map functionality */
+
+m1 = %{ "alpha":1, "beta":2, "gamma":3 };
+assert("alpha" in m1);
+assert(!(1 in m1));
+assert(m1["alpha"] == 1);
+assert(m1["beta"] == 2);
+
+m2 = m1;
+assert(m2["alpha"] == 1);
+
+m2["delta"] = null;
+assert("delta" in m2);
+assert(m2["delta"] == null);
+
+return 0;

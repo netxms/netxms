@@ -7,6 +7,8 @@ a1[100] = 101;
 assert(a1->size == 3);
 assert(a1->minIndex == 1);
 assert(a1->maxIndex == 100);
+assert(42 in a1);
+assert(!("abcde" in a1));
 
 a2 = %(1, 2, 3, 4);
 assert(a2->size == 4);

@@ -393,6 +393,7 @@ public:
    NXSL_Value *get(const TCHAR *key) const { return m_values->get(key); }
    NXSL_Value *getKeys() const;
    NXSL_Value *getValues() const;
+   bool contains(const TCHAR *key) const { return m_values->contains(key); }
 
    StringMap *toStringMap() const;
    void toStringMap(StringMap *map) const;
