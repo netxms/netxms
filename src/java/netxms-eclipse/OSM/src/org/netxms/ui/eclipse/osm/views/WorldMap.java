@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -59,26 +59,28 @@ public class WorldMap extends AbstractGeolocationView
 	private int initialZoom;
 	private Action actionPlaceObject;
    private Action actionShowFilter;
+   private Action actionShowObjectNames;
    private boolean filterEnabled;
+   private boolean showObjectNames;
    private FilterText filterControl;
 
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.ui.eclipse.osm.views.AbstractGeolocationView#createPartControl(org.eclipse.swt.widgets.Composite)
     */
    @Override
    public void createPartControl(Composite parent)
    {
       IDialogSettings settings = Activator.getDefault().getDialogSettings();
-      
+
       initialZoom = settings.get(ID + "zoom") != null ? settings.getInt(ID + "zoom") : 2;
       if (settings.get(ID + "latitude") != null && settings.get(ID + "longitude") != null)
          initialLocation = new GeoLocation(settings.getDouble(ID + "latitude"), settings.getDouble(ID + "longitude"));
       filterEnabled = settings.get(ID + "filterEnabled") != null ? settings.getBoolean(ID + "filterEnabled") : true;
-      
+      showObjectNames = settings.get(ID + "showObjectNames") != null ? settings.getBoolean(ID + "showObjectNames") : true;
+
       super.createPartControl(parent);
-      
       parent.setLayout(new FormLayout());
-      
+
       // Create filter area
       filterControl = new FilterText(parent, SWT.NONE);
       filterControl.addModifyListener(new ModifyListener() {
@@ -95,7 +97,7 @@ public class WorldMap extends AbstractGeolocationView
             enableFilter(false);
          }
       });
-      
+
       // Setup layout
       FormData fd = new FormData();
       fd.left = new FormAttachment(0, 0);
@@ -109,7 +111,7 @@ public class WorldMap extends AbstractGeolocationView
       fd.top = new FormAttachment(0, 0);
       fd.right = new FormAttachment(100, 0);
       filterControl.setLayoutData(fd);
-      
+
       // Set initial focus to filter input line
       if (filterEnabled)
          filterControl.setFocus();
@@ -117,16 +119,18 @@ public class WorldMap extends AbstractGeolocationView
          enableFilter(false); // Will hide filter area correctly
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.ui.eclipse.osm.views.AbstractGeolocationView#createMapViewer(org.eclipse.swt.widgets.Composite, int)
     */
    @Override
    protected AbstractGeoMapViewer createMapViewer(Composite parent, int style)
    {
-      return new ObjectGeoLocationViewer(parent, style);
+      ObjectGeoLocationViewer viewer = new ObjectGeoLocationViewer(parent, style);
+      viewer.setShowObjectNames(showObjectNames);
+      return viewer;
    }
 
-	/* (non-Javadoc)
+   /**
     * @see org.eclipse.ui.part.WorkbenchPart#dispose()
     */
    @Override
@@ -139,30 +143,31 @@ public class WorldMap extends AbstractGeolocationView
       settings.put(ID + "latitude", m.getLatitude());
       settings.put(ID + "longitude", m.getLongitude());
       settings.put(ID + "filterEnabled", filterEnabled);
+      settings.put(ID + "showObjectNames", showObjectNames);
       super.dispose();
    }
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.osm.views.AbstractGeolocationView#getInitialCenterPoint()
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.osm.views.AbstractGeolocationView#getInitialCenterPoint()
+    */
 	@Override
 	protected GeoLocation getInitialCenterPoint()
 	{
 		return initialLocation;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.osm.views.AbstractGeolocationView#getInitialZoomLevel()
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.osm.views.AbstractGeolocationView#getInitialZoomLevel()
+    */
 	@Override
 	protected int getInitialZoomLevel()
 	{
 		return initialZoom;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.osm.views.AbstractGeolocationView#createActions()
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.osm.views.AbstractGeolocationView#createActions()
+    */
 	@Override
 	protected void createActions()
 	{
@@ -176,56 +181,72 @@ public class WorldMap extends AbstractGeolocationView
 			}
 		};
 		
-      actionShowFilter = new Action("Show filter", Action.AS_CHECK_BOX) {
+      actionShowFilter = new Action("Show &filter", Action.AS_CHECK_BOX) {
          @Override
          public void run()
          {
             enableFilter(actionShowFilter.isChecked());
          }
       };
-      
       actionShowFilter.setImageDescriptor(SharedIcons.FILTER);
       actionShowFilter.setChecked(filterEnabled);
       actionShowFilter.setActionDefinitionId("org.netxms.ui.eclipse.worldmap.commands.show_filter"); //$NON-NLS-1$
       final ActionHandler showFilterHandler = new ActionHandler(actionShowFilter);
       final IHandlerService handlerService = (IHandlerService)getSite().getService(IHandlerService.class);
       handlerService.activateHandler(actionShowFilter.getActionDefinitionId(), showFilterHandler);
+
+      actionShowObjectNames = new Action("Show object &names", Action.AS_CHECK_BOX) {
+         @Override
+         public void run()
+         {
+            showObjectNames = actionShowObjectNames.isChecked();
+            ((ObjectGeoLocationViewer)map).setShowObjectNames(showObjectNames);
+            map.redraw();
+         }
+      };
+      actionShowObjectNames.setImageDescriptor(Activator.getImageDescriptor("icons/show_names.png"));
+      actionShowObjectNames.setChecked(showObjectNames);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.osm.views.AbstractGeolocationView#fillContextMenu(org.eclipse.jface.action.IMenuManager)
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.osm.views.AbstractGeolocationView#fillContextMenu(org.eclipse.jface.action.IMenuManager)
+    */
 	@Override
 	protected void fillContextMenu(IMenuManager manager)
 	{
 		super.fillContextMenu(manager);
-		
+      manager.add(new Separator());
+      manager.add(actionShowFilter);
+      manager.add(actionShowObjectNames);
 		if (getSelection().isEmpty())
 		{
    		manager.add(new Separator());
    		manager.add(actionPlaceObject);
-         manager.add(actionShowFilter);
 		}
 	}
-	
-	/* (non-Javadoc)
+
+   /**
     * @see org.netxms.ui.eclipse.osm.views.AbstractGeolocationView#fillLocalPullDown(org.eclipse.jface.action.IMenuManager)
     */
    @Override
    protected void fillLocalPullDown(IMenuManager manager)
    {
       super.fillLocalPullDown(manager);
+      manager.add(new Separator());
       manager.add(actionShowFilter);
+      manager.add(actionShowObjectNames);
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.ui.eclipse.osm.views.AbstractGeolocationView#fillLocalToolBar(org.eclipse.jface.action.IToolBarManager)
     */
    @Override
    protected void fillLocalToolBar(IToolBarManager manager)
    {
       super.fillLocalToolBar(manager);
+      manager.add(new Separator());
       manager.add(actionShowFilter);
+      manager.add(actionShowObjectNames);
    }
 
    /**
