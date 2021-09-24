@@ -215,11 +215,11 @@ public class WorldMap extends AbstractGeolocationView
 	protected void fillContextMenu(IMenuManager manager)
 	{
 		super.fillContextMenu(manager);
-      manager.add(new Separator());
-      manager.add(actionShowFilter);
-      manager.add(actionShowObjectNames);
 		if (getSelection().isEmpty())
 		{
+	      manager.add(new Separator());
+	      manager.add(actionShowFilter);
+	      manager.add(actionShowObjectNames);
    		manager.add(new Separator());
    		manager.add(actionPlaceObject);
 		}
