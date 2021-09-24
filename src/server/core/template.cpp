@@ -438,7 +438,7 @@ UINT32 Template::modifyFromMessageInternal(NXCPMessage *pRequest)
 void Template::updateFromImport(ConfigEntry *config)
 {
    super::updateFromImport(config);
-   AutoBindTarget::updateFromImport(config);
+   AutoBindTarget::updateFromImport(*config);
    VersionableObject::updateFromImport(config);
 
    lockProperties();

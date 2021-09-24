@@ -34,7 +34,7 @@
 /**
  * Base business service default constructor
  */
-BaseBusinessService::BaseBusinessService() : super(), AutoBindTarget(this), m_checks(10, 10, Ownership::True)
+BaseBusinessService::BaseBusinessService() : super(), AutoBindTarget(this), m_checks(16, 16, Ownership::True)
 {
    m_id = 0;
    m_busy = false;
@@ -42,7 +42,7 @@ BaseBusinessService::BaseBusinessService() : super(), AutoBindTarget(this), m_ch
    m_lastPollTime = time_t(0);
    m_prototypeId = 0;
    m_instance = nullptr;
-   m_instanceDiscoveryMethod = 0;
+   m_instanceDiscoveryMethod = IDM_NONE;
    m_instanceDiscoveryData = nullptr;
    m_instanceDiscoveryFilter = nullptr;
    m_instanceSource = 0;
@@ -53,19 +53,44 @@ BaseBusinessService::BaseBusinessService() : super(), AutoBindTarget(this), m_ch
 /**
  * Base business service default constructor
  */
-BaseBusinessService::BaseBusinessService(const TCHAR *name) : super(name, 0), AutoBindTarget(this), m_checks(10, 10, Ownership::True)
+BaseBusinessService::BaseBusinessService(const TCHAR *name) : super(name, 0), AutoBindTarget(this), m_checks(16, 16, Ownership::True)
 {
    m_busy = false;
    m_pollingDisabled = false;
    m_lastPollTime = time_t(0);
    m_prototypeId = 0;
    m_instance = nullptr;
-   m_instanceDiscoveryMethod = 0;
+   m_instanceDiscoveryMethod = IDM_NONE;
    m_instanceDiscoveryData = nullptr;
    m_instanceDiscoveryFilter = nullptr;
    m_instanceSource = 0;
    m_objectStatusThreshhold = 0;
    m_dciStatusThreshhold = 0;
+}
+
+/**
+ * Create business service from prototype
+ */
+BaseBusinessService::BaseBusinessService(BaseBusinessService *prototype, const TCHAR *name, const TCHAR *instance) : super(name, 0),
+         AutoBindTarget(this), m_checks(prototype->m_checks.size(), 16, Ownership::True)
+{
+   m_busy = false;
+   m_pollingDisabled = false;
+   m_lastPollTime = time_t(0);
+   m_prototypeId = prototype->m_id;
+   m_instance = MemCopyString(prototype->m_instance);
+   m_instanceDiscoveryMethod = IDM_NONE;
+   m_instanceDiscoveryData = nullptr;
+   m_instanceDiscoveryFilter = nullptr;
+   m_instanceSource = 0;
+   m_objectStatusThreshhold = prototype->m_objectStatusThreshhold;
+   m_dciStatusThreshhold = prototype->m_dciStatusThreshhold;
+
+   for(int i = 0; i < MAX_AUTOBIND_TARGET_FILTERS; i++)
+      setAutoBindFilter(i, prototype->m_autoBindFilterSources[i]);
+   m_autoBindFlags = prototype->m_autoBindFlags;
+
+   copyChecks(m_checks);
 }
 
 /**
@@ -346,6 +371,14 @@ BusinessService::BusinessService(const TCHAR *name) : BaseBusinessService(name),
 }
 
 /**
+ * Create new business service from prototype
+ */
+BusinessService::BusinessService(BaseBusinessService *prototype, const TCHAR *name, const TCHAR *instance) : BaseBusinessService(prototype, name, instance), m_statusPollState(_T("status")), m_configurationPollState(_T("configuration"))
+{
+   m_hPollerMutex = MutexCreate();
+}
+
+/**
  * Destructor
  */
 BusinessService::~BusinessService()
@@ -508,6 +541,7 @@ void BusinessService::configurationPoll(PollerInfo *poller, ClientSession *sessi
    m_pollRequestor = session;
    m_pollRequestId = rqId;
 
+   nxlog_debug_tag(DEBUG_TAG, 6, _T("BusinessService::configurationPoll(%s): started"), m_name);
    sendPollerMsg(_T("Configuration poll started\r\n"));
 
    lockProperties();
@@ -529,142 +563,128 @@ void BusinessService::configurationPoll(PollerInfo *poller, ClientSession *sessi
       return;
    }
 
-   objectCheckAutoBinding();
-   dciCheckAutoBinding();
+   validateAutomaticObjectChecks();
+   validateAutomaticDCIChecks();
 
    sendPollerMsg(_T("Configuration poll finished\r\n"));
-   nxlog_debug_tag(DEBUG_TAG, 6, _T("BusinessServiceConfPoll(%s): finished"), m_name);
+   nxlog_debug_tag(DEBUG_TAG, 6, _T("BusinessService::configurationPoll(%s): finished"), m_name);
 
    pollerUnlock();
 }
 
 /**
- * Business service object checks autobinding
+ * Validate automatically created object based checks (will add or remove checks as needed)
  */
-void BusinessService::objectCheckAutoBinding()
+void BusinessService::validateAutomaticObjectChecks()
 {
-   if (isFirstFilterBindingEnabled())
+   if (!isAutoBindEnabled(0))
    {
-      nxlog_debug_tag(DEBUG_TAG, 6, _T("Business service(%s): Looking for object checks to create"), m_name);
-      sendPollerMsg(_T("Business service(%s): Looking for object checks to create \r\n"), m_name);
-      unique_ptr<SharedObjectArray<NetObj>> objects = g_idxObjectById.getObjects();
-      uint32_t bindedCount = 0;
-      uint32_t unbindedCount = 0;
-      for (int i = 0; i < objects->size(); i++)
+      sendPollerMsg(_T("Automatic creation of object based checks is disabled\r\n"));
+      return;
+   }
+
+   nxlog_debug_tag(DEBUG_TAG, 6, _T("BusinessService::validateAutomaticObjectChecks(%s): validating object based checks"), m_name);
+   sendPollerMsg(_T("Validating automatically created object based checks\r\n"));
+   unique_ptr<SharedObjectArray<NetObj>> objects = g_idxObjectById.getObjects();
+   for (int i = 0; i < objects->size(); i++)
+   {
+      shared_ptr<NetObj> object = objects->getShared(i);
+      AutoBindDecision decision = isApplicable(object);
+      if (decision != AutoBindDecision_Ignore)
       {
-         shared_ptr<NetObj> object = objects->getShared(i);
-         AutoBindDecision decision = isFirstFilterApplicable(object);
-         if (decision != AutoBindDecision_Ignore)
+         BusinessServiceCheck* selectedCheck = nullptr;
+         for (BusinessServiceCheck* check : m_checks)
          {
-            uint32_t foundCheckId = 0;
-            for (auto check : m_checks)
+            if ((check->getType() == BusinessServiceCheck::CheckType::OBJECT) && (check->getRelatedObject() == object->getId()))
             {
-               if (check->getType() == BusinessServiceCheck::CheckType::OBJECT && check->getRelatedObject() == object->getId())
-               {
-                  foundCheckId = check->getId();
-                  break;
-               }
-            }
-            if (foundCheckId != 0 && decision == AutoBindDecision_Unbind && isFirstFilterUnbindingEnabled())
-            {
-               nxlog_debug_tag(DEBUG_TAG, 6, _T("Business service(%s): object check %u deleted"), foundCheckId);
-               deleteCheck(foundCheckId);
-               unbindedCount++;
-            }
-            if (foundCheckId == 0 && decision == AutoBindDecision_Bind)
-            {
-               BusinessServiceCheck *check = new BusinessServiceCheck(m_id);
-               m_checks.add(check);
-               check->setRelatedObject(object->getId());
-               TCHAR checkName[MAX_OBJECT_NAME];
-               _sntprintf(checkName, MAX_OBJECT_NAME, _T("%s[%u] check"), object->getName(), object->getId());
-               check->setName(checkName);
-               check->generateId();
-               check->setThreshold(m_objectStatusThreshhold);
-               check->saveToDatabase();
-               nxlog_debug_tag(DEBUG_TAG, 6, _T("Business service(%s): object check %s[%u] created"), checkName, foundCheckId);
-               NotifyClientsOnBusinessServiceCheckUpdate(*this, check);
-               bindedCount++;
+               selectedCheck = check;
+               break;
             }
          }
+         if ((selectedCheck != nullptr) && (decision == AutoBindDecision_Unbind) && isAutoUnbindEnabled(0))
+         {
+            nxlog_debug_tag(DEBUG_TAG, 6, _T("BusinessService::validateAutomaticObjectChecks(%s): object check %s [%u] deleted"), m_name, selectedCheck->getName(), selectedCheck->getId());
+            sendPollerMsg(_T("   Object based check \"%s\" deleted\r\n"), selectedCheck->getName());
+            deleteCheck(selectedCheck->getId());
+         }
+         if ((selectedCheck == nullptr) && (decision == AutoBindDecision_Bind))
+         {
+            BusinessServiceCheck *check = new BusinessServiceCheck(m_id);
+            m_checks.add(check);
+            check->setRelatedObject(object->getId());
+            TCHAR checkName[MAX_OBJECT_NAME];
+            _sntprintf(checkName, MAX_OBJECT_NAME, _T("%s"), object->getName());
+            check->setName(checkName);
+            check->generateId();
+            check->setThreshold(m_objectStatusThreshhold);
+            check->saveToDatabase();
+            nxlog_debug_tag(DEBUG_TAG, 6, _T("BusinessService::validateAutomaticObjectChecks(%s): object check %s [%u] created"), m_name, checkName, check->getId());
+            sendPollerMsg(_T("   Object based check \"%s\" created\r\n"), checkName);
+            NotifyClientsOnBusinessServiceCheckUpdate(*this, check);
+         }
       }
-      sendPollerMsg(_T("Business service object checks created: %u, business service object checks deleted: %u \r\n"), bindedCount, unbindedCount);
-   }
-   else
-   {
-      sendPollerMsg(_T("Business service object checks creation disabled \r\n"));
    }
 }
 
 /**
  * Business service DCI checks autobinding
  */
-void BusinessService::dciCheckAutoBinding()
+void BusinessService::validateAutomaticDCIChecks()
 {
-   if (isSecondFilterBindingEnabled())
+   if (!isAutoBindEnabled(1))
    {
-      nxlog_debug_tag(DEBUG_TAG, 6, _T("Business service(%s): Looking for DCI checks to create"), m_name);
-      sendPollerMsg(_T("Business service(%s): Looking for DCI checks to create \r\n"), m_name);
-      unique_ptr<SharedObjectArray<NetObj>> objects = g_idxObjectById.getObjects();
-      uint32_t bindedCount = 0;
-      uint32_t unbindedCount = 0;
-      for (int i = 0; i < objects->size(); i++)
+      sendPollerMsg(_T("Automatic creation of DCI based checks is disabled\r\n"));
+      return;
+   }
+
+   nxlog_debug_tag(DEBUG_TAG, 6, _T("BusinessService::validateAutomaticObjectChecks(%s): validating DCI based checks"), m_name);
+   sendPollerMsg(_T("Validating automatically created DCI based checks\r\n"));
+   unique_ptr<SharedObjectArray<NetObj>> objects = g_idxObjectById.getObjects();
+   for (int i = 0; i < objects->size(); i++)
+   {
+      shared_ptr<NetObj> object = objects->getShared(i);
+      if (!object->isDataCollectionTarget())
+         continue;
+
+      for (shared_ptr<DCObject> dci : *static_cast<DataCollectionTarget&>(*object).getAllDCObjects())
       {
-         shared_ptr<NetObj> object = objects->getShared(i);
-         if (object->isDataCollectionTarget())
+         AutoBindDecision decision = isApplicable(object, dci, 1);
+         if (decision != AutoBindDecision_Ignore)
          {
-            shared_ptr<DataCollectionTarget> target = static_pointer_cast<DataCollectionTarget>(object);
-            unique_ptr<IntegerArray<uint32_t>> dciIds = target->getDCIIds();
-            for (int j = 0; j < dciIds->size(); j++)
+            BusinessServiceCheck* selectedCheck = nullptr;
+            for (BusinessServiceCheck* check : m_checks)
             {
-               shared_ptr<DCObject> dci = target->getDCObjectById(dciIds->get(j), 0);
-               if (dci != nullptr)
+               if ((check->getType() == BusinessServiceCheck::CheckType::DCI) && (check->getRelatedObject() == object->getId()) && (check->getRelatedDCI() == dci->getId()))
                {
-                  AutoBindDecision decision = isSecondFilterApplicable(object, dci);
-                  if (decision != AutoBindDecision_Ignore)
-                  {
-                     uint32_t foundCheckId = 0;
-                     for (auto check : m_checks)
-                     {
-                        if (check->getType() == BusinessServiceCheck::CheckType::DCI && check->getRelatedObject() == object->getId() && check->getRelatedDCI() == dci->getId())
-                        {
-                           foundCheckId = check->getId();
-                           break;
-                        }
-                     }
-                     if (foundCheckId != 0 && decision == AutoBindDecision_Unbind && isFirstFilterUnbindingEnabled())
-                     {
-                        nxlog_debug_tag(DEBUG_TAG, 6, _T("Business service(%s): DCI check %u deleted"), foundCheckId);
-                        deleteCheck(foundCheckId);
-                        unbindedCount++;
-                     }
-                     if (foundCheckId == 0 && decision == AutoBindDecision_Bind)
-                     {
-                        BusinessServiceCheck *check = new BusinessServiceCheck(m_id);
-                        m_checks.add(check);
-                        check->setType(BusinessServiceCheck::DCI);
-                        check->setRelatedObject(object->getId());
-                        check->setRelatedDCI(dci->getId());
-                        TCHAR checkName[MAX_OBJECT_NAME];
-                        _sntprintf(checkName, MAX_OBJECT_NAME, _T("%s in %s[%u] DCI check"), dci->getName().cstr(), object->getName(), object->getId());
-                        check->setName(checkName);
-                        check->generateId();
-                        check->setThreshold(m_dciStatusThreshhold);
-                        check->saveToDatabase();
-                        nxlog_debug_tag(DEBUG_TAG, 6, _T("Business service(%s): DCI check %s[%u] created"), checkName, foundCheckId);
-                        NotifyClientsOnBusinessServiceCheckUpdate(*this, check);
-                        bindedCount++;
-                     }
-                  }
+                  selectedCheck = check;
+                  break;
                }
+            }
+            if ((selectedCheck != nullptr) && (decision == AutoBindDecision_Unbind) && isAutoUnbindEnabled(1))
+            {
+               nxlog_debug_tag(DEBUG_TAG, 6, _T("BusinessService::validateAutomaticObjectChecks(%s): DCI check %s [%u] deleted"), m_name, selectedCheck->getName(), selectedCheck->getId());
+               sendPollerMsg(_T("   DCI based check \"%s\" deleted\r\n"), selectedCheck->getName());
+               deleteCheck(selectedCheck->getId());
+            }
+            if ((selectedCheck == nullptr) && (decision == AutoBindDecision_Bind))
+            {
+               BusinessServiceCheck *check = new BusinessServiceCheck(m_id);
+               m_checks.add(check);
+               check->setType(BusinessServiceCheck::DCI);
+               check->setRelatedObject(object->getId());
+               check->setRelatedDCI(dci->getId());
+               TCHAR checkName[MAX_OBJECT_NAME];
+               _sntprintf(checkName, MAX_OBJECT_NAME, _T("%s: %s"), object->getName(), dci->getName().cstr());
+               check->setName(checkName);
+               check->generateId();
+               check->setThreshold(m_dciStatusThreshhold);
+               check->saveToDatabase();
+               nxlog_debug_tag(DEBUG_TAG, 6, _T("BusinessService::validateAutomaticObjectChecks(%s): DCI check %s [%u] created"), m_name, checkName, check->getId());
+               sendPollerMsg(_T("   DCI based check \"%s\" created\r\n"), checkName);
+               NotifyClientsOnBusinessServiceCheckUpdate(*this, check);
             }
          }
       }
-      sendPollerMsg(_T("Business service DCI checks created: %u, business service DCI checks deleted: %u  \r\n"), bindedCount, unbindedCount);
-   }
-   else
-   {
-      sendPollerMsg(_T("Business service DCI checks creation disabled \r\n"));
    }
 }
 
@@ -961,29 +981,21 @@ void BusinessServicePrototype::instanceDiscoveryPoll(PollerInfo *poller, ClientS
    for (auto it = services->begin(); it.hasNext();)
    {
       auto service = it.next();
-      sendPollerMsg(_T("   Service \"%s\" removed\r\n"), service->getName());
+      sendPollerMsg(_T("   Business service \"%s\" removed\r\n"), service->getName());
       service->deleteObject();
       it.remove();
    }
 
-   for (auto inst : *instances)
+   for (auto instance : *instances)
    {
-      auto service = make_shared<BusinessService>(inst->value);
-      if (service != nullptr)
-      {
-         service->setInstance(inst->key);
-         service->setPrototypeId(m_id);
-         service->setFirstFilter(m_firstBindFilterSource);
-         service->setSecondFilter(m_secondBindFilterSource);
-         service->copyChecks(m_checks);
-         service->setAutoBindFlags(m_autoBindFlags);
-         NetObjInsert(service, true, false); // Insert into indexes
-         g_businessServiceRoot->addChild(service);
-         service->addParent(getParents()->getShared(0));
-         g_businessServiceRoot->calculateCompoundStatus();
-         service->unhide();
-         sendPollerMsg(_T("   Service \"%s\" created\r\n"), service->getName());
-      }
+      auto service = make_shared<BusinessService>(this, instance->value, instance->key);
+      NetObjInsert(service, true, false); // Insert into indexes
+      shared_ptr<NetObj> parent = getParents()->getShared(0);
+      parent->addChild(service);
+      service->addParent(parent);
+      parent->calculateCompoundStatus();
+      service->unhide();
+      sendPollerMsg(_T("   Business service \"%s\" created\r\n"), service->getName());
    }
 
    delete poller;

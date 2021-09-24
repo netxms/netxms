@@ -59,7 +59,7 @@ public class DciSummaryTable
 		columns = new ArrayList<DciSummaryTableColumn>();
 		tableDciName = "";
 	}
-	
+
    /**
     * Create new empty summary table object for single valued DCIs
     * 

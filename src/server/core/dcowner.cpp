@@ -813,7 +813,7 @@ shared_ptr<DCObject> DataCollectionOwner::getDCObjectByGUID(const uuid& guid, ui
 /**
  * Get all DC objects with matching name and description
  */
-NXSL_Value *DataCollectionOwner::getAllDCObjectsForNXSL(NXSL_VM *vm, const TCHAR *name, const TCHAR *description, UINT32 userID) const
+NXSL_Value *DataCollectionOwner::getAllDCObjectsForNXSL(NXSL_VM *vm, const TCHAR *name, const TCHAR *description, uint32_t userID) const
 {
    NXSL_Array *list = new NXSL_Array(vm);
    readLockDciAccess();
@@ -947,18 +947,6 @@ unique_ptr<StringSet> DataCollectionOwner::getDCIScriptList() const
    }
    unlockDciAccess();
    return unique_ptr<StringSet>(scripts);
-}
-
-unique_ptr<IntegerArray<uint32_t>> DataCollectionOwner::getDCIIds()
-{
-   IntegerArray<uint32_t>* arr = new IntegerArray<uint32_t>();
-   readLockDciAccess();
-   for(int i = 0; i < m_dcObjects->size(); i++)
-   {
-      arr->add(m_dcObjects->get(i)->getId());
-   }
-   unlockDciAccess();
-   return unique_ptr<IntegerArray<uint32_t>>(arr);
 }
 
 /**
@@ -1132,17 +1120,17 @@ bool DataCollectionOwner::isDataCollectionSource(UINT32 nodeId) const
  * @param userId to check user access
  * @return list of matching DCOs
  */
-SharedObjectArray<DCObject> *DataCollectionOwner::getDCObjectsByRegex(const TCHAR *regex, bool searchName, UINT32 userId) const
+unique_ptr<SharedObjectArray<DCObject>> DataCollectionOwner::getDCObjectsByRegex(const TCHAR *regex, bool searchName, uint32_t userId) const
 {
    const char *eptr;
    int eoffset;
-   PCRE *preg = _pcre_compile_t(reinterpret_cast<const PCRE_TCHAR*>(regex), PCRE_COMMON_FLAGS | PCRE_CASELESS, &eptr, &eoffset, NULL);
-   if (preg == NULL)
-      return NULL;
+   PCRE *preg = _pcre_compile_t(reinterpret_cast<const PCRE_TCHAR*>(regex), PCRE_COMMON_FLAGS | PCRE_CASELESS, &eptr, &eoffset, nullptr);
+   if (preg == nullptr)
+      return unique_ptr<SharedObjectArray<DCObject>>();
 
    readLockDciAccess();
 
-   auto result = new SharedObjectArray<DCObject>(m_dcObjects->size());
+   auto result = make_unique<SharedObjectArray<DCObject>>(m_dcObjects->size());
 
    for(int i = 0; i < m_dcObjects->size(); i++)
    {
@@ -1152,7 +1140,7 @@ SharedObjectArray<DCObject> *DataCollectionOwner::getDCObjectsByRegex(const TCHA
 
       const TCHAR *subj = searchName ? o->getName() : o->getDescription();
       int ovector[30];
-      if (_pcre_exec_t(preg, NULL, reinterpret_cast<const PCRE_TCHAR*>(subj), static_cast<int>(_tcslen(subj)), 0, 0, ovector, 30) >= 0)
+      if (_pcre_exec_t(preg, nullptr, reinterpret_cast<const PCRE_TCHAR*>(subj), static_cast<int>(_tcslen(subj)), 0, 0, ovector, 30) >= 0)
       {
          result->add(m_dcObjects->getShared(i));
       }
@@ -1161,5 +1149,20 @@ SharedObjectArray<DCObject> *DataCollectionOwner::getDCObjectsByRegex(const TCHA
    unlockDciAccess();
 
    _pcre_free_t(preg);
+   return result;
+}
+
+/**
+ * Get all data collection objects
+ */
+unique_ptr<SharedObjectArray<DCObject>> DataCollectionOwner::getAllDCObjects() const
+{
+   readLockDciAccess();
+   auto result = make_unique<SharedObjectArray<DCObject>>(m_dcObjects->size());
+   for(int i = 0; i < m_dcObjects->size(); i++)
+   {
+      result->add(m_dcObjects->getShared(i));
+   }
+   unlockDciAccess();
    return result;
 }

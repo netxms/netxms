@@ -3123,7 +3123,7 @@ template class LIBNETXMS_EXPORTABLE shared_ptr<Table>;
  */
 inline json_t *json_string_a(const char *s)
 {
-   return (s != NULL) ? json_string(s) : json_null();
+   return (s != nullptr) ? json_string(s) : json_null();
 }
 
 /**
@@ -3131,11 +3131,11 @@ inline json_t *json_string_a(const char *s)
  */
 inline json_t *json_string_w(const WCHAR *s)
 {
-   if (s == NULL)
+   if (s == nullptr)
       return json_null();
    char *us = UTF8StringFromWideString(s);
    json_t *js = json_string(us);
-   free(us);
+   MemFree(us);
    return js;
 }
 

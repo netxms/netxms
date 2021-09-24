@@ -14693,12 +14693,12 @@ void ClientSession::forceApplyPolicy(NXCPMessage *pRequest)
  * @param searchByName
  * @return
  */
-SharedObjectArray<DCObject> *ClientSession::resolveDCOsByRegex(UINT32 objectId, const TCHAR *objectNameRegex, const TCHAR *dciRegex, bool searchByName)
+unique_ptr<SharedObjectArray<DCObject>> ClientSession::resolveDCOsByRegex(UINT32 objectId, const TCHAR *objectNameRegex, const TCHAR *dciRegex, bool searchByName)
 {
    if (dciRegex == nullptr || dciRegex[0] == 0)
-      return nullptr;
+      return unique_ptr<SharedObjectArray<DCObject>>();
 
-   SharedObjectArray<DCObject> *dcoList = nullptr;
+   unique_ptr<SharedObjectArray<DCObject>> dcoList;
 
    if (objectNameRegex == nullptr || objectNameRegex[0] == 0)
    {
@@ -14711,20 +14711,19 @@ SharedObjectArray<DCObject> *ClientSession::resolveDCOsByRegex(UINT32 objectId, 
       unique_ptr<SharedObjectArray<NetObj>> objects = FindObjectsByRegex(objectNameRegex);
       if (objects != nullptr)
       {
-         dcoList = new SharedObjectArray<DCObject>();
+         dcoList = make_unique<SharedObjectArray<DCObject>>();
          for(int i = 0; i < objects->size(); i++)
          {
             NetObj *object = objects->get(i);
             if (object->isDataCollectionTarget() && object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
             {
-               SharedObjectArray<DCObject> *nodeDcoList = static_cast<DataCollectionTarget&>(*object).getDCObjectsByRegex(dciRegex, searchByName, m_dwUserId);
+               unique_ptr<SharedObjectArray<DCObject>> nodeDcoList = static_cast<DataCollectionTarget&>(*object).getDCObjectsByRegex(dciRegex, searchByName, m_dwUserId);
                if (nodeDcoList != nullptr)
                {
                   for(int n = 0; n < nodeDcoList->size(); n++)
                   {
                      dcoList->add(nodeDcoList->getShared(n));
                   }
-                  delete(nodeDcoList);
                }
             }
          }
@@ -14754,10 +14753,10 @@ void ClientSession::getMatchingDCI(NXCPMessage *request)
    uint32_t flags = request->getFieldAsInt32(VID_FLAGS);
    request->getFieldAsString(VID_DCI_NAME, dciName, MAX_OBJECT_NAME);
 
-   SharedObjectArray<DCObject> *dcoList = resolveDCOsByRegex(objectId, objectName, dciName, (flags & DCI_RES_SEARCH_NAME));
+   unique_ptr<SharedObjectArray<DCObject>> dcoList = resolveDCOsByRegex(objectId, objectName, dciName, (flags & DCI_RES_SEARCH_NAME));
    if (dcoList != nullptr)
    {
-      UINT32 dciBase = VID_DCI_VALUES_BASE, count = 0;
+      uint32_t dciBase = VID_DCI_VALUES_BASE, count = 0;
       for(int i = 0; i < dcoList->size(); i++)
       {
          if (dcoList->get(i)->getType() == DCO_TYPE_ITEM)
@@ -14776,7 +14775,6 @@ void ClientSession::getMatchingDCI(NXCPMessage *request)
          }
       }
       response.setField(VID_NUM_ITEMS, count);
-      delete dcoList;
    }
    else
    {

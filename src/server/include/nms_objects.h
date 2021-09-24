@@ -1235,8 +1235,13 @@ public:
    VersionableObject(NetObj *_this);
 
    void updateVersion() { InterlockedIncrement(&m_version); }
-   UINT32 getVersion() const { return m_version; }
+   uint32_t getVersion() const { return m_version; }
 };
+
+/**
+ * Number of filters in auto bind target
+ */
+#define MAX_AUTOBIND_TARGET_FILTERS    2
 
 /**
  * Generic auto-bind target. Intended to be used only as secondary class in multi-inheritance with primary class derived from NetObj.
@@ -1251,44 +1256,33 @@ private:
    void internalUnlock() const { MutexUnlock(m_mutexProperties); }
 
 protected:
-   TCHAR *m_firstBindFilterSource;
-   NXSL_Program *m_firstBindFilter;
-   TCHAR *m_secondBindFilterSource;
-   NXSL_Program *m_secondBindFilter;
+   TCHAR *m_autoBindFilterSources[MAX_AUTOBIND_TARGET_FILTERS];
+   NXSL_Program *m_autoBindFilters[MAX_AUTOBIND_TARGET_FILTERS];
    uint32_t m_autoBindFlags;
 
-   void modifyFromMessage(NXCPMessage *request);
-   void fillMessage(NXCPMessage *msg);
+   void modifyFromMessage(const NXCPMessage& request);
+   void fillMessage(NXCPMessage* msg) const;
 
-   bool loadFromDatabase(DB_HANDLE hdb, UINT32 objectId);
+   bool loadFromDatabase(DB_HANDLE hdb, uint32_t objectId);
    bool saveToDatabase(DB_HANDLE hdb);
    bool deleteFromDatabase(DB_HANDLE hdb);
-   void updateFromImport(ConfigEntry *config);
+   void updateFromImport(const ConfigEntry& config);
 
    void toJson(json_t *root);
    void createExportRecord(StringBuffer &str);
-   void setAutoBindFlag(bool value, uint32_t flag);
-   AutoBindDecision isApplicable(const shared_ptr<NetObj>& target, const shared_ptr<DCObject>& dci, NXSL_Program *filterProgram);
 
 public:
    AutoBindTarget(NetObj *_this);
    virtual ~AutoBindTarget();
 
-   AutoBindDecision isFirstFilterApplicable(const shared_ptr<NetObj>& object, const shared_ptr<DCObject>& dci = shared_ptr<DCObject>());
-   bool isFirstFilterBindingEnabled() { return m_autoBindFlags & AAF_AUTO_APPLY_1; }
-   bool isFirstFilterUnbindingEnabled() { return isFirstFilterBindingEnabled() && m_autoBindFlags & AAF_AUTO_REMOVE_1; }
-   void setFirstFilter(const TCHAR *filter);
-   void setFirstFilterBindMode(bool doBind, bool doUnbind);
-   const TCHAR *getFirstFilterSource() const { return m_firstBindFilterSource; }
+   AutoBindDecision isApplicable(const shared_ptr<NetObj>& object, const shared_ptr<DCObject>& dci = shared_ptr<DCObject>(), int filterNumber = 0) const;
 
-   AutoBindDecision isSecondFilterApplicable(const shared_ptr<NetObj>& object, const shared_ptr<DCObject>& dci = shared_ptr<DCObject>());
-   bool isSecondFilterBindingEnabled() { return m_autoBindFlags & AAF_AUTO_APPLY_2; }
-   bool isSecondFilterUnbindingEnabled() { return isSecondFilterBindingEnabled() && m_autoBindFlags & AAF_AUTO_REMOVE_2; }
-   void setSecondFilter(const TCHAR *filter);
-   void setSecondFilterBindMode(bool doBind, bool doUnbind);
-   void setAutoBindFlags(uint32_t flags) { m_autoBindFlags = flags; }
+   bool isAutoBindEnabled(int filterNumber = 0) const { return (filterNumber >= 0) && (filterNumber < MAX_AUTOBIND_TARGET_FILTERS) && (m_autoBindFlags & (AAF_AUTO_APPLY_1 << filterNumber * 2)); }
+   bool isAutoUnbindEnabled(int filterNumber = 0) const { return isAutoBindEnabled(filterNumber) && (m_autoBindFlags & (AAF_AUTO_REMOVE_1 << filterNumber * 2)); }
+   const TCHAR *getAutoBindFilterSource(int filterNumber = 0) const { return (filterNumber >= 0) && (filterNumber < MAX_AUTOBIND_TARGET_FILTERS) ? m_autoBindFilterSources[filterNumber] : nullptr; }
 
-   const TCHAR *getSecondFilterSource() const { return m_secondBindFilterSource; }
+   void setAutoBindFilter(int filterNumber, const TCHAR *filter);
+   void setAutoBindMode(int filterNumber, bool doBind, bool doUnbind);
 };
 
 /**
@@ -1388,13 +1382,13 @@ public:
    shared_ptr<DCObject> getDCObjectByTemplateId(uint32_t tmplItemId, uint32_t userId) const;
    shared_ptr<DCObject> getDCObjectByName(const TCHAR *name, uint32_t userId) const;
    shared_ptr<DCObject> getDCObjectByDescription(const TCHAR *description, uint32_t userId) const;
-   SharedObjectArray<DCObject> *getDCObjectsByRegex(const TCHAR *regex, bool searchName, UINT32 userId) const;
-   NXSL_Value *getAllDCObjectsForNXSL(NXSL_VM *vm, const TCHAR *name, const TCHAR *description, UINT32 userId) const;
+   unique_ptr<SharedObjectArray<DCObject>> getAllDCObjects() const;
+   unique_ptr<SharedObjectArray<DCObject>> getDCObjectsByRegex(const TCHAR *regex, bool searchName, uint32_t userId) const;
+   NXSL_Value *getAllDCObjectsForNXSL(NXSL_VM *vm, const TCHAR *name, const TCHAR *description, uint32_t userId) const;
    void setDCIModificationFlag() { lockProperties(); m_dciListModified = true; unlockProperties(); }
    void sendItemsToClient(ClientSession *pSession, UINT32 dwRqId) const;
    virtual HashSet<uint32_t> *getRelatedEventsList() const;
    unique_ptr<StringSet> getDCIScriptList() const;
-   unique_ptr<IntegerArray<uint32_t>> getDCIIds();
    bool isDataCollectionSource(UINT32 nodeId) const;
 
    virtual void applyDCIChanges(bool forcedChange);
@@ -4474,8 +4468,10 @@ protected:
 
 public:
    BaseBusinessService(const TCHAR* name);
+   BaseBusinessService(BaseBusinessService *prototype, const TCHAR *name, const TCHAR *instance);
    BaseBusinessService();
    virtual ~BaseBusinessService();
+
    ObjectArray<BusinessServiceCheck> *getChecks() { return &m_checks; }
    void deleteCheck(uint32_t checkId);
    virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
@@ -4493,26 +4489,28 @@ class NXCORE_EXPORTABLE BusinessService : public BaseBusinessService
 protected:
    PollState m_statusPollState;
    PollState m_configurationPollState;
-   uint32_t m_lastPollStatus;
    MUTEX m_hPollerMutex;
 
-   void objectCheckAutoBinding();
-   void dciCheckAutoBinding();
+   void validateAutomaticObjectChecks();
+   void validateAutomaticDCIChecks();
+
    void configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId);
    void statusPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId);
+
    void _pollerLock() { MutexLock(m_hPollerMutex); }
    void _pollerUnlock() { MutexUnlock(m_hPollerMutex); }
 
 public:
    BusinessService(const TCHAR *name);
+   BusinessService(BaseBusinessService *prototype, const TCHAR *name, const TCHAR *instance);
    BusinessService();
    virtual ~BusinessService();
 
    virtual int getObjectClass() const override { return OBJECT_BUSINESS_SERVICE; }
-   uint32_t getPrototypeId() { return m_prototypeId; }
-   void setPrototypeId(uint32_t id) { m_prototypeId = id; }
-   const TCHAR* getInstance() { return m_instance; } const
-   void setInstance(const TCHAR* instance) { MemFree(m_instance); m_instance = MemCopyString(instance); }
+
+   uint32_t getPrototypeId() const { return m_prototypeId; }
+   const TCHAR* getInstance() const { return m_instance; }
+
    void startForcedStatusPoll() { m_statusPollState.manualStart(); }
    void statusPollWorkerEntry(PollerInfo *poller) { statusPollWorkerEntry(poller, nullptr, 0); }
    void statusPollWorkerEntry(PollerInfo *poller, ClientSession *session, UINT32 rqId);
@@ -4521,6 +4519,7 @@ public:
    void configurationPollWorkerEntry(PollerInfo *poller, ClientSession *session, UINT32 rqId);
    bool lockForStatusPoll();
    bool lockForConfigurationPoll();
+
    void addChildTicket(BusinessServiceTicketData* data);
 };
 

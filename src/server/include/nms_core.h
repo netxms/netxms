@@ -603,6 +603,8 @@ private:
    void prepare2FAChallenge(NXCPMessage *request);
    void validate2FAResponse(NXCPMessage *request);
 
+   unique_ptr<SharedObjectArray<DCObject>> resolveDCOsByRegex(uint32_t objectId, const TCHAR *objectNameRegex, const TCHAR *dciRegex, bool searchByName);
+
    void respondToKeepalive(uint32_t requestId)
    {
       NXCPMessage msg(CMD_REQUEST_COMPLETED, requestId);
@@ -859,7 +861,6 @@ private:
    void getUserAgentNotification(NXCPMessage *request);
    void addUserAgentNotification(NXCPMessage *request);
    void recallUserAgentNotification(NXCPMessage *request);
-   SharedObjectArray<DCObject> *resolveDCOsByRegex(UINT32 objectId, const TCHAR *objectNameRegex, const TCHAR *dciRegex, bool searchByName);
    void getNotificationChannels(UINT32 requestId);
    void addNotificationChannel(NXCPMessage *request);
    void updateNotificationChannel(NXCPMessage *request);
