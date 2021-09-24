@@ -443,15 +443,11 @@ void Template::updateFromImport(ConfigEntry *config)
 
    lockProperties();
 
-   uint32_t flags = config->getSubEntryValueAsUInt(_T("flags"), 0, 0);
-   if (flags != 0)
+   // Templatex exported by older server version will have auto bind flags in separate field
+   uint32_t flags = config->getSubEntryValueAsUInt(_T("flags"), 0, 0xBADF);
+   if (flags != 0xBADF)
    {
       m_autoBindFlags = flags;
-      /*if (flags & AAF_AUTO_APPLY_1)
-         m_autoBindFlag = true;
-      if (flags & AAF_AUTO_REMOVE_1)
-         m_autoUnbindFlag = true;*/
-      m_flags &= !(AAF_AUTO_APPLY_1 | AAF_AUTO_REMOVE_1);
    }
 
    m_policyList->clear();
