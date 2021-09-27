@@ -94,9 +94,9 @@ public class TabbedObjectView extends ViewPart
 	private long objectId = 0; 
 	private NXCSession session;
 	
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
-	 */
+   /**
+    * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
+    */
 	@Override
 	public void init(IViewSite site) throws PartInitException
 	{
@@ -106,9 +106,9 @@ public class TabbedObjectView extends ViewPart
 		selectionService = getSite().getWorkbenchWindow().getSelectionService();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	public void createPartControl(Composite parent)
 	{
@@ -302,7 +302,7 @@ public class TabbedObjectView extends ViewPart
 	{
 	   if (header.isDisposed())
 	      return;
-		header.setText(object.getObjectName());
+      header.setText(object.getNameWithAlias());
 		for(final ObjectTab tab : tabs)
 		{
 			if (tab.isVisible())
@@ -358,7 +358,7 @@ public class TabbedObjectView extends ViewPart
 		Control focusControl = Display.getCurrent().getFocusControl();
 		if (object != null)
 		{
-			header.setText(object.getObjectName());
+         header.setText(object.getNameWithAlias());
 			for(final ObjectTab tab : tabs)
 			{
 				if (tab.showForObject(object) && !WorkbenchActivityHelper.filterItem(tab))
