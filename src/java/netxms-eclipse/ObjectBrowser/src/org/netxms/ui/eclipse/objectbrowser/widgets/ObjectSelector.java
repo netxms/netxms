@@ -67,7 +67,7 @@ public class ObjectSelector extends AbstractSelector
 			{
 				objectId = objects[0].getObjectId();
 				object = objects[0];
-				setText(objects[0].getObjectName());
+            setText(objects[0].getNameWithAlias());
 			}
 			else
 			{
@@ -79,9 +79,9 @@ public class ObjectSelector extends AbstractSelector
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.widgets.AbstractSelector#clearButtonHandler()
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.widgets.AbstractSelector#clearButtonHandler()
+    */
 	@Override
 	protected void clearButtonHandler()
 	{
@@ -92,13 +92,20 @@ public class ObjectSelector extends AbstractSelector
 	}
 
 	/**
-	 * @return the objectId
-	 */
+    * Get ID of selected object.
+    *
+    * @return ID of selected object
+    */
 	public long getObjectId()
 	{
 		return objectId;
 	}
 	
+   /**
+    * Get selected object.
+    *
+    * @return selected object
+    */
 	public AbstractObject getObject()
 	{
 	   return object;
