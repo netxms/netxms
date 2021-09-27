@@ -54,10 +54,7 @@ static void UpdateEnvironment()
    if (entrySet != nullptr)
    {
       for(int i = 0; i < entrySet->size(); i++)
-      {
-         ConfigEntry *e = entrySet->get(i);
-         currEnvList.add(e->getName());
-      }
+         currEnvList.add(entrySet->get(i)->getName());
       delete entrySet;
    }
 
@@ -80,16 +77,17 @@ static void UpdateEnvironment()
 
       for(int i = 0; i < currEnvList.size(); i++)
       {
+         const TCHAR *var = currEnvList.get(i);
          int j = 0;
          for(;j < newEnvList.size(); j++)
          {
-            if(_tcscmp(currEnvList.get(i), newEnvList.get(j)))
+            if (!_tcscmp(var, newEnvList.get(j)))
                break;
          }
          if (j == newEnvList.size())
          {
-            nxlog_debug_tag(DEBUG_TAG, 6, _T("UpdateEnvironment(): unset environment variable %s"), currEnvList.get(i));
-            SetEnvironmentVariable(currEnvList.get(i), nullptr);
+            nxlog_debug_tag(DEBUG_TAG, 6, _T("UpdateEnvironment(): unset environment variable %s"), var);
+            SetEnvironmentVariable(var, nullptr);
          }
       }
    }
