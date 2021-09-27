@@ -24,7 +24,6 @@ import junit.framework.TestCase;
 
 /**
  * Tests for MacAddress class
- *
  */
 public class MacAddressTest extends TestCase
 {
