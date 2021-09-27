@@ -64,6 +64,8 @@ public:
 	const TCHAR *getName() const { return m_name; }
 	int getId() const { return m_id; }
 	int getValueCount() const { return m_values.size(); }
+
+   String getConcatenatedValues(const TCHAR *separator = nullptr) const;
 	int getConcatenatedValuesLength() const;
 
    const TCHAR *getValue(int index = 0) const { return m_values.get(index); }
