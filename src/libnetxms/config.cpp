@@ -381,6 +381,23 @@ void ConfigEntry::setValue(const TCHAR *value)
 }
 
 /**
+ * Get all values concatenated
+ */
+String ConfigEntry::getConcatenatedValues(const TCHAR *separator) const
+{
+   if (m_values.isEmpty())
+      return String();
+
+   StringBuffer result(m_values.get(0));
+   for(int i = 1; i < m_values.size(); i++)
+   {
+      result.append(separator);
+      result.append(m_values.get(i));
+   }
+   return result;
+}
+
+/**
  * Get summary length of all values as if they was concatenated with separator character
  */
 int ConfigEntry::getConcatenatedValuesLength() const
