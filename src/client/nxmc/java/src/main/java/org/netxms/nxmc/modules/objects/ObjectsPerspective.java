@@ -154,7 +154,7 @@ public abstract class ObjectsPerspective extends Perspective
       if (selection.getFirstElement() instanceof AbstractObject)
       {
          AbstractObject object = (AbstractObject)selection.getFirstElement();
-         objectName.setText(object.getObjectName());
+         objectName.setText(object.getNameWithAlias());
          updateObjectToolBar(object);
          updateObjectMenuBar(object);
       }

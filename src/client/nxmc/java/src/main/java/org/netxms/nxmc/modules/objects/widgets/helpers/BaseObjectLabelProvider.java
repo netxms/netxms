@@ -86,7 +86,7 @@ public class BaseObjectLabelProvider extends LabelProvider
    @Override
    public String getText(Object element)
    {
-      return ((AbstractObject)element).getObjectName();
+      return ((AbstractObject)element).getNameWithAlias();
    }
 
    /**

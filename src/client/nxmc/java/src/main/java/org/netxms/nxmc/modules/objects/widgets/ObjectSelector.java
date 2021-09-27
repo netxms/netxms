@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -54,7 +54,7 @@ public class ObjectSelector extends AbstractSelector
 	}
 
    /**
-    * @see org.netxms.ui.eclipse.widgets.AbstractSelector#selectionButtonHandler()
+    * @see org.netxms.nxmc.base.widgets.AbstractSelector#selectionButtonHandler()
     */
 	@Override
 	protected void selectionButtonHandler()
@@ -68,7 +68,7 @@ public class ObjectSelector extends AbstractSelector
 			{
 				objectId = objects[0].getObjectId();
 				object = objects[0];
-				setText(objects[0].getObjectName());
+            setText(objects[0].getNameWithAlias());
 			}
 			else
 			{
@@ -80,9 +80,9 @@ public class ObjectSelector extends AbstractSelector
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.widgets.AbstractSelector#clearButtonHandler()
-	 */
+   /**
+    * @see org.netxms.nxmc.base.widgets.AbstractSelector#clearButtonHandler()
+    */
 	@Override
 	protected void clearButtonHandler()
 	{
@@ -93,24 +93,23 @@ public class ObjectSelector extends AbstractSelector
 	}
 
 	/**
-	 * @return the objectId
-	 */
+    * Get ID of selected object
+    *
+    * @return ID of selected object
+    */
 	public long getObjectId()
 	{
 		return objectId;
 	}
 	
+   /**
+    * Get selected object
+    *
+    * @return selected object
+    */
 	public AbstractObject getObject()
 	{
 	   return object;
-	}
-
-	/**
-	 * @return the object name
-	 */
-	public String getObjectName()
-	{
-		return getText();
 	}
 
 	/**
