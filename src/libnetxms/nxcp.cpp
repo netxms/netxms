@@ -679,14 +679,16 @@ bool LIBNETXMS_EXPORTABLE SendFileOverNXCP(AbstractCommChannel *channel, uint32_
             if (stream->bad())
                break;
             bytes = static_cast<size_t>(stream->gcount());
-
-            // Each compressed data block prepended with 4 bytes header
-            // First byte contains compression method, second is always 0,
-            // third and fourth contains uncompressed block size in network byte order
-            *((BYTE *)msg->fields) = (BYTE)compressionMethod;
-            *((BYTE *)msg->fields + 1) = 0;
-            *((uint16_t *)((BYTE *)msg->fields + 2)) = htons((uint16_t)bytes);
-            bytes = compressor->compress(compBuffer, bytes, (BYTE *)msg->fields + 4, compressor->compressBufferSize(FILE_BUFFER_SIZE)) + 4;
+            if (bytes > 0)
+            {
+               // Each compressed data block prepended with 4 bytes header
+               // First byte contains compression method, second is always 0,
+               // third and fourth contains uncompressed block size in network byte order
+               *((BYTE *)msg->fields) = (BYTE)compressionMethod;
+               *((BYTE *)msg->fields + 1) = 0;
+               *((uint16_t *)((BYTE *)msg->fields + 2)) = htons((uint16_t)bytes);
+               bytes = compressor->compress(compBuffer, bytes, (BYTE *)msg->fields + 4, compressor->compressBufferSize(FILE_BUFFER_SIZE)) + 4;
+            }
          }
          else
          {
@@ -704,10 +706,10 @@ bool LIBNETXMS_EXPORTABLE SendFileOverNXCP(AbstractCommChannel *channel, uint32_
             msg->flags |= htons(MF_END_OF_FILE);
 
          int64_t startTime = GetCurrentTimeMs();
-         if (ectx != NULL)
+         if (ectx != nullptr)
          {
             NXCP_ENCRYPTED_MESSAGE *emsg = ectx->encryptMessage(msg);
-            if (emsg != NULL)
+            if (emsg != nullptr)
             {
                channel->send(emsg, ntohl(emsg->size), mutex);
                MemFree(emsg);
