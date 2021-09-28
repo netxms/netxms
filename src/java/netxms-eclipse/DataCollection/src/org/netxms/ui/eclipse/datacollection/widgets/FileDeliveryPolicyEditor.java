@@ -35,6 +35,8 @@ import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.dialogs.IInputValidator;
 import org.eclipse.jface.dialogs.InputDialog;
+import org.eclipse.jface.viewers.DoubleClickEvent;
+import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
@@ -49,7 +51,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.ProgressListener;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.datacollection.Activator;
-import org.netxms.ui.eclipse.datacollection.dialogs.FilePermissionsSelectionDialog;
+import org.netxms.ui.eclipse.datacollection.dialogs.FilePermissionDialog;
 import org.netxms.ui.eclipse.datacollection.widgets.helpers.FileDeliveryPolicy;
 import org.netxms.ui.eclipse.datacollection.widgets.helpers.FileDeliveryPolicyComparator;
 import org.netxms.ui.eclipse.datacollection.widgets.helpers.FileDeliveryPolicyContentProvider;
@@ -81,9 +83,7 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
    private Action actionDelete;
    private Action actionRename;
    private Action actionUpdate;
-   private Action actionChangePermissions;
-   private Action actionChangeOwner;
-   private Action actionChangeOwnerGroup;
+   private Action actionEditPermissions;
    private Set<String> filesForDeletion = new HashSet<String>();
    private Set<String> notSavedFiles = new HashSet<String>();
 
@@ -96,7 +96,6 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
       super(parent, style, policy, viewPart);
       
       setLayout(new FillLayout());
-      
 
       final String[] columnNames = { "Name", "Guid", "Date", "User", "Group", "Permissions" };
       final int[] columnWidths = { 300, 300, 200, 150, 150, 200 };
@@ -104,8 +103,23 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
       fileTree.setContentProvider(new FileDeliveryPolicyContentProvider());
       fileTree.setLabelProvider(new FileDeliveryPolicyLabelProvider());
       fileTree.setComparator(new FileDeliveryPolicyComparator());
-      
-      actionAddRoot = new Action("&Add root directory...", SharedIcons.ADD_OBJECT) {
+      fileTree.addDoubleClickListener(new IDoubleClickListener() {
+         @Override
+         public void doubleClick(DoubleClickEvent event)
+         {
+            IStructuredSelection selection = fileTree.getStructuredSelection();
+            if (selection.size() == 1)
+            {
+               PathElement element = (PathElement)selection.getFirstElement();
+               if (element.isFile())
+                  changePermissions();
+               else
+                  fileTree.expandToLevel(element, 1);
+            }
+         }
+      });
+
+      actionAddRoot = new Action("&Add root directory...", Activator.getImageDescriptor("icons/add_directory.png")) {
          @Override
          public void run()
          {
@@ -113,7 +127,7 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
          }
       };
 
-      actionAddDirectory = new Action("Add d&irectory...") {
+      actionAddDirectory = new Action("Add d&irectory...", Activator.getImageDescriptor("icons/add_directory.png")) {
          @Override
          public void run()
          {
@@ -121,7 +135,7 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
          }
       };
       
-      actionAddFile = new Action("Add &file...") {
+      actionAddFile = new Action("Add &file...", Activator.getImageDescriptor("icons/add_file.png")) {
          @Override
          public void run()
          {
@@ -129,15 +143,15 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
          }
       };
       
-      actionRename = new Action("&Rename...") {
+      actionRename = new Action("&Rename...", SharedIcons.RENAME) {
          @Override
          public void run()
          {
             renameElement();
          }
       };
-      
-      actionDelete = new Action("&Delete") {
+
+      actionDelete = new Action("&Delete", SharedIcons.DELETE_OBJECT) {
          @Override
          public void run()
          {
@@ -145,7 +159,7 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
          }
       };
       
-      actionUpdate = new Action("&Update...") {
+      actionUpdate = new Action("&Update...", Activator.getImageDescriptor("icons/update_file.png")) {
          @Override
          public void run()
          {
@@ -153,7 +167,7 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
          }
       };
       
-      actionChangePermissions = new Action("Change &permissions") {
+      actionEditPermissions = new Action("&Permissions...", Activator.getImageDescriptor("icons/permissions.png")) {
          @Override
          public void run()
          {
@@ -161,24 +175,8 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
          }
       };
 
-      actionChangeOwner = new Action("Change &owner") {
-         @Override
-         public void run()
-         {
-            changeOwner();
-         }
-      };
-
-      actionChangeOwnerGroup = new Action("Change owner &group") {
-         @Override
-         public void run()
-         {
-            changeOwnerGroup();
-         }
-      };
-
       createPopupMenu();
-      
+
       fileTree.setInput(rootElements);
       updateControlFromPolicy();
    }
@@ -228,10 +226,8 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
             manager.add(actionAddFile);
          }
          manager.add(actionRename);
+         manager.add(actionEditPermissions);
          manager.add(actionDelete);
-         manager.add(actionChangePermissions);
-         manager.add(actionChangeOwner);
-         manager.add(actionChangeOwnerGroup);
       }
       else
       {
@@ -333,7 +329,7 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
       IStructuredSelection selection = fileTree.getStructuredSelection();
       if ((selection.size() != 1) || ((PathElement)selection.getFirstElement()).isFile())
          return;
-      
+
       addElement((PathElement)selection.getFirstElement());
    }
 
@@ -578,51 +574,13 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
          return;
 
       PathElement element = (PathElement)selection.getFirstElement();
-      FilePermissionsSelectionDialog dlg = new FilePermissionsSelectionDialog(getShell(), element.getPermissions());
+      FilePermissionDialog dlg = new FilePermissionDialog(getShell(), element.getPermissions(), element.getOwner(), element.getOwnerGroup());
       if (dlg.open() != Window.OK)
          return;
 
-      element.setPermissions(dlg.getValue());
-      fileTree.update(element, null);
-
-      fireModifyListeners();
-   }
-
-   /**
-    * Change file owner
-    */
-   private void changeOwner()
-   {
-      IStructuredSelection selection = fileTree.getStructuredSelection();
-      if (selection.size() != 1)
-         return;
-
-      PathElement element = (PathElement)selection.getFirstElement();
-      InputDialog dlg = new InputDialog(getShell(), "Set new file owner user name", "Enter owner", element.getOwner(), null);
-      if (dlg.open() != Window.OK)
-         return;
-
-      element.setOwner(dlg.getValue());
-      fileTree.update(element, null);
-
-      fireModifyListeners();
-   }
-
-   /**
-    * Change file owner group
-    */
-   private void changeOwnerGroup()
-   {
-      IStructuredSelection selection = fileTree.getStructuredSelection();
-      if (selection.size() != 1)
-         return;
-
-      PathElement element = (PathElement)selection.getFirstElement();
-      InputDialog dlg = new InputDialog(getShell(), "Set new file owner group name", "Enter owner group name", element.getOwnerGroup(), null);
-      if (dlg.open() != Window.OK)
-         return;
-
-      element.setOwnerGroup(dlg.getValue());
+      element.setPermissions(dlg.getPermissions());
+      element.setOwner(dlg.getOwner());
+      element.setOwnerGroup(dlg.getGroup());
       fileTree.update(element, null);
 
       fireModifyListeners();
@@ -667,7 +625,9 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
    private void deleteFiles(PathElement element)
    {
       if (element.isFile())
+      {
          filesForDeletion.add(element.getGuid().toString());
+      }
       else
       {
          for(PathElement el : element.getChildren())

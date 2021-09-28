@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Raden Solutions
+ * Copyright (C) 2003-2021 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -41,7 +41,7 @@ public class FileDeliveryPolicyLabelProvider extends LabelProvider implements IT
       imageFolder = Activator.getImageDescriptor("icons/folder.gif").createImage();
       imageFile = Activator.getImageDescriptor("icons/file.png").createImage();
    }
-   
+
    /**
     * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
     */
@@ -80,6 +80,12 @@ public class FileDeliveryPolicyLabelProvider extends LabelProvider implements IT
             if (!((PathElement)element).isFile())
                return null;
             return ((PathElement)element).getCreationTime() != null ? RegionalSettings.getDateTimeFormat().format(((PathElement)element).getCreationTime()) : null;
+         case FileDeliveryPolicyEditor.COLUMN_USER:
+             return ((PathElement)element).getOwner();
+         case FileDeliveryPolicyEditor.COLUMN_GROUP:
+             return ((PathElement)element).getOwnerGroup();
+         case FileDeliveryPolicyEditor.COLUMN_PERMISSIONS:
+             return ((PathElement)element).getPermissionsAsString();
       }
       return null;
    }
