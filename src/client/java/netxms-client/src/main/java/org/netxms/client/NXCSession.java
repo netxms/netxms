@@ -1846,8 +1846,8 @@ public class NXCSession
             {
                msg.setEndOfFile(true);
             }
-   
-            if ((compressor != null) && (bytesRead >= 0))
+
+            if ((compressor != null) && (bytesRead > 0))
             {
                byte[] compressedData = new byte[compressor.deflateBound(bytesRead) + 4];
                compressor.setInput(buffer, 0, bytesRead, false);
@@ -1864,14 +1864,14 @@ public class NXCSession
             }
             else
             {
-               msg.setBinaryData((bytesRead == -1) ? new byte[0] : Arrays.copyOf(buffer, bytesRead));
+               msg.setBinaryData((bytesRead > 0) ? Arrays.copyOf(buffer, bytesRead) : new byte[0]);
             }
             sendMessage(msg);
-   
+
             bytesSent += (bytesRead == -1) ? 0 : bytesRead;
             if (listener != null)
                listener.markProgress(bytesSent);
-   
+
             if (bytesRead < FILE_BUFFER_SIZE)
                break;
          }

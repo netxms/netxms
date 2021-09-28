@@ -687,21 +687,23 @@ bool LIBNETXMS_EXPORTABLE SendFileOverNXCP(AbstractCommChannel *channel, uint32_
             break;
 
          size_t bytes;
-         bufferSize = chunkSize > 0 ? (bytesRemaining < FILE_BUFFER_SIZE ? bytesRemaining : FILE_BUFFER_SIZE) : FILE_BUFFER_SIZE;
+         bufferSize = (chunkSize > 0) ? ((bytesRemaining < FILE_BUFFER_SIZE) ? bytesRemaining : FILE_BUFFER_SIZE) : FILE_BUFFER_SIZE;
          if (compressor != nullptr)
          {
             stream->read(reinterpret_cast<char*>(compBuffer), bufferSize);
             if (stream->bad())
                break;
             bytes = static_cast<size_t>(stream->gcount());
-
-            // Each compressed data block prepended with 4 bytes header
-            // First byte contains compression method, second is always 0,
-            // third and fourth contains uncompressed block size in network byte order
-            *((BYTE *)msg->fields) = (BYTE)compressionMethod;
-            *((BYTE *)msg->fields + 1) = 0;
-            *((uint16_t *)((BYTE *)msg->fields + 2)) = htons((uint16_t)bytes);
-            bytes = compressor->compress(compBuffer, bytes, (BYTE *)msg->fields + 4, compressor->compressBufferSize(FILE_BUFFER_SIZE)) + 4;
+            if (bytes > 0)
+            {
+               // Each compressed data block prepended with 4 bytes header
+               // First byte contains compression method, second is always 0,
+               // third and fourth contains uncompressed block size in network byte order
+               *((BYTE *)msg->fields) = (BYTE)compressionMethod;
+               *((BYTE *)msg->fields + 1) = 0;
+               *((uint16_t *)((BYTE *)msg->fields + 2)) = htons((uint16_t)bytes);
+               bytes = compressor->compress(compBuffer, bytes, (BYTE *)msg->fields + 4, compressor->compressBufferSize(FILE_BUFFER_SIZE)) + 4;
+            }
          }
          else
          {
@@ -711,23 +713,23 @@ bool LIBNETXMS_EXPORTABLE SendFileOverNXCP(AbstractCommChannel *channel, uint32_
             bytes = static_cast<size_t>(stream->gcount());
          }
 
-         if(chunkSize > 0)
+         if (chunkSize > 0)
          {
-            bytesRemaining-=static_cast<size_t>(stream->gcount());
+            bytesRemaining -= static_cast<size_t>(stream->gcount());
          }
 
          // Message should be aligned to 8 bytes boundary
          uint32_t padding = (8 - ((static_cast<uint32_t>(bytes) + NXCP_HEADER_SIZE) % 8)) & 7;
          msg->size = htonl(static_cast<uint32_t>(bytes) + NXCP_HEADER_SIZE + padding);
          msg->numFields = htonl(static_cast<uint32_t>(bytes));   // numFields contains actual data size for binary message
-         if (stream->eof() || (chunkSize > 0 && bytesRemaining == 0))
+         if (stream->eof() || ((chunkSize > 0) && (bytesRemaining == 0)))
             msg->flags |= htons(MF_END_OF_FILE);
 
          int64_t startTime = GetCurrentTimeMs();
-         if (ectx != NULL)
+         if (ectx != nullptr)
          {
             NXCP_ENCRYPTED_MESSAGE *emsg = ectx->encryptMessage(msg);
-            if (emsg != NULL)
+            if (emsg != nullptr)
             {
                channel->send(emsg, ntohl(emsg->size), mutex);
                MemFree(emsg);
@@ -766,7 +768,7 @@ bool LIBNETXMS_EXPORTABLE SendFileOverNXCP(AbstractCommChannel *channel, uint32_
             progressCallback(bytesTransferred, cbArg);
          }
 
-         if (stream->eof() || (chunkSize > 0 && bytesRemaining == 0))
+         if (stream->eof() || ((chunkSize > 0) && (bytesRemaining == 0)))
          {
             // End of file
             success = true;

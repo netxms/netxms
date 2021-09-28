@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2015 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -25,6 +25,8 @@
 #include <nxcpapi.h>
 #include <zlib.h>
 #include "lz4.h"
+
+#define DEBUG_TAG _T("nxcp.streamcomp")
 
 /**
  * Stream compressor destructor
@@ -171,31 +173,28 @@ size_t LZ4StreamCompressor::compressBufferSize(size_t dataSize)
 DeflateStreamCompressor::DeflateStreamCompressor(bool compress, size_t maxBlockSize)
 {
    m_compress = compress;
-   m_stream = (z_stream_s *)malloc(sizeof(z_stream_s));
-   m_stream->zalloc = Z_NULL;
-   m_stream->zfree = Z_NULL;
-   m_stream->opaque = Z_NULL;
-   m_stream->avail_in = 0;
-   m_stream->next_in = Z_NULL;
+   m_stream = MemAllocStruct<z_stream_s>();
    if (compress)
    {
-      m_buffer = NULL;
-      if (deflateInit(m_stream, 9) != Z_OK)
+      m_buffer = nullptr;
+      int rc = deflateInit(m_stream, 9);
+      if (rc != Z_OK)
       {
-         nxlog_debug(5, _T("DeflateStreamCompressor: deflateInit() failed"));
-         free(m_stream);
-         m_stream = NULL;
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("DeflateStreamCompressor: deflateInit() failed (%hs: %hs)"), zError(rc), m_stream->msg);
+         MemFree(m_stream);
+         m_stream = nullptr;
       }
    }
    else
    {
       m_bufferSize = maxBlockSize * 2;
-      m_buffer = (BYTE *)malloc(m_bufferSize);
-      if (inflateInit(m_stream) != Z_OK)
+      m_buffer = (BYTE *)MemAlloc(m_bufferSize);
+      int rc = inflateInit(m_stream);
+      if (rc != Z_OK)
       {
-         nxlog_debug(5, _T("DeflateStreamCompressor: inflateInit() failed"));
-         free(m_stream);
-         m_stream = NULL;
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("DeflateStreamCompressor: inflateInit() failed (%hs: %hs)"), zError(rc), m_stream->msg);
+         MemFree(m_stream);
+         m_stream = nullptr;
       }
    }
 }
@@ -205,15 +204,15 @@ DeflateStreamCompressor::DeflateStreamCompressor(bool compress, size_t maxBlockS
  */
 DeflateStreamCompressor::~DeflateStreamCompressor()
 {
-   if (m_stream != NULL)
+   if (m_stream != nullptr)
    {
       if (m_compress)
          deflateEnd(m_stream);
       else
          inflateEnd(m_stream);
-      free(m_stream);
+      MemFree(m_stream);
    }
-   free(m_buffer);
+   MemFree(m_buffer);
 }
 
 /**
@@ -221,16 +220,17 @@ DeflateStreamCompressor::~DeflateStreamCompressor()
  */
 size_t DeflateStreamCompressor::compress(const BYTE *in, size_t inSize, BYTE *out, size_t maxOutSize)
 {
-   if (m_stream == NULL)
+   if (m_stream == nullptr)
       return 0;
 
    m_stream->avail_in = (uInt)inSize;
    m_stream->next_in = (BYTE *)in;
    m_stream->avail_out = (uInt)maxOutSize;
    m_stream->next_out = out;
-   if (deflate(m_stream, Z_SYNC_FLUSH) != Z_OK)
+   int rc = deflate(m_stream, Z_SYNC_FLUSH);
+   if (rc != Z_OK)
    {
-      nxlog_debug(5, _T("DeflateStreamCompressor: deflate() failed"));
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("DeflateStreamCompressor: deflate() failed (%hs: %hs)"), zError(rc), m_stream->msg);
       return 0;
    }
    return maxOutSize - m_stream->avail_out;
@@ -241,7 +241,7 @@ size_t DeflateStreamCompressor::compress(const BYTE *in, size_t inSize, BYTE *ou
  */
 size_t DeflateStreamCompressor::decompress(const BYTE *in, size_t inSize, const BYTE **out)
 {
-   if (m_stream == NULL)
+   if (m_stream == nullptr)
       return 0;
 
    m_stream->avail_in = (uInt)inSize;
@@ -251,7 +251,7 @@ size_t DeflateStreamCompressor::decompress(const BYTE *in, size_t inSize, const 
    int rc = inflate(m_stream, Z_SYNC_FLUSH);
    if ((rc != Z_OK) && (rc != Z_STREAM_END))
    {
-      nxlog_debug(5, _T("DeflateStreamCompressor: inflate() failed"));
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("DeflateStreamCompressor: inflate() failed (%hs: %hs)"), zError(rc), m_stream->msg);
       return 0;
    }
    *out = m_buffer;
@@ -263,5 +263,5 @@ size_t DeflateStreamCompressor::decompress(const BYTE *in, size_t inSize, const 
  */
 size_t DeflateStreamCompressor::compressBufferSize(size_t dataSize)
 {
-   return (m_stream != NULL) ? deflateBound(m_stream, (uLong)dataSize) : 0;
+   return (m_stream != nullptr) ? deflateBound(m_stream, (uLong)dataSize) : 0;
 }
