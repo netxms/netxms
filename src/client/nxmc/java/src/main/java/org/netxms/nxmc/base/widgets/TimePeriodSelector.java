@@ -242,5 +242,9 @@ public class TimePeriodSelector extends Composite
       timeFrom.setValue(period.getTimeFrom());
       timeTo.setValue(period.getTimeTo());
       
+      timeRange.setEnabled(radioBackFromNow.getSelection());
+      timeUnits.setEnabled(radioBackFromNow.getSelection());
+      timeFrom.setEnabled(radioFixedInterval.getSelection());
+      timeTo.setEnabled(radioFixedInterval.getSelection());      
    }
 }

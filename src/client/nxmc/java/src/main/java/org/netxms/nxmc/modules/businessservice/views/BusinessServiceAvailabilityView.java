@@ -18,6 +18,8 @@
  */
 package org.netxms.nxmc.modules.businessservice.views;
 
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.viewers.ArrayContentProvider;
@@ -100,12 +102,11 @@ public class BusinessServiceAvailabilityView extends ObjectView
       
       Composite buttonGroup = new Composite(parent, SWT.NONE);
       GridLayout layout = new GridLayout();
-      layout.numColumns = 3;
+      layout.numColumns = 6;
       layout.makeColumnsEqualWidth = true;
       buttonGroup.setLayout(layout);
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.LEFT;
-      gd.widthHint = 300;
       buttonGroup.setLayoutData(gd);
       
       Button buttonToday = new Button(buttonGroup, SWT.PUSH);
@@ -114,7 +115,13 @@ public class BusinessServiceAvailabilityView extends ObjectView
          @Override
          public void widgetSelected(SelectionEvent arg0)
          {
-            updateTime(1, TimeUnit.DAY);
+            Calendar calendar = Calendar.getInstance();
+            calendar.set(Calendar.HOUR, 0);
+            calendar.set(Calendar.AM_PM, Calendar.AM);
+            calendar.set(Calendar.MINUTE, 0);
+            calendar.set(Calendar.SECOND, 0);
+            dateTimeSelector.setTimePeriod(new TimePeriod(TimeFrameType.FIXED, 0, TimeUnit.DAY, calendar.getTime(), new Date()));
+            refresh();
          }         
          @Override
          public void widgetDefaultSelected(SelectionEvent arg0)
@@ -125,7 +132,40 @@ public class BusinessServiceAvailabilityView extends ObjectView
       gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
-      buttonToday.setLayoutData(gd);      
+      buttonToday.setLayoutData(gd);     
+      
+      Button buttonYesterday = new Button(buttonGroup, SWT.PUSH);
+      buttonYesterday.setText(i18n.tr("Yesterday"));
+      buttonYesterday.addSelectionListener(new SelectionListener() {         
+         @Override
+         public void widgetSelected(SelectionEvent arg0)
+         {
+            Calendar calendarStart = Calendar.getInstance();
+            calendarStart.set(Calendar.HOUR, 0);
+            calendarStart.set(Calendar.AM_PM, Calendar.AM);
+            calendarStart.set(Calendar.MINUTE, 0);
+            calendarStart.set(Calendar.SECOND, 0);
+            calendarStart.add(Calendar.DATE, -1);
+            
+            Calendar calendarEnd = Calendar.getInstance();
+            calendarEnd.set(Calendar.HOUR, 0);
+            calendarEnd.set(Calendar.AM_PM, Calendar.AM);
+            calendarEnd.set(Calendar.MINUTE, 0);
+            calendarEnd.set(Calendar.SECOND, 0);
+            calendarEnd.add(Calendar.SECOND, -1);
+            dateTimeSelector.setTimePeriod(new TimePeriod(TimeFrameType.FIXED, 0, TimeUnit.DAY, calendarStart.getTime(), calendarEnd.getTime()));
+            refresh();
+         }         
+         @Override
+         public void widgetDefaultSelected(SelectionEvent arg0)
+         {
+            widgetSelected(arg0);
+         }
+      });
+      gd = new GridData();
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalAlignment = SWT.FILL;
+      buttonYesterday.setLayoutData(gd);    
       
       Button buttonLastMonth = new Button(buttonGroup, SWT.PUSH);
       buttonLastMonth.setText(i18n.tr("Last month"));
@@ -133,7 +173,14 @@ public class BusinessServiceAvailabilityView extends ObjectView
          @Override
          public void widgetSelected(SelectionEvent arg0)
          {
-            updateTime(30, TimeUnit.DAY);
+            Calendar calendar = Calendar.getInstance();
+            calendar.set(Calendar.DAY_OF_MONTH, 1);
+            calendar.set(Calendar.HOUR, 0);
+            calendar.set(Calendar.AM_PM, Calendar.AM);
+            calendar.set(Calendar.MINUTE, 0);
+            calendar.set(Calendar.SECOND, 0);
+            dateTimeSelector.setTimePeriod(new TimePeriod(TimeFrameType.FIXED, 0, TimeUnit.DAY, calendar.getTime(), new Date()));
+            refresh();
          }         
          @Override
          public void widgetDefaultSelected(SelectionEvent arg0)
@@ -146,13 +193,56 @@ public class BusinessServiceAvailabilityView extends ObjectView
       gd.horizontalAlignment = SWT.FILL;
       buttonLastMonth.setLayoutData(gd);
       
+      Button buttonPrevMonth = new Button(buttonGroup, SWT.PUSH);
+      buttonPrevMonth.setText(i18n.tr("Previous month"));
+      buttonPrevMonth.addSelectionListener(new SelectionListener() {         
+         @Override
+         public void widgetSelected(SelectionEvent arg0)
+         {
+            Calendar calendarStart = Calendar.getInstance();
+            calendarStart.add(Calendar.MONTH, -1);
+            calendarStart.set(Calendar.DAY_OF_MONTH, 1);
+            calendarStart.set(Calendar.HOUR, 0);
+            calendarStart.set(Calendar.AM_PM, Calendar.AM);
+            calendarStart.set(Calendar.MINUTE, 0);
+            calendarStart.set(Calendar.SECOND, 0);            
+            
+            Calendar calendarEnd = Calendar.getInstance();
+            calendarEnd.add(Calendar.MONTH, -1);
+            calendarEnd.set(Calendar.DAY_OF_MONTH, calendarEnd.getActualMaximum(Calendar.DAY_OF_MONTH));
+            calendarEnd.set(Calendar.HOUR, 0);
+            calendarEnd.set(Calendar.AM_PM, Calendar.AM);
+            calendarEnd.set(Calendar.MINUTE, 0);
+            calendarEnd.set(Calendar.SECOND, 0);
+            calendarEnd.add(Calendar.SECOND, -1);
+            dateTimeSelector.setTimePeriod(new TimePeriod(TimeFrameType.FIXED, 0, TimeUnit.DAY, calendarStart.getTime(), calendarEnd.getTime()));
+            refresh();
+         }         
+         @Override
+         public void widgetDefaultSelected(SelectionEvent arg0)
+         {
+            widgetSelected(arg0);
+         }
+      });
+      gd = new GridData();
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalAlignment = SWT.FILL;
+      buttonPrevMonth.setLayoutData(gd);
+      
       Button buttonLastYear = new Button(buttonGroup, SWT.PUSH);
       buttonLastYear.setText(i18n.tr("Last year"));
       buttonLastYear.addSelectionListener(new SelectionListener() {
          @Override
          public void widgetSelected(SelectionEvent arg0)
          {
-            updateTime(365, TimeUnit.DAY);
+            Calendar calendar = Calendar.getInstance();
+            calendar.set(Calendar.DAY_OF_YEAR, 1);
+            calendar.set(Calendar.HOUR, 0);
+            calendar.set(Calendar.AM_PM, Calendar.AM);
+            calendar.set(Calendar.MINUTE, 0);
+            calendar.set(Calendar.SECOND, 0);
+            dateTimeSelector.setTimePeriod(new TimePeriod(TimeFrameType.FIXED, 0, TimeUnit.DAY, calendar.getTime(), new Date()));
+            refresh();
          }
          @Override
          public void widgetDefaultSelected(SelectionEvent arg0)
@@ -164,6 +254,43 @@ public class BusinessServiceAvailabilityView extends ObjectView
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
       buttonLastYear.setLayoutData(gd);
+      
+      Button buttonPrevYear = new Button(buttonGroup, SWT.PUSH);
+      buttonPrevYear.setText(i18n.tr("Previous year"));
+      buttonPrevYear.addSelectionListener(new SelectionListener() {
+         @Override
+         public void widgetSelected(SelectionEvent arg0)
+         {
+            Calendar calendarStart = Calendar.getInstance();
+            calendarStart.add(Calendar.YEAR, -1);
+            calendarStart.set(Calendar.MONTH, Calendar.JANUARY);
+            calendarStart.set(Calendar.DAY_OF_MONTH, 1);
+            calendarStart.set(Calendar.HOUR, 0);
+            calendarStart.set(Calendar.AM_PM, Calendar.AM);
+            calendarStart.set(Calendar.MINUTE, 0);
+            calendarStart.set(Calendar.SECOND, 0);            
+            
+            Calendar calendarEnd = Calendar.getInstance();
+            calendarEnd.set(Calendar.MONTH, Calendar.JANUARY);
+            calendarEnd.set(Calendar.DAY_OF_MONTH, 1);
+            calendarEnd.set(Calendar.HOUR, 0);
+            calendarEnd.set(Calendar.AM_PM, Calendar.AM);
+            calendarEnd.set(Calendar.MINUTE, 0);
+            calendarEnd.set(Calendar.SECOND, 0);
+            calendarEnd.add(Calendar.SECOND, -1);
+            dateTimeSelector.setTimePeriod(new TimePeriod(TimeFrameType.FIXED, 0, TimeUnit.DAY, calendarStart.getTime(), calendarEnd.getTime()));
+            refresh();
+         }
+         @Override
+         public void widgetDefaultSelected(SelectionEvent arg0)
+         {
+            widgetSelected(arg0);
+         }
+      });
+      gd = new GridData();
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalAlignment = SWT.FILL;
+      buttonPrevYear.setLayoutData(gd);
 
       Composite timeSelectorGroup = new Composite(parent, SWT.NONE);
       layout = new GridLayout();
@@ -196,7 +323,6 @@ public class BusinessServiceAvailabilityView extends ObjectView
       buttonSelect.setLayoutData(gd);
       
       ChartConfiguration chartConfiguration = new ChartConfiguration();
-      //chartConfiguration.setLegendPosition(legendPosition);
       chartConfiguration.setLegendVisible(true);
       chartConfiguration.setShowIn3D(true);
       chartConfiguration.setTransposed(true);
@@ -246,12 +372,6 @@ public class BusinessServiceAvailabilityView extends ObjectView
       gd.grabExcessVerticalSpace = true;
       gd.verticalAlignment = SWT.FILL;
       ticketViewer.getTable().setLayoutData(gd);
-   }
-   
-   private void updateTime(int timeRange, TimeUnit unit)
-   {
-      dateTimeSelector.setTimePeriod(new TimePeriod(TimeFrameType.BACK_FROM_NOW, timeRange, unit, null, null));
-      refresh();
    }
    
    /**
