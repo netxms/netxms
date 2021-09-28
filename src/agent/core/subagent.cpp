@@ -226,9 +226,9 @@ LONG H_SubAgentList(const TCHAR *cmd, const TCHAR *arg, StringList *value, Abstr
  */
 LONG H_SubAgentTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *session)
 {
-   value->addColumn(_T("NAME"));
-   value->addColumn(_T("VERSION"));
-   value->addColumn(_T("FILE"));
+   value->addColumn(_T("NAME"), DCI_DT_STRING, _T("Name"), true);
+   value->addColumn(_T("VERSION"), DCI_DT_STRING, _T("Version"));
+   value->addColumn(_T("FILE"), DCI_DT_STRING, _T("File"));
 
    for(int i = 0; i < s_subAgents.size(); i++)
    {
