@@ -352,14 +352,22 @@ struct FileInfo
    uuid newGuid;
    TCHAR *path;
    uint32_t permissions;
-   TCHAR *ownerUser;
-   TCHAR *ownerGroup;
+   TCHAR *owner;
+   TCHAR *group;
+
+   FileInfo(const uuid& _guid, const TCHAR *_path, uint32_t _permissions, const TCHAR *_owner, const TCHAR *_group) : guid(_guid)
+   {
+      path = MemCopyString(_path);
+      permissions = _permissions;
+      owner = ((_owner != nullptr) && (*_owner != 0)) ? MemCopyString(_owner) : nullptr;
+      group = ((_group != nullptr) && (*_group != 0)) ? MemCopyString(_group) : nullptr;
+   }
 
    ~FileInfo()
    {
       MemFree(path);
-      MemFree(ownerUser);
-      MemFree(ownerGroup);
+      MemFree(owner);
+      MemFree(group);
    }
 };
 
@@ -376,14 +384,10 @@ static void BuildFileList(ConfigEntry *currEntry, StringBuffer *currPath, Object
 
    currPath->append(currEntry->getAttribute(_T("name")));
 
-   if(includeDirectories)
+   if (includeDirectories)
    {
-      auto f = new FileInfo;
-      f->path = MemCopyString(currPath->cstr());
-      f->permissions = currEntry->getSubEntryValueAsUInt(_T("permissions"));
-      f->ownerUser = MemCopyString(currEntry->getSubEntryValue(_T("owner")));
-      f->ownerGroup = MemCopyString(currEntry->getSubEntryValue(_T("owner")));
-      files->add(f);
+      files->add(new FileInfo(uuid::NULL_UUID, currPath->cstr(), currEntry->getSubEntryValueAsUInt(_T("permissions")),
+               currEntry->getSubEntryValue(_T("owner")), currEntry->getSubEntryValue(_T("ownerGroup"))));
    }
 
    currPath->append(_T("/"));
@@ -399,12 +403,8 @@ static void BuildFileList(ConfigEntry *currEntry, StringBuffer *currPath, Object
          {
             size_t pos = currPath->length();
             currPath->append(e->getAttribute(_T("name")));
-            auto f = new FileInfo;
-            f->guid = guid;
-            f->path = MemCopyString(currPath->cstr());
-            f->permissions = e->getSubEntryValueAsUInt(_T("permissions"));
-            f->ownerUser = MemCopyString(e->getSubEntryValue(_T("owner")));
-            f->ownerGroup = MemCopyString(e->getSubEntryValue(_T("ownerGroup")));
+            auto f = new FileInfo(guid, currPath->cstr(), e->getSubEntryValueAsUInt(_T("permissions")),
+                     e->getSubEntryValue(_T("owner")), e->getSubEntryValue(_T("ownerGroup")));
             files->add(f);
             currPath->shrink(currPath->length() - pos);
             if (updateGuid)
@@ -561,6 +561,18 @@ void FileDeliveryPolicy::validate()
 }
 
 /**
+ * Convert file permissions to text
+ */
+static TCHAR *FilePermissionsToText(uint32_t bits, TCHAR *buffer)
+{
+   _tcscpy(buffer, _T("rwxrwxrwx"));
+   for(int i = 0; i <= 8; i++)
+      if ((bits & (1 << i)) == 0)
+         buffer[i] = _T('-');
+   return buffer;
+}
+
+/**
  * Deploy file delivery policy
  */
 void FileDeliveryPolicy::deploy(shared_ptr<AgentPolicyDeploymentData> data)
@@ -618,6 +630,13 @@ void FileDeliveryPolicy::deploy(shared_ptr<AgentPolicyDeploymentData> data)
       nxlog_debug_tag(DEBUG_TAG, 4, _T("FileDeliveryPolicy::deploy(%s): call to AgentConnection::getFileSetInfo failed (%s)"), data->debugId, AgentErrorCodeToText(rcc));
       return;
    }
+   if (remoteFiles->size() != files.size())
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("FileDeliveryPolicy::deploy(%s): inconsistent number of elements returned by AgentConnection::getFileSetInfo (expected %d, returned %d)"),
+               data->debugId, files.size(), remoteFiles->size());
+      delete remoteFiles;
+      return;
+   }
 
    for (int i = 0; i < remoteFiles->size(); i++)
    {
@@ -628,51 +647,73 @@ void FileDeliveryPolicy::deploy(shared_ptr<AgentPolicyDeploymentData> data)
          continue;
       }
 
-      StringBuffer localFile = g_netxmsdDataDir;
-      localFile.append(DDIR_FILES FS_PATH_SEPARATOR _T("FileDelivery-"));
-      localFile.append(files.get(i)->guid.toString());
+      FileInfo *localFile = files.get(i);
+      if (!localFile->guid.isNull())
+      {
+         // Regular file, check if upload is needed
+         StringBuffer localFilePath(g_netxmsdDataDir);
+         localFilePath.append(DDIR_FILES FS_PATH_SEPARATOR _T("FileDelivery-"));
+         localFilePath.append(localFile->guid.toString());
 
-      BYTE localHash[MD5_DIGEST_SIZE];
-      if (CalculateFileMD5Hash(localFile, localHash) && ((remoteFile->status() == ERR_FILE_STAT_FAILED) || memcmp(localHash, remoteFile->hash(), MD5_DIGEST_SIZE)))
-      {
-         nxlog_debug_tag(DEBUG_TAG, 5, _T("FileDeliveryPolicy::deploy(%s): uploading %s"), data->debugId, files.get(i)->path);
-         rcc = conn->uploadFile(localFile, remoteFile->name(), true);
-         nxlog_debug_tag(DEBUG_TAG, 5, _T("FileDeliveryPolicy::deploy(%s): upload completed (%s)"), data->debugId, AgentErrorCodeToText(rcc));
+         BYTE localHash[MD5_DIGEST_SIZE];
+         if (CalculateFileMD5Hash(localFilePath, localHash) && ((remoteFile->status() == ERR_FILE_STAT_FAILED) || memcmp(localHash, remoteFile->hash(), MD5_DIGEST_SIZE)))
+         {
+            nxlog_debug_tag(DEBUG_TAG, 5, _T("FileDeliveryPolicy::deploy(%s): uploading %s"), data->debugId, localFile->path);
+            rcc = conn->uploadFile(localFilePath, remoteFile->name(), true);
+            if (rcc == ERR_SUCCESS)
+               nxlog_debug_tag(DEBUG_TAG, 5, _T("FileDeliveryPolicy::deploy(%s): upload completed"), data->debugId);
+            else
+               nxlog_debug_tag(DEBUG_TAG, 5, _T("FileDeliveryPolicy::deploy(%s): upload failed (%s)"), data->debugId, AgentErrorCodeToText(rcc));
+         }
+         else
+         {
+            nxlog_debug_tag(DEBUG_TAG, 5, _T("FileDeliveryPolicy::deploy(%s): remote file %s and local file %s are the same, synchronization skipped"), data->debugId, remoteFile->name(), localFilePath.cstr());
+         }
       }
-      else
+      else if (remoteFile->status() == ERR_FILE_STAT_FAILED)
       {
-         nxlog_debug_tag(DEBUG_TAG, 5, _T("FileDeliveryPolicy::deploy(%s): remote file %s and local file %s are the same, synchronization skipped"), data->debugId, remoteFile->name(), localFile.cstr());
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("FileDeliveryPolicy::deploy(%s): creating remote directory %s"), data->debugId, localFile->path);
+         NXCPMessage request(CMD_FILEMGR_CREATE_FOLDER, conn->generateRequestId(), conn->getProtocolVersion());
+         request.setField(VID_FILE_NAME, remoteFile->name());
+         NXCPMessage *response = conn->customRequest(&request);
+         if (response != nullptr)
+         {
+            rcc = response->getFieldAsUInt32(VID_RCC);
+            delete response;
+         }
+         else
+         {
+            rcc = ERR_REQUEST_TIMEOUT;
+         }
+         if (rcc == ERR_SUCCESS)
+            nxlog_debug_tag(DEBUG_TAG, 5, _T("FileDeliveryPolicy::deploy(%s): remote directory created"), data->debugId);
+         else
+            nxlog_debug_tag(DEBUG_TAG, 5, _T("FileDeliveryPolicy::deploy(%s): cannot create remote directory (%s)"), data->debugId, AgentErrorCodeToText(rcc));
       }
 
-      TCHAR* owner = nullptr;
-      if (remoteFile->ownerUser() != nullptr && files.get(i)->ownerUser != nullptr ? _tcsncmp(remoteFile->ownerUser(), files.get(i)->ownerUser, MAX_USER_NAME) : false )
+      if (((remoteFile->status() == ERR_FILE_STAT_FAILED) && (rcc == ERR_SUCCESS) && ((localFile->owner != nullptr) || (localFile->group != nullptr))) ||
+          ((localFile->owner != nullptr) && _tcscmp(CHECK_NULL_EX(remoteFile->ownerUser()), localFile->owner)) ||
+          ((localFile->group != nullptr) && _tcscmp(CHECK_NULL_EX(remoteFile->ownerGroup()), localFile->group)))
       {
-         if (_tcsncmp(_T(""), files.get(i)->ownerUser, MAX_USER_NAME))
-            owner = files.get(i)->ownerUser;
-      }
-      TCHAR* ownerGroup = nullptr;
-      if (remoteFile->ownerGroup() != nullptr && files.get(i)->ownerGroup != nullptr ? _tcsncmp(remoteFile->ownerGroup(), files.get(i)->ownerGroup, MAX_USER_NAME) : false)
-      {
-         if (_tcsncmp(_T(""), files.get(i)->ownerGroup, MAX_USER_NAME))
-            ownerGroup = files.get(i)->ownerGroup;
-      }
-
-      if (owner != nullptr || ownerGroup != nullptr)
-      {
-         if (owner != nullptr)
-            nxlog_debug_tag(DEBUG_TAG, 5, _T("FileDeliveryPolicy::deploy(%s): changing ownership for %s to user:%s"), data->debugId, files.get(i)->path, owner);
-         if (ownerGroup != nullptr)
-            nxlog_debug_tag(DEBUG_TAG, 5, _T("FileDeliveryPolicy::deploy(%s): changing ownership for %s to group:%s"), data->debugId, files.get(i)->path, ownerGroup);
-
-         rcc = conn->changeFileOwner(remoteFile->name(), owner, ownerGroup);
-         nxlog_debug_tag(DEBUG_TAG, 5, _T("FileDeliveryPolicy::deploy(%s): changing ownership completed (%s)"), data->debugId, AgentErrorCodeToText(rcc));
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("FileDeliveryPolicy::deploy(%s): changing ownership for %s to %s:%s"),
+                  data->debugId, localFile->path, CHECK_NULL(localFile->owner), CHECK_NULL(localFile->group));
+         rcc = conn->changeFileOwner(remoteFile->name(), localFile->owner, localFile->group);
+         if (rcc == ERR_SUCCESS)
+            nxlog_debug_tag(DEBUG_TAG, 5, _T("FileDeliveryPolicy::deploy(%s): ownership changed"), data->debugId);
+         else
+            nxlog_debug_tag(DEBUG_TAG, 5, _T("FileDeliveryPolicy::deploy(%s): cannot change file ownership (%s)"), data->debugId, AgentErrorCodeToText(rcc));
       }
 
-      if (files.get(i)->permissions != remoteFile->permissions())
+      if (localFile->permissions != remoteFile->permissions())
       {
-         nxlog_debug_tag(DEBUG_TAG, 5, _T("FileDeliveryPolicy::deploy(%s): changing permissions for %s to %o"), data->debugId, files.get(i)->path, files.get(i)->permissions);
-         rcc = conn->changeFilePermissions(remoteFile->name(), files.get(i)->permissions, owner, ownerGroup);
-         nxlog_debug_tag(DEBUG_TAG, 5, _T("FileDeliveryPolicy::deploy(%s): changing permissions completed (%s)"), data->debugId, AgentErrorCodeToText(rcc));
+         TCHAR buffer[16];
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("FileDeliveryPolicy::deploy(%s): changing permissions for %s to %s"),
+                  data->debugId, localFile->path, FilePermissionsToText(localFile->permissions, buffer));
+         rcc = conn->changeFilePermissions(remoteFile->name(), localFile->permissions, localFile->owner, localFile->group);
+         if (rcc == ERR_SUCCESS)
+            nxlog_debug_tag(DEBUG_TAG, 5, _T("FileDeliveryPolicy::deploy(%s): permissions changed"), data->debugId);
+         else
+            nxlog_debug_tag(DEBUG_TAG, 5, _T("FileDeliveryPolicy::deploy(%s): cannot change permissions (%s)"), data->debugId, AgentErrorCodeToText(rcc));
       }
    }
    delete remoteFiles;

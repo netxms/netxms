@@ -3900,7 +3900,7 @@ bool LIBNETXMS_EXPORTABLE MergeFiles(const TCHAR *source, const TCHAR *destinati
     CloseHandle(sourceFile);
     CloseHandle(destinationFile);
 #else
-   success = CopyFileInternal(source, destination, 0, true);
+   success = CopyFileInternal(source, destination, S_IRUSR | S_IWUSR, true);
 #endif
    return success;
 }

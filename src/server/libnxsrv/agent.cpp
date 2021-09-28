@@ -35,6 +35,7 @@
  * Constants
  */
 #define MAX_MSG_SIZE    268435456
+#define FILE_PART_SIZE  (1024 * 1024)
 
 /**
  * Agent connection thread pool
@@ -1781,8 +1782,6 @@ void AgentConnection::prepareFilePartList(const TCHAR *localFile, const TCHAR *d
    uint64_t localFileSize = FileSize(localFile);
 
    int handle = _topen(localFile, O_RDONLY | O_BINARY);
-
-   const uint32_t FILE_PART_SIZE = 1024 * 1024;
    BYTE *buffer = (handle != -1) ? MemAllocArrayNoInit<BYTE>(FILE_PART_SIZE) : nullptr;
 
    for(int i = 0; localFileSize > 0; i++)
@@ -1828,114 +1827,110 @@ void AgentConnection::prepareFilePartList(const TCHAR *localFile, const TCHAR *d
 uint32_t AgentConnection::uploadFile(const TCHAR *localFile, const TCHAR *destinationFile, bool allowPathExpansion,
          void (* progressCallback)(size_t, void *), void *cbArg, NXCPStreamCompressionMethod compMethod, bool disablePartialTransfer)
 {
-   uint32_t rcc = ERR_SUCCESS;
-   if (m_fileResumingEnabled && !disablePartialTransfer) //If file resuming is enabled, we will try to upload file in chunks, then merge them together.
-   {
-      // If destination file name is not set, is expected that we won't use File Manager,
-      // even if we can. Instead we will use CMD_FILE_TRANSFER.
-      bool useFileTransfer = destinationFile == nullptr;
+   // If file resuming is enabled, we will try to upload file in chunks, then merge them together
+   // Smaller files should be transferred in one part
+   if (!m_fileResumingEnabled || disablePartialTransfer || (FileSize(localFile) <= FILE_PART_SIZE))
+      return uploadFileInternal(localFile, destinationFile, allowPathExpansion, progressCallback, cbArg, compMethod);
 
-      // We need to set up remote file name. If destinationFile is not set, remote file name will be same as local file name, but without path.
-      const TCHAR* remoteFileName = nullptr;
-      if (useFileTransfer)
+   uint32_t rcc = ERR_SUCCESS;
+
+   // If destination file name is not set, is expected that we won't use File Manager,
+   // even if we can. Instead we will use CMD_FILE_TRANSFER.
+   bool useFileTransfer = (destinationFile == nullptr);
+
+   // We need to set up remote file name. If destinationFile is not set, remote file name will be same as local file name, but without path.
+   const TCHAR* remoteFileName = nullptr;
+   if (useFileTransfer)
+   {
+      remoteFileName = _tcsrchr(localFile, '/');
+      if (remoteFileName != nullptr)
       {
-         remoteFileName = _tcsrchr(localFile, '/');
+         remoteFileName = remoteFileName + 1;
+      }
+      else
+      {
+         remoteFileName = _tcsrchr(localFile, '\\');
          if (remoteFileName != nullptr)
          {
             remoteFileName = remoteFileName + 1;
          }
          else
          {
-            remoteFileName = _tcsrchr(localFile, '\\');
-            if (remoteFileName != nullptr)
-            {
-               remoteFileName = remoteFileName + 1;
-            }
-            else
-            {
-               remoteFileName = localFile;
-            }
+            remoteFileName = localFile;
          }
       }
-      else
-      {
-         remoteFileName = destinationFile;
-      }
-
-      // We need to prepare expected file chunk list
-      ObjectArray<FilePartInfo> partInfo(8, 8, Ownership::True);   // Will contain information about file chunks for upload, including file name, size, hash and offset.
-      StringList partNames;                                        // Will contain only file chunks names, used only in getFileSetInfo()
-      prepareFilePartList(localFile, remoteFileName, &partNames, &partInfo);
-
-      // If we can use File Manager on agent, we can get already uploaded file chunk list and skip upload for them.
-      ObjectArray<RemoteFileInfo> *remoteFiles = nullptr;
-      if (!useFileTransfer)
-      {
-         rcc = getFileSetInfo(partNames, allowPathExpansion, &remoteFiles);
-         if (rcc == ERR_UNKNOWN_COMMAND) // Can't find File Manager on agent, switching to File Transfer mode.
-            useFileTransfer = true;
-      }
-
-      // We try to upload file chunks if we got remote files or if we switched in File Transfer mode in process
-      if (rcc == ERR_SUCCESS || useFileTransfer)
-      {
-         for (int i = 0; i < partNames.size(); i++)
-         {
-            bool found = false;
-            FilePartInfo* localFilePart = partInfo.get(i);
-            // If we can't find file chunk on agent with correct name, size and hash - we upload it.
-            if (!localFilePart->isFoundInRemoteFiles(remoteFiles))
-            {
-               rcc = uploadFileInternal(localFile, localFilePart->m_name, allowPathExpansion, progressCallback, cbArg, compMethod, localFilePart->m_offset, localFilePart->m_size, useFileTransfer);
-               if (rcc != ERR_SUCCESS)
-                  break;
-            }
-         }
-         //We don't need remote file list anymore
-         if (remoteFiles != nullptr)
-            delete remoteFiles;
-
-         // If upload successfull - we need to merge file chunks together
-         if (rcc == ERR_SUCCESS)
-         {
-            NXCPMessage request(m_nProtocolVersion);
-            request.setId(generateRequestId());
-
-            // We have two merge methods - in core agent and in file manager.
-            // We should use core agent merge if files are uploaded by File Transfer,
-            // and File Manager merge if file chunks are uploaded by File Manager.
-            if (useFileTransfer)
-            {
-               request.setCode(CMD_MERGE_FILES);
-            }
-            else
-            {
-               request.setCode(CMD_FILEMGR_MERGE_FILES);
-            }
-
-            request.setField(VID_DESTINATION_FILE_NAME, remoteFileName);
-            partNames.fillMessage(&request, VID_FILE_LIST_BASE, VID_FILE_COUNT);
-            BYTE hash[MD5_DIGEST_SIZE];
-            CalculateFileMD5Hash(localFile, hash);
-            request.setField(VID_HASH_MD5, hash, MD5_DIGEST_SIZE);
-            if (sendMessage(&request))
-            {
-               rcc = waitForRCC(request.getId(), m_commandTimeout);
-            }
-            else
-            {
-               rcc = ERR_CONNECTION_BROKEN;
-            }
-         }
-      }
-      return rcc;
    }
    else
    {
-      //backwards compatibility
-      rcc = uploadFileInternal(localFile, destinationFile, allowPathExpansion, progressCallback, cbArg, compMethod);
+      remoteFileName = destinationFile;
    }
 
+   // We need to prepare expected file chunk list
+   ObjectArray<FilePartInfo> partInfo(8, 8, Ownership::True);   // Will contain information about file chunks for upload, including file name, size, hash and offset.
+   StringList partNames;                                        // Will contain only file chunks names, used only in getFileSetInfo()
+   prepareFilePartList(localFile, remoteFileName, &partNames, &partInfo);
+
+   // If we can use File Manager on agent, we can get already uploaded file chunk list and skip upload for them.
+   ObjectArray<RemoteFileInfo> *remoteFiles = nullptr;
+   if (!useFileTransfer)
+   {
+      rcc = getFileSetInfo(partNames, allowPathExpansion, &remoteFiles);
+      if (rcc == ERR_UNKNOWN_COMMAND) // Can't find File Manager on agent, switching to File Transfer mode.
+         useFileTransfer = true;
+   }
+
+   // We try to upload file chunks if we got remote files or if we switched in File Transfer mode in process
+   if (rcc == ERR_SUCCESS || useFileTransfer)
+   {
+      for (int i = 0; i < partNames.size(); i++)
+      {
+         bool found = false;
+         FilePartInfo* localFilePart = partInfo.get(i);
+         // If we can't find file chunk on agent with correct name, size and hash - we upload it.
+         if (!localFilePart->isFoundInRemoteFiles(remoteFiles))
+         {
+            rcc = uploadFileInternal(localFile, localFilePart->m_name, allowPathExpansion, progressCallback, cbArg, compMethod, localFilePart->m_offset, localFilePart->m_size, useFileTransfer);
+            if (rcc != ERR_SUCCESS)
+               break;
+         }
+      }
+      //We don't need remote file list anymore
+      if (remoteFiles != nullptr)
+         delete remoteFiles;
+
+      // If upload successfull - we need to merge file chunks together
+      if (rcc == ERR_SUCCESS)
+      {
+         NXCPMessage request(m_nProtocolVersion);
+         request.setId(generateRequestId());
+
+         // We have two merge methods - in core agent and in file manager.
+         // We should use core agent merge if files are uploaded by File Transfer,
+         // and File Manager merge if file chunks are uploaded by File Manager.
+         if (useFileTransfer)
+         {
+            request.setCode(CMD_MERGE_FILES);
+         }
+         else
+         {
+            request.setCode(CMD_FILEMGR_MERGE_FILES);
+         }
+
+         request.setField(VID_DESTINATION_FILE_NAME, remoteFileName);
+         partNames.fillMessage(&request, VID_FILE_LIST_BASE, VID_FILE_COUNT);
+         BYTE hash[MD5_DIGEST_SIZE];
+         CalculateFileMD5Hash(localFile, hash);
+         request.setField(VID_HASH_MD5, hash, MD5_DIGEST_SIZE);
+         if (sendMessage(&request))
+         {
+            rcc = waitForRCC(request.getId(), m_commandTimeout);
+         }
+         else
+         {
+            rcc = ERR_CONNECTION_BROKEN;
+         }
+      }
+   }
    return rcc;
 }
 
@@ -1951,10 +1946,8 @@ uint32_t AgentConnection::changeFileOwner(const TCHAR *file, const TCHAR *newOwn
    NXCPMessage msg(CMD_FILEMGR_CHOWN, requestId, m_nProtocolVersion);
 
    msg.setField(VID_FILE_NAME, file);
-   if (newOwner != nullptr)
-      msg.setField(VID_USER_NAME, newOwner);
-   if (newGroup != nullptr)
-      msg.setField(VID_GROUP_NAME, newGroup);
+   msg.setField(VID_USER_NAME, newOwner);
+   msg.setField(VID_GROUP_NAME, newGroup);
 
    uint32_t rcc;
    if (sendMessage(&msg))
