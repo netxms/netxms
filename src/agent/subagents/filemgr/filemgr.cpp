@@ -1418,7 +1418,7 @@ static void CH_ChangeFileOwner(NXCPMessage *request, NXCPMessage *response, Abst
          }
          else
          {
-            response->setField(VID_RCC, ERR_INTERNAL_ERROR);
+            response->setField(VID_RCC, ((errno == EPERM) || (errno == EACCES)) ? ERR_ACCESS_DENIED : ERR_IO_FAILURE);
          }
       }
       else
