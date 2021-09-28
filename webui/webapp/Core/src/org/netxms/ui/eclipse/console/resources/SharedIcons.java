@@ -41,7 +41,7 @@ public class SharedIcons
    public static ImageDescriptor CONTAINER;
 	public static ImageDescriptor COPY;
 	public static ImageDescriptor CSV;
-	public static ImageDescriptor CUT;
+   public static ImageDescriptor CUT;
 	public static ImageDescriptor DELETE_OBJECT;
 	public static ImageDescriptor DOWN;
 	public static ImageDescriptor EDIT;
@@ -49,14 +49,15 @@ public class SharedIcons
 	public static ImageDescriptor EXECUTE;
 	public static ImageDescriptor EXPAND;
 	public static ImageDescriptor EXPAND_ALL;
-	public static ImageDescriptor FILTER;
-   public static ImageDescriptor FIND;
+   public static ImageDescriptor FILTER;
+	public static ImageDescriptor FIND;
    public static ImageDescriptor INFORMATION;
 	public static ImageDescriptor IP_ADDRESS;
 	public static ImageDescriptor NAV_BACKWARD;
 	public static ImageDescriptor NAV_FORWARD;
 	public static ImageDescriptor PASTE;
 	public static ImageDescriptor REFRESH;
+   public static ImageDescriptor RENAME;
 	public static ImageDescriptor RESTART;
 	public static ImageDescriptor SAVE;
    public static ImageDescriptor SAVE_AS;
@@ -81,7 +82,7 @@ public class SharedIcons
    public static Image IMG_CONTAINER;
 	public static Image IMG_COPY;
 	public static Image IMG_CSV;
-	public static Image IMG_CUT;
+   public static Image IMG_CUT;
 	public static Image IMG_DELETE_OBJECT;
 	public static Image IMG_DOWN;
 	public static Image IMG_EDIT;
@@ -89,14 +90,15 @@ public class SharedIcons
 	public static Image IMG_EXECUTE;
 	public static Image IMG_EXPAND;
 	public static Image IMG_EXPAND_ALL;
-   public static Image IMG_FILTER;
-	public static Image IMG_FIND;
+	public static Image IMG_FILTER;
+   public static Image IMG_FIND;
    public static Image IMG_INFORMATION;
 	public static Image IMG_IP_ADDRESS;
 	public static Image IMG_NAV_BACKWARD;
 	public static Image IMG_NAV_FORWARD;
 	public static Image IMG_PASTE;
 	public static Image IMG_REFRESH;
+   public static Image IMG_RENAME;
 	public static Image IMG_RESTART;
 	public static Image IMG_SAVE;
    public static Image IMG_SAVE_AS;
@@ -126,7 +128,7 @@ public class SharedIcons
       CONTAINER = Activator.getImageDescriptor("icons/container.png"); //$NON-NLS-1$
 		COPY = Activator.getImageDescriptor("icons/copy.gif"); //$NON-NLS-1$
 		CSV = Activator.getImageDescriptor("icons/csv.png"); //$NON-NLS-1$
-		CUT = Activator.getImageDescriptor("icons/cut.gif"); //$NON-NLS-1$
+      CUT = Activator.getImageDescriptor("icons/cut.gif"); //$NON-NLS-1$
 		DELETE_OBJECT = Activator.getImageDescriptor("icons/delete_obj.gif"); //$NON-NLS-1$
 		DOWN = Activator.getImageDescriptor("icons/down.png"); //$NON-NLS-1$
 		EDIT = Activator.getImageDescriptor("icons/edit.png"); //$NON-NLS-1$
@@ -134,14 +136,15 @@ public class SharedIcons
 		EXECUTE = Activator.getImageDescriptor("icons/execute.gif"); //$NON-NLS-1$
 		EXPAND = Activator.getImageDescriptor("icons/expand.png"); //$NON-NLS-1$
 		EXPAND_ALL = Activator.getImageDescriptor("icons/expandall.png"); //$NON-NLS-1$
-      FILTER = Activator.getImageDescriptor("icons/filter.gif"); //$NON-NLS-1$
-		FIND = Activator.getImageDescriptor("icons/find.gif"); //$NON-NLS-1$
+		FILTER = Activator.getImageDescriptor("icons/filter.gif"); //$NON-NLS-1$
+      FIND = Activator.getImageDescriptor("icons/find.gif"); //$NON-NLS-1$
       INFORMATION = Activator.getImageDescriptor("icons/information.png"); //$NON-NLS-1$
 		IP_ADDRESS = Activator.getImageDescriptor("icons/ipaddr.png"); //$NON-NLS-1$
 		NAV_BACKWARD = Activator.getImageDescriptor("icons/nav_backward.gif"); //$NON-NLS-1$
 		NAV_FORWARD = Activator.getImageDescriptor("icons/nav_forward.gif"); //$NON-NLS-1$
 		PASTE = Activator.getImageDescriptor("icons/paste.gif"); //$NON-NLS-1$
 		REFRESH = Activator.getImageDescriptor("icons/refresh.gif"); //$NON-NLS-1$
+      RENAME = Activator.getImageDescriptor("icons/rename.png"); //$NON-NLS-1$
 		RESTART = Activator.getImageDescriptor("icons/restart.gif"); //$NON-NLS-1$
 		SAVE = Activator.getImageDescriptor("icons/save.gif"); //$NON-NLS-1$
       SAVE_AS = Activator.getImageDescriptor("icons/saveas.gif"); //$NON-NLS-1$
@@ -182,10 +185,11 @@ public class SharedIcons
 		IMG_NAV_FORWARD = NAV_FORWARD.createImage(display);
 		IMG_PASTE = PASTE.createImage(display);
 		IMG_REFRESH = REFRESH.createImage(display);
+      IMG_RENAME = RENAME.createImage(display);
 		IMG_RESTART = RESTART.createImage(display);
 		IMG_SAVE = SAVE.createImage(display);
       IMG_SAVE_AS = SAVE_AS.createImage(display);
-      IMG_SAVE_AS_IMAGE = SAVE_AS_IMAGE.createImage();
+      IMG_SAVE_AS_IMAGE = SAVE_AS_IMAGE.createImage(display);
 		IMG_TERMINATE = TERMINATE.createImage(display);
 		IMG_UNKNOWN_OBJECT = UNKNOWN_OBJECT.createImage(display);
 		IMG_UP = UP.createImage(display);

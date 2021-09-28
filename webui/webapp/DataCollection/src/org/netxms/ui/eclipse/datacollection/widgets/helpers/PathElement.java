@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Raden Solutions
+ * Copyright (C) 2003-2021 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,20 +34,30 @@ import org.simpleframework.xml.Root;
 @Root(name = "element")
 public class PathElement
 {
+   public static final int OWNER_READ     = 0x0001;
+   public static final int OWNER_WRITE    = 0x0002;
+   public static final int OWNER_EXECUTE  = 0x0004;
+   public static final int GROUP_READ     = 0x0008;
+   public static final int GROUP_WRITE    = 0x0010;
+   public static final int GROUP_EXECUTE  = 0x0020;
+   public static final int OTHERS_READ    = 0x0040;
+   public static final int OTHERS_WRITE   = 0x0080;
+   public static final int OTHERS_EXECUTE = 0x0100;
+
    @Attribute
    private String name;
-   
+
    private PathElement parent;
-   
+
    @ElementList(required = false)
    private Set<PathElement> children;
-   
+
    @Element(required = false)
    private UUID guid;
-   
+
    @Element(required = false)
    private Date creationTime;
-   
+
    @Element(required = false)
    private Integer permissions;
 
@@ -58,9 +68,17 @@ public class PathElement
    private String ownerGroup;
 
    private File localFile = null;
-   
+
    /**
-    * Create new path element 
+    * Default constructor
+    */
+   public PathElement()
+   {
+      this(null, "", null, null, new Date());
+   }
+
+   /**
+    * Create new path element
     */
    public PathElement(PathElement parent, String name)
    {
@@ -76,7 +94,7 @@ public class PathElement
       this.name = name;
       this.guid = guid;
       this.localFile = localFile;
-      this.permissions = 0;
+      this.permissions = (OWNER_WRITE | OWNER_READ | GROUP_READ | OTHERS_READ) | ((guid != null) ? 0 : (OWNER_EXECUTE | GROUP_EXECUTE | OTHERS_EXECUTE));
       this.owner = "";
       this.ownerGroup = "";
       this.creationTime = creationDate;
@@ -88,21 +106,7 @@ public class PathElement
          parent.children.add(this);
       }
    }
-   
-   /**
-    * Default constructor
-    */
-   public PathElement()
-   {
-      name = "";
-      parent = null;
-      children = new HashSet<PathElement>();
-      guid = null;
-      permissions = 0;
-      owner = "";
-      ownerGroup = "";
-   }
-   
+
    /**
     * Update parent reference recursively
     */
@@ -170,12 +174,12 @@ public class PathElement
    {      
       for (PathElement element : children)
       {
-         if(element.getName().equals(name))
+         if (element.getName().equals(name))
             return element;
       }
       return null;
    }
-   
+
    /**
     * Check if this element has children
     * 
@@ -321,21 +325,18 @@ public class PathElement
     */
    public String getPermissionsAsString()
    {
-      String retVal = "";
-      if(permissions > 0)
-      {
-         retVal += isFile() ? "-" : "d";
-         retVal += (permissions & (1 << 0)) > 0 ? "r" : "-";
-         retVal += (permissions & (1 << 1)) > 0 ? "w" : "-";
-         retVal += (permissions & (1 << 2)) > 0 ? "x" : "-";
-         retVal += (permissions & (1 << 3)) > 0 ? "r" : "-";
-         retVal += (permissions & (1 << 4)) > 0 ? "w" : "-";
-         retVal += (permissions & (1 << 5)) > 0 ? "x" : "-";
-         retVal += (permissions & (1 << 6)) > 0 ? "r" : "-";
-         retVal += (permissions & (1 << 7)) > 0 ? "w" : "-";
-         retVal += (permissions & (1 << 8)) > 0 ? "x" : "-";
-      }
-      return retVal;
+      StringBuilder sb = new StringBuilder();
+      sb.append(isFile() ? '-' : 'd');
+      sb.append((permissions & (1 << 0)) > 0 ? 'r' : '-');
+      sb.append((permissions & (1 << 1)) > 0 ? 'w' : '-');
+      sb.append((permissions & (1 << 2)) > 0 ? 'x' : '-');
+      sb.append((permissions & (1 << 3)) > 0 ? 'r' : '-');
+      sb.append((permissions & (1 << 4)) > 0 ? 'w' : '-');
+      sb.append((permissions & (1 << 5)) > 0 ? 'x' : '-');
+      sb.append((permissions & (1 << 6)) > 0 ? 'r' : '-');
+      sb.append((permissions & (1 << 7)) > 0 ? 'w' : '-');
+      sb.append((permissions & (1 << 8)) > 0 ? 'x' : '-');
+      return sb.toString();
    }
 
    /**

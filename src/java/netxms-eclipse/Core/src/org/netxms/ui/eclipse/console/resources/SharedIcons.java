@@ -56,6 +56,7 @@ public class SharedIcons
 	public static ImageDescriptor NAV_FORWARD;
 	public static ImageDescriptor PASTE;
 	public static ImageDescriptor REFRESH;
+   public static ImageDescriptor RENAME;
 	public static ImageDescriptor RESTART;
 	public static ImageDescriptor SAVE;
    public static ImageDescriptor SAVE_AS;
@@ -96,6 +97,7 @@ public class SharedIcons
 	public static Image IMG_NAV_FORWARD;
 	public static Image IMG_PASTE;
 	public static Image IMG_REFRESH;
+   public static Image IMG_RENAME;
 	public static Image IMG_RESTART;
 	public static Image IMG_SAVE;
    public static Image IMG_SAVE_AS;
@@ -122,7 +124,7 @@ public class SharedIcons
 		CLOSE = Activator.getImageDescriptor("icons/close.gif"); //$NON-NLS-1$
 		COLLAPSE = Activator.getImageDescriptor("icons/collapse.png"); //$NON-NLS-1$
 		COLLAPSE_ALL = Activator.getImageDescriptor("icons/collapseall.png"); //$NON-NLS-1$
-		CONTAINER = Activator.getImageDescriptor("icons/container.png"); //$NON-NLS-1$
+      CONTAINER = Activator.getImageDescriptor("icons/container.png"); //$NON-NLS-1$
 		COPY = Activator.getImageDescriptor("icons/copy.gif"); //$NON-NLS-1$
 		CSV = Activator.getImageDescriptor("icons/csv.png"); //$NON-NLS-1$
       CUT = Activator.getImageDescriptor("icons/cut.gif"); //$NON-NLS-1$
@@ -141,6 +143,7 @@ public class SharedIcons
 		NAV_FORWARD = Activator.getImageDescriptor("icons/nav_forward.gif"); //$NON-NLS-1$
 		PASTE = Activator.getImageDescriptor("icons/paste.gif"); //$NON-NLS-1$
 		REFRESH = Activator.getImageDescriptor("icons/refresh.gif"); //$NON-NLS-1$
+      RENAME = Activator.getImageDescriptor("icons/rename.png"); //$NON-NLS-1$
 		RESTART = Activator.getImageDescriptor("icons/restart.gif"); //$NON-NLS-1$
 		SAVE = Activator.getImageDescriptor("icons/save.gif"); //$NON-NLS-1$
       SAVE_AS = Activator.getImageDescriptor("icons/saveas.gif"); //$NON-NLS-1$
@@ -181,6 +184,7 @@ public class SharedIcons
 		IMG_NAV_FORWARD = NAV_FORWARD.createImage();
 		IMG_PASTE = PASTE.createImage();
 		IMG_REFRESH = REFRESH.createImage();
+      IMG_RENAME = RENAME.createImage();
 		IMG_RESTART = RESTART.createImage();
 		IMG_SAVE = SAVE.createImage();
       IMG_SAVE_AS = SAVE_AS.createImage();
