@@ -312,7 +312,7 @@ void AutoBindTarget::createExportRecord(StringBuffer &str)
 /**
  * Update from import record
  */
-void AutoBindTarget::updateFromImport(const ConfigEntry& config)
+void AutoBindTarget::updateFromImport(const ConfigEntry& config, bool defaultAutoBindFlag)
 {
    for(int i = 0; i < MAX_AUTOBIND_TARGET_FILTERS; i++)
    {
@@ -325,7 +325,7 @@ void AutoBindTarget::updateFromImport(const ConfigEntry& config)
       if (filter != nullptr)
       {
          setAutoBindFilter(i, filter->getValue());
-         setAutoBindMode(i, filter->getAttributeAsBoolean(_T("autoBind")), filter->getAttributeAsBoolean(_T("autoUnbind")));
+         setAutoBindMode(i, filter->getAttributeAsBoolean(_T("autoBind"), defaultAutoBindFlag), filter->getAttributeAsBoolean(_T("autoUnbind")));
          internalUnlock();
       }
       else

@@ -1266,7 +1266,7 @@ protected:
    bool loadFromDatabase(DB_HANDLE hdb, uint32_t objectId);
    bool saveToDatabase(DB_HANDLE hdb);
    bool deleteFromDatabase(DB_HANDLE hdb);
-   void updateFromImport(const ConfigEntry& config);
+   void updateFromImport(const ConfigEntry& config, bool defaultAutoBindFlag);
 
    void toJson(json_t *root);
    void createExportRecord(StringBuffer &str);

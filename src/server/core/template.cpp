@@ -289,9 +289,7 @@ void Template::createExportRecord(StringBuffer &xml)
    xml.append(m_guid.toString());
    xml.append(_T("</guid>\n\t\t\t<name>"));
    xml.append(EscapeStringForXML2(m_name));
-   xml.append(_T("</name>\n\t\t\t<flags>"));
-   xml.append(m_flags);
-   xml.append(_T("</flags>\n\t\t\t<comments>"));
+   xml.append(_T("</name>\n\t\t\t<comments>"));
    xml.append(EscapeStringForXML2(m_comments));
    xml.append(_T("</comments>\n"));
 
@@ -420,15 +418,7 @@ void Template::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
  */
 UINT32 Template::modifyFromMessageInternal(NXCPMessage *pRequest)
 {
-   // Change flags
-   if (pRequest->isFieldExist(VID_FLAGS))
-   {
-      UINT32 mask = pRequest->isFieldExist(VID_FLAGS_MASK) ? pRequest->getFieldAsUInt32(VID_FLAGS_MASK) : 0xFFFFFFFF;
-      m_flags &= ~mask;
-      m_flags |= pRequest->getFieldAsUInt32(VID_FLAGS) & mask;
-   }
    AutoBindTarget::modifyFromMessage(pRequest);
-
    return super::modifyFromMessageInternal(pRequest);
 }
 
@@ -438,17 +428,15 @@ UINT32 Template::modifyFromMessageInternal(NXCPMessage *pRequest)
 void Template::updateFromImport(ConfigEntry *config)
 {
    super::updateFromImport(config);
-   AutoBindTarget::updateFromImport(*config);
+
+   // Templates exported by older server version will have auto bind flags in separate field
+   // In that case, bit 0 in flags will be set to 1
+   uint32_t flags = config->getSubEntryValueAsUInt(_T("flags"), 0, 0);
+   AutoBindTarget::updateFromImport(*config, (flags & 1) != 0);
+
    VersionableObject::updateFromImport(config);
 
    lockProperties();
-
-   // Templatex exported by older server version will have auto bind flags in separate field
-   uint32_t flags = config->getSubEntryValueAsUInt(_T("flags"), 0, 0xBADF);
-   if (flags != 0xBADF)
-   {
-      m_autoBindFlags = flags;
-   }
 
    m_policyList->clear();
    ConfigEntry *policyRoot = config->findEntry(_T("agentPolicies"));
