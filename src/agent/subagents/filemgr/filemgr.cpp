@@ -1386,7 +1386,7 @@ static void CH_ChangeFileOwner(NXCPMessage *request, NXCPMessage *response, Abst
          struct passwd *pw = getpwnam(userName);
 #endif
          MemFree(userName);
-         newOwner = pw->pw_uid;
+         newOwner = (pw != nullptr) ? pw->pw_uid : -1;
       }
 
       if (groupName != nullptr)
@@ -1399,10 +1399,10 @@ static void CH_ChangeFileOwner(NXCPMessage *request, NXCPMessage *response, Abst
          struct group *gr = getgrnam(groupName);
 #endif
          MemFree(groupName);
-         newGroup = gr->gr_gid;
+         newGroup = (gr != nullptr) ? gr->gr_gid : -1;
       }
 
-      if (newOwner != -1 || newGroup != -1)
+      if ((newOwner != -1) || (newGroup != -1))
       {
          bool success = false;
 #ifdef UNICODE
