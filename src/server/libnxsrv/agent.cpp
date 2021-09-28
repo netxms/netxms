@@ -1826,10 +1826,10 @@ void AgentConnection::prepareFilePartList(const TCHAR *localFile, const TCHAR *d
  * Upload file to agent
  */
 uint32_t AgentConnection::uploadFile(const TCHAR *localFile, const TCHAR *destinationFile, bool allowPathExpansion,
-         void (* progressCallback)(size_t, void *), void *cbArg, NXCPStreamCompressionMethod compMethod)
+         void (* progressCallback)(size_t, void *), void *cbArg, NXCPStreamCompressionMethod compMethod, bool disablePartialTransfer)
 {
    uint32_t rcc = ERR_SUCCESS;
-   if (m_fileResumingEnabled) //If file resuming is enabled, we will try to upload file in chunks, then merge them together.
+   if (m_fileResumingEnabled && !disablePartialTransfer) //If file resuming is enabled, we will try to upload file in chunks, then merge them together.
    {
       // If destination file name is not set, is expected that we won't use File Manager,
       // even if we can. Instead we will use CMD_FILE_TRANSFER.

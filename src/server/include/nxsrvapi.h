@@ -994,7 +994,7 @@ public:
          void (*outputCallback)(ActionCallbackEvent, const TCHAR*, void*) = nullptr, void *cbData = nullptr);
    uint32_t uploadFile(const TCHAR *localFile, const TCHAR *destinationFile = nullptr, bool allowPathExpansion = false,
             void (* progressCallback)(size_t, void *) = nullptr, void *cbArg = nullptr,
-            NXCPStreamCompressionMethod compMethod = NXCP_STREAM_COMPRESSION_NONE);
+            NXCPStreamCompressionMethod compMethod = NXCP_STREAM_COMPRESSION_NONE, bool disablePartialTransfer = false);
    uint32_t downloadFile(const TCHAR *localFile, const TCHAR *destinationFile = nullptr, bool allowPathExpansion = false,
             void (* progressCallback)(size_t, void *) = nullptr, void *cbArg = nullptr,
             NXCPStreamCompressionMethod compMethod = NXCP_STREAM_COMPRESSION_NONE);

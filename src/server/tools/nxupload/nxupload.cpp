@@ -31,6 +31,7 @@ NETXMS_EXECUTABLE_HEADER(nxupload)
 /**
  * Static fields
  */
+static bool s_doNotSplit = false;
 static bool s_verbose = true;
 static bool s_upgrade = false;
 static TCHAR s_destinationFile[MAX_PATH] = {0};
@@ -41,12 +42,9 @@ static NXCPStreamCompressionMethod s_compression = NXCP_STREAM_COMPRESSION_NONE;
  */
 static int UpgradeAgent(AgentConnection *conn, const TCHAR *pszPkgName, RSA *serverKey)
 {
-   UINT32 dwError;
-   int i;
-   BOOL bConnected = FALSE;
-
-   dwError = conn->startUpgrade(pszPkgName);
-   if (dwError == ERR_SUCCESS)
+   bool connected = false;
+   uint32_t rcc = conn->startUpgrade(pszPkgName);
+   if (rcc == ERR_SUCCESS)
    {
       conn->disconnect();
 
@@ -55,7 +53,7 @@ static int UpgradeAgent(AgentConnection *conn, const TCHAR *pszPkgName, RSA *ser
          _tprintf(_T("Agent upgrade started, waiting for completion...\n")
                   _T("[............................................................]\r["));
          fflush(stdout);
-         for(i = 0; i < 120; i += 2)
+         for(int i = 0; i < 120; i += 2)
          {
             ThreadSleep(2);
             _puttc(_T('*'), stdout);
@@ -64,7 +62,7 @@ static int UpgradeAgent(AgentConnection *conn, const TCHAR *pszPkgName, RSA *ser
             {
                if (conn->connect(serverKey))
                {
-                  bConnected = TRUE;
+                  connected = true;
                   break;   // Connected successfully
                }
             }
@@ -74,22 +72,22 @@ static int UpgradeAgent(AgentConnection *conn, const TCHAR *pszPkgName, RSA *ser
       else
       {
          ThreadSleep(20);
-         for(i = 20; i < 120; i += 20)
+         for(int i = 20; i < 120; i += 20)
          {
             ThreadSleep(20);
             if (conn->connect(serverKey))
             {
-               bConnected = TRUE;
+               connected = true;
                break;   // Connected successfully
             }
          }
       }
 
       // Last attempt to reconnect
-      if (!bConnected)
-         bConnected = conn->connect(serverKey);
+      if (!connected)
+         connected = conn->connect(serverKey);
 
-      if (bConnected && s_verbose)
+      if (connected && s_verbose)
       {
          _tprintf(_T("Successfully established connection to agent after upgrade\n"));
       }
@@ -101,10 +99,10 @@ static int UpgradeAgent(AgentConnection *conn, const TCHAR *pszPkgName, RSA *ser
    else
    {
       if (s_verbose)
-         _ftprintf(stderr, _T("%d: %s\n"), dwError, AgentErrorCodeToText(dwError));
+         _ftprintf(stderr, _T("%d: %s\n"), rcc, AgentErrorCodeToText(rcc));
    }
 
-   return bConnected ? 0 : 1;
+   return connected ? 0 : 1;
 }
 
 /**
@@ -125,6 +123,9 @@ static bool ParseAdditionalOptionCb(const char ch, const TCHAR *optarg)
       case 'd':
         _tcslcpy(s_destinationFile, optarg, MAX_PATH);
         break;
+      case 'n':   // Do not split file into chunks
+         s_doNotSplit = true;
+         break;
       case 'q':   // Quiet mode
          s_verbose = false;
          break;
@@ -163,7 +164,7 @@ static int ExecuteCommandCb(AgentConnection *conn, int argc, TCHAR **argv, int o
    nElapsedTime = GetCurrentTimeMs();
    if (s_verbose)
       _tprintf(_T("Upload:                 "));
-   dwError = conn->uploadFile(argv[optind + 1], s_destinationFile[0] != 0 ? s_destinationFile : NULL, false, s_verbose ? ProgressCallback : NULL, NULL, s_compression);
+   dwError = conn->uploadFile(argv[optind + 1], s_destinationFile[0] != 0 ? s_destinationFile : NULL, false, s_verbose ? ProgressCallback : NULL, NULL, s_compression, s_doNotSplit);
    if (s_verbose)
       _tprintf(_T("\r                        \r"));
    nElapsedTime = GetCurrentTimeMs() - nElapsedTime;
@@ -211,11 +212,12 @@ int main(int argc, char *argv[])
    tool.mainHelpText = _T("Usage: nxupload [<options>] <host> <file>\n")
                        _T("Tool specific options are:\n")
                        _T("   -d <file>    : Fully qualified destination file name\n")
+                       _T("   -n           : Do not split file into chunks.\n")
                        _T("   -q           : Quiet mode.\n")
                        _T("   -u           : Start agent upgrade from uploaded package.\n")
                        _T("   -z           : Compress data stream with LZ4.\n")
                        _T("   -Z           : Compress data stream with DEFLATE.\n");
-   tool.additionalOptions = "d:quzZ";
+   tool.additionalOptions = "d:nquzZ";
    tool.executeCommandCb = &ExecuteCommandCb;
    tool.parseAdditionalOptionCb = &ParseAdditionalOptionCb;
    tool.isArgMissingCb = &IsArgMissingCb;
