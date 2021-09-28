@@ -62,6 +62,9 @@ bool DownloadFileInfo::write(const BYTE *data, size_t dataSize, bool compressedS
    static const TCHAR *compressionMethods[] = { _T("NONE"), _T("LZ4"), _T("DEFLATE") };
 
    m_lastUpdateTime = time(nullptr);
+   if (dataSize == 0)
+      return true;
+
    if (!compressedStream)
       return _write(m_fileHandle, data, (int)dataSize) == dataSize;
 
