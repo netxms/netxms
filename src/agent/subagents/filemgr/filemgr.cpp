@@ -1548,6 +1548,7 @@ static void CH_MergeFiles(NXCPMessage *request, NXCPMessage *response, AbstractC
          if (!partFiles.isEmpty())
          {
             bool success = true;
+            Delete(destinationFullPath);
             for(int i = 0; (i < partFiles.size()) && success; i++)
             {
                TCHAR sourceFileName[MAX_PATH];
