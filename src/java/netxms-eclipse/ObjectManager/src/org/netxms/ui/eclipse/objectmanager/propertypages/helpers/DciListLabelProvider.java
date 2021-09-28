@@ -45,47 +45,8 @@ public class DciListLabelProvider extends LabelProvider implements ITableLabelPr
 	private static final String[] functions = { "last()", "average(", "deviation(", "diff()", "error(", "sum(" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
 
 	private NXCSession session;
-	private Map<NodeItemPair, String> dciNameCache = new HashMap<NodeItemPair, String>();
+	private Map<Long, String> dciNameCache = new HashMap<Long, String>();
 	private List<ConditionDciInfo> elementList;
-	
-	private class NodeItemPair
-	{
-		long nodeId;
-		long dciId;
-
-		public NodeItemPair(long nodeId, long dciId)
-		{
-			this.nodeId = nodeId;
-			this.dciId = dciId;
-		}
-
-		@Override
-		public int hashCode()
-		{
-			final int prime = 31;
-			int result = 1;
-			result = prime * result + (int)(dciId ^ (dciId >>> 32));
-			result = prime * result + (int)(nodeId ^ (nodeId >>> 32));
-			return result;
-		}
-
-		@Override
-		public boolean equals(Object obj)
-		{
-			if (this == obj)
-				return true;
-			if (obj == null)
-				return false;
-			if (getClass() != obj.getClass())
-				return false;
-			NodeItemPair other = (NodeItemPair)obj;
-			if (dciId != other.dciId)
-				return false;
-			if (nodeId != other.nodeId)
-				return false;
-			return true;
-		}
-	}
 	
 	/**
 	 * The constructor
@@ -120,7 +81,7 @@ public class DciListLabelProvider extends LabelProvider implements ITableLabelPr
 				AbstractObject object = session.findObjectById(dci.getNodeId());
 				return (object != null) ? object.getObjectName() : ("[" + Long.toString(dci.getNodeId()) + "]"); //$NON-NLS-1$ //$NON-NLS-2$
 			case ConditionData.COLUMN_METRIC:
-				String name = dciNameCache.get(new NodeItemPair(dci.getNodeId(), dci.getDciId()));
+				String name = dciNameCache.get(dci.getDciId());
 				return (name != null) ? name : Messages.get().DciListLabelProvider_Unresolved;
 			case ConditionData.COLUMN_FUNCTION:
 			   if (dci.getType() == DataCollectionObject.DCO_TYPE_TABLE)
@@ -148,16 +109,12 @@ public class DciListLabelProvider extends LabelProvider implements ITableLabelPr
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				final String[] names = session.dciIdsToNames(dciList);
+				final Map<Long, String> names = session.dciIdsToNames(dciList);
 				getDisplay().asyncExec(new Runnable() {
 					@Override
 					public void run()
 					{
-						int i = 0;
-						for(ConditionDciInfo dci : dciList)
-						{
-							dciNameCache.put(new NodeItemPair(dci.getNodeId(), dci.getDciId()), names[i++]);
-						}
+						dciNameCache = names;
 					}
 				});
 			}
@@ -179,6 +136,6 @@ public class DciListLabelProvider extends LabelProvider implements ITableLabelPr
 	 */
 	public void addCacheEntry(long nodeId, long dciId, String name)
 	{
-		dciNameCache.put(new NodeItemPair(nodeId, dciId), name);
+		dciNameCache.put(dciId, name);
 	}
 }

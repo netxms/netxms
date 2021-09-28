@@ -18,6 +18,7 @@
  */
 package org.netxms.client.datacollection;
 
+import org.netxms.client.objects.interfaces.NodeItemPair;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Root;
@@ -26,7 +27,7 @@ import org.simpleframework.xml.Root;
  * DCI information for chart
  */
 @Root(name="dci", strict=false)
-public class ChartDciConfig
+public class ChartDciConfig implements NodeItemPair
 {
    public static final String UNSET_COLOR = "UNSET";
 
@@ -306,5 +307,17 @@ public class ChartDciConfig
       return "ChartDciConfig [nodeId=" + nodeId + ", dciId=" + dciId + ", dciName=" + dciName + ", dciDescription=" + dciDescription + ", type=" + type + ", color=" + color + ", name=" + name +
             ", lineWidth=" + lineWidth + ", lineChartType=" + lineChartType + ", displayType=" + displayType + ", showThresholds=" + showThresholds + ", invertValues=" +
             invertValues + ", useRawValues=" + useRawValues + ", multiMatch=" + multiMatch + ", instance=" + instance + ", column=" + column + ", displayFormat=" + displayFormat + "]";
+   }
+
+   @Override
+   public long getNodeId()
+   {
+      return nodeId;
+   }
+
+   @Override
+   public long getDciId()
+   {
+      return dciId;
    }
 }

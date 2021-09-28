@@ -57,6 +57,12 @@ public class BusinessServiceComparator extends ViewerComparator
          case BusinessServiceChecksView.COLUMN_TYPE:  
             result = labelProvider.getTypeName(c1).compareTo(labelProvider.getTypeName(c2));  
             break;
+         case BusinessServiceChecksView.COLUMN_OBJECT: 
+            result = labelProvider.getObjectName(c1).compareTo(labelProvider.getObjectName(c2));  
+            break; 
+         case BusinessServiceChecksView.COLUMN_DCI:  
+            result = labelProvider.getDciName(c1).compareTo(labelProvider.getDciName(c2));  
+            break; 
          case BusinessServiceChecksView.COLUMN_STATUS:    
             result = labelProvider.getViolationStatus(c1).compareTo(labelProvider.getViolationStatus(c2));
             break;

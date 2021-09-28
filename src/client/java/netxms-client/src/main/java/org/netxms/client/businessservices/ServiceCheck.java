@@ -21,11 +21,12 @@ package org.netxms.client.businessservices;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.constants.BusinessChecksType;
+import org.netxms.client.objects.interfaces.NodeItemPair;
 
 /**
  * Business service check
  */
-public class ServiceCheck 
+public class ServiceCheck implements NodeItemPair
 {	
 	private long id;
 	private BusinessChecksType checkType;
@@ -223,5 +224,11 @@ public class ServiceCheck
    public void setThreshold(int threshold)
    {
       this.threshold = threshold;
+   }
+
+   @Override
+   public long getNodeId()
+   {
+      return objectId;
    }
 }

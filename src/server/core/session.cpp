@@ -9131,14 +9131,18 @@ void ClientSession::resolveDCINames(NXCPMessage *request)
    request->getFieldAsInt32Array(VID_DCI_LIST, count, dciList);
 
    UINT32 rcc = RCC_INVALID_ARGUMENT;
-   for(uint32_t i = 0, fieldId = VID_DCI_LIST_BASE; i < count; i++)
+   uint32_t i = 0;
+   uint32_t fieldId = VID_DCI_LIST_BASE;
+   for(; i < count; i++)
    {
       TCHAR m_description[MAX_DB_STRING];
       rcc = resolveDCIName(nodeList[i], dciList[i], m_description);
       if (rcc != RCC_SUCCESS)
          break;
+      msg.setField(fieldId++, dciList[i]);
       msg.setField(fieldId++, m_description);
    }
+   msg.setField(VID_NUM_ITEMS, i);
 
    MemFree(nodeList);
    MemFree(dciList);

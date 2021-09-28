@@ -77,7 +77,7 @@ public class ObjectPollerView extends AdHocObjectView
 
    public ObjectPollerView(AbstractObject object, NodePollType type)
    {
-      super(i18n.tr("Object poll"), ResourceManager.getImageDescriptor("icons/object-views/poller_view.png"), "Object poll", object.getObjectId(), false);
+      super(i18n.tr("Object poll"), ResourceManager.getImageDescriptor("icons/object-views/poller_view.png"), POLL_NAME[type.getValue()], object.getObjectId(), false);
 
       session = Registry.getSession();
       display = Display.getCurrent();

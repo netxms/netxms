@@ -12,6 +12,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.businessservices.ServiceCheck;
 import org.netxms.client.constants.BusinessChecksType;
+import org.netxms.client.objects.GenericObject;
 import org.netxms.nxmc.base.widgets.LabeledText;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.datacollection.widgets.DciSelector;
@@ -102,6 +103,7 @@ public class EditBusinessServiceCheckDlg extends Dialog
          thresholdCombo.add(StatusDisplayInfo.getStatusText(i));   
       
       objectSelector = new ObjectSelector(dialogArea, SWT.NONE, true);
+      objectSelector.setObjectClass(GenericObject.class);
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;

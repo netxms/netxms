@@ -18,15 +18,22 @@
  */
 package org.netxms.nxmc.modules.businessservice.views.helpers;
 
+import java.util.HashMap;
+import java.util.Map;
 import org.eclipse.jface.viewers.ITableColorProvider;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
+import org.netxms.client.NXCSession;
 import org.netxms.client.businessservices.ServiceCheck;
+import org.netxms.client.constants.BusinessChecksType;
 import org.netxms.client.constants.ObjectStatus;
+import org.netxms.client.objects.AbstractObject;
+import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.businessservice.views.BusinessServiceChecksView;
+import org.netxms.nxmc.modules.objects.widgets.helpers.BaseObjectLabelProvider;
 import org.netxms.nxmc.resources.StatusDisplayInfo;
 import org.xnap.commons.i18n.I18n;
 
@@ -36,14 +43,31 @@ import org.xnap.commons.i18n.I18n;
 public class BusinessServiceCheckLabelProvider extends LabelProvider implements ITableLabelProvider, ITableColorProvider
 {
    private static final I18n i18n = LocalizationHelper.getI18n(BusinessServiceCheckLabelProvider.class);
-   private static final String[] TYPES = {i18n.tr("Node"), i18n.tr("Script"), i18n.tr("DCI")};
-	
+   private static final String[] TYPES = {i18n.tr("Object"), i18n.tr("Script"), i18n.tr("DCI")};
+
+   private NXCSession session;
+   private Map<Long, String> dciNameCache = new HashMap<Long, String>();
+   private BaseObjectLabelProvider objectLabelProvider;
+   
+   public BusinessServiceCheckLabelProvider()
+   {
+      session = Registry.getSession();
+      objectLabelProvider = new BaseObjectLabelProvider();
+   }
+   
    /**
     * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
     */
 	@Override
 	public Image getColumnImage(Object element, int columnIndex)
-	{
+	{    
+      ServiceCheck check = (ServiceCheck)element;
+      switch(columnIndex)
+      {
+         case BusinessServiceChecksView.COLUMN_OBJECT:  
+            AbstractObject object = session.findObjectById(check.getObjectId());
+            return (object != null) ? objectLabelProvider.getImage(object) : null;
+      }
 		return null;
 	}
 
@@ -62,6 +86,10 @@ public class BusinessServiceCheckLabelProvider extends LabelProvider implements 
             return check.getDescription();
          case BusinessServiceChecksView.COLUMN_TYPE:  
             return getTypeName(check);  
+         case BusinessServiceChecksView.COLUMN_OBJECT:  
+            return getObjectName(check);  
+         case BusinessServiceChecksView.COLUMN_DCI:  
+            return getDciName(check);  
          case BusinessServiceChecksView.COLUMN_STATUS:    
             return getViolationStatus(check);  
          case BusinessServiceChecksView.COLUMN_FAIL_REASON:    
@@ -69,6 +97,31 @@ public class BusinessServiceCheckLabelProvider extends LabelProvider implements 
 		}
 		return null;
 	}
+	
+	public String getObjectName(ServiceCheck check)
+	{
+	   String name = "";
+      if (check.getCheckType() == BusinessChecksType.OBJECT || check.getCheckType() == BusinessChecksType.DCI ||
+         (check.getCheckType() == BusinessChecksType.SCRIPT) && check.getObjectId() != 0)
+      {
+         AbstractObject object = session.findObjectById(check.getObjectId());
+         name = (object != null) ? object.getObjectName() : ("[" + Long.toString(check.getObjectId()) + "]");
+      }
+	   
+	   return name;
+	}
+   
+   public String getDciName(ServiceCheck check)
+   {
+      String name = "";
+      if (check.getCheckType() == BusinessChecksType.DCI)
+      {
+         name = dciNameCache.get(check.getDciId());
+         return (name != null) ? name : ("[" + Long.toString(check.getDciId()) + "]");
+      }
+      
+      return name;
+   }
 	
 	/**
 	 * Get violation status string
@@ -114,4 +167,9 @@ public class BusinessServiceCheckLabelProvider extends LabelProvider implements 
 	{
 		return null;
 	}
+
+   public void updateDciNames(Map<Long, String> names)
+   {
+      dciNameCache.putAll(names);
+   }
 }

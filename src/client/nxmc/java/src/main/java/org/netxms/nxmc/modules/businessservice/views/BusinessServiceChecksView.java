@@ -18,6 +18,9 @@
  */
 package org.netxms.nxmc.modules.businessservice.views;
 
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
@@ -69,8 +72,10 @@ public class BusinessServiceChecksView extends ObjectView
    public static final int COLUMN_ID = 0;
    public static final int COLUMN_DESCRIPTION = 1;
    public static final int COLUMN_TYPE = 2;
-   public static final int COLUMN_STATUS = 3;
-   public static final int COLUMN_FAIL_REASON = 4;
+   public static final int COLUMN_OBJECT = 3;
+   public static final int COLUMN_DCI = 4;
+   public static final int COLUMN_STATUS = 5;
+   public static final int COLUMN_FAIL_REASON = 6;
 
    private NXCSession session;
    private SessionListener sessionListener;
@@ -87,7 +92,7 @@ public class BusinessServiceChecksView extends ObjectView
     */
    public BusinessServiceChecksView()
    {
-      super(i18n.tr("BusinessServiceChecks"), ResourceManager.getImageDescriptor("icons/object-views/service_check.gif"), "Checks", true);
+      super(i18n.tr("Checks"), ResourceManager.getImageDescriptor("icons/object-views/service_check.gif"), "BusinessServiceChecks", true);
    }
 
    /**
@@ -103,10 +108,12 @@ public class BusinessServiceChecksView extends ObjectView
             i18n.tr("ID"), 
             i18n.tr("Description"),
             i18n.tr("Type"),
+            i18n.tr("Object"),
+            i18n.tr("DCI"),
             i18n.tr("Status"),
             i18n.tr("Reason")
          };
-      final int[] widths = { 70, 200, 100, 70, 300 };
+      final int[] widths = { 70, 200, 100, 200, 200, 70, 300 };
       viewer = new SortableTableViewer(parent, names, widths, 0, SWT.DOWN, SortableTreeViewer.DEFAULT_STYLE);
       labelProvider = new BusinessServiceCheckLabelProvider();
       BusinessServiceCheckFilter filter = new BusinessServiceCheckFilter(labelProvider);
@@ -157,7 +164,8 @@ public class BusinessServiceChecksView extends ObjectView
                      public void run()
                      {
                         checksList.put(n.getSubCode(), (ServiceCheck)n.getObject());
-                        viewer.setInput(checksList.values());
+                        updateDciLabelList(Arrays.asList((ServiceCheck)n.getObject()));
+                        viewer.refresh();
                      }
                   });
                   break;
@@ -175,6 +183,8 @@ public class BusinessServiceChecksView extends ObjectView
          }
       };
       session.addListener(sessionListener);
+      
+      
    }
 
    /**
@@ -187,13 +197,15 @@ public class BusinessServiceChecksView extends ObjectView
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            checksList = session.getBusinessServiceChecks(getObject().getObjectId());
+            Map<Long, ServiceCheck> list = session.getBusinessServiceChecks(getObject().getObjectId());
             
             runInUIThread(new Runnable() {               
                @Override
                public void run()
                {
+                  checksList = list;
                   viewer.setInput(checksList.values());
+                  updateDciLabelList(list.values());
                }
             });
          }
@@ -360,13 +372,15 @@ public class BusinessServiceChecksView extends ObjectView
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            checksList = session.getBusinessServiceChecks(object.getObjectId());
+            Map<Long, ServiceCheck> list = session.getBusinessServiceChecks(object.getObjectId());
             
             runInUIThread(new Runnable() {               
                @Override
                public void run()
                {
+                  checksList = list;
                   viewer.setInput(checksList.values());
+                  updateDciLabelList(checksList.values());
                }
             });
          }
@@ -379,6 +393,33 @@ public class BusinessServiceChecksView extends ObjectView
       };
       job.setUser(false);
       job.start();
+   }
+   
+   public void updateDciLabelList(Collection<ServiceCheck> collection)
+   {
+      new Job("Resolve DCI names", null) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {            
+            final Map<Long, String> names = session.dciIdsToNames(collection);
+            
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
+                  labelProvider.updateDciNames(names);
+                  viewer.refresh(true);
+               }
+            });
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return "Failed to load DCI names";
+         }
+      }.start();
+      
    }
 
    /**

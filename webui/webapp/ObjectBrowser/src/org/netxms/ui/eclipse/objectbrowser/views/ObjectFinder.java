@@ -264,11 +264,9 @@ public class ObjectFinder extends ViewPart
       OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_NETWORKMAPROOT, "Network Map Root"));
       OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_NETWORKSERVICE, "Network Service"));
       OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_NODE, "Node"));
-      OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_NODELINK, "Node Link"));
       OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_RACK, "Rack"));
       OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_SENSOR, "Sensor"));
       OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_SERVICEROOT, "Service Root"));
-      OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_SLMCHECK, "Service Check"));
       OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_SUBNET, "Subnet"));
       OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_TEMPLATE, "Template"));
       OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_TEMPLATEGROUP, "Template Group"));

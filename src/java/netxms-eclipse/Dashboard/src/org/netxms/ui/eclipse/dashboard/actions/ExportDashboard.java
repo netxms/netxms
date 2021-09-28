@@ -20,8 +20,10 @@ package org.netxms.ui.eclipse.dashboard.actions;
 
 import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -133,24 +135,22 @@ public class ExportDashboard implements IObjectActionDelegate
 				xml.append("\t</objectMap>\n\t<dciMap>\n"); //$NON-NLS-1$
 		
 				// Add DCI ID mapping
-				long[] nodeList = new long[items.size()];
-				long[] dciList = new long[items.size()];
-				int pos = 0;
+		      List<Long> nodeList = new ArrayList<Long>();
+		      List<Long> dciList = new ArrayList<Long>();
 				for(Entry<Long, Long> dci : items.entrySet())
 				{
-					dciList[pos] = dci.getKey();
-					nodeList[pos] = dci.getValue();
-					pos++;
+					dciList.add(dci.getKey());
+					nodeList.add(dci.getValue());
 				}
-				String[] names = session.dciIdsToNames(nodeList, dciList);
-				for(int i = 0; i < names.length; i++)
+				Map<Long, String> names = session.dciIdsToNames(nodeList, dciList);
+				for(int i = 0; i < names.size(); i++)
 				{
 					xml.append("\t\t<dci id=\""); //$NON-NLS-1$
-					xml.append(dciList[i]);
+					xml.append(dciList.get(i));
 					xml.append("\" node=\""); //$NON-NLS-1$
-					xml.append(nodeList[i]);
+					xml.append(nodeList.get(i));
 					xml.append("\">"); //$NON-NLS-1$
-					xml.append(names[i]);
+					xml.append(names.get(dciList.get(i)));
 					xml.append("</dci>\n"); //$NON-NLS-1$
 				}
 				xml.append("\t</dciMap>\n</dashboard>\n"); //$NON-NLS-1$

@@ -69,8 +69,8 @@ import org.netxms.base.NXCPMsgWaitQueue;
 import org.netxms.base.VersionInfo;
 import org.netxms.client.agent.config.AgentConfiguration;
 import org.netxms.client.agent.config.AgentConfigurationHandle;
-import org.netxms.client.businessservices.ServiceCheck;
 import org.netxms.client.businessservices.BusinessServiceTicket;
+import org.netxms.client.businessservices.ServiceCheck;
 import org.netxms.client.constants.AggregationFunction;
 import org.netxms.client.constants.AuthenticationType;
 import org.netxms.client.constants.DataOrigin;
@@ -164,6 +164,7 @@ import org.netxms.client.objects.VPNConnector;
 import org.netxms.client.objects.Zone;
 import org.netxms.client.objects.configs.CustomAttribute;
 import org.netxms.client.objects.configs.PassiveRackElement;
+import org.netxms.client.objects.interfaces.NodeItemPair;
 import org.netxms.client.objects.queries.ObjectQuery;
 import org.netxms.client.objects.queries.ObjectQueryResult;
 import org.netxms.client.objecttools.ObjectContextBase;
@@ -5527,23 +5528,25 @@ public class NXCSession
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public String[] dciIdsToNames(long[] nodeIds, long[] dciIds) throws IOException, NXCException
+   public Map<Long, String> dciIdsToNames(List<Long> nodeIds, List<Long> dciIds) throws IOException, NXCException
    {
-      if (nodeIds.length == 0)
-         return new String[0];
+      if (nodeIds.size() == 0)
+         return new HashMap<Long, String>();
 
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_RESOLVE_DCI_NAMES);
-      msg.setFieldInt32(NXCPCodes.VID_NUM_ITEMS, nodeIds.length);
+      msg.setFieldInt32(NXCPCodes.VID_NUM_ITEMS, nodeIds.size());
       msg.setField(NXCPCodes.VID_NODE_LIST, nodeIds);
       msg.setField(NXCPCodes.VID_DCI_LIST, dciIds);
       sendMessage(msg);
 
       final NXCPMessage response = waitForRCC(msg.getMessageId());
-      String[] result = new String[nodeIds.length];
+      Map<Long, String> result = new HashMap<Long, String>();
+      int size = response.getFieldAsInt32(NXCPCodes.VID_NUM_ITEMS);
       long varId = NXCPCodes.VID_DCI_LIST_BASE;
-      for(int i = 0; i < result.length; i++)
+      for(int i = 0; i < size; i++)
       {
-         result[i] = response.getFieldAsString(varId++);
+         result.put(response.getFieldAsInt64(varId), response.getFieldAsString(varId+1));
+         varId+=2;
       }
       return result;
    }
@@ -5551,21 +5554,22 @@ public class NXCSession
    /**
     * Get names for given DCI list
     *
-    * @param dciList DCI list
-    * @return array of resolved DCI names
+    * @param itemList list of items to resolved
+    * @return map of DCI id to DCI description
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public String[] dciIdsToNames(Collection<ConditionDciInfo> dciList) throws IOException, NXCException
+   public Map<Long, String> dciIdsToNames(Collection<? extends NodeItemPair> itemList) throws IOException, NXCException
    {
-      final long[] nodeIds = new long[dciList.size()];
-      final long[] dciIds = new long[dciList.size()];
-      int i = 0;
-      for(ConditionDciInfo dci : dciList)
+      List<Long> nodeIds = new ArrayList<Long>();
+      List<Long> dciIds = new ArrayList<Long>();
+      for(NodeItemPair nodeItem : itemList)
       {
-         nodeIds[i] = dci.getNodeId();
-         dciIds[i] = dci.getDciId();
-         i++;
+         if (nodeItem.getNodeId() != 0 && nodeItem.getDciId() != 0)
+         {
+            nodeIds.add(nodeItem.getNodeId());
+            dciIds.add(nodeItem.getDciId());
+         }
       }
       return dciIdsToNames(nodeIds, dciIds);
    }
@@ -12826,5 +12830,5 @@ public class NXCSession
          base +=10;
       }
       return tickets;
-   } 
+   }
 }

@@ -19,12 +19,13 @@
 package org.netxms.client.datacollection;
 
 import org.netxms.base.NXCPMessage;
+import org.netxms.client.objects.interfaces.NodeItemPair;
 
 /**
  * DCI information used in condition objects
  *
  */
-public class ConditionDciInfo
+public class ConditionDciInfo implements NodeItemPair
 {
 	private long nodeId;
 	private long dciId;

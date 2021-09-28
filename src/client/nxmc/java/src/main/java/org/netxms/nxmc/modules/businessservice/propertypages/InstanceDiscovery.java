@@ -99,7 +99,7 @@ public class InstanceDiscovery extends ObjectPropertyPage
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
-				int method = discoveryMethod.getSelectionIndex();
+				int method = DISCOVERY_TYPES.indexOf(discoveryMethod.getText());
 		      discoveryData.setLabel(getDataLabel(method));
 			}
 

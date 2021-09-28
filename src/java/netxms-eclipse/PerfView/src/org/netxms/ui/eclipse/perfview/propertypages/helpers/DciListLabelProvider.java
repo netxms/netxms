@@ -41,47 +41,8 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 public class DciListLabelProvider extends LabelProvider implements ITableLabelProvider
 {
 	private NXCSession session;
-	private Map<NodeItemPair, String> dciNameCache = new HashMap<NodeItemPair, String>();
+	private Map<Long, String> dciNameCache = new HashMap<Long, String>();
 	private List<ChartDciConfig> elementList;
-	
-	private class NodeItemPair
-	{
-		long nodeId;
-		long dciId;
-
-		public NodeItemPair(long nodeId, long dciId)
-		{
-			this.nodeId = nodeId;
-			this.dciId = dciId;
-		}
-
-		@Override
-		public int hashCode()
-		{
-			final int prime = 31;
-			int result = 1;
-			result = prime * result + (int)(dciId ^ (dciId >>> 32));
-			result = prime * result + (int)(nodeId ^ (nodeId >>> 32));
-			return result;
-		}
-
-		@Override
-		public boolean equals(Object obj)
-		{
-			if (this == obj)
-				return true;
-			if (obj == null)
-				return false;
-			if (getClass() != obj.getClass())
-				return false;
-			NodeItemPair other = (NodeItemPair)obj;
-			if (dciId != other.dciId)
-				return false;
-			if (nodeId != other.nodeId)
-				return false;
-			return true;
-		}
-	}
 	
 	/**
 	 * The constructor
@@ -116,7 +77,7 @@ public class DciListLabelProvider extends LabelProvider implements ITableLabelPr
 				AbstractObject object = session.findObjectById(dci.nodeId);
 				return (object != null) ? object.getObjectName() : ("[" + Long.toString(dci.nodeId) + "]"); //$NON-NLS-1$ //$NON-NLS-2$
 			case DataSources.COLUMN_METRIC:
-				String name = dciNameCache.get(new NodeItemPair(dci.nodeId, dci.dciId));
+				String name = dciNameCache.get(dci.dciId);
 				return (name != null) ? name : Messages.get().DciListLabelProvider_Unresolved;
 			case DataSources.COLUMN_LABEL:
 				return dci.name;
@@ -137,26 +98,13 @@ public class DciListLabelProvider extends LabelProvider implements ITableLabelPr
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				final long[] nodeIds = new long[dciList.size()];
-				final long[] dciIds = new long[dciList.size()];
-				int i = 0;
-				for(ChartDciConfig dci : dciList)
-				{
-					nodeIds[i] = dci.nodeId;
-					dciIds[i] = dci.dciId;
-					i++;
-				}
-				final String[] names = session.dciIdsToNames(nodeIds, dciIds);
+				final Map<Long, String> names = session.dciIdsToNames(dciList);
 				
 				runInUIThread(new Runnable() {
 					@Override
 					public void run()
 					{
-						int i = 0;
-						for(ChartDciConfig dci : dciList)
-						{
-							dciNameCache.put(new NodeItemPair(dci.nodeId, dci.dciId), names[i++]);
-						}
+						dciNameCache = names;
 					}
 				});
 			}
@@ -178,6 +126,6 @@ public class DciListLabelProvider extends LabelProvider implements ITableLabelPr
 	 */
 	public void addCacheEntry(long nodeId, long dciId, String name)
 	{
-		dciNameCache.put(new NodeItemPair(nodeId, dciId), name);
+		dciNameCache.put(dciId, name);
 	}
 }

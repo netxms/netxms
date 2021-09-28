@@ -32,6 +32,7 @@ import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.Template;
+import org.netxms.client.objects.interfaces.AutoBindObject;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.nxsl.widgets.ScriptEditor;
 import org.netxms.ui.eclipse.objectmanager.Activator;
@@ -153,15 +154,18 @@ public class AutoApply extends PropertyPage
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		final NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
 		md.setAutoBindFilter(filterSource.getText());
-		md.setAutoBindFlags(apply, remove);
+		int flags = ((Template)object).getAutoApplyFlags();
+      flags = apply ? flags | AutoBindObject.OBJECT_BIND_FLAG : flags & ~AutoBindObject.OBJECT_BIND_FLAG;  
+      flags = remove ? flags | AutoBindObject.OBJECT_UNBIND_FLAG : flags & ~AutoBindObject.OBJECT_UNBIND_FLAG;  
+      md.setAutoBindFlags(flags);
 		
 		new ConsoleJob(Messages.get().AutoApply_JobName, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 				session.modifyObject(md);
-		      initialBind = md.isAutoBindEnabled();
-		      initialUnbind = md.isAutoUnbindEnabled();
+            initialBind = apply;
+            initialUnbind = remove;
 				initialApplyFilter = md.getAutoBindFilter();
 			}
 

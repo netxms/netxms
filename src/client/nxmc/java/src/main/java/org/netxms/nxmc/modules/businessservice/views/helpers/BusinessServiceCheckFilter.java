@@ -51,6 +51,8 @@ public class BusinessServiceCheckFilter extends ViewerFilter implements ViewerFi
             check.getDescription().contains(filterString) ||
             labelProvider.getTypeName(check).contains(filterString) || 
             labelProvider.getViolationStatus(check).contains(filterString) || 
+            labelProvider.getObjectName(check).contains(filterString) || 
+            labelProvider.getDciName(check).contains(filterString) || 
             check.getFailureReason().contains(filterString))
          return true;
       return false;

@@ -18,7 +18,10 @@
  */
 package org.netxms.nxmc.modules.datacollection.widgets;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Composite;
@@ -104,7 +107,8 @@ public class DciSelector extends AbstractSelector
 			@Override
          protected void run(IProgressMonitor monitor) throws Exception
 			{
-				final String[] names = session.dciIdsToNames(new long[] { nodeId }, new long[] { DciSelector.this.dciId });
+				final Map<Long, String> names = session.dciIdsToNames(new ArrayList<Long> (Arrays.asList( nodeId )), 
+                  new ArrayList<Long> (Arrays.asList( DciSelector.this.dciId )));
 				runInUIThread(new Runnable() {
 					@Override
 					public void run()
@@ -126,9 +130,9 @@ public class DciSelector extends AbstractSelector
 							}
 							sb.append(" / "); //$NON-NLS-1$
 						}
-						if (names.length > 0)
+						if (names.size() > 0)
 						{
-							sb.append(names[0]);
+							sb.append(names.get(dciId));
 						}
 						else
 						{

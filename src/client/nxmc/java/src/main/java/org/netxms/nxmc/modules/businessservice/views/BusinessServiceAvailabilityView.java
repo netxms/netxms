@@ -73,9 +73,6 @@ public class BusinessServiceAvailabilityView extends ObjectView
    public static final int COLUMN_TERMINATION_TIME = 5;
    public static final int COLUMN_REASON = 6;
 
-   private Button buttonToday;
-   private Button buttonLastMonth;
-   private Button buttonLastYear;
    private TimePeriodSelector dateTimeSelector;
    private Button buttonSelect;
    private Chart chart;
@@ -89,7 +86,7 @@ public class BusinessServiceAvailabilityView extends ObjectView
     */
    public BusinessServiceAvailabilityView()
    {
-      super(i18n.tr("BusinessServiceAvailability"), ResourceManager.getImageDescriptor("icons/object-views/availability_chart.png"), "Availability", false);
+      super(i18n.tr("Availability"), ResourceManager.getImageDescriptor("icons/object-views/availability_chart.png"), "BusinessServiceAvailability", false);
    }
 
    /**
@@ -111,7 +108,7 @@ public class BusinessServiceAvailabilityView extends ObjectView
       gd.widthHint = 300;
       buttonGroup.setLayoutData(gd);
       
-      buttonToday = new Button(buttonGroup, SWT.PUSH);
+      Button buttonToday = new Button(buttonGroup, SWT.PUSH);
       buttonToday.setText(i18n.tr("Today"));
       buttonToday.addSelectionListener(new SelectionListener() {         
          @Override
@@ -130,7 +127,7 @@ public class BusinessServiceAvailabilityView extends ObjectView
       gd.horizontalAlignment = SWT.FILL;
       buttonToday.setLayoutData(gd);      
       
-      buttonLastMonth = new Button(buttonGroup, SWT.PUSH);
+      Button buttonLastMonth = new Button(buttonGroup, SWT.PUSH);
       buttonLastMonth.setText(i18n.tr("Last month"));
       buttonLastMonth.addSelectionListener(new SelectionListener() {         
          @Override
@@ -149,7 +146,7 @@ public class BusinessServiceAvailabilityView extends ObjectView
       gd.horizontalAlignment = SWT.FILL;
       buttonLastMonth.setLayoutData(gd);
       
-      buttonLastYear = new Button(buttonGroup, SWT.PUSH);
+      Button buttonLastYear = new Button(buttonGroup, SWT.PUSH);
       buttonLastYear.setText(i18n.tr("Last year"));
       buttonLastYear.addSelectionListener(new SelectionListener() {
          @Override
