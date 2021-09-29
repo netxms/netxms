@@ -4387,26 +4387,22 @@ protected:
 
 public:
    BusinessServiceCheck(uint32_t serviceId = 0);
+   BusinessServiceCheck(uint32_t serviceId, int type, uint32_t relatedObject, uint32_t relatedDCI, const TCHAR* name, int threshhold, const TCHAR* script = nullptr);
    virtual ~BusinessServiceCheck();
 
-   int getType() { return m_type; }
-   void setType( int type ) { if ( type >= CheckType::OBJECT && type <= CheckType::DCI ) m_type = type; }
-   const TCHAR* getScript() { return m_script; } const
-   void setScript(const TCHAR* script) { m_script = MemCopyString(script); }
-   uint32_t getId() { return m_id; }
+   int getType() const { return m_type; }
+   const TCHAR* getScript() const { return m_script; }
+   uint32_t getId() const { return m_id; }
    void generateId();
-   uint32_t getRelatedObject() { return m_relatedObject; }
-   void setRelatedObject(uint32_t object) { m_relatedObject = object; }
-   uint32_t getRelatedDCI() { return m_relatedDCI; }
-   void setRelatedDCI(uint32_t dci) { m_relatedDCI = dci; }
-   uint32_t getCurrentTicket() { return m_currentTicket; }
-   uint32_t getStatus() { return m_status; }
-   void setName(const TCHAR* name) { _tcslcpy(m_name, name, 1023); }
-   const TCHAR* getName() { return m_name; } const
-   void setThreshold(int threshold) { m_statusThreshold = threshold; }
-   int getThreshold() { return m_statusThreshold; }
+   uint32_t getRelatedObject() const { return m_relatedObject; }
+   uint32_t getRelatedDCI() const { return m_relatedDCI; }
+   uint32_t getCurrentTicket() const { return m_currentTicket; }
+   uint32_t getStatus() const { return m_status; }
+   const TCHAR* getName()  const { return m_name; }
+   int getThreshold() const { return m_statusThreshold; }
 
    uint32_t execute(BusinessServiceTicketData* ticket);
+   void copyCheck(const BusinessServiceCheck& check);
 
    void modifyFromMessage(NXCPMessage *pRequest);
    void loadFromSelect(DB_RESULT hResult, int row);
@@ -4415,10 +4411,11 @@ public:
    bool deleteFromDatabase();
 
    enum CheckType{
-      OBJECT = 0,
-      SCRIPT = 1,
-      DCI = 2
-   };
+   OBJECT = 0,
+   SCRIPT = 1,
+   DCI = 2
+};
+
 };
 
 /**

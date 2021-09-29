@@ -160,15 +160,10 @@ void BaseBusinessService::copyChecks(const ObjectArray<BusinessServiceCheck> &ch
 {
    for (int i = 0; i < checks.size(); i++)
    {
-      BusinessServiceCheck *ch = new BusinessServiceCheck(m_id);
+      BusinessServiceCheck *ch = new BusinessServiceCheck(m_id, 
+         checks.get(i)->getType(), checks.get(i)->getRelatedObject(), checks.get(i)->getRelatedDCI(), checks.get(i)->getName(), checks.get(i)->getThreshold(), checks.get(i)->getScript());
       m_checks.add(ch);
       ch->generateId();
-      ch->setType(checks.get(i)->getType());
-      ch->setRelatedObject(checks.get(i)->getRelatedObject());
-      ch->setRelatedDCI(checks.get(i)->getRelatedDCI());
-      ch->setThreshold(checks.get(i)->getThreshold());
-      ch->setName(checks.get(i)->getName());
-      ch->setScript(checks.get(i)->getScript());
       ch->saveToDatabase();
    }
 }
@@ -609,14 +604,11 @@ void BusinessService::validateAutomaticObjectChecks()
          }
          if ((selectedCheck == nullptr) && (decision == AutoBindDecision_Bind))
          {
-            BusinessServiceCheck *check = new BusinessServiceCheck(m_id);
-            m_checks.add(check);
-            check->setRelatedObject(object->getId());
             TCHAR checkName[MAX_OBJECT_NAME];
             _sntprintf(checkName, MAX_OBJECT_NAME, _T("%s"), object->getName());
-            check->setName(checkName);
+            BusinessServiceCheck *check = new BusinessServiceCheck(m_id, BusinessServiceCheck::CheckType::OBJECT, object->getId(), 0, checkName, m_objectStatusThreshhold);
+            m_checks.add(check);
             check->generateId();
-            check->setThreshold(m_objectStatusThreshhold);
             check->saveToDatabase();
             nxlog_debug_tag(DEBUG_TAG, 6, _T("BusinessService::validateAutomaticObjectChecks(%s): object check %s [%u] created"), m_name, checkName, check->getId());
             sendPollerMsg(_T("   Object based check \"%s\" created\r\n"), checkName);
@@ -669,16 +661,11 @@ void BusinessService::validateAutomaticDCIChecks()
             }
             if ((selectedCheck == nullptr) && (decision == AutoBindDecision_Bind))
             {
-               BusinessServiceCheck *check = new BusinessServiceCheck(m_id);
-               m_checks.add(check);
-               check->setType(BusinessServiceCheck::DCI);
-               check->setRelatedObject(object->getId());
-               check->setRelatedDCI(dci->getId());
                TCHAR checkName[1023];
                _sntprintf(checkName, 1023, _T("%s: %s"), object->getName(), dci->getName().cstr());
-               check->setName(checkName);
+               BusinessServiceCheck *check = new BusinessServiceCheck(m_id, BusinessServiceCheck::CheckType::DCI, object->getId(), dci->getId(), checkName, m_dciStatusThreshhold);
+               m_checks.add(check);
                check->generateId();
-               check->setThreshold(m_dciStatusThreshhold);
                check->saveToDatabase();
                nxlog_debug_tag(DEBUG_TAG, 6, _T("BusinessService::validateAutomaticObjectChecks(%s): DCI check %s [%u] created"), m_name, checkName, check->getId());
                sendPollerMsg(_T("   DCI based check \"%s\" created\r\n"), checkName);
@@ -1082,7 +1069,7 @@ double GetServiceUptime(uint32_t serviceId, time_t from, time_t to)
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    DB_STATEMENT hStmt = DBPrepare(hdb,
             _T("SELECT from_timestamp,to_timestamp FROM business_service_downtime ")
-            _T("WHERE service_id=? AND ((from_timestamp BETWEEN ? AND ? OR to_timestamp BETWEEN ? and ?) OR (from_timestamp<=? AND (to_timestamp=0 OR to_timestamp=>?)))"));
+            _T("WHERE service_id=? AND ((from_timestamp BETWEEN ? AND ? OR to_timestamp BETWEEN ? and ?) OR (from_timestamp<=? AND (to_timestamp=0 OR to_timestamp>=?)))"));
    if (hStmt != nullptr)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, serviceId);

@@ -30,7 +30,7 @@
 BusinessServiceCheck::BusinessServiceCheck(uint32_t serviceId)
 {
 	m_id = 0;
-	m_type = OBJECT;
+	m_type = CheckType::OBJECT;
 	m_script = NULL;
 	m_pCompiledScript = NULL;
 	m_reason[0] = 0;
@@ -38,7 +38,34 @@ BusinessServiceCheck::BusinessServiceCheck(uint32_t serviceId)
 	m_relatedDCI = 0;
 	m_currentTicket = 0;
 	m_serviceId = serviceId;
+	m_statusThreshold = 0;
 	_tcscpy(m_name, _T("Default check name"));
+}
+
+/**
+ * Business service check constructor
+ */
+BusinessServiceCheck::BusinessServiceCheck(uint32_t serviceId, int type, uint32_t relatedObject, uint32_t relatedDCI, const TCHAR* name, int threshhold, const TCHAR* script)
+{
+	m_id = 0;
+	m_type = type;
+	m_script = MemCopyString(script);
+	m_pCompiledScript = nullptr;
+	m_reason[0] = 0;
+	m_relatedObject = relatedObject;
+	m_relatedDCI = relatedDCI;
+	m_currentTicket = 0;
+	m_serviceId = serviceId;
+	m_statusThreshold = threshhold;
+	if (name != nullptr)
+	{
+		_tcslcpy(m_name, name, 1023);
+	}
+	else
+	{
+		_tcscpy(m_name, _T("Default check name"));
+	}
+
 }
 
 /**
@@ -120,7 +147,7 @@ void BusinessServiceCheck::loadFromSelect(DB_RESULT hResult, int row)
  */
 void BusinessServiceCheck::compileScript()
 {
-	if (m_type != SCRIPT || m_script == NULL)
+	if (m_type != CheckType::SCRIPT || m_script == NULL)
 	   return;
 
    const int errorMsgLen = 512;
