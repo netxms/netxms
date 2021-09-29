@@ -21,6 +21,7 @@ package org.netxms.client;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import org.netxms.base.InetAddressEx;
 import org.netxms.base.MacAddress;
@@ -398,9 +399,9 @@ public class NXCObjectCreationData
 	/**
 	 * @param seedObjectIds the seed node object Ids to set
 	 */
-	public void setSeedObjectIds(List<Long> seedObjectIds)
+   public void setSeedObjectIds(Collection<Long> seedObjectIds)
 	{
-	   this.seedObjectIds = seedObjectIds;
+      this.seedObjectIds = new ArrayList<Long>(seedObjectIds);
 	}
 
 	/**

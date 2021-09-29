@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -39,10 +39,6 @@ import org.netxms.client.maps.elements.NetworkMapElement;
  * Network map object
  *
  */
-/**
- * @author victor
- *
- */
 public class NetworkMap extends GenericObject
 {
 	public static final UUID GEOMAP_BACKGROUND = UUID.fromString("ffffffff-ffff-ffff-ffff-ffffffffffff"); 
@@ -65,7 +61,7 @@ public class NetworkMap extends GenericObject
 	private UUID background;
 	private GeoLocation backgroundLocation;
 	private int backgroundZoom;
-	private Long seedObjectIds[];
+   private List<Long> seedObjects;
 	private int defaultLinkColor;
 	private int defaultLinkRouting;
 	private MapObjectDisplayMode objectDisplayMode;
@@ -74,7 +70,7 @@ public class NetworkMap extends GenericObject
 	private String filter;
 	private List<NetworkMapElement> elements;
 	private List<NetworkMapLink> links;
-	
+
 	/**
     * Create from NXCP message.
     *
@@ -89,7 +85,7 @@ public class NetworkMap extends GenericObject
 		background = msg.getFieldAsUUID(NXCPCodes.VID_BACKGROUND);
 		backgroundLocation = new GeoLocation(msg.getFieldAsDouble(NXCPCodes.VID_BACKGROUND_LATITUDE), msg.getFieldAsDouble(NXCPCodes.VID_BACKGROUND_LONGITUDE));
 		backgroundZoom = msg.getFieldAsInt32(NXCPCodes.VID_BACKGROUND_ZOOM);
-		seedObjectIds = msg.getFieldAsUInt32ArrayEx(NXCPCodes.VID_SEED_OBJECTS);
+      seedObjects = Arrays.asList(msg.getFieldAsUInt32ArrayEx(NXCPCodes.VID_SEED_OBJECTS));
 		defaultLinkColor = msg.getFieldAsInt32(NXCPCodes.VID_LINK_COLOR);
 		defaultLinkRouting = msg.getFieldAsInt32(NXCPCodes.VID_LINK_ROUTING);
 		objectDisplayMode = MapObjectDisplayMode.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_DISPLAY_MODE));
@@ -125,8 +121,8 @@ public class NetworkMap extends GenericObject
 	public void prepareCopy(NXCObjectCreationData cd, NXCObjectModificationData md)
 	{
 	   cd.setMapType(mapType);
-	   cd.setSeedObjectIds(Arrays.asList(seedObjectIds));
-	   
+      cd.setSeedObjectIds(seedObjects);
+
 	   md.setMapLayout(layout);
 	   md.setMapBackground(background, backgroundLocation, backgroundZoom, backgroundColor);
       md.setDiscoveryRadius(discoveryRadius);
@@ -179,11 +175,11 @@ public class NetworkMap extends GenericObject
 	/**
 	 * @return the seedObjectIds
 	 */
-	public Long[] getSeedObjectIds()
+   public List<Long> getSeedObjects()
 	{
-		return seedObjectIds;
+      return seedObjects;
 	}
-	
+
 	/**
 	 * Create map page from map object's data
 	 * 

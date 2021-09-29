@@ -23,6 +23,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import org.eclipse.jface.action.Action;
+import org.eclipse.jface.fieldassist.ContentProposalAdapter;
+import org.eclipse.jface.fieldassist.IContentProposal;
+import org.eclipse.jface.fieldassist.IContentProposalListener;
+import org.eclipse.jface.fieldassist.IContentProposalProvider;
+import org.eclipse.jface.fieldassist.TextContentAdapter;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.KeyListener;
@@ -62,22 +67,25 @@ public class FilterText extends Composite
 	private int minLength = 1;
 	private Set<ModifyListener> modifyListeners = new HashSet<ModifyListener>();
 	private ModifyEvent lastModifyEvent = null;
+   private IContentProposalProvider proposalProvider = null;
+   private ContentProposalAdapter proposalAdapter = null;
 	
 	public FilterText(Composite parent, int style)
    {
-      this(parent, style, null, true, true);
+      this(parent, style, null, true, true, null);
    }
 
    public FilterText(Composite parent, int style, String tooltip, boolean showFilterCloseButton)
    {
-      this(parent, style, tooltip, showFilterCloseButton, true);
+      this(parent, style, tooltip, showFilterCloseButton, true, null);
    }
 
-	/**
-	 * @param parent
-	 * @param style
-	 */
    public FilterText(Composite parent, int style, String tooltip, boolean showFilterCloseButton, boolean showFilterLabel)
+   {
+      this(parent, style, tooltip, showFilterCloseButton, showFilterLabel, null);
+   }
+
+   public FilterText(Composite parent, int style, String tooltip, boolean showFilterCloseButton, boolean showFilterLabel, IContentProposalProvider proposalProvider)
 	{
 		super(parent, style);		
 		GridLayout layout = new GridLayout();
@@ -162,7 +170,7 @@ public class FilterText extends Composite
          {
          }
       });
-		
+
 		if (tooltip != null) 
 		{
    		final Label icon = new Label(textArea, SWT.NONE);
@@ -177,6 +185,12 @@ public class FilterText extends Composite
 		
 		textArea.setBackground(text.getBackground());
 		
+      if (proposalProvider != null)
+      {
+         this.proposalProvider = proposalProvider;
+         enableAutoComplete();
+      }
+
 		buttonArea = new Composite(this, SWT.NONE);
 		RowLayout buttonLayout = new RowLayout();
 		buttonLayout.type = SWT.HORIZONTAL;
@@ -224,7 +238,7 @@ public class FilterText extends Composite
 		         clearFilter();
 		   }
 		});		
-		
+
 		if (showFilterCloseButton)
 		{
    		closeButton = new Label(this, SWT.NONE);
@@ -261,7 +275,39 @@ public class FilterText extends Composite
    		});
 		}
 	}
-	
+
+   /**
+    * Enable text auto completion
+    */
+   private void enableAutoComplete()
+   {
+      proposalAdapter = new ContentProposalAdapter(text, new TextContentAdapter(), proposalProvider, null, null);
+      proposalAdapter.setPropagateKeys(true);
+      proposalAdapter.setProposalAcceptanceStyle(ContentProposalAdapter.PROPOSAL_IGNORE);
+      proposalAdapter.addContentProposalListener(new IContentProposalListener() {
+         @Override
+         public void proposalAccepted(IContentProposal proposal)
+         {
+            String content = text.getText();
+            if (content.isEmpty())
+            {
+               text.append(proposal.getContent());
+               return;
+            }
+            int pos = text.getCaretPosition() - 1;
+            while((pos > 0) && !isStopCharacter(content.charAt(pos)))
+               pos--;
+            text.setSelection(isStopCharacter(content.charAt(pos)) ? pos + 1 : pos, text.getCaretPosition());
+            text.insert(proposal.getContent());
+         }
+      });
+   }
+
+   private static boolean isStopCharacter(char ch)
+   {
+      return (ch == ':') || (ch == ',') || Character.isWhitespace(ch);
+   }
+
 	/**
 	 * Clear filter
 	 */

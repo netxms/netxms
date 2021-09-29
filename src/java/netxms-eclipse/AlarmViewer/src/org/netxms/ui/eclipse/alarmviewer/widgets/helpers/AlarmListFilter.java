@@ -27,10 +27,10 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.events.Alarm;
 import org.netxms.client.events.AlarmHandle;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.interfaces.ZoneMember;
+import org.netxms.client.search.SearchAttributeProvider;
+import org.netxms.client.search.SearchQuery;
 import org.netxms.client.users.AbstractUserObject;
-import org.netxms.ui.eclipse.alarmviewer.Messages;
-import org.netxms.ui.eclipse.console.resources.RegionalSettings;
-import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
@@ -38,13 +38,14 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 public class AlarmListFilter extends ViewerFilter
 {
-   private static final String[] stateText = { Messages.get().AlarmListLabelProvider_AlarmState_Outstanding, Messages.get().AlarmListLabelProvider_AlarmState_Acknowledged, Messages.get().AlarmListLabelProvider_AlarmState_Resolved, Messages.get().AlarmListLabelProvider_AlarmState_Terminated };
-
    private Set<Long> rootObjects = new HashSet<Long>();
    private int stateFilter = 0xFF;
    private int severityFilter = 0xFF;
    private NXCSession session = ConsoleSharedData.getSession();
    private String filterString = null;
+   private SearchQuery query = null;
+
+   private static final String[] STATE_TEXT = { "Outstanding", "Acknowledged", "Resolved", "Terminated" };
 
    /**
     * @see org.eclipse.jface.viewers.ViewerFilter#select(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
@@ -52,131 +53,50 @@ public class AlarmListFilter extends ViewerFilter
    @Override
    public boolean select(Viewer viewer, Object parentElement, Object element)
    {
-      if ((filterString == null) || (filterString.isEmpty()))
+      if (query == null)
          return true;
 
-      Alarm alarm = ((AlarmHandle)element).alarm;
-      if (checkSeverity(alarm))
-         return true;
-      if (checkState(alarm))
-         return true;
-      if (checkSource(alarm))
-         return true;
-      if (checkMessage(alarm))
-         return true;
-      if (checkCount(alarm))
-         return true;
-      if (checkComments(alarm))
-         return true;
-      if (checkHelpdeskId(alarm))
-         return true;
-      if (checkResolvedBy(alarm))
-         return true;
-      if (checkCreated(alarm))
-         return true;
-      if (checkChanged(alarm))
-         return true;
-      return false;
-   }
-   
-   /**
-    * @param alarm Alarm selected
-    * @return true if matches filter string
-    */
-   private boolean checkSeverity(Alarm alarm)
-   {
-      return StatusDisplayInfo.getStatusText(alarm.getCurrentSeverity()).toLowerCase().contains(filterString);
-   }
-   
-   /**
-    * @param alarm Alarm selected
-    * @return true if matches filter string
-    */
-   private boolean checkState(Alarm alarm)
-   {
-      return stateText[alarm.getState()].toLowerCase().contains(filterString);
-   }
-   
-   /**
-    * @param alarm Alarm selected
-    * @return true if matches filter string
-    */
-   private boolean checkSource(Alarm alarm)
-   {
-      AbstractObject object = session.findObjectById(alarm.getSourceObjectId());
-      return object != null ? object.getObjectName().toLowerCase().contains(filterString) : false;
-   }
-   
-   /**
-    * @param alarm Alarm selected
-    * @return true if matches filter string
-    */
-   private boolean checkMessage(Alarm alarm)
-   {
-      return alarm.getMessage().toLowerCase().contains(filterString);
-   }
-   
-   /**
-    * @param element Alarm selected
-    * @return true if matches filter string
-    */
-   private boolean checkCount(Object element)
-   {
-      return Integer.toString(((Alarm)element).getRepeatCount()).contains(filterString);
-   }
-   
-   /**
-    * @param alarm Alarm selected
-    * @return true if matches filter string
-    */
-   private boolean checkComments(Alarm alarm)
-   {
-      return Integer.toString(alarm.getCommentsCount()).contains(filterString);
-   }
-   
-   /**
-    * @param alarm Alarm selected
-    * @return true if matches filter string
-    */
-   private boolean checkHelpdeskId(Alarm alarm)
-   {            
-      switch(alarm.getHelpdeskState())
-      {
-         case Alarm.HELPDESK_STATE_OPEN:
-            return alarm.getHelpdeskReference().toLowerCase().contains(filterString);
-         case Alarm.HELPDESK_STATE_CLOSED:
-            return (alarm.getHelpdeskReference() + Messages.get().AlarmListLabelProvider_Closed).toLowerCase().contains(filterString);
-         default:
-            return false;
-      }
-   }
+      final Alarm alarm = ((AlarmHandle)element).alarm;
+      return query.match(new SearchAttributeProvider() {
+         @Override
+         public String getText()
+         {
+            return alarm.getMessage();
+         }
 
-   /**
-    * @param alarm Alarm selected
-    * @return true if matches filter string
-    */
-   private boolean checkResolvedBy(Alarm alarm)
-   {
-      AbstractUserObject user = session.findUserDBObjectById(alarm.getAcknowledgedByUser(), null);
-      return user != null ? user.getName().toLowerCase().contains(filterString) : false;
-   }
-
-   /**
-    * @param alarm Alarm selected
-    * @return true if matches filter string
-    */
-   private boolean checkCreated(Alarm alarm)
-   {
-      return RegionalSettings.getDateTimeFormat().format(alarm.getCreationTime()).contains(filterString);
-   }
-   
-   /**
-    * @param alarm Alarm selected
-    * @return true if matches filter string
-    */
-   private boolean checkChanged(Alarm alarm)
-   {
-      return RegionalSettings.getDateTimeFormat().format(alarm.getLastChangeTime()).contains(filterString);
+         @Override
+         public String getAttribute(String name)
+         {
+            if (name.equals("acknowledgedby"))
+            {
+               AbstractUserObject user = session.findUserDBObjectById(alarm.getAcknowledgedByUser(), null);
+               return (user != null) ? user.getName() : null;
+            }
+            if (name.equals("event"))
+               return session.getEventName(alarm.getSourceEventCode());
+            if (name.equals("hascomments"))
+               return alarm.getCommentsCount() > 0 ? "yes" : "no";
+            if (name.equals("repeatcount"))
+               return Integer.toString(alarm.getRepeatCount());
+            if (name.equals("resolvedby"))
+            {
+               AbstractUserObject user = session.findUserDBObjectById(alarm.getResolvedByUser(), null);
+               return (user != null) ? user.getName() : null;
+            }
+            if (name.equals("severity"))
+               return alarm.getCurrentSeverity().toString();
+            if (name.equals("source"))
+               return session.getObjectName(alarm.getSourceObjectId());
+            if (name.equals("state"))
+               return STATE_TEXT[alarm.getState()];
+            if (name.equals("zone") && session.isZoningEnabled())
+            {
+               ZoneMember zm = session.findObjectById(alarm.getSourceObjectId(), ZoneMember.class);
+               return (zm != null) ? zm.getZoneName() : null;
+            }
+            return null;
+         }
+      });
    }
 
    /**
@@ -264,6 +184,25 @@ public class AlarmListFilter extends ViewerFilter
     */
    public void setFilterString(String filterString)
    {
-      this.filterString = filterString.toLowerCase();
+      if (filterString == null)
+      {
+         this.filterString = null;
+         query = null;
+         return;
+      }
+
+      String s = filterString.toLowerCase().trim();
+      if (!s.equals(this.filterString))
+      {
+         this.filterString = s;
+         if (!s.isEmpty())
+         {
+            query = new SearchQuery(s);
+         }
+         else
+         {
+            query = null;
+         }
+      }
    }
 }
