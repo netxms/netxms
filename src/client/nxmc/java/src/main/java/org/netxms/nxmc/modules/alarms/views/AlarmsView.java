@@ -29,8 +29,7 @@ import org.netxms.nxmc.resources.ResourceManager;
 import org.xnap.commons.i18n.I18n;
 
 /**
- * @author victor
- *
+ * "Alarms" view
  */
 public class AlarmsView extends ObjectView
 {

@@ -29,6 +29,7 @@ import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
+import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
@@ -55,7 +56,7 @@ public abstract class AbstractGeolocationView extends View implements ISelection
 	private int zoomLevel = 15;
 	private Action actionZoomIn;
 	private Action actionZoomOut;
-	private ISelection selection;
+   private ISelection selection = new StructuredSelection();
 	private Set<ISelectionChangedListener> selectionChangeListeners = new HashSet<ISelectionChangedListener>();
 	
 	/**

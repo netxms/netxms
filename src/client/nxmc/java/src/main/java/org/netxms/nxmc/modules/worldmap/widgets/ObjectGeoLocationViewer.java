@@ -31,9 +31,11 @@ import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.Path;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.graphics.Rectangle;
+import org.eclipse.swt.graphics.Transform;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.base.GeoLocation;
@@ -63,7 +65,8 @@ public class ObjectGeoLocationViewer extends AbstractGeoMapViewer implements Mou
    private static final int OBJECT_TOOLTIP_Y_MARGIN = 6;
    private static final int OBJECT_TOOLTIP_SPACING = 6;
 
-   private static final Color ACTIVE_BORDER_COLOR = new Color(Display.getCurrent(), 255, 255, 255);
+   private static final Color INNER_BORDER_COLOR = new Color(Display.getCurrent(), 255, 255, 255);
+   private static final Color SELECTION_COLOR = new Color(Display.getCurrent(), 0, 148, 255);
    
    private List<AbstractObject> objects = new ArrayList<AbstractObject>();
    private AbstractObject currentObject = null;
@@ -71,9 +74,12 @@ public class ObjectGeoLocationViewer extends AbstractGeoMapViewer implements Mou
    private Point objectToolTipLocation = null;
    private Rectangle objectTooltipRectangle = null;
    private Font objectToolTipHeaderFont;
+   private Font objectLabelFont;
    private long rootObjectId = 0;
+   private boolean singleObjectMode = false;
+   private boolean showObjectNames = true;
    private String filterString = null;
-   
+
    /**
     * Create object geolocation viewer.
     *
@@ -87,6 +93,7 @@ public class ObjectGeoLocationViewer extends AbstractGeoMapViewer implements Mou
       addMouseTrackListener(this);
 
       objectToolTipHeaderFont = FontTools.createFont(TITLE_FONTS, 1, SWT.BOLD);
+      objectLabelFont = FontTools.createFont(TITLE_FONTS, 0, SWT.BOLD);
       
       final SessionListener listener = new SessionListener() {
          @Override
@@ -113,6 +120,7 @@ public class ObjectGeoLocationViewer extends AbstractGeoMapViewer implements Mou
          {
             Registry.getSession().removeListener(listener);
             objectToolTipHeaderFont.dispose();
+            objectLabelFont.dispose();
          }
       });
    }
@@ -132,7 +140,39 @@ public class ObjectGeoLocationViewer extends AbstractGeoMapViewer implements Mou
    {
       this.rootObjectId = rootObjectId;
    }
-   
+
+   /**
+    * @return the singleObjectMode
+    */
+   public boolean isSingleObjectMode()
+   {
+      return singleObjectMode;
+   }
+
+   /**
+    * @param singleObjectMode the singleObjectMode to set
+    */
+   public void setSingleObjectMode(boolean singleObjectMode)
+   {
+      this.singleObjectMode = singleObjectMode;
+   }
+
+   /**
+    * @return the showObjectNames
+    */
+   public boolean isShowObjectNames()
+   {
+      return showObjectNames;
+   }
+
+   /**
+    * @param showObjectNames the showObjectNames to set
+    */
+   public void setShowObjectNames(boolean showObjectNames)
+   {
+      this.showObjectNames = showObjectNames;
+   }
+
    /**
     * Process object update
     * 
@@ -147,13 +187,13 @@ public class ObjectGeoLocationViewer extends AbstractGeoMapViewer implements Mou
          if (objects.get(index).getObjectId() == object.getObjectId())
             break;
       }
-      
+
       if (index < objects.size())
       {
          AbstractObject curr = objects.set(index, object);
          return curr.getStatus() != object.getStatus();
       }
-      
+
       return false;
    }
    
@@ -163,7 +203,17 @@ public class ObjectGeoLocationViewer extends AbstractGeoMapViewer implements Mou
    @Override
    protected void onMapLoad()
    {
-      objects = GeoLocationCache.getInstance().getObjectsInArea(coverage, rootObjectId, filterString);
+      if (singleObjectMode)
+      {
+         objects = new ArrayList<AbstractObject>(1);
+         AbstractObject object = Registry.getSession().findObjectById(rootObjectId);
+         if ((object != null) && coverage.contains(object.getGeolocation()))
+            objects.add(object);
+      }
+      else
+      {
+         objects = GeoLocationCache.getInstance().getObjectsInArea(coverage, rootObjectId, filterString);
+      }
       redraw();
    }
 
@@ -217,7 +267,7 @@ public class ObjectGeoLocationViewer extends AbstractGeoMapViewer implements Mou
    {
       setCurrentObject(null);
    }
-   
+
    /**
     * @see org.netxms.nxmc.modules.worldmap.widgets.AbstractGeoMapViewer#mouseMove(org.eclipse.swt.events.MouseEvent)
     */
@@ -302,50 +352,60 @@ public class ObjectGeoLocationViewer extends AbstractGeoMapViewer implements Mou
    private void drawObject(GC gc, int x, int y, AbstractObject object) 
    {
       boolean selected = (currentObject != null) && (currentObject.getObjectId() == object.getObjectId());
-      
+
       Image image = labelProvider.getImage(object);
       if (image == null)
          image = SharedIcons.IMG_UNKNOWN_OBJECT;
-      
-      int w = image.getImageData().width + LABEL_X_MARGIN * 2;
-      int h = image.getImageData().height+ LABEL_Y_MARGIN * 2;
-      Rectangle rect = new Rectangle(x - w / 2 - 1, y - LABEL_ARROW_HEIGHT - h, w, h);
-      
-      Color bgColor = ColorConverter.adjustColor(StatusDisplayInfo.getStatusColor(object.getStatus()), new RGB(255, 255, 255),  0.5f, colorCache);
-      
-      gc.setBackground(bgColor);
-      gc.fillRoundRectangle(rect.x, rect.y, rect.width, rect.height, 4, 4);
-      if (selected)
-      {
-         gc.setLineWidth(3);
-         gc.setForeground(ACTIVE_BORDER_COLOR);
-         gc.drawRoundRectangle(rect.x, rect.y, rect.width, rect.height, 4, 4);
-      }
-      gc.setLineWidth(1);
-      gc.setForeground(BORDER_COLOR);
-      gc.drawRoundRectangle(rect.x, rect.y, rect.width, rect.height, 4, 4);
-      
-      final int[] arrow = new int[] { x - 4, rect.y + rect.height, x, y, x + 4, rect.y + rect.height };
 
-      gc.fillPolygon(arrow);
-      gc.setForeground(bgColor);
-      gc.drawPolygon(arrow);
-      if (selected)
-      {
-         gc.drawLine(arrow[0], arrow[1] - 1, arrow[4], arrow[5] - 1);
-         gc.setLineWidth(3);
-         gc.setForeground(ACTIVE_BORDER_COLOR);
-         gc.drawPolyline(arrow);
-      }
+      int w = image.getImageData().width + LABEL_X_MARGIN * 2;
+      int h = image.getImageData().height + LABEL_Y_MARGIN * 2;
+      Rectangle rect = new Rectangle(x - w / 2 - 1, y - LABEL_ARROW_HEIGHT - h, w, h);
+
+      Color bgColor = selected ? SELECTION_COLOR : ColorConverter.adjustColor(StatusDisplayInfo.getStatusColor(object.getStatus()), new RGB(0, 0, 0), 0.2f, colorCache);
+
+      gc.setBackground(bgColor);
+      gc.fillArc(rect.x, rect.y, rect.width, rect.height, 0, 360);
+      gc.setLineWidth(2);
+      gc.setForeground(INNER_BORDER_COLOR);
+      gc.drawArc(rect.x + 4, rect.y + 4, rect.width - 8, rect.height - 8, 0, 360);
       gc.setLineWidth(1);
       gc.setForeground(BORDER_COLOR);
-      gc.drawPolyline(arrow);
+
+      final int[] arrow = new int[] { rect.x + rect.width / 2 - 3, rect.y + rect.height - 1, x, y, rect.x + rect.width / 2 + 4, rect.y + rect.height - 1 };
+      gc.fillPolygon(arrow);
+      gc.setForeground(BORDER_COLOR);
 
       gc.drawImage(image, rect.x + LABEL_X_MARGIN, rect.y + LABEL_Y_MARGIN);
-      
+
+      if (showObjectNames)
+      {
+         String text = object.getObjectName();
+         if (!object.getAlias().isEmpty())
+            text += "\n" + object.getAlias();
+
+         gc.setFont(objectLabelFont);
+         Point textSize = gc.textExtent(text);
+
+         Transform tr = new Transform(getDisplay());
+         tr.translate(rect.x + rect.width + 3, rect.y + rect.height / 2 - textSize.y / 2);
+         gc.setTransform(tr);
+
+         Path path = new Path(getDisplay());
+         path.addString(text, 0, 0, objectLabelFont);
+
+         gc.setBackground(bgColor);
+         gc.setForeground(getDisplay().getSystemColor(SWT.COLOR_WHITE));
+         gc.drawPath(path);
+         gc.fillPath(path);
+
+         gc.setTransform(null);
+         path.dispose();
+         tr.dispose();
+      }
+
       objectIcons.add(new ObjectIcon(object, rect, x, y));
    }
-   
+
    /**
     * Draw tooltip for current object
     * 
@@ -354,9 +414,9 @@ public class ObjectGeoLocationViewer extends AbstractGeoMapViewer implements Mou
    private void drawObjectToolTip(GC gc)
    {
       gc.setFont(objectToolTipHeaderFont);
-      Point titleSize = gc.textExtent(currentObject.getObjectName());
+      Point titleSize = gc.textExtent(currentObject.getNameWithAlias());
       gc.setFont(JFaceResources.getDefaultFont());
-      
+
       // Calculate width and height
       int width = Math.max(titleSize.x + 12, 128);
       int height = OBJECT_TOOLTIP_Y_MARGIN * 2 + titleSize.y + 2 + OBJECT_TOOLTIP_SPACING;
@@ -368,8 +428,7 @@ public class ObjectGeoLocationViewer extends AbstractGeoMapViewer implements Mou
       height += pt.y;
       
       String locationDetails;
-      if ((currentObject.getGeolocation().getTimestamp().getTime() > 0) &&
-          currentObject.getGeolocation().isAutomatic())
+      if ((currentObject.getGeolocation().getTimestamp().getTime() > 0) && currentObject.getGeolocation().isAutomatic())
       {
          locationDetails = i18n.tr("Obtained at {1} from {2}",
                DateFormatFactory.getDateTimeFormat().format(currentObject.getGeolocation().getTimestamp()),
@@ -383,7 +442,7 @@ public class ObjectGeoLocationViewer extends AbstractGeoMapViewer implements Mou
       {
          locationDetails = null;
       }
-      
+
       final String postalAddress = currentObject.getPostalAddress().getAddressLine();
       if (!postalAddress.isEmpty())
       {
@@ -392,7 +451,7 @@ public class ObjectGeoLocationViewer extends AbstractGeoMapViewer implements Mou
             width = pt.x;
          height += pt.y + OBJECT_TOOLTIP_SPACING;
       }
-      
+
       String lastReport, batteryLevel;
       if (currentObject instanceof MobileDevice)
       {
@@ -462,8 +521,8 @@ public class ObjectGeoLocationViewer extends AbstractGeoMapViewer implements Mou
       
       gc.setForeground(colorCache.create(0, 0, 0));
       gc.setFont(objectToolTipHeaderFont);
-      gc.drawText(currentObject.getObjectName(), rect.x + OBJECT_TOOLTIP_X_MARGIN + 12, rect.y + OBJECT_TOOLTIP_Y_MARGIN, true);
-      
+      gc.drawText(currentObject.getNameWithAlias(), rect.x + OBJECT_TOOLTIP_X_MARGIN + 12, rect.y + OBJECT_TOOLTIP_Y_MARGIN, true);
+
       gc.setFont(JFaceResources.getDefaultFont());
       int textLineHeight = gc.textExtent("M").y; //$NON-NLS-1$
       y = rect.y + OBJECT_TOOLTIP_Y_MARGIN + titleSize.y + OBJECT_TOOLTIP_SPACING + 2;
@@ -478,7 +537,7 @@ public class ObjectGeoLocationViewer extends AbstractGeoMapViewer implements Mou
          y += textLineHeight;
          gc.drawText(postalAddress, rect.x + OBJECT_TOOLTIP_X_MARGIN, y, true);
       }
-      
+
       if (lastReport != null)
       {
          y += textLineHeight + OBJECT_TOOLTIP_SPACING;
@@ -507,7 +566,7 @@ public class ObjectGeoLocationViewer extends AbstractGeoMapViewer implements Mou
       objectTooltipRectangle = rect;
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.ui.eclipse.osm.widgets.AbstractGeoMapViewer#getObjectAtPoint(org.eclipse.swt.graphics.Point)
     */
    @Override
@@ -537,8 +596,8 @@ public class ObjectGeoLocationViewer extends AbstractGeoMapViewer implements Mou
          this.object = object;
          arrow = new Polygon();
          arrow.addPoint(x, y);
-         arrow.addPoint(x - 4, rect.y + rect.height);
-         arrow.addPoint(x + 4, rect.y + rect.height);
+         arrow.addPoint(rect.x + rect.width / 2 - 3, rect.y + rect.height - 1);
+         arrow.addPoint(rect.x + rect.width / 2 + 4, rect.y + rect.height - 1);
       }
       
       public boolean contains(Point p)

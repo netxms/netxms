@@ -73,11 +73,11 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
    protected static final String[] TITLE_FONTS = { "Segoe UI", "Liberation Sans", "DejaVu Sans", "Verdana", "Arial" };
 
    protected static final Color BORDER_COLOR = new Color(Display.getCurrent(), 0, 0, 0);
-   
-	protected static final int LABEL_ARROW_HEIGHT = 5;
-	protected static final int LABEL_X_MARGIN = 4;
-	protected static final int LABEL_Y_MARGIN = 4;
-	protected static final int LABEL_SPACING = 4;
+
+   protected static final int LABEL_ARROW_HEIGHT = 20;
+   protected static final int LABEL_X_MARGIN = 12;
+   protected static final int LABEL_Y_MARGIN = 12;
+   protected static final int LABEL_SPACING = 4;
 
    private static final Color MAP_BACKGROUND = new Color(Display.getCurrent(), 255, 255, 255);
    private static final Color INFO_BLOCK_BACKGROUND = new Color(Display.getCurrent(), 0, 0, 0);
@@ -121,7 +121,7 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 	{
 		super(parent, style | SWT.NO_BACKGROUND | SWT.DOUBLE_BUFFERED);
       this.view = view;
-		
+
 		colorCache = new ColorCache(this);
 		
       imageZoomIn = ResourceManager.getImage("icons/worldmap/zoom_in.png");
@@ -535,7 +535,7 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
       gc.dispose();
       e.gc.drawImage(bufferImage, 0, 0);      
 	}
-	
+
 	/**
 	 * Draw content over map
 	 * 
