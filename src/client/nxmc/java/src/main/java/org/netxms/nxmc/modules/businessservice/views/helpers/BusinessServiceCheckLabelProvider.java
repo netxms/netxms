@@ -172,4 +172,14 @@ public class BusinessServiceCheckLabelProvider extends LabelProvider implements 
    {
       dciNameCache.putAll(names);
    }
+
+   /**
+    * @see org.eclipse.jface.viewers.BaseLabelProvider#dispose()
+    */
+   @Override
+   public void dispose()
+   {
+      objectLabelProvider.dispose();
+      super.dispose();
+   }
 }

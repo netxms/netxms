@@ -44,7 +44,7 @@ public class ServiceCheck implements NodeItemPair
    public ServiceCheck()
    {
       id = 0;
-      checkType = BusinessChecksType.DCI;
+      checkType = BusinessChecksType.OBJECT;
       description = null;
       script = null; 
       objectId = 0;
