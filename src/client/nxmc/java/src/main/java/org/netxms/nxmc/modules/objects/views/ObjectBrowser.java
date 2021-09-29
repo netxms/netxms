@@ -68,6 +68,8 @@ public class ObjectBrowser extends NavigationView
 
       Menu menu = new ObjectContextMenuManager(this, objectTree.getSelectionProvider()).createContextMenu(objectTree.getTreeControl());
       objectTree.getTreeControl().setMenu(menu);
+
+      objectTree.getTreeViewer().expandToLevel(2);
    }
 
    /**
