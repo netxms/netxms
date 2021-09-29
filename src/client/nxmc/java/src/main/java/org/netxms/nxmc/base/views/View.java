@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 import org.eclipse.jface.action.ToolBarManager;
+import org.eclipse.jface.fieldassist.IContentProposalProvider;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.StructuredViewer;
 import org.eclipse.jface.window.Window;
@@ -61,7 +62,7 @@ public abstract class View implements MessageAreaHolder
    private Composite clientArea;
    private boolean hasFilter;
    private boolean filterEnabled;
-   private ViewerFilterInternal filter;
+   private AbstractViewerFilter filter;
    private StructuredViewer viewer;
    private Set<ViewStateListener> stateListeners = new HashSet<ViewStateListener>();
 
@@ -499,12 +500,12 @@ public abstract class View implements MessageAreaHolder
    }
    
    /**
-    * Set viewer and filter to use default onFilterModify method
+    * Set viewer and filter that will be managed by default filter string handler
     * 
     * @param viewer viewer to refresh
     * @param filter filter to set filtering text
     */
-   protected void setViewerAndFilter(StructuredViewer viewer, ViewerFilterInternal filter)
+   protected void setFilterClient(StructuredViewer viewer, AbstractViewerFilter filter)
    {
       this.viewer = viewer;
       this.filter = filter;
@@ -545,6 +546,17 @@ public abstract class View implements MessageAreaHolder
          onFilterModify();
       }
       PreferenceStore.getInstance().set(getBaseId() + ".showFilter", enable);
+   }
+
+   /**
+    * Enable autocomplete for filter string.
+    *
+    * @param proposalProvider proposal provider
+    */
+   protected void enableFilterAutocomplete(IContentProposalProvider proposalProvider)
+   {
+      if (hasFilter)
+         filterText.enableAutoComplete(proposalProvider);
    }
 
    /**

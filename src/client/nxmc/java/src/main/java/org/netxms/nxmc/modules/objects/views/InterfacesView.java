@@ -136,7 +136,7 @@ public class InterfacesView extends NodeSubObjectTableView
       viewer.setComparator(new InterfaceListComparator());
       filter = new InterfaceListFilter();
       ((InterfaceListFilter)filter).setHideSubInterfaces(hideSubInterfaces);
-      setViewerAndFilter(viewer, filter);
+      setFilterClient(viewer, filter);
       viewer.addFilter(filter);
       WidgetHelper.restoreTableViewerSettings(viewer, "InterfacesView.TableViewer");
       viewer.getTable().addDisposeListener(new DisposeListener() {

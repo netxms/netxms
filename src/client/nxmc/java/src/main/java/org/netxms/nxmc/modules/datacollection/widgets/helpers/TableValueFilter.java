@@ -3,12 +3,12 @@ package org.netxms.nxmc.modules.datacollection.widgets.helpers;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.netxms.client.TableRow;
-import org.netxms.nxmc.base.views.ViewerFilterInternal;
+import org.netxms.nxmc.base.views.AbstractViewerFilter;
 
 /**
  * Filter for table values
  */
-public class TableValueFilter extends ViewerFilter implements ViewerFilterInternal
+public class TableValueFilter extends ViewerFilter implements AbstractViewerFilter
 {
    private String filterString = null;
 

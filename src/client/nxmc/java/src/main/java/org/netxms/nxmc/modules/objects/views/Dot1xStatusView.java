@@ -90,7 +90,7 @@ public class Dot1xStatusView extends ObjectView
 		viewer.setLabelProvider(new Dot1xPortListLabelProvider());
 		viewer.setComparator(new Dot1xPortComparator());
 		Dot1xPortFilter filter = new Dot1xPortFilter();
-		setViewerAndFilter(viewer, filter);
+		setFilterClient(viewer, filter);
 		viewer.setFilters(filter);
 
       WidgetHelper.restoreTableViewerSettings(viewer, "Dot1xStatusView");

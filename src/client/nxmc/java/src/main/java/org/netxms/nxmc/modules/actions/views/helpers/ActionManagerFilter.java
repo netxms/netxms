@@ -3,9 +3,9 @@ package org.netxms.nxmc.modules.actions.views.helpers;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.netxms.client.ServerAction;
-import org.netxms.nxmc.base.views.ViewerFilterInternal;
+import org.netxms.nxmc.base.views.AbstractViewerFilter;
 
-public final class ActionManagerFilter extends ViewerFilter implements ViewerFilterInternal
+public final class ActionManagerFilter extends ViewerFilter implements AbstractViewerFilter
 {
    private String filterString;
    private ActionLabelProvider labelProvider;

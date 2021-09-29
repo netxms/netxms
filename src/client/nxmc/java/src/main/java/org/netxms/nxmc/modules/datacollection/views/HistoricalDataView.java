@@ -184,7 +184,7 @@ public class HistoricalDataView extends ViewWithContext
 		viewer.setComparator(new HistoricalDataComparator());
 		HistoricalDataFilter filter = new HistoricalDataFilter();
 		viewer.setFilters(filter);
-		setViewerAndFilter(viewer, filter);
+		setFilterClient(viewer, filter);
 
 		createActions();
 		createPopupMenu();

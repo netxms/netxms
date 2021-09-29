@@ -21,12 +21,12 @@ package org.netxms.nxmc.modules.nxsl.views.helpers;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.netxms.client.Script;
-import org.netxms.nxmc.base.views.ViewerFilterInternal;
+import org.netxms.nxmc.base.views.AbstractViewerFilter;
 
 /**
  * Script filtering class
  */
-public final class ScriptFilter extends ViewerFilter implements ViewerFilterInternal
+public final class ScriptFilter extends ViewerFilter implements AbstractViewerFilter
 {
    private String filterString;
 

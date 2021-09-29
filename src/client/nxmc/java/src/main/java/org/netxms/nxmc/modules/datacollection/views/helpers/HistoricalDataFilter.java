@@ -21,13 +21,13 @@ package org.netxms.nxmc.modules.datacollection.views.helpers;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.netxms.client.datacollection.DciDataRow;
-import org.netxms.nxmc.base.views.ViewerFilterInternal;
+import org.netxms.nxmc.base.views.AbstractViewerFilter;
 import org.netxms.nxmc.localization.DateFormatFactory;
 
 /**
  * Filter for graph tree
  */
-public class HistoricalDataFilter extends ViewerFilter implements ViewerFilterInternal
+public class HistoricalDataFilter extends ViewerFilter implements AbstractViewerFilter
 {
    private String filterString = null;
    

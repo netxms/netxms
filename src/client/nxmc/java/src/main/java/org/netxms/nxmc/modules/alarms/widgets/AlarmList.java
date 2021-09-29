@@ -60,16 +60,20 @@ import org.netxms.client.constants.UserAccessRights;
 import org.netxms.client.events.Alarm;
 import org.netxms.client.events.AlarmHandle;
 import org.netxms.client.events.BulkAlarmStateChangeData;
+import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.Zone;
 import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.actions.ExportToCsvAction;
 import org.netxms.nxmc.base.helpers.TransformationSelectionProvider;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.View;
-import org.netxms.nxmc.base.views.ViewerFilterInternal;
+import org.netxms.nxmc.base.views.AbstractViewerFilter;
 import org.netxms.nxmc.base.widgets.CompositeWithMessageArea;
 import org.netxms.nxmc.base.widgets.MessageArea;
 import org.netxms.nxmc.base.widgets.SortableTreeViewer;
+import org.netxms.nxmc.base.widgets.helpers.SearchQueryAttribute;
+import org.netxms.nxmc.base.widgets.helpers.SearchQueryAttributeValueProvider;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.alarms.AlarmNotifier;
 import org.netxms.nxmc.modules.alarms.dialogs.AcknowledgeCustomTimeDialog;
@@ -147,6 +151,19 @@ public class AlarmList extends CompositeWithMessageArea
    private Action actionShowColor;
    private boolean initShowfilter;
    private boolean isLocalNotificationsEnabled = false;
+
+   private final SearchQueryAttribute[] attributeProposals = {
+         new SearchQueryAttribute("AcknowledgedBy:"),
+         new SearchQueryAttribute("Event:"),
+         new SearchQueryAttribute("HasComments:", "yes", "no"),
+         new SearchQueryAttribute("NOT"),
+         new SearchQueryAttribute("RepeatCount:"),
+         new SearchQueryAttribute("ResolvedBy:"),
+         new SearchQueryAttribute("Severity:", "NORMAL", "WARNING", "MINOR", "MAJOR", "CRITICAL"),
+         new SearchQueryAttribute("Source:", new SourceAttributeValueProvider()),
+         new SearchQueryAttribute("State:", "Outstanding", "Acknowledged", "Resolved"),
+         new SearchQueryAttribute("Zone:", new ZoneAttributeValueProvider())
+   };
 
    /**
     * Create alarm list widget
@@ -1270,8 +1287,72 @@ public class AlarmList extends CompositeWithMessageArea
       this.isLocalNotificationsEnabled = isLocalSoundEnabled;
    }
 
-   public ViewerFilterInternal getFilter()
+   /**
+    * Get filter for alarm viewer.
+    *
+    * @return filter for alarm viewer
+    */
+   public AbstractViewerFilter getFilter()
    {
       return alarmFilter;
    }
+
+   /**
+    * Get attribute proposals for search query autocompletion.
+    *
+    * @return attribute proposals for search query autocompletion
+    */
+   public SearchQueryAttribute[] getAttributeProposals()
+   {
+      return attributeProposals;
+   }
+
+   /**
+    * Value provider for attribute "Source"
+    */
+   private class SourceAttributeValueProvider implements SearchQueryAttributeValueProvider
+   {
+      /**
+       * @see org.netxms.ui.eclipse.widgets.helpers.SearchQueryAttributeValueProvider#getValues()
+       */
+      @Override
+      public String[] getValues()
+      {
+         Set<Long> objectIdentifiers = new HashSet<Long>();
+         for(AlarmHandle a : displayList.values())
+            objectIdentifiers.add(a.alarm.getSourceObjectId());
+         List<AbstractObject> objects = session.findMultipleObjects(objectIdentifiers, false);
+         if (objects.isEmpty())
+            return null;
+         String[] values = new String[objects.size()];
+         for(int i = 0; i < values.length; i++)
+            values[i] = objects.get(i).getObjectName();
+         return values;
+      }
+   }
+
+   /**
+    * Value provider for attribute "Zone"
+    */
+   private static class ZoneAttributeValueProvider implements SearchQueryAttributeValueProvider
+   {
+      /**
+       * @see org.netxms.ui.eclipse.widgets.helpers.SearchQueryAttributeValueProvider#getValues()
+       */
+      @Override
+      public String[] getValues()
+      {
+         NXCSession session = Registry.getSession();
+         if (!session.isZoningEnabled())
+            return null;
+         List<Zone> zones = session.getAllZones();
+         if (zones.isEmpty())
+            return null;
+         String[] values = new String[zones.size()];
+         for(int i = 0; i < values.length; i++)
+            values[i] = zones.get(i).getObjectName();
+         return values;
+      }
+   }
 }
+

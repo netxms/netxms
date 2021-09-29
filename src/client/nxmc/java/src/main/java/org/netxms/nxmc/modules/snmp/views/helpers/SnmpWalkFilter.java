@@ -22,13 +22,13 @@ import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.netxms.client.snmp.MibObject;
 import org.netxms.client.snmp.SnmpValue;
-import org.netxms.nxmc.base.views.ViewerFilterInternal;
+import org.netxms.nxmc.base.views.AbstractViewerFilter;
 import org.netxms.nxmc.modules.snmp.shared.MibCache;
 
 /**
  * Filter for MIB Explorer
  */
-public class SnmpWalkFilter extends ViewerFilter implements ViewerFilterInternal
+public class SnmpWalkFilter extends ViewerFilter implements AbstractViewerFilter
 {
    private String filterString = null;
    

@@ -103,7 +103,7 @@ public class NotificationChannels extends ConfigurationView
       viewer.setComparator(new NotificationChannelListComparator());
       NotificationChannelFilter filter = new NotificationChannelFilter();
       viewer.setFilters(filter);
-      setViewerAndFilter(viewer, filter);
+      setFilterClient(viewer, filter);
       viewer.addDoubleClickListener(new IDoubleClickListener() {
          @Override
          public void doubleClick(DoubleClickEvent event)

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2019 RadenSolutions
+ * Copyright (C) 2021 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,33 +16,17 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.nxmc.modules.objects.views.helpers;
-
-import org.eclipse.jface.viewers.ViewerFilter;
-import org.netxms.nxmc.base.views.AbstractViewerFilter;
+package org.netxms.nxmc.base.views;
 
 /**
- * Abstract filter class for node sub-object views
+ * Viewer filter interface
  */
-public abstract class NodeSubObjectFilter extends ViewerFilter implements AbstractViewerFilter
+public interface AbstractViewerFilter
 {
-   protected String filterString = null;
-   
    /**
-    * Get filter string
+    * Update filtering string
     * 
-    * @return
+    * @param string new filtering string
     */
-   public String getFilterString()
-   {
-      return filterString;
-   }
-
-   /**
-    * @param filterString the filterString to set
-    */
-   public void setFilterString(String filterString)
-   {
-      this.filterString = filterString.toLowerCase();
-   }
+   public void setFilterString(String string);
 }

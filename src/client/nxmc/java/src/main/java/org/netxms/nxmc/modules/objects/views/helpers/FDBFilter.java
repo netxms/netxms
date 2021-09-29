@@ -23,14 +23,14 @@ import org.eclipse.jface.viewers.ViewerFilter;
 import org.netxms.client.NXCSession;
 import org.netxms.client.topology.FdbEntry;
 import org.netxms.nxmc.Registry;
-import org.netxms.nxmc.base.views.ViewerFilterInternal;
+import org.netxms.nxmc.base.views.AbstractViewerFilter;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
  * Filter for switch forwarding database  
  */
-public class FDBFilter extends ViewerFilter implements ViewerFilterInternal
+public class FDBFilter extends ViewerFilter implements AbstractViewerFilter
 {
    private static final I18n i18n = LocalizationHelper.getI18n(FDBFilter.class);
 

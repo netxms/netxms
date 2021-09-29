@@ -100,7 +100,7 @@ public class ScriptLibraryView extends ConfigurationView
       viewer.setLabelProvider(new ScriptLabelProvider());
       viewer.setComparator(new ScriptComparator());
       ScriptFilter filter = new ScriptFilter();
-      setViewerAndFilter(viewer, filter);
+      setFilterClient(viewer, filter);
       viewer.addFilter(filter);
       viewer.addSelectionChangedListener(new ISelectionChangedListener() {
          @Override

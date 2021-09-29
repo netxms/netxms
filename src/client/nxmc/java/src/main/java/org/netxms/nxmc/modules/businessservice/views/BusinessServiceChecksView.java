@@ -117,7 +117,7 @@ public class BusinessServiceChecksView extends ObjectView
       viewer = new SortableTableViewer(parent, names, widths, 0, SWT.DOWN, SortableTreeViewer.DEFAULT_STYLE);
       labelProvider = new BusinessServiceCheckLabelProvider();
       BusinessServiceCheckFilter filter = new BusinessServiceCheckFilter(labelProvider);
-      setViewerAndFilter(viewer, filter);
+      setFilterClient(viewer, filter);
       viewer.setComparator(new BusinessServiceComparator(labelProvider));
       viewer.setLabelProvider(labelProvider);
       viewer.setContentProvider(new ArrayContentProvider());

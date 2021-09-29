@@ -89,7 +89,7 @@ public class SwitchForwardingDatabaseView extends ObjectView
 		viewer.setLabelProvider(new FDBLabelProvider());
 		viewer.setComparator(new FDBComparator());
 		FDBFilter filter = new FDBFilter();
-		setViewerAndFilter(viewer, filter);
+		setFilterClient(viewer, filter);
 		viewer.addFilter(filter);
 
       WidgetHelper.restoreTableViewerSettings(viewer, "SwitchForwardingDatabase");

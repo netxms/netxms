@@ -105,7 +105,7 @@ public class ActionManager extends ConfigurationView
       viewer.setLabelProvider(labelProvider);
       viewer.setComparator(new ActionComparator());
       ActionManagerFilter filter = new ActionManagerFilter(labelProvider);
-      setViewerAndFilter(viewer, filter);
+      setFilterClient(viewer, filter);
       viewer.addFilter(filter);
       viewer.addSelectionChangedListener(new ISelectionChangedListener() {
          @Override

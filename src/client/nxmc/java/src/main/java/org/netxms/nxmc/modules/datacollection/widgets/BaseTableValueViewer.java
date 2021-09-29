@@ -24,7 +24,7 @@ import org.netxms.client.TableColumnDefinition;
 import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
-import org.netxms.nxmc.base.views.ViewerFilterInternal;
+import org.netxms.nxmc.base.views.AbstractViewerFilter;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.modules.datacollection.widgets.helpers.CellSelectionManager;
 import org.netxms.nxmc.modules.datacollection.widgets.helpers.TableContentProvider;
@@ -287,7 +287,7 @@ public abstract class BaseTableValueViewer extends Composite
       job.start();
    }
 
-   public ViewerFilterInternal getFilter()
+   public AbstractViewerFilter getFilter()
    {
       return filter;
    }

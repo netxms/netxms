@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2021 Raden Solutions
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,18 +16,17 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.nxmc.base.views;
+package org.netxms.nxmc.base.widgets.helpers;
 
 /**
- * Viewer filter interface
+ * Dynamic value provider for search query attribute
  */
-public interface ViewerFilterInternal
+public interface SearchQueryAttributeValueProvider
 {
-   
    /**
-    * Update filtering string
-    * 
-    * @param string new filtering string
+    * Get values for attribute
+    *
+    * @return values for attribute
     */
-   public void setFilterString(String string);
+   public String[] getValues();
 }

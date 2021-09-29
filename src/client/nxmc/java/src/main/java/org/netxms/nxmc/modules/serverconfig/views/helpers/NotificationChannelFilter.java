@@ -21,12 +21,12 @@ package org.netxms.nxmc.modules.serverconfig.views.helpers;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.netxms.client.NotificationChannel;
-import org.netxms.nxmc.base.views.ViewerFilterInternal;
+import org.netxms.nxmc.base.views.AbstractViewerFilter;
 
 /**
  * Server configuration variable filter
  */
-public class NotificationChannelFilter extends ViewerFilter implements ViewerFilterInternal
+public class NotificationChannelFilter extends ViewerFilter implements AbstractViewerFilter
 {
 	private String filterString = null;
 

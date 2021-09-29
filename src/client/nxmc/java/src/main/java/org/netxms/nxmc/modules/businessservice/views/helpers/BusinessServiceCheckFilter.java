@@ -21,12 +21,12 @@ package org.netxms.nxmc.modules.businessservice.views.helpers;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.netxms.client.businessservices.ServiceCheck;
-import org.netxms.nxmc.base.views.ViewerFilterInternal;
+import org.netxms.nxmc.base.views.AbstractViewerFilter;
 
 /**
  * Filter for switch forwarding database  
  */
-public class BusinessServiceCheckFilter extends ViewerFilter implements ViewerFilterInternal
+public class BusinessServiceCheckFilter extends ViewerFilter implements AbstractViewerFilter
 {
    private String filterString = null;
    private BusinessServiceCheckLabelProvider labelProvider;

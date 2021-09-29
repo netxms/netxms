@@ -171,7 +171,7 @@ public class MibExplorer extends ObjectView implements SnmpWalkListener
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.setLabelProvider(new SnmpValueLabelProvider());
 		filter = new SnmpWalkFilter();
-      setViewerAndFilter(viewer, filter);
+      setFilterClient(viewer, filter);
 		viewer.addFilter(filter);
 		viewer.getTable().addDisposeListener(new DisposeListener() {
 			@Override

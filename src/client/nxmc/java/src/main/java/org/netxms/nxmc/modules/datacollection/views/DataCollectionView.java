@@ -233,7 +233,7 @@ public class DataCollectionView extends ObjectView
       viewer.setLabelProvider(new DciLabelProvider());
       viewer.setComparator(new DciComparator((DciLabelProvider)viewer.getLabelProvider()));
       dcFilter = new DciFilter();
-      setViewerAndFilter(viewer, dcFilter); 
+      setFilterClient(viewer, dcFilter); 
       viewer.addFilter(dcFilter);
       WidgetHelper.restoreTableViewerSettings(viewer, configPrefix); //$NON-NLS-1$
       
@@ -1138,7 +1138,7 @@ public class DataCollectionView extends ObjectView
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setComparator(comparator);
       viewer.addFilter(lvFilter);
-      setViewerAndFilter(viewer, lvFilter); 
+      setFilterClient(viewer, lvFilter); 
       WidgetHelper.restoreTableViewerSettings(viewer, configPrefix);
 
       refreshController = new ViewRefreshController(this, -1, new Runnable() {

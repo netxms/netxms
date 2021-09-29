@@ -108,7 +108,7 @@ public class ServerVariables extends ConfigurationView
       viewer.setLabelProvider(new ServerVariablesLabelProvider());
       viewer.setComparator(new ServerVariableComparator());
       ServerVariablesFilter filter = new ServerVariablesFilter();
-      setViewerAndFilter(viewer, filter);
+      setFilterClient(viewer, filter);
       viewer.addFilter(filter);
       viewer.addDoubleClickListener(new IDoubleClickListener() {
          @Override

@@ -21,6 +21,7 @@ package org.netxms.nxmc.modules.alarms.views;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.nxmc.base.widgets.helpers.SearchQueryContentProposalProvider;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.alarms.widgets.AlarmList;
 import org.netxms.nxmc.modules.objects.views.ObjectView;
@@ -52,7 +53,8 @@ public class AlarmsView extends ObjectView
    protected void createContent(Composite parent)
    {
       alarmList = new AlarmList(this, parent, SWT.NONE, "AlarmView.AlarmList", null);
-      setViewerAndFilter(alarmList.getViewer(), alarmList.getFilter());
+      setFilterClient(alarmList.getViewer(), alarmList.getFilter());
+      enableFilterAutocomplete(new SearchQueryContentProposalProvider(alarmList.getAttributeProposals()));
    }
 
    /**
