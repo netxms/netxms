@@ -213,7 +213,7 @@ public abstract class ObjectsPerspective extends Perspective
    }
 
    /**
-    * Update object toolbar
+    * Update object menu bar
     *
     * @param object selected object
     */
@@ -238,7 +238,7 @@ public abstract class ObjectsPerspective extends Perspective
          return;
 
       ToolItem item = new ToolItem(objectMenuBar, SWT.PUSH);
-      item.setText(name + " \u25BE");
+      item.setText("  " + name + " \u25BE  ");
       item.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)

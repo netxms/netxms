@@ -208,9 +208,9 @@ public abstract class AbstractObject
 	{
 		int i, count;
 		long id, id2;
-		
+
 		this.session = session;
-		
+
 		objectId = msg.getFieldAsInt32(NXCPCodes.VID_OBJECT_ID);
 		guid = msg.getFieldAsUUID(NXCPCodes.VID_GUID);
 		objectName = msg.getFieldAsString(NXCPCodes.VID_OBJECT_NAME);
@@ -231,7 +231,7 @@ public abstract class AbstractObject
 		mapImage = msg.getFieldAsUUID(NXCPCodes.VID_IMAGE);
 		drillDownObjectId = msg.getFieldAsInt64(NXCPCodes.VID_DRILL_DOWN_OBJECT_ID);
 		creationTime = msg.getFieldAsDate(NXCPCodes.VID_CREATION_TIME);
-		
+
 		statusCalculationMethod = msg.getFieldAsInt32(NXCPCodes.VID_STATUS_CALCULATION_ALG);
 		statusPropagationMethod = msg.getFieldAsInt32(NXCPCodes.VID_STATUS_PROPAGATION_ALG);
 		fixedPropagatedStatus = ObjectStatus.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_FIXED_STATUS));
@@ -247,7 +247,7 @@ public abstract class AbstractObject
 		statusThresholds[1] = msg.getFieldAsInt32(NXCPCodes.VID_STATUS_THRESHOLD_2);
 		statusThresholds[2] = msg.getFieldAsInt32(NXCPCodes.VID_STATUS_THRESHOLD_3);
 		statusThresholds[3] = msg.getFieldAsInt32(NXCPCodes.VID_STATUS_THRESHOLD_4);
-		
+
 		// Status shift can be negative, but all int16 values read from message
 		// as unsigned, so we need to convert shift value
 		if (statusShift > 32767)

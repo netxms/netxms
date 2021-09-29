@@ -48,17 +48,17 @@ import org.xnap.commons.i18n.I18n;
 public class ObjectPollerView extends AdHocObjectView
 {
    private static final I18n i18n = LocalizationHelper.getI18n(ObjectPollerView.class);
-   
-   public static final String ID = "ObjectPollerView"; //$NON-NLS-1$
+
+   public static final String ID = "ObjectPollerView";
 
    public static final String[] POLL_NAME = {
-         "", //$NON-NLS-1$
+         "",
          i18n.tr("Status Poll"), 
          i18n.tr("Configuration Poll (Full)"),
          i18n.tr("Interface Poll"), 
          i18n.tr("Topology Poll"),
          i18n.tr("Configuration Poll"), 
-         i18n.tr("Instance Discovery") 
+         i18n.tr("Instance Discovery Poll") 
       };
    private static final Color COLOR_ERROR = new Color(Display.getCurrent(), 192, 0, 0);
    private static final Color COLOR_WARNING = new Color(Display.getCurrent(), 255, 128, 0);
@@ -73,21 +73,27 @@ public class ObjectPollerView extends AdHocObjectView
    private boolean pollActive = false;
    private Action actionRestart;
    private Action actionClearOutput;
-   
 
+   /**
+    * Create object poll view.
+    *
+    * @param object object to poll
+    * @param type poll type
+    */
    public ObjectPollerView(AbstractObject object, NodePollType type)
    {
-      super(i18n.tr("Object poll"), ResourceManager.getImageDescriptor("icons/object-views/poller_view.png"), POLL_NAME[type.getValue()], object.getObjectId(), false);
+      super(POLL_NAME[type.getValue()], ResourceManager.getImageDescriptor("icons/object-views/poller_view.png"), "ObjectPoll." + type, object.getObjectId(), false);
 
       session = Registry.getSession();
       display = Display.getCurrent();
 
       target = (PollingTarget)object;
       pollType = type;
-
-      setName(POLL_NAME[pollType.getValue()] + " - " + target.getObjectName()); 
    }
 
+   /**
+    * @see org.netxms.nxmc.base.views.View#createContent(org.eclipse.swt.widgets.Composite)
+    */
    @Override
    protected void createContent(Composite parent)
    {

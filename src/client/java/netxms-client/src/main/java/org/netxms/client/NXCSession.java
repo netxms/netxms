@@ -212,7 +212,7 @@ public class NXCSession
 {
    // DCI resolve flags
    public static final int DCI_RES_SEARCH_NAME = 0x01;
-   
+
    // Various public constants
    public static final int DEFAULT_CONN_PORT = 4701;
 

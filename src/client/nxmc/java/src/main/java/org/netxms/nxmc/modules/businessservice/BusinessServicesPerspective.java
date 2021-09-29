@@ -16,10 +16,12 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.nxmc.modules.objects;
+package org.netxms.nxmc.modules.businessservice;
 
 import org.netxms.nxmc.base.views.PerspectiveConfiguration;
 import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.objects.ObjectsPerspective;
+import org.netxms.nxmc.modules.objects.SubtreeType;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.xnap.commons.i18n.I18n;
 
@@ -32,7 +34,7 @@ public class BusinessServicesPerspective extends ObjectsPerspective
 
    public BusinessServicesPerspective()
    {
-      super("Business Services", i18n.tr("Business Services"), ResourceManager.getImage("icons/perspective-business-service.png"), SubtreeType.BUSINESS_SERVICES);
+      super("Business Services", i18n.tr("Business Services"), ResourceManager.getImage("icons/perspective-business-services.png"), SubtreeType.BUSINESS_SERVICES);
    }
 
    /**
