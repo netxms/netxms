@@ -176,7 +176,7 @@ public class AutoBindDCI extends ObjectPropertyPage
 		md.setAutoBindFilter2(filterSource.getText());      
 		int flags = businessService.getAutoBindFlags();
       flags = apply ? flags | AutoBindDCIObject.DCI_BIND_FLAG : flags & ~AutoBindDCIObject.DCI_BIND_FLAG;  
-      flags = remove ? flags | AutoBindObject.OBJECT_UNBIND_FLAG : flags & ~AutoBindObject.OBJECT_UNBIND_FLAG;  
+      flags = remove ? flags | AutoBindDCIObject.DCI_UNBIND_FLAG : flags & ~AutoBindDCIObject.DCI_UNBIND_FLAG;  
       md.setAutoBindFlags(flags);
       md.setDciStatusThreshold(thresholdCombo.getSelectionIndex());
 		
