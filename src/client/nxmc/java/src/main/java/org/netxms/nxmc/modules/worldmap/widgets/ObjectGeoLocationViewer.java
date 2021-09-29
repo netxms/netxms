@@ -31,11 +31,9 @@ import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.graphics.Path;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.graphics.Rectangle;
-import org.eclipse.swt.graphics.Transform;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.base.GeoLocation;
@@ -94,7 +92,7 @@ public class ObjectGeoLocationViewer extends AbstractGeoMapViewer implements Mou
 
       objectToolTipHeaderFont = FontTools.createFont(TITLE_FONTS, 1, SWT.BOLD);
       objectLabelFont = FontTools.createFont(TITLE_FONTS, 0, SWT.BOLD);
-      
+
       final SessionListener listener = new SessionListener() {
          @Override
          public void notificationHandler(final SessionNotification n)
@@ -113,7 +111,7 @@ public class ObjectGeoLocationViewer extends AbstractGeoMapViewer implements Mou
          }
       };
       Registry.getSession().addListener(listener);
-      
+
       addDisposeListener(new DisposeListener() {
          @Override
          public void widgetDisposed(DisposeEvent e)
@@ -386,21 +384,14 @@ public class ObjectGeoLocationViewer extends AbstractGeoMapViewer implements Mou
          gc.setFont(objectLabelFont);
          Point textSize = gc.textExtent(text);
 
-         Transform tr = new Transform(getDisplay());
-         tr.translate(rect.x + rect.width + 3, rect.y + rect.height / 2 - textSize.y / 2);
-         gc.setTransform(tr);
-
-         Path path = new Path(getDisplay());
-         path.addString(text, 0, 0, objectLabelFont);
-
-         gc.setBackground(bgColor);
-         gc.setForeground(getDisplay().getSystemColor(SWT.COLOR_WHITE));
-         gc.drawPath(path);
-         gc.fillPath(path);
-
-         gc.setTransform(null);
-         path.dispose();
-         tr.dispose();
+         gc.setAlpha(128);
+         gc.setBackground(INFO_BLOCK_BACKGROUND);
+         gc.fillRoundRectangle(rect.x + rect.width + 3, rect.y + rect.height / 2 - textSize.y / 2 - 2, textSize.x + 6, textSize.y + 4, 4, 4);
+         gc.setAlpha(255);
+         
+         Color textColor = ColorConverter.adjustColor(selected ? SELECTION_COLOR : StatusDisplayInfo.getStatusColor(object.getStatus()), new RGB(255, 255, 255), 0.6f, colorCache);
+         gc.setForeground(textColor);
+         gc.drawText(text, rect.x + rect.width + 6, rect.y + rect.height / 2 - textSize.y / 2, true);
       }
 
       objectIcons.add(new ObjectIcon(object, rect, x, y));
