@@ -412,7 +412,7 @@ void BusinessService::statusPoll(PollerInfo *poller, ClientSession *session, UIN
    nxlog_debug_tag(DEBUG_TAG, 5, _T("Started polling of business service %s [%d]"), m_name, (int)m_id);
    sendPollerMsg(_T("Started status poll of business service %s [%d] \r\n"), m_name, (int)m_id);
    m_lastPollTime = time(nullptr);
-   uint32_t lastPollStatus = m_status;
+   int lastPollStatus = m_status;
    m_status = STATUS_NORMAL;
 
    // Loop through the kids and execute their either scripts or thresholds
@@ -423,8 +423,8 @@ void BusinessService::statusPoll(PollerInfo *poller, ClientSession *session, UIN
    for (auto check : m_checks)
    {
       BusinessServiceTicketData data = {};
-      uint32_t oldStatus = check->getStatus();
-      uint32_t newStatus = check->execute(&data);
+      int oldCheckStatus = check->getStatus();
+      int newCheckStatus = check->execute(&data);
 
       if (data.ticket_id != 0)
       {
@@ -437,18 +437,20 @@ void BusinessService::statusPoll(PollerInfo *poller, ClientSession *session, UIN
             }
          }
       }
-      if (oldStatus != newStatus)
+      if (oldCheckStatus != newCheckStatus)
       {
-         sendPollerMsg(_T("Business service check \"%s\" status changed, set to: %s\r\n"), check->getName(), newStatus == STATUS_CRITICAL ? _T("Critical") : newStatus == STATUS_NORMAL ? _T("Normal")
-                                                                                                                                                                           : _T("Unknown"));
+         sendPollerMsg(_T("Business service check \"%s\" status changed, set to: %s\r\n"), check->getName(), newCheckStatus == STATUS_CRITICAL ? _T("Critical") : _T("Normal"));
          NotifyClientsOnBusinessServiceCheckUpdate(*this, check);
       }
-      if (newStatus > m_status)
+      if (newCheckStatus > m_status)
       {
-         sendPollerMsg(_T("Business service status changed, set to: %s\r\n"), newStatus == STATUS_CRITICAL ? _T("Critical") : newStatus == STATUS_NORMAL ? _T("Normal")
-                                                                                                                                                         : _T("Unknown"));
-         m_status = newStatus;
+         m_status = newCheckStatus;
       }
+   }
+
+   if (lastPollStatus != m_status)
+   {
+      sendPollerMsg(_T("Business service status changed, set to: %s\r\n"), m_status == STATUS_CRITICAL ? _T("Critical") : _T("Normal"));
    }
 
    if (m_status > lastPollStatus)

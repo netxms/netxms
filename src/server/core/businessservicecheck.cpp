@@ -250,9 +250,9 @@ bool BusinessServiceCheck::deleteFromDatabase()
 /**
  * Execute check. It could be object status check, or DCI status check or script
  */
-uint32_t BusinessServiceCheck::execute(BusinessServiceTicketData* ticket)
+int BusinessServiceCheck::execute(BusinessServiceTicketData* ticket)
 {
-	uint32_t oldStatus = m_status;
+	int oldStatus = m_status;
 	switch (m_type)
 	{
 		case CheckType::OBJECT:

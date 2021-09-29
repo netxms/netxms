@@ -4367,7 +4367,7 @@ struct BusinessServiceTicketData{
 class NXCORE_EXPORTABLE BusinessServiceCheck
 {
 protected:
-   uint32_t m_status;
+   int m_status;
    int m_type;
    TCHAR *m_script;
    NXSL_Program *m_pCompiledScript;
@@ -4397,11 +4397,11 @@ public:
    uint32_t getRelatedObject() const { return m_relatedObject; }
    uint32_t getRelatedDCI() const { return m_relatedDCI; }
    uint32_t getCurrentTicket() const { return m_currentTicket; }
-   uint32_t getStatus() const { return m_status; }
+   int getStatus() const { return m_status; }
    const TCHAR* getName()  const { return m_name; }
    int getThreshold() const { return m_statusThreshold; }
 
-   uint32_t execute(BusinessServiceTicketData* ticket);
+   int execute(BusinessServiceTicketData* ticket);
    void copyCheck(const BusinessServiceCheck& check);
 
    void modifyFromMessage(NXCPMessage *pRequest);
