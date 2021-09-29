@@ -77,6 +77,7 @@ import org.netxms.client.events.Alarm;
 import org.netxms.client.events.AlarmHandle;
 import org.netxms.client.events.BulkAlarmStateChangeData;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.Zone;
 import org.netxms.ui.eclipse.actions.ExportToCsvAction;
 import org.netxms.ui.eclipse.alarmviewer.Activator;
 import org.netxms.ui.eclipse.alarmviewer.AlarmNotifier;
@@ -106,6 +107,9 @@ import org.netxms.ui.eclipse.widgets.CompositeWithMessageBar;
 import org.netxms.ui.eclipse.widgets.FilterText;
 import org.netxms.ui.eclipse.widgets.MessageBar;
 import org.netxms.ui.eclipse.widgets.SortableTreeViewer;
+import org.netxms.ui.eclipse.widgets.helpers.SearchQueryAttribute;
+import org.netxms.ui.eclipse.widgets.helpers.SearchQueryAttributeValueProvider;
+import org.netxms.ui.eclipse.widgets.helpers.SearchQueryContentProposalProvider;
 
 /**
  * Alarm list widget
@@ -165,6 +169,19 @@ public class AlarmList extends CompositeWithMessageBar
    private boolean initShowfilter;
    private boolean isLocalNotificationsEnabled = false;
 
+   private final SearchQueryAttribute[] attributeProposals = {
+         new SearchQueryAttribute("AcknowledgedBy:"),
+         new SearchQueryAttribute("Event:"),
+         new SearchQueryAttribute("HasComments:", "yes", "no"),
+         new SearchQueryAttribute("NOT"),
+         new SearchQueryAttribute("RepeatCount:"),
+         new SearchQueryAttribute("ResolvedBy:"),
+         new SearchQueryAttribute("Severity:", "NORMAL", "WARNING", "MINOR", "MAJOR", "CRITICAL"),
+         new SearchQueryAttribute("Source:", new SourceAttributeValueProvider()),
+         new SearchQueryAttribute("State:", "Outstanding", "Acknowledged", "Resolved"),
+         new SearchQueryAttribute("Zone:", new ZoneAttributeValueProvider())
+   };
+
    /**
     * Create alarm list widget
     * 
@@ -184,7 +201,7 @@ public class AlarmList extends CompositeWithMessageBar
       getContent().setLayout(new FormLayout());
 
       // Create filter area
-      filterText = new FilterText(getContent(), SWT.NONE, null, true);
+      filterText = new FilterText(getContent(), SWT.NONE, null, true, true, new SearchQueryContentProposalProvider(attributeProposals));
       filterText.addModifyListener(new ModifyListener() {
          @Override
          public void modifyText(ModifyEvent e)
@@ -1509,5 +1526,54 @@ public class AlarmList extends CompositeWithMessageBar
    public void setIsLocalSoundEnabled(boolean isLocalSoundEnabled)
    {
       this.isLocalNotificationsEnabled = isLocalSoundEnabled;
+   }
+
+   /**
+    * Value provider for attribute "Source"
+    */
+   private class SourceAttributeValueProvider implements SearchQueryAttributeValueProvider
+   {
+      /**
+       * @see org.netxms.ui.eclipse.widgets.helpers.SearchQueryAttributeValueProvider#getValues()
+       */
+      @Override
+      public String[] getValues()
+      {
+         NXCSession session = ConsoleSharedData.getSession();
+         Set<Long> objectIdentifiers = new HashSet<Long>();
+         for(AlarmHandle a : displayList.values())
+            objectIdentifiers.add(a.alarm.getSourceObjectId());
+         List<AbstractObject> objects = session.findMultipleObjects(objectIdentifiers, false);
+         if (objects.isEmpty())
+            return null;
+         String[] values = new String[objects.size()];
+         for(int i = 0; i < values.length; i++)
+            values[i] = objects.get(i).getObjectName();
+         return values;
+      }
+   }
+
+   /**
+    * Value provider for attribute "Zone"
+    */
+   private static class ZoneAttributeValueProvider implements SearchQueryAttributeValueProvider
+   {
+      /**
+       * @see org.netxms.ui.eclipse.widgets.helpers.SearchQueryAttributeValueProvider#getValues()
+       */
+      @Override
+      public String[] getValues()
+      {
+         NXCSession session = ConsoleSharedData.getSession();
+         if (!session.isZoningEnabled())
+            return null;
+         List<Zone> zones = session.getAllZones();
+         if (zones.isEmpty())
+            return null;
+         String[] values = new String[zones.size()];
+         for(int i = 0; i < values.length; i++)
+            values[i] = zones.get(i).getObjectName();
+         return values;
+      }
    }
 }

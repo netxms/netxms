@@ -102,7 +102,7 @@ public class RuleSourceObjects extends PropertyPage
 			}
       });
 
-      for(AbstractObject o : session.findMultipleObjects(rule.getSources().toArray(new Long[0]), true))
+      for(AbstractObject o : session.findMultipleObjects(rule.getSources(), true))
       	objects.put(o.getObjectId(), o);
       viewer.setInput(objects.values().toArray());
       

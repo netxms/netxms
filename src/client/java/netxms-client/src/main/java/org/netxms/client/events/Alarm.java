@@ -21,7 +21,6 @@ package org.netxms.client.events;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.UUID;
-
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.constants.Severity;

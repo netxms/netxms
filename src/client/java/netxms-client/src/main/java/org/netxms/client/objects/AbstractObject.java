@@ -831,7 +831,7 @@ public abstract class AbstractObject
 	 */
 	public List<AbstractObject> getTrustedNodes()
 	{
-	   return session.findMultipleObjects(trustedNodes.toArray(new Long[trustedNodes.size()]), true);
+      return session.findMultipleObjects(trustedNodes, true);
 	}
 
    /**
@@ -842,7 +842,7 @@ public abstract class AbstractObject
     */
    public List<AbstractObject> getDashboards(boolean accessibleOnly)
    {
-      return session.findMultipleObjects(dashboards.toArray(new Long[dashboards.size()]), true);
+      return session.findMultipleObjects(dashboards, true);
    }
 
 	/**

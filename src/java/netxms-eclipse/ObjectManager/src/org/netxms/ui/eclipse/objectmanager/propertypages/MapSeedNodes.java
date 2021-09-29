@@ -94,7 +94,7 @@ public class MapSeedNodes extends PropertyPage
       });
       
       NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-      seedNodes = new HashSet<AbstractObject>(session.findMultipleObjects(((NetworkMap)object).getSeedObjectIds(), false));
+      seedNodes = new HashSet<AbstractObject>(session.findMultipleObjects(((NetworkMap)object).getSeedObjects(), false));
       viewer.setInput(seedNodes);
       
       GridData gridData = new GridData();

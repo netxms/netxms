@@ -3420,8 +3420,7 @@ public class NXCSession
     * @param returnUnknown if true, this method will return UnknownObject placeholders for unknown object identifiers
     * @return list of found objects
     */
-   public List<AbstractObject> findMultipleObjects(final long[] idList, Class<? extends AbstractObject> classFilter,
-         boolean returnUnknown)
+   public List<AbstractObject> findMultipleObjects(final long[] idList, Class<? extends AbstractObject> classFilter, boolean returnUnknown)
    {
       List<AbstractObject> result = new ArrayList<AbstractObject>(idList.length);
 
@@ -3447,11 +3446,11 @@ public class NXCSession
    /**
     * Find multiple NetXMS objects by identifiers
     *
-    * @param idList        array of object identifiers
+    * @param idList collection of object identifiers
     * @param returnUnknown if true, this method will return UnknownObject placeholders for unknown object identifiers
     * @return array of found objects
     */
-   public List<AbstractObject> findMultipleObjects(final Long[] idList, boolean returnUnknown)
+   public List<AbstractObject> findMultipleObjects(final Collection<Long> idList, boolean returnUnknown)
    {
       return findMultipleObjects(idList, null, returnUnknown);
    }
@@ -3459,28 +3458,27 @@ public class NXCSession
    /**
     * Find multiple NetXMS objects by identifiers
     *
-    * @param idList        array of object identifiers
-    * @param classFilter   class filter for objects, or null to disable filtering
+    * @param idList collection of object identifiers
+    * @param classFilter class filter for objects, or null to disable filtering
     * @param returnUnknown if true, this method will return UnknownObject placeholders for unknown object identifiers
     * @return array of found objects
     */
-   public List<AbstractObject> findMultipleObjects(final Long[] idList, Class<? extends AbstractObject> classFilter,
-         boolean returnUnknown)
+   public List<AbstractObject> findMultipleObjects(final Collection<Long> idList, Class<? extends AbstractObject> classFilter, boolean returnUnknown)
    {
-      List<AbstractObject> result = new ArrayList<AbstractObject>(idList.length);
+      List<AbstractObject> result = new ArrayList<AbstractObject>(idList.size());
 
       synchronized(objectList)
       {
-         for(int i = 0; i < idList.length; i++)
+         for(Long id : idList)
          {
-            final AbstractObject object = objectList.get(idList[i]);
+            final AbstractObject object = objectList.get(id);
             if ((object != null) && ((classFilter == null) || classFilter.isInstance(object)))
             {
                result.add(object);
             }
             else if (returnUnknown)
             {
-               result.add(new UnknownObject(idList[i], this));
+               result.add(new UnknownObject(id, this));
             }
          }
       }

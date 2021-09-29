@@ -50,9 +50,9 @@ public class AlarmListLabelProvider extends LabelProvider implements ITableLabel
    private static final Color FOREGROUND_COLOR_LIGHT = new Color(Display.getCurrent(), 255, 255, 255);
    private static final Color[] FOREGROUND_COLORS =
       { FOREGROUND_COLOR_LIGHT, FOREGROUND_COLOR_DARK, FOREGROUND_COLOR_DARK, FOREGROUND_COLOR_LIGHT, FOREGROUND_COLOR_LIGHT };
-   
+
 	private static final String[] stateText = { Messages.get().AlarmListLabelProvider_AlarmState_Outstanding, Messages.get().AlarmListLabelProvider_AlarmState_Acknowledged, Messages.get().AlarmListLabelProvider_AlarmState_Resolved, Messages.get().AlarmListLabelProvider_AlarmState_Terminated };
-	
+
 	private NXCSession session;
 	private Image[] stateImages = new Image[5];
 	private Image commentsImage;
