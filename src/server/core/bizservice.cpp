@@ -646,7 +646,8 @@ void BusinessService::validateAutomaticDCIChecks()
       if (!object->isDataCollectionTarget())
          continue;
 
-      for (shared_ptr<DCObject> dci : *static_cast<DataCollectionTarget&>(*object).getAllDCObjects())
+      unique_ptr<SharedObjectArray<DCObject>> allDCOObjects = static_pointer_cast<DataCollectionTarget>(object)->getAllDCObjects();
+      for (shared_ptr<DCObject> dci : *allDCOObjects)
       {
          AutoBindDecision decision = isApplicable(object, dci, 1);
          if (decision != AutoBindDecision_Ignore)
@@ -673,8 +674,8 @@ void BusinessService::validateAutomaticDCIChecks()
                check->setType(BusinessServiceCheck::DCI);
                check->setRelatedObject(object->getId());
                check->setRelatedDCI(dci->getId());
-               TCHAR checkName[MAX_OBJECT_NAME];
-               _sntprintf(checkName, MAX_OBJECT_NAME, _T("%s: %s"), object->getName(), dci->getName().cstr());
+               TCHAR checkName[1023];
+               _sntprintf(checkName, 1023, _T("%s: %s"), object->getName(), dci->getName().cstr());
                check->setName(checkName);
                check->generateId();
                check->setThreshold(m_dciStatusThreshhold);
@@ -1081,7 +1082,7 @@ double GetServiceUptime(uint32_t serviceId, time_t from, time_t to)
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    DB_STATEMENT hStmt = DBPrepare(hdb,
             _T("SELECT from_timestamp,to_timestamp FROM business_service_downtime ")
-            _T("WHERE service_id=? AND ((from_timestamp BETWEEN ? AND ? OR to_timestamp BETWEEN ? and ?) OR (from_timestamp<? AND (to_timestamp=0 OR to_timestamp>?)))"));
+            _T("WHERE service_id=? AND ((from_timestamp BETWEEN ? AND ? OR to_timestamp BETWEEN ? and ?) OR (from_timestamp<=? AND (to_timestamp=0 OR to_timestamp=>?)))"));
    if (hStmt != nullptr)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, serviceId);
