@@ -76,10 +76,10 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
    protected static final int LABEL_Y_MARGIN = 12;
    protected static final int LABEL_SPACING = 4;
 
-   private static final Color MAP_BACKGROUND = new Color(Display.getCurrent(), 255, 255, 255);
-   private static final Color INFO_BLOCK_BACKGROUND = new Color(Display.getCurrent(), 0, 0, 0);
-   private static final Color INFO_BLOCK_TEXT = new Color(Display.getCurrent(), 255, 255, 255);
-   private static final Color SELECTION_COLOR = new Color(Display.getCurrent(), 0, 0, 255);
+   protected static final Color MAP_BACKGROUND = new Color(Display.getCurrent(), 255, 255, 255);
+   protected static final Color INFO_BLOCK_BACKGROUND = new Color(Display.getCurrent(), 0, 0, 0);
+   protected static final Color INFO_BLOCK_TEXT = new Color(Display.getCurrent(), 255, 255, 255);
+   protected static final Color SELECTION_COLOR = new Color(Display.getCurrent(), 0, 0, 255);
    
 	private static final int DRAG_JITTER = 8;
 

@@ -379,8 +379,14 @@ public class ObjectGeoLocationViewer extends AbstractGeoMapViewer implements Mou
          gc.setFont(objectLabelFont);
          Point textSize = gc.textExtent(text);
 
-         gc.setForeground(bgColor);
-         gc.drawText(text, rect.x + rect.width + 3, rect.y + rect.height / 2 - textSize.y / 2, true);
+         gc.setAlpha(128);
+         gc.setBackground(INFO_BLOCK_BACKGROUND);
+         gc.fillRoundRectangle(rect.x + rect.width + 3, rect.y + rect.height / 2 - textSize.y / 2 - 2, textSize.x + 6, textSize.y + 4, 4, 4);
+         gc.setAlpha(255);
+         
+         Color textColor = ColorConverter.adjustColor(selected ? SELECTION_COLOR : StatusDisplayInfo.getStatusColor(object.getStatus()), new RGB(255, 255, 255), 0.6f, colorCache);
+         gc.setForeground(textColor);
+         gc.drawText(text, rect.x + rect.width + 6, rect.y + rect.height / 2 - textSize.y / 2, true);
       }
 
       objectIcons.add(new ObjectIcon(object, rect, x, y));
