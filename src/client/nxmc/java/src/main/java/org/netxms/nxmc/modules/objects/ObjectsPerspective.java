@@ -18,6 +18,7 @@
  */
 package org.netxms.nxmc.modules.objects;
 
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
@@ -33,7 +34,10 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.ToolBar;
 import org.eclipse.swt.widgets.ToolItem;
+import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.Perspective;
 import org.netxms.nxmc.base.views.PerspectiveConfiguration;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -52,6 +56,7 @@ import org.netxms.nxmc.modules.snmp.views.MibExplorer;
 import org.netxms.nxmc.modules.worldmap.views.ObjectGeoLocationView;
 import org.netxms.nxmc.resources.SharedIcons;
 import org.netxms.nxmc.tools.FontTools;
+import org.netxms.nxmc.tools.MessageDialogHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -189,6 +194,26 @@ public abstract class ObjectsPerspective extends Perspective
          @Override
          public void run()
          {
+            String question = String.format(i18n.tr("Are you sure you want to delete \"%s\"?"), object.getObjectName());
+            boolean confirmed = MessageDialogHelper.openConfirm(getWindow().getShell(), i18n.tr("Confirm Delete"), question);
+            
+            if (confirmed)
+            {
+               final NXCSession session =  Registry.getSession();
+               new Job(i18n.tr("Delete objects"), null) {
+                  @Override
+                  protected void run(IProgressMonitor monitor) throws Exception
+                  {
+                     session.deleteObject(object.getObjectId());
+                  }
+                  
+                  @Override
+                  protected String getErrorMessage()
+                  {
+                     return i18n.tr("Cannot delete object");
+                  }
+               }.start();
+            }
          }
       });
    }
