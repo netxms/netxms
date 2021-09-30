@@ -129,10 +129,10 @@ public:
    const TCHAR *getCommand() const { return m_cmd; }
    uint32_t getId() const { return m_id; }
 #ifdef _WIN32
-   pid_t ProcessExecutor::getProcessId() const { return GetProcessId(m_phandle); }
+   pid_t getProcessId() const { return GetProcessId(m_phandle); }
    HANDLE getProcessHandle() const { return m_phandle; }
 #else
-   pid_t ProcessExecutor::getProcessId() const { return m_pid; }
+   pid_t getProcessId() const { return m_pid; }
 #endif
 
    virtual bool execute();
