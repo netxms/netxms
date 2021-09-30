@@ -261,7 +261,7 @@ int BusinessServiceCheck::execute(BusinessServiceTicketData* ticket)
 				if (obj != nullptr)
 				{
 					int threshold = m_statusThreshold != 0 ? m_statusThreshold : ConfigReadInt(_T("BusinessServices.Check.Threshold.Objects"), 1);
-					m_status = obj->getStatus() >= threshold ? STATUS_NORMAL : STATUS_CRITICAL;
+					m_status = obj->getStatus() >= threshold ? STATUS_CRITICAL : STATUS_NORMAL;
 					_tcslcpy(m_reason, _T("Object status threshold violation"), 256);
 				}
 			}
@@ -343,7 +343,7 @@ int BusinessServiceCheck::execute(BusinessServiceTicketData* ticket)
 				{
 					shared_ptr<DataCollectionTarget> target = static_pointer_cast<DataCollectionTarget>(obj);
 					int threshold = m_statusThreshold != 0 ? m_statusThreshold : ConfigReadInt(_T("BusinessServices.Check.Threshold.DataCollection"), 1);
-					m_status = target->getDciThreshold(m_relatedDCI) >= threshold ? STATUS_NORMAL : STATUS_CRITICAL;
+					m_status = target->getDciThreshold(m_relatedDCI) >= threshold ? STATUS_CRITICAL : STATUS_NORMAL;
 					_tcslcpy(m_reason, _T("DCI status threshold violation"), 256);
 				}
 			}
