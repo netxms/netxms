@@ -27,6 +27,7 @@ import org.netxms.websvc.handlers.BindToHandler;
 import org.netxms.websvc.handlers.DCObjectLastValue;
 import org.netxms.websvc.handlers.DataCollectionConfigurationHandler;
 import org.netxms.websvc.handlers.DataCollectionObjectHandler;
+import org.netxms.websvc.handlers.Events;
 import org.netxms.websvc.handlers.GrafanaAlarms;
 import org.netxms.websvc.handlers.GrafanaDataCollection;
 import org.netxms.websvc.handlers.HistoricalData;
@@ -89,6 +90,7 @@ public class WebSvcApplication extends Application
       router.attach("/alarms", Alarms.class);
       router.attach("/alarms/{id}", Alarms.class);
       router.attach("/authenticate", AccessIntegrationTools.class);
+      router.attach("/events", Events.class);
       router.attach("/grafana/alarms", GrafanaAlarms.class);
       router.attach("/grafana/datacollection", GrafanaDataCollection.class);
       router.attach("/info", InfoHandler.class);
