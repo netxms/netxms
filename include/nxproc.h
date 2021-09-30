@@ -128,9 +128,11 @@ public:
 
    const TCHAR *getCommand() const { return m_cmd; }
    uint32_t getId() const { return m_id; }
-   pid_t getProcessId() const;
 #ifdef _WIN32
+   pid_t ProcessExecutor::getProcessId() const { return GetProcessId(m_phandle); }
    HANDLE getProcessHandle() const { return m_phandle; }
+#else
+   pid_t ProcessExecutor::getProcessId() const { return m_pid; }
 #endif
 
    virtual bool execute();
@@ -139,6 +141,10 @@ public:
    bool isStarted() const { return m_started; }
    bool isRunning();
    bool waitForCompletion(uint32_t timeout);
+
+#ifdef _WIN32
+   void detach();
+#endif
 
    static bool execute(const TCHAR *cmdLine, bool shellExec = true);
 };

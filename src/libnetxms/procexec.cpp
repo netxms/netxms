@@ -586,17 +586,23 @@ bool ProcessExecutor::waitForCompletion(uint32_t timeout)
 #endif
 }
 
-/**
- * Get process ID
- */
-pid_t ProcessExecutor::getProcessId() const
-{
 #ifdef _WIN32
-   return GetProcessId(m_phandle);
-#else
-   return m_pid;
-#endif
+
+/**
+ * Detach from process (Windows only)
+ */
+void ProcessExecutor::detach()
+{
+   if (!m_running || m_sendOutput)
+      return;
+
+   CloseHandle(m_phandle);
+   m_phandle = INVALID_HANDLE_VALUE;
+   m_started = false;
+   m_running = false;
 }
+
+#endif
 
 /**
  * Execute command and forget
@@ -604,7 +610,11 @@ pid_t ProcessExecutor::getProcessId() const
 bool ProcessExecutor::execute(const TCHAR *cmdLine, bool shellExec)
 {
 #ifdef _WIN32
-   return ProcessExecutor(cmdLine, shellExec).execute();
+   ProcessExecutor executor(cmdLine, shellExec);
+   if (!executor.execute())
+      return false;
+   executor.detach();
+   return true;
 #else
    auto executor = new ProcessExecutor(cmdLine, shellExec, true);
    if (executor->execute())
