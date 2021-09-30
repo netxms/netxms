@@ -98,7 +98,6 @@ public class WebSvcApplication extends Application
       router.attach("/notifications", NotificationHandler.class);
       router.attach("/objects", Objects.class);
       router.attach("/objects/{object-id}", Objects.class);
-      router.attach("/objects/{object-id}/uptime", BusinessServiceUptime.class);
       router.attach("/objects/{object-id}/bind", BindHandler.class);
       router.attach("/objects/{object-id}/bindTo", BindToHandler.class);
       router.attach("/objects/{object-id}/checks", BusinessServiceChecks.class);
@@ -113,6 +112,7 @@ public class WebSvcApplication extends Application
       router.attach("/objects/{object-id}/tickets", BusinessServiceTickets.class);
       router.attach("/objects/{object-id}/unbind", UnbindHandler.class);
       router.attach("/objects/{object-id}/unbindFrom", UnbindFromHandler.class);
+      router.attach("/objects/{object-id}/uptime", BusinessServiceUptime.class);
       router.attach("/predefinedgraphs", PredefinedGraphs.class);
       router.attach("/pushData", PushDataHandler.class);
       router.attach("/sessions", Sessions.class);
