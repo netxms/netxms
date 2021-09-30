@@ -687,6 +687,8 @@ enum SessionState
 #define RCC_NO_SUCH_2FA_DRIVER            ((uint32_t)151)
 #define RCC_INVALID_2FA_BINDING_CONFIG    ((uint32_t)152)
 #define RCC_NO_SUCH_2FA_BINDING           ((uint32_t)153)
+#define RCC_INVALID_TIME_INTERVAL         ((uint32_t)154)
+#define RCC_INVALID_BUSINESS_CHECK_ID     ((uint32_t)155)
 
 /**
  * Mask bits for NXCModifyEventTemplate()

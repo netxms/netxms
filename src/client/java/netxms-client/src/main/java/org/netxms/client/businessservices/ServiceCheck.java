@@ -231,4 +231,12 @@ public class ServiceCheck implements NodeItemPair
    {
       return objectId;
    }
+
+   /**
+    * @param id the id to set
+    */
+   public void setId(long id)
+   {
+      this.id = id;
+   }
 }
