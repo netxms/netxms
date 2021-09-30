@@ -49,6 +49,7 @@ import org.netxms.websvc.handlers.UnbindHandler;
 import org.netxms.websvc.handlers.UserAgentNotifications;
 import org.netxms.websvc.handlers.UserPassword;
 import org.netxms.websvc.handlers.Users;
+import org.netxms.websvc.handlers.Events;
 import org.restlet.Application;
 import org.restlet.Restlet;
 import org.restlet.data.Method;
@@ -122,6 +123,7 @@ public class WebSvcApplication extends Application
       router.attach("/users", Users.class);
       router.attach("/users/{id}", Users.class);
       router.attach("/users/{id}/password", UserPassword.class);
+      router.attach("/events", Events.class);
       return router;
    }
 }
