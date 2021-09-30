@@ -49,6 +49,7 @@ import org.netxms.nxmc.modules.objects.views.ObjectBrowser;
 import org.netxms.nxmc.modules.objects.views.ObjectOverviewView;
 import org.netxms.nxmc.modules.objects.views.SwitchForwardingDatabaseView;
 import org.netxms.nxmc.modules.snmp.views.MibExplorer;
+import org.netxms.nxmc.modules.worldmap.views.ObjectGeoLocationView;
 import org.netxms.nxmc.resources.SharedIcons;
 import org.netxms.nxmc.tools.FontTools;
 import org.xnap.commons.i18n.I18n;
@@ -109,6 +110,7 @@ public abstract class ObjectsPerspective extends Perspective
       addMainView(new EntityMIBView());
       addMainView(new PerformanceView());
       addMainView(new Dot1xStatusView());
+      addMainView(new ObjectGeoLocationView());
       addMainView(new SwitchForwardingDatabaseView());
       addMainView(new MibExplorer());
       addMainView(new BusinessServiceChecksView());

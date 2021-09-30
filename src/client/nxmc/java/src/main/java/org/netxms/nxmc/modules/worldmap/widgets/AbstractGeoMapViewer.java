@@ -109,7 +109,7 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 	private Rectangle zoomControlRect = null;
    private Font mapTitleFont;
    private boolean enableControls = true;
-	
+
    /**
     * Create abstract geo map viewer.
     *
@@ -407,6 +407,9 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 	@Override
 	public void paintControl(PaintEvent e)
 	{
+      if (bufferImage == null)
+         return;
+
 		final GC gc = new GC(bufferImage);
       gc.setAntialias(SWT.ON);
       gc.setTextAntialias(SWT.ON);

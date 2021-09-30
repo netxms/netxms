@@ -20,8 +20,15 @@ package org.netxms.nxmc.modules.worldmap.widgets;
 
 import java.awt.Polygon;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import org.eclipse.jface.resource.JFaceResources;
+import org.eclipse.jface.viewers.ISelection;
+import org.eclipse.jface.viewers.ISelectionChangedListener;
+import org.eclipse.jface.viewers.ISelectionProvider;
+import org.eclipse.jface.viewers.SelectionChangedEvent;
+import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
@@ -55,7 +62,7 @@ import org.xnap.commons.i18n.I18n;
 /**
  * Geo location viewer for objects
  */
-public class ObjectGeoLocationViewer extends AbstractGeoMapViewer implements MouseTrackListener
+public class ObjectGeoLocationViewer extends AbstractGeoMapViewer implements MouseTrackListener, ISelectionProvider
 {
    private static final I18n i18n = LocalizationHelper.getI18n(ObjectGeoLocationViewer.class);
 
@@ -77,6 +84,8 @@ public class ObjectGeoLocationViewer extends AbstractGeoMapViewer implements Mou
    private boolean singleObjectMode = false;
    private boolean showObjectNames = true;
    private String filterString = null;
+   private ISelection selection = new StructuredSelection();
+   private Set<ISelectionChangedListener> selectionChangeListeners = new HashSet<ISelectionChangedListener>();
 
    /**
     * Create object geolocation viewer.
@@ -310,13 +319,16 @@ public class ObjectGeoLocationViewer extends AbstractGeoMapViewer implements Mou
          int idx = objects.indexOf(currentObject);
          objects.remove(idx);
          objects.add(currentObject);
+         selection = new StructuredSelection(currentObject);
       }
       else
       {
          objectToolTipLocation = null;
          objectTooltipRectangle = null;
+         selection = new StructuredSelection();
       }
       redraw();
+      fireSelectionChangedListeners();
    }
 
    /**
@@ -570,6 +582,52 @@ public class ObjectGeoLocationViewer extends AbstractGeoMapViewer implements Mou
             return icon.object;
       }
       return null;
+   }
+
+   /**
+    * Fire selection changed listeners
+    */
+   protected void fireSelectionChangedListeners()
+   {
+      SelectionChangedEvent e = new SelectionChangedEvent(this, selection);
+      for(ISelectionChangedListener l : selectionChangeListeners)
+         l.selectionChanged(e);
+   }
+
+   /**
+    * @see org.eclipse.jface.viewers.ISelectionProvider#addSelectionChangedListener(org.eclipse.jface.viewers.ISelectionChangedListener)
+    */
+   @Override
+   public void addSelectionChangedListener(ISelectionChangedListener listener)
+   {
+      selectionChangeListeners.add(listener);
+   }
+
+   /**
+    * @see org.eclipse.jface.viewers.ISelectionProvider#removeSelectionChangedListener(org.eclipse.jface.viewers.ISelectionChangedListener)
+    */
+   @Override
+   public void removeSelectionChangedListener(ISelectionChangedListener listener)
+   {
+      selectionChangeListeners.remove(listener);
+   }
+
+   /**
+    * @see org.eclipse.jface.viewers.ISelectionProvider#getSelection()
+    */
+   @Override
+   public ISelection getSelection()
+   {
+      return selection;
+   }
+
+   /**
+    * @see org.eclipse.jface.viewers.ISelectionProvider#setSelection(org.eclipse.jface.viewers.ISelection)
+    */
+   @Override
+   public void setSelection(ISelection selection)
+   {
+      this.selection = selection;
    }
 
    /**

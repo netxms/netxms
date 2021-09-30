@@ -22,6 +22,7 @@ import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
 import org.netxms.client.users.AbstractUserObject;
 import org.netxms.client.users.User;
+import org.netxms.client.users.UserGroup;
 import org.netxms.nxmc.resources.SharedIcons;
 
 /**
@@ -35,7 +36,7 @@ public class BaseUserLabelProvider extends LabelProvider
    @Override
    public Image getImage(Object element)
    {
-      return (element instanceof User) ? SharedIcons.IMG_USER : SharedIcons.IMG_GROUP;
+      return (element instanceof User) ? SharedIcons.IMG_USER : ((element instanceof UserGroup) ? SharedIcons.IMG_GROUP : null);
    }
 
    /**
@@ -44,6 +45,8 @@ public class BaseUserLabelProvider extends LabelProvider
    @Override
    public String getText(Object element)
    {
+      if (element instanceof String)
+         return (String)element;
       return ((AbstractUserObject)element).getLabel();
    }
 }
