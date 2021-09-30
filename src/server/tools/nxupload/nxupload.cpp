@@ -58,7 +58,7 @@ static int UpgradeAgent(AgentConnection *conn, const TCHAR *pszPkgName, RSA *ser
             ThreadSleep(2);
             _puttc(_T('*'), stdout);
             fflush(stdout);
-            if ((i % 20 == 0) && (i > 30))
+            if ((i % 10 == 0) && (i > 10))
             {
                if (conn->connect(serverKey))
                {
