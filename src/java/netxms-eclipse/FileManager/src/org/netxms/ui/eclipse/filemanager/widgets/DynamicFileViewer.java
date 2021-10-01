@@ -58,7 +58,7 @@ public class DynamicFileViewer extends BaseFileViewer
    public DynamicFileViewer(Composite parent, int style, IViewPart viewPart)
    {
       super(parent, style, viewPart);
-      
+
       final SessionListener sessionListener = new SessionListener() {
          @Override
          public void notificationHandler(SessionNotification n)
@@ -75,7 +75,7 @@ public class DynamicFileViewer extends BaseFileViewer
          }
       };
       session.addListener(sessionListener);
-      
+
       addDisposeListener(new DisposeListener() {
          @Override
          public void widgetDisposed(DisposeEvent e)
@@ -96,16 +96,16 @@ public class DynamicFileViewer extends BaseFileViewer
    {
       if (restartJob != null)
          restartJob.cancel();
-      
+
       if (monitoringJob != null)
          monitoringJob.cancel();
-      
+
       hideMessage();
-      
+
       this.fileId = fileId;
       this.nodeId = nodeId;
       this.remoteFileName = remoteFileName;
-      
+
       text.setTopIndex(text.getLineCount() - 1);
       monitoringJob = new ConsoleJob(Messages.get().DynamicFileViewer_TrackFileChanges, null, Activator.PLUGIN_ID, null) {
          private boolean tracking = true;
@@ -115,7 +115,7 @@ public class DynamicFileViewer extends BaseFileViewer
          {
             tracking = false;
          }
-         
+
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
@@ -149,7 +149,7 @@ public class DynamicFileViewer extends BaseFileViewer
                logger.warn(String.format("Cannot cancel file monitoring node id: %d, file id: %s", nodeId, fileId), e);
             }
          }
-         
+
          @Override
          protected String getErrorMessage()
          {
@@ -160,7 +160,7 @@ public class DynamicFileViewer extends BaseFileViewer
       monitoringJob.setSystem(true);
       monitoringJob.start();
    }
-   
+
    /**
     * Stop tracking
     */
