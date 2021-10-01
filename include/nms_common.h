@@ -339,6 +339,8 @@ typedef __int64 ssize_t;
 typedef int ssize_t;
 #endif
 
+typedef __int64 off64_t;
+
 typedef signed __int8 int8_t;
 typedef signed __int16 int16_t;
 typedef signed __int32 int32_t;
