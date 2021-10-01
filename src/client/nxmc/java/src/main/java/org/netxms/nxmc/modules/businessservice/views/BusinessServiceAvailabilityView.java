@@ -60,7 +60,7 @@ import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
- * Business service "Checks" view
+ * Business service "Availability" view
  */
 public class BusinessServiceAvailabilityView extends ObjectView
 {

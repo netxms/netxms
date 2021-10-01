@@ -39,7 +39,7 @@ BaseBusinessService::BaseBusinessService() : super(), AutoBindTarget(this), m_ch
    m_id = 0;
    m_busy = false;
    m_pollingDisabled = false;
-   m_lastPollTime = time_t(0);
+   m_lastPollTime = 0;
    m_prototypeId = 0;
    m_instance = nullptr;
    m_instanceDiscoveryMethod = IDM_NONE;
@@ -57,7 +57,7 @@ BaseBusinessService::BaseBusinessService(const TCHAR *name) : super(name, 0), Au
 {
    m_busy = false;
    m_pollingDisabled = false;
-   m_lastPollTime = time_t(0);
+   m_lastPollTime = 0;
    m_prototypeId = 0;
    m_instance = nullptr;
    m_instanceDiscoveryMethod = IDM_NONE;
@@ -76,7 +76,7 @@ BaseBusinessService::BaseBusinessService(BaseBusinessService *prototype, const T
 {
    m_busy = false;
    m_pollingDisabled = false;
-   m_lastPollTime = time_t(0);
+   m_lastPollTime = 0;
    m_prototypeId = prototype->m_id;
    m_instance = MemCopyString(prototype->m_instance);
    m_instanceDiscoveryMethod = IDM_NONE;
@@ -94,7 +94,7 @@ BaseBusinessService::BaseBusinessService(BaseBusinessService *prototype, const T
 }
 
 /**
- * Base business service default destructor
+ * Base business service destructor
  */
 BaseBusinessService::~BaseBusinessService()
 {
@@ -108,11 +108,10 @@ BaseBusinessService::~BaseBusinessService()
  */
 bool BaseBusinessService::loadChecksFromDatabase(DB_HANDLE hdb)
 {
-   nxlog_debug_tag(DEBUG_TAG, 4, _T("Loading service checks for business service %ld"), (long)m_id);
+   nxlog_debug_tag(DEBUG_TAG, 4, _T("Loading service checks for business service %u"), m_id);
 
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT id,service_id,type,description,related_object,related_dci,status_threshold,content,current_ticket ")
                                        _T("FROM business_service_checks WHERE service_id=?"));
-
    if (hStmt == nullptr)
       return false;
 
@@ -1019,11 +1018,9 @@ bool BusinessServicePrototype::lockForDiscoveryPoll()
  */
 void GetCheckList(uint32_t serviceId, NXCPMessage *response)
 {
-   shared_ptr<BaseBusinessService> service = static_pointer_cast<BaseBusinessService>(FindObjectById(serviceId));
+   auto service = static_pointer_cast<BaseBusinessService>(FindObjectById(serviceId));
    if (service == nullptr)
-   {
       return;
-   }
 
    int counter = 0;
    for (auto check : *service->getChecks())
@@ -1039,12 +1036,10 @@ void GetCheckList(uint32_t serviceId, NXCPMessage *response)
  */
 uint32_t ModifyCheck(NXCPMessage *request)
 {
-   uint32_t serviceId = request->getFieldAsUInt32(VID_OBJECT_ID);
-   shared_ptr<BaseBusinessService> service = static_pointer_cast<BaseBusinessService>(FindObjectById(serviceId));
+   auto service = static_pointer_cast<BaseBusinessService>(FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID)));
    if (service == nullptr)
-   {
       return RCC_INVALID_OBJECT_ID;
-   }
+
    service->modifyCheckFromMessage(request);
    return RCC_SUCCESS;
 }
