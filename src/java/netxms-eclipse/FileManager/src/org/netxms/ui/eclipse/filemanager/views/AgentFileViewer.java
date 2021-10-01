@@ -323,8 +323,7 @@ public class AgentFileViewer extends ViewPart
       {
 	      if (followChanges)
 	      {
-	         final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-
+            final NXCSession session = ConsoleSharedData.getSession();
    	      final ConsoleJob job = new ConsoleJob(Messages.get().FileViewer_Stop_File_Monitoring, null, Activator.PLUGIN_ID, null) {
                @Override
                protected void runInternal(IProgressMonitor monitor) throws Exception
@@ -344,10 +343,10 @@ public class AgentFileViewer extends ViewPart
          }
          return false;
       }
-	   IViewReference vi = window.getActivePage().findViewReference(AgentFileViewer.ID, secondaryId);
-	   if(vi != null)
+	   IViewReference viewReference = window.getActivePage().findViewReference(AgentFileViewer.ID, secondaryId);
+      if (viewReference != null)
 	   {
-	      AgentFileViewer view = (AgentFileViewer)vi.getView(true);
+	      AgentFileViewer view = (AgentFileViewer)viewReference.getView(true);
          if (view != null)
          {
             window.getActivePage().activate(view);
@@ -358,7 +357,7 @@ public class AgentFileViewer extends ViewPart
 	      AgentFileViewer view = (AgentFileViewer)window.getActivePage().showView(AgentFileViewer.ID, secondaryId, IWorkbenchPage.VIEW_ACTIVATE);
    	   view.viewer.setLineStyler(lineStyler);
    	   view.followChanges = followChanges;
-   	   view.viewer.showFile(file.getFile());
+         view.viewer.showFile(file.getFile(), followChanges);
    	   if (followChanges)
    	   {
    	      view.viewer.startTracking(nodeId, file.getId(), file.getRemoteName());
