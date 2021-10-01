@@ -72,10 +72,15 @@ public class Objects extends AbstractObjectHandler
       String nameFilter = query.get("name");
       String parentFilter = query.get("parent");
       String zoneFilter = query.get("zone");
-      
+      String primaryNameFilter = query.get("primaryName");
+
       Pattern nameFilterRegex = null;
       if ((nameFilter != null) && !nameFilter.isEmpty())
          nameFilterRegex = Pattern.compile(nameFilter, Pattern.CASE_INSENSITIVE);
+
+      Pattern primaryNameFilterRegex = null;
+      if ((primaryNameFilter != null) && !primaryNameFilter.isEmpty())
+         primaryNameFilterRegex = Pattern.compile(primaryNameFilter, Pattern.CASE_INSENSITIVE);
 
       Map<String, Object> customAttributes = null;
       for(String k : query.keySet())
@@ -92,8 +97,7 @@ public class Objects extends AbstractObjectHandler
       }
       
       if ((areaFilter != null) || (classFilter != null) || (customAttributes != null) || (nameFilter != null) 
-            || (parentFilter != null) || (zoneFilter != null))
-      {
+            || (parentFilter != null) || (zoneFilter != null) || (primaryNameFilter != null)) {
          double[] area = null;
          if (areaFilter != null)
          {
@@ -251,6 +255,27 @@ public class Objects extends AbstractObjectHandler
                if (!match)
                   continue;
             }
+
+            // Filter by primary name
+            if (primaryNameFilter != null) {
+               // If we want to filter by primary name this implies that we are only looking
+               // for nodes.
+               if (o instanceof AbstractNode) {
+                  AbstractNode node = (AbstractNode) o;
+                  if (useRegex) {
+                     if ((primaryNameFilterRegex != null)
+                           && !primaryNameFilterRegex.matcher(node.getPrimaryName()).matches())
+                        continue;
+                  } else {
+                     if ((primaryNameFilter != null) && !primaryNameFilter.isEmpty()
+                           && !Glob.matchIgnoreCase(primaryNameFilter, node.getPrimaryName()))
+                        continue;
+                  }
+               } else {
+                  continue;
+               }
+            }
+
             filteredObjects.add(o);
          }
          objects = filteredObjects;
