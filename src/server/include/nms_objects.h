@@ -4175,48 +4175,47 @@ struct BusinessServiceTicketData{
 class NXCORE_EXPORTABLE BusinessServiceCheck
 {
 protected:
-   int m_status;
-   int m_type;
-   TCHAR *m_script;
-   NXSL_Program *m_pCompiledScript;
-   TCHAR m_reason[256];
    uint32_t m_id;
-   TCHAR m_name[1023];
+   SharedString m_name;
+   int m_type;
+   int m_status;
+   uint32_t m_serviceId;
+   MUTEX m_mutex;
+   TCHAR *m_script;
+   NXSL_Program *m_compiledScript;
+   TCHAR m_reason[256];
    uint32_t m_relatedObject;
    uint32_t m_relatedDCI;
    uint32_t m_currentTicket;
    int m_statusThreshold;
-   uint32_t m_serviceId;
-   MUTEX m_mutex;
 
    bool insertTicket(BusinessServiceTicketData* ticket);
    void closeTicket();
    void compileScript();
-   const TCHAR* getReason();
+   void loadReason();
 
-   void lock() { MutexLock(m_mutex); }
-   void unlock() { MutexUnlock(m_mutex); }
+   void lock() const { MutexLock(m_mutex); }
+   void unlock() const { MutexUnlock(m_mutex); }
 
 public:
-   BusinessServiceCheck(uint32_t serviceId = 0);
+   BusinessServiceCheck(uint32_t serviceId);
    BusinessServiceCheck(uint32_t serviceId, int type, uint32_t relatedObject, uint32_t relatedDCI, const TCHAR* name, int threshhold);
-   BusinessServiceCheck(uint32_t serviceId, BusinessServiceCheck& check);
+   BusinessServiceCheck(uint32_t serviceId, const BusinessServiceCheck& check);
+   BusinessServiceCheck(DB_RESULT hResult, int row);
    virtual ~BusinessServiceCheck();
 
-   void generateId();
-   int getType() { return m_type; }
-   uint32_t getId() { return m_id; }
-   uint32_t getRelatedObject() { return m_relatedObject; }
-   uint32_t getRelatedDCI() { return m_relatedDCI; }
-   int getStatus() { return m_status; }
-   String getName() { return GetStringAttributeWithLock(m_name, m_mutex); }
+   uint32_t getId() const { return m_id; }
+   int getType() const { return m_type; }
+   uint32_t getRelatedObject() const { return m_relatedObject; }
+   uint32_t getRelatedDCI() const { return m_relatedDCI; }
+   int getStatus() const { return m_status; }
+   SharedString getName() const { return GetStringAttributeWithLock(m_name, m_mutex); }
 
    int execute(BusinessServiceTicketData* ticket);
 
-   void modifyFromMessage(NXCPMessage *pRequest);
-   void loadFromSelect(DB_RESULT hResult, int row);
-   void fillMessage(NXCPMessage *msg, uint32_t baseId);
-   bool saveToDatabase();
+   void modifyFromMessage(const NXCPMessage& request);
+   void fillMessage(NXCPMessage *msg, uint32_t baseId) const;
+   bool saveToDatabase() const;
    bool deleteFromDatabase();
 
    enum CheckType{

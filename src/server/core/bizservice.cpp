@@ -95,7 +95,6 @@ BaseBusinessService::BaseBusinessService(BaseBusinessService *prototype, const T
    {
       BusinessServiceCheck *ch = new BusinessServiceCheck(m_id, *check.get());
       m_checks.add(ch);
-      ch->generateId();
       ch->saveToDatabase();
    }
 }
@@ -111,6 +110,9 @@ BaseBusinessService::~BaseBusinessService()
    MemFree(m_instanceDiscoveryFilter);
 }
 
+/**
+ * Get all checks
+ */
 unique_ptr<SharedObjectArray<BusinessServiceCheck>> BaseBusinessService::getChecks()
 {
    checksLock();
@@ -126,8 +128,7 @@ bool BaseBusinessService::loadChecksFromDatabase(DB_HANDLE hdb)
 {
    nxlog_debug_tag(DEBUG_TAG, 4, _T("Loading service checks for business service %u"), m_id);
 
-   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT id,service_id,type,description,related_object,related_dci,status_threshold,content,current_ticket ")
-                                       _T("FROM business_service_checks WHERE service_id=?"));
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT id,service_id,type,description,related_object,related_dci,status_threshold,content,current_ticket FROM business_service_checks WHERE service_id=?"));
    if (hStmt == nullptr)
       return false;
 
@@ -142,11 +143,7 @@ bool BaseBusinessService::loadChecksFromDatabase(DB_HANDLE hdb)
    int rows = DBGetNumRows(hResult);
    for (int i = 0; i < rows; i++)
    {
-      BusinessServiceCheck *check = new BusinessServiceCheck();
-      check->loadFromSelect(hResult, i);
-      checksLock();
-      m_checks.add(check);
-      checksUnlock();
+      m_checks.add(new BusinessServiceCheck(hResult, i));
    }
 
    DBFreeResult(hResult);
@@ -160,7 +157,7 @@ bool BaseBusinessService::loadChecksFromDatabase(DB_HANDLE hdb)
 void BaseBusinessService::deleteCheck(uint32_t checkId)
 {
    checksLock();
-   for (auto it = m_checks.begin(); it.hasNext();)
+   for (SharedPtrIterator<BusinessServiceCheck> it = m_checks.begin(); it.hasNext();)
    {
       if (it.next()->getId() == checkId)
       {
@@ -200,7 +197,7 @@ void BaseBusinessService::modifyCheckFromMessage(NXCPMessage *request)
    checksLock();
    if (checkId != 0)
    {
-      for (auto c : m_checks)
+      for (const shared_ptr<BusinessServiceCheck>& c : m_checks)
       {
          if (c->getId() == checkId)
          {
@@ -609,7 +606,6 @@ void BusinessService::validateAutomaticObjectChecks()
             TCHAR checkName[MAX_OBJECT_NAME];
             _sntprintf(checkName, MAX_OBJECT_NAME, _T("%s"), object->getName());
             auto check = make_shared<BusinessServiceCheck>(m_id, BusinessServiceCheck::CheckType::OBJECT, object->getId(), 0, checkName, m_objectStatusThreshhold);
-            check->generateId();
             checksLock();
             m_checks.add(check);
             checksUnlock();
@@ -669,7 +665,6 @@ void BusinessService::validateAutomaticDCIChecks()
                TCHAR checkName[1023];
                _sntprintf(checkName, 1023, _T("%s: %s"), object->getName(), dci->getName().cstr());
                auto check = make_shared<BusinessServiceCheck>(m_id, BusinessServiceCheck::CheckType::DCI, object->getId(), dci->getId(), checkName, m_dciStatusThreshhold);
-               check->generateId();
                checksLock();
                m_checks.add(check);
                checksUnlock();
