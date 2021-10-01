@@ -164,7 +164,7 @@ void BusinessServiceCheck::compileScript()
 /**
  * Fill message with business service check data
  */
-void BusinessServiceCheck::fillMessage(NXCPMessage *msg, uint64_t baseId)
+void BusinessServiceCheck::fillMessage(NXCPMessage *msg, uint32_t baseId)
 {
    msg->setField(baseId, m_id);
    msg->setField(baseId + 1, m_type);

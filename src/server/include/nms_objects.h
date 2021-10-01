@@ -4214,7 +4214,7 @@ public:
 
    void modifyFromMessage(NXCPMessage *pRequest);
    void loadFromSelect(DB_RESULT hResult, int row);
-   void fillMessage(NXCPMessage *msg, uint64_t baseId);
+   void fillMessage(NXCPMessage *msg, uint32_t baseId);
    bool saveToDatabase();
    bool deleteFromDatabase();
 
