@@ -332,10 +332,11 @@ public class BaseFileViewer extends Composite
    
    /**
     * Show local file in viewer
-    * 
-    * @param file
+    *
+    * @param file file to show
+    * @param scrollToEnd if true, scroll to end of file
     */
-   public void showFile(final File file)
+   public void showFile(final File file, final boolean scrollToEnd)
    {
       ConsoleJob job = new ConsoleJob(Messages.get().BaseFileViewer_LoadJobName, viewPart, Activator.PLUGIN_ID, null) {
          @Override
@@ -347,6 +348,8 @@ public class BaseFileViewer extends Composite
                public void run()
                {
                   setContent(content);
+                  if (scrollToEnd)
+                     text.setTopIndex(text.getLineCount() - 1);
                }
             });
          }

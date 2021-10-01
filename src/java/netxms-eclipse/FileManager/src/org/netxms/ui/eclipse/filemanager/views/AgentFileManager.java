@@ -134,6 +134,7 @@ public class AgentFileManager extends ViewPart
    private FilterText filterText;
    private SortableTreeViewer viewer;
    private NXCSession session;
+   private long objectId = 0;
    private Action actionRefreshAll;
    private Action actionUploadFile;
    private Action actionUploadFolder;
@@ -149,10 +150,8 @@ public class AgentFileManager extends ViewPart
    private Action actionCalculateFolderSize;
    private Action actionCopyFilePath;
    private Action actionCopyFileName;
-   private long objectId = 0;
-   /*
-    * (non-Javadoc)
-    * 
+
+   /**
     * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
     */
    @Override
@@ -177,9 +176,7 @@ public class AgentFileManager extends ViewPart
       return (s != null) ? b : defval;
    }
    
-   /*
-    * (non-Javadoc)
-    * 
+   /**
     * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
     */
    @Override
@@ -187,7 +184,7 @@ public class AgentFileManager extends ViewPart
    {
       content = new Composite(parent, SWT.NONE);
       content.setLayout(new FormLayout());
-      
+
       // Create filter area
       filterText = new FilterText(content, SWT.NONE);
       filterText.addModifyListener(new ModifyListener() {
@@ -197,7 +194,7 @@ public class AgentFileManager extends ViewPart
             onFilterModify();
          }
       });
-      
+
       String os = ((Node)session.findObjectById(objectId)).getSystemDescription(); //$NON-NLS-1$
       if (os.contains("Windows")) //if OS is windows don't show group and access rights columns //$NON-NLS-1$
       {
@@ -271,8 +268,8 @@ public class AgentFileManager extends ViewPart
 
       refreshFileList();
    }
-   
-   /* (non-Javadoc)
+
+   /**
     * @see org.eclipse.ui.part.WorkbenchPart#dispose()
     */
    @Override
@@ -1102,7 +1099,6 @@ public class AgentFileManager extends ViewPart
          return;
 
       final AgentFile sf = ((AgentFile)objects[0]);
-
       ConsoleJobCallingServerJob job = new ConsoleJobCallingServerJob(Messages.get().AgentFileManager_DownloadJobTitle, null, Activator.PLUGIN_ID, null) {
          @Override
          protected String getErrorMessage()
@@ -1113,7 +1109,19 @@ public class AgentFileManager extends ViewPart
          @Override
          protected void runInternal(final IProgressMonitor monitor) throws Exception
          {
-            final AgentFileData file = session.downloadFileFromAgent(objectId, sf.getFullName(), offset, followChanges, null, this);
+            final AgentFileData file = session.downloadFileFromAgent(objectId, sf.getFullName(), Math.min(offset, sf.getSize()), followChanges, new ProgressListener() {
+               @Override
+               public void setTotalWorkAmount(long workTotal)
+               {
+                  monitor.beginTask("Download file " + sf.getFullName(), (int)workTotal);
+               }
+
+               @Override
+               public void markProgress(long workDone)
+               {
+                  monitor.worked((int)workDone);
+               }
+            }, this);
             runInUIThread(new Runnable() {
                @Override
                public void run()
@@ -1282,7 +1290,7 @@ public class AgentFileManager extends ViewPart
       };
       job.start();
    }
-   
+
    /**
     * Recursively download directory from agent to local pc
     * 
@@ -1385,7 +1393,6 @@ public class AgentFileManager extends ViewPart
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
             NestedVerifyOverwrite verify = new NestedVerifyOverwrite(object.getType(), object.getName(), true, true, false) {
-               
                @Override
                public void executeAction() throws NXCException, IOException
                {
@@ -1400,11 +1407,11 @@ public class AgentFileManager extends ViewPart
             };
             verify.run(viewer.getControl().getDisplay());
             
-            if(verify.isOkPressed())
+            if (verify.isOkPressed())
             {
                target.setChildren(session.listAgentFiles(target, target.getFullName(), objectId));
                object.getParent().setChildren(session.listAgentFiles(object.getParent(), object.getParent().getFullName(), objectId));
-               
+
                runInUIThread(new Runnable() {
                   @Override
                   public void run()
