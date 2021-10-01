@@ -98,4 +98,15 @@ public abstract class ObjectView extends ViewWithContext
    {
       return (AbstractObject)getContext();
    }
+
+   /**
+    * Get ID of object set as current context.
+    *
+    * @return ID of object set as current context or 0 if context is not set
+    */
+   public long getObjectId()
+   {
+      AbstractObject object = (AbstractObject)getContext();
+      return (object != null) ? object.getObjectId() : 0;
+   }
 }

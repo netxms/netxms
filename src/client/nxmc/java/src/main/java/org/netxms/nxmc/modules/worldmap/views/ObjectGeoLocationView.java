@@ -6,6 +6,7 @@ package org.netxms.nxmc.modules.worldmap.views;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
+import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.action.ToolBarManager;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
@@ -36,8 +37,10 @@ public class ObjectGeoLocationView extends ObjectView
    private PreferenceStore settings = PreferenceStore.getInstance();
    private int zoomLevel = 3;
    private boolean showPending = false;
+   private boolean hideOtherObjects = false;
    private Action actionZoomIn;
    private Action actionZoomOut;
+   private Action actionHideOtherObjects;
 
    /**
     * @param name
@@ -85,6 +88,10 @@ public class ObjectGeoLocationView extends ObjectView
          mapAccessor.setLatitude(0);
          mapAccessor.setLongitude(0);
       }
+
+      if (hideOtherObjects)
+         map.setRootObjectId(object.getObjectId());
+
       if (isVisible())
          map.showMap(mapAccessor);
       else
@@ -112,6 +119,12 @@ public class ObjectGeoLocationView extends ObjectView
    protected void createContent(Composite parent)
    {
       map = new ObjectGeoLocationViewer(parent, SWT.NONE, this);
+      hideOtherObjects = settings.getAsBoolean(getBaseId() + ".hideOtherObjects", hideOtherObjects);
+      if (hideOtherObjects)
+      {
+         map.setSingleObjectMode(true);
+         map.setRootObjectId(getObjectId());
+      }
 
       createActions();
       createPopupMenu();
@@ -164,6 +177,18 @@ public class ObjectGeoLocationView extends ObjectView
             setZoomLevel(zoomLevel - 1);
          }
       };
+
+      actionHideOtherObjects = new Action(i18n.tr("&Hide other objects"), ResourceManager.getImageDescriptor("icons/hide_other_objects.png")) {
+         @Override
+         public void run()
+         {
+            hideOtherObjects = isChecked();
+            map.setRootObjectId(hideOtherObjects ? getObjectId() : 0);
+            map.setSingleObjectMode(hideOtherObjects);
+            map.reloadMap();
+         }
+      };
+      actionHideOtherObjects.setChecked(hideOtherObjects);
    }
 
    /**
@@ -198,6 +223,8 @@ public class ObjectGeoLocationView extends ObjectView
    {
       manager.add(actionZoomIn);
       manager.add(actionZoomOut);
+      manager.add(new Separator());
+      manager.add(actionHideOtherObjects);
    }
 
    /**
@@ -206,9 +233,10 @@ public class ObjectGeoLocationView extends ObjectView
    @Override
    protected void fillLocalToolbar(ToolBarManager manager)
    {
-      super.fillLocalToolbar(manager);
       manager.add(actionZoomIn);
       manager.add(actionZoomOut);
+      manager.add(new Separator());
+      manager.add(actionHideOtherObjects);
    }
 
    /**
@@ -217,6 +245,7 @@ public class ObjectGeoLocationView extends ObjectView
    @Override
    public void dispose()
    {
+      settings.set(getBaseId() + ".hideOtherObjects", hideOtherObjects);
       settings.set(getBaseId() + ".zoom", mapAccessor.getZoom());
       super.dispose();
    }

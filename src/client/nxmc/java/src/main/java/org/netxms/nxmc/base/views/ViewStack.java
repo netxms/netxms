@@ -132,21 +132,7 @@ public class ViewStack extends Composite
          }
       });
 
-      enableFilter = new ToolItem(viewControlBar, SWT.CHECK);
-      enableFilter.setImage(SharedIcons.IMG_FILTER);
-      enableFilter.addSelectionListener(new SelectionAdapter() {
-         @Override
-         public void widgetSelected(SelectionEvent e)
-         {
-            View view = getSelection();
-            if (view != null)
-            {
-               view.enableFilter(enableFilter.getSelection());
-            }
-         }
-      });
       onFilterCloseCallback = new Runnable() {
-         
          @Override
          public void run()
          {
@@ -285,8 +271,31 @@ public class ViewStack extends Composite
       view.fillLocalToolbar(viewToolBarManager);      
       viewToolBarManager.update(true);      
 
-      enableFilter.setSelection(view.isFilterEnabled());
-      enableFilter.setEnabled(view.hasFilter());
+      if (view.hasFilter())
+      {
+         if (enableFilter == null)
+         {
+            enableFilter = new ToolItem(viewControlBar, SWT.CHECK, 0);
+            enableFilter.setImage(SharedIcons.IMG_FILTER);
+            enableFilter.addSelectionListener(new SelectionAdapter() {
+               @Override
+               public void widgetSelected(SelectionEvent e)
+               {
+                  View view = getSelection();
+                  if (view != null)
+                  {
+                     view.enableFilter(enableFilter.getSelection());
+                  }
+               }
+            });
+         }
+         enableFilter.setSelection(view.isFilterEnabled());
+      }
+      else if (enableFilter != null)
+      {
+         enableFilter.dispose();
+         enableFilter = null;
+      }
 
       view.activate();
    }
