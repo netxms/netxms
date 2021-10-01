@@ -1000,6 +1000,9 @@ void SyncPoliciesWithExtSubagents()
    }
 }
 
+/**
+ * Notify all connected external subagents about policy change
+ */
 void NotifyExtSubagentsOnPolicyInstall(uuid *guid)
 {
    for(int i = 0; i < s_subagents.size(); i++)
