@@ -1906,8 +1906,7 @@ uint32_t AgentConnection::uploadFile(const TCHAR *localFile, const TCHAR *destin
          }
       }
       //We don't need remote file list anymore
-      if (remoteFiles != nullptr)
-         delete remoteFiles;
+      delete remoteFiles;
 
       // If upload successfull - we need to merge file chunks together
       if (rcc == ERR_SUCCESS)
