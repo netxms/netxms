@@ -438,7 +438,7 @@ static uint32_t HandlerInetCidrRouteTable(SNMP_Variable *var, SNMP_Transport *tr
       return SNMP_ERR_SUCCESS;   // Unknown or unsupported address format, or prefix of no interest
 
    uint32_t *policy = oid + oid[12] + 14; // Policy follows prefix, oid[12] contains prefix length
-   if (policy - oid + 3 >= var->getName().length())
+   if (static_cast<size_t>(policy - oid + 3) >= var->getName().length())
       return SNMP_ERR_SUCCESS;   // Check that length is valid and do not point beyond OID end
 
    InetAddress nextHop = InetAddressFromOID(policy + policy[0] + 1, false);
