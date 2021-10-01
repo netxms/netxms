@@ -51,7 +51,7 @@ import org.slf4j.LoggerFactory;
 public class Objects extends AbstractObjectHandler
 {
    private Logger log = LoggerFactory.getLogger(AbstractHandler.class);
-   
+
    /**
     * @see org.netxms.websvc.handlers.AbstractHandler#getCollection(org.json.JSONObject)
     */
@@ -61,12 +61,12 @@ public class Objects extends AbstractObjectHandler
       NXCSession session = getSession();
       if (!session.areObjectsSynchronized())
          session.syncObjects();
-      
+
       boolean topLevelOnly = (query.get("topLevelOnly") != null) ? Boolean.parseBoolean(query.get("topLevelOnly")) : false;
       List<AbstractObject> objects = topLevelOnly ? Arrays.asList(session.getTopLevelObjects()) : session.getAllObjects();
 
       boolean useRegex = (query.get("regex") != null) ? Boolean.parseBoolean(query.get("regex")) : false;
-      
+
       String areaFilter = query.get("area");
       String classFilter = query.get("class");
       String nameFilter = query.get("name");
@@ -87,7 +87,7 @@ public class Objects extends AbstractObjectHandler
       {
          if (!k.startsWith("@"))
             continue;
-         
+
          if (customAttributes == null)
             customAttributes = new HashMap<String, Object>();
          if (useRegex)
@@ -95,9 +95,9 @@ public class Objects extends AbstractObjectHandler
          else
             customAttributes.put(k.substring(1), query.get(k));
       }
-      
-      if ((areaFilter != null) || (classFilter != null) || (customAttributes != null) || (nameFilter != null) 
-            || (parentFilter != null) || (zoneFilter != null) || (primaryNameFilter != null)) {
+
+      if ((areaFilter != null) || (classFilter != null) || (customAttributes != null) || (nameFilter != null) || (parentFilter != null) || (zoneFilter != null) || (primaryNameFilter != null))
+      {
          double[] area = null;
          if (areaFilter != null)
          {
@@ -126,7 +126,7 @@ public class Objects extends AbstractObjectHandler
          {
             classes = classFilter.split(",");
          }
-         
+
          long parentId;
          if (parentFilter != null)
          {
@@ -167,9 +167,9 @@ public class Objects extends AbstractObjectHandler
             if (zones != null)
             {
                long zoneUin = getZoneUin(o);
-               if(zoneUin == -1)
+               if (zoneUin == -1)
                   continue;
-                  
+
                boolean match = false;
                for(long z : zones)
                {
@@ -182,7 +182,7 @@ public class Objects extends AbstractObjectHandler
                if (!match)
                   continue;
             }
-            
+
             // Filter by name
             if (useRegex)
             {
@@ -194,7 +194,7 @@ public class Objects extends AbstractObjectHandler
                if ((nameFilter != null) && !nameFilter.isEmpty() && !Glob.matchIgnoreCase(nameFilter, o.getObjectName()))
                   continue;
             }
-            
+
             // Filter by class
             if (classes != null)
             {
@@ -210,7 +210,7 @@ public class Objects extends AbstractObjectHandler
                if (!match)
                   continue;
             }
-            
+
             // Filter by parent
             if ((parentId != 0) && !o.isChildOf(parentId))
                continue;
@@ -221,7 +221,7 @@ public class Objects extends AbstractObjectHandler
                if (!o.getGeolocation().isWithinArea(area[0], area[1], area[2], area[3]))
                   continue;
             }
-            
+
             // Filter by custom attribute
             if (customAttributes != null)
             {
@@ -257,21 +257,26 @@ public class Objects extends AbstractObjectHandler
             }
 
             // Filter by primary name
-            if (primaryNameFilter != null) {
+            if (primaryNameFilter != null)
+            {
                // If we want to filter by primary name this implies that we are only looking
                // for nodes.
-               if (o instanceof AbstractNode) {
-                  AbstractNode node = (AbstractNode) o;
-                  if (useRegex) {
-                     if ((primaryNameFilterRegex != null)
-                           && !primaryNameFilterRegex.matcher(node.getPrimaryName()).matches())
-                        continue;
-                  } else {
-                     if ((primaryNameFilter != null) && !primaryNameFilter.isEmpty()
-                           && !Glob.matchIgnoreCase(primaryNameFilter, node.getPrimaryName()))
+               if (o instanceof AbstractNode)
+               {
+                  AbstractNode node = (AbstractNode)o;
+                  if (useRegex)
+                  {
+                     if ((primaryNameFilterRegex != null) && !primaryNameFilterRegex.matcher(node.getPrimaryName()).matches())
                         continue;
                   }
-               } else {
+                  else
+                  {
+                     if ((primaryNameFilter != null) && !primaryNameFilter.isEmpty() && !Glob.matchIgnoreCase(primaryNameFilter, node.getPrimaryName()))
+                        continue;
+                  }
+               }
+               else
+               {
                   continue;
                }
             }
@@ -280,12 +285,13 @@ public class Objects extends AbstractObjectHandler
          }
          objects = filteredObjects;
       }
-      
+
       return new ResponseContainer("objects", objects);
    }
-   
+
    /**
     * Get zoneUIN depending on object class
+    * 
     * @param obj
     * @return
     */
@@ -318,7 +324,9 @@ public class Objects extends AbstractObjectHandler
       return -1;
    }
 
-   /* (non-Javadoc)
+   /*
+    * (non-Javadoc)
+    * 
     * @see org.netxms.websvc.handlers.AbstractHandler#get(java.lang.String)
     */
    @Override
@@ -327,7 +335,9 @@ public class Objects extends AbstractObjectHandler
       return getObject();
    }
 
-   /* (non-Javadoc)
+   /*
+    * (non-Javadoc)
+    * 
     * @see org.netxms.websvc.handlers.AbstractHandler#getEntityIdFieldName()
     */
    @Override
@@ -341,14 +351,14 @@ public class Objects extends AbstractObjectHandler
     */
    @Override
    protected Object create(JSONObject data) throws Exception
-   {      
+   {
       int type = JsonTools.getIntFromJson(data, "objectType", -1);
       String name = JsonTools.getStringFromJson(data, "name", null);
-      long parentId = JsonTools.getLongFromJson(data, "parentId", -1);      
-      if (type == -1 || name == null || parentId == 1) 
+      long parentId = JsonTools.getLongFromJson(data, "parentId", -1);
+      if (type == -1 || name == null || parentId == 1)
          throw new NXCException(RCC.INVALID_ARGUMENT, "Object type, name and parent id should be set for new object");
-      
-      NXCObjectCreationData createData = new NXCObjectCreationData(type, name, parentId);    
+
+      NXCObjectCreationData createData = new NXCObjectCreationData(type, name, parentId);
       createData.setComments(JsonTools.getStringFromJson(data, "comments", createData.getComments()));
       createData.setCreationFlags(JsonTools.getIntFromJson(data, "creationFlags", createData.getFlags()));
       createData.setMapType(JsonTools.getIntFromJson(data, "mapType", createData.getMapType()));
@@ -366,17 +376,17 @@ public class Objects extends AbstractObjectHandler
       createData.setDeviceId(JsonTools.getStringFromJson(data, "deviceId", createData.getDeviceId()));
       createData.setFlags(JsonTools.getIntFromJson(data, "flags", createData.getFlags()));
       createData.setXmlRegConfig(JsonTools.getStringFromJson(data, "xmlRegConfig", createData.getXmlRegConfig()));
-      createData.setCommProtocol(JsonTools.getIntFromJson(data, "commProtocol", createData.getCommProtocol()));   
-      createData.setCommProtocol(JsonTools.getIntFromJson(data, "instanceDiscoveryMethod", createData.getInstanceDiscoveryMethod()));   
-            
+      createData.setCommProtocol(JsonTools.getIntFromJson(data, "commProtocol", createData.getCommProtocol()));
+      createData.setCommProtocol(JsonTools.getIntFromJson(data, "instanceDiscoveryMethod", createData.getInstanceDiscoveryMethod()));
+
       NXCObjectModificationData mdObject = JsonTools.createGsonInstance().fromJson(data.toString(), NXCObjectModificationData.class);
       createData.updateFromMofidyData(mdObject);
-      
+
       NXCSession session = getSession();
       long nodeId = session.createObject(createData);
-      mdObject.setObjectId(nodeId);         
-      session.modifyObject(mdObject);        
-      
+      mdObject.setObjectId(nodeId);
+      session.modifyObject(mdObject);
+
       JSONObject result = new JSONObject();
       result.put("id", nodeId);
       return result;
@@ -390,19 +400,21 @@ public class Objects extends AbstractObjectHandler
    {
       NXCSession session = getSession();
       NXCObjectModificationData mdObject = JsonTools.createGsonInstance().fromJson(data.toString(), NXCObjectModificationData.class);
-      mdObject.setObjectId(getObjectId());           
-      session.modifyObject(mdObject);      
+      mdObject.setObjectId(getObjectId());
+      session.modifyObject(mdObject);
       return null;
    }
 
-   /* (non-Javadoc)
+   /*
+    * (non-Javadoc)
+    * 
     * @see org.netxms.websvc.handlers.AbstractHandler#delete(java.lang.String)
     */
    @Override
    protected Object delete(String id) throws Exception
-   {  
+   {
       NXCSession session = getSession();
-      session.deleteObject(getObjectId());      
-      return null;      
+      session.deleteObject(getObjectId());
+      return null;
    }
 }

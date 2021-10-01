@@ -16,7 +16,6 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-
 package org.netxms.websvc.handlers;
 
 import org.json.JSONArray;
@@ -27,21 +26,25 @@ import java.util.Date;
 /**
  * Handler for event management
  */
-public class Events extends AbstractHandler {
+public class Events extends AbstractHandler
+{
    /**
     * @see org.netxms.websvc.handlers.AbstractHandler#create(org.json.JSONObject)
     */
    @Override
-   protected Object create(JSONObject data) throws Exception {
+   protected Object create(JSONObject data) throws Exception
+   {
       long eventCode = JsonTools.getLongFromJson(data, "eventCode", 0);
       String eventName = JsonTools.getStringFromJson(data, "eventName", null);
       long objectId = JsonTools.getLongFromJson(data, "objectId", 0);
 
       JSONArray parametersJsonArray = JsonTools.getJsonArrayFromJson(data, "parameters", null);
       String[] parameters = new String[0];
-      if (parametersJsonArray != null) {
+      if (parametersJsonArray != null)
+      {
          parameters = new String[parametersJsonArray.length()];
-         for (int i = 0; i < parametersJsonArray.length(); i++) {
+         for(int i = 0; i < parametersJsonArray.length(); i++)
+         {
             parameters[i] = parametersJsonArray.getString(i);
          }
       }

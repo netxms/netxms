@@ -24,12 +24,13 @@ import org.netxms.websvc.handlers.AccessIntegrationTools;
 import org.netxms.websvc.handlers.Alarms;
 import org.netxms.websvc.handlers.BindHandler;
 import org.netxms.websvc.handlers.BindToHandler;
-import org.netxms.websvc.handlers.BusinessServiceUptime;
 import org.netxms.websvc.handlers.BusinessServiceChecks;
 import org.netxms.websvc.handlers.BusinessServiceTickets;
+import org.netxms.websvc.handlers.BusinessServiceUptime;
 import org.netxms.websvc.handlers.DCObjectLastValue;
 import org.netxms.websvc.handlers.DataCollectionConfigurationHandler;
 import org.netxms.websvc.handlers.DataCollectionObjectHandler;
+import org.netxms.websvc.handlers.Events;
 import org.netxms.websvc.handlers.GrafanaAlarms;
 import org.netxms.websvc.handlers.GrafanaDataCollection;
 import org.netxms.websvc.handlers.HistoricalData;
@@ -49,7 +50,6 @@ import org.netxms.websvc.handlers.UnbindHandler;
 import org.netxms.websvc.handlers.UserAgentNotifications;
 import org.netxms.websvc.handlers.UserPassword;
 import org.netxms.websvc.handlers.Users;
-import org.netxms.websvc.handlers.Events;
 import org.restlet.Application;
 import org.restlet.Restlet;
 import org.restlet.data.Method;
@@ -93,6 +93,7 @@ public class WebSvcApplication extends Application
       router.attach("/alarms", Alarms.class);
       router.attach("/alarms/{id}", Alarms.class);
       router.attach("/authenticate", AccessIntegrationTools.class);
+      router.attach("/events", Events.class);
       router.attach("/grafana/alarms", GrafanaAlarms.class);
       router.attach("/grafana/datacollection", GrafanaDataCollection.class);
       router.attach("/info", InfoHandler.class);
@@ -123,7 +124,6 @@ public class WebSvcApplication extends Application
       router.attach("/users", Users.class);
       router.attach("/users/{id}", Users.class);
       router.attach("/users/{id}/password", UserPassword.class);
-      router.attach("/events", Events.class);
       return router;
    }
 }
