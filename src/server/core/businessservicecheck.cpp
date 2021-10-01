@@ -31,8 +31,8 @@ BusinessServiceCheck::BusinessServiceCheck(uint32_t serviceId)
 {
 	m_id = 0;
 	m_type = CheckType::OBJECT;
-	m_script = NULL;
-	m_pCompiledScript = NULL;
+	m_script = nullptr;
+	m_pCompiledScript = nullptr;
 	m_reason[0] = 0;
 	m_relatedObject = 0;
 	m_relatedDCI = 0;
@@ -40,16 +40,17 @@ BusinessServiceCheck::BusinessServiceCheck(uint32_t serviceId)
 	m_serviceId = serviceId;
 	m_statusThreshold = 0;
 	_tcscpy(m_name, _T("Default check name"));
+	m_mutex = MutexCreate();
 }
 
 /**
  * Business service check constructor
  */
-BusinessServiceCheck::BusinessServiceCheck(uint32_t serviceId, int type, uint32_t relatedObject, uint32_t relatedDCI, const TCHAR* name, int threshhold, const TCHAR* script)
+BusinessServiceCheck::BusinessServiceCheck(uint32_t serviceId, int type, uint32_t relatedObject, uint32_t relatedDCI, const TCHAR* name, int threshhold)
 {
 	m_id = 0;
 	m_type = type;
-	m_script = MemCopyString(script);
+	m_script = nullptr;
 	m_pCompiledScript = nullptr;
 	m_reason[0] = 0;
 	m_relatedObject = relatedObject;
@@ -65,7 +66,28 @@ BusinessServiceCheck::BusinessServiceCheck(uint32_t serviceId, int type, uint32_
 	{
 		_tcscpy(m_name, _T("Default check name"));
 	}
+	m_mutex = MutexCreate();
+}
 
+/**
+ * Business service check constructor
+ */
+BusinessServiceCheck::BusinessServiceCheck(uint32_t serviceId, BusinessServiceCheck& check)
+{
+	generateId();
+	m_type = check.m_type;
+	m_script = MemCopyString(check.m_script);
+	m_pCompiledScript = nullptr;
+	m_reason[0] = 0;
+	m_relatedObject = check.m_relatedObject;
+	m_relatedDCI = check.m_relatedDCI;
+	m_currentTicket = 0;
+	m_serviceId = serviceId;
+	m_statusThreshold = check.m_statusThreshold;
+	check.lock();
+	_tcslcpy(m_name, check.m_name, 1023);
+	check.unlock();
+	m_mutex = MutexCreate();
 }
 
 /**
@@ -75,6 +97,7 @@ BusinessServiceCheck::~BusinessServiceCheck()
 {
 	MemFree(m_script);
 	delete m_pCompiledScript;
+	MutexDestroy(m_mutex);
 }
 
 /**
@@ -90,6 +113,7 @@ void BusinessServiceCheck::generateId()
  */
 void BusinessServiceCheck::modifyFromMessage(NXCPMessage *request)
 {
+	lock();
 	// If new check
    if (m_id == 0)
 		generateId();
@@ -120,8 +144,8 @@ void BusinessServiceCheck::modifyFromMessage(NXCPMessage *request)
    {
       m_statusThreshold = request->getFieldAsInt32(VID_THRESHOLD);
    }
-
 	saveToDatabase();
+	unlock();
 }
 
 /**
@@ -129,6 +153,7 @@ void BusinessServiceCheck::modifyFromMessage(NXCPMessage *request)
  */
 void BusinessServiceCheck::loadFromSelect(DB_RESULT hResult, int row)
 {
+	lock();
 	m_id = DBGetFieldULong(hResult, row, 0);
 	m_serviceId = DBGetFieldULong(hResult, row, 1);
 	m_type = DBGetFieldLong(hResult, row, 2);
@@ -140,6 +165,7 @@ void BusinessServiceCheck::loadFromSelect(DB_RESULT hResult, int row)
 	m_script = DBGetField(hResult, row, 7, nullptr, 0);
 	m_currentTicket = DBGetFieldULong(hResult, row, 8);
 	compileScript();
+	unlock();
 }
 
 /**
@@ -147,8 +173,10 @@ void BusinessServiceCheck::loadFromSelect(DB_RESULT hResult, int row)
  */
 void BusinessServiceCheck::compileScript()
 {
-	if (m_type != CheckType::SCRIPT || m_script == NULL)
+	if (m_type != CheckType::SCRIPT || m_script == nullptr)
+	{
 	   return;
+	}
 
    const int errorMsgLen = 512;
    TCHAR errorMsg[errorMsgLen];
@@ -166,6 +194,7 @@ void BusinessServiceCheck::compileScript()
  */
 void BusinessServiceCheck::fillMessage(NXCPMessage *msg, uint32_t baseId)
 {
+	lock();
    msg->setField(baseId, m_id);
    msg->setField(baseId + 1, m_type);
    msg->setField(baseId + 2, getReason());
@@ -174,6 +203,7 @@ void BusinessServiceCheck::fillMessage(NXCPMessage *msg, uint32_t baseId)
    msg->setField(baseId + 5, m_statusThreshold);
    msg->setField(baseId + 6, m_name);
    msg->setField(baseId + 7, m_script);
+	unlock();
 }
 
 /**
@@ -216,6 +246,7 @@ bool BusinessServiceCheck::saveToDatabase()
 	bool success = false;
 	if (hStmt != nullptr)
 	{
+		lock();
 		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_serviceId);
 		DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (uint32_t)m_type);
 		DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_name, DB_BIND_STATIC);
@@ -225,6 +256,7 @@ bool BusinessServiceCheck::saveToDatabase()
 		DBBind(hStmt, 7, DB_SQLTYPE_TEXT, m_script, DB_BIND_STATIC);
 		DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, m_currentTicket);
 		DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, m_id);
+		unlock();
 		success = DBExecute(hStmt);
 		DBFreeStatement(hStmt);
 	}
@@ -233,6 +265,7 @@ bool BusinessServiceCheck::saveToDatabase()
 		success = false;
 	}
 	DBConnectionPoolReleaseConnection(hdb);
+
 	return success;
 }
 
@@ -252,6 +285,7 @@ bool BusinessServiceCheck::deleteFromDatabase()
  */
 int BusinessServiceCheck::execute(BusinessServiceTicketData* ticket)
 {
+	lock();
 	int oldStatus = m_status;
 	switch (m_type)
 	{
@@ -366,7 +400,9 @@ int BusinessServiceCheck::execute(BusinessServiceTicketData* ticket)
 			m_reason[0] = 0;
 		}
 	}
-	return m_status;
+	int newStatus = m_status;
+	unlock();
+	return newStatus;
 }
 
 /**

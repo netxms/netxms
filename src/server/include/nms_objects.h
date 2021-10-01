@@ -4187,30 +4187,31 @@ protected:
    uint32_t m_currentTicket;
    int m_statusThreshold;
    uint32_t m_serviceId;
+   MUTEX m_mutex;
 
    bool insertTicket(BusinessServiceTicketData* ticket);
    void closeTicket();
    void compileScript();
    const TCHAR* getReason();
 
+   void lock() { MutexLock(m_mutex); }
+   void unlock() { MutexUnlock(m_mutex); }
+
 public:
    BusinessServiceCheck(uint32_t serviceId = 0);
-   BusinessServiceCheck(uint32_t serviceId, int type, uint32_t relatedObject, uint32_t relatedDCI, const TCHAR* name, int threshhold, const TCHAR* script = nullptr);
+   BusinessServiceCheck(uint32_t serviceId, int type, uint32_t relatedObject, uint32_t relatedDCI, const TCHAR* name, int threshhold);
+   BusinessServiceCheck(uint32_t serviceId, BusinessServiceCheck& check);
    virtual ~BusinessServiceCheck();
 
-   int getType() const { return m_type; }
-   const TCHAR* getScript() const { return m_script; }
-   uint32_t getId() const { return m_id; }
    void generateId();
-   uint32_t getRelatedObject() const { return m_relatedObject; }
-   uint32_t getRelatedDCI() const { return m_relatedDCI; }
-   uint32_t getCurrentTicket() const { return m_currentTicket; }
-   int getStatus() const { return m_status; }
-   const TCHAR* getName()  const { return m_name; }
-   int getThreshold() const { return m_statusThreshold; }
+   int getType() { return m_type; }
+   uint32_t getId() { return m_id; }
+   uint32_t getRelatedObject() { return m_relatedObject; }
+   uint32_t getRelatedDCI() { return m_relatedDCI; }
+   int getStatus() { return m_status; }
+   String getName() { return GetStringAttributeWithLock(m_name, m_mutex); }
 
    int execute(BusinessServiceTicketData* ticket);
-   void copyCheck(const BusinessServiceCheck& check);
 
    void modifyFromMessage(NXCPMessage *pRequest);
    void loadFromSelect(DB_RESULT hResult, int row);
@@ -4253,8 +4254,7 @@ class NXCORE_EXPORTABLE BaseBusinessService : public AbstractContainer, public A
 {
   typedef AbstractContainer super;
 protected:
-   ObjectArray<BusinessServiceCheck> m_checks;
-   bool m_busy;
+   SharedObjectArray<BusinessServiceCheck> m_checks;
    bool m_pollingDisabled;
    time_t m_lastPollTime;
    uint32_t m_objectStatusThreshhold;
@@ -4272,17 +4272,19 @@ protected:
    virtual uint32_t modifyFromMessageInternal(NXCPMessage *pRequest) override;
    virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId) override;
 
+   void checksLock() { MutexLock(m_checkMutex); }
+   void checksUnlock() { MutexUnlock(m_checkMutex); }
+
 public:
    BaseBusinessService(const TCHAR* name);
    BaseBusinessService(BaseBusinessService *prototype, const TCHAR *name, const TCHAR *instance);
    BaseBusinessService();
    virtual ~BaseBusinessService();
 
-   ObjectArray<BusinessServiceCheck> *getChecks() { return &m_checks; }
+   unique_ptr<SharedObjectArray<BusinessServiceCheck>> getChecks();
    void deleteCheck(uint32_t checkId);
    virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
-   void copyChecks(const ObjectArray<BusinessServiceCheck>& checks);
    void modifyCheckFromMessage(NXCPMessage *pRequest);
 };
 

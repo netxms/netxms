@@ -34,10 +34,9 @@
 /**
  * Base business service default constructor
  */
-BaseBusinessService::BaseBusinessService() : super(), AutoBindTarget(this), m_checks(16, 16, Ownership::True)
+BaseBusinessService::BaseBusinessService() : super(), AutoBindTarget(this)
 {
    m_id = 0;
-   m_busy = false;
    m_pollingDisabled = false;
    m_lastPollTime = 0;
    m_prototypeId = 0;
@@ -48,14 +47,14 @@ BaseBusinessService::BaseBusinessService() : super(), AutoBindTarget(this), m_ch
    m_instanceSource = 0;
    m_objectStatusThreshhold = 0;
    m_dciStatusThreshhold = 0;
+   m_checkMutex = MutexCreate();
 }
 
 /**
  * Base business service default constructor
  */
-BaseBusinessService::BaseBusinessService(const TCHAR *name) : super(name, 0), AutoBindTarget(this), m_checks(16, 16, Ownership::True)
+BaseBusinessService::BaseBusinessService(const TCHAR *name) : super(name, 0), AutoBindTarget(this)
 {
-   m_busy = false;
    m_pollingDisabled = false;
    m_lastPollTime = 0;
    m_prototypeId = 0;
@@ -66,15 +65,15 @@ BaseBusinessService::BaseBusinessService(const TCHAR *name) : super(name, 0), Au
    m_instanceSource = 0;
    m_objectStatusThreshhold = 0;
    m_dciStatusThreshhold = 0;
+   m_checkMutex = MutexCreate();
 }
 
 /**
  * Create business service from prototype
  */
 BaseBusinessService::BaseBusinessService(BaseBusinessService *prototype, const TCHAR *name, const TCHAR *instance) : super(name, 0),
-         AutoBindTarget(this), m_checks(prototype->m_checks.size(), 16, Ownership::True)
+         AutoBindTarget(this)
 {
-   m_busy = false;
    m_pollingDisabled = false;
    m_lastPollTime = 0;
    m_prototypeId = prototype->m_id;
@@ -85,12 +84,20 @@ BaseBusinessService::BaseBusinessService(BaseBusinessService *prototype, const T
    m_instanceSource = 0;
    m_objectStatusThreshhold = prototype->m_objectStatusThreshhold;
    m_dciStatusThreshhold = prototype->m_dciStatusThreshhold;
+   m_checkMutex = MutexCreate();
 
    for(int i = 0; i < MAX_AUTOBIND_TARGET_FILTERS; i++)
       setAutoBindFilter(i, prototype->m_autoBindFilterSources[i]);
    m_autoBindFlags = prototype->m_autoBindFlags;
 
-   copyChecks(m_checks);
+   unique_ptr<SharedObjectArray<BusinessServiceCheck>> checks = prototype->getChecks();
+   for (shared_ptr<BusinessServiceCheck> check : *checks)
+   {
+      BusinessServiceCheck *ch = new BusinessServiceCheck(m_id, *check.get());
+      m_checks.add(ch);
+      ch->generateId();
+      ch->saveToDatabase();
+   }
 }
 
 /**
@@ -98,9 +105,18 @@ BaseBusinessService::BaseBusinessService(BaseBusinessService *prototype, const T
  */
 BaseBusinessService::~BaseBusinessService()
 {
+   MutexDestroy(m_checkMutex);
    MemFree(m_instance);
    MemFree(m_instanceDiscoveryData);
    MemFree(m_instanceDiscoveryFilter);
+}
+
+unique_ptr<SharedObjectArray<BusinessServiceCheck>> BaseBusinessService::getChecks()
+{
+   checksLock();
+   auto checks = make_unique<SharedObjectArray<BusinessServiceCheck>>(m_checks);
+   checksUnlock();
+   return checks;
 }
 
 /**
@@ -128,7 +144,9 @@ bool BaseBusinessService::loadChecksFromDatabase(DB_HANDLE hdb)
    {
       BusinessServiceCheck *check = new BusinessServiceCheck();
       check->loadFromSelect(hResult, i);
+      checksLock();
       m_checks.add(check);
+      checksUnlock();
    }
 
    DBFreeResult(hResult);
@@ -141,30 +159,18 @@ bool BaseBusinessService::loadChecksFromDatabase(DB_HANDLE hdb)
  */
 void BaseBusinessService::deleteCheck(uint32_t checkId)
 {
+   checksLock();
    for (auto it = m_checks.begin(); it.hasNext();)
    {
       if (it.next()->getId() == checkId)
       {
          it.remove();
+         checksUnlock();
          deleteCheckFromDatabase(checkId);
          break;
       }
    }
-}
-
-/**
- * Copy business service checks from checks array
- */
-void BaseBusinessService::copyChecks(const ObjectArray<BusinessServiceCheck> &checks)
-{
-   for (int i = 0; i < checks.size(); i++)
-   {
-      BusinessServiceCheck *ch = new BusinessServiceCheck(m_id, 
-         checks.get(i)->getType(), checks.get(i)->getRelatedObject(), checks.get(i)->getRelatedDCI(), checks.get(i)->getName(), checks.get(i)->getThreshold(), checks.get(i)->getScript());
-      m_checks.add(ch);
-      ch->generateId();
-      ch->saveToDatabase();
-   }
+   checksUnlock();
 }
 
 /**
@@ -176,12 +182,10 @@ void BaseBusinessService::deleteCheckFromDatabase(uint32_t checkId)
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("DELETE FROM business_service_checks WHERE id=?"));
    if (hStmt != nullptr)
    {
-      //lockProperties();
       DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, checkId);
       DBExecute(hStmt);
       DBFreeStatement(hStmt);
       NotifyClientsOnBusinessServiceCheckDelete(*this, checkId);
-      //unlockProperties();
    }
    DBConnectionPoolReleaseConnection(hdb);
 }
@@ -192,7 +196,8 @@ void BaseBusinessService::deleteCheckFromDatabase(uint32_t checkId)
 void BaseBusinessService::modifyCheckFromMessage(NXCPMessage *request)
 {
    uint32_t checkId = request->getFieldAsUInt32(VID_BUSINESS_SERVICE_CHECK_ID);
-   BusinessServiceCheck *check = nullptr;
+   shared_ptr<BusinessServiceCheck> check;
+   checksLock();
    if (checkId != 0)
    {
       for (auto c : m_checks)
@@ -206,10 +211,11 @@ void BaseBusinessService::modifyCheckFromMessage(NXCPMessage *request)
    }
    if (check == nullptr)
    {
-      check = new BusinessServiceCheck(m_id);
+      check = make_shared<BusinessServiceCheck>(m_id);
       m_checks.add(check);
    }
    check->modifyFromMessage(request);
+   checksUnlock();
    NotifyClientsOnBusinessServiceCheckUpdate(*this, check);
 }
 
@@ -397,7 +403,6 @@ void BusinessService::statusPoll(PollerInfo *poller, ClientSession *session, UIN
    if (IsShutdownInProgress())
    {
       sendPollerMsg(_T("Server shutdown in progress, poll canceled \r\n"));
-      m_busy = false;
       return;
    }
 
@@ -407,15 +412,18 @@ void BusinessService::statusPoll(PollerInfo *poller, ClientSession *session, UIN
    nxlog_debug_tag(DEBUG_TAG, 5, _T("Started polling of business service %s [%d]"), m_name, (int)m_id);
    sendPollerMsg(_T("Started status poll of business service %s [%d] \r\n"), m_name, (int)m_id);
    m_lastPollTime = time(nullptr);
+   lockProperties();
    int lastPollStatus = m_status;
-   m_status = STATUS_NORMAL;
+   unlockProperties();
+   int newStatus = STATUS_NORMAL;
 
    // Loop through the kids and execute their either scripts or thresholds
    readLockChildList();
    calculateCompoundStatus();
    unlockChildList();
 
-   for (auto check : m_checks)
+   unique_ptr<SharedObjectArray<BusinessServiceCheck>> checks = getChecks();
+   for (shared_ptr<BusinessServiceCheck> check : *checks)
    {
       BusinessServiceTicketData data = {};
       int oldCheckStatus = check->getStatus();
@@ -434,21 +442,26 @@ void BusinessService::statusPoll(PollerInfo *poller, ClientSession *session, UIN
       }
       if (oldCheckStatus != newCheckStatus)
       {
-         sendPollerMsg(_T("Business service check \"%s\" status changed, set to: %s\r\n"), check->getName(), newCheckStatus == STATUS_CRITICAL ? _T("Critical") : _T("Normal"));
+         sendPollerMsg(_T("Business service check \"%s\" status changed, set to: %s\r\n"), check->getName().cstr(), newCheckStatus == STATUS_CRITICAL ? _T("Critical") : _T("Normal"));
          NotifyClientsOnBusinessServiceCheckUpdate(*this, check);
       }
-      if (newCheckStatus > m_status)
+      lockProperties();
+      if (newCheckStatus > newStatus)
       {
-         m_status = newCheckStatus;
+         newStatus = newCheckStatus;
       }
+      unlockProperties();
    }
 
-   if (lastPollStatus != m_status)
+   if (lastPollStatus != newStatus)
    {
-      sendPollerMsg(_T("Business service status changed, set to: %s\r\n"), m_status == STATUS_CRITICAL ? _T("Critical") : _T("Normal"));
+      sendPollerMsg(_T("Business service status changed, set to: %s\r\n"), newStatus == STATUS_CRITICAL ? _T("Critical") : _T("Normal"));
+      lockProperties();
+      m_status = newStatus;
+      unlockProperties();
    }
 
-   if (m_status > lastPollStatus)
+   if (newStatus > lastPollStatus)
    {
       DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
       DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO business_service_downtime (record_id,service_id,from_timestamp,to_timestamp) VALUES (?,?,?,0)"));
@@ -462,7 +475,7 @@ void BusinessService::statusPoll(PollerInfo *poller, ClientSession *session, UIN
       }
       DBConnectionPoolReleaseConnection(hdb);
    }
-   if (m_status < lastPollStatus)
+   if (newStatus < lastPollStatus)
    {
       DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
       DB_STATEMENT hStmt = DBPrepare(hdb, _T("UPDATE business_service_downtime SET to_timestamp=? WHERE service_id=? AND to_timestamp=0"));
@@ -476,9 +489,10 @@ void BusinessService::statusPoll(PollerInfo *poller, ClientSession *session, UIN
       DBConnectionPoolReleaseConnection(hdb);
    }
 
+   lockProperties();
    sendPollerMsg(_T("Finished status polling of business service %s [%d] \r\n"), m_name, (int)m_id);
    nxlog_debug_tag(DEBUG_TAG, 5, _T("Finished status polling of business service %s [%d]"), m_name, (int)m_id);
-   m_busy = false;
+   unlockProperties();
    pollerUnlock();
 }
 
@@ -574,8 +588,9 @@ void BusinessService::validateAutomaticObjectChecks()
       AutoBindDecision decision = isApplicable(object);
       if (decision != AutoBindDecision_Ignore)
       {
-         BusinessServiceCheck* selectedCheck = nullptr;
-         for (BusinessServiceCheck* check : m_checks)
+         shared_ptr<BusinessServiceCheck> selectedCheck;
+         unique_ptr<SharedObjectArray<BusinessServiceCheck>> checks = getChecks();
+         for (shared_ptr<BusinessServiceCheck> check : *checks)
          {
             if ((check->getType() == BusinessServiceCheck::CheckType::OBJECT) && (check->getRelatedObject() == object->getId()))
             {
@@ -585,17 +600,19 @@ void BusinessService::validateAutomaticObjectChecks()
          }
          if ((selectedCheck != nullptr) && (decision == AutoBindDecision_Unbind) && isAutoUnbindEnabled(0))
          {
-            nxlog_debug_tag(DEBUG_TAG, 6, _T("BusinessService::validateAutomaticObjectChecks(%s): object check %s [%u] deleted"), m_name, selectedCheck->getName(), selectedCheck->getId());
-            sendPollerMsg(_T("   Object based check \"%s\" deleted\r\n"), selectedCheck->getName());
+            nxlog_debug_tag(DEBUG_TAG, 6, _T("BusinessService::validateAutomaticObjectChecks(%s): object check %s [%u] deleted"), m_name, selectedCheck->getName().cstr(), selectedCheck->getId());
+            sendPollerMsg(_T("   Object based check \"%s\" deleted\r\n"), selectedCheck->getName().cstr());
             deleteCheck(selectedCheck->getId());
          }
          if ((selectedCheck == nullptr) && (decision == AutoBindDecision_Bind))
          {
             TCHAR checkName[MAX_OBJECT_NAME];
             _sntprintf(checkName, MAX_OBJECT_NAME, _T("%s"), object->getName());
-            BusinessServiceCheck *check = new BusinessServiceCheck(m_id, BusinessServiceCheck::CheckType::OBJECT, object->getId(), 0, checkName, m_objectStatusThreshhold);
-            m_checks.add(check);
+            auto check = make_shared<BusinessServiceCheck>(m_id, BusinessServiceCheck::CheckType::OBJECT, object->getId(), 0, checkName, m_objectStatusThreshhold);
             check->generateId();
+            checksLock();
+            m_checks.add(check);
+            checksUnlock();
             check->saveToDatabase();
             nxlog_debug_tag(DEBUG_TAG, 6, _T("BusinessService::validateAutomaticObjectChecks(%s): object check %s [%u] created"), m_name, checkName, check->getId());
             sendPollerMsg(_T("   Object based check \"%s\" created\r\n"), checkName);
@@ -631,8 +648,9 @@ void BusinessService::validateAutomaticDCIChecks()
          AutoBindDecision decision = isApplicable(object, dci, 1);
          if (decision != AutoBindDecision_Ignore)
          {
-            BusinessServiceCheck* selectedCheck = nullptr;
-            for (BusinessServiceCheck* check : m_checks)
+            shared_ptr<BusinessServiceCheck> selectedCheck;
+            unique_ptr<SharedObjectArray<BusinessServiceCheck>> checks = getChecks();
+            for (shared_ptr<BusinessServiceCheck> check : *checks)
             {
                if ((check->getType() == BusinessServiceCheck::CheckType::DCI) && (check->getRelatedObject() == object->getId()) && (check->getRelatedDCI() == dci->getId()))
                {
@@ -642,17 +660,19 @@ void BusinessService::validateAutomaticDCIChecks()
             }
             if ((selectedCheck != nullptr) && (decision == AutoBindDecision_Unbind) && isAutoUnbindEnabled(1))
             {
-               nxlog_debug_tag(DEBUG_TAG, 6, _T("BusinessService::validateAutomaticObjectChecks(%s): DCI check %s [%u] deleted"), m_name, selectedCheck->getName(), selectedCheck->getId());
-               sendPollerMsg(_T("   DCI based check \"%s\" deleted\r\n"), selectedCheck->getName());
+               nxlog_debug_tag(DEBUG_TAG, 6, _T("BusinessService::validateAutomaticObjectChecks(%s): DCI check %s [%u] deleted"), m_name, selectedCheck->getName().cstr(), selectedCheck->getId());
+               sendPollerMsg(_T("   DCI based check \"%s\" deleted\r\n"), selectedCheck->getName().cstr());
                deleteCheck(selectedCheck->getId());
             }
             if ((selectedCheck == nullptr) && (decision == AutoBindDecision_Bind))
             {
                TCHAR checkName[1023];
                _sntprintf(checkName, 1023, _T("%s: %s"), object->getName(), dci->getName().cstr());
-               BusinessServiceCheck *check = new BusinessServiceCheck(m_id, BusinessServiceCheck::CheckType::DCI, object->getId(), dci->getId(), checkName, m_dciStatusThreshhold);
-               m_checks.add(check);
+               auto check = make_shared<BusinessServiceCheck>(m_id, BusinessServiceCheck::CheckType::DCI, object->getId(), dci->getId(), checkName, m_dciStatusThreshhold);
                check->generateId();
+               checksLock();
+               m_checks.add(check);
+               checksUnlock();
                check->saveToDatabase();
                nxlog_debug_tag(DEBUG_TAG, 6, _T("BusinessService::validateAutomaticObjectChecks(%s): DCI check %s [%u] created"), m_name, checkName, check->getId());
                sendPollerMsg(_T("   DCI based check \"%s\" created\r\n"), checkName);
@@ -956,8 +976,9 @@ void BusinessServicePrototype::instanceDiscoveryPoll(PollerInfo *poller, ClientS
    m_pollRequestId = rqId;
 
    sendPollerMsg(_T("Started instance discovery poll for business service prototype \"%s\"\r\n"), m_name);
-
+   lockProperties();
    unique_ptr<StringMap> instances = getInstances();
+   unlockProperties();
    sendPollerMsg(_T("   Found %d instances\r\n"), instances->size());
    unique_ptr<SharedObjectArray<BusinessService>> services = getServices();
    sendPollerMsg(_T("   Found %d services\r\n"), services->size());
@@ -1027,7 +1048,8 @@ void GetCheckList(uint32_t serviceId, NXCPMessage *response)
       return;
 
    int counter = 0;
-   for (auto check : *service->getChecks())
+   unique_ptr<SharedObjectArray<BusinessServiceCheck>> checks = service->getChecks();
+   for (shared_ptr<BusinessServiceCheck> check : *checks)
    {
       check->fillMessage(response, VID_BUSINESS_SERVICE_CHECK_LIST_BASE + (counter * 10));
       counter++;
