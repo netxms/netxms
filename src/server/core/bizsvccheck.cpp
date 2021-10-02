@@ -187,9 +187,9 @@ void BusinessServiceCheck::compileScript()
    if (m_compiledScript == nullptr)
    {
       TCHAR buffer[1024];
-      _sntprintf(buffer, 1024, _T("ServiceCheck::%s::%d"), m_name, m_id);
+      _sntprintf(buffer, 1024, _T("ServiceCheck::%s::%d"), m_name.cstr(), m_id);
       PostSystemEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", buffer, errorMsg, 0);
-      nxlog_write(NXLOG_WARNING, _T("Failed to compile script for service check %s [%u] (%s)"), m_name, m_id, errorMsg);
+      nxlog_write(NXLOG_WARNING, _T("Failed to compile script for service check %s [%u] (%s)"), m_name.cstr(), m_id, errorMsg);
    }
 }
 
@@ -331,9 +331,9 @@ int BusinessServiceCheck::execute(BusinessServiceTicketData* ticket)
 					else
 					{
 						TCHAR buffer[1024];
-						_sntprintf(buffer, 1024, _T("ServiceCheck::%s::%d"), m_name, m_id);
+						_sntprintf(buffer, 1024, _T("ServiceCheck::%s::%d"), m_name.cstr(), m_id);
 						PostSystemEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", buffer, script->getErrorText(), m_id);
-						nxlog_write_tag(2, DEBUG_TAG, _T("Failed to execute script for service check object %s [%u] (%s)"), m_name, m_id, script->getErrorText());
+						nxlog_write_tag(2, DEBUG_TAG, _T("Failed to execute script for service check object %s [%u] (%s)"), m_name.cstr(), m_id, script->getErrorText());
 						m_status = STATUS_NORMAL;
 					}
 					delete script;
@@ -360,7 +360,7 @@ int BusinessServiceCheck::execute(BusinessServiceTicketData* ticket)
 			}
 			break;
 		default:
-			nxlog_write_tag(4, DEBUG_TAG, _T("BusinessServiceCheck::execute(%s [%u]) called for undefined check type %d"), m_name, m_id, m_type);
+			nxlog_write_tag(4, DEBUG_TAG, _T("BusinessServiceCheck::execute(%s [%u]) called for undefined check type %d"), m_name.cstr(), m_id, m_type);
 			m_status = STATUS_NORMAL;
 			break;
 	}
