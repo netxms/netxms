@@ -336,9 +336,6 @@
     <ClCompile Include="session.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="businessservicecheck.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="smclp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -475,6 +472,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="authtokens.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="bizsvccheck.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -4243,7 +4243,9 @@ public:
 };
 
 #ifdef _WIN32
-template class NXCORE_EXPORTABLE ObjectArray<BusinessServiceCheck>;
+template class NXCORE_EXPORTABLE shared_ptr<BusinessServiceCheck>;
+template class NXCORE_EXPORTABLE ObjectMemoryPool<shared_ptr<BusinessServiceCheck>>;
+template class NXCORE_EXPORTABLE SharedObjectArray<BusinessServiceCheck>;
 #endif
 
 /**
@@ -4252,6 +4254,7 @@ template class NXCORE_EXPORTABLE ObjectArray<BusinessServiceCheck>;
 class NXCORE_EXPORTABLE BaseBusinessService : public AbstractContainer, public AutoBindTarget
 {
   typedef AbstractContainer super;
+
 protected:
    SharedObjectArray<BusinessServiceCheck> m_checks;
    bool m_pollingDisabled;

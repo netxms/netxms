@@ -211,6 +211,7 @@
     <ClCompile Include="authtokens.cpp" />
     <ClCompile Include="beacon.cpp" />
     <ClCompile Include="bizservice.cpp" />
+    <ClCompile Include="bizsvccheck.cpp" />
     <ClCompile Include="bridge.cpp" />
     <ClCompile Include="cas_validator.cpp" />
     <ClCompile Include="ccy.cpp" />
@@ -320,7 +321,6 @@
     <ClCompile Include="sensor.cpp" />
     <ClCompile Include="server_stats.cpp" />
     <ClCompile Include="session.cpp" />
-    <ClCompile Include="businessservicecheck.cpp" />
     <ClCompile Include="smclp.cpp" />
     <ClCompile Include="snmp.cpp" />
     <ClCompile Include="snmptrap.cpp" />
