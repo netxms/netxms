@@ -133,23 +133,28 @@ static bool H_UpgradeFromV69()
 
    // Business service
    static const TCHAR *businessServiceBatch =
-      _T("ALTER TABLE business_services ADD is_prototype char(1)\n")
       _T("ALTER TABLE business_services ADD prototype_id integer\n")
       _T("ALTER TABLE business_services ADD instance varchar(1023)\n")
-      _T("ALTER TABLE business_services ADD instance_method integer\n")
-      _T("ALTER TABLE business_services ADD instance_data varchar(1023)\n")
-      _T("ALTER TABLE business_services ADD instance_filter $SQL:TEXT\n")
-      _T("ALTER TABLE business_services ADD instance_source integer\n")
       _T("ALTER TABLE business_services ADD object_status_threshold integer\n")
       _T("ALTER TABLE business_services ADD dci_status_threshold integer\n")
-      _T("UPDATE business_services SET instance_method=0,prototype_id=0,is_prototype='0',object_status_threshold=0,dci_status_threshold=0,instance_source=0\n")
+      _T("UPDATE business_services SET object_status_threshold=0,dci_status_threshold=0\n")
       _T("<END>");
    CHK_EXEC(SQLBatch(businessServiceBatch));
-   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("business_services"), _T("instance_method")));
+   CHK_EXEC(DBRenameColumn(g_dbHandle, _T("business_services"), _T("service_id"), _T("id")));
    CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("business_services"), _T("prototype_id")));
    CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("business_services"), _T("object_status_threshold")));
    CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("business_services"), _T("dci_status_threshold")));
-   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("business_services"), _T("instance_source")));
+
+   CHK_EXEC(CreateTable(
+         _T("CREATE TABLE business_service_prototypes (")
+         _T("   id integer not null,")
+         _T("   instance_method integer not null,")
+         _T("   instance_source integer not null,")
+         _T("   instance_data varchar(1023),")
+         _T("   instance_filter $SQL:TEXT,")
+         _T("   object_status_threshold integer not null,")
+         _T("   dci_status_threshold integer not null,")
+         _T("   PRIMARY KEY(id))")));
 
    // Delete all templates
    CHK_EXEC(SQLQuery(_T("DELETE FROM object_properties WHERE object_id IN (SELECT id FROM slm_checks WHERE is_template=1)")));
@@ -185,14 +190,12 @@ static bool H_UpgradeFromV69()
       int slmCheckCount = DBGetNumRows(linkUnderMainContainer);
       if (slmCheckCount > 0)
       {
-         //create new web service and update child/parent
+         //create new business service and update child/parent
          for (int i = 0; i < slmCheckCount; i++)
          {
             uint32_t linkId = DBGetFieldULong(linkUnderMainContainer, i, 0);
-            TCHAR query[1024];
-            _sntprintf(query, 1024,
-                     _T("INSERT INTO business_services (service_id,is_prototype,prototype_id,instance,instance_method,instance_data,instance_filter,object_status_threshold,dci_status_threshold,instance_source) ")
-                     _T("VALUES (%d,'0',0,'',0,'','',0,0,0)"), linkId);
+            TCHAR query[256];
+            _sntprintf(query, 256, _T("INSERT INTO business_services (id,prototype_id,instance,object_status_threshold,dci_status_threshold) VALUES (%u,0,'',0,0)"), linkId);
             if (!SQLQuery(query) && !g_ignoreErrors)
             {
                return false;
@@ -376,12 +379,12 @@ static bool H_UpgradeFromV69()
 
    // slm service history
    CHK_EXEC(CreateTable(
-               _T("CREATE TABLE business_service_downtime (")
-               _T("   record_id integer not null,")
-               _T("   service_id integer not null,")
-               _T("   from_timestamp integer not null,")
-               _T("   to_timestamp integer not null,")
-               _T("PRIMARY KEY(record_id))")));
+         _T("CREATE TABLE business_service_downtime (")
+         _T("   record_id integer not null,")
+         _T("   service_id integer not null,")
+         _T("   from_timestamp integer not null,")
+         _T("   to_timestamp integer not null,")
+         _T("PRIMARY KEY(record_id))")));
    DB_RESULT slmHistoryResult = SQLSelect(_T("SELECT service_id,change_timestamp,new_status FROM slm_service_history ORDER BY service_id, change_timestamp"));
    if (slmHistoryResult != nullptr)
    {

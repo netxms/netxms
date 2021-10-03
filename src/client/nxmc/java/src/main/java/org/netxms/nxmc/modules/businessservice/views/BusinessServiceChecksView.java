@@ -41,7 +41,7 @@ import org.eclipse.swt.widgets.Menu;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
-import org.netxms.client.businessservices.ServiceCheck;
+import org.netxms.client.businessservices.BusinessServiceCheck;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.BusinessService;
 import org.netxms.nxmc.Registry;
@@ -83,7 +83,7 @@ public class BusinessServiceChecksView extends ObjectView
    private Action actionEdit;
    private Action actionCreate;
    private Action actionDelete;
-   private Map<Long, ServiceCheck> checksList;
+   private Map<Long, BusinessServiceCheck> checksList;
    
    /**
     * @param name
@@ -162,8 +162,8 @@ public class BusinessServiceChecksView extends ObjectView
                      @Override
                      public void run()
                      {
-                        checksList.put(n.getSubCode(), (ServiceCheck)n.getObject());
-                        updateDciLabelList(Arrays.asList((ServiceCheck)n.getObject()));
+                        checksList.put(n.getSubCode(), (BusinessServiceCheck)n.getObject());
+                        updateDciLabelList(Arrays.asList((BusinessServiceCheck)n.getObject()));
                         viewer.refresh();
                      }
                   });
@@ -196,7 +196,7 @@ public class BusinessServiceChecksView extends ObjectView
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            Map<Long, ServiceCheck> list = session.getBusinessServiceChecks(getObject().getObjectId());
+            Map<Long, BusinessServiceCheck> list = session.getBusinessServiceChecks(getObject().getObjectId());
             
             runInUIThread(new Runnable() {               
                @Override
@@ -297,7 +297,7 @@ public class BusinessServiceChecksView extends ObjectView
          {
             for(int i = 0; i < objects.length; i++)
             {
-               session.deleteBusinessServiceCheck(getObject().getObjectId(), ((ServiceCheck)objects[i]).getId());
+               session.deleteBusinessServiceCheck(getObject().getObjectId(), ((BusinessServiceCheck)objects[i]).getId());
             }
          }
 
@@ -315,7 +315,7 @@ public class BusinessServiceChecksView extends ObjectView
       if (selection.size() != 1)
          return;
 
-      final ServiceCheck check = new ServiceCheck((ServiceCheck)selection.getFirstElement());
+      final BusinessServiceCheck check = new BusinessServiceCheck((BusinessServiceCheck)selection.getFirstElement());
       final EditBusinessServiceCheckDlg dlg = new EditBusinessServiceCheckDlg(getWindow().getShell(), check, false);
       if (dlg.open() == Window.OK)
       {
@@ -337,7 +337,7 @@ public class BusinessServiceChecksView extends ObjectView
 
    private void createCheck()
    {
-      final ServiceCheck check = new ServiceCheck();
+      final BusinessServiceCheck check = new BusinessServiceCheck();
       final EditBusinessServiceCheckDlg dlg = new EditBusinessServiceCheckDlg(getWindow().getShell(), check, false);
       if (dlg.open() == Window.OK)
       {
@@ -371,7 +371,7 @@ public class BusinessServiceChecksView extends ObjectView
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            Map<Long, ServiceCheck> list = session.getBusinessServiceChecks(object.getObjectId());
+            Map<Long, BusinessServiceCheck> list = session.getBusinessServiceChecks(object.getObjectId());
             
             runInUIThread(new Runnable() {               
                @Override
@@ -394,7 +394,7 @@ public class BusinessServiceChecksView extends ObjectView
       job.start();
    }
    
-   public void updateDciLabelList(Collection<ServiceCheck> collection)
+   public void updateDciLabelList(Collection<BusinessServiceCheck> collection)
    {
       new Job("Resolve DCI names", null) {
          @Override

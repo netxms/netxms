@@ -1253,8 +1253,8 @@ bool NetworkMap::isAllowedOnMap(const shared_ptr<NetObj>& object)
 		else
 		{
 			TCHAR buffer[1024];
-			_sntprintf(buffer, 1024, _T("NetworkMap::%s::%d"), m_name, m_id);
-			PostSystemEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", buffer, m_filter->getErrorText(), m_id);
+			_sntprintf(buffer, 1024, _T("NetworkMap::%s::Filter"), m_name);
+			PostSystemEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", buffer, m_filter->getErrorText(), 0);
          nxlog_write(NXLOG_WARNING, _T("Failed to execute filter script for network map object %s [%u] (%s)"), m_name, m_id, m_filter->getErrorText());
 		}
 	}

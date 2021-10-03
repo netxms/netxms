@@ -457,11 +457,11 @@ public class NXCPCodes
    public static final int CMD_WEB_SERVICE_CUSTOM_REQUEST = 0x01B8;
    public static final int CMD_MERGE_FILES = 0x01B9;
    public static final int CMD_FILEMGR_MERGE_FILES = 0x01BA;
-   public static final int CMD_GET_BUSINESS_CHECK_LIST = 0x01BB;
-   public static final int CMD_UPDATE_BUSINESS_CHECK = 0x01BC;
-   public static final int CMD_DELETE_BUSINESS_CHECK = 0x01BD;
-   public static final int CMD_GET_BUSINESS_UPTIME = 0x01BE;
-   public static final int CMD_GET_BUSINESS_TICKETS = 0x01BF;
+   public static final int CMD_GET_BIZSVC_CHECK_LIST = 0x01BB;
+   public static final int CMD_UPDATE_BIZSVC_CHECK = 0x01BC;
+   public static final int CMD_DELETE_BIZSVC_CHECK = 0x01BD;
+   public static final int CMD_GET_BUSINESS_SERVICE_UPTIME = 0x01BE;
+   public static final int CMD_GET_BUSINESS_SERVICE_TICKETS = 0x01BF;
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;
@@ -862,7 +862,7 @@ public class NXCPCodes
 	public static final long VID_BRIDGE_BASE_ADDRESS = 388;
 	public static final long VID_DRILL_DOWN_OBJECT_ID = 389;
 	public static final long VID_REPORT_DEFINITION = 390;
-	public static final long VID_BUSINESS_SERVICE_CHECK_TYPE = 391;
+	public static final long VID_BIZSVC_CHECK_TYPE = 391;
 	public static final long VID_REASON = 392;
 	public static final long VID_NODE_ID = 393;
 	public static final long VID_UPTIME_DAY = 394;
@@ -1237,15 +1237,15 @@ public class NXCPCodes
    public static final long VID_WEB_SWC_ERROR_TEXT = 765;
    public static final long VID_REQUEST_DATA = 766;
    public static final long VID_ENABLE_FILE_UPLOAD_RESUMING = 767;
-   public static final long VID_BUSINESS_SERVICE_CHECK_COUNT = 768;
-   public static final long VID_BUSINESS_SERVICE_CHECK_ID  = 769;
+   public static final long VID_CHECK_COUNT = 768;
+   public static final long VID_CHECK_ID  = 769;
    public static final long VID_BUSINESS_SERVICE_CHECK_RELATED_OBJECT = 770;
-   public static final long VID_BUSINESS_SERVICE_CHECK_RELATED_DCI = 771;
+   public static final long VID_RELATED_DCI = 771;
    public static final long VID_THRESHOLD = 772;
    public static final long VID_OBJECT_STATUS_THRESHOLD = 773;
    public static final long VID_DCI_STATUS_THRESHOLD = 774;
    public static final long VID_BUSINESS_SERVICE_UPTIME = 775;
-   public static final long VID_BUSINESS_TICKET_COUNT = 776;
+   public static final long VID_TICKET_COUNT = 776;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;
@@ -1358,6 +1358,6 @@ public class NXCPCodes
    public static final long VID_MASKED_FIELD_LIST_BASE = 0x10000000L;
    public static final long VID_SSH_KEY_LIST_BASE = 0x10000000L;
    public static final long VID_2FA_METHOD_LIST_BASE = 0x10000000L;
-   public static final long VID_BUSINESS_SERVICE_CHECK_LIST_BASE = 0x10000000L;
-   public static final long VID_BUSINESS_TICKET_LIST_BASE = 0x10000000L;
+   public static final long VID_CHECK_LIST_BASE = 0x10000000L;
+   public static final long VID_TICKET_LIST_BASE = 0x10000000L;
 }

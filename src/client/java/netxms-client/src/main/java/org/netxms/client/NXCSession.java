@@ -70,7 +70,7 @@ import org.netxms.base.VersionInfo;
 import org.netxms.client.agent.config.AgentConfiguration;
 import org.netxms.client.agent.config.AgentConfigurationHandle;
 import org.netxms.client.businessservices.BusinessServiceTicket;
-import org.netxms.client.businessservices.ServiceCheck;
+import org.netxms.client.businessservices.BusinessServiceCheck;
 import org.netxms.client.constants.AggregationFunction;
 import org.netxms.client.constants.AuthenticationType;
 import org.netxms.client.constants.DataOrigin;
@@ -686,13 +686,13 @@ public class NXCSession
                      userSystemRights = msg.getFieldAsInt64(NXCPCodes.VID_USER_SYS_RIGHTS);
                      sendNotification(new SessionNotification(SessionNotification.SYSTEM_ACCESS_CHANGED, userSystemRights));
                      break;
-                  case NXCPCodes.CMD_UPDATE_BUSINESS_CHECK:
+                  case NXCPCodes.CMD_UPDATE_BIZSVC_CHECK:
                      sendNotification(new SessionNotification(SessionNotification.BUSINESS_SERVICE_CHECK_MODIFY,
-                           msg.getFieldAsInt64(NXCPCodes.VID_BUSINESS_SERVICE_CHECK_LIST_BASE), new ServiceCheck(msg, NXCPCodes.VID_BUSINESS_SERVICE_CHECK_LIST_BASE)));
+                           msg.getFieldAsInt64(NXCPCodes.VID_CHECK_LIST_BASE), new BusinessServiceCheck(msg, NXCPCodes.VID_CHECK_LIST_BASE)));
                      break;
-                  case NXCPCodes.CMD_DELETE_BUSINESS_CHECK:
+                  case NXCPCodes.CMD_DELETE_BIZSVC_CHECK:
                      sendNotification(new SessionNotification(SessionNotification.BUSINESS_SERVICE_CHECK_DELETE,
-                           msg.getFieldAsInt64(NXCPCodes.VID_BUSINESS_SERVICE_CHECK_ID)));
+                           msg.getFieldAsInt64(NXCPCodes.VID_CHECK_ID)));
                      break;
                   default:
                      // Check subscriptions
@@ -12728,24 +12728,24 @@ public class NXCSession
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     * @return list of business service checks
     */
-   public Map<Long, ServiceCheck> getBusinessServiceChecks(long serviceId) throws NXCException, IOException
+   public Map<Long, BusinessServiceCheck> getBusinessServiceChecks(long serviceId) throws NXCException, IOException
    {
-      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_BUSINESS_CHECK_LIST);
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_BIZSVC_CHECK_LIST);
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)serviceId);
       sendMessage(msg);
       final NXCPMessage response = waitForRCC(msg.getMessageId());
-      Map<Long, ServiceCheck> checks = new HashMap<Long, ServiceCheck>();
-      int count = response.getFieldAsInt32(NXCPCodes.VID_BUSINESS_SERVICE_CHECK_COUNT);
-      long base = NXCPCodes.VID_BUSINESS_SERVICE_CHECK_LIST_BASE;
+      Map<Long, BusinessServiceCheck> checks = new HashMap<Long, BusinessServiceCheck>();
+      int count = response.getFieldAsInt32(NXCPCodes.VID_CHECK_COUNT);
+      long fieldId = NXCPCodes.VID_CHECK_LIST_BASE;
       for (int i= 0; i < count; i ++)
       {
-         ServiceCheck check = new ServiceCheck(response, base);
+         BusinessServiceCheck check = new BusinessServiceCheck(response, fieldId);
          checks.put(check.getId(), check);
-         base +=10;
+         fieldId += 10;
       }
       return checks;
    }
-   
+
    /**  
     * Delete check form businsess service
     * 
@@ -12756,13 +12756,13 @@ public class NXCSession
     */
    public void deleteBusinessServiceCheck(long businessServiceid, long checkId) throws NXCException, IOException
    {
-      final NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_BUSINESS_CHECK);
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_BIZSVC_CHECK);
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)businessServiceid);
-      msg.setFieldInt32(NXCPCodes.VID_BUSINESS_SERVICE_CHECK_ID, (int)checkId);
+      msg.setFieldInt32(NXCPCodes.VID_CHECK_ID, (int)checkId);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
-   
+
    /**  
     * Modify check form businsess service
     * 
@@ -12771,15 +12771,15 @@ public class NXCSession
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void modifyBusinessServiceCheck(long businessServiceid, ServiceCheck check) throws NXCException, IOException
+   public void modifyBusinessServiceCheck(long businessServiceid, BusinessServiceCheck check) throws NXCException, IOException
    {
-      final NXCPMessage msg = newMessage(NXCPCodes.CMD_UPDATE_BUSINESS_CHECK);
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_UPDATE_BIZSVC_CHECK);
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)businessServiceid);
       check.fillMessage(msg);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }  
-   
+
    /**  
     * Get business service availability
     * 
@@ -12791,7 +12791,7 @@ public class NXCSession
     */
    public double getBusinessServiceAvailablity(long businessServiceid, TimePeriod timePeriod) throws NXCException, IOException
    {
-      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_BUSINESS_UPTIME);
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_BUSINESS_SERVICE_UPTIME);
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)businessServiceid);
       msg.setField(NXCPCodes.VID_TIME_FROM, timePeriod.getPeriodStart());
       msg.setField(NXCPCodes.VID_TIME_TO, timePeriod.getPeriodEnd());
@@ -12799,7 +12799,7 @@ public class NXCSession
       NXCPMessage response = waitForRCC(msg.getMessageId());
       return response.getFieldAsDouble(NXCPCodes.VID_BUSINESS_SERVICE_UPTIME);
    }  
-   
+
    /**  
     * Get business service tickets
     * 
@@ -12812,20 +12812,20 @@ public class NXCSession
    public List<BusinessServiceTicket> getBusinessServiceTickets(long businessServiceid, TimePeriod timePeriod) throws NXCException, IOException
    {
 
-      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_BUSINESS_TICKETS);
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_BUSINESS_SERVICE_TICKETS);
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)businessServiceid);
       msg.setField(NXCPCodes.VID_TIME_FROM, timePeriod.getPeriodStart());
       msg.setField(NXCPCodes.VID_TIME_TO, timePeriod.getPeriodEnd());
       sendMessage(msg);
       NXCPMessage response = waitForRCC(msg.getMessageId());
       List<BusinessServiceTicket> tickets = new ArrayList<BusinessServiceTicket>();
-      int count = response.getFieldAsInt32(NXCPCodes.VID_BUSINESS_TICKET_COUNT);
-      long base = NXCPCodes.VID_BUSINESS_TICKET_LIST_BASE;
-      for (int i= 0; i < count; i++)
+      int count = response.getFieldAsInt32(NXCPCodes.VID_TICKET_COUNT);
+      long fieldId = NXCPCodes.VID_TICKET_LIST_BASE;
+      for(int i = 0; i < count; i++)
       {
-         BusinessServiceTicket ticket = new BusinessServiceTicket(response, base);
+         BusinessServiceTicket ticket = new BusinessServiceTicket(response, fieldId);
          tickets.add(ticket);
-         base +=10;
+         fieldId += 10;
       }
       return tickets;
    }

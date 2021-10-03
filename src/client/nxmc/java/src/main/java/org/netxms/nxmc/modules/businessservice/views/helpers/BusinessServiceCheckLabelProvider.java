@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,8 +26,8 @@ import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
 import org.netxms.client.NXCSession;
-import org.netxms.client.businessservices.ServiceCheck;
-import org.netxms.client.constants.BusinessChecksType;
+import org.netxms.client.businessservices.BusinessServiceCheck;
+import org.netxms.client.constants.BusinessServiceCheckType;
 import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.Registry;
@@ -43,7 +43,7 @@ import org.xnap.commons.i18n.I18n;
 public class BusinessServiceCheckLabelProvider extends LabelProvider implements ITableLabelProvider, ITableColorProvider
 {
    private static final I18n i18n = LocalizationHelper.getI18n(BusinessServiceCheckLabelProvider.class);
-   private static final String[] TYPES = {i18n.tr("Object"), i18n.tr("Script"), i18n.tr("DCI")};
+   private static final String[] TYPES = { i18n.tr("None"), i18n.tr("Script"), i18n.tr("DCI threshold"), i18n.tr("Object status"), };
 
    private NXCSession session;
    private Map<Long, String> dciNameCache = new HashMap<Long, String>();
@@ -61,7 +61,7 @@ public class BusinessServiceCheckLabelProvider extends LabelProvider implements 
 	@Override
 	public Image getColumnImage(Object element, int columnIndex)
 	{    
-      ServiceCheck check = (ServiceCheck)element;
+      BusinessServiceCheck check = (BusinessServiceCheck)element;
       switch(columnIndex)
       {
          case BusinessServiceChecksView.COLUMN_OBJECT:  
@@ -77,7 +77,7 @@ public class BusinessServiceCheckLabelProvider extends LabelProvider implements 
 	@Override
 	public String getColumnText(Object element, int columnIndex)
 	{		
-		ServiceCheck check = (ServiceCheck)element;
+		BusinessServiceCheck check = (BusinessServiceCheck)element;
 		switch(columnIndex)
 		{
          case BusinessServiceChecksView.COLUMN_ID:				
@@ -97,12 +97,18 @@ public class BusinessServiceCheckLabelProvider extends LabelProvider implements 
 		}
 		return null;
 	}
-	
-	public String getObjectName(ServiceCheck check)
+
+   /**
+    * Get name of related object (if any).
+    *
+    * @param check service check to get object name from
+    * @return name of related object or empty string
+    */
+	public String getObjectName(BusinessServiceCheck check)
 	{
 	   String name = "";
-      if (check.getCheckType() == BusinessChecksType.OBJECT || check.getCheckType() == BusinessChecksType.DCI ||
-         (check.getCheckType() == BusinessChecksType.SCRIPT) && check.getObjectId() != 0)
+      if (check.getCheckType() == BusinessServiceCheckType.OBJECT || check.getCheckType() == BusinessServiceCheckType.DCI ||
+            (check.getCheckType() == BusinessServiceCheckType.SCRIPT) && check.getObjectId() != 0)
       {
          AbstractObject object = session.findObjectById(check.getObjectId());
          name = (object != null) ? object.getObjectName() : ("[" + Long.toString(check.getObjectId()) + "]");
@@ -110,11 +116,17 @@ public class BusinessServiceCheckLabelProvider extends LabelProvider implements 
 	   
 	   return name;
 	}
-   
-   public String getDciName(ServiceCheck check)
+
+   /**
+    * Get name of related DCI (if any).
+    *
+    * @param check service check to get DCI name from
+    * @return name of related DCI or empty string
+    */
+   public String getDciName(BusinessServiceCheck check)
    {
       String name = "";
-      if (check.getCheckType() == BusinessChecksType.DCI)
+      if (check.getCheckType() == BusinessServiceCheckType.DCI)
       {
          name = dciNameCache.get(check.getDciId());
          return (name != null) ? name : ("[" + Long.toString(check.getDciId()) + "]");
@@ -122,13 +134,13 @@ public class BusinessServiceCheckLabelProvider extends LabelProvider implements 
       
       return name;
    }
-	
+
 	/**
 	 * Get violation status string
 	 * 
 	 * @return violation status text
 	 */
-	public String getViolationStatus(ServiceCheck check)
+	public String getViolationStatus(BusinessServiceCheck check)
 	{
 	   return check.isViolated() ? i18n.tr("Failed") : i18n.tr("Normal");
 	}
@@ -138,7 +150,7 @@ public class BusinessServiceCheckLabelProvider extends LabelProvider implements 
     * @param check check object
     * @return cehck type name
     */
-   public String getTypeName(ServiceCheck check)
+   public String getTypeName(BusinessServiceCheck check)
    {
       return TYPES[check.getCheckType().getValue()];
    }
@@ -149,7 +161,7 @@ public class BusinessServiceCheckLabelProvider extends LabelProvider implements 
 	@Override
 	public Color getForeground(Object element, int columnIndex)
 	{
-      ServiceCheck check = (ServiceCheck)element;
+      BusinessServiceCheck check = (BusinessServiceCheck)element;
 		switch(columnIndex)
 		{
          case BusinessServiceChecksView.COLUMN_STATUS:    
@@ -168,6 +180,11 @@ public class BusinessServiceCheckLabelProvider extends LabelProvider implements 
 		return null;
 	}
 
+   /**
+    * Update cached DCI names
+    * 
+    * @param names set of updated names
+    */
    public void updateDciNames(Map<Long, String> names)
    {
       dciNameCache.putAll(names);

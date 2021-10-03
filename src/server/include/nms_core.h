@@ -115,6 +115,8 @@ template class NXCORE_EXPORTABLE SynchronizedHashSet<uint32_t>;
 #define DEBUG_TAG_CONF_POLL         _T("poll.conf")
 #define DEBUG_TAG_GEOLOCATION       _T("geolocation")
 #define DEBUG_TAG_STATUS_POLL       _T("poll.status")
+#define DEBUG_TAG_BIZSVC            _T("bizsvc")
+
 
 /**
  * Prefixes for poller messages
@@ -894,9 +896,9 @@ private:
    void getUser2FABindingDetails(NXCPMessage *request);
    void modifyUser2FABinding(NXCPMessage *request);
    void deleteUser2FABinding(NXCPMessage *request);
-   void businessServiceGetCheckList(NXCPMessage *request);
-   void businessServiceModifyCheck(NXCPMessage *request);
-   void businessServiceDeleteCheck(NXCPMessage *request);
+   void getBusinessServiceCheckList(NXCPMessage *request);
+   void modifyBusinessServiceCheck(NXCPMessage *request);
+   void deleteBusinessServiceCheck(NXCPMessage *request);
    void getBusinessServiceUptime(NXCPMessage *request);
    void getBusinessServiceTickets(NXCPMessage *request);
    void alarmUpdateWorker(Alarm *alarm);

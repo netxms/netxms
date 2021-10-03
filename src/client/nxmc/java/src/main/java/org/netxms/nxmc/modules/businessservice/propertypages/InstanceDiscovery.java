@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Raden Solutions
+ * Copyright (C) 2003-2021 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -55,25 +55,25 @@ public class InstanceDiscovery extends ObjectPropertyPage
    
    public static final List<String> DISCOVERY_TYPES = Arrays.asList(null, i18n.tr("Agent List"), i18n.tr("Agent Table"), 
          null, null, i18n.tr("Script"), null, null, null);
-   
+
 	private Combo discoveryMethod;
 	private LabeledText discoveryData;
 	private ObjectSelector instanceSourceSelector;
 	private ScriptEditor filterScript;
-   
+
    /**
     * Constructor
     * 
-    * @param editor
+    * @param prototype business service prototype
     */
    public InstanceDiscovery(AbstractObject prototype)
    {
       super(i18n.tr("Instance Discovery"), prototype);
    }
 	
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createContents(Composite parent)
 	{		
@@ -86,15 +86,14 @@ public class InstanceDiscovery extends ObjectPropertyPage
 		layout.marginHeight = 0;
 		dialogArea.setLayout(layout);
 
-      discoveryMethod = WidgetHelper.createLabeledCombo(dialogArea, SWT.BORDER | SWT.READ_ONLY, i18n.tr("Instance discovery method"),
-                                                         WidgetHelper.DEFAULT_LAYOUT_DATA);
+      discoveryMethod = WidgetHelper.createLabeledCombo(dialogArea, SWT.BORDER | SWT.READ_ONLY, i18n.tr("Instance discovery method"), WidgetHelper.DEFAULT_LAYOUT_DATA);
 
       for (String type : DISCOVERY_TYPES)
       {
          if (type != null)
             discoveryMethod.add(type);            
       }
-      discoveryMethod.setText(DISCOVERY_TYPES.get(prototype.getInstanceDiscoveryMethod()));
+      discoveryMethod.select(discoveryMethod.indexOf(DISCOVERY_TYPES.get(prototype.getInstanceDiscoveryMethod())));
       discoveryMethod.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
@@ -109,7 +108,7 @@ public class InstanceDiscovery extends ObjectPropertyPage
 				widgetSelected(e);
 			}
 		});
-      
+
       instanceSourceSelector  = new ObjectSelector(dialogArea, SWT.NONE, true);
       instanceSourceSelector.setLabel(i18n.tr("Source"));
       instanceSourceSelector.setObjectClass(Node.class);
@@ -182,7 +181,7 @@ public class InstanceDiscovery extends ObjectPropertyPage
          case DataCollectionObject.IDM_WINPERF:
             return i18n.tr("Object name");
       }
-      return ""; //$NON-NLS-1$
+      return "";
 	}
 
    /**
@@ -193,13 +192,14 @@ public class InstanceDiscovery extends ObjectPropertyPage
 	{       
       if (isApply)
          setValid(false);
-      NXCSession session = Registry.getSession();     
+
       final NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
       md.setInstanceDiscoveryMethod(DISCOVERY_TYPES.indexOf(discoveryMethod.getText()));
       md.setInstanceDiscoveryData(discoveryData.getText());
       md.setInstanceDiscoveryFilter(filterScript.getText());
       md.setSourceNode(instanceSourceSelector.getObjectId());
 
+      final NXCSession session = Registry.getSession();
       new Job(String.format(i18n.tr("Modify instance discovery for busines service prototype %s"), object.getObjectName()), null, null) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
@@ -239,18 +239,24 @@ public class InstanceDiscovery extends ObjectPropertyPage
 	protected void performDefaults()
 	{
 		super.performDefaults();
-		discoveryMethod.select(BusinessServicePrototype.IDM_SCRIPT);
-		discoveryData.setLabel(getDataLabel(BusinessServicePrototype.IDM_SCRIPT));
-		discoveryData.setText(""); //$NON-NLS-1$
-		filterScript.setText(""); //$NON-NLS-1$
+      discoveryMethod.select(discoveryMethod.indexOf(DISCOVERY_TYPES.get(DataCollectionObject.IDM_SCRIPT)));
+      discoveryData.setLabel(getDataLabel(DataCollectionObject.IDM_SCRIPT));
+      discoveryData.setText("");
+      filterScript.setText("");
 	}
 
+   /**
+    * @see org.netxms.nxmc.modules.objects.propertypages.ObjectPropertyPage#getId()
+    */
    @Override
    public String getId()
    {
       return "InstanceDiscovery";
    }
 
+   /**
+    * @see org.netxms.nxmc.modules.objects.propertypages.ObjectPropertyPage#isVisible()
+    */
    @Override
    public boolean isVisible()
    {

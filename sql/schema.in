@@ -1969,31 +1969,41 @@ CREATE TABLE dashboard_associations
 ) TABLE_TYPE;
 
 /**
- * SLA business services
+ * Business services
  */
 CREATE TABLE business_services
 (
-  service_id integer not null,
-  is_prototype char(1) not null,
+  id integer not null,
   prototype_id integer not null,
   instance varchar(1023),
-  instance_method integer not null,
-  instance_data varchar(1023),
-  instance_filter SQL_TEXT,
-  instance_source integer not null,
   object_status_threshold integer not null,
   dci_status_threshold integer not null,
-  PRIMARY KEY(service_id)
+  PRIMARY KEY(id)
 ) TABLE_TYPE;
 
 /**
- * SLA service checks
+ * Business service prototypes
+ */
+CREATE TABLE business_service_prototypes
+(
+  id integer not null,
+  instance_method integer not null,
+  instance_source integer not null,
+  instance_data varchar(1023),
+  instance_filter SQL_TEXT,
+  object_status_threshold integer not null,
+  dci_status_threshold integer not null,
+  PRIMARY KEY(id)
+) TABLE_TYPE;
+
+/**
+ * Business service checks
  */
 CREATE TABLE business_service_checks
 (
   id integer not null,
   service_id integer not null,  
-  type integer not null, // 2 - threshold, 1 - script, 0 - node
+  type integer not null, // 2 - threshold, 1 - script, 0 - object
   description varchar(1023),
   related_object integer not null,
   related_dci integer not null,  // threshold_id => related_dci

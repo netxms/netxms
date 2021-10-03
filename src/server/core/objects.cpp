@@ -1056,6 +1056,10 @@ shared_ptr<NetObj> NXCORE_EXPORTABLE FindObjectById(uint32_t id, int objClass)
       case OBJECT_ACCESSPOINT:
          index = &g_idxAccessPointById;
          break;
+      case OBJECT_BUSINESS_SERVICE:
+      case OBJECT_BUSINESS_SERVICE_PROTOTYPE:
+         index = &g_idxBusinessServicesById;
+         break;
       case OBJECT_CLUSTER:
          index = &g_idxClusterById;
          break;
@@ -1119,6 +1123,10 @@ unique_ptr<SharedObjectArray<NetObj>> NXCORE_EXPORTABLE FindObjectsByRegex(const
       case OBJECT_ACCESSPOINT:
          index = &g_idxAccessPointById;
          break;
+      case OBJECT_BUSINESS_SERVICE:
+      case OBJECT_BUSINESS_SERVICE_PROTOTYPE:
+         index = &g_idxBusinessServicesById;
+         break;
       case OBJECT_CLUSTER:
          index = &g_idxClusterById;
          break;
@@ -1164,6 +1172,10 @@ shared_ptr<NetObj> NXCORE_EXPORTABLE FindObject(bool (* comparator)(NetObj *, vo
    {
       case OBJECT_ACCESSPOINT:
          index = &g_idxAccessPointById;
+         break;
+      case OBJECT_BUSINESS_SERVICE:
+      case OBJECT_BUSINESS_SERVICE_PROTOTYPE:
+         index = &g_idxBusinessServicesById;
          break;
       case OBJECT_CLUSTER:
          index = &g_idxClusterById;
@@ -1473,7 +1485,8 @@ bool LoadObjects()
                DBCacheTable(cachedb, mainDB, _T("dashboard_elements"), _T("dashboard_id,element_id"), _T("*"), intColumns) &&
                DBCacheTable(cachedb, mainDB, _T("dashboard_associations"), _T("object_id,dashboard_id"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("business_service_checks"), _T("id"), _T("*")) &&
-               DBCacheTable(cachedb, mainDB, _T("business_services"), _T("service_id"), _T("*")) &&
+               DBCacheTable(cachedb, mainDB, _T("business_services"), _T("id"), _T("*")) &&
+               DBCacheTable(cachedb, mainDB, _T("business_service_prototypes"), _T("id"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("acl"), _T("object_id,user_id"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("trusted_nodes"), _T("source_object_id,target_node_id"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("auto_bind_target"), _T("object_id"), _T("*")) &&
@@ -1601,6 +1614,8 @@ bool LoadObjects()
    LoadObjectsFromTable<DashboardGroup>(_T("dashboard group"), hdb, _T("object_containers WHERE object_class=") AS_STRING(OBJECT_DASHBOARDGROUP));
    LoadObjectsFromTable<BusinessService>(_T("business service"), hdb, _T("object_containers WHERE object_class=") AS_STRING(OBJECT_BUSINESS_SERVICE));
    LoadObjectsFromTable<BusinessServicePrototype>(_T("business service prototype"), hdb, _T("object_containers WHERE object_class=") AS_STRING(OBJECT_BUSINESS_SERVICE_PROTOTYPE));
+
+   g_idxBusinessServicesById.setStartupMode(false);
    g_idxObjectById.setStartupMode(false);
 
 	// Load custom object classes provided by modules
@@ -1934,12 +1949,8 @@ bool IsValidParentClass(int childClass, int parentClass)
             return true;
          break;
 		case OBJECT_BUSINESS_SERVICE_ROOT:
-			if (childClass == OBJECT_BUSINESS_SERVICE ||
-             childClass == OBJECT_BUSINESS_SERVICE_PROTOTYPE)
-            return true;
-         break;
-		case OBJECT_BUSINESS_SERVICE:
-			if (childClass == OBJECT_BUSINESS_SERVICE)
+      case OBJECT_BUSINESS_SERVICE:
+			if ((childClass == OBJECT_BUSINESS_SERVICE) || (childClass == OBJECT_BUSINESS_SERVICE_PROTOTYPE))
             return true;
          break;
       case OBJECT_ZONE:
@@ -2094,7 +2105,7 @@ bool NXCORE_EXPORTABLE IsParentObject(uint32_t object1, uint32_t object2)
  */
 struct CreateObjectAccessSnapshot_CallbackData
 {
-   UINT32 userId;
+   uint32_t userId;
    StructArray<ACL_ELEMENT> *accessList;
 };
 
@@ -2124,6 +2135,10 @@ bool NXCORE_EXPORTABLE CreateObjectAccessSnapshot(uint32_t userId, int objClass)
    {
       case OBJECT_ACCESSPOINT:
          index = &g_idxAccessPointById;
+         break;
+      case OBJECT_BUSINESS_SERVICE:
+      case OBJECT_BUSINESS_SERVICE_PROTOTYPE:
+         index = &g_idxBusinessServicesById;
          break;
       case OBJECT_CLUSTER:
          index = &g_idxClusterById;

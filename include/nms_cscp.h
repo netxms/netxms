@@ -679,11 +679,11 @@ typedef struct
 #define CMD_WEB_SERVICE_CUSTOM_REQUEST    0x01B8
 #define CMD_MERGE_FILES                   0x01B9
 #define CMD_FILEMGR_MERGE_FILES           0x01BA
-#define CMD_GET_BUSINESS_CHECK_LIST       0x01BB
-#define CMD_UPDATE_BUSINESS_CHECK         0x01BC
-#define CMD_DELETE_BUSINESS_CHECK         0x01BD
-#define CMD_GET_BUSINESS_UPTIME           0x01BE
-#define CMD_GET_BUSINESS_TICKETS          0x01BF
+#define CMD_GET_BIZSVC_CHECK_LIST         0x01BB
+#define CMD_UPDATE_BIZSVC_CHECK           0x01BC
+#define CMD_DELETE_BIZSVC_CHECK           0x01BD
+#define CMD_GET_BUSINESS_SERVICE_UPTIME   0x01BE
+#define CMD_GET_BUSINESS_SERVICE_TICKETS  0x01BF
 
 #define CMD_RS_LIST_REPORTS               0x1100
 #define CMD_RS_GET_REPORT_DEFINITION      0x1101
@@ -1086,7 +1086,7 @@ typedef struct
 #define VID_BRIDGE_BASE_ADDRESS     ((UINT32)388)
 #define VID_DRILL_DOWN_OBJECT_ID    ((UINT32)389)
 #define VID_REPORT_DEFINITION       ((UINT32)390)
-#define VID_BUSINESS_SERVICE_CHECK_TYPE ((UINT32)391)
+#define VID_BIZSVC_CHECK_TYPE       ((UINT32)391)
 #define VID_REASON                  ((UINT32)392)
 #define VID_NODE_ID                 ((UINT32)393)
 #define VID_UPTIME_DAY              ((UINT32)394)
@@ -1462,16 +1462,16 @@ typedef struct
 #define VID_WEB_SWC_RESPONSE        ((uint32_t)764)
 #define VID_WEB_SWC_ERROR_TEXT      ((uint32_t)765)
 #define VID_REQUEST_DATA            ((uint32_t)766)
-#define VID_ENABLE_FILE_UPLOAD_RESUMING            ((uint32_t)767)
-#define VID_BUSINESS_SERVICE_CHECK_COUNT          ((uint32_t)768)
-#define VID_BUSINESS_SERVICE_CHECK_ID              ((uint32_t)769)
-#define VID_BUSINESS_SERVICE_CHECK_RELATED_OBJECT  ((uint32_t)770)
-#define VID_BUSINESS_SERVICE_CHECK_RELATED_DCI     ((uint32_t)771)
+#define VID_ENABLE_FILE_UPLOAD_RESUMING ((uint32_t)767)
+#define VID_CHECK_COUNT             ((uint32_t)768)
+#define VID_CHECK_ID                ((uint32_t)769)
+#define VID_PROTOTYPE_ID            ((uint32_t)770)
+#define VID_RELATED_DCI             ((uint32_t)771)
 #define VID_THRESHOLD               ((uint32_t)772)
 #define VID_OBJECT_STATUS_THRESHOLD ((uint32_t)773)
 #define VID_DCI_STATUS_THRESHOLD    ((uint32_t)774)
 #define VID_BUSINESS_SERVICE_UPTIME ((uint32_t)775)
-#define VID_BUSINESS_TICKET_COUNT  ((uint32_t)776)
+#define VID_TICKET_COUNT            ((uint32_t)776)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)
@@ -1717,9 +1717,9 @@ typedef struct
 
 #define VID_2FA_METHODS_LIST_BASE   ((uint32_t)0x10000000)
 
-#define VID_BUSINESS_SERVICE_CHECK_LIST_BASE   ((uint32_t)0x10000000)
+#define VID_CHECK_LIST_BASE         ((uint32_t)0x10000000)
 
-#define VID_BUSINESS_TICKET_LIST_BASE   ((uint32_t)0x10000000)
+#define VID_TICKET_LIST_BASE        ((uint32_t)0x10000000)
 
 #ifdef __cplusplus
 

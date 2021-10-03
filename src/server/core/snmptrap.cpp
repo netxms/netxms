@@ -191,8 +191,8 @@ void SNMPTrapConfiguration::compileScript()
       if (m_script == nullptr)
       {
          TCHAR buffer[1024];
-         _sntprintf(buffer, 1024, _T("SNMPTrap::%d"), m_id);
-         PostSystemEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", buffer, errorMessage, m_id);
+         _sntprintf(buffer, 1024, _T("SNMPTrap::%u"), m_id);
+         PostSystemEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", buffer, errorMessage, 0);
          nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Failed to compile SNMP trap transformation script for trap mapping [%u] (%s)"), m_id, errorMessage);
       }
    }

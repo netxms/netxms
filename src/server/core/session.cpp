@@ -1771,19 +1771,19 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_2FA_DELETE_USER_BINDING:
          deleteUser2FABinding(request);
          break;
-      case CMD_GET_BUSINESS_CHECK_LIST:
-         businessServiceGetCheckList(request);
+      case CMD_GET_BIZSVC_CHECK_LIST:
+         getBusinessServiceCheckList(request);
          break;
-      case CMD_UPDATE_BUSINESS_CHECK:
-         businessServiceModifyCheck(request);
+      case CMD_UPDATE_BIZSVC_CHECK:
+         modifyBusinessServiceCheck(request);
          break;
-      case CMD_DELETE_BUSINESS_CHECK:
-         businessServiceDeleteCheck(request);
+      case CMD_DELETE_BIZSVC_CHECK:
+         deleteBusinessServiceCheck(request);
          break;
-      case CMD_GET_BUSINESS_UPTIME:
+      case CMD_GET_BUSINESS_SERVICE_UPTIME:
          getBusinessServiceUptime(request);
          break;
-      case CMD_GET_BUSINESS_TICKETS:
+      case CMD_GET_BUSINESS_SERVICE_TICKETS:
          getBusinessServiceTickets(request);
          break;
       default:
@@ -15925,93 +15925,141 @@ void ClientSession::deleteUser2FABinding(NXCPMessage *request)
 /**
  * Get business service check list
  * Expected input parameters:
- * VID_OBJECT_ID                 id of business service
+ * VID_OBJECT_ID                     ID of business service
  *
  * Return values:
- * VID_BUSINESS_SERVICE_CHECK_COUNT                   Number of checks. List offset is 10.
- * VID_BUSINESS_SERVICE_CHECK_LIST_BASE + offset      Id of business service check
- * VID_BUSINESS_SERVICE_CHECK_LIST_BASE + offset + 1  Business service check violation reason
- * VID_BUSINESS_SERVICE_CHECK_LIST_BASE + offset + 2  Related data collection item id in related data collection target object
- * VID_BUSINESS_SERVICE_CHECK_LIST_BASE + offset + 3  Related NetObj object id
- * VID_BUSINESS_SERVICE_CHECK_LIST_BASE + offset + 4  Threshold for object check and DCI check
- * VID_BUSINESS_SERVICE_CHECK_LIST_BASE + offset + 5  Business service check name
- * VID_BUSINESS_SERVICE_CHECK_LIST_BASE + offset + 6  Script text for script check
- * VID_RCC                                            Request Completion Code
+ * VID_CHECK_COUNT                   Number of checks. List offset is 10.
+ * VID_CHECK_LIST_BASE + offset      Id of business service check
+ * VID_CHECK_LIST_BASE + offset + 1  Business service check violation reason
+ * VID_CHECK_LIST_BASE + offset + 2  Related data collection item id in related data collection target object
+ * VID_CHECK_LIST_BASE + offset + 3  Related NetObj object id
+ * VID_CHECK_LIST_BASE + offset + 4  Threshold for object check and DCI check
+ * VID_CHECK_LIST_BASE + offset + 5  Business service check name
+ * VID_CHECK_LIST_BASE + offset + 6  Script text for script check
+ * VID_RCC                           Request Completion Code
  */
-void ClientSession::businessServiceGetCheckList(NXCPMessage *request)
+void ClientSession::getBusinessServiceCheckList(NXCPMessage *request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
-   shared_ptr<NetObj> obj = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID));
-   if (obj->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
+   shared_ptr<NetObj> object = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID));
+   if (object != nullptr)
    {
-      GetCheckList(request->getFieldAsUInt32(VID_OBJECT_ID), &msg);
-      msg.setField(VID_RCC, RCC_SUCCESS);
+      if ((object->getObjectClass() == OBJECT_BUSINESS_SERVICE) || (object->getObjectClass() == OBJECT_BUSINESS_SERVICE_PROTOTYPE))
+      {
+         if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+         {
+            unique_ptr<SharedObjectArray<BusinessServiceCheck>> checks = static_cast<BaseBusinessService&>(*object).getChecks();
+            uint32_t fieldId = VID_CHECK_LIST_BASE;
+            for (const shared_ptr<BusinessServiceCheck>& check : *checks)
+            {
+               check->fillMessage(&response, fieldId);
+               fieldId += 10;
+            }
+            response.setField(VID_CHECK_COUNT, checks->size());
+            response.setField(VID_RCC, RCC_SUCCESS);
+         }
+         else
+         {
+            writeAuditLog(AUDIT_OBJECTS, false, object->getId(), _T("Access denied on reading business service check list"));
+            response.setField(VID_RCC, RCC_ACCESS_DENIED);
+         }
+      }
+      else
+      {
+         response.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+      }
    }
    else
    {
-      TCHAR buffer[MAX_USER_NAME];
-      writeAuditLog(AUDIT_SECURITY, false, 0, _T("Access denied on Business Service Get Check List method for user \"%s\""), ResolveUserId(m_dwUserId, buffer, true));
-      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
    }
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
  * Modify business service check
  * Expected input parameters:
- * VID_OBJECT_ID                                id of business service
- * VID_BUSINESS_SERVICE_CHECK_ID                id of business service check
- * VID_BUSINESS_SERVICE_CHECK_TYPE              Business service check type. Object = 0, Script = 1, DCI = 2
- * VID_BUSINESS_SERVICE_CHECK_RELATED_OBJECT    Related NetObj object id. Mandatory in object and DCI checks, optional in script check
- * VID_BUSINESS_SERVICE_CHECK_RELATED_DCI       Related data collection item id in related data collection target object. Mandatory in DCI checks
- * VID_SCRIPT                                   Script text for script check. Optional, without it script check just do nothing and stays in NORMAL state.
- * VID_DESCRIPTION                              Business service check name
- * VID_THRESHOLD                                Threshold for object check and DCI check. If not set, default threshold will be used instead
+ * VID_OBJECT_ID         ID of business service
+ * VID_CHECK_ID          ID of business service check
+ * VID_CHECK_TYPE        Business service check type. Object = 0, Script = 1, DCI = 2
+ * VID_RELATED_OBJECT    Related NetObj object id. Mandatory in object and DCI checks, optional in script check
+ * VID_RELATED_DCI       Related data collection item id in related data collection target object. Mandatory in DCI checks
+ * VID_SCRIPT            Script text for script check. Optional, without it script check just do nothing and stays in NORMAL state.
+ * VID_DESCRIPTION       Business service check description
+ * VID_THRESHOLD         Threshold for object check and DCI check. If not set, default threshold will be used instead
  *
  * Return values:
  * VID_RCC                       Request Completion Code
  */
-void ClientSession::businessServiceModifyCheck(NXCPMessage *request)
+void ClientSession::modifyBusinessServiceCheck(NXCPMessage *request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
-   shared_ptr<NetObj> obj = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID));
-   if (obj->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
+   shared_ptr<NetObj> object = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID));
+   if (object != nullptr)
    {
-      msg.setField(VID_RCC, ModifyCheck(request));
+      if ((object->getObjectClass() == OBJECT_BUSINESS_SERVICE) || (object->getObjectClass() == OBJECT_BUSINESS_SERVICE_PROTOTYPE))
+      {
+         if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
+         {
+            writeAuditLog(AUDIT_OBJECTS, true, object->getId(), _T("Business service check modified"));
+            response.setField(VID_RCC, static_cast<BaseBusinessService&>(*object).modifyCheckFromMessage(request));
+         }
+         else
+         {
+            writeAuditLog(AUDIT_OBJECTS, false, object->getId(), _T("Access denied on modifying business service check"));
+            response.setField(VID_RCC, RCC_ACCESS_DENIED);
+         }
+      }
+      else
+      {
+         response.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+      }
    }
    else
    {
-      TCHAR buffer[MAX_USER_NAME];
-      writeAuditLog(AUDIT_SECURITY, false, 0, _T("Access denied on Business Service Modify Check method for user \"%s\""), ResolveUserId(m_dwUserId, buffer, true));
-      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
    }
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
  * Delete business service check from business service
  * Expected input parameters:
- * VID_OBJECT_ID                 id of business service
- * VID_BUSINESS_SERVICE_CHECK_ID id of business service check
+ * VID_OBJECT_ID  id of business service
+ * VID_CHECK_ID   id of business service check
  *
  * Return values:
  * VID_RCC                       Request Completion Code
  */
-void ClientSession::businessServiceDeleteCheck(NXCPMessage *request)
+void ClientSession::deleteBusinessServiceCheck(NXCPMessage *request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
-   shared_ptr<NetObj> obj = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID));
-   if (obj->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
+   shared_ptr<NetObj> object = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID));
+   if (object != nullptr)
    {
-      msg.setField(VID_RCC, DeleteCheck(request->getFieldAsUInt32(VID_OBJECT_ID), request->getFieldAsUInt32(VID_BUSINESS_SERVICE_CHECK_ID)));
+      if ((object->getObjectClass() == OBJECT_BUSINESS_SERVICE) || (object->getObjectClass() == OBJECT_BUSINESS_SERVICE_PROTOTYPE))
+      {
+         if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
+         {
+            writeAuditLog(AUDIT_OBJECTS, true, object->getId(), _T("Business service check deleted"));
+            response.setField(VID_RCC, static_cast<BaseBusinessService&>(*object).deleteCheck(request->getFieldAsUInt32(VID_CHECK_ID)));
+         }
+         else
+         {
+            writeAuditLog(AUDIT_OBJECTS, false, object->getId(), _T("Access denied on deleting business service check"));
+            response.setField(VID_RCC, RCC_ACCESS_DENIED);
+         }
+      }
+      else
+      {
+         response.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+      }
    }
    else
    {
-      TCHAR buffer[MAX_USER_NAME];
-      writeAuditLog(AUDIT_SECURITY, false, 0, _T("Access denied on Business Service Delete Check method for user \"%s\""), ResolveUserId(m_dwUserId, buffer, true));
-      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
    }
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
@@ -16027,31 +16075,37 @@ void ClientSession::businessServiceDeleteCheck(NXCPMessage *request)
  */
 void ClientSession::getBusinessServiceUptime(NXCPMessage *request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
-   shared_ptr<NetObj> obj = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID));
-   if (obj->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
+   shared_ptr<NetObj> object = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID), OBJECT_BUSINESS_SERVICE);
+   if (object != nullptr)
    {
-      time_t from = 0;
-      if (request->isFieldExist(VID_TIME_FROM))
+      if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
       {
-         from = request->getFieldAsUInt64(VID_TIME_FROM);
-      }
-      time_t to = time(nullptr);
-      if (request->isFieldExist(VID_TIME_TO))
-      {
-         to = request->getFieldAsUInt64(VID_TIME_TO);
-      }
+         time_t from = 0;
+         if (request->isFieldExist(VID_TIME_FROM))
+         {
+            from = request->getFieldAsUInt64(VID_TIME_FROM);
+         }
+         time_t to = time(nullptr);
+         if (request->isFieldExist(VID_TIME_TO))
+         {
+            to = request->getFieldAsUInt64(VID_TIME_TO);
+         }
 
-      msg.setField(VID_BUSINESS_SERVICE_UPTIME, GetServiceUptime(obj->getId(), from, to));
-      msg.setField(VID_RCC, RCC_SUCCESS);
+         response.setField(VID_BUSINESS_SERVICE_UPTIME, GetServiceUptime(object->getId(), from, to));
+         response.setField(VID_RCC, RCC_SUCCESS);
+      }
+      else
+      {
+         writeAuditLog(AUDIT_OBJECTS, false, object->getId(), _T("Access denied on reading business service uptime"));
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
+      }
    }
    else
    {
-      TCHAR buffer[MAX_USER_NAME];
-      writeAuditLog(AUDIT_SECURITY, false, 0, _T("Access denied on Get Business service Uptime data method for user \"%s\""), ResolveUserId(m_dwUserId, buffer, true));
-      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
    }
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
@@ -16062,40 +16116,46 @@ void ClientSession::getBusinessServiceUptime(NXCPMessage *request)
  * VID_TIME_TO                   Get valid tickets to this time. Seconds since the Epoch.
  *
  * Return values:
- * VID_BUSINESS_TICKET_COUNT                  Number of tickets. List offset is 10.
- * VID_BUSINESS_TICKET_LIST_BASE + offset     Id of business service ticket
- * VID_BUSINESS_TICKET_LIST_BASE + offset + 1 Id of business service
- * VID_BUSINESS_TICKET_LIST_BASE + offset + 2 Id of business service check
- * VID_BUSINESS_TICKET_LIST_BASE + offset + 3 Ticket creation timestamp
- * VID_BUSINESS_TICKET_LIST_BASE + offset + 4 Ticket closing timestamp
- * VID_BUSINESS_TICKET_LIST_BASE + offset + 5 Reason
- * VID_BUSINESS_TICKET_LIST_BASE + offset + 6 Business service check description
- * VID_RCC                                    Request Completion Code
+ * VID_TICKET_COUNT                  Number of tickets. List offset is 10.
+ * VID_TICKET_LIST_BASE + offset     Id of business service ticket
+ * VID_TICKET_LIST_BASE + offset + 1 Id of business service
+ * VID_TICKET_LIST_BASE + offset + 2 Id of business service check
+ * VID_TICKET_LIST_BASE + offset + 3 Ticket creation timestamp
+ * VID_TICKET_LIST_BASE + offset + 4 Ticket closing timestamp
+ * VID_TICKET_LIST_BASE + offset + 5 Reason
+ * VID_TICKET_LIST_BASE + offset + 6 Business service check description
+ * VID_RCC                           Request Completion Code
  */
 void ClientSession::getBusinessServiceTickets(NXCPMessage *request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
-   shared_ptr<NetObj> obj = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID));
-   if (obj->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
+   shared_ptr<NetObj> object = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID), OBJECT_BUSINESS_SERVICE);
+   if (object != nullptr)
    {
-      time_t from = 0;
-      if (request->isFieldExist(VID_TIME_FROM))
+      if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
       {
-         from = request->getFieldAsUInt64(VID_TIME_FROM);
+         time_t from = 0;
+         if (request->isFieldExist(VID_TIME_FROM))
+         {
+            from = request->getFieldAsUInt64(VID_TIME_FROM);
+         }
+         time_t to = time(nullptr);
+         if (request->isFieldExist(VID_TIME_TO))
+         {
+            to = request->getFieldAsUInt64(VID_TIME_TO);
+         }
+         GetServiceTickets(object->getId(), from, to, &response);
+         response.setField(VID_RCC, RCC_SUCCESS);
       }
-      time_t to = time(nullptr);
-      if (request->isFieldExist(VID_TIME_TO))
+      else
       {
-         to = request->getFieldAsUInt64(VID_TIME_TO);
+         writeAuditLog(AUDIT_OBJECTS, false, object->getId(), _T("Access denied on reading business service tickets"));
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
       }
-      GetServiceTickets(obj->getId(), from, to, &msg);
-      msg.setField(VID_RCC, RCC_SUCCESS);
    }
    else
    {
-      TCHAR buffer[MAX_USER_NAME];
-      writeAuditLog(AUDIT_SECURITY, false, 0, _T("Access denied on Get Business Service tickets method for user \"%s\""), ResolveUserId(m_dwUserId, buffer, true));
-      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
    }
-   sendMessage(&msg);
+   sendMessage(response);
 }

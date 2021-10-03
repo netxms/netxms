@@ -35,7 +35,6 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.BusinessService;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.interfaces.AutoBindDCIObject;
-import org.netxms.client.objects.interfaces.AutoBindObject;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.localization.LocalizationHelper;

@@ -20,7 +20,7 @@ package org.netxms.nxmc.modules.businessservice.views.helpers;
 
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
-import org.netxms.client.businessservices.ServiceCheck;
+import org.netxms.client.businessservices.BusinessServiceCheck;
 import org.netxms.nxmc.base.views.AbstractViewerFilter;
 
 /**
@@ -45,7 +45,7 @@ public class BusinessServiceCheckFilter extends ViewerFilter implements Abstract
       if ((filterString == null) || (filterString.isEmpty()))
          return true;
 
-      ServiceCheck check = (ServiceCheck)element;      
+      BusinessServiceCheck check = (BusinessServiceCheck)element;      
       
       if (Long.toString(check.getId()).contains(filterString) || 
             check.getDescription().contains(filterString) ||

@@ -64,10 +64,10 @@ public class InstanceDiscovery extends AbstractDCIPropertyPage
    {
       super(i18n.tr("Instance Discovery"), editor);
    }
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
-	 */
+
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createContents(Composite parent)
 	{

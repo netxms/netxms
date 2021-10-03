@@ -20,16 +20,16 @@ package org.netxms.client.businessservices;
 
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
-import org.netxms.client.constants.BusinessChecksType;
+import org.netxms.client.constants.BusinessServiceCheckType;
 import org.netxms.client.objects.interfaces.NodeItemPair;
 
 /**
  * Business service check
  */
-public class ServiceCheck implements NodeItemPair
+public class BusinessServiceCheck implements NodeItemPair
 {	
 	private long id;
-	private BusinessChecksType checkType;
+	private BusinessServiceCheckType type;
    private String description;
 	private String script;
    private long objectId;
@@ -41,10 +41,10 @@ public class ServiceCheck implements NodeItemPair
    /**
     * Default constructor 
     */
-   public ServiceCheck()
+   public BusinessServiceCheck()
    {
       id = 0;
-      checkType = BusinessChecksType.OBJECT;
+      type = BusinessServiceCheckType.NONE;
       description = null;
       script = null; 
       objectId = 0;
@@ -57,10 +57,10 @@ public class ServiceCheck implements NodeItemPair
     * 
     * @param check check to copy
     */
-   public ServiceCheck(ServiceCheck check)
+   public BusinessServiceCheck(BusinessServiceCheck check)
    {
       id = check.id;
-      checkType = check.checkType;
+      type = check.type;
       description = check.description;
       script = check.script; 
       objectId = check.objectId;
@@ -74,10 +74,10 @@ public class ServiceCheck implements NodeItemPair
 	 * @param msg NXCPmessage from server with data
 	 * @param base base id for object
 	 */
-	public ServiceCheck(NXCPMessage msg, long base)
+	public BusinessServiceCheck(NXCPMessage msg, long base)
 	{
 	   id = msg.getFieldAsInt64(base);
-		checkType = BusinessChecksType.getByValue(msg.getFieldAsInt32(base + 1));
+		type = BusinessServiceCheckType.getByValue(msg.getFieldAsInt32(base + 1));
       failureReason = msg.getFieldAsString(base + 2);
       dciId = msg.getFieldAsInt64(base + 3);
       objectId = msg.getFieldAsInt64(base + 4);
@@ -89,7 +89,7 @@ public class ServiceCheck implements NodeItemPair
 		   violated = true;
 		}
 	}
-	
+
 	/**
 	 * Fill message
 	 * 
@@ -97,11 +97,11 @@ public class ServiceCheck implements NodeItemPair
 	 */
 	public void fillMessage(NXCPMessage msg)
 	{
-	   msg.setFieldInt32(NXCPCodes.VID_BUSINESS_SERVICE_CHECK_ID, (int)id);
+	   msg.setFieldInt32(NXCPCodes.VID_CHECK_ID, (int)id);
       msg.setField(NXCPCodes.VID_DESCRIPTION, description);
-	   msg.setFieldInt32(NXCPCodes.VID_BUSINESS_SERVICE_CHECK_TYPE, checkType.getValue());
-      msg.setFieldInt32(NXCPCodes.VID_BUSINESS_SERVICE_CHECK_RELATED_OBJECT, (int)objectId);
-      msg.setFieldInt32(NXCPCodes.VID_BUSINESS_SERVICE_CHECK_RELATED_DCI, (int)dciId);
+      msg.setFieldInt16(NXCPCodes.VID_BIZSVC_CHECK_TYPE, type.getValue());
+      msg.setFieldInt32(NXCPCodes.VID_RELATED_OBJECT, (int)objectId);
+      msg.setFieldInt32(NXCPCodes.VID_RELATED_DCI, (int)dciId);
       msg.setField(NXCPCodes.VID_SCRIPT, script);
       msg.setFieldInt32(NXCPCodes.VID_THRESHOLD, threshold);
 	}
@@ -109,9 +109,9 @@ public class ServiceCheck implements NodeItemPair
 	/**
 	 * @return the checkType
 	 */
-	public BusinessChecksType getCheckType()
+	public BusinessServiceCheckType getCheckType()
 	{
-		return checkType;
+		return type;
 	}
 
 	/**
@@ -181,9 +181,9 @@ public class ServiceCheck implements NodeItemPair
    /**
     * @param checkType the checkType to set
     */
-   public void setCheckType(BusinessChecksType checkType)
+   public void setCheckType(BusinessServiceCheckType checkType)
    {
-      this.checkType = checkType;
+      this.type = checkType;
    }
 
    /**

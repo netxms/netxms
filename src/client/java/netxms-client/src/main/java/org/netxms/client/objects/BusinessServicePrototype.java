@@ -28,16 +28,11 @@ import org.netxms.client.NXCSession;
  */
 public class BusinessServicePrototype extends BusinessService
 {
-   public static final int IDM_SCRIPT = 0;
-   public static final int IDM_AGENT_LIST = 1;
-   public static final int IDM_AGENT_TABLE = 2;
-   
    protected String instance;
    protected int instanceDiscoveryMethod;
    protected String instanceDiscoveryData;
    protected String instanceDiscoveryFilter;
    protected long sourceNode;
-   
 
    /**
     * Constructor

@@ -22,7 +22,7 @@ import java.util.Map;
 import org.json.JSONObject;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
-import org.netxms.client.businessservices.ServiceCheck;
+import org.netxms.client.businessservices.BusinessServiceCheck;
 import org.netxms.client.constants.RCC;
 import org.netxms.websvc.json.JsonTools;
 import org.netxms.websvc.json.ResponseContainer;
@@ -39,7 +39,7 @@ public class BusinessServiceChecks extends AbstractObjectHandler
    protected Object getCollection(Map<String, String> query) throws Exception
    {      
       NXCSession session = getSession();
-      Map<Long, ServiceCheck> checks = session.getBusinessServiceChecks(getObjectId());
+      Map<Long, BusinessServiceCheck> checks = session.getBusinessServiceChecks(getObjectId());
       return new ResponseContainer("checks", checks.values());
    }
 
@@ -50,7 +50,7 @@ public class BusinessServiceChecks extends AbstractObjectHandler
    protected Object create(JSONObject data) throws Exception
    {  
       NXCSession session = getSession();
-      ServiceCheck check = JsonTools.createGsonInstance().fromJson(data.toString(), ServiceCheck.class);        
+      BusinessServiceCheck check = JsonTools.createGsonInstance().fromJson(data.toString(), BusinessServiceCheck.class);        
       check.setId(0);
       session.modifyBusinessServiceCheck(getObjectId(), check);     
       return null;     
@@ -72,7 +72,7 @@ public class BusinessServiceChecks extends AbstractObjectHandler
       {
          throw new NXCException(RCC.INVALID_BUSINESS_CHECK_ID);
       }
-      ServiceCheck check = JsonTools.createGsonInstance().fromJson(data.toString(), ServiceCheck.class);    
+      BusinessServiceCheck check = JsonTools.createGsonInstance().fromJson(data.toString(), BusinessServiceCheck.class);    
       check.setId(checkId);
       session.modifyBusinessServiceCheck(getObjectId(), check);     
       return null;  

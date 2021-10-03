@@ -26,17 +26,18 @@ import org.slf4j.LoggerFactory;
 /**
  * Business checks type
  */
-public enum BusinessChecksType
+public enum BusinessServiceCheckType
 {
-   OBJECT(0),
+   NONE(0),
    SCRIPT(1),
-   DCI(2);
+   DCI(2),
+   OBJECT(3);
 
-   private static Logger logger = LoggerFactory.getLogger(BusinessChecksType.class);
-   private static Map<Integer, BusinessChecksType> lookupTable = new HashMap<Integer, BusinessChecksType>();
+   private static Logger logger = LoggerFactory.getLogger(BusinessServiceCheckType.class);
+   private static Map<Integer, BusinessServiceCheckType> lookupTable = new HashMap<Integer, BusinessServiceCheckType>();
    static
    {
-      for(BusinessChecksType element : BusinessChecksType.values())
+      for(BusinessServiceCheckType element : BusinessServiceCheckType.values())
       {
          lookupTable.put(element.value, element);
       }
@@ -49,7 +50,7 @@ public enum BusinessChecksType
     *  
     * @param value integer value
     */
-   private BusinessChecksType(int value)
+   private BusinessServiceCheckType(int value)
    {
       this.value = value;
    }
@@ -70,13 +71,13 @@ public enum BusinessChecksType
     * @param value integer value
     * @return enum element corresponding to given integer value or fall-back element for invalid value
     */
-   public static BusinessChecksType getByValue(int value)
+   public static BusinessServiceCheckType getByValue(int value)
    {
-      final BusinessChecksType element = lookupTable.get(value);
+      final BusinessServiceCheckType element = lookupTable.get(value);
       if (element == null)
       {
          logger.warn("Unknown element " + value);
-         return SCRIPT; // fall-back
+         return NONE; // fall-back
       }
       return element;
    }

@@ -21,7 +21,7 @@ package org.netxms.nxmc.modules.businessservice.views.helpers;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
-import org.netxms.client.businessservices.ServiceCheck;
+import org.netxms.client.businessservices.BusinessServiceCheck;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.modules.businessservice.views.BusinessServiceChecksView;
 
@@ -42,8 +42,8 @@ public class BusinessServiceComparator extends ViewerComparator
 	@Override
 	public int compare(Viewer viewer, Object e1, Object e2)
 	{
-	   ServiceCheck c1 = (ServiceCheck)e1;
-	   ServiceCheck c2 = (ServiceCheck)e2;
+	   BusinessServiceCheck c1 = (BusinessServiceCheck)e1;
+	   BusinessServiceCheck c2 = (BusinessServiceCheck)e2;
 		
 		int result = 0;
 		switch((Integer)((SortableTableViewer)viewer).getTable().getSortColumn().getData("ID")) //$NON-NLS-1$

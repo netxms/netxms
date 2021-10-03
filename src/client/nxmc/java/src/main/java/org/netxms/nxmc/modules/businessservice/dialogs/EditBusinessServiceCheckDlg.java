@@ -12,8 +12,8 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
-import org.netxms.client.businessservices.ServiceCheck;
-import org.netxms.client.constants.BusinessChecksType;
+import org.netxms.client.businessservices.BusinessServiceCheck;
+import org.netxms.client.constants.BusinessServiceCheckType;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.nxmc.base.widgets.AbstractSelector;
 import org.netxms.nxmc.base.widgets.LabeledText;
@@ -31,9 +31,9 @@ import org.xnap.commons.i18n.I18n;
 public class EditBusinessServiceCheckDlg extends Dialog
 {
    private static final I18n i18n = LocalizationHelper.getI18n(EditBusinessServiceCheckDlg.class);
-   private static final String[] TYPES = {i18n.tr("Object"), i18n.tr("Script"), i18n.tr("DCI")};
+   private static final String[] TYPES = { i18n.tr("Script"), i18n.tr("DCI threshold"), i18n.tr("Object status") };
    
-   private ServiceCheck check;
+   private BusinessServiceCheck check;
    private boolean createNew;
    
    private LabeledText descriptionText;
@@ -44,13 +44,16 @@ public class EditBusinessServiceCheckDlg extends Dialog
    private Composite selectorGroup;
    private Composite dialogArea;
 
-   public EditBusinessServiceCheckDlg(Shell parentShell, ServiceCheck check, boolean createNew)
+   public EditBusinessServiceCheckDlg(Shell parentShell, BusinessServiceCheck check, boolean createNew)
    {
       super(parentShell);
       this.check = check;
       this.createNew = createNew;
    }
 
+   /**
+    * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
+    */
    @Override
    protected void configureShell(Shell newShell)
    {
@@ -58,6 +61,9 @@ public class EditBusinessServiceCheckDlg extends Dialog
       newShell.setText(createNew ? i18n.tr("Create check") : i18n.tr("Modify check"));
    }  
 
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
+    */
    @Override
    protected Control createDialogArea(Composite parent)
    {
@@ -84,7 +90,6 @@ public class EditBusinessServiceCheckDlg extends Dialog
       for (String type : TYPES)
          typeCombo.add(type);   
       typeCombo.addSelectionListener(new SelectionListener() {
-         
          @Override
          public void widgetSelected(SelectionEvent e)
          {
@@ -114,7 +119,7 @@ public class EditBusinessServiceCheckDlg extends Dialog
       gd.horizontalSpan = 2;
       selectorGroup.setLayoutData(gd);
       
-      if (check.getCheckType() == BusinessChecksType.DCI)
+      if (check.getCheckType() == BusinessServiceCheckType.DCI)
       {
          objectOrDciSelector = new DciSelector(selectorGroup, SWT.NONE, false);
          objectOrDciSelector.setLabel(i18n.tr("Data collection item"));
@@ -146,7 +151,7 @@ public class EditBusinessServiceCheckDlg extends Dialog
       
       //Set all values 
       descriptionText.setText(check.getDescription());
-      typeCombo.select(check.getCheckType().getValue());
+      typeCombo.select(check.getCheckType().getValue() - 1);
       thresholdCombo.select(check.getThreshold());
       scriptEditor.setText(check.getScript());  
       updateEditableElements();
@@ -154,17 +159,20 @@ public class EditBusinessServiceCheckDlg extends Dialog
       return dialogArea;
    }
    
+   /**
+    * Update dialog elements for selected check type
+    */
    private void updateEditableElements()
    {
-      BusinessChecksType type = BusinessChecksType.getByValue(typeCombo.getSelectionIndex());
-      if (type == BusinessChecksType.DCI && !(objectOrDciSelector instanceof DciSelector))
+      BusinessServiceCheckType type = BusinessServiceCheckType.getByValue(typeCombo.getSelectionIndex() + 1);
+      if (type == BusinessServiceCheckType.DCI && !(objectOrDciSelector instanceof DciSelector))
       {
          objectOrDciSelector.dispose();
          objectOrDciSelector = new DciSelector(selectorGroup, SWT.NONE, false);
          objectOrDciSelector.setLabel(i18n.tr("Data collection item"));
          ((DciSelector)objectOrDciSelector).setDciId(check.getObjectId(), check.getDciId());
       }
-      if ((type == BusinessChecksType.OBJECT || type == BusinessChecksType.SCRIPT) && !(objectOrDciSelector instanceof ObjectSelector))
+      if ((type == BusinessServiceCheckType.OBJECT || type == BusinessServiceCheckType.SCRIPT) && !(objectOrDciSelector instanceof ObjectSelector))
       {       
          objectOrDciSelector.dispose(); 
          objectOrDciSelector = new ObjectSelector(selectorGroup, SWT.NONE, true);
@@ -172,38 +180,42 @@ public class EditBusinessServiceCheckDlg extends Dialog
          ((ObjectSelector)objectOrDciSelector).setObjectId(check.getObjectId()); 
       }
       
-      scriptEditor.setEnabled(type == BusinessChecksType.SCRIPT);
-      thresholdCombo.setEnabled(type == BusinessChecksType.OBJECT || type == BusinessChecksType.DCI);
-      if (type == BusinessChecksType.OBJECT)
+      scriptEditor.setEnabled(type == BusinessServiceCheckType.SCRIPT);
+      thresholdCombo.setEnabled(type == BusinessServiceCheckType.OBJECT || type == BusinessServiceCheckType.DCI);
+      if (type == BusinessServiceCheckType.OBJECT)
          ((ObjectSelector)objectOrDciSelector).setLabel(i18n.tr("Check object"));
-      else if (type == BusinessChecksType.SCRIPT)
+      else if (type == BusinessServiceCheckType.SCRIPT)
          ((ObjectSelector)objectOrDciSelector).setLabel(i18n.tr("Related object"));
 
       dialogArea.layout(true, true);
    }
 
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#okPressed()
+    */
    @Override
    protected void okPressed()
    {
       check.setDescription(descriptionText.getText());
-      check.setCheckType(BusinessChecksType.getByValue(typeCombo.getSelectionIndex()));
 
-      BusinessChecksType type = BusinessChecksType.getByValue(typeCombo.getSelectionIndex());
-      if (type == BusinessChecksType.DCI)
+      BusinessServiceCheckType type = BusinessServiceCheckType.getByValue(typeCombo.getSelectionIndex() + 1);
+      check.setCheckType(type);
+
+      if (type == BusinessServiceCheckType.DCI)
       {
          check.setThreshold(thresholdCombo.getSelectionIndex());
          check.setObjectId(((DciSelector)objectOrDciSelector).getNodeId());
          check.setDciId(((DciSelector)objectOrDciSelector).getDciId());      
          check.setScript("");
       }
-      else if (type == BusinessChecksType.OBJECT)
+      else if (type == BusinessServiceCheckType.OBJECT)
       {
          check.setThreshold(thresholdCombo.getSelectionIndex());
          check.setObjectId(((ObjectSelector)objectOrDciSelector).getObjectId());
          check.setDciId(0);         
          check.setScript("");
       }
-      else if (type == BusinessChecksType.SCRIPT)
+      else if (type == BusinessServiceCheckType.SCRIPT)
       {
          check.setObjectId(((ObjectSelector)objectOrDciSelector).getObjectId());
          check.setDciId(0);         
@@ -211,5 +223,4 @@ public class EditBusinessServiceCheckDlg extends Dialog
       }
       super.okPressed();
    }
-   
 }

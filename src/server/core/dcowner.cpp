@@ -431,12 +431,11 @@ bool DataCollectionOwner::deleteDCObject(uint32_t dcObjectId, bool needLock, uin
  * Deletes child DCI objects of instance discovery DCI.
  * It is assumed that list is already locked
  */
-void DataCollectionOwner::deleteChildDCIs(UINT32 dcObjectId)
+void DataCollectionOwner::deleteChildDCIs(uint32_t dcObjectId)
 {
    for(int i = 0; i < m_dcObjects->size(); i++)
    {
       DCObject *subObject = m_dcObjects->get(i);
-
       if (subObject->getTemplateItemId() == dcObjectId)
       {
          nxlog_debug_tag(_T("obj.dc"), 7, _T("DataCollectionOwner::DeleteDCObject: deleting DCObject %d created by DCObject %d instance discovery from object %d"), (int)subObject->getId(), (int)dcObjectId, (int)m_id);
@@ -644,13 +643,9 @@ void DataCollectionOwner::applyDCIChanges(bool forcedChange)
 /**
  * Send DCI list to client
  */
-void DataCollectionOwner::sendItemsToClient(ClientSession *pSession, UINT32 dwRqId) const
+void DataCollectionOwner::sendItemsToClient(ClientSession *session, uint32_t requestId) const
 {
-   NXCPMessage msg;
-
-   // Prepare message
-   msg.setId(dwRqId);
-   msg.setCode(CMD_NODE_DCI);
+   NXCPMessage msg(CMD_NODE_DCI, requestId);
 
    readLockDciAccess();
 
@@ -658,15 +653,15 @@ void DataCollectionOwner::sendItemsToClient(ClientSession *pSession, UINT32 dwRq
    for(int i = 0; i < m_dcObjects->size(); i++)
    {
       DCObject *dco = m_dcObjects->get(i);
-      if (dco->hasAccess(pSession->getUserId()))
+      if (dco->hasAccess(session->getUserId()))
       {
          dco->createMessage(&msg);
-         pSession->sendMessage(&msg);
+         session->sendMessage(&msg);
          msg.deleteAllFields();
       }
       else
       {
-         nxlog_debug_tag(_T("obj.dc"), 6, _T("DataCollectionOwner::sendItemsToClient: denied access to DCObject %u for user %u"), dco->getId(), pSession->getUserId());
+         nxlog_debug_tag(_T("obj.dc"), 6, _T("DataCollectionOwner::sendItemsToClient: denied access to DCObject %u for user %u"), dco->getId(), session->getUserId());
       }
    }
 
@@ -674,7 +669,7 @@ void DataCollectionOwner::sendItemsToClient(ClientSession *pSession, UINT32 dwRq
 
    // Send end-of-list indicator
 	msg.setEndOfSequence();
-   pSession->sendMessage(&msg);
+   session->sendMessage(&msg);
 }
 
 /**

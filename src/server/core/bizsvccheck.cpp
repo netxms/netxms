@@ -27,10 +27,10 @@
 /**
  * Create empty business service check object
  */
-BusinessServiceCheck::BusinessServiceCheck(uint32_t serviceId) : m_name(_T("Unnamed"))
+BusinessServiceCheck::BusinessServiceCheck(uint32_t serviceId) : m_description(_T("Unnamed"))
 {
    m_id = CreateUniqueId(IDG_BUSINESS_SERVICE_CHECK);
-   m_type = CheckType::OBJECT;
+   m_type = BusinessServiceCheckType::OBJECT;
    m_status = STATUS_NORMAL;
    m_script = nullptr;
    m_compiledScript = nullptr;
@@ -46,7 +46,8 @@ BusinessServiceCheck::BusinessServiceCheck(uint32_t serviceId) : m_name(_T("Unna
 /**
  * Create new business service check
  */
-BusinessServiceCheck::BusinessServiceCheck(uint32_t serviceId, int type, uint32_t relatedObject, uint32_t relatedDCI, const TCHAR* name, int threshhold) : m_name((name != nullptr) ? name : _T("Unnamed"))
+BusinessServiceCheck::BusinessServiceCheck(uint32_t serviceId, BusinessServiceCheckType type, uint32_t relatedObject, uint32_t relatedDCI, const TCHAR* description, int threshhold) :
+         m_description((description != nullptr) ? description : _T("Unnamed"))
 {
    m_id = CreateUniqueId(IDG_BUSINESS_SERVICE_CHECK);
    m_type = type;
@@ -65,7 +66,7 @@ BusinessServiceCheck::BusinessServiceCheck(uint32_t serviceId, int type, uint32_
 /**
  * Create copy of existing business service check
  */
-BusinessServiceCheck::BusinessServiceCheck(uint32_t serviceId, const BusinessServiceCheck& check) : m_name(check.getName())
+BusinessServiceCheck::BusinessServiceCheck(uint32_t serviceId, const BusinessServiceCheck& check) : m_description(check.getDescription())
 {
    m_id = CreateUniqueId(IDG_BUSINESS_SERVICE_CHECK);
 	m_type = check.m_type;
@@ -88,14 +89,15 @@ BusinessServiceCheck::BusinessServiceCheck(DB_RESULT hResult, int row)
 {
    m_id = DBGetFieldULong(hResult, row, 0);
    m_serviceId = DBGetFieldULong(hResult, row, 1);
-   m_type = DBGetFieldLong(hResult, row, 2);
-   m_name = DBGetFieldAsSharedString(hResult, row, 3);
+   m_type = BusinessServiceCheckTypeFromInt(DBGetFieldLong(hResult, row, 2));
+   m_description = DBGetFieldAsSharedString(hResult, row, 3);
    m_relatedObject = DBGetFieldULong(hResult, row, 4);
    m_relatedDCI = DBGetFieldULong(hResult, row, 5);
    m_statusThreshold = DBGetFieldULong(hResult, row, 6);
    m_script = DBGetField(hResult, row, 7, nullptr, 0);
    m_currentTicket = DBGetFieldULong(hResult, row, 8);
    m_mutex = MutexCreateFast();
+   m_compiledScript = nullptr;
    compileScript();
    m_reason[0] = 0;
    loadReason();
@@ -141,18 +143,17 @@ BusinessServiceCheck::~BusinessServiceCheck()
 void BusinessServiceCheck::modifyFromMessage(const NXCPMessage& request)
 {
 	lock();
-
-	if (request.isFieldExist(VID_BUSINESS_SERVICE_CHECK_TYPE))
+	if (request.isFieldExist(VID_BIZSVC_CHECK_TYPE))
    {
-      m_type = request.getFieldAsUInt32(VID_BUSINESS_SERVICE_CHECK_TYPE);
+      m_type = BusinessServiceCheckTypeFromInt(request.getFieldAsInt16(VID_BIZSVC_CHECK_TYPE));
    }
-	if (request.isFieldExist(VID_BUSINESS_SERVICE_CHECK_RELATED_OBJECT))
+	if (request.isFieldExist(VID_RELATED_OBJECT))
    {
-      m_relatedObject = request.getFieldAsUInt32(VID_BUSINESS_SERVICE_CHECK_RELATED_OBJECT);
+      m_relatedObject = request.getFieldAsUInt32(VID_RELATED_OBJECT);
    }
-	if (request.isFieldExist(VID_BUSINESS_SERVICE_CHECK_RELATED_DCI))
+	if (request.isFieldExist(VID_RELATED_DCI))
    {
-      m_relatedDCI = request.getFieldAsUInt32(VID_BUSINESS_SERVICE_CHECK_RELATED_DCI);
+      m_relatedDCI = request.getFieldAsUInt32(VID_RELATED_DCI);
    }
 	if (request.isFieldExist(VID_SCRIPT))
    {
@@ -162,15 +163,13 @@ void BusinessServiceCheck::modifyFromMessage(const NXCPMessage& request)
    }
 	if (request.isFieldExist(VID_DESCRIPTION))
    {
-      m_name = request.getFieldAsSharedString(VID_DESCRIPTION);
+      m_description = request.getFieldAsSharedString(VID_DESCRIPTION);
    }
 	if (request.isFieldExist(VID_THRESHOLD))
    {
       m_statusThreshold = request.getFieldAsInt32(VID_THRESHOLD);
    }
 	unlock();
-
-   saveToDatabase();
 }
 
 /**
@@ -178,7 +177,7 @@ void BusinessServiceCheck::modifyFromMessage(const NXCPMessage& request)
  */
 void BusinessServiceCheck::compileScript()
 {
-	if ((m_type != CheckType::SCRIPT) || (m_script == nullptr))
+	if ((m_type != BusinessServiceCheckType::SCRIPT) || (m_script == nullptr))
 	   return;
 
 	delete m_compiledScript;
@@ -187,9 +186,9 @@ void BusinessServiceCheck::compileScript()
    if (m_compiledScript == nullptr)
    {
       TCHAR buffer[1024];
-      _sntprintf(buffer, 1024, _T("ServiceCheck::%s::%d"), m_name.cstr(), m_id);
+      _sntprintf(buffer, 1024, _T("BusinessServiceCheck::%u"), m_id);
       PostSystemEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", buffer, errorMsg, 0);
-      nxlog_write(NXLOG_WARNING, _T("Failed to compile script for service check %s [%u] (%s)"), m_name.cstr(), m_id, errorMsg);
+      nxlog_write(NXLOG_WARNING, _T("Failed to compile script for service check %s [%u] (%s)"), m_description.cstr(), m_id, errorMsg);
    }
 }
 
@@ -200,12 +199,12 @@ void BusinessServiceCheck::fillMessage(NXCPMessage *msg, uint32_t baseId) const
 {
 	lock();
    msg->setField(baseId, m_id);
-   msg->setField(baseId + 1, m_type);
+   msg->setField(baseId + 1, static_cast<uint16_t>(m_type));
    msg->setField(baseId + 2, m_reason);
    msg->setField(baseId + 3, m_relatedDCI);
    msg->setField(baseId + 4, m_relatedObject);
    msg->setField(baseId + 5, m_statusThreshold);
-   msg->setField(baseId + 6, m_name);
+   msg->setField(baseId + 6, m_description);
    msg->setField(baseId + 7, m_script);
 	unlock();
 }
@@ -227,8 +226,8 @@ bool BusinessServiceCheck::saveToDatabase() const
 	{
 		lock();
 		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_serviceId);
-		DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (uint32_t)m_type);
-		DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_name, DB_BIND_STATIC);
+		DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_type));
+		DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_description, DB_BIND_STATIC);
 		DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, m_relatedObject);
 		DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, m_relatedDCI);
 		DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, m_statusThreshold);
@@ -268,7 +267,7 @@ int BusinessServiceCheck::execute(BusinessServiceTicketData* ticket)
 	int oldStatus = m_status;
 	switch (m_type)
 	{
-		case CheckType::OBJECT:
+		case BusinessServiceCheckType::OBJECT:
 			{
 				shared_ptr<NetObj> obj = FindObjectById(m_relatedObject);
 				if (obj != nullptr)
@@ -279,7 +278,7 @@ int BusinessServiceCheck::execute(BusinessServiceTicketData* ticket)
 				}
 			}
 			break;
-		case CheckType::SCRIPT:
+		case BusinessServiceCheckType::SCRIPT:
 			if (m_compiledScript != nullptr)
 			{
 				NXSL_VM *script = CreateServerScriptVM(m_compiledScript, nullptr);
@@ -331,9 +330,9 @@ int BusinessServiceCheck::execute(BusinessServiceTicketData* ticket)
 					else
 					{
 						TCHAR buffer[1024];
-						_sntprintf(buffer, 1024, _T("ServiceCheck::%s::%d"), m_name.cstr(), m_id);
-						PostSystemEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", buffer, script->getErrorText(), m_id);
-						nxlog_write_tag(2, DEBUG_TAG, _T("Failed to execute script for service check object %s [%u] (%s)"), m_name.cstr(), m_id, script->getErrorText());
+						_sntprintf(buffer, 1024, _T("BusinessServiceCheck::%u"), m_id);
+						PostSystemEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", buffer, script->getErrorText(), 0);
+						nxlog_write_tag(2, DEBUG_TAG, _T("Failed to execute script for service check object %s [%u] (%s)"), m_description.cstr(), m_id, script->getErrorText());
 						m_status = STATUS_NORMAL;
 					}
 					delete script;
@@ -348,7 +347,7 @@ int BusinessServiceCheck::execute(BusinessServiceTicketData* ticket)
 				m_status = STATUS_NORMAL;
 			}
 			break;
-		case CheckType::DCI:
+		case BusinessServiceCheckType::DCI:
 			{
 				shared_ptr<NetObj> object = FindObjectById(m_relatedObject);
 				if ((object != nullptr) && object->isDataCollectionTarget())
@@ -360,7 +359,7 @@ int BusinessServiceCheck::execute(BusinessServiceTicketData* ticket)
 			}
 			break;
 		default:
-			nxlog_write_tag(4, DEBUG_TAG, _T("BusinessServiceCheck::execute(%s [%u]) called for undefined check type %d"), m_name.cstr(), m_id, m_type);
+			nxlog_write_tag(4, DEBUG_TAG, _T("BusinessServiceCheck::execute(%s [%u]) called for undefined check type %d"), m_description.cstr(), m_id, m_type);
 			m_status = STATUS_NORMAL;
 			break;
 	}
@@ -401,9 +400,9 @@ bool BusinessServiceCheck::insertTicket(BusinessServiceTicketData* ticket)
 	   lock();
 		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_currentTicket);
 		DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_id);
-		DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_name, DB_BIND_TRANSIENT);
+		DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_description, DB_BIND_TRANSIENT);
 		DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, m_serviceId);
-		DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, (uint32_t)currentTime);
+		DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(currentTime));
 		DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, m_reason, DB_BIND_TRANSIENT);
       unlock();
 		success = DBExecute(hStmt);
@@ -412,11 +411,11 @@ bool BusinessServiceCheck::insertTicket(BusinessServiceTicketData* ticket)
 
 	if (success)
 	{
-		ticket->ticket_id = m_currentTicket;
-		ticket->check_id = m_id;
-		_tcslcpy(ticket->description, m_name, 1023);
-		ticket->service_id = m_serviceId;
-		ticket->create_timestamp = currentTime;
+		ticket->ticketId = m_currentTicket;
+		ticket->checkId = m_id;
+		_tcslcpy(ticket->description, m_description, 1024);
+		ticket->serviceId = m_serviceId;
+		ticket->timestamp = currentTime;
 		_tcslcpy(ticket->reason, m_reason, 256);
 
 		hStmt = DBPrepare(hdb, _T("UPDATE business_service_checks SET current_ticket=? WHERE id=?"));
