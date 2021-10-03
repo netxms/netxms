@@ -406,7 +406,7 @@ void NotifyClientsOnBusinessServiceCheckUpdate(const NXCPMessage& msg, const Net
  */
 void NotifyClientsOnBusinessServiceCheckUpdate(const NetObj& service, shared_ptr<BusinessServiceCheck>& check)
 {
-   NXCPMessage msg(CMD_UPDATE_BUSINESS_CHECK, 0);
+   NXCPMessage msg(CMD_UPDATE_BIZSVC_CHECK, 0);
    check->fillMessage(&msg, VID_CHECK_LIST_BASE);
    NotifyClientsOnBusinessServiceCheckUpdate(msg, service);
 }
@@ -416,7 +416,7 @@ void NotifyClientsOnBusinessServiceCheckUpdate(const NetObj& service, shared_ptr
  */
 void NotifyClientsOnBusinessServiceCheckDelete(const NetObj& service, uint32_t checkId)
 {
-   NXCPMessage msg(CMD_DELETE_BUSINESS_CHECK, 0);
+   NXCPMessage msg(CMD_DELETE_BIZSVC_CHECK, 0);
    msg.setField(VID_OBJECT_ID, service.getId());
    msg.setField(VID_CHECK_ID, checkId);
    NotifyClientsOnBusinessServiceCheckUpdate(msg, service);
