@@ -319,7 +319,7 @@ static LRESULT CALLBACK EventHandlerWndProc(HWND hWnd, UINT uMsg, WPARAM wParam,
  */
 static void EventHandler()
 {
-   HINSTANCE hInstance = (HINSTANCE)GetModuleHandle(NULL);
+   HINSTANCE hInstance = (HINSTANCE)GetModuleHandle(nullptr);
 
 	WNDCLASS wc;
 	memset(&wc, 0, sizeof(WNDCLASS));
@@ -332,18 +332,21 @@ static void EventHandler()
       _tprintf(_T("Call to RegisterClass() failed\n"));
       return;
    }
+   _tprintf(_T("Event handler window class registered\n"));
 
-	HWND hWnd = CreateWindow(_T("NetXMS_SessionAgent_Wnd"), _T("NetXMS Session Agent"), 0, 0, 0, 0, 0, HWND_MESSAGE, NULL, hInstance, NULL);
-	if (hWnd == NULL)
+	HWND hWnd = CreateWindow(_T("NetXMS_SessionAgent_Wnd"), _T("NetXMS Session Agent"), 0, 0, 0, 0, 0, HWND_MESSAGE, nullptr, hInstance, nullptr);
+	if (hWnd == nullptr)
 	{
       _tprintf(_T("Cannot create window: %s"), GetSystemErrorText(GetLastError(), nullptr, 0));
 		return;
 	}
+   _tprintf(_T("Event handler window created\n"));
 
    WTSRegisterSessionNotification(hWnd, NOTIFY_FOR_THIS_SESSION);
+   _tprintf(_T("Event loop started\n"));
 
-	MSG msg;
-	while(GetMessage(&msg, NULL, 0, 0) > 0)
+   MSG msg;
+	while(GetMessage(&msg, nullptr, 0, 0) > 0)
 	{
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);
@@ -377,6 +380,8 @@ static HWND GetConsoleHWND()
  */
 static void CheckIfRunning()
 {
+   _tprintf(_T("Checking if session agent instance is already running\n"));
+
    DWORD sessionId;
    if (!ProcessIdToSessionId(GetCurrentProcessId(), &sessionId))
       return;
@@ -399,6 +404,7 @@ static void CheckIfRunning()
  */
 int main(int argc, char *argv[])
 {
+   _tprintf(_T("NetXMS Session Agent Version ") NETXMS_VERSION_STRING _T(" Build ") NETXMS_BUILD_TAG _T("\n"));
    InitNetXMSProcess(true);
 
    int ch;
@@ -412,7 +418,6 @@ int main(int argc, char *argv[])
             s_hideConsole = true;
             break;
 		   case 'v':   // version
-            _tprintf(_T("NetXMS Session Agent Version ") NETXMS_VERSION_STRING _T(" Build ") NETXMS_BUILD_TAG _T("\n"));
 			   exit(0);
 			   break;
 		   case '?':
@@ -427,30 +432,38 @@ int main(int argc, char *argv[])
 	int wrc = WSAStartup(MAKEWORD(2, 2), &wsaData);
    if (wrc != 0)
    {
-      _tprintf(_T("WSAStartup() failed"));
+      _tprintf(_T("WSAStartup() failed\n"));
       return 1;
    }
+   _tprintf(_T("WSAStartup() completed\n"));
 
-   auto __SetProcessDpiAwarenessContext = reinterpret_cast<BOOL (*)(DPI_AWARENESS_CONTEXT)>(GetProcAddress(GetModuleHandle(_T("user32.dll")), "SetProcessDpiAwarenessContext"));
+   auto __SetProcessDpiAwarenessContext = reinterpret_cast<BOOL (WINAPI *)(DPI_AWARENESS_CONTEXT)>(GetProcAddress(GetModuleHandle(_T("user32.dll")), "SetProcessDpiAwarenessContext"));
    if (__SetProcessDpiAwarenessContext != nullptr)
    {
+      _tprintf(_T("SetProcessDpiAwarenessContext is available\n"));
       __SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE);
    }
    else
    {
-      auto __SetProcessDPIAware = reinterpret_cast<BOOL(*)()>(GetProcAddress(GetModuleHandle(_T("user32.dll")), "SetProcessDPIAware"));
+      auto __SetProcessDPIAware = reinterpret_cast<BOOL(WINAPI *)()>(GetProcAddress(GetModuleHandle(_T("user32.dll")), "SetProcessDPIAware"));
       if (__SetProcessDPIAware != nullptr)
+      {
+         _tprintf(_T("SetProcessDPIAware is available\n"));
          __SetProcessDPIAware();
+      }
       else
+      {
          _tprintf(_T("Neither SetProcessDpiAwarenessContext nor SetProcessDPIAware are available\n"));
+      }
    }
 
    ThreadCreate(EventHandler);
+   _tprintf(_T("Event handler started\n"));
 
    if (s_hideConsole)
    {
       HWND hWnd = GetConsoleHWND();
-      if (hWnd != NULL)
+      if (hWnd != nullptr)
          ShowWindow(hWnd, SW_HIDE);
    }
 #endif
