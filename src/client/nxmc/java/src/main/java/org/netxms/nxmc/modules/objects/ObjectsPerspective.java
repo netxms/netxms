@@ -40,6 +40,7 @@ import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.Perspective;
 import org.netxms.nxmc.base.views.PerspectiveConfiguration;
+import org.netxms.nxmc.base.views.ViewPlacement;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.alarms.views.AlarmsView;
 import org.netxms.nxmc.modules.businessservice.views.BusinessServiceAvailabilityView;
@@ -249,8 +250,8 @@ public abstract class ObjectsPerspective extends Perspective
       for(ToolItem item : objectMenuBar.getItems())
          item.dispose();
 
-      addObjectMenu(i18n.tr("Tools"), ObjectToolsMenuFactory.createMenu(new StructuredSelection(object), null, objectToolBar, getWindow()));
-      addObjectMenu(i18n.tr("Polls"), ObjectPollsMenuFactory.createMenu(new StructuredSelection(object), null, objectToolBar, getWindow(), this));
+      addObjectMenu(i18n.tr("Tools"), ObjectMenuFactory.createToolsMenu(new StructuredSelection(object), null, objectToolBar, new ViewPlacement(this)));
+      addObjectMenu(i18n.tr("Poll"), ObjectMenuFactory.createPollMenu(new StructuredSelection(object), null, objectToolBar, new ViewPlacement(this)));
    }
 
    /**

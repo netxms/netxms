@@ -51,7 +51,7 @@ public class ObjectPollerView extends AdHocObjectView
 
    public static final String ID = "ObjectPollerView";
 
-   public static final String[] POLL_NAME = {
+   private static final String[] POLL_NAME = {
          "",
          i18n.tr("Status Poll"), 
          i18n.tr("Configuration Poll (Full)"),

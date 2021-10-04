@@ -36,8 +36,8 @@ import org.netxms.client.constants.InputFieldType;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
+import org.netxms.nxmc.base.views.ViewPlacement;
 import org.netxms.nxmc.base.widgets.MessageArea;
-import org.netxms.nxmc.base.widgets.MessageAreaHolder;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.dialogs.ObjectToolInputDialog;
 import org.netxms.nxmc.tools.MessageDialogHelper;
@@ -106,9 +106,9 @@ public final class ObjectToolExecutor
     * 
     * @param allNodes nodes to execution tool on
     * @param tool Object tool
-    * @param window owning window
+    * @param perspective owning perspective
     */
-   public static void execute(final Set<ObjectContext> allNodes, final ObjectTool tool, final Window window)
+   public static void execute(final Set<ObjectContext> allNodes, final ObjectTool tool, final ViewPlacement viewPlacement)
    {
       // Filter allowed and applicable nodes for execution
       final Set<ObjectContext> nodes = new HashSet<ObjectContext>();
@@ -240,7 +240,7 @@ public final class ObjectToolExecutor
                   @Override
                   public void run()
                   {
-                     executeOnMultipleNodes(nodes, tool, inputValues, maskedFields, finalExpandedText, window);
+                     executeOnMultipleNodes(nodes, tool, inputValues, maskedFields, finalExpandedText, viewPlacement);
                   }
                });
             }
@@ -255,7 +255,7 @@ public final class ObjectToolExecutor
                         @Override
                         public void run()
                         {
-                           executeOnNode(n, tool, inputValues, maskedFields, tmp, window);
+                           executeOnNode(n, tool, inputValues, maskedFields, tmp, viewPlacement);
                         }
                      });
                   }
@@ -265,7 +265,7 @@ public final class ObjectToolExecutor
                         @Override
                         public void run()
                         {
-                           executeOnNode(n, tool, inputValues, maskedFields, null, window);
+                           executeOnNode(n, tool, inputValues, maskedFields, null, viewPlacement);
                         }
                      });                  
                   }
@@ -328,14 +328,15 @@ public final class ObjectToolExecutor
     * @param maskedFields list of input fields to be masked
     * @param expandedToolData expanded tool data
     * @param winbdow owning window
+    * @param perspective owning perspective
     */
    private static void executeOnNode(final ObjectContext node, final ObjectTool tool, Map<String, String> inputValues,
-         List<String> maskedFields, String expandedToolData, Window window)
+         List<String> maskedFields, String expandedToolData, final ViewPlacement viewPlacement)
    {
       switch(tool.getToolType())
       {
          case ObjectTool.TYPE_ACTION:
-            executeAgentAction(node, tool, inputValues, maskedFields, window);
+            executeAgentAction(node, tool, inputValues, maskedFields, viewPlacement);
             break;
          case ObjectTool.TYPE_FILE_DOWNLOAD:
             executeFileDownload(node, tool, inputValues);
@@ -371,10 +372,10 @@ public final class ObjectToolExecutor
     * @param inputValues input values
     * @param maskedFields list of input fields to be masked
     * @param expandedToolData expanded tool data
-    * @param window owning window
+    * @param perspective owning perspective
     */
    private static void executeOnMultipleNodes(Set<ObjectContext> nodes, ObjectTool tool, Map<String, String> inputValues,
-         List<String> maskedFields, List<String> expandedToolData, Window window)
+         List<String> maskedFields, List<String> expandedToolData, ViewPlacement viewPlacement)
    {
       /*
       final IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
@@ -419,15 +420,15 @@ public final class ObjectToolExecutor
     * @param node
     * @param tool
     * @param inputValues
-    * @param window owning window
+    * @param view current view
     */
-   private static void executeAgentAction(final ObjectContext node, final ObjectTool tool, final Map<String, String> inputValues, final List<String> maskedFields, Window window)
+   private static void executeAgentAction(final ObjectContext node, final ObjectTool tool, final Map<String, String> inputValues, final List<String> maskedFields, final ViewPlacement viewPlacement)
    {
       final NXCSession session = Registry.getSession();
 
       if ((tool.getFlags() & ObjectTool.GENERATES_OUTPUT) == 0)
       {
-         new Job(String.format(i18n.tr("Execute command on node %s"), node.object.getObjectName()), null, (window instanceof MessageAreaHolder) ? (MessageAreaHolder)window : null) {
+         new Job(String.format(i18n.tr("Execute command on node %s"), node.object.getObjectName()), null, viewPlacement.getMessageAreaHolder()) {
             @Override
             protected String getErrorMessage()
             {
@@ -443,10 +444,7 @@ public final class ObjectToolExecutor
                   public void run()
                   {
                      String message = String.format(i18n.tr("Action %s executed successfully on node %s"), action, node.object.getObjectName());
-                     if ((window != null) && (window instanceof MessageAreaHolder))
-                        ((MessageAreaHolder)window).addMessage(MessageArea.SUCCESS, message);
-                     else
-                        MessageDialogHelper.openInformation(Registry.getMainWindow().getShell(), i18n.tr("Tool Execution"), message);
+                     viewPlacement.getMessageAreaHolder().addMessage(MessageArea.SUCCESS, message);
                   }
                });
             }

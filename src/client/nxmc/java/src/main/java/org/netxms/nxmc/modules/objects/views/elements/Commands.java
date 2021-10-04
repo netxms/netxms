@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,6 +34,7 @@ import org.netxms.client.objects.Node;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
+import org.netxms.nxmc.base.views.ViewPlacement;
 import org.netxms.nxmc.base.widgets.CommandBox;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.ObjectContext;
@@ -126,7 +127,7 @@ public class Commands extends OverviewPageElement
                @Override
                public void run()
                {
-                  ObjectToolExecutor.execute(nodes, tool, getObjectView().getWindow());
+                  ObjectToolExecutor.execute(nodes, tool, new ViewPlacement(getObjectView()));
                }
             };
             ImageDescriptor icon = ObjectToolsCache.getInstance().findIcon(tool.getId());

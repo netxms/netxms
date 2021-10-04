@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -41,6 +41,7 @@ import org.netxms.client.objects.ServiceRoot;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.View;
+import org.netxms.nxmc.base.views.ViewPlacement;
 import org.netxms.nxmc.base.widgets.helpers.MenuContributionItem;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.businessservice.dialogs.CreateBusinessServicePrototype;
@@ -200,10 +201,9 @@ public class ObjectContextMenuManager extends MenuManager
       actionCreateRack = new GenericObjectCreationAction(i18n.tr("&Rack..."), AbstractObject.OBJECT_RACK, i18n.tr("Rack"));
       actionCreateVpnConnector = new GenericObjectCreationAction(i18n.tr("&VPN connector..."), AbstractObject.OBJECT_VPNCONNECTOR, i18n.tr("VPN Connector"));
       
+      actionCreateBusinessService = new GenericObjectCreationAction(i18n.tr("&Business service..."), AbstractObject.OBJECT_BUSINESSSERVICE, i18n.tr("Business Service"));
 
-      actionCreateBusinessService = new GenericObjectCreationAction(i18n.tr("&Business Service..."), AbstractObject.OBJECT_BUSINESSSERVICE, i18n.tr("Business Service"));
-
-      actionCreateBusinessServicePrototype = new Action(i18n.tr("Business Service &Prototype...")) {
+      actionCreateBusinessServicePrototype = new Action(i18n.tr("Business service &prototype...")) {
          @Override
          public void run()
          {
@@ -262,14 +262,14 @@ public class ObjectContextMenuManager extends MenuManager
       if (!createMenu.isEmpty())
          add(createMenu);
 
-      final Menu toolsMenu = ObjectToolsMenuFactory.createMenu((IStructuredSelection)selectionProvider.getSelection(), getMenu(), null, view.getWindow());
+      final Menu toolsMenu = ObjectMenuFactory.createToolsMenu((IStructuredSelection)selectionProvider.getSelection(), getMenu(), null, new ViewPlacement(view));
       if (toolsMenu != null)
       {
          add(new Separator());
          add(new MenuContributionItem(i18n.tr("&Tools"), toolsMenu));
       }
 
-      final Menu pollsMenu = ObjectPollsMenuFactory.createMenu((IStructuredSelection)selectionProvider.getSelection(), getMenu(), null, view.getWindow(), view.getPerspective());
+      final Menu pollsMenu = ObjectMenuFactory.createPollMenu((IStructuredSelection)selectionProvider.getSelection(), getMenu(), null, new ViewPlacement(view));
       if (pollsMenu != null)
       {
          add(new Separator());
