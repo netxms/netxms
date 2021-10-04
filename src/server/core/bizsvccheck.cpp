@@ -382,7 +382,7 @@ int BusinessServiceCheck::execute(BusinessServiceTicketData* ticket)
 }
 
 /**
- * Insert ticket for this check into business_service_tickets
+ * Insert ticket for this check into business_service_tickets. Expected to be called while lock on check is held.
  */
 bool BusinessServiceCheck::insertTicket(BusinessServiceTicketData* ticket)
 {
@@ -397,14 +397,12 @@ bool BusinessServiceCheck::insertTicket(BusinessServiceTicketData* ticket)
 	DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO business_service_tickets (ticket_id,original_ticket_id,original_service_id,check_id,check_description,service_id,create_timestamp,close_timestamp,reason) VALUES (?,0,0,?,?,?,?,0,?)"));
 	if (hStmt != nullptr)
 	{
-	   lock();
 		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_currentTicket);
 		DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_id);
-		DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_description, DB_BIND_TRANSIENT);
+		DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_description, DB_BIND_STATIC);
 		DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, m_serviceId);
 		DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(currentTime));
-		DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, m_reason, DB_BIND_TRANSIENT);
-      unlock();
+		DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, m_reason, DB_BIND_STATIC);
 		success = DBExecute(hStmt);
 		DBFreeStatement(hStmt);
 	}
@@ -433,11 +431,12 @@ bool BusinessServiceCheck::insertTicket(BusinessServiceTicketData* ticket)
 }
 
 /**
- * Close current ticket
+ * Close current ticket.  Expected to be called while lock on check is held.
  */
 void BusinessServiceCheck::closeTicket()
 {
 	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+
 	DB_STATEMENT hStmt = DBPrepare(hdb, _T("UPDATE business_service_tickets SET close_timestamp=? WHERE ticket_id=? OR original_ticket_id=?"));
 	if (hStmt != nullptr)
 	{
@@ -450,8 +449,6 @@ void BusinessServiceCheck::closeTicket()
 
 	DBConnectionPoolReleaseConnection(hdb);
 
-	lock();
 	m_currentTicket = 0;
 	m_reason[0] = 0;
-	unlock();
 }
