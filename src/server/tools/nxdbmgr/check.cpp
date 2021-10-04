@@ -778,7 +778,7 @@ static void CheckCollectedDataSingleTable_TSDB(bool isTable)
 {
    static const TCHAR *sclasses[] = { _T("default"), _T("7"), _T("30"), _T("90"), _T("180"), _T("other") };
 
-   StartStage(isTable ? _T("Table DCI history records") : _T("DCI history records"), 12);
+   StartStage(isTable ? _T("Table DCI history records") : _T("DCI history records"), 6);
    time_t now = time(NULL);
 
    for(int sc = 0; sc < 6; sc++)
@@ -798,36 +798,6 @@ static void CheckCollectedDataSingleTable_TSDB(bool isTable)
                         isTable ? _T("tdata") : _T("idata"), sclasses[sc], isTable ? _T("tdata") : _T("idata"), TIME_T_FCAST(now));
                if (SQLQuery(query))
                   g_dbCheckFixes++;
-            }
-         }
-         DBFreeResult(hResult);
-      }
-
-      UpdateStageProgress(1);
-   }
-
-   ResetBulkYesNo();
-
-   for(int sc = 0; sc < 6; sc++)
-   {
-      TCHAR query[1024];
-      _sntprintf(query, 1024, _T("SELECT distinct(item_id) FROM %s_sc_%s"), isTable ? _T("tdata") : _T("idata"), sclasses[sc]);
-      DB_RESULT hResult = SQLSelect(query);
-      if (hResult != NULL)
-      {
-         int count = DBGetNumRows(hResult);
-         for(int i = 0; i < count; i++)
-         {
-            UINT32 id = DBGetFieldLong(hResult, i, 0);
-            if (!IsDciExists(id, 0, isTable))
-            {
-               g_dbCheckErrors++;
-               if (GetYesNoEx(_T("Found collected data for non-existing DCI [%d]. Delete invalid records?"), id))
-               {
-                  _sntprintf(query, 1024, _T("DELETE FROM %s_sc_%s WHERE item_id=%d"), isTable ? _T("tdata") : _T("idata"), sclasses[sc], id);
-                  if (SQLQuery(query))
-                     g_dbCheckFixes++;
-               }
             }
          }
          DBFreeResult(hResult);
