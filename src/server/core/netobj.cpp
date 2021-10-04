@@ -955,6 +955,14 @@ void NetObj::destroy()
 }
 
 /**
+ * Get most critical additional status from any object specific function or component. Default implementation always return STATUS_UNKNOWN.
+ */
+int NetObj::getAdditionalMostCriticalStatus()
+{
+   return STATUS_UNKNOWN;
+}
+
+/**
  * Calculate status for compound object based on children status
  */
 void NetObj::calculateCompoundStatus(BOOL bForcedRecalc)
@@ -963,7 +971,6 @@ void NetObj::calculateCompoundStatus(BOOL bForcedRecalc)
       return;
 
    int mostCriticalAlarm = GetMostCriticalStatusForObject(m_id);
-   int mostCriticalDCI = isDataCollectionTarget() ? ((DataCollectionTarget *)this)->getMostCriticalDCIStatus() : STATUS_UNKNOWN;
 
    int oldStatus = m_status;
    int mostCriticalStatus, i, count, iStatusAlg;
@@ -1053,16 +1060,17 @@ void NetObj::calculateCompoundStatus(BOOL bForcedRecalc)
       }
    }
 
-   // If DCI status is calculated for object apply DCI object's status
-   if (mostCriticalDCI != STATUS_UNKNOWN)
+   // Apply any additional most critical status
+   int mostCriticalAdditional = getAdditionalMostCriticalStatus();
+   if (mostCriticalAdditional != STATUS_UNKNOWN)
    {
       if (m_status == STATUS_UNKNOWN)
       {
-         m_status = mostCriticalDCI;
+         m_status = mostCriticalAdditional;
       }
       else
       {
-         m_status = std::max(m_status, mostCriticalDCI);
+         m_status = std::max(m_status, mostCriticalAdditional);
       }
    }
 

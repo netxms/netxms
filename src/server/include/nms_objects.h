@@ -1280,6 +1280,8 @@ protected:
    virtual void prepareForDeletion();
    virtual void onObjectDelete(UINT32 objectId);
 
+   virtual int getAdditionalMostCriticalStatus();
+
    virtual void fillMessageInternal(NXCPMessage *msg, UINT32 userId);
    virtual void fillMessageInternalStage2(NXCPMessage *msg, UINT32 userId);
    virtual UINT32 modifyFromMessageInternal(NXCPMessage *msg);
@@ -2207,6 +2209,8 @@ protected:
    virtual void onInstanceDiscoveryChange() override;
    virtual bool isDataCollectionDisabled();
 
+   virtual int getAdditionalMostCriticalStatus() override;
+
    virtual void instanceDiscoveryPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) override;
    virtual StringMap *getInstanceList(DCObject *dco);
    void doInstanceDiscovery(UINT32 requestId);
@@ -2250,8 +2254,6 @@ public:
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
    virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
 
-   virtual bool setMgmtStatus(bool isManaged) override;
-   virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE) override;
    virtual bool isDataCollectionTarget() const override;
 
    virtual void enterMaintenanceMode(uint32_t userId, const TCHAR *comments) override;
@@ -2301,8 +2303,6 @@ public:
    virtual bool isEventSource() const override;
 
    uint32_t getEffectiveWebServiceProxy();
-
-   int getMostCriticalDCIStatus();
 
    uint64_t getCacheMemoryUsage();
 
@@ -4324,6 +4324,8 @@ protected:
 
    virtual void configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) override;
    virtual void statusPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) override;
+
+   virtual int getAdditionalMostCriticalStatus() override;
 
    void validateAutomaticObjectChecks();
    void validateAutomaticDCIChecks();

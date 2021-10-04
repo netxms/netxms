@@ -1676,10 +1676,9 @@ bool DataCollectionTarget::isEventSource() const
 }
 
 /**
- * Returns most critical status of DCI used for
- * status calculation
+ * Returns most critical status of DCI used for status calculation
  */
-int DataCollectionTarget::getMostCriticalDCIStatus()
+int DataCollectionTarget::getAdditionalMostCriticalStatus()
 {
    int status = -1;
    readLockDciAccess();
@@ -1700,22 +1699,6 @@ int DataCollectionTarget::getMostCriticalDCIStatus()
 	}
    unlockDciAccess();
    return (status == -1) ? STATUS_UNKNOWN : status;
-}
-
-/**
- * Set object's management status
- */
-bool DataCollectionTarget::setMgmtStatus(bool isManaged)
-{
-   return super::setMgmtStatus(isManaged);
-}
-
-/**
- * Calculate compound status
- */
-void DataCollectionTarget::calculateCompoundStatus(BOOL bForcedRecalc)
-{
-   super::calculateCompoundStatus(bForcedRecalc);
 }
 
 /**

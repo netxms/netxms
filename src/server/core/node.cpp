@@ -1937,14 +1937,14 @@ bool Node::setMgmtStatus(bool isManaged)
  */
 void Node::calculateCompoundStatus(BOOL bForcedRecalc)
 {
-   int iOldStatus = m_status;
-   static UINT32 dwEventCodes[] = { EVENT_NODE_NORMAL, EVENT_NODE_WARNING,
+   int oldStatus = m_status;
+   static uint32_t eventCodes[] = { EVENT_NODE_NORMAL, EVENT_NODE_WARNING,
       EVENT_NODE_MINOR, EVENT_NODE_MAJOR, EVENT_NODE_CRITICAL,
       EVENT_NODE_UNKNOWN, EVENT_NODE_UNMANAGED };
 
    super::calculateCompoundStatus(bForcedRecalc);
-   if (m_status != iOldStatus)
-      PostSystemEvent(dwEventCodes[m_status], m_id, "d", iOldStatus);
+   if (m_status != oldStatus)
+      PostSystemEvent(eventCodes[m_status], m_id, "d", oldStatus);
 }
 
 /**

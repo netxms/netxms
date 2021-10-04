@@ -136,6 +136,21 @@ void BusinessService::fillMessageInternal(NXCPMessage *msg, uint32_t userId)
 }
 
 /**
+ * Returns most critical status of DCI used for status calculation
+ */
+int BusinessService::getAdditionalMostCriticalStatus()
+{
+   int status = STATUS_NORMAL;
+   unique_ptr<SharedObjectArray<BusinessServiceCheck>> checks = getChecks();
+   for (const shared_ptr<BusinessServiceCheck>& check : *checks)
+   {
+      if (check->getStatus() > status)
+         status = check->getStatus();
+   }
+   return status;
+}
+
+/**
  * Status poll
  */
 void BusinessService::statusPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId)
@@ -154,17 +169,12 @@ void BusinessService::statusPoll(PollerInfo *poller, ClientSession *session, UIN
 
    nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("BusinessService::statusPoll(%s [%u]): poll started"), m_name, m_id);
    sendPollerMsg(_T("Started status poll of business service %s [%d] \r\n"), m_name, (int)m_id);
-   lockProperties();
-   int lastPollStatus = m_status;
-   unlockProperties();
-   int newStatus = STATUS_NORMAL;
+   int prevStatus = m_status;
 
-   // Loop through the kids and execute their either scripts or thresholds
-   readLockChildList();
-   calculateCompoundStatus();
-   unlockChildList();
-
+   poller->setStatus(_T("executing checks"));
    sendPollerMsg(_T("Executing business service checks\r\n"));
+
+   int mostCriticalCheckStatus = STATUS_NORMAL;
    unique_ptr<SharedObjectArray<BusinessServiceCheck>> checks = getChecks();
    for (const shared_ptr<BusinessServiceCheck>& check : *checks)
    {
@@ -189,28 +199,25 @@ void BusinessService::statusPoll(PollerInfo *poller, ClientSession *session, UIN
                   checkDescription.cstr(), newCheckStatus == STATUS_CRITICAL ? _T("CRITICAL") : _T("NORMAL"));
          NotifyClientsOnBusinessServiceCheckUpdate(*this, check);
       }
-      lockProperties();
-      if (newCheckStatus > newStatus)
+      if (newCheckStatus > mostCriticalCheckStatus)
       {
-         newStatus = newCheckStatus;
+         mostCriticalCheckStatus = newCheckStatus;
       }
-      unlockProperties();
    }
    sendPollerMsg(_T("All business service checks executed\r\n"));
 
-   if (lastPollStatus != newStatus)
+   calculateCompoundStatus();
+
+   if (prevStatus != m_status)
    {
-      sendPollerMsg(_T("Status of business service changed to %s\r\n"), newStatus == STATUS_CRITICAL ? _T("CRITICAL") : _T("NORMAL"));
-      lockProperties();
-      m_status = newStatus;
-      unlockProperties();
+      sendPollerMsg(_T("Status of business service changed to %s\r\n"), m_status == STATUS_CRITICAL ? _T("CRITICAL") : _T("NORMAL"));
    }
 
-   if (newStatus > lastPollStatus)
+   if (m_status > prevStatus)
    {
       DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
       DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO business_service_downtime (record_id,service_id,from_timestamp,to_timestamp) VALUES (?,?,?,0)"));
-      if (hStmt != NULL)
+      if (hStmt != nullptr)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, CreateUniqueId(IDG_BUSINESS_SERVICE_RECORD));
          DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_id);
@@ -220,11 +227,11 @@ void BusinessService::statusPoll(PollerInfo *poller, ClientSession *session, UIN
       }
       DBConnectionPoolReleaseConnection(hdb);
    }
-   if (newStatus < lastPollStatus)
+   else if (m_status < prevStatus)
    {
       DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
       DB_STATEMENT hStmt = DBPrepare(hdb, _T("UPDATE business_service_downtime SET to_timestamp=? WHERE service_id=? AND to_timestamp=0"));
-      if (hStmt != NULL)
+      if (hStmt != nullptr)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (uint32_t)time(nullptr));
          DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_id);
