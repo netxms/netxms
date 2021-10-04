@@ -2786,7 +2786,7 @@ AC_CHECK_TYPES([long long, unsigned long long, int64_t, uint64_t, u_int64_t, int
 #include <inttypes.h>
 #endif
 ])
-AC_CHECK_TYPES([mode_t, size_t, ssize_t, off_t, socklen_t, uuid_t],,,[
+AC_CHECK_TYPES([mode_t, size_t, ssize_t, off_t, off64_t, socklen_t, uuid_t],,,[
 #if HAVE_SYS_TYPES_H
 #include <sys/types.h>
 #endif
