@@ -211,7 +211,9 @@
     <ClCompile Include="authtokens.cpp" />
     <ClCompile Include="beacon.cpp" />
     <ClCompile Include="bizservice.cpp" />
+    <ClCompile Include="bizsvcbase.cpp" />
     <ClCompile Include="bizsvccheck.cpp" />
+    <ClCompile Include="bizsvcproto.cpp" />
     <ClCompile Include="bridge.cpp" />
     <ClCompile Include="cas_validator.cpp" />
     <ClCompile Include="ccy.cpp" />
