@@ -137,7 +137,7 @@ static bool H_UpgradeFromV69()
       _T("ALTER TABLE business_services ADD instance varchar(1023)\n")
       _T("ALTER TABLE business_services ADD object_status_threshold integer\n")
       _T("ALTER TABLE business_services ADD dci_status_threshold integer\n")
-      _T("UPDATE business_services SET object_status_threshold=0,dci_status_threshold=0\n")
+      _T("UPDATE business_services SET prototype_id=0,object_status_threshold=0,dci_status_threshold=0\n")
       _T("<END>");
    CHK_EXEC(SQLBatch(businessServiceBatch));
    CHK_EXEC(DBRenameColumn(g_dbHandle, _T("business_services"), _T("service_id"), _T("id")));
