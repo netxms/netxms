@@ -703,6 +703,10 @@ typedef void * HMODULE;
 typedef int mode_t;
 #endif
 
+#if !HAVE_OFF64_T
+typedef int64_t off64_t;
+#endif
+
 #if defined(PRId64)
 #define INT64_FMT       _T("%") PRId64
 #define INT64_FMTW      L"%" PRId64
