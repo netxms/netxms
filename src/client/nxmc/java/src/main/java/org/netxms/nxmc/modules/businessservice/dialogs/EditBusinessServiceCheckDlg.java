@@ -58,7 +58,7 @@ public class EditBusinessServiceCheckDlg extends Dialog
    protected void configureShell(Shell newShell)
    {
       super.configureShell(newShell);
-      newShell.setText(createNew ? i18n.tr("Create check") : i18n.tr("Modify check"));
+      newShell.setText(createNew ? i18n.tr("Create Business Service Check") : i18n.tr("Modify Business Service Check"));
    }  
 
    /**
@@ -137,14 +137,14 @@ public class EditBusinessServiceCheckDlg extends Dialog
       gd = new GridData();
       gd.horizontalSpan = 2;
       label.setLayoutData(gd);
-      
+
       scriptEditor = new ScriptEditor(dialogArea, SWT.BORDER, SWT.H_SCROLL | SWT.V_SCROLL, true, true);
       gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
       gd.grabExcessVerticalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
       gd.verticalAlignment = SWT.FILL;
-      gd.widthHint = 300;
+      gd.widthHint = 700;
       gd.heightHint = 300;
       gd.horizontalSpan = 2;
       scriptEditor.setLayoutData(gd);

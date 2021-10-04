@@ -404,7 +404,7 @@ void NotifyClientsOnBusinessServiceCheckUpdate(const NXCPMessage& msg, const Net
 /**
  * Send business service check update to all active sessions
  */
-void NotifyClientsOnBusinessServiceCheckUpdate(const NetObj& service, shared_ptr<BusinessServiceCheck>& check)
+void NotifyClientsOnBusinessServiceCheckUpdate(const NetObj& service, const shared_ptr<BusinessServiceCheck>& check)
 {
    NXCPMessage msg(CMD_UPDATE_BIZSVC_CHECK, 0);
    check->fillMessage(&msg, VID_CHECK_LIST_BASE);

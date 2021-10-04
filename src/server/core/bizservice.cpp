@@ -152,7 +152,7 @@ void BusinessService::statusPoll(PollerInfo *poller, ClientSession *session, UIN
    poller->setStatus(_T("wait for lock"));
    pollerLock(status);
 
-   nxlog_debug_tag(DEBUG_TAG_BIZSVC, 5, _T("Started polling of business service %s [%d]"), m_name, (int)m_id);
+   nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("BusinessService::statusPoll(%s [%u]): poll started"), m_name, m_id);
    sendPollerMsg(_T("Started status poll of business service %s [%d] \r\n"), m_name, (int)m_id);
    lockProperties();
    int lastPollStatus = m_status;
@@ -164,10 +164,15 @@ void BusinessService::statusPoll(PollerInfo *poller, ClientSession *session, UIN
    calculateCompoundStatus();
    unlockChildList();
 
+   sendPollerMsg(_T("Executing business service checks\r\n"));
    unique_ptr<SharedObjectArray<BusinessServiceCheck>> checks = getChecks();
-   for (shared_ptr<BusinessServiceCheck> check : *checks)
+   for (const shared_ptr<BusinessServiceCheck>& check : *checks)
    {
       BusinessServiceTicketData data = {};
+      SharedString checkDescription = check->getDescription();
+
+      nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("BusinessService::statusPoll(%s [%u]): executing check %s [%u]"), m_name, m_id, checkDescription.cstr(), check->getId());
+      sendPollerMsg(_T("   Executing business service check \"%s\"\r\n"), checkDescription.cstr());
       int oldCheckStatus = check->getStatus();
       int newCheckStatus = check->execute(&data);
 
@@ -179,8 +184,9 @@ void BusinessService::statusPoll(PollerInfo *poller, ClientSession *session, UIN
       }
       if (oldCheckStatus != newCheckStatus)
       {
-         sendPollerMsg(_T("Status of business service check \"%s\" changed to %s\r\n"),
-                  check->getDescription().cstr(), newCheckStatus == STATUS_CRITICAL ? _T("CRITICAL") : _T("NORMAL"));
+         nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("BusinessService::statusPoll(%s [%u]): status of check %s [%u] changed to %d"), m_name, m_id, checkDescription.cstr(), check->getId(), newCheckStatus);
+         sendPollerMsg(_T("   Status of business service check \"%s\" changed to %s\r\n"),
+                  checkDescription.cstr(), newCheckStatus == STATUS_CRITICAL ? _T("CRITICAL") : _T("NORMAL"));
          NotifyClientsOnBusinessServiceCheckUpdate(*this, check);
       }
       lockProperties();
@@ -190,6 +196,7 @@ void BusinessService::statusPoll(PollerInfo *poller, ClientSession *session, UIN
       }
       unlockProperties();
    }
+   sendPollerMsg(_T("All business service checks executed\r\n"));
 
    if (lastPollStatus != newStatus)
    {
@@ -229,7 +236,7 @@ void BusinessService::statusPoll(PollerInfo *poller, ClientSession *session, UIN
 
    lockProperties();
    sendPollerMsg(_T("Finished status poll of business service %s [%u] \r\n"), m_name, m_id);
-   nxlog_debug_tag(DEBUG_TAG_BIZSVC, 5, _T("Finished status polling of business service %s [%u]"), m_name, m_id);
+   nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("BusinessService::statusPoll(%s [%u]): poll finished"), m_name, m_id);
    unlockProperties();
    pollerUnlock();
 }
