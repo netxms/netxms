@@ -1,5 +1,5 @@
 /* 
-** nxshell - launcher for main Java application
+** nxmc - launcher for main Java application
 ** Copyright (C) 2017-2021 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
@@ -24,19 +24,35 @@
 #include <netxms-version.h>
 #include <nxjava.h>
 
-NETXMS_EXECUTABLE_HEADER(nxshell)
+NETXMS_EXECUTABLE_HEADER(nxmc)
 
 /**
  * Options
  */
 static const char *s_optHost = "127.0.0.1";
 static const char *s_optPort = "";
-static const char *s_optUser = "admin";
-static const char *s_optPassword = nullptr;
+static const char *s_optUser = nullptr;
+static const char *s_optPassword = "";
 static const char *s_optToken = nullptr;
 static const char *s_optJre = nullptr;
 static const char *s_optClassPath = nullptr;
-static bool s_optSync = true;
+
+/**
+ * Display error message
+ */
+static void ShowErrorMessage(const TCHAR *format, ...)
+{
+   TCHAR message[1024];
+   va_list args;
+   va_start(args, format);
+   _vsntprintf(message, 1024, format, args);
+   va_end(args);
+#ifdef _WIN32
+   MessageBox(nullptr, message, _T("NetXMS Management Console - Startup Error"), MB_OK | MB_ICONERROR);
+#else
+   _tprintf(_T("%s\n"), message);
+#endif
+}
 
 /**
  * Start application
@@ -57,7 +73,7 @@ static int StartApp(int argc, char *argv[])
    {
       if (FindJavaRuntime(jre, MAX_PATH) == nullptr)
       {
-         _tprintf(_T("Cannot find suitable Java runtime environment\n"));
+         ShowErrorMessage(_T("Cannot find suitable Java runtime environment"));
          return 2;
       }
    }
@@ -69,52 +85,21 @@ static int StartApp(int argc, char *argv[])
    vmOptions.addMBString(buffer);
    snprintf(buffer, 256, "-Dnetxms.port=%s", s_optPort);
    vmOptions.addMBString(buffer);
-   snprintf(buffer, 256, "-Dnetxms.syncObjects=%s", s_optSync ? "true" : "false");
-   vmOptions.addMBString(buffer);
 
    if (s_optToken != nullptr)
    {
       snprintf(buffer, 256, "-Dnetxms.token=%s", s_optToken);
       vmOptions.addMBString(buffer);
    }
-   else
+   else if (s_optUser != nullptr)
    {
       snprintf(buffer, 256, "-Dnetxms.login=%s", s_optUser);
       vmOptions.addMBString(buffer);
-
-      if (s_optPassword == nullptr)
-      {
-         TCHAR prompt[256], passwordBuffer[256];
-         _sntprintf(prompt, 256, _T("%hs@%hs password: "), s_optUser, s_optHost);
-         if (ReadPassword(prompt, passwordBuffer, 256))
-         {
-#ifdef UNICODE
-            s_optPassword = MBStringFromWideString(passwordBuffer);
-#else
-            s_optPassword = MemCopyStringA(passwordBuffer);
-#endif
-         }
-         else
-         {
-            s_optPassword = "";
-         }
-      }
 
       char clearPassword[128];
       DecryptPasswordA(s_optUser, s_optPassword, clearPassword, 128);
       snprintf(buffer, 256, "-Dnetxms.password=%s", clearPassword);
       vmOptions.addMBString(buffer);
-   }
-
-   int debugLevel = nxlog_get_debug_level();
-   if (debugLevel > 0)
-   {
-      vmOptions.add(_T("-Dnxshell.debug=true"));
-      if (debugLevel > 7)
-      {
-         vmOptions.add(_T("-verbose:jni"));
-         vmOptions.add(_T("-verbose:class"));
-      }
    }
 
    int rc = 0;
@@ -125,27 +110,21 @@ static int StartApp(int argc, char *argv[])
 #define cp s_optClassPath
 #endif
    JNIEnv *env;
-   static const TCHAR *syslibs[] =
-   {
-      _T("netxms-base-") NETXMS_PACKAGE_VERSION _T(".jar"),
-      _T("netxms-client-") NETXMS_PACKAGE_VERSION _T(".jar"),  // should be listed explicitly, otherwise jython cannot do some imports correctly
-      nullptr
-   };
-   JavaBridgeError err = CreateJavaVM(jre, _T("nxshell-") NETXMS_PACKAGE_VERSION _T(".jar"), syslibs, cp, &vmOptions, &env);
+   JavaBridgeError err = CreateJavaVM(jre, _T("nxmc-") NETXMS_PACKAGE_VERSION _T(".jar"), nullptr, cp, &vmOptions, &env);
    if (err == NXJAVA_SUCCESS)
    {
       nxlog_debug(5, _T("JVM created"));
-      err = StartJavaApplication(env, "org/netxms/Shell", argc, argv);
+      err = StartJavaApplication(env, "org/netxms/nxmc/Startup", argc, argv);
       if (err != NXJAVA_SUCCESS)
       {
-         _tprintf(_T("Cannot start Java application (%s)\n"), GetJavaBridgeErrorMessage(err));
+         ShowErrorMessage(_T("Cannot start Java application (%s)"), GetJavaBridgeErrorMessage(err));
          rc = 4;
       }
       DestroyJavaVM();
    }
    else
    {
-      _tprintf(_T("Unable to create Java VM (%s)\n"), GetJavaBridgeErrorMessage(err));
+      ShowErrorMessage(_T("Unable to create Java VM (%s)"), GetJavaBridgeErrorMessage(err));
       rc = 3;
    }
    return rc;
@@ -162,7 +141,6 @@ static struct option longOptions[] =
 	{ (char *)"help",           no_argument,       nullptr,        'h' },
 	{ (char *)"host",           required_argument, nullptr,        'H' },
 	{ (char *)"jre",            required_argument, nullptr,        'j' },
-	{ (char *)"no-sync",        required_argument, nullptr,        'n' },
 	{ (char *)"password",       required_argument, nullptr,        'P' },
    { (char *)"port",           required_argument, nullptr,        'p' },
    { (char *)"token",          required_argument, nullptr,        't' },
@@ -172,7 +150,7 @@ static struct option longOptions[] =
 };
 #endif
 
-#define SHORT_OPTIONS "C:DhH:j:np:P:t:u:v"
+#define SHORT_OPTIONS "C:DhH:j:p:P:t:u:v"
 
 /**
  * Print usage info
@@ -182,12 +160,12 @@ static void ShowUsage(bool showVersion)
    if (showVersion)
    {
       _tprintf(
-         _T("NetXMS Interactive Shell  Version ") NETXMS_VERSION_STRING _T("\n")
+         _T("NetXMS Management Console  Version ") NETXMS_VERSION_STRING _T("\n")
          _T("Copyright (c) 2006-2021 Raden Solutions\n\n"));
    }
 
    _tprintf(
-      _T("Usage: nxshell [OPTIONS] [script]\n")
+      _T("Usage: nxmc [OPTIONS]\n")
       _T("  \n")
       _T("Options:\n")
 #if HAVE_GETOPT_LONG
@@ -196,11 +174,10 @@ static void ShowUsage(bool showVersion)
       _T("  -h, --help                  Display this help message.\n")
       _T("  -H, --host <hostname>       Specify host name or IP address. Could be in host:port form.\n")
       _T("  -j, --jre <path>            Specify JRE location.\n")
-      _T("  -n, --no-sync               Do not synchronize objects on connect.\n")
       _T("  -p, --port <port>           Specify TCP port for connection. Default is 4701.\n")
       _T("  -P, --password <password>   Specify user's password. Default is empty.\n")
       _T("  -t, --token <token>         Login to server using given authentication token.\n")
-      _T("  -u, --user <user>           Login to server as user. Default is \"admin\".\n")
+      _T("  -u, --user <user>           Login to server as given user.\n")
       _T("  -v, --version               Display version information.\n\n")
 #else
       _T("  -C <path>      Additional Java class path.\n")
@@ -208,11 +185,10 @@ static void ShowUsage(bool showVersion)
       _T("  -h             Display this help message.\n")
       _T("  -H <hostname>  Specify host name or IP address. Could be in host:port form.\n")
       _T("  -j <path>      Specify JRE location.\n")
-      _T("  -n             Do not synchronize objects on connect.\n")
       _T("  -p <port>      Specify TCP port for connection. Default is 4701.\n")
       _T("  -P <password>  Specify user's password. If not given, password will be read from terminal.\n")
       _T("  -t <token>     Login to server using given authentication token.\n")
-      _T("  -u <user>      Login to server as user. Default is \"admin\".\n")
+      _T("  -u <user>      Login to server as given user.\n")
       _T("  -v             Display version information.\n\n")
 #endif
       );
@@ -223,7 +199,7 @@ static void ShowUsage(bool showVersion)
  */
 static void DebugWriter(const TCHAR *tag, const TCHAR *format, va_list args)
 {
-   _tprintf(_T("[%-19s] "), (tag != nullptr) ? tag : _T("nxshell"));
+   _tprintf(_T("[%-19s] "), (tag != nullptr) ? tag : _T("nxmc"));
    _vtprintf(format, args);
    _fputtc(_T('\n'), stdout);
 }
@@ -263,9 +239,6 @@ int main(int argc, char *argv[])
 		   case 'j': // JRE
 			   s_optJre = optarg;
 			   break;
-         case 'n': // no sync
-            s_optSync = false;
-            break;
          case 'p': // port
             s_optPort = optarg;
             break;
@@ -280,7 +253,7 @@ int main(int argc, char *argv[])
             break;
 		   case 'v': // version
             _tprintf(
-               _T("NetXMS Interactive Shell  Version ") NETXMS_VERSION_STRING _T("\n")
+               _T("NetXMS Management Console  Version ") NETXMS_VERSION_STRING _T("\n")
                _T("Copyright (c) 2006-2021 Raden Solutions\n\n"));
 			   exit(0);
 			   break;

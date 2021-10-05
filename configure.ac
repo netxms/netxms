@@ -960,7 +960,7 @@ AC_ARG_WITH(dist,
 	TOP_LEVEL_MODULES="include sql images tests"
 	SERVER_INCLUDE="include"
 	CONTRIB_MODULES="mibs backgrounds music templates"
-	CLIENT_COMPONENTS="java nxalarm nxevent nxpush nxshell nxnotify"
+	CLIENT_COMPONENTS="java nxalarm nxevent nxmc nxnotify nxpush nxshell"
 	SERVER_COMPONENTS="nxreportd"
 	DIST_BUILD="yes"
 )
@@ -1197,6 +1197,9 @@ if test $? = 0; then
 	check_substr "$COMPONENTS" "java"
 	if test $? = 0; then
 		CLIENT_COMPONENTS="$CLIENT_COMPONENTS java nxshell"
+		if test "x$PLATFORM" = "xLinux" -o "x$PLATFORM" = "xDarwin"; then
+			CLIENT_COMPONENTS="$CLIENT_COMPONENTS nxmc"
+		fi
 	fi
 fi
 
@@ -4891,6 +4894,8 @@ AC_CONFIG_FILES([
 	src/client/libnxclient/Makefile
 	src/client/nxalarm/Makefile
 	src/client/nxevent/Makefile
+	src/client/nxmc/Makefile
+	src/client/nxmc/java/Makefile
 	src/client/nxnotify/Makefile
 	src/client/nxpush/Makefile
 	src/client/nxshell/Makefile
@@ -5153,14 +5158,15 @@ else
 fi
 if test "x${BUILD_CLIENT}" = "xyes"; then
 	echo "Build Clients           : YES"
+	echo "Client components       :${CLIENT_COMPONENTS}"
 else
 	echo "Build Clients           : NO"
 fi
 if test "x${BUILD_AGENT}" = "xyes"; then
 	echo "Build Agent             : YES"
 	echo "Agent libs              :${AGENT_LIBS}"
-	echo "Agent extra components  :${AGENT_DIRS}"
-	echo "Subagents list          :${SUBAGENT_DIRS}"
+	echo "Agent extra components  : ${AGENT_DIRS}"
+	echo "Subagents list          : ${SUBAGENT_DIRS}"
 	if test "x${SYSTEMD_SUPPORT}" = "xyes"; then
 		echo "Systemd support         : YES"
 		if test "x${HAVE_SDBUS}" = "xyes"; then
@@ -5313,7 +5319,7 @@ if test "x${MONGODB_LDFLAGS}" != "x"; then
 fi
 
 if test "x${ASTERISK_LIBS}" != "x"; then
-	echo "Asterisk LIBS           : ${ASTERISK_LIBS}"
+	echo "Asterisk LIBS           :${ASTERISK_LIBS}"
 fi
 
 if test "x${VMGR_CPPFLAGS}" != "x"; then
