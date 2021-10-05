@@ -26,16 +26,30 @@
 
 NETXMS_EXECUTABLE_HEADER(nxmc)
 
+#ifdef _WIN32
+#define NXMC_CHAR WCHAR
+#define _NXMC_T(s) L##s
+#define NXMC_OPTARG optargW
+#define NXMC_SNPRINTF _snwprintf
+#define NXMC_ADD_STRING(sb, s) sb.add(s)
+#else
+#define NXMC_CHAR char
+#define _NXMC_T(s) s
+#define NXMC_OPTARG optarg
+#define NXMC_SNPRINTF snprintf
+#define NXMC_ADD_STRING(sb, s) sb.addMBString(s)
+#endif
+
 /**
  * Options
  */
-static const char *s_optHost = "127.0.0.1";
-static const char *s_optPort = "";
-static const char *s_optUser = nullptr;
-static const char *s_optPassword = "";
-static const char *s_optToken = nullptr;
-static const char *s_optJre = nullptr;
-static const char *s_optClassPath = nullptr;
+static const NXMC_CHAR *s_optHost = _NXMC_T("127.0.0.1");
+static const NXMC_CHAR *s_optPort = _NXMC_T("");
+static const NXMC_CHAR *s_optUser = nullptr;
+static const NXMC_CHAR *s_optPassword = _NXMC_T("");
+static const NXMC_CHAR *s_optToken = nullptr;
+static const NXMC_CHAR *s_optJre = nullptr;
+static const NXMC_CHAR *s_optClassPath = nullptr;
 
 /**
  * Display error message
@@ -57,16 +71,16 @@ static void ShowErrorMessage(const TCHAR *format, ...)
 /**
  * Start application
  */
-static int StartApp(int argc, char *argv[])
+static int StartApp(int argc, NXMC_CHAR *argv[])
 {
    TCHAR jre[MAX_PATH];
    if (s_optJre != nullptr)
    {
-#ifdef UNICODE
+#if !defined(_WIN32) && defined(UNICODE)
       MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, s_optJre, -1, jre, MAX_PATH);
       jre[MAX_PATH - 1] = 0;
 #else
-      strlcpy(jre, s_optJre, MAX_PATH);
+      _tcslcpy(jre, s_optJre, MAX_PATH);
 #endif
    }
    else
@@ -80,31 +94,38 @@ static int StartApp(int argc, char *argv[])
    nxlog_debug(1, _T("Using JRE: %s"), jre);
 
    StringList vmOptions;
-   char buffer[256];
-   snprintf(buffer, 256, "-Dnetxms.server=%s", s_optHost);
-   vmOptions.addMBString(buffer);
-   snprintf(buffer, 256, "-Dnetxms.port=%s", s_optPort);
-   vmOptions.addMBString(buffer);
-
-   if (s_optToken != nullptr)
+   if ((s_optToken != nullptr) || (s_optUser != nullptr))
    {
-      snprintf(buffer, 256, "-Dnetxms.token=%s", s_optToken);
-      vmOptions.addMBString(buffer);
-   }
-   else if (s_optUser != nullptr)
-   {
-      snprintf(buffer, 256, "-Dnetxms.login=%s", s_optUser);
-      vmOptions.addMBString(buffer);
+      NXMC_CHAR buffer[256];
+      NXMC_SNPRINTF(buffer, 256, _NXMC_T("-Dnetxms.server=%s"), s_optHost);
+      NXMC_ADD_STRING(vmOptions, buffer);
+      NXMC_SNPRINTF(buffer, 256, _NXMC_T("-Dnetxms.port=%s"), s_optPort);
+      NXMC_ADD_STRING(vmOptions, buffer);
 
-      char clearPassword[128];
-      DecryptPasswordA(s_optUser, s_optPassword, clearPassword, 128);
-      snprintf(buffer, 256, "-Dnetxms.password=%s", clearPassword);
-      vmOptions.addMBString(buffer);
+      if (s_optToken != nullptr)
+      {
+         NXMC_SNPRINTF(buffer, 256, _NXMC_T("-Dnetxms.token=%s"), s_optToken);
+         NXMC_ADD_STRING(vmOptions, buffer);
+      }
+      else if (s_optUser != nullptr)
+      {
+         NXMC_SNPRINTF(buffer, 256, _NXMC_T("-Dnetxms.login=%s"), s_optUser);
+         NXMC_ADD_STRING(vmOptions, buffer);
+
+         NXMC_CHAR clearPassword[128];
+#ifdef _WIN32
+         DecryptPasswordW(s_optUser, s_optPassword, clearPassword, 128);
+#else
+         DecryptPasswordA(s_optUser, s_optPassword, clearPassword, 128);
+#endif
+         NXMC_SNPRINTF(buffer, 256, _NXMC_T("-Dnetxms.password=%s"), clearPassword);
+         NXMC_ADD_STRING(vmOptions, buffer);
+      }
    }
 
    int rc = 0;
 
-#ifdef UNICODE
+#if !defined(_WIN32) && defined(UNICODE)
    TCHAR *cp = WideStringFromMBStringSysLocale(s_optClassPath);
 #else
 #define cp s_optClassPath
@@ -114,7 +135,11 @@ static int StartApp(int argc, char *argv[])
    if (err == NXJAVA_SUCCESS)
    {
       nxlog_debug(5, _T("JVM created"));
-      err = StartJavaApplication(env, "org/netxms/nxmc/Startup", argc, argv);
+#ifdef _WIN32
+      err = StartJavaApplication(env, "org/netxms/nxmc/Startup", argc, nullptr, argv);
+#else
+      err = StartJavaApplication(env, "org/netxms/nxmc/Startup", argc, argv, nullptr);
+#endif
       if (err != NXJAVA_SUCCESS)
       {
          ShowErrorMessage(_T("Cannot start Java application (%s)"), GetJavaBridgeErrorMessage(err));
@@ -155,22 +180,23 @@ static struct option longOptions[] =
 /**
  * Print usage info
  */
-static void ShowUsage(bool showVersion)
+static void ShowUsage()
 {
-   if (showVersion)
-   {
-      _tprintf(
-         _T("NetXMS Management Console  Version ") NETXMS_VERSION_STRING _T("\n")
-         _T("Copyright (c) 2006-2021 Raden Solutions\n\n"));
-   }
-
+#ifdef _WIN32
+   MessageBox(nullptr,
+#else
    _tprintf(
+#endif
+      _T("NetXMS Management Console  Version ") NETXMS_VERSION_STRING _T("\n")
+      _T("Copyright (c) 2006-2021 Raden Solutions\n\n")
       _T("Usage: nxmc [OPTIONS]\n")
       _T("  \n")
       _T("Options:\n")
 #if HAVE_GETOPT_LONG
       _T("  -C, --classpath <path>      Additional Java class path.\n")
+#ifndef _WIN32
       _T("  -D, --debug                 Show additional debug output (use twice for extra output).\n")
+#endif
       _T("  -h, --help                  Display this help message.\n")
       _T("  -H, --host <hostname>       Specify host name or IP address. Could be in host:port form.\n")
       _T("  -j, --jre <path>            Specify JRE location.\n")
@@ -191,6 +217,9 @@ static void ShowUsage(bool showVersion)
       _T("  -u <user>      Login to server as given user.\n")
       _T("  -v             Display version information.\n\n")
 #endif
+#ifdef _WIN32
+      , _T("NetXMS Management Console"), MB_OK | MB_ICONINFORMATION
+#endif
       );
 }
 
@@ -207,54 +236,76 @@ static void DebugWriter(const TCHAR *tag, const TCHAR *format, va_list args)
 /**
  * Entry point
  */
-int main(int argc, char *argv[])
+#ifdef _WIN32
+int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine, int nCmdShow)
 {
    InitNetXMSProcess(true);
 
+   int argc;
+   WCHAR **argv = CommandLineToArgvW(GetCommandLineW(), &argc);
+#else
+int main(int argc, char *argv[])
+{
+   InitNetXMSProcess(true);
+#endif
+
    opterr = 0;
-   int c, debug = 0;
+   int c;
+#ifdef _WIN32
+   while ((c = getopt_longW(argc, argv, SHORT_OPTIONS, longOptions, nullptr)) != -1)
+#else
+   int debug = 0;
 #if HAVE_DECL_GETOPT_LONG
    while ((c = getopt_long(argc, argv, SHORT_OPTIONS, longOptions, nullptr)) != -1)
 #else
    while ((c = getopt(argc, argv, SHORT_OPTIONS)) != -1)
 #endif
+#endif
    {
 		switch(c)
 		{
 		   case 'C': // classpath
-			   s_optClassPath = optarg;
+			   s_optClassPath = NXMC_OPTARG;
 			   break;
          case 'D': // Additional debug
+#ifndef _WIN32
             debug++;
             nxlog_set_debug_writer(DebugWriter);
             nxlog_set_debug_level(debug == 1 ? 5 : 9);
+#endif
             break;
 		   case 'h': // help
-		      ShowUsage(true);
+		      ShowUsage();
 			   exit(0);
 			   break;
 		   case 'H': // host
-			   s_optHost = optarg;
+			   s_optHost = NXMC_OPTARG;
 			   break;
 		   case 'j': // JRE
-			   s_optJre = optarg;
+			   s_optJre = NXMC_OPTARG;
 			   break;
          case 'p': // port
-            s_optPort = optarg;
+            s_optPort = NXMC_OPTARG;
             break;
 		   case 'P': // password
-			   s_optPassword = optarg;
+			   s_optPassword = NXMC_OPTARG;
 			   break;
 		   case 't': // token
-			   s_optToken = optarg;
+			   s_optToken = NXMC_OPTARG;
 			   break;
          case 'u': // user
-            s_optUser = optarg;
+            s_optUser = NXMC_OPTARG;
             break;
 		   case 'v': // version
+#ifdef _WIN32
+            MessageBox(nullptr,
+               _T("NetXMS Management Console  Version ") NETXMS_VERSION_STRING _T("\n")
+               _T("Copyright (c) 2006-2021 Raden Solutions\n\n"), _T("NetXMS Management Console"), MB_OK | MB_ICONINFORMATION);
+#else
             _tprintf(
                _T("NetXMS Management Console  Version ") NETXMS_VERSION_STRING _T("\n")
                _T("Copyright (c) 2006-2021 Raden Solutions\n\n"));
+#endif
 			   exit(0);
 			   break;
 		   case '?':

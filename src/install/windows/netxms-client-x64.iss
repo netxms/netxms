@@ -34,20 +34,24 @@ Name: "cmdline"; Description: "Command Line Tools"; Types: full
 Name: "jre"; Description: "Java Runtime Environment"; Types: full
 
 [Files]
-Source: "..\..\..\out\nxmc\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs; Components: nxmc
-; Common files for nxshell and command line tools
-Source: "..\..\..\x64\Release\jansson.dll"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: nxshell or cmdline
-Source: "..\..\..\x64\Release\libnetxms.dll"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: nxshell or cmdline
-Source: "..\..\..\x64\Release\libexpat.dll"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: nxshell or cmdline
-Source: "..\..\..\x64\Release\nxzlib.dll"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: nxshell or cmdline
-Source: "..\files\windows\x64\libcrypto.dll"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: nxshell or cmdline
-Source: "..\files\windows\x64\libcurl.dll"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: nxshell or cmdline
-Source: "..\files\windows\x64\libssl.dll"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: nxshell or cmdline
-Source: "..\files\windows\x64\pcre.dll"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: nxshell or cmdline
-Source: "..\files\windows\x64\pcre16.dll"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: nxshell or cmdline
+; Common files
+Source: "..\..\..\x64\Release\jansson.dll"; DestDir: "{app}"; Flags: ignoreversion signonce
+Source: "..\..\..\x64\Release\libnetxms.dll"; DestDir: "{app}"; Flags: ignoreversion signonce
+Source: "..\..\..\x64\Release\libexpat.dll"; DestDir: "{app}"; Flags: ignoreversion signonce
+Source: "..\..\..\x64\Release\nxzlib.dll"; DestDir: "{app}"; Flags: ignoreversion signonce
+Source: "..\files\windows\x64\libcrypto.dll"; DestDir: "{app}"; Flags: ignoreversion signonce
+Source: "..\files\windows\x64\libcurl.dll"; DestDir: "{app}"; Flags: ignoreversion signonce
+Source: "..\files\windows\x64\libssl.dll"; DestDir: "{app}"; Flags: ignoreversion signonce
+Source: "..\files\windows\x64\pcre.dll"; DestDir: "{app}"; Flags: ignoreversion signonce
+Source: "..\files\windows\x64\pcre16.dll"; DestDir: "{app}"; Flags: ignoreversion signonce
+; Common files for Java based components
+Source: "..\..\..\x64\Release\libnxjava.dll"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: nxmc or nxshell
+; nxmc
+Source: "..\..\..\x64\Release\nxmc.exe"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: nxmc
+Source: "..\..\client\nxmc\java\target\nxmc-{#VersionString}.jar"; DestDir: "{app}\lib\java"; Flags: ignoreversion; Components: nxmc
+Source: "..\..\client\nxmc\java\target\lib\*.jar"; DestDir: "{app}\lib\java"; Flags: ignoreversion; Components: nxmc
 ; nxshell
 Source: "..\..\..\x64\Release\nxshell.exe"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: nxshell
-Source: "..\..\..\x64\Release\libnxjava.dll"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: nxshell
 Source: "..\..\client\nxshell\java\target\nxshell-{#VersionString}.jar"; DestDir: "{app}\lib\java"; Flags: ignoreversion; Components: nxshell
 Source: "..\..\client\nxshell\java\target\lib\*.jar"; DestDir: "{app}\lib\java"; Flags: ignoreversion; Components: nxshell
 ; Command line tools
@@ -59,7 +63,7 @@ Source: "..\..\..\x64\Release\nxpush.exe"; DestDir: "{app}"; Flags: ignoreversio
 ; Java Runtime
 Source: "..\files\windows\x64\jre\*"; DestDir: "{app}\jre"; Flags: ignoreversion recursesubdirs; Components: jre
 ; Install-time files
-Source: "..\files\windows\x64\vcredist_x64.exe"; DestDir: "{app}"; DestName: "vcredist.exe"; Flags: ignoreversion deleteafterinstall; Components: nxshell or cmdline
+Source: "..\files\windows\x64\vcredist_x64.exe"; DestDir: "{app}"; DestName: "vcredist.exe"; Flags: ignoreversion deleteafterinstall
 
 [InstallDelete]
 Type: files; Name: "{app}\lib\java\*.jar"
