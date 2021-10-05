@@ -4796,7 +4796,6 @@ AC_CONFIG_FILES([
 	src/agent/tools/nxreload/Makefile
 	src/appagent/Makefile
 	src/client/Makefile
-	src/client/install/Makefile
 	src/client/java/Makefile
 	src/client/java/netxms-client/Makefile
 	src/client/libnxclient/Makefile
