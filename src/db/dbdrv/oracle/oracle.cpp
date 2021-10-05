@@ -1143,20 +1143,20 @@ static ORACLE_RESULT *ProcessQueryResults(ORACLE_CONN *pConn, OCIStmt *handleStm
                else if (pBuffers[i].lobLocator != nullptr)
                {
                   ub4 length = 0;
-                  ub4 amount = length;
                   OCILobGetLength(pConn->handleService, pConn->handleError, pBuffers[i].lobLocator, &length);
 						pResult->pData[nPos] = MemAllocStringW(length + 1);
+                  ub4 amount = length;
 #if UNICODE_UCS4
                   UCS2CHAR *ucs2buffer = MemAllocArrayNoInit<UCS2CHAR>(length);
                   OCILobRead(pConn->handleService, pConn->handleError, pBuffers[i].lobLocator, &amount, 1, 
                              ucs2buffer, length * sizeof(UCS2CHAR), nullptr, nullptr, OCI_UCS2ID, SQLCS_IMPLICIT);
-						ucs2_to_ucs4(ucs2buffer, length, pResult->pData[nPos], length + 1);
+						ucs2_to_ucs4(ucs2buffer, amount, pResult->pData[nPos], length + 1);
                   MemFree(ucs2buffer);
 #else
                   OCILobRead(pConn->handleService, pConn->handleError, pBuffers[i].lobLocator, &amount, 1, 
                              pResult->pData[nPos], (length + 1) * sizeof(WCHAR), NULL, NULL, OCI_UCS2ID, SQLCS_IMPLICIT);
 #endif
-						pResult->pData[nPos][length] = 0;
+						pResult->pData[nPos][amount] = 0;
                }
 					else
 					{
