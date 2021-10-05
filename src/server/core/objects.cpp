@@ -1444,9 +1444,9 @@ BOOL LoadObjects()
                DBCacheTable(cachedb, mainDB, _T("dci_access"), _T("dci_id,user_id"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("ap_common"), _T("guid"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("network_maps"), _T("id"), _T("*")) &&
-               DBCacheTable(cachedb, mainDB, _T("network_map_deleted_nodes"), _T("map_id"), _T("*")) &&
+               DBCacheTable(cachedb, mainDB, _T("network_map_deleted_nodes"), _T("map_id,object_id"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("network_map_elements"), _T("map_id,element_id"), _T("*")) &&
-               DBCacheTable(cachedb, mainDB, _T("network_map_links"), nullptr, _T("*")) &&
+               DBCacheTable(cachedb, mainDB, _T("network_map_links"), _T("map_id,link_id"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("network_map_seed_nodes"), _T("map_id,seed_node_id"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("node_components"), _T("node_id,component_index"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("object_containers"), _T("id"), _T("*")) &&
