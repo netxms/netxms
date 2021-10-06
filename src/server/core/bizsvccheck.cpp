@@ -281,47 +281,45 @@ int BusinessServiceCheck::execute(BusinessServiceTicketData* ticket)
 		case BusinessServiceCheckType::SCRIPT:
 			if (m_compiledScript != nullptr)
 			{
-				NXSL_VM *script = CreateServerScriptVM(m_compiledScript, nullptr);
-				if (script != nullptr)
+				NXSL_VM *vm = CreateServerScriptVM(m_compiledScript, FindObjectById(m_relatedObject));
+				if (vm != nullptr)
 				{
-					script->addConstant("OK", script->createValue((LONG)0));
-					script->addConstant("FAIL", script->createValue((LONG)1));
-					script->setGlobalVariable("$reason", script->createValue());
-					shared_ptr<NetObj> obj = FindObjectById(m_relatedObject);
-					if (obj != nullptr)
-						script->setGlobalVariable("$object", obj->createNXSLObject(script));
-					if (obj != nullptr && obj->getObjectClass() == OBJECT_NODE)
-						script->setGlobalVariable("$node", obj->createNXSLObject(script));
+					vm->addConstant("OK", vm->createValue(true));
+					vm->addConstant("FAIL", vm->createValue(false));
+					vm->setGlobalVariable("$reason", vm->createValue());
+					shared_ptr<NetObj> serviceObject = FindObjectById(m_serviceId);
+					if (serviceObject != nullptr)
+					   vm->setGlobalVariable("$service", serviceObject->createNXSLObject(vm));
 					NXSL_VariableSystem *globals = nullptr;
 					ObjectRefArray<NXSL_Value> args(0);
-					if (script->run(args, &globals))
+					if (vm->run(args, &globals))
 					{
-						NXSL_Value *pValue = script->getResult();
-						if (pValue->getDataType() == NXSL_DT_STRING)
+						NXSL_Value *value = vm->getResult();
+						if (value->getDataType() == NXSL_DT_STRING)
 						{
 							m_status = STATUS_CRITICAL;
-							_tcslcpy(m_reason, pValue->getValueAsCString(), 256);
+							_tcslcpy(m_reason, value->getValueAsCString(), 256);
 						}
 						else
 						{
-							if (pValue->getDataType() == NXSL_DT_BOOLEAN)
+							if (value->isBoolean())
 							{
-								m_status = pValue->isTrue() ? STATUS_NORMAL : STATUS_CRITICAL;
+								m_status = value->isTrue() ? STATUS_NORMAL : STATUS_CRITICAL;
 							}
 							else
 							{
-								m_status = (pValue->getValueAsInt32() == 0) ? STATUS_NORMAL : STATUS_CRITICAL;
+								m_status = STATUS_NORMAL;
 							}
-							if (m_status == STATUS_CRITICAL && m_reason[0] == 0)
+							if (m_status == STATUS_CRITICAL)
 							{
 								NXSL_Variable *reason = globals->find("$reason");
-								if (reason != nullptr && reason->getValue()->getValueAsCString()[0] != 0)
+								if ((reason != nullptr) && (reason->getValue()->getValueAsCString()[0] != 0))
 								{
 									_tcslcpy(m_reason, reason->getValue()->getValueAsCString(), 256);
 								}
 								else
 								{
-									_tcslcpy(m_reason, _T("Check script returns error"), 256);
+									_tcscpy(m_reason, _T("Check script returned error"));
 								}
 							}
 						}
@@ -331,11 +329,11 @@ int BusinessServiceCheck::execute(BusinessServiceTicketData* ticket)
 					{
 						TCHAR buffer[1024];
 						_sntprintf(buffer, 1024, _T("BusinessServiceCheck::%u"), m_id);
-						PostSystemEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", buffer, script->getErrorText(), 0);
-						nxlog_write_tag(2, DEBUG_TAG, _T("Failed to execute script for service check object %s [%u] (%s)"), m_description.cstr(), m_id, script->getErrorText());
+						PostSystemEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", buffer, vm->getErrorText(), 0);
+						nxlog_write_tag(2, DEBUG_TAG, _T("Failed to execute script for service check object %s [%u] (%s)"), m_description.cstr(), m_id, vm->getErrorText());
 						m_status = STATUS_NORMAL;
 					}
-					delete script;
+					delete vm;
 				}
 				else
 				{

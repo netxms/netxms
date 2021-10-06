@@ -241,6 +241,7 @@ AutoBindDecision AutoBindTarget::isApplicable(const shared_ptr<NetObj>& target, 
       return result;
 
    filter->setGlobalVariable("$container", m_this->createNXSLObject(filter));
+   filter->setGlobalVariable("$service", m_this->createNXSLObject(filter));
    filter->setGlobalVariable("$template", m_this->createNXSLObject(filter));
    if (dci != nullptr)
       filter->setGlobalVariable("$dci", dci->createNXSLObject(filter));

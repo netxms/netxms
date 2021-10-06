@@ -317,14 +317,12 @@ unique_ptr<StringMap> BusinessServicePrototype::getInstances()
    {
       for (auto instance : *instanceMap)
       {
-         NXSL_VM *filter = CreateServerScriptVM(m_compiledInstanceDiscoveryFilter, shared_ptr<NetObj>());
+         NXSL_VM *filter = CreateServerScriptVM(m_compiledInstanceDiscoveryFilter, FindObjectById(m_instanceSource));
          if (filter != nullptr)
          {
-            shared_ptr<NetObj> obj = FindObjectById(m_instanceSource);
             filter->setGlobalVariable("$1", filter->createValue(instance->key));
             filter->setGlobalVariable("$2", filter->createValue(instance->value));
             filter->setGlobalVariable("$prototype", createNXSLObject(filter));
-            filter->setGlobalVariable("$node", obj->createNXSLObject(filter));
             if (filter->run())
             {
                NXSL_Value *value = filter->getResult();
