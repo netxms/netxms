@@ -260,11 +260,22 @@ public abstract class View implements MessageAreaHolder
       // sometimes recursive activation can happen when tab selection changed - it's OK here
       try
       {
-         viewArea.setFocus();
+         setFocus();
       }
       catch(RuntimeException e)
       {
       }
+   }
+
+   /**
+    * Handle set focus. Default implementation sets focus on filter text if present, otherwise on view area.
+    */
+   public void setFocus()
+   {
+      if (hasFilter && filterEnabled)
+         filterText.setFocus();
+      else
+         viewArea.setFocus();
    }
 
    /**

@@ -156,7 +156,7 @@ public class DataCollectionView extends ObjectView
    private boolean hideModificationWarnings;
    private RemoteChangeListener changeListener;
 
-   private Action actionEnableEditMode;
+   private Action actionToggleEditMode;
    private Action actionCreateItem;
    private Action actionCreateTable;
    private Action actionEdit;
@@ -600,16 +600,16 @@ public class DataCollectionView extends ObjectView
             showHistoryData();
          }
       };
-      
-      actionEnableEditMode = new Action(i18n.tr("Edit mode"), SharedIcons.EDIT) {
+
+      actionToggleEditMode = new Action(i18n.tr("&Edit mode\tCTRL+E"), SharedIcons.EDIT) {
          @Override
          public void run()
          {
-            editMode = actionEnableEditMode.isChecked();
+            editMode = actionToggleEditMode.isChecked();
             switchMode();
          }
       }; 
-      actionEnableEditMode.setChecked(editMode); 
+      actionToggleEditMode.setChecked(editMode); 
    }
 
    /**
@@ -1327,7 +1327,7 @@ public class DataCollectionView extends ObjectView
    protected void onObjectChange(AbstractObject object)
    {
       this.object = ((object != null) && ((object instanceof DataCollectionTarget) || (object instanceof Template))) ? object : null;
-      actionEnableEditMode.setEnabled(!(object instanceof Template));
+      actionToggleEditMode.setEnabled(!(object instanceof Template));
 
       // Request server to open data collection configuration
       new Job(String.format(i18n.tr("Open data collection configuration for %s"), object.getObjectName()), this) {
@@ -1401,7 +1401,7 @@ public class DataCollectionView extends ObjectView
    protected void fillLocalToolbar(ToolBarManager manager)
    {
       super.fillLocalToolbar(manager);
-      manager.add(actionEnableEditMode);
+      manager.add(actionToggleEditMode);
    }
 
    /**

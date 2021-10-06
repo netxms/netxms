@@ -18,6 +18,7 @@
  */
 package org.netxms.nxmc.base.windows;
 
+import org.eclipse.jface.bindings.keys.KeyStroke;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
@@ -28,7 +29,10 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Layout;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.base.views.View;
@@ -114,7 +118,41 @@ public class PopOutViewWindow extends Window implements MessageAreaHolder
             PreferenceStore.getInstance().set("PopupWindowSize." + view.getBaseId(), getShell().getSize());
          }
       });
+
+      final Display display = parent.getDisplay();
+      display.addFilter(SWT.KeyDown, new Listener() {
+         @Override
+         public void handleEvent(Event e)
+         {
+            if (getShell() == display.getActiveShell()) // Only process keystrokes directed to this window
+               processKeyDownEvent(e.stateMask, e.keyCode);
+         }
+      });
+
       return parent;
+   }
+
+   /**
+    * Process key down event
+    *
+    * @param e event to process
+    */
+   private void processKeyDownEvent(int stateMask, int keyCode)
+   {
+      if ((keyCode == SWT.SHIFT) || (keyCode == SWT.CTRL) || (keyCode == SWT.SHIFT) || (keyCode == SWT.ALT) || (keyCode == SWT.ALT_GR) || (keyCode == SWT.COMMAND))
+         return; // Ignore key down on modifier keys
+
+      KeyStroke ks = KeyStroke.getInstance(stateMask, keyCode);
+      processKeyboardBindings(ks);
+   }
+
+   /**
+    * Process keyboard bindings
+    *
+    * @param ks keystroke to match
+    */
+   private void processKeyboardBindings(KeyStroke ks)
+   {
    }
 
    /**

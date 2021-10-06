@@ -464,7 +464,7 @@ public class ViewStack extends Composite
     *
     * @param allViewsAreCloseable if true all views will be marked as closeable
     */
-   public void setAllViewsAaCloseable(boolean allViewsAreCloseable)
+   public void setAllViewsAsCloseable(boolean allViewsAreCloseable)
    {
       this.allViewsAreCloseable = allViewsAreCloseable;
    }
@@ -511,5 +511,24 @@ public class ViewStack extends Composite
    private String getViewId(View view)
    {
       return useGlobalViewId ? view.getGlobalId() : view.getBaseId();
+   }
+
+   /**
+    * @see org.eclipse.swt.widgets.Composite#setFocus()
+    */
+   @Override
+   public boolean setFocus()
+   {
+      CTabItem tabItem = tabFolder.getSelection();
+      View view = (tabItem != null) ? (View)tabItem.getData("view") : null;
+      if (view != null)
+      {
+         view.setFocus();
+      }
+      else
+      {
+         super.setFocus();
+      }
+      return true;
    }
 }

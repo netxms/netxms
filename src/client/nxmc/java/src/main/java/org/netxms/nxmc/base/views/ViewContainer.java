@@ -268,4 +268,17 @@ public class ViewContainer extends Composite
    {
       this.contextAware = contextAware;
    }
+
+   /**
+    * @see org.eclipse.swt.widgets.Composite#setFocus()
+    */
+   @Override
+   public boolean setFocus()
+   {
+      if (view != null)
+         view.setFocus();
+      else
+         viewArea.setFocus();
+      return true;
+   }
 }

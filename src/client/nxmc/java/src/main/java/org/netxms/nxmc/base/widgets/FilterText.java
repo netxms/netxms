@@ -455,9 +455,9 @@ public class FilterText extends Composite
       this.closeCallback = closeCallback;
    }
 
-   /* (non-Javadoc)
-	 * @see org.eclipse.swt.widgets.Composite#setFocus()
-	 */
+   /**
+    * @see org.eclipse.swt.widgets.Composite#setFocus()
+    */
 	@Override
 	public boolean setFocus()
 	{

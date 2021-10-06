@@ -19,6 +19,7 @@
 package org.netxms.nxmc.base.windows;
 
 import java.util.List;
+import org.eclipse.jface.bindings.keys.KeyStroke;
 import org.eclipse.jface.preference.PreferenceDialog;
 import org.eclipse.jface.preference.PreferenceManager;
 import org.eclipse.jface.preference.PreferenceNode;
@@ -36,6 +37,9 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.ToolBar;
 import org.eclipse.swt.widgets.ToolItem;
@@ -212,6 +216,16 @@ public class MainWindow extends ApplicationWindow implements MessageAreaHolder
 
       setupPerspectiveSwitcher();
 
+      final Display display = parent.getDisplay();
+      display.addFilter(SWT.KeyDown, new Listener() {
+         @Override
+         public void handleEvent(Event e)
+         {
+            if (getShell() == display.getActiveShell()) // Only process keystrokes directed to this window
+               processKeyDownEvent(e.stateMask, e.keyCode);
+         }
+      });
+
       switchToPerspective("Pinboard");
       switchToPerspective(PreferenceStore.getInstance().getAsString("MainWindow.CurrentPerspective"));
 
@@ -220,6 +234,29 @@ public class MainWindow extends ApplicationWindow implements MessageAreaHolder
          addMessage(MessageArea.INFORMATION, session.getMessageOfTheDay());
 
       return windowContent;
+   }
+
+   /**
+    * Process key down event
+    *
+    * @param e event to process
+    */
+   private void processKeyDownEvent(int stateMask, int keyCode)
+   {
+      if ((keyCode == SWT.SHIFT) || (keyCode == SWT.CTRL) || (keyCode == SWT.SHIFT) || (keyCode == SWT.ALT) || (keyCode == SWT.ALT_GR) || (keyCode == SWT.COMMAND))
+         return; // Ignore key down on modifier keys
+
+      KeyStroke ks = KeyStroke.getInstance(stateMask, keyCode);
+      processKeyboardBindings(ks);
+   }
+
+   /**
+    * Process keyboard bindings
+    *
+    * @param ks keystroke to match
+    */
+   private void processKeyboardBindings(KeyStroke ks)
+   {
    }
 
    /**

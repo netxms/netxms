@@ -140,6 +140,29 @@ public abstract class Perspective
       {
          content.setVisible(true);
       }
+
+      window.getShell().getDisplay().asyncExec(new Runnable() {
+         @Override
+         public void run()
+         {
+            if (navigationFolder != null)
+            {
+               navigationFolder.setFocus();
+            }
+            else if (navigationArea != null)
+            {
+               navigationArea.setFocus();
+            }
+            else if (mainFolder != null)
+            {
+               mainFolder.setFocus();
+            }
+            else if (mainArea != null)
+            {
+               mainArea.setFocus();
+            }
+         }
+      });
    }
 
    /**
@@ -177,7 +200,7 @@ public abstract class Perspective
                   setNavigationSelectionProvider(((view != null) && (view instanceof NavigationView)) ? ((NavigationView)view).getSelectionProvider() : null);
                }
             });
-            navigationFolder.setAllViewsAaCloseable(configuration.allViewsAreCloseable);
+            navigationFolder.setAllViewsAsCloseable(configuration.allViewsAreCloseable);
          }
          else
          {
@@ -215,7 +238,7 @@ public abstract class Perspective
       if (configuration.multiViewMainArea)
       {
          mainFolder = new ViewStack(window, this, mainAreaHolder, configuration.enableViewExtraction, configuration.enableViewPinning);
-         mainFolder.setAllViewsAaCloseable(configuration.allViewsAreCloseable);
+         mainFolder.setAllViewsAsCloseable(configuration.allViewsAreCloseable);
          mainFolder.setUseGlobalViewId(configuration.useGlobalViewId);
          if (configuration.hasHeaderArea)
             mainFolder.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
@@ -232,7 +255,7 @@ public abstract class Perspective
          if (configuration.multiViewSupplementalArea)
          {
             supplementaryFolder = new ViewStack(window, this, horizontalSpliter, configuration.enableViewExtraction, configuration.enableViewPinning);
-            supplementaryFolder.setAllViewsAaCloseable(configuration.allViewsAreCloseable);
+            supplementaryFolder.setAllViewsAsCloseable(configuration.allViewsAreCloseable);
          }
          else
          {
