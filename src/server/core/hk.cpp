@@ -393,6 +393,23 @@ static void HouseKeeper()
             break;
 		}
 
+      // Remove outdated business service history records
+      retentionTime = ConfigReadULong(_T("BusinessServices.History.RetentionTime"), 90);
+      if (retentionTime > 0)
+      {
+         nxlog_debug_tag(DEBUG_TAG, 2, _T("Clearing business service history (retention time %d days)"), retentionTime);
+         retentionTime *= 86400;	// Convert days to seconds
+         TCHAR query[256];
+         _sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("DELETE FROM business_service_tickets WHERE close_timestamp>0 AND close_timestamp<") INT64_FMT, static_cast<int64_t>(cycleStartTime - retentionTime));
+         DBQuery(hdb, query);
+         if (!ThrottleHousekeeper())
+            break;
+         _sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("DELETE FROM business_service_downtime WHERE to_timestamp>0 AND to_timestamp<") INT64_FMT, static_cast<int64_t>(cycleStartTime - retentionTime));
+         DBQuery(hdb, query);
+         if (!ThrottleHousekeeper())
+            break;
+      }
+
       // Delete old user agent messages
       retentionTime = ConfigReadULong(_T("UserAgent.RetentionTime"), 30);
       if (retentionTime > 0)
