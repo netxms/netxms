@@ -242,13 +242,11 @@ unique_ptr<StringMap> BusinessServicePrototype::getInstancesFromAgentTable()
  */
 unique_ptr<StringMap> BusinessServicePrototype::getInstancesFromScript()
 {
-   ScriptVMHandle vm = GetServerScriptLibrary()->createVM(m_instanceDiscoveryData, new NXSL_ServerEnv());
+   NXSL_VM *vm = CreateServerScriptVM(m_instanceDiscoveryData, self());
    if (vm == nullptr)
       return unique_ptr<StringMap>();
 
    StringMap *instances = nullptr;
-
-   vm->setGlobalVariable("$prototype", createNXSLObject(vm));
    if (vm->run())
    {
       NXSL_Value *value = vm->getResult();
