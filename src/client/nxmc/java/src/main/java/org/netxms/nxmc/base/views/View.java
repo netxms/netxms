@@ -21,6 +21,7 @@ package org.netxms.nxmc.base.views;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
+import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.action.ToolBarManager;
 import org.eclipse.jface.fieldassist.IContentProposalProvider;
 import org.eclipse.jface.resource.ImageDescriptor;
@@ -40,6 +41,8 @@ import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.base.widgets.FilterText;
 import org.netxms.nxmc.base.widgets.MessageArea;
 import org.netxms.nxmc.base.widgets.MessageAreaHolder;
+import org.netxms.nxmc.keyboard.KeyBindingManager;
+import org.netxms.nxmc.keyboard.KeyStroke;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -65,6 +68,7 @@ public abstract class View implements MessageAreaHolder
    private AbstractViewerFilter filter;
    private StructuredViewer viewer;
    private Set<ViewStateListener> stateListeners = new HashSet<ViewStateListener>();
+   private KeyBindingManager keyBindingManager = new KeyBindingManager();
 
    /**
     * Create new view with specific base ID. Actual view ID will be derived from base ID, possibly by classes derived from base view
@@ -584,5 +588,59 @@ public abstract class View implements MessageAreaHolder
    public boolean isFilterEnabled()
    {
       return filterEnabled;
+   }
+
+   /**
+    * Process keystroke.
+    *
+    * @param keyStroke keystroke to process
+    */
+   public void processKeyStroke(KeyStroke keyStroke)
+   {
+      keyBindingManager.processKeyStroke(keyStroke);
+   }
+
+   /**
+    * Get key binding manager.
+    *
+    * @return key binding manager for this view
+    */
+   protected KeyBindingManager getKeyBindingManager()
+   {
+      return keyBindingManager;
+   }
+
+   /**
+    * Add key binding.
+    *
+    * @param keyStroke keystroke to handle
+    * @param action action to execute
+    */
+   public void addKeyBinding(KeyStroke keyStroke, IAction action)
+   {
+      keyBindingManager.addBinding(keyStroke, action);
+   }
+
+   /**
+    * Add key binding.
+    *
+    * @param keyStroke keystroke to handle
+    * @param action action to execute
+    */
+   public void addKeyBinding(String keyStroke, IAction action)
+   {
+      keyBindingManager.addBinding(keyStroke, action);
+   }
+
+   /**
+    * Add key binding.
+    *
+    * @param modifiers modifier bits for keystroke to handle
+    * @param key key code for keystroke to handle
+    * @param action action to execute
+    */
+   public void addKeyBinding(int modifiers, int key, IAction action)
+   {
+      keyBindingManager.addBinding(modifiers, key, action);
    }
 }

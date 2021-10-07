@@ -601,7 +601,7 @@ public class DataCollectionView extends ObjectView
          }
       };
 
-      actionToggleEditMode = new Action(i18n.tr("&Edit mode\tCTRL+E"), SharedIcons.EDIT) {
+      actionToggleEditMode = new Action(i18n.tr("&Edit mode"), SharedIcons.EDIT) {
          @Override
          public void run()
          {
@@ -609,7 +609,8 @@ public class DataCollectionView extends ObjectView
             switchMode();
          }
       }; 
-      actionToggleEditMode.setChecked(editMode); 
+      actionToggleEditMode.setChecked(editMode);
+      addKeyBinding("Ctrl+E", actionToggleEditMode);
    }
 
    /**

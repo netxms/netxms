@@ -18,6 +18,8 @@
  */
 package org.netxms.nxmc.base.views;
 
+import org.eclipse.swt.SWT;
+import org.netxms.nxmc.keyboard.KeyStroke;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.xnap.commons.i18n.I18n;
@@ -51,5 +53,6 @@ public class PinboardPerspective extends Perspective
       configuration.enableViewPinning = false;
       configuration.allViewsAreCloseable = true;
       configuration.useGlobalViewId = true;
+      configuration.keyboardShortcut = new KeyStroke(SWT.F12);
    }
 }

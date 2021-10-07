@@ -18,7 +18,6 @@
  */
 package org.netxms.nxmc.base.windows;
 
-import org.eclipse.jface.bindings.keys.KeyStroke;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
@@ -39,6 +38,7 @@ import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.views.ViewContainer;
 import org.netxms.nxmc.base.widgets.MessageArea;
 import org.netxms.nxmc.base.widgets.MessageAreaHolder;
+import org.netxms.nxmc.keyboard.KeyStroke;
 
 /**
  * Window that holds pop out view
@@ -47,6 +47,7 @@ public class PopOutViewWindow extends Window implements MessageAreaHolder
 {
    private Composite windowArea;
    private MessageArea messageArea;
+   private ViewContainer viewContainer;
    private View view;
 
    /**
@@ -96,7 +97,7 @@ public class PopOutViewWindow extends Window implements MessageAreaHolder
       messageArea = new MessageArea(windowArea, SWT.NONE);
       messageArea.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
 
-      ViewContainer viewContainer = new ViewContainer(this, null, windowArea, false, false) {
+      viewContainer = new ViewContainer(this, null, windowArea, false, false) {
          @Override
          public Point computeSize(int wHint, int hHint, boolean changed)
          {
@@ -142,17 +143,7 @@ public class PopOutViewWindow extends Window implements MessageAreaHolder
       if ((keyCode == SWT.SHIFT) || (keyCode == SWT.CTRL) || (keyCode == SWT.SHIFT) || (keyCode == SWT.ALT) || (keyCode == SWT.ALT_GR) || (keyCode == SWT.COMMAND))
          return; // Ignore key down on modifier keys
 
-      KeyStroke ks = KeyStroke.getInstance(stateMask, keyCode);
-      processKeyboardBindings(ks);
-   }
-
-   /**
-    * Process keyboard bindings
-    *
-    * @param ks keystroke to match
-    */
-   private void processKeyboardBindings(KeyStroke ks)
-   {
+      viewContainer.processKeyStroke(new KeyStroke(stateMask, keyCode));
    }
 
    /**

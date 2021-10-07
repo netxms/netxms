@@ -30,6 +30,8 @@ import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
+import org.netxms.nxmc.keyboard.KeyStroke;
 import org.netxms.nxmc.tools.ImageCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -275,7 +277,7 @@ public abstract class Perspective
       // Set initially selected navigation view as selection provider
       if (navigationFolder != null)
       {
-         View selectedView = navigationFolder.getSelection();
+         View selectedView = navigationFolder.getActiveView();
          if ((selectedView != null) && (selectedView instanceof NavigationView))
             setNavigationSelectionProvider(((NavigationView)selectedView).getSelectionProvider());
       }
@@ -526,5 +528,47 @@ public abstract class Perspective
       if (!updated && (supplementaryFolder != null))
          updated = supplementaryFolder.updateViewTrim(view);
       return updated;
+   }
+
+   /**
+    * Get keyboard shortcut for switching to this perspective.
+    *
+    * @return keyboard shortcut for switching to this perspective or null
+    */
+   public KeyStroke getKeyboardShortcut()
+   {
+      return configuration.keyboardShortcut;
+   }
+
+   /**
+    * Process keystroke
+    *
+    * @param ks keystroke to process
+    */
+   public void processKeyStroke(KeyStroke ks)
+   {
+      // Determine which view stack has focus
+      ViewStack activeViewStack = null;
+      ViewContainer activeViewContainer = null;
+      Control c = content.getDisplay().getFocusControl();
+      while(c != null)
+      {
+         if (c instanceof ViewStack)
+         {
+            activeViewStack = (ViewStack)c;
+            break;
+         }
+         if (c instanceof ViewContainer)
+         {
+            activeViewContainer = (ViewContainer)c;
+            break;
+         }
+         c = c.getParent();
+      }
+
+      if (activeViewStack != null)
+         activeViewStack.processKeyStroke(ks);
+      else if (activeViewContainer != null)
+         activeViewContainer.processKeyStroke(ks);
    }
 }

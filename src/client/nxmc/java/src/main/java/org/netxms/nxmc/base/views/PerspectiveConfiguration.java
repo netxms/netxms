@@ -18,6 +18,8 @@
  */
 package org.netxms.nxmc.base.views;
 
+import org.netxms.nxmc.keyboard.KeyStroke;
+
 /**
  * Configuration for perspective
  */
@@ -34,6 +36,7 @@ public class PerspectiveConfiguration
    public boolean allViewsAreCloseable = false;
    public boolean useGlobalViewId = false;
    public int priority = 255;
+   public KeyStroke keyboardShortcut = null;
 
    /**
     * @see java.lang.Object#toString()
@@ -44,6 +47,6 @@ public class PerspectiveConfiguration
       return "PerspectiveConfiguration [hasNavigationArea=" + hasNavigationArea + ", multiViewNavigationArea=" + multiViewNavigationArea + ", multiViewMainArea=" + multiViewMainArea +
             ", hasHeaderArea=" + hasHeaderArea + ", hasSupplementalArea=" + hasSupplementalArea + ", multiViewSupplementalArea=" + multiViewSupplementalArea + ", enableViewPinning=" +
             enableViewPinning + ", enableViewExtraction=" + enableViewExtraction + ", allViewsAreCloseable=" + allViewsAreCloseable + ", useGlobalViewId=" + useGlobalViewId + ", priority=" +
-            priority + "]";
+            priority + ", keyboardShortcut=" + keyboardShortcut + "]";
    }
 }

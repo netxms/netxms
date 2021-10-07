@@ -18,6 +18,7 @@
  */
 package org.netxms.nxmc.base.views;
 
+import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.ToolBarManager;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
@@ -34,6 +35,8 @@ import org.eclipse.swt.widgets.ToolBar;
 import org.eclipse.swt.widgets.ToolItem;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.windows.PopOutViewWindow;
+import org.netxms.nxmc.keyboard.KeyBindingManager;
+import org.netxms.nxmc.keyboard.KeyStroke;
 import org.netxms.nxmc.resources.SharedIcons;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,6 +59,7 @@ public class ViewContainer extends Composite
    private Composite viewArea;
    private Runnable onFilterCloseCallback = null;
    private ToolItem enableFilter = null;
+   private KeyBindingManager keyBindingManager = new KeyBindingManager();
 
    /**
     * Create new view stack.
@@ -99,9 +103,7 @@ public class ViewContainer extends Composite
          public void widgetSelected(SelectionEvent e)
          {
             if (view != null)
-            {
                view.enableFilter(enableFilter.getSelection());
-            }
          }
       });
       onFilterCloseCallback = new Runnable() {
@@ -112,6 +114,17 @@ public class ViewContainer extends Composite
             view.enableFilter(enableFilter.getSelection());
          }
       };
+      keyBindingManager.addBinding(SWT.CTRL, SWT.F2, new Action() {
+         @Override
+         public void run()
+         {
+            if ((view != null) && view.hasFilter())
+            {
+               view.enableFilter(!view.isFilterEnabled());
+               enableFilter.setSelection(view.isFilterEnabled());
+            }
+         }
+      });
 
       ToolItem refreshView = new ToolItem(viewControlBar, SWT.PUSH);
       refreshView.setImage(SharedIcons.IMG_REFRESH);
@@ -280,5 +293,16 @@ public class ViewContainer extends Composite
       else
          viewArea.setFocus();
       return true;
+   }
+
+   /**
+    * Process keystroke
+    *
+    * @param ks keystroke to process
+    */
+   public void processKeyStroke(KeyStroke ks)
+   {
+      if (!keyBindingManager.processKeyStroke(ks) && (view != null))
+         view.processKeyStroke(ks);
    }
 }

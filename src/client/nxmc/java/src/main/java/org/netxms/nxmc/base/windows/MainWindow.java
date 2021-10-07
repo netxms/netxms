@@ -19,7 +19,6 @@
 package org.netxms.nxmc.base.windows;
 
 import java.util.List;
-import org.eclipse.jface.bindings.keys.KeyStroke;
 import org.eclipse.jface.preference.PreferenceDialog;
 import org.eclipse.jface.preference.PreferenceManager;
 import org.eclipse.jface.preference.PreferenceNode;
@@ -51,6 +50,7 @@ import org.netxms.nxmc.base.views.Perspective;
 import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.widgets.MessageArea;
 import org.netxms.nxmc.base.widgets.MessageAreaHolder;
+import org.netxms.nxmc.keyboard.KeyStroke;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.ThemeEngine;
@@ -246,17 +246,25 @@ public class MainWindow extends ApplicationWindow implements MessageAreaHolder
       if ((keyCode == SWT.SHIFT) || (keyCode == SWT.CTRL) || (keyCode == SWT.SHIFT) || (keyCode == SWT.ALT) || (keyCode == SWT.ALT_GR) || (keyCode == SWT.COMMAND))
          return; // Ignore key down on modifier keys
 
-      KeyStroke ks = KeyStroke.getInstance(stateMask, keyCode);
-      processKeyboardBindings(ks);
-   }
-
-   /**
-    * Process keyboard bindings
-    *
-    * @param ks keystroke to match
-    */
-   private void processKeyboardBindings(KeyStroke ks)
-   {
+      KeyStroke ks = new KeyStroke(stateMask, keyCode);
+      boolean processed = false;
+      for(final Perspective p : perspectives)
+      {
+         if (ks.equals(p.getKeyboardShortcut()))
+         {
+            processed = true;
+            getShell().getDisplay().asyncExec(new Runnable() {
+               @Override
+               public void run()
+               {
+                  switchToPerspective(p);
+               }
+            });
+            break;
+         }
+      }
+      if (!processed && (currentPerspective != null))
+         currentPerspective.processKeyStroke(ks);
    }
 
    /**
@@ -286,10 +294,10 @@ public class MainWindow extends ApplicationWindow implements MessageAreaHolder
          ToolItem item = new ToolItem(mainMenu, SWT.RADIO);
          item.setData("PerspectiveId", p.getId());
          item.setImage(p.getImage());
-         if (verticalLayout)
-            item.setToolTipText(p.getName());
-         else
+         if (!verticalLayout)
             item.setText(p.getName());
+         KeyStroke shortcut = p.getKeyboardShortcut();
+         item.setToolTipText((shortcut != null) ? p.getName() + "\t" + shortcut.toString() : p.getName());
          item.addSelectionListener(new SelectionListener() {
             @Override
             public void widgetSelected(SelectionEvent e)

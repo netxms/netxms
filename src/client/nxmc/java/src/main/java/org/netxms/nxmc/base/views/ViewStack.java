@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.ToolBarManager;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
@@ -40,6 +41,8 @@ import org.eclipse.swt.widgets.ToolBar;
 import org.eclipse.swt.widgets.ToolItem;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.windows.PopOutViewWindow;
+import org.netxms.nxmc.keyboard.KeyBindingManager;
+import org.netxms.nxmc.keyboard.KeyStroke;
 import org.netxms.nxmc.resources.SharedIcons;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -66,6 +69,7 @@ public class ViewStack extends Composite
    private Map<String, CTabItem> tabs = new HashMap<String, CTabItem>();
    private Set<ViewStackSelectionListener> selectionListeners = new HashSet<ViewStackSelectionListener>();
    private Runnable onFilterCloseCallback = null;
+   private KeyBindingManager keyBindingManager = new KeyBindingManager();
 
    /**
     * Create new view stack.
@@ -124,7 +128,7 @@ public class ViewStack extends Composite
          @Override
          public void widgetSelected(SelectionEvent e)
          {
-            View view = getSelection();
+            View view = getActiveView();
             if (view != null)
             {
                view.refresh();
@@ -136,7 +140,7 @@ public class ViewStack extends Composite
          @Override
          public void run()
          {
-            View view = getSelection();
+            View view = getActiveView();
             if (view != null)
             {
                enableFilter.setSelection(false);
@@ -153,7 +157,7 @@ public class ViewStack extends Composite
             @Override
             public void widgetSelected(SelectionEvent e)
             {
-               View view = getSelection();
+               View view = getActiveView();
                if (view != null)
                {
                   View clone = view.cloneView();
@@ -173,7 +177,7 @@ public class ViewStack extends Composite
             @Override
             public void widgetSelected(SelectionEvent e)
             {
-               View view = getSelection();
+               View view = getActiveView();
                if (view != null)
                {
                   View clone = view.cloneView();
@@ -186,6 +190,20 @@ public class ViewStack extends Composite
             }
          });
       }
+
+      // Keyboard binding for filter toggle
+      keyBindingManager.addBinding(SWT.CTRL, SWT.F2, new Action() {
+         @Override
+         public void run()
+         {
+            View view = getActiveView();
+            if ((view != null) && view.hasFilter())
+            {
+               view.enableFilter(!view.isFilterEnabled());
+               enableFilter.setSelection(view.isFilterEnabled());
+            }
+         }
+      });
    }
 
    /**
@@ -281,7 +299,7 @@ public class ViewStack extends Composite
                @Override
                public void widgetSelected(SelectionEvent e)
                {
-                  View view = getSelection();
+                  View view = getActiveView();
                   if (view != null)
                   {
                      view.enableFilter(enableFilter.getSelection());
@@ -412,7 +430,7 @@ public class ViewStack extends Composite
     *
     * @return currently selected view or null
     */
-   public View getSelection()
+   public View getActiveView()
    {
       CTabItem selection = tabFolder.getSelection();
       return (selection != null) ? (View)selection.getData("view") : null;
@@ -519,16 +537,26 @@ public class ViewStack extends Composite
    @Override
    public boolean setFocus()
    {
-      CTabItem tabItem = tabFolder.getSelection();
-      View view = (tabItem != null) ? (View)tabItem.getData("view") : null;
+      View view = getActiveView();
       if (view != null)
-      {
          view.setFocus();
-      }
       else
-      {
          super.setFocus();
-      }
       return true;
+   }
+
+   /**
+    * Process keystroke
+    *
+    * @param ks keystroke to process
+    */
+   public void processKeyStroke(KeyStroke ks)
+   {
+      if (!keyBindingManager.processKeyStroke(ks))
+      {
+         View view = getActiveView();
+         if (view != null)
+            view.processKeyStroke(ks);
+      }
    }
 }
