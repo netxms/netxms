@@ -25,7 +25,6 @@
 #include "aix_subagent.h"
 #include <procinfo.h>
 
-
 //
 // Possible consolidation types of per-process information
 //
@@ -68,7 +67,7 @@ static PROCENTRY *GetProcessList(int *pnprocs)
 
 	PROCENTRY *pBuffer;
 	int nrecs = nprocs + 64;
-	
+
 retry_getprocs:
 	pBuffer = (PROCENTRY *)malloc(sizeof(PROCENTRY) * nrecs);
 	index = 0;
@@ -168,26 +167,101 @@ LONG H_SysThreadCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, A
 }
 
 /**
- * Handler for Process.Count(*) parameter
+ * Reads initial characters of arg list (cmd line) of process by pid.
+ * Buffer size should be PRARGSZ bytes.
+ */
+static bool ReadProcessCmdLine(pid_t pid, char *buff)
+{
+   bool result = false;
+   char fileName[MAX_PATH];
+   snprintf(fileName, MAX_PATH, "/proc/%i/psinfo", static_cast<int>(pid));
+   int hFile = _open(fileName, O_RDONLY);
+   if (hFile != -1)
+   {
+      psinfo pi;
+      ssize_t readSize = _read(hFile, &pi, sizeof(psinfo));
+      if (readSize == sizeof(psinfo))
+      {
+         strcpy(buff, pi.pr_psargs);
+         result = true;
+      }
+      _close(hFile);
+   }
+   return result;
+}
+
+/**
+ * Check if given process matches filter
+ */
+static bool MatchProcess(PROCENTRY *proc, const char *processNameFilter, const char *userNameFilter, const char *cmdLineFilter)
+{
+   //Proc name filter
+   if (processNameFilter != nullptr && *processNameFilter != 0)
+      if (!RegexpMatchA(proc->pi_comm, processNameFilter, true))
+         return false;
+   
+   //User filter
+   if (userNameFilter != nullptr && *userNameFilter != 0)
+   {
+      passwd resultbuf;
+      char buffer[512];
+      passwd *userInfo;
+      getpwuid_r(proc->pi_uid, &resultbuf, buffer, sizeof(buffer), &userInfo);
+      if (userInfo == nullptr || !RegexpMatchA(userInfo->pw_name, userNameFilter, true))
+         return false;
+   }
+   //Cmd line filter
+   if (cmdLineFilter != nullptr && *cmdLineFilter != 0)
+   {
+      char cmdLine[PRARGSZ];
+      if (!ReadProcessCmdLine(proc->pi_pid, cmdLine) || !RegexpMatchA(cmdLine, cmdLineFilter, true))
+         return false;
+   }
+   return true;
+}
+
+/**
+ * Handler for Process.Count(*), Process.CountEx(*) parameters
  */
 LONG H_ProcessCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	LONG nRet;
 	PROCENTRY *pList;
 	int i, nSysProcCount, nProcCount;
-	char szProcessName[256];
+   char processNameFilter[MAX_PATH] = "", cmdLineFilter[MAX_PATH] = "", userNameFilter[256] = "";
 
-	if (!AgentGetParameterArgA(pszParam, 1, szProcessName, 256))
-		return SYSINFO_RC_UNSUPPORTED;
+	if (!AgentGetParameterArgA(pszParam, 1, processNameFilter, 256))
+   {
+      return SYSINFO_RC_UNSUPPORTED;
+   }
+   
+   if (*pArg == _T('E'))
+   {
+      AgentGetParameterArgA(pszParam, 2, cmdLineFilter, sizeof(cmdLineFilter));
+      AgentGetParameterArgA(pszParam, 3, userNameFilter, sizeof(userNameFilter));
+   }
 
-	pList = GetProcessList(&nSysProcCount);
+   pList = GetProcessList(&nSysProcCount);
 	if (pList != NULL)
 	{
-		for(i = 0, nProcCount = 0; i < nSysProcCount; i++)
-		{
-			if (!strcmp(pList[i].pi_comm, szProcessName))
-				nProcCount++;
-		}
+      for (i = 0, nProcCount = 0; i < nSysProcCount; i++)
+      {
+         if (*pArg == _T('E')) //Process.CountEx()
+         {
+            if (MatchProcess(&pList[i], processNameFilter, cmdLineFilter, userNameFilter))
+               nProcCount++;
+         }
+         else //Process.Count()
+         {
+            if (*processNameFilter != 0)
+            {
+               if (strcmp(pList[i].pi_comm, processNameFilter))
+               {
+                  nProcCount++;
+               }
+            }
+         }
+      }
 		free(pList);
 		ret_uint(pValue, nProcCount);
 		nRet = SYSINFO_RC_SUCCESS;
@@ -207,7 +281,8 @@ LONG H_ProcessInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abst
 {
 	int nRet = SYSINFO_RC_SUCCESS;
 	char szBuffer[256] = "";
-	int i, nProcCount, nType, nCount;
+   char processNameFilter[128] = "", cmdLineFilter[128] = "", userNameFilter[128] = "";
+   int i, nProcCount, nType, nCount;
 	PROCENTRY *pList;
 	QWORD qwValue, qwCurrVal;
 	static const char *pszTypeList[]={ "min", "max", "avg", "sum", NULL };
@@ -227,13 +302,15 @@ LONG H_ProcessInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abst
 			return SYSINFO_RC_UNSUPPORTED;     // Unsupported type
 	}
 
-	AgentGetParameterArgA(pszParam, 1, szBuffer, sizeof(szBuffer));
-	pList = GetProcessList(&nProcCount);
+   AgentGetParameterArgA(pszParam, 1, processNameFilter, sizeof(processNameFilter));
+   AgentGetParameterArgA(pszParam, 3, cmdLineFilter, sizeof(cmdLineFilter));
+   AgentGetParameterArgA(pszParam, 4, userNameFilter, sizeof(userNameFilter));
+   pList = GetProcessList(&nProcCount);
    if (pList != NULL)
    {
       for(i = 0, qwValue = 0, nCount = 0; i < nProcCount; i++)
       {
-         if (!strcmp(pList[i].pi_comm, szBuffer))
+         if (MatchProcess(&pList[i], processNameFilter, cmdLineFilter, userNameFilter))
          {
             switch(CAST_FROM_POINTER(pArg, int))
             {

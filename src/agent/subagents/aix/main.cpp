@@ -178,7 +178,8 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("Net.Interface.PacketsOut(*)"), H_NetInterfaceInfo, (TCHAR *)IF_INFO_PACKETS_OUT, DCI_DT_UINT, DCIDESC_NET_INTERFACE_PACKETSOUT },
    { _T("Net.Interface.Speed(*)"), H_NetInterfaceInfo, (TCHAR *)IF_INFO_SPEED, DCI_DT_INT, DCIDESC_NET_INTERFACE_SPEED },
 
-   { _T("Process.Count(*)"), H_ProcessCount, NULL, DCI_DT_UINT, DCIDESC_PROCESS_COUNT },
+   { _T("Process.Count(*)"), H_ProcessCount, _T("S"), DCI_DT_UINT, DCIDESC_PROCESS_COUNT },
+   { _T("Process.CountEx(*)"), H_ProcessCount, _T("E"), DCI_DT_UINT, DCIDESC_PROCESS_COUNTEX },
    { _T("Process.CPUTime(*)"), H_ProcessInfo, (TCHAR *)PROCINFO_CPUTIME, DCI_DT_UINT64, DCIDESC_PROCESS_CPUTIME },
    { _T("Process.IO.ReadOp(*)"), H_ProcessInfo, (TCHAR *)PROCINFO_IO_READ_OP, DCI_DT_UINT64, DCIDESC_PROCESS_IO_READOP },
    { _T("Process.IO.WriteOp(*)"), H_ProcessInfo, (TCHAR *)PROCINFO_IO_WRITE_OP, DCI_DT_UINT64, DCIDESC_PROCESS_IO_WRITEOP },

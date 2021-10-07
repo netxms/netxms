@@ -28,6 +28,8 @@
 #include <nms_threads.h>
 #include <sys/var.h>
 #include "libperfstat_compat.h"
+#include <pwd.h>
+#include <sys/procfs.h>
 
 #define AIX_DEBUG_TAG	_T("aix")
 

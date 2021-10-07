@@ -23,24 +23,24 @@
 /**
  * Maximum possible length of process name
  */
-#define MAX_PROCESS_NAME_LEN  32
+#define MAX_PROCESS_NAME_LEN 32
 
 /**
  * File descriptor
  */
 class FileDescriptor
 {
-public:   
+public:
    int handle;
    char *name;
-   
+
    FileDescriptor(struct dirent *e, const char *base)
    {
       handle = strtol(e->d_name, nullptr, 10);
-      
+
       char path[MAX_PATH];
       snprintf(path, MAX_PATH, "%s/%s", base, e->d_name);
-      
+
       char fname[MAX_PATH];
       int len = (int)readlink(path, fname, MAX_PATH - 1);
       if (len >= 0)
@@ -53,7 +53,7 @@ public:
          name = MemCopyStringA("");
       }
    }
-   
+
    ~FileDescriptor()
    {
       MemFree(name);
@@ -68,18 +68,18 @@ class Process
 public:
    uint32_t pid;
    char name[MAX_PROCESS_NAME_LEN];
-   uint32_t parent;          // PID of parent process
-   uint32_t group;           // Group ID
-   char state;             // Process state
-   long threads;           // Number of threads
-   unsigned long ktime;    // Number of ticks spent in kernel mode
-   unsigned long utime;    // Number of ticks spent in user mode
-   unsigned long vmsize;   // Size of process's virtual memory in bytes
-   long rss;               // Process's resident set size in pages
-   unsigned long minflt;   // Number of minor page faults
-   unsigned long majflt;   // Number of major page faults
+   uint32_t parent;      // PID of parent process
+   uint32_t group;       // Group ID
+   char state;           // Process state
+   long threads;         // Number of threads
+   unsigned long ktime;  // Number of ticks spent in kernel mode
+   unsigned long utime;  // Number of ticks spent in user mode
+   unsigned long vmsize; // Size of process's virtual memory in bytes
+   long rss;             // Process's resident set size in pages
+   unsigned long minflt; // Number of minor page faults
+   unsigned long majflt; // Number of major page faults
    ObjectArray<FileDescriptor> *fd;
-   char *cmdLine;          // Process command line
+   char *cmdLine; // Process command line
 
    Process(uint32_t _pid, const char *_name, char *_cmdLine)
    {
@@ -111,24 +111,24 @@ public:
  */
 static int ProcFilter(const struct dirent *pEnt)
 {
-	char *pTmp;
+   char *pTmp;
 
-	if (pEnt == nullptr)
-	{
-		return 0; // ignore file
-	}
+   if (pEnt == nullptr)
+   {
+      return 0; // ignore file
+   }
 
-	pTmp = (char *)pEnt->d_name;
-	while (*pTmp != 0)
-	{
-		if (*pTmp < '0' || *pTmp > '9')
-		{
-			return 0; // skip
-		}
-		pTmp++;
-	}
+   pTmp = (char *)pEnt->d_name;
+   while (*pTmp != 0)
+   {
+      if (*pTmp < '0' || *pTmp > '9')
+      {
+         return 0; // skip
+      }
+      pTmp++;
+   }
 
-	return 1;
+   return 1;
 }
 
 /**
@@ -138,14 +138,14 @@ static ObjectArray<FileDescriptor> *ReadProcessHandles(UINT32 pid)
 {
    char path[MAX_PATH];
    snprintf(path, MAX_PATH, "/proc/%u/fd", pid);
-   
-	struct dirent **handles;
-	int count = scandir(path, &handles, ProcFilter, alphasort);
+
+   struct dirent **handles;
+   int count = scandir(path, &handles, ProcFilter, alphasort);
    if (count < 0)
       return NULL;
-      
+
    ObjectArray<FileDescriptor> *fd = new ObjectArray<FileDescriptor>(count, 16, Ownership::True);
-   while(count-- > 0)
+   while (count-- > 0)
    {
       fd->add(new FileDescriptor(handles[count], path));
       free(handles[count]);
@@ -167,47 +167,31 @@ static ObjectArray<FileDescriptor> *ReadProcessHandles(UINT32 pid)
  *    procUser - If not NULL, only processes run by this user will be counted.
  * Return value: number of matched processes or -1 in case of error.
  */
-static int ProcRead(ObjectArray<Process> *plist, const char *procNameFilter, const char *cmdLineFilter, const char *procUser, bool readHandles, bool readCmdLine)
+static int ProcRead(ObjectArray<Process> *plist, const char *procNameFilter, const char *cmdLineFilter, const char *procUserFilter, bool readHandles, bool readCmdLine)
 {
-	nxlog_debug_tag(DEBUG_TAG, 5, _T("ProcRead(%p, \"%hs\",\"%hs\",\"%hs\")"), plist, CHECK_NULL_A(procNameFilter), CHECK_NULL_A(cmdLineFilter), CHECK_NULL_A(procUser));
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("ProcRead(%p, \"%hs\",\"%hs\",\"%hs\")"), plist, CHECK_NULL_A(procNameFilter), CHECK_NULL_A(cmdLineFilter), CHECK_NULL_A(procUserFilter));
 
-   uid_t procUid = -1;
-   if ((procUser != nullptr) && (*procUser != 0))
-   {
-      struct passwd pwd;
-      struct passwd *result;
-      char *buffer = MemAllocStringA(16384);
-      getpwnam_r(procUser, &pwd, buffer, 16384, &result);
-      if (result == nullptr)
-      {
-         MemFree(buffer);
-         return -2; //If user is set, but it's not found return unsupported
-      }
-      procUid = pwd.pw_uid;
-      MemFree(buffer);
-   }
-
-	struct dirent **nameList;
-	int count = scandir("/proc", &nameList, ProcFilter, alphasort);
+   struct dirent **nameList;
+   int count = scandir("/proc", &nameList, ProcFilter, alphasort);
    if (count < 0)
       return -1;
    if (count == 0)
    {
       free(nameList);
-      return -1;  // consider 0 as error as there should not be 0 processes
+      return -1; // consider 0 as error as there should not be 0 processes
    }
-   
+
    // get process count without filtering, we can skip long loop
-	if ((plist == nullptr) && (procNameFilter == nullptr) && (cmdLineFilter == nullptr) && (procUser == nullptr))
-	{
-      for(int i = 0; i < count; i++)
+   if ((plist == nullptr) && (procNameFilter == nullptr) && (cmdLineFilter == nullptr) && (procUserFilter == nullptr))
+   {
+      for (int i = 0; i < count; i++)
          free(nameList[i]);
       free(nameList);
-		return count;
-	}
+      return count;
+   }
 
    int found = 0;
-   while(count-- > 0)
+   while (count-- > 0)
    {
       bool procFound = false;
       bool cmdFound = false;
@@ -259,14 +243,22 @@ static int ProcRead(ObjectArray<Process> *plist, const char *procNameFilter, con
          _close(hFile);
       } // hFile
 
-      if (procUid != -1)
+      //Check if user name matches pattern
+      if (procUserFilter != nullptr && *procUserFilter != 0)
       {
-         snprintf(fileName, MAX_PATH, "/proc/%s/", nameList[count]->d_name);
          struct stat fileInfo;
          if (stat(fileName, &fileInfo) == 0)
-            uidFound = fileInfo.st_uid == procUid;
-         else
-            uidFound = false;
+         {
+            passwd* resultbuf = new passwd();
+            char buffer[512];
+            size_t buflen = 512;
+            passwd *pUserInfo = new passwd();
+            getpwuid_r(fileInfo.st_uid, resultbuf, buffer, buflen, &pUserInfo);
+            if (pUserInfo != nullptr)
+               uidFound = RegexpMatchA(pUserInfo->pw_name, procUserFilter, true);
+            else
+               uidFound = false;
+         }
       }
 
       char *processCmdLine = nullptr;
@@ -278,7 +270,7 @@ static int ProcRead(ObjectArray<Process> *plist, const char *procNameFilter, con
          {
             size_t len = 0, pos = 0;
             processCmdLine = MemAllocStringA(4096);
-            while(true)
+            while (true)
             {
                ssize_t bytes = _read(hFile, &processCmdLine[pos], 4096);
                if (bytes < 0)
@@ -298,7 +290,7 @@ static int ProcRead(ObjectArray<Process> *plist, const char *procNameFilter, con
                // Note: to behave identicaly on different platforms,
                // full command line including argv[0] should be matched
                // replace 0x00 with spaces
-               for(int j = 0; j < len - 1; j++)
+               for (int j = 0; j < len - 1; j++)
                {
                   if (processCmdLine[j] == 0)
                   {
@@ -353,7 +345,7 @@ static int ProcRead(ObjectArray<Process> *plist, const char *procNameFilter, con
       free(nameList[count]);
    }
    free(nameList);
-	return found;
+   return found;
 }
 
 /**
@@ -361,33 +353,33 @@ static int ProcRead(ObjectArray<Process> *plist, const char *procNameFilter, con
  */
 LONG H_ProcessCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
-	int nRet = SYSINFO_RC_ERROR;
-	char procNameFilter[MAX_PATH] = "", cmdLineFilter[MAX_PATH] = "", userFilter[256] = "";
-	int nCount = -1;
+   int nRet = SYSINFO_RC_ERROR;
+   char procNameFilter[MAX_PATH] = "", cmdLineFilter[MAX_PATH] = "", userFilter[256] = "";
+   int nCount = -1;
 
-	if (*pArg != _T('T'))
-	{
-		AgentGetParameterArgA(pszParam, 1, procNameFilter, sizeof(procNameFilter));
-		if (*pArg == _T('E'))
-		{
-			AgentGetParameterArgA(pszParam, 2, cmdLineFilter, sizeof(cmdLineFilter));
-			AgentGetParameterArgA(pszParam, 3, userFilter, sizeof(userFilter));
-		}
-	}
+   if (*pArg != _T('T'))
+   {
+      AgentGetParameterArgA(pszParam, 1, procNameFilter, sizeof(procNameFilter));
+      if (*pArg == _T('E'))
+      {
+         AgentGetParameterArgA(pszParam, 2, cmdLineFilter, sizeof(cmdLineFilter));
+         AgentGetParameterArgA(pszParam, 3, userFilter, sizeof(userFilter));
+      }
+   }
 
-	nCount = ProcRead(nullptr, (*pArg != _T('T')) ? procNameFilter : nullptr, (*pArg == _T('E')) ? cmdLineFilter : nullptr, (*pArg == _T('E')) ? userFilter : nullptr, false, false);
+   nCount = ProcRead(nullptr, (*pArg != _T('T')) ? procNameFilter : nullptr, (*pArg == _T('E')) ? cmdLineFilter : nullptr, (*pArg == _T('E')) ? userFilter : nullptr, false, false);
 
-	if (nCount == -2)
+   if (nCount == -2)
    {
       nRet = SYSINFO_RC_UNSUPPORTED;
    }
-	else if (nCount >= 0)
-	{
+   else if (nCount >= 0)
+   {
       ret_int(pValue, nCount);
       nRet = SYSINFO_RC_SUCCESS;
-	}
+   }
 
-	return nRet;
+   return nRet;
 }
 
 /**
@@ -395,19 +387,19 @@ LONG H_ProcessCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abs
  */
 LONG H_ThreadCount(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
-	int i, sum, count, ret = SYSINFO_RC_ERROR;
-	ObjectArray<Process> procList(128, 128, Ownership::True);
+   int i, sum, count, ret = SYSINFO_RC_ERROR;
+   ObjectArray<Process> procList(128, 128, Ownership::True);
 
-	count = ProcRead(&procList, nullptr, nullptr, nullptr, false, false);
-	if (count >= 0)
-	{
-		for(i = 0, sum = 0; i < procList.size(); i++)
-			sum += procList.get(i)->threads;
-		ret_int(value, sum);
-		ret = SYSINFO_RC_SUCCESS;
-	}
+   count = ProcRead(&procList, nullptr, nullptr, nullptr, false, false);
+   if (count >= 0)
+   {
+      for (i = 0, sum = 0; i < procList.size(); i++)
+         sum += procList.get(i)->threads;
+      ret_int(value, sum);
+      ret = SYSINFO_RC_SUCCESS;
+   }
 
-	return ret;
+   return ret;
 }
 
 /**
@@ -415,22 +407,22 @@ LONG H_ThreadCount(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractC
  */
 LONG H_HandleCount(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
-	int i, sum, count, ret = SYSINFO_RC_ERROR;
-	ObjectArray<Process> procList(128, 128, Ownership::True);
+   int i, sum, count, ret = SYSINFO_RC_ERROR;
+   ObjectArray<Process> procList(128, 128, Ownership::True);
 
-	count = ProcRead(&procList, nullptr, nullptr, nullptr, true, false);
-	if (count >= 0)
-	{
-		for(i = 0, sum = 0; i < procList.size(); i++)
+   count = ProcRead(&procList, nullptr, nullptr, nullptr, true, false);
+   if (count >= 0)
+   {
+      for (i = 0, sum = 0; i < procList.size(); i++)
       {
          if (procList.get(i)->fd != NULL)
             sum += procList.get(i)->fd->size();
       }
-		ret_int(value, sum);
-		ret = SYSINFO_RC_SUCCESS;
-	}
+      ret_int(value, sum);
+      ret = SYSINFO_RC_SUCCESS;
+   }
 
-	return ret;
+   return ret;
 }
 
 /**
@@ -446,13 +438,13 @@ static int64_t CountVMRegions(uint32_t pid)
 
    int64_t count = 0;
    char buffer[16384];
-   while(true)
+   while (true)
    {
       ssize_t bytes = _read(f, buffer, 16384);
       if (bytes <= 0)
          break;
       char *p = buffer;
-      for(ssize_t i = 0; i < bytes; i++)
+      for (ssize_t i = 0; i < bytes; i++)
          if (*p++ == '\n')
             count++;
    }
@@ -479,100 +471,100 @@ static int64_t CountVMRegions(uint32_t pid)
  */
 LONG H_ProcessDetails(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
-	int i, count, type;
-	INT64 currVal, finalVal;
-	char procNameFilter[MAX_PATH], cmdLineFilter[MAX_PATH], buffer[256], userFilter[256] = "";
-   static const char *typeList[]={ "min", "max", "avg", "sum", nullptr };
+   int i, count, type;
+   INT64 currVal, finalVal;
+   char procNameFilter[MAX_PATH], cmdLineFilter[MAX_PATH], buffer[256], userFilter[256] = "";
+   static const char *typeList[] = {"min", "max", "avg", "sum", nullptr};
 
    // Get parameter type arguments
    AgentGetParameterArgA(param, 2, buffer, 256);
-   if (buffer[0] == 0)     // Omited type
+   if (buffer[0] == 0) // Omited type
    {
       type = INFOTYPE_SUM;
    }
    else
    {
-      for(type = 0; typeList[type] != nullptr; type++)
+      for (type = 0; typeList[type] != nullptr; type++)
          if (!stricmp(typeList[type], buffer))
             break;
       if (typeList[type] == nullptr)
-         return SYSINFO_RC_UNSUPPORTED;     // Unsupported type
+         return SYSINFO_RC_UNSUPPORTED; // Unsupported type
    }
 
-	// Get process name
-	AgentGetParameterArgA(param, 1, procNameFilter, MAX_PATH);
-	AgentGetParameterArgA(param, 3, cmdLineFilter, MAX_PATH);
+   // Get process name
+   AgentGetParameterArgA(param, 1, procNameFilter, MAX_PATH);
+   AgentGetParameterArgA(param, 3, cmdLineFilter, MAX_PATH);
    AgentGetParameterArgA(param, 4, userFilter, sizeof(userFilter));
-	TrimA(cmdLineFilter);
+   TrimA(cmdLineFilter);
 
-	ObjectArray<Process> procList(128, 128, Ownership::True);
-	count = ProcRead(&procList, procNameFilter, (cmdLineFilter[0] != 0) ? cmdLineFilter : nullptr,
-	         (userFilter[0] != 0) ? userFilter : nullptr, CAST_FROM_POINTER(arg, int) == PROCINFO_HANDLES, false);
-	nxlog_debug_tag(DEBUG_TAG, 5, _T("H_ProcessDetails(\"%hs\"): ProcRead() returns %d"), param, count);
-	if (count == -1)
-		return SYSINFO_RC_ERROR;
-	if (count == -2)
-	      return SYSINFO_RC_UNSUPPORTED;
+   ObjectArray<Process> procList(128, 128, Ownership::True);
+   count = ProcRead(&procList, procNameFilter, (cmdLineFilter[0] != 0) ? cmdLineFilter : nullptr,
+                    (userFilter[0] != 0) ? userFilter : nullptr, CAST_FROM_POINTER(arg, int) == PROCINFO_HANDLES, false);
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("H_ProcessDetails(\"%hs\"): ProcRead() returns %d"), param, count);
+   if (count == -1)
+      return SYSINFO_RC_ERROR;
+   if (count == -2)
+      return SYSINFO_RC_UNSUPPORTED;
 
-	long pageSize = getpagesize();
-	long ticksPerSecond = sysconf(_SC_CLK_TCK);
-	for(i = 0, finalVal = 0; i < procList.size(); i++)
-	{
+   long pageSize = getpagesize();
+   long ticksPerSecond = sysconf(_SC_CLK_TCK);
+   for (i = 0, finalVal = 0; i < procList.size(); i++)
+   {
       Process *p = procList.get(i);
-		switch(CAST_FROM_POINTER(arg, int))
-		{
-			case PROCINFO_CPUTIME:
-				currVal = (p->ktime + p->utime) * 1000 / ticksPerSecond;
-				break;
-			case PROCINFO_HANDLES:
-				currVal = (p->fd != NULL) ? p->fd->size() : 0;
-				break;
-			case PROCINFO_KTIME:
-				currVal = p->ktime * 1000 / ticksPerSecond;
-				break;
-			case PROCINFO_UTIME:
-				currVal = p->utime * 1000 / ticksPerSecond;
-				break;
-			case PROCINFO_PAGEFAULTS:
-				currVal = p->majflt + p->minflt;
-				break;
-			case PROCINFO_THREADS:
-				currVal = p->threads;
-				break;
-         case PROCINFO_VMREGIONS:
-            currVal = CountVMRegions(p->pid);
-            break;
-			case PROCINFO_VMSIZE:
-				currVal = p->vmsize;
-				break;
-			case PROCINFO_WKSET:
-				currVal = p->rss * pageSize;
-				break;
-			default:
-				currVal = 0;
-				break;
-		}
+      switch (CAST_FROM_POINTER(arg, int))
+      {
+      case PROCINFO_CPUTIME:
+         currVal = (p->ktime + p->utime) * 1000 / ticksPerSecond;
+         break;
+      case PROCINFO_HANDLES:
+         currVal = (p->fd != NULL) ? p->fd->size() : 0;
+         break;
+      case PROCINFO_KTIME:
+         currVal = p->ktime * 1000 / ticksPerSecond;
+         break;
+      case PROCINFO_UTIME:
+         currVal = p->utime * 1000 / ticksPerSecond;
+         break;
+      case PROCINFO_PAGEFAULTS:
+         currVal = p->majflt + p->minflt;
+         break;
+      case PROCINFO_THREADS:
+         currVal = p->threads;
+         break;
+      case PROCINFO_VMREGIONS:
+         currVal = CountVMRegions(p->pid);
+         break;
+      case PROCINFO_VMSIZE:
+         currVal = p->vmsize;
+         break;
+      case PROCINFO_WKSET:
+         currVal = p->rss * pageSize;
+         break;
+      default:
+         currVal = 0;
+         break;
+      }
 
-		switch(type)
-		{
-			case INFOTYPE_SUM:
-			case INFOTYPE_AVG:
-				finalVal += currVal;
-				break;
-			case INFOTYPE_MIN:
-				finalVal = std::min(currVal, finalVal);
-				break;
-			case INFOTYPE_MAX:
-				finalVal = std::max(currVal, finalVal);
-				break;
-		}
-	}
+      switch (type)
+      {
+      case INFOTYPE_SUM:
+      case INFOTYPE_AVG:
+         finalVal += currVal;
+         break;
+      case INFOTYPE_MIN:
+         finalVal = std::min(currVal, finalVal);
+         break;
+      case INFOTYPE_MAX:
+         finalVal = std::max(currVal, finalVal);
+         break;
+      }
+   }
 
-	if (type == INFOTYPE_AVG)
-		finalVal /= count;
+   if (type == INFOTYPE_AVG)
+      finalVal /= count;
 
-	ret_int64(value, finalVal);
-	return SYSINFO_RC_SUCCESS;
+   ret_int64(value, finalVal);
+   return SYSINFO_RC_SUCCESS;
 }
 
 /**
@@ -582,20 +574,20 @@ LONG H_ProcessList(const TCHAR *pszParam, const TCHAR *pArg, StringList *value, 
 {
    int nRet = SYSINFO_RC_ERROR;
 
-	ObjectArray<Process> procList(128, 128, Ownership::True);
+   ObjectArray<Process> procList(128, 128, Ownership::True);
    int nCount = ProcRead(&procList, nullptr, nullptr, nullptr, false, false);
    if (nCount >= 0)
-   {    
+   {
       nRet = SYSINFO_RC_SUCCESS;
 
-      for(int i = 0; i < procList.size(); i++)
-      {         
+      for (int i = 0; i < procList.size(); i++)
+      {
          Process *p = procList.get(i);
          TCHAR szBuff[128];
          _sntprintf(szBuff, sizeof(szBuff), _T("%d %hs"), p->pid, p->name);
          value->add(szBuff);
-      }         
-   }    
+      }
+   }
    return nRet;
 }
 
@@ -617,16 +609,16 @@ LONG H_ProcessTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCo
 
    int rc = SYSINFO_RC_ERROR;
 
-	ObjectArray<Process> procList(128, 128, Ownership::True);
+   ObjectArray<Process> procList(128, 128, Ownership::True);
    int nCount = ProcRead(&procList, nullptr, nullptr, nullptr, true, true);
    if (nCount >= 0)
-   {    
+   {
       rc = SYSINFO_RC_SUCCESS;
 
       uint64_t pageSize = getpagesize();
       uint64_t ticksPerSecond = sysconf(_SC_CLK_TCK);
-      for(int i = 0; i < procList.size(); i++)
-      {         
+      for (int i = 0; i < procList.size(); i++)
+      {
          Process *p = procList.get(i);
          value->addRow();
          value->set(0, p->pid);
@@ -643,8 +635,8 @@ LONG H_ProcessTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCo
          value->set(7, static_cast<uint64_t>(p->rss) * pageSize);
          value->set(8, static_cast<uint64_t>(p->minflt) + static_cast<uint64_t>(p->majflt));
          value->set(9, p->cmdLine);
-      }         
-   }    
+      }
+   }
    return rc;
 }
 
@@ -660,18 +652,18 @@ LONG H_OpenFilesTable(const TCHAR *cmd, const TCHAR *arg, Table *value, Abstract
 
    int rc = SYSINFO_RC_ERROR;
 
-	ObjectArray<Process> procList(128, 128, Ownership::True);
+   ObjectArray<Process> procList(128, 128, Ownership::True);
    int nCount = ProcRead(&procList, nullptr, nullptr, nullptr, true, false);
    if (nCount >= 0)
-   {    
+   {
       rc = SYSINFO_RC_SUCCESS;
 
-      for(int i = 0; i < procList.size(); i++)
-      {         
+      for (int i = 0; i < procList.size(); i++)
+      {
          Process *p = procList.get(i);
          if (p->fd != nullptr)
          {
-            for(int j = 0; j < p->fd->size(); j++)
+            for (int j = 0; j < p->fd->size(); j++)
             {
                FileDescriptor *f = p->fd->get(j);
                value->addRow();
@@ -686,7 +678,7 @@ LONG H_OpenFilesTable(const TCHAR *cmd, const TCHAR *arg, Table *value, Abstract
 #endif
             }
          }
-      }         
-   }    
+      }
+   }
    return rc;
 }

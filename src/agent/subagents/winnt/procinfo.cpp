@@ -22,10 +22,13 @@
 **/
 
 #define UMDF_USING_NTSTATUS
+#define MAX_NAME 256
 #include <ntstatus.h>
 
 #include "winnt_subagent.h"
 #include <winternl.h>
+#include <sstream>
+#include "aclapi.h"
 
 /**
  * Convert process time from FILETIME structure (100-nanosecond units) to __uint64 (milliseconds)
@@ -265,35 +268,76 @@ static StringList *GetProcessWindows(DWORD pid)
 	return list.pWndList;
 }
 
+
+/**
+ * Get owner name and domain of given process by process ID
+ */
+static bool GetProcessOwner(DWORD pid, TCHAR* buffer, size_t bufferSize)
+{
+	HANDLE pHandle = OpenProcess(READ_CONTROL, FALSE, pid);
+	if (pHandle != nullptr)
+	{
+      PSID sidUser;
+      PSID sidGroup;
+
+      DWORD error = GetSecurityInfo(pHandle, SE_KERNEL_OBJECT, OWNER_SECURITY_INFORMATION, &sidUser, &sidGroup, NULL, NULL, NULL);
+      CloseHandle(pHandle);
+
+      if (error == ERROR_SUCCESS)
+      {
+         TCHAR userName[256];
+         DWORD acctNameSize = 256;
+         TCHAR domainName[256];
+         DWORD domainNameSize = 256;
+         SID_NAME_USE use;
+
+         if (LookupAccountSid(nullptr, sidUser, userName, &acctNameSize, domainName, &domainNameSize, &use))
+         {
+            return _sntprintf(buffer, bufferSize, _T("%s\\%s"), domainName, userName) < static_cast<int>(bufferSize);
+         }
+      }
+	}
+   return false;
+}
+
 /**
  * Match process to search criteria
  */
-static bool MatchProcess(DWORD pid, const WCHAR *imageName, bool extendedMatch, TCHAR *moduleNamePattern, TCHAR *cmdLinePattern, TCHAR *windowNamePattern)
-{
-   if (!extendedMatch)
-      return (imageName != nullptr) ? wcsicmp(imageName, moduleNamePattern) == 0 : false;
-
-	bool procMatch, cmdLineMatch, windowMatch;
-	procMatch = cmdLineMatch = windowMatch = true;
-
-	if (cmdLinePattern[0] != 0)		// not empty, check if match
-	{
-      TCHAR commandLine[8192];
-      memset(commandLine, 0, sizeof(commandLine));
-      if (GetProcessCommandLine(pid, commandLine, 8192))
-         cmdLineMatch = RegexpMatch(commandLine, cmdLinePattern, false);
-      else
-         cmdLineMatch = false;
+static bool MatchProcess(DWORD pid, const WCHAR *imageName, bool extendedMatch, TCHAR *moduleNamePattern, TCHAR *cmdLinePattern, TCHAR *userPattern, TCHAR *windowNamePattern)
+{	
+	if (!extendedMatch) 
+   {
+		return (imageName != nullptr) ? wcsicmp(imageName, moduleNamePattern) == 0 : false;
 	}
 
-	if (moduleNamePattern[0] != 0)
-	{
-		procMatch = (imageName != nullptr) ? RegexpMatch(imageName, moduleNamePattern, false) : false;
+   //Cmd line match
+   if (cmdLinePattern != nullptr && cmdLinePattern[0] != 0) // not empty, check if match
+   {
+		TCHAR commandLine[8192];
+		memset(commandLine, 0, sizeof(commandLine));
+      if (!GetProcessCommandLine(pid, commandLine, 8192) || !RegexpMatch(commandLine, cmdLinePattern, false))
+         return false;
 	}
 
-	if (windowNamePattern[0] != 0)
-	{
-      windowMatch = false;
+   //Process name match
+   if (moduleNamePattern != nullptr && moduleNamePattern[0] != 0)
+   {	
+		if(imageName == nullptr || RegexpMatch(imageName, moduleNamePattern, false))
+         return false;
+	}
+
+   //User name match
+   if (userPattern != nullptr && userPattern[0] != 0)
+   {
+		TCHAR userName[256];
+      if (!GetProcessOwner(pid, userName, sizeof(userName) / sizeof(TCHAR)) || !RegexpMatch(userName, userPattern, false))
+         return false;
+   }
+
+   //Window name match
+   if (windowNamePattern != nullptr && windowNamePattern[0] != 0)
+   {
+		bool windowMatch = false;
 		StringList *windowList = GetProcessWindows(pid);
 		for(int i = 0; i < windowList->size(); i++)
 		{
@@ -304,15 +348,16 @@ static bool MatchProcess(DWORD pid, const WCHAR *imageName, bool extendedMatch, 
 			}
 		}
 		delete windowList;
-	}
+      return windowMatch; //Change this when adding new filters
+   }
 
-	return procMatch && cmdLineMatch && windowMatch;
+	return true;
 }
 
 /**
  * Get process-specific information
  * Parameter has the following syntax:
- *    Process.XXX(<process>,<type>,<cmdline>,<window>)
+ *    Process.XXX(<process>,<type>,<cmdline>,<user>,<window>)
  * where
  *    XXX        - requested process attribute (see documentation for list of valid attributes)
  *    <process>  - process name (same as in Process.Count() parameter)
@@ -327,7 +372,7 @@ static bool MatchProcess(DWORD pid, const WCHAR *imageName, bool extendedMatch, 
  */
 LONG H_ProcInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
-   TCHAR buffer[256], procName[MAX_PATH], cmdLine[MAX_PATH], windowTitle[MAX_PATH];
+	TCHAR buffer[256], procName[MAX_PATH], cmdLine[MAX_PATH], user[MAX_PATH], windowTitle[MAX_PATH];
 
    // Get parameter type arguments
    AgentGetParameterArg(cmd, 2, buffer, 255);
@@ -350,11 +395,11 @@ LONG H_ProcInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSe
 
       aggregationMethod = methods[i];
    }
-
    // Get process name
    AgentGetParameterArg(cmd, 1, procName, MAX_PATH - 1);
-	AgentGetParameterArg(cmd, 3, cmdLine, MAX_PATH - 1);
-	AgentGetParameterArg(cmd, 4, windowTitle, MAX_PATH - 1);
+   AgentGetParameterArg(cmd, 3, cmdLine, MAX_PATH - 1);
+   AgentGetParameterArg(cmd, 4, user, MAX_PATH - 1);
+   AgentGetParameterArg(cmd, 5, windowTitle, MAX_PATH - 1);
 
    ULONG allocated = 1024 * 1024;  // 1MB by default
    void *processInfoBuffer = MemAlloc(allocated);
@@ -380,7 +425,7 @@ LONG H_ProcInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSe
    SYSTEM_PROCESS_INFORMATION *process = static_cast<SYSTEM_PROCESS_INFORMATION*>(processInfoBuffer);
    do
    {
-      if (MatchProcess(static_cast<DWORD>(reinterpret_cast<ULONG_PTR>(process->UniqueProcessId)), process->ImageName.Buffer, (cmdLine[0] != 0) || (windowTitle[0] != 0), procName, cmdLine, windowTitle))
+      if (MatchProcess(static_cast<DWORD>(reinterpret_cast<ULONG_PTR>(process->UniqueProcessId)), process->ImageName.Buffer, (cmdLine[0] != 0) || (windowTitle[0] != 0), procName, cmdLine, user, windowTitle))
       {
          counter++;  // Number of processes with specific name
          attributeValue = GetProcessAttribute(process, attribute, aggregationMethod, counter, attributeValue);
@@ -415,16 +460,17 @@ LONG H_ProcCount(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommS
  */
 LONG H_ProcCountSpecific(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
-   TCHAR procName[MAX_PATH], cmdLine[MAX_PATH], windowTitle[MAX_PATH];
+   TCHAR procName[MAX_PATH], cmdLine[MAX_PATH], user[MAX_PATH], windowTitle[MAX_PATH];
 
    AgentGetParameterArg(cmd, 1, procName, MAX_PATH - 1);
 	if (*arg == 'E')
 	{
 		AgentGetParameterArg(cmd, 2, cmdLine, MAX_PATH - 1);
-		AgentGetParameterArg(cmd, 3, windowTitle, MAX_PATH - 1);
+		AgentGetParameterArg(cmd, 3, user, MAX_PATH - 1);
+		AgentGetParameterArg(cmd, 4, windowTitle, MAX_PATH - 1);
 
-		// Check if all 3 parameters are empty
-		if ((procName[0] == 0) && (cmdLine[0] == 0) && (windowTitle[0] == 0))
+		// Check if all 4 parameters are empty
+		if ((procName[0] == 0) && (cmdLine[0] == 0) && (user[0] == 0) && (windowTitle[0] == 0))
 			return SYSINFO_RC_UNSUPPORTED;
 	}
 
@@ -449,9 +495,10 @@ LONG H_ProcCountSpecific(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, Abstr
    SYSTEM_PROCESS_INFORMATION *process = static_cast<SYSTEM_PROCESS_INFORMATION*>(processInfoBuffer);
    do
    {
-      if (MatchProcess(static_cast<DWORD>(reinterpret_cast<ULONG_PTR>(process->UniqueProcessId)), process->ImageName.Buffer, *arg == 'E', procName, cmdLine, windowTitle))
-         count++;
-
+	   if (MatchProcess(static_cast<DWORD>(reinterpret_cast<ULONG_PTR>(process->UniqueProcessId)), process->ImageName.Buffer, *arg == 'E', procName, cmdLine, user, windowTitle))
+	   {
+		   count++;        
+	   }
       process = reinterpret_cast<SYSTEM_PROCESS_INFORMATION*>(reinterpret_cast<char*>(process) + process->NextEntryOffset);
    } while (process->NextEntryOffset != 0);
 

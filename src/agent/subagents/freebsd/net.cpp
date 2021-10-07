@@ -737,8 +737,8 @@ LONG H_NetIfInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCom
 	if (s_kvmd == NULL)
 	{
 		char errmsg[_POSIX2_LINE_MAX];
-		s_kvmd = kvm_openfiles(NULL, NULL, NULL, O_RDONLY, errmsg);
-		if (s_kvmd == NULL)
+      s_kvmd = kvm_openfiles(NULL, "/dev/null", NULL, O_RDONLY, errmsg);
+      if (s_kvmd == NULL)
 		{
 			nxlog_debug(7, _T("H_NetIfInfo: kvm_openfiles failed (%hs)"), errmsg);
 			s_kvmLock.unlock();

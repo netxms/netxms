@@ -23,6 +23,7 @@
 #include "sunos_subagent.h"
 #include <procfs.h>
 #include <sys/proc.h>
+#include <pwd.h>
 
 
 //
@@ -61,60 +62,61 @@ static int ProcFilter(const struct dirent *pEnt)
    return 1;
 }
 
-
 //
 // Read process information from /proc system
 // Parameters:
 //    pEnt - If not NULL, ProcRead() will return pointer to dynamically
 //           allocated array of process information structures for
 //           matched processes. Caller should free it with MemFree().
-//    pszProcName - If not NULL, only processes with matched name will
-//                  be counted and read. If szCmdLine is NULL, then exact
-//                  match required to pass filter; otherwise szProcName can
-//                  be a regular expression.
-//    pszCmdLine - If not NULL, only processes with command line matched to
-//                 regular expression will be counted and read.
-//    lwpState   - If non-zero, only processes with pstatus_t.pr_lwp.pr_state
-//                 (as defined in proc.h: SSLEEP, SRUN, SZOMB, SSTOP,
-//                 SIDL, SONPROC) will be counted
+//    extended - If FALSE, only process name filter will be used and will require exact
+//               match insted of regular expression.
+//    procNameFilter - If not NULL, only processes with name matched to
+//                     regular expression will be counted and read.
+//    cmdLineFilter - If not NULL, only processes with command line matched to
+//                    regular expression will be counted and read.
+//    userNameFilter - If not NULL, only processes with user name matched to
+//                     regular expression will be counted and read.
+//    state - If non-zero, only processes with pstatus_t.pr_lwp.pr_state
+//            (as defined in proc.h: SSLEEP, SRUN, SZOMB, SSTOP,
+//            SIDL, SONPROC) will be counted
 // Return value: number of matched processes or -1 in case of error.
 //
 
-static int ProcRead(PROC_ENT **pEnt, char *pszProcName, char *pszCmdLine, int lwpState)
+static int ProcRead(PROC_ENT **pEnt, bool extended, char *procNameFilter, char *cmdLineFilter, char *userNameFilter, int state)
 {
-   struct dirent **pNameList;
-   int nCount, nFound;
+   struct dirent **procList;
+   int procCount, procFound;
 
-   nFound = -1;
-   if (pEnt != NULL)
-      *pEnt = NULL;
+   procFound = -1;
+   if (pEnt != nullptr)
+      *pEnt = nullptr;
 
-   nCount = scandir("/proc", &pNameList, &ProcFilter, alphasort);
-   if (nCount >= 0)
+   procCount = scandir("/proc", &procList, &ProcFilter, alphasort);
+   if (procCount >= 0)
    {
-      nFound = 0;
+      procFound = 0;
 
-      if (nCount > 0 && pEnt != NULL)
+      if (procCount > 0 && pEnt != nullptr)
       {
-         *pEnt = MemAllocArray<PROC_ENT>(nCount + 1);
-         if (*pEnt == NULL)
+         *pEnt = MemAllocArray<PROC_ENT>(procCount + 1);
+         if (*pEnt == nullptr)
          {
-            nFound = -1;
+            procFound = -1;
             // cleanup
-            while(nCount--)
+            while(procCount--)
             {
-               free(pNameList[nCount]);
+               free(procList[procCount]);
             }
          }
       }
 
-      while(nCount--)
+      while(procCount--)
       {
          char szFileName[256];
          int hFile;
 
          snprintf(szFileName, sizeof(szFileName),
-               "/proc/%s/psinfo", pNameList[nCount]->d_name);
+               "/proc/%s/psinfo", procList[procCount]->d_name);
          hFile = open(szFileName, O_RDONLY);
          if (hFile != -1)
          {
@@ -122,51 +124,73 @@ static int ProcRead(PROC_ENT **pEnt, char *pszProcName, char *pszCmdLine, int lw
 
             if (read(hFile, &psi, sizeof(psinfo_t)) == sizeof(psinfo_t))
             {
-               BOOL nameMatch = TRUE, cmdLineMatch = TRUE, lwpStateMatch = TRUE;
-
-               if (pszProcName != NULL)
+               bool nameMatch = true, cmdLineMatch = true, userMatch = true, stateMatch = true;
+               
+               if(extended)
                {
-                  if (pszCmdLine == NULL)		// Match like in Process.Count()
-                     nameMatch = !strcmp(psi.pr_fname, pszProcName);
-                  else
-                     nameMatch = RegexpMatchA(psi.pr_fname, pszProcName, FALSE);
-               }
-
-               if ((pszCmdLine != NULL) && (*pszCmdLine != 0))
-               {
-                  cmdLineMatch = RegexpMatchA(psi.pr_psargs, pszCmdLine, TRUE);
-               }
-
-               if (lwpState != 0)
-               {
-                  lwpStateMatch = psi.pr_lwp.pr_state == lwpState;
-               }
-
-               if (nameMatch && cmdLineMatch && lwpStateMatch)
-               {
-                  if (pEnt != NULL)
+                  //Match process name
+                  if ((procNameFilter != nullptr) && (*procNameFilter != 0))
                   {
-                     (*pEnt)[nFound].nPid = strtoul(pNameList[nCount]->d_name, NULL, 10);
-                     strncpy((*pEnt)[nFound].szProcName, psi.pr_fname,
-                           sizeof((*pEnt)[nFound].szProcName));
-                     (*pEnt)[nFound].szProcName[sizeof((*pEnt)[nFound].szProcName) - 1] = 0;
+                     nameMatch = RegexpMatchA(psi.pr_fname, procNameFilter, true);
                   }
-                  nFound++;
+                  //Match cmd line
+                  if ((cmdLineFilter != nullptr) && (*cmdLineFilter != 0))
+                  {
+                     cmdLineMatch = RegexpMatchA(psi.pr_psargs, cmdLineFilter, true);
+                  }
+                  //Match user name
+                  if ((userNameFilter != nullptr) && (*userNameFilter != 0))
+                  {
+                     passwd resultbuf;
+                     char buffer[512];
+                     passwd *userInfo;
+                     getpwuid_r(psi.pr_uid, &resultbuf, buffer, sizeof(buffer), &userInfo);
+                     if (userInfo != nullptr)
+                        userMatch = RegexpMatchA(userInfo->pw_name, userNameFilter, true);
+                     else
+                        userMatch = false;
+                  }
+               }
+               else
+               { 
+                  //Match process name
+                  if ((procNameFilter != nullptr) && (*procNameFilter != 0))
+                  {
+                     nameMatch = !strcmp(psi.pr_fname, procNameFilter);
+                  }
+               }
+
+               //Match state
+               if (state != 0)
+               {
+                  stateMatch = psi.pr_lwp.pr_state == state;
+               }
+
+               if (nameMatch && cmdLineMatch && userMatch && stateMatch)
+               {
+                  if (pEnt != nullptr)
+                  {
+                     (*pEnt)[procFound].nPid = strtoul(procList[procCount]->d_name, nullptr, 10);
+                     strncpy((*pEnt)[procFound].szProcName, psi.pr_fname,
+                           sizeof((*pEnt)[procFound].szProcName));
+                     (*pEnt)[procFound].szProcName[sizeof((*pEnt)[procFound].szProcName) - 1] = 0;
+                  }
+                  procFound++;
                }
             }
             close(hFile);
          }
-         free(pNameList[nCount]);
+         free(procList[procCount]);
       }
-      free(pNameList);
+      free(procList);
    }
 
-   if ((nFound < 0) && (pEnt != NULL))
+   if ((procFound < 0) && (pEnt != nullptr))
    {
       MemFree(*pEnt);
-      *pEnt = NULL;
+      *pEnt = nullptr;
    }
-   return nFound;
+   return procFound;
 }
 
 /**
@@ -179,7 +203,7 @@ LONG H_ProcessList(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue,
    int i, nProc;
    TCHAR szBuffer[256];
 
-   nProc = ProcRead(&pList, NULL, NULL, 0);
+   nProc = ProcRead(&pList, false, nullptr, nullptr, nullptr, 0);
    if (nProc != -1)
    {
       for(i = 0; i < nProc; i++)
@@ -203,27 +227,29 @@ LONG H_ProcessList(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue,
 LONG H_ProcessCount(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
    int nRet = SYSINFO_RC_ERROR;
-   char procName[256] = "", cmdLine[256] = "";
    int nCount;
 
+   char procName[256] = "";
    AgentGetParameterArgA(param, 1, procName, sizeof(procName));
-   if (*arg == _T('E'))	// Process.CountEx
-      AgentGetParameterArgA(param, 2, cmdLine, sizeof(cmdLine));
 
-   switch (*arg)
+   if (*arg == _T('Z')) // Process.ZombieCount
    {
-      case 'E':
-         nCount = ProcRead(NULL, (procName[0] != 0) ? procName : NULL, cmdLine, 0);
-         break;
-      case 'Z':
-         nCount = ProcRead(NULL, (procName[0] != 0) ? procName : NULL, NULL, SZOMB);
-         break;
-      default:
-         nCount = ProcRead(NULL, (procName[0] != 0) ? procName : NULL, cmdLine, 0);
-         // 'S'
-         break;
+      nCount = ProcRead(nullptr, false, procName, nullptr, nullptr, SZOMB);
    }
-
+   else
+   {
+      char cmdLine[256] = "", userName[256] = "";
+      if (*arg == _T('E')) // Process.CountEx()
+      {
+         AgentGetParameterArgA(param, 2, cmdLine, sizeof(cmdLine));
+         AgentGetParameterArgA(param, 3, userName, sizeof(userName));
+         nCount = ProcRead(nullptr, true, procName, cmdLine, userName, 0);
+      }
+      else // Process.Count()
+      {
+         nCount = ProcRead(nullptr, false, procName, nullptr, nullptr, 0);
+      }
+   }
    if (nCount >= 0)
    {
       ret_int(value, nCount);
@@ -412,7 +438,7 @@ static BOOL GetProcessAttribute(pid_t nPid, int nAttr, int nType, int nCount, QW
 LONG H_ProcessInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
    int nRet = SYSINFO_RC_ERROR;
-   char szBuffer[256] = "", procName[256] = "", cmdLine[256] = "";
+   char szBuffer[256] = "", procName[256] = "", cmdLine[256] = "", userName[256] = "";
    int i, nCount, nType;
    PROC_ENT *pList;
    QWORD qwValue;
@@ -436,9 +462,10 @@ LONG H_ProcessInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractC
    // Get process name
    AgentGetParameterArgA(param, 1, procName, MAX_PATH);
    AgentGetParameterArgA(param, 3, cmdLine, MAX_PATH);
+   AgentGetParameterArgA(param, 4, userName, MAX_PATH);
    TrimA(cmdLine);
 
-   nCount = ProcRead(&pList, (procName[0] != 0) ? procName : NULL, (cmdLine[0] != 0) ? cmdLine : NULL, 0);
+   nCount = ProcRead(&pList, true, procName, cmdLine, userName, 0);
    if (nCount > 0)
    {
       for(i = 0, qwValue = 0; i < nCount; i++)

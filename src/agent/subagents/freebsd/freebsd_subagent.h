@@ -42,6 +42,7 @@
 #include <fcntl.h>
 #include <kvm.h>
 #include <paths.h>
+#include <pwd.h>
 
 #define SUBAGENT_DEBUG_TAG _T("freebsd")
 

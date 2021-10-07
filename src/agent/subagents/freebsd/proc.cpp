@@ -92,32 +92,50 @@ static void BuildProcessCommandLine(kvm_t *kd, struct kinfo_proc *p, char *cmdLi
 /**
  * Check if given process matches filter
  */
-static BOOL MatchProcess(kvm_t *kd, struct kinfo_proc *p, BOOL extMatch, const char *name, const char *cmdLine)
+static bool MatchProcess(kvm_t *kd, struct kinfo_proc *p, bool extMatch, const char *name, const char *cmdLine, const char *userName)
 {
-	char processCmdLine[32768];
-
 	if (extMatch)
 	{
-		BuildProcessCommandLine(kd, p, processCmdLine, sizeof(processCmdLine));
-		return ((*name != 0) ? RegexpMatchA(PNAME, name, FALSE) : TRUE) &&
-		       ((*cmdLine != 0) ? RegexpMatchA(processCmdLine, cmdLine, TRUE) : TRUE);
-	}
+      //Proc name filter
+      if (name != nullptr && *name != 0)
+         if (!RegexpMatchARegexpMatchA(PNAME, name, false))
+            return false;
+
+      //User filter
+      if (cmdLine != nullptr && *cmdLine != 0)
+      {
+         passwd resultbuf;
+         char buffer[512];
+         passwd *userInfo;
+         getpwuid_r(p->ki_uid, &resultbuf, buffer, sizeof(buffer), &userInfo);
+         if (userInfo == nullptr || !RegexpMatchA(userInfo->pw_name, userName, false))
+            return false;
+      }
+      //Cmd line filter
+      if (cmdLineFilter != nullptr && *cmdLineFilter != 0)
+      {
+         char processCmdLine[32768];
+         BuildProcessCommandLine(kd, p, processCmdLine, sizeof(processCmdLine));
+         if (!RegexpMatchA(processCmdLine, cmdLine, true))
+            return false;
+      }
+      return true;    
+   }
 	else
 	{
 		return strcasecmp(PNAME, name) == 0;
 	}
 }
 
-
 //
-// Handler for Process.Count, Process.CountEx and System.ProcessCount parameters
+// Handler for Process.Count, Process.CountEx, System.ProcessCount and System.ThreadCount parameters
 //
 
 LONG H_ProcessCount(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
 	int nRet = SYSINFO_RC_ERROR;
-	char name[128] = "", cmdLine[128] = "";
-	int nCount;
+   char name[128] = "", cmdLine[128] = "", userName[128] = "";
+   int nCount;
 	int nResult = -1;
 	int i;
 	kvm_t *kd;
@@ -129,17 +147,17 @@ LONG H_ProcessCount(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abstract
 		if (*arg == 'E')	// Process.CountEx
 		{
 			AgentGetParameterArgA(param, 2, cmdLine, sizeof(cmdLine));
-		}
+         AgentGetParameterArgA(param, 3, userName, sizeof(userName));
+      }
 	}
 
-	kd = kvm_openfiles(NULL, NULL, NULL, O_RDONLY, NULL);
-	if (kd != NULL)
+   kd = kvm_openfiles(NULL, "/dev/null", NULL, O_RDONLY, NULL);
+   if (kd != nullptr)
 	{
-		kp = kvm_getprocs(kd, KERN_PROC_PROC, 0, &nCount);
-
-		if (kp != NULL)
-		{
-			if (*arg != 'S')	// Not System.ProcessCount
+      kp = kvm_getprocs(kd, KERN_PROC_PROC, 0, &nCount);
+      if (kp != nullptr)
+      {
+         if (*arg != 'S')	// Not System.ProcessCount
 			{
 				nResult = 0;
 				if (*arg == 'T')  // System.ThreadCount
@@ -149,11 +167,11 @@ LONG H_ProcessCount(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abstract
 						nResult += kp[i].ki_numthreads;
 					}
 				}
-				else
-				{
+            else // Process.CountEx
+            {
 					for (i = 0; i < nCount; i++)
 					{
-						if (MatchProcess(kd, &kp[i], *arg == 'E', name, cmdLine))
+						if (MatchProcess(kd, &kp[i], *arg == 'E', name, cmdLine, userName))
 						{
 							nResult++;
 						}
@@ -163,19 +181,16 @@ LONG H_ProcessCount(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abstract
 			else
 			{
 				nResult = nCount;
-			}
+         }
 		}
-
 		kvm_close(kd);
 	}
-
 	if (nResult >= 0)
 	{
 		ret_int(value, nResult);
 		nRet = SYSINFO_RC_SUCCESS;
 	}
-
-	return nRet;
+   return nRet;
 }
 
 
@@ -186,8 +201,8 @@ LONG H_ProcessCount(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abstract
 LONG H_ProcessInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
 	int nRet = SYSINFO_RC_ERROR;
-	char name[128] = "", cmdLine[128] = "", buffer[64] = "";
-	int nCount, nMatched;
+   char name[128] = "", cmdLine[128] = "", userName[128] = "", buffer[64] = "";
+   int nCount, nMatched;
 	INT64 currValue, result;
 	int i, type;
 	kvm_t *kd;
@@ -211,9 +226,10 @@ LONG H_ProcessInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractC
 
 	AgentGetParameterArgA(param, 1, name, sizeof(name));
 	AgentGetParameterArgA(param, 3, cmdLine, sizeof(cmdLine));
+   AgentGetParameterArgA(param, 4, userName, sizeof(userName));
 
-	kd = kvm_openfiles(NULL, NULL, NULL, O_RDONLY, NULL);
-	if (kd != NULL)
+   kd = kvm_openfiles(NULL, "/dev/null", NULL, O_RDONLY, NULL);
+   if (kd != NULL)
 	{
 		kp = kvm_getprocs(kd, KERN_PROC_PROC, 0, &nCount);
 
@@ -223,7 +239,7 @@ LONG H_ProcessInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractC
 			nMatched = 0;
 			for (i = 0; i < nCount; i++)
 			{
-				if (MatchProcess(kd, &kp[i], *cmdLine != 0, name, cmdLine))
+				if (MatchProcess(kd, &kp[i], *cmdLine != 0, name, cmdLine, userName))
 				{
 					nMatched++;
 					switch(CAST_FROM_POINTER(arg, int))
@@ -282,8 +298,8 @@ LONG H_ProcessList(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue,
 	struct kinfo_proc *kp;
 	kvm_t *kd;
 
-	kd = kvm_openfiles(NULL, NULL, NULL, O_RDONLY, NULL);
-	if (kd != 0)
+   kd = kvm_openfiles(NULL, "/dev/null", NULL, O_RDONLY, NULL);
+   if (kd != 0)
 	{
 		kp = kvm_getprocs(kd, KERN_PROC_PROC, 0, &nCount);
 
