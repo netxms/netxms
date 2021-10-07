@@ -86,8 +86,11 @@ static COLUMN_IDENTIFIER s_integerFixColumns[] =
 static COLUMN_IDENTIFIER s_timestampColumns[] =
 {
    { _T("event_log"), "event_timestamp" },
+   { _T("notification_log"), "notification_timestamp" },
+   { _T("server_action_execution_log"), "action_timestamp" },
    { _T("syslog"), "msg_timestamp" },
    { _T("snmp_trap_log"), "trap_timestamp" },
+   { _T("win_event_log"), "event_timestamp" },
    { nullptr, nullptr },
 };
 
@@ -191,6 +194,19 @@ static bool ConnectToSource()
 }
 
 /**
+ * Check if timestamp converting is needed for this table
+ */
+bool IsTimestampConversionNeeded(const TCHAR* table)
+{
+   for(int n = 0; s_timestampColumns[n].table != nullptr; n++)
+   {
+      if (!_tcsicmp(s_timestampColumns[n].table, table))
+         return true;
+   }
+   return false;
+}
+
+/**
  * Migrate single database table
  */
 static bool MigrateTable(const TCHAR *table)
@@ -204,8 +220,46 @@ static bool MigrateTable(const TCHAR *table)
    }
 
    bool success = false;
-   TCHAR buffer[256], errorText[DBDRV_MAX_ERROR_TEXT];
-   _sntprintf(buffer, 256, _T("SELECT * FROM %s"), table);
+   TCHAR buffer[512], errorText[DBDRV_MAX_ERROR_TEXT];
+
+   if ((s_sourceSyntax == DB_SYNTAX_TSDB) && (IsTimestampConversionNeeded(table)))
+   {
+      _sntprintf(buffer, 512, _T("SELECT * FROM %s WHERE 1=0"), table);
+      DB_UNBUFFERED_RESULT result = DBSelectUnbufferedEx(s_hdbSource, buffer, errorText);
+      if (result != nullptr)
+      {
+         StringBuffer querySelect;
+         int columnCount = DBGetColumnCount(result);
+         for (int i = 0; i < columnCount; i++)
+         {
+            char columnName[256];
+            DBGetColumnNameA(result, i, columnName, 256);
+            if (IsTimestampColumn(table, columnName))
+            {
+               querySelect.appendFormattedString(_T("extract(epoch from %hs) as %hs"), columnName, columnName);
+            }
+            else
+            {
+               querySelect.appendMBString(columnName, strlen(columnName), CP_UTF8);
+            }
+            if ((i+1) < columnCount)
+               querySelect.append(_T(","));
+         }
+         DBFreeResult(result);
+         _sntprintf(buffer, 512, _T("SELECT %s FROM %s"), querySelect.cstr(), table);
+      }
+      else
+      {
+         _tprintf(_T("ERROR: unable to read data from source table (%s)\n"), errorText);
+         DBRollback(g_dbHandle);
+         return false;
+      }
+   }
+   else
+   {
+      _sntprintf(buffer, 512, _T("SELECT * FROM %s"), table);
+   }
+
    DB_UNBUFFERED_RESULT hResult = DBSelectUnbufferedEx(s_hdbSource, buffer, errorText);
    if (hResult == nullptr)
    {
@@ -221,7 +275,7 @@ static bool MigrateTable(const TCHAR *table)
 	int columnCount = DBGetColumnCount(hResult);
 	for(int i = 0; i < columnCount; i++)
 	{
-		DBGetColumnName(hResult, i, buffer, 256);
+		DBGetColumnName(hResult, i, buffer, 512);
 		query.append(buffer);
 		query.append(_T(","));
 	}
@@ -274,7 +328,7 @@ static bool MigrateTable(const TCHAR *table)
             _tprintf(_T("Failed input record:\n"));
             for(int i = 0; i < columnCount; i++)
             {
-               DBGetColumnName(hResult, i, buffer, 256);
+               DBGetColumnName(hResult, i, buffer, 512);
                TCHAR *value = DBGetField(hResult, i, nullptr, 0);
                _tprintf(_T("   %s = \"%s\"\n"), buffer, CHECK_NULL(value));
                MemFree(value);
