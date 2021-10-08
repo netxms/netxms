@@ -86,6 +86,7 @@ bool CheckModuleSchemas();
 
 bool IsColumnIntegerFixNeeded(const TCHAR *table, const char *name);
 bool IsTimestampColumn(const TCHAR *table, const char *name);
+bool IsTimestampConversionNeeded(const TCHAR* table);
 
 bool LoadDataCollectionObjects();
 const TCHAR *GetDCObjectStorageClass(uint32_t id);

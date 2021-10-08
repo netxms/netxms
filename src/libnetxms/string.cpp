@@ -518,7 +518,7 @@ void StringBuffer::insertFormattedStringV(size_t index, const TCHAR *format, va_
 #else
    // No way to determine required buffer size, guess
    len = wcslen(format) + NumCharsW(format, L'%') * 1000 + 1;
-   buffer = (WCHAR *)malloc(len * sizeof(WCHAR));
+   buffer = MemAllocStringW(len);
 
    nx_vswprintf(buffer, len, format, args);
 #endif
@@ -528,7 +528,7 @@ void StringBuffer::insertFormattedStringV(size_t index, const TCHAR *format, va_
 #if HAVE_VASPRINTF && !defined(_IPSO)
    if (vasprintf(&buffer, format, args) == -1)
    {
-      buffer = (char *)malloc(1);
+      buffer = MemAllocStringA(1);
       *buffer = 0;
    }
 #elif HAVE_VSCPRINTF && HAVE_DECL_VA_COPY
@@ -536,7 +536,7 @@ void StringBuffer::insertFormattedStringV(size_t index, const TCHAR *format, va_
    va_copy(argsCopy, args);
 
    len = (int)vscprintf(format, args) + 1;
-   buffer = (char *)malloc(len);
+   buffer = MemAllocStringA(len);
 
    vsnprintf(buffer, len, format, argsCopy);
    va_end(argsCopy);
@@ -544,15 +544,15 @@ void StringBuffer::insertFormattedStringV(size_t index, const TCHAR *format, va_
    va_list argsCopy;
    va_copy(argsCopy, args);
 
-   len = (int)vsnprintf(NULL, 0, format, args) + 1;
-   buffer = (char *)malloc(len);
+   len = (int)vsnprintf(nullptr, 0, format, args) + 1;
+   buffer = MemAllocStringA(len);
 
    vsnprintf(buffer, len, format, argsCopy);
    va_end(argsCopy);
 #else
    // No way to determine required buffer size, guess
    len = strlen(format) + NumChars(format, '%') * 1000 + 1;
-   buffer = (char *)malloc(len);
+   buffer = MemAllocStringA(len);
 
    vsnprintf(buffer, len, format, args);
 #endif
@@ -560,7 +560,7 @@ void StringBuffer::insertFormattedStringV(size_t index, const TCHAR *format, va_
 #endif   /* UNICODE */
 
    insert(index, buffer, _tcslen(buffer));
-   free(buffer);
+   MemFree(buffer);
 }
 
 /**
