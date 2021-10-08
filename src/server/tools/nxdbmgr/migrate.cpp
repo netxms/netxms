@@ -101,8 +101,7 @@ static bool IsColumnInList(const COLUMN_IDENTIFIER *list, const TCHAR *table, co
 {
    for(int n = 0; list[n].table != nullptr; n++)
    {
-      if (!_tcsicmp(list[n].table, table) &&
-          !stricmp(list[n].column, name))
+      if (!_tcsicmp(list[n].table, table) && !stricmp(list[n].column, name))
          return true;
    }
    return false;
@@ -122,6 +121,19 @@ bool IsColumnIntegerFixNeeded(const TCHAR *table, const char *name)
 bool IsTimestampColumn(const TCHAR *table, const char *name)
 {
    return IsColumnInList(s_timestampColumns, table, name);
+}
+
+/**
+ * Check if timestamp converting is needed for this table
+ */
+bool IsTimestampConversionNeeded(const TCHAR* table)
+{
+   for(int n = 0; s_timestampColumns[n].table != nullptr; n++)
+   {
+      if (!_tcsicmp(s_timestampColumns[n].table, table))
+         return true;
+   }
+   return false;
 }
 
 /**
@@ -166,7 +178,7 @@ static bool ConnectToSource()
    }
 
    // Check source schema version
-	INT32 major, minor;
+	int32_t major, minor;
    if (!DBGetSchemaVersion(s_hdbSource, &major, &minor))
    {
       WriteToTerminal(s_import ? _T("\x1b[31;1mERROR:\x1b[0m Import file is corrupted.\n") : _T("\x1b[31;1mERROR:\x1b[0m Unable to determine source database version.\n"));
@@ -194,19 +206,6 @@ static bool ConnectToSource()
 }
 
 /**
- * Check if timestamp converting is needed for this table
- */
-bool IsTimestampConversionNeeded(const TCHAR* table)
-{
-   for(int n = 0; s_timestampColumns[n].table != nullptr; n++)
-   {
-      if (!_tcsicmp(s_timestampColumns[n].table, table))
-         return true;
-   }
-   return false;
-}
-
-/**
  * Migrate single database table
  */
 static bool MigrateTable(const TCHAR *table)
@@ -222,31 +221,35 @@ static bool MigrateTable(const TCHAR *table)
    bool success = false;
    TCHAR buffer[512], errorText[DBDRV_MAX_ERROR_TEXT];
 
-   if ((s_sourceSyntax == DB_SYNTAX_TSDB) && (IsTimestampConversionNeeded(table)))
+   if ((s_sourceSyntax == DB_SYNTAX_TSDB) && IsTimestampConversionNeeded(table))
    {
       _sntprintf(buffer, 512, _T("SELECT * FROM %s WHERE 1=0"), table);
-      DB_UNBUFFERED_RESULT result = DBSelectUnbufferedEx(s_hdbSource, buffer, errorText);
-      if (result != nullptr)
+      DB_RESULT hResult = DBSelectEx(s_hdbSource, buffer, errorText);
+      if (hResult != nullptr)
       {
-         StringBuffer querySelect;
-         int columnCount = DBGetColumnCount(result);
+         StringBuffer columns;
+         int columnCount = DBGetColumnCount(hResult);
          for (int i = 0; i < columnCount; i++)
          {
+            if (!columns.isEmpty())
+               columns.append(_T(","));
+
             char columnName[256];
-            DBGetColumnNameA(result, i, columnName, 256);
+            DBGetColumnNameA(hResult, i, columnName, 256);
             if (IsTimestampColumn(table, columnName))
             {
-               querySelect.appendFormattedString(_T("extract(epoch from %hs) as %hs"), columnName, columnName);
+               columns.append(_T("extract(epoch from "));
+               columns.appendMBString(columnName, strlen(columnName), CP_UTF8);
+               columns.append(_T(") AS "));
+               columns.appendMBString(columnName, strlen(columnName), CP_UTF8);
             }
             else
             {
-               querySelect.appendMBString(columnName, strlen(columnName), CP_UTF8);
+               columns.appendMBString(columnName, strlen(columnName), CP_UTF8);
             }
-            if ((i+1) < columnCount)
-               querySelect.append(_T(","));
          }
-         DBFreeResult(result);
-         _sntprintf(buffer, 512, _T("SELECT %s FROM %s"), querySelect.cstr(), table);
+         DBFreeResult(hResult);
+         _sntprintf(buffer, 512, _T("SELECT %s FROM %s"), columns.cstr(), table);
       }
       else
       {
