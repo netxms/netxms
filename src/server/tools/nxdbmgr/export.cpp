@@ -86,9 +86,10 @@ static bool ExportTable(sqlite3 *db, const TCHAR *name)
 	bool success = true;
    char cname[256];
    StringBuffer selectQuery(_T("SELECT * FROM "));
-   if (g_dbSyntax == DB_SYNTAX_TSDB)
+   if ((g_dbSyntax == DB_SYNTAX_TSDB) && IsTimestampConversionNeeded(name))
    {
       selectQuery.append(name);
+      selectQuery.append(_T(" WHERE 1=0"));
       DB_RESULT hResult = SQLSelect(selectQuery);
       if (hResult != nullptr)
       {
