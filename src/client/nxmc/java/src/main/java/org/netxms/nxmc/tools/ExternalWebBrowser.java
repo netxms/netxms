@@ -39,26 +39,35 @@ public class ExternalWebBrowser
     */
    public static void open(URL url)
    {
-      String href = url.toString();
-      if (href.startsWith("file:"))
+      open(url.toString());
+   }
+
+   /**
+    * Open given URL in external web browser
+    *
+    * @param url URL to open
+    */
+   public static void open(String url)
+   {
+      if (url.startsWith("file:"))
       {
-         href = href.substring(5);
-         while (href.startsWith("/"))
+         url = url.substring(5);
+         while (url.startsWith("/"))
          {
-            href = href.substring(1);
+            url = url.substring(1);
          }
-         href = "file:///" + href;
+         url = "file:///" + url;
       }
 
       if (Util.isWindows())
       {
-         Program.launch(href);
+         Program.launch(url);
       } 
       else if (Util.isMac())
       {
          try 
          {
-            Runtime.getRuntime().exec("/usr/bin/open '" + href + "'");
+            Runtime.getRuntime().exec("/usr/bin/open '" + url + "'");
          } 
          catch (IOException e)
          {
@@ -69,7 +78,7 @@ public class ExternalWebBrowser
       {
          try
          {
-            Runtime.getRuntime().exec("firefox " + urlEncode(href)); // FIXME: detect or configure other browsers
+            Runtime.getRuntime().exec("firefox " + urlEncode(url)); // FIXME: detect or configure other browsers
          }
          catch(IOException e)
          {

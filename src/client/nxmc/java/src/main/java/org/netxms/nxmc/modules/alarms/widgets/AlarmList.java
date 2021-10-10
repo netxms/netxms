@@ -49,7 +49,6 @@ import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseTrackAdapter;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.FillLayout;
-import org.eclipse.swt.program.Program;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.TreeItem;
@@ -67,8 +66,8 @@ import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.actions.ExportToCsvAction;
 import org.netxms.nxmc.base.helpers.TransformationSelectionProvider;
 import org.netxms.nxmc.base.jobs.Job;
-import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.views.AbstractViewerFilter;
+import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.widgets.CompositeWithMessageArea;
 import org.netxms.nxmc.base.widgets.MessageArea;
 import org.netxms.nxmc.base.widgets.SortableTreeViewer;
@@ -86,12 +85,10 @@ import org.netxms.nxmc.modules.alarms.widgets.helpers.AlarmToolTip;
 import org.netxms.nxmc.modules.alarms.widgets.helpers.AlarmTreeContentProvider;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
-import org.netxms.nxmc.tools.MessageDialogHelper;
+import org.netxms.nxmc.tools.ExternalWebBrowser;
 import org.netxms.nxmc.tools.RefreshTimer;
 import org.netxms.nxmc.tools.VisibilityValidator;
 import org.netxms.nxmc.tools.WidgetHelper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -112,8 +109,6 @@ public class AlarmList extends CompositeWithMessageArea
 	public static final int COLUMN_CREATED = 9;
 	public static final int COLUMN_LASTCHANGE = 10;
 	
-   private static Logger logger = LoggerFactory.getLogger(AlarmList.class);
-
    private I18n i18n = LocalizationHelper.getI18n(AlarmList.class);
    private View view;
 	private NXCSession session = null;
@@ -1184,26 +1179,7 @@ public class AlarmList extends CompositeWithMessageArea
                @Override
                public void run()
                {
-                  try
-                  {
-                     Program browser = Program.findProgram("html");
-                     if (browser != null)
-                     {
-                        browser.execute(url);
-                     }
-                     else
-                     {
-                        logger.error("Program.findProgram returned null in AlarmList.showIssue");
-                        MessageDialogHelper.openError(getShell(), i18n.tr("Error"),
-                              i18n.tr("Internal error: unable to open web browser"));
-                     }
-                  }
-                  catch(Exception e)
-                  {
-                     logger.error("Exception in AlarmList.showIssue (url=\"" + url + "\")", e);
-                     MessageDialogHelper.openError(getShell(), i18n.tr("Error"),
-                           i18n.tr("Internal error: unable to open web browser"));
-                  }
+                  ExternalWebBrowser.open(url);
                }
             });
          }
