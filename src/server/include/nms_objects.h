@@ -1712,6 +1712,8 @@ protected:
    MUTEX m_contentLock;
 
    virtual bool createDeploymentMessage(NXCPMessage *msg, char *content, bool newTypeFormatSupported);
+   virtual void saveAdditionalData(StringBuffer &xml) {}
+   virtual void loadAdditionalData(const ConfigEntry *config) {}
 
 public:
    GenericAgentPolicy(const uuid& guid, const TCHAR *type, uint32_t ownerId);
@@ -1747,6 +1749,10 @@ public:
  */
 class NXCORE_EXPORTABLE FileDeliveryPolicy : public GenericAgentPolicy
 {
+protected:
+   virtual void saveAdditionalData(StringBuffer &xml) override;
+   virtual void loadAdditionalData(const ConfigEntry *config) override;
+
 public:
    FileDeliveryPolicy(const uuid& guid, uint32_t ownerId) : GenericAgentPolicy(guid, _T("FileDelivery"), ownerId) { }
    FileDeliveryPolicy(const TCHAR *name, uint32_t ownerId) : GenericAgentPolicy(name, _T("FileDelivery"), ownerId) { }

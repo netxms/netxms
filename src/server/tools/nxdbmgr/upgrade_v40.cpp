@@ -67,6 +67,21 @@ static bool BSCommonDeleteObject(uint32_t id)
 }
 
 /**
+ * Upgrade from 40.72 to 40.73
+ */
+static bool H_UpgradeFromV72()
+{
+   CHK_EXEC(CreateConfigParam(_T("AgentPolicy.MaxFileSize"),
+         _T("134217728"),
+         _T("Maximum file size for exported files in agent policies"),
+         _T("bytes"),
+         'I', true, false, false, false));
+
+   CHK_EXEC(SetMinorSchemaVersion(73));
+   return true;
+}
+
+/**
  * Upgrade from 40.71 to 40.72
  */
 static bool H_UpgradeFromV71()
@@ -2424,6 +2439,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 72, 40, 73, H_UpgradeFromV72 },
    { 71, 40, 72, H_UpgradeFromV71 },
    { 70, 40, 71, H_UpgradeFromV70 },
    { 69, 40, 70, H_UpgradeFromV69 },

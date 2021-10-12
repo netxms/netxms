@@ -22,6 +22,7 @@
 
 #include "nxcore.h"
 #include <nxlpapi.h>
+#include <zlib.h>
 
 #define DEBUG_TAG _T("agent.policy")
 
@@ -318,6 +319,7 @@ void GenericAgentPolicy::updateFromImport(const ConfigEntry *config)
    const TCHAR *content = config->getSubEntryValue(_T("content"), 0, _T(""));
    MemFree(m_content);
    m_content = UTF8StringFromTString(content);
+   loadAdditionalData(config);
 }
 
 /**
@@ -340,6 +342,7 @@ void GenericAgentPolicy::createExportRecord(StringBuffer &xml, uint32_t recordId
    xml.append(EscapeStringForXML2(content));
    MemFree(content);
    xml.append(_T("</content>\n"));
+   saveAdditionalData(xml);
    xml.append(_T("\t\t\t\t</agentPolicy>\n"));
 }
 
@@ -427,6 +430,177 @@ static void BuildFileList(ConfigEntry *currEntry, StringBuffer *currPath, Object
 }
 
 /**
+ * Get file list from file policy configuration
+ */
+static unique_ptr<ObjectArray<FileInfo>> GetFilesFromConfig(const char* content)
+{
+   auto files = make_unique<ObjectArray<FileInfo>>(64, 64, Ownership::True);
+   Config data;
+   data.loadXmlConfigFromMemory(content, static_cast<int>(strlen(content)), nullptr, "FileDeliveryPolicy", false);
+   ObjectArray<ConfigEntry> *rootElements = data.getSubEntries(_T("/elements"), _T("*"));
+   if (rootElements != nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Found elements"));
+      for(int i = 0; i < rootElements->size(); i++)
+      {
+         StringBuffer path;
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("Building file list"));
+         BuildFileList(rootElements->get(i), &path, files.get(), true, false);
+      }
+      delete rootElements;
+   }
+   return files;
+}
+
+/**
+ * Adds files in base64 coding to export xml record
+ */
+void FileDeliveryPolicy::saveAdditionalData(StringBuffer &xml)
+{
+   xml.append(_T("\t\t\t\t\t<files>\n"));
+   MutexLock(m_contentLock);
+   unique_ptr<ObjectArray<FileInfo>> files = GetFilesFromConfig(m_content);
+   MutexUnlock(m_contentLock);
+   for (int i = 0; i < files->size(); i++)
+   {
+      StringBuffer fileName = _T("FileDelivery-");
+      fileName.append(files->get(i)->guid.toString());
+      StringBuffer fullPath = g_netxmsdDataDir;
+      fullPath.append(DDIR_FILES FS_PATH_SEPARATOR);
+      fullPath.append(fileName);
+
+      uint64_t fileSize = FileSize(fullPath.cstr());
+      uint64_t maxFileSize = ConfigReadULong(_T("AgentPolicy.MaxFileSize"), 128 * 1024 * 1024);
+      if (fileSize < maxFileSize)
+      {
+         int fd = _topen(fullPath.cstr(), O_BINARY | O_RDONLY);
+         if (fd != -1)
+         {
+            char* buffer = (char*)MemAlloc(fileSize);
+            ssize_t sz = _read(fd, buffer, fileSize);
+            if (sz == fileSize)
+            {
+               xml.append(_T("\t\t\t\t\t\t<file>\n"));
+               xml.appendFormattedString(_T("\t\t\t\t\t\t\t<name>%s</name>\n"), fileName.cstr());
+               char* compressedBuffer = (char*)MemAlloc(fileSize);
+               uint64_t compressedBufferSize = fileSize;
+               int compressResult = compress((BYTE *)compressedBuffer, &compressedBufferSize, (BYTE *)buffer, fileSize);
+               char* encodedBuffer;
+               uint64_t encodedBufferSize;
+               if (compressResult == Z_OK)
+               {
+                  xml.append(_T("\t\t\t\t\t\t\t<compression>true</compression>\n"));
+                  encodedBuffer = compressedBuffer;
+                  encodedBufferSize = compressedBufferSize;
+                  MemFree(buffer);
+               }
+               else
+               {
+                  encodedBuffer = buffer;
+                  encodedBufferSize = fileSize;
+                  MemFree(compressedBuffer);
+               }
+               char* base64Buffer;
+               size_t base64BufferSize = base64_encode_alloc(encodedBuffer, encodedBufferSize, &base64Buffer);
+               MemFree(encodedBuffer);
+               xml.append(_T("\t\t\t\t\t\t\t\t<data>"));
+               xml.appendMBString(base64Buffer, base64BufferSize, CP_ACP);
+               MemFree(base64Buffer);
+               xml.append(_T("</data>\n"));
+               xml.appendFormattedString(_T("\t\t\t\t\t\t\t\t<size>%u</size>\n"), fileSize);
+               BYTE hash[MD5_DIGEST_SIZE];
+               CalculateFileMD5Hash(fullPath.cstr(), hash);
+               TCHAR text[MD5_DIGEST_SIZE * 2 + 1];
+               BinToStr(hash, MD5_DIGEST_SIZE, text);
+               xml.appendFormattedString(_T("\t\t\t\t\t\t\t<hash>%s</hash>\n"), text);
+               xml.append(_T("\n\t\t\t\t\t\t</file>\n"));
+            }
+            else
+            {
+               nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Cannot read file %s for exporting. File skipped."), fileName.cstr());
+            }
+            _close(fd);
+         }
+         else
+         {
+            nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Cannot open file %s for exporting. File skipped."), fileName.cstr());
+         }
+      }
+      else
+      {
+         nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("File %s too big (>%u) and will not be exported! Move it manually or change server configuration"), fileName.cstr(), maxFileSize);
+      }
+   }
+   xml.append(_T("\t\t\t\t\t</files>\n"));
+}
+
+/**
+ * Loads files in base64 coding from imported config
+ */
+void FileDeliveryPolicy::loadAdditionalData(const ConfigEntry *config)
+{
+   ConfigEntry *fileRoot = config->findEntry(_T("files"));
+   if (fileRoot != nullptr)
+   {
+      ObjectArray<ConfigEntry> *files = fileRoot->getSubEntries(_T("file"));
+      for (int i = 0; i < files->size(); i++)
+      {
+         ConfigEntry* file = files->get(i);
+         String fileName(file->getSubEntryValue(_T("name")));
+         StringBuffer fullPath = g_netxmsdDataDir;
+         fullPath.append(DDIR_FILES FS_PATH_SEPARATOR);
+         fullPath.append(fileName);
+         int fd = _topen(fullPath.cstr(), O_CREAT | O_TRUNC | O_WRONLY | O_BINARY, S_IRUSR | S_IWUSR);
+         if (fd != -1)
+         {
+            #ifdef UNICODE
+               char *base64Data = MBStringFromWideString(file->getSubEntryValue(_T("data")));
+            #else
+               char *base64Data = MemCopyString(file->getSubEntryValue(_T("data")));
+            #endif
+            size_t fileSize = file->getSubEntryValueAsUInt64(_T("size"));
+            char* buffer;
+            size_t decodedFileSize;
+            base64_decode_alloc(base64Data, strlen(base64Data), &buffer, &decodedFileSize);
+            MemFree(base64Data);
+
+            if (file->getSubEntryValueAsBoolean(_T("compression")))
+            {
+               char* uncompressedBuffer = (char*)MemAlloc(fileSize);
+               uncompress((BYTE *)uncompressedBuffer, &fileSize, (BYTE *)buffer, decodedFileSize);
+               MemFree(buffer);
+               buffer = uncompressedBuffer;
+            }
+
+            if (_write(fd, buffer, fileSize) == fileSize)
+            {
+               MemFree(buffer);
+               _close(fd);
+
+               BYTE originalHash[MD5_DIGEST_SIZE];
+               StrToBin(file->getSubEntryValue(_T("hash")), originalHash, MD5_DIGEST_SIZE);
+               BYTE calculatedHash[MD5_DIGEST_SIZE];
+               CalculateFileMD5Hash(fullPath.cstr(), calculatedHash);
+               if (memcmp(originalHash, calculatedHash, MD5_DIGEST_SIZE) != 0)
+               {
+                  TCHAR hashStr[64];
+                  nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Calculated hash of imported file %s is not equal to original file: original %s, calculated %s. File will be deleted."), 
+                     fileName.cstr(), file->getSubEntryValue(_T("hash")), BinToStr(calculatedHash, MD5_DIGEST_SIZE, hashStr));
+                  _tremove(fullPath.cstr());
+               }
+            }
+            else
+            {
+               nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Cannot write to %s file while importing. File will be deleted."), fileName.cstr());
+               _tremove(fullPath.cstr());
+            }
+         }
+      }
+      delete files;
+   }
+}
+
+/**
  * Modify from message and in case of duplicate - duplicate all physical files and update GUID
  */
 uint32_t FileDeliveryPolicy::modifyFromMessage(const NXCPMessage& request)
@@ -444,7 +618,7 @@ uint32_t FileDeliveryPolicy::modifyFromMessage(const NXCPMessage& request)
       ObjectArray<ConfigEntry> *rootElements = data.getSubEntries(_T("/elements"), _T("*"));
       if (rootElements != nullptr)
       {
-         for(int i = 0; i < rootElements->size(); i++)
+         for (int i = 0; i < rootElements->size(); i++)
          {
             StringBuffer path;
             BuildFileList(rootElements->get(i), &path, &files, true, false);
@@ -456,7 +630,7 @@ uint32_t FileDeliveryPolicy::modifyFromMessage(const NXCPMessage& request)
       m_content = data.createXml().getUTF8String();
       MutexUnlock(m_contentLock);
 
-      for(int i = 0; i < files.size(); i++)
+      for (int i = 0; i < files.size(); i++)
       {
          nxlog_debug_tag(DEBUG_TAG, 4, _T("FileDeliveryPolicy::modifyFromMessage(): copy file and update GUID from %s to %s"),
                   files.get(i)->guid.toString().cstr(), files.get(i)->newGuid.toString().cstr());
@@ -481,23 +655,10 @@ uint32_t FileDeliveryPolicy::modifyFromMessage(const NXCPMessage& request)
  */
 bool FileDeliveryPolicy::deleteFromDatabase(DB_HANDLE hdb)
 {
-   ObjectArray<FileInfo> files(64, 64, Ownership::True);
-   Config data;
-   data.loadXmlConfigFromMemory(m_content, static_cast<int>(strlen(m_content)), nullptr, "FileDeliveryPolicy", false);
-   ObjectArray<ConfigEntry> *rootElements = data.getSubEntries(_T("/elements"), _T("*"));
-   if (rootElements != nullptr)
+   unique_ptr<ObjectArray<FileInfo>> files = GetFilesFromConfig(m_content);
+   for (int i = 0; i < files->size(); i++)
    {
-      for(int i = 0; i < rootElements->size(); i++)
-      {
-         StringBuffer path;
-         BuildFileList(rootElements->get(i), &path, &files, true, false);
-      }
-      delete rootElements;
-   }
-
-   for(int i = 0; i < files.size(); i++)
-   {
-      String guid = files.get(i)->guid.toString();
+      String guid = files->get(i)->guid.toString();
       nxlog_debug_tag(DEBUG_TAG, 4, _T("FileDeliveryPolicy::modifyFromMessage(): copy file %s and update guid"), guid.cstr());
 
       StringBuffer sourceFile = g_netxmsdDataDir;
@@ -524,34 +685,21 @@ void FileDeliveryPolicy::validate()
    }
 
    nxlog_debug_tag(DEBUG_TAG, 6, _T("FileDeliveryPolicy::validate(): preparing file list"));
-   ObjectArray<FileInfo> files(64, 64, Ownership::True);
-   Config content;
-   content.loadXmlConfigFromMemory(m_content, strlen(m_content), nullptr, "FileDeliveryPolicy", false);
+   unique_ptr<ObjectArray<FileInfo>> files = GetFilesFromConfig(m_content);
    MutexUnlock(m_contentLock);
 
-   ObjectArray<ConfigEntry> *rootElements = content.getSubEntries(_T("/elements"), _T("*"));
-   if (rootElements != nullptr)
+   for(int i = 0; i < files->size(); i++)
    {
-      for(int i = 0; i < rootElements->size(); i++)
-      {
-         StringBuffer path;
-         BuildFileList(rootElements->get(i), &path, &files, false, false);
-      }
-      delete rootElements;
-   }
-
-   for(int i = 0; i < files.size(); i++)
-   {
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("FileDeliveryPolicy::validate(): processing file path %s"), files.get(i)->path);
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("FileDeliveryPolicy::validate(): processing file path %s"), files->get(i)->path);
 
       StringBuffer localFile = g_netxmsdDataDir;
       localFile.append(DDIR_FILES FS_PATH_SEPARATOR _T("FileDelivery-"));
-      localFile.append(files.get(i)->guid.toString());
+      localFile.append(files->get(i)->guid.toString());
 
       // Check if the file exists
       if (_taccess(localFile, 0) != 0)
       {
-         nxlog_debug_tag(DEBUG_TAG, 4, _T("FileDeliveryPolicy::validate(): failed to find file %s"), files.get(i)->path);
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("FileDeliveryPolicy::validate(): failed to find file %s"), files->get(i)->path);
          TCHAR description[MAX_PATH] = _T("Missing policy file ");
          _tcslcat(description, localFile, MAX_PATH);
          static const TCHAR *names[] = { _T("templateName"), _T("templateId"), _T("policyName"), _T("policyType"), _T("policyId"), _T("additionalInfo") };
@@ -601,27 +749,14 @@ void FileDeliveryPolicy::deploy(shared_ptr<AgentPolicyDeploymentData> data)
    }
 
    nxlog_debug_tag(DEBUG_TAG, 6, _T("FileDeliveryPolicy::deploy(%s): preparing file list"), data->debugId);
-   ObjectArray<FileInfo> files(64, 64, Ownership::True);
-   Config content;
-   content.loadXmlConfigFromMemory(m_content, static_cast<int>(strlen(m_content)), nullptr, "FileDeliveryPolicy", false);
+   unique_ptr<ObjectArray<FileInfo>> files = GetFilesFromConfig(m_content);
    MutexUnlock(m_contentLock);
 
-   ObjectArray<ConfigEntry> *rootElements = content.getSubEntries(_T("/elements"), _T("*"));
-   if (rootElements != nullptr)
-   {
-      for(int i = 0; i < rootElements->size(); i++)
-      {
-         StringBuffer path;
-         BuildFileList(rootElements->get(i), &path, &files, false, true);
-      }
-      delete rootElements;
-   }
-
    StringList fileRequest;
-   for (int i = 0; i < files.size(); i++)
+   for (int i = 0; i < files->size(); i++)
    {
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("FileDeliveryPolicy::deploy(%s): processing file path %s"), data->debugId, files.get(i)->path);
-      fileRequest.add(files.get(i)->path);
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("FileDeliveryPolicy::deploy(%s): processing file path %s"), data->debugId, files->get(i)->path);
+      fileRequest.add(files->get(i)->path);
    }
    ObjectArray<RemoteFileInfo> *remoteFiles;
    uint32_t rcc = conn->getFileSetInfo(&fileRequest, true, &remoteFiles);
@@ -630,10 +765,10 @@ void FileDeliveryPolicy::deploy(shared_ptr<AgentPolicyDeploymentData> data)
       nxlog_debug_tag(DEBUG_TAG, 4, _T("FileDeliveryPolicy::deploy(%s): call to AgentConnection::getFileSetInfo failed (%s)"), data->debugId, AgentErrorCodeToText(rcc));
       return;
    }
-   if (remoteFiles->size() != files.size())
+   if (remoteFiles->size() != files->size())
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("FileDeliveryPolicy::deploy(%s): inconsistent number of elements returned by AgentConnection::getFileSetInfo (expected %d, returned %d)"),
-               data->debugId, files.size(), remoteFiles->size());
+               data->debugId, files->size(), remoteFiles->size());
       delete remoteFiles;
       return;
    }
@@ -647,7 +782,7 @@ void FileDeliveryPolicy::deploy(shared_ptr<AgentPolicyDeploymentData> data)
          continue;
       }
 
-      FileInfo *localFile = files.get(i);
+      FileInfo *localFile = files->get(i);
       if (!localFile->guid.isNull())
       {
          // Regular file, check if upload is needed
