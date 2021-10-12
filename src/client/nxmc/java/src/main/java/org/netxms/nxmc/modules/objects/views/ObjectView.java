@@ -109,4 +109,15 @@ public abstract class ObjectView extends ViewWithContext
       AbstractObject object = (AbstractObject)getContext();
       return (object != null) ? object.getObjectId() : 0;
    }
+
+   /**
+    * Get name of object set as current context.
+    *
+    * @return name of object set as current context or 0 if context is not set
+    */
+   public String getObjectName()
+   {
+      AbstractObject object = (AbstractObject)getContext();
+      return (object != null) ? object.getObjectName() : "";
+   }
 }

@@ -92,7 +92,7 @@ public class AccessControl extends ObjectPropertyPage
 	protected Control createContents(Composite parent)
 	{
       session = Registry.getSession();
-		
+
 		AccessListElement[] origAcl = object.getAccessList();
 		acl = new HashMap<Long, AccessListElement>(origAcl.length);
 		for(int i = 0; i < origAcl.length; i++)

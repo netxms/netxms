@@ -1061,7 +1061,6 @@ public class DataCollectionView extends ObjectView
       }.start();
    }
 
-   
    /**
     * Display message with information about policy deploy
     */
