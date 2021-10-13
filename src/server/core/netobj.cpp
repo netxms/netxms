@@ -1946,7 +1946,7 @@ bool NetObj::saveTrustedNodes(DB_HANDLE hdb)
 
 /**
  * Check if given node is in trust list
- * Will always return TRUE if system parameter CheckTrustedNodes set to 0
+ * Will always return TRUE if system parameter Objects.Security.CheckTrustedNodes set to false
  */
 bool NetObj::isTrustedNode(uint32_t id) const
 {

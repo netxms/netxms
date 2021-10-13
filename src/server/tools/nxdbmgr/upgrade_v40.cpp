@@ -24,45 +24,12 @@
 #include <nxevent.h>
 
 /**
- * Delete all Netobj level information
+ * Upgrade from 40.73 to 40.74
  */
-static bool BSCommonDeleteObject(uint32_t id)
+static bool H_UpgradeFromV73()
 {
-   TCHAR query[1024];
-   _sntprintf(query, 1024, _T("DELETE FROM acl WHERE object_id=%d"), id);
-   if (!SQLQuery(query) && !g_ignoreErrors)
-      return false;
-
-   _sntprintf(query, 1024,  _T("DELETE FROM object_properties WHERE object_id=%d"), id);
-   if (!SQLQuery(query) && !g_ignoreErrors)
-      return false;
-
-   _sntprintf(query, 1024,  _T("DELETE FROM object_custom_attributes WHERE object_id=%d"), id);
-   if (!SQLQuery(query) && !g_ignoreErrors)
-      return false;
-
-   _sntprintf(query, 1024,  _T("DELETE FROM object_urls WHERE object_id=%d"), id);
-   if (!SQLQuery(query) && !g_ignoreErrors)
-      return false;
-
-   _sntprintf(query, 1024,  _T("DELETE FROM responsible_users WHERE object_id=%d"), id);
-   if (!SQLQuery(query) && !g_ignoreErrors)
-      return false;
-
-   _sntprintf(query, 1024,  _T("DELETE FROM slm_service_history WHERE service_id=%d"), id);
-   if (!SQLQuery(query) && !g_ignoreErrors)
-      return false;
-
-   TCHAR table[256];
-   _sntprintf(table, 256, _T("gps_history_%u"), id);
-   int rc = DBIsTableExist(g_dbHandle, table);
-   if (rc == DBIsTableExist_Found)
-   {
-      TCHAR query[256];
-      _sntprintf(query, 256, _T("DROP TABLE gps_history_%u"), id);
-      return DBQuery(g_dbHandle, query);
-   }
-
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET var_name='Objects.Security.CheckTrustedNodes',need_server_restart=0 WHERE var_name='CheckTrustedNodes'")));
+   CHK_EXEC(SetMinorSchemaVersion(74));
    return true;
 }
 
@@ -110,6 +77,49 @@ static bool H_UpgradeFromV70()
 {
    CHK_EXEC(SQLQuery(_T("DELETE FROM config WHERE var_name='EnableObjectTransactions'")));
    CHK_EXEC(SetMinorSchemaVersion(71));
+   return true;
+}
+
+/**
+ * Delete all Netobj level information
+ */
+static bool BSCommonDeleteObject(uint32_t id)
+{
+   TCHAR query[1024];
+   _sntprintf(query, 1024, _T("DELETE FROM acl WHERE object_id=%d"), id);
+   if (!SQLQuery(query) && !g_ignoreErrors)
+      return false;
+
+   _sntprintf(query, 1024,  _T("DELETE FROM object_properties WHERE object_id=%d"), id);
+   if (!SQLQuery(query) && !g_ignoreErrors)
+      return false;
+
+   _sntprintf(query, 1024,  _T("DELETE FROM object_custom_attributes WHERE object_id=%d"), id);
+   if (!SQLQuery(query) && !g_ignoreErrors)
+      return false;
+
+   _sntprintf(query, 1024,  _T("DELETE FROM object_urls WHERE object_id=%d"), id);
+   if (!SQLQuery(query) && !g_ignoreErrors)
+      return false;
+
+   _sntprintf(query, 1024,  _T("DELETE FROM responsible_users WHERE object_id=%d"), id);
+   if (!SQLQuery(query) && !g_ignoreErrors)
+      return false;
+
+   _sntprintf(query, 1024,  _T("DELETE FROM slm_service_history WHERE service_id=%d"), id);
+   if (!SQLQuery(query) && !g_ignoreErrors)
+      return false;
+
+   TCHAR table[256];
+   _sntprintf(table, 256, _T("gps_history_%u"), id);
+   int rc = DBIsTableExist(g_dbHandle, table);
+   if (rc == DBIsTableExist_Found)
+   {
+      TCHAR query[256];
+      _sntprintf(query, 256, _T("DROP TABLE gps_history_%u"), id);
+      return DBQuery(g_dbHandle, query);
+   }
+
    return true;
 }
 
@@ -2439,6 +2449,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 73, 40, 74, H_UpgradeFromV73 },
    { 72, 40, 73, H_UpgradeFromV72 },
    { 71, 40, 72, H_UpgradeFromV71 },
    { 70, 40, 71, H_UpgradeFromV70 },

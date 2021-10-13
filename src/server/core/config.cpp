@@ -508,7 +508,7 @@ static void OnConfigVariableChange(bool isCLOB, const TCHAR *name, const TCHAR *
    {
       CASReadSettings();
    }
-   else if (!_tcscmp(name, _T("CheckTrustedNodes")))
+   else if (!_tcscmp(name, _T("Objects.Security.CheckTrustedNodes")))
    {
       if (_tcstol(value, nullptr, 0))
          g_flags |= AF_CHECK_TRUSTED_NODES;
