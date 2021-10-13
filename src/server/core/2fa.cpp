@@ -190,7 +190,7 @@ MessageAuthMethod::MessageAuthMethod(const TCHAR* name, const TCHAR* description
 TwoFactorAuthenticationToken* MessageAuthMethod::prepareChallenge(uint32_t userId)
 {
    shared_ptr<Config> binding = GetUser2FABindingInfo(userId, m_methodName);
-   if (binding == nullptr || m_channelName == nullptr)
+   if (binding == nullptr)
       return nullptr;
 
    uint32_t challenge;
