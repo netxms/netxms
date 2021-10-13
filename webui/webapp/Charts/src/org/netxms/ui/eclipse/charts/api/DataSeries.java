@@ -162,11 +162,21 @@ public class DataSeries
    /**
     * Get severity of active threshold.
     *
-    * @return
+    * @return severity of active threshold
     */
    public Severity getActiveThresholdSeverity()
    {
       return currentThresholdSeverity;
+   }
+
+   /**
+    * Set severity of active threshold.
+    *
+    * @param severity severity of active threshold
+    */
+   public void setActiveThresholdSeverity(Severity severity)
+   {
+      currentThresholdSeverity = severity;
    }
 
    /**

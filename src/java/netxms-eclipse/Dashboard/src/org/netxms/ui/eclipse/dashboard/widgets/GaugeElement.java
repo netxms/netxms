@@ -80,6 +80,7 @@ public class GaugeElement extends ComparisonChartElement
 		{
          case GaugeConfig.BAR:
             chart = new Chart(this, SWT.NONE, ChartType.GAUGE, chartConfig);
+            updateThresholds = true;
             break;
 			case GaugeConfig.TEXT:
             chart = new Chart(this, SWT.NONE, ChartType.TEXT, chartConfig);

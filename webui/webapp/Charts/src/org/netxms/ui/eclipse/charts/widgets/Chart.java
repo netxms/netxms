@@ -39,6 +39,7 @@ import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.netxms.client.constants.DataType;
+import org.netxms.client.constants.Severity;
 import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.DciDataRow;
@@ -523,7 +524,18 @@ public class Chart extends Composite
     */
    public void updateParameterThresholds(int index, Threshold[] thresholds)
    {
-      // FIXME: implement
+      DataSeries series = dataSeries.get(index);
+      if (series != null)
+      {
+         Severity severity = Severity.NORMAL;
+         for(Threshold t : thresholds)
+            if (t.isActive())
+            {
+               severity = t.getCurrentSeverity();
+               break;
+            }
+         series.setActiveThresholdSeverity(severity);
+      }
    }
 
    /**
