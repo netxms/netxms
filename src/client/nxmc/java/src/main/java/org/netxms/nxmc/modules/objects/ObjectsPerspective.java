@@ -47,6 +47,7 @@ import org.netxms.nxmc.modules.businessservice.views.BusinessServiceAvailability
 import org.netxms.nxmc.modules.businessservice.views.BusinessServiceChecksView;
 import org.netxms.nxmc.modules.datacollection.views.DataCollectionView;
 import org.netxms.nxmc.modules.datacollection.views.PerformanceView;
+import org.netxms.nxmc.modules.networkmaps.views.PredefinedMap;
 import org.netxms.nxmc.modules.objects.views.Dot1xStatusView;
 import org.netxms.nxmc.modules.objects.views.EntityMIBView;
 import org.netxms.nxmc.modules.objects.views.InterfacesView;
@@ -109,18 +110,19 @@ public abstract class ObjectsPerspective extends Perspective
    protected void configureViews()
    {
       addNavigationView(new ObjectBrowser("Objects", null, subtreeType));
-      addMainView(new ObjectOverviewView());
       addMainView(new AlarmsView());
-      addMainView(new DataCollectionView());
-      addMainView(new InterfacesView());
-      addMainView(new EntityMIBView());
-      addMainView(new PerformanceView());
-      addMainView(new Dot1xStatusView());
-      addMainView(new ObjectGeoLocationView());
-      addMainView(new SwitchForwardingDatabaseView());
-      addMainView(new MibExplorer());
-      addMainView(new BusinessServiceChecksView());
       addMainView(new BusinessServiceAvailabilityView());
+      addMainView(new BusinessServiceChecksView());
+      addMainView(new DataCollectionView());
+      addMainView(new Dot1xStatusView());
+      addMainView(new EntityMIBView());
+      addMainView(new InterfacesView());
+      addMainView(new MibExplorer());
+      addMainView(new ObjectGeoLocationView());
+      addMainView(new ObjectOverviewView());
+      addMainView(new PerformanceView());
+      addMainView(new PredefinedMap());
+      addMainView(new SwitchForwardingDatabaseView());
    }
 
    /**

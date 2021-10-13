@@ -37,7 +37,6 @@ import org.eclipse.gef4.zest.core.viewers.IFigureProvider;
 import org.eclipse.gef4.zest.core.viewers.ISelfStyleProvider;
 import org.eclipse.gef4.zest.core.widgets.GraphConnection;
 import org.eclipse.gef4.zest.core.widgets.GraphNode;
-import org.eclipse.jface.viewers.ILabelProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.SWT;
@@ -66,6 +65,7 @@ import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.modules.imagelibrary.ImageProvider;
 import org.netxms.nxmc.modules.networkmaps.MapImageProvidersManager;
+import org.netxms.nxmc.modules.objects.widgets.helpers.DecoratingObjectLabelProvider;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.StatusDisplayInfo;
 import org.netxms.nxmc.tools.ColorCache;
@@ -116,13 +116,13 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	private boolean longObjectNames = false;
 	private boolean connectionLabelsVisible = true;
 	private boolean connectionsVisible = true;
-	private ILabelProvider workbenchLabelProvider;
 	private MapObjectDisplayMode objectFigureType = MapObjectDisplayMode.ICON;
 	private ColorCache colors;
 	private Color defaultLinkColor = null;
 	private ManhattanConnectionRouter manhattanRouter = new ManhattanConnectionRouter();
 	private BendpointConnectionRouter bendpointRouter = new BendpointConnectionRouter();
 	private LinkDciValueProvider dciValueProvider;
+   private DecoratingObjectLabelProvider objectLabelProvider;
 	
 	/**
 	 * Create map label provider
@@ -167,6 +167,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 
 		colors = new ColorCache();
 		dciValueProvider = LinkDciValueProvider.getInstance();
+      objectLabelProvider = new DecoratingObjectLabelProvider();
 	}
 
    /**
@@ -347,15 +348,16 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 		imgInterface.dispose();
 		imgOther.dispose();
 		imgUnknown.dispose();
-		
+
 		imgResCluster.dispose();
-		
+
 		fontLabel.dispose();
 		fontTitle.dispose();
-		
+
 		colors.dispose();
-		
-		workbenchLabelProvider.dispose();
+
+      objectLabelProvider.dispose();
+
 		super.dispose();
 	}
 
@@ -666,14 +668,14 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	{
 		this.showStatusFrame = showStatusFrame;
 	}
-	
+
 	/**
 	 * @param object
 	 * @return
 	 */
-	public Image getWorkbenchIcon(Object object)
+	public Image getSmallIcon(Object object)
 	{
-		return workbenchLabelProvider.getImage(object);
+      return objectLabelProvider.getImage(object);
 	}
 
 	/**

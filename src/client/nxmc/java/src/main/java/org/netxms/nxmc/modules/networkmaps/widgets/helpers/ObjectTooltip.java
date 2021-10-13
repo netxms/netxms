@@ -75,7 +75,7 @@ public class ObjectTooltip extends Figure
 		setLayoutManager(layout);
 
 		Label title = new Label();
-		title.setIcon(labelProvider.getWorkbenchIcon(object));
+		title.setIcon(labelProvider.getSmallIcon(object));
 		title.setText(object.getObjectName());
 		title.setFont(JFaceResources.getBannerFont());
 		add(title);

@@ -89,7 +89,6 @@ import org.netxms.client.objects.Dashboard;
 import org.netxms.client.objects.NetworkMap;
 import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.Registry;
-import org.netxms.nxmc.base.actions.RefreshAction;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.Perspective;
 import org.netxms.nxmc.base.windows.PopOutViewWindow;
@@ -219,7 +218,7 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
       final PreferenceStore settings = PreferenceStore.getInstance();
       alwaysFitLayout = settings.getAsBoolean(getBaseId() + ".alwaysFitLayout", false);
 
-      viewer.zoomTo(settings.getAsDouble(getBaseId() + ".zoom", 0));
+      viewer.zoomTo(settings.getAsDouble(getBaseId() + ".zoom", 1.0));
 		viewer.getGraphControl().addDisposeListener(new DisposeListener() {
          @Override
          public void widgetDisposed(DisposeEvent e)
@@ -331,21 +330,31 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 
 		doubleClickHandlers = new ObjectDoubleClickHandlerRegistry(this);
 		setupMapControl();
-		refreshMap();
 	}
 
 	/**
-	 * Called from createPartControl to allow subclasses to do additional map setup. Subclasses
-	 * should override this method instead of createPartControl. Default implementation do nothing.
-	 */
+    * @see org.netxms.nxmc.base.views.ViewWithContext#postContentCreate()
+    */
+   @Override
+   protected void postContentCreate()
+   {
+      super.postContentCreate();
+      refresh();
+   }
+
+   /**
+    * Called from createPartControl to allow subclasses to do additional map setup. Subclasses should override this method instead
+    * of createPartControl. Default implementation do nothing.
+    */
 	protected void setupMapControl()
 	{
 	}
 
 	/**
-	 * Do full map refresh
-	 */
-	protected void refreshMap()
+    * @see org.netxms.nxmc.base.views.View#refresh()
+    */
+   @Override
+   public void refresh()
 	{
       if (mapPage != null)
          dciValueProvider.removeDcis(mapPage);
@@ -488,14 +497,6 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 	 */
 	protected void createActions()
 	{
-		actionRefresh = new RefreshAction(this) {
-			@Override
-			public void run()
-			{
-				refreshMap();
-			}
-		};
-
       actionShowLinkDirection = new Action("Show link &direction", Action.AS_CHECK_BOX) {
          @Override
          public void run()
@@ -876,8 +877,6 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
       manager.add(actionSaveImage);
 		manager.add(new Separator());
       manager.add(actionSelectAllObjects);
-      manager.add(new Separator());
-		manager.add(actionRefresh);
 	}
 
    /**
@@ -902,8 +901,6 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 			manager.add(actionSaveLayout);
 		}
       manager.add(actionCopyImage);
-      manager.add(new Separator());
-		manager.add(actionRefresh);
 	}
 
 	/**
@@ -1095,7 +1092,7 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 	@Override
 	public void setFocus()
 	{
-		viewer.getControl().setFocus();
+      viewer.getControl().setFocus();
 	}
 
    /**
@@ -1342,19 +1339,19 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
       /* FIXME: show object details */
 	}
 
-	/**
+   /**
     * Goes thought all links and tries to add to request list required DCIs.
     */
-	protected void addDciToRequestList()
+   protected void addDciToRequestList()
    {
       Collection<NetworkMapLink> linkList = mapPage.getLinks();
-      for (NetworkMapLink item : linkList)
+      for(NetworkMapLink item : linkList)
       {
-         if(item.hasDciData())
+         if (item.hasDciData())
          {
-            for (SingleDciConfig value :item.getDciAsList())
+            for(SingleDciConfig value : item.getDciAsList())
             {
-               if(value.type == SingleDciConfig.ITEM)
+               if (value.type == SingleDciConfig.ITEM)
                {
                   dciValueProvider.addDci(value.getNodeId(), value.dciId, mapPage);
                }
@@ -1366,16 +1363,16 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
          }
       }
       Collection<NetworkMapElement> mapElements = mapPage.getElements();
-      for (NetworkMapElement element : mapElements)
+      for(NetworkMapElement element : mapElements)
       {
-         if(element instanceof NetworkMapDCIContainer)
+         if (element instanceof NetworkMapDCIContainer)
          {
             NetworkMapDCIContainer item = (NetworkMapDCIContainer)element;
-            if(item.hasDciData())
+            if (item.hasDciData())
             {
-               for (SingleDciConfig value : item.getObjectDCIArray())
+               for(SingleDciConfig value : item.getObjectDCIArray())
                {
-                  if(value.type == SingleDciConfig.ITEM)
+                  if (value.type == SingleDciConfig.ITEM)
                   {
                      dciValueProvider.addDci(value.getNodeId(), value.dciId, mapPage);
                   }
@@ -1386,13 +1383,13 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
                }
             }
          }
-         
-         if(element instanceof NetworkMapDCIImage)
+
+         if (element instanceof NetworkMapDCIImage)
          {
             NetworkMapDCIImage item = (NetworkMapDCIImage)element;
             DCIImageConfiguration config = item.getImageOptions();
             SingleDciConfig value = config.getDci();
-            if(value.type == SingleDciConfig.ITEM)
+            if (value.type == SingleDciConfig.ITEM)
             {
                dciValueProvider.addDci(value.getNodeId(), value.dciId, mapPage);
             }
@@ -1403,7 +1400,7 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
          }
       }
    }
-   
+
    /**
     * @param mode
     * @param saveLayout

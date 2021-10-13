@@ -643,4 +643,14 @@ public abstract class View implements MessageAreaHolder
    {
       keyBindingManager.addBinding(modifiers, key, action);
    }
+
+   /**
+    * Check if view client area is disposed.
+    *
+    * @return true if view client area is disposed
+    */
+   public boolean isClientAreaDisposed()
+   {
+      return clientArea.isDisposed();
+   }
 }

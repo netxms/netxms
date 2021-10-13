@@ -36,9 +36,9 @@ public class ObjectFigureSmallLabel extends ObjectFigure
 	private static final int BORDER_WIDTH = 2;
 	private static final int MARGIN_WIDTH = 4;
 	private static final int MARGIN_HEIGHT = 2;
-	
+
 	private Label label;
-	
+
 	/**
 	 * @param element
 	 * @param labelProvider
@@ -52,11 +52,11 @@ public class ObjectFigureSmallLabel extends ObjectFigure
       label = new Label(object.getNameOnMap());
 		label.setFont(labelProvider.getLabelFont());
 		label.setLabelAlignment(PositionConstants.CENTER);
-		label.setIcon(labelProvider.getWorkbenchIcon(object));
+		label.setIcon(labelProvider.getSmallIcon(object));
 		add(label, BorderLayout.CENTER);
-		
+
 		setOpaque(true);
-		
+
 		updateSize();
 	}
 
@@ -69,9 +69,9 @@ public class ObjectFigureSmallLabel extends ObjectFigure
 		setSize(ls.width + MARGIN_WIDTH * 2 + BORDER_WIDTH * 2, ls.height + MARGIN_HEIGHT * 2 + BORDER_WIDTH * 2);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.draw2d.Figure#paintFigure(org.eclipse.draw2d.Graphics)
-	 */
+   /**
+    * @see org.eclipse.draw2d.Figure#paintFigure(org.eclipse.draw2d.Graphics)
+    */
 	@Override
 	protected void paintFigure(Graphics gc)
 	{
@@ -80,14 +80,14 @@ public class ObjectFigureSmallLabel extends ObjectFigure
       rect.y += BORDER_WIDTH / 2;
       rect.width -= BORDER_WIDTH;
       rect.height -= BORDER_WIDTH;
-      
+
 		gc.setAntialias(SWT.ON);
-		
+
 		gc.setBackgroundColor(isElementSelected() ? SELECTION_COLOR : StatusDisplayInfo.getStatusColor(object.getStatus()));
       gc.setAlpha(32);
       gc.fillRoundRectangle(rect, 8, 8);
       gc.setAlpha(255);
-      
+
 		gc.setForegroundColor(isElementSelected() ? SELECTION_COLOR : StatusDisplayInfo.getStatusColor(object.getStatus()));
       gc.setLineStyle(labelProvider.isElementSelected(element) ? SWT.LINE_DOT : SWT.LINE_SOLID);
 		gc.setLineWidth(BORDER_WIDTH);

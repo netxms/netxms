@@ -538,7 +538,7 @@ public class ViewStack extends Composite
    public boolean setFocus()
    {
       View view = getActiveView();
-      if (view != null)
+      if ((view != null) && !view.isClientAreaDisposed())
          view.setFocus();
       else
          super.setFocus();

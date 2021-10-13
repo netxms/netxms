@@ -37,25 +37,16 @@ public class MapImageProvidersManager
 {
    private static final Logger logger = LoggerFactory.getLogger(MapImageProvidersManager.class);
 
-	private static MapImageProvidersManager instance = null;
-	
+   private static MapImageProvidersManager instance = new MapImageProvidersManager();
+
 	/**
-	 * Get color manager instance.
-	 * 
-	 * @return
-	 */
+    * Get map image providers manager instance.
+    * 
+    * @return
+    */
 	public static MapImageProvidersManager getInstance()
 	{
 		return instance;
-	}
-	
-	/**
-	 * Create color manager instance
-	 */
-	protected static void create()
-	{
-		if (instance == null)
-			instance = new MapImageProvidersManager();
 	}
 
    private List<NetworkMapImageProvider> providers = new ArrayList<NetworkMapImageProvider>(0);
@@ -80,7 +71,7 @@ public class MapImageProvidersManager
          }
       });
 	}
-	
+
 	/**
 	 * Get image for object.
 	 * 
@@ -96,7 +87,7 @@ public class MapImageProvidersManager
 		}
 		return null;
 	}
-	
+
 	/**
 	 * Get status icon for given status code.
 	 * 

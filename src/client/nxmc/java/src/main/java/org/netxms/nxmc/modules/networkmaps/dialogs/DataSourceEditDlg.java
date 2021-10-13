@@ -118,10 +118,10 @@ public class DataSourceEditDlg extends Dialog
 			gd.grabExcessHorizontalSpace = true;
 			gd.horizontalSpan = 2;
 			tableGroup.setLayoutData(gd);
-			
+
 			layout = new GridLayout();
 			tableGroup.setLayout(layout);
-			
+
 			dataColumn = new LabeledText(tableGroup, SWT.NONE);
          dataColumn.setLabel(i18n.tr("Data column"));
 			dataColumn.setText(dci.getColumn());
@@ -129,7 +129,7 @@ public class DataSourceEditDlg extends Dialog
 			gd.horizontalAlignment = SWT.FILL;
 			gd.grabExcessHorizontalSpace = true;
 			dataColumn.setLayoutData(gd);
-			
+
 			instance = new LabeledText(tableGroup, SWT.NONE);
          instance.setLabel(i18n.tr("Instance"));
 			instance.setText(dci.getInstance());

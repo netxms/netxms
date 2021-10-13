@@ -28,19 +28,20 @@ import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.ui.eclipse.jobs.ConsoleJob;
-import org.netxms.ui.eclipse.networkmaps.Activator;
-import org.netxms.ui.eclipse.networkmaps.Messages;
-import org.netxms.ui.eclipse.networkmaps.propertypages.LinkDataSources;
+import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.base.jobs.Job;
+import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.networkmaps.propertypages.LinkDataSources;
+import org.xnap.commons.i18n.I18n;
 import org.netxms.client.maps.configs.SingleDciConfig;
-import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
  * Label provider for DCI list on property page for map link
  */
 public class DciListLabelProvider extends LabelProvider implements ITableLabelProvider
 {
-	private NXCSession session;
+   private I18n i18n = LocalizationHelper.getI18n(DciListLabelProvider.class);
+   private NXCSession session = Registry.getSession();
 	private Map<Long, String> dciNameCache = new HashMap<Long, String>();
 	private List<SingleDciConfig> elementList;
 	
@@ -50,21 +51,20 @@ public class DciListLabelProvider extends LabelProvider implements ITableLabelPr
 	public DciListLabelProvider(List<SingleDciConfig> elementList)
 	{
 		this.elementList = elementList;
-		session = (NXCSession)ConsoleSharedData.getSession();
 	}
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
-	 */
+
+   /**
+    * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
+    */
 	@Override
 	public Image getColumnImage(Object element, int columnIndex)
 	{
 		return null;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
+    */
 	@Override
 	public String getColumnText(Object element, int columnIndex)
 	{
@@ -78,13 +78,13 @@ public class DciListLabelProvider extends LabelProvider implements ITableLabelPr
 				return (object != null) ? object.getObjectName() : ("[" + Long.toString(dci.getNodeId()) + "]"); //$NON-NLS-1$ //$NON-NLS-2$
 			case LinkDataSources.COLUMN_METRIC:
 				String name = dciNameCache.get(dci.dciId);
-				return (name != null) ? name : Messages.get().DciListLabelProvider_Unresolved;
+            return (name != null) ? name : i18n.tr("Unresolved DCI name");
 			case LinkDataSources.COLUMN_LABEL:
 				return dci.name;
 		}
 		return null;
 	}
-	
+
 	/**
 	 * Resolve DCI names for given collection of condition DCIs and add to cache
 	 * 
@@ -92,12 +92,11 @@ public class DciListLabelProvider extends LabelProvider implements ITableLabelPr
 	 */
 	public void resolveDciNames(final Collection<SingleDciConfig> dciList)
 	{
-		new ConsoleJob(Messages.get().DciListLabelProvider_JobName, null, Activator.PLUGIN_ID, null) {
+      new Job(i18n.tr("Resolve DCI names"), null) {
 			@Override
-			protected void runInternal(IProgressMonitor monitor) throws Exception
+         protected void run(IProgressMonitor monitor) throws Exception
 			{
 				final Map<Long, String> names = session.dciIdsToNames(dciList);
-				
 				runInUIThread(new Runnable() {
 					@Override
 					public void run()
@@ -110,11 +109,11 @@ public class DciListLabelProvider extends LabelProvider implements ITableLabelPr
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.get().DciListLabelProvider_JobError;
+            return i18n.tr("Cannot resolve DCI names");
 			}
 		}.runInForeground();
 	}
-	
+
 	/**
 	 * Add single cache entry
 	 * 
