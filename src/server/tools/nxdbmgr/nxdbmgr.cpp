@@ -314,7 +314,7 @@ int main(int argc, char *argv[])
       TCHAR path[MAX_PATH];
       GetNetXMSDirectory(nxDirEtc, path);
       _tcscat(path, _T("\\netxmsd.conf"));
-      if (_taccess(path, 4) == 0)
+      if (_taccess(path, R_OK) == 0)
       {
 		   _tcscpy(configFile, path);
       }
@@ -328,13 +328,13 @@ int main(int argc, char *argv[])
       {
          TCHAR config[MAX_PATH];
          _sntprintf(config, MAX_PATH, _T("%s/etc/netxmsd.conf"), homeDir.cstr());
-		   if (_taccess(config, 4) == 0)
+		   if (_taccess(config, R_OK) == 0)
 		   {
 			   _tcscpy(configFile, config);
             goto stop_search;
 		   }
       }
-		if (_taccess(SYSCONFDIR _T("/netxmsd.conf"), 4) == 0)
+		if (_taccess(SYSCONFDIR _T("/netxmsd.conf"), R_OK) == 0)
 		{
 			_tcscpy(configFile, SYSCONFDIR _T("/netxmsd.conf"));
 		}

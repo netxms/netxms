@@ -697,7 +697,7 @@ void FileDeliveryPolicy::validate()
       localFile.append(files->get(i)->guid.toString());
 
       // Check if the file exists
-      if (_taccess(localFile, 0) != 0)
+      if (_taccess(localFile, F_OK) != 0)
       {
          nxlog_debug_tag(DEBUG_TAG, 4, _T("FileDeliveryPolicy::validate(): failed to find file %s"), files->get(i)->path);
          TCHAR description[MAX_PATH] = _T("Missing policy file ");

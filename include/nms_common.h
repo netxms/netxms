@@ -310,6 +310,12 @@ typedef int bool;
 #define S_IWOTH      _S_IWRITE
 #endif
 
+/* Mode flags for _access() */
+#define F_OK   0
+#define R_OK   4
+#define W_OK   2
+#define X_OK   R_OK  /* on Windows execute is granted if read is granted */
+
 #define STDIN_FILENO    _fileno(stdin)
 #define STDOUT_FILENO   _fileno(stdout)
 #define STDERR_FILENO   _fileno(stderr)

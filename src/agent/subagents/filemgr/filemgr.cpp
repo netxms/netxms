@@ -412,7 +412,7 @@ static void FillFileOwnerFields(NXCPMessage *msg, uint32_t fieldId, const NX_STA
 
 static bool FillMessageFolderContent(const TCHAR *filePath, const TCHAR *fileName, NXCPMessage *msg, uint32_t varId)
 {
-   if (_taccess(filePath, 4) != 0)
+   if (_taccess(filePath, R_OK) != 0)
       return false;
 
    NX_STAT_STRUCT st;

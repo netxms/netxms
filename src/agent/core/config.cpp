@@ -153,7 +153,7 @@ bool DownloadConfig(const TCHAR *server)
 int CreateConfig(bool forceCreate, const char *masterServers, const char *logFile, const char *fileStore,
       const char *configIncludeDir, int numSubAgents, char **subAgentList, const char *extraValues)
 {
-   if ((_taccess(g_szConfigFile, 0) == 0) && !forceCreate)
+   if ((_taccess(g_szConfigFile, F_OK) == 0) && !forceCreate)
       return 0;  // File already exist, we shouldn't overwrite it
 
    FILE *fp = _tfopen(g_szConfigFile, _T("w"));
@@ -282,7 +282,7 @@ extern TCHAR g_dataDirRecoveryPath[];
 */
 static void RecoverDataDirectory()
 {
-   if (_taccess(g_szDataDirectory, 0) == 0)
+   if (_taccess(g_szDataDirectory, F_OK) == 0)
       return;  // Data directory exist
 
    TCHAR appDataDir[MAX_PATH];
@@ -296,7 +296,7 @@ static void RecoverDataDirectory()
    StringBuffer oldAppDataDir(appDataDir);
    oldAppDataDir.toUppercase();
    oldAppDataDir.replace(_T("\\WINDOWS\\"), _T("\\WINDOWS.OLD\\"));
-   if (_taccess(oldAppDataDir, 0) != 0)
+   if (_taccess(oldAppDataDir, F_OK) != 0)
       return;  // Old directory missing
 
    if (CopyFileOrDirectory(oldAppDataDir, g_szDataDirectory))
@@ -322,7 +322,7 @@ void RecoverConfigPolicyDirectory()
    if (!_tcsicmp(legacyConfigPolicyDir, g_szConfigPolicyDir))
       return;
 
-   if (_taccess(legacyConfigPolicyDir, 0) != 0)
+   if (_taccess(legacyConfigPolicyDir, F_OK) != 0)
       return;
 
    MoveFileOrDirectory(legacyConfigPolicyDir, g_szConfigPolicyDir);
@@ -401,7 +401,7 @@ bool LoadConfig(const TCHAR *configSection, bool firstStart)
       if (g_szConfigPolicyDir[_tcslen(g_szConfigPolicyDir) - 1] != FS_PATH_SEPARATOR_CHAR)
          _tcslcat(g_szConfigPolicyDir, FS_PATH_SEPARATOR, MAX_PATH);
       _tcslcat(g_szConfigPolicyDir, SUBDIR_CONFIG_POLICY, MAX_PATH);
-      if (_taccess(g_szConfigPolicyDir, 0) != 0)
+      if (_taccess(g_szConfigPolicyDir, F_OK) != 0)
       {
          // Check if configuration policies stored at old location
          RecoverConfigPolicyDirectory();
