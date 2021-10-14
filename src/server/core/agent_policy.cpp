@@ -319,7 +319,7 @@ void GenericAgentPolicy::updateFromImport(const ConfigEntry *config)
    const TCHAR *content = config->getSubEntryValue(_T("content"), 0, _T(""));
    MemFree(m_content);
    m_content = UTF8StringFromTString(content);
-   loadAdditionalData(config);
+   importAdditionalData(config);
 }
 
 /**
@@ -342,8 +342,22 @@ void GenericAgentPolicy::createExportRecord(StringBuffer &xml, uint32_t recordId
    xml.append(EscapeStringForXML2(content));
    MemFree(content);
    xml.append(_T("</content>\n"));
-   saveAdditionalData(xml);
+   exportAdditionalData(xml);
    xml.append(_T("\t\t\t\t</agentPolicy>\n"));
+}
+
+/**
+ * Export additional data.
+ */
+void GenericAgentPolicy::exportAdditionalData(StringBuffer &xml)
+{
+}
+
+/**
+ * Import additional data.
+ */
+void GenericAgentPolicy::importAdditionalData(const ConfigEntry *config)
+{
 }
 
 /**
@@ -455,7 +469,7 @@ static unique_ptr<ObjectArray<FileInfo>> GetFilesFromConfig(const char* content)
 /**
  * Adds files in base64 coding to export xml record
  */
-void FileDeliveryPolicy::saveAdditionalData(StringBuffer &xml)
+void FileDeliveryPolicy::exportAdditionalData(StringBuffer &xml)
 {
    xml.append(_T("\t\t\t\t\t<files>\n"));
    MutexLock(m_contentLock);
@@ -476,59 +490,65 @@ void FileDeliveryPolicy::saveAdditionalData(StringBuffer &xml)
          int fd = _topen(fullPath.cstr(), O_BINARY | O_RDONLY);
          if (fd != -1)
          {
-            char* buffer = (char*)MemAlloc(fileSize);
-            ssize_t sz = _read(fd, buffer, fileSize);
-            if (sz == fileSize)
+            auto fileContent = MemAllocArrayNoInit<BYTE>(fileSize);
+            if (_read(fd, fileContent, static_cast<unsigned int>(fileSize)) == fileSize)
             {
-               xml.append(_T("\t\t\t\t\t\t<file>\n"));
-               xml.appendFormattedString(_T("\t\t\t\t\t\t\t<name>%s</name>\n"), fileName.cstr());
-               char* compressedBuffer = (char*)MemAlloc(fileSize);
-               uint64_t compressedBufferSize = fileSize;
-               int compressResult = compress((BYTE *)compressedBuffer, &compressedBufferSize, (BYTE *)buffer, fileSize);
-               char* encodedBuffer;
-               uint64_t encodedBufferSize;
-               if (compressResult == Z_OK)
+               xml.append(_T("\t\t\t\t\t\t<file>\n\t\t\t\t\t\t\t<name>"));
+               xml.append(EscapeStringForXML2(fileName));
+               xml.append(_T("</name>\n\t\t\t\t\t\t\t\t<size>"));
+               xml.append(fileSize);
+               xml.append(_T("</size>\n"));
+
+               auto compressedFileContent = MemAllocArrayNoInit<BYTE>(fileSize);
+               uLongf compressedFileSize = static_cast<uLongf>(fileSize);
+               BYTE* encodeInput;
+               uint64_t encodedInputSize;
+               if (compress(compressedFileContent, &compressedFileSize, fileContent, static_cast<uLong>(fileSize)) == Z_OK)
                {
                   xml.append(_T("\t\t\t\t\t\t\t<compression>true</compression>\n"));
-                  encodedBuffer = compressedBuffer;
-                  encodedBufferSize = compressedBufferSize;
-                  MemFree(buffer);
+                  encodeInput = compressedFileContent;
+                  encodedInputSize = compressedFileSize;
+                  MemFree(fileContent);
                }
                else
                {
-                  encodedBuffer = buffer;
-                  encodedBufferSize = fileSize;
-                  MemFree(compressedBuffer);
+                  encodeInput = fileContent;
+                  encodedInputSize = fileSize;
+                  MemFree(compressedFileContent);
                }
+
                char* base64Buffer;
-               size_t base64BufferSize = base64_encode_alloc(encodedBuffer, encodedBufferSize, &base64Buffer);
-               MemFree(encodedBuffer);
+               size_t base64BufferSize = base64_encode_alloc(reinterpret_cast<char*>(encodeInput), encodedInputSize, &base64Buffer);
+               MemFree(encodeInput);
                xml.append(_T("\t\t\t\t\t\t\t\t<data>"));
                xml.appendMBString(base64Buffer, base64BufferSize, CP_ACP);
                MemFree(base64Buffer);
-               xml.append(_T("</data>\n"));
-               xml.appendFormattedString(_T("\t\t\t\t\t\t\t\t<size>%u</size>\n"), fileSize);
+               xml.append(_T("</data>\n\t\t\t\t\t\t\t<hash>"));
+
                BYTE hash[MD5_DIGEST_SIZE];
-               CalculateFileMD5Hash(fullPath.cstr(), hash);
+               CalculateFileMD5Hash(fullPath, hash);
                TCHAR text[MD5_DIGEST_SIZE * 2 + 1];
                BinToStr(hash, MD5_DIGEST_SIZE, text);
-               xml.appendFormattedString(_T("\t\t\t\t\t\t\t<hash>%s</hash>\n"), text);
-               xml.append(_T("\n\t\t\t\t\t\t</file>\n"));
+               xml.append(BinToStr(hash, MD5_DIGEST_SIZE, text));
+               xml.append(_T("</hash>\n\t\t\t\t\t\t</file>\n"));
             }
             else
             {
-               nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Cannot read file %s for exporting. File skipped."), fileName.cstr());
+               nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Cannot read file %s for export of policy %s in template %s [%u] (%s)"),
+                  fileName.cstr(), m_name, GetObjectName(m_ownerId, _T("Unknown")), m_ownerId, _tcserror(errno));
             }
             _close(fd);
          }
          else
          {
-            nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Cannot open file %s for exporting. File skipped."), fileName.cstr());
+            nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Cannot open file %s for export of policy %s in template %s [%u] (%s)"),
+               fileName.cstr(), m_name, GetObjectName(m_ownerId, _T("Unknown")), m_ownerId, _tcserror(errno));
          }
       }
       else
       {
-         nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("File %s too big (>%u) and will not be exported! Move it manually or change server configuration"), fileName.cstr(), maxFileSize);
+         nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("File %s in policy %s in template %s [%u] is too big (%u bytes with limit %u bytes) and will not be exported"),
+            fileName.cstr(), m_name, GetObjectName(m_ownerId, _T("Unknown")), m_ownerId, static_cast<unsigned int>(fileSize), static_cast<unsigned int>(maxFileSize));
       }
    }
    xml.append(_T("\t\t\t\t\t</files>\n"));
@@ -537,7 +557,7 @@ void FileDeliveryPolicy::saveAdditionalData(StringBuffer &xml)
 /**
  * Loads files in base64 coding from imported config
  */
-void FileDeliveryPolicy::loadAdditionalData(const ConfigEntry *config)
+void FileDeliveryPolicy::importAdditionalData(const ConfigEntry *config)
 {
    ConfigEntry *fileRoot = config->findEntry(_T("files"));
    if (fileRoot != nullptr)
@@ -553,45 +573,47 @@ void FileDeliveryPolicy::loadAdditionalData(const ConfigEntry *config)
          int fd = _topen(fullPath.cstr(), O_CREAT | O_TRUNC | O_WRONLY | O_BINARY, S_IRUSR | S_IWUSR);
          if (fd != -1)
          {
-            #ifdef UNICODE
-               char *base64Data = MBStringFromWideString(file->getSubEntryValue(_T("data")));
-            #else
-               char *base64Data = MemCopyString(file->getSubEntryValue(_T("data")));
-            #endif
-            size_t fileSize = file->getSubEntryValueAsUInt64(_T("size"));
-            char* buffer;
+#ifdef UNICODE
+            char *base64Data = MBStringFromWideString(file->getSubEntryValue(_T("data")));
+#else
+            char *base64Data = MemCopyString(file->getSubEntryValue(_T("data")));
+#endif
+            uLongf fileSize = static_cast<uLongf>(file->getSubEntryValueAsUInt64(_T("size")));
+            char* fileContent;
             size_t decodedFileSize;
-            base64_decode_alloc(base64Data, strlen(base64Data), &buffer, &decodedFileSize);
+            base64_decode_alloc(base64Data, strlen(base64Data), &fileContent, &decodedFileSize);
             MemFree(base64Data);
 
             if (file->getSubEntryValueAsBoolean(_T("compression")))
             {
-               char* uncompressedBuffer = (char*)MemAlloc(fileSize);
-               uncompress((BYTE *)uncompressedBuffer, &fileSize, (BYTE *)buffer, decodedFileSize);
-               MemFree(buffer);
-               buffer = uncompressedBuffer;
+               auto buffer = MemAllocArrayNoInit<char>(fileSize);
+               uncompress(reinterpret_cast<BYTE*>(buffer), &fileSize, (BYTE *)fileContent, static_cast<uLong>(decodedFileSize));
+               MemFree(fileContent);
+               fileContent = buffer;
             }
 
-            if (_write(fd, buffer, fileSize) == fileSize)
-            {
-               MemFree(buffer);
-               _close(fd);
+            bool success = (_write(fd, fileContent, fileSize) == fileSize);
+            _close(fd);
+            MemFree(fileContent);
 
+            if (success)
+            {
                BYTE originalHash[MD5_DIGEST_SIZE];
-               StrToBin(file->getSubEntryValue(_T("hash")), originalHash, MD5_DIGEST_SIZE);
+               memset(originalHash, 0, sizeof(originalHash));
+               StrToBin(file->getSubEntryValue(_T("hash"), 0, _T("")), originalHash, MD5_DIGEST_SIZE);
                BYTE calculatedHash[MD5_DIGEST_SIZE];
-               CalculateFileMD5Hash(fullPath.cstr(), calculatedHash);
-               if (memcmp(originalHash, calculatedHash, MD5_DIGEST_SIZE) != 0)
+               CalculateFileMD5Hash(fullPath, calculatedHash);
+               if (memcmp(originalHash, calculatedHash, MD5_DIGEST_SIZE))
                {
-                  TCHAR hashStr[64];
-                  nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Calculated hash of imported file %s is not equal to original file: original %s, calculated %s. File will be deleted."), 
-                     fileName.cstr(), file->getSubEntryValue(_T("hash")), BinToStr(calculatedHash, MD5_DIGEST_SIZE, hashStr));
+                  nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Hash mismatch for file %s while importing policy %s in template %s [%u]"),
+                        fileName.cstr(), m_name, GetObjectName(m_ownerId, _T("Unknown")), m_ownerId);
                   _tremove(fullPath.cstr());
                }
             }
             else
             {
-               nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Cannot write to %s file while importing. File will be deleted."), fileName.cstr());
+               nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Cannot write to file %s while importing policy %s in template %s [%u] (%s)"),
+                     fileName.cstr(), m_name, GetObjectName(m_ownerId, _T("Unknown")), m_ownerId, _tcserror(errno));
                _tremove(fullPath.cstr());
             }
          }
