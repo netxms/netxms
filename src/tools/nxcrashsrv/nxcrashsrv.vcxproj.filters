@@ -18,5 +18,8 @@
     <ClCompile Include="nxcrashsrv.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="deflate.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
