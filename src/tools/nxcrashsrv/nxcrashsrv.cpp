@@ -13,6 +13,11 @@
 using namespace google_breakpad;
 
 /**
+ * Deflate given file
+ */
+bool DeflateFile(const wchar_t *inputFile);
+
+/**
  * Log file name
  */
 static TCHAR s_logFile[MAX_PATH];
@@ -378,6 +383,8 @@ static void DumpCallback(void* context, const ClientInfo* clientInfo, const std:
    {
       _wrename(fullDumpFile.c_str(), fileName);
       _wremove(dumpFile->c_str());
+      if (DeflateFile(fileName))
+         _wremove(fileName);
    }
    else
    {
