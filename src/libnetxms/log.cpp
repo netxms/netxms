@@ -571,7 +571,7 @@ static bool RotateLog(bool needLock)
 		   oldName = s_logFileName;
 		   oldName.append(_T('.'));
 		   oldName.append(i);
-			if (_taccess(oldName, 0) == 0)
+			if (_taccess(oldName, F_OK) == 0)
 			{
             if (_tunlink(oldName) != 0)
             {
@@ -587,7 +587,7 @@ static bool RotateLog(bool needLock)
          oldName = s_logFileName;
          oldName.append(_T('.'));
          oldName.append(i);
-         if (_taccess(oldName, 0) == 0)
+         if (_taccess(oldName, F_OK) == 0)
          {
             newName = s_logFileName;
             newName.append(_T('.'));

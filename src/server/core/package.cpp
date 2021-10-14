@@ -68,7 +68,7 @@ bool IsPackageFileExist(const TCHAR *fileName)
    fullPath.append(DDIR_PACKAGES);
    fullPath.append(FS_PATH_SEPARATOR);
    fullPath.append(fileName);
-   return (_taccess(fullPath, 0) == 0);
+   return (_taccess(fullPath, F_OK) == 0);
 }
 
 /**
@@ -92,7 +92,7 @@ uint32_t UninstallPackage(uint32_t packageId)
          fileName.append(DDIR_PACKAGES);
          fileName.append(FS_PATH_SEPARATOR);
          fileName.appendPreallocated(DBGetField(hResult, 0, 0, nullptr, 0));
-         if ((_taccess(fileName, 0) == -1) || (_tunlink(fileName) == 0))
+         if ((_taccess(fileName, F_OK) == -1) || (_tunlink(fileName) == 0))
          {
             // Delete record from database
             ExecuteQueryOnObject(hdb, packageId, _T("DELETE FROM agent_pkg WHERE pkg_id=?"));
