@@ -69,7 +69,7 @@ static bool IsRealDevice(const char *name)
    // Check using /sys/block
    char path[MAX_PATH];
    snprintf(path, MAX_PATH, "/sys/block/%s", name);
-   return access(path, 0) == 0;
+   return access(path, F_OK) == 0;
 }
 
 /**

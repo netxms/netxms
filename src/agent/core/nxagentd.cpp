@@ -2095,15 +2095,15 @@ int main(int argc, char *argv[])
       {
          _sntprintf(path, MAX_PATH, _T("%s/etc/nxagentd.conf"), homeDir.cstr());
       }
-		if ((path[0] != 0) && (_taccess(path, 4) == 0))
+		if ((path[0] != 0) && (_taccess(path, R_OK) == 0))
 		{
 			_tcscpy(g_szConfigFile, path);
 		}
-		else if (_taccess(SYSCONFDIR _T("/nxagentd.conf"), 4) == 0)
+		else if (_taccess(SYSCONFDIR _T("/nxagentd.conf"), R_OK) == 0)
 		{
 			_tcscpy(g_szConfigFile, SYSCONFDIR _T("/nxagentd.conf"));
 		}
-		else if (_taccess(_T("/Database/etc/nxagentd.conf"), 4) == 0)	// for ZeroShell
+		else if (_taccess(_T("/Database/etc/nxagentd.conf"), R_OK) == 0)	// for ZeroShell
 		{
 			_tcscpy(g_szConfigFile, _T("/Database/etc/nxagentd.conf"));
 		}
@@ -2120,15 +2120,15 @@ int main(int argc, char *argv[])
       {
          _sntprintf(path, MAX_PATH, _T("%s/etc/nxagentd.conf.d"), homeDir.cstr());
       }
-		if ((path[0] != 0) && (_taccess(path, 4) == 0))
+		if ((path[0] != 0) && (_taccess(path, R_OK) == 0))
 		{
 			_tcscpy(g_szConfigIncludeDir, path);
 		}
-		else if (_taccess(SYSCONFDIR _T("/nxagentd.conf.d"), 4) == 0)
+		else if (_taccess(SYSCONFDIR _T("/nxagentd.conf.d"), R_OK) == 0)
 		{
 			_tcscpy(g_szConfigIncludeDir, SYSCONFDIR _T("/nxagentd.conf.d"));
 		}
-		else if (_taccess(_T("/Database/etc/nxagentd.conf.d"), 4) == 0)
+		else if (_taccess(_T("/Database/etc/nxagentd.conf.d"), R_OK) == 0)
 		{
 			_tcscpy(g_szConfigIncludeDir, _T("/Database/etc/nxagentd.conf.d"));
 		}
@@ -2143,7 +2143,7 @@ int main(int argc, char *argv[])
       TCHAR path[MAX_PATH];
       GetNetXMSDirectory(nxDirEtc, path);
       _tcscat(path, _T("\\nxagentd.conf"));
-      if (_taccess(path, 4) == 0)
+      if (_taccess(path, R_OK) == 0)
       {
          _tcscpy(g_szConfigFile, path);
       }
@@ -2157,7 +2157,7 @@ int main(int argc, char *argv[])
       TCHAR path[MAX_PATH];
       GetNetXMSDirectory(nxDirEtc, path);
       _tcscat(path, _T("\\nxagentd.conf.d"));
-      if (_taccess(path, 4) == 0)
+      if (_taccess(path, R_OK) == 0)
       {
          _tcscpy(g_szConfigIncludeDir, path);
       }

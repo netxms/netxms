@@ -38,12 +38,12 @@ static bool CheckJvmPath(const char *base, const char *libdir, const char *arch,
    {
       snprintf(jvm, MAX_PATH, "%s%s/lib/%s/%s/libjvm" SYSTEM_SHLIB_SUFFIX_A, base, libdir, arch, jreType[i]);
       nxlog_debug_tag(DEBUG_TAG_JAVA_RUNTIME, 7, _T("FindJavaRuntime: checking %hs (%s)"), jvm, description);
-      if (_access(jvm, 0) == 0)
+      if (_access(jvm, F_OK) == 0)
          return true;
 
       snprintf(jvm, MAX_PATH, "%s%s/jre/lib/%s/%s/libjvm" SYSTEM_SHLIB_SUFFIX_A, base, libdir, arch, jreType[i]);
       nxlog_debug_tag(DEBUG_TAG_JAVA_RUNTIME, 7, _T("FindJavaRuntime: checking %hs (%s)"), jvm, description);
-      if (_access(jvm, 0) == 0)
+      if (_access(jvm, F_OK) == 0)
          return true;
    }
 
@@ -85,7 +85,7 @@ TCHAR LIBNXJAVA_EXPORTABLE *FindJavaRuntime(TCHAR *buffer, size_t size)
       s++;
       _tcscpy(s, _T("jre\\bin\\server\\jvm.dll"));
       nxlog_debug_tag(DEBUG_TAG_JAVA_RUNTIME, 7, _T("FindJavaRuntime: checking %s (executable path)"), path);
-      if (_taccess(path, 0) == 0)
+      if (_taccess(path, F_OK) == 0)
       {
          _tcslcpy(buffer, path, size);
          return buffer;
@@ -113,7 +113,7 @@ TCHAR LIBNXJAVA_EXPORTABLE *FindJavaRuntime(TCHAR *buffer, size_t size)
    }
 
 #ifdef _WIN32
-   if ((jvm[0] == 0) || (_access(jvm, 0) != 0))
+   if ((jvm[0] == 0) || (_access(jvm, F_OK) != 0))
    {
       HKEY hKey;
       if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\JavaSoft\\Java Runtime Environment"), 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
@@ -140,7 +140,7 @@ TCHAR LIBNXJAVA_EXPORTABLE *FindJavaRuntime(TCHAR *buffer, size_t size)
 #endif
 
    // Check JAVA_HOME
-   if ((jvm[0] == 0) || (_access(jvm, 0) != 0))
+   if ((jvm[0] == 0) || (_access(jvm, F_OK) != 0))
    {
       const char *javaHome = getenv("JAVA_HOME");
       if ((javaHome != NULL) && (*javaHome != 0))
@@ -148,7 +148,7 @@ TCHAR LIBNXJAVA_EXPORTABLE *FindJavaRuntime(TCHAR *buffer, size_t size)
 #ifdef _WIN32
          snprintf(jvm, MAX_PATH, "%s\\bin\\server\\jvm.dll", javaHome);
          nxlog_debug_tag(DEBUG_TAG_JAVA_RUNTIME, 7, _T("FindJavaRuntime: checking %hs (Java home)"), jvm);
-         if (_access(jvm, 0) != 0)
+         if (_access(jvm, F_OK) != 0)
          {
             snprintf(jvm, MAX_PATH, "%s\\jre\\bin\\server\\jvm.dll", javaHome);
             nxlog_debug_tag(DEBUG_TAG_JAVA_RUNTIME, 7, _T("FindJavaRuntime: checking %hs (Java home)"), jvm);
@@ -160,7 +160,7 @@ TCHAR LIBNXJAVA_EXPORTABLE *FindJavaRuntime(TCHAR *buffer, size_t size)
    }
 
 #ifdef JDK_LOCATION
-   if ((jvm[0] == 0) || (_access(jvm, 0) != 0))
+   if ((jvm[0] == 0) || (_access(jvm, F_OK) != 0))
    {
 #ifdef _WIN32
       snprintf(jvm, MAX_PATH, JDK_LOCATION "\\jre\\bin\\server\\jvm.dll");
@@ -171,7 +171,7 @@ TCHAR LIBNXJAVA_EXPORTABLE *FindJavaRuntime(TCHAR *buffer, size_t size)
    }
 #endif
 
-   if ((jvm[0] == 0) || (_access(jvm, 0) != 0))
+   if ((jvm[0] == 0) || (_access(jvm, F_OK) != 0))
       return NULL;
 
 #ifdef UNICODE
