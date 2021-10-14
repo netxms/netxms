@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2016 Raden Solutions
+** Copyright (C) 2003-2021 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -27,37 +27,33 @@
  *
  * @return attribute value or default value if no value found
  */
-TCHAR LIBNXAGENT_EXPORTABLE *ReadRegistryAsString(const TCHAR *attr, TCHAR *buffer, int bufSize, const TCHAR *defaultValue)
+TCHAR LIBNXAGENT_EXPORTABLE *ReadRegistryAsString(const TCHAR *attr, TCHAR *buffer, size_t bufferSize, const TCHAR *defaultValue)
 {
-   TCHAR *value = NULL;
+   TCHAR *value = nullptr;
 
    DB_HANDLE hdb = AgentGetLocalDatabaseHandle();
-   if(hdb != NULL && attr != NULL)
+   if ((hdb != nullptr) && (attr != nullptr))
    {
-      DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT value FROM registry WHERE attribute=?"));
-      if (hStmt != NULL)
+      TCHAR query[256];
+      _sntprintf(query, 256, _T("SELECT value FROM registry WHERE attribute=%s"), DBPrepareString(hdb, attr).cstr());
+      DB_RESULT hResult = DBSelect(hdb, query);
+      if (hResult != nullptr)
       {
-         DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, attr, DB_BIND_STATIC);
-         DB_RESULT hResult = DBSelectPrepared(hStmt);
-         if (hResult != NULL)
-         {
-            if(DBGetNumRows(hResult) > 0)
-               value = DBGetField(hResult, 0, 0, buffer, bufSize);
-            DBFreeResult(hResult);
-         }
-         DBFreeStatement(hStmt);
+         if (DBGetNumRows(hResult) > 0)
+            value = DBGetField(hResult, 0, 0, buffer, bufferSize);
+         DBFreeResult(hResult);
       }
    }
 
-   if ((value == NULL) && (defaultValue != NULL))
+   if ((value == nullptr) && (defaultValue != nullptr))
    {
-      if (buffer == NULL)
+      if (buffer == nullptr)
       {
-         value = _tcsdup(defaultValue);
+         value = MemCopyString(defaultValue);
       }
       else
       {
-         _tcslcpy(buffer, defaultValue, bufSize);
+         _tcslcpy(buffer, defaultValue, bufferSize);
          value = buffer;
       }
    }
@@ -69,18 +65,11 @@ TCHAR LIBNXAGENT_EXPORTABLE *ReadRegistryAsString(const TCHAR *attr, TCHAR *buff
  *
  * @return attribute value or default value in no value found
  */
-INT32 LIBNXAGENT_EXPORTABLE ReadRegistryAsInt32(const TCHAR *attr, INT32 defaultValue)
+int32_t LIBNXAGENT_EXPORTABLE ReadRegistryAsInt32(const TCHAR *attr, int32_t defaultValue)
 {
    TCHAR buffer[MAX_DB_STRING];
-   TCHAR *value = ReadRegistryAsString(attr, buffer, MAX_DB_STRING, NULL);
-   if (value == NULL)
-   {
-      return defaultValue;
-   }
-   else
-   {
-      return _tcstol(buffer, NULL, 0);
-   }
+   TCHAR *value = ReadRegistryAsString(attr, buffer, MAX_DB_STRING, nullptr);
+   return (value != nullptr) ? _tcstol(buffer, nullptr, 0) : defaultValue;
 }
 
 /**
@@ -88,18 +77,11 @@ INT32 LIBNXAGENT_EXPORTABLE ReadRegistryAsInt32(const TCHAR *attr, INT32 default
  *
  * @return attribute value or default value in no value found
  */
-INT64 LIBNXAGENT_EXPORTABLE ReadRegistryAsInt64(const TCHAR *attr, INT64 defaultValue)
+int64_t LIBNXAGENT_EXPORTABLE ReadRegistryAsInt64(const TCHAR *attr, int64_t defaultValue)
 {
    TCHAR buffer[MAX_DB_STRING];
-   TCHAR *value = ReadRegistryAsString(attr, buffer, MAX_DB_STRING, NULL);
-   if (value == NULL)
-   {
-      return defaultValue;
-   }
-   else
-   {
-      return _tcstoll(buffer, NULL, 0);
-   }
+   TCHAR *value = ReadRegistryAsString(attr, buffer, MAX_DB_STRING, nullptr);
+   return (value != nullptr) ? _tcstoll(buffer, nullptr, 0) : defaultValue;
 }
 
 /**
@@ -109,51 +91,38 @@ INT64 LIBNXAGENT_EXPORTABLE ReadRegistryAsInt64(const TCHAR *attr, INT64 default
  */
 bool LIBNXAGENT_EXPORTABLE WriteRegistry(const TCHAR *attr, const TCHAR *value)
 {
-   DB_HANDLE hdb = AgentGetLocalDatabaseHandle();
-   if (_tcslen(attr) > 63 || hdb == NULL)
+   if (_tcslen(attr) > 63)
       return false;
 
-   // Check for variable existence
-   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT value FROM registry WHERE attribute=?"));
-   if (hStmt == NULL)
-   {
+   DB_HANDLE hdb = AgentGetLocalDatabaseHandle();
+   if (hdb == nullptr)
       return false;
-   }
-   DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, attr, DB_BIND_STATIC);
-   DB_RESULT hResult = DBSelectPrepared(hStmt);
+
+   String pattr = DBPrepareString(hdb, attr);
+   
+   // Check for variable existence
+   TCHAR query[1024];
+   _sntprintf(query, 1024, _T("SELECT value FROM registry WHERE attribute=%s"), pattr.cstr());
+   DB_RESULT hResult = DBSelect(hdb, query);
    bool varExist = false;
-   if (hResult != NULL)
+   if (hResult != nullptr)
    {
       if (DBGetNumRows(hResult) > 0)
          varExist = true;
       DBFreeResult(hResult);
    }
-   DBFreeStatement(hStmt);
 
    // Create or update variable value
+   String pvalue = DBPrepareString(hdb, value);
    if (varExist)
    {
-      hStmt = DBPrepare(hdb, _T("UPDATE registry SET value=? WHERE attribute=?"));
-      if (hStmt == NULL)
-      {
-         return false;
-      }
-      DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, value, DB_BIND_STATIC);
-      DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, attr, DB_BIND_STATIC);
+      _sntprintf(query, 1024, _T("UPDATE registry SET value=%s WHERE attribute=%s"), pvalue.cstr(), pattr.cstr());
    }
    else
    {
-      hStmt = DBPrepare(hdb, _T("INSERT INTO registry (attribute,value) VALUES (?,?)"));
-      if (hStmt == NULL)
-      {
-         return false;
-      }
-      DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, attr, DB_BIND_STATIC);
-      DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, value, DB_BIND_STATIC);
+      _sntprintf(query, 1024, _T("INSERT INTO registry (attribute,value) VALUES (%s,%s)"), pattr.cstr(), pvalue.cstr());
    }
-   bool success = DBExecute(hStmt);
-   DBFreeStatement(hStmt);
-   return success;
+   return DBQuery(hdb, query);
 }
 
 /**
@@ -161,7 +130,7 @@ bool LIBNXAGENT_EXPORTABLE WriteRegistry(const TCHAR *attr, const TCHAR *value)
  *
  * @return if this update/insert was successful
  */
-bool LIBNXAGENT_EXPORTABLE WriteRegistry(const TCHAR *attr, INT32 value)
+bool LIBNXAGENT_EXPORTABLE WriteRegistry(const TCHAR *attr, int32_t value)
 {
    TCHAR buffer[64];
    _sntprintf(buffer, 64, _T("%d"), value);
@@ -173,7 +142,7 @@ bool LIBNXAGENT_EXPORTABLE WriteRegistry(const TCHAR *attr, INT32 value)
  *
  * @return if this update/insert was successful
  */
-bool LIBNXAGENT_EXPORTABLE WriteRegistry(const TCHAR *attr, INT64 value)
+bool LIBNXAGENT_EXPORTABLE WriteRegistry(const TCHAR *attr, int64_t value)
 {
    TCHAR buffer[64];
    _sntprintf(buffer, 64, INT64_FMT, value);
@@ -187,18 +156,14 @@ bool LIBNXAGENT_EXPORTABLE WriteRegistry(const TCHAR *attr, INT64 value)
  */
 bool LIBNXAGENT_EXPORTABLE DeleteRegistryEntry(const TCHAR *attr)
 {
-   bool success = false;
-
-   DB_HANDLE hdb = AgentGetLocalDatabaseHandle();
-   if(hdb == NULL || attr == NULL)
+   if (attr == nullptr)
       return false;
 
-   DB_STATEMENT hStmt = DBPrepare(hdb, _T("DELETE FROM registry WHERE attribute=?"));
-   if (hStmt != NULL)
-   {
-      DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, attr, DB_BIND_STATIC);
-      success = DBExecute(hStmt);
-      DBFreeStatement(hStmt);
-   }
-   return success;
+   DB_HANDLE hdb = AgentGetLocalDatabaseHandle();
+   if (hdb == nullptr)
+      return false;
+
+   TCHAR query[256];
+   _sntprintf(query, 256, _T("DELETE FROM registry WHERE attribute=%s"), DBPrepareString(hdb, attr).cstr());
+   return DBQuery(hdb, query);
 }

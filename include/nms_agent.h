@@ -1201,12 +1201,12 @@ void LIBNXAGENT_EXPORTABLE AgentExecuteAction(const TCHAR *action, const StringL
 
 bool LIBNXAGENT_EXPORTABLE AgentGetScreenInfoForUserSession(uint32_t sessionId, uint32_t *width, uint32_t *height, uint32_t *bpp);
 
-TCHAR LIBNXAGENT_EXPORTABLE *ReadRegistryAsString(const TCHAR *attr, TCHAR *buffer = NULL, int bufSize = 0, const TCHAR *defaultValue = NULL);
-INT32 LIBNXAGENT_EXPORTABLE ReadRegistryAsInt32(const TCHAR *attr, INT32 defaultValue);
-INT64 LIBNXAGENT_EXPORTABLE ReadRegistryAsInt64(const TCHAR *attr, INT64 defaultValue);
+TCHAR LIBNXAGENT_EXPORTABLE *ReadRegistryAsString(const TCHAR *attr, TCHAR *buffer = nullptr, size_t bufferSize = 0, const TCHAR *defaultValue = nullptr);
+int32_t LIBNXAGENT_EXPORTABLE ReadRegistryAsInt32(const TCHAR *attr, int32_t defaultValue);
+int64_t LIBNXAGENT_EXPORTABLE ReadRegistryAsInt64(const TCHAR *attr, int64_t defaultValue);
 bool LIBNXAGENT_EXPORTABLE WriteRegistry(const TCHAR *attr, const TCHAR *value);
-bool LIBNXAGENT_EXPORTABLE WriteRegistry(const TCHAR *attr, INT32 value);
-bool LIBNXAGENT_EXPORTABLE WriteRegistry(const TCHAR *attr, INT64 value);
+bool LIBNXAGENT_EXPORTABLE WriteRegistry(const TCHAR *attr, int32_t value);
+bool LIBNXAGENT_EXPORTABLE WriteRegistry(const TCHAR *attr, int64_t value);
 bool LIBNXAGENT_EXPORTABLE DeleteRegistryEntry(const TCHAR *attr);
 
 const char LIBNXAGENT_EXPORTABLE *SMBIOS_GetHardwareManufacturer();
