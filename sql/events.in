@@ -1455,6 +1455,22 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
       '   2) List of interfaces where MAC address was found'
    );
 
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+   (
+      EVENT_BUSINESS_SERVICE_NORMAL, 'SYS_BUSINESS_SERVICE_NORMAL', 'ffe557a4-f572-44a8-928e-020b3fbd07b0',
+      EVENT_SEVERITY_NORMAL, 1,
+      'Business service changed status to normal',
+      'Generated when all checks are set back to normal.'
+   );
+
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+   (
+      EVENT_BUSINESS_SERVICE_CRITICAL, 'SYS_BUSINESS_SERVICE_CRITICAL', 'fc66c83f-c7e8-4635-ad2d-89589d8b0fc2',
+      EVENT_SEVERITY_CRITICAL, 1,
+      'Business service changed status to critical',
+      'Generated when any check or child business service changed status to critical.'
+   );
+
 /*
 ** SNMP traps
 */

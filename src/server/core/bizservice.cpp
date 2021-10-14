@@ -226,6 +226,7 @@ void BusinessService::statusPoll(PollerInfo *poller, ClientSession *session, UIN
          DBFreeStatement(hStmt);
       }
       DBConnectionPoolReleaseConnection(hdb);
+      PostSystemEvent(EVENT_BUSINESS_SERVICE_CRITICAL, m_id, nullptr);
    }
    else if (m_status < prevStatus)
    {
@@ -239,6 +240,7 @@ void BusinessService::statusPoll(PollerInfo *poller, ClientSession *session, UIN
          DBFreeStatement(hStmt);
       }
       DBConnectionPoolReleaseConnection(hdb);
+      PostSystemEvent(EVENT_BUSINESS_SERVICE_NORMAL, m_id, nullptr);
    }
 
    lockProperties();
