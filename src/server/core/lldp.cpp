@@ -25,15 +25,15 @@
 /**
  * Handler for walking local port table
  */
-static UINT32 PortLocalInfoHandler(SNMP_Variable *var, SNMP_Transport *transport, void *arg)
+static uint32_t PortLocalInfoHandler(SNMP_Variable *var, SNMP_Transport *transport, void *arg)
 {
 	LLDP_LOCAL_PORT_INFO *port = new LLDP_LOCAL_PORT_INFO;
    port->portNumber = var->getName().getElement(11);
 	port->localIdLen = var->getRawValue(port->localId, 256);
 
 	const SNMP_ObjectId& oid = var->getName();
-	UINT32 newOid[128];
-	memcpy(newOid, oid.value(), oid.length() * sizeof(UINT32));
+	uint32_t newOid[128];
+	memcpy(newOid, oid.value(), oid.length() * sizeof(uint32_t));
    SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), transport->getSnmpVersion());
 
 	newOid[oid.length() - 2] = 4;	// lldpLocPortDescr
@@ -42,16 +42,16 @@ static UINT32 PortLocalInfoHandler(SNMP_Variable *var, SNMP_Transport *transport
    newOid[oid.length() - 2] = 2;   // lldpLocPortIdSubtype
    request.bindVariable(new SNMP_Variable(newOid, oid.length()));
 
-	SNMP_PDU *pRespPDU = nullptr;
-   uint32_t rcc = transport->doRequest(&request, &pRespPDU, SnmpGetDefaultTimeout(), 3);
+	SNMP_PDU *responsePDU = nullptr;
+   uint32_t rcc = transport->doRequest(&request, &responsePDU, SnmpGetDefaultTimeout(), 3);
 	if (rcc == SNMP_ERR_SUCCESS)
    {
-	   if (pRespPDU->getNumVariables() >= 2)
+	   if (responsePDU->getNumVariables() >= 2)
 	   {
-	      pRespPDU->getVariable(0)->getValueAsString(port->ifDescr, 192);
-	      port->localIdSubtype = pRespPDU->getVariable(1)->getValueAsUInt();
+	      responsePDU->getVariable(0)->getValueAsString(port->ifDescr, 192);
+	      port->localIdSubtype = responsePDU->getVariable(1)->getValueAsUInt();
 	   }
-		delete pRespPDU;
+		delete responsePDU;
 	}
 	else
 	{
@@ -59,7 +59,7 @@ static UINT32 PortLocalInfoHandler(SNMP_Variable *var, SNMP_Transport *transport
 	   nxlog_debug_tag(DEBUG_TAG_TOPO_LLDP, 5, _T("PortLocalInfoHandler: failed SNMP request for port information (%s)"), SNMPGetErrorText(rcc));
 	}
 
-	((ObjectArray<LLDP_LOCAL_PORT_INFO> *)arg)->add(port);
+	static_cast<ObjectArray<LLDP_LOCAL_PORT_INFO>*>(arg)->add(port);
 	return SNMP_ERR_SUCCESS;
 }
 
@@ -238,8 +238,8 @@ static unique_ptr<StringObjectMap<SNMP_Variable>> ReadLLDPRemoteTable(Node *node
 static shared_ptr<Node> FindRemoteNode(Node *node, const SNMP_Variable *lldpRemChassisId, const SNMP_Variable *lldpRemChassisIdSubtype, const SNMP_Variable *lldpRemSysName)
 {
    // Build LLDP ID for remote system
-   TCHAR remoteId[256];
-   BuildLldpId(lldpRemChassisIdSubtype->getValueAsInt(), lldpRemChassisId->getValue(), lldpRemChassisId->getValueLength(), remoteId, 256);
+   TCHAR remoteId[1024];
+   BuildLldpId(lldpRemChassisIdSubtype->getValueAsInt(), lldpRemChassisId->getValue(), lldpRemChassisId->getValueLength(), remoteId, sizeof(remoteId) / sizeof(TCHAR));
    shared_ptr<Node> remoteNode = FindNodeByLLDPId(remoteId);
 
    // Try to find node by interface MAC address if chassis ID type is "MAC address"
@@ -544,25 +544,26 @@ static bool ParseMACAddress(const char *text, size_t length, BYTE *mac, size_t *
 /**
  * Build LLDP ID for node
  */
-void BuildLldpId(int type, const BYTE *data, size_t length, TCHAR *id, int idLen)
+void BuildLldpId(int type, const BYTE *data, size_t length, TCHAR *id, size_t idLen)
 {
 	_sntprintf(id, idLen, _T("%d@"), type);
+	size_t offset = _tcslen(id);
    if (type == 4)
    {
       // Some D-Link switches returns MAC address for ID type 4 as formatted text instead of raw bytes
       BYTE macAddr[64];
       size_t macLength;
-      if ((length >= MAC_ADDR_LENGTH * 2) && ParseMACAddress(reinterpret_cast<const char*>(data), length, macAddr, &macLength))
+      if ((length >= MAC_ADDR_LENGTH * 2) && (length <= MAC_ADDR_LENGTH * 3) && ParseMACAddress(reinterpret_cast<const char*>(data), length, macAddr, &macLength))
       {
-   	   BinToStr(macAddr, macLength, &id[_tcslen(id)]);
+   	   BinToStr(macAddr, macLength, &id[offset]);
       }
       else
       {
-   	   BinToStr(data, length, &id[_tcslen(id)]);
+   	   BinToStr(data, std::min(length, (idLen - offset - 1) / 2), &id[offset]);
       }
    }
    else
    {
-	   BinToStr(data, length, &id[_tcslen(id)]);
+	   BinToStr(data, std::min(length, (idLen - offset - 1) / 2), &id[offset]);
    }
 }
