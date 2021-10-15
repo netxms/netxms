@@ -4850,7 +4850,7 @@ bool Node::confPollSnmp(uint32_t rqId)
          if ((m_lldpNodeId == nullptr) || _tcscmp(m_lldpNodeId, szBuffer))
          {
             MemFree(m_lldpNodeId);
-            m_lldpNodeId = _tcsdup(szBuffer);
+            m_lldpNodeId = MemCopyString(szBuffer);
             hasChanges = true;
             sendPollerMsg(_T("   LLDP node ID changed to %s\r\n"), m_lldpNodeId);
          }
