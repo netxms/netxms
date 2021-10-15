@@ -286,6 +286,8 @@
 #define NSF_ETHERNET_IP_UNREACHABLE    0x00040000
 #define NSF_CACHE_MODE_NOT_SUPPORTED   0x00080000
 #define NSF_SNMP_TRAP_FLOOD            0x00100000
+#define NSF_ICMP_UNREACHABLE           0x00200000
+
 
 /**
  * Sensor state flags

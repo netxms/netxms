@@ -1471,6 +1471,22 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
       'Generated when business service status changes to critical.'
    );
 
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+   (
+      EVENT_ICMP_OK, 'SYS_ICMP_OK', '6c6f3d24-4cf0-40a1-a4c9-1686ff37533d',
+      EVENT_SEVERITY_NORMAL, 1,
+      'Node started responding to ICMP',
+      'Generated when node start responding to ICMP again'
+   );
+
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+   (
+      EVENT_ICMP_UNREACHABLE, 'SYS_ICMP_UNREACHABLE', '5eaf0007-2018-44c7-8f83-d244279aca4f',
+      EVENT_SEVERITY_MAJOR, 1,
+      'Node is unreachable by ICMP',
+      'Generated when node is unreachable by ICMP.'
+   );
+
 /*
 ** SNMP traps
 */

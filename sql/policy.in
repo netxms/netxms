@@ -188,6 +188,13 @@ INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_s
     VALUES (44,'af00706c-b92a-4335-b441-190609c2494f',7944,'Terminate alarm when business service status changes back to normal',
         '%m',6,'BUSINESS_SERVICE_CRITICAL_%i','',0,EVENT_ALARM_TIMEOUT);
 
+INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event)
+    VALUES (45,'9169a40b-cd9d-4328-b113-f690ef57773e',7944,'Generated alarm when node is unreachable by ICMP.',
+        '%m',5,'ICMP_UNREACHABLE_%i','',0,EVENT_ALARM_TIMEOUT);
+
+INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event)
+    VALUES (46,'81320995-d6db-4a3c-9670-12400eba4fe6',7944,'Terminate alarm when node started responding to ICMP again.',
+        '%m',6,'ICMP_UNREACHABLE_%i','',0,EVENT_ALARM_TIMEOUT);
 
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (0,EVENT_NODE_DOWN);
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (1,EVENT_NODE_UP);
@@ -243,3 +250,5 @@ INSERT INTO policy_event_list (rule_id,event_code) VALUES (41,EVENT_TUNNEL_SETUP
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (42,EVENT_DUPLICATE_MAC_ADDRESS);
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (43,EVENT_BUSINESS_SERVICE_CRITICAL);
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (44,EVENT_BUSINESS_SERVICE_NORMAL);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (45,EVENT_ICMP_UNREACHABLE);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (46,EVENT_ICMP_NORMAL);

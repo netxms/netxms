@@ -24,6 +24,46 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 40.76 to 40.77
+ */
+static bool H_UpgradeFromV76()
+{
+   CHK_EXEC(CreateEventTemplate(EVENT_ICMP_OK, _T("SYS_ICMP_OK"),
+      EVENT_SEVERITY_NORMAL, EF_LOG, _T("6c6f3d24-4cf0-40a1-a4c9-1686ff37533d"),
+      _T("Node started responding to ICMP"),
+      _T("Generated when node start responding to ICMP again")));
+
+   CHK_EXEC(CreateEventTemplate(EVENT_ICMP_UNREACHABLE, _T("SYS_ICMP_UNREACHABLE"),
+      EVENT_SEVERITY_MAJOR, EF_LOG, _T("5eaf0007-2018-44c7-8f83-d244279aca4f"),
+      _T("Node is unreachable by ICMP"),
+      _T("Generated when node is unreachable by ICMP.")));
+
+   int ruleId = NextFreeEPPruleID();
+
+   TCHAR query[1024];
+   _sntprintf(query, 1024, _T("INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event) ")
+                           _T("VALUES (%d,'9169a40b-cd9d-4328-b113-f690ef57773e',7944,'Generated alarm when node is unreachable by ICMP.','%%m',5,'ICMP_UNREACHABLE_%%i','',0,%d)"),
+         ruleId, EVENT_ALARM_TIMEOUT);
+   CHK_EXEC(SQLQuery(query));
+
+   _sntprintf(query, 1024, _T("INSERT INTO policy_event_list (rule_id,event_code) VALUES (%d,%d)"), ruleId, EVENT_ICMP_UNREACHABLE);
+   CHK_EXEC(SQLQuery(query));
+
+   ruleId++;
+
+   _sntprintf(query, 1024, _T("INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event) ")
+                           _T("VALUES (%d,'81320995-d6db-4a3c-9670-12400eba4fe6',7944,'Terminate alarm when node started responding to ICMP again.','%%m',6,'ICMP_UNREACHABLE_%%i','',0,%d)"),
+         ruleId, EVENT_ALARM_TIMEOUT);
+   CHK_EXEC(SQLQuery(query));
+
+   _sntprintf(query, 1024, _T("INSERT INTO policy_event_list (rule_id,event_code) VALUES (%d,%d)"), ruleId, EVENT_ICMP_OK);
+   CHK_EXEC(SQLQuery(query));
+
+   CHK_EXEC(SetMinorSchemaVersion(77));
+   return true;
+}
+
+/**
  * Upgrade from 40.75 to 40.76
  */
 static bool H_UpgradeFromV75()
@@ -2499,6 +2539,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 76, 40, 77, H_UpgradeFromV76 },
    { 75, 40, 76, H_UpgradeFromV75 },
    { 74, 40, 75, H_UpgradeFromV74 },
    { 73, 40, 74, H_UpgradeFromV73 },

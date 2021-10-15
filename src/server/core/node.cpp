@@ -10960,6 +10960,26 @@ void Node::icmpPollAddress(AgentConnection *conn, const TCHAR *target, const Ine
          nxlog_debug_tag(DEBUG_TAG_ICMP_POLL, 7, _T("%s: new collector object created"), debugPrefix);
       }
 
+      if (_tcscmp(target, _T("PRI")) == 0)
+      {
+         if ((status != ICMP_SUCCESS) && !(m_state & NSF_ICMP_UNREACHABLE))
+         {
+            PostSystemEvent(EVENT_ICMP_UNREACHABLE, m_id, nullptr);
+         }
+         else if ((status == ICMP_SUCCESS) && (m_state & NSF_ICMP_UNREACHABLE))
+         {
+            PostSystemEvent(EVENT_ICMP_OK, m_id, nullptr);
+         }
+         if(status == ICMP_SUCCESS)
+         {
+            m_state &= ~NSF_ICMP_UNREACHABLE;
+         }
+         else
+         {
+            m_state |= NSF_ICMP_UNREACHABLE;
+         }
+      }
+
       collector->update((status == ICMP_SUCCESS) ? rtt : 10000);
 
       unlockProperties();
