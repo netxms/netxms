@@ -94,43 +94,40 @@ static void BuildProcessCommandLine(kvm_t *kd, struct kinfo_proc *p, char *cmdLi
  */
 static bool MatchProcess(kvm_t *kd, struct kinfo_proc *p, bool extMatch, const char *name, const char *cmdLine, const char *userName)
 {
-	if (extMatch)
-	{
-      //Proc name filter
-      if (name != nullptr && *name != 0)
-         if (!RegexpMatchARegexpMatchA(PNAME, name, false))
+   if (extMatch)
+   {
+      if (*name != 0)
+         if (!RegexpMatchA(PNAME, name, false))
             return false;
 
-      //User filter
-      if (cmdLine != nullptr && *cmdLine != 0)
+      if (*userName != 0)
       {
-         passwd resultbuf;
          char buffer[512];
-         passwd *userInfo;
-         getpwuid_r(p->ki_uid, &resultbuf, buffer, sizeof(buffer), &userInfo);
-         if (userInfo == nullptr || !RegexpMatchA(userInfo->pw_name, userName, false))
+         passwd *userInfo, result;
+         getpwuid_r(p->ki_uid, &result, buffer, sizeof(buffer), &userInfo);
+         if ((userInfo == nullptr) || !RegexpMatchA(userInfo->pw_name, userName, false))
             return false;
       }
-      //Cmd line filter
-      if (cmdLineFilter != nullptr && *cmdLineFilter != 0)
+
+      if (*cmdLine != 0)
       {
          char processCmdLine[32768];
          BuildProcessCommandLine(kd, p, processCmdLine, sizeof(processCmdLine));
          if (!RegexpMatchA(processCmdLine, cmdLine, true))
             return false;
       }
+
       return true;    
    }
-	else
-	{
-		return strcasecmp(PNAME, name) == 0;
-	}
+   else
+   {
+      return strcasecmp(PNAME, name) == 0;
+   }
 }
 
-//
-// Handler for Process.Count, Process.CountEx, System.ProcessCount and System.ThreadCount parameters
-//
-
+/**
+ * Handler for Process.Count, Process.CountEx, System.ProcessCount and System.ThreadCount parameters
+ */
 LONG H_ProcessCount(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
 	int nRet = SYSINFO_RC_ERROR;
@@ -193,14 +190,12 @@ LONG H_ProcessCount(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abstract
    return nRet;
 }
 
-
-//
-// Handler for Process.* parameters
-//
-
+/**
+ * Handler for Process.* parameters
+ */
 LONG H_ProcessInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
-	int nRet = SYSINFO_RC_ERROR;
+   int nRet = SYSINFO_RC_ERROR;
    char name[128] = "", cmdLine[128] = "", userName[128] = "", buffer[64] = "";
    int nCount, nMatched;
 	INT64 currValue, result;
