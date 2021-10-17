@@ -133,9 +133,9 @@ public class TextGauge extends GenericGauge
       if (config.areLabelsVisible())
 		{
          gc.setFont(null);
-			ext = gc.textExtent(dci.getName(), SWT.DRAW_TRANSPARENT);
+         ext = gc.textExtent(dci.getDescription(), SWT.DRAW_TRANSPARENT);
          gc.setForeground(chart.getColorFromPreferences("Chart.Colors.Legend")); //$NON-NLS-1$
-			gc.drawText(dci.getName(), rect.x + ((rect.width - ext.x) / 2), rect.y + rect.height + 4, true);
+         gc.drawText(dci.getDescription(), rect.x + ((rect.width - ext.x) / 2), rect.y + rect.height + 4, true);
 		}
 	}
 }

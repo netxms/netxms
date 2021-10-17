@@ -217,15 +217,15 @@ public class DialGauge extends GenericGauge
       if (configuration.areLabelsVisible())
 		{
          gc.setFont(configuration.areLabelsInside() ? markFont : null);
-			ext = gc.textExtent(dci.getName(), SWT.DRAW_TRANSPARENT);
+         ext = gc.textExtent(dci.getDescription(), SWT.DRAW_TRANSPARENT);
          gc.setForeground(chart.getColorFromPreferences("Chart.Colors.Legend")); //$NON-NLS-1$
          if (configuration.areLabelsInside())
 			{
-				gc.drawText(dci.getName(), rect.x + ((rect.width - ext.x) / 2), rect.y + scaleInnerOffset / 2 + rect.height / 4, true);
+            gc.drawText(dci.getDescription(), rect.x + ((rect.width - ext.x) / 2), rect.y + scaleInnerOffset / 2 + rect.height / 4, true);
 			}
 			else
 			{
-				gc.drawText(dci.getName(), rect.x + ((rect.width - ext.x) / 2), rect.y + rect.height + 4, true);
+            gc.drawText(dci.getDescription(), rect.x + ((rect.width - ext.x) / 2), rect.y + rect.height + 4, true);
 			}
 		}
 	}
