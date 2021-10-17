@@ -374,7 +374,7 @@ public class HistoricalGraphView extends ViewPart implements ChartConfigurationC
          nodeId |= dci.nodeId; // Check that all DCI's are from one node
          GraphItem item = new GraphItem(dci, DataOrigin.INTERNAL, DataType.INT32);
          if (configuration.isShowHostNames())
-            item.setDescription(session.getObjectName(dci.nodeId) + " - " + dci.getName());
+            item.setDescription(session.getObjectName(dci.nodeId) + " - " + dci.getLabel());
          chart.addParameter(item);
       }
 

@@ -144,7 +144,7 @@ public class GraphItem
     */
    public GraphItem(ChartDciConfig dciConfig, DataOrigin source, DataType dataType)
    {
-      this(dciConfig.nodeId, dciConfig.dciId, source, dataType, dciConfig.getDciName(), dciConfig.getDciDescription(), dciConfig.getDisplayFormat(), dciConfig.getLineChartType(), dciConfig.getColorAsInt());
+      this(dciConfig.nodeId, dciConfig.dciId, source, dataType, dciConfig.getDciName(), dciConfig.getLabel(), dciConfig.getDisplayFormat(), dciConfig.getLineChartType(), dciConfig.getColorAsInt());
       this.instance = dciConfig.instance;
       this.inverted = dciConfig.invertValues;
       this.lineWidth = dciConfig.lineWidth;

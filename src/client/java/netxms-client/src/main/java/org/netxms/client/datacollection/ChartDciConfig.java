@@ -215,12 +215,19 @@ public class ChartDciConfig implements NodeItemPair
 	}
 
 	/**
-	 * Get DCI name. Always returns non-empty string.
-	 * @return The name
-	 */
-	public String getName()
+    * Get DCI label. Always returns non-empty string.
+    * 
+    * @return DCI label
+    */
+	public String getLabel()
 	{
-      return ((name != null) && !name.isEmpty()) ? name : ("[" + Long.toString(dciId) + "]");
+	   if ((name != null) && !name.isEmpty())
+	      return name;
+	   if ((dciDescription != null) && !dciDescription.isEmpty())
+	      return dciDescription;
+      if ((dciName != null) && !dciName.isEmpty())
+         return dciName;
+      return "[" + Long.toString(dciId) + "]";
 	}
 
 	/**

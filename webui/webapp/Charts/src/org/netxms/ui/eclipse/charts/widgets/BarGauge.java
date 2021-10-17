@@ -106,26 +106,26 @@ public class BarGauge extends GenericGauge
       {
          gc.setForeground(getColorFromPreferences("Chart.Colors.Legend")); //$NON-NLS-1$
          gc.setFont(null);
-         Point legendExt = gc.textExtent(dci.getName());
+         Point legendExt = gc.textExtent(dci.getDescription());
          switch(config.getLegendPosition())
          {
             case ChartConfiguration.POSITION_TOP:
-               gc.drawText(dci.getName(), rect.x + ((rect.width - legendExt.x) / 2), rect.y + 4, true);
+               gc.drawText(dci.getDescription(), rect.x + ((rect.width - legendExt.x) / 2), rect.y + 4, true);
                rect.y += legendExt.y + 8;
                rect.height -= legendExt.y + 8;
                break;
             case ChartConfiguration.POSITION_BOTTOM:
                rect.height -= legendExt.y + 8;
-               gc.drawText(dci.getName(), rect.x + ((rect.width - legendExt.x) / 2), rect.y + rect.height + 4, true);
+               gc.drawText(dci.getDescription(), rect.x + ((rect.width - legendExt.x) / 2), rect.y + rect.height + 4, true);
                break;
             case ChartConfiguration.POSITION_LEFT:
-               gc.drawText(dci.getName(), rect.x + 4, rect.y + ((rect.height - legendExt.y) / 2), true);
+               gc.drawText(dci.getDescription(), rect.x + 4, rect.y + ((rect.height - legendExt.y) / 2), true);
                rect.x += legendExt.x + 8;
                rect.width -= legendExt.x + 8;
                break;
             case ChartConfiguration.POSITION_RIGHT:
                rect.width -= legendExt.x + 8;
-               gc.drawText(dci.getName(), rect.x + rect.width + 4, rect.y + ((rect.height - legendExt.y) / 2), true);
+               gc.drawText(dci.getDescription(), rect.x + rect.width + 4, rect.y + ((rect.height - legendExt.y) / 2), true);
                break;
          }
       }

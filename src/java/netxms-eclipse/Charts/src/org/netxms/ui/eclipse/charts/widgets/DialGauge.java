@@ -217,15 +217,15 @@ public class DialGauge extends GenericGauge
       if (configuration.areLabelsVisible())
 		{
          gc.setFont(configuration.areLabelsInside() ? markFont : null);
-			ext = gc.textExtent(dci.getName(), SWT.DRAW_TRANSPARENT);
+         ext = gc.textExtent(dci.getDescription(), SWT.DRAW_TRANSPARENT);
 			gc.setForeground(getColorFromPreferences("Chart.Colors.Legend")); //$NON-NLS-1$
          if (configuration.areLabelsInside())
 			{
-				gc.drawText(dci.getName(), rect.x + ((rect.width - ext.x) / 2), rect.y + scaleInnerOffset / 2 + rect.height / 4, true);
+            gc.drawText(dci.getDescription(), rect.x + ((rect.width - ext.x) / 2), rect.y + scaleInnerOffset / 2 + rect.height / 4, true);
 			}
 			else
 			{
-				gc.drawText(dci.getName(), rect.x + ((rect.width - ext.x) / 2), rect.y + rect.height + 4, true);
+            gc.drawText(dci.getDescription(), rect.x + ((rect.width - ext.x) / 2), rect.y + rect.height + 4, true);
 			}
 		}
 	}
@@ -272,7 +272,7 @@ public class DialGauge extends GenericGauge
 	{
 		return new Point((int)(radius * Math.cos(Math.toRadians(angle)) + cx), (int)(radius * -Math.sin(Math.toRadians(angle)) + cy));
 	}
-	
+
    /**
     * Get minimal element size
     * 

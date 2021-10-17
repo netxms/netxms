@@ -111,6 +111,7 @@ public class LineChartElement extends ElementWidget implements HistoricalChartOw
       chartConfig.setLogScale(config.isLogScaleEnabled());
       chartConfig.setStacked(config.isStacked());
       chartConfig.setLineWidth(config.getLineWidth());
+      chartConfig.setArea(config.isArea());
       chartConfig.setTranslucent(config.isTranslucent());
       chartConfig.setUseMultipliers(config.isUseMultipliers());
       chartConfig.setAutoScale(config.isAutoScale());
@@ -331,7 +332,7 @@ public class LineChartElement extends ElementWidget implements HistoricalChartOw
 	   
 	   public DataCacheElement(ChartDciConfig config, DciData data)
 	   {
-	      this.name = config.getName();
+	      this.name = config.getLabel();
 	      this.data = data;
 	   }
 	}
