@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Driver for Juniper Networks switches
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -70,15 +70,15 @@ InterfaceList *JuniperDriver::getInterfaces(SNMP_Transport *snmp, NObject *node,
 {
 	// Get interface list from standard MIB
 	InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(snmp, node, driverData, useAliases, useIfXTable);
-	if (ifList == NULL)
+	if (ifList == nullptr)
 	{
 	   nxlog_debug_tag(JUNIPER_DEBUG_TAG, 5, _T("getInterfaces: call to NetworkDeviceDriver::getInterfaces failed"));
-		return NULL;
+		return nullptr;
 	}
 
 	// Update physical port locations
 	SNMP_Snapshot *chassisTable = SNMP_Snapshot::create(snmp, _T(".1.3.6.1.4.1.2636.3.3.2.1"));
-	if (chassisTable != NULL)
+	if (chassisTable != nullptr)
 	{
       nxlog_debug_tag(JUNIPER_DEBUG_TAG, 5, _T("getInterfaces: cannot create snapshot of chassis table"));
 
@@ -129,7 +129,7 @@ InterfaceList *JuniperDriver::getInterfaces(SNMP_Transport *snmp, NObject *node,
             continue;
 
          InterfaceInfo *parent = ifList->findByPhysicalLocation(0, slot - 1, pic - 1, port - 1);
-         if (parent != NULL)
+         if (parent != nullptr)
             iface->parentIndex = parent->index;
       }
 
@@ -143,15 +143,22 @@ InterfaceList *JuniperDriver::getInterfaces(SNMP_Transport *snmp, NObject *node,
  */
 VlanList *JuniperDriver::getVlans(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
 {
+   BYTE buffer[256];
+   if (SnmpGetEx(snmp, _T(".1.3.6.1.4.1.2636.3.48.1.3.1.1.2"), nullptr, 0, buffer, 256, SNMP_GET_NEXT_REQUEST | SG_RAW_RESULT, nullptr) == SNMP_ERR_SUCCESS)
+   {
+      nxlog_debug_tag(JUNIPER_DEBUG_TAG, 5, _T("getVlans: device supports jnxL2aldVlanTable, will use NetworkDeviceDriver::getVlans"));
+      return NetworkDeviceDriver::getVlans(snmp, node, driverData);
+   }
+
    SNMP_Snapshot *vlanTable = SNMP_Snapshot::create(snmp, _T(".1.3.6.1.4.1.2636.3.40.1.5.1.5.1"));
-   if (vlanTable == NULL)
+   if (vlanTable == nullptr)
    {
       nxlog_debug_tag(JUNIPER_DEBUG_TAG, 5, _T("getVlans: cannot create snapshot of VLAN table, fallback to NetworkDeviceDriver::getVlans"));
       return NetworkDeviceDriver::getVlans(snmp, node, driverData);
    }
 
    SNMP_Snapshot *portTable = SNMP_Snapshot::create(snmp, _T(".1.3.6.1.4.1.2636.3.40.1.5.1.7.1"));
-   if (portTable == NULL)
+   if (portTable == nullptr)
    {
       delete vlanTable;
       nxlog_debug_tag(JUNIPER_DEBUG_TAG, 5, _T("getVlans: cannot create snapshot of port table, fallback to NetworkDeviceDriver::getVlans"));
@@ -161,7 +168,7 @@ VlanList *JuniperDriver::getVlans(SNMP_Transport *snmp, NObject *node, DriverDat
    VlanList *vlans = new VlanList();
    SNMP_ObjectId oid = SNMP_ObjectId::parse(_T(".1.3.6.1.4.1.2636.3.40.1.5.1.5.1.5"));
    const SNMP_Variable *v;
-   while((v = vlanTable->getNext(oid)) != NULL)
+   while((v = vlanTable->getNext(oid)) != nullptr)
    {
       VlanInfo *vlan = new VlanInfo(v->getValueAsInt(), VLAN_PRM_IFINDEX);
       vlans->add(vlan);
@@ -169,18 +176,18 @@ VlanList *JuniperDriver::getVlans(SNMP_Transport *snmp, NObject *node, DriverDat
       oid = v->getName();
       oid.changeElement(oid.length() - 2, 2);   // VLAN name
       const SNMP_Variable *name = vlanTable->get(oid);
-      if (name != NULL)
+      if (name != nullptr)
       {
          TCHAR buffer[256];
          vlan->setName(name->getValueAsString(buffer, 256));
       }
 
       // VLAN ports
-      UINT32 vlanId = oid.getElement(oid.length() - 1);
+      uint32_t vlanId = oid.getElement(oid.length() - 1);
       SNMP_ObjectId baseOid = SNMP_ObjectId::parse(_T(".1.3.6.1.4.1.2636.3.40.1.5.1.7.1.5"));
       baseOid.extend(vlanId);
-      const SNMP_Variable *p = NULL;
-      while((p = portTable->getNext((p != NULL) ? p->getName() : baseOid)) != NULL)
+      const SNMP_Variable *p = nullptr;
+      while((p = portTable->getNext((p != nullptr) ? p->getName() : baseOid)) != nullptr)
       {
          if (p->getName().compare(baseOid) != OID_LONGER)
             break;
