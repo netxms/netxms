@@ -19,15 +19,11 @@
 package org.netxms.nxmc.modules.charts.widgets;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.ControlEvent;
-import org.eclipse.swt.events.ControlListener;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.graphics.GC;
-import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Canvas;
 import org.netxms.client.datacollection.DataFormatter;
 import org.netxms.client.datacollection.GraphItem;
@@ -39,7 +35,6 @@ import org.netxms.nxmc.modules.charts.api.DataSeries;
 public abstract class GenericComparisonChart extends Canvas implements PlotArea
 {
    protected Chart chart;
-   protected Image chartImage = null;
    protected boolean fontsCreated = false;
 
    /**
@@ -49,41 +44,21 @@ public abstract class GenericComparisonChart extends Canvas implements PlotArea
     */
    public GenericComparisonChart(Chart parent)
    {
-      super(parent, SWT.NO_BACKGROUND);
+      super(parent, SWT.DOUBLE_BUFFERED);
 
       chart = parent;
       addPaintListener(new PaintListener() {
          @Override
          public void paintControl(PaintEvent e)
          {
-            if (chartImage != null)
-               e.gc.drawImage(chartImage, 0, 0);
+            prepareGCAndRender(e.gc);
          }
       });
       addDisposeListener(new DisposeListener() {
          @Override
          public void widgetDisposed(DisposeEvent e)
          {
-            if (chartImage != null)
-               chartImage.dispose();
             disposeFonts();
-         }
-      });
-      addControlListener(new ControlListener() {
-         @Override
-         public void controlResized(ControlEvent e)
-         {
-            if (chartImage != null)
-            {
-               chartImage.dispose();
-               chartImage = null;
-            }
-            refresh();
-         }
-
-         @Override
-         public void controlMoved(ControlEvent e)
-         {
          }
       });
    }
@@ -104,11 +79,15 @@ public abstract class GenericComparisonChart extends Canvas implements PlotArea
    @Override
    public void refresh()
    {
-      prepareGCAndRender();
       redraw();
    }
 
-   private void prepareGCAndRender()
+   /**
+    * Prepare GC and render chart
+    *
+    * @param gc GC to use
+    */
+   private void prepareGCAndRender(GC gc)
    {
       if (!fontsCreated)
       {
@@ -116,23 +95,10 @@ public abstract class GenericComparisonChart extends Canvas implements PlotArea
          fontsCreated = true;
       }
 
-      Point size = getSize();
-      if (chartImage == null)
-      {
-         if ((size.x <= 0) || (size.y <= 0))
-            return;
-         chartImage = new Image(getDisplay(), size.x, size.y);
-      }
-
-      GC gc = new GC(chartImage);
-      gc.setBackground(chart.getColorFromPreferences("Chart.Colors.Background"));
-      gc.fillRectangle(0, 0, size.x, size.y);
       gc.setAntialias(SWT.ON);
       gc.setTextAntialias(SWT.ON);
 
       render(gc);
-
-      gc.dispose();
    }
 
    /**
