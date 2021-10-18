@@ -65,6 +65,34 @@ template<typename T> static T *SharedObjectFromData(NXSL_Object *nxslObject)
 }
 
 /**
+ * Generic implementation for flag changing methods
+ */
+static int ChangeFlagMethod(NXSL_Object *object, NXSL_Value *arg, NXSL_Value **result, uint32_t flag, bool invert)
+{
+   if (!arg->isBoolean())
+      return NXSL_ERR_NOT_BOOLEAN;
+
+   NetObj *nobject = static_cast<shared_ptr<NetObj>*>(object->getData())->get();
+   if (arg->isTrue())
+   {
+      if (invert)
+         nobject->clearFlag(flag);
+      else
+         nobject->setFlag(flag);
+   }
+   else
+   {
+      if (invert)
+         nobject->setFlag(flag);
+      else
+         nobject->clearFlag(flag);
+   }
+
+   *result = object->vm()->createValue();
+   return 0;
+}
+
+/**
  * NetObj::bind(object)
  */
 NXSL_METHOD_DEFINITION(NetObj, bind)
@@ -894,6 +922,30 @@ NXSL_METHOD_DEFINITION(DataCollectionTarget, applyTemplate)
 }
 
 /**
+ * enableConfigurationPolling(enabled) method
+ */
+NXSL_METHOD_DEFINITION(DataCollectionTarget, enableConfigurationPolling)
+{
+   return ChangeFlagMethod(object, argv[0], result, DCF_DISABLE_CONF_POLL, true);
+}
+
+/**
+ * enableDataCollection(enabled) method
+ */
+NXSL_METHOD_DEFINITION(DataCollectionTarget, enableDataCollection)
+{
+   return ChangeFlagMethod(object, argv[0], result, DCF_DISABLE_DATA_COLLECT, true);
+}
+
+/**
+ * enableStatusPolling(enabled) method
+ */
+NXSL_METHOD_DEFINITION(DataCollectionTarget, enableStatusPolling)
+{
+   return ChangeFlagMethod(object, argv[0], result, DCF_DISABLE_STATUS_POLL, true);
+}
+
+/**
  * readInternalParameter(name) method
  */
 NXSL_METHOD_DEFINITION(DataCollectionTarget, readInternalParameter)
@@ -940,6 +992,9 @@ NXSL_DCTargetClass::NXSL_DCTargetClass() : NXSL_NetObjClass()
    setName(_T("DataCollectionTarget"));
 
    NXSL_REGISTER_METHOD(DataCollectionTarget, applyTemplate, 1);
+   NXSL_REGISTER_METHOD(DataCollectionTarget, enableConfigurationPolling, 1);
+   NXSL_REGISTER_METHOD(DataCollectionTarget, enableDataCollection, 1);
+   NXSL_REGISTER_METHOD(DataCollectionTarget, enableStatusPolling, 1);
    NXSL_REGISTER_METHOD(DataCollectionTarget, readInternalParameter, 1);
    NXSL_REGISTER_METHOD(DataCollectionTarget, removeTemplate, 1);
 }
@@ -1006,34 +1061,6 @@ NXSL_Value *NXSL_ZoneClass::getAttr(NXSL_Object *object, const char *attr)
       value = vm->createValue(zone->getUIN());
    }
    return value;
-}
-
-/**
- * Generic implementation for flag changing methods
- */
-static int ChangeFlagMethod(NXSL_Object *object, NXSL_Value *arg, NXSL_Value **result, uint32_t flag, bool invert)
-{
-   if (!arg->isBoolean())
-      return NXSL_ERR_NOT_BOOLEAN;
-
-   NetObj *nobject = static_cast<shared_ptr<NetObj>*>(object->getData())->get();
-   if (arg->isTrue())
-   {
-      if (invert)
-         nobject->clearFlag(flag);
-      else
-         nobject->setFlag(flag);
-   }
-   else
-   {
-      if (invert)
-         nobject->setFlag(flag);
-      else
-         nobject->clearFlag(flag);
-   }
-
-   *result = object->vm()->createValue();
-   return 0;
 }
 
 /**
@@ -1203,14 +1230,6 @@ NXSL_METHOD_DEFINITION(Node, enableAgent)
 }
 
 /**
- * enableConfigurationPolling(enabled) method
- */
-NXSL_METHOD_DEFINITION(Node, enableConfigurationPolling)
-{
-   return ChangeFlagMethod(object, argv[0], result, DCF_DISABLE_CONF_POLL, true);
-}
-
-/**
  * enableDiscoveryPolling(enabled) method
  */
 NXSL_METHOD_DEFINITION(Node, enableDiscoveryPolling)
@@ -1256,14 +1275,6 @@ NXSL_METHOD_DEFINITION(Node, enableRoutingTablePolling)
 NXSL_METHOD_DEFINITION(Node, enableSnmp)
 {
    return ChangeFlagMethod(object, argv[0], result, NF_DISABLE_SNMP, true);
-}
-
-/**
- * enableStatusPolling(enabled) method
- */
-NXSL_METHOD_DEFINITION(Node, enableStatusPolling)
-{
-   return ChangeFlagMethod(object, argv[0], result, DCF_DISABLE_STATUS_POLL, true);
 }
 
 /**
@@ -1556,14 +1567,12 @@ NXSL_NodeClass::NXSL_NodeClass() : NXSL_DCTargetClass()
    NXSL_REGISTER_METHOD(Node, createSNMPTransport, -1);
    NXSL_REGISTER_METHOD(Node, enable8021xStatusPolling, 1);
    NXSL_REGISTER_METHOD(Node, enableAgent, 1);
-   NXSL_REGISTER_METHOD(Node, enableConfigurationPolling, 1);
    NXSL_REGISTER_METHOD(Node, enableDiscoveryPolling, 1);
    NXSL_REGISTER_METHOD(Node, enableEtherNetIP, 1);
    NXSL_REGISTER_METHOD(Node, enableIcmp, 1);
    NXSL_REGISTER_METHOD(Node, enablePrimaryIPPing, 1);
    NXSL_REGISTER_METHOD(Node, enableRoutingTablePolling, 1);
    NXSL_REGISTER_METHOD(Node, enableSnmp, 1);
-   NXSL_REGISTER_METHOD(Node, enableStatusPolling, 1);
    NXSL_REGISTER_METHOD(Node, enableTopologyPolling, 1);
    NXSL_REGISTER_METHOD(Node, executeSSHCommand, 1);
    NXSL_REGISTER_METHOD(Node, getInterface, 1);
