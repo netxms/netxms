@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Raden Solutions
+ * Copyright (C) 2003-2021 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,8 +18,6 @@
  */
 package org.netxms.nxmc.modules.datacollection.propertypages;
 
-import java.util.HashMap;
-import java.util.Map;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
@@ -45,10 +43,6 @@ import org.netxms.client.constants.AgentCacheMode;
 import org.netxms.client.constants.DataOrigin;
 import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DataCollectionTable;
-import org.netxms.client.objects.AbstractNode;
-import org.netxms.client.objects.AbstractObject;
-import org.netxms.client.objects.Cluster;
-import org.netxms.client.objects.ClusterResource;
 import org.netxms.client.objects.Node;
 import org.netxms.client.snmp.SnmpObjectId;
 import org.netxms.client.snmp.SnmpObjectIdFormatException;
@@ -74,9 +68,6 @@ public class GeneralTable extends AbstractDCIPropertyPage
    private static final I18n i18n = LocalizationHelper.getI18n(GeneralTable.class);
    
 	private DataCollectionTable dci;
-	private AbstractObject owner;
-	private Cluster cluster = null;
-	private Map<Integer, Long> clusterResourceMap;
 	private Text description;
 	private LabeledText parameter;
 	private Button selectButton;
@@ -91,7 +82,6 @@ public class GeneralTable extends AbstractDCIPropertyPage
    private Combo retentionMode;
 	private LabeledText pollingInterval;
 	private LabeledText retentionTime;
-	private Combo clusterResource;
    
    /**
     * Constructor
@@ -112,25 +102,6 @@ public class GeneralTable extends AbstractDCIPropertyPage
 	   Composite dialogArea = (Composite)super.createContents(parent);
 	   
 		dci = editor.getObjectAsTable();
-		
-		final NXCSession session = Registry.getSession();
-		owner = session.findObjectById(dci.getNodeId());
-		
-		if (owner instanceof Cluster)
-		{
-			cluster = (Cluster)owner;
-		}
-		else if (owner instanceof AbstractNode)
-		{
-			for(AbstractObject o : owner.getParentsAsArray())
-			{
-				if (o instanceof Cluster)
-				{
-					cluster = (Cluster)o;
-					break;
-				}
-			}
-		}
 		
 		GridLayout layout = new GridLayout();
 		layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
@@ -382,37 +353,6 @@ public class GeneralTable extends AbstractDCIPropertyPage
       fd.top = new FormAttachment(0, 0);
       pollingInterval.setLayoutData(fd);
       
-      fd = new FormData();
-      fd.left = new FormAttachment(0, 0);
-      fd.right = new FormAttachment(100, 0);
-      fd.top = new FormAttachment(schedulingMode.getParent(), WidgetHelper.OUTER_SPACING, SWT.BOTTOM);
-      clusterResource = WidgetHelper.createLabeledCombo(groupPolling, SWT.READ_ONLY, i18n.tr("Associate with cluster resource"), fd);
-      if (cluster != null)
-      {
-      	clusterResourceMap = new HashMap<Integer, Long>();
-      	clusterResourceMap.put(0, 0L);
-      	
-	      clusterResource.add(i18n.tr("<none>"));
-	      if (dci.getResourceId() == 0)
-	      	clusterResource.select(0);
-	      
-	      int index = 1;
-	      for (ClusterResource r : cluster.getResources())
-	      {
-	      	clusterResource.add(r.getName());
-	      	clusterResourceMap.put(index, r.getId());
-		      if (dci.getResourceId() == r.getId())
-		      	clusterResource.select(index);
-	      	index++;
-	      }
-      }
-      else
-      {
-	      clusterResource.add(i18n.tr("<none>"));
-	      clusterResource.select(0);
-	      clusterResource.setEnabled(false);
-      }
-      	
       /** storage **/
       Group groupStorage = new Group(dialogArea, SWT.NONE);
       groupStorage.setText(i18n.tr("Storage"));
@@ -613,11 +553,6 @@ public class GeneralTable extends AbstractDCIPropertyPage
       {
          dci.setSnmpVersion(SnmpVersion.DEFAULT);
       }
-
-		if (cluster != null)
-		{
-			dci.setResourceId(clusterResourceMap.get(clusterResource.getSelectionIndex()));
-		}
 
 		editor.modify();
 		return true;
