@@ -31,32 +31,32 @@ static bool H_UpgradeFromV74()
    CHK_EXEC(CreateEventTemplate(EVENT_BUSINESS_SERVICE_NORMAL, _T("SYS_BUSINESS_SERVICE_NORMAL"),
       EVENT_SEVERITY_NORMAL, EF_LOG, _T("ffe557a4-f572-44a8-928e-020b3fbd07b0"),
       _T("Business service changed status to normal"),
-      _T("Generated when all checks are set back to normal.")));
+      _T("Generated when business service status changes back to normal.")));
+
+   CHK_EXEC(CreateEventTemplate(EVENT_BUSINESS_SERVICE_CRITICAL, _T("SYS_BUSINESS_SERVICE_CRITICAL"),
+      EVENT_SEVERITY_CRITICAL, EF_LOG, _T("fc66c83f-c7e8-4635-ad2d-89589d8b0fc2"),
+      _T("Business service changed status to critical"),
+      _T("Generated when business service status changes to critical.")));
 
    int ruleId = NextFreeEPPruleID();
 
    TCHAR query[1024];
    _sntprintf(query, 1024, _T("INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event) ")
-                           _T("VALUES (%d,'ffe557a4-f572-44a8-928e-020b3fbd07b0',7944,'Generated when all checks are set back to normal.','%%m',5,'BUSINESS_SERVICE_NORMAL_%%1','',0,%d)"),
-         ruleId, EVENT_ALARM_TIMEOUT);
-   CHK_EXEC(SQLQuery(query));
-
-   _sntprintf(query, 1024, _T("INSERT INTO policy_event_list (rule_id,event_code) VALUES (%d,%d)"), ruleId, EVENT_BUSINESS_SERVICE_NORMAL);
-   CHK_EXEC(SQLQuery(query));
-
-   CHK_EXEC(CreateEventTemplate(EVENT_BUSINESS_SERVICE_CRITICAL, _T("SYS_BUSINESS_SERVICE_CRITICAL"),
-      EVENT_SEVERITY_CRITICAL, EF_LOG, _T("fc66c83f-c7e8-4635-ad2d-89589d8b0fc2"),
-      _T("Business service changed status to critical"),
-      _T("Generated when any check or child business service changed status to critical.")));
-
-   ruleId++;
-
-   _sntprintf(query, 1024, _T("INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event) ")
-                           _T("VALUES (%d,'fb915441-f9d8-4dab-b9e6-1296f3f8ec9f',7944,'Generated when any check or child business service changed status to critical.','%%m',6,'BUSINESS_SERVICE_CRITICAL_%%1','',0,%d)"),
+                           _T("VALUES (%d,'aa188673-049f-4c4d-8767-c1cf443c9547',7944,'Generated alarm when business service changes status to critical','%%m',5,'BUSINESS_SERVICE_CRITICAL_%%i','',0,%d)"),
          ruleId, EVENT_ALARM_TIMEOUT);
    CHK_EXEC(SQLQuery(query));
 
    _sntprintf(query, 1024, _T("INSERT INTO policy_event_list (rule_id,event_code) VALUES (%d,%d)"), ruleId, EVENT_BUSINESS_SERVICE_CRITICAL);
+   CHK_EXEC(SQLQuery(query));
+
+   ruleId++;
+
+   _sntprintf(query, 1024, _T("INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event) ")
+                           _T("VALUES (%d,'af00706c-b92a-4335-b441-190609c2494f',7944,'Terminate alarm when business service status changes back to normal','%%m',6,'BUSINESS_SERVICE_CRITICAL_%%i','',0,%d)"),
+         ruleId, EVENT_ALARM_TIMEOUT);
+   CHK_EXEC(SQLQuery(query));
+
+   _sntprintf(query, 1024, _T("INSERT INTO policy_event_list (rule_id,event_code) VALUES (%d,%d)"), ruleId, EVENT_BUSINESS_SERVICE_NORMAL);
    CHK_EXEC(SQLQuery(query));
 
    CHK_EXEC(SetMinorSchemaVersion(75));

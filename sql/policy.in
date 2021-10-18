@@ -181,12 +181,12 @@ INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_s
         '%m',5,'DUPLICATE_MAC_ADDRESS_%1','',0,EVENT_ALARM_TIMEOUT);
 
 INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event)
-    VALUES (43,'ffe557a4-f572-44a8-928e-020b3fbd07b0',7944,'Business service changed status to normal',
-        '%m',5,'BUSINESS_SERVICE_NORMAL_%1','',0,EVENT_ALARM_TIMEOUT);
+    VALUES (43,'aa188673-049f-4c4d-8767-c1cf443c9547',7944,'Generated alarm when business service changes status to critical',
+        '%m',5,'BUSINESS_SERVICE_CRITICAL_%i','',0,EVENT_ALARM_TIMEOUT);
 
 INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event)
-    VALUES (44,'fc66c83f-c7e8-4635-ad2d-89589d8b0fc2',7944,'Generated when any check or child business service changed status to critical.',
-        '%m',6,'BUSINESS_SERVICE_CRITICAL_%1','',0,EVENT_ALARM_TIMEOUT);
+    VALUES (44,'af00706c-b92a-4335-b441-190609c2494f',7944,'Terminate alarm when business service status changes back to normal',
+        '%m',6,'BUSINESS_SERVICE_CRITICAL_%i','',0,EVENT_ALARM_TIMEOUT);
 
 
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (0,EVENT_NODE_DOWN);
@@ -241,5 +241,5 @@ INSERT INTO policy_event_list (rule_id,event_code) VALUES (39,EVENT_PACKAGE_REMO
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (40,EVENT_POLICY_VALIDATION_ERROR);
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (41,EVENT_TUNNEL_SETUP_ERROR);
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (42,EVENT_DUPLICATE_MAC_ADDRESS);
-INSERT INTO policy_event_list (rule_id,event_code) VALUES (43,EVENT_BUSINESS_SERVICE_NORMAL);
-INSERT INTO policy_event_list (rule_id,event_code) VALUES (44,EVENT_BUSINESS_SERVICE_CRITICAL);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (43,EVENT_BUSINESS_SERVICE_CRITICAL);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (44,EVENT_BUSINESS_SERVICE_NORMAL);
