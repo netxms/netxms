@@ -379,7 +379,7 @@ static bool ZoneProxyComparator(ZoneProxy *p, ZoneProxyComparatorContext* contex
       }
       else
       {
-         p->assignments--;
+         InterlockedDecrement(&p->assignments);
          context->syncSet->put(p->nodeId);
 
          uint32_t otherProxy = context->object->getAssignedZoneProxyId(!context->backup);
@@ -433,7 +433,7 @@ uint32_t Zone::getProxyNodeId(NetObj *object, bool backup)
          if (proxy != nullptr)
          {
             object->setAssignedZoneProxyId(proxy->nodeId, backup);
-            proxy->assignments++;
+            InterlockedIncrement(&proxy->assignments);
             syncSet.put(proxy->nodeId);
 
             uint32_t otherProxy = object->getAssignedZoneProxyId(!backup);
@@ -452,8 +452,6 @@ uint32_t Zone::getProxyNodeId(NetObj *object, bool backup)
             backup ? _T("backup") : _T("primary"),
             id, (object != nullptr) ? object->getName() : _T("(null)"), (object != nullptr) ? object->getId() : 0,
             m_name, m_uin);
-
-   unlockProperties();
 
    syncSet.forEach(ForceConfigurationSync, nullptr);
    return id;
@@ -634,15 +632,15 @@ void Zone::migrateProxyLoad(ZoneProxy *source, ZoneProxy *target)
       Node *n = static_cast<Node*>(nodes->get(i));
       nxlog_debug_tag(DEBUG_TAG_ZONE_PROXY, 6, _T("ZoneHealthCheck(%s [%u]): moving node %s [%u] from [%u] to [%u]"),
                m_name, m_uin, n->getName(), n->getId(), source->nodeId, target->nodeId);
-      source->assignments--;
-      target->assignments++;
+      InterlockedDecrement(&source->assignments);
+      InterlockedIncrement(&target->assignments);
       n->setAssignedZoneProxyId(target->nodeId, false);
       if (n->getAssignedZoneProxyId(true) == target->nodeId)
       {
          nxlog_debug_tag(DEBUG_TAG_ZONE_PROXY, 6, _T("ZoneHealthCheck(%s [%u]): backup proxy for node node %s [%u] should be changed"),
                   m_name, m_uin, n->getName(), n->getId());
          n->setAssignedZoneProxyId(0, true);
-         target->assignments--;
+         InterlockedDecrement(&target->assignments);
          ThreadPoolExecute(g_mainThreadPool, UpdateNodeBackupProxy, n);
       }
       loadFactor -= n->getProxyLoadFactor();
@@ -726,7 +724,7 @@ void Zone::statusPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId)
          if ((p->dataSenderLoad <= dataSenderLoad) &&
              (p->dataCollectorLoad <= dataCollectorLoad) &&
              (p->cpuLoad <= cpuLoad) &&
-             (p->assignments <= assignments) &&
+             (static_cast<uint32_t>(p->assignments) <= assignments) &&
              (now - p->loadBalanceTimestamp >= 420))  // was not re-balanced within last 7 minutes
          {
             targets.add(p);
@@ -735,7 +733,7 @@ void Zone::statusPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId)
                    (p->dataSenderLoadTrend > 0) ||
                    (p->dataCollectorLoad > dataCollectorLoad) ||
                    ((p->cpuLoad > cpuLoad) && (p->cpuLoad > 1)) ||
-                   (p->assignments > assignments * 2)) &&
+                   (static_cast<uint32_t>(p->assignments) > assignments * 2)) &&
                   (now - p->loadBalanceTimestamp >= 420))  // was not re-balanced within last 7 minutes
          {
             sources.add(p);

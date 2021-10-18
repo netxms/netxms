@@ -3725,7 +3725,7 @@ struct ZoneProxy
 {
    uint32_t nodeId;
    bool isAvailable;    // True if proxy is available
-   uint32_t assignments;  // Number of objects where this proxy is assigned
+   VolatileCounter assignments;  // Number of objects where this proxy is assigned
    int64_t rawDataSenderLoad;
    double cpuLoad;
    double dataCollectorLoad;
