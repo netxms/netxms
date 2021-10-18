@@ -134,14 +134,14 @@ public class LineChart extends org.eclipse.swtchart.Chart implements PlotArea
       {
          yAxis.setRange(new Range(configuration.getMinYScaleValue(), configuration.getMaxYScaleValue()));
       }
-		
+
 		// Setup grid
       xAxis.getGrid().setStyle(getLineStyleFromPreferences("Chart.Grid.X.Style"));
       xAxis.getGrid().setForeground(getColorFromPreferences("Chart.Grid.X.Color"));
       yAxis.getGrid().setStyle(getLineStyleFromPreferences("Chart.Grid.Y.Style"));
       yAxis.getGrid().setForeground(getColorFromPreferences("Chart.Grid.Y.Color"));
       setGridVisible(configuration.isGridVisible());
-		
+
 		// Setup plot area
       getPlotArea().setBackground(getColorFromPreferences("Chart.Colors.PlotArea"));
       final IPlotArea plotArea = getPlotArea();

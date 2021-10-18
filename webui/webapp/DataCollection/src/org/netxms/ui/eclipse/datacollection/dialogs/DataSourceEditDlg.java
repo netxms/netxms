@@ -94,7 +94,7 @@ public class DataSourceEditDlg extends Dialog
 		dialogArea.setLayout(layout);
 
       GridData gd = new GridData();
-		if(!graphIsTemplate)
+      if (!graphIsTemplate)
       {
    		dciSelector = new DciSelector(dialogArea, SWT.NONE, false);
    		dciSelector.setLabel(Messages.get().DataSourceEditDlg_DCI);
@@ -115,7 +115,7 @@ public class DataSourceEditDlg extends Dialog
 		gd.grabExcessHorizontalSpace = true;
 		gd.horizontalSpan = 2;
 		name.setLayoutData(gd);
-		
+
       displayFormat = new LabeledText(dialogArea, SWT.NONE);
       displayFormat.setLabel(Messages.get().DataSourceEditDlg_DisplayFormat);
       displayFormat.setText(dci.displayFormat);
@@ -124,7 +124,7 @@ public class DataSourceEditDlg extends Dialog
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalSpan = 2;
       displayFormat.setLayoutData(gd);
-      
+
       if (graphIsTemplate)
 		{
 		   dciName = new LabeledText(dialogArea, SWT.NONE);
@@ -145,7 +145,7 @@ public class DataSourceEditDlg extends Dialog
          gd.horizontalSpan = 2;
          dciDescription.setLayoutData(gd);
 		}
-		
+
 		if (dci.type == ChartDciConfig.TABLE)
 		{
 			Group tableGroup = new Group(dialogArea, SWT.NONE);
@@ -175,7 +175,7 @@ public class DataSourceEditDlg extends Dialog
 			gd.grabExcessHorizontalSpace = true;
 			instance.setLayoutData(gd);
 		}
-		
+
       /*** Display type ***/
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
@@ -184,8 +184,8 @@ public class DataSourceEditDlg extends Dialog
       displayType.add("Default");
       displayType.add("Line");
       displayType.add("Area");
-      displayType.select(dci.getLineChartType());
-            
+      displayType.select(dci.getLineChartType() + 1);
+
       /*** Options group ***/
       Group optionsGroup = new Group(dialogArea, SWT.NONE);
       optionsGroup.setText(Messages.get().DataSourceEditDlg_Options);
@@ -259,7 +259,7 @@ public class DataSourceEditDlg extends Dialog
 		{
          dci.color = "0x" + Integer.toHexString(ColorConverter.rgbToInt(color)); //$NON-NLS-1$
 		}
-      dci.lineChartType = displayType.getSelectionIndex();
+      dci.lineChartType = displayType.getSelectionIndex() - 1;
 		dci.showThresholds = checkShowThresholds.getSelection();
 		dci.invertValues = checkInvertValues.getSelection();
       dci.useRawValues = checkRawValues.getSelection();

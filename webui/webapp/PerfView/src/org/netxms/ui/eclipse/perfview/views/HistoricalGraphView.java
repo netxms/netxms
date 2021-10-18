@@ -358,6 +358,7 @@ public class HistoricalGraphView extends ViewPart implements ChartConfigurationC
       chartConfiguration.setStacked(configuration.isStacked());
       chartConfiguration.setTranslucent(configuration.isTranslucent());
       chartConfiguration.setLineWidth(configuration.getLineWidth());
+      chartConfiguration.setArea(configuration.isArea());
       chartConfiguration.setUseMultipliers(configuration.isUseMultipliers());
       chartConfiguration.setAutoScale(configuration.isAutoScale());
       chartConfiguration.setModifyYBase(configuration.isModifyYBase());
@@ -1182,7 +1183,7 @@ public class HistoricalGraphView extends ViewPart implements ChartConfigurationC
       pm.addToRoot(new PreferenceNode("graph", new Graph(settings, false)));
       pm.addToRoot(new PreferenceNode("general", new General(settings, false)));
       pm.addToRoot(new PreferenceNode("source", new DataSources(settings, false)));
-      
+
       PreferenceDialog dlg = new PreferenceDialog(getViewSite().getShell(), pm) {
          @Override
          protected void configureShell(Shell newShell)

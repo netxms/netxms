@@ -132,14 +132,14 @@ public class LineChart extends org.swtchart.Chart implements PlotArea
       {
          yAxis.setRange(new Range(configuration.getMinYScaleValue(), configuration.getMaxYScaleValue()));
       }
-		
+
 		// Setup grid
 		xAxis.getGrid().setStyle(getLineStyleFromPreferences("Chart.Grid.X.Style")); //$NON-NLS-1$
 		xAxis.getGrid().setForeground(getColorFromPreferences("Chart.Grid.X.Color")); //$NON-NLS-1$
 		yAxis.getGrid().setStyle(getLineStyleFromPreferences("Chart.Grid.Y.Style")); //$NON-NLS-1$
 		yAxis.getGrid().setForeground(getColorFromPreferences("Chart.Grid.Y.Color")); //$NON-NLS-1$
       setGridVisible(configuration.isGridVisible());
-		
+
 		// Setup plot area
 		setBackgroundInPlotArea(getColorFromPreferences("Chart.Colors.PlotArea")); //$NON-NLS-1$
 		final Composite plotArea = getPlotArea();
@@ -262,7 +262,7 @@ public class LineChart extends org.swtchart.Chart implements PlotArea
 		};
 		plotArea.addMouseMoveListener(moveListener);
 	}
-	
+
 	/**
 	 * Selection end handler
 	 */
@@ -289,7 +289,7 @@ public class LineChart extends org.swtchart.Chart implements PlotArea
 				{
 					range = selection.getVerticalRange();
 				}
-	
+
 				if (range != null && range.x != range.y)
 				{
 					setRange(range, axis);
@@ -393,11 +393,11 @@ public class LineChart extends org.swtchart.Chart implements PlotArea
 
       delayedRangeFrom = null;
       delayedRangeTo = null;
-	   
+
 		timeFrom = from.getTime();
 		timeTo = to.getTime();
 		getAxisSet().getXAxis(0).setRange(new Range(timeFrom, timeTo));
-		
+
 		int seconds = (int)((timeTo - timeFrom) / 1000);
 		String formatString;
 		int angle;
@@ -421,7 +421,7 @@ public class LineChart extends org.swtchart.Chart implements PlotArea
 			formatString = Messages.get().LineChart_LongTimeFormat;
 			angle = 45;
 		}
-		
+
 		IAxisTick xTick = getAxisSet().getXAxis(0).getTick();
 		DateFormat format = new SimpleDateFormat(formatString);
 		xTick.setFormat(format);
@@ -652,10 +652,10 @@ public class LineChart extends org.swtchart.Chart implements PlotArea
               }
           }
       }
-      
+
       return (closestSeries != null) ? new DataPoint(new Date((long)closestX), closestY, closestSeries) : null;
    }
-   
+
    /**
     * Get series at given point
     * 
@@ -681,7 +681,7 @@ public class LineChart extends org.swtchart.Chart implements PlotArea
       }
       return null;
    }
-   
+
    /**
     * Calculate distance from point to line.
     * https://en.wikipedia.org/wiki/Distance_from_a_point_to_a_line

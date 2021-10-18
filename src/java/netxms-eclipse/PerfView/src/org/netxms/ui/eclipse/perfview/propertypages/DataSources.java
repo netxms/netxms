@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -71,7 +71,7 @@ public class DataSources extends PreferencePage
 	public static final int COLUMN_METRIC = 2;
 	public static final int COLUMN_LABEL = 3;
 	public static final int COLUMN_COLOR = 4;
-	
+
    private GraphDefinition config;
 	private DciListLabelProvider labelProvider;
 	private SortableTableViewer viewer;
@@ -84,8 +84,7 @@ public class DataSources extends PreferencePage
 	private ColorCache colorCache;
 	private boolean graphIsTemplate = false;
 	private boolean saveToDatabase;
-   
-   
+
    /**
     * Constructor
     * @param settings
@@ -137,7 +136,7 @@ public class DataSources extends PreferencePage
 			}
 		});
       viewer.setInput(dciList.toArray());
-      
+
       GridData gridData = new GridData();
       gridData.verticalAlignment = GridData.FILL;
       gridData.grabExcessVerticalSpace = true;
@@ -158,7 +157,7 @@ public class DataSources extends PreferencePage
       gridData = new GridData();
       gridData.horizontalAlignment = SWT.LEFT;
       leftButtons.setLayoutData(gridData);
-      
+
       upButton = new Button(leftButtons, SWT.PUSH);
       upButton.setText(Messages.get().DataSources_Up);
       RowData rd = new RowData();
@@ -178,7 +177,7 @@ public class DataSources extends PreferencePage
 			}
       });
       upButton.setEnabled(false);
-      
+
       downButton = new Button(leftButtons, SWT.PUSH);
       downButton.setText(Messages.get().DataSources_Down);
       rd = new RowData();

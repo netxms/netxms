@@ -100,7 +100,7 @@ public class DataSourceEditDlg extends Dialog
 		dialogArea.setLayout(layout);
 
       GridData gd = new GridData();
-		if(!graphIsTemplate)
+      if (!graphIsTemplate)
       {
    		dciSelector = new DciSelector(dialogArea, SWT.NONE, false);
          dciSelector.setLabel(i18n.tr("Data collection item"));
@@ -121,7 +121,7 @@ public class DataSourceEditDlg extends Dialog
 		gd.grabExcessHorizontalSpace = true;
 		gd.horizontalSpan = 2;
 		name.setLayoutData(gd);
-		
+
       displayFormat = new LabeledText(dialogArea, SWT.NONE);
       displayFormat.setLabel(i18n.tr("Display format"));
       displayFormat.setText(dci.displayFormat);
@@ -130,7 +130,7 @@ public class DataSourceEditDlg extends Dialog
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalSpan = 2;
       displayFormat.setLayoutData(gd);
-      
+
       if (graphIsTemplate)
 		{
 		   dciName = new LabeledText(dialogArea, SWT.NONE);
@@ -151,7 +151,7 @@ public class DataSourceEditDlg extends Dialog
          gd.horizontalSpan = 2;
          dciDescription.setLayoutData(gd);
 		}
-		
+
 		if (dci.type == ChartDciConfig.TABLE)
 		{
 			Group tableGroup = new Group(dialogArea, SWT.NONE);
@@ -181,7 +181,7 @@ public class DataSourceEditDlg extends Dialog
 			gd.grabExcessHorizontalSpace = true;
 			instance.setLayoutData(gd);
 		}
-		
+
       /*** Display type ***/
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
@@ -190,8 +190,8 @@ public class DataSourceEditDlg extends Dialog
       displayType.add("Default");
       displayType.add("Line");
       displayType.add("Area");
-      displayType.select(dci.getLineChartType());
-            
+      displayType.select(dci.getLineChartType() + 1);
+
       /*** Options group ***/
       Group optionsGroup = new Group(dialogArea, SWT.NONE);
       optionsGroup.setText(i18n.tr("Options"));
@@ -291,7 +291,7 @@ public class DataSourceEditDlg extends Dialog
 	@Override
 	protected void okPressed()
 	{
-      if(graphIsTemplate)
+      if (graphIsTemplate)
       {
          dci.dciName = dciName.getText();
          dci.dciDescription = dciDescription.getText();
@@ -312,7 +312,7 @@ public class DataSourceEditDlg extends Dialog
 		{
 			dci.color = "0x" + Integer.toHexString(ColorConverter.rgbToInt(colorSelector.getColorValue())); //$NON-NLS-1$
 		}
-      dci.lineChartType = displayType.getSelectionIndex();
+      dci.lineChartType = displayType.getSelectionIndex() - 1;
 		dci.showThresholds = checkShowThresholds.getSelection();
 		dci.invertValues = checkInvertValues.getSelection();
       dci.useRawValues = checkRawValues.getSelection();
