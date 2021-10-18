@@ -39,7 +39,7 @@ public class DataCollectionTable extends DataCollectionObject
 	private String instanceColumn;
 	private List<ColumnDefinition> columns;
 	private List<TableThreshold> thresholds;
-	
+
 	/**
     * Create data collection object from NXCP message.
     *
@@ -138,7 +138,7 @@ public class DataCollectionTable extends DataCollectionObject
 	public void fillMessage(final NXCPMessage msg)
 	{
 		super.fillMessage(msg);
-		
+
 		msg.setFieldInt16(NXCPCodes.VID_DCOBJECT_TYPE, DCO_TYPE_TABLE);
 		msg.setField(NXCPCodes.VID_INSTANCE_COLUMN, instanceColumn);
 		msg.setFieldInt32(NXCPCodes.VID_NUM_COLUMNS, columns.size());
@@ -155,7 +155,7 @@ public class DataCollectionTable extends DataCollectionObject
 			varId = thresholds.get(i).fillMessage(msg, varId);
 		}
 	}
-	
+
 	/**
 	 * @return the instanceColumn
 	 */

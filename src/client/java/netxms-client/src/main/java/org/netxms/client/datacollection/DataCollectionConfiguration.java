@@ -302,7 +302,7 @@ public class DataCollectionConfiguration
    {
       if (localChangeListener != null)
          localChangeListener.onObjectChange();
-      
+
       NXCPMessage msg = session.newMessage(NXCPCodes.CMD_MODIFY_NODE_DCI);
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)ownerId);
       if (dco != null)

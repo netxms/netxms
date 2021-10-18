@@ -293,14 +293,14 @@ public abstract class DataCollectionObject
       msg.setFieldInt16(NXCPCodes.VID_SNMP_VERSION, snmpVersion.getValue());
 		msg.setField(NXCPCodes.VID_COMMENTS, comments);
 		msg.setFieldInt32(NXCPCodes.VID_INSTANCE_RETENTION, instanceRetentionTime);
-		
+
 		msg.setFieldInt32(NXCPCodes.VID_NUM_SCHEDULES, schedules.size());
 		long varId = NXCPCodes.VID_DCI_SCHEDULE_BASE;
 		for(int i = 0; i < schedules.size(); i++)
 		{
 			msg.setField(varId++, schedules.get(i));
 		}
-		
+
       msg.setField(NXCPCodes.VID_INSTANCE, instance);
       msg.setFieldInt16(NXCPCodes.VID_INSTD_METHOD, instanceDiscoveryMethod);
       if (instanceDiscoveryData != null)
