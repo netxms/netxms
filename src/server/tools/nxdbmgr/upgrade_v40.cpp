@@ -24,19 +24,9 @@
 #include <nxevent.h>
 
 /**
- * Upgrade from 40.73 to 40.74
+ * Upgrade from 40.74 to 40.75
  */
-static bool H_UpgradeFromV73()
-{
-   CHK_EXEC(SQLQuery(_T("UPDATE config SET var_name='Objects.Security.CheckTrustedNodes',need_server_restart=0 WHERE var_name='CheckTrustedNodes'")));
-   CHK_EXEC(SetMinorSchemaVersion(74));
-   return true;
-}
-
-/**
- * Upgrade from 40.73 to 40.74
- */
-static bool H_UpgradeFromV73()
+static bool H_UpgradeFromV74()
 {
    CHK_EXEC(CreateEventTemplate(EVENT_BUSINESS_SERVICE_NORMAL, _T("SYS_BUSINESS_SERVICE_NORMAL"),
       EVENT_SEVERITY_NORMAL, EF_LOG, _T("ffe557a4-f572-44a8-928e-020b3fbd07b0"),
@@ -69,10 +59,19 @@ static bool H_UpgradeFromV73()
    _sntprintf(query, 1024, _T("INSERT INTO policy_event_list (rule_id,event_code) VALUES (%d,%d)"), ruleId, EVENT_BUSINESS_SERVICE_CRITICAL);
    CHK_EXEC(SQLQuery(query));
 
-   CHK_EXEC(SetMinorSchemaVersion(74));
+   CHK_EXEC(SetMinorSchemaVersion(75));
    return true;
 }
 
+/**
+ * Upgrade from 40.73 to 40.74
+ */
+static bool H_UpgradeFromV73()
+{
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET var_name='Objects.Security.CheckTrustedNodes',need_server_restart=0 WHERE var_name='CheckTrustedNodes'")));
+   CHK_EXEC(SetMinorSchemaVersion(74));
+   return true;
+}
 
 /**
  * Upgrade from 40.72 to 40.73
@@ -2490,6 +2489,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 74, 40, 75, H_UpgradeFromV74 },
    { 73, 40, 74, H_UpgradeFromV73 },
    { 72, 40, 73, H_UpgradeFromV72 },
    { 71, 40, 72, H_UpgradeFromV71 },
