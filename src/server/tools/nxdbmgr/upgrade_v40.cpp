@@ -24,6 +24,16 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 40.75 to 40.76
+ */
+static bool H_UpgradeFromV75()
+{
+   CHK_EXEC(DBRenameColumn(g_dbHandle, _T("network_services"), _T("check_responce"), _T("check_response")));
+   CHK_EXEC(SetMinorSchemaVersion(76));
+   return true;
+}
+
+/**
  * Upgrade from 40.74 to 40.75
  */
 static bool H_UpgradeFromV74()
@@ -2489,6 +2499,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 75, 40, 76, H_UpgradeFromV75 },
    { 74, 40, 75, H_UpgradeFromV74 },
    { 73, 40, 74, H_UpgradeFromV73 },
    { 72, 40, 73, H_UpgradeFromV72 },

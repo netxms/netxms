@@ -617,7 +617,7 @@ CREATE TABLE network_services
   ip_proto integer not null,
   ip_port integer not null,
   check_request SQL_TEXT null,
-  check_responce SQL_TEXT null,
+  check_response SQL_TEXT null,
   poller_node_id integer not null,
   required_polls integer not null,
   PRIMARY KEY(id)

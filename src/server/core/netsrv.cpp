@@ -80,47 +80,33 @@ bool NetworkService::saveToDatabase(DB_HANDLE hdb)
 
    if (success && (m_modified & MODIFY_OTHER))
    {
-      DB_STATEMENT hStmt;
-      if (IsDatabaseRecordExist(hdb, _T("network_services"), _T("id"), m_id))
-      {
-         hStmt = DBPrepare(hdb, _T("UPDATE network_services SET node_id=?,")
-                                _T("service_type=?,ip_bind_addr=?,")
-                                _T("ip_proto=?,ip_port=?,check_request=?,")
-                                _T("check_responce=?,poller_node_id=?,")
-                                _T("required_polls=? WHERE id=?"));
-      }
-      else
-      {
-         hStmt = DBPrepare(hdb, _T("INSERT INTO network_services (node_id,")
-                                _T("service_type,ip_bind_addr,ip_proto,ip_port,")
-                                _T("check_request,check_responce,poller_node_id,")
-                                _T("required_polls,id) VALUES (?,?,?,?,?,?,?,?,?,?)"));
-      }
-      if (hStmt != nullptr)
-      {
-         lockProperties();
+      static const TCHAR *columns[] = {
+         _T("node_id"), _T("service_type"), _T("ip_bind_addr"), _T("ip_proto"), _T("ip_port"), _T("check_request"),
+         _T("check_response"), _T("poller_node_id"), _T("required_polls"), nullptr
+      };
 
-         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_hostNode.lock()->getId());
-         DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (LONG)m_serviceType);
-         DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_ipAddress);
-         DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (UINT32)m_proto);
-         DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, (UINT32)m_port);
-         DBBind(hStmt, 6, DB_SQLTYPE_TEXT, m_request, DB_BIND_STATIC);
-         DBBind(hStmt, 7, DB_SQLTYPE_TEXT, m_response, DB_BIND_STATIC);
-         DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, m_pollerNode);
-         DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, m_requiredPollCount);
-         DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, m_id);
+      DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("network_services"), _T("id"), m_id, columns);
+      if (hStmt == nullptr)
+         return false;
 
-         success = DBExecute(hStmt);
+      lockProperties();
 
-         DBFreeStatement(hStmt);
+      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_hostNode.lock()->getId());
+      DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (int32_t)m_serviceType);
+      DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_ipAddress);
+      DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (uint32_t)m_proto);
+      DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, (uint32_t)m_port);
+      DBBind(hStmt, 6, DB_SQLTYPE_TEXT, m_request, DB_BIND_STATIC);
+      DBBind(hStmt, 7, DB_SQLTYPE_TEXT, m_response, DB_BIND_STATIC);
+      DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, m_pollerNode);
+      DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, m_requiredPollCount);
+      DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, m_id);
 
-         unlockProperties();
-      }
-      else
-      {
-         success = false;
-      }
+      success = DBExecute(hStmt);
+
+      DBFreeStatement(hStmt);
+
+      unlockProperties();
    }
 
    return success;
@@ -142,7 +128,7 @@ bool NetworkService::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
       return false;
 
    _sntprintf(szQuery, 256, _T("SELECT node_id,service_type,")
-                               _T("ip_bind_addr,ip_proto,ip_port,check_request,check_responce,")
+                               _T("ip_bind_addr,ip_proto,ip_port,check_request,check_response,")
                                _T("poller_node_id,required_polls FROM network_services WHERE id=%d"), dwId);
    hResult = DBSelect(hdb, szQuery);
    if (hResult == nullptr)
