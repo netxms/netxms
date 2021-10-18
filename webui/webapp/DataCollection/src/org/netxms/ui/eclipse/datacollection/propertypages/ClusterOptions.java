@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2017 Raden Solutions
+ * Copyright (C) 2003-2021 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -55,7 +55,7 @@ public class ClusterOptions extends AbstractDCIPropertyPage
 	private Button checkRunScript;
 	private Combo aggregationFunction;
 
-	/* (non-Javadoc)
+	/**
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
 	 */
 	@Override
@@ -63,7 +63,7 @@ public class ClusterOptions extends AbstractDCIPropertyPage
 	{      
       Composite dialogArea = (Composite)super.createContents(parent);
 
-		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+		final NXCSession session = ConsoleSharedData.getSession();
 		owner = session.findObjectById(editor.getObject().getNodeId());		
 		if (owner instanceof Cluster)
 		{
@@ -80,85 +80,85 @@ public class ClusterOptions extends AbstractDCIPropertyPage
 				}
 			}
 		}
-		
+
 		GridLayout layout = new GridLayout();
 		layout.verticalSpacing = WidgetHelper.DIALOG_SPACING;
 		layout.horizontalSpacing = WidgetHelper.DIALOG_SPACING;
 		layout.marginWidth = 0;
 		layout.marginHeight = 0;
       dialogArea.setLayout(layout);
-      
+
       clusterResource = WidgetHelper.createLabeledCombo(dialogArea, SWT.BORDER | SWT.READ_ONLY, Messages.get().General_ClRes, WidgetHelper.DEFAULT_LAYOUT_DATA);
       if (cluster != null)
       {
-      	clusterResourceMap = new HashMap<Integer, Long>();
-      	clusterResourceMap.put(0, 0L);
-      	
-	      clusterResource.add(Messages.get().General_None);
-	      if (editor.getObject().getResourceId() == 0)
-	      	clusterResource.select(0);
-	      
-	      int index = 1;
-	      for (ClusterResource r : cluster.getResources())
-	      {
-	      	clusterResource.add(r.getName());
-	      	clusterResourceMap.put(index, r.getId());
-		      if (editor.getObject().getResourceId() == r.getId())
-		      	clusterResource.select(index);
-	      	index++;
-	      }
+         clusterResourceMap = new HashMap<Integer, Long>();
+         clusterResourceMap.put(0, 0L);
+
+         clusterResource.add(Messages.get().General_None);
+         if (editor.getObject().getResourceId() == 0)
+            clusterResource.select(0);
+
+         int index = 1;
+         for(ClusterResource r : cluster.getResources())
+         {
+            clusterResource.add(r.getName());
+            clusterResourceMap.put(index, r.getId());
+            if (editor.getObject().getResourceId() == r.getId())
+               clusterResource.select(index);
+            index++;
+         }
       }
       else
       {
-	      clusterResource.add(Messages.get().General_None);
-	      clusterResource.select(0);
-	      clusterResource.setEnabled(false);
+         clusterResource.add(Messages.get().General_None);
+         clusterResource.select(0);
+         clusterResource.setEnabled(false);
       }
-      
-   	Group aggregationGroup = new Group(dialogArea, SWT.NONE);
-   	aggregationGroup.setText(Messages.get().ClusterOptions_DataAggregation);
-   	aggregationGroup.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
-   	
-   	layout = new GridLayout();
-		layout.verticalSpacing = WidgetHelper.DIALOG_SPACING;
-		layout.horizontalSpacing = WidgetHelper.DIALOG_SPACING;
-		aggregationGroup.setLayout(layout);
-   	
-   	checkAggregate = new Button(aggregationGroup, SWT.CHECK);
-   	checkAggregate.setText(Messages.get().ClusterOptions_AggregateFromNodes);
-   	checkAggregate.setSelection(editor.getObject().isAggregateOnCluster());
-      	
+
+      Group aggregationGroup = new Group(dialogArea, SWT.NONE);
+      aggregationGroup.setText(Messages.get().ClusterOptions_DataAggregation);
+      aggregationGroup.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
+
+      layout = new GridLayout();
+      layout.verticalSpacing = WidgetHelper.DIALOG_SPACING;
+      layout.horizontalSpacing = WidgetHelper.DIALOG_SPACING;
+      aggregationGroup.setLayout(layout);
+
+      checkAggregate = new Button(aggregationGroup, SWT.CHECK);
+      checkAggregate.setText(Messages.get().ClusterOptions_AggregateFromNodes);
+      checkAggregate.setSelection(editor.getObject().isAggregateOnCluster());
+
       checkAggregateWithErrors = new Button(aggregationGroup, SWT.CHECK);
       checkAggregateWithErrors.setText("Use last known value for aggregation in case of data collection error");
       checkAggregateWithErrors.setSelection(editor.getObject().isAggregateWithErrors());
-         
+
       checkRunScript = new Button(aggregationGroup, SWT.CHECK);
       checkRunScript.setText(Messages.get().ClusterOptions_RunScriptOnAggregatedData);
       checkRunScript.setSelection(editor.getObject().isTransformAggregated());
-         
+
       if (editor.getObject() instanceof DataCollectionItem)
       {
-      	checkAggregate.addSelectionListener(new SelectionListener() {
-   			@Override
-   			public void widgetSelected(SelectionEvent e)
-   			{
-   				aggregationFunction.setEnabled(checkAggregate.getSelection());
-   			}
-   			
-   			@Override
-   			public void widgetDefaultSelected(SelectionEvent e)
-   			{
-   				widgetSelected(e);
-   			}
-   		});
-      	
-      	aggregationFunction = WidgetHelper.createLabeledCombo(aggregationGroup, SWT.BORDER | SWT.READ_ONLY, Messages.get().ClusterOptions_AggrFunction, WidgetHelper.DEFAULT_LAYOUT_DATA);
-      	aggregationFunction.add(Messages.get().ClusterOptions_Total);
-      	aggregationFunction.add(Messages.get().ClusterOptions_Average);
-      	aggregationFunction.add(Messages.get().ClusterOptions_Min);
-      	aggregationFunction.add(Messages.get().ClusterOptions_Max);
-      	aggregationFunction.select(editor.getObjectAsItem().getAggregationFunction());
-      	aggregationFunction.setEnabled(editor.getObjectAsItem().isAggregateOnCluster());
+         checkAggregate.addSelectionListener(new SelectionListener() {
+            @Override
+            public void widgetSelected(SelectionEvent e)
+            {
+               aggregationFunction.setEnabled(checkAggregate.getSelection());
+            }
+
+            @Override
+            public void widgetDefaultSelected(SelectionEvent e)
+            {
+               widgetSelected(e);
+            }
+         });
+
+         aggregationFunction = WidgetHelper.createLabeledCombo(aggregationGroup, SWT.BORDER | SWT.READ_ONLY, Messages.get().ClusterOptions_AggrFunction, WidgetHelper.DEFAULT_LAYOUT_DATA);
+         aggregationFunction.add(Messages.get().ClusterOptions_Total);
+         aggregationFunction.add(Messages.get().ClusterOptions_Average);
+         aggregationFunction.add(Messages.get().ClusterOptions_Min);
+         aggregationFunction.add(Messages.get().ClusterOptions_Max);
+         aggregationFunction.select(editor.getObjectAsItem().getAggregationFunction());
+         aggregationFunction.setEnabled(editor.getObjectAsItem().isAggregateOnCluster());
       }
 
       return dialogArea;
@@ -186,7 +186,7 @@ public class ClusterOptions extends AbstractDCIPropertyPage
 		return true;
 	}
 
-	/* (non-Javadoc)
+	/**
 	 * @see org.eclipse.jface.preference.PreferencePage#performOk()
 	 */
 	@Override
@@ -195,7 +195,7 @@ public class ClusterOptions extends AbstractDCIPropertyPage
 		return applyChanges(false);
 	}
 
-	/* (non-Javadoc)
+	/**
 	 * @see org.eclipse.jface.preference.PreferencePage#performApply()
 	 */
 	@Override
@@ -204,7 +204,7 @@ public class ClusterOptions extends AbstractDCIPropertyPage
 		applyChanges(true);
 	}
 
-	/* (non-Javadoc)
+	/**
 	 * @see org.eclipse.jface.preference.PreferencePage#performDefaults()
 	 */
 	@Override
