@@ -109,7 +109,7 @@ public class DataCollectionObjectEditor
 		Display.getCurrent().timerExec(-1, timer);
 		Display.getCurrent().timerExec(200, timer);
 	}
-	
+
 	/**
 	 * @param listener
 	 */
