@@ -1182,6 +1182,8 @@ protected:
    size_t m_allocated;
    size_t m_allocationStep;
 
+   void insertPlaceholder(size_t index, size_t len);
+
 public:
    StringBuffer();
    StringBuffer(const TCHAR *init);
@@ -1224,6 +1226,8 @@ public:
    void appendFormattedString(const TCHAR *format, ...);
    void appendFormattedStringV(const TCHAR *format, va_list args) { insertFormattedStringV(m_length, format, args); }
 
+   void appendAsHexString(const void *data, size_t len) { insertAsHexString(m_length, data, len); }
+
    void insert(size_t index, const TCHAR *str)  { if (str != nullptr) insert(index, str, _tcslen(str)); }
    void insert(size_t index, const TCHAR *str, size_t len);
    void insert(size_t index, const TCHAR c) { insert(index, &c, 1); }
@@ -1241,6 +1245,8 @@ public:
 
    void insertFormattedString(size_t index, const TCHAR *format, ...);
    void insertFormattedStringV(size_t index, const TCHAR *format, va_list args);
+
+   void insertAsHexString(size_t index, const void *data, size_t len, TCHAR separator = 0);
 
    void clear();
 

@@ -564,9 +564,9 @@ void StringBuffer::insertFormattedStringV(size_t index, const TCHAR *format, va_
 }
 
 /**
- * Append string to the end of buffer
+ * Insert placeholder into buffer (expand buffer as needed but do not copy anything into newly allocated space and do not update string length)
  */
-void StringBuffer::insert(size_t index, const TCHAR *str, size_t len)
+void StringBuffer::insertPlaceholder(size_t index, size_t len)
 {
    if (len <= 0)
       return;
@@ -590,13 +590,17 @@ void StringBuffer::insert(size_t index, const TCHAR *str, size_t len)
    }
    if (index < m_length)
    {
-      memmove(&m_buffer[index], &m_buffer[index + len], m_length - len);
-      memcpy(&m_buffer[index], str, len * sizeof(TCHAR));
+      memmove(&m_buffer[index + len], &m_buffer[index], (m_length - index) * sizeof(TCHAR));
    }
-   else
-   {
-      memcpy(&m_buffer[m_length], str, len * sizeof(TCHAR));
-   }
+}
+
+/**
+ * Insert string into buffer
+ */
+void StringBuffer::insert(size_t index, const TCHAR *str, size_t len)
+{
+   insertPlaceholder(index, len);
+   memcpy(&m_buffer[index], str, len * sizeof(TCHAR));
    m_length += len;
    m_buffer[m_length] = 0;
 }
@@ -607,26 +611,9 @@ void StringBuffer::insert(size_t index, const TCHAR *str, size_t len)
 void StringBuffer::insertMBString(size_t index, const char *str, size_t len, int codePage)
 {
 #ifdef UNICODE
-   if (isInternalBuffer())
-   {
-      if (m_length + len >= STRING_INTERNAL_BUFFER_SIZE)
-      {
-         m_allocated = m_length + len + 1;
-         m_buffer = MemAllocString(m_allocated);
-         memcpy(m_buffer, m_internalBuffer, m_length * sizeof(TCHAR));
-      }
-   }
-   else
-   {
-      if (m_length + len >= m_allocated)
-      {
-         m_allocated += std::max(m_allocationStep, len + 1);
-         m_buffer = MemRealloc(m_buffer, m_allocated * sizeof(TCHAR));
-      }
-   }
+   insertPlaceholder(index, len);
    if (index < m_length)
    {
-      memmove(&m_buffer[index], &m_buffer[index + len], m_length - len);
       int wchars = MultiByteToWideChar(codePage, (codePage == CP_UTF8) ? 0 : MB_PRECOMPOSED, str, (int)len, &m_buffer[index], (int)len + 1);
       if (static_cast<size_t>(wchars) < len)
       {
@@ -653,26 +640,9 @@ void StringBuffer::insertWideString(size_t index, const WCHAR *str, size_t len)
    insert(index, str, len);
 #else
    size_t clen = WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, str, len, nullptr, 0, nullptr, nullptr);
-   if (isInternalBuffer())
-   {
-      if (m_length + clen >= STRING_INTERNAL_BUFFER_SIZE)
-      {
-         m_allocated = m_length + clen + 1;
-         m_buffer = MemAllocString(m_allocated);
-         memcpy(m_buffer, m_internalBuffer, m_length * sizeof(TCHAR));
-      }
-   }
-   else
-   {
-      if (m_length + clen >= m_allocated)
-      {
-         m_allocated += std::max(m_allocationStep, clen + 1);
-         m_buffer = MemRealloc(m_buffer, m_allocated * sizeof(TCHAR));
-      }
-   }
+   insertPlaceholder(index, clen);
    if (index < m_length)
    {
-      memmove(&m_buffer[index], &m_buffer[index + clen], m_length - clen);
       int chars = WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, str, len, &m_buffer[index], clen, nullptr, nullptr);
       if (chars < len)
       {
@@ -753,6 +723,33 @@ void StringBuffer::insert(size_t index, const uuid& guid)
    TCHAR buffer[64];
    guid.toString(buffer);
    insert(index, buffer, _tcslen(buffer));
+}
+
+/**
+ * Insert binary data as hex string
+ */
+void StringBuffer::insertAsHexString(size_t index, const void *data, size_t len, TCHAR separator)
+{
+   if (len == 0)
+      return;
+
+   size_t chars = (separator != 0) ? (len * 3 - 1) : len * 2;
+   insertPlaceholder(index, chars);
+
+   const BYTE *in = static_cast<const BYTE*>(data);
+   TCHAR *out = &m_buffer[index];
+   for(size_t i = 0; i < len - 1; i++, in++)
+   {
+      *out++ = bin2hex(*in >> 4);
+      *out++ = bin2hex(*in & 15);
+      if (separator != 0)
+         *out++ = separator;
+   }
+   *out++ = bin2hex(*in >> 4);
+   *out++ = bin2hex(*in & 15);
+
+   m_length += chars;
+   m_buffer[m_length] = 0;
 }
 
 /**
