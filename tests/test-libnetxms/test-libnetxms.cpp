@@ -350,6 +350,14 @@ static void TestString()
    AssertTrue(!_tcsncmp(s.getBuffer(), _T("ABC ABC ABC ABC "), 16));
    EndTest();
 
+   StartTest(_T("String - insert"));
+   s = _T("one");
+   s.insert(0, _T("two"));
+   AssertTrue(!_tcscmp(s, _T("twoone")));
+   s.insert(3, _T(" "));
+   AssertTrue(!_tcscmp(s, _T("two one")));
+   EndTest();
+
    StartTest(_T("String - assign #1"));
    s = _T("alpha");
    AssertEquals(s.length(), 5);
@@ -398,21 +406,21 @@ static void TestString()
 
    StartTest(_T("String - substring #1"));
    s = _T("alpha beta gamma");
-   TCHAR *str = s.substring(0, 5, NULL);
+   TCHAR *str = s.substring(0, 5, nullptr);
    AssertTrue(!_tcscmp(str, _T("alpha")));
    free(str);
    EndTest();
 
    StartTest(_T("String - substring #2"));
    s = _T("alpha beta gamma");
-   str = s.substring(5, -1, NULL);
+   str = s.substring(5, -1, nullptr);
    AssertTrue(!_tcscmp(str, _T(" beta gamma")));
    free(str);
    EndTest();
 
    StartTest(_T("String - substring #3"));
    s = _T("alpha beta gamma");
-   str = s.substring(14, 4, NULL);
+   str = s.substring(14, 4, nullptr);
    AssertTrue(!_tcscmp(str, _T("ma")));
    free(str);
    EndTest();
@@ -461,6 +469,21 @@ static void TestString()
    AssertTrue(!_tcscmp(list->get(1), _T("beta;gamma")));
    AssertTrue(!_tcscmp(list->get(2), _T("delta")));
    delete list;
+   EndTest();
+
+   StartTest(_T("String - appendAsHexString"));
+   s = _T("");
+   s.appendAsHexString(reinterpret_cast<const BYTE*>("\x12\x24\x36\x48"), 5);
+   AssertTrue(s.equals(_T("1224364800")));
+   EndTest();
+
+   StartTest(_T("String - insertAsHexString"));
+   s = _T("onetwo");
+   s.insertAsHexString(3, reinterpret_cast<const BYTE*>("\xFA\xCD\xEF\xA8"), 5);
+   AssertTrue(s.equals(_T("oneFACDEFA800two")));
+   s = _T("onetwo");
+   s.insertAsHexString(3, reinterpret_cast<const BYTE*>("\xFA\xCD\xEF\xA8"), 5, ':');
+   AssertTrue(s.equals(_T("oneFA:CD:EF:A8:00two")));
    EndTest();
 
    StartTest(_T("String - take ownership"));
