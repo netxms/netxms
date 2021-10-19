@@ -23,6 +23,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.preference.PreferenceConverter;
 import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.swt.SWT;
@@ -35,7 +36,9 @@ import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
@@ -76,6 +79,7 @@ public class Chart extends Composite
    private PlotArea plotArea;
    private boolean mouseDown = false;
    private Set<IDoubleClickListener> doubleClickListeners = new HashSet<IDoubleClickListener>();
+   private MenuManager menuManager = null;
 
    /**
     * Create empty chart control.
@@ -316,6 +320,8 @@ public class Chart extends Composite
       gd.horizontalAlignment = SWT.CENTER;
       gd.horizontalSpan = isLegendOnSide() ? 2 : 1;
       title.setLayoutData(gd);
+      if (menuManager != null)
+         title.setMenu(menuManager.createContextMenu(title));
    }
 
    /**
@@ -338,6 +344,13 @@ public class Chart extends Composite
          gd.grabExcessHorizontalSpace = true;
       }
       legend.setLayoutData(gd);
+      if (menuManager != null)
+      {
+         Menu menu = menuManager.createContextMenu(legend);
+         legend.setMenu(menu);
+         for(Control c : legend.getChildren())
+            c.setMenu(menu);
+      }
    }
 
    /**
@@ -388,6 +401,13 @@ public class Chart extends Composite
             plotArea = null;
       }
       plotAreaComposite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+      if (menuManager != null)
+      {
+         Menu menu = menuManager.createContextMenu(plotAreaComposite);
+         plotAreaComposite.setMenu(menu);
+         for(Control c : plotAreaComposite.getChildren())
+            c.setMenu(menu);
+      }
    }
 
    /**
@@ -615,6 +635,37 @@ public class Chart extends Composite
          legend.refresh();
       if (plotArea != null)
          plotArea.refresh();
+   }
+
+   /**
+    * Set menu manager for context menu.
+    *
+    * @param menuManager menu manager for context menu
+    */
+   public void setMenuManager(MenuManager menuManager)
+   {
+      this.menuManager = menuManager;
+      if (menuManager != null)
+      {
+         if (title != null)
+         {
+            title.setMenu(menuManager.createContextMenu(title));
+         }
+         if (legend != null)
+         {
+            Menu menu = menuManager.createContextMenu(legend);
+            legend.setMenu(menu);
+            for(Control c : legend.getChildren())
+               c.setMenu(menu);
+         }
+         if (plotAreaComposite != null)
+         {
+            Menu menu = menuManager.createContextMenu(plotAreaComposite);
+            plotAreaComposite.setMenu(menu);
+            for(Control c : plotAreaComposite.getChildren())
+               c.setMenu(menu);
+         }
+      }
    }
 
    /**

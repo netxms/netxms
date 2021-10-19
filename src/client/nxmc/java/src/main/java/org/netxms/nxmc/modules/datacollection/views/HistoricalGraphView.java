@@ -41,9 +41,7 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.graphics.ImageLoader;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.FileDialog;
-import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Widget;
 import org.netxms.client.AccessListElement;
@@ -327,6 +325,7 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
       chartConfiguration.setExtendedLegend(configuration.isExtendedLegend());
       chartConfiguration.setStacked(configuration.isStacked());
       chartConfiguration.setTranslucent(configuration.isTranslucent());
+      chartConfiguration.setArea(configuration.isArea());
       chartConfiguration.setLineWidth(configuration.getLineWidth());
       chartConfiguration.setUseMultipliers(configuration.isUseMultipliers());
       chartConfiguration.setAutoScale(configuration.isAutoScale());
@@ -379,23 +378,15 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
     */
    private void createPopupMenu()
    {
-      // Create menu manager.
-      MenuManager menuMgr = new MenuManager();
-      menuMgr.setRemoveAllWhenShown(true);
-      menuMgr.addMenuListener(new IMenuListener() {
+      MenuManager menuManager = new MenuManager();
+      menuManager.setRemoveAllWhenShown(true);
+      menuManager.addMenuListener(new IMenuListener() {
          public void menuAboutToShow(IMenuManager mgr)
          {
             fillContextMenu(mgr);
          }
       });
-
-      // Create menu
-      Menu menu = menuMgr.createContextMenu((Control)chart);
-      ((Control)chart).setMenu(menu);
-      for(Control ch : ((Composite)chart).getChildren())
-      {
-         ch.setMenu(menu);
-      }
+      chart.setMenuManager(menuManager);
    }
 
    /**

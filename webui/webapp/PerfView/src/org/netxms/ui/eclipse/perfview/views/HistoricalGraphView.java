@@ -413,23 +413,15 @@ public class HistoricalGraphView extends ViewPart implements ChartConfigurationC
     */
    private void createPopupMenu()
    {
-      // Create menu manager.
-      MenuManager menuMgr = new MenuManager();
-      menuMgr.setRemoveAllWhenShown(true);
-      menuMgr.addMenuListener(new IMenuListener() {
+      MenuManager menuManager = new MenuManager();
+      menuManager.setRemoveAllWhenShown(true);
+      menuManager.addMenuListener(new IMenuListener() {
          public void menuAboutToShow(IMenuManager mgr)
          {
             fillContextMenu(mgr);
          }
       });
-
-      // Create menu
-      Menu menu = menuMgr.createContextMenu((Control)chart);
-      ((Control)chart).setMenu(menu);
-      for(Control ch : ((Composite)chart).getChildren())
-      {
-         ch.setMenu(menu);
-      }
+      chart.setMenuManager(menuManager);
    }
 
    /**
