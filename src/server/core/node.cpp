@@ -4978,12 +4978,12 @@ bool Node::confPollSnmp(uint32_t rqId)
       if ((SnmpGetEx(pTransport, _T(".1.0.8802.1.1.2.1.3.1.0"), nullptr, 0, &type, sizeof(int32_t), 0, nullptr) == SNMP_ERR_SUCCESS) &&
           (SnmpGetEx(pTransport, _T(".1.0.8802.1.1.2.1.3.2.0"), nullptr, 0, data, 256, SG_RAW_RESULT, &dataLen) == SNMP_ERR_SUCCESS))
       {
-         BuildLldpId(type, data, dataLen, szBuffer, 1024);
+         String lldpId = BuildLldpId(type, data, dataLen);
          lockProperties();
-         if ((m_lldpNodeId == nullptr) || _tcscmp(m_lldpNodeId, szBuffer))
+         if ((m_lldpNodeId == nullptr) || _tcscmp(m_lldpNodeId, lldpId))
          {
             MemFree(m_lldpNodeId);
-            m_lldpNodeId = MemCopyString(szBuffer);
+            m_lldpNodeId = MemCopyString(lldpId);
             hasChanges = true;
             sendPollerMsg(_T("   LLDP node ID changed to %s\r\n"), m_lldpNodeId);
          }
