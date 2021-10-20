@@ -238,8 +238,7 @@ static StringObjectMap<SNMP_Variable> *ReadLLDPRemoteTable(Node *node)
 static shared_ptr<Node> FindRemoteNode(Node *node, const SNMP_Variable *lldpRemChassisId, const SNMP_Variable *lldpRemChassisIdSubtype, const SNMP_Variable *lldpRemSysName)
 {
    // Build LLDP ID for remote system
-   TCHAR remoteId[1024];
-   BuildLldpId(lldpRemChassisIdSubtype->getValueAsInt(), lldpRemChassisId->getValue(), lldpRemChassisId->getValueLength(), remoteId, sizeof(remoteId) / sizeof(TCHAR));
+   String remoteId = BuildLldpId(lldpRemChassisIdSubtype->getValueAsInt(), lldpRemChassisId->getValue(), lldpRemChassisId->getValueLength());
    shared_ptr<Node> remoteNode = FindNodeByLLDPId(remoteId);
 
    // Try to find node by interface MAC address if chassis ID type is "MAC address"
@@ -250,7 +249,7 @@ static shared_ptr<Node> FindRemoteNode(Node *node, const SNMP_Variable *lldpRemC
       TCHAR buffer[64];
       MacAddress macAddr = (lldpRemChassisId->getValueLength() > 8) ? MacAddress::parse(lldpRemChassisId->getValueAsString(buffer, 64)) : lldpRemChassisId->getValueAsMACAddr();
       nxlog_debug_tag(DEBUG_TAG_TOPO_LLDP, 5, _T("ProcessLLDPConnectionEntry(%s [%d]): remoteId=%s: FindNodeByLLDPId failed, fallback to interface MAC address (\"%s\")"),
-               node->getName(), node->getId(), remoteId, macAddr.toString().cstr());
+               node->getName(), node->getId(), remoteId.cstr(), macAddr.toString().cstr());
       remoteNode = FindNodeByMAC(macAddr);
    }
 
@@ -261,7 +260,7 @@ static shared_ptr<Node> FindRemoteNode(Node *node, const SNMP_Variable *lldpRemC
       lldpRemSysName->getValueAsString(sysName, 256);
       Trim(sysName);
       nxlog_debug_tag(DEBUG_TAG_TOPO_LLDP, 5, _T("ProcessLLDPConnectionEntry(%s [%d]): remoteId=%s: FindNodeByLLDPId and FindNodeByMAC failed, fallback to sysName (\"%s\")"),
-               node->getName(), node->getId(), remoteId, sysName);
+               node->getName(), node->getId(), remoteId.cstr(), sysName);
       remoteNode = FindNodeBySysName(sysName);
    }
 
@@ -546,10 +545,11 @@ static bool ParseMACAddress(const char *text, size_t length, BYTE *mac, size_t *
 /**
  * Build LLDP ID for node
  */
-void BuildLldpId(int type, const BYTE *data, size_t length, TCHAR *id, size_t idLen)
+String BuildLldpId(int type, const BYTE *data, size_t length)
 {
-	_sntprintf(id, idLen, _T("%d@"), type);
-	size_t offset = _tcslen(id);
+   StringBuffer sb;
+   sb.append(type);
+   sb.append(_T('@'));
    if (type == 4)
    {
       // Some D-Link switches returns MAC address for ID type 4 as formatted text instead of raw bytes
@@ -557,15 +557,16 @@ void BuildLldpId(int type, const BYTE *data, size_t length, TCHAR *id, size_t id
       size_t macLength;
       if ((length >= MAC_ADDR_LENGTH * 2) && (length <= MAC_ADDR_LENGTH * 3) && ParseMACAddress(reinterpret_cast<const char*>(data), length, macAddr, &macLength))
       {
-   	   BinToStr(macAddr, macLength, &id[offset]);
+         sb.appendAsHexString(macAddr, macLength);
       }
       else
       {
-   	   BinToStr(data, std::min(length, (idLen - offset - 1) / 2), &id[offset]);
+         sb.appendAsHexString(data, length);
       }
    }
    else
    {
-	   BinToStr(data, std::min(length, (idLen - offset - 1) / 2), &id[offset]);
+      sb.appendAsHexString(data, length);
    }
+   return sb;
 }
