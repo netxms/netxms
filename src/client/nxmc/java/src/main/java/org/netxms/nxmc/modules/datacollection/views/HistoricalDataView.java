@@ -116,6 +116,15 @@ public class HistoricalDataView extends ViewWithContext
       return sb.toString();
    }	
 
+   /**
+    * Create new historical data view.
+    *
+    * @param contextObject context object
+    * @param dciId DCI ID
+    * @param tableName table name
+    * @param instance instance for table data
+    * @param column column name for table data
+    */
    public HistoricalDataView(AbstractObject contextObject, long dciId, String tableName, String instance, String column)
    {
       super(i18n.tr("Historical Data"), ResourceManager.getImageDescriptor("icons/object-views/data_history.gif"), 
@@ -171,19 +180,22 @@ public class HistoricalDataView extends ViewWithContext
       return fullName;
    }
 
+   /**
+    * @see org.netxms.nxmc.base.views.View#createContent(org.eclipse.swt.widgets.Composite)
+    */
    @Override
    protected void createContent(Composite parent)
    {
 		final String[] names = (tableName != null) ? 
          new String[] { i18n.tr("Timestamp"), i18n.tr("Value") } :
-         new String[] { i18n.tr("Timestamp"), i18n.tr("Value"), "Raw value" };
+         new String[] { i18n.tr("Timestamp"), i18n.tr("Value"), i18n.tr("Raw value") };
 		final int[] widths = { 150, 400, 400 };
 		viewer = new SortableTableViewer(parent, names, widths, 0, SWT.DOWN, SWT.FULL_SELECTION | SWT.MULTI);
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.setLabelProvider(new HistoricalDataLabelProvider());
 		viewer.setComparator(new HistoricalDataComparator());
 		HistoricalDataFilter filter = new HistoricalDataFilter();
-		viewer.setFilters(filter);
+      viewer.addFilter(filter);
 		setFilterClient(viewer, filter);
 
 		createActions();
@@ -205,11 +217,11 @@ public class HistoricalDataView extends ViewWithContext
 			}
 		};
 		
-		actionDeleteDciEntry = new Action("Delete entry") {
+      actionDeleteDciEntry = new Action("&Delete value") {
 		   @Override
 		   public void run ()
 		   {
-		      deleteDciEntry();
+		      deleteValue();
 		   }
 		};
 		
@@ -267,7 +279,7 @@ public class HistoricalDataView extends ViewWithContext
 			   if (tableName != null)
 			      data = session.getCollectedTableData(objectId, dciId, instance, column, timeFrom, timeTo, recordLimit);
 			   else
-			      data = session.getCollectedData(objectId, dciId, timeFrom, timeTo, recordLimit, HistoricalDataType.BOTH);
+               data = session.getCollectedData(objectId, dciId, timeFrom, timeTo, recordLimit, HistoricalDataType.RAW_AND_PROCESSED);
 			   
 				runInUIThread(new Runnable() {
 					@Override
@@ -286,7 +298,7 @@ public class HistoricalDataView extends ViewWithContext
 			}
 		}.start();
 	}
-	
+
 	/**
 	 * Select data range for display
 	 */
@@ -301,14 +313,17 @@ public class HistoricalDataView extends ViewWithContext
 			refresh();
 		}
 	}
-	
-	private void deleteDciEntry()
+
+   /**
+    * Delete value from collected data
+    */
+	private void deleteValue()
 	{
-	   final IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-	   if (selection.size() == 0)
+      final IStructuredSelection selection = viewer.getStructuredSelection();
+      if (selection.isEmpty())
 	      return;
-	   
-	   new Job("Delete DCI entry", null) {
+
+      new Job("Delete DCI value", null) {
          @SuppressWarnings("unchecked")
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
@@ -316,13 +331,13 @@ public class HistoricalDataView extends ViewWithContext
             List<DciDataRow> list = selection.toList();
             for(DciDataRow r : list)
                session.deleteDciEntry(objectId, dciId, r.getTimestamp().getTime() / 1000); // Convert back to seconds
-            
+
             final DciData data;
             if (tableName != null)
                data = session.getCollectedTableData(objectId, dciId, instance, column, timeFrom, timeTo, recordLimit);
             else
-               data = session.getCollectedData(objectId, dciId, timeFrom, timeTo, recordLimit, HistoricalDataType.BOTH);
-            
+               data = session.getCollectedData(objectId, dciId, timeFrom, timeTo, recordLimit, HistoricalDataType.RAW_AND_PROCESSED);
+
             runInUIThread(new Runnable() {
                @Override
                public void run()
@@ -332,7 +347,7 @@ public class HistoricalDataView extends ViewWithContext
                }
             });
          }
-         
+
          @Override
          protected String getErrorMessage()
          {
@@ -350,6 +365,9 @@ public class HistoricalDataView extends ViewWithContext
       return (context != null) && (context instanceof AbstractObject) && (((AbstractObject)context).getObjectId() == objectId);
    }
 
+   /**
+    * @see org.netxms.nxmc.base.views.ViewWithContext#contextChanged(java.lang.Object, java.lang.Object)
+    */
    @Override
    protected void contextChanged(Object oldContext, Object newContext)
    {
