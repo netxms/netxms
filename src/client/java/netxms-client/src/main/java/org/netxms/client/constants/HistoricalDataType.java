@@ -30,7 +30,8 @@ public enum HistoricalDataType
 {
    PROCESSED(0),
    RAW(1),
-   BOTH(2);
+   RAW_AND_PROCESSED(2),
+   FULL_TABLE(3);
 
    private static Logger logger = LoggerFactory.getLogger(HistoricalDataType.class);
    private static Map<Integer, HistoricalDataType> lookupTable = new HashMap<Integer, HistoricalDataType>();

@@ -5321,7 +5321,7 @@ public class NXCSession
       }
       else
       {
-         msg = newMessage(NXCPCodes.CMD_GET_DCI_DATA);
+         msg = newMessage((valueType == HistoricalDataType.FULL_TABLE) ? NXCPCodes.CMD_GET_TABLE_DCI_DATA : NXCPCodes.CMD_GET_DCI_DATA);
       }
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
       msg.setFieldInt32(NXCPCodes.VID_DCI_ID, (int)dciId);
@@ -5329,13 +5329,12 @@ public class NXCSession
 
       DciData data = new DciData(nodeId, dciId);
 
-      int rowsReceived, rowsRemaining = maxRows;
       int timeFrom = (from != null) ? (int)(from.getTime() / 1000) : 0;
       int timeTo = (to != null) ? (int)(to.getTime() / 1000) : 0;
 
-      do
+      // If full table values are requested, each value will be sent in separate message
+      if (valueType == HistoricalDataType.FULL_TABLE)
       {
-         msg.setMessageId(requestId.getAndIncrement());
          msg.setFieldInt32(NXCPCodes.VID_MAX_ROWS, maxRows);
          msg.setFieldInt32(NXCPCodes.VID_TIME_FROM, timeFrom);
          msg.setFieldInt32(NXCPCodes.VID_TIME_TO, timeTo);
@@ -5343,32 +5342,55 @@ public class NXCSession
 
          waitForRCC(msg.getMessageId());
 
-         NXCPMessage response = waitForMessage(NXCPCodes.CMD_DCI_DATA, msg.getMessageId());
-         if (!response.isBinaryMessage())
-            throw new NXCException(RCC.INTERNAL_ERROR);
-
-         rowsReceived = parseDataRows(response.getBinaryData(), data);
-         if (((rowsRemaining == 0) || (rowsRemaining > MAX_DCI_DATA_ROWS)) && (rowsReceived == MAX_DCI_DATA_ROWS))
+         while(true)
          {
-            // adjust boundaries for next request
-            if (rowsRemaining > 0)
-               rowsRemaining -= rowsReceived;
+            NXCPMessage response = waitForMessage(NXCPCodes.CMD_DCI_DATA, msg.getMessageId());
+            long timestamp = response.getFieldAsInt64(NXCPCodes.VID_TIMESTAMP) * 1000L; // Convert to milliseconds
+            if (timestamp == 0)
+               break; // End of value list indicator
 
-            // Rows goes in newest to oldest order, so if we need to
-            // retrieve additional data, we should update timeTo limit
-            if (to != null)
+            data.addDataRow(new DciDataRow(new Date(timestamp), new Table(response)));
+         }
+      }
+      else
+      {
+         int rowsReceived, rowsRemaining = maxRows;
+         do
+         {
+            msg.setMessageId(requestId.getAndIncrement());
+            msg.setFieldInt32(NXCPCodes.VID_MAX_ROWS, maxRows);
+            msg.setFieldInt32(NXCPCodes.VID_TIME_FROM, timeFrom);
+            msg.setFieldInt32(NXCPCodes.VID_TIME_TO, timeTo);
+            sendMessage(msg);
+
+            waitForRCC(msg.getMessageId());
+
+            NXCPMessage response = waitForMessage(NXCPCodes.CMD_DCI_DATA, msg.getMessageId());
+            if (!response.isBinaryMessage())
+               throw new NXCException(RCC.INTERNAL_ERROR);
+
+            rowsReceived = parseDataRows(response.getBinaryData(), data);
+            if (((rowsRemaining == 0) || (rowsRemaining > MAX_DCI_DATA_ROWS)) && (rowsReceived == MAX_DCI_DATA_ROWS))
             {
-               DciDataRow row = data.getLastValue();
-               if (row != null)
+               // adjust boundaries for next request
+               if (rowsRemaining > 0)
+                  rowsRemaining -= rowsReceived;
+
+               // Rows goes in newest to oldest order, so if we need to
+               // retrieve additional data, we should update timeTo limit
+               if (to != null)
                {
-                  // There should be only one value per second, so we set
-                  // last row's timestamp - 1 second as new boundary
-                  timeTo = (int)(row.getTimestamp().getTime() / 1000) - 1;
+                  DciDataRow row = data.getLastValue();
+                  if (row != null)
+                  {
+                     // There should be only one value per second, so we set
+                     // last row's timestamp - 1 second as new boundary
+                     timeTo = (int)(row.getTimestamp().getTime() / 1000) - 1;
+                  }
                }
             }
-         }
-      } while(rowsReceived == MAX_DCI_DATA_ROWS);
-
+         } while(rowsReceived == MAX_DCI_DATA_ROWS);
+      }
       return data;
    }
 
