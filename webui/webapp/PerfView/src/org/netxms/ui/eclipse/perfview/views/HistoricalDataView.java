@@ -180,15 +180,15 @@ public class HistoricalDataView extends ViewPart
 				selectRange();
 			}
 		};
-		
-		actionDeleteDciEntry = new Action("Delete entry") {
+
+      actionDeleteDciEntry = new Action("Delete value") {
 		   @Override
 		   public void run ()
 		   {
-		      deleteDciEntry();
+		      deleteValue();
 		   }
 		};
-		
+
 		actionExportToCsv = new ExportToCsvAction(this, viewer, true);
 		actionExportAllToCsv = new ExportToCsvAction(this, viewer, false);
 	}
@@ -266,9 +266,9 @@ public class HistoricalDataView extends ViewPart
 		manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
-	 */
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
+    */
 	@Override
 	public void setFocus()
 	{
@@ -292,7 +292,7 @@ public class HistoricalDataView extends ViewPart
 			   if (subparts != null)
 			      data = session.getCollectedTableData(nodeId, dciId, instance, column, timeFrom, timeTo, recordLimit);
 			   else
-			      data = session.getCollectedData(nodeId, dciId, timeFrom, timeTo, recordLimit, HistoricalDataType.BOTH);
+               data = session.getCollectedData(nodeId, dciId, timeFrom, timeTo, recordLimit, HistoricalDataType.RAW_AND_PROCESSED);
 			   
 				runInUIThread(new Runnable() {
 					@Override
@@ -326,13 +326,13 @@ public class HistoricalDataView extends ViewPart
 			refreshData();
 		}
 	}
-	
-	private void deleteDciEntry()
+
+	private void deleteValue()
 	{
-	   final IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-	   if (selection.size() == 0)
+      final IStructuredSelection selection = viewer.getStructuredSelection();
+      if (selection.isEmpty())
 	      return;
-	   
+
 	   new ConsoleJob("Delete DCI entry", null, Activator.PLUGIN_ID, null) {
          @SuppressWarnings("unchecked")
          @Override
@@ -341,12 +341,12 @@ public class HistoricalDataView extends ViewPart
             List<DciDataRow> list = selection.toList();
             for(DciDataRow r : list)
                session.deleteDciEntry(nodeId, dciId, r.getTimestamp().getTime() / 1000); // Convert back to seconds
-            
+
             final DciData data;
             if (subparts != null)
                data = session.getCollectedTableData(nodeId, dciId, instance, column, timeFrom, timeTo, recordLimit);
             else
-               data = session.getCollectedData(nodeId, dciId, timeFrom, timeTo, recordLimit, HistoricalDataType.BOTH);
+               data = session.getCollectedData(nodeId, dciId, timeFrom, timeTo, recordLimit, HistoricalDataType.RAW_AND_PROCESSED);
             
             runInUIThread(new Runnable() {
                @Override
@@ -357,7 +357,7 @@ public class HistoricalDataView extends ViewPart
                }
             });
          }
-         
+
          @Override
          protected String getErrorMessage()
          {

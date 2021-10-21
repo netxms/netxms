@@ -870,11 +870,15 @@ enum CertificateMappingMethod
 #define DCO_TYPE_TABLE     2
 #define DCO_TYPE_LIST      3
 
+/**
+ * Types of historical DCI data
+ */
 enum HistoricalDataType
 {
-   DCO_TYPE_PROCESSED = 0,
-   DCO_TYPE_RAW = 1,
-   DCO_TYPE_BOTH = 2
+   HDT_PROCESSED = 0,
+   HDT_RAW = 1,
+   HDT_RAW_AND_PROCESSED = 2,
+   HDT_FULL_TABLE = 3
 };
 
 /**
