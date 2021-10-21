@@ -1327,6 +1327,13 @@ public class DataCollectionView extends ObjectView
    protected void onObjectChange(AbstractObject object)
    {
       this.object = ((object != null) && ((object instanceof DataCollectionTarget) || (object instanceof Template))) ? object : null;
+      if (this.object == null)
+      {
+         actionToggleEditMode.setEnabled(false);
+         viewer.setInput(new Object[0]);
+         return;
+      }
+
       actionToggleEditMode.setEnabled(!(object instanceof Template));
 
       // Request server to open data collection configuration
