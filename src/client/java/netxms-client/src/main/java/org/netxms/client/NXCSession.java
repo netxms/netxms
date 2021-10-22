@@ -7137,6 +7137,64 @@ public class NXCSession
    }
 
    /**
+    * Execute SSH command on remote agent
+    *
+    * @param nodeId        Node object ID
+    * @param command       Command to execute
+    * @param receiveOutput true if action's output has to be read
+    * @param listener      listener for action's output or null
+    * @param writer        writer for action's output or null
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void executeSshCommand(long nodeId, String command, boolean receiveOutput, final TextOutputListener listener,
+         final Writer writer) throws IOException, NXCException
+   {
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_SSH_COMMAND);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
+      msg.setField(NXCPCodes.VID_COMMAND, command);
+      msg.setField(NXCPCodes.VID_RECEIVE_OUTPUT, receiveOutput);
+
+      MessageHandler handler = receiveOutput ? new MessageHandler() {
+         @Override
+         public boolean processMessage(NXCPMessage m)
+         {
+            String text = m.getFieldAsString(NXCPCodes.VID_MESSAGE);
+            if (text != null)
+            {
+               if (listener != null)
+                  listener.messageReceived(text);
+               if (writer != null)
+               {
+                  try
+                  {
+                     writer.write(text);
+                  }
+                  catch(IOException e)
+                  {
+                  }
+               }
+            }
+            if (m.isEndOfSequence())
+               setComplete();
+            return true;
+         }
+      } : null;
+      if (receiveOutput)
+         addMessageSubscription(NXCPCodes.CMD_COMMAND_OUTPUT, msg.getMessageId(), handler);
+
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+
+      if (receiveOutput)
+      {
+         handler.waitForCompletion();
+         if (handler.isExpired())
+            throw new NXCException(RCC.TIMEOUT);
+      }
+   }
+
+   /**
     * Wakeup node by sending wake-on-LAN magic packet. Either node ID or
     * interface ID may be given. If node ID is given, system will send wakeup
     * packets to all active interfaces with IP address.

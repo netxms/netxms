@@ -176,8 +176,8 @@ struct ACTION
       TCHAR *cmdLine;
       struct __subagentAction
       {
-         LONG (*handler)(const TCHAR *, const StringList *, const TCHAR *, AbstractCommSession *);
-         const TCHAR *arg;
+         void (*handler)(shared_ptr<ActionContext>);
+         const void *arg;
          const TCHAR *subagentName;
       } sa;
    } handler;
@@ -330,6 +330,7 @@ private:
    MsgWaitQueue *m_responseQueue;
    Mutex m_tcpProxyLock;
    ObjectArray<TcpProxy> m_tcpProxies;
+   SynchronizedHashMap<uint32_t, Condition> m_responseConditionMap;
 
 	bool sendRawMessage(NXCP_MESSAGE *msg, NXCPEncryptionContext *ctx);
    void authenticate(NXCPMessage *pRequest, NXCPMessage *pMsg);
@@ -357,6 +358,8 @@ private:
    void processingThread();
    void proxyReadThread();
    void tcpProxyReadThread();
+
+   void setResponseSentCondition(uint32_t requestId);
 
 public:
    CommSession(const shared_ptr<AbstractCommChannel>& channel, const InetAddress &serverAddr, bool masterServer, bool controlServer);
@@ -403,6 +406,9 @@ public:
 
    bool sendMessage(const NXCPMessage& msg) { return sendMessage(&msg); }
    void postMessage(const NXCPMessage& msg) { postMessage(&msg); }
+
+   virtual void registerForResponseSentCondition(uint32_t requestId) override;
+   virtual void waitForResponseSentCondition(uint32_t requestId) override;
 };
 
 /**
@@ -445,6 +451,8 @@ public:
    virtual void debugPrintf(int level, const TCHAR *format, ...) override;
    virtual void writeLog(int16_t severity, const TCHAR *format, ...) override;
    virtual void prepareProxySessionSetupMsg(NXCPMessage *msg) override { }
+   virtual void registerForResponseSentCondition(uint32_t requestId) override { }
+   virtual void waitForResponseSentCondition(uint32_t requestId) override { }
 };
 
 /**
@@ -494,6 +502,8 @@ public:
    virtual void debugPrintf(int level, const TCHAR *format, ...) override;
    virtual void writeLog(int16_t severity, const TCHAR *format, ...) override;
    virtual void prepareProxySessionSetupMsg(NXCPMessage *msg) override { }
+   virtual void registerForResponseSentCondition(uint32_t requestId) override { }
+   virtual void waitForResponseSentCondition(uint32_t requestId) override { }
 };
 
 /**
@@ -767,7 +777,7 @@ bool LoadSubAgent(const TCHAR *moduleName);
 void UnloadAllSubAgents();
 bool ProcessCommandBySubAgent(UINT32 command, NXCPMessage *request, NXCPMessage *response, AbstractCommSession *session);
 void NotifySubAgents(uint32_t code, void *data);
-bool AddAction(const TCHAR *name, bool isExternal, const TCHAR *arg, LONG (*handler)(const TCHAR*, const StringList*, const TCHAR*, AbstractCommSession *session),
+bool AddAction(const TCHAR *name, bool isExternal, const void *arg, void (*handler)(shared_ptr<ActionContext>),
          const TCHAR *subAgent, const TCHAR *description);
 bool AddActionFromConfig(const TCHAR *config);
 

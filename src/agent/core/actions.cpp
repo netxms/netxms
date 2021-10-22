@@ -63,8 +63,8 @@ static ACTION *FindAction(const TCHAR *name)
 /**
  * Add action
  */
-bool AddAction(const TCHAR *name, bool isExternal, const TCHAR *arg,
-         LONG (*handler)(const TCHAR*, const StringList*, const TCHAR*, AbstractCommSession*),
+bool AddAction(const TCHAR *name, bool isExternal, const void *arg,
+         void (*handler)(shared_ptr<ActionContext>),
          const TCHAR *subAgent, const TCHAR *description)
 {
    ACTION *action = FindAction(name);
@@ -77,7 +77,7 @@ bool AddAction(const TCHAR *name, bool isExternal, const TCHAR *arg,
       action->isExternal = isExternal;
       if (isExternal)
       {
-         action->handler.cmdLine = MemCopyString(arg);
+         action->handler.cmdLine = MemCopyString((const TCHAR*)arg);
       }
       else
       {
@@ -95,7 +95,7 @@ bool AddAction(const TCHAR *name, bool isExternal, const TCHAR *arg,
       _tcslcpy(newAction.description, description, MAX_DB_STRING);
       if (isExternal)
       {
-         newAction.handler.cmdLine = MemCopyString(arg);
+         newAction.handler.cmdLine = MemCopyString((const TCHAR*)arg);
       }
       else
       {
@@ -207,7 +207,10 @@ static uint32_t ExecuteAction(const TCHAR *name, const StringList& args, const s
    else
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("Executing internal action %s"), name);
-      rcc = action->handler.sa.handler(name, &args, action->handler.sa.arg, session.get());
+      auto context = make_shared<ActionContext>(name, args, action->handler.sa.arg, session, requestId, sendOutput);
+      ThreadCreate(action->handler.sa.handler, context);
+      rcc = context->waitForCompletion();
+      nxlog_debug_tag(DEBUG_TAG, 7, _T("Internal action execution result: %d"), rcc);
    }
    return rcc;
 }

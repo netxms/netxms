@@ -786,6 +786,8 @@ public:
    virtual void debugPrintf(int level, const TCHAR *format, ...) = 0;
    virtual void writeLog(int16_t severity, const TCHAR *format, ...) = 0;
    virtual void prepareProxySessionSetupMsg(NXCPMessage *msg) = 0;
+   virtual void registerForResponseSentCondition(uint32_t requestId) = 0;
+   virtual void waitForResponseSentCondition(uint32_t requestId) = 0;
 };
 
 /**
@@ -797,6 +799,82 @@ template <class C, typename... Args> shared_ptr<C> MakeSharedCommSession(Args&&.
    object->setSelfPtr(object);
    return object;
 }
+
+/**
+ *  Executor for internal actions
+ */
+class ActionContext
+{
+private:
+   uint32_t m_requestId;
+   shared_ptr<AbstractCommSession> m_session;
+   bool m_sendOutput;
+   TCHAR* m_name;
+   const void* m_data;
+   StringList m_args;
+   uint32_t m_rcc;
+   Condition m_rccCondition;
+
+
+public:
+   ActionContext(const TCHAR *name, const StringList& args, const void *data, const shared_ptr<AbstractCommSession>& session, uint32_t requestId, bool sendOutput)
+                        : m_session(session), m_args(args), m_rccCondition(true), m_data(data)
+   {
+      m_name = MemCopyString(name);
+      m_requestId = requestId;
+      m_sendOutput = sendOutput;
+      m_rcc = ERR_INTERNAL_ERROR;
+   }
+
+   ~ActionContext()
+   {
+      MemFree(m_name);
+   }
+
+   void sendOutput(const TCHAR* text)
+   {
+      if(m_sendOutput)
+      {
+         NXCPMessage msg(m_session->getProtocolVersion());
+         msg.setId(m_requestId);
+         msg.setCode(CMD_COMMAND_OUTPUT);
+         msg.setField(VID_MESSAGE, text);
+         m_session->sendMessage(&msg);
+      }
+   }
+
+   void sendOutputEnd()
+   {
+      if(m_sendOutput)
+      {
+         NXCPMessage msg(m_session->getProtocolVersion());
+         msg.setId(m_requestId);
+         msg.setCode(CMD_COMMAND_OUTPUT);
+         msg.setEndOfSequence();
+         m_session->sendMessage(&msg);
+      }
+   }
+
+   void markAsCompleted(uint32_t rcc)
+   {
+      m_rcc = rcc;
+      if (m_sendOutput)
+         m_session->registerForResponseSentCondition(m_requestId);
+      m_rccCondition.set();
+      if (m_sendOutput)
+         m_session->waitForResponseSentCondition(m_requestId);
+   }
+
+   uint32_t waitForCompletion()
+   {
+      m_rccCondition.wait();
+      return m_rcc;
+   }
+
+   AbstractCommSession* getSession() { return m_session.get(); }
+   const StringList* getArgs() { return &m_args; }
+   const void* getData() { return m_data; }
+};
 
 /**
  * Subagent's parameter information
@@ -862,8 +940,8 @@ struct NETXMS_SUBAGENT_TABLE
 struct NETXMS_SUBAGENT_ACTION
 {
    TCHAR name[MAX_PARAM_NAME];
-   LONG (* handler)(const TCHAR *, const StringList *, const TCHAR *, AbstractCommSession *);
-   const TCHAR *arg;
+   void (* handler)(shared_ptr<ActionContext>);
+   const void *arg;
    TCHAR description[MAX_DB_STRING];
 };
 

@@ -462,6 +462,7 @@ public class NXCPCodes
    public static final int CMD_DELETE_BIZSVC_CHECK = 0x01BD;
    public static final int CMD_GET_BUSINESS_SERVICE_UPTIME = 0x01BE;
    public static final int CMD_GET_BUSINESS_SERVICE_TICKETS = 0x01BF;
+   public static final int CMD_SSH_COMMAND = 0x01C0;
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;

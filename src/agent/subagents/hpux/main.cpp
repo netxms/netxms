@@ -34,12 +34,17 @@ static LONG H_SourcePkg(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue,
 /**
  * Handler for shutdown/restart actions
  */
-static LONG H_Shutdown(const TCHAR *pszAction, const StringList *pArgList, const TCHAR *pData, AbstractCommSession *session)
+static void H_Shutdown(shared_ptr<ActionContext> context)
 {
+	TCHAR mode = 0;
+	if (context->getData() != nullptr)
+	{
+		mode = ((const TCHAR*)context->getData())[0];
+	}
    chdir("/");
    char cmd[128];
-   snprintf(cmd, 128, "/sbin/shutdown %s -y now", (*pData == _T('R')) ? "-r" : "-h");
-   return (system(cmd) >= 0) ? ERR_SUCCESS : ERR_INTERNAL_ERROR;
+   snprintf(cmd, 128, "/sbin/shutdown %s -y now", (mode == _T('R')) ? "-r" : "-h");
+   context->markAsCompleted((system(cmd) >= 0) ? ERR_SUCCESS : ERR_INTERNAL_ERROR);
 }
 
 /**

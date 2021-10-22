@@ -45,6 +45,7 @@ public class ObjectTool implements ObjectAction
 	public static final int TYPE_FILE_DOWNLOAD  = 7;
    public static final int TYPE_SERVER_SCRIPT  = 8;
    public static final int TYPE_AGENT_TABLE    = 9;
+   public static final int TYPE_SSH_COMMAND    = 10;
 
    public static final int ASK_CONFIRMATION          = 0x00000001;
    public static final int GENERATES_OUTPUT          = 0x00000002;

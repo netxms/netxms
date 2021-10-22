@@ -65,4 +65,5 @@ public class CommonRCC
 	public static final int OBJECT_IN_USE = 116;
    public static final int INVALID_TIME_INTERVAL = 154;
    public static final int INVALID_BUSINESS_CHECK_ID = 155;
+	public static final int INVALID_SSH_PROXY_ID = 157;
 }

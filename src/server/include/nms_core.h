@@ -901,6 +901,7 @@ private:
    void alarmUpdateWorker(Alarm *alarm);
    void sendActionDBUpdateMessage(NXCP_MESSAGE *msg);
    void sendObjectUpdates();
+   void executeSshCommand(NXCPMessage *pRequest);
 
    void finalizeFileTransferToAgent(shared_ptr<AgentConnection> conn, uint32_t requestId);
    uint32_t resolveDCIName(uint32_t nodeId, uint32_t dciId, TCHAR *name);

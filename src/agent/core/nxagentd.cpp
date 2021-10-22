@@ -739,25 +739,25 @@ LONG RestartAgent()
 /**
  * Handler for Agent.Restart action
  */
-static LONG H_RestartAgent(const TCHAR *action, const StringList *args, const TCHAR *data, AbstractCommSession *session)
+static void H_RestartAgent(shared_ptr<ActionContext> context)
 {
-   return RestartAgent();
+   context->markAsCompleted(RestartAgent());
 }
 
 /**
  * Handler for Agent.RotateLog action
  */
-static LONG H_RotateLog(const TCHAR *action, const StringList *args, const TCHAR *data, AbstractCommSession *session)
+static void H_RotateLog(shared_ptr<ActionContext> context)
 {
-   return nxlog_rotate() ? ERR_SUCCESS : ERR_INTERNAL_ERROR;
+   context->markAsCompleted(nxlog_rotate() ? ERR_SUCCESS : ERR_INTERNAL_ERROR);
 }
 
 /**
  * Handler for System.Execute action
  */
-static LONG H_SystemExecute(const TCHAR *action, const StringList *args, const TCHAR *data, AbstractCommSession *session)
+static void H_SystemExecute(shared_ptr<ActionContext> context)
 {
-   return ERR_NOT_IMPLEMENTED;
+   context->markAsCompleted(ERR_NOT_IMPLEMENTED);
 }
 
 #ifdef _WIN32
@@ -784,16 +784,24 @@ static LONG H_SystemExecuteInAllSessions(const TCHAR *action, const StringList *
 /**
  * Handler for action Process.Terminate
  */
-static LONG H_TerminateProcess(const TCHAR *action, const StringList *args, const TCHAR *data, AbstractCommSession *session)
+static void H_TerminateProcess(shared_ptr<ActionContext> context)
 {
-   if (args->isEmpty())
-      return ERR_BAD_ARGUMENTS;
-
-   pid_t pid = _tcstol(args->get(0), nullptr, 0);
-   if (pid <= 0)
-      return ERR_BAD_ARGUMENTS;
-
-   return (kill(pid, SIGKILL) == 0) ? ERR_SUCCESS : ERR_INTERNAL_ERROR;
+   if (context->getArgs()->isEmpty())
+   {
+      context->markAsCompleted(ERR_BAD_ARGUMENTS);
+   }
+   else
+   {
+      pid_t pid = _tcstol(context->getArgs()->get(0), nullptr, 0);
+      if (pid <= 0)
+      {
+         context->markAsCompleted(ERR_BAD_ARGUMENTS);
+      }
+      else
+      {
+         return context->markAsCompleted((kill(pid, SIGKILL) == 0) ? ERR_SUCCESS : ERR_INTERNAL_ERROR);
+      }
+   }
 }
 
 #endif

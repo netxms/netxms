@@ -260,6 +260,62 @@ static bool ExecuteRemoteAction(const TCHAR *pszTarget, const TCHAR *pszAction)
 }
 
 /**
+ * Execute command on remote node by SSH. Node should have valid ssh proxy.
+ */
+static bool ExecuteRemoteSshAction(const TCHAR *pszTarget, const TCHAR *pszAction)
+{
+   shared_ptr<Node> node;
+   uint32_t proxyId = 0;
+   if ((pszTarget[0] == '@') || (pszTarget[0] == '#'))
+   {
+      // Resolve object name or ID.
+      node = (pszTarget[0] == '@') ?
+            static_pointer_cast<Node>(FindObjectByName(&pszTarget[1], OBJECT_NODE)) :
+            static_pointer_cast<Node>(FindObjectById(_tcstoul(&pszTarget[1], nullptr, 0), OBJECT_NODE));
+   }
+   else
+   {
+      // Resolve hostname
+      InetAddress addr = InetAddress::resolveHostName(pszTarget);
+      if (!addr.isValid())
+         return false;
+
+      node = FindNodeByIP(0, addr);
+   }
+
+   if (node != nullptr)
+   {
+      proxyId = node->getEffectiveSshProxy();
+   }
+   else
+   {
+      return false;
+   }
+
+   shared_ptr<Node> proxy = static_pointer_cast<Node>(FindObjectById(proxyId, OBJECT_NODE));
+   if (proxy != nullptr)
+   {
+      auto conn = proxy->getAgentConnection();
+      if (conn != nullptr)
+      {
+         StringList list;
+         TCHAR ipAddr[64];
+         list.add(node->getIpAddress().toString(ipAddr));
+         list.add(node->getSshPort());
+         list.add(node->getSshLogin());
+         list.add(node->getSshPassword());
+         list.add(pszAction);
+         list.add(node->getSshKeyId());
+         uint32_t rcc = conn->executeCommand(_T("SSH.Command"), list);
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("Agent action execution result: %d (%s)"), rcc, AgentErrorCodeToText(rcc));
+         if (rcc == ERR_SUCCESS)
+            return true;
+      }
+   }
+   return false;
+}
+
+/**
  * Run external command via system()
  */
 static void RunCommand(void *arg)
@@ -434,7 +490,7 @@ static void WriteServerActionExecutionLog(uint64_t eventId, uint32_t eventCode, 
  */
 bool ExecuteAction(uint32_t actionId, const Event *event, const Alarm *alarm)
 {
-   static const TCHAR *actionType[] = { _T("EXEC"), _T("REMOTE"), _T("SEND EMAIL"), _T("SEND NOTIFICATION"), _T("FORWARD EVENT"), _T("NXSL SCRIPT"), _T("XMPP MESSAGE") };
+   static const TCHAR *actionType[] = { _T("EXEC"), _T("REMOTE"), _T("SEND EMAIL"), _T("SEND NOTIFICATION"), _T("FORWARD EVENT"), _T("NXSL SCRIPT"), _T("XMPP MESSAGE"), _T("SSH") };
 
    bool success = false;
 
@@ -549,6 +605,18 @@ bool ExecuteAction(uint32_t actionId, const Event *event, const Alarm *alarm)
                   success = true;
                }
 					break;
+            case ACTION_SSH_REMOTE:
+               if (!expandedRcpt.isEmpty())
+               {
+                  nxlog_debug_tag(DEBUG_TAG, 3, _T("Executing by ssh on \"%s\": \"%s\""), expandedRcpt.cstr(), expandedData.cstr());
+                  success = ExecuteRemoteSshAction(expandedRcpt, expandedData);
+               }
+               else
+               {
+                  nxlog_debug_tag(DEBUG_TAG, 3, _T("Empty target list - remote ssh action will not be executed"));
+                  success = true;
+               }
+               break;
             default:
                break;
          }

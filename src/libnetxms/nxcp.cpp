@@ -490,7 +490,8 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(uint16_t code, TCHAR *buffer)
       _T("CMD_UPDATE_BIZSVC_CHECK"),
       _T("CMD_DELETE_BIZSVC_CHECK"),
       _T("CMD_GET_BUSINESS_SERVICE_UPTIME"),
-      _T("CMD_GET_BUSINESS_SERVICE_TICKETS")
+      _T("CMD_GET_BUSINESS_SERVICE_TICKETS"),
+      _T("CMD_SSH_COMMAND")
    };
    static const TCHAR *reportingMessageNames[] =
    {
@@ -503,7 +504,7 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(uint16_t code, TCHAR *buffer)
       _T("CMD_RS_NOTIFY")
    };
 
-   if ((code >= CMD_LOGIN) && (code <= CMD_GET_BUSINESS_SERVICE_TICKETS))
+   if ((code >= CMD_LOGIN) && (code <= CMD_SSH_COMMAND))
    {
       _tcscpy(buffer, messageNames[code - CMD_LOGIN]);
    }

@@ -8,10 +8,11 @@ public class Messages extends NLS
 	public static String ActionLabelProvider_ActionTypeExecute;
 	public static String ActionLabelProvider_ActionTypeForward;
 	public static String ActionLabelProvider_ActionTypeMail;
-   public static String ActionLabelProvider_ActionTypeNXSL;
+	public static String ActionLabelProvider_ActionTypeNXSL;
 	public static String ActionLabelProvider_ActionTypeRemoteExec;
 	public static String ActionLabelProvider_ActionTypeNotification;
-   public static String ActionLabelProvider_ActionTypeXMPP;
+	public static String ActionLabelProvider_ActionTypeXMPP;
+	public static String ActionLabelProvider_ActionTypeRemoteSSH;
 	public static String ActionLabelProvider_Unknown;
 	public static String ActionManager_ActionDelete;
 	public static String ActionManager_ActionNew;
@@ -37,6 +38,7 @@ public class Messages extends NLS
 	public static String EditActionDlg_CreateAction;
 	public static String EditActionDlg_EditAction;
 	public static String EditActionDlg_ExecCommandOnNode;
+	public static String EditActionDlg_ExecSshCommandOnNode;
 	public static String EditActionDlg_ExecCommandOnServer;
 	public static String EditActionDlg_ExecuteScript;
 	public static String EditActionDlg_ForwardEvent;

@@ -684,6 +684,7 @@ typedef struct
 #define CMD_DELETE_BIZSVC_CHECK           0x01BD
 #define CMD_GET_BUSINESS_SERVICE_UPTIME   0x01BE
 #define CMD_GET_BUSINESS_SERVICE_TICKETS  0x01BF
+#define CMD_SSH_COMMAND                   0x01C0
 
 #define CMD_RS_LIST_REPORTS               0x1100
 #define CMD_RS_GET_REPORT_DEFINITION      0x1101

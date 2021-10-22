@@ -1772,6 +1772,9 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_GET_BUSINESS_SERVICE_TICKETS:
          getBusinessServiceTickets(request);
          break;
+      case CMD_SSH_COMMAND:
+         executeSshCommand(request);
+         break;
       default:
          if ((code >> 8) == 0x11)
          {
@@ -16069,4 +16072,86 @@ void ClientSession::getBusinessServiceTickets(NXCPMessage *request)
       response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
    }
    sendMessage(response);
+}
+
+/**
+ * Execute SSH command on agent
+ * Expected input parameters:
+ * VID_OBJECT_ID                 Id of node
+ * VID_COMMAND                   Command to execute
+ * VID_RECEIVE_OUTPUT            Boolean flag for sending output of command.
+ *
+ * Return values:
+ * VID_RCC                           Request Completion Code
+ */
+void ClientSession::executeSshCommand(NXCPMessage *request)
+{
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   shared_ptr<Node> node = static_pointer_cast<Node>(FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID), OBJECT_NODE));
+   if (node != nullptr)
+   {
+      TCHAR command[MAX_PARAM_NAME];
+      request->getFieldAsString(VID_COMMAND, command, MAX_PARAM_NAME);
+
+      if (node->checkAccessRights(m_dwUserId, OBJECT_ACCESS_CONTROL))
+      {
+         uint32_t proxyId = node->getEffectiveSshProxy();
+         shared_ptr<Node> proxy = static_pointer_cast<Node>(FindObjectById(proxyId, OBJECT_NODE));
+         if (proxy != nullptr)
+         {
+            shared_ptr<AgentConnectionEx> conn = proxy->createAgentConnection();
+            if (conn != nullptr)
+            {
+               StringList list;
+               TCHAR ipAddr[64];
+               list.add(node->getIpAddress().toString(ipAddr));
+               list.add(node->getSshPort());
+               list.add(node->getSshLogin());
+               list.add(node->getSshPassword());
+               list.add(command);
+               list.add(node->getSshKeyId());
+
+               uint32_t rcc;
+               bool withOutput = request->getFieldAsBoolean(VID_RECEIVE_OUTPUT);
+               if (withOutput)
+               {
+                  ActionExecutionData data(this, request->getId());
+                  rcc = conn->executeCommand(_T("SSH.Command"), list, true, ActionExecuteCallback, &data);
+               }
+               else
+               {
+                  rcc = conn->executeCommand(_T("SSH.Command"), list);
+               }
+               debugPrintf(4, _T("executeSshCommand: rcc=%d"), rcc);
+
+               msg.setField(VID_RCC, AgentErrorToRCC(rcc));
+               if (rcc == ERR_SUCCESS)
+               {
+                  writeAuditLog(AUDIT_OBJECTS, true, node->getId(),  _T("Executed SSH command \"%s\", ip: %s:%u, login: %s"),
+                     command, node->getIpAddress().toString(ipAddr), node->getSshPort(), node->getSshLogin());
+               }
+            }
+            else
+            {
+               msg.setField(VID_RCC, RCC_COMM_FAILURE);
+            }
+         }
+         else
+         {
+            msg.setField(VID_RCC, RCC_INVALID_SSH_PROXY_ID);
+         }
+      }
+      else
+      {
+         msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+         writeAuditLog(AUDIT_OBJECTS, false, node->getId(), _T("Access denied on executing SSH command %s"), command);
+      }
+   }
+   else
+   {
+      msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+
+   // Send response
+   sendMessage(&msg);
 }

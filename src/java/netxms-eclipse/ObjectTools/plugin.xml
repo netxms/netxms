@@ -105,6 +105,14 @@
             name="Command results"
             restorable="false">
       </view>
+      <view
+            allowMultiple="true"
+            class="org.netxms.ui.eclipse.objecttools.views.SSHCommandResults"
+            icon="icons/console.png"
+            id="org.netxms.ui.eclipse.objecttools.views.SSHCommandResults"
+            name="SSH Command"
+            restorable="false">
+      </view>
    </extension>
    <extension
          point="org.eclipse.ui.commands">

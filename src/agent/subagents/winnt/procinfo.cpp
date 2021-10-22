@@ -631,20 +631,32 @@ LONG H_ProcessTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCo
 /**
  * Handler for Process.Terminate action
  */
-LONG H_TerminateProcess(const TCHAR *action, const StringList *args, const TCHAR *data, AbstractCommSession *session)
+void H_TerminateProcess(shared_ptr<ActionContext> context)
 {
-   if (args->isEmpty())
-      return ERR_BAD_ARGUMENTS;
-
-   DWORD pid = _tcstoul(args->get(0), nullptr, 0);
-   if (pid == 0)
-      return ERR_BAD_ARGUMENTS;
-
-   HANDLE hp = OpenProcess(PROCESS_TERMINATE, FALSE, pid);
-   if (hp == nullptr)
-      return ERR_INTERNAL_ERROR;
-
-   BOOL success = TerminateProcess(hp, 127);
-   CloseHandle(hp);
-   return success ? ERR_SUCCESS : ERR_INTERNAL_ERROR;
+   if (context->getArgs()->isEmpty())
+   {
+      context->markAsCompleted(ERR_BAD_ARGUMENTS);
+   }
+   else
+   {
+      DWORD pid = _tcstoul(args->get(0), nullptr, 0);
+      if (pid == 0)
+      {
+         context->markAsCompleted(ERR_BAD_ARGUMENTS);
+      }
+      else
+      {
+         HANDLE hp = OpenProcess(PROCESS_TERMINATE, FALSE, pid);
+         if (hp == nullptr)
+         {
+            context->markAsCompleted(ERR_INTERNAL_ERROR);
+         }
+         else
+         {
+            BOOL success = TerminateProcess(hp, 127);
+            CloseHandle(hp);
+            context->markAsCompleted(success ? ERR_SUCCESS : ERR_INTERNAL_ERROR);
+         }
+      }
+   }
 }

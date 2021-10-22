@@ -34,13 +34,14 @@ import org.netxms.ui.eclipse.actionmanager.views.ActionManager;
 public class ActionLabelProvider extends DecoratingLabelProvider implements ITableLabelProvider
 {
 	public static final String[] ACTION_TYPE = { 
-   	   Messages.get().ActionLabelProvider_ActionTypeExecute, 
-   	   Messages.get().ActionLabelProvider_ActionTypeRemoteExec, 
-   	   Messages.get().ActionLabelProvider_ActionTypeMail, 
-   	   Messages.get().ActionLabelProvider_ActionTypeNotification, 
-   	   Messages.get().ActionLabelProvider_ActionTypeForward, 
-         Messages.get().ActionLabelProvider_ActionTypeNXSL, 
-   	   Messages.get().ActionLabelProvider_ActionTypeXMPP 
+			Messages.get().ActionLabelProvider_ActionTypeExecute,
+			Messages.get().ActionLabelProvider_ActionTypeRemoteExec,
+			Messages.get().ActionLabelProvider_ActionTypeMail,
+			Messages.get().ActionLabelProvider_ActionTypeNotification,
+			Messages.get().ActionLabelProvider_ActionTypeForward,
+			Messages.get().ActionLabelProvider_ActionTypeNXSL,
+			Messages.get().ActionLabelProvider_ActionTypeXMPP,
+			Messages.get().ActionLabelProvider_ActionTypeRemoteSSH
 	   };
 	
 	/**

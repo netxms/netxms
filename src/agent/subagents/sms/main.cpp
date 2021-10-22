@@ -45,21 +45,25 @@ static LONG H_StringConst(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValu
 /**
  * Handler for SMS.Send action
  */
-static LONG H_SendSMS(const TCHAR *pszAction, const StringList *pArgs, const TCHAR *pData, AbstractCommSession *session)
+static void H_SendSMS(shared_ptr<ActionContext> context)
 {
-	if (pArgs->size() < 2)
-		return ERR_BAD_ARGUMENTS;
-
+	if (context->getArgs()->size() < 2)
+	{
+		context->markAsCompleted(ERR_BAD_ARGUMENTS);
+	}
+	else
+	{
 #ifdef UNICODE
-	char *rcpt = MBStringFromWideString(pArgs->get(0));
-	char *text = MBStringFromWideString(pArgs->get(1));
-	LONG rc = SendSMS(rcpt, text) ? ERR_SUCCESS : ERR_INTERNAL_ERROR;
-	MemFree(rcpt);
-	MemFree(text);
+		char *rcpt = MBStringFromWideString(context->getArgs()->get(0));
+		char *text = MBStringFromWideString(context->getArgs()->get(1));
+		LONG rc = SendSMS(rcpt, text) ? ERR_SUCCESS : ERR_INTERNAL_ERROR;
+		MemFree(rcpt);
+		MemFree(text);
 #else
-	LONG rc = SendSMS(pArgs->get(0), pArgs->get(1)) ? ERR_SUCCESS : ERR_INTERNAL_ERROR;
+		LONG rc = SendSMS(context->getArgs()->get(0), context->getArgs()->get(1)) ? ERR_SUCCESS : ERR_INTERNAL_ERROR;
 #endif
-	return rc;
+		context->markAsCompleted(rc);
+	}
 }
 
 /**

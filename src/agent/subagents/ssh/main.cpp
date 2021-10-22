@@ -142,6 +142,11 @@ static NETXMS_SUBAGENT_LIST m_lists[] =
    { _T("SSH.Command(*)"), H_SSHCommandList, NULL, _T("Result of command execution") },
 };
 
+static NETXMS_SUBAGENT_ACTION m_actions[] =
+{
+	{ _T("SSH.Command"), H_SSHCommandAction, NULL, _T("Result of command execution") },
+};
+
 /**
  * Subagent information
  */
@@ -155,7 +160,8 @@ static NETXMS_SUBAGENT_INFO m_info =
    sizeof(m_lists) / sizeof(NETXMS_SUBAGENT_LIST),
    m_lists,
    0, NULL,	// tables
-   0, NULL,	// actions
+   sizeof(m_actions) / sizeof(NETXMS_SUBAGENT_ACTION),
+   m_actions,
    0, NULL	// push parameters
 };
 

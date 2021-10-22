@@ -62,6 +62,8 @@ private:
    bool m_busy;
    TCHAR m_name[MAX_SSH_SESSION_NAME_LEN];
 
+   bool execute(const TCHAR *command, StringList* output, ActionContext* context);
+
 public:
    SSHSession(const InetAddress& addr, UINT16 port, INT32 id = 0);
    ~SSHSession();
@@ -80,6 +82,7 @@ public:
    void release();
 
    StringList *execute(const TCHAR *command);
+   bool execute(const TCHAR *command, shared_ptr<ActionContext>& context);
 };
 
 /* Key functions */
@@ -94,6 +97,7 @@ void ReleaseSession(SSHSession *session);
 /* handlers */
 LONG H_SSHCommand(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_SSHCommandList(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session);
+void H_SSHCommandAction(shared_ptr<ActionContext> context);
 
 /* globals */
 extern uint32_t g_sshConnectTimeout;

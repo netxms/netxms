@@ -59,6 +59,7 @@ public class EditActionDlg extends Dialog
    private Combo channelName;
 	private Button typeLocalExec;
 	private Button typeRemoteExec;
+	private Button typeRemoteSshExec;
 	private Button typeExecScript;
 	private Button typeNotification;
 	private Button typeXMPP;
@@ -139,6 +140,11 @@ public class EditActionDlg extends Dialog
 		typeRemoteExec.setSelection(action.getType() == ServerAction.EXEC_REMOTE);
 		typeRemoteExec.addSelectionListener(new TypeButtonSelectionListener());
 		
+		typeRemoteSshExec = new Button(typeGroup, SWT.RADIO);
+		typeRemoteSshExec.setText(Messages.get().EditActionDlg_ExecSshCommandOnNode);
+		typeRemoteSshExec.setSelection(action.getType() == ServerAction.EXEC_SSH_REMOTE);
+		typeRemoteSshExec.addSelectionListener(new TypeButtonSelectionListener());
+
 		typeExecScript = new Button(typeGroup, SWT.RADIO);
 		typeExecScript.setText(Messages.get().EditActionDlg_ExecuteScript);
 		typeExecScript.setSelection(action.getType() == ServerAction.EXEC_NXSL_SCRIPT);
@@ -261,6 +267,7 @@ public class EditActionDlg extends Dialog
 		switch(type)
 		{
 			case ServerAction.EXEC_REMOTE:
+			case ServerAction.EXEC_SSH_REMOTE:
 				return Messages.get().EditActionDlg_RemoteHost;
          case ServerAction.XMPP_MESSAGE:
             return Messages.get().EditActionDlg_XMPPID;
@@ -285,6 +292,7 @@ public class EditActionDlg extends Dialog
 			case ServerAction.EXEC_LOCAL:
 				return Messages.get().EditActionDlg_Command;
 			case ServerAction.EXEC_REMOTE:
+			case ServerAction.EXEC_SSH_REMOTE:
 				return Messages.get().EditActionDlg_Action;
 		}
 		return Messages.get().EditActionDlg_MessageText;
@@ -300,6 +308,8 @@ public class EditActionDlg extends Dialog
 			action.setType(ServerAction.EXEC_LOCAL);
 		else if (typeRemoteExec.getSelection())
 			action.setType(ServerAction.EXEC_REMOTE);
+		else if (typeRemoteSshExec.getSelection())
+			action.setType(ServerAction.EXEC_SSH_REMOTE);
 		else if (typeExecScript.getSelection())
 			action.setType(ServerAction.EXEC_NXSL_SCRIPT);
 		else if (typeNotification.getSelection())
@@ -359,6 +369,8 @@ public class EditActionDlg extends Dialog
 			type = ServerAction.EXEC_LOCAL;
 		else if (typeRemoteExec.getSelection())
 			type = ServerAction.EXEC_REMOTE;
+		else if (typeRemoteSshExec.getSelection())
+			type = ServerAction.EXEC_SSH_REMOTE;
 		else if (typeExecScript.getSelection())
 			type = ServerAction.EXEC_NXSL_SCRIPT;
 		else if (typeNotification.getSelection())
@@ -377,6 +389,7 @@ public class EditActionDlg extends Dialog
 				data.setEnabled(true);
 				break;
 			case ServerAction.EXEC_REMOTE:
+			case ServerAction.EXEC_SSH_REMOTE:
          case ServerAction.XMPP_MESSAGE:
             channelName.setEnabled(false);
 				recipient.setEnabled(true);

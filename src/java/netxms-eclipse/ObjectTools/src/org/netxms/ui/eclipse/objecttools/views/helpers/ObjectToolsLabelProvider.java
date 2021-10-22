@@ -42,7 +42,8 @@ public class ObjectToolsLabelProvider extends LabelProvider implements ITableLab
 		Messages.get().ObjectToolsLabelProvider_TypeServerCmd,
 		Messages.get().ObjectToolsLabelProvider_TypeDownloadFile,
       Messages.get().ObjectToolsLabelProvider_TypeServerScript,
-      Messages.get().ObjectToolsLabelProvider_TypeAgentTable
+      Messages.get().ObjectToolsLabelProvider_TypeAgentTable,
+      Messages.get().ObjectToolsLabelProvider_TypeSshCmd
 	};
 	
 	private Image[] toolTypeImages = new Image[TOOL_TYPES.length + 1];

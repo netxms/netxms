@@ -54,6 +54,7 @@ import org.netxms.ui.eclipse.objecttools.views.MultiNodeCommandExecutor;
 import org.netxms.ui.eclipse.objecttools.views.ServerCommandResults;
 import org.netxms.ui.eclipse.objecttools.views.ServerScriptResults;
 import org.netxms.ui.eclipse.objecttools.views.TableToolResults;
+import org.netxms.ui.eclipse.objecttools.views.SSHCommandResults;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.views.BrowserView;
@@ -343,6 +344,9 @@ public final class ObjectToolExecutor
          case ObjectTool.TYPE_SERVER_COMMAND:
             executeServerCommand(node, tool, inputValues, maskedFields);
             break;
+         case ObjectTool.TYPE_SSH_COMMAND:
+            executeSshCommand(node, tool);
+            break;
          case ObjectTool.TYPE_SERVER_SCRIPT:
             executeServerScript(node, tool, inputValues);
             break;
@@ -463,7 +467,7 @@ public final class ObjectToolExecutor
    {
       final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
       if ((tool.getFlags() & ObjectTool.GENERATES_OUTPUT) == 0)
-      {      
+      {
          new ConsoleJob(Messages.get().ObjectToolsDynamicMenu_ExecuteServerCmd, null, Activator.PLUGIN_ID, null) {
             @Override
             protected void runInternal(IProgressMonitor monitor) throws Exception
@@ -500,6 +504,56 @@ public final class ObjectToolExecutor
          }
       }
    }
+
+   /**
+    * Execute ssh command
+    * 
+    * @param node
+    * @param tool
+    */
+   private static void executeSshCommand(final ObjectContext node, final ObjectTool tool)
+   {
+      final NXCSession session = ConsoleSharedData.getSession();
+
+      if ((tool.getFlags() & ObjectTool.GENERATES_OUTPUT) == 0)
+      {
+         new ConsoleJob(String.format(Messages.get().ObjectToolsDynamicMenu_ExecuteOnNode, node.object.getObjectName()), null, Activator.PLUGIN_ID, null) {
+            @Override
+            protected String getErrorMessage()
+            {
+               return String.format(Messages.get().ObjectToolsDynamicMenu_CannotExecuteOnNode, node.object.getObjectName());
+            }
+
+            @Override
+            protected void runInternal(IProgressMonitor monitor) throws Exception
+            {
+               session.executeSshCommand(node.object.getObjectId(), tool.getData(), false, null, null);
+               runInUIThread(new Runnable() {
+                  @Override
+                  public void run()
+                  {
+                     MessageDialogHelper.openInformation(null, Messages.get().ObjectToolsDynamicMenu_ToolExecution, String.format(Messages.get().ObjectToolsDynamicMenu_ExecSuccess, tool.getData(), node.object.getObjectName()));
+                  }
+               });
+            }
+         }.start();
+      }
+      else
+      {
+         final String secondaryId = Long.toString(node.object.getObjectId()) + "&" + Long.toString(tool.getId()); //$NON-NLS-1$
+         final IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+         try
+         {
+            SSHCommandResults view = (SSHCommandResults)window.getActivePage().showView(SSHCommandResults.ID, secondaryId, IWorkbenchPage.VIEW_ACTIVATE);
+            view.executeSshCommand(tool.getData());
+         }
+         catch(Exception e)
+         {
+            MessageDialogHelper.openError(window.getShell(), Messages.get().ObjectToolsDynamicMenu_Error, String.format(Messages.get().ObjectToolsDynamicMenu_ErrorOpeningView, e.getLocalizedMessage()));
+         }
+      }
+   }
+
    
    /**
     * Execute server script

@@ -694,6 +694,7 @@ enum SessionState
 #define RCC_INVALID_TIME_INTERVAL         ((uint32_t)154)
 #define RCC_INVALID_BUSINESS_CHECK_ID     ((uint32_t)155)
 #define RCC_PROTECTED_IMAGE               ((uint32_t)156)
+#define RCC_INVALID_SSH_PROXY_ID          ((uint32_t)157)
 
 /**
  * Mask bits for NXCModifyEventTemplate()
@@ -1097,6 +1098,7 @@ enum AggregationFunction
 #define ACTION_FORWARD_EVENT  4
 #define ACTION_NXSL_SCRIPT    5
 #define ACTION_XMPP_MESSAGE   6
+#define ACTION_SSH_REMOTE     7
 
 /**
  * Network map types

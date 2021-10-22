@@ -90,20 +90,20 @@ static LONG H_PinState(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abstr
 /**
  * Set GPIO pin state
  */
-static LONG H_SetPinState(const TCHAR *action, const StringList *arguments, const TCHAR *data, AbstractCommSession *session)
+static void H_SetPinState(shared_ptr<ActionContext> context)
 {
-   const TCHAR *pinStr = arguments->get(0);
-   const TCHAR *stateStr = arguments->get(1);
+   const TCHAR *pinStr = context->getArgs()->get(0);
+   const TCHAR *stateStr = context->getArgs()->get(1);
    if (pinStr == NULL || stateStr == NULL) 
    {
-      return ERR_INTERNAL_ERROR;
+      context->markAsCompleted(ERR_INTERNAL_ERROR);
    }
    uint8_t pin = (uint8_t)_tcstol(pinStr, NULL, 10);
    uint8_t state = (uint8_t)_tcstol(stateStr, NULL, 10);
 
    bcm2835_gpio_write(pin, state == 1 ? HIGH : LOW);
 
-   return ERR_SUCCESS;
+   context->markAsCompleted(ERR_SUCCESS);
 }
 
 /**

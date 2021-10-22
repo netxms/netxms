@@ -92,7 +92,7 @@ LONG H_AgentProxyStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, Abstrac
  */
 CommSession::CommSession(const shared_ptr<AbstractCommChannel>& channel, const InetAddress &serverAddr,
          bool masterServer, bool controlServer) : m_downloadFileMap(Ownership::True), m_tcpProxies(0, 16, Ownership::True),
-         m_channel(channel), m_socketWriteMutex(MutexType::FAST)
+         m_channel(channel), m_socketWriteMutex(MutexType::FAST), m_responseConditionMap(Ownership::True)
 {
    m_id = InterlockedIncrement(&s_sessionId);
    m_index = INVALID_INDEX;
@@ -806,6 +806,7 @@ void CommSession::processingThread()
 
       // Send response
       sendMessage(&response);
+      setResponseSentCondition(response.getId());
    }
 }
 
@@ -1460,6 +1461,38 @@ void CommSession::prepareProxySessionSetupMsg(NXCPMessage *msg)
    if (m_ipv6Aware)
       flags |= 0x20;
    msg->setField(VID_FLAGS, flags);
+}
+
+/**
+ * Sets condition after response was sent, if anyone is signed up for this response
+ */
+void CommSession::setResponseSentCondition(uint32_t responseId)
+{
+   Condition* responseCondition = m_responseConditionMap.get(responseId);
+   if (responseCondition != nullptr)
+      responseCondition->set();
+}
+
+/**
+ * Signing for condition on response sending
+ */
+void CommSession::registerForResponseSentCondition(uint32_t responseId)
+{
+   auto responseCondition = new Condition(true);
+   m_responseConditionMap.set(responseId, responseCondition);
+}
+
+/**
+ * Prepare setup message for proxy session on external subagent side
+ */
+void CommSession::waitForResponseSentCondition(uint32_t responseId)
+{
+   Condition* responseCondition = m_responseConditionMap.get(responseId);
+   if (responseCondition != nullptr)
+   {
+      responseCondition->wait();
+   }
+   m_responseConditionMap.remove(responseId);
 }
 
 /**

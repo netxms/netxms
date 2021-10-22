@@ -1,0 +1,163 @@
+/**
+ * NetXMS - open source network management system
+ * Copyright (C) 2020 Raden Soultions
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+package org.netxms.ui.eclipse.objecttools.widgets;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.ui.console.IOConsoleOutputStream;
+import org.eclipse.ui.part.ViewPart;
+import org.netxms.client.NXCSession;
+import org.netxms.client.TextOutputListener;
+import org.netxms.client.objecttools.ObjectTool;
+import org.netxms.ui.eclipse.jobs.ConsoleJob;
+import org.netxms.ui.eclipse.objects.ObjectContext;
+import org.netxms.ui.eclipse.objecttools.Activator;
+import org.netxms.ui.eclipse.objecttools.Messages;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+
+/**
+ * Action executor widget to run an action and display it's result
+ */
+public class SSHExecutor extends AbstractObjectToolExecutor implements TextOutputListener
+{
+   private IOConsoleOutputStream out;
+   private String executionString;
+   protected long nodeId;
+
+   /**
+    * Constructor for action execution
+    * 
+    * @param parent parent control
+    * @param viewPart parent view
+    * @param ctx execution context
+    * @param actionSet action set
+    * @param tool object tool to execute
+    */
+   public SSHExecutor(Composite parent, ViewPart viewPart, ObjectContext ctx, ActionSet actionSet, ObjectTool tool)
+   {
+      super(parent, viewPart, ctx, actionSet);
+      nodeId = ctx.object.getObjectId();
+      this.executionString = tool.getData();
+   }
+
+   /**
+    * @see org.netxms.ui.eclipse.objecttools.widgets.AbstractObjectToolExecutor#execute()
+    */
+   @Override
+   public void execute()
+   {
+      setRunning(true);
+      final NXCSession session = ConsoleSharedData.getSession();
+      out = console.newOutputStream();
+      ConsoleJob job = new ConsoleJob(String.format(Messages.get().ObjectToolsDynamicMenu_ExecuteOnNode, session.getObjectName(nodeId)), null, Activator.PLUGIN_ID, null) {
+         @Override
+         protected String getErrorMessage()
+         {
+            return String.format(Messages.get().ObjectToolsDynamicMenu_CannotExecuteOnNode, session.getObjectName(nodeId));
+         }
+
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            try
+            {
+               session.executeSshCommand(nodeId, executionString, true, SSHExecutor.this, null);
+               out.write(Messages.get().LocalCommandResults_Terminated);
+            }
+            finally
+            {
+               out.close();
+               out = null;
+            }
+         }
+
+         @Override
+         protected void jobFinalize()
+         {
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
+                  setRunning(false);
+               }
+            });
+         }
+      };
+      job.setUser(false);
+      job.setSystem(true);
+      job.start();
+
+   }
+
+   /**
+    * @see org.netxms.client.ActionExecutionListener#messageReceived(java.lang.String)
+    */
+   @Override
+   public void messageReceived(String text)
+   {
+      try
+      {
+         if (out != null)
+            out.write(text);
+      }
+      catch(IOException e)
+      {
+      }
+   }
+
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#dispose()
+    */
+   @Override
+   public void dispose()
+   {
+      if (out != null)
+      {
+         try
+         {
+            out.close();
+         }
+         catch(IOException e)
+         {
+         }
+         out = null;
+      }
+      super.dispose();
+   }
+
+   /**
+    * @see org.netxms.client.TextOutputListener#setStreamId(long)
+    */
+   @Override
+   public void setStreamId(long streamId)
+   {
+   }
+
+   /**
+    * @see org.netxms.client.TextOutputListener#onError()
+    */
+   @Override
+   public void onError()
+   {
+   }
+}
+

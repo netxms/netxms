@@ -178,3 +178,51 @@ LONG H_SSHCommandList(const TCHAR *param, const TCHAR *arg, StringList *value, A
    }
    return rc;
 }
+
+/**
+ * Generic handler to execute command on host by ssh
+ */
+void H_SSHCommandAction(shared_ptr<ActionContext> context)
+{
+   const StringList* pArgList = context->getArgs();
+
+	if (pArgList->size() < 6)
+   {
+      context->markAsCompleted(ERR_MALFORMED_COMMAND);
+   }
+   else
+   {
+      InetAddress addr = InetAddress::resolveHostName(pArgList->get(0));
+      if (!addr.isValidUnicast())
+      {
+         context->markAsCompleted(ERR_BAD_ARGUMENTS);
+      }
+      else
+      {
+         uint16_t port = (uint16_t)_tcstoul(pArgList->get(1), nullptr, 10);
+         uint32_t id = _tcstoul(pArgList->get(5), nullptr, 10);
+         shared_ptr<KeyPair> key = GetSshKey(context->getSession(), id);
+         int32_t rc = ERR_EXEC_FAILED;
+         SSHSession *ssh = AcquireSession(addr, port, pArgList->get(2), pArgList->get(3), key);
+         if (ssh != nullptr)
+         {
+            if (ssh->execute(pArgList->get(4), context))
+            {
+               rc = ERR_SUCCESS;
+               nxlog_debug_tag(DEBUG_TAG, 6, _T("SSH execute success"));
+            }
+            else
+            {
+               nxlog_debug_tag(DEBUG_TAG, 6, _T("SSH execute failed"));
+            }
+            context->sendOutputEnd();
+            ReleaseSession(ssh);
+         }
+         else
+         {
+            nxlog_debug_tag(DEBUG_TAG, 6, _T("SSH session is not created"));
+         }
+         context->markAsCompleted(rc);
+      }
+   }
+}

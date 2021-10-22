@@ -200,25 +200,41 @@ void SSHSession::disconnect()
    m_session = NULL;
 }
 
+StringList* SSHSession::execute(const TCHAR *command)
+{
+   StringList* output = new StringList();
+   bool result = execute(command, output, nullptr);
+   if (!result)
+   {
+      delete_and_null(output);
+   }
+   return output;
+}
+
+bool SSHSession::execute(const TCHAR *command, shared_ptr<ActionContext>& context)
+{
+   return execute(command, nullptr, context.get());
+}
+
 /**
  * Execute command and capture output
  */
-StringList *SSHSession::execute(const TCHAR *command)
+bool SSHSession::execute(const TCHAR *command, StringList* output, ActionContext *context)
 {
    if ((m_session == nullptr) || !ssh_is_connected(m_session))
    {
       nxlog_debug_tag(DEBUG_TAG, 6, _T("SSHSession::execute: is not connected"));
-      return nullptr;
+      return false;
    }
 
    ssh_channel channel = ssh_channel_new(m_session);
    if (channel == nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG, 6, _T("SSHSession::execute: channel is null"));
-      return nullptr;
+      return false;
    }
 
-   StringList *output = nullptr;
+   bool result = false;
    if (ssh_channel_open_session(channel) == SSH_OK)
    {
 #ifdef UNICODE
@@ -228,7 +244,11 @@ StringList *SSHSession::execute(const TCHAR *command)
       if (ssh_channel_request_exec(channel, command) == SSH_OK)
 #endif
       {
-         output = new StringList();
+         result = true;
+         if (context != nullptr)
+         {
+            context->markAsCompleted(ERR_SUCCESS);
+         }
          char buffer[8192];
          //ThreadSleep(1);
          int nbytes = ssh_channel_read(channel, buffer, sizeof(buffer) - 1, 0);
@@ -244,7 +264,17 @@ StringList *SSHSession::execute(const TCHAR *command)
                char *cr = strchr(curr, '\r');
                if (cr != NULL)
                   *cr = 0;
-               output->addMBString(curr);
+               
+               if(context != nullptr)
+               {
+                  TCHAR* text = TStringFromUTF8String(curr);
+                  context->sendOutput(text);
+                  MemFree(text);
+               }
+               else
+               {
+                  output->addMBString(curr);
+               }
                curr = eol + 1;
                eol = strchr(curr, '\n');
             }
@@ -261,7 +291,17 @@ StringList *SSHSession::execute(const TCHAR *command)
                char *cr = strchr(buffer, '\r');
                if (cr != NULL)
                   *cr = 0;
-               output->addMBString(buffer);
+               
+               if(context != nullptr)
+               {
+                  TCHAR* text = TStringFromUTF8String(buffer);
+                  context->sendOutput(text);
+                  MemFree(text);
+               }
+               else
+               {
+                  output->addMBString(buffer);
+               }
             }
             ssh_channel_send_eof(channel);
          }
@@ -286,5 +326,5 @@ StringList *SSHSession::execute(const TCHAR *command)
    }
    ssh_channel_free(channel);
    m_lastAccess = time(NULL);
-   return output;
+   return result;
 }
