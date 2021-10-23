@@ -48,6 +48,16 @@ public abstract class ObjectPropertyPage extends PreferencePage
    public abstract String getId();
 
    /**
+    * Get parent page ID.
+    *
+    * @return parent page ID or null
+    */
+   public String getParentId()
+   {
+      return null;
+   }
+
+   /**
     * Check if this page should be visible for current object.
     *
     * @return true if this page should be visible

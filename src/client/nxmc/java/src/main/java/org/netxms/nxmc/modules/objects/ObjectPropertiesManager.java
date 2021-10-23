@@ -34,9 +34,15 @@ import org.netxms.nxmc.modules.businessservice.propertypages.AutoBindBusinessSer
 import org.netxms.nxmc.modules.businessservice.propertypages.AutoBindDCI;
 import org.netxms.nxmc.modules.businessservice.propertypages.InstanceDiscovery;
 import org.netxms.nxmc.modules.objects.propertypages.AccessControl;
+import org.netxms.nxmc.modules.objects.propertypages.Agent;
 import org.netxms.nxmc.modules.objects.propertypages.AutoApply;
 import org.netxms.nxmc.modules.objects.propertypages.AutoBind;
+import org.netxms.nxmc.modules.objects.propertypages.ClusterNetworks;
+import org.netxms.nxmc.modules.objects.propertypages.ClusterResources;
+import org.netxms.nxmc.modules.objects.propertypages.Comments;
 import org.netxms.nxmc.modules.objects.propertypages.Communication;
+import org.netxms.nxmc.modules.objects.propertypages.CustomAttributes;
+import org.netxms.nxmc.modules.objects.propertypages.Dashboards;
 import org.netxms.nxmc.modules.objects.propertypages.General;
 import org.netxms.nxmc.modules.objects.propertypages.ObjectPropertyPage;
 import org.slf4j.Logger;
@@ -55,7 +61,13 @@ public class ObjectPropertiesManager
    static
    {
       pageClasses.add(AccessControl.class);
+      pageClasses.add(Agent.class);
+      pageClasses.add(ClusterNetworks.class);
+      pageClasses.add(ClusterResources.class);
+      pageClasses.add(Comments.class);
       pageClasses.add(Communication.class);
+      pageClasses.add(CustomAttributes.class);
+      pageClasses.add(Dashboards.class);
       pageClasses.add(General.class);
       pageClasses.add(InstanceDiscovery.class);
       pageClasses.add(AutoApply.class);
@@ -91,7 +103,18 @@ public class ObjectPropertiesManager
 
       PreferenceManager pm = new PreferenceManager();
       for(ObjectPropertyPage p : pages)
-         pm.addToRoot(new PreferenceNode(p.getId(), p));
+      {
+         if (p.getParentId() == null)
+            pm.addToRoot(new PreferenceNode(p.getId(), p));
+      }
+      for(ObjectPropertyPage p : pages)
+      {
+         String parentId = p.getParentId();
+         if (parentId != null)
+         {
+            pm.addTo(parentId, new PreferenceNode(p.getId(), p));
+         }
+      }
 
       PreferenceDialog dlg = new PreferenceDialog(shell, pm) {
          @Override

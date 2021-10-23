@@ -432,8 +432,10 @@ public class ViewStack extends Composite
     */
    public View getActiveView()
    {
+      if (tabFolder.isDisposed())
+         return null;
       CTabItem selection = tabFolder.getSelection();
-      return (selection != null) ? (View)selection.getData("view") : null;
+      return ((selection != null) && !selection.isDisposed()) ? (View)selection.getData("view") : null;
    }
 
    /**

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,11 +20,11 @@ package org.netxms.nxmc.modules.objects.propertypages;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Text;
-import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.Registry;
@@ -34,25 +34,23 @@ import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
- * "General" property page for NetXMS objects
+ * "Comments" property page for NetXMS object
  */
-public class General extends ObjectPropertyPage
+public class Comments extends ObjectPropertyPage
 {
-   private static I18n i18n = LocalizationHelper.getI18n(General.class);
+   private static final I18n i18n = LocalizationHelper.getI18n(Comments.class);
 
-   private Text name;
-   private Text alias;
-	private String initialName;
-   private String initialAlias;
+	private Text comments;
+	private String initialComments;
 
    /**
     * Create new page.
     *
     * @param object object to edit
     */
-   public General(AbstractObject object)
+   public Comments(AbstractObject object)
    {
-      super(i18n.tr("General"), object);
+      super(i18n.tr("Comments"), object);
    }
 
    /**
@@ -61,16 +59,7 @@ public class General extends ObjectPropertyPage
    @Override
    public String getId()
    {
-      return "general";
-   }
-
-   /**
-    * @see org.netxms.nxmc.modules.objects.propertypages.ObjectPropertyPage#getPriority()
-    */
-   @Override
-   public int getPriority()
-   {
-      return 1;
+      return "comments";
    }
 
    /**
@@ -80,44 +69,31 @@ public class General extends ObjectPropertyPage
 	protected Control createContents(Composite parent)
 	{
 		Composite dialogArea = new Composite(parent, SWT.NONE);
+		
+		initialComments = object.getComments();
+		if (initialComments == null)
+			initialComments = ""; //$NON-NLS-1$
 
 		GridLayout layout = new GridLayout();
 		layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
 		layout.marginWidth = 0;
 		layout.marginHeight = 0;
       dialogArea.setLayout(layout);
-      
-      // Object ID
 
-      WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER | SWT.READ_ONLY, SWT.DEFAULT,
-           i18n.tr("Object ID"), Long.toString(object.getObjectId()), WidgetHelper.DEFAULT_LAYOUT_DATA);
-      
-		// Object class
-      WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER | SWT.READ_ONLY, SWT.DEFAULT,
-            i18n.tr("Object class"), object.getObjectClassName(), WidgetHelper.DEFAULT_LAYOUT_DATA);
+      comments = new Text(dialogArea, SWT.BORDER | SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
+		comments.setText(initialComments);
+
+		GridData gd = new GridData();
+		gd.grabExcessHorizontalSpace = true;
+		gd.grabExcessVerticalSpace = true;
+		gd.horizontalAlignment = SWT.FILL;
+		gd.verticalAlignment = SWT.FILL;
+		gd.widthHint = 0;
+      gd.heightHint = 0;
+		comments.setLayoutData(gd);
 		
-		// Object name
-      initialName = object.getObjectName();
-      name = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT, i18n.tr("Name"),
-            initialName, WidgetHelper.DEFAULT_LAYOUT_DATA);
-      
-      // Object alias
-      initialAlias = object.getAlias();
-      alias = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT, i18n.tr("Alias"),
-            initialAlias, WidgetHelper.DEFAULT_LAYOUT_DATA);
-
 		return dialogArea;
 	}
-
-   /**
-    * @see org.eclipse.jface.preference.PreferencePage#createControl(org.eclipse.swt.widgets.Composite)
-    */
-   @Override
-   public void createControl(Composite parent)
-   {
-      super.createControl(parent);
-      getDefaultsButton().setVisible(false);
-   }
 
    /**
     * @see org.netxms.nxmc.modules.objects.propertypages.ObjectPropertyPage#applyChanges(boolean)
@@ -125,29 +101,26 @@ public class General extends ObjectPropertyPage
    @Override
    protected boolean applyChanges(final boolean isApply)
 	{
-      final String newName = name.getText();
-      final String newAlias = alias.getText();
-      if (newName.equals(initialName) && newAlias.equals(initialAlias))
-         return true; // nothing to change
-
+		if (initialComments.equals(comments.getText()))
+         return true; // Nothing to apply
+		
 		if (isApply)
 			setValid(false);
-
+		
+		final String newComments = new String(comments.getText());
       final NXCSession session = Registry.getSession();
-		final NXCObjectModificationData data = new NXCObjectModificationData(object.getObjectId());
-		data.setName(newName);
-      data.setAlias(newAlias);
-      new Job(i18n.tr("Update object properties"), null, null) {
+      new Job(String.format(i18n.tr("Update comments for object %s"), object.getObjectName()), null) {
 			@Override
          protected void run(IProgressMonitor monitor) throws Exception
 			{
-				session.modifyObject(data);
+				session.updateObjectComments(object.getObjectId(), newComments);
+				initialComments = newComments;
 			}
 
 			@Override
 			protected String getErrorMessage()
 			{
-            return i18n.tr("Cannot modify object");
+				return i18n.tr("Cannot change comments");
 			}
 
 			@Override
@@ -159,15 +132,22 @@ public class General extends ObjectPropertyPage
 						@Override
 						public void run()
 						{
-							initialName = newName;
-                     initialAlias = newAlias;
-							General.this.setValid(true);
+							Comments.this.setValid(true);
 						}
 					});
 				}
 			}
 		}.start();
+		return true;
+	}
 
-      return true;
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performDefaults()
+    */
+	@Override
+	protected void performDefaults()
+	{
+		super.performDefaults();
+      comments.setText("");
 	}
 }
