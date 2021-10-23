@@ -48,7 +48,7 @@ import org.netxms.ui.eclipse.epp.Messages;
 import org.netxms.ui.eclipse.epp.widgets.RuleEditor;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
-import org.netxms.ui.eclipse.tools.ObjectLabelComparator;
+import org.netxms.ui.eclipse.tools.ElementLabelComparator;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
@@ -92,7 +92,7 @@ public class RuleSourceObjects extends PropertyPage
       viewer = new SortableTableViewer(dialogArea, columnNames, columnWidths, 0, SWT.UP, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setLabelProvider(new WorkbenchLabelProvider());
-      viewer.setComparator(new ObjectLabelComparator((ILabelProvider)viewer.getLabelProvider()));
+      viewer.setComparator(new ElementLabelComparator((ILabelProvider)viewer.getLabelProvider()));
       viewer.addSelectionChangedListener(new ISelectionChangedListener() {
 			@Override
 			public void selectionChanged(SelectionChangedEvent event)

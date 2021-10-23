@@ -56,7 +56,7 @@ import org.netxms.ui.eclipse.objectmanager.dialogs.AttributeEditDialog;
 import org.netxms.ui.eclipse.objectmanager.propertypages.helpers.AttrListLabelProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
-import org.netxms.ui.eclipse.tools.ObjectLabelComparator;
+import org.netxms.ui.eclipse.tools.ElementLabelComparator;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
@@ -103,7 +103,7 @@ public class CustomAttributes extends PropertyPage
       viewer.setContentProvider(new ArrayContentProvider());
       AttrListLabelProvider labelProvider = new AttrListLabelProvider();
       viewer.setLabelProvider(labelProvider);
-      viewer.setComparator(new ObjectLabelComparator(labelProvider));
+      viewer.setComparator(new ElementLabelComparator(labelProvider));
       
       attributes = new HashMap<String, CustomAttribute>(object.getCustomAttributes());
       viewer.setInput(attributes.entrySet());
