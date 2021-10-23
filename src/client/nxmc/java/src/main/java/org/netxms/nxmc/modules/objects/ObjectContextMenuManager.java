@@ -35,6 +35,7 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.BusinessService;
 import org.netxms.client.objects.BusinessServicePrototype;
 import org.netxms.client.objects.BusinessServiceRoot;
+import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.Container;
 import org.netxms.client.objects.Node;
 import org.netxms.client.objects.ServiceRoot;
@@ -48,6 +49,7 @@ import org.netxms.nxmc.modules.businessservice.dialogs.CreateBusinessServiceProt
 import org.netxms.nxmc.modules.objects.dialogs.CreateChassisDialog;
 import org.netxms.nxmc.modules.objects.dialogs.CreateInterfaceDialog;
 import org.netxms.nxmc.modules.objects.dialogs.CreateMobileDeviceDialog;
+import org.netxms.nxmc.modules.objects.dialogs.CreateNodeDialog;
 import org.netxms.nxmc.modules.objects.dialogs.CreateObjectDialog;
 import org.xnap.commons.i18n.I18n;
 
@@ -180,7 +182,7 @@ public class ObjectContextMenuManager extends MenuManager
                return;
 
             final NXCSession session = Registry.getSession();
-            new Job(i18n.tr("Creating rack"), view, null) {
+            new Job(i18n.tr("Create mobile device"), view, null) {
                @Override
                protected void run(IProgressMonitor monitor) throws Exception
                {
@@ -195,6 +197,55 @@ public class ObjectContextMenuManager extends MenuManager
                   return String.format(i18n.tr("Cannot create mobile device object %s"), dlg.getName());
                }
             }.start();
+         }
+      };
+
+      actionCreateNode = new Action(i18n.tr("&Node...")) {
+         @Override
+         public void run()
+         {
+            final long parentId = getObjectIdFromSelection();
+            if (parentId == 0)
+               return;
+
+            CreateNodeDialog dlg = null;
+            do
+            {
+               dlg = new CreateNodeDialog(getShell(), dlg);
+               if (dlg.open() != Window.OK)
+                  return;
+
+               final NXCObjectCreationData cd = new NXCObjectCreationData(AbstractObject.OBJECT_NODE, dlg.getObjectName(), parentId);
+               cd.setCreationFlags(dlg.getCreationFlags());
+               cd.setPrimaryName(dlg.getHostName());
+               cd.setAgentPort(dlg.getAgentPort());
+               cd.setSnmpPort(dlg.getSnmpPort());
+               cd.setEtherNetIpPort(dlg.getEtherNetIpPort());
+               cd.setSshPort(dlg.getSshPort());
+               cd.setAgentProxyId(dlg.getAgentProxy());
+               cd.setSnmpProxyId(dlg.getSnmpProxy());
+               cd.setEtherNetIpProxyId(dlg.getEtherNetIpProxy());
+               cd.setIcmpProxyId(dlg.getIcmpProxy());
+               cd.setSshProxyId(dlg.getSshProxy());
+               cd.setZoneUIN(dlg.getZoneUIN());
+               cd.setSshLogin(dlg.getSshLogin());
+               cd.setSshPassword(dlg.getSshPassword());
+
+               final NXCSession session = Registry.getSession();
+               new Job(i18n.tr("Create node"), view, null) {
+                  @Override
+                  protected void run(IProgressMonitor monitor) throws Exception
+                  {
+                     session.createObject(cd);
+                  }
+
+                  @Override
+                  protected String getErrorMessage()
+                  {
+                     return String.format(i18n.tr("Cannot create node object %s"), cd.getName());
+                  }
+               }.start();
+            } while(dlg.isShowAgain());
          }
       };
 
@@ -255,6 +306,7 @@ public class ObjectContextMenuManager extends MenuManager
       addAction(createMenu, actionCreateContainer, (AbstractObject o) -> (o instanceof Container) || (o instanceof ServiceRoot));
       addAction(createMenu, actionCreateInterface, (AbstractObject o) -> o instanceof Node);
       addAction(createMenu, actionCreateMobileDevice, (AbstractObject o) -> (o instanceof Container) || (o instanceof ServiceRoot));
+      addAction(createMenu, actionCreateNode, (AbstractObject o) -> (o instanceof Cluster) || (o instanceof Container) || (o instanceof ServiceRoot));
       addAction(createMenu, actionCreateRack, (AbstractObject o) -> (o instanceof Container) || (o instanceof ServiceRoot));
       addAction(createMenu, actionCreateVpnConnector, (AbstractObject o) -> o instanceof Node);
       addAction(createMenu, actionCreateBusinessService, (AbstractObject o) -> (o instanceof BusinessService) || (o instanceof BusinessServiceRoot) && !(o instanceof BusinessServicePrototype));
