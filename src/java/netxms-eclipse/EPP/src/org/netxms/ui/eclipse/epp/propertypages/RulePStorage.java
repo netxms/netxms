@@ -41,7 +41,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.events.EventProcessingPolicyRule;
 import org.netxms.ui.eclipse.epp.widgets.RuleEditor;
-import org.netxms.ui.eclipse.tools.ObjectLabelComparator;
+import org.netxms.ui.eclipse.tools.ElementLabelComparator;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.SetEditor;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
@@ -106,7 +106,7 @@ public class RulePStorage extends PropertyPage
       final int[] deleteColumnWidths = { 150 };
       viewerDeleteValue = new SortableTableViewer(dialogArea, deleteColumnNames, deleteColumnWidths, 0, SWT.UP, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
       viewerDeleteValue.setContentProvider(new ArrayContentProvider());
-      viewerDeleteValue.setComparator(new ObjectLabelComparator((ILabelProvider)viewerDeleteValue.getLabelProvider()));
+      viewerDeleteValue.setComparator(new ElementLabelComparator((ILabelProvider)viewerDeleteValue.getLabelProvider()));
       viewerDeleteValue.setInput(pStorageDelete.toArray());
       viewerDeleteValue.addSelectionChangedListener(new ISelectionChangedListener() {
          @Override

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,10 +27,9 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.TableColumn;
 
 /**
- * Generic object comparator for SortableTableViewer - sort objects by labels
- *
+ * Generic comparator for SortableTableViewer - sort elements by labels
  */
-public class ObjectLabelComparator extends ViewerComparator
+public class ElementLabelComparator extends ViewerComparator
 {
 	private ILabelProvider labelProvider;
 
@@ -39,14 +38,14 @@ public class ObjectLabelComparator extends ViewerComparator
 	 * 
 	 * @param labelProvider label provider
 	 */
-	public ObjectLabelComparator(ILabelProvider labelProvider)
+	public ElementLabelComparator(ILabelProvider labelProvider)
 	{
 		this.labelProvider = labelProvider;
 	}
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ViewerComparator#compare(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
-	 */
+
+   /**
+    * @see org.eclipse.jface.viewers.ViewerComparator#compare(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
+    */
 	@Override
 	public int compare(Viewer viewer, Object e1, Object e2)
 	{

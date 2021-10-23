@@ -41,7 +41,7 @@ import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.objectbrowser.Messages;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
-import org.netxms.ui.eclipse.tools.ObjectLabelComparator;
+import org.netxms.ui.eclipse.tools.ElementLabelComparator;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
@@ -92,7 +92,7 @@ public class ObjectList extends Composite
       viewer.getTable().setSortDirection(SWT.UP);
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setLabelProvider(new WorkbenchLabelProvider());
-      viewer.setComparator(new ObjectLabelComparator((ILabelProvider)viewer.getLabelProvider()));
+      viewer.setComparator(new ElementLabelComparator((ILabelProvider)viewer.getLabelProvider()));
       viewer.setInput(objects.values().toArray());
       
       GridData gd = new GridData();

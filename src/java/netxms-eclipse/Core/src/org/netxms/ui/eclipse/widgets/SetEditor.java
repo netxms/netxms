@@ -38,7 +38,7 @@ import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.ui.eclipse.console.dialogs.KeyValuePairEditDialog;
-import org.netxms.ui.eclipse.tools.ObjectLabelComparator;
+import org.netxms.ui.eclipse.tools.ElementLabelComparator;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.helpers.AttributeLabelProvider;
 
@@ -65,7 +65,7 @@ public class SetEditor extends Composite
       viewerSetValue = new SortableTableViewer(this, setColumnNames, setColumnWidths, 0, SWT.UP, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
       viewerSetValue.setContentProvider(new ArrayContentProvider());
       viewerSetValue.setLabelProvider(new AttributeLabelProvider());
-      viewerSetValue.setComparator(new ObjectLabelComparator((ILabelProvider)viewerSetValue.getLabelProvider()));
+      viewerSetValue.setComparator(new ElementLabelComparator((ILabelProvider)viewerSetValue.getLabelProvider()));
       viewerSetValue.setInput(pStorageSet.entrySet().toArray());
       viewerSetValue.addSelectionChangedListener(new ISelectionChangedListener() {
          @Override

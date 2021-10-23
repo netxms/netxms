@@ -63,7 +63,7 @@ import org.netxms.ui.eclipse.serverconfig.dialogs.EditSshKeysDialog;
 import org.netxms.ui.eclipse.serverconfig.views.helpers.SSHKeyLabelProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
-import org.netxms.ui.eclipse.tools.ObjectLabelComparator;
+import org.netxms.ui.eclipse.tools.ElementLabelComparator;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
@@ -104,7 +104,7 @@ public class SshKeyConfigurator extends ViewPart
       viewer = new SortableTableViewer(parent, setColumnNames, setColumnWidths, 0, SWT.UP, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setLabelProvider(new SSHKeyLabelProvider());
-      viewer.setComparator(new ObjectLabelComparator((ILabelProvider)viewer.getLabelProvider()));
+      viewer.setComparator(new ElementLabelComparator((ILabelProvider)viewer.getLabelProvider()));
       viewer.addSelectionChangedListener(new ISelectionChangedListener() {
          @Override
          public void selectionChanged(SelectionChangedEvent event)

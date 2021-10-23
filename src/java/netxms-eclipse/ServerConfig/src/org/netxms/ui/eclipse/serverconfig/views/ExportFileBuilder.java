@@ -104,7 +104,7 @@ import org.netxms.ui.eclipse.serverconfig.views.helpers.SummaryTablesLabelProvid
 import org.netxms.ui.eclipse.serverconfig.views.helpers.ToolComparator;
 import org.netxms.ui.eclipse.serverconfig.views.helpers.ToolLabelProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
-import org.netxms.ui.eclipse.tools.ObjectLabelComparator;
+import org.netxms.ui.eclipse.tools.ElementLabelComparator;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
 /**
@@ -258,7 +258,7 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 		templateViewer.getTable().setLayoutData(gd);
 		templateViewer.setContentProvider(new ArrayContentProvider());
 		templateViewer.setLabelProvider(new WorkbenchLabelProvider());
-		templateViewer.setComparator(new ObjectLabelComparator((ILabelProvider)templateViewer.getLabelProvider()));
+		templateViewer.setComparator(new ElementLabelComparator((ILabelProvider)templateViewer.getLabelProvider()));
 		templateViewer.getTable().setSortDirection(SWT.UP);
 
 		final ImageHyperlink linkAdd = toolkit.createImageHyperlink(clientArea, SWT.NONE);
@@ -320,7 +320,7 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 		eventViewer.getTable().setLayoutData(gd);
 		eventViewer.setContentProvider(new ArrayContentProvider());
 		eventViewer.setLabelProvider(new WorkbenchLabelProvider());
-		eventViewer.setComparator(new ObjectLabelComparator((ILabelProvider)eventViewer.getLabelProvider()));
+		eventViewer.setComparator(new ElementLabelComparator((ILabelProvider)eventViewer.getLabelProvider()));
 		eventViewer.getTable().setSortDirection(SWT.UP);
 
 		final ImageHyperlink linkAdd = toolkit.createImageHyperlink(clientArea, SWT.NONE);
@@ -382,7 +382,7 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 		trapViewer.getTable().setLayoutData(gd);
 		trapViewer.setContentProvider(new ArrayContentProvider());
 		trapViewer.setLabelProvider(new TrapListLabelProvider());
-		trapViewer.setComparator(new ObjectLabelComparator((ILabelProvider)eventViewer.getLabelProvider()));
+		trapViewer.setComparator(new ElementLabelComparator((ILabelProvider)eventViewer.getLabelProvider()));
 		trapViewer.getTable().setSortDirection(SWT.UP);
 
 		final ImageHyperlink linkAdd = toolkit.createImageHyperlink(clientArea, SWT.NONE);

@@ -49,7 +49,7 @@ import org.netxms.ui.eclipse.datacollection.propertypages.helpers.AccessListLabe
 import org.netxms.ui.eclipse.datacollection.propertypages.helpers.AbstractDCIPropertyPage;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
-import org.netxms.ui.eclipse.tools.ObjectLabelComparator;
+import org.netxms.ui.eclipse.tools.ElementLabelComparator;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.usermanager.dialogs.SelectUserDialog;
 
@@ -99,7 +99,7 @@ public class AccessControl extends AbstractDCIPropertyPage
 		viewer = new TableViewer(dialogArea, SWT.BORDER | SWT.FULL_SELECTION | SWT.MULTI);
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.setLabelProvider(new AccessListLabelProvider());
-		viewer.setComparator(new ObjectLabelComparator((ILabelProvider)viewer.getLabelProvider()));
+		viewer.setComparator(new ElementLabelComparator((ILabelProvider)viewer.getLabelProvider()));
 		viewer.getTable().setSortDirection(SWT.UP);
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
