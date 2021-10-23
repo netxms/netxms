@@ -37,7 +37,8 @@ import org.xnap.commons.i18n.I18n;
  */
 public class ImageSelector extends AbstractSelector implements ImageUpdateListener
 {
-   private I18n i18n = LocalizationHelper.getI18n(ImageSelector.class);
+   private static I18n i18n = LocalizationHelper.getI18n(ImageSelector.class);
+
    private UUID imageGuid = null;
 	
 	/**

@@ -93,15 +93,6 @@ public class Agent extends ObjectPropertyPage
    }
 
    /**
-    * @see org.netxms.nxmc.modules.objects.propertypages.ObjectPropertyPage#getPriority()
-    */
-   @Override
-   public int getPriority()
-   {
-      return 10;
-   }
-
-   /**
     * @see org.netxms.nxmc.modules.objects.propertypages.ObjectPropertyPage#isVisible()
     */
    @Override

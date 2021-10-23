@@ -86,6 +86,15 @@ public class AccessControl extends ObjectPropertyPage
    }
 
    /**
+    * @see org.netxms.nxmc.modules.objects.propertypages.ObjectPropertyPage#getPriority()
+    */
+   @Override
+   public int getPriority()
+   {
+      return 11;
+   }
+
+   /**
     * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
     */
 	@Override
@@ -97,15 +106,15 @@ public class AccessControl extends ObjectPropertyPage
 		acl = new HashMap<Long, AccessListElement>(origAcl.length);
 		for(int i = 0; i < origAcl.length; i++)
 			acl.put(origAcl[i].getUserId(), new AccessListElement(origAcl[i]));
-		
+
 		Composite dialogArea = new Composite(parent, SWT.NONE);
-		
+
 		GridLayout layout = new GridLayout();
 		layout.marginHeight = 0;
 		layout.marginWidth = 0;
 		layout.numColumns = 2;
 		dialogArea.setLayout(layout);
-		
+
 		Group users = new Group(dialogArea, SWT.NONE);
       users.setText(i18n.tr("Users and Groups"));
       GridData gd = new GridData();
@@ -117,11 +126,10 @@ public class AccessControl extends ObjectPropertyPage
 
 		layout = new GridLayout();
 		users.setLayout(layout);
-      
+
       final String[] columnNames = { i18n.tr("Login name"), i18n.tr("Rights") };
       final int[] columnWidths = { 150, 100 };
-      userList = new SortableTableViewer(users, columnNames, columnWidths, 0, SWT.UP,
-                                         SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
+      userList = new SortableTableViewer(users, columnNames, columnWidths, 0, SWT.UP, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
       userList.setContentProvider(new ArrayContentProvider());
       userList.setLabelProvider(new AccessListLabelProvider());
       userList.setComparator(new AccessListComparator());
@@ -407,13 +415,4 @@ public class AccessControl extends ObjectPropertyPage
 		acl.clear();
 		userList.setInput(acl.values().toArray());
 	}
-
-   /**
-    * @see org.netxms.nxmc.modules.objects.propertypages.ObjectPropertyPage#getPriority()
-    */
-   @Override
-   public int getPriority()
-   {
-      return 11;
-   }
 }

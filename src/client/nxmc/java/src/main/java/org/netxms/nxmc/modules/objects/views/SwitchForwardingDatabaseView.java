@@ -191,7 +191,8 @@ public class SwitchForwardingDatabaseView extends ObjectView
    @Override
    protected void onObjectChange(AbstractObject object)
    {
-      refresh();
+      if (isActive())
+         refresh();
    }
 
    /**
