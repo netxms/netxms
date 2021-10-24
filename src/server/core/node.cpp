@@ -9985,12 +9985,12 @@ void Node::writePackageListToMessage(NXCPMessage *msg)
    lockProperties();
    if (m_softwarePackages != nullptr)
    {
-      msg->setField(VID_NUM_ELEMENTS, (UINT32)m_softwarePackages->size());
-      UINT32 varId = VID_ELEMENT_LIST_BASE;
+      msg->setField(VID_NUM_ELEMENTS, static_cast<uint32_t>(m_softwarePackages->size()));
+      uint32_t fieldId = VID_ELEMENT_LIST_BASE;
       for(int i = 0; i < m_softwarePackages->size(); i++)
       {
-         m_softwarePackages->get(i)->fillMessage(msg, varId);
-         varId += 10;
+         m_softwarePackages->get(i)->fillMessage(msg, fieldId);
+         fieldId += 10;
       }
       msg->setField(VID_RCC, RCC_SUCCESS);
    }
