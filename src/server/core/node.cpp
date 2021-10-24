@@ -1181,6 +1181,12 @@ bool Node::deleteFromDatabase(DB_HANDLE hdb)
       success = executeQueryOnObject(hdb, _T("DELETE FROM icmp_statistics WHERE object_id=?"));
    if (success)
       success = executeQueryOnObject(hdb, _T("DELETE FROM icmp_target_address_list WHERE node_id=?"));
+   if (success)
+      success = executeQueryOnObject(hdb, _T("DELETE FROM software_inventory WHERE node_id=?"));
+   if (success)
+      success = executeQueryOnObject(hdb, _T("DELETE FROM hardware_inventory WHERE node_id=?"));
+   if (success)
+      success = executeQueryOnObject(hdb, _T("DELETE FROM node_components WHERE node_id=?"));
    return success;
 }
 
