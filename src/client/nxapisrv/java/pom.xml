@@ -7,21 +7,18 @@
    <version>${revision}</version>
    <name>NetXMS REST API Server</name>
    <url>http://netxms.org</url>
-
    <properties>
-     <revision>4.0-SNAPSHOT</revision>
-     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-     <restlet-version>2.4.3</restlet-version>
+      <revision>4.0-SNAPSHOT</revision>
+      <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+      <restlet-version>2.4.3</restlet-version>
    </properties>
-
    <repositories>
-     <repository>
-       <id>maven-restlet</id>
-       <name>Public online Restlet repository</name>
-       <url>https://maven.restlet.talend.com</url>
-     </repository>
+      <repository>
+         <id>maven-restlet</id>
+         <name>Public online Restlet repository</name>
+         <url>https://maven.restlet.talend.com</url>
+      </repository>
    </repositories>
-
    <dependencies>
       <dependency>
          <groupId>junit</groupId>
@@ -72,13 +69,12 @@
          <version>${project.version}</version>
       </dependency>
    </dependencies>
-
    <build>
       <plugins>
          <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-compiler-plugin</artifactId>
-	    <version>3.8.0</version>
+            <version>3.8.0</version>
             <configuration>
                <source>1.8</source>
                <target>1.8</target>
@@ -98,9 +94,18 @@
                      <maxIdleTime>60000</maxIdleTime>
                   </connector>
                </connectors>
-	       <webApp>
+               <webApp>
                   <extraClasspath>${basedir}/local</extraClasspath>
                </webApp>
+            </configuration>
+         </plugin>
+         <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-eclipse-plugin</artifactId>
+            <version>2.10</version>
+            <configuration>
+               <downloadSources>true</downloadSources>
+               <downloadJavadocs>true</downloadJavadocs>
             </configuration>
          </plugin>
       </plugins>
