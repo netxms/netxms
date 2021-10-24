@@ -418,27 +418,11 @@ public class NXCObjectModificationData
    }
 
    /**
-    * @param snmpAuthMethod the snmpAuthMethod to set
-    */
-   public void setSnmpAuthMethod(int snmpAuthMethod)
-   {
-      this.snmpAuthMethod = snmpAuthMethod;
-   }
-
-   /**
     * @return the snmpPrivMethod
     */
    public Integer getSnmpPrivMethod()
    {
       return snmpPrivMethod;
-   }
-
-   /**
-    * @param snmpPrivMethod the snmpPrivMethod to set
-    */
-   public void setSnmpPrivMethod(int snmpPrivMethod)
-   {
-      this.snmpPrivMethod = snmpPrivMethod;
    }
 
    /**
@@ -450,27 +434,11 @@ public class NXCObjectModificationData
    }
 
    /**
-    * @param snmpAuthName the snmpAuthName to set
-    */
-   public void setSnmpAuthName(String snmpAuthName)
-   {
-      this.snmpAuthName = snmpAuthName;
-   }
-
-   /**
     * @return the snmpAuthPassword
     */
    public String getSnmpAuthPassword()
    {
       return snmpAuthPassword;
-   }
-
-   /**
-    * @param snmpAuthPassword the snmpAuthPassword to set
-    */
-   public void setSnmpAuthPassword(String snmpAuthPassword)
-   {
-      this.snmpAuthPassword = snmpAuthPassword;
    }
 
    /**
@@ -482,11 +450,32 @@ public class NXCObjectModificationData
    }
 
    /**
-    * @param snmpPrivPassword the snmpPrivPassword to set
+    * Set SNMP authentication information.
+    *
+    * @param authName authentication name (user name for SNMPv3 or community for SNMP v1/2)
+    * @param authMethod SNMPv3 authentication method
+    * @param authPassword SNMPv3 authentication password
+    * @param privMethod SNMPv3 encryption method
+    * @param privPassword SNMPv3 encryption password
     */
-   public void setSnmpPrivPassword(String snmpPrivPassword)
+   public void setSnmpAuthentication(String authName, int authMethod, String authPassword, int privMethod, String privPassword)
    {
-      this.snmpPrivPassword = snmpPrivPassword;
+      this.snmpAuthName = authName;
+      this.snmpAuthMethod = authMethod;
+      this.snmpAuthPassword = authPassword;
+      this.snmpPrivMethod = privMethod;
+      this.snmpPrivPassword = privPassword;
+   }
+
+   /**
+    * Set SNMP authentication information - simplified version that can be used for setting SNMP v1/2 community string. Will set
+    * authentication and encryption passwords to empty strings and authentication and encryption methods to NONE.
+    *
+    * @param authName authentication name (user name for SNMPv3 or community for SNMP v1/2)
+    */
+   public void setSnmpAuthentication(String authName)
+   {
+      setSnmpAuthentication(authName, 0, "", 0, "");
    }
 
    /**
