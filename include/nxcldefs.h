@@ -210,6 +210,7 @@
 #define NC_IS_ETHERNET_IP         0x00800000
 #define NC_IS_MODBUS_TCP          0x01000000
 #define NC_IS_PROFINET            0x02000000
+#define NC_HAS_FILE_MANAGER       0x04000000
 
 /**
  * Flag separator

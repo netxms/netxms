@@ -4406,7 +4406,7 @@ bool Node::confPollAgent(UINT32 rqId)
          }
          else
          {
-            sendPollerMsg(POLLER_ERROR _T("   unable to get Windows Performance Counters list\r\n"));
+            sendPollerMsg(POLLER_ERROR _T("   Unable to get Windows Performance Counters list\r\n"));
             if (m_capabilities & NC_HAS_WINPDH)
             {
                m_capabilities &= ~NC_HAS_WINPDH;
@@ -4415,6 +4415,33 @@ bool Node::confPollAgent(UINT32 rqId)
          }
          unlockProperties();
       }
+
+      // Check if file manager is supported
+      bool fileManagerPresent = false;
+      NXCPMessage request(CMD_GET_FOLDER_CONTENT, pAgentConn->generateRequestId());
+      request.setField(VID_ROOT, true);
+      request.setField(VID_FILE_NAME, _T("/"));
+      NXCPMessage *response = pAgentConn->customRequest(&request);
+      if (response != nullptr)
+      {
+         if (response->getFieldAsUInt32(VID_RCC) == ERR_SUCCESS)
+            fileManagerPresent = true;
+         delete response;
+      }
+      lockProperties();
+      if (fileManagerPresent)
+      {
+         m_capabilities |= NC_HAS_FILE_MANAGER;
+         sendPollerMsg(_T("   File manager is available\r\n"));
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): file manager is available"), m_name);
+      }
+      else
+      {
+         m_capabilities &= ~NC_HAS_FILE_MANAGER;
+         sendPollerMsg(_T("   File manager is not available\r\n"));
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): file manager is not available"), m_name);
+      }
+      unlockProperties();
 
       // Server ID should be set on this connection before updating configuration elements on agent side
       if (pAgentConn->setServerId(g_serverId) == ERR_SUCCESS)

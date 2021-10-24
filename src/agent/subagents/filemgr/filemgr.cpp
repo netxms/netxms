@@ -721,7 +721,7 @@ static void CH_GetFolderSize(NXCPMessage *request, NXCPMessage *response, Abstra
  */
 static void CH_GetFolderContent(NXCPMessage *request, NXCPMessage *response, AbstractCommSession *session)
 {
-   TCHAR directory[MAX_PATH];
+   TCHAR directory[MAX_PATH] = _T("");
    request->getFieldAsString(VID_FILE_NAME, directory, MAX_PATH);
    if (directory[0] == 0)
    {
