@@ -675,7 +675,7 @@ public:
    SoftwarePackage(DB_RESULT result, int row);
    ~SoftwarePackage();
 
-   void fillMessage(NXCPMessage *msg, UINT32 baseId) const;
+   void fillMessage(NXCPMessage *msg, uint32_t baseId) const;
    bool saveToDatabase(DB_STATEMENT hStmt) const;
 
    const TCHAR *getName() const { return m_name; }
