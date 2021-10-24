@@ -51,7 +51,7 @@ ObjectArray<SoftwarePackage> *CalculatePackageChanges(ObjectArray<SoftwarePackag
    {
       SoftwarePackage *p = oldSet->get(i);
       SoftwarePackage *np = newSet->find(p, PackageNameComparator);
-      if (np == NULL)
+      if (np == nullptr)
       {
          p->setChangeCode(CHANGE_REMOVED);
          changes->add(p);
@@ -61,7 +61,7 @@ ObjectArray<SoftwarePackage> *CalculatePackageChanges(ObjectArray<SoftwarePackag
       if (!_tcscmp(p->getVersion(), np->getVersion()))
          continue;
 
-      if (newSet->find(p, PackageNameVersionComparator) != NULL)
+      if (newSet->find(p, PackageNameVersionComparator) != nullptr)
          continue;
 
       // multiple versions of same package could be installed
@@ -71,8 +71,8 @@ ObjectArray<SoftwarePackage> *CalculatePackageChanges(ObjectArray<SoftwarePackag
       SoftwarePackage *prev = oldSet->get(i - 1);
       SoftwarePackage *next = oldSet->get(i + 1);
       bool multipleVersions =
-               ((prev != NULL) && !_tcscmp(prev->getName(), p->getName())) ||
-               ((next != NULL) && !_tcscmp(next->getName(), p->getName()));
+               ((prev != nullptr) && !_tcscmp(prev->getName(), p->getName())) ||
+               ((next != nullptr) && !_tcscmp(next->getName(), p->getName()));
 
       if (multipleVersions)
       {
@@ -161,12 +161,12 @@ SoftwarePackage *SoftwarePackage::createFromTableRow(const Table *table, int row
  */
 SoftwarePackage::SoftwarePackage()
 {
-	m_name = NULL;
-	m_version = NULL;
-	m_vendor = NULL;
+	m_name = nullptr;
+	m_version = nullptr;
+	m_vendor = nullptr;
 	m_date = 0;
-	m_url = NULL;
-	m_description = NULL;
+	m_url = nullptr;
+	m_description = nullptr;
 	m_changeCode = CHANGE_NONE;
 }
 
@@ -178,12 +178,12 @@ SoftwarePackage::SoftwarePackage()
  */
 SoftwarePackage::SoftwarePackage(DB_RESULT result, int row)
 {
-   m_name = DBGetField(result, row, 0, NULL, 0);
-   m_version = DBGetField(result, row, 1, NULL, 0);
-   m_vendor = DBGetField(result, row, 2, NULL, 0);
+   m_name = DBGetField(result, row, 0, nullptr, 0);
+   m_version = DBGetField(result, row, 1, nullptr, 0);
+   m_vendor = DBGetField(result, row, 2, nullptr, 0);
    m_date = (time_t)DBGetFieldULong(result, row, 3);
-   m_url = DBGetField(result, row, 4, NULL, 0);
-   m_description = DBGetField(result, row, 5, NULL, 0);
+   m_url = DBGetField(result, row, 4, nullptr, 0);
+   m_description = DBGetField(result, row, 5, nullptr, 0);
    m_changeCode = CHANGE_NONE;
 }
 
@@ -202,15 +202,15 @@ SoftwarePackage::~SoftwarePackage()
 /**
  * Fill NXCP message with package data
  */
-void SoftwarePackage::fillMessage(NXCPMessage *msg, UINT32 baseId) const
+void SoftwarePackage::fillMessage(NXCPMessage *msg, uint32_t baseId) const
 {
-	UINT32 varId = baseId;
-	msg->setField(varId++, CHECK_NULL_EX(m_name));
-	msg->setField(varId++, CHECK_NULL_EX(m_version));
-	msg->setField(varId++, CHECK_NULL_EX(m_vendor));
-	msg->setField(varId++, static_cast<UINT32>(m_date));
-	msg->setField(varId++, CHECK_NULL_EX(m_url));
-	msg->setField(varId++, CHECK_NULL_EX(m_description));
+   uint32_t fieldId = baseId;
+	msg->setField(fieldId++, CHECK_NULL_EX(m_name));
+	msg->setField(fieldId++, CHECK_NULL_EX(m_version));
+	msg->setField(fieldId++, CHECK_NULL_EX(m_vendor));
+	msg->setField(fieldId++, static_cast<uint32_t>(m_date));
+	msg->setField(fieldId++, CHECK_NULL_EX(m_url));
+	msg->setField(fieldId++, CHECK_NULL_EX(m_description));
 }
 
 /**
@@ -221,7 +221,7 @@ bool SoftwarePackage::saveToDatabase(DB_STATEMENT hStmt) const
    DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_name, DB_BIND_STATIC, 127);
    DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_version, DB_BIND_STATIC, 63);
    DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, m_vendor, DB_BIND_STATIC, 63);
-   DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, static_cast<UINT32>(m_date));
+   DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_date));
    DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, m_url, DB_BIND_STATIC, 255);
    DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, m_description, DB_BIND_STATIC, 255);
    return DBExecute(hStmt);
