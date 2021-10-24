@@ -22,13 +22,13 @@
      <id>console</id>
      <repositories>
         <repository>
-            <id>eclipse-2021-03-updates</id>
-            <url>http://download.eclipse.org/eclipse/updates/4.19</url>
+            <id>eclipse-2021-09-updates</id>
+            <url>http://download.eclipse.org/eclipse/updates/4.21</url>
             <layout>p2</layout>
         </repository>
         <repository>
-            <id>eclipse-2021-03</id>
-            <url>http://download.eclipse.org/releases/2021-03</url>
+            <id>eclipse-2021-09</id>
+            <url>http://download.eclipse.org/releases/2021-09</url>
             <layout>p2</layout>
         </repository>
      </repositories>
@@ -37,8 +37,8 @@
      <id>web</id>
      <repositories>
         <repository>  
-            <id>rap-3.16</id>
-            <url>http://download.eclipse.org/rt/rap/3.16</url>
+            <id>rap-3.18</id>
+            <url>http://download.eclipse.org/rt/rap/3.18</url>
             <layout>p2</layout>
         </repository>
         <repository>
