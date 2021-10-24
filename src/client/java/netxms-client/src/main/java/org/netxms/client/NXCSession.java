@@ -6044,7 +6044,7 @@ public class NXCSession
                data.getSnmpPrivPassword() == null || data.getSnmpAuthMethod() == null ||
                data.getSnmpPrivMethod() == null) 
             throw new NXCException(RCC.VARIABLE_NOT_FOUND);
-         
+
          msg.setField(NXCPCodes.VID_SNMP_AUTH_OBJECT, data.getSnmpAuthName());
          msg.setField(NXCPCodes.VID_SNMP_AUTH_PASSWORD, data.getSnmpAuthPassword());
          msg.setField(NXCPCodes.VID_SNMP_PRIV_PASSWORD, data.getSnmpPrivPassword());

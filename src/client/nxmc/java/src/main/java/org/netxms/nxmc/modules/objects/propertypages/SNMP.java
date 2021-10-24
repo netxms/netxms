@@ -286,11 +286,7 @@ public class SNMP extends ObjectPropertyPage
          return false;
       }
       md.setSnmpProxy(snmpProxy.getObjectId());
-      md.setSnmpAuthMethod(snmpAuth.getSelectionIndex());
-      md.setSnmpPrivMethod(snmpPriv.getSelectionIndex());
-      md.setSnmpAuthName(snmpAuthName.getText());
-      md.setSnmpAuthPassword(snmpAuthPassword.getText());
-      md.setSnmpPrivPassword(snmpPrivPassword.getText());
+      md.setSnmpAuthentication(snmpAuthName.getText(), snmpAuth.getSelectionIndex(), snmpAuthPassword.getText(), snmpPriv.getSelectionIndex(), snmpPrivPassword.getText());
 
       int flags = node.getFlags();
       if (snmpSettingsLocked.getSelection())

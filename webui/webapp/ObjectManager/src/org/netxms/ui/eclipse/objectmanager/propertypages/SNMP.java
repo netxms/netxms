@@ -249,19 +249,15 @@ public class SNMP extends PropertyPage
          return false;
       }
       md.setSnmpProxy(snmpProxy.getObjectId());
-      md.setSnmpAuthMethod(snmpAuth.getSelectionIndex());
-      md.setSnmpPrivMethod(snmpPriv.getSelectionIndex());
-      md.setSnmpAuthName(snmpAuthName.getText());
-      md.setSnmpAuthPassword(snmpAuthPassword.getText());
-      md.setSnmpPrivPassword(snmpPrivPassword.getText());
-      
+      md.setSnmpAuthentication(snmpAuthName.getText(), snmpAuth.getSelectionIndex(), snmpAuthPassword.getText(), snmpPriv.getSelectionIndex(), snmpPrivPassword.getText());
+
       int flags = node.getFlags();
       if (snmpSettingsLocked.getSelection())
          flags |= AbstractNode.NF_SNMP_SETTINGS_LOCKED;
       else
          flags &= ~AbstractNode.NF_SNMP_SETTINGS_LOCKED;
       md.setObjectFlags(flags, AbstractNode.NF_SNMP_SETTINGS_LOCKED);
-      
+
       final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
       new ConsoleJob(String.format("Updating SNMP settings for node %s", node.getObjectName()), null, Activator.PLUGIN_ID, null) {
          @Override
