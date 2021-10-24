@@ -79,6 +79,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
    public static final int NC_IS_ETHERNET_IP         = 0x00800000;
    public static final int NC_IS_MODBUS_TCP          = 0x01000000;
    public static final int NC_IS_PROFINET            = 0x02000000;
+   public static final int NC_HAS_FILE_MANAGER       = 0x04000000;
 
 	// Node flags
    public static final int NF_EXTERNAL_GATEWAY          = 0x00010000;
@@ -607,6 +608,16 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
 	{
 		return (capabilities & NC_IS_NATIVE_AGENT) != 0;
 	}
+
+   /**
+    * Check if file manager is available on this node.
+    *
+    * @return true if file manager is available on this node
+    */
+   public boolean hasFileManager()
+   {
+      return (capabilities & NC_HAS_FILE_MANAGER) != 0;
+   }
 
 	/**
 	 * 

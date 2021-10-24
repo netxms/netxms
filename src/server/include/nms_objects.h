@@ -3202,7 +3202,7 @@ public:
    SharedString getProductCode() const { return GetAttributeWithLock(m_productCode, m_mutexProperties); }
    SharedString getSerialNumber() const { return GetAttributeWithLock(m_serialNumber, m_mutexProperties); }
 
-   uint32_t getCapabilities() { return m_capabilities; }
+   uint32_t getCapabilities() const { return m_capabilities; }
    void setCapabilities(uint32_t flag) { lockProperties(); m_capabilities |= flag; setModified(MODIFY_NODE_PROPERTIES); unlockProperties(); }
    void clearCapabilities(uint32_t flag) { lockProperties(); m_capabilities &= ~flag; setModified(MODIFY_NODE_PROPERTIES); unlockProperties(); }
    void setLocalMgmtFlag() { setCapabilities(NC_IS_LOCAL_MGMT); }
