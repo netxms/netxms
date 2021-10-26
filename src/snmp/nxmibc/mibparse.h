@@ -54,8 +54,8 @@ public:
    MP_SYNTAX()
    {
       nSyntax = 0;
-      pszStr = NULL;
-	   pszDescription = NULL;
+      pszStr = nullptr;
+	   pszDescription = nullptr;
    }
 
    ~MP_SYNTAX()
@@ -73,8 +73,8 @@ typedef struct mp_numeric_value
    int nType;
    union
    {
-      LONG nInt32;
-      INT64 nInt64;
+      int32_t nInt32;
+      int64_t nInt64;
    } value;
 } MP_NUMERIC_VALUE;
 
@@ -84,7 +84,7 @@ typedef struct mp_numeric_value
 class MP_SUBID
 {
 public:
-   DWORD dwValue;
+   uint32_t dwValue;
    char *pszName;
    BOOL bResolved;
 
