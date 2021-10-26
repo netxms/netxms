@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?pde version="3.5"?>
 
-<product name="%product.name" uid="org.netxms.ui.eclipse.console.product" id="org.netxms.ui.eclipse.console.product" application="org.netxms.ui.eclipse.console.application" version="3.9.0" useFeatures="false" includeLaunchers="true">
+<product name="%product.name" uid="org.netxms.ui.eclipse.console.product" id="org.netxms.ui.eclipse.console.product" application="org.netxms.ui.eclipse.console.application" version="4.0.0" useFeatures="false" includeLaunchers="true">
 
    <aboutInfo>
       <image path="/Core/icons/about.png"/>
@@ -858,9 +858,6 @@ Copyright (c) 2003-2021 Raden Solutions
       <plugin id="org.eclipse.pde.ds.lib.nl_pt_BR" fragment="true"/>
       <plugin id="org.eclipse.pde.ds.lib.nl_ru" fragment="true"/>
       <plugin id="org.eclipse.swt"/>
-      <plugin id="org.eclipse.swt.browser.chromium.cocoa.macosx.x86_64" fragment="true"/>
-      <plugin id="org.eclipse.swt.browser.chromium.gtk.linux.x86_64" fragment="true"/>
-      <plugin id="org.eclipse.swt.browser.chromium.win32.win32.x86_64" fragment="true"/>
       <plugin id="org.eclipse.swt.cocoa.macosx.x86_64" fragment="true"/>
       <plugin id="org.eclipse.swt.gtk.linux.aarch64" fragment="true"/>
       <plugin id="org.eclipse.swt.gtk.linux.ppc64le" fragment="true"/>
