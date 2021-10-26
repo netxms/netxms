@@ -65,13 +65,14 @@ extern char mptext[];
 #endif
 
 #ifdef __64BIT__
-#define YYSIZE_T  INT64
+#define YYSIZE_T  int64_t
 #endif
 
 extern FILE *mpin, *mpout;
 extern int g_nCurrLine;
 
 static MP_MODULE *m_pModule;
+static MP_SYNTAX *s_currentSyntaxObject = nullptr;
 #ifdef UNICODE
 static char s_currentFilename[MAX_PATH];
 #else
@@ -93,13 +94,12 @@ static int AccessFromText(const char *pszText)
 {
    static const char *pText[] = { "read-only", "read-write", "write-only",
                                   "not-accessible", "accessible-for-notify",
-                                  "read-create", NULL };
-   char szBuffer[256];
-   int i;
-
-   for(i = 0; pText[i] != NULL; i++)
+                                  "read-create", nullptr };
+   for(int i = 0; pText[i] != nullptr; i++)
       if (strcmp(pszText, pText[i]))
          return i + 1;
+
+   char szBuffer[256];
    sprintf(szBuffer, "Invalid ACCESS value \"%s\"", pszText);
    mperror(szBuffer);
    return -1;
@@ -223,13 +223,13 @@ static int AccessFromText(const char *pszText)
 
 %type <nInteger> SnmpStatusPart SnmpAccessPart
 
-%type <pSyntax> SnmpSyntaxPart SnmpSyntax Type BuiltInType NamedType
+%type <pSyntax> SnmpSyntaxPart SnmpSyntaxStatement Type BuiltInType NamedType
 %type <pSyntax> TextualConventionAssignment BuiltInTypeAssignment
 
 %type <pszString> UCidentifier LCidentifier Identifier
 %type <pszString> ModuleIdentifier DefinedValue SnmpIdentityPart
 %type <pszString> Symbol CharString
-%type <pszString> SnmpDescriptionPart
+%type <pszString> SnmpDescriptionPart SnmpDescriptionStatement
 
 %type <number> Number
 
@@ -588,13 +588,20 @@ SnmpUpdatePart:
 ;
 
 SnmpDescriptionPart:
-    DESCRIPTION_SYM CharString
+    SnmpDescriptionStatement
 {
-   $$ = $2;
+   $$ = $1;
 }
 |
 {
-   $$ = NULL;
+   $$ = nullptr;
+}
+;
+
+SnmpDescriptionStatement:
+    DESCRIPTION_SYM CharString
+{
+   $$ = $2;
 }
 ;
 
@@ -639,15 +646,8 @@ SnmpKeywordBinding:
 }
 ;
 
-SnmpSyntax:
-    SYNTAX_SYM Type
-{
-   $$ = $2;
-}
-;
-
 SnmpSyntaxPart:
-    SnmpSyntax
+    SnmpSyntaxStatement
 {
    $$ = $1;
 }
@@ -655,6 +655,13 @@ SnmpSyntaxPart:
 {
    $$ = new MP_SYNTAX;
    $$->nSyntax = MIB_TYPE_OTHER;
+}
+;
+
+SnmpSyntaxStatement:
+    SYNTAX_SYM Type
+{
+   $$ = $2;
 }
 ;
 
@@ -907,19 +914,52 @@ TokenList:
 ;
 
 TokenObject:
-    TOKEN_SYM
+   TOKEN_SYM
 ;
 
 TextualConventionAssignment:
-    TEXTUAL_CONVENTION_SYM
-    SnmpDisplayHintPart
-    SnmpStatusPart
-    SnmpDescriptionPart
-    SnmpReferencePart
-    SnmpSyntaxPart
+   TEXTUAL_CONVENTION_SYM TextualConventionDefinition
 {
-   $$ = $6;
-   $$->pszDescription = $4;
+   $$ = s_currentSyntaxObject;
+   s_currentSyntaxObject = nullptr;
+}
+;
+
+TextualConventionDefinition:
+	TextualConventionDefinition TextualConventionDefinitionElement
+|	TextualConventionDefinitionElement
+;
+
+TextualConventionDefinitionElement: 
+	SnmpDisplayHintStatement
+|	SnmpStatusPart
+|	SnmpDescriptionStatement
+{
+	if (s_currentSyntaxObject != nullptr)
+	{
+		MemFree(s_currentSyntaxObject->pszDescription);
+	}
+	else
+	{
+		s_currentSyntaxObject = new MP_SYNTAX();
+	}
+	s_currentSyntaxObject->pszDescription = $1;
+}
+|	SnmpReferenceStatement
+|	SnmpSyntaxStatement
+{
+	if (s_currentSyntaxObject != nullptr)
+	{
+		s_currentSyntaxObject->nSyntax = $1->nSyntax;
+		MemFree(s_currentSyntaxObject->pszStr);
+		s_currentSyntaxObject->pszStr = $1->pszStr;
+		$1->pszStr = nullptr;
+		delete $1;
+	}
+	else
+	{
+		s_currentSyntaxObject = $1;
+	}
 }
 ;
 
@@ -1234,19 +1274,22 @@ SnmpStatusPart:
 ;
 
 SnmpReferencePart:
-    REFERENCE_SYM CharString
-{
-   MemFree($2);
-}
+	SnmpReferenceStatement
 |
 ;
 
-SnmpDisplayHintPart:
+SnmpReferenceStatement:
+	REFERENCE_SYM CharString
+{
+   MemFree($2);
+}
+;
+
+SnmpDisplayHintStatement:
     DISPLAY_HINT_SYM CharString
 {
    MemFree($2);
 }
-|
 ;
 
 SnmpIndexPart:
