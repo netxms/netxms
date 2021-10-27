@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,8 +33,8 @@ import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.layout.RowData;
@@ -42,7 +42,6 @@ import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Event;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
@@ -158,31 +157,11 @@ public class CustomAttributes extends ObjectPropertyPage
       RowData rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       addButton.setLayoutData(rd);
-      addButton.addSelectionListener(new SelectionListener() {
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e)
-			{
-				widgetSelected(e);
-			}
-
+      addButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
-				final AttributeEditDialog dlg = new AttributeEditDialog(CustomAttributes.this.getShell(), null, null, 0, false);
-				if (dlg.open() == Window.OK)
-				{
-					if (attributes.containsKey(dlg.getName()))
-					{
-						MessageDialogHelper.openWarning(CustomAttributes.this.getShell(), i18n.tr("Warning"), 
-						      String.format(i18n.tr("Attribute named %s already exists"), dlg.getName()));
-					}
-					else
-					{
-						attributes.put(dlg.getName(), new CustomAttribute(dlg.getValue(), dlg.getFlags(), 0));
-				      viewer.setInput(attributes.entrySet());
-				      CustomAttributes.this.isModified = true;
-					}
-				}
+            addAttribute();
 			}
       });
 		
@@ -191,30 +170,11 @@ public class CustomAttributes extends ObjectPropertyPage
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       editButton.setLayoutData(rd);
-      editButton.addSelectionListener(new SelectionListener() {
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e)
-			{
-				widgetSelected(e);
-			}
-
-			@SuppressWarnings("unchecked")
+      editButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
-				IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-				if (selection.size() == 1)
-				{
-					Entry<String, CustomAttribute> element = (Entry<String, CustomAttribute>)selection.getFirstElement();
-					CustomAttribute attr = element.getValue();
-					final AttributeEditDialog dlg = new AttributeEditDialog(CustomAttributes.this.getShell(), element.getKey(), attr.getValue(), attr.getFlags(), attr.isInherited());
-					if (dlg.open() == Window.OK)
-					{
-						attributes.put(dlg.getName(), new CustomAttribute(dlg.getValue(), dlg.getFlags(), attr.getSourceObject()));
-				      viewer.setInput(attributes.entrySet());
-				      CustomAttributes.this.isModified = true;
-					}
-				}
+            editAttribute();
 			}
       });
 
@@ -223,58 +183,19 @@ public class CustomAttributes extends ObjectPropertyPage
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       deleteButton.setLayoutData(rd);
-      deleteButton.addSelectionListener(new SelectionListener() {
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e)
-			{
-				widgetSelected(e);
-			}
-
-			@SuppressWarnings("unchecked")
+      deleteButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
-				IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-				Iterator<Entry<String, CustomAttribute>> it = selection.iterator();
-				boolean modified = false;
-				if (it.hasNext())
-				{
-					while(it.hasNext())
-					{
-						Entry<String, CustomAttribute> element = it.next();
-						if (element.getValue().isInherited() && !element.getValue().isRedefined())
-						   continue;
-						if (element.getValue().isRedefined())
-						{
-						   for(AbstractObject obj : object.getParentsAsArray())
-						   {
-						      CustomAttribute ca = obj.getCustomAttribute(element.getKey());
-						      if (ca != null)
-						      {
-						         attributes.put(element.getKey(), 
-						               new CustomAttribute(ca.getValue(), CustomAttribute.INHERITABLE, ca.isInherited() && !ca.isRedefined() ? ca.getSourceObject() : obj.getObjectId()));						         						         
-						         break;
-						      }
-						   }	
-						   modified = true;
-						}
-						else
-						{
-						   attributes.remove(element.getKey());		
-						   modified = true;
-						}
-					}
-			      viewer.setInput(attributes.entrySet());
-			      CustomAttributes.this.isModified = modified;
-				}
+            deleteAttributes();
 			}
       });
-		
+
       viewer.addDoubleClickListener(new IDoubleClickListener() {
 			@Override
 			public void doubleClick(DoubleClickEvent event)
 			{
-				editButton.notifyListeners(SWT.Selection, new Event());
+            editAttribute();
 			}
       });
       
@@ -290,6 +211,92 @@ public class CustomAttributes extends ObjectPropertyPage
       
 		return dialogArea;
 	}
+
+   /**
+    * Add new attribute
+    */
+   private void addAttribute()
+   {
+      final AttributeEditDialog dlg = new AttributeEditDialog(CustomAttributes.this.getShell(), null, null, 0, false);
+      if (dlg.open() != Window.OK)
+         return;
+
+      if (attributes.containsKey(dlg.getName()))
+      {
+         MessageDialogHelper.openWarning(CustomAttributes.this.getShell(), i18n.tr("Warning"), String.format(i18n.tr("Attribute named %s already exists"), dlg.getName()));
+      }
+      else
+      {
+         attributes.put(dlg.getName(), new CustomAttribute(dlg.getValue(), dlg.getFlags(), 0));
+         viewer.setInput(attributes.entrySet());
+         CustomAttributes.this.isModified = true;
+      }
+   }
+
+   /**
+    * Edit selected attribute
+    */
+   @SuppressWarnings("unchecked")
+   private void editAttribute()
+   {
+      IStructuredSelection selection = viewer.getStructuredSelection();
+      if (selection.size() != 1)
+         return;
+
+      Entry<String, CustomAttribute> element = (Entry<String, CustomAttribute>)selection.getFirstElement();
+      CustomAttribute attr = element.getValue();
+      final AttributeEditDialog dlg = new AttributeEditDialog(CustomAttributes.this.getShell(), element.getKey(), attr.getValue(), attr.getFlags(), attr.isInherited());
+      if (dlg.open() == Window.OK)
+      {
+         attributes.put(dlg.getName(), new CustomAttribute(dlg.getValue(), dlg.getFlags(), attr.getSourceObject()));
+         viewer.setInput(attributes.entrySet());
+         CustomAttributes.this.isModified = true;
+      }
+   }
+
+   /**
+    * Delete selected attributes
+    */
+   @SuppressWarnings("unchecked")
+   private void deleteAttributes()
+   {
+      IStructuredSelection selection = viewer.getStructuredSelection();
+      Iterator<Entry<String, CustomAttribute>> it = selection.iterator();
+      boolean modified = false;
+      while(it.hasNext())
+      {
+         Entry<String, CustomAttribute> element = it.next();
+         if (element.getValue().isInherited() && !element.getValue().isRedefined())
+            continue;
+         if (element.getValue().isRedefined())
+         {
+            boolean parentAttributeFound = false;
+            for(AbstractObject obj : object.getParentsAsArray())
+            {
+               CustomAttribute ca = obj.getCustomAttribute(element.getKey());
+               if (ca != null)
+               {
+                  attributes.put(element.getKey(), new CustomAttribute(ca.getValue(), CustomAttribute.INHERITABLE, ca.isInherited() && !ca.isRedefined() ? ca.getSourceObject() : obj.getObjectId()));
+                  parentAttributeFound = true;
+                  break;
+               }
+            }
+            if (!parentAttributeFound) // Parent attribute not found, do real delete
+               attributes.remove(element.getKey());
+            modified = true;
+         }
+         else
+         {
+            attributes.remove(element.getKey());
+            modified = true;
+         }
+      }
+      if (modified)
+      {
+         viewer.setInput(attributes.entrySet());
+         CustomAttributes.this.isModified = true;
+      }
+   }
 
    /**
     * @see org.netxms.nxmc.modules.objects.propertypages.ObjectPropertyPage#applyChanges(boolean)
