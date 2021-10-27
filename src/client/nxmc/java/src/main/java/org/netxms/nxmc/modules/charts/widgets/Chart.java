@@ -24,6 +24,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import org.eclipse.jface.action.MenuManager;
+import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.MouseEvent;
@@ -309,7 +310,8 @@ public class Chart extends Composite
    {
       title = new Label(this, SWT.NONE);
       title.setBackground(getBackground());
-      title.setText(configuration.getTitle());
+      title.setText(configuration.getTitle().replace("&", "&&"));
+      title.setFont(JFaceResources.getBannerFont());
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.CENTER;
       gd.horizontalSpan = isLegendOnSide() ? 2 : 1;
