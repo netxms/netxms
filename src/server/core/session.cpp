@@ -6929,30 +6929,34 @@ void ClientSession::forcedNodePoll(NXCPMessage *pRequest)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, pRequest->getId());
 
-   int pollType = pRequest->getFieldAsUInt16(VID_POLL_TYPE);
    bool isValidPoll = false;
+   int pollType = pRequest->getFieldAsUInt16(VID_POLL_TYPE);
 
    // Find object to be polled
+   Pollable *pollableObject;
    shared_ptr<NetObj> object = FindObjectById(pRequest->getFieldAsUInt32(VID_OBJECT_ID));
    if (object != nullptr)
    {
-      if (pollType == POLL_STATUS)
-         isValidPoll = object->getAsPollable()->isStatusPollAvailable();
-      else if (pollType == POLL_CONFIGURATION_FULL)
-         isValidPoll = (object->getAsPollable()->isConfigurationPollAvailable() && object->getObjectClass() == OBJECT_NODE);
-      else if (pollType == POLL_CONFIGURATION_NORMAL)
-         isValidPoll = object->getAsPollable()->isConfigurationPollAvailable();
-      else if (pollType == POLL_INSTANCE_DISCOVERY)
-         isValidPoll = object->getAsPollable()->isInstanceDiscoveryPollAvailable();
-      else if (pollType == POLL_TOPOLOGY)
-         isValidPoll = object->getAsPollable()->isTopologyPollAvailable();
-      else if (pollType == POLL_ROUTING_TABLE)
-         isValidPoll = object->getAsPollable()->isRoutingTablePollAvailable();
-      else if (pollType == POLL_DISCOVERY)
-         isValidPoll = object->getAsPollable()->isDiscoveryPollAvailable();
-      else if (pollType == POLL_INTERFACE_NAMES)
-         isValidPoll = (object->getObjectClass() == OBJECT_NODE);
-
+      pollableObject = object->getAsPollable();
+      if (pollableObject != nullptr)
+      {
+         if (pollType == POLL_STATUS)
+            isValidPoll = pollableObject->isStatusPollAvailable();
+         else if (pollType == POLL_CONFIGURATION_FULL)
+            isValidPoll = (pollableObject->isConfigurationPollAvailable() && object->getObjectClass() == OBJECT_NODE);
+         else if (pollType == POLL_CONFIGURATION_NORMAL)
+            isValidPoll = pollableObject->isConfigurationPollAvailable();
+         else if (pollType == POLL_INSTANCE_DISCOVERY)
+            isValidPoll = pollableObject->isInstanceDiscoveryPollAvailable();
+         else if (pollType == POLL_TOPOLOGY)
+            isValidPoll = pollableObject->isTopologyPollAvailable();
+         else if (pollType == POLL_ROUTING_TABLE)
+            isValidPoll = pollableObject->isRoutingTablePollAvailable();
+         else if (pollType == POLL_DISCOVERY)
+            isValidPoll = pollableObject->isDiscoveryPollAvailable();
+         else if (pollType == POLL_INTERFACE_NAMES)
+            isValidPoll = (object->getObjectClass() == OBJECT_NODE);
+      }
       if (isValidPoll)
       {
          // Check access rights
@@ -6986,26 +6990,26 @@ void ClientSession::forcedNodePoll(NXCPMessage *pRequest)
       switch(pollType)
       {
          case POLL_STATUS:
-            object->getAsPollable()->doForcedStatusPoll(RegisterPoller(PollerType::STATUS, object), this, pRequest->getId());
+            pollableObject->doForcedStatusPoll(RegisterPoller(PollerType::STATUS, object), this, pRequest->getId());
             break;
          case POLL_CONFIGURATION_FULL:
             if (object->getObjectClass() == OBJECT_NODE)
                static_cast<Node&>(*object).setRecheckCapsFlag();
             // intentionally no break here
          case POLL_CONFIGURATION_NORMAL:
-            object->getAsPollable()->doForcedConfigurationPoll(RegisterPoller(PollerType::CONFIGURATION, object), this, pRequest->getId());
+            pollableObject->doForcedConfigurationPoll(RegisterPoller(PollerType::CONFIGURATION, object), this, pRequest->getId());
             break;
          case POLL_INSTANCE_DISCOVERY:
-            object->getAsPollable()->doForcedInstanceDiscoveryPoll(RegisterPoller(PollerType::INSTANCE_DISCOVERY, object), this, pRequest->getId());
+            pollableObject->doForcedInstanceDiscoveryPoll(RegisterPoller(PollerType::INSTANCE_DISCOVERY, object), this, pRequest->getId());
             break;
          case POLL_TOPOLOGY:
-            object->getAsPollable()->doForcedTopologyPoll(RegisterPoller(PollerType::TOPOLOGY, object), this, pRequest->getId());
+            pollableObject->doForcedTopologyPoll(RegisterPoller(PollerType::TOPOLOGY, object), this, pRequest->getId());
             break;
          case POLL_ROUTING_TABLE:
-            object->getAsPollable()->doForcedRoutingTablePoll(RegisterPoller(PollerType::ROUTING_TABLE, object), this, pRequest->getId());
+            pollableObject->doForcedRoutingTablePoll(RegisterPoller(PollerType::ROUTING_TABLE, object), this, pRequest->getId());
             break;
          case POLL_DISCOVERY:
-            object->getAsPollable()->doForcedDiscoveryPoll(RegisterPoller(PollerType::DISCOVERY, object), this, pRequest->getId());
+            pollableObject->doForcedDiscoveryPoll(RegisterPoller(PollerType::DISCOVERY, object), this, pRequest->getId());
             break;
          case POLL_INTERFACE_NAMES:
             if (object->getObjectClass() == OBJECT_NODE)
@@ -7022,7 +7026,6 @@ void ClientSession::forcedNodePoll(NXCPMessage *pRequest)
       msg.setField(VID_RCC, RCC_SUCCESS);
       sendMessage(&msg);
    }
-
 }
 
 /**

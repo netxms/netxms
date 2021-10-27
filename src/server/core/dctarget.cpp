@@ -1767,7 +1767,7 @@ void DataCollectionTarget::leaveMaintenanceMode(uint32_t userId)
    {
       TCHAR threadKey[32];
       _sntprintf(threadKey, 32, _T("POLL_%u"), getId());
-      ThreadPoolExecuteSerialized(g_pollerThreadPool, threadKey, getAsPollable(), &Pollable::doForcedStatusPoll, RegisterPoller(PollerType::STATUS, self()));
+      ThreadPoolExecuteSerialized(g_pollerThreadPool, threadKey, static_cast<Pollable*>(this), &Pollable::doForcedStatusPoll, RegisterPoller(PollerType::STATUS, self()));
    }
 }
 

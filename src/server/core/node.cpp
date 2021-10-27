@@ -3101,7 +3101,7 @@ NetworkPathCheckResult Node::checkNetworkPathLayer2(uint32_t requestId, bool sec
                {
                   nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("Node::checkNetworkPath(%s [%d]): forced status poll on node %s [%d]"),
                               m_name, m_id, node->getName(), node->getId());
-                  node->getAsPollable()->doForcedStatusPoll(RegisterPoller(PollerType::STATUS, node));
+                  static_cast<Pollable&>(*node).doForcedStatusPoll(RegisterPoller(PollerType::STATUS, node));
                }
             }
 

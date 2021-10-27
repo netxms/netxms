@@ -219,18 +219,16 @@ enum class PollerType
  */
 class NXCORE_EXPORTABLE PollerInfo
 {
-   friend PollerInfo *RegisterPoller(PollerType, const shared_ptr<NetObj>&, bool);
+   friend PollerInfo *RegisterPoller(PollerType, const shared_ptr<NetObj>&);
 
 private:
    PollerType m_type;
    shared_ptr<NetObj> m_object;
-   bool m_objectCreation; //FIXME: this member is never used
    TCHAR m_status[128];
 
-   PollerInfo(PollerType type, const shared_ptr<NetObj>& object, bool objectCreation) : m_object(object)
+   PollerInfo(PollerType type, const shared_ptr<NetObj>& object) : m_object(object)
    {
       m_type = type;
-      m_objectCreation = objectCreation;
       _tcscpy(m_status, _T("awaiting execution"));
    }
 
@@ -239,7 +237,6 @@ public:
 
    PollerType getType() const { return m_type; }
    NetObj *getObject() const { return m_object.get(); }
-   bool isObjectCreation() const { return m_objectCreation; }
    const TCHAR *getStatus() const { return m_status; }
 
    void startExecution() { _tcscpy(m_status, _T("started")); }
@@ -4593,7 +4590,7 @@ bool IsEventSource(int objectClass);
 int DefaultPropagatedStatus(int iObjectStatus);
 int GetDefaultStatusCalculation(int *pnSingleThreshold, int **ppnThresholds);
 
-PollerInfo *RegisterPoller(PollerType type, const shared_ptr<NetObj>& object, bool objectCreation = false);
+PollerInfo *RegisterPoller(PollerType type, const shared_ptr<NetObj>& object);
 void ShowPollers(ServerConsole *console);
 
 void InitUserAgentNotifications();

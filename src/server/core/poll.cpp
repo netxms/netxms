@@ -71,9 +71,9 @@ PollerInfo::~PollerInfo()
 /**
  * Register active poller
  */
-PollerInfo *RegisterPoller(PollerType type, const shared_ptr<NetObj>& object, bool objectCreation)
+PollerInfo *RegisterPoller(PollerType type, const shared_ptr<NetObj>& object)
 {
-   PollerInfo *p = new PollerInfo(type, object, objectCreation);
+   PollerInfo *p = new PollerInfo(type, object);
    s_pollerLock.lock();
    s_pollers.set(CAST_FROM_POINTER(p, uint64_t), p);
    s_pollerLock.unlock();
@@ -130,7 +130,7 @@ static void CreateManagementNode(const InetAddress& addr)
    NetObjInsert(node, true, false);
 	node->setName(GetLocalHostName(buffer, 256, false));
 
-   node->getAsPollable()->doForcedConfigurationPoll(RegisterPoller(PollerType::CONFIGURATION, node));
+   static_cast<Pollable&>(*node).doForcedConfigurationPoll(RegisterPoller(PollerType::CONFIGURATION, node));
 
    node->unhide();
    g_dwMgmtNode = node->getId();   // Set local management node ID
