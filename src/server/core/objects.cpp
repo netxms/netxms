@@ -1665,6 +1665,14 @@ bool LoadObjects()
 }
 
 /**
+ * Cleanup objects before shutdown (only needed to eliminate false positives by leak detector)
+ */
+void CleanupObjects()
+{
+   g_idxObjectById.forEach([](NetObj *object, void *context) { object->cleanup(); }, nullptr);
+}
+
+/**
  * Stop object maintenance threads
  */
 void StopObjectMaintenanceThreads()

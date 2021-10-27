@@ -67,6 +67,7 @@ void InitCertificates();
 bool LoadServerCertificate(RSA **serverKey);
 void InitUsers();
 void CleanupUsers();
+void CleanupObjects();
 void LoadPerfDataStorageDrivers();
 void ShutdownPerfDataStorageDrivers();
 void ImportLocalConfiguration(bool overwrite);
@@ -1400,10 +1401,10 @@ void NXCORE_EXPORTABLE Shutdown()
    nxlog_debug(2, _T("All persistent storage values saved"));
    DBConnectionPoolReleaseConnection(hdb);
 
-	if (g_syncerThreadPool != NULL)
+	if (g_syncerThreadPool != nullptr)
 	   ThreadPoolDestroy(g_syncerThreadPool);
 
-   if (g_discoveryThreadPool != NULL)
+   if (g_discoveryThreadPool != nullptr)
       ThreadPoolDestroy(g_discoveryThreadPool);
 
    StopDBWriter();
@@ -1421,6 +1422,7 @@ void NXCORE_EXPORTABLE Shutdown()
    nxlog_debug(1, _T("Event processing stopped"));
 
    DisableAgentConnections();
+   CleanupObjects();
 
    ThreadPoolDestroy(g_clientThreadPool);
    ThreadPoolDestroy(g_agentConnectionThreadPool);

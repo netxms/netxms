@@ -1849,6 +1849,13 @@ void NetObj::prepareForDeletion()
 }
 
 /**
+ * Cleanup object before server shutdown
+ */
+void NetObj::cleanup()
+{
+}
+
+/**
  * Set object's description.
  */
 void NetObj::setAlias(const TCHAR *alias)

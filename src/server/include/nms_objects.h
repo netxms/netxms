@@ -1372,6 +1372,7 @@ public:
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
    virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
    virtual void linkObjects();
+   virtual void cleanup();
 
    void setId(uint32_t dwId) { m_id = dwId; setModified(MODIFY_ALL); }
    void generateGuid() { m_guid = uuid::generate(); }
@@ -1431,7 +1432,7 @@ public:
    virtual bool showThresholdSummary() const;
    virtual bool isEventSource() const;
    virtual bool isDataCollectionTarget() const;
-   bool isPollable() { return m_asPollable != nullptr; }
+   bool isPollable() const { return m_asPollable != nullptr; }
    virtual Pollable* getAsPollable() { return m_asPollable; }
 
    void setStatusCalculation(int method, int arg1 = 0, int arg2 = 0, int arg3 = 0, int arg4 = 0);
@@ -3169,6 +3170,7 @@ public:
    virtual bool saveRuntimeData(DB_HANDLE hdb) override;
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
    virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
+   virtual void cleanup() override;
 
    virtual bool lockForStatusPoll() override;
    virtual bool lockForConfigurationPoll() override;

@@ -8640,6 +8640,17 @@ void Node::prepareForDeletion()
 }
 
 /**
+ * Cleanup object before server shutdown
+ */
+void Node::cleanup()
+{
+   // Clear possible references to self and other nodes
+   m_lastKnownNetworkPath.reset();
+
+   super::cleanup();
+}
+
+/**
  * Check and update if needed interface names
  */
 void Node::checkInterfaceNames(InterfaceList *pIfList)
