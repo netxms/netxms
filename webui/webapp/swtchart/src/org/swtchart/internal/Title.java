@@ -195,7 +195,7 @@ public class Title extends Canvas implements ITitle, PaintListener
 		int width;
 		if (isVisible() && !text.trim().equals(""))
 		{
-			Point p = Util.getExtentInGC(getFont(), text);
+			Point p = Util.getExtentInGC(getFont(), text.replace("&", "&&"));
 			width = p.x;
 			height = p.y;
 		}
@@ -244,7 +244,7 @@ public class Title extends Canvas implements ITitle, PaintListener
 	private void drawHorizontalTitle(GC gc)
 	{
 		int width = getSize().x;
-		int textWidth = gc.textExtent(text).x;
+		int textWidth = gc.textExtent(text.replace("&", "&&")).x;
 
 		int x = (int)(width / 2d - textWidth / 2d);
 		if (x < 0)
