@@ -522,6 +522,11 @@ void NObject::setCustomAttributesFromMessage(const NXCPMessage *msg)
    while(it.hasNext())
    {
       KeyValuePair<CustomAttribute> *pair = it.next();
+      if (pair->value->isRedefined() && !pair->value->isInherited())
+      {
+         // This inherited attribute was redefined, but parent attribute since gone - reset "redefined" flag
+         pair->value->flags &= ~CAF_REDEFINED;
+      }
       if ((pair->value->isInherited() == pair->value->isRedefined()) && !existingAttibutes.contains(pair->key))
       {
          if (pair->value->isRedefined())
@@ -541,7 +546,13 @@ void NObject::setCustomAttributesFromMessage(const NXCPMessage *msg)
       populateRemove(deletionList.get(i));
 
    for(int i = 0; i < updateList.size(); i++)
-      setCustomAttribute(updateList.get(i)->first, getCustomAttributeFromParent(updateList.get(i)->first), updateList.get(i)->second);
+   {
+      SharedString value = getCustomAttributeFromParent(updateList.get(i)->first);
+      if (!value.isNull())
+         setCustomAttribute(updateList.get(i)->first, value, updateList.get(i)->second);
+      else
+         populateRemove(updateList.get(i)->first); // Attribute no longer exist at parent, delete it from this object
+   }
 }
 
 /**
@@ -628,6 +639,7 @@ void NObject::deletePopulatedCustomAttribute(const TCHAR *name)
       else
       {
          ca->sourceObject = 0;
+         ca->flags &= ~CAF_REDEFINED;
       }
 
       onCustomAttributeChange();
