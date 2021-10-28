@@ -96,7 +96,7 @@ public class MapBackground extends PropertyPage
       typeGroup.setLayoutData(gd);
       layout = new GridLayout();
       typeGroup.setLayout(layout);
-      
+
       final SelectionListener listener = new SelectionListener() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
@@ -133,7 +133,7 @@ public class MapBackground extends PropertyPage
          if (object.getBackground().equals(NetworkMap.GEOMAP_BACKGROUND))
             radioTypeNone.setSelection(true);
       }
-      
+
       image = new ImageSelector(dialogArea, SWT.NONE);
       image.setLabel(Messages.get().MapBackground_BkgndImage);
       if (radioTypeImage.getSelection())
