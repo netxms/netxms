@@ -34,6 +34,8 @@ public class DefaultDarkTheme extends Theme
       elements.put(".", new ThemeElement(null, null, null, 0));
       elements.put("Card.Title", new ThemeElement(new RGB(53, 80, 9), new RGB(240, 240, 240)));
       elements.put("Dashboard", new ThemeElement(new RGB(53, 53, 53), null));
+      elements.put("DeviceView.Port", new ThemeElement(new RGB(64, 64, 64), null));
+      elements.put("DeviceView.PortHighlight", new ThemeElement(new RGB(39, 96, 138), null));
       elements.put("GeoMap.Title", new ThemeElement(null, new RGB(0, 0, 0)));
       elements.put("List.Error", new ThemeElement(null, new RGB(220, 35, 61)));
       elements.put("Map.GroupBox", new ThemeElement(null, new RGB(255, 255, 255)));
@@ -41,9 +43,9 @@ public class DefaultDarkTheme extends Theme
       elements.put("MessageBar", new ThemeElement(new RGB(138, 148, 47), new RGB(0, 0, 0)));
       elements.put("MibExplorer.Header", new ThemeElement(new RGB(64, 64, 64), new RGB(153, 180, 209)));
       elements.put("ObjectTab.Header", new ThemeElement(new RGB(64, 64, 64), new RGB(153, 180, 209)));
-      elements.put("Rack", new ThemeElement(new RGB(255, 255, 255), new RGB(0, 0, 0)));
+      elements.put("Rack", new ThemeElement(new RGB(53, 53, 53), new RGB(240, 240, 240)));
       elements.put("Rack.Border", new ThemeElement(new RGB(92, 92, 92), new RGB(92, 92, 92)));
-      elements.put("Rack.EmptySpace", new ThemeElement(new RGB(224, 224, 224), null));
+      elements.put("Rack.EmptySpace", new ThemeElement(new RGB(64, 64, 64), null));
       elements.put("RuleEditor", new ThemeElement(new RGB(53, 53, 53), new RGB(240, 240, 240)));
       elements.put("RuleEditor.Title.Disabled", new ThemeElement(new RGB(98, 110, 99), null));
       elements.put("RuleEditor.Title.Normal", new ThemeElement(new RGB(80, 84, 87), null));

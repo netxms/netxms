@@ -51,7 +51,7 @@ public class NetworkMap extends GenericObject
 	public static final int TYPE_LAYER2_TOPOLOGY = 1;
 	public static final int TYPE_IP_TOPOLOGY = 2;
    public static final int TYPE_ENTIRE_NETWORK = 3;
-	
+
 	public static final int MF_SHOW_STATUS_ICON       = 0x000001;
 	public static final int MF_SHOW_STATUS_FRAME      = 0x000002;
 	public static final int MF_SHOW_STATUS_BKGND      = 0x000004;
@@ -59,7 +59,7 @@ public class NetworkMap extends GenericObject
 	public static final int MF_CALCULATE_STATUS       = 0x000010;
    public static final int MF_FILTER_OBJECTS         = 0x000020;
    public static final int MF_SHOW_LINK_DIRECTION    = 0x000040;
-	
+
 	private int mapType;
 	private MapLayoutAlgorithm layout;
 	private UUID background;
@@ -96,7 +96,7 @@ public class NetworkMap extends GenericObject
 		backgroundColor = msg.getFieldAsInt32(NXCPCodes.VID_BACKGROUND_COLOR);
 		discoveryRadius = msg.getFieldAsInt32(NXCPCodes.VID_DISCOVERY_RADIUS);
 		filter = msg.getFieldAsString(NXCPCodes.VID_FILTER);
-		
+
 		int count = msg.getFieldAsInt32(NXCPCodes.VID_NUM_ELEMENTS);
 		elements = new ArrayList<NetworkMapElement>(count);
 		long varId = NXCPCodes.VID_ELEMENT_LIST_BASE;

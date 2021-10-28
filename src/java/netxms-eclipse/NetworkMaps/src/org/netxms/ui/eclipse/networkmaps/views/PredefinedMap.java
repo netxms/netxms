@@ -199,7 +199,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 
 		setConnectionRouter(mapObject.getDefaultLinkRouting(), false);
 		viewer.setBackgroundColor(ColorConverter.rgbFromInt(mapObject.getBackgroundColor()));
-		
+
 		if (mapObject.getDefaultLinkColor() >= 0)
 		{
 			defaultLinkColor = new Color(viewer.getControl().getDisplay(), ColorConverter.rgbFromInt(mapObject.getDefaultLinkColor()));
