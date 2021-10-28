@@ -714,6 +714,7 @@ mibs_DATA = \
 	TOKEN-RING-RMON-MIB.txt \
 	TOKENRING-STATION-SR-MIB.txt \
 	TUNNEL-MIB.txt \
+	UBNT-EdgeMAX-MIB.txt \
 	UBNT-MIB.txt \
 	UCD-DISKIO-MIB.txt \
 	UCD-DLMOD-MIB.txt \
