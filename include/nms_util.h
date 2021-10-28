@@ -4628,6 +4628,14 @@ uuid LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsGUIDA(const char *optString, 
 #define ExtractNamedOptionValueAsGUID ExtractNamedOptionValueAsGUIDA
 #endif
 
+int LIBNETXMS_EXPORTABLE CountFilesInDirectoryA(const char *dir, bool (*filter)(const struct dirent *) = nullptr);
+int LIBNETXMS_EXPORTABLE CountFilesInDirectoryW(const WCHAR *path, bool (*filter)(const struct dirent_w *) = nullptr);
+#ifdef UNICODE
+#define CountFilesInDirectory CountFilesInDirectoryW
+#else
+#define CountFilesInDirectory CountFilesInDirectoryA
+#endif
+
 /**
  * Status for SaveFile function
  */

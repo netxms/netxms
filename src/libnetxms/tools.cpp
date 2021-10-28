@@ -4009,6 +4009,61 @@ bool LIBNETXMS_EXPORTABLE MergeFiles(const TCHAR *source, const TCHAR *destinati
 }
 
 /**
+ * Counts files in given directory considering the filter
+ * @param dir Directory path.
+ * @param filter File name filter. Can be 'nullptr' for no filtering.
+ * @return Returns -1 if file reading fails. Otherwise returns file count.
+ */
+int LIBNETXMS_EXPORTABLE CountFilesInDirectoryA(const char *path, bool (*filter)(const struct dirent *))
+{
+   DIR *dir = opendir(path);
+   if (dir == nullptr)
+      return -1;
+
+   int i = 0;
+   struct dirent *d;
+   while ((d = readdir(dir)) != nullptr)
+   {
+      if (!strcmp(d->d_name, ".") || !strcmp(d->d_name, ".."))
+         continue;
+      if ((filter == nullptr) || filter(d))
+      {
+         i++;
+      }
+   }
+   closedir(dir);
+   return i;
+}
+
+/**
+ * Counts files in given directory considering the filter (wide character version).
+ *
+ * @param dir Directory path.
+ * @param filter File name filter. Can be 'nullptr' for no filtering.
+ * @return Returns -1 if file reading fails. Otherwise returns file count.
+ */
+int LIBNETXMS_EXPORTABLE CountFilesInDirectoryW(const WCHAR *path, bool (*filter)(const struct dirent_w *))
+{
+   DIRW *dir = wopendir(path);
+   if (dir == nullptr)
+      return -1;
+
+   int i = 0;
+   struct dirent_w *d;
+   while ((d = wreaddir(dir)) != nullptr)
+   {
+      if (!wcscmp(d->d_name, L".") || !wcscmp(d->d_name, L".."))
+         continue;
+      if ((filter == nullptr) || filter(d))
+      {
+         i++;
+      }
+   }
+   wclosedir(dir);
+   return i;
+}
+
+/**
  * Copy file/folder
  */
 bool LIBNETXMS_EXPORTABLE CopyFileOrDirectory(const TCHAR *oldName, const TCHAR *newName)
