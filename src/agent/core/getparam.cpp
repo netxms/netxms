@@ -62,7 +62,9 @@ LONG H_SNMPProxyStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, Abstract
 LONG H_SubAgentList(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
 LONG H_SubAgentTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *session);
 LONG H_SyslogStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_SystemDate(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_SystemTime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_SystemTimeZone(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_ThreadPoolInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_ThreadPoolList(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session);
 LONG H_LineCount(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
@@ -426,11 +428,13 @@ static NETXMS_SUBAGENT_PARAM s_standardParams[] =
    { _T("File.Time.Modify(*)"), H_FileTime, (TCHAR *)FILETIME_MTIME, DCI_DT_UINT64, DCIDESC_FILE_TIME_MODIFY },
    { _T("Net.Resolver.AddressByName(*)"), H_ResolverAddrByName, nullptr, DCI_DT_STRING, DCIDESC_NET_RESOLVER_ADDRBYNAME },
    { _T("Net.Resolver.NameByAddress(*)"), H_ResolverNameByAddr, nullptr, DCI_DT_STRING, DCIDESC_NET_RESOLVER_NAMEBYADDR },
+   { _T("System.CurrentDate"), H_SystemDate, nullptr, DCI_DT_STRING, DCIDESC_SYSTEM_CURRENTDATE },
    { _T("System.CurrentTime"), H_SystemTime, nullptr, DCI_DT_INT64, DCIDESC_SYSTEM_CURRENTTIME },
    { _T("System.FQDN"), H_HostName, _T("FQDN"), DCI_DT_STRING, DCIDESC_SYSTEM_FQDN },
    { _T("System.HardwareId"), H_SystemHardwareId, nullptr, DCI_DT_STRING, DCIDESC_SYSTEM_HARDWAREID },
    { _T("System.Hostname"), H_HostName, nullptr, DCI_DT_STRING, DCIDESC_SYSTEM_HOSTNAME },
    { _T("System.PlatformName"), H_PlatformName, nullptr, DCI_DT_STRING, DCIDESC_SYSTEM_PLATFORMNAME },
+   { _T("System.TimeZone"), H_SystemTimeZone, nullptr, DCI_DT_STRING, DCIDESC_SYSTEM_TIMEZONE },
 
    // Deprecated parameters
    { _T("Agent.GeneratedTraps"), H_AgentEventSender, _T("G"), DCI_DT_COUNTER64, DCIDESC_DEPRECATED },
