@@ -423,7 +423,7 @@ void DataCollectionTarget::cleanDCIData(DB_HANDLE hdb)
       if (tableCount > 0)
          queryTables.append(_T(" OR "));
       queryTables.append(_T("item_id="));
-      queryTables.append(m_deletedItems.get(i));
+      queryTables.append(m_deletedTables.get(i));
       tableCount++;
    }
    m_deletedTables.clear();
@@ -433,7 +433,7 @@ void DataCollectionTarget::cleanDCIData(DB_HANDLE hdb)
    if (itemCount > 0)
    {
       LockIDataWrites();
-      nxlog_debug_tag(_T("housekeeper"), 6, _T("DataCollectionTarget::cleanDCIData(%s [%d]): running query \"%s\""), m_name, m_id, (const TCHAR *)queryItems);
+      nxlog_debug_tag(_T("housekeeper"), 6, _T("DataCollectionTarget::cleanDCIData(%s [%d]): running query \"%s\""), m_name, m_id, queryItems.cstr());
       DBQuery(hdb, queryItems);
       UnlockIDataWrites();
       if (!ThrottleHousekeeper())
@@ -442,7 +442,7 @@ void DataCollectionTarget::cleanDCIData(DB_HANDLE hdb)
 
    if (tableCount > 0)
    {
-      nxlog_debug_tag(_T("housekeeper"), 6, _T("DataCollectionTarget::cleanDCIData(%s [%d]): running query \"%s\""), m_name, m_id, (const TCHAR *)queryTables);
+      nxlog_debug_tag(_T("housekeeper"), 6, _T("DataCollectionTarget::cleanDCIData(%s [%d]): running query \"%s\""), m_name, m_id, queryTables.cstr());
       DBQuery(hdb, queryTables);
    }
 }
