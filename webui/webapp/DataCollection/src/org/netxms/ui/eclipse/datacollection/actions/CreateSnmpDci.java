@@ -45,7 +45,6 @@ import org.netxms.client.constants.DataType;
 import org.netxms.client.constants.RCC;
 import org.netxms.client.datacollection.DataCollectionConfiguration;
 import org.netxms.client.datacollection.DataCollectionItem;
-import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.snmp.MibObject;
 import org.netxms.client.snmp.SnmpValue;
@@ -87,25 +86,25 @@ public class CreateSnmpDci implements IObjectActionDelegate
 		String description = (mibObject != null) ? mibObject.getName() : objects.get(0).getName();
 		if (objects.size() > 1)
 			description += " @@instance@@"; //$NON-NLS-1$
-		
+
 		final CreateSnmpDciDialog dlg = new CreateSnmpDciDialog(shell, description);
 		if (dlg.open() != Window.OK)
 			return;
-		
-		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+
+      final NXCSession session = ConsoleSharedData.getSession();
 		final List<SnmpValue> values = new ArrayList<SnmpValue>(objects);
-		
+
 		// Get set of nodes
 		final Set<AbstractNode> nodes = new HashSet<AbstractNode>();
 		for(SnmpValue v : values)
 		{
-			AbstractNode node = (AbstractNode)session.findObjectById(v.getNodeId(), AbstractNode.class);
+         AbstractNode node = session.findObjectById(v.getNodeId(), AbstractNode.class);
 			if (node != null)
 			{
 				nodes.add(node);
 			}
 		}
-		
+
 		// Check what nodes requires DCI list lock
 		final Map<Long, Boolean> lockRequired = new HashMap<Long, Boolean>(nodes.size());
 		final IWorkbenchPage page = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
@@ -114,7 +113,7 @@ public class CreateSnmpDci implements IObjectActionDelegate
 			IViewReference ref = page.findViewReference(DataCollectionEditor.ID, Long.toString(n.getObjectId()));
 			lockRequired.put(n.getObjectId(), !((ref != null) && (ref.getView(false) != null)));
 		}
-		
+
 		new ConsoleJob(Messages.get().CreateSnmpDci_JobTitle, viewPart, Activator.PLUGIN_ID, null) {
 			@Override
 			protected String getErrorMessage()
@@ -125,11 +124,11 @@ public class CreateSnmpDci implements IObjectActionDelegate
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				monitor.beginTask(Messages.get(getDisplay()).CreateSnmpDci_TaskTitle, values.size());
+				monitor.beginTask(Messages.get().CreateSnmpDci_TaskTitle, values.size());
 				for(SnmpValue v : values)
 				{
 					final String description = dlg.getDescription().replaceAll("@@instance@@", Long.toString(v.getObjectId().getIdFromPos(v.getObjectId().getLength() - 1))); //$NON-NLS-1$
-					createDci(session, v, description, dlg.getPollingInterval(), 
+               createDci(session, v, description, dlg.getPollingScheduleType(), dlg.getPollingInterval(), dlg.getRetentionType(),
 							dlg.getRetentionTime(), dlg.getDeltaCalculation(), lockRequired);
 					monitor.worked(1);
 				}
@@ -138,20 +137,22 @@ public class CreateSnmpDci implements IObjectActionDelegate
 		}.start();
 	}
 
-	/**
-	 * @param session
-	 * @param value
-	 * @param description
-	 * @param pollingInterval
-	 * @param retentionTime
-	 * @param deltaCalculation
-	 * @param lockRequired
-	 * @throws Exception
-	 */
-	private static void createDci(NXCSession session, SnmpValue value, String description, int pollingInterval,
-			int retentionTime, int deltaCalculation, Map<Long, Boolean> lockRequired) throws Exception
+   /**
+    * @param session
+    * @param value
+    * @param description
+    * @param pollingScheduleType
+    * @param pollingInterval
+    * @param retentionType
+    * @param retentionTime
+    * @param deltaCalculation
+    * @param lockRequired
+    * @throws Exception
+    */
+   private static void createDci(NXCSession session, SnmpValue value, String description, int pollingScheduleType, String pollingInterval, int retentionType, String retentionTime,
+         int deltaCalculation, Map<Long, Boolean> lockRequired) throws Exception
 	{
-		AbstractNode node = (AbstractNode)session.findObjectById(value.getNodeId(), AbstractNode.class);
+      AbstractNode node = session.findObjectById(value.getNodeId(), AbstractNode.class);
 		if (node == null)
 			throw new NXCException(RCC.INTERNAL_ERROR);		
 		
@@ -166,10 +167,10 @@ public class CreateSnmpDci implements IObjectActionDelegate
 		}
 
 		final DataCollectionItem dci = new DataCollectionItem(dcc, 0);
-      dci.setPollingScheduleType(DataCollectionObject.POLLING_SCHEDULE_CUSTOM);
-      dci.setPollingInterval(Integer.toString(pollingInterval));
-      dci.setRetentionType(DataCollectionObject.RETENTION_CUSTOM);
-      dci.setRetentionTime(Integer.toString(retentionTime));
+      dci.setPollingScheduleType(pollingScheduleType);
+      dci.setPollingInterval(pollingInterval);
+      dci.setRetentionType(retentionType);
+      dci.setRetentionTime(retentionTime);
       dci.setOrigin(DataOrigin.SNMP);
 		dci.setDataType(dciTypeFromAsnType(value.getType()));
 		dci.setStatus(DataCollectionItem.ACTIVE);

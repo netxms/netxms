@@ -293,7 +293,7 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
       else
          enableFilter(false); // Will hide filter area correctly
 	}
-	
+
 	/**
     * Activate context
     */
@@ -305,7 +305,7 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
          contextService.activateContext("org.netxms.ui.eclipse.snmp.context.SNMP"); //$NON-NLS-1$
       }
    }
-	
+
 	/**
 	 * Enable or disable filter
 	 * @param enable New filter state
@@ -452,7 +452,7 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 		actionSelect.setEnabled(false);
 
 		actionExportToCsv = new ExportToCsvAction(this, viewer, true);
-		
+
 		actionShowFilter = new Action("Show filter", Action.AS_CHECK_BOX) {
 		  @Override
 		  public void run()
@@ -464,7 +464,6 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 		actionShowFilter.setChecked(initShowFilter);
       actionShowFilter.setActionDefinitionId("org.netxms.ui.eclipse.snmp.commands.showFilter"); //$NON-NLS-1$
       handlerService.activateHandler(actionShowFilter.getActionDefinitionId(), new ActionHandler(actionShowFilter));
-		
 	}
 	
 	/**
