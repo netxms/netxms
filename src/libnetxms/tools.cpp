@@ -1015,7 +1015,6 @@ void LIBNETXMS_EXPORTABLE GetSystemTimeZone(TCHAR *buffer, size_t size)
          break;
       default:    // error
          effectiveBias = 0;
-         debugPrintf(4, _T("GetTimeZoneInformation() call failed"));
          break;
    }
 
