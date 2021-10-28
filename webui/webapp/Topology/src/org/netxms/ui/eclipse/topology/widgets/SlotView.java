@@ -42,6 +42,7 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Interface;
 import org.netxms.client.topology.Port;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
+import org.netxms.ui.eclipse.console.resources.ThemeEngine;
 import org.netxms.ui.eclipse.objectview.widgets.ObjectPopupDialog;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.ColorCache;
@@ -82,9 +83,6 @@ public class SlotView extends Canvas implements PaintListener, MouseListener, Mo
 	private static final int PORT_WIDTH = 44;
 	private static final int PORT_HEIGHT = 30;
 	
-	private static final RGB BACKGROUND_COLOR = new RGB(224, 224, 224);
-	private static final RGB HIGHLIGHT_COLOR = new RGB(64, 156, 224);
-	
 	private List<PortInfo> ports = new ArrayList<PortInfo>();
 	private int rowCount;
 	private int numberingScheme;
@@ -97,7 +95,9 @@ public class SlotView extends Canvas implements PaintListener, MouseListener, Mo
 	private PortLocationFinder finder = new PortLocationFinder();
    private AbstractObject tooltipObject = null;
    private ObjectPopupDialog tooltipDialog = null;
-	
+   private RGB colorBackground = ThemeEngine.getBackgroundColorDefinition("DeviceView.Port");
+   private RGB colorHighlight = ThemeEngine.getBackgroundColorDefinition("DeviceView.PortHighlight");
+
 	/**
 	 * @param parent
 	 * @param style
@@ -182,8 +182,7 @@ public class SlotView extends Canvas implements PaintListener, MouseListener, Mo
 		
 		if (p.isHighlighted())
 		{
-			gc.setBackground(colors.create(HIGHLIGHT_COLOR));
-			gc.fillRectangle(rect);
+         gc.setBackground(colors.create(colorHighlight));
 		}
 		else if (portStatusVisible)
 		{
@@ -212,13 +211,14 @@ public class SlotView extends Canvas implements PaintListener, MouseListener, Mo
 					break;
 			}
 			gc.setBackground(StatusDisplayInfo.getStatusColor(status));
-			gc.fillRectangle(rect);
 		}
 		else
 		{
-			gc.setBackground(colors.create(BACKGROUND_COLOR));
-			gc.fillRectangle(rect);
+         gc.setBackground(colors.create(colorBackground));
 		}
+      gc.setAlpha(127);
+      gc.fillRectangle(rect);
+      gc.setAlpha(255);
 		gc.drawRectangle(rect);
 		
 		if (selection == p)
@@ -227,14 +227,14 @@ public class SlotView extends Canvas implements PaintListener, MouseListener, Mo
 			gc.drawRectangle(rect.x + 2, rect.y + 2, rect.width - 4, rect.height - 4);
 			//gc.setLineStyle(SWT.LINE_SOLID);
 		}
-		
+
 		Point ext = gc.textExtent(label);
-		gc.drawText(label, point.x + (PORT_WIDTH - ext.x) / 2, point.y + (PORT_HEIGHT - ext.y) / 2);
+      gc.drawText(label, point.x + (PORT_WIDTH - ext.x) / 2, point.y + (PORT_HEIGHT - ext.y) / 2, true);
 	}
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.swt.widgets.Composite#computeSize(int, int, boolean)
-	 */
+
+   /**
+    * @see org.eclipse.swt.widgets.Composite#computeSize(int, int, boolean)
+    */
 	@Override
 	public Point computeSize(int wHint, int hHint, boolean changed)
 	{

@@ -343,7 +343,7 @@ public class ThemeEngine
     */
    private void loadDefaultTheme(Display display)
    {
-      boolean darkOSTheme = ColorConverter.isDarkColor(display.getSystemColor(SWT.COLOR_WIDGET_BACKGROUND).getRGB());
-      loadTheme(darkOSTheme ? new DefaultDarkTheme() : new DefaultLightTheme());
+      boolean darkThemeDetected = ColorConverter.isDarkColor(display.getSystemColor(SWT.COLOR_WIDGET_BACKGROUND).getRGB());
+      loadTheme(darkThemeDetected ? new DefaultDarkTheme() : new DefaultLightTheme());
    }
 }

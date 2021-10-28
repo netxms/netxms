@@ -106,14 +106,14 @@ public class NetworkMapWidget extends Composite
       this.viewPart = viewPart;
       final IPreferenceStore ps = Activator.getDefault().getPreferenceStore();
       disableGeolocationBackground = ps.getBoolean("DISABLE_GEOLOCATION_BACKGROUND"); //$NON-NLS-1$
-		
+
 		setLayout(new FillLayout());
 
 		viewer = new ExtendedGraphViewer(this, SWT.NONE);
       labelProvider = new MapLabelProvider(viewer);
 		viewer.setContentProvider(new MapContentProvider(viewer, labelProvider));
 		viewer.setLabelProvider(labelProvider);
-		
+
 		addDisposeListener(new DisposeListener() {
 			@Override
 			public void widgetDisposed(DisposeEvent e)
@@ -124,7 +124,7 @@ public class NetworkMapWidget extends Composite
 		         session.removeListener(sessionListener);
 			}
 		});
-		
+
       sessionListener = new SessionListener() {
          @Override
          public void notificationHandler(final SessionNotification n)

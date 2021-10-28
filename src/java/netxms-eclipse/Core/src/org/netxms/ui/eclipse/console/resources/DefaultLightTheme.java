@@ -34,6 +34,8 @@ public class DefaultLightTheme extends Theme
       elements.put(".", new ThemeElement(null, null, null, 0));
       elements.put("Card.Title", new ThemeElement(new RGB(153, 180, 209), new RGB(0, 0, 0)));
       elements.put("Dashboard", new ThemeElement(new RGB(240, 240, 240), null));
+      elements.put("DeviceView.Port", new ThemeElement(new RGB(224, 224, 224), null));
+      elements.put("DeviceView.PortHighlight", new ThemeElement(new RGB(64, 156, 224), null));
       elements.put("GeoMap.Title", new ThemeElement(null, new RGB(0, 0, 0)));
       elements.put("List.Error", new ThemeElement(null, new RGB(255, 0, 0)));
       elements.put("Map.GroupBox", new ThemeElement(null, new RGB(255, 255, 255)));
