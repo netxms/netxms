@@ -288,7 +288,6 @@
 #define NSF_SNMP_TRAP_FLOOD            0x00100000
 #define NSF_ICMP_UNREACHABLE           0x00200000
 
-
 /**
  * Sensor state flags
  */

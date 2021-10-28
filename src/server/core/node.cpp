@@ -10964,19 +10964,15 @@ void Node::icmpPollAddress(AgentConnection *conn, const TCHAR *target, const Ine
       {
          if ((status != ICMP_SUCCESS) && !(m_state & NSF_ICMP_UNREACHABLE))
          {
+            m_state |= NSF_ICMP_UNREACHABLE;
             PostSystemEvent(EVENT_ICMP_UNREACHABLE, m_id, nullptr);
+            setModified(MODIFY_NODE_PROPERTIES);
          }
          else if ((status == ICMP_SUCCESS) && (m_state & NSF_ICMP_UNREACHABLE))
          {
-            PostSystemEvent(EVENT_ICMP_OK, m_id, nullptr);
-         }
-         if(status == ICMP_SUCCESS)
-         {
             m_state &= ~NSF_ICMP_UNREACHABLE;
-         }
-         else
-         {
-            m_state |= NSF_ICMP_UNREACHABLE;
+            PostSystemEvent(EVENT_ICMP_OK, m_id, nullptr);
+            setModified(MODIFY_NODE_PROPERTIES);
          }
       }
 
