@@ -251,4 +251,4 @@ INSERT INTO policy_event_list (rule_id,event_code) VALUES (42,EVENT_DUPLICATE_MA
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (43,EVENT_BUSINESS_SERVICE_CRITICAL);
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (44,EVENT_BUSINESS_SERVICE_NORMAL);
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (45,EVENT_ICMP_UNREACHABLE);
-INSERT INTO policy_event_list (rule_id,event_code) VALUES (46,EVENT_ICMP_NORMAL);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (46,EVENT_ICMP_OK);
