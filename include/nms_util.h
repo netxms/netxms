@@ -4592,6 +4592,7 @@ int LIBNETXMS_EXPORTABLE DeflateFileStream(FILE *source, FILE *dest, bool gzipFo
 
 TCHAR LIBNETXMS_EXPORTABLE *FormatTimestamp(time_t t, TCHAR *buffer);
 String LIBNETXMS_EXPORTABLE FormatTimestamp(time_t t);
+void LIBNETXMS_EXPORTABLE GetSystemTimeZone(TCHAR *buffer, size_t size);
 
 String LIBNETXMS_EXPORTABLE GetEnvironmentVariableEx(const TCHAR *var);
 
