@@ -28,11 +28,36 @@
 #include <nxstat.h>
 
 /**
+ * Handler for System.CurrentDate parameter
+ */
+LONG H_SystemDate(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   time_t now = time(nullptr);
+#if HAVE_LOCALTIME_R
+   tm buffer;
+   tm *lt = localtime_r(&now, &buffer);
+#else
+   tm *lt = localtime(&now);
+#endif
+   _tcsftime(value, MAX_RESULT_LENGTH, _T("%Y%m%d"), lt);
+   return SYSINFO_RC_SUCCESS;
+}
+
+/**
  * Handler for System.CurrentTime parameter
  */
 LONG H_SystemTime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
-   ret_int64(value, (INT64)time(NULL));
+   ret_int64(value, static_cast<int64_t>(time(nullptr)));
+   return SYSINFO_RC_SUCCESS;
+}
+
+/**
+ * Handler for System.TimeZone parameter
+ */
+LONG H_SystemTimeZone(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   GetSystemTimeZone(value, MAX_RESULT_LENGTH);
    return SYSINFO_RC_SUCCESS;
 }
 
@@ -41,7 +66,7 @@ LONG H_SystemTime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractComm
  */
 LONG H_AgentUptime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
-   ret_uint(value, (UINT32)(time(NULL) - g_tmAgentStartTime));
+   ret_uint(value, static_cast<uint32_t>(time(nullptr) - g_tmAgentStartTime));
    return SYSINFO_RC_SUCCESS;
 }
 

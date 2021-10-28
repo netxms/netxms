@@ -447,6 +447,7 @@ struct PolicyChangeNotification
 #define DCIDESC_SYSTEM_CPU_FREQUENCY                 _T("CPU {instance}: frequency")
 #define DCIDESC_SYSTEM_CPU_MODEL                     _T("CPU {instance}: model")
 #define DCIDESC_SYSTEM_CPU_PHYSICAL_ID               _T("CPU {instance}: physical ID")
+#define DCIDESC_SYSTEM_CURRENTDATE                   _T("Current system date")
 #define DCIDESC_SYSTEM_CURRENTTIME                   _T("Current system time")
 #define DCIDESC_SYSTEM_FQDN                          _T("Fully qualified domain name")
 #define DCIDESC_SYSTEM_HANDLECOUNT                   _T("Total number of handles")
@@ -495,6 +496,7 @@ struct PolicyChangeNotification
 #define DCIDESC_SYSTEM_PROCESSCOUNT                  _T("Total number of processes")
 #define DCIDESC_SYSTEM_SERVICESTATE                  _T("State of {instance} service")
 #define DCIDESC_SYSTEM_THREADCOUNT                   _T("Total number of threads")
+#define DCIDESC_SYSTEM_TIMEZONE                      _T("System time zone")
 #define DCIDESC_SYSTEM_UNAME                         _T("System uname")
 #define DCIDESC_SYSTEM_UPTIME                        _T("System uptime")
 
