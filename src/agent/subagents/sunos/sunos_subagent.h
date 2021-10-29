@@ -29,7 +29,6 @@
 #include <fcntl.h>
 #include <kstat.h>
 
-
 #define AGENT_NAME _T("SunOS")
 
 //
@@ -100,7 +99,8 @@ enum
    PROCINFO_WKSET,
    PROCINFO_SYSCALLS,
    PROCINFO_THREADS,
-   PROCINFO_CPUTIME
+   PROCINFO_CPUTIME,
+   PROCINFO_HANDLES
 };
 
 /**
@@ -125,15 +125,6 @@ enum
    IOSTAT_QUEUE_MIN,
    IOSTAT_QUEUE_MAX
 };
-
-/**
- * Process list entry structure
- */
-typedef struct t_ProcEnt
-{
-   unsigned int nPid;
-   char szProcName[128];
-} PROC_ENT;
 
 //
 // Functions

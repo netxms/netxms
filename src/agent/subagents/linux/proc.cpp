@@ -71,6 +71,7 @@ public:
    uint32_t parent;      // PID of parent process
    uint32_t group;       // Group ID
    char state;           // Process state
+   char *user;           // Process owner user
    long threads;         // Number of threads
    unsigned long ktime;  // Number of ticks spent in kernel mode
    unsigned long utime;  // Number of ticks spent in user mode
@@ -81,13 +82,14 @@ public:
    ObjectArray<FileDescriptor> *fd;
    char *cmdLine; // Process command line
 
-   Process(uint32_t _pid, const char *_name, char *_cmdLine)
+   Process(uint32_t _pid, const char *_name, char *_user, char *_cmdLine)
    {
       pid = _pid;
       strlcpy(name, _name, MAX_PROCESS_NAME_LEN);
       parent = 0;
       group = 0;
       state = '?';
+      user = _user;
       threads = 0;
       ktime = 0;
       utime = 0;
@@ -243,22 +245,29 @@ static int ProcRead(ObjectArray<Process> *plist, const char *procNameFilter, con
          _close(hFile);
       } // hFile
 
+      char *userName = nullptr;
+      //Get user name
+      struct stat fileInfo;
+      if (stat(fileName, &fileInfo) == 0)
+      {
+         passwd resultbuf;
+         char buffer[512];
+         size_t buflen = 512;
+         passwd *pUserInfo; // Will point to static
+         getpwuid_r(fileInfo.st_uid, &resultbuf, buffer, buflen, &pUserInfo);
+         if (pUserInfo != nullptr)
+         {
+            userName = pUserInfo->pw_name;
+         }
+      }
+
       //Check if user name matches pattern
       if (procUserFilter != nullptr && *procUserFilter != 0)
       {
-         struct stat fileInfo;
-         if (stat(fileName, &fileInfo) == 0)
-         {
-            passwd* resultbuf = new passwd();
-            char buffer[512];
-            size_t buflen = 512;
-            passwd *pUserInfo = new passwd();
-            getpwuid_r(fileInfo.st_uid, resultbuf, buffer, buflen, &pUserInfo);
-            if (pUserInfo != nullptr)
-               uidFound = RegexpMatchA(pUserInfo->pw_name, procUserFilter, true);
-            else
-               uidFound = false;
-         }
+         if (userName != nullptr)
+            uidFound = RegexpMatchA(userName, procUserFilter, true);
+         else
+            uidFound = false;
       }
 
       char *processCmdLine = nullptr;
@@ -325,7 +334,7 @@ static int ProcRead(ObjectArray<Process> *plist, const char *procNameFilter, con
       {
          if ((plist != nullptr) && (pProcName != nullptr))
          {
-            Process *p = new Process(nPid, pProcName, processCmdLine);
+            Process *p = new Process(nPid, pProcName, userName, processCmdLine);
             // Parse rest of /proc/pid/stat file
             if (pProcStat != nullptr)
             {
@@ -598,6 +607,7 @@ LONG H_ProcessTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCo
 {
    value->addColumn(_T("PID"), DCI_DT_UINT, _T("PID"), true);
    value->addColumn(_T("NAME"), DCI_DT_STRING, _T("Name"));
+   value->addColumn(_T("USER"), DCI_DT_STRING, _T("User"));
    value->addColumn(_T("THREADS"), DCI_DT_UINT, _T("Threads"));
    value->addColumn(_T("HANDLES"), DCI_DT_UINT, _T("Handles"));
    value->addColumn(_T("KTIME"), DCI_DT_UINT64, _T("Kernel Time"));
@@ -624,17 +634,19 @@ LONG H_ProcessTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCo
          value->set(0, p->pid);
 #ifdef UNICODE
          value->setPreallocated(1, WideStringFromMBString(p->name));
+         value->setPreallocated(2, WideStringFromMBString(p->user));
 #else
          value->set(1, p->name);
+         value->set(2, p->user);
 #endif
-         value->set(2, static_cast<uint32_t>(p->threads));
-         value->set(3, static_cast<uint32_t>((p->fd != nullptr) ? p->fd->size() : 0));
-         value->set(4, static_cast<uint64_t>(p->ktime) * 1000 / ticksPerSecond);
-         value->set(5, static_cast<uint64_t>(p->utime) * 1000 / ticksPerSecond);
-         value->set(6, static_cast<uint64_t>(p->vmsize));
-         value->set(7, static_cast<uint64_t>(p->rss) * pageSize);
-         value->set(8, static_cast<uint64_t>(p->minflt) + static_cast<uint64_t>(p->majflt));
-         value->set(9, p->cmdLine);
+         value->set(3, static_cast<uint32_t>(p->threads));
+         value->set(4, static_cast<uint32_t>((p->fd != nullptr) ? p->fd->size() : 0));
+         value->set(5, static_cast<uint64_t>(p->ktime) * 1000 / ticksPerSecond);
+         value->set(6, static_cast<uint64_t>(p->utime) * 1000 / ticksPerSecond);
+         value->set(7, static_cast<uint64_t>(p->vmsize));
+         value->set(8, static_cast<uint64_t>(p->rss) * pageSize);
+         value->set(9, static_cast<uint64_t>(p->minflt) + static_cast<uint64_t>(p->majflt));
+         value->set(10, p->cmdLine);
       }
    }
    return rc;

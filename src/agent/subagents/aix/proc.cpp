@@ -24,16 +24,17 @@
 
 #include "aix_subagent.h"
 #include <procinfo.h>
+#include <sys/resource.h>
+#include <sys/time.h>
 
 //
 // Possible consolidation types of per-process information
 //
 
-#define INFOTYPE_MIN             0
-#define INFOTYPE_MAX             1
-#define INFOTYPE_AVG             2
-#define INFOTYPE_SUM             3
-
+#define INFOTYPE_MIN 0
+#define INFOTYPE_MAX 1
+#define INFOTYPE_AVG 2
+#define INFOTYPE_SUM 3
 
 //
 // Select 32-bit or 64-bit interface
@@ -56,38 +57,107 @@ extern "C" int getprocs(struct procsinfo *, int, struct fdsinfo *, int, pid_t *,
 #endif
 
 /**
+ * Maximum possible length of process name and user name
+ */
+#define MAX_PROCESS_NAME_LEN (MAXCOMLEN + 1)
+#define MAX_USER_NAME_LEN 256
+#define MAX_CMD_LINE_LEN PRARGSZ
+
+/**
+ * Reads process psinfo file from /proc
+ * T = psinfo OR pstatus
+ * fileName = psinfo OR status
+ */
+template <typename T>
+static bool ReadProcInfo(const char *fileName, pid_t pid, T *buff)
+{
+   bool result = false;
+   char fullFileName[MAX_PATH];
+   snprintf(fullFileName, MAX_PATH, "/proc/%i/%s", static_cast<int>(pid), fileName);
+   int hFile = _open(fullFileName, O_RDONLY);
+   if (hFile != -1)
+   {
+      result = _read(hFile, buff, sizeof(T)) == sizeof(T);
+      _close(hFile);
+   }
+   return result;
+}
+
+/**
+ * Reads initial characters of arg list (cmd line) of process.
+ * Buffer must be MAX_CMD_LINE_LEN bytes long.
+ */
+static bool ReadProcCmdLine(pid_t pid, char *buff)
+{
+   psinfo pi;
+   if (ReadProcInfo<psinfo>("psinfo", pid, &pi))
+   {
+      strcpy(buff, pi.pr_psargs);
+      return true;
+   }
+   return false;
+}
+
+/**
+ * Reads process user name.
+ */
+static bool ReadProcUser(uid_t uid, char *userName)
+{
+   passwd resultbuf;
+   char buffer[512];
+   passwd *userInfo;
+   getpwuid_r(uid, &resultbuf, buffer, sizeof(buffer), &userInfo);
+   if (userInfo != nullptr)
+   {
+      strlcpy(userName, userInfo->pw_name, MAX_USER_NAME_LEN);
+      return true;
+   }
+   return false;
+}
+
+/**
+ * Read handles
+ */
+static uint32_t CountProcessHandles(uint32_t pid)
+{
+   char path[MAX_PATH];
+   snprintf(path, MAX_PATH, "/proc/%u/fd", pid);
+   int result = CountFilesInDirectoryA(path);
+   if (result < 0)
+      return 0;
+   return result;
+}
+
+/**
  * Get process list and number of processes
  */
 static PROCENTRY *GetProcessList(int *pnprocs)
 {
    pid_t index = 0;
-   int nprocs = GETPROCS(NULL, 0, NULL, 0, &index, 65535);
-	if (nprocs == -1)
-		return NULL;
+   int nprocs = GETPROCS(nullptr, 0, nullptr, 0, &index, 65535);
+   if (nprocs == -1)
+      return nullptr;
 
-	PROCENTRY *pBuffer;
-	int nrecs = nprocs + 64;
+   PROCENTRY *pBuffer;
+   int nrecs = nprocs + 64;
 
 retry_getprocs:
-	pBuffer = (PROCENTRY *)malloc(sizeof(PROCENTRY) * nrecs);
-	index = 0;
-	nprocs = GETPROCS(pBuffer, sizeof(PROCENTRY), NULL, 0, &index, nrecs);
-	if (nprocs != -1)
-	{
-		if (nprocs == nrecs)
-		{
-			free(pBuffer);
-			nrecs += 1024;
-			goto retry_getprocs;
-		}
-		*pnprocs = nprocs;
-	}
-	else
-	{
-		free(pBuffer);
-		pBuffer = NULL;
-	}
-	return pBuffer;
+   pBuffer = MemAllocArray<PROCENTRY>(nrecs);
+   index = 0;
+   nprocs = GETPROCS(pBuffer, sizeof(PROCENTRY), nullptr, 0, &index, nrecs);
+   if (nprocs != -1)
+   {
+      if (nprocs == nrecs)
+      {
+         free(pBuffer);
+         nrecs += 1024;
+         goto retry_getprocs;
+      }
+      *pnprocs = nprocs;
+   }
+   else
+      MemFreeAndNull(pBuffer);
+   return pBuffer;
 }
 
 /**
@@ -95,32 +165,32 @@ retry_getprocs:
  */
 LONG H_ProcessList(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue, AbstractCommSession *session)
 {
-	LONG nRet;
-	PROCENTRY *pList;
-	int i, nProcCount;
-	char szBuffer[256];
+   LONG nRet;
+   PROCENTRY *pList;
+   int i, nProcCount;
+   char szBuffer[256];
 
-	pList = GetProcessList(&nProcCount);
-	if (pList != NULL)
-	{
-		for(i = 0; i < nProcCount; i++)
-		{
-			snprintf(szBuffer, 256, "%d %s", pList[i].pi_pid, pList[i].pi_comm);
+   pList = GetProcessList(&nProcCount);
+   if (pList != NULL)
+   {
+      for (i = 0; i < nProcCount; i++)
+      {
+         snprintf(szBuffer, 256, "%d %s", pList[i].pi_pid, pList[i].pi_comm);
 #ifdef UNICODE
-			pValue->addPreallocated(WideStringFromMBString(szBuffer));
+         pValue->addPreallocated(WideStringFromMBString(szBuffer));
 #else
-			pValue->add(szBuffer);
+         pValue->add(szBuffer);
 #endif
-		}
-		free(pList);
-		nRet = SYSINFO_RC_SUCCESS;
-	}
-	else
-	{
-		nRet = SYSINFO_RC_ERROR;
-	}
+      }
+      free(pList);
+      nRet = SYSINFO_RC_SUCCESS;
+   }
+   else
+   {
+      nRet = SYSINFO_RC_ERROR;
+   }
 
-	return nRet;
+   return nRet;
 }
 
 /**
@@ -128,15 +198,15 @@ LONG H_ProcessList(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue,
  */
 LONG H_SysProcessCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
-	int nprocs;
-	pid_t index = 0;
+   int nprocs;
+   pid_t index = 0;
 
-	nprocs = GETPROCS(NULL, 0, NULL, 0, &index, 65535);
-	if (nprocs == -1)
-		return SYSINFO_RC_ERROR;
-	
-	ret_uint(pValue, nprocs);
-	return SYSINFO_RC_SUCCESS;
+   nprocs = GETPROCS(NULL, 0, NULL, 0, &index, 65535);
+   if (nprocs == -1)
+      return SYSINFO_RC_ERROR;
+
+   ret_uint(pValue, nprocs);
+   return SYSINFO_RC_SUCCESS;
 }
 
 /**
@@ -144,77 +214,51 @@ LONG H_SysProcessCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, 
  */
 LONG H_SysThreadCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
-	LONG nRet;
-	int nProcCount;
-	PROCENTRY *pList = GetProcessList(&nProcCount);
-	if (pList != NULL)
-	{
-	   int nThreadCount = 0;
-		for(int i = 0; i < nProcCount; i++)
-		{
-			nThreadCount += pList[i].pi_thcount;
-		}
-		free(pList);
-		ret_uint(pValue, nThreadCount);
-		nRet = SYSINFO_RC_SUCCESS;
-	}
-	else
-	{
-		nRet = SYSINFO_RC_ERROR;
-	}
-
-	return nRet;
-}
-
-/**
- * Reads initial characters of arg list (cmd line) of process by pid.
- * Buffer size should be PRARGSZ bytes.
- */
-static bool ReadProcessCmdLine(pid_t pid, char *buff)
-{
-   bool result = false;
-   char fileName[MAX_PATH];
-   snprintf(fileName, MAX_PATH, "/proc/%i/psinfo", static_cast<int>(pid));
-   int hFile = _open(fileName, O_RDONLY);
-   if (hFile != -1)
+   LONG nRet;
+   int nProcCount;
+   PROCENTRY *pList = GetProcessList(&nProcCount);
+   if (pList != NULL)
    {
-      psinfo pi;
-      ssize_t readSize = _read(hFile, &pi, sizeof(psinfo));
-      if (readSize == sizeof(psinfo))
+      int nThreadCount = 0;
+      for (int i = 0; i < nProcCount; i++)
       {
-         strcpy(buff, pi.pr_psargs);
-         result = true;
+         nThreadCount += pList[i].pi_thcount;
       }
-      _close(hFile);
+      free(pList);
+      ret_uint(pValue, nThreadCount);
+      nRet = SYSINFO_RC_SUCCESS;
    }
-   return result;
+   else
+   {
+      nRet = SYSINFO_RC_ERROR;
+   }
+
+   return nRet;
 }
 
 /**
  * Check if given process matches filter
  */
-static bool MatchProcess(PROCENTRY *proc, const char *processNameFilter, const char *userNameFilter, const char *cmdLineFilter)
+static bool MatchProcess(PROCENTRY *proc, const char *processNameFilter, const char *cmdLineFilter, const char *userNameFilter)
 {
-   //Proc name filter
+   // Proc name filter
    if (processNameFilter != nullptr && *processNameFilter != 0)
+   {
       if (!RegexpMatchA(proc->pi_comm, processNameFilter, true))
          return false;
-   
-   //User filter
+   }
+   // User filter
    if (userNameFilter != nullptr && *userNameFilter != 0)
    {
-      passwd resultbuf;
-      char buffer[512];
-      passwd *userInfo;
-      getpwuid_r(proc->pi_uid, &resultbuf, buffer, sizeof(buffer), &userInfo);
-      if (userInfo == nullptr || !RegexpMatchA(userInfo->pw_name, userNameFilter, true))
+      char userName[MAX_USER_NAME_LEN];
+      if (!ReadProcUser(proc->pi_uid, userName) || !RegexpMatchA(userName, userNameFilter, true))
          return false;
    }
-   //Cmd line filter
+   // Cmd line filter
    if (cmdLineFilter != nullptr && *cmdLineFilter != 0)
    {
-      char cmdLine[PRARGSZ];
-      if (!ReadProcessCmdLine(proc->pi_pid, cmdLine) || !RegexpMatchA(cmdLine, cmdLineFilter, true))
+      char cmdLine[MAX_CMD_LINE_LEN];
+      if (!ReadProcCmdLine(proc->pi_pid, cmdLine) || !RegexpMatchA(cmdLine, cmdLineFilter, true))
          return false;
    }
    return true;
@@ -225,16 +269,16 @@ static bool MatchProcess(PROCENTRY *proc, const char *processNameFilter, const c
  */
 LONG H_ProcessCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
-	LONG nRet;
-	PROCENTRY *pList;
-	int i, nSysProcCount, nProcCount;
+   LONG nRet;
+   PROCENTRY *pList;
+   int i, nSysProcCount, nProcCount;
    char processNameFilter[MAX_PATH] = "", cmdLineFilter[MAX_PATH] = "", userNameFilter[256] = "";
 
-	if (!AgentGetParameterArgA(pszParam, 1, processNameFilter, 256))
+   if (!AgentGetParameterArgA(pszParam, 1, processNameFilter, 256))
    {
       return SYSINFO_RC_UNSUPPORTED;
    }
-   
+
    if (*pArg == _T('E'))
    {
       AgentGetParameterArgA(pszParam, 2, cmdLineFilter, sizeof(cmdLineFilter));
@@ -242,16 +286,16 @@ LONG H_ProcessCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abs
    }
 
    pList = GetProcessList(&nSysProcCount);
-	if (pList != NULL)
-	{
+   if (pList != NULL)
+   {
       for (i = 0, nProcCount = 0; i < nSysProcCount; i++)
       {
-         if (*pArg == _T('E')) //Process.CountEx()
+         if (*pArg == _T('E')) // Process.CountEx()
          {
             if (MatchProcess(&pList[i], processNameFilter, cmdLineFilter, userNameFilter))
                nProcCount++;
          }
-         else //Process.Count()
+         else // Process.Count()
          {
             if (*processNameFilter != 0)
             {
@@ -262,16 +306,16 @@ LONG H_ProcessCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abs
             }
          }
       }
-		free(pList);
-		ret_uint(pValue, nProcCount);
-		nRet = SYSINFO_RC_SUCCESS;
-	}
-	else
-	{
-		nRet = SYSINFO_RC_ERROR;
-	}
+      free(pList);
+      ret_uint(pValue, nProcCount);
+      nRet = SYSINFO_RC_SUCCESS;
+   }
+   else
+   {
+      nRet = SYSINFO_RC_ERROR;
+   }
 
-	return nRet;
+   return nRet;
 }
 
 /**
@@ -279,28 +323,28 @@ LONG H_ProcessCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abs
  */
 LONG H_ProcessInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
-	int nRet = SYSINFO_RC_SUCCESS;
-	char szBuffer[256] = "";
+   int nRet = SYSINFO_RC_SUCCESS;
+   char szBuffer[256] = "";
    char processNameFilter[128] = "", cmdLineFilter[128] = "", userNameFilter[128] = "";
    int i, nProcCount, nType, nCount;
-	PROCENTRY *pList;
-	QWORD qwValue, qwCurrVal;
-	static const char *pszTypeList[]={ "min", "max", "avg", "sum", NULL };
+   PROCENTRY *pList;
+   QWORD qwValue, qwCurrVal;
+   static const char *pszTypeList[] = { "min", "max", "avg", "sum", NULL };
 
-	// Get parameter type arguments
-	AgentGetParameterArgA(pszParam, 2, szBuffer, sizeof(szBuffer));
-	if (szBuffer[0] == 0)     // Omited type
-	{
-		nType = INFOTYPE_SUM;
-	}
-	else
-	{
-		for(nType = 0; pszTypeList[nType] != NULL; nType++)
-			if (!stricmp(pszTypeList[nType], szBuffer))
-				break;
-		if (pszTypeList[nType] == NULL)
-			return SYSINFO_RC_UNSUPPORTED;     // Unsupported type
-	}
+   // Get parameter type arguments
+   AgentGetParameterArgA(pszParam, 2, szBuffer, sizeof(szBuffer));
+   if (szBuffer[0] == 0) // Omited type
+   {
+      nType = INFOTYPE_SUM;
+   }
+   else
+   {
+      for (nType = 0; pszTypeList[nType] != NULL; nType++)
+         if (!stricmp(pszTypeList[nType], szBuffer))
+            break;
+      if (pszTypeList[nType] == NULL)
+         return SYSINFO_RC_UNSUPPORTED; // Unsupported type
+   }
 
    AgentGetParameterArgA(pszParam, 1, processNameFilter, sizeof(processNameFilter));
    AgentGetParameterArgA(pszParam, 3, cmdLineFilter, sizeof(cmdLineFilter));
@@ -308,24 +352,20 @@ LONG H_ProcessInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abst
    pList = GetProcessList(&nProcCount);
    if (pList != NULL)
    {
-      for(i = 0, qwValue = 0, nCount = 0; i < nProcCount; i++)
+      for (i = 0, qwValue = 0, nCount = 0; i < nProcCount; i++)
       {
          if (MatchProcess(&pList[i], processNameFilter, cmdLineFilter, userNameFilter))
          {
-            switch(CAST_FROM_POINTER(pArg, int))
+            switch (CAST_FROM_POINTER(pArg, int))
             {
                case PROCINFO_CPUTIME:
                   // tv_usec contains nanoseconds, not microseconds
-                  qwCurrVal = pList[i].pi_ru.ru_stime.tv_sec * 1000 + 
-                             pList[i].pi_ru.ru_stime.tv_usec / 1000000 +
-                             pList[i].pi_ru.ru_utime.tv_sec * 1000 +
-                             pList[i].pi_ru.ru_utime.tv_usec / 1000000;
+                  qwCurrVal = pList[i].pi_ru.ru_stime.tv_sec * 1000 + pList[i].pi_ru.ru_stime.tv_usec / 1000000 +
+                              pList[i].pi_ru.ru_utime.tv_sec * 1000 + pList[i].pi_ru.ru_utime.tv_usec / 1000000;
                   break;
-//             case PROCINFO_IO_READ_B:
                case PROCINFO_IO_READ_OP:
                   qwCurrVal = pList[i].pi_ru.ru_inblock;
                   break;
-//             case PROCINFO_IO_WRITE_B:
                case PROCINFO_IO_WRITE_OP:
                   qwCurrVal = pList[i].pi_ru.ru_oublock;
                   break;
@@ -333,59 +373,165 @@ LONG H_ProcessInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abst
                   // tv_usec contains nanoseconds, not microseconds
                   qwCurrVal = pList[i].pi_ru.ru_stime.tv_sec * 1000 + pList[i].pi_ru.ru_stime.tv_usec / 1000000;
                   break;
-					case PROCINFO_PF:
-						qwCurrVal = pList[i].pi_majflt + pList[i].pi_minflt;
-						break;
-					case PROCINFO_THREADS:
-						qwCurrVal = pList[i].pi_thcount;
-						break;
-					case PROCINFO_UTIME:
+               case PROCINFO_PF:
+                  qwCurrVal = pList[i].pi_majflt + pList[i].pi_minflt;
+                  break;
+               case PROCINFO_THREADS:
+                  qwCurrVal = pList[i].pi_thcount;
+                  break;
+               case PROCINFO_UTIME:
                   // tv_usec contains nanoseconds, not microseconds
-						qwCurrVal = pList[i].pi_ru.ru_utime.tv_sec * 1000 + pList[i].pi_ru.ru_utime.tv_usec / 1000000;
-						break;
-					case PROCINFO_VMSIZE:
-						qwCurrVal = pList[i].pi_size * getpagesize();
-						break;
-					case PROCINFO_WKSET:
-						qwCurrVal = (pList[i].pi_drss + pList[i].pi_trss) * getpagesize();
-						break;
-					default:
-						nRet = SYSINFO_RC_UNSUPPORTED;
-						break;
-				}
+                  qwCurrVal = pList[i].pi_ru.ru_utime.tv_sec * 1000 + pList[i].pi_ru.ru_utime.tv_usec / 1000000;
+                  break;
+               case PROCINFO_VMSIZE:
+                  qwCurrVal = pList[i].pi_size * getpagesize();
+                  break;
+               case PROCINFO_WKSET:
+                  qwCurrVal = (pList[i].pi_drss + pList[i].pi_trss) * getpagesize();
+                  break;
+               case PROCINFO_HANDLES:
+                  qwCurrVal = CountProcessHandles(pList[i].pi_pid);
+                  break;
+               default:
+                  nRet = SYSINFO_RC_UNSUPPORTED;
+                  break;
+            }
 
-				if (nCount == 0)
-				{
-					qwValue = qwCurrVal;
-				}
-				else
-				{
-					switch(nType)
-					{
-						case INFOTYPE_MIN:
-							qwValue = std::min(qwValue, qwCurrVal);
-							break;
-						case INFOTYPE_MAX:
-							qwValue = std::max(qwValue, qwCurrVal);
-							break;
-						case INFOTYPE_AVG:
-							qwValue = (qwValue * nCount + qwCurrVal) / (nCount + 1);
-							break;
-						case INFOTYPE_SUM:
-							qwValue += qwCurrVal;
-							break;
-					}
-				}
-				nCount++;
-			}
-		}
-		free(pList);
-		ret_uint64(pValue, qwValue);
-	}
-	else
-	{
-		nRet = SYSINFO_RC_ERROR;
-	}	
+            if (nCount == 0)
+            {
+               qwValue = qwCurrVal;
+            }
+            else
+            {
+               switch (nType)
+               {
+                  case INFOTYPE_MIN:
+                     qwValue = std::min(qwValue, qwCurrVal);
+                     break;
+                  case INFOTYPE_MAX:
+                     qwValue = std::max(qwValue, qwCurrVal);
+                     break;
+                  case INFOTYPE_AVG:
+                     qwValue = (qwValue * nCount + qwCurrVal) / (nCount + 1);
+                     break;
+                  case INFOTYPE_SUM:
+                     qwValue += qwCurrVal;
+                     break;
+               }
+            }
+            nCount++;
+         }
+      }
+      free(pList);
+      ret_uint64(pValue, qwValue);
+   }
+   else
+   {
+      nRet = SYSINFO_RC_ERROR;
+   }
 
    return nRet;
+}
+
+/**
+ * Handler for System.Processes table
+ */
+LONG H_ProcessTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *session)
+{
+   value->addColumn(_T("PID"), DCI_DT_UINT, _T("PID"), true);
+   value->addColumn(_T("NAME"), DCI_DT_STRING, _T("Name"));
+   value->addColumn(_T("USER"), DCI_DT_STRING, _T("User"));
+   value->addColumn(_T("THREADS"), DCI_DT_UINT, _T("Threads"));
+   value->addColumn(_T("HANDLES"), DCI_DT_UINT, _T("Handles"));
+   value->addColumn(_T("KTIME"), DCI_DT_UINT64, _T("Kernel Time"));
+   value->addColumn(_T("UTIME"), DCI_DT_UINT64, _T("User Time"));
+   value->addColumn(_T("VMSIZE"), DCI_DT_UINT64, _T("VM Size"));
+   value->addColumn(_T("RSS"), DCI_DT_UINT64, _T("RSS"));
+   value->addColumn(_T("PAGE_FAULTS"), DCI_DT_UINT64, _T("Page Faults"));
+   value->addColumn(_T("CMDLINE"), DCI_DT_STRING, _T("Command Line"));
+
+   int rc = SYSINFO_RC_ERROR;
+
+   int procCount;
+   PROCENTRY *procs = GetProcessList(&procCount);
+   if (procs != nullptr)
+   {
+      rc = SYSINFO_RC_SUCCESS;
+      for (int i = 0; i < procCount; i++)
+      {
+         value->addRow();
+         value->set(0, procs[i].pi_pid);
+#ifdef UNICODE
+         value->setPreallocated(1, WideStringFromMBString(procs[i].pi_comm));
+
+         char userName[MAX_USER_NAME_LEN];
+         if (!ReadProcUser(procs[i].pi_uid, userName))
+            *userName = 0;
+         value->setPreallocated(2, WideStringFromMBString(userName));
+#else
+         value->set(1, procs[i].pi_comm);
+         char userName[MAX_USER_NAME_LEN];
+         if (!ReadProcUser(procs[i].pi_uid, userName))
+            *userName = 0;
+         value->set(2, userName);
+#endif
+         value->set(4, CountProcessHandles(procs[i].pi_pid));
+
+         pstatus ps;
+         if (ReadProcInfo<pstatus>("status", procs[i].pi_pid, &ps))
+         {
+            value->set(3, ps.pr_nlwp);
+            // tv_sec are seconds, tv_nsec are nanoseconds => converting both to milliseconds
+            value->set(5, (ps.pr_stime.tv_sec * 1000 + ps.pr_stime.tv_nsec / 1000000));
+            value->set(6, (ps.pr_utime.tv_sec * 1000 + ps.pr_utime.tv_nsec / 1000000));
+         }
+         else
+         {
+            value->set(3, 0);
+            value->set(5, 0);
+            value->set(6, 0);
+         }
+
+         value->set(7, static_cast<uint32_t>(procs[i].pi_dvm * 1024));
+
+         psinfo pi;
+         if (ReadProcInfo<psinfo>("psinfo", procs[i].pi_pid, &pi))
+         {
+            value->set(8, pi.pr_rssize * 1024);
+         }
+         else
+         {
+            value->set(8, 0);
+         }
+
+         value->set(9, static_cast<uint32_t>(procs[i].pi_majflt + procs[i].pi_minflt));
+
+         char cmdLine[MAX_CMD_LINE_LEN];
+         if (ReadProcCmdLine(procs[i].pi_pid, cmdLine))
+            value->set(10, cmdLine);
+      }
+      MemFree(procs);
+   }
+   return rc;
+}
+
+/**
+ * Handler for System.HandleCount parameter
+ */
+LONG H_HandleCount(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   int procCount, ret = SYSINFO_RC_ERROR;
+   PROCENTRY *procs = GetProcessList(&procCount);
+   if (procs != nullptr)
+   {
+      int sum = 0;
+      for (int i = 0; i < procCount; i++)
+      {
+         sum += CountProcessHandles(procs[i].pi_pid);
+      }
+      ret_int(value, sum);
+      ret = SYSINFO_RC_SUCCESS;
+      MemFree(procs);
+   }
+   return ret;
 }

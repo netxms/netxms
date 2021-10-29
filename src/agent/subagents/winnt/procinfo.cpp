@@ -565,6 +565,7 @@ LONG H_ProcessTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCo
 
    value->addColumn(_T("PID"), DCI_DT_UINT, _T("PID"), true);
    value->addColumn(_T("NAME"), DCI_DT_STRING, _T("Name"));
+   value->addColumn(_T("USER"), DCI_DT_STRING, _T("User"));
    value->addColumn(_T("THREADS"), DCI_DT_UINT, _T("Threads"));
    value->addColumn(_T("HANDLES"), DCI_DT_UINT, _T("Handles"));
    value->addColumn(_T("KTIME"), DCI_DT_UINT64, _T("Kernel Time"));
@@ -582,10 +583,10 @@ LONG H_ProcessTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCo
 		value->addRow();
 		value->set(0, static_cast<uint32_t>(pid));
       value->set(1, (process->ImageName.Buffer == nullptr) ? L"System Idle Process" : process->ImageName.Buffer);
-      value->set(2, static_cast<uint32_t>(process->NumberOfThreads));
-      value->set(3, static_cast<uint32_t>(process->HandleCount));
-      value->set(6, static_cast<uint64_t>(process->VirtualSize));
-      value->set(7, static_cast<uint64_t>(process->WorkingSetSize));
+      value->set(3, static_cast<uint32_t>(process->NumberOfThreads));
+      value->set(4, static_cast<uint32_t>(process->HandleCount));
+      value->set(7, static_cast<uint64_t>(process->VirtualSize));
+      value->set(8, static_cast<uint64_t>(process->WorkingSetSize));
 
       HANDLE hProcess = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, pid);
       if (hProcess != nullptr)
@@ -593,24 +594,31 @@ LONG H_ProcessTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCo
          FILETIME ftCreate, ftExit, ftKernel, ftUser;
          if (GetProcessTimes(hProcess, &ftCreate, &ftExit, &ftKernel, &ftUser))
          {
-            value->set(4, ConvertProcessTime(&ftKernel));
-            value->set(5, ConvertProcessTime(&ftUser));
+            value->set(5, ConvertProcessTime(&ftKernel));
+            value->set(6, ConvertProcessTime(&ftUser));
          }
 
          PROCESS_MEMORY_COUNTERS mc;
          if (GetProcessMemoryInfo(hProcess, &mc, sizeof(PROCESS_MEMORY_COUNTERS)))
          {
-            value->set(8, static_cast<uint32_t>(mc.PageFaultCount));
+            value->set(9, static_cast<uint32_t>(mc.PageFaultCount));
          }
 
          CloseHandle(hProcess);
+      }
+
+      // Get user
+      TCHAR userName[256];
+      if (GetProcessOwner(pid, userName, 256))
+      {
+         value->set(2, userName);
       }
 
       // Get command line
       TCHAR cmdLine[4096];
       if (GetProcessCommandLine(pid, cmdLine, 4096))
       {
-         value->set(9, cmdLine);
+         value->set(10, cmdLine);
       }
 
       process = reinterpret_cast<SYSTEM_PROCESS_INFORMATION*>(reinterpret_cast<char*>(process) + process->NextEntryOffset);

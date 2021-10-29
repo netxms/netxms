@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS subagent for FreeBSD
 ** Copyright (C) 2004-2009 Alex Kirhenshtein, Victor Kirhenshtein
 **
@@ -21,25 +21,25 @@
 #undef _XOPEN_SOURCE
 
 #if __FreeBSD__ < 8
-#define _SYS_LOCK_PROFILE_H_	/* prevent include of sys/lock_profile.h which can be C++ incompatible) */
+#define _SYS_LOCK_PROFILE_H_ /* prevent include of sys/lock_profile.h which can be C++ incompatible) */
 #endif
 
-#include <nms_common.h>
 #include <nms_agent.h>
+#include <nms_common.h>
 #include <nms_util.h>
 
+#include <sys/param.h>
+#include <sys/sysctl.h>
 #include <sys/time.h>
 #include <sys/types.h>
-#include <sys/sysctl.h>
 #include <sys/utsname.h>
-#include <sys/param.h>
 
 #if __FreeBSD__ < 5
 #include <sys/proc.h>
 #endif
 
-#include <sys/user.h>
 #include <kvm.h>
+#include <sys/user.h>
 
 #include "freebsd_subagent.h"
 
@@ -47,81 +47,61 @@
 #define KERN_PROC_PROC KERN_PROC_ALL
 #endif
 
-#if __FreeBSD__ >= 5
-#define PNAME p->ki_comm
-#else
-#define PNAME p->kp_proc.p_comm
-#endif
+/**
+ * Maximum possible length of process name and user name
+ */
+#define MAX_PROCESS_NAME_LEN (COMMLEN + 1)
+#define MAX_USER_NAME_LEN (LOGNAMELEN + 1)
+#define MAX_CMD_LINE_LEN ARG_MAX
 
 /**
  * Build process command line
  */
-static void BuildProcessCommandLine(kvm_t *kd, struct kinfo_proc *p, char *cmdLine, size_t maxSize)
+static bool ReadProcCmdLine(const pid_t pid, char *buff)
 {
-	*cmdLine = 0;
-	char **argv = kvm_getargv(kd, p, 0);
-	if (argv != nullptr)
-	{
-		if (argv[0] != nullptr)
-		{
-			for(int i = 0, pos = 0; (argv[i] != nullptr) && (pos < maxSize); i++)
-			{
-				if (i > 0)
-					cmdLine[pos++] = ' ';
-				strlcpy(&cmdLine[pos], argv[i], maxSize - pos);
-				pos += strlen(argv[i]);
-			}
-		}
-		else
-		{
-			// Use process name if command line is empty
-			cmdLine[0] = '[';
-			strlcpy(&cmdLine[1], PNAME, maxSize - 2);
-			strcat(cmdLine, "]");
-		}
-	}
-	else
-	{
-		// Use process name if command line cannot be obtained
-		cmdLine[0] = '[';
-		strlcpy(&cmdLine[1], PNAME, maxSize - 2);
-		strcat(cmdLine, "]");
-	}
+   bool result = false;
+   char fullFileName[MAX_PATH];
+   snprintf(fullFileName, MAX_PATH, "/proc/%i/cmdline", static_cast<int>(pid));
+   int hFile = _open(fullFileName, O_RDONLY);
+   if (hFile != -1)
+   {
+      result = _read(hFile, buff, MAX_CMD_LINE_LEN) > 0;
+      _close(hFile);
+   }
+   return result;
 }
 
 /**
  * Check if given process matches filter
  */
-static bool MatchProcess(kvm_t *kd, struct kinfo_proc *p, bool extMatch, const char *name, const char *cmdLine, const char *userName)
+static bool MatchProcess(struct kinfo_proc *p, bool extMatch, const char *nameFilter, const char *cmdLineFilter,
+                         const char *userNameFilter)
 {
    if (extMatch)
    {
-      if (*name != 0)
-         if (!RegexpMatchA(PNAME, name, false))
+      // Proc name filter
+      if (nameFilter != nullptr && *nameFilter != 0)
+         if (!RegexpMatchA(p->ki_comm, nameFilter, false))
             return false;
 
-      if (*userName != 0)
+      // User filter
+      if (userNameFilter != nullptr && *userNameFilter != 0)
       {
-         char buffer[512];
-         passwd *userInfo, result;
-         getpwuid_r(p->ki_uid, &result, buffer, sizeof(buffer), &userInfo);
-         if ((userInfo == nullptr) || !RegexpMatchA(userInfo->pw_name, userName, false))
+         if (!RegexpMatchA(p->ki_login, userNameFilter, false))
             return false;
       }
-
-      if (*cmdLine != 0)
+      // Cmd line filter
+      if (cmdLineFilter != nullptr && *cmdLineFilter != 0)
       {
-         char processCmdLine[32768];
-         BuildProcessCommandLine(kd, p, processCmdLine, sizeof(processCmdLine));
-         if (!RegexpMatchA(processCmdLine, cmdLine, true))
+         char cmdLine[MAX_CMD_LINE_LEN];
+         if (!ReadProcCmdLine(p->ki_pid, cmdLine) || !RegexpMatchA(cmdLine, cmdLineFilter, true))
             return false;
       }
-
-      return true;    
+      return true;
    }
    else
    {
-      return strcasecmp(PNAME, name) == 0;
+      return strcasecmp(p->ki_comm, nameFilter) == 0;
    }
 }
 
@@ -130,64 +110,60 @@ static bool MatchProcess(kvm_t *kd, struct kinfo_proc *p, bool extMatch, const c
  */
 LONG H_ProcessCount(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
-	int nRet = SYSINFO_RC_ERROR;
+   int ret = SYSINFO_RC_ERROR;
    char name[128] = "", cmdLine[128] = "", userName[128] = "";
-   int nCount;
-	int nResult = -1;
-	int i;
-	kvm_t *kd;
-	struct kinfo_proc *kp;
+   int procCount;
+   int result = -1;
 
-	if ((*arg != 'S') && (*arg != 'T'))  // Not System.ProcessCount nor System.ThreadCount
-	{
-		AgentGetParameterArgA(param, 1, name, sizeof(name));
-		if (*arg == 'E')	// Process.CountEx
-		{
-			AgentGetParameterArgA(param, 2, cmdLine, sizeof(cmdLine));
+   if ((*arg != 'S') && (*arg != 'T')) // Not System.ProcessCount nor System.ThreadCount
+   {
+      AgentGetParameterArgA(param, 1, name, sizeof(name));
+      if (*arg == 'E') // Process.CountEx
+      {
+         AgentGetParameterArgA(param, 2, cmdLine, sizeof(cmdLine));
          AgentGetParameterArgA(param, 3, userName, sizeof(userName));
       }
-	}
-
-   kd = kvm_openfiles(NULL, "/dev/null", NULL, O_RDONLY, NULL);
+   }
+   kvm_t *kd = kvm_openfiles(NULL, "/dev/null", NULL, O_RDONLY, NULL);
    if (kd != nullptr)
-	{
-      kp = kvm_getprocs(kd, KERN_PROC_PROC, 0, &nCount);
+   {
+      kinfo_proc *kp = kvm_getprocs(kd, KERN_PROC_PROC, 0, &procCount);
       if (kp != nullptr)
       {
-         if (*arg != 'S')	// Not System.ProcessCount
-			{
-				nResult = 0;
-				if (*arg == 'T')  // System.ThreadCount
-				{
-					for (i = 0; i < nCount; i++)
-					{
-						nResult += kp[i].ki_numthreads;
-					}
-				}
+         if (*arg != 'S') // Not System.ProcessCount
+         {
+            result = 0;
+            if (*arg == 'T') // System.ThreadCount
+            {
+               for (int i = 0; i < procCount; i++)
+               {
+                  result += kp[i].ki_numthreads;
+               }
+            }
             else // Process.CountEx
             {
-					for (i = 0; i < nCount; i++)
-					{
-						if (MatchProcess(kd, &kp[i], *arg == 'E', name, cmdLine, userName))
-						{
-							nResult++;
-						}
-					}
-				}
-			}
-			else
-			{
-				nResult = nCount;
+               for (int i = 0; i < procCount; i++)
+               {
+                  if (MatchProcess(&kp[i], *arg == 'E', name, cmdLine, userName))
+                  {
+                     result++;
+                  }
+               }
+            }
          }
-		}
-		kvm_close(kd);
-	}
-	if (nResult >= 0)
-	{
-		ret_int(value, nResult);
-		nRet = SYSINFO_RC_SUCCESS;
-	}
-   return nRet;
+         else
+         {
+            result = procCount;
+         }
+      }
+      if (result >= 0)
+      {
+         ret_int(value, result);
+         ret = SYSINFO_RC_SUCCESS;
+      }
+      kvm_close(kd);
+   }
+   return ret;
 }
 
 /**
@@ -195,137 +171,173 @@ LONG H_ProcessCount(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abstract
  */
 LONG H_ProcessInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
-   int nRet = SYSINFO_RC_ERROR;
+   int ret = SYSINFO_RC_ERROR;
    char name[128] = "", cmdLine[128] = "", userName[128] = "", buffer[64] = "";
-   int nCount, nMatched;
-	INT64 currValue, result;
-	int i, type;
-	kvm_t *kd;
-	struct kinfo_proc *kp;
-	static const char *typeList[]={ "min", "max", "avg", "sum", NULL };
+   int procCount, matched;
+   INT64 currValue, result;
+   int i, type;
+   static const char *typeList[] = { "min", "max", "avg", "sum", NULL };
 
-	 // Get parameter type arguments
-	AgentGetParameterArgA(param, 2, buffer, sizeof(buffer));
-	if (buffer[0] == 0)     // Omited type
-	{
-		type = INFOTYPE_SUM;
-	}
-	else
-	{
-		for(type = 0; typeList[type] != NULL; type++)
-			if (!stricmp(typeList[type], buffer))
-				break;
-		if (typeList[type] == NULL)
-			return SYSINFO_RC_UNSUPPORTED;     // Unsupported type
-	}
+   // Get parameter type arguments
+   AgentGetParameterArgA(param, 2, buffer, sizeof(buffer));
+   if (buffer[0] == 0) // Omited type
+   {
+      type = INFOTYPE_SUM;
+   }
+   else
+   {
+      for (type = 0; typeList[type] != NULL; type++)
+         if (!stricmp(typeList[type], buffer))
+            break;
+      if (typeList[type] == NULL)
+         return SYSINFO_RC_UNSUPPORTED; // Unsupported type
+   }
 
-	AgentGetParameterArgA(param, 1, name, sizeof(name));
-	AgentGetParameterArgA(param, 3, cmdLine, sizeof(cmdLine));
+   AgentGetParameterArgA(param, 1, name, sizeof(name));
+   AgentGetParameterArgA(param, 3, cmdLine, sizeof(cmdLine));
    AgentGetParameterArgA(param, 4, userName, sizeof(userName));
 
-   kd = kvm_openfiles(NULL, "/dev/null", NULL, O_RDONLY, NULL);
-   if (kd != NULL)
-	{
-		kp = kvm_getprocs(kd, KERN_PROC_PROC, 0, &nCount);
+   kvm_t *kd = kvm_openfiles(NULL, "/dev/null", NULL, O_RDONLY, NULL);
+   if (kd != nullptr)
+   {
+      kinfo_proc *kp = kvm_getprocs(kd, KERN_PROC_PROC, 0, &procCount);
+      if (kp != nullptr)
+      {
+         result = 0;
+         matched = 0;
+         for (i = 0; i < procCount; i++)
+         {
+            if (MatchProcess(&kp[i], *cmdLine != 0, name, cmdLine, userName))
+            {
+               matched++;
+               switch (CAST_FROM_POINTER(arg, int))
+               {
+                  case PROCINFO_CPUTIME:
+                     currValue = kp[i].ki_runtime / 1000; // microsec -> millisec
+                     break;
+                  case PROCINFO_THREADS:
+                     currValue = kp[i].ki_numthreads;
+                     break;
+                  case PROCINFO_VMSIZE:
+                     currValue = kp[i].ki_size;
+                     break;
+                  case PROCINFO_WKSET:
+                     currValue = kp[i].ki_rssize * getpagesize();
+                     break;
+               }
 
-		if (kp != NULL)
-		{
-			result = 0;
-			nMatched = 0;
-			for (i = 0; i < nCount; i++)
-			{
-				if (MatchProcess(kd, &kp[i], *cmdLine != 0, name, cmdLine, userName))
-				{
-					nMatched++;
-					switch(CAST_FROM_POINTER(arg, int))
-					{
-						case PROCINFO_CPUTIME:
-							currValue = kp[i].ki_runtime / 1000;  // microsec -> millisec
-							break;
-						case PROCINFO_THREADS:
-							currValue = kp[i].ki_numthreads;
-							break;
-						case PROCINFO_VMSIZE:
-							currValue = kp[i].ki_size;
-							break;
-						case PROCINFO_WKSET:
-							currValue = kp[i].ki_rssize * getpagesize();
-							break;
-					}
-
-					switch(type)
-					{
-						case INFOTYPE_SUM:
-						case INFOTYPE_AVG:
-							result += currValue;
-							break;
-						case INFOTYPE_MIN:
-							result = std::min(result, currValue);
-							break;
-						case INFOTYPE_MAX:
-							result = std::max(result, currValue);
-							break;
-					}
-				}
-			}
-			if ((type == INFOTYPE_AVG) && (nMatched > 0))
-				result /= nMatched;
-			ret_int64(value, result);
-			nRet = SYSINFO_RC_SUCCESS;
-		}
-
-		kvm_close(kd);
-	}
-
-	return nRet;
+               switch (type)
+               {
+                  case INFOTYPE_SUM:
+                  case INFOTYPE_AVG:
+                     result += currValue;
+                     break;
+                  case INFOTYPE_MIN:
+                     result = std::min(result, currValue);
+                     break;
+                  case INFOTYPE_MAX:
+                     result = std::max(result, currValue);
+                     break;
+               }
+            }
+         }
+         if ((type == INFOTYPE_AVG) && (matched > 0))
+            result /= matched;
+         ret_int64(value, result);
+         ret = SYSINFO_RC_SUCCESS;
+      }
+   }
+   return ret;
 }
 
-
-//
-// Handler for System.ProcessList enum
-//
-
-LONG H_ProcessList(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue, AbstractCommSession *session)
+/**
+ * Handler for System.ProcessList enum
+ */
+LONG H_ProcessList(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session)
 {
-	int nRet = SYSINFO_RC_ERROR;
-	int nCount = -1;
-	int i;
-	struct kinfo_proc *kp;
-	kvm_t *kd;
+   int ret = SYSINFO_RC_ERROR;
+   int procCount = -1;
+   int i;
 
-   kd = kvm_openfiles(NULL, "/dev/null", NULL, O_RDONLY, NULL);
-   if (kd != 0)
-	{
-		kp = kvm_getprocs(kd, KERN_PROC_PROC, 0, &nCount);
+   kvm_t *kd = kvm_openfiles(NULL, "/dev/null", NULL, O_RDONLY, NULL);
+   if (kd != nullptr)
+   {
+      kinfo_proc *kp = kvm_getprocs(kd, KERN_PROC_PROC, 0, &procCount);
+      if (kp != nullptr)
+      {
+         for (i = 0; i < procCount; i++)
+         {
+            char szBuff[128];
 
-		if (kp != NULL)
-		{
-			for (i = 0; i < nCount; i++)
-			{
-				char szBuff[128];
-
-				snprintf(szBuff, sizeof(szBuff), "%d %s",
-#if __FreeBSD__ >= 5
-						kp[i].ki_pid, kp[i].ki_comm
-#else
-						kp[i].kp_proc.p_pid, kp[i].kp_proc.p_comm
-#endif
-						);
+            snprintf(szBuff, sizeof(szBuff), "%d %s", kp[i].ki_pid, kp[i].ki_comm);
 #ifdef UNICODE
-				pValue->addPreallocated(WideStringFromMBString(szBuff));
+            value->addPreallocated(WideStringFromMBString(szBuff));
 #else
-				pValue->add(szBuff);
+            value->add(szBuff);
 #endif
-			}
-		}
+         }
+      }
+      if (procCount >= 0)
+      {
+         ret = SYSINFO_RC_SUCCESS;
+      }
+   }
+   return ret;
+}
 
-		kvm_close(kd);
-	}
+/**
+ * Handler for System.Processes table
+ */
+LONG H_ProcessTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *session)
+{
+   value->addColumn(_T("PID"), DCI_DT_UINT, _T("PID"), true);
+   value->addColumn(_T("NAME"), DCI_DT_STRING, _T("Name"));
+   value->addColumn(_T("USER"), DCI_DT_STRING, _T("User"));
+   value->addColumn(_T("THREADS"), DCI_DT_UINT, _T("Threads"));
+   value->addColumn(_T("HANDLES"), DCI_DT_UINT, _T("Handles"));
+   value->addColumn(_T("KTIME"), DCI_DT_UINT64, _T("Kernel Time"));
+   value->addColumn(_T("UTIME"), DCI_DT_UINT64, _T("User Time"));
+   value->addColumn(_T("VMSIZE"), DCI_DT_UINT64, _T("VM Size"));
+   value->addColumn(_T("RSS"), DCI_DT_UINT64, _T("RSS"));
+   value->addColumn(_T("PAGE_FAULTS"), DCI_DT_UINT64, _T("Page Faults"));
+   value->addColumn(_T("CMDLINE"), DCI_DT_STRING, _T("Command Line"));
 
-	if (nCount >= 0)
-	{
-		nRet = SYSINFO_RC_SUCCESS;
-	}
+   int rc = SYSINFO_RC_ERROR;
 
-	return nRet;
+   kvm_t *kd = kvm_openfiles(NULL, "/dev/null", NULL, O_RDONLY, NULL);
+   if (kd != nullptr)
+   {
+      int procCount;
+      kinfo_proc *procs = kvm_getprocs(kd, KERN_PROC_PROC, 0, &procCount);
+      if (procs != nullptr)
+      {
+
+         rc = SYSINFO_RC_SUCCESS;
+         for (int i = 0; i < procCount; i++)
+         {
+            value->addRow();
+            value->set(0, procs[i].ki_pid);
+#ifdef UNICODE
+            value->setPreallocated(1, WideStringFromMBString(procs[i].ki_comm));
+            value->setPreallocated(2, WideStringFromMBString(procs[i].ki_login));
+#else
+            value->set(1, procs[i].ki_comm);
+            value->set(2, procs[i].ki_login);
+#endif
+            value->set(3, procs[i].ki_numthreads);
+            // value->set(4, p->fd);
+            // tv_sec are seconds, tv_usec are microseconds => converting both to milliseconds
+            value->set(5, procs[i].ki_rusage.ru_stime.tv_sec * 1000 + procs[i].ki_rusage.ru_stime.tv_usec / 1000);
+            value->set(6, procs[i].ki_rusage.ru_utime.tv_sec * 1000 + procs[i].ki_rusage.ru_utime.tv_usec / 1000);
+            value->set(7, procs[i].ki_size);
+            value->set(8, procs[i].ki_rssize * 1024);
+            value->set(9, procs[i].ki_rusage.ru_minflt + procs[i].ki_rusage.ru_majflt);
+            char cmdLine[MAX_CMD_LINE_LEN];
+            if (ReadProcCmdLine(procs[i].ki_pid, cmdLine))
+               value->set(10, cmdLine);
+         }
+      }
+      kvm_close(kd);
+   }
+   return rc;
 }
