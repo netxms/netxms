@@ -21,6 +21,9 @@
 #include "linux_subagent.h"
 #include <sys/ipc.h>
 #include <sys/msg.h>
+#include <sys/statvfs.h>
+#include <sys/utsname.h>
+#include <utmp.h>
 
 /**
  * Handler for System.ConnectedUsers parameter

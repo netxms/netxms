@@ -19,6 +19,7 @@
 **/
 
 #include "linux_subagent.h"
+#include <sys/utsname.h>
 
 /**
  * Handler for System.InstalledProducts table

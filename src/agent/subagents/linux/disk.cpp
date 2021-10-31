@@ -19,6 +19,8 @@
 **/
 
 #include "linux_subagent.h"
+#include <mntent.h>
+#include <sys/vfs.h>
 
 /**
  * Find mount point by device

@@ -24,21 +24,7 @@
 #include <nms_common.h>
 #include <nms_agent.h>
 #include <nms_util.h>
-#include <interface_types.h>
 
-#include <locale.h>
-#include <sys/utsname.h>
-#include <sys/statvfs.h>
-#include <utmp.h>
-#include <paths.h>
-#include <mntent.h>
-#include <sys/vfs.h>
-#include <sys/ioctl.h>
-#include <net/if.h>
-#include <asm/types.h>
-#include <linux/netlink.h>
-#include <linux/rtnetlink.h>
-#include <pwd.h>
 
 #define DEBUG_TAG _T("linux")
 
@@ -48,10 +34,10 @@
 enum
 {
 	PROCINFO_CPUTIME,
+   PROCINFO_HANDLES,
 	PROCINFO_KTIME,
 	PROCINFO_PAGEFAULTS,
-	PROCINFO_THREADS,
-   PROCINFO_HANDLES,
+   PROCINFO_THREADS,
 	PROCINFO_UTIME,
    PROCINFO_VMREGIONS,
 	PROCINFO_VMSIZE,
@@ -62,38 +48,6 @@ enum
 #define INFOTYPE_MAX             1
 #define INFOTYPE_AVG             2
 #define INFOTYPE_SUM             3
-
-/**
- * Interface info
- */
-class LinuxInterfaceInfo
-{
-public:
-   int index;
-   int type;
-   int mtu;
-   BYTE macAddr[8];
-   char name[16];
-   ObjectArray<InetAddress> addrList;
-
-   LinuxInterfaceInfo() : addrList(16, 16, Ownership::True)
-   {
-      index = 0;
-      type = IFTYPE_OTHER;
-      mtu = 0;
-      memset(macAddr, 0, sizeof(macAddr));
-      name[0] = 0;
-   }
-};
-
-/**
- * Netlink
- */
-typedef struct
-{
-   nlmsghdr header;
-   rtgenmsg message;
-} NETLINK_REQ;
 
 /**
  * FS info types
@@ -119,22 +73,25 @@ enum
 /**
  * Network interface stats
  */
-#define IF_INFO_ADMIN_STATUS     0
-#define IF_INFO_OPER_STATUS      1
-#define IF_INFO_BYTES_IN         2
-#define IF_INFO_BYTES_OUT        3
-#define IF_INFO_DESCRIPTION      4
-#define IF_INFO_ERRORS_IN        5
-#define IF_INFO_ERRORS_OUT       6
-#define IF_INFO_PACKETS_IN       7
-#define IF_INFO_PACKETS_OUT      8
-#define IF_INFO_SPEED            9
-#define IF_INFO_BYTES_IN_64      10
-#define IF_INFO_BYTES_OUT_64     11
-#define IF_INFO_ERRORS_IN_64     12
-#define IF_INFO_ERRORS_OUT_64    13
-#define IF_INFO_PACKETS_IN_64    14
-#define IF_INFO_PACKETS_OUT_64   15
+enum
+{
+   IF_INFO_ADMIN_STATUS,
+   IF_INFO_OPER_STATUS,
+   IF_INFO_BYTES_IN,
+   IF_INFO_BYTES_OUT,
+   IF_INFO_DESCRIPTION,
+   IF_INFO_ERRORS_IN,
+   IF_INFO_ERRORS_OUT,
+   IF_INFO_PACKETS_IN,
+   IF_INFO_PACKETS_OUT,
+   IF_INFO_SPEED,
+   IF_INFO_BYTES_IN_64,
+   IF_INFO_BYTES_OUT_64,
+   IF_INFO_ERRORS_IN_64,
+   IF_INFO_ERRORS_OUT_64,
+   IF_INFO_PACKETS_IN_64,
+   IF_INFO_PACKETS_OUT_64
+};
 
 /**
  * Memory stats
@@ -259,6 +216,7 @@ LONG H_CpuUsageEx(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 LONG H_CpuVendorId(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 LONG H_ProcessCount(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 LONG H_ProcessDetails(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
+LONG H_SystemProcessCount(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 LONG H_ThreadCount(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 LONG H_MemoryInfo(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 LONG H_SourcePkgSupport(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);

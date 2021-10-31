@@ -19,7 +19,12 @@
  **/
 
 #include <linux_subagent.h>
+#include <sys/ioctl.h>
+#include <net/if.h>
 #include <net/if_arp.h>
+#include <linux/netlink.h>
+#include <linux/rtnetlink.h>
+#include <interface_types.h>
 
 /**
  * Handler for Net.IP.Forwarding and Net.IP6.Forwarding parameters
@@ -233,6 +238,15 @@ LONG H_NetRoutingTable(const TCHAR *pszParam, const TCHAR *pArg, StringList *pVa
 }
 
 /**
+ * Netlink request
+ */
+typedef struct
+{
+   nlmsghdr header;
+   rtgenmsg message;
+} NETLINK_REQ;
+
+/**
  * Send netlink message
  */
 static int SendMessage(int socket, unsigned short type)
@@ -308,6 +322,28 @@ static struct
    { ARPHRD_TUNNEL, IFTYPE_TUNNEL },
    { ARPHRD_TUNNEL6, IFTYPE_TUNNEL },
    { -1, -1 }
+};
+
+/**
+ * Interface info
+ */
+struct LinuxInterfaceInfo
+{
+   int index;
+   int type;
+   int mtu;
+   BYTE macAddr[8];
+   char name[16];
+   ObjectArray<InetAddress> addrList;
+
+   LinuxInterfaceInfo() : addrList(16, 16, Ownership::True)
+   {
+      index = 0;
+      type = IFTYPE_OTHER;
+      mtu = 0;
+      memset(macAddr, 0, sizeof(macAddr));
+      name[0] = 0;
+   }
 };
 
 /**
@@ -727,7 +763,7 @@ LONG H_NetIfInfoFromProc(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abs
    if (*ptr == 0)
    {
       // Index passed as argument, convert to name
-      if (if_indextoname(nIndex, szName) == NULL)
+      if (if_indextoname(nIndex, szName) == nullptr)
          nRet = SYSINFO_RC_ERROR;
    }
    else
@@ -750,7 +786,7 @@ LONG H_NetIfInfoFromProc(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abs
          while(1)
          {
             char *ret = fgets(szBuffer, 256, fp);
-            if (ret == NULL || feof(fp))
+            if (ret == nullptr || feof(fp))
             {
                nRet = SYSINFO_RC_ERROR;   // Interface record not found
                break;

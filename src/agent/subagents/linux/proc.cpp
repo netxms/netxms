@@ -19,30 +19,31 @@
 **/
 
 #include "linux_subagent.h"
+#include <pwd.h>
 
 /**
  * Maximum possible length of process name
  */
 #define MAX_PROCESS_NAME_LEN 32
+#define MAX_USER_NAME_LEN    32
 
 /**
  * File descriptor
  */
-class FileDescriptor
+struct FileDescriptor
 {
-public:
    int handle;
    char *name;
 
-   FileDescriptor(struct dirent *e, const char *base)
+   FileDescriptor(int h, const char *base, const char *e)
    {
-      handle = strtol(e->d_name, nullptr, 10);
+      handle = h;
 
       char path[MAX_PATH];
-      snprintf(path, MAX_PATH, "%s/%s", base, e->d_name);
+      snprintf(path, MAX_PATH, "%s/%s", base, e);
 
       char fname[MAX_PATH];
-      int len = (int)readlink(path, fname, MAX_PATH - 1);
+      int len = readlink(path, fname, MAX_PATH - 1);
       if (len >= 0)
       {
          fname[len] = 0;
@@ -63,15 +64,14 @@ public:
 /**
  * Process entry
  */
-class Process
+struct Process
 {
-public:
    uint32_t pid;
    char name[MAX_PROCESS_NAME_LEN];
    uint32_t parent;      // PID of parent process
    uint32_t group;       // Group ID
    char state;           // Process state
-   char *user;           // Process owner user
+   char user[MAX_USER_NAME_LEN];   // Process owner user
    long threads;         // Number of threads
    unsigned long ktime;  // Number of ticks spent in kernel mode
    unsigned long utime;  // Number of ticks spent in user mode
@@ -89,7 +89,7 @@ public:
       parent = 0;
       group = 0;
       state = '?';
-      user = _user;
+      strlcpy(user, _user, MAX_USER_NAME_LEN);
       threads = 0;
       ktime = 0;
       utime = 0;
@@ -109,50 +109,30 @@ public:
 };
 
 /**
- * Filter for reading only pid directories from /proc
- */
-static int ProcFilter(const struct dirent *pEnt)
-{
-   char *pTmp;
-
-   if (pEnt == nullptr)
-   {
-      return 0; // ignore file
-   }
-
-   pTmp = (char *)pEnt->d_name;
-   while (*pTmp != 0)
-   {
-      if (*pTmp < '0' || *pTmp > '9')
-      {
-         return 0; // skip
-      }
-      pTmp++;
-   }
-
-   return 1;
-}
-
-/**
  * Read handles
  */
-static ObjectArray<FileDescriptor> *ReadProcessHandles(UINT32 pid)
+static ObjectArray<FileDescriptor> *ReadProcessHandles(const char *path)
 {
-   char path[MAX_PATH];
-   snprintf(path, MAX_PATH, "/proc/%u/fd", pid);
+   DIR *dir = opendir(path);
+   if (dir == nullptr)
+      return nullptr;
 
-   struct dirent **handles;
-   int count = scandir(path, &handles, ProcFilter, alphasort);
-   if (count < 0)
-      return NULL;
-
-   ObjectArray<FileDescriptor> *fd = new ObjectArray<FileDescriptor>(count, 16, Ownership::True);
-   while (count-- > 0)
+   ObjectArray<FileDescriptor> *fd = new ObjectArray<FileDescriptor>(64, 64, Ownership::True);
+   struct dirent *d;
+   while((d = readdir(dir)) != nullptr)
    {
-      fd->add(new FileDescriptor(handles[count], path));
-      free(handles[count]);
+      if (d->d_name[0] == '.')
+         continue;
+
+      char *eptr;
+      int handle = strtol(d->d_name, &eptr, 10);
+      if (*eptr == 0)
+      {
+         fd->add(new FileDescriptor(handle, path, d->d_name));
+      }
    }
-   free(handles);
+
+   closedir(dir);
    return fd;
 }
 
@@ -171,49 +151,43 @@ static ObjectArray<FileDescriptor> *ReadProcessHandles(UINT32 pid)
  */
 static int ProcRead(ObjectArray<Process> *plist, const char *procNameFilter, const char *cmdLineFilter, const char *procUserFilter, bool readHandles, bool readCmdLine)
 {
-   nxlog_debug_tag(DEBUG_TAG, 5, _T("ProcRead(%p, \"%hs\",\"%hs\",\"%hs\")"), plist, CHECK_NULL_A(procNameFilter), CHECK_NULL_A(cmdLineFilter), CHECK_NULL_A(procUserFilter));
+   nxlog_debug_tag(DEBUG_TAG, 6, _T("ProcRead(%p, \"%hs\",\"%hs\",\"%hs\")"), plist, CHECK_NULL_A(procNameFilter), CHECK_NULL_A(cmdLineFilter), CHECK_NULL_A(procUserFilter));
 
-   struct dirent **nameList;
-   int count = scandir("/proc", &nameList, ProcFilter, alphasort);
-   if (count < 0)
+   DIR *dir = opendir("/proc");
+   if (dir == nullptr)
       return -1;
-   if (count == 0)
+
+   char fileName[MAX_PATH] = "/proc/";
+
+   int count = 0;
+   struct dirent *d;
+   while ((d = readdir(dir)) != nullptr)
    {
-      free(nameList);
-      return -1; // consider 0 as error as there should not be 0 processes
-   }
+      if ((d->d_name[0] < '0') || (d->d_name[0] > '9'))
+         continue;
 
-   // get process count without filtering, we can skip long loop
-   if ((plist == nullptr) && (procNameFilter == nullptr) && (cmdLineFilter == nullptr) && (procUserFilter == nullptr))
-   {
-      for (int i = 0; i < count; i++)
-         free(nameList[i]);
-      free(nameList);
-      return count;
-   }
+      char *eptr;
+      uint32_t pid = strtoull(d->d_name, &eptr, 10);
+      if (*eptr != 0)
+         continue;
 
-   int found = 0;
-   while (count-- > 0)
-   {
-      bool procFound = false;
-      bool cmdFound = false;
-      bool uidFound = true;
-      char *pProcName = nullptr;
-      char *pProcStat = nullptr;
-      unsigned int nPid = 0;
+      strcpy(&fileName[6], d->d_name);
+      strcat(fileName, "/");
+      size_t fileNamePos = strlen(fileName);
 
-      char fileName[MAX_PATH], procNameBuffer[MAX_PROCESS_NAME_LEN + 1];
-
-      snprintf(fileName, MAX_PATH, "/proc/%s/stat", nameList[count]->d_name);
+      // Read stat file
+      char szProcStat[1024], *pProcStat = nullptr, *pProcName = nullptr;
+      bool procNameMatch = false;
+      strcpy(&fileName[fileNamePos], "stat");
       int hFile = _open(fileName, O_RDONLY);
-      char szProcStat[1024];
       if (hFile != -1)
       {
          ssize_t bytes = _read(hFile, szProcStat, sizeof(szProcStat) - 1);
          if (bytes > 0)
          {
             szProcStat[bytes] = 0;
-            if (sscanf(szProcStat, "%u ", &nPid) == 1)
+            uint32_t tmp;
+            if (sscanf(szProcStat, "%u ", &tmp) == 1) // Skip PID
             {
                char *procNamePos = strchr(szProcStat, '(');
                if (procNamePos != nullptr)
@@ -230,50 +204,63 @@ static int ProcRead(ObjectArray<Process> *plist, const char *procNameFilter, con
                      if ((procNameFilter != nullptr) && (*procNameFilter != 0))
                      {
                         if (cmdLineFilter == nullptr) // use old style compare
-                           procFound = (strcmp(pProcName, procNameFilter) == 0);
+                           procNameMatch = (strcmp(pProcName, procNameFilter) == 0);
                         else
-                           procFound = RegexpMatchA(pProcName, procNameFilter, false);
+                           procNameMatch = RegexpMatchA(pProcName, procNameFilter, false);
                      }
                      else
                      {
-                        procFound = true;
+                        procNameMatch = true;
                      }
                   }
-               } // pProcName != nullptr
+               }
             }
-         } // _read
-         _close(hFile);
-      } // hFile
-
-      char *userName = nullptr;
-      //Get user name
-      struct stat fileInfo;
-      if (stat(fileName, &fileInfo) == 0)
-      {
-         passwd resultbuf;
-         char buffer[512];
-         size_t buflen = 512;
-         passwd *pUserInfo; // Will point to static
-         getpwuid_r(fileInfo.st_uid, &resultbuf, buffer, buflen, &pUserInfo);
-         if (pUserInfo != nullptr)
-         {
-            userName = pUserInfo->pw_name;
          }
+         _close(hFile);
       }
 
-      //Check if user name matches pattern
-      if (procUserFilter != nullptr && *procUserFilter != 0)
+      if (!procNameMatch)
+         continue;
+
+      // Read status file
+      passwd pbuffer, *userInfo;
+      char pwbuffer[512];
+      char *userName = nullptr;
+      strcpy(&fileName[fileNamePos], "status");
+      hFile = _open(fileName, O_RDONLY);
+      if (hFile != -1)
       {
-         if (userName != nullptr)
-            uidFound = RegexpMatchA(userName, procUserFilter, true);
-         else
-            uidFound = false;
+         char statusBuffer[8192];
+         ssize_t bytes = _read(hFile, statusBuffer, sizeof(statusBuffer) - 1);
+         if (bytes > 0)
+         {
+            statusBuffer[bytes] = 0;
+            char *puid = strstr(statusBuffer, "Uid:");
+            if (puid != nullptr)
+            {
+               puid += 4;
+               while((*puid == '\t') || (*puid == ' '))
+                  puid++;
+               uint32_t uid = strtoul(puid, &eptr, 10);
+
+               getpwuid_r(uid, &pbuffer, pwbuffer, sizeof(pwbuffer), &userInfo);
+               if (userInfo != nullptr)
+               {
+                  userName = userInfo->pw_name;
+               }
+            }
+         }
+         _close(hFile);
       }
+
+      // Check if user name matches pattern
+      if ((procUserFilter != nullptr) && (*procUserFilter != 0)  && !RegexpMatchA(CHECK_NULL_EX_A(userName), procUserFilter, true))
+         continue;
 
       char *processCmdLine = nullptr;
       if (readCmdLine || ((cmdLineFilter != nullptr) && (*cmdLineFilter != 0)))
       {
-         snprintf(fileName, MAX_PATH, "/proc/%s/cmdline", nameList[count]->d_name);
+         strcpy(&fileName[fileNamePos], "cmdline");
          hFile = _open(fileName, O_RDONLY);
          if (hFile != -1)
          {
@@ -285,7 +272,7 @@ static int ProcRead(ObjectArray<Process> *plist, const char *procNameFilter, con
                if (bytes < 0)
                   bytes = 0;
                len += bytes;
-               if (bytes < 1024)
+               if (bytes < 4096)
                {
                   processCmdLine[len] = 0;
                   break;
@@ -293,6 +280,7 @@ static int ProcRead(ObjectArray<Process> *plist, const char *procNameFilter, con
                pos += bytes;
                processCmdLine = MemRealloc(processCmdLine, pos + 4096);
             }
+            _close(hFile);
             if (len > 0)
             {
                // got a valid record in format: argv[0]\x00argv[1]\x00...
@@ -307,88 +295,89 @@ static int ProcRead(ObjectArray<Process> *plist, const char *procNameFilter, con
                   }
                }
             }
-            _close(hFile);
          }
 
          if ((cmdLineFilter != nullptr) && (*cmdLineFilter != 0))
          {
-            if (processCmdLine != nullptr)
-               cmdFound = RegexpMatchA(processCmdLine, cmdLineFilter, true);
-            else
-               cmdFound = RegexpMatchA("", cmdLineFilter, false);
-
+            if (!RegexpMatchA(CHECK_NULL_EX_A(processCmdLine), cmdLineFilter, true))
+            {
+               MemFree(processCmdLine);
+               continue;
+            }
             if (!readCmdLine)
                MemFreeAndNull(processCmdLine);
          }
-         else
-         {
-            cmdFound = true;
-         }
-      } // cmdLineFilter
-      else
-      {
-         cmdFound = true;
       }
 
-      if (procFound && cmdFound && uidFound)
+      if ((plist != nullptr) && (pProcName != nullptr))
       {
-         if ((plist != nullptr) && (pProcName != nullptr))
+         auto p = new Process(pid, pProcName, userName, processCmdLine);
+         // Parse rest of /proc/pid/stat file
+         if (pProcStat != nullptr)
          {
-            Process *p = new Process(nPid, pProcName, userName, processCmdLine);
-            // Parse rest of /proc/pid/stat file
-            if (pProcStat != nullptr)
+            if (sscanf(pProcStat, " %c %d %d %*d %*d %*d %*u %lu %*u %lu %*u %lu %lu %*u %*u %*d %*d %ld %*d %*u %lu %ld ",
+                       &p->state, &p->parent, &p->group, &p->minflt, &p->majflt,
+                       &p->utime, &p->ktime, &p->threads, &p->vmsize, &p->rss) != 10)
             {
-               if (sscanf(pProcStat, " %c %d %d %*d %*d %*d %*u %lu %*u %lu %*u %lu %lu %*u %*u %*d %*d %ld %*d %*u %lu %ld ",
-                          &p->state, &p->parent, &p->group, &p->minflt, &p->majflt,
-                          &p->utime, &p->ktime, &p->threads, &p->vmsize, &p->rss) != 10)
-               {
-                  nxlog_debug_tag(DEBUG_TAG, 2, _T("Error parsing /proc/%u/stat"), nPid);
-               }
+               nxlog_debug_tag(DEBUG_TAG, 5, _T("Error parsing /proc/%u/stat"), pid);
             }
-            p->fd = readHandles ? ReadProcessHandles(nPid) : nullptr;
-            plist->add(p);
          }
-         found++;
+         if (readHandles)
+         {
+            strcpy(&fileName[fileNamePos], "fd");
+            p->fd = ReadProcessHandles(fileName);
+         }
+         plist->add(p);
       }
 
-      free(nameList[count]);
+      count++;
    }
-   free(nameList);
-   return found;
+   closedir(dir);
+   return count;
 }
 
 /**
- * Handler for System.ProcessCount, Process.Count() and Process.CountEx() parameters
+ * Handler for System.ProcessCount
+ */
+LONG H_SystemProcessCount(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   int count = CountFilesInDirectoryA("/proc", [](const dirent *d) {
+      const char *p = d->d_name;
+      while(*p != 0)
+      {
+         if ((*p < '0') || (*p > '9'))
+            return false;
+         p++;
+      }
+      return true;
+   });
+
+   if (count < 0)
+      return SYSINFO_RC_ERROR;
+
+   ret_int(value, count);
+   return SYSINFO_RC_SUCCESS;
+}
+
+/**
+ * Handler for Process.Count() and Process.CountEx() parameters
  */
 LONG H_ProcessCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
-   int nRet = SYSINFO_RC_ERROR;
    char procNameFilter[MAX_PATH] = "", cmdLineFilter[MAX_PATH] = "", userFilter[256] = "";
-   int nCount = -1;
-
-   if (*pArg != _T('T'))
+   AgentGetParameterArgA(pszParam, 1, procNameFilter, sizeof(procNameFilter));
+   if (*pArg == _T('E'))
    {
-      AgentGetParameterArgA(pszParam, 1, procNameFilter, sizeof(procNameFilter));
-      if (*pArg == _T('E'))
-      {
-         AgentGetParameterArgA(pszParam, 2, cmdLineFilter, sizeof(cmdLineFilter));
-         AgentGetParameterArgA(pszParam, 3, userFilter, sizeof(userFilter));
-      }
+      AgentGetParameterArgA(pszParam, 2, cmdLineFilter, sizeof(cmdLineFilter));
+      AgentGetParameterArgA(pszParam, 3, userFilter, sizeof(userFilter));
    }
 
-   nCount = ProcRead(nullptr, (*pArg != _T('T')) ? procNameFilter : nullptr, (*pArg == _T('E')) ? cmdLineFilter : nullptr, (*pArg == _T('E')) ? userFilter : nullptr, false, false);
+   int count = ProcRead(nullptr, procNameFilter, (*pArg == _T('E')) ? cmdLineFilter : nullptr, (*pArg == _T('E')) ? userFilter : nullptr, false, false);
+   if (count == -1)
+      return SYSINFO_RC_ERROR;
 
-   if (nCount == -2)
-   {
-      nRet = SYSINFO_RC_UNSUPPORTED;
-   }
-   else if (nCount >= 0)
-   {
-      ret_int(pValue, nCount);
-      nRet = SYSINFO_RC_SUCCESS;
-   }
-
-   return nRet;
+   ret_int(pValue, count);
+   return SYSINFO_RC_SUCCESS;
 }
 
 /**
@@ -463,11 +452,11 @@ static int64_t CountVMRegions(uint32_t pid)
 }
 
 /**
- * Handler for Process.xxx() parameters
+ * Handler for Process.*() parameters
  * Parameter has the following syntax:
- *    Process.XXX(<process>,<type>,<cmdline>)
+ *    Process.*(<process>,<type>,<cmdline>)
  * where
- *    XXX        - requested process attribute (see documentation for list of valid attributes)
+ *    *          - requested process attribute (see documentation for list of valid attributes)
  *    <process>  - process name (same as in Process.Count() parameter)
  *    <type>     - representation type (meaningful when more than one process with the same
  *                 name exists). Valid values are:
@@ -481,7 +470,7 @@ static int64_t CountVMRegions(uint32_t pid)
 LONG H_ProcessDetails(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
    int i, count, type;
-   INT64 currVal, finalVal;
+   int64_t currVal, finalVal;
    char procNameFilter[MAX_PATH], cmdLineFilter[MAX_PATH], buffer[256], userFilter[256] = "";
    static const char *typeList[] = {"min", "max", "avg", "sum", nullptr};
 
@@ -522,50 +511,50 @@ LONG H_ProcessDetails(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abstra
       Process *p = procList.get(i);
       switch (CAST_FROM_POINTER(arg, int))
       {
-      case PROCINFO_CPUTIME:
-         currVal = (p->ktime + p->utime) * 1000 / ticksPerSecond;
-         break;
-      case PROCINFO_HANDLES:
-         currVal = (p->fd != NULL) ? p->fd->size() : 0;
-         break;
-      case PROCINFO_KTIME:
-         currVal = p->ktime * 1000 / ticksPerSecond;
-         break;
-      case PROCINFO_UTIME:
-         currVal = p->utime * 1000 / ticksPerSecond;
-         break;
-      case PROCINFO_PAGEFAULTS:
-         currVal = p->majflt + p->minflt;
-         break;
-      case PROCINFO_THREADS:
-         currVal = p->threads;
-         break;
-      case PROCINFO_VMREGIONS:
-         currVal = CountVMRegions(p->pid);
-         break;
-      case PROCINFO_VMSIZE:
-         currVal = p->vmsize;
-         break;
-      case PROCINFO_WKSET:
-         currVal = p->rss * pageSize;
-         break;
-      default:
-         currVal = 0;
-         break;
+         case PROCINFO_CPUTIME:
+            currVal = (p->ktime + p->utime) * 1000 / ticksPerSecond;
+            break;
+         case PROCINFO_HANDLES:
+            currVal = (p->fd != NULL) ? p->fd->size() : 0;
+            break;
+         case PROCINFO_KTIME:
+            currVal = p->ktime * 1000 / ticksPerSecond;
+            break;
+         case PROCINFO_UTIME:
+            currVal = p->utime * 1000 / ticksPerSecond;
+            break;
+         case PROCINFO_PAGEFAULTS:
+            currVal = p->majflt + p->minflt;
+            break;
+         case PROCINFO_THREADS:
+            currVal = p->threads;
+            break;
+         case PROCINFO_VMREGIONS:
+            currVal = CountVMRegions(p->pid);
+            break;
+         case PROCINFO_VMSIZE:
+            currVal = p->vmsize;
+            break;
+         case PROCINFO_WKSET:
+            currVal = p->rss * pageSize;
+            break;
+         default:
+            currVal = 0;
+            break;
       }
 
       switch (type)
       {
-      case INFOTYPE_SUM:
-      case INFOTYPE_AVG:
-         finalVal += currVal;
-         break;
-      case INFOTYPE_MIN:
-         finalVal = std::min(currVal, finalVal);
-         break;
-      case INFOTYPE_MAX:
-         finalVal = std::max(currVal, finalVal);
-         break;
+         case INFOTYPE_SUM:
+         case INFOTYPE_AVG:
+            finalVal += currVal;
+            break;
+         case INFOTYPE_MIN:
+            finalVal = std::min(currVal, finalVal);
+            break;
+         case INFOTYPE_MAX:
+            finalVal = std::max(currVal, finalVal);
+            break;
       }
    }
 
