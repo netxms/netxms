@@ -176,8 +176,9 @@ private:
    TCHAR *m_name;
    uint8_t m_type;
    uint8_t m_origin;
-   uint8_t m_busy;
    uint8_t m_snmpRawValueType;
+   bool m_busy;
+   bool m_disabled;
    uint16_t m_snmpPort;
    SNMP_Version m_snmpVersion;
 	uuid m_snmpTargetGuid;
@@ -201,7 +202,7 @@ public:
    int getType() const { return (int)m_type; }
    int getOrigin() const { return (int)m_origin; }
    const uuid& getSnmpTargetGuid() const { return m_snmpTargetGuid; }
-   UINT16 getSnmpPort() const { return m_snmpPort; }
+   uint16_t getSnmpPort() const { return m_snmpPort; }
    SNMP_Version getSnmpVersion() const { return m_snmpVersion; }
    int getSnmpRawValueType() const { return (int)m_snmpRawValueType; }
    uint32_t getPollingInterval() const { return static_cast<uint32_t>(m_pollingInterval); }
@@ -214,8 +215,11 @@ public:
    void deleteFromDatabase(DB_HANDLE hdb, DataCollectionStatementSet *statements);
    void setLastPollTime(time_t time);
 
-   void startDataCollection() { m_busy = 1; }
-   void finishDataCollection() { m_busy = 0; }
+   void startDataCollection() { m_busy = true; }
+   void finishDataCollection() { m_busy = false; }
+
+   bool isDisabled() const { return m_disabled; }
+   void setDisabled() { m_disabled = true; }
 
    uint32_t getTimeToNextPoll(time_t now)
    {
@@ -298,7 +302,8 @@ DataCollectionItem::DataCollectionItem(uint64_t serverId, const NXCPMessage& msg
    m_snmpPort = msg.getFieldAsUInt16(baseId + 7);
    m_snmpRawValueType = static_cast<uint8_t>(msg.getFieldAsUInt16(baseId + 8));
    m_backupProxyId = msg.getFieldAsInt32(baseId + 9);
-   m_busy = 0;
+   m_busy = false;
+   m_disabled = false;
    m_tLastCheck = 0;
 
    if (hasExtraData && (m_origin == DS_SNMP_AGENT))
@@ -363,7 +368,8 @@ DataCollectionItem::DataCollectionItem(DB_RESULT hResult, int row)
    m_backupProxyId = DBGetFieldULong(hResult, row, 10);
    m_snmpVersion = SNMP_VersionFromInt(DBGetFieldLong(hResult, row, 11));
    m_scheduleType = static_cast<ScheduleType>(DBGetFieldLong(hResult, row, 12));
-   m_busy = 0;
+   m_busy = false;
+   m_disabled = false;
    m_tLastCheck = 0;
 
    if ((m_origin == DS_SNMP_AGENT) && (m_type == DCO_TYPE_TABLE))
@@ -449,7 +455,8 @@ DataCollectionItem::DataCollectionItem(DB_RESULT hResult, int row)
    {
       m_tableColumns = nullptr;
    }
-   m_busy = 0;
+   m_busy = false;
+   m_disabled = false;
    m_tLastCheck = 0;
    m_scheduleType = item->m_scheduleType;
  }
@@ -704,27 +711,27 @@ private:
    } m_value;
 
 public:
-   DataElement(DataCollectionItem *dci, const TCHAR *value, uint32_t status)
+   DataElement(const DataCollectionItem& dci, const TCHAR *value, uint32_t status)
    {
-      m_serverId = dci->getServerId();
-      m_dciId = dci->getId();
+      m_serverId = dci.getServerId();
+      m_dciId = dci.getId();
       m_timestamp = time(nullptr);
-      m_origin = dci->getOrigin();
+      m_origin = dci.getOrigin();
       m_type = DCO_TYPE_ITEM;
       m_statusCode = status;
-      m_snmpNode = dci->getSnmpTargetGuid();
+      m_snmpNode = dci.getSnmpTargetGuid();
       m_value.item = MemCopyString(value);
    }
 
-   DataElement(DataCollectionItem *dci, Table *value, uint32_t status)
+   DataElement(const DataCollectionItem& dci, Table *value, uint32_t status)
    {
-      m_serverId = dci->getServerId();
-      m_dciId = dci->getId();
+      m_serverId = dci.getServerId();
+      m_dciId = dci.getId();
       m_timestamp = time(nullptr);
-      m_origin = dci->getOrigin();
+      m_origin = dci.getOrigin();
       m_type = DCO_TYPE_TABLE;
       m_statusCode = status;
-      m_snmpNode = dci->getSnmpTargetGuid();
+      m_snmpNode = dci.getSnmpTargetGuid();
       m_value.table = value;
    }
 
@@ -1222,22 +1229,22 @@ static void DataSender()
 /**
  * Collect data from agent
  */
-static DataElement *CollectDataFromAgent(DataCollectionItem *dci)
+static DataElement *CollectDataFromAgent(const DataCollectionItem& dci)
 {
-   VirtualSession session(dci->getServerId());
+   VirtualSession session(dci.getServerId());
 
    DataElement *e = nullptr;
    uint32_t status;
-   if (dci->getType() == DCO_TYPE_ITEM)
+   if (dci.getType() == DCO_TYPE_ITEM)
    {
       TCHAR value[MAX_RESULT_LENGTH];
-      status = GetParameterValue(dci->getName(), value, &session);
+      status = GetParameterValue(dci.getName(), value, &session);
       e = new DataElement(dci, (status == ERR_SUCCESS) ? value : _T(""), status);
    }
-   else if (dci->getType() == DCO_TYPE_TABLE)
+   else if (dci.getType() == DCO_TYPE_TABLE)
    {
       Table *value = new Table();
-      status = GetTableValue(dci->getName(), value, &session);
+      status = GetTableValue(dci.getName(), value, &session);
       e = new DataElement(dci, value, status);
    }
 
@@ -1247,30 +1254,30 @@ static DataElement *CollectDataFromAgent(DataCollectionItem *dci)
 /**
  * Collect data from SNMP
  */
-static DataElement *CollectDataFromSNMP(DataCollectionItem *dci)
+static DataElement *CollectDataFromSNMP(const DataCollectionItem& dci)
 {
    DataElement *e = nullptr;
-   if (dci->getType() == DCO_TYPE_ITEM)
+   if (dci.getType() == DCO_TYPE_ITEM)
    {
-      nxlog_debug_tag(DEBUG_TAG, 8, _T("Read SNMP parameter %s"), dci->getName());
+      nxlog_debug_tag(DEBUG_TAG, 8, _T("Read SNMP parameter %s"), dci.getName());
 
       TCHAR value[MAX_RESULT_LENGTH];
-      uint32_t status = GetSnmpValue(dci->getSnmpTargetGuid(), dci->getSnmpPort(), dci->getSnmpVersion(), dci->getName(), value, dci->getSnmpRawValueType());
+      uint32_t status = GetSnmpValue(dci.getSnmpTargetGuid(), dci.getSnmpPort(), dci.getSnmpVersion(), dci.getName(), value, dci.getSnmpRawValueType());
       e = new DataElement(dci, status == ERR_SUCCESS ? value : _T(""), status);
    }
-   else if (dci->getType() == DCO_TYPE_TABLE)
+   else if (dci.getType() == DCO_TYPE_TABLE)
    {
-      nxlog_debug_tag(DEBUG_TAG, 8, _T("Read SNMP table %s"), dci->getName());
-      const ObjectArray<SNMPTableColumnDefinition> *columns = dci->getColumns();
+      nxlog_debug_tag(DEBUG_TAG, 8, _T("Read SNMP table %s"), dci.getName());
+      const ObjectArray<SNMPTableColumnDefinition> *columns = dci.getColumns();
       if (columns != nullptr)
       {
          Table *value = new Table();
-         uint32_t status = GetSnmpTable(dci->getSnmpTargetGuid(), dci->getSnmpPort(), dci->getSnmpVersion(), dci->getName(), *columns, value);
+         uint32_t status = GetSnmpTable(dci.getSnmpTargetGuid(), dci.getSnmpPort(), dci.getSnmpVersion(), dci.getName(), *columns, value);
          e = new DataElement(dci, value, status);
       }
       else
       {
-         nxlog_debug_tag(DEBUG_TAG, 8, _T("Missing column definition for SNMP table %s"), dci->getName());
+         nxlog_debug_tag(DEBUG_TAG, 8, _T("Missing column definition for SNMP table %s"), dci.getName());
       }
    }
    return e;
@@ -1279,18 +1286,20 @@ static DataElement *CollectDataFromSNMP(DataCollectionItem *dci)
 /**
  * Local data collection callback
  */
-static void LocalDataCollectionCallback(DataCollectionItem *dci)
+static void LocalDataCollectionCallback(const shared_ptr<DataCollectionItem>& dci)
 {
-   DataElement *e = CollectDataFromAgent(dci);
-   if (e != nullptr)
+   if (!dci->isDisabled())
    {
-      s_dataSenderQueue.put(e);
+      DataElement *e = CollectDataFromAgent(*dci);
+      if (e != nullptr)
+      {
+         s_dataSenderQueue.put(e);
+      }
+      else
+      {
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("DataCollector: collection error for DCI %d \"%s\""), dci->getId(), dci->getName());
+      }
    }
-   else
-   {
-      nxlog_debug_tag(DEBUG_TAG, 6, _T("DataCollector: collection error for DCI %d \"%s\""), dci->getId(), dci->getName());
-   }
-
    dci->setLastPollTime(time(nullptr));
    dci->finishDataCollection();
 }
@@ -1298,18 +1307,20 @@ static void LocalDataCollectionCallback(DataCollectionItem *dci)
 /**
  * SNMP data collection callback
  */
-static void SnmpDataCollectionCallback(DataCollectionItem *dci)
+static void SnmpDataCollectionCallback(const shared_ptr<DataCollectionItem>& dci)
 {
-   DataElement *e = CollectDataFromSNMP(dci);
-   if (e != nullptr)
+   if (!dci->isDisabled())
    {
-      s_dataSenderQueue.put(e);
+      DataElement *e = CollectDataFromSNMP(*dci);
+      if (e != nullptr)
+      {
+         s_dataSenderQueue.put(e);
+      }
+      else
+      {
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("DataCollector: collection error for DCI %d \"%s\""), dci->getId(), dci->getName());
+      }
    }
-   else
-   {
-      nxlog_debug_tag(DEBUG_TAG, 6, _T("DataCollector: collection error for DCI %d \"%s\""), dci->getId(), dci->getName());
-   }
-
    dci->setLastPollTime(time(nullptr));
    dci->finishDataCollection();
 }
@@ -1331,7 +1342,7 @@ static uint32_t DataCollectionSchedulerRun()
    auto it = s_items.begin();
    while(it.hasNext())
    {
-      DataCollectionItem *dci = it.next().get();
+      const shared_ptr<DataCollectionItem>& dci = it.next();
       uint32_t timeToPoll = dci->getTimeToNextPoll(now);
       if (timeToPoll == 0)
       {
@@ -1608,7 +1619,7 @@ static void LoadState()
 /**
  * Clear stalled offline data
  */
-static void ClearStalledOfflineData(void *arg)
+static void ClearStalledOfflineData()
 {
    if (g_dwFlags & AF_SHUTDOWN)
       return;
@@ -1639,6 +1650,19 @@ static void ClearStalledOfflineData(void *arg)
       {
          uint64_t serverId = deleteList.get(i);
 
+         s_itemLock.lock();
+         auto it = s_items.begin();
+         while(it.hasNext())
+         {
+            shared_ptr<DataCollectionItem> item = it.next();
+            if (item->getServerId() == serverId)
+            {
+               item->setDisabled();    // In case it is currently scheduled for collection
+               it.remove();
+            }
+         }
+         s_itemLock.unlock();
+
          DBBegin(hdb);
 
          _sntprintf(query, 256, _T("DELETE FROM dc_queue WHERE server_id=") UINT64_FMT, serverId);
@@ -1652,23 +1676,11 @@ static void ClearStalledOfflineData(void *arg)
 
          DBCommit(hdb);
 
-         s_itemLock.lock();
-         auto it = s_items.begin();
-         while(it.hasNext())
-         {
-            shared_ptr<DataCollectionItem> item = it.next();
-            if (item->getServerId() == serverId)
-            {
-               it.remove();
-            }
-         }
-         s_itemLock.unlock();
-
          nxlog_debug_tag(DEBUG_TAG, 2, _T("Offline data collection configuration for server ID ") UINT64X_FMT(_T("016")) _T(" deleted"), serverId);
       }
    }
 
-   ThreadPoolScheduleRelative(g_dataCollectorPool, STALLED_DATA_CHECK_INTERVAL, ClearStalledOfflineData, nullptr);
+   ThreadPoolScheduleRelative(g_dataCollectorPool, STALLED_DATA_CHECK_INTERVAL, ClearStalledOfflineData);
 }
 
 /**
@@ -1722,7 +1734,7 @@ void StartLocalDataCollector()
    s_databaseWriterThread = ThreadCreateEx(DatabaseWriter);
    s_reconciliationThread = ThreadCreateEx(ReconciliationThread);
    s_proxyListennerThread = ThreadCreateEx(ProxyListenerThread);
-   ThreadPoolScheduleRelative(g_dataCollectorPool, STALLED_DATA_CHECK_INTERVAL, ClearStalledOfflineData, nullptr);
+   ThreadPoolScheduleRelative(g_dataCollectorPool, STALLED_DATA_CHECK_INTERVAL, ClearStalledOfflineData);
    ThreadPoolScheduleRelative(g_dataCollectorPool, 1000, ProxyConnectionChecker);
 
    s_dataCollectorStarted = true;
