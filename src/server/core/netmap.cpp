@@ -30,7 +30,9 @@
  */
 void NetworkMapGroup::calculateCompoundStatus(BOOL bForcedRecalc)
 {
-   m_status = STATUS_NORMAL;
+   super::calculateCompoundStatus(bForcedRecalc);
+   if (m_status == STATUS_UNKNOWN)
+      m_status = STATUS_NORMAL;
 }
 
 /**
