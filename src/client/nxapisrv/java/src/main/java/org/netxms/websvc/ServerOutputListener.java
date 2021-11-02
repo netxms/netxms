@@ -18,6 +18,7 @@
  */
 package org.netxms.websvc;
 
+import java.util.Date;
 import org.netxms.client.TextOutputListener;
 
 /**
@@ -29,6 +30,7 @@ public class ServerOutputListener implements TextOutputListener
    private StringBuilder buffer = new StringBuilder();
    private boolean completed = false;
    private Long streamId = 0L;
+   private Date lastUpdateTime;
 
    /**
     * @see org.netxms.client.TextOutputListener#messageReceived(java.lang.String)
@@ -36,6 +38,7 @@ public class ServerOutputListener implements TextOutputListener
    @Override
    public void messageReceived(String text)
    {
+      lastUpdateTime = new Date();
       synchronized(mutex)
       {
          buffer.append(text);
@@ -58,6 +61,13 @@ public class ServerOutputListener implements TextOutputListener
    @Override
    public void onError()
    {
+      lastUpdateTime = new Date();
+      synchronized(mutex)
+      {
+         buffer.append("Error occured");
+         completed = true;
+         mutex.notifyAll();
+      }
    }
 
    /**
@@ -77,6 +87,7 @@ public class ServerOutputListener implements TextOutputListener
     */
    public String readOutput() throws InterruptedException
    {
+      lastUpdateTime = new Date();
       String data;
       synchronized(mutex)
       {
@@ -93,6 +104,7 @@ public class ServerOutputListener implements TextOutputListener
     */
    public void onComplete()
    {
+      lastUpdateTime = new Date();
       synchronized(mutex)
       {
          completed = true;
@@ -108,5 +120,15 @@ public class ServerOutputListener implements TextOutputListener
    public boolean isCompleted()
    {
       return completed;
+   }
+
+   /**
+    * Check if tool is completed
+    * 
+    * @return true if tool is completed
+    */
+   public Date getLastUpdateTime()
+   {
+      return lastUpdateTime;
    }
 }

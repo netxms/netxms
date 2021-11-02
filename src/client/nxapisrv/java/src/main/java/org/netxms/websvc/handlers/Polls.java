@@ -71,7 +71,7 @@ public class Polls extends AbstractObjectHandler
       
       final NodePollType tmpType = pollType;
       NXCSession session = getSession();
-      new Thread(() -> {
+      Thread pollingThread = new Thread(() -> {
          try
          {
             session.pollObject(getObjectId(), tmpType, listener);
@@ -84,7 +84,9 @@ public class Polls extends AbstractObjectHandler
          {
             listener.onComplete();
          }
-      }).start();
+      });
+      pollingThread.setDaemon(true);
+      pollingThread.start();
       
       JSONObject response = new JSONObject();
       response.put("UUID", uuid);

@@ -28,7 +28,13 @@ public class ObjectToolOutputHandler extends AbstractHandlerWithListenner
          JSONObject response = new JSONObject();
          response.put("message", msg);
          response.put("streamId", listener.getStreamId());
-         response.put("completed", listener.isCompleted());
+         response.put("completed", listener.isCompleted());         
+
+         if (listener.isCompleted()) //delete listener on complete response sent
+         {
+            listenerMap.remove(UUID.fromString(id));
+         }
+         
          return new StringRepresentation(response.toString(), MediaType.APPLICATION_JSON);
       }
       return createErrorResponseRepresentation(RCC.ACCESS_DENIED);
