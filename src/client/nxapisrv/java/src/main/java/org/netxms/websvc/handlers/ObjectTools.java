@@ -35,7 +35,7 @@ import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.client.objecttools.ObjectToolDetails;
 import org.netxms.client.objecttools.ObjectToolFolder;
 import org.netxms.websvc.ObjectToolExecutor;
-import org.netxms.websvc.ObjectToolOutputListener;
+import org.netxms.websvc.ServerOutputListener;
 import org.netxms.websvc.json.ResponseContainer;
 import org.restlet.data.MediaType;
 import org.restlet.ext.json.JsonRepresentation;
@@ -144,7 +144,7 @@ public class ObjectTools extends AbstractObjectHandler
          ObjectToolDetails details = session.getObjectToolDetails(id);
          if (((details.getFlags() & ObjectTool.GENERATES_OUTPUT) != 0))
          {
-            ObjectToolOutputListener listener = new ObjectToolOutputListener();
+            ServerOutputListener listener = new ServerOutputListener();
             UUID uuid = UUID.randomUUID();
             ObjectToolOutputHandler.addListener(uuid, listener);
             new ObjectToolExecutor(details, object.getObjectId(), fields, maskedFields, listener, session);

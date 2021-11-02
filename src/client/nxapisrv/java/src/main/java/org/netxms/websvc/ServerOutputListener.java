@@ -23,7 +23,7 @@ import org.netxms.client.TextOutputListener;
 /**
  * Object tool output listener
  */
-public class ObjectToolOutputListener implements TextOutputListener
+public class ServerOutputListener implements TextOutputListener
 {
    private Object mutex = new Object();
    private StringBuilder buffer = new StringBuilder();

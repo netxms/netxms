@@ -1,12 +1,10 @@
 package org.netxms.websvc.handlers;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.UUID;
 import org.json.JSONObject;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.RCC;
-import org.netxms.websvc.ObjectToolOutputListener;
+import org.netxms.websvc.ServerOutputListener;
 import org.restlet.data.MediaType;
 import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.Representation;
@@ -14,10 +12,8 @@ import org.restlet.representation.StringRepresentation;
 import org.restlet.resource.Get;
 import org.restlet.resource.Post;
 
-public class ObjectToolOutputHandler extends AbstractHandler
+public class ObjectToolOutputHandler extends AbstractHandlerWithListenner
 {
-   private static Map<UUID, ObjectToolOutputListener> listenerMap = new HashMap<>();
-
    @Get
    public Representation onGet() throws Exception
    {
@@ -25,7 +21,7 @@ public class ObjectToolOutputHandler extends AbstractHandler
          return createErrorResponseRepresentation(RCC.ACCESS_DENIED);
 
       String id = getEntityId();
-      ObjectToolOutputListener listener = listenerMap.get(UUID.fromString(id));
+      ServerOutputListener listener = listenerMap.get(UUID.fromString(id));
       if (listener != null)
       {
          String msg = listener.readOutput();
@@ -36,16 +32,6 @@ public class ObjectToolOutputHandler extends AbstractHandler
          return new StringRepresentation(response.toString(), MediaType.APPLICATION_JSON);
       }
       return createErrorResponseRepresentation(RCC.ACCESS_DENIED);
-   }
-
-   public static void addListener(UUID uuid, ObjectToolOutputListener listener)
-   {
-      listenerMap.put(uuid, listener);
-   }
-
-   public static void removeListener(UUID uuid)
-   {
-      listenerMap.remove(uuid);
    }
 
    @Post

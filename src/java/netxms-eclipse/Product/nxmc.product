@@ -53,9 +53,11 @@ Copyright (c) 2003-2021 Raden Solutions
       <plugin id="ch.qos.logback.classic"/>
       <plugin id="ch.qos.logback.core"/>
       <plugin id="ch.qos.logback.slf4j" fragment="true"/>
+      <plugin id="com.google.guava"/>
       <plugin id="com.ibm.icu"/>
       <plugin id="com.sun.jna"/>
       <plugin id="com.sun.jna.platform"/>
+      <plugin id="jakarta.servlet-api"/>
       <plugin id="javax.annotation"/>
       <plugin id="javax.inject"/>
       <plugin id="javax.servlet"/>
@@ -68,10 +70,14 @@ Copyright (c) 2003-2021 Raden Solutions
       <plugin id="org.apache.commons.io"/>
       <plugin id="org.apache.commons.jxpath"/>
       <plugin id="org.apache.commons.logging"/>
+      <plugin id="org.apache.felix.gogo.runtime"/>
+      <plugin id="org.apache.felix.scr"/>
       <plugin id="org.apache.log4j"/>
       <plugin id="org.apache.xerces"/>
       <plugin id="org.apache.xml.resolver"/>
       <plugin id="org.apache.xmlgraphics"/>
+      <plugin id="org.bouncycastle.bcpg"/>
+      <plugin id="org.bouncycastle.bcprov"/>
       <plugin id="org.eclipse.ant.core"/>
       <plugin id="org.eclipse.ant.core.nl_ar" fragment="true"/>
       <plugin id="org.eclipse.ant.core.nl_cs" fragment="true"/>
@@ -586,6 +592,8 @@ Copyright (c) 2003-2021 Raden Solutions
       <plugin id="org.eclipse.equinox.common.nl_pt" fragment="true"/>
       <plugin id="org.eclipse.equinox.common.nl_pt_BR" fragment="true"/>
       <plugin id="org.eclipse.equinox.common.nl_ru" fragment="true"/>
+      <plugin id="org.eclipse.equinox.event"/>
+      <plugin id="org.eclipse.equinox.p2.artifact.repository"/>
       <plugin id="org.eclipse.equinox.p2.core"/>
       <plugin id="org.eclipse.equinox.p2.core.nl_ar" fragment="true"/>
       <plugin id="org.eclipse.equinox.p2.core.nl_cs" fragment="true"/>
@@ -606,6 +614,7 @@ Copyright (c) 2003-2021 Raden Solutions
       <plugin id="org.eclipse.equinox.p2.engine.nl_pt" fragment="true"/>
       <plugin id="org.eclipse.equinox.p2.engine.nl_pt_BR" fragment="true"/>
       <plugin id="org.eclipse.equinox.p2.engine.nl_ru" fragment="true"/>
+      <plugin id="org.eclipse.equinox.p2.jarprocessor"/>
       <plugin id="org.eclipse.equinox.p2.metadata"/>
       <plugin id="org.eclipse.equinox.p2.metadata.nl_ar" fragment="true"/>
       <plugin id="org.eclipse.equinox.p2.metadata.nl_cs" fragment="true"/>

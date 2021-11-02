@@ -27,7 +27,6 @@ import java.util.Map.Entry;
 import java.util.regex.Pattern;
 import org.json.JSONObject;
 import org.netxms.base.Glob;
-import org.netxms.client.NXCException;
 import org.netxms.client.NXCObjectCreationData;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
@@ -356,7 +355,7 @@ public class Objects extends AbstractObjectHandler
       String name = JsonTools.getStringFromJson(data, "name", null);
       long parentId = JsonTools.getLongFromJson(data, "parentId", -1);
       if (type == -1 || name == null || parentId == 1)
-         throw new NXCException(RCC.INVALID_ARGUMENT, "Object type, name and parent id should be set for new object");
+         return createErrorResponseRepresentation(RCC.INVALID_ARGUMENT);
 
       NXCObjectCreationData createData = new NXCObjectCreationData(type, name, parentId);
       createData.setComments(JsonTools.getStringFromJson(data, "comments", createData.getComments()));

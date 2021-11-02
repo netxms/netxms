@@ -36,7 +36,7 @@ public class ObjectToolExecutor extends Thread
    private long objectId;
    private Map<String, String> inputFields;
    private List<String> maskedFields;
-   private ObjectToolOutputListener listener;
+   private ServerOutputListener listener;
    private NXCSession session;
    private boolean generateOutput;
 
@@ -50,7 +50,7 @@ public class ObjectToolExecutor extends Thread
     * @param session
     */
    public ObjectToolExecutor(ObjectToolDetails details, long objectId, Map<String, String> inputFields,
-         List<String> maskedFields, ObjectToolOutputListener listener, NXCSession session)
+         List<String> maskedFields, ServerOutputListener listener, NXCSession session)
    {
       this.details = details;
       this.objectId = objectId;
