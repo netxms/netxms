@@ -1,0 +1,2 @@
+org.netxms.nxmc.modules.alarms.AlarmsModuleLoginListener
+org.netxms.nxmc.modules.worldmap.MapTilesHousekeeper

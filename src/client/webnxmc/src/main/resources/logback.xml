@@ -1,0 +1,17 @@
+<configuration>
+   <appender name="Console" class="ch.qos.logback.core.ConsoleAppender">
+      <layout class="ch.qos.logback.classic.PatternLayout">
+         <Pattern>%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n</Pattern>
+      </layout>
+   </appender>
+   <appender name="MainLogFile" class="ch.qos.logback.core.FileAppender">
+      <file>${user.home}/.nxmc4/nxmc.log</file>
+      <layout class="ch.qos.logback.classic.PatternLayout">
+         <Pattern>%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n</Pattern>
+      </layout>
+   </appender>
+   <root level="debug">
+      <appender-ref ref="Console"/>
+      <appender-ref ref="MainLogFile"/>
+   </root>
+</configuration>
