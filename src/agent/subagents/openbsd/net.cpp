@@ -40,6 +40,7 @@
 #include <arpa/inet.h>
 #include <kvm.h>
 #include <nlist.h>
+#include <interface_types.h>
 #include "net.h"
 
 typedef struct t_Addr

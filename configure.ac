@@ -4183,6 +4183,9 @@ if test $? = 0; then
 	if test -d "${JDK_LOCATION}/include/linux"; then
 		CPPFLAGS="$CPPFLAGS -I${JDK_LOCATION}/include/linux"
 	fi
+	if test -d "${JDK_LOCATION}/include/openbsd"; then
+		CPPFLAGS="$CPPFLAGS -I${JDK_LOCATION}/include/openbsd"
+	fi
 	if test -d "${JDK_LOCATION}/include/solaris"; then
 		CPPFLAGS="$CPPFLAGS -I${JDK_LOCATION}/include/solaris"
 	fi

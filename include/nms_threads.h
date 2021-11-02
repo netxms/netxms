@@ -1103,6 +1103,10 @@ static inline uint32_t GetCurrentThreadId()
    return (uint32_t)id;
 #elif defined(_AIX) || defined(__sun)
    return (uint32_t)pthread_self();
+#elif defined(__NetBSD__)
+   return _lwp_self();
+#elif defined(__OpenBSD__)
+   return getthrid();
 #else
 #error GetCurrentThreadId not implemented for this platform
 #endif

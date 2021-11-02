@@ -1505,9 +1505,9 @@ retry:
          MemFree(url);
       }
 
-#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+#if (OPENSSL_VERSION_NUMBER >= 0x10100000L) && !defined(LIBRESSL_VERSION_NUMBER)
       STACK_OF(X509) *chain = SSL_get0_verified_chain(ssl);
-      if (sk_X509_num(chain) > 1)
+      if ((chain != nullptr) && (sk_X509_num(chain) > 1))
       {
          X509 *issuer = sk_X509_value(chain, 1);
          if (CheckCertificateRevocation(cert, issuer))
