@@ -600,8 +600,6 @@ bool NetworkMap::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
       DBFreeStatement(hStmt);
 	}
 
-	m_status = STATUS_NORMAL;
-
 	return true;
 }
 
