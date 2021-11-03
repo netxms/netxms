@@ -98,6 +98,7 @@ BusinessServiceCheck::BusinessServiceCheck(DB_RESULT hResult, int row)
    m_currentTicket = DBGetFieldULong(hResult, row, 8);
    m_mutex = MutexCreateFast();
    m_compiledScript = nullptr;
+   m_status = m_currentTicket != 0 ? STATUS_CRITICAL : STATUS_NORMAL;
    compileScript();
    m_reason[0] = 0;
    loadReason();
@@ -274,7 +275,10 @@ int BusinessServiceCheck::execute(BusinessServiceTicketData* ticket)
 				{
 					int threshold = m_statusThreshold != 0 ? m_statusThreshold : ConfigReadInt(_T("BusinessServices.Check.Threshold.Objects"), STATUS_WARNING);
 					m_status = obj->getStatus() >= threshold ? STATUS_CRITICAL : STATUS_NORMAL;
-					_tcslcpy(m_reason, _T("Object status threshold violation"), 256);
+					if (m_status == STATUS_CRITICAL)
+					{
+						_tcslcpy(m_reason, _T("Object status threshold violation"), 256);
+					}
 				}
 			}
 			break;
@@ -352,7 +356,10 @@ int BusinessServiceCheck::execute(BusinessServiceTicketData* ticket)
 				{
 					int threshold = m_statusThreshold != 0 ? m_statusThreshold : ConfigReadInt(_T("BusinessServices.Check.Threshold.DataCollection"), STATUS_WARNING);
 					m_status = static_cast<DataCollectionTarget&>(*object).getDciThreshold(m_relatedDCI) >= threshold ? STATUS_CRITICAL : STATUS_NORMAL;
-					_tcslcpy(m_reason, _T("DCI threshold violation"), 256);
+					if (m_status == STATUS_CRITICAL)
+					{
+						_tcslcpy(m_reason, _T("DCI threshold violation"), 256);
+					}
 				}
 			}
 			break;
