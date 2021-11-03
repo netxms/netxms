@@ -133,7 +133,7 @@ LONG H_PhysicalDiskInfo(const TCHAR *pszParam, const TCHAR *pszArg, TCHAR *pValu
 /**
  * Parameters provided by subagent
  */
-static NETXMS_SUBAGENT_PARAM m_parameters[] =
+static NETXMS_SUBAGENT_PARAM m_parameters[] = 
 {
    { _T("Agent.SourcePackageSupport"), H_SourcePkgSupport, nullptr, DCI_DT_INT, DCIDESC_AGENT_SOURCEPACKAGESUPPORT },
 
@@ -241,15 +241,15 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("PhysicalDisk.SmartStatus(*)"), H_PhysicalDiskInfo, _T("S"), DCI_DT_INT, DCIDESC_PHYSICALDISK_SMARTSTATUS },
    { _T("PhysicalDisk.Temperature(*)"), H_PhysicalDiskInfo, _T("T"), DCI_DT_INT, DCIDESC_PHYSICALDISK_TEMPERATURE },
 
-   { _T("Process.Count(*)"), H_ProcessCount, _T("S"), DCI_DT_UINT, DCIDESC_PROCESS_COUNT },
-   { _T("Process.CountEx(*)"), H_ProcessCount, _T("E"), DCI_DT_UINT, DCIDESC_PROCESS_COUNTEX },
+   { _T("Process.Count(*)"), H_ProcessCount, _T("S"), DCI_DT_INT, DCIDESC_PROCESS_COUNT },
+   { _T("Process.CountEx(*)"), H_ProcessCount, _T("E"), DCI_DT_INT, DCIDESC_PROCESS_COUNTEX },
    { _T("Process.CPUTime(*)"), H_ProcessDetails, CAST_TO_POINTER(PROCINFO_CPUTIME, const TCHAR *), DCI_DT_COUNTER64, DCIDESC_PROCESS_CPUTIME },
-   { _T("Process.Handles(*)"), H_ProcessDetails, CAST_TO_POINTER(PROCINFO_HANDLES, const TCHAR *), DCI_DT_UINT, DCIDESC_PROCESS_HANDLES },
+   { _T("Process.Handles(*)"), H_ProcessDetails, CAST_TO_POINTER(PROCINFO_HANDLES, const TCHAR *), DCI_DT_INT, DCIDESC_PROCESS_HANDLES },
    { _T("Process.KernelTime(*)"), H_ProcessDetails, CAST_TO_POINTER(PROCINFO_KTIME, const TCHAR *), DCI_DT_COUNTER64, DCIDESC_PROCESS_KERNELTIME },
    { _T("Process.PageFaults(*)"), H_ProcessDetails, CAST_TO_POINTER(PROCINFO_PAGEFAULTS, const TCHAR *), DCI_DT_COUNTER64, DCIDESC_PROCESS_PAGEFAULTS },
-   { _T("Process.Threads(*)"), H_ProcessDetails, CAST_TO_POINTER(PROCINFO_THREADS, const TCHAR *), DCI_DT_UINT, DCIDESC_PROCESS_THREADS },
+   { _T("Process.Threads(*)"), H_ProcessDetails, CAST_TO_POINTER(PROCINFO_THREADS, const TCHAR *), DCI_DT_INT, DCIDESC_PROCESS_THREADS },
    { _T("Process.UserTime(*)"), H_ProcessDetails, CAST_TO_POINTER(PROCINFO_UTIME, const TCHAR *), DCI_DT_COUNTER64, DCIDESC_PROCESS_USERTIME },
-   { _T("Process.VMRegions(*)"), H_ProcessDetails, CAST_TO_POINTER(PROCINFO_VMREGIONS, const TCHAR *), DCI_DT_UINT, DCIDESC_PROCESS_VMREGIONS },
+   { _T("Process.VMRegions(*)"), H_ProcessDetails, CAST_TO_POINTER(PROCINFO_VMREGIONS, const TCHAR *), DCI_DT_INT, DCIDESC_PROCESS_VMREGIONS },
    { _T("Process.VMSize(*)"), H_ProcessDetails, CAST_TO_POINTER(PROCINFO_VMSIZE, const TCHAR *), DCI_DT_INT64, DCIDESC_PROCESS_VMSIZE },
    { _T("Process.WkSet(*)"), H_ProcessDetails, CAST_TO_POINTER(PROCINFO_WKSET, const TCHAR *), DCI_DT_INT64, DCIDESC_PROCESS_WKSET },
 
@@ -352,7 +352,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 
    { _T("System.CPU.VendorId"), H_CpuVendorId, nullptr, DCI_DT_STRING, DCIDESC_SYSTEM_CPU_VENDORID },
 
-   { _T("System.HandleCount"), H_HandleCount, nullptr, DCI_DT_UINT, DCIDESC_SYSTEM_HANDLECOUNT },
+   { _T("System.HandleCount"), H_HandleCount, nullptr, DCI_DT_INT, DCIDESC_SYSTEM_HANDLECOUNT },
 
    /* iostat */
    { _T("System.IO.ReadRate"), H_IoStatsTotalFloat, (const TCHAR *)IOSTAT_NUM_READS, DCI_DT_FLOAT, DCIDESC_SYSTEM_IO_READS },
