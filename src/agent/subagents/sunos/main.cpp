@@ -1,6 +1,6 @@
 /*
 ** NetXMS subagent for SunOS/Solaris
-** Copyright (C) 2004-2020 Raden Solutions
+** Copyright (C) 2004-2021 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -111,7 +111,7 @@ static LONG H_SourcePkg(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue,
 static NX_CFG_TEMPLATE s_cfgTemplate[] =
 {
    { _T("InterfacesFromAllZones"), CT_BOOLEAN, 0, 0, SF_IF_ALL_ZONES, 0, &g_flags },
-   { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
+   { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, nullptr }
 };
 
 /**
@@ -171,7 +171,7 @@ static void SubAgentShutdown()
  */
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
-   { _T("Agent.SourcePackageSupport"), H_SourcePkg, NULL, DCI_DT_INT, DCIDESC_AGENT_SOURCEPACKAGESUPPORT },
+   { _T("Agent.SourcePackageSupport"), H_SourcePkg, nullptr, DCI_DT_INT, DCIDESC_AGENT_SOURCEPACKAGESUPPORT },
 
    { _T("Disk.Avail(*)"), H_DiskInfo, (TCHAR *)DISK_AVAIL, DCI_DT_DEPRECATED, DCIDESC_DEPRECATED },
    { _T("Disk.AvailPerc(*)"), H_DiskInfo, (TCHAR *)DISK_AVAIL_PERC, DCI_DT_DEPRECATED, DCIDESC_DEPRECATED },
@@ -198,9 +198,9 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("FileSystem.UsedPerc(*)"), H_DiskInfo, (TCHAR *)DISK_USED_PERC, DCI_DT_FLOAT, DCIDESC_FS_USEDPERC },
 
 #ifdef __sparc
-   { _T("Hardware.System.Manufacturer"), H_SystemHardwareInfo, CAST_TO_POINTER(SI_HW_PROVIDER, TCHAR*), DCI_DT_STRING, DCIDESC_HARDWARE_SYSTEM_MANUFACTURER },
-   { _T("Hardware.System.Product"), H_SystemHardwareInfo, CAST_TO_POINTER(SI_PLATFORM, TCHAR*), DCI_DT_STRING, DCIDESC_HARDWARE_SYSTEM_PRODUCT },
-   { _T("Hardware.System.SerialNumber"), H_SystemHardwareInfo, CAST_TO_POINTER(SI_HW_SERIAL, TCHAR*), DCI_DT_STRING, DCIDESC_HARDWARE_SYSTEM_SERIALNUMBER },
+   { _T("Hardware.System.Manufacturer"), H_SystemHardwareInfo, CAST_TO_POINTER(SI_HW_PROVIDER, TCHAR *), DCI_DT_STRING, DCIDESC_HARDWARE_SYSTEM_MANUFACTURER },
+   { _T("Hardware.System.Product"), H_SystemHardwareInfo, CAST_TO_POINTER(SI_PLATFORM, TCHAR *), DCI_DT_STRING, DCIDESC_HARDWARE_SYSTEM_PRODUCT },
+   { _T("Hardware.System.SerialNumber"), H_SystemHardwareInfo, CAST_TO_POINTER(SI_HW_SERIAL, TCHAR *), DCI_DT_STRING, DCIDESC_HARDWARE_SYSTEM_SERIALNUMBER },
 #else
    { _T("Hardware.Baseboard.Manufacturer"), SMBIOS_ParameterHandler, _T("bM"), DCI_DT_STRING, DCIDESC_HARDWARE_BASEBOARD_MANUFACTURER },
    { _T("Hardware.Baseboard.Product"), SMBIOS_ParameterHandler, _T("bP"), DCI_DT_STRING, DCIDESC_HARDWARE_BASEBOARD_PRODUCT },
@@ -245,45 +245,46 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("Hardware.WakeUpEvent"), SMBIOS_ParameterHandler, _T("W"), DCI_DT_STRING, DCIDESC_HARDWARE_WAKEUPEVENT },
 #endif
 
-   { _T("Hypervisor.Type"), H_HypervisorType, NULL, DCI_DT_STRING, DCIDESC_HYPERVISOR_TYPE },
-   { _T("Hypervisor.Version"), H_HypervisorVersion, NULL, DCI_DT_STRING, DCIDESC_HYPERVISOR_VERSION },
+   { _T("Hypervisor.Type"), H_HypervisorType, nullptr, DCI_DT_STRING, DCIDESC_HYPERVISOR_TYPE },
+   { _T("Hypervisor.Version"), H_HypervisorVersion, nullptr, DCI_DT_STRING, DCIDESC_HYPERVISOR_VERSION },
 
-   { _T("Net.Interface.AdminStatus(*)"), H_NetIfAdminStatus, NULL, DCI_DT_INT, DCIDESC_NET_INTERFACE_ADMINSTATUS },
-   { _T("Net.Interface.BytesIn(*)"), H_NetInterfaceStats, (const TCHAR *)"rbytes", DCI_DT_COUNTER32, DCIDESC_NET_INTERFACE_BYTESIN },
-   { _T("Net.Interface.BytesIn64(*)"), H_NetInterfaceStats, (const TCHAR *)"rbytes64", DCI_DT_COUNTER64, DCIDESC_NET_INTERFACE_BYTESIN },
-   { _T("Net.Interface.BytesOut(*)"), H_NetInterfaceStats, (const TCHAR *)"obytes", DCI_DT_COUNTER32, DCIDESC_NET_INTERFACE_BYTESOUT },
-   { _T("Net.Interface.BytesOut64(*)"), H_NetInterfaceStats, (const TCHAR *)"obytes64", DCI_DT_COUNTER64, DCIDESC_NET_INTERFACE_BYTESOUT },
-   { _T("Net.Interface.Description(*)"), H_NetIfDescription, NULL, DCI_DT_STRING, DCIDESC_NET_INTERFACE_DESCRIPTION },
-   { _T("Net.Interface.InErrors(*)"), H_NetInterfaceStats, (const TCHAR *)"ierrors", DCI_DT_COUNTER32, DCIDESC_NET_INTERFACE_INERRORS },
-   { _T("Net.Interface.Link(*)"), H_NetInterfaceLink, NULL, DCI_DT_DEPRECATED, DCIDESC_DEPRECATED },
-   { _T("Net.Interface.OperStatus(*)"), H_NetInterfaceLink, NULL, DCI_DT_INT, DCIDESC_NET_INTERFACE_OPERSTATUS },
-   { _T("Net.Interface.OutErrors(*)"), H_NetInterfaceStats, (const TCHAR *)"oerrors", DCI_DT_COUNTER32, DCIDESC_NET_INTERFACE_OUTERRORS },
-   { _T("Net.Interface.PacketsIn(*)"), H_NetInterfaceStats, (const TCHAR *)"ipackets", DCI_DT_COUNTER32, DCIDESC_NET_INTERFACE_PACKETSIN },
-   { _T("Net.Interface.PacketsIn64(*)"), H_NetInterfaceStats, (const TCHAR *)"ipackets64", DCI_DT_COUNTER64, DCIDESC_NET_INTERFACE_PACKETSIN },
-   { _T("Net.Interface.PacketsOut(*)"), H_NetInterfaceStats, (const TCHAR *)"opackets", DCI_DT_COUNTER32, DCIDESC_NET_INTERFACE_PACKETSOUT },
-   { _T("Net.Interface.PacketsOut64(*)"), H_NetInterfaceStats, (const TCHAR *)"opackets64", DCI_DT_COUNTER64, DCIDESC_NET_INTERFACE_PACKETSOUT },
-   { _T("Net.Interface.Speed(*)"), H_NetInterfaceStats, (const TCHAR *)"ifspeed", DCI_DT_UINT, DCIDESC_NET_INTERFACE_SPEED },
+   { _T("Net.Interface.AdminStatus(*)"), H_NetIfAdminStatus, nullptr, DCI_DT_INT, DCIDESC_NET_INTERFACE_ADMINSTATUS },
+   { _T("Net.Interface.BytesIn(*)"), H_NetInterfaceStats, (const TCHAR*)"rbytes", DCI_DT_COUNTER32, DCIDESC_NET_INTERFACE_BYTESIN },
+   { _T("Net.Interface.BytesIn64(*)"), H_NetInterfaceStats, (const TCHAR*)"rbytes64", DCI_DT_COUNTER64, DCIDESC_NET_INTERFACE_BYTESIN },
+   { _T("Net.Interface.BytesOut(*)"), H_NetInterfaceStats, (const TCHAR*)"obytes", DCI_DT_COUNTER32, DCIDESC_NET_INTERFACE_BYTESOUT },
+   { _T("Net.Interface.BytesOut64(*)"), H_NetInterfaceStats, (const TCHAR*)"obytes64", DCI_DT_COUNTER64, DCIDESC_NET_INTERFACE_BYTESOUT },
+   { _T("Net.Interface.Description(*)"), H_NetIfDescription, nullptr, DCI_DT_STRING, DCIDESC_NET_INTERFACE_DESCRIPTION },
+   { _T("Net.Interface.InErrors(*)"), H_NetInterfaceStats, (const TCHAR*)"ierrors", DCI_DT_COUNTER32, DCIDESC_NET_INTERFACE_INERRORS },
+   { _T("Net.Interface.Link(*)"), H_NetInterfaceLink, nullptr, DCI_DT_DEPRECATED, DCIDESC_DEPRECATED },
+   { _T("Net.Interface.OperStatus(*)"), H_NetInterfaceLink, nullptr, DCI_DT_INT, DCIDESC_NET_INTERFACE_OPERSTATUS },
+   { _T("Net.Interface.OutErrors(*)"), H_NetInterfaceStats, (const TCHAR*)"oerrors", DCI_DT_COUNTER32, DCIDESC_NET_INTERFACE_OUTERRORS },
+   { _T("Net.Interface.PacketsIn(*)"), H_NetInterfaceStats, (const TCHAR*)"ipackets", DCI_DT_COUNTER32, DCIDESC_NET_INTERFACE_PACKETSIN },
+   { _T("Net.Interface.PacketsIn64(*)"), H_NetInterfaceStats, (const TCHAR*)"ipackets64", DCI_DT_COUNTER64, DCIDESC_NET_INTERFACE_PACKETSIN },
+   { _T("Net.Interface.PacketsOut(*)"), H_NetInterfaceStats, (const TCHAR*)"opackets", DCI_DT_COUNTER32, DCIDESC_NET_INTERFACE_PACKETSOUT },
+   { _T("Net.Interface.PacketsOut64(*)"), H_NetInterfaceStats, (const TCHAR*)"opackets64", DCI_DT_COUNTER64, DCIDESC_NET_INTERFACE_PACKETSOUT },
+   { _T("Net.Interface.Speed(*)"), H_NetInterfaceStats, (const TCHAR*)"ifspeed", DCI_DT_UINT, DCIDESC_NET_INTERFACE_SPEED },
 
-   { _T("Process.Count(*)"), H_ProcessCount, _T("S"), DCI_DT_UINT, DCIDESC_PROCESS_COUNT },
-   { _T("Process.CountEx(*)"), H_ProcessCount, _T("E"), DCI_DT_UINT, DCIDESC_PROCESS_COUNTEX },
-   { _T("Process.ZombieCount"), H_ProcessCount, _T("Z"), DCI_DT_UINT, DCIDESC_PROCESS_ZOMBIE_COUNT },
-   { _T("Process.CPUTime(*)"), H_ProcessInfo, CAST_TO_POINTER(PROCINFO_CPUTIME, const TCHAR *), DCI_DT_UINT64, DCIDESC_PROCESS_CPUTIME },
-   { _T("Process.KernelTime(*)"), H_ProcessInfo, CAST_TO_POINTER(PROCINFO_KTIME, const TCHAR *), DCI_DT_UINT64, DCIDESC_PROCESS_KERNELTIME },
-   { _T("Process.PageFaults(*)"), H_ProcessInfo, CAST_TO_POINTER(PROCINFO_PF, const TCHAR *), DCI_DT_UINT64, DCIDESC_PROCESS_PAGEFAULTS },
-   { _T("Process.Syscalls(*)"), H_ProcessInfo, CAST_TO_POINTER(PROCINFO_SYSCALLS, const TCHAR *), DCI_DT_UINT64, DCIDESC_PROCESS_SYSCALLS },
-   { _T("Process.Threads(*)"), H_ProcessInfo, CAST_TO_POINTER(PROCINFO_THREADS, const TCHAR *), DCI_DT_UINT, DCIDESC_PROCESS_THREADS },
-   { _T("Process.UserTime(*)"), H_ProcessInfo,  CAST_TO_POINTER(PROCINFO_UTIME, const TCHAR *), DCI_DT_UINT64, DCIDESC_PROCESS_USERTIME },
-   { _T("Process.VMSize(*)"), H_ProcessInfo, CAST_TO_POINTER(PROCINFO_VMSIZE, const TCHAR *), DCI_DT_UINT64, DCIDESC_PROCESS_VMSIZE },
-   { _T("Process.WkSet(*)"), H_ProcessInfo, CAST_TO_POINTER(PROCINFO_WKSET, const TCHAR *), DCI_DT_UINT64, DCIDESC_PROCESS_WKSET },
+   {_T("Process.Count(*)"), H_ProcessCount, _T("S"), DCI_DT_INT, DCIDESC_PROCESS_COUNT},
+   {_T("Process.CountEx(*)"), H_ProcessCount, _T("E"), DCI_DT_INT, DCIDESC_PROCESS_COUNTEX},
+   {_T("Process.ZombieCount"), H_ProcessCount, _T("Z"), DCI_DT_INT, DCIDESC_PROCESS_ZOMBIE_COUNT},
+   {_T("Process.CPUTime(*)"), H_ProcessInfo, CAST_TO_POINTER(PROCINFO_CPUTIME, const TCHAR *), DCI_DT_COUNTER64, DCIDESC_PROCESS_CPUTIME},
+   {_T("Process.Handles(*)"), H_ProcessInfo, CAST_TO_POINTER(PROCINFO_HANDLES, const TCHAR *), DCI_DT_INT, DCIDESC_PROCESS_HANDLES},
+   {_T("Process.KernelTime(*)"), H_ProcessInfo, CAST_TO_POINTER(PROCINFO_KTIME, const TCHAR *), DCI_DT_COUNTER64, DCIDESC_PROCESS_KERNELTIME},
+   {_T("Process.PageFaults(*)"), H_ProcessInfo, CAST_TO_POINTER(PROCINFO_PF, const TCHAR *), DCI_DT_COUNTER64, DCIDESC_PROCESS_PAGEFAULTS},
+   {_T("Process.Syscalls(*)"), H_ProcessInfo, CAST_TO_POINTER(PROCINFO_SYSCALLS, const TCHAR *), DCI_DT_COUNTER64, DCIDESC_PROCESS_SYSCALLS},
+   {_T("Process.Threads(*)"), H_ProcessInfo, CAST_TO_POINTER(PROCINFO_THREADS, const TCHAR *), DCI_DT_INT, DCIDESC_PROCESS_THREADS},
+   {_T("Process.UserTime(*)"), H_ProcessInfo, CAST_TO_POINTER(PROCINFO_UTIME, const TCHAR *), DCI_DT_COUNTER64, DCIDESC_PROCESS_USERTIME},
+   {_T("Process.VMSize(*)"), H_ProcessInfo, CAST_TO_POINTER(PROCINFO_VMSIZE, const TCHAR *), DCI_DT_INT64, DCIDESC_PROCESS_VMSIZE},
+   {_T("Process.WkSet(*)"), H_ProcessInfo, CAST_TO_POINTER(PROCINFO_WKSET, const TCHAR *), DCI_DT_INT64, DCIDESC_PROCESS_WKSET},
 
    { _T("System.BIOS.Date"), SMBIOS_ParameterHandler, _T("BD"), DCI_DT_STRING, DCIDESC_SYSTEM_BIOS_DATE },
    { _T("System.BIOS.Vendor"), SMBIOS_ParameterHandler, _T("Bv"), DCI_DT_STRING, DCIDESC_SYSTEM_BIOS_VENDOR },
    { _T("System.BIOS.Version"), SMBIOS_ParameterHandler, _T("BV"), DCI_DT_STRING, DCIDESC_SYSTEM_BIOS_VERSION },
 
-   { _T("System.CPU.Count"), H_CPUCount, NULL, DCI_DT_UINT, DCIDESC_SYSTEM_CPU_COUNT },
-   { _T("System.CPU.LoadAvg"), H_LoadAvg, (TCHAR *)0, DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_LOADAVG },
-   { _T("System.CPU.LoadAvg5"), H_LoadAvg, (TCHAR *)1, DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_LOADAVG5 },
-   { _T("System.CPU.LoadAvg15"), H_LoadAvg, (TCHAR *)2, DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_LOADAVG15 },
+   { _T("System.CPU.Count"), H_CPUCount, nullptr, DCI_DT_UINT, DCIDESC_SYSTEM_CPU_COUNT },
+   { _T("System.CPU.LoadAvg"), H_LoadAvg, (TCHAR*)0, DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_LOADAVG },
+   { _T("System.CPU.LoadAvg5"), H_LoadAvg, (TCHAR*)1, DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_LOADAVG5 },
+   { _T("System.CPU.LoadAvg15"), H_LoadAvg, (TCHAR*)2, DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_LOADAVG15 },
    { _T("System.CPU.Usage"), H_CPUUsage, _T("T0"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE },
    { _T("System.CPU.Usage5"), H_CPUUsage, _T("T1"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE5 },
    { _T("System.CPU.Usage15"), H_CPUUsage, _T("T2"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE15 },
@@ -291,68 +292,67 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("System.CPU.Usage5(*)"), H_CPUUsage, _T("C1"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE5_EX },
    { _T("System.CPU.Usage15(*)"), H_CPUUsage, _T("C2"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE15_EX },
 
-   { _T("System.Hostname"), H_Hostname, NULL, DCI_DT_STRING, DCIDESC_SYSTEM_HOSTNAME },
-   { _T("System.KStat(*)"), H_KStat, NULL, DCI_DT_STRING, _T("") },
+   { _T("System.HandleCount"), H_HandleCount, NULL, DCI_DT_INT, DCIDESC_SYSTEM_HANDLECOUNT },
+   { _T("System.Hostname"), H_Hostname, nullptr, DCI_DT_STRING, DCIDESC_SYSTEM_HOSTNAME },
+   { _T("System.KStat(*)"), H_KStat, nullptr, DCI_DT_STRING, _T("") },
 
-   { _T("System.IO.ReadRate"), H_IOStatsTotal, (const TCHAR *)IOSTAT_NUM_READS, DCI_DT_FLOAT, DCIDESC_SYSTEM_IO_READS },
-   { _T("System.IO.ReadRate.Min"), H_IOStatsTotal, (const TCHAR *)IOSTAT_NUM_READS_MIN, DCI_DT_UINT, DCIDESC_SYSTEM_IO_READS_MIN },
-   { _T("System.IO.ReadRate.Max"), H_IOStatsTotal, (const TCHAR *)IOSTAT_NUM_READS_MAX, DCI_DT_UINT, DCIDESC_SYSTEM_IO_READS_MAX },
-   { _T("System.IO.ReadRate(*)"), H_IOStats, (const TCHAR *)IOSTAT_NUM_READS, DCI_DT_FLOAT, DCIDESC_SYSTEM_IO_READS_EX },
-   { _T("System.IO.ReadRate.Min(*)"), H_IOStats, (const TCHAR *)IOSTAT_NUM_READS_MIN, DCI_DT_UINT, DCIDESC_SYSTEM_IO_READS_EX_MIN },
-   { _T("System.IO.ReadRate.Max(*)"), H_IOStats, (const TCHAR *)IOSTAT_NUM_READS_MAX, DCI_DT_UINT, DCIDESC_SYSTEM_IO_READS_EX_MAX },
-   { _T("System.IO.WriteRate"), H_IOStatsTotal, (const TCHAR *)IOSTAT_NUM_WRITES, DCI_DT_FLOAT, DCIDESC_SYSTEM_IO_WRITES },
-   { _T("System.IO.WriteRate.Min"), H_IOStatsTotal, (const TCHAR *)IOSTAT_NUM_WRITES_MIN, DCI_DT_UINT, DCIDESC_SYSTEM_IO_WRITES_MIN },
-   { _T("System.IO.WriteRate.Max"), H_IOStatsTotal, (const TCHAR *)IOSTAT_NUM_WRITES_MAX, DCI_DT_UINT, DCIDESC_SYSTEM_IO_WRITES_MAX },
-   { _T("System.IO.WriteRate(*)"), H_IOStats, (const TCHAR *)IOSTAT_NUM_WRITES, DCI_DT_FLOAT, DCIDESC_SYSTEM_IO_WRITES_EX },
-   { _T("System.IO.WriteRate.Min(*)"), H_IOStats, (const TCHAR *)IOSTAT_NUM_WRITES_MIN, DCI_DT_UINT, DCIDESC_SYSTEM_IO_WRITES_EX_MIN },
-   { _T("System.IO.WriteRate.Max(*)"), H_IOStats, (const TCHAR *)IOSTAT_NUM_WRITES_MAX, DCI_DT_UINT, DCIDESC_SYSTEM_IO_WRITES_EX_MAX },
-   { _T("System.IO.BytesReadRate"), H_IOStatsTotal, (const TCHAR *)IOSTAT_NUM_RBYTES, DCI_DT_UINT64, DCIDESC_SYSTEM_IO_BYTEREADS },
-   { _T("System.IO.BytesReadRate.Min"), H_IOStatsTotal, (const TCHAR *)IOSTAT_NUM_RBYTES_MIN, DCI_DT_UINT64, DCIDESC_SYSTEM_IO_BYTEREADS_MIN },
-   { _T("System.IO.BytesReadRate.Max"), H_IOStatsTotal, (const TCHAR *)IOSTAT_NUM_RBYTES_MAX, DCI_DT_UINT64, DCIDESC_SYSTEM_IO_BYTEREADS_MAX },
-   { _T("System.IO.BytesReadRate(*)"), H_IOStats, (const TCHAR *)IOSTAT_NUM_RBYTES, DCI_DT_UINT64, DCIDESC_SYSTEM_IO_BYTEREADS_EX },
-   { _T("System.IO.BytesReadRate.Min(*)"), H_IOStats, (const TCHAR *)IOSTAT_NUM_RBYTES_MIN, DCI_DT_UINT64, DCIDESC_SYSTEM_IO_BYTEREADS_EX_MIN },
-   { _T("System.IO.BytesReadRate.Max(*)"), H_IOStats, (const TCHAR *)IOSTAT_NUM_RBYTES_MAX, DCI_DT_UINT64, DCIDESC_SYSTEM_IO_BYTEREADS_EX_MAX },
-   { _T("System.IO.BytesWriteRate"), H_IOStatsTotal, (const TCHAR *)IOSTAT_NUM_WBYTES, DCI_DT_UINT64, DCIDESC_SYSTEM_IO_BYTEWRITES },
-   { _T("System.IO.BytesWriteRate.Min"), H_IOStatsTotal, (const TCHAR *)IOSTAT_NUM_WBYTES_MIN, DCI_DT_UINT64, DCIDESC_SYSTEM_IO_BYTEWRITES_MIN },
-   { _T("System.IO.BytesWriteRate.Max"), H_IOStatsTotal, (const TCHAR *)IOSTAT_NUM_WBYTES_MAX, DCI_DT_UINT64, DCIDESC_SYSTEM_IO_BYTEWRITES_MAX },
-   { _T("System.IO.BytesWriteRate(*)"), H_IOStats, (const TCHAR *)IOSTAT_NUM_WBYTES, DCI_DT_UINT64, DCIDESC_SYSTEM_IO_BYTEWRITES_EX },
-   { _T("System.IO.BytesWriteRate.Min(*)"), H_IOStats, (const TCHAR *)IOSTAT_NUM_WBYTES_MIN, DCI_DT_UINT64, DCIDESC_SYSTEM_IO_BYTEWRITES_EX_MIN },
-   { _T("System.IO.BytesWriteRate.Max(*)"), H_IOStats, (const TCHAR *)IOSTAT_NUM_WBYTES_MAX, DCI_DT_UINT64, DCIDESC_SYSTEM_IO_BYTEWRITES_EX_MAX },
-   { _T("System.IO.DiskQueue"), H_IOStatsTotal, (const TCHAR *)IOSTAT_QUEUE, DCI_DT_FLOAT, DCIDESC_SYSTEM_IO_DISKQUEUE },
-   { _T("System.IO.DiskQueue.Min"), H_IOStatsTotal, (const TCHAR *)IOSTAT_QUEUE_MIN, DCI_DT_UINT, DCIDESC_SYSTEM_IO_DISKQUEUE_MIN },
-   { _T("System.IO.DiskQueue.Max"), H_IOStatsTotal, (const TCHAR *)IOSTAT_QUEUE_MAX, DCI_DT_UINT, DCIDESC_SYSTEM_IO_DISKQUEUE_MAX },
-   { _T("System.IO.DiskQueue(*)"), H_IOStats, (const TCHAR *)IOSTAT_QUEUE, DCI_DT_FLOAT, DCIDESC_SYSTEM_IO_DISKQUEUE_EX },
-   { _T("System.IO.DiskQueue.Min(*)"), H_IOStats, (const TCHAR *)IOSTAT_QUEUE_MIN, DCI_DT_UINT, DCIDESC_SYSTEM_IO_DISKQUEUE_EX_MIN },
-   { _T("System.IO.DiskQueue.Max(*)"), H_IOStats, (const TCHAR *)IOSTAT_QUEUE_MAX, DCI_DT_UINT, DCIDESC_SYSTEM_IO_DISKQUEUE_EX_MAX },
+   { _T("System.IO.ReadRate"), H_IOStatsTotal, (const TCHAR*)IOSTAT_NUM_READS, DCI_DT_FLOAT, DCIDESC_SYSTEM_IO_READS },
+   { _T("System.IO.ReadRate.Min"), H_IOStatsTotal, (const TCHAR*)IOSTAT_NUM_READS_MIN, DCI_DT_UINT, DCIDESC_SYSTEM_IO_READS_MIN },
+   { _T("System.IO.ReadRate.Max"), H_IOStatsTotal, (const TCHAR*)IOSTAT_NUM_READS_MAX, DCI_DT_UINT, DCIDESC_SYSTEM_IO_READS_MAX },
+   { _T("System.IO.ReadRate(*)"), H_IOStats, (const TCHAR*)IOSTAT_NUM_READS, DCI_DT_FLOAT, DCIDESC_SYSTEM_IO_READS_EX },
+   { _T("System.IO.ReadRate.Min(*)"), H_IOStats, (const TCHAR*)IOSTAT_NUM_READS_MIN, DCI_DT_UINT, DCIDESC_SYSTEM_IO_READS_EX_MIN },
+   { _T("System.IO.ReadRate.Max(*)"), H_IOStats, (const TCHAR*)IOSTAT_NUM_READS_MAX, DCI_DT_UINT, DCIDESC_SYSTEM_IO_READS_EX_MAX },
+   { _T("System.IO.WriteRate"), H_IOStatsTotal, (const TCHAR*)IOSTAT_NUM_WRITES, DCI_DT_FLOAT, DCIDESC_SYSTEM_IO_WRITES },
+   { _T("System.IO.WriteRate.Min"), H_IOStatsTotal, (const TCHAR*)IOSTAT_NUM_WRITES_MIN, DCI_DT_UINT, DCIDESC_SYSTEM_IO_WRITES_MIN },
+   { _T("System.IO.WriteRate.Max"), H_IOStatsTotal, (const TCHAR*)IOSTAT_NUM_WRITES_MAX, DCI_DT_UINT, DCIDESC_SYSTEM_IO_WRITES_MAX },
+   { _T("System.IO.WriteRate(*)"), H_IOStats, (const TCHAR*)IOSTAT_NUM_WRITES, DCI_DT_FLOAT, DCIDESC_SYSTEM_IO_WRITES_EX },
+   { _T("System.IO.WriteRate.Min(*)"), H_IOStats, (const TCHAR*)IOSTAT_NUM_WRITES_MIN, DCI_DT_UINT, DCIDESC_SYSTEM_IO_WRITES_EX_MIN },
+   { _T("System.IO.WriteRate.Max(*)"), H_IOStats, (const TCHAR*)IOSTAT_NUM_WRITES_MAX, DCI_DT_UINT, DCIDESC_SYSTEM_IO_WRITES_EX_MAX },
+   { _T("System.IO.BytesReadRate"), H_IOStatsTotal, (const TCHAR*)IOSTAT_NUM_RBYTES, DCI_DT_UINT64, DCIDESC_SYSTEM_IO_BYTEREADS },
+   { _T("System.IO.BytesReadRate.Min"), H_IOStatsTotal, (const TCHAR*)IOSTAT_NUM_RBYTES_MIN, DCI_DT_UINT64, DCIDESC_SYSTEM_IO_BYTEREADS_MIN },
+   { _T("System.IO.BytesReadRate.Max"), H_IOStatsTotal, (const TCHAR*)IOSTAT_NUM_RBYTES_MAX, DCI_DT_UINT64, DCIDESC_SYSTEM_IO_BYTEREADS_MAX },
+   { _T("System.IO.BytesReadRate(*)"), H_IOStats, (const TCHAR*)IOSTAT_NUM_RBYTES, DCI_DT_UINT64, DCIDESC_SYSTEM_IO_BYTEREADS_EX },
+   { _T("System.IO.BytesReadRate.Min(*)"), H_IOStats, (const TCHAR*)IOSTAT_NUM_RBYTES_MIN, DCI_DT_UINT64, DCIDESC_SYSTEM_IO_BYTEREADS_EX_MIN },
+   { _T("System.IO.BytesReadRate.Max(*)"), H_IOStats, (const TCHAR*)IOSTAT_NUM_RBYTES_MAX, DCI_DT_UINT64, DCIDESC_SYSTEM_IO_BYTEREADS_EX_MAX },
+   { _T("System.IO.BytesWriteRate"), H_IOStatsTotal, (const TCHAR*)IOSTAT_NUM_WBYTES, DCI_DT_UINT64, DCIDESC_SYSTEM_IO_BYTEWRITES },
+   { _T("System.IO.BytesWriteRate.Min"), H_IOStatsTotal, (const TCHAR*)IOSTAT_NUM_WBYTES_MIN, DCI_DT_UINT64, DCIDESC_SYSTEM_IO_BYTEWRITES_MIN },
+   { _T("System.IO.BytesWriteRate.Max"), H_IOStatsTotal, (const TCHAR*)IOSTAT_NUM_WBYTES_MAX, DCI_DT_UINT64, DCIDESC_SYSTEM_IO_BYTEWRITES_MAX },
+   { _T("System.IO.BytesWriteRate(*)"), H_IOStats, (const TCHAR*)IOSTAT_NUM_WBYTES, DCI_DT_UINT64, DCIDESC_SYSTEM_IO_BYTEWRITES_EX },
+   { _T("System.IO.BytesWriteRate.Min(*)"), H_IOStats, (const TCHAR*)IOSTAT_NUM_WBYTES_MIN, DCI_DT_UINT64, DCIDESC_SYSTEM_IO_BYTEWRITES_EX_MIN },
+   { _T("System.IO.BytesWriteRate.Max(*)"), H_IOStats, (const TCHAR*)IOSTAT_NUM_WBYTES_MAX, DCI_DT_UINT64, DCIDESC_SYSTEM_IO_BYTEWRITES_EX_MAX },
+   { _T("System.IO.DiskQueue"), H_IOStatsTotal, (const TCHAR*)IOSTAT_QUEUE, DCI_DT_FLOAT, DCIDESC_SYSTEM_IO_DISKQUEUE },
+   { _T("System.IO.DiskQueue.Min"), H_IOStatsTotal, (const TCHAR*)IOSTAT_QUEUE_MIN, DCI_DT_UINT, DCIDESC_SYSTEM_IO_DISKQUEUE_MIN },
+   { _T("System.IO.DiskQueue.Max"), H_IOStatsTotal, (const TCHAR*)IOSTAT_QUEUE_MAX, DCI_DT_UINT, DCIDESC_SYSTEM_IO_DISKQUEUE_MAX },
+   { _T("System.IO.DiskQueue(*)"), H_IOStats, (const TCHAR*)IOSTAT_QUEUE, DCI_DT_FLOAT, DCIDESC_SYSTEM_IO_DISKQUEUE_EX },
+   { _T("System.IO.DiskQueue.Min(*)"), H_IOStats, (const TCHAR*)IOSTAT_QUEUE_MIN, DCI_DT_UINT, DCIDESC_SYSTEM_IO_DISKQUEUE_EX_MIN },
+   { _T("System.IO.DiskQueue.Max(*)"), H_IOStats, (const TCHAR*)IOSTAT_QUEUE_MAX, DCI_DT_UINT, DCIDESC_SYSTEM_IO_DISKQUEUE_EX_MAX },
 
    { _T("System.IsVirtual"), H_IsVirtual, NULL, DCI_DT_INT, DCIDESC_SYSTEM_IS_VIRTUAL },
 
-   //        { _T("System.IO.DiskTime"), H_IoStatsTotal, (const TCHAR *)IOSTAT_IO_TIME, DCI_DT_FLOAT, DCIDESC_SYSTEM_IO_DISKTIME },
-   //        { _T("System.IO.DiskTime(*)"), H_IoStats, (const TCHAR *)IOSTAT_IO_TIME, DCI_DT_FLOAT, DCIDESC_SYSTEM_IO_DISKTIME_EX },
-   { _T("System.Memory.Physical.Free"), H_MemoryInfo, (const TCHAR *)MEMINFO_PHYSICAL_FREE, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_PHYSICAL_FREE },
-   { _T("System.Memory.Physical.FreePerc"), H_MemoryInfo, (const TCHAR *)MEMINFO_PHYSICAL_FREEPCT, DCI_DT_FLOAT, DCIDESC_SYSTEM_MEMORY_PHYSICAL_FREE_PCT },
-   { _T("System.Memory.Physical.Total"), H_MemoryInfo, (const TCHAR *)MEMINFO_PHYSICAL_TOTAL, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_PHYSICAL_TOTAL },
-   { _T("System.Memory.Physical.Used"), H_MemoryInfo, (const TCHAR *)MEMINFO_PHYSICAL_USED, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_PHYSICAL_USED },
-   { _T("System.Memory.Physical.UsedPerc"), H_MemoryInfo, (const TCHAR *)MEMINFO_PHYSICAL_USEDPCT, DCI_DT_FLOAT, DCIDESC_SYSTEM_MEMORY_PHYSICAL_USED_PCT },
-   { _T("System.Memory.Swap.Free"), H_MemoryInfo, (const TCHAR *)MEMINFO_SWAP_FREE, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_SWAP_FREE },
-   { _T("System.Memory.Swap.FreePerc"), H_MemoryInfo, (const TCHAR *)MEMINFO_SWAP_FREEPCT, DCI_DT_FLOAT, DCIDESC_SYSTEM_MEMORY_SWAP_FREE_PCT },
-   { _T("System.Memory.Swap.Total"), H_MemoryInfo, (const TCHAR *)MEMINFO_SWAP_TOTAL, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_SWAP_TOTAL },
-   { _T("System.Memory.Swap.Used"), H_MemoryInfo, (const TCHAR *)MEMINFO_SWAP_USED, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_SWAP_USED },
-   { _T("System.Memory.Swap.UsedPerc"), H_MemoryInfo, (const TCHAR *)MEMINFO_SWAP_USEDPCT, DCI_DT_FLOAT, DCIDESC_SYSTEM_MEMORY_SWAP_USED_PCT },
-   { _T("System.Memory.Virtual.Free"), H_MemoryInfo, (const TCHAR *)MEMINFO_VIRTUAL_FREE, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_VIRTUAL_FREE },
-   { _T("System.Memory.Virtual.FreePerc"), H_MemoryInfo, (const TCHAR *)MEMINFO_VIRTUAL_FREEPCT, DCI_DT_FLOAT, DCIDESC_SYSTEM_MEMORY_VIRTUAL_FREE_PCT },
-   { _T("System.Memory.Virtual.Total"), H_MemoryInfo, (const TCHAR *)MEMINFO_VIRTUAL_TOTAL, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_VIRTUAL_TOTAL },
-   { _T("System.Memory.Virtual.Used"), H_MemoryInfo, (const TCHAR *)MEMINFO_VIRTUAL_USED, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_VIRTUAL_USED },
-   { _T("System.Memory.Virtual.UsedPerc"), H_MemoryInfo, (const TCHAR *)MEMINFO_VIRTUAL_USEDPCT, DCI_DT_FLOAT, DCIDESC_SYSTEM_MEMORY_VIRTUAL_USED_PCT },
+   { _T("System.Memory.Physical.Free"), H_MemoryInfo, (const TCHAR*)MEMINFO_PHYSICAL_FREE, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_PHYSICAL_FREE },
+   { _T("System.Memory.Physical.FreePerc"), H_MemoryInfo, (const TCHAR*)MEMINFO_PHYSICAL_FREEPCT, DCI_DT_FLOAT, DCIDESC_SYSTEM_MEMORY_PHYSICAL_FREE_PCT },
+   { _T("System.Memory.Physical.Total"), H_MemoryInfo, (const TCHAR*)MEMINFO_PHYSICAL_TOTAL, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_PHYSICAL_TOTAL },
+   { _T("System.Memory.Physical.Used"), H_MemoryInfo, (const TCHAR*)MEMINFO_PHYSICAL_USED, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_PHYSICAL_USED },
+   { _T("System.Memory.Physical.UsedPerc"), H_MemoryInfo, (const TCHAR*)MEMINFO_PHYSICAL_USEDPCT, DCI_DT_FLOAT, DCIDESC_SYSTEM_MEMORY_PHYSICAL_USED_PCT },
+   { _T("System.Memory.Swap.Free"), H_MemoryInfo, (const TCHAR*)MEMINFO_SWAP_FREE, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_SWAP_FREE },
+   { _T("System.Memory.Swap.FreePerc"), H_MemoryInfo, (const TCHAR*)MEMINFO_SWAP_FREEPCT, DCI_DT_FLOAT, DCIDESC_SYSTEM_MEMORY_SWAP_FREE_PCT },
+   { _T("System.Memory.Swap.Total"), H_MemoryInfo, (const TCHAR*)MEMINFO_SWAP_TOTAL, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_SWAP_TOTAL },
+   { _T("System.Memory.Swap.Used"), H_MemoryInfo, (const TCHAR*)MEMINFO_SWAP_USED, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_SWAP_USED },
+   { _T("System.Memory.Swap.UsedPerc"), H_MemoryInfo, (const TCHAR*)MEMINFO_SWAP_USEDPCT, DCI_DT_FLOAT, DCIDESC_SYSTEM_MEMORY_SWAP_USED_PCT },
+   { _T("System.Memory.Virtual.Free"), H_MemoryInfo, (const TCHAR*)MEMINFO_VIRTUAL_FREE, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_VIRTUAL_FREE },
+   { _T("System.Memory.Virtual.FreePerc"), H_MemoryInfo, (const TCHAR*)MEMINFO_VIRTUAL_FREEPCT, DCI_DT_FLOAT, DCIDESC_SYSTEM_MEMORY_VIRTUAL_FREE_PCT },
+   { _T("System.Memory.Virtual.Total"), H_MemoryInfo, (const TCHAR*)MEMINFO_VIRTUAL_TOTAL, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_VIRTUAL_TOTAL },
+   { _T("System.Memory.Virtual.Used"), H_MemoryInfo, (const TCHAR*)MEMINFO_VIRTUAL_USED, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_VIRTUAL_USED },
+   { _T("System.Memory.Virtual.UsedPerc"), H_MemoryInfo, (const TCHAR*)MEMINFO_VIRTUAL_USEDPCT, DCI_DT_FLOAT, DCIDESC_SYSTEM_MEMORY_VIRTUAL_USED_PCT },
    { _T("System.MsgQueue.Bytes(*)"), H_SysMsgQueue, _T("b"), DCI_DT_UINT64, DCIDESC_SYSTEM_MSGQUEUE_BYTES },
    { _T("System.MsgQueue.BytesMax(*)"), H_SysMsgQueue, _T("B"), DCI_DT_UINT64, DCIDESC_SYSTEM_MSGQUEUE_BYTES_MAX },
    { _T("System.MsgQueue.ChangeTime(*)"), H_SysMsgQueue, _T("c"), DCI_DT_UINT64, DCIDESC_SYSTEM_MSGQUEUE_CHANGE_TIME },
    { _T("System.MsgQueue.Messages(*)"), H_SysMsgQueue, _T("m"), DCI_DT_UINT, DCIDESC_SYSTEM_MSGQUEUE_MESSAGES },
    { _T("System.MsgQueue.RecvTime(*)"), H_SysMsgQueue, _T("r"), DCI_DT_UINT64, DCIDESC_SYSTEM_MSGQUEUE_RECV_TIME },
    { _T("System.MsgQueue.SendTime(*)"), H_SysMsgQueue, _T("s"), DCI_DT_UINT64, DCIDESC_SYSTEM_MSGQUEUE_SEND_TIME },
-   { _T("System.ProcessCount"), H_SysProcCount, NULL, DCI_DT_INT, DCIDESC_SYSTEM_PROCESSCOUNT },
-   { _T("System.Uname"), H_Uname, NULL, DCI_DT_STRING, DCIDESC_SYSTEM_UNAME },
-   { _T("System.Uptime"), H_Uptime, NULL, DCI_DT_UINT, DCIDESC_SYSTEM_UPTIME }
+   { _T("System.ProcessCount"), H_SysProcCount, nullptr, DCI_DT_INT, DCIDESC_SYSTEM_PROCESSCOUNT },
+   { _T("System.Uname"), H_Uname, nullptr, DCI_DT_STRING, DCIDESC_SYSTEM_UNAME },
+   { _T("System.Uptime"), H_Uptime, nullptr, DCI_DT_UINT, DCIDESC_SYSTEM_UPTIME }
 };
 
 /**
@@ -360,13 +360,13 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
  */
 static NETXMS_SUBAGENT_LIST m_lists[] =
 {
-   { _T("FileSystem.MountPoints"), H_MountPoints, NULL },
+   { _T("FileSystem.MountPoints"), H_MountPoints, nullptr },
    { _T("Hardware.Batteries"), SMBIOS_ListHandler, _T("B") },
    { _T("Hardware.MemoryDevices"), SMBIOS_ListHandler, _T("M") },
    { _T("Hardware.Processors"), SMBIOS_ListHandler, _T("P") },
-   { _T("Net.InterfaceList"), H_NetIfList, NULL },
-   { _T("Net.InterfaceNames"), H_NetIfNames, NULL },
-   { _T("System.ProcessList"), H_ProcessList, NULL }
+   { _T("Net.InterfaceList"), H_NetIfList, nullptr },
+   { _T("Net.InterfaceNames"), H_NetIfNames, nullptr },
+   { _T("System.ProcessList"), H_ProcessList, nullptr }
 };
 
 /**
@@ -374,7 +374,7 @@ static NETXMS_SUBAGENT_LIST m_lists[] =
  */
 static NETXMS_SUBAGENT_TABLE m_tables[] =
 {
-   { _T("FileSystem.Volumes"), H_FileSystems, NULL, _T("MOUNTPOINT"), DCTDESC_FILESYSTEM_VOLUMES },
+   { _T("FileSystem.Volumes"), H_FileSystems, nullptr, _T("MOUNTPOINT"), DCTDESC_FILESYSTEM_VOLUMES },
    { _T("Hardware.Batteries"), SMBIOS_TableHandler, _T("B"), _T("HANDLE"), DCTDESC_HARDWARE_BATTERIES },
    { _T("Hardware.MemoryDevices"), SMBIOS_TableHandler, _T("M"), _T("HANDLE"), DCTDESC_HARDWARE_MEMORY_DEVICES },
    { _T("Hardware.Processors"), SMBIOS_TableHandler, _T("P"), _T("HANDLE"), DCTDESC_HARDWARE_PROCESSORS },
@@ -390,16 +390,16 @@ static NETXMS_SUBAGENT_INFO m_info =
    _T("SUNOS"), NETXMS_VERSION_STRING,
    SubAgentInit, // init handler
    SubAgentShutdown, // unload handler
-   NULL, // command handler
-   NULL, // notification handler
+   nullptr, // command handler
+   nullptr, // notification handler
    sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
    m_parameters,
    sizeof(m_lists) / sizeof(NETXMS_SUBAGENT_LIST),
    m_lists,
    sizeof(m_tables) / sizeof(NETXMS_SUBAGENT_TABLE),
    m_tables,
-   0, NULL,	// actions
-   0, NULL	// push parameters
+   0, nullptr,	// actions
+   0, nullptr	// push parameters
 };
 
 /**
@@ -416,7 +416,7 @@ DECLARE_SUBAGENT_ENTRY_POINT(SUNOS)
  */
 extern "C" BOOL __EXPORT __NxSubAgentGetIfList(StringList *pValue)
 {
-   return H_NetIfList(_T("Net.InterfaceList"), NULL, pValue, NULL) == SYSINFO_RC_SUCCESS;
+   return H_NetIfList(_T("Net.InterfaceList"), nullptr, pValue, nullptr) == SYSINFO_RC_SUCCESS;
 }
 
 /**
