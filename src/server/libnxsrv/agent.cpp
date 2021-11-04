@@ -1925,7 +1925,7 @@ uint32_t AgentConnection::uploadFile(const TCHAR *localFile, const TCHAR *destin
          {
             request.setCode(CMD_FILEMGR_MERGE_FILES);
          }
-
+         request.setField(VID_ALLOW_PATH_EXPANSION, allowPathExpansion);
          request.setField(VID_DESTINATION_FILE_NAME, remoteFileName);
          partNames.fillMessage(&request, VID_FILE_LIST_BASE, VID_FILE_COUNT);
          BYTE hash[MD5_DIGEST_SIZE];
