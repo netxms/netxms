@@ -124,7 +124,7 @@ public class PhysicalLinkWidget extends  Composite implements SessionListener
    public PhysicalLinkWidget(ViewPart viewPart, Composite parent, int style, long objectId, long patchPanelId, boolean enablefilter, VisibilityValidator visibilityValidator)
    {
       super(parent, style);
-      session = (NXCSession)ConsoleSharedData.getSession();
+      session = ConsoleSharedData.getSession();
       this.viewPart = viewPart;  
       this.objectId = objectId;
       this.patchPanelId = patchPanelId;
@@ -224,7 +224,7 @@ public class PhysicalLinkWidget extends  Composite implements SessionListener
       session.addListener(this);
       refresh();
    }
-   
+
    /**
     * Sync physical links interface objects
     * 
@@ -256,7 +256,7 @@ public class PhysicalLinkWidget extends  Composite implements SessionListener
       if (objectId == -1)
          return;      
 
-      if(visibilityValidator != null && !visibilityValidator.isVisible())
+      if (visibilityValidator != null && !visibilityValidator.isVisible())
          return;
       
       new ConsoleJob("Load physical links", viewPart, Activator.PLUGIN_ID, null) {
@@ -279,7 +279,7 @@ public class PhysicalLinkWidget extends  Composite implements SessionListener
          @Override
          protected String getErrorMessage()
          {
-            return "Error getting physical link list";
+            return "Cannot get physical link list";
          }         
 
          @Override
@@ -386,7 +386,7 @@ public class PhysicalLinkWidget extends  Composite implements SessionListener
          }
       }; 
       
-      actionAdd = new Action("Create new") {
+      actionAdd = new Action("&New...") {
          @Override
          public void run()
          {
@@ -395,7 +395,7 @@ public class PhysicalLinkWidget extends  Composite implements SessionListener
       };
       actionAdd.setImageDescriptor(SharedIcons.ADD_OBJECT);
       
-      actionDelete = new Action("Delete") {
+      actionDelete = new Action("&Delete") {
          @Override
          public void run()
          {
@@ -404,7 +404,7 @@ public class PhysicalLinkWidget extends  Composite implements SessionListener
       };
       actionDelete.setImageDescriptor(SharedIcons.DELETE_OBJECT);
       
-      actionEdit = new Action("Edit...") {
+      actionEdit = new Action("&Edit...") {
          @Override
          public void run()
          {
@@ -413,7 +413,7 @@ public class PhysicalLinkWidget extends  Composite implements SessionListener
       };
       actionEdit.setImageDescriptor(SharedIcons.EDIT);
 
-      actionShowFilter = new Action("Show filter", Action.AS_CHECK_BOX) {
+      actionShowFilter = new Action("Show &filter", Action.AS_CHECK_BOX) {
          @Override
          public void run()
          {
@@ -431,18 +431,17 @@ public class PhysicalLinkWidget extends  Composite implements SessionListener
     */
    private void editPhysicalLink()
    {
-      IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-      if (selection.isEmpty() || selection.size() != 1)
+      IStructuredSelection selection = viewer.getStructuredSelection();
+      if (selection.size() != 1)
          return;
-      
-      PhysicalLink link = (PhysicalLink)selection.getFirstElement();      
+
+      PhysicalLink link = (PhysicalLink)selection.getFirstElement();
       PhysicalLinkEditDialog dlg = new PhysicalLinkEditDialog(getShell(), link);
-      if(dlg.open() != Window.OK)
+      if (dlg.open() != Window.OK)
          return;
-         
+
       final PhysicalLink editedLink = dlg.getLink();
-      new ConsoleJob("Edit physical link", viewPart, Activator.PLUGIN_ID, null) {
-         
+      new ConsoleJob("Modify physical link", viewPart, Activator.PLUGIN_ID) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
@@ -452,7 +451,7 @@ public class PhysicalLinkWidget extends  Composite implements SessionListener
          @Override
          protected String getErrorMessage()
          {
-            return "Error editing physical link";
+            return "Cannot modify physical link";
          }
       }.start();
       
@@ -463,22 +462,23 @@ public class PhysicalLinkWidget extends  Composite implements SessionListener
     */
    private void deletePhysicalLink()
    {
-      final IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      IStructuredSelection selection = viewer.getStructuredSelection();
       if (selection.isEmpty())
          return;
-      
-      final String message = (selection.size() == 1) ? "Do you really want to delete the selected physical link?" :
-         "Do you really want to delete the selected categories?";
-      if(!MessageDialogHelper.openQuestion(getShell(), "Confirm p-hysical link deletion", message))
+
+      final String message = (selection.size() == 1) ? "Do you really want to delete the selected physical link?" : "Do you really want to delete the selected physical links?";
+      if (!MessageDialogHelper.openQuestion(getShell(), "Confirm Delete", message))
          return;
-         
-      new ConsoleJob("Delete physical link", viewPart, Activator.PLUGIN_ID, null) {
-         
+
+      final List<PhysicalLink> links = new ArrayList<PhysicalLink>(selection.size());
+      for (Object o : selection.toList())
+         links.add((PhysicalLink)o);
+      new ConsoleJob("Delete physical link", viewPart, Activator.PLUGIN_ID) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            for (Object o : selection.toList())
-               session.deletePhysicalLink(((PhysicalLink)o).getId());
+            for(PhysicalLink link : links)
+               session.deletePhysicalLink(link.getId());
          }
          
          @Override
@@ -499,7 +499,7 @@ public class PhysicalLinkWidget extends  Composite implements SessionListener
          return;
          
       final PhysicalLink link = dlg.getLink();
-      new ConsoleJob("Create new physical ink", viewPart, Activator.PLUGIN_ID, null) {
+      new ConsoleJob("Create new physical link", viewPart, Activator.PLUGIN_ID) {
          
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
@@ -555,10 +555,8 @@ public class PhysicalLinkWidget extends  Composite implements SessionListener
       viewer.refresh(false);
    }
 
-   /*
-    * (non-Javadoc)
-    * 
-    * @see org.eclipse.ui.part.WorkbenchPart#dispose()
+   /**
+    * @see org.eclipse.swt.widgets.Widget#dispose()
     */
    @Override
    public void dispose()
@@ -569,20 +567,21 @@ public class PhysicalLinkWidget extends  Composite implements SessionListener
       super.dispose();
    }
 
+   /**
+    * @see org.netxms.client.SessionListener#notificationHandler(org.netxms.client.SessionNotification)
+    */
    @Override
    public void notificationHandler(SessionNotification n)
    {
-      switch(n.getCode())
+      if (n.getCode() == SessionNotification.PHYSICAL_LINK_UPDATE)
       {
-         case SessionNotification.PHYSICAL_LINK_UPDATE:
-            viewer.getControl().getDisplay().asyncExec(new Runnable() {
-     		   @Override
-     		   public void run()
-     		   {
-     		      refresh();
-     		   }
-     	   });            
-         break;
+         viewer.getControl().getDisplay().asyncExec(new Runnable() {
+            @Override
+            public void run()
+            {
+               refresh();
+            }
+         });
       }
    }
 
