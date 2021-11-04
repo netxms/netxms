@@ -20,6 +20,7 @@
 
 #include "linux_subagent.h"
 #include <mntent.h>
+#include <paths.h>
 #include <sys/vfs.h>
 
 /**
