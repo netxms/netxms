@@ -63,7 +63,7 @@ public class RackTab extends ObjectTab implements ISelectionProvider
 	protected void createTabContent(Composite parent)
 	{
 	   scroller = new ScrolledComposite(parent, SWT.H_SCROLL);
-	   
+
 	   content = new Composite(scroller, SWT.NONE) {
          @Override
          public Point computeSize(int wHint, int hHint, boolean changed)
