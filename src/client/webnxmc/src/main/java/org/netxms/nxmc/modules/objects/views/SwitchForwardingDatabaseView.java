@@ -75,7 +75,7 @@ public class SwitchForwardingDatabaseView extends ObjectView
    }
 
    /**
-    * @see org.netxms.nxmc.modules.objects.views.NodeSubObjectTableView#createContent(org.eclipse.swt.widgets.Composite)
+    * @see org.netxms.nxmc.base.views.View#createContent(org.eclipse.swt.widgets.Composite)
     */
    @Override
    protected void createContent(Composite parent)
@@ -108,7 +108,7 @@ public class SwitchForwardingDatabaseView extends ObjectView
 	/**
 	 * Create actions
 	 */
-	private void createActions()
+   private void createActions()
 	{
 		actionExportToCsv = new ExportToCsvAction(this, viewer, true);
 		actionExportAllToCsv = new ExportToCsvAction(this, viewer, false);

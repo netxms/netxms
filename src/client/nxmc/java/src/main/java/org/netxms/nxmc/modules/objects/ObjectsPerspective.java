@@ -53,6 +53,7 @@ import org.netxms.nxmc.modules.objects.views.EntityMIBView;
 import org.netxms.nxmc.modules.objects.views.InterfacesView;
 import org.netxms.nxmc.modules.objects.views.ObjectBrowser;
 import org.netxms.nxmc.modules.objects.views.ObjectOverviewView;
+import org.netxms.nxmc.modules.objects.views.RackView;
 import org.netxms.nxmc.modules.objects.views.SwitchForwardingDatabaseView;
 import org.netxms.nxmc.modules.snmp.views.MibExplorer;
 import org.netxms.nxmc.modules.worldmap.views.ObjectGeoLocationView;
@@ -122,6 +123,7 @@ public abstract class ObjectsPerspective extends Perspective
       addMainView(new ObjectOverviewView());
       addMainView(new PerformanceView());
       addMainView(new PredefinedMap());
+      addMainView(new RackView());
       addMainView(new SwitchForwardingDatabaseView());
    }
 

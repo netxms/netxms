@@ -224,7 +224,7 @@ public class DataCollectionView extends ObjectView
       object = ((getObject() instanceof DataCollectionTarget) || (getObject() instanceof Template)) ? getObject() : null;
 
       final PreferenceStore ds = PreferenceStore.getInstance();
-      
+
       parent.setLayout(new FillLayout());
       final String[] names = { i18n.tr("ID"), i18n.tr("Origin"), i18n.tr("Description"), i18n.tr("Parameter"), i18n.tr("Data Type"), i18n.tr("Polling Interval"), i18n.tr("Retention Time"), i18n.tr("Status"), i18n.tr("Thresholds"), i18n.tr("Template"), i18n.tr("Related Object"), i18n.tr("Is status calculation") };
       final int[] widths = { 60, 100, 250, 200, 90, 90, 90, 100, 200, 150, 150, 90 };
@@ -236,7 +236,7 @@ public class DataCollectionView extends ObjectView
       setFilterClient(viewer, dcFilter); 
       viewer.addFilter(dcFilter);
       WidgetHelper.restoreTableViewerSettings(viewer, configPrefix); //$NON-NLS-1$
-      
+
       viewer.addSelectionChangedListener(new ISelectionChangedListener() {
          @Override
          public void selectionChanged(SelectionChangedEvent event)
@@ -272,7 +272,7 @@ public class DataCollectionView extends ObjectView
          @Override
          public void doubleClick(DoubleClickEvent event)
          {
-            actionEdit.run();
+            editSelectedObject();
          }
       });
       viewer.getTable().addDisposeListener(new DisposeListener() {
@@ -819,9 +819,9 @@ public class DataCollectionView extends ObjectView
       IStructuredSelection selection = viewer.getStructuredSelection();
       if (selection.size() != 1)
          return;
-      
+
       DataCollectionObject dco = getDataCollectionObject(selection.getFirstElement());
-      
+
       DialogData data = null;
       if (!hideModificationWarnings && dco.getTemplateId() != 0)
       {
@@ -1163,13 +1163,10 @@ public class DataCollectionView extends ObjectView
          @Override
          public void doubleClick(DoubleClickEvent event)
          {
-            IStructuredSelection selection = viewer.getStructuredSelection();
-            if (selection.size() == 1)
-            {
-            }
+            showLineChart(false);
          }
       });
-      
+
       viewer.getTable().addDisposeListener(new DisposeListener() {
          @Override
          public void widgetDisposed(DisposeEvent e)
