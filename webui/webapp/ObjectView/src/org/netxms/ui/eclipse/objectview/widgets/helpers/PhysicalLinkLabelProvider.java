@@ -1,3 +1,21 @@
+/**
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
 package org.netxms.ui.eclipse.objectview.widgets.helpers;
 
 import org.eclipse.jface.viewers.ITableLabelProvider;
@@ -39,19 +57,15 @@ public class PhysicalLinkLabelProvider extends LabelProvider implements ITableLa
     */
    public String getObjectText(PhysicalLink link, boolean isLeft)
    {
-      AbstractObject obj = null;
-      if (isLeft)
-         obj = session.findObjectById(link.getLeftObjectId());
-      else
-         obj = session.findObjectById(link.getRightObjectId());
       String name = "Unknown";
-      if(obj instanceof Interface)
+      AbstractObject object = session.findObjectById(isLeft ? link.getLeftObjectId() : link.getRightObjectId());
+      if (object instanceof Interface)
       {
-         name = ((Interface)obj).getParentNode().getObjectName();
+         name = ((Interface)object).getParentNode().getObjectName();
       }
-      else if (obj instanceof Rack)
+      else if (object instanceof Rack)
       {
-         name = obj.getObjectName();
+         name = object.getObjectName();
       }
       return name;
    }
@@ -65,10 +79,10 @@ public class PhysicalLinkLabelProvider extends LabelProvider implements ITableLa
     */
    public String getPortText(PhysicalLink link, boolean isLeft)
    {      
-      if(isLeft)
+      if (isLeft)
          return getPortTextInternal(link.getLeftObjectId(), link.getLeftPatchPanelId(), link.getLeftPortNumber(), link.getLeftFront());
       else
-         return getPortTextInternal(link.getRightObjectId(), link.getRightPatchPanelId(), link.getRightPortNumber(), link.getRightFront());         
+         return getPortTextInternal(link.getRightObjectId(), link.getRightPatchPanelId(), link.getRightPortNumber(), link.getRightFront());
    }
 
    /**
@@ -100,6 +114,9 @@ public class PhysicalLinkLabelProvider extends LabelProvider implements ITableLa
       return sb.toString();
    }
 
+   /**
+    * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
+    */
    @Override
    public Image getColumnImage(Object element, int columnIndex)
    {
@@ -118,11 +135,11 @@ public class PhysicalLinkLabelProvider extends LabelProvider implements ITableLa
          case PhysicalLinkWidget.RIGHT_OBJECT:
             object = session.findObjectById(((PhysicalLink)element).getRightObjectId());
             break;
-         
+
       }
-      if(object != null)
+      if (object != null)
       {
-         if(object instanceof Interface)
+         if (object instanceof Interface)
          {
             object = ((Interface)object).getParentNode();
          }
@@ -131,6 +148,9 @@ public class PhysicalLinkLabelProvider extends LabelProvider implements ITableLa
       return null;
    }
 
+   /**
+    * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
+    */
    @Override
    public String getColumnText(Object element, int columnIndex)
    {
@@ -151,4 +171,13 @@ public class PhysicalLinkLabelProvider extends LabelProvider implements ITableLa
       return null;
    }
 
+   /**
+    * @see org.eclipse.jface.viewers.BaseLabelProvider#dispose()
+    */
+   @Override
+   public void dispose()
+   {
+      wbLabelProvider.dispose();
+      super.dispose();
+   }
 }
