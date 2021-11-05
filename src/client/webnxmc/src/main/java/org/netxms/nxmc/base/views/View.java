@@ -41,6 +41,7 @@ import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.base.widgets.FilterText;
 import org.netxms.nxmc.base.widgets.MessageArea;
 import org.netxms.nxmc.base.widgets.MessageAreaHolder;
+import org.netxms.nxmc.base.windows.PopOutViewWindow;
 import org.netxms.nxmc.keyboard.KeyBindingManager;
 import org.netxms.nxmc.keyboard.KeyStroke;
 import org.slf4j.Logger;
@@ -652,5 +653,23 @@ public abstract class View implements MessageAreaHolder
    public boolean isClientAreaDisposed()
    {
       return clientArea.isDisposed();
+   }
+
+   /**
+    * Open new view in same perspective or in pop out window if this view is not in perspective.
+    *
+    * @param view view to open
+    */
+   public void openView(View view)
+   {
+      if (perspective != null)
+      {
+         perspective.addMainView(view, true, false);
+      }
+      else
+      {
+         PopOutViewWindow window = new PopOutViewWindow(view);
+         window.open();
+      }
    }
 }

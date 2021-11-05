@@ -213,10 +213,11 @@ public class ObjectPopupDialog extends PopupDialog
    /**
     * @see org.eclipse.jface.dialogs.PopupDialog#getForegroundColorExclusions()
     */
+   @SuppressWarnings({ "unchecked", "rawtypes" })
    @Override
    protected List<Control> getForegroundColorExclusions()
    {
-      List<Control> e = super.getForegroundColorExclusions();
+      List e = super.getForegroundColorExclusions();
       e.add(statusLabel);
       return e;
    }
@@ -243,7 +244,8 @@ public class ObjectPopupDialog extends PopupDialog
     */
    private static void createSeparator(Composite parent) 
    {
-      Label separator = new Label(parent, SWT.SEPARATOR | SWT.HORIZONTAL | SWT.LINE_DOT);
+      // Label separator = new Label(parent, SWT.SEPARATOR | SWT.HORIZONTAL | SWT.LINE_DOT);
+      Label separator = new Label(parent, SWT.SEPARATOR | SWT.HORIZONTAL); // FIXME: update style when supported by RAP
       GridDataFactory.fillDefaults().align(SWT.FILL, SWT.CENTER).grab(true, false).applyTo(separator);
    }
 

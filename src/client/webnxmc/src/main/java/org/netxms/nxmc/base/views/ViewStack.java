@@ -523,7 +523,7 @@ public class ViewStack extends Composite
    }
 
    /**
-    * Get ID for given view. Dependng on operation mode will return base or global view ID.
+    * Get ID for given view. Depending on operation mode will return base or global view ID.
     * 
     * @param view view to get ID from
     * @return view ID according to current operation mode

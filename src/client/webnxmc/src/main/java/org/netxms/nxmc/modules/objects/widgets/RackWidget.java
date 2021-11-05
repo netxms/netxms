@@ -44,8 +44,10 @@ import org.netxms.client.objects.Chassis;
 import org.netxms.client.objects.Rack;
 import org.netxms.client.objects.configs.PassiveRackElement;
 import org.netxms.client.objects.interfaces.HardwareEntity;
+import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.modules.imagelibrary.ImageProvider;
 import org.netxms.nxmc.modules.imagelibrary.ImageUpdateListener;
+import org.netxms.nxmc.modules.objects.views.AdHocChassisView;
 import org.netxms.nxmc.modules.objects.widgets.helpers.ElementSelectionListener;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.StatusDisplayInfo;
@@ -103,17 +105,19 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
    private Set<ElementSelectionListener> selectionListeners = new HashSet<ElementSelectionListener>(0);
    private Object tooltipObject = null;
    private ObjectPopupDialog tooltipDialog = null;
-   private RackOrientation view;
+   private RackOrientation side;
+   private View view;
 
    /**
     * @param parent
     * @param style
     */
-   public RackWidget(Composite parent, int style, Rack rack, RackOrientation view)
+   public RackWidget(Composite parent, int style, Rack rack, RackOrientation side, View view)
    {
       super(parent, style | SWT.DOUBLE_BUFFERED);
       this.rack = rack;
-      this.view = (view == RackOrientation.FILL) ? RackOrientation.FRONT : view;
+      this.side = (side == RackOrientation.FILL) ? RackOrientation.FRONT : side;
+      this.view = view;
 
       setBackground(ThemeEngine.getBackgroundColor("Rack"));
 
@@ -145,7 +149,6 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
       final GC gc = e.gc;
 
       gc.setAntialias(SWT.ON);
-      gc.setInterpolation(SWT.HIGH);
 
       // Calculate bounding box for rack picture
       Rectangle rect = getClientArea();
@@ -172,8 +175,8 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
 
       // Title
       gc.setFont(WidgetHelper.getBestFittingFont(gc, titleFonts, VIEW_LABELS[0], rect.width, TITLE_HEIGHT)); //$NON-NLS-1$
-      Point titleSize = gc.textExtent(VIEW_LABELS[view.getValue() - 1]);
-      gc.drawText(VIEW_LABELS[view.getValue() - 1], (rect.width / 2 - titleSize.x / 2) + UNIT_NUMBER_WIDTH + MARGIN_WIDTH, rect.y - TITLE_HEIGHT - MARGIN_HEIGHT / 2 - borderWidth / 2);
+      Point titleSize = gc.textExtent(VIEW_LABELS[side.getValue() - 1]);
+      gc.drawText(VIEW_LABELS[side.getValue() - 1], (rect.width / 2 - titleSize.x / 2) + UNIT_NUMBER_WIDTH + MARGIN_WIDTH, rect.y - TITLE_HEIGHT - MARGIN_HEIGHT / 2 - borderWidth / 2);
 
       // Rack itself
       gc.setBackground(ThemeEngine.getBackgroundColor("Rack.EmptySpace"));
@@ -223,7 +226,7 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
       for(PassiveRackElement c : attributes)
       {
          if ((c.getPosition() < 1) || (c.getPosition() > rack.getHeight()) ||
-            (c.getOrientation() != view) && (c.getOrientation() != RackOrientation.FILL))
+            (c.getOrientation() != side) && (c.getOrientation() != RackOrientation.FILL))
             continue;
          
          int topLine, bottomLine;
@@ -270,7 +273,7 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
          if ((n.getRackPosition() < 1) || (n.getRackPosition() > rack.getHeight()) || 
              (rack.isTopBottomNumbering() && (n.getRackPosition() + n.getRackHeight() > rack.getHeight() + 1)) ||
              (!rack.isTopBottomNumbering() && (n.getRackPosition() - n.getRackHeight() < 0)) || 
-             ((n.getRackOrientation() != view) && (n.getRackOrientation() != RackOrientation.FILL)))
+             ((n.getRackOrientation() != side) && (n.getRackOrientation() != RackOrientation.FILL)))
             continue;
          
          int topLine, bottomLine;
@@ -297,15 +300,15 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
 
          if(n instanceof Chassis)
          {
-            ChassisWidget.drawChassis(gc, unitRect, (Chassis)n, view, null);
+            ChassisWidget.drawChassis(gc, unitRect, (Chassis)n, side, null);
          }
-         else if ((n.getRearRackImage() != null) && !n.getRearRackImage().equals(NXCommon.EMPTY_GUID) && view == RackOrientation.REAR)
+         else if ((n.getRearRackImage() != null) && !n.getRearRackImage().equals(NXCommon.EMPTY_GUID) && side == RackOrientation.REAR)
          {
             Image image = ImageProvider.getInstance().getImage(n.getRearRackImage());
             Rectangle r = image.getBounds();
             gc.drawImage(image, 0, 0, r.width, r.height, unitRect.x, unitRect.y, unitRect.width, unitRect.height);
          }
-         else if ((n.getFrontRackImage() != null) && !n.getFrontRackImage().equals(NXCommon.EMPTY_GUID) && view == RackOrientation.FRONT)
+         else if ((n.getFrontRackImage() != null) && !n.getFrontRackImage().equals(NXCommon.EMPTY_GUID) && side == RackOrientation.FRONT)
          {
             Image image = ImageProvider.getInstance().getImage(n.getFrontRackImage());
             Rectangle r = image.getBounds();
@@ -313,7 +316,7 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
          }         
          else // Draw default representation
          {
-            Image imageTop = (view == RackOrientation.REAR && n.getRackOrientation() == RackOrientation.FILL) ? imageDefaultRear : imageDefaultTop;
+            Image imageTop = (side == RackOrientation.REAR && n.getRackOrientation() == RackOrientation.FILL) ? imageDefaultRear : imageDefaultTop;
             
             Rectangle r = imageTop.getBounds();
             if (n.getRackHeight() == 1)
@@ -322,8 +325,8 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
             }
             else
             {
-               Image imageMiddle = (view == RackOrientation.REAR && n.getRackOrientation() == RackOrientation.FILL) ? imageDefaultRear : imageDefaultMiddle;
-               Image imageBottom = (view == RackOrientation.REAR && n.getRackOrientation() == RackOrientation.FILL) ? imageDefaultRear : imageDefaultBottom;
+               Image imageMiddle = (side == RackOrientation.REAR && n.getRackOrientation() == RackOrientation.FILL) ? imageDefaultRear : imageDefaultMiddle;
+               Image imageBottom = (side == RackOrientation.REAR && n.getRackOrientation() == RackOrientation.FILL) ? imageDefaultRear : imageDefaultBottom;
                if (rack.isTopBottomNumbering())
                {
                   unitRect.height = unitBaselines[n.getRackPosition()] - topLine;
@@ -455,9 +458,9 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
    @Override
    public void mouseDoubleClick(MouseEvent e)
    {
-      /*
       if (selectedObject instanceof PassiveRackElement)
       {
+         /*
          try 
          {
             PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().showView(PhysicalLinkView.ID, String.valueOf(rack.getObjectId()) + "&" + String.valueOf(((PassiveRackElement)selectedObject).getId()), IWorkbenchPage.VIEW_ACTIVATE);            
@@ -466,19 +469,12 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
          {
             MessageDialogHelper.openError(getShell(), "Error openning Physical link view", String.format("Cannot open Physical link view: %s", ex.getLocalizedMessage()));
          }
+         */
       }
       else if (selectedObject instanceof Chassis)
       {
-         try 
-         {
-            PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().showView(ChassisView.ID, String.valueOf(((Chassis)selectedObject).getObjectId()), IWorkbenchPage.VIEW_ACTIVATE);            
-         } 
-         catch (PartInitException ex) 
-         {
-            MessageDialogHelper.openError(getShell(), "Error openning Physical link view", String.format("Cannot open Physical link view: %s", ex.getLocalizedMessage()));
-         }
+         view.openView(new AdHocChassisView(rack.getObjectId(), (Chassis)selectedObject));
       }
-      */
    }
 
    /**

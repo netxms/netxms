@@ -117,7 +117,6 @@ public class ChassisWidget extends Canvas implements PaintListener, DisposeListe
       final GC gc = e.gc;
       
       gc.setAntialias(SWT.ON);
-      gc.setInterpolation(SWT.HIGH);
       
       // Calculate bounding box for chassis picture
       Rectangle rect = getClientArea();

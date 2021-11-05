@@ -70,10 +70,8 @@ import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.actions.ExportToCsvAction;
 import org.netxms.nxmc.base.jobs.Job;
-import org.netxms.nxmc.base.views.Perspective;
 import org.netxms.nxmc.base.widgets.MessageArea;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
-import org.netxms.nxmc.base.windows.PopOutViewWindow;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.datacollection.DataCollectionObjectEditor;
 import org.netxms.nxmc.modules.datacollection.dialogs.BulkUpdateDialog;
@@ -1651,17 +1649,7 @@ public class DataCollectionView extends ObjectView
          items.add(config);
       }
 
-      AbstractObject object = getObject();
-      Perspective p = getPerspective();
-      if (p != null)
-      {
-         p.addMainView(new HistoricalGraphView(object, items), true, false);
-      }
-      else
-      {
-         PopOutViewWindow window = new PopOutViewWindow(new HistoricalGraphView(object, items));
-         window.open();
-      }
+      openView(new HistoricalGraphView(getObject(), items));
    }
 
    /**
@@ -1674,33 +1662,16 @@ public class DataCollectionView extends ObjectView
          return;
 
       AbstractObject object = getObject();
-      Perspective p = getPerspective();      
-      for(Object o : selection.toList())
+      for(Object dcObject : selection.toList())
       {
-         if ((o instanceof DataCollectionTable) || ((o instanceof DciValue) &&
-               ((DciValue)o).getDcObjectType() == DataCollectionObject.DCO_TYPE_TABLE))
+         if ((dcObject instanceof DataCollectionTable) || ((dcObject instanceof DciValue) &&
+               ((DciValue)dcObject).getDcObjectType() == DataCollectionObject.DCO_TYPE_TABLE))
          {
-            if (p != null)
-            {
-               p.addMainView(new TableLastValuesView(object, getObjectId(o)), true, false);
-            }
-            else
-            {
-               PopOutViewWindow window = new PopOutViewWindow(new TableLastValuesView(object, getObjectId(o)));
-               window.open();
-            }
+            openView(new TableLastValuesView(object, getObjectId(dcObject)));
          }
          else 
          {
-            if (p != null)
-            {
-               p.addMainView(new HistoricalDataView(object, getObjectId(o), null, null, null), true, false);
-            }
-            else
-            {
-               PopOutViewWindow window = new PopOutViewWindow(new HistoricalDataView(object, getObjectId(o), null, null, null));
-               window.open();
-            }
+            openView(new HistoricalDataView(object, getObjectId(dcObject), null, null, null));
          }
       }
    }

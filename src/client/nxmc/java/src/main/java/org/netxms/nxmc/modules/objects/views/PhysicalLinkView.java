@@ -43,6 +43,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.PhysicalLink;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.Node;
 import org.netxms.client.objects.Rack;
@@ -112,7 +113,7 @@ public class PhysicalLinkView extends ObjectView
    @Override
    public int getPriority()
    {
-      return 30;
+      return 55;
    }
 
    /**
@@ -246,6 +247,23 @@ public class PhysicalLinkView extends ObjectView
       mgr.add(actionAdd);
       mgr.add(actionEdit);
       mgr.add(actionDelete);
+   }
+
+   /**
+    * @see org.netxms.nxmc.modules.objects.views.ObjectView#onObjectChange(org.netxms.client.objects.AbstractObject)
+    */
+   @Override
+   protected void onObjectChange(AbstractObject object)
+   {
+      if (object != null)
+      {
+         refresh();
+      }
+      else if ((linkList != null) && !linkList.isEmpty())
+      {
+         linkList.clear();
+         viewer.setInput(linkList);
+      }
    }
 
    /**

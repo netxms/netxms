@@ -120,7 +120,6 @@ public class RackView extends ObjectView implements ISelectionProvider
       scroller.setContent(content);
       scroller.setExpandHorizontal(true);
       scroller.setExpandVertical(true);
-      scroller.getHorizontalBar().setIncrement(20);
       scroller.addControlListener(new ControlAdapter() {
          public void controlResized(ControlEvent e)
          {
@@ -184,10 +183,10 @@ public class RackView extends ObjectView implements ISelectionProvider
             }
          };
 
-         rackFrontWidget = new RackWidget(content, SWT.NONE, (Rack)object, RackOrientation.FRONT);
+         rackFrontWidget = new RackWidget(content, SWT.NONE, (Rack)object, RackOrientation.FRONT, this);
          rackFrontWidget.addSelectionListener(listener);
 
-         rackRearWidget = new RackWidget(content, SWT.NONE, (Rack)object, RackOrientation.REAR);
+         rackRearWidget = new RackWidget(content, SWT.NONE, (Rack)object, RackOrientation.REAR, this);
          rackRearWidget.addSelectionListener(listener);
 
          scroller.setMinSize(content.computeSize(SWT.DEFAULT, scroller.getSize().y));
