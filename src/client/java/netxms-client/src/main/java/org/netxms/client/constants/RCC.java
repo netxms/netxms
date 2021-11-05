@@ -147,6 +147,9 @@ public final class RCC extends CommonRCC
    public static final int NO_SUCH_2FA_DRIVER = 151;
    public static final int INVALID_2FA_BINDING_CONFIG = 152;
    public static final int NO_SUCH_2FA_BINDING = 153;
+   public static final int RCC_INVALID_TIME_INTERVAL = 154;
+   public static final int RCC_INVALID_BUSINESS_CHECK_ID = 155;
+   public static final int RCC_PROTECTED_IMAGE = 156;
 
 	// SNMP-specific, has no corresponding RCC_xxx constants in C library
 	public static final int BAD_MIB_FILE_HEADER = 1001;

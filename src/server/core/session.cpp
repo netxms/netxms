@@ -11994,7 +11994,7 @@ void ClientSession::updateLibraryImage(NXCPMessage *request)
          }
          else
          {
-            rcc = RCC_INVALID_REQUEST;
+            rcc = RCC_PROTECTED_IMAGE;
          }
       }
       else
@@ -12095,7 +12095,7 @@ void ClientSession::deleteLibraryImage(NXCPMessage *request)
 			}
 			else
 			{
-				rcc = RCC_ACCESS_DENIED;
+            rcc = RCC_PROTECTED_IMAGE;
 			}
 		}
 		else

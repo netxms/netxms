@@ -693,6 +693,7 @@ enum SessionState
 #define RCC_NO_SUCH_2FA_BINDING           ((uint32_t)153)
 #define RCC_INVALID_TIME_INTERVAL         ((uint32_t)154)
 #define RCC_INVALID_BUSINESS_CHECK_ID     ((uint32_t)155)
+#define RCC_PROTECTED_IMAGE               ((uint32_t)156)
 
 /**
  * Mask bits for NXCModifyEventTemplate()

@@ -9595,7 +9595,7 @@ public class NXCSession
    public void deleteImage(LibraryImage image) throws IOException, NXCException
    {
       if (image.isProtected())
-         throw new NXCException(RCC.INVALID_REQUEST);
+         throw new NXCException(RCC.RCC_PROTECTED_IMAGE);
       deleteImage(image.getGuid());
    }
 
@@ -9626,7 +9626,7 @@ public class NXCSession
    {
       if (image.isProtected())
       {
-         throw new NXCException(RCC.INVALID_REQUEST);
+         throw new NXCException(RCC.RCC_PROTECTED_IMAGE);
       }
 
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_CREATE_IMAGE);
