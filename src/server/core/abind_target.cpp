@@ -327,7 +327,6 @@ void AutoBindTarget::updateFromImport(const ConfigEntry& config, bool defaultAut
       {
          setAutoBindFilter(i, filter->getValue());
          setAutoBindMode(i, filter->getAttributeAsBoolean(_T("autoBind"), defaultAutoBindFlag), filter->getAttributeAsBoolean(_T("autoUnbind")));
-         internalUnlock();
       }
       else
       {
