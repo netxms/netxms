@@ -1223,36 +1223,40 @@ static int F_SetInterfaceExpectedState(int argc, NXSL_Value **argv, NXSL_Value *
  */
 static int F_CreateSNMPTransport(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
-   if ((argc < 1) || (argc > 3))
+   if ((argc < 1) || (argc > 4))
       return NXSL_ERR_INVALID_ARGUMENT_COUNT;
 
 	if (!argv[0]->isObject())
 		return NXSL_ERR_NOT_OBJECT;
 
-	if ((argc > 1) && !argv[1]->isInteger())
+   if ((argc > 1) && !argv[1]->isNull() && !argv[1]->isInteger())
       return NXSL_ERR_NOT_INTEGER;
 
-   if ((argc > 2) && !argv[2]->isString())
+   if ((argc > 2) && !argv[2]->isNull() && !argv[2]->isString())
       return NXSL_ERR_NOT_STRING;
 
-	NXSL_Object *obj = argv[0]->getValueAsObject();
-	if (!obj->getClass()->instanceOf(g_nxslNodeClass.getName()))
-		return NXSL_ERR_BAD_CLASS;
+   if ((argc > 3) && !argv[3]->isNull() && !argv[3]->isString())
+      return NXSL_ERR_NOT_STRING;
 
-	Node *node = static_cast<shared_ptr<Node>*>(obj->getData())->get();
-	if (node != nullptr)
-	{
-	   UINT16 port = (argc > 1) ? (UINT16)argv[1]->getValueAsInt32() : 0;
-	   const TCHAR *context = (argc > 2) ? argv[2]->getValueAsCString() : nullptr;
-		SNMP_Transport *t = node->createSnmpTransport(port, SNMP_VERSION_DEFAULT, context);
+   NXSL_Object *obj = argv[0]->getValueAsObject();
+   if (!obj->getClass()->instanceOf(g_nxslNodeClass.getName()))
+      return NXSL_ERR_BAD_CLASS;
+
+   Node *node = static_cast<shared_ptr<Node> *>(obj->getData())->get();
+   if (node != nullptr)
+   {
+      uint16_t port = ((argc > 1) && argv[1]->isInteger()) ? static_cast<uint16_t>(argv[1]->getValueAsInt32()) : 0;
+      const char *context = ((argc > 2) && argv[2]->isString()) ? argv[2]->getValueAsMBString() : nullptr;
+      const char *community = ((argc > 3) && argv[3]->isString()) ? argv[3]->getValueAsMBString() : nullptr;
+      SNMP_Transport *t = node->createSnmpTransport(port, SNMP_VERSION_DEFAULT, context, community);
       *ppResult = (t != nullptr) ? vm->createValue(new NXSL_Object(vm, &g_nxslSnmpTransportClass, t)) : vm->createValue();
-	}
-	else
-	{
-		*ppResult = vm->createValue();
-	}
+   }
+   else
+   {
+      *ppResult = vm->createValue();
+   }
 
-	return 0;
+   return 0;
 }
 
 /**

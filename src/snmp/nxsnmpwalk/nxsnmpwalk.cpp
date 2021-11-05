@@ -101,7 +101,7 @@ static int DoWalk(TCHAR *pszHost, TCHAR *pszRootOid)
    {
       SNMP_SecurityContext *context = new SNMP_SecurityContext(m_user, m_authPassword, m_encryptionPassword, m_authMethod, m_encryptionMethod);
       if (m_contextName[0] != 0)
-         context->setContextNameA(m_contextName);
+         context->setContextName(m_contextName);
       transport->setSecurityContext(context);
    }
    else

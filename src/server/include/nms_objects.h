@@ -3394,7 +3394,7 @@ public:
    shared_ptr<AgentConnectionEx> createAgentConnection(bool sendServerId = false);
    shared_ptr<AgentConnectionEx> getAgentConnection(bool forcePrimary = false);
    shared_ptr<AgentConnectionEx> acquireProxyConnection(ProxyType type, bool validate = false);
-   SNMP_Transport *createSnmpTransport(UINT16 port = 0, SNMP_Version version = SNMP_VERSION_DEFAULT, const TCHAR *context = nullptr);
+   SNMP_Transport *createSnmpTransport(UINT16 port = 0, SNMP_Version version = SNMP_VERSION_DEFAULT, const char *context = nullptr, const char *community = nullptr);
    SNMP_SecurityContext *getSnmpSecurityContext() const;
 
    uint32_t getEffectiveSnmpProxy(bool backup = false);
@@ -3423,7 +3423,7 @@ public:
 
    UINT32 callSnmpEnumerate(const TCHAR *pszRootOid,
       UINT32 (* pHandler)(SNMP_Variable *, SNMP_Transport *, void *), void *pArg,
-      const TCHAR *context = nullptr, bool failOnShutdown = false);
+      const char *context = nullptr, bool failOnShutdown = false);
 
    shared_ptr<NetworkMapObjectList> getL2Topology();
    shared_ptr<NetworkMapObjectList> buildL2Topology(uint32_t *status, int radius, bool includeEndNodes);

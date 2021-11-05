@@ -571,12 +571,7 @@ public:
    void setAuthMethod(SNMP_AuthMethod method);
    void setPrivMethod(SNMP_EncryptionMethod method);
    void setSecurityModel(SNMP_SecurityModel model);
-   void setContextName(const TCHAR *name);
-#ifdef UNICODE
-   void setContextNameA(const char *name);
-#else
-   void setContextNameA(const char *name) { setContextName(name); }
-#endif
+   void setContextName(const char *name);
 
    void setAuthoritativeEngine(const SNMP_Engine &engine);
    const SNMP_Engine& getAuthoritativeEngine() { return m_authoritativeEngine; }

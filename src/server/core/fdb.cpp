@@ -431,8 +431,8 @@ shared_ptr<ForwardingDatabase> GetSwitchForwardingDatabase(Node *node)
          {
             for(int i = 0; i < vlans->size(); i++)
             {
-               TCHAR context[16];
-               _sntprintf(context, 16, _T("%s%d"), (node->getSNMPVersion() < SNMP_VERSION_3) ? _T("") : _T("vlan-"), vlans->get(i)->getVlanId());
+               char context[16];
+               sprintf(context, "%s%d", (node->getSNMPVersion() < SNMP_VERSION_3) ? "" : "vlan-", vlans->get(i)->getVlanId());
                if (node->callSnmpEnumerate(_T(".1.3.6.1.2.1.17.1.4.1.2"), Dot1dPortTableHandler, fdb.get(), context, true) != SNMP_ERR_SUCCESS)
                {
                   // Some Cisco switches may not return data for certain system VLANs
@@ -459,8 +459,8 @@ shared_ptr<ForwardingDatabase> GetSwitchForwardingDatabase(Node *node)
 		{
 			for(int i = 0; i < vlans->size(); i++)
 			{
-				TCHAR context[16];
-				_sntprintf(context, 16, _T("%s%d"), (node->getSNMPVersion() < SNMP_VERSION_3) ? _T("") : _T("vlan-"), vlans->get(i)->getVlanId());
+            char context[16];
+            sprintf(context, "%s%d", (node->getSNMPVersion() < SNMP_VERSION_3) ? "" : "vlan-", vlans->get(i)->getVlanId());
             fdb->setCurrentVlanId((UINT16)vlans->get(i)->getVlanId());
 				if (node->callSnmpEnumerate(_T(".1.3.6.1.2.1.17.4.3.1.1"), FDBHandler, fdb.get(), context) != SNMP_ERR_SUCCESS)
 				{

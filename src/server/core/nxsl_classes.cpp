@@ -1087,18 +1087,22 @@ NXSL_Value *NXSL_ZoneClass::getAttr(NXSL_Object *object, const char *attr)
  */
 NXSL_METHOD_DEFINITION(Node, createSNMPTransport)
 {
-   if (argc > 2)
+   if (argc > 3)
       return NXSL_ERR_INVALID_ARGUMENT_COUNT;
 
-   if ((argc > 0) && !argv[0]->isInteger())
+   if ((argc > 0) && !argv[0]->isNull() && !argv[0]->isInteger())
       return NXSL_ERR_NOT_INTEGER;
 
-   if ((argc > 1) && !argv[1]->isString())
+   if ((argc > 1) && !argv[1]->isNull() && !argv[1]->isString())
       return NXSL_ERR_NOT_STRING;
 
-   UINT16 port = (argc > 0) ? static_cast<UINT16>(argv[0]->getValueAsInt32()) : 0;
-   const TCHAR *context = (argc > 1) ? argv[1]->getValueAsCString() : nullptr;
-   SNMP_Transport *t = static_cast<shared_ptr<Node>*>(object->getData())->get()->createSnmpTransport(port, SNMP_VERSION_DEFAULT, context);
+   if ((argc > 2) && !argv[2]->isNull() && !argv[2]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   uint16_t port = ((argc > 0) && argv[0]->isInteger()) ? static_cast<uint16_t>(argv[0]->getValueAsInt32()) : 0;
+   const char *context = ((argc > 1) && argv[1]->isString()) ? argv[1]->getValueAsMBString() : nullptr;
+   const char *community = ((argc > 2) && argv[2]->isString()) ? argv[2]->getValueAsMBString() : nullptr;
+   SNMP_Transport *t = static_cast<shared_ptr<Node> *>(object->getData())->get()->createSnmpTransport(port, SNMP_VERSION_DEFAULT, context, community);
    *result = (t != nullptr) ? vm->createValue(new NXSL_Object(vm, &g_nxslSnmpTransportClass, t)) : vm->createValue();
    return 0;
 }

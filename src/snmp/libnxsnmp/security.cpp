@@ -124,35 +124,11 @@ SNMP_SecurityContext::~SNMP_SecurityContext()
 /**
  * Set context name
  */
-void SNMP_SecurityContext::setContextName(const TCHAR *name)
+void SNMP_SecurityContext::setContextName(const char *name)
 {
-	MemFree(m_contextName);
-	if (name != nullptr)
-	{
-#ifdef UNICODE
-		m_contextName = MBStringFromWideString(name);
-#else
-		m_contextName = MemCopyStringA(name);
-#endif
-	}
-	else
-	{
-		m_contextName = nullptr;
-	}
+   MemFree(m_contextName);
+   m_contextName = MemCopyStringA(name);
 }
-
-#ifdef UNICODE
-
-/**
- * Set context name (multibyte string version)
- */
-void SNMP_SecurityContext::setContextNameA(const char *name)
-{
-	MemFree(m_contextName);
-	m_contextName = MemCopyStringA(name);
-}
-
-#endif
 
 /**
  * Set security model

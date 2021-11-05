@@ -8551,8 +8551,8 @@ void Node::routingTablePoll(PollerInfo *poller, ClientSession *session, UINT32 r
  * Call SNMP Enumerate with node's SNMP parameters
  */
 UINT32 Node::callSnmpEnumerate(const TCHAR *pszRootOid,
-                              UINT32 (* pHandler)(SNMP_Variable *, SNMP_Transport *, void *),
-                              void *pArg, const TCHAR *context, bool failOnShutdown)
+                               UINT32 (* pHandler)(SNMP_Variable *, SNMP_Transport *, void *),
+                               void *pArg, const char *context, bool failOnShutdown)
 {
    if ((m_capabilities & NC_IS_SNMP) &&
        (!(m_state & NSF_SNMP_UNREACHABLE)) &&
@@ -8775,8 +8775,32 @@ uint32_t Node::getEffectiveAgentProxy()
 /**
  * Create SNMP transport
  */
-SNMP_Transport *Node::createSnmpTransport(UINT16 port, SNMP_Version version, const TCHAR *context)
+SNMP_Transport *Node::createSnmpTransport(UINT16 port, SNMP_Version version, const char *context, const char *community)
 {
+   if (community != nullptr)
+   {
+      // Check community from list
+      bool valid = false;
+      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+      DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT count(*) FROM snmp_communities WHERE (zone=? OR zone=-1) AND community=?"));
+      if (hStmt != nullptr)
+      {
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_zoneUIN);
+         DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, DB_CTYPE_UTF8_STRING, community, DB_BIND_STATIC);
+         DB_RESULT hResult = DBSelectPrepared(hStmt);
+         if (hResult != nullptr)
+         {
+            valid = (DBGetFieldLong(hResult, 0, 0) > 0);
+            DBFreeResult(hResult);
+         }
+         DBFreeStatement(hStmt);
+      }
+      DBConnectionPoolReleaseConnection(hdb);
+
+      if (!valid)
+         return nullptr;
+   }
+
    if ((m_flags & NF_DISABLE_SNMP) || (m_status == STATUS_UNMANAGED) || (g_flags & AF_SHUTDOWN) || m_isDeleteInitiated)
       return nullptr;
 
@@ -8809,21 +8833,21 @@ SNMP_Transport *Node::createSnmpTransport(UINT16 port, SNMP_Version version, con
       pTransport->setSnmpVersion(effectiveVersion);
       if (context == nullptr)
       {
-         pTransport->setSecurityContext(new SNMP_SecurityContext(m_snmpSecurity));
+         if (community == nullptr)
+            pTransport->setSecurityContext(new SNMP_SecurityContext(m_snmpSecurity));
+         else
+            pTransport->setSecurityContext(new SNMP_SecurityContext(community));
       }
       else
       {
          if (effectiveVersion < SNMP_VERSION_3)
          {
-            char community[128];
-#ifdef UNICODE
-            char mbContext[64];
-            WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, context, -1, mbContext, 64, nullptr, nullptr);
-            snprintf(community, 128, "%s@%s", m_snmpSecurity->getCommunity(), mbContext);
-#else
-            snprintf(community, 128, "%s@%s", m_snmpSecurity->getCommunity(), context);
-#endif
-            pTransport->setSecurityContext(new SNMP_SecurityContext(community));
+            char fullCommunity[128];
+            if (community == nullptr)
+               snprintf(fullCommunity, 128, "%s@%s", m_snmpSecurity->getCommunity(), context);
+            else
+               snprintf(fullCommunity, 128, "%s@%s", community, context);
+            pTransport->setSecurityContext(new SNMP_SecurityContext(fullCommunity));
          }
          else
          {
