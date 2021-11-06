@@ -22,37 +22,37 @@
 
 #include "sunos_subagent.h"
 
-
-//
-// Constants
-//
-
+/**
+ * Maximum supported number of devices
+ */
 #define MAX_DEVICES		255
+
+/**
+ * History size
+ */
 #define HISTORY_SIZE		60
 
-
-//
-// Device I/O stats structure
-//
-
+/**
+ * Device I/O stats structure
+ */
 struct IO_STATS
 {
    // device name
    char dev[KSTAT_STRLEN];
 
    // current values
-   QWORD currBytesRead;
-   QWORD currBytesWritten;
-   DWORD currReadOps;
-   DWORD currWriteOps;
-   DWORD currQueue;
+   uint64_t currBytesRead;
+   uint64_t currBytesWritten;
+   uint32_t currReadOps;
+   uint32_t currWriteOps;
+   uint32_t currQueue;
 
    // history - totals for queue, deltas for others
-   QWORD histBytesRead[HISTORY_SIZE];
-   QWORD histBytesWritten[HISTORY_SIZE];
-   DWORD histReadOps[HISTORY_SIZE];
-   DWORD histWriteOps[HISTORY_SIZE];
-   DWORD histQueue[HISTORY_SIZE];
+   uint64_t histBytesRead[HISTORY_SIZE];
+   uint64_t histBytesWritten[HISTORY_SIZE];
+   uint32_t histReadOps[HISTORY_SIZE];
+   uint32_t histWriteOps[HISTORY_SIZE];
+   uint32_t histQueue[HISTORY_SIZE];
 };
 
 /**
@@ -104,8 +104,8 @@ static void ProcessDeviceStats(const char *dev, kstat_io_t *kio)
  */
 static void CalculateTotals()
 {
-   QWORD br = 0, bw = 0;
-   DWORD r = 0, w = 0, q = 0;
+   uint64_t br = 0, bw = 0;
+   uint32_t r = 0, w = 0, q = 0;
 
    for(int i = 1; (i <= MAX_DEVICES) && (s_data[i].dev[0] != 0); i++)
    {
@@ -126,7 +126,7 @@ static void CalculateTotals()
 /**
  * I/O stat collector
  */
-THREAD_RESULT THREAD_CALL IOStatCollector(void *arg)
+void IOStatCollector()
 {
    kstat_ctl_t *kc;
    kstat_t *kp;
@@ -135,13 +135,13 @@ THREAD_RESULT THREAD_CALL IOStatCollector(void *arg)
    kstat_lock();
    kc = kstat_open();
    kstat_unlock();
-   if (kc == NULL)
+   if (kc == nullptr)
    {
       AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("SunOS::IOStatCollector: call to kstat_open failed (%s), I/O statistic will not be collected"), _tcserror(errno));
-      return THREAD_OK;
+      return;
    }
 
-   memset(s_data, 0, sizeof(IO_STATS) * (MAX_DEVICES + 1));
+   memset(s_data, 0, sizeof(s_data));
    AgentWriteDebugLog(1, _T("SunOS: I/O stat collector thread started"));
 
    while(!g_bShutdown)
@@ -168,13 +168,12 @@ THREAD_RESULT THREAD_CALL IOStatCollector(void *arg)
    kstat_lock();
    kstat_close(kc);
    kstat_unlock();
-   return THREAD_OK;
 }
 
 /**
  * Calculate average value for 32bit series
  */
-static double CalculateAverage32(DWORD *series)
+static double CalculateAverage32(uint32_t *series)
 {
    double sum = 0;
    for(int i = 0; i < HISTORY_SIZE; i++)
@@ -185,9 +184,9 @@ static double CalculateAverage32(DWORD *series)
 /**
  * Calculate min value for 32bit series
  */
-static DWORD CalculateMin32(DWORD *series)
+static uint32_t CalculateMin32(uint32_t *series)
 {
-   DWORD val = series[0];
+   uint32_t val = series[0];
    for(int i = 1; i < HISTORY_SIZE; i++)
       if (series[i] < val)
          val = series[i];
@@ -197,9 +196,9 @@ static DWORD CalculateMin32(DWORD *series)
 /**
  * Calculate max value for 32bit series
  */
-static DWORD CalculateMax32(DWORD *series)
+static uint32_t CalculateMax32(uint32_t *series)
 {
-   DWORD val = series[0];
+   uint32_t val = series[0];
    for(int i = 1; i < HISTORY_SIZE; i++)
       if (series[i] > val)
          val = series[i];
@@ -209,9 +208,9 @@ static DWORD CalculateMax32(DWORD *series)
 /**
  * Calculate average value for 64bit series
  */
-static QWORD CalculateAverage64(QWORD *series)
+static uint64_t CalculateAverage64(uint64_t *series)
 {
-   QWORD sum = 0;
+   uint64_t sum = 0;
    for(int i = 0; i < HISTORY_SIZE; i++)
       sum += series[i];
    return sum / HISTORY_SIZE;
@@ -220,9 +219,9 @@ static QWORD CalculateAverage64(QWORD *series)
 /**
  * Calculate min value for 64bit series
  */
-static QWORD CalculateMin64(QWORD *series)
+static uint64_t CalculateMin64(uint64_t *series)
 {
-   QWORD val = series[0];
+   uint64_t val = series[0];
    for(int i = 1; i < HISTORY_SIZE; i++)
       if (series[i] < val)
          val = series[i];
@@ -232,9 +231,9 @@ static QWORD CalculateMin64(QWORD *series)
 /**
  * Calculate max value for 64bit series
  */
-static QWORD CalculateMax64(QWORD *series)
+static uint64_t CalculateMax64(uint64_t *series)
 {
-   QWORD val = series[0];
+   uint64_t val = series[0];
    for(int i = 1; i < HISTORY_SIZE; i++)
       if (series[i] > val)
          val = series[i];

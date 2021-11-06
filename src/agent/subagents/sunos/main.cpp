@@ -148,8 +148,8 @@ static bool SubAgentInit(Config *config)
    ReadCPUVendorId();
    SMBIOS_Parse(SMBIOS_Reader);
 
-   s_cpuStatThread = ThreadCreateEx(CPUStatCollector, 0, NULL);
-   s_ioStatThread = ThreadCreateEx(IOStatCollector, 0, NULL);
+   s_cpuStatThread = ThreadCreateEx(CPUStatCollector);
+   s_ioStatThread = ThreadCreateEx(IOStatCollector);
    s_kstatLock = MutexCreate();
 
    return true;
@@ -285,14 +285,47 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("System.CPU.LoadAvg"), H_LoadAvg, (TCHAR*)0, DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_LOADAVG },
    { _T("System.CPU.LoadAvg5"), H_LoadAvg, (TCHAR*)1, DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_LOADAVG5 },
    { _T("System.CPU.LoadAvg15"), H_LoadAvg, (TCHAR*)2, DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_LOADAVG15 },
-   { _T("System.CPU.Usage"), H_CPUUsage, _T("T0"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE },
-   { _T("System.CPU.Usage5"), H_CPUUsage, _T("T1"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE5 },
-   { _T("System.CPU.Usage15"), H_CPUUsage, _T("T2"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE15 },
-   { _T("System.CPU.Usage(*)"), H_CPUUsage, _T("C0"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE_EX },
-   { _T("System.CPU.Usage5(*)"), H_CPUUsage, _T("C1"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE5_EX },
-   { _T("System.CPU.Usage15(*)"), H_CPUUsage, _T("C2"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE15_EX },
 
-   { _T("System.HandleCount"), H_HandleCount, NULL, DCI_DT_INT, DCIDESC_SYSTEM_HANDLECOUNT },
+   /* CPU usage */
+   { _T("System.CPU.Usage"), H_CPUUsage, _T("T0T"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE },
+   { _T("System.CPU.Usage5"), H_CPUUsage, _T("T1T"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE5 },
+   { _T("System.CPU.Usage15"), H_CPUUsage, _T("T2T"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE15 },
+   { _T("System.CPU.Usage(*)"), H_CPUUsage, _T("C0T"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE_EX },
+   { _T("System.CPU.Usage5(*)"), H_CPUUsage, _T("C1T"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE5_EX },
+   { _T("System.CPU.Usage15(*)"), H_CPUUsage, _T("C2T"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE15_EX },
+
+   /* CPU usage - idle */
+   { _T("System.CPU.Usage.Idle"), H_CPUUsage, _T("T0I"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE_IDLE },
+   { _T("System.CPU.Usage5.Idle"), H_CPUUsage, _T("T1I"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE5_IDLE },
+   { _T("System.CPU.Usage15.Idle"), H_CPUUsage, _T("T2I"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE15_IDLE },
+   { _T("System.CPU.Usage.Idle(*)"), H_CPUUsage, _T("C0I"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE_IDLE_EX },
+   { _T("System.CPU.Usage5.Idle(*)"), H_CPUUsage, _T("C1I"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE5_IDLE_EX },
+   { _T("System.CPU.Usage15.Idle(*)"), H_CPUUsage, _T("C2I"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE15_IDLE_EX },
+
+   /* CPU usage - iowait */
+   { _T("System.CPU.Usage.IoWait"), H_CPUUsage, _T("T0W"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE_IOWAIT },
+   { _T("System.CPU.Usage5.IoWait"), H_CPUUsage, _T("T1W"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE5_IOWAIT },
+   { _T("System.CPU.Usage15.IoWait"), H_CPUUsage, _T("T2W"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE15_IOWAIT },
+   { _T("System.CPU.Usage.IoWait(*)"), H_CPUUsage, _T("C0W"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE_IOWAIT_EX },
+   { _T("System.CPU.Usage5.IoWait(*)"), H_CPUUsage, _T("C1W"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE5_IOWAIT_EX },
+   { _T("System.CPU.Usage15.IoWait(*)"), H_CPUUsage, _T("C2W"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE15_IOWAIT_EX },
+
+   /* CPU usage - system */
+   { _T("System.CPU.Usage.System"), H_CPUUsage, _T("T0S"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE_SYSTEM },
+   { _T("System.CPU.Usage5.System"), H_CPUUsage, _T("T1S"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE5_SYSTEM },
+   { _T("System.CPU.Usage15.System"), H_CPUUsage, _T("T2S"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE15_SYSTEM },
+   { _T("System.CPU.Usage.System(*)"), H_CPUUsage, _T("C0S"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE_SYSTEM_EX },
+   { _T("System.CPU.Usage5.System(*)"), H_CPUUsage, _T("C1S"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE5_SYSTEM_EX },
+   { _T("System.CPU.Usage15.System(*)"), H_CPUUsage, _T("C2S"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE15_SYSTEM_EX },
+
+   /* CPU usage - user */
+   { _T("System.CPU.Usage.User"), H_CPUUsage, _T("T0U"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE_USER },
+   { _T("System.CPU.Usage5.User"), H_CPUUsage, _T("T1U"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE5_USER },
+   { _T("System.CPU.Usage15.User"), H_CPUUsage, _T("T2U"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE15_USER },
+   { _T("System.CPU.Usage.User(*)"), H_CPUUsage, _T("C0U"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE_USER_EX },
+   { _T("System.CPU.Usage5.User(*)"), H_CPUUsage, _T("C1U"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE5_USER_EX },
+   { _T("System.CPU.Usage15.User(*)"), H_CPUUsage, _T("C2U"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE15_USER_EX },
+
    { _T("System.Hostname"), H_Hostname, nullptr, DCI_DT_STRING, DCIDESC_SYSTEM_HOSTNAME },
    { _T("System.KStat(*)"), H_KStat, nullptr, DCI_DT_STRING, _T("") },
 

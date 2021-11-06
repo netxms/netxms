@@ -1,6 +1,6 @@
 /*
 ** NetXMS subagent for SunOS/Solaris
-** Copyright (C) 2004-2016 Victor Kirhenshtein
+** Copyright (C) 2004-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -23,23 +23,40 @@
 #include "sunos_subagent.h"
 #include <sys/sysinfo.h>
 
-
-//
-// Constants
-//
-
+/**
+ * Maximum supported numebr of CPUs
+ */
 #define MAX_CPU_COUNT   256
 
+/**
+ * Fixed point arithmetics multiplier
+ */
+#define FP_MULTIPLIER	(1000)
 
-//
-// Collected statistic
-//
+/**
+ * CPU usage data
+ */
+struct CPU_USAGE_DATA
+{
+   uint32_t states[CPU_STATES + 1];
+};
 
-static int m_nCPUCount = 1;
-static int m_nInstanceMap[MAX_CPU_COUNT];
-static DWORD m_dwUsage[MAX_CPU_COUNT + 1];
-static DWORD m_dwUsage5[MAX_CPU_COUNT + 1];
-static DWORD m_dwUsage15[MAX_CPU_COUNT + 1];
+/**
+ * Average CPU usage data
+ */
+struct CPU_USAGE_DATA_AVG
+{
+   double states[CPU_STATES + 1];
+};
+
+/**
+ * Collected statistic
+ */
+static int s_cpuCount = 1;
+static int s_instanceMap[MAX_CPU_COUNT];
+static CPU_USAGE_DATA_AVG s_usage[MAX_CPU_COUNT + 1];
+static CPU_USAGE_DATA_AVG s_usage5[MAX_CPU_COUNT + 1];
+static CPU_USAGE_DATA_AVG s_usage15[MAX_CPU_COUNT + 1];
 
 /**
  * Read CPU times
@@ -47,29 +64,29 @@ static DWORD m_dwUsage15[MAX_CPU_COUNT + 1];
 static bool ReadCPUTimes(kstat_ctl_t *kc, uint_t *pValues, BYTE *success)
 {
    uint_t *pData = pValues;
-   memset(success, 0, m_nCPUCount);
+   memset(success, 0, s_cpuCount);
    bool hasFailures = false;
 
    kstat_lock();
-   for(int i = 0; i < m_nCPUCount; i++, pData += CPU_STATES)
+   for(int i = 0; i < s_cpuCount; i++, pData += CPU_STATES)
    {
-      kstat_t *kp = kstat_lookup(kc, (char *)"cpu_stat", m_nInstanceMap[i], NULL);
-      if (kp != NULL)
+      kstat_t *kp = kstat_lookup(kc, (char *)"cpu_stat", s_instanceMap[i], nullptr);
+      if (kp != nullptr)
       {
-         if (kstat_read(kc, kp, NULL) != -1)
+         if (kstat_read(kc, kp, nullptr) != -1)
          {
             memcpy(pData, ((cpu_stat_t *)kp->ks_data)->cpu_sysinfo.cpu, sizeof(uint_t) * CPU_STATES);
             success[i] = 1;
          }
          else
          {
-            nxlog_debug(8, _T("SunOS: kstat_read failed in ReadCPUTimes (instance=%d errno=%d)"), m_nInstanceMap[i], errno);
+            nxlog_debug(8, _T("SunOS: kstat_read failed in ReadCPUTimes (instance=%d errno=%d)"), s_instanceMap[i], errno);
             hasFailures = true;
          }
       }
       else
       {
-         nxlog_debug(8, _T("SunOS: kstat_lookup failed in ReadCPUTimes (instance=%d errno=%d)"), m_nInstanceMap[i], errno);
+         nxlog_debug(8, _T("SunOS: kstat_lookup failed in ReadCPUTimes (instance=%d errno=%d)"), s_instanceMap[i], errno);
          hasFailures = true;
       }
    }
@@ -80,49 +97,42 @@ static bool ReadCPUTimes(kstat_ctl_t *kc, uint_t *pValues, BYTE *success)
 /**
  * CPU usage statistics collector thread
  */
-THREAD_RESULT THREAD_CALL CPUStatCollector(void *arg)
+void CPUStatCollector()
 {
-   kstat_ctl_t *kc;
-   kstat_t *kp;
-   kstat_named_t *kn;
-   int i, j, iIdleTime, iLimit;
-   DWORD *pdwHistory, dwHistoryPos, dwCurrPos, dwIndex;
-   DWORD dwSum[MAX_CPU_COUNT + 1];
-   BYTE readSuccess[MAX_CPU_COUNT];
-   uint_t *pnLastTimes, *pnCurrTimes, *pnTemp;
-   uint_t nSum, nSysSum, nSysCurrIdle, nSysLastIdle;
+   int i, j;
+   uint32_t dwCurrPos, dwIndex;
 
    // Open kstat
    kstat_lock();
-   kc = kstat_open();
-   if (kc == NULL)
+   kstat_ctl_t *kc = kstat_open();
+   if (kc == nullptr)
    {
       kstat_unlock();
       AgentWriteLog(NXLOG_ERROR,
             _T("SunOS: Unable to open kstat() context (%s), CPU statistics will not be collected"), 
             _tcserror(errno));
-      return THREAD_OK;
+      return;
    }
 
    // Read number of CPUs
-   kp = kstat_lookup(kc, (char *)"unix", 0, (char *)"system_misc");
-   if (kp != NULL)
+   kstat_t *kp = kstat_lookup(kc, (char *)"unix", 0, (char *)"system_misc");
+   if (kp != nullptr)
    {
       if (kstat_read(kc, kp, 0) != -1)
       {
-         kn = (kstat_named_t *)kstat_data_lookup(kp, (char *)"ncpus");
-         if (kn != NULL)
+         kstat_named_t *kn = (kstat_named_t *)kstat_data_lookup(kp, (char *)"ncpus");
+         if (kn != nullptr)
          {
-            m_nCPUCount = kn->value.ui32;
+            s_cpuCount = kn->value.ui32;
          }
       }
    }
 
    // Read CPU instance numbers
-   memset(m_nInstanceMap, 0xFF, sizeof(int) * MAX_CPU_COUNT);
-   for(i = 0, j = 0; (i < m_nCPUCount) && (j < MAX_CPU_COUNT); i++)
+   memset(s_instanceMap, 0xFF, sizeof(int) * MAX_CPU_COUNT);
+   for(i = 0, j = 0; (i < s_cpuCount) && (j < MAX_CPU_COUNT); i++)
    {
-      while(kstat_lookup(kc, (char *)"cpu_info", j, NULL) == NULL)
+      while(kstat_lookup(kc, (char *)"cpu_info", j, nullptr) == nullptr)
       {
          j++;
          if (j == MAX_CPU_COUNT)
@@ -131,20 +141,22 @@ THREAD_RESULT THREAD_CALL CPUStatCollector(void *arg)
             break;
          }
       }
-      m_nInstanceMap[i] = j++;
+      s_instanceMap[i] = j++;
    }
 
    kstat_unlock();
 
    // Initialize data
-   memset(m_dwUsage, 0, sizeof(DWORD) * (MAX_CPU_COUNT + 1));
-   memset(m_dwUsage5, 0, sizeof(DWORD) * (MAX_CPU_COUNT + 1));
-   memset(m_dwUsage15, 0, sizeof(DWORD) * (MAX_CPU_COUNT + 1));
-   pdwHistory = (DWORD *)malloc(sizeof(DWORD) * (m_nCPUCount + 1) * 900);
-   memset(pdwHistory, 0, sizeof(DWORD) * (m_nCPUCount + 1) * 900);
-   pnLastTimes = (uint_t *)malloc(sizeof(uint_t) * m_nCPUCount * CPU_STATES);
-   pnCurrTimes = (uint_t *)malloc(sizeof(uint_t) * m_nCPUCount * CPU_STATES);
-   dwHistoryPos = 0;
+   memset(s_usage, 0, sizeof(s_usage));
+   memset(s_usage5, 0, sizeof(s_usage5));
+   memset(s_usage15, 0, sizeof(s_usage15));
+   CPU_USAGE_DATA *history = MemAllocArray<CPU_USAGE_DATA>((s_cpuCount + 1) * 900);
+   for(i = 0; i < (s_cpuCount + 1) * 900; i++)
+      history[i].states[CPU_IDLE] = FP_MULTIPLIER * 100; // Pre-fill history with 100% idle
+   uint_t *pnLastTimes = MemAllocArray<uint_t>(s_cpuCount * CPU_STATES);
+   uint_t *pnCurrTimes = MemAllocArray<uint_t>(s_cpuCount * CPU_STATES);
+   uint32_t dwHistoryPos = 0;
+   BYTE readSuccess[MAX_CPU_COUNT];
    AgentWriteDebugLog(1, _T("CPU stat collector thread started"));
 
    // Do first read
@@ -152,6 +164,7 @@ THREAD_RESULT THREAD_CALL CPUStatCollector(void *arg)
 
    // Collection loop
    int counter = 0;
+   uint_t sysDelta[CPU_STATES];
    while(!AgentSleepAndCheckForShutdown(1000))
    {
       counter++;
@@ -164,96 +177,107 @@ THREAD_RESULT THREAD_CALL CPUStatCollector(void *arg)
          kstat_lock();
          kstat_close(kc);
          kc = kstat_open();
-         if (kc == NULL)
+         if (kc == nullptr)
          {
             kstat_unlock();
             AgentWriteLog(NXLOG_ERROR,
                           _T("SunOS: Unable to re-open kstat() context (%s), CPU statistics collection aborted"), 
                           _tcserror(errno));
-            return THREAD_OK;
+            return;
          }
          kstat_unlock();
       }
       readFailures = ReadCPUTimes(kc, pnCurrTimes, readSuccess);
 
       // Calculate utilization for last second for each CPU
-      dwIndex = dwHistoryPos * (m_nCPUCount + 1);
-      for(i = 0, j = 0, nSysSum = 0, nSysCurrIdle = 0, nSysLastIdle = 0; i < m_nCPUCount; i++)
+      memset(sysDelta, 0, sizeof(sysDelta));
+      uint_t sysTotal = 0;
+      dwIndex = dwHistoryPos * (s_cpuCount + 1);
+      for(i = 0, j = 0; i < s_cpuCount; i++, dwIndex++)
       {
          if (readSuccess[i])
          {
-            iIdleTime = j + CPU_IDLE;
-            iLimit = j + CPU_STATES;
-            for(nSum = 0; j < iLimit; j++)
-               nSum += pnCurrTimes[j] - pnLastTimes[j];
-            if (nSum > 0)
+            uint_t sum = 0;
+            for(int state = 0; state < CPU_STATES; state++, j++)
             {
-               nSysSum += nSum;
-               nSysCurrIdle += pnCurrTimes[iIdleTime];
-               nSysLastIdle += pnLastTimes[iIdleTime];
-               pdwHistory[dwIndex++] = 1000 - ((pnCurrTimes[iIdleTime] - pnLastTimes[iIdleTime]) * 1000 / nSum);
+               uint_t delta = pnCurrTimes[j] - pnLastTimes[j];
+               sysDelta[state] += delta;
+               sum += delta;
+            }
+
+            if (sum > 0)
+            {
+               sysTotal += sum;
+               j -= CPU_STATES;
+               for(int state = 0; state < CPU_STATES; state++, j++)
+                  history[dwIndex].states[state] = (pnCurrTimes[j] - pnLastTimes[j]) * FP_MULTIPLIER * 100 / sum;
             }
             else
             {
                // sum for all states is 0
                // this could indicate CPU spending all time in a state we are not aware of, or incorrect state data
                // assume 100% utilization
-               pdwHistory[dwIndex++] = 1000;
+               memset(&history[dwIndex], 0, sizeof(CPU_USAGE_DATA));
             }
          }
          else
          {
-            pdwHistory[dwIndex++] = 0;
+            memset(&history[dwIndex], 0, sizeof(CPU_USAGE_DATA));
             j += CPU_STATES;  // skip states for offline CPU
          }
       }
 
       // Average utilization for last second for all CPUs
-      if (nSysSum > 0)
+      if (sysTotal > 0)
       {
-         pdwHistory[dwIndex] = 1000 - ((nSysCurrIdle - nSysLastIdle) * 1000 / nSysSum);
+         for(int state = 0; state < CPU_STATES; state++)
+            history[dwIndex].states[state] = sysDelta[state] * FP_MULTIPLIER * 100 / sysTotal;
       }
       else
       {
          // sum for all states for all CPUs is 0
          // this could indicate CPU spending all time in a state we are not aware of, or incorrect state data
          // assume 100% utilization
-         pdwHistory[dwIndex] = 1000;
+         memset(&history[dwIndex], 0, sizeof(CPU_USAGE_DATA));
       }
 
       // Copy current times to last
-      pnTemp = pnLastTimes;
+      uint_t *pnTemp = pnLastTimes;
       pnLastTimes = pnCurrTimes;
       pnCurrTimes = pnTemp;
 
       // Calculate averages
-      memset(dwSum, 0, sizeof(dwSum));
+      CPU_USAGE_DATA usageSum[MAX_CPU_COUNT + 1];
+      memset(usageSum, 0, sizeof(usageSum));
       for(i = 0, dwCurrPos = dwHistoryPos; i < 900; i++)
       {
-         dwIndex = dwCurrPos * (m_nCPUCount + 1);
-         for(j = 0; j < m_nCPUCount; j++, dwIndex++)
-            dwSum[j] += pdwHistory[dwIndex];
-         dwSum[MAX_CPU_COUNT] += pdwHistory[dwIndex];
-
-         switch(i)
+         dwIndex = dwCurrPos * (s_cpuCount + 1);
+         for(int state = 0; state < CPU_STATES; state++)
          {
-            case 59:
-               for(j = 0; j < m_nCPUCount; j++)
-                  m_dwUsage[j] = dwSum[j] / 60;
-               m_dwUsage[MAX_CPU_COUNT] = dwSum[MAX_CPU_COUNT] / 60;
-               break;
-            case 299:
-               for(j = 0; j < m_nCPUCount; j++)
-                  m_dwUsage5[j] = dwSum[j] / 300;
-               m_dwUsage5[MAX_CPU_COUNT] = dwSum[MAX_CPU_COUNT] / 300;
-               break;
-            case 899:
-               for(j = 0; j < m_nCPUCount; j++)
-                  m_dwUsage15[j] = dwSum[j] / 900;
-               m_dwUsage15[MAX_CPU_COUNT] = dwSum[MAX_CPU_COUNT] / 900;
-               break;
-            default:
-               break;
+            for(j = 0; j < s_cpuCount; j++, dwIndex++)
+               usageSum[j].states[state] += history[dwIndex].states[state];
+            usageSum[MAX_CPU_COUNT].states[state] += history[dwIndex].states[state];
+
+            switch(i)
+            {
+               case 59:
+                  for(j = 0; j < s_cpuCount; j++)
+                     s_usage[j].states[state] = static_cast<double>(usageSum[j].states[state]) / (60.0 * FP_MULTIPLIER);
+                  s_usage[MAX_CPU_COUNT].states[state] = static_cast<double>(usageSum[MAX_CPU_COUNT].states[state]) / (60.0 * FP_MULTIPLIER);
+                  break;
+               case 299:
+                  for(j = 0; j < s_cpuCount; j++)
+                     s_usage5[j].states[state] = static_cast<double>(usageSum[j].states[state]) / (300.0 * FP_MULTIPLIER);
+                  s_usage5[MAX_CPU_COUNT].states[state] = static_cast<double>(usageSum[MAX_CPU_COUNT].states[state]) / (300.0 * FP_MULTIPLIER);
+                  break;
+               case 899:
+                  for(j = 0; j < s_cpuCount; j++)
+                     s_usage15[j].states[state] = static_cast<double>(usageSum[j].states[state]) / (900.0 * FP_MULTIPLIER);
+                  s_usage15[MAX_CPU_COUNT].states[state] = static_cast<double>(usageSum[MAX_CPU_COUNT].states[state]) / (900.0 * FP_MULTIPLIER);
+                  break;
+               default:
+                  break;
+            }
          }
 
          if (dwCurrPos > 0)
@@ -269,90 +293,91 @@ THREAD_RESULT THREAD_CALL CPUStatCollector(void *arg)
    }
 
    // Cleanup
-   free(pnLastTimes);
-   free(pnCurrTimes);
-   free(pdwHistory);
+   MemFree(pnLastTimes);
+   MemFree(pnCurrTimes);
+   MemFree(history);
    kstat_lock();
    kstat_close(kc);
    kstat_unlock();
    AgentWriteDebugLog(1, _T("CPU stat collector thread stopped"));
-   return THREAD_OK;
 }
 
 /**
  * Handlers for System.CPU.Usage parameters
  */
-LONG H_CPUUsage(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
+LONG H_CPUUsage(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
    LONG nRet = SYSINFO_RC_SUCCESS;
 
-   if (pArg[0] == 'T')
+   CPU_USAGE_DATA_AVG *dataSet;
+   switch(arg[1])
    {
-      switch(pArg[1])
-      {
-         case '0':
-            _sntprintf(pValue, MAX_RESULT_LENGTH, _T("%d.%d"),
-                  m_dwUsage[MAX_CPU_COUNT] / 10,
-                  m_dwUsage[MAX_CPU_COUNT] % 10);
-            break;
-         case '1':
-            _sntprintf(pValue, MAX_RESULT_LENGTH, _T("%d.%d"),
-                  m_dwUsage5[MAX_CPU_COUNT] / 10,
-                  m_dwUsage5[MAX_CPU_COUNT] % 10);
-            break;
-         case '2':
-            _sntprintf(pValue, MAX_RESULT_LENGTH, _T("%d.%d"),
-                  m_dwUsage15[MAX_CPU_COUNT] / 10,
-                  m_dwUsage15[MAX_CPU_COUNT] % 10);
-            break;
-         default:
-            nRet = SYSINFO_RC_UNSUPPORTED;
-            break;
-      }
+      case '0':
+         dataSet = s_usage;
+         break;
+      case '1':
+         dataSet = s_usage5;
+         break;
+      case '2':
+         dataSet = s_usage15;
+         break;
+      default:
+         return SYSINFO_RC_UNSUPPORTED;
+   }
+
+   CPU_USAGE_DATA_AVG *data;
+   if (arg[0] == 'T')
+   {
+      data = &dataSet[MAX_CPU_COUNT];
    }
    else
    {
-      LONG nCPU = -1, nInstance;
-      TCHAR *eptr, szBuffer[32] = _T("error");
-
       // Get CPU number
-      AgentGetParameterArg(pszParam, 1, szBuffer, 32);
-      nInstance = _tcstol(szBuffer, &eptr, 0);
-      if (nInstance != -1)
+      char buffer[32] = "error";
+      AgentGetParameterArgA(param, 1, buffer, 32);
+
+      char *eptr;
+      int32_t instance = strtol(buffer, &eptr, 0);
+      int32_t cpu = -1;
+      if (instance != -1)
       {
-         for(nCPU = 0; nCPU < MAX_CPU_COUNT; nCPU++)
-            if (m_nInstanceMap[nCPU] == nInstance)
+         for(cpu = 0; cpu < MAX_CPU_COUNT; cpu++)
+            if (s_instanceMap[cpu] == instance)
                break;
       }
-      if ((*eptr == 0) && (nCPU >= 0) && (nCPU < m_nCPUCount))
-      {
-         switch(pArg[1])
-         {
-            case '0':
-               _sntprintf(pValue, MAX_RESULT_LENGTH, _T("%d.%d"),
-                     m_dwUsage[nCPU] / 10,
-                     m_dwUsage[nCPU] % 10);
-               break;
-            case '1':
-               _sntprintf(pValue, MAX_RESULT_LENGTH, _T("%d.%d"),
-                     m_dwUsage5[nCPU] / 10,
-                     m_dwUsage5[nCPU] % 10);
-               break;
-            case '2':
-               _sntprintf(pValue, MAX_RESULT_LENGTH, _T("%d.%d"),
-                     m_dwUsage15[nCPU] / 10,
-                     m_dwUsage15[nCPU] % 10);
-               break;
-            default:
-               nRet = SYSINFO_RC_UNSUPPORTED;
-               break;
-         }
-      }
-      else
-      {
-         nRet = SYSINFO_RC_UNSUPPORTED;
-      }
+      if ((*eptr != 0) || (cpu < 0) || (cpu >= s_cpuCount))
+         return SYSINFO_RC_UNSUPPORTED;
+
+      data = &dataSet[cpu];
    }
 
-   return nRet;
+   int state;
+   bool invert = false;
+   switch(arg[2])
+   {
+      case 'I':
+         state = CPU_IDLE;
+         break;
+      case 'S':
+         state = CPU_KERNEL;
+         break;
+      case 'T':
+         state = CPU_IDLE;
+         invert = true;
+         break;
+      case 'U':
+         state = CPU_USER;
+         break;
+      case 'W':
+         state = CPU_WAIT;
+         break;
+      default:
+         return SYSINFO_RC_UNSUPPORTED;
+   }
+
+   double usage = data->states[state];
+   if (invert)
+      usage = 100.0 - usage;
+   _sntprintf(value, MAX_RESULT_LENGTH, _T("%.2f"), usage);
+   return SYSINFO_RC_SUCCESS;
 }
