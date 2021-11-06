@@ -268,7 +268,6 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    {_T("Process.CountEx(*)"), H_ProcessCount, _T("E"), DCI_DT_INT, DCIDESC_PROCESS_COUNTEX},
    {_T("Process.ZombieCount"), H_ProcessCount, _T("Z"), DCI_DT_INT, DCIDESC_PROCESS_ZOMBIE_COUNT},
    {_T("Process.CPUTime(*)"), H_ProcessInfo, CAST_TO_POINTER(PROCINFO_CPUTIME, const TCHAR *), DCI_DT_COUNTER64, DCIDESC_PROCESS_CPUTIME},
-   {_T("Process.Handles(*)"), H_ProcessInfo, CAST_TO_POINTER(PROCINFO_HANDLES, const TCHAR *), DCI_DT_INT, DCIDESC_PROCESS_HANDLES},
    {_T("Process.KernelTime(*)"), H_ProcessInfo, CAST_TO_POINTER(PROCINFO_KTIME, const TCHAR *), DCI_DT_COUNTER64, DCIDESC_PROCESS_KERNELTIME},
    {_T("Process.PageFaults(*)"), H_ProcessInfo, CAST_TO_POINTER(PROCINFO_PF, const TCHAR *), DCI_DT_COUNTER64, DCIDESC_PROCESS_PAGEFAULTS},
    {_T("Process.Syscalls(*)"), H_ProcessInfo, CAST_TO_POINTER(PROCINFO_SYSCALLS, const TCHAR *), DCI_DT_COUNTER64, DCIDESC_PROCESS_SYSCALLS},
