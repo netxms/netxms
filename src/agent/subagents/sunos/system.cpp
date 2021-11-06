@@ -297,15 +297,15 @@ static void UpdateSwapInfo()
 {
    static TCHAR METHOD_NAME[] = _T("UpdateSwapInfo");
 
-   int num = swapctl(SC_GETNSWP, NULL);
+   int num = swapctl(SC_GETNSWP, nullptr);
    if (num == -1)
    {
       AgentWriteDebugLog(6, _T("%s: %s: call to swapctl(SC_GETNSWP) failed"), AGENT_NAME, METHOD_NAME);
       return;
    }
 
-   swaptbl_t *swapTable = (swaptbl_t *)malloc(num * sizeof(swapent_t) + sizeof(swaptbl_t));
-   if (swapTable == NULL)
+   swaptbl_t *swapTable = (swaptbl_t *)MemAlloc(num * sizeof(swapent_t) + sizeof(swaptbl_t));
+   if (swapTable == nullptr)
    {
       AgentWriteDebugLog(6, _T("%s: %s: failed to allocate the swap table"), AGENT_NAME, METHOD_NAME);
       return;
@@ -321,21 +321,21 @@ static void UpdateSwapInfo()
    if (ret == -1)
    {
       AgentWriteDebugLog(6, _T("%s: %s: call to swapctl(SC_LIST) failed"), AGENT_NAME, METHOD_NAME);
-      free(swapTable);
+      MemFree(swapTable);
       return;
    }
 
-   UINT64 totalBytes = 0;
-   UINT64 freeBytes = 0;
+   uint64_t totalBytes = 0;
+   uint64_t freeBytes = 0;
 
    swapent *swapEntry = swapTable->swt_ent;
    for(int i = 0; i < num; i++)
    {
-      totalBytes += (INT64)swapEntry[i].ste_pages;
-      freeBytes += (INT64)swapEntry[i].ste_free;
+      totalBytes += static_cast<uint64_t>(swapEntry[i].ste_pages);
+      freeBytes += static_cast<uint64_t>(swapEntry[i].ste_free);
    }
 
-   free(swapTable);
+   MemFree(swapTable);
 
    s_swapTotal = totalBytes;
    s_swapFree = freeBytes;
@@ -345,16 +345,16 @@ static void UpdateSwapInfo()
 /**
  * Get swap info counter, calling update if needed
  */
-static UINT64 GetSwapCounter(UINT64 *cnt)
+static uint64_t GetSwapCounter(uint64_t *cnt)
 {
    MutexLock(s_swapInfoMutex);
-   time_t now = time(NULL);
+   time_t now = time(nullptr);
    if (now - s_lastSwapInfoUpdate > 10)   // older then 10 seconds
    {
       UpdateSwapInfo();
       s_lastSwapInfoUpdate = now;
    }
-   INT64 result = *cnt;
+   uint64_t result = *cnt;
    MutexUnlock(s_swapInfoMutex);
    return result;
 }
@@ -366,48 +366,46 @@ LONG H_MemoryInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abstr
 {
    LONG nRet = SYSINFO_RC_SUCCESS;
    kstat_named_t kn;
-   QWORD qwPageSize;
-
-   qwPageSize = sysconf(_SC_PAGESIZE);
+   uint64_t pageSize = sysconf(_SC_PAGESIZE);
 
    switch(CAST_FROM_POINTER(pArg, int))
    {
       case MEMINFO_PHYSICAL_TOTAL:
-         ret_uint64(pValue, (QWORD)sysconf(_SC_PHYS_PAGES) * qwPageSize);
+         ret_uint64(pValue, static_cast<uint64_t>(sysconf(_SC_PHYS_PAGES)) * pageSize);
          break;
       case MEMINFO_PHYSICAL_FREE:
-         nRet = ReadKStatValue("unix", 0, "system_pages", "freemem", NULL, &kn);
+         nRet = ReadKStatValue("unix", 0, "system_pages", "freemem", nullptr, &kn);
          if (nRet == SYSINFO_RC_SUCCESS)
          {
-            ret_uint64(pValue, (QWORD)kn.value.ul * qwPageSize);
+            ret_uint64(pValue, (QWORD)kn.value.ul * pageSize);
          }
          break;
       case MEMINFO_PHYSICAL_FREEPCT:
-         nRet = ReadKStatValue("unix", 0, "system_pages", "freemem", NULL, &kn);
+         nRet = ReadKStatValue("unix", 0, "system_pages", "freemem", nullptr, &kn);
          if (nRet == SYSINFO_RC_SUCCESS)
          {
             ret_double(pValue, (double)kn.value.ul * 100.0 / (double)sysconf(_SC_PHYS_PAGES), 2);
          }
          break;
       case MEMINFO_PHYSICAL_USED:
-         nRet = ReadKStatValue("unix", 0, "system_pages", "freemem", NULL, &kn);
+         nRet = ReadKStatValue("unix", 0, "system_pages", "freemem", nullptr, &kn);
          if (nRet == SYSINFO_RC_SUCCESS)
          {
-            ret_uint64(pValue, (QWORD)(sysconf(_SC_PHYS_PAGES) - kn.value.ul) * qwPageSize);
+            ret_uint64(pValue, (QWORD)(sysconf(_SC_PHYS_PAGES) - kn.value.ul) * pageSize);
          }
          break;
       case MEMINFO_PHYSICAL_USEDPCT:
-         nRet = ReadKStatValue("unix", 0, "system_pages", "freemem", NULL, &kn);
+         nRet = ReadKStatValue("unix", 0, "system_pages", "freemem", nullptr, &kn);
          if (nRet == SYSINFO_RC_SUCCESS)
          {
             ret_double(pValue, (double)(sysconf(_SC_PHYS_PAGES) - kn.value.ul) * 100.0 / sysconf(_SC_PHYS_PAGES), 2);
          }
          break;
       case MEMINFO_SWAP_TOTAL:
-         ret_uint64(pValue, GetSwapCounter(&s_swapTotal) * qwPageSize);
+         ret_uint64(pValue, GetSwapCounter(&s_swapTotal) * pageSize);
          break;
       case MEMINFO_SWAP_FREE:
-         ret_uint64(pValue, GetSwapCounter(&s_swapFree) * qwPageSize);
+         ret_uint64(pValue, GetSwapCounter(&s_swapFree) * pageSize);
          break;
       case MEMINFO_SWAP_FREEPCT:
          {
@@ -416,7 +414,7 @@ LONG H_MemoryInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abstr
          }
          break;
       case MEMINFO_SWAP_USED:
-         ret_uint64(pValue, GetSwapCounter(&s_swapUsed) * qwPageSize);
+         ret_uint64(pValue, GetSwapCounter(&s_swapUsed) * pageSize);
          break;
       case MEMINFO_SWAP_USEDPCT:
          {
@@ -425,17 +423,17 @@ LONG H_MemoryInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abstr
          }
          break;
       case MEMINFO_VIRTUAL_TOTAL:
-         ret_uint64(pValue, ((UINT64)sysconf(_SC_PHYS_PAGES) + GetSwapCounter(&s_swapTotal)) * qwPageSize);
+         ret_uint64(pValue, ((UINT64)sysconf(_SC_PHYS_PAGES) + GetSwapCounter(&s_swapTotal)) * pageSize);
          break;
       case MEMINFO_VIRTUAL_FREE:
-         nRet = ReadKStatValue("unix", 0, "system_pages", "freemem", NULL, &kn);
+         nRet = ReadKStatValue("unix", 0, "system_pages", "freemem", nullptr, &kn);
          if (nRet == SYSINFO_RC_SUCCESS)
          {
-            ret_uint64(pValue, ((UINT64)kn.value.ul + GetSwapCounter(&s_swapFree)) * qwPageSize);
+            ret_uint64(pValue, ((UINT64)kn.value.ul + GetSwapCounter(&s_swapFree)) * pageSize);
          }
          break;
       case MEMINFO_VIRTUAL_FREEPCT:
-         nRet = ReadKStatValue("unix", 0, "system_pages", "freemem", NULL, &kn);
+         nRet = ReadKStatValue("unix", 0, "system_pages", "freemem", nullptr, &kn);
          if (nRet == SYSINFO_RC_SUCCESS)
          {
             UINT64 freeMem = (UINT64)kn.value.ul + GetSwapCounter(&s_swapFree);
@@ -445,14 +443,14 @@ LONG H_MemoryInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abstr
          }
          break;
       case MEMINFO_VIRTUAL_USED:
-         nRet = ReadKStatValue("unix", 0, "system_pages", "freemem", NULL, &kn);
+         nRet = ReadKStatValue("unix", 0, "system_pages", "freemem", nullptr, &kn);
          if (nRet == SYSINFO_RC_SUCCESS)
          {
-            ret_uint64(pValue, (UINT64)(sysconf(_SC_PHYS_PAGES) - kn.value.ul + GetSwapCounter(&s_swapUsed)) * qwPageSize);
+            ret_uint64(pValue, (UINT64)(sysconf(_SC_PHYS_PAGES) - kn.value.ul + GetSwapCounter(&s_swapUsed)) * pageSize);
          }
          break;
       case MEMINFO_VIRTUAL_USEDPCT:
-         nRet = ReadKStatValue("unix", 0, "system_pages", "freemem", NULL, &kn);
+         nRet = ReadKStatValue("unix", 0, "system_pages", "freemem", nullptr, &kn);
          if (nRet == SYSINFO_RC_SUCCESS)
          {
             UINT64 freeMem = (UINT64)kn.value.ul + GetSwapCounter(&s_swapFree);

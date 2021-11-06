@@ -133,8 +133,8 @@ int mac_addr_dlpi(char *pszIfName, u_char *pMacAddr);
 LONG ReadKStatValue(const char *pszModule, LONG nInstance, const char *pszName,
       const char *pszStat, TCHAR *pValue, kstat_named_t *pRawValue);
 
-THREAD_RESULT THREAD_CALL CPUStatCollector(void *arg);
-THREAD_RESULT THREAD_CALL IOStatCollector(void *arg);
+void CPUStatCollector();
+void IOStatCollector();
 
 void kstat_lock();
 void kstat_unlock();
