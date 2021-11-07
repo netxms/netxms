@@ -33,26 +33,26 @@ public class LastValuesFilter extends ViewerFilter
 	private boolean showUnsupported = false;
    private boolean showHidden = false;
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ViewerFilter#select(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.ViewerFilter#select(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
+    */
 	@Override
 	public boolean select(Viewer viewer, Object parentElement, Object element)
 	{
 		final DciValue value = (DciValue)element;
-		
+
 		if (!showUnsupported && (value.getStatus() == DataCollectionObject.NOT_SUPPORTED))
 			return false;
-		
+
 		if (!showDisabled && (value.getStatus() == DataCollectionObject.DISABLED))
 			return false;
-		
-		if (!showHidden && (value.getFlags() == DataCollectionObject.DCF_HIDE_ON_LAST_VALUES_PAGE))
+
+      if (!showHidden && ((value.getFlags() & DataCollectionObject.DCF_HIDE_ON_LAST_VALUES_PAGE) != 0))
          return false;
-		
+
 		if ((filterString == null) || (filterString.isEmpty()))
 			return true;
-		
+
 		return value.getDescription().toLowerCase().contains(filterString);
 	}
 
