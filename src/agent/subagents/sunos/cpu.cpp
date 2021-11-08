@@ -38,7 +38,7 @@
  */
 struct CPU_USAGE_DATA
 {
-   uint32_t states[CPU_STATES + 1];
+   uint32_t states[CPU_STATES];
 };
 
 /**
@@ -46,7 +46,7 @@ struct CPU_USAGE_DATA
  */
 struct CPU_USAGE_DATA_AVG
 {
-   double states[CPU_STATES + 1];
+   double states[CPU_STATES];
 };
 
 /**
@@ -57,6 +57,7 @@ static int s_instanceMap[MAX_CPU_COUNT];
 static CPU_USAGE_DATA_AVG s_usage[MAX_CPU_COUNT + 1];
 static CPU_USAGE_DATA_AVG s_usage5[MAX_CPU_COUNT + 1];
 static CPU_USAGE_DATA_AVG s_usage15[MAX_CPU_COUNT + 1];
+static Mutex s_usageDataLock(true);
 
 /**
  * Read CPU times
@@ -251,9 +252,9 @@ void CPUStatCollector()
       memset(usageSum, 0, sizeof(usageSum));
       for(i = 0, dwCurrPos = dwHistoryPos; i < 900; i++)
       {
-         dwIndex = dwCurrPos * (s_cpuCount + 1);
          for(int state = 0; state < CPU_STATES; state++)
          {
+            dwIndex = dwCurrPos * (s_cpuCount + 1);
             for(j = 0; j < s_cpuCount; j++, dwIndex++)
                usageSum[j].states[state] += history[dwIndex].states[state];
             usageSum[MAX_CPU_COUNT].states[state] += history[dwIndex].states[state];
@@ -261,19 +262,25 @@ void CPUStatCollector()
             switch(i)
             {
                case 59:
+                  s_usageDataLock.lock();
                   for(j = 0; j < s_cpuCount; j++)
                      s_usage[j].states[state] = static_cast<double>(usageSum[j].states[state]) / (60.0 * FP_MULTIPLIER);
                   s_usage[MAX_CPU_COUNT].states[state] = static_cast<double>(usageSum[MAX_CPU_COUNT].states[state]) / (60.0 * FP_MULTIPLIER);
+                  s_usageDataLock.unlock();
                   break;
                case 299:
+                  s_usageDataLock.lock();
                   for(j = 0; j < s_cpuCount; j++)
                      s_usage5[j].states[state] = static_cast<double>(usageSum[j].states[state]) / (300.0 * FP_MULTIPLIER);
                   s_usage5[MAX_CPU_COUNT].states[state] = static_cast<double>(usageSum[MAX_CPU_COUNT].states[state]) / (300.0 * FP_MULTIPLIER);
+                  s_usageDataLock.unlock();
                   break;
                case 899:
+                  s_usageDataLock.lock();
                   for(j = 0; j < s_cpuCount; j++)
                      s_usage15[j].states[state] = static_cast<double>(usageSum[j].states[state]) / (900.0 * FP_MULTIPLIER);
                   s_usage15[MAX_CPU_COUNT].states[state] = static_cast<double>(usageSum[MAX_CPU_COUNT].states[state]) / (900.0 * FP_MULTIPLIER);
+                  s_usageDataLock.unlock();
                   break;
                default:
                   break;
@@ -375,7 +382,9 @@ LONG H_CPUUsage(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractComm
          return SYSINFO_RC_UNSUPPORTED;
    }
 
+   s_usageDataLock.lock();
    double usage = data->states[state];
+   s_usageDataLock.unlock();
    if (invert)
       usage = 100.0 - usage;
    _sntprintf(value, MAX_RESULT_LENGTH, _T("%.2f"), usage);
