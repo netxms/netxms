@@ -32,6 +32,7 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Layout;
+import org.eclipse.ui.IViewPart;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.console.resources.ThemeEngine;
 import org.netxms.ui.eclipse.objectview.objecttabs.elements.AvailabilityChart;
@@ -58,8 +59,8 @@ public class ObjectOverview extends ObjectTab
 	private Composite leftColumn;
 	private Composite rightColumn;
    private ViewRefreshController refreshController;
-	
-	/* (non-Javadoc)
+
+	/**
 	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#createTabContent(org.eclipse.swt.widgets.Composite)
 	 */
 	@Override
@@ -136,7 +137,9 @@ public class ObjectOverview extends ObjectTab
             if (viewArea.isDisposed())
                return;
 
-            ((TabbedObjectView)getViewPart()).refreshCurrentTab();
+            IViewPart viewPart = getViewPart();
+            if (viewPart instanceof TabbedObjectView)
+               ((TabbedObjectView)getViewPart()).refreshCurrentTab();
          }
       }, validator);
       refreshController.setInterval(30);
@@ -164,7 +167,7 @@ public class ObjectOverview extends ObjectTab
 		return layout;
 	}
 
-	/* (non-Javadoc)
+	/**
 	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#currentObjectUpdated(org.netxms.client.objects.AbstractObject)
 	 */
 	@Override
