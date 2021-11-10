@@ -46,7 +46,7 @@ struct db_driver_t
 	int m_refCount;
 	int m_reconnect;
    int m_defaultPrefetchLimit;
-	MUTEX m_mutexReconnect;
+	Mutex *m_mutexReconnect;
 	HMODULE m_handle;
 	void *m_context;
 	DBDRV_CONNECTION (* m_fpDrvConnect)(const char *, const char *, const char *, const char *, const char *, WCHAR *);
@@ -106,7 +106,7 @@ struct db_handle_t
    DBDRV_CONNECTION m_connection;
 	DB_DRIVER m_driver;
 	bool m_reconnectEnabled;
-   MUTEX m_mutexTransLock;      // Transaction lock
+   Mutex *m_mutexTransLock;      // Transaction lock
    int m_transactionLevel;
    char *m_server;
    char *m_login;
@@ -114,7 +114,7 @@ struct db_handle_t
    char *m_dbName;
    char *m_schema;
    ObjectArray<db_statement_t> *m_preparedStatements;
-   MUTEX m_preparedStatementsLock;
+   Mutex *m_preparedStatementsLock;
 };
 
 /**

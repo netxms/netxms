@@ -307,17 +307,21 @@ struct LIBNXSRV_EXPORTABLE HostMibStorageEntry
    bool getMetric(const TCHAR *metric, TCHAR *buffer, size_t len) const;
 };
 
+#ifdef _WIN32
+template class LIBNXSRV_EXPORTABLE ObjectArray<HostMibStorageEntry>;
+#endif
+
 /**
  * Host MIB support for drivers
  */
 class LIBNXSRV_EXPORTABLE HostMibDriverData : public DriverData
 {
 protected:
-   ObjectArray<HostMibStorageEntry> *m_storage;
+   ObjectArray<HostMibStorageEntry> m_storage;
    time_t m_storageCacheTimestamp;
-   MUTEX m_storageCacheMutex;
+   Mutex m_storageCacheMutex;
 
-   UINT32 updateStorageCacheCallback(SNMP_Variable *v, SNMP_Transport *snmp);
+   uint32_t updateStorageCacheCallback(SNMP_Variable *v, SNMP_Transport *snmp);
 
 public:
    HostMibDriverData();

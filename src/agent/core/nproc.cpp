@@ -114,7 +114,7 @@ static void MasterNotificationProcessor()
          ServerRegistration *server = s_serverSyncStatus.get(i);
          if (server->status == SyncStatus::ONLINE)
          {
-            MutexLock(g_sessionLock);
+            g_sessionLock.lock();
             for(int j = 0; j < g_sessions.size(); j++)
             {
                CommSession *session = g_sessions.get(j);
@@ -124,7 +124,7 @@ static void MasterNotificationProcessor()
                   break;
                }
             }
-            MutexUnlock(g_sessionLock);
+            g_sessionLock.unlock();
          }
 
          if (!sent)
@@ -337,7 +337,7 @@ static void NotificationHousekeeper()
    }
 
    // Update last connection time for all connected sessions
-   MutexLock(g_sessionLock);
+   g_sessionLock.lock();
    for(int i = 0; i < g_sessions.size(); i++)
    {
       CommSession *session = g_sessions.get(i);
@@ -346,7 +346,7 @@ static void NotificationHousekeeper()
          UpdateServerRegistration(session->getServerId(), now);
       }
    }
-   MutexUnlock(g_sessionLock);
+   g_sessionLock.unlock();
    ThreadPoolScheduleRelative(g_commThreadPool, ONE_DAY * 1000, NotificationHousekeeper);
    nxlog_debug_tag(DEBUG_TAG, 1, _T("Notification housekeeper thread stopped"));
 }

@@ -175,9 +175,8 @@ void SocketPoller::reset()
 /**
  * Create background socket poller
  */
-BackgroundSocketPoller::BackgroundSocketPoller()
+BackgroundSocketPoller::BackgroundSocketPoller() : m_mutex(MutexType::FAST)
 {
-   m_mutex = MutexCreateFast();
    m_head = m_memoryPool.allocate();   // dummy element at list head
    m_head->next = nullptr;
    m_shutdown = false;
@@ -223,7 +222,6 @@ BackgroundSocketPoller::~BackgroundSocketPoller()
    ThreadJoin(m_workerThread);
    closesocket(m_controlSockets[1]);
    closesocket(m_controlSockets[0]);
-   MutexDestroy(m_mutex);
 }
 
 /**
@@ -251,10 +249,10 @@ void BackgroundSocketPoller::poll(SOCKET socket, uint32_t timeout, void (*callba
    request->queueTime = GetCurrentTimeMs();
    request->cancelled = false;
 
-   MutexLock(m_mutex);
+   m_mutex.lock();
    request->next = m_head->next;
    m_head->next = request;
-   MutexUnlock(m_mutex);
+   m_mutex.unlock();
 
    // No need for notification if poll() called from worker thread itself
    // (likely that means re-insert from poll completion callback)
@@ -267,7 +265,7 @@ void BackgroundSocketPoller::poll(SOCKET socket, uint32_t timeout, void (*callba
  */
 void BackgroundSocketPoller::cancel(SOCKET socket)
 {
-   MutexLock(m_mutex);
+   m_mutex.lock();
    auto r = m_head->next;
    for(; r != nullptr; r = r->next)
    {
@@ -277,7 +275,7 @@ void BackgroundSocketPoller::cancel(SOCKET socket)
          break;
       }
    }
-   MutexUnlock(m_mutex);
+   m_mutex.unlock();
 
    // No need for notification if poll() called from worker thread itself
    // (likely that means cancellation from poll completion callback)
@@ -290,9 +288,9 @@ void BackgroundSocketPoller::cancel(SOCKET socket)
  */
 void BackgroundSocketPoller::shutdown()
 {
-   MutexLock(m_mutex);
+   m_mutex.lock();
    m_shutdown = true;
-   MutexUnlock(m_mutex);
+   m_mutex.unlock();
 
    // No need for notification if poll() called from worker thread itself
    // (likely that means cancellation from poll completion callback)
@@ -331,7 +329,7 @@ void BackgroundSocketPoller::workerThread()
       int64_t now = GetCurrentTimeMs();
       BackgroundSocketPollRequest *processedRequests = nullptr;
 
-      MutexLock(m_mutex);
+      m_mutex.lock();
       for(auto r = m_head->next, p = m_head; r != nullptr; p = r, r = r->next)
       {
          uint32_t waitTime = static_cast<uint32_t>(now - r->queueTime);
@@ -350,7 +348,7 @@ void BackgroundSocketPoller::workerThread()
             r = p;
          }
       }
-      MutexUnlock(m_mutex);
+      m_mutex.unlock();
 
       for(auto r = processedRequests; r != nullptr;)
       {
@@ -376,7 +374,7 @@ void BackgroundSocketPoller::workerThread()
          }
 
          processedRequests = nullptr;
-         MutexLock(m_mutex);
+         m_mutex.lock();
          for(auto r = m_head->next, p = m_head; r != nullptr; p = r, r = r->next)
          {
             if (r->cancelled || sp.isSet(r->socket))
@@ -387,7 +385,7 @@ void BackgroundSocketPoller::workerThread()
                r = p;
             }
          }
-         MutexUnlock(m_mutex);
+         m_mutex.unlock();
 
          for(auto r = processedRequests; r != nullptr;)
          {
@@ -400,7 +398,7 @@ void BackgroundSocketPoller::workerThread()
       else if ((rc < 0) && sp.hasInvalidDescriptor())
       {
          processedRequests = nullptr;
-         MutexLock(m_mutex);
+         m_mutex.lock();
          for(auto r = m_head->next, p = m_head; r != nullptr; p = r, r = r->next)
          {
             if (!IsValidSocket(r->socket))
@@ -411,7 +409,7 @@ void BackgroundSocketPoller::workerThread()
                r = p;
             }
          }
-         MutexUnlock(m_mutex);
+         m_mutex.unlock();
 
          for(auto r = processedRequests; r != nullptr;)
          {

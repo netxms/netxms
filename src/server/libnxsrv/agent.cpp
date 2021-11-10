@@ -56,7 +56,7 @@ static int m_iDefaultEncryptionPolicy = ENCRYPTION_ALLOWED;
 static int m_iDefaultEncryptionPolicy = ENCRYPTION_DISABLED;
 #endif
 static ObjectArray<BackgroundSocketPollerHandle> s_pollers(64, 64, Ownership::True);
-static Mutex s_pollerListLock(true);
+static Mutex s_pollerListLock(MutexType::FAST);
 static bool s_shutdownMode = false;
 static uint32_t s_maxConnectionsPerPoller = std::min(256, SOCKET_POLLER_MAX_SOCKETS - 1);
 
@@ -457,7 +457,7 @@ void AgentConnectionReceiver::finalize()
 /**
  * Constructor for AgentConnection
  */
-AgentConnection::AgentConnection(const InetAddress& addr, uint16_t port, const TCHAR *secret, bool allowCompression)
+AgentConnection::AgentConnection(const InetAddress& addr, uint16_t port, const TCHAR *secret, bool allowCompression) : m_condFileDownload(true)
 {
    m_debugId = InterlockedIncrement(&s_connectionId);
    m_addr = addr;
@@ -484,8 +484,6 @@ AgentConnection::AgentConnection(const InetAddress& addr, uint16_t port, const T
    m_commandTimeout = 5000;   // Default timeout 5 seconds
    m_recvTimeout = 420000; // 7 minutes
    m_isConnected = false;
-   m_mutexDataLock = MutexCreate();
-	m_mutexSocketWrite = MutexCreate();
    m_encryptionPolicy = m_iDefaultEncryptionPolicy;
    m_useProxy = false;
    m_proxyPort = 4700;
@@ -493,7 +491,6 @@ AgentConnection::AgentConnection(const InetAddress& addr, uint16_t port, const T
    m_nProtocolVersion = NXCP_VERSION;
 	m_hCurrFile = -1;
    m_deleteFileOnDownloadFailure = true;
-	m_condFileDownload = ConditionCreate(true);
    m_fileDownloadSucceeded = false;
 	m_fileUploadInProgress = false;
    m_fileUpdateConnection = false;
@@ -532,10 +529,6 @@ AgentConnection::~AgentConnection()
 
    if (m_channel != nullptr)
       m_channel->shutdown();
-
-   MutexDestroy(m_mutexDataLock);
-   MutexDestroy(m_mutexSocketWrite);
-   ConditionDestroy(m_condFileDownload);
 }
 
 /**
@@ -677,7 +670,7 @@ bool AgentConnection::connect(RSA *serverKey, uint32_t *error, uint32_t *socketE
    m_channel = channel;
    unlock();
 
-   if (!NXCPGetPeerProtocolVersion(m_channel, &m_nProtocolVersion, m_mutexSocketWrite))
+   if (!NXCPGetPeerProtocolVersion(m_channel, &m_nProtocolVersion, &m_mutexSocketWrite))
    {
       debugPrintf(6, _T("Protocol version negotiation failed"));
       dwError = ERR_INTERNAL_ERROR;
@@ -762,7 +755,7 @@ setup_encryption:
 	   msg.size = htonl(NXCP_HEADER_SIZE);
 	   msg.code = htons(CMD_GET_NXCP_CAPS);
 	   msg.flags = htons(MF_CONTROL | MF_NXCP_VERSION(NXCP_VERSION));
-	   if (m_channel->send(&msg, NXCP_HEADER_SIZE, m_mutexSocketWrite) == NXCP_HEADER_SIZE)
+	   if (m_channel->send(&msg, NXCP_HEADER_SIZE, &m_mutexSocketWrite) == NXCP_HEADER_SIZE)
 	   {
 	      NXCPMessage *rsp = m_pMsgWaitQueue->waitForMessage(CMD_NXCP_CAPS, 0, m_commandTimeout);
 	      if (rsp != nullptr)
@@ -1309,7 +1302,7 @@ bool AgentConnection::sendMessage(NXCPMessage *pMsg)
       NXCP_ENCRYPTED_MESSAGE *encryptedMsg = encryptionContext->encryptMessage(rawMsg);
       if (encryptedMsg != nullptr)
       {
-         success = (channel->send(encryptedMsg, ntohl(encryptedMsg->size), m_mutexSocketWrite) == (int)ntohl(encryptedMsg->size));
+         success = (channel->send(encryptedMsg, ntohl(encryptedMsg->size), &m_mutexSocketWrite) == (int)ntohl(encryptedMsg->size));
          MemFree(encryptedMsg);
       }
       else
@@ -1319,7 +1312,7 @@ bool AgentConnection::sendMessage(NXCPMessage *pMsg)
    }
    else
    {
-      success = (channel->send(rawMsg, ntohl(rawMsg->size), m_mutexSocketWrite) == (int)ntohl(rawMsg->size));
+      success = (channel->send(rawMsg, ntohl(rawMsg->size), &m_mutexSocketWrite) == (int)ntohl(rawMsg->size));
    }
    MemFree(rawMsg);
    return success;
@@ -1368,7 +1361,7 @@ bool AgentConnection::sendRawMessage(NXCP_MESSAGE *pMsg)
       NXCP_ENCRYPTED_MESSAGE *pEnMsg = encryptionContext->encryptMessage(rawMsg);
       if (pEnMsg != nullptr)
       {
-         success = (channel->send(pEnMsg, ntohl(pEnMsg->size), m_mutexSocketWrite) == (int)ntohl(pEnMsg->size));
+         success = (channel->send(pEnMsg, ntohl(pEnMsg->size), &m_mutexSocketWrite) == (int)ntohl(pEnMsg->size));
          free(pEnMsg);
       }
       else
@@ -1378,7 +1371,7 @@ bool AgentConnection::sendRawMessage(NXCP_MESSAGE *pMsg)
    }
    else
    {
-      success = (channel->send(rawMsg, ntohl(rawMsg->size), m_mutexSocketWrite) == (int)ntohl(rawMsg->size));
+      success = (channel->send(rawMsg, ntohl(rawMsg->size), &m_mutexSocketWrite) == (int)ntohl(rawMsg->size));
    }
    return success;
 }
@@ -1755,7 +1748,7 @@ uint32_t AgentConnection::uploadFileInternal(const TCHAR *localFile, const TCHAR
                   localFile, (compMethod == NXCP_STREAM_COMPRESSION_NONE) ? _T("without") : _T("with"));
          m_fileUploadInProgress = true;
          shared_ptr<NXCPEncryptionContext> ctx = acquireEncryptionContext();
-         if (SendFileOverNXCP(channel.get(), requestId, localFile, ctx.get(), offset, progressCallback, cbArg, m_mutexSocketWrite, compMethod, nullptr, chunkSize))
+         if (SendFileOverNXCP(channel.get(), requestId, localFile, ctx.get(), offset, progressCallback, cbArg, &m_mutexSocketWrite, compMethod, nullptr, chunkSize))
          {
             rcc = waitForRCC(requestId, std::max(m_commandTimeout, static_cast<uint32_t>(30000)));  // Wait at least 30 seconds for file transfer confirmation
          }
@@ -2626,7 +2619,7 @@ NXCPMessage *AgentConnection::customRequest(NXCPMessage *request, const TCHAR *r
       {
          if (msg->getFieldAsUInt32(VID_RCC) == ERR_SUCCESS)
          {
-            if (ConditionWait(m_condFileDownload, 1800000))	 // 30 min timeout
+            if (m_condFileDownload.wait(1800000))	 // 30 min timeout
             {
                if (!m_fileDownloadSucceeded)
                {
@@ -2697,7 +2690,7 @@ uint32_t AgentConnection::prepareFileDownload(const TCHAR *fileName, uint32_t rq
          return ERR_RESOURCE_BUSY;
 
       _tcslcpy(m_currentFileName, fileName, MAX_PATH);
-      ConditionReset(m_condFileDownload);
+      m_condFileDownload.reset();
       m_hCurrFile = _topen(fileName, (append ? 0 : (O_CREAT | O_TRUNC)) | O_RDWR | O_BINARY, S_IREAD | S_IWRITE);
       if (m_hCurrFile == -1)
       {
@@ -2720,7 +2713,7 @@ uint32_t AgentConnection::prepareFileDownload(const TCHAR *fileName, uint32_t rq
    }
    else
    {
-      ConditionReset(m_condFileDownload);
+      m_condFileDownload.reset();
 
       m_downloadRequestId = rqId;
       m_downloadProgressCallback = downloadProgressCallback;
@@ -2809,7 +2802,7 @@ void AgentConnection::onFileDownload(bool success)
    if (!success && m_deleteFileOnDownloadFailure)
 		_tremove(m_currentFileName);
 	m_fileDownloadSucceeded = success;
-	ConditionSet(m_condFileDownload);
+	m_condFileDownload.set();
 }
 
 /**

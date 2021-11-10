@@ -215,11 +215,10 @@ void NamedPipeListener::serverThread()
 /**
  * Named pipe constructor
  */
-NamedPipe::NamedPipe(const TCHAR *name, HPIPE handle, const TCHAR *user)
+NamedPipe::NamedPipe(const TCHAR *name, HPIPE handle, const TCHAR *user) : m_writeLock(MutexType::FAST)
 {
    _tcslcpy(m_name, name, MAX_PIPE_NAME_LEN);
    m_handle = handle;
-   m_writeLock = MutexCreate();
    _tcslcpy(m_user, CHECK_NULL_EX(user), 64);
 }
 
@@ -229,7 +228,6 @@ NamedPipe::NamedPipe(const TCHAR *name, HPIPE handle, const TCHAR *user)
 NamedPipe::~NamedPipe()
 {
    close(m_handle);
-   MutexDestroy(m_writeLock);
 }
 
 /**
@@ -266,7 +264,7 @@ NamedPipe *NamedPipe::connect(const TCHAR *name, UINT32 timeout)
  */
 bool NamedPipe::write(const void *data, size_t size)
 {
-   return SendEx(m_handle, data, size, 0, m_writeLock) == (int)size;
+   return SendEx(m_handle, data, size, 0, &m_writeLock) == (int)size;
 }
 
 /**

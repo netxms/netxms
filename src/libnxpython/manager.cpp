@@ -47,42 +47,35 @@ struct PythonManagerRequest
 {
    int command;
    PyThreadState *interpreter;
-   CONDITION condition;
+   Condition condition;
 
-   PythonManagerRequest()
+   PythonManagerRequest() : condition(true)
    {
       command = 0;   // create interpreter
       interpreter = NULL;
-      condition = ConditionCreate(true);
    }
 
-   PythonManagerRequest(PyThreadState *pi)
+   PythonManagerRequest(PyThreadState *pi) : condition(true)
    {
       command = 1;   // destroy interpreter
       interpreter = pi;
-      condition = ConditionCreate(true);
-   }
-
-   ~PythonManagerRequest()
-   {
-      ConditionDestroy(condition);
    }
 
    void wait()
    {
-      ConditionWait(condition, INFINITE);
+      condition.wait(INFINITE);
    }
 
    void notify()
    {
-      ConditionSet(condition);
+      condition.set();
    }
 };
 
 /**
  * Manager thread
  */
-static THREAD_RESULT THREAD_CALL PythonManager(void *arg)
+static void PythonManager(Condition *initCompleteCondition)
 {
    PyImport_AppendInittab("netxms", PyInit_netxms);
    if (s_extraModules != NULL)
@@ -101,7 +94,7 @@ static THREAD_RESULT THREAD_CALL PythonManager(void *arg)
 
    PyEval_InitThreads();
    PyThreadState *mainPyThread = PyEval_SaveThread();
-   ConditionSet(static_cast<CONDITION>(arg));
+   initCompleteCondition->set();
    nxlog_debug_tag(DEBUG_TAG, 1, _T("Embedded Python interpreter (version %hs) initialized"), version);
 
    while(true)
@@ -155,7 +148,6 @@ static THREAD_RESULT THREAD_CALL PythonManager(void *arg)
    PyEval_RestoreThread(mainPyThread);
    Py_Finalize();
    nxlog_debug_tag(DEBUG_TAG, 1, _T("Embedded Python interpreter terminated"));
-   return THREAD_OK;
 }
 
 /**
@@ -402,10 +394,9 @@ static THREAD s_managerThread = INVALID_THREAD_HANDLE;
 void LIBNXPYTHON_EXPORTABLE InitializeEmbeddedPython(NXPYTHON_MODULE_INFO *modules)
 {
    s_extraModules = modules;
-   CONDITION initCompleted = ConditionCreate(true);
-   s_managerThread = ThreadCreateEx(PythonManager, 0, initCompleted);
-   ConditionWait(initCompleted, INFINITE);
-   ConditionDestroy(initCompleted);
+   Condition initCompleted(true);
+   s_managerThread = ThreadCreateEx(PythonManager, &initCompleted);
+   initCompleted.wait(INFINITE);
 }
 
 /**

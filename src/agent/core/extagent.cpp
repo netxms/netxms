@@ -174,13 +174,13 @@ void ExternalSubagent::connect(NamedPipe *pipe)
       switch(msg->getCode())
       {
          case CMD_PUSH_DCI_DATA:
-            MutexLock(g_sessionLock);
+            g_sessionLock.lock();
             for(int i = 0; i < g_sessions.size(); i++)
                if (g_sessions.get(i)->canAcceptTraps())
                {
                   g_sessions.get(i)->sendMessage(msg);
                }
-            MutexUnlock(g_sessionLock);
+            g_sessionLock.unlock();
             delete msg;
             break;
          case CMD_TRAP:

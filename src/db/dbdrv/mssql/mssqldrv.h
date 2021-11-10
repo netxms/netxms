@@ -40,38 +40,38 @@
 /**
  * Driver connection handle structure
  */
-typedef struct
+struct MSSQL_CONN
 {
-   MUTEX mutexQuery;
+   Mutex *mutexQuery;
    SQLHENV sqlEnv;
    SQLHDBC sqlConn;
-} MSSQL_CONN;
+};
 
 /**
  * Prepared statement structure
  */
-typedef struct
+struct MSSQL_STATEMENT
 {
 	SQLHSTMT handle;
 	Array *buffers;
 	MSSQL_CONN *connection;
-} MSSQL_STATEMENT;
+};
 
 /**
  * Result buffer structure
  */
-typedef struct
+struct MSSQL_QUERY_RESULT
 {
    int numRows;
    int numColumns;
    WCHAR **pValues;
 	char **columnNames;
-} MSSQL_QUERY_RESULT;
+};
 
 /**
  * Unbuffered result buffer structure
  */
-typedef struct
+struct MSSQL_UNBUFFERED_QUERY_RESULT
 {
    SQLHSTMT sqlStatement;
    bool isPrepared;
@@ -80,6 +80,6 @@ typedef struct
    bool noMoreRows;
 	char **columnNames;
    WCHAR **data;
-} MSSQL_UNBUFFERED_QUERY_RESULT;
+};
 
 #endif   /* _mssqldrv_h_ */

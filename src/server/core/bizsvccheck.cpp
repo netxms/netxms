@@ -27,7 +27,7 @@
 /**
  * Create empty business service check object
  */
-BusinessServiceCheck::BusinessServiceCheck(uint32_t serviceId) : m_description(_T("Unnamed"))
+BusinessServiceCheck::BusinessServiceCheck(uint32_t serviceId) : m_description(_T("Unnamed")), m_mutex(MutexType::FAST)
 {
    m_id = CreateUniqueId(IDG_BUSINESS_SERVICE_CHECK);
    m_type = BusinessServiceCheckType::OBJECT;
@@ -40,14 +40,13 @@ BusinessServiceCheck::BusinessServiceCheck(uint32_t serviceId) : m_description(_
    m_currentTicket = 0;
    m_serviceId = serviceId;
    m_statusThreshold = 0;
-   m_mutex = MutexCreateFast();
 }
 
 /**
  * Create new business service check
  */
 BusinessServiceCheck::BusinessServiceCheck(uint32_t serviceId, BusinessServiceCheckType type, uint32_t relatedObject, uint32_t relatedDCI, const TCHAR* description, int threshhold) :
-         m_description((description != nullptr) ? description : _T("Unnamed"))
+         m_description((description != nullptr) ? description : _T("Unnamed")), m_mutex(MutexType::FAST)
 {
    m_id = CreateUniqueId(IDG_BUSINESS_SERVICE_CHECK);
    m_type = type;
@@ -60,13 +59,12 @@ BusinessServiceCheck::BusinessServiceCheck(uint32_t serviceId, BusinessServiceCh
    m_currentTicket = 0;
    m_serviceId = serviceId;
    m_statusThreshold = threshhold;
-   m_mutex = MutexCreateFast();
 }
 
 /**
  * Create copy of existing business service check
  */
-BusinessServiceCheck::BusinessServiceCheck(uint32_t serviceId, const BusinessServiceCheck& check) : m_description(check.getDescription())
+BusinessServiceCheck::BusinessServiceCheck(uint32_t serviceId, const BusinessServiceCheck& check) : m_description(check.getDescription()), m_mutex(MutexType::FAST)
 {
    m_id = CreateUniqueId(IDG_BUSINESS_SERVICE_CHECK);
 	m_type = check.m_type;
@@ -79,13 +77,12 @@ BusinessServiceCheck::BusinessServiceCheck(uint32_t serviceId, const BusinessSer
 	m_currentTicket = 0;
 	m_serviceId = serviceId;
 	m_statusThreshold = check.m_statusThreshold;
-	m_mutex = MutexCreateFast();
 }
 
 /**
  * Create business service check from database
  */
-BusinessServiceCheck::BusinessServiceCheck(DB_RESULT hResult, int row)
+BusinessServiceCheck::BusinessServiceCheck(DB_RESULT hResult, int row) : m_mutex(MutexType::FAST)
 {
    m_id = DBGetFieldULong(hResult, row, 0);
    m_serviceId = DBGetFieldULong(hResult, row, 1);
@@ -96,7 +93,6 @@ BusinessServiceCheck::BusinessServiceCheck(DB_RESULT hResult, int row)
    m_statusThreshold = DBGetFieldULong(hResult, row, 6);
    m_script = DBGetField(hResult, row, 7, nullptr, 0);
    m_currentTicket = DBGetFieldULong(hResult, row, 8);
-   m_mutex = MutexCreateFast();
    m_compiledScript = nullptr;
    m_status = m_currentTicket != 0 ? STATUS_CRITICAL : STATUS_NORMAL;
    compileScript();
@@ -135,7 +131,6 @@ BusinessServiceCheck::~BusinessServiceCheck()
 {
 	MemFree(m_script);
 	delete m_compiledScript;
-	MutexDestroy(m_mutex);
 }
 
 /**

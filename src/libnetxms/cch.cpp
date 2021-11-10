@@ -74,7 +74,7 @@ SocketCommChannel::~SocketCommChannel()
 /**
  * Send data
  */
-ssize_t SocketCommChannel::send(const void *data, size_t size, MUTEX mutex)
+ssize_t SocketCommChannel::send(const void *data, size_t size, Mutex* mutex)
 {
    return SendEx(m_socket, data, size, 0, mutex);
 }
@@ -82,7 +82,7 @@ ssize_t SocketCommChannel::send(const void *data, size_t size, MUTEX mutex)
 /**
  * Receive data
  */
-ssize_t SocketCommChannel::recv(void *buffer, size_t size, UINT32 timeout)
+ssize_t SocketCommChannel::recv(void *buffer, size_t size, uint32_t timeout)
 {
    if (timeout == 0)
    {
@@ -105,7 +105,7 @@ ssize_t SocketCommChannel::recv(void *buffer, size_t size, UINT32 timeout)
 /**
  * Poll channel
  */
-int SocketCommChannel::poll(UINT32 timeout, bool write)
+int SocketCommChannel::poll(uint32_t timeout, bool write)
 {
    if (m_socket == INVALID_SOCKET)
       return -1;

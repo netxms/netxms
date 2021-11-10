@@ -29,6 +29,7 @@
 #include <nms_objects.h>
 #include <nxcore_2fa.h>
 #include <nxcore_logs.h>
+#include <nxcore_jobs.h>
 #include <nxcore_ps.h>
 #include <nxcore_websvc.h>
 
@@ -117,7 +118,7 @@ void StopWindowsEventProcessing();
  */
 void Syncer();
 void NodePoller();
-void PollManager(CONDITION startCondition);
+void PollManager(Condition *startCondition);
 void ClientListenerThread();
 void MobileDeviceListenerThread();
 void ISCListener();
@@ -1234,8 +1235,8 @@ retry_db_lock:
    ThreadCreate(JobManagerThread);
    s_syncerThread = ThreadCreateEx(Syncer);
 
-   CONDITION pollManagerInitialized = ConditionCreate(true);
-   s_pollManagerThread = ThreadCreateEx(PollManager, pollManagerInitialized);
+   Condition pollManagerInitialized(true);
+   s_pollManagerThread = ThreadCreateEx(PollManager, &pollManagerInitialized);
 
    StartHouseKeeper();
 
@@ -1266,8 +1267,7 @@ retry_db_lock:
       ThreadCreate(LDAPSyncThread);
 
    // Wait for initialization of critical threads
-   ConditionWait(pollManagerInitialized, INFINITE);
-   ConditionDestroy(pollManagerInitialized);
+   pollManagerInitialized.wait(INFINITE);
    nxlog_debug(2, _T("Poll manager initialized"));
 
    RegisterSchedulerTaskHandler(_T("System.CheckUserAuthTokens"), CheckUserAuthenticationTokens, 0); //No access right because it will be used only by server

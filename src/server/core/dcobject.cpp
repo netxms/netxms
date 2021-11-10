@@ -62,7 +62,7 @@ const TCHAR *DCObject::getStorageClassName(DCObjectStorageClass storageClass)
 /**
  * Default constructor for DCObject
  */
-DCObject::DCObject(const shared_ptr<DataCollectionOwner>& owner) : m_owner(owner)
+DCObject::DCObject(const shared_ptr<DataCollectionOwner>& owner) : m_owner(owner), m_mutex(MutexType::RECURSIVE)
 {
    m_id = 0;
    m_guid = uuid::generate();
@@ -80,7 +80,6 @@ DCObject::DCObject(const shared_ptr<DataCollectionOwner>& owner) : m_owner(owner
    m_source = DS_INTERNAL;
    m_status = ITEM_STATUS_NOT_SUPPORTED;
    m_lastPoll = 0;
-   m_hMutex = MutexCreateRecursive();
    m_schedules = nullptr;
    m_tLastCheck = 0;
 	m_flags = 0;
@@ -112,7 +111,7 @@ DCObject::DCObject(const shared_ptr<DataCollectionOwner>& owner) : m_owner(owner
 DCObject::DCObject(const DCObject *src, bool shadowCopy) :
          m_owner(src->m_owner), m_name(src->m_name), m_description(src->m_description),
          m_systemTag(src->m_systemTag), m_instanceDiscoveryData(src->m_instanceDiscoveryData),
-         m_instance(src->m_instance)
+         m_instance(src->m_instance), m_mutex(MutexType::RECURSIVE)
 {
    m_id = src->m_id;
    m_guid = src->m_guid;
@@ -130,7 +129,6 @@ DCObject::DCObject(const DCObject *src, bool shadowCopy) :
    m_source = src->m_source;
    m_status = src->m_status;
    m_lastPoll = shadowCopy ? src->m_lastPoll : 0;
-   m_hMutex = MutexCreateRecursive();
    m_tLastCheck = shadowCopy ? src->m_tLastCheck : 0;
    m_dwErrorCount = shadowCopy ? src->m_dwErrorCount : 0;
 	m_flags = src->m_flags;
@@ -167,7 +165,7 @@ DCObject::DCObject(const DCObject *src, bool shadowCopy) :
 DCObject::DCObject(UINT32 id, const TCHAR *name, int source, const TCHAR *pollingInterval, const TCHAR *retentionTime,
          const shared_ptr<DataCollectionOwner>& owner, const TCHAR *description, const TCHAR *systemTag) :
          m_owner(owner), m_name(name), m_description(description), m_systemTag(systemTag),
-         m_instanceDiscoveryData(_T("")), m_instance(_T(""))
+         m_instanceDiscoveryData(_T("")), m_instance(_T("")), m_mutex(MutexType::RECURSIVE)
 {
    m_id = id;
    m_guid = uuid::generate();
@@ -183,7 +181,6 @@ DCObject::DCObject(UINT32 id, const TCHAR *name, int source, const TCHAR *pollin
    m_busy = 0;
    m_scheduledForDeletion = 0;
    m_lastPoll = 0;
-   m_hMutex = MutexCreateRecursive();
    m_flags = 0;
    m_schedules = nullptr;
    m_tLastCheck = 0;
@@ -214,7 +211,7 @@ DCObject::DCObject(UINT32 id, const TCHAR *name, int source, const TCHAR *pollin
 /**
  * Create DCObject from import file
  */
-DCObject::DCObject(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& owner) : m_owner(owner)
+DCObject::DCObject(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& owner) : m_owner(owner), m_mutex(MutexType::RECURSIVE)
 {
    m_id = CreateUniqueId(IDG_ITEM);
    m_guid = config->getSubEntryValueAsUUID(_T("guid"));
@@ -257,7 +254,6 @@ DCObject::DCObject(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& o
    m_busy = 0;
    m_scheduledForDeletion = 0;
    m_lastPoll = 0;
-   m_hMutex = MutexCreateRecursive();
    m_tLastCheck = 0;
    m_dwErrorCount = 0;
    m_dwResourceId = 0;
@@ -320,7 +316,6 @@ DCObject::~DCObject()
    delete m_schedules;
    MemFree(m_pszPerfTabSettings);
    MemFree(m_comments);
-   MutexDestroy(m_hMutex);
    MemFree(m_instanceFilterSource);
    delete m_instanceFilter;
    delete m_accessList;

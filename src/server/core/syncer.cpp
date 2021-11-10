@@ -40,7 +40,7 @@ static VolatileCounter s_outstandingSaveRequests = 0;
  * Syncer run time statistic
  */
 static ManualGauge64 s_syncerRunTime(_T("Syncer"), 5, 900);
-static Mutex s_syncerGaugeLock(true);
+static Mutex s_syncerGaugeLock(MutexType::FAST);
 static time_t s_lastRunTime = 0;
 
 /**

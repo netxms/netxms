@@ -116,7 +116,7 @@ static void UnregisterSessionAgent(uint32_t id)
 /**
  * Connector constructor
  */
-SessionAgentConnector::SessionAgentConnector(uint32_t id, SOCKET s)
+SessionAgentConnector::SessionAgentConnector(uint32_t id, SOCKET s) : m_mutex(MutexType::FAST)
 {
    m_id = id;
    m_socket = s;
@@ -127,7 +127,6 @@ SessionAgentConnector::SessionAgentConnector(uint32_t id, SOCKET s)
    m_clientName = nullptr;
    m_processId = 0;
    m_userAgent = false;
-   m_mutex = MutexCreate();
    m_requestId = 0;
 }
 
@@ -136,7 +135,6 @@ SessionAgentConnector::SessionAgentConnector(uint32_t id, SOCKET s)
  */
 SessionAgentConnector::~SessionAgentConnector()
 {
-   MutexDestroy(m_mutex);
    closesocket(m_socket);
    MemFree(m_sessionName);
    MemFree(m_userName);
@@ -157,7 +155,7 @@ void SessionAgentConnector::disconnect()
 bool SessionAgentConnector::sendMessage(const NXCPMessage *msg)
 {
    NXCP_MESSAGE *rawMsg = msg->serialize();
-   bool success = (SendEx(m_socket, rawMsg, ntohl(rawMsg->size), 0, m_mutex) == ntohl(rawMsg->size));
+   bool success = (SendEx(m_socket, rawMsg, ntohl(rawMsg->size), 0, &m_mutex) == ntohl(rawMsg->size));
    MemFree(rawMsg);
    return success;
 }

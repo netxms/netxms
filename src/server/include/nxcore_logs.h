@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -180,7 +180,7 @@ class LogHandle
 private:
    const NXCORE_LOG *m_log;
    LogFilter *m_filter;
-   MUTEX m_lock;
+   Mutex m_mutex;
    StringBuffer m_queryColumns;
    uint32_t m_rowCountLimit;
    int64_t m_maxRecordId;
@@ -196,8 +196,8 @@ public:
    LogHandle(const NXCORE_LOG *log);
    ~LogHandle();
 
-   void lock() { MutexLock(m_lock); }
-   void release() { MutexUnlock(m_lock); }
+   void lock() { m_mutex.lock(); }
+   void release() { m_mutex.unlock(); }
 
    bool query(LogFilter *filter, int64_t *rowCount, uint32_t userId);
    Table *getData(int64_t startRow, int64_t numRows, bool refresh, uint32_t userId);

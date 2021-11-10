@@ -56,7 +56,6 @@ LoraWanServerLink::LoraWanServerLink(const ConfigEntry *config)
 
    snprintf(m_auth, MAX_AUTH_LENGTH, "%s:%s", m_user, m_pass);
    m_curl = NULL;
-   m_curlHandleMutex = MutexCreate();
 
    free(m_user);
    free(m_pass);
@@ -69,7 +68,6 @@ LoraWanServerLink::~LoraWanServerLink()
 {
    disconnect();
    curl_global_cleanup();
-   MutexDestroy(m_curlHandleMutex);
    free(m_url);
    free(m_app);
    free(m_appId);
@@ -81,7 +79,7 @@ LoraWanServerLink::~LoraWanServerLink()
  */
 UINT32 LoraWanServerLink::sendRequest(const char *method, const char *url, const curl_slist *headers, char *postFields)
 {
-   MutexLock(m_curlHandleMutex);
+   m_curlHandleMutex.lock();
    curl_easy_setopt(m_curl, CURLOPT_URL, url);
    curl_easy_setopt(m_curl, CURLOPT_CUSTOMREQUEST, method);
    curl_easy_setopt(m_curl, CURLOPT_HTTPHEADER, headers);
@@ -98,7 +96,7 @@ UINT32 LoraWanServerLink::sendRequest(const char *method, const char *url, const
    else
       nxlog_debug(7, _T("LoraWAN Module: call to curl_easy_perform() failed: %hs"), m_errorBuffer);
 
-   MutexUnlock(m_curlHandleMutex);
+   m_curlHandleMutex.unlock();
    return rcc;
 }
 

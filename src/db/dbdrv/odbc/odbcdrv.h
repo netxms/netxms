@@ -1,6 +1,6 @@
 /* 
 ** ODBC Database Driver
-** Copyright (C) 2004-2016 Victor Kirhenshtein
+** Copyright (C) 2004-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -87,38 +87,38 @@
 /**
  * Driver connection handle structure
  */
-typedef struct
+struct ODBCDRV_CONN
 {
-   MUTEX mutexQuery;
+   Mutex *mutexQuery;
    SQLHENV sqlEnv;
    SQLHDBC sqlConn;
-} ODBCDRV_CONN;
+};
 
 /**
  * Prepared statement structure
  */
-typedef struct
+struct ODBCDRV_STATEMENT
 {
 	SQLHSTMT handle;
 	Array *buffers;
 	ODBCDRV_CONN *connection;
-} ODBCDRV_STATEMENT;
+};
 
 /**
  * Result buffer structure
  */
-typedef struct
+struct ODBCDRV_QUERY_RESULT
 {
    long numRows;
    long numColumns;
    NETXMS_WCHAR **pValues;
 	char **columnNames;
-} ODBCDRV_QUERY_RESULT;
+};
 
 /**
  * Unbuffered result buffer structure
  */
-typedef struct
+struct ODBCDRV_UNBUFFERED_QUERY_RESULT
 {
    SQLHSTMT sqlStatement;
    bool isPrepared;
@@ -127,7 +127,6 @@ typedef struct
    bool noMoreRows;
 	char **columnNames;
    NETXMS_WCHAR **values;
-} ODBCDRV_UNBUFFERED_QUERY_RESULT;
-
+};
 
 #endif   /* _odbcdrv_h_ */

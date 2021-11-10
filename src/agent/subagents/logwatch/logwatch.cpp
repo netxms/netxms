@@ -271,7 +271,7 @@ static void ParserThreadTemplate(LogParser *parser)
 
       delete previousWatchedFiles;
 
-   } while(!ConditionWait(parser->getStopCondition(), 10000));
+   } while(!parser->getStopCondition()->wait(10000));
 
    ObjectArray<LogParser> * parsers = currentWatchedFiles.values();
    for(int i = 0; i < parsers->size(); i++)

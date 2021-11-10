@@ -1,6 +1,6 @@
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -31,29 +31,27 @@ class ApplicationAgent
 public:
    TCHAR *m_name;
    HPIPE m_handle;
-   MUTEX m_mutex;
+   Mutex m_mutex;
 
    ApplicationAgent(const TCHAR *name)
    {
       m_name = _tcsdup(name);
       m_handle = INVALID_PIPE_HANDLE;
-      m_mutex = MutexCreate();
    }
 
    ~ApplicationAgent()
    {
       MemFree(m_name);
-      MutexDestroy(m_mutex);
    }
 
    void lock()
    {
-      MutexLock(m_mutex);
+      m_mutex.lock();
    }
 
    void unlock()
    {
-      MutexUnlock(m_mutex);
+      m_mutex.unlock();
    }
 };
 

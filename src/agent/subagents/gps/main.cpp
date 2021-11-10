@@ -51,7 +51,7 @@ static GeoLocation s_geolocation;
 /**
  * Lock for NMEA info
  */
-static MUTEX s_nmeaInfoLock = MutexCreate();
+static Mutex s_nmeaInfoLock;
 
 /**
  * Serial port
@@ -223,14 +223,14 @@ static void PollerThread()
 
          if (occ != nullptr)
          {
-            MutexLock(s_nmeaInfoLock);
+            s_nmeaInfoLock.lock();
             int count = nmea_parse(&parser, buffer, (int)strlen(buffer), &s_nmeaInfo);
             if (count > 0)
             {
                s_geolocation = GeoLocation(GL_GPS, NMEA_TO_DEG(s_nmeaInfo.lat), NMEA_TO_DEG(s_nmeaInfo.lon),
                                            (int)(s_nmeaInfo.HDOP * s_uere), time(nullptr));
             }
-            MutexUnlock(s_nmeaInfoLock);
+            s_nmeaInfoLock.unlock();
          }
       }
    }
@@ -290,7 +290,7 @@ static LONG H_LocationInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, A
 {
    LONG rc = SYSINFO_RC_SUCCESS;
 
-   MutexLock(s_nmeaInfoLock);
+   s_nmeaInfoLock.lock();
    switch(*arg)
    {
       case 'A': // latitude as text
@@ -345,7 +345,7 @@ static LONG H_LocationInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, A
          rc = SYSINFO_RC_UNSUPPORTED;
          break;
    }
-   MutexUnlock(s_nmeaInfoLock);
+   s_nmeaInfoLock.unlock();
    return rc;
 }
 

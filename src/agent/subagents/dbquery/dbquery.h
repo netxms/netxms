@@ -37,7 +37,7 @@
 class Query
 {
 private:
-   MUTEX m_mutex;
+   Mutex m_mutex;
    THREAD m_pollerThread;
    TCHAR *m_name;
    TCHAR *m_dbid;
@@ -60,8 +60,8 @@ public:
 
    ~Query();
 
-   void lock() { MutexLock(m_mutex); }
-   void unlock() { MutexUnlock(m_mutex); }
+   void lock() { m_mutex.lock(); }
+   void unlock() { m_mutex.unlock(); }
 
    time_t getNextPoll() { return m_lastPoll + m_interval; }
    void poll();
@@ -143,6 +143,6 @@ Query *AcquireQueryObject(const TCHAR *name);
 /**
  * Shutdown condition
  */
-extern CONDITION g_condShutdown;
+extern Condition g_condShutdown;
 
 #endif

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -26,7 +26,7 @@
  * Database connections
  */
 static ObjectArray<DBConnection> s_dbConnections(8, 8, Ownership::True);
-static MUTEX s_dbConnectionsLock = MutexCreate();
+static Mutex s_dbConnectionsLock;
 
 /**
  * DB connection constructor
@@ -137,9 +137,9 @@ bool AddDatabaseFromConfig(const TCHAR *db)
    if (conn == nullptr)
       return false;
 
-   MutexLock(s_dbConnectionsLock);
+   s_dbConnectionsLock.lock();
    s_dbConnections.add(conn);
-   MutexUnlock(s_dbConnectionsLock);
+   s_dbConnectionsLock.unlock();
    return true;
 }
 
@@ -148,9 +148,9 @@ bool AddDatabaseFromConfig(const TCHAR *db)
  */
 void ShutdownConnections()
 {
-   MutexLock(s_dbConnectionsLock);
+   s_dbConnectionsLock.lock();
    s_dbConnections.clear();
-   MutexUnlock(s_dbConnectionsLock);
+   s_dbConnectionsLock.unlock();
 }
 
 /**
@@ -159,7 +159,7 @@ void ShutdownConnections()
 DB_HANDLE GetConnectionHandle(const TCHAR *dbid)
 {
    DB_HANDLE hdb = nullptr;
-   MutexLock(s_dbConnectionsLock);
+   s_dbConnectionsLock.lock();
    for(int i = 0; i < s_dbConnections.size(); i++)
       if (!_tcsicmp(dbid, s_dbConnections.get(i)->getId()))
       {
@@ -172,6 +172,6 @@ DB_HANDLE GetConnectionHandle(const TCHAR *dbid)
          }
          break;
       }
-   MutexUnlock(s_dbConnectionsLock);
+   s_dbConnectionsLock.unlock();
    return hdb;
 }

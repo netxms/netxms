@@ -322,9 +322,9 @@ extern "C" DBDRV_CONNECTION __EXPORT DrvConnect(const char *host, const char *lo
 		return NULL;
 	}
 	
-	pConn = MemAllocStruct<MARIADB_CONN>();
+	pConn = new MARIADB_CONN();
 	pConn->pMySQL = pMySQL;
-	pConn->mutexQueryLock = MutexCreate();
+	pConn->fixForCONC281 = false;
 
    // Switch to UTF-8 encoding
    mysql_set_character_set(pMySQL, "utf8");
@@ -365,8 +365,7 @@ extern "C" void __EXPORT DrvDisconnect(MARIADB_CONN *pConn)
 	if (pConn != NULL)
 	{
 		mysql_close(pConn->pMySQL);
-		MutexDestroy(pConn->mutexQueryLock);
-		MemFree(pConn);
+		delete pConn;
 	}
 }
 
@@ -377,7 +376,7 @@ extern "C" DBDRV_STATEMENT __EXPORT DrvPrepare(MARIADB_CONN *pConn, WCHAR *pwszQ
 {
 	MARIADB_STATEMENT *result = NULL;
 
-	MutexLock(pConn->mutexQueryLock);
+	pConn->mutexQueryLock.lock();
 	MYSQL_STMT *stmt = mysql_stmt_init(pConn->pMySQL);
 	if (stmt != NULL)
 	{
@@ -416,7 +415,7 @@ extern "C" DBDRV_STATEMENT __EXPORT DrvPrepare(MARIADB_CONN *pConn, WCHAR *pwszQ
 		*pdwError = DBERR_OTHER_ERROR;
 		UpdateErrorMessage("Call to mysql_stmt_init failed", errorText);
 	}
-	MutexUnlock(pConn->mutexQueryLock);
+	pConn->mutexQueryLock.unlock();
 	return result;
 }
 
@@ -498,7 +497,7 @@ extern "C" DWORD __EXPORT DrvExecute(MARIADB_CONN *pConn, MARIADB_STATEMENT *hSt
 {
 	DWORD dwResult;
 
-	MutexLock(pConn->mutexQueryLock);
+	pConn->mutexQueryLock.lock();
 
 	if (mysql_stmt_bind_param(hStmt->statement, hStmt->bindings) == 0)
 	{
@@ -526,7 +525,7 @@ extern "C" DWORD __EXPORT DrvExecute(MARIADB_CONN *pConn, MARIADB_STATEMENT *hSt
 		dwResult = DBERR_OTHER_ERROR;
 	}
 
-	MutexUnlock(pConn->mutexQueryLock);
+	pConn->mutexQueryLock.unlock();
 	return dwResult;
 }
 
@@ -538,9 +537,9 @@ extern "C" void __EXPORT DrvFreeStatement(MARIADB_STATEMENT *hStmt)
 	if (hStmt == NULL)
 		return;
 
-	MutexLock(hStmt->connection->mutexQueryLock);
+	hStmt->connection->mutexQueryLock.lock();
 	mysql_stmt_close(hStmt->statement);
-	MutexUnlock(hStmt->connection->mutexQueryLock);
+	hStmt->connection->mutexQueryLock.unlock();
 	delete hStmt->buffers;
 	MemFree(hStmt->bindings);
 	MemFree(hStmt->lengthFields);
@@ -554,7 +553,7 @@ static DWORD DrvQueryInternal(MARIADB_CONN *pConn, const char *pszQuery, WCHAR *
 {
 	DWORD dwRet = DBERR_INVALID_HANDLE;
 
-	MutexLock(pConn->mutexQueryLock);
+	pConn->mutexQueryLock.lock();
 	if (mysql_query(pConn->pMySQL, pszQuery) == 0)
 	{
 		dwRet = DBERR_SUCCESS;
@@ -575,7 +574,7 @@ static DWORD DrvQueryInternal(MARIADB_CONN *pConn, const char *pszQuery, WCHAR *
 		UpdateErrorMessage(mysql_error(pConn->pMySQL), errorText);
 	}
 
-	MutexUnlock(pConn->mutexQueryLock);
+	pConn->mutexQueryLock.unlock();
 	return dwRet;
 }
 
@@ -600,7 +599,7 @@ static MARIADB_RESULT *DrvSelectInternal(MARIADB_CONN *pConn, WCHAR *pwszQuery, 
 
    char localBuffer[1024];
    char *pszQueryUTF8 = WideStringToUTF8(pwszQuery, localBuffer, 1024);
-	MutexLock(pConn->mutexQueryLock);
+	pConn->mutexQueryLock.lock();
 	if (mysql_query(pConn->pMySQL, pszQueryUTF8) == 0)
 	{
 		result = MemAllocStruct<MARIADB_RESULT>();
@@ -629,7 +628,7 @@ static MARIADB_RESULT *DrvSelectInternal(MARIADB_CONN *pConn, WCHAR *pwszQuery, 
 		UpdateErrorMessage(mysql_error(pConn->pMySQL), errorText);
 	}
 
-	MutexUnlock(pConn->mutexQueryLock);
+	pConn->mutexQueryLock.unlock();
 	FreeConvertedString(pszQueryUTF8, localBuffer);
 	return result;
 }
@@ -660,7 +659,7 @@ extern "C" DBDRV_RESULT __EXPORT DrvSelectPrepared(MARIADB_CONN *pConn, MARIADB_
 
    MARIADB_RESULT *result = NULL;
 
-	MutexLock(pConn->mutexQueryLock);
+	pConn->mutexQueryLock.lock();
 
 	if (mysql_stmt_bind_param(hStmt->statement, hStmt->bindings) == 0)
 	{
@@ -728,7 +727,7 @@ extern "C" DBDRV_RESULT __EXPORT DrvSelectPrepared(MARIADB_CONN *pConn, MARIADB_
 		*pdwError = DBERR_OTHER_ERROR;
 	}
 
-	MutexUnlock(pConn->mutexQueryLock);
+	pConn->mutexQueryLock.unlock();
 	return result;
 }
 
@@ -745,12 +744,12 @@ extern "C" LONG __EXPORT DrvGetFieldLength(MARIADB_RESULT *hResult, int iRow, in
 	{
 		if (hResult->currentRow != iRow)
 		{
-         MutexLock(hResult->connection->mutexQueryLock);
+         hResult->connection->mutexQueryLock.lock();
          if (iRow != hResult->currentRow + 1)
             mysql_stmt_data_seek(hResult->statement, iRow);
 			mysql_stmt_fetch(hResult->statement);
 			hResult->currentRow = iRow;
-	      MutexUnlock(hResult->connection->mutexQueryLock);
+	      hResult->connection->mutexQueryLock.unlock();
 		}
 		return (LONG)hResult->lengthFields[iColumn];
 	}
@@ -792,7 +791,7 @@ static void *GetFieldInternal(MARIADB_RESULT *hResult, int iRow, int iColumn, vo
 	void *value = nullptr;
 	if (hResult->isPreparedStatement)
 	{
-      MutexLock(hResult->connection->mutexQueryLock);
+      hResult->connection->mutexQueryLock.lock();
 		if (hResult->currentRow != iRow)
 		{
          if (iRow != hResult->currentRow + 1)
@@ -836,7 +835,7 @@ static void *GetFieldInternal(MARIADB_RESULT *hResult, int iRow, int iColumn, vo
          }
 			value = pBuffer;
 		}
-      MutexUnlock(hResult->connection->mutexQueryLock);
+      hResult->connection->mutexQueryLock.unlock();
 		MemFreeLocal(b.buffer);
 	}
 	else
@@ -965,7 +964,7 @@ extern "C" DBDRV_UNBUFFERED_RESULT __EXPORT DrvSelectUnbuffered(MARIADB_CONN *pC
 
    char localBuffer[1024];
 	char *pszQueryUTF8 = WideStringToUTF8(pwszQuery, localBuffer, 1024);
-	MutexLock(pConn->mutexQueryLock);
+	pConn->mutexQueryLock.lock();
 	if (mysql_query(pConn->pMySQL, pszQueryUTF8) == 0)
 	{
 		pResult = MemAllocStruct<MARIADB_UNBUFFERED_RESULT>();
@@ -1011,7 +1010,7 @@ extern "C" DBDRV_UNBUFFERED_RESULT __EXPORT DrvSelectUnbuffered(MARIADB_CONN *pC
 
 	if (pResult == NULL)
 	{
-		MutexUnlock(pConn->mutexQueryLock);
+		pConn->mutexQueryLock.unlock();
 	}
 	FreeConvertedString(pszQueryUTF8, localBuffer);
 
@@ -1025,7 +1024,7 @@ extern "C" DBDRV_RESULT __EXPORT DrvSelectPreparedUnbuffered(MARIADB_CONN *pConn
 {
    MARIADB_UNBUFFERED_RESULT *result = NULL;
 
-   MutexLock(pConn->mutexQueryLock);
+   pConn->mutexQueryLock.lock();
 
    if (mysql_stmt_bind_param(hStmt->statement, hStmt->bindings) == 0)
    {
@@ -1088,7 +1087,7 @@ extern "C" DBDRV_RESULT __EXPORT DrvSelectPreparedUnbuffered(MARIADB_CONN *pConn
 
    if (result == NULL)
    {
-      MutexUnlock(pConn->mutexQueryLock);
+      pConn->mutexQueryLock.unlock();
    }
    return result;
 }
@@ -1110,7 +1109,7 @@ extern "C" bool __EXPORT DrvFetch(MARIADB_UNBUFFERED_RESULT *result)
       {
          result->noMoreRows = true;
          success = false;
-         MutexUnlock(result->connection->mutexQueryLock);
+         result->connection->mutexQueryLock.unlock();
       }
 	}
 	else
@@ -1121,7 +1120,7 @@ extern "C" bool __EXPORT DrvFetch(MARIADB_UNBUFFERED_RESULT *result)
       {
          result->noMoreRows = true;
          success = false;
-         MutexUnlock(result->connection->mutexQueryLock);
+         result->connection->mutexQueryLock.unlock();
       }
       else
       {
@@ -1304,7 +1303,7 @@ extern "C" void __EXPORT DrvFreeUnbufferedResult(MARIADB_UNBUFFERED_RESULT *hRes
       }
 
       // Now we are ready for next query, so unlock query mutex
-      MutexUnlock(hResult->connection->mutexQueryLock);
+      hResult->connection->mutexQueryLock.unlock();
    }
 
    // Free allocated memory

@@ -80,14 +80,14 @@ DWORD g_flags = 0;
  */
 static THREAD s_cpuStatThread = INVALID_THREAD_HANDLE;
 static THREAD s_ioStatThread = INVALID_THREAD_HANDLE;
-static MUTEX s_kstatLock = INVALID_MUTEX_HANDLE;
+static Mutex s_kstatLock(MutexType::FAST);
 
 /**
  * Lock access to kstat API
  */
 void kstat_lock()
 {
-   MutexLock(s_kstatLock);
+   s_kstatLock.lock();
 }
 
 /**
@@ -95,7 +95,7 @@ void kstat_lock()
  */
 void kstat_unlock()
 {
-   MutexUnlock(s_kstatLock);
+   s_kstatLock.unlock();
 }
 
 /**
@@ -152,7 +152,6 @@ static bool SubAgentInit(Config *config)
 
    s_cpuStatThread = ThreadCreateEx(CPUStatCollector);
    s_ioStatThread = ThreadCreateEx(IOStatCollector);
-   s_kstatLock = MutexCreate();
 
    return true;
 }
@@ -165,7 +164,6 @@ static void SubAgentShutdown()
    g_bShutdown = TRUE;
    ThreadJoin(s_cpuStatThread);
    ThreadJoin(s_ioStatThread);
-   MutexDestroy(s_kstatLock);
 }
 
 /**

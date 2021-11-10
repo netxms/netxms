@@ -36,7 +36,7 @@ NXMBSubscriber::NXMBSubscriber(const TCHAR *id)
  */
 NXMBSubscriber::~NXMBSubscriber()
 {
-	free(m_id);
+	MemFree(m_id);
 }
 
 /**

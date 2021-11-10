@@ -531,7 +531,7 @@ private:
    SharedObjectArray<NObject> m_parentList;    // Array of pointers to parent objects
 
    StringObjectMap<CustomAttribute> m_customAttributes;
-   MUTEX m_customAttributeLock;
+   Mutex m_customAttributeLock;
 
    SharedString getCustomAttributeFromParent(const TCHAR *name);
    bool setCustomAttributeFromMessage(const NXCPMessage *msg, uint32_t base);
@@ -569,8 +569,8 @@ protected:
       return false;
    }
 
-   void lockCustomAttributes() const { MutexLock(m_customAttributeLock); }
-   void unlockCustomAttributes() const { MutexUnlock(m_customAttributeLock); }
+   void lockCustomAttributes() const { m_customAttributeLock.lock(); }
+   void unlockCustomAttributes() const { m_customAttributeLock.unlock(); }
 
    void readLockParentList() const { RWLockReadLock(m_rwlockParentList); }
    void writeLockParentList() { RWLockWriteLock(m_rwlockParentList); }
@@ -876,8 +876,8 @@ private:
 	uint32_t m_recvTimeout;
    MsgWaitQueue *m_pMsgWaitQueue;
    bool m_isConnected;
-   MUTEX m_mutexDataLock;
-	MUTEX m_mutexSocketWrite;
+   Mutex m_mutexDataLock;
+   Mutex m_mutexSocketWrite;
    int m_encryptionPolicy;
    bool m_useProxy;
    InetAddress m_proxyAddr;
@@ -887,7 +887,7 @@ private:
 	int m_hCurrFile;
 	TCHAR m_currentFileName[MAX_PATH];
 	uint32_t m_downloadRequestId;
-	CONDITION m_condFileDownload;
+	Condition m_condFileDownload;
 	bool m_fileDownloadSucceeded;
 	void (*m_downloadProgressCallback)(size_t, void*);
 	void *m_downloadProgressCallbackArg;
@@ -943,8 +943,8 @@ protected:
 
 	void debugPrintf(int level, const TCHAR *format, ...);
 
-   void lock() { MutexLock(m_mutexDataLock); }
-   void unlock() { MutexUnlock(m_mutexDataLock); }
+   void lock() { m_mutexDataLock.lock(); }
+   void unlock() { m_mutexDataLock.unlock(); }
 	shared_ptr<NXCPEncryptionContext> acquireEncryptionContext();
    shared_ptr<AbstractCommChannel> acquireChannel();
 
@@ -1088,8 +1088,8 @@ private:
 	VolatileCounter m_requestId;
 	uint32_t m_recvTimeout;
    MsgWaitQueue *m_msgWaitQueue;
-   MUTEX m_mutexDataLock;
-	MUTEX m_socketLock;
+   Mutex m_mutexDataLock;
+   Mutex m_socketLock;
    THREAD m_hReceiverThread;
    shared_ptr<NXCPEncryptionContext> m_ctx;
    uint32_t m_commandTimeout;
@@ -1101,8 +1101,8 @@ protected:
    UINT32 setupEncryption(RSA *pServerKey);
 	UINT32 connectToService(UINT32 service);
 
-   void lock() { MutexLock(m_mutexDataLock); }
-   void unlock() { MutexUnlock(m_mutexDataLock); }
+   void lock() { m_mutexDataLock.lock(); }
+   void unlock() { m_mutexDataLock.unlock(); }
 
    virtual void printMessage(const TCHAR *format, ...);
    virtual bool onMessage(NXCPMessage *msg);

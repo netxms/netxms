@@ -47,7 +47,7 @@ class EventLogReader
 {
 private:
    THREAD m_thread;
-   CONDITION m_stopCondition;
+   Condition m_stopCondition;
    TCHAR *m_name;
    EVT_HANDLE m_renderContext;
    uint32_t m_messageId;

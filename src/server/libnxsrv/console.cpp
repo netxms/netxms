@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -86,9 +86,8 @@ void LocalTerminalConsole::write(const TCHAR *text)
 /**
  * String buffer console constructor
  */
-StringBufferConsole::StringBufferConsole()
+StringBufferConsole::StringBufferConsole() : m_mutex(MutexType::FAST)
 {
-   m_mutex = MutexCreate();
 }
 
 /**
@@ -96,7 +95,6 @@ StringBufferConsole::StringBufferConsole()
  */
 StringBufferConsole::~StringBufferConsole()
 {
-   MutexDestroy(m_mutex);
 }
 
 /**
@@ -105,7 +103,7 @@ StringBufferConsole::~StringBufferConsole()
 void StringBufferConsole::write(const TCHAR *text)
 {
    size_t start = 0, i;
-   MutexLock(m_mutex);
+   m_mutex.lock();
    for(i = 0; text[i] != 0; i++)
    {
       if (text[i] == 27)
@@ -123,16 +121,15 @@ void StringBufferConsole::write(const TCHAR *text)
       }
    }
    m_buffer.append(&text[start], i - start);
-   MutexUnlock(m_mutex);
+   m_mutex.unlock();
 }
 
 /**
  * Socket console constructor
  */
-SocketConsole::SocketConsole(SOCKET s, UINT16 msgCode)
+SocketConsole::SocketConsole(SOCKET s, uint16_t msgCode) : m_mutex(MutexType::FAST)
 {
    m_socket = s;
-   m_mutex = MutexCreate();
    m_messageCode = msgCode;
 }
 
@@ -141,7 +138,6 @@ SocketConsole::SocketConsole(SOCKET s, UINT16 msgCode)
  */
 SocketConsole::~SocketConsole()
 {
-   MutexDestroy(m_mutex);
 }
 
 /**
@@ -152,7 +148,7 @@ void SocketConsole::write(const TCHAR *text)
    NXCPMessage msg(m_messageCode, 0);
    msg.setField(VID_MESSAGE, text);
    NXCP_MESSAGE *rawMsg = msg.serialize();
-   SendEx(m_socket, rawMsg, ntohl(rawMsg->size), 0, m_mutex);
+   SendEx(m_socket, rawMsg, ntohl(rawMsg->size), 0, &m_mutex);
    MemFree(rawMsg);
 }
 
@@ -164,7 +160,7 @@ void LIBNXSRV_EXPORTABLE ConsoleDebugPrintf(ServerConsole *console, const TCHAR 
 {
    va_list args;
    va_start(args, text);
-   if (console != NULL)
+   if (console != nullptr)
    {
       va_list cargs;
       va_copy(cargs, args);

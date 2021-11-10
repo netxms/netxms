@@ -95,7 +95,7 @@ static VolatileCounter s_executorId = 0;
 /**
  * Create new process executor object for given command line
  */
-ProcessExecutor::ProcessExecutor(const TCHAR *cmd, bool shellExec, bool selfDestruct)
+ProcessExecutor::ProcessExecutor(const TCHAR *cmd, bool shellExec, bool selfDestruct) : m_completed(true)
 {
    m_id = InterlockedIncrement(&s_executorId);
 #ifdef _WIN32
@@ -111,7 +111,6 @@ ProcessExecutor::ProcessExecutor(const TCHAR *cmd, bool shellExec, bool selfDest
    m_sendOutput = false;
    m_selfDestruct = selfDestruct;
    m_outputThread = INVALID_THREAD_HANDLE;
-   m_completed = ConditionCreate(true);
    m_started = false;
    m_running = false;
 }
@@ -128,7 +127,6 @@ ProcessExecutor::~ProcessExecutor()
    if (m_phandle != INVALID_HANDLE_VALUE)
       CloseHandle(m_phandle);
 #endif
-   ConditionDestroy(m_completed);
 }
 
 #ifdef _WIN32
@@ -184,7 +182,7 @@ bool ProcessExecutor::execute()
       ThreadJoin(m_outputThread);
       m_outputThread = INVALID_THREAD_HANDLE;
    }
-   ConditionReset(m_completed);
+   m_completed.reset();
 
    bool success = false;
 
@@ -383,7 +381,7 @@ THREAD_RESULT THREAD_CALL ProcessExecutor::waitForProcess(void *arg)
 {
    waitpid(static_cast<ProcessExecutor*>(arg)->m_pid, nullptr, 0);
    static_cast<ProcessExecutor*>(arg)->m_running = false;
-   ConditionSet(static_cast<ProcessExecutor*>(arg)->m_completed);
+   static_cast<ProcessExecutor*>(arg)->m_completed.set();
    if (static_cast<ProcessExecutor*>(arg)->m_selfDestruct)
       delete static_cast<ProcessExecutor*>(arg);
    return THREAD_OK;
@@ -517,7 +515,7 @@ do_wait:
 
 #endif
    static_cast<ProcessExecutor*>(arg)->m_running = false;
-   ConditionSet(static_cast<ProcessExecutor*>(arg)->m_completed);
+   static_cast<ProcessExecutor*>(arg)->m_completed.set();
    if (static_cast<ProcessExecutor*>(arg)->m_selfDestruct)
       delete static_cast<ProcessExecutor*>(arg);
    return THREAD_OK;
@@ -592,10 +590,10 @@ bool ProcessExecutor::waitForCompletion(uint32_t timeout)
 
 #ifdef _WIN32
    if (m_sendOutput)
-      return ConditionWait(m_completed, timeout);
+      return m_completed.wait(timeout);
    return (m_phandle != INVALID_HANDLE_VALUE) ? (WaitForSingleObject(m_phandle, timeout) == WAIT_OBJECT_0) : true;
 #else
-   return ConditionWait(m_completed, timeout);
+   return m_completed.wait(timeout);
 #endif
 }
 

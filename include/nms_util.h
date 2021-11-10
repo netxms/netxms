@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -975,27 +975,24 @@ public:
  */
 template <class T> class ObjectLock
 {
+#if CAN_DELETE_COPY_CTOR
+   ObjectLock(const ObjectLock<T> &src) = delete;
+   ObjectLock<T>& operator =(const ObjectLock<T> &src) = delete;
+#endif
+
 private:
    Mutex m_mutex;
    T m_object;
 
 public:
-   ObjectLock() : m_mutex(true) { }
-   ObjectLock(const T& object) : m_mutex(true), m_object(object) { }
-   ObjectLock(const ObjectLock<T> &src) : m_mutex(src.m_mutex), m_object(src.m_object) { }
+   ObjectLock() : m_mutex(MutexType::FAST) { }
+   ObjectLock(const T& object) : m_mutex(MutexType::FAST), m_object(object) { }
 
    void lock() { m_mutex.lock(); }
    void unlock() { m_mutex.unlock(); }
 
    const T& get() { return m_object; }
    void set(const T& object) { m_object = object; }
-
-   ObjectLock<T>& operator =(const ObjectLock<T> &src)
-   {
-      m_object = src.m_object;
-      m_mutex = src.m_mutex;
-      return *this;
-   }
 };
 
 /**
@@ -2346,43 +2343,36 @@ template<class K> class SynchronizedHashSet
 {
 private:
    HashSet<K> m_set;
-   MUTEX m_mutex;
+   Mutex m_mutex;
 
 public:
-   SynchronizedHashSet()
-   {
-      m_mutex = MutexCreateFast();
-   }
-   ~SynchronizedHashSet()
-   {
-      MutexDestroy(m_mutex);
-   }
+   SynchronizedHashSet() : m_mutex(MutexType::FAST) { }
 
    void put(const K& key)
    {
-      MutexLock(m_mutex);
+      m_mutex.lock();
       m_set.put(key);
-      MutexUnlock(m_mutex);
+      m_mutex.unlock();
    }
    void remove(const K& key)
    {
-      MutexLock(m_mutex);
+      m_mutex.lock();
       m_set.remove(key);
-      MutexUnlock(m_mutex);
+      m_mutex.unlock();
    }
    bool contains(const K& key) const
    {
-      MutexLock(m_mutex);
+      m_mutex.lock();
       bool result = m_set.contains(key);
-      MutexUnlock(m_mutex);
+      m_mutex.unlock();
       return result;
    }
 
    EnumerationCallbackResult forEach(EnumerationCallbackResult (*cb)(const K *, void *), void *context) const
    {
-      MutexLock(m_mutex);
+      m_mutex.lock();
       auto result = m_set.forEach(cb, context);
-      MutexUnlock(m_mutex);
+      m_mutex.unlock();
       return result;
    }
 };
@@ -2532,84 +2522,83 @@ template <class K, class V> class SynchronizedHashMap
 
 private:
    HashMap<K, V> m_data;
-   MUTEX m_mutex;
+   Mutex m_mutex;
 
 public:
-   SynchronizedHashMap(Ownership ownership) : m_data(ownership)
+   SynchronizedHashMap(Ownership ownership) : m_data(ownership), m_mutex(MutexType::FAST)
    {
       m_data.setContext(this);
-      m_mutex = MutexCreateFast();
    }
-   virtual ~SynchronizedHashMap() { MutexDestroy(m_mutex); }
+   virtual ~SynchronizedHashMap() { }
 
    void set(const K& key, V *element)
    {
-      MutexLock(m_mutex);
+      m_mutex.lock();
       m_data.set(key, element);
-      MutexUnlock(m_mutex);
+      m_mutex.unlock();
    }
 
    V *get(const K& key) const
    {
-      MutexLock(m_mutex);
+      m_mutex.lock();
       auto p = m_data.get(key);
-      MutexUnlock(m_mutex);
+      m_mutex.unlock();
       return p;
    }
 
    void remove(const K& key)
    {
-      MutexLock(m_mutex);
+      m_mutex.lock();
       m_data.remove(key);
-      MutexUnlock(m_mutex);
+      m_mutex.unlock();
    }
 
    void clear()
    {
-      MutexLock(m_mutex);
+      m_mutex.lock();
       m_data.clear();
-      MutexUnlock(m_mutex);
+      m_mutex.unlock();
    }
 
    bool contains(const K& key)
    {
-      MutexLock(m_mutex);
+      m_mutex.lock();
       bool contains = m_data.contains(key);
-      MutexUnlock(m_mutex);
+      m_mutex.unlock();
       return contains;
    }
 
    int size() const
    {
-      MutexLock(m_mutex);
+      m_mutex.lock();
       int size = m_data.size();
-      MutexUnlock(m_mutex);
+      m_mutex.unlock();
       return size;
    }
 
    template <typename C>
    EnumerationCallbackResult forEach(EnumerationCallbackResult (*cb)(const K&, V*, C*), C *context) const
    {
-      MutexLock(m_mutex);
+      m_mutex.lock();
       EnumerationCallbackResult result = m_data.forEach(cb, context);
-      MutexUnlock(m_mutex);
+      m_mutex.unlock();
       return result;
    }
 
    EnumerationCallbackResult forEach(EnumerationCallbackResult (*cb)(const K&, V*)) const
    {
-      MutexLock(m_mutex);
+      m_mutex.lock();
       EnumerationCallbackResult result = m_data.forEach(cb);
-      MutexUnlock(m_mutex);
+      m_mutex.unlock();
       return result;
    }
 
    template <typename C>
    const shared_ptr<V>& findElement(bool(*cb)(const K&, const V&, C*), C *context) const
    {
-      MutexLock(m_mutex);
+      m_mutex.lock();
       auto result = m_data.findElement(cb, context);
-      MutexUnlock(m_mutex);
+      m_mutex.unlock();
       return result;
    }
 };
@@ -2694,7 +2683,7 @@ template <class K, class V> class SynchronizedSharedHashMap final
 private:
    ObjectMemoryPool<shared_ptr<V>> m_pool;
    HashMap<K, shared_ptr<V>> m_data;
-   MUTEX m_mutex;
+   Mutex m_mutex;
 
    static shared_ptr<V> m_null;
 
@@ -2718,62 +2707,61 @@ private:
    }
 
 public:
-   SynchronizedSharedHashMap() : m_pool(64), m_data(Ownership::True, SynchronizedSharedHashMap<K, V>::destructor)
+   SynchronizedSharedHashMap() : m_pool(64), m_data(Ownership::True, SynchronizedSharedHashMap<K, V>::destructor), m_mutex(MutexType::FAST)
    {
       m_data.setContext(this);
-      m_mutex = MutexCreateFast();
    }
-   virtual ~SynchronizedSharedHashMap() { MutexDestroy(m_mutex); }
+   virtual ~SynchronizedSharedHashMap() { }
 
    void set(const K& key, shared_ptr<V> element)
    {
-      MutexLock(m_mutex);
+      m_mutex.lock();
       m_data.set(key, new(m_pool.allocate()) shared_ptr<V>(element));
-      MutexUnlock(m_mutex);
+      m_mutex.unlock();
    }
 
    void set(const K& key, V *element)
    {
-      MutexLock(m_mutex);
+      m_mutex.lock();
       m_data.set(key, new(m_pool.allocate()) shared_ptr<V>(element));
-      MutexUnlock(m_mutex);
+      m_mutex.unlock();
    }
 
    const shared_ptr<V>& getShared(const K& key) const
    {
-      MutexLock(m_mutex);
+      m_mutex.lock();
       auto p = m_data.get(key);
-      MutexUnlock(m_mutex);
+      m_mutex.unlock();
       return (p != NULL) ? *p : m_null;
    }
 
    void remove(const K& key)
    {
-      MutexLock(m_mutex);
+      m_mutex.lock();
       m_data.remove(key);
-      MutexUnlock(m_mutex);
+      m_mutex.unlock();
    }
 
    void clear()
    {
-      MutexLock(m_mutex);
+      m_mutex.lock();
       m_data.clear();
-      MutexUnlock(m_mutex);
+      m_mutex.unlock();
    }
 
    bool contains(const K& key)
    {
-      MutexLock(m_mutex);
+      m_mutex.lock();
       bool contains = m_data.contains(key);
-      MutexUnlock(m_mutex);
+      m_mutex.unlock();
       return contains;
    }
 
    int size() const
    {
-      MutexLock(m_mutex);
+      m_mutex.lock();
       int size = m_data.size();
-      MutexUnlock(m_mutex);
+      m_mutex.unlock();
       return size;
    }
 
@@ -2781,9 +2769,9 @@ public:
    EnumerationCallbackResult forEach(EnumerationCallbackResult (*cb)(const K&, const shared_ptr<V>&, C*), C *context) const
    {
       std::pair<EnumerationCallbackResult (*)(const K&, const shared_ptr<V>&, C*), C*> _context(cb, context);
-      MutexLock(m_mutex);
+      m_mutex.lock();
       EnumerationCallbackResult result = m_data.forEach(&SynchronizedSharedHashMap<K, V>::forEachCallbackWrapper<C>, &_context);
-      MutexUnlock(m_mutex);
+      m_mutex.unlock();
       return result;
    }
 
@@ -2791,9 +2779,9 @@ public:
    const shared_ptr<V>& findElement(bool (*cb)(const K&, const V&, C*), C *context) const
    {
       std::pair<bool (*)(const K&, const V&, C*), C*> _context(cb, context);
-      MutexLock(m_mutex);
+      m_mutex.lock();
       auto result = m_data.findElement(&SynchronizedSharedHashMap<K, V>::findCallbackWrapper<C>, &_context);
-      MutexUnlock(m_mutex);
+      m_mutex.unlock();
       return (result != nullptr) ? *result : m_null;
    }
 };
@@ -3692,7 +3680,7 @@ private:
    THREAD m_workerThread;
    uint32_t m_workerThreadId;
    SOCKET m_controlSockets[2];
-   MUTEX m_mutex;
+   Mutex m_mutex;
    BackgroundSocketPollRequest *m_head;
    bool m_shutdown;
 
@@ -3767,9 +3755,9 @@ public:
    AbstractCommChannel();
    virtual ~AbstractCommChannel();
 
-   virtual ssize_t send(const void *data, size_t size, MUTEX mutex = INVALID_MUTEX_HANDLE) = 0;
-   virtual ssize_t recv(void *buffer, size_t size, UINT32 timeout = INFINITE) = 0;
-   virtual int poll(UINT32 timeout, bool write = false) = 0;
+   virtual ssize_t send(const void *data, size_t size, Mutex* mutex = nullptr) = 0;
+   virtual ssize_t recv(void *buffer, size_t size, uint32_t timeout = INFINITE) = 0;
+   virtual int poll(uint32_t timeout, bool write = false) = 0;
    virtual int shutdown() = 0;
    virtual void close() = 0;
 
@@ -3807,9 +3795,9 @@ public:
    SocketCommChannel(SOCKET socket, BackgroundSocketPollerHandle *socketPoller = nullptr, Ownership owner = Ownership::True);
    virtual ~SocketCommChannel();
 
-   virtual ssize_t send(const void *data, size_t size, MUTEX mutex = INVALID_MUTEX_HANDLE) override;
-   virtual ssize_t recv(void *buffer, size_t size, UINT32 timeout = INFINITE) override;
-   virtual int poll(UINT32 timeout, bool write = false) override;
+   virtual ssize_t send(const void *data, size_t size, Mutex* mutex = nullptr) override;
+   virtual ssize_t recv(void *buffer, size_t size, uint32_t timeout = INFINITE) override;
+   virtual int poll(uint32_t timeout, bool write = false) override;
    virtual void backgroundPoll(uint32_t timeout, void (*callback)(BackgroundSocketPollResult, AbstractCommChannel*, void*), void *context) override;
    virtual int shutdown() override;
    virtual void close() override;
@@ -3831,22 +3819,19 @@ template<typename T> class shared_ptr_store
 {
 private:
    shared_ptr<T> pointer;
-   MUTEX mutex;
+   Mutex mutex;
 
 public:
-   shared_ptr_store()
+   shared_ptr_store() : mutex(MutexType::FAST)
    {
-      mutex = MutexCreateFast();
    }
 
-   shared_ptr_store(const shared_ptr<T>& p) : pointer(p)
+   shared_ptr_store(const shared_ptr<T>& p) : pointer(p), mutex(MutexType::FAST)
    {
-      mutex = MutexCreateFast();
    }
 
    ~shared_ptr_store()
    {
-      MutexDestroy(mutex);
    }
 
    operator shared_ptr<T>()
@@ -3861,17 +3846,17 @@ public:
 
    shared_ptr<T> get()
    {
-      MutexLock(mutex);
+      mutex.lock();
       auto p = pointer;
-      MutexUnlock(mutex);
+      mutex.unlock();
       return p;
    }
 
    void set(const shared_ptr<T>& p)
    {
-      MutexLock(mutex);
+      mutex.lock();
       pointer = p;
-      MutexUnlock(mutex);
+      mutex.unlock();
    }
 };
 
@@ -3978,7 +3963,7 @@ typedef struct _dir_struc_w
 #ifdef __cplusplus
 
 int LIBNETXMS_EXPORTABLE ConnectEx(SOCKET s, struct sockaddr *addr, int len, uint32_t timeout, bool *isTimeout = nullptr);
-ssize_t LIBNETXMS_EXPORTABLE SendEx(SOCKET hSocket, const void *data, size_t len, int flags, MUTEX mutex);
+ssize_t LIBNETXMS_EXPORTABLE SendEx(SOCKET hSocket, const void *data, size_t len, int flags, Mutex* mutex);
 ssize_t LIBNETXMS_EXPORTABLE RecvEx(SOCKET hSocket, void *data, size_t len, int flags, uint32_t timeout, SOCKET controlSocket = INVALID_SOCKET);
 bool LIBNETXMS_EXPORTABLE RecvAll(SOCKET s, void *buffer, size_t size, uint32_t timeout);
 
@@ -4004,10 +3989,10 @@ TCHAR LIBNETXMS_EXPORTABLE *SockaddrToStr(struct sockaddr *addr, TCHAR *buffer);
 
 void LIBNETXMS_EXPORTABLE InitNetXMSProcess(bool commandLineTool);
 void LIBNETXMS_EXPORTABLE InitiateProcessShutdown();
-bool LIBNETXMS_EXPORTABLE SleepAndCheckForShutdown(UINT32 seconds);
-bool LIBNETXMS_EXPORTABLE SleepAndCheckForShutdownEx(UINT32 milliseconds);
+bool LIBNETXMS_EXPORTABLE SleepAndCheckForShutdown(uint32_t seconds);
+bool LIBNETXMS_EXPORTABLE SleepAndCheckForShutdownEx(uint32_t milliseconds);
 bool LIBNETXMS_EXPORTABLE IsShutdownInProgress();
-CONDITION LIBNETXMS_EXPORTABLE GetShutdownConditionObject();
+Condition LIBNETXMS_EXPORTABLE *GetShutdownConditionObject();
 
 #ifdef _WIN32
 void LIBNETXMS_EXPORTABLE EnableFatalExitOnCRTError(bool enable);
@@ -4646,32 +4631,32 @@ template<typename T> inline double GetExpMovingAverageValue(const T load)
 /**
  * Get value of given attribute protected by given mutex
  */
-template<typename T> inline T GetAttributeWithLock(const T& attr, MUTEX mutex)
+template<typename T> inline T GetAttributeWithLock(const T& attr, const Mutex& mutex)
 {
-   MutexLock(mutex);
+   mutex.lock();
    T value = attr;
-   MutexUnlock(mutex);
+   mutex.unlock();
    return value;
 }
 
 /**
  * Set value of given attribute protected by given mutex
  */
-template<typename T> inline void SetAttributeWithLock(T& attr, T value, MUTEX mutex)
+template<typename T> inline void SetAttributeWithLock(T& attr, T value, const Mutex& mutex)
 {
-   MutexLock(mutex);
+   mutex.lock();
    attr = value;
-   MutexUnlock(mutex);
+   mutex.unlock();
 }
 
 /**
  * Get TCHAR[] attribute protected by given mutex as String object
  */
-inline String GetStringAttributeWithLock(const TCHAR *attr, MUTEX mutex)
+inline String GetStringAttributeWithLock(const TCHAR *attr, const Mutex& mutex)
 {
-   MutexLock(mutex);
+   mutex.lock();
    String value(attr);
-   MutexUnlock(mutex);
+   mutex.unlock();
    return value;
 }
 

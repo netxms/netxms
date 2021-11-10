@@ -26,15 +26,13 @@
 /**
  * Global variables
  */
-CONDITION g_condShutdown;
+Condition g_condShutdown(true);
 
 /**
  * Subagent initialization
  */
 static bool SubAgentInit(Config *config)
 {
-	// Create shutdown condition and start poller threads
-   g_condShutdown = ConditionCreate(true);
    StartPollingThreads();
    return true;
 }
@@ -86,10 +84,9 @@ static void SubAgentShutdown()
 {
    MemFree(m_info.parameters);
    MemFree(m_info.tables);
-   ConditionSet(g_condShutdown);
+   g_condShutdown.set();
    StopPollingThreads();
    ShutdownConnections();
-   ConditionDestroy(g_condShutdown);
 }
 
 static void AddDCIParam(StructArray<NETXMS_SUBAGENT_PARAM> *parameters, Query *query, bool parameterRequired)

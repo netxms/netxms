@@ -30,7 +30,7 @@
 /**
  * DRBD device structure
  */
-typedef struct
+struct DRBD_DEVICE
 {
    int id;
    int protocol;
@@ -39,18 +39,18 @@ typedef struct
    char remoteDeviceState[STATUS_FIELD_LEN];
    char localDataState[STATUS_FIELD_LEN];
    char remoteDataState[STATUS_FIELD_LEN];
-} DRBD_DEVICE;
+};
 
 /**
  * Static data
  */
 static DRBD_DEVICE s_devices[MAX_DEVICE_COUNT];
-static MUTEX s_deviceAccess = INVALID_MUTEX_HANDLE;
-static MUTEX s_versionAccess = INVALID_MUTEX_HANDLE;
+static Mutex s_deviceAccess(MutexType::NORMAL);
+static Mutex s_versionAccess(MutexType::FAST);
 static char s_drbdVersion[32] = "0.0.0";
 static int s_apiVersion = 0;
 static char s_protocolVersion[32] = "0";
-static CONDITION s_stopCondition = INVALID_CONDITION_HANDLE;
+static Condition s_stopCondition(true);
 static THREAD s_collectorThread = INVALID_THREAD_HANDLE;
 
 /**
@@ -76,7 +76,7 @@ static bool ParseDrbdStatus()
 	fp = fopen("/proc/drbd", "r");
 	if (fp != NULL)
 	{
-		MutexLock(s_deviceAccess);
+		s_deviceAccess.lock();
 		for(int i = 0; i < MAX_DEVICE_COUNT; i++)
 			s_devices[i].id = -1;
 
@@ -108,23 +108,23 @@ static bool ParseDrbdStatus()
 				for(int i = 1; i < 4; i++)
 					line[pmatch[i].rm_eo] = 0;
 
-				MutexLock(s_versionAccess);
+				s_versionAccess.lock();
 				strlcpy(s_drbdVersion, &line[pmatch[1].rm_so], 32);
-				s_apiVersion = strtol(&line[pmatch[2].rm_so], NULL, 10);
+				s_apiVersion = strtol(&line[pmatch[2].rm_so], nullptr, 10);
 				strlcpy(s_protocolVersion, &line[pmatch[3].rm_so], 32);
-				MutexUnlock(s_versionAccess);
+				s_versionAccess.unlock();
 			}
 		}
-		MutexUnlock(s_deviceAccess);
+		s_deviceAccess.unlock();
 		fclose(fp);
 		rc = true;
 	}
 	else
 	{
-		MutexLock(s_deviceAccess);
+		s_deviceAccess.lock();
 		for(int i = 0; i < MAX_DEVICE_COUNT; i++)
 			s_devices[i].id = -1;
-		MutexUnlock(s_deviceAccess);
+		s_deviceAccess.unlock();
 	}
 
 	regfree(&pregVersion);
@@ -143,7 +143,7 @@ static void CollectorThread()
 		return;
 	}
 
-	while(!ConditionWait(s_stopCondition, 15000))
+	while(!s_stopCondition.wait(15000))
 		ParseDrbdStatus();
 }
 
@@ -152,10 +152,7 @@ static void CollectorThread()
  */
 void InitDrbdCollector()
 {
-	s_deviceAccess = MutexCreate();
-	s_versionAccess = MutexCreate();
-	s_stopCondition = ConditionCreate(TRUE);
-	s_collectorThread = ThreadCreateEx(CollectorThread);
+   s_collectorThread = ThreadCreateEx(CollectorThread);
 }
 
 /**
@@ -163,11 +160,8 @@ void InitDrbdCollector()
  */
 void StopDrbdCollector()
 {
-	ConditionSet(s_stopCondition);
-	ThreadJoin(s_collectorThread);
-	ConditionDestroy(s_stopCondition);
-	MutexDestroy(s_deviceAccess);
-	MutexDestroy(s_versionAccess);
+   s_stopCondition.set();
+   ThreadJoin(s_collectorThread);
 }
 
 /**
@@ -175,7 +169,7 @@ void StopDrbdCollector()
  */
 LONG H_DRBDDeviceList(const TCHAR *pszCmd, const TCHAR *pArg, StringList *pValue, AbstractCommSession *session)
 {
-   MutexLock(s_deviceAccess);
+   s_deviceAccess.lock();
    for(int i = 0; i < MAX_DEVICE_COUNT; i++)
    {
       if (s_devices[i].id != -1)
@@ -188,7 +182,7 @@ LONG H_DRBDDeviceList(const TCHAR *pszCmd, const TCHAR *pArg, StringList *pValue
          pValue->add(szBuffer);
       }
    }
-   MutexUnlock(s_deviceAccess);
+   s_deviceAccess.unlock();
    return SYSINFO_RC_SUCCESS;
 }
 
@@ -198,6 +192,7 @@ LONG H_DRBDDeviceList(const TCHAR *pszCmd, const TCHAR *pArg, StringList *pValue
 LONG H_DRBDVersion(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	LONG nRet = SYSINFO_RC_SUCCESS;
+	s_versionAccess.lock();
 	switch(*pArg)
 	{
 		case 'v':	// DRBD version
@@ -213,6 +208,7 @@ LONG H_DRBDVersion(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue, Abstra
 			nRet = SYSINFO_RC_UNSUPPORTED;
 			break;
 	}
+   s_versionAccess.unlock();
 	return nRet;
 }
 
@@ -231,7 +227,7 @@ LONG H_DRBDDeviceInfo(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue, Abs
       return SYSINFO_RC_UNSUPPORTED;
 
    LONG nRet = SYSINFO_RC_ERROR;
-   MutexLock(s_deviceAccess);
+   s_deviceAccess.lock();
    if (s_devices[nDev].id != -1)
    {
       nRet = SYSINFO_RC_SUCCESS;
@@ -261,7 +257,7 @@ LONG H_DRBDDeviceInfo(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue, Abs
 				break;
 		}
    }
-   MutexUnlock(s_deviceAccess);
+   s_deviceAccess.unlock();
 
    return nRet;
 }

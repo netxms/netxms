@@ -26,10 +26,9 @@
 /**
  * Constructor
  */
-NXSL_Library::NXSL_Library()
+NXSL_Library::NXSL_Library() : m_mutex(MutexType::FAST)
 {
    m_scriptList = new ObjectArray<NXSL_LibraryScript>(16, 16, Ownership::True);
-   m_mutex = MutexCreate();
 }
 
 /**
@@ -38,7 +37,6 @@ NXSL_Library::NXSL_Library()
 NXSL_Library::~NXSL_Library()
 {
    delete m_scriptList;
-   MutexDestroy(m_mutex);
 }
 
 /**

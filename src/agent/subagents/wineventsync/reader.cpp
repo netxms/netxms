@@ -115,10 +115,9 @@ static void ParseEvents(const TCHAR *name, Config *config, const TCHAR *path, bo
 /**
  * Create new reader
  */
-EventLogReader::EventLogReader(const TCHAR *name, Config *config)
+EventLogReader::EventLogReader(const TCHAR *name, Config *config) : m_stopCondition(true)
 {
    m_thread = INVALID_THREAD_HANDLE;
-   m_stopCondition = ConditionCreate(true);
    m_name = MemCopyString(name);
    m_messageId = 1;
 
@@ -179,7 +178,6 @@ EventLogReader::EventLogReader(const TCHAR *name, Config *config)
 EventLogReader::~EventLogReader()
 {
    MemFree(m_name);
-   ConditionDestroy(m_stopCondition);
 }
 
 /**
@@ -196,7 +194,7 @@ void EventLogReader::start()
 void EventLogReader::stop()
 {
    nxlog_debug_tag(DEBUG_TAG, 4, _T("Waiting for event log reader \"%s\" to stop"), m_name);
-   ConditionSet(m_stopCondition);
+   m_stopCondition.set();
    ThreadJoin(m_thread);
 }
 
@@ -235,7 +233,7 @@ void EventLogReader::run()
    }
 
    nxlog_debug_tag(DEBUG_TAG, 2, _T("Event log reader \"%s\" started"), m_name);
-   ConditionWait(m_stopCondition, INFINITE);
+   m_stopCondition.wait(INFINITE);
    EvtClose(handle);
    EvtClose(m_renderContext);
    nxlog_debug_tag(DEBUG_TAG, 2, _T("Event log reader \"%s\" stopped"), m_name);

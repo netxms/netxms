@@ -124,11 +124,11 @@ class DataCollectionTarget;
 class NXCORE_EXPORTABLE Threshold
 {
 private:
-   UINT32 m_id;             // Unique threshold id
-   UINT32 m_itemId;         // Parent item id
-   UINT32 m_targetId;       // Parent data collection target ID
-   UINT32 m_eventCode;      // Event code to be generated
-   UINT32 m_rearmEventCode;
+   uint32_t m_id;             // Unique threshold id
+   uint32_t m_itemId;         // Parent item id
+   uint32_t m_targetId;       // Parent data collection target ID
+   uint32_t m_eventCode;      // Event code to be generated
+   uint32_t m_rearmEventCode;
    ItemValue m_value;
    bool m_expandValue;
    ItemValue m_lastCheckValue;
@@ -163,9 +163,9 @@ public:
 
    void bindToItem(UINT32 itemId, UINT32 targetId) { m_itemId = itemId; m_targetId = targetId; }
 
-   UINT32 getId() const { return m_id; }
-   UINT32 getEventCode() const { return m_eventCode; }
-   UINT32 getRearmEventCode() const { return m_rearmEventCode; }
+   uint32_t getId() const { return m_id; }
+   uint32_t getEventCode() const { return m_eventCode; }
+   uint32_t getRearmEventCode() const { return m_rearmEventCode; }
 	int getFunction() const { return m_function; }
 	int getOperation() const { return m_operation; }
 	int getSampleCount() const { return m_sampleCount; }
@@ -272,7 +272,7 @@ protected:
 	uint32_t m_flags;
 	uint32_t m_dwTemplateId;         // Related template's id
 	uint32_t m_dwTemplateItemId;     // Related template item's id
-   MUTEX m_hMutex;
+   Mutex m_mutex;
    StringList *m_schedules;
    time_t m_tLastCheck;          // Last schedule checking time
    UINT32 m_dwErrorCount;        // Consequtive collection error count
@@ -298,9 +298,9 @@ protected:
    time_t m_startTime;                 // Time to start data collection
    uint32_t m_relatedObject;
 
-   void lock() const { MutexLock(m_hMutex); }
-   bool tryLock() const { return MutexTryLock(m_hMutex); }
-   void unlock() const { MutexUnlock(m_hMutex); }
+   void lock() const { m_mutex.lock(); }
+   bool tryLock() const { return m_mutex.tryLock(); }
+   void unlock() const { m_mutex.unlock(); }
 
    bool loadAccessList(DB_HANDLE hdb);
 	bool loadCustomSchedules(DB_HANDLE hdb);
@@ -349,8 +349,8 @@ public:
    int getDataSource() const { return m_source; }
    const TCHAR *getDataProviderName() const { return getDataProviderName(m_source); }
    int getStatus() const { return m_status; }
-   SharedString getName() const { return GetAttributeWithLock(m_name, m_hMutex); }
-   SharedString getDescription() const { return GetAttributeWithLock(m_description, m_hMutex); }
+   SharedString getName() const { return GetAttributeWithLock(m_name, m_mutex); }
+   SharedString getDescription() const { return GetAttributeWithLock(m_description, m_mutex); }
 	const TCHAR *getPerfTabSettings() const { return m_pszPerfTabSettings; }
    int getEffectivePollingInterval() const { return (m_pollingScheduleType == DC_POLLING_SCHEDULE_CUSTOM) ? std::max(m_pollingInterval, 1) : m_defaultPollingInterval; }
    shared_ptr<DataCollectionOwner> getOwner() const { return m_owner.lock(); }
@@ -411,14 +411,14 @@ public:
 	bool prepareForDeletion();
 
 	uint16_t getInstanceDiscoveryMethod() const { return m_instanceDiscoveryMethod; }
-	SharedString getInstanceDiscoveryData() const { return GetAttributeWithLock(m_instanceDiscoveryData, m_hMutex); }
+	SharedString getInstanceDiscoveryData() const { return GetAttributeWithLock(m_instanceDiscoveryData, m_mutex); }
    int32_t getInstanceRetentionTime() const { return m_instanceRetentionTime; }
    StringObjectMap<InstanceDiscoveryData> *filterInstanceList(StringMap *instances);
    void setInstanceDiscoveryMethod(WORD method) { m_instanceDiscoveryMethod = method; }
    void setInstanceDiscoveryData(const TCHAR *data) { lock(); m_instanceDiscoveryData = data; unlock(); }
    void setInstanceFilter(const TCHAR *script);
    void setInstance(const TCHAR *instance) { lock(); m_instance = instance; unlock(); }
-   SharedString getInstance() const { return GetAttributeWithLock(m_instance, m_hMutex); }
+   SharedString getInstance() const { return GetAttributeWithLock(m_instance, m_mutex); }
    void expandInstance();
    time_t getInstanceGracePeriodStart() const { return m_instanceGracePeriodStart; }
    void setInstanceGracePeriodStart(time_t t) { m_instanceGracePeriodStart = t; }
@@ -733,7 +733,7 @@ protected:
 	static TC_ID_MAP_ENTRY *m_cache;
 	static int m_cacheSize;
 	static int m_cacheAllocated;
-	static MUTEX m_cacheMutex;
+	static Mutex m_cacheMutex;
 
    bool transform(const shared_ptr<Table>& value);
    void checkThresholds(Table *value);

@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2018 Raden Solutions
+** Copyright (C) 2003-2021 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,15 +21,15 @@
 **/
 
 #include "nxcore.h"
+#include <nxcore_jobs.h>
 
 /**
  * Constructor
  */
-ServerJobQueue::ServerJobQueue(uint32_t objectId)
+ServerJobQueue::ServerJobQueue(uint32_t objectId) : m_accessMutex(MutexType::FAST)
 {
 	m_jobCount = 0;
 	m_jobList = nullptr;
-	m_accessMutex = MutexCreate();
 	m_objectId = objectId;
 }
 
@@ -46,8 +46,6 @@ ServerJobQueue::~ServerJobQueue()
 		delete m_jobList[i];
 	}
 	MemFree(m_jobList);
-
-	MutexDestroy(m_accessMutex);
 }
 
 /**
@@ -55,11 +53,11 @@ ServerJobQueue::~ServerJobQueue()
  */
 void ServerJobQueue::add(ServerJob *job)
 {
-	MutexLock(m_accessMutex);
+	m_accessMutex.lock();
 	m_jobList = MemReallocArray(m_jobList, m_jobCount + 1);
 	m_jobList[m_jobCount++] = job;
 	job->setOwningQueue(this);
-	MutexUnlock(m_accessMutex);
+	m_accessMutex.unlock();
 
 	DbgPrintf(4, _T("Job %d added to queue (node=%d, type=%s, description=\"%s\")"),
 	          job->getId(), job->getObjectId(), job->getType(), job->getDescription());
@@ -74,14 +72,14 @@ void ServerJobQueue::runNext()
 {
 	int i;
 
-	MutexLock(m_accessMutex);
+	m_accessMutex.lock();
 	for(i = 0; i < m_jobCount; i++)
 		if ((m_jobList[i]->getStatus() != JOB_ON_HOLD) &&
 			 ((m_jobList[i]->getStatus() != JOB_FAILED) || m_jobList[i]->isBlockNextJobsOnFailure()))
 			break;
 	if ((i < m_jobCount) && (m_jobList[i]->getStatus() == JOB_PENDING))
 		m_jobList[i]->start();
-	MutexUnlock(m_accessMutex);
+	m_accessMutex.unlock();
 }
 
 /**
@@ -91,7 +89,7 @@ void ServerJobQueue::jobCompleted(ServerJob *job)
 {
 	int i;
 
-	MutexLock(m_accessMutex);
+	m_accessMutex.lock();
 	for(i = 0; i < m_jobCount; i++)
 		if (m_jobList[i] == job)
 		{
@@ -105,7 +103,7 @@ void ServerJobQueue::jobCompleted(ServerJob *job)
 			}
 			break;
 		}
-	MutexUnlock(m_accessMutex);
+	m_accessMutex.unlock();
 
 	runNext();
 }
@@ -118,7 +116,7 @@ bool ServerJobQueue::cancel(UINT32 jobId)
 	int i;
 	bool success = false;
 
-	MutexLock(m_accessMutex);
+	m_accessMutex.lock();
 	for(i = 0; i < m_jobCount; i++)
 		if (m_jobList[i]->getId()  == jobId)
 		{
@@ -138,7 +136,7 @@ bool ServerJobQueue::cancel(UINT32 jobId)
 			}
 			break;
 		}
-	MutexUnlock(m_accessMutex);
+	m_accessMutex.unlock();
 
 	runNext();
 	return success;
@@ -152,7 +150,7 @@ bool ServerJobQueue::hold(UINT32 jobId)
 	int i;
 	bool success = false;
 
-	MutexLock(m_accessMutex);
+	m_accessMutex.lock();
 	for(i = 0; i < m_jobCount; i++)
 		if (m_jobList[i]->getId()  == jobId)
 		{
@@ -165,7 +163,7 @@ bool ServerJobQueue::hold(UINT32 jobId)
 			}
 			break;
 		}
-	MutexUnlock(m_accessMutex);
+	m_accessMutex.unlock();
 
 	runNext();
 	return success;
@@ -179,7 +177,7 @@ bool ServerJobQueue::unhold(UINT32 jobId)
 	int i;
 	bool success = false;
 
-	MutexLock(m_accessMutex);
+	m_accessMutex.lock();
 	for(i = 0; i < m_jobCount; i++)
 		if (m_jobList[i]->getId()  == jobId)
 		{
@@ -192,7 +190,7 @@ bool ServerJobQueue::unhold(UINT32 jobId)
 			}
 			break;
 		}
-	MutexUnlock(m_accessMutex);
+	m_accessMutex.unlock();
 
 	runNext();
 	return success;
@@ -206,7 +204,7 @@ void ServerJobQueue::cleanup()
 	int i;
 	time_t now;
 
-	MutexLock(m_accessMutex);
+	m_accessMutex.lock();
 	now = time(NULL);
 	for(i = 0; i < m_jobCount; i++)
 	{
@@ -226,7 +224,7 @@ void ServerJobQueue::cleanup()
 			}
 		}
 	}
-	MutexUnlock(m_accessMutex);
+	m_accessMutex.unlock();
 
 	runNext();
 }
@@ -238,14 +236,14 @@ ServerJob *ServerJobQueue::findJob(UINT32 jobId)
 {
 	ServerJob *job = NULL;
 
-	MutexLock(m_accessMutex);
+	m_accessMutex.lock();
 	for(int i = 0; i < m_jobCount; i++)
 		if (m_jobList[i]->getId()  == jobId)
 		{
 			job = m_jobList[i];
 			break;
 		}
-	MutexUnlock(m_accessMutex);
+	m_accessMutex.unlock();
 
 	return job;
 }
@@ -259,7 +257,7 @@ UINT32 ServerJobQueue::fillMessage(NXCPMessage *msg, UINT32 *varIdBase) const
 	UINT32 id = *varIdBase;
 	int i;
 
-	MutexLock(m_accessMutex);
+	m_accessMutex.lock();
 	for(i = 0; i < m_jobCount; i++, id += 2)
 	{
 		msg->setField(id++, m_jobList[i]->getId());
@@ -271,7 +269,7 @@ UINT32 ServerJobQueue::fillMessage(NXCPMessage *msg, UINT32 *varIdBase) const
 		msg->setField(id++, m_jobList[i]->getFailureMessage());
 		msg->setField(id++, m_jobList[i]->getUserId());
 	}
-	MutexUnlock(m_accessMutex);
+	m_accessMutex.unlock();
 	*varIdBase = id;
 	return i;
 }
@@ -282,7 +280,7 @@ UINT32 ServerJobQueue::fillMessage(NXCPMessage *msg, UINT32 *varIdBase) const
 int ServerJobQueue::getJobCount(const TCHAR *type) const
 {
 	int count;
-	MutexLock(m_accessMutex);
+	m_accessMutex.lock();
 	if (type == nullptr)
 	{
 		count = m_jobCount;
@@ -296,6 +294,6 @@ int ServerJobQueue::getJobCount(const TCHAR *type) const
 				count++;
 			}
 	}
-	MutexUnlock(m_accessMutex);
+	m_accessMutex.unlock();
 	return count;
 }

@@ -20,9 +20,9 @@
 #include "db2_subagent.h"
 #include <netxms-version.h>
 
-static DB_DRIVER s_driver = NULL;
-static CONDITION s_condShutdown = NULL;
-static PTHREAD_INFO s_threads = NULL;
+static DB_DRIVER s_driver = nullptr;
+static Condition s_condShutdown(true);
+static THREAD_INFO *s_threads = nullptr;
 static int s_threadCount = 0;
 
 static NETXMS_SUBAGENT_PARAM m_agentParams[] =
@@ -541,7 +541,7 @@ static bool DB2Init(Config *config)
       return false;
    }
 
-   PDB2_INFO* arrDb2Info;
+   DB2_INFO** arrDb2Info;
    int numOfPossibleThreads = 0;
 
    ConfigEntry* xmlFile = db2IniEntry->findEntry(_T("ConfigFile"));
@@ -549,7 +549,7 @@ static bool DB2Init(Config *config)
    {
       AgentWriteDebugLog(7, _T("%s: processing configuration entries in section '%s'"), SUBAGENT_NAME, db2IniEntry->getName());
 
-      const PDB2_INFO db2Info = GetConfigs(config, db2IniEntry, _T("db2"));
+      DB2_INFO *db2Info = GetConfigs(config, db2IniEntry, _T("db2"));
       if (db2Info == NULL)
       {
          return false;
@@ -558,7 +558,7 @@ static bool DB2Init(Config *config)
       db2Info->db2Id = 1;
 
       s_threadCount = 1;
-      arrDb2Info = new PDB2_INFO[1];
+      arrDb2Info = new DB2_INFO*[1];
       arrDb2Info[0] = db2Info;
    }
    else
@@ -582,7 +582,7 @@ static bool DB2Init(Config *config)
       ObjectArray<ConfigEntry> *db2SubXmlSubEntries = db2SubXmlEntry->getSubEntries(_T("db2#*"));
       numOfPossibleThreads = db2SubXmlSubEntries->size();
       AgentWriteDebugLog(7, _T("%s: '%s' loaded with number of db2 entries: %d"), SUBAGENT_NAME, pathToXml, numOfPossibleThreads);
-      arrDb2Info = new PDB2_INFO[numOfPossibleThreads];
+      arrDb2Info = new DB2_INFO*[numOfPossibleThreads];
       TCHAR entryName[STR_MAX];
 
       for(int i = 0; i < numOfPossibleThreads; i++)
@@ -591,7 +591,7 @@ static bool DB2Init(Config *config)
          _tcscpy(entryName, _T("db2sub/"));
          _tcslcat(entryName, entry->getName(), STR_MAX);
 
-         const PDB2_INFO db2Info = GetConfigs(config, entry, entryName);
+         DB2_INFO *db2Info = GetConfigs(config, entry, entryName);
          if (db2Info == NULL)
          {
             continue;
@@ -607,15 +607,14 @@ static bool DB2Init(Config *config)
    {
       AgentWriteDebugLog(7, _T("%s: loaded %d configuration section(s)"), SUBAGENT_NAME, s_threadCount);
       s_threads = new THREAD_INFO[s_threadCount];
-      s_condShutdown = ConditionCreate(TRUE);
    }
 
    for(int i = 0; i < s_threadCount; i++)
    {
       //s_threads[i] = new THREAD_INFO;
-      s_threads[i].mutex = MutexCreate();
+      s_threads[i].mutex = new Mutex();
       s_threads[i].db2Info = arrDb2Info[i];
-      s_threads[i].threadHandle = ThreadCreateEx(RunMonitorThread, 0, (void*) &s_threads[i]);
+      s_threads[i].threadHandle = ThreadCreateEx(RunMonitorThread, &s_threads[i]);
    }
 
    delete[] arrDb2Info;
@@ -635,38 +634,34 @@ static bool DB2Init(Config *config)
 static void DB2Shutdown()
 {
    AgentWriteDebugLog(9, _T("%s: terminating"), SUBAGENT_NAME);
-   ConditionSet(s_condShutdown);
+   s_condShutdown.set();
 
    for(int i = 0; i < s_threadCount; i++)
    {
       ThreadJoin(s_threads[i].threadHandle);
-      MutexDestroy(s_threads[i].mutex);
+      delete s_threads[i].mutex;
       delete s_threads[i].db2Info;
    }
    delete[] s_threads;
 
    DBUnloadDriver(s_driver);
-   ConditionDestroy(s_condShutdown);
 
    s_driver = NULL;
-   s_condShutdown = NULL;
    s_threads = NULL;
 
    AgentWriteDebugLog(3, _T("%s: terminated"), SUBAGENT_NAME);
 }
 
-static THREAD_RESULT THREAD_CALL RunMonitorThread(void* info)
+static void RunMonitorThread(THREAD_INFO *threadInfo)
 {
-   PTHREAD_INFO threadInfo = (PTHREAD_INFO) info;
-   PDB2_INFO db2Info = threadInfo->db2Info;
+   DB2_INFO *db2Info = threadInfo->db2Info;
    DB_HANDLE dbHandle = NULL;
    TCHAR connectError[DBDRV_MAX_ERROR_TEXT];
    DWORD reconnectInterval = (DWORD) db2Info->db2ReconnectInterval;
 
    while(TRUE)
    {
-      dbHandle = DBConnect(
-         s_driver, db2Info->db2DbAlias, db2Info->db2DbName, db2Info->db2UName, db2Info->db2UPass, NULL, connectError);
+      dbHandle = DBConnect(s_driver, db2Info->db2DbAlias, db2Info->db2DbName, db2Info->db2UName, db2Info->db2UPass, NULL, connectError);
 
       if (dbHandle == NULL)
       {
@@ -675,7 +670,7 @@ static THREAD_RESULT THREAD_CALL RunMonitorThread(void* info)
             _T("%s: failed to connect to the database \"%s\" (%s), reconnecting in %ds"),
             SUBAGENT_NAME, db2Info->db2DbName, connectError, reconnectInterval);
 
-         if (ConditionWait(s_condShutdown, (reconnectInterval * 1000)))
+         if (s_condShutdown.wait(reconnectInterval * 1000))
          {
             break;
          }
@@ -699,18 +694,16 @@ static THREAD_RESULT THREAD_CALL RunMonitorThread(void* info)
    {
       DBDisconnect(dbHandle);
    }
-
-   return THREAD_OK;
 }
 
-static BOOL PerformQueries(const PTHREAD_INFO threadInfo)
+static BOOL PerformQueries(THREAD_INFO *threadInfo)
 {
-   PDB2_INFO db2Info = threadInfo->db2Info;
+   DB2_INFO *db2Info = threadInfo->db2Info;
    DWORD queryInterval = (DWORD) db2Info->db2QueryInterval;
 
    while(TRUE)
    {
-      MutexLock(threadInfo->mutex);
+      threadInfo->mutex->lock();
 
       DB_RESULT hResult;
       Dci* dciList;
@@ -743,9 +736,9 @@ static BOOL PerformQueries(const PTHREAD_INFO threadInfo)
          queryId++;
       }
 
-      MutexUnlock(threadInfo->mutex);
+      threadInfo->mutex->unlock();
 
-      if (ConditionWait(s_condShutdown, queryInterval * 1000))
+      if (s_condShutdown.wait(queryInterval * 1000))
       {
          break;
       }
@@ -794,7 +787,7 @@ static LONG GetParameter(const TCHAR *parameter, const TCHAR *arg, TCHAR *value,
    return SYSINFO_RC_SUCCESS;
 }
 
-static const PDB2_INFO GetConfigs(Config *config, ConfigEntry *configEntry, const TCHAR *entryName)
+static DB2_INFO *GetConfigs(Config *config, ConfigEntry *configEntry, const TCHAR *entryName)
 {
    ObjectArray<ConfigEntry> *entryList = configEntry->getSubEntries(_T("*"));
    if (entryList->size() == 0)
@@ -805,7 +798,7 @@ static const PDB2_INFO GetConfigs(Config *config, ConfigEntry *configEntry, cons
    }
    delete entryList;
 
-   const PDB2_INFO db2Info = new DB2_INFO();
+   DB2_INFO *db2Info = new DB2_INFO();
    BOOL noErr = TRUE;
    TCHAR dbPassEncrypted[MAX_DB_STRING] = _T("");
 

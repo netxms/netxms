@@ -28,7 +28,7 @@
 TC_ID_MAP_ENTRY __EXPORT *DCTable::m_cache = nullptr;
 int __EXPORT DCTable::m_cacheSize = 0;
 int __EXPORT DCTable::m_cacheAllocated = 0;
-MUTEX __EXPORT DCTable::m_cacheMutex = MutexCreate();
+Mutex __EXPORT DCTable::m_cacheMutex;
 
 /**
  * Compare cache element's name to string key
@@ -57,7 +57,7 @@ INT32 DCTable::columnIdFromName(const TCHAR *name)
 	if ((name == nullptr) || (*name == 0))
 		return 0;
 
-	MutexLock(m_cacheMutex);
+	m_cacheMutex.lock();
 
 	TC_ID_MAP_ENTRY *entry = (TC_ID_MAP_ENTRY *)bsearch(name, m_cache, m_cacheSize, sizeof(TC_ID_MAP_ENTRY), CompareCacheElements);
 	if (entry == nullptr)
@@ -114,7 +114,7 @@ INT32 DCTable::columnIdFromName(const TCHAR *name)
 		DBConnectionPoolReleaseConnection(hdb);
 	}
 
-	MutexUnlock(m_cacheMutex);
+	m_cacheMutex.unlock();
 	return (entry != nullptr) ? entry->id : 0;
 }
 

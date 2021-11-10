@@ -35,13 +35,13 @@ uint32_t g_rejectedConnections = 0;
  * Session list
  */
 SharedObjectArray<CommSession> g_sessions;
-MUTEX g_sessionLock = INVALID_MUTEX_HANDLE;
+Mutex g_sessionLock(MutexType::FAST);
 
 /**
  * Static data
  */
-static MUTEX m_mutexWatchdogActive = INVALID_MUTEX_HANDLE;
-static VolatileCounter s_messageId = (INT32)time(NULL);
+static Mutex s_mutexWatchdogActive;
+static VolatileCounter s_messageId = static_cast<int32_t>(time(NULL));
 
 /**
  * Generate new message ID
@@ -65,15 +65,6 @@ void InitSessionList()
       g_maxCommSessions = MIN(MAX(g_maxCommSessions, 2), 4096);
    }
    nxlog_debug(2, _T("Maximum number of sessions set to %d"), g_maxCommSessions);
-	g_sessionLock = MutexCreate();
-}
-
-/**
- * Destroy session list
- */
-void DestroySessionList()
-{
-   MutexDestroy(g_sessionLock);
 }
 
 /**
@@ -99,17 +90,17 @@ bool IsValidServerAddress(const InetAddress &addr, bool *pbMasterServer, bool *p
  */
 bool RegisterSession(const shared_ptr<CommSession>& session)
 {
-   MutexLock(g_sessionLock);
+   g_sessionLock.lock();
    if (g_sessions.size() < static_cast<int>(g_maxCommSessions))
    {
       g_sessions.add(session);
-      MutexUnlock(g_sessionLock);
+      g_sessionLock.unlock();
       session->debugPrintf(4, _T("Session registered (control=%s, master=%s)"),
                session->isControlServer() ? _T("true") : _T("false"), session->isMasterServer() ? _T("true") : _T("false"));
       return true;
    }
 
-   MutexUnlock(g_sessionLock);
+   g_sessionLock.unlock();
    nxlog_write(NXLOG_WARNING, _T("Too many communication sessions open - unable to accept new connection"));
    return false;
 }
@@ -119,14 +110,14 @@ bool RegisterSession(const shared_ptr<CommSession>& session)
  */
 void UnregisterSession(uint32_t id)
 {
-   MutexLock(g_sessionLock);
+   g_sessionLock.lock();
    for(int i = 0; i < g_sessions.size(); i++)
       if (g_sessions.get(i)->getId() == id)
       {
          g_sessions.get(i)->debugPrintf(4, _T("Session unregistered"));
          g_sessions.remove(i);
       }
-   MutexUnlock(g_sessionLock);
+   g_sessionLock.unlock();
 }
 
 /**
@@ -138,7 +129,7 @@ void UnregisterSession(uint32_t id)
 bool EnumerateSessions(EnumerationCallbackResult (*callback)(AbstractCommSession *, void *), void *data)
 {
    bool result = false;
-   MutexLock(g_sessionLock);
+   g_sessionLock.lock();
    for(int i = 0; i < g_sessions.size(); i++)
    {
       if (callback(g_sessions.get(i), data) == _STOP)
@@ -147,7 +138,7 @@ bool EnumerateSessions(EnumerationCallbackResult (*callback)(AbstractCommSession
          break;
       }
    }
-   MutexUnlock(g_sessionLock);
+   g_sessionLock.unlock();
    return result;
 }
 
@@ -157,7 +148,7 @@ bool EnumerateSessions(EnumerationCallbackResult (*callback)(AbstractCommSession
 shared_ptr<AbstractCommSession> FindServerSessionByServerId(uint64_t serverId)
 {
    shared_ptr<AbstractCommSession> session;
-   MutexLock(g_sessionLock);
+   g_sessionLock.lock();
    for(int i = 0; i < g_sessions.size(); i++)
    {
       if (g_sessions.get(i)->getServerId() == serverId)
@@ -166,7 +157,7 @@ shared_ptr<AbstractCommSession> FindServerSessionByServerId(uint64_t serverId)
          break;
       }
    }
-   MutexUnlock(g_sessionLock);
+   g_sessionLock.unlock();
    return session;
 }
 
@@ -176,7 +167,7 @@ shared_ptr<AbstractCommSession> FindServerSessionByServerId(uint64_t serverId)
 shared_ptr<AbstractCommSession> FindServerSessionById(uint32_t id)
 {
    shared_ptr<AbstractCommSession> session;
-   MutexLock(g_sessionLock);
+   g_sessionLock.lock();
    for(int i = 0; i < g_sessions.size(); i++)
    {
       if (g_sessions.get(i)->getId() == id)
@@ -185,7 +176,7 @@ shared_ptr<AbstractCommSession> FindServerSessionById(uint32_t id)
          break;
       }
    }
-   MutexUnlock(g_sessionLock);
+   g_sessionLock.unlock();
    return session;
 }
 
@@ -195,7 +186,7 @@ shared_ptr<AbstractCommSession> FindServerSessionById(uint32_t id)
 shared_ptr<AbstractCommSession> FindServerSession(bool (*comparator)(AbstractCommSession *, void *), void *userData)
 {
    shared_ptr<AbstractCommSession> session;
-   MutexLock(g_sessionLock);
+   g_sessionLock.lock();
    for(int i = 0; i < g_sessions.size(); i++)
    {
       if (comparator(g_sessions.get(i), userData))
@@ -204,7 +195,7 @@ shared_ptr<AbstractCommSession> FindServerSession(bool (*comparator)(AbstractCom
          break;
       }
    }
-   MutexUnlock(g_sessionLock);
+   g_sessionLock.unlock();
    return session;
 }
 
@@ -216,14 +207,14 @@ void NotifyConnectedServers(const TCHAR *notificationCode)
    NXCPMessage msg(CMD_NOTIFY, 0);
    msg.setField(VID_NOTIFICATION_CODE, notificationCode);
 
-   MutexLock(g_sessionLock);
+   g_sessionLock.lock();
    for(int j = 0; j < g_sessions.size(); j++)
    {
       CommSession *session = g_sessions.get(j);
       if (session->canAcceptTraps())
          session->sendMessage(msg);
    }
-   MutexUnlock(g_sessionLock);
+   g_sessionLock.unlock();
 }
 
 /**
@@ -491,9 +482,8 @@ void ListenerThread()
    }
 
    // Wait for watchdog thread
-   MutexLock(m_mutexWatchdogActive);
-   MutexUnlock(m_mutexWatchdogActive);
-   MutexDestroy(m_mutexWatchdogActive);
+   s_mutexWatchdogActive.lock();
+   s_mutexWatchdogActive.unlock();
 
    closesocket(hSocket);
 #ifdef WITH_IPV6
@@ -507,12 +497,11 @@ void ListenerThread()
  */
 void SessionWatchdog()
 {
-   m_mutexWatchdogActive = MutexCreate();
-   MutexLock(m_mutexWatchdogActive);
+   s_mutexWatchdogActive.lock();
 
    while(!AgentSleepAndCheckForShutdown(5000))
    {
-      MutexLock(g_sessionLock);
+      g_sessionLock.lock();
       time_t now = time(nullptr);
       for(int i = 0; i < g_sessions.size(); i++)
       {
@@ -525,17 +514,17 @@ void SessionWatchdog()
             i--;
          }
       }
-      MutexUnlock(g_sessionLock);
+      g_sessionLock.unlock();
    }
 
    // Disconnect all sessions
-   MutexLock(g_sessionLock);
+   g_sessionLock.lock();
    for(int i = 0; i < g_sessions.size(); i++)
       g_sessions.get(i)->disconnect();
-   MutexUnlock(g_sessionLock);
+   g_sessionLock.unlock();
 
    ThreadSleep(1);
-   MutexUnlock(m_mutexWatchdogActive);
+   s_mutexWatchdogActive.unlock();
    DebugPrintf(1, _T("Session Watchdog thread terminated"));
 }
 
@@ -544,8 +533,8 @@ void SessionWatchdog()
  */
 LONG H_ActiveConnections(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
-   MutexLock(g_sessionLock);
+   g_sessionLock.lock();
    ret_int(pValue, g_sessions.size());
-   MutexUnlock(g_sessionLock);
+   g_sessionLock.unlock();
    return SYSINFO_RC_SUCCESS;
 }

@@ -37,7 +37,7 @@ HANDLE g_winperfShutdownCondition = NULL;
  * Static variables
  */
 static DWORD m_dwFlags = WPF_ENABLE_DEFAULT_COUNTERS;
-static MUTEX s_autoCountersLock = MutexCreate();
+static Mutex s_autoCountersLock(MutexType::FAST);
 static StringObjectMap<WINPERF_COUNTER> *s_autoCounters = new StringObjectMap<WINPERF_COUNTER>(Ownership::False);
 
 /**
@@ -117,7 +117,7 @@ static LONG H_PdhCounterValue(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *p
    BOOL bUseTwoSamples = FALSE;
    static TCHAR szFName[] = _T("H_PdhCounterValue");
 
-	if (pArg == NULL)		// Normal call
+	if (pArg == nullptr)		// Normal call
 	{
 		if (!AgentGetParameterArg(pszParam, 1, szCounter, MAX_PATH))
 			return SYSINFO_RC_UNSUPPORTED;
@@ -127,23 +127,23 @@ static LONG H_PdhCounterValue(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *p
 		AgentGetParameterArg(pszParam, 2, buffer, MAX_PATH);
 		if (buffer[0] != 0)   // sample count given
 		{
-			int samples = _tcstol(buffer, NULL, 0);
+			int samples = _tcstol(buffer, nullptr, 0);
 			if (samples > 1)
 			{
 				_sntprintf(buffer, MAX_PATH, _T("%d#%s"), samples, szCounter);
-				MutexLock(s_autoCountersLock);
+				s_autoCountersLock.lock();
 				WINPERF_COUNTER *counter = s_autoCounters->get(buffer);
-				if (counter == NULL)
+				if (counter == nullptr)
 				{
 					counter = AddCounter(szCounter, 0, samples, COUNTER_TYPE_AUTO);
-					if (counter != NULL)
+					if (counter != nullptr)
 					{
 						nxlog_debug_tag(WINPERF_DEBUG_TAG, 5, _T("New automatic counter created: \"%s\""), buffer);
 						s_autoCounters->set(buffer, counter);
 					}
 				}
-				MutexUnlock(s_autoCountersLock);
-				return (counter != NULL) ? H_CollectedCounterData(pszParam, (const TCHAR *)counter, pValue, session) : SYSINFO_RC_UNSUPPORTED;
+				s_autoCountersLock.unlock();
+				return (counter != nullptr) ? H_CollectedCounterData(pszParam, (const TCHAR *)counter, pValue, session) : SYSINFO_RC_UNSUPPORTED;
 			}
 		}
 	}

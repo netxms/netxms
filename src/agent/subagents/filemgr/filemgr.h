@@ -105,11 +105,11 @@ struct MessageData
 class MonitoredFileList
 {
 private:
-   MUTEX m_mutex;
+   Mutex m_mutex;
    ObjectArray<MONITORED_FILE> m_files;
 
-   void lock() { MutexLock(m_mutex); }
-   void unlock() { MutexUnlock(m_mutex); }
+   void lock() { m_mutex.lock(); }
+   void unlock() { m_mutex.unlock(); }
 
 public:
    MonitoredFileList();

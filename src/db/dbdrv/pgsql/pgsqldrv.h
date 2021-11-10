@@ -1,6 +1,6 @@
 /* 
 ** PostgreSQL Database Driver
-** Copyright (C) 2003-2015 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -48,16 +48,16 @@
 /**
  * PostgreSQL connection
  */
-typedef struct
+struct PG_CONN
 {
 	PGconn *handle;
-	MUTEX mutexQueryLock;
-} PG_CONN;
+	Mutex mutexQueryLock;
+};
 
 /**
  * Prepared statement
  */
-typedef struct
+struct PG_STATEMENT
 {
 	PG_CONN *connection;
 	char name[64];
@@ -65,18 +65,18 @@ typedef struct
 	int pcount;		// Number of parameters
 	int allocated;	// Allocated buffers
 	char **buffers;	
-} PG_STATEMENT;
+};
 
 /**
  * Unbuffered query result
  */
-typedef struct
+struct PG_UNBUFFERED_RESULT
 {
    PG_CONN *conn;
    PGresult *fetchBuffer;
    bool keepFetchBuffer;
    bool singleRowMode;
    int currRow;
-} PG_UNBUFFERED_RESULT;
+};
 
 #endif   /* _pgsqldrv_h_ */

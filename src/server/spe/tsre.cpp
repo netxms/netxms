@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Raden Solutions
+** Copyright (C) 2003-2021 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -30,9 +30,8 @@
 /**
  * Constructor
  */
-TimeSeriesRegressionEngine::TimeSeriesRegressionEngine() : PredictionEngine(), m_networks(Ownership::True)
+TimeSeriesRegressionEngine::TimeSeriesRegressionEngine() : PredictionEngine(), m_networks(Ownership::True), m_networkLock(MutexType::FAST)
 {
-   m_networkLock = MutexCreate();
 }
 
 /**
@@ -40,7 +39,6 @@ TimeSeriesRegressionEngine::TimeSeriesRegressionEngine() : PredictionEngine(), m
  */
 TimeSeriesRegressionEngine::~TimeSeriesRegressionEngine()
 {
-   MutexDestroy(m_networkLock);
 }
 
 /**
@@ -146,9 +144,9 @@ void TimeSeriesRegressionEngine::reset(UINT32 nodeId, UINT32 dciId, DCObjectStor
    TCHAR nid[64];
    _sntprintf(nid, 64, _T("%u/%u"), nodeId, dciId);
 
-   MutexLock(m_networkLock);
+   m_networkLock.lock();
    m_networks.remove(nid);
-   MutexUnlock(m_networkLock);
+   m_networkLock.unlock();
 }
 
 /**
@@ -163,7 +161,7 @@ void TimeSeriesRegressionEngine::reset(UINT32 nodeId, UINT32 dciId, DCObjectStor
 double TimeSeriesRegressionEngine::getPredictedValue(UINT32 nodeId, UINT32 dciId, DCObjectStorageClass storageClass, time_t timestamp)
 {
    StructArray<DciValue> *values = getDciValues(nodeId, dciId, storageClass, INPUT_LAYER_SIZE);
-   if (values == NULL)
+   if (values == nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG, 5, _T("TimeSeriesRegressionEngine::getPredictedValue: cannot read data for DCI %u/%u"), nodeId, dciId);
       return 0;
@@ -245,15 +243,15 @@ NeuralNetwork *TimeSeriesRegressionEngine::acquireNetwork(UINT32 nodeId, UINT32 
    TCHAR nid[64];
    _sntprintf(nid, 64, _T("%u/%u"), nodeId, dciId);
 
-   MutexLock(m_networkLock);
+   m_networkLock.lock();
    NeuralNetwork *nn = m_networks.get(nid);
-   if (nn == NULL)
+   if (nn == nullptr)
    {
       nn = new NeuralNetwork(INPUT_LAYER_SIZE, 10);
       m_networks.set(nid, nn);
    }
    nn->lock();
-   MutexUnlock(m_networkLock);
+   m_networkLock.unlock();
 
    return nn;
 }

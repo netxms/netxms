@@ -24,7 +24,7 @@
 // 64 + 1 for overal
 
 static THREAD m_cpuUsageCollector = INVALID_THREAD_HANDLE;
-static MUTEX m_cpuUsageMutex = INVALID_MUTEX_HANDLE;
+static Mutex m_cpuUsageMutex(MutexType::FAST);
 static bool volatile m_stopCollectorThread = false;
 static uint64_t *m_user;
 static uint64_t *m_nice;
@@ -70,7 +70,7 @@ static void CpuUsageCollector()
 	uint32_t maxCpu = 0;
 	char buffer[1024];
 
-	MutexLock(m_cpuUsageMutex);
+	m_cpuUsageMutex.lock();
 	if (m_currentSlot == CPU_USAGE_SLOTS)
 	{
 		m_currentSlot = 0;
@@ -179,7 +179,7 @@ static void CpuUsageCollector()
 
 	/* go to the next slot */
 	m_currentSlot++;
-	MutexUnlock(m_cpuUsageMutex);
+	m_cpuUsageMutex.unlock();
 
 	fclose(hStat);
 	m_maxCPU = maxCpu;
@@ -235,8 +235,6 @@ static uint32_t GetCpuCountFromStat()
 void StartCpuUsageCollector()
 {
 	int i, j;
-
-	m_cpuUsageMutex = MutexCreate();
 
    uint32_t cpuCount = sysconf(_SC_NPROCESSORS_ONLN);
    uint32_t cpuCount2 = GetCpuCountFromStat();
@@ -301,7 +299,6 @@ void ShutdownCpuUsageCollector()
 {
 	m_stopCollectorThread = true;
 	ThreadJoin(m_cpuUsageCollector);
-	MutexDestroy(m_cpuUsageMutex);
 
 	MemFree(m_cpuUsage);
 	MemFree(m_cpuUsageUser);
@@ -365,7 +362,7 @@ static void GetUsage(int source, int cpu, int count, TCHAR *value)
 
    table += cpu * CPU_USAGE_SLOTS;
    float usage = 0;
-   MutexLock(m_cpuUsageMutex);
+   m_cpuUsageMutex.lock();
 
    float *p = table + m_currentSlot - 1;
    for (int i = 0; i < count; i++)
@@ -378,7 +375,7 @@ static void GetUsage(int source, int cpu, int count, TCHAR *value)
       p--;
    }
 
-   MutexUnlock(m_cpuUsageMutex);
+   m_cpuUsageMutex.unlock();
 
    usage /= count;
 

@@ -1275,8 +1275,10 @@ enum class Ownership : bool
  */
 #if CAN_DELETE_COPY_CTOR
 #define DISABLE_COPY_CTOR(c) c (const c &s) = delete;
+#define DISABLE_ASSIGNMENT_OP(c) c& operator =(const c &s) = delete;
 #else
 #define DISABLE_COPY_CTOR(c)
+#define DISABLE_ASSIGNMENT_OP(c)
 #endif
 
 /**

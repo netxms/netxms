@@ -37,9 +37,9 @@
 /**
  * Housekeeper data
  */
-MUTEX __EXPORT MsgWaitQueue::m_housekeeperLock = MutexCreate();
+Mutex __EXPORT MsgWaitQueue::m_housekeeperLock;
 HashMap<uint64_t, MsgWaitQueue> __EXPORT *MsgWaitQueue::m_activeQueues = new HashMap<uint64_t, MsgWaitQueue>(Ownership::False);
-CONDITION __EXPORT MsgWaitQueue::m_shutdownCondition = ConditionCreate(true);
+Condition __EXPORT MsgWaitQueue::m_shutdownCondition(true);
 THREAD __EXPORT MsgWaitQueue::m_housekeeperThread = INVALID_THREAD_HANDLE;
 
 /**
@@ -66,14 +66,14 @@ MsgWaitQueue::MsgWaitQueue()
 #endif
 
    // register new queue
-   MutexLock(m_housekeeperLock);
+   m_housekeeperLock.lock();
    if (m_activeQueues != nullptr)
       m_activeQueues->set(CAST_FROM_POINTER(this, uint64_t), this);
    if (m_housekeeperThread == INVALID_THREAD_HANDLE)
    {
       m_housekeeperThread = ThreadCreateEx(MsgWaitQueue::housekeeperThread, 0, nullptr);
    }
-   MutexUnlock(m_housekeeperLock);
+   m_housekeeperLock.unlock();
 }
 
 /**
@@ -82,10 +82,10 @@ MsgWaitQueue::MsgWaitQueue()
 MsgWaitQueue::~MsgWaitQueue()
 {
    // unregister queue
-   MutexLock(m_housekeeperLock);
+   m_housekeeperLock.lock();
    if (m_activeQueues != nullptr)
       m_activeQueues->remove(CAST_FROM_POINTER(this, uint64_t));
-   MutexUnlock(m_housekeeperLock);
+   m_housekeeperLock.unlock();
 
    clear();
 
@@ -226,11 +226,11 @@ void *MsgWaitQueue::waitForMessageInternal(UINT16 isBinary, UINT16 wCode, UINT32
 
    do
    {
-      UINT64 minSeq = _ULL(0xFFFFFFFFFFFFFFFF);
+      uint64_t minSeq = _ULL(0xFFFFFFFFFFFFFFFF);
       int index = -1;
       for(int i = 0; i < m_allocated; i++)
 		{
-         if ((m_elements[i].msg != NULL) && 
+         if ((m_elements[i].msg != nullptr) &&
              (m_elements[i].id == dwId) &&
              (m_elements[i].code == wCode) &&
              (m_elements[i].isBinary == isBinary))
@@ -246,7 +246,7 @@ void *MsgWaitQueue::waitForMessageInternal(UINT16 isBinary, UINT16 wCode, UINT32
       if (index != -1)
       {
          void *msg = m_elements[index].msg;
-         m_elements[index].msg = NULL;
+         m_elements[index].msg = nullptr;
          m_size--;
 #ifdef _WIN32
          if (slot != -1)
@@ -256,7 +256,7 @@ void *MsgWaitQueue::waitForMessageInternal(UINT16 isBinary, UINT16 wCode, UINT32
          return msg;
       }
 
-      INT64 startTime = GetCurrentTimeMs();
+      int64_t startTime = GetCurrentTimeMs();
        
 #if defined(_WIN32)
       // Find free slot if needed
@@ -378,11 +378,11 @@ EnumerationCallbackResult MsgWaitQueue::houseKeeperCallback(const uint64_t& key,
 THREAD_RESULT THREAD_CALL MsgWaitQueue::housekeeperThread(void *arg)
 {
    ThreadSetName("MsgWaitQueue");
-   while(!ConditionWait(m_shutdownCondition, TTL_CHECK_INTERVAL))
+   while(!m_shutdownCondition.wait(TTL_CHECK_INTERVAL))
    {
-      MutexLock(m_housekeeperLock);
+      m_housekeeperLock.lock();
       m_activeQueues->forEach(MsgWaitQueue::houseKeeperCallback);
-      MutexUnlock(m_housekeeperLock);
+      m_housekeeperLock.unlock();
    }
    return THREAD_OK;
 }
@@ -392,14 +392,12 @@ THREAD_RESULT THREAD_CALL MsgWaitQueue::housekeeperThread(void *arg)
  */
 void MsgWaitQueue::shutdown()
 {
-   ConditionSet(m_shutdownCondition);
+   m_shutdownCondition.set();
    ThreadJoin(m_housekeeperThread);
-   MutexLock(m_housekeeperLock);
+   m_housekeeperLock.lock();
    m_housekeeperThread = INVALID_THREAD_HANDLE;
    delete_and_null(m_activeQueues);
-   MutexUnlock(m_housekeeperLock);
-   ConditionDestroy(m_shutdownCondition);
-   MutexDestroy(m_housekeeperLock);
+   m_housekeeperLock.unlock();
 }
 
 /**
@@ -419,7 +417,7 @@ EnumerationCallbackResult MsgWaitQueue::diagInfoCallback(const uint64_t& key, Ms
 StringBuffer MsgWaitQueue::getDiagInfo()
 {
    StringBuffer out;
-   MutexLock(m_housekeeperLock);
+   m_housekeeperLock.lock();
    out.append(m_activeQueues->size());
    out.append(_T(" active queues\nHousekeeper thread state is "));
    out.append((m_housekeeperThread != INVALID_THREAD_HANDLE) ? _T("RUNNING\n") : _T("STOPPED\n"));
@@ -428,6 +426,6 @@ StringBuffer MsgWaitQueue::getDiagInfo()
       out.append(_T("Active queues:\n"));
       m_activeQueues->forEach(MsgWaitQueue::diagInfoCallback, &out);
    }
-   MutexUnlock(m_housekeeperLock);
+   m_housekeeperLock.unlock();
    return out;
 }

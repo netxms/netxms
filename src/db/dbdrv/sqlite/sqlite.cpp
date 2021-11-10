@@ -33,7 +33,7 @@ static void GetErrorMessage(sqlite3 *hdb, WCHAR *errorText)
 		return;
 
 #if UNICODE_UCS2
-	wcsncpy(errorText, (const WCHAR *)sqlite3_errmsg16(hdb), DBDRV_MAX_ERROR_TEXT);
+	wcslcpy(errorText, (const WCHAR *)sqlite3_errmsg16(hdb), DBDRV_MAX_ERROR_TEXT);
 #else
 	MultiByteToWideChar(CP_UTF8, 0, sqlite3_errmsg(hdb), -1, errorText, DBDRV_MAX_ERROR_TEXT);
 #endif
@@ -144,22 +144,20 @@ extern "C" DBDRV_CONNECTION __EXPORT DrvConnect(const char *host, const char *lo
    SQLITE_CONN *pConn;
 	sqlite3 *hdb;
 
-   if (sqlite3_open_v2(database, &hdb, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, NULL) == SQLITE_OK)
+   if (sqlite3_open_v2(database, &hdb, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, nullptr) == SQLITE_OK)
    {
       sqlite3_busy_timeout(hdb, 30000);  // 30 sec. busy timeout
 
 		// Create new handle
-		pConn = (SQLITE_CONN *)malloc(sizeof(SQLITE_CONN));
-		memset(pConn, 0, sizeof(SQLITE_CONN));
+		pConn = new SQLITE_CONN();
 		pConn->pdb = hdb;
-		pConn->mutexQueryLock = MutexCreate();
 
-      sqlite3_exec(hdb, "PRAGMA foreign_keys = ON", NULL, NULL, NULL);
+      sqlite3_exec(hdb, "PRAGMA foreign_keys = ON", nullptr, nullptr, nullptr);
    }
 	else
 	{
 		GetErrorMessage(hdb, errorText);
-		pConn = NULL;
+		pConn = nullptr;
 		sqlite3_close(hdb);
 	}
    return (DBDRV_CONNECTION)pConn;
@@ -170,12 +168,11 @@ extern "C" DBDRV_CONNECTION __EXPORT DrvConnect(const char *host, const char *lo
  */
 extern "C" void __EXPORT DrvDisconnect(SQLITE_CONN *hConn)
 {
-   if (hConn == NULL)
+   if (hConn == nullptr)
 		return;
 
 	sqlite3_close(hConn->pdb);
-   MutexDestroy(hConn->mutexQueryLock);
-   free(hConn);
+   delete hConn;
 }
 
 /**
@@ -184,7 +181,7 @@ extern "C" void __EXPORT DrvDisconnect(SQLITE_CONN *hConn)
 extern "C" DBDRV_STATEMENT __EXPORT DrvPrepare(SQLITE_CONN *hConn, WCHAR *pwszQuery, bool optimizeForReuse, DWORD *pdwError, WCHAR *errorText)
 {
    char *pszQueryUTF8 = UTF8StringFromWideString(pwszQuery);
-   MutexLock(hConn->mutexQueryLock);
+   hConn->mutexQueryLock.lock();
 	sqlite3_stmt *stmt;
 
 retry:
@@ -201,7 +198,7 @@ retry:
 		stmt = NULL;
 		*pdwError = DBERR_OTHER_ERROR;
    }
-   MutexUnlock(hConn->mutexQueryLock);
+   hConn->mutexQueryLock.unlock();
    free(pszQueryUTF8);
    return stmt;
 }
@@ -261,7 +258,7 @@ extern "C" DWORD __EXPORT DrvExecute(SQLITE_CONN *hConn, sqlite3_stmt *stmt, WCH
 {
 	DWORD result;
 
-	MutexLock(hConn->mutexQueryLock);
+	hConn->mutexQueryLock.lock();
 retry:
 	int rc = sqlite3_step(stmt);
 	if ((rc == SQLITE_DONE) || (rc == SQLITE_ROW))
@@ -290,7 +287,7 @@ retry:
 
       sqlite3_reset(stmt);
 	}
-	MutexUnlock(hConn->mutexQueryLock);
+	hConn->mutexQueryLock.unlock();
 	return result;
 }
 
@@ -310,7 +307,7 @@ static DWORD DrvQueryInternal(SQLITE_CONN *pConn, const char *pszQuery, WCHAR *e
 {
    DWORD result;
 
-   MutexLock(pConn->mutexQueryLock);
+   pConn->mutexQueryLock.lock();
 retry:
    int rc = sqlite3_exec(pConn->pdb, pszQuery, NULL, NULL, NULL);
    if (rc == SQLITE_OK)
@@ -328,7 +325,7 @@ retry:
 		GetErrorMessage(pConn->pdb, errorText);
 		result = DBERR_OTHER_ERROR;
 	}
-   MutexUnlock(pConn->mutexQueryLock);
+   pConn->mutexQueryLock.unlock();
    return result;
 }
 
@@ -417,7 +414,7 @@ static SQLITE_RESULT *DrvSelectInternal(SQLITE_CONN *conn, const WCHAR *query, u
 
    SQLITE_RESULT *result = MemAllocStruct<SQLITE_RESULT>();
 
-	MutexLock(conn->mutexQueryLock);
+	conn->mutexQueryLock.lock();
 retry:
    int rc = sqlite3_exec(conn->pdb, queryUTF8, SelectCallback, result, NULL);
    if ((rc == SQLITE_LOCKED) || (rc == SQLITE_LOCKED_SHAREDCACHE))
@@ -432,7 +429,7 @@ retry:
 		DrvFreeResultInternal(result);
 		result = nullptr;
    }
-   MutexUnlock(conn->mutexQueryLock);
+   conn->mutexQueryLock.unlock();
 
 	MemFree(queryUTF8);
    *errorCode = (result != NULL) ? DBERR_SUCCESS : DBERR_OTHER_ERROR;
@@ -454,7 +451,7 @@ extern "C" DBDRV_RESULT __EXPORT DrvSelectPrepared(SQLITE_CONN *hConn, sqlite3_s
 {
    SQLITE_RESULT *result = MemAllocStruct<SQLITE_RESULT>();
 
-   MutexLock(hConn->mutexQueryLock);
+   hConn->mutexQueryLock.lock();
 
 	int nCols = sqlite3_column_count(stmt);
 	char **cnames = (char **)malloc(sizeof(char *) * nCols * 2);	// column names + values
@@ -512,7 +509,7 @@ extern "C" DBDRV_RESULT __EXPORT DrvSelectPrepared(SQLITE_CONN *hConn, sqlite3_s
       sqlite3_reset(stmt);
    }
 
-   MutexUnlock(hConn->mutexQueryLock);
+   hConn->mutexQueryLock.unlock();
 
 	if (*errorCode != DBERR_SUCCESS)
 	{
@@ -599,7 +596,7 @@ extern "C" DBDRV_UNBUFFERED_RESULT __EXPORT DrvSelectUnbuffered(SQLITE_CONN *hCo
    sqlite3_stmt *stmt;
 
    char *pszQueryUTF8 = UTF8StringFromWideString(pwszQuery);
-   MutexLock(hConn->mutexQueryLock);
+   hConn->mutexQueryLock.lock();
 retry:
    int rc = sqlite3_prepare(hConn->pdb, pszQueryUTF8, -1, &stmt, nullptr);
 	if (rc == SQLITE_OK)
@@ -620,7 +617,7 @@ retry:
    else
    {
 		GetErrorMessage(hConn->pdb, errorText);
-      MutexUnlock(hConn->mutexQueryLock);
+      hConn->mutexQueryLock.unlock();
       result = nullptr;
 		*pdwError = DBERR_OTHER_ERROR;
    }
@@ -760,7 +757,7 @@ extern "C" void __EXPORT DrvFreeUnbufferedResult(SQLITE_UNBUFFERED_RESULT *resul
          sqlite3_reset(result->stmt);
       else
          sqlite3_finalize(result->stmt);
-      MutexUnlock(result->connection->mutexQueryLock);
+      result->connection->mutexQueryLock.unlock();
       MemFree(result);
    }
 }

@@ -56,14 +56,14 @@ static char s_service[MAX_CONFIG_VALUE] = "";
 static char s_trustedCA[MAX_PATH] = "";
 static char s_validateURL[MAX_CONFIG_VALUE] = "/cas/serviceValidate";
 static StringSet s_proxies;
-static MUTEX s_lock = MutexCreate();
+static Mutex s_lock;
 
 /**
  * Read CAS settings
  */
 void CASReadSettings()
 {
-   MutexLock(s_lock);
+   s_lock.lock();
 
    ConfigReadStrA(_T("CAS.Host"), s_hostname, MAX_DNS_NAME, "localhost");
    s_port = ConfigReadInt(_T("CAS.Port"), 8443);
@@ -80,7 +80,7 @@ void CASReadSettings()
       s_proxies.splitAndAdd(proxies, _T(","));
    }
 
-   MutexUnlock(s_lock);
+   s_lock.unlock();
    nxlog_debug_tag(DEBUG_TAG, 4, _T("CAS configuration reloaded"));
 }
 
@@ -367,13 +367,13 @@ end:
 bool CASAuthenticate(const char *ticket, TCHAR *loginName)
 {
    bool success = false;
-   MutexLock(s_lock);
+   s_lock.lock();
 #ifdef UNICODE
    char mbLogin[MAX_USER_NAME];
    int rc = CASValidate(ticket, mbLogin);
    if (rc == CAS_SUCCESS)
    {
-      MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, mbLogin, -1, loginName, MAX_USER_NAME);
+      mb_to_wchar(mbLogin, -1, loginName, MAX_USER_NAME);
       success = true;
    }
 #else
@@ -387,7 +387,7 @@ bool CASAuthenticate(const char *ticket, TCHAR *loginName)
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("CAS: ticket %hs validation failed, error %d"), ticket, rc);
    }
-   MutexUnlock(s_lock);
+   s_lock.unlock();
    return success;
 }
 

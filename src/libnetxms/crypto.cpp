@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -58,7 +58,7 @@ static UINT32 s_supportedCiphers =
 /**
  * Static data
  */
-static WORD s_noEncryptionFlag = 0;
+static uint16_t s_noEncryptionFlag = 0;
 static const TCHAR *s_cipherNames[NETXMS_MAX_CIPHERS] = { _T("AES-256"), _T("Blowfish-256"), _T("IDEA"), _T("3DES"), _T("AES-128"), _T("Blowfish-128") };
 
 #ifdef _WITH_ENCRYPTION
@@ -99,7 +99,7 @@ static CIPHER_FUNC s_ciphers[NETXMS_MAX_CIPHERS] =
 };
 
 #if OPENSSL_VERSION_NUMBER < 0x10100000L
-static MUTEX *s_cryptoMutexList = NULL;
+static Mutex *s_cryptoMutexList = nullptr;
 
 /**
  * Locking callback for CRYPTO library
@@ -110,9 +110,9 @@ extern "C"
 static void CryptoLockingCallback(int nMode, int nLock, const char *pszFile, int nLine)
 {
    if (nMode & CRYPTO_LOCK)
-      MutexLock(s_cryptoMutexList[nLock]);
+      s_cryptoMutexList[nLock].lock();
    else
-      MutexUnlock(s_cryptoMutexList[nLock]);
+      s_cryptoMutexList[nLock].unlock();
 }
 
 #endif   /* OPENSSL_VERSION_NUMBER < 0x10100000L */
@@ -214,9 +214,7 @@ bool LIBNETXMS_EXPORTABLE InitCryptoLib(UINT32 dwEnabledCiphers)
    RAND_seed(random, 8192);
 
 #if OPENSSL_VERSION_NUMBER < 0x10100000L
-   s_cryptoMutexList = (MUTEX *)malloc(sizeof(MUTEX) * CRYPTO_num_locks());
-   for (i = 0; i < CRYPTO_num_locks(); i++)
-      s_cryptoMutexList[i] = MutexCreate();
+   s_cryptoMutexList = new Mutex[CRYPTO_num_locks()];
    CRYPTO_set_locking_callback(CryptoLockingCallback);
 #ifndef _WIN32
    CRYPTO_set_id_callback(CryptoIdCallback);
@@ -226,7 +224,7 @@ bool LIBNETXMS_EXPORTABLE InitCryptoLib(UINT32 dwEnabledCiphers)
    // validate supported ciphers
    nxlog_debug_tag(DEBUG_TAG, 1, _T("Validating ciphers"));
    s_supportedCiphers &= dwEnabledCiphers;
-   UINT32 cipherBit = 1;
+   uint32_t cipherBit = 1;
    for (i = 0; i < NETXMS_MAX_CIPHERS; i++, cipherBit = cipherBit << 1)
    {
       if ((s_supportedCiphers & cipherBit) == 0)
@@ -588,7 +586,7 @@ void LIBNETXMS_EXPORTABLE ICEDecryptData(const BYTE *in, size_t inLen, BYTE *out
 /**
  * Encryption context constructor
  */
-NXCPEncryptionContext::NXCPEncryptionContext()
+NXCPEncryptionContext::NXCPEncryptionContext() : m_encryptorLock(MutexType::FAST)
 {
    m_sessionKey = NULL;
    m_keyLength = 0;
@@ -603,7 +601,6 @@ NXCPEncryptionContext::NXCPEncryptionContext()
    EVP_CIPHER_CTX_init(m_encryptor);
    EVP_CIPHER_CTX_init(m_decryptor);
 #endif
-   m_encryptorLock = MutexCreate();
 #endif
 }
 
@@ -623,7 +620,6 @@ NXCPEncryptionContext::~NXCPEncryptionContext()
    MemFree(m_encryptor);
    MemFree(m_decryptor);
 #endif
-   MutexDestroy(m_encryptorLock);
 #endif
 }
 
@@ -809,17 +805,17 @@ NXCP_ENCRYPTED_MESSAGE *NXCPEncryptionContext::encryptMessage(NXCP_MESSAGE *msg)
       return (NXCP_ENCRYPTED_MESSAGE *)MemCopyBlock(msg, ntohl(msg->size));
 
 #ifdef _WITH_ENCRYPTION
-   MutexLock(m_encryptorLock);
+   m_encryptorLock.lock();
 
    if (!EVP_EncryptInit_ex(m_encryptor, nullptr, nullptr, m_sessionKey, m_iv))
    {
-      MutexUnlock(m_encryptorLock);
+      m_encryptorLock.unlock();
       return nullptr;
    }
 
    UINT32 msgSize = ntohl(msg->size);
    NXCP_ENCRYPTED_MESSAGE *emsg = 
-      (NXCP_ENCRYPTED_MESSAGE *)malloc(msgSize + NXCP_ENCRYPTION_HEADER_SIZE + EVP_CIPHER_block_size(EVP_CIPHER_CTX_cipher(m_encryptor)) + 8);
+      (NXCP_ENCRYPTED_MESSAGE *)MemAlloc(msgSize + NXCP_ENCRYPTION_HEADER_SIZE + EVP_CIPHER_block_size(EVP_CIPHER_CTX_cipher(m_encryptor)) + 8);
    emsg->code = htons(CMD_ENCRYPTED_MESSAGE);
    emsg->reserved = 0;
 
@@ -835,7 +831,7 @@ NXCP_ENCRYPTED_MESSAGE *NXCPEncryptionContext::encryptMessage(NXCP_MESSAGE *msg)
    EVP_EncryptFinal_ex(m_encryptor, emsg->data + msgSize, &dataSize);
    msgSize += dataSize + NXCP_EH_UNENCRYPTED_BYTES;
 
-   MutexUnlock(m_encryptorLock);
+   m_encryptorLock.unlock();
 
    if (msgSize % 8 != 0)
    {

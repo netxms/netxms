@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Raden Solutions
+** Copyright (C) 2003-2021 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -27,7 +27,7 @@
  * Storage
  */
 static StringMap s_persistentStorage;
-static MUTEX s_lockPStorage;
+static Mutex s_lockPStorage(MutexType::FAST);
 
 /**
  * Lists for database update
@@ -45,7 +45,6 @@ NXSL_PersistentStorage g_nxslPstorage;
  */
 void PersistentStorageInit()
 {
-   s_lockPStorage = MutexCreate();
    s_valueDeleteList = new StringMap();
    s_valueSetList = new StringMap();
 
@@ -69,7 +68,6 @@ void PersistentStorageInit()
  */
 void PersistentStorageDestroy()
 {
-   MutexDestroy(s_lockPStorage);
    delete s_valueDeleteList;
    delete s_valueSetList;
    s_persistentStorage.clear();
@@ -90,11 +88,11 @@ void SetPersistentStorageValue(const TCHAR *key, const TCHAR *value)
       key = tempKey;
    }
 
-   MutexLock(s_lockPStorage);
+   s_lockPStorage.lock();
    s_persistentStorage.set(key, CHECK_NULL_EX(value));
    s_valueSetList->set(key, CHECK_NULL_EX(value));
    s_valueDeleteList->remove(key);
-   MutexUnlock(s_lockPStorage);
+   s_lockPStorage.unlock();
 }
 
 /**
@@ -112,7 +110,7 @@ bool DeletePersistentStorageValue(const TCHAR *key)
       key = tempKey;
    }
 
-   MutexLock(s_lockPStorage);
+   s_lockPStorage.lock();
    bool success = s_persistentStorage.contains(key);
    if (success)
    {
@@ -120,7 +118,7 @@ bool DeletePersistentStorageValue(const TCHAR *key)
       s_valueSetList->remove(key);
       s_valueDeleteList->set(key, _T(""));
    }
-   MutexUnlock(s_lockPStorage);
+   s_lockPStorage.unlock();
    return success;
 }
 
@@ -139,9 +137,9 @@ SharedString GetPersistentStorageValue(const TCHAR *key)
       key = tempKey;
    }
 
-   MutexLock(s_lockPStorage);
+   s_lockPStorage.lock();
    SharedString value(s_persistentStorage.get(key));
-   MutexUnlock(s_lockPStorage);
+   s_lockPStorage.unlock();
    return value;
 }
 
@@ -150,9 +148,9 @@ SharedString GetPersistentStorageValue(const TCHAR *key)
  */
 void GetPersistentStorageList(NXCPMessage *msg)
 {
-   MutexLock(s_lockPStorage);
+   s_lockPStorage.lock();
    s_persistentStorage.fillMessage(msg, VID_NUM_PSTORAGE, VID_PSTORAGE_LIST_BASE);
-   MutexUnlock(s_lockPStorage);
+   s_lockPStorage.unlock();
 }
 
 /**
@@ -216,12 +214,12 @@ void UpdatePStorageDatabase(DB_HANDLE hdb, uint32_t watchdogId)
 
    StringMap *tmpDeleteList;
    StringMap *tmpSetList;
-   MutexLock(s_lockPStorage);
+   s_lockPStorage.lock();
    tmpDeleteList = s_valueDeleteList;
    s_valueDeleteList = new StringMap();
    tmpSetList = s_valueSetList;
    s_valueSetList = new StringMap();
-   MutexUnlock(s_lockPStorage);
+   s_lockPStorage.unlock();
 
    if (!tmpDeleteList->isEmpty())
    {
@@ -251,11 +249,11 @@ void UpdatePStorageDatabase(DB_HANDLE hdb, uint32_t watchdogId)
    else
    {
       DBRollback(hdb);
-      MutexLock(s_lockPStorage);
+      s_lockPStorage.lock();
       tmpDeleteList->forEach(MoveToPreviousListCB, s_valueDeleteList);
       tmpSetList->forEach(MoveToPreviousListCB, s_valueSetList);
       //move all updates to previous list if this item is not yet updated
-      MutexUnlock(s_lockPStorage);
+      s_lockPStorage.unlock();
    }
 
    delete tmpDeleteList;

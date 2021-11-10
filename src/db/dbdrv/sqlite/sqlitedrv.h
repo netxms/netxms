@@ -49,32 +49,32 @@
 /**
  * Structure of synchronous SELECT result
  */
-typedef struct
+struct SQLITE_RESULT
 {
    int nRows;
    int nCols;
    char **ppszData;
 	char **ppszNames;
-} SQLITE_RESULT;
+};
 
 /**
  * Structure of DB connection handle
  */
-typedef struct
+struct SQLITE_CONN
 {
    sqlite3 *pdb;
-   MUTEX mutexQueryLock;
-} SQLITE_CONN;
+   Mutex mutexQueryLock;
+};
 
 /**
  * Structure for unbuffered select result
  */
-typedef struct
+struct SQLITE_UNBUFFERED_RESULT
 {
    SQLITE_CONN *connection;
    sqlite3_stmt *stmt;
    int numColumns;
    bool prepared;
-} SQLITE_UNBUFFERED_RESULT;
+};
 
 #endif   /* _sqlitedrv_h_ */

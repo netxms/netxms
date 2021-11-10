@@ -6,19 +6,19 @@
 
 NETXMS_EXECUTABLE_HEADER(test-libnxcc)
 
-static MUTEX cbLock = MutexCreate();
-static UINT32 s_nodeId;
+static Mutex cbLock;
+static uint32_t s_nodeId;
 
 static void DebugWriter(const TCHAR *tag, const TCHAR *format, va_list args)
 {
-   MutexLock(cbLock);
-   if (tag != NULL)
+   cbLock.lock();
+   if (tag != nullptr)
       _tprintf(_T("[DEBUG/%-20s] "), tag);
    else
       _tprintf(_T("[DEBUG%-21s] "), _T(""));
    _vtprintf(format, args);
    _fputtc(_T('\n'), stdout);
-   MutexUnlock(cbLock);
+   cbLock.unlock();
 }
 
 class EventHandler : public ClusterEventHandler
@@ -65,7 +65,7 @@ static void TestDirectCommand()
 {
    NXCPMessage msg;
    msg.setCode(111);
-   UINT32 rcc = ClusterSendDirectCommand(s_nodeId == 1 ? 2 : 1, &msg);
+   uint32_t rcc = ClusterSendDirectCommand(s_nodeId == 1 ? 2 : 1, &msg);
    _tprintf(_T("TestDirectCommand: rcc=%d\n"), rcc);
 }
 
@@ -87,7 +87,7 @@ int main(int argc, char *argv[])
    WSAStartup(MAKEWORD(2, 2), &wsaData);
 #endif
 
-   s_nodeId = strtoul(argv[1], NULL, 0);
+   s_nodeId = strtoul(argv[1], nullptr, 0);
 
    Config *config = new Config();
    config->setValue(_T("/CLUSTER/NodeId"), s_nodeId);

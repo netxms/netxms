@@ -212,7 +212,7 @@ private:
    TCHAR m_name[MAX_CLASS_NAME];
    StringList m_classHierarchy;
    StringSet m_attributes;
-   MUTEX m_metadataLock;
+   Mutex m_metadataLock;
 
 protected:
    HashMap<NXSL_Identifier, NXSL_ExtMethod> *m_methods;
@@ -1038,7 +1038,7 @@ class LIBNXSL_EXPORTABLE NXSL_Library
 {
 private:
    ObjectArray<NXSL_LibraryScript> *m_scriptList;
-   MUTEX m_mutex;
+   Mutex m_mutex;
 
    void deleteInternal(int nIndex);
 
@@ -1046,8 +1046,8 @@ public:
    NXSL_Library();
    ~NXSL_Library();
 
-   void lock() { MutexLock(m_mutex); }
-   void unlock() { MutexUnlock(m_mutex); }
+   void lock() { m_mutex.lock(); }
+   void unlock() { m_mutex.unlock(); }
 
    bool addScript(NXSL_LibraryScript *script);
    void deleteScript(const TCHAR *name);

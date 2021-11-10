@@ -79,13 +79,13 @@ private:
 	time_t m_lastStatusChange;
 	int m_autoCancelDelay;	// Interval in seconds to cancel failed job automatically (0 = disabled)
 	time_t m_lastNotification;
-	MUTEX m_notificationLock;
+	Mutex m_notificationLock;
 	NXCPMessage m_notificationMessage;
 	bool m_blockNextJobsOnFailure;
 	bool m_valid;
 
-	static THREAD_RESULT THREAD_CALL WorkerThreadStarter(void *);
-	static void sendNotification(ClientSession *session, void *arg);
+	static void workerThread(ServerJob *job);
+	static void sendNotification(ClientSession *session, ServerJob *job);
 
 protected:
    uint32_t m_objectId;
@@ -148,7 +148,7 @@ class NXCORE_EXPORTABLE ServerJobQueue
 private:
 	int m_jobCount;
 	ServerJob **m_jobList;
-	MUTEX m_accessMutex;
+	Mutex m_accessMutex;
 	uint32_t m_objectId;
 
 public:
@@ -189,7 +189,7 @@ class FileUploadJob : public ServerJob
 private:
 	static int m_activeJobs;
 	static int m_maxActiveJobs;
-	static MUTEX m_sharedDataMutex;
+	static Mutex m_sharedDataMutex;
 
 	TCHAR *m_localFile;
 	TCHAR *m_localFileFullPath;
@@ -226,8 +226,8 @@ private:
    bool m_cancelled;
 
 protected:
-   virtual ServerJobResult run();
-   virtual bool onCancel();
+   virtual ServerJobResult run() override;
+   virtual bool onCancel() override;
 
 public:
    DCIRecalculationJob(const shared_ptr<DataCollectionTarget>& object, const DCItem *dci, uint32_t userId);

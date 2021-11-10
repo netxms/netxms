@@ -1,6 +1,6 @@
 /* 
 ** MariaDB Database Driver
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -56,17 +56,17 @@
 /**
  * Structure of DB connection handle
  */
-typedef struct
+struct MARIADB_CONN
 {
    MYSQL *pMySQL;
-   MUTEX mutexQueryLock;
+   Mutex mutexQueryLock;
    bool fixForCONC281;
-} MARIADB_CONN;
+};
 
 /**
  * Structure of prepared statement
  */
-typedef struct
+struct MARIADB_STATEMENT
 {
 	MARIADB_CONN *connection;
 	MYSQL_STMT *statement;
@@ -74,12 +74,12 @@ typedef struct
 	unsigned long *lengthFields;
 	Array *buffers;
 	int paramCount;
-} MARIADB_STATEMENT;
+};
 
 /**
  * Structure of synchronous SELECT result
  */
-typedef struct
+struct MARIADB_RESULT
 {
 	MARIADB_CONN *connection;
 	MYSQL_RES *resultSet;
@@ -91,12 +91,12 @@ typedef struct
 	MYSQL_BIND *bindings;
 	unsigned long *lengthFields;
 	MYSQL_ROW *rows;
-} MARIADB_RESULT;
+};
 
 /**
  * Structure of asynchronous SELECT result
  */
-typedef struct
+struct MARIADB_UNBUFFERED_RESULT
 {
    MARIADB_CONN *connection;
    MYSQL_RES *resultSet;
@@ -107,6 +107,6 @@ typedef struct
    unsigned long *lengthFields;
    bool isPreparedStatement;
    MYSQL_STMT *statement;
-} MARIADB_UNBUFFERED_RESULT;
+};
 
 #endif   /* _mariadbdrv_h_ */

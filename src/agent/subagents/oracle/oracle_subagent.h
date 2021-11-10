@@ -76,9 +76,9 @@ private:
 	bool m_connected;
 	int m_version;
    StringMap *m_data;
-	MUTEX m_dataLock;
-	MUTEX m_sessionLock;
-   CONDITION m_stopCondition;
+	Mutex m_dataLock;
+	Mutex m_sessionLock;
+   Condition m_stopCondition;
 
    static THREAD_RESULT THREAD_CALL pollerThreadStarter(void *arg);
 

@@ -43,10 +43,9 @@ struct ObjectCacheEntry
 /**
  * Controller constructor
  */
-ObjectController::ObjectController(NXCSession *session) : Controller(session)
+ObjectController::ObjectController(NXCSession *session) : Controller(session), m_cacheLock(MutexType::FAST)
 {
    m_cache = nullptr;
-   m_cacheLock = MutexCreate();
 }
 
 /**
@@ -60,7 +59,6 @@ ObjectController::~ObjectController()
       HASH_DEL(m_cache, entry);
       delete entry;
    }
-   MutexDestroy(m_cacheLock);
 }
 
 /**
@@ -125,7 +123,7 @@ UINT32 ObjectController::syncSingleObject(UINT32 id)
  */
 void ObjectController::addObject(const shared_ptr<AbstractObject>& object)
 {
-   MutexLock(m_cacheLock);
+   m_cacheLock.lock();
    ObjectCacheEntry *entry;
    uint32_t id = object->getId();
    HASH_FIND_INT(m_cache, &id, entry);
@@ -138,7 +136,7 @@ void ObjectController::addObject(const shared_ptr<AbstractObject>& object)
       entry = new ObjectCacheEntry(id, object);
       HASH_ADD_INT(m_cache, id, entry);
    }
-   MutexUnlock(m_cacheLock);
+   m_cacheLock.unlock();
 }
 
 /**
@@ -148,14 +146,14 @@ void ObjectController::addObject(const shared_ptr<AbstractObject>& object)
 shared_ptr<AbstractObject> ObjectController::findObjectById(uint32_t id)
 {
    shared_ptr<AbstractObject> object;
-   MutexLock(m_cacheLock);
+   m_cacheLock.lock();
    ObjectCacheEntry *entry;
    HASH_FIND_INT(m_cache, &id, entry);
    if (entry != nullptr)
    {
       object = entry->object;
    }
-   MutexUnlock(m_cacheLock);
+   m_cacheLock.unlock();
    return object;
 }
 

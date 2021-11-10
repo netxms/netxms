@@ -239,7 +239,7 @@ void UpdateDesktopWallpaper();
 /*** Global variables ***/
 extern HINSTANCE g_hInstance;
 extern DWORD g_mainThreadId;
-extern CONDITION g_shutdownCondition;
+extern Condition g_shutdownCondition;
 extern HFONT g_menuFont;
 extern HFONT g_messageFont;
 extern HFONT g_notificationFont;

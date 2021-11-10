@@ -59,9 +59,9 @@ public:
    AgentTunnelCommChannel(const shared_ptr<AgentTunnel>& tunnel, uint32_t id);
    virtual ~AgentTunnelCommChannel();
 
-   virtual ssize_t send(const void *data, size_t size, MUTEX mutex = INVALID_MUTEX_HANDLE) override;
-   virtual ssize_t recv(void *buffer, size_t size, UINT32 timeout = INFINITE) override;
-   virtual int poll(UINT32 timeout, bool write = false) override;
+   virtual ssize_t send(const void *data, size_t size, Mutex *mutex = nullptr) override;
+   virtual ssize_t recv(void *buffer, size_t size, uint32_t timeout = INFINITE) override;
+   virtual int poll(uint32_t timeout, bool write = false) override;
    virtual void backgroundPoll(uint32_t timeout, void (*callback)(BackgroundSocketPollResult, AbstractCommChannel*, void*), void *context) override;
    virtual int shutdown() override;
    virtual void close() override;
@@ -104,8 +104,8 @@ protected:
    TCHAR m_threadPoolKey[12];
    SSL_CTX *m_context;
    SSL *m_ssl;
-   MUTEX m_sslLock;
-   MUTEX m_writeLock;
+   Mutex m_sslLock;
+   Mutex m_writeLock;
    MsgWaitQueue m_queue;
    VolatileCounter m_requestId;
    uint32_t m_nodeId;
@@ -133,7 +133,7 @@ protected:
    bool m_syslogProxy;
    bool m_extProvCertificate;
    SharedHashMap<uint32_t, AgentTunnelCommChannel> m_channels;
-   MUTEX m_channelLock;
+   Mutex m_channelLock;
    shared_ptr<AgentTunnel> m_replacedTunnel; // Tunnel that was replaced by this tunnel
 
    bool readSocket();
@@ -195,9 +195,9 @@ public:
 
    int getChannelCount()
    {
-      MutexLock(m_channelLock);
+      m_channelLock.lock();
       int c = m_channels.size();
-      MutexUnlock(m_channelLock);
+      m_channelLock.unlock();
       return c;
    }
 

@@ -31,7 +31,6 @@ Pollable::Pollable(NetObj *_this, uint32_t acceptablePolls) : m_statusPollState(
    m_this = _this;
    _this->m_asPollable = this;
    m_acceptablePolls = acceptablePolls;
-   m_hPollerMutex = MutexCreate();
 }
 
 /**
@@ -39,7 +38,6 @@ Pollable::Pollable(NetObj *_this, uint32_t acceptablePolls) : m_statusPollState(
  */
 Pollable::~Pollable()
 {
-   MutexDestroy(m_hPollerMutex);
 }
 
 /**

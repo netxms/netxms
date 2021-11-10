@@ -187,7 +187,7 @@ public:
 class LIBNXCLIENT_EXPORTABLE EventController : public Controller
 {
 private:
-   MUTEX m_eventTemplateLock;
+   Mutex m_eventTemplateLock;
    ObjectArray<EventTemplate> *m_eventTemplates;
 
 public:
@@ -210,7 +210,7 @@ class LIBNXCLIENT_EXPORTABLE ObjectController : public Controller
 {
 private:
    ObjectCacheEntry *m_cache;
-   MUTEX m_cacheLock;
+   Mutex m_cacheLock;
 
    void addObject(const shared_ptr<AbstractObject>& object);
 
@@ -274,8 +274,8 @@ protected:
    bool m_passwordChangeNeeded;
 
    // data
-   MUTEX m_dataLock;
-   MUTEX m_msgSendLock;
+   Mutex m_dataLock;
+   Mutex m_msgSendLock;
    StringObjectMap<Controller> *m_controllers;
 
    void onNotify(NXCPMessage *msg);

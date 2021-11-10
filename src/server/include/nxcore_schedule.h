@@ -131,10 +131,10 @@ private:
    bool m_recurrent;
    time_t m_lastExecutionTime;
    shared_ptr<ScheduledTaskParameters> m_parameters;
-   MUTEX m_mutex;
+   Mutex m_mutex;
 
-   void lock() const { MutexLock(m_mutex); }
-   void unlock() const { MutexUnlock(m_mutex); }
+   void lock() const { m_mutex.lock(); }
+   void unlock() const { m_mutex.unlock(); }
 
    void run(SchedulerCallback *callback);
 

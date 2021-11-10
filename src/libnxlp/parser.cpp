@@ -117,7 +117,7 @@ struct LogParser_XmlParserState
 /**
  * Parser default constructor
  */
-LogParser::LogParser() : m_rules(0, 16, Ownership::True)
+LogParser::LogParser() : m_rules(0, 16, Ownership::True), m_stopCondition(true)
 {
 	m_cb = nullptr;
 	m_cbAction = nullptr;
@@ -132,7 +132,6 @@ LogParser::LogParser() : m_rules(0, 16, Ownership::True)
 	m_eventNameList = nullptr;
 	m_eventResolver = nullptr;
 	m_thread = INVALID_THREAD_HANDLE;
-   m_stopCondition = ConditionCreate(true);
 	m_recordsProcessed = 0;
 	m_recordsMatched = 0;
 	m_processAllRules = false;
@@ -152,7 +151,7 @@ LogParser::LogParser() : m_rules(0, 16, Ownership::True)
 /**
  * Parser copy constructor
  */
-LogParser::LogParser(const LogParser *src) : m_rules(src->m_rules.size(), 16, Ownership::True)
+LogParser::LogParser(const LogParser *src) : m_rules(src->m_rules.size(), 16, Ownership::True), m_stopCondition(true)
 {
    int count = src->m_rules.size();
 	for(int i = 0; i < count; i++)
@@ -186,7 +185,6 @@ LogParser::LogParser(const LogParser *src) : m_rules(src->m_rules.size(), 16, Ow
 
 	m_eventResolver = src->m_eventResolver;
 	m_thread = INVALID_THREAD_HANDLE;
-   m_stopCondition = ConditionCreate(true);
    m_recordsProcessed = 0;
 	m_recordsMatched = 0;
 	m_processAllRules = src->m_processAllRules;
@@ -215,7 +213,6 @@ LogParser::~LogParser()
 #endif
    MemFree(m_readBuffer);
    MemFree(m_textBuffer);
-   ConditionDestroy(m_stopCondition);
 }
 
 /**
@@ -1033,7 +1030,7 @@ bool LogParser::isExclusionPeriod()
  */
 void LogParser::stop()
 {
-   ConditionSet(m_stopCondition);
+   m_stopCondition.set();
    ThreadJoin(m_thread);
    m_thread = INVALID_THREAD_HANDLE;
 }

@@ -25,16 +25,13 @@
 /**
  * Create new database instance object
  */
-DatabaseInstance::DatabaseInstance(DatabaseInfo *info)
+DatabaseInstance::DatabaseInstance(DatabaseInfo *info) : m_dataLock(MutexType::FAST), m_sessionLock(MutexType::NORMAL), m_stopCondition(true)
 {
 	memcpy(&m_info, info, sizeof(DatabaseInfo));
 	m_pollerThread = INVALID_THREAD_HANDLE;
 	m_session = nullptr;
 	m_connected = false;
 	m_data = nullptr;
-	m_dataLock = MutexCreate();
-	m_sessionLock = MutexCreate();
-	m_stopCondition = ConditionCreate(true);
 	m_version = 0;
 }
 
@@ -44,9 +41,6 @@ DatabaseInstance::DatabaseInstance(DatabaseInfo *info)
 DatabaseInstance::~DatabaseInstance()
 {
 	stop();
-	MutexDestroy(m_dataLock);
-	MutexDestroy(m_sessionLock);
-	ConditionDestroy(m_stopCondition);
 	delete m_data;
 }
 
@@ -63,13 +57,13 @@ void DatabaseInstance::run()
  */
 void DatabaseInstance::stop()
 {
-	ConditionSet(m_stopCondition);
+	m_stopCondition.set();
 	ThreadJoin(m_pollerThread);
 	m_pollerThread = INVALID_THREAD_HANDLE;
-	if (m_session != NULL)
+	if (m_session != nullptr)
 	{
 		DBDisconnect(m_session);
-		m_session = NULL;
+		m_session = nullptr;
 	}
 }
 
@@ -79,7 +73,7 @@ void DatabaseInstance::stop()
 int DatabaseInstance::getPgsqlVersion() 
 {
 	DB_RESULT hResult = DBSelect(m_session, _T("SELECT substring(version() from '(\\\\d+\\.\\\\d+(\\\\.\\\\d+)?)')"));
-	if (hResult == NULL)	
+	if (hResult == nullptr)
 	{
 		return 0;
 	}
@@ -92,7 +86,6 @@ int DatabaseInstance::getPgsqlVersion()
 
 	return MAKE_PGSQL_VERSION(ver1, ver2, ver3);
 }
-
 
 /**
  * Poller thread starter
@@ -113,13 +106,13 @@ void DatabaseInstance::pollerThread()
    do
    {
 reconnect:
-		MutexLock(m_sessionLock);
+		m_sessionLock.lock();
 
 		TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
 		m_session = DBConnect(g_pgsqlDriver, m_info.server, m_info.name, m_info.login, m_info.password, nullptr, errorText);
 		if (m_session == nullptr)
 		{
-			MutexUnlock(m_sessionLock);
+			m_sessionLock.unlock();
 			nxlog_debug_tag(DEBUG_TAG, 5, _T("Cannot connect to PostgreSQL database server %s (%s)"), m_info.id, errorText);
 			continue;
 		}
@@ -134,7 +127,7 @@ reconnect:
 		   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Connection with PostgreSQL database server %s restored (version %d.%d.%d, connection TTL %d)"),
 				m_info.id, m_version >> 16, (m_version >> 8) & 0xFF, m_version & 0xFF, m_info.connectionTTL);
 
-		MutexUnlock(m_sessionLock);
+		m_sessionLock.unlock();
 
 		int64_t pollerLoopStartTime = GetCurrentTimeMs();
 		uint32_t sleepTime;
@@ -150,25 +143,25 @@ reconnect:
 			if (currTime - pollerLoopStartTime > connectionTTL)
 			{
 				nxlog_debug_tag(DEBUG_TAG, 4, _T("Planned connection reset for database %s"), m_info.id);
-				MutexLock(m_sessionLock);
+				m_sessionLock.lock();
 				m_connected = false;
 				DBDisconnect(m_session);
 				m_session = nullptr;
-				MutexUnlock(m_sessionLock);
+				m_sessionLock.unlock();
 				goto reconnect;
 			}
 			int64_t elapsedTime = currTime - startTime;
 			sleepTime = (UINT32)((elapsedTime >= 60000) ? 60000 : (60000 - elapsedTime));
 		}
-		while(!ConditionWait(m_stopCondition, sleepTime));
+		while(!m_stopCondition.wait(sleepTime));
 
-		MutexLock(m_sessionLock);
+		m_sessionLock.lock();
 		m_connected = false;
 		DBDisconnect(m_session);
 		m_session = NULL;
-		MutexUnlock(m_sessionLock);
+		m_sessionLock.unlock();
 	}
-	while(!ConditionWait(m_stopCondition, 60000));	// reconnect every 60 seconds
+	while(!m_stopCondition.wait(60000));	// reconnect every 60 seconds
 	nxlog_debug_tag(DEBUG_TAG, 3, _T("Poller thread for database server %s stopped"), m_info.id);
 }
 
@@ -251,10 +244,10 @@ bool DatabaseInstance::poll()
 	}
 
 	// update cached data
-	MutexLock(m_dataLock);
+	m_dataLock.lock();
 	delete m_data;
 	m_data = data;
-	MutexUnlock(m_dataLock);
+	m_dataLock.unlock();
 
 	return failures < count;
 }
@@ -265,7 +258,7 @@ bool DatabaseInstance::poll()
 bool DatabaseInstance::getData(const TCHAR *tag, TCHAR *value)
 {
 	bool success = false;
-	MutexLock(m_dataLock);
+	m_dataLock.lock();
 	if (m_data != NULL)
 	{
 		const TCHAR *v = m_data->get(tag);
@@ -275,7 +268,7 @@ bool DatabaseInstance::getData(const TCHAR *tag, TCHAR *value)
 			success = true;
 		}
 	}
-	MutexUnlock(m_dataLock);
+	m_dataLock.unlock();
 	return success;
 }
 
@@ -311,8 +304,8 @@ static EnumerationCallbackResult TagListCallback(const TCHAR *key, const TCHAR *
 bool DatabaseInstance::getTagList(const TCHAR *pattern, StringList *value)
 {
 	bool success = false;
-	MutexLock(m_dataLock);
-	if (m_data != NULL)
+	m_dataLock.lock();
+	if (m_data != nullptr)
 	{
 		const char *eptr;
 		int eoffset;
@@ -326,7 +319,7 @@ bool DatabaseInstance::getTagList(const TCHAR *pattern, StringList *value)
 			success = true;
 		}
 	}
-	MutexUnlock(m_dataLock);
+	m_dataLock.unlock();
 	return success;
 }
 
@@ -335,11 +328,11 @@ bool DatabaseInstance::getTagList(const TCHAR *pattern, StringList *value)
  */
 bool DatabaseInstance::queryTable(TableDescriptor *td, Table *value)
 {
-	MutexLock(m_sessionLock);
+	m_sessionLock.lock();
 	
-	if (!m_connected || (m_session == NULL))
+	if (!m_connected || (m_session == nullptr))
 	{
-		MutexUnlock(m_sessionLock);
+		m_sessionLock.unlock();
 		return false;
 	}
 
@@ -370,6 +363,6 @@ bool DatabaseInstance::queryTable(TableDescriptor *td, Table *value)
 		success = true;
 	}
 
-	MutexUnlock(m_sessionLock);
+	m_sessionLock.unlock();
 	return success;
 }

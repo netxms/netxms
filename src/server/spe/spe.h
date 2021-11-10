@@ -57,7 +57,7 @@ private:
    ObjectArray<NeuralNetworkNode> m_input;
    ObjectArray<NeuralNetworkNode> m_hidden;
    NeuralNetworkNode m_output;
-   MUTEX m_mutex;
+   Mutex m_mutex;
 
 public:
    NeuralNetwork(int inputCount, int hiddenCount);
@@ -66,8 +66,8 @@ public:
    double computeOutput(double *inputs);
    void train(double *series, size_t length, int rounds, double learnRate);
 
-   void lock() { MutexLock(m_mutex); }
-   void unlock() { MutexUnlock(m_mutex); }
+   void lock() { m_mutex.lock(); }
+   void unlock() { m_mutex.unlock(); }
 };
 
 /**
@@ -77,7 +77,7 @@ class TimeSeriesRegressionEngine : public PredictionEngine
 {
 private:
    StringObjectMap<NeuralNetwork> m_networks;
-   MUTEX m_networkLock;
+   Mutex m_networkLock;
 
    NeuralNetwork *acquireNetwork(UINT32 nodeId, UINT32 dciId);
 

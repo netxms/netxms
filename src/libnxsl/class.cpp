@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -69,11 +69,10 @@ NXSL_METHOD_DEFINITION(Object, __invoke)
 /**
  * Class constructor
  */
-NXSL_Class::NXSL_Class()
+NXSL_Class::NXSL_Class() : m_metadataLock(MutexType::FAST)
 {
    setName(_T("Object"));
    m_methods = new HashMap<NXSL_Identifier, NXSL_ExtMethod>(Ownership::True);
-   m_metadataLock = MutexCreateFast();
 
    NXSL_REGISTER_METHOD(Object, __get, 1);
    NXSL_REGISTER_METHOD(Object, __invoke, -1);
@@ -92,7 +91,6 @@ NXSL_Class::NXSL_Class()
 NXSL_Class::~NXSL_Class()
 {
    delete m_methods;
-   MutexDestroy(m_metadataLock);
 }
 
 /**
@@ -129,7 +127,7 @@ bool NXSL_Class::setAttr(NXSL_Object *object, const char *attr, NXSL_Value *valu
  */
 void NXSL_Class::scanAttributes()
 {
-   MutexLock(m_metadataLock);
+   m_metadataLock.lock();
    if (m_attributes.isEmpty())
    {
       NXSL_VM vm(new NXSL_Environment());
@@ -138,7 +136,7 @@ void NXSL_Class::scanAttributes()
       if (v != nullptr)
          vm.destroyValue(v);
    }
-   MutexUnlock(m_metadataLock);
+   m_metadataLock.unlock();
 }
 
 /**
@@ -148,7 +146,7 @@ void NXSL_Class::scanAttributes()
 int NXSL_Class::callMethod(const NXSL_Identifier& name, NXSL_Object *object, int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
    NXSL_ExtMethod *m = m_methods->get(name);
-   if (m != NULL)
+   if (m != nullptr)
    {
       if ((argc == m->numArgs) || (m->numArgs == -1))
          return m->handler(object, argc, argv, result, vm);

@@ -60,11 +60,10 @@ THREAD_RESULT THREAD_CALL MobileDeviceSession::readThreadStarter(void *pArg)
 /**
  * Mobile device session class constructor
  */
-MobileDeviceSession::MobileDeviceSession(SOCKET hSocket, const InetAddress& addr)
+MobileDeviceSession::MobileDeviceSession(SOCKET hSocket, const InetAddress& addr) : m_condEncryptionSetup(false)
 {
    m_socket = hSocket;
    m_id = -1;
-	m_mutexSocketWrite = MutexCreate();
 	m_clientAddr = addr;
 	m_clientAddr.toString(m_hostName);
    _tcscpy(m_userName, _T("<not logged in>"));
@@ -73,7 +72,6 @@ MobileDeviceSession::MobileDeviceSession(SOCKET hSocket, const InetAddress& addr
 	m_deviceObjectId = 0;
    m_encryptionRqId = 0;
    m_encryptionResult = 0;
-   m_condEncryptionSetup = INVALID_CONDITION_HANDLE;
    m_refCount = 0;
 	m_authenticated = false;
 }
@@ -85,8 +83,6 @@ MobileDeviceSession::~MobileDeviceSession()
 {
    if (m_socket != INVALID_SOCKET)
       closesocket(m_socket);
-	MutexDestroy(m_mutexSocketWrite);
-   ConditionDestroy(m_condEncryptionSetup);
 }
 
 /**
@@ -153,7 +149,7 @@ void MobileDeviceSession::readThread()
          m_encryptionResult = SetupEncryptionContext(msg, &encryptionContext, nullptr, g_pServerKey, NXCP_VERSION);
          m_encryptionContext = shared_ptr<NXCPEncryptionContext>(encryptionContext);
          receiver.setEncryptionContext(m_encryptionContext);
-         ConditionSet(m_condEncryptionSetup);
+         m_condEncryptionSetup.set();
          m_encryptionRqId = 0;
          delete msg;
       }
@@ -273,7 +269,7 @@ void MobileDeviceSession::sendMessage(const NXCPMessage& msg)
       NXCP_ENCRYPTED_MESSAGE *encryptedMsg = m_encryptionContext->encryptMessage(rawMsg);
       if (encryptedMsg != nullptr)
       {
-         success = (SendEx(m_socket, (char *)encryptedMsg, ntohl(encryptedMsg->size), 0, m_mutexSocketWrite) == (int)ntohl(encryptedMsg->size));
+         success = (SendEx(m_socket, (char *)encryptedMsg, ntohl(encryptedMsg->size), 0, &m_mutexSocketWrite) == (int)ntohl(encryptedMsg->size));
          MemFree(encryptedMsg);
       }
       else
@@ -283,7 +279,7 @@ void MobileDeviceSession::sendMessage(const NXCPMessage& msg)
    }
    else
    {
-      success = (SendEx(m_socket, (const char *)rawMsg, ntohl(rawMsg->size), 0, m_mutexSocketWrite) == (int)ntohl(rawMsg->size));
+      success = (SendEx(m_socket, (const char *)rawMsg, ntohl(rawMsg->size), 0, &m_mutexSocketWrite) == (int)ntohl(rawMsg->size));
    }
    MemFree(rawMsg);
 
@@ -466,8 +462,6 @@ void MobileDeviceSession::setupEncryption(NXCPMessage *request)
 #ifdef _WITH_ENCRYPTION
 	m_encryptionRqId = request->getId();
    m_encryptionResult = RCC_TIMEOUT;
-   if (m_condEncryptionSetup == INVALID_CONDITION_HANDLE)
-      m_condEncryptionSetup = ConditionCreate(FALSE);
 
    // Send request for session key
 	PrepareKeyRequestMsg(&msg, g_pServerKey, request->getFieldAsUInt16(VID_USE_X509_KEY_FORMAT) != 0);
@@ -476,7 +470,7 @@ void MobileDeviceSession::setupEncryption(NXCPMessage *request)
    msg.deleteAllFields();
 
    // Wait for encryption setup
-   ConditionWait(m_condEncryptionSetup, 30000);
+   m_condEncryptionSetup.wait(30000);
 
    // Send response
    msg.setCode(CMD_REQUEST_COMPLETED);

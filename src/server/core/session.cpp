@@ -27,6 +27,7 @@
 #include <entity_mib.h>
 #include <nxcore_websvc.h>
 #include <nxcore_logs.h>
+#include <nxcore_jobs.h>
 #include <nxcore_syslog.h>
 #include <nxcore_ps.h>
 #include <nms_pkg.h>
@@ -183,18 +184,14 @@ void ClientSession::terminate(ClientSession *session)
 /**
  * Client session class constructor
  */
-ClientSession::ClientSession(SOCKET hSocket, const InetAddress& addr) : m_downloadFileMap(Ownership::True), m_subscriptions(Ownership::True)
+ClientSession::ClientSession(SOCKET hSocket, const InetAddress& addr) : m_downloadFileMap(Ownership::True), m_subscriptions(Ownership::True),
+         m_subscriptionLock(MutexType::FAST), m_pendingObjectNotificationsLock(MutexType::FAST), m_condEncryptionSetup(false)
 {
    m_id = -1;
    m_socket = hSocket;
    m_socketPoller = nullptr;
    m_messageReceiver = nullptr;
    m_loginInfo = nullptr;
-	m_mutexSocketWrite = MutexCreate();
-   m_mutexSendAlarms = MutexCreate();
-   m_mutexSendActions = MutexCreate();
-   m_mutexSendAuditLog = MutexCreate();
-   m_subscriptionLock = MutexCreateFast();
    m_flags = 0;
 	m_clientType = CLIENT_TYPE_DESKTOP;
 	m_clientAddr = addr;
@@ -211,16 +208,13 @@ ClientSession::ClientSession(SOCKET hSocket, const InetAddress& addr) : m_downlo
    m_refCount = 0;
    m_encryptionRqId = 0;
    m_encryptionResult = 0;
-   m_condEncryptionSetup = INVALID_CONDITION_HANDLE;
 	m_console = nullptr;
    m_loginTime = time(nullptr);
    m_soundFileTypes.add(_T("wav"));
    _tcscpy(m_language, _T("en"));
    m_tcpProxyConnections = new ObjectArray<TcpProxy>(0, 16, Ownership::True);
-   m_tcpProxyLock = MutexCreate();
    m_tcpProxyChannelId = 0;
    m_pendingObjectNotifications = new HashSet<uint32_t>();
-   m_pendingObjectNotificationsLock = MutexCreateFast();
    m_objectNotificationScheduled = false;
    m_objectNotificationBatchSize = 500;
    m_objectNotificationDelay = 200;
@@ -240,11 +234,6 @@ ClientSession::~ClientSession()
       closesocket(m_socket);
       debugPrintf(6, _T("Socket closed"));
    }
-	MutexDestroy(m_mutexSocketWrite);
-   MutexDestroy(m_mutexSendAlarms);
-   MutexDestroy(m_mutexSendActions);
-   MutexDestroy(m_mutexSendAuditLog);
-   MutexDestroy(m_subscriptionLock);
    if (m_ppEPPRuleList != nullptr)
    {
       if (m_flags & CSF_EPP_UPLOAD)  // Aborted in the middle of EPP transfer
@@ -254,7 +243,6 @@ ClientSession::~ClientSession()
       }
       MemFree(m_ppEPPRuleList);
    }
-   ConditionDestroy(m_condEncryptionSetup);
 
 	delete m_console;
 
@@ -263,9 +251,7 @@ ClientSession::~ClientSession()
    m_downloadFileMap.forEach(CancelFileTransfer);
 
    delete m_tcpProxyConnections;
-   MutexDestroy(m_tcpProxyLock);
    delete m_pendingObjectNotifications;
-   MutexDestroy(m_pendingObjectNotificationsLock);
 
    delete m_loginInfo;
 
@@ -362,9 +348,9 @@ void ClientSession::writeAuditLogWithValues(const TCHAR *subsys, bool success, U
  */
 bool ClientSession::isSubscribedTo(const TCHAR *channel) const
 {
-   MutexLock(m_subscriptionLock);
+   m_subscriptionLock.lock();
    bool subscribed = m_subscriptions.contains(channel);
-   MutexUnlock(m_subscriptionLock);
+   m_subscriptionLock.unlock();
    return subscribed;
 }
 
@@ -441,7 +427,7 @@ MessageReceiverResult ClientSession::readMessage(bool allowSocketRead)
       {
          shared_ptr<AgentConnectionEx> conn;
          uint32_t agentChannelId = 0;
-         MutexLock(m_tcpProxyLock);
+         m_tcpProxyLock.lock();
          for(int i = 0; i < m_tcpProxyConnections->size(); i++)
          {
             TcpProxy *p = m_tcpProxyConnections->get(i);
@@ -452,7 +438,7 @@ MessageReceiverResult ClientSession::readMessage(bool allowSocketRead)
                break;
             }
          }
-         MutexUnlock(m_tcpProxyLock);
+         m_tcpProxyLock.unlock();
          if ((conn != nullptr) && conn->isConnected())
          {
             size_t size = msg->getBinaryDataSize();
@@ -473,7 +459,7 @@ MessageReceiverResult ClientSession::readMessage(bool allowSocketRead)
             debugPrintf(5, _T("Missing or broken TCP proxy channel %u"), msg->getId());
             if (conn != nullptr)
             {
-               MutexLock(m_tcpProxyLock);
+               m_tcpProxyLock.lock();
                for(int i = 0; i < m_tcpProxyConnections->size(); i++)
                {
                   TcpProxy *p = m_tcpProxyConnections->get(i);
@@ -483,7 +469,7 @@ MessageReceiverResult ClientSession::readMessage(bool allowSocketRead)
                      break;
                   }
                }
-               MutexUnlock(m_tcpProxyLock);
+               m_tcpProxyLock.unlock();
             }
 
             NXCPMessage response(CMD_CLOSE_TCP_PROXY, 0);
@@ -503,7 +489,7 @@ MessageReceiverResult ClientSession::readMessage(bool allowSocketRead)
          m_encryptionResult = SetupEncryptionContext(msg, &encryptionContext, nullptr, g_pServerKey, NXCP_VERSION);
          m_encryptionContext = shared_ptr<NXCPEncryptionContext>(encryptionContext);
          m_messageReceiver->setEncryptionContext(m_encryptionContext);
-         ConditionSet(m_condEncryptionSetup);
+         m_condEncryptionSetup.set();
          m_encryptionRqId = 0;
          delete msg;
       }
@@ -661,7 +647,7 @@ void ClientSession::processFileTransferMessage(NXCPMessage *msg)
             if (ft->fileName != nullptr)
             {
                bool success;
-               MutexLock(ft->mutex);
+               ft->mutex.lock();
                int fd = _topen(ft->fileName, O_CREAT | O_APPEND | O_WRONLY | O_BINARY, S_IRUSR | S_IWUSR);
                if (fd != -1)
                {
@@ -671,7 +657,7 @@ void ClientSession::processFileTransferMessage(NXCPMessage *msg)
                   _close(fd);
                   MemFree(data);
                }
-               MutexUnlock(ft->mutex);
+               ft->mutex.unlock();
                if (success && msg->isEndOfFile())
                {
                   ft->active = false;
@@ -760,9 +746,9 @@ bool ClientSession::sendDataFromCacheFile(AgentFileTransfer *ft)
    _tcscpy(tempFileName, ft->fileName);
    _tcscat(tempFileName, _T(".out"));
 
-   MutexLock(ft->mutex);
+   ft->mutex.lock();
    _trename(ft->fileName, tempFileName);
-   MutexUnlock(ft->mutex);
+   ft->mutex.unlock();
 
    int fd = _topen(tempFileName, O_RDONLY | O_BINARY);
    if (fd == -1)
@@ -1850,7 +1836,7 @@ bool ClientSession::sendMessage(const NXCPMessage& msg)
       NXCP_ENCRYPTED_MESSAGE *enMsg = m_encryptionContext->encryptMessage(rawMsg);
       if (enMsg != nullptr)
       {
-         result = (SendEx(m_socket, (char *)enMsg, ntohl(enMsg->size), 0, m_mutexSocketWrite) == (int)ntohl(enMsg->size));
+         result = (SendEx(m_socket, (char *)enMsg, ntohl(enMsg->size), 0, &m_mutexSocketWrite) == (int)ntohl(enMsg->size));
          MemFree(enMsg);
       }
       else
@@ -1860,7 +1846,7 @@ bool ClientSession::sendMessage(const NXCPMessage& msg)
    }
    else
    {
-      result = (SendEx(m_socket, (const char *)rawMsg, ntohl(rawMsg->size), 0, m_mutexSocketWrite) == (int)ntohl(rawMsg->size));
+      result = (SendEx(m_socket, (const char *)rawMsg, ntohl(rawMsg->size), 0, &m_mutexSocketWrite) == (int)ntohl(rawMsg->size));
    }
    MemFree(rawMsg);
 
@@ -1899,7 +1885,7 @@ void ClientSession::sendRawMessage(NXCP_MESSAGE *msg)
       NXCP_ENCRYPTED_MESSAGE *emsg = m_encryptionContext->encryptMessage(msg);
       if (emsg != nullptr)
       {
-         result = (SendEx(m_socket, (char *)emsg, ntohl(emsg->size), 0, m_mutexSocketWrite) == (int)ntohl(emsg->size));
+         result = (SendEx(m_socket, (char *)emsg, ntohl(emsg->size), 0, &m_mutexSocketWrite) == (int)ntohl(emsg->size));
          MemFree(emsg);
       }
       else
@@ -1909,7 +1895,7 @@ void ClientSession::sendRawMessage(NXCP_MESSAGE *msg)
    }
    else
    {
-      result = (SendEx(m_socket, (const char *)msg, ntohl(msg->size), 0, m_mutexSocketWrite) == (int)ntohl(msg->size));
+      result = (SendEx(m_socket, (const char *)msg, ntohl(msg->size), 0, &m_mutexSocketWrite) == (int)ntohl(msg->size));
    }
 
    if (!result)
@@ -1946,7 +1932,7 @@ void ClientSession::postRawMessageAndDelete(NXCP_MESSAGE *msg)
 bool ClientSession::sendFile(const TCHAR *file, uint32_t requestId, long ofset, bool allowCompression)
 {
    return !isTerminated() ? SendFileOverNXCP(m_socket, requestId, file, m_encryptionContext.get(),
-            ofset, nullptr, nullptr, m_mutexSocketWrite, isCompressionEnabled() && allowCompression ? NXCP_STREAM_COMPRESSION_DEFLATE : NXCP_STREAM_COMPRESSION_NONE) : false;
+            ofset, nullptr, nullptr, &m_mutexSocketWrite, isCompressionEnabled() && allowCompression ? NXCP_STREAM_COMPRESSION_DEFLATE : NXCP_STREAM_COMPRESSION_NONE) : false;
 }
 
 /**
@@ -3157,14 +3143,14 @@ void ClientSession::sendObjectUpdates()
    uint32_t *idList = reinterpret_cast<uint32_t*>(alloca(m_objectNotificationBatchSize * sizeof(uint32_t)));
    size_t count = 0;
 
-   MutexLock(m_pendingObjectNotificationsLock);
+   m_pendingObjectNotificationsLock.lock();
    auto it = m_pendingObjectNotifications->begin();
    while(it.hasNext() && (count < m_objectNotificationBatchSize))
    {
       idList[count++] = *it.next();
       it.remove();
    }
-   MutexUnlock(m_pendingObjectNotificationsLock);
+   m_pendingObjectNotificationsLock.unlock();
 
    int64_t startTime = GetCurrentTimeMs();
 
@@ -3231,7 +3217,7 @@ void ClientSession::sendObjectUpdates()
       }
    }
 
-   MutexLock(m_pendingObjectNotificationsLock);
+   m_pendingObjectNotificationsLock.lock();
    if ((m_pendingObjectNotifications->size() > 0) && ((m_flags & (CSF_TERMINATE_REQUESTED | CSF_TERMINATED)) == 0))
    {
       ThreadPoolScheduleRelative(g_clientThreadPool, m_objectNotificationDelay, this, &ClientSession::sendObjectUpdates);
@@ -3241,7 +3227,7 @@ void ClientSession::sendObjectUpdates()
       m_objectNotificationScheduled = false;
       decRefCount();
    }
-   MutexUnlock(m_pendingObjectNotificationsLock);
+   m_pendingObjectNotificationsLock.unlock();
 }
 
 /**
@@ -3252,7 +3238,7 @@ void ClientSession::onObjectChange(const shared_ptr<NetObj>& object)
    if (((m_flags & CSF_OBJECT_SYNC_FINISHED) > 0) && isAuthenticated() && isSubscribedTo(NXC_CHANNEL_OBJECTS) &&
       (object->isDeleted() || object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ)))
    {
-      MutexLock(m_pendingObjectNotificationsLock);
+      m_pendingObjectNotificationsLock.lock();
       m_pendingObjectNotifications->put(object->getId());
       if (!m_objectNotificationScheduled)
       {
@@ -3260,7 +3246,7 @@ void ClientSession::onObjectChange(const shared_ptr<NetObj>& object)
          incRefCount();
          ThreadPoolScheduleRelative(g_clientThreadPool, m_objectNotificationDelay, this, &ClientSession::sendObjectUpdates);
       }
-      MutexUnlock(m_pendingObjectNotificationsLock);
+      m_pendingObjectNotificationsLock.unlock();
    }
 }
 
@@ -6129,9 +6115,9 @@ void ClientSession::alarmUpdateWorker(Alarm *alarm)
 {
    NXCPMessage msg(CMD_ALARM_UPDATE, 0);
    alarm->fillMessage(&msg);
-   MutexLock(m_mutexSendAlarms);
+   m_mutexSendAlarms.lock();
    sendMessage(&msg);
-   MutexUnlock(m_mutexSendAlarms);
+   m_mutexSendAlarms.unlock();
    delete alarm;
 }
 
@@ -6159,9 +6145,9 @@ void ClientSession::onAlarmUpdate(UINT32 code, const Alarm *alarm)
  */
 void ClientSession::getAlarms(NXCPMessage *request)
 {
-   MutexLock(m_mutexSendAlarms);
+   m_mutexSendAlarms.lock();
    SendAlarmsToClient(request->getId(), this);
-   MutexUnlock(m_mutexSendAlarms);
+   m_mutexSendAlarms.unlock();
 }
 
 /**
@@ -6169,14 +6155,10 @@ void ClientSession::getAlarms(NXCPMessage *request)
  */
 void ClientSession::getAlarm(NXCPMessage *request)
 {
-   NXCPMessage msg;
-
-   // Prepare response message
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
 
    // Get alarm id and it's source object
-   UINT32 alarmId = request->getFieldAsUInt32(VID_ALARM_ID);
+   uint32_t alarmId = request->getFieldAsUInt32(VID_ALARM_ID);
    shared_ptr<NetObj> object = GetAlarmSourceObject(alarmId);
    if (object != nullptr)
    {
@@ -6198,8 +6180,7 @@ void ClientSession::getAlarm(NXCPMessage *request)
       msg.setField(VID_RCC, RCC_INVALID_ALARM_ID);
    }
 
-   // Send response
-   sendMessage(&msg);
+   sendMessage(msg);
 }
 
 /**
@@ -6678,104 +6659,85 @@ void ClientSession::deleteAlarmComment(NXCPMessage *request)
  */
 void ClientSession::updateAlarmStatusFlow(NXCPMessage *request)
 {
-   NXCPMessage msg;
-
-   // Prepare response message
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request->getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
    int status = request->getFieldAsUInt32(VID_ALARM_STATUS_FLOW_STATE);
 
    ConfigWriteInt(_T("StrictAlarmStatusFlow"), status, false);
-   msg.setField(VID_RCC, RCC_SUCCESS);
+   response.setField(VID_RCC, RCC_SUCCESS);
 
-   // Send response
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
  * Create new server action
  */
-void ClientSession::createAction(NXCPMessage *pRequest)
+void ClientSession::createAction(NXCPMessage *request)
 {
-   NXCPMessage msg;
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
 
-   // Prepare response message
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(pRequest->getId());
-
-   // Check user rights
    if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_ACTIONS)
    {
       TCHAR actionName[MAX_OBJECT_NAME];
-      pRequest->getFieldAsString(VID_ACTION_NAME, actionName, MAX_OBJECT_NAME);
+      request->getFieldAsString(VID_ACTION_NAME, actionName, MAX_OBJECT_NAME);
       uint32_t actionId;
       uint32_t rcc = CreateAction(actionName, &actionId);
-      msg.setField(VID_RCC, rcc);
+      response.setField(VID_RCC, rcc);
       if (rcc == RCC_SUCCESS)
-         msg.setField(VID_ACTION_ID, actionId);   // Send id of new action to client
+         response.setField(VID_ACTION_ID, actionId);   // Send id of new action to client
    }
    else
    {
-      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
 
-   // Send response
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
  * Update existing action's data
  */
-void ClientSession::updateAction(NXCPMessage *pRequest)
+void ClientSession::updateAction(NXCPMessage *request)
 {
-   NXCPMessage msg;
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
 
-   // Prepare response message
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(pRequest->getId());
-
-   // Check user rights
    if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_ACTIONS)
    {
-      msg.setField(VID_RCC, ModifyActionFromMessage(pRequest));
+      response.setField(VID_RCC, ModifyActionFromMessage(request));
    }
    else
    {
-      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
 
-   // Send response
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
  * Delete action
  */
-void ClientSession::deleteAction(NXCPMessage *pRequest)
+void ClientSession::deleteAction(NXCPMessage *request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, pRequest->getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
 
-   // Check user rights
    if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_ACTIONS)
    {
       // Get Id of action to be deleted
-      UINT32 actionId = pRequest->getFieldAsUInt32(VID_ACTION_ID);
+      uint32_t actionId = request->getFieldAsUInt32(VID_ACTION_ID);
       if (!g_pEventPolicy->isActionInUse(actionId))
       {
-         msg.setField(VID_RCC, DeleteAction(actionId));
+         response.setField(VID_RCC, DeleteAction(actionId));
       }
       else
       {
-         msg.setField(VID_RCC, RCC_ACTION_IN_USE);
+         response.setField(VID_RCC, RCC_ACTION_IN_USE);
       }
    }
    else
    {
-      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
 
-   // Send response
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
@@ -6783,10 +6745,10 @@ void ClientSession::deleteAction(NXCPMessage *pRequest)
  */
 void ClientSession::sendActionDBUpdateMessage(NXCP_MESSAGE *msg)
 {
-   MutexLock(m_mutexSendActions);
+   m_mutexSendActions.lock();
    sendRawMessage(msg);
-   MutexUnlock(m_mutexSendActions);
-   free(msg);
+   m_mutexSendActions.unlock();
+   MemFree(msg);
 }
 
 /**
@@ -6823,9 +6785,9 @@ void ClientSession::sendAllActions(UINT32 dwRqId)
    {
       msg.setField(VID_RCC, RCC_SUCCESS);
       sendMessage(&msg);
-      MutexLock(m_mutexSendActions);
+      m_mutexSendActions.lock();
       SendActionsToClient(this, dwRqId);
-      MutexUnlock(m_mutexSendActions);
+      m_mutexSendActions.unlock();
    }
    else
    {
@@ -8031,8 +7993,6 @@ void ClientSession::setupEncryption(NXCPMessage *request)
 #ifdef _WITH_ENCRYPTION
 	m_encryptionRqId = request->getId();
    m_encryptionResult = RCC_TIMEOUT;
-   if (m_condEncryptionSetup == INVALID_CONDITION_HANDLE)
-      m_condEncryptionSetup = ConditionCreate(FALSE);
 
    // Send request for session key
 	PrepareKeyRequestMsg(&msg, g_pServerKey, request->getFieldAsBoolean(VID_USE_X509_KEY_FORMAT));
@@ -8041,7 +8001,7 @@ void ClientSession::setupEncryption(NXCPMessage *request)
    msg.deleteAllFields();
 
    // Wait for encryption setup
-   ConditionWait(m_condEncryptionSetup, 30000);
+   m_condEncryptionSetup.wait(30000);
 
    // Send response
    msg.setCode(CMD_REQUEST_COMPLETED);
@@ -8533,8 +8493,8 @@ void ClientSession::changeSubscription(NXCPMessage *request)
    Trim(channel);
    if (channel[0] != 0)
    {
-      MutexLock(m_subscriptionLock);
-      UINT32 *count = m_subscriptions.get(channel);
+      m_subscriptionLock.lock();
+      uint32_t *count = m_subscriptions.get(channel);
       if (request->getFieldAsBoolean(VID_OPERATION))
       {
          // Subscribe
@@ -8561,7 +8521,7 @@ void ClientSession::changeSubscription(NXCPMessage *request)
                m_subscriptions.remove(channel);
          }
       }
-      MutexUnlock(m_subscriptionLock);
+      m_subscriptionLock.unlock();
       msg.setField(VID_RCC, RCC_SUCCESS);
    }
    else
@@ -10669,7 +10629,7 @@ void ClientSession::getServerFile(NXCPMessage *request)
 		if (_taccess(fname, 0) == 0)
 		{
 			debugPrintf(5, _T("getServerFile: Sending file %s"), fname);
-			if (SendFileOverNXCP(m_socket, request->getId(), fname, m_encryptionContext.get(), 0, nullptr, nullptr, m_mutexSocketWrite))
+			if (SendFileOverNXCP(m_socket, request->getId(), fname, m_encryptionContext.get(), 0, nullptr, nullptr, &m_mutexSocketWrite))
 			{
 				debugPrintf(5, _T("getServerFile: File %s was successfully sent"), fname);
 		      msg.setField(VID_RCC, RCC_SUCCESS);
@@ -14202,9 +14162,9 @@ void ClientSession::setupTcpProxy(NXCPMessage *request)
                   if (rcc == ERR_SUCCESS)
                   {
                      uint32_t clientChannelId = InterlockedIncrement(&m_tcpProxyChannelId);
-                     MutexLock(m_tcpProxyLock);
+                     m_tcpProxyLock.lock();
                      m_tcpProxyConnections->add(new TcpProxy(conn, agentChannelId, clientChannelId, node->getId()));
-                     MutexUnlock(m_tcpProxyLock);
+                     m_tcpProxyLock.unlock();
                      msg.setField(VID_RCC, RCC_SUCCESS);
                      msg.setField(VID_CHANNEL_ID, clientChannelId);
                      writeAuditLog(AUDIT_SYSCFG, true, node->getId(), _T("Created TCP proxy to %s port %d via %s [%u] (client channel %u)"),
@@ -14257,7 +14217,7 @@ void ClientSession::closeTcpProxy(NXCPMessage *request)
 
    shared_ptr<AgentConnectionEx> conn;
    uint32_t agentChannelId, nodeId;
-   MutexLock(m_tcpProxyLock);
+   m_tcpProxyLock.lock();
    for(int i = 0; i < m_tcpProxyConnections->size(); i++)
    {
       TcpProxy *p = m_tcpProxyConnections->get(i);
@@ -14270,7 +14230,7 @@ void ClientSession::closeTcpProxy(NXCPMessage *request)
          break;
       }
    }
-   MutexUnlock(m_tcpProxyLock);
+   m_tcpProxyLock.unlock();
 
    if (conn != nullptr)
    {
@@ -14287,7 +14247,7 @@ void ClientSession::closeTcpProxy(NXCPMessage *request)
 void ClientSession::processTcpProxyData(AgentConnectionEx *conn, uint32_t agentChannelId, const void *data, size_t size, bool errorIndicator)
 {
    uint32_t clientChannelId = 0;
-   MutexLock(m_tcpProxyLock);
+   m_tcpProxyLock.lock();
    for(int i = 0; i < m_tcpProxyConnections->size(); i++)
    {
       TcpProxy *p = m_tcpProxyConnections->get(i);
@@ -14302,7 +14262,7 @@ void ClientSession::processTcpProxyData(AgentConnectionEx *conn, uint32_t agentC
          break;
       }
    }
-   MutexUnlock(m_tcpProxyLock);
+   m_tcpProxyLock.unlock();
 
    if (clientChannelId != 0)
    {
@@ -14336,7 +14296,7 @@ void ClientSession::processTcpProxyData(AgentConnectionEx *conn, uint32_t agentC
 void ClientSession::processTcpProxyAgentDisconnect(AgentConnectionEx *conn)
 {
    IntegerArray<uint32_t> clientChannelList;
-   MutexLock(m_tcpProxyLock);
+   m_tcpProxyLock.lock();
    for(int i = 0; i < m_tcpProxyConnections->size(); i++)
    {
       TcpProxy *p = m_tcpProxyConnections->get(i);
@@ -14348,7 +14308,7 @@ void ClientSession::processTcpProxyAgentDisconnect(AgentConnectionEx *conn)
          i--;
       }
    }
-   MutexUnlock(m_tcpProxyLock);
+   m_tcpProxyLock.unlock();
 
    if (!clientChannelList.isEmpty())
    {

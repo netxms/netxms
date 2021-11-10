@@ -79,7 +79,7 @@ class ServiceEntry
 {
 private:
    time_t m_lastRequestTime;
-   MUTEX m_lock;
+   Mutex m_mutex;
    DocumentType m_type;
    union
    {
@@ -124,8 +124,8 @@ public:
    uint32_t updateData(const TCHAR *url, const char *userName, const char *password, WebServiceAuthType authType,
             struct curl_slist *headers, bool peerVerify, bool hostVerify, bool forcePlainTextParser, uint32_t requestTimeout);
 
-   void lock() { MutexLock(m_lock); }
-   void unlock() { MutexUnlock(m_lock); }
+   void lock() { m_mutex.lock(); }
+   void unlock() { m_mutex.unlock(); }
 };
 
 /**
@@ -141,7 +141,6 @@ ServiceEntry::ServiceEntry()
 {
    m_lastRequestTime = 0;
    m_type = DocumentType::NONE;
-   m_lock = MutexCreate();
 }
 
 /**
@@ -150,7 +149,6 @@ ServiceEntry::ServiceEntry()
 ServiceEntry::~ServiceEntry()
 {
    deleteContent();
-   MutexDestroy(m_lock);
 }
 
 /**

@@ -72,7 +72,7 @@ void LibCURLCleanup();
 /**
  * Process shutdown condition
  */
-static CONDITION s_shutdownCondition = INVALID_CONDITION_HANDLE;
+static Condition s_shutdownCondition(true);
 
 /**
  * Process shutdown flag
@@ -93,7 +93,6 @@ static void OnProcessExit()
 {
    SubProcessExecutor::shutdown();
    MsgWaitQueue::shutdown();
-   ConditionDestroy(s_shutdownCondition);
    LibCURLCleanup();
 #ifdef _WIN32
    SetConsoleOutputCP(s_originalConsoleCodePage);
@@ -150,8 +149,6 @@ static void InvalidParameterHandler(const wchar_t *expression, const wchar_t *fu
 void LIBNETXMS_EXPORTABLE InitNetXMSProcess(bool commandLineTool)
 {
    InitThreadLibrary();
-
-   s_shutdownCondition = ConditionCreate(true);
 
    // Set locale to C. It shouldn't be needed, according to
    // documentation, but I've seen the cases when agent formats
@@ -211,7 +208,7 @@ void LIBNETXMS_EXPORTABLE InitNetXMSProcess(bool commandLineTool)
 void LIBNETXMS_EXPORTABLE InitiateProcessShutdown()
 {
    s_shutdownFlag = true;
-   ConditionSet(s_shutdownCondition);
+   s_shutdownCondition.set();
 }
 
 /**
@@ -221,9 +218,9 @@ void LIBNETXMS_EXPORTABLE InitiateProcessShutdown()
  * @param seconds seconds to sleep
  * @return true if server is shutting down
  */
-bool LIBNETXMS_EXPORTABLE SleepAndCheckForShutdown(UINT32 seconds)
+bool LIBNETXMS_EXPORTABLE SleepAndCheckForShutdown(uint32_t seconds)
 {
-   return ConditionWait(s_shutdownCondition, (seconds != INFINITE) ? seconds * 1000 : INFINITE);
+   return s_shutdownCondition.wait((seconds != INFINITE) ? seconds * 1000 : INFINITE);
 }
 
 /**
@@ -233,17 +230,17 @@ bool LIBNETXMS_EXPORTABLE SleepAndCheckForShutdown(UINT32 seconds)
  * @param milliseconds milliseconds to sleep
  * @return true if server is shutting down
  */
-bool LIBNETXMS_EXPORTABLE SleepAndCheckForShutdownEx(UINT32 milliseconds)
+bool LIBNETXMS_EXPORTABLE SleepAndCheckForShutdownEx(uint32_t milliseconds)
 {
-   return ConditionWait(s_shutdownCondition, milliseconds);
+   return s_shutdownCondition.wait(milliseconds);
 }
 
 /**
  * Get condition object to wait for shutdown
  */
-CONDITION LIBNETXMS_EXPORTABLE GetShutdownConditionObject()
+Condition LIBNETXMS_EXPORTABLE *GetShutdownConditionObject()
 {
-   return s_shutdownCondition;
+   return &s_shutdownCondition;
 }
 
 /**
@@ -1443,13 +1440,13 @@ int LIBNETXMS_EXPORTABLE NxDCIDataTypeFromText(const TCHAR *pszText)
  * Extended send() - send all data even if single call to send()
  * cannot handle them all
  */
-ssize_t LIBNETXMS_EXPORTABLE SendEx(SOCKET hSocket, const void *data, size_t len, int flags, MUTEX mutex)
+ssize_t LIBNETXMS_EXPORTABLE SendEx(SOCKET hSocket, const void *data, size_t len, int flags, Mutex* mutex)
 {
    ssize_t nLeft = len;
 	int nRet;
 
-	if (mutex != INVALID_MUTEX_HANDLE)
-		MutexLock(mutex);
+	if (mutex != nullptr)
+		mutex->lock();
 
 	do
 	{
@@ -1483,8 +1480,8 @@ retry:
 		nLeft -= nRet;
 	} while (nLeft > 0);
 
-	if (mutex != INVALID_MUTEX_HANDLE)
-		MutexUnlock(mutex);
+	if (mutex != nullptr)
+		mutex->unlock();
 
 	return nLeft == 0 ? len : nRet;
 }

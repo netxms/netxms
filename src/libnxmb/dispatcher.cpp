@@ -29,25 +29,21 @@
 THREAD_RESULT THREAD_CALL NXMBDispatcher::workerThreadStarter(void *arg)
 {
 	((NXMBDispatcher *)arg)->workerThread();
-   ConditionSet(((NXMBDispatcher *)arg)->m_stopCondition);
+   ((NXMBDispatcher *)arg)->m_stopCondition.set();
 	return THREAD_OK;
 }
 
 /**
  * Constructor
  */
-NXMBDispatcher::NXMBDispatcher()
+NXMBDispatcher::NXMBDispatcher() : m_startCondition(true), m_stopCondition(true), m_subscriberListAccess(MutexType::FAST), m_callHandlerAccess(MutexType::FAST)
 {
 	m_queue = new Queue;
 	m_numSubscribers = 0;
-	m_subscribers = NULL;
-	m_filters = NULL;
-	m_subscriberListAccess = MutexCreate();
+	m_subscribers = nullptr;
+	m_filters = nullptr;
 	m_workerThreadHandle = INVALID_THREAD_HANDLE;
    m_callHandlers = new CallHandlerMap();
-   m_callHandlerAccess = MutexCreate();
-   m_startCondition = ConditionCreate(TRUE);
-   m_stopCondition = ConditionCreate(TRUE);
 }
 
 /**
@@ -56,7 +52,7 @@ NXMBDispatcher::NXMBDispatcher()
 NXMBDispatcher::~NXMBDispatcher()
 {
 	NXMBMessage *msg;
-	while((msg = (NXMBMessage *)m_queue->get()) != NULL)
+	while((msg = (NXMBMessage *)m_queue->get()) != nullptr)
 		delete msg;
 
    if (m_workerThreadHandle != INVALID_THREAD_HANDLE)
@@ -66,11 +62,9 @@ NXMBDispatcher::~NXMBDispatcher()
       // will cause deadlock
 	   ThreadDetach(m_workerThreadHandle);
 	   m_queue->put(INVALID_POINTER_VALUE);
-      ConditionWait(m_stopCondition, 30000);
+      m_stopCondition.wait(30000);
    }
 	delete m_queue;
-
-	MutexDestroy(m_subscriberListAccess);
 
 	for(int i = 0; i < m_numSubscribers; i++)
 	{
@@ -79,14 +73,10 @@ NXMBDispatcher::~NXMBDispatcher()
 		if ((m_filters[i] != NULL) && m_filters[i]->isOwnedByDispatcher())
 			delete m_filters[i];
 	}
-	free(m_subscribers);
-	free(m_filters);
+	MemFree(m_subscribers);
+	MemFree(m_filters);
 
-   MutexDestroy(m_callHandlerAccess);
    delete m_callHandlers;
-
-   ConditionDestroy(m_startCondition);
-   ConditionDestroy(m_stopCondition);
 }
 
 /**
@@ -95,7 +85,7 @@ NXMBDispatcher::~NXMBDispatcher()
 void NXMBDispatcher::workerThread()
 {
    nxlog_debug(3, _T("NXMB: dispatcher thread started"));
-   ConditionSet(m_startCondition);
+   m_startCondition.set();
 	while(true)
 	{
 		NXMBMessage *msg = (NXMBMessage *)m_queue->getOrBlock();
@@ -104,7 +94,7 @@ void NXMBDispatcher::workerThread()
 
       nxlog_debug(7, _T("NXMB: processing message %s from %s"), msg->getType(), msg->getSenderId());
 
-		MutexLock(m_subscriberListAccess);
+		m_subscriberListAccess.lock();
 		for(int i = 0; i < m_numSubscribers; i++)
 		{
 			if (m_filters[i]->isAllowed(*msg))
@@ -112,7 +102,7 @@ void NXMBDispatcher::workerThread()
 				m_subscribers[i]->messageHandler(*msg);
 			}
 		}
-		MutexUnlock(m_subscriberListAccess);
+		m_subscriberListAccess.unlock();
 		delete msg;
 	}
    nxlog_debug(3, _T("NXMB: dispatcher thread stopped"));
@@ -133,7 +123,7 @@ void NXMBDispatcher::addSubscriber(NXMBSubscriber *subscriber, NXMBFilter *filte
 {
 	int i;
 
-	MutexLock(m_subscriberListAccess);
+   m_subscriberListAccess.lock();
 
 	for(i = 0; i < m_numSubscribers; i++)
 	{
@@ -168,7 +158,7 @@ void NXMBDispatcher::addSubscriber(NXMBSubscriber *subscriber, NXMBFilter *filte
 		m_filters[i] = filter;
 	}
 
-	MutexUnlock(m_subscriberListAccess);
+   m_subscriberListAccess.unlock();
 }
 
 /**
@@ -176,11 +166,9 @@ void NXMBDispatcher::addSubscriber(NXMBSubscriber *subscriber, NXMBFilter *filte
  */
 void NXMBDispatcher::removeSubscriber(const TCHAR *id)
 {
-	int i;
+   m_subscriberListAccess.lock();
 
-	MutexLock(m_subscriberListAccess);
-
-	for(i = 0; i < m_numSubscribers; i++)
+	for(int i = 0; i < m_numSubscribers; i++)
 	{
 		if ((m_subscribers[i] != NULL) && (!_tcscmp(m_subscribers[i]->getId(), id)))
 		{
@@ -195,7 +183,7 @@ void NXMBDispatcher::removeSubscriber(const TCHAR *id)
 		}
 	}
 
-	MutexUnlock(m_subscriberListAccess);
+   m_subscriberListAccess.unlock();
 }
 
 /**
@@ -203,9 +191,9 @@ void NXMBDispatcher::removeSubscriber(const TCHAR *id)
  */
 void NXMBDispatcher::addCallHandler(const TCHAR *callName, NXMBCallHandler handler)
 {
-   MutexLock(m_callHandlerAccess);
+   m_callHandlerAccess.lock();
    m_callHandlers->set(callName, handler);
-   MutexUnlock(m_callHandlerAccess);
+   m_callHandlerAccess.unlock();
 }
 
 /**
@@ -213,9 +201,9 @@ void NXMBDispatcher::addCallHandler(const TCHAR *callName, NXMBCallHandler handl
  */
 void NXMBDispatcher::removeCallHandler(const TCHAR *callName)
 {
-   MutexLock(m_callHandlerAccess);
+   m_callHandlerAccess.lock();
    m_callHandlers->remove(callName);
-   MutexUnlock(m_callHandlerAccess);
+   m_callHandlerAccess.unlock();
 }
 
 /**
@@ -223,10 +211,10 @@ void NXMBDispatcher::removeCallHandler(const TCHAR *callName)
  */
 bool NXMBDispatcher::call(const TCHAR *callName, const void *input, void *output)
 {
-   MutexLock(m_callHandlerAccess);
+   m_callHandlerAccess.unlock();
    NXMBCallHandler handler = m_callHandlers->get(callName);
-   MutexUnlock(m_callHandlerAccess);
-   if (handler == NULL)
+   m_callHandlerAccess.unlock();
+   if (handler == nullptr)
    {
       nxlog_debug(7, _T("NXMB: call handler %s not registered"), callName);
       return false;
@@ -255,7 +243,7 @@ NXMBDispatcher *NXMBDispatcher::getInstance()
    if (s_instance.m_workerThreadHandle == INVALID_THREAD_HANDLE)
    {
       s_instance.m_workerThreadHandle = ThreadCreateEx(NXMBDispatcher::workerThreadStarter, 0, &s_instance);
-      ConditionWait(s_instance.m_startCondition, INFINITE);
+      s_instance.m_startCondition.wait(INFINITE);
    }
    s_instanceLock.unlock();
 	return &s_instance;

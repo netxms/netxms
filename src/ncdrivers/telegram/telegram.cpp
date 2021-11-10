@@ -45,7 +45,7 @@
  */
 struct Chat
 {
-   INT64 id;
+   int64_t id;
    TCHAR *userName;
    TCHAR *firstName;
    TCHAR *lastName;
@@ -158,8 +158,8 @@ private:
    ProxyInfo *m_proxy;
    TCHAR *m_botName;
    StringObjectMap<Chat> m_chats;
-   MUTEX m_chatsLock;
-   CONDITION m_shutdownCondition;
+   Mutex m_chatsLock;
+   Condition m_shutdownCondition;
    bool m_shutdownFlag;
    int64_t m_nextUpdateId;
    NCDriverStorageManager *m_storageManager;   
@@ -167,15 +167,13 @@ private:
    bool m_longPollingMode;
    uint32_t m_pollingInterval;
 
-   TelegramDriver(NCDriverStorageManager *storageManager) : NCDriver(), m_chats(Ownership::True)
+   TelegramDriver(NCDriverStorageManager *storageManager) : NCDriver(), m_chats(Ownership::True), m_chatsLock(MutexType::FAST), m_shutdownCondition(true)
    {
       m_updateHandlerThread = INVALID_THREAD_HANDLE;
       memset(m_authToken, 0, sizeof(m_authToken));
       m_ipVersion = CURL_IPRESOLVE_WHATEVER;
       m_proxy = nullptr;
       m_botName = nullptr;
-      m_chatsLock = MutexCreateFast();
-      m_shutdownCondition = ConditionCreate(true);
       m_shutdownFlag = false;
       m_nextUpdateId = 0;
       m_storageManager = storageManager;
@@ -183,7 +181,7 @@ private:
       m_pollingInterval = 300;
    }
 
-   static THREAD_RESULT THREAD_CALL updateHandler(void *arg);
+   static void updateHandler(TelegramDriver *driver);
 
 public:
    virtual ~TelegramDriver();
@@ -205,8 +203,6 @@ TelegramDriver::~TelegramDriver()
    nxlog_debug_tag(DEBUG_TAG, 4, _T("Waiting for update handler thread completion for bot %s"), m_botName);
    ThreadJoin(m_updateHandlerThread);
    MemFree(m_botName);
-   ConditionDestroy(m_shutdownCondition);
-   MutexDestroy(m_chatsLock);
    MemFree(m_proxy);
 }
 
@@ -457,7 +453,7 @@ TelegramDriver *TelegramDriver::createInstance(Config *config, NCDriverStorageMa
                data->forEach(RestoreChats, &driver->m_chats);
                delete data;
 
-               driver->m_updateHandlerThread = ThreadCreateEx(TelegramDriver::updateHandler, 0, driver);
+               driver->m_updateHandlerThread = ThreadCreateEx(TelegramDriver::updateHandler, driver);
                _tcslcpy(driver->m_parseMode, parseMode, 32);
 	         }
 	         else
@@ -508,10 +504,8 @@ static int ProgressCallbackPreV_7_32(void *context, double dltotal, double dlnow
 /**
  * Handler for incoming updates
  */
-THREAD_RESULT THREAD_CALL TelegramDriver::updateHandler(void *arg)
+void TelegramDriver::updateHandler(TelegramDriver *driver)
 {
-   TelegramDriver *driver = static_cast<TelegramDriver*>(arg);
-
    // Main loop
    ByteStream responseData(32768);
    responseData.setAllocationStep(32768);
@@ -521,7 +515,7 @@ THREAD_RESULT THREAD_CALL TelegramDriver::updateHandler(void *arg)
       if (curl == NULL)
       {
          nxlog_debug_tag(DEBUG_TAG, 4, _T("UpdateHandler(%s): Call to curl_easy_init() failed"), driver->m_botName);
-         if (ConditionWait(driver->m_shutdownCondition, 60000))
+         if (driver->m_shutdownCondition.wait(60000))
             break;
          continue;
       }
@@ -615,7 +609,6 @@ THREAD_RESULT THREAD_CALL TelegramDriver::updateHandler(void *arg)
    }
 
    nxlog_debug_tag(DEBUG_TAG, 1, _T("Update handler thread for Telegram bot %s stopped"), driver->m_botName);
-   return THREAD_OK;
 }
 
 /**
@@ -661,7 +654,7 @@ void TelegramDriver::processUpdate(json_t *data)
          continue;
 
       int64_t newId = json_object_get_integer(message, "migrate_to_chat_id", 0);
-      MutexLock(m_chatsLock);
+      m_chatsLock.lock();
       Chat *chatObject = m_chats.get(username);
       if (newId != 0) // Check group migration to supergroup
       {
@@ -681,7 +674,7 @@ void TelegramDriver::processUpdate(json_t *data)
             chatObject->save(m_storageManager);
          }
       }
-      MutexUnlock(m_chatsLock);
+      m_chatsLock.unlock();
 
       TCHAR *text = json_object_get_string_t(message, "text", _T(""));
       nxlog_debug_tag(DEBUG_TAG, 5, _T("%hs message from %s: %s"), type, username, text);
@@ -702,7 +695,7 @@ bool TelegramDriver::send(const TCHAR *recipient, const TCHAR *subject, const TC
 
    // Recipient name started with @ indicates public channel
    // In that case use channel name instead of chat ID
-   INT64 chatId = 0;
+   int64_t chatId = 0;
    bool useRecipientName = recipient[0] == _T('@');
    if (!useRecipientName)
    {
@@ -713,10 +706,10 @@ bool TelegramDriver::send(const TCHAR *recipient, const TCHAR *subject, const TC
 
    if (!useRecipientName)
    {
-      MutexLock(m_chatsLock);
+      m_chatsLock.lock();
       Chat *chatObject = m_chats.get(recipient);
-      chatId = (chatObject != NULL) ? chatObject->id : 0;
-      MutexUnlock(m_chatsLock);
+      chatId = (chatObject != nullptr) ? chatObject->id : 0;
+      m_chatsLock.unlock();
    }
 
    if ((chatId != 0) || useRecipientName)
@@ -749,7 +742,7 @@ bool TelegramDriver::send(const TCHAR *recipient, const TCHAR *subject, const TC
       {
          nxlog_debug_tag(DEBUG_TAG, 4, _T("Cannot send message from bot %s to recipient %s: invalid API response"), m_botName, recipient);
       }
-      if (response != NULL)
+      if (response != nullptr)
          json_decref(response);
    }
    else

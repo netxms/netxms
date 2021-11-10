@@ -30,7 +30,7 @@
 #define CPU_USAGE_SLOTS			900 		/* 60 sec * 15 min => 900 sec */
 
 static THREAD m_cpuUsageCollector = INVALID_THREAD_HANDLE;
-static MUTEX m_cpuUsageMutex = INVALID_MUTEX_HANDLE;
+static Mutex m_cpuUsageMutex(MutexType::FAST);
 static bool volatile m_stopCollectorThread = false;
 static uint64_t *m_lastUser;
 static uint64_t *m_lastSystem;
@@ -62,10 +62,10 @@ static int m_maxCPU = 0;
  */
 static void CpuUsageCollector()
 {
-	uint64_t user = 0, system = 0, idle = 0, iowait = 0;
-	unsigned int cpu = 0;
+   uint64_t user = 0, system = 0, idle = 0, iowait = 0;
+   unsigned int cpu = 0;
 
-	MutexLock(m_cpuUsageMutex);
+   m_cpuUsageMutex.lock();
 	if (m_currentSlot == CPU_USAGE_SLOTS)
 	{
 		m_currentSlot = 0;
@@ -183,9 +183,9 @@ static void CpuUsageCollector()
       nxlog_debug_tag(AIX_DEBUG_TAG, 6, _T("Call to perfstat_partition_total failed (%s)"), _tcserror(errno));
    }
 
-	// go to the next slot
-	m_currentSlot++;
-	MutexUnlock(m_cpuUsageMutex);
+   // go to the next slot
+   m_currentSlot++;
+   m_cpuUsageMutex.unlock();
 }
 
 /**
@@ -209,8 +209,6 @@ static THREAD_RESULT THREAD_CALL CpuUsageCollectorThread(void *arg)
 void StartCpuUsageCollector()
 {
    int i, j;
-
-   m_cpuUsageMutex = MutexCreate();
 
    perfstat_cpu_total_t cpuTotals;
    if (perfstat_cpu_total(NULL, &cpuTotals, sizeof(perfstat_cpu_total_t), 1) == 1)
@@ -293,7 +291,6 @@ void ShutdownCpuUsageCollector()
 {
    m_stopCollectorThread = true;
    ThreadJoin(m_cpuUsageCollector);
-   MutexDestroy(m_cpuUsageMutex);
 
    MemFree(m_cpuStats);
 
@@ -362,7 +359,7 @@ static void GetUsage(int source, int cpu, int count, TCHAR *value)
 
    double usage = 0;
 
-	MutexLock(m_cpuUsageMutex);
+   m_cpuUsageMutex.lock();
 
    // m_currentSlot points to next slot to be filled
    // it is never zero because collector thread always increment it
@@ -378,10 +375,10 @@ static void GetUsage(int source, int cpu, int count, TCHAR *value)
 		p--;
 	}
 
-	MutexUnlock(m_cpuUsageMutex);
+   m_cpuUsageMutex.unlock();
 
-	usage /= count;
-	ret_double(value, usage);
+   usage /= count;
+   ret_double(value, usage);
 }
 
 /**

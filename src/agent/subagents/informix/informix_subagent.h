@@ -31,7 +31,7 @@
 //
 
 // struct for the databases configured within the subagent
-typedef struct
+struct DatabaseInfo
 {
 	TCHAR id[MAX_STR];				// this is how client addresses the database
 	TCHAR server[MAX_STR];
@@ -42,29 +42,31 @@ typedef struct
 	DB_HANDLE handle;
 	bool connected;
 	int version;					// in xxx format
-	MUTEX accessMutex;
-} DatabaseInfo;
+	Mutex *accessMutex;
+};
 
-typedef struct {
+struct DBParameter
+{
 	TCHAR name[MAX_STR];
 	StringMap* attrs;
-} DBParameter;
+};
 
-typedef struct {
+struct DBParameterGroup 
+{
 	int version;						// minimum database version in xxx format for this query
 	const TCHAR* prefix;						// parameter prefix, e.g. "Informix.Dbspaces."
 	const TCHAR* query;						// the query
 	int	  queryColumns;						// number of columns returned by query
 	DBParameter* values[MAX_DATABASES];		// list of values
 	int valueCount[MAX_DATABASES];
-} DBParameterGroup;
+};
 
 // struct for stat data obtained from the database
-typedef struct
+struct DatabaseData
 {
 	DWORD openCursors;
 	DWORD sessions;
-} DatabaseData;
+};
 
 //
 // Functions

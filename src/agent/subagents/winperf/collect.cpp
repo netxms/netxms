@@ -35,9 +35,8 @@ WinPerfCounterSet *m_cntSet[3] =
 /**
  * Counter set constructor
  */
-WinPerfCounterSet::WinPerfCounterSet(DWORD interval, TCHAR cls)
+WinPerfCounterSet::WinPerfCounterSet(DWORD interval, TCHAR cls) : m_mutex(MutexType::FAST)
 {
-	m_mutex = MutexCreate();
 	m_changeCondition = CreateEvent(NULL, TRUE, FALSE, NULL);
 	m_interval = interval;
 	m_class = cls;
@@ -50,7 +49,6 @@ WinPerfCounterSet::WinPerfCounterSet(DWORD interval, TCHAR cls)
  */
 WinPerfCounterSet::~WinPerfCounterSet()
 {
-	MutexDestroy(m_mutex);
 	CloseHandle(m_changeCondition);
 	delete m_counters;
 }
@@ -60,9 +58,9 @@ WinPerfCounterSet::~WinPerfCounterSet()
  */
 void WinPerfCounterSet::addCounter(WINPERF_COUNTER *c)
 {
-	MutexLock(m_mutex);
+	m_mutex.lock();
 	m_counters->add(c);
-	MutexUnlock(m_mutex);
+	m_mutex.unlock();
 	SetEvent(m_changeCondition);
 }
 
@@ -103,7 +101,7 @@ void WinPerfCounterSet::collectorThread()
 
 		// Add counters to query
 	   DWORD dwOKCounters = 0;
-		MutexLock(m_mutex);
+		m_mutex.lock();
 		for(int i = 0; i < m_counters->size(); i++)
 		{
 			WINPERF_COUNTER *counter = m_counters->get(i);
@@ -120,7 +118,7 @@ void WinPerfCounterSet::collectorThread()
 				dwOKCounters++;
 			}
 		}
-		MutexUnlock(m_mutex);
+		m_mutex.unlock();
 
       // Check if we was able to add at least one counter
       if (dwOKCounters == 0)

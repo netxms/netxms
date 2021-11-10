@@ -1,6 +1,6 @@
 /*
 ** NetXMS Tuxedo helper library
-** Copyright (C) 2014-2018 Raden Solutions
+** Copyright (C) 2014-2021 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@
  * Connect count
  */
 static int s_connectCount = 0;
-static MUTEX s_connectLock = MutexCreate();
+static Mutex s_connectLock;
 
 /**
  * Connect to Tuxedo app
@@ -34,10 +34,10 @@ static MUTEX s_connectLock = MutexCreate();
 bool LIBNXTUX_EXPORTABLE TuxedoConnect()
 {
    bool success = true;
-   MutexLock(s_connectLock);
+   s_connectLock.lock();
    if (s_connectCount == 0)
    {
-      if (tpinit(NULL) != -1)
+      if (tpinit(nullptr) != -1)
       {
          s_connectCount++;
       }
@@ -51,7 +51,7 @@ bool LIBNXTUX_EXPORTABLE TuxedoConnect()
    {
       s_connectCount++;
    }
-   MutexUnlock(s_connectLock);
+   s_connectLock.unlock();
    return success;
 }
 
@@ -60,14 +60,14 @@ bool LIBNXTUX_EXPORTABLE TuxedoConnect()
  */
 void LIBNXTUX_EXPORTABLE TuxedoDisconnect()
 {
-   MutexLock(s_connectLock);
+   s_connectLock.lock();
    if (s_connectCount > 0)
    {
       s_connectCount--;
       if (s_connectCount == 0)
          tpterm();
    }
-   MutexUnlock(s_connectLock);
+   s_connectLock.unlock();
 }
 
 /**
@@ -94,7 +94,7 @@ bool LIBNXTUX_EXPORTABLE CFgetExecutableName(FBFR32 *fb, FLDID32 fieldid, FLDOCC
       return false;
    
    char *p = strrchr(temp, '/');
-   if (p != NULL)
+   if (p != nullptr)
       p++;
    else
       p = temp;

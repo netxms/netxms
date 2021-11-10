@@ -43,7 +43,7 @@ extern HashMap<uuid, LoraDeviceData> g_deviceMap;
 /**
  * Device map mutex
  */
-extern MUTEX g_deviceMapMutex;
+extern Mutex g_deviceMapMutex;
 
 /**
  * Simple MQTT client definition
@@ -88,7 +88,7 @@ private:
    char m_errorBuffer[CURL_ERROR_SIZE];
    CURL *m_curl;
    long m_response;
-   MUTEX m_curlHandleMutex;
+   Mutex m_curlHandleMutex;
 
    UINT32 sendRequest(const char *method, const char *url, const curl_slist *headers = NULL, char *postFields = NULL);
 

@@ -103,7 +103,7 @@ void AsteriskSystem::updateRTCPStatistic(const char *channel, const TCHAR *peer)
    if (data == nullptr)
       return;  // No RTCP data for this channel
 
-   MutexLock(m_rtcpLock);
+   m_rtcpLock.lock();
    RTCPStatistic *stat = m_peerRTCPStatistic.get(peer);
    if (stat == nullptr)
    {
@@ -123,7 +123,7 @@ void AsteriskSystem::updateRTCPStatistic(const char *channel, const TCHAR *peer)
             stat->jitter[RTCP_MIN], stat->jitter[RTCP_MAX], stat->jitter[RTCP_AVG] >> EMA_FP_SHIFT, stat->jitter[RTCP_LAST],
             stat->packetLoss[RTCP_MIN], stat->packetLoss[RTCP_MAX], stat->packetLoss[RTCP_AVG] >> EMA_FP_SHIFT, stat->packetLoss[RTCP_LAST],
             stat->rtt[RTCP_MIN], stat->rtt[RTCP_MAX], stat->rtt[RTCP_AVG] >> EMA_FP_SHIFT, stat->rtt[RTCP_LAST]);
-   MutexUnlock(m_rtcpLock);
+   m_rtcpLock.unlock();
 
    m_rtcpData.remove(channelKey);
 #undef channelKey
@@ -134,11 +134,11 @@ void AsteriskSystem::updateRTCPStatistic(const char *channel, const TCHAR *peer)
  */
 RTCPStatistic *AsteriskSystem::getPeerRTCPStatistic(const TCHAR *peer, RTCPStatistic *buffer) const
 {
-   MutexLock(m_rtcpLock);
+   m_rtcpLock.lock();
    const RTCPStatistic *stats = m_peerRTCPStatistic.get(peer);
    if (stats != nullptr)
       memcpy(buffer, stats, sizeof(RTCPStatistic));
-   MutexUnlock(m_rtcpLock);
+   m_rtcpLock.unlock();
    return (stats != nullptr) ? buffer : nullptr;
 }
 

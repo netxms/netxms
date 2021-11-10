@@ -391,16 +391,13 @@ static GlobalData s_globalData[] =
 /**
  * Create new database instance object
  */
-DatabaseInstance::DatabaseInstance(DatabaseInfo *info)
+DatabaseInstance::DatabaseInstance(DatabaseInfo *info) : m_dataLock(MutexType::FAST), m_sessionLock(MutexType::NORMAL), m_stopCondition(true)
 {
    memcpy(&m_info, info, sizeof(DatabaseInfo));
 	m_pollerThread = INVALID_THREAD_HANDLE;
-	m_session = NULL;
+	m_session = nullptr;
 	m_connected = false;
-   m_data = NULL;
-	m_dataLock = MutexCreate();
-	m_sessionLock = MutexCreate();
-   m_stopCondition = ConditionCreate(TRUE);
+   m_data = nullptr;
 }
 
 /**
@@ -409,9 +406,6 @@ DatabaseInstance::DatabaseInstance(DatabaseInfo *info)
 DatabaseInstance::~DatabaseInstance()
 {
    stop();
-   MutexDestroy(m_dataLock);
-   MutexDestroy(m_sessionLock);
-   ConditionDestroy(m_stopCondition);
    delete m_data;
 }
 
@@ -428,13 +422,13 @@ void DatabaseInstance::run()
  */
 void DatabaseInstance::stop()
 {
-   ConditionSet(m_stopCondition);
+   m_stopCondition.set();
    ThreadJoin(m_pollerThread);
    m_pollerThread = INVALID_THREAD_HANDLE;
-   if (m_session != NULL)
+   if (m_session != nullptr)
    {
       DBDisconnect(m_session);
-      m_session = NULL;
+      m_session = nullptr;
    }
 }
 
@@ -457,13 +451,13 @@ void DatabaseInstance::pollerThread()
    do
    {
 reconnect:
-      MutexLock(m_sessionLock);
+      m_sessionLock.lock();
 
       TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
       m_session = DBConnect(g_mysqlDriver, m_info.server, m_info.name, m_info.login, m_info.password, NULL, errorText);
       if (m_session == NULL)
       {
-         MutexUnlock(m_sessionLock);
+         m_sessionLock.unlock();
          nxlog_debug_tag(DEBUG_TAG, 6, _T("MYSQL: cannot connect to database %s: %s"), m_info.id, errorText);
          continue;
       }
@@ -472,7 +466,7 @@ reconnect:
 		DBEnableReconnect(m_session, false);
       AgentWriteLog(NXLOG_INFO, _T("MYSQL: connection with database %s restored (connection TTL %d)"), m_info.id, m_info.connectionTTL);
 
-      MutexUnlock(m_sessionLock);
+      m_sessionLock.unlock();
 
       INT64 pollerLoopStartTime = GetCurrentTimeMs();
       UINT32 sleepTime;
@@ -488,25 +482,25 @@ reconnect:
          if (currTime - pollerLoopStartTime > connectionTTL)
          {
             nxlog_debug_tag(DEBUG_TAG, 4, _T("MYSQL: planned connection reset"));
-            MutexLock(m_sessionLock);
+            m_sessionLock.lock();
             m_connected = false;
             DBDisconnect(m_session);
             m_session = NULL;
-            MutexUnlock(m_sessionLock);
+            m_sessionLock.unlock();
             goto reconnect;
          }
-         INT64 elapsedTime = currTime - startTime;
+         int64_t elapsedTime = currTime - startTime;
          sleepTime = (UINT32)((elapsedTime >= 60000) ? 60000 : (60000 - elapsedTime));
       }
-      while(!ConditionWait(m_stopCondition, sleepTime));
+      while(!m_stopCondition.wait(sleepTime));
 
-      MutexLock(m_sessionLock);
+      m_sessionLock.lock();
       m_connected = false;
       DBDisconnect(m_session);
       m_session = NULL;
-      MutexUnlock(m_sessionLock);
+      m_sessionLock.unlock();
    }
-   while(!ConditionWait(m_stopCondition, 60000));   // reconnect every 60 seconds
+   while(!m_stopCondition.wait(60000));   // reconnect every 60 seconds
    nxlog_debug_tag(DEBUG_TAG, 3, _T("MYSQL: poller thread for database %s stopped"), m_info.id);
 }
 
@@ -606,10 +600,10 @@ bool DatabaseInstance::poll()
    delete globalVariables;
 
    // update cached data
-   MutexLock(m_dataLock);
+   m_dataLock.lock();
    delete m_data;
    m_data = data;
-   MutexUnlock(m_dataLock);
+   m_dataLock.unlock();
 
    return failures < count;
 }
@@ -620,16 +614,16 @@ bool DatabaseInstance::poll()
 bool DatabaseInstance::getData(const TCHAR *tag, TCHAR *value)
 {
    bool success = false;
-   MutexLock(m_dataLock);
-   if (m_data != NULL)
+   m_dataLock.lock();
+   if (m_data != nullptr)
    {
       const TCHAR *v = m_data->get(tag);
-      if (v != NULL)
+      if (v != nullptr)
       {
          ret_string(value, v);
          success = true;
       }
    }
-   MutexUnlock(m_dataLock);
+   m_dataLock.unlock();
    return success;
 }

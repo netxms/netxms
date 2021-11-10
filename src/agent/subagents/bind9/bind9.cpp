@@ -50,7 +50,7 @@ static char s_queryUrl[MAX_PATH];
 /**
  * Lock for json parameter read/writing
  */
-static MUTEX s_paramsLock = MutexCreate();
+static Mutex s_paramsLock;
 
 /**
  * Flag to prevent error spam in case of bad configuration
@@ -141,7 +141,7 @@ static LONG H_Bind9Info(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abst
 {
    LONG rc = SYSINFO_RC_SUCCESS;
 
-   MutexLock(s_paramsLock);
+   s_paramsLock.lock();
    FetchStats();
    if (s_response != nullptr)
    {
@@ -175,7 +175,7 @@ static LONG H_Bind9Info(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abst
    {
       rc = SYSINFO_RC_ERROR;
    }
-   MutexUnlock(s_paramsLock);
+   s_paramsLock.unlock();
 
    return rc;
 }

@@ -75,15 +75,15 @@ class ProjectComponent
 class RedmineLink : public HelpDeskLink
 {
  private:
-   MUTEX m_mutex;
+   Mutex m_mutex;
    char m_serverUrl[MAX_PATH];
    char m_apiKey[JIRA_MAX_LOGIN_LEN];
    char m_password[JIRA_MAX_PASSWORD_LEN];
    CURL *m_curl;
    char m_errorBuffer[CURL_ERROR_SIZE];
 
-   void lock() { MutexLock(m_mutex); }
-   void unlock() { MutexUnlock(m_mutex); }
+   void lock() { m_mutex.lock(); }
+   void unlock() { m_mutex.unlock(); }
    UINT32 connect();
    void disconnect();
 

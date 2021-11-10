@@ -64,31 +64,31 @@ struct DebugTagManager
  * Static data
  */
 #ifdef _WIN32
-static HANDLE s_eventLogHandle = NULL;
+static HANDLE s_eventLogHandle = nullptr;
 #else
 static char s_syslogName[64];
 #endif
 static TCHAR s_logFileName[MAX_PATH] = _T("");
 static int s_logFileHandle = -1;
-static MUTEX s_mutexLogAccess = INVALID_MUTEX_HANDLE;
-static UINT32 s_flags = 0;
+static Mutex s_mutexLogAccess(MutexType::FAST);
+static uint32_t s_flags = 0;
 static int s_rotationMode = NXLOG_ROTATION_BY_SIZE;
-static UINT64 s_maxLogSize = 4096 * 1024;	// 4 MB
+static uint64_t s_maxLogSize = 4096 * 1024;	// 4 MB
 static int s_logHistorySize = 4;		// Keep up 4 previous log files
 static time_t s_lastRotationAttempt = 0;
 static TCHAR s_dailyLogSuffixTemplate[64] = _T("%Y%m%d");
 static time_t s_currentDayStart = 0;
 #ifdef _WIN32
-static NxLogConsoleWriter m_consoleWriter = DefaultConsoleWriter;
+static NxLogConsoleWriter s_consoleWriter = DefaultConsoleWriter;
 #else
-static NxLogConsoleWriter m_consoleWriter = (NxLogConsoleWriter)_tprintf;
+static NxLogConsoleWriter s_consoleWriter = (NxLogConsoleWriter)_tprintf;
 #endif
 static StringBuffer s_logBuffer;
 static THREAD s_writerThread = INVALID_THREAD_HANDLE;
-static CONDITION s_writerStopCondition = INVALID_CONDITION_HANDLE;
-static NxLogDebugWriter s_debugWriter = NULL;
+static Condition s_writerStopCondition(true);
+static NxLogDebugWriter s_debugWriter = nullptr;
 static volatile DebugTagManager s_tagTree;
-static Mutex s_mutexDebugTagTreeWrite;
+static Mutex s_mutexDebugTagTreeWrite(MutexType::FAST);
 
 /**
  * Swaps tag tree pointers and waits till reader count drops to 0
@@ -533,7 +533,7 @@ bool LIBNETXMS_EXPORTABLE nxlog_set_rotation_policy(int rotationMode, UINT64 max
  */
 void LIBNETXMS_EXPORTABLE nxlog_set_console_writer(NxLogConsoleWriter writer)
 {
-	m_consoleWriter = writer;
+	s_consoleWriter = writer;
 }
 
 /**
@@ -542,12 +542,12 @@ void LIBNETXMS_EXPORTABLE nxlog_set_console_writer(NxLogConsoleWriter writer)
 static bool RotateLog(bool needLock)
 {
 	if (needLock)
-		MutexLock(s_mutexLogAccess);
+		s_mutexLogAccess.lock();
 
 	if ((s_flags & NXLOG_ROTATION_ERROR) && (s_lastRotationAttempt > time(NULL) - 3600))
 	{
 	   if (needLock)
-	      MutexUnlock(s_mutexLogAccess);
+	      s_mutexLogAccess.unlock();
 	   return (s_flags & NXLOG_IS_OPEN) ? true : false;
 	}
 
@@ -708,7 +708,7 @@ static bool RotateLog(bool needLock)
    s_lastRotationAttempt = time(NULL);
 
 	if (needLock)
-		MutexUnlock(s_mutexLogAccess);
+		s_mutexLogAccess.unlock();
 
 	MemFree(buffer);
 	return (s_flags & NXLOG_IS_OPEN) ? true : false;
@@ -730,22 +730,22 @@ static void BackgroundWriterThread()
    bool stop = false;
    while(!stop)
    {
-      stop = ConditionWait(s_writerStopCondition, 1000);
+      stop = s_writerStopCondition.wait(1000);
 
       // Check for new day start
-      time_t t = time(NULL);
+      time_t t = time(nullptr);
 	   if ((s_logFileHandle != -1) && (s_rotationMode == NXLOG_ROTATION_DAILY) && (t >= s_currentDayStart + 86400))
 	   {
 		   RotateLog(false);
 	   }
 
-      MutexLock(s_mutexLogAccess);
+      s_mutexLogAccess.lock();
       if (!s_logBuffer.isEmpty())
       {
          size_t buflen = s_logBuffer.length();
          char *data = s_logBuffer.getUTF8String();
          s_logBuffer.clear();
-         MutexUnlock(s_mutexLogAccess);
+         s_mutexLogAccess.unlock();
 
          if (s_logFileHandle != -1)
          {
@@ -772,7 +772,7 @@ static void BackgroundWriterThread()
       }
       else
       {
-         MutexUnlock(s_mutexLogAccess);
+         s_mutexLogAccess.unlock();
       }
    }
 }
@@ -785,21 +785,21 @@ static void BackgroundWriterThreadStdOut()
    bool stop = false;
    while(!stop)
    {
-      stop = ConditionWait(s_writerStopCondition, 1000);
+      stop = s_writerStopCondition.wait(1000);
 
-      MutexLock(s_mutexLogAccess);
+      s_mutexLogAccess.lock();
       if (!s_logBuffer.isEmpty())
       {
          char *data = s_logBuffer.getUTF8String();
          s_logBuffer.clear();
-         MutexUnlock(s_mutexLogAccess);
+         s_mutexLogAccess.unlock();
 
          _write(STDOUT_FILENO, data, strlen(data));
          MemFree(data);
       }
       else
       {
-         MutexUnlock(s_mutexLogAccess);
+         s_mutexLogAccess.unlock();
       }
    }
 }
@@ -809,9 +809,6 @@ static void BackgroundWriterThreadStdOut()
  */
 bool LIBNETXMS_EXPORTABLE nxlog_open(const TCHAR *logName, UINT32 flags)
 {
-   if (s_mutexLogAccess == INVALID_MUTEX_HANDLE)
-      s_mutexLogAccess = MutexCreateFast();
-
 	s_flags = flags & 0x7FFFFFFF;
    if (s_flags & NXLOG_USE_SYSLOG)
    {
@@ -842,7 +839,6 @@ bool LIBNETXMS_EXPORTABLE nxlog_open(const TCHAR *logName, UINT32 flags)
       if (s_flags & NXLOG_BACKGROUND_WRITER)
       {
          s_logBuffer.setAllocationStep(8192);
-         s_writerStopCondition = ConditionCreate(TRUE);
          s_writerThread = ThreadCreateEx(BackgroundWriterThreadStdOut);
       }
    }
@@ -883,7 +879,6 @@ bool LIBNETXMS_EXPORTABLE nxlog_open(const TCHAR *logName, UINT32 flags)
          if (s_flags & NXLOG_BACKGROUND_WRITER)
          {
             s_logBuffer.setAllocationStep(8192);
-            s_writerStopCondition = ConditionCreate(TRUE);
             s_writerThread = ThreadCreateEx(BackgroundWriterThread);
          }
       }
@@ -916,22 +911,20 @@ void LIBNETXMS_EXPORTABLE nxlog_close()
       {
          if (s_flags & NXLOG_BACKGROUND_WRITER)
          {
-            ConditionSet(s_writerStopCondition);
+            s_writerStopCondition.set();
             ThreadJoin(s_writerThread);
-            ConditionDestroy(s_writerStopCondition);
             s_writerThread = INVALID_THREAD_HANDLE;
-            s_writerStopCondition = INVALID_CONDITION_HANDLE;
+            s_writerStopCondition.reset();
          }
       }
       else
       {
          if (s_flags & NXLOG_BACKGROUND_WRITER)
          {
-            ConditionSet(s_writerStopCondition);
+            s_writerStopCondition.set();
             ThreadJoin(s_writerThread);
-            ConditionDestroy(s_writerStopCondition);
             s_writerThread = INVALID_THREAD_HANDLE;
-            s_writerStopCondition = INVALID_CONDITION_HANDLE;
+            s_writerStopCondition.reset();
          }
 
          if (s_logFileHandle != -1)
@@ -941,12 +934,6 @@ void LIBNETXMS_EXPORTABLE nxlog_close()
          }
       }
 	   s_flags &= ~NXLOG_IS_OPEN;
-   }
-
-   if (s_mutexLogAccess != INVALID_MUTEX_HANDLE)
-   {
-      MutexDestroy(s_mutexLogAccess);
-      s_mutexLogAccess = INVALID_MUTEX_HANDLE;
    }
 }
 
@@ -976,7 +963,7 @@ static void WriteLogToConsole(INT16 severity, const TCHAR *timestamp, const TCHA
    }
 
    TCHAR tagf[20];
-   m_consoleWriter(_T("%s %s%s] %s\n"), timestamp, loglevel, FormatTag(tag, tagf), message);
+   s_consoleWriter(_T("%s %s%s] %s\n"), timestamp, loglevel, FormatTag(tag, tagf), message);
 }
 
 /**
@@ -1007,7 +994,7 @@ static void WriteLogToFileAsText(INT16 severity, const TCHAR *tag, const TCHAR *
    TCHAR tagf[20];
    FormatTag(tag, tagf);
 
-   MutexLock(s_mutexLogAccess);
+   s_mutexLogAccess.lock();
 
    TCHAR timestamp[64];
    FormatLogTimestamp(timestamp);
@@ -1049,7 +1036,7 @@ static void WriteLogToFileAsText(INT16 severity, const TCHAR *tag, const TCHAR *
    if (s_flags & NXLOG_PRINT_TO_STDOUT)
       WriteLogToConsole(severity, timestamp, tag, message);
 
-   MutexUnlock(s_mutexLogAccess);
+   s_mutexLogAccess.unlock();
 }
 
 /**
@@ -1094,7 +1081,7 @@ static void WriteLogToFileAsJSON(INT16 severity, const TCHAR *tag, const TCHAR *
    _tcscat(json, escapedMessage);
    _tcscat(json, _T("\"}\n"));
 
-   MutexLock(s_mutexLogAccess);
+   s_mutexLogAccess.lock();
 
    if (s_flags & NXLOG_BACKGROUND_WRITER)
    {
@@ -1128,7 +1115,7 @@ static void WriteLogToFileAsJSON(INT16 severity, const TCHAR *tag, const TCHAR *
    if (s_flags & NXLOG_PRINT_TO_STDOUT)
       WriteLogToConsole(severity, timestamp, tag, message);
 
-   MutexUnlock(s_mutexLogAccess);
+   s_mutexLogAccess.unlock();
 
    FreeStringBuffer(json, jsonBuffer);
    FreeStringBuffer(escapedMessage, escapedMessageBuffer);
@@ -1155,9 +1142,9 @@ static void WriteLog(int16_t severity, const TCHAR *tag, const TCHAR *format, va
    {
       va_list args2;
       va_copy(args2, args);
-      MutexLock(s_mutexLogAccess);
+      s_mutexLogAccess.lock();
       s_debugWriter(tag, format, args2);
-      MutexUnlock(s_mutexLogAccess);
+      s_mutexLogAccess.unlock();
       va_end(args2);
    }
 
@@ -1218,10 +1205,10 @@ static void WriteLog(int16_t severity, const TCHAR *tag, const TCHAR *format, va
 #endif   /* _WIN32 */
       if (s_flags & NXLOG_PRINT_TO_STDOUT)
       {
-         MutexLock(s_mutexLogAccess);
+         s_mutexLogAccess.lock();
          TCHAR timestamp[64];
          WriteLogToConsole(severity, FormatLogTimestamp(timestamp), tag, message);
-         MutexUnlock(s_mutexLogAccess);
+         s_mutexLogAccess.unlock();
       }
       FreeFormattedString(message, localBuffer);
    }
@@ -1248,7 +1235,7 @@ static void WriteLog(int16_t severity, const TCHAR *tag, const TCHAR *format, va
       }
 
       TCHAR tagf[20];
-      MutexLock(s_mutexLogAccess);
+      s_mutexLogAccess.lock();
       if (tag != NULL)
          _ftprintf(stderr, _T("<%d>[%s] "), level, FormatTag(tag, tagf));
       else
@@ -1256,7 +1243,7 @@ static void WriteLog(int16_t severity, const TCHAR *tag, const TCHAR *format, va
       _vftprintf(stderr, format, args);
       _fputtc(_T('\n'), stderr);
       fflush(stderr);
-      MutexUnlock(s_mutexLogAccess);
+      s_mutexLogAccess.unlock();
    }
    else
    {
@@ -1402,10 +1389,10 @@ void LIBNETXMS_EXPORTABLE nxlog_report_event(DWORD msg, int level, int stringCou
          TCHAR *message = FormatString(localBuffer, altMessage, args2);
          va_end(args2);
 
-         MutexLock(s_mutexLogAccess);
+         s_mutexLogAccess.lock();
          TCHAR timestamp[64];
          WriteLogToConsole(level, FormatLogTimestamp(timestamp), NULL, message);
-         MutexUnlock(s_mutexLogAccess);
+         s_mutexLogAccess.unlock();
          FreeFormattedString(message, localBuffer);
       }
 

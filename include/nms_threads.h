@@ -53,17 +53,6 @@ typedef unsigned int THREAD_ID;
 
 extern "C" typedef THREAD_RESULT (THREAD_CALL *ThreadFunction)(void *);
 
-typedef win_mutex_t *MUTEX;
-
-struct netxms_cond_t
-{
-   CONDITION_VARIABLE v;
-   CRITICAL_SECTION lock;
-   bool broadcast;
-   bool isSet;
-};
-typedef netxms_cond_t *CONDITION;
-
 struct netxms_thread_t
 {
 	HANDLE handle;
@@ -170,166 +159,6 @@ inline THREAD_ID ThreadId(THREAD thread)
    return (thread != INVALID_THREAD_HANDLE) ? thread->id : 0;
 }
 
-inline MUTEX MutexCreate()
-{
-	MUTEX mutex = (MUTEX)MemAlloc(sizeof(win_mutex_t));
-	InitializeMutex(mutex, 4000);
-   return mutex;
-}
-
-inline MUTEX MutexCreateFast()
-{
-   // Under Windows we always use mutex with spin
-   return MutexCreate();
-}
-
-inline MUTEX MutexCreateRecursive()
-{
-   return MutexCreate();
-}
-
-inline void MutexDestroy(MUTEX mutex)
-{
-	DestroyMutex(mutex);
-   MemFree(mutex);
-}
-
-inline bool MutexLock(MUTEX mutex)
-{
-	if (mutex == INVALID_MUTEX_HANDLE)
-		return false;
-	LockMutex(mutex, INFINITE);
-   return true;
-}
-
-inline bool MutexTryLock(MUTEX mutex)
-{
-	if (mutex == INVALID_MUTEX_HANDLE)
-		return false;
-	return TryLockMutex(mutex);
-}
-
-inline bool MutexTimedLock(MUTEX mutex, UINT32 timeout)
-{
-   if (mutex == INVALID_MUTEX_HANDLE)
-      return false;
-   return LockMutex(mutex, timeout);
-}
-
-inline void MutexUnlock(MUTEX mutex)
-{
-   if (mutex != INVALID_MUTEX_HANDLE)
-      UnlockMutex(mutex);
-}
-
-inline CONDITION ConditionCreate(bool broadcast)
-{
-   CONDITION c = MemAllocStruct<netxms_cond_t>();
-   InitializeCriticalSectionAndSpinCount(&c->lock, 4000);
-   InitializeConditionVariable(&c->v);
-   c->broadcast = broadcast;
-   c->isSet = false;
-   return c;
-}
-
-inline void ConditionDestroy(CONDITION c)
-{
-   if (c != INVALID_CONDITION_HANDLE)
-   {
-      DeleteCriticalSection(&c->lock);
-      MemFree(c);
-   }
-}
-
-inline void ConditionSet(CONDITION cond)
-{
-   if (cond != INVALID_CONDITION_HANDLE)
-   {
-      EnterCriticalSection(&cond->lock);
-      cond->isSet = true;
-      if (cond->broadcast)
-      {
-         WakeAllConditionVariable(&cond->v);
-      }
-      else
-      {
-         WakeConditionVariable(&cond->v);
-      }
-      LeaveCriticalSection(&cond->lock);
-   }
-}
-
-inline void ConditionReset(CONDITION cond)
-{
-   if (cond != INVALID_CONDITION_HANDLE)
-   {
-      EnterCriticalSection(&cond->lock);
-      cond->isSet = FALSE;
-      LeaveCriticalSection(&cond->lock);
-   }
-}
-
-inline void ConditionPulse(CONDITION cond)
-{
-   if (cond != INVALID_CONDITION_HANDLE)
-   {
-      EnterCriticalSection(&cond->lock);
-      if (cond->broadcast)
-      {
-         WakeAllConditionVariable(&cond->v);
-      }
-      else
-      {
-         WakeConditionVariable(&cond->v);
-      }
-      cond->isSet = FALSE;
-      LeaveCriticalSection(&cond->lock);
-   }
-}
-
-inline bool ConditionWait(CONDITION cond, UINT32 timeout)
-{
-	if (cond == INVALID_CONDITION_HANDLE)
-		return false;
-
-   bool success;
-
-   EnterCriticalSection(&cond->lock);
-
-   if (cond->isSet)
-   {
-      success = true;
-      if (!cond->broadcast)
-         cond->isSet = false;
-   }
-   else if (timeout == INFINITE)
-   {
-      do
-      {
-         SleepConditionVariableCS(&cond->v, &cond->lock, INFINITE);
-      } while (!cond->isSet);
-      success = true;
-      if (!cond->broadcast)
-         cond->isSet = false;
-   }
-   else
-   {
-      do
-      {
-         UINT64 start = GetTickCount64();
-         SleepConditionVariableCS(&cond->v, &cond->lock, timeout);
-         UINT32 elapsed = static_cast<UINT32>(GetTickCount64() - start);
-         timeout -= std::min(elapsed, timeout);
-      } while (!cond->isSet && (timeout > 0));
-      success = cond->isSet;
-      if (!cond->broadcast)
-         cond->isSet = false;
-   }
-
-   LeaveCriticalSection(&cond->lock);
-   return success;
-}
-
 #elif defined(_USE_GNU_PTH)
 
 /****************************************************************************/
@@ -341,18 +170,7 @@ inline bool ConditionWait(CONDITION cond, UINT32 timeout)
 //
 
 typedef pth_t THREAD;
-typedef pth_mutex_t * MUTEX;
-struct netxms_condition_t
-{
-	pth_cond_t cond;
-	pth_mutex_t mutex;
-	bool broadcast;
-   bool isSet;
-};
-typedef struct netxms_condition_t * CONDITION;
 
-#define INVALID_MUTEX_HANDLE        (NULL)
-#define INVALID_CONDITION_HANDLE    (NULL)
 #define INVALID_THREAD_HANDLE       (NULL)
 
 #ifndef INFINITE
@@ -455,165 +273,6 @@ inline void ThreadDetach(THREAD hThread)
       pth_detach(hThread);
 }
 
-inline MUTEX MutexCreate(void)
-{
-   MUTEX mutex = (MUTEX)MemAlloc(sizeof(pth_mutex_t));
-   if (mutex != NULL)
-   {
-      pth_mutex_init(mutex);
-   }
-   return mutex;
-}
-
-inline MUTEX MutexCreateFast(void)
-{
-   return MutexCreate();
-}
-
-inline MUTEX MutexCreateRecursive()
-{
-   // In libpth, recursive locking is explicitly supported,
-   // so we just create mutex
-   return MutexCreate();
-}
-
-inline void MutexDestroy(MUTEX mutex)
-{
-   if (mutex != NULL)
-      MemFree(mutex);
-}
-
-inline bool MutexLock(MUTEX mutex)
-{
-   return (mutex != NULL) ? (pth_mutex_acquire(mutex, FALSE, NULL) != 0) : false;
-}
-
-inline bool MutexTryLock(MUTEX mutex)
-{
-   return (mutex != NULL) ? (pth_mutex_acquire(mutex, TRUE, NULL) != 0) : false;
-}
-
-inline bool MutexTimedLock(MUTEX mutex, UINT32 timeout)
-{
-   if (mutex == NULL)
-      return false;
-
-   if (timeout == 0)
-      return pth_mutex_acquire(mutex, TRUE, NULL) != 0;
-
-   if (timeout == INFINITE)
-      return pth_mutex_acquire(mutex, FALSE, NULL) != 0;
-
-   pth_event_t ev = pth_event(PTH_EVENT_TIME, pth_timeout(timeout / 1000, (timeout % 1000) * 1000));
-   int retcode = pth_mutex_acquire(mutex, FALSE, ev);
-   pth_event_free(ev, PTH_FREE_ALL);
-   return retcode != 0;
-}
-
-inline void MutexUnlock(MUTEX mutex)
-{
-   if (mutex != NULL) 
-      pth_mutex_release(mutex);
-}
-
-inline CONDITION ConditionCreate(bool bBroadcast)
-{
-	CONDITION cond;
-
-	cond = (CONDITION)MemAlloc(sizeof(struct netxms_condition_t));
-	if (cond != NULL) 
-	{
-		pth_cond_init(&cond->cond);
-		pth_mutex_init(&cond->mutex);
-		cond->broadcast = bBroadcast;
-		cond->isSet = FALSE;
-	}
-
-	return cond;
-}
-
-inline void ConditionDestroy(CONDITION cond)
-{
-	if (cond != INVALID_CONDITION_HANDLE)
-	{
-		MemFree(cond);
-	}
-}
-
-inline void ConditionSet(CONDITION cond)
-{
-	if (cond != INVALID_CONDITION_HANDLE)
-	{
-		pth_mutex_acquire(&cond->mutex, FALSE, NULL);
-      cond->isSet = TRUE;
-      pth_cond_notify(&cond->cond, cond->broadcast);
-		pth_mutex_release(&cond->mutex);
-	}
-}
-
-inline void ConditionReset(CONDITION cond)
-{
-	if (cond != INVALID_CONDITION_HANDLE)
-	{
-		pth_mutex_acquire(&cond->mutex, FALSE, NULL);
-      cond->isSet = FALSE;
-		pth_mutex_release(&cond->mutex);
-	}
-}
-
-inline void ConditionPulse(CONDITION cond)
-{
-	if (cond != INVALID_CONDITION_HANDLE)
-	{
-		pth_mutex_acquire(&cond->mutex, FALSE, NULL);
-      pth_cond_notify(&cond->cond, cond->broadcast);
-      cond->isSet = FALSE;
-		pth_mutex_release(&cond->mutex);
-	}
-}
-
-inline bool ConditionWait(CONDITION cond, UINT32 dwTimeOut)
-{
-	bool ret = false;
-
-	if (cond != NULL)
-	{
-		int retcode;
-
-		pth_mutex_acquire(&cond->mutex, FALSE, NULL);
-      if (cond->isSet)
-      {
-         ret = true;
-         if (!cond->broadcast)
-            cond->isSet = FALSE;
-      }
-      else
-      {
-		   if (dwTimeOut != INFINITE)
-		   {
-            pth_event_t ev = pth_event(PTH_EVENT_TIME, pth_timeout(dwTimeOut / 1000, (dwTimeOut % 1000) * 1000));
-			   retcode = pth_cond_await(&cond->cond, &cond->mutex, ev);
-            pth_event_free(ev, PTH_FREE_ALL);
-		   }
-		   else
-		   {
-			   retcode = pth_cond_await(&cond->cond, &cond->mutex, NULL);
-		   }
-
-		   if (retcode)
-		   {
-            if (!cond->broadcast)
-               cond->isSet = FALSE;
-			   ret = true;
-		   }
-      }
-
-		pth_mutex_release(&cond->mutex);
-	}
-
-	return ret;
-}
-
 static inline uint32_t GetCurrentProcessId()
 {
    return getpid();
@@ -675,26 +334,7 @@ static inline uint32_t GetCurrentThreadId()
 //
 
 typedef pthread_t THREAD;
-struct netxms_mutex_t
-{
-   pthread_mutex_t mutex;
-#ifndef HAVE_RECURSIVE_MUTEXES
-   bool isRecursive;
-   pthread_t owner;
-#endif
-};
-typedef netxms_mutex_t * MUTEX;
-struct netxms_condition_t
-{
-	pthread_cond_t cond;
-	pthread_mutex_t mutex;
-	bool broadcast;
-   bool isSet;
-};
-typedef struct netxms_condition_t * CONDITION;
 
-#define INVALID_MUTEX_HANDLE        (nullptr)
-#define INVALID_CONDITION_HANDLE    (nullptr)
 #define INVALID_THREAD_HANDLE       0
 
 #ifndef INFINITE
@@ -807,271 +447,6 @@ inline void ThreadDetach(THREAD hThread)
 {
    if (hThread != INVALID_THREAD_HANDLE)
       pthread_detach(hThread);
-}
-
-/**
- * Create normal mutex
- */
-inline MUTEX MutexCreate()
-{
-   MUTEX mutex = (MUTEX)MemAlloc(sizeof(netxms_mutex_t));
-   if (mutex != NULL)
-   {
-      pthread_mutex_init(&mutex->mutex, NULL);
-#ifndef HAVE_RECURSIVE_MUTEXES
-      mutex->isRecursive = FALSE;
-#endif
-   }
-   return mutex;
-}
-
-/**
- * Create fast mutex if supported, otherwise normal mutex
- * Such mutex should not be used in MutexTimedLock
- */
-inline MUTEX MutexCreateFast()
-{
-   MUTEX mutex = (MUTEX)MemAlloc(sizeof(netxms_mutex_t));
-   if (mutex != NULL)
-   {
-#ifndef HAVE_RECURSIVE_MUTEXES
-      mutex->isRecursive = FALSE;
-#endif
-#if HAVE_DECL_PTHREAD_MUTEX_ADAPTIVE_NP
-      pthread_mutexattr_t a;
-      pthread_mutexattr_init(&a);
-      MUTEXATTR_SETTYPE(&a, PTHREAD_MUTEX_ADAPTIVE_NP);
-      pthread_mutex_init(&mutex->mutex, &a);
-      pthread_mutexattr_destroy(&a);
-#else
-      pthread_mutex_init(&mutex->mutex, NULL);
-#endif
-   }
-   return mutex;
-}
-
-/**
- * Create recursive mutex
- */
-inline MUTEX MutexCreateRecursive()
-{
-   MUTEX mutex = (MUTEX)MemAlloc(sizeof(netxms_mutex_t));
-   if (mutex != NULL)
-   {
-#ifdef HAVE_RECURSIVE_MUTEXES
-      pthread_mutexattr_t a;
-      pthread_mutexattr_init(&a);
-      MUTEXATTR_SETTYPE(&a, MUTEX_RECURSIVE_FLAG);
-      pthread_mutex_init(&mutex->mutex, &a);
-      pthread_mutexattr_destroy(&a);
-#else
-      mutex->isRecursive = TRUE;
-#error FIXME: implement recursive mutexes
-#endif
-   }
-   return mutex;
-}
-
-inline void MutexDestroy(MUTEX mutex)
-{
-   if (mutex != NULL)
-   {
-      pthread_mutex_destroy(&mutex->mutex);
-      MemFree(mutex);
-   }
-}
-
-inline bool MutexLock(MUTEX mutex)
-{
-   return (mutex != NULL) ? (pthread_mutex_lock(&mutex->mutex) == 0) : false;
-}
-
-inline bool MutexTryLock(MUTEX mutex)
-{
-   return (mutex != NULL) ? (pthread_mutex_trylock(&mutex->mutex) == 0) : false;
-}
-
-inline bool MutexTimedLock(MUTEX mutex, UINT32 timeout)
-{
-   if (mutex == NULL)
-      return false;
-
-#if HAVE_PTHREAD_MUTEX_TIMEDLOCK
-   struct timeval now;
-   struct timespec absTimeout;
-
-   gettimeofday(&now, NULL);
-   absTimeout.tv_sec = now.tv_sec + (timeout / 1000);
-
-   now.tv_usec += (timeout % 1000) * 1000;
-   absTimeout.tv_sec += now.tv_usec / 1000000;
-   absTimeout.tv_nsec = (now.tv_usec % 1000000) * 1000;
-
-   return pthread_mutex_timedlock(&mutex->mutex, &absTimeout) == 0;
-#else
-   if (pthread_mutex_trylock(&mutex->mutex) == 0)
-      return true;
-
-   while(timeout > 0)
-   {
-      if (timeout >= 10)
-      {
-         ThreadSleepMs(10);
-         timeout -= 10;
-      }
-      else
-      {
-         ThreadSleepMs(timeout);
-         timeout = 0;
-      }
-
-      if (pthread_mutex_trylock(&mutex->mutex) == 0)
-         return true;
-   } while(timeout > 0);
-
-   return false;
-#endif
-}
-
-inline void MutexUnlock(MUTEX mutex)
-{
-   if (mutex != NULL) 
-      pthread_mutex_unlock(&mutex->mutex);
-}
-
-inline CONDITION ConditionCreate(bool bBroadcast)
-{
-	CONDITION cond;
-
-   cond = (CONDITION)MemAlloc(sizeof(struct netxms_condition_t));
-   if (cond != NULL) 
-   {
-      pthread_cond_init(&cond->cond, NULL);
-      pthread_mutex_init(&cond->mutex, NULL);
-		cond->broadcast = bBroadcast;
-      cond->isSet = FALSE;
-	}
-
-   return cond;
-}
-
-inline void ConditionDestroy(CONDITION cond)
-{
-	if (cond != INVALID_CONDITION_HANDLE)
-	{
-		pthread_cond_destroy(&cond->cond);
-		pthread_mutex_destroy(&cond->mutex);
-		MemFree(cond);
-	}
-}
-
-inline void ConditionSet(CONDITION cond)
-{
-	if (cond != INVALID_CONDITION_HANDLE)
-	{
-		pthread_mutex_lock(&cond->mutex);
-      cond->isSet = TRUE;
-		if (cond->broadcast)
-		{
-			pthread_cond_broadcast(&cond->cond);
-		}
-		else
-		{
-			pthread_cond_signal(&cond->cond);
-		}
-		pthread_mutex_unlock(&cond->mutex);
-	}
-}
-
-inline void ConditionReset(CONDITION cond)
-{
-	if (cond != INVALID_CONDITION_HANDLE)
-	{
-		pthread_mutex_lock(&cond->mutex);
-      cond->isSet = FALSE;
-		pthread_mutex_unlock(&cond->mutex);
-	}
-}
-
-inline void ConditionPulse(CONDITION cond)
-{
-	if (cond != INVALID_CONDITION_HANDLE)
-	{
-		pthread_mutex_lock(&cond->mutex);
-		if (cond->broadcast)
-		{
-			pthread_cond_broadcast(&cond->cond);
-		}
-		else
-		{
-			pthread_cond_signal(&cond->cond);
-		}
-      cond->isSet = FALSE;
-		pthread_mutex_unlock(&cond->mutex);
-	}
-}
-
-inline bool ConditionWait(CONDITION cond, UINT32 dwTimeOut)
-{
-	bool ret = FALSE;
-
-	if (cond != NULL)
-	{
-		int retcode;
-
-		pthread_mutex_lock(&cond->mutex);
-      if (cond->isSet)
-      {
-         ret = true;
-         if (!cond->broadcast)
-            cond->isSet = FALSE;
-      }
-      else
-      {
-		   if (dwTimeOut != INFINITE)
-		   {
-#if HAVE_PTHREAD_COND_RELTIMEDWAIT_NP
-			   struct timespec timeout;
-			   timeout.tv_sec = dwTimeOut / 1000;
-			   timeout.tv_nsec = (dwTimeOut % 1000) * 1000000;
-			   retcode = pthread_cond_reltimedwait_np(&cond->cond, &cond->mutex, &timeout);
-#else
-			   struct timeval now;
-			   struct timespec timeout;
-
-			   // note.
-			   // mili - 10^-3
-			   // micro - 10^-6
-			   // nano - 10^-9
-
-			   // FIXME there should be more accurate way
-			   gettimeofday(&now, NULL);
-			   timeout.tv_sec = now.tv_sec + (dwTimeOut / 1000);
-
-			   now.tv_usec += (dwTimeOut % 1000) * 1000;
-			   timeout.tv_sec += now.tv_usec / 1000000;
-			   timeout.tv_nsec = (now.tv_usec % 1000000) * 1000;
-
-			   retcode = pthread_cond_timedwait(&cond->cond, &cond->mutex, &timeout);
-#endif
-		   }
-		   else
-		   {
-			   retcode = pthread_cond_wait(&cond->cond, &cond->mutex);
-		   }
-
-		   if (retcode == 0)
-		   {
-            if (!cond->broadcast)
-               cond->isSet = FALSE;
-			   ret = true;
-		   }
-      }
-
-		pthread_mutex_unlock(&cond->mutex);
-	}
-
-	return ret;
 }
 
 /**
@@ -2022,24 +1397,388 @@ template <typename R1, typename R2, typename R3> inline void ThreadPoolExecute(T
 void LIBNETXMS_EXPORTABLE ThreadSetDefaultStackSize(int size);
 
 /**
+ * Mutex type
+ */
+enum class MutexType
+{
+   NORMAL,
+   FAST,
+   RECURSIVE
+};
+
+/**
  * Wrappers for mutex
  */
 class LIBNETXMS_EXPORTABLE Mutex
 {
+   DISABLE_COPY_CTOR(Mutex)
+   DISABLE_ASSIGNMENT_OP(Mutex)
+
 private:
-   MUTEX m_mutex;
-   VolatileCounter *m_refCount;
+#if defined(_WIN32)
+   win_mutex_t m_mutex;
+#elif defined(_USE_GNU_PTH)
+   pth_mutex_t m_mutex;
+#else
+   pthread_mutex_t m_mutex;
+#endif
 
 public:
-   Mutex(bool fast = false);
-   Mutex(const Mutex& src);
-   ~Mutex();
+   Mutex(MutexType type = MutexType::NORMAL)
+   {
+#if defined(_WIN32)
+      InitializeMutex(&m_mutex, 4000); // Under Windows we always use mutex with spin
+#elif defined(_USE_GNU_PTH)
+      pth_mutex_init(&m_mutex);  // In libpth, recursive locking is explicitly supported, and no separate "fast" mutexes
+#else
+      if (type == MutexType::FAST)
+      {
+         // Create fast mutex if supported, otherwise normal mutex
+#if HAVE_DECL_PTHREAD_MUTEX_ADAPTIVE_NP
+         pthread_mutexattr_t a;
+         pthread_mutexattr_init(&a);
+         MUTEXATTR_SETTYPE(&a, PTHREAD_MUTEX_ADAPTIVE_NP);
+         pthread_mutex_init(&m_mutex, &a);
+         pthread_mutexattr_destroy(&a);
+#else
+         pthread_mutex_init(&m_mutex, nullptr);
+#endif
+      }
+      else if (type == MutexType::RECURSIVE)
+      {
+#ifdef HAVE_RECURSIVE_MUTEXES
+         pthread_mutexattr_t a;
+         pthread_mutexattr_init(&a);
+         MUTEXATTR_SETTYPE(&a, MUTEX_RECURSIVE_FLAG);
+         pthread_mutex_init(&m_mutex, &a);
+         pthread_mutexattr_destroy(&a);
+#else
+#error FIXME: implement recursive mutexes
+#endif
+      }
+      else
+      {
+         pthread_mutex_init(&m_mutex, nullptr);
+      }
+#endif
+   }
+   ~Mutex()
+   {
+#if defined(_WIN32)
+      DestroyMutex(&m_mutex);
+#elif defined(_USE_GNU_PTH)
+      // No cleanup for mutex
+#else
+      pthread_mutex_destroy(&m_mutex);
+#endif
+   }
 
-   Mutex& operator =(const Mutex &src);
+   /**
+    * Lock mutex. Calling thread will block if necessary.
+    */
+   void lock() const
+   {
+#if defined(_WIN32)
+      LockMutex((win_mutex_t*)&m_mutex, INFINITE);
+#elif defined(_USE_GNU_PTH)
+      pth_mutex_acquire((pth_mutex_t*)&m_mutex, FALSE, nullptr);
+#else
+      pthread_mutex_lock((pthread_mutex_t*)&m_mutex);
+#endif
+   }
 
-   void lock() { MutexLock(m_mutex); }
-   bool tryLock() { return MutexTryLock(m_mutex); }
-   void unlock() { MutexUnlock(m_mutex); }
+   /**
+    * Try lock mutex without locking calling thread. Returns true if lock was successful.
+    */
+   bool tryLock() const
+   {
+#if defined(_WIN32)
+      return TryLockMutex((win_mutex_t*)&m_mutex);
+#elif defined(_USE_GNU_PTH)
+      return pth_mutex_acquire((pth_mutex_t*)&m_mutex, TRUE, nullptr) != 0;
+#else
+      return pthread_mutex_trylock((pthread_mutex_t*)&m_mutex) == 0;
+#endif
+   }
+
+   /**
+    * Unlock mutex
+    */
+   void unlock() const
+   {
+#if defined(_WIN32)
+      UnlockMutex((win_mutex_t*)&m_mutex);
+#elif defined(_USE_GNU_PTH)
+      pth_mutex_release((pth_mutex_t*)&m_mutex);
+#else
+      pthread_mutex_unlock((pthread_mutex_t*)&m_mutex);
+#endif
+   }
+};
+
+/**
+ * Wrappers for condition
+ */
+class LIBNETXMS_EXPORTABLE Condition
+{
+   DISABLE_COPY_CTOR(Condition)
+   DISABLE_ASSIGNMENT_OP(Condition)
+
+private:
+#if defined(_WIN32)
+   CRITICAL_SECTION m_mutex;
+   CONDITION_VARIABLE m_condition;
+#elif defined(_USE_GNU_PTH)
+   pth_mutex_t m_mutex;
+   pth_cond_t m_condition;
+#else
+   pthread_mutex_t m_mutex;
+   pthread_cond_t m_condition;
+#endif
+   bool m_broadcast;
+   bool m_isSet;
+
+public:
+   Condition(bool broadcast)
+   {
+#if defined(_WIN32)
+      InitializeCriticalSectionAndSpinCount(&m_mutex, 4000);
+      InitializeConditionVariable(&m_condition);
+#elif defined(_USE_GNU_PTH)
+      pth_mutex_init(&m_mutex);
+      pth_cond_init(&m_condition);
+#else
+#if HAVE_DECL_PTHREAD_MUTEX_ADAPTIVE_NP
+      pthread_mutexattr_t a;
+      pthread_mutexattr_init(&a);
+      MUTEXATTR_SETTYPE(&a, PTHREAD_MUTEX_ADAPTIVE_NP);
+      pthread_mutex_init(&m_mutex, &a);
+      pthread_mutexattr_destroy(&a);
+#else
+      pthread_mutex_init(&m_mutex, nullptr);
+#endif
+      pthread_cond_init(&m_condition, nullptr);
+#endif
+      m_broadcast = broadcast;
+      m_isSet = false;
+   }
+
+   ~Condition()
+   {
+#if defined(_WIN32)
+      DeleteCriticalSection(&m_mutex);
+#elif defined(_USE_GNU_PTH)
+      // No cleanup for mutex or condition
+#else
+      pthread_cond_destroy(&m_condition);
+      pthread_mutex_destroy(&m_mutex);
+#endif
+   }
+
+   /**
+    * Set condition
+    */
+   void set()
+   {
+#if defined(_WIN32)
+      EnterCriticalSection(&m_mutex);
+      m_isSet = true;
+      if (m_broadcast)
+         WakeAllConditionVariable(&m_condition);
+      else
+         WakeConditionVariable(&m_condition);
+      LeaveCriticalSection(&m_mutex);
+#elif defined(_USE_GNU_PTH)
+      pth_mutex_acquire(&m_mutex, FALSE, nullptr);
+      m_isSet = true;
+      pth_cond_notify(&m_condition, m_broadcast);
+      pth_mutex_release(&m_mutex);
+#else
+      pthread_mutex_lock(&m_mutex);
+      m_isSet = true;
+      if (m_broadcast)
+         pthread_cond_broadcast(&m_condition);
+      else
+         pthread_cond_signal(&m_condition);
+      pthread_mutex_unlock(&m_mutex);
+#endif
+   }
+
+   /**
+    * Pulse condition - will wake up thread or all threads (for broadcast condition) that is currently waiting on condition
+    * but wil not mark conditionas set if no threads are currently waiting.
+    */
+   void pulse()
+   {
+#if defined(_WIN32)
+      EnterCriticalSection(&m_mutex);
+      if (m_broadcast)
+         WakeAllConditionVariable(&m_condition);
+      else
+         WakeConditionVariable(&m_condition);
+      m_isSet = false;
+      LeaveCriticalSection(&m_mutex);
+#elif defined(_USE_GNU_PTH)
+      pth_mutex_acquire(&m_mutex, FALSE, nullptr);
+      pth_cond_notify(&m_condition, m_broadcast);
+      m_isSet = false;
+      pth_mutex_release(&m_mutex);
+#else
+      pthread_mutex_lock(&m_mutex);
+      if (m_broadcast)
+         pthread_cond_broadcast(&m_condition);
+      else
+         pthread_cond_signal(&m_condition);
+      m_isSet = false;
+      pthread_mutex_unlock(&m_mutex);
+#endif
+   }
+
+   /**
+    * Reset condition to unset state
+    */
+   void reset()
+   {
+#if defined(_WIN32)
+      EnterCriticalSection(&m_mutex);
+      m_isSet = false;
+      LeaveCriticalSection(&m_mutex);
+#elif defined(_USE_GNU_PTH)
+      pth_mutex_acquire(&m_mutex, FALSE, nullptr);
+      m_isSet = false;
+      pth_mutex_release(&m_mutex);
+#else
+      pthread_mutex_lock(&m_mutex);
+      m_isSet = false;
+      pthread_mutex_unlock(&m_mutex);
+#endif
+   }
+
+   /**
+    * Wait for condition to set. Timeout is in milliseconds.
+    */
+   bool wait(uint32_t timeout = INFINITE)
+   {
+      bool success;
+
+#if defined(_WIN32)
+      EnterCriticalSection(&m_mutex);
+
+      if (m_isSet)
+      {
+         success = true;
+         if (!m_broadcast)
+            m_isSet = false;
+      }
+      else if (timeout == INFINITE)
+      {
+         // SleepConditionVariableCS may have spurious wakeups, so wait should be done in a cycle
+         do
+         {
+            SleepConditionVariableCS(&m_condition, &m_mutex, INFINITE);
+         } while (!m_isSet);
+         success = true;
+         if (!m_broadcast)
+            m_isSet = false;
+      }
+      else
+      {
+         do
+         {
+            uint64_t start = GetTickCount64();
+            SleepConditionVariableCS(&m_condition, &m_mutex, timeout);
+            uint32_t elapsed = static_cast<uint32_t>(GetTickCount64() - start);
+            timeout -= std::min(elapsed, timeout);
+         } while (!m_isSet && (timeout > 0));
+         success = m_isSet;
+         if (!m_broadcast)
+            m_isSet = false;
+      }
+
+      LeaveCriticalSection(&m_mutex);
+#elif defined(_USE_GNU_PTH)
+      pth_mutex_acquire(&m_mutex, FALSE, nullptr);
+      if (m_isSet)
+      {
+         success = true;
+         if (!m_broadcast)
+            m_isSet = false;
+      }
+      else
+      {
+         int retcode;
+         if (timeout != INFINITE)
+         {
+            pth_event_t ev = pth_event(PTH_EVENT_TIME, pth_timeout(timeout / 1000, (timeout % 1000) * 1000));
+            retcode = pth_cond_await(&m_condition, &m_mutex, ev);
+            if (retcode > 0)
+               success = (pth_event_status(ev) == PTH_STATUS_OCCURRED);
+            else
+               success = false;
+            pth_event_free(ev, PTH_FREE_ALL);
+         }
+         else
+         {
+            success = (pth_cond_await(&m_condition, &m_mutex, nullptr) > 0);
+         }
+
+         if (success && !m_broadcast)
+            m_isSet = false;
+      }
+      pth_mutex_release(&m_mutex);
+#else
+      pthread_mutex_lock(&m_mutex);
+      if (m_isSet)
+      {
+         success = true;
+         if (!m_broadcast)
+            m_isSet = false;
+      }
+      else
+      {
+         int retcode;
+
+         if (timeout != INFINITE)
+         {
+#if HAVE_PTHREAD_COND_RELTIMEDWAIT_NP
+            struct timespec ts;
+            ts.tv_sec = timeout / 1000;
+            ts.tv_nsec = (timeout % 1000) * 1000000;
+            retcode = pthread_cond_reltimedwait_np(&m_condition, &m_mutex, &ts);
+#else
+            struct timeval now;
+            gettimeofday(&now, nullptr);
+            now.tv_usec += (timeout % 1000) * 1000;
+
+            struct timespec ts;
+            ts.tv_sec = now.tv_sec + (timeout / 1000);
+            ts.tv_sec += now.tv_usec / 1000000;
+            ts.tv_nsec = (now.tv_usec % 1000000) * 1000;
+
+            retcode = pthread_cond_timedwait(&m_condition, &m_mutex, &ts);
+#endif
+         }
+         else
+         {
+            retcode = pthread_cond_wait(&m_condition, &m_mutex);
+         }
+
+         if (retcode == 0)
+         {
+            if (!m_broadcast)
+               m_isSet = false;
+            success = true;
+         }
+         else
+         {
+            success = false;
+         }
+      }
+      pthread_mutex_unlock(&m_mutex);
+#endif
+
+      return success;
+   }
 };
 
 /**
@@ -2061,28 +1800,6 @@ public:
    void readLock() { RWLockReadLock(m_rwlock); }
    void writeLock() { RWLockWriteLock(m_rwlock); }
    void unlock() { RWLockUnlock(m_rwlock); }
-};
-
-/**
- * Wrappers for condition
- */
-class LIBNETXMS_EXPORTABLE Condition
-{
-private:
-   CONDITION m_condition;
-   VolatileCounter *m_refCount;
-
-public:
-   Condition(bool broadcast);
-   Condition(const Condition& src);
-   ~Condition();
-
-   Condition& operator =(const Condition &src);
-
-   void set() { ConditionSet(m_condition); }
-   void pulse() { ConditionPulse(m_condition); }
-   void reset() { ConditionReset(m_condition); }
-   bool wait(uint32_t timeout = INFINITE) { return ConditionWait(m_condition, timeout); }
 };
 
 #endif   /* __cplusplus */

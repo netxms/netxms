@@ -39,10 +39,10 @@ protected:
    time_t m_lastPollTime;
    TCHAR *m_command;
    ProcessExecutor *m_executor;
-   MUTEX m_mutex;
+   Mutex m_mutex;
 
-   void lock() { MutexLock(m_mutex); }
-   void unlock() { MutexUnlock(m_mutex); }
+   void lock() { m_mutex.lock(); }
+   void unlock() { m_mutex.unlock(); }
 
    virtual ProcessExecutor *createExecutor() = 0;
    virtual void processPollResults() = 0;
@@ -76,7 +76,6 @@ ExternalDataProvider::ExternalDataProvider(const TCHAR *command, uint32_t pollin
    m_lastPollTime = 0;
    m_command = MemCopyString(command);
    m_executor = nullptr;
-   m_mutex = MutexCreate();
 }
 
 /**
@@ -86,7 +85,6 @@ ExternalDataProvider::~ExternalDataProvider()
 {
    MemFree(m_command);
    delete m_executor;
-   MutexDestroy(m_mutex);
 }
 
 /**

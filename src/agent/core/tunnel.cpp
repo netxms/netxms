@@ -61,7 +61,7 @@ class TunnelCommChannel : public AbstractCommChannel
 {
 private:
    Tunnel *m_tunnel;
-   UINT32 m_id;
+   uint32_t m_id;
    bool m_active;
    VolatileCounter m_closed;
    RingBuffer m_buffer;
@@ -77,9 +77,9 @@ public:
    TunnelCommChannel(Tunnel *tunnel);
    virtual ~TunnelCommChannel();
 
-   virtual ssize_t send(const void *data, size_t size, MUTEX mutex = INVALID_MUTEX_HANDLE) override;
-   virtual ssize_t recv(void *buffer, size_t size, UINT32 timeout = INFINITE) override;
-   virtual int poll(UINT32 timeout, bool write = false) override;
+   virtual ssize_t send(const void *data, size_t size, Mutex *mutex = nullptr) override;
+   virtual ssize_t recv(void *buffer, size_t size, uint32_t timeout = INFINITE) override;
+   virtual int poll(uint32_t timeout, bool write = false) override;
    virtual void backgroundPoll(uint32_t timeout, void (*callback)(BackgroundSocketPollResult, AbstractCommChannel*, void*), void *context) override;
    virtual int shutdown() override;
    virtual void close() override;
@@ -103,9 +103,9 @@ private:
    SOCKET m_socket;
    SSL_CTX *m_context;
    SSL *m_ssl;
-   MUTEX m_sslLock;
-   MUTEX m_writeLock;
-   MUTEX m_stateLock;
+   Mutex m_sslLock;
+   Mutex m_writeLock;
+   Mutex m_stateLock;
    bool m_connected;
    bool m_reset;
    bool m_forceResolve;
@@ -113,7 +113,7 @@ private:
    THREAD m_recvThread;
    MsgWaitQueue *m_queue;
    SharedHashMap<uint32_t, TunnelCommChannel> m_channels;
-   MUTEX m_channelLock;
+   Mutex m_channelLock;
    int m_tlsHandshakeFailures;
    bool m_ignoreClientCertificate;
 
@@ -159,7 +159,7 @@ public:
 /**
  * Tunnel constructor
  */
-Tunnel::Tunnel(const TCHAR *hostname, uint16_t port, const TCHAR *certificate, const TCHAR *pkeyPassword)
+Tunnel::Tunnel(const TCHAR *hostname, uint16_t port, const TCHAR *certificate, const TCHAR *pkeyPassword) : m_channelLock(MutexType::FAST)
 {
    m_hostname = MemCopyString(hostname);
    m_port = port;
@@ -172,16 +172,12 @@ Tunnel::Tunnel(const TCHAR *hostname, uint16_t port, const TCHAR *certificate, c
    m_socket = INVALID_SOCKET;
    m_context = nullptr;
    m_ssl = nullptr;
-   m_sslLock = MutexCreate();
-   m_writeLock = MutexCreate();
-   m_stateLock = MutexCreate();
    m_connected = false;
    m_reset = false;
    m_forceResolve = false;
    m_requestId = 0;
    m_recvThread = INVALID_THREAD_HANDLE;
    m_queue = nullptr;
-   m_channelLock = MutexCreate();
    m_tlsHandshakeFailures = 0;
    m_ignoreClientCertificate = false;
 }
@@ -198,10 +194,6 @@ Tunnel::~Tunnel()
       SSL_free(m_ssl);
    if (m_context != nullptr)
       SSL_CTX_free(m_context);
-   MutexDestroy(m_sslLock);
-   MutexDestroy(m_writeLock);
-   MutexDestroy(m_stateLock);
-   MutexDestroy(m_channelLock);
    MemFree(m_hostname);
    MemFree(m_certificate);
    MemFree(m_pkeyPassword);
@@ -225,21 +217,21 @@ void Tunnel::debugPrintf(int level, const TCHAR *format, ...)
  */
 void Tunnel::disconnect()
 {
-   MutexLock(m_stateLock);
+   m_stateLock.lock();
    if (m_socket != INVALID_SOCKET)
       shutdown(m_socket, SHUT_RDWR);
    m_connected = false;
    ThreadJoin(m_recvThread);
    m_recvThread = INVALID_THREAD_HANDLE;
    delete_and_null(m_queue);
-   MutexUnlock(m_stateLock);
+   m_stateLock.unlock();
 
    SharedObjectArray<TunnelCommChannel> channels(g_maxCommSessions, 16);
-   MutexLock(m_channelLock);
+   m_channelLock.lock();
    auto it = m_channels.begin();
    while(it.hasNext())
       channels.add(it.next());
-   MutexUnlock(m_channelLock);
+   m_channelLock.unlock();
 
    for(int i = 0; i < channels.size(); i++)
       channels.get(i)->close();
@@ -265,7 +257,7 @@ THREAD_RESULT THREAD_CALL Tunnel::recvThreadStarter(void *arg)
  */
 void Tunnel::recvThread()
 {
-   TlsMessageReceiver receiver(m_socket, m_ssl, m_sslLock, 8192, MAX_AGENT_MSG_SIZE);
+   TlsMessageReceiver receiver(m_socket, m_ssl, &m_sslLock, 8192, MAX_AGENT_MSG_SIZE);
    while(m_connected)
    {
       MessageReceiverResult result;
@@ -298,9 +290,9 @@ void Tunnel::recvThread()
             case CMD_CHANNEL_DATA:
                if (msg->isBinary())
                {
-                  MutexLock(m_channelLock);
+                  m_channelLock.lock();
                   shared_ptr<TunnelCommChannel> channel = m_channels.getShared(msg->getId());
-                  MutexUnlock(m_channelLock);
+                  m_channelLock.unlock();
                   if (channel != nullptr)
                   {
                      channel->putData(msg->getBinaryData(), msg->getBinaryDataSize());
@@ -337,23 +329,23 @@ int Tunnel::sslWrite(const void *data, size_t size)
 
    bool canRetry;
    int bytes;
-   MutexLock(m_writeLock);
+   m_writeLock.lock();
    do
    {
       canRetry = false;
-      MutexLock(m_sslLock);
+      m_sslLock.lock();
       bytes = SSL_write(m_ssl, data, static_cast<int>(size));
       if (bytes <= 0)
       {
          int err = SSL_get_error(m_ssl, bytes);
          if ((err == SSL_ERROR_WANT_READ) || (err == SSL_ERROR_WANT_WRITE))
          {
-            MutexUnlock(m_sslLock);
+            m_sslLock.unlock();
             SocketPoller sp(err == SSL_ERROR_WANT_WRITE);
             sp.add(m_socket);
             if (sp.poll(REQUEST_TIMEOUT) > 0)
                canRetry = true;
-            MutexLock(m_sslLock);
+            m_sslLock.lock();
          }
          else
          {
@@ -362,10 +354,10 @@ int Tunnel::sslWrite(const void *data, size_t size)
                LogOpenSSLErrorStack(7);
          }
       }
-      MutexUnlock(m_sslLock);
+      m_sslLock.unlock();
    }
    while(canRetry);
-   MutexUnlock(m_writeLock);
+   m_writeLock.unlock();
    return bytes;
 }
 
@@ -861,7 +853,7 @@ static bool VerifyServerCertificate(X509 *cert)
  */
 bool Tunnel::connectToServer()
 {
-   MutexLock(m_stateLock);
+   m_stateLock.lock();
 
    // Cleanup from previous connection attempt
    if (m_socket != INVALID_SOCKET)
@@ -879,7 +871,7 @@ bool Tunnel::connectToServer()
    if (!m_address.isValidUnicast())
    {
       debugPrintf(4, _T("Server address cannot be resolved or is not valid"));
-      MutexUnlock(m_stateLock);
+      m_stateLock.unlock();
       return false;
    }
 
@@ -889,7 +881,7 @@ bool Tunnel::connectToServer()
    {
       TCHAR buffer[1024];
       debugPrintf(4, _T("Cannot establish connection (%s)"), GetLastSocketErrorText(buffer, 1024));
-      MutexUnlock(m_stateLock);
+      m_stateLock.unlock();
       return false;
    }
 
@@ -902,7 +894,7 @@ bool Tunnel::connectToServer()
    if (method == nullptr)
    {
       debugPrintf(4, _T("Cannot obtain TLS method"));
-      MutexUnlock(m_stateLock);
+      m_stateLock.unlock();
       return false;
    }
 
@@ -910,7 +902,7 @@ bool Tunnel::connectToServer()
    if (m_context == nullptr)
    {
       debugPrintf(4, _T("Cannot create TLS context"));
-      MutexUnlock(m_stateLock);
+      m_stateLock.unlock();
       return false;
    }
    if (g_dwFlags & AF_ENABLE_SSL_TRACE)
@@ -929,7 +921,7 @@ bool Tunnel::connectToServer()
    if (m_ssl == nullptr)
    {
       debugPrintf(4, _T("Cannot create SSL object"));
-      MutexUnlock(m_stateLock);
+      m_stateLock.unlock();
       return false;
    }
 
@@ -952,7 +944,7 @@ bool Tunnel::connectToServer()
                continue;
             }
             debugPrintf(4, _T("TLS handshake failed (timeout on %s)"), (sslErr == SSL_ERROR_WANT_READ) ? _T("read") : _T("write"));
-            MutexUnlock(m_stateLock);
+            m_stateLock.unlock();
             return false;
          }
          else
@@ -977,7 +969,7 @@ bool Tunnel::connectToServer()
                   debugPrintf(4, _T("Next connection attempt will ignore agent certificate"));
                }
             }
-            MutexUnlock(m_stateLock);
+            m_stateLock.unlock();
             return false;
          }
       }
@@ -996,7 +988,7 @@ bool Tunnel::connectToServer()
          shutdown(m_socket, SHUT_RDWR);
          m_socket = INVALID_SOCKET;
       }
-      MutexUnlock(m_stateLock);
+      m_stateLock.unlock();
       return false;
    }
 
@@ -1027,7 +1019,7 @@ bool Tunnel::connectToServer()
          shutdown(m_socket, SHUT_RDWR);
          m_socket = INVALID_SOCKET;
       }
-      MutexUnlock(m_stateLock);
+      m_stateLock.unlock();
       return false;
    }
 
@@ -1037,7 +1029,7 @@ bool Tunnel::connectToServer()
    m_connected = true;
    m_recvThread = ThreadCreateEx(Tunnel::recvThreadStarter, 0, this);
 
-   MutexUnlock(m_stateLock);
+   m_stateLock.unlock();
 
    m_requestId = 0;
 
@@ -1444,14 +1436,14 @@ void Tunnel::createSession(const NXCPMessage& request)
 shared_ptr<TunnelCommChannel> Tunnel::createChannel()
 {
    shared_ptr<TunnelCommChannel> channel;
-   MutexLock(m_channelLock);
+   m_channelLock.lock();
    if (m_channels.size() < (int)g_maxCommSessions)
    {
       channel = make_shared<TunnelCommChannel>(this);
       m_channels.set(channel->getId(), channel);
       debugPrintf(5, _T("New channel created (ID=%d)"), channel->getId());
    }
-   MutexUnlock(m_channelLock);
+   m_channelLock.unlock();
    return channel;
 }
 
@@ -1462,9 +1454,9 @@ void Tunnel::processChannelCloseRequest(const NXCPMessage& request)
 {
    uint32_t id = request.getFieldAsUInt32(VID_CHANNEL_ID);
    debugPrintf(5, _T("Close request for channel %d"), id);
-   MutexLock(m_channelLock);
+   m_channelLock.lock();
    shared_ptr<TunnelCommChannel> channel = m_channels.getShared(id);
-   MutexUnlock(m_channelLock);
+   m_channelLock.unlock();
    if (channel != nullptr)
    {
       channel->close();
@@ -1477,14 +1469,14 @@ void Tunnel::processChannelCloseRequest(const NXCPMessage& request)
 void Tunnel::closeChannel(TunnelCommChannel *channel)
 {
    uint32_t id = 0;
-   MutexLock(m_channelLock);
+   m_channelLock.lock();
    if (m_channels.contains(channel->getId()))
    {
       id = channel->getId();
       debugPrintf(5, _T("Channel %d closed"), id);
       m_channels.remove(id);
    }
-   MutexUnlock(m_channelLock);
+   m_channelLock.unlock();
 
    if (id != 0)
    {
@@ -1582,7 +1574,7 @@ TunnelCommChannel::~TunnelCommChannel()
 /**
  * Send data
  */
-ssize_t TunnelCommChannel::send(const void *data, size_t size, MUTEX mutex)
+ssize_t TunnelCommChannel::send(const void *data, size_t size, Mutex *mutex)
 {
    return m_active ? m_tunnel->sendChannelData(m_id, data, size) : -1;
 }
@@ -1590,7 +1582,7 @@ ssize_t TunnelCommChannel::send(const void *data, size_t size, MUTEX mutex)
 /**
  * Receive data
  */
-ssize_t TunnelCommChannel::recv(void *buffer, size_t size, UINT32 timeout)
+ssize_t TunnelCommChannel::recv(void *buffer, size_t size, uint32_t timeout)
 {
 #ifdef _WIN32
    EnterCriticalSection(&m_bufferLock);
@@ -1663,7 +1655,7 @@ ssize_t TunnelCommChannel::recv(void *buffer, size_t size, UINT32 timeout)
 /**
  * Poll for data
  */
-int TunnelCommChannel::poll(UINT32 timeout, bool write)
+int TunnelCommChannel::poll(uint32_t timeout, bool write)
 {
    if (write)
       return 1;

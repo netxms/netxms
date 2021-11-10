@@ -43,7 +43,7 @@ static SOCKET s_socket = INVALID_SOCKET;
 /**
  * Socket lock
  */
-static MUTEX s_socketLock = MutexCreate();
+static Mutex s_socketLock;
 
 /**
  * "Hide console" flag
@@ -91,7 +91,7 @@ static bool SendMsg(NXCPMessage *msg)
       return false;
 
    NXCP_MESSAGE *rawMsg = msg->serialize();
-   bool success = (SendEx(s_socket, rawMsg, ntohl(rawMsg->size), 0, s_socketLock) == ntohl(rawMsg->size));
+   bool success = (SendEx(s_socket, rawMsg, ntohl(rawMsg->size), 0, &s_socketLock) == ntohl(rawMsg->size));
    MemFree(rawMsg);
    return success;
 }

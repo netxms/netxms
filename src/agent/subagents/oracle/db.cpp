@@ -24,17 +24,14 @@
 /**
  * Create new database instance object
  */
-DatabaseInstance::DatabaseInstance(DatabaseInfo *info)
+DatabaseInstance::DatabaseInstance(DatabaseInfo *info) : m_dataLock(MutexType::FAST), m_sessionLock(MutexType::NORMAL), m_stopCondition(true)
 {
    memcpy(&m_info, info, sizeof(DatabaseInfo));
 	m_pollerThread = INVALID_THREAD_HANDLE;
-	m_session = NULL;
+	m_session = nullptr;
 	m_connected = false;
 	m_version = 0;
-   m_data = NULL;
-	m_dataLock = MutexCreate();
-	m_sessionLock = MutexCreate();
-   m_stopCondition = ConditionCreate(TRUE);
+   m_data = nullptr;
 }
 
 /**
@@ -43,9 +40,6 @@ DatabaseInstance::DatabaseInstance(DatabaseInfo *info)
 DatabaseInstance::~DatabaseInstance()
 {
    stop();
-   MutexDestroy(m_dataLock);
-   MutexDestroy(m_sessionLock);
-   ConditionDestroy(m_stopCondition);
    delete m_data;
 }
 
@@ -62,13 +56,13 @@ void DatabaseInstance::run()
  */
 void DatabaseInstance::stop()
 {
-   ConditionSet(m_stopCondition);
+   m_stopCondition.set();
    ThreadJoin(m_pollerThread);
    m_pollerThread = INVALID_THREAD_HANDLE;
-   if (m_session != NULL)
+   if (m_session != nullptr)
    {
       DBDisconnect(m_session);
-      m_session = NULL;
+      m_session = nullptr;
    }
 }
 
@@ -78,7 +72,7 @@ void DatabaseInstance::stop()
 int DatabaseInstance::getOracleVersion() 
 {
 	DB_RESULT hResult = DBSelect(m_session, _T("SELECT version FROM v$instance"));
-	if (hResult == NULL)	
+	if (hResult == nullptr)
 	{
 		return 700;		// assume Oracle 7.0 by default
 	}
@@ -111,13 +105,13 @@ void DatabaseInstance::pollerThread()
    do
    {
 reconnect:
-      MutexLock(m_sessionLock);
+      m_sessionLock.lock();
 
       TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
       m_session = DBConnect(g_oracleDriver, m_info.name, NULL, m_info.username, m_info.password, NULL, errorText);
       if (m_session == NULL)
       {
-         MutexUnlock(m_sessionLock);
+         m_sessionLock.unlock();
          AgentWriteDebugLog(6, _T("ORACLE: cannot connect to database %s: %s"), m_info.id, errorText);
          continue;
       }
@@ -128,41 +122,41 @@ reconnect:
       AgentWriteLog(NXLOG_INFO, _T("ORACLE: connection with database %s restored (version %d.%d, connection TTL %d)"),
          m_info.id, m_version >> 8, m_version &0xFF, m_info.connectionTTL);
 
-      MutexUnlock(m_sessionLock);
+      m_sessionLock.unlock();
 
-      INT64 pollerLoopStartTime = GetCurrentTimeMs();
-      UINT32 sleepTime;
+      int64_t pollerLoopStartTime = GetCurrentTimeMs();
+      uint32_t sleepTime;
       do
       {
-         INT64 startTime = GetCurrentTimeMs();
+         int64_t startTime = GetCurrentTimeMs();
          if (!poll())
          {
             AgentWriteLog(NXLOG_WARNING, _T("ORACLE: connection with database %s lost"), m_info.id);
             break;
          }
-         INT64 currTime = GetCurrentTimeMs();
+         int64_t currTime = GetCurrentTimeMs();
          if (currTime - pollerLoopStartTime > connectionTTL)
          {
             AgentWriteDebugLog(4, _T("ORACLE: planned connection reset"));
-            MutexLock(m_sessionLock);
+            m_sessionLock.lock();
             m_connected = false;
             DBDisconnect(m_session);
             m_session = NULL;
-            MutexUnlock(m_sessionLock);
+            m_sessionLock.unlock();
             goto reconnect;
          }
-         INT64 elapsedTime = currTime - startTime;
+         int64_t elapsedTime = currTime - startTime;
          sleepTime = (UINT32)((elapsedTime >= 60000) ? 60000 : (60000 - elapsedTime));
       }
-      while(!ConditionWait(m_stopCondition, sleepTime));
+      while(!m_stopCondition.wait(sleepTime));
 
-      MutexLock(m_sessionLock);
+      m_sessionLock.lock();
       m_connected = false;
       DBDisconnect(m_session);
-      m_session = NULL;
-      MutexUnlock(m_sessionLock);
+      m_session = nullptr;
+      m_sessionLock.unlock();
    }
-   while(!ConditionWait(m_stopCondition, 60000));   // reconnect every 60 seconds
+   while(!m_stopCondition.wait(60000));   // reconnect every 60 seconds
    AgentWriteDebugLog(3, _T("ORACLE: poller thread for database %s stopped"), m_info.id);
 }
 
@@ -176,14 +170,14 @@ bool DatabaseInstance::poll()
    int count = 0;
    int failures = 0;
 
-   for(int i = 0; g_queries[i].name != NULL; i++)
+   for(int i = 0; g_queries[i].name != nullptr; i++)
    {
       if (g_queries[i].minVersion > m_version)
          continue;   // not supported by this database
 
       count++;
       DB_RESULT hResult = DBSelect(m_session, g_queries[i].query);
-      if (hResult == NULL)
+      if (hResult == nullptr)
       {
          failures++;
          continue;
@@ -236,10 +230,10 @@ bool DatabaseInstance::poll()
    }
 
    // update cached data
-   MutexLock(m_dataLock);
+   m_dataLock.lock();
    delete m_data;
    m_data = data;
-   MutexUnlock(m_dataLock);
+   m_dataLock.unlock();
 
    return failures < count;
 }
@@ -250,7 +244,7 @@ bool DatabaseInstance::poll()
 bool DatabaseInstance::getData(const TCHAR *tag, TCHAR *value)
 {
    bool success = false;
-   MutexLock(m_dataLock);
+   m_dataLock.lock();
    if (m_data != NULL)
    {
       const TCHAR *v = m_data->get(tag);
@@ -260,7 +254,7 @@ bool DatabaseInstance::getData(const TCHAR *tag, TCHAR *value)
          success = true;
       }
    }
-   MutexUnlock(m_dataLock);
+   m_dataLock.unlock();
    return success;
 }
 
@@ -296,22 +290,22 @@ static EnumerationCallbackResult TagListCallback(const TCHAR *key, const TCHAR *
 bool DatabaseInstance::getTagList(const TCHAR *pattern, StringList *value)
 {
    bool success = false;
-   MutexLock(m_dataLock);
-   if (m_data != NULL)
+   m_dataLock.lock();
+   if (m_data != nullptr)
    {
       const char *eptr;
       int eoffset;
       TagListCallbackData data;
       data.list = value;
-      data.preg = _pcre_compile_t(reinterpret_cast<const PCRE_TCHAR*>(pattern), PCRE_COMMON_FLAGS | PCRE_CASELESS, &eptr, &eoffset, NULL);
-	   if (data.preg != NULL)
+      data.preg = _pcre_compile_t(reinterpret_cast<const PCRE_TCHAR*>(pattern), PCRE_COMMON_FLAGS | PCRE_CASELESS, &eptr, &eoffset, nullptr);
+	   if (data.preg != nullptr)
 	   {
          m_data->forEach(TagListCallback, &data);
          _pcre_free_t(data.preg);
          success = true;
 	   }
    }
-   MutexUnlock(m_dataLock);
+   m_dataLock.unlock();
    return success;
 }
 
@@ -320,18 +314,18 @@ bool DatabaseInstance::getTagList(const TCHAR *pattern, StringList *value)
  */
 bool DatabaseInstance::queryTable(TableDescriptor *td, Table *value)
 {
-   MutexLock(m_sessionLock);
+   m_sessionLock.lock();
    
-   if (!m_connected || (m_session == NULL))
+   if (!m_connected || (m_session == nullptr))
    {
-      MutexUnlock(m_sessionLock);
+      m_sessionLock.unlock();
       return false;
    }
 
    bool success = false;
 
    DB_RESULT hResult = DBSelect(m_session, td->query);
-   if (hResult != NULL)
+   if (hResult != nullptr)
    {
       int numColumns = DBGetColumnCount(hResult);
       for(int col = 0; col < numColumns; col++)
@@ -347,7 +341,7 @@ bool DatabaseInstance::queryTable(TableDescriptor *td, Table *value)
          value->addRow();
          for(int col = 0; col < numColumns; col++)
          {
-            value->setPreallocated(col, DBGetField(hResult, row, col, NULL, 0));
+            value->setPreallocated(col, DBGetField(hResult, row, col, nullptr, 0));
          }
       }
 
@@ -355,6 +349,6 @@ bool DatabaseInstance::queryTable(TableDescriptor *td, Table *value)
       success = true;
    }
 
-   MutexUnlock(m_sessionLock);
+   m_sessionLock.unlock();
    return success;
 }

@@ -79,7 +79,7 @@ static Mutex s_certificateMappingsLock;
 static SharedHashMap<uint32_t, AgentTunnel> s_tunnels;   // All tunnels indexed by tunnel ID
 static SharedHashMap<uint32_t, AgentTunnel> s_boundTunnels;
 static SharedObjectArray<AgentTunnel> s_unboundTunnels(16, 16);
-static Mutex s_tunnelListLock(true);
+static Mutex s_tunnelListLock(MutexType::FAST);
 static VolatileCounter s_activeSetupCalls = 0;  // Number of tunnel setup calls currently running
 
 /**
@@ -87,7 +87,7 @@ static VolatileCounter s_activeSetupCalls = 0;  // Number of tunnel setup calls 
  */
 static ObjectArray<BackgroundSocketPollerHandle> s_pollers(64, 64, Ownership::True);
 static uint32_t s_maxTunnelsPerPoller = MIN(SOCKET_POLLER_MAX_SOCKETS - 1, 256);
-static Mutex s_pollerListLock(true);
+static Mutex s_pollerListLock(MutexType::FAST);
 
 /**
  * Execute tunnel establishing hook script in the separate thread
@@ -328,7 +328,7 @@ static VolatileCounter s_nextTunnelId = 0;
  */
 AgentTunnel::AgentTunnel(SSL_CTX *context, SSL *ssl, SOCKET sock, const InetAddress& addr,
          uint32_t nodeId, int32_t zoneUIN, const TCHAR *certificateSubject, const TCHAR *certificateIssuer,
-         time_t certificateExpirationTime, BackgroundSocketPollerHandle *socketPoller)
+         time_t certificateExpirationTime, BackgroundSocketPollerHandle *socketPoller) : m_channelLock(MutexType::FAST)
 {
    m_id = InterlockedIncrement(&s_nextTunnelId);
    m_address = addr;
@@ -338,8 +338,6 @@ AgentTunnel::AgentTunnel(SSL_CTX *context, SSL *ssl, SOCKET sock, const InetAddr
    _sntprintf(m_threadPoolKey, 12, _T("TN%u"), m_id);
    m_context = context;
    m_ssl = ssl;
-   m_sslLock = MutexCreate();
-   m_writeLock = MutexCreate();
    m_requestId = 0;
    m_nodeId = nodeId;
    m_zoneUIN = zoneUIN;
@@ -354,7 +352,6 @@ AgentTunnel::AgentTunnel(SSL_CTX *context, SSL *ssl, SOCKET sock, const InetAddr
    m_agentBuildTag = nullptr;
    m_bindRequestId = 0;
    m_bindUserId = 0;
-   m_channelLock = MutexCreate();
    m_hostname[0] = 0;
    m_startTime = time(nullptr);
    m_userAgentInstalled = false;
@@ -373,8 +370,6 @@ AgentTunnel::~AgentTunnel()
    shutdown();
    SSL_CTX_free(m_context);
    SSL_free(m_ssl);
-   MutexDestroy(m_sslLock);
-   MutexDestroy(m_writeLock);
    closesocket(m_socket);
    MemFree(m_systemName);
    MemFree(m_platformName);
@@ -383,7 +378,6 @@ AgentTunnel::~AgentTunnel()
    MemFree(m_agentBuildTag);
    MemFree(m_certificateIssuer);
    MemFree(m_certificateSubject);
-   MutexDestroy(m_channelLock);
    delete m_messageReceiver;
    InterlockedDecrement(&m_socketPoller->usageCount);
    debugPrintf(4, _T("Tunnel destroyed"));
@@ -440,9 +434,9 @@ MessageReceiverResult AgentTunnel::readMessage(bool allowSocketRead)
    {
       if (msg->isBinary())
       {
-         MutexLock(m_channelLock);
+         m_channelLock.lock();
          shared_ptr<AgentTunnelCommChannel> channel = m_channels.getShared(msg->getId());
-         MutexUnlock(m_channelLock);
+         m_channelLock.unlock();
          if (channel != nullptr)
          {
             channel->putData(msg->getBinaryData(), msg->getBinaryDataSize());
@@ -500,7 +494,7 @@ void AgentTunnel::finalize()
    UnregisterTunnel(this);
 
    // shutdown all channels
-   MutexLock(m_channelLock);
+   m_channelLock.lock();
    auto it = m_channels.begin();
    while(it.hasNext())
    {
@@ -509,7 +503,7 @@ void AgentTunnel::finalize()
       channel->detach();
    }
    m_channels.clear();
-   MutexUnlock(m_channelLock);
+   m_channelLock.unlock();
 
    debugPrintf(4, _T("Tunnel closure completed"));
 }
@@ -541,23 +535,23 @@ int AgentTunnel::sslWrite(const void *data, size_t size)
 {
    bool canRetry;
    int bytes;
-   MutexLock(m_writeLock);
+   m_writeLock.lock();
    do
    {
       canRetry = false;
-      MutexLock(m_sslLock);
+      m_sslLock.lock();
       bytes = SSL_write(m_ssl, data, (int)size);
       if (bytes <= 0)
       {
          int err = SSL_get_error(m_ssl, bytes);
          if ((err == SSL_ERROR_WANT_READ) || (err == SSL_ERROR_WANT_WRITE))
          {
-            MutexUnlock(m_sslLock);
+            m_sslLock.unlock();
             SocketPoller sp(err == SSL_ERROR_WANT_WRITE);
             sp.add(m_socket);
             if (sp.poll(REQUEST_TIMEOUT) > 0)
                canRetry = true;
-            MutexLock(m_sslLock);
+            m_sslLock.lock();
          }
          else
          {
@@ -566,10 +560,10 @@ int AgentTunnel::sslWrite(const void *data, size_t size)
                LogOpenSSLErrorStack(7);
          }
       }
-      MutexUnlock(m_sslLock);
+      m_sslLock.unlock();
    }
    while(canRetry);
-   MutexUnlock(m_writeLock);
+   m_writeLock.unlock();
    return bytes;
 }
 
@@ -598,7 +592,7 @@ bool AgentTunnel::sendMessage(NXCPMessage *msg)
 void AgentTunnel::start()
 {
    debugPrintf(4, _T("Tunnel started"));
-   m_messageReceiver = new TlsMessageReceiver(m_socket, m_ssl, m_sslLock, 4096, MAX_MSG_SIZE);
+   m_messageReceiver = new TlsMessageReceiver(m_socket, m_ssl, &m_sslLock, 4096, MAX_MSG_SIZE);
    m_socketPoller->poller.poll(m_socket, 60000, socketPollerCallback, this);
 }
 
@@ -930,7 +924,7 @@ shared_ptr<AgentTunnelCommChannel> AgentTunnel::createChannel()
 
    shared_ptr<AgentTunnelCommChannel> channel = make_shared<AgentTunnelCommChannel>(self(), response->getFieldAsUInt32(VID_CHANNEL_ID));
    delete response;
-   MutexLock(m_channelLock);
+   m_channelLock.lock();
    if (m_state == AGENT_TUNNEL_BOUND)
    {
       m_channels.set(channel->getId(), channel);
@@ -939,7 +933,7 @@ shared_ptr<AgentTunnelCommChannel> AgentTunnel::createChannel()
    {
       channel.reset();
    }
-   MutexUnlock(m_channelLock);
+   m_channelLock.unlock();
 
    if (channel != nullptr)
       debugPrintf(4, _T("createChannel: new channel created (ID=%d)"), channel->getId());
@@ -956,9 +950,9 @@ void AgentTunnel::processChannelClose(uint32_t channelId)
 {
    debugPrintf(4, _T("processChannelClose: notification of channel %u closure"), channelId);
 
-   MutexLock(m_channelLock);
+   m_channelLock.lock();
    shared_ptr<AgentTunnelCommChannel> channel = m_channels.getShared(channelId);
-   MutexUnlock(m_channelLock);
+   m_channelLock.unlock();
    if (channel != nullptr)
    {
       channel->shutdown();
@@ -975,9 +969,9 @@ void AgentTunnel::closeChannel(AgentTunnelCommChannel *channel)
 
    debugPrintf(4, _T("closeChannel: request to close channel %u"), channel->getId());
 
-   MutexLock(m_channelLock);
+   m_channelLock.lock();
    m_channels.remove(channel->getId());
-   MutexUnlock(m_channelLock);
+   m_channelLock.unlock();
 
    // Inform agent that channel is closing
    NXCPMessage msg(CMD_CLOSE_CHANNEL, InterlockedIncrement(&m_requestId));
@@ -1011,9 +1005,9 @@ void AgentTunnel::fillMessage(NXCPMessage *msg, UINT32 baseId) const
    msg->setField(baseId + 5, m_systemInfo);
    msg->setField(baseId + 6, m_platformName);
    msg->setField(baseId + 7, m_agentVersion);
-   MutexLock(m_channelLock);
+   m_channelLock.lock();
    msg->setField(baseId + 8, m_channels.size());
-   MutexUnlock(m_channelLock);
+   m_channelLock.unlock();
    msg->setField(baseId + 9, m_zoneUIN);
    msg->setField(baseId + 10, m_hostname);
    msg->setField(baseId + 11, m_agentId);
@@ -1072,7 +1066,7 @@ AgentTunnelCommChannel::~AgentTunnelCommChannel()
 /**
  * Send data
  */
-ssize_t AgentTunnelCommChannel::send(const void *data, size_t size, MUTEX mutex)
+ssize_t AgentTunnelCommChannel::send(const void *data, size_t size, Mutex *mutex)
 {
    if (!m_active)
       return -1;
@@ -1083,7 +1077,7 @@ ssize_t AgentTunnelCommChannel::send(const void *data, size_t size, MUTEX mutex)
 /**
  * Receive data
  */
-ssize_t AgentTunnelCommChannel::recv(void *buffer, size_t size, UINT32 timeout)
+ssize_t AgentTunnelCommChannel::recv(void *buffer, size_t size, uint32_t timeout)
 {
    if (!m_active)
       return 0;
@@ -1164,7 +1158,7 @@ ssize_t AgentTunnelCommChannel::recv(void *buffer, size_t size, UINT32 timeout)
 /**
  * Poll for data
  */
-int AgentTunnelCommChannel::poll(UINT32 timeout, bool write)
+int AgentTunnelCommChannel::poll(uint32_t timeout, bool write)
 {
    if (write)
       return 1;

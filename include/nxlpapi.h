@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Log Parsing Library
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -273,7 +273,7 @@ private:
 	CodeLookupElement *m_eventNameList;
 	bool (*m_eventResolver)(const TCHAR *, uint32_t *);
 	THREAD m_thread;	// Associated thread
-   CONDITION m_stopCondition;
+   Condition m_stopCondition;
    int m_recordsProcessed;
 	int m_recordsMatched;
 	bool m_preallocatedFile;
@@ -339,7 +339,7 @@ public:
 
 	void setThread(THREAD thread) { m_thread = thread; }
 	THREAD getThread() { return m_thread; }
-   CONDITION getStopCondition() { return m_stopCondition; }
+   Condition *getStopCondition() { return &m_stopCondition; }
 
 	void setProcessAllFlag(bool flag) { m_processAllRules = flag; }
 	bool getProcessAllFlag() const { return m_processAllRules; }

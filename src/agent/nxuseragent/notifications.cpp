@@ -206,7 +206,7 @@ static EnumerationCallbackResult CheckPendingNotifications(const ServerObjectKey
 THREAD_RESULT THREAD_CALL NotificationManager(void *arg)
 {
    nxlog_write(NXLOG_INFO, _T("Notification manager thread started"));
-   while (!ConditionWait(g_shutdownCondition, 10000))
+   while (!g_shutdownCondition.wait(10000))
    {
       bool pendingNotifications = false;
       s_notificationLock.lock();

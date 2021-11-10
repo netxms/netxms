@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -234,9 +234,9 @@ static void ConnectionHandler(xmpp_conn_t * const conn, const xmpp_conn_event_t 
 /**
  * XMPP context
  */
-static xmpp_ctx_t *s_xmppContext = NULL;
-static xmpp_conn_t *s_xmppConnection = NULL;
-static MUTEX s_xmppMutex = MutexCreate();
+static xmpp_ctx_t *s_xmppContext = nullptr;
+static xmpp_conn_t *s_xmppConnection = nullptr;
+static Mutex s_xmppMutex;
 
 /**
  * XMPP thread
@@ -245,7 +245,7 @@ static THREAD_RESULT THREAD_CALL XMPPConnectionManager(void *arg)
 {
    xmpp_initialize();
 
-   s_xmppContext = xmpp_ctx_new(NULL, &s_logger);
+   s_xmppContext = xmpp_ctx_new(nullptr, &s_logger);
 
    TCHAR tmpLogin[64];
    TCHAR tmpPassword[MAX_PASSWORD];
@@ -273,24 +273,24 @@ static THREAD_RESULT THREAD_CALL XMPPConnectionManager(void *arg)
    // outer loop - try to reconnect after disconnect
    do
    {
-      MutexLock(s_xmppMutex);
+      s_xmppMutex.lock();
       s_xmppConnection = xmpp_conn_new(s_xmppContext);
       xmpp_conn_set_jid(s_xmppConnection, login);
       xmpp_conn_set_pass(s_xmppConnection, password);
       xmpp_connect_client(s_xmppConnection, (server[0] != 0) ? server : NULL, (server[0] != 0) ? port : 0, ConnectionHandler, s_xmppContext);
-      MutexUnlock(s_xmppMutex);
+      s_xmppMutex.unlock();
 
       xmpp_set_loop_status(s_xmppContext, XMPP_LOOP_RUNNING);
       while(xmpp_get_loop_status(s_xmppContext) == XMPP_LOOP_RUNNING)
       {
-         MutexLock(s_xmppMutex);
+         s_xmppMutex.lock();
          xmpp_run_once(s_xmppContext, 100);
-         MutexUnlock(s_xmppMutex);
+         s_xmppMutex.unlock();
       }
-      MutexLock(s_xmppMutex);
+      s_xmppMutex.lock();
       xmpp_conn_release(s_xmppConnection);
       s_xmppConnection = NULL;
-      MutexUnlock(s_xmppMutex);
+      s_xmppMutex.unlock();
    } while(!SleepAndCheckForShutdown(30));
 
    xmpp_ctx_free(s_xmppContext);
@@ -354,10 +354,10 @@ static THREAD_RESULT THREAD_CALL XMPPMessageSender(void *arg)
       if (m == INVALID_POINTER_VALUE)
          break;
 
-      MutexLock(s_xmppMutex);
+      s_xmppMutex.lock();
       if ((s_xmppContext == NULL) || (s_xmppConnection == NULL) || !s_xmppConnected)
       {
-         MutexUnlock(s_xmppMutex);
+         s_xmppMutex.unlock();
          if (m->getAge() < 3600)
          {
             s_xmppMessageQueue.insert(m);
@@ -389,7 +389,7 @@ static THREAD_RESULT THREAD_CALL XMPPMessageSender(void *arg)
       xmpp_send(s_xmppConnection, msg);
       xmpp_stanza_release(msg);
 
-      MutexUnlock(s_xmppMutex);
+      s_xmppMutex.unlock();
       delete m;
    }
 
@@ -418,19 +418,19 @@ void StartXMPPConnector()
 void StopXMPPConnector()
 {
    XMPPMessage *m;
-   while((m = (XMPPMessage *)s_xmppMessageQueue.get()) != NULL)
+   while((m = (XMPPMessage *)s_xmppMessageQueue.get()) != nullptr)
       delete m;
    s_xmppMessageQueue.put(INVALID_POINTER_VALUE);
 
-   MutexLock(s_xmppMutex);
-   if (s_xmppContext != NULL)
+   s_xmppMutex.lock();
+   if (s_xmppContext != nullptr)
    {
       if (s_xmppConnected)
          xmpp_disconnect(s_xmppConnection);
       else
          xmpp_stop(s_xmppContext);
    }
-   MutexUnlock(s_xmppMutex);
+   s_xmppMutex.unlock();
 
    ThreadJoin(s_connManagerThread);
    ThreadJoin(s_msgSenderThread);

@@ -67,7 +67,7 @@ VolatileCounter64 g_windowsEventsReceived = 0;
  */
 static uint64_t s_eventId = 1;  // Next available event ID
 static LogParser *s_parser = nullptr;
-static MUTEX s_parserLock = INVALID_MUTEX_HANDLE;
+static Mutex s_parserLock;
 static THREAD s_writerThread = INVALID_THREAD_HANDLE;
 static THREAD s_processingThread = INVALID_THREAD_HANDLE;
 static bool s_enableStorage = true;
@@ -294,7 +294,7 @@ static void WindwsEventParserCallback(UINT32 eventCode, const TCHAR *eventName, 
  */
 void InitializeWindowsEventParser()
 {
-   MutexLock(s_parserLock);
+   s_parserLock.lock();
    LogParser *prev = s_parser;
    s_parser = nullptr;
 #ifdef UNICODE
@@ -331,7 +331,7 @@ void InitializeWindowsEventParser()
       MemFree(xml);
       delete parsers;
    }
-   MutexUnlock(s_parserLock);
+   s_parserLock.unlock();
    delete prev;
 }
 
@@ -352,12 +352,12 @@ static void WindowsEventProcessingThread()
 
       bool writeToDatabase = true;
 
-      MutexLock(s_parserLock);
+      s_parserLock.lock();
       if (s_parser != nullptr)
       {
          s_parser->matchEvent(event->eventSource, event->eventCode, event->eventSeverity, event->message, nullptr, 0, event->nodeId, event->originTimestamp, event->logName, &writeToDatabase);
       }
-      MutexUnlock(s_parserLock);
+      s_parserLock.unlock();
 
       if (writeToDatabase && s_enableStorage)
          g_windowsEventWriterQueue.put(event);
@@ -405,7 +405,6 @@ void StartWindowsEventProcessing()
    InitLogParserLibrary();
 
    // Create message parser
-   s_parserLock = MutexCreate();
    InitializeWindowsEventParser();
 
    s_writerThread = ThreadCreateEx((g_dbSyntax == DB_SYNTAX_PGSQL) || (g_dbSyntax == DB_SYNTAX_TSDB) ? WindowsEventWriterThread_PGSQL :  WindowsEventWriterThread);

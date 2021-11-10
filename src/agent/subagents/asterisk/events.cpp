@@ -1,6 +1,6 @@
 /*
 ** NetXMS Asterisk subagent
-** Copyright (C) 2004-2018 Victor Kirhenshtein
+** Copyright (C) 2004-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -53,9 +53,9 @@ void AsteriskSystem::setupEventFilters()
  */
 const EventCounters *AsteriskSystem::getPeerEventCounters(const TCHAR *peer) const
 {
-   MutexLock(m_eventCounterLock);
+   m_eventCounterLock.lock();
    const EventCounters *counters = m_peerEventCounters.get(peer);
-   MutexUnlock(m_eventCounterLock);
+   m_eventCounterLock.unlock();
    return counters;
 }
 
@@ -71,7 +71,7 @@ void AsteriskSystem::processHangup(const shared_ptr<AmiMessage>& msg)
    EventCounters *peerEventCounters;
    if (peer[0] != 0)
    {
-      MutexLock(m_eventCounterLock);
+      m_eventCounterLock.lock();
       peerEventCounters = m_peerEventCounters.get(peer);
       if (peerEventCounters == nullptr)
       {
@@ -79,7 +79,7 @@ void AsteriskSystem::processHangup(const shared_ptr<AmiMessage>& msg)
          memset(peerEventCounters, 0, sizeof(EventCounters));
          m_peerEventCounters.set(peer, peerEventCounters);
       }
-      MutexUnlock(m_eventCounterLock);
+      m_eventCounterLock.unlock();
    }
    else
    {

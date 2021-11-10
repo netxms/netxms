@@ -63,10 +63,8 @@ static const char *s_classNameA[]=
 /**
  * Default constructor
  */
-NetObj::NetObj() : NObject(), m_dashboards(0, 8), m_urls(0, 8, Ownership::True)
+NetObj::NetObj() : NObject(), m_dashboards(0, 8), m_urls(0, 8, Ownership::True), m_mutexProperties(MutexType::FAST), m_mutexACL(MutexType::FAST), m_moduleDataLock(MutexType::FAST), m_mutexResponsibleUsers(MutexType::FAST)
 {
-   m_mutexProperties = MutexCreateFast();
-   m_mutexACL = MutexCreateFast();
    m_status = STATUS_UNKNOWN;
    m_savedStatus = STATUS_UNKNOWN;
    m_comments = nullptr;
@@ -95,7 +93,6 @@ NetObj::NetObj() : NObject(), m_dashboards(0, 8), m_urls(0, 8, Ownership::True)
    }
    m_submapId = 0;
    m_moduleData = nullptr;
-   m_moduleDataLock = MutexCreateFast();
    m_primaryZoneProxyId = 0;
    m_backupZoneProxyId = 0;
    m_state = 0;
@@ -104,7 +101,6 @@ NetObj::NetObj() : NObject(), m_dashboards(0, 8), m_urls(0, 8, Ownership::True)
    m_runtimeFlags = 0;
    m_flags = 0;
    m_responsibleUsers = nullptr;
-   m_mutexResponsibleUsers = MutexCreate();
    m_creationTime = 0;
    m_categoryId = 0;
    m_asPollable = nullptr;
@@ -117,13 +113,9 @@ NetObj::~NetObj()
 {
    if (!(g_flags & AF_SHUTDOWN))
       nxlog_debug_tag(DEBUG_TAG_OBJECT_LIFECYCLE, 7, _T("Called destructor for object %s [%u]"), m_name, m_id);
-   MutexDestroy(m_mutexProperties);
-   MutexDestroy(m_mutexACL);
    delete m_trustedNodes;
    delete m_moduleData;
-   MutexDestroy(m_moduleDataLock);
    delete m_responsibleUsers;
-   MutexDestroy(m_mutexResponsibleUsers);
 }
 
 /**
@@ -401,13 +393,13 @@ bool NetObj::saveModuleData(DB_HANDLE hdb)
       return true;
 
    bool success = true;
-   MutexLock(m_moduleDataLock);
+   m_moduleDataLock.lock();
    if (m_moduleData != nullptr)
    {
       std::pair<uint32_t, DB_HANDLE> context(m_id, hdb);
       success = (m_moduleData->forEach(SaveModuleDataCallback, &context) == _CONTINUE);
    }
-   MutexUnlock(m_moduleDataLock);
+   m_moduleDataLock.unlock();
    return success;
 }
 
@@ -451,13 +443,13 @@ bool NetObj::saveRuntimeData(DB_HANDLE hdb)
    }
 
    // Save module runtime data
-   MutexLock(m_moduleDataLock);
+   m_moduleDataLock.lock();
    if (success && (m_moduleData != nullptr))
    {
       std::pair<uint32_t, DB_HANDLE> context(m_id, hdb);
       success = (m_moduleData->forEach(SaveModuleRuntimeDataCallback, &context) == _CONTINUE);
    }
-   MutexUnlock(m_moduleDataLock);
+   m_moduleDataLock.unlock();
 
    return success;
 }
@@ -1271,7 +1263,7 @@ void NetObj::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
  */
 void NetObj::fillMessageInternalStage2(NXCPMessage *pMsg, UINT32 userId)
 {
-   MutexLock(m_moduleDataLock);
+   m_moduleDataLock.lock();
    if (m_moduleData != nullptr)
    {
       pMsg->setField(VID_MODULE_DATA_COUNT, (UINT16)m_moduleData->size());
@@ -1282,7 +1274,7 @@ void NetObj::fillMessageInternalStage2(NXCPMessage *pMsg, UINT32 userId)
    {
       pMsg->setField(VID_MODULE_DATA_COUNT, (UINT16)0);
    }
-   MutexUnlock(m_moduleDataLock);
+   m_moduleDataLock.unlock();
 }
 
 /**
@@ -2232,9 +2224,9 @@ bool NetObj::isDataCollectionTarget() const
  */
 ModuleData *NetObj::getModuleData(const TCHAR *module)
 {
-   MutexLock(m_moduleDataLock);
+   m_moduleDataLock.lock();
    ModuleData *data = (m_moduleData != nullptr) ? m_moduleData->get(module) : nullptr;
-   MutexUnlock(m_moduleDataLock);
+   m_moduleDataLock.unlock();
    return data;
 }
 
@@ -2243,11 +2235,11 @@ ModuleData *NetObj::getModuleData(const TCHAR *module)
  */
 void NetObj::setModuleData(const TCHAR *module, ModuleData *data)
 {
-   MutexLock(m_moduleDataLock);
+   m_moduleDataLock.lock();
    if (m_moduleData == nullptr)
       m_moduleData = new StringObjectMap<ModuleData>(Ownership::True);
    m_moduleData->set(module, data);
-   MutexUnlock(m_moduleDataLock);
+   m_moduleDataLock.unlock();
 }
 
 /**

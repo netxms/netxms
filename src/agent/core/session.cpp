@@ -91,7 +91,8 @@ LONG H_AgentProxyStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, Abstrac
  * Client session class constructor
  */
 CommSession::CommSession(const shared_ptr<AbstractCommChannel>& channel, const InetAddress &serverAddr,
-         bool masterServer, bool controlServer) : m_downloadFileMap(Ownership::True), m_tcpProxies(0, 16, Ownership::True), m_channel(channel)
+         bool masterServer, bool controlServer) : m_downloadFileMap(Ownership::True), m_tcpProxies(0, 16, Ownership::True),
+         m_channel(channel), m_socketWriteMutex(MutexType::FAST)
 {
    m_id = InterlockedIncrement(&s_sessionId);
    m_index = INVALID_INDEX;
@@ -116,10 +117,8 @@ CommSession::CommSession(const shared_ptr<AbstractCommChannel>& channel, const I
    m_disconnected = false;
    m_allowCompression = false;
    m_ts = time(nullptr);
-   m_socketWriteMutex = MutexCreate();
    m_responseQueue = new MsgWaitQueue();
    m_requestId = 0;
-   m_tcpProxyLock = MutexCreate();
 }
 
 /**
@@ -146,9 +145,7 @@ CommSession::~CommSession()
    m_disconnected = true;
 
    delete m_processingQueue;
-	MutexDestroy(m_socketWriteMutex);
    delete m_responseQueue;
-   MutexDestroy(m_tcpProxyLock);
 
    m_downloadFileMap.forEach(AbortFileTransfer, this);
 }
@@ -192,9 +189,9 @@ void CommSession::run()
 void CommSession::disconnect()
 {
 	debugPrintf(5, _T("CommSession::disconnect()"));
-   MutexLock(m_tcpProxyLock);
+   m_tcpProxyLock.lock();
    m_tcpProxies.clear();
-   MutexUnlock(m_tcpProxyLock);
+   m_tcpProxyLock.unlock();
    m_channel->shutdown();
    if (m_hProxySocket != -1)
       shutdown(m_hProxySocket, SHUT_RDWR);
@@ -290,7 +287,7 @@ void CommSession::readThread()
             else if (msg->getCode() == CMD_TCP_PROXY_DATA)
             {
                uint32_t proxyId = msg->getId();
-               MutexLock(m_tcpProxyLock);
+               m_tcpProxyLock.lock();
                for(int i = 0; i < m_tcpProxies.size(); i++)
                {
                   TcpProxy *p = m_tcpProxies.get(i);
@@ -300,7 +297,7 @@ void CommSession::readThread()
                      break;
                   }
                }
-               MutexUnlock(m_tcpProxyLock);
+               m_tcpProxyLock.unlock();
             }
             delete msg;
          }
@@ -443,9 +440,9 @@ void CommSession::readThread()
    if (m_proxyConnection)
       ThreadJoin(m_proxyReadThread);
 
-   MutexLock(m_tcpProxyLock);
+   m_tcpProxyLock.lock();
    m_tcpProxies.clear();
-   MutexUnlock(m_tcpProxyLock);
+   m_tcpProxyLock.unlock();
    ThreadJoin(m_tcpProxyReadThread);
 
    debugPrintf(4, _T("Session with %s closed"), m_serverAddr.toString().cstr());
@@ -485,7 +482,7 @@ bool CommSession::sendRawMessage(NXCP_MESSAGE *msg, NXCPEncryptionContext *ctx)
       NXCP_ENCRYPTED_MESSAGE *enMsg = ctx->encryptMessage(msg);
       if (enMsg != NULL)
       {
-         if (m_channel->send(enMsg, ntohl(enMsg->size), m_socketWriteMutex) <= 0)
+         if (m_channel->send(enMsg, ntohl(enMsg->size), &m_socketWriteMutex) <= 0)
          {
             success = false;
          }
@@ -494,7 +491,7 @@ bool CommSession::sendRawMessage(NXCP_MESSAGE *msg, NXCPEncryptionContext *ctx)
    }
    else
    {
-      if (m_channel->send(msg, ntohl(msg->size), m_socketWriteMutex) <= 0)
+      if (m_channel->send(msg, ntohl(msg->size), &m_socketWriteMutex) <= 0)
       {
          success = false;
       }
@@ -1116,7 +1113,7 @@ bool CommSession::sendFile(uint32_t requestId, const TCHAR *file, off_t offset, 
 {
    if (m_disconnected)
       return false;
-   return SendFileOverNXCP(m_channel.get(), requestId, file, m_encryptionContext.get(), offset, SendFileProgressCallback, this, m_socketWriteMutex,
+   return SendFileOverNXCP(m_channel.get(), requestId, file, m_encryptionContext.get(), offset, SendFileProgressCallback, this, &m_socketWriteMutex,
             allowCompression ? NXCP_STREAM_COMPRESSION_DEFLATE : NXCP_STREAM_COMPRESSION_NONE, cancellationFlag);
 }
 
@@ -1284,7 +1281,7 @@ void CommSession::proxyReadThread()
          rc = recv(m_hProxySocket, buffer, 32768, 0);
          if (rc <= 0)
             break;
-         m_channel->send(buffer, rc, m_socketWriteMutex);
+         m_channel->send(buffer, rc, &m_socketWriteMutex);
       }
    }
    disconnect();
@@ -1351,11 +1348,11 @@ void CommSession::setupTcpProxy(NXCPMessage *request, NXCPMessage *response)
    {
       TcpProxy *proxy = new TcpProxy(this, s);
       response->setField(VID_CHANNEL_ID, proxy->getId());
-      MutexLock(m_tcpProxyLock);
+      m_tcpProxyLock.lock();
       m_tcpProxies.add(proxy);
       if (m_tcpProxyReadThread == INVALID_THREAD_HANDLE)
          m_tcpProxyReadThread = ThreadCreateEx(this, &CommSession::tcpProxyReadThread);
-      MutexUnlock(m_tcpProxyLock);
+      m_tcpProxyLock.unlock();
       debugPrintf(5, _T("TCP proxy %d created (destination address %s port %d)"),
                proxy->getId(), (const TCHAR *)addr.toString(), (int)port);
       rcc = ERR_SUCCESS;
@@ -1375,7 +1372,7 @@ uint32_t CommSession::closeTcpProxy(NXCPMessage *request)
 {
    uint32_t rcc = ERR_INVALID_OBJECT;
    uint32_t id = request->getFieldAsUInt32(VID_CHANNEL_ID);
-   MutexLock(m_tcpProxyLock);
+   m_tcpProxyLock.lock();
    for(int i = 0; i < m_tcpProxies.size(); i++)
    {
       if (m_tcpProxies.get(i)->getId() == id)
@@ -1385,7 +1382,7 @@ uint32_t CommSession::closeTcpProxy(NXCPMessage *request)
          break;
       }
    }
-   MutexUnlock(m_tcpProxyLock);
+   m_tcpProxyLock.unlock();
    return rcc;
 }
 
@@ -1401,16 +1398,16 @@ void CommSession::tcpProxyReadThread()
    {
       sp.reset();
 
-      MutexLock(m_tcpProxyLock);
+      m_tcpProxyLock.lock();
       if (m_tcpProxies.isEmpty())
       {
-         MutexUnlock(m_tcpProxyLock);
+         m_tcpProxyLock.unlock();
          ThreadSleepMs(500);
          continue;
       }
       for(int i = 0; i < m_tcpProxies.size(); i++)
          sp.add(m_tcpProxies.get(i)->getSocket());
-      MutexUnlock(m_tcpProxyLock);
+      m_tcpProxyLock.unlock();
 
       int rc = sp.poll(500);
       if (rc < 0)
@@ -1418,7 +1415,7 @@ void CommSession::tcpProxyReadThread()
 
       if (rc > 0)
       {
-         MutexLock(m_tcpProxyLock);
+         m_tcpProxyLock.lock();
          for(int i = 0; i < m_tcpProxies.size(); i++)
          {
             TcpProxy *p = m_tcpProxies.get(i);
@@ -1433,7 +1430,7 @@ void CommSession::tcpProxyReadThread()
                }
             }
          }
-         MutexUnlock(m_tcpProxyLock);
+         m_tcpProxyLock.unlock();
       }
    }
 

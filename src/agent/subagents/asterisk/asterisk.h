@@ -178,7 +178,7 @@ private:
    time_t m_lastRunTime;
    int32_t m_elapsedTime;
    int m_status;
-   MUTEX m_mutex;
+   Mutex m_mutex;
    bool m_stop;
 
    void run();
@@ -217,20 +217,20 @@ private:
    RingBuffer m_networkBuffer;
    int64_t m_requestId;
    int64_t m_activeRequestId;
-   MUTEX m_requestLock;
-   CONDITION m_requestCompletion;
+   Mutex m_requestLock;
+   Condition m_requestCompletion;
    shared_ptr<AmiMessage> m_response;
    bool m_amiSessionReady;
    bool m_resetSession;
    ObjectArray<AmiEventListener> m_eventListeners;
-   MUTEX m_eventListenersLock;
+   Mutex m_eventListenersLock;
    uint32_t m_amiTimeout;
    EventCounters m_globalEventCounters;
    StringObjectMap<EventCounters> m_peerEventCounters;
-   MUTEX m_eventCounterLock;
+   Mutex m_eventCounterLock;
    StringObjectMap<RTCPData> m_rtcpData;
    StringObjectMap<RTCPStatistic> m_peerRTCPStatistic;
-   MUTEX m_rtcpLock;
+   Mutex m_rtcpLock;
    StringObjectMap<SIPRegistrationTest> m_registrationTests;
 
    shared_ptr<AmiMessage> readMessage() { return AmiMessage::createFromNetwork(m_networkBuffer); }

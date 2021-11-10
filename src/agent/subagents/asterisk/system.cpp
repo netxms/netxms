@@ -73,7 +73,8 @@ AsteriskSystem *AsteriskSystem::createFromConfig(ConfigEntry *config, bool defau
  */
 AsteriskSystem::AsteriskSystem(const TCHAR *name) :
          m_eventListeners(0, 16, Ownership::False), m_peerEventCounters(Ownership::True), m_peerRTCPStatistic(Ownership::True),
-         m_rtcpData(Ownership::True), m_registrationTests(Ownership::True)
+         m_rtcpData(Ownership::True), m_registrationTests(Ownership::True), m_requestCompletion(false),
+         m_eventListenersLock(MutexType::FAST), m_eventCounterLock(MutexType::FAST)
 {
    m_name = MemCopyString(name);
    m_port = 5038;
@@ -83,13 +84,8 @@ AsteriskSystem::AsteriskSystem(const TCHAR *name) :
    m_socket = INVALID_SOCKET;
    m_requestId = 1;
    m_activeRequestId = 0;
-   m_requestLock = MutexCreate();
-   m_requestCompletion = ConditionCreate(false);
    m_amiSessionReady = false;
    m_resetSession = false;
-   m_eventListenersLock = MutexCreate();
-   m_eventCounterLock = MutexCreate();
-   m_rtcpLock = MutexCreate();
    m_amiTimeout = 2000;
    memset(&m_globalEventCounters, 0, sizeof(EventCounters));
 }
@@ -102,11 +98,6 @@ AsteriskSystem::~AsteriskSystem()
    MemFree(m_name);
    MemFree(m_login);
    MemFree(m_password);
-   MutexDestroy(m_requestLock);
-   ConditionDestroy(m_requestCompletion);
-   MutexDestroy(m_eventListenersLock);
-   MutexDestroy(m_eventCounterLock);
-   MutexDestroy(m_rtcpLock);
 }
 
 /**
@@ -114,10 +105,10 @@ AsteriskSystem::~AsteriskSystem()
  */
 void AsteriskSystem::addEventListener(AmiEventListener *listener)
 {
-   MutexLock(m_eventListenersLock);
+   m_eventListenersLock.lock();
    if (m_eventListeners.indexOf(listener) == -1)
       m_eventListeners.add(listener);
-   MutexUnlock(m_eventListenersLock);
+   m_eventListenersLock.unlock();
 }
 
 /**
@@ -125,9 +116,9 @@ void AsteriskSystem::addEventListener(AmiEventListener *listener)
  */
 void AsteriskSystem::removeEventListener(AmiEventListener *listener)
 {
-   MutexLock(m_eventListenersLock);
+   m_eventListenersLock.lock();
    m_eventListeners.remove(listener);
-   MutexUnlock(m_eventListenersLock);
+   m_eventListenersLock.unlock();
 }
 
 /**

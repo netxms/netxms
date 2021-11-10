@@ -281,14 +281,14 @@ static bool ReadVMInfo(kstat_ctl_t *kc, struct vminfo *info)
  * Last swap info update time
  */
 static time_t s_lastSwapInfoUpdate = 0;
-static MUTEX s_swapInfoMutex = MutexCreate();
+static Mutex s_swapInfoMutex;
 
 /**
  * All swap counters are in blocks
  */
-static UINT64 s_swapUsed = 0;
-static UINT64 s_swapFree = 0;
-static UINT64 s_swapTotal = 0;
+static uint64_t s_swapUsed = 0;
+static uint64_t s_swapFree = 0;
+static uint64_t s_swapTotal = 0;
 
 /**
  * Update swap info
@@ -347,7 +347,7 @@ static void UpdateSwapInfo()
  */
 static uint64_t GetSwapCounter(uint64_t *cnt)
 {
-   MutexLock(s_swapInfoMutex);
+   s_swapInfoMutex.lock();
    time_t now = time(nullptr);
    if (now - s_lastSwapInfoUpdate > 10)   // older then 10 seconds
    {
@@ -355,7 +355,7 @@ static uint64_t GetSwapCounter(uint64_t *cnt)
       s_lastSwapInfoUpdate = now;
    }
    uint64_t result = *cnt;
-   MutexUnlock(s_swapInfoMutex);
+   s_swapInfoMutex.unlock();
    return result;
 }
 

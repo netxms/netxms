@@ -27,7 +27,7 @@
 /**
  * Housekeeper wakeup condition
  */
-static CONDITION s_wakeupCondition = INVALID_CONDITION_HANDLE;
+static Condition s_wakeupCondition(false);
 
 /**
  * Housekeeper shutdown flag
@@ -52,7 +52,7 @@ bool ThrottleHousekeeper()
    nxlog_debug_tag(DEBUG_TAG, 1, _T("Housekeeper paused (queue size %d, high watermark %d, low watermark %d)"), qsize, s_throttlingHighWatermark, s_throttlingLowWatermark);
    while((qsize >= s_throttlingLowWatermark) && !s_shutdown)
    {
-      ConditionWait(s_wakeupCondition, 30000);
+      s_wakeupCondition.wait(30000);
       qsize = g_dbWriterQueue.size() + static_cast<size_t>(GetIDataWriterQueueSize() + GetRawDataWriterQueueSize());
    }
    nxlog_debug_tag(DEBUG_TAG, 1, _T("Housekeeper resumed (queue size %d)"), qsize);
@@ -351,7 +351,7 @@ static void HouseKeeper()
    while(!s_shutdown)
    {
       nxlog_debug_tag(DEBUG_TAG, 2, _T("Sleeping for %d seconds"), sleepTime);
-      ConditionWait(s_wakeupCondition, sleepTime * 1000);
+      s_wakeupCondition.wait(sleepTime * 1000);
       if (s_shutdown)
          break;
 
@@ -523,7 +523,6 @@ static THREAD s_thread = INVALID_THREAD_HANDLE;
  */
 void StartHouseKeeper()
 {
-   s_wakeupCondition = ConditionCreate(FALSE);
    s_thread = ThreadCreateEx(HouseKeeper);
 }
 
@@ -533,9 +532,8 @@ void StartHouseKeeper()
 void StopHouseKeeper()
 {
    s_shutdown = true;
-   ConditionSet(s_wakeupCondition);
+   s_wakeupCondition.set();
    ThreadJoin(s_thread);
-   ConditionDestroy(s_wakeupCondition);
 }
 
 /**
@@ -543,5 +541,5 @@ void StopHouseKeeper()
  */
 void RunHouseKeeper()
 {
-   ConditionSet(s_wakeupCondition);
+   s_wakeupCondition.set();
 }

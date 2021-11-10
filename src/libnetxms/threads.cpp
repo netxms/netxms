@@ -1,6 +1,6 @@
 /* 
 ** libnetxms - Common NetXMS utility library
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -21,55 +21,6 @@
 **/
 
 #include "libnetxms.h"
-
-/**
- * Mutex class constructor
- */
-Mutex::Mutex(bool fast)
-{
-   m_mutex = fast ? MutexCreateFast() : MutexCreate();
-   m_refCount = new VolatileCounter(1);
-}
-
-/**
- * Mutex class copy constructor
- */
-Mutex::Mutex(const Mutex& src)
-{
-   InterlockedIncrement(src.m_refCount);
-   m_mutex = src.m_mutex;
-   m_refCount = src.m_refCount;
-}
-
-/**
- * Mutex destructor
- */
-Mutex::~Mutex()
-{
-   if (InterlockedDecrement(m_refCount) == 0)
-   {
-      MutexDestroy(m_mutex);
-      delete m_refCount;
-   }
-}
-
-/**
- * Mutex assignment operator
- */
-Mutex& Mutex::operator =(const Mutex& src)
-{
-   if (&src == this)
-      return *this;
-   if (InterlockedDecrement(m_refCount))
-   {
-      MutexDestroy(m_mutex);
-      delete m_refCount;
-   }
-   InterlockedIncrement(src.m_refCount);
-   m_mutex = src.m_mutex;
-   m_refCount = src.m_refCount;
-   return *this;
-}
 
 /**
  * R/W Lock class constructor
@@ -116,55 +67,6 @@ RWLock& RWLock::operator =(const RWLock& src)
    }
    InterlockedIncrement(src.m_refCount);
    m_rwlock = src.m_rwlock;
-   m_refCount = src.m_refCount;
-   return *this;
-}
-
-/**
- * Condition class constructor
- */
-Condition::Condition(bool broadcast)
-{
-   m_condition = ConditionCreate(broadcast);
-   m_refCount = new VolatileCounter(1);
-}
-
-/**
- * Condition class copy constructor
- */
-Condition::Condition(const Condition& src)
-{
-   InterlockedIncrement(src.m_refCount);
-   m_condition = src.m_condition;
-   m_refCount = src.m_refCount;
-}
-
-/**
- * Condition destructor
- */
-Condition::~Condition()
-{
-   if (InterlockedDecrement(m_refCount) == 0)
-   {
-      ConditionDestroy(m_condition);
-      delete m_refCount;
-   }
-}
-
-/**
- * Condition assignment operator
- */
-Condition& Condition::operator =(const Condition& src)
-{
-   if (&src == this)
-      return *this;
-   if (InterlockedDecrement(m_refCount))
-   {
-      ConditionDestroy(m_condition);
-      delete m_refCount;
-   }
-   InterlockedIncrement(src.m_refCount);
-   m_condition = src.m_condition;
    m_refCount = src.m_refCount;
    return *this;
 }

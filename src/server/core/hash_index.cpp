@@ -46,11 +46,10 @@ struct HashIndexHead
 /**
  * Constructor
  */
-HashIndexBase::HashIndexBase(size_t keyLength)
+HashIndexBase::HashIndexBase(size_t keyLength) : m_writerLock(MutexType::FAST)
 {
    m_primary = MemAllocStruct<HashIndexHead>();
    m_secondary = MemAllocStruct<HashIndexHead>();
-   m_writerLock = MutexCreate();
    m_keyLength = keyLength;
 }
 
@@ -75,8 +74,6 @@ HashIndexBase::~HashIndexBase()
       MemFree(entry);
    }
    MemFree(m_secondary);
-
-   MutexDestroy(m_writerLock);
 }
 
 /**
@@ -144,12 +141,12 @@ static inline bool SetElement(HashIndexHead *index, const void *key, size_t keyL
  */
 bool HashIndexBase::put(const void *key, const shared_ptr<NetObj>& object)
 {
-   MutexLock(m_writerLock);
+   m_writerLock.lock();
    SetElement(m_secondary, key, m_keyLength, object);
    swapAndWait();
    bool replace = SetElement(m_secondary, key, m_keyLength, object);
    InterlockedDecrement(&m_secondary->writers);
-   MutexUnlock(m_writerLock);
+   m_writerLock.unlock();
    return replace;
 }
 
@@ -173,12 +170,12 @@ static inline void RemoveElement(HashIndexHead *index, const void *key, size_t k
  */
 void HashIndexBase::remove(const void *key)
 {
-   MutexLock(m_writerLock);
+   m_writerLock.lock();
    RemoveElement(m_secondary, key, m_keyLength);
    swapAndWait();
    RemoveElement(m_secondary, key, m_keyLength);
    InterlockedDecrement(&m_secondary->writers);
-   MutexUnlock(m_writerLock);
+   m_writerLock.unlock();
 }
 
 /**

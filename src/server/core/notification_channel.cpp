@@ -196,7 +196,7 @@ private:
    NCDriver *m_driver;
    TCHAR m_name[MAX_OBJECT_NAME];
    TCHAR m_description[MAX_NC_DESCRIPTION];
-   MUTEX m_driverLock;
+   Mutex m_driverLock;
    THREAD m_workerThread;
    ObjectQueue<NotificationMessage> m_notificationQueue;
    TCHAR m_driverName[MAX_OBJECT_NAME];
@@ -291,7 +291,7 @@ NotificationMessage::~NotificationMessage()
  */
 NotificationChannel::NotificationChannel(NCDriver *driver, NCDriverServerStorageManager *storageManager, const TCHAR *name,
          const TCHAR *description, const TCHAR *driverName, char *config, const NCConfigurationTemplate *confTemplate, const TCHAR *errorMessage) :
-                  m_notificationQueue(64, Ownership::True)
+                  m_notificationQueue(64, Ownership::True), m_driverLock(MutexType::FAST)
 {
    m_driver = driver;
    m_storageManager = storageManager;
@@ -300,7 +300,6 @@ NotificationChannel::NotificationChannel(NCDriver *driver, NCDriverServerStorage
    _tcslcpy(m_description, description, MAX_NC_DESCRIPTION);
    _tcslcpy(m_driverName, driverName, MAX_OBJECT_NAME);
    m_configuration = config;
-   m_driverLock = MutexCreate();
    _tcslcpy(m_errorMessage, errorMessage, MAX_NC_ERROR_MESSAGE);
    m_lastStatus = NCSendStatus::UNKNOWN;
    m_workerThread = ThreadCreateEx(this, &NotificationChannel::workerThread);
@@ -313,7 +312,6 @@ NotificationChannel::~NotificationChannel()
 {
    m_notificationQueue.setShutdownMode();
    ThreadJoin(m_workerThread);
-   MutexDestroy(m_driverLock);
    delete m_driver;
    delete m_storageManager;
    MemFree(m_configuration);
@@ -331,7 +329,7 @@ void NotificationChannel::workerThread()
       if (notification == INVALID_POINTER_VALUE)
          break;
 
-      MutexLock(m_driverLock);
+      m_driverLock.lock();
       if (m_driver != nullptr)
       {
          bool success = m_driver->send(notification->getRecipient(), notification->getSubject(), notification->getBody());
@@ -353,7 +351,7 @@ void NotificationChannel::workerThread()
          nxlog_debug_tag(DEBUG_TAG, 4, _T("No driver for channel %s, message dropped"), m_name);
          setError(_T("Driver not initialized"));
       }
-      MutexUnlock(m_driverLock);
+      m_driverLock.unlock();
       delete notification;
    }
    nxlog_debug_tag(DEBUG_TAG, 2, _T("Worker thread for channel %s stopped"), m_name);
@@ -423,10 +421,10 @@ void NotificationChannel::update(const TCHAR *description, const TCHAR *driverNa
             nxlog_debug_tag(DEBUG_TAG, 1, _T("Cannot parse driver %s configuration: %hs"), m_name, config);
          }
       }
-      MutexLock(m_driverLock);
+      m_driverLock.lock();
       delete m_driver;
       m_driver = driver;
-      MutexUnlock(m_driverLock);
+      m_driverLock.unlock();
       m_confTemplate = confTemplate;
       _tcslcpy(m_driverName, driverName, MAX_OBJECT_NAME);
       MemFree(m_configuration);

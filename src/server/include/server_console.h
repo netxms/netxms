@@ -68,7 +68,7 @@ class LIBNXSRV_EXPORTABLE StringBufferConsole : public ServerConsole
 {
 private:
    StringBuffer m_buffer;
-   MUTEX m_mutex;
+   Mutex m_mutex;
 
 protected:
    virtual void write(const TCHAR *text) override;
@@ -87,17 +87,17 @@ class LIBNXSRV_EXPORTABLE SocketConsole : public ServerConsole
 {
 private:
    SOCKET m_socket;
-   MUTEX m_mutex;
-   UINT16 m_messageCode;
+   Mutex m_mutex;
+   uint16_t m_messageCode;
 
 protected:
    virtual void write(const TCHAR *text) override;
 
 public:
-   SocketConsole(SOCKET s, UINT16 msgCode = CMD_ADM_MESSAGE);
+   SocketConsole(SOCKET s, uint16_t msgCode = CMD_ADM_MESSAGE);
    virtual ~SocketConsole();
 
-   MUTEX getMutex() { return m_mutex; }
+   Mutex *getMutex() { return &m_mutex; }
 };
 
 typedef ServerConsole* CONSOLE_CTX;

@@ -44,7 +44,7 @@
 #define DB2_MAX_USER_NAME 8 + 1
 #endif
 
-typedef struct
+struct DB2_INFO
 {
    int db2Id;
    TCHAR db2DbName[DB2_DB_MAX_NAME];
@@ -53,29 +53,29 @@ typedef struct
    TCHAR db2UPass[MAX_PASSWORD];
    LONG db2ReconnectInterval;
    LONG db2QueryInterval;
-} DB2_INFO, *PDB2_INFO;
+};
 
-typedef struct
+struct THREAD_INFO
 {
    THREAD threadHandle;
-   MUTEX mutex;
+   Mutex *mutex;
    DB_HANDLE hDb;
-   PDB2_INFO db2Info;
+   DB2_INFO *db2Info;
    TCHAR db2Params[NUM_OF_DCI][STR_MAX];
-} THREAD_INFO, *PTHREAD_INFO;
+};
 
-typedef struct
+struct QUERY
 {
    Dci dciList[DCI_LIST_SIZE];
    TCHAR query[QUERY_MAX];
-} QUERY;
+};
 
 static bool DB2Init(Config* config);
 static void DB2Shutdown();
 
-static THREAD_RESULT THREAD_CALL RunMonitorThread(void *info);
-static BOOL PerformQueries(const PTHREAD_INFO);
+static void RunMonitorThread(THREAD_INFO *threadInfo);
+static BOOL PerformQueries(THREAD_INFO*);
 static LONG GetParameter(const TCHAR *parameter, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
-static const PDB2_INFO GetConfigs(Config *config, ConfigEntry *configEntry, const TCHAR *entryName);
+static DB2_INFO *GetConfigs(Config *config, ConfigEntry *configEntry, const TCHAR *entryName);
 
 #endif /* DB2_SUBAGENT_H_ */

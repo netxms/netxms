@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Raden Solutions
+** Copyright (C) 2003-2021 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -29,7 +29,7 @@
 /**
  * Sub-process stop condition
  */
-static CONDITION s_stopCondition = INVALID_CONDITION_HANDLE;
+static Condition s_stopCondition(true);
 
 /**
  * Sub-process pipe connector
@@ -67,29 +67,29 @@ static void PipeConnector(NamedPipe *pipe, void *userArg)
                }
                else
                {
-                  data = NULL;
+                  data = nullptr;
                   size = 0;
                }
                response = reinterpret_cast<SubProcessRequestHandler>(userArg)(request->getCode(), data, size);
-               if (response != NULL)
+               if (response != nullptr)
                   response->setId(request->getId());
             }
             break;
       }
       delete request;
 
-      if (response != NULL)
+      if (response != nullptr)
       {
          NXCP_MESSAGE *data = response->serialize(false);
          pipe->write(data, ntohl(data->size));
-         free(data);
+         MemFree(data);
          delete response;
       }
    }
 
 stop:
    nxlog_debug_tag(DEBUG_TAG, 2, _T("Connection with master process closed"));
-   ConditionSet(s_stopCondition);
+   s_stopCondition.set();
 }
 
 /**
@@ -99,23 +99,21 @@ int LIBNETXMS_EXPORTABLE SubProcessMain(int argc, char *argv[], SubProcessReques
 {
    TCHAR pipeName[256];
    _sntprintf(pipeName, 256, _T("netxms.subprocess.%u"), GetCurrentProcessId());
-   NamedPipeListener *pipeListener = NamedPipeListener::create(pipeName, PipeConnector, reinterpret_cast<void*>(requestHandler), NULL);
-   if (pipeListener == NULL)
+   NamedPipeListener *pipeListener = NamedPipeListener::create(pipeName, PipeConnector, reinterpret_cast<void*>(requestHandler), nullptr);
+   if (pipeListener == nullptr)
       return 1;
-   s_stopCondition = ConditionCreate(true);
    pipeListener->start();
-   ConditionWait(s_stopCondition, INFINITE);
+   s_stopCondition.wait(INFINITE);
    pipeListener->stop();
    delete pipeListener;
-   ConditionDestroy(s_stopCondition);
    return 0;
 }
 
 /**
  * Sub-process registry
  */
-ObjectArray<SubProcessExecutor> LIBNETXMS_EXPORTABLE *SubProcessExecutor::m_registry = NULL;
-MUTEX LIBNETXMS_EXPORTABLE SubProcessExecutor::m_registryLock = MutexCreate();
+ObjectArray<SubProcessExecutor> LIBNETXMS_EXPORTABLE *SubProcessExecutor::m_registry = nullptr;
+Mutex LIBNETXMS_EXPORTABLE SubProcessExecutor::m_registryLock(MutexType::FAST);
 
 /**
  * Sub-process manager thread handle
@@ -125,7 +123,7 @@ THREAD LIBNETXMS_EXPORTABLE SubProcessExecutor::m_monitorThread = INVALID_THREAD
 /**
  * Sub-process manager thread stop condition
  */
-CONDITION LIBNETXMS_EXPORTABLE SubProcessExecutor::m_stopCondition = INVALID_CONDITION_HANDLE;
+Condition LIBNETXMS_EXPORTABLE SubProcessExecutor::m_stopCondition(true);
 
 /**
  * Sub-process monitor thread
@@ -133,9 +131,9 @@ CONDITION LIBNETXMS_EXPORTABLE SubProcessExecutor::m_stopCondition = INVALID_CON
 THREAD_RESULT THREAD_CALL SubProcessExecutor::monitorThread(void *arg)
 {
    nxlog_debug_tag(DEBUG_TAG, 1, _T("Sub-process monitor started"));
-   while(!ConditionWait(m_stopCondition, 5000))
+   while(!m_stopCondition.wait(5000))
    {
-      MutexLock(m_registryLock);
+      m_registryLock.lock();
       for(int i = 0; i < m_registry->size(); i++)
       {
          SubProcessExecutor *p = m_registry->get(i);
@@ -146,9 +144,8 @@ THREAD_RESULT THREAD_CALL SubProcessExecutor::monitorThread(void *arg)
             p->execute();
          }
       }
-      MutexUnlock(m_registryLock);
+      m_registryLock.unlock();
    }
-   ConditionDestroy(m_stopCondition);
    nxlog_debug_tag(DEBUG_TAG, 1, _T("Sub-process monitor stopped"));
    return THREAD_OK;
 }
@@ -167,11 +164,11 @@ THREAD_RESULT THREAD_CALL SubProcessExecutor::receiverThreadStarter(void *arg)
  */
 void SubProcessExecutor::shutdown()
 {
-   ConditionSet(m_stopCondition);
+   m_stopCondition.set();
    ThreadJoin(m_monitorThread);
    m_monitorThread = INVALID_THREAD_HANDLE;
 
-   MutexLock(m_registryLock);
+   m_registryLock.lock();
    if (m_registry != nullptr)
    {
       for(int i = 0; i < m_registry->size(); i++)
@@ -185,8 +182,7 @@ void SubProcessExecutor::shutdown()
       }
       delete_and_null(m_registry);
    }
-   MutexUnlock(m_registryLock);
-   MutexDestroy(m_registryLock);
+   m_registryLock.unlock();
 }
 
 /**
@@ -201,15 +197,13 @@ SubProcessExecutor::SubProcessExecutor(const TCHAR *name, const TCHAR *command) 
    m_messageQueue = new MsgWaitQueue();
    m_receiverThread = INVALID_THREAD_HANDLE;
 
-   MutexLock(m_registryLock);
-   if (m_registry == NULL)
+   m_registryLock.lock();
+   if (m_registry == nullptr)
       m_registry = new ObjectArray<SubProcessExecutor>(16, 16, Ownership::False);
-   if (m_stopCondition == INVALID_CONDITION_HANDLE)
-      m_stopCondition = ConditionCreate(true);
    if (m_monitorThread == INVALID_THREAD_HANDLE)
-      m_monitorThread = ThreadCreateEx(SubProcessExecutor::monitorThread, 0, NULL);
+      m_monitorThread = ThreadCreateEx(SubProcessExecutor::monitorThread, 0, nullptr);
    m_registry->add(this);
-   MutexUnlock(m_registryLock);
+   m_registryLock.unlock();
 }
 
 /**
@@ -217,9 +211,9 @@ SubProcessExecutor::SubProcessExecutor(const TCHAR *name, const TCHAR *command) 
  */
 SubProcessExecutor::~SubProcessExecutor()
 {
-   MutexLock(m_registryLock);
+   m_registryLock.lock();
    m_registry->remove(this);
-   MutexUnlock(m_registryLock);
+   m_registryLock.unlock();
 
    delete m_messageQueue;
    delete m_pipe;
@@ -306,7 +300,7 @@ void SubProcessExecutor::receiverThread()
 /**
  * Send command to sub-process
  */
-bool SubProcessExecutor::sendCommand(UINT16 command, const void *data, size_t dataSize, UINT32 *requestId)
+bool SubProcessExecutor::sendCommand(uint16_t command, const void *data, size_t dataSize, uint32_t *requestId)
 {
    if (m_pipe == nullptr)
       return false;
@@ -316,8 +310,8 @@ bool SubProcessExecutor::sendCommand(UINT16 command, const void *data, size_t da
    NXCP_MESSAGE msg;
    msg.code = htons(command);
    msg.id = htonl(rid);
-   msg.flags = htons((data != NULL) ? MF_BINARY : MF_CONTROL);
-   msg.numFields = htonl((UINT32)dataSize);
+   msg.flags = htons((data != nullptr) ? MF_BINARY : MF_CONTROL);
+   msg.numFields = htonl((uint32_t)dataSize);
    uint32_t padding = (8 - (dataSize % 8)) & 7;
    msg.size = htonl(NXCP_HEADER_SIZE + static_cast<uint32_t>(dataSize) + padding);
    if (!m_pipe->write(&msg, NXCP_HEADER_SIZE))
@@ -343,9 +337,9 @@ bool SubProcessExecutor::sendCommand(UINT16 command, const void *data, size_t da
 /**
  * Send request to sub-process
  */
-bool SubProcessExecutor::sendRequest(UINT16 command, const void *data, size_t dataSize, void **response, size_t *rspSize, UINT32 timeout)
+bool SubProcessExecutor::sendRequest(uint16_t command, const void *data, size_t dataSize, void **response, size_t *rspSize, uint32_t timeout)
 {
-   UINT32 requestId;
+   uint32_t requestId;
    if (!sendCommand(command, data, dataSize, &requestId))
       return false;
 

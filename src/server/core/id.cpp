@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -42,7 +42,7 @@ void LoadLastEventId(DB_HANDLE hdb);
 /**
  * Static data
  */
-static MUTEX s_mutexTableAccess;
+static Mutex s_mutexTableAccess(MutexType::FAST);
 static uint32_t s_freeIdTable[NUMBER_OF_GROUPS] =
    {
       100, FIRST_USER_EVENT_ID, 1, 1,
@@ -106,8 +106,6 @@ static const TCHAR *s_groupNames[NUMBER_OF_GROUPS] =
 bool InitIdTable()
 {
    DB_RESULT hResult;
-
-   s_mutexTableAccess = MutexCreateFast();
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
@@ -557,7 +555,7 @@ bool InitIdTable()
 uint32_t CreateUniqueId(int group)
 {
    uint32_t id;
-   MutexLock(s_mutexTableAccess);
+   s_mutexTableAccess.lock();
    if (s_freeIdTable[group] == s_idLimits[group])
    {
       id = 0;   // ID zero means _T("no unique ID available")
@@ -568,7 +566,7 @@ uint32_t CreateUniqueId(int group)
       id = s_freeIdTable[group];
       s_freeIdTable[group]++;
    }
-   MutexUnlock(s_mutexTableAccess);
+   s_mutexTableAccess.unlock();
    return id;
 }
 
@@ -577,11 +575,11 @@ uint32_t CreateUniqueId(int group)
  */
 void SaveCurrentFreeId()
 {
-   MutexLock(s_mutexTableAccess);
+   s_mutexTableAccess.lock();
    uint32_t objectId = s_freeIdTable[IDG_NETWORK_OBJECT];
    uint32_t dciId = s_freeIdTable[IDG_ITEM];
    uint32_t alarmId = s_freeIdTable[IDG_ALARM];
-   MutexUnlock(s_mutexTableAccess);
+   s_mutexTableAccess.unlock();
    ConfigWriteULong(_T("FirstFreeObjectId"), objectId, true, false, true);
    ConfigWriteULong(_T("FirstFreeDCIId"), dciId, true, false, true);
    ConfigWriteULong(_T("FirstFreeAlarmId"), alarmId, true, false, true);

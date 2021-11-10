@@ -38,7 +38,7 @@ char g_sshConfigFile[MAX_PATH] = "";
  */
 static int cb_mutex_init(void **mutex)
 {
-   *mutex = MutexCreate();
+   *mutex = new Mutex(MutexType::FAST);
    return 0;
 }
 
@@ -47,7 +47,7 @@ static int cb_mutex_init(void **mutex)
  */
 static int cb_mutex_destroy(void **mutex)
 {
-   MutexDestroy(*((MUTEX *)mutex));
+   delete static_cast<Mutex*>(*mutex);
    return 0;
 }
 
@@ -56,7 +56,7 @@ static int cb_mutex_destroy(void **mutex)
  */
 static int cb_mutex_lock(void **mutex)
 {
-   MutexLock(*((MUTEX *)mutex));
+   static_cast<Mutex*>(*mutex)->lock();
    return 0;
 }
 
@@ -65,7 +65,7 @@ static int cb_mutex_lock(void **mutex)
  */
 static int cb_mutex_unlock(void **mutex)
 {
-   MutexUnlock(*((MUTEX *)mutex));
+   static_cast<Mutex*>(*mutex)->unlock();
    return 0;
 }
 
@@ -74,7 +74,7 @@ static int cb_mutex_unlock(void **mutex)
  */
 static unsigned long cb_thread_id()
 {
-   return (unsigned long)GetCurrentThreadId();
+   return static_cast<unsigned long>(GetCurrentThreadId());
 }
 
 /**

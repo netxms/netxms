@@ -24,7 +24,7 @@ DWORD g_mainThreadId = 0;
 /**
  * Shutdown condition
  */
-CONDITION g_shutdownCondition = ConditionCreate(true);
+Condition g_shutdownCondition(true);
 
 /**
  * Initialize logging
@@ -257,7 +257,7 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR cmdLine
       }
    }
 
-   ConditionSet(g_shutdownCondition);
+   g_shutdownCondition.set();
 
    if (s_echoListener != nullptr)
    {

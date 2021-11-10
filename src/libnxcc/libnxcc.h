@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2015 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -40,14 +40,14 @@
  */
 struct ClusterNodeInfo
 {
-   UINT32 m_id;
+   uint32_t m_id;
    InetAddress *m_addr;
-   UINT16 m_port;
+   uint16_t m_port;
    SOCKET m_socket;
    THREAD m_thread;
    ClusterNodeState m_state;
    bool m_master;
-   MUTEX m_mutex;
+   Mutex *m_mutex;
    THREAD m_receiverThread;
    MsgWaitQueue *m_msgWaitQueue;
 };

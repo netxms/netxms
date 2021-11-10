@@ -42,7 +42,7 @@ static TCHAR s_moduleVersion[] = NETXMS_VERSION_STRING;
 /**
  * Get integer value from json element
  */
-static INT64 JsonIntegerValue(json_t *v)
+static int64_t JsonIntegerValue(json_t *v)
 {
    switch(json_typeof(v))
    {
@@ -64,7 +64,6 @@ static INT64 JsonIntegerValue(json_t *v)
  */
 JiraLink::JiraLink() : HelpDeskLink()
 {
-   m_mutex = MutexCreate();
    strcpy(m_serverUrl, "http://localhost");
    strcpy(m_login, "netxms");
    m_password[0] = 0;
@@ -77,7 +76,6 @@ JiraLink::JiraLink() : HelpDeskLink()
 JiraLink::~JiraLink()
 {
    disconnect();
-   MutexDestroy(m_mutex);
 }
 
 /**
@@ -87,7 +85,7 @@ JiraLink::~JiraLink()
  */
 const TCHAR *JiraLink::getName()
 {
-	return s_moduleName;
+   return s_moduleName;
 }
 
 /**
@@ -97,7 +95,7 @@ const TCHAR *JiraLink::getName()
  */
 const TCHAR *JiraLink::getVersion()
 {
-	return s_moduleVersion;
+   return s_moduleVersion;
 }
 
 /**
@@ -145,7 +143,7 @@ static size_t OnCurlDataReceived(char *ptr, size_t size, size_t nmemb, void *use
 /**
  * Connect to Jira server
  */
-UINT32 JiraLink::connect()
+uint32_t JiraLink::connect()
 {
    disconnect();
 
@@ -192,7 +190,7 @@ UINT32 JiraLink::connect()
    headers = curl_slist_append(headers, "Content-Type: application/json;charset=UTF-8");
    curl_easy_setopt(m_curl, CURLOPT_HTTPHEADER, headers);
 
-   UINT32 rcc = RCC_HDLINK_COMM_FAILURE;
+   uint32_t rcc = RCC_HDLINK_COMM_FAILURE;
    if (curl_easy_perform(m_curl) == CURLE_OK)
    {
       data->data[data->size] = 0;

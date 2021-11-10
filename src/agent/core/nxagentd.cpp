@@ -106,7 +106,6 @@ void StopWatchdog();
 int WatchdogMain(DWORD pid, const TCHAR *configSection);
 
 void InitSessionList();
-void DestroySessionList();
 
 BOOL RegisterOnServer(const TCHAR *pszServer, int32_t zoneUIN);
 
@@ -285,7 +284,7 @@ static uint32_t s_defaultExecutionTimeout = 0;  // Default execution timeout for
 
 #ifdef _WIN32
 static TCHAR s_dumpDirectory[MAX_PATH] = _T("{default}");
-static CONDITION s_shutdownCondition = INVALID_CONDITION_HANDLE;
+static Condition s_shutdownCondition(true);
 #endif
 
 #if !defined(_WIN32)
@@ -473,7 +472,6 @@ ServerInfo::ServerInfo(const TCHAR *name, bool control, bool master)
    m_control = control;
    m_master = master;
    m_lastResolveTime = time(nullptr);
-   m_mutex = MutexCreate();
 }
 
 /**
@@ -482,7 +480,6 @@ ServerInfo::ServerInfo(const TCHAR *name, bool control, bool master)
 ServerInfo::~ServerInfo()
 {
    MemFree(m_name);
-   MutexDestroy(m_mutex);
 }
 
 /**
@@ -504,11 +501,11 @@ void ServerInfo::resolve(bool forceResolve)
  */
 bool ServerInfo::match(const InetAddress &addr, bool forceResolve)
 {
-   MutexLock(m_mutex);
+   m_mutex.lock();
    if (m_redoResolve)
       resolve(forceResolve);
    bool result = m_address.isValid() ? m_address.contain(addr) : false;
-   MutexUnlock(m_mutex);
+   m_mutex.unlock();
    return result;
 }
 
@@ -725,7 +722,7 @@ LONG RestartAgent()
    {
       if (g_dwFlags & AF_HIDE_WINDOW)
       {
-         ConditionSet(s_shutdownCondition);
+         s_shutdownCondition.set();
       }
       else
       {
@@ -1462,9 +1459,6 @@ BOOL Initialize()
       ThreadPoolScheduleRelative(g_commThreadPool, s_crlReloadInterval, ScheduledCRLReload);
 	}
 
-#ifdef _WIN32
-   s_shutdownCondition = ConditionCreate(TRUE);
-#endif
    ThreadSleep(1);
 
 	// Start watchdog process
@@ -1543,11 +1537,11 @@ void Shutdown()
 		ThreadJoin(s_tunnelManagerThread);
 		StopExternalSubagentConnectors();
 	}
-	if (g_dwFlags & AF_ENABLE_SNMP_TRAP_PROXY)
-	{
+   if (g_dwFlags & AF_ENABLE_SNMP_TRAP_PROXY)
+   {
       ThreadJoin(s_snmpTrapReceiverThread);
       ThreadJoin(s_snmpTrapSenderThread);
-	}
+   }
    if (g_dwFlags & AF_ENABLE_SYSLOG_PROXY)
    {
       ThreadJoin(s_syslogReceiverThread);
@@ -1555,7 +1549,6 @@ void Shutdown()
 
    StopExternalParameterProviders();
    StopNotificationProcessor();
-	DestroySessionList();
 
    if (!(g_dwFlags & AF_SUBAGENT_LOADER))
    {
@@ -1571,7 +1564,7 @@ void Shutdown()
 
    // Notify main thread about shutdown
 #ifdef _WIN32
-   ConditionSet(s_shutdownCondition);
+   s_shutdownCondition.set();
 #endif
 
    // Remove PID file
@@ -1590,7 +1583,7 @@ void Main()
    if (g_dwFlags & AF_DAEMON)
    {
 #if defined(_WIN32)
-      ConditionWait(s_shutdownCondition, INFINITE);
+      s_shutdownCondition.wait(INFINITE);
 #else
       StartMainLoop(SignalHandler, NULL);
 #endif
@@ -1605,7 +1598,7 @@ void Main()
          hWnd = GetConsoleHWND();
          if (hWnd != NULL)
             ShowWindow(hWnd, SW_HIDE);
-         ConditionWait(s_shutdownCondition, INFINITE);
+         s_shutdownCondition.wait(INFINITE);
          ThreadSleep(1);
       }
       else
@@ -2417,11 +2410,6 @@ int main(int argc, char *argv[])
             }
          }
 #endif   /* _WIN32 */
-
-#ifdef _WIN32
-         if (s_shutdownCondition != INVALID_CONDITION_HANDLE)
-            ConditionDestroy(s_shutdownCondition);
-#endif
          break;
       case Command::CHECK_CONFIG:
          {

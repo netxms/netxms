@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -36,7 +36,6 @@ Query::Query()
    _tcscpy(m_statusText, _T("UNKNOWN"));
    m_result = NULL;
    m_pollerThread = INVALID_THREAD_HANDLE;
-   m_mutex = MutexCreate();
    m_pollRequired = false;
    m_description = NULL;
 }
@@ -46,13 +45,12 @@ Query::Query()
  */
 Query::~Query()
 {
-   free(m_name);
-   free(m_dbid);
-   free(m_query);
-   free(m_description);
-   if (m_result != NULL)
+   MemFree(m_name);
+   MemFree(m_dbid);
+   MemFree(m_query);
+   MemFree(m_description);
+   if (m_result != nullptr)
       DBFreeResult(m_result);
-   MutexDestroy(m_mutex);
 }
 
 /**
@@ -263,7 +261,7 @@ static THREAD_RESULT THREAD_CALL PollerThread(void *arg)
    int sleepTime = (int)(query->getNextPoll() - time(NULL));
    if (sleepTime <= 0)
       sleepTime = 1;
-   while(!ConditionWait(g_condShutdown, sleepTime * 1000))
+   while(!g_condShutdown.wait(sleepTime * 1000))
    {
       query->poll();
       sleepTime = (int)(query->getNextPoll() - time(NULL));

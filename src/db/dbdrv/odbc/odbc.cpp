@@ -1,6 +1,6 @@
 /* 
 ** ODBC Database Driver
-** Copyright (C) 2004-2020 Victor Kirhenshtein
+** Copyright (C) 2004-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -247,7 +247,7 @@ extern "C" DBDRV_CONNECTION __EXPORT DrvConnect(const char *pszHost, const char 
 	}
 
    // Create mutex
-   pConn->mutexQuery = MutexCreate();
+   pConn->mutexQuery = new Mutex(MutexType::NORMAL);
 
    // Success
    return (DBDRV_CONNECTION)pConn;
@@ -269,13 +269,13 @@ connect_failure_0:
  */
 extern "C" void __EXPORT DrvDisconnect(ODBCDRV_CONN *pConn)
 {
-   MutexLock(pConn->mutexQuery);
-   MutexUnlock(pConn->mutexQuery);
+   pConn->mutexQuery->lock();
+   pConn->mutexQuery->unlock();
    SQLDisconnect(pConn->sqlConn);
    SQLFreeHandle(SQL_HANDLE_DBC, pConn->sqlConn);
    SQLFreeHandle(SQL_HANDLE_ENV, pConn->sqlEnv);
-   MutexDestroy(pConn->mutexQuery);
-   free(pConn);
+   delete pConn->mutexQuery;
+   MemFree(pConn);
 }
 
 /**
@@ -287,7 +287,7 @@ extern "C" DBDRV_STATEMENT __EXPORT DrvPrepare(ODBCDRV_CONN *pConn, NETXMS_WCHAR
 	SQLHSTMT stmt;
 	ODBCDRV_STATEMENT *result;
 
-   MutexLock(pConn->mutexQuery);
+   pConn->mutexQuery->lock();
 
    // Allocate statement handle
    iResult = SQLAllocHandle(SQL_HANDLE_STMT, pConn->sqlConn, &stmt);
@@ -332,7 +332,7 @@ extern "C" DBDRV_STATEMENT __EXPORT DrvPrepare(ODBCDRV_CONN *pConn, NETXMS_WCHAR
 		result = NULL;
    }
 
-   MutexUnlock(pConn->mutexQuery);
+   pConn->mutexQuery->unlock();
    return result;
 }
 
@@ -515,7 +515,7 @@ extern "C" DWORD __EXPORT DrvExecute(ODBCDRV_CONN *pConn, ODBCDRV_STATEMENT *stm
 {
    DWORD dwResult;
 
-   MutexLock(pConn->mutexQuery);
+   pConn->mutexQuery->lock();
 	long rc = SQLExecute(stmt->handle);
    if ((rc == SQL_SUCCESS) || 
        (rc == SQL_SUCCESS_WITH_INFO) || 
@@ -528,7 +528,7 @@ extern "C" DWORD __EXPORT DrvExecute(ODBCDRV_CONN *pConn, ODBCDRV_STATEMENT *stm
    {
 		dwResult = GetSQLErrorInfo(SQL_HANDLE_STMT, stmt->handle, errorText);
    }
-   MutexUnlock(pConn->mutexQuery);
+   pConn->mutexQuery->unlock();
 	return dwResult;
 }
 
@@ -540,11 +540,11 @@ extern "C" void __EXPORT DrvFreeStatement(ODBCDRV_STATEMENT *stmt)
 	if (stmt == NULL)
 		return;
 
-	MutexLock(stmt->connection->mutexQuery);
+	stmt->connection->mutexQuery->lock();
 	SQLFreeHandle(SQL_HANDLE_STMT, stmt->handle);
-	MutexUnlock(stmt->connection->mutexQuery);
+	stmt->connection->mutexQuery->unlock();
 	delete stmt->buffers;
-	free(stmt);
+	MemFree(stmt);
 }
 
 /**
@@ -554,7 +554,7 @@ extern "C" DWORD __EXPORT DrvQuery(ODBCDRV_CONN *pConn, NETXMS_WCHAR *pwszQuery,
 {
    DWORD dwResult;
 
-   MutexLock(pConn->mutexQuery);
+   pConn->mutexQuery->lock();
 
    // Allocate statement handle
    SQLHSTMT sqlStatement;
@@ -595,7 +595,7 @@ extern "C" DWORD __EXPORT DrvQuery(ODBCDRV_CONN *pConn, NETXMS_WCHAR *pwszQuery,
       dwResult = GetSQLErrorInfo(SQL_HANDLE_DBC, pConn->sqlConn, errorText);
    }
 
-   MutexUnlock(pConn->mutexQuery);
+   pConn->mutexQuery->unlock();
    return dwResult;
 }
 
@@ -822,7 +822,7 @@ extern "C" DBDRV_RESULT __EXPORT DrvSelect(ODBCDRV_CONN *pConn, NETXMS_WCHAR *pw
 {
    ODBCDRV_QUERY_RESULT *pResult = NULL;
 
-   MutexLock(pConn->mutexQuery);
+   pConn->mutexQuery->lock();
 
    // Allocate statement handle
    SQLHSTMT sqlStatement;
@@ -863,7 +863,7 @@ extern "C" DBDRV_RESULT __EXPORT DrvSelect(ODBCDRV_CONN *pConn, NETXMS_WCHAR *pw
       *pdwError = GetSQLErrorInfo(SQL_HANDLE_DBC, pConn->sqlConn, errorText);
    }
 
-   MutexUnlock(pConn->mutexQuery);
+   pConn->mutexQuery->unlock();
    return pResult;
 }
 
@@ -874,7 +874,7 @@ extern "C" DBDRV_RESULT __EXPORT DrvSelectPrepared(ODBCDRV_CONN *pConn, ODBCDRV_
 {
    ODBCDRV_QUERY_RESULT *pResult = NULL;
 
-   MutexLock(pConn->mutexQuery);
+   pConn->mutexQuery->lock();
 	long rc = SQLExecute(stmt->handle);
    if ((rc == SQL_SUCCESS) || 
        (rc == SQL_SUCCESS_WITH_INFO))
@@ -886,7 +886,7 @@ extern "C" DBDRV_RESULT __EXPORT DrvSelectPrepared(ODBCDRV_CONN *pConn, ODBCDRV_
    {
 		*pdwError = GetSQLErrorInfo(SQL_HANDLE_STMT, stmt->handle, errorText);
    }
-   MutexUnlock(pConn->mutexQuery);
+   pConn->mutexQuery->unlock();
 	return pResult;
 }
 
@@ -987,7 +987,7 @@ extern "C" DBDRV_UNBUFFERED_RESULT __EXPORT DrvSelectUnbuffered(ODBCDRV_CONN *pC
    short wNumCols;
 	int i;
 
-   MutexLock(pConn->mutexQuery);
+   pConn->mutexQuery->lock();
 
    // Allocate statement handle
    SQLHSTMT sqlStatement;
@@ -1063,7 +1063,7 @@ extern "C" DBDRV_UNBUFFERED_RESULT __EXPORT DrvSelectUnbuffered(ODBCDRV_CONN *pC
    }
 
    if (pResult == NULL) // Unlock mutex if query has failed
-      MutexUnlock(pConn->mutexQuery);
+      pConn->mutexQuery->unlock();
    return pResult;
 }
 
@@ -1074,7 +1074,7 @@ extern "C" DBDRV_UNBUFFERED_RESULT __EXPORT DrvSelectPreparedUnbuffered(ODBCDRV_
 {
    ODBCDRV_UNBUFFERED_QUERY_RESULT *pResult = NULL;
 
-   MutexLock(pConn->mutexQuery);
+   pConn->mutexQuery->lock();
 	SQLRETURN rc = SQLExecute(stmt->handle);
    if ((rc == SQL_SUCCESS) || (rc == SQL_SUCCESS_WITH_INFO))
    {
@@ -1117,7 +1117,7 @@ extern "C" DBDRV_UNBUFFERED_RESULT __EXPORT DrvSelectPreparedUnbuffered(ODBCDRV_
    }
 
    if (pResult == NULL) // Unlock mutex if query has failed
-      MutexUnlock(pConn->mutexQuery);
+      pConn->mutexQuery->unlock();
 	return pResult;
 }
 
@@ -1220,10 +1220,10 @@ extern "C" void __EXPORT DrvFreeUnbufferedResult(ODBCDRV_UNBUFFERED_QUERY_RESULT
       MemFree(pResult->columnNames[i]);
       MemFree(pResult->values[i]);
    }
-   free(pResult->columnNames);
-   free(pResult->values);
-   MutexUnlock(pResult->pConn->mutexQuery);
-   free(pResult);
+   MemFree(pResult->columnNames);
+   MemFree(pResult->values);
+   pResult->pConn->mutexQuery->unlock();
+   MemFree(pResult);
 }
 
 /**
@@ -1237,7 +1237,7 @@ extern "C" DWORD __EXPORT DrvBegin(ODBCDRV_CONN *pConn)
 	if (pConn == NULL)
       return DBERR_INVALID_HANDLE;
 
-	MutexLock(pConn->mutexQuery);
+	pConn->mutexQuery->lock();
    nRet = SQLSetConnectAttr(pConn->sqlConn, SQL_ATTR_AUTOCOMMIT, (SQLPOINTER)SQL_AUTOCOMMIT_OFF, 0);
    if ((nRet == SQL_SUCCESS) || (nRet == SQL_SUCCESS_WITH_INFO))
    {
@@ -1247,7 +1247,7 @@ extern "C" DWORD __EXPORT DrvBegin(ODBCDRV_CONN *pConn)
    {
       dwResult = GetSQLErrorInfo(SQL_HANDLE_DBC, pConn->sqlConn, NULL);
    }
-	MutexUnlock(pConn->mutexQuery);
+	pConn->mutexQuery->unlock();
    return dwResult;
 }
 
@@ -1261,10 +1261,10 @@ extern "C" DWORD __EXPORT DrvCommit(ODBCDRV_CONN *pConn)
 	if (pConn == NULL)
       return DBERR_INVALID_HANDLE;
 
-	MutexLock(pConn->mutexQuery);
+	pConn->mutexQuery->lock();
    nRet = SQLEndTran(SQL_HANDLE_DBC, pConn->sqlConn, SQL_COMMIT);
    SQLSetConnectAttr(pConn->sqlConn, SQL_ATTR_AUTOCOMMIT, (SQLPOINTER)SQL_AUTOCOMMIT_ON, 0);
-	MutexUnlock(pConn->mutexQuery);
+	pConn->mutexQuery->unlock();
    return ((nRet == SQL_SUCCESS) || (nRet == SQL_SUCCESS_WITH_INFO)) ? DBERR_SUCCESS : DBERR_OTHER_ERROR;
 }
 
@@ -1278,10 +1278,10 @@ extern "C" DWORD __EXPORT DrvRollback(ODBCDRV_CONN *pConn)
 	if (pConn == NULL)
       return DBERR_INVALID_HANDLE;
 
-	MutexLock(pConn->mutexQuery);
+	pConn->mutexQuery->lock();
    nRet = SQLEndTran(SQL_HANDLE_DBC, pConn->sqlConn, SQL_ROLLBACK);
    SQLSetConnectAttr(pConn->sqlConn, SQL_ATTR_AUTOCOMMIT, (SQLPOINTER)SQL_AUTOCOMMIT_ON, 0);
-	MutexUnlock(pConn->mutexQuery);
+	pConn->mutexQuery->unlock();
    return ((nRet == SQL_SUCCESS) || (nRet == SQL_SUCCESS_WITH_INFO)) ? DBERR_SUCCESS : DBERR_OTHER_ERROR;
 }
 
@@ -1292,7 +1292,7 @@ extern "C" int __EXPORT DrvIsTableExist(ODBCDRV_CONN *pConn, const NETXMS_WCHAR 
 {
    int rc = DBIsTableExist_Failure;
 
-   MutexLock(pConn->mutexQuery);
+   pConn->mutexQuery->lock();
 
    SQLHSTMT sqlStatement;
    SQLRETURN iResult = SQLAllocHandle(SQL_HANDLE_STMT, pConn->sqlConn, &sqlStatement);
@@ -1323,7 +1323,7 @@ extern "C" int __EXPORT DrvIsTableExist(ODBCDRV_CONN *pConn, const NETXMS_WCHAR 
       SQLFreeHandle(SQL_HANDLE_STMT, sqlStatement);
    }
 
-   MutexUnlock(pConn->mutexQuery);
+   pConn->mutexQuery->unlock();
    return rc;
 }
 

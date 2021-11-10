@@ -98,8 +98,8 @@ struct UPS_PARAMETER
 class UPSInterface
 {
 private:
-   MUTEX m_mutex;
-   CONDITION m_condStop;
+   Mutex m_mutex;
+   Condition m_condStop;
    THREAD m_commThread;
    int m_id;
 

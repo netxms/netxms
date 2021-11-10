@@ -118,7 +118,7 @@ VolatileCounter64 g_otherWriteRequests = 0;
  * Queue monitor data
  */
 static bool s_queueMonitorDiscardFlag = false;  // true when new data should be discarded
-static Mutex s_queueMonitorStateLock(true);
+static Mutex s_queueMonitorStateLock(MutexType::FAST);
 static Condition s_queueMonitorStopCondition(true);
 
 /**

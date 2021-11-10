@@ -31,7 +31,6 @@ BaseBusinessService::BaseBusinessService() : super(), AutoBindTarget(this)
    m_pollingDisabled = false;
    m_objectStatusThreshhold = 0;
    m_dciStatusThreshhold = 0;
-   m_checkMutex = MutexCreate();
 }
 
 /**
@@ -42,7 +41,6 @@ BaseBusinessService::BaseBusinessService(const TCHAR *name) : super(name, 0), Au
    m_pollingDisabled = false;
    m_objectStatusThreshhold = 0;
    m_dciStatusThreshhold = 0;
-   m_checkMutex = MutexCreate();
 }
 
 /**
@@ -53,7 +51,6 @@ BaseBusinessService::BaseBusinessService(const BaseBusinessService& prototype, c
    m_pollingDisabled = false;
    m_objectStatusThreshhold = prototype.m_objectStatusThreshhold;
    m_dciStatusThreshhold = prototype.m_dciStatusThreshhold;
-   m_checkMutex = MutexCreate();
 
    for(int i = 0; i < MAX_AUTOBIND_TARGET_FILTERS; i++)
       setAutoBindFilter(i, prototype.m_autoBindFilterSources[i]);
@@ -73,7 +70,6 @@ BaseBusinessService::BaseBusinessService(const BaseBusinessService& prototype, c
  */
 BaseBusinessService::~BaseBusinessService()
 {
-   MutexDestroy(m_checkMutex);
 }
 
 /**

@@ -1,7 +1,7 @@
 /**
  * NetXMS - Network Management System
  * Driver for Rittal CMC and LCP devices
- * Copyright (C) 2017-2020 Raden Solutions
+ * Copyright (C) 2017-2021 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -32,11 +32,11 @@
  */
 struct RittalMetric
 {
-   UINT32 index;
+   uint32_t index;
    TCHAR name[MAX_OBJECT_NAME];
    TCHAR description[MAX_DB_STRING];
    int dataType;
-   UINT32 oid[15];
+   uint32_t oid[15];
 };
 
 /**
@@ -44,9 +44,9 @@ struct RittalMetric
  */
 struct RittalDevice
 {
-   UINT32 index;
-   UINT32 bus;
-   UINT32 position;
+   uint32_t index;
+   uint32_t bus;
+   uint32_t position;
    TCHAR name[MAX_OBJECT_NAME];
    TCHAR alias[MAX_OBJECT_NAME];
    ObjectArray<RittalMetric> *metrics;
@@ -75,13 +75,13 @@ class RittalDriverData : public HostMibDriverData
 private:
    ObjectArray<RittalDevice> m_devices;
    time_t m_cacheTimestamp;
-   MUTEX m_cacheLock;
+   Mutex m_cacheLock;
 
-   UINT32 deviceInfoWalkCallback(SNMP_Variable *v, SNMP_Transport *snmp);
-   UINT32 metricInfoWalkCallback(SNMP_Variable *v, SNMP_Transport *snmp);
+   uint32_t deviceInfoWalkCallback(SNMP_Variable *v, SNMP_Transport *snmp);
+   uint32_t metricInfoWalkCallback(SNMP_Variable *v, SNMP_Transport *snmp);
    void updateDeviceInfoInternal(SNMP_Transport *snmp);
-   RittalDevice *getDevice(UINT32 index);
-   RittalDevice *getDevice(UINT32 bus, UINT32 position);
+   RittalDevice *getDevice(uint32_t index);
+   RittalDevice *getDevice(uint32_t bus, uint32_t position);
 
 public:
    RittalDriverData();

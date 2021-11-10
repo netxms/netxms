@@ -26,6 +26,8 @@
 #include <nms_util.h>
 #include <nms_threads.h>
 #include <nxqueue.h>
+#include <math.h>
+#include <functional>
 
 /**
  * Maximum name length for gauge
@@ -103,17 +105,16 @@ protected:
    GaugeData<T> m_data;
    int m_interval;   // Time interval (in seconds) for measuring average
    int m_period;     // Time period (in seconds) for measuring average
-   
-   virtual T readCurrentValue() = 0;
+   std::function<int64_t ()> m_reader;  // Data reader
    
 public:   
-   Gauge(const TCHAR *name, int interval, int period) : m_data(interval, period)
+   Gauge(std::function<int64_t ()> reader, const TCHAR *name, int interval, int period) : m_data(interval, period)
    {
       _tcslcpy(m_name, name, MAX_GAUGE_NAME_LEN);
       m_interval = interval;
       m_period = period;
+      m_reader = reader;
    }
-   virtual ~Gauge() = default;
 
    const TCHAR *getName() const { return m_name; }
    T getCurrent() const { return m_data.getCurrent(); }
@@ -123,11 +124,11 @@ public:
    bool isNull() const { return m_data.isNull(); }
    int getInterval() const { return m_interval; }
    int getPeriod() const { return m_period; }
-   void reset() {m_data.reset(); }
+   void reset() { m_data.reset(); }
    
    void update() 
    {
-      m_data.update(readCurrentValue());
+      m_data.update(static_cast<T>(m_reader()));
    }
 
    void update(T value)
@@ -136,58 +137,52 @@ public:
    }
 };
 
+#ifdef _WIN32
+template class LIBNETXMS_EXPORTABLE std::function<int64_t ()>;
+template class LIBNETXMS_EXPORTABLE GaugeData<int32_t>;
+template class LIBNETXMS_EXPORTABLE GaugeData<int64_t>;
+template class LIBNETXMS_EXPORTABLE Gauge<int32_t>;
+template class LIBNETXMS_EXPORTABLE Gauge<int64_t>;
+#endif
+
 /**
  * 64 bit integer gauge
  */
-class Gauge64 : public Gauge<int64_t>
+class LIBNETXMS_EXPORTABLE Gauge64 : public Gauge<int64_t>
 {
 public:
-   Gauge64(const TCHAR *name, int interval, int period) : Gauge<int64_t>(name, interval, period) { }
-   virtual ~Gauge64() = default;
+   Gauge64(std::function<int64_t()> reader, const TCHAR *name, int interval, int period) : Gauge<int64_t>(reader, name, interval, period) { }
 };
 
 /**
  * 32 bit integer gauge
  */
-class Gauge32 : public Gauge<int32_t>
+class LIBNETXMS_EXPORTABLE Gauge32 : public Gauge<int32_t>
 {
 public:
-   Gauge32(const TCHAR *name, int interval, int period) : Gauge<int32_t>(name, interval, period) { }
-   virtual ~Gauge32() = default;
+   Gauge32(std::function<int64_t()> reader, const TCHAR *name, int interval, int period) : Gauge<int32_t>(reader, name, interval, period) { }
 };
 
 /**
  * Queue length gauge
  */
-class GaugeQueueLength : public Gauge64
+class LIBNETXMS_EXPORTABLE GaugeQueueLength : public Gauge64
 {
-private:
-   Queue *m_queue;
-
-protected:
-   virtual int64_t readCurrentValue() override
-   {
-      return m_queue->size();
-   }
-
 public:
-   GaugeQueueLength(const TCHAR *name, Queue *queue, int interval = 5, int period = 900) : Gauge64(name, interval, period)
-   {
-      m_queue = queue;
-   }
-   virtual ~GaugeQueueLength() = default;
+   GaugeQueueLength(const TCHAR *name, Queue *queue, int interval = 5, int period = 900) :
+      Gauge64([queue]() -> int64_t { return static_cast<int64_t>(queue->size()); }, name, interval, period) { }
 };
 
 /**
  * Thread pool request execution queue length gauge
  */
-class GaugeThreadPoolRequests : public Gauge64
+class LIBNETXMS_EXPORTABLE GaugeThreadPoolRequests : public Gauge64
 {
 private:
    ThreadPool *m_pool;
 
 protected:
-   virtual int64_t readCurrentValue() override
+   int64_t readCurrentValue()
    {
       ThreadPoolInfo poolInfo;
       ThreadPoolGetInfo(m_pool, &poolInfo);
@@ -195,46 +190,29 @@ protected:
    }
 
 public:
-   GaugeThreadPoolRequests(const TCHAR *name, ThreadPool *pool, int interval = 5, int period = 900) : Gauge64(name, interval, period)
+   GaugeThreadPoolRequests(const TCHAR *name, ThreadPool *pool, int interval = 5, int period = 900) :
+      Gauge64([=]() -> int64_t { return this->readCurrentValue(); }, name, interval, period)
    {
       m_pool = pool;
    }
-   virtual ~GaugeThreadPoolRequests() = default;
 };
 
 /**
  * Gauge for data provided by external function
  */
-class GaugeFunction : public Gauge64
+class LIBNETXMS_EXPORTABLE GaugeFunction : public Gauge64
 {
-private:
-   int64_t (*m_function)();
-
-protected:
-   virtual int64_t readCurrentValue() override
-   {
-      return m_function();
-   }
-
 public:
-   GaugeFunction(const TCHAR *name, INT64 (*function)(), int interval = 5, int period = 900) : Gauge64(name, interval, period)
-   {
-      m_function = function;
-   }
-   virtual ~GaugeFunction() = default;
+   GaugeFunction(const TCHAR *name, int64_t (*function)(), int interval = 5, int period = 900) : Gauge64(function, name, interval, period) { }
 };
 
 /**
  * Manually updated 64 bit integer gauge
  */
-class ManualGauge64 : public Gauge64
+class LIBNETXMS_EXPORTABLE ManualGauge64 : public Gauge64
 {
-protected:
-   virtual int64_t readCurrentValue() override { return 0; }
-
 public:
-   ManualGauge64(const TCHAR *name, int interval, int period) : Gauge64(name, interval, period) {}
-   virtual ~ManualGauge64() = default;
+   ManualGauge64(const TCHAR *name, int interval, int period) : Gauge64([]() -> int64_t { return 0; }, name, interval, period) { }
 };
 
 #endif

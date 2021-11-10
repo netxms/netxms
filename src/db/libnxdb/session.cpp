@@ -52,7 +52,7 @@ static void (*s_sessionInitCb)(DB_HANDLE session) = nullptr;
  */
 static void InvalidatePreparedStatements(DB_HANDLE hConn)
 {
-   MutexLock(hConn->m_preparedStatementsLock);
+   hConn->m_preparedStatementsLock->lock();
    for(int i = 0; i < hConn->m_preparedStatements->size(); i++)
    {
       db_statement_t *stmt = hConn->m_preparedStatements->get(i);
@@ -61,7 +61,7 @@ static void InvalidatePreparedStatements(DB_HANDLE hConn)
       stmt->m_connection = nullptr;
    }
    hConn->m_preparedStatements->clear();
-   MutexUnlock(hConn->m_preparedStatementsLock);
+   hConn->m_preparedStatementsLock->unlock();
 }
 
 /**
@@ -111,10 +111,10 @@ DB_HANDLE LIBNXDB_EXPORTABLE DBConnect(DB_DRIVER driver, const TCHAR *server, co
 			hConn->m_driver = driver;
 			hConn->m_reconnectEnabled = true;
 			hConn->m_connection = hDrvConn;
-         hConn->m_mutexTransLock = MutexCreateRecursive();
+         hConn->m_mutexTransLock = new Mutex(MutexType::RECURSIVE);
          hConn->m_transactionLevel = 0;
          hConn->m_preparedStatements = new ObjectArray<db_statement_t>(4, 4, Ownership::False);
-         hConn->m_preparedStatementsLock = MutexCreateFast();
+         hConn->m_preparedStatementsLock = new Mutex(MutexType::FAST);
          hConn->m_dbName = utfDatabase;
          hConn->m_login = utfLogin;
          hConn->m_password = utfPassword;
@@ -147,7 +147,7 @@ DB_HANDLE LIBNXDB_EXPORTABLE DBConnect(DB_DRIVER driver, const TCHAR *server, co
  */
 void LIBNXDB_EXPORTABLE DBDisconnect(DB_HANDLE hConn)
 {
-   if (hConn == NULL)
+   if (hConn == nullptr)
       return;
 
    nxlog_debug_tag(DEBUG_TAG_CONNECTION, 4, _T("DB connection %p closed"), hConn);
@@ -155,14 +155,14 @@ void LIBNXDB_EXPORTABLE DBDisconnect(DB_HANDLE hConn)
    InvalidatePreparedStatements(hConn);
 
 	hConn->m_driver->m_fpDrvDisconnect(hConn->m_connection);
-   MutexDestroy(hConn->m_mutexTransLock);
+   delete hConn->m_mutexTransLock;
    MemFree(hConn->m_dbName);
    MemFree(hConn->m_login);
    MemFree(hConn->m_password);
    MemFree(hConn->m_server);
    MemFree(hConn->m_schema);
    delete hConn->m_preparedStatements;
-   MutexDestroy(hConn->m_preparedStatementsLock);
+   delete hConn->m_preparedStatementsLock;
    MemFree(hConn);
 }
 
@@ -191,31 +191,31 @@ static void DBReconnect(DB_HANDLE hConn)
    {
 		hConn->m_connection = hConn->m_driver->m_fpDrvConnect(hConn->m_server, hConn->m_login,
 		         hConn->m_password, hConn->m_dbName, hConn->m_schema, errorText);
-      if (hConn->m_connection != NULL)
+      if (hConn->m_connection != nullptr)
       {
-         if (hConn->m_driver->m_fpDrvSetPrefetchLimit != NULL)
+         if (hConn->m_driver->m_fpDrvSetPrefetchLimit != nullptr)
             hConn->m_driver->m_fpDrvSetPrefetchLimit(hConn->m_connection, hConn->m_driver->m_defaultPrefetchLimit);
-         if (s_sessionInitCb != NULL)
+         if (s_sessionInitCb != nullptr)
             s_sessionInitCb(hConn);
          break;
       }
       if (nCount == 0)
       {
-			MutexLock(hConn->m_driver->m_mutexReconnect);
-         if ((hConn->m_driver->m_reconnect == 0) && (hConn->m_driver->m_fpEventHandler != NULL))
+         hConn->m_driver->m_mutexReconnect->lock();
+         if ((hConn->m_driver->m_reconnect == 0) && (hConn->m_driver->m_fpEventHandler != nullptr))
 				hConn->m_driver->m_fpEventHandler(DBEVENT_CONNECTION_LOST, NULL, NULL, true, hConn->m_driver->m_context);
          hConn->m_driver->m_reconnect++;
-         MutexUnlock(hConn->m_driver->m_mutexReconnect);
+         hConn->m_driver->m_mutexReconnect->unlock();
       }
       ThreadSleepMs(1000);
    }
    if (nCount > 0)
    {
-      MutexLock(hConn->m_driver->m_mutexReconnect);
+      hConn->m_driver->m_mutexReconnect->lock();
       hConn->m_driver->m_reconnect--;
-      if ((hConn->m_driver->m_reconnect == 0) && (hConn->m_driver->m_fpEventHandler != NULL))
+      if ((hConn->m_driver->m_reconnect == 0) && (hConn->m_driver->m_fpEventHandler != nullptr))
 			hConn->m_driver->m_fpEventHandler(DBEVENT_CONNECTION_RESTORED, NULL, NULL, false, hConn->m_driver->m_context);
-      MutexUnlock(hConn->m_driver->m_mutexReconnect);
+      hConn->m_driver->m_mutexReconnect->unlock();
    }
 }
 
@@ -267,7 +267,7 @@ bool LIBNXDB_EXPORTABLE DBQueryEx(DB_HANDLE hConn, const TCHAR *szQuery, TCHAR *
 	WCHAR wcErrorText[DBDRV_MAX_ERROR_TEXT] = L"";
 #endif
 
-   MutexLock(hConn->m_mutexTransLock);
+   hConn->m_mutexTransLock->lock();
    int64_t ms = GetCurrentTimeMs();
 
    dwResult = hConn->m_driver->m_fpDrvQuery(hConn->m_connection, pwszQuery, wcErrorText);
@@ -291,7 +291,7 @@ bool LIBNXDB_EXPORTABLE DBQueryEx(DB_HANDLE hConn, const TCHAR *szQuery, TCHAR *
       s_perfLongRunningQueries++;
    }
    
-   MutexUnlock(hConn->m_mutexTransLock);
+   hConn->m_mutexTransLock->unlock();
 
 #ifndef UNICODE
 	WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, wcErrorText, -1, errorText, DBDRV_MAX_ERROR_TEXT, NULL, NULL);
@@ -337,7 +337,7 @@ DB_RESULT LIBNXDB_EXPORTABLE DBSelectEx(DB_HANDLE hConn, const TCHAR *szQuery, T
 	WCHAR wcErrorText[DBDRV_MAX_ERROR_TEXT] = L"";
 #endif
    
-   MutexLock(hConn->m_mutexTransLock);
+   hConn->m_mutexTransLock->lock();
    INT64 ms = GetCurrentTimeMs();
 
    s_perfSelectQueries++;
@@ -360,7 +360,7 @@ DB_RESULT LIBNXDB_EXPORTABLE DBSelectEx(DB_HANDLE hConn, const TCHAR *szQuery, T
       nxlog_debug_tag(DEBUG_TAG_QUERY, 3, _T("Long running query: \"%s\" [%d ms]"), szQuery, (int)ms);
       s_perfLongRunningQueries++;
    }
-   MutexUnlock(hConn->m_mutexTransLock);
+   hConn->m_mutexTransLock->unlock();
 
 #ifndef UNICODE
 	WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, wcErrorText, -1, errorText, DBDRV_MAX_ERROR_TEXT, NULL, NULL);
@@ -856,7 +856,7 @@ DB_UNBUFFERED_RESULT LIBNXDB_EXPORTABLE DBSelectUnbufferedEx(DB_HANDLE hConn, co
 	WCHAR wcErrorText[DBDRV_MAX_ERROR_TEXT] = L"";
 #endif
    
-   MutexLock(hConn->m_mutexTransLock);
+   hConn->m_mutexTransLock->lock();
    INT64 ms = GetCurrentTimeMs();
 
    s_perfSelectQueries++;
@@ -882,7 +882,7 @@ DB_UNBUFFERED_RESULT LIBNXDB_EXPORTABLE DBSelectUnbufferedEx(DB_HANDLE hConn, co
    if (hResult == NULL)
    {
       s_perfFailedQueries++;
-      MutexUnlock(hConn->m_mutexTransLock);
+      hConn->m_mutexTransLock->unlock();
 
 #ifndef UNICODE
 		WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, wcErrorText, -1, errorText, DBDRV_MAX_ERROR_TEXT, NULL, NULL);
@@ -1166,7 +1166,7 @@ uuid LIBNXDB_EXPORTABLE DBGetFieldGUID(DB_UNBUFFERED_RESULT hResult, int iColumn
 void LIBNXDB_EXPORTABLE DBFreeResult(DB_UNBUFFERED_RESULT hResult)
 {
 	hResult->m_driver->m_fpDrvFreeUnbufferedResult(hResult->m_data);
-	MutexUnlock(hResult->m_connection->m_mutexTransLock);
+	hResult->m_connection->m_mutexTransLock->unlock();
 	MemFree(hResult);
 }
 
@@ -1186,7 +1186,7 @@ DB_STATEMENT LIBNXDB_EXPORTABLE DBPrepareEx(DB_HANDLE hConn, const TCHAR *query,
 	WCHAR wcErrorText[DBDRV_MAX_ERROR_TEXT] = L"";
 #endif
 
-	MutexLock(hConn->m_mutexTransLock);
+	hConn->m_mutexTransLock->lock();
 
 	if (s_queryTrace)
       ms = GetCurrentTimeMs();
@@ -1198,7 +1198,7 @@ DB_STATEMENT LIBNXDB_EXPORTABLE DBPrepareEx(DB_HANDLE hConn, const TCHAR *query,
       DBReconnect(hConn);
 		stmt = hConn->m_driver->m_fpDrvPrepare(hConn->m_connection, pwszQuery, optimizeForReuse, &errorCode, wcErrorText);
 	}
-   MutexUnlock(hConn->m_mutexTransLock);
+   hConn->m_mutexTransLock->unlock();
 
 	if (stmt != NULL)
 	{
@@ -1233,11 +1233,11 @@ DB_STATEMENT LIBNXDB_EXPORTABLE DBPrepareEx(DB_HANDLE hConn, const TCHAR *query,
 	MemFree(pwszQuery);
 #endif
 
-   if (result != NULL)
+   if (result != nullptr)
    {
-      MutexLock(hConn->m_preparedStatementsLock);
+      hConn->m_preparedStatementsLock->lock();
       hConn->m_preparedStatements->add(result);
-      MutexUnlock(hConn->m_preparedStatementsLock);
+      hConn->m_preparedStatementsLock->unlock();
    }
 
 	return result;
@@ -1264,9 +1264,9 @@ void LIBNXDB_EXPORTABLE DBFreeStatement(DB_STATEMENT hStmt)
 
    if (hStmt->m_connection != NULL)
    {
-      MutexLock(hStmt->m_connection->m_preparedStatementsLock);
+      hStmt->m_connection->m_preparedStatementsLock->lock();
       hStmt->m_connection->m_preparedStatements->remove(hStmt);
-      MutexUnlock(hStmt->m_connection->m_preparedStatementsLock);
+      hStmt->m_connection->m_preparedStatementsLock->unlock();
    }
    hStmt->m_driver->m_fpDrvFreeStatement(hStmt->m_statement);
    MemFree(hStmt->m_query);
@@ -1516,7 +1516,7 @@ bool LIBNXDB_EXPORTABLE DBExecuteEx(DB_STATEMENT hStmt, TCHAR *errorText)
 #endif
 
 	DB_HANDLE hConn = hStmt->m_connection;
-	MutexLock(hConn->m_mutexTransLock);
+	hConn->m_mutexTransLock->lock();
    uint64_t ms = GetCurrentTimeMs();
 
    s_perfNonSelectQueries++;
@@ -1541,7 +1541,7 @@ bool LIBNXDB_EXPORTABLE DBExecuteEx(DB_STATEMENT hStmt, TCHAR *errorText)
       DBReconnect(hConn);
    }
    
-   MutexUnlock(hConn->m_mutexTransLock);
+   hConn->m_mutexTransLock->unlock();
 
 #ifndef UNICODE
 	WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, wcErrorText, -1, errorText, DBDRV_MAX_ERROR_TEXT, NULL, NULL);
@@ -1596,7 +1596,7 @@ DB_RESULT LIBNXDB_EXPORTABLE DBSelectPreparedEx(DB_STATEMENT hStmt, TCHAR *error
 #endif
 
 	DB_HANDLE hConn = hStmt->m_connection;
-   MutexLock(hConn->m_mutexTransLock);
+   hConn->m_mutexTransLock->lock();
 
    s_perfSelectQueries++;
    s_perfTotalQueries++;
@@ -1624,7 +1624,7 @@ DB_RESULT LIBNXDB_EXPORTABLE DBSelectPreparedEx(DB_STATEMENT hStmt, TCHAR *error
       DBReconnect(hConn);
    }
 
-   MutexUnlock(hConn->m_mutexTransLock);
+   hConn->m_mutexTransLock->unlock();
 
 #ifndef UNICODE
 	WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, wcErrorText, -1, errorText, DBDRV_MAX_ERROR_TEXT, NULL, NULL);
@@ -1687,7 +1687,7 @@ DB_UNBUFFERED_RESULT LIBNXDB_EXPORTABLE DBSelectPreparedUnbufferedEx(DB_STATEMEN
 #endif
 
    DB_HANDLE hConn = hStmt->m_connection;
-   MutexLock(hConn->m_mutexTransLock);
+   hConn->m_mutexTransLock->lock();
 
    s_perfSelectQueries++;
    s_perfTotalQueries++;
@@ -1722,7 +1722,7 @@ DB_UNBUFFERED_RESULT LIBNXDB_EXPORTABLE DBSelectPreparedUnbufferedEx(DB_STATEMEN
 
    if (hResult == NULL)
    {
-      MutexUnlock(hConn->m_mutexTransLock);
+      hConn->m_mutexTransLock->unlock();
 
       nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_DRIVER, _T("SQL query failed (Query = \"%s\"): %s"), hStmt->m_query, errorText);
       if (hConn->m_driver->m_fpEventHandler != NULL)
@@ -1767,7 +1767,7 @@ bool LIBNXDB_EXPORTABLE DBBegin(DB_HANDLE hConn)
    DWORD dwResult;
    bool bRet = false;
 
-   MutexLock(hConn->m_mutexTransLock);
+   hConn->m_mutexTransLock->lock();
    if (hConn->m_transactionLevel == 0)
    {
       dwResult = hConn->m_driver->m_fpDrvBegin(hConn->m_connection);
@@ -1784,7 +1784,7 @@ bool LIBNXDB_EXPORTABLE DBBegin(DB_HANDLE hConn)
       }
       else
       {
-         MutexUnlock(hConn->m_mutexTransLock);
+         hConn->m_mutexTransLock->unlock();
 			nxlog_debug_tag(DEBUG_TAG_QUERY, 9, _T("BEGIN TRANSACTION failed"), hConn->m_transactionLevel);
       }
    }
@@ -1804,7 +1804,7 @@ bool LIBNXDB_EXPORTABLE DBCommit(DB_HANDLE hConn)
 {
    bool bRet = false;
 
-   MutexLock(hConn->m_mutexTransLock);
+   hConn->m_mutexTransLock->lock();
    if (hConn->m_transactionLevel > 0)
    {
       hConn->m_transactionLevel--;
@@ -1813,9 +1813,9 @@ bool LIBNXDB_EXPORTABLE DBCommit(DB_HANDLE hConn)
       else
          bRet = true;
 		nxlog_debug_tag(DEBUG_TAG_QUERY, 9, _T("COMMIT TRANSACTION %s (level %d)"), bRet ? _T("successful") : _T("failed"), hConn->m_transactionLevel);
-      MutexUnlock(hConn->m_mutexTransLock);
+      hConn->m_mutexTransLock->unlock();
    }
-   MutexUnlock(hConn->m_mutexTransLock);
+   hConn->m_mutexTransLock->unlock();
    return bRet;
 }
 
@@ -1826,7 +1826,7 @@ bool LIBNXDB_EXPORTABLE DBRollback(DB_HANDLE hConn)
 {
    bool bRet = false;
 
-   MutexLock(hConn->m_mutexTransLock);
+   hConn->m_mutexTransLock->lock();
    if (hConn->m_transactionLevel > 0)
    {
       hConn->m_transactionLevel--;
@@ -1835,9 +1835,9 @@ bool LIBNXDB_EXPORTABLE DBRollback(DB_HANDLE hConn)
       else
          bRet = true;
 		nxlog_debug_tag(DEBUG_TAG_QUERY, 9, _T("ROLLBACK TRANSACTION %s (level %d)"), bRet ? _T("successful") : _T("failed"), hConn->m_transactionLevel);
-      MutexUnlock(hConn->m_mutexTransLock);
+      hConn->m_mutexTransLock->unlock();
    }
-   MutexUnlock(hConn->m_mutexTransLock);
+   hConn->m_mutexTransLock->unlock();
    return bRet;
 }
 

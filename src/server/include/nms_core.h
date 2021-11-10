@@ -93,12 +93,11 @@ template class NXCORE_EXPORTABLE SynchronizedHashSet<uint32_t>;
 #include "nms_dcoll.h"
 #include "nms_users.h"
 #include "nxcore_winperf.h"
+#include "nxcore_schedule.h"
 #include "nms_objects.h"
 #include "nms_locks.h"
 #include "nms_topo.h"
 #include "nms_script.h"
-#include "nxcore_jobs.h"
-#include "nxcore_schedule.h"
 
 /**
  * Common constants and macros
@@ -360,14 +359,14 @@ private:
    uint32_t m_deviceObjectId;
    shared_ptr<NXCPEncryptionContext> m_encryptionContext;
 	BYTE m_challenge[CLIENT_CHALLENGE_SIZE];
-	MUTEX m_mutexSocketWrite;
+	Mutex m_mutexSocketWrite;
 	InetAddress m_clientAddr;
 	TCHAR m_hostName[256]; // IP address of name of conneced host in textual form
    TCHAR m_userName[MAX_SESSION_NAME];   // String in form login_name@host
    TCHAR m_clientInfo[96];  // Client app info string
    uint32_t m_encryptionRqId;
    uint32_t m_encryptionResult;
-   CONDITION m_condEncryptionSetup;
+   Condition m_condEncryptionSetup;
    uint32_t m_refCount;
 	bool m_authenticated;
 
@@ -473,16 +472,15 @@ struct AgentFileTransfer
    uint32_t requestId;
    TCHAR key[24];
    TCHAR *fileName;
-   MUTEX mutex;
+   Mutex mutex;
    bool active;
    bool failure;
 
-   AgentFileTransfer(session_id_t sessionId, uint32_t _requestId, const shared_ptr<AgentConnection>& _connection) : connection(_connection)
+   AgentFileTransfer(session_id_t sessionId, uint32_t _requestId, const shared_ptr<AgentConnection>& _connection) : connection(_connection), mutex(MutexType::FAST)
    {
       requestId = _requestId;
       _sntprintf(key, 24, _T("FT_%d_%u"), sessionId, _requestId);
       fileName = nullptr;
-      mutex = MutexCreateFast();
       active = true;
       failure = false;
    }
@@ -494,7 +492,6 @@ struct AgentFileTransfer
          _tremove(fileName);
          MemFree(fileName);
       }
-      MutexDestroy(mutex);
    }
 };
 
@@ -535,10 +532,10 @@ private:
 	int m_clientType;              // Client system type - desktop, web, mobile, etc.
    shared_ptr<NXCPEncryptionContext> m_encryptionContext;
 	BYTE m_challenge[CLIENT_CHALLENGE_SIZE];
-	MUTEX m_mutexSocketWrite;
-   MUTEX m_mutexSendAlarms;
-   MUTEX m_mutexSendActions;
-	MUTEX m_mutexSendAuditLog;
+	Mutex m_mutexSocketWrite;
+	Mutex m_mutexSendAlarms;
+	Mutex m_mutexSendActions;
+	Mutex m_mutexSendAuditLog;
 	InetAddress m_clientAddr;
 	TCHAR m_workstation[64];       // IP address or name of connected host in textual form
    TCHAR m_webServerAddress[64];  // IP address or name of web server for web sessions
@@ -548,25 +545,25 @@ private:
    TCHAR m_language[8];       // Client's desired language
    time_t m_loginTime;
    SynchronizedHashSet<uint32_t> m_openDataCollectionConfigurations; // List of nodes with DCI lists open
-   UINT32 m_dwNumRecordsToUpload; // Number of records to be uploaded
-   UINT32 m_dwRecordsUploaded;
+   uint32_t m_dwNumRecordsToUpload; // Number of records to be uploaded
+   uint32_t m_dwRecordsUploaded;
    EPRule **m_ppEPPRuleList;   // List of loaded EPP rules
    SynchronizedHashMap<uint32_t, ServerDownloadFileInfo> m_downloadFileMap;
    VolatileCounter m_refCount;
    uint32_t m_encryptionRqId;
    uint32_t m_encryptionResult;
-   CONDITION m_condEncryptionSetup;
+   Condition m_condEncryptionSetup;
 	ClientSessionConsole *m_console;			// Server console context
 	StringList m_soundFileTypes;
 	SharedPointerIndex<AgentFileTransfer> m_agentFileTransfers;
 	StringObjectMap<uint32_t> m_subscriptions;
-	MUTEX m_subscriptionLock;
+	Mutex m_subscriptionLock;
 	SharedPointerIndex<ProcessExecutor> m_serverCommands;
 	ObjectArray<TcpProxy> *m_tcpProxyConnections;
-	MUTEX m_tcpProxyLock;
+	Mutex m_tcpProxyLock;
 	VolatileCounter m_tcpProxyChannelId;
 	HashSet<uint32_t> *m_pendingObjectNotifications;
-   MUTEX m_pendingObjectNotificationsLock;
+   Mutex m_pendingObjectNotificationsLock;
    bool m_objectNotificationScheduled;
    uint32_t m_objectNotificationDelay;
    size_t m_objectNotificationBatchSize;
@@ -1507,22 +1504,14 @@ struct MONITORED_FILE
 class FileMonitoringList
 {
 private:
-   MUTEX m_mutex;
+   Mutex m_mutex;
    ObjectArray<MONITORED_FILE> m_monitoredFiles;
 
-   void lock()
-   {
-      MutexLock(m_mutex);
-   }
-
-   void unlock()
-   {
-      MutexUnlock(m_mutex);
-   }
+   void lock() { m_mutex.lock(); }
+   void unlock() { m_mutex.unlock(); }
 
 public:
    FileMonitoringList();
-   ~FileMonitoringList();
 
    void addFile(MONITORED_FILE *file, Node *node, const shared_ptr<AgentConnection>& conn);
    bool isDuplicate(MONITORED_FILE *file);

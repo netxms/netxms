@@ -46,7 +46,6 @@ LogHandle::LogHandle(const NXCORE_LOG *info)
 {
 	m_log = info;
 	m_filter = nullptr;
-	m_lock = MutexCreate();
 	m_resultSet = nullptr;
 	m_rowCountLimit = 1000;
 	m_maxRecordId = 0;
@@ -59,7 +58,6 @@ LogHandle::~LogHandle()
 {
 	deleteQueryResults();
 	delete m_filter;
-	MutexDestroy(m_lock);
 }
 
 /**

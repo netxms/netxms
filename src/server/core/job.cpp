@@ -21,6 +21,7 @@
 **/
 
 #include "nxcore.h"
+#include <nxcore_jobs.h>
 #include <math.h>
 
 /**
@@ -44,14 +45,13 @@ ServerJob::ServerJob(const TCHAR *type, const TCHAR *description, const shared_p
 	_tcslcpy(m_type, CHECK_NULL(type), MAX_JOB_NAME_LEN);
 	_tcslcpy(m_description, CHECK_NULL_EX(description), MAX_DB_STRING);
 	m_status = createOnHold ? JOB_ON_HOLD : JOB_PENDING;
-	m_lastStatusChange = time(NULL);
+	m_lastStatusChange = time(nullptr);
 	m_autoCancelDelay = 600;
 	m_progress = 0;
-	m_failureMessage = NULL;
-	m_owningQueue = NULL;
+	m_failureMessage = nullptr;
+	m_owningQueue = nullptr;
 	m_workerThread = INVALID_THREAD_HANDLE;
 	m_lastNotification = 0;
-	m_notificationLock = MutexCreate();
 	m_blockNextJobsOnFailure = false;
 	m_retryCount = (retryCount == -1) ? ConfigReadInt(_T("JobRetryCount"), 5) : retryCount;
 	m_valid = (m_object != nullptr);
@@ -63,19 +63,15 @@ ServerJob::ServerJob(const TCHAR *type, const TCHAR *description, const shared_p
 ServerJob::~ServerJob()
 {
 	UnregisterJob(m_id);
-
 	ThreadJoin(m_workerThread);
-
 	MemFree(m_failureMessage);
-	MutexDestroy(m_notificationLock);
 }
 
 /**
  * Send notification to clients
  */
-void ServerJob::sendNotification(ClientSession *session, void *arg)
+void ServerJob::sendNotification(ClientSession *session, ServerJob *job)
 {
-	ServerJob *job = (ServerJob *)arg;
 	if (job->m_object->checkAccessRights(session->getUserId(), OBJECT_ACCESS_READ))
 		session->postMessage(&job->m_notificationMessage);
 }
@@ -88,16 +84,16 @@ void ServerJob::notifyClients(bool isStatusChange)
 	if (m_object == nullptr)
 		return;
 
-	time_t t = time(NULL);
+	time_t t = time(nullptr);
 	if (!isStatusChange && (t - m_lastNotification < 3))
 		return;	// Don't send progress notifications often then every 3 seconds
 	m_lastNotification = t;
 
-	MutexLock(m_notificationLock);
+	m_notificationLock.lock();
 	m_notificationMessage.setCode(CMD_JOB_CHANGE_NOTIFICATION);
 	fillMessage(&m_notificationMessage);
 	EnumerateClientSessions(ServerJob::sendNotification, this);
-	MutexUnlock(m_notificationLock);
+	m_notificationLock.unlock();
 }
 
 /**
@@ -106,7 +102,7 @@ void ServerJob::notifyClients(bool isStatusChange)
 void ServerJob::changeStatus(ServerJobStatus newStatus)
 {
 	m_status = newStatus;
-	m_lastStatusChange = time(NULL);
+	m_lastStatusChange = time(nullptr);
 	notifyClients(true);
 }
 
@@ -134,9 +130,8 @@ void ServerJob::markProgress(int pctCompleted)
 /**
  *  Worker thread starter
  */
-THREAD_RESULT THREAD_CALL ServerJob::WorkerThreadStarter(void *arg)
+void ServerJob::workerThread(ServerJob *job)
 {
-	ServerJob *job = (ServerJob *)arg;
 	DbgPrintf(4, _T("Job %d started"), job->m_id);
 	ServerJobResult result = job->run();
 
@@ -162,9 +157,8 @@ THREAD_RESULT THREAD_CALL ServerJob::WorkerThreadStarter(void *arg)
 	ThreadDetach(job->m_workerThread);
    job->m_workerThread = INVALID_THREAD_HANDLE;
 
-	if (job->m_owningQueue != NULL)
+	if (job->m_owningQueue != nullptr)
 		job->m_owningQueue->jobCompleted(job);
-	return THREAD_OK;
 }
 
 /**
@@ -173,7 +167,7 @@ THREAD_RESULT THREAD_CALL ServerJob::WorkerThreadStarter(void *arg)
 void ServerJob::start()
 {
 	m_status = JOB_ACTIVE;
-	m_workerThread = ThreadCreateEx(WorkerThreadStarter, 0, this);
+	m_workerThread = ThreadCreateEx(workerThread, this);
 }
 
 /**

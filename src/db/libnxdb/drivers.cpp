@@ -31,7 +31,7 @@ uint32_t g_sqlQueryExecTimeThreshold = 0xFFFFFFFF;
  * Loaded drivers
  */
 static DB_DRIVER s_drivers[MAX_DB_DRIVERS];
-static MUTEX s_driverListLock;
+static Mutex s_driverListLock;
 
 /**
  * Get symbol address and log errors
@@ -53,7 +53,6 @@ static void *DLGetSymbolAddrEx(HMODULE hModule, const char *pszSymbol, bool mand
 bool LIBNXDB_EXPORTABLE DBInit()
 {
 	memset(s_drivers, 0, sizeof(s_drivers));
-	s_driverListLock = MutexCreate();
 	return true;
 }
 
@@ -77,7 +76,7 @@ DB_DRIVER LIBNXDB_EXPORTABLE DBLoadDriver(const TCHAR *module, const TCHAR *init
 	int position = -1;
    int i; // have to define it here because otherwise HP aCC complains at goto statements
 
-	MutexLock(s_driverListLock);
+	s_driverListLock.lock();
 
 	driver = MemAllocStruct<db_driver_t>();
    driver->m_fpEventHandler = eventHandler;
@@ -119,7 +118,7 @@ DB_DRIVER LIBNXDB_EXPORTABLE DBLoadDriver(const TCHAR *module, const TCHAR *init
 
 	// Check name
 	driverName = *((const char **)DLGetSymbolAddr(driver->m_handle, "drvName", NULL));
-	if (driverName == NULL)
+	if (driverName == nullptr)
 	{
 	   nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_DRIVER, _T("Unable to find all required entry points in database driver \"%s\""), module);
 		goto failure;
@@ -133,7 +132,7 @@ DB_DRIVER LIBNXDB_EXPORTABLE DBLoadDriver(const TCHAR *module, const TCHAR *init
 			position = i;
 			break;
 		}
-		if (s_drivers[i] == NULL)
+		if (s_drivers[i] == nullptr)
 			position = i;
 	}
 
@@ -225,28 +224,28 @@ DB_DRIVER LIBNXDB_EXPORTABLE DBLoadDriver(const TCHAR *module, const TCHAR *init
    }
 
    // Success
-   driver->m_mutexReconnect = MutexCreate();
+   driver->m_mutexReconnect = new Mutex();
 	driver->m_name = driverName;
 	driver->m_refCount = 1;
    driver->m_defaultPrefetchLimit = 10;
 	s_drivers[position] = driver;
 	nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_DRIVER, _T("Database driver \"%s\" loaded and initialized successfully"), module);
-	MutexUnlock(s_driverListLock);
+	s_driverListLock.unlock();
    return driver;
 
 failure:
-	if (driver->m_handle != NULL)
+	if (driver->m_handle != nullptr)
 		DLClose(driver->m_handle);
 	MemFree(driver);
-	MutexUnlock(s_driverListLock);
-	return NULL;
+   s_driverListLock.unlock();
+	return nullptr;
 
 reuse_driver:
-	if (driver->m_handle != NULL)
+	if (driver->m_handle != nullptr)
 		DLClose(driver->m_handle);
 	MemFree(driver);
 	s_drivers[position]->m_refCount++;
-	MutexUnlock(s_driverListLock);
+   s_driverListLock.unlock();
 	return s_drivers[position];
 }
 
@@ -255,10 +254,10 @@ reuse_driver:
  */
 void LIBNXDB_EXPORTABLE DBUnloadDriver(DB_DRIVER driver)
 {
-   if (driver == NULL)
+   if (driver == nullptr)
       return;
 
-	MutexLock(s_driverListLock);
+   s_driverListLock.lock();
 
 	for(int i = 0; i < MAX_DB_DRIVERS; i++)
 	{
@@ -269,15 +268,15 @@ void LIBNXDB_EXPORTABLE DBUnloadDriver(DB_DRIVER driver)
 			{
 				driver->m_fpDrvUnload();
 				DLClose(driver->m_handle);
-				MutexDestroy(driver->m_mutexReconnect);
+				delete driver->m_mutexReconnect;
 				MemFree(driver);
-				s_drivers[i] = NULL;
+				s_drivers[i] = nullptr;
 			}
 			break;
 		}
 	}
 
-	MutexUnlock(s_driverListLock);
+   s_driverListLock.unlock();
 }
 
 /**

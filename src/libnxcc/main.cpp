@@ -103,7 +103,7 @@ bool LIBNXCC_EXPORTABLE ClusterInit(Config *config, const TCHAR *section, Cluste
    memset(g_nxccNodes, 0, sizeof(g_nxccNodes));
    for(int i = 0; i < CLUSTER_MAX_NODE_ID; i++)
    {
-      g_nxccNodes[i].m_mutex = MutexCreate();
+      g_nxccNodes[i].m_mutex = new Mutex(MutexType::FAST);
       g_nxccNodes[i].m_socket = INVALID_SOCKET;
       g_nxccNodes[i].m_receiverThread = INVALID_THREAD_HANDLE;
    }
@@ -146,7 +146,7 @@ void LIBNXCC_EXPORTABLE ClusterShutdown()
 
    for(int i = 0; i < CLUSTER_MAX_NODE_ID; i++)
    {
-      MutexDestroy(g_nxccNodes[i].m_mutex);
+      delete g_nxccNodes[i].m_mutex;
       delete g_nxccNodes[i].m_msgWaitQueue;
    }
 }

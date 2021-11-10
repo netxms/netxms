@@ -21,6 +21,7 @@
 **/
 
 #include "nxcore.h"
+#include <nxcore_jobs.h>
 
 #define DEBUG_TAG _T("job.manager")
 

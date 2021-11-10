@@ -635,7 +635,7 @@ void CheckRange(const InetAddressListElement& range, void (*callback)(const Inet
 /**
  * Active discovery thread wakeup condition
  */
-static CONDITION s_activeDiscoveryWakeup = ConditionCreate(false);
+static Condition s_activeDiscoveryWakeup(false);
 
 /**
  * Active discovery poller thread
@@ -652,7 +652,7 @@ static void ActiveDiscoveryPoller()
    // Main loop
    while(!IsShutdownInProgress())
    {
-      ConditionWait(s_activeDiscoveryWakeup, sleepTime);
+      s_activeDiscoveryWakeup.wait(sleepTime);
       if (IsShutdownInProgress())
          break;
 
@@ -784,7 +784,7 @@ static void QueueForPolling(NetObj *object, void *data)
 /**
  * Node and condition queuing thread
  */
-void PollManager(CONDITION startCondition)
+void PollManager(Condition *startCondition)
 {
    ThreadSetName("PollManager");
    g_pollerThreadPool = ThreadPoolCreate( _T("POLLERS"),
@@ -798,7 +798,7 @@ void PollManager(CONDITION startCondition)
    uint32_t watchdogId = WatchdogAddThread(_T("Poll Manager"), 5);
    int counter = 0;
 
-   ConditionSet(startCondition);
+   startCondition->set();
 
    WatchdogStartSleep(watchdogId);
    while(!SleepAndCheckForShutdown(5))
@@ -819,7 +819,7 @@ void PollManager(CONDITION startCondition)
 	   WatchdogStartSleep(watchdogId);
    }
 
-   ConditionSet(s_activeDiscoveryWakeup);
+   s_activeDiscoveryWakeup.set();
    ThreadJoin(activeDiscoveryPollerThread);
 
    // Clear node poller queue
@@ -833,9 +833,6 @@ void PollManager(CONDITION startCondition)
 
    nxlog_debug_tag(DEBUG_TAG_POLL_MANAGER, 2, _T("Waiting for outstanding poll requests"));
    ThreadPoolDestroy(g_pollerThreadPool);
-
-   ConditionDestroy(s_activeDiscoveryWakeup);
-   s_activeDiscoveryWakeup = INVALID_CONDITION_HANDLE;
 
    nxlog_debug_tag(DEBUG_TAG_POLL_MANAGER, 1, _T("Poll manager main thread terminated"));
 }
@@ -886,7 +883,7 @@ void ResetDiscoveryPoller()
    else
       g_flags &= ~AF_SYSLOG_DISCOVERY;
 
-   ConditionSet(s_activeDiscoveryWakeup);
+   s_activeDiscoveryWakeup.set();
 }
 
 /**
@@ -894,7 +891,7 @@ void ResetDiscoveryPoller()
  */
 void WakeupActiveDiscoveryThread()
 {
-   ConditionSet(s_activeDiscoveryWakeup);
+   s_activeDiscoveryWakeup.set();
 }
 
 /**

@@ -25,7 +25,7 @@
 /**
  * Abstract class constructor
  */
-UPSInterface::UPSInterface(const TCHAR *device)
+UPSInterface::UPSInterface(const TCHAR *device) : m_condStop(true)
 {
    m_id = 0;
    m_name = nullptr;
@@ -34,8 +34,6 @@ UPSInterface::UPSInterface(const TCHAR *device)
    memset(m_paramList, 0, sizeof(UPS_PARAMETER) * UPS_PARAM_COUNT);
    for(int i = 0; i < UPS_PARAM_COUNT; i++)
       m_paramList[i].flags |= UPF_NULL_VALUE;
-   m_mutex = MutexCreate();
-   m_condStop = ConditionCreate(true);
    m_commThread = INVALID_THREAD_HANDLE;
 }
 
@@ -44,12 +42,10 @@ UPSInterface::UPSInterface(const TCHAR *device)
  */
 UPSInterface::~UPSInterface()
 {
-   ConditionSet(m_condStop);
+   m_condStop.set();
    ThreadJoin(m_commThread);
    MemFree(m_device);
    MemFree(m_name);
-   MutexDestroy(m_mutex);
-   ConditionDestroy(m_condStop);
 }
 
 /**
@@ -70,7 +66,7 @@ void UPSInterface::setName(const char *pszName)
 #ifdef UNICODE
       m_name = WideStringFromMBString(pszName);
 #else
-      m_name = strdup(pszName);
+      m_name = MemCopyStringA(pszName);
 #endif
    }
 }
@@ -130,7 +126,7 @@ LONG UPSInterface::getParameter(int parameterIndex, TCHAR *value)
       return SYSINFO_RC_UNSUPPORTED;
 
    LONG rc;
-   MutexLock(m_mutex);
+   m_mutex.lock();
    if (m_paramList[parameterIndex].flags & UPF_NOT_SUPPORTED)
    {
       rc = SYSINFO_RC_UNSUPPORTED;
@@ -148,7 +144,7 @@ LONG UPSInterface::getParameter(int parameterIndex, TCHAR *value)
 #endif
       rc = SYSINFO_RC_SUCCESS;
    }
-   MutexUnlock(m_mutex);
+   m_mutex.unlock();
    return rc;
 }
 
@@ -274,10 +270,10 @@ void UPSInterface::commThread()
       nxlog_write_tag(NXLOG_INFO, UPS_DEBUG_TAG, _T("Established communication with device #%d \"%s\""), m_id, m_name);
 
       // Open successfully, query all parameters
-      MutexLock(m_mutex);
+      m_mutex.lock();
       queryStaticData();
       queryDynamicData();
-      MutexUnlock(m_mutex);
+      m_mutex.unlock();
 
       nxlog_debug_tag(UPS_DEBUG_TAG, 5, _T("Initial poll finished for device #%d \"%s\""), m_id, m_name);
    }
@@ -288,7 +284,7 @@ void UPSInterface::commThread()
 
    for(nIteration = 0; ; nIteration++)
    {
-      if (ConditionWait(m_condStop, 10000))
+      if (m_condStop.wait(10000))
          break;
 
       // Try to connect to device if it is not connected
@@ -320,7 +316,7 @@ void UPSInterface::commThread()
       // query parameters if we are connected
       if (m_isConnected)
       {
-         MutexLock(m_mutex);
+         m_mutex.lock();
 
          // Check rarely changing parameters only every 100th poll
          if (nIteration == 100)
@@ -330,7 +326,7 @@ void UPSInterface::commThread()
          }
          queryDynamicData();
          
-         MutexUnlock(m_mutex);
+         m_mutex.unlock();
          nxlog_debug_tag(UPS_DEBUG_TAG, 9, _T("Poll finished for device #%d \"%s\""), m_id, m_name);
       }
    }

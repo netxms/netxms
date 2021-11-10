@@ -41,7 +41,7 @@ struct LOCK_INFO
 /**
  * EPP lock
  */
-static MUTEX m_hMutexLockerAccess = NULL;
+static Mutex s_mutex(MutexType::FAST);
 static LOCK_INFO s_eppLock = { UNLOCKED, _T("")};
 
 /**
@@ -66,7 +66,6 @@ bool LockDatabase(InetAddress *lockAddr, TCHAR *lockInfo)
       GetSysInfoStr(buffer, sizeof(buffer));
       ConfigWriteStr(_T("DBLockInfo"), buffer, true, false);
       ConfigWriteULong(_T("DBLockPID"), GetCurrentProcessId(), true, false);
-      m_hMutexLockerAccess = MutexCreate();
       success = true;
    }
    else if (!_tcsncmp(buffer, _T("NXDBMGR"), 7))
@@ -111,7 +110,7 @@ BOOL LockEPP(int sessionId, const TCHAR *pszOwnerInfo, UINT32 *pdwCurrentOwner, 
 
    DbgPrintf(5, _T("*Locks* Attempting to lock Event Processing Policy by %d (%s)"),
              sessionId, pszOwnerInfo != NULL ? pszOwnerInfo : _T("NULL"));
-   MutexLock(m_hMutexLockerAccess);
+   s_mutex.lock();
    if (s_eppLock.dwLockStatus == UNLOCKED)
    {
       s_eppLock.dwLockStatus = (UINT32)sessionId;
@@ -128,7 +127,7 @@ BOOL LockEPP(int sessionId, const TCHAR *pszOwnerInfo, UINT32 *pdwCurrentOwner, 
                 sessionId, pszOwnerInfo != NULL ? pszOwnerInfo : _T("NULL"),
                 s_eppLock.szOwnerInfo);
    }
-   MutexUnlock(m_hMutexLockerAccess);
+   s_mutex.unlock();
    return bSuccess;
 }
 
@@ -137,10 +136,10 @@ BOOL LockEPP(int sessionId, const TCHAR *pszOwnerInfo, UINT32 *pdwCurrentOwner, 
  */
 void UnlockEPP()
 {
-   MutexLock(m_hMutexLockerAccess);
+   s_mutex.lock();
    s_eppLock.dwLockStatus = UNLOCKED;
    s_eppLock.szOwnerInfo[0] = 0;
-   MutexUnlock(m_hMutexLockerAccess);
+   s_mutex.unlock();
    DbgPrintf(5, _T("*Locks* Event Processing Policy unlocked"));
 }
 
@@ -149,12 +148,12 @@ void UnlockEPP()
  */
 void RemoveAllSessionLocks(int sessionId)
 {
-   MutexLock(m_hMutexLockerAccess);
+   s_mutex.lock();
    if (s_eppLock.dwLockStatus == (UINT32)sessionId)
    {
       s_eppLock.dwLockStatus = UNLOCKED;
       s_eppLock.szOwnerInfo[0] = 0;
    }
-   MutexUnlock(m_hMutexLockerAccess);
+   s_mutex.unlock();
    DbgPrintf(5, _T("*Locks* All locks for session %d removed"), sessionId);
 }

@@ -25,12 +25,11 @@
 /**
  * Auto bind object constructor
  */
-AutoBindTarget::AutoBindTarget(NetObj *_this)
+AutoBindTarget::AutoBindTarget(NetObj *_this) : m_mutexProperties(MutexType::FAST)
 {
    m_this = _this;
    memset(m_autoBindFilters, 0, sizeof(m_autoBindFilters));
    memset(m_autoBindFilterSources, 0, sizeof(m_autoBindFilterSources));
-   m_mutexProperties = MutexCreateFast();
    m_autoBindFlags = 0;
 }
 
@@ -44,7 +43,6 @@ AutoBindTarget::~AutoBindTarget()
       delete m_autoBindFilters[i];
       MemFree(m_autoBindFilterSources[i]);
    }
-   MutexDestroy(m_mutexProperties);
 }
 
 /**

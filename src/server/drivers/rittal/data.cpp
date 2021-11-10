@@ -28,7 +28,6 @@
 RittalDriverData::RittalDriverData() : HostMibDriverData(), m_devices(32, 32, Ownership::True)
 {
    m_cacheTimestamp = 0;
-   m_cacheLock = MutexCreate();
 }
 
 /**
@@ -36,13 +35,12 @@ RittalDriverData::RittalDriverData() : HostMibDriverData(), m_devices(32, 32, Ow
  */
 RittalDriverData::~RittalDriverData()
 {
-   MutexDestroy(m_cacheLock);
 }
 
 /**
  * Get device by bus and position
  */
-RittalDevice *RittalDriverData::getDevice(UINT32 bus, UINT32 position)
+RittalDevice *RittalDriverData::getDevice(uint32_t bus, uint32_t position)
 {
    for(int i = 0; i < m_devices.size(); i++)
    {
@@ -56,7 +54,7 @@ RittalDevice *RittalDriverData::getDevice(UINT32 bus, UINT32 position)
 /**
  * Get device by index
  */
-RittalDevice *RittalDriverData::getDevice(UINT32 index)
+RittalDevice *RittalDriverData::getDevice(uint32_t index)
 {
    for(int i = 0; i < m_devices.size(); i++)
    {
@@ -79,7 +77,7 @@ bool RittalDriverData::getMetric(const TCHAR *name, SNMP_Transport *snmp, Rittal
 
    TCHAR buffer[32];
    _tcslcpy(buffer, name, std::min((size_t)32, (size_t)(s1 - name) + 1));
-   UINT32 bus = _tcstoul(buffer, NULL, 10);
+   uint32_t bus = _tcstoul(buffer, NULL, 10);
 
    s1++;
    const TCHAR *s2 = _tcschr(s1, _T('/'));
@@ -87,10 +85,10 @@ bool RittalDriverData::getMetric(const TCHAR *name, SNMP_Transport *snmp, Rittal
       return false;
 
    _tcslcpy(buffer, s1, std::min((size_t)32, (size_t)(s2 - s1) + 1));
-   UINT32 position = _tcstoul(buffer, NULL, 10);
+   uint32_t position = _tcstoul(buffer, NULL, 10);
 
-   MutexLock(m_cacheLock);
-   if ((m_cacheTimestamp == 0) || (time(NULL) - m_cacheTimestamp > 3600))
+   m_cacheLock.lock();
+   if ((m_cacheTimestamp == 0) || (time(nullptr) - m_cacheTimestamp > 3600))
    {
       updateDeviceInfoInternal(snmp);
    }
@@ -115,14 +113,14 @@ bool RittalDriverData::getMetric(const TCHAR *name, SNMP_Transport *snmp, Rittal
    {
       nxlog_debug_tag(RITTAL_DEBUG_TAG, 6, _T("getMetric(%s): cannot find device at bus:%d position:%d"), name, bus, position);
    }
-   MutexUnlock(m_cacheLock);
+   m_cacheLock.unlock();
    return success;
 }
 
 /**
  * Callback for reading device information
  */
-UINT32 RittalDriverData::deviceInfoWalkCallback(SNMP_Variable *v, SNMP_Transport *snmp)
+uint32_t RittalDriverData::deviceInfoWalkCallback(SNMP_Variable *v, SNMP_Transport *snmp)
 {
    SNMP_ObjectId oid = v->getName();
 
@@ -156,7 +154,7 @@ UINT32 RittalDriverData::deviceInfoWalkCallback(SNMP_Variable *v, SNMP_Transport
 /**
  * Callback for reading metric information
  */
-UINT32 RittalDriverData::metricInfoWalkCallback(SNMP_Variable *v, SNMP_Transport *snmp)
+uint32_t RittalDriverData::metricInfoWalkCallback(SNMP_Variable *v, SNMP_Transport *snmp)
 {
    SNMP_ObjectId oid = v->getName();
 
@@ -216,9 +214,9 @@ void RittalDriverData::updateDeviceInfoInternal(SNMP_Transport *snmp)
  */
 void RittalDriverData::updateDeviceInfo(SNMP_Transport *snmp)
 {
-   MutexLock(m_cacheLock);
+   m_cacheLock.lock();
    updateDeviceInfoInternal(snmp);
-   MutexUnlock(m_cacheLock);
+   m_cacheLock.unlock();
 }
 
 /**
@@ -226,7 +224,7 @@ void RittalDriverData::updateDeviceInfo(SNMP_Transport *snmp)
  */
 void RittalDriverData::registerMetrics(ObjectArray<AgentParameterDefinition> *metrics)
 {
-   MutexLock(m_cacheLock);
+   m_cacheLock.lock();
    for(int i = 0; i < m_devices.size(); i++)
    {
       RittalDevice *d = m_devices.get(i);
@@ -238,5 +236,5 @@ void RittalDriverData::registerMetrics(ObjectArray<AgentParameterDefinition> *me
          metrics->add(new AgentParameterDefinition(name, m->description, (m->dataType == 2) ? DCI_DT_INT : DCI_DT_STRING));
       }
    }
-   MutexUnlock(m_cacheLock);
+   m_cacheLock.unlock();
 }

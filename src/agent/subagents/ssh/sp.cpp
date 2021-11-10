@@ -1,6 +1,6 @@
 /*
 ** NetXMS SSH subagent
-** Copyright (C) 2004-2020 Victor Kirhenshtein
+** Copyright (C) 2004-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -25,9 +25,9 @@
  * Session pool
  */
 static ObjectArray<SSHSession> s_sessions(16, 16, Ownership::True);
-static MUTEX s_lock = MutexCreate();
+static Mutex s_lock(MutexType::FAST);
 static VolatileCounter s_sessionId = 0;
-static CONDITION s_shutdownCondition = ConditionCreate(TRUE);
+static Condition s_shutdownCondition(true);
 static THREAD s_housekeeperThread = INVALID_THREAD_HANDLE;
 
 /**
@@ -35,18 +35,18 @@ static THREAD s_housekeeperThread = INVALID_THREAD_HANDLE;
  */
 SSHSession *AcquireSession(const InetAddress& addr, UINT16 port, const TCHAR *user, const TCHAR *password, const shared_ptr<KeyPair>& keys)
 {
-   MutexLock(s_lock);
+   s_lock.lock();
    for(int i = 0; i < s_sessions.size(); i++)
    {
       SSHSession *s = s_sessions.get(i);
       if (s->match(addr, port, user) && s->acquire())
       {
          nxlog_debug_tag(DEBUG_TAG, 7, _T("AcquireSession: acquired existing session %s"), s->getName());
-         MutexUnlock(s_lock);
+         s_lock.unlock();
          return s;
       }
    }
-   MutexUnlock(s_lock);
+   s_lock.unlock();
 
    // No matching sessions, create new one
    SSHSession *session = new SSHSession(addr, port, InterlockedIncrement(&s_sessionId));
@@ -58,9 +58,9 @@ SSHSession *AcquireSession(const InetAddress& addr, UINT16 port, const TCHAR *us
    nxlog_debug_tag(DEBUG_TAG, 7, _T("AcquireSession: created new session %s"), session->getName());
 
    session->acquire();
-   MutexLock(s_lock);
+   s_lock.lock();
    s_sessions.add(session);
-   MutexUnlock(s_lock);
+   s_lock.unlock();
    return session;
 }
 
@@ -69,14 +69,14 @@ SSHSession *AcquireSession(const InetAddress& addr, UINT16 port, const TCHAR *us
  */
 void ReleaseSession(SSHSession *session)
 {
-   MutexLock(s_lock);
+   s_lock.lock();
    session->release();
    if (!session->isConnected())
    {
       nxlog_debug_tag(DEBUG_TAG, 7, _T("ReleaseSession: disconnected session %s removed"), session->getName());
       s_sessions.remove(session);
    }
-   MutexUnlock(s_lock);
+   s_lock.unlock();
 }
 
 /**
@@ -85,9 +85,9 @@ void ReleaseSession(SSHSession *session)
 static THREAD_RESULT THREAD_CALL HousekeeperThread(void *arg)
 {
    ObjectArray<SSHSession> deleteList(16, 16, Ownership::True);
-   while(!ConditionWait(s_shutdownCondition, 30000))
+   while(!s_shutdownCondition.wait(30000))
    {
-      MutexLock(s_lock);
+      s_lock.lock();
       time_t now = time(NULL);
       for(int i = 0; i < s_sessions.size(); i++)
       {
@@ -100,7 +100,7 @@ static THREAD_RESULT THREAD_CALL HousekeeperThread(void *arg)
             deleteList.add(s);
          }
       }
-      MutexUnlock(s_lock);
+      s_lock.unlock();
       deleteList.clear();
    }
    return THREAD_OK;
@@ -120,12 +120,12 @@ void InitializeSessionPool()
  */
 void ShutdownSessionPool()
 {
-   ConditionSet(s_shutdownCondition);
+   s_shutdownCondition.set();
    ThreadJoin(s_housekeeperThread);
 
-   MutexLock(s_lock);
+   s_lock.lock();
    s_sessions.clear();
-   MutexUnlock(s_lock);
+   s_lock.unlock();
 
    nxlog_debug_tag(DEBUG_TAG, 5, _T("ShutdownSessionPool: connection pool closed"));
 }

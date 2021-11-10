@@ -95,7 +95,7 @@ static TCHAR s_dumpDir[MAX_PATH] = _T("C:\\");
 static THREAD m_listenerThread = INVALID_THREAD_HANDLE;
 
 #if defined(_WIN32)
-static CONDITION m_hCondShutdown = INVALID_CONDITION_HANDLE;
+static Condition m_condShutdown(true);
 #endif
 
 #if !defined(_WIN32)
@@ -256,7 +256,7 @@ void Shutdown()
 
    // Notify main thread about shutdown
 #ifdef _WIN32
-   ConditionSet(m_hCondShutdown);
+   m_condShutdown.set();
 #endif
    
    // Remove PID file
@@ -275,7 +275,7 @@ void Main()
    if (g_flags & AF_DAEMON)
    {
 #if defined(_WIN32)
-      ConditionWait(m_hCondShutdown, INFINITE);
+      m_condShutdown.wait(INFINITE);
 #else
       StartMainLoop(SignalHandler, NULL);
 #endif
@@ -542,10 +542,6 @@ int main(int argc, char *argv[])
 	            }
 #endif   /* _WIN32 */
 
-#ifdef _WIN32
-					if (m_hCondShutdown != INVALID_CONDITION_HANDLE)
-						ConditionDestroy(m_hCondShutdown);
-#endif
 				}
 				else
 				{

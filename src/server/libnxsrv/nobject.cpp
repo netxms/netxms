@@ -27,11 +27,10 @@
 /**
  * Default constructor for the class
  */
-NObject::NObject() : m_customAttributes(Ownership::True), m_parentList(8, 8), m_childList(0, 32)
+NObject::NObject() : m_customAttributes(Ownership::True), m_parentList(8, 8), m_childList(0, 32), m_customAttributeLock(MutexType::FAST)
 {
    m_id = 0;
    m_name[0] = 0;
-   m_customAttributeLock = MutexCreateFast();
    m_rwlockParentList = RWLockCreate();
    m_rwlockChildList = RWLockCreate();
 }
@@ -41,7 +40,6 @@ NObject::NObject() : m_customAttributes(Ownership::True), m_parentList(8, 8), m_
  */
 NObject::~NObject()
 {
-   MutexDestroy(m_customAttributeLock);
    RWLockDestroy(m_rwlockParentList);
    RWLockDestroy(m_rwlockChildList);
 }

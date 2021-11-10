@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -37,7 +37,7 @@ NamedPipeListener::NamedPipeListener(const TCHAR *name, HPIPE handle, NamedPipeR
    m_stop = false;
    _tcslcpy(m_user, CHECK_NULL_EX(user), 64);
 #ifdef _WIN32
-   m_stopEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
+   m_stopEvent = CreateEvent(nullptr, TRUE, FALSE, nullptr);
 #endif
 }
 

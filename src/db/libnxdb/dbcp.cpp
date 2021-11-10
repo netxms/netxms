@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Database Abstraction Library
-** Copyright (C) 2008-2020 Raden Solutions
+** Copyright (C) 2008-2021 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -36,11 +36,11 @@ static int m_maxPoolSize;
 static int m_cooldownTime;
 static int m_connectionTTL;
 
-static MUTEX m_poolAccessMutex = INVALID_MUTEX_HANDLE;
+static Mutex m_poolAccessMutex;
 static ObjectArray<PoolConnectionInfo> m_connections;
 static THREAD m_maintThread = INVALID_THREAD_HANDLE;
-static CONDITION m_condShutdown = INVALID_CONDITION_HANDLE;
-static CONDITION m_condRelease = INVALID_CONDITION_HANDLE;
+static Condition m_condShutdown(true);
+static Condition m_condRelease(false);
 
 #define DEBUG_TAG _T("db.cpool")
 
@@ -52,7 +52,7 @@ static bool DBConnectionPoolPopulate()
 	TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
 	bool success = false;
 
-	MutexLock(m_poolAccessMutex);
+	m_poolAccessMutex.lock();
 	for(int i = 0; i < m_basePoolSize; i++)
 	{
       PoolConnectionInfo *conn = new PoolConnectionInfo;
@@ -76,7 +76,7 @@ static bool DBConnectionPoolPopulate()
          delete conn;
       }
 	}
-	MutexUnlock(m_poolAccessMutex);
+	m_poolAccessMutex.unlock();
 	return success;
 }
 
@@ -85,9 +85,9 @@ static bool DBConnectionPoolPopulate()
  */
 static void DBConnectionPoolShrink()
 {
-	MutexLock(m_poolAccessMutex);
+	m_poolAccessMutex.lock();
 
-   time_t now = time(NULL);
+   time_t now = time(nullptr);
    for(int i = m_basePoolSize; i < m_connections.size(); i++)
 	{
       PoolConnectionInfo *conn = m_connections.get(i);
@@ -100,7 +100,7 @@ static void DBConnectionPoolShrink()
 		}
 	}
 
-	MutexUnlock(m_poolAccessMutex);
+	m_poolAccessMutex.unlock();
 }
 
 /*
@@ -126,7 +126,7 @@ static bool ResetConnection(PoolConnectionInfo *conn)
 		nxlog_debug_tag(DEBUG_TAG, 3, _T("Connection %p reconnect failure (%s)"), conn, errorText);
 	}
    conn->resetOnRelease = false;
-   return conn->handle != NULL;
+   return conn->handle != nullptr;
 }
 
 /**
@@ -142,9 +142,9 @@ static int ResetListSortCallback(const PoolConnectionInfo **e1, const PoolConnec
  */
 static void ResetExpiredConnections()
 {
-   time_t now = time(NULL);
+   time_t now = time(nullptr);
 
-   MutexLock(m_poolAccessMutex);
+   m_poolAccessMutex.lock();
 
 	int i, availCount = 0;
    ObjectArray<PoolConnectionInfo> reconnList(m_connections.size(), 16, Ownership::False);
@@ -171,14 +171,14 @@ static void ResetExpiredConnections()
 
    for(i = 0; i < count; i++)
       reconnList.get(i)->inUse = true;
-   MutexUnlock(m_poolAccessMutex);
+   m_poolAccessMutex.unlock();
 
    // do reconnects
    for(i = 0; i < count; i++)
 	{
    	PoolConnectionInfo *conn = reconnList.get(i);
    	bool success = ResetConnection(conn);
-   	MutexLock(m_poolAccessMutex);
+   	m_poolAccessMutex.lock();
 		if (success)
 		{
 			conn->inUse = false;
@@ -187,7 +187,7 @@ static void ResetExpiredConnections()
 		{
 			m_connections.remove(conn);
 		}
-		MutexUnlock(m_poolAccessMutex);
+		m_poolAccessMutex.unlock();
 	}
 }
 
@@ -199,7 +199,7 @@ static THREAD_RESULT THREAD_CALL MaintenanceThread(void *arg)
    ThreadSetName("DBPoolMaint");
    nxlog_debug_tag(DEBUG_TAG, 1, _T("Database Connection Pool maintenance thread started"));
 
-   while(!ConditionWait(m_condShutdown, (m_connectionTTL > 0) ? m_connectionTTL * 750 : 300000))
+   while(!m_condShutdown.wait((m_connectionTTL > 0) ? m_connectionTTL * 750 : 300000))
    {
       DBConnectionPoolShrink();
       if (m_connectionTTL > 0)
@@ -235,17 +235,11 @@ bool LIBNXDB_EXPORTABLE DBConnectionPoolStartup(DB_DRIVER driver, const TCHAR *s
 	m_cooldownTime = cooldownTime;
    m_connectionTTL = connTTL;
 
-	m_poolAccessMutex = MutexCreate();
    m_connections.setOwner(Ownership::True);
-   m_condShutdown = ConditionCreate(TRUE);
-   m_condRelease = ConditionCreate(FALSE);
 
 	if (!DBConnectionPoolPopulate())
 	{
 	   // cannot open at least one connection
-	   ConditionDestroy(m_condShutdown);
-	   ConditionDestroy(m_condRelease);
-	   MutexDestroy(m_poolAccessMutex);
 	   return false;
 	}
 
@@ -265,12 +259,8 @@ void LIBNXDB_EXPORTABLE DBConnectionPoolShutdown()
    if (!s_initialized)
       return;
 
-   ConditionSet(m_condShutdown);
+   m_condShutdown.set();
    ThreadJoin(m_maintThread);
-
-   ConditionDestroy(m_condShutdown);
-   ConditionDestroy(m_condRelease);
-	MutexDestroy(m_poolAccessMutex);
 
    for(int i = 0; i < m_connections.size(); i++)
 	{
@@ -288,7 +278,7 @@ void LIBNXDB_EXPORTABLE DBConnectionPoolShutdown()
  */
 void LIBNXDB_EXPORTABLE DBConnectionPoolReset()
 {
-   MutexLock(m_poolAccessMutex);
+   m_poolAccessMutex.lock();
 
    for(int i = 0; i < m_connections.size(); i++)
    {
@@ -313,7 +303,7 @@ void LIBNXDB_EXPORTABLE DBConnectionPoolReset()
       }
    }
 
-   MutexUnlock(m_poolAccessMutex);
+   m_poolAccessMutex.unlock();
 }
 
 /**
@@ -323,12 +313,12 @@ void LIBNXDB_EXPORTABLE DBConnectionPoolReset()
 DB_HANDLE LIBNXDB_EXPORTABLE __DBConnectionPoolAcquireConnection(const char *srcFile, int srcLine)
 {
 retry:
-	MutexLock(m_poolAccessMutex);
+	m_poolAccessMutex.lock();
 
-	DB_HANDLE handle = NULL;
+	DB_HANDLE handle = nullptr;
 
 	// find less used connection
-   UINT32 count = 0xFFFFFFFF;
+   uint32_t count = 0xFFFFFFFF;
 	int index = -1;
    for(int i = 0; (i < m_connections.size()) && (count > 0); i++)
 	{
@@ -345,9 +335,9 @@ retry:
 		PoolConnectionInfo *conn = m_connections.get(index);
 		handle = conn->handle;
 		conn->inUse = true;
-		conn->lastAccessTime = time(NULL);
+		conn->lastAccessTime = time(nullptr);
 		conn->usageCount++;
-		strncpy(conn->srcFile, srcFile, 128);
+		strlcpy(conn->srcFile, srcFile, 128);
 		conn->srcLine = srcLine;
 	}
    else if (m_connections.size() < m_maxPoolSize)
@@ -362,7 +352,7 @@ retry:
          conn->connectTime = time(NULL);
          conn->lastAccessTime = conn->connectTime;
          conn->usageCount = 0;
-         strncpy(conn->srcFile, srcFile, 128);
+         strlcpy(conn->srcFile, srcFile, 128);
          conn->srcLine = srcLine;
          m_connections.add(conn);
          handle = conn->handle;
@@ -375,12 +365,12 @@ retry:
       }
 	}
 
-	MutexUnlock(m_poolAccessMutex);
+	m_poolAccessMutex.unlock();
 
 	if (handle == NULL)
 	{
    	nxlog_debug_tag(DEBUG_TAG, 1, _T("Database connection pool exhausted (call from %hs:%d)"), srcFile, srcLine);
-      ConditionWait(m_condRelease, 10000);
+      m_condRelease.wait(10000);
       nxlog_debug_tag(DEBUG_TAG, 5, _T("Retry acquire connection (call from %hs:%d)"), srcFile, srcLine);
       goto retry;
 	}
@@ -394,7 +384,7 @@ retry:
  */
 void LIBNXDB_EXPORTABLE DBConnectionPoolReleaseConnection(DB_HANDLE handle)
 {
-	MutexLock(m_poolAccessMutex);
+	m_poolAccessMutex.lock();
 
    for(int i = 0; i < m_connections.size(); i++)
 	{
@@ -405,9 +395,9 @@ void LIBNXDB_EXPORTABLE DBConnectionPoolReleaseConnection(DB_HANDLE handle)
          conn->srcLine = 0;
          if (conn->resetOnRelease)
          {
-            MutexUnlock(m_poolAccessMutex);
+            m_poolAccessMutex.unlock();
             bool success = ResetConnection(conn);
-            MutexLock(m_poolAccessMutex);
+            m_poolAccessMutex.lock();
             if (success)
             {
                conn->inUse = false;
@@ -426,10 +416,10 @@ void LIBNXDB_EXPORTABLE DBConnectionPoolReleaseConnection(DB_HANDLE handle)
 		}
 	}
 
-	MutexUnlock(m_poolAccessMutex);
+	m_poolAccessMutex.unlock();
 
    nxlog_debug_tag(DEBUG_TAG, 7, _T("Handle %p released"), handle);
-   ConditionPulse(m_condRelease);
+   m_condRelease.pulse();
 }
 
 /**
@@ -437,9 +427,9 @@ void LIBNXDB_EXPORTABLE DBConnectionPoolReleaseConnection(DB_HANDLE handle)
  */
 int LIBNXDB_EXPORTABLE DBConnectionPoolGetSize()
 {
-	MutexLock(m_poolAccessMutex);
+	m_poolAccessMutex.lock();
    int size = m_connections.size();
-	MutexUnlock(m_poolAccessMutex);
+	m_poolAccessMutex.unlock();
    return size;
 }
 
@@ -449,11 +439,11 @@ int LIBNXDB_EXPORTABLE DBConnectionPoolGetSize()
 int LIBNXDB_EXPORTABLE DBConnectionPoolGetAcquiredCount()
 {
    int count = 0;
-	MutexLock(m_poolAccessMutex);
+	m_poolAccessMutex.lock();
    for(int i = 0; i < m_connections.size(); i++)
       if (m_connections.get(i)->inUse)
          count++;
-	MutexUnlock(m_poolAccessMutex);
+	m_poolAccessMutex.unlock();
    return count;
 }
 
@@ -464,7 +454,7 @@ int LIBNXDB_EXPORTABLE DBConnectionPoolGetAcquiredCount()
 ObjectArray<PoolConnectionInfo> LIBNXDB_EXPORTABLE *DBConnectionPoolGetConnectionList()
 {
    ObjectArray<PoolConnectionInfo> *list = new ObjectArray<PoolConnectionInfo>(32, 32, Ownership::True);
-   MutexLock(m_poolAccessMutex);
+   m_poolAccessMutex.lock();
    for(int i = 0; i < m_connections.size(); i++)
    {
       PoolConnectionInfo *curr = m_connections.get(i);
@@ -475,6 +465,6 @@ ObjectArray<PoolConnectionInfo> LIBNXDB_EXPORTABLE *DBConnectionPoolGetConnectio
          list->add(ci);
       }
    }
-   MutexUnlock(m_poolAccessMutex);
+   m_poolAccessMutex.unlock();
    return list;
 }

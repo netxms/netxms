@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Client Library
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -26,10 +26,9 @@
 /**
  * Controller constructor
  */
-EventController::EventController(NXCSession *session) : Controller(session)
+EventController::EventController(NXCSession *session) : Controller(session), m_eventTemplateLock(MutexType::FAST)
 {
    m_eventTemplates = NULL;
-   m_eventTemplateLock = MutexCreate();
 }
 
 /**
@@ -38,7 +37,6 @@ EventController::EventController(NXCSession *session) : Controller(session)
 EventController::~EventController()
 {
    delete m_eventTemplates;
-   MutexDestroy(m_eventTemplateLock);
 }
 
 /**
@@ -54,10 +52,10 @@ UINT32 EventController::syncEventTemplates()
       return rcc;
    }
 
-   MutexLock(m_eventTemplateLock);
+   m_eventTemplateLock.lock();
    delete m_eventTemplates;
    m_eventTemplates = list;
-   MutexUnlock(m_eventTemplateLock);
+   m_eventTemplateLock.unlock();
    return RCC_SUCCESS;
 }
 
@@ -104,7 +102,7 @@ UINT32 EventController::getEventTemplates(ObjectArray<EventTemplate> *templates)
  */
 TCHAR *EventController::getEventName(UINT32 code, TCHAR *buffer, size_t bufferSize)
 {
-   MutexLock(m_eventTemplateLock);
+   m_eventTemplateLock.lock();
    if (m_eventTemplates != NULL)
    {
       for(int i = 0; i < m_eventTemplates->size(); i++)
@@ -112,14 +110,14 @@ TCHAR *EventController::getEventName(UINT32 code, TCHAR *buffer, size_t bufferSi
          EventTemplate *t = m_eventTemplates->get(i);
          if (t->getCode() == code)
          {
-            nx_strncpy(buffer, t->getName(), bufferSize);
-            MutexUnlock(m_eventTemplateLock);
+            _tcslcpy(buffer, t->getName(), bufferSize);
+            m_eventTemplateLock.unlock();
             return buffer;
          }
       }
    }
-   MutexUnlock(m_eventTemplateLock);
-   nx_strncpy(buffer, _T("<unknown>"), bufferSize);
+   m_eventTemplateLock.unlock();
+   _tcslcpy(buffer, _T("<unknown>"), bufferSize);
    return buffer;
 }
 

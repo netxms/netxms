@@ -46,7 +46,7 @@ void NXSL_TestEnv::configureVM(NXSL_VM *vm)
  */
 static EnumerationCallbackResult PrintMetadataEntry(const TCHAR *key, const void *value, void *context)
 {
-   _tprintf(_T("   %s = %s\n"), key, value);
+   _tprintf(_T("   %s = %s\n"), key, static_cast<const TCHAR*>(value));
    return _CONTINUE;
 }
 

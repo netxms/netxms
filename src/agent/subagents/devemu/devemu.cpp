@@ -45,7 +45,7 @@ static TCHAR s_paramConfigFile[MAX_PATH] = _T("");
 static NX_STAT_STRUCT fileStats;
 static time_t fileLastModifyTime = 0;
 static StringMap *s_values = new StringMap();
-static MUTEX s_valuesMutex = MutexCreate();
+static Mutex s_valuesMutex;
 static bool s_shutdown = false;
 
 static bool SubagentInit(Config *config);
@@ -102,7 +102,7 @@ static LONG H_Constant(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, 
  */
 static LONG H_Value(const TCHAR *pszParam, const TCHAR *arg, TCHAR *pValue, AbstractCommSession *session)
 {
-   MutexLock(s_valuesMutex);
+   s_valuesMutex.lock();
    const TCHAR *value = s_values->get(arg);
    if (value == NULL)
    {
@@ -112,7 +112,7 @@ static LONG H_Value(const TCHAR *pszParam, const TCHAR *arg, TCHAR *pValue, Abst
    {
       ret_string(pValue, value);
    }
-   MutexUnlock(s_valuesMutex);
+   s_valuesMutex.unlock();
    return SYSINFO_RC_SUCCESS;
 }
 
@@ -184,7 +184,7 @@ static bool LoadConfiguration(bool initial)
       return false;
    }
 
-   MutexLock(s_valuesMutex);
+   s_valuesMutex.lock();
    s_values->clear();
 
    TCHAR line[10240];
@@ -250,7 +250,7 @@ static bool LoadConfiguration(bool initial)
       }
    }
 
-   MutexUnlock(s_valuesMutex);
+   s_valuesMutex.unlock();
 
    if (initial)
    {

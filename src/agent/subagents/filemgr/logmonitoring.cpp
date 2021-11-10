@@ -32,9 +32,8 @@
 /**
  * File list constructor
  */
-MonitoredFileList::MonitoredFileList() : m_files(16, 16, Ownership::True)
+MonitoredFileList::MonitoredFileList() : m_files(16, 16, Ownership::True), m_mutex(MutexType::FAST)
 {
-   m_mutex = MutexCreate();
 }
 
 /**
@@ -42,7 +41,6 @@ MonitoredFileList::MonitoredFileList() : m_files(16, 16, Ownership::True)
  */
 MonitoredFileList::~MonitoredFileList()
 {
-   MutexDestroy(m_mutex);
 }
 
 /**

@@ -186,7 +186,7 @@ struct LogHandleRegistration
    }
 };
 static LogHandleRegistration *s_regList = new LogHandleRegistration();
-static MUTEX s_regListMutex = MutexCreate();
+static Mutex s_regListMutex(MutexType::FAST);
 static int32_t s_handleId = 0;
 
 /**
@@ -195,11 +195,11 @@ static int32_t s_handleId = 0;
 static int32_t RegisterLogHandle(const shared_ptr<LogHandle>& handle, ClientSession *session)
 {
 	LogHandleRegistration *r = new LogHandleRegistration(handle, session->getId());
-	MutexLock(s_regListMutex);
+	s_regListMutex.lock();
 	r->next = s_regList->next;
 	s_regList->next = r;
 	r->id = s_handleId++;
-	MutexUnlock(s_regListMutex);
+	s_regListMutex.unlock();
 
    nxlog_debug_tag(DEBUG_TAG, 6, _T("RegisterLogHandle: handle object %p registered as %d"), handle.get(), r->id);
 	return r->id;
@@ -259,7 +259,7 @@ uint32_t CloseLog(ClientSession *session, int32_t logHandle)
 {
    uint32_t rcc = RCC_INVALID_LOG_HANDLE;
    nxlog_debug_tag(DEBUG_TAG, 6, _T("CloseLog: close request from session %d for handle %d"), session->getId(), logHandle);
-	MutexLock(s_regListMutex);
+	s_regListMutex.lock();
 	for(LogHandleRegistration *r = s_regList; r->next != nullptr; r = r->next)
 	{
 	   LogHandleRegistration *n = r->next;
@@ -271,7 +271,7 @@ uint32_t CloseLog(ClientSession *session, int32_t logHandle)
 	      break;
 	   }
 	}
-	MutexUnlock(s_regListMutex);
+	s_regListMutex.unlock();
 	return rcc;
 }
 
@@ -281,7 +281,7 @@ uint32_t CloseLog(ClientSession *session, int32_t logHandle)
 void CloseAllLogsForSession(session_id_t sessionId)
 {
    nxlog_debug_tag(DEBUG_TAG, 6, _T("Closing all logs for session %d"), sessionId);
-   MutexLock(s_regListMutex);
+   s_regListMutex.lock();
    for(LogHandleRegistration *r = s_regList; r->next != nullptr; r = r->next)
    {
       LogHandleRegistration *n = r->next;
@@ -293,7 +293,7 @@ void CloseAllLogsForSession(session_id_t sessionId)
             break;
       }
    }
-   MutexUnlock(s_regListMutex);
+   s_regListMutex.unlock();
 }
 
 /**
@@ -305,7 +305,7 @@ shared_ptr<LogHandle> AcquireLogHandleObject(ClientSession *session, int32_t log
 	shared_ptr<LogHandle> object;
 
    nxlog_debug_tag(DEBUG_TAG, 6, _T("AcquireLogHandleObject: request from session %d for handle %d"), session->getId(), logHandle);
-	MutexLock(s_regListMutex);
+	s_regListMutex.lock();
    for(LogHandleRegistration *r = s_regList->next; r != nullptr; r = r->next)
    {
       if ((r->id == logHandle) && (r->sessionId == session->getId()))
@@ -314,7 +314,7 @@ shared_ptr<LogHandle> AcquireLogHandleObject(ClientSession *session, int32_t log
          break;
       }
    }
-	MutexUnlock(s_regListMutex);
+	s_regListMutex.unlock();
 
    if (object != nullptr)
       object->lock();

@@ -21,6 +21,7 @@
 **/
 
 #include "nxcore.h"
+#include <nxcore_jobs.h>
 
 #define DEBUG_TAG _T("file.upload")
 
@@ -29,7 +30,7 @@
  */
 int FileUploadJob::m_activeJobs = 0;
 int FileUploadJob::m_maxActiveJobs = 10;
-MUTEX FileUploadJob::m_sharedDataMutex = INVALID_MUTEX_HANDLE;
+Mutex FileUploadJob::m_sharedDataMutex(MutexType::FAST);
 
 /**
  * Scheduled file upload
@@ -64,7 +65,6 @@ static void ScheduledFileUpload(const shared_ptr<ScheduledTaskParameters>& param
  */
 void FileUploadJob::init()
 {
-	m_sharedDataMutex = MutexCreate();
 	m_maxActiveJobs = ConfigReadInt(_T("MaxActiveUploadJobs"), 10);
 	RegisterSchedulerTaskHandler(_T("Upload.File"), ScheduledFileUpload, SYSTEM_ACCESS_SCHEDULE_FILE_UPLOAD);
 }
@@ -159,14 +159,14 @@ ServerJobResult FileUploadJob::run()
 
 	while(true)
 	{
-		MutexLock(m_sharedDataMutex);
+		m_sharedDataMutex.lock();
 		if (m_activeJobs < m_maxActiveJobs)
 		{
 			m_activeJobs++;
-			MutexUnlock(m_sharedDataMutex);
+			m_sharedDataMutex.unlock();
 			break;
 		}
-		MutexUnlock(m_sharedDataMutex);
+		m_sharedDataMutex.unlock();
 		ThreadSleep(5);
 	}
 
@@ -189,9 +189,9 @@ ServerJobResult FileUploadJob::run()
 		setFailureMessage(_T("Agent connection not available"));
 	}
 
-	MutexLock(m_sharedDataMutex);
+	m_sharedDataMutex.lock();
 	m_activeJobs--;
-	MutexUnlock(m_sharedDataMutex);
+	m_sharedDataMutex.unlock();
 
    if ((result == JOB_RESULT_FAILED) && (m_retryCount-- > 0))
    {

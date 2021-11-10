@@ -47,12 +47,10 @@ bool Controller::handleMessage(NXCPMessage *msg)
 /**
  * Constructor
  */
-NXCSession::NXCSession()
+NXCSession::NXCSession() : m_dataLock(MutexType::FAST), m_msgSendLock(MutexType::FAST)
 {
    m_controllers = new StringObjectMap<Controller>(Ownership::True);
    m_msgId = 0;
-   m_dataLock = MutexCreate();
-   m_msgSendLock = MutexCreate();
    m_connected = false;
    m_disconnected = false;
    m_hSocket = INVALID_SOCKET;
@@ -76,8 +74,6 @@ NXCSession::~NXCSession()
 {
    disconnect();
    delete m_controllers;
-   MutexDestroy(m_dataLock);
-   MutexDestroy(m_msgSendLock);
    delete m_protocolVersions;
 }
 
@@ -86,7 +82,7 @@ NXCSession::~NXCSession()
  */
 Controller *NXCSession::getController(const TCHAR *name)
 {
-   MutexLock(m_dataLock);
+   m_dataLock.lock();
    Controller *c = m_controllers->get(name);
    if (c == NULL)
    {
@@ -104,7 +100,7 @@ Controller *NXCSession::getController(const TCHAR *name)
       if (c != NULL)
          m_controllers->set(name, c);
    }
-   MutexUnlock(m_dataLock);
+   m_dataLock.unlock();
    return c;
 }
 
@@ -363,7 +359,7 @@ bool NXCSession::sendMessage(NXCPMessage *msg)
 
    bool result;
    NXCP_MESSAGE *rawMsg = msg->serialize(m_compressionEnabled);
-	MutexLock(m_msgSendLock);
+	m_msgSendLock.lock();
    if (m_encryptionContext != nullptr)
    {
       NXCP_ENCRYPTED_MESSAGE *emsg = m_encryptionContext->encryptMessage(rawMsg);
@@ -381,7 +377,7 @@ bool NXCSession::sendMessage(NXCPMessage *msg)
    {
       result = (SendEx(m_hSocket, (char *)rawMsg, ntohl(rawMsg->size), 0, nullptr) == (int)ntohl(rawMsg->size));
    }
-	MutexUnlock(m_msgSendLock);
+	m_msgSendLock.unlock();
    MemFree(rawMsg);
    return result;
 }
@@ -456,11 +452,11 @@ void NXCSession::receiverThread()
             {
                NXCPMessage *response;
                NXCPEncryptionContext *encryptionContext = nullptr;
-               MutexLock(m_dataLock);
+               m_dataLock.lock();
                SetupEncryptionContext(msg, &encryptionContext, &response, nullptr, NXCP_VERSION);
                m_encryptionContext = shared_ptr<NXCPEncryptionContext>(encryptionContext);
                m_receiver->setEncryptionContext(m_encryptionContext);
-               MutexUnlock(m_dataLock);
+               m_dataLock.unlock();
                sendMessage(response);
                delete response;
             }
@@ -494,9 +490,9 @@ static EnumerationCallbackResult HandleMessageCallback(const TCHAR *key, const v
  */
 bool NXCSession::handleMessage(NXCPMessage *msg)
 {
-   MutexLock(m_dataLock);
+   m_dataLock.lock();
    EnumerationCallbackResult result = m_controllers->forEach(HandleMessageCallback, msg);
-   MutexUnlock(m_dataLock);
+   m_dataLock.unlock();
    return result == _STOP;
 }
 

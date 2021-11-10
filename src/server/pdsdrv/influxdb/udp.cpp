@@ -90,7 +90,7 @@ bool UDPSender::send(const char *data)
          return false;
    }
 
-   if (SendEx(m_socket, data, strlen(data), 0, INVALID_MUTEX_HANDLE) <= 0)
+   if (SendEx(m_socket, data, strlen(data), 0, nullptr) <= 0)
    {
       closesocket(m_socket);
       m_socket = INVALID_SOCKET;

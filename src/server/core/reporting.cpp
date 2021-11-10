@@ -50,14 +50,14 @@ struct FileRequest
  * Outstanding file requests
  */
 static ObjectArray<FileRequest> s_fileRequests(16, 16, Ownership::True);
-static MUTEX s_fileRequestLock = MutexCreate();
+static Mutex s_fileRequestLock;
 
 /**
  * Remove all pending file transfer requests for session
  */
 void RemovePendingFileTransferRequests(ClientSession *session)
 {
-   MutexLock(s_fileRequestLock);
+   s_fileRequestLock.lock();
    for(int i = 0; i < s_fileRequests.size(); i++)
    {
       FileRequest *f = s_fileRequests.get(i);
@@ -67,7 +67,7 @@ void RemovePendingFileTransferRequests(ClientSession *session)
          i--;
       }
    }
-   MutexUnlock(s_fileRequestLock);
+   s_fileRequestLock.unlock();
 }
 
 /**
@@ -131,7 +131,7 @@ bool RSConnector::onMessage(NXCPMessage *msg)
  */
 void RSConnector::processFileTransfer(NXCPMessage *msg)
 {
-   MutexLock(s_fileRequestLock);
+   s_fileRequestLock.lock();
    for(int i = 0; i < s_fileRequests.size(); i++)
    {
       FileRequest *f = s_fileRequests.get(i);
@@ -147,7 +147,7 @@ void RSConnector::processFileTransfer(NXCPMessage *msg)
          break;
       }
    }
-   MutexUnlock(s_fileRequestLock);
+   s_fileRequestLock.unlock();
 }
 
 /**
@@ -342,9 +342,9 @@ NXCPMessage *ForwardMessageToReportingServer(NXCPMessage *request, ClientSession
    switch(request->getCode())
    {
       case CMD_RS_RENDER_RESULT: // File transfer requests
-         MutexLock(s_fileRequestLock);
+         s_fileRequestLock.lock();
          s_fileRequests.add(new FileRequest(originalId, rqId, session));
-         MutexUnlock(s_fileRequestLock);
+         s_fileRequestLock.unlock();
          break;
       case CMD_RS_EXECUTE_REPORT:
          if (IsDataViewRequired(request->getFieldAsGUID(VID_REPORT_DEFINITION)) && PrepareReportingDataView(session->getUserId(), viewName))

@@ -28,7 +28,6 @@
 #include <geolocation.h>
 #include <jansson.h>
 #include <math.h>
-#include "nxcore_jobs.h"
 #include "nms_topo.h"
 #include <gauge_helpers.h>
 
@@ -40,6 +39,7 @@ class Queue;
 class DataCollectionTarget;
 class Cluster;
 class ComponentTree;
+class Pollable;
 
 /**
  * Global variables used by inline methods
@@ -201,49 +201,6 @@ template class NXCORE_EXPORTABLE shared_ptr<AgentConnectionEx>;
 #endif
 
 /**
- * Poller types
- */
-enum class PollerType
-{
-   STATUS               = 0,
-   CONFIGURATION        = 1,
-   INSTANCE_DISCOVERY   = 2,
-   ROUTING_TABLE        = 3,
-   DISCOVERY            = 4,
-   TOPOLOGY             = 5,
-   ICMP                 = 6
-};
-
-/**
- * Poller information
- */
-class NXCORE_EXPORTABLE PollerInfo
-{
-   friend PollerInfo *RegisterPoller(PollerType, const shared_ptr<NetObj>&);
-
-private:
-   PollerType m_type;
-   shared_ptr<NetObj> m_object;
-   TCHAR m_status[128];
-
-   PollerInfo(PollerType type, const shared_ptr<NetObj>& object) : m_object(object)
-   {
-      m_type = type;
-      _tcscpy(m_status, _T("awaiting execution"));
-   }
-
-public:
-   ~PollerInfo();
-
-   PollerType getType() const { return m_type; }
-   NetObj *getObject() const { return m_object.get(); }
-   const TCHAR *getStatus() const { return m_status; }
-
-   void startExecution() { _tcscpy(m_status, _T("started")); }
-   void setStatus(const TCHAR *status) { _tcslcpy(m_status, status, 128); }
-};
-
-/**
  * Auto bind/apply decisions
  */
 enum AutoBindDecision
@@ -308,7 +265,7 @@ class NXCORE_EXPORTABLE AbstractIndexBase
 protected:
    INDEX_HEAD* volatile m_primary;
    INDEX_HEAD* volatile m_secondary;
-   MUTEX m_writerLock;
+   Mutex m_writerLock;
    bool m_owner;
    bool m_startupMode;
    bool m_dirty;
@@ -604,7 +561,7 @@ class NXCORE_EXPORTABLE HashIndexBase
 private:
    HashIndexHead* volatile m_primary;
    HashIndexHead* volatile m_secondary;
-   MUTEX m_writerLock;
+   Mutex m_writerLock;
    size_t m_keyLength;
 
    HashIndexHead *acquireIndex() const;
@@ -943,22 +900,14 @@ class NXCORE_EXPORTABLE PollState
 private:
    VolatileCounter m_pollerCount;
    time_t m_lastCompleted;
-   ManualGauge64 *m_timer;
-   MUTEX m_lock;
+   ManualGauge64 m_timer;
+   Mutex m_lock;
 
 public:
-   PollState(const TCHAR *name)
+   PollState(const TCHAR *name) : m_timer(name, 1, 1000), m_lock(MutexType::FAST)
    {
       m_pollerCount = 0;
       m_lastCompleted = TIMESTAMP_NEVER;
-      m_timer = new ManualGauge64(name, 1, 1000);
-      m_lock = MutexCreateFast();
-   }
-
-   ~PollState()
-   {
-      delete m_timer;
-      MutexDestroy(m_lock);
    }
 
    /**
@@ -997,11 +946,11 @@ public:
     */
    void complete(int64_t elapsed)
    {
-      MutexLock(m_lock);
+      m_lock.lock();
       m_lastCompleted = time(nullptr);
-      m_timer->update(elapsed);
+      m_timer.update(elapsed);
       InterlockedDecrement(&m_pollerCount);
-      MutexUnlock(m_lock);
+      m_lock.unlock();
    }
 
    /**
@@ -1017,9 +966,9 @@ public:
     */
    void resetTimer()
    {
-      MutexLock(m_lock);
-      m_timer->reset();
-      MutexUnlock(m_lock);
+      m_lock.lock();
+      m_timer.reset();
+      m_lock.unlock();
    }
 
    /**
@@ -1027,9 +976,9 @@ public:
     */
    time_t getLastCompleted()
    {
-      MutexLock(m_lock);
+      m_lock.lock();
       time_t t = m_lastCompleted;
-      MutexUnlock(m_lock);
+      m_lock.unlock();
       return t;
    }
 
@@ -1038,9 +987,9 @@ public:
     */
    int64_t getTimerAverage()
    {
-      MutexLock(m_lock);
-      int64_t v = static_cast<int64_t>(m_timer->getAverage());
-      MutexUnlock(m_lock);
+      m_lock.lock();
+      int64_t v = static_cast<int64_t>(m_timer.getAverage());
+      m_lock.unlock();
       return v;
    }
 
@@ -1049,9 +998,9 @@ public:
     */
    int64_t getTimerMin()
    {
-      MutexLock(m_lock);
-      int64_t v = m_timer->getMin();
-      MutexUnlock(m_lock);
+      m_lock.lock();
+      int64_t v = m_timer.getMin();
+      m_lock.unlock();
       return v;
    }
 
@@ -1060,9 +1009,9 @@ public:
     */
    int64_t getTimerMax()
    {
-      MutexLock(m_lock);
-      int64_t v = m_timer->getMax();
-      MutexUnlock(m_lock);
+      m_lock.lock();
+      int64_t v = m_timer.getMax();
+      m_lock.unlock();
       return v;
    }
 
@@ -1071,114 +1020,11 @@ public:
     */
    int64_t getTimerLast()
    {
-      MutexLock(m_lock);
-      int64_t v = m_timer->getCurrent();
-      MutexUnlock(m_lock);
+      m_lock.lock();
+      int64_t v = m_timer.getCurrent();
+      m_lock.unlock();
       return v;
    }
-};
-
-/**
- * Generic pollable class. Intended to be used only as secondary class in multi-inheritance with primary class derived from NetObj.
- */
-class NXCORE_EXPORTABLE Pollable
-{
-protected:
-   NetObj* m_this;
-
-   uint32_t m_acceptablePolls;
-   PollState m_statusPollState;
-   PollState m_configurationPollState;
-   PollState m_instancePollState;
-   PollState m_discoveryPollState;
-   PollState m_topologyPollState;
-   PollState m_routingPollState;
-   PollState m_icmpPollState;
-
-   MUTEX m_hPollerMutex;
-
-   virtual void statusPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) {}
-   virtual void configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) {}
-   virtual void instanceDiscoveryPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) {}
-   virtual void topologyPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) {}
-   virtual void routingTablePoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) {}
-   virtual void icmpPoll(PollerInfo *poller) {}
-
-   void _pollerLock() { MutexLock(m_hPollerMutex); }
-   void _pollerUnlock() { MutexUnlock(m_hPollerMutex); }
-
-   bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
-
-public:
-   Pollable(NetObj *_this, uint32_t acceptablePolls);
-   virtual ~Pollable();
-
-   static constexpr uint32_t NONE               = 0;
-   static constexpr uint32_t STATUS             = (1 << 0);
-   static constexpr uint32_t CONFIGURATION      = (1 << 1);
-   static constexpr uint32_t INSTANCE_DISCOVERY = (1 << 2);
-   static constexpr uint32_t TOPOLOGY           = (1 << 3);
-   static constexpr uint32_t ROUTING_TABLE      = (1 << 4);
-   static constexpr uint32_t DISCOVERY          = (1 << 5);
-   static constexpr uint32_t ICMP               = (1 << 6);
-
-   // Status poll
-   bool isStatusPollAvailable() const { return m_acceptablePolls & Pollable::STATUS; }
-   void doForcedStatusPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId);
-   void doForcedStatusPoll(PollerInfo *poller) { doForcedStatusPoll(poller, nullptr, 0); }
-   void doStatusPoll(PollerInfo *parentPoller, ClientSession *session, uint32_t rqId);
-   void doStatusPoll(PollerInfo *poller);
-   virtual void startForcedStatusPoll() { m_statusPollState.manualStart(); }
-   virtual bool lockForStatusPoll();
-
-   // Configuration poll
-   bool isConfigurationPollAvailable() const { return m_acceptablePolls & Pollable::CONFIGURATION; }
-   void doForcedConfigurationPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId);
-   void doForcedConfigurationPoll(PollerInfo *poller) { doForcedConfigurationPoll(poller, nullptr, 0); }
-   void doConfigurationPoll(PollerInfo *poller);
-   virtual void startForcedConfigurationPoll() { m_configurationPollState.manualStart(); }
-   virtual bool lockForConfigurationPoll();
-
-   // Instance Discovery
-   bool isInstanceDiscoveryPollAvailable() const { return m_acceptablePolls & Pollable::INSTANCE_DISCOVERY; }
-   void doForcedInstanceDiscoveryPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId);
-   void doForcedInstanceDiscoveryPoll(PollerInfo *poller) { doForcedInstanceDiscoveryPoll(poller, nullptr, 0); }
-   void doInstanceDiscoveryPoll(PollerInfo *poller);
-   virtual void startForcedInstanceDiscoveryPoll() { m_instancePollState.manualStart(); }
-   virtual bool lockForInstanceDiscoveryPoll() { return false; }
-
-   // Topology
-   bool isTopologyPollAvailable() const { return m_acceptablePolls & Pollable::TOPOLOGY ; }
-   void doForcedTopologyPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId);
-   void doForcedTopologyPoll(PollerInfo *poller) { doForcedTopologyPoll(poller, nullptr, 0); }
-   void doTopologyPoll(PollerInfo *poller);
-   virtual void startForcedTopologyPoll() { m_topologyPollState.manualStart(); }
-   virtual bool lockForTopologyPoll() { return false; }
-
-   // Routing Table
-   bool isRoutingTablePollAvailable() const { return m_acceptablePolls & Pollable::ROUTING_TABLE; }
-   void doForcedRoutingTablePoll(PollerInfo *poller, ClientSession *session, uint32_t rqId);
-   void doForcedRoutingTablePoll(PollerInfo *poller) { doForcedRoutingTablePoll(poller, nullptr, 0); }
-   void doRoutingTablePoll(PollerInfo *poller);
-   virtual void startForcedRoutingTablePoll() { m_routingPollState.manualStart(); }
-   virtual bool lockForRoutingTablePoll() { return false; }
-
-   // Discovery
-   bool isDiscoveryPollAvailable() const { return m_acceptablePolls & Pollable::DISCOVERY; }
-   void doForcedDiscoveryPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId);
-   void doForcedDiscoveryPoll(PollerInfo *poller) { doForcedDiscoveryPoll(poller, nullptr, 0); }
-   void doDiscoveryPoll(PollerInfo *poller);
-   virtual void startForcedDiscoveryPoll() { m_discoveryPollState.manualStart(); }
-   virtual bool lockForDiscoveryPoll() { return false; }
-   
-   // ICMP
-   bool isIcmpPollAvailable() const { return m_acceptablePolls & Pollable::ICMP; }
-   void doIcmpPoll(PollerInfo *poller);
-   virtual bool lockForIcmpPoll() { return false; }
-
-   void resetPollTimers();
-   DataCollectionError getInternalMetric(const TCHAR *name, TCHAR *buffer, size_t size);
-   bool saveToDatabase(DB_HANDLE hdb);
 };
 
 /**
@@ -1234,7 +1080,7 @@ protected:
    uuid m_mapImage;
    uint32_t m_submapId;          // Map object which should be open on drill-down request
    uint32_t m_categoryId;
-   MUTEX m_mutexProperties;         // Object data access mutex
+   Mutex m_mutexProperties;         // Object data access mutex
    GeoLocation m_geoLocation;
    PostalAddress m_postalAddress;
    ClientSession *m_pollRequestor;
@@ -1246,27 +1092,27 @@ protected:
 
    AccessList m_accessList;
    bool m_inheritAccessRights;
-   MUTEX m_mutexACL;
+   Mutex m_mutexACL;
 
    IntegerArray<uint32_t> *m_trustedNodes;
 
    StringObjectMap<ModuleData> *m_moduleData;
-   MUTEX m_moduleDataLock;
+   Mutex m_moduleDataLock;
 
    StructArray<ResponsibleUser> *m_responsibleUsers;
-   MUTEX m_mutexResponsibleUsers;
+   Mutex m_mutexResponsibleUsers;
 
    Pollable* m_asPollable; // Only changed in Pollable class constructor
 
    const SharedObjectArray<NetObj> &getChildList() const { return reinterpret_cast<const SharedObjectArray<NetObj>&>(super::getChildList()); }
    const SharedObjectArray<NetObj> &getParentList() const { return reinterpret_cast<const SharedObjectArray<NetObj>&>(super::getParentList()); }
 
-   void lockProperties() const { MutexLock(m_mutexProperties); }
-   void unlockProperties() const { MutexUnlock(m_mutexProperties); }
-   void lockACL() const { MutexLock(m_mutexACL); }
-   void unlockACL() const { MutexUnlock(m_mutexACL); }
-   void lockResponsibleUsersList() const { MutexLock(m_mutexResponsibleUsers); }
-   void unlockResponsibleUsersList() const { MutexUnlock(m_mutexResponsibleUsers); }
+   void lockProperties() const { m_mutexProperties.lock(); }
+   void unlockProperties() const { m_mutexProperties.unlock(); }
+   void lockACL() const { m_mutexACL.lock(); }
+   void unlockACL() const { m_mutexACL.unlock(); }
+   void lockResponsibleUsersList() const { m_mutexResponsibleUsers.lock(); }
+   void unlockResponsibleUsersList() const { m_mutexResponsibleUsers.unlock(); }
 
    void setModified(uint32_t flags, bool notify = true);                  // Used to mark object as modified
 
@@ -1462,6 +1308,156 @@ public:
 #endif
 };
 
+#ifdef _WIN32
+template class NXCORE_EXPORTABLE shared_ptr<NetObj>;
+#endif
+
+/**
+ * Poller types
+ */
+enum class PollerType
+{
+   STATUS = 0,
+   CONFIGURATION = 1,
+   INSTANCE_DISCOVERY = 2,
+   ROUTING_TABLE = 3,
+   DISCOVERY = 4,
+   TOPOLOGY = 5,
+   ICMP = 6
+};
+
+/**
+ * Poller information
+ */
+class NXCORE_EXPORTABLE PollerInfo
+{
+   friend PollerInfo *RegisterPoller(PollerType, const shared_ptr<NetObj>&);
+
+private:
+   PollerType m_type;
+   shared_ptr<NetObj> m_object;
+   TCHAR m_status[128];
+
+   PollerInfo(PollerType type, const shared_ptr<NetObj>& object) : m_object(object)
+   {
+      m_type = type;
+      _tcscpy(m_status, _T("awaiting execution"));
+   }
+
+public:
+   ~PollerInfo();
+
+   PollerType getType() const { return m_type; }
+   NetObj *getObject() const { return m_object.get(); }
+   const TCHAR *getStatus() const { return m_status; }
+
+   void startExecution() { _tcscpy(m_status, _T("started")); }
+   void setStatus(const TCHAR *status) { _tcslcpy(m_status, status, 128); }
+};
+
+/**
+ * Generic pollable class. Intended to be used only as secondary class in multi-inheritance with primary class derived from NetObj.
+ */
+class NXCORE_EXPORTABLE Pollable
+{
+protected:
+   NetObj* m_this;
+
+   uint32_t m_acceptablePolls;
+   PollState m_statusPollState;
+   PollState m_configurationPollState;
+   PollState m_instancePollState;
+   PollState m_discoveryPollState;
+   PollState m_topologyPollState;
+   PollState m_routingPollState;
+   PollState m_icmpPollState;
+
+   Mutex m_pollerMutex;
+
+   virtual void statusPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) {}
+   virtual void configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) {}
+   virtual void instanceDiscoveryPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) {}
+   virtual void topologyPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) {}
+   virtual void routingTablePoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) {}
+   virtual void icmpPoll(PollerInfo *poller) {}
+
+   void _pollerLock() { m_pollerMutex.lock(); }
+   void _pollerUnlock() { m_pollerMutex.unlock(); }
+
+   bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
+
+public:
+   Pollable(NetObj *_this, uint32_t acceptablePolls);
+   virtual ~Pollable();
+
+   static constexpr uint32_t NONE = 0;
+   static constexpr uint32_t STATUS = (1 << 0);
+   static constexpr uint32_t CONFIGURATION = (1 << 1);
+   static constexpr uint32_t INSTANCE_DISCOVERY = (1 << 2);
+   static constexpr uint32_t TOPOLOGY = (1 << 3);
+   static constexpr uint32_t ROUTING_TABLE = (1 << 4);
+   static constexpr uint32_t DISCOVERY = (1 << 5);
+   static constexpr uint32_t ICMP = (1 << 6);
+
+   // Status poll
+   bool isStatusPollAvailable() const { return m_acceptablePolls & Pollable::STATUS; }
+   void doForcedStatusPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId);
+   void doForcedStatusPoll(PollerInfo *poller) { doForcedStatusPoll(poller, nullptr, 0); }
+   void doStatusPoll(PollerInfo *parentPoller, ClientSession *session, uint32_t rqId);
+   void doStatusPoll(PollerInfo *poller);
+   virtual void startForcedStatusPoll() { m_statusPollState.manualStart(); }
+   virtual bool lockForStatusPoll();
+
+   // Configuration poll
+   bool isConfigurationPollAvailable() const { return m_acceptablePolls & Pollable::CONFIGURATION; }
+   void doForcedConfigurationPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId);
+   void doForcedConfigurationPoll(PollerInfo *poller) { doForcedConfigurationPoll(poller, nullptr, 0); }
+   void doConfigurationPoll(PollerInfo *poller);
+   virtual void startForcedConfigurationPoll() { m_configurationPollState.manualStart(); }
+   virtual bool lockForConfigurationPoll();
+
+   // Instance Discovery
+   bool isInstanceDiscoveryPollAvailable() const { return m_acceptablePolls & Pollable::INSTANCE_DISCOVERY; }
+   void doForcedInstanceDiscoveryPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId);
+   void doForcedInstanceDiscoveryPoll(PollerInfo *poller) { doForcedInstanceDiscoveryPoll(poller, nullptr, 0); }
+   void doInstanceDiscoveryPoll(PollerInfo *poller);
+   virtual void startForcedInstanceDiscoveryPoll() { m_instancePollState.manualStart(); }
+   virtual bool lockForInstanceDiscoveryPoll() { return false; }
+
+   // Topology
+   bool isTopologyPollAvailable() const { return m_acceptablePolls & Pollable::TOPOLOGY; }
+   void doForcedTopologyPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId);
+   void doForcedTopologyPoll(PollerInfo *poller) { doForcedTopologyPoll(poller, nullptr, 0); }
+   void doTopologyPoll(PollerInfo *poller);
+   virtual void startForcedTopologyPoll() { m_topologyPollState.manualStart(); }
+   virtual bool lockForTopologyPoll() { return false; }
+
+   // Routing Table
+   bool isRoutingTablePollAvailable() const { return m_acceptablePolls & Pollable::ROUTING_TABLE; }
+   void doForcedRoutingTablePoll(PollerInfo *poller, ClientSession *session, uint32_t rqId);
+   void doForcedRoutingTablePoll(PollerInfo *poller) { doForcedRoutingTablePoll(poller, nullptr, 0); }
+   void doRoutingTablePoll(PollerInfo *poller);
+   virtual void startForcedRoutingTablePoll() { m_routingPollState.manualStart(); }
+   virtual bool lockForRoutingTablePoll() { return false; }
+
+   // Discovery
+   bool isDiscoveryPollAvailable() const { return m_acceptablePolls & Pollable::DISCOVERY; }
+   void doForcedDiscoveryPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId);
+   void doForcedDiscoveryPoll(PollerInfo *poller) { doForcedDiscoveryPoll(poller, nullptr, 0); }
+   void doDiscoveryPoll(PollerInfo *poller);
+   virtual void startForcedDiscoveryPoll() { m_discoveryPollState.manualStart(); }
+   virtual bool lockForDiscoveryPoll() { return false; }
+
+   // ICMP
+   bool isIcmpPollAvailable() const { return m_acceptablePolls & Pollable::ICMP; }
+   void doIcmpPoll(PollerInfo *poller);
+   virtual bool lockForIcmpPoll() { return false; }
+
+   void resetPollTimers();
+   DataCollectionError getInternalMetric(const TCHAR *name, TCHAR *buffer, size_t size);
+   bool saveToDatabase(DB_HANDLE hdb);
+};
+
 /**
  * Generic versionable object
  */
@@ -1501,10 +1497,10 @@ class NXCORE_EXPORTABLE AutoBindTarget
 {
 private:
    NetObj *m_this;
-   MUTEX m_mutexProperties;
+   Mutex m_mutexProperties;
 
-   void internalLock() const { MutexLock(m_mutexProperties); }
-   void internalUnlock() const { MutexUnlock(m_mutexProperties); }
+   void internalLock() const { m_mutexProperties.lock(); }
+   void internalUnlock() const { m_mutexProperties.unlock(); }
 
 protected:
    TCHAR *m_autoBindFilterSources[MAX_AUTOBIND_TARGET_FILTERS];
@@ -1710,7 +1706,7 @@ protected:
    char *m_content;
    uint32_t m_version;
    uint32_t m_flags;
-   MUTEX m_contentLock;
+   Mutex m_contentLock;
 
    virtual bool createDeploymentMessage(NXCPMessage *msg, char *content, bool newTypeFormatSupported);
    virtual void exportAdditionalData(StringBuffer &xml);
@@ -2903,7 +2899,6 @@ private:
 public:
    ProxyAgentConnection() : ObjectLock<shared_ptr<AgentConnectionEx>>() { m_lastConnect = 0; }
    ProxyAgentConnection(const shared_ptr<AgentConnectionEx>& object) : ObjectLock<shared_ptr<AgentConnectionEx>>(object) { m_lastConnect = 0; }
-   ProxyAgentConnection(const ProxyAgentConnection &src) : ObjectLock<shared_ptr<AgentConnectionEx>>(src) { m_lastConnect = src.m_lastConnect; }
 
    void setLastConnectTime(time_t t) { m_lastConnect = t; }
    time_t getLastConnectTime() const { return m_lastConnect; }
@@ -3019,10 +3014,10 @@ protected:
    time_t m_lastAgentCommTime;
    time_t m_lastAgentConnectAttempt;
    time_t m_agentRestartTime;
-   MUTEX m_hAgentAccessMutex;
-   MUTEX m_hSmclpAccessMutex;
-   MUTEX m_mutexRTAccess;
-   MUTEX m_mutexTopoAccess;
+   Mutex m_agentMutex;
+   Mutex m_smclpMutex;
+   Mutex m_routingTableMutex;
+   Mutex m_topologyMutex;
    shared_ptr<AgentConnectionEx> m_agentConnection;
    ProxyAgentConnection *m_proxyConnections;
    VolatileCounter m_pendingDataConfigurationSync;
@@ -3100,14 +3095,14 @@ protected:
 
    virtual bool getObjectAttribute(const TCHAR *name, TCHAR **value, bool *isAllocated) const override;
 
-   void agentLock() { MutexLock(m_hAgentAccessMutex); }
-   void agentUnlock() { MutexUnlock(m_hAgentAccessMutex); }
+   void agentLock() { m_agentMutex.lock(); }
+   void agentUnlock() { m_agentMutex.unlock(); }
 
-   void smclpLock() { MutexLock(m_hSmclpAccessMutex); }
-   void smclpUnlock() { MutexUnlock(m_hSmclpAccessMutex); }
+   void smclpLock() { m_smclpMutex.lock(); }
+   void smclpUnlock() { m_smclpMutex.unlock(); }
 
-   void routingTableLock() { MutexLock(m_mutexRTAccess); }
-   void routingTableUnlock() { MutexUnlock(m_mutexRTAccess); }
+   void routingTableLock() { m_routingTableMutex.lock(); }
+   void routingTableUnlock() { m_routingTableMutex.unlock(); }
 
    void checkOSPFSupport(SNMP_Transport *pTransport);
    void addVrrpInterfaces(InterfaceList *ifList);
@@ -4134,7 +4129,7 @@ protected:
 
 protected:
    int m_numColumns;
-   UINT32 m_options;
+   uint32_t m_options;
    ObjectArray<DashboardElement> *m_elements;
 
    virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId) override;
@@ -4229,7 +4224,7 @@ protected:
    BusinessServiceCheckType m_type;
    int m_status;
    uint32_t m_serviceId;
-   MUTEX m_mutex;
+   Mutex m_mutex;
    TCHAR *m_script;
    NXSL_Program *m_compiledScript;
    TCHAR m_reason[256];
@@ -4243,8 +4238,8 @@ protected:
    void compileScript();
    void loadReason();
 
-   void lock() const { MutexLock(m_mutex); }
-   void unlock() const { MutexUnlock(m_mutex); }
+   void lock() const { m_mutex.lock(); }
+   void unlock() const { m_mutex.unlock(); }
 
 public:
    BusinessServiceCheck(uint32_t serviceId);
@@ -4302,13 +4297,13 @@ protected:
    bool m_pollingDisabled;
    uint32_t m_objectStatusThreshhold;
    uint32_t m_dciStatusThreshhold;
-   MUTEX m_checkMutex;
+   Mutex m_checkMutex;
 
    virtual uint32_t modifyFromMessageInternal(NXCPMessage *request) override;
    virtual void fillMessageInternal(NXCPMessage *msg, UINT32 userId) override;
 
-   void checksLock() const { MutexLock(m_checkMutex); }
-   void checksUnlock() const { MutexUnlock(m_checkMutex); }
+   void checksLock() const { m_checkMutex.lock(); }
+   void checksUnlock() const { m_checkMutex.unlock(); }
 
    bool loadChecksFromDatabase(DB_HANDLE hdb);
    bool deleteCheckFromDatabase(uint32_t checkId);

@@ -242,9 +242,9 @@ private:
 
    void housekeeperRun();
 
-   static MUTEX m_housekeeperLock;
+   static Mutex m_housekeeperLock;
    static HashMap<uint64_t, MsgWaitQueue> *m_activeQueues;
-   static CONDITION m_shutdownCondition;
+   static Condition m_shutdownCondition;
    static THREAD m_housekeeperThread;
    static EnumerationCallbackResult houseKeeperCallback(const uint64_t& key, MsgWaitQueue *queue);
    static THREAD_RESULT THREAD_CALL housekeeperThread(void *);
@@ -283,7 +283,7 @@ private:
 	int m_keyLength;
 	BYTE m_iv[EVP_MAX_IV_LENGTH];
 #ifdef _WITH_ENCRYPTION
-   MUTEX m_encryptorLock;
+   Mutex m_encryptorLock;
    EVP_CIPHER_CTX *m_encryptor;
    EVP_CIPHER_CTX *m_decryptor;
 #endif
@@ -407,7 +407,7 @@ class LIBNETXMS_EXPORTABLE TlsMessageReceiver : public AbstractMessageReceiver
 private:
    SOCKET m_socket;
    SSL *m_ssl;
-   MUTEX m_mutex;
+   Mutex *m_mutex;
 #ifndef _WIN32
    int m_controlPipe[2];
 #endif
@@ -416,7 +416,7 @@ protected:
    virtual ssize_t readBytes(BYTE *buffer, size_t size, uint32_t timeout) override;
 
 public:
-   TlsMessageReceiver(SOCKET socket, SSL *ssl, MUTEX mutex, size_t initialSize, size_t maxSize);
+   TlsMessageReceiver(SOCKET socket, SSL *ssl, Mutex *mutex, size_t initialSize, size_t maxSize);
    virtual ~TlsMessageReceiver();
 
    virtual void cancel() override;
@@ -589,20 +589,20 @@ typedef bool (*NXCPMessageNameResolver)(UINT16 code, TCHAR *buffer);
 
 NXCP_MESSAGE LIBNETXMS_EXPORTABLE *CreateRawNXCPMessage(uint16_t code, uint32_t id, uint16_t flags, const void *data, size_t dataSize,
       NXCP_MESSAGE *buffer, bool allowCompression);
-bool LIBNETXMS_EXPORTABLE NXCPGetPeerProtocolVersion(SOCKET s, int *pnVersion, MUTEX mutex);
-bool LIBNETXMS_EXPORTABLE NXCPGetPeerProtocolVersion(const shared_ptr<AbstractCommChannel>& channel, int *pnVersion, MUTEX mutex);
+bool LIBNETXMS_EXPORTABLE NXCPGetPeerProtocolVersion(SOCKET s, int *pnVersion, Mutex *mutex);
+bool LIBNETXMS_EXPORTABLE NXCPGetPeerProtocolVersion(const shared_ptr<AbstractCommChannel>& channel, int *pnVersion, Mutex *mutex);
 
 bool LIBNETXMS_EXPORTABLE SendFileOverNXCP(SOCKET hSocket, uint32_t requestId, const TCHAR *fileName, NXCPEncryptionContext *ectx, off64_t offset,
-         void (* progressCallback)(size_t, void *), void *cbArg, MUTEX mutex, NXCPStreamCompressionMethod compressionMethod = NXCP_STREAM_COMPRESSION_NONE,
+         void (* progressCallback)(size_t, void *), void *cbArg, Mutex *mutex, NXCPStreamCompressionMethod compressionMethod = NXCP_STREAM_COMPRESSION_NONE,
          VolatileCounter *cancellationFlag = nullptr);
 bool LIBNETXMS_EXPORTABLE SendFileOverNXCP(AbstractCommChannel *channel, uint32_t requestId, const TCHAR *fileName, NXCPEncryptionContext *ectx, off64_t offset,
-         void (* progressCallback)(size_t, void *), void *cbArg, MUTEX mutex, NXCPStreamCompressionMethod compressionMethod = NXCP_STREAM_COMPRESSION_NONE,
+         void (* progressCallback)(size_t, void *), void *cbArg, Mutex *mutex, NXCPStreamCompressionMethod compressionMethod = NXCP_STREAM_COMPRESSION_NONE,
          VolatileCounter *cancellationFlag = nullptr, size_t chunkSize = 0);
 bool LIBNETXMS_EXPORTABLE SendFileOverNXCP(SOCKET hSocket, uint32_t requestId, std::istream *stream, NXCPEncryptionContext *ectx, off64_t offset,
-         void (* progressCallback)(size_t, void *), void *cbArg, MUTEX mutex, NXCPStreamCompressionMethod compressionMethod = NXCP_STREAM_COMPRESSION_NONE,
+         void (* progressCallback)(size_t, void *), void *cbArg, Mutex *mutex, NXCPStreamCompressionMethod compressionMethod = NXCP_STREAM_COMPRESSION_NONE,
          VolatileCounter *cancellationFlag = nullptr);
 bool LIBNETXMS_EXPORTABLE SendFileOverNXCP(AbstractCommChannel *channel, uint32_t requestId, std::istream *stream, NXCPEncryptionContext *ectx, off64_t offset,
-         void (* progressCallback)(size_t, void *), void *cbArg, MUTEX mutex, NXCPStreamCompressionMethod compressionMethod = NXCP_STREAM_COMPRESSION_NONE,
+         void (* progressCallback)(size_t, void *), void *cbArg, Mutex *mutex, NXCPStreamCompressionMethod compressionMethod = NXCP_STREAM_COMPRESSION_NONE,
          VolatileCounter *cancellationFlag = nullptr, size_t chunkSize = 0);
 
 TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(uint16_t vode, TCHAR *buffer);

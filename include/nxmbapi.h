@@ -129,12 +129,12 @@ private:
 	int m_numSubscribers;
 	NXMBSubscriber **m_subscribers;
 	NXMBFilter **m_filters;
-	MUTEX m_subscriberListAccess;
+	Mutex m_subscriberListAccess;
 	THREAD m_workerThreadHandle;
    CallHandlerMap *m_callHandlers;
-   MUTEX m_callHandlerAccess;
-   CONDITION m_startCondition;
-   CONDITION m_stopCondition;
+   Mutex m_callHandlerAccess;
+   Condition m_startCondition;
+   Condition m_stopCondition;
 
 	void workerThread();
 	static THREAD_RESULT THREAD_CALL workerThreadStarter(void *);

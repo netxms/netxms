@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -89,15 +89,15 @@ struct ThreadPool
    int stackSize;
    uint32_t workerIdleTimeout;
    VolatileCounter activeRequests;
-   MUTEX mutex;
+   Mutex mutex;
    THREAD maintThread;
-   CONDITION maintThreadWakeup;
+   Condition maintThreadWakeup;
    HashMap<uint64_t, WorkerThreadInfo> threads;
    ObjectQueue<WorkRequest> queue;
    StringObjectMap<SerializationQueue> serializationQueues;
-   MUTEX serializationLock;
+   Mutex serializationLock;
    ObjectArray<WorkRequest> schedulerQueue;
-   MUTEX schedulerLock;
+   Mutex schedulerLock;
    TCHAR *name;
    bool shutdownMode;
    int64_t loadAverage[3];
@@ -108,7 +108,8 @@ struct ThreadPool
    SynchronizedObjectMemoryPool<WorkRequest> workRequestMemoryPool;
 
    ThreadPool(const TCHAR *name, int minThreads, int maxThreads, int stackSize) :
-         queue(64, Ownership::False), serializationQueues(Ownership::True), schedulerQueue(16, 16, Ownership::False)
+         queue(64, Ownership::False), serializationQueues(Ownership::True), schedulerQueue(16, 16, Ownership::False),
+         mutex(MutexType::FAST), serializationLock(MutexType::FAST), schedulerLock(MutexType::FAST), maintThreadWakeup(false)
    {
       this->name = (name != nullptr) ? MemCopyString(name) : MemCopyString(_T("NONAME"));
       this->minThreads = std::max(minThreads, 1);
@@ -116,12 +117,8 @@ struct ThreadPool
       this->stackSize = stackSize;
       workerIdleTimeout = MIN_WORKER_IDLE_TIMEOUT;
       activeRequests = 0;
-      mutex = MutexCreateFast();
       maintThread = INVALID_THREAD_HANDLE;
-      maintThreadWakeup = ConditionCreate(false);
       serializationQueues.setIgnoreCase(false);
-      serializationLock = MutexCreateFast();
-      schedulerLock = MutexCreateFast();
       shutdownMode = false;
       memset(loadAverage, 0, sizeof(loadAverage));
       averageWaitTime = 0;
@@ -133,9 +130,6 @@ struct ThreadPool
    ~ThreadPool()
    {
       threads.setOwner(Ownership::True);
-      MutexDestroy(serializationLock);
-      MutexDestroy(schedulerLock);
-      MutexDestroy(mutex);
       MemFree(name);
    }
 };
@@ -184,15 +178,15 @@ static void WorkerThread(WorkerThreadInfo *threadInfo)
             continue;
          }
 
-         MutexLock(p->mutex);
+         p->mutex.lock();
          if ((p->threads.size() <= p->minThreads) || (p->averageWaitTime / EMA_FP_1 > s_waitTimeLowWatermark))
          {
-            MutexUnlock(p->mutex);
+            p->mutex.unlock();
             continue;
          }
          p->threads.remove(CAST_FROM_POINTER(threadInfo, uint64_t));
          p->threadStopCount++;
-         MutexUnlock(p->mutex);
+         p->mutex.unlock();
 
          nxlog_debug_tag(DEBUG_TAG, 5, _T("Stopping worker thread in thread pool %s due to inactivity"), p->name);
 
@@ -210,9 +204,9 @@ static void WorkerThread(WorkerThreadInfo *threadInfo)
          break;
       
       int64_t waitTime = GetCurrentTimeMs() - rq->queueTime;
-      MutexLock(p->mutex);
+      p->mutex.lock();
       UpdateExpMovingAverage(p->averageWaitTime, EMA_EXP_180, waitTime);
-      MutexUnlock(p->mutex);
+      p->mutex.unlock();
 
       rq->func(rq->arg);
       p->workRequestMemoryPool.destroy(rq);
@@ -243,7 +237,7 @@ static void MaintenanceThread(ThreadPool *p)
    while(!p->shutdownMode)
    {
       int64_t startTime = GetCurrentTimeMs();
-      ConditionWait(p->maintThreadWakeup, sleepTime);
+      p->maintThreadWakeup.wait(sleepTime);
       cycleTime += static_cast<uint32_t>(GetCurrentTimeMs() - startTime);
 
       // Update load data every 5 seconds
@@ -263,7 +257,7 @@ static void MaintenanceThread(ThreadPool *p)
             int started = 0;
             bool failure = false;
 
-            MutexLock(p->mutex);
+            p->mutex.lock();
             int threadCount = p->threads.size();
             int64_t averageWaitTime = p->averageWaitTime / EMA_FP_1;
             if (((averageWaitTime > s_waitTimeHighWatermark) && (threadCount < p->maxThreads)) ||
@@ -299,7 +293,7 @@ static void MaintenanceThread(ThreadPool *p)
                p->workerIdleTimeout /= 2;
                _sntprintf(debugMessage, 1024, _T("Worker idle timeout decreased to %d milliseconds for thread pool %s"), p->workerIdleTimeout, p->name);
             }
-            MutexUnlock(p->mutex);
+            p->mutex.unlock();
             count = 0;
 
             if (started > 1)
@@ -315,7 +309,7 @@ static void MaintenanceThread(ThreadPool *p)
       sleepTime = 5000 - cycleTime;
 
       // Check scheduler queue
-      MutexLock(p->schedulerLock);
+      p->schedulerLock.lock();
       if (p->schedulerQueue.size() > 0)
       {
          int64_t now = GetCurrentTimeMs();
@@ -337,7 +331,7 @@ static void MaintenanceThread(ThreadPool *p)
             p->queue.put(rq);
          }
       }
-      MutexUnlock(p->schedulerLock);
+      p->schedulerLock.unlock();
    }
    nxlog_debug_tag(DEBUG_TAG, 3, _T("Maintenance thread for thread pool %s stopped"), p->name);
 }
@@ -350,7 +344,7 @@ ThreadPool LIBNETXMS_EXPORTABLE *ThreadPoolCreate(const TCHAR *name, int minThre
    auto p = new ThreadPool(name, minThreads, maxThreads, stackSize);
    p->maintThread = ThreadCreateEx(MaintenanceThread, p, 256 * 1024);
 
-   MutexLock(p->mutex);
+   p->mutex.lock();
    for(int i = 0; i < p->minThreads; i++)
    {
       WorkerThreadInfo *wt = new WorkerThreadInfo;
@@ -366,7 +360,7 @@ ThreadPool LIBNETXMS_EXPORTABLE *ThreadPoolCreate(const TCHAR *name, int minThre
          delete wt;
       }
    }
-   MutexUnlock(p->mutex);
+   p->mutex.unlock();
 
    s_registryLock.lock();
    s_registry.set(p->name, p);
@@ -404,18 +398,17 @@ void LIBNETXMS_EXPORTABLE ThreadPoolDestroy(ThreadPool *p)
 
    p->shutdownMode = true;
 
-   ConditionSet(p->maintThreadWakeup);
+   p->maintThreadWakeup.set();
    ThreadJoin(p->maintThread);
-   ConditionDestroy(p->maintThreadWakeup);
 
    WorkRequest rq;
    rq.func = nullptr;
    rq.queueTime = GetCurrentTimeMs();
-   MutexLock(p->mutex);
+   p->mutex.lock();
    int count = p->threads.size();
    for(int i = 0; i < count; i++)
       p->queue.put(&rq);
-   MutexUnlock(p->mutex);
+   p->mutex.unlock();
 
    p->threads.forEach(ThreadPoolDestroyCallback);
 
@@ -464,15 +457,15 @@ static void ProcessSerializedRequests(RequestSerializationData *data)
          // new serialized task may have been placed into queue between
          // get and lock calls. To avoid loosing it re-check queue again
          // with serialization lock being held.
-         MutexLock(data->pool->serializationLock);
+         data->pool->serializationLock.lock();
          rq = static_cast<WorkRequest*>(data->queue->get());
          if (rq == nullptr)
          {
             data->pool->serializationQueues.remove(data->key);
-            MutexUnlock(data->pool->serializationLock);
+            data->pool->serializationLock.unlock();
             break;
          }
-         MutexUnlock(data->pool->serializationLock);
+         data->pool->serializationLock.unlock();
       }
       data->queue->updateMaxWaitTime(static_cast<uint32_t>(GetCurrentTimeMs() - rq->queueTime));
 
@@ -495,7 +488,7 @@ void LIBNETXMS_EXPORTABLE ThreadPoolExecuteSerialized(ThreadPool *p, const TCHAR
    rq->arg = arg;
    rq->queueTime = GetCurrentTimeMs();
 
-   MutexLock(p->serializationLock);
+   p->serializationLock.lock();
    SerializationQueue *q = p->serializationQueues.get(key);
    if (q == nullptr)
    {
@@ -515,7 +508,7 @@ void LIBNETXMS_EXPORTABLE ThreadPoolExecuteSerialized(ThreadPool *p, const TCHAR
       q->put(rq);
       InterlockedIncrement64(&p->taskExecutionCount);
    }
-   MutexUnlock(p->serializationLock);
+   p->serializationLock.unlock();
 }
 
 /**
@@ -542,11 +535,11 @@ void LIBNETXMS_EXPORTABLE ThreadPoolScheduleAbsoluteMs(ThreadPool *p, int64_t ru
    rq->runTime = runTime;
    rq->queueTime = GetCurrentTimeMs();
 
-   MutexLock(p->schedulerLock);
+   p->schedulerLock.lock();
    p->schedulerQueue.add(rq);
    p->schedulerQueue.sort(ScheduledRequestsComparator);
-   MutexUnlock(p->schedulerLock);
-   ConditionSet(p->maintThreadWakeup);
+   p->schedulerLock.unlock();
+   p->maintThreadWakeup.set();
 }
 
 /**
@@ -573,7 +566,7 @@ void LIBNETXMS_EXPORTABLE ThreadPoolScheduleRelative(ThreadPool *p, uint32_t del
  */
 void LIBNETXMS_EXPORTABLE ThreadPoolGetInfo(ThreadPool *p, ThreadPoolInfo *info)
 {
-   MutexLock(p->mutex);
+   p->mutex.lock();
    info->name = p->name;
    info->minThreads = p->minThreads;
    info->maxThreads = p->maxThreads;
@@ -588,18 +581,18 @@ void LIBNETXMS_EXPORTABLE ThreadPoolGetInfo(ThreadPool *p, ThreadPoolInfo *info)
    info->loadAvg[1] = GetExpMovingAverageValue(p->loadAverage[1]);
    info->loadAvg[2] = GetExpMovingAverageValue(p->loadAverage[2]);
    info->averageWaitTime = static_cast<uint32_t>(p->averageWaitTime / EMA_FP_1);
-   MutexUnlock(p->mutex);
+   p->mutex.unlock();
 
-   MutexLock(p->schedulerLock);
+   p->schedulerLock.lock();
    info->scheduledRequests = p->schedulerQueue.size();
-   MutexUnlock(p->schedulerLock);
+   p->schedulerLock.unlock();
 
    info->serializedRequests = 0;
-   MutexLock(p->serializationLock);
+   p->serializationLock.lock();
    auto it = p->serializationQueues.begin();
    while(it.hasNext())
       info->serializedRequests += static_cast<int>(it.next()->value->size());
-   MutexUnlock(p->serializationLock);
+   p->serializationLock.unlock();
 }
 
 /**
@@ -609,10 +602,10 @@ bool LIBNETXMS_EXPORTABLE ThreadPoolGetInfo(const TCHAR *name, ThreadPoolInfo *i
 {
    s_registryLock.lock();
    ThreadPool *p = s_registry.get(name);
-   if (p != NULL)
+   if (p != nullptr)
       ThreadPoolGetInfo(p, info);
    s_registryLock.unlock();
-   return p != NULL;
+   return p != nullptr;
 }
 
 /**
@@ -631,10 +624,10 @@ StringList LIBNETXMS_EXPORTABLE *ThreadPoolGetAllPools()
  */
 int LIBNETXMS_EXPORTABLE ThreadPoolGetSerializedRequestCount(ThreadPool *p, const TCHAR *key)
 {
-   MutexLock(p->serializationLock);
+   p->serializationLock.lock();
    SerializationQueue *q = p->serializationQueues.get(key);
    int count = (q != nullptr) ? static_cast<int>(q->size()) : 0;
-   MutexUnlock(p->serializationLock);
+   p->serializationLock.unlock();
    return count;
 }
 
@@ -643,10 +636,10 @@ int LIBNETXMS_EXPORTABLE ThreadPoolGetSerializedRequestCount(ThreadPool *p, cons
  */
 uint32_t LIBNETXMS_EXPORTABLE ThreadPoolGetSerializedRequestMaxWaitTime(ThreadPool *p, const TCHAR *key)
 {
-   MutexLock(p->serializationLock);
+   p->serializationLock.lock();
    SerializationQueue *q = p->serializationQueues.get(key);
    uint32_t waitTime = (q != nullptr) ? q->getMaxWaitTime() : 0;
-   MutexUnlock(p->serializationLock);
+   p->serializationLock.unlock();
    return waitTime;
 }
 

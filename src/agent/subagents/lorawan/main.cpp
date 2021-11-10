@@ -39,7 +39,7 @@ HashMap<uuid, LoraDeviceData> g_deviceMap(Ownership::True);
 /**
  * Device map mutex
  */
-MUTEX g_deviceMapMutex = INVALID_MUTEX_HANDLE;
+Mutex g_deviceMapMutex(MutexType::FAST);
 
 /**
  * Parameters
@@ -64,9 +64,9 @@ UINT32 AddDevice(LoraDeviceData *device)
 
    if (rcc == ERR_SUCCESS)
    {
-      MutexLock(g_deviceMapMutex);
+      g_deviceMapMutex.lock();
       g_deviceMap.set(device->getGuid(), device);
-      MutexUnlock(g_deviceMapMutex);
+      g_deviceMapMutex.unlock();
    }
 
    return rcc;
@@ -81,9 +81,9 @@ UINT32 RemoveDevice(LoraDeviceData *device)
 
    if (rcc == ERR_SUCCESS)
    {
-      MutexLock(g_deviceMapMutex);
+      g_deviceMapMutex.lock();
       g_deviceMap.remove(device->getGuid());
-      MutexUnlock(g_deviceMapMutex);
+      g_deviceMapMutex.unlock();
    }
 
    return rcc;
@@ -96,9 +96,9 @@ LoraDeviceData *FindDevice(uuid guid)
 {
    LoraDeviceData *data;
 
-   MutexLock(g_deviceMapMutex);
+   g_deviceMapMutex.lock();
    data = g_deviceMap.get(guid);
-   MutexUnlock(g_deviceMapMutex);
+   g_deviceMapMutex.unlock();
 
    return data;
 }
@@ -114,17 +114,19 @@ static void LoadDevices()
    if (hResult != NULL)
    {
       UINT32 nRows = DBGetNumRows(hResult);
-      MutexLock(g_deviceMapMutex);
+      g_deviceMapMutex.lock();
       for(int i = 0; i < nRows; i++)
       {
          LoraDeviceData *data = new LoraDeviceData(hResult, i);
          g_deviceMap.set(data->getGuid(), data);
       }
-      MutexUnlock(g_deviceMapMutex);
+      g_deviceMapMutex.unlock();
       DBFreeResult(hResult);
    }
    else
+   {
       nxlog_debug(4, _T("LoraWAN Subagent: Unable to load device map table"));
+   }
 
    DBConnectionPoolReleaseConnection(hdb);
 }
@@ -152,8 +154,6 @@ static bool ProcessCommands(UINT32 command, NXCPMessage *request, NXCPMessage *r
  */
 static bool SubagentInit(Config *config)
 {
-   g_deviceMapMutex = MutexCreate();
-
    LoadDevices();
 
    s_mqtt = new MqttClient(config->getEntry(_T("/LORAWAN")));
@@ -172,9 +172,8 @@ static void SubagentShutdown()
 {
    s_mqtt->stopNetworkLoop();
 
-   MutexDestroy(g_deviceMapMutex);
-   delete(s_mqtt);
-   delete(s_link);
+   delete s_mqtt;
+   delete s_link;
 }
 
 /**

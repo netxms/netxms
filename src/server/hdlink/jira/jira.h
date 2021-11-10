@@ -50,22 +50,22 @@ struct RequestData
 class ProjectComponent
 {
 public:
-   INT64 m_id;
+   int64_t m_id;
    TCHAR *m_name;
 
-   ProjectComponent(INT64 id, const char *name)
+   ProjectComponent(int64_t id, const char *name)
    {
       m_id = id;
 #ifdef UNICODE
       m_name = WideStringFromUTF8String(CHECK_NULL_EX_A(name));
 #else
-      m_name = strdup(CHECK_NULL_EX(name));
+      m_name = MemCopyString(CHECK_NULL_EX(name));
 #endif
    }
 
    ~ProjectComponent()
    {
-      free(m_name);
+      MemFree(m_name);
    }
 };
 
@@ -75,16 +75,16 @@ public:
 class JiraLink : public HelpDeskLink
 {
 private:
-   MUTEX m_mutex;
+   Mutex m_mutex;
    char m_serverUrl[MAX_PATH];
    char m_login[JIRA_MAX_LOGIN_LEN];
    char m_password[JIRA_MAX_PASSWORD_LEN];
    CURL *m_curl;
    char m_errorBuffer[CURL_ERROR_SIZE];
 
-   void lock() { MutexLock(m_mutex); }
-   void unlock() { MutexUnlock(m_mutex); }
-   UINT32 connect();
+   void lock() { m_mutex.lock(); }
+   void unlock() { m_mutex.unlock(); }
+   uint32_t connect();
    void disconnect();
    ObjectArray<ProjectComponent> *getProjectComponents(const char *project);
 
@@ -92,8 +92,8 @@ public:
    JiraLink();
    virtual ~JiraLink();
 
-	virtual const TCHAR *getName();
-	virtual const TCHAR *getVersion();
+   virtual const TCHAR *getName();
+   virtual const TCHAR *getVersion();
 
    virtual bool init();
    virtual bool checkConnection();

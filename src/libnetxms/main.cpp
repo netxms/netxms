@@ -22,6 +22,7 @@
 **/
 
 #include "libnetxms.h"
+#include <gauge_helpers.h>
 
 #if HAVE_LIBCURL
 #include <curl/curl.h>

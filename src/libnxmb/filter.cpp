@@ -49,8 +49,7 @@ bool NXMBFilter::isOwnedByDispatcher()
 /**
  * Filter by message type implementation
  */
-NXMBTypeFilter::NXMBTypeFilter()
-               :NXMBFilter()
+NXMBTypeFilter::NXMBTypeFilter() : NXMBFilter()
 {
 }
 

@@ -57,7 +57,7 @@ static int s_instanceMap[MAX_CPU_COUNT];
 static CPU_USAGE_DATA_AVG s_usage[MAX_CPU_COUNT + 1];
 static CPU_USAGE_DATA_AVG s_usage5[MAX_CPU_COUNT + 1];
 static CPU_USAGE_DATA_AVG s_usage15[MAX_CPU_COUNT + 1];
-static Mutex s_usageDataLock(true);
+static Mutex s_usageDataLock(MutexType::FAST);
 
 /**
  * Read CPU times

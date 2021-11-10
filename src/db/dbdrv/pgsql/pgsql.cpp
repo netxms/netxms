@@ -32,7 +32,7 @@
 
 DECLARE_DRIVER_HEADER("PGSQL")
 
-extern "C" void __EXPORT DrvDisconnect(DBDRV_CONNECTION pConn);
+extern "C" void __EXPORT DrvDisconnect(PG_CONN *pConn);
 static bool UnsafeDrvQuery(PG_CONN *pConn, const char *szQuery, WCHAR *errorText);
 
 #ifndef _WIN32
@@ -260,48 +260,40 @@ extern "C" DBDRV_CONNECTION __EXPORT DrvConnect(const char *serverAddress,	const
       port = nullptr;
    }
 	
-	PG_CONN *pConn = MemAllocStruct<PG_CONN>();
-	if (pConn != nullptr)
-	{
-		// should be replaced with PQconnectdb();
-		pConn->handle = PQsetdbLogin(host, port, nullptr, nullptr, (database != nullptr) ? database : "template1", login, password);
+	PG_CONN *pConn = new PG_CONN();
 
-		if (PQstatus(pConn->handle) == CONNECTION_BAD)
-		{
-			utf8_to_wchar(PQerrorMessage(pConn->handle), -1, errorText, DBDRV_MAX_ERROR_TEXT);
-			errorText[DBDRV_MAX_ERROR_TEXT - 1] = 0;
-			RemoveTrailingCRLFW(errorText);
-			PQfinish(pConn->handle);
-			MemFreeAndNull(pConn);
-		}
-		else
-		{
-			PGresult	*pResult = PQexec(pConn->handle, "SET standard_conforming_strings TO off");
-			PQclear(pResult);
-			
-			pResult = PQexec(pConn->handle, "SET escape_string_warning TO off");
-			PQclear(pResult);
+	// should be replaced with PQconnectdb();
+   pConn->handle = PQsetdbLogin(host, port, nullptr, nullptr, (database != nullptr) ? database : "template1", login, password);
 
-			PQsetClientEncoding(pConn->handle, "UTF8");
+   if (PQstatus(pConn->handle) == CONNECTION_BAD)
+   {
+      utf8_to_wchar(PQerrorMessage(pConn->handle), -1, errorText, DBDRV_MAX_ERROR_TEXT);
+      errorText[DBDRV_MAX_ERROR_TEXT - 1] = 0;
+      RemoveTrailingCRLFW(errorText);
+      PQfinish(pConn->handle);
+      delete_and_null(pConn);
+   }
+   else
+   {
+      PGresult	*pResult = PQexec(pConn->handle, "SET standard_conforming_strings TO off");
+      PQclear(pResult);
 
-   		pConn->mutexQueryLock = MutexCreate();
+      pResult = PQexec(pConn->handle, "SET escape_string_warning TO off");
+      PQclear(pResult);
 
-			if ((schema != nullptr) && (schema[0] != 0))
-			{
-				char query[256];
-				snprintf(query, 256, "SET search_path=%s", schema);
-				if (!UnsafeDrvQuery(pConn, query, errorText))
-				{
-					DrvDisconnect(pConn);
-					pConn = nullptr;
-				}
-			}
-		}
-	}
-	else
-	{
-		wcscpy(errorText, L"Memory allocation error");
-	}
+      PQsetClientEncoding(pConn->handle, "UTF8");
+
+      if ((schema != nullptr) && (schema[0] != 0))
+      {
+         char query[256];
+         snprintf(query, 256, "SET search_path=%s", schema);
+         if (!UnsafeDrvQuery(pConn, query, errorText))
+         {
+            DrvDisconnect(pConn);
+            pConn = nullptr;
+         }
+      }
+   }
 
    return pConn;
 }
@@ -309,14 +301,13 @@ extern "C" DBDRV_CONNECTION __EXPORT DrvConnect(const char *serverAddress,	const
 /**
  * Disconnect from database
  */
-extern "C" void __EXPORT DrvDisconnect(DBDRV_CONNECTION pConn)
+extern "C" void __EXPORT DrvDisconnect(PG_CONN *pConn)
 {
-	if (pConn != nullptr)
-	{
-   	PQfinish(((PG_CONN *)pConn)->handle);
-     	MutexDestroy(((PG_CONN *)pConn)->mutexQueryLock);
-      MemFree(pConn);
-	}
+   if (pConn != nullptr)
+   {
+      PQfinish(((PG_CONN *)pConn)->handle);
+      delete pConn;
+   }
 }
 
 /**
@@ -398,7 +389,7 @@ extern "C" DBDRV_STATEMENT __EXPORT DrvPrepare(PG_CONN *pConn, WCHAR *pwszQuery,
    {
       snprintf(hStmt->name, 64, "netxms_stmt_%p_%d", hStmt, (int)InterlockedIncrement(&s_statementId));
 
-      MutexLock(pConn->mutexQueryLock);
+      pConn->mutexQueryLock.lock();
       PGresult	*pResult = PQprepare(pConn->handle, hStmt->name, pszQueryUTF8, 0, NULL);
       if ((pResult == NULL) || (PQresultStatus(pResult) != PGRES_COMMAND_OK))
       {
@@ -421,7 +412,7 @@ extern "C" DBDRV_STATEMENT __EXPORT DrvPrepare(PG_CONN *pConn, WCHAR *pwszQuery,
          hStmt->buffers = NULL;
          *pdwError = DBERR_SUCCESS;
       }
-      MutexUnlock(pConn->mutexQueryLock);
+      pConn->mutexQueryLock.unlock();
       if (pResult != NULL)
          PQclear(pResult);
       FreeConvertedString(pszQueryUTF8, localBuffer);
@@ -510,7 +501,7 @@ extern "C" DWORD __EXPORT DrvExecute(PG_CONN *pConn, PG_STATEMENT *hStmt, WCHAR 
 {
 	DWORD rc;
 
-	MutexLock(pConn->mutexQueryLock);
+	pConn->mutexQueryLock.lock();
    bool retry;
    int retryCount = 60;
    do
@@ -557,7 +548,7 @@ extern "C" DWORD __EXPORT DrvExecute(PG_CONN *pConn, PG_STATEMENT *hStmt, WCHAR 
       PQclear(pResult);
    }
    while(retry);
-	MutexUnlock(pConn->mutexQueryLock);
+	pConn->mutexQueryLock.unlock();
 	return rc;
 }
 
@@ -574,9 +565,9 @@ extern "C" void __EXPORT DrvFreeStatement(PG_STATEMENT *hStmt)
       char query[256];
       snprintf(query, 256, "DEALLOCATE \"%s\"", hStmt->name);
 
-      MutexLock(hStmt->connection->mutexQueryLock);
-      UnsafeDrvQuery(hStmt->connection, query, NULL);
-      MutexUnlock(hStmt->connection->mutexQueryLock);
+      hStmt->connection->mutexQueryLock.lock();
+      UnsafeDrvQuery(hStmt->connection, query, nullptr);
+      hStmt->connection->mutexQueryLock.unlock();
    }
    else
    {
@@ -646,7 +637,7 @@ extern "C" DWORD __EXPORT DrvQuery(PG_CONN *pConn, WCHAR *pwszQuery, WCHAR *erro
 
 	char localBuffer[1024];
    char *pszQueryUTF8 = WideStringToUTF8(pwszQuery, localBuffer, 1024);
-	MutexLock(pConn->mutexQueryLock);
+	pConn->mutexQueryLock.lock();
 	if (UnsafeDrvQuery(pConn, pszQueryUTF8, errorText))
    {
       dwRet = DBERR_SUCCESS;
@@ -655,7 +646,7 @@ extern "C" DWORD __EXPORT DrvQuery(PG_CONN *pConn, WCHAR *pwszQuery, WCHAR *erro
    {
       dwRet = (PQstatus(pConn->handle) == CONNECTION_BAD) ? DBERR_CONNECTION_LOST : DBERR_OTHER_ERROR;
    }
-	MutexUnlock(pConn->mutexQueryLock);
+	pConn->mutexQueryLock.unlock();
    FreeConvertedString(pszQueryUTF8, localBuffer);
 
 	return dwRet;
@@ -714,7 +705,7 @@ extern "C" DBDRV_RESULT __EXPORT DrvSelect(PG_CONN *pConn, WCHAR *query, DWORD *
 {
    char localBuffer[1024];
    char *queryUTF8 = WideStringToUTF8(query, localBuffer, 1024);
-	MutexLock(pConn->mutexQueryLock);
+	pConn->mutexQueryLock.lock();
 	DBDRV_RESULT pResult = UnsafeDrvSelect(pConn, queryUTF8, errorText);
    if (pResult != nullptr)
    {
@@ -724,7 +715,7 @@ extern "C" DBDRV_RESULT __EXPORT DrvSelect(PG_CONN *pConn, WCHAR *query, DWORD *
    {
       *pdwError = (PQstatus(pConn->handle) == CONNECTION_BAD) ? DBERR_CONNECTION_LOST : DBERR_OTHER_ERROR;
    }
-	MutexUnlock(pConn->mutexQueryLock);
+	pConn->mutexQueryLock.unlock();
    FreeConvertedString(queryUTF8, localBuffer);
    return pResult;
 }
@@ -738,7 +729,7 @@ extern "C" DBDRV_RESULT __EXPORT DrvSelectPrepared(PG_CONN *conn, PG_STATEMENT *
    bool retry;
    int retryCount = 60;
 
-	MutexLock(conn->mutexQueryLock);
+	conn->mutexQueryLock.lock();
    do
    {
       retry = false;
@@ -783,7 +774,7 @@ extern "C" DBDRV_RESULT __EXPORT DrvSelectPrepared(PG_CONN *conn, PG_STATEMENT *
       }
    }
    while(retry);
-	MutexUnlock(conn->mutexQueryLock);
+	conn->mutexQueryLock.unlock();
 
 	return (DBDRV_RESULT)result;
 }
@@ -895,7 +886,7 @@ extern "C" DBDRV_UNBUFFERED_RESULT __EXPORT DrvSelectUnbuffered(PG_CONN *pConn, 
    result->fetchBuffer = NULL;
    result->keepFetchBuffer = true;
 
-	MutexLock(pConn->mutexQueryLock);
+	pConn->mutexQueryLock.lock();
 
 	bool success = false;
 	bool retry;
@@ -980,7 +971,7 @@ extern "C" DBDRV_UNBUFFERED_RESULT __EXPORT DrvSelectUnbuffered(PG_CONN *pConn, 
    if (!success)
    {
       MemFreeAndNull(result);
-      MutexUnlock(pConn->mutexQueryLock);
+      pConn->mutexQueryLock.unlock();
    }
    return (DBDRV_UNBUFFERED_RESULT)result;
 }
@@ -998,7 +989,7 @@ extern "C" DBDRV_UNBUFFERED_RESULT __EXPORT DrvSelectPreparedUnbuffered(PG_CONN 
    result->fetchBuffer = nullptr;
    result->keepFetchBuffer = true;
 
-   MutexLock(pConn->mutexQueryLock);
+   pConn->mutexQueryLock.lock();
 
    bool success = false;
    bool retry;
@@ -1083,7 +1074,7 @@ extern "C" DBDRV_UNBUFFERED_RESULT __EXPORT DrvSelectPreparedUnbuffered(PG_CONN 
    if (!success)
    {
       MemFreeAndNull(result);
-      MutexUnlock(pConn->mutexQueryLock);
+      pConn->mutexQueryLock.unlock();
    }
    return (DBDRV_UNBUFFERED_RESULT)result;
 }
@@ -1248,7 +1239,7 @@ extern "C" void __EXPORT DrvFreeUnbufferedResult(PG_UNBUFFERED_RESULT *result)
       PQclear(result->fetchBuffer);
    }
 
-   MutexUnlock(result->conn->mutexQueryLock);
+   result->conn->mutexQueryLock.unlock();
    MemFree(result);
 }
 
@@ -1262,7 +1253,7 @@ extern "C" DWORD __EXPORT DrvBegin(PG_CONN *pConn)
 	if (pConn == NULL)
       return DBERR_INVALID_HANDLE;
 
-	MutexLock(pConn->mutexQueryLock);
+	pConn->mutexQueryLock.lock();
 	if (UnsafeDrvQuery(pConn, "BEGIN", nullptr))
    {
       dwResult = DBERR_SUCCESS;
@@ -1271,7 +1262,7 @@ extern "C" DWORD __EXPORT DrvBegin(PG_CONN *pConn)
    {
       dwResult = (PQstatus(pConn->handle) == CONNECTION_BAD) ? DBERR_CONNECTION_LOST : DBERR_OTHER_ERROR;
    }
-	MutexUnlock(pConn->mutexQueryLock);
+	pConn->mutexQueryLock.unlock();
    return dwResult;
 }
 
@@ -1285,9 +1276,9 @@ extern "C" DWORD __EXPORT DrvCommit(PG_CONN *pConn)
 	if (pConn == NULL)
       return DBERR_INVALID_HANDLE;
 
-	MutexLock(pConn->mutexQueryLock);
+	pConn->mutexQueryLock.lock();
 	bRet = UnsafeDrvQuery(pConn, "COMMIT", nullptr);
-	MutexUnlock(pConn->mutexQueryLock);
+	pConn->mutexQueryLock.unlock();
    return bRet ? DBERR_SUCCESS : DBERR_OTHER_ERROR;
 }
 
@@ -1301,9 +1292,9 @@ extern "C" DWORD __EXPORT DrvRollback(PG_CONN *pConn)
 	if (pConn == NULL)
       return DBERR_INVALID_HANDLE;
 
-	MutexLock(pConn->mutexQueryLock);
+	pConn->mutexQueryLock.lock();
 	bRet = UnsafeDrvQuery(pConn, "ROLLBACK", NULL);
-	MutexUnlock(pConn->mutexQueryLock);
+	pConn->mutexQueryLock.unlock();
    return bRet ? DBERR_SUCCESS : DBERR_OTHER_ERROR;
 }
 
@@ -1316,9 +1307,9 @@ extern "C" int __EXPORT DrvIsTableExist(PG_CONN *pConn, const WCHAR *name)
    snprintf(query, 256, "SELECT count(*) FROM information_schema.tables WHERE table_catalog=current_database() AND table_schema=current_schema() AND lower(table_name)=lower('%ls')", name);
    WCHAR errorText[DBDRV_MAX_ERROR_TEXT];
    int rc = DBIsTableExist_Failure;
-   MutexLock(pConn->mutexQueryLock);
+   pConn->mutexQueryLock.lock();
    DBDRV_RESULT hResult = UnsafeDrvSelect(pConn, query, errorText);
-   MutexUnlock(pConn->mutexQueryLock);
+   pConn->mutexQueryLock.unlock();
    if (hResult != nullptr)
    {
       WCHAR buffer[64] = L"";

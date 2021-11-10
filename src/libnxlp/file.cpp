@@ -559,7 +559,7 @@ bool LogParser::monitorFile(off_t startOffset)
             nxlog_debug_tag(DEBUG_TAG, 6, _T("Will not open file \"%s\" because of exclusion period"), getFileName());
             setStatus(LPS_SUSPENDED);
 	      }
-         if (ConditionWait(m_stopCondition, 30000))
+         if (m_stopCondition.wait(30000))
             break;
          continue;
 	   }
@@ -578,7 +578,7 @@ bool LogParser::monitorFile(off_t startOffset)
          if (errno == ENOENT)
             readFromStart = true;
          setStatus(LPS_NO_FILE);
-         if (ConditionWait(m_stopCondition, 10000))
+         if (m_stopCondition.wait(10000))
             break;
          continue;
       }
@@ -591,7 +591,7 @@ bool LogParser::monitorFile(off_t startOffset)
 		if (fh == -1)
       {
          setStatus(LPS_OPEN_ERROR);
-         if (ConditionWait(m_stopCondition, 10000))
+         if (m_stopCondition.wait(10000))
             break;
          continue;
       }
@@ -635,7 +635,7 @@ bool LogParser::monitorFile(off_t startOffset)
 
 		while(true)
 		{
-			if (ConditionWait(m_stopCondition, m_fileCheckInterval))
+			if (m_stopCondition.wait(m_fileCheckInterval))
 			{
 			   _close(fh);
 				goto stop_parser;
@@ -770,7 +770,7 @@ bool LogParser::monitorFile2(off_t startOffset)
             nxlog_debug_tag(DEBUG_TAG, 6, _T("Will not open file \"%s\" because of exclusion period"), getFileName());
             setStatus(LPS_SUSPENDED);
          }
-         if (ConditionWait(m_stopCondition, 30000))
+         if (m_stopCondition.wait(30000))
             break;
          continue;
       }
@@ -794,7 +794,7 @@ bool LogParser::monitorFile2(off_t startOffset)
             startOffset = -1;
          }
          setStatus(LPS_NO_FILE);
-         if (ConditionWait(m_stopCondition, 10000))
+         if (m_stopCondition.wait(10000))
             break;
          continue;
       }
@@ -814,7 +814,7 @@ bool LogParser::monitorFile2(off_t startOffset)
              (!m_ignoreMTime && (size == st.st_size) && (mtime == st.st_mtime)))
 #endif
          {
-            if (ConditionWait(m_stopCondition, m_fileCheckInterval))
+            if (m_stopCondition.wait(m_fileCheckInterval))
                break;
             continue;
          }
@@ -828,7 +828,7 @@ bool LogParser::monitorFile2(off_t startOffset)
       if (fh == -1)
       {
          setStatus(LPS_OPEN_ERROR);
-         if (ConditionWait(m_stopCondition, 10000))  // retry in 10 seconds
+         if (m_stopCondition.wait(10000))  // retry in 10 seconds
             break;
          continue;
       }
@@ -917,7 +917,7 @@ bool LogParser::monitorFile2(off_t startOffset)
       size = static_cast<size_t>(st.st_size);
       mtime = st.st_mtime;
 
-      if (ConditionWait(m_stopCondition, m_fileCheckInterval))
+      if (m_stopCondition.wait(m_fileCheckInterval))
          break;
    }
 
@@ -998,7 +998,7 @@ bool LogParser::monitorFileWithSnapshot(off_t startOffset)
             nxlog_debug_tag(DEBUG_TAG, 6, _T("Will not open file \"%s\" because of exclusion period"), getFileName());
             setStatus(LPS_SUSPENDED);
          }
-         if (ConditionWait(m_stopCondition, 30000))
+         if (m_stopCondition.wait(30000))
             break;
          continue;
       }
@@ -1016,7 +1016,7 @@ bool LogParser::monitorFileWithSnapshot(off_t startOffset)
       if (CALL_STAT(fname, &st) != 0)
       {
          setStatus(LPS_NO_FILE);
-         if (ConditionWait(m_stopCondition, 10000))
+         if (m_stopCondition.wait(10000))
             break;
          continue;
       }
@@ -1026,7 +1026,7 @@ bool LogParser::monitorFileWithSnapshot(off_t startOffset)
 
       if ((size == st.st_size) && (mtime == st.st_mtime) && (ctime == st.st_ctime) && !readFromStart)
       {
-         if (ConditionWait(m_stopCondition, m_fileCheckInterval))
+         if (m_stopCondition.wait(m_fileCheckInterval))
             break;
          continue;
       }
@@ -1035,7 +1035,7 @@ bool LogParser::monitorFileWithSnapshot(off_t startOffset)
       if (snapshot == nullptr)
       {
          setStatus(LPS_VSS_FAILURE);
-         if (ConditionWait(m_stopCondition, 30000))  // retry in 30 seconds
+         if (m_stopCondition.wait(30000))  // retry in 30 seconds
             break;
          continue;
       }
@@ -1045,7 +1045,7 @@ bool LogParser::monitorFileWithSnapshot(off_t startOffset)
       {
          DestroyFileSnapshot(snapshot);
          setStatus(LPS_OPEN_ERROR);
-         if (ConditionWait(m_stopCondition, 10000))  // retry in 10 seconds
+         if (m_stopCondition.wait(10000))  // retry in 10 seconds
             break;
          continue;
       }
@@ -1099,7 +1099,7 @@ bool LogParser::monitorFileWithSnapshot(off_t startOffset)
       mtime = st.st_mtime;
 
       DestroyFileSnapshot(snapshot);
-      if (ConditionWait(m_stopCondition, m_fileCheckInterval))
+      if (m_stopCondition.wait(m_fileCheckInterval))
          break;
    }
 

@@ -251,7 +251,7 @@ LONG H_SIPTestRegistration(const TCHAR *param, const TCHAR *arg, TCHAR *value, A
 /**
  * Registration test constructor
  */
-SIPRegistrationTest::SIPRegistrationTest(ConfigEntry *config, const char *defaultProxy)
+SIPRegistrationTest::SIPRegistrationTest(ConfigEntry *config, const char *defaultProxy) : m_mutex(MutexType::FAST)
 {
    m_name = MemCopyString(config->getName());
 #ifdef UNICODE
@@ -305,7 +305,6 @@ SIPRegistrationTest::SIPRegistrationTest(ConfigEntry *config, const char *defaul
    m_lastRunTime = 0;
    m_elapsedTime = 0;
    m_status = 500;
-   m_mutex = MutexCreate();
    m_stop = false;
 }
 
@@ -319,7 +318,6 @@ SIPRegistrationTest::~SIPRegistrationTest()
    MemFree(m_name);
    MemFree(m_password);
    MemFree(m_proxy);
-   MutexDestroy(m_mutex);
 }
 
 /**
@@ -331,12 +329,12 @@ void SIPRegistrationTest::run()
       return;
 
    int status;
-   INT32 elapsed = RegisterSIPClient(m_login, m_password, m_domain, m_proxy, m_timeout, &status);
-   MutexLock(m_mutex);
-   m_lastRunTime = time(NULL);
+   int32_t elapsed = RegisterSIPClient(m_login, m_password, m_domain, m_proxy, m_timeout, &status);
+   m_mutex.lock();
+   m_lastRunTime = time(nullptr);
    m_elapsedTime = elapsed;
    m_status = status;
-   MutexUnlock(m_mutex);
+   m_mutex.unlock();
    nxlog_debug_tag(DEBUG_TAG, 7, _T("SIP registration test for %hs@%hs via %hs completed (status=%03d elapsed=%d)"),
             m_login, m_domain, m_proxy, status, elapsed);
 

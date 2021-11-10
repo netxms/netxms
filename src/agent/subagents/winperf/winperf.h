@@ -69,7 +69,7 @@ private:
    DWORD m_interval;    // Interval beetween samples in milliseconds
 	ObjectArray<WINPERF_COUNTER> *m_counters;
    TCHAR m_class;
-	MUTEX m_mutex;
+	Mutex m_mutex;
 	HANDLE m_changeCondition;
    THREAD m_collectorThread;
 

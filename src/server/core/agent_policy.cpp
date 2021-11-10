@@ -29,7 +29,7 @@
 /**
  * Constructor for user-initiated object creation
  */
-GenericAgentPolicy::GenericAgentPolicy(const uuid& guid, const TCHAR *type, uint32_t ownerId)
+GenericAgentPolicy::GenericAgentPolicy(const uuid& guid, const TCHAR *type, uint32_t ownerId) : m_contentLock(MutexType::FAST)
 {
    m_name[0] = 0;
    _tcslcpy(m_type, type, MAX_POLICY_TYPE_LEN);
@@ -38,13 +38,12 @@ GenericAgentPolicy::GenericAgentPolicy(const uuid& guid, const TCHAR *type, uint
    m_content = nullptr;
    m_version = 1;
    m_flags = 0;
-   m_contentLock = MutexCreateFast();
 }
 
 /**
  * Constructor for user-initiated object creation
  */
-GenericAgentPolicy::GenericAgentPolicy(const TCHAR *name, const TCHAR *type, uint32_t ownerId)
+GenericAgentPolicy::GenericAgentPolicy(const TCHAR *name, const TCHAR *type, uint32_t ownerId) : m_contentLock(MutexType::FAST)
 {
    _tcslcpy(m_name, name, MAX_OBJECT_NAME);
    _tcslcpy(m_type, type, MAX_POLICY_TYPE_LEN);
@@ -53,7 +52,6 @@ GenericAgentPolicy::GenericAgentPolicy(const TCHAR *name, const TCHAR *type, uin
    m_content = nullptr;
    m_version = 1;
    m_flags = 0;
-   m_contentLock = MutexCreateFast();
 }
 
 /**
@@ -61,7 +59,6 @@ GenericAgentPolicy::GenericAgentPolicy(const TCHAR *name, const TCHAR *type, uin
  */
 GenericAgentPolicy::~GenericAgentPolicy()
 {
-   MutexDestroy(m_contentLock);
    MemFree(m_content);
 }
 
@@ -159,7 +156,7 @@ void GenericAgentPolicy::fillUpdateMessage(NXCPMessage *msg) const
  */
 uint32_t GenericAgentPolicy::modifyFromMessage(const NXCPMessage& msg)
 {
-   MutexLock(m_contentLock);
+   m_contentLock.lock();
    msg.getFieldAsString(VID_NAME, m_name, MAX_DB_STRING);
    if (msg.isFieldExist(VID_CONFIG_FILE_DATA))
    {
@@ -171,7 +168,7 @@ uint32_t GenericAgentPolicy::modifyFromMessage(const NXCPMessage& msg)
       m_flags = msg.getFieldAsUInt32(VID_FLAGS);
    }
    m_version++;
-   MutexUnlock(m_contentLock);
+   m_contentLock.unlock();
    return RCC_SUCCESS;
 }
 
@@ -231,7 +228,7 @@ void GenericAgentPolicy::deploy(shared_ptr<AgentPolicyDeploymentData> data)
    }
 
    bool sendUpdate = true;
-   MutexLock(m_contentLock);
+   m_contentLock.lock();
 
    if (!data->forceInstall && data->currVersion >= m_version && (m_flags & EXPAND_MACRO) == 0)
    {
@@ -262,7 +259,7 @@ void GenericAgentPolicy::deploy(shared_ptr<AgentPolicyDeploymentData> data)
    {
       content = MemCopyStringA(m_content);
    }
-   MutexUnlock(m_contentLock);
+   m_contentLock.unlock();
 
    if (sendUpdate)
    {
@@ -472,9 +469,9 @@ static unique_ptr<ObjectArray<FileInfo>> GetFilesFromConfig(const char* content)
 void FileDeliveryPolicy::exportAdditionalData(StringBuffer &xml)
 {
    xml.append(_T("\t\t\t\t\t<files>\n"));
-   MutexLock(m_contentLock);
+   m_contentLock.lock();
    unique_ptr<ObjectArray<FileInfo>> files = GetFilesFromConfig(m_content);
-   MutexUnlock(m_contentLock);
+   m_contentLock.unlock();
    for (int i = 0; i < files->size(); i++)
    {
       StringBuffer fileName = _T("FileDelivery-");
@@ -633,7 +630,7 @@ uint32_t FileDeliveryPolicy::modifyFromMessage(const NXCPMessage& request)
 
    if (request.getFieldAsBoolean(VID_DUPLICATE))
    {
-      MutexLock(m_contentLock);
+      m_contentLock.lock();
       ObjectArray<FileInfo> files(64, 64, Ownership::True);
       Config data;
       data.loadXmlConfigFromMemory(m_content, static_cast<int>(strlen(m_content)), nullptr, "FileDeliveryPolicy", false);
@@ -650,7 +647,7 @@ uint32_t FileDeliveryPolicy::modifyFromMessage(const NXCPMessage& request)
       MemFree(m_content);
       data.setTopLevelTag(_T("FileDeliveryPolicy"));
       m_content = data.createXml().getUTF8String();
-      MutexUnlock(m_contentLock);
+      m_contentLock.unlock();
 
       for (int i = 0; i < files.size(); i++)
       {
@@ -698,17 +695,17 @@ bool FileDeliveryPolicy::deleteFromDatabase(DB_HANDLE hdb)
  */
 void FileDeliveryPolicy::validate()
 {
-   MutexLock(m_contentLock);
+   m_contentLock.lock();
    if (m_content == nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("FileDeliveryPolicy::validate(): empty content"));
-      MutexUnlock(m_contentLock);
+      m_contentLock.unlock();
       return;
    }
 
    nxlog_debug_tag(DEBUG_TAG, 6, _T("FileDeliveryPolicy::validate(): preparing file list"));
    unique_ptr<ObjectArray<FileInfo>> files = GetFilesFromConfig(m_content);
-   MutexUnlock(m_contentLock);
+   m_contentLock.unlock();
 
    for(int i = 0; i < files->size(); i++)
    {
@@ -762,17 +759,17 @@ void FileDeliveryPolicy::deploy(shared_ptr<AgentPolicyDeploymentData> data)
       return;
    }
 
-   MutexLock(m_contentLock);
+   m_contentLock.lock();
    if (m_content == nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("FileDeliveryPolicy::deploy(%s): empty content)"), data->debugId);
-      MutexUnlock(m_contentLock);
+      m_contentLock.unlock();
       return;
    }
 
    nxlog_debug_tag(DEBUG_TAG, 6, _T("FileDeliveryPolicy::deploy(%s): preparing file list"), data->debugId);
    unique_ptr<ObjectArray<FileInfo>> files = GetFilesFromConfig(m_content);
-   MutexUnlock(m_contentLock);
+   m_contentLock.unlock();
 
    StringList fileRequest;
    for (int i = 0; i < files->size(); i++)

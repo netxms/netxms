@@ -71,15 +71,14 @@ static ipfix_datarecord_t g_data = { nullptr, nullptr, 0 }; /* ipfix_export */
 static ipfix_field_t *g_ipfix_fields;
 
 #ifndef NOTHREADS
-static MUTEX s_mutex;
+static Mutex s_mutex;
 static inline void mod_lock()
 {
-   if (!MutexLock(s_mutex))
-      nxlog_debug_tag(LIBIPFIX_DEBUG_TAG, 1, _T("[mod_lock] mutex_lock() failed"));
+   s_mutex.lock();
 }
 static inline void mod_unlock()
 {
-   MutexUnlock(s_mutex);
+   s_mutex.unlock();
 }
 #else
 static inline void mod_lock()
@@ -677,9 +676,6 @@ int ipfix_init()
       ipfix_cleanup();
    }
 
-#ifndef NOTHREADS
-   s_mutex = MutexCreate();
-#endif
    g_tstart = time(nullptr);
 #ifndef _WIN32
    signal(SIGPIPE, SIG_IGN);
@@ -820,9 +816,6 @@ void ipfix_cleanup()
    g_data.maxfields = 0;
    g_data.lens = nullptr;
    g_data.addrs = nullptr;
-#ifndef NOTHREADS
-   MutexDestroy(s_mutex);
-#endif
 }
 
 int _ipfix_connect(ipfix_collector_t *col)

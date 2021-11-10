@@ -25,7 +25,7 @@ class LIBNETXMS_EXPORTABLE NamedPipe
 private:
    TCHAR m_name[MAX_PIPE_NAME_LEN];
    HPIPE m_handle;
-   MUTEX m_writeLock;
+   Mutex m_writeLock;
    TCHAR m_user[64];
 #ifdef _WIN32
    HANDLE m_writeEvent;
@@ -97,7 +97,7 @@ private:
    pid_t m_pid;
    int m_pipe[2];
 #endif
-   CONDITION m_completed;
+   Condition m_completed;
    bool m_started;
    bool m_running;
    uint32_t m_id;
@@ -192,9 +192,9 @@ private:
    void receiverThread();
 
    static ObjectArray<SubProcessExecutor> *m_registry;
-   static MUTEX m_registryLock;
+   static Mutex m_registryLock;
    static THREAD m_monitorThread;
-   static CONDITION m_stopCondition;
+   static Condition m_stopCondition;
 
    static THREAD_RESULT THREAD_CALL monitorThread(void *arg);
    static THREAD_RESULT THREAD_CALL receiverThreadStarter(void *arg);
@@ -206,8 +206,8 @@ public:
    virtual bool execute();
    virtual void stop();
 
-   bool sendCommand(UINT16 command, const void *data = NULL, size_t dataSize = 0, UINT32 *requestId = NULL);
-   bool sendRequest(UINT16 command, const void *data, size_t dataSize, void **response, size_t *rspSize, UINT32 timeout);
+   bool sendCommand(uint16_t command, const void *data = nullptr, size_t dataSize = 0, uint32_t *requestId = nullptr);
+   bool sendRequest(uint16_t command, const void *data, size_t dataSize, void **response, size_t *rspSize, uint32_t timeout);
 
    const TCHAR *getName() const { return m_name; }
    SubProcessState getState() const { return m_state; }

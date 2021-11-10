@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2015 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -48,14 +48,14 @@ static VolatileCounter s_commandId = 1;
 /**
  * Join condition
  */
-static CONDITION s_joinCondition = ConditionCreate(TRUE);
+static Condition s_joinCondition(true);
 
 /**
  * Mark as joined
  */
 void SetJoinCondition()
 {
-   ConditionSet(s_joinCondition);
+   s_joinCondition.set();
 }
 
 /**
@@ -68,16 +68,16 @@ static void ProcessClusterNotification(ClusterNodeInfo *node, int code)
    {
       case CN_NEW_MASTER:
          ClusterDebug(3, _T("Node %d [%s] is new master"), node->m_id, (const TCHAR *)node->m_addr->toString());
-         MutexLock(node->m_mutex);
+         node->m_mutex->lock();
          node->m_master = true;
          ChangeClusterNodeState(node, CLUSTER_NODE_UP);
-         MutexUnlock(node->m_mutex);
-         ConditionSet(s_joinCondition);
+         node->m_mutex->unlock();
+         s_joinCondition.set();
          break;
       case CN_NODE_RUNNING:
-         MutexLock(node->m_mutex);
+         node->m_mutex->lock();
          ChangeClusterNodeState(node, CLUSTER_NODE_UP);
-         MutexUnlock(node->m_mutex);
+         node->m_mutex->unlock();
          break;
       default:
          if (code >= CN_CUSTOM)
@@ -104,14 +104,14 @@ static void ReceiverThreadShutdownCB(void *arg)
 {
    ReceiverThreadStopData *data = (ReceiverThreadStopData *)arg;
 
-   MutexLock(data->node->m_mutex);
+   data->node->m_mutex->lock();
    if (data->node->m_socket == data->s)
    {
       shutdown(data->s, SHUT_RDWR);
       data->node->m_socket = INVALID_SOCKET;
       ChangeClusterNodeState(data->node, CLUSTER_NODE_DOWN);
    }
-   MutexUnlock(data->node->m_mutex);
+   data->node->m_mutex->unlock();
    free(data);
    ClusterDebug(6, _T("Cluster receiver thread shutdown callback completed"));
 }
@@ -129,9 +129,9 @@ static THREAD_RESULT THREAD_CALL ClusterReceiverThread(void *arg)
 
    while(!g_nxccShutdown)
    {
-      MutexLock(node->m_mutex);
+      node->m_mutex->lock();
       SOCKET cs = node->m_socket;
-      MutexUnlock(node->m_mutex);
+      node->m_mutex->unlock();
 
       if (cs != s)
          break;   // socket was changed
@@ -235,10 +235,10 @@ void ChangeClusterNodeState(ClusterNodeInfo *node, ClusterNodeState state)
       case CLUSTER_NODE_DOWN:
          receiverThread = node->m_receiverThread;
          node->m_receiverThread = INVALID_THREAD_HANDLE;
-         MutexUnlock(node->m_mutex);
+         node->m_mutex->unlock();
          // Join receiver thread with node mutex unlocked to avoid deadlock
          ThreadJoin(receiverThread);
-         MutexLock(node->m_mutex);
+         node->m_mutex->lock();
          g_nxccEventHandler->onNodeDisconnect(node->m_id);
          if (node->m_master)
          {
@@ -293,7 +293,7 @@ static THREAD_RESULT THREAD_CALL ClusterListenerThread(void *arg)
             continue;
          }
 
-         MutexLock(g_nxccNodes[idx].m_mutex);
+         g_nxccNodes[idx].m_mutex->lock();
          if (g_nxccNodes[idx].m_socket == INVALID_SOCKET)
          {
             g_nxccNodes[idx].m_socket = in;
@@ -307,7 +307,7 @@ static THREAD_RESULT THREAD_CALL ClusterListenerThread(void *arg)
                g_nxccNodes[idx].m_id, (const TCHAR *)g_nxccNodes[idx].m_addr->toString());
             closesocket(in);
          }
-         MutexUnlock(g_nxccNodes[idx].m_mutex);
+         g_nxccNodes[idx].m_mutex->unlock();
       }
    }
 
@@ -331,12 +331,12 @@ static THREAD_RESULT THREAD_CALL ClusterConnectorThread(void *arg)
 
       for(int i = 0; i < CLUSTER_MAX_NODE_ID; i++)
       {
-         MutexLock(g_nxccNodes[i].m_mutex);
+         g_nxccNodes[i].m_mutex->lock();
          if ((g_nxccNodes[i].m_id != 0) && (g_nxccNodes[i].m_socket == INVALID_SOCKET))
          {
-            MutexUnlock(g_nxccNodes[i].m_mutex);
+            g_nxccNodes[i].m_mutex->unlock();
             SOCKET s = ConnectToHost(*g_nxccNodes[i].m_addr, g_nxccNodes[i].m_port, 500);
-            MutexLock(g_nxccNodes[i].m_mutex);
+            g_nxccNodes[i].m_mutex->lock();
             if (s != INVALID_SOCKET)
             {
                if (g_nxccNodes[i].m_socket == INVALID_SOCKET)
@@ -354,7 +354,7 @@ static THREAD_RESULT THREAD_CALL ClusterConnectorThread(void *arg)
                }
             }
          }
-         MutexUnlock(g_nxccNodes[i].m_mutex);
+         g_nxccNodes[i].m_mutex->unlock();
       }
    }
 
@@ -385,7 +385,7 @@ static THREAD_RESULT THREAD_CALL ClusterKeepaliveThread(void *arg)
          if (g_nxccNodes[i].m_id == 0)
             continue;   // empty slot
 
-         MutexLock(g_nxccNodes[i].m_mutex);
+         g_nxccNodes[i].m_mutex->lock();
          if (g_nxccNodes[i].m_socket != INVALID_SOCKET)
          {
             if (SendEx(g_nxccNodes[i].m_socket, rawMsg, ntohl(rawMsg->size), 0, NULL) <= 0)
@@ -397,7 +397,7 @@ static THREAD_RESULT THREAD_CALL ClusterKeepaliveThread(void *arg)
                ChangeClusterNodeState(&g_nxccNodes[i], CLUSTER_NODE_DOWN);
             }
          }
-         MutexUnlock(g_nxccNodes[i].m_mutex);
+         g_nxccNodes[i].m_mutex->unlock();
       }
    }
 
@@ -417,7 +417,7 @@ void ClusterSendMessage(ClusterNodeInfo *node, NXCPMessage *msg)
                 node->m_id, (const TCHAR *)node->m_addr->toString());
 
    NXCP_MESSAGE *rawMsg = msg->serialize();
-   MutexLock(node->m_mutex);
+   node->m_mutex->lock();
    if (node->m_socket != INVALID_SOCKET)
    {
       if (SendEx(node->m_socket, rawMsg, ntohl(rawMsg->size), 0, NULL) <= 0)
@@ -432,8 +432,8 @@ void ClusterSendMessage(ClusterNodeInfo *node, NXCPMessage *msg)
    {
       ClusterDebug(5, _T("ClusterSendMessage: send failed for peer %d [%s]"), node->m_id, (const TCHAR *)node->m_addr->toString());
    }
-   MutexUnlock(node->m_mutex);
-   free(rawMsg);
+   node->m_mutex->unlock();
+   MemFree(rawMsg);
 }
 
 /**
@@ -462,7 +462,7 @@ void LIBNXCC_EXPORTABLE ClusterNotify(NXCPMessage *msg)
       if (g_nxccNodes[i].m_id == 0)
          continue;   // empty slot
 
-      MutexLock(g_nxccNodes[i].m_mutex);
+      g_nxccNodes[i].m_mutex->lock();
       if (g_nxccNodes[i].m_socket != INVALID_SOCKET)
       {
          if (SendEx(g_nxccNodes[i].m_socket, rawMsg, ntohl(rawMsg->size), 0, NULL) <= 0)
@@ -474,10 +474,10 @@ void LIBNXCC_EXPORTABLE ClusterNotify(NXCPMessage *msg)
             ChangeClusterNodeState(&g_nxccNodes[i], CLUSTER_NODE_DOWN);
          }
       }
-      MutexUnlock(g_nxccNodes[i].m_mutex);
+      g_nxccNodes[i].m_mutex->unlock();
    }
 
-   free(rawMsg);
+   MemFree(rawMsg);
 }
 
 /**
@@ -538,7 +538,7 @@ int LIBNXCC_EXPORTABLE ClusterSendCommand(NXCPMessage *msg)
       if (g_nxccNodes[i].m_id == 0)
          continue;   // empty slot
 
-      MutexLock(g_nxccNodes[i].m_mutex);
+      g_nxccNodes[i].m_mutex->lock();
       if (g_nxccNodes[i].m_socket != INVALID_SOCKET)
       {
          if (SendEx(g_nxccNodes[i].m_socket, rawMsg, ntohl(rawMsg->size), 0, NULL) > 0)
@@ -555,10 +555,10 @@ int LIBNXCC_EXPORTABLE ClusterSendCommand(NXCPMessage *msg)
             errors++;
          }
       }
-      MutexUnlock(g_nxccNodes[i].m_mutex);
+      g_nxccNodes[i].m_mutex->unlock();
    }
 
-   free(rawMsg);
+   MemFree(rawMsg);
 
    // Collect responses
    for(int i = 0; i < CLUSTER_MAX_NODE_ID; i++)
@@ -585,7 +585,7 @@ int LIBNXCC_EXPORTABLE ClusterSendCommand(NXCPMessage *msg)
       }
    }
 
-   UINT32 elapsed = (UINT32)(GetCurrentTimeMs() - startTime);
+   uint32_t elapsed = (UINT32)(GetCurrentTimeMs() - startTime);
    TCHAR buffer[64];
    nxlog_debug(6, _T("ClusterCommand: command %s [%u] processed in %u ms (errors=%d)"),
                NXCPMessageCodeName(msg->getCode(), buffer), msg->getId(), elapsed, errors);
@@ -642,7 +642,7 @@ NXCPMessage LIBNXCC_EXPORTABLE *ClusterSendDirectCommandEx(UINT32 nodeId, NXCPMe
                 node->m_id, (const TCHAR *)node->m_addr->toString());
 
    bool sent = false;
-   MutexLock(node->m_mutex);
+   node->m_mutex->lock();
    if (node->m_socket != INVALID_SOCKET)
    {
       if (SendEx(node->m_socket, rawMsg, ntohl(rawMsg->size), 0, NULL) > 0)
@@ -661,9 +661,9 @@ NXCPMessage LIBNXCC_EXPORTABLE *ClusterSendDirectCommandEx(UINT32 nodeId, NXCPMe
    {
       ClusterDebug(5, _T("ClusterDirectCommand: send failed for peer %d [%s]"), nodeId, (const TCHAR *)node->m_addr->toString());
    }
-   MutexUnlock(node->m_mutex);
+   node->m_mutex->unlock();
 
-   free(rawMsg);
+   MemFree(rawMsg);
 
    // Wait for responses
    NXCPMessage *response;
@@ -785,7 +785,7 @@ bool LIBNXCC_EXPORTABLE ClusterJoin()
    s_keepaliveThread = ThreadCreateEx(ClusterKeepaliveThread, 0, NULL);
 
    ClusterDebug(1, _T("ClusterJoin: waiting for other nodes"));
-   if (ConditionWait(s_joinCondition, 60000))  // wait 1 minute for other nodes to join
+   if (s_joinCondition.wait(60000))  // wait 1 minute for other nodes to join
    {
       ClusterDebug(1, _T("ClusterJoin: successfully joined"));
    }

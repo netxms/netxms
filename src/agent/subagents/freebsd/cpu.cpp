@@ -24,13 +24,13 @@
 #define MAX_CPU               (64 + 1)
 
 static THREAD m_cpuUsageCollector = INVALID_THREAD_HANDLE;
-static MUTEX m_cpuUsageMutex = INVALID_MUTEX_HANDLE;
+static Mutex m_cpuUsageMutex(MutexType::FAST);
 static bool volatile m_stopCollectorThread = false;
-static UINT64 m_user[MAX_CPU];
-static UINT64 m_nice[MAX_CPU];
-static UINT64 m_system[MAX_CPU];
-static UINT64 m_idle[MAX_CPU];
-static UINT64 m_cpuInterrupts;
+static uint64_t m_user[MAX_CPU];
+static uint64_t m_nice[MAX_CPU];
+static uint64_t m_system[MAX_CPU];
+static uint64_t m_idle[MAX_CPU];
+static uint64_t m_cpuInterrupts;
 static float *m_cpuUsage;
 static float *m_cpuUsageUser;
 static float *m_cpuUsageNice;
@@ -44,13 +44,13 @@ static int m_cpuCount = 0;
  */
 static void CpuUsageCollector()
 {
-   UINT64 buffer[1024];
+   uint64_t buffer[1024];
    size_t buffSize = sizeof(buffer);
 
    if (ExecSysctl("kern.cp_times", buffer, buffSize) != SYSINFO_RC_SUCCESS)
       return;
 
-   MutexLock(m_cpuUsageMutex);
+   m_cpuUsageMutex.lock();
    if (m_currentSlot == CPU_USAGE_SLOTS)
    {
       m_currentSlot = 0;
@@ -116,7 +116,7 @@ static void CpuUsageCollector()
 
    /* go to the next slot */
    m_currentSlot++;
-   MutexUnlock(m_cpuUsageMutex);
+   m_cpuUsageMutex.unlock();
 }
 
 /**
@@ -141,8 +141,6 @@ void StartCpuUsageCollector()
    size_t size = sizeof(m_cpuCount);
    if (ExecSysctl("hw.ncpu", &m_cpuCount, size) != SYSINFO_RC_SUCCESS)
       return;
-
-   m_cpuUsageMutex = MutexCreate();
 
 #define SIZE sizeof(float) * CPU_USAGE_SLOTS * m_cpuCount
 #define ALLOCATE_AND_CLEAR(x) x = (float *)malloc(SIZE); memset(x, 0, SIZE);
@@ -184,13 +182,12 @@ void ShutdownCpuUsageCollector()
 {
    m_stopCollectorThread = true;
    ThreadJoin(m_cpuUsageCollector);
-   MutexDestroy(m_cpuUsageMutex);
 
-   free(m_cpuUsage);
-   free(m_cpuUsageUser);
-   free(m_cpuUsageNice);
-   free(m_cpuUsageSystem);
-   free(m_cpuUsageIdle);
+   MemFree(m_cpuUsage);
+   MemFree(m_cpuUsageUser);
+   MemFree(m_cpuUsageNice);
+   MemFree(m_cpuUsageSystem);
+   MemFree(m_cpuUsageIdle);
 }
 
 static void GetUsage(int source, int cpu, int count, TCHAR *value)
@@ -219,7 +216,7 @@ static void GetUsage(int source, int cpu, int count, TCHAR *value)
 
    table += cpu * CPU_USAGE_SLOTS;
    double usage = 0;
-   MutexLock(m_cpuUsageMutex);
+   m_cpuUsageMutex.lock();
 
    float *p = table + m_currentSlot - 1;
    for (int i = 0; i < count; i++)
@@ -232,7 +229,7 @@ static void GetUsage(int source, int cpu, int count, TCHAR *value)
       p--;
    }
 
-   MutexUnlock(m_cpuUsageMutex);
+   m_cpuUsageMutex.unlock();
 
    usage /= count;
 

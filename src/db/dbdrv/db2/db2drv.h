@@ -66,45 +66,45 @@
 /**
  * Driver connection handle structure
  */
-typedef struct
+struct DB2DRV_CONN
 {
-   MUTEX mutexQuery;
+   Mutex *mutexQuery;
    SQLHENV sqlEnv;
    SQLHDBC sqlConn;
-} DB2DRV_CONN;
+};
 
 /**
  * Prepared statement structure
  */
-typedef struct
+struct DB2DRV_STATEMENT
 {
-	SQLHSTMT handle;
-	Array *buffers;
-	DB2DRV_CONN *connection;
-} DB2DRV_STATEMENT;
+   SQLHSTMT handle;
+   Array *buffers;
+   DB2DRV_CONN *connection;
+};
 
 /**
  * Result buffer structure
  */
-typedef struct
+struct DB2DRV_QUERY_RESULT
 {
    long numRows;
    long numColumns;
    NETXMS_WCHAR **values;
-	char **columnNames;
-} DB2DRV_QUERY_RESULT;
+   char **columnNames;
+};
 
 /**
  * Async result buffer structure
  */
-typedef struct
+struct DB2DRV_UNBUFFERED_QUERY_RESULT
 {
    SQLHSTMT sqlStatement;
    bool isPrepared;
    long numColumns;
    DB2DRV_CONN *pConn;
    bool noMoreRows;
-	char **columnNames;
-} DB2DRV_UNBUFFERED_QUERY_RESULT;
+   char **columnNames;
+};
 
 #endif   /* _db2drv_h_ */

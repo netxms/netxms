@@ -66,7 +66,7 @@ struct ORACLE_CONN
 	OCISvcCtx *handleService;
 	OCISession *handleSession;
 	OCIError *handleError;
-	MUTEX mutexQueryLock;
+	Mutex *mutexQueryLock;
 	int nTransLevel;
 	sb4 lastErrorCode;
 	WCHAR lastErrorText[DBDRV_MAX_ERROR_TEXT];

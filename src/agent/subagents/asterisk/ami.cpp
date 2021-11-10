@@ -342,7 +342,7 @@ bool AsteriskSystem::sendLoginRequest()
    char msg[1024];
    snprintf(msg, 1024, "Action: Login\r\nActionID: -1\r\nUsername: %s\r\nSecret: %s\r\n\r\n", m_login, m_password);
    size_t len = strlen(msg);
-   return SendEx(m_socket, msg, len, 0, INVALID_MUTEX_HANDLE) == len;
+   return SendEx(m_socket, msg, len, 0, nullptr) == len;
 }
 
 /**
@@ -419,16 +419,16 @@ bool AsteriskSystem::processMessage(const shared_ptr<AmiMessage>& msg)
    else if ((msg->getType() == AMI_RESPONSE) && (msg->getId() == m_activeRequestId))
    {
       m_response = msg;
-      ConditionSet(m_requestCompletion);
+      m_requestCompletion.set();
    }
    else if (msg->getType() == AMI_EVENT)
    {
-      MutexLock(m_eventListenersLock);
+      m_eventListenersLock.lock();
       for(int i = 0; i < m_eventListeners.size(); i++)
       {
          m_eventListeners.get(i)->processEvent(msg);
       }
-      MutexUnlock(m_eventListenersLock);
+      m_eventListenersLock.unlock();
 
       if (!stricmp(msg->getSubType(), "Hangup"))
          processHangup(msg);
@@ -447,26 +447,20 @@ class ListCollector : public AmiEventListener
 private:
    SharedObjectArray<AmiMessage> *m_messages;
    int64_t m_requestId;
-   CONDITION m_completed;
+   Condition m_completed;
 
 public:
-   ListCollector(SharedObjectArray<AmiMessage> *messages, int64_t requestId)
+   ListCollector(SharedObjectArray<AmiMessage> *messages, int64_t requestId) : m_completed(true)
    {
       m_messages = messages;
       m_requestId = requestId;
-      m_completed = ConditionCreate(true);
-   }
-
-   virtual ~ListCollector()
-   {
-      ConditionDestroy(m_completed);
    }
 
    virtual void processEvent(const shared_ptr<AmiMessage>& event) override;
 
    bool waitForCompletion(uint32_t timeout)
    {
-      return ConditionWait(m_completed, timeout);
+      return m_completed.wait(timeout);
    }
 };
 
@@ -481,7 +475,7 @@ void ListCollector::processEvent(const shared_ptr<AmiMessage>& event)
    const char *v = event->getTag("EventList");
    if ((v != nullptr) && !stricmp(v, "Complete"))
    {
-      ConditionSet(m_completed);
+      m_completed.set();
       return;
    }
 
@@ -501,8 +495,8 @@ shared_ptr<AmiMessage> AsteriskSystem::sendRequest(const shared_ptr<AmiMessage>&
       timeout = m_amiTimeout;
 
    shared_ptr<AmiMessage> response;
-   MutexLock(m_requestLock);
-   ConditionReset(m_requestCompletion);
+   m_requestLock.lock();
+   m_requestCompletion.reset();
 
    m_activeRequestId = m_requestId++;
    request->setId(m_activeRequestId);
@@ -517,9 +511,9 @@ shared_ptr<AmiMessage> AsteriskSystem::sendRequest(const shared_ptr<AmiMessage>&
 
    size_t size;
    const BYTE *bytes = serializedMessage->buffer(&size);
-   if (SendEx(m_socket, bytes, size, 0, INVALID_MUTEX_HANDLE) == size)
+   if (SendEx(m_socket, bytes, size, 0, nullptr) == size)
    {
-      if (ConditionWait(m_requestCompletion, timeout))
+      if (m_requestCompletion.wait(timeout))
       {
          response = m_response;
          m_response.reset();
@@ -554,7 +548,7 @@ shared_ptr<AmiMessage> AsteriskSystem::sendRequest(const shared_ptr<AmiMessage>&
    }
 
    m_activeRequestId = 0;
-   MutexUnlock(m_requestLock);
+   m_requestLock.unlock();
 
    return response;
 }

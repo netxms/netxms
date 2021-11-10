@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -291,7 +291,7 @@ void CommChannelMessageReceiver::cancel()
 /**
  * TLS message receiver constructor
  */
-TlsMessageReceiver::TlsMessageReceiver(SOCKET socket, SSL *ssl, MUTEX mutex, size_t initialSize, size_t maxSize) : AbstractMessageReceiver(initialSize, maxSize)
+TlsMessageReceiver::TlsMessageReceiver(SOCKET socket, SSL *ssl, Mutex *mutex, size_t initialSize, size_t maxSize) : AbstractMessageReceiver(initialSize, maxSize)
 {
    m_socket = socket;
    m_ssl = ssl;
@@ -326,12 +326,12 @@ ssize_t TlsMessageReceiver::readBytes(BYTE *buffer, size_t size, uint32_t timeou
    bool doRead = true;
    bool needWrite = false;
    int bytes = 0;
-   MutexLock(m_mutex);
+   m_mutex->lock();
    while(doRead)
    {
       if (SSL_pending(m_ssl) == 0)
       {
-         MutexUnlock(m_mutex);
+         m_mutex->unlock();
          SocketPoller sp(needWrite);
          sp.add(m_socket);
 #ifndef _WIN32
@@ -350,7 +350,7 @@ ssize_t TlsMessageReceiver::readBytes(BYTE *buffer, size_t size, uint32_t timeou
          }
 #endif
          needWrite = false;
-         MutexLock(m_mutex);
+         m_mutex->lock();
       }
       doRead = false;
       bytes = SSL_read(m_ssl, buffer, (int)size);
@@ -370,7 +370,7 @@ ssize_t TlsMessageReceiver::readBytes(BYTE *buffer, size_t size, uint32_t timeou
          }
       }
    }
-   MutexUnlock(m_mutex);
+   m_mutex->unlock();
    return bytes;
 }
 

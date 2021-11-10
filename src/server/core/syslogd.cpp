@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -73,7 +73,7 @@ enum NodeMatchingPolicy
  */
 static uint64_t s_msgId = 1;  // Next available message ID
 static LogParser *s_parser = nullptr;
-static MUTEX s_parserLock = INVALID_MUTEX_HANDLE;
+static Mutex s_parserLock(MutexType::FAST);
 static NodeMatchingPolicy s_nodeMatchingPolicy = SOURCE_IP_THEN_HOSTNAME;
 static THREAD s_receiverThread = INVALID_THREAD_HANDLE;
 static THREAD s_processingThread = INVALID_THREAD_HANDLE;
@@ -447,7 +447,7 @@ static void ProcessSyslogMessage(SyslogMessage *msg)
 		            msg->getSourceAddress().toString(ipAddr), msg->getZoneUIN(), msg->getNodeId(), msg->getTag(), msg->getMessage());
 
 		bool writeToDatabase = true;
-		MutexLock(s_parserLock);
+		s_parserLock.lock();
 		if ((msg->getNodeId() != 0) && (s_parser != nullptr))
 		{
 #ifdef UNICODE
@@ -462,7 +462,7 @@ static void ProcessSyslogMessage(SyslogMessage *msg)
 			         nullptr, 0, msg->getNodeId(), 0, nullptr, &writeToDatabase);
 #endif
 		}
-		MutexUnlock(s_parserLock);
+		s_parserLock.unlock();
 
 	   if ((msg->getNodeId() == 0) && (g_flags & AF_SYSLOG_DISCOVERY))  // unknown node, discovery enabled
 	   {
@@ -546,7 +546,7 @@ static void SyslogParserCallback(UINT32 eventCode, const TCHAR *eventName, const
  */
 static void CreateParserFromConfig()
 {
-	MutexLock(s_parserLock);
+	s_parserLock.lock();
 	LogParser *prev = s_parser;
 	s_parser = nullptr;
 #ifdef UNICODE
@@ -583,7 +583,7 @@ static void CreateParserFromConfig()
 		free(xml);
 		delete parsers;
 	}
-	MutexUnlock(s_parserLock);
+	s_parserLock.unlock();
 	delete prev;
 }
 
@@ -789,8 +789,6 @@ static void SyslogReceiver()
  */
 void ReinitializeSyslogParser()
 {
-   if (s_parserLock == INVALID_MUTEX_HANDLE)
-      return;  // Syslog daemon not initialized
    CreateParserFromConfig();
 }
 
@@ -838,16 +836,9 @@ int F_GetSyslogRuleCheckCount(int argc, NXSL_Value **argv, NXSL_Value **result, 
       }
    }
 
-   if (s_parserLock == INVALID_MUTEX_HANDLE)
-   {
-      // Syslog daemon not initialized
-      *result = vm->createValue(-1);
-      return 0;
-   }
-
-   MutexLock(s_parserLock);
-   *result = vm->createValue(s_parser->getRuleCheckCount(argv[0]->getValueAsCString(), objectId));
-   MutexUnlock(s_parserLock);
+   s_parserLock.lock();
+   *result = vm->createValue((s_parser != nullptr) ? s_parser->getRuleCheckCount(argv[0]->getValueAsCString(), objectId) : -1);
+   s_parserLock.unlock();
    return 0;
 }
 
@@ -875,16 +866,9 @@ int F_GetSyslogRuleMatchCount(int argc, NXSL_Value **argv, NXSL_Value **result, 
       }
    }
 
-   if (s_parserLock == INVALID_MUTEX_HANDLE)
-   {
-      // Syslog daemon not initialized
-      *result = vm->createValue(-1);
-      return 0;
-   }
-
-   MutexLock(s_parserLock);
-   *result = vm->createValue(s_parser->getRuleMatchCount(argv[0]->getValueAsCString(), objectId));
-   MutexUnlock(s_parserLock);
+   s_parserLock.lock();
+   *result = vm->createValue((s_parser != nullptr) ? s_parser->getRuleMatchCount(argv[0]->getValueAsCString(), objectId) : -1);
+   s_parserLock.unlock();
    return 0;
 }
 
@@ -924,7 +908,6 @@ void StartSyslogServer()
    InitLogParserLibrary();
 
    // Create message parser
-   s_parserLock = MutexCreate();
    CreateParserFromConfig();
 
    // Start processing thread

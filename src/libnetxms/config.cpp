@@ -746,7 +746,6 @@ Config::Config(bool allowMacroExpansion)
 {
    m_root = new ConfigEntry(_T("[root]"), nullptr, this, nullptr, 0, 0);
    m_errorCount = 0;
-   m_mutex = MutexCreate();
    m_allowMacroExpansion = allowMacroExpansion;
    m_mergeStrategy = nullptr;
 }
@@ -757,7 +756,6 @@ Config::Config(bool allowMacroExpansion)
 Config::~Config()
 {
    delete m_root;
-   MutexDestroy(m_mutex);
 }
 
 /**

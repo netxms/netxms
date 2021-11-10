@@ -49,13 +49,13 @@ struct IOSTAT_DEVICE
 /**
  * Static data
  */
-static CONDITION s_stopCondition = INVALID_CONDITION_HANDLE;
+static Condition s_stopCondition(true);
 static THREAD s_collectorThread = INVALID_THREAD_HANDLE;
 static const char *s_statFile = "/proc/diskstats";
 static IOSTAT_DEVICE *s_devices = nullptr;
 static int s_deviceCount = 0;
 static int s_currSample = 0;
-static MUTEX s_dataAccessLock;
+static Mutex s_dataAccessLock(MutexType::FAST);
 static bool s_isSysFsAvailable = false;
 
 /**
@@ -175,7 +175,7 @@ static IOSTAT_DEVICE *ParseIoStat(char *line)
  */
 static void Collect()
 {
-   MutexLock(s_dataAccessLock);
+   s_dataAccessLock.lock();
 
    FILE *f = fopen(s_statFile, "r");
    if (f != nullptr)
@@ -199,32 +199,31 @@ static void Collect()
 	if (s_currSample == SAMPLES_PER_MINUTE)
 		s_currSample = 0;
 
-	MutexUnlock(s_dataAccessLock);
+	s_dataAccessLock.unlock();
 }
 
 /**
  * Collection thread
  */
-static THREAD_RESULT THREAD_CALL IoCollectionThread(void *arg)
+static void IoCollectionThread()
 {
 	// Get first sample for each device and fill all samples
 	// with same data
 	Collect();
-	MutexLock(s_dataAccessLock);
+	s_dataAccessLock.lock();
 	for(int i = 0; i < s_deviceCount; i++)
 	{
 		for(int j = 1; j < SAMPLES_PER_MINUTE; j++)
 			memcpy(&s_devices[i].samples[j], &s_devices[i].samples[0], sizeof(IOSTAT_SAMPLE));
 	}
-	MutexUnlock(s_dataAccessLock);
+	s_dataAccessLock.unlock();
 
 	while(true)
 	{
-		if (ConditionWait(s_stopCondition, 60000 / SAMPLES_PER_MINUTE))
+		if (s_stopCondition.wait(60000 / SAMPLES_PER_MINUTE))
 			break;	// Stop condition set
 		Collect();
 	}
-	return THREAD_OK;
 }
 
 /**
@@ -243,9 +242,7 @@ void StartIoStatCollector()
 		}
 	}	
 
-	s_stopCondition = ConditionCreate(TRUE);
-	s_dataAccessLock = MutexCreate();
-	s_collectorThread = ThreadCreateEx(IoCollectionThread, 0, NULL);
+	s_collectorThread = ThreadCreateEx(IoCollectionThread);
 }
 
 /**
@@ -253,10 +250,8 @@ void StartIoStatCollector()
  */
 void ShutdownIoStatCollector()
 {
-	ConditionSet(s_stopCondition);
+	s_stopCondition.set();
 	ThreadJoin(s_collectorThread);
-	ConditionDestroy(s_stopCondition);
-	MutexDestroy(s_dataAccessLock);
 }
 
 /**
@@ -307,7 +302,7 @@ LONG H_IoStatsCumulative(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abs
 {
 	int nRet = SYSINFO_RC_UNSUPPORTED;
 
-	MutexLock(s_dataAccessLock);
+	s_dataAccessLock.lock();
 
 	IOSTAT_SAMPLE *s = GetSamples(param);
 	if (s != nullptr)
@@ -331,7 +326,7 @@ LONG H_IoStatsCumulative(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abs
 		nRet = SYSINFO_RC_SUCCESS;
 	}
 
-	MutexUnlock(s_dataAccessLock);	
+	s_dataAccessLock.unlock();
 	return nRet;
 }
 
@@ -342,7 +337,7 @@ LONG H_IoStatsNonCumulative(const TCHAR *param, const TCHAR *arg, TCHAR *value, 
 {
    int nRet = SYSINFO_RC_UNSUPPORTED;
 
-   MutexLock(s_dataAccessLock);
+   s_dataAccessLock.lock();
 
    IOSTAT_SAMPLE *s = GetSamples(param);
    if (s != nullptr)
@@ -363,7 +358,7 @@ LONG H_IoStatsNonCumulative(const TCHAR *param, const TCHAR *arg, TCHAR *value, 
       nRet = SYSINFO_RC_SUCCESS;
    }
 
-   MutexUnlock(s_dataAccessLock);
+   s_dataAccessLock.unlock();
    return nRet;
 }
 
@@ -374,7 +369,7 @@ LONG H_IoStatsTotalSectors(const TCHAR *param, const TCHAR *arg, TCHAR *value, A
 {
    int metric = CAST_FROM_POINTER(arg, int);
 
-   MutexLock(s_dataAccessLock);
+   s_dataAccessLock.lock();
 
    uint64_t sum = 0;
    for(int i = 0; i < s_deviceCount; i++)
@@ -387,7 +382,7 @@ LONG H_IoStatsTotalSectors(const TCHAR *param, const TCHAR *arg, TCHAR *value, A
       sum += static_cast<uint64_t>(delta / 60);
    }
 
-   MutexUnlock(s_dataAccessLock);
+   s_dataAccessLock.unlock();
 
    ret_uint64(value, sum);
    return SYSINFO_RC_SUCCESS;
@@ -400,7 +395,7 @@ LONG H_IoStatsTotalFloat(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abs
 {
    int metric = CAST_FROM_POINTER(arg, int);
 
-   MutexLock(s_dataAccessLock);
+   s_dataAccessLock.lock();
 
    double sum = 0;
    for(int i = 0; i < s_deviceCount; i++)
@@ -409,7 +404,7 @@ LONG H_IoStatsTotalFloat(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abs
          sum += GetSampleDelta(s_devices[i].samples, metric) / 60;
    }
 
-   MutexUnlock(s_dataAccessLock);
+   s_dataAccessLock.unlock();
 
    ret_double(value, sum);
    return SYSINFO_RC_SUCCESS;
@@ -422,7 +417,7 @@ LONG H_IoStatsTotalTimePct(const TCHAR *param, const TCHAR *arg, TCHAR *value, A
 {
    int metric = CAST_FROM_POINTER(arg, int);
 
-   MutexLock(s_dataAccessLock);
+   s_dataAccessLock.lock();
 
    double sum = 0;
    for(int i = 0; i < s_deviceCount; i++)
@@ -431,7 +426,7 @@ LONG H_IoStatsTotalTimePct(const TCHAR *param, const TCHAR *arg, TCHAR *value, A
          sum += static_cast<double>(GetSampleDelta(s_devices[i].samples, metric)) / 600; // = / 60000 * 100
    }
 
-   MutexUnlock(s_dataAccessLock);
+   s_dataAccessLock.unlock();
 
    ret_double(value, sum);
    return SYSINFO_RC_SUCCESS;
@@ -444,7 +439,7 @@ LONG H_IoStatsTotalNonCumulativeFloat(const TCHAR *param, const TCHAR *arg, TCHA
 {
    int metric = CAST_FROM_POINTER(arg, int);
 
-   MutexLock(s_dataAccessLock);
+   s_dataAccessLock.lock();
 
    unsigned long sum = 0;
    for(int i = 0; i < s_deviceCount; i++)
@@ -455,7 +450,7 @@ LONG H_IoStatsTotalNonCumulativeFloat(const TCHAR *param, const TCHAR *arg, TCHA
             sum += s_devices[i].samples[j].stats[metric];
       }
    }
-   MutexUnlock(s_dataAccessLock);
+   s_dataAccessLock.unlock();
 
    ret_double(value, static_cast<double>(sum) / SAMPLES_PER_MINUTE);
    return SYSINFO_RC_SUCCESS;
@@ -468,7 +463,7 @@ LONG H_IoStatsTotalNonCumulativeInteger(const TCHAR *param, const TCHAR *arg, TC
 {
    int metric = CAST_FROM_POINTER(arg, int);
 
-   MutexLock(s_dataAccessLock);
+   s_dataAccessLock.lock();
 
    unsigned long sum = 0;
    for(int i = 0; i < s_deviceCount; i++)
@@ -479,7 +474,7 @@ LONG H_IoStatsTotalNonCumulativeInteger(const TCHAR *param, const TCHAR *arg, TC
             sum += s_devices[i].samples[j].stats[metric];
       }
    }
-   MutexUnlock(s_dataAccessLock);
+   s_dataAccessLock.unlock();
 
    ret_uint64(value, static_cast<uint64_t>(sum) / SAMPLES_PER_MINUTE);
    return SYSINFO_RC_SUCCESS;

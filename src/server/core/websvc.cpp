@@ -325,7 +325,7 @@ json_t *WebServiceDefinition::toJson() const
  * List of configured web services
  */
 static SharedObjectArray<WebServiceDefinition> s_webServiceDefinitions;
-static Mutex s_webServiceDefinitionLock(true);
+static Mutex s_webServiceDefinitionLock(MutexType::FAST);
 
 /**
  * Load web service definitions from database

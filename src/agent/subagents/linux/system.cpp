@@ -1,6 +1,6 @@
 /*
 ** NetXMS subagent for GNU/Linux
-** Copyright (C) 2004-2016 Raden Solutions
+** Copyright (C) 2004-2021 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -233,8 +233,8 @@ static long s_memFileInactive = 0;
 static long s_memSlabReclaimable = 0;
 static long s_swapTotal = 0;
 static long s_swapFree = 0;
-static INT64 s_memStatTimestamp = 0;
-static MUTEX s_memStatLock = MutexCreate();
+static int64_t s_memStatTimestamp = 0;
+static Mutex s_memStatLock(MutexType::FAST);
 
 /**
  * Collect memory usage info
@@ -242,12 +242,12 @@ static MUTEX s_memStatLock = MutexCreate();
 static bool CollectMemoryUsageInfo()
 {
    FILE *hFile = fopen("/proc/meminfo", "r");
-   if (hFile == NULL)
+   if (hFile == nullptr)
       return false;
 
    bool memAvailPresent = false;
    char buffer[256];
-   while(fgets(buffer, sizeof(buffer), hFile) != NULL)
+   while(fgets(buffer, sizeof(buffer), hFile) != nullptr)
    {
       if (sscanf(buffer, "MemTotal: %lu kB\n", &s_memTotal) == 1)
          continue;
@@ -298,12 +298,12 @@ static bool CollectMemoryUsageInfo()
  */
 LONG H_MemoryInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
-   MutexLock(s_memStatLock);
+   s_memStatLock.lock();
    if (s_memStatTimestamp < GetCurrentTimeMs() - 1000)
    {
       if (!CollectMemoryUsageInfo())
       {
-         MutexUnlock(s_memStatLock);
+         s_memStatLock.unlock();
          return SYSINFO_RC_ERROR;
       }
    }
@@ -390,7 +390,7 @@ LONG H_MemoryInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abstr
          rc = SYSINFO_RC_UNSUPPORTED;
          break;
    }
-   MutexUnlock(s_memStatLock);
+   s_memStatLock.unlock();
 	return rc;
 }
 

@@ -31,7 +31,7 @@
  * SNMP proxy socket pollers
  */
 static ObjectArray<BackgroundSocketPollerHandle> s_snmpProxySocketPollers(0, 8, Ownership::True);
-static Mutex s_snmpProxySocketPollersLock(true);
+static Mutex s_snmpProxySocketPollersLock(MutexType::FAST);
 
 /**
  * SNMP proxy stats

@@ -50,7 +50,7 @@ bool PushData(const TCHAR *parameter, const TCHAR *value, UINT32 objectId, time_
    }
    else
    {
-      MutexLock(g_sessionLock);
+      g_sessionLock.lock();
       for(int i = 0; i < g_sessions.size(); i++)
       {
          CommSession *session = g_sessions.get(i);
@@ -60,7 +60,7 @@ bool PushData(const TCHAR *parameter, const TCHAR *value, UINT32 objectId, time_
             success = true;
          }
       }
-      MutexUnlock(g_sessionLock);
+      g_sessionLock.unlock();
    }
 	return success;
 }

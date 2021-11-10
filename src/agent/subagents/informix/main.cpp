@@ -1,21 +1,22 @@
 /*
 ** NetXMS subagent for Informix monitoring
-** Copyright (C) 2011, 2012 Raden Solutions
+** Copyright (C) 2011-2021 Raden Solutions
 **/
 
 #include "informix_subagent.h"
 #include <netxms-version.h>
 
-CONDITION g_shutdownCondition;
-MUTEX g_paramAccessMutex;
+Condition g_shutdownCondition(true);
+Mutex g_paramAccessMutex;
 int g_dbCount;
-DB_DRIVER g_driverHandle = NULL;
+DB_DRIVER g_driverHandle = nullptr;
 DatabaseInfo g_dbInfo[MAX_DATABASES];
 DatabaseData g_dbData[MAX_DATABASES];
 
 static void QueryThread(int dbIndex);
 
-DBParameterGroup g_paramGroup[] = {
+DBParameterGroup g_paramGroup[] =
+{
 	{
 		1100, _T("Informix.Session."),
 		_T("select ") DB_NULLARG_MAGIC _T(" ValueName, count(*) Count from syssessions"),
@@ -63,7 +64,7 @@ LONG H_DatabaseParameter(const TCHAR *parameter, const TCHAR *argument, TCHAR *v
 			{
 				if (!_tcsnicmp(g_paramGroup[k].prefix, parameter, _tcslen(g_paramGroup[k].prefix))) // found prefix
 				{
-					MutexLock(g_dbInfo[i].accessMutex);
+					g_dbInfo[i].accessMutex->lock();
 					// Loop through the values
 					AgentWriteDebugLog(7, _T("%s: valuecount %d"), MYNAMESTR, g_paramGroup[k].valueCount[i]);
 					for (int j = 0; j < g_paramGroup[k].valueCount[i]; j++)
@@ -73,7 +74,7 @@ LONG H_DatabaseParameter(const TCHAR *parameter, const TCHAR *argument, TCHAR *v
 						if (!_tcsnicmp(name, entity, MAX_STR))	// found value which matches the parameters argument
 						{
 							TCHAR key[MAX_STR];
-							nx_strncpy(key, parameter + _tcslen(g_paramGroup[k].prefix), MAX_STR);
+							_tcslcpy(key, parameter + _tcslen(g_paramGroup[k].prefix), MAX_STR);
 							TCHAR* place = _tcschr(key, _T('('));
 							if (place != NULL)
 							{
@@ -92,8 +93,7 @@ LONG H_DatabaseParameter(const TCHAR *parameter, const TCHAR *argument, TCHAR *v
 							break;
 						}
 					}
-					MutexUnlock(g_dbInfo[i].accessMutex);
-
+					g_dbInfo[i].accessMutex->unlock();
 					break;
 				}
 			}
@@ -131,11 +131,6 @@ static bool SubAgentInit(Config *config)
 		result = false;
 	}
 
-	if (result)
-	{
-		g_shutdownCondition = ConditionCreate(true);
-	}
-
 	// Load configuration from "informix" section to allow simple configuration
 	// of one database without XML includes
 	memset(&info, 0, sizeof(info));
@@ -147,7 +142,7 @@ static bool SubAgentInit(Config *config)
 			if (info.id[0] == 0)
 				_tcscpy(info.id, info.dsn);
 			memcpy(&g_dbInfo[++g_dbCount], &info, sizeof(DatabaseInfo));
-			g_dbInfo[g_dbCount].accessMutex = MutexCreate();
+			g_dbInfo[g_dbCount].accessMutex = new Mutex();
 		}
 
       DecryptPassword(info.username, info.password, info.password, MAX_PASSWORD);
@@ -184,10 +179,9 @@ static bool SubAgentInit(Config *config)
          AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("%s: error getting password for "), MYNAMESTR);
          result = false;
       }
-		if (result && (g_dbInfo[g_dbCount].accessMutex = MutexCreate()) == NULL)
+		if (result)
 		{
-			AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("%s: failed to create mutex (%d)"), MYNAMESTR, i);
-			result = false;
+         g_dbInfo[g_dbCount].accessMutex = new Mutex();
 		}
 	}
 
@@ -213,13 +207,12 @@ static bool SubAgentInit(Config *config)
 static void SubAgentShutdown()
 {
 	AgentWriteLog(EVENTLOG_INFORMATION_TYPE, _T("%s: shutting down"), MYNAMESTR);
-	ConditionSet(g_shutdownCondition);
+	g_shutdownCondition.set();
 	for (int i = 0; i <= g_dbCount; i++)
 	{
 		ThreadJoin(g_dbInfo[i].queryThreadHandle);
-		MutexDestroy(g_dbInfo[i].accessMutex);
+		delete g_dbInfo[i].accessMutex;
 	}
-	ConditionDestroy(g_shutdownCondition);
 }
 
 /**
@@ -266,12 +259,12 @@ static void QueryThread(int dbIndex)
 			}
 
 			waitTimeout = pollInterval - DWORD(GetCurrentTimeMs() - startTimeMs);
-			if (ConditionWait(g_shutdownCondition, waitTimeout < 0 ? 1 : waitTimeout))
+			if (g_shutdownCondition.wait(waitTimeout < 0 ? 1 : waitTimeout))
 				goto finish;
 		}
 
 		// Try to reconnect every 30 secs
-		if (ConditionWait(g_shutdownCondition, 30000))
+		if (g_shutdownCondition.wait(30000))
 			break;
 	}
 
@@ -293,7 +286,7 @@ bool getParametersFromDB( int dbIndex )
 		return false;
 	}
 
-	MutexLock(info.accessMutex);
+	info.accessMutex->lock();
 
 	for (int i = 0; g_paramGroup[i].prefix; i++)
 	{
@@ -335,7 +328,7 @@ bool getParametersFromDB( int dbIndex )
 		DBFreeResult(queryResult);
 	}
 
-	MutexUnlock(info.accessMutex);
+	info.accessMutex->unlock();
 
 	return ret;
 }

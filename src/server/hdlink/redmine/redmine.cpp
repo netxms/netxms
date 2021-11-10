@@ -64,7 +64,6 @@ static INT64 JsonIntegerValue(json_t *v)
  */
 RedmineLink::RedmineLink() : HelpDeskLink()
 {
-   m_mutex = MutexCreate();
    strcpy(m_serverUrl, "http://localhost:3000");
    strcpy(m_apiKey, "netxms");
    m_password[0] = 0;
@@ -77,7 +76,6 @@ RedmineLink::RedmineLink() : HelpDeskLink()
 RedmineLink::~RedmineLink()
 {
    disconnect();
-   MutexDestroy(m_mutex);
 }
 
 /**

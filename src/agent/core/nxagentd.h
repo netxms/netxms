@@ -260,7 +260,7 @@ private:
    bool m_master;
    time_t m_lastResolveTime;
    bool m_redoResolve;
-   MUTEX m_mutex;
+   Mutex m_mutex;
 
    void resolve(bool forceResolve);
 
@@ -325,10 +325,10 @@ private:
 	shared_ptr<NXCPEncryptionContext> m_encryptionContext;
    time_t m_ts;               // Last activity timestamp
    SOCKET m_hProxySocket;     // Socket for proxy connection
-	MUTEX m_socketWriteMutex;
+	Mutex m_socketWriteMutex;
    VolatileCounter m_requestId;
    MsgWaitQueue *m_responseQueue;
-   MUTEX m_tcpProxyLock;
+   Mutex m_tcpProxyLock;
    ObjectArray<TcpProxy> m_tcpProxies;
 
 	bool sendRawMessage(NXCP_MESSAGE *msg, NXCPEncryptionContext *ctx);
@@ -507,7 +507,7 @@ private:
    weak_ptr<SessionAgentConnector> m_self;
    uint32_t m_id;
    SOCKET m_socket;
-   MUTEX m_mutex;
+   Mutex m_mutex;
    MsgWaitQueue m_msgQueue;
    uint32_t m_sessionId;
    TCHAR *m_sessionName;
@@ -909,7 +909,7 @@ extern uint32_t g_acceptedConnections;
 extern uint32_t g_rejectedConnections;
 
 extern SharedObjectArray<CommSession> g_sessions;
-extern MUTEX g_sessionLock;
+extern Mutex g_sessionLock;
 extern ThreadPool *g_commThreadPool;
 extern ThreadPool *g_executorThreadPool;
 extern ThreadPool *g_webSvcThreadPool;

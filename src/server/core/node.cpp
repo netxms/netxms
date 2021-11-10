@@ -87,7 +87,8 @@ DataCollectionError GetPerfDataStorageDriverMetric(const TCHAR *driver, const TC
 /**
  * Node class default constructor
  */
-Node::Node() : super(Pollable::STATUS | Pollable::CONFIGURATION | Pollable::DISCOVERY | Pollable::TOPOLOGY | Pollable::ROUTING_TABLE | Pollable::ICMP)
+Node::Node() : super(Pollable::STATUS | Pollable::CONFIGURATION | Pollable::DISCOVERY | Pollable::TOPOLOGY | Pollable::ROUTING_TABLE | Pollable::ICMP),
+         m_topologyMutex(MutexType::FAST), m_routingTableMutex(MutexType::FAST)
 {
    m_status = STATUS_UNKNOWN;
    m_type = NODE_TYPE_UNKNOWN;
@@ -105,10 +106,6 @@ Node::Node() : super(Pollable::STATUS | Pollable::CONFIGURATION | Pollable::DISC
    m_downSince = 0;
    m_bootTime = 0;
    m_agentUpTime = 0;
-   m_hAgentAccessMutex = MutexCreate();
-   m_hSmclpAccessMutex = MutexCreate();
-   m_mutexRTAccess = MutexCreate();
-   m_mutexTopoAccess = MutexCreate();
    m_proxyConnections = new ProxyAgentConnection[MAX_PROXY_TYPE];
    m_pendingDataConfigurationSync = 0;
    m_smclpConnection = nullptr;
@@ -194,7 +191,8 @@ Node::Node() : super(Pollable::STATUS | Pollable::CONFIGURATION | Pollable::DISC
 /**
  * Create new node from new node data
  */
-Node::Node(const NewNodeData *newNodeData, UINT32 flags) : super(Pollable::STATUS | Pollable::CONFIGURATION | Pollable::DISCOVERY | Pollable::TOPOLOGY | Pollable::ROUTING_TABLE | Pollable::ICMP)
+Node::Node(const NewNodeData *newNodeData, UINT32 flags) : super(Pollable::STATUS | Pollable::CONFIGURATION | Pollable::DISCOVERY | Pollable::TOPOLOGY | Pollable::ROUTING_TABLE | Pollable::ICMP),
+         m_topologyMutex(MutexType::FAST), m_routingTableMutex(MutexType::FAST)
 {
    m_runtimeFlags |= ODF_CONFIGURATION_POLL_PENDING;
    m_primaryHostName = newNodeData->ipAddr.toString();
@@ -223,10 +221,6 @@ Node::Node(const NewNodeData *newNodeData, UINT32 flags) : super(Pollable::STATU
    m_downSince = 0;
    m_bootTime = 0;
    m_agentUpTime = 0;
-   m_hAgentAccessMutex = MutexCreate();
-   m_hSmclpAccessMutex = MutexCreate();
-   m_mutexRTAccess = MutexCreate();
-   m_mutexTopoAccess = MutexCreate();
    m_proxyConnections = new ProxyAgentConnection[MAX_PROXY_TYPE];
    m_pendingDataConfigurationSync = 0;
    m_smclpConnection = nullptr;
@@ -318,10 +312,6 @@ Node::Node(const NewNodeData *newNodeData, UINT32 flags) : super(Pollable::STATU
 Node::~Node()
 {
    delete m_driverData;
-   MutexDestroy(m_hAgentAccessMutex);
-   MutexDestroy(m_hSmclpAccessMutex);
-   MutexDestroy(m_mutexRTAccess);
-   MutexDestroy(m_mutexTopoAccess);
    delete[] m_proxyConnections;
    delete m_smclpConnection;
    delete m_agentParameters;
@@ -8127,14 +8117,14 @@ shared_ptr<AgentConnectionEx> Node::getAgentConnection(bool forcePrimary)
    int retryCount = 5;
    while(--retryCount >= 0)
    {
-      success = MutexTryLock(m_hAgentAccessMutex);
+      success = m_agentMutex.tryLock();
       if (success)
       {
          if (connectToAgent())
          {
             conn = m_agentConnection;
          }
-         MutexUnlock(m_hAgentAccessMutex);
+         m_agentMutex.unlock();
          break;
       }
       ThreadSleepMs(50);
@@ -9045,12 +9035,12 @@ shared_ptr<NetworkMapObjectList> Node::getL2Topology()
 {
    shared_ptr<NetworkMapObjectList> result;
    time_t expTime = ConfigReadULong(_T("Topology.AdHocRequest.ExpirationTime"), 900);
-   MutexLock(m_mutexTopoAccess);
+   m_topologyMutex.lock();
    if ((m_topology != nullptr) && (m_topologyRebuildTimestamp + expTime >= time(nullptr)))
    {
       result = m_topology;
    }
-   MutexUnlock(m_mutexTopoAccess);
+   m_topologyMutex.unlock();
    return result;
 }
 
@@ -9062,15 +9052,15 @@ shared_ptr<NetworkMapObjectList> Node::buildL2Topology(uint32_t *status, int rad
    shared_ptr<NetworkMapObjectList> result;
    int nDepth = (radius < 0) ? ConfigReadInt(_T("Topology.DefaultDiscoveryRadius"), 5) : radius;
 
-   MutexLock(m_mutexTopoAccess);
+   m_topologyMutex.lock();
    if (m_linkLayerNeighbors != nullptr)
    {
-      MutexUnlock(m_mutexTopoAccess);
+      m_topologyMutex.unlock();
 
       result = make_shared<NetworkMapObjectList>();
       BuildL2Topology(*result, this, nDepth, includeEndNodes);
 
-      MutexLock(m_mutexTopoAccess);
+      m_topologyMutex.lock();
       m_topology = result;
       m_topologyRebuildTimestamp = time(nullptr);
    }
@@ -9079,7 +9069,7 @@ shared_ptr<NetworkMapObjectList> Node::buildL2Topology(uint32_t *status, int rad
       m_topology.reset();
       *status = RCC_NO_L2_TOPOLOGY_SUPPORT;
    }
-   MutexUnlock(m_mutexTopoAccess);
+   m_topologyMutex.unlock();
    return result;
 }
 
@@ -9125,7 +9115,7 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, UINT32 rqId
          VlanList *vlanList = m_driver->getVlans(snmp, this, m_driverData);
          delete snmp;
 
-         MutexLock(m_mutexTopoAccess);
+         m_topologyMutex.lock();
          if (vlanList != nullptr)
          {
             resolveVlanPorts(vlanList);
@@ -9139,7 +9129,7 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, UINT32 rqId
             nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 4, _T("Cannot retrieve VLAN list from node %s [%d]"), m_name, m_id);
             m_vlans.reset();
          }
-         MutexUnlock(m_mutexTopoAccess);
+         m_topologyMutex.unlock();
 
          lockProperties();
          uint32_t oldCaps = m_capabilities;
@@ -9157,9 +9147,9 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, UINT32 rqId
 
    poller->setStatus(_T("reading FDB"));
    shared_ptr<ForwardingDatabase> fdb = GetSwitchForwardingDatabase(this);
-   MutexLock(m_mutexTopoAccess);
+   m_topologyMutex.lock();
    m_fdb = fdb;
-   MutexUnlock(m_mutexTopoAccess);
+   m_topologyMutex.unlock();
    if (fdb != nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 4, _T("Switch forwarding database retrieved for node %s [%d]"), m_name, m_id);
@@ -9180,9 +9170,9 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, UINT32 rqId
       sendPollerMsg(POLLER_INFO _T("Link layer topology retrieved (%d connections found)\r\n"), nbs->size());
       nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 4, _T("Link layer topology retrieved for node %s [%d] (%d connections found)"), m_name, (int)m_id, nbs->size());
 
-      MutexLock(m_mutexTopoAccess);
+      m_topologyMutex.lock();
       m_linkLayerNeighbors = nbs;
-      MutexUnlock(m_mutexTopoAccess);
+      m_topologyMutex.unlock();
 
       // Walk through interfaces and update peers
       sendPollerMsg(_T("Updating peer information on interfaces\r\n"));
@@ -9929,9 +9919,9 @@ NXSL_Array *Node::getInterfacesForNXSL(NXSL_VM *vm)
  */
 shared_ptr<ForwardingDatabase> Node::getSwitchForwardingDatabase()
 {
-   MutexLock(m_mutexTopoAccess);
+   m_topologyMutex.lock();
    shared_ptr<ForwardingDatabase> fdb = m_fdb;
-   MutexUnlock(m_mutexTopoAccess);
+   m_topologyMutex.unlock();
    return fdb;
 }
 
@@ -9940,9 +9930,9 @@ shared_ptr<ForwardingDatabase> Node::getSwitchForwardingDatabase()
  */
 shared_ptr<LinkLayerNeighbors> Node::getLinkLayerNeighbors()
 {
-   MutexLock(m_mutexTopoAccess);
+   m_topologyMutex.lock();
    shared_ptr<LinkLayerNeighbors> linkLayerNeighbors = m_linkLayerNeighbors;
-   MutexUnlock(m_mutexTopoAccess);
+   m_topologyMutex.unlock();
    return linkLayerNeighbors;
 }
 
@@ -9951,9 +9941,9 @@ shared_ptr<LinkLayerNeighbors> Node::getLinkLayerNeighbors()
  */
 shared_ptr<VlanList> Node::getVlans()
 {
-   MutexLock(m_mutexTopoAccess);
+   m_topologyMutex.lock();
    shared_ptr<VlanList> vlans(m_vlans);
-   MutexUnlock(m_mutexTopoAccess);
+   m_topologyMutex.unlock();
    return vlans;
 }
 

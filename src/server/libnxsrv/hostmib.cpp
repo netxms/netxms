@@ -87,11 +87,9 @@ bool HostMibStorageEntry::getMetric(const TCHAR *metric, TCHAR *buffer, size_t l
 /**
  * Constructor
  */
-HostMibDriverData::HostMibDriverData() : DriverData()
+HostMibDriverData::HostMibDriverData() : DriverData(), m_storageCacheMutex(MutexType::FAST), m_storage(16, 16, Ownership::True)
 {
-   m_storage = new ObjectArray<HostMibStorageEntry>(16, 16, Ownership::True);
    m_storageCacheTimestamp = 0;
-   m_storageCacheMutex = MutexCreate();
 }
 
 /**
@@ -99,14 +97,12 @@ HostMibDriverData::HostMibDriverData() : DriverData()
  */
 HostMibDriverData::~HostMibDriverData()
 {
-   delete m_storage;
-   MutexDestroy(m_storageCacheMutex);
 }
 
 /**
  * Callback for processing storage walk
  */
-UINT32 HostMibDriverData::updateStorageCacheCallback(SNMP_Variable *v, SNMP_Transport *snmp)
+uint32_t HostMibDriverData::updateStorageCacheCallback(SNMP_Variable *v, SNMP_Transport *snmp)
 {
    SNMP_ObjectId oid = v->getName();
 
@@ -125,7 +121,7 @@ UINT32 HostMibDriverData::updateStorageCacheCallback(SNMP_Variable *v, SNMP_Tran
    request.bindVariable(new SNMP_Variable(oid));
 
    SNMP_PDU *response;
-   UINT32 rc = snmp->doRequest(&request, &response, SnmpGetDefaultTimeout(), 3);
+   uint32_t rc = snmp->doRequest(&request, &response, SnmpGetDefaultTimeout(), 3);
    if (rc != SNMP_ERR_SUCCESS)
       return rc;
 
@@ -143,7 +139,7 @@ UINT32 HostMibDriverData::updateStorageCacheCallback(SNMP_Variable *v, SNMP_Tran
       e->used = response->getVariable(3)->getValueAsUInt();
       e->lastUpdate = time(NULL);
       memcpy(e->oid, oid.value(), 12 * sizeof(UINT32));
-      m_storage->add(e);
+      m_storage.add(e);
    }
    delete response;
    return SNMP_ERR_SUCCESS;
@@ -154,17 +150,17 @@ UINT32 HostMibDriverData::updateStorageCacheCallback(SNMP_Variable *v, SNMP_Tran
  */
 void HostMibDriverData::updateStorageCache(SNMP_Transport *snmp)
 {
-   MutexLock(m_storageCacheMutex);
-   m_storage->clear();
+   m_storageCacheMutex.lock();
+   m_storage.clear();
    SnmpWalk(snmp, _T(".1.3.6.1.2.1.25.2.3.1.3"), this, &HostMibDriverData::updateStorageCacheCallback);
    m_storageCacheTimestamp = time(NULL);
    nxlog_debug_tag(DEBUG_TAG, 5, _T("Storage cache updated for node %s [%u]:"), m_nodeName, m_nodeId);
-   for(int i = 0; i < m_storage->size(); i++)
+   for(int i = 0; i < m_storage.size(); i++)
    {
-      HostMibStorageEntry *e = m_storage->get(i);
+      HostMibStorageEntry *e = m_storage.get(i);
       nxlog_debug_tag(DEBUG_TAG, 5, _T("   \"%s\": type=%d, size=%u, used=%u, unit=%u"), e->name, e->type, e->size, e->used, e->unitSize);
    }
-   MutexUnlock(m_storageCacheMutex);
+   m_storageCacheMutex.unlock();
 }
 
 /**
@@ -172,34 +168,34 @@ void HostMibDriverData::updateStorageCache(SNMP_Transport *snmp)
  */
 const HostMibStorageEntry *HostMibDriverData::getStorageEntry(SNMP_Transport *snmp, const TCHAR *name, HostMibStorageType type)
 {
-   if ((m_storageCacheTimestamp == 0) || (time(NULL) - m_storageCacheTimestamp > 3600))
+   if ((m_storageCacheTimestamp == 0) || (time(nullptr) - m_storageCacheTimestamp > 3600))
       updateStorageCache(snmp);
 
-   MutexLock(m_storageCacheMutex);
+   m_storageCacheMutex.lock();
 
-   HostMibStorageEntry *entry = NULL;
-   for(int i = 0; i < m_storage->size(); i++)
+   HostMibStorageEntry *entry = nullptr;
+   for(int i = 0; i < m_storage.size(); i++)
    {
-      HostMibStorageEntry *e = m_storage->get(i);
-      if ((e->type == type) && ((name == NULL) || !_tcscmp(name, e->name)))
+      HostMibStorageEntry *e = m_storage.get(i);
+      if ((e->type == type) && ((name == nullptr) || !_tcscmp(name, e->name)))
       {
          entry = e;
          break;
       }
    }
 
-   if (entry != NULL)
+   if (entry != nullptr)
    {
-      time_t now = time(NULL);
+      time_t now = time(nullptr);
       if (entry->lastUpdate + 5 < now)
       {
-         if (SnmpGetEx(snmp, NULL, entry->oid, 12, &entry->used, sizeof(UINT32), 0, NULL) == SNMP_ERR_SUCCESS)
+         if (SnmpGetEx(snmp, nullptr, entry->oid, 12, &entry->used, sizeof(uint32_t), 0, nullptr) == SNMP_ERR_SUCCESS)
             entry->lastUpdate = now;
          else
-            entry = NULL;  // return error
+            entry = nullptr;  // return error
       }
    }
 
-   MutexUnlock(m_storageCacheMutex);
+   m_storageCacheMutex.unlock();
    return entry;
 }

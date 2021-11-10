@@ -49,8 +49,8 @@ static DISK_INFO s_total;
 static DISK_INFO s_devices[MAX_DEVICES];
 static int s_currSlot = 0;
 static THREAD s_collectorThread = INVALID_THREAD_HANDLE;
-static MUTEX s_dataLock = INVALID_MUTEX_HANDLE;
-static CONDITION s_condShutdown = INVALID_CONDITION_HANDLE;
+static Mutex s_dataLock(MutexType::FAST);
+static Condition s_condShutdown(true);
 
 /**
  * Calculate total values
@@ -125,13 +125,13 @@ static void ProcessDiskStats(perfstat_disk_t *di)
 /**
  * I/O stat collector
  */
-static THREAD_RESULT THREAD_CALL IOStatCollector(void *arg)
+static void IOStatCollector()
 {
 	nxlog_debug_tag(AIX_DEBUG_TAG, 1, _T("I/O stat collector thread started"));
 
-	while(!ConditionWait(s_condShutdown, 1000))
+	while(!s_condShutdown.wait(1000))
 	{
-		MutexLock(s_dataLock);
+		s_dataLock.lock();
 
 		perfstat_id_t firstdisk;
 		strcpy(firstdisk.name, FIRST_DISK);
@@ -151,11 +151,10 @@ static THREAD_RESULT THREAD_CALL IOStatCollector(void *arg)
 		s_currSlot++;
 		if (s_currSlot == SAMPLE_COUNT)
 			s_currSlot = 0;
-		MutexUnlock(s_dataLock);
+		s_dataLock.unlock();
 	}
 
 	nxlog_debug_tag(AIX_DEBUG_TAG, 1, _T("I/O stat collector thread stopped"));
-	return THREAD_OK;
 }
 
 /**
@@ -163,11 +162,9 @@ static THREAD_RESULT THREAD_CALL IOStatCollector(void *arg)
  */
 void StartIOStatCollector()
 {
-	memset(&s_total, 0, sizeof(s_total));
-	memset(s_devices, 0, sizeof(s_devices));
-	s_dataLock = MutexCreate();
-	s_condShutdown = ConditionCreate(TRUE);
-	s_collectorThread = ThreadCreateEx(IOStatCollector, 0, NULL);
+   memset(&s_total, 0, sizeof(s_total));
+   memset(s_devices, 0, sizeof(s_devices));
+   s_collectorThread = ThreadCreateEx(IOStatCollector);
 }
 
 /**
@@ -175,10 +172,8 @@ void StartIOStatCollector()
  */
 void ShutdownIOStatCollector()
 {
-	ConditionSet(s_condShutdown);
-	ThreadJoin(s_collectorThread);
-	MutexDestroy(s_dataLock);
-	ConditionDestroy(s_condShutdown);
+   s_condShutdown.set();
+   ThreadJoin(s_collectorThread);
 }
 
 /**
@@ -228,7 +223,7 @@ LONG H_IOStatsTotal(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCo
 {
 	LONG rc = SYSINFO_RC_SUCCESS;
 
-	MutexLock(s_dataLock);
+	s_dataLock.lock();
 	switch(CAST_FROM_POINTER(arg, int))
 	{
 		case IOSTAT_NUM_READS:
@@ -256,7 +251,7 @@ LONG H_IOStatsTotal(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCo
 			rc = SYSINFO_RC_UNSUPPORTED;
 			break;
 	}
-	MutexUnlock(s_dataLock);
+	s_dataLock.unlock();
 	return rc;
 }
 
@@ -280,7 +275,7 @@ LONG H_IOStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSes
 	if ((i == MAX_DEVICES) || (s_devices[i].name[0] == 0))
 		return SYSINFO_RC_UNSUPPORTED;	// unknown device
 
-	MutexLock(s_dataLock);
+	s_dataLock.lock();
 	switch(CAST_FROM_POINTER(arg, int))
 	{
 		case IOSTAT_NUM_READS:
@@ -308,7 +303,7 @@ LONG H_IOStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSes
 			rc = SYSINFO_RC_UNSUPPORTED;
 			break;
 	}
-	MutexUnlock(s_dataLock);
+	s_dataLock.unlock();
 	return rc;
 }
 

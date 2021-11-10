@@ -224,7 +224,7 @@ void TuxedoServer::addInstance(TuxedoServerInstance *s)
 /**
  * Service list
  */
-static Mutex s_lock(true);
+static Mutex s_lock(MutexType::FAST);
 static HashMap<uint32_t, TuxedoServer> *s_servers = nullptr;
 static HashMap<uint32_t, TuxedoServerInstance> *s_serverInstances = nullptr;
 

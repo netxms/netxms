@@ -89,7 +89,6 @@ ScheduledTask::ScheduledTask(uint32_t id, const TCHAR *taskHandlerId, const TCHA
    m_lastExecutionTime = TIMESTAMP_NEVER;
    m_recurrent = true;
    m_flags = systemTask ? SCHEDULED_TASK_SYSTEM : 0;
-   m_mutex = MutexCreate();
 }
 
 /**
@@ -105,7 +104,6 @@ ScheduledTask::ScheduledTask(uint32_t id, const TCHAR *taskHandlerId, time_t exe
    m_lastExecutionTime = TIMESTAMP_NEVER;
    m_recurrent = false;
    m_flags = systemTask ? SCHEDULED_TASK_SYSTEM : 0;
-   m_mutex = MutexCreate();
 }
 
 /**
@@ -121,7 +119,6 @@ ScheduledTask::ScheduledTask(DB_RESULT hResult, int row)
    m_lastExecutionTime = DBGetFieldULong(hResult, row, 5);
    m_flags = DBGetFieldULong(hResult, row, 6);
    m_recurrent = !m_schedule.isEmpty();
-   m_mutex = MutexCreate();
 
    TCHAR persistentData[1024];
    DBGetField(hResult, row, 3, persistentData, 1024);
@@ -138,7 +135,6 @@ ScheduledTask::ScheduledTask(DB_RESULT hResult, int row)
  */
 ScheduledTask::~ScheduledTask()
 {
-   MutexDestroy(m_mutex);
 }
 
 /**

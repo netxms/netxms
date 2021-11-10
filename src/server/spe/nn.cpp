@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Raden Solutions
+** Copyright (C) 2003-2021 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -61,13 +61,12 @@ void NeuralNetworkNode::reset()
  * Constructor
  */
 NeuralNetwork::NeuralNetwork(int inputCount, int hiddenCount) :
-      m_input(inputCount, 8, Ownership::True), m_hidden(hiddenCount, 8, Ownership::True), m_output(1)
+      m_input(inputCount, 8, Ownership::True), m_hidden(hiddenCount, 8, Ownership::True), m_output(1), m_mutex(MutexType::FAST)
 {
    for(int i = 0; i < inputCount; i++)
       m_input.add(new NeuralNetworkNode(hiddenCount));
    for(int i = 0; i < hiddenCount; i++)
       m_hidden.add(new NeuralNetworkNode(1));
-   m_mutex = MutexCreate();
 }
 
 /**
@@ -75,7 +74,6 @@ NeuralNetwork::NeuralNetwork(int inputCount, int hiddenCount) :
  */
 NeuralNetwork::~NeuralNetwork()
 {
-   MutexDestroy(m_mutex);
 }
 
 /**

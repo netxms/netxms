@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -190,11 +190,10 @@ void NamedPipeListener::serverThread()
 /**
  * Named pipe constructor
  */
-NamedPipe::NamedPipe(const TCHAR *name, HPIPE handle, const TCHAR *user)
+NamedPipe::NamedPipe(const TCHAR *name, HPIPE handle, const TCHAR *user) : m_writeLock(MutexType::FAST)
 {
    _tcslcpy(m_name, name, MAX_PIPE_NAME_LEN);
    m_handle = handle;
-   m_writeLock = MutexCreate();
    _tcslcpy(m_user, CHECK_NULL_EX(user), 64);
    m_writeEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
 }
@@ -211,7 +210,6 @@ NamedPipe::~NamedPipe()
 		DisconnectNamedPipe(m_handle);
    else
       CloseHandle(m_handle);
-   MutexDestroy(m_writeLock);
    CloseHandle(m_writeEvent);
 }
 
@@ -245,7 +243,7 @@ reconnect:
  */
 bool NamedPipe::write(const void *data, size_t size)
 {
-   MutexLock(m_writeLock);
+   m_writeLock.lock();
    OVERLAPPED ov;
    memset(&ov, 0, sizeof(OVERLAPPED));
    ov.hEvent = m_writeEvent;
@@ -260,7 +258,7 @@ bool NamedPipe::write(const void *data, size_t size)
       if (bytes != static_cast<DWORD>(size))
          success = FALSE;
    }
-   MutexUnlock(m_writeLock);
+   m_writeLock.unlock();
    return success ? true : false;
 }
 

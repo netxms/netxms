@@ -55,11 +55,10 @@ static void DefaultObjectDestructor(void *object, AbstractIndexBase *index)
 /**
  * Constructor for object index
  */
-AbstractIndexBase::AbstractIndexBase(Ownership owner)
+AbstractIndexBase::AbstractIndexBase(Ownership owner) : m_writerLock(MutexType::FAST)
 {
 	m_primary = MemAllocStruct<INDEX_HEAD>();
    m_secondary = MemAllocStruct<INDEX_HEAD>();
-	m_writerLock = MutexCreate();
 	m_owner = static_cast<bool>(owner);
 	m_startupMode = false;
 	m_dirty = false;
@@ -80,7 +79,6 @@ AbstractIndexBase::~AbstractIndexBase()
    MemFree(m_primary);
    MemFree(m_secondary->elements);
    MemFree(m_secondary);
-	MutexDestroy(m_writerLock);
 }
 
 /**
@@ -193,7 +191,7 @@ bool AbstractIndexBase::put(uint64_t key, void *object)
    bool replace = false;
 	void *oldObject = nullptr;
 
-	MutexLock(m_writerLock);
+   m_writerLock.lock();
 
 	ssize_t pos = findElement(m_secondary, key);
 	if (pos != -1)
@@ -254,7 +252,7 @@ bool AbstractIndexBase::put(uint64_t key, void *object)
 
    InterlockedDecrement(&m_secondary->writers);
 
-	MutexUnlock(m_writerLock);
+   m_writerLock.unlock();
 	return replace;
 }
 
@@ -284,7 +282,7 @@ void AbstractIndexBase::remove(uint64_t key)
       return;
    }
 
-   MutexLock(m_writerLock);
+   m_writerLock.lock();
 
 	ssize_t pos = findElement(m_secondary, key);
 	if (pos != -1)
@@ -306,7 +304,7 @@ void AbstractIndexBase::remove(uint64_t key)
       InterlockedDecrement(&m_secondary->writers);
    }
 
-   MutexUnlock(m_writerLock);
+   m_writerLock.unlock();
 }
 
 /**
@@ -314,7 +312,7 @@ void AbstractIndexBase::remove(uint64_t key)
  */
 void AbstractIndexBase::clear()
 {
-   MutexLock(m_writerLock);
+   m_writerLock.lock();
 
    m_secondary->size = 0;
    m_secondary->allocated = 0;
@@ -336,7 +334,7 @@ void AbstractIndexBase::clear()
 
    InterlockedDecrement(&m_secondary->writers);
 
-   MutexUnlock(m_writerLock);
+   m_writerLock.unlock();
 }
 
 /**

@@ -30,18 +30,9 @@ FileMonitoringList g_monitoringList;
 /**
  * Constructor
  */
-FileMonitoringList::FileMonitoringList()
+FileMonitoringList::FileMonitoringList() : m_mutex(MutexType::FAST)
 {
-   m_mutex = MutexCreate();
    m_monitoredFiles.setOwner(Ownership::True);
-}
-
-/**
- * Destructor
- */
-FileMonitoringList::~FileMonitoringList()
-{
-   MutexDestroy(m_mutex);
 }
 
 /**
