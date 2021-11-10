@@ -3631,6 +3631,20 @@ static void DeleteDuplicateNode(DeleteDuplicateNodeData *data)
 }
 
 /**
+ * Exit from "unreachable" state f full configuration poll was successful on any communication method (agent, SNMP, etc.)
+ */
+#define ExitFromUnreachableState() do { \
+   if ((m_runtimeFlags & NDF_RECHECK_CAPABILITIES) && (m_state & DCSF_UNREACHABLE)) \
+   { \
+      int reason = (m_state & DCSF_NETWORK_PATH_PROBLEM) ? 1 : 0; \
+      m_state &= ~(DCSF_UNREACHABLE | DCSF_NETWORK_PATH_PROBLEM); \
+      PostSystemEvent(EVENT_NODE_UP, m_id, "d", reason); \
+      sendPollerMsg(POLLER_INFO _T("Node recovered from unreachable state\r\n")); \
+      m_recoveryTime = time(nullptr); \
+   } \
+} while(0)
+
+/**
  * Perform configuration poll on node
  */
 void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId)
@@ -3712,13 +3726,67 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
 
       POLL_CANCELLATION_CHECKPOINT();
 
+      // Setup permanent connection to agent if not present (needed for proper configuration re-sync)
+      if (m_capabilities & NC_IS_NATIVE_AGENT)
+      {
+         ExitFromUnreachableState();
+
+         uint32_t error, socketError;
+         bool newConnection;
+         agentLock();
+         connectToAgent(&error, &socketError, &newConnection, true);
+         agentUnlock();
+
+         // Check if agent was marked as unreachable before full poll
+         if ((m_state & NSF_AGENT_UNREACHABLE) && (m_runtimeFlags & NDF_RECHECK_CAPABILITIES))
+         {
+            m_state &= ~NSF_AGENT_UNREACHABLE;
+            PostSystemEvent(EVENT_AGENT_OK, m_id, nullptr);
+            sendPollerMsg(POLLER_INFO _T("Connectivity with NetXMS agent restored\r\n"));
+            m_pollCountAgent = 0;
+
+            // Reset connection time of all proxy connections so they can be re-established immediately
+            for(int i = 0; i < MAX_PROXY_TYPE; i++)
+            {
+               m_proxyConnections[i].lock();
+               m_proxyConnections[i].setLastConnectTime(0);
+               m_proxyConnections[i].unlock();
+            }
+         }
+      }
+
+      POLL_CANCELLATION_CHECKPOINT();
+
       if (confPollSnmp(rqId))
          modified |= MODIFY_NODE_PROPERTIES;
+
+      ExitFromUnreachableState();
+
+      // Check if SNMP was marked as unreachable before full poll
+      if ((m_capabilities & NC_IS_SNMP) && (m_state & NSF_SNMP_UNREACHABLE) && (m_runtimeFlags & NDF_RECHECK_CAPABILITIES))
+      {
+         m_state &= ~NSF_SNMP_UNREACHABLE;
+         PostSystemEvent(EVENT_SNMP_OK, m_id, nullptr);
+         sendPollerMsg(POLLER_INFO _T("Connectivity with SNMP agent restored\r\n"));
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("ConfPoll(%s): Connectivity with SNMP agent restored"), m_name);
+         m_pollCountSNMP = 0;
+      }
 
       POLL_CANCELLATION_CHECKPOINT();
 
       if (confPollEthernetIP(rqId))
          modified |= MODIFY_NODE_PROPERTIES;
+
+      ExitFromUnreachableState();
+
+      // Check if Ethernet/IP was marked as unreachable before full poll
+      if ((m_capabilities & NC_IS_ETHERNET_IP) && (m_state & NSF_ETHERNET_IP_UNREACHABLE) && (m_runtimeFlags & NDF_RECHECK_CAPABILITIES))
+      {
+         m_state &= ~NSF_ETHERNET_IP_UNREACHABLE;
+         PostSystemEvent(EVENT_ETHERNET_IP_OK, m_id, nullptr);
+         sendPollerMsg(POLLER_INFO _T("EtherNet/IP connectivity restored\r\n"));
+         m_pollCountEtherNetIP = 0;
+      }
 
       POLL_CANCELLATION_CHECKPOINT();
 
@@ -3839,16 +3907,6 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
       else
       {
          sendPollerMsg(_T("Node name is OK\r\n"));
-      }
-
-      POLL_CANCELLATION_CHECKPOINT();
-
-      // Setup permanent connection to agent if not present (needed for proper configuration re-sync)
-      if (m_capabilities & NC_IS_NATIVE_AGENT)
-      {
-         agentLock();
-         connectToAgent();
-         agentUnlock();
       }
 
       POLL_CANCELLATION_CHECKPOINT();
