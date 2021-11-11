@@ -55,6 +55,7 @@ import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.GraphItem;
 import org.netxms.client.datacollection.PerfTabDci;
+import org.netxms.client.datacollection.Threshold;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.charts.api.ChartType;
 import org.netxms.ui.eclipse.charts.widgets.Chart;
@@ -130,6 +131,7 @@ public class PerfTabGraph extends DashboardComposite implements HistoricalChartO
 		
       GraphItem item = new GraphItem(nodeId, dci.getId(), DataOrigin.INTERNAL, DataType.INT32, "", settings.getRuntimeName(), "%s", settings.getType(), settings.getColorAsInt());
       item.setInverted(settings.isInvertedValues());
+      item.setShowThresholds(settings.isShowThresholds());
       chart.addParameter(item);
 
 		addDisposeListener(new DisposeListener() {
@@ -239,6 +241,7 @@ public class PerfTabGraph extends DashboardComposite implements HistoricalChartO
 			items.add(dci);
          GraphItem item = new GraphItem(nodeId, dci.getId(), DataOrigin.INTERNAL, DataType.INT32, "", settings.getRuntimeName(), "%s", settings.getType(), settings.getColorAsInt());
          item.setInverted(settings.isInvertedValues());
+         item.setShowThresholds(settings.isShowThresholds());
          chart.addParameter(item);
 		}
 	}
@@ -285,10 +288,12 @@ public class PerfTabGraph extends DashboardComposite implements HistoricalChartO
 				synchronized(items)
 				{
 					final DciData[] data = new DciData[items.size()];
+	            final Threshold[][] thresholds = new Threshold[items.size()][];
 					for(int i = 0; i < data.length; i++)
 					{
 						currentDci = items.get(i);
 						data[i] = session.getCollectedData(nodeId, currentDci.getId(), from, to, 0, HistoricalDataType.PROCESSED);
+                  thresholds[i] = session.getThresholds(nodeId, currentDci.getId());
 					}
 					runInUIThread(new Runnable() {
 						@Override
@@ -299,6 +304,7 @@ public class PerfTabGraph extends DashboardComposite implements HistoricalChartO
 								chart.setTimeRange(from, to);
 								for(int i = 0; i < data.length; i++)
                            chart.updateParameter(i, data[i], false);
+						      chart.setThresholds(thresholds);
                         chart.refresh();
 							}
 							updateInProgress = false;

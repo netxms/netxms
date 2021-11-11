@@ -72,6 +72,7 @@ public class Chart extends Composite
    protected ChartColor[] palette = null;
    private List<GraphItem> items = new ArrayList<GraphItem>(ChartConfiguration.MAX_GRAPH_ITEM_COUNT);
    private List<DataSeries> dataSeries = new ArrayList<DataSeries>(ChartConfiguration.MAX_GRAPH_ITEM_COUNT);
+   private Threshold[][] thresholds;
    private long drillDownObjectId = 0;
    private ColorCache colorCache;
    private Label title;
@@ -495,6 +496,29 @@ public class Chart extends Composite
    {
       items.clear();
       dataSeries.clear();
+   }
+   
+   /**
+    * Set threshold configuraiton
+    * 
+    * @param thresholds
+    */
+   public void setThresholds(Threshold[][] thresholds)
+   {
+      this.thresholds = thresholds;
+   }
+
+   /**
+    * Get threshold configuraiton for item
+    * 
+    * @param i time index
+    * @return
+    */
+   public Threshold[] getThreshold(int i)
+   {
+      if (thresholds == null)
+         return null;
+      return thresholds.length > i ? thresholds[i] : null;
    }
 
    /**

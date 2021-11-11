@@ -477,7 +477,7 @@ public class HistoricalGraphView extends ViewPart implements ChartConfigurationC
                   if (!((Widget)chart).isDisposed())
                   {
                      chart.setTimeRange(configuration.getTimeFrom(), configuration.getTimeTo());
-                     setChartData(data);
+                     setChartData(data, thresholds);
                      chart.clearErrors();
                   }
                   updateInProgress = false;
@@ -909,11 +909,13 @@ public class HistoricalGraphView extends ViewPart implements ChartConfigurationC
     * Set chart data
     * 
     * @param data Retrieved DCI data
+    * @param thresholds 
     */
-   private void setChartData(final DciData[] data)
+   private void setChartData(final DciData[] data, Threshold[][] thresholds)
    {
       for(int i = 0; i < data.length; i++)
          chart.updateParameter(i, data[i], false);
+      chart.setThresholds(thresholds);
       chart.refresh();
    }
 

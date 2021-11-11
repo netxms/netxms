@@ -148,6 +148,7 @@ public class GraphItem
       this.instance = dciConfig.instance;
       this.inverted = dciConfig.invertValues;
       this.lineWidth = dciConfig.lineWidth;
+      this.showThresholds = dciConfig.showThresholds;
    }
 
    /**

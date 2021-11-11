@@ -37,16 +37,21 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
+import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.DataFormatter;
 import org.netxms.client.datacollection.DciDataRow;
 import org.netxms.client.datacollection.GraphItem;
+import org.netxms.client.datacollection.Threshold;
+import org.netxms.client.events.EventTemplate;
 import org.netxms.ui.eclipse.charts.Activator;
 import org.netxms.ui.eclipse.charts.Messages;
 import org.netxms.ui.eclipse.charts.api.ChartColor;
 import org.netxms.ui.eclipse.charts.api.DataPoint;
 import org.netxms.ui.eclipse.charts.widgets.internal.SelectionRectangle;
 import org.netxms.ui.eclipse.console.resources.RegionalSettings;
+import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.ColorCache;
 import org.netxms.ui.eclipse.tools.ColorConverter;
 import org.swtchart.IAxis;
@@ -435,16 +440,34 @@ public class LineChart extends org.swtchart.Chart implements PlotArea
 	{
 		GC gc = e.gc;
 		Rectangle clientArea = getPlotArea().getClientArea();
+		NXCSession session = ConsoleSharedData.getSession();
 
-      for(GraphItem item : chart.getItems())
+		List<GraphItem> items = chart.getItems();
+      for(int i = 0; i < items.size(); i++)
 		{
-         if (item.isShowThresholds())
+         Threshold[] tr = chart.getThreshold(i);
+         System.out.println(items.get(i).isShowThresholds());
+         System.out.println(tr != null);
+         if (items.get(i).isShowThresholds() && tr != null)
 			{
-				int y = axis.getPixelCoordinate(10);
-            gc.setForeground(ColorConverter.colorFromInt(item.getColor(), colorCache));
-				gc.setLineStyle(SWT.LINE_DOT);
-				gc.setLineWidth(3);
-				gc.drawLine(0, y, clientArea.width, y);
+            System.out.println("paintThresholds2");
+            for (int j = 0; j < tr.length; j++)
+            {
+               System.out.println("paintThresholds3");
+               try
+               {
+      				int y = axis.getPixelCoordinate(Integer.parseInt(tr[j].getValue()));
+                  final EventTemplate event = (EventTemplate)session.findEventTemplateByCode(((Threshold)tr[j]).getFireEvent());
+                  gc.setForeground(StatusDisplayInfo.getStatusColor(event.getSeverity()));
+      				gc.setLineStyle(SWT.LINE_DOT);
+      				gc.setLineWidth(3);
+      				gc.drawLine(0, y, clientArea.width, y);
+               }
+               catch (Exception ex)
+               {
+                  //Do nothing for String thresholds
+               }
+            }
 			}
 		}
 	}
