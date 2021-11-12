@@ -351,6 +351,7 @@ bool ProcessExecutor::execute()
          write(STDERR_FILENO, errorMessage, strlen(errorMessage));
          _exit(127);
          break;
+
       default: // parent
          close(m_pipe[1]);
          if (m_sendOutput)
@@ -451,6 +452,12 @@ do_wait:
       }
    }
 
+   DWORD exitCode;
+   if (GetExitCodeProcess(static_cast<ProcessExecutor*>(arg)->m_phandle, &exitCode))
+      static_cast<ProcessExecutor*>(arg)->m_exitCode = exitCode;
+   else
+      static_cast<ProcessExecutor*>(arg)->m_exitCode = -1;
+
    CloseHandle(ov.hEvent);
    CloseHandle(pipe);
 
@@ -501,7 +508,13 @@ do_wait:
 
    static_cast<ProcessExecutor*>(arg)->endOfOutput();
 #ifndef _WIN32
-   waitpid(static_cast<ProcessExecutor*>(arg)->m_pid, nullptr, 0);
+   int status;
+   waitpid(static_cast<ProcessExecutor *>(arg)->m_pid, &status, 0);
+   if (WIFEXITED(status))
+      static_cast<ProcessExecutor *>(arg)->m_exitCode = WEXITSTATUS(status);
+   else
+      static_cast<ProcessExecutor *>(arg)->m_exitCode = -1;
+
 #endif
    static_cast<ProcessExecutor*>(arg)->m_running = false;
    ConditionSet(static_cast<ProcessExecutor*>(arg)->m_completed);

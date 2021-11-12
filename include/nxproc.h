@@ -101,6 +101,7 @@ private:
    bool m_started;
    bool m_running;
    uint32_t m_id;
+   uint32_t m_exitCode;
 
 protected:
    TCHAR *m_cmd;
@@ -141,6 +142,8 @@ public:
    bool isStarted() const { return m_started; }
    bool isRunning();
    bool waitForCompletion(uint32_t timeout);
+
+   uint32_t getExitCode() const { return m_exitCode; }
 
 #ifdef _WIN32
    void detach();

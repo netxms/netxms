@@ -35,12 +35,21 @@
  */
 static LONG RunExternal(const TCHAR *param, const TCHAR *arg, StringList *value)
 {
+   bool returnProcessExitCode = false;
    nxlog_debug_tag(EXEC_DEBUG_TAG, 4, _T("RunExternal called for \"%s\" \"%s\""), param, arg);
 
    // Substitute $1 .. $9 with actual arguments
    StringBuffer cmdLine;
    cmdLine.setAllocationStep(1024);
-   for(const TCHAR *sptr = &arg[1]; *sptr != 0; sptr++)
+
+   int commandBegin = 1;
+   if (arg[1] == _T('@'))
+   {
+      returnProcessExitCode = true;
+      commandBegin++;
+   }
+
+   for (const TCHAR *sptr = &arg[commandBegin]; *sptr != 0; sptr++)
    {
       if (*sptr == _T('$'))
       {
@@ -80,7 +89,10 @@ static LONG RunExternal(const TCHAR *param, const TCHAR *arg, StringList *value)
       return SYSINFO_RC_ERROR;
    }
 
-   value->addAll(executor.getData());
+   if (returnProcessExitCode)
+      value->add(executor.getExitCode());
+   else
+      value->addAll(executor.getData());
    return SYSINFO_RC_SUCCESS;
 }
 
