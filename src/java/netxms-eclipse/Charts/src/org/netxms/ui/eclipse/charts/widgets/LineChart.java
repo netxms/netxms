@@ -446,14 +446,10 @@ public class LineChart extends org.swtchart.Chart implements PlotArea
       for(int i = 0; i < items.size(); i++)
 		{
          Threshold[] tr = chart.getThreshold(i);
-         System.out.println(items.get(i).isShowThresholds());
-         System.out.println(tr != null);
          if (items.get(i).isShowThresholds() && tr != null)
 			{
-            System.out.println("paintThresholds2");
             for (int j = 0; j < tr.length; j++)
             {
-               System.out.println("paintThresholds3");
                try
                {
       				int y = axis.getPixelCoordinate(Integer.parseInt(tr[j].getValue()));
