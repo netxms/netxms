@@ -167,6 +167,7 @@ CREATE TABLE object_properties
   status_single_threshold integer not null,
   status_thresholds varchar(8) not null,
   comments SQL_TEXT null,
+  comments_source SQL_TEXT null,
   location_type integer not null,
   latitude varchar(20),
   longitude varchar(20),

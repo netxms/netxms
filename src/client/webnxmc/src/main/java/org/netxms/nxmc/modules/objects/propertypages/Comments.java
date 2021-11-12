@@ -70,7 +70,7 @@ public class Comments extends ObjectPropertyPage
 	{
 		Composite dialogArea = new Composite(parent, SWT.NONE);
 		
-		initialComments = object.getComments();
+		initialComments = object.getCommentsSource();
 		if (initialComments == null)
 			initialComments = ""; //$NON-NLS-1$
 

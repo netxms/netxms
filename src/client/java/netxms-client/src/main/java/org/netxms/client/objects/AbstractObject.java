@@ -139,6 +139,7 @@ public abstract class AbstractObject
 	protected long primaryZoneProxyId = 0;
    protected long backupZoneProxyId = 0;
 	protected String comments;
+	protected String commentsSource;
 	protected GeoLocation geolocation;
 	protected PostalAddress postalAddress;
 	protected UUID mapImage;
@@ -179,6 +180,7 @@ public abstract class AbstractObject
 		objectName = "unknown";
 		objectClass = OBJECT_GENERIC;
 		comments = "";
+		commentsSource = "";
 		geolocation = new GeoLocation(false);
 		postalAddress = new PostalAddress();
 
@@ -226,6 +228,7 @@ public abstract class AbstractObject
 		primaryZoneProxyId = msg.getFieldAsInt64(NXCPCodes.VID_PRIMARY_ZONE_PROXY_ID);
       backupZoneProxyId = msg.getFieldAsInt64(NXCPCodes.VID_BACKUP_ZONE_PROXY_ID);
 		comments = msg.getFieldAsString(NXCPCodes.VID_COMMENTS);
+		commentsSource = msg.getFieldAsString(NXCPCodes.VID_COMMENTS_SOURCE);
 		geolocation = new GeoLocation(msg);
 		postalAddress = new PostalAddress(msg);
 		mapImage = msg.getFieldAsUUID(NXCPCodes.VID_IMAGE);
@@ -393,6 +396,16 @@ public abstract class AbstractObject
 	   return !urls.isEmpty();
 	}
 
+	/**
+    * Get object's commentsSource.
+    * 
+    * @return object's commentsSource
+    */
+   public String getCommentsSource()
+   {
+      return commentsSource;
+   }
+	
 	/**
 	 * Get object's comments.
 	 * 

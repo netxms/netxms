@@ -9461,7 +9461,8 @@ void ClientSession::getObjectComments(NXCPMessage *request)
 }
 
 /**
- * Update object comments from client
+ * Update object comments from client.
+ * Recieves comments source, expands it and sends expanded comments to all clients via setModified in setComments.
  */
 void ClientSession::updateObjectComments(NXCPMessage *pRequest)
 {
@@ -9472,9 +9473,9 @@ void ClientSession::updateObjectComments(NXCPMessage *pRequest)
    {
       if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
       {
-         TCHAR *comments = pRequest->getFieldAsString(VID_COMMENTS);
-         object->setComments(comments);
-         MemFree(comments);
+         TCHAR *commentsSource = pRequest->getFieldAsString(VID_COMMENTS);
+         object->setComments(commentsSource);
+         MemFree(commentsSource);
       }
       else
       {

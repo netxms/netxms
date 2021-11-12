@@ -1208,6 +1208,7 @@ protected:
    time_t m_timestamp;           // Last change time stamp
    SharedString m_alias;         // Object's alias
    SharedString m_comments;      // User comments
+   SharedString m_commentsSource; // User comments with macros
    SharedString m_nameOnMap;     // Object's name on network map
    int m_status;
    int m_savedStatus;            // Object status in database
@@ -1319,6 +1320,7 @@ public:
    time_t getTimeStamp() const { return m_timestamp; }
    SharedString getAlias() const { return GetAttributeWithLock(m_alias, m_mutexProperties); }
    SharedString getComments() const { return GetAttributeWithLock(m_comments, m_mutexProperties); }
+   SharedString getCommentsSource() const { return GetAttributeWithLock(m_commentsSource, m_mutexProperties); }
    SharedString getNameOnMap() const { return GetAttributeWithLock(m_nameOnMap, m_mutexProperties); }
 
    uint32_t getCategoryId() const { return m_categoryId; }
@@ -1380,6 +1382,7 @@ public:
    void resetStatus() { lockProperties(); m_status = STATUS_UNKNOWN; setModified(MODIFY_RUNTIME); unlockProperties(); }
    void setAlias(const TCHAR *alias);
    void setComments(const TCHAR *comments);
+   void expandCommentMacros();
    void setNameOnMap(const TCHAR *name);
    void setCreationTime() { m_creationTime = time(nullptr); }
    time_t getCreationTime() { return m_creationTime; }
@@ -2150,6 +2153,16 @@ void ResetObjectPollTimers(const shared_ptr<ScheduledTaskParameters>& parameters
  * Poll timers reset task
  */
 #define DCT_RESET_POLL_TIMERS_TASK_ID _T("System.ResetPollTimers")
+
+/**
+ * Scheduled task for comments macros expansion
+ */
+void ExpandCommentMacrosTask(const shared_ptr<ScheduledTaskParameters> &parameters);
+
+/**
+ * "Expand comments macros" scheduled task
+ */
+#define UPDATE_OBJECT_COMMENTS_TASK_ID _T("Objects.expandCommentMacros")
 
 #define pollerLock(name) \
    _pollerLock(); \

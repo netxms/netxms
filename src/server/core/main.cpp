@@ -21,15 +21,16 @@
 **/
 
 #include "nxcore.h"
-#include <netxmsdb.h>
-#include <netxms_mt.h>
-#include <hdlink.h>
 #include <agent_tunnel.h>
-#include <nxcore_websvc.h>
+#include <hdlink.h>
+#include <netxms-version.h>
+#include <netxms_mt.h>
+#include <netxmsdb.h>
+#include <nms_objects.h>
+#include <nxcore_2fa.h>
 #include <nxcore_logs.h>
 #include <nxcore_ps.h>
-#include <nxcore_2fa.h>
-#include <netxms-version.h>
+#include <nxcore_websvc.h>
 
 #if !defined(_WIN32) && HAVE_READLINE_READLINE_H && HAVE_READLINE && !defined(UNICODE)
 #include <readline/readline.h>
@@ -1279,6 +1280,7 @@ retry_db_lock:
    RegisterSchedulerTaskHandler(UNBOUND_TUNNEL_PROCESSOR_TASK_ID, ProcessUnboundTunnels, 0); //No access right because it will be used only by server
    RegisterSchedulerTaskHandler(RENEW_AGENT_CERTIFICATES_TASK_ID, RenewAgentCertificates, 0); //No access right because it will be used only by server
    RegisterSchedulerTaskHandler(RELOAD_CRLS_TASK_ID, ReloadCRLs, 0); //No access right because it will be used only by server
+   RegisterSchedulerTaskHandler(UPDATE_OBJECT_COMMENTS_TASK_ID, ExpandCommentMacrosTask, 0);     // No access right because it will be used only by server
    RegisterSchedulerTaskHandler(DCT_RESET_POLL_TIMERS_TASK_ID, ResetObjectPollTimers, 0); //No access right because it will be used only by server
    RegisterSchedulerTaskHandler(EXECUTE_REPORT_TASK_ID, ExecuteReport, SYSTEM_ACCESS_REPORTING_SERVER);
    RegisterSchedulerTaskHandler(_T("DataCollection.RemoveTemplate"), DataCollectionTarget::removeTemplate, 0);
@@ -1296,6 +1298,9 @@ retry_db_lock:
 
    // Schedule automatic CRL reload
    AddUniqueRecurrentScheduledTask(RELOAD_CRLS_TASK_ID, _T("0 */4 * * *"), _T(""), nullptr, 0, 0, SYSTEM_ACCESS_FULL, _T("Reload certificate revocation lists"), nullptr, true);
+
+   // Schedule automatic comments macros expansion
+   AddUniqueRecurrentScheduledTask(UPDATE_OBJECT_COMMENTS_TASK_ID, _T("0 */4 * * *"), _T(""), nullptr, 0, 0, SYSTEM_ACCESS_FULL, _T("Expand object comments"), nullptr, true);
 
    // Schedule poll timers reset
    AddUniqueRecurrentScheduledTask(DCT_RESET_POLL_TIMERS_TASK_ID, _T("0 0 1 * *"), _T(""), nullptr, 0, 0, SYSTEM_ACCESS_FULL, _T(""), nullptr, true);

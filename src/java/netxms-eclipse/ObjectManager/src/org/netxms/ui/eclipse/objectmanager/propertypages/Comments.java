@@ -53,9 +53,9 @@ public class Comments extends PropertyPage
 		Composite dialogArea = new Composite(parent, SWT.NONE);
 		
 		object = (AbstractObject)getElement().getAdapter(AbstractObject.class);
-		initialComments = object.getComments();
+		initialComments = object.getCommentsSource();
 		if (initialComments == null)
-			initialComments = ""; //$NON-NLS-1$
+		   initialComments = ""; //$NON-NLS-1$
 
 		GridLayout layout = new GridLayout();
 		layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
@@ -64,7 +64,7 @@ public class Comments extends PropertyPage
       dialogArea.setLayout(layout);
 
       comments = new Text(dialogArea, SWT.BORDER | SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
-		comments.setText(initialComments);
+      comments.setText(initialComments);
 
 		GridData gd = new GridData();
 		gd.grabExcessHorizontalSpace = true;
@@ -73,7 +73,7 @@ public class Comments extends PropertyPage
 		gd.verticalAlignment = SWT.FILL;
 		gd.widthHint = 0;
       gd.heightHint = 0;
-		comments.setLayoutData(gd);
+      comments.setLayoutData(gd);
 		
 		return dialogArea;
 	}

@@ -24,6 +24,22 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 40.77 to 40.78
+ */
+static bool H_UpgradeFromV77()
+{
+   static const TCHAR *batch = 
+      _T("ALTER TABLE object_properties ADD comments_source $SQL:TEXT\n")
+      _T("UPDATE object_properties SET comments_source = comments\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+
+   CHK_EXEC(SetMinorSchemaVersion(78));
+   return true;
+}
+
+
+/**
  * Upgrade from 40.76 to 40.77
  */
 static bool H_UpgradeFromV76()

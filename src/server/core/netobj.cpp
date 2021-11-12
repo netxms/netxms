@@ -70,6 +70,7 @@ NetObj::NetObj() : NObject(), m_dashboards(0, 8), m_urls(0, 8, Ownership::True)
    m_status = STATUS_UNKNOWN;
    m_savedStatus = STATUS_UNKNOWN;
    m_comments = nullptr;
+   m_commentsSource = nullptr;
    m_modified = 0;
    m_isDeleted = false;
    m_isDeleteInitiated = false;
@@ -232,7 +233,7 @@ bool NetObj::saveToDatabase(DB_HANDLE hdb)
       _T("status_thresholds"), _T("comments"), _T("is_system"), _T("location_type"), _T("latitude"), _T("longitude"),
       _T("location_accuracy"), _T("location_timestamp"), _T("guid"), _T("map_image"), _T("submap_id"), _T("country"), _T("city"),
       _T("street_address"), _T("postcode"), _T("maint_event_id"), _T("state_before_maint"), _T("state"), _T("flags"),
-      _T("creation_time"), _T("maint_initiator"), _T("alias"), _T("name_on_map"), _T("category"), nullptr
+      _T("creation_time"), _T("maint_initiator"), _T("alias"), _T("name_on_map"), _T("category"), _T("comments_source"), nullptr
    };
 
    DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("object_properties"), _T("object_id"), m_id, columns);
@@ -285,7 +286,8 @@ bool NetObj::saveToDatabase(DB_HANDLE hdb)
    DBBind(hStmt, 33, DB_SQLTYPE_VARCHAR, m_alias, DB_BIND_STATIC);
    DBBind(hStmt, 34, DB_SQLTYPE_VARCHAR, m_nameOnMap, DB_BIND_STATIC);
    DBBind(hStmt, 35, DB_SQLTYPE_INTEGER, m_categoryId);
-   DBBind(hStmt, 36, DB_SQLTYPE_INTEGER, m_id);
+   DBBind(hStmt, 36, DB_SQLTYPE_TEXT, m_commentsSource, DB_BIND_STATIC);
+   DBBind(hStmt, 37, DB_SQLTYPE_INTEGER, m_id);
 
    success = DBExecute(hStmt);
    DBFreeStatement(hStmt);
@@ -530,19 +532,19 @@ bool NetObj::loadCommonProperties(DB_HANDLE hdb)
    bool success = false;
 
    // Load access options
-	DB_STATEMENT hStmt = DBPrepare(hdb,
-         _T("SELECT name,status,is_deleted,inherit_access_rights,last_modified,status_calc_alg,")
-         _T("status_prop_alg,status_fixed_val,status_shift,status_translation,status_single_threshold,")
-         _T("status_thresholds,comments,is_system,location_type,latitude,longitude,location_accuracy,")
-         _T("location_timestamp,guid,map_image,submap_id,country,city,street_address,postcode,maint_event_id,")
-         _T("state_before_maint,maint_initiator,state,flags,creation_time,alias,name_on_map,category ")
-         _T("FROM object_properties WHERE object_id=?"));
-	if (hStmt != nullptr)
-	{
-		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
-		DB_RESULT hResult = DBSelectPrepared(hStmt);
-		if (hResult != nullptr)
-		{
+   DB_STATEMENT hStmt = DBPrepare(hdb,
+                                  _T("SELECT name,status,is_deleted,inherit_access_rights,last_modified,status_calc_alg,")
+                                  _T("status_prop_alg,status_fixed_val,status_shift,status_translation,status_single_threshold,")
+                                  _T("status_thresholds,comments,is_system,location_type,latitude,longitude,location_accuracy,")
+                                  _T("location_timestamp,guid,map_image,submap_id,country,city,street_address,postcode,maint_event_id,")
+                                  _T("state_before_maint,maint_initiator,state,flags,creation_time,alias,name_on_map,category,comments_source ")
+                                  _T("FROM object_properties WHERE object_id=?"));
+   if (hStmt != nullptr)
+   {
+      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+      DB_RESULT hResult = DBSelectPrepared(hStmt);
+      if (hResult != nullptr)
+      {
 			if (DBGetNumRows(hResult) > 0)
 			{
 				DBGetField(hResult, 0, 0, m_name, MAX_OBJECT_NAME);
@@ -556,12 +558,12 @@ bool NetObj::loadCommonProperties(DB_HANDLE hdb)
 				m_statusShift = DBGetFieldLong(hResult, 0, 8);
 				DBGetFieldByteArray(hResult, 0, 9, m_statusTranslation, 4, STATUS_WARNING);
 				m_statusSingleThreshold = DBGetFieldLong(hResult, 0, 10);
-				DBGetFieldByteArray(hResult, 0, 11, m_statusThresholds, 4, 50);
-				m_comments = DBGetFieldAsSharedString(hResult, 0, 12);
-				m_isSystem = DBGetFieldLong(hResult, 0, 13) ? true : false;
+            DBGetFieldByteArray(hResult, 0, 11, m_statusThresholds, 4, 50);
+            m_comments = DBGetFieldAsSharedString(hResult, 0, 12);
+            m_isSystem = DBGetFieldLong(hResult, 0, 13) ? true : false;
 
-				int locType = DBGetFieldLong(hResult, 0, 14);
-				if (locType != GL_UNSET)
+            int locType = DBGetFieldLong(hResult, 0, 14);
+            if (locType != GL_UNSET)
 				{
 					TCHAR lat[32], lon[32];
 
@@ -595,18 +597,18 @@ bool NetObj::loadCommonProperties(DB_HANDLE hdb)
             m_alias = DBGetFieldAsSharedString(hResult, 0, 32);
             m_nameOnMap = DBGetFieldAsSharedString(hResult, 0, 33);
             m_categoryId = DBGetFieldULong(hResult, 0, 34);
+            m_commentsSource = DBGetFieldAsSharedString(hResult, 0, 35);
+            success = true;
+         }
+         DBFreeResult(hResult);
+      }
+      DBFreeStatement(hStmt);
+   }
 
-				success = true;
-			}
-			DBFreeResult(hResult);
-		}
-		DBFreeStatement(hStmt);
-	}
-
-	// Load custom attributes
-	if (success)
-	{
-		hStmt = DBPrepare(hdb, _T("SELECT attr_name,attr_value,flags FROM object_custom_attributes WHERE object_id=?"));
+   // Load custom attributes
+   if (success)
+   {
+      hStmt = DBPrepare(hdb, _T("SELECT attr_name,attr_value,flags FROM object_custom_attributes WHERE object_id=?"));
 		if (hStmt != nullptr)
 		{
 			DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -626,7 +628,7 @@ bool NetObj::loadCommonProperties(DB_HANDLE hdb)
 		{
 			success = false;
 		}
-	}
+   }
 
    // Load associated dashboards
    if (success)
@@ -1221,8 +1223,9 @@ void NetObj::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
    pMsg->setField(VID_STATUS_THRESHOLD_3, (WORD)m_statusThresholds[2]);
    pMsg->setField(VID_STATUS_THRESHOLD_4, (WORD)m_statusThresholds[3]);
    pMsg->setField(VID_COMMENTS, CHECK_NULL_EX(m_comments));
-	pMsg->setField(VID_IMAGE, m_mapImage);
-	pMsg->setField(VID_DRILL_DOWN_OBJECT_ID, m_submapId);
+   pMsg->setField(VID_COMMENTS_SOURCE, CHECK_NULL_EX(m_commentsSource));
+   pMsg->setField(VID_IMAGE, m_mapImage);
+   pMsg->setField(VID_DRILL_DOWN_OBJECT_ID, m_submapId);
    pMsg->setField(VID_CATEGORY_ID, m_categoryId);
 	pMsg->setFieldFromTime(VID_CREATION_TIME, m_creationTime);
 	if ((m_trustedNodes != nullptr) && !m_trustedNodes->isEmpty())
@@ -1878,12 +1881,31 @@ void NetObj::setNameOnMap(const TCHAR *name)
 }
 
 /**
+ * Expands m_commentsSource macros into m_comments.
+ * Locks object properties.
+ */
+void NetObj::expandCommentMacros()
+{
+   nxlog_debug_tag(_T("obj.comments"), 8, _T("Updating %s comments"), m_name);
+   if (!m_commentsSource.isNull() && !m_commentsSource.isEmpty())
+   {
+      const StringBuffer expandedComments = expandText(m_commentsSource, nullptr, nullptr, shared_ptr<DCObjectInfo>(), nullptr, nullptr, nullptr, nullptr, nullptr);
+      lockProperties();
+      m_comments = expandedComments;
+      setModified(MODIFY_COMMON_PROPERTIES);
+      unlockProperties();
+   }
+}
+
+/**
  * Set object's comments.
  */
 void NetObj::setComments(const TCHAR *comments)
 {
+   const StringBuffer expandedComments = expandText(comments, nullptr, nullptr, shared_ptr<DCObjectInfo>(), nullptr, nullptr, nullptr, nullptr, nullptr);
    lockProperties();
-   m_comments = comments;
+   m_commentsSource = comments;
+   m_comments = expandedComments;
    setModified(MODIFY_COMMON_PROPERTIES);
    unlockProperties();
 }
@@ -1895,6 +1917,7 @@ void NetObj::commentsToMessage(NXCPMessage *pMsg)
 {
    lockProperties();
    pMsg->setField(VID_COMMENTS, m_comments);
+   pMsg->setField(VID_COMMENTS_SOURCE, m_commentsSource);
    unlockProperties();
 }
 
@@ -2554,6 +2577,7 @@ json_t *NetObj::toJson()
    json_object_set_new(root, "timestamp", json_integer(m_timestamp));
    json_object_set_new(root, "name", json_string_t(m_name));
    json_object_set_new(root, "alias", json_string_t(m_alias));
+   json_object_set_new(root, "commentsSource", json_string_t(m_commentsSource));
    json_object_set_new(root, "comments", json_string_t(m_comments));
    json_object_set_new(root, "status", json_integer(m_status));
    json_object_set_new(root, "statusCalcAlg", json_integer(m_statusCalcAlg));

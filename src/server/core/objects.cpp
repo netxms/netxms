@@ -1408,6 +1408,16 @@ template<typename T> static void LoadObjectsFromTable(const TCHAR* className, DB
 }
 
 /**
+ * Scheduled task for comments macros expansion
+ */
+void ExpandCommentMacrosTask(const shared_ptr<ScheduledTaskParameters> &parameters)
+{
+   nxlog_debug_tag(_T("obj.comments"), 2, _T("Updating all objects comments macros"));
+   g_idxObjectById.forEach([](NetObj *object, void *context) { object->expandCommentMacros(); }, nullptr);
+   nxlog_debug_tag(_T("obj.comments"), 5, _T("Objects comments macros update complete"));
+}
+
+/**
  * Load objects from database at stratup
  */
 bool LoadObjects()
@@ -1657,6 +1667,10 @@ bool LoadObjects()
 
    // Start template update applying thread
    s_applyTemplateThread = ThreadCreateEx(ApplyTemplateThread);
+
+   // Expand comments macros
+   nxlog_debug_tag(_T("obj.comments"), 2, _T("Updating all objects comments macros"));
+   g_idxObjectById.forEach([](NetObj *object, void *context) { object->expandCommentMacros(); }, nullptr);
 
    if (cachedb != nullptr)
       DBCloseInMemoryDatabase(cachedb);
