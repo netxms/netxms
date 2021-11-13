@@ -24,6 +24,7 @@ import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Composite;
+import org.netxms.client.datacollection.Threshold;
 import org.netxms.ui.eclipse.charts.widgets.internal.DataComparisonElement;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -133,4 +134,18 @@ public class CurrentValueWidget extends GaugeWidget
 			gc.drawText(dci.getName(), rect.x + ((rect.width - ext.x) / 2), rect.y + rect.height + 4, true);
 		}
 	}
+
+   @Override
+   public void setThresholds(Threshold[][] thresholds)
+   {
+      // TODO Auto-generated method stub
+      
+   }
+
+   @Override
+   public Threshold[] getThreshold(int i)
+   {
+      // TODO Auto-generated method stub
+      return null;
+   }
 }

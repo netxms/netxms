@@ -42,16 +42,21 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
+import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.DciDataRow;
 import org.netxms.client.datacollection.GraphItem;
 import org.netxms.client.datacollection.GraphItemStyle;
 import org.netxms.client.datacollection.GraphSettings;
+import org.netxms.client.datacollection.Threshold;
+import org.netxms.client.events.EventTemplate;
 import org.netxms.ui.eclipse.charts.Activator;
 import org.netxms.ui.eclipse.charts.Messages;
 import org.netxms.ui.eclipse.charts.api.ChartColor;
 import org.netxms.ui.eclipse.charts.api.DataPoint;
 import org.netxms.ui.eclipse.charts.api.HistoricalDataChart;
+import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.ColorCache;
 import org.netxms.ui.eclipse.tools.ColorConverter;
 import org.swtchart.Chart;
@@ -79,6 +84,7 @@ public class LineChart extends Chart implements HistoricalDataChart
 	
 	private List<GraphItem> items = new ArrayList<GraphItem>();
 	private List<GraphItemStyle> itemStyles = new ArrayList<GraphItemStyle>(GraphSettings.MAX_GRAPH_ITEM_COUNT);
+	private Threshold[][] thresholds;
 	private long timeFrom;
 	private long timeTo;
 	private boolean showToolTips;
@@ -472,16 +478,29 @@ public class LineChart extends Chart implements HistoricalDataChart
 	{
 		GC gc = e.gc;
 		Rectangle clientArea = getPlotArea().getClientArea();
-		
-		for(GraphItemStyle style : itemStyles)
-		{
-			if (style.isShowThresholds())
+      NXCSession session = ConsoleSharedData.getSession();
+
+	   for(int i = 0; i < itemStyles.size(); i++)
+      {
+         Threshold[] tr = getThreshold(i);
+			if (itemStyles.get(i).isShowThresholds() && !isStacked() && tr != null)
 			{
-				int y = axis.getPixelCoordinate(10);
-				gc.setForeground(ColorConverter.colorFromInt(style.getColor(), colors));
-				//gc.setLineStyle(SWT.LINE_DOT);
-				gc.setLineWidth(3);
-				gc.drawLine(0, y, clientArea.width, y);
+			   for (int j = 0; j < tr.length; j++)
+            {
+               try
+               {
+                  int y = axis.getPixelCoordinate(Integer.parseInt(tr[j].getValue()));
+                  final EventTemplate event = (EventTemplate)session.findEventTemplateByCode(((Threshold)tr[j]).getFireEvent());
+                  gc.setForeground(StatusDisplayInfo.getStatusColor(event.getSeverity()));
+                  //gc.setLineStyle(SWT.LINE_DOT);
+                  gc.setLineWidth(3);
+                  gc.drawLine(0, y, clientArea.width, y);
+               }
+               catch (Exception ex)
+               {
+                  //Do nothing for String thresholds
+               }
+            }
 			}
 		}
 	}
@@ -1176,5 +1195,19 @@ public class LineChart extends Chart implements HistoricalDataChart
    public void modifyYBase(boolean modifyYBase)
    {
       this.modifyYBase = modifyYBase;
+   }
+
+   @Override
+   public void setThresholds(Threshold[][] thresholds)
+   {
+      this.thresholds = thresholds;
+   }
+
+   @Override
+   public Threshold[] getThreshold(int i)
+   {
+      if (thresholds == null)
+         return null;
+      return thresholds.length > i ? thresholds[i] : null;
    }
 }

@@ -23,6 +23,7 @@ import java.util.List;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.GraphItem;
 import org.netxms.client.datacollection.GraphItemStyle;
+import org.netxms.client.datacollection.Threshold;
 import org.eclipse.swt.events.MouseListener;
 import org.eclipse.swt.widgets.Canvas;
 
@@ -178,4 +179,19 @@ public interface HistoricalDataChart extends DataChart
     * @param useMultipliers the useMultipliers to set
     */
    public void setUseMultipliers(boolean useMultipliers);
+    
+   /**
+    * Set threshold configuraiton
+    * 
+    * @param thresholds
+    */
+   public void setThresholds(Threshold[][] thresholds);
+   
+   /**
+    * Get threshold configuraiton for item
+    * 
+    * @param i time index
+    * @return thresholds for this DCI
+    */
+   public Threshold[] getThreshold(int i);
 }

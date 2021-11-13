@@ -131,4 +131,19 @@ public interface DataComparisonChart extends DataChart
 	 * @return currently set rotation angle
 	 */
 	public abstract double getRotation();
+   
+  /**
+   * Set threshold configuraiton
+   * 
+   * @param thresholds
+   */
+  public void setThresholds(Threshold[][] thresholds);
+  
+  /**
+   * Get threshold configuraiton for item
+   * 
+   * @param i time index
+   * @return thresholds for this DCI
+   */
+  public Threshold[] getThreshold(int i);
 }
