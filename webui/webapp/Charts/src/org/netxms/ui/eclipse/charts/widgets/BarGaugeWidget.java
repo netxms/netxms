@@ -28,6 +28,7 @@ import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.datacollection.DataFormatter;
 import org.netxms.client.datacollection.GraphSettings;
+import org.netxms.client.datacollection.Threshold;
 import org.netxms.ui.eclipse.charts.api.GaugeColorMode;
 import org.netxms.ui.eclipse.charts.widgets.internal.DataComparisonElement;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
@@ -319,5 +320,19 @@ public class BarGaugeWidget extends GaugeWidget
             break;
       }
       return d;
+   }
+
+   @Override
+   public void setThresholds(Threshold[][] thresholds)
+   {
+      // TODO Auto-generated method stub
+      
+   }
+
+   @Override
+   public Threshold[] getThreshold(int i)
+   {
+      // TODO Auto-generated method stub
+      return null;
    }
 }

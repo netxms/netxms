@@ -557,4 +557,18 @@ public class DataComparisonBirtChart extends GenericBirtChart implements DataCom
 		// TODO Auto-generated method stub
 		
 	}
+
+   @Override
+   public void setThresholds(Threshold[][] thresholds)
+   {
+      // TODO Auto-generated method stub
+      
+   }
+
+   @Override
+   public Threshold[] getThreshold(int i)
+   {
+      // TODO Auto-generated method stub
+      return null;
+   }
 }

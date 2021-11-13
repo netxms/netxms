@@ -94,6 +94,7 @@ public class BirtChartFigure extends GenericChartFigure implements DataCompariso
 	private static final int CHART_FONT_SIZE_AXIS = 7;
 	
 	private int chartType = BAR_CHART;
+	private Threshold[][] thresholds;
 	private Chart chart = null;
 	private boolean fullRepaint = true;
 	private IDeviceRenderer deviceRenderer = null;
@@ -880,5 +881,19 @@ public class BirtChartFigure extends GenericChartFigure implements DataCompariso
          yAxis.getScale().setMin(NumberDataElementImpl.create(from));
          yAxis.getScale().setMax(NumberDataElementImpl.create(to));
       }
+   }
+
+   @Override
+   public void setThresholds(Threshold[][] thresholds)
+   {
+      this.thresholds = thresholds;      
+   }
+
+   @Override
+   public Threshold[] getThreshold(int i)
+   {
+      if (thresholds == null)
+         return null;
+      return thresholds.length > i ? thresholds[i] : null;
    }
 }

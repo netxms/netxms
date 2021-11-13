@@ -392,7 +392,9 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
          int color = dci.getColorAsInt();
          if (color == -1)
             color = ChartColor.getDefaultColor(index).getRGB();
-         styles.add(new GraphItemStyle(getDisplayType(dci), color, 2, dci.invertValues ? GraphItemStyle.INVERTED : 0));
+         int flags = dci.invertValues ? GraphItemStyle.INVERTED : 0;
+         flags |= dci.showThresholds ? GraphItemStyle.SHOW_THRESHOLDS : 0;
+         styles.add(new GraphItemStyle(getDisplayType(dci), color, 2, flags));
          index++;
       }
       
@@ -516,7 +518,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
                   if (!((Widget)chart).isDisposed())
                   {
                      chart.setTimeRange(settings.getTimeFrom(), settings.getTimeTo());
-                     setChartData(data);
+                     setChartData(data, thresholds);
                      chart.clearErrors();
                   }
                   updateInProgress = false;
@@ -943,11 +945,13 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
     * Set chart data
     * 
     * @param data Retrieved DCI data
+    * @param thresholds 
     */
-   private void setChartData(final DciData[] data)
+   private void setChartData(final DciData[] data, Threshold[][] thresholds)
    {
       for(int i = 0; i < data.length; i++)
          chart.updateParameter(i, data[i], false);
+      chart.setThresholds(thresholds);
       chart.refresh();
    }
 

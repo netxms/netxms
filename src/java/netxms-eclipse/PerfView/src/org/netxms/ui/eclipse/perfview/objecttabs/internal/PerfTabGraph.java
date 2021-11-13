@@ -55,6 +55,7 @@ import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.GraphItem;
 import org.netxms.client.datacollection.GraphItemStyle;
 import org.netxms.client.datacollection.PerfTabDci;
+import org.netxms.client.datacollection.Threshold;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.charts.api.ChartFactory;
 import org.netxms.ui.eclipse.charts.api.HistoricalDataChart;
@@ -122,8 +123,10 @@ public class PerfTabGraph extends DashboardComposite implements HistoricalChartO
       final Date from = new Date(System.currentTimeMillis() - settings.getTimeRangeMillis());
       final Date to = new Date(System.currentTimeMillis());
       chart.setTimeRange(from, to);
-		
-		GraphItemStyle style = new GraphItemStyle(settings.getType(), settings.getColorAsInt(), 2, settings.isInvertedValues() ? GraphItemStyle.INVERTED : 0);
+
+      int flags = settings.isInvertedValues() ? GraphItemStyle.INVERTED : 0;
+      flags |= settings.isShowThresholds() ? GraphItemStyle.SHOW_THRESHOLDS : 0;
+		GraphItemStyle style = new GraphItemStyle(settings.getType(), settings.getColorAsInt(), 2, flags);
 		chart.setItemStyles(Arrays.asList(new GraphItemStyle[] { style }));
 		if (!settings.isAutoScale())
       {
@@ -284,7 +287,9 @@ public class PerfTabGraph extends DashboardComposite implements HistoricalChartO
 		synchronized(items)
 		{
 			items.add(dci);
-			GraphItemStyle style = new GraphItemStyle(settings.getType(), settings.getColorAsInt(), 2, settings.isInvertedValues() ? GraphItemStyle.INVERTED : 0);
+			int flags = settings.isInvertedValues() ? GraphItemStyle.INVERTED : 0;
+			flags |= settings.isShowThresholds() ? GraphItemStyle.SHOW_THRESHOLDS : 0;
+			GraphItemStyle style = new GraphItemStyle(settings.getType(), settings.getColorAsInt(), 2, flags);
 			List<GraphItemStyle> styles = new ArrayList<GraphItemStyle>(chart.getItemStyles());
 			if (styles.size() < items.size())
 				styles.add(style);
@@ -336,10 +341,13 @@ public class PerfTabGraph extends DashboardComposite implements HistoricalChartO
 				synchronized(items)
 				{
 					final DciData[] data = new DciData[items.size()];
+					final Threshold[][] thresholds = new Threshold[items.size()][];
+					
 					for(int i = 0; i < data.length; i++)
 					{
 						currentDci = items.get(i);
 						data[i] = session.getCollectedData(nodeId, currentDci.getId(), from, to, 0, HistoricalDataType.PROCESSED);
+						thresholds[i] = session.getThresholds(nodeId, currentDci.getId());
 					}
 					runInUIThread(new Runnable() {
 						@Override
@@ -350,6 +358,7 @@ public class PerfTabGraph extends DashboardComposite implements HistoricalChartO
 								chart.setTimeRange(from, to);
 								for(int i = 0; i < data.length; i++)
 									chart.updateParameter(i, data[i], true);
+								chart.setThresholds(thresholds);
 							}
 							updateInProgress = false;
 						}

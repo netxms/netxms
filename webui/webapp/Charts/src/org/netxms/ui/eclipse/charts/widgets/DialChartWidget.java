@@ -27,6 +27,7 @@ import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.datacollection.DataFormatter;
+import org.netxms.client.datacollection.Threshold;
 import org.netxms.ui.eclipse.charts.widgets.internal.DataComparisonElement;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
@@ -276,4 +277,18 @@ public class DialChartWidget extends GaugeWidget
 	{
 		return new Point((int)(radius * Math.cos(Math.toRadians(angle)) + cx), (int)(radius * -Math.sin(Math.toRadians(angle)) + cy));
 	}
+
+   @Override
+   public void setThresholds(Threshold[][] thresholds)
+   {
+      // TODO Auto-generated method stub
+      
+   }
+
+   @Override
+   public Threshold[] getThreshold(int i)
+   {
+      // TODO Auto-generated method stub
+      return null;
+   }
 }
