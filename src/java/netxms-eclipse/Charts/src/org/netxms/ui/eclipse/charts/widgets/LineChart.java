@@ -446,7 +446,7 @@ public class LineChart extends org.swtchart.Chart implements PlotArea
       for(int i = 0; i < items.size(); i++)
 		{
          Threshold[] tr = chart.getThreshold(i);
-         if (items.get(i).isShowThresholds() && tr != null)
+         if (items.get(i).isShowThresholds() && !configuration.isStacked() && tr != null)
 			{
             for (int j = 0; j < tr.length; j++)
             {

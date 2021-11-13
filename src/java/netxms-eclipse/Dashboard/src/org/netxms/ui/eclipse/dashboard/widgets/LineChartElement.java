@@ -49,6 +49,7 @@ import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.GraphItem;
+import org.netxms.client.datacollection.Threshold;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.charts.api.ChartType;
 import org.netxms.ui.eclipse.charts.widgets.Chart;
@@ -241,13 +242,20 @@ public class LineChartElement extends ElementWidget implements HistoricalChartOw
 				final Date to = new Date(System.currentTimeMillis());
 				final ChartDciConfig[] dciList = config.getDciList();
 				final DciData[] data = new DciData[dciList.length];
+				final Threshold[][] thresholds = new Threshold[dciList.length][];
 				for(int i = 0; i < dciList.length; i++)
 				{
 					currentDci = dciList[i];
 					if (currentDci.type == ChartDciConfig.ITEM)
+					{
 						data[i] = session.getCollectedData(currentDci.nodeId, currentDci.dciId, from, to, 0, HistoricalDataType.PROCESSED);
+						thresholds[i] = session.getThresholds(currentDci.nodeId, currentDci.dciId);
+					}
 					else
+					{
 						data[i] = session.getCollectedTableData(currentDci.nodeId, currentDci.dciId, currentDci.instance, currentDci.column, from, to, 0);
+						thresholds[i] = null;
+					}
 				}
 				runInUIThread(new Runnable() {
 					@Override
@@ -262,6 +270,7 @@ public class LineChartElement extends ElementWidget implements HistoricalChartOw
 								chart.updateParameter(i, data[i], false);
 								dataCache.add(new DataCacheElement(dciList[i], data[i]));
 							}
+							chart.setThresholds(thresholds);
 							chart.refresh();
 							chart.clearErrors();
 						}
