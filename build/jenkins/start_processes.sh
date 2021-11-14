@@ -8,11 +8,17 @@ if test "x$BUILD_PREFIX" = "x"; then
 fi
 
 OS=`uname -s`
-if test "$OS" = "FreeBSD"; then
-    PS_OPTIONS="-aex"
-else
-    PS_OPTIONS="-ae"
-fi
+case "$OS" in
+    FreeBSD)
+        PS_OPTIONS="-aex"
+        ;;
+    OpenBSD)
+        PS_OPTIONS="-ax"
+        ;;
+    *)
+        PS_OPTIONS="-ae"
+        ;;
+esac
 
 BINDIR="$BUILD_PREFIX/bin"
 USER=`whoami`
@@ -24,10 +30,10 @@ else
 fi
 
 if test -f "$BUILD_PREFIX/etc/jenkins/netxmsd.conf"; then
-	NETXMSD_CONFIG="-c $BUILD_PREFIX/etc/jenkins/netxmsd.conf"
+    NETXMSD_CONFIG="-c $BUILD_PREFIX/etc/jenkins/netxmsd.conf"
 fi
 if test -f "$BUILD_PREFIX/etc/jenkins/nxagentd.conf"; then
-	NXAGENTD_CONFIG="-c $BUILD_PREFIX/etc/jenkins/nxagentd.conf"
+    NXAGENTD_CONFIG="-c $BUILD_PREFIX/etc/jenkins/nxagentd.conf"
 fi
 
 $BINDIR/nxdbmgr$SUFFIX $NETXMSD_CONFIG -f unlock
