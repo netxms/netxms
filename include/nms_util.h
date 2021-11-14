@@ -4312,7 +4312,7 @@ int LIBNETXMS_EXPORTABLE wclosedir(DIRW *p);
 #define _topendir wopendir
 #define _treaddir wreaddir
 #define _tclosedir wclosedir
-#else
+#else   /* not UNICODE */
 #define _topendir opendir
 #define _treaddir readdir
 #define _tclosedir closedir
