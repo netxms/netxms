@@ -89,7 +89,7 @@ public class DCIContainerFigure extends DecorationLayerAbstractFigure
          
          gc.setForegroundColor(borderColor);
          gc.setLineWidth(BORDER_SIZE);
-         gc.setLineStyle(SWT.LINE_SOLID);
+         gc.setLineStyle(Graphics.LINE_SOLID);
          gc.drawRoundRectangle(rect, 8, 8);         
       }
 

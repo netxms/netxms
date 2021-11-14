@@ -143,7 +143,7 @@ public class ObjectFigureLargeLabel extends ObjectFigure
 		gc.setAlpha(255);
 
 		gc.setForegroundColor(isElementSelected() ? SELECTION_COLOR : StatusDisplayInfo.getStatusColor(object.getStatus()));
-      gc.setLineStyle(labelProvider.isElementSelected(element) ? SWT.LINE_DOT : SWT.LINE_SOLID);
+      gc.setLineStyle(labelProvider.isElementSelected(element) ? Graphics.LINE_DOT : Graphics.LINE_SOLID);
 		gc.drawRoundRectangle(rect, 8, 8);
 	}
 }

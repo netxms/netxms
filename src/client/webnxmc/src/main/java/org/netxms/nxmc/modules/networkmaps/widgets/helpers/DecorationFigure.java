@@ -255,7 +255,7 @@ public class DecorationFigure extends DecorationLayerAbstractFigure
 		
 		gc.setForegroundColor(color);
 		gc.setLineWidth(3);
-		gc.setLineStyle(selected ? SWT.LINE_DOT : SWT.LINE_SOLID);
+      gc.setLineStyle(selected ? Graphics.LINE_DOT : Graphics.LINE_SOLID);
 		gc.drawRoundRectangle(rect, 8, 8);
 		
 		gc.setBackgroundColor(color);

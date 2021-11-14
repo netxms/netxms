@@ -91,7 +91,7 @@ public class ObjectStatusIcon extends ObjectFigure
          
          gc.setForegroundColor(SELECTION_COLOR);
          gc.setLineWidth(FRAME_LINE_WIDTH);
-         gc.setLineStyle(labelProvider.isElementSelected(element) ? SWT.LINE_DOT : SWT.LINE_SOLID);
+         gc.setLineStyle(labelProvider.isElementSelected(element) ? Graphics.LINE_DOT : Graphics.LINE_SOLID);
          gc.drawRoundRectangle(rect, 16, 16);
 
          rect = new Rectangle(getBounds());

@@ -18,11 +18,15 @@
  */
 package org.netxms.nxmc.base.jobs;
 
+import java.lang.reflect.InvocationTargetException;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jface.dialogs.ProgressMonitorDialog;
+import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.widgets.MessageArea;
 import org.netxms.nxmc.base.widgets.MessageAreaHolder;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
@@ -30,6 +34,8 @@ import org.slf4j.LoggerFactory;
  */
 public abstract class Job
 {
+   private static final Logger logger = LoggerFactory.getLogger(Job.class);
+
    private static final int TYPE_SYSTEM = 0;
    private static final int TYPE_DEFAULT = 1;
    private static final int TYPE_USER = 2;
@@ -131,7 +137,7 @@ public abstract class Job
       }
       catch(Exception e)
       {
-         LoggerFactory.getLogger(Job.class).error("Exception in UI job - " + e.getMessage(), e);
+         logger.error("Exception in UI job - " + e.getMessage(), e);
          jobFailureHandler(e);
          if (messageArea != null)
          {
@@ -159,7 +165,7 @@ public abstract class Job
    {
       JobManager.getInstance().submit(this);
    }
-   
+
    /**
     * Schedule job for later execution.
     *
@@ -168,6 +174,41 @@ public abstract class Job
    public void schedule(long delay)
    {
       JobManager.getInstance().schedule(this, delay);
+   }
+
+   /**
+    * Run job in foreground
+    */
+   public void runInForeground()
+   {
+      ProgressMonitorDialog monitorDialog = new ProgressMonitorDialog(null);
+      try
+      {
+         monitorDialog.run(true, false, new IRunnableWithProgress() {
+            @Override
+            public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException
+            {
+               state = JobState.RUNNING;
+               try
+               {
+                  Job.this.run(monitor);
+               }
+               catch(Exception e)
+               {
+                  throw new InvocationTargetException(e);
+               }
+               finally
+               {
+                  jobFinalize();
+                  state = JobState.COMPLETED;
+               }
+            }
+         });
+      }
+      catch(Exception e)
+      {
+         logger.error("Exception in foreground UI job - " + e.getMessage(), e);
+      }
    }
 
    /**

@@ -97,7 +97,7 @@ public class TextBoxFigure extends DecorationLayerAbstractFigure
          
          gc.setForegroundColor(labelProvider.getColors().create(ColorConverter.rgbFromInt(textBoxElement.getBorderColor())));
          gc.setLineWidth(BORDER_SIZE);
-         gc.setLineStyle(SWT.LINE_SOLID);
+         gc.setLineStyle(Graphics.LINE_SOLID);
          gc.drawRoundRectangle(rect, 8, 8);         
       }
    }

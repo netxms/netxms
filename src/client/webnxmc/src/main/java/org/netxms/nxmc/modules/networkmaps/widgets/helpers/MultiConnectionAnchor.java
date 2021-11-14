@@ -49,7 +49,7 @@ public class MultiConnectionAnchor extends ChopboxAnchor
    @Override
    public Point getLocation(Point reference)
    {
-      Rectangle r = Rectangle.SINGLETON;
+      Rectangle r = Rectangle.getSINGLETON();
       r.setBounds(getBox());
       getOwner().translateToAbsolute(r);
 

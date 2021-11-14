@@ -18,6 +18,7 @@
  */
 package org.netxms.nxmc.modules.networkmaps.views;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -66,7 +67,6 @@ import org.eclipse.swt.graphics.ImageLoader;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Menu;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
@@ -87,6 +87,7 @@ import org.netxms.client.maps.elements.NetworkMapTextBox;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Dashboard;
 import org.netxms.client.objects.NetworkMap;
+import org.netxms.nxmc.DownloadServiceHandler;
 import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
@@ -755,10 +756,10 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
          @Override
          public void run()
          {
-            saveMapImageToFile(null);
+            saveMapImageToFile();
          }
       };
-      
+
       actionHideLinkLabels = new Action(i18n.tr("Hide link labels"), Action.AS_CHECK_BOX) {
          @Override
          public void run()
@@ -1446,28 +1447,21 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
                (GraphConnection)viewer.getGraphControl().getSelection().get(0), viewer);
       }      
    }
-   
+
    /**
     * Save map image to file
     */
-   public boolean saveMapImageToFile(String fileName)
+   public boolean saveMapImageToFile()
    {
-      if (fileName == null)
-      {
-         FileDialog dlg = new FileDialog(getWindow().getShell(), SWT.SAVE);
-         dlg.setFilterExtensions(new String[] { ".png" });
-         dlg.setOverwrite(true);
-         fileName = dlg.open();
-         if (fileName == null)
-            return false;
-      }
-      
       Image image = viewer.takeSnapshot();
       try
       {
          ImageLoader loader = new ImageLoader();
          loader.data = new ImageData[] { image.getImageData() };
-         loader.save(fileName, SWT.IMAGE_PNG);
+         File tempFile = File.createTempFile("MapImage_" + hashCode(), "_" + System.currentTimeMillis());
+         loader.save(tempFile.getAbsolutePath(), SWT.IMAGE_PNG);
+         DownloadServiceHandler.addDownload(tempFile.getName(), "map.png", tempFile, "image/png");
+         DownloadServiceHandler.startDownload(tempFile.getName());
          return true;
       }
       catch(Exception e)
