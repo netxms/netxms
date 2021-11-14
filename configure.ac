@@ -1227,7 +1227,10 @@ if test $? = 0; then
 
 	check_substr "$COMPONENTS" "java"
 	if test $? = 0; then
-		SERVER_COMPONENTS="$SERVER_COMPONENTS nxreportd"
+		check_substr "$COMPONENTS" "client"
+		if test $? = 0; then
+			SERVER_COMPONENTS="$SERVER_COMPONENTS nxreportd"
+		fi
 	fi
 fi
 
