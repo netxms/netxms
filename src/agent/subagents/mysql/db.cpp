@@ -20,7 +20,7 @@
 
 #include "mysql_subagent.h"
 
-#define DEBUG_TAG _T("sa.mysql")
+#define DEBUG_TAG _T("mysql")
 
 /**
  * Data to query
@@ -454,8 +454,8 @@ reconnect:
       m_sessionLock.lock();
 
       TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
-      m_session = DBConnect(g_mysqlDriver, m_info.server, m_info.name, m_info.login, m_info.password, NULL, errorText);
-      if (m_session == NULL)
+      m_session = DBConnect(g_mysqlDriver, m_info.server, m_info.name, m_info.login, m_info.password, nullptr, errorText);
+      if (m_session == nullptr)
       {
          m_sessionLock.unlock();
          nxlog_debug_tag(DEBUG_TAG, 6, _T("MYSQL: cannot connect to database %s: %s"), m_info.id, errorText);
@@ -464,18 +464,18 @@ reconnect:
 
       m_connected = true;
 		DBEnableReconnect(m_session, false);
-      AgentWriteLog(NXLOG_INFO, _T("MYSQL: connection with database %s restored (connection TTL %d)"), m_info.id, m_info.connectionTTL);
+      nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("MYSQL: connection with database %s restored (connection TTL %d)"), m_info.id, m_info.connectionTTL);
 
       m_sessionLock.unlock();
 
-      INT64 pollerLoopStartTime = GetCurrentTimeMs();
-      UINT32 sleepTime;
+      int64_t pollerLoopStartTime = GetCurrentTimeMs();
+      uint32_t sleepTime;
       do
       {
          INT64 startTime = GetCurrentTimeMs();
          if (!poll())
          {
-            AgentWriteLog(NXLOG_WARNING, _T("MYSQL: connection with database %s lost"), m_info.id);
+            nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("MYSQL: connection with database %s lost"), m_info.id);
             break;
          }
          INT64 currTime = GetCurrentTimeMs();
@@ -485,19 +485,19 @@ reconnect:
             m_sessionLock.lock();
             m_connected = false;
             DBDisconnect(m_session);
-            m_session = NULL;
+            m_session = nullptr;
             m_sessionLock.unlock();
             goto reconnect;
          }
          int64_t elapsedTime = currTime - startTime;
-         sleepTime = (UINT32)((elapsedTime >= 60000) ? 60000 : (60000 - elapsedTime));
+         sleepTime = (uint32_t)((elapsedTime >= 60000) ? 60000 : (60000 - elapsedTime));
       }
       while(!m_stopCondition.wait(sleepTime));
 
       m_sessionLock.lock();
       m_connected = false;
       DBDisconnect(m_session);
-      m_session = NULL;
+      m_session = nullptr;
       m_sessionLock.unlock();
    }
    while(!m_stopCondition.wait(60000));   // reconnect every 60 seconds
