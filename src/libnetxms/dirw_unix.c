@@ -22,8 +22,6 @@
 #include "libnetxms.h"
 #include <sys/stat.h>
 
-#ifdef UNICODE
-
 /**
  * opendir() wrapper
  */
@@ -69,5 +67,3 @@ int wclosedir(DIRW *dirp)
 	MemFree(dirp);
 	return 0;
 }
-
-#endif
