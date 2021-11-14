@@ -1,6 +1,6 @@
 /* 
 ** MariaDB Database Driver
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -227,7 +227,7 @@ extern "C" char __EXPORT *DrvPrepareStringA(const char *str)
  */
 extern "C" bool __EXPORT DrvInit(const char *cmdLine)
 {
-	if (mysql_library_init(0, NULL, NULL) != 0)
+	if (mysql_library_init(0, nullptr, nullptr) != 0)
 	   return false;
 	nxlog_debug_tag(DEBUG_TAG, 4, _T("MariaDB client library version %hs"), mysql_get_client_info());
 	s_enforceTLS = ExtractNamedOptionValueAsBoolA(cmdLine, "enforceTLS", true);
@@ -250,7 +250,7 @@ static bool GetConnectorVersion(MYSQL *conn, char *version)
    bool success = false;
 #if HAVE_DECL_MYSQL_GET_OPTIONV && HAVE_DECL_MYSQL_OPT_CONNECT_ATTRS
    int elements = 0;
-   if (mysql_get_optionv(conn, MYSQL_OPT_CONNECT_ATTRS, NULL, NULL, (void *)&elements) == 0)
+   if (mysql_get_optionv(conn, MYSQL_OPT_CONNECT_ATTRS, nullptr, nullptr, (void *)&elements) == 0)
    {
       char **keys = MemAllocArray<char*>(elements);
       char **values = MemAllocArray<char*>(elements);
@@ -277,64 +277,75 @@ static bool GetConnectorVersion(MYSQL *conn, char *version)
  * Connect to database
  */
 extern "C" DBDRV_CONNECTION __EXPORT DrvConnect(const char *host, const char *login, const char *password,
-                                                const char *database, const char *schema, WCHAR *errorText)
+      const char *database, const char *schema, WCHAR *errorText)
 {
-	MYSQL *pMySQL;
-	MARIADB_CONN *pConn;
-	my_bool v;
-	const char *pHost = host;
-	const char *pSocket = NULL;
-	
-	pMySQL = mysql_init(NULL);
-	if (pMySQL == NULL)
+	MYSQL *mysql = mysql_init(nullptr);
+	if (mysql == nullptr)
 	{
 		wcscpy(errorText, L"Insufficient memory to allocate connection handle");
-		return NULL;
+		return nullptr;
 	}
 
-	pSocket = strstr(host, "socket:");
-	if (pSocket != NULL)
+	uint16_t port = 0;
+	char hostBuffer[256];
+   const char *hostName = host;
+	const char *socketName = strstr(host, "socket:");
+	if (socketName != nullptr)
 	{
-		pHost = NULL;
-		pSocket += 7;
+		hostName = nullptr;
+		socketName += 7;
+	}
+	else
+	{
+	   // Check if port number is provided
+	   const char *p = strchr(host, ':');
+	   if (p != nullptr)
+	   {
+	      size_t l = p - host;
+	      strncpy(hostBuffer, host, l);
+	      hostBuffer[l] = 0;
+	      hostName = hostBuffer;
+	      port = static_cast<uint16_t>(strtoul(p + 1, nullptr, 10));
+	   }
 	}
 
    // Set TLS enforcement option
 	// If set to 0 connector will not setup TLS connection even if server requires it
+   my_bool v;
 #if HAVE_DECL_MYSQL_OPT_SSL_ENFORCE
    v = s_enforceTLS ? 1 : 0;
-   mysql_options(pMySQL, MYSQL_OPT_SSL_ENFORCE, &v);
+   mysql_options(mysql, MYSQL_OPT_SSL_ENFORCE, &v);
 #endif
 
 	if (!mysql_real_connect(
-		pMySQL, // MYSQL *
-		pHost, // host
-		login[0] == 0 ? NULL : login, // user
-		(password[0] == 0 || login[0] == 0) ? NULL : password, // pass
-		database, // DB Name
-		0, // use default port
-		pSocket, // char * - unix socket
-		0 // flags
+         mysql,
+         hostName,
+         login[0] == 0 ? nullptr : login,
+         (password[0] == 0 || login[0] == 0) ? nullptr : password,
+         database,
+         port,
+         socketName,
+         0 // flags
 		))
 	{
-		UpdateErrorMessage(mysql_error(pMySQL), errorText);
-		mysql_close(pMySQL);
-		return NULL;
+		UpdateErrorMessage(mysql_error(mysql), errorText);
+		mysql_close(mysql);
+		return nullptr;
 	}
 	
-	pConn = MemAllocStruct<MARIADB_CONN>();
-	pConn->pMySQL = pMySQL;
+	auto pConn = MemAllocStruct<MARIADB_CONN>();
+	pConn->pMySQL = mysql;
 	pConn->mutexQueryLock = MutexCreate();
 
    // Switch to UTF-8 encoding
-   mysql_set_character_set(pMySQL, "utf8");
+   mysql_set_character_set(mysql, "utf8");
 
    // Disable truncation reporting
    v = 0;
-   mysql_options(pMySQL, MYSQL_REPORT_DATA_TRUNCATION, &v);
+   mysql_options(mysql, MYSQL_REPORT_DATA_TRUNCATION, &v);
 
    char connectorVersion[64];
-   if (GetConnectorVersion(pMySQL, connectorVersion))
+   if (GetConnectorVersion(mysql, connectorVersion))
    {
       int major, minor, patch;
       if (sscanf(connectorVersion, "%d.%d.%d", &major, &minor, &patch) == 3)
@@ -345,12 +356,12 @@ extern "C" DBDRV_CONNECTION __EXPORT DrvConnect(const char *host, const char *lo
       {
          pConn->fixForCONC281 = true;  // cannot determine version, assume that fix is needed
       }
-      nxlog_debug_tag(DEBUG_TAG, 5, _T("Connected to %hs (connector version %hs)"), mysql_get_host_info(pMySQL), connectorVersion);
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("Connected to %hs (connector version %hs)"), mysql_get_host_info(mysql), connectorVersion);
    }
    else
    {
       pConn->fixForCONC281 = true;  // cannot determine version, assume that fix is needed
-      nxlog_debug_tag(DEBUG_TAG, 5, _T("Connected to %hs"), mysql_get_host_info(pMySQL));
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("Connected to %hs"), mysql_get_host_info(mysql));
    }
    if (pConn->fixForCONC281)
       nxlog_debug_tag(DEBUG_TAG, 7, _T("Enabled workaround for MariadB bug CONC-281"));
@@ -671,7 +682,7 @@ extern "C" DBDRV_RESULT __EXPORT DrvSelectPrepared(MARIADB_CONN *pConn, MARIADB_
 			result->isPreparedStatement = true;
 			result->statement = hStmt->statement;
 			result->resultSet = mysql_stmt_result_metadata(hStmt->statement);
-			if (result->resultSet != NULL)
+			if (result->resultSet != nullptr)
 			{
 				result->numColumns = mysql_num_fields(result->resultSet);
 				result->lengthFields = MemAllocArray<unsigned long>(result->numColumns);
@@ -756,7 +767,7 @@ extern "C" LONG __EXPORT DrvGetFieldLength(MARIADB_RESULT *hResult, int iRow, in
 	}
 	else
 	{
-	   MYSQL_ROW row;
+      MYSQL_ROW row;
       if (hResult->currentRow != iRow)
       {
          if (hResult->rows[iRow] == nullptr)
@@ -823,7 +834,7 @@ static void *GetFieldInternal(MARIADB_RESULT *hResult, int iRow, int iColumn, vo
             }
             else
             {
-			      MultiByteToWideChar(CP_UTF8, 0, (char *)b.buffer, -1, (WCHAR *)pBuffer, nBufSize);
+			      utf8_to_wchar((char *)b.buffer, -1, (WCHAR *)pBuffer, nBufSize);
    			   ((WCHAR *)pBuffer)[nBufSize - 1] = 0;
             }
          }
@@ -861,7 +872,7 @@ static void *GetFieldInternal(MARIADB_RESULT *hResult, int iRow, int iColumn, vo
       {
          row = hResult->rows[iRow];
       }
-		if (row != nullptr)
+      if (row != nullptr)
 		{
 			if (row[iColumn] != nullptr)
 			{
@@ -1300,7 +1311,7 @@ extern "C" void __EXPORT DrvFreeUnbufferedResult(MARIADB_UNBUFFERED_RESULT *hRes
       // Fetch remaining rows
       if (!hResult->isPreparedStatement)
       {
-         while(mysql_fetch_row(hResult->resultSet) != NULL);
+         while(mysql_fetch_row(hResult->resultSet) != nullptr);
       }
 
       // Now we are ready for next query, so unlock query mutex

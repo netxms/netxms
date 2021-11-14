@@ -1,7 +1,7 @@
 /*
  ** NetXMS - Network Management System
  ** Subagent for MySQL monitoring
- ** Copyright (C) 2016-2020 Raden Solutions
+ ** Copyright (C) 2016-2021 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU Lesser General Public License as published
@@ -26,12 +26,12 @@
 /**
  * Driver handle
  */
-DB_DRIVER g_mysqlDriver = NULL;
+DB_DRIVER g_mysqlDriver = nullptr;
 
 /**
  * Database instances
  */
-static ObjectArray<DatabaseInstance> *s_instances = NULL;
+static ObjectArray<DatabaseInstance> *s_instances = nullptr;
 
 /**
  * Find instance by ID
@@ -44,7 +44,7 @@ static DatabaseInstance *FindInstance(const TCHAR *id)
       if (!_tcsicmp(db->getId(), id))
          return db;
    }
-   return NULL;
+   return nullptr;
 }
 
 /**
@@ -57,7 +57,7 @@ static LONG H_GlobalParameter(const TCHAR *param, const TCHAR *arg, TCHAR *value
       return SYSINFO_RC_UNSUPPORTED;
 
    DatabaseInstance *db = FindInstance(id);
-   if (db == NULL)
+   if (db == nullptr)
       return SYSINFO_RC_UNSUPPORTED;
 
    return db->getData(arg, value) ? SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR;
@@ -111,10 +111,8 @@ static NX_CFG_TEMPLATE s_configTemplate[] =
  */
 static bool SubAgentInit(Config *config)
 {
-   int i;
-
-	g_mysqlDriver = DBLoadDriver(_T("mysql.ddr"), NULL, NULL, NULL);
-	if (g_mysqlDriver == NULL)
+	g_mysqlDriver = DBLoadDriver(config->getValue(_T("/MySQL/Driver"), _T("mysql.ddr")), nullptr, nullptr, nullptr);
+	if (g_mysqlDriver == nullptr)
 	{
 		AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("MYSQL: failed to load database driver"));
 		return false;
@@ -130,9 +128,9 @@ static bool SubAgentInit(Config *config)
    _tcscpy(s_dbInfo.server, _T("127.0.0.1"));
    _tcscpy(s_dbInfo.name, _T("information_schema"));
    _tcscpy(s_dbInfo.login, _T("netxms"));
-   if(config->getEntry(_T("/mysql/id")) != NULL || config->getEntry(_T("/mysql/name")) != NULL ||
-         config->getEntry(_T("mysql/server")) != NULL || config->getEntry(_T("/mysql/login")) != NULL  ||
-         config->getEntry(_T("/mysql/password")) != NULL)
+   if (config->getEntry(_T("/mysql/id")) != nullptr || config->getEntry(_T("/mysql/name")) != nullptr ||
+       config->getEntry(_T("mysql/server")) != nullptr || config->getEntry(_T("/mysql/login")) != nullptr  ||
+       config->getEntry(_T("/mysql/password")) != nullptr)
    {
       if (config->parseTemplate(_T("MYSQL"), s_configTemplate))
       {
@@ -188,7 +186,7 @@ static bool SubAgentInit(Config *config)
 	}
 
 	// Run query thread for each configured database
-   for(i = 0; i < s_instances->size(); i++)
+   for(int i = 0; i < s_instances->size(); i++)
       s_instances->get(i)->run();
 
 	return true;
