@@ -20,7 +20,7 @@
 
 #include "mysql_subagent.h"
 
-#define DEBUG_TAG _T("sa.mysql")
+#define DEBUG_TAG _T("mysql")
 
 /**
  * Data to query
@@ -460,8 +460,8 @@ reconnect:
       MutexLock(m_sessionLock);
 
       TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
-      m_session = DBConnect(g_mysqlDriver, m_info.server, m_info.name, m_info.login, m_info.password, NULL, errorText);
-      if (m_session == NULL)
+      m_session = DBConnect(g_mysqlDriver, m_info.server, m_info.name, m_info.login, m_info.password, nullptr, errorText);
+      if (m_session == nullptr)
       {
          MutexUnlock(m_sessionLock);
          nxlog_debug_tag(DEBUG_TAG, 6, _T("MYSQL: cannot connect to database %s: %s"), m_info.id, errorText);
@@ -470,18 +470,18 @@ reconnect:
 
       m_connected = true;
 		DBEnableReconnect(m_session, false);
-      AgentWriteLog(NXLOG_INFO, _T("MYSQL: connection with database %s restored (connection TTL %d)"), m_info.id, m_info.connectionTTL);
+      nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("MYSQL: connection with database %s restored (connection TTL %d)"), m_info.id, m_info.connectionTTL);
 
       MutexUnlock(m_sessionLock);
 
-      INT64 pollerLoopStartTime = GetCurrentTimeMs();
-      UINT32 sleepTime;
+      int64_t pollerLoopStartTime = GetCurrentTimeMs();
+      uint32_t sleepTime;
       do
       {
          INT64 startTime = GetCurrentTimeMs();
          if (!poll())
          {
-            AgentWriteLog(NXLOG_WARNING, _T("MYSQL: connection with database %s lost"), m_info.id);
+            nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("MYSQL: connection with database %s lost"), m_info.id);
             break;
          }
          INT64 currTime = GetCurrentTimeMs();
@@ -491,19 +491,19 @@ reconnect:
             MutexLock(m_sessionLock);
             m_connected = false;
             DBDisconnect(m_session);
-            m_session = NULL;
+            m_session = nullptr;
             MutexUnlock(m_sessionLock);
             goto reconnect;
          }
-         INT64 elapsedTime = currTime - startTime;
-         sleepTime = (UINT32)((elapsedTime >= 60000) ? 60000 : (60000 - elapsedTime));
+         int64_t elapsedTime = currTime - startTime;
+         sleepTime = (uint32_t)((elapsedTime >= 60000) ? 60000 : (60000 - elapsedTime));
       }
       while(!ConditionWait(m_stopCondition, sleepTime));
 
       MutexLock(m_sessionLock);
       m_connected = false;
       DBDisconnect(m_session);
-      m_session = NULL;
+      m_session = nullptr;
       MutexUnlock(m_sessionLock);
    }
    while(!ConditionWait(m_stopCondition, 60000));   // reconnect every 60 seconds

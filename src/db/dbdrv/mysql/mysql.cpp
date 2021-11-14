@@ -24,6 +24,8 @@
 
 DECLARE_DRIVER_HEADER("MYSQL")
 
+#define DEBUG_TAG _T("db.drv.mysql")
+
 /**
  * Convert wide character string to UTF-8 using internal buffer when possible
  */
@@ -220,7 +222,10 @@ extern "C" char __EXPORT *DrvPrepareStringA(const char *str)
  */
 extern "C" bool __EXPORT DrvInit(const char *cmdLine)
 {
-	return mysql_library_init(0, NULL, NULL) == 0;
+	if (mysql_library_init(0, nullptr, nullptr) != 0)
+	   return false;
+	nxlog_debug_tag(DEBUG_TAG, 4, _T("MariaDB client library version %hs"), mysql_get_client_info());
+	return true;
 }
 
 /**
@@ -234,52 +239,63 @@ extern "C" void __EXPORT DrvUnload()
 /**
  * Connect to database
  */
-extern "C" DBDRV_CONNECTION __EXPORT DrvConnect(const char *szHost, const char *szLogin, const char *szPassword,
-															 const char *szDatabase, const char *schema, WCHAR *errorText)
+extern "C" DBDRV_CONNECTION __EXPORT DrvConnect(const char *host, const char *login, const char *password,
+      const char *database, const char *schema, WCHAR *errorText)
 {
-	MYSQL *pMySQL;
-	MYSQL_CONN *pConn;
-	const char *pHost = szHost;
-	const char *pSocket = NULL;
-	
-	pMySQL = mysql_init(NULL);
-	if (pMySQL == NULL)
+	MYSQL *mysql = mysql_init(nullptr);
+	if (mysql == nullptr)
 	{
 		wcscpy(errorText, L"Insufficient memory to allocate connection handle");
-		return NULL;
+		return nullptr;
 	}
 
-	pSocket = strstr(szHost, "socket:");
-	if (pSocket != NULL)
+	uint16_t port = 0;
+	char hostBuffer[256];
+   const char *hostName = host;
+	const char *socketName = strstr(host, "socket:");
+	if (socketName != nullptr)
 	{
-		pHost = NULL;
-		pSocket += 7;
+		hostName = nullptr;
+		socketName += 7;
+	}
+	else
+	{
+	   // Check if port number is provided
+	   const char *p = strchr(host, ':');
+	   if (p != nullptr)
+	   {
+	      size_t l = p - host;
+	      strncpy(hostBuffer, host, l);
+	      hostBuffer[l] = 0;
+	      hostName = hostBuffer;
+	      port = static_cast<uint16_t>(strtoul(p + 1, nullptr, 10));
+	   }
 	}
 
 	if (!mysql_real_connect(
-		pMySQL, // MYSQL *
-		pHost, // host
-		szLogin[0] == 0 ? NULL : szLogin, // user
-		(szPassword[0] == 0 || szLogin[0] == 0) ? NULL : szPassword, // pass
-		szDatabase, // DB Name
-		0, // use default port
-		pSocket, // char * - unix socket
-		0 // flags
+         mysql,
+         hostName,
+         login[0] == 0 ? nullptr : login,
+         (password[0] == 0 || login[0] == 0) ? nullptr : password,
+         database,
+         port,
+         socketName,
+         0 // flags
 		))
 	{
-		UpdateErrorMessage(mysql_error(pMySQL), errorText);
-		mysql_close(pMySQL);
-		return NULL;
+		UpdateErrorMessage(mysql_error(mysql), errorText);
+		mysql_close(mysql);
+		return nullptr;
 	}
-	
-	pConn = MemAllocStruct<MYSQL_CONN>();
-	pConn->pMySQL = pMySQL;
-	pConn->mutexQueryLock = MutexCreate();
+
+   auto pConn = MemAllocStruct<MYSQL_CONN>();
+   pConn->pMySQL = mysql;
+   pConn->mutexQueryLock = MutexCreate();
 
    // Switch to UTF-8 encoding
-   mysql_set_character_set(pMySQL, "utf8");
-	
-	return (DBDRV_CONNECTION)pConn;
+   mysql_set_character_set(mysql, "utf8");
+
+   return (DBDRV_CONNECTION)pConn;
 }
 
 /**
@@ -564,11 +580,11 @@ static MYSQL_RESULT *DrvSelectInternal(MYSQL_CONN *pConn, WCHAR *pwszQuery, DWOR
  */
 extern "C" DBDRV_RESULT __EXPORT DrvSelect(MYSQL_CONN *conn, WCHAR *query, DWORD *errorCode, WCHAR *errorText)
 {
-	if (conn == nullptr)
-	{
-		*errorCode = DBERR_INVALID_HANDLE;
-		return nullptr;
-	}
+   if (conn == nullptr)
+   {
+      *errorCode = DBERR_INVALID_HANDLE;
+      return nullptr;
+   }
    return DrvSelectInternal(conn, query, errorCode, errorText);
 }
 
@@ -623,16 +639,14 @@ extern "C" DBDRV_RESULT __EXPORT DrvSelectPrepared(MYSQL_CONN *pConn, MYSQL_STAT
 					mysql_free_result(result->resultSet);
 					MemFree(result->bindings);
 					MemFree(result->lengthFields);
-					MemFree(result);
-					result = nullptr;
+					MemFreeAndNull(result);
 				}
 			}
 			else
 			{
 				UpdateErrorMessage(mysql_stmt_error(hStmt->statement), errorText);
 				*pdwError = DBERR_OTHER_ERROR;
-				MemFree(result);
-				result = nullptr;
+				MemFreeAndNull(result);
 			}
 		}
 		else
@@ -722,8 +736,8 @@ static void *GetFieldInternal(MYSQL_RESULT *hResult, int iRow, int iColumn, void
       MutexLock(hResult->connection->mutexQueryLock);
 		if (hResult->currentRow != iRow)
 		{
-		   if (iRow != hResult->currentRow + 1)
-		      mysql_stmt_data_seek(hResult->statement, iRow);
+         if (iRow != hResult->currentRow + 1)
+            mysql_stmt_data_seek(hResult->statement, iRow);
 			mysql_stmt_fetch(hResult->statement);
 			hResult->currentRow = iRow;
 		}
@@ -913,8 +927,7 @@ extern "C" DBDRV_UNBUFFERED_RESULT __EXPORT DrvSelectUnbuffered(MYSQL_CONN *pCon
 		}
 		else
 		{
-			free(pResult);
-			pResult = NULL;
+			MemFreeAndNull(pResult);
 		}
 
 		*pdwError = DBERR_SUCCESS;
@@ -973,7 +986,6 @@ extern "C" DBDRV_RESULT __EXPORT DrvSelectPreparedUnbuffered(MYSQL_CONN *pConn, 
             result->noMoreRows = false;
             result->numColumns = mysql_num_fields(result->resultSet);
             result->pCurrRow = NULL;
-
             result->lengthFields = MemAllocArray<unsigned long>(result->numColumns);
 
             result->bindings = MemAllocArray<MYSQL_BIND>(result->numColumns);
@@ -990,8 +1002,7 @@ extern "C" DBDRV_RESULT __EXPORT DrvSelectPreparedUnbuffered(MYSQL_CONN *pConn, 
          {
             UpdateErrorMessage(mysql_stmt_error(hStmt->statement), errorText);
             *pdwError = DBERR_OTHER_ERROR;
-            free(result);
-            result = NULL;
+            MemFreeAndNull(result);
          }
       }
       else
