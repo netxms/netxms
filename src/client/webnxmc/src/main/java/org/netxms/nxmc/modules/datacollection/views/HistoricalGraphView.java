@@ -429,7 +429,7 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
                   if (!((Widget)chart).isDisposed())
                   {
                      chart.setTimeRange(configuration.getTimeFrom(), configuration.getTimeTo());
-                     setChartData(data);
+                     setChartData(data, thresholds);
                      chart.clearErrors();
                   }
                   updateInProgress = false;
@@ -761,10 +761,11 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
     * 
     * @param data Retrieved DCI data
     */
-   private void setChartData(final DciData[] data)
+   private void setChartData(final DciData[] data, Threshold[][] thresholds)
    {
       for(int i = 0; i < data.length; i++)
          chart.updateParameter(i, data[i], false);
+      chart.setThresholds(thresholds);
       chart.refresh();
    }
 
