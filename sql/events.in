@@ -1465,6 +1465,14 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
    (
+      EVENT_BUSINESS_SERVICE_MINOR, 'SYS_BUSINESS_SERVICE_MINOR', '39bd18fc-bfd7-4c31-af9c-1e96ef3aef64',
+      EVENT_SEVERITY_MINOR, 1,
+      'Business service changed status to minor (degraded)',
+      'Generated when business service status changes to minor (degraded).'
+   );
+
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+   (
       EVENT_BUSINESS_SERVICE_CRITICAL, 'SYS_BUSINESS_SERVICE_CRITICAL', 'fc66c83f-c7e8-4635-ad2d-89589d8b0fc2',
       EVENT_SEVERITY_CRITICAL, 1,
       'Business service changed status to critical',

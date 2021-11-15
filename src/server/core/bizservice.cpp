@@ -194,9 +194,9 @@ void BusinessService::statusPoll(PollerInfo *poller, ClientSession *session, UIN
       }
       if (oldCheckStatus != newCheckStatus)
       {
-         nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("BusinessService::statusPoll(%s [%u]): status of check %s [%u] changed to %d"), m_name, m_id, checkDescription.cstr(), check->getId(), newCheckStatus);
-         sendPollerMsg(_T("   Status of business service check \"%s\" changed to %s\r\n"),
-                  checkDescription.cstr(), newCheckStatus == STATUS_CRITICAL ? _T("CRITICAL") : _T("NORMAL"));
+         nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("BusinessService::statusPoll(%s [%u]): status of check %s [%u] changed to %s"),
+               m_name, m_id, checkDescription.cstr(), check->getId(), GetStatusAsText(newCheckStatus, true));
+         sendPollerMsg(_T("   Status of business service check \"%s\" changed to %s\r\n"), checkDescription.cstr(), GetStatusAsText(newCheckStatus, true));
          NotifyClientsOnBusinessServiceCheckUpdate(*this, check);
       }
       if (newCheckStatus > mostCriticalCheckStatus)
@@ -210,43 +210,53 @@ void BusinessService::statusPoll(PollerInfo *poller, ClientSession *session, UIN
 
    if (prevStatus != m_status)
    {
-      sendPollerMsg(_T("Status of business service changed to %s\r\n"), m_status == STATUS_CRITICAL ? _T("CRITICAL") : _T("NORMAL"));
-   }
-
-   if (m_status > prevStatus)
-   {
-      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-      DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO business_service_downtime (record_id,service_id,from_timestamp,to_timestamp) VALUES (?,?,?,0)"));
-      if (hStmt != nullptr)
+      sendPollerMsg(_T("Status of business service changed to %s\r\n"), GetStatusAsText(m_status, true));
+      if (m_status > prevStatus)
       {
-         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, CreateUniqueId(IDG_BUSINESS_SERVICE_RECORD));
-         DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_id);
-         DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (uint32_t)time(nullptr));
-         DBExecute(hStmt);
-         DBFreeStatement(hStmt);
+         if  (m_status == STATUS_CRITICAL)
+         {
+            DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+            DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO business_service_downtime (record_id,service_id,from_timestamp,to_timestamp) VALUES (?,?,?,0)"));
+            if (hStmt != nullptr)
+            {
+               DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, CreateUniqueId(IDG_BUSINESS_SERVICE_RECORD));
+               DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_id);
+               DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(time(nullptr)));
+               DBExecute(hStmt);
+               DBFreeStatement(hStmt);
+            }
+            DBConnectionPoolReleaseConnection(hdb);
+            PostSystemEvent(EVENT_BUSINESS_SERVICE_CRITICAL, m_id, nullptr);
+         }
+         else
+         {
+            PostSystemEvent(EVENT_BUSINESS_SERVICE_MINOR, m_id, nullptr);
+         }
       }
-      DBConnectionPoolReleaseConnection(hdb);
-      PostSystemEvent(EVENT_BUSINESS_SERVICE_CRITICAL, m_id, nullptr);
-   }
-   else if (m_status < prevStatus)
-   {
-      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-      DB_STATEMENT hStmt = DBPrepare(hdb, _T("UPDATE business_service_downtime SET to_timestamp=? WHERE service_id=? AND to_timestamp=0"));
-      if (hStmt != nullptr)
+      else if (m_status < prevStatus)
       {
-         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (uint32_t)time(nullptr));
-         DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_id);
-         DBExecute(hStmt);
-         DBFreeStatement(hStmt);
+         if (prevStatus == STATUS_CRITICAL)
+         {
+            DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+            DB_STATEMENT hStmt = DBPrepare(hdb, _T("UPDATE business_service_downtime SET to_timestamp=? WHERE service_id=? AND to_timestamp=0"));
+            if (hStmt != nullptr)
+            {
+               DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(time(nullptr)));
+               DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_id);
+               DBExecute(hStmt);
+               DBFreeStatement(hStmt);
+            }
+            DBConnectionPoolReleaseConnection(hdb);
+         }
+         PostSystemEvent((m_status == STATUS_NORMAL) ? EVENT_BUSINESS_SERVICE_NORMAL : EVENT_BUSINESS_SERVICE_MINOR, m_id, nullptr);
       }
-      DBConnectionPoolReleaseConnection(hdb);
-      PostSystemEvent(EVENT_BUSINESS_SERVICE_NORMAL, m_id, nullptr);
    }
 
    lockProperties();
    sendPollerMsg(_T("Finished status poll of business service %s [%u] \r\n"), m_name, m_id);
    nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("BusinessService::statusPoll(%s [%u]): poll finished"), m_name, m_id);
    unlockProperties();
+
    pollerUnlock();
 }
 

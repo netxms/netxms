@@ -22,7 +22,7 @@
 
 #include "nxcore.h"
 
-#define DEBUG_TAG _T("business.service.check")
+#define DEBUG_TAG _T("bizsvc.check")
 
 /**
  * Create empty business service check object
@@ -81,6 +81,7 @@ BusinessServiceCheck::BusinessServiceCheck(uint32_t serviceId, const BusinessSer
 
 /**
  * Create business service check from database
+ * Expected field order: id,service_id,type,description,related_object,related_dci,status_threshold,content,status,current_ticket,failure_reason
  */
 BusinessServiceCheck::BusinessServiceCheck(DB_RESULT hResult, int row) : m_mutex(MutexType::FAST)
 {
@@ -92,36 +93,11 @@ BusinessServiceCheck::BusinessServiceCheck(DB_RESULT hResult, int row) : m_mutex
    m_relatedDCI = DBGetFieldULong(hResult, row, 5);
    m_statusThreshold = DBGetFieldULong(hResult, row, 6);
    m_script = DBGetField(hResult, row, 7, nullptr, 0);
-   m_currentTicket = DBGetFieldULong(hResult, row, 8);
+   m_status = DBGetFieldULong(hResult, row, 8);
+   m_currentTicket = DBGetFieldULong(hResult, row, 9);
+   DBGetField(hResult, row, 10, m_reason, 256);
    m_compiledScript = nullptr;
-   m_status = m_currentTicket != 0 ? STATUS_CRITICAL : STATUS_NORMAL;
    compileScript();
-   m_reason[0] = 0;
-   loadReason();
-}
-
-/**
- * Load reason of violated business service check
- */
-void BusinessServiceCheck::loadReason()
-{
-   if (m_currentTicket != 0)
-   {
-      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-      DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT reason FROM business_service_tickets WHERE ticket_id=?"));
-      if (hStmt != nullptr)
-      {
-         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_currentTicket);
-         DB_RESULT hResult = DBSelectPrepared(hStmt);
-         if (hResult != nullptr)
-         {
-            DBGetField(hResult, 0, 0, m_reason, 256);
-            DBFreeResult(hResult);
-         }
-         DBFreeStatement(hStmt);
-      }
-      DBConnectionPoolReleaseConnection(hdb);
-   }
 }
 
 /**
@@ -184,7 +160,7 @@ void BusinessServiceCheck::compileScript()
       TCHAR buffer[1024];
       _sntprintf(buffer, 1024, _T("BusinessServiceCheck::%u"), m_id);
       PostSystemEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", buffer, errorMsg, 0);
-      nxlog_write(NXLOG_WARNING, _T("Failed to compile script for service check %s [%u] (%s)"), m_description.cstr(), m_id, errorMsg);
+      nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Failed to compile script for service check %s [%u] (%s)"), m_description.cstr(), m_id, errorMsg);
    }
 }
 
@@ -214,7 +190,7 @@ bool BusinessServiceCheck::saveToDatabase() const
 
    static const TCHAR *columns[] = {
          _T("service_id") ,_T("type"), _T("description"), _T("related_object"), _T("related_dci"), _T("status_threshold"),
-         _T("content"), _T("current_ticket"), nullptr
+         _T("content"), _T("status"), _T("current_ticket"), _T("failure_reason"), nullptr
    };
    DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("business_service_checks"), _T("id"), m_id, columns);
 	bool success = false;
@@ -228,8 +204,10 @@ bool BusinessServiceCheck::saveToDatabase() const
 		DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, m_relatedDCI);
 		DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, m_statusThreshold);
 		DBBind(hStmt, 7, DB_SQLTYPE_TEXT, m_script, DB_BIND_STATIC);
-		DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, m_currentTicket);
-		DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, m_id);
+      DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, m_status);
+		DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, m_currentTicket);
+      DBBind(hStmt, 10, DB_SQLTYPE_VARCHAR, m_reason, DB_BIND_STATIC);
+		DBBind(hStmt, 11, DB_SQLTYPE_INTEGER, m_id);
 		success = DBExecute(hStmt);
       unlock();
 		DBFreeStatement(hStmt);
@@ -268,11 +246,22 @@ int BusinessServiceCheck::execute(BusinessServiceTicketData* ticket)
 				shared_ptr<NetObj> obj = FindObjectById(m_relatedObject);
 				if (obj != nullptr)
 				{
-					int threshold = m_statusThreshold != 0 ? m_statusThreshold : ConfigReadInt(_T("BusinessServices.Check.Threshold.Objects"), STATUS_WARNING);
-					m_status = obj->getStatus() >= threshold ? STATUS_CRITICAL : STATUS_NORMAL;
-					if (m_status == STATUS_CRITICAL)
+					int threshold = (m_statusThreshold != 0) ? m_statusThreshold : ConfigReadInt(_T("BusinessServices.Check.Threshold.Objects"), STATUS_WARNING);
+					if ((obj->getStatus() >= threshold) && (obj->getStatus() != STATUS_UNMANAGED))
 					{
-						_tcslcpy(m_reason, _T("Object status threshold violation"), 256);
+					   m_status = STATUS_CRITICAL;
+					   if (oldStatus != STATUS_CRITICAL)
+	                  _tcscpy(m_reason, _T("Object status threshold violation"));
+					}
+					else if ((obj->getStatus() > STATUS_NORMAL) && (obj->getStatus() != STATUS_UNMANAGED))
+					{
+                  m_status = STATUS_MINOR;
+                  if (oldStatus != STATUS_MINOR)
+                     _tcscpy(m_reason, _T("Object status threshold violation"));
+					}
+					else
+					{
+					   m_status = STATUS_NORMAL;
 					}
 				}
 			}
@@ -349,11 +338,23 @@ int BusinessServiceCheck::execute(BusinessServiceTicketData* ticket)
 				shared_ptr<NetObj> object = FindObjectById(m_relatedObject);
 				if ((object != nullptr) && object->isDataCollectionTarget())
 				{
-					int threshold = m_statusThreshold != 0 ? m_statusThreshold : ConfigReadInt(_T("BusinessServices.Check.Threshold.DataCollection"), STATUS_WARNING);
-					m_status = static_cast<DataCollectionTarget&>(*object).getDciThreshold(m_relatedDCI) >= threshold ? STATUS_CRITICAL : STATUS_NORMAL;
-					if (m_status == STATUS_CRITICAL)
+					int threshold = (m_statusThreshold != 0) ? m_statusThreshold : ConfigReadInt(_T("BusinessServices.Check.Threshold.DataCollection"), STATUS_WARNING);
+					int dciStatus = static_cast<DataCollectionTarget&>(*object).getDciThreshold(m_relatedDCI);
+					if (dciStatus >= threshold)
 					{
-						_tcslcpy(m_reason, _T("DCI threshold violation"), 256);
+					   m_status = STATUS_CRITICAL;
+					   if (oldStatus != STATUS_CRITICAL)
+					      _tcscpy(m_reason, _T("DCI threshold violation"));
+					}
+					else if (dciStatus != STATUS_NORMAL)
+					{
+                  m_status = STATUS_MINOR;
+                  if (oldStatus != STATUS_MINOR)
+                     _tcscpy(m_reason, _T("DCI threshold violation"));
+					}
+					else
+					{
+					   m_status = STATUS_NORMAL;
 					}
 				}
 			}
@@ -373,7 +374,8 @@ int BusinessServiceCheck::execute(BusinessServiceTicketData* ticket)
 		else
 		{
 			closeTicket();
-			m_reason[0] = 0;
+			if (m_status == STATUS_NORMAL)
+			   m_reason[0] = 0;
 		}
 	}
 	int newStatus = m_status;

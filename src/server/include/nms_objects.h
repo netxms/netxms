@@ -4236,7 +4236,6 @@ protected:
    bool insertTicket(BusinessServiceTicketData* ticket);
    void closeTicket();
    void compileScript();
-   void loadReason();
 
    void lock() const { m_mutex.lock(); }
    void unlock() const { m_mutex.unlock(); }

@@ -178,6 +178,7 @@
 #define EVENT_BUSINESS_SERVICE_CRITICAL             121
 #define EVENT_ICMP_UNREACHABLE                      122
 #define EVENT_ICMP_OK                               123
+#define EVENT_BUSINESS_SERVICE_MINOR                124
 
 #define EVENT_SNMP_UNMATCHED_TRAP                   500
 #define EVENT_SNMP_COLD_START                       501

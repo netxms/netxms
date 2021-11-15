@@ -24,20 +24,42 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 40.78 to 40.79
+ */
+static bool H_UpgradeFromV78()
+{
+   static const TCHAR *batch =
+      _T("ALTER TABLE business_service_checks ADD status integer\n")
+      _T("ALTER TABLE business_service_checks ADD failure_reason varchar(255)\n")
+      _T("UPDATE business_service_checks SET status=(CASE WHEN current_ticket<>0 THEN 4 ELSE 0)\n")
+      _T("UPDATE business_service_checks SET failure_reason=(SELECT reason FROM business_service_tickets WHERE business_service_tickets.ticket_id=business_service_checks.current_ticket) WHERE current_ticket<>0\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("business_service_checks"), _T("status")));
+
+   CHK_EXEC(CreateEventTemplate(EVENT_BUSINESS_SERVICE_MINOR, _T("SYS_BUSINESS_SERVICE_MINOR"),
+      EVENT_SEVERITY_MINOR, EF_LOG, _T("39bd18fc-bfd7-4c31-af9c-1e96ef3aef64"),
+      _T("Business service changed status to minor (degraded)"),
+      _T("Generated when business service status changes to minor (degraded).")));
+
+   CHK_EXEC(SetMinorSchemaVersion(79));
+   return true;
+}
+
+/**
  * Upgrade from 40.77 to 40.78
  */
 static bool H_UpgradeFromV77()
 {
    static const TCHAR *batch = 
       _T("ALTER TABLE object_properties ADD comments_source $SQL:TEXT\n")
-      _T("UPDATE object_properties SET comments_source = comments\n")
+      _T("UPDATE object_properties SET comments_source=comments\n")
       _T("<END>");
    CHK_EXEC(SQLBatch(batch));
 
    CHK_EXEC(SetMinorSchemaVersion(78));
    return true;
 }
-
 
 /**
  * Upgrade from 40.76 to 40.77
@@ -2555,6 +2577,8 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 78, 40, 79, H_UpgradeFromV78 },
+   { 77, 40, 78, H_UpgradeFromV77 },
    { 76, 40, 77, H_UpgradeFromV76 },
    { 75, 40, 76, H_UpgradeFromV75 },
    { 74, 40, 75, H_UpgradeFromV74 },

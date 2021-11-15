@@ -2010,7 +2010,9 @@ CREATE TABLE business_service_checks
   related_dci integer not null,  // threshold_id => related_dci
   status_threshold integer not null,
   content SQL_TEXT null, // if type == 1
+  status integer not null,
   current_ticket integer not null,
+  failure_reason varchar(255) null,
   PRIMARY KEY(id)
 ) TABLE_TYPE;
 
