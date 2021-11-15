@@ -140,7 +140,7 @@ DCItem::DCItem(DB_HANDLE hdb, DB_RESULT hResult, int row, const shared_ptr<DataC
    m_snmpVersion = static_cast<SNMP_Version>(DBGetFieldLong(hResult, row, 37));
 
    int effectivePollingInterval = getEffectivePollingInterval();
-   m_startTime = (useStartupDelay && (effectivePollingInterval > 0)) ? time(nullptr) + rand() % (effectivePollingInterval / 2) : 0;
+   m_startTime = (useStartupDelay && (effectivePollingInterval >= 10)) ? time(nullptr) + rand() % (effectivePollingInterval / 2) : 0;
 
    // Load last raw value from database
 	TCHAR szQuery[256];

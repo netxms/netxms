@@ -197,7 +197,7 @@ DCTable::DCTable(DB_HANDLE hdb, DB_RESULT hResult, int row, const shared_ptr<Dat
    m_snmpVersion = static_cast<SNMP_Version>(DBGetFieldLong(hResult, row, 29));
 
    int effectivePollingInterval = getEffectivePollingInterval();
-   m_startTime = (useStartupDelay && (effectivePollingInterval > 0)) ? time(nullptr) + rand() % (effectivePollingInterval / 2) : 0;
+   m_startTime = (useStartupDelay && (effectivePollingInterval >= 10)) ? time(nullptr) + rand() % (effectivePollingInterval / 2) : 0;
 
 	m_columns = new ObjectArray<DCTableColumn>(8, 8, Ownership::True);
 	DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT column_name,flags,snmp_oid,display_name FROM dc_table_columns WHERE table_id=? ORDER BY sequence_number"));
