@@ -24,7 +24,7 @@
 #include <nms_agent.h>
 #include <nxcpapi.h>
 
-#define VMGR_DEBUG_TAG  _T("sa.vmgr")
+#define VMGR_DEBUG_TAG  _T("vmgr")
 #define NEVER 0
 #define DATA_COLLECTION_CACHE_TIMEOUT 10
 
@@ -53,9 +53,11 @@ class NXvirDomain
 {
 private:
    virDomainPtr vm;
+
 public:
    NXvirDomain(virDomainPtr vm) { this->vm = vm; }
    ~NXvirDomain() { virDomainFree(vm); }
+
    operator virDomainPtr() const { return vm; }
 };
 
@@ -63,9 +65,11 @@ class NXvirNetwork
 {
 private:
    virNetworkPtr network;
+
 public:
    NXvirNetwork(virNetworkPtr network) { this->network = network; }
    ~NXvirNetwork() { virNetworkFree(network); }
+
    operator virNetworkPtr() const { return network; }
 };
 
@@ -73,9 +77,11 @@ class NXvirStoragePool
 {
 private:
    virStoragePoolPtr storage;
+
 public:
    NXvirStoragePool(virStoragePoolPtr storage) { this->storage = storage; }
    ~NXvirStoragePool() {virStoragePoolFree(storage); }
+
    operator virStoragePoolPtr() const { return storage; }
 };
 
@@ -90,12 +96,33 @@ private:
    bool mallocObj;
 
 public:
-   Cache(bool mallocObj = true) { m_lastCollectionTime = NEVER; m_data = nullptr; this->mallocObj = mallocObj;}
-   ~Cache() { if (mallocObj) { MemFree(m_data); } else { delete m_data; } }
+   Cache(bool mallocObj = true)
+   {
+      m_lastCollectionTime = NEVER;
+      m_data = nullptr;
+      this->mallocObj = mallocObj;
+   }
+   ~Cache()
+   {
+      if (mallocObj)
+         MemFree(m_data);
+      else
+         delete m_data;
+   }
+
    const T *getData() const { return m_data; }
    const time_t getLastCollecitonTime() const { return m_lastCollectionTime; }
-   void update(T* data) { m_lastCollectionTime = time(NULL); if (mallocObj) { MemFree(m_data); } else { delete m_data; } m_data = data; }
-   bool shouldUpdate() { return (time(NULL) - m_lastCollectionTime) > DATA_COLLECTION_CACHE_TIMEOUT; }
+   bool shouldUpdate() const { return (time(nullptr) - m_lastCollectionTime) > DATA_COLLECTION_CACHE_TIMEOUT; }
+
+   void update(T* data)
+   {
+      m_lastCollectionTime = time(nullptr);
+      if (mallocObj)
+         MemFree(m_data);
+      else
+         delete m_data;
+      m_data = data;
+   }
 };
 
 /**
@@ -104,13 +131,13 @@ public:
 template <class T> class CacheAndLock : public Cache<T>
 {
 private:
-   MUTEX m_mutex;
+   Mutex m_mutex;
 
 public:
-   CacheAndLock(bool mallocObj = true) : Cache<T>(mallocObj) { m_mutex = MutexCreate(); }
-   ~CacheAndLock() { MutexDestroy(m_mutex); }
-   void lock() { MutexLock(m_mutex); }
-   void unlock() { MutexUnlock(m_mutex); }
+   CacheAndLock(bool mallocObj = true) : Cache<T>(mallocObj), m_mutex(MutexType::FAST) { }
+
+   void lock() { m_mutex.lock(); }
+   void unlock() { m_mutex.unlock(); }
 };
 
 /**
@@ -132,13 +159,13 @@ private:
    CacheAndLock<StringObjectMap<NXvirNetwork> > m_networks;
    CacheAndLock<StringObjectMap<NXvirStoragePool> > m_storages;
 
-   MUTEX m_vmInfoMutex;
+   Mutex m_vmInfoMutex;
    StringObjectMap<Cache<virDomainInfo> > m_vmInfo;
-   MUTEX m_vmXMLMutex;
+   Mutex m_vmXMLMutex;
    StringObjectMap<Cache<char> > m_vmXMLs;
-   MUTEX m_networkXMLMutex;
+   Mutex m_networkXMLMutex;
    StringObjectMap<Cache<char> > m_networkXMLs;
-   MUTEX m_storageInfoMutex;
+   Mutex m_storageInfoMutex;
    StringObjectMap<Cache<virStoragePoolInfo> > m_storageInfo;
 
    static int authCb(virConnectCredentialPtr cred, unsigned int ncred, void *cbdata);
@@ -146,6 +173,7 @@ private:
 public:
    HostConnections(const TCHAR *name, const char *url, const char *login, const char *password);
    ~HostConnections();
+
    bool connect();
    void disconnect();
 

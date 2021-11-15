@@ -28,8 +28,8 @@ static TCHAR *ReadAttribute(const TCHAR *config, const TCHAR *attribute)
 {
    TCHAR buffer[256];
    if (!ExtractNamedOptionValue(config, attribute, buffer, 256))
-      return NULL;
-   return _tcsdup(buffer);
+      return nullptr;
+   return MemCopyString(buffer);
 }
 
 bool AddMongoDBFromConfig(const TCHAR *config)
@@ -38,22 +38,22 @@ bool AddMongoDBFromConfig(const TCHAR *config)
    //parse id:server:login:password
    DatabaseInfo info;
    TCHAR *tmp = ReadAttribute(config, _T("id"));
-   _tcsncpy(info.id, CHECK_NULL_EX(tmp), MAX_STR);
+   _tcslcpy(info.id, CHECK_NULL_EX(tmp), MAX_STR);
    MemFree(tmp);
    tmp = ReadAttribute(config, _T("server"));
-   _tcsncpy(info.server, CHECK_NULL_EX(tmp), MAX_STR);
+   _tcslcpy(info.server, CHECK_NULL_EX(tmp), MAX_STR);
    MemFree(tmp);
    tmp = ReadAttribute(config, _T("login"));
-   _tcsncpy(info.username, CHECK_NULL_EX(tmp), MAX_STR);
+   _tcslcpy(info.username, CHECK_NULL_EX(tmp), MAX_STR);
    MemFree(tmp);
 
    TCHAR *password = ReadAttribute(config, _T("password"));
-   if (password == NULL)
+   if (password == nullptr)
    {
       password = ReadAttribute(config, _T("encryptedPassword"));
    }
 
-   if(password != NULL)
+   if (password != nullptr)
    {
       DecryptPassword(CHECK_NULL_EX(info.username), password, info.password, MAX_PASSWORD);
       MemFree(password);
@@ -62,7 +62,7 @@ bool AddMongoDBFromConfig(const TCHAR *config)
    bool sucess = false;
    //add to list of DB connecdtions
    DatabaseInstance *db = new DatabaseInstance(&info);
-   if(db->connectionEstablished())
+   if (db->connectionEstablished())
    {
       AgentWriteDebugLog(NXLOG_WARNING, _T("MONGODB: Connection estables and db added to list: %s"), info.id);
       g_instances->add(db);
@@ -105,22 +105,16 @@ static LONG H_GetParameter(const TCHAR *param, const TCHAR *arg, TCHAR *value, A
    return result;
 }
 
-
 /**
  * Create new database instance object
  */
-DatabaseInstance::DatabaseInstance(DatabaseInfo *info)
+DatabaseInstance::DatabaseInstance(DatabaseInfo *info) : m_stopCondition(true)
 {
    memcpy(&m_info, info, sizeof(DatabaseInfo));
-   m_serverStatus = NULL;
-   connect();
-	m_serverStatusLock = MutexCreate();
-   m_stopCondition = ConditionCreate(TRUE);
-   m_databaseListLock = MutexCreate();
-   m_dataLock = MutexCreate();
-   m_connLock = MutexCreate();
-   m_databaseList = NULL;
+   m_serverStatus = nullptr;
+   m_databaseList = nullptr;
    m_data = new StringObjectMap<StringObjectMap<MongoDBCommand> >(Ownership::True);
+   connect();
 }
 
 /**
@@ -130,7 +124,7 @@ DatabaseInstance::DatabaseInstance(DatabaseInfo *info)
  {
    TCHAR connectionString[256];
    _tcscpy(connectionString, _T("mongodb://"));
-   if(_tcscmp(m_info.username, _T("")))
+   if (_tcscmp(m_info.username, _T("")))
    {
       _tcscat(connectionString, m_info.username);
       _tcscat(connectionString, _T(":"));
@@ -147,7 +141,23 @@ DatabaseInstance::DatabaseInstance(DatabaseInfo *info)
 	m_dbConn = mongoc_client_new(connectionString);
 #endif
    return connectionEstablished();
- }
+}
+
+/**
+ * Destructor
+ */
+DatabaseInstance::~DatabaseInstance()
+{
+   if (m_serverStatus != nullptr)
+   {
+      bson_destroy (m_serverStatus);
+      delete m_serverStatus;
+   }
+   mongoc_client_destroy (m_dbConn);
+   if (m_databaseList != nullptr)
+      bson_strfreev(m_databaseList);
+   delete m_data;
+}
 
 /**
  * Run
@@ -162,7 +172,7 @@ void DatabaseInstance::run()
  */
 void DatabaseInstance::stop()
 {
-   ConditionSet(m_stopCondition);
+   m_stopCondition.set();
    ThreadJoin(m_pollerThread);
    m_pollerThread = INVALID_THREAD_HANDLE;
 }
@@ -187,7 +197,7 @@ void DatabaseInstance::pollerThread()
       getServerStatus();
       getDatabases();
    }
-   while(!ConditionWait(m_stopCondition, 60000));
+   while(!m_stopCondition.wait(60000));
    AgentWriteDebugLog(NXLOG_INFO, _T("MONGODB: poller thread for database %s stopped"), m_info.id);
 }
 
@@ -197,13 +207,13 @@ void DatabaseInstance::pollerThread()
 void DatabaseInstance::getDatabases()
 {
    bson_error_t error;
-   MutexLock(m_databaseListLock);
+   m_databaseListLock.lock();
    if(m_databaseList != NULL)
    {
       bson_strfreev(m_databaseList);
       m_databaseList = NULL;
    }
-   MutexLock(m_connLock);
+   m_connLock.lock();
    if (!(m_databaseList = mongoc_client_get_database_names(m_dbConn, &error)))
    {
 #ifdef UNICODE
@@ -216,8 +226,8 @@ void DatabaseInstance::getDatabases()
       bson_strfreev (m_databaseList);
       m_databaseList = NULL;
    }
-   MutexUnlock(m_connLock);
-   MutexUnlock(m_databaseListLock);
+   m_connLock.unlock();
+   m_databaseListLock.unlock();
 }
 
 /**
@@ -233,7 +243,7 @@ bool DatabaseInstance::connectionEstablished()
  */
 bool DatabaseInstance::getServerStatus()
 {
-   MutexLock(m_serverStatusLock);
+   m_serverStatusLock.lock();
    bson_error_t error;
    bool sucess = true;
    if (m_serverStatus != NULL)
@@ -242,7 +252,7 @@ bool DatabaseInstance::getServerStatus()
       delete m_serverStatus;
    }
    m_serverStatus = new bson_t;
-   MutexLock(m_connLock);
+   m_connLock.lock();
    if (!mongoc_client_get_server_status(m_dbConn, NULL, m_serverStatus, &error)) {
 #ifdef UNICODE
       TCHAR *_error = WideStringFromUTF8String(error.message);
@@ -256,8 +266,8 @@ bool DatabaseInstance::getServerStatus()
       delete m_serverStatus;
       m_serverStatus = NULL;
    }
-   MutexUnlock(m_connLock);
-   MutexUnlock(m_serverStatusLock);
+   m_connLock.unlock();
+   m_serverStatusLock.unlock();
    return sucess;
 }
 
@@ -266,9 +276,9 @@ bool DatabaseInstance::getServerStatus()
  */
 LONG DatabaseInstance::getStatusParam(const char *paramName, TCHAR *value)
 {
-   MutexLock(m_serverStatusLock);
+   m_serverStatusLock.lock();
    LONG result = getParam(m_serverStatus, paramName, value);
-   MutexUnlock(m_serverStatusLock);
+   m_serverStatusLock.unlock();
    return result;
 }
 
@@ -348,7 +358,7 @@ NETXMS_SUBAGENT_PARAM *DatabaseInstance::getParameters(int *paramCount)
    bson_iter_t iter;
    bson_iter_t child;
 
-   MutexLock(m_serverStatusLock);
+   m_serverStatusLock.lock();
    int i = 0;
    if (bson_iter_init (&iter, m_serverStatus))
    {
@@ -390,8 +400,8 @@ NETXMS_SUBAGENT_PARAM *DatabaseInstance::getParameters(int *paramCount)
          i++;
       }
    }
-   MutexUnlock(m_serverStatusLock);
-   if(i<attrSize)
+   m_serverStatusLock.unlock();
+   if (i < attrSize)
    {
       result = (NETXMS_SUBAGENT_PARAM *)realloc(result, sizeof(NETXMS_SUBAGENT_PARAM)*i);
    }
@@ -401,9 +411,10 @@ NETXMS_SUBAGENT_PARAM *DatabaseInstance::getParameters(int *paramCount)
 
 LONG DatabaseInstance::setDbNames(StringList *value)
 {
-   if(m_databaseList == NULL)
+   if (m_databaseList == nullptr)
       return SYSINFO_RC_ERROR;
-   MutexLock(m_databaseListLock);
+
+   m_databaseListLock.lock();
    for (int i = 0; m_databaseList[i]; i++)
    {
 #ifdef UNICODE
@@ -414,7 +425,7 @@ LONG DatabaseInstance::setDbNames(StringList *value)
       value->add(m_databaseList[i]);
 #endif
    }
-   MutexUnlock(m_databaseListLock);
+   m_databaseListLock.unlock();
    return SYSINFO_RC_SUCCESS;
 }
 
@@ -427,7 +438,7 @@ LONG DatabaseInstance::getOtherParam(const TCHAR *param, const TCHAR *arg, const
    if (!AgentGetParameterArg(param, 2, dbName, MAX_STR))
       return SYSINFO_RC_ERROR;
    LONG result = SYSINFO_RC_UNSUPPORTED;
-   MutexLock(m_dataLock);
+   m_dataLock.lock();
    MongoDBCommand *commandData = NULL;
    StringObjectMap<MongoDBCommand> * list = m_data->get(dbName);
    if (list != NULL)
@@ -438,9 +449,9 @@ LONG DatabaseInstance::getOtherParam(const TCHAR *param, const TCHAR *arg, const
    {
       if((GetCurrentTimeMs() - commandData->m_lastUpdateTime) > 60000)
       {
-         MutexLock(m_connLock);
+         m_connLock.lock();
          result = commandData->getData(m_dbConn, dbName, command) ?  SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR;
-         MutexUnlock(m_connLock);
+         m_connLock.unlock();
       }
       else
       {
@@ -450,9 +461,9 @@ LONG DatabaseInstance::getOtherParam(const TCHAR *param, const TCHAR *arg, const
    else
    {
       commandData = new MongoDBCommand();
-      MutexLock(m_connLock);
+      m_connLock.lock();
       result = commandData->getData(m_dbConn, dbName, command) ?  SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR;
-      MutexUnlock(m_connLock);
+      m_connLock.unlock();
       list = new StringObjectMap<MongoDBCommand>(Ownership::True);
       list->set(command,commandData);
       m_data->set(dbName,list);
@@ -469,32 +480,9 @@ LONG DatabaseInstance::getOtherParam(const TCHAR *param, const TCHAR *arg, const
 #endif
    }
 
-   MutexUnlock(m_dataLock);
+   m_dataLock.unlock();
    return result;
 }
-
-
-/**
- * Destructor
- */
-DatabaseInstance::~DatabaseInstance()
-{
-   MutexDestroy(m_serverStatusLock);
-   if(m_serverStatus != NULL)
-   {
-      bson_destroy (m_serverStatus);
-      delete m_serverStatus;
-   }
-   mongoc_client_destroy (m_dbConn);
-   ConditionDestroy(m_stopCondition);
-   if(m_databaseList != NULL)
-      bson_strfreev(m_databaseList);
-   MutexDestroy(m_databaseListLock);
-   MutexDestroy(m_dataLock);
-   MutexDestroy(m_connLock);
-   delete m_data;
-}
-
 
 bool MongoDBCommand::getData(mongoc_client_t *m_dbConn, const TCHAR *dbName, const TCHAR *command)
 {

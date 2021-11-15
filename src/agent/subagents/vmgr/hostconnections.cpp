@@ -32,10 +32,6 @@ HostConnections::HostConnections(const TCHAR *name, const char *url, const char 
    m_url = MemCopyStringA(url);
    m_login = MemCopyStringA(login);
    m_password = MemCopyStringA(password);
-   m_vmXMLMutex = MutexCreate();
-   m_networkXMLMutex = MutexCreate();
-   m_storageInfoMutex = MutexCreate();
-   m_vmInfoMutex = MutexCreate();
 }
 
 /**
@@ -48,10 +44,6 @@ HostConnections::~HostConnections()
    MemFree(m_name);
    MemFree(m_login);
    MemFree(m_password);
-   MutexDestroy(m_vmXMLMutex);
-   MutexDestroy(m_networkXMLMutex);
-   MutexDestroy(m_storageInfoMutex);
-   MutexDestroy(m_vmInfoMutex);
 }
 
 /**
@@ -283,7 +275,7 @@ void HostConnections::unlockDomainList()
  */
 const char *HostConnections::getDomainDefinitionAndLock(const TCHAR *name, const NXvirDomain *vm)
 {
-   MutexLock(m_vmXMLMutex);
+   m_vmXMLMutex.lock();
    Cache<char> *xmlCache = m_vmXMLs.get(name);
    if (xmlCache == nullptr || xmlCache->shouldUpdate())
    {
@@ -321,7 +313,7 @@ const char *HostConnections::getDomainDefinitionAndLock(const TCHAR *name, const
  */
 void HostConnections::unlockDomainDefinition()
 {
-   MutexUnlock(m_vmXMLMutex);
+   m_vmXMLMutex.unlock();
 }
 
 /**
@@ -329,7 +321,7 @@ void HostConnections::unlockDomainDefinition()
  */
 const virDomainInfo *HostConnections::getDomainInfoAndLock(const TCHAR *domainName, const NXvirDomain *vm)
 {
-   MutexLock(m_vmInfoMutex);
+   m_vmInfoMutex.lock();
    Cache<virDomainInfo> *infoCache = m_vmInfo.get(domainName);
    if (infoCache == nullptr || infoCache->shouldUpdate())
    {
@@ -374,7 +366,7 @@ const virDomainInfo *HostConnections::getDomainInfoAndLock(const TCHAR *domainNa
  */
 void HostConnections::unlockDomainInfo()
 {
-   MutexUnlock(m_vmInfoMutex);
+   m_vmInfoMutex.unlock();
 }
 
 /**---------
@@ -499,7 +491,7 @@ void HostConnections::unlockNetworkList()
  */
 const char *HostConnections::getNetworkDefinitionAndLock(const TCHAR *name, const NXvirNetwork *network)
 {
-   MutexLock(m_networkXMLMutex);
+   m_networkXMLMutex.lock();
    Cache<char> *xmlCache = m_networkXMLs.get(name);
    if (xmlCache == nullptr || xmlCache->shouldUpdate())
    {
@@ -537,7 +529,7 @@ const char *HostConnections::getNetworkDefinitionAndLock(const TCHAR *name, cons
  */
 void HostConnections::unlockNetworkDefinition()
 {
-   MutexUnlock(m_networkXMLMutex);
+   m_networkXMLMutex.unlock();
 }
 
 /**---------
@@ -602,7 +594,7 @@ void HostConnections::unlockStorageList()
  */
 const virStoragePoolInfo *HostConnections::getStorageInformationAndLock(const TCHAR *name, const NXvirStoragePool *storage)
 {
-   MutexLock(m_storageInfoMutex);
+   m_storageInfoMutex.lock();
    Cache<virStoragePoolInfo> *info = m_storageInfo.get(name);
    if (info == nullptr || info->shouldUpdate())
    {
@@ -647,7 +639,7 @@ const virStoragePoolInfo *HostConnections::getStorageInformationAndLock(const TC
  */
 void HostConnections::unlockStorageInfo()
 {
-   MutexUnlock(m_storageInfoMutex);
+   m_storageInfoMutex.unlock();
 }
 
 /**---------

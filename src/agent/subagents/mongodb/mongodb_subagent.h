@@ -46,14 +46,15 @@ struct DatabaseInfo
 	TCHAR password[MAX_PASSWORD];
 };
 
-class MongoDBCommand
+struct MongoDBCommand
 {
-public:
-   MongoDBCommand() { bson_init(&m_result); }
-   INT64 m_lastUpdateTime;
+   int64_t m_lastUpdateTime;
    bson_t m_result;
-   bool getData(mongoc_client_t *m_dbConn, const TCHAR *dbName, const TCHAR *command);
+
+   MongoDBCommand() { bson_init(&m_result); }
    ~MongoDBCommand() { bson_destroy(&m_result); }
+
+   bool getData(mongoc_client_t *m_dbConn, const TCHAR *dbName, const TCHAR *command);
 };
 
 /**
@@ -66,18 +67,17 @@ private:
    mongoc_client_t *m_dbConn;
 	THREAD m_pollerThread;
    DatabaseInfo m_info;
-   CONDITION m_stopCondition;
+   Condition m_stopCondition;
    //server status
-	MUTEX m_serverStatusLock;
+	Mutex m_serverStatusLock;
    bson_t *m_serverStatus;
    //Database list
-   MUTEX m_databaseListLock;
+   Mutex m_databaseListLock;
    char **m_databaseList;
    //Other data
-   MUTEX m_dataLock;
-   MUTEX m_connLock;
+   Mutex m_dataLock;
+   Mutex m_connLock;
    StringObjectMap<StringObjectMap<MongoDBCommand> > *m_data;
-
 
    static THREAD_RESULT THREAD_CALL pollerThreadStarter(void *arg);
    void pollerThread();
