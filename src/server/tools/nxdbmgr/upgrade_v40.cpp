@@ -31,7 +31,7 @@ static bool H_UpgradeFromV78()
    static const TCHAR *batch =
       _T("ALTER TABLE business_service_checks ADD status integer\n")
       _T("ALTER TABLE business_service_checks ADD failure_reason varchar(255)\n")
-      _T("UPDATE business_service_checks SET status=(CASE WHEN current_ticket<>0 THEN 4 ELSE 0)\n")
+      _T("UPDATE business_service_checks SET status=(CASE WHEN current_ticket<>0 THEN 4 ELSE 0 END)\n")
       _T("UPDATE business_service_checks SET failure_reason=(SELECT reason FROM business_service_tickets WHERE business_service_tickets.ticket_id=business_service_checks.current_ticket) WHERE current_ticket<>0\n")
       _T("<END>");
    CHK_EXEC(SQLBatch(batch));
