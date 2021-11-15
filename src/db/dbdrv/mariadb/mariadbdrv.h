@@ -58,9 +58,15 @@
  */
 struct MARIADB_CONN
 {
-   MYSQL *pMySQL;
+   MYSQL *mysql;
    Mutex mutexQueryLock;
    bool fixForCONC281;
+
+   MARIADB_CONN(MYSQL *_mysql)
+   {
+      mysql = _mysql;
+      fixForCONC281 = false;
+   }
 };
 
 /**

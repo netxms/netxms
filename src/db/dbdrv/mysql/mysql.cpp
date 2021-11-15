@@ -288,38 +288,30 @@ extern "C" DBDRV_CONNECTION __EXPORT DrvConnect(const char *host, const char *lo
 		return nullptr;
 	}
 
-	auto pConn = MemAllocStruct<MYSQL_CONN>();
-	pConn->pMySQL = mysql;
-	pConn->mutexQueryLock = new Mutex(MutexType::NORMAL);
-
    // Switch to UTF-8 encoding
    mysql_set_character_set(mysql, "utf8");
 
-	return (DBDRV_CONNECTION)pConn;
+	return new MYSQL_CONN(mysql);
 }
 
 /**
  * Disconnect from database
  */
-extern "C" void __EXPORT DrvDisconnect(MYSQL_CONN *conn)
+extern "C" void __EXPORT DrvDisconnect(MYSQL_CONN *connection)
 {
-   if (conn == NULL)
-      return;
-
-	mysql_close(conn->pMySQL);
-	delete conn->mutexQueryLock;
-	MemFree(conn);
+   mysql_close(connection->mysql);
+   delete connection;
 }
 
 /**
  * Prepare statement
  */
-extern "C" DBDRV_STATEMENT __EXPORT DrvPrepare(MYSQL_CONN *pConn, WCHAR *pwszQuery, bool optimizeForReuse, DWORD *pdwError, WCHAR *errorText)
+extern "C" DBDRV_STATEMENT __EXPORT DrvPrepare(MYSQL_CONN *connection, WCHAR *pwszQuery, bool optimizeForReuse, DWORD *pdwError, WCHAR *errorText)
 {
 	MYSQL_STATEMENT *result = NULL;
 
-	pConn->mutexQueryLock->lock();
-	MYSQL_STMT *stmt = mysql_stmt_init(pConn->pMySQL);
+	connection->mutexQueryLock.lock();
+	MYSQL_STMT *stmt = mysql_stmt_init(connection->mysql);
 	if (stmt != NULL)
 	{
 	   char localBuffer[1024];
@@ -328,7 +320,7 @@ extern "C" DBDRV_STATEMENT __EXPORT DrvPrepare(MYSQL_CONN *pConn, WCHAR *pwszQue
 		if (rc == 0)
 		{
 			result = MemAllocStruct<MYSQL_STATEMENT>();
-			result->connection = pConn;
+			result->connection = connection;
 			result->statement = stmt;
 			result->paramCount = (int)mysql_stmt_param_count(stmt);
 			result->bindings = MemAllocArray<MYSQL_BIND>(result->paramCount);
@@ -338,7 +330,7 @@ extern "C" DBDRV_STATEMENT __EXPORT DrvPrepare(MYSQL_CONN *pConn, WCHAR *pwszQue
 		}
 		else
 		{
-			int nErr = mysql_errno(pConn->pMySQL);
+			int nErr = mysql_errno(connection->mysql);
 			if (nErr == CR_SERVER_LOST || nErr == CR_CONNECTION_ERROR || nErr == CR_SERVER_GONE_ERROR)
 			{
 				*pdwError = DBERR_CONNECTION_LOST;
@@ -357,7 +349,7 @@ extern "C" DBDRV_STATEMENT __EXPORT DrvPrepare(MYSQL_CONN *pConn, WCHAR *pwszQue
 		*pdwError = DBERR_OTHER_ERROR;
 		UpdateErrorMessage("Call to mysql_stmt_init failed", errorText);
 	}
-	pConn->mutexQueryLock->unlock();
+	connection->mutexQueryLock.unlock();
 	return result;
 }
 
@@ -377,7 +369,7 @@ extern "C" void __EXPORT DrvBind(MYSQL_STATEMENT *hStmt, int pos, int sqlType, i
 		b->buffer = UTF8StringFromWideString((WCHAR *)buffer);
 		hStmt->buffers->add(b->buffer);
 		if (allocType == DB_BIND_DYNAMIC)
-			free(buffer);
+			MemFree(buffer);
 		b->buffer_length = (unsigned long)strlen((char *)b->buffer) + 1;
 		hStmt->lengthFields[pos - 1] = b->buffer_length - 1;
 		b->length = &hStmt->lengthFields[pos - 1];
@@ -435,11 +427,11 @@ extern "C" void __EXPORT DrvBind(MYSQL_STATEMENT *hStmt, int pos, int sqlType, i
 /**
  * Execute prepared statement
  */
-extern "C" DWORD __EXPORT DrvExecute(MYSQL_CONN *pConn, MYSQL_STATEMENT *hStmt, WCHAR *errorText)
+extern "C" DWORD __EXPORT DrvExecute(MYSQL_CONN *connection, MYSQL_STATEMENT *hStmt, WCHAR *errorText)
 {
 	DWORD dwResult;
 
-	pConn->mutexQueryLock->lock();
+	connection->mutexQueryLock.lock();
 
 	if (mysql_stmt_bind_param(hStmt->statement, hStmt->bindings) == 0)
 	{
@@ -449,7 +441,7 @@ extern "C" DWORD __EXPORT DrvExecute(MYSQL_CONN *pConn, MYSQL_STATEMENT *hStmt, 
 		}
 		else
 		{
-			int nErr = mysql_errno(pConn->pMySQL);
+			int nErr = mysql_errno(connection->mysql);
 			if (nErr == CR_SERVER_LOST || nErr == CR_CONNECTION_ERROR || nErr == CR_SERVER_GONE_ERROR)
 			{
 				dwResult = DBERR_CONNECTION_LOST;
@@ -467,7 +459,7 @@ extern "C" DWORD __EXPORT DrvExecute(MYSQL_CONN *pConn, MYSQL_STATEMENT *hStmt, 
 		dwResult = DBERR_OTHER_ERROR;
 	}
 
-	pConn->mutexQueryLock->unlock();
+	connection->mutexQueryLock.unlock();
 	return dwResult;
 }
 
@@ -479,9 +471,9 @@ extern "C" void __EXPORT DrvFreeStatement(MYSQL_STATEMENT *hStmt)
 	if (hStmt == NULL)
 		return;
 
-	hStmt->connection->mutexQueryLock->lock();
+	hStmt->connection->mutexQueryLock.lock();
 	mysql_stmt_close(hStmt->statement);
-	hStmt->connection->mutexQueryLock->unlock();
+	hStmt->connection->mutexQueryLock.unlock();
 	delete hStmt->buffers;
 	MemFree(hStmt->bindings);
 	MemFree(hStmt->lengthFields);
@@ -491,12 +483,12 @@ extern "C" void __EXPORT DrvFreeStatement(MYSQL_STATEMENT *hStmt)
 /**
  * Perform actual non-SELECT query
  */
-static DWORD DrvQueryInternal(MYSQL_CONN *pConn, const char *pszQuery, WCHAR *errorText)
+static DWORD DrvQueryInternal(MYSQL_CONN *connection, const char *pszQuery, WCHAR *errorText)
 {
 	DWORD dwRet = DBERR_INVALID_HANDLE;
 
-	pConn->mutexQueryLock->lock();
-	if (mysql_query(pConn->pMySQL, pszQuery) == 0)
+	connection->mutexQueryLock.lock();
+	if (mysql_query(connection->mysql, pszQuery) == 0)
 	{
 		dwRet = DBERR_SUCCESS;
 		if (errorText != NULL)
@@ -504,7 +496,7 @@ static DWORD DrvQueryInternal(MYSQL_CONN *pConn, const char *pszQuery, WCHAR *er
 	}
 	else
 	{
-		int nErr = mysql_errno(pConn->pMySQL);
+		int nErr = mysql_errno(connection->mysql);
 		if (nErr == CR_SERVER_LOST || nErr == CR_CONNECTION_ERROR || nErr == CR_SERVER_GONE_ERROR) // CR_SERVER_GONE_ERROR - ???
 		{
 			dwRet = DBERR_CONNECTION_LOST;
@@ -513,21 +505,21 @@ static DWORD DrvQueryInternal(MYSQL_CONN *pConn, const char *pszQuery, WCHAR *er
 		{
 			dwRet = DBERR_OTHER_ERROR;
 		}
-		UpdateErrorMessage(mysql_error(pConn->pMySQL), errorText);
+		UpdateErrorMessage(mysql_error(connection->mysql), errorText);
 	}
 
-	pConn->mutexQueryLock->unlock();
+	connection->mutexQueryLock.unlock();
 	return dwRet;
 }
 
 /**
  * Perform non-SELECT query
  */
-extern "C" DWORD __EXPORT DrvQuery(MYSQL_CONN *pConn, WCHAR *pwszQuery, WCHAR *errorText)
+extern "C" DWORD __EXPORT DrvQuery(MYSQL_CONN *connection, WCHAR *pwszQuery, WCHAR *errorText)
 {
    char localBuffer[1024];
    char *pszQueryUTF8 = WideStringToUTF8(pwszQuery, localBuffer, 1024);
-   DWORD rc = DrvQueryInternal(pConn, pszQueryUTF8, errorText);
+   DWORD rc = DrvQueryInternal(connection, pszQueryUTF8, errorText);
    FreeConvertedString(pszQueryUTF8, localBuffer);
 	return rc;
 }
@@ -535,30 +527,30 @@ extern "C" DWORD __EXPORT DrvQuery(MYSQL_CONN *pConn, WCHAR *pwszQuery, WCHAR *e
 /**
  * Perform SELECT query - actual implementation
  */
-static MYSQL_RESULT *DrvSelectInternal(MYSQL_CONN *pConn, WCHAR *pwszQuery, DWORD *pdwError, WCHAR *errorText)
+static MYSQL_RESULT *DrvSelectInternal(MYSQL_CONN *connection, WCHAR *pwszQuery, DWORD *pdwError, WCHAR *errorText)
 {
    MYSQL_RESULT *result = nullptr;
 
    char localBuffer[1024];
-	char *pszQueryUTF8 = WideStringToUTF8(pwszQuery, localBuffer, 1024);
-	pConn->mutexQueryLock->lock();
-	if (mysql_query(pConn->pMySQL, pszQueryUTF8) == 0)
+   char *pszQueryUTF8 = WideStringToUTF8(pwszQuery, localBuffer, 1024);
+	connection->mutexQueryLock.lock();
+	if (mysql_query(connection->mysql, pszQueryUTF8) == 0)
 	{
 		result = MemAllocStruct<MYSQL_RESULT>();
-      result->connection = pConn;
+      result->connection = connection;
 		result->isPreparedStatement = false;
-		result->resultSet = mysql_store_result(pConn->pMySQL);
+		result->resultSet = mysql_store_result(connection->mysql);
 		result->numColumns = (int)mysql_num_fields(result->resultSet);
-		result->numRows = (int)mysql_num_rows(result->resultSet);
-		result->rows = MemAllocArray<MYSQL_ROW>(result->numRows);
-		result->currentRow = -1;
+      result->numRows = (int)mysql_num_rows(result->resultSet);
+      result->rows = MemAllocArray<MYSQL_ROW>(result->numRows);
+      result->currentRow = -1;
 		*pdwError = DBERR_SUCCESS;
 		if (errorText != nullptr)
 			*errorText = 0;
 	}
 	else
 	{
-		int nErr = mysql_errno(pConn->pMySQL);
+		int nErr = mysql_errno(connection->mysql);
 		if (nErr == CR_SERVER_LOST || nErr == CR_CONNECTION_ERROR || nErr == CR_SERVER_GONE_ERROR) // CR_SERVER_GONE_ERROR - ???
 		{
 			*pdwError = DBERR_CONNECTION_LOST;
@@ -567,10 +559,10 @@ static MYSQL_RESULT *DrvSelectInternal(MYSQL_CONN *pConn, WCHAR *pwszQuery, DWOR
 		{
 			*pdwError = DBERR_OTHER_ERROR;
 		}
-		UpdateErrorMessage(mysql_error(pConn->pMySQL), errorText);
+		UpdateErrorMessage(mysql_error(connection->mysql), errorText);
 	}
 
-	pConn->mutexQueryLock->unlock();
+	connection->mutexQueryLock.unlock();
 	FreeConvertedString(pszQueryUTF8, localBuffer);
 	return result;
 }
@@ -578,37 +570,37 @@ static MYSQL_RESULT *DrvSelectInternal(MYSQL_CONN *pConn, WCHAR *pwszQuery, DWOR
 /**
  * Perform SELECT query - public entry point
  */
-extern "C" DBDRV_RESULT __EXPORT DrvSelect(MYSQL_CONN *conn, WCHAR *query, DWORD *errorCode, WCHAR *errorText)
+extern "C" DBDRV_RESULT __EXPORT DrvSelect(MYSQL_CONN *connection, WCHAR *query, DWORD *errorCode, WCHAR *errorText)
 {
-   if (conn == nullptr)
+   if (connection == nullptr)
    {
       *errorCode = DBERR_INVALID_HANDLE;
       return nullptr;
    }
-   return DrvSelectInternal(conn, query, errorCode, errorText);
+   return DrvSelectInternal(connection, query, errorCode, errorText);
 }
 
 /**
  * Perform SELECT query using prepared statement
  */
-extern "C" DBDRV_RESULT __EXPORT DrvSelectPrepared(MYSQL_CONN *pConn, MYSQL_STATEMENT *hStmt, DWORD *pdwError, WCHAR *errorText)
+extern "C" DBDRV_RESULT __EXPORT DrvSelectPrepared(MYSQL_CONN *connection, MYSQL_STATEMENT *hStmt, DWORD *pdwError, WCHAR *errorText)
 {
-	MYSQL_RESULT *result = nullptr;
-
-	if (pConn == nullptr)
+	if (connection == nullptr)
 	{
 		*pdwError = DBERR_INVALID_HANDLE;
 		return nullptr;
 	}
 
-	pConn->mutexQueryLock->lock();
+	MYSQL_RESULT *result = nullptr;
+
+	connection->mutexQueryLock.lock();
 
 	if (mysql_stmt_bind_param(hStmt->statement, hStmt->bindings) == 0)
 	{
 		if (mysql_stmt_execute(hStmt->statement) == 0)
 		{
 			result = MemAllocStruct<MYSQL_RESULT>();
-         result->connection = pConn;
+         result->connection = connection;
 			result->isPreparedStatement = true;
 			result->statement = hStmt->statement;
 			result->resultSet = mysql_stmt_result_metadata(hStmt->statement);
@@ -651,7 +643,7 @@ extern "C" DBDRV_RESULT __EXPORT DrvSelectPrepared(MYSQL_CONN *pConn, MYSQL_STAT
 		}
 		else
 		{
-			int nErr = mysql_errno(pConn->pMySQL);
+			int nErr = mysql_errno(connection->mysql);
 			if (nErr == CR_SERVER_LOST || nErr == CR_CONNECTION_ERROR || nErr == CR_SERVER_GONE_ERROR)
 			{
 				*pdwError = DBERR_CONNECTION_LOST;
@@ -669,7 +661,7 @@ extern "C" DBDRV_RESULT __EXPORT DrvSelectPrepared(MYSQL_CONN *pConn, MYSQL_STAT
 		*pdwError = DBERR_OTHER_ERROR;
 	}
 
-	pConn->mutexQueryLock->unlock();
+	connection->mutexQueryLock.unlock();
 	return result;
 }
 
@@ -686,12 +678,12 @@ extern "C" LONG __EXPORT DrvGetFieldLength(MYSQL_RESULT *hResult, int iRow, int 
 	{
 		if (hResult->currentRow != iRow)
 		{
-         hResult->connection->mutexQueryLock->lock();
+         hResult->connection->mutexQueryLock.lock();
          if (iRow != hResult->currentRow + 1)
             mysql_stmt_data_seek(hResult->statement, iRow);
 			mysql_stmt_fetch(hResult->statement);
 			hResult->currentRow = iRow;
-	      hResult->connection->mutexQueryLock->unlock();
+	      hResult->connection->mutexQueryLock.unlock();
 		}
 		return (LONG)hResult->lengthFields[iColumn];
 	}
@@ -733,7 +725,7 @@ static void *GetFieldInternal(MYSQL_RESULT *hResult, int iRow, int iColumn, void
 	void *value = nullptr;
 	if (hResult->isPreparedStatement)
 	{
-      hResult->connection->mutexQueryLock->lock();
+      hResult->connection->mutexQueryLock.lock();
 		if (hResult->currentRow != iRow)
 		{
          if (iRow != hResult->currentRow + 1)
@@ -781,7 +773,7 @@ static void *GetFieldInternal(MYSQL_RESULT *hResult, int iRow, int iColumn, void
          }
 			value = pBuffer;
 		}
-      hResult->connection->mutexQueryLock->unlock();
+      hResult->connection->mutexQueryLock.unlock();
 		MemFreeLocal(b.buffer);
 	}
 	else
@@ -898,25 +890,25 @@ extern "C" void __EXPORT DrvFreeResult(MYSQL_RESULT *hResult)
 /**
  * Perform unbuffered SELECT query
  */
-extern "C" DBDRV_UNBUFFERED_RESULT __EXPORT DrvSelectUnbuffered(MYSQL_CONN *pConn, WCHAR *pwszQuery, DWORD *pdwError, WCHAR *errorText)
+extern "C" DBDRV_UNBUFFERED_RESULT __EXPORT DrvSelectUnbuffered(MYSQL_CONN *connection, WCHAR *pwszQuery, DWORD *pdwError, WCHAR *errorText)
 {
-	if (pConn == NULL)
+	if (connection == nullptr)
 	{
 		*pdwError = DBERR_INVALID_HANDLE;
-		return NULL;
+		return nullptr;
 	}
 
-   MYSQL_UNBUFFERED_RESULT *pResult = NULL;
+   MYSQL_UNBUFFERED_RESULT *pResult = nullptr;
 
    char localBuffer[1024];
 	char *pszQueryUTF8 = WideStringToUTF8(pwszQuery, localBuffer, 1024);
-	pConn->mutexQueryLock->lock();
-	if (mysql_query(pConn->pMySQL, pszQueryUTF8) == 0)
+	connection->mutexQueryLock.lock();
+	if (mysql_query(connection->mysql, pszQueryUTF8) == 0)
 	{
 		pResult = MemAllocStruct<MYSQL_UNBUFFERED_RESULT>();
-		pResult->connection = pConn;
+		pResult->connection = connection;
 		pResult->isPreparedStatement = false;
-		pResult->resultSet = mysql_use_result(pConn->pMySQL);
+		pResult->resultSet = mysql_use_result(connection->mysql);
 		if (pResult->resultSet != NULL)
 		{
 			pResult->noMoreRows = false;
@@ -931,12 +923,12 @@ extern "C" DBDRV_UNBUFFERED_RESULT __EXPORT DrvSelectUnbuffered(MYSQL_CONN *pCon
 		}
 
 		*pdwError = DBERR_SUCCESS;
-		if (errorText != NULL)
+		if (errorText != nullptr)
 			*errorText = 0;
 	}
 	else
 	{
-		int nErr = mysql_errno(pConn->pMySQL);
+		int nErr = mysql_errno(connection->mysql);
 		if (nErr == CR_SERVER_LOST || nErr == CR_CONNECTION_ERROR || nErr == CR_SERVER_GONE_ERROR) // CR_SERVER_GONE_ERROR - ???
 		{
 			*pdwError = DBERR_CONNECTION_LOST;
@@ -946,17 +938,17 @@ extern "C" DBDRV_UNBUFFERED_RESULT __EXPORT DrvSelectUnbuffered(MYSQL_CONN *pCon
 			*pdwError = DBERR_OTHER_ERROR;
 		}
 		
-		if (errorText != NULL)
+		if (errorText != nullptr)
 		{
-			MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, mysql_error(pConn->pMySQL), -1, errorText, DBDRV_MAX_ERROR_TEXT);
+			MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, mysql_error(connection->mysql), -1, errorText, DBDRV_MAX_ERROR_TEXT);
 			errorText[DBDRV_MAX_ERROR_TEXT - 1] = 0;
 			RemoveTrailingCRLFW(errorText);
 		}
 	}
 
-	if (pResult == NULL)
+	if (pResult == nullptr)
 	{
-		pConn->mutexQueryLock->unlock();
+		connection->mutexQueryLock.unlock();
 	}
 	FreeConvertedString(pszQueryUTF8, localBuffer);
 
@@ -966,26 +958,26 @@ extern "C" DBDRV_UNBUFFERED_RESULT __EXPORT DrvSelectUnbuffered(MYSQL_CONN *pCon
 /**
  * Perform unbuffered SELECT query using prepared statement
  */
-extern "C" DBDRV_RESULT __EXPORT DrvSelectPreparedUnbuffered(MYSQL_CONN *pConn, MYSQL_STATEMENT *hStmt, DWORD *pdwError, WCHAR *errorText)
+extern "C" DBDRV_RESULT __EXPORT DrvSelectPreparedUnbuffered(MYSQL_CONN *connection, MYSQL_STATEMENT *hStmt, DWORD *pdwError, WCHAR *errorText)
 {
-   MYSQL_UNBUFFERED_RESULT *result = NULL;
+   MYSQL_UNBUFFERED_RESULT *result = nullptr;
 
-   pConn->mutexQueryLock->lock();
+   connection->mutexQueryLock.lock();
 
    if (mysql_stmt_bind_param(hStmt->statement, hStmt->bindings) == 0)
    {
       if (mysql_stmt_execute(hStmt->statement) == 0)
       {
          result = MemAllocStruct<MYSQL_UNBUFFERED_RESULT>();
-         result->connection = pConn;
+         result->connection = connection;
          result->isPreparedStatement = true;
          result->statement = hStmt->statement;
          result->resultSet = mysql_stmt_result_metadata(hStmt->statement);
-         if (result->resultSet != NULL)
+         if (result->resultSet != nullptr)
          {
             result->noMoreRows = false;
             result->numColumns = mysql_num_fields(result->resultSet);
-            result->pCurrRow = NULL;
+            result->pCurrRow = nullptr;
             result->lengthFields = MemAllocArray<unsigned long>(result->numColumns);
 
             result->bindings = MemAllocArray<MYSQL_BIND>(result->numColumns);
@@ -1007,7 +999,7 @@ extern "C" DBDRV_RESULT __EXPORT DrvSelectPreparedUnbuffered(MYSQL_CONN *pConn, 
       }
       else
       {
-         int nErr = mysql_errno(pConn->pMySQL);
+         int nErr = mysql_errno(connection->mysql);
          if (nErr == CR_SERVER_LOST || nErr == CR_CONNECTION_ERROR || nErr == CR_SERVER_GONE_ERROR)
          {
             *pdwError = DBERR_CONNECTION_LOST;
@@ -1027,7 +1019,7 @@ extern "C" DBDRV_RESULT __EXPORT DrvSelectPreparedUnbuffered(MYSQL_CONN *pConn, 
 
    if (result == NULL)
    {
-      pConn->mutexQueryLock->unlock();
+      connection->mutexQueryLock.unlock();
    }
    return result;
 }
@@ -1049,7 +1041,7 @@ extern "C" bool __EXPORT DrvFetch(MYSQL_UNBUFFERED_RESULT *result)
       {
          result->noMoreRows = true;
          success = false;
-         result->connection->mutexQueryLock->unlock();
+         result->connection->mutexQueryLock.unlock();
       }
 	}
 	else
@@ -1060,7 +1052,7 @@ extern "C" bool __EXPORT DrvFetch(MYSQL_UNBUFFERED_RESULT *result)
       {
          result->noMoreRows = true;
          success = false;
-         result->connection->mutexQueryLock->unlock();
+         result->connection->mutexQueryLock.unlock();
       }
       else
       {
@@ -1087,11 +1079,11 @@ extern "C" bool __EXPORT DrvFetch(MYSQL_UNBUFFERED_RESULT *result)
 extern "C" LONG __EXPORT DrvGetFieldLengthUnbuffered(MYSQL_UNBUFFERED_RESULT *hResult, int iColumn)
 {
 	// Check if we have valid result handle
-	if (hResult == NULL)
+	if (hResult == nullptr)
 		return 0;
 	
 	// Check if there are valid fetched row
-	if (hResult->noMoreRows || ((hResult->pCurrRow == NULL) && !hResult->isPreparedStatement))
+	if (hResult->noMoreRows || ((hResult->pCurrRow == nullptr) && !hResult->isPreparedStatement))
 		return 0;
 	
 	// Check if column number is valid
@@ -1245,7 +1237,7 @@ extern "C" void __EXPORT DrvFreeUnbufferedResult(MYSQL_UNBUFFERED_RESULT *hResul
       }
 
       // Now we are ready for next query, so unlock query mutex
-      hResult->connection->mutexQueryLock->unlock();
+      hResult->connection->mutexQueryLock.unlock();
    }
 
    // Free allocated memory
@@ -1258,33 +1250,33 @@ extern "C" void __EXPORT DrvFreeUnbufferedResult(MYSQL_UNBUFFERED_RESULT *hResul
 /**
  * Begin transaction
  */
-extern "C" DWORD __EXPORT DrvBegin(MYSQL_CONN *pConn)
+extern "C" DWORD __EXPORT DrvBegin(MYSQL_CONN *connection)
 {
-	return DrvQueryInternal(pConn, "BEGIN", NULL);
+	return DrvQueryInternal(connection, "BEGIN", nullptr);
 }
 
 /**
  * Commit transaction
  */
-extern "C" DWORD __EXPORT DrvCommit(MYSQL_CONN *pConn)
+extern "C" DWORD __EXPORT DrvCommit(MYSQL_CONN *connection)
 {
-	return DrvQueryInternal(pConn, "COMMIT", NULL);
+	return DrvQueryInternal(connection, "COMMIT", nullptr);
 }
 
 /**
  * Rollback transaction
  */
-extern "C" DWORD __EXPORT DrvRollback(MYSQL_CONN *pConn)
+extern "C" DWORD __EXPORT DrvRollback(MYSQL_CONN *connection)
 {
-	return DrvQueryInternal(pConn, "ROLLBACK", NULL);
+	return DrvQueryInternal(connection, "ROLLBACK", nullptr);
 }
 
 /**
  * Check if table exist
  */
-extern "C" int __EXPORT DrvIsTableExist(MYSQL_CONN *conn, const WCHAR *name)
+extern "C" int __EXPORT DrvIsTableExist(MYSQL_CONN *connection, const WCHAR *name)
 {
-   if (conn == nullptr)
+   if (connection == nullptr)
       return DBIsTableExist_Failure;
 
    WCHAR query[256], lname[256];
@@ -1294,8 +1286,8 @@ extern "C" int __EXPORT DrvIsTableExist(MYSQL_CONN *conn, const WCHAR *name)
    DWORD error;
    WCHAR errorText[DBDRV_MAX_ERROR_TEXT];
    int rc = DBIsTableExist_Failure;
-   MYSQL_RESULT *hResult = DrvSelectInternal(conn, query, &error, errorText);
-   if (hResult != NULL)
+   MYSQL_RESULT *hResult = DrvSelectInternal(connection, query, &error, errorText);
+   if (hResult != nullptr)
    {
       rc = (hResult->numRows > 0) ? DBIsTableExist_Found : DBIsTableExist_NotFound;
       DrvFreeResultInternal(hResult);

@@ -59,8 +59,13 @@
  */
 struct MYSQL_CONN
 {
-   MYSQL *pMySQL;
-   Mutex *mutexQueryLock;
+   MYSQL *mysql;
+   Mutex mutexQueryLock;
+
+   MYSQL_CONN(MYSQL *_mysql)
+   {
+      mysql = _mysql;
+   }
 };
 
 /**

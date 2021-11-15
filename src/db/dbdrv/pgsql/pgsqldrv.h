@@ -52,6 +52,11 @@ struct PG_CONN
 {
 	PGconn *handle;
 	Mutex mutexQueryLock;
+
+	PG_CONN(PGconn *_handle)
+	{
+	   handle = _handle;
+	}
 };
 
 /**

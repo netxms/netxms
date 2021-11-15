@@ -333,9 +333,7 @@ extern "C" DBDRV_CONNECTION __EXPORT DrvConnect(const char *host, const char *lo
 		return nullptr;
 	}
 	
-	auto pConn = new MARIADB_CONN();
-	pConn->pMySQL = mysql;
-	pConn->fixForCONC281 = false;
+	auto connection = new MARIADB_CONN(mysql);
 
    // Switch to UTF-8 encoding
    mysql_set_character_set(mysql, "utf8");
@@ -350,45 +348,42 @@ extern "C" DBDRV_CONNECTION __EXPORT DrvConnect(const char *host, const char *lo
       int major, minor, patch;
       if (sscanf(connectorVersion, "%d.%d.%d", &major, &minor, &patch) == 3)
       {
-         pConn->fixForCONC281 = (major < 3) || ((major == 3) && (minor < 1) && (patch < 6));
+         connection->fixForCONC281 = (major < 3) || ((major == 3) && (minor < 1) && (patch < 6));
       }
       else
       {
-         pConn->fixForCONC281 = true;  // cannot determine version, assume that fix is needed
+         connection->fixForCONC281 = true;  // cannot determine version, assume that fix is needed
       }
       nxlog_debug_tag(DEBUG_TAG, 5, _T("Connected to %hs (connector version %hs)"), mysql_get_host_info(mysql), connectorVersion);
    }
    else
    {
-      pConn->fixForCONC281 = true;  // cannot determine version, assume that fix is needed
+      connection->fixForCONC281 = true;  // cannot determine version, assume that fix is needed
       nxlog_debug_tag(DEBUG_TAG, 5, _T("Connected to %hs"), mysql_get_host_info(mysql));
    }
-   if (pConn->fixForCONC281)
+   if (connection->fixForCONC281)
       nxlog_debug_tag(DEBUG_TAG, 7, _T("Enabled workaround for MariadB bug CONC-281"));
-	return (DBDRV_CONNECTION)pConn;
+	return (DBDRV_CONNECTION)connection;
 }
 
 /**
  * Disconnect from database
  */
-extern "C" void __EXPORT DrvDisconnect(MARIADB_CONN *pConn)
+extern "C" void __EXPORT DrvDisconnect(MARIADB_CONN *connection)
 {
-	if (pConn != NULL)
-	{
-		mysql_close(pConn->pMySQL);
-		delete pConn;
-	}
+   mysql_close(connection->mysql);
+   delete connection;
 }
 
 /**
  * Prepare statement
  */
-extern "C" DBDRV_STATEMENT __EXPORT DrvPrepare(MARIADB_CONN *pConn, WCHAR *pwszQuery, bool optimizeForReuse, DWORD *pdwError, WCHAR *errorText)
+extern "C" DBDRV_STATEMENT __EXPORT DrvPrepare(MARIADB_CONN *connection, WCHAR *pwszQuery, bool optimizeForReuse, DWORD *pdwError, WCHAR *errorText)
 {
 	MARIADB_STATEMENT *result = NULL;
 
-	pConn->mutexQueryLock.lock();
-	MYSQL_STMT *stmt = mysql_stmt_init(pConn->pMySQL);
+	connection->mutexQueryLock.lock();
+	MYSQL_STMT *stmt = mysql_stmt_init(connection->mysql);
 	if (stmt != NULL)
 	{
 	   char localBuffer[1024];
@@ -397,7 +392,7 @@ extern "C" DBDRV_STATEMENT __EXPORT DrvPrepare(MARIADB_CONN *pConn, WCHAR *pwszQ
 		if (rc == 0)
 		{
 			result = MemAllocStruct<MARIADB_STATEMENT>();
-			result->connection = pConn;
+			result->connection = connection;
 			result->statement = stmt;
 			result->paramCount = (int)mysql_stmt_param_count(stmt);
 			result->bindings = MemAllocArray<MYSQL_BIND>(result->paramCount);
@@ -407,7 +402,7 @@ extern "C" DBDRV_STATEMENT __EXPORT DrvPrepare(MARIADB_CONN *pConn, WCHAR *pwszQ
 		}
 		else
 		{
-			int nErr = mysql_errno(pConn->pMySQL);
+			int nErr = mysql_errno(connection->mysql);
 			if (nErr == CR_SERVER_LOST || nErr == CR_CONNECTION_ERROR || nErr == CR_SERVER_GONE_ERROR)
 			{
 				*pdwError = DBERR_CONNECTION_LOST;
@@ -426,7 +421,7 @@ extern "C" DBDRV_STATEMENT __EXPORT DrvPrepare(MARIADB_CONN *pConn, WCHAR *pwszQ
 		*pdwError = DBERR_OTHER_ERROR;
 		UpdateErrorMessage("Call to mysql_stmt_init failed", errorText);
 	}
-	pConn->mutexQueryLock.unlock();
+	connection->mutexQueryLock.unlock();
 	return result;
 }
 
@@ -504,11 +499,11 @@ extern "C" void __EXPORT DrvBind(MARIADB_STATEMENT *hStmt, int pos, int sqlType,
 /**
  * Execute prepared statement
  */
-extern "C" DWORD __EXPORT DrvExecute(MARIADB_CONN *pConn, MARIADB_STATEMENT *hStmt, WCHAR *errorText)
+extern "C" DWORD __EXPORT DrvExecute(MARIADB_CONN *connection, MARIADB_STATEMENT *hStmt, WCHAR *errorText)
 {
 	DWORD dwResult;
 
-	pConn->mutexQueryLock.lock();
+	connection->mutexQueryLock.lock();
 
 	if (mysql_stmt_bind_param(hStmt->statement, hStmt->bindings) == 0)
 	{
@@ -518,7 +513,7 @@ extern "C" DWORD __EXPORT DrvExecute(MARIADB_CONN *pConn, MARIADB_STATEMENT *hSt
 		}
 		else
 		{
-			int nErr = mysql_errno(pConn->pMySQL);
+			int nErr = mysql_errno(connection->mysql);
 			if (nErr == CR_SERVER_LOST || nErr == CR_CONNECTION_ERROR || nErr == CR_SERVER_GONE_ERROR)
 			{
 				dwResult = DBERR_CONNECTION_LOST;
@@ -536,7 +531,7 @@ extern "C" DWORD __EXPORT DrvExecute(MARIADB_CONN *pConn, MARIADB_STATEMENT *hSt
 		dwResult = DBERR_OTHER_ERROR;
 	}
 
-	pConn->mutexQueryLock.unlock();
+	connection->mutexQueryLock.unlock();
 	return dwResult;
 }
 
@@ -560,12 +555,12 @@ extern "C" void __EXPORT DrvFreeStatement(MARIADB_STATEMENT *hStmt)
 /**
  * Perform actual non-SELECT query
  */
-static DWORD DrvQueryInternal(MARIADB_CONN *pConn, const char *pszQuery, WCHAR *errorText)
+static DWORD DrvQueryInternal(MARIADB_CONN *connection, const char *pszQuery, WCHAR *errorText)
 {
 	DWORD dwRet = DBERR_INVALID_HANDLE;
 
-	pConn->mutexQueryLock.lock();
-	if (mysql_query(pConn->pMySQL, pszQuery) == 0)
+	connection->mutexQueryLock.lock();
+	if (mysql_query(connection->mysql, pszQuery) == 0)
 	{
 		dwRet = DBERR_SUCCESS;
 		if (errorText != NULL)
@@ -573,7 +568,7 @@ static DWORD DrvQueryInternal(MARIADB_CONN *pConn, const char *pszQuery, WCHAR *
 	}
 	else
 	{
-		int nErr = mysql_errno(pConn->pMySQL);
+		int nErr = mysql_errno(connection->mysql);
 		if (nErr == CR_SERVER_LOST || nErr == CR_CONNECTION_ERROR || nErr == CR_SERVER_GONE_ERROR) // CR_SERVER_GONE_ERROR - ???
 		{
 			dwRet = DBERR_CONNECTION_LOST;
@@ -582,21 +577,21 @@ static DWORD DrvQueryInternal(MARIADB_CONN *pConn, const char *pszQuery, WCHAR *
 		{
 			dwRet = DBERR_OTHER_ERROR;
 		}
-		UpdateErrorMessage(mysql_error(pConn->pMySQL), errorText);
+		UpdateErrorMessage(mysql_error(connection->mysql), errorText);
 	}
 
-	pConn->mutexQueryLock.unlock();
+	connection->mutexQueryLock.unlock();
 	return dwRet;
 }
 
 /**
  * Perform non-SELECT query
  */
-extern "C" DWORD __EXPORT DrvQuery(MARIADB_CONN *pConn, WCHAR *pwszQuery, WCHAR *errorText)
+extern "C" DWORD __EXPORT DrvQuery(MARIADB_CONN *connection, WCHAR *pwszQuery, WCHAR *errorText)
 {
    char localBuffer[1024];
    char *pszQueryUTF8 = WideStringToUTF8(pwszQuery, localBuffer, 1024);
-   DWORD rc = DrvQueryInternal(pConn, pszQueryUTF8, errorText);
+   DWORD rc = DrvQueryInternal(connection, pszQueryUTF8, errorText);
    FreeConvertedString(pszQueryUTF8, localBuffer);
 	return rc;
 }
@@ -604,19 +599,19 @@ extern "C" DWORD __EXPORT DrvQuery(MARIADB_CONN *pConn, WCHAR *pwszQuery, WCHAR 
 /**
  * Perform SELECT query - actual implementation
  */
-static MARIADB_RESULT *DrvSelectInternal(MARIADB_CONN *pConn, WCHAR *pwszQuery, DWORD *pdwError, WCHAR *errorText)
+static MARIADB_RESULT *DrvSelectInternal(MARIADB_CONN *connection, WCHAR *pwszQuery, DWORD *pdwError, WCHAR *errorText)
 {
    MARIADB_RESULT *result = nullptr;
 
    char localBuffer[1024];
    char *pszQueryUTF8 = WideStringToUTF8(pwszQuery, localBuffer, 1024);
-	pConn->mutexQueryLock.lock();
-	if (mysql_query(pConn->pMySQL, pszQueryUTF8) == 0)
+	connection->mutexQueryLock.lock();
+	if (mysql_query(connection->mysql, pszQueryUTF8) == 0)
 	{
 		result = MemAllocStruct<MARIADB_RESULT>();
-      result->connection = pConn;
+      result->connection = connection;
 		result->isPreparedStatement = false;
-		result->resultSet = mysql_store_result(pConn->pMySQL);
+		result->resultSet = mysql_store_result(connection->mysql);
 		result->numColumns = (int)mysql_num_fields(result->resultSet);
       result->numRows = (int)mysql_num_rows(result->resultSet);
       result->rows = MemAllocArray<MYSQL_ROW>(result->numRows);
@@ -627,7 +622,7 @@ static MARIADB_RESULT *DrvSelectInternal(MARIADB_CONN *pConn, WCHAR *pwszQuery, 
 	}
 	else
 	{
-		int nErr = mysql_errno(pConn->pMySQL);
+		int nErr = mysql_errno(connection->mysql);
 		if (nErr == CR_SERVER_LOST || nErr == CR_CONNECTION_ERROR || nErr == CR_SERVER_GONE_ERROR) // CR_SERVER_GONE_ERROR - ???
 		{
 			*pdwError = DBERR_CONNECTION_LOST;
@@ -636,10 +631,10 @@ static MARIADB_RESULT *DrvSelectInternal(MARIADB_CONN *pConn, WCHAR *pwszQuery, 
 		{
 			*pdwError = DBERR_OTHER_ERROR;
 		}
-		UpdateErrorMessage(mysql_error(pConn->pMySQL), errorText);
+		UpdateErrorMessage(mysql_error(connection->mysql), errorText);
 	}
 
-	pConn->mutexQueryLock.unlock();
+	connection->mutexQueryLock.unlock();
 	FreeConvertedString(pszQueryUTF8, localBuffer);
 	return result;
 }
@@ -647,37 +642,37 @@ static MARIADB_RESULT *DrvSelectInternal(MARIADB_CONN *pConn, WCHAR *pwszQuery, 
 /**
  * Perform SELECT query - public entry point
  */
-extern "C" DBDRV_RESULT __EXPORT DrvSelect(MARIADB_CONN *conn, WCHAR *query, DWORD *errorCode, WCHAR *errorText)
+extern "C" DBDRV_RESULT __EXPORT DrvSelect(MARIADB_CONN *connection, WCHAR *query, DWORD *errorCode, WCHAR *errorText)
 {
-   if (conn == nullptr)
+   if (connection == nullptr)
    {
       *errorCode = DBERR_INVALID_HANDLE;
       return nullptr;
    }
-   return DrvSelectInternal(conn, query, errorCode, errorText);
+   return DrvSelectInternal(connection, query, errorCode, errorText);
 }
 
 /**
  * Perform SELECT query using prepared statement
  */
-extern "C" DBDRV_RESULT __EXPORT DrvSelectPrepared(MARIADB_CONN *pConn, MARIADB_STATEMENT *hStmt, DWORD *pdwError, WCHAR *errorText)
+extern "C" DBDRV_RESULT __EXPORT DrvSelectPrepared(MARIADB_CONN *connection, MARIADB_STATEMENT *hStmt, DWORD *pdwError, WCHAR *errorText)
 {
-	if (pConn == NULL)
+	if (connection == nullptr)
 	{
 		*pdwError = DBERR_INVALID_HANDLE;
-		return NULL;
+		return nullptr;
 	}
 
-   MARIADB_RESULT *result = NULL;
+   MARIADB_RESULT *result = nullptr;
 
-	pConn->mutexQueryLock.lock();
+	connection->mutexQueryLock.lock();
 
 	if (mysql_stmt_bind_param(hStmt->statement, hStmt->bindings) == 0)
 	{
 		if (mysql_stmt_execute(hStmt->statement) == 0)
 		{
 			result = MemAllocStruct<MARIADB_RESULT>();
-         result->connection = pConn;
+         result->connection = connection;
 			result->isPreparedStatement = true;
 			result->statement = hStmt->statement;
 			result->resultSet = mysql_stmt_result_metadata(hStmt->statement);
@@ -720,7 +715,7 @@ extern "C" DBDRV_RESULT __EXPORT DrvSelectPrepared(MARIADB_CONN *pConn, MARIADB_
 		}
 		else
 		{
-			int nErr = mysql_errno(pConn->pMySQL);
+			int nErr = mysql_errno(connection->mysql);
 			if (nErr == CR_SERVER_LOST || nErr == CR_CONNECTION_ERROR || nErr == CR_SERVER_GONE_ERROR)
 			{
 				*pdwError = DBERR_CONNECTION_LOST;
@@ -738,7 +733,7 @@ extern "C" DBDRV_RESULT __EXPORT DrvSelectPrepared(MARIADB_CONN *pConn, MARIADB_
 		*pdwError = DBERR_OTHER_ERROR;
 	}
 
-	pConn->mutexQueryLock.unlock();
+	connection->mutexQueryLock.unlock();
 	return result;
 }
 
@@ -786,7 +781,7 @@ extern "C" LONG __EXPORT DrvGetFieldLength(MARIADB_RESULT *hResult, int iRow, in
       {
          row = hResult->rows[iRow];
       }
-		return (row == nullptr) ? (LONG)-1 : ((row[iColumn] == nullptr) ? -1 : (LONG)strlen(row[iColumn]));
+      return (row == nullptr) ? (LONG)-1 : ((row[iColumn] == nullptr) ? -1 : (LONG)strlen(row[iColumn]));
 	}
 }
 
@@ -963,25 +958,25 @@ extern "C" void __EXPORT DrvFreeResult(MARIADB_RESULT *hResult)
 /**
  * Perform unbuffered SELECT query
  */
-extern "C" DBDRV_UNBUFFERED_RESULT __EXPORT DrvSelectUnbuffered(MARIADB_CONN *pConn, WCHAR *pwszQuery, DWORD *pdwError, WCHAR *errorText)
+extern "C" DBDRV_UNBUFFERED_RESULT __EXPORT DrvSelectUnbuffered(MARIADB_CONN *connection, WCHAR *pwszQuery, DWORD *pdwError, WCHAR *errorText)
 {
-	if (pConn == NULL)
+	if (connection == nullptr)
 	{
 		*pdwError = DBERR_INVALID_HANDLE;
-		return NULL;
+		return nullptr;
 	}
 
-   MARIADB_UNBUFFERED_RESULT *pResult = NULL;
+   MARIADB_UNBUFFERED_RESULT *pResult = nullptr;
 
    char localBuffer[1024];
 	char *pszQueryUTF8 = WideStringToUTF8(pwszQuery, localBuffer, 1024);
-	pConn->mutexQueryLock.lock();
-	if (mysql_query(pConn->pMySQL, pszQueryUTF8) == 0)
+	connection->mutexQueryLock.lock();
+	if (mysql_query(connection->mysql, pszQueryUTF8) == 0)
 	{
 		pResult = MemAllocStruct<MARIADB_UNBUFFERED_RESULT>();
-		pResult->connection = pConn;
+		pResult->connection = connection;
 		pResult->isPreparedStatement = false;
-		pResult->resultSet = mysql_use_result(pConn->pMySQL);
+		pResult->resultSet = mysql_use_result(connection->mysql);
 		if (pResult->resultSet != NULL)
 		{
 			pResult->noMoreRows = false;
@@ -996,12 +991,12 @@ extern "C" DBDRV_UNBUFFERED_RESULT __EXPORT DrvSelectUnbuffered(MARIADB_CONN *pC
 		}
 
 		*pdwError = DBERR_SUCCESS;
-		if (errorText != NULL)
+		if (errorText != nullptr)
 			*errorText = 0;
 	}
 	else
 	{
-		int nErr = mysql_errno(pConn->pMySQL);
+		int nErr = mysql_errno(connection->mysql);
 		if (nErr == CR_SERVER_LOST || nErr == CR_CONNECTION_ERROR || nErr == CR_SERVER_GONE_ERROR) // CR_SERVER_GONE_ERROR - ???
 		{
 			*pdwError = DBERR_CONNECTION_LOST;
@@ -1011,17 +1006,17 @@ extern "C" DBDRV_UNBUFFERED_RESULT __EXPORT DrvSelectUnbuffered(MARIADB_CONN *pC
 			*pdwError = DBERR_OTHER_ERROR;
 		}
 		
-		if (errorText != NULL)
+		if (errorText != nullptr)
 		{
-			MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, mysql_error(pConn->pMySQL), -1, errorText, DBDRV_MAX_ERROR_TEXT);
+			MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, mysql_error(connection->mysql), -1, errorText, DBDRV_MAX_ERROR_TEXT);
 			errorText[DBDRV_MAX_ERROR_TEXT - 1] = 0;
 			RemoveTrailingCRLFW(errorText);
 		}
 	}
 
-	if (pResult == NULL)
+	if (pResult == nullptr)
 	{
-		pConn->mutexQueryLock.unlock();
+		connection->mutexQueryLock.unlock();
 	}
 	FreeConvertedString(pszQueryUTF8, localBuffer);
 
@@ -1031,26 +1026,26 @@ extern "C" DBDRV_UNBUFFERED_RESULT __EXPORT DrvSelectUnbuffered(MARIADB_CONN *pC
 /**
  * Perform unbuffered SELECT query using prepared statement
  */
-extern "C" DBDRV_RESULT __EXPORT DrvSelectPreparedUnbuffered(MARIADB_CONN *pConn, MARIADB_STATEMENT *hStmt, DWORD *pdwError, WCHAR *errorText)
+extern "C" DBDRV_RESULT __EXPORT DrvSelectPreparedUnbuffered(MARIADB_CONN *connection, MARIADB_STATEMENT *hStmt, DWORD *pdwError, WCHAR *errorText)
 {
-   MARIADB_UNBUFFERED_RESULT *result = NULL;
+   MARIADB_UNBUFFERED_RESULT *result = nullptr;
 
-   pConn->mutexQueryLock.lock();
+   connection->mutexQueryLock.lock();
 
    if (mysql_stmt_bind_param(hStmt->statement, hStmt->bindings) == 0)
    {
       if (mysql_stmt_execute(hStmt->statement) == 0)
       {
          result = MemAllocStruct<MARIADB_UNBUFFERED_RESULT>();
-         result->connection = pConn;
+         result->connection = connection;
          result->isPreparedStatement = true;
          result->statement = hStmt->statement;
          result->resultSet = mysql_stmt_result_metadata(hStmt->statement);
-         if (result->resultSet != NULL)
+         if (result->resultSet != nullptr)
          {
             result->noMoreRows = false;
             result->numColumns = mysql_num_fields(result->resultSet);
-            result->pCurrRow = NULL;
+            result->pCurrRow = nullptr;
             result->lengthFields = MemAllocArray<unsigned long>(result->numColumns);
 
             result->bindings = MemAllocArray<MYSQL_BIND>(result->numColumns);
@@ -1063,7 +1058,7 @@ extern "C" DBDRV_RESULT __EXPORT DrvSelectPreparedUnbuffered(MARIADB_CONN *pConn
             mysql_stmt_bind_result(hStmt->statement, result->bindings);
 
             /* workaround for MariaDB C Connector bug CONC-281 */
-            if (pConn->fixForCONC281)
+            if (connection->fixForCONC281)
             {
                mysql_stmt_store_result(hStmt->statement);
             }
@@ -1078,7 +1073,7 @@ extern "C" DBDRV_RESULT __EXPORT DrvSelectPreparedUnbuffered(MARIADB_CONN *pConn
       }
       else
       {
-         int nErr = mysql_errno(pConn->pMySQL);
+         int nErr = mysql_errno(connection->mysql);
          if (nErr == CR_SERVER_LOST || nErr == CR_CONNECTION_ERROR || nErr == CR_SERVER_GONE_ERROR)
          {
             *pdwError = DBERR_CONNECTION_LOST;
@@ -1098,7 +1093,7 @@ extern "C" DBDRV_RESULT __EXPORT DrvSelectPreparedUnbuffered(MARIADB_CONN *pConn
 
    if (result == NULL)
    {
-      pConn->mutexQueryLock.unlock();
+      connection->mutexQueryLock.unlock();
    }
    return result;
 }
@@ -1158,11 +1153,11 @@ extern "C" bool __EXPORT DrvFetch(MARIADB_UNBUFFERED_RESULT *result)
 extern "C" LONG __EXPORT DrvGetFieldLengthUnbuffered(MARIADB_UNBUFFERED_RESULT *hResult, int iColumn)
 {
 	// Check if we have valid result handle
-	if (hResult == NULL)
+	if (hResult == nullptr)
 		return 0;
 	
 	// Check if there are valid fetched row
-	if (hResult->noMoreRows || ((hResult->pCurrRow == NULL) && !hResult->isPreparedStatement))
+	if (hResult->noMoreRows || ((hResult->pCurrRow == nullptr) && !hResult->isPreparedStatement))
 		return 0;
 	
 	// Check if column number is valid
@@ -1267,7 +1262,7 @@ extern "C" WCHAR __EXPORT *DrvGetFieldUnbuffered(MARIADB_UNBUFFERED_RESULT *hRes
 }
 
 /**
- * Get field from current row in async query result
+ * Get field from current row in unbuffered query result
  */
 extern "C" char __EXPORT *DrvGetFieldUnbufferedUTF8(MARIADB_UNBUFFERED_RESULT *hResult, int iColumn, char *pBuffer, int iBufSize)
 {
@@ -1275,7 +1270,7 @@ extern "C" char __EXPORT *DrvGetFieldUnbufferedUTF8(MARIADB_UNBUFFERED_RESULT *h
 }
 
 /**
- * Get column count in async query result
+ * Get column count in unbuffered query result
  */
 extern "C" int __EXPORT DrvGetColumnCountUnbuffered(MARIADB_UNBUFFERED_RESULT *hResult)
 {
@@ -1283,21 +1278,19 @@ extern "C" int __EXPORT DrvGetColumnCountUnbuffered(MARIADB_UNBUFFERED_RESULT *h
 }
 
 /**
- * Get column name in async query result
+ * Get column name in unbuffered query result
  */
 extern "C" const char __EXPORT *DrvGetColumnNameUnbuffered(MARIADB_UNBUFFERED_RESULT *hResult, int column)
 {
-	MYSQL_FIELD *field;
-
 	if ((hResult == NULL) || (hResult->resultSet == NULL))
 		return NULL;
 
-	field = mysql_fetch_field_direct(hResult->resultSet, column);
+	MYSQL_FIELD *field = mysql_fetch_field_direct(hResult->resultSet, column);
 	return (field != NULL) ? field->name : NULL;
 }
 
 /**
- * Destroy result of async query
+ * Destroy result of unbuffered query
  */
 extern "C" void __EXPORT DrvFreeUnbufferedResult(MARIADB_UNBUFFERED_RESULT *hResult)
 {
@@ -1327,33 +1320,33 @@ extern "C" void __EXPORT DrvFreeUnbufferedResult(MARIADB_UNBUFFERED_RESULT *hRes
 /**
  * Begin transaction
  */
-extern "C" DWORD __EXPORT DrvBegin(MARIADB_CONN *pConn)
+extern "C" DWORD __EXPORT DrvBegin(MARIADB_CONN *connection)
 {
-	return DrvQueryInternal(pConn, "BEGIN", NULL);
+	return DrvQueryInternal(connection, "BEGIN", nullptr);
 }
 
 /**
  * Commit transaction
  */
-extern "C" DWORD __EXPORT DrvCommit(MARIADB_CONN *pConn)
+extern "C" DWORD __EXPORT DrvCommit(MARIADB_CONN *connection)
 {
-	return DrvQueryInternal(pConn, "COMMIT", NULL);
+	return DrvQueryInternal(connection, "COMMIT", nullptr);
 }
 
 /**
  * Rollback transaction
  */
-extern "C" DWORD __EXPORT DrvRollback(MARIADB_CONN *pConn)
+extern "C" DWORD __EXPORT DrvRollback(MARIADB_CONN *connection)
 {
-	return DrvQueryInternal(pConn, "ROLLBACK", NULL);
+	return DrvQueryInternal(connection, "ROLLBACK", nullptr);
 }
 
 /**
  * Check if table exist
  */
-extern "C" int __EXPORT DrvIsTableExist(MARIADB_CONN *conn, const WCHAR *name)
+extern "C" int __EXPORT DrvIsTableExist(MARIADB_CONN *connection, const WCHAR *name)
 {
-   if (conn == nullptr)
+   if (connection == nullptr)
       return DBIsTableExist_Failure;
 
    WCHAR query[256], lname[256];
@@ -1363,7 +1356,7 @@ extern "C" int __EXPORT DrvIsTableExist(MARIADB_CONN *conn, const WCHAR *name)
    DWORD error;
    WCHAR errorText[DBDRV_MAX_ERROR_TEXT];
    int rc = DBIsTableExist_Failure;
-   MARIADB_RESULT *hResult = DrvSelectInternal(conn, query, &error, errorText);
+   MARIADB_RESULT *hResult = DrvSelectInternal(connection, query, &error, errorText);
    if (hResult != nullptr)
    {
       rc = (hResult->numRows > 0) ? DBIsTableExist_Found : DBIsTableExist_NotFound;

@@ -32,7 +32,7 @@
 
 DECLARE_DRIVER_HEADER("PGSQL")
 
-extern "C" void __EXPORT DrvDisconnect(PG_CONN *pConn);
+extern "C" void __EXPORT DrvDisconnect(PG_CONN *connection);
 static bool UnsafeDrvQuery(PG_CONN *pConn, const char *szQuery, WCHAR *errorText);
 
 #ifndef _WIN32
@@ -260,54 +260,51 @@ extern "C" DBDRV_CONNECTION __EXPORT DrvConnect(const char *serverAddress,	const
       port = nullptr;
    }
 	
-	PG_CONN *pConn = new PG_CONN();
+	PG_CONN *connection = nullptr;
 
 	// should be replaced with PQconnectdb();
-   pConn->handle = PQsetdbLogin(host, port, nullptr, nullptr, (database != nullptr) ? database : "template1", login, password);
-
-   if (PQstatus(pConn->handle) == CONNECTION_BAD)
+	PGconn *handle = PQsetdbLogin(host, port, nullptr, nullptr, (database != nullptr) ? database : "template1", login, password);
+   if (PQstatus(handle) != CONNECTION_BAD)
    {
-      utf8_to_wchar(PQerrorMessage(pConn->handle), -1, errorText, DBDRV_MAX_ERROR_TEXT);
-      errorText[DBDRV_MAX_ERROR_TEXT - 1] = 0;
-      RemoveTrailingCRLFW(errorText);
-      PQfinish(pConn->handle);
-      delete_and_null(pConn);
-   }
-   else
-   {
-      PGresult	*pResult = PQexec(pConn->handle, "SET standard_conforming_strings TO off");
+      PGresult *pResult = PQexec(handle, "SET standard_conforming_strings TO off");
       PQclear(pResult);
 
-      pResult = PQexec(pConn->handle, "SET escape_string_warning TO off");
+      pResult = PQexec(handle, "SET escape_string_warning TO off");
       PQclear(pResult);
 
-      PQsetClientEncoding(pConn->handle, "UTF8");
+      PQsetClientEncoding(handle, "UTF8");
+
+      connection = new PG_CONN(handle);
 
       if ((schema != nullptr) && (schema[0] != 0))
       {
          char query[256];
          snprintf(query, 256, "SET search_path=%s", schema);
-         if (!UnsafeDrvQuery(pConn, query, errorText))
+         if (!UnsafeDrvQuery(connection, query, errorText))
          {
-            DrvDisconnect(pConn);
-            pConn = nullptr;
+            PQfinish(handle);
+            delete_and_null(connection);
          }
       }
    }
+   else
+   {
+      utf8_to_wchar(PQerrorMessage(handle), -1, errorText, DBDRV_MAX_ERROR_TEXT);
+      errorText[DBDRV_MAX_ERROR_TEXT - 1] = 0;
+      RemoveTrailingCRLFW(errorText);
+      PQfinish(handle);
+   }
 
-   return pConn;
+   return connection;
 }
 
 /**
  * Disconnect from database
  */
-extern "C" void __EXPORT DrvDisconnect(PG_CONN *pConn)
+extern "C" void __EXPORT DrvDisconnect(PG_CONN *connection)
 {
-   if (pConn != nullptr)
-   {
-      PQfinish(((PG_CONN *)pConn)->handle);
-      delete pConn;
-   }
+   PQfinish(connection->handle);
+   delete connection;
 }
 
 /**
