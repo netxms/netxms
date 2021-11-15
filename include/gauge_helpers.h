@@ -178,23 +178,13 @@ public:
  */
 class LIBNETXMS_EXPORTABLE GaugeThreadPoolRequests : public Gauge64
 {
-private:
-   ThreadPool *m_pool;
-
-protected:
-   int64_t readCurrentValue()
-   {
-      ThreadPoolInfo poolInfo;
-      ThreadPoolGetInfo(m_pool, &poolInfo);
-      return (poolInfo.activeRequests > poolInfo.curThreads) ? poolInfo.activeRequests - poolInfo.curThreads : 0;
-   }
-
 public:
    GaugeThreadPoolRequests(const TCHAR *name, ThreadPool *pool, int interval = 5, int period = 900) :
-      Gauge64([=]() -> int64_t { return this->readCurrentValue(); }, name, interval, period)
-   {
-      m_pool = pool;
-   }
+      Gauge64([pool]() -> int64_t {
+         ThreadPoolInfo poolInfo;
+         ThreadPoolGetInfo(pool, &poolInfo);
+         return (poolInfo.activeRequests > poolInfo.curThreads) ? poolInfo.activeRequests - poolInfo.curThreads : 0;
+      }, name, interval, period) { }
 };
 
 /**
