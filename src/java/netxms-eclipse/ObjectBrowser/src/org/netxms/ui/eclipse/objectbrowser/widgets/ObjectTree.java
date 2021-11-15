@@ -142,7 +142,7 @@ public class ObjectTree extends Composite
       FormLayout formLayout = new FormLayout();
       setLayout(formLayout);
       if (showFilterToolTip)
-         tooltip = " > - Search by IP \n # - Search by ID \n / - Search by comment \n @ - Search by Zone ID";
+         tooltip = " > - Search by IP address part \n ^ - Search by exact IP address \n # - Search by ID \n / - Search by comment \n @ - Search by Zone ID";
       // Create filter area
       filterText = new FilterText(this, SWT.NONE, tooltip, showFilterCloseButton);
       setupFilterText(true);
