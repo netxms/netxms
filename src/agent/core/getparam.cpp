@@ -41,6 +41,7 @@ LONG H_CRC32(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSessi
 LONG H_DataCollectorQueueSize(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_DirInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_ExternalParameter(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_ExternalParameterExitCode(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_ExternalList(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
 LONG H_ExternalTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *session);
 LONG H_FileTime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
@@ -592,7 +593,7 @@ void AddParameter(const TCHAR *name, LONG (* handler)(const TCHAR *, const TCHAR
    {
       // Add new parameter
       NETXMS_SUBAGENT_PARAM np;
-      _tcslcpy(np.name, name, MAX_PARAM_NAME - 1);
+      _tcslcpy(np.name, name, MAX_PARAM_NAME);
       np.handler = handler;
       np.arg = arg;
       np.dataType = dataType;
@@ -697,6 +698,10 @@ bool AddExternalParameter(TCHAR *config, bool shellExec, bool isList)
    else
    {
       AddParameter(config, H_ExternalParameter, arg, DCI_DT_STRING, _T(""));
+      TCHAR nameExitCode[MAX_PARAM_NAME];
+      _tcslcpy(nameExitCode, config, MAX_PARAM_NAME);
+      _tcslcat(nameExitCode, _T(".ExitCode"), MAX_PARAM_NAME);
+      AddParameter(nameExitCode, H_ExternalParameterExitCode, arg, DCI_DT_INT, _T(""));
    }
    return true;
 }

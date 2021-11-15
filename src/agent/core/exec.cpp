@@ -33,23 +33,15 @@
 /**
  * Exec function for external (user-defined) parameters and lists. Handler argument contains command line before substitution.
  */
-static LONG RunExternal(const TCHAR *param, const TCHAR *arg, StringList *value)
+static LONG RunExternal(const TCHAR *param, const TCHAR *arg, StringList *value, bool returnProcessExitCode = false)
 {
-   bool returnProcessExitCode = false;
    nxlog_debug_tag(EXEC_DEBUG_TAG, 4, _T("RunExternal called for \"%s\" \"%s\""), param, arg);
 
    // Substitute $1 .. $9 with actual arguments
    StringBuffer cmdLine;
    cmdLine.setAllocationStep(1024);
 
-   int commandBegin = 1;
-   if (arg[1] == _T('@'))
-   {
-      returnProcessExitCode = true;
-      commandBegin++;
-   }
-
-   for (const TCHAR *sptr = &arg[commandBegin]; *sptr != 0; sptr++)
+   for (const TCHAR *sptr = &arg[1]; *sptr != 0; sptr++)
    {
       if (*sptr == _T('$'))
       {
@@ -107,6 +99,21 @@ LONG H_ExternalParameter(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, Abstr
    if (status == SYSINFO_RC_SUCCESS)
    {
       ret_string(value, values.size() > 0 ? values.get(0) : _T(""));
+   }
+   return status;
+}
+
+/**
+ * Handler function for external parameters return exit code version
+ */
+LONG H_ExternalParameterExitCode(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   session->debugPrintf(4, _T("H_ExternalParameterExitCode called for \"%s\" \"%s\""), cmd, arg);
+   StringList values;
+   LONG status = RunExternal(cmd, arg, &values, true);
+   if (status == SYSINFO_RC_SUCCESS)
+   {
+      ret_string(value, values.get(0));
    }
    return status;
 }
