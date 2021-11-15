@@ -37,7 +37,7 @@ protected:
    virtual void onOutput(const char *text) override;
 
 public:
-   OutputLoggingExecutor(const TCHAR *command, bool shellExec = true, bool selfDestruct = false) : ProcessExecutor(command, shellExec, selfDestruct)
+   OutputLoggingExecutor(const TCHAR *command) : ProcessExecutor(command, true, false)
    {
       m_sendOutput = true;
    };
@@ -58,7 +58,7 @@ void OutputLoggingExecutor::onOutput(const char *text)
    MemFree(buffer);
    for (int i = 0; i < outputLines->size(); i++)
    {
-      nxlog_write_tag(1, DEBUG_TAG, _T("Output: %s"), outputLines->get(i));
+      nxlog_write_tag(5, DEBUG_TAG, _T("Output: %s"), outputLines->get(i));
    }
    delete outputLines;
 }
@@ -70,10 +70,13 @@ class ShellDriver : public NCDriver
 {
 private:
    String m_command;
-   ShellDriver(const TCHAR * command) : m_command(command){};
+
+   ShellDriver(const TCHAR *command) : m_command(command) { }
+
 public:
-   static ShellDriver *createInstance(Config *config);
    virtual bool send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body) override;
+
+   static ShellDriver *createInstance(Config *config);
 };
 
 /**
@@ -84,7 +87,7 @@ ShellDriver *ShellDriver::createInstance(Config *config)
    const TCHAR * command = config->getValue(_T("/Shell/Command"));
    if (command == nullptr)
    {
-      nxlog_debug_tag(DEBUG_TAG, 1, _T("Driver configuration not found"));
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Driver configuration not found"));
       return nullptr;
    }
    return new ShellDriver(command);
@@ -99,7 +102,8 @@ bool ShellDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCHAR
    command.replace(_T("${recipient}"), CHECK_NULL_EX(recipient));
    command.replace(_T("${subject}"), CHECK_NULL_EX(subject));
    command.replace(_T("${text}"), CHECK_NULL_EX(body));
-   OutputLoggingExecutor* procexec = new OutputLoggingExecutor(command.getBuffer(), false, true);
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("Executing command %s"), command.cstr());
+   auto procexec = new OutputLoggingExecutor(command);
    return procexec->execute();
 }
 
@@ -118,9 +122,9 @@ DECLARE_NCD_ENTRY_POINT(Shell, &s_config)
  */
 BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
-	if (dwReason == DLL_PROCESS_ATTACH)
-		DisableThreadLibraryCalls(hInstance);
-	return TRUE;
+   if (dwReason == DLL_PROCESS_ATTACH)
+      DisableThreadLibraryCalls(hInstance);
+   return TRUE;
 }
 
 #endif
