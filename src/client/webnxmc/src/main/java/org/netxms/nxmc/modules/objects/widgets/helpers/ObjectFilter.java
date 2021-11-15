@@ -45,9 +45,10 @@ public class ObjectFilter extends ViewerFilter
 	private static final int NONE = 0;
 	private static final int NAME = 1;
 	private static final int COMMENTS = 2;
-	private static final int IP_ADDRESS = 3;
-	private static final int OBJECT_ID = 4;
-	private static final int ZONE = 5;
+   private static final int IP_ADDRESS_PATTERN = 3;
+   private static final int IP_ADDRESS_EXACT = 4;
+   private static final int OBJECT_ID = 5;
+   private static final int ZONE = 6;
 
 	private String filterString = null;
 	private boolean hideUnmanaged = false;
@@ -84,40 +85,57 @@ public class ObjectFilter extends ViewerFilter
 		{
          case COMMENTS:
             return object.getComments().toLowerCase().contains(filterString);
-			case IP_ADDRESS:
-			   if (object instanceof AbstractNode)
-			   {
-			      if (!((AbstractNode)object).getPrimaryIP().isValidAddress())
-			         return false;
-			      return ((AbstractNode)object).getPrimaryIP().getHostAddress().startsWith(filterString);
-			   }
-			   else if (object instanceof Subnet)
-            {
-               return ((Subnet)object).getSubnetAddress().getHostAddress().startsWith(filterString);
-            }
-            else if (object instanceof Interface)
+         case IP_ADDRESS_PATTERN:
+         case IP_ADDRESS_EXACT:
+            if (object instanceof Interface)
             {
                for(InetAddressEx a : ((Interface)object).getIpAddressList())
                {
-                  if (a.getHostAddress().startsWith(filterString))
-                     return true;
+                  if (mode == IP_ADDRESS_EXACT)
+                  {
+                     if (a.getHostAddress().equals(filterString))
+                        return true;
+                  }
+                  else
+                  {
+                     if (a.getHostAddress().startsWith(filterString))
+                        return true;
+                  }
                }
                return false;
             }
-            else if (object instanceof AccessPoint)
+            else
             {
-               if (!((AccessPoint)object).getIpAddress().isValidAddress())
+               String address;
+   			   if (object instanceof AbstractNode)
+   			   {
+   			      if (!((AbstractNode)object).getPrimaryIP().isValidAddress())
+   			         return false;
+                  address = ((AbstractNode)object).getPrimaryIP().getHostAddress();
+   			   }
+   			   else if (object instanceof Subnet)
+               {
+                  address = ((Subnet)object).getSubnetAddress().getHostAddress();
+               }
+               else if (object instanceof AccessPoint)
+               {
+                  if (!((AccessPoint)object).getIpAddress().isValidAddress())
+                     return false;
+                  address = ((AccessPoint)object).getIpAddress().getHostAddress();
+               }
+               else
+               {
                   return false;
-               return ((AccessPoint)object).getIpAddress().getHostAddress().startsWith(filterString);
+               }
+               return (mode == IP_ADDRESS_EXACT) ? address.equals(filterString) : address.startsWith(filterString);
             }
-			   return false;
          case NAME:
             return usePatternMatching ? Glob.matchIgnoreCase(filterString, object.getNameWithAlias()) : object.getNameWithAlias().toLowerCase().contains(filterString);
 			case OBJECT_ID:
 			   if (object instanceof AbstractObject)
 			   {
 			      long objectID = ((AbstractObject)object).getObjectId();
-			      return String.valueOf(objectID).startsWith(filterString);
+			      return String.valueOf(objectID).contentEquals(filterString);
 			   }
             return false;
 			case ZONE:
@@ -195,9 +213,14 @@ public class ObjectFilter extends ViewerFilter
 			}
 			else if (filterString.charAt(0) == '>')
 			{
-				mode = IP_ADDRESS;
+            mode = IP_ADDRESS_PATTERN;
 				this.filterString = filterString.substring(1);
 			}
+         else if (filterString.charAt(0) == '^')
+         {
+            mode = IP_ADDRESS_EXACT;
+            this.filterString = filterString.substring(1);
+         }
 			else if (filterString.charAt(0) == '#')
 			{
 			   mode = OBJECT_ID;
