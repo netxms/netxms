@@ -174,11 +174,11 @@
 #define EVENT_POLICY_VALIDATION_ERROR               117
 #define EVENT_TUNNEL_SETUP_ERROR                    118
 #define EVENT_DUPLICATE_MAC_ADDRESS                 119
-#define EVENT_BUSINESS_SERVICE_NORMAL               120
-#define EVENT_BUSINESS_SERVICE_CRITICAL             121
+#define EVENT_BUSINESS_SERVICE_OPERATIONAL          120
+#define EVENT_BUSINESS_SERVICE_FAILED               121
 #define EVENT_ICMP_UNREACHABLE                      122
 #define EVENT_ICMP_OK                               123
-#define EVENT_BUSINESS_SERVICE_MINOR                124
+#define EVENT_BUSINESS_SERVICE_DEGRADED             124
 
 #define EVENT_SNMP_UNMATCHED_TRAP                   500
 #define EVENT_SNMP_COLD_START                       501

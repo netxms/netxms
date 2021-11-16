@@ -181,11 +181,11 @@ INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_s
         '%m',5,'DUPLICATE_MAC_ADDRESS_%1','',0,EVENT_ALARM_TIMEOUT);
 
 INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event)
-    VALUES (43,'aa188673-049f-4c4d-8767-c1cf443c9547',7944,'Generated alarm when business service changes status to critical or minor',
+    VALUES (43,'aa188673-049f-4c4d-8767-c1cf443c9547',7944,'Generated alarm when business service changes state to failed or degraded',
         '%m',5,'BUSINESS_SERVICE_NOT_OK_%i','',0,EVENT_ALARM_TIMEOUT);
 
 INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event)
-    VALUES (44,'af00706c-b92a-4335-b441-190609c2494f',7944,'Terminate alarm when business service status changes back to normal',
+    VALUES (44,'af00706c-b92a-4335-b441-190609c2494f',7944,'Terminate alarm when business service changes state to operational',
         '%m',6,'BUSINESS_SERVICE_NOT_OK_%i','',0,EVENT_ALARM_TIMEOUT);
 
 INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event)
@@ -248,8 +248,8 @@ INSERT INTO policy_event_list (rule_id,event_code) VALUES (39,EVENT_PACKAGE_REMO
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (40,EVENT_POLICY_VALIDATION_ERROR);
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (41,EVENT_TUNNEL_SETUP_ERROR);
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (42,EVENT_DUPLICATE_MAC_ADDRESS);
-INSERT INTO policy_event_list (rule_id,event_code) VALUES (43,EVENT_BUSINESS_SERVICE_CRITICAL);
-INSERT INTO policy_event_list (rule_id,event_code) VALUES (43,EVENT_BUSINESS_SERVICE_MINOR);
-INSERT INTO policy_event_list (rule_id,event_code) VALUES (44,EVENT_BUSINESS_SERVICE_NORMAL);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (43,EVENT_BUSINESS_SERVICE_FAILED);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (43,EVENT_BUSINESS_SERVICE_DEGRADED);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (44,EVENT_BUSINESS_SERVICE_OPERATIONAL);
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (45,EVENT_ICMP_UNREACHABLE);
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (46,EVENT_ICMP_OK);

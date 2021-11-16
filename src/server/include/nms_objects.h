@@ -4329,8 +4329,9 @@ class NXCORE_EXPORTABLE BusinessService : public BaseBusinessService, public Pol
    typedef BaseBusinessService super;
 
 protected:
+   int m_serviceState; // State of service - operational/degraded/failed
    uint32_t m_prototypeId;
-   TCHAR* m_instance;
+   TCHAR *m_instance;
 
    virtual void fillMessageInternal(NXCPMessage *msg, UINT32 userId) override;
 
@@ -4338,6 +4339,8 @@ protected:
    virtual void statusPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) override;
 
    virtual int getAdditionalMostCriticalStatus() override;
+
+   int getMostCriticalCheckStatus();
 
    void validateAutomaticObjectChecks();
    void validateAutomaticDCIChecks();
@@ -4356,6 +4359,7 @@ public:
    virtual bool lockForStatusPoll() override;
    virtual bool lockForConfigurationPoll() override;
 
+   int getServiceState() const { return m_serviceState; }
    uint32_t getPrototypeId() const { return m_prototypeId; }
    const TCHAR* getInstance() const { return m_instance; }
 

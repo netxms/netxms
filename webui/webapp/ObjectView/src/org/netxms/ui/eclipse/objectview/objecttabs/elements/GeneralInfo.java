@@ -24,6 +24,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.AccessPoint;
+import org.netxms.client.objects.BusinessService;
 import org.netxms.client.objects.Chassis;
 import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.MobileDevice;
@@ -57,9 +58,9 @@ public class GeneralInfo extends TableElement
 		super(parent, anchor, objectTab);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.objectview.objecttabs.elements.TableElement#fillTable()
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.objectview.objecttabs.elements.TableElement#fillTable()
+    */
 	@Override
 	protected void fillTable()
 	{
@@ -280,6 +281,10 @@ public class GeneralInfo extends TableElement
 				Zone zone = (Zone)object;
 				addPair(Messages.get().GeneralInfo_ZoneId, Long.toString(zone.getUIN()));
 				break;
+         case AbstractObject.OBJECT_BUSINESSSERVICE:
+            BusinessService businessService = (BusinessService)object;
+            addPair("Service state", businessService.getServiceState().toString());
+            break;
 			default:
 				break;
 		}

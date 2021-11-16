@@ -42,8 +42,8 @@ import org.xnap.commons.i18n.I18n;
  */
 public class BusinessServiceCheckLabelProvider extends LabelProvider implements ITableLabelProvider, ITableColorProvider
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(BusinessServiceCheckLabelProvider.class);
-   private static final String[] TYPES = { i18n.tr("None"), i18n.tr("Script"), i18n.tr("DCI threshold"), i18n.tr("Object status"), };
+   private final I18n i18n = LocalizationHelper.getI18n(BusinessServiceCheckLabelProvider.class);
+   private final String[] TYPES = { i18n.tr("None"), i18n.tr("Script"), i18n.tr("DCI threshold"), i18n.tr("Object status"), };
 
    private NXCSession session;
    private Map<Long, String> dciNameCache = new HashMap<Long, String>();
@@ -60,15 +60,13 @@ public class BusinessServiceCheckLabelProvider extends LabelProvider implements 
     */
 	@Override
 	public Image getColumnImage(Object element, int columnIndex)
-	{    
+   {
+      if (columnIndex != BusinessServiceChecksView.COLUMN_OBJECT)
+         return null;
+
       BusinessServiceCheck check = (BusinessServiceCheck)element;
-      switch(columnIndex)
-      {
-         case BusinessServiceChecksView.COLUMN_OBJECT:  
-            AbstractObject object = session.findObjectById(check.getObjectId());
-            return (object != null) ? objectLabelProvider.getImage(object) : null;
-      }
-		return null;
+      AbstractObject object = session.findObjectById(check.getObjectId());
+      return (object != null) ? objectLabelProvider.getImage(object) : null;
 	}
 
    /**
@@ -91,12 +89,32 @@ public class BusinessServiceCheckLabelProvider extends LabelProvider implements 
          case BusinessServiceChecksView.COLUMN_DCI:  
             return getDciName(check);  
          case BusinessServiceChecksView.COLUMN_STATUS:    
-            return getViolationStatus(check);  
+            return getCheckStateText(check);
          case BusinessServiceChecksView.COLUMN_FAIL_REASON:    
             return check.getFailureReason();
 		}
 		return null;
 	}
+
+   /**
+    * Get text representation of check's state.
+    *
+    * @param check check to get state from
+    * @return state text
+    */
+   public String getCheckStateText(BusinessServiceCheck check)
+   {
+      switch(check.getState())
+      {
+         case OPERATIONAL:
+            return i18n.tr("OK");
+         case DEGRADED:
+            return i18n.tr("Degraded");
+         case FAILED:
+            return i18n.tr("Failed");
+      }
+      return null;
+   }
 
    /**
     * Get name of related object (if any).
@@ -135,16 +153,6 @@ public class BusinessServiceCheckLabelProvider extends LabelProvider implements 
       return name;
    }
 
-	/**
-	 * Get violation status string
-	 * 
-	 * @return violation status text
-	 */
-	public String getViolationStatus(BusinessServiceCheck check)
-	{
-	   return check.isViolated() ? i18n.tr("Failed") : i18n.tr("Normal");
-	}
-   
    /**
     * Check type text name
     * @param check check object
@@ -161,14 +169,19 @@ public class BusinessServiceCheckLabelProvider extends LabelProvider implements 
 	@Override
 	public Color getForeground(Object element, int columnIndex)
 	{
-      BusinessServiceCheck check = (BusinessServiceCheck)element;
-		switch(columnIndex)
-		{
-         case BusinessServiceChecksView.COLUMN_STATUS:    
-            return check.isViolated() ? StatusDisplayInfo.getStatusColor(ObjectStatus.MAJOR) : StatusDisplayInfo.getStatusColor(ObjectStatus.NORMAL);  
-			default:
-				return null;
-		}
+      if (columnIndex != BusinessServiceChecksView.COLUMN_STATUS)
+         return null;
+
+      switch(((BusinessServiceCheck)element).getState())
+      {
+         case OPERATIONAL:
+            return StatusDisplayInfo.getStatusColor(ObjectStatus.NORMAL);
+         case DEGRADED:
+            return StatusDisplayInfo.getStatusColor(ObjectStatus.MINOR);
+         case FAILED:
+            return StatusDisplayInfo.getStatusColor(ObjectStatus.CRITICAL);
+      }
+      return null;
 	}
 
    /**

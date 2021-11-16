@@ -23,6 +23,7 @@ import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.AgentCacheMode;
+import org.netxms.client.constants.BusinessServiceState;
 import org.netxms.client.objects.interfaces.AutoBindDCIObject;
 import org.netxms.client.objects.interfaces.AutoBindObject;
 import org.netxms.client.objects.interfaces.PollingTarget;
@@ -32,6 +33,7 @@ import org.netxms.client.objects.interfaces.PollingTarget;
  */
 public class BusinessService extends GenericObject implements AutoBindObject, AutoBindDCIObject, PollingTarget
 {
+   private BusinessServiceState serviceState;
    private int autoBindFlags;
    private String objectAutoBindFilter;
    private String dciAutoBindFilter;
@@ -47,6 +49,7 @@ public class BusinessService extends GenericObject implements AutoBindObject, Au
    public BusinessService(NXCPMessage msg, NXCSession session)
    {
       super(msg, session);
+      serviceState = BusinessServiceState.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_SERVICE_STATUS));
       objectAutoBindFilter = msg.getFieldAsString(NXCPCodes.VID_AUTOBIND_FILTER);
       autoBindFlags = msg.getFieldAsInt32(NXCPCodes.VID_AUTOBIND_FLAGS);
       objectStatusThreshold = msg.getFieldAsInt32(NXCPCodes.VID_OBJECT_STATUS_THRESHOLD);
@@ -54,7 +57,7 @@ public class BusinessService extends GenericObject implements AutoBindObject, Au
       dciStatusThreshold = msg.getFieldAsInt32(NXCPCodes.VID_DCI_STATUS_THRESHOLD);
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.client.objects.AbstractObject#isAllowedOnMap()
     */
    @Override
@@ -63,13 +66,23 @@ public class BusinessService extends GenericObject implements AutoBindObject, Au
       return true;
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.client.objects.AbstractObject#isAlarmsVisible()
     */
    @Override
    public boolean isAlarmsVisible()
    {
       return true;
+   }
+
+   /**
+    * Get business service state.
+    *
+    * @return business service state
+    */
+   public BusinessServiceState getServiceState()
+   {
+      return serviceState;
    }
 
    /**
@@ -114,7 +127,7 @@ public class BusinessService extends GenericObject implements AutoBindObject, Au
       return dciAutoBindFilter;
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.client.objects.GenericObject#getObjectClassName()
     */
    @Override
@@ -123,7 +136,7 @@ public class BusinessService extends GenericObject implements AutoBindObject, Au
       return "BusinessService";
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.client.objects.AbstractObject#getStrings()
     */
    @Override

@@ -50,7 +50,7 @@ public class BusinessServiceCheckFilter extends ViewerFilter implements Abstract
       if (Long.toString(check.getId()).contains(filterString) || 
             check.getDescription().contains(filterString) ||
             labelProvider.getTypeName(check).contains(filterString) || 
-            labelProvider.getViolationStatus(check).contains(filterString) || 
+            labelProvider.getCheckStateText(check).contains(filterString) ||
             labelProvider.getObjectName(check).contains(filterString) || 
             labelProvider.getDciName(check).contains(filterString) || 
             check.getFailureReason().contains(filterString))

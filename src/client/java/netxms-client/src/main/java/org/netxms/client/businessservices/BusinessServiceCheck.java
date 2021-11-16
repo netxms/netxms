@@ -21,6 +21,7 @@ package org.netxms.client.businessservices;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.constants.BusinessServiceCheckType;
+import org.netxms.client.constants.BusinessServiceState;
 import org.netxms.client.objects.interfaces.NodeItemPair;
 
 /**
@@ -35,7 +36,7 @@ public class BusinessServiceCheck implements NodeItemPair
    private long objectId;
    private long dciId;
 	private int threshold;
-   private boolean violated = false;
+   private BusinessServiceState state;
 	private String failureReason;
 
    /**
@@ -50,30 +51,32 @@ public class BusinessServiceCheck implements NodeItemPair
       objectId = 0;
       dciId = 0;
       threshold = 0;
+      state = BusinessServiceState.OPERATIONAL;
    }
 
    /**
     * Copy constructor
     * 
-    * @param check check to copy
+    * @param src check to copy
     */
-   public BusinessServiceCheck(BusinessServiceCheck check)
+   public BusinessServiceCheck(BusinessServiceCheck src)
    {
-      id = check.id;
-      type = check.type;
-      description = check.description;
-      script = check.script; 
-      objectId = check.objectId;
-      dciId = check.dciId;
-      threshold = check.threshold;
+      id = src.id;
+      type = src.type;
+      description = src.description;
+      script = src.script; 
+      objectId = src.objectId;
+      dciId = src.dciId;
+      threshold = src.threshold;
+      state = src.state;
    }
 
 	/**
-	 * Constructor to create object form message 
-	 * 
-	 * @param msg NXCPmessage from server with data
-	 * @param base base id for object
-	 */
+    * Constructor to create object from message
+    * 
+    * @param msg NXCPmessage from server with data
+    * @param base base id for object
+    */
 	public BusinessServiceCheck(NXCPMessage msg, long base)
 	{
 	   id = msg.getFieldAsInt64(base);
@@ -83,11 +86,8 @@ public class BusinessServiceCheck implements NodeItemPair
       objectId = msg.getFieldAsInt64(base + 4);
       threshold = msg.getFieldAsInt32(base + 5); 
 		description = msg.getFieldAsString(base + 6); 
-		script = msg.getFieldAsString(base + 7); 
-		if (failureReason != null && !failureReason.isEmpty())
-		{
-		   violated = true;
-		}
+      script = msg.getFieldAsString(base + 7);
+      state = BusinessServiceState.getByValue(msg.getFieldAsInt32(base + 8));
 	}
 
 	/**
@@ -171,11 +171,13 @@ public class BusinessServiceCheck implements NodeItemPair
    }
 
    /**
-    * @return the status
+    * Get check state.
+    *
+    * @return check state
     */
-   public boolean isViolated()
+   public BusinessServiceState getState()
    {
-      return violated;
+      return state;
    }
 
    /**
@@ -226,6 +228,9 @@ public class BusinessServiceCheck implements NodeItemPair
       this.threshold = threshold;
    }
 
+   /**
+    * @see org.netxms.client.objects.interfaces.NodeItemPair#getNodeId()
+    */
    @Override
    public long getNodeId()
    {

@@ -178,6 +178,7 @@ void BusinessServiceCheck::fillMessage(NXCPMessage *msg, uint32_t baseId) const
    msg->setField(baseId + 5, m_statusThreshold);
    msg->setField(baseId + 6, m_description);
    msg->setField(baseId + 7, m_script);
+   msg->setField(baseId + 8, m_status);
 	unlock();
 }
 

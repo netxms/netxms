@@ -27,6 +27,7 @@
  */
 BusinessService::BusinessService() : super(), Pollable(this, Pollable::STATUS | Pollable::CONFIGURATION)
 {
+   m_serviceState = STATUS_NORMAL;
    m_prototypeId = 0;
    m_instance = nullptr;
 }
@@ -36,6 +37,7 @@ BusinessService::BusinessService() : super(), Pollable(this, Pollable::STATUS | 
  */
 BusinessService::BusinessService(const TCHAR *name) : super(name), Pollable(this, Pollable::STATUS | Pollable::CONFIGURATION)
 {
+   m_serviceState = STATUS_NORMAL;
    m_prototypeId = 0;
    m_instance = nullptr;
 }
@@ -45,6 +47,7 @@ BusinessService::BusinessService(const TCHAR *name) : super(name), Pollable(this
  */
 BusinessService::BusinessService(const BaseBusinessService& prototype, const TCHAR *name, const TCHAR *instance) : super(prototype, name), Pollable(this, Pollable::STATUS | Pollable::CONFIGURATION)
 {
+   m_serviceState = STATUS_NORMAL;
    m_prototypeId = prototype.getId();
    m_instance = MemCopyString(instance);
 }
@@ -88,6 +91,7 @@ bool BusinessService::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
    if (!Pollable::loadFromDatabase(hdb, m_id))
       return false;
 
+   m_serviceState = getMostCriticalCheckStatus();
    return true;
 }
 
@@ -130,15 +134,16 @@ bool BusinessService::saveToDatabase(DB_HANDLE hdb)
 void BusinessService::fillMessageInternal(NXCPMessage *msg, uint32_t userId)
 {
    AutoBindTarget::fillMessage(msg);
+   msg->setField(VID_SERVICE_STATUS, m_serviceState);
    msg->setField(VID_INSTANCE, m_instance);
    msg->setField(VID_PROTOTYPE_ID, m_prototypeId);
    return super::fillMessageInternal(msg, userId);
 }
 
 /**
- * Returns most critical status of DCI used for status calculation
+ * Returns most critical service check status
  */
-int BusinessService::getAdditionalMostCriticalStatus()
+int BusinessService::getMostCriticalCheckStatus()
 {
    int status = STATUS_NORMAL;
    unique_ptr<SharedObjectArray<BusinessServiceCheck>> checks = getChecks();
@@ -148,6 +153,14 @@ int BusinessService::getAdditionalMostCriticalStatus()
          status = check->getStatus();
    }
    return status;
+}
+
+/**
+ * Returns most critical service check status (interface implementation)
+ */
+int BusinessService::getAdditionalMostCriticalStatus()
+{
+   return getMostCriticalCheckStatus();
 }
 
 /**
@@ -169,7 +182,7 @@ void BusinessService::statusPoll(PollerInfo *poller, ClientSession *session, UIN
 
    nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("BusinessService::statusPoll(%s [%u]): poll started"), m_name, m_id);
    sendPollerMsg(_T("Started status poll of business service %s [%d] \r\n"), m_name, (int)m_id);
-   int prevStatus = m_status;
+   int prevState = m_serviceState;
 
    poller->setStatus(_T("executing checks"));
    sendPollerMsg(_T("Executing business service checks\r\n"));
@@ -196,7 +209,7 @@ void BusinessService::statusPoll(PollerInfo *poller, ClientSession *session, UIN
       {
          nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("BusinessService::statusPoll(%s [%u]): status of check %s [%u] changed to %s"),
                m_name, m_id, checkDescription.cstr(), check->getId(), GetStatusAsText(newCheckStatus, true));
-         sendPollerMsg(_T("   Status of business service check \"%s\" changed to %s\r\n"), checkDescription.cstr(), GetStatusAsText(newCheckStatus, true));
+         sendPollerMsg(_T("   State of business service check \"%s\" changed to %s\r\n"), checkDescription.cstr(), GetStatusAsText(newCheckStatus, true));
          NotifyClientsOnBusinessServiceCheckUpdate(*this, check);
       }
       if (newCheckStatus > mostCriticalCheckStatus)
@@ -204,16 +217,15 @@ void BusinessService::statusPoll(PollerInfo *poller, ClientSession *session, UIN
          mostCriticalCheckStatus = newCheckStatus;
       }
    }
+   m_serviceState = mostCriticalCheckStatus;
    sendPollerMsg(_T("All business service checks executed\r\n"));
 
-   calculateCompoundStatus();
-
-   if (prevStatus != m_status)
+   if (prevState != m_serviceState)
    {
-      sendPollerMsg(_T("Status of business service changed to %s\r\n"), GetStatusAsText(m_status, true));
-      if (m_status > prevStatus)
+      sendPollerMsg(_T("State of business service changed to %s\r\n"), GetStatusAsText(m_serviceState, true));
+      if (m_serviceState > prevState)
       {
-         if  (m_status == STATUS_CRITICAL)
+         if  (m_serviceState == STATUS_CRITICAL)
          {
             DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
             DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO business_service_downtime (record_id,service_id,from_timestamp,to_timestamp) VALUES (?,?,?,0)"));
@@ -226,16 +238,16 @@ void BusinessService::statusPoll(PollerInfo *poller, ClientSession *session, UIN
                DBFreeStatement(hStmt);
             }
             DBConnectionPoolReleaseConnection(hdb);
-            PostSystemEvent(EVENT_BUSINESS_SERVICE_CRITICAL, m_id, nullptr);
+            PostSystemEvent(EVENT_BUSINESS_SERVICE_FAILED, m_id, nullptr);
          }
          else
          {
-            PostSystemEvent(EVENT_BUSINESS_SERVICE_MINOR, m_id, nullptr);
+            PostSystemEvent(EVENT_BUSINESS_SERVICE_DEGRADED, m_id, nullptr);
          }
       }
-      else if (m_status < prevStatus)
+      else if (m_serviceState < prevState)
       {
-         if (prevStatus == STATUS_CRITICAL)
+         if (prevState == STATUS_CRITICAL)
          {
             DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
             DB_STATEMENT hStmt = DBPrepare(hdb, _T("UPDATE business_service_downtime SET to_timestamp=? WHERE service_id=? AND to_timestamp=0"));
@@ -248,9 +260,12 @@ void BusinessService::statusPoll(PollerInfo *poller, ClientSession *session, UIN
             }
             DBConnectionPoolReleaseConnection(hdb);
          }
-         PostSystemEvent((m_status == STATUS_NORMAL) ? EVENT_BUSINESS_SERVICE_NORMAL : EVENT_BUSINESS_SERVICE_MINOR, m_id, nullptr);
+         PostSystemEvent((m_serviceState == STATUS_NORMAL) ? EVENT_BUSINESS_SERVICE_OPERATIONAL : EVENT_BUSINESS_SERVICE_DEGRADED, m_id, nullptr);
       }
+      setModified(MODIFY_RUNTIME);
    }
+
+   calculateCompoundStatus();
 
    lockProperties();
    sendPollerMsg(_T("Finished status poll of business service %s [%u] \r\n"), m_name, m_id);

@@ -24,6 +24,22 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 40.79 to 40.80
+ */
+static bool H_UpgradeFromV79()
+{
+   static const TCHAR *batch =
+      _T("UPDATE event_cfg SET event_name='SYS_BUSINESS_SERVICE_OPERATIONAL' WHERE guid='ffe557a4-f572-44a8-928e-020b3fbd07b0'\n")
+      _T("UPDATE event_cfg SET event_name='SYS_BUSINESS_SERVICE_DEGRADED' WHERE guid='39bd18fc-bfd7-4c31-af9c-1e96ef3aef64'\n")
+      _T("UPDATE event_cfg SET event_name='SYS_BUSINESS_SERVICE_FAILED' WHERE guid='fc66c83f-c7e8-4635-ad2d-89589d8b0fc2'\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+
+   CHK_EXEC(SetMinorSchemaVersion(80));
+   return true;
+}
+
+/**
  * Upgrade from 40.78 to 40.79
  */
 static bool H_UpgradeFromV78()
@@ -37,10 +53,10 @@ static bool H_UpgradeFromV78()
    CHK_EXEC(SQLBatch(batch));
    CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("business_service_checks"), _T("status")));
 
-   CHK_EXEC(CreateEventTemplate(EVENT_BUSINESS_SERVICE_MINOR, _T("SYS_BUSINESS_SERVICE_MINOR"),
+   CHK_EXEC(CreateEventTemplate(EVENT_BUSINESS_SERVICE_DEGRADED, _T("SYS_BUSINESS_SERVICE_DEGRADED"),
       EVENT_SEVERITY_MINOR, EF_LOG, _T("39bd18fc-bfd7-4c31-af9c-1e96ef3aef64"),
-      _T("Business service changed status to minor (degraded)"),
-      _T("Generated when business service status changes to minor (degraded).")));
+      _T("Business service changed state to degraded"),
+      _T("Generated when business service state changes to degraded.")));
 
    CHK_EXEC(SetMinorSchemaVersion(79));
    return true;
@@ -116,15 +132,15 @@ static bool H_UpgradeFromV75()
  */
 static bool H_UpgradeFromV74()
 {
-   CHK_EXEC(CreateEventTemplate(EVENT_BUSINESS_SERVICE_NORMAL, _T("SYS_BUSINESS_SERVICE_NORMAL"),
+   CHK_EXEC(CreateEventTemplate(EVENT_BUSINESS_SERVICE_OPERATIONAL, _T("SYS_BUSINESS_SERVICE_OPERATIONAL"),
       EVENT_SEVERITY_NORMAL, EF_LOG, _T("ffe557a4-f572-44a8-928e-020b3fbd07b0"),
-      _T("Business service changed status to normal"),
-      _T("Generated when business service status changes back to normal.")));
+      _T("Business service changed state to operational"),
+      _T("Generated when business service state changes to operational.")));
 
-   CHK_EXEC(CreateEventTemplate(EVENT_BUSINESS_SERVICE_CRITICAL, _T("SYS_BUSINESS_SERVICE_CRITICAL"),
+   CHK_EXEC(CreateEventTemplate(EVENT_BUSINESS_SERVICE_FAILED, _T("SYS_BUSINESS_SERVICE_FAILED"),
       EVENT_SEVERITY_CRITICAL, EF_LOG, _T("fc66c83f-c7e8-4635-ad2d-89589d8b0fc2"),
-      _T("Business service changed status to critical"),
-      _T("Generated when business service status changes to critical.")));
+      _T("Business service changed state to failed"),
+      _T("Generated when business service state changes to failed.")));
 
    int ruleId = NextFreeEPPruleID();
 
@@ -134,7 +150,7 @@ static bool H_UpgradeFromV74()
          ruleId, EVENT_ALARM_TIMEOUT);
    CHK_EXEC(SQLQuery(query));
 
-   _sntprintf(query, 1024, _T("INSERT INTO policy_event_list (rule_id,event_code) VALUES (%d,%d)"), ruleId, EVENT_BUSINESS_SERVICE_CRITICAL);
+   _sntprintf(query, 1024, _T("INSERT INTO policy_event_list (rule_id,event_code) VALUES (%d,%d)"), ruleId, EVENT_BUSINESS_SERVICE_FAILED);
    CHK_EXEC(SQLQuery(query));
 
    ruleId++;
@@ -144,7 +160,7 @@ static bool H_UpgradeFromV74()
          ruleId, EVENT_ALARM_TIMEOUT);
    CHK_EXEC(SQLQuery(query));
 
-   _sntprintf(query, 1024, _T("INSERT INTO policy_event_list (rule_id,event_code) VALUES (%d,%d)"), ruleId, EVENT_BUSINESS_SERVICE_NORMAL);
+   _sntprintf(query, 1024, _T("INSERT INTO policy_event_list (rule_id,event_code) VALUES (%d,%d)"), ruleId, EVENT_BUSINESS_SERVICE_OPERATIONAL);
    CHK_EXEC(SQLQuery(query));
 
    CHK_EXEC(SetMinorSchemaVersion(75));
@@ -2577,6 +2593,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 79, 40, 80, H_UpgradeFromV79 },
    { 78, 40, 79, H_UpgradeFromV78 },
    { 77, 40, 78, H_UpgradeFromV77 },
    { 76, 40, 77, H_UpgradeFromV76 },

@@ -55,7 +55,7 @@ public class BusinessServiceComparator extends ViewerComparator
             result = c1.getDescription().compareTo(c2.getDescription());
             break;
          case BusinessServiceChecksView.COLUMN_TYPE:  
-            result = labelProvider.getTypeName(c1).compareTo(labelProvider.getTypeName(c2));  
+            result = c1.getCheckType().compareTo(c2.getCheckType());
             break;
          case BusinessServiceChecksView.COLUMN_OBJECT: 
             result = labelProvider.getObjectName(c1).compareTo(labelProvider.getObjectName(c2));  
@@ -64,7 +64,7 @@ public class BusinessServiceComparator extends ViewerComparator
             result = labelProvider.getDciName(c1).compareTo(labelProvider.getDciName(c2));  
             break; 
          case BusinessServiceChecksView.COLUMN_STATUS:    
-            result = labelProvider.getViolationStatus(c1).compareTo(labelProvider.getViolationStatus(c2));
+            result = c1.getState().compareTo(c2.getState());
             break;
          case BusinessServiceChecksView.COLUMN_FAIL_REASON:    
             result = c1.getFailureReason().compareTo(c2.getFailureReason());
