@@ -70,8 +70,9 @@ public class Objects extends AbstractObjectHandler
       String classFilter = query.get("class");
       String nameFilter = query.get("name");
       String parentFilter = query.get("parent");
-      String zoneFilter = query.get("zone");
       String primaryNameFilter = query.get("primaryName");
+      String stateFilter = query.get("state");
+      String zoneFilter = query.get("zone");
 
       Pattern nameFilterRegex = null;
       if ((nameFilter != null) && !nameFilter.isEmpty())
@@ -81,6 +82,18 @@ public class Objects extends AbstractObjectHandler
       if ((primaryNameFilter != null) && !primaryNameFilter.isEmpty())
          primaryNameFilterRegex = Pattern.compile(primaryNameFilter, Pattern.CASE_INSENSITIVE);
 
+      Integer stateFilterValue = null;
+      if ((stateFilter != null) && !stateFilter.isEmpty())
+      {
+         try
+         {
+            stateFilterValue = stateFilter.startsWith("0x") ? Integer.parseInt(stateFilter.substring(2), 16) : Integer.parseInt(stateFilter);
+         }
+         catch(NumberFormatException e)
+         {
+            log.debug("Invalid state filter " + stateFilter);
+         }
+      }
       Map<String, Object> customAttributes = null;
       for(String k : query.keySet())
       {
@@ -95,7 +108,8 @@ public class Objects extends AbstractObjectHandler
             customAttributes.put(k.substring(1), query.get(k));
       }
 
-      if ((areaFilter != null) || (classFilter != null) || (customAttributes != null) || (nameFilter != null) || (parentFilter != null) || (zoneFilter != null) || (primaryNameFilter != null))
+      if ((areaFilter != null) || (classFilter != null) || (customAttributes != null) || (nameFilter != null) ||
+          (parentFilter != null) || (primaryNameFilter != null) || (stateFilterValue != null) || (zoneFilter != null))
       {
          double[] area = null;
          if (areaFilter != null)
@@ -162,6 +176,15 @@ public class Objects extends AbstractObjectHandler
          List<AbstractObject> filteredObjects = new ArrayList<AbstractObject>();
          for(AbstractObject o : objects)
          {
+            // Filter by state
+            if (stateFilterValue != null)
+            {
+               if (!(o instanceof AbstractNode))
+                  continue; // FIXME: check state for all objects
+               if ((stateFilterValue & ((AbstractNode)o).getStateFlags()) == 0)
+                  continue;
+            }
+
             // Filter by zone
             if (zones != null)
             {
