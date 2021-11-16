@@ -2063,6 +2063,9 @@ int main(int argc, char *argv[])
    WSAStartup(MAKEWORD(2, 2), &wsaData);
 #endif
 
+   TestMutex();
+   TestCondition();
+   TestRWLockWrapper();
    TestGauge64();
    TestMemoryPool();
    TestObjectMemoryPool();
@@ -2088,9 +2091,6 @@ int main(int argc, char *argv[])
    TestObjectArray();
    TestSharedObjectArray();
    TestTable();
-   TestMutex();
-   TestCondition();
-   TestRWLockWrapper();
    TestByteSwap();
    TestDiff();
    TestRingBuffer();

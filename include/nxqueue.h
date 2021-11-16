@@ -48,9 +48,12 @@ class LIBNETXMS_EXPORTABLE Queue
    DISABLE_COPY_CTOR(Queue)
 
 private:
-#ifdef _WIN32
+#if defined(_WIN32)
    CRITICAL_SECTION m_lock;
    CONDITION_VARIABLE m_wakeupCondition;
+#elif defined(_USE_GNU_PTH)
+   pth_mutex_t m_lock;
+   pth_cond_t m_wakeupCondition;
 #else
    pthread_mutex_t m_lock;
    pthread_cond_t m_wakeupCondition;
@@ -61,13 +64,16 @@ private:
    size_t m_blockSize;
    size_t m_blockCount;
    int m_readers;
-	bool m_shutdownFlag;
-	bool m_owner;
+   bool m_shutdownFlag;
+   bool m_owner;
 
-	void commonInit();
-#ifdef _WIN32
+   void commonInit();
+#if defined(_WIN32)
    void lock() { EnterCriticalSection(&m_lock); }
    void unlock() { LeaveCriticalSection(&m_lock); }
+#elif defined(_USE_GNU_PTH)
+   void lock() { pth_mutex_acquire(&m_lock, FALSE, nullptr); }
+   void unlock() { pth_mutex_release(&m_lock); }
 #else
    void lock() { pthread_mutex_lock(&m_lock); }
    void unlock() { pthread_mutex_unlock(&m_lock); }
@@ -84,17 +90,17 @@ public:
    virtual ~Queue();
 
    void put(void *object);
-	void insert(void *object);
-	void setShutdownMode();
-	void setOwner(bool owner) { m_owner = owner; }
+   void insert(void *object);
+   void setShutdownMode();
+   void setOwner(bool owner) { m_owner = owner; }
    void *get();
    void *getOrBlock(uint32_t timeout = INFINITE);
    size_t size() const { return m_size; }
    size_t allocated() const { return m_blockSize * m_blockCount; }
    void clear();
-	void *find(const void *key, QueueComparator comparator, void *(*transform)(void*) = nullptr);
-	bool remove(const void *key, QueueComparator comparator);
-	void forEach(QueueEnumerationCallback callback, void *context);
+   void *find(const void *key, QueueComparator comparator, void *(*transform)(void*) = nullptr);
+   bool remove(const void *key, QueueComparator comparator);
+   void forEach(QueueEnumerationCallback callback, void *context);
 };
 
 /**

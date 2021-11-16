@@ -452,6 +452,12 @@ inline time_t FileTimeToUnixTime(const FILETIME &ft)
 #define HAVE_THREAD_LOCAL_STORAGE 0
 #endif
 
+/* Minix defines BYTE in const.h - include it early and undef */
+#ifdef __minix
+#include <minix/const.h>
+#undef BYTE
+#endif
+
 #if HAVE_STDBOOL_H
 #include <stdbool.h>
 #endif

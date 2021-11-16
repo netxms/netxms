@@ -257,7 +257,7 @@ inline void ThreadSetName(const char *name)
  */
 inline void ThreadExit(void)
 {
-   pth_exit(NULL);
+   pth_exit(nullptr);
 }
 
 inline bool ThreadJoin(THREAD hThread)
@@ -269,8 +269,10 @@ inline bool ThreadJoin(THREAD hThread)
 
 inline void ThreadDetach(THREAD hThread)
 {
-   if (hThread != INVALID_THREAD_HANDLE)
-      pth_detach(hThread);
+   if (hThread == INVALID_THREAD_HANDLE)
+      return;
+   pth_attr_t a = pth_attr_of(hThread);
+   pth_attr_set(a, PTH_ATTR_JOINABLE, FALSE);
 }
 
 static inline uint32_t GetCurrentProcessId()
@@ -1706,13 +1708,12 @@ public:
       }
       else
       {
-         int retcode;
          if (timeout != INFINITE)
          {
             pth_event_t ev = pth_event(PTH_EVENT_TIME, pth_timeout(timeout / 1000, (timeout % 1000) * 1000));
-            retcode = pth_cond_await(&m_condition, &m_mutex, ev);
+            int retcode = pth_cond_await(&m_condition, &m_mutex, ev);
             if (retcode > 0)
-               success = (pth_event_status(ev) == PTH_STATUS_OCCURRED);
+               success = (pth_event_status(ev) != PTH_STATUS_OCCURRED);
             else
                success = false;
             pth_event_free(ev, PTH_FREE_ALL);

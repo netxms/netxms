@@ -99,9 +99,17 @@ void LIBNETXMS_EXPORTABLE BlockAllSignals(bool processWide, bool allowInterrupt)
    sigaddset(&signals, SIGPIPE);
 #endif
    if (processWide)
+   {
       sigprocmask(SIG_BLOCK, &signals, NULL);
+   }
    else
+   {
+#ifdef _USE_GNU_PTH
+      pth_sigmask(SIG_BLOCK, &signals, NULL);
+#else
       pthread_sigmask(SIG_BLOCK, &signals, NULL);
+#endif
+   }
 }
 
 /**

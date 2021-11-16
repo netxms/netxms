@@ -50,7 +50,7 @@ Queue::Queue(size_t blockSize, Ownership owner)
 {
    m_blockSize = blockSize;
    m_owner = (owner == Ownership::True);
-	commonInit();
+   commonInit();
 }
 
 /**
@@ -60,7 +60,7 @@ Queue::Queue()
 {
    m_blockSize = 256;
    m_owner = false;
-	commonInit();
+   commonInit();
 }
 
 /**
@@ -68,9 +68,12 @@ Queue::Queue()
  */
 void Queue::commonInit()
 {
-#ifdef _WIN32
+#if defined(_WIN32)
    InitializeCriticalSectionAndSpinCount(&m_lock, 4000);
    InitializeConditionVariable(&m_wakeupCondition);
+#elif defined(_USE_GNU_PTH)
+   pth_mutex_init(&m_lock);
+   pth_cond_init(&m_wakeupCondition);
 #else
 
 #if HAVE_DECL_PTHREAD_MUTEX_ADAPTIVE_NP
@@ -92,8 +95,8 @@ void Queue::commonInit()
    m_readers = 0;
    m_head = static_cast<QueueBuffer*>(MemAllocZeroed(sizeof(QueueBuffer) + (m_blockSize - 1) * sizeof(void*)));
    m_tail = m_head;
-	m_shutdownFlag = false;
-	m_destructor = DefaultElementDestructor;
+   m_shutdownFlag = false;
+   m_destructor = DefaultElementDestructor;
 }
 
 /**
@@ -122,8 +125,10 @@ Queue::~Queue()
 
    setShutdownMode();
 
-#ifdef _WIN32
+#if defined(_WIN32)
    DeleteCriticalSection(&m_lock);
+#elif defined(_USE_GNU_PTH)
+   // No cleanup for mutex or condition
 #else
    pthread_mutex_destroy(&m_lock);
    pthread_cond_destroy(&m_wakeupCondition);
@@ -150,8 +155,10 @@ void Queue::put(void *element)
    m_size++;
    if (m_readers > 0)
    {
-#ifdef _WIN32
+#if defined(_WIN32)
       WakeConditionVariable(&m_wakeupCondition);
+#elif defined(_USE_GNU_PTH)
+      pth_cond_notify(&m_wakeupCondition, false);
 #else
       pthread_cond_signal(&m_wakeupCondition);
 #endif
@@ -180,8 +187,10 @@ void Queue::insert(void *element)
    m_size++;
    if (m_readers > 0)
    {
-#ifdef _WIN32
+#if defined(_WIN32)
       WakeConditionVariable(&m_wakeupCondition);
+#elif defined(_USE_GNU_PTH)
+      pth_cond_notify(&m_wakeupCondition, false);
 #else
       pthread_cond_signal(&m_wakeupCondition);
 #endif
@@ -237,9 +246,17 @@ void *Queue::getOrBlock(uint32_t timeout)
    void *element = getInternal();
    while(element == nullptr)
    {
-#ifdef _WIN32
+#if defined(_WIN32)
       if (!SleepConditionVariableCS(&m_wakeupCondition, &m_lock, timeout))
          break;
+#elif defined(_USE_GNU_PTH)
+      pth_event_t ev = pth_event(PTH_EVENT_TIME, pth_timeout(timeout / 1000, (timeout % 1000) * 1000));
+      int rc = pth_cond_await(&m_wakeupCondition, &m_lock, ev);
+      if ((rc > 0) && (pth_event_status(ev) == PTH_STATUS_OCCURRED))
+	 rc = 0;
+      pth_event_free(ev, PTH_FREE_ALL);
+      if (rc == 0)
+	 break;
 #else
       int rc;
       if (timeout != INFINITE)
@@ -323,17 +340,19 @@ void Queue::clear()
  */
 void Queue::setShutdownMode()
 {
-	lock();
-	m_shutdownFlag = true;
-	if (m_readers > 0)
-	{
-#ifdef _WIN32
-	   WakeAllConditionVariable(&m_wakeupCondition);
+   lock();
+   m_shutdownFlag = true;
+   if (m_readers > 0)
+   {
+#if defined(_WIN32)
+      WakeAllConditionVariable(&m_wakeupCondition);
+#elif defined(_USE_GNU_PTH)
+      pth_cond_notify(&m_wakeupCondition, true);
 #else
-	   pthread_cond_broadcast(&m_wakeupCondition);
+      pthread_cond_broadcast(&m_wakeupCondition);
 #endif
-	}
-	unlock();
+   }
+   unlock();
 }
 
 /**

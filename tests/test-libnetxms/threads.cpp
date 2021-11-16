@@ -116,4 +116,11 @@ void TestCondition()
    AssertTrue(c2.wait(500));
    ThreadJoin(th2);
    EndTest();
+
+   StartTest(_T("Condition - timed wait"));
+   Condition c3(true);
+   THREAD th3 = ThreadCreateEx(ConditionWorkerThread2, &c3);
+   AssertTrue(c3.wait(2000));
+   ThreadJoin(th3);
+   EndTest();
 }

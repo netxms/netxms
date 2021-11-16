@@ -161,7 +161,11 @@ struct PingRequest
    uint16_t sequence;
    bool dontFragment;
    PingRequestState state;
+#ifdef _USE_GNU_PTH
+   pth_cond_t wakeupCondition;
+#else
    pthread_cond_t wakeupCondition;
+#endif
 };
 
 /**
@@ -173,7 +177,11 @@ static inline void CloseRequest(PingRequest *r, int32_t result)
    {
       r->state = COMPLETED;
       r->result = result;
+#ifdef _USE_GNU_PTH
+      pth_cond_notify(&r->wakeupCondition, false);
+#else
       pthread_cond_signal(&r->wakeupCondition);
+#endif
    }
 }
 
@@ -184,7 +192,11 @@ class PingRequestProcessor
 {
 private:
    PingRequest *m_head;
+#ifdef _USE_GNU_PTH
+   pth_mutex_t m_mutex;
+#else
    pthread_mutex_t m_mutex;
+#endif
    SOCKET m_dataSocket;
    SOCKET m_controlSockets[2];
    THREAD m_processingThread;
@@ -235,6 +247,9 @@ PingRequestProcessor::PingRequestProcessor(int family)
    m_sequence = 0;
    m_family = family;
    m_shutdown = false;
+#ifdef _USE_GNU_PTH
+   pth_mutex_init(&m_mutex);
+#else
 #if HAVE_DECL_PTHREAD_MUTEX_ADAPTIVE_NP
    pthread_mutexattr_t a;
    pthread_mutexattr_init(&a);
@@ -244,6 +259,7 @@ PingRequestProcessor::PingRequestProcessor(int family)
 #else
    pthread_mutex_init(&m_mutex, nullptr);
 #endif
+#endif
 }
 
 /**
@@ -251,16 +267,26 @@ PingRequestProcessor::PingRequestProcessor(int family)
  */
 PingRequestProcessor::~PingRequestProcessor()
 {
+#ifdef _USE_GNU_PTH
+   pth_mutex_acquire(&m_mutex, FALSE, nullptr);
+#else
    pthread_mutex_lock(&m_mutex);
+#endif
    m_shutdown = true;
+#ifdef _USE_GNU_PTH
+   pth_mutex_release(&m_mutex);
+#else
    pthread_mutex_unlock(&m_mutex);
+#endif
 
    if (m_controlSockets[1] != INVALID_SOCKET)
       write(m_controlSockets[1], "S", 1);
 
    ThreadJoin(m_processingThread);
    MemFree(m_head);
+#ifndef _USE_GNU_PTH
    pthread_mutex_destroy(&m_mutex);
+#endif
 
    close(m_dataSocket);
    close(m_controlSockets[0]);
@@ -316,21 +342,37 @@ void PingRequestProcessor::processingThread()
 
       if (sp.isSet(m_dataSocket))
       {
+#ifdef _USE_GNU_PTH
+         pth_mutex_acquire(&m_mutex, FALSE, nullptr);
+#else
          pthread_mutex_lock(&m_mutex);
+#endif
          if (m_family == AF_INET)
             receivePacketV4();
          else
             receivePacketV6();
+#ifdef _USE_GNU_PTH
+         pth_mutex_release(&m_mutex);
+#else
          pthread_mutex_unlock(&m_mutex);
+#endif
       }
    }
 
    // Cancel all pending requests
+#ifdef _USE_GNU_PTH
+   pth_mutex_acquire(&m_mutex, FALSE, nullptr);
+#else
    pthread_mutex_lock(&m_mutex);
+#endif
    for(PingRequest *r = m_head->next; r != nullptr; r = r->next)
       CloseRequest(r, ICMP_API_ERROR);
    m_head->next = nullptr;
+#ifdef _USE_GNU_PTH
+   pth_mutex_release(&m_mutex);
+#else
    pthread_mutex_unlock(&m_mutex);
+#endif
 }
 
 /**
@@ -606,9 +648,17 @@ uint32_t PingRequestProcessor::ping(const InetAddress &addr, uint32_t timeout, u
    request.dontFragment = dontFragment;
    request.timeout = timeout;
    request.timestamp = GetCurrentTimeMs();
+#ifdef _USE_GNU_PTH
+   pth_cond_init(&request.wakeupCondition);
+#else
    pthread_cond_init(&request.wakeupCondition, nullptr);
+#endif
 
+#ifdef _USE_GNU_PTH
+   pth_mutex_acquire(&m_mutex, FALSE, nullptr);
+#else
    pthread_mutex_lock(&m_mutex);
+#endif
    if (!m_shutdown)
    {
       if (m_dataSocket == INVALID_SOCKET)
@@ -639,6 +689,20 @@ uint32_t PingRequestProcessor::ping(const InetAddress &addr, uint32_t timeout, u
             request.next = m_head->next;
             m_head->next = &request;
 
+#ifdef _USE_GNU_PTH
+            pth_event_t ev = pth_event(PTH_EVENT_TIME, pth_timeout(timeout / 1000, (timeout % 1000) * 1000));
+	    int waitResult = pth_cond_await(&request.wakeupCondition, &m_mutex, ev);
+	    if (waitResult > 0)
+	    {
+	       if (pth_event_status(ev) != PTH_STATUS_OCCURRED)
+		  waitResult = 0; // Success, condition signalled
+            }
+            else
+	    {
+	       waitResult = -1; // Failure
+	    }
+	    pth_event_free(ev, PTH_FREE_ALL);
+#else /* not _USE_GNU_PTH */
 #if HAVE_PTHREAD_COND_RELTIMEDWAIT_NP
             struct timespec ts;
             ts.tv_sec = timeout / 1000;
@@ -653,6 +717,7 @@ uint32_t PingRequestProcessor::ping(const InetAddress &addr, uint32_t timeout, u
             ts.tv_sec = now.tv_sec + (timeout / 1000) + now.tv_usec / 1000000;
             ts.tv_nsec = (now.tv_usec % 1000000) * 1000;
             int waitResult = pthread_cond_timedwait(&request.wakeupCondition, &m_mutex, &ts);
+#endif
 #endif
 
             // Check request state in addition to timeout for case when response was received and processed
@@ -678,9 +743,16 @@ uint32_t PingRequestProcessor::ping(const InetAddress &addr, uint32_t timeout, u
    {
       request.result = ICMP_API_ERROR;
    }
+#ifdef _USE_GNU_PTH
+   pth_mutex_release(&m_mutex);
+#else
    pthread_mutex_unlock(&m_mutex);
+#endif
 
+#ifndef _USE_GNU_PTH
    pthread_cond_destroy(&request.wakeupCondition);
+#endif
+
    if (rtt != nullptr)
       *rtt = request.rtt;
    return request.result;
