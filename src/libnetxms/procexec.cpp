@@ -339,7 +339,6 @@ bool ProcessExecutor::execute()
                }
             }
             argv[index] = nullptr;
-
             execv(argv[0], argv);
          }
 

@@ -1302,6 +1302,18 @@ BOOL Initialize()
       MemFree(s_externalTablesConfig);
    }
 
+   ObjectArray<ConfigEntry> *extTables = config->getSubEntries(_T("/ExternalTable"));
+   if (extTables != nullptr)
+   {
+      for (int i = 0; i < extTables->size(); i++)
+      {
+         ConfigEntry *e = extTables->get(i);
+         if (!AddExternalTable(e))
+            nxlog_write(NXLOG_WARNING, _T("Unable to add external table \"%s\""), e->getName());
+      }
+      delete extTables;
+   }
+
    // Parse external parameters providers list
    if (s_externalParameterProvidersConfig != nullptr)
    {
