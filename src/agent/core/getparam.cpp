@@ -778,6 +778,32 @@ bool AddExternalTable(TCHAR *config)
 }
 
 /**
+ * Add external table
+ */
+bool AddExternalTable(ConfigEntry *config)
+{
+   ExternalTableDefinition *td = new ExternalTableDefinition();
+   td->separator = config->getSubEntryValue(_T("Separator"), 0, _T(","))[0];
+
+   TCHAR fullCmd[MAX_CMD_LEN + 1];
+   fullCmd[0] = config->getSubEntryValueAsBoolean(_T("ShellExec"), 0, false) ? _T('E') : _T('S');
+   _tcslcpy(&fullCmd[1], config->getSubEntryValue(_T("Command"), 0, _T("echo no command specified")), MAX_CMD_LEN);
+   td->cmdLine = MemCopyString(fullCmd);
+
+   td->instanceColumns = SplitString(config->getSubEntryValue(_T("InstanceColumns"), 0, _T("")), _T(','), &td->instanceColumnCount);
+   if (config->getSubEntryValueAsInt(_T("PollingInterval"), 0, -1) >= 0)
+   {
+      AddTableProvider(config->getName(), td, config->getSubEntryValueAsUInt(_T("PollingInterval"), 0, 60), config->getSubEntryValue(_T("Description")));
+   }
+   else
+   {
+      AddTable(config->getName(), H_ExternalTable, reinterpret_cast<const TCHAR *>(td), *td->instanceColumns,
+               config->getSubEntryValue(_T("Description"), 0, _T("")), 0, nullptr);
+   }
+   return true;
+}
+
+/**
  * Get parameter's value
  */
 uint32_t GetParameterValue(const TCHAR *param, TCHAR *value, AbstractCommSession *session)

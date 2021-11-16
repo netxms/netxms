@@ -738,6 +738,7 @@ void AddTable(const TCHAR *name, LONG (*handler)(const TCHAR *, const TCHAR *, T
          const TCHAR *arg, const TCHAR *instanceColumns, const TCHAR *description, int numColumns, NETXMS_SUBAGENT_TABLE_COLUMN *columns);
 bool AddExternalParameter(TCHAR *config, bool shellExec, bool isList);
 bool AddExternalTable(TCHAR *config);
+bool AddExternalTable(ConfigEntry *config);
 uint32_t GetParameterValue(const TCHAR *param, TCHAR *value, AbstractCommSession *session);
 uint32_t GetListValue(const TCHAR *param, StringList *value, AbstractCommSession *session);
 uint32_t GetTableValue(const TCHAR *param, Table *value, AbstractCommSession *session);
