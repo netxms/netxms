@@ -1504,6 +1504,66 @@ public:
    }
 
    /**
+    * Try mutex lock with timeout. Returns true if lock was successful.
+    */
+   bool timedLock(uint32_t timeout) const
+   {
+      if (timeout == 0)
+         return tryLock();
+
+      if (timeout == INFINITE)
+      {
+         lock();
+         return true;
+      }
+
+#if defined(_WIN32)
+      return LockMutex((win_mutex_t*)&m_mutex, timeout);
+#elif defined(_USE_GNU_PTH)
+      pth_event_t ev = pth_event(PTH_EVENT_TIME, pth_timeout(timeout / 1000, (timeout % 1000) * 1000));
+      int retcode = pth_mutex_acquire((pth_mutex_t*)&m_mutex, FALSE, ev);
+      if ((retcode > 0) && (pth_event_status(ev) == PTH_STATUS_OCCURRED))
+         retcode = 0;
+      pth_event_free(ev, PTH_FREE_ALL);
+      return retcode > 0;
+#else
+#if HAVE_PTHREAD_MUTEX_TIMEDLOCK
+   struct timeval now;
+   gettimeofday(&now, nullptr);
+   now.tv_usec += (timeout % 1000) * 1000;
+
+   struct timespec absTimeout;
+   absTimeout.tv_sec = now.tv_sec + (timeout / 1000) + now.tv_usec / 1000000;
+   absTimeout.tv_nsec = (now.tv_usec % 1000000) * 1000;
+
+   return pthread_mutex_timedlock((pthread_mutex_t*)&m_mutex, &absTimeout) == 0;
+#else
+   if (pthread_mutex_trylock((pthread_mutex_t*)&m_mutex) == 0)
+      return true;
+
+   while(timeout > 0)
+   {
+      if (timeout >= 10)
+      {
+         ThreadSleepMs(10);
+         timeout -= 10;
+      }
+      else
+      {
+         ThreadSleepMs(timeout);
+         timeout = 0;
+      }
+
+      if (pthread_mutex_trylock((pthread_mutex_t*)&m_mutex) == 0)
+         return true;
+   };
+
+   return false;
+#endif
+#endif
+   }
+
+   /**
     * Unlock mutex
     */
    void unlock() const
@@ -1752,8 +1812,7 @@ public:
             now.tv_usec += (timeout % 1000) * 1000;
 
             struct timespec ts;
-            ts.tv_sec = now.tv_sec + (timeout / 1000);
-            ts.tv_sec += now.tv_usec / 1000000;
+            ts.tv_sec = now.tv_sec + (timeout / 1000) + now.tv_usec / 1000000;
             ts.tv_nsec = (now.tv_usec % 1000000) * 1000;
 
             retcode = pthread_cond_timedwait(&m_condition, &m_mutex, &ts);

@@ -14,6 +14,14 @@ static void MutexWorkerThread(Mutex *m)
    m->unlock();
 }
 
+static void MutexWorkerThread2(Mutex *m)
+{
+   m->lock();
+   s_val = 1;
+   ThreadSleepMs(800);
+   m->unlock();
+}
+
 void TestMutex()
 {
    StartTest(_T("Mutex"));
@@ -34,6 +42,18 @@ void TestMutex()
 
       AssertEquals(s_val, s_count * 100 * s_increment);
    }
+   EndTest();
+
+   StartTest(_T("Mutex - timed lock"));
+   Mutex m;
+   s_val = 0;
+   THREAD t = ThreadCreateEx(MutexWorkerThread2, &m);
+   ThreadSleepMs(100);
+   AssertFalse(m.timedLock(200));
+   AssertTrue(m.timedLock(1000));
+   m.unlock();
+   ThreadJoin(t);
+   AssertEquals(s_val, 1);
    EndTest();
 }
 

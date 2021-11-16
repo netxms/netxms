@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -253,10 +253,10 @@ void *Queue::getOrBlock(uint32_t timeout)
       pth_event_t ev = pth_event(PTH_EVENT_TIME, pth_timeout(timeout / 1000, (timeout % 1000) * 1000));
       int rc = pth_cond_await(&m_wakeupCondition, &m_lock, ev);
       if ((rc > 0) && (pth_event_status(ev) == PTH_STATUS_OCCURRED))
-	 rc = 0;
+         rc = 0;   // Timeout
       pth_event_free(ev, PTH_FREE_ALL);
       if (rc == 0)
-	 break;
+         break;
 #else
       int rc;
       if (timeout != INFINITE)

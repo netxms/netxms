@@ -691,17 +691,17 @@ uint32_t PingRequestProcessor::ping(const InetAddress &addr, uint32_t timeout, u
 
 #ifdef _USE_GNU_PTH
             pth_event_t ev = pth_event(PTH_EVENT_TIME, pth_timeout(timeout / 1000, (timeout % 1000) * 1000));
-	    int waitResult = pth_cond_await(&request.wakeupCondition, &m_mutex, ev);
-	    if (waitResult > 0)
-	    {
-	       if (pth_event_status(ev) != PTH_STATUS_OCCURRED)
-		  waitResult = 0; // Success, condition signalled
+            int waitResult = pth_cond_await(&request.wakeupCondition, &m_mutex, ev);
+            if (waitResult > 0)
+            {
+               if (pth_event_status(ev) != PTH_STATUS_OCCURRED)
+                  waitResult = 0; // Success, condition signalled
             }
             else
-	    {
-	       waitResult = -1; // Failure
-	    }
-	    pth_event_free(ev, PTH_FREE_ALL);
+            {
+               waitResult = -1; // Failure
+            }
+            pth_event_free(ev, PTH_FREE_ALL);
 #else /* not _USE_GNU_PTH */
 #if HAVE_PTHREAD_COND_RELTIMEDWAIT_NP
             struct timespec ts;
