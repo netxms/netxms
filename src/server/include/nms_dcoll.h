@@ -146,11 +146,10 @@ private:
 	int m_repeatInterval;		// -1 = default, 0 = off, >0 = seconds between repeats
 	time_t m_lastEventTimestamp;
 
-   const ItemValue& value() { return m_value; }
-   void calculateAverageValue(ItemValue *pResult, ItemValue &lastValue, ItemValue **ppPrevValues);
-   void calculateSumValue(ItemValue *pResult, ItemValue &lastValue, ItemValue **ppPrevValues);
-   void calculateMDValue(ItemValue *pResult, ItemValue &lastValue, ItemValue **ppPrevValues);
-   void calculateDiff(ItemValue *pResult, ItemValue &lastValue, ItemValue **ppPrevValues);
+   const ItemValue& value() const { return m_value; }
+   void calculateAverageValue(ItemValue *result, const ItemValue &lastValue, ItemValue **ppPrevValues);
+   void calculateSumValue(ItemValue *result, const ItemValue &lastValue, ItemValue **ppPrevValues);
+   void calculateMDValue(ItemValue *result, const ItemValue &lastValue, ItemValue **ppPrevValues);
    void setScript(TCHAR *script);
 
 public:
@@ -161,7 +160,7 @@ public:
 	Threshold(ConfigEntry *config, DCItem *parentItem);
    ~Threshold();
 
-   void bindToItem(UINT32 itemId, UINT32 targetId) { m_itemId = itemId; m_targetId = targetId; }
+   void bindToItem(uint32_t itemId, uint32_t targetId) { m_itemId = itemId; m_targetId = targetId; }
 
    UINT32 getId() const { return m_id; }
    UINT32 getEventCode() const { return m_eventCode; }
@@ -506,16 +505,16 @@ public:
 	int getSampleCount() const { return m_sampleCount; }
 	const TCHAR *getPredictionEngine() const { return m_predictionEngine; }
 
-	UINT64 getCacheMemoryUsage() const;
+	uint64_t getCacheMemoryUsage() const;
 
    virtual bool processNewValue(time_t nTimeStamp, void *value, bool *updateStatus) override;
    virtual void processNewError(bool noInstance, time_t now) override;
    virtual void updateThresholdsBeforeMaintenanceState() override;
    virtual void generateEventsBasedOnThrDiff() override;
 
-   void fillLastValueMessage(NXCPMessage *pMsg, UINT32 dwId);
+   void fillLastValueMessage(NXCPMessage *bsg, uint32_t baseId);
    void fillLastValueMessage(NXCPMessage *msg);
-   NXSL_Value *getValueForNXSL(NXSL_VM *vm, int nFunction, int nPolls);
+   NXSL_Value *getValueForNXSL(NXSL_VM *vm, int function, int sampleCount);
    NXSL_Value *getRawValueForNXSL(NXSL_VM *vm);
    const TCHAR *getLastValue();
    ItemValue *getInternalLastValue();
@@ -534,7 +533,7 @@ public:
    virtual void createExportRecord(StringBuffer &str) override;
    virtual json_t *toJson() override;
 
-	int getThresholdCount() const { return (m_thresholds != NULL) ? m_thresholds->size() : 0; }
+	int getThresholdCount() const { return (m_thresholds != nullptr) ? m_thresholds->size() : 0; }
 	BOOL enumThresholds(BOOL (* pfCallback)(Threshold *, UINT32, void *), void *pArg);
 
 	void setDataType(int dataType) { m_dataType = dataType; }
@@ -867,12 +866,12 @@ void DeleteAllItemsForNode(UINT32 dwNodeId);
 void WriteFullParamListToMessage(NXCPMessage *pMsg, int origin, WORD flags);
 int GetDCObjectType(UINT32 nodeId, UINT32 dciId);
 
-void CalculateItemValueDiff(ItemValue &result, int nDataType, const ItemValue &value1, const ItemValue &value2);
-void CalculateItemValueAverage(ItemValue &result, int nDataType, const ItemValue * const *valueList, size_t numValues);
-void CalculateItemValueMD(ItemValue &result, int nDataType, const ItemValue * const *valueList, size_t numValues);
-void CalculateItemValueTotal(ItemValue &result, int nDataType, const ItemValue *const *valueList, size_t numValues);
-void CalculateItemValueMin(ItemValue &result, int nDataType, const ItemValue *const *valueList, size_t numValues);
-void CalculateItemValueMax(ItemValue &result, int nDataType, const ItemValue *const *valueList, size_t numValues);
+void CalculateItemValueDiff(ItemValue *result, int dataType, const ItemValue &value1, const ItemValue &value2);
+void CalculateItemValueAverage(ItemValue *result, int dataType, const ItemValue * const *valueList, size_t sampleCount);
+void CalculateItemValueMD(ItemValue *result, int dataType, const ItemValue * const *valueList, size_t sampleCount);
+void CalculateItemValueTotal(ItemValue *result, int dataType, const ItemValue *const *valueList, size_t sampleCount);
+void CalculateItemValueMin(ItemValue *result, int dataType, const ItemValue *const *valueList, size_t sampleCount);
+void CalculateItemValueMax(ItemValue *result, int dataType, const ItemValue *const *valueList, size_t sampleCount);
 
 DataCollectionError GetQueueStatistic(const TCHAR *parameter, StatisticType type, TCHAR *value);
 
