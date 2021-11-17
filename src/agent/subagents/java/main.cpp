@@ -42,7 +42,7 @@ static void ActionHandler(shared_ptr<ActionContext> context)
    else
    {
       AgentWriteDebugLog(6, _T("JAVA: ActionHandler(action=%s, id=%s)"), context->getName(), (const TCHAR*)context->getData());
-      int32_t rc = s_subAgent->actionHandler(context->getName(), context->getArgs(), context->getData());
+      int32_t rc = s_subAgent->actionHandler(context->getName(), context->getArgs(), (const TCHAR*)context->getData());
       DetachThreadFromJavaVM();
       context->markAsCompleted(rc);
    }
