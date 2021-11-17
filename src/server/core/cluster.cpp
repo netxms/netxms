@@ -777,16 +777,16 @@ uint32_t Cluster::collectAggregatedData(DCItem *item, TCHAR *buffer)
       switch(item->getAggregationFunction())
       {
          case DCF_FUNCTION_AVG:
-            CalculateItemValueAverage(result, item->getDataType(), values.getBuffer(), values.size());
+            CalculateItemValueAverage(&result, item->getDataType(), values.getBuffer(), values.size());
             break;
          case DCF_FUNCTION_MAX:
-            CalculateItemValueMax(result, item->getDataType(), values.getBuffer(), values.size());
+            CalculateItemValueMax(&result, item->getDataType(), values.getBuffer(), values.size());
             break;
          case DCF_FUNCTION_MIN:
-            CalculateItemValueMin(result, item->getDataType(), values.getBuffer(), values.size());
+            CalculateItemValueMin(&result, item->getDataType(), values.getBuffer(), values.size());
             break;
          case DCF_FUNCTION_SUM:
-            CalculateItemValueTotal(result, item->getDataType(), values.getBuffer(), values.size());
+            CalculateItemValueTotal(&result, item->getDataType(), values.getBuffer(), values.size());
             break;
          default:
             rcc = DCE_NOT_SUPPORTED;

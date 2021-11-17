@@ -258,7 +258,7 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
          break;
       case F_AVERAGE:
       case F_SUM:
-      case F_DEVIATION:
+      case F_MEAN_DEVIATION:
          for(int i = 0; i < m_sampleCount - 1; i++)
             if (ppPrevValues[i]->getTimeStamp() == 1) // Timestamp 1 means placeholder value inserted by cache loader
                return m_isReached ? ThresholdCheckResult::ALREADY_ACTIVE : ThresholdCheckResult::ALREADY_INACTIVE;
@@ -283,11 +283,11 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
 		case F_SUM:
          calculateSumValue(&fvalue, value, ppPrevValues);
 			break;
-      case F_DEVIATION:    // Check mean absolute deviation
+      case F_MEAN_DEVIATION:    // Check mean absolute deviation
          calculateMDValue(&fvalue, value, ppPrevValues);
          break;
       case F_DIFF:
-         calculateDiff(&fvalue, value, ppPrevValues);
+         CalculateItemValueDiff(&fvalue, m_dataType, value, *ppPrevValues[0]);
          switch(m_dataType)
          {
             case DCI_DT_STRING:
@@ -301,7 +301,7 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
          }
          break;
       case F_ERROR:        // Check for collection error
-         fvalue = (UINT32)0;
+         fvalue = static_cast<uint32_t>(0);
          break;
       default:
          break;
@@ -637,42 +637,42 @@ void Threshold::updateFromMessage(const NXCPMessage& msg, uint32_t baseId)
 }
 
 /**
- * Calculate average value for parameter
+ * Calculate average value for values of given type
  */
-#define CALC_AVG_VALUE(vtype) \
-{ \
-   vtype var; \
-   var = (vtype)lastValue; \
-   for(int i = 1; i < m_sampleCount; i++) \
-   { \
-      var += (vtype)(*ppPrevValues[i - 1]); \
-   } \
-   *pResult = var / (vtype)m_sampleCount; \
+template<typename T> static T CalculateAverage(const ItemValue &lastValue, ItemValue **prevValues, int sampleCount)
+{
+   T sum = static_cast<T>(lastValue);
+   for(int i = 1; i < sampleCount; i++)
+      sum += static_cast<T>(*prevValues[i - 1]);
+   return sum / static_cast<T>(sampleCount);
 }
 
-void Threshold::calculateAverageValue(ItemValue *pResult, ItemValue &lastValue, ItemValue **ppPrevValues)
+/**
+ * Calculate average value for metric
+ */
+void Threshold::calculateAverageValue(ItemValue *result, const ItemValue &lastValue, ItemValue **prevValues)
 {
    switch(m_dataType)
    {
       case DCI_DT_INT:
-         CALC_AVG_VALUE(INT32);
+         *result = CalculateAverage<int32_t>(lastValue, prevValues, m_sampleCount);
          break;
       case DCI_DT_UINT:
       case DCI_DT_COUNTER32:
-         CALC_AVG_VALUE(UINT32);
+         *result = CalculateAverage<uint32_t>(lastValue, prevValues, m_sampleCount);
          break;
       case DCI_DT_INT64:
-         CALC_AVG_VALUE(INT64);
+         *result = CalculateAverage<int64_t>(lastValue, prevValues, m_sampleCount);
          break;
       case DCI_DT_UINT64:
       case DCI_DT_COUNTER64:
-         CALC_AVG_VALUE(UINT64);
+         *result = CalculateAverage<uint64_t>(lastValue, prevValues, m_sampleCount);
          break;
       case DCI_DT_FLOAT:
-         CALC_AVG_VALUE(double);
+         *result = CalculateAverage<double>(lastValue, prevValues, m_sampleCount);
          break;
       case DCI_DT_STRING:
-         *pResult = _T("");   // Average value for string is meaningless
+         *result = _T("");   // Average value for string is meaningless
          break;
       default:
          break;
@@ -682,43 +682,40 @@ void Threshold::calculateAverageValue(ItemValue *pResult, ItemValue &lastValue, 
 /**
  * Calculate sum value for values of given type
  */
-#define CALC_SUM_VALUE(vtype) \
-{ \
-   vtype var; \
-   var = (vtype)lastValue; \
-   for(int i = 1; i < m_sampleCount; i++) \
-   { \
-      var += (vtype)(*ppPrevValues[i - 1]); \
-   } \
-   *pResult = var; \
+template<typename T> static T CalculateSum(const ItemValue &lastValue, ItemValue **prevValues, int sampleCount)
+{
+   T sum = static_cast<T>(lastValue);
+   for(int i = 1; i < sampleCount; i++)
+      sum += static_cast<T>(*prevValues[i - 1]);
+   return sum;
 }
 
 /**
- * Calculate sum value for parameter
+ * Calculate sum value for metric
  */
-void Threshold::calculateSumValue(ItemValue *pResult, ItemValue &lastValue, ItemValue **ppPrevValues)
+void Threshold::calculateSumValue(ItemValue *result, const ItemValue &lastValue, ItemValue **prevValues)
 {
    switch(m_dataType)
    {
       case DCI_DT_INT:
-         CALC_SUM_VALUE(INT32);
+         *result = CalculateSum<int32_t>(lastValue, prevValues, m_sampleCount);
          break;
       case DCI_DT_UINT:
       case DCI_DT_COUNTER32:
-         CALC_SUM_VALUE(UINT32);
+         *result = CalculateSum<uint32_t>(lastValue, prevValues, m_sampleCount);
          break;
       case DCI_DT_INT64:
-         CALC_SUM_VALUE(INT64);
+         *result = CalculateSum<int64_t>(lastValue, prevValues, m_sampleCount);
          break;
       case DCI_DT_UINT64:
       case DCI_DT_COUNTER64:
-         CALC_SUM_VALUE(UINT64);
+         *result = CalculateSum<uint64_t>(lastValue, prevValues, m_sampleCount);
          break;
       case DCI_DT_FLOAT:
-         CALC_SUM_VALUE(double);
+         *result = CalculateSum<double>(lastValue, prevValues, m_sampleCount);
          break;
       case DCI_DT_STRING:
-         *pResult = _T("");   // Sum value for string is meaningless
+         *result = _T("");   // Sum value for string is meaningless
          break;
       default:
          break;
@@ -728,68 +725,86 @@ void Threshold::calculateSumValue(ItemValue *pResult, ItemValue &lastValue, Item
 /**
  * Calculate mean absolute deviation for values of given type
  */
-#define CALC_MD_VALUE(vtype) \
-{ \
-   vtype mean, dev; \
-   mean = (vtype)lastValue; \
-   for(i = 1; i < m_sampleCount; i++) \
-   { \
-      mean += (vtype)(*ppPrevValues[i - 1]); \
-   } \
-   mean /= (vtype)m_sampleCount; \
-   dev = ABS((vtype)lastValue - mean); \
-   for(i = 1; i < m_sampleCount; i++) \
-   { \
-      dev += ABS((vtype)(*ppPrevValues[i - 1]) - mean); \
-   } \
-   *pResult = dev / (vtype)m_sampleCount; \
+template<typename T, T (*ABS)(T)> static T CalculateMeanDeviation(const ItemValue& lastValue, ItemValue **prevValues, int sampleCount)
+{
+   T mean = static_cast<T>(lastValue);
+   for(int i = 1; i < sampleCount; i++)
+   {
+      mean += static_cast<T>(*prevValues[i - 1]);
+   }
+   mean /= static_cast<T>(sampleCount);
+   T dev = ABS(static_cast<T>(lastValue) - mean);
+   for(int i = 1; i < sampleCount; i++)
+   {
+      dev += ABS(static_cast<T>(*prevValues[i - 1]) - mean);
+   }
+   return dev / static_cast<T>(sampleCount);
 }
 
 /**
- * Calculate mean absolute deviation for parameter
+ * Get absolute value for 32 bit integer
  */
-void Threshold::calculateMDValue(ItemValue *pResult, ItemValue &lastValue, ItemValue **ppPrevValues)
+static int32_t abs32(int32_t v)
+{
+   return v < 0 ? -v : v;
+}
+
+/**
+ * Get absolute value for 64 bit integer
+ */
+static int64_t abs64(int64_t v)
+{
+   return v < 0 ? -v : v;
+}
+
+/**
+ * Do nothing with unsigned 32 bit value
+ */
+static uint32_t noop32(uint32_t v)
+{
+   return v;
+}
+
+/**
+ * Do nothing with unsigned 64 bit value
+ */
+static uint64_t noop64(uint64_t v)
+{
+   return v;
+}
+
+/**
+ * Calculate mean absolute deviation for metric
+ */
+void Threshold::calculateMDValue(ItemValue *result, const ItemValue &lastValue, ItemValue **prevValues)
 {
    int i;
 
    switch(m_dataType)
    {
       case DCI_DT_INT:
-#define ABS(x) ((x) < 0 ? -(x) : (x))
-         CALC_MD_VALUE(INT32);
+         *result = CalculateMeanDeviation<int32_t, abs32>(lastValue, prevValues, m_sampleCount);
          break;
       case DCI_DT_INT64:
-         CALC_MD_VALUE(INT64);
+         *result = CalculateMeanDeviation<int64_t, abs64>(lastValue, prevValues, m_sampleCount);
          break;
       case DCI_DT_FLOAT:
-         CALC_MD_VALUE(double);
+         *result = CalculateMeanDeviation<double, fabs>(lastValue, prevValues, m_sampleCount);
          break;
       case DCI_DT_UINT:
       case DCI_DT_COUNTER32:
-#undef ABS
-#define ABS(x) (x)
-         CALC_MD_VALUE(UINT32);
+         *result = CalculateMeanDeviation<uint32_t, noop32>(lastValue, prevValues, m_sampleCount);
          break;
       case DCI_DT_UINT64:
       case DCI_DT_COUNTER64:
-         CALC_MD_VALUE(UINT64);
+         *result = CalculateMeanDeviation<uint64_t, noop64>(lastValue, prevValues, m_sampleCount);
          break;
       case DCI_DT_STRING:
-         *pResult = _T("");   // Mean deviation for string is meaningless
+         *result = _T("");   // Mean deviation for string is meaningless
          break;
       default:
          break;
    }
-}
-
-#undef ABS
-
-/**
- * Calculate difference between last and previous value
- */
-void Threshold::calculateDiff(ItemValue *pResult, ItemValue &lastValue, ItemValue **ppPrevValues)
-{
-   CalculateItemValueDiff(*pResult, m_dataType, lastValue, *ppPrevValues[0]);
 }
 
 /**
@@ -808,21 +823,21 @@ bool Threshold::equals(const Threshold *t) const
       switch(m_dataType)
       {
          case DCI_DT_INT:
-            match = ((INT32)t->m_value == (INT32)m_value);
+            match = (t->m_value.getInt32() == m_value.getInt32());
             break;
          case DCI_DT_UINT:
          case DCI_DT_COUNTER32:
-            match = ((UINT32)t->m_value == (UINT32)m_value);
+            match = (t->m_value.getUInt32() == m_value.getUInt32());
             break;
          case DCI_DT_INT64:
-            match = ((INT64)t->m_value == (INT64)m_value);
+            match = (t->m_value.getInt64() == m_value.getInt64());
             break;
          case DCI_DT_UINT64:
          case DCI_DT_COUNTER64:
-            match = ((UINT64)t->m_value == (UINT64)m_value);
+            match = (t->m_value.getUInt64() == m_value.getUInt64());
             break;
          case DCI_DT_FLOAT:
-            match = ((double)t->m_value == (double)m_value);
+            match = (t->m_value.getDouble() == m_value.getDouble());
             break;
          case DCI_DT_STRING:
             match = (_tcscmp(t->m_value.getString(), m_value.getString()) == 0);

@@ -143,242 +143,270 @@ inline int64_t diff_uint64(uint64_t curr, uint64_t prev)
 /**
  * Calculate difference between two values
  */
-void CalculateItemValueDiff(ItemValue &result, int nDataType, const ItemValue &curr, const ItemValue &prev)
+void CalculateItemValueDiff(ItemValue *result, int dataType, const ItemValue &curr, const ItemValue &prev)
 {
-   switch(nDataType)
+   switch(dataType)
    {
       case DCI_DT_INT:
-         result = curr.getInt32() - prev.getInt32();
+         *result = curr.getInt32() - prev.getInt32();
          break;
       case DCI_DT_UINT:
       case DCI_DT_COUNTER32:
-         result = diff_uint32(curr.getUInt32(), prev.getUInt32());
+         *result = diff_uint32(curr.getUInt32(), prev.getUInt32());
          break;
       case DCI_DT_INT64:
-         result = curr.getInt64() - prev.getInt64();
+         *result = curr.getInt64() - prev.getInt64();
          break;
       case DCI_DT_UINT64:
       case DCI_DT_COUNTER64:
-         result = diff_uint64(curr.getUInt64(), prev.getUInt64());
+         *result = diff_uint64(curr.getUInt64(), prev.getUInt64());
          break;
       case DCI_DT_FLOAT:
-         result = curr.getDouble() - prev.getDouble();
+         *result = curr.getDouble() - prev.getDouble();
          break;
       case DCI_DT_STRING:
-         result = (INT32)((_tcscmp(curr.getString(), prev.getString()) == 0) ? 0 : 1);
+         *result = static_cast<int32_t>((_tcscmp(curr.getString(), prev.getString()) == 0) ? 0 : 1);
          break;
       default:
          // Delta calculation is not supported for other types
-         result = curr;
+         *result = curr;
          break;
    }
+}
+
+/**
+ * Calculate average value for values of given type
+ */
+template<typename T> static T CalculateAverage(const ItemValue * const *valueList, size_t sampleCount)
+{
+   T sum = 0;
+   int count = 0;
+   for(size_t i = 0; i < sampleCount; i++)
+   {
+      if (valueList[i]->getTimeStamp() != 1)
+      {
+         sum += static_cast<T>(*valueList[i]);
+         count++;
+      }
+   }
+   return (count > 0) ? sum / static_cast<T>(count) : 0;
 }
 
 /**
  * Calculate average value for set of values
  */
-void CalculateItemValueAverage(ItemValue &result, int nDataType, const ItemValue * const *valueList, size_t numValues)
+void CalculateItemValueAverage(ItemValue *result, int dataType, const ItemValue * const *valueList, size_t sampleCount)
 {
-#define CALC_AVG_VALUE(vtype) \
-{ \
-   vtype var; \
-   var = 0; \
-   for(i = 0, valueCount = 0; i < numValues; i++) \
-   { \
-      if (valueList[i]->getTimeStamp() != 1) \
-      { \
-         var += (vtype)(*valueList[i]); \
-         valueCount++; \
-      } \
-   } \
-   if (valueCount == 0) { valueCount = 1; } \
-   result = var / (vtype)valueCount; \
-}
-
-   size_t i;
-   int valueCount;
-
-   switch(nDataType)
+   switch(dataType)
    {
       case DCI_DT_INT:
-         CALC_AVG_VALUE(INT32);
+         *result = CalculateAverage<int32_t>(valueList, sampleCount);
          break;
       case DCI_DT_UINT:
       case DCI_DT_COUNTER32:
-         CALC_AVG_VALUE(UINT32);
+         *result = CalculateAverage<uint32_t>(valueList, sampleCount);
          break;
       case DCI_DT_INT64:
-         CALC_AVG_VALUE(INT64);
+         *result = CalculateAverage<int64_t>(valueList, sampleCount);
          break;
       case DCI_DT_UINT64:
       case DCI_DT_COUNTER64:
-         CALC_AVG_VALUE(UINT64);
+         *result = CalculateAverage<uint64_t>(valueList, sampleCount);
          break;
       case DCI_DT_FLOAT:
-         CALC_AVG_VALUE(double);
+         *result = CalculateAverage<double>(valueList, sampleCount);
          break;
       case DCI_DT_STRING:
-         result = _T("");   // Average value for string is meaningless
+         *result = _T("");   // Average value for string is meaningless
          break;
       default:
          break;
    }
+}
+
+/**
+ * Calculate total value for values of given type
+ */
+template<typename T> static T CalculateSum(const ItemValue * const *valueList, size_t sampleCount)
+{
+   T sum = 0;
+   for(size_t i = 0; i < sampleCount; i++)
+   {
+      if (valueList[i]->getTimeStamp() != 1)
+         sum += static_cast<T>(*valueList[i]);
+   }
+   return sum;
 }
 
 /**
  * Calculate total value for set of values
  */
-void CalculateItemValueTotal(ItemValue &result, int nDataType, const ItemValue * const *valueList, size_t numValues)
+void CalculateItemValueTotal(ItemValue *result, int dataType, const ItemValue * const *valueList, size_t sampleCount)
 {
-#define CALC_TOTAL_VALUE(vtype) \
-{ \
-   vtype var; \
-   var = 0; \
-   for(i = 0; i < numValues; i++) \
-   { \
-      if (valueList[i]->getTimeStamp() != 1) \
-      { \
-         var += (vtype)(*valueList[i]); \
-      } \
-   } \
-   result = var; \
-}
-
-   size_t i;
-
-   switch(nDataType)
+   switch(dataType)
    {
       case DCI_DT_INT:
-         CALC_TOTAL_VALUE(INT32);
+         *result = CalculateSum<int32_t>(valueList, sampleCount);
          break;
       case DCI_DT_UINT:
       case DCI_DT_COUNTER32:
-         CALC_TOTAL_VALUE(UINT32);
+         *result = CalculateSum<uint32_t>(valueList, sampleCount);
          break;
       case DCI_DT_INT64:
-         CALC_TOTAL_VALUE(INT64);
+         *result = CalculateSum<int64_t>(valueList, sampleCount);
          break;
       case DCI_DT_UINT64:
       case DCI_DT_COUNTER64:
-         CALC_TOTAL_VALUE(UINT64);
+         *result = CalculateSum<uint64_t>(valueList, sampleCount);
          break;
       case DCI_DT_FLOAT:
-         CALC_TOTAL_VALUE(double);
+         *result = CalculateSum<double>(valueList, sampleCount);
          break;
       case DCI_DT_STRING:
-         result = _T("");
+         *result = _T("");
          break;
       default:
          break;
    }
+}
+
+/**
+ * Calculate mean absolute deviation for values of given type
+ */
+template<typename T, T (*ABS)(T)> static T CalculateMeanDeviation(const ItemValue * const *valueList, size_t sampleCount)
+{
+   T mean = 0;
+   int count = 0;
+   for(size_t i = 0; i < sampleCount; i++)
+   {
+      if (valueList[i]->getTimeStamp() != 1)
+      {
+         mean += static_cast<T>(*valueList[i]);
+         count++;
+      }
+   }
+   mean /= static_cast<T>(count);
+   T dev = 0;
+   for(size_t i = 0; i < sampleCount; i++)
+   {
+      if (valueList[i]->getTimeStamp() != 1)
+         dev += ABS(static_cast<T>(*valueList[i]) - mean);
+   }
+   return dev / static_cast<T>(count);
+}
+
+/**
+ * Get absolute value for 32 bit integer
+ */
+static int32_t abs32(int32_t v)
+{
+   return v < 0 ? -v : v;
+}
+
+/**
+ * Get absolute value for 64 bit integer
+ */
+static int64_t abs64(int64_t v)
+{
+   return v < 0 ? -v : v;
+}
+
+/**
+ * Do nothing with unsigned 32 bit value
+ */
+static uint32_t noop32(uint32_t v)
+{
+   return v;
+}
+
+/**
+ * Do nothing with unsigned 64 bit value
+ */
+static uint64_t noop64(uint64_t v)
+{
+   return v;
 }
 
 /**
  * Calculate mean absolute deviation for set of values
  */
-void CalculateItemValueMD(ItemValue &result, int nDataType, const ItemValue * const *valueList, size_t numValues)
+void CalculateItemValueMD(ItemValue *result, int dataType, const ItemValue * const *valueList, size_t sampleCount)
 {
-#define CALC_MD_VALUE(vtype) \
-{ \
-   vtype mean, dev; \
-   mean = 0; \
-   for(i = 0, valueCount = 0; i < numValues; i++) \
-   { \
-      if (valueList[i]->getTimeStamp() != 1) \
-      { \
-         mean += (vtype)(*valueList[i]); \
-         valueCount++; \
-      } \
-   } \
-   mean /= (vtype)valueCount; \
-   dev = 0; \
-   for(i = 0, valueCount = 0; i < numValues; i++) \
-   { \
-      if (valueList[i]->getTimeStamp() != 1) \
-      { \
-         dev += ABS((vtype)(*valueList[i]) - mean); \
-         valueCount++; \
-      } \
-   } \
-   result = dev / (vtype)valueCount; \
-}
-
-   size_t i;
-   int valueCount;
-
-   switch(nDataType)
+   switch(dataType)
    {
       case DCI_DT_INT:
-#define ABS(x) ((x) < 0 ? -(x) : (x))
-         CALC_MD_VALUE(INT32);
-         break;
-      case DCI_DT_INT64:
-         CALC_MD_VALUE(INT64);
-         break;
-      case DCI_DT_FLOAT:
-         CALC_MD_VALUE(double);
+         *result = CalculateMeanDeviation<int32_t, abs32>(valueList, sampleCount);
          break;
       case DCI_DT_UINT:
       case DCI_DT_COUNTER32:
-#undef ABS
-#define ABS(x) (x)
-         CALC_MD_VALUE(UINT32);
+         *result = CalculateMeanDeviation<uint32_t, noop32>(valueList, sampleCount);
+         break;
+      case DCI_DT_INT64:
+         *result = CalculateMeanDeviation<int64_t, abs64>(valueList, sampleCount);
          break;
       case DCI_DT_UINT64:
       case DCI_DT_COUNTER64:
-         CALC_MD_VALUE(UINT64);
+         *result = CalculateMeanDeviation<uint64_t, noop64>(valueList, sampleCount);
+         break;
+      case DCI_DT_FLOAT:
+         *result = CalculateMeanDeviation<double, fabs>(valueList, sampleCount);
          break;
       case DCI_DT_STRING:
-         result = _T("");   // Mean deviation for string is meaningless
+         *result = _T("");   // Mean deviation for string is meaningless
          break;
       default:
          break;
    }
+}
+
+/**
+ * Calculate min value for values of given type
+ */
+template<typename T> static T CalculateMin(const ItemValue * const *valueList, size_t sampleCount)
+{
+   bool first = true;
+   T value = 0;
+   for(size_t i = 0; i < sampleCount; i++)
+   {
+      if (valueList[i]->getTimeStamp() != 1)
+      {
+         T curr = static_cast<T>(*valueList[i]);
+         if (first || (curr < value))
+         {
+            value = curr;
+            first = false;
+         }
+      }
+   }
+   return value;
 }
 
 /**
  * Calculate min value for set of values
  */
-void CalculateItemValueMin(ItemValue &result, int nDataType, const ItemValue * const *valueList, size_t numValues)
+void CalculateItemValueMin(ItemValue *result, int dataType, const ItemValue * const *valueList, size_t sampleCount)
 {
-#define CALC_MIN_VALUE(vtype) \
-{ \
-   bool first = true; \
-   vtype var = 0; \
-   for(i = 0; i < numValues; i++) \
-   { \
-      if (valueList[i]->getTimeStamp() != 1) \
-      { \
-         vtype curr = (vtype)(*valueList[i]); \
-         if (first || (curr < var)) { var = curr; first = false; } \
-      } \
-   } \
-   result = var; \
-}
-
-   size_t i;
-
-   switch(nDataType)
+   switch(dataType)
    {
       case DCI_DT_INT:
-         CALC_MIN_VALUE(INT32);
+         *result = CalculateMin<int32_t>(valueList, sampleCount);
          break;
       case DCI_DT_UINT:
       case DCI_DT_COUNTER32:
-         CALC_MIN_VALUE(UINT32);
+         *result = CalculateMin<uint32_t>(valueList, sampleCount);
          break;
       case DCI_DT_INT64:
-         CALC_MIN_VALUE(INT64);
+         *result = CalculateMin<int64_t>(valueList, sampleCount);
          break;
       case DCI_DT_UINT64:
       case DCI_DT_COUNTER64:
-         CALC_MIN_VALUE(UINT64);
+         *result = CalculateMin<uint64_t>(valueList, sampleCount);
          break;
       case DCI_DT_FLOAT:
-         CALC_MIN_VALUE(double);
+         *result = CalculateMin<double>(valueList, sampleCount);
          break;
       case DCI_DT_STRING:
-         result = _T("");   // Min value for string is meaningless
+         *result = _T("");   // Min value for string is meaningless
          break;
       default:
          break;
@@ -386,48 +414,53 @@ void CalculateItemValueMin(ItemValue &result, int nDataType, const ItemValue * c
 }
 
 /**
- * Calculate max value for set of values
+ * Calculate max value for values of given type
  */
-void CalculateItemValueMax(ItemValue &result, int nDataType, const ItemValue * const *valueList, size_t numValues)
+template<typename T> static T CalculateMax(const ItemValue * const *valueList, size_t sampleCount)
 {
-#define CALC_MAX_VALUE(vtype) \
-{ \
-   bool first = true; \
-   vtype var = 0; \
-   for(i = 0; i < numValues; i++) \
-   { \
-      if (valueList[i]->getTimeStamp() != 1) \
-      { \
-         vtype curr = (vtype)(*valueList[i]); \
-         if (first || (curr > var)) { var = curr; first = false; } \
-      } \
-   } \
-   result = var; \
+   bool first = true;
+   T value = 0;
+   for(size_t i = 0; i < sampleCount; i++)
+   {
+      if (valueList[i]->getTimeStamp() != 1)
+      {
+         T curr = static_cast<T>(*valueList[i]);
+         if (first || (curr > value))
+         {
+            value = curr;
+            first = false;
+         }
+      }
+   }
+   return value;
 }
 
-   size_t i;
-
+/**
+ * Calculate max value for set of values
+ */
+void CalculateItemValueMax(ItemValue *result, int nDataType, const ItemValue * const *valueList, size_t sampleCount)
+{
    switch(nDataType)
    {
       case DCI_DT_INT:
-         CALC_MAX_VALUE(INT32);
+         *result = CalculateMax<int32_t>(valueList, sampleCount);
          break;
       case DCI_DT_UINT:
       case DCI_DT_COUNTER32:
-         CALC_MAX_VALUE(UINT32);
+         *result = CalculateMax<uint32_t>(valueList, sampleCount);
          break;
       case DCI_DT_INT64:
-         CALC_MAX_VALUE(INT64);
+         *result = CalculateMax<int64_t>(valueList, sampleCount);
          break;
       case DCI_DT_UINT64:
       case DCI_DT_COUNTER64:
-         CALC_MAX_VALUE(UINT64);
+         *result = CalculateMax<uint64_t>(valueList, sampleCount);
          break;
       case DCI_DT_FLOAT:
-         CALC_MAX_VALUE(double);
+         *result = CalculateMax<double>(valueList, sampleCount);
          break;
       case DCI_DT_STRING:
-         result = _T("");   // Max value for string is meaningless
+         *result = _T("");   // Max value for string is meaningless
          break;
       default:
          break;

@@ -1363,10 +1363,10 @@ void DCItem::reloadCache(bool forceReload)
 /**
  * Get cache memory usage
  */
-UINT64 DCItem::getCacheMemoryUsage() const
+uint64_t DCItem::getCacheMemoryUsage() const
 {
    lock();
-   INT64 size = m_cacheSize * (sizeof(ItemValue) + sizeof(ItemValue*));
+   uint64_t size = m_cacheSize * (sizeof(ItemValue) + sizeof(ItemValue*));
    unlock();
    return size;
 }
@@ -1398,30 +1398,30 @@ void DCItem::fillLastValueMessage(NXCPMessage *msg)
 /**
  * Put last value into NXCP message
  */
-void DCItem::fillLastValueMessage(NXCPMessage *pMsg, UINT32 dwId)
+void DCItem::fillLastValueMessage(NXCPMessage *msg, uint32_t baseId)
 {
 	lock();
-   pMsg->setField(dwId++, m_id);
-   pMsg->setField(dwId++, m_name);
-   pMsg->setField(dwId++, m_flags);
-   pMsg->setField(dwId++, m_description);
-   pMsg->setField(dwId++, static_cast<uint16_t>(m_source));
+   msg->setField(baseId++, m_id);
+   msg->setField(baseId++, m_name);
+   msg->setField(baseId++, m_flags);
+   msg->setField(baseId++, m_description);
+   msg->setField(baseId++, static_cast<uint16_t>(m_source));
    if (m_cacheSize > 0)
    {
-      pMsg->setField(dwId++, static_cast<uint16_t>(m_dataType));
-      pMsg->setField(dwId++, m_ppValueCache[0]->getString());
-      pMsg->setFieldFromTime(dwId++, m_ppValueCache[0]->getTimeStamp());
+      msg->setField(baseId++, static_cast<uint16_t>(m_dataType));
+      msg->setField(baseId++, m_ppValueCache[0]->getString());
+      msg->setFieldFromTime(baseId++, m_ppValueCache[0]->getTimeStamp());
    }
    else
    {
-      pMsg->setField(dwId++, static_cast<uint16_t>(DCI_DT_NULL));
-      pMsg->setField(dwId++, _T(""));
-      pMsg->setField(dwId++, static_cast<uint32_t>(0));
+      msg->setField(baseId++, static_cast<uint16_t>(DCI_DT_NULL));
+      msg->setField(baseId++, _T(""));
+      msg->setField(baseId++, static_cast<uint32_t>(0));
    }
-   pMsg->setField(dwId++, (WORD)(matchClusterResource() ? m_status : ITEM_STATUS_DISABLED)); // show resource-bound DCIs as inactive if cluster resource is not on this node
-	pMsg->setField(dwId++, (WORD)getType());
-	pMsg->setField(dwId++, m_dwErrorCount);
-	pMsg->setField(dwId++, m_dwTemplateItemId);
+   msg->setField(baseId++, (WORD)(matchClusterResource() ? m_status : ITEM_STATUS_DISABLED)); // show resource-bound DCIs as inactive if cluster resource is not on this node
+	msg->setField(baseId++, (WORD)getType());
+	msg->setField(baseId++, m_dwErrorCount);
+	msg->setField(baseId++, m_dwTemplateItemId);
 
 	if (m_thresholds != nullptr)
 	{
@@ -1449,17 +1449,17 @@ void DCItem::fillLastValueMessage(NXCPMessage *pMsg, UINT32 dwId)
       }
       if (mostCritical != -1)
       {
-         pMsg->setField(dwId++, (WORD)1);
-         m_thresholds->get(mostCritical)->fillMessage(pMsg, dwId);
+         msg->setField(baseId++, (WORD)1);
+         m_thresholds->get(mostCritical)->fillMessage(msg, baseId);
       }
       else
       {
-         pMsg->setField(dwId++, (WORD)0);
+         msg->setField(baseId++, (WORD)0);
       }
 	}
 	else
 	{
-      pMsg->setField(dwId++, (WORD)0);
+      msg->setField(baseId++, (WORD)0);
 	}
 
 	unlock();
@@ -1479,7 +1479,7 @@ NXSL_Value *DCItem::getRawValueForNXSL(NXSL_VM *vm)
 /**
  * Get item's last value for use in NXSL
  */
-NXSL_Value *DCItem::getValueForNXSL(NXSL_VM *vm, int nFunction, int nPolls)
+NXSL_Value *DCItem::getValueForNXSL(NXSL_VM *vm, int function, int sampleCount)
 {
    if (!m_bCacheLoaded)
       reloadCache(false);
@@ -1487,7 +1487,7 @@ NXSL_Value *DCItem::getValueForNXSL(NXSL_VM *vm, int nFunction, int nPolls)
    NXSL_Value *pValue;
 
 	lock();
-   switch(nFunction)
+   switch(function)
    {
       case F_LAST:
          // cache placeholders will have timestamp 1
@@ -1497,7 +1497,7 @@ NXSL_Value *DCItem::getValueForNXSL(NXSL_VM *vm, int nFunction, int nPolls)
          if (m_bCacheLoaded && (m_cacheSize >= 2))
          {
             ItemValue result;
-            CalculateItemValueDiff(result, m_dataType, *m_ppValueCache[0], *m_ppValueCache[1]);
+            CalculateItemValueDiff(&result, m_dataType, *m_ppValueCache[0], *m_ppValueCache[1]);
             pValue = vm->createValue(result.getString());
          }
          else
@@ -1509,7 +1509,7 @@ NXSL_Value *DCItem::getValueForNXSL(NXSL_VM *vm, int nFunction, int nPolls)
          if (m_bCacheLoaded && (m_cacheSize > 0))
          {
             ItemValue result;
-            CalculateItemValueAverage(result, m_dataType, m_ppValueCache, std::min(m_cacheSize, (UINT32)nPolls));
+            CalculateItemValueAverage(&result, m_dataType, m_ppValueCache, std::min(m_cacheSize, (UINT32)sampleCount));
             pValue = vm->createValue(result.getString());
          }
          else
@@ -1517,11 +1517,11 @@ NXSL_Value *DCItem::getValueForNXSL(NXSL_VM *vm, int nFunction, int nPolls)
             pValue = vm->createValue();
          }
          break;
-      case F_DEVIATION:
+      case F_MEAN_DEVIATION:
          if (m_bCacheLoaded && (m_cacheSize > 0))
          {
             ItemValue result;
-            CalculateItemValueMD(result, m_dataType, m_ppValueCache, std::min(m_cacheSize, (UINT32)nPolls));
+            CalculateItemValueMD(&result, m_dataType, m_ppValueCache, std::min(m_cacheSize, (UINT32)sampleCount));
             pValue = vm->createValue(result.getString());
          }
          else
@@ -1530,7 +1530,7 @@ NXSL_Value *DCItem::getValueForNXSL(NXSL_VM *vm, int nFunction, int nPolls)
          }
          break;
       case F_ERROR:
-         pValue = vm->createValue((INT32)((m_dwErrorCount >= (UINT32)nPolls) ? 1 : 0));
+         pValue = vm->createValue(static_cast<int32_t>((m_dwErrorCount >= static_cast<uint32_t>(sampleCount)) ? 1 : 0));
          break;
       default:
          pValue = vm->createValue();
