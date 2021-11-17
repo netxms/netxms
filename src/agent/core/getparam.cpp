@@ -726,7 +726,7 @@ bool AddExternalTable(TCHAR *config)
    Trim(config);
    Trim(options);
    Trim(cmdLine);
-   if ((*config == 0) || (*options == 0) || (*cmdLine == 0))
+   if ((*config == 0) || (*cmdLine == 0))
       return false;
 
    TCHAR instanceColumns[256] = _T("");
