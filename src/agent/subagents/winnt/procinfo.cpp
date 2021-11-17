@@ -639,7 +639,7 @@ void H_TerminateProcess(shared_ptr<ActionContext> context)
    }
    else
    {
-      DWORD pid = _tcstoul(args->get(0), nullptr, 0);
+      DWORD pid = _tcstoul(context->getArgs()->get(0), nullptr, 0);
       if (pid == 0)
       {
          context->markAsCompleted(ERR_BAD_ARGUMENTS);

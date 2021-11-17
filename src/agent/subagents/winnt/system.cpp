@@ -242,7 +242,7 @@ LONG H_ServiceTable(const TCHAR *pszCmd, const TCHAR *pArg, Table *value, Abstra
 /**
  * Handler for service control actions
  */
-LONG H_ServiceControl(shared_ptr<ActionContext> context)
+void H_ServiceControl(shared_ptr<ActionContext> context)
 {
    if (context->getArgs()->isEmpty())
    {
@@ -262,7 +262,7 @@ LONG H_ServiceControl(shared_ptr<ActionContext> context)
          if (hService != nullptr)
          {
             SERVICE_STATUS ss;
-            switch (*data)
+            switch (((const TCHAR*)context->getData())[0])
             {
                case 's':
                   if (StartService(hService, 0, nullptr))
