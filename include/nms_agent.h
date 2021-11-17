@@ -871,6 +871,7 @@ public:
       return m_rcc;
    }
 
+   const void* getName() { return m_name; }
    AbstractCommSession* getSession() { return m_session.get(); }
    const StringList* getArgs() { return &m_args; }
    const void* getData() { return m_data; }

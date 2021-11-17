@@ -33,15 +33,19 @@ static SubAgent *s_subAgent = NULL;
 /**
  * Action handler
  */
-static LONG ActionHandler(const TCHAR *action, const StringList *args, const TCHAR *id, AbstractCommSession *session)
+static void ActionHandler(shared_ptr<ActionContext> context)
 {
-    if (s_subAgent == NULL)
-      return SYSINFO_RC_ERROR;
-
-   AgentWriteDebugLog(6, _T("JAVA: ActionHandler(action=%s, id=%s)"), action, id);
-   LONG rc = s_subAgent->actionHandler(action, args, id);
-   DetachThreadFromJavaVM();
-   return rc;
+   if (s_subAgent == NULL)
+   {
+      context->markAsCompleted(SYSINFO_RC_ERROR);
+   }
+   else
+   {
+      AgentWriteDebugLog(6, _T("JAVA: ActionHandler(action=%s, id=%s)"), context->getName(), (const TCHAR*)context->getData());
+      int32_t rc = s_subAgent->actionHandler(context->getName(), context->getArgs(), context->getData());
+      DetachThreadFromJavaVM();
+      context->markAsCompleted(rc);
+   }
 }
 
 /**
