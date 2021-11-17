@@ -61,6 +61,8 @@ public class ServerActionAdapterFactory implements IAdapterFactory
 						return Activator.getImageDescriptor("icons/exec_local.png"); //$NON-NLS-1$
 					case ServerAction.EXEC_REMOTE:
 						return Activator.getImageDescriptor("icons/exec_remote.png"); //$NON-NLS-1$
+					case ServerAction.EXEC_SSH_REMOTE:
+						return Activator.getImageDescriptor("icons/exec_remote.png"); //$NON-NLS-1$
 					case ServerAction.SEND_NOTIFICATION:
 						return Activator.getImageDescriptor("icons/email.png"); //$NON-NLS-1$
 					case ServerAction.FORWARD_EVENT:

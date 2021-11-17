@@ -22,7 +22,6 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-
 import org.eclipse.jface.preference.PreferencePage;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.SWT;
@@ -137,6 +136,7 @@ public class General extends PreferencePage
 				break;
 			case ObjectTool.TYPE_LOCAL_COMMAND:
 			case ObjectTool.TYPE_SERVER_COMMAND:
+			case ObjectTool.TYPE_SSH_COMMAND:
 				textData.setLabel(Messages.get().General_Command);
 				createOutputGroup(dialogArea);
 				break;
@@ -563,7 +563,8 @@ public class General extends PreferencePage
 		if ((objectTool.getToolType() == ObjectTool.TYPE_LOCAL_COMMAND) ||
 		    (objectTool.getToolType() == ObjectTool.TYPE_SERVER_COMMAND) ||
           (objectTool.getToolType() == ObjectTool.TYPE_SERVER_SCRIPT) ||
-		    (objectTool.getToolType() == ObjectTool.TYPE_ACTION))
+		    (objectTool.getToolType() == ObjectTool.TYPE_ACTION) ||
+		    (objectTool.getToolType() == ObjectTool.TYPE_SSH_COMMAND))
 		{
 			if (checkOutput.getSelection())
 			{

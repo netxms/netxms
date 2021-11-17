@@ -106,12 +106,15 @@ public class Messages extends NLS
    public String ObjectToolsDynamicMenu_ExecSuccess;
    public String ObjectToolsDynamicMenu_ExecuteOnNode;
    public String ObjectToolsDynamicMenu_ExecuteServerCmd;
+   public String ObjectToolsDynamicMenu_ExecuteSshCmd;
    public String ObjectToolsDynamicMenu_HandlerNotDefined;
    public String ObjectToolsDynamicMenu_Information;
    public String ObjectToolsDynamicMenu_ServerCmdExecError;
    public String ObjectToolsDynamicMenu_ServerCommandExecuted;
    public String ObjectToolsDynamicMenu_ServerScriptExecError;
    public String ObjectToolsDynamicMenu_ServerScriptExecuted;
+   public String ObjectToolsDynamicMenu_SshCmdExecError;
+   public String ObjectToolsDynamicMenu_SshCommandExecuted;
    public String ObjectToolsDynamicMenu_ToolExecution;
    public String ObjectToolsDynamicMenu_TopLevelLabel;
    public String ObjectToolsEditor_AckToDisableObjectTool;
@@ -150,6 +153,7 @@ public class Messages extends NLS
    public String ObjectToolsLabelProvider_TypeLocalCmd;
    public String ObjectToolsLabelProvider_TypeServerCmd;
    public String ObjectToolsLabelProvider_TypeServerScript;
+   public String ObjectToolsLabelProvider_TypeSshCmd;
    public String ObjectToolsLabelProvider_TypeSNMPTable;
    public String ObjectToolsLabelProvider_TypeURL;
    public String OpenObjectToolsEditor_Error;
