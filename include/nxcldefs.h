@@ -986,13 +986,13 @@ enum HistoricalDataType
 /**
  * Threshold functions
  */
-#define F_LAST       0
-#define F_AVERAGE    1
-#define F_DEVIATION  2
-#define F_DIFF       3
-#define F_ERROR      4
-#define F_SUM        5
-#define F_SCRIPT     6
+#define F_LAST             0
+#define F_AVERAGE          1
+#define F_MEAN_DEVIATION   2
+#define F_DIFF             3
+#define F_ERROR            4
+#define F_SUM              5
+#define F_SCRIPT           6
 
 /**
  * DCI aggregation functions
