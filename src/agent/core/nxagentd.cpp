@@ -765,18 +765,23 @@ static void H_SystemExecute(shared_ptr<ActionContext> context)
 /**
  * Handler for System.ExecuteInAllSessions action
  */
-static LONG H_SystemExecuteInAllSessions(const TCHAR *action, const StringList *args, const TCHAR *data, AbstractCommSession *session)
+static void H_SystemExecuteInAllSessions(shared_ptr<ActionContext> context)
 {
-   if (args->isEmpty())
-      return ERR_BAD_ARGUMENTS;
-   StringBuffer command;
-   for (int i = 0; i < args->size(); i++)
+   if (context->getArgs()->isEmpty())
    {
-      command.append(command.isEmpty() ? _T("\"") : _T(" \""));
-      command.append(args->get(i));
-      command.append(_T("\""));
+      context->markAsCompleted(ERR_BAD_ARGUMENTS);
    }
-   return ExecuteInAllSessions(command) ? ERR_SUCCESS : ERR_EXEC_FAILED;
+   else
+   {
+      StringBuffer command;
+      for (int i = 0; i < context->getArgs()->size(); i++)
+      {
+         command.append(command.isEmpty() ? _T("\"") : _T(" \""));
+         command.append(context->getArgs()->get(i));
+         command.append(_T("\""));
+      }
+      context->markAsCompleted(ExecuteInAllSessions(command) ? ERR_SUCCESS : ERR_EXEC_FAILED);
+   }
 }
 
 #else
