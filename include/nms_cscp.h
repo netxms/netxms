@@ -1474,6 +1474,7 @@ typedef struct
 #define VID_BUSINESS_SERVICE_UPTIME ((uint32_t)775)
 #define VID_TICKET_COUNT            ((uint32_t)776)
 #define VID_COMMENTS_SOURCE         ((uint32_t)777)
+#define VID_WEB_SERVICE_PROXY       ((uint32_t)778)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

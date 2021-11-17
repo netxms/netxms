@@ -63,6 +63,7 @@ DataCollectionTarget::DataCollectionTarget(uint32_t pollableFlags) : super(), Po
    m_geoLocationControlMode = GEOLOCATION_NO_CONTROL;
    m_geoLocationRestrictionsViolated = false;
    m_instanceDiscoveryPending = false;
+   m_webServiceProxy = 0;
 }
 
 /**
@@ -74,6 +75,7 @@ DataCollectionTarget::DataCollectionTarget(const TCHAR *name, uint32_t pollableF
    m_geoLocationControlMode = GEOLOCATION_NO_CONTROL;
    m_geoLocationRestrictionsViolated = false;
    m_instanceDiscoveryPending = false;
+   m_webServiceProxy = 0;
 }
 
 /**
@@ -111,6 +113,7 @@ void DataCollectionTarget::fillMessageInternal(NXCPMessage *msg, UINT32 userId)
    super::fillMessageInternal(msg, userId);
    msg->setField(VID_GEOLOCATION_CTRL_MODE, static_cast<int16_t>(m_geoLocationControlMode));
    msg->setFieldFromInt32Array(VID_GEO_AREAS, m_geoAreas);
+   msg->setField(VID_WEB_SERVICE_PROXY, m_webServiceProxy);
 }
 
 /**
@@ -164,6 +167,9 @@ UINT32 DataCollectionTarget::modifyFromMessageInternal(NXCPMessage *request)
    if (request->isFieldExist(VID_GEO_AREAS))
       request->getFieldAsInt32Array(VID_GEO_AREAS, &m_geoAreas);
 
+   if (request->isFieldExist(VID_WEB_SERVICE_PROXY))
+      m_webServiceProxy = request->getFieldAsUInt32(VID_WEB_SERVICE_PROXY);
+
    return super::modifyFromMessageInternal(request);
 }
 
@@ -173,7 +179,7 @@ UINT32 DataCollectionTarget::modifyFromMessageInternal(NXCPMessage *request)
 bool DataCollectionTarget::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
 {
    TCHAR query[512];
-   _sntprintf(query, 512, _T("SELECT geolocation_ctrl_mode,geo_areas FROM dc_targets WHERE id=%u"), m_id);
+   _sntprintf(query, 512, _T("SELECT geolocation_ctrl_mode,geo_areas,web_service_proxy FROM dc_targets WHERE id=%u"), m_id);
    DB_RESULT hResult = DBSelect(hdb, query);
    if (hResult == nullptr)
       return false;
@@ -203,6 +209,8 @@ bool DataCollectionTarget::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
       }
    }
 
+   m_webServiceProxy = DBGetFieldULong(hResult, 0, 2);
+
    DBFreeResult(hResult);
    return true;
 }
@@ -216,7 +224,7 @@ bool DataCollectionTarget::saveToDatabase(DB_HANDLE hdb)
 
    if (success && (m_modified & MODIFY_DC_TARGET))
    {
-      static const TCHAR *columns[] = {_T("geolocation_ctrl_mode"), _T("geo_areas"), nullptr };
+      static const TCHAR *columns[] = {_T("geolocation_ctrl_mode"), _T("geo_areas"), _T("web_service_proxy"), nullptr };
       DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("dc_targets"), _T("id"), m_id, columns);
       if (hStmt != nullptr)
       {
@@ -232,7 +240,8 @@ bool DataCollectionTarget::saveToDatabase(DB_HANDLE hdb)
 
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, static_cast<int32_t>(m_geoLocationControlMode));
          DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, areas, DB_BIND_STATIC);
-         DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_id);
+         DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_webServiceProxy);
+         DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, m_id);
          success = DBExecute(hStmt);
          DBFreeStatement(hStmt);
       }
@@ -2540,7 +2549,7 @@ uint64_t DataCollectionTarget::getCacheMemoryUsage()
  */
 uint32_t DataCollectionTarget::getEffectiveWebServiceProxy()
 {
-   uint32_t webServiceProxy = 0;
+   uint32_t webServiceProxy = m_webServiceProxy;
    int32_t zoneUIN = getZoneUIN();
    if (IsZoningEnabled() && (webServiceProxy == 0) && (zoneUIN != 0))
    {

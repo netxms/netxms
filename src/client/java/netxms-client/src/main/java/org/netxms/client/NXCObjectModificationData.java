@@ -80,6 +80,7 @@ public class NXCObjectModificationData
    private String snmpPrivPassword;
    private Long snmpProxy;
    private Long icmpProxy;
+   private Long webServiceProxy;
    private Long[] trustedNodes;
    private GeoLocation geolocation;
    private InetAddress primaryIpAddress;
@@ -514,6 +515,26 @@ public class NXCObjectModificationData
    public void setIcmpProxy(long icmpProxy)
    {
       this.icmpProxy = icmpProxy;
+   }
+
+   /**
+    * Get ID of web service proxy node.
+    *
+    * @return ID of web service proxy node
+    */
+   public Long getWebServiceProxy()
+   {
+      return webServiceProxy;
+   }
+
+   /**
+    * Set ID of web service proxy node.
+    *
+    * @param webServiceProxy ID of web service proxy node
+    */
+   public void setWebServiceProxy(long webServiceProxy)
+   {
+      this.webServiceProxy = webServiceProxy;
    }
 
    /**

@@ -2456,6 +2456,7 @@ CREATE TABLE dc_targets
    id integer not null,
    geolocation_ctrl_mode integer not null,
    geo_areas varchar(2000) null,
+   web_service_proxy integer not null,
    PRIMARY KEY(id)
 ) TABLE_TYPE;
 

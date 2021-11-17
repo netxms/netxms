@@ -5732,6 +5732,7 @@ public class NXCSession
             msg.setFieldInt32(NXCPCodes.VID_SSH_PROXY, (int)data.getSshProxyId());
             msg.setField(NXCPCodes.VID_SSH_LOGIN, data.getSshLogin());
             msg.setField(NXCPCodes.VID_SSH_PASSWORD, data.getSshPassword());
+            msg.setFieldInt32(NXCPCodes.VID_WEB_SERVICE_PROXY, (int)data.getWebServiceProxyId());
             break;
          case AbstractObject.OBJECT_NETWORKMAP:
             msg.setFieldInt16(NXCPCodes.VID_MAP_TYPE, data.getMapType());
@@ -6607,6 +6608,11 @@ public class NXCSession
       if (data.getSourceNode() != null)
       {
          msg.setFieldInt32(NXCPCodes.VID_NODE_ID, data.getSourceNode().intValue());
+      }
+
+      if (data.getWebServiceProxy() != null)
+      {
+         msg.setFieldInt32(NXCPCodes.VID_WEB_SERVICE_PROXY, data.getWebServiceProxy().intValue());
       }
 
       modifyCustomObject(data, userData, msg);

@@ -89,6 +89,7 @@ NewNodeData::NewNodeData(const InetAddress& ipAddr)
    doConfPoll = false;
    origin = NODE_ORIGIN_MANUAL;
    snmpSecurity = nullptr;
+   webServiceProxyId = 0;
 }
 
 /**
@@ -115,6 +116,7 @@ NewNodeData::NewNodeData(const NXCPMessage *msg, const InetAddress& ipAddr)
    doConfPoll = false;
    origin = NODE_ORIGIN_MANUAL;
    snmpSecurity = nullptr;
+   webServiceProxyId = msg->getFieldAsUInt32(VID_WEB_SERVICE_PROXY);
 }
 
 /**

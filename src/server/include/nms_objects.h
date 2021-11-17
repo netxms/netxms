@@ -729,6 +729,7 @@ struct NXCORE_EXPORTABLE NewNodeData
    uint32_t eipProxyId;
    uint32_t icmpProxyId;
    uint32_t sshProxyId;
+   uint32_t webServiceProxyId;
    TCHAR sshLogin[MAX_SSH_LOGIN_LEN];
    TCHAR sshPassword[MAX_SSH_PASSWORD_LEN];
    uint16_t sshPort;
@@ -2212,6 +2213,8 @@ protected:
    bool m_instanceDiscoveryPending;
 
    atomic<double> m_proxyLoadFactor;
+
+   uint32_t m_webServiceProxy;
 
    virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId) override;
    virtual void fillMessageInternalStage2(NXCPMessage *pMsg, UINT32 userId) override;

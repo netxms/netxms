@@ -66,6 +66,7 @@ import org.netxms.nxmc.modules.objects.propertypages.SensorProperties;
 import org.netxms.nxmc.modules.objects.propertypages.StatusCalculation;
 import org.netxms.nxmc.modules.objects.propertypages.TrustedNodes;
 import org.netxms.nxmc.modules.objects.propertypages.VPNSubnets;
+import org.netxms.nxmc.modules.objects.propertypages.WebServiceProxy;
 import org.netxms.nxmc.modules.objects.propertypages.ZoneCommunications;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -117,6 +118,7 @@ public class ObjectPropertiesManager
       pageClasses.add(StatusCalculation.class);
       pageClasses.add(TrustedNodes.class);
       pageClasses.add(VPNSubnets.class);
+      pageClasses.add(WebServiceProxy.class);
       pageClasses.add(ZoneCommunications.class);
    }
 

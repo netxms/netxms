@@ -97,6 +97,7 @@ public class NXCObjectCreationData
    private String description;
    private long sensorProxy;
    private int instanceDiscoveryMethod;
+   private long webServiceProxyId;
 	
 	/**
 	 * Constructor.
@@ -162,6 +163,7 @@ public class NXCObjectCreationData
 	   metaType = "";
 	   description = "";
 	   sensorProxy = 0;
+	   webServiceProxyId = 0;
 	}
 	
 	/**
@@ -202,6 +204,7 @@ public class NXCObjectCreationData
       if (data.getMetaType()!= null) metaType = data.getMetaType();
       if (data.getDescription()!= null) description = data.getDescription();
       if (data.getSensorProxy()!= null) sensorProxy = data.getSensorProxy();
+      if (data.getWebServiceProxy()!= null) webServiceProxyId = data.getWebServiceProxy();
 	}
 
 	/**
@@ -1058,5 +1061,21 @@ public class NXCObjectCreationData
    public void setInstanceDiscoveryMethod(int instanceDiscoveryMethod)
    {
       this.instanceDiscoveryMethod = instanceDiscoveryMethod;
+   }
+
+   /**
+    * @return the webServiceProxyId
+    */
+   public long getWebServiceProxyId()
+   {
+      return webServiceProxyId;
+   }
+
+   /**
+    * @param webServiceProxyId the webServiceProxyId to set
+    */
+   public void setWebServiceProxyId(long webServiceProxyId)
+   {
+      this.webServiceProxyId = webServiceProxyId;
    }
 }

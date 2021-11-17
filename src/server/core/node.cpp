@@ -304,6 +304,7 @@ Node::Node(const NewNodeData *newNodeData, UINT32 flags) : super(Pollable::STATU
    m_cipState = 0;
    m_cipStatus = 0;
    m_cipVendorCode = 0;
+   m_webServiceProxy = newNodeData->webServiceProxyId;
 }
 
 /**

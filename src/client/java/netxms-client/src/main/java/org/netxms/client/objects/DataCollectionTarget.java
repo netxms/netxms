@@ -43,6 +43,7 @@ public class DataCollectionTarget extends GenericObject
    protected List<DciValue> tooltipDciData;
    protected GeoLocationControlMode geoLocationControlMode;
    protected long[] geoAreas;
+   protected long webServiceProxyId;
 
    /**
     * Create new object.
@@ -89,6 +90,7 @@ public class DataCollectionTarget extends GenericObject
 
       geoLocationControlMode = GeoLocationControlMode.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_GEOLOCATION_CTRL_MODE));
       geoAreas = msg.getFieldAsUInt32Array(NXCPCodes.VID_GEO_AREAS);
+      webServiceProxyId = msg.getFieldAsInt64(NXCPCodes.VID_WEB_SERVICE_PROXY);
    }
 
    /**
@@ -135,5 +137,13 @@ public class DataCollectionTarget extends GenericObject
    public boolean isLocationChageEventGenerated()
    {
       return (flags & DCF_LOCATION_CHANGE_EVENT) != 0;
+   }
+
+   /**
+    * @return the webServiceProxyId
+    */
+   public long getWebServiceProxyId()
+   {
+      return webServiceProxyId;
    }
 }

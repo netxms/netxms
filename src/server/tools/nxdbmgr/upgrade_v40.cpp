@@ -24,6 +24,22 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 40.80 to 40.81
+ */
+static bool H_UpgradeFromV80()
+{
+   static const TCHAR *batch =
+      _T("ALTER TABLE dc_targets ADD web_service_proxy integer\n")
+      _T("UPDATE dc_targets SET web_service_proxy=0\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("dc_targets"), _T("web_service_proxy")));
+
+   CHK_EXEC(SetMinorSchemaVersion(81));
+   return true;
+}
+
+/**
  * Upgrade from 40.79 to 40.80
  */
 static bool H_UpgradeFromV79()
@@ -2593,6 +2609,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 80, 40, 81, H_UpgradeFromV80 },
    { 79, 40, 80, H_UpgradeFromV79 },
    { 78, 40, 79, H_UpgradeFromV78 },
    { 77, 40, 78, H_UpgradeFromV77 },

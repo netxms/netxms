@@ -230,6 +230,7 @@ public class ObjectContextMenuManager extends MenuManager
                cd.setZoneUIN(dlg.getZoneUIN());
                cd.setSshLogin(dlg.getSshLogin());
                cd.setSshPassword(dlg.getSshPassword());
+               cd.setWebServiceProxyId(dlg.getWebServiceProxy());
 
                final NXCSession session = Registry.getSession();
                new Job(i18n.tr("Create node"), view, null) {
