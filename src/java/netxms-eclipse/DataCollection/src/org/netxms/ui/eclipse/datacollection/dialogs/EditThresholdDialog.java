@@ -81,26 +81,26 @@ public class EditThresholdDialog extends Dialog
 		selectedFunction = threshold.getFunction();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createDialogArea(final Composite parent)
 	{
 		final Composite dialogArea =  (Composite)super.createDialogArea(parent);
-		
+
 		GridLayout dialogLayout = new GridLayout();
 		dialogArea.setLayout(dialogLayout);
-		
+
 		// Condition area
 		conditionGroup = new Group(dialogArea, SWT.NONE);
 		conditionGroup.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		conditionGroup.setText(Messages.get().EditThresholdDialog_Condition);
-		
+
 		GridLayout condLayout = new GridLayout();
 		condLayout.numColumns = 2;
 		conditionGroup.setLayout(condLayout);
-		
+
 		function = WidgetHelper.createLabeledCombo(conditionGroup, SWT.BORDER | SWT.DROP_DOWN | SWT.READ_ONLY, Messages.get().EditThresholdDialog_Function, WidgetHelper.DEFAULT_LAYOUT_DATA);
 		function.add(Messages.get().EditThresholdDialog_LastValue);
 		function.add(Messages.get().EditThresholdDialog_AvgValue);
@@ -109,6 +109,7 @@ public class EditThresholdDialog extends Dialog
 		function.add(Messages.get().EditThresholdDialog_DCError);
 		function.add(Messages.get().EditThresholdDialog_Sum);
       function.add(Messages.get().EditThresholdDialog_Script);
+      function.add("Absolute deviation");
 		function.select(threshold.getFunction());
 		function.addSelectionListener(new SelectionAdapter() {
          @Override
@@ -142,22 +143,22 @@ public class EditThresholdDialog extends Dialog
             selectedFunction = f;
          }
       });
-		
+
 		samples = WidgetHelper.createLabeledText(conditionGroup, SWT.BORDER, 60, Messages.get().EditThresholdDialog_Samples, Integer.toString(threshold.getSampleCount()), WidgetHelper.DEFAULT_LAYOUT_DATA);
 		samples.setTextLimit(5);
-		
+
 		if (threshold.getFunction() == Threshold.F_SCRIPT)
 		   createScriptGroup();
 		else
 		   createOperGroup();
-		
+
 		// Event area
 		Group eventGroup = new Group(dialogArea, SWT.NONE);
 		eventGroup.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		eventGroup.setText(Messages.get().EditThresholdDialog_Event);
 		GridLayout eventLayout = new GridLayout();
 		eventGroup.setLayout(eventLayout);
-		
+
 		activationEvent = new EventSelector(eventGroup, SWT.NONE);
 		activationEvent.setLabel(Messages.get().EditThresholdDialog_ActEvent);
 		activationEvent.setEventCode(threshold.getFireEvent());
@@ -166,12 +167,12 @@ public class EditThresholdDialog extends Dialog
 		gd.horizontalAlignment = SWT.FILL;
 		gd.widthHint = 550;
 		activationEvent.setLayoutData(gd);
-		
+
 		deactivationEvent = new EventSelector(eventGroup, SWT.NONE);
 		deactivationEvent.setLabel(Messages.get().EditThresholdDialog_DeactEvent);
 		deactivationEvent.setEventCode(threshold.getRearmEvent());
 		deactivationEvent.setLayoutData(gd);
-		
+
 		// Repeat area
 		Group repeatGroup = new Group(dialogArea, SWT.NONE);
 		repeatGroup.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
@@ -195,7 +196,7 @@ public class EditThresholdDialog extends Dialog
 		gd.horizontalSpan = 3;
 		repeatNever.setLayoutData(gd);
 		repeatNever.setSelection(threshold.getRepeatInterval() == 0);
-		
+
 		repeatCustom = new Button(repeatGroup, SWT.RADIO);
 		repeatCustom.setText(Messages.get().EditThresholdDialog_Every);
 		repeatCustom.setSelection(threshold.getRepeatInterval() > 0);
@@ -206,17 +207,17 @@ public class EditThresholdDialog extends Dialog
 				repeatInterval.setEnabled(repeatCustom.getSelection());
 			}
 		});
-		
+
 		repeatInterval = new Text(repeatGroup, SWT.BORDER);
 		repeatInterval.setTextLimit(5);
 		repeatInterval.setText((threshold.getRepeatInterval() > 0) ? Integer.toString(threshold.getRepeatInterval()) : "3600"); //$NON-NLS-1$
 		repeatInterval.setEnabled(threshold.getRepeatInterval() > 0);
-		
+
 		new Label(repeatGroup, SWT.NONE).setText(Messages.get().EditThresholdDialog_Seconds);
-		
+
 		return dialogArea;
 	}
-	
+
 	/**
 	 * Create "operation" group
 	 */
@@ -236,7 +237,7 @@ public class EditThresholdDialog extends Dialog
       value = WidgetHelper.createLabeledText(conditionGroup, SWT.BORDER, 120, Messages.get().EditThresholdDialog_Value, 
             (savedValue != null) ? savedValue : threshold.getValue(), WidgetHelper.DEFAULT_LAYOUT_DATA);
 	}
-	
+
 	/**
 	 * Dispose "operation" group
 	 */
@@ -284,7 +285,7 @@ public class EditThresholdDialog extends Dialog
             openScriptEditor();
          }
       });
-      
+
       final Listener keyListener = new Listener() {
          private boolean disabled = false;
          
@@ -309,14 +310,14 @@ public class EditThresholdDialog extends Dialog
             editButton.getDisplay().removeFilter(SWT.KeyDown, keyListener);
          }
       });
-      
+
       value = WidgetHelper.createLabeledText(conditionGroup, SWT.BORDER, 120, Messages.get().EditThresholdDialog_Value, 
             (savedValue != null) ? savedValue : threshold.getValue(), WidgetHelper.DEFAULT_LAYOUT_DATA);
 	}
-	
+
 	/**
-	 * 
-	 */
+    * Open script editor
+    */
 	private void openScriptEditor()
 	{
       ScriptEditDialog dlg = new ScriptEditDialog(getShell(), script.getText(), 
@@ -337,9 +338,9 @@ public class EditThresholdDialog extends Dialog
 	   value.getParent().dispose();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
-	 */
+   /**
+    * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
+    */
 	@Override
 	protected void configureShell(Shell newShell)
 	{
@@ -347,15 +348,15 @@ public class EditThresholdDialog extends Dialog
 		newShell.setText(Messages.get().EditThresholdDialog_Title);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#okPressed()
-	 */
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#okPressed()
+    */
 	@Override
 	protected void okPressed()
 	{
 		if (!WidgetHelper.validateTextInput(samples, Messages.get().EditThresholdDialog_Samples, new NumericTextFieldValidator(1, 1000), null))
 			return;
-		
+
 		int rpt;
 		if (repeatDefault.getSelection())
 		{
@@ -371,7 +372,7 @@ public class EditThresholdDialog extends Dialog
 				return;
 			rpt = Integer.parseInt(repeatInterval.getText());
 		}
-		
+
 		threshold.setFunction(function.getSelectionIndex());
 		if (threshold.getFunction() == Threshold.F_SCRIPT)
 		{
@@ -387,7 +388,7 @@ public class EditThresholdDialog extends Dialog
 		threshold.setRepeatInterval(rpt);
 		threshold.setFireEvent((int)activationEvent.getEventCode());
 		threshold.setRearmEvent((int)deactivationEvent.getEventCode());
-				
+
 		super.okPressed();
 	}
 }

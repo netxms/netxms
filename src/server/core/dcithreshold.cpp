@@ -278,13 +278,16 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
          fvalue = value;
          break;
       case F_AVERAGE:      // Check average value for last n polls
-         calculateAverageValue(&fvalue, value, ppPrevValues);
+         calculateAverage(&fvalue, value, ppPrevValues);
          break;
 		case F_SUM:
-         calculateSumValue(&fvalue, value, ppPrevValues);
+         calculateTotal(&fvalue, value, ppPrevValues);
 			break;
       case F_MEAN_DEVIATION:    // Check mean absolute deviation
-         calculateMDValue(&fvalue, value, ppPrevValues);
+         calculateMeanDeviation(&fvalue, value, ppPrevValues);
+         break;
+      case F_ABS_DEVIATION:    // Check absolute deviation for last point
+         calculateAbsoluteDeviation(&fvalue, value, ppPrevValues);
          break;
       case F_DIFF:
          CalculateItemValueDiff(&fvalue, m_dataType, value, *ppPrevValues[0]);
@@ -549,9 +552,9 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
    if (result == ThresholdCheckResult::ACTIVATED || result == ThresholdCheckResult::DEACTIVATED)
    {
       // Update threshold status in database
-      TCHAR szQuery[256];
-      _sntprintf(szQuery, 256, _T("UPDATE thresholds SET current_state=%d WHERE threshold_id=%d"), (int)m_isReached, (int)m_id);
-      QueueSQLRequest(szQuery);
+      TCHAR query[256];
+      _sntprintf(query, 256, _T("UPDATE thresholds SET current_state=%d WHERE threshold_id=%u"), (int)m_isReached, m_id);
+      QueueSQLRequest(query);
    }
    return result;
 }
@@ -561,14 +564,14 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
  */
 void Threshold::markLastEvent(int severity)
 {
-	m_lastEventTimestamp = time(NULL);
+	m_lastEventTimestamp = time(nullptr);
 	m_currentSeverity = (BYTE)severity;
 
 	// Update threshold in database
 	TCHAR query[256];
    _sntprintf(query, 256,
-              _T("UPDATE thresholds SET current_severity=%d,last_event_timestamp=%d WHERE threshold_id=%d"),
-              (int)m_currentSeverity, (int)m_lastEventTimestamp, (int)m_id);
+              _T("UPDATE thresholds SET current_severity=%d,last_event_timestamp=%d WHERE threshold_id=%u"),
+              (int)m_currentSeverity, (int)m_lastEventTimestamp, m_id);
 	QueueSQLRequest(query);
 }
 
@@ -590,9 +593,9 @@ ThresholdCheckResult Threshold::checkError(UINT32 dwErrorCount)
    if (result == ThresholdCheckResult::ACTIVATED || result == ThresholdCheckResult::DEACTIVATED)
    {
       // Update threshold status in database
-      TCHAR szQuery[256];
-      _sntprintf(szQuery, 256, _T("UPDATE thresholds SET current_state=%d WHERE threshold_id=%d"), m_isReached, m_id);
-      QueueSQLRequest(szQuery);
+      TCHAR query[256];
+      _sntprintf(query, 256, _T("UPDATE thresholds SET current_state=%d WHERE threshold_id=%d"), m_isReached, m_id);
+      QueueSQLRequest(query);
    }
    return result;
 }
@@ -650,7 +653,7 @@ template<typename T> static T CalculateAverage(const ItemValue &lastValue, ItemV
 /**
  * Calculate average value for metric
  */
-void Threshold::calculateAverageValue(ItemValue *result, const ItemValue &lastValue, ItemValue **prevValues)
+void Threshold::calculateAverage(ItemValue *result, const ItemValue &lastValue, ItemValue **prevValues)
 {
    switch(m_dataType)
    {
@@ -693,7 +696,7 @@ template<typename T> static T CalculateSum(const ItemValue &lastValue, ItemValue
 /**
  * Calculate sum value for metric
  */
-void Threshold::calculateSumValue(ItemValue *result, const ItemValue &lastValue, ItemValue **prevValues)
+void Threshold::calculateTotal(ItemValue *result, const ItemValue &lastValue, ItemValue **prevValues)
 {
    switch(m_dataType)
    {
@@ -776,10 +779,8 @@ static uint64_t noop64(uint64_t v)
 /**
  * Calculate mean absolute deviation for metric
  */
-void Threshold::calculateMDValue(ItemValue *result, const ItemValue &lastValue, ItemValue **prevValues)
+void Threshold::calculateMeanDeviation(ItemValue *result, const ItemValue &lastValue, ItemValue **prevValues)
 {
-   int i;
-
    switch(m_dataType)
    {
       case DCI_DT_INT:
@@ -801,6 +802,52 @@ void Threshold::calculateMDValue(ItemValue *result, const ItemValue &lastValue, 
          break;
       case DCI_DT_STRING:
          *result = _T("");   // Mean deviation for string is meaningless
+         break;
+      default:
+         break;
+   }
+}
+
+/**
+ * Calculate mean absolute deviation for values of given type
+ */
+template<typename T, T (*ABS)(T)> static T CalculateAbsoluteDeviation(const ItemValue& lastValue, ItemValue **prevValues, int sampleCount)
+{
+   T mean = static_cast<T>(lastValue);
+   for(int i = 1; i < sampleCount; i++)
+   {
+      mean += static_cast<T>(*prevValues[i - 1]);
+   }
+   mean /= static_cast<T>(sampleCount);
+   return ABS(static_cast<T>(lastValue) - mean);
+}
+
+/**
+ * Calculate absolute deviation for metric
+ */
+void Threshold::calculateAbsoluteDeviation(ItemValue *result, const ItemValue &lastValue, ItemValue **prevValues)
+{
+   switch(m_dataType)
+   {
+      case DCI_DT_INT:
+         *result = CalculateAbsoluteDeviation<int32_t, abs32>(lastValue, prevValues, m_sampleCount);
+         break;
+      case DCI_DT_INT64:
+         *result = CalculateAbsoluteDeviation<int64_t, abs64>(lastValue, prevValues, m_sampleCount);
+         break;
+      case DCI_DT_FLOAT:
+         *result = CalculateAbsoluteDeviation<double, fabs>(lastValue, prevValues, m_sampleCount);
+         break;
+      case DCI_DT_UINT:
+      case DCI_DT_COUNTER32:
+         *result = CalculateAbsoluteDeviation<uint32_t, noop32>(lastValue, prevValues, m_sampleCount);
+         break;
+      case DCI_DT_UINT64:
+      case DCI_DT_COUNTER64:
+         *result = CalculateAbsoluteDeviation<uint64_t, noop64>(lastValue, prevValues, m_sampleCount);
+         break;
+      case DCI_DT_STRING:
+         *result = _T("");   // Absolute deviation for string is meaningless
          break;
       default:
          break;

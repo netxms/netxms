@@ -1591,7 +1591,7 @@ void DataCollectionTarget::getItemDciValuesSummary(SummaryTable *tableDefinition
             tableData->setStatusAt(row, i + offset, ((DCItem *)object)->getThresholdSeverity());
             tableData->setCellObjectIdAt(row, i + offset, object->getId());
             tableData->getColumnDefinitions()->get(i + offset)->setDataType(((DCItem *)object)->getDataType());
-            if (tableDefinition->getAggregationFunction() == F_LAST)
+            if (tableDefinition->getAggregationFunction() == DCI_AGG_LAST)
             {
                if (tc->m_flags & COLUMN_DEFINITION_MULTIVALUED)
                {

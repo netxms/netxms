@@ -330,7 +330,7 @@ static uint64_t noop64(uint64_t v)
 /**
  * Calculate mean absolute deviation for set of values
  */
-void CalculateItemValueMD(ItemValue *result, int dataType, const ItemValue * const *valueList, size_t sampleCount)
+void CalculateItemValueMeanDeviation(ItemValue *result, int dataType, const ItemValue * const *valueList, size_t sampleCount)
 {
    switch(dataType)
    {

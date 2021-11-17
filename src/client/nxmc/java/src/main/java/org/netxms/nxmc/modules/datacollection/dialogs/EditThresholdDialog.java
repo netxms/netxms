@@ -91,19 +91,19 @@ public class EditThresholdDialog extends Dialog
 	protected Control createDialogArea(final Composite parent)
 	{
 		final Composite dialogArea =  (Composite)super.createDialogArea(parent);
-		
+
 		GridLayout dialogLayout = new GridLayout();
 		dialogArea.setLayout(dialogLayout);
-		
+
 		// Condition area
 		conditionGroup = new Group(dialogArea, SWT.NONE);
 		conditionGroup.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
       conditionGroup.setText(i18n.tr("Condition"));
-		
+
 		GridLayout condLayout = new GridLayout();
 		condLayout.numColumns = 2;
 		conditionGroup.setLayout(condLayout);
-		
+
 		function = WidgetHelper.createLabeledCombo(conditionGroup, SWT.BORDER | SWT.DROP_DOWN | SWT.READ_ONLY, i18n.tr("Function"), WidgetHelper.DEFAULT_LAYOUT_DATA);
       function.add(i18n.tr("Last polled value"));
       function.add(i18n.tr("Average value"));
@@ -112,6 +112,7 @@ public class EditThresholdDialog extends Dialog
       function.add(i18n.tr("Data collection error"));
       function.add(i18n.tr("Sum of values"));
       function.add(i18n.tr("Script"));
+      function.add(i18n.tr("Absolute deviation"));
 		function.select(threshold.getFunction());
 		function.addSelectionListener(new SelectionAdapter() {
          @Override
@@ -145,7 +146,7 @@ public class EditThresholdDialog extends Dialog
             selectedFunction = f;
          }
       });
-		
+
 		samples = WidgetHelper.createLabeledText(conditionGroup, SWT.BORDER, 60, i18n.tr("Samples"), Integer.toString(threshold.getSampleCount()), WidgetHelper.DEFAULT_LAYOUT_DATA);
 		samples.setTextLimit(5);
 
@@ -209,7 +210,7 @@ public class EditThresholdDialog extends Dialog
 				repeatInterval.setEnabled(repeatCustom.getSelection());
 			}
 		});
-		
+
 		repeatInterval = new Text(repeatGroup, SWT.BORDER);
 		repeatInterval.setTextLimit(5);
 		repeatInterval.setText((threshold.getRepeatInterval() > 0) ? Integer.toString(threshold.getRepeatInterval()) : "3600"); //$NON-NLS-1$
@@ -219,7 +220,7 @@ public class EditThresholdDialog extends Dialog
 
 		return dialogArea;
 	}
-	
+
 	/**
 	 * Create "operation" group
 	 */

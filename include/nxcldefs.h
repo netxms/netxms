@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Common defines for client library and server
-** Copyright (C) 2003-2014 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -1015,13 +1015,17 @@ enum HistoricalDataType
 /**
  * Threshold functions
  */
-#define F_LAST             0
-#define F_AVERAGE          1
-#define F_MEAN_DEVIATION   2
-#define F_DIFF             3
-#define F_ERROR            4
-#define F_SUM              5
-#define F_SCRIPT           6
+enum ThresholdFunction
+{
+   F_LAST           = 0,
+   F_AVERAGE        = 1,
+   F_MEAN_DEVIATION = 2,
+   F_DIFF           = 3,
+   F_ERROR          = 4,
+   F_SUM            = 5,
+   F_SCRIPT         = 6,
+   F_ABS_DEVIATION  = 7
+};
 
 /**
  * DCI aggregation functions
@@ -1029,10 +1033,10 @@ enum HistoricalDataType
 enum AggregationFunction
 {
    DCI_AGG_LAST = 0,
-   DCI_AGG_MIN = 1,
-   DCI_AGG_MAX = 2,
-   DCI_AGG_AVG = 3,
-   DCI_AGG_SUM = 4
+   DCI_AGG_MIN  = 1,
+   DCI_AGG_MAX  = 2,
+   DCI_AGG_AVG  = 3,
+   DCI_AGG_SUM  = 4
 };
 
 /**

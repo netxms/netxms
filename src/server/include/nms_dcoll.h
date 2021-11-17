@@ -147,9 +147,10 @@ private:
 	time_t m_lastEventTimestamp;
 
    const ItemValue& value() const { return m_value; }
-   void calculateAverageValue(ItemValue *result, const ItemValue &lastValue, ItemValue **ppPrevValues);
-   void calculateSumValue(ItemValue *result, const ItemValue &lastValue, ItemValue **ppPrevValues);
-   void calculateMDValue(ItemValue *result, const ItemValue &lastValue, ItemValue **ppPrevValues);
+   void calculateAverage(ItemValue *result, const ItemValue &lastValue, ItemValue **ppPrevValues);
+   void calculateTotal(ItemValue *result, const ItemValue &lastValue, ItemValue **ppPrevValues);
+   void calculateAbsoluteDeviation(ItemValue *result, const ItemValue &lastValue, ItemValue **ppPrevValues);
+   void calculateMeanDeviation(ItemValue *result, const ItemValue &lastValue, ItemValue **ppPrevValues);
    void setScript(TCHAR *script);
 
 public:
@@ -869,7 +870,7 @@ int GetDCObjectType(UINT32 nodeId, UINT32 dciId);
 
 void CalculateItemValueDiff(ItemValue *result, int dataType, const ItemValue &value1, const ItemValue &value2);
 void CalculateItemValueAverage(ItemValue *result, int dataType, const ItemValue * const *valueList, size_t sampleCount);
-void CalculateItemValueMD(ItemValue *result, int dataType, const ItemValue * const *valueList, size_t sampleCount);
+void CalculateItemValueMeanDeviation(ItemValue *result, int dataType, const ItemValue * const *valueList, size_t sampleCount);
 void CalculateItemValueTotal(ItemValue *result, int dataType, const ItemValue *const *valueList, size_t sampleCount);
 void CalculateItemValueMin(ItemValue *result, int dataType, const ItemValue *const *valueList, size_t sampleCount);
 void CalculateItemValueMax(ItemValue *result, int dataType, const ItemValue *const *valueList, size_t sampleCount);

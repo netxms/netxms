@@ -27,14 +27,15 @@ import org.netxms.client.constants.Severity;
  */
 public class Threshold
 {
-	public static final int F_LAST      = 0;
-	public static final int F_AVERAGE   = 1;
-	public static final int F_DEVIATION = 2;
-	public static final int F_DIFF      = 3;
-	public static final int F_ERROR     = 4;
-	public static final int F_SUM       = 5;
-   public static final int F_SCRIPT    = 6;
-	
+	public static final int F_LAST           = 0;
+	public static final int F_AVERAGE        = 1;
+	public static final int F_MEAN_DEVIATION = 2;
+	public static final int F_DIFF           = 3;
+	public static final int F_ERROR          = 4;
+	public static final int F_SUM            = 5;
+   public static final int F_SCRIPT         = 6;
+   public static final int F_ABS_DEVIATION  = 7;
+
 	public static final int OP_LE       = 0;
 	public static final int OP_LE_EQ    = 1;
 	public static final int OP_EQ       = 2;
@@ -44,7 +45,7 @@ public class Threshold
 	public static final int OP_LIKE     = 6;
 	public static final int OP_NOTLIKE  = 7;
 	
-   public static final String[] FUNCTION_NAMES = { "last(", "average(", "deviation(", "diff(", "error(", "sum(", "script(" };
+   public static final String[] FUNCTION_NAMES = { "last(", "average(", "mean-deviation(", "diff(", "error(", "sum(", "script(", "abs-deviation(" };
    public static final String[] OPERATION_NAMES = { "<", "<=", "==", ">=", ">", "!=", "like", "not like" };
 	
 	private long id;
