@@ -242,68 +242,60 @@ LONG H_ServiceTable(const TCHAR *pszCmd, const TCHAR *pArg, Table *value, Abstra
 /**
  * Handler for service control actions
  */
-void H_ServiceControl(shared_ptr<ActionContext> context)
+uint32_t H_ServiceControl(const shared_ptr<ActionContext>& context)
 {
-   if (context->getArgs()->isEmpty())
+   if (args->isEmpty())
+      return ERR_BAD_ARGUMENTS;
+
+   SC_HANDLE hManager = OpenSCManager(nullptr, nullptr, GENERIC_READ);
+   if (hManager == nullptr)
+      return ERR_INTERNAL_ERROR;
+
+   uint32_t rc;
+   SC_HANDLE hService = OpenService(hManager, context->getArg(0), SERVICE_START | SERVICE_STOP);
+   if (hService != nullptr)
    {
-      context->markAsCompleted(ERR_BAD_ARGUMENTS);
+      SERVICE_STATUS ss;
+      switch (*static_cast<const TCHAR*>(context->getData()))
+      {
+         case 's':
+            if (StartService(hService, 0, nullptr))
+            {
+               nxlog_debug_tag(DEBUG_TAG, 3, _T("H_ServiceControl: service \"%s\" started"), context->getArg(0));
+               rc = ERR_SUCCESS;
+            }
+            else
+            {
+               TCHAR buffer[1024];
+               nxlog_debug_tag(DEBUG_TAG, 3, _T("H_ServiceControl: cannot start service \"%s\" (%s)"), context->getArg(0), GetSystemErrorText(GetLastError(), buffer, 1024));
+               rc = ERR_INTERNAL_ERROR;
+            }
+            break;
+         case 'S':
+            if (ControlService(hService, SERVICE_CONTROL_STOP, &ss))
+            {
+               nxlog_debug_tag(DEBUG_TAG, 3, _T("H_ServiceControl: service \"%s\" stopped"), context->getArg(0));
+               rc = ERR_SUCCESS;
+            }
+            else
+            {
+               TCHAR buffer[1024];
+               nxlog_debug_tag(DEBUG_TAG, 3, _T("H_ServiceControl: cannot stop service \"%s\" (%s)"), context->getArg(0), GetSystemErrorText(GetLastError(), buffer, 1024));
+               rc = ERR_INTERNAL_ERROR;
+            }
+            break;
+      }
+      CloseServiceHandle(hService);
    }
    else
    {
-      SC_HANDLE hManager = OpenSCManager(nullptr, nullptr, GENERIC_READ);
-      if (hManager == nullptr)
-      {
-         context->markAsCompleted(ERR_INTERNAL_ERROR);
-      }
-      else
-      {
-         LONG rc;
-         SC_HANDLE hService = OpenService(hManager, context->getArgs()->get(0), SERVICE_START | SERVICE_STOP);
-         if (hService != nullptr)
-         {
-            SERVICE_STATUS ss;
-            switch (((const TCHAR*)context->getData())[0])
-            {
-               case 's':
-                  if (StartService(hService, 0, nullptr))
-                  {
-                     nxlog_debug_tag(DEBUG_TAG, 3, _T("H_ServiceControl: service \"%s\" started"), context->getArgs()->get(0));
-                     rc = ERR_SUCCESS;
-                  }
-                  else
-                  {
-                     TCHAR buffer[1024];
-                     nxlog_debug_tag(DEBUG_TAG, 3, _T("H_ServiceControl: cannot start service \"%s\" (%s)"), context->getArgs()->get(0), GetSystemErrorText(GetLastError(), buffer, 1024));
-                     rc = ERR_INTERNAL_ERROR;
-                  }
-                  break;
-               case 'S':
-                  if (ControlService(hService, SERVICE_CONTROL_STOP, &ss))
-                  {
-                     nxlog_debug_tag(DEBUG_TAG, 3, _T("H_ServiceControl: service \"%s\" stopped"), context->getArgs()->get(0));
-                     rc = ERR_SUCCESS;
-                  }
-                  else
-                  {
-                     TCHAR buffer[1024];
-                     nxlog_debug_tag(DEBUG_TAG, 3, _T("H_ServiceControl: cannot stop service \"%s\" (%s)"), context->getArgs()->get(0), GetSystemErrorText(GetLastError(), buffer, 1024));
-                     rc = ERR_INTERNAL_ERROR;
-                  }
-                  break;
-            }
-            CloseServiceHandle(hService);
-         }
-         else
-         {
-            TCHAR buffer[1024];
-            nxlog_debug_tag(DEBUG_TAG, 3, _T("H_ServiceControl: cannot open service \"%s\" (%s)"), context->getArgs()->get(0), GetSystemErrorText(GetLastError(), buffer, 1024));
-            rc = ERR_INTERNAL_ERROR;
-         }
-
-         CloseServiceHandle(hManager);
-         context->markAsCompleted(rc);
-      }
+      TCHAR buffer[1024];
+      nxlog_debug_tag(DEBUG_TAG, 3, _T("H_ServiceControl: cannot open service \"%s\" (%s)"), context->getArg(0), GetSystemErrorText(GetLastError(), buffer, 1024));
+      rc = ERR_INTERNAL_ERROR;
    }
+
+   CloseServiceHandle(hManager);
+   return rc;
 }
 
 /**

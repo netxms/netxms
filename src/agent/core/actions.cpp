@@ -64,7 +64,7 @@ static ACTION *FindAction(const TCHAR *name)
  * Add action
  */
 bool AddAction(const TCHAR *name, bool isExternal, const void *arg,
-         void (*handler)(shared_ptr<ActionContext>),
+         uint32_t (*handler)(const shared_ptr<ActionContext>&),
          const TCHAR *subAgent, const TCHAR *description)
 {
    ACTION *action = FindAction(name);
@@ -179,6 +179,14 @@ static void ExecutorCleanup(ExternalActionExecutor *executor)
 }
 
 /**
+ * Wrapper for internal action handlers
+ */
+static void InternalActionExecutor(uint32_t (*handler)(const shared_ptr<ActionContext>&), shared_ptr<ActionContext> context)
+{
+   context->markAsCompleted(handler(context));
+}
+
+/**
  * Execute action
  */
 static uint32_t ExecuteAction(const TCHAR *name, const StringList& args, const shared_ptr<AbstractCommSession>& session, uint32_t requestId, bool sendOutput)
@@ -208,7 +216,7 @@ static uint32_t ExecuteAction(const TCHAR *name, const StringList& args, const s
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("Executing internal action %s"), name);
       auto context = make_shared<ActionContext>(name, args, action->handler.sa.arg, session, requestId, sendOutput);
-      ThreadCreate(action->handler.sa.handler, context);
+      ThreadCreate(InternalActionExecutor, action->handler.sa.handler, context);
       rcc = context->waitForCompletion();
       nxlog_debug_tag(DEBUG_TAG, 7, _T("Internal action execution result: %d"), rcc);
    }

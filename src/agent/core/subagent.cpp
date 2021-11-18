@@ -264,7 +264,7 @@ LONG H_IsSubagentLoaded(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue, A
 /**
  * Process unknown command by subagents
  */
-bool ProcessCommandBySubAgent(UINT32 command, NXCPMessage *request, NXCPMessage *response, AbstractCommSession *session)
+bool ProcessCommandBySubAgent(uint32_t command, NXCPMessage *request, NXCPMessage *response, AbstractCommSession *session)
 {
    bool processed = false;
    for(int i = 0; (i < s_subAgents.size()) && (!processed); i++)

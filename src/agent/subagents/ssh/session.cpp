@@ -211,7 +211,7 @@ StringList* SSHSession::execute(const TCHAR *command)
    return output;
 }
 
-bool SSHSession::execute(const TCHAR *command, shared_ptr<ActionContext>& context)
+bool SSHSession::execute(const TCHAR *command, const shared_ptr<ActionContext>& context)
 {
    return execute(command, nullptr, context.get());
 }
@@ -244,41 +244,34 @@ bool SSHSession::execute(const TCHAR *command, StringList* output, ActionContext
       if (ssh_channel_request_exec(channel, command) == SSH_OK)
 #endif
       {
-         result = true;
          if (context != nullptr)
-         {
             context->markAsCompleted(ERR_SUCCESS);
-         }
+
+         result = true;
          char buffer[8192];
-         //ThreadSleep(1);
          int nbytes = ssh_channel_read(channel, buffer, sizeof(buffer) - 1, 0);
-         int offset = 0;
+         size_t offset = 0;
          while(nbytes > 0)
          {
             buffer[nbytes + offset] = 0;
             char *curr = buffer;
             char *eol = strchr(curr, '\n');
-            while(eol != NULL)
+            while(eol != nullptr)
             {
                *eol = 0;
                char *cr = strchr(curr, '\r');
-               if (cr != NULL)
+               if (cr != nullptr)
                   *cr = 0;
                
-               if(context != nullptr)
-               {
-                  TCHAR* text = TStringFromUTF8String(curr);
-                  context->sendOutput(text);
-                  MemFree(text);
-               }
+               if (context != nullptr)
+                  context->sendOutputUtf8(curr);
                else
-               {
                   output->addMBString(curr);
-               }
+
                curr = eol + 1;
                eol = strchr(curr, '\n');
             }
-            offset = (int)strlen(curr);
+            offset = strlen(curr);
             if (offset > 0)
                memmove(buffer, curr, offset);
             nbytes = ssh_channel_read(channel, &buffer[offset], sizeof(buffer) - offset - 1, 0);
@@ -289,19 +282,13 @@ bool SSHSession::execute(const TCHAR *command, StringList* output, ActionContext
             {
                buffer[offset] = 0;
                char *cr = strchr(buffer, '\r');
-               if (cr != NULL)
+               if (cr != nullptr)
                   *cr = 0;
-               
-               if(context != nullptr)
-               {
-                  TCHAR* text = TStringFromUTF8String(buffer);
-                  context->sendOutput(text);
-                  MemFree(text);
-               }
+
+               if (context != nullptr)
+                  context->sendOutputUtf8(buffer);
                else
-               {
                   output->addMBString(buffer);
-               }
             }
             ssh_channel_send_eof(channel);
          }
@@ -313,7 +300,7 @@ bool SSHSession::execute(const TCHAR *command, StringList* output, ActionContext
       }
       else
       {
-         nxlog_debug_tag(DEBUG_TAG, 6, _T("SSHSession::execute: command \"%s\" execution on %s:%d failed"), command, (const TCHAR *)m_addr.toString(), m_port);
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("SSHSession::execute: command \"%s\" execution on %s:%d failed"), command, m_addr.toString().cstr(), m_port);
       }
       ssh_channel_close(channel);
 #ifdef UNICODE
@@ -322,9 +309,9 @@ bool SSHSession::execute(const TCHAR *command, StringList* output, ActionContext
    }
    else
    {
-      nxlog_debug_tag(DEBUG_TAG, 6, _T("SSHSession::execute: cannot open channel on %s:%d"), (const TCHAR *)m_addr.toString(), m_port);
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("SSHSession::execute: cannot open channel on %s:%d"), m_addr.toString().cstr(), m_port);
    }
    ssh_channel_free(channel);
-   m_lastAccess = time(NULL);
+   m_lastAccess = time(nullptr);
    return result;
 }

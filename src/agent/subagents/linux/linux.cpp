@@ -60,50 +60,42 @@ static void RebootThread(const char *mode)
 /**
  * Handler for hard shutdown/restart actions
  */
-static void H_HardShutdown(shared_ptr<ActionContext> context)
+static uint32_t H_HardShutdown(const shared_ptr<ActionContext>& context)
 {
-   TCHAR mode = 0;
-   if (context->getData() != nullptr)
-   {
-      mode = ((const TCHAR*)context->getData())[0];
-   }
 #if HAVE_REBOOT
+   TCHAR mode = *static_cast<const TCHAR*>(context->getData());
    if (mode == _T('R'))
    {
 #if HAVE_DECL_RB_AUTOBOOT
       ThreadCreate(RebootThread, "R");
-      context->markAsCompleted(ERR_SUCCESS);
+      return ERR_SUCCESS;
 #else
-      context->markAsCompleted(ERR_INTERNAL_ERROR);
+      return ERR_NOT_IMPLEMENTED;
 #endif
    }
    else
    {
 #if HAVE_DECL_RB_POWER_OFF || HAVE_DECL_RB_HALT_SYSTEM
       ThreadCreate(RebootThread, "S");
-      context->markAsCompleted(ERR_SUCCESS);
+      return ERR_SUCCESS;
 #else
-      context->markAsCompleted(ERR_INTERNAL_ERROR);
+      return ERR_NOT_IMPLEMENTED;
 #endif
    }
 #else
-   context->markAsCompleted(ERR_INTERNAL_ERROR);
+   return ERR_NOT_IMPLEMENTED;
 #endif
 }
 
 /**
  * Handler for soft shutdown/restart actions
  */
-static void H_SoftShutdown(shared_ptr<ActionContext> context)
+static uint32_t H_SoftShutdown(const shared_ptr<ActionContext>& context)
 {
-   TCHAR mode = 0;
-	if (context->getData() != nullptr)
-	{
-		mode = ((const TCHAR*)context->getData())[0];
-	}
+   TCHAR mode = *static_cast<const TCHAR*>(context->getData());
    char cmd[128];
    snprintf(cmd, 128, "shutdown %s now", (mode == _T('R')) ? "-r" : "-h");
-   context->markAsCompleted((system(cmd) >= 0) ? ERR_SUCCESS : ERR_INTERNAL_ERROR);
+   return (system(cmd) >= 0) ? ERR_SUCCESS : ERR_INTERNAL_ERROR;
 }
 
 /**

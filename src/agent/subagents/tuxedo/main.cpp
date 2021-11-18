@@ -411,15 +411,15 @@ static NETXMS_SUBAGENT_INFO s_info =
 {
    NETXMS_SUBAGENT_INFO_MAGIC,
    _T("TUXEDO"), NETXMS_VERSION_STRING,
-   SubAgentInit, SubAgentShutdown, NULL, NULL,
+   SubAgentInit, SubAgentShutdown, nullptr, nullptr,
    sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
    m_parameters,
    sizeof(s_lists) / sizeof(NETXMS_SUBAGENT_LIST),
    s_lists,
    sizeof(s_tables) / sizeof(NETXMS_SUBAGENT_TABLE),
    s_tables,
-   0, NULL, // actions
-   0, NULL  // push parameters
+   0, nullptr, // actions
+   0, nullptr  // push parameters
 };
 
 /**

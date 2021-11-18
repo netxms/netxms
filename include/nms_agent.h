@@ -813,12 +813,11 @@ private:
    const void* m_data;
    StringList m_args;
    uint32_t m_rcc;
-   Condition m_rccCondition;
-
+   Condition m_completionCondition;
 
 public:
    ActionContext(const TCHAR *name, const StringList& args, const void *data, const shared_ptr<AbstractCommSession>& session, uint32_t requestId, bool sendOutput)
-                        : m_session(session), m_args(args), m_rccCondition(true), m_data(data)
+                        : m_session(session), m_args(args), m_completionCondition(true), m_data(data)
    {
       m_name = MemCopyString(name);
       m_requestId = requestId;
@@ -831,50 +830,74 @@ public:
       MemFree(m_name);
    }
 
+   /**
+    * Send output to server
+    */
    void sendOutput(const TCHAR* text)
    {
-      if(m_sendOutput)
+      if (m_sendOutput)
       {
-         NXCPMessage msg(m_session->getProtocolVersion());
-         msg.setId(m_requestId);
-         msg.setCode(CMD_COMMAND_OUTPUT);
+         NXCPMessage msg(CMD_COMMAND_OUTPUT, m_requestId, m_session->getProtocolVersion());
          msg.setField(VID_MESSAGE, text);
          m_session->sendMessage(&msg);
       }
    }
 
-   void sendOutputEnd()
+   /**
+    * Send output to server with text encoded in UTF-8
+    */
+   void sendOutputUtf8(const char* text)
    {
-      if(m_sendOutput)
+      if (m_sendOutput)
       {
-         NXCPMessage msg(m_session->getProtocolVersion());
-         msg.setId(m_requestId);
-         msg.setCode(CMD_COMMAND_OUTPUT);
+         NXCPMessage msg(CMD_COMMAND_OUTPUT, m_requestId, m_session->getProtocolVersion());
+         msg.setFieldFromUtf8String(VID_MESSAGE, text);
+         m_session->sendMessage(&msg);
+      }
+   }
+
+   /**
+    * Send end of output marker to server
+    */
+   void sendEndOfOutputMarker()
+   {
+      if (m_sendOutput)
+      {
+         NXCPMessage msg(CMD_COMMAND_OUTPUT, m_requestId, m_session->getProtocolVersion());
          msg.setEndOfSequence();
          m_session->sendMessage(&msg);
       }
    }
 
+   /**
+    * Mark action execution as completed
+    */
    void markAsCompleted(uint32_t rcc)
    {
       m_rcc = rcc;
       if (m_sendOutput)
          m_session->registerForResponseSentCondition(m_requestId);
-      m_rccCondition.set();
+      m_completionCondition.set();
       if (m_sendOutput)
          m_session->waitForResponseSentCondition(m_requestId);
    }
 
+   /**
+    * Wait for handler execution completion
+    */
    uint32_t waitForCompletion()
    {
-      m_rccCondition.wait();
+      m_completionCondition.wait();
       return m_rcc;
    }
 
-   const TCHAR* getName() { return m_name; }
-   AbstractCommSession* getSession() { return m_session.get(); }
-   const StringList* getArgs() { return &m_args; }
-   const void* getData() { return m_data; }
+   const TCHAR *getName() const { return m_name; }
+   const shared_ptr<AbstractCommSession>& getSession() const { return m_session; }
+   const StringList& getArgs() const { return m_args; }
+   int getArgCount() const { return m_args.size(); }
+   bool hasArgs() const { return !m_args.isEmpty(); }
+   const TCHAR *getArg(int index) const { return m_args.get(index); }
+   const void *getData() const { return m_data; }
 };
 
 /**
@@ -941,7 +964,7 @@ struct NETXMS_SUBAGENT_TABLE
 struct NETXMS_SUBAGENT_ACTION
 {
    TCHAR name[MAX_PARAM_NAME];
-   void (* handler)(shared_ptr<ActionContext>);
+   uint32_t (* handler)(const shared_ptr<ActionContext>&);
    const void *arg;
    TCHAR description[MAX_DB_STRING];
 };

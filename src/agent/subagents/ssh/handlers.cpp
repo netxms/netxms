@@ -35,7 +35,7 @@ LONG H_SSHCommand(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCo
        !AgentGetParameterArg(param, 4, command, 256))
       return SYSINFO_RC_UNSUPPORTED;
 
-   UINT16 port = 22;
+   uint16_t port = 22;
    TCHAR *p = _tcschr(hostName, _T(':'));
    if (p != nullptr)
    {
@@ -182,47 +182,37 @@ LONG H_SSHCommandList(const TCHAR *param, const TCHAR *arg, StringList *value, A
 /**
  * Generic handler to execute command on host by ssh
  */
-void H_SSHCommandAction(shared_ptr<ActionContext> context)
+uint32_t H_SSHCommandAction(const shared_ptr<ActionContext>& context)
 {
-   const StringList* pArgList = context->getArgs();
+	if (context->getArgCount() < 6)
+      return ERR_MALFORMED_COMMAND;
 
-	if (pArgList->size() < 6)
+   InetAddress addr = InetAddress::resolveHostName(context->getArg(0));
+   if (!addr.isValidUnicast())
+      return ERR_BAD_ARGUMENTS;
+
+   uint16_t port = (uint16_t)_tcstoul(context->getArg(1), nullptr, 10);
+   uint32_t id = _tcstoul(context->getArg(5), nullptr, 10);
+   shared_ptr<KeyPair> key = GetSshKey(context->getSession().get(), id);
+   uint32_t rc = ERR_EXEC_FAILED;
+   SSHSession *ssh = AcquireSession(addr, port, context->getArg(2), context->getArg(3), key);
+   if (ssh != nullptr)
    {
-      context->markAsCompleted(ERR_MALFORMED_COMMAND);
-   }
-   else
-   {
-      InetAddress addr = InetAddress::resolveHostName(pArgList->get(0));
-      if (!addr.isValidUnicast())
+      if (ssh->execute(context->getArg(4), context))
       {
-         context->markAsCompleted(ERR_BAD_ARGUMENTS);
+         rc = ERR_SUCCESS;
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("SSH command execution on %s successful"), context->getArg(0));
       }
       else
       {
-         uint16_t port = (uint16_t)_tcstoul(pArgList->get(1), nullptr, 10);
-         uint32_t id = _tcstoul(pArgList->get(5), nullptr, 10);
-         shared_ptr<KeyPair> key = GetSshKey(context->getSession(), id);
-         int32_t rc = ERR_EXEC_FAILED;
-         SSHSession *ssh = AcquireSession(addr, port, pArgList->get(2), pArgList->get(3), key);
-         if (ssh != nullptr)
-         {
-            if (ssh->execute(pArgList->get(4), context))
-            {
-               rc = ERR_SUCCESS;
-               nxlog_debug_tag(DEBUG_TAG, 6, _T("SSH execute success"));
-            }
-            else
-            {
-               nxlog_debug_tag(DEBUG_TAG, 6, _T("SSH execute failed"));
-            }
-            context->sendOutputEnd();
-            ReleaseSession(ssh);
-         }
-         else
-         {
-            nxlog_debug_tag(DEBUG_TAG, 6, _T("SSH session is not created"));
-         }
-         context->markAsCompleted(rc);
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("SSH command execution on %s failed"), context->getArg(0));
       }
+      context->sendEndOfOutputMarker();
+      ReleaseSession(ssh);
    }
+   else
+   {
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("Failed to create SSH connection to %s:%u"), context->getArg(0), port);
+   }
+   return rc;
 }

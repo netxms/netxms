@@ -90,20 +90,19 @@ static LONG H_PinState(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abstr
 /**
  * Set GPIO pin state
  */
-static void H_SetPinState(shared_ptr<ActionContext> context)
+static uint32_t H_SetPinState(const shared_ptr<ActionContext>& context)
 {
-   const TCHAR *pinStr = context->getArgs()->get(0);
-   const TCHAR *stateStr = context->getArgs()->get(1);
-   if (pinStr == NULL || stateStr == NULL) 
-   {
-      context->markAsCompleted(ERR_INTERNAL_ERROR);
-   }
-   uint8_t pin = (uint8_t)_tcstol(pinStr, NULL, 10);
-   uint8_t state = (uint8_t)_tcstol(stateStr, NULL, 10);
+   const TCHAR *pinStr = context->getArg(0);
+   const TCHAR *stateStr = context->getArg(1);
+   if (pinStr == nullptr || stateStr == nullptr) 
+      return ERR_INTERNAL_ERROR;
+
+   uint8_t pin = (uint8_t)_tcstol(pinStr, nullptr, 10);
+   uint8_t state = (uint8_t)_tcstol(stateStr, nullptr, 10);
 
    bcm2835_gpio_write(pin, state == 1 ? HIGH : LOW);
 
-   context->markAsCompleted(ERR_SUCCESS);
+   return ERR_SUCCESS;
 }
 
 /**
@@ -198,10 +197,10 @@ static void SubagentShutdown()
  */
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
-	{ _T("GPIO.PinState(*)"), H_PinState, NULL, DCI_DT_INT, _T("Pin {instance} state") },
-	{ _T("Sensors.Humidity"), H_Sensors, (TCHAR *)0, DCI_DT_INT, _T("Humidity") },
-	{ _T("Sensors.Temperature"), H_Sensors, (TCHAR *)1, DCI_DT_INT, _T("Temperature") },
-	{ _T("System.CPU.Temperature"), H_CpuTemperature, _T("T"), DCI_DT_FLOAT, _T("CPU: temperature") }
+   { _T("GPIO.PinState(*)"), H_PinState, nullptr, DCI_DT_INT, _T("Pin {instance} state") },
+   { _T("Sensors.Humidity"), H_Sensors, (TCHAR *)0, DCI_DT_INT, _T("Humidity") },
+   { _T("Sensors.Temperature"), H_Sensors, (TCHAR *)1, DCI_DT_INT, _T("Temperature") },
+   { _T("System.CPU.Temperature"), H_CpuTemperature, _T("T"), DCI_DT_FLOAT, _T("CPU: temperature") }
 };
 
 /**
@@ -209,7 +208,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
  */
 static NETXMS_SUBAGENT_ACTION m_actions[] =
 {
-	{ _T("GPIO.SetPinState"), H_SetPinState, NULL, _T("Set GPIO pin ($1) state to high/low ($2 - 1/0)") }
+   { _T("GPIO.SetPinState"), H_SetPinState, nullptr, _T("Set GPIO pin ($1) state to high/low ($2 - 1/0)") }
 };
 
 /**

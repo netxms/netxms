@@ -82,7 +82,7 @@ public:
    void release();
 
    StringList *execute(const TCHAR *command);
-   bool execute(const TCHAR *command, shared_ptr<ActionContext>& context);
+   bool execute(const TCHAR *command, const shared_ptr<ActionContext>& context);
 };
 
 /* Key functions */
@@ -97,7 +97,7 @@ void ReleaseSession(SSHSession *session);
 /* handlers */
 LONG H_SSHCommand(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_SSHCommandList(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session);
-void H_SSHCommandAction(shared_ptr<ActionContext> context);
+uint32_t H_SSHCommandAction(const shared_ptr<ActionContext>& context);
 
 /* globals */
 extern uint32_t g_sshConnectTimeout;

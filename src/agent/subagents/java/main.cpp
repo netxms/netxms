@@ -28,24 +28,20 @@
 /**
  * Java subagent instance
  */
-static SubAgent *s_subAgent = NULL;
+static SubAgent *s_subAgent = nullptr;
 
 /**
  * Action handler
  */
-static void ActionHandler(shared_ptr<ActionContext> context)
+static uint32_t ActionHandler(const shared_ptr<ActionContext>& context)
 {
-   if (s_subAgent == NULL)
-   {
-      context->markAsCompleted(SYSINFO_RC_ERROR);
-   }
-   else
-   {
-      AgentWriteDebugLog(6, _T("JAVA: ActionHandler(action=%s, id=%s)"), context->getName(), (const TCHAR*)context->getData());
-      int32_t rc = s_subAgent->actionHandler(context->getName(), context->getArgs(), (const TCHAR*)context->getData());
-      DetachThreadFromJavaVM();
-      context->markAsCompleted(rc);
-   }
+   if (s_subAgent == nullptr)
+      return SYSINFO_RC_ERROR;
+
+   AgentWriteDebugLog(6, _T("JAVA: ActionHandler(action=%s, id=%s)"), context->getName(), (const TCHAR*)context->getData());
+   uint32_t rc = s_subAgent->actionHandler(context->getName(), context->getArgs(), (const TCHAR*)context->getData());
+   DetachThreadFromJavaVM();
+   return rc;
 }
 
 /**

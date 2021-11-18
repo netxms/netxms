@@ -1,6 +1,6 @@
 /*
 ** NetXMS SMS sending subagent
-** Copyright (C) 2006-2014 Raden Solutions
+** Copyright (C) 2006-2021 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -45,25 +45,21 @@ static LONG H_StringConst(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValu
 /**
  * Handler for SMS.Send action
  */
-static void H_SendSMS(shared_ptr<ActionContext> context)
+static uint32_t H_SendSMS(const shared_ptr<ActionContext>& context)
 {
-	if (context->getArgs()->size() < 2)
-	{
-		context->markAsCompleted(ERR_BAD_ARGUMENTS);
-	}
-	else
-	{
+	if (context->getArgCount() < 2)
+		return ERR_BAD_ARGUMENTS;
+
 #ifdef UNICODE
-		char *rcpt = MBStringFromWideString(context->getArgs()->get(0));
-		char *text = MBStringFromWideString(context->getArgs()->get(1));
-		LONG rc = SendSMS(rcpt, text) ? ERR_SUCCESS : ERR_INTERNAL_ERROR;
-		MemFree(rcpt);
-		MemFree(text);
+   char *rcpt = MBStringFromWideString(context->getArg(0));
+   char *text = MBStringFromWideString(context->getArg(1));
+   uint32_t rc = SendSMS(rcpt, text) ? ERR_SUCCESS : ERR_INTERNAL_ERROR;
+   MemFree(rcpt);
+   MemFree(text);
 #else
-		LONG rc = SendSMS(context->getArgs()->get(0), context->getArgs()->get(1)) ? ERR_SUCCESS : ERR_INTERNAL_ERROR;
+   uint32_t rc = SendSMS(context->getArgs()->get(0), context->getArgs()->get(1)) ? ERR_SUCCESS : ERR_INTERNAL_ERROR;
 #endif
-		context->markAsCompleted(rc);
-	}
+   return rc;
 }
 
 /**
@@ -108,7 +104,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
  */
 static NETXMS_SUBAGENT_ACTION m_actions[] =
 {
-	{ _T("SMS.Send"), H_SendSMS, NULL, _T("Send SMS") }
+	{ _T("SMS.Send"), H_SendSMS, nullptr, _T("Send SMS") }
 };
 
 /**
@@ -118,14 +114,14 @@ static NETXMS_SUBAGENT_INFO m_info =
 {
 	NETXMS_SUBAGENT_INFO_MAGIC,
 	_T("SMS"), NETXMS_VERSION_STRING,
-	SubAgentInit, SubAgentShutdown, NULL, NULL,
+	SubAgentInit, SubAgentShutdown, nullptr, nullptr,
 	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	m_parameters,
-	0, NULL,	// lists
-	0, NULL,	// tables
+	0, nullptr,	// lists
+	0, nullptr,	// tables
 	sizeof(m_actions) / sizeof(NETXMS_SUBAGENT_ACTION),
 	m_actions,
-	0, NULL	// push parameters
+	0, nullptr	// push parameters
 };
 
 /**

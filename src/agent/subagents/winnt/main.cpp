@@ -66,7 +66,7 @@ LONG H_ProcessTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCo
 LONG H_ProcCount(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_ProcCountSpecific(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_ProcInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
-void H_ServiceControl(shared_ptr<ActionContext> context);
+uint32_t H_ServiceControl(const shared_ptr<ActionContext>& context);
 LONG H_ServiceList(const TCHAR *pszCmd, const TCHAR *pArg, StringList *value, AbstractCommSession *session);
 LONG H_ServiceState(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_ServiceTable(const TCHAR *pszCmd, const TCHAR *pArg, Table *value, AbstractCommSession *session);
@@ -79,7 +79,7 @@ LONG H_SystemProductInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, Abstr
 LONG H_SystemUname(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_SystemVersionInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_SysUpdateTime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
-void H_TerminateProcess(shared_ptr<ActionContext> context);
+uint32_t H_TerminateProcess(const shared_ptr<ActionContext>& context);
 LONG H_ThreadCount(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_Uptime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_WindowsFirewallCurrentProfile(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
@@ -134,36 +134,28 @@ static BOOL SetCurrentPrivilege(LPCTSTR pszPrivilege, BOOL bEnablePrivilege)
 /**
  * Shutdown system
  */
-static void H_ActionShutdown(shared_ptr<ActionContext> context)
+static void H_ActionShutdown(const shared_ptr<ActionContext>& context)
 {
-	LONG nRet = ERR_INTERNAL_ERROR;
+	if (!SetCurrentPrivilege(SE_SHUTDOWN_NAME, TRUE))
+      return ERR_INTERNAL_ERROR;
 
-	if (SetCurrentPrivilege(SE_SHUTDOWN_NAME, TRUE))
-	{
-		if (InitiateSystemShutdown(NULL, NULL, 0, TRUE, (((const TCHAR*)context->getData())[0] == _T('R')) ? TRUE : FALSE))
-			nRet = ERR_SUCCESS;
-	}
-   context->markAsCompleted(nRet);
+   return InitiateSystemShutdown(NULL, NULL, 0, TRUE, (*static_cast<const TCHAR*>(context->getData()) == _T('R')) ? TRUE : FALSE) ? ERR_SUCCESS : ERR_INTERNAL_ERROR;
 }
 
 /**
  * Change user's password
  * Parameters: user new_password
  */
-static void H_ChangeUserPassword(shared_ptr<ActionContext> context)
+static uint32_t H_ChangeUserPassword(const shared_ptr<ActionContext>& context)
 {
-   if (context->getArgs()->size() < 2)
-   {
-      context->markAsCompleted(ERR_INTERNAL_ERROR);
-   }
-   else
-   {
-      USER_INFO_1003 ui;
-      ui.usri1003_password = (TCHAR *)context->getArgs()->get(1);
-      NET_API_STATUS status = NetUserSetInfo(NULL, context->getArgs()->get(0), 1003, (LPBYTE)&ui, NULL);
-      AgentWriteDebugLog(2, _T("WINNT: change password for user %s status=%d"), context->getArgs()->get(0), status);
-      context->markAsCompleted((status == NERR_Success) ? ERR_SUCCESS : ERR_INTERNAL_ERROR);
-   }
+   if (context->getArgCount() < 2)
+      return ERR_BAD_ARGUMENTS;
+
+   USER_INFO_1003 ui;
+   ui.usri1003_password = (TCHAR *)context->getArgs()->get(1);
+   NET_API_STATUS status = NetUserSetInfo(NULL, context->getArgs()->get(0), 1003, (LPBYTE)&ui, NULL);
+   AgentWriteDebugLog(2, _T("WINNT: change password for user %s status=%d"), context->getArgs()->get(0), status);
+   return (status == NERR_Success) ? ERR_SUCCESS : ERR_INTERNAL_ERROR;
 }
 
 /**

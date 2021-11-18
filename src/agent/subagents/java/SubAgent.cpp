@@ -1,7 +1,7 @@
 /* 
  ** Java-Bridge NetXMS subagent
  ** Copyright (c) 2013 TEMPEST a.s.
- ** Copyright (c) 2015-2017 Raden Solutions SIA
+ ** Copyright (c) 2015-2021 Raden Solutions SIA
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -461,36 +461,36 @@ LONG SubAgent::tableHandler(const TCHAR *param, const TCHAR *id, Table *value)
 /**
  * Call Java method SubAgent.actionHandler()
  */
-LONG SubAgent::actionHandler(const TCHAR *action, const StringList *args, const TCHAR *id)
+uint32_t SubAgent::actionHandler(const TCHAR *action, const StringList& args, const TCHAR *id)
 {
    if (!m_initialized)
       return SYSINFO_RC_ERROR;
 
    JNIEnv *curEnv = getCurrentEnv();
-   if (curEnv == NULL)
-      return SYSINFO_RC_ERROR;
+   if (curEnv == nullptr)
+      return ERR_OUT_OF_RESOURCES;
 
-   LONG rc = SYSINFO_RC_ERROR;
+   uint32_t rc = ERR_INTERNAL_ERROR;
    jboolean ret = JNI_FALSE;
    jstring jaction = JavaStringFromCString(curEnv, action);
    jstring jid = JavaStringFromCString(curEnv, id);
-   jobjectArray jargs = curEnv->NewObjectArray(args->size(), m_stringClass, NULL);
-   if ((jaction == NULL) || (jid == NULL))
+   jobjectArray jargs = curEnv->NewObjectArray(args.size(), m_stringClass, nullptr);
+   if ((jaction == nullptr) || (jid == nullptr))
    {
       AgentWriteLog(NXLOG_ERROR, _T("JAVA: SubAgent::actionHandler: Could not convert C string to Java string"));
       goto cleanup;
    }
-   if (jargs == NULL)
+   if (jargs == nullptr)
    {
       AgentWriteLog(NXLOG_ERROR, _T("JAVA: SubAgent::actionHandler: cannot allocate Java string array"));
       goto cleanup;
    }
 
    // convert arguments to java string array
-   for(int i = 0; i < args->size(); i++)
+   for(int i = 0; i < args.size(); i++)
    {
-      jstring s = JavaStringFromCString(curEnv, args->get(i));
-      if (s != NULL)
+      jstring s = JavaStringFromCString(curEnv, args.get(i));
+      if (s != nullptr)
       {
          curEnv->SetObjectArrayElement(jargs, i, s);
          curEnv->DeleteLocalRef(s);
@@ -500,7 +500,7 @@ LONG SubAgent::actionHandler(const TCHAR *action, const StringList *args, const 
    ret = static_cast<jboolean>(curEnv->CallBooleanMethod(m_instance, m_actionHandler, jaction, jargs, jid));
    if (!curEnv->ExceptionCheck())
    {
-      rc = ret ? SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR;
+      rc = ret ? ERR_SUCCESS : ERR_INTERNAL_ERROR;
    }
    else
    {

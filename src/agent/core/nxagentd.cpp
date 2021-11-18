@@ -547,12 +547,11 @@ static FARPROC GetProcAddressAndLog(HMODULE hModule, LPCSTR procName)
 /**
  * Shutdown thread (created by H_RestartAgent)
  */
-static THREAD_RESULT THREAD_CALL ShutdownThread(void *pArg)
+static void ShutdownThread()
 {
-	DebugPrintf(1, _T("Shutdown thread started"));
+	nxlog_debug(1, _T("Shutdown thread started"));
    Shutdown();
    ExitProcess(0);
-   return THREAD_OK; // Never reached
 }
 
 #endif   /* _WIN32 */
@@ -726,7 +725,7 @@ LONG RestartAgent()
       }
       else
       {
-         ThreadCreate(ShutdownThread, 0, NULL);
+         ThreadCreate(ShutdownThread);
       }
    }
    return dwResult;
@@ -739,25 +738,25 @@ LONG RestartAgent()
 /**
  * Handler for Agent.Restart action
  */
-static void H_RestartAgent(shared_ptr<ActionContext> context)
+static uint32_t H_RestartAgent(const shared_ptr<ActionContext>& context)
 {
-   context->markAsCompleted(RestartAgent());
+   return RestartAgent();
 }
 
 /**
  * Handler for Agent.RotateLog action
  */
-static void H_RotateLog(shared_ptr<ActionContext> context)
+static uint32_t H_RotateLog(const shared_ptr<ActionContext>& context)
 {
-   context->markAsCompleted(nxlog_rotate() ? ERR_SUCCESS : ERR_INTERNAL_ERROR);
+   return nxlog_rotate() ? ERR_SUCCESS : ERR_INTERNAL_ERROR;
 }
 
 /**
  * Handler for System.Execute action
  */
-static void H_SystemExecute(shared_ptr<ActionContext> context)
+static uint32_t H_SystemExecute(const shared_ptr<ActionContext>& context)
 {
-   context->markAsCompleted(ERR_NOT_IMPLEMENTED);
+   return ERR_NOT_IMPLEMENTED;
 }
 
 #ifdef _WIN32
@@ -765,23 +764,19 @@ static void H_SystemExecute(shared_ptr<ActionContext> context)
 /**
  * Handler for System.ExecuteInAllSessions action
  */
-static void H_SystemExecuteInAllSessions(shared_ptr<ActionContext> context)
+static uint32_t H_SystemExecuteInAllSessions(shared_ptr<ActionContext> context)
 {
-   if (context->getArgs()->isEmpty())
+   if (!context->hasArgs())
+      return ERR_BAD_ARGUMENTS;
+
+   StringBuffer command;
+   for (int i = 0; i < context->getArgCount(); i++)
    {
-      context->markAsCompleted(ERR_BAD_ARGUMENTS);
+      command.append(command.isEmpty() ? _T("\"") : _T(" \""));
+      command.append(context->getArg(i));
+      command.append(_T("\""));
    }
-   else
-   {
-      StringBuffer command;
-      for (int i = 0; i < context->getArgs()->size(); i++)
-      {
-         command.append(command.isEmpty() ? _T("\"") : _T(" \""));
-         command.append(context->getArgs()->get(i));
-         command.append(_T("\""));
-      }
-      context->markAsCompleted(ExecuteInAllSessions(command) ? ERR_SUCCESS : ERR_EXEC_FAILED);
-   }
+   return ExecuteInAllSessions(command) ? ERR_SUCCESS : ERR_EXEC_FAILED;
 }
 
 #else
@@ -789,24 +784,16 @@ static void H_SystemExecuteInAllSessions(shared_ptr<ActionContext> context)
 /**
  * Handler for action Process.Terminate
  */
-static void H_TerminateProcess(shared_ptr<ActionContext> context)
+static uint32_t H_TerminateProcess(const shared_ptr<ActionContext>& context)
 {
-   if (context->getArgs()->isEmpty())
-   {
-      context->markAsCompleted(ERR_BAD_ARGUMENTS);
-   }
-   else
-   {
-      pid_t pid = _tcstol(context->getArgs()->get(0), nullptr, 0);
-      if (pid <= 0)
-      {
-         context->markAsCompleted(ERR_BAD_ARGUMENTS);
-      }
-      else
-      {
-         return context->markAsCompleted((kill(pid, SIGKILL) == 0) ? ERR_SUCCESS : ERR_INTERNAL_ERROR);
-      }
-   }
+   if (!context->hasArgs())
+      return ERR_BAD_ARGUMENTS;
+
+   pid_t pid = _tcstol(context->getArg(0), nullptr, 0);
+   if (pid <= 0)
+      return ERR_BAD_ARGUMENTS;
+
+   return (kill(pid, SIGKILL) == 0) ? ERR_SUCCESS : ERR_INTERNAL_ERROR;
 }
 
 #endif

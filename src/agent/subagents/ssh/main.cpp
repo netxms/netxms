@@ -1,6 +1,6 @@
 /*
 ** NetXMS SSH subagent
-** Copyright (C) 2004-2020 Victor Kirhenshtein
+** Copyright (C) 2004-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -131,7 +131,7 @@ static void SubagentShutdown()
  */
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
-	{ _T("SSH.Command(*)"), H_SSHCommand, NULL, DCI_DT_STRING, _T("Result of command execution") },
+	{ _T("SSH.Command(*)"), H_SSHCommand, nullptr, DCI_DT_STRING, _T("Result of command execution") },
 };
 
 /**
@@ -139,12 +139,12 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
  */
 static NETXMS_SUBAGENT_LIST m_lists[] =
 {
-   { _T("SSH.Command(*)"), H_SSHCommandList, NULL, _T("Result of command execution") },
+   { _T("SSH.Command(*)"), H_SSHCommandList, nullptr, _T("Result of command execution") },
 };
 
 static NETXMS_SUBAGENT_ACTION m_actions[] =
 {
-	{ _T("SSH.Command"), H_SSHCommandAction, NULL, _T("Result of command execution") },
+	{ _T("SSH.Command"), H_SSHCommandAction, nullptr, _T("Result of command execution") },
 };
 
 /**
@@ -154,15 +154,15 @@ static NETXMS_SUBAGENT_INFO m_info =
 {
    NETXMS_SUBAGENT_INFO_MAGIC,
    _T("SSH"), NETXMS_VERSION_STRING,
-   SubagentInit, SubagentShutdown, NULL, NULL,
+   SubagentInit, SubagentShutdown, nullptr, nullptr,
    sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
    m_parameters,
    sizeof(m_lists) / sizeof(NETXMS_SUBAGENT_LIST),
    m_lists,
-   0, NULL,	// tables
+   0, nullptr,	// tables
    sizeof(m_actions) / sizeof(NETXMS_SUBAGENT_ACTION),
    m_actions,
-   0, NULL	// push parameters
+   0, nullptr	// push parameters
 };
 
 /**
