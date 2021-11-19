@@ -244,7 +244,7 @@ LONG H_ServiceTable(const TCHAR *pszCmd, const TCHAR *pArg, Table *value, Abstra
  */
 uint32_t H_ServiceControl(const shared_ptr<ActionContext>& context)
 {
-   if (args->isEmpty())
+   if (!context->hasArgs())
       return ERR_BAD_ARGUMENTS;
 
    SC_HANDLE hManager = OpenSCManager(nullptr, nullptr, GENERIC_READ);

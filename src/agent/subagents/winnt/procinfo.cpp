@@ -636,7 +636,7 @@ uint32_t H_TerminateProcess(const shared_ptr<ActionContext>& context)
    if (!context->hasArgs())
       return ERR_BAD_ARGUMENTS;
 
-   DWORD pid = _tcstoul(context->getArgs()->get(0), nullptr, 0);
+   DWORD pid = _tcstoul(context->getArg(0), nullptr, 0);
    if (pid == 0)
       return ERR_BAD_ARGUMENTS;
 

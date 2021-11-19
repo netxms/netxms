@@ -764,7 +764,7 @@ static uint32_t H_SystemExecute(const shared_ptr<ActionContext>& context)
 /**
  * Handler for System.ExecuteInAllSessions action
  */
-static uint32_t H_SystemExecuteInAllSessions(shared_ptr<ActionContext> context)
+static uint32_t H_SystemExecuteInAllSessions(const shared_ptr<ActionContext>& context)
 {
    if (!context->hasArgs())
       return ERR_BAD_ARGUMENTS;

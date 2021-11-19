@@ -95,51 +95,51 @@ void StopIOStatCollector();
 /**
  * Set or clear current privilege
  */
-static BOOL SetCurrentPrivilege(LPCTSTR pszPrivilege, BOOL bEnablePrivilege)
+static BOOL SetCurrentPrivilege(LPCTSTR privilege, BOOL enable)
 {
-	HANDLE hToken;
-	LUID luid;
-	TOKEN_PRIVILEGES tp, tpPrevious;
-	DWORD cbPrevious = sizeof(TOKEN_PRIVILEGES);
-	BOOL bSuccess = FALSE;
-
-	if (!LookupPrivilegeValue(NULL, pszPrivilege, &luid))
+   LUID luid;
+   if (!LookupPrivilegeValue(nullptr, privilege, &luid))
 		return FALSE;
 
-	if (!OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY | TOKEN_ADJUST_PRIVILEGES, &hToken))
+   HANDLE hToken;
+   if (!OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY | TOKEN_ADJUST_PRIVILEGES, &hToken))
 		return FALSE;
 
-	tp.PrivilegeCount = 1;
+   TOKEN_PRIVILEGES tp;
+   tp.PrivilegeCount = 1;
 	tp.Privileges[0].Luid = luid;
 	tp.Privileges[0].Attributes = 0;
 
-	if (AdjustTokenPrivileges(hToken, FALSE, &tp, sizeof(TOKEN_PRIVILEGES), &tpPrevious, &cbPrevious))
+   BOOL success = FALSE;
+   TOKEN_PRIVILEGES tpPrevious;
+   DWORD cbPrevious = sizeof(TOKEN_PRIVILEGES);
+   if (AdjustTokenPrivileges(hToken, FALSE, &tp, sizeof(TOKEN_PRIVILEGES), &tpPrevious, &cbPrevious))
 	{
 		tpPrevious.PrivilegeCount = 1;
 		tpPrevious.Privileges[0].Luid = luid;
 
-		if (bEnablePrivilege)
+		if (enable)
 			tpPrevious.Privileges[0].Attributes |= SE_PRIVILEGE_ENABLED;
 		else
 			tpPrevious.Privileges[0].Attributes &= ~SE_PRIVILEGE_ENABLED;
 
-		bSuccess = AdjustTokenPrivileges(hToken, FALSE, &tpPrevious, cbPrevious, NULL, NULL);
+		success = AdjustTokenPrivileges(hToken, FALSE, &tpPrevious, cbPrevious, nullptr, nullptr);
 	}
 
 	CloseHandle(hToken);
 
-	return bSuccess;
+	return success;
 }
 
 /**
  * Shutdown system
  */
-static void H_ActionShutdown(const shared_ptr<ActionContext>& context)
+static uint32_t H_ActionShutdown(const shared_ptr<ActionContext>& context)
 {
 	if (!SetCurrentPrivilege(SE_SHUTDOWN_NAME, TRUE))
       return ERR_INTERNAL_ERROR;
 
-   return InitiateSystemShutdown(NULL, NULL, 0, TRUE, (*static_cast<const TCHAR*>(context->getData()) == _T('R')) ? TRUE : FALSE) ? ERR_SUCCESS : ERR_INTERNAL_ERROR;
+   return InitiateSystemShutdown(nullptr, nullptr, 0, TRUE, (*static_cast<const TCHAR*>(context->getData()) == _T('R')) ? TRUE : FALSE) ? ERR_SUCCESS : ERR_INTERNAL_ERROR;
 }
 
 /**
@@ -152,9 +152,9 @@ static uint32_t H_ChangeUserPassword(const shared_ptr<ActionContext>& context)
       return ERR_BAD_ARGUMENTS;
 
    USER_INFO_1003 ui;
-   ui.usri1003_password = (TCHAR *)context->getArgs()->get(1);
-   NET_API_STATUS status = NetUserSetInfo(NULL, context->getArgs()->get(0), 1003, (LPBYTE)&ui, NULL);
-   AgentWriteDebugLog(2, _T("WINNT: change password for user %s status=%d"), context->getArgs()->get(0), status);
+   ui.usri1003_password = (TCHAR *)context->getArg(1);
+   NET_API_STATUS status = NetUserSetInfo(NULL, context->getArg(0), 1003, (LPBYTE)&ui, nullptr);
+   nxlog_debug_tag(DEBUG_TAG, 2, _T("Change password for user %s status=%d"), context->getArg(0), status);
    return (status == NERR_Success) ? ERR_SUCCESS : ERR_INTERNAL_ERROR;
 }
 
@@ -462,7 +462,7 @@ static NETXMS_SUBAGENT_ACTION s_actions[] =
    { _T("Service.Stop"), H_ServiceControl, _T("S"), _T("Stop service") },
    { _T("System.Restart"), H_ActionShutdown, _T("R"), _T("Restart system") },
    { _T("System.Shutdown"), H_ActionShutdown, _T("S"), _T("Shutdown system") },
-	{ _T("User.ChangePassword"), H_ChangeUserPassword, NULL, _T("Change password for given user") }
+	{ _T("User.ChangePassword"), H_ChangeUserPassword, nullptr, _T("Change password for given user") }
 };
 
 /**
