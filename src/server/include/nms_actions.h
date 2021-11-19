@@ -28,9 +28,9 @@
  */
 struct Action
 {
-   UINT32 id;
+   uint32_t id;
    uuid guid;
-   int type;
+   ServerActionType type;
    bool isDisabled;
    TCHAR name[MAX_OBJECT_NAME];
    TCHAR rcptAddr[MAX_RCPT_ADDR_LEN];
@@ -40,7 +40,7 @@ struct Action
 
    Action(const TCHAR *name);
    Action(DB_RESULT hResult, int row);
-   Action(const Action *act);
+   Action(const Action& src);
    ~Action();
 
    void fillMessage(NXCPMessage *msg) const;

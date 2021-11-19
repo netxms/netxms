@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,9 +34,9 @@ public class ServerActionAdapterFactory implements IAdapterFactory
 		IWorkbenchAdapter.class
 	};
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.core.runtime.IAdapterFactory#getAdapter(java.lang.Object, java.lang.Class)
-	 */
+   /**
+    * @see org.eclipse.core.runtime.IAdapterFactory#getAdapter(java.lang.Object, java.lang.Class)
+    */
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
 	public Object getAdapter(Object adaptableObject, Class adapterType)
@@ -57,19 +57,19 @@ public class ServerActionAdapterFactory implements IAdapterFactory
 			{
 				switch(((ServerAction)object).getType())
 				{
-					case ServerAction.EXEC_LOCAL:
+               case LOCAL_COMMAND:
 						return Activator.getImageDescriptor("icons/exec_local.png"); //$NON-NLS-1$
-					case ServerAction.EXEC_REMOTE:
+               case AGENT_COMMAND:
 						return Activator.getImageDescriptor("icons/exec_remote.png"); //$NON-NLS-1$
-					case ServerAction.EXEC_SSH_REMOTE:
+               case SSH_COMMAND:
 						return Activator.getImageDescriptor("icons/exec_remote.png"); //$NON-NLS-1$
-					case ServerAction.SEND_NOTIFICATION:
+               case NOTIFICATION:
 						return Activator.getImageDescriptor("icons/email.png"); //$NON-NLS-1$
-					case ServerAction.FORWARD_EVENT:
+               case FORWARD_EVENT:
 						return Activator.getImageDescriptor("icons/fwd_event.png"); //$NON-NLS-1$
-					case ServerAction.EXEC_NXSL_SCRIPT:
+               case NXSL_SCRIPT:
 						return Activator.getImageDescriptor("icons/exec_script.gif"); //$NON-NLS-1$
-               case ServerAction.XMPP_MESSAGE:
+               case XMPP_MESSAGE:
                   return Activator.getImageDescriptor("icons/xmpp.png"); //$NON-NLS-1$
 				}
 				return null;
@@ -89,9 +89,9 @@ public class ServerActionAdapterFactory implements IAdapterFactory
 		};
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.core.runtime.IAdapterFactory#getAdapterList()
-	 */
+   /**
+    * @see org.eclipse.core.runtime.IAdapterFactory#getAdapterList()
+    */
 	@Override
 	public Class<?>[] getAdapterList()
 	{

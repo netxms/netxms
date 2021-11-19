@@ -1093,18 +1093,6 @@ enum AggregationFunction
 #define RF_CREATE_TICKET         0x2000
 
 /**
- * Action types
- */
-#define ACTION_EXEC           0
-#define ACTION_REMOTE         1
-//#define ACTION_SEND_EMAIL     2 removed
-#define ACTION_NOTIFICATION   3
-#define ACTION_FORWARD_EVENT  4
-#define ACTION_NXSL_SCRIPT    5
-#define ACTION_XMPP_MESSAGE   6
-#define ACTION_SSH_REMOTE     7
-
-/**
  * Network map types
  */
 #define NETMAP_USER_DEFINED   0
@@ -1231,6 +1219,20 @@ enum AggregationFunction
 #define DCI_RES_SEARCH_NAME   0x01
 
 #ifdef __cplusplus
+
+/**
+ * Action types
+ */
+enum class ServerActionType
+{
+   LOCAL_COMMAND = 0,
+   AGENT_COMMAND = 1,
+   SSH_COMMAND = 2,
+   NOTIFICATION = 3,
+   FORWARD_EVENT = 4,
+   NXSL_SCRIPT = 5,
+   XMPP_MESSAGE = 6
+};
 
 /**
  * IP network

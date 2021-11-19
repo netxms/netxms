@@ -33,7 +33,7 @@ Action::Action(const TCHAR *name)
    guid = uuid::generate();
    _tcsncpy(this->name, name, MAX_OBJECT_NAME);
    isDisabled = true;
-   type = ACTION_EXEC;
+   type = ServerActionType::LOCAL_COMMAND;
    emailSubject[0] = 0;
    rcptAddr[0] = 0;
    data = NULL;
@@ -48,7 +48,7 @@ Action::Action(DB_RESULT hResult, int row)
    id = DBGetFieldULong(hResult, row, 0);
    guid = DBGetFieldGUID(hResult, row, 1);
    DBGetField(hResult, row, 2, name, MAX_OBJECT_NAME);
-   type = DBGetFieldLong(hResult, row, 3);
+   type = static_cast<ServerActionType>(DBGetFieldLong(hResult, row, 3));
    isDisabled = DBGetFieldLong(hResult, row, 4) ? true : false;
    DBGetField(hResult, row, 5, rcptAddr, MAX_RCPT_ADDR_LEN);
    DBGetField(hResult, row, 6, emailSubject, MAX_EMAIL_SUBJECT_LEN);
@@ -59,18 +59,17 @@ Action::Action(DB_RESULT hResult, int row)
 /**
  * Action copy constructor
  */
-Action::Action(const Action *act)
+Action::Action(const Action& src)
 {
-   id = act->id;
-   guid = act->guid;
-   _tcsncpy(name, act->name, MAX_OBJECT_NAME);
-   type = act->type;
-   isDisabled = act->isDisabled;
-   _tcsncpy(rcptAddr, act->rcptAddr, MAX_RCPT_ADDR_LEN);
-   _tcsncpy(emailSubject, act->emailSubject, MAX_EMAIL_SUBJECT_LEN);
-   data = MemCopyString(act->data);
-   _tcsncpy(channelName, act->channelName, MAX_OBJECT_NAME);
-
+   id = src.id;
+   guid = src.guid;
+   _tcscpy(name, src.name);
+   type = src.type;
+   isDisabled = src.isDisabled;
+   _tcscpy(rcptAddr, src.rcptAddr);
+   _tcscpy(emailSubject, src.emailSubject);
+   data = MemCopyString(src.data);
+   _tcscpy(channelName, src.channelName);
 }
 
 /**
@@ -78,7 +77,7 @@ Action::Action(const Action *act)
  */
 Action::~Action()
 {
-   free(data);
+   MemFree(data);
 }
 
 /**
@@ -89,7 +88,7 @@ void Action::fillMessage(NXCPMessage *msg) const
    msg->setField(VID_ACTION_ID, id);
    msg->setField(VID_GUID, guid);
    msg->setField(VID_IS_DISABLED, isDisabled);
-   msg->setField(VID_ACTION_TYPE, (UINT16)type);
+   msg->setField(VID_ACTION_TYPE, static_cast<uint16_t>(type));
    msg->setField(VID_ACTION_DATA, CHECK_NULL_EX(data));
    msg->setField(VID_EMAIL_SUBJECT, emailSubject);
    msg->setField(VID_ACTION_NAME, name);
@@ -112,7 +111,7 @@ void Action::saveToDatabase() const
    {
       DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, guid);
       DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, name, DB_BIND_STATIC);
-      DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, type);
+      DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(type));
       DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (INT32)(isDisabled ? 1 : 0));
       DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, rcptAddr, DB_BIND_STATIC);
       DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, emailSubject, DB_BIND_STATIC);
@@ -504,8 +503,7 @@ bool ExecuteAction(uint32_t actionId, const Event *event, const Alarm *alarm)
       }
       else
       {
-         nxlog_debug_tag(DEBUG_TAG, 3, _T("Executing action %d (%s) of type %s"),
-            actionId, action->name, actionType[action->type]);
+         nxlog_debug_tag(DEBUG_TAG, 3, _T("Executing action %d (%s) of type %s"), actionId, action->name, actionType[static_cast<int>(action->type)]);
 
          StringBuffer expandedData = event->expandText(CHECK_NULL_EX(action->data), alarm);
          expandedData.trim();
@@ -517,7 +515,7 @@ bool ExecuteAction(uint32_t actionId, const Event *event, const Alarm *alarm)
 
          switch(action->type)
          {
-            case ACTION_EXEC:
+            case ServerActionType::LOCAL_COMMAND:
                if (!expandedData.isEmpty())
                {
                   ThreadPoolExecute(g_mainThreadPool, RunCommand, MemCopyString(expandedData));
@@ -528,7 +526,7 @@ bool ExecuteAction(uint32_t actionId, const Event *event, const Alarm *alarm)
                }
                success = true;
                break;
-            case ACTION_NOTIFICATION:
+            case ServerActionType::NOTIFICATION:
                if (action->channelName[0] != 0)
                {
                   if(expandedRcpt.isEmpty())
@@ -544,7 +542,7 @@ bool ExecuteAction(uint32_t actionId, const Event *event, const Alarm *alarm)
                }
                success = true;
                break;
-            case ACTION_XMPP_MESSAGE:
+            case ServerActionType::XMPP_MESSAGE:
                if (!expandedRcpt.isEmpty())
                {
 #if XMPP_SUPPORTED
@@ -569,7 +567,7 @@ bool ExecuteAction(uint32_t actionId, const Event *event, const Alarm *alarm)
                }
                success = true;
                break;
-            case ACTION_REMOTE:
+            case ServerActionType::AGENT_COMMAND:
                if (!expandedRcpt.isEmpty())
                {
                   nxlog_debug_tag(DEBUG_TAG, 3, _T("Executing on \"%s\": \"%s\""), expandedRcpt.cstr(), expandedData.cstr());
@@ -581,7 +579,7 @@ bool ExecuteAction(uint32_t actionId, const Event *event, const Alarm *alarm)
                   success = true;
                }
                break;
-            case ACTION_FORWARD_EVENT:
+            case ServerActionType::FORWARD_EVENT:
                if (!expandedRcpt.isEmpty())
                {
                   nxlog_debug_tag(DEBUG_TAG, 3, _T("Forwarding event to \"%s\""), expandedRcpt.cstr());
@@ -593,7 +591,7 @@ bool ExecuteAction(uint32_t actionId, const Event *event, const Alarm *alarm)
                   success = true;
                }
                break;
-            case ACTION_NXSL_SCRIPT:
+            case ServerActionType::NXSL_SCRIPT:
                if (!expandedRcpt.isEmpty())
                {
                   nxlog_debug_tag(DEBUG_TAG, 3, _T("Executing NXSL script \"%s\""), expandedRcpt.cstr());
@@ -605,7 +603,7 @@ bool ExecuteAction(uint32_t actionId, const Event *event, const Alarm *alarm)
                   success = true;
                }
                break;
-            case ACTION_SSH_REMOTE:
+            case ServerActionType::SSH_COMMAND:
                if (!expandedRcpt.isEmpty())
                {
                   nxlog_debug_tag(DEBUG_TAG, 3, _T("Executing by ssh on \"%s\": \"%s\""), expandedRcpt.cstr(), expandedData.cstr());
@@ -687,7 +685,7 @@ uint32_t DeleteAction(uint32_t actionId)
  */
 uint32_t ModifyActionFromMessage(const NXCPMessage *msg)
 {
-   uint32_t dwResult = RCC_INVALID_ACTION_ID;
+   uint32_t rcc = RCC_INVALID_ACTION_ID;
 
    TCHAR name[MAX_OBJECT_NAME];
    msg->getFieldAsString(VID_ACTION_NAME, name, MAX_OBJECT_NAME);
@@ -696,9 +694,9 @@ uint32_t ModifyActionFromMessage(const NXCPMessage *msg)
    shared_ptr<Action> tmp = s_actions.getShared(actionId);
    if (tmp != nullptr)
    {
-      Action *action = new Action(tmp.get());
+      auto action = make_shared<Action>(*tmp);
       action->isDisabled = msg->getFieldAsBoolean(VID_IS_DISABLED);
-      action->type = msg->getFieldAsUInt16(VID_ACTION_TYPE);
+      action->type = static_cast<ServerActionType>(msg->getFieldAsUInt16(VID_ACTION_TYPE));
       MemFree(action->data);
       action->data = msg->getFieldAsString(VID_ACTION_DATA);
       msg->getFieldAsString(VID_EMAIL_SUBJECT, action->emailSubject, MAX_EMAIL_SUBJECT_LEN);
@@ -709,13 +707,13 @@ uint32_t ModifyActionFromMessage(const NXCPMessage *msg)
       action->saveToDatabase();
 
       s_updateCode = NX_NOTIFY_ACTION_MODIFIED;
-      EnumerateClientSessions(SendActionDBUpdate, action);
+      EnumerateClientSessions(SendActionDBUpdate, action.get());
       s_actions.set(actionId, action);
 
-      dwResult = RCC_SUCCESS;
+      rcc = RCC_SUCCESS;
    }
 
-   return dwResult;
+   return rcc;
 }
 
 /**
@@ -725,9 +723,9 @@ uint32_t ModifyActionFromMessage(const NXCPMessage *msg)
  */
 static EnumerationCallbackResult RenameChannel(const uint32_t& id, const shared_ptr<Action>& action, std::pair<TCHAR*, TCHAR*> *names)
 {
-   if (!_tcsncmp(action->channelName, names->first, MAX_OBJECT_NAME) && action->type == ACTION_NOTIFICATION)
+   if (!_tcsncmp(action->channelName, names->first, MAX_OBJECT_NAME) && (action->type == ServerActionType::NOTIFICATION))
    {
-      _tcsncpy(action->channelName, names->second, MAX_OBJECT_NAME);
+      _tcslcpy(action->channelName, names->second, MAX_OBJECT_NAME);
       s_updateCode = NX_NOTIFY_ACTION_MODIFIED;
       EnumerateClientSessions(SendActionDBUpdate, action.get());
    }
@@ -884,7 +882,7 @@ uint32_t FindActionByGUID(const uuid& guid)
  */
 bool ImportAction(ConfigEntry *config, bool overwrite)
 {
-   if (config->getSubEntryValue(_T("name")) == NULL)
+   if (config->getSubEntryValue(_T("name")) == nullptr)
    {
       nxlog_debug_tag(_T("import"), 4, _T("ImportAction: no name specified"));
       return false;
@@ -892,7 +890,7 @@ bool ImportAction(ConfigEntry *config, bool overwrite)
 
    const uuid guid = config->getSubEntryValueAsUUID(_T("guid"));
    shared_ptr<Action> action = !guid.isNull() ? s_actions.findElement(ActionGUIDComparator, &guid) : shared_ptr<Action>();
-   if (action == NULL)
+   if (action == nullptr)
    {
       // Check for duplicate name
       const TCHAR *name = config->getSubEntryValue(_T("name"));
@@ -920,11 +918,11 @@ bool ImportAction(ConfigEntry *config, bool overwrite)
       nxlog_debug_tag(_T("import"), 4, _T("ImportAction: found existing action \"%s\" with GUID %s"), action->name, action->guid.toString(guidText));
       _tcslcpy(action->name, config->getSubEntryValue(_T("name")), MAX_OBJECT_NAME);
       s_updateCode = NX_NOTIFY_ACTION_MODIFIED;
-      action = make_shared<Action>(action.get());
+      action = make_shared<Action>(*action);
    }
 
    // If not exist, create it
-   action->type = config->getSubEntryValueAsUInt(_T("type"), 0);
+   action->type = static_cast<ServerActionType>(config->getSubEntryValueAsInt(_T("type"), static_cast<int>(ServerActionType::LOCAL_COMMAND)));
    if (config->getSubEntryValue(_T("emailSubject")) == NULL)
       action->emailSubject[0] = 0;
    else

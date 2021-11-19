@@ -22,6 +22,7 @@ import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
 import org.netxms.client.ServerAction;
+import org.netxms.client.constants.ServerActionType;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.actions.views.ActionManager;
 import org.netxms.nxmc.resources.ResourceManager;
@@ -35,9 +36,9 @@ public class ActionLabelProvider extends LabelProvider implements ITableLabelPro
    private static final I18n i18n = LocalizationHelper.getI18n(ActionLabelProvider.class);
 
 	public static final String[] ACTION_TYPE = { 
-   	   i18n.tr("Execute"), 
-   	   i18n.tr("Remote Execute"), 
-   	   i18n.tr("Email"), 
+   	   i18n.tr("Local Command"), 
+   	   i18n.tr("Agent Command"), 
+   	   i18n.tr("SSH Command"), 
    	   i18n.tr("Notification"), 
    	   i18n.tr("Forward Event"), 
          i18n.tr("NXSL Script"), 
@@ -52,12 +53,13 @@ public class ActionLabelProvider extends LabelProvider implements ITableLabelPro
    public ActionLabelProvider()
    {
       images = new Image[7];
-      images[ServerAction.EXEC_LOCAL] = ResourceManager.getImage("icons/actions/exec_local.png");
-      images[ServerAction.EXEC_REMOTE] = ResourceManager.getImage("icons/actions/exec_remote.png");
-      images[ServerAction.SEND_NOTIFICATION] = ResourceManager.getImage("icons/actions/email.png");
-      images[ServerAction.FORWARD_EVENT] = ResourceManager.getImage("icons/actions/fwd_event.png");
-      images[ServerAction.EXEC_NXSL_SCRIPT] = ResourceManager.getImage("icons/actions/exec_script.png");
-      images[ServerAction.XMPP_MESSAGE] = ResourceManager.getImage("icons/actions/xmpp.png");
+      images[ServerActionType.LOCAL_COMMAND.getValue()] = ResourceManager.getImage("icons/actions/exec_local.png");
+      images[ServerActionType.AGENT_COMMAND.getValue()] = ResourceManager.getImage("icons/actions/exec_remote.png");
+      images[ServerActionType.SSH_COMMAND.getValue()] = ResourceManager.getImage("icons/actions/exec_remote.png");
+      images[ServerActionType.NOTIFICATION.getValue()] = ResourceManager.getImage("icons/actions/email.png");
+      images[ServerActionType.FORWARD_EVENT.getValue()] = ResourceManager.getImage("icons/actions/fwd_event.png");
+      images[ServerActionType.NXSL_SCRIPT.getValue()] = ResourceManager.getImage("icons/actions/exec_script.png");
+      images[ServerActionType.XMPP_MESSAGE.getValue()] = ResourceManager.getImage("icons/actions/xmpp.png");
    }
 
    /**
@@ -71,7 +73,7 @@ public class ActionLabelProvider extends LabelProvider implements ITableLabelPro
 
       try
       {
-         return images[((ServerAction)element).getType()];
+         return images[((ServerAction)element).getType().getValue()];
       }
       catch(IndexOutOfBoundsException e)
       {
@@ -93,7 +95,7 @@ public class ActionLabelProvider extends LabelProvider implements ITableLabelPro
 			case ActionManager.COLUMN_TYPE:
 				try
 				{
-					return ACTION_TYPE[action.getType()];
+               return ACTION_TYPE[action.getType().getValue()];
 				}
 				catch(IndexOutOfBoundsException e)
 				{

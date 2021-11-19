@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,6 +20,7 @@ package org.netxms.client;
 
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
+import org.netxms.client.constants.ServerActionType;
 
 /**
  * Represents NetXMS server's action
@@ -27,17 +28,8 @@ import org.netxms.base.NXCPMessage;
  */
 public class ServerAction
 {
-	public static final int EXEC_LOCAL = 0;
-	public static final int EXEC_REMOTE = 1;
-//	public static final int SEND_EMAIL = 2;
-	public static final int SEND_NOTIFICATION = 3;
-	public static final int FORWARD_EVENT = 4;
-	public static final int EXEC_NXSL_SCRIPT = 5;
-	public static final int XMPP_MESSAGE = 6;
-	public static final int EXEC_SSH_REMOTE = 7;
-	
 	private long id;
-	private int type;
+   private ServerActionType type;
 	private String name;
 	private String data;
 	private String recipientAddress;
@@ -53,7 +45,7 @@ public class ServerAction
 	public ServerAction(long id)
 	{
 		this.id = id;
-		type = EXEC_LOCAL;
+      type = ServerActionType.LOCAL_COMMAND;
 		name = "New action";
 		data = "";
 		disabled = false;
@@ -68,7 +60,7 @@ public class ServerAction
 	protected ServerAction(final NXCPMessage msg)
 	{
 		id = msg.getFieldAsInt64(NXCPCodes.VID_ACTION_ID);
-		type = msg.getFieldAsInt32(NXCPCodes.VID_ACTION_TYPE);
+      type = ServerActionType.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_ACTION_TYPE));
 		name = msg.getFieldAsString(NXCPCodes.VID_ACTION_NAME);
 		data = msg.getFieldAsString(NXCPCodes.VID_ACTION_DATA);
 		recipientAddress = msg.getFieldAsString(NXCPCodes.VID_RCPT_ADDR);
@@ -84,7 +76,7 @@ public class ServerAction
 	public void fillMessage(final NXCPMessage msg)
 	{
 		msg.setFieldInt32(NXCPCodes.VID_ACTION_ID, (int)id);
-		msg.setFieldInt16(NXCPCodes.VID_ACTION_TYPE, type);
+      msg.setFieldInt16(NXCPCodes.VID_ACTION_TYPE, type.getValue());
 		msg.setField(NXCPCodes.VID_ACTION_NAME, name);
 		msg.setField(NXCPCodes.VID_ACTION_DATA, data);
 		msg.setField(NXCPCodes.VID_RCPT_ADDR, recipientAddress);
@@ -96,7 +88,7 @@ public class ServerAction
 	/**
 	 * @return the type
 	 */
-	public int getType()
+   public ServerActionType getType()
 	{
 		return type;
 	}
@@ -104,7 +96,7 @@ public class ServerAction
 	/**
 	 * @param type the type to set
 	 */
-	public void setType(int type)
+   public void setType(ServerActionType type)
 	{
 		this.type = type;
 	}

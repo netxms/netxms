@@ -25,18 +25,16 @@ public final class ActionManagerFilter extends ViewerFilter implements AbstractV
          return true;
       
       final ServerAction action = (ServerAction)element;
-      boolean found = false;
-      if(action.getName().toLowerCase().contains(filterString) ||
-            labelProvider.ACTION_TYPE[action.getType()].toLowerCase().contains(filterString) ||
-            action.getRecipientAddress().toLowerCase().contains(filterString) ||
-            action.getEmailSubject().toLowerCase().contains(filterString) ||
-            action.getData().toLowerCase().contains(filterString) ||
-            action.getChannelName().toLowerCase().contains(filterString))
+      if (action.getName().toLowerCase().contains(filterString) ||
+          labelProvider.ACTION_TYPE[action.getType().getValue()].toLowerCase().contains(filterString) ||
+          action.getRecipientAddress().toLowerCase().contains(filterString) ||
+          action.getEmailSubject().toLowerCase().contains(filterString) ||
+          action.getData().toLowerCase().contains(filterString) ||
+          action.getChannelName().toLowerCase().contains(filterString))
       {
-         found = true;
+         return true;
       }
-      
-      return found;
+      return false;
    }
 
    public void setFilterString(String text)

@@ -36,14 +36,13 @@ public class ActionLabelProvider extends DecoratingLabelProvider implements ITab
 	public static final String[] ACTION_TYPE = { 
 			Messages.get().ActionLabelProvider_ActionTypeExecute,
 			Messages.get().ActionLabelProvider_ActionTypeRemoteExec,
-			Messages.get().ActionLabelProvider_ActionTypeMail,
+         Messages.get().ActionLabelProvider_ActionTypeRemoteSSH,
 			Messages.get().ActionLabelProvider_ActionTypeNotification,
 			Messages.get().ActionLabelProvider_ActionTypeForward,
 			Messages.get().ActionLabelProvider_ActionTypeNXSL,
-			Messages.get().ActionLabelProvider_ActionTypeXMPP,
-			Messages.get().ActionLabelProvider_ActionTypeRemoteSSH
+         Messages.get().ActionLabelProvider_ActionTypeXMPP
 	   };
-	
+
 	/**
 	 * The constructor
 	 */
@@ -52,9 +51,9 @@ public class ActionLabelProvider extends DecoratingLabelProvider implements ITab
       super(new WorkbenchLabelProvider(), PlatformUI.getWorkbench().getDecoratorManager().getLabelDecorator());
 	}
 	
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
+    */
 	@Override
 	public Image getColumnImage(Object element, int columnIndex)
 	{
@@ -63,9 +62,9 @@ public class ActionLabelProvider extends DecoratingLabelProvider implements ITab
 		return null;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
+    */
 	@Override
 	public String getColumnText(Object element, int columnIndex)
 	{
@@ -77,7 +76,7 @@ public class ActionLabelProvider extends DecoratingLabelProvider implements ITab
 			case ActionManager.COLUMN_TYPE:
 				try
 				{
-					return ACTION_TYPE[action.getType()];
+               return ACTION_TYPE[action.getType().getValue()];
 				}
 				catch(IndexOutOfBoundsException e)
 				{

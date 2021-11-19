@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,6 +38,7 @@ import org.eclipse.swt.widgets.Text;
 import org.netxms.client.NXCSession;
 import org.netxms.client.NotificationChannel;
 import org.netxms.client.ServerAction;
+import org.netxms.client.constants.ServerActionType;
 import org.netxms.ui.eclipse.actionmanager.Activator;
 import org.netxms.ui.eclipse.actionmanager.Messages;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -69,7 +70,6 @@ public class EditActionDlg extends Dialog
 
 	/**
 	 * Selection listener for action type radio buttons
-	 *
 	 */
 	class TypeButtonSelectionListener implements SelectionListener
 	{
@@ -96,9 +96,9 @@ public class EditActionDlg extends Dialog
 		this.createNew = createNew;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
-	 */
+   /**
+    * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
+    */
 	@Override
 	protected void configureShell(Shell newShell)
 	{
@@ -106,9 +106,9 @@ public class EditActionDlg extends Dialog
 		newShell.setText(createNew ? Messages.get().EditActionDlg_CreateAction : Messages.get().EditActionDlg_EditAction);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createDialogArea(Composite parent)
 	{
@@ -132,37 +132,37 @@ public class EditActionDlg extends Dialog
 		
 		typeLocalExec = new Button(typeGroup, SWT.RADIO);
 		typeLocalExec.setText(Messages.get().EditActionDlg_ExecCommandOnServer);
-		typeLocalExec.setSelection(action.getType() == ServerAction.EXEC_LOCAL);
+      typeLocalExec.setSelection(action.getType() == ServerActionType.LOCAL_COMMAND);
 		typeLocalExec.addSelectionListener(new TypeButtonSelectionListener());
 		
 		typeRemoteExec = new Button(typeGroup, SWT.RADIO);
 		typeRemoteExec.setText(Messages.get().EditActionDlg_ExecCommandOnNode);
-		typeRemoteExec.setSelection(action.getType() == ServerAction.EXEC_REMOTE);
+      typeRemoteExec.setSelection(action.getType() == ServerActionType.AGENT_COMMAND);
 		typeRemoteExec.addSelectionListener(new TypeButtonSelectionListener());
 		
 		typeRemoteSshExec = new Button(typeGroup, SWT.RADIO);
 		typeRemoteSshExec.setText(Messages.get().EditActionDlg_ExecSshCommandOnNode);
-		typeRemoteSshExec.setSelection(action.getType() == ServerAction.EXEC_SSH_REMOTE);
+      typeRemoteSshExec.setSelection(action.getType() == ServerActionType.SSH_COMMAND);
 		typeRemoteSshExec.addSelectionListener(new TypeButtonSelectionListener());
 
 		typeExecScript = new Button(typeGroup, SWT.RADIO);
 		typeExecScript.setText(Messages.get().EditActionDlg_ExecuteScript);
-		typeExecScript.setSelection(action.getType() == ServerAction.EXEC_NXSL_SCRIPT);
+      typeExecScript.setSelection(action.getType() == ServerActionType.NXSL_SCRIPT);
 		typeExecScript.addSelectionListener(new TypeButtonSelectionListener());
 		
 		typeNotification = new Button(typeGroup, SWT.RADIO);
 		typeNotification.setText("Send notification");
-		typeNotification.setSelection(action.getType() == ServerAction.SEND_NOTIFICATION);
+      typeNotification.setSelection(action.getType() == ServerActionType.NOTIFICATION);
 		typeNotification.addSelectionListener(new TypeButtonSelectionListener());
 		
       typeXMPP = new Button(typeGroup, SWT.RADIO);
       typeXMPP.setText(Messages.get().EditActionDlg_SendXMPPMessage);
-      typeXMPP.setSelection(action.getType() == ServerAction.XMPP_MESSAGE);
+      typeXMPP.setSelection(action.getType() == ServerActionType.XMPP_MESSAGE);
       typeXMPP.addSelectionListener(new TypeButtonSelectionListener());
       
 		typeForward = new Button(typeGroup, SWT.RADIO);
 		typeForward.setText(Messages.get().EditActionDlg_ForwardEvent);
-		typeForward.setSelection(action.getType() == ServerAction.FORWARD_EVENT);
+      typeForward.setSelection(action.getType() == ServerActionType.FORWARD_EVENT);
 		typeForward.addSelectionListener(new TypeButtonSelectionListener());
 		/* type selection radio buttons - end */
 
@@ -183,7 +183,6 @@ public class EditActionDlg extends Dialog
       gd.grabExcessHorizontalSpace = true;
 		channelName = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, "Channel name", gd);
 		channelName.addSelectionListener(new SelectionListener() {
-         
          @Override
          public void widgetSelected(SelectionEvent e)
          {
@@ -222,8 +221,8 @@ public class EditActionDlg extends Dialog
 		gd.grabExcessHorizontalSpace = true;
 		data.setLayoutData(gd);
 
-      final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-      new ConsoleJob("Get server actions", null, Activator.PLUGIN_ID, null) {
+      final NXCSession session = ConsoleSharedData.getSession();
+      new ConsoleJob("Get list of notification channels", null, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
@@ -249,7 +248,7 @@ public class EditActionDlg extends Dialog
          @Override
          protected String getErrorMessage()
          {
-            return "Cannot get notification channels";
+            return "Cannot get list of notification channels";
          }
       }.start();
 		
@@ -262,73 +261,76 @@ public class EditActionDlg extends Dialog
 	 * @param type Action type
 	 * @return Label for "recipient" field
 	 */
-	private String getRcptLabel(int type)
+   private String getRcptLabel(ServerActionType type)
 	{
 		switch(type)
 		{
-			case ServerAction.EXEC_REMOTE:
-			case ServerAction.EXEC_SSH_REMOTE:
+         case AGENT_COMMAND:
+         case SSH_COMMAND:
 				return Messages.get().EditActionDlg_RemoteHost;
-         case ServerAction.XMPP_MESSAGE:
+         case XMPP_MESSAGE:
             return Messages.get().EditActionDlg_XMPPID;
-			case ServerAction.FORWARD_EVENT:
+         case FORWARD_EVENT:
 				return Messages.get().EditActionDlg_RemoteServer;
-			case ServerAction.EXEC_NXSL_SCRIPT:
+         case NXSL_SCRIPT:
 				return Messages.get().EditActionDlg_ScriptName;
+         default:
+            return Messages.get().EditActionDlg_Recipient;
 		}
-		return Messages.get().EditActionDlg_Recipient;
 	}
-	
+
 	/**
 	 * Get "data" field label depending on action type
 	 * 
 	 * @param type Action type
 	 * @return Label for "data" field
 	 */
-	private String getDataLabel(int type)
+   private String getDataLabel(ServerActionType type)
 	{
 		switch(type)
 		{
-			case ServerAction.EXEC_LOCAL:
+         case LOCAL_COMMAND:
 				return Messages.get().EditActionDlg_Command;
-			case ServerAction.EXEC_REMOTE:
-			case ServerAction.EXEC_SSH_REMOTE:
+         case AGENT_COMMAND:
+         case SSH_COMMAND:
 				return Messages.get().EditActionDlg_Action;
+         default:
+            return Messages.get().EditActionDlg_MessageText;
 		}
-		return Messages.get().EditActionDlg_MessageText;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#okPressed()
-	 */
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#okPressed()
+    */
 	@Override
 	protected void okPressed()
 	{
 		if (typeLocalExec.getSelection())
-			action.setType(ServerAction.EXEC_LOCAL);
+         action.setType(ServerActionType.LOCAL_COMMAND);
 		else if (typeRemoteExec.getSelection())
-			action.setType(ServerAction.EXEC_REMOTE);
+         action.setType(ServerActionType.AGENT_COMMAND);
 		else if (typeRemoteSshExec.getSelection())
-			action.setType(ServerAction.EXEC_SSH_REMOTE);
+         action.setType(ServerActionType.SSH_COMMAND);
 		else if (typeExecScript.getSelection())
-			action.setType(ServerAction.EXEC_NXSL_SCRIPT);
+         action.setType(ServerActionType.NXSL_SCRIPT);
 		else if (typeNotification.getSelection())
-			action.setType(ServerAction.SEND_NOTIFICATION);
+         action.setType(ServerActionType.NOTIFICATION);
       else if (typeXMPP.getSelection())
-         action.setType(ServerAction.XMPP_MESSAGE);
+         action.setType(ServerActionType.XMPP_MESSAGE);
 		else if (typeForward.getSelection())
-			action.setType(ServerAction.FORWARD_EVENT);
-		
+         action.setType(ServerActionType.FORWARD_EVENT);
+
 		action.setName(name.getText());
 		action.setRecipientAddress(recipient.getText());
 		action.setEmailSubject(subject.getText());
 		action.setData(data.getText());
 		action.setDisabled(markDisabled.getSelection());
-		if(typeNotification.getSelection())
+
+      if (typeNotification.getSelection())
          action.setChannelName(ncList.get(channelName.getSelectionIndex()).getName());
 		else
 		   action.setChannelName("");
-		
+
 		super.okPressed();
 	}
 	
@@ -341,7 +343,7 @@ public class EditActionDlg extends Dialog
 
       boolean needRecipient = false;
       boolean needSubject = false;
-	   
+
 	   for(int i = 0; i < ncList.size(); i++)
 	   {
 	      NotificationChannel nc = ncList.get(i);
@@ -357,59 +359,62 @@ public class EditActionDlg extends Dialog
       recipient.setEnabled(needRecipient);
       subject.setEnabled(needSubject);
 	}
-	
+
 	/**
 	 * Handle action type change
 	 */
 	private void onTypeChange()
 	{
-		int type = -1;
-		
+      ServerActionType type = null;
+
 		if (typeLocalExec.getSelection())
-			type = ServerAction.EXEC_LOCAL;
+         type = ServerActionType.LOCAL_COMMAND;
 		else if (typeRemoteExec.getSelection())
-			type = ServerAction.EXEC_REMOTE;
+         type = ServerActionType.AGENT_COMMAND;
 		else if (typeRemoteSshExec.getSelection())
-			type = ServerAction.EXEC_SSH_REMOTE;
+         type = ServerActionType.SSH_COMMAND;
 		else if (typeExecScript.getSelection())
-			type = ServerAction.EXEC_NXSL_SCRIPT;
+         type = ServerActionType.NXSL_SCRIPT;
 		else if (typeNotification.getSelection())
-			type = ServerAction.SEND_NOTIFICATION;
+         type = ServerActionType.NOTIFICATION;
       else if (typeXMPP.getSelection())
-         type = ServerAction.XMPP_MESSAGE;
+         type = ServerActionType.XMPP_MESSAGE;
 		else if (typeForward.getSelection())
-			type = ServerAction.FORWARD_EVENT;
-		
+         type = ServerActionType.FORWARD_EVENT;
+
+		if (type == null)
+         return;
+
 		switch(type)
 		{
-			case ServerAction.EXEC_LOCAL:
+			case LOCAL_COMMAND:
 			   channelName.setEnabled(false);
 				recipient.setEnabled(false);
 				subject.setEnabled(false);
 				data.setEnabled(true);
 				break;
-			case ServerAction.EXEC_REMOTE:
-			case ServerAction.EXEC_SSH_REMOTE:
-         case ServerAction.XMPP_MESSAGE:
+         case AGENT_COMMAND:
+         case SSH_COMMAND:
+         case XMPP_MESSAGE:
             channelName.setEnabled(false);
 				recipient.setEnabled(true);
 				subject.setEnabled(false);
 				data.setEnabled(true);
 				break;
-			case ServerAction.FORWARD_EVENT:
-			case ServerAction.EXEC_NXSL_SCRIPT:
+         case FORWARD_EVENT:
+         case NXSL_SCRIPT:
             channelName.setEnabled(false);
 				recipient.setEnabled(true);
 				subject.setEnabled(false);
 				data.setEnabled(false);
 				break;
-         case ServerAction.SEND_NOTIFICATION:
+         case NOTIFICATION:
             channelName.setEnabled(true);
             updateChannelList();            
             data.setEnabled(true);
             break;
 		}
-		
+
 		recipient.setLabel(getRcptLabel(type));
 		data.setLabel(getDataLabel(type));
 	}

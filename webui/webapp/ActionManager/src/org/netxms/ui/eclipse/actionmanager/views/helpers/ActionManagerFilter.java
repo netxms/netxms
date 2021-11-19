@@ -8,13 +8,13 @@ public final class ActionManagerFilter extends ViewerFilter
 {
    private String filterString;
    private ActionLabelProvider labelProvider;
-   
+
    public ActionManagerFilter(ActionLabelProvider labelProvider)
    {
       this.labelProvider = labelProvider;
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.viewers.ViewerFilter#select(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
     */
    @Override
@@ -25,8 +25,8 @@ public final class ActionManagerFilter extends ViewerFilter
       
       final ServerAction action = (ServerAction)element;
       boolean found = false;
-      if(action.getName().toLowerCase().contains(filterString) ||
-            labelProvider.ACTION_TYPE[action.getType()].toLowerCase().contains(filterString) ||
+      if (action.getName().toLowerCase().contains(filterString) ||
+            labelProvider.ACTION_TYPE[action.getType().getValue()].toLowerCase().contains(filterString) ||
             action.getRecipientAddress().toLowerCase().contains(filterString) ||
             action.getEmailSubject().toLowerCase().contains(filterString) ||
             action.getData().toLowerCase().contains(filterString) ||

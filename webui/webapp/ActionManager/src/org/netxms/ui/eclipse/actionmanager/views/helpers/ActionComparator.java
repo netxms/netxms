@@ -49,7 +49,7 @@ public class ActionComparator extends ViewerComparator
 				rc = ((ServerAction)e1).getName().compareToIgnoreCase(((ServerAction)e2).getName());
 				break;
 			case ActionManager.COLUMN_TYPE:
-				rc = ((ServerAction)e1).getType() - ((ServerAction)e2).getType();
+            rc = ((ServerAction)e1).getType().compareTo(((ServerAction)e2).getType());
 				break;
 			case ActionManager.COLUMN_RCPT:
 				rc = ((ServerAction)e1).getRecipientAddress().compareToIgnoreCase(((ServerAction)e2).getRecipientAddress());
