@@ -20,9 +20,7 @@ package org.netxms.websvc.handlers;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
-import org.netxms.client.constants.RCC;
 import org.netxms.client.datacollection.DciPushData;
 import org.netxms.websvc.json.JsonTools;
 
@@ -53,5 +51,4 @@ public class PushDataHandler extends AbstractHandler
       session.pushDciData(dciData);
       return null;
    }
-   
 }

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,11 +29,10 @@ import org.netxms.ui.eclipse.actionmanager.views.ActionManager;
 
 /**
  * Label provider for action list 
- *
  */
 public class ActionLabelProvider extends DecoratingLabelProvider implements ITableLabelProvider
 {
-	public static final String[] ACTION_TYPE = { 
+	public final String[] ACTION_TYPE = { 
 			Messages.get().ActionLabelProvider_ActionTypeExecute,
 			Messages.get().ActionLabelProvider_ActionTypeRemoteExec,
          Messages.get().ActionLabelProvider_ActionTypeRemoteSSH,

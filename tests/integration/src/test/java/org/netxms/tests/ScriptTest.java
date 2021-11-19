@@ -236,7 +236,7 @@ public class ScriptTest extends AbstractSessionTest implements TextOutputListene
          session.executeAction(managementNode.getObjectId(), "Agent.Restart", null);
 
          Thread.sleep(10000); // Wait for agent restart         
-         session.pollNode(managementNode.getObjectId(), NodePollType.STATUS, null);
+         session.pollObject(managementNode.getObjectId(), NodePollType.STATUS, null);
 
          List<String> params = new ArrayList<String>();
          params.add(Long.toString(managementNode.getObjectId()));

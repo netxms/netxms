@@ -19,8 +19,6 @@
 package org.netxms.ui.eclipse.objecttools.widgets;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.Map;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.console.IOConsoleOutputStream;

@@ -38,8 +38,6 @@ import org.eclipse.jface.preference.PreferenceNode;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Widget;
 import org.eclipse.ui.IActionBars;
@@ -123,7 +121,6 @@ public class HistoricalGraphView extends ViewPart implements ChartConfigurationC
    private Action actionSaveAs;
    private Action actionSaveAsTemplate;
    private Action[] presetActions;
-   private Action actionSaveAsImage;
 
    /**
     * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)

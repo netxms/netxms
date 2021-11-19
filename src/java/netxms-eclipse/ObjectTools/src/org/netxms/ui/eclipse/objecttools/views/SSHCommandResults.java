@@ -19,8 +19,6 @@
 package org.netxms.ui.eclipse.objecttools.views;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.Map;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;

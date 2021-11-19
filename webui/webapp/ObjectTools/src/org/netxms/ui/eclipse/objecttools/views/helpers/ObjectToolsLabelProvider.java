@@ -63,12 +63,13 @@ public class ObjectToolsLabelProvider extends LabelProvider implements ITableLab
 		toolTypeImages[7] = Activator.getImageDescriptor("icons/file_download.png").createImage(); //$NON-NLS-1$
       toolTypeImages[8] = Activator.getImageDescriptor("icons/script.png").createImage(); //$NON-NLS-1$
       toolTypeImages[9] = Activator.getImageDescriptor("icons/table.gif").createImage(); //$NON-NLS-1$
-		toolTypeImages[10] = Activator.getImageDescriptor("icons/stop.png").createImage(); //$NON-NLS-1$
+      toolTypeImages[10] = Activator.getImageDescriptor("icons/console.png").createImage(); //$NON-NLS-1$
+      toolTypeImages[11] = Activator.getImageDescriptor("icons/stop.png").createImage(); //$NON-NLS-1$
 	}
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
-	 */
+
+   /**
+    * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
+    */
 	@Override
 	public Image getColumnImage(Object element, int columnIndex)
 	{
@@ -92,9 +93,9 @@ public class ObjectToolsLabelProvider extends LabelProvider implements ITableLab
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
+    */
 	@Override
 	public String getColumnText(Object element, int columnIndex)
 	{
@@ -120,9 +121,9 @@ public class ObjectToolsLabelProvider extends LabelProvider implements ITableLab
 		return null;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.BaseLabelProvider#dispose()
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.BaseLabelProvider#dispose()
+    */
 	@Override
 	public void dispose()
 	{

@@ -9,7 +9,8 @@ Require-Bundle: org.eclipse.rap.ui;bundle-version="2.3.1",
  org.netxms.ui.base;bundle-version="4.0.0",
  org.netxms.ui.eclipse.clientlibrary;bundle-version="4.0.0",
  org.netxms.webui.core;bundle-version="4.0.0",
- org.netxms.ui.base;bundle-version="4.0.0"
+ org.netxms.ui.base;bundle-version="4.0.0",
+ org.slf4j.api;bundle-version="1.7.30"
 Bundle-RequiredExecutionEnvironment: JavaSE-11
 Bundle-ActivationPolicy: lazy
 Export-Package: org.netxms.ui.eclipse.actionmanager.dialogs,
