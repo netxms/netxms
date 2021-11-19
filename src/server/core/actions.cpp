@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -262,11 +262,11 @@ static bool ExecuteRemoteAction(const TCHAR *pszTarget, const TCHAR *pszAction)
 /**
  * Run external command via system()
  */
-static void RunCommand(void *arg)
+static void RunCommand(TCHAR *command)
 {
    if (ConfigReadBoolean(_T("EscapeLocalCommands"), false))
    {
-      StringBuffer s = (TCHAR *)arg;
+      StringBuffer s(command);
 #ifdef _WIN32
       s.replace(_T("\t"), _T("\\t"));
       s.replace(_T("\n"), _T("\\n"));
@@ -276,13 +276,13 @@ static void RunCommand(void *arg)
       s.replace(_T("\n"), _T("\\\\n"));
       s.replace(_T("\r"), _T("\\\\r"));
 #endif
-      MemFree(arg);
-      arg = MemCopyString(s.cstr());
+      MemFree(command);
+      command = MemCopyString(s);
    }
-   nxlog_debug_tag(DEBUG_TAG, 3, _T("Executing command \"%s\""), (TCHAR *)arg);
-	if (_tsystem((TCHAR *)arg) == -1)
-	   nxlog_debug_tag(DEBUG_TAG, 5, _T("RunCommandThread: failed to execute command \"%s\""), (TCHAR *)arg);
-	MemFree(arg);
+   nxlog_debug_tag(DEBUG_TAG, 3, _T("Executing command \"%s\""), command);
+   if (_tsystem(command) == -1)
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("RunCommandThread: failed to execute command \"%s\""), command);
+   MemFree(command);
 }
 
 /**
@@ -470,7 +470,7 @@ bool ExecuteAction(uint32_t actionId, const Event *event, const Alarm *alarm)
                {
                   nxlog_debug_tag(DEBUG_TAG, 3, _T("Empty command - nothing to execute"));
                }
-					success = true;
+               success = true;
                break;
             case ACTION_SEND_EMAIL:
                if (!expandedRcpt.isEmpty())
@@ -547,7 +547,7 @@ bool ExecuteAction(uint32_t actionId, const Event *event, const Alarm *alarm)
                   success = true;
                }
                break;
-				case ACTION_FORWARD_EVENT:
+            case ACTION_FORWARD_EVENT:
                if (!expandedRcpt.isEmpty())
                {
                   nxlog_debug_tag(DEBUG_TAG, 3, _T("Forwarding event to \"%s\""), expandedRcpt.cstr());
@@ -558,8 +558,8 @@ bool ExecuteAction(uint32_t actionId, const Event *event, const Alarm *alarm)
                   nxlog_debug_tag(DEBUG_TAG, 3, _T("Empty destination - event will not be forwarded"));
                   success = true;
                }
-					break;
-				case ACTION_NXSL_SCRIPT:
+               break;
+            case ACTION_NXSL_SCRIPT:
                if (!expandedRcpt.isEmpty())
                {
                   nxlog_debug_tag(DEBUG_TAG, 3, _T("Executing NXSL script \"%s\""), expandedRcpt.cstr());
@@ -570,7 +570,7 @@ bool ExecuteAction(uint32_t actionId, const Event *event, const Alarm *alarm)
                   nxlog_debug_tag(DEBUG_TAG, 3, _T("Empty script name - nothing to execute"));
                   success = true;
                }
-					break;
+               break;
             default:
                break;
          }
