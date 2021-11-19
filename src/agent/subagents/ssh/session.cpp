@@ -254,26 +254,28 @@ bool SSHSession::execute(const TCHAR *command, StringList* output, ActionContext
          while(nbytes > 0)
          {
             buffer[nbytes + offset] = 0;
-            char *curr = buffer;
-            char *eol = strchr(curr, '\n');
-            while(eol != nullptr)
+            if (context != nullptr)
             {
-               *eol = 0;
-               char *cr = strchr(curr, '\r');
-               if (cr != nullptr)
-                  *cr = 0;
-               
-               if (context != nullptr)
-                  context->sendOutputUtf8(curr);
-               else
-                  output->addMBString(curr);
-
-               curr = eol + 1;
-               eol = strchr(curr, '\n');
+               context->sendOutputUtf8(buffer);
             }
-            offset = strlen(curr);
-            if (offset > 0)
-               memmove(buffer, curr, offset);
+            else
+            {
+               char *curr = buffer;
+               char *eol = strchr(curr, '\n');
+               while(eol != nullptr)
+               {
+                  *eol = 0;
+                  char *cr = strchr(curr, '\r');
+                  if (cr != nullptr)
+                     *cr = 0;
+                  output->addMBString(curr);
+                  curr = eol + 1;
+                  eol = strchr(curr, '\n');
+               }
+               offset = strlen(curr);
+               if (offset > 0)
+                  memmove(buffer, curr, offset);
+            }
             nbytes = ssh_channel_read(channel, &buffer[offset], sizeof(buffer) - offset - 1, 0);
          }
          if (nbytes == 0)
@@ -284,11 +286,7 @@ bool SSHSession::execute(const TCHAR *command, StringList* output, ActionContext
                char *cr = strchr(buffer, '\r');
                if (cr != nullptr)
                   *cr = 0;
-
-               if (context != nullptr)
-                  context->sendOutputUtf8(buffer);
-               else
-                  output->addMBString(buffer);
+               output->addMBString(buffer);
             }
             ssh_channel_send_eof(channel);
          }
