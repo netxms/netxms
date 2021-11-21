@@ -51,6 +51,8 @@ public class SearchQuery
 
    /**
     * Construct new search query from source string
+    * 
+    * @param source query source
     */
    public SearchQuery(String source)
    {
