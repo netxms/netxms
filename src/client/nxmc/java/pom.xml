@@ -4,7 +4,7 @@
    <groupId>org.netxms</groupId>
    <artifactId>nxmc</artifactId>
    <version>${revision}</version>
-   <packaging>jar</packaging>
+   <packaging>${packaging.type}</packaging>
    <name>nxmc</name>
    <description>NetXMS Management Console</description>
    <url>http://www.netxms.org</url>
@@ -41,7 +41,9 @@
       <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
       <build.finalName>${project.artifactId}-${project.version}</build.finalName>
       <lib.scope>compile</lib.scope>
+      <rwt.version>3.18.0</rwt.version>
       <swt.version>3.117.0</swt.version>
+      <packaging.type>jar</packaging.type>
    </properties>
    <profiles>
       <profile>
@@ -50,6 +52,10 @@
             <os>
                <family>windows</family>
             </os>
+            <property>
+               <name>netxms.build.disablePlatformProfile</name>
+               <value>!true</value>
+            </property>
          </activation>
          <dependencies>
             <dependency>
@@ -72,6 +78,10 @@
             <os>
                <name>Linux</name>
             </os>
+            <property>
+               <name>netxms.build.disablePlatformProfile</name>
+               <value>!true</value>
+            </property>
          </activation>
          <dependencies>
             <dependency>
@@ -94,6 +104,10 @@
             <os>
                <name>Mac OS X</name>
             </os>
+            <property>
+               <name>netxms.build.disablePlatformProfile</name>
+               <value>!true</value>
+            </property>
          </activation>
          <dependencies>
             <dependency>
@@ -142,6 +156,173 @@
             </plugins>
          </build>
       </profile>
+      <profile>
+         <id>desktop</id>
+         <dependencies>
+            <dependency>
+               <groupId>org.netxms</groupId>
+               <artifactId>swtchart</artifactId>
+               <version>1.2</version>
+               <scope>${lib.scope}</scope>
+               <exclusions>
+                  <exclusion>
+                     <groupId>org.eclipse.platform</groupId>
+                     <artifactId>org.eclipse.swt</artifactId>
+                  </exclusion>
+               </exclusions>
+            </dependency>
+            <dependency>
+               <groupId>org.netxms</groupId>
+               <artifactId>zest-swt</artifactId>
+               <version>2.0.10</version>
+               <scope>${lib.scope}</scope>
+               <exclusions>
+                  <exclusion>
+                     <groupId>org.eclipse.platform</groupId>
+                     <artifactId>org.eclipse.swt</artifactId>
+                  </exclusion>
+               </exclusions>
+            </dependency>
+         </dependencies>
+         <build>
+            <plugins>
+               <plugin>
+                  <groupId>org.apache.maven.plugins</groupId>
+                  <artifactId>maven-jar-plugin</artifactId>
+                  <version>3.2.0</version>
+                  <configuration>
+                     <archive>
+                        <manifest>
+                           <mainClass>org.netxms.nxmc.Startup</mainClass>
+                           <addClasspath>true</addClasspath>
+                        </manifest>
+                     </archive>
+                  </configuration>
+               </plugin>
+               <plugin>
+                  <groupId>org.codehaus.mojo</groupId>
+                  <artifactId>build-helper-maven-plugin</artifactId>
+                  <version>3.2.0</version>
+                  <executions>
+                     <execution>
+                        <id>add-sources</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                           <goal>add-source</goal>
+                        </goals>
+                        <configuration>
+                           <sources>
+                              <source>${basedir}/src/swt/java</source>
+                           </sources>
+                        </configuration>
+                     </execution>
+                  </executions>
+               </plugin>
+               <plugin>
+                  <groupId>org.apache.maven.plugins</groupId>
+                  <artifactId>maven-dependency-plugin</artifactId>
+                  <version>3.2.0</version>
+                  <executions>
+                     <execution>
+                        <id>copy-dependencies</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                           <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                           <outputDirectory>${project.build.directory}/lib</outputDirectory>
+                           <overWriteReleases>false</overWriteReleases>
+                           <overWriteSnapshots>false</overWriteSnapshots>
+                           <overWriteIfNewer>true</overWriteIfNewer>
+                           <includeScope>runtime</includeScope>
+                        </configuration>
+                     </execution>
+                  </executions>
+               </plugin>
+            </plugins>
+         </build>
+      </profile>
+      <profile>
+         <id>web</id>
+         <properties>
+            <packaging.type>war</packaging.type>
+         </properties>
+         <dependencies>
+            <dependency>
+               <groupId>org.eclipse.rap</groupId>
+               <artifactId>org.eclipse.rap.jface</artifactId>
+               <version>${rwt.version}</version>
+               <scope>${lib.scope}</scope>
+            </dependency>
+            <dependency>
+               <groupId>org.eclipse.rap</groupId>
+               <artifactId>org.eclipse.rap.filedialog</artifactId>
+               <version>${rwt.version}</version>
+               <scope>${lib.scope}</scope>
+            </dependency>
+            <dependency>
+               <groupId>org.netxms</groupId>
+               <artifactId>draw2d-rwt</artifactId>
+               <version>1.5.3</version>
+               <scope>${lib.scope}</scope>
+            </dependency>
+            <dependency>
+               <groupId>org.netxms</groupId>
+               <artifactId>zest-rwt</artifactId>
+               <version>2.0.10</version>
+               <scope>${lib.scope}</scope>
+            </dependency>
+            <dependency>
+               <groupId>org.netxms</groupId>
+               <artifactId>rwtchart</artifactId>
+               <version>1.1</version>
+               <scope>${lib.scope}</scope>
+            </dependency>
+            <dependency>
+               <groupId>javax.servlet</groupId>
+               <artifactId>javax.servlet-api</artifactId>
+               <version>4.0.1</version>
+               <scope>provided</scope>
+            </dependency>
+         </dependencies>
+         <build>
+            <plugins>
+               <plugin>
+                  <groupId>org.codehaus.mojo</groupId>
+                  <artifactId>build-helper-maven-plugin</artifactId>
+                  <version>3.2.0</version>
+                  <executions>
+                     <execution>
+                        <id>add-sources</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                           <goal>add-source</goal>
+                        </goals>
+                        <configuration>
+                           <sources>
+                              <source>${basedir}/src/rwt/java</source>
+                           </sources>
+                        </configuration>
+                     </execution>
+                     <execution>
+                        <id>add-resource</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                           <goal>add-resource</goal>
+                        </goals>
+                        <configuration>
+                           <resources>
+                              <resource>
+                                 <directory>${basedir}/src/rwt/resources</directory>
+                              </resource>
+                           </resources>
+                        </configuration>
+                     </execution>
+                  </executions>
+               </plugin>
+            </plugins>
+         </build>
+      </profile>
    </profiles>
    <dependencies>
       <dependency>
@@ -167,42 +348,6 @@
          <artifactId>org.eclipse.core.commands</artifactId>
          <version>3.9.800</version>
          <scope>${lib.scope}</scope>
-      </dependency>
-      <dependency>
-         <groupId>org.eclipse.platform</groupId>
-         <artifactId>org.eclipse.jface</artifactId>
-         <version>3.23.0</version>
-         <scope>${lib.scope}</scope>
-         <exclusions>
-            <exclusion>
-               <groupId>org.eclipse.platform</groupId>
-               <artifactId>org.eclipse.swt</artifactId>
-            </exclusion>
-         </exclusions>
-      </dependency>
-      <dependency>
-         <groupId>org.netxms</groupId>
-         <artifactId>swtchart</artifactId>
-         <version>1.2</version>
-         <scope>${lib.scope}</scope>
-         <exclusions>
-            <exclusion>
-               <groupId>org.eclipse.platform</groupId>
-               <artifactId>org.eclipse.swt</artifactId>
-            </exclusion>
-         </exclusions>
-      </dependency>
-      <dependency>
-         <groupId>org.netxms</groupId>
-         <artifactId>zest-swt</artifactId>
-         <version>2.0.10</version>
-         <scope>${lib.scope}</scope>
-         <exclusions>
-            <exclusion>
-               <groupId>org.eclipse.platform</groupId>
-               <artifactId>org.eclipse.swt</artifactId>
-            </exclusion>
-         </exclusions>
       </dependency>
       <dependency>
          <groupId>org.slf4j</groupId>
@@ -234,46 +379,12 @@
       <plugins>
          <plugin>
             <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-jar-plugin</artifactId>
-            <version>3.2.0</version>
-            <configuration>
-               <archive>
-                  <manifest>
-                     <mainClass>org.netxms.nxmc.Startup</mainClass>
-                     <addClasspath>true</addClasspath>
-                  </manifest>
-               </archive>
-            </configuration>
-         </plugin>
-         <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-compiler-plugin</artifactId>
             <version>3.8.1</version>
             <configuration>
                <source>11</source>
                <target>11</target>
             </configuration>
-         </plugin>
-         <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-dependency-plugin</artifactId>
-            <version>3.2.0</version>
-            <executions>
-               <execution>
-                  <id>copy-dependencies</id>
-                  <phase>prepare-package</phase>
-                  <goals>
-                     <goal>copy-dependencies</goal>
-                  </goals>
-                  <configuration>
-                     <outputDirectory>${project.build.directory}/lib</outputDirectory>
-                     <overWriteReleases>false</overWriteReleases>
-                     <overWriteSnapshots>false</overWriteSnapshots>
-                     <overWriteIfNewer>true</overWriteIfNewer>
-                     <includeScope>runtime</includeScope>
-                  </configuration>
-               </execution>
-            </executions>
          </plugin>
          <plugin>
             <groupId>org.apache.maven.plugins</groupId>

@@ -64,11 +64,14 @@ public class PropertyDialog extends PreferenceDialog
          return Window.OK;
 
       // Check if any of the pages was changed
-      for(IPreferenceNode n : getPreferenceManager().getElements(PreferenceManager.PRE_ORDER))
+      for(Object n : getPreferenceManager().getElements(PreferenceManager.PRE_ORDER))
       {
-         IPreferencePage page = n.getPage();
-         if ((page != null) && (page instanceof PropertyPage) && ((PropertyPage)page).isChanged())
-            return Window.OK;
+         if (n instanceof IPreferenceNode)
+         {
+            IPreferencePage page = ((IPreferenceNode)n).getPage();
+            if ((page != null) && (page instanceof PropertyPage) && ((PropertyPage)page).isChanged())
+               return Window.OK;
+         }
       }
       return result;
    }
