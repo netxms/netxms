@@ -1,7 +1,7 @@
 EXTRA_DIST = pom.xml src
 
 install-exec-hook:
-	mvn -Drevision=$(PACKAGE_VERSION) -Dmaven.test.skip=true package
+	mvn -Drevision=$(PACKAGE_VERSION) -Dmaven.test.skip=true -Pdesktop package
 	mkdir -p $(DESTDIR)$(pkglibdir)/java
 	cp target/nxmc-$(PACKAGE_VERSION).jar $(DESTDIR)$(pkglibdir)/java/
 	cp target/lib/*.jar $(DESTDIR)$(pkglibdir)/java/
