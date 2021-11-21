@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2017 Raden Solutions
+ * Copyright (C) 2003-2021 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -57,7 +57,7 @@ public class ClusterOptions extends AbstractDCIPropertyPage
    private Button checkAggregateWithErrors;
 	private Button checkRunScript;
 	private Combo aggregationFunction;
-	
+
 	/**
 	 * Constructor
 	 * 
@@ -93,14 +93,14 @@ public class ClusterOptions extends AbstractDCIPropertyPage
 				}
 			}
 		}
-		
+
 		GridLayout layout = new GridLayout();
 		layout.verticalSpacing = WidgetHelper.DIALOG_SPACING;
 		layout.horizontalSpacing = WidgetHelper.DIALOG_SPACING;
 		layout.marginWidth = 0;
 		layout.marginHeight = 0;
       dialogArea.setLayout(layout);
-      
+
       clusterResource = WidgetHelper.createLabeledCombo(dialogArea, SWT.BORDER | SWT.READ_ONLY, i18n.tr("Associate with cluster resource"), WidgetHelper.DEFAULT_LAYOUT_DATA);
       if (cluster != null)
       {
@@ -140,7 +140,7 @@ public class ClusterOptions extends AbstractDCIPropertyPage
    	checkAggregate = new Button(aggregationGroup, SWT.CHECK);
    	checkAggregate.setText(i18n.tr("Aggregate values from cluster nodes"));
    	checkAggregate.setSelection(editor.getObject().isAggregateOnCluster());
-      	
+
       checkAggregateWithErrors = new Button(aggregationGroup, SWT.CHECK);
       checkAggregateWithErrors.setText("Use last known value for aggregation in case of data collection error");
       checkAggregateWithErrors.setSelection(editor.getObject().isAggregateWithErrors());
@@ -202,7 +202,7 @@ public class ClusterOptions extends AbstractDCIPropertyPage
 		return true;
 	}
 
-	/* (non-Javadoc)
+	/**
 	 * @see org.eclipse.jface.preference.PreferencePage#performOk()
 	 */
 	@Override
@@ -211,7 +211,7 @@ public class ClusterOptions extends AbstractDCIPropertyPage
 		return applyChanges(false);
 	}
 
-	/* (non-Javadoc)
+	/**
 	 * @see org.eclipse.jface.preference.PreferencePage#performApply()
 	 */
 	@Override
@@ -220,7 +220,7 @@ public class ClusterOptions extends AbstractDCIPropertyPage
 		applyChanges(true);
 	}
 
-	/* (non-Javadoc)
+	/**
 	 * @see org.eclipse.jface.preference.PreferencePage#performDefaults()
 	 */
 	@Override
