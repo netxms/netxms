@@ -53,11 +53,13 @@ private:
 	MUTEX m_dataLock;
 	MUTEX m_sessionLock;
    CONDITION m_stopCondition;
+   bool m_usePerformanceSchema; // True if DB server is MySQL and version is >= 5.7
 
    static THREAD_RESULT THREAD_CALL pollerThreadStarter(void *arg);
 
    void pollerThread();
    bool poll();
+   void checkMySQLVersion();
 
 public:
    DatabaseInstance(DatabaseInfo *info);
