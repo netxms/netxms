@@ -288,7 +288,7 @@ void UpdateConfig(const NXCPMessage *msg)
    if (SHGetFolderPath(NULL, CSIDL_LOCAL_APPDATA, NULL, SHGFP_TYPE_CURRENT, path) != S_OK)
       _tcscpy(path, _T("C:"));
    _tcscat(path, _T("\\nxuseragent"));
-   CreateFolder(path);
+   CreateDirectoryTree(path);
    _tcscat(path, _T("\\config.xml"));
 
    int fd = _topen(path, O_CREAT | O_TRUNC | O_BINARY | O_WRONLY, _S_IREAD | _S_IWRITE);

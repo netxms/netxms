@@ -42,7 +42,7 @@ static void InitLogging()
       _tcscpy(path, _T("C:"));
    }
    _tcscat(path, _T("\\nxuseragent\\log"));
-   CreateFolder(path);
+   CreateDirectoryTree(path);
    
    _tcscat(path, _T("\\nxuseragent.log"));
    nxlog_open(path, 0);

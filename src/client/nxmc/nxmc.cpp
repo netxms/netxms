@@ -139,7 +139,7 @@ static int StartApp(int argc, NXMC_CHAR *argv[])
 #else
    swtLibraryPath.append(_T("/tmp/nxmc."));
 #endif
-   swtLibraryPath.append(GetCurrentProcessId());
+   swtLibraryPath.append(static_cast<uint32_t>(GetCurrentProcessId()));
    swtLibraryPath.append(_T("."));
    swtLibraryPath.append(GetCurrentTimeMs());
    if (CreateDirectoryTree(swtLibraryPath))
