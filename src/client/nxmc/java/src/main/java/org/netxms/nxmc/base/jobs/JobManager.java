@@ -43,14 +43,18 @@ public class JobManager
          @Override
          public Thread newThread(Runnable r)
          {
-            return new Thread(r, "JobWorker-" + Integer.toString(threadNumber++));
+            Thread t = new Thread(r, "JobWorker-" + Integer.toString(threadNumber++));
+            t.setDaemon(true);
+            return t;
          }
       });
       scheduler = Executors.newSingleThreadScheduledExecutor(new ThreadFactory() {
          @Override
          public Thread newThread(Runnable r)
          {
-            return new Thread(r, "JobScheduler");
+            Thread t = new Thread(r, "JobScheduler");
+            t.setDaemon(true);
+            return t;
          }
       });
    }

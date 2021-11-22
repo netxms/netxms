@@ -98,26 +98,31 @@ public class Startup
          }
       });
 
-      doLogin(display, args);
+      if (doLogin(display, args))
+      {
+         DataCollectionDisplayInfo.init();
+         MibCache.init(Registry.getSession(), display);
+         ObjectToolsCache.init();
+         ObjectToolsCache.attachSession(Registry.getSession());
 
-      DataCollectionDisplayInfo.init();
-      MibCache.init(Registry.getSession(), display);
-      ObjectToolsCache.init();
-      ObjectToolsCache.attachSession(Registry.getSession());
+         MainWindow w = new MainWindow(null);
+         Registry.getInstance().setMainWindow(w);
+         w.setBlockOnOpen(true);
+         w.open();
+      }
 
-      MainWindow w = new MainWindow(null);
-      Registry.getInstance().setMainWindow(w);
-      w.setBlockOnOpen(true);
-      w.open();
       display.dispose();
       logger.info("Application exit");
-      System.exit(0);
-}
+
+      logger.debug("Running threads on shutdown:");
+      for(Thread t : Thread.getAllStackTraces().keySet())
+         logger.debug("   " + t.getName() + " state=" + t.getState() + " daemon=" + t.isDaemon());
+   }
 
    /**
     * Show login dialog and perform login
     */
-   private static void doLogin(final Display display, String[] args)
+   private static boolean doLogin(final Display display, String[] args)
    {
       PreferenceStore settings = PreferenceStore.getInstance();
       boolean success = false;
@@ -192,7 +197,7 @@ public class Startup
             if (loginDialog.open() != Window.OK)
             {
                logger.info("Login cancelled by user - exiting");
-               System.exit(0);
+               return false;
             }
             password = loginDialog.getPassword();
          }
@@ -262,6 +267,7 @@ public class Startup
       {
          requestPasswordChange(loginDialog.getPassword(), session);
       }
+      return true;
    }
 
    /**

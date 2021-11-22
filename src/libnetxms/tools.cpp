@@ -850,50 +850,105 @@ const TCHAR LIBNETXMS_EXPORTABLE *ExpandFileName(const TCHAR *name, TCHAR *buffe
 }
 
 /**
- * Create folder
+ * Create directory and all parent directories as needed (like mkdir -p)
  */
-bool LIBNETXMS_EXPORTABLE CreateFolder(const TCHAR *directory)
+bool LIBNETXMS_EXPORTABLE CreateDirectoryTree(const TCHAR *path)
 {
    NX_STAT_STRUCT st;
-   TCHAR *previous = MemCopyString(directory);
+   TCHAR *previous = MemCopyString(path);
    TCHAR *ptr = _tcsrchr(previous, FS_PATH_SEPARATOR_CHAR);
-   bool result = false;
+   bool success = false;
    if (ptr != nullptr)
    {
       *ptr = 0;
       if (CALL_STAT(previous, &st) != 0)
       {
-         result = CreateFolder(previous);
-         if (result)
+         success = CreateDirectoryTree(previous);
+         if (success)
          {
-            result = (CALL_STAT(previous, &st) == 0);
+            success = (CALL_STAT(previous, &st) == 0);
          }
       }
       else
       {
          if (S_ISDIR(st.st_mode))
          {
-            result = true;
+            success = true;
          }
       }
    }
    else
    {
-      result = true;
+      success = true;
       st.st_mode = 0700;
    }
    MemFree(previous);
 
-   if (result)
+   if (success)
    {
 #ifdef _WIN32
-      result = CreateDirectory(directory, nullptr);
+      success = CreateDirectory(path, nullptr);
 #else
-      result = (_tmkdir(directory, st.st_mode) == 0);
+      success = (_tmkdir(path, st.st_mode) == 0);
 #endif /* _WIN32 */
    }
 
-   return result;
+   return success;
+}
+
+/**
+ * Delete given directory and all files and sub-directories
+ */
+bool LIBNETXMS_EXPORTABLE DeleteDirectoryTree(const TCHAR *path)
+{
+   TCHAR epath[MAX_PATH];
+   _tcslcpy(epath, path, MAX_PATH);
+   size_t rootPathLen = _tcslen(epath);
+   if (rootPathLen >= MAX_PATH - 2)
+      return false;  // Path is too long
+   epath[rootPathLen++] = FS_PATH_SEPARATOR_CHAR;
+
+   _TDIR *dir = _topendir(path);
+   if (dir == nullptr)
+      return false;
+
+   bool success = true;
+   while(success)
+   {
+      struct _tdirent *e = _treaddir(dir);
+      if (e == nullptr)
+         break;
+
+      if (!_tcscmp(e->d_name, _T(".")) || !_tcscmp(e->d_name, _T("..")))
+         continue;
+
+      _tcslcpy(&epath[rootPathLen], e->d_name, MAX_PATH - rootPathLen);
+      if (e->d_type == DT_DIR)
+      {
+         success = DeleteDirectoryTree(epath);
+      }
+      else
+      {
+#ifdef _WIN32
+         success = DeleteFile(epath);
+#else
+         success = (_tremove(epath) == 0);
+#endif
+      }
+   }
+
+   _tclosedir(dir);
+
+   if (success)
+   {
+#ifdef _WIN32
+      success = RemoveDirectory(path);
+#else
+      success = (_trmdir(path) == 0);
+#endif
+   }
+
+   return success;
 }
 
 /**

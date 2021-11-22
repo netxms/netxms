@@ -405,7 +405,7 @@ bool LoadConfig(const TCHAR *configSection, bool firstStart)
       {
          // Check if configuration policies stored at old location
          RecoverConfigPolicyDirectory();
-         CreateFolder(g_szConfigPolicyDir);
+         CreateDirectoryTree(g_szConfigPolicyDir);
       }
       _tcscat(g_szConfigPolicyDir, FS_PATH_SEPARATOR);
 

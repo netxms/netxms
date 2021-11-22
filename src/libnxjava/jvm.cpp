@@ -232,5 +232,6 @@ JavaBridgeError LIBNXJAVA_EXPORTABLE StartJavaApplication(JNIEnv *env, const cha
    }
    env->CallStaticVoidMethod(app, appMain, jargs);
    env->DeleteLocalRef(jargs);
+   nxlog_debug_tag(DEBUG_TAG_JAVA_RUNTIME, 5, _T("Application main method exited"));
    return NXJAVA_SUCCESS;
 }

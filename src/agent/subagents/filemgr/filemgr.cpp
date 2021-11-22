@@ -767,7 +767,7 @@ static void CH_CreateFolder(NXCPMessage *request, NXCPMessage *response, Abstrac
    {
       if (ValidateFileChangeOperation(fullPath, false, response))
       {
-         if (CreateFolder(fullPath))
+         if (CreateDirectoryTree(fullPath))
          {
             response->setField(VID_RCC, ERR_SUCCESS);
          }
@@ -997,7 +997,7 @@ static void CH_Upload(NXCPMessage *request, NXCPMessage *response, AbstractCommS
       TCHAR *pathToFile = GetPathToFile(fullPath);
       if (pathToFile != nullptr)
       {
-         CreateFolder(pathToFile);
+         CreateDirectoryTree(pathToFile);
          MemFree(pathToFile);
       }
 

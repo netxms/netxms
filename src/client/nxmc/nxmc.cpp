@@ -77,7 +77,7 @@ static int StartApp(int argc, NXMC_CHAR *argv[])
    if (s_optJre != nullptr)
    {
 #if !defined(_WIN32) && defined(UNICODE)
-      MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, s_optJre, -1, jre, MAX_PATH);
+      MultiByteToWideCharSysLocale(s_optJre, jre, MAX_PATH);
       jre[MAX_PATH - 1] = 0;
 #else
       _tcslcpy(jre, s_optJre, MAX_PATH);
@@ -123,6 +123,32 @@ static int StartApp(int argc, NXMC_CHAR *argv[])
       }
    }
 
+   // Temporary directory for SWT libraries
+   StringBuffer swtLibraryPath;
+#ifdef _WIN32
+   TCHAR temp[MAX_PATH];
+   if (GetTempPath(MAX_PATH, temp) != 0)
+   {
+      swtLibraryPath.append(temp);
+      swtLibraryPath.append(_T("nxmc."));
+   }
+   else
+   {
+      swtLibraryPath.append(_T("C:\\nxmc."));
+   }
+#else
+   swtLibraryPath.append(_T("/tmp/nxmc."));
+#endif
+   swtLibraryPath.append(GetCurrentProcessId());
+   swtLibraryPath.append(_T("."));
+   swtLibraryPath.append(GetCurrentTimeMs());
+   if (CreateDirectoryTree(swtLibraryPath))
+   {
+      StringBuffer option(_T("-Dswt.library.path="));
+      option.append(swtLibraryPath);
+      vmOptions.add(option);
+   }
+
    int rc = 0;
 
 #if !defined(_WIN32) && defined(UNICODE)
@@ -152,6 +178,8 @@ static int StartApp(int argc, NXMC_CHAR *argv[])
       ShowErrorMessage(_T("Unable to create Java VM (%s)"), GetJavaBridgeErrorMessage(err));
       rc = 3;
    }
+
+   DeleteDirectoryTree(swtLibraryPath);
    return rc;
 }
 

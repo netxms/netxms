@@ -4096,7 +4096,8 @@ bool LIBNETXMS_EXPORTABLE RegexpMatchW(const WCHAR *str, const WCHAR *expr, bool
 #endif
 
 const TCHAR LIBNETXMS_EXPORTABLE *ExpandFileName(const TCHAR *name, TCHAR *buffer, size_t bufSize, bool allowShellCommands);
-bool LIBNETXMS_EXPORTABLE CreateFolder(const TCHAR *directory);
+bool LIBNETXMS_EXPORTABLE CreateDirectoryTree(const TCHAR *path);
+bool LIBNETXMS_EXPORTABLE DeleteDirectoryTree(const TCHAR *path);
 bool LIBNETXMS_EXPORTABLE SetLastModificationTime(TCHAR *fileName, time_t lastModDate);
 bool LIBNETXMS_EXPORTABLE CopyFileOrDirectory(const TCHAR *oldName, const TCHAR *newName);
 bool LIBNETXMS_EXPORTABLE MoveFileOrDirectory(const TCHAR *oldName, const TCHAR *newName);

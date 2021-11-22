@@ -906,7 +906,7 @@ static void ConfigureAgentDirectory(TCHAR *generatedPath, const TCHAR *suffix, c
    _sntprintf(path, MAX_PATH, _T("%s%s%s") FS_PATH_SEPARATOR, g_szDataDirectory,
               ((tail != '\\') && (tail != '/')) ? FS_PATH_SEPARATOR : _T(""),
               suffix);
-   CreateFolder(path);
+   CreateDirectoryTree(path);
    nxlog_debug(2, _T("%s directory: %s"), contentDescription, path);
 }
 
@@ -1033,13 +1033,13 @@ BOOL Initialize()
    if (g_dataDirRecoveryPath[0] != 0)
       nxlog_write(NXLOG_INFO, _T("Data directory recovered from %s"), g_dataDirRecoveryPath);
 	nxlog_write(NXLOG_INFO, _T("Data directory: %s"), g_szDataDirectory);
-   CreateFolder(g_szDataDirectory);
+   CreateDirectoryTree(g_szDataDirectory);
 
 #ifdef _WIN32
    if (s_startupFlags & SF_CATCH_EXCEPTIONS)
    {
       nxlog_write(NXLOG_INFO, _T("Crash dump generation is enabled (dump directory is %s)"), s_dumpDirectory);
-      CreateFolder(s_dumpDirectory);
+      CreateDirectoryTree(s_dumpDirectory);
       if (g_failFlags & FAIL_CRASH_SERVER_START)
          nxlog_write(NXLOG_ERROR, _T("Failed to start crash dump collector process"));
    }
@@ -1050,7 +1050,7 @@ BOOL Initialize()
 #endif
 
    nxlog_write(NXLOG_INFO, _T("File store: %s"), g_szFileStore);
-   CreateFolder(g_szFileStore);
+   CreateDirectoryTree(g_szFileStore);
    SetEnvironmentVariable(_T("NETXMS_FILE_STORE"), g_szFileStore);
 
 #ifndef _WIN32
