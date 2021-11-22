@@ -3122,7 +3122,7 @@ TCHAR LIBNETXMS_EXPORTABLE *safe_fgetts(TCHAR *buffer, int len, FILE *f)
 #if !HAVE_STRLWR && !defined(_WIN32)
 
 /**
- * Convert UNICODE string to lowercase
+ * Convert non-UNICODE string to lowercase
  */
 char LIBNETXMS_EXPORTABLE *strlwr(char *str)
 {

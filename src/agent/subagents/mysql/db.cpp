@@ -398,6 +398,7 @@ DatabaseInstance::DatabaseInstance(DatabaseInfo *info) : m_dataLock(MutexType::F
 	m_session = nullptr;
 	m_connected = false;
    m_data = nullptr;
+   m_usePerformanceSchema = true;
 }
 
 /**
@@ -429,6 +430,43 @@ void DatabaseInstance::stop()
    {
       DBDisconnect(m_session);
       m_session = nullptr;
+   }
+}
+
+/**
+ * Checks if database server is mysql and version is > 5.7.
+ * Sets m_usePerformanceSchema flag.
+ */
+void DatabaseInstance::checkMySQLVersion()
+{
+   m_usePerformanceSchema = true;
+
+   DB_RESULT hResult = DBSelect(m_session, _T("SELECT VERSION()"));
+
+   if (hResult != nullptr)
+   {
+      TCHAR version[256];
+      DBGetField(hResult, 0, 0, version, 256);
+
+      if (_tcsstr(_tcslwr(version), _T("mariadb")) == nullptr) // MySQL
+      {
+         if (version[1] == _T('.')) // Version is X.*
+         {
+            if (version[0] < _T('5') || (version[0] == _T('5') && version[2] < _T('7'))) // Version is < 5.7
+            {
+               m_usePerformanceSchema = false;
+            }
+         }
+      }
+      else // MariaDB
+      {
+         m_usePerformanceSchema = false;
+      }
+      MemFree(hResult);
+   }
+   else
+   {
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("MYSQL: failed to check version for database %s"), m_info.id);
    }
 }
 
@@ -467,6 +505,8 @@ reconnect:
       nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("MYSQL: connection with database %s restored (connection TTL %d)"), m_info.id, m_info.connectionTTL);
 
       m_sessionLock.unlock();
+
+      checkMySQLVersion();
 
       int64_t pollerLoopStartTime = GetCurrentTimeMs();
       uint32_t sleepTime;
@@ -529,8 +569,22 @@ static StringMap *ReadGlobalStatsTable(DB_HANDLE hdb, const TCHAR *table)
 bool DatabaseInstance::poll()
 {
    // Query global stat tables
-   StringMap *globalStatus = ReadGlobalStatsTable(m_session, _T("information_schema.global_status"));
-   StringMap *globalVariables = ReadGlobalStatsTable(m_session, _T("information_schema.global_variables"));
+   StringMap *globalStatus;
+   StringMap *globalVariables;
+
+   if (m_usePerformanceSchema)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 7, _T("MYSQL: using performance schema for %s database during polling"), m_info.id);
+      globalStatus = ReadGlobalStatsTable(m_session, _T("performance_schema.global_status"));
+      globalVariables = ReadGlobalStatsTable(m_session, _T("performance_schema.global_variables"));
+   }
+   else
+   {
+      nxlog_debug_tag(DEBUG_TAG, 7, _T("MYSQL: using information schema for %s database during polling"), m_info.id);
+      globalStatus = ReadGlobalStatsTable(m_session, _T("information_schema.global_status"));
+      globalVariables = ReadGlobalStatsTable(m_session, _T("information_schema.global_variables"));
+   }
+
    if ((globalStatus == NULL) || (globalVariables == NULL))
    {
       delete globalStatus;
