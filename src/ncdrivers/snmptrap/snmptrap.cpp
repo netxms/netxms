@@ -231,8 +231,7 @@ SNMPTrapDriver *SNMPTrapDriver::createInstance(Config *config)
        !ParseOIDArgument(instance->m_keyFieldId, config, _T("/SNMPTrap/AlarmKeyFieldID"), _T(".1.3.6.1.4.1.57163.1.1.5.0")) ||
        !ParseOIDArgument(instance->m_additionalDataFieldId, config, _T("/SNMPTrap/AdditionalDataFieldID"), _T(".1.3.6.1.4.1.57163.1.1.6.0")))
    {
-      delete instance;
-      return nullptr;
+      RETURN_ERROR(_T("Cannot parse OID in driver configuration"));
    }
 
    const TCHAR *v = config->getValue(_T("/SNMPTrap/ProtocolVersion"));
