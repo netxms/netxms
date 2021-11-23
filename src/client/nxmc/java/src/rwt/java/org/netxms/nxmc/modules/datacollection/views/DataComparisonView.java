@@ -476,17 +476,17 @@ public class DataComparisonView extends ObjectView
 	}
 
    /**
-    * @see org.eclipse.ui.part.WorkbenchPart#dispose()
+    * @see org.netxms.nxmc.base.views.View#dispose()
     */
-	@Override
-	public void dispose()
-	{
-	   refreshController.dispose();
-		for(Image i : titleImages)
-		{
-			if (i != null)
-				i.dispose();
-		}
-		super.dispose();
-	}
+   @Override
+   public void dispose()
+   {
+      refreshController.dispose();
+      for(Image i : titleImages)
+      {
+         if (i != null)
+            i.dispose();
+      }
+      super.dispose();
+   }
 }

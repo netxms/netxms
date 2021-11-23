@@ -404,7 +404,7 @@ public class DataComparisonView extends ObjectView
          manager.add(actionCopyImage);
       manager.add(actionSaveAsImage);  
 	}
-	
+
 	/**
 	 * Set new chart type
 	 * @param newType
@@ -534,18 +534,18 @@ public class DataComparisonView extends ObjectView
 		chart.refresh();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#dispose()
-	 */
-	@Override
-	public void dispose()
-	{
-	   refreshController.dispose();
-		for(Image i : titleImages)
-		{
-			if (i != null)
-				i.dispose();
-		}
-		super.dispose();
-	}
+   /**
+    * @see org.netxms.nxmc.base.views.View#dispose()
+    */
+   @Override
+   public void dispose()
+   {
+      refreshController.dispose();
+      for(Image i : titleImages)
+      {
+         if (i != null)
+            i.dispose();
+      }
+      super.dispose();
+   }
 }

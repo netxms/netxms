@@ -63,7 +63,7 @@ import org.xnap.commons.i18n.I18n;
 /**
  * Geo location viewer for objects
  */
-public class ObjectGeoLocationViewer extends AbstractGeoMapViewer implements MouseTrackListener, ISelectionProvider
+public class ObjectGeoLocationViewer extends AbstractGeoMapViewer implements ISelectionProvider
 {
    private static final I18n i18n = LocalizationHelper.getI18n(ObjectGeoLocationViewer.class);
 
@@ -98,7 +98,32 @@ public class ObjectGeoLocationViewer extends AbstractGeoMapViewer implements Mou
    public ObjectGeoLocationViewer(Composite parent, int style, View view)
    {
       super(parent, style, view);
-      WidgetHelper.attachMouseTrackListener(this, this);
+      WidgetHelper.attachMouseTrackListener(this, new MouseTrackListener() {
+         @Override
+         public void mouseHover(MouseEvent e)
+         {
+            if (objectTooltipRectangle == null) // ignore hover if tooltip already open
+            {
+               AbstractObject object = getObjectAtPoint(new Point(e.x, e.y));
+               if (object != currentObject)
+               {
+                  objectToolTipLocation = (object != null) ? new Point(e.x, e.y) : null;
+                  setCurrentObject(object);
+               }
+            }
+         }
+
+         @Override
+         public void mouseEnter(MouseEvent e)
+         {
+         }
+
+         @Override
+         public void mouseExit(MouseEvent e)
+         {
+            setCurrentObject(null);
+         }
+      });
 
       objectToolTipHeaderFont = FontTools.createFont(TITLE_FONTS, 1, SWT.BOLD);
       objectLabelFont = FontTools.createFont(TITLE_FONTS, 0, SWT.BOLD);
@@ -240,40 +265,6 @@ public class ObjectGeoLocationViewer extends AbstractGeoMapViewer implements Mou
          objects = GeoLocationCache.getInstance().getObjectsInArea(coverage, rootObjectId, filterString);
          redraw();
       }
-   }
-
-   /**
-    * @see org.eclipse.swt.events.MouseTrackListener#mouseHover(org.eclipse.swt.events.MouseEvent)
-    */
-   @Override
-   public void mouseHover(MouseEvent e)
-   {
-      if (objectTooltipRectangle == null) // ignore hover if tooltip already open
-      {
-         AbstractObject object = getObjectAtPoint(new Point(e.x, e.y));
-         if (object != currentObject)
-         {
-            objectToolTipLocation = (object != null) ? new Point(e.x, e.y) : null;
-            setCurrentObject(object);
-         }
-      }
-   }
-
-   /**
-    * @see org.eclipse.swt.events.MouseTrackListener#mouseEnter(org.eclipse.swt.events.MouseEvent)
-    */
-   @Override
-   public void mouseEnter(MouseEvent e)
-   {
-   }
-
-   /**
-    * @see org.eclipse.swt.events.MouseTrackListener#mouseExit(org.eclipse.swt.events.MouseEvent)
-    */
-   @Override
-   public void mouseExit(MouseEvent e)
-   {
-      setCurrentObject(null);
    }
 
    /**

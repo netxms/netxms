@@ -758,7 +758,7 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
             saveMapImageToFile(null);
          }
       };
-      
+
       actionHideLinkLabels = new Action(i18n.tr("Hide link labels"), Action.AS_CHECK_BOX) {
          @Override
          public void run()
@@ -1446,7 +1446,7 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
                (GraphConnection)viewer.getGraphControl().getSelection().get(0), viewer);
       }      
    }
-   
+
    /**
     * Save map image to file
     */

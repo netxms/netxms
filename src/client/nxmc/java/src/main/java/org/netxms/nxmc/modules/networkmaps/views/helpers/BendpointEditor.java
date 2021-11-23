@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -205,9 +205,7 @@ public class BendpointEditor
 	private boolean isLineContainsPoint(int x1, int y1, int x2, int y2, int px, int py)
 	{
 		int tolerance = 7;
-      Rectangle rect = Rectangle.getSINGLETON();
-		rect.setSize(0, 0);
-		rect.setLocation(x1, y1);
+      Rectangle rect = new Rectangle(x1, y1, 0, 0);
 		rect.union(x2, y2);
 		rect.expand(tolerance, tolerance);
 		if (!rect.contains(px, py))

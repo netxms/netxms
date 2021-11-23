@@ -38,6 +38,7 @@ import org.eclipse.swt.widgets.Label;
 import org.netxms.client.LibraryImage;
 import org.netxms.nxmc.modules.imagelibrary.ImageProvider;
 import org.netxms.nxmc.tools.FontTools;
+import org.netxms.nxmc.tools.WidgetHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -173,7 +174,7 @@ public class ImagePreview extends Composite
             try
             {
                gc.setAntialias(SWT.ON);
-               gc.setInterpolation(SWT.HIGH);
+               WidgetHelper.setHighInterpolation(gc);
             }
             catch(SWTException e)
             {

@@ -42,6 +42,7 @@ import org.netxms.nxmc.modules.objects.views.elements.LastValues;
 import org.netxms.nxmc.modules.objects.views.elements.OverviewPageElement;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.ThemeEngine;
+import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -74,6 +75,7 @@ public class ObjectOverviewView extends ObjectView
       scroller = new ScrolledComposite(parent, SWT.V_SCROLL);
       scroller.setExpandVertical(true);
       scroller.setExpandHorizontal(true);
+      WidgetHelper.setScrollBarIncrement(scroller, SWT.VERTICAL, 20);
       scroller.addControlListener(new ControlAdapter() {
          public void controlResized(ControlEvent e)
          {

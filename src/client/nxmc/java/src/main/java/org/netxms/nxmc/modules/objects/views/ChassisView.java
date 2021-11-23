@@ -42,6 +42,7 @@ import org.netxms.nxmc.modules.objects.widgets.ChassisWidget;
 import org.netxms.nxmc.modules.objects.widgets.helpers.ElementSelectionListener;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.ThemeEngine;
+import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -127,6 +128,7 @@ public class ChassisView extends ObjectView implements ISelectionProvider
       scroller.setContent(content);
       scroller.setExpandHorizontal(true);
       scroller.setExpandVertical(true);
+      WidgetHelper.setScrollBarIncrement(scroller, SWT.HORIZONTAL, 20);
       scroller.addControlListener(new ControlAdapter() {
          public void controlResized(ControlEvent e)
          {

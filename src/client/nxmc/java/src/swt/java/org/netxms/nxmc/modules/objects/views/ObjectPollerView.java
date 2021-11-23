@@ -147,7 +147,7 @@ public class ObjectPollerView extends AdHocObjectView
    private void addPollerMessage(String message)
    {
       Date now = new Date();
-      textArea.append("[" + DateFormatFactory.getDateTimeFormat().format(now) + "] "); //$NON-NLS-1$ //$NON-NLS-2$
+      textArea.append("[" + DateFormatFactory.getDateTimeFormat().format(now) + "] ");
 
       int index = message.indexOf(0x7F);
       if (index != -1)

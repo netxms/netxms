@@ -53,12 +53,13 @@ import org.netxms.nxmc.modules.worldmap.tools.Area;
 import org.netxms.nxmc.modules.worldmap.tools.QuadTree;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
+import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
  * Geolocation viewer for object location history
  */
-public class GeoLocationHistoryViewer extends AbstractGeoMapViewer implements MouseTrackListener
+public class GeoLocationHistoryViewer extends AbstractGeoMapViewer
 {
    private static final I18n i18n = LocalizationHelper.getI18n(GeoLocationHistoryViewer.class);
 
@@ -90,7 +91,34 @@ public class GeoLocationHistoryViewer extends AbstractGeoMapViewer implements Mo
       super(parent, style, view);
       this.historyObject = object;
       pointToolTip = new ToolTip(getShell(), SWT.BALLOON);
-      addMouseTrackListener(this);
+
+      WidgetHelper.attachMouseTrackListener(this, new MouseTrackListener() {
+         @Override
+         public void mouseHover(MouseEvent e)
+         {
+            selectedPoint = -1;
+            pointToolTip.setVisible(false);
+            List<GeoLocation> suitablePoints = getAdjacentLocations(e.x, e.y);
+            if (suitablePoints.isEmpty())
+               return;
+
+            selectedPoint = points.indexOf(suitablePoints.get(0));
+            redraw();
+         }
+
+         @Override
+         public void mouseEnter(MouseEvent e)
+         {
+         }
+
+         @Override
+         public void mouseExit(MouseEvent e)
+         {
+            selectedPoint = -1;
+            pointToolTip.setVisible(false);
+            redraw();
+         }
+      });
 
       imageStart = ResourceManager.getImage("icons/start.png");
       imageFinish = ResourceManager.getImage("icons/finish.png");
@@ -121,41 +149,6 @@ public class GeoLocationHistoryViewer extends AbstractGeoMapViewer implements Mo
    {
       if (object.getObjectId() == historyObject.getObjectId())
          updateHistory();
-   }
-
-   /**
-    * @see org.eclipse.swt.events.MouseTrackListener#mouseHover(org.eclipse.swt.events.MouseEvent)
-    */
-   @Override
-   public void mouseHover(MouseEvent e)
-   {
-      selectedPoint = -1;
-      pointToolTip.setVisible(false);
-      List<GeoLocation> suitablePoints = getAdjacentLocations(e.x, e.y);
-      if (suitablePoints.isEmpty())
-         return;
-      
-      selectedPoint = points.indexOf(suitablePoints.get(0)); 
-      redraw();
-   }
-
-   /**
-    * @see org.eclipse.swt.events.MouseTrackListener#mouseEnter(org.eclipse.swt.events.MouseEvent)
-    */
-   @Override
-   public void mouseEnter(MouseEvent e)
-   {
-   }
-
-   /**
-    * @see org.eclipse.swt.events.MouseTrackListener#mouseExit(org.eclipse.swt.events.MouseEvent)
-    */
-   @Override
-   public void mouseExit(MouseEvent e)
-   {
-      selectedPoint = -1;
-      pointToolTip.setVisible(false);
-      redraw();
    }
 
    /**

@@ -115,26 +115,26 @@ public class ChassisWidget extends Canvas implements PaintListener, DisposeListe
    public void paintControl(PaintEvent e)
    {      
       final GC gc = e.gc;
-      
+
       gc.setAntialias(SWT.ON);
-      
+      WidgetHelper.setHighInterpolation(gc);
+
       // Calculate bounding box for chassis picture
       Rectangle rect = getClientArea();
       rect.x += MARGIN_WIDTH; 
       rect.y += MARGIN_HEIGHT + TITLE_HEIGHT;
       rect.height -= MARGIN_HEIGHT * 2 + TITLE_HEIGHT;
       rect.width -= MARGIN_WIDTH * 2;
-      
+
       if (rect.height <= 0 || rect.width <= 0)
          return;
-      
+
       // Title
       gc.setFont(WidgetHelper.getBestFittingFont(gc, titleFonts, VIEW_LABELS[0], rect.width, TITLE_HEIGHT)); //$NON-NLS-1$
       Point titleSize = gc.textExtent(VIEW_LABELS[view.getValue() - 1]);
       gc.drawText(VIEW_LABELS[view.getValue() - 1], (rect.width / 2 - titleSize.x / 2) + MARGIN_WIDTH, rect.y - TITLE_HEIGHT - MARGIN_HEIGHT / 2);
-      
+
       drawChassis(gc, rect, chassis, view, new ObjectRegistration() {
-         
          @Override
          public void addObject(Object object, Rectangle rect)
          {

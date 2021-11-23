@@ -149,7 +149,7 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
       final GC gc = e.gc;
 
       gc.setAntialias(SWT.ON);
-      gc.setInterpolation(SWT.HIGH);
+      WidgetHelper.setHighInterpolation(gc);
 
       // Calculate bounding box for rack picture
       Rectangle rect = getClientArea();

@@ -46,6 +46,7 @@ import org.netxms.nxmc.modules.objects.views.ObjectView;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.ThemeEngine;
 import org.netxms.nxmc.tools.ViewVisibilityValidator;
+import org.netxms.nxmc.tools.WidgetHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
@@ -94,6 +95,7 @@ public class PerformanceView extends ObjectView
       scroller.setContent(chartArea);
       scroller.setExpandVertical(true);
       scroller.setExpandHorizontal(true);
+      WidgetHelper.setScrollBarIncrement(scroller, SWT.VERTICAL, 20);
       scroller.addControlListener(new ControlAdapter() {
          public void controlResized(ControlEvent e)
          {

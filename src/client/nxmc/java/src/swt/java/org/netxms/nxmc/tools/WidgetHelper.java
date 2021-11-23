@@ -49,6 +49,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.ScrollBar;
+import org.eclipse.swt.widgets.Scrollable;
 import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
@@ -769,7 +770,8 @@ public class WidgetHelper
             numOfCharToLeave = substr.length();
          String tmp = substr;
          
-         while(gc.textExtent(tmp, SWT.DRAW_TRANSPARENT | SWT.DRAW_DELIMITER).x > width) {
+         while(gc.textExtent(tmp, SWT.DRAW_TRANSPARENT | SWT.DRAW_DELIMITER).x > width)
+         {
             numOfCharToLeave--;
             tmp = substr.substring(0, numOfCharToLeave);
             Matcher matcher = patternOnlyCharNum.matcher(tmp);
@@ -1011,17 +1013,6 @@ public class WidgetHelper
    }
 
    /**
-    * Attach mouse track listener to composite (compatibility layer for RAP).
-    * 
-    * @param control control to attach listener to
-    * @param listener mouse track listener
-    */
-   public static void attachMouseTrackListener(Composite control, MouseTrackListener listener)
-   {
-      control.addMouseTrackListener(listener);
-   }
-
-   /**
     * Compute wrap size for given text. Copied from Eclipse forms plugin.
     *
     * @param gc
@@ -1130,5 +1121,40 @@ public class WidgetHelper
          Point lastExtent = gc.textExtent(lastLine);
          gc.drawLine(bounds.x, lineY, bounds.x + lastExtent.x, lineY);
       }
+   }
+
+   /**
+    * Attach mouse track listener to composite (compatibility layer for RAP).
+    * 
+    * @param control control to attach listener to
+    * @param listener mouse track listener
+    */
+   public static void attachMouseTrackListener(Composite control, MouseTrackListener listener)
+   {
+      control.addMouseTrackListener(listener);
+   }
+
+   /**
+    * Helper method to set scroll bar increment (compatibility layer for RAP).
+    *
+    * @param scrollable scrollable to configure scrollbar for
+    * @param direction scrollbar direction (<code>SWT.HORIZONTAL</code> or <code>SWT.VERTICAL</code>)
+    * @param increment increment value
+    */
+   public static void setScrollBarIncrement(Scrollable scrollable, int direction, int increment)
+   {
+      ScrollBar bar = (direction == SWT.HORIZONTAL) ? scrollable.getHorizontalBar() : scrollable.getVerticalBar();
+      if (bar != null)
+         bar.setIncrement(increment);
+   }
+
+   /**
+    * Wrapper for <code>GC.setInterpolation(SWT.HIGH)</code> (compatibility layer for RAP).
+    *
+    * @param gc GC to set high interpolation mode for
+    */
+   public static void setHighInterpolation(GC gc)
+   {
+      gc.setInterpolation(SWT.HIGH);
    }
 }
