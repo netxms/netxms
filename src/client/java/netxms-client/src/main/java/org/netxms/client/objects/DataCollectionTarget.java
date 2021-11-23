@@ -140,7 +140,9 @@ public class DataCollectionTarget extends GenericObject
    }
 
    /**
-    * @return the webServiceProxyId
+    * Get ID of web service proxy node.
+    *
+    * @return ID of web service proxy node
     */
    public long getWebServiceProxyId()
    {

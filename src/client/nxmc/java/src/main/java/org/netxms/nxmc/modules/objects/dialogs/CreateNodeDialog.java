@@ -318,7 +318,7 @@ public class CreateNodeDialog extends Dialog
       sshProxySelector.setLayoutData(gd);
 
       webServiceProxySelector = new ObjectSelector(dialogArea, SWT.NONE, true);
-      webServiceProxySelector.setLabel(i18n.tr("Proxy for Web Service"));
+      webServiceProxySelector.setLabel(i18n.tr("Proxy for web services"));
       webServiceProxySelector.setEmptySelectionName("<default>");
       webServiceProxySelector.setObjectClass(Node.class);
       webServiceProxySelector.setObjectId(webServiceProxy);
@@ -326,7 +326,7 @@ public class CreateNodeDialog extends Dialog
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       webServiceProxySelector.setLayoutData(gd);
-      
+
 		if (session.isZoningEnabled())
 		{
 			zoneSelector = new ZoneSelector(dialogArea, SWT.NONE, false);

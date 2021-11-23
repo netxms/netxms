@@ -18,36 +18,31 @@
  */
 package org.netxms.nxmc.modules.objects.propertypages;
 
-import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
-import org.netxms.client.SshKeyPair;
-import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.Cluster;
+import org.netxms.client.objects.DataCollectionTarget;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
-import org.netxms.nxmc.base.widgets.LabeledText;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.widgets.ObjectSelector;
-import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
- * "WebServiceProxy" property page for node
+ * "Web Services" property page for node
  */
-public class WebServiceProxy extends ObjectPropertyPage
+public class WebServices extends ObjectPropertyPage
 {
-   private static I18n i18n = LocalizationHelper.getI18n(WebServiceProxy.class);
+   private static I18n i18n = LocalizationHelper.getI18n(WebServices.class);
 
-   private AbstractNode node;
+   private DataCollectionTarget dcTarget;
    private ObjectSelector webServiceProxy;
    private NXCSession session;
 
@@ -56,9 +51,9 @@ public class WebServiceProxy extends ObjectPropertyPage
     *
     * @param object object to edit
     */
-   public WebServiceProxy(AbstractObject object)
+   public WebServices(AbstractObject object)
    {
-      super(i18n.tr("WebServiceProxy"), object);
+      super(i18n.tr("Web Services"), object);
    }
 
    /**
@@ -85,7 +80,7 @@ public class WebServiceProxy extends ObjectPropertyPage
    @Override
    public boolean isVisible()
    {
-      return object instanceof AbstractNode;
+      return (object instanceof DataCollectionTarget) && !(object instanceof Cluster);
    }
 
    /**
@@ -94,7 +89,7 @@ public class WebServiceProxy extends ObjectPropertyPage
    @Override
    protected Control createContents(Composite parent)
    {
-      node = (AbstractNode)object;
+      dcTarget = (DataCollectionTarget)object;
       session = Registry.getSession();
 
       Composite dialogArea = new Composite(parent, SWT.NONE);
@@ -108,7 +103,7 @@ public class WebServiceProxy extends ObjectPropertyPage
       webServiceProxy = new ObjectSelector(dialogArea, SWT.NONE, true);
       webServiceProxy.setLabel(i18n.tr("Proxy"));
       webServiceProxy.setEmptySelectionName("<default>");
-      webServiceProxy.setObjectId(node.getWebServiceProxyId());
+      webServiceProxy.setObjectId(dcTarget.getWebServiceProxyId());
       webServiceProxy.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
       
       return dialogArea;
@@ -121,14 +116,14 @@ public class WebServiceProxy extends ObjectPropertyPage
     */
    protected boolean applyChanges(final boolean isApply)
    {
-      final NXCObjectModificationData md = new NXCObjectModificationData(node.getObjectId());
+      final NXCObjectModificationData md = new NXCObjectModificationData(dcTarget.getObjectId());
       
       if (isApply)
          setValid(false);
 
       md.setWebServiceProxy(webServiceProxy.getObjectId());
 
-      new Job(String.format(i18n.tr("Updating Web Service Proxy settings for node %s"), node.getObjectName()), null) {
+      new Job(String.format(i18n.tr("Updating web service settings for object %s"), dcTarget.getObjectName()), null) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
@@ -138,7 +133,7 @@ public class WebServiceProxy extends ObjectPropertyPage
          @Override
          protected String getErrorMessage()
          {
-            return String.format(i18n.tr("Cannot update Web Service Proxy settings for node %s"), node.getObjectName());
+            return String.format(i18n.tr("Cannot update web service settings for object %s"), dcTarget.getObjectName());
          }
 
          @Override
@@ -150,7 +145,7 @@ public class WebServiceProxy extends ObjectPropertyPage
                   @Override
                   public void run()
                   {
-                     WebServiceProxy.this.setValid(true);
+                     WebServices.this.setValid(true);
                   }
                });
             }

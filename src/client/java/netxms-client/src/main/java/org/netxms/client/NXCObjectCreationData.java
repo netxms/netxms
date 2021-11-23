@@ -60,6 +60,7 @@ public class NXCObjectCreationData
    private long etherNetIpProxyId;
    private long icmpProxyId;
    private long sshProxyId;
+   private long webServiceProxyId;
 	private int mapType;
 	private List<Long> seedObjectIds;
 	private int zoneUIN;
@@ -97,8 +98,7 @@ public class NXCObjectCreationData
    private String description;
    private long sensorProxy;
    private int instanceDiscoveryMethod;
-   private long webServiceProxyId;
-	
+
 	/**
 	 * Constructor.
 	 * 
@@ -368,8 +368,24 @@ public class NXCObjectCreationData
    }
 
    /**
-	 * @return the mapType
-	 */
+    * @return the webServiceProxyId
+    */
+   public long getWebServiceProxyId()
+   {
+      return webServiceProxyId;
+   }
+
+   /**
+    * @param webServiceProxyId the webServiceProxyId to set
+    */
+   public void setWebServiceProxyId(long webServiceProxyId)
+   {
+      this.webServiceProxyId = webServiceProxyId;
+   }
+
+   /**
+    * @return the mapType
+    */
 	public int getMapType()
 	{
 		return mapType;
@@ -1061,21 +1077,5 @@ public class NXCObjectCreationData
    public void setInstanceDiscoveryMethod(int instanceDiscoveryMethod)
    {
       this.instanceDiscoveryMethod = instanceDiscoveryMethod;
-   }
-
-   /**
-    * @return the webServiceProxyId
-    */
-   public long getWebServiceProxyId()
-   {
-      return webServiceProxyId;
-   }
-
-   /**
-    * @param webServiceProxyId the webServiceProxyId to set
-    */
-   public void setWebServiceProxyId(long webServiceProxyId)
-   {
-      this.webServiceProxyId = webServiceProxyId;
    }
 }

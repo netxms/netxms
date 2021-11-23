@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,6 +31,8 @@ import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.Cluster;
+import org.netxms.client.objects.DataCollectionTarget;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.widgets.LabeledText;
@@ -85,7 +87,7 @@ public class Communication extends ObjectPropertyPage
    @Override
    public boolean isVisible()
    {
-      return object instanceof AbstractNode;
+      return (object instanceof DataCollectionTarget) && !(object instanceof Cluster);
    }
 
    /**
@@ -94,45 +96,48 @@ public class Communication extends ObjectPropertyPage
 	@Override
 	protected Control createContents(Composite parent)
 	{
-      node = (AbstractNode)object;
+      Composite dialogArea = new Composite(parent, SWT.NONE);
+      GridLayout dialogLayout = new GridLayout();
+      dialogLayout.marginWidth = 0;
+      dialogLayout.marginHeight = 0;
+      dialogArea.setLayout(dialogLayout);
 
-		Composite dialogArea = new Composite(parent, SWT.NONE);
-		GridLayout dialogLayout = new GridLayout();
-		dialogLayout.marginWidth = 0;
-		dialogLayout.marginHeight = 0;
-		dialogArea.setLayout(dialogLayout);
-		
-		primaryName = new LabeledText(dialogArea, SWT.NONE);
-      primaryName.setLabel(i18n.tr("Primary host name"));
-		primaryName.setText(node.getPrimaryName());
-		GridData gd = new GridData();
-		gd.horizontalAlignment = SWT.FILL;
-		gd.grabExcessHorizontalSpace = true;
-		primaryName.setLayoutData(gd);
-		primaryName.getTextControl().addModifyListener(new ModifyListener() {
-			@Override
-			public void modifyText(ModifyEvent e)
-			{
-				primaryNameChanged = true;
-			}
-		});
+      if (object instanceof AbstractNode)
+      {
+         node = (AbstractNode)object;
 
-      externalGateway = new Button(dialogArea, SWT.CHECK);
-      externalGateway.setText(i18n.tr("Communication through external gateway"));
-      externalGateway.setSelection((node.getFlags() & AbstractNode.NF_EXTERNAL_GATEWAY) != 0);
-      gd = new GridData();
-      gd.horizontalAlignment = SWT.FILL;
-      gd.grabExcessHorizontalSpace = true;
-      externalGateway.setLayoutData(gd);
-      		
-      enablePingOnPrimaryIP = new Button(dialogArea, SWT.CHECK);
-      enablePingOnPrimaryIP.setText("Use ICMP ping on primary IP address to determine node status");
-      enablePingOnPrimaryIP.setSelection(node.isPingOnPrimaryIPEnabled());
-      gd = new GridData();
-      gd.horizontalAlignment = SWT.FILL;
-      gd.grabExcessHorizontalSpace = true;
-      enablePingOnPrimaryIP.setLayoutData(gd);
-            
+         primaryName = new LabeledText(dialogArea, SWT.NONE);
+         primaryName.setLabel(i18n.tr("Primary host name"));
+         primaryName.setText(node.getPrimaryName());
+         GridData gd = new GridData();
+         gd.horizontalAlignment = SWT.FILL;
+         gd.grabExcessHorizontalSpace = true;
+         primaryName.setLayoutData(gd);
+         primaryName.getTextControl().addModifyListener(new ModifyListener() {
+            @Override
+            public void modifyText(ModifyEvent e)
+            {
+               primaryNameChanged = true;
+            }
+         });
+
+         externalGateway = new Button(dialogArea, SWT.CHECK);
+         externalGateway.setText(i18n.tr("Communication through external gateway"));
+         externalGateway.setSelection((node.getFlags() & AbstractNode.NF_EXTERNAL_GATEWAY) != 0);
+         gd = new GridData();
+         gd.horizontalAlignment = SWT.FILL;
+         gd.grabExcessHorizontalSpace = true;
+         externalGateway.setLayoutData(gd);
+
+         enablePingOnPrimaryIP = new Button(dialogArea, SWT.CHECK);
+         enablePingOnPrimaryIP.setText("Use ICMP ping on primary IP address to determine node status");
+         enablePingOnPrimaryIP.setSelection(node.isPingOnPrimaryIPEnabled());
+         gd = new GridData();
+         gd.horizontalAlignment = SWT.FILL;
+         gd.grabExcessHorizontalSpace = true;
+         enablePingOnPrimaryIP.setLayoutData(gd);
+      }
+
 		return dialogArea;
 	}
 
@@ -142,6 +147,9 @@ public class Communication extends ObjectPropertyPage
    @Override
 	protected boolean applyChanges(final boolean isApply)
 	{
+      if (node == null) // Nothing to do for non-node objects
+         return true;
+
 		final NXCObjectModificationData md = new NXCObjectModificationData(node.getObjectId());
 		
 		if (primaryNameChanged)
@@ -210,6 +218,10 @@ public class Communication extends ObjectPropertyPage
 	protected void performDefaults()
 	{
 		super.performDefaults();
-		externalGateway.setSelection(false);
+      if (node != null)
+      {
+         externalGateway.setSelection(false);
+         enablePingOnPrimaryIP.setSelection(false);
+      }
 	}
 }
