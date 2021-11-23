@@ -923,7 +923,20 @@ bool LIBNETXMS_EXPORTABLE DeleteDirectoryTree(const TCHAR *path)
          continue;
 
       _tcslcpy(&epath[rootPathLen], e->d_name, MAX_PATH - rootPathLen);
-      if (e->d_type == DT_DIR)
+
+#if HAVE_DIRENT_D_TYPE
+      bool isDir = (e->d_type == DT_DIR);
+#else
+      NX_STAT_STRUCT st;
+      if (CALL_STAT(epath, &st) != 0)
+      {
+         success = false;
+         break;
+      }
+      bool isDir = S_ISDIR(st.st_mode);
+#endif
+
+      if (isDir)
       {
          success = DeleteDirectoryTree(epath);
       }
