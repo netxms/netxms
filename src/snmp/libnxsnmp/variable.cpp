@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** SNMP support library
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -28,7 +28,7 @@
  */
 SNMP_Variable::SNMP_Variable()
 {
-   m_value = NULL;
+   m_value = nullptr;
    m_type = ASN_NULL;
    m_valueLength = 0;
 }
@@ -39,7 +39,7 @@ SNMP_Variable::SNMP_Variable()
 SNMP_Variable::SNMP_Variable(const TCHAR *name)
 {
    m_name = SNMP_ObjectId::parse(name);
-   m_value = NULL;
+   m_value = nullptr;
    m_type = ASN_NULL;
    m_valueLength = 0;
 }
@@ -355,7 +355,7 @@ double SNMP_Variable::getValueAsDouble() const
  * Get value as string
  * Note: buffer size is in characters
  */
-TCHAR *SNMP_Variable::getValueAsString(TCHAR *buffer, size_t bufferSize) const
+TCHAR *SNMP_Variable::getValueAsString(TCHAR *buffer, size_t bufferSize, const char *codepage) const
 {
    if ((buffer == nullptr) || (bufferSize == 0))
       return nullptr;
@@ -401,7 +401,7 @@ TCHAR *SNMP_Variable::getValueAsString(TCHAR *buffer, size_t bufferSize) const
          if (length > 0)
          {
 #ifdef UNICODE
-            int cch = MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (char *)m_value, (int)length, buffer, (int)bufferSize);
+            int cch = mbcp_to_wchar((char *)m_value, length, buffer, bufferSize, codepage);
             if (cch > 0)
             {
                length = cch;  // length can be different for multibyte character set
@@ -444,7 +444,7 @@ TCHAR *SNMP_Variable::getValueAsString(TCHAR *buffer, size_t bufferSize) const
  * Get value as printable string, doing bin to hex conversion if necessary
  * Note: buffer size is in characters
  */
-TCHAR *SNMP_Variable::getValueAsPrintableString(TCHAR *buffer, size_t bufferSize, bool *convertToHex) const
+TCHAR *SNMP_Variable::getValueAsPrintableString(TCHAR *buffer, size_t bufferSize, bool *convertToHex, const char *codepage) const
 {
    if ((buffer == nullptr) || (bufferSize == 0))
       return nullptr;
@@ -474,7 +474,7 @@ TCHAR *SNMP_Variable::getValueAsPrintableString(TCHAR *buffer, size_t bufferSize
          if (!conversionNeeded)
          {
 #ifdef UNICODE
-            int cch = MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (char *)m_value, (int)length, buffer, (int)bufferSize);
+            int cch = mbcp_to_wchar((char *)m_value, length, buffer, bufferSize, codepage);
             if (cch > 0)
             {
                length = cch;  // length can be different for multibyte character set
@@ -611,7 +611,7 @@ size_t SNMP_Variable::encode(BYTE *pBuffer, size_t bufferSize) const
 /**
  * Set variable from string
  */
-void SNMP_Variable::setValueFromString(uint32_t type, const TCHAR *value)
+void SNMP_Variable::setValueFromString(uint32_t type, const TCHAR *value, const char *codepage)
 {
    uint32_t *pdwBuffer;
    size_t length;
@@ -662,7 +662,9 @@ void SNMP_Variable::setValueFromString(uint32_t type, const TCHAR *value)
       case ASN_OCTET_STRING:
          MemFree(m_value);
 #ifdef UNICODE
-         m_value = reinterpret_cast<BYTE*>(MBStringFromWideString(value));
+         length = wcslen(value) + 1;
+         m_value = reinterpret_cast<BYTE*>(MemAllocStringA(length));
+         wchar_to_mbcp(value, -1, reinterpret_cast<char*>(m_value), length, codepage);
 #else
          m_value = reinterpret_cast<BYTE*>(MemCopyString(value));
 #endif

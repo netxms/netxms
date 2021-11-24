@@ -159,7 +159,7 @@ static void WorkerThread(WorkerThreadInfo *threadInfo)
    char threadName[16];
    threadName[0] = '$';
 #ifdef UNICODE
-   WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, p->name, -1, &threadName[1], 11, NULL, NULL);
+   wchar_to_ASCII(p->name, -1, &threadName[1], 11);
 #else
    strlcpy(&threadName[1], p->name, 11);
 #endif
@@ -224,7 +224,7 @@ static void MaintenanceThread(ThreadPool *p)
    char threadName[16];
    threadName[0] = '$';
 #ifdef UNICODE
-   WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, p->name, -1, &threadName[1], 11, NULL, NULL);
+   wchar_to_ASCII(p->name, -1, &threadName[1], 11);
 #else
    strlcpy(&threadName[1], p->name, 11);
 #endif

@@ -501,7 +501,7 @@ unique_ptr<ObjectArray<ObjectQueryResult>> QueryObjects(const TCHAR *query, uint
                   {
 #ifdef UNICODE
                      char attr[MAX_IDENTIFIER_LENGTH];
-                     WideCharToMultiByte(CP_UTF8, 0, fields->get(j), -1, attr, MAX_IDENTIFIER_LENGTH - 1, nullptr, nullptr);
+                     wchar_to_utf8(fields->get(j), -1, attr, MAX_IDENTIFIER_LENGTH - 1);
                      attr[MAX_IDENTIFIER_LENGTH - 1] = 0;
                      NXSL_Value *av = object->getClass()->getAttr(object, attr);
 #else

@@ -715,7 +715,7 @@ stop_search:
 
          StringBuffer initFile = shareDir;
          initFile.append(FS_PATH_SEPARATOR _T("sql") FS_PATH_SEPARATOR _T("dbinit_"));
-         initFile.appendMBString(driver, strlen(driver), CP_ACP);
+         initFile.appendMBString(driver);
          initFile.append(_T(".sql"));
 
 #ifdef UNICODE
@@ -733,7 +733,7 @@ stop_search:
 
          StringBuffer initFile = shareDir;
          initFile.append(FS_PATH_SEPARATOR _T("sql") FS_PATH_SEPARATOR _T("dbinit_"));
-         initFile.appendMBString(argv[optind + 1], strlen(argv[optind + 1]), CP_ACP);
+         initFile.appendMBString(argv[optind + 1]);
          initFile.append(_T(".sql"));
 
 #ifdef UNICODE

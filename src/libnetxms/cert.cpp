@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -62,9 +62,9 @@ static bool GetX509NameField(X509_NAME *name, int nid, TCHAR *buffer, size_t siz
    unsigned char *text;
    ASN1_STRING_to_UTF8(&text, data);
 #ifdef UNICODE
-   MultiByteToWideChar(CP_UTF8, 0, (char *)text, -1, buffer, (int)size);
+   utf8_to_wchar((char *)text, -1, buffer, size);
 #else
-   utf8_to_mb((char *)text, -1, buffer, (int)size);
+   utf8_to_mb((char *)text, -1, buffer, size);
 #endif
    buffer[size - 1] = 0;
    OPENSSL_free(text);
@@ -346,7 +346,7 @@ String LIBNETXMS_EXPORTABLE GetCertificateCRLDistributionPoint(const X509 *cert)
                   const unsigned char *data = ASN1_STRING_get0_data(uri);
                   if (!memcmp(data, "http:", 5) || !memcmp(data, "https:", 6))
                   {
-                     result.appendMBString(reinterpret_cast<const char*>(data), l, CP_UTF8);
+                     result.appendUtf8String(reinterpret_cast<const char*>(data), l);
                      break;
                   }
                }

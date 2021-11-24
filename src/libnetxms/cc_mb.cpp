@@ -1,6 +1,6 @@
 /*
  ** NetXMS - Network Management System
- ** Copyright (C) 2003-2020 Raden Solutions
+ ** Copyright (C) 2003-2021 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU Lesser General Public License as published
@@ -47,36 +47,30 @@ size_t LIBNETXMS_EXPORTABLE mb_to_ucs4(const char *src, ssize_t srcLen, UCS4CHAR
       return ASCII_to_ucs4(src, srcLen, dst, dstLen);
    if (g_defaultCodePageType == CodePageType::ISO8859_1)
       return ISO8859_1_to_ucs4(src, srcLen, dst, dstLen);
+   if (g_defaultCodePageType == CodePageType::UTF8)
+      return utf8_to_ucs4(src, srcLen, dst, dstLen);
 
 #if HAVE_ICONV && !defined(__DISABLE_ICONV)
-   iconv_t cd;
-   const char *inbuf;
-   char *outbuf;
-   size_t count, inbytes, outbytes;
-
-   cd = IconvOpen(UCS4_CODEPAGE_NAME, g_cpDefault);
+   iconv_t cd = IconvOpen(UCS4_CODEPAGE_NAME, g_cpDefault);
    if (cd == (iconv_t)(-1))
    {
       return ASCII_to_ucs4(src, srcLen, dst, dstLen);
    }
 
-   inbuf = (const char *)src;
-   inbytes = (srcLen == -1) ? strlen(src) + 1 : (size_t)srcLen;
-   outbuf = (char *)dst;
-   outbytes = (size_t)dstLen * sizeof(UCS4CHAR);
-   count = iconv(cd, (ICONV_CONST char **) &inbuf, &inbytes, &outbuf, &outbytes);
+   const char *inbuf = (const char *)src;
+   size_t inbytes = (srcLen == -1) ? strlen(src) + 1 : (size_t)srcLen;
+   char *outbuf = (char *)dst;
+   size_t outbytes = (size_t)dstLen * sizeof(UCS4CHAR);
+   size_t count = iconv(cd, (ICONV_CONST char **) &inbuf, &inbytes, &outbuf, &outbytes);
    IconvClose(cd);
 
-   if (count == (size_t) - 1)
+   if ((count != (size_t)(-1)) || (errno == EILSEQ))
    {
-      if (errno == EILSEQ)
-      {
-         count = (dstLen * sizeof(UCS4CHAR) - outbytes) / sizeof(UCS4CHAR);
-      }
-      else
-      {
-         count = 0;
-      }
+      count = (dstLen * sizeof(UCS4CHAR) - outbytes) / sizeof(UCS4CHAR);
+   }
+   else
+   {
+      count = 0;
    }
    if (((char *) outbuf - (char *) dst > sizeof(UCS4CHAR)) && (*dst == 0xFEFF))
    {
@@ -108,36 +102,30 @@ size_t LIBNETXMS_EXPORTABLE mb_to_ucs2(const char *src, ssize_t srcLen, UCS2CHAR
       return ASCII_to_ucs2(src, srcLen, dst, dstLen);
    if (g_defaultCodePageType == CodePageType::ISO8859_1)
       return ISO8859_1_to_ucs2(src, srcLen, dst, dstLen);
+   if (g_defaultCodePageType == CodePageType::UTF8)
+      return utf8_to_ucs2(src, srcLen, dst, dstLen);
 
 #if HAVE_ICONV && !defined(__DISABLE_ICONV)
-   iconv_t cd;
-   const char *inbuf;
-   char *outbuf;
-   size_t count, inbytes, outbytes;
-
-   cd = IconvOpen(UCS2_CODEPAGE_NAME, g_cpDefault);
+   iconv_t cd = IconvOpen(UCS2_CODEPAGE_NAME, g_cpDefault);
    if (cd == (iconv_t)(-1))
    {
       return ASCII_to_ucs2(src, srcLen, dst, dstLen);
    }
 
-   inbuf = src;
-   inbytes = (srcLen == -1) ? strlen(src) + 1 : static_cast<size_t>(srcLen);
-   outbuf = reinterpret_cast<char*>(dst);
-   outbytes = static_cast<size_t>(dstLen) * sizeof(UCS2CHAR);
-   count = iconv(cd, (ICONV_CONST char **)&inbuf, &inbytes, &outbuf, &outbytes);
+   const char *inbuf = src;
+   size_t inbytes = (srcLen == -1) ? strlen(src) + 1 : static_cast<size_t>(srcLen);
+   char *outbuf = reinterpret_cast<char*>(dst);
+   size_t outbytes = static_cast<size_t>(dstLen) * sizeof(UCS2CHAR);
+   size_t count = iconv(cd, (ICONV_CONST char **)&inbuf, &inbytes, &outbuf, &outbytes);
    IconvClose(cd);
 
-   if (count == (size_t)-1)
+   if ((count != (size_t)(-1)) || (errno == EILSEQ))
    {
-      if (errno == EILSEQ)
-      {
-         count = (dstLen * sizeof(UCS2CHAR) - outbytes) / sizeof(UCS2CHAR);
-      }
-      else
-      {
-         count = 0;
-      }
+      count = (dstLen * sizeof(UCS2CHAR) - outbytes) / sizeof(UCS2CHAR);
+   }
+   else
+   {
+      count = 0;
    }
    if ((outbuf - reinterpret_cast<char*>(dst) > static_cast<ptrdiff_t>(sizeof(UCS2CHAR))) && (*dst == 0xFEFF))
    {
@@ -181,44 +169,41 @@ size_t LIBNETXMS_EXPORTABLE mb_to_utf8(const char *src, ssize_t srcLen, char *ds
  */
 size_t LIBNETXMS_EXPORTABLE mb_to_utf8(const char *src, ssize_t srcLen, char *dst, size_t dstLen)
 {
+   if (g_defaultCodePageType == CodePageType::UTF8)
+   {
+      if (srcLen == -1)
+         return strlcpy(dst, src, dstLen);
+      size_t l = std::min(dstLen, static_cast<size_t>(srcLen));
+      strncpy(dst, src, l);
+      return l;
+   }
+
    if (g_defaultCodePageType == CodePageType::ASCII)
       return ASCII_to_utf8(src, srcLen, dst, dstLen);
    if (g_defaultCodePageType == CodePageType::ISO8859_1)
       return ISO8859_1_to_utf8(src, srcLen, dst, dstLen);
 
 #if HAVE_ICONV && !defined(__DISABLE_ICONV)
-   iconv_t cd;
-   const char *inbuf;
-   char *outbuf;
-   size_t count, inbytes, outbytes;
-
-   cd = IconvOpen("UTF-8", g_cpDefault);
+   iconv_t cd = IconvOpen("UTF-8", g_cpDefault);
    if (cd == (iconv_t)(-1))
    {
       return ASCII_to_utf8(src, srcLen, dst, dstLen);
    }
 
-   inbuf = (const char *)src;
-   inbytes = (srcLen == -1) ? strlen(src) + 1 : (size_t)srcLen;
-   outbuf = (char *)dst;
-   outbytes = (size_t)dstLen;
-   count = iconv(cd, (ICONV_CONST char **)&inbuf, &inbytes, &outbuf, &outbytes);
+   const char *inbuf = (const char *)src;
+   size_t inbytes = (srcLen == -1) ? strlen(src) + 1 : (size_t)srcLen;
+   char *outbuf = (char *)dst;
+   size_t outbytes = (size_t)dstLen;
+   size_t count = iconv(cd, (ICONV_CONST char **)&inbuf, &inbytes, &outbuf, &outbytes);
    IconvClose(cd);
 
-   if (count == (size_t) - 1)
+   if ((count != (size_t)(-1)) || (errno == EILSEQ))
    {
-      if (errno == EILSEQ)
-      {
-         count = dstLen * sizeof(char) - outbytes;
-      }
-      else
-      {
-         count = 0;
-      }
+      count = dstLen - outbytes;
    }
    else
    {
-      count = dstLen - outbytes;
+      count = 0;
    }
    if ((srcLen == -1) && (outbytes >= 1))
    {

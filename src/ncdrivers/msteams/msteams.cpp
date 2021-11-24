@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Notification channel driver for Microsoft Teams
-** Copyright (C) 2014-2019 Raden Solutions
+** Copyright (C) 2014-2021 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -189,7 +189,7 @@ bool MicrosoftTeamsDriver::send(const TCHAR *recipient, const TCHAR *subject, co
 
    char utf8url[256];
 #ifdef UNICODE
-   WideCharToMultiByte(CP_UTF8, 0, url, -1, utf8url, 256, NULL, NULL);
+   wchar_to_utf8(url, -1, utf8url, 256);
 #else
    mb_to_utf8(url, -1, utf8url, 256);
 #endif

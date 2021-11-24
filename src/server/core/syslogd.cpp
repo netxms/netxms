@@ -279,7 +279,7 @@ static shared_ptr<Node> FindNodeByHostname(const char *hostName, int32_t zoneUIN
 	{
 #ifdef UNICODE
 		WCHAR wname[MAX_OBJECT_NAME];
-		MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, hostName, -1, wname, MAX_OBJECT_NAME);
+		mb_to_wchar(hostName, -1, wname, MAX_OBJECT_NAME);
 		wname[MAX_OBJECT_NAME - 1] = 0;
 		node = static_pointer_cast<Node>(FindObjectByName(wname, OBJECT_NODE));
 #else
@@ -453,8 +453,8 @@ static void ProcessSyslogMessage(SyslogMessage *msg)
 #ifdef UNICODE
 			WCHAR wtag[MAX_SYSLOG_TAG_LEN];
 			WCHAR wmsg[MAX_LOG_MSG_LENGTH];
-			MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, msg->getTag(), -1, wtag, MAX_SYSLOG_TAG_LEN);
-			MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, msg->getMessage(), -1, wmsg, MAX_LOG_MSG_LENGTH);
+			mb_to_wchar(msg->getTag(), -1, wtag, MAX_SYSLOG_TAG_LEN);
+			mb_to_wchar(msg->getMessage(), -1, wmsg, MAX_LOG_MSG_LENGTH);
 			s_parser->matchEvent(wtag, msg->getFacility(), 1 << msg->getSeverity(), wmsg, nullptr, 0,
 			         msg->getNodeId(), 0, nullptr, &writeToDatabase);
 #else

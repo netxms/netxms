@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** SMS driver for Portech MV-37x VoIP GSM gateways
-** Copyright (C) 2011-2019 Raden Solutions
+** Copyright (C) 2011-2021 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -59,7 +59,6 @@ public:
  */
 PortechDriver::PortechDriver(Config *config)
 {
-
 	_tcscpy(m_primaryHostName, _T("10.0.0.1"));
 	_tcscpy(m_secondaryHostName, _T(""));
 	strcpy(m_login, "admin");
@@ -172,7 +171,7 @@ static bool SendText(SocketConnection *conn, const TCHAR *recipient, const TCHAR
    ThreadSleep(1);
 #ifdef UNICODE
 	char mbPhoneNumber[256];
-	WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, recipient, -1, mbPhoneNumber, 256, NULL, NULL);
+	wchar_to_ASCII(recipient, -1, mbPhoneNumber, 256);
 	mbPhoneNumber[255] = 0;
 	snprintf(szTmp, sizeof(szTmp), "AT+CMGS=\"%s\"\r\n", mbPhoneNumber);
 #else
@@ -183,7 +182,7 @@ static bool SendText(SocketConnection *conn, const TCHAR *recipient, const TCHAR
 
 #ifdef UNICODE
 	char mbText[161];
-	WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, body, -1, mbText, 161, NULL, NULL);
+	wchar_to_utf8(body, -1, mbText, 161);
 	mbText[160] = 0;
    __chk(conn->writeLine(mbText));
 #else
@@ -210,15 +209,15 @@ static bool SendPDU(SocketConnection *conn, const TCHAR *recipient, const TCHAR 
 	nxlog_debug_tag(DEBUG_TAG, 3, _T("PDU mode: rcpt=\"%s\" text=\"%s\""), recipient, body);
 
 #ifdef UNICODE
-	if (WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, recipient, -1, phoneNumber, bufferSize, NULL, NULL) == 0 ||
-	    WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, body, -1, text, bufferSize, NULL, NULL) == 0)
+	if (wchar_to_ASCII(recipient, -1, phoneNumber, bufferSize) == 0 ||
+	    wchar_to_utf8(body, -1, text, bufferSize) == 0)
 	{
 		nxlog_debug_tag(DEBUG_TAG, 2, _T("Failed to convert phone number or text to multibyte string"));
 		return false;
 	}
 #else
-	nx_strncpy(phoneNumber, recipient, bufferSize);
-	nx_strncpy(text, body, bufferSize);
+	strlcpy(phoneNumber, recipient, bufferSize);
+	strlcpy(text, body, bufferSize);
 #endif
 
    // Older versions responded with OK, newer with 0

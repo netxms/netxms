@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Command line event sender
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -210,7 +210,7 @@ int main(int argc, char *argv[])
             break;
          case 'u':
 #ifdef UNICODE
-				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, m_szLogin, MAX_DB_STRING);
+				MultiByteToWideCharSysLocale(optarg, m_szLogin, MAX_DB_STRING);
 				m_szLogin[MAX_DB_STRING - 1] = 0;
 #else
             strlcpy(m_szLogin, optarg, MAX_DB_STRING);
@@ -218,7 +218,7 @@ int main(int argc, char *argv[])
             break;
          case 'P':
 #ifdef UNICODE
-				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, m_szPassword, MAX_DB_STRING);
+            MultiByteToWideCharSysLocale(optarg, m_szPassword, MAX_DB_STRING);
 				m_szPassword[MAX_DB_STRING - 1] = 0;
 #else
             strlcpy(m_szPassword, optarg, MAX_DB_STRING);
@@ -229,7 +229,7 @@ int main(int argc, char *argv[])
             break;
          case 'T':
 #ifdef UNICODE
-				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, m_szUserTag, MAX_USERTAG_LENGTH);
+            MultiByteToWideCharSysLocale(optarg, m_szUserTag, MAX_USERTAG_LENGTH);
 				m_szUserTag[MAX_USERTAG_LENGTH - 1] = 0;
 #else
             strlcpy(m_szUserTag, optarg, MAX_USERTAG_LENGTH);
@@ -274,7 +274,7 @@ int main(int argc, char *argv[])
          }
 #endif
 #ifdef UNICODE
-			MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, argv[optind], -1, m_szServer, 256);
+         MultiByteToWideCharSysLocale(argv[optind], m_szServer, 256);
 			m_szServer[255] = 0;
 #else
          strlcpy(m_szServer, argv[optind], 256);
@@ -287,7 +287,7 @@ int main(int argc, char *argv[])
             // assume that event is specified by name
             m_dwEventCode = 0;
 #ifdef UNICODE
-            MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, argv[optind + 1], -1, m_eventName, MAX_EVENT_NAME);
+            MultiByteToWideCharSysLocale(argv[optind + 1], m_eventName, MAX_EVENT_NAME);
             m_eventName[MAX_EVENT_NAME - 1] = 0;
 #else
             strlcpy(m_eventName, argv[optind + 1], MAX_EVENT_NAME);

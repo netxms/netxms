@@ -1,6 +1,6 @@
 /*
 ** NetXMS Tuxedo subagent
-** Copyright (C) 2014-2018 Raden Solutions
+** Copyright (C) 2014-2021 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -85,7 +85,7 @@ TuxedoMachine::TuxedoMachine(FBFR32 *fb, FLDOCC32 index)
 #ifdef UNICODE
    char id[32] = "";
    CFgetString(fb, TA_LMID, index, id, sizeof(id));
-   MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, id, -1, m_id, 32);
+   mb_to_wchar(id, -1, m_id, 32);
 #else
    CFgetString(fb, TA_LMID, index, m_id, sizeof(m_id));
 #endif
@@ -136,7 +136,7 @@ static EnumerationCallbackResult UpdateLocalMachineId(const TCHAR *key, const vo
    if (!stricmp(m->m_pmid, static_cast<char*>(arg)))
    {
 #ifdef UNICODE
-      WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, m->m_id, -1, s_localMachineId, 64, NULL, NULL);
+      wchar_to_mb(m->m_id, -1, s_localMachineId, 64);
 #else
       strlcpy(s_localMachineId, m->m_id, 64);
 #endif

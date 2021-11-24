@@ -1,6 +1,6 @@
 /*
 ** NetXMS Tuxedo subagent
-** Copyright (C) 2014-2018 Raden Solutions
+** Copyright (C) 2014-2021 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -51,7 +51,7 @@ TuxedoService::TuxedoService(FBFR32 *fb, FLDOCC32 index)
 #ifdef UNICODE
    char name[32] = "";
    CFgetString(fb, TA_SERVICENAME, index, name, sizeof(name));
-   MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, name, -1, m_name, 32);
+   mb_to_wchar(name, -1, m_name, 32);
 #else
    CFgetString(fb, TA_SERVICENAME, index, m_name, sizeof(m_name));
 #endif

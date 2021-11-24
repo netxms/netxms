@@ -82,7 +82,8 @@ enum class CodePageType
 {
    OTHER,
    ASCII,
-   ISO8859_1
+   ISO8859_1,
+   UTF8
 };
 
 extern char g_cpDefault[];

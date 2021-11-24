@@ -509,11 +509,11 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 		name = XMLGetAttr(attrs, "name");
 #ifdef UNICODE
 		ps->macroName = L"";
-		ps->macroName.appendMBString(name, strlen(name), CP_UTF8);
+		ps->macroName.appendUtf8String(name);
 #else
 		ps->macroName = CHECK_NULL_A(name);
 #endif
-		ps->macro = NULL;
+		ps->macro = nullptr;
 	}
 	else if (!strcmp(name, "rules"))
 	{
@@ -537,11 +537,11 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 		ps->ruleContext.clear();
 		const char *context = XMLGetAttr(attrs, "context");
 		if (context != nullptr)
-			ps->ruleContext.appendMBString(context, strlen(context), CP_UTF8);
+			ps->ruleContext.appendUtf8String(context);
       ps->ruleName.clear();
       const char *name = XMLGetAttr(attrs, "name");
       if (name != nullptr)
-         ps->ruleName.appendMBString(name, strlen(name), CP_UTF8);
+         ps->ruleName.appendUtf8String(name);
 #else
 		ps->ruleContext = XMLGetAttr(attrs, "context");
       ps->ruleName = XMLGetAttr(attrs, "name");
@@ -557,7 +557,7 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 	   if (action != nullptr)
 	   {
 #ifdef UNICODE
-	      ps->agentAction.appendMBString(action, strlen(action), CP_UTF8);
+	      ps->agentAction.appendUtf8String(action);
 #else
 	      ps->agentAction = action;
 #endif
@@ -824,40 +824,40 @@ static void CharData(void *userData, const XML_Char *s, int len)
 	switch(ps->state)
 	{
 	   case XML_STATE_AGENT_ACTION:
-	      ps->agentActionArgs.appendMBString(s, len, CP_UTF8);
+	      ps->agentActionArgs.appendUtf8String(s, len);
 	      break;
 		case XML_STATE_MATCH:
-			ps->regexp.appendMBString(s, len, CP_UTF8);
+			ps->regexp.appendUtf8String(s, len);
 			break;
 		case XML_STATE_ID:
-			ps->id.appendMBString(s, len, CP_UTF8);
+			ps->id.appendUtf8String(s, len);
 			break;
 		case XML_STATE_LEVEL:
-			ps->level.appendMBString(s, len, CP_UTF8);
+			ps->level.appendUtf8String(s, len);
 			break;
 		case XML_STATE_SOURCE:
-			ps->source.appendMBString(s, len, CP_UTF8);
+			ps->source.appendUtf8String(s, len);
 			break;
 		case XML_STATE_EVENT:
-			ps->event.appendMBString(s, len, CP_UTF8);
+			ps->event.appendUtf8String(s, len);
 			break;
 		case XML_STATE_FILE:
-			ps->file.appendMBString(s, len, CP_UTF8);
+			ps->file.appendUtf8String(s, len);
 			break;
 		case XML_STATE_CONTEXT:
-			ps->context.appendMBString(s, len, CP_UTF8);
+			ps->context.appendUtf8String(s, len);
 			break;
 		case XML_STATE_DESCRIPTION:
-			ps->description.appendMBString(s, len, CP_UTF8);
+			ps->description.appendUtf8String(s, len);
 			break;
       case XML_STATE_LOG_NAME:
-         ps->logName.appendMBString(s, len, CP_UTF8);
+         ps->logName.appendUtf8String(s, len);
          break;
 		case XML_STATE_MACRO:
-			ps->macro.appendMBString(s, len, CP_UTF8);
+			ps->macro.appendUtf8String(s, len);
 			break;
 		case XML_STATE_EXCLUSION_SCHEDULE:
-         ps->schedule.appendMBString(s, len, CP_UTF8);
+         ps->schedule.appendUtf8String(s, len);
          break;
 		default:
 			break;

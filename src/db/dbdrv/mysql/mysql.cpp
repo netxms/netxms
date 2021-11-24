@@ -59,9 +59,9 @@ inline void FreeConvertedString(char *str, char *localBuffer)
  */
 static void UpdateErrorMessage(const char *source, WCHAR *errorText)
 {
-	if (errorText != NULL)
+	if (errorText != nullptr)
 	{
-		MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, source, -1, errorText, DBDRV_MAX_ERROR_TEXT);
+	   utf8_to_wchar(source, -1, errorText, DBDRV_MAX_ERROR_TEXT);
 		errorText[DBDRV_MAX_ERROR_TEXT - 1] = 0;
 		RemoveTrailingCRLFW(errorText);
 	}
@@ -808,7 +808,7 @@ static void *GetFieldInternal(MYSQL_RESULT *hResult, int iRow, int iColumn, void
             }
             else
             {
-   				MultiByteToWideChar(CP_UTF8, 0, row[iColumn], -1, (WCHAR *)pBuffer, nBufSize);
+   				utf8_to_wchar(row[iColumn], -1, (WCHAR *)pBuffer, nBufSize);
    			   ((WCHAR *)pBuffer)[nBufSize - 1] = 0;
             }
 				value = pBuffer;
@@ -940,7 +940,7 @@ extern "C" DBDRV_UNBUFFERED_RESULT __EXPORT DrvSelectUnbuffered(MYSQL_CONN *conn
 		
 		if (errorText != nullptr)
 		{
-			MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, mysql_error(connection->mysql), -1, errorText, DBDRV_MAX_ERROR_TEXT);
+		   utf8_to_wchar(mysql_error(connection->mysql), -1, errorText, DBDRV_MAX_ERROR_TEXT);
 			errorText[DBDRV_MAX_ERROR_TEXT - 1] = 0;
 			RemoveTrailingCRLFW(errorText);
 		}
@@ -1140,7 +1140,7 @@ static void *GetFieldUnbufferedInternal(MYSQL_UNBUFFERED_RESULT *hResult, int iC
             }
             else
             {
-               MultiByteToWideChar(CP_UTF8, 0, (char *)b.buffer, -1, (WCHAR *)pBuffer, iBufSize);
+               utf8_to_wchar((char *)b.buffer, -1, (WCHAR *)pBuffer, iBufSize);
                ((WCHAR *)pBuffer)[iBufSize - 1] = 0;
             }
          }

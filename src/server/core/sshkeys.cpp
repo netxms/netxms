@@ -132,29 +132,28 @@ static int SshEncodeBuffer(unsigned char *encoding, int bufferLen, unsigned char
 shared_ptr<SshKeyPair> SshKeyPair::generate(const TCHAR *name)
 {
    shared_ptr<SshKeyPair> data = make_shared<SshKeyPair>();
-   _tcsncpy(data->m_name, name, MAX_SSH_KEY_NAME);
+   _tcslcpy(data->m_name, name, MAX_SSH_KEY_NAME);
    RSA *key = RSAGenerateKey(4056);
-   if(key == nullptr)
+   if (key == nullptr)
    {
       nxlog_write(NXLOG_ERROR, _T("SshKeyData::generateNewKeys: failed to generate RSA key"));
       RSA_free(key);
       return shared_ptr<SshKeyPair>();
    }
-   //Format private key to PKCS#1 and encode to base64
+
+   // Format private key to PKCS#1 and encode to base64
    StringBuffer privateKey;
    privateKey.append(_T("-----BEGIN RSA PRIVATE KEY-----\n"));
    char buf[4096];
    BYTE *pBufPos = reinterpret_cast<BYTE *>(buf);
    uint32_t privateLen = i2d_RSAPrivateKey(key, &pBufPos);
    base64_encode_alloc(buf, privateLen, &data->m_privateKey);
-   privateKey.appendMBString(data->m_privateKey, strlen(data->m_privateKey), CP_UTF8);
+   privateKey.appendUtf8String(data->m_privateKey);
    privateKey.append(_T("\n-----END RSA PRIVATE KEY-----"));
    MemFree(data->m_privateKey);
    data->m_privateKey = privateKey.getUTF8String();
 
-
-   //Format public key
-   // reading the modulus
+   // Format public key
    const BIGNUM *n, *e;
 #if OPENSSL_VERSION_NUMBER < 0x10100000L
    n = key->n;
@@ -163,12 +162,13 @@ shared_ptr<SshKeyPair> SshKeyPair::generate(const TCHAR *name)
    const BIGNUM *d;
    RSA_get0_key(key, &n, &e, &d);
 #endif
-   if(n == nullptr || e == nullptr)
+   if (n == nullptr || e == nullptr)
    {
       nxlog_write(NXLOG_ERROR, _T("SshKeyData::generateNewKeys: failed to generate RSA key components"));
       RSA_free(key);
       return shared_ptr<SshKeyPair>();
    }
+
    int nLen = BN_num_bytes(n);
    unsigned char* nBytes = (unsigned char*) MemAlloc(nLen);
    BN_bn2bin(n, nBytes);
@@ -195,7 +195,7 @@ shared_ptr<SshKeyPair> SshKeyPair::generate(const TCHAR *name)
    publicKey.append(_T("ssh-rsa "));
    char *out;
    size_t len = base64_encode_alloc(reinterpret_cast<const char *>(encoding), encodingLength, &out);
-   publicKey.appendMBString(out, len, CP_UTF8);
+   publicKey.appendUtf8String(out, len);
 
    MemFree(nBytes);
    MemFree(eBytes);

@@ -47,7 +47,7 @@ static int StartApp(int argc, char *argv[])
    if (s_optJre != nullptr)
    {
 #ifdef UNICODE
-      MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, s_optJre, -1, jre, MAX_PATH);
+      MultiByteToWideCharSysLocale(s_optJre, jre, MAX_PATH);
       jre[MAX_PATH - 1] = 0;
 #else
       strlcpy(jre, s_optJre, MAX_PATH);

@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Utility Library
-** Copyright (C) 2003-2020 Raden Solutions
+** Copyright (C) 2003-2021 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -172,28 +172,28 @@ MacAddress MacAddress::parse(const char *str)
    StringBuffer mac;
    const char *errptr;
    int erroffset;
-   pcre *compRegex = pcre_compile(exp1, PCRE_COMMON_FLAGS_A, &errptr, &erroffset, NULL);
-   if (compRegex != NULL)
+   pcre *compRegex = pcre_compile(exp1, PCRE_COMMON_FLAGS_A, &errptr, &erroffset, nullptr);
+   if (compRegex != nullptr)
    {
       int ovector[30];
-      int cgcount = pcre_exec(compRegex, NULL, str, static_cast<int>(strlen(str)), 0, 0, ovector, 30);
+      int cgcount = pcre_exec(compRegex, nullptr, str, static_cast<int>(strlen(str)), 0, 0, ovector, 30);
       if (cgcount >= 7) // at least 6 elements
       {
          for(int i = 1; i < cgcount; i++)
-            mac.appendMBString(str + ovector[i * 2], (ovector[i * 2 + 1] - ovector[i * 2]), CP_ACP);
+            mac.appendMBString(str + ovector[i * 2], (ovector[i * 2 + 1] - ovector[i * 2]));
          pcre_free(compRegex);
       }
       else
       {
          pcre_free(compRegex);
-         pcre *compRegex = pcre_compile(exp2, PCRE_COMMON_FLAGS_A, &errptr, &erroffset, NULL);
+         pcre *compRegex = pcre_compile(exp2, PCRE_COMMON_FLAGS_A, &errptr, &erroffset, nullptr);
          if (compRegex != NULL)
          {
-            cgcount = pcre_exec(compRegex, NULL, str, static_cast<int>(strlen(str)), 0, 0, ovector, 30);
+            cgcount = pcre_exec(compRegex, nullptr, str, static_cast<int>(strlen(str)), 0, 0, ovector, 30);
             if (cgcount == 5)
             {
                for(int i = 1; i < cgcount; i++)
-                  mac.appendMBString(str + ovector[i * 2], (ovector[i * 2 + 1] - ovector[i * 2]), CP_ACP);
+                  mac.appendMBString(str + ovector[i * 2], (ovector[i * 2 + 1] - ovector[i * 2]));
             }
             pcre_free(compRegex);
          }
@@ -216,6 +216,6 @@ MacAddress MacAddress::parse(const char *str)
 MacAddress MacAddress::parse(const WCHAR *str)
 {
    char mb[256];
-   WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, str, -1, mb, 256, NULL, NULL);
+   wchar_to_mb(str, -1, mb, 256);
    return parse(mb);
 }

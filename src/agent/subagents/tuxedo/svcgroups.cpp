@@ -1,6 +1,6 @@
 /*
 ** NetXMS Tuxedo subagent
-** Copyright (C) 2014-2019 Raden Solutions
+** Copyright (C) 2014-2021 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -77,9 +77,9 @@ TuxedoServiceGropup::TuxedoServiceGropup(FBFR32 *fb, FLDOCC32 index)
 #ifdef UNICODE
    char buffer[32] = "";
    CFgetString(fb, TA_SERVICENAME, index, buffer, sizeof(buffer));
-   MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, buffer, -1, m_svcName, 32);
+   mb_to_wchar(buffer, -1, m_svcName, 32);
    CFgetString(fb, TA_SRVGRP, index, buffer, sizeof(buffer));
-   MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, buffer, -1, m_srvGroup, 32);
+   mb_to_wchar(buffer, -1, m_srvGroup, 32);
 #else
    CFgetString(fb, TA_SERVICENAME, index, m_svcName, sizeof(m_svcName));
    CFgetString(fb, TA_SRVGRP, index, m_srvGroup, sizeof(m_srvGroup));

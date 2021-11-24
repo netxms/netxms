@@ -1,6 +1,6 @@
 /*
  ** MQTT subagent
- ** Copyright (C) 2017-2020 Raden Solutions
+ ** Copyright (C) 2017-2021 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -25,7 +25,7 @@
 Topic::Topic(const TCHAR *pattern, const TCHAR *event)
 {
 #ifdef UNICODE
-   m_pattern = (pattern != NULL) ? UTF8StringFromWideString(pattern) : NULL;
+   m_pattern = UTF8StringFromWideString(pattern);
 #else
    m_pattern = MemCopyStringA(pattern);
 #endif
@@ -40,8 +40,8 @@ Topic::Topic(const TCHAR *pattern, const TCHAR *event)
  */
 Topic::~Topic()
 {
-   free(m_pattern);
-   free(m_event);
+   MemFree(m_pattern);
+   MemFree(m_event);
 }
 
 /**
@@ -55,16 +55,16 @@ void Topic::processMessage(const char *topic, const char *msg)
    if (!match)
       return;
 
-   if (m_event != NULL)
+   if (m_event != nullptr)
    {
       AgentPostEvent(0, m_event, 0, "mm", topic, msg);
    }
    else
    {
       m_mutex.lock();
-      strncpy(m_lastName, topic, MAX_DB_STRING);
-      strncpy(m_lastValue, msg, MAX_RESULT_LENGTH);
-      m_timestamp = time(NULL);
+      strlcpy(m_lastName, topic, MAX_DB_STRING);
+      strlcpy(m_lastValue, msg, MAX_RESULT_LENGTH);
+      m_timestamp = time(nullptr);
       m_mutex.unlock();
    }
 }
@@ -82,10 +82,10 @@ bool Topic::retrieveData(TCHAR *buffer, size_t bufferLen)
    }
 
 #ifdef UNICODE
-   MultiByteToWideChar(CP_UTF8, 0, m_lastValue, -1, buffer, (int)bufferLen);
+   utf8_to_wchar(m_lastValue, -1, buffer, bufferLen);
    buffer[bufferLen - 1] = 0;
 #else
-   nx_strncpy(buffer, m_lastValue, bufferLen);
+   strlcpy(buffer, m_lastValue, bufferLen);
 #endif
 
    m_mutex.unlock();

@@ -331,7 +331,7 @@ static int CASValidate(const char *ticket, char *loginName)
       {
 #ifdef UNICODE
          WCHAR wproxy[MAX_DNS_NAME];
-         MultiByteToWideChar(CP_UTF8, 0, parsebuf, -1, wproxy, MAX_DNS_NAME);
+         utf8_to_wchar(parsebuf, -1, wproxy, MAX_DNS_NAME);
          if (!s_proxies.contains(wproxy))
 #else
          if (!s_proxies.contains(parsebuf))

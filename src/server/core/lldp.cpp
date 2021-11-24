@@ -138,7 +138,7 @@ static shared_ptr<Interface> FindRemoteInterface(Node *node, uint32_t idType, BY
 			return shared_ptr<Interface>();
 		case 5:	// Interface name
 #ifdef UNICODE
-			MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (char *)id, (int)idLen, ifName, 128);
+			mbcp_to_wchar((char *)id, (int)idLen, ifName, 128, "ISO-8859-1");
 			ifName[MIN(idLen, 127)] = 0;
 #else
 			{

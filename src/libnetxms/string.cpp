@@ -608,22 +608,24 @@ void StringBuffer::insert(size_t index, const TCHAR *str, size_t len)
 /**
  * Insert multibyte string at given position
  */
-void StringBuffer::insertMBString(size_t index, const char *str, size_t len, int codePage)
+void StringBuffer::insertMBString(size_t index, const char *str, ssize_t len)
 {
+   if (len == -1)
+      len = strlen(str);
 #ifdef UNICODE
    insertPlaceholder(index, len);
    if (index < m_length)
    {
-      int wchars = MultiByteToWideChar(codePage, (codePage == CP_UTF8) ? 0 : MB_PRECOMPOSED, str, (int)len, &m_buffer[index], (int)len + 1);
+      int wchars = mb_to_wchar(str, len, &m_buffer[index], len + 1);
       if (static_cast<size_t>(wchars) < len)
       {
-         memmove(&m_buffer[index + len], &m_buffer[index + wchars], len - wchars);
+         memmove(&m_buffer[index + len], &m_buffer[index + wchars], (len - wchars) * sizeof(WCHAR));
       }
       m_length += wchars;
    }
    else
    {
-      m_length += MultiByteToWideChar(codePage, (codePage == CP_UTF8) ? 0 : MB_PRECOMPOSED, str, (int)len, &m_buffer[m_length], (int)len + 1);
+      m_length += mb_to_wchar(str, len, &m_buffer[m_length], len + 1);
    }
    m_buffer[m_length] = 0;
 #else
@@ -632,18 +634,52 @@ void StringBuffer::insertMBString(size_t index, const char *str, size_t len, int
 }
 
 /**
+ * Insert UTF-8 string at given position
+ */
+void StringBuffer::insertUtf8String(size_t index, const char *str, ssize_t len)
+{
+   if (len == -1)
+      len = strlen(str);
+   insertPlaceholder(index, len);
+   if (index < m_length)
+   {
+#ifdef UNICODE
+      size_t wchars = utf8_to_wchar(str, len, &m_buffer[index], len + 1);
+#else
+      size_t wchars = utf8_to_mb(str, len, &m_buffer[index], len + 1);
+#endif
+      if (wchars < len)
+      {
+         memmove(&m_buffer[index + len], &m_buffer[index + wchars], (len - wchars) * sizeof(TCHAR));
+      }
+      m_length += wchars;
+   }
+   else
+   {
+#ifdef UNICODE
+      m_length += utf8_to_wchar(str, len, &m_buffer[m_length], len + 1);
+#else
+      m_length += utf8_to_mb(str, len, &m_buffer[m_length], len + 1);
+#endif
+   }
+   m_buffer[m_length] = 0;
+}
+
+/**
  * Insert wide character string at given position
  */
-void StringBuffer::insertWideString(size_t index, const WCHAR *str, size_t len)
+void StringBuffer::insertWideString(size_t index, const WCHAR *str, ssize_t len)
 {
+   if (len == -1)
+      len = wcslen(str);
 #ifdef UNICODE
    insert(index, str, len);
 #else
-   size_t clen = WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, str, len, nullptr, 0, nullptr, nullptr);
+   size_t clen = wchar_to_mb(str, len, nullptr, 0);
    insertPlaceholder(index, clen);
    if (index < m_length)
    {
-      int chars = WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, str, len, &m_buffer[index], clen, nullptr, nullptr);
+      int chars = wchar_to_mb(str, len, &m_buffer[index], clen);
       if (chars < len)
       {
          memmove(&m_buffer[index + len], &m_buffer[index + chars], clen - chars);
@@ -652,7 +688,7 @@ void StringBuffer::insertWideString(size_t index, const WCHAR *str, size_t len)
    }
    else
    {
-      m_length += WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, str, len, &m_buffer[m_length], len, nullptr, nullptr);
+      m_length += wchar_to_mb(str, len, &m_buffer[m_length], len);
    }
    m_buffer[m_length] = 0;
 #endif

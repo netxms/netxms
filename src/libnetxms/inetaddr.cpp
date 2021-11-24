@@ -464,7 +464,7 @@ TCHAR *InetAddress::getHostByAddr(TCHAR *buffer, size_t buflen) const
 InetAddress InetAddress::resolveHostName(const WCHAR *hostname, int af)
 {
    char mbName[256];
-   WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, hostname, -1, mbName, 256, NULL, NULL);
+   WideCharToMultiByteSysLocale(hostname, mbName, 256);
    return resolveHostName(mbName, af);
 }
 

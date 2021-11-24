@@ -2361,7 +2361,7 @@ int main(int argc, char *argv[])
                {
 #ifdef UNICODE
                   char vmb[64];
-                  WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, v, -1, vmb, 64, NULL, NULL);
+                  WideCharToMultiByteSysLocale(v, vmb, 64);
                   vmb[63] = 0;
                   gid = GetGroupId(vmb);
 #else
@@ -2376,7 +2376,7 @@ int main(int argc, char *argv[])
                {
 #ifdef UNICODE
                   char vmb[64];
-                  WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, v, -1, vmb, 64, NULL, NULL);
+                  WideCharToMultiByteSysLocale(v, vmb, 64);
                   vmb[63] = 0;
                   uid = GetUserId(vmb);
 #else

@@ -33,9 +33,9 @@ void MqttMessageHandler(const char *payload, char *topic)
    {
       TCHAR buffer[64];
 #ifdef UNICODE
-      MultiByteToWideChar(CP_UTF8, 0, json_string_value(tmp), -1, buffer, 64);
+      utf8_to_wchar(json_string_value(tmp), -1, buffer, 64);
 #else
-      nx_strncpy(buffer, json_string_value(tmp), 64);
+      strlcpy(buffer, json_string_value(tmp), 64);
 #endif
       LoraDeviceData *data = FindDevice(uuid::parse(buffer));
 

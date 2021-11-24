@@ -35,7 +35,7 @@ static void GetErrorMessage(sqlite3 *hdb, WCHAR *errorText)
 #if UNICODE_UCS2
 	wcslcpy(errorText, (const WCHAR *)sqlite3_errmsg16(hdb), DBDRV_MAX_ERROR_TEXT);
 #else
-	MultiByteToWideChar(CP_UTF8, 0, sqlite3_errmsg(hdb), -1, errorText, DBDRV_MAX_ERROR_TEXT);
+	utf8_to_wchar(sqlite3_errmsg(hdb), -1, errorText, DBDRV_MAX_ERROR_TEXT);
 #endif
 	errorText[DBDRV_MAX_ERROR_TEXT - 1] = 0;
 	RemoveTrailingCRLFW(errorText);

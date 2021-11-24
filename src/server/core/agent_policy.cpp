@@ -94,8 +94,8 @@ bool GenericAgentPolicy::saveToDatabase(DB_HANDLE hdb)
  */
 bool GenericAgentPolicy::deleteFromDatabase(DB_HANDLE hdb)
 {
-   TCHAR query[256];
-   _sntprintf(query, 256, _T("DELETE FROM ap_common WHERE guid='%s'"), (const TCHAR *)m_guid.toString());
+   TCHAR query[256], guid[64];
+   _sntprintf(query, 256, _T("DELETE FROM ap_common WHERE guid='%s'"), m_guid.toString(guid));
    return DBQuery(hdb, query);
 }
 
@@ -106,8 +106,8 @@ bool GenericAgentPolicy::loadFromDatabase(DB_HANDLE hdb)
 {
    bool success = false;
 
-   TCHAR query[256];
-   _sntprintf(query, 256, _T("SELECT policy_name,owner_id,policy_type,file_content,version,flags FROM ap_common WHERE guid='%s'"), (const TCHAR *)m_guid.toString());
+   TCHAR query[256], guid[64];
+   _sntprintf(query, 256, _T("SELECT policy_name,owner_id,policy_type,file_content,version,flags FROM ap_common WHERE guid='%s'"), m_guid.toString(guid));
    DB_RESULT hResult = DBSelect(hdb, query);
    if (hResult != nullptr)
    {
@@ -518,7 +518,7 @@ void FileDeliveryPolicy::exportAdditionalData(StringBuffer &xml)
                size_t base64BufferSize = base64_encode_alloc(reinterpret_cast<char*>(encodeInput), encodedInputSize, &base64Buffer);
                MemFree(encodeInput);
                xml.append(_T("\t\t\t\t\t\t\t\t<data>"));
-               xml.appendMBString(base64Buffer, base64BufferSize, CP_ACP);
+               xml.appendMBString(base64Buffer, base64BufferSize);
                MemFree(base64Buffer);
                xml.append(_T("</data>\n\t\t\t\t\t\t\t<hash>"));
 

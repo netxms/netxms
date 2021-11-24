@@ -156,18 +156,18 @@ int main(int argc, char *argv[])
             break;
          case 'o':
 #ifdef UNICODE
-				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, m_outFormat, MAX_DB_STRING);
+				MultiByteToWideCharSysLocale(optarg, m_outFormat, MAX_DB_STRING);
 				m_outFormat[MAX_DB_STRING - 1] = 0;
 #else
-            nx_strncpy(m_outFormat, optarg, MAX_DB_STRING);
+            strlcpy(m_outFormat, optarg, MAX_DB_STRING);
 #endif
             break;
          case 'P':
 #ifdef UNICODE
-				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, password, MAX_DB_STRING);
+				MultiByteToWideCharSysLocale(optarg, password, MAX_DB_STRING);
 				password[MAX_DB_STRING - 1] = 0;
 #else
-            nx_strncpy(password, optarg, MAX_DB_STRING);
+            strlcpy(password, optarg, MAX_DB_STRING);
 #endif
             break;
          case 's':
@@ -184,10 +184,10 @@ int main(int argc, char *argv[])
             break;
          case 'u':
 #ifdef UNICODE
-				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, login, MAX_DB_STRING);
+				MultiByteToWideCharSysLocale(optarg, login, MAX_DB_STRING);
 				login[MAX_DB_STRING - 1] = 0;
 #else
-            nx_strncpy(login, optarg, MAX_DB_STRING);
+            strlcpy(login, optarg, MAX_DB_STRING);
 #endif
             break;
          case 'w':
@@ -243,7 +243,7 @@ int main(int argc, char *argv[])
 
 #ifdef UNICODE
 	WCHAR whost[256];
-	MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, argv[optind], -1, whost, 256);
+	MultiByteToWideCharSysLocale(argv[optind], whost, 256);
 	whost[255] = 0;
 #define _HOST whost
 #else
@@ -289,9 +289,9 @@ int main(int argc, char *argv[])
 		else if (!stricmp(argv[optind + 1], "add-comment"))
 		{
 #ifdef UNICODE
-         WCHAR *wtext = WideStringFromMBString(argv[optind + 3]);
+         WCHAR *wtext = WideStringFromMBStringSysLocale(argv[optind + 3]);
          rcc = ctrl->addComment(alarmId, wtext);
-         free(wtext);
+         MemFree(wtext);
 #else
 			rcc = ctrl->addComment(alarmId, argv[optind + 3]);
 #endif

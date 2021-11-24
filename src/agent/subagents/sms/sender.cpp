@@ -1,6 +1,6 @@
 /*
 ** NetXMS SMS sending subagent
-** Copyright (C) 2006-2014 Raden Solutions
+** Copyright (C) 2006-2021 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -28,14 +28,14 @@ bool SMSCreatePDUString(const char* phoneNumber, const char* message, char* pduB
  * Static data
  */
 static Serial s_serial;
-static const char *s_eosMarks[] = { "OK", "ERROR", NULL };
-static const char *s_eosMarksSend[] = { ">", "ERROR", NULL };
+static const char *s_eosMarks[] = { "OK", "ERROR", nullptr };
+static const char *s_eosMarksSend[] = { ">", "ERROR", nullptr };
 static enum { OM_TEXT, OM_PDU } s_operationMode = OM_TEXT;
 
 /**
  * Read input to OK
  */
-static bool ReadToOK(Serial *serial, char *data = NULL)
+static bool ReadToOK(Serial *serial, char *data = nullptr)
 {
    char buffer[1024];
    memset(buffer, 0, 1024);
@@ -48,9 +48,9 @@ static bool ReadToOK(Serial *serial, char *data = NULL)
          AgentWriteDebugLog(5, _T("SMS: ReadToOK: readToMark returned %d"), rc);
          return false;
       }
-      if (mark != NULL) 
+      if (mark != nullptr)
       {
-         if (data != NULL)
+         if (data != nullptr)
          {
             int len = (int)(mark - buffer);
             memcpy(data, buffer, len);
@@ -223,10 +223,10 @@ bool InitSender(const TCHAR *pszInitArgs)
 		for(eptr = sptr; (*eptr != 0) && (*eptr != '\r') && (*eptr != '\n'); eptr++);
 		*eptr = 0;
 #ifdef UNICODE
-		MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, sptr, -1, g_szDeviceModel, 256);
+		mb_to_wchar(sptr, -1, g_szDeviceModel, 256);
 		g_szDeviceModel[255] = 0;
 #else
-		nx_strncpy(g_szDeviceModel, sptr, 256);
+		strlcpy(g_szDeviceModel, sptr, 256);
 #endif
 		AgentWriteLog(EVENTLOG_INFORMATION_TYPE, _T("SMS Sender: GSM modem initialized (Device=\"%s\" Model=\"%s\")"), pszInitArgs, g_szDeviceModel);
 	}
@@ -246,7 +246,7 @@ cleanup:
  */
 bool SendSMS(const char *pszPhoneNumber, const char *pszText)
 {
-	if ((pszPhoneNumber == NULL) || (pszText == NULL))
+	if ((pszPhoneNumber == nullptr) || (pszText == nullptr))
       return false;
 
 	AgentWriteDebugLog(3, _T("SMS: send to {%hs}: {%hs}"), pszPhoneNumber, pszText);

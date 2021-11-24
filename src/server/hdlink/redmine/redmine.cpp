@@ -383,7 +383,7 @@ bool RedmineLink::getIssueUrl(const TCHAR *hdref, TCHAR *url, size_t size)
 {
 #ifdef UNICODE
    WCHAR serverUrl[MAX_PATH];
-   MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, m_serverUrl, -1, serverUrl, MAX_PATH);
+   utf8_to_wchar(m_serverUrl, -1, serverUrl, MAX_PATH);
    _sntprintf(url, size, _T("%s/issues/%s"), serverUrl, hdref);
 #else
    _sntprintf(url, size, _T("%s/issues/%s"), m_serverUrl, hdref);

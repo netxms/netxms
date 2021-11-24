@@ -266,10 +266,9 @@ static void EndElement(void *userData, const char *name)
 static void CharData(void *userData, const XML_Char *s, int len)
 {
    XML_PARSER_STATE *ps = (XML_PARSER_STATE *)userData;
-
    if (ps->state == XML_STATE_CELL)
    {
-      ps->buffer->appendMBString(s, len, CP_UTF8);
+      ps->buffer->appendUtf8String(s, len);
    }
 }
 

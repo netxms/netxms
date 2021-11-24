@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -153,7 +153,7 @@ void StringList::addMBString(const char *value)
    CHECK_ALLOCATION;
    size_t l = strlen(value);
    WCHAR *s = m_pool.allocateArray<WCHAR>(l + 1);
-   MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, value, -1, s, static_cast<int>(l + 1));
+   mb_to_wchar(value, -1, s, static_cast<int>(l + 1));
    m_values[m_count++] = s;
 }
 
@@ -282,7 +282,7 @@ void StringList::insertMBString(int pos, const char *value)
 
    size_t l = strlen(value);
    WCHAR *s = m_pool.allocateArray<WCHAR>(l + 1);
-   MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, value, -1, s, static_cast<int>(l + 1));
+   mb_to_wchar(value, -1, s, static_cast<int>(l + 1));
    if (pos < m_count)
       memmove(&m_values[pos + 1], &m_values[pos], (m_count - pos) * sizeof(TCHAR*));
    m_count++;

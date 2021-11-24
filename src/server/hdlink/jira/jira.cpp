@@ -387,10 +387,10 @@ UINT32 JiraLink::openIssue(const TCHAR *description, TCHAR *hdref)
             if (json_is_string(key))
             {
 #ifdef UNICODE
-               MultiByteToWideChar(CP_UTF8, 0, json_string_value(key), -1, hdref, MAX_HELPDESK_REF_LEN);
+               utf8_to_wchar(json_string_value(key), -1, hdref, MAX_HELPDESK_REF_LEN);
                hdref[MAX_HELPDESK_REF_LEN - 1] = 0;
 #else
-               nx_strncpy(hdref, json_string_value(key), MAX_HELPDESK_REF_LEN);
+               strlcpy(hdref, json_string_value(key), MAX_HELPDESK_REF_LEN);
 #endif
                rcc = RCC_SUCCESS;
                DbgPrintf(4, _T("Jira: created new issue with reference \"%s\""), hdref);
@@ -416,9 +416,9 @@ UINT32 JiraLink::openIssue(const TCHAR *description, TCHAR *hdref)
    {
       DbgPrintf(4, _T("Jira: call to curl_easy_perform() failed: %hs"), m_errorBuffer);
    }
-   free(request);
-   free(data->data);
-   free(data);
+   MemFree(request);
+   MemFree(data->data);
+   MemFree(data);
    delete projectComponents;
 
    unlock();
@@ -506,7 +506,7 @@ bool JiraLink::getIssueUrl(const TCHAR *hdref, TCHAR *url, size_t size)
 {
 #ifdef UNICODE
    WCHAR serverUrl[MAX_PATH];
-   MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, m_serverUrl, -1, serverUrl, MAX_PATH);
+   utf8_to_wchar(m_serverUrl, -1, serverUrl, MAX_PATH);
    _sntprintf(url, size, _T("%s/browse/%s"), serverUrl, hdref);
 #else
    _sntprintf(url, size, _T("%s/browse/%s"), m_serverUrl, hdref);

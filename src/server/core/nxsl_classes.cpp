@@ -857,7 +857,7 @@ NXSL_Value *NXSL_NetObjClass::getAttr(NXSL_Object *_object, const char *attr)
    {
 #ifdef UNICODE
       WCHAR wattr[MAX_IDENTIFIER_LENGTH];
-      MultiByteToWideChar(CP_UTF8, 0, attr, -1, wattr, MAX_IDENTIFIER_LENGTH);
+      utf8_to_wchar(attr, -1, wattr, MAX_IDENTIFIER_LENGTH);
       wattr[MAX_IDENTIFIER_LENGTH - 1] = 0;
       value = object->getCustomAttributeForNXSL(vm, wattr);
 #else
@@ -3443,7 +3443,7 @@ NXSL_Value *NXSL_EventClass::getAttr(NXSL_Object *object, const char *attr)
       {
 #ifdef UNICODE
          WCHAR wattr[MAX_IDENTIFIER_LENGTH];
-         MultiByteToWideChar(CP_UTF8, 0, attr, -1, wattr, MAX_IDENTIFIER_LENGTH);
+         utf8_to_wchar(attr, -1, wattr, MAX_IDENTIFIER_LENGTH);
          wattr[MAX_IDENTIFIER_LENGTH - 1] = 0;
          const TCHAR *s = event->getNamedParameter(wattr);
 #else
@@ -3509,7 +3509,7 @@ bool NXSL_EventClass::setAttr(NXSL_Object *object, const char *attr, NXSL_Value 
       {
 #ifdef UNICODE
          WCHAR wattr[MAX_IDENTIFIER_LENGTH];
-         MultiByteToWideChar(CP_UTF8, 0, attr, -1, wattr, MAX_IDENTIFIER_LENGTH);
+         utf8_to_wchar(attr, -1, wattr, MAX_IDENTIFIER_LENGTH);
          wattr[MAX_IDENTIFIER_LENGTH - 1] = 0;
          event->setNamedParameter(wattr, value->getValueAsCString());
 #else

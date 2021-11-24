@@ -361,7 +361,7 @@ private:
    int m_iStatus;
    int m_iAccess;
 
-   void Initialize();
+   void initialize();
 
 public:
    SNMP_MIBObject();
@@ -475,15 +475,15 @@ public:
    int64_t getValueAsInt64() const;
    uint64_t getValueAsUInt64() const;
    double getValueAsDouble() const;
-   TCHAR *getValueAsString(TCHAR *buffer, size_t bufferSize) const;
-   TCHAR *getValueAsPrintableString(TCHAR *buffer, size_t bufferSize, bool *convertToHex) const;
+   TCHAR *getValueAsString(TCHAR *buffer, size_t bufferSize, const char *codepage = nullptr) const;
+   TCHAR *getValueAsPrintableString(TCHAR *buffer, size_t bufferSize, bool *convertToHex, const char *codepage = nullptr) const;
    SNMP_ObjectId getValueAsObjectId() const;
    MacAddress getValueAsMACAddr() const;
    TCHAR *getValueAsIPAddr(TCHAR *buffer) const;
 
    SNMP_Variable *decodeOpaque() const;
 
-   void setValueFromString(uint32_t type, const TCHAR *value);
+   void setValueFromString(uint32_t type, const TCHAR *value, const char *codepage = nullptr);
    void setValueFromUInt32(uint32_t type, uint32_t value);
    void setValueFromObjectId(uint32_t type, const SNMP_ObjectId& value);
 };

@@ -1502,7 +1502,7 @@ MP_MODULE *ParseMIB(const TCHAR *fileName)
    if (mpin != NULL)
    {
 #ifdef UNICODE
-	  WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR |WC_COMPOSITECHECK, fileName, -1, s_currentFilename, MAX_PATH, NULL, NULL);
+	  WideCharToMultiByteSysLocale(fileName, s_currentFilename, MAX_PATH);
 #else
 	  s_currentFilename = fileName;
 #endif

@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Ethernet/IP support library
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -124,7 +124,7 @@ bool LIBETHERNETIP_EXPORTABLE CIP_ParseSymbolicPathA(const char *symbolicPath, u
 bool LIBETHERNETIP_EXPORTABLE CIP_ParseSymbolicPathW(const WCHAR *symbolicPath, uint32_t *classId, uint32_t *instance, uint32_t *attributeId)
 {
    char buffer[256];
-   WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, symbolicPath, -1, buffer, 256, NULL, NULL);
+   wchar_to_ASCII(symbolicPath, -1, buffer, 256);
    return ParseSymbolicAttributePathInternal(buffer, classId, instance, attributeId);
 }
 
@@ -160,7 +160,7 @@ bool LIBETHERNETIP_EXPORTABLE CIP_EncodeAttributePathA(const char *symbolicPath,
 bool LIBETHERNETIP_EXPORTABLE CIP_EncodeAttributePathW(const WCHAR *symbolicPath, CIP_EPATH *path)
 {
    char buffer[256];
-   WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, symbolicPath, -1, buffer, 256, NULL, NULL);
+   wchar_to_ASCII(symbolicPath, -1, buffer, 256);
    return EncodeSymbolicAttributePathInternal(buffer, path);
 }
 

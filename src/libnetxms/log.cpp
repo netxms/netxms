@@ -818,7 +818,7 @@ bool LIBNETXMS_EXPORTABLE nxlog_open(const TCHAR *logName, UINT32 flags)
 			s_flags |= NXLOG_IS_OPEN;
 #else
 #ifdef UNICODE
-		WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, logName, -1, s_syslogName, 64, NULL, NULL);
+		WideCharToMultiByteSysLocale(logName, s_syslogName, 64);
 		s_syslogName[63] = 0;
 #else
 		strlcpy(s_syslogName, logName, 64);
@@ -1184,10 +1184,10 @@ static void WriteLog(int16_t severity, const TCHAR *tag, const TCHAR *format, va
 
 #ifdef UNICODE
       char *mbmsg = MBStringFromWideString(message);
-      if (tag != NULL)
+      if (tag != nullptr)
       {
          char mbtag[64];
-         WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, tag, -1, mbtag, 64, NULL, NULL);
+         wchar_to_mb(tag, -1, mbtag, 64);
          mbtag[63] = 0;
          syslog(level, "[%s] %s", mbtag, mbmsg);
       }
@@ -1197,7 +1197,7 @@ static void WriteLog(int16_t severity, const TCHAR *tag, const TCHAR *format, va
       }
       MemFree(mbmsg);
 #else
-      if (tag != NULL)
+      if (tag != nullptr)
          syslog(level, "[%s] %s", tag, message);
       else
          syslog(level, "%s", message);

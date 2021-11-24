@@ -858,7 +858,7 @@ void CommSession::authenticate(NXCPMessage *pRequest, NXCPMessage *pMsg)
 #ifdef UNICODE
 				{
 					char sharedSecret[256];
-					WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, g_szSharedSecret, -1, sharedSecret, 256, NULL, NULL);
+					wchar_to_utf8(g_szSharedSecret, -1, sharedSecret, 256);
 					sharedSecret[255] = 0;
 					CalculateMD5Hash((BYTE *)sharedSecret, strlen(sharedSecret), hash);
 				}
@@ -881,7 +881,7 @@ void CommSession::authenticate(NXCPMessage *pRequest, NXCPMessage *pMsg)
 #ifdef UNICODE
 				{
 					char sharedSecret[256];
-					WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, g_szSharedSecret, -1, sharedSecret, 256, NULL, NULL);
+					wchar_to_utf8(g_szSharedSecret, -1, sharedSecret, 256);
 					sharedSecret[255] = 0;
 					CalculateSHA1Hash((BYTE *)sharedSecret, strlen(sharedSecret), hash);
 				}

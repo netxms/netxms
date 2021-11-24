@@ -897,7 +897,7 @@ bool Config::parseTemplate(const TCHAR *section, NX_CFG_TEMPLATE *cfgTemplate)
                }
 #ifdef UNICODE
                memset(cfgTemplate[i].buffer, 0, (size_t)cfgTemplate[i].bufferSize);
-               WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, value, -1, (char *)cfgTemplate[i].buffer, (int)cfgTemplate[i].bufferSize - 1, nullptr, nullptr);
+               wchar_to_mb(value, -1, (char *)cfgTemplate[i].buffer, (int)cfgTemplate[i].bufferSize - 1);
 #else
                strlcpy((TCHAR *)cfgTemplate[i].buffer, value, (size_t)cfgTemplate[i].bufferSize);
 #endif
@@ -1327,7 +1327,7 @@ bool Config::loadIniConfigFromMemory(const char *content, size_t length, const T
       next = strchr(curr, '\n');
       size_t llen = (next != nullptr) ? next - curr : length - (curr - content);
 #ifdef UNICODE
-      llen = MultiByteToWideChar(CP_UTF8, 0, curr, (int)llen, buffer, 4095);
+      llen = utf8_to_wchar(curr, static_cast<ssize_t>(llen), buffer, 4095);
 #else
       llen = MIN(llen, 4095);
       memcpy(buffer, curr, llen);
@@ -1442,7 +1442,7 @@ static void StartElement(void *userData, const char *name, const char **attrs)
       {
 #ifdef UNICODE
          WCHAR wname[MAX_PATH];
-         MultiByteToWideChar(CP_UTF8, 0, name, -1, wname, MAX_PATH);
+         utf8_to_wchar(name, -1, wname, MAX_PATH);
          wname[MAX_PATH - 1] = 0;
          ConfigEntry *e = new ConfigEntry(wname, ps->config->getEntry(_T("/")), ps->config, ps->file, XML_GetCurrentLineNumber(ps->parser), 0);
 #else
@@ -1564,7 +1564,7 @@ static void CharData(void *userData, const XML_Char *s, int len)
    Config_XmlParserState *ps = (Config_XmlParserState *) userData;
 
    if ((ps->level > 0) && (ps->level <= MAX_STACK_DEPTH))
-      ps->charData[ps->level - 1].appendMBString(s, len, CP_UTF8);
+      ps->charData[ps->level - 1].appendUtf8String(s, len);
 }
 
 /**
@@ -1581,7 +1581,6 @@ bool Config::loadConfigFromMemory(const char *xml, size_t xmlSize, const TCHAR *
       i++;
    }
    while(isspace(ch));
-
 
    if (ch == '<')
    {

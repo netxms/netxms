@@ -1,6 +1,6 @@
 /*
  ** NetXMS - Network Management System
- ** Copyright (C) 2003-2020 Raden Solutions
+ ** Copyright (C) 2003-2021 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU Lesser General Public License as published
@@ -49,6 +49,8 @@ bool LIBNETXMS_EXPORTABLE SetDefaultCodepage(const char *cp)
 
       if (!stricmp(cp, "ASCII"))
          g_defaultCodePageType = CodePageType::ASCII;
+      else if (!stricmp(cp, "UTF8") || !stricmp(cp, "UTF-8"))
+         g_defaultCodePageType = CodePageType::UTF8;
       else if (!stricmp(cp, "ISO-8859-1") || !stricmp(cp, "ISO_8859_1") ||
                !stricmp(cp, "ISO8859-1") || !stricmp(cp, "ISO8859_1") ||
                !stricmp(cp, "LATIN-1") || !stricmp(cp, "LATIN1"))
@@ -193,58 +195,53 @@ WCHAR LIBNETXMS_EXPORTABLE *wcsncpy(WCHAR *dest, const WCHAR *src, size_t n)
 /**
  * Convert UNICODE string to single-byte string using iconv
  */
-static int WideCharToMultiByteIconv(int iCodePage, DWORD dwFlags, const WCHAR *pWideCharStr,
-         int cchWideChar, char *pByteStr, int cchByteChar, char *pDefaultChar, BOOL *pbUsedDefChar)
+static size_t WideCharToMultiByteIconv(const char *codepage, const WCHAR *src, ssize_t srcLen, char *dst, size_t dstLen)
 {
-   iconv_t cd;
-   int nRet;
-   const char *inbuf;
-   char *outbuf;
-   size_t inbytes, outbytes;
-   char cp[MAX_CODEPAGE_LEN + 16];
-
-   strcpy(cp, g_cpDefault);
 #if HAVE_ICONV_IGNORE
+   char cp[MAX_CODEPAGE_LEN + 16];
+   strcpy(cp, (codepage != nullptr) ? codepage : g_cpDefault);
    strcat(cp, "//IGNORE");
+#else
+   const char *cp = codepage;
 #endif /* HAVE_ICONV_IGNORE */
 
-   cd = IconvOpen(iCodePage == CP_UTF8 ? "UTF-8" : cp, UNICODE_CODEPAGE_NAME);
+   iconv_t cd = IconvOpen(cp, UNICODE_CODEPAGE_NAME);
    if (cd == (iconv_t)(-1))
    {
 #if UNICODE_UCS4
-      return ucs4_to_ASCII(pWideCharStr, cchWideChar, pByteStr, cchByteChar);
+      return ucs4_to_ASCII(src, srcLen, dst, dstLen);
 #else
-      return ucs2_to_ASCII(pWideCharStr, cchWideChar, pByteStr, cchByteChar);
+      return ucs2_to_ASCII(src, srcLen, dst, dstLen);
 #endif
    }
 
-   inbuf = (const char *)pWideCharStr;
-   inbytes = ((cchWideChar == -1) ? wcslen(pWideCharStr) + 1 : cchWideChar) * sizeof(WCHAR);
-   outbuf = pByteStr;
-   outbytes = cchByteChar;
-   nRet = iconv(cd, (ICONV_CONST char **)&inbuf, &inbytes, &outbuf, &outbytes);
+   const char *inbuf = (const char *)src;
+   size_t inbytes = ((srcLen == -1) ? wcslen(src) + 1 : srcLen) * sizeof(WCHAR);
+   char *outbuf = dst;
+   size_t outbytes = dstLen;
+   size_t count = iconv(cd, (ICONV_CONST char **)&inbuf, &inbytes, &outbuf, &outbytes);
    IconvClose(cd);
-   if (nRet == -1)
+   if (count == (size_t)(-1))
    {
       if (errno == EILSEQ)
       {
-         nRet = cchByteChar - outbytes;
+         count = dstLen - outbytes;
       }
       else
       {
-         nRet = 0;
+         count = 0;
       }
    }
    else
    {
-      nRet = cchByteChar - outbytes;
+      count = dstLen - outbytes;
    }
    if (outbytes > 0)
    {
       *outbuf = 0;
    }
 
-   return nRet;
+   return count;
 }
 
 #endif
@@ -252,57 +249,51 @@ static int WideCharToMultiByteIconv(int iCodePage, DWORD dwFlags, const WCHAR *p
 /**
  * Convert UNICODE string to single-byte string (Windows compatibility layer)
  */
-int LIBNETXMS_EXPORTABLE WideCharToMultiByte(int iCodePage, DWORD dwFlags, const WCHAR *pWideCharStr,
-         int cchWideChar, char *pByteStr, int cchByteChar, char *pDefaultChar, BOOL *pbUsedDefChar)
+size_t LIBNETXMS_EXPORTABLE wchar_to_mb(const WCHAR *src, ssize_t srcLen, char *dst, size_t dstLen)
 {
-   if (iCodePage == CP_UTF8)
-   {
-#ifdef UNICODE_UCS4
-      if (cchByteChar == 0)
-         return ucs4_utf8len(pWideCharStr, cchWideChar);
-      return ucs4_to_utf8(pWideCharStr, cchWideChar, pByteStr, cchByteChar);
-#else
-      if (cchByteChar == 0)
-         return ucs2_utf8len(pWideCharStr, cchWideChar);
-      return ucs2_to_utf8(pWideCharStr, cchWideChar, pByteStr, cchByteChar);
-#endif
-   }
-
 #if HAVE_ICONV && !defined(__DISABLE_ICONV)
-   if (cchByteChar == 0)
+   if (dstLen == 0)
    {
       // Calculate required length. Because iconv cannot calculate
       // resulting multibyte string length, assume the worst case - 2 bytes per character
-      return ((cchWideChar == -1) ? wcslen(pWideCharStr) : cchWideChar) * 2 + 1;
+      return ((srcLen == -1) ? wcslen(src) : srcLen) * 2 + 1;
    }
 
 #if UNICODE_UCS4
    if (g_defaultCodePageType == CodePageType::ISO8859_1)
-      return ucs4_to_ISO8859_1(pWideCharStr, cchWideChar, pByteStr, cchByteChar);
+      return ucs4_to_ISO8859_1(src, srcLen, dst, dstLen);
    if (g_defaultCodePageType == CodePageType::ASCII)
-      return ucs4_to_ASCII(pWideCharStr, cchWideChar, pByteStr, cchByteChar);
+      return ucs4_to_ASCII(src, srcLen, dst, dstLen);
+   if (g_defaultCodePageType == CodePageType::UTF8)
+      return ucs4_to_utf8(src, srcLen, dst, dstLen);
 #else
    if (g_defaultCodePageType == CodePageType::ISO8859_1)
-      return ucs2_to_ISO8859_1(pWideCharStr, cchWideChar, pByteStr, cchByteChar);
+      return ucs2_to_ISO8859_1(src, srcLen, dst, dstLen);
    if (g_defaultCodePageType == CodePageType::ASCII)
-      return ucs2_to_ASCII(pWideCharStr, cchWideChar, pByteStr, cchByteChar);
+      return ucs2_to_ASCII(src, srcLen, dst, dstLen);
+   if (g_defaultCodePageType == CodePageType::UT8)
+      return ucs2_to_utf8(src, srcLen, dst, dstLen);
 #endif
 
-   return WideCharToMultiByteIconv(iCodePage, dwFlags, pWideCharStr, cchWideChar, pByteStr, cchByteChar, pDefaultChar, pbUsedDefChar);
+   return WideCharToMultiByteIconv(nullptr, src, srcLen, dst, dstLen);
 #else
-   if (cchByteChar == 0)
+   if (dstLen == 0)
    {
-      return wcslen(pWideCharStr) + 1;
+      return wcslen(src) + 1;
    }
 
 #if UNICODE_UCS4
    if (g_defaultCodePageType == CodePageType::ISO8859_1)
-      return ucs4_to_ISO8859_1(pWideCharStr, cchWideChar, pByteStr, cchByteChar);
-   return ucs4_to_ASCII(pWideCharStr, cchWideChar, pByteStr, cchByteChar);
+      return ucs4_to_ISO8859_1(src, srcLen, dst, dstLen);
+   if (g_defaultCodePageType == CodePageType::UT8)
+      return ucs4_to_utf8(src, srcLen, dst, dstLen);
+   return ucs4_to_ASCII(src, srcLen, dst, dstLen);
 #else
    if (g_defaultCodePageType == CodePageType::ISO8859_1)
-      return ucs2_to_ISO8859_1(pWideCharStr, cchWideChar, pByteStr, cchByteChar);
-   return ucs2_to_ASCII(pWideCharStr, cchWideChar, pByteStr, cchByteChar);
+      return ucs2_to_ISO8859_1(src, srcLen, dst, dstLen);
+   if (g_defaultCodePageType == CodePageType::UT8)
+      return ucs2_to_utf8(src, srcLen, dst, dstLen);
+   return ucs2_to_ASCII(src, srcLen, dst, dstLen);
 #endif
 #endif
 }
@@ -312,103 +303,88 @@ int LIBNETXMS_EXPORTABLE WideCharToMultiByte(int iCodePage, DWORD dwFlags, const
 /**
  * Convert single-byte to UNICODE string using iconv
  */
-static int MultiByteToWideCharIconv(int iCodePage, DWORD dwFlags, const char *pByteStr, int cchByteChar, WCHAR *pWideCharStr, int cchWideChar)
+static size_t MultiByteToWideCharIconv(const char *codepage, const char *src, ssize_t srcLen, WCHAR *dst, size_t dstLen)
 {
-   iconv_t cd;
-   int nRet;
-   const char *inbuf;
-   char *outbuf;
-   size_t inbytes, outbytes;
-
-   cd = IconvOpen(UNICODE_CODEPAGE_NAME, iCodePage == CP_UTF8 ? "UTF-8" : g_cpDefault);
+   iconv_t cd = IconvOpen(UNICODE_CODEPAGE_NAME, (codepage != nullptr) ? codepage : g_cpDefault);
    if (cd == (iconv_t)(-1))
    {
 #if UNICODE_UCS4
-      return ASCII_to_ucs4(pByteStr, cchByteChar, pWideCharStr, cchWideChar);
+      return ASCII_to_ucs4(src, srcLen, dst, dstLen);
 #else
-      return ASCII_to_ucs2(pByteStr, cchByteChar, pWideCharStr, cchWideChar);
+      return ASCII_to_ucs2(src, srcLen, dst, dstLen);
 #endif
    }
 
-   inbuf = pByteStr;
-   inbytes = (cchByteChar == -1) ? strlen(pByteStr) + 1 : cchByteChar;
-   outbuf = (char *)pWideCharStr;
-   outbytes = cchWideChar * sizeof(WCHAR);
-   nRet = iconv(cd, (ICONV_CONST char **)&inbuf, &inbytes, &outbuf, &outbytes);
+   const char *inbuf = src;
+   size_t inbytes = (srcLen == -1) ? strlen(src) + 1 : srcLen;
+   char *outbuf = (char *)dst;
+   size_t outbytes = dstLen * sizeof(WCHAR);
+   size_t count = iconv(cd, (ICONV_CONST char **)&inbuf, &inbytes, &outbuf, &outbytes);
    IconvClose(cd);
 
-   if (nRet == -1)
+   if (count == (size_t)(-1))
    {
       if (errno == EILSEQ)
       {
-         nRet = (cchWideChar * sizeof(WCHAR) - outbytes) / sizeof(WCHAR);
+         count = (dstLen * sizeof(WCHAR) - outbytes) / sizeof(WCHAR);
       }
       else
       {
-         nRet = 0;
+         count = 0;
       }
    }
    else
    {
-      nRet = (cchWideChar * sizeof(WCHAR) - outbytes) / sizeof(WCHAR);
+      count = (dstLen * sizeof(WCHAR) - outbytes) / sizeof(WCHAR);
    }
-   if (((char *) outbuf - (char *) pWideCharStr > sizeof(WCHAR)) && (*pWideCharStr == 0xFEFF))
+   if (((char *) outbuf - (char *) dst > sizeof(WCHAR)) && (*dst == 0xFEFF))
    {
       // Remove UNICODE byte order indicator if presented
-      memmove(pWideCharStr, &pWideCharStr[1], (char *) outbuf - (char *) pWideCharStr - sizeof(WCHAR));
+      memmove(dst, &dst[1], (char *) outbuf - (char *) dst - sizeof(WCHAR));
       outbuf -= sizeof(WCHAR);
-      nRet--;
+      count--;
    }
    if (outbytes >= sizeof(WCHAR))
    {
       *((WCHAR *)outbuf) = 0;
    }
 
-   return nRet;
+   return count;
 }
 
 #endif   /* __DISABLE_ICONV */
 
 /**
- * Convert single-byte to UNICODE string (Windows compatibility layer)
+ * Convert multibyte string to wide character string
  */
-int LIBNETXMS_EXPORTABLE MultiByteToWideChar(int iCodePage, DWORD dwFlags, const char *pByteStr, int cchByteChar, WCHAR *pWideCharStr, int cchWideChar)
+size_t LIBNETXMS_EXPORTABLE mb_to_wchar(const char *src, ssize_t srcLen, WCHAR *dst, size_t dstLen)
 {
-   if (iCodePage == CP_UTF8)
-   {
-#if UNICODE_UCS4
-      if (cchWideChar == 0)
-         return utf8_ucs4len(pByteStr, cchByteChar);
-      return utf8_to_ucs4(pByteStr, cchByteChar, pWideCharStr, cchWideChar);
-#else
-      if (cchWideChar == 0)
-         return utf8_ucs2len(pByteStr, cchByteChar);
-      return utf8_to_ucs2(pByteStr, cchByteChar, pWideCharStr, cchWideChar);
-#endif
-   }
-
-   if (cchWideChar == 0)
-      return strlen(pByteStr) + 1;
+   if (dstLen == 0)
+      return strlen(src) + 1;
 
 #if UNICODE_UCS4
    if (g_defaultCodePageType == CodePageType::ISO8859_1)
-      return ISO8859_1_to_ucs4(pByteStr, cchByteChar, pWideCharStr, cchWideChar);
+      return ISO8859_1_to_ucs4(src, srcLen, dst, dstLen);
    if (g_defaultCodePageType == CodePageType::ASCII)
-      return ASCII_to_ucs4(pByteStr, cchByteChar, pWideCharStr, cchWideChar);
+      return ASCII_to_ucs4(src, srcLen, dst, dstLen);
+   if (g_defaultCodePageType == CodePageType::UTF8)
+      return utf8_to_ucs4(src, srcLen, dst, dstLen);
 #else
    if (g_defaultCodePageType == CodePageType::ISO8859_1)
-      return ISO8859_1_to_ucs2(pByteStr, cchByteChar, pWideCharStr, cchWideChar);
+      return ISO8859_1_to_ucs2(src, srcLen, dst, dstLen);
    if (g_defaultCodePageType == CodePageType::ASCII)
-      return ASCII_to_ucs2(pByteStr, cchByteChar, pWideCharStr, cchWideChar);
+      return ASCII_to_ucs2(src, srcLen, dst, dstLen);
+   if (g_defaultCodePageType == CodePageType::UTF8)
+      return UTF8_to_ucs2(src, srcLen, dst, dstLen);
 #endif
 
 #if HAVE_ICONV && !defined(__DISABLE_ICONV)
-   return MultiByteToWideCharIconv(iCodePage, dwFlags, pByteStr, cchByteChar, pWideCharStr, cchWideChar);
+   return MultiByteToWideCharIconv(nullptr, src, srcLen, dst, dstLen);
 #else
 #if UNICODE_UCS4
-   return ASCII_to_ucs4(pByteStr, cchByteChar, pWideCharStr, cchWideChar);
+   return ASCII_to_ucs4(src, srcLen, dst, dstLen);
 #else
-   return ASCII_to_ucs2(pByteStr, cchByteChar, pWideCharStr, cchWideChar);
+   return ASCII_to_ucs2(src, srcLen, dst, dstLen);
 #endif
 #endif
 }
@@ -507,9 +483,9 @@ char LIBNETXMS_EXPORTABLE *UTF8StringFromWideString(const WCHAR *src)
 {
    if (src == nullptr)
       return nullptr;
-   int len = WideCharToMultiByte(CP_UTF8, 0, src, -1, nullptr, 0, nullptr, nullptr);
-   char *out = (char *)MemAlloc(len);
-   WideCharToMultiByte(CP_UTF8, 0, src, -1, out, len, nullptr, nullptr);
+   int len = wchar_utf8len(src, -1);
+   char *out = MemAllocStringA(len);
+   wchar_to_utf8(src, -1, out, len);
    return out;
 }
 
@@ -652,6 +628,102 @@ char LIBNETXMS_EXPORTABLE *MBStringFromUCS4String(const UCS4CHAR *src)
 
 #endif /* UNICODE_UCS4 */
 
+#ifdef _WIN32
+
+/**
+ * Get WIndows code page number from code page name
+ */
+static int GetCodePageNumber(const char *codepage)
+{
+   return 0;
+}
+
+#endif
+
+/**
+ * Convert wide character string to multibyte character string using given codepage
+ */
+size_t LIBNETXMS_EXPORTABLE wchar_to_mbcp(const WCHAR *src, ssize_t srcLen, char *dst, size_t dstLen, const char *codepage)
+{
+   if (codepage == nullptr)
+      return wchar_to_mb(src, srcLen, dst, dstLen);
+
+   if (!stricmp(codepage, "ASCII"))
+   {
+#if UNICODE_UCS4
+      return ucs4_to_ASCII(src, srcLen, dst, dstLen);
+#else
+      return ucs2_to_ASCII(src, srcLen, dst, dstLen);
+#endif
+   }
+   if (!stricmp(codepage, "UTF8") || !stricmp(codepage, "UTF-8"))
+   {
+#if UNICODE_UCS4
+      return ucs4_to_utf8(src, srcLen, dst, dstLen);
+#else
+      return ucs2_to_utf8(src, srcLen, dst, dstLen);
+#endif
+   }
+   if (!stricmp(codepage, "ISO-8859-1") || !stricmp(codepage, "ISO_8859_1") ||
+       !stricmp(codepage, "ISO8859-1") || !stricmp(codepage, "ISO8859_1") ||
+       !stricmp(codepage, "LATIN-1") || !stricmp(codepage, "LATIN1"))
+   {
+#if UNICODE_UCS4
+      return ucs4_to_ISO8859_1(src, srcLen, dst, dstLen);
+#else
+      return ucs2_to_ISO8859_1(src, srcLen, dst, dstLen);
+#endif
+   }
+
+#ifdef _WIN32
+   return (size_t)WideCharToMultiByte(GetCodePageNumber(codepage), WC_COMPOSITECHECK | WC_DEFAULTCHAR, src, (int)srcLen, dst, (int)dstLen, nullptr, nullptr);
+#else
+   return WideCharToMultiByteIconv(codepage, src, srcLen, dst, dstLen);
+#endif
+}
+
+/**
+ * Convert multibyte character string to wide character string using given codepage
+ */
+size_t LIBNETXMS_EXPORTABLE mbcp_to_wchar(const char *src, ssize_t srcLen, WCHAR *dst, size_t dstLen, const char *codepage)
+{
+   if (codepage == nullptr)
+      return mb_to_wchar(src, srcLen, dst, dstLen);
+
+   if (!stricmp(codepage, "ASCII"))
+   {
+#if UNICODE_UCS4
+      return ASCII_to_ucs4(src, srcLen, dst, dstLen);
+#else
+      return ASCII_to_ucs2(src, srcLen, dst, dstLen);
+#endif
+   }
+   if (!stricmp(codepage, "UTF8") || !stricmp(codepage, "UTF-8"))
+   {
+#if UNICODE_UCS4
+      return utf8_to_ucs4(src, srcLen, dst, dstLen);
+#else
+      return utf8_to_ucs2(src, srcLen, dst, dstLen);
+#endif
+   }
+   if (!stricmp(codepage, "ISO-8859-1") || !stricmp(codepage, "ISO_8859_1") ||
+       !stricmp(codepage, "ISO8859-1") || !stricmp(codepage, "ISO8859_1") ||
+       !stricmp(codepage, "LATIN-1") || !stricmp(codepage, "LATIN1"))
+   {
+#if UNICODE_UCS4
+      return ISO8859_1_to_ucs4(src, srcLen, dst, dstLen);
+#else
+      return ISO8859_1_to_ucs2(src, srcLen, dst, dstLen);
+#endif
+   }
+
+#ifdef _WIN32
+   return (size_t)MultiByteToWideChar(GetCodePageNumber(codepage), MB_PRECOMPOSED, src, (int)srcLen, dst, (int)dstLen);
+#else
+   return MultiByteToWideCharIconv(codepage, src, srcLen, dst, dstLen);
+#endif
+}
+
 /**
  * UNIX UNICODE specific wrapper functions
  */
@@ -662,9 +734,7 @@ char LIBNETXMS_EXPORTABLE *MBStringFromUCS4String(const UCS4CHAR *src)
 int LIBNETXMS_EXPORTABLE wstat(const WCHAR *_path, struct stat *_sbuf)
 {
    char path[MAX_PATH];
-
-   WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR,
-      _path, -1, path, MAX_PATH, NULL, NULL);
+   WideCharToMultiByteSysLocale(_path, path, MAX_PATH);
    return stat(path, _sbuf);
 }
 
@@ -898,12 +968,12 @@ WCHAR LIBNETXMS_EXPORTABLE *wcserror(int errnum)
    char buffer[256];
 #if HAVE_POSIX_STRERROR_R
    strerror_r(errnum, buffer, 256);
-   MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, buffer, -1, value, 256);
+   MultiByteToWideCharSysLocale(buffer, value, 256);
 #else
-   MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, strerror_r(errnum, buffer, 256), -1, value, 256);
+   MultiByteToWideCharSysLocale(strerror_r(errnum, buffer, 256), value, 256);
 #endif
 #else
-   MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, strerror(errnum), -1, value, 256);
+   MultiByteToWideCharSysLocale(strerror(errnum), value, 256);
 #endif
    return value;
 }
@@ -918,19 +988,18 @@ int LIBNETXMS_EXPORTABLE wcserror_r(int errnum, WCHAR *strerrbuf, size_t buflen)
 WCHAR LIBNETXMS_EXPORTABLE *wcserror_r(int errnum, WCHAR *strerrbuf, size_t buflen)
 #endif /* HAVE_POSIX_STRERROR_R */
 {
-   char *mbbuf;
 #if HAVE_POSIX_STRERROR_R
    int err = 0;
 #endif /* HAVE_POSIX_STRERROR_R */
 
-   mbbuf = (char *)MemAlloc(buflen);
-   if (mbbuf != NULL)
+   char *mbbuf = MemAllocStringA(buflen);
+   if (mbbuf != nullptr)
    {
 #if HAVE_POSIX_STRERROR_R
       err = strerror_r(errnum, mbbuf, buflen);
-      MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, mbbuf, -1, strerrbuf, buflen);
+      MultiByteToWideCharSysLocale(mbbuf, strerrbuf, buflen);
 #else
-      MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, strerror_r(errnum, mbbuf, buflen), -1, strerrbuf, buflen);
+      MultiByteToWideCharSysLocale(strerror_r(errnum, mbbuf, buflen), strerrbuf, buflen);
 #endif
       MemFree(mbbuf);
    }
@@ -1235,14 +1304,13 @@ int LIBNETXMS_EXPORTABLE nx_vswscanf(const WCHAR *str, const WCHAR *format, va_l
  * Get OpenSSL error string as UNICODE string
  * Buffer must be at least 256 character long
  */
-WCHAR LIBNETXMS_EXPORTABLE *ERR_error_string_W(int nError, WCHAR *pwszBuffer)
+WCHAR LIBNETXMS_EXPORTABLE *ERR_error_string_W(int errorCode, WCHAR *buffer)
 {
    char text[256];
-
    memset(text, 0, sizeof(text));
-   ERR_error_string(nError, text);
-   MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, text, -1, pwszBuffer, 256);
-   return pwszBuffer;
+   ERR_error_string(errorCode, text);
+   MultiByteToWideCharSysLocale(text, buffer, 256);
+   return buffer;
 }
 
 #endif

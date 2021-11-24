@@ -1077,8 +1077,8 @@ bool RadiusAuth(const TCHAR *login, const TCHAR *passwd)
 
 	char server[256], rlogin[256], rpasswd[256];
 #ifdef UNICODE
-	WideCharToMultiByte(CP_UTF8, 0, login, -1, rlogin, 256, NULL, NULL);
-	WideCharToMultiByte(CP_UTF8, 0, passwd, -1, rpasswd, 256, NULL, NULL);
+	wchar_to_utf8(login, -1, rlogin, 256);
+	wchar_to_utf8(passwd, -1, rpasswd, 256);
 #else
 	mb_to_utf8(login, -1, rlogin, 256);
    mb_to_utf8(passwd, -1, rpasswd, 256);

@@ -396,21 +396,21 @@ extern "C" DBDRV_STATEMENT __EXPORT DrvPrepare(PG_CONN *pConn, WCHAR *pwszQuery,
 
          if (errorText != NULL)
          {
-            MultiByteToWideChar(CP_UTF8, 0, PQerrorMessage(pConn->handle), -1, errorText, DBDRV_MAX_ERROR_TEXT);
+            utf8_to_wchar(PQerrorMessage(pConn->handle), -1, errorText, DBDRV_MAX_ERROR_TEXT);
             errorText[DBDRV_MAX_ERROR_TEXT - 1] = 0;
             RemoveTrailingCRLFW(errorText);
          }
       }
       else
       {
-         hStmt->query = NULL;
+         hStmt->query = nullptr;
          hStmt->allocated = 0;
          hStmt->pcount = 0;
-         hStmt->buffers = NULL;
+         hStmt->buffers = nullptr;
          *pdwError = DBERR_SUCCESS;
       }
       pConn->mutexQueryLock.unlock();
-      if (pResult != NULL)
+      if (pResult != nullptr)
          PQclear(pResult);
       FreeConvertedString(pszQueryUTF8, localBuffer);
    }
@@ -420,7 +420,7 @@ extern "C" DBDRV_STATEMENT __EXPORT DrvPrepare(PG_CONN *pConn, WCHAR *pwszQuery,
       hStmt->query = (pszQueryUTF8 != localBuffer) ? pszQueryUTF8 : MemCopyStringA(pszQueryUTF8);
       hStmt->allocated = 0;
       hStmt->pcount = 0;
-      hStmt->buffers = NULL;
+      hStmt->buffers = nullptr;
    }
 	return hStmt;
 }
@@ -931,14 +931,14 @@ extern "C" DBDRV_UNBUFFERED_RESULT __EXPORT DrvSelectUnbuffered(PG_CONN *pConn, 
                {
                   if (errorText != NULL)
                   {
-                     MultiByteToWideChar(CP_UTF8, 0, CHECK_NULL_EX_A(sqlState), -1, errorText, DBDRV_MAX_ERROR_TEXT);
+                     utf8_to_wchar(CHECK_NULL_EX_A(sqlState), -1, errorText, DBDRV_MAX_ERROR_TEXT);
                      int len = (int)wcslen(errorText);
                      if (len > 0)
                      {
                         errorText[len] = L' ';
                         len++;
                      }
-                     MultiByteToWideChar(CP_UTF8, 0, PQerrorMessage(pConn->handle), -1, &errorText[len], DBDRV_MAX_ERROR_TEXT - len);
+                     utf8_to_wchar(PQerrorMessage(pConn->handle), -1, &errorText[len], DBDRV_MAX_ERROR_TEXT - len);
                      errorText[DBDRV_MAX_ERROR_TEXT - 1] = 0;
                      RemoveTrailingCRLFW(errorText);
                   }
@@ -1035,14 +1035,14 @@ extern "C" DBDRV_UNBUFFERED_RESULT __EXPORT DrvSelectPreparedUnbuffered(PG_CONN 
                {
                   if (errorText != NULL)
                   {
-                     MultiByteToWideChar(CP_UTF8, 0, CHECK_NULL_EX_A(sqlState), -1, errorText, DBDRV_MAX_ERROR_TEXT);
+                     utf8_to_wchar(CHECK_NULL_EX_A(sqlState), -1, errorText, DBDRV_MAX_ERROR_TEXT);
                      int len = (int)wcslen(errorText);
                      if (len > 0)
                      {
                         errorText[len] = L' ';
                         len++;
                      }
-                     MultiByteToWideChar(CP_UTF8, 0, PQerrorMessage(pConn->handle), -1, &errorText[len], DBDRV_MAX_ERROR_TEXT - len);
+                     utf8_to_wchar(PQerrorMessage(pConn->handle), -1, &errorText[len], DBDRV_MAX_ERROR_TEXT - len);
                      errorText[DBDRV_MAX_ERROR_TEXT - 1] = 0;
                      RemoveTrailingCRLFW(errorText);
                   }
@@ -1171,7 +1171,7 @@ extern "C" WCHAR __EXPORT *DrvGetFieldUnbuffered(PG_UNBUFFERED_RESULT *result, i
 	if (value == NULL)
 		return NULL;
 
-   MultiByteToWideChar(CP_UTF8, 0, value, -1, pBuffer, nBufSize);
+	utf8_to_wchar(value, -1, pBuffer, nBufSize);
    pBuffer[nBufSize - 1] = 0;
 
    return pBuffer;

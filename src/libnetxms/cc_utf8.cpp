@@ -1,6 +1,6 @@
 /*
  ** NetXMS - Network Management System
- ** Copyright (C) 2003-2020 Raden Solutions
+ ** Copyright (C) 2003-2021 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU Lesser General Public License as published
@@ -169,44 +169,41 @@ size_t LIBNETXMS_EXPORTABLE utf8_to_mb(const char *src, ssize_t srcLen, char *ds
  */
 size_t LIBNETXMS_EXPORTABLE utf8_to_mb(const char *src, ssize_t srcLen, char *dst, size_t dstLen)
 {
+   if (g_defaultCodePageType == CodePageType::UTF8)
+   {
+      if (srcLen == -1)
+         return strlcpy(dst, src, dstLen);
+      size_t l = std::min(dstLen, static_cast<size_t>(srcLen));
+      strncpy(dst, src, l);
+      return l;
+   }
+
    if (g_defaultCodePageType == CodePageType::ASCII)
       return utf8_to_ASCII(src, srcLen, dst, dstLen);
    if (g_defaultCodePageType == CodePageType::ISO8859_1)
       return utf8_to_ISO8859_1(src, srcLen, dst, dstLen);
 
 #if HAVE_ICONV && !defined(__DISABLE_ICONV)
-   iconv_t cd;
-   const char *inbuf;
-   char *outbuf;
-   size_t count, inbytes, outbytes;
-
-   cd = IconvOpen(g_cpDefault, "UTF-8");
+   iconv_t cd = IconvOpen(g_cpDefault, "UTF-8");
    if (cd == (iconv_t)(-1))
    {
       return utf8_to_ASCII(src, srcLen, dst, dstLen);
    }
 
-   inbuf = (const char *)src;
-   inbytes = (srcLen == -1) ? strlen(src) + 1 : (size_t)srcLen;
-   outbuf = (char *)dst;
-   outbytes = (size_t)dstLen;
-   count = iconv(cd, (ICONV_CONST char **)&inbuf, &inbytes, &outbuf, &outbytes);
+   const char *inbuf = (const char *)src;
+   size_t inbytes = (srcLen == -1) ? strlen(src) + 1 : (size_t)srcLen;
+   char *outbuf = (char *)dst;
+   size_t outbytes = (size_t)dstLen;
+   size_t count = iconv(cd, (ICONV_CONST char **)&inbuf, &inbytes, &outbuf, &outbytes);
    IconvClose(cd);
 
-   if (count == (size_t) - 1)
+   if ((count != (size_t)(-1)) || (errno == EILSEQ))
    {
-      if (errno == EILSEQ)
-      {
-         count = dstLen * sizeof(char) - outbytes;
-      }
-      else
-      {
-         count = 0;
-      }
+      count = dstLen - outbytes;
    }
    else
    {
-      count = dstLen - outbytes;
+      count = 0;
    }
    if ((srcLen == -1) && (outbytes >= 1))
    {

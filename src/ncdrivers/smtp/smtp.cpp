@@ -155,11 +155,22 @@ MAIL_ENVELOPE *SmtpDriver::prepareMail(const TCHAR *recipient, const TCHAR *subj
    envelope->isUtf8 = m_isHtml || !stricmp(envelope->encoding, "utf-8") || !stricmp(envelope->encoding, "utf8");
 
 #ifdef UNICODE
-   WideCharToMultiByte(envelope->isUtf8 ? CP_UTF8 : CP_ACP, envelope->isUtf8 ? 0 : WC_DEFAULTCHAR | WC_COMPOSITECHECK, recipient, -1, envelope->rcptAddr, MAX_RCPT_ADDR_LEN, NULL, NULL);
-   envelope->rcptAddr[MAX_RCPT_ADDR_LEN - 1] = 0;
-   WideCharToMultiByte(envelope->isUtf8 ? CP_UTF8 : CP_ACP, envelope->isUtf8 ? 0 : WC_DEFAULTCHAR | WC_COMPOSITECHECK, subject, -1, envelope->subject, MAX_EMAIL_SUBJECT_LEN, NULL, NULL);
-   envelope->subject[MAX_EMAIL_SUBJECT_LEN - 1] = 0;
-   envelope->text = envelope->isUtf8 ? UTF8StringFromWideString(body) : MBStringFromWideString(body);
+   if (envelope->isUtf8)
+   {
+      wchar_to_utf8(recipient, -1, envelope->rcptAddr, MAX_RCPT_ADDR_LEN);
+      envelope->rcptAddr[MAX_RCPT_ADDR_LEN - 1] = 0;
+      wchar_to_utf8(subject, -1, envelope->subject, MAX_EMAIL_SUBJECT_LEN);
+      envelope->subject[MAX_EMAIL_SUBJECT_LEN - 1] = 0;
+      envelope->text = UTF8StringFromWideString(body);
+   }
+   else
+   {
+      wchar_to_mb(recipient, -1, envelope->rcptAddr, MAX_RCPT_ADDR_LEN);
+      envelope->rcptAddr[MAX_RCPT_ADDR_LEN - 1] = 0;
+      wchar_to_mb(subject, -1, envelope->subject, MAX_EMAIL_SUBJECT_LEN);
+      envelope->subject[MAX_EMAIL_SUBJECT_LEN - 1] = 0;
+      envelope->text = MBStringFromWideString(body);
+   }
 #else
    if (envelope->isUtf8)
    {

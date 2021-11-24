@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Notification channel driver - GSM modem
-** Copyright (C) 2003-2019 Raden Solutions
+** Copyright (C) 2003-2021 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -284,10 +284,10 @@ bool GSMDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *
 #ifdef UNICODE
 	   char mbPhoneNumber[128], mbText[161];
 
-	   WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, recipient, -1, mbPhoneNumber, 128, NULL, NULL);
+	   wchar_to_ASCII(recipient, -1, mbPhoneNumber, 128);
 	   mbPhoneNumber[127] = 0;
 
-	   WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, body, -1, mbText, 161, NULL, NULL);
+	   wchar_to_utf8(body, -1, mbText, 161);
 	   mbText[160] = 0;
 
 		SMSCreatePDUString(mbPhoneNumber, mbText, pduBuffer);
@@ -322,7 +322,7 @@ bool GSMDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *
       char buffer[256];
 #ifdef UNICODE
 	   char mbPhoneNumber[128];
-	   WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, recipient, -1, mbPhoneNumber, 128, NULL, NULL);
+	   wchar_to_ASCII(recipient, -1, mbPhoneNumber, 128);
 	   mbPhoneNumber[127] = 0;
       if (m_cmgsUseQuotes)
          snprintf(buffer, sizeof(buffer), "AT+CMGS=\"%s\"\r\n", mbPhoneNumber);
@@ -348,7 +348,7 @@ bool GSMDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *
    	
 #ifdef UNICODE
 	   char mbText[161];
-	   WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, body, -1, mbText, 161, NULL, NULL);
+      wchar_to_utf8(body, -1, mbText, 161);
 	   mbText[160] = 0;
       snprintf(buffer, sizeof(buffer), "%s\x1A", mbText);
 #else

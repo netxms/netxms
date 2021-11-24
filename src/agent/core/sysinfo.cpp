@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -165,7 +165,7 @@ static LONG GetDirInfo(const char *path, const char *pattern, bool bRecursive, u
 #else
    DIR *dir = opendir(path);
 #endif
-   if (dir != NULL)
+   if (dir != nullptr)
    {
       while(true)
       {
@@ -174,7 +174,7 @@ static LONG GetDirInfo(const char *path, const char *pattern, bool bRecursive, u
 #else
          struct dirent *pFile = readdir(dir);
 #endif
-         if (pFile == NULL)
+         if (pFile == nullptr)
             break;
 
 #ifdef _WIN32
@@ -223,7 +223,7 @@ static LONG GetDirInfo(const char *path, const char *pattern, bool bRecursive, u
          if (((countFiles && !S_ISDIR(fileInfo.st_mode)) || (countFolders && S_ISDIR(fileInfo.st_mode))) && 
              MatchFileFilter(pFile->d_name, fileInfo, pattern, ageFilter, sizeFilter, searchInverse))
          {
-             llFileSize += (UINT64)fileInfo.st_size;
+             llFileSize += static_cast<uint64_t>(fileInfo.st_size);
              uFileCount++;
          }
       }
@@ -307,8 +307,8 @@ LONG H_DirInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSes
    nRet = GetDirInfo(szRealPath, szRealPattern, bRecursive, uFileCount, llFileSize, ageFilter, sizeFilter, mode != DIRINFO_FOLDER_COUNT, mode == DIRINFO_FOLDER_COUNT, searchInverse);
 #else
    char mbRealPath[MAX_PATH], mbRealPattern[MAX_PATH];
-   WideCharToMultiByte(CP_UTF8, 0, szRealPath, -1, mbRealPath, MAX_PATH, NULL, NULL);
-   WideCharToMultiByte(CP_UTF8, 0, szRealPattern, -1, mbRealPattern, MAX_PATH, NULL, NULL);
+   WideCharToMultiByteSysLocale(szRealPath, mbRealPath, MAX_PATH);
+   WideCharToMultiByteSysLocale(szRealPattern, mbRealPattern, MAX_PATH);
    nRet = GetDirInfo(mbRealPath, mbRealPattern, bRecursive, uFileCount, llFileSize, ageFilter, sizeFilter, mode != DIRINFO_FOLDER_COUNT, mode == DIRINFO_FOLDER_COUNT, searchInverse);
 #endif
 

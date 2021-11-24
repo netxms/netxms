@@ -465,7 +465,7 @@ AgentConnection::AgentConnection(const InetAddress& addr, uint16_t port, const T
    if ((secret != nullptr) && (*secret != 0))
    {
 #ifdef UNICODE
-		WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, secret, -1, m_secret, MAX_SECRET_LENGTH, nullptr, nullptr);
+		wchar_to_utf8(secret, -1, m_secret, MAX_SECRET_LENGTH);
 		m_secret[MAX_SECRET_LENGTH - 1] = 0;
 #else
       strlcpy(m_secret, secret, MAX_SECRET_LENGTH);
@@ -865,7 +865,7 @@ void AgentConnection::setSharedSecret(const TCHAR *secret)
    if ((secret != nullptr) && (*secret != 0))
    {
 #ifdef UNICODE
-      WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, secret, -1, m_secret, MAX_SECRET_LENGTH, nullptr, nullptr);
+      wchar_to_utf8(secret, -1, m_secret, MAX_SECRET_LENGTH);
       m_secret[MAX_SECRET_LENGTH - 1] = 0;
 #else
       strlcpy(m_secret, secret, MAX_SECRET_LENGTH);
@@ -2442,7 +2442,7 @@ void AgentConnection::setProxy(const InetAddress& addr, uint16_t port, const TCH
    if ((secret != nullptr) && (*secret != 0))
    {
 #ifdef UNICODE
-      WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, secret, -1, m_proxySecret, MAX_SECRET_LENGTH, nullptr, nullptr);
+      wchar_to_utf8(secret, -1, m_proxySecret, MAX_SECRET_LENGTH);
       m_proxySecret[MAX_SECRET_LENGTH - 1] = 0;
 #else
       strlcpy(m_proxySecret, secret, MAX_SECRET_LENGTH);

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2015 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -119,14 +119,14 @@ static bool AgentGetParameterArgInternal(const TCHAR *param, int index, TCHAR *a
 bool APPAGENT_EXPORTABLE AppAgentGetParameterArgA(const TCHAR *param, int index, char *arg, int maxSize)
 {
 #ifdef UNICODE
-	WCHAR *temp = (WCHAR *)malloc(maxSize * sizeof(WCHAR));
+	WCHAR *temp = MemAllocStringW(maxSize * sizeof(WCHAR));
 	bool success = AgentGetParameterArgInternal(param, index, temp, maxSize);
 	if (success)
 	{
-		WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, temp, -1, arg, maxSize, NULL, NULL);
+		WideCharToMultiByteSysLocale(temp, arg, maxSize);
 		arg[maxSize - 1] = 0;
 	}
-	free(temp);
+	MemFree(temp);
 	return success;
 #else
 	return AgentGetParameterArgInternal(param, index, arg, maxSize);
@@ -142,14 +142,14 @@ bool APPAGENT_EXPORTABLE AppAgentGetParameterArgW(const TCHAR *param, int index,
 #ifdef UNICODE
 	return AgentGetParameterArgInternal(param, index, arg, maxSize);
 #else
-	char *temp = (char *)malloc(maxSize);
+	char *temp = MemAllocStringA(maxSize);
 	bool success = AgentGetParameterArgInternal(param, index, temp, maxSize);
 	if (success)
 	{
-		MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, temp, -1, arg, maxSize);
+		MultiByteToWideCharSysLocale(temp, arg, maxSize);
 		arg[maxSize - 1] = 0;
 	}
-	free(temp);
+	MemFree(temp);
 	return success;
 #endif
 }

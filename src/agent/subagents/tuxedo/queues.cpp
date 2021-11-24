@@ -1,6 +1,6 @@
 /*
 ** NetXMS Tuxedo subagent
-** Copyright (C) 2014-2018 Raden Solutions
+** Copyright (C) 2014-2021 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -64,7 +64,7 @@ TuxedoQueue::TuxedoQueue(FBFR32 *fb, FLDOCC32 index)
 #ifdef UNICODE
    char name[MAX_QUEUE_NAME_LEN] = "";
    CFgetString(fb, TA_RQADDR, index, name, sizeof(name));
-   MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, name, -1, m_name, sizeof(m_name) / sizeof(WCHAR));
+   mb_to_wchar(name, -1, m_name, sizeof(m_name) / sizeof(WCHAR));
 #else
    CFgetString(fb, TA_RQADDR, index, m_name, sizeof(m_name));
 #endif
@@ -161,7 +161,7 @@ void TuxedoQueryQueues()
 
 #ifdef UNICODE
             WCHAR serverNameKey[128];
-            MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, q->m_serverName, -1, serverNameKey, 128);
+            mb_to_wchar(q->m_serverName, -1, serverNameKey, 128);
 #else
 #define serverNameKey (q->m_serverName)
 #endif

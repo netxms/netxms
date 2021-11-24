@@ -1,6 +1,6 @@
 /*
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004-2020 Victor Kirhenshtein
+** Copyright (C) 2004-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -239,13 +239,13 @@ static bool MigrateTable(const TCHAR *table)
             if (IsTimestampColumn(table, columnName))
             {
                columns.append(_T("extract(epoch from "));
-               columns.appendMBString(columnName, strlen(columnName), CP_UTF8);
+               columns.appendUtf8String(columnName);
                columns.append(_T(") AS "));
-               columns.appendMBString(columnName, strlen(columnName), CP_UTF8);
+               columns.appendUtf8String(columnName);
             }
             else
             {
-               columns.appendMBString(columnName, strlen(columnName), CP_UTF8);
+               columns.appendUtf8String(columnName);
             }
          }
          DBFreeResult(hResult);

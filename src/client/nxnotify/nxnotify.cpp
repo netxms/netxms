@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** nxnotify - send notification via NetXMS server
-** Copyright (C) 2003-2020 Raden Solutions
+** Copyright (C) 2003-2021 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -87,7 +87,7 @@ int main(int argc, char *argv[])
             break;
          case 'u':
 #ifdef UNICODE
-            MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, login, MAX_DB_STRING);
+            MultiByteToWideCharSysLocale(optarg, login, MAX_DB_STRING);
             login[MAX_DB_STRING - 1] = 0;
 #else
             strlcpy(login, optarg, MAX_DB_STRING);
@@ -95,7 +95,7 @@ int main(int argc, char *argv[])
             break;
          case 'P':
 #ifdef UNICODE
-            MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, password, MAX_DB_STRING);
+            MultiByteToWideCharSysLocale(optarg, password, MAX_DB_STRING);
             password[MAX_DB_STRING - 1] = 0;
 #else
             strlcpy(password, optarg, MAX_DB_STRING);
@@ -146,7 +146,7 @@ int main(int argc, char *argv[])
 
 #ifdef UNICODE
    WCHAR whost[256];
-   MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, argv[optind], -1, whost, 256);
+   MultiByteToWideCharSysLocale(argv[optind], whost, 256);
    whost[255] = 0;
 #define _HOST whost
 #else

@@ -156,15 +156,25 @@ void LIBNETXMS_EXPORTABLE InitNetXMSProcess(bool commandLineTool)
    // of a dot, as set by system's regional settings.
 #if HAVE_SETLOCALE
    setlocale(LC_NUMERIC, "C");
-#if defined(UNICODE) && !defined(_WIN32)
+#endif
+
+   // Set default code page according to system settings and update LC_CTYPE
+#ifndef _WIN32
    const char *locale = getenv("LC_CTYPE");
-   if (locale == NULL)
+   if (locale == nullptr)
       locale = getenv("LC_ALL");
-   if (locale == NULL)
+   if (locale == nullptr)
       locale = getenv("LANG");
-   if (locale != NULL)
+   if (locale != nullptr)
+   {
+#if defined(UNICODE) && HAVE_SETLOCALE
       setlocale(LC_CTYPE, locale);
 #endif
+
+      const char *cp = strchr(locale, '.');
+      if (cp != nullptr)
+         SetDefaultCodepage(cp + 1);
+   }
 #endif
 
    json_set_alloc_funcs(MemAlloc, MemFree);
@@ -758,7 +768,7 @@ const TCHAR LIBNETXMS_EXPORTABLE *ExpandFileName(const TCHAR *name, TCHAR *buffe
 	TCHAR temp[MAX_PATH], command[1024];
 	size_t outpos = 0;
 
-	t = time(NULL);
+	t = time(nullptr);
 #if HAVE_LOCALTIME_R
 	ltm = localtime_r(&t, &tmBuff);
 #else
@@ -768,7 +778,7 @@ const TCHAR LIBNETXMS_EXPORTABLE *ExpandFileName(const TCHAR *name, TCHAR *buffe
    {
       if (name != buffer)
          _tcslcpy(buffer, name, bufSize);
-      return NULL;
+      return nullptr;
    }
 
 	for(int i = 0; (temp[i] != 0) && (outpos < bufSize - 1); i++)
@@ -783,7 +793,7 @@ const TCHAR LIBNETXMS_EXPORTABLE *ExpandFileName(const TCHAR *name, TCHAR *buffe
 			command[len] = 0;
 
 			FILE *p = _tpopen(command, _T("r"));
-			if (p != NULL)
+			if (p != nullptr)
 			{
 				char result[1024];
 				int rc = (int)fread(result, 1, 1023, p);
@@ -802,7 +812,7 @@ const TCHAR LIBNETXMS_EXPORTABLE *ExpandFileName(const TCHAR *name, TCHAR *buffe
 
 					len = (int)std::min(strlen(result), bufSize - outpos - 1);
 #ifdef UNICODE
-					len = MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, result, len, &buffer[outpos], len + 1);
+					len = mb_to_wchar(result, len, &buffer[outpos], len + 1);
 #else
 					memcpy(&buffer[outpos], result, len);
 #endif
@@ -1828,7 +1838,7 @@ void LIBNETXMS_EXPORTABLE GetOSVersionString(TCHAR *pszBuffer, int nBufSize)
 #ifdef UNICODE
    char buf[1024];
    snprintf(buf, 1024, "%s %s", un.sysname, un.release);
-   MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, buf, -1, pszBuffer, nSize);
+   MultiByteToWideCharSysLocale(buf, pszBuffer, nSize);
 #else
    snprintf(pszBuffer, nSize, "%s %s", un.sysname, un.release);
 #endif
@@ -2486,7 +2496,7 @@ bool LIBNETXMS_EXPORTABLE MatchSchedule(const TCHAR *schedule, bool *withSeconds
 static inline bool DecryptPasswordFailW(const WCHAR *encryptedPasswd, WCHAR *decryptedPasswd, size_t bufferLenght)
 {
    if (decryptedPasswd != encryptedPasswd)
-      wcsncpy(decryptedPasswd, encryptedPasswd, bufferLenght);
+      wcslcpy(decryptedPasswd, encryptedPasswd, bufferLenght);
    return false;
 }
 
@@ -2520,7 +2530,7 @@ bool LIBNETXMS_EXPORTABLE DecryptPasswordW(const WCHAR *login, const WCHAR *encr
 	ICEDecryptData(encrypted, encSize, decrypted, key);
 	decrypted[encSize - 1] = 0;
 
-	MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (char *)decrypted, -1, decryptedPasswd, (int)bufferLenght);
+	MultiByteToWideCharSysLocale((char *)decrypted, decryptedPasswd, bufferLenght);
 	decryptedPasswd[bufferLenght - 1] = 0;
 	MemFree(mbencrypted);
 	MemFree(mblogin);
@@ -2534,7 +2544,7 @@ bool LIBNETXMS_EXPORTABLE DecryptPasswordW(const WCHAR *login, const WCHAR *encr
 static inline bool DecryptPasswordFailA(const char *encryptedPasswd, char *decryptedPasswd, size_t bufferLenght)
 {
    if (decryptedPasswd != encryptedPasswd)
-      strncpy(decryptedPasswd, encryptedPasswd, bufferLenght);
+      strlcpy(decryptedPasswd, encryptedPasswd, bufferLenght);
    return false;
 }
 
@@ -3342,7 +3352,7 @@ time_t LIBNETXMS_EXPORTABLE ParseDateTimeA(const char *text, time_t defaultValue
 time_t LIBNETXMS_EXPORTABLE ParseDateTimeW(const WCHAR *text, time_t defaultValue)
 {
    char buffer[16];
-   WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, text, -1, buffer, 16, NULL, NULL);
+   wchar_to_mb(text, -1, buffer, 16);
    buffer[15] = 0;
    return ParseDateTimeA(buffer, defaultValue);
 }
@@ -3843,7 +3853,7 @@ TCHAR LIBNETXMS_EXPORTABLE *GetLocalHostName(TCHAR *buffer, size_t size, bool fq
 #else    /* _WIN32 */
    char hostname[256];
    if (gethostname(hostname, 256) != 0)
-      return NULL;
+      return nullptr;
    if (fqdn)
    {
 #if HAVE_GETADDRINFO
@@ -3855,15 +3865,15 @@ TCHAR LIBNETXMS_EXPORTABLE *GetLocalHostName(TCHAR *buffer, size_t size, bool fq
 
       struct addrinfo *info;
       if (getaddrinfo(hostname, "http", &hints, &info) != 0)
-         return NULL;
+         return nullptr;
 
       bool found = false;
-      for(struct addrinfo *p = info; p != NULL; p = p->ai_next)
+      for(struct addrinfo *p = info; p != nullptr; p = p->ai_next)
       {
-         if (p->ai_canonname != NULL && strchr(p->ai_canonname, '.') != NULL)
+         if ((p->ai_canonname != nullptr) && (strchr(p->ai_canonname, '.') != nullptr))
          {
 #ifdef UNICODE
-            MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, p->ai_canonname, -1, buffer, size);
+            MultiByteToWideCharSysLocale(p->ai_canonname, buffer, size);
 #else
             strncpy(buffer, p->ai_canonname, size);
 #endif
@@ -3872,26 +3882,26 @@ TCHAR LIBNETXMS_EXPORTABLE *GetLocalHostName(TCHAR *buffer, size_t size, bool fq
          }
       }
 
-      if (!found && (info != NULL))
+      if (!found && (info != nullptr))
       {
          // Use first available name as last resort
 #ifdef UNICODE
-         MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, info->ai_canonname, -1, buffer, size);
+         MultiByteToWideCharSysLocale(info->ai_canonname, buffer, size);
 #else
-         strncpy(buffer, info->ai_canonname, size);
+         strlcpy(buffer, info->ai_canonname, size);
 #endif
          found = true;
       }
 
       freeaddrinfo(info);
       if (!found)
-         return NULL;
+         return nullptr;
 #else    /* HAVE_GETADDRINFO */
       struct hostent *h = gethostbyname(hostname);
-      if (h == NULL)
-         return NULL;
+      if (h == nullptr)
+         return nullptr;
 #ifdef UNICODE
-      MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, h->h_name, -1, buffer, size);
+      MultiByteToWideCharSysLocale(h->h_name, buffer, size);
 #else
       strncpy(buffer, h->h_name, size);
 #endif
@@ -3901,10 +3911,10 @@ TCHAR LIBNETXMS_EXPORTABLE *GetLocalHostName(TCHAR *buffer, size_t size, bool fq
    {
       // some systems return FQDN in gethostname call
       char *p = strchr(hostname, '.');
-      if (p != NULL)
+      if (p != nullptr)
          *p = 0;
 #ifdef UNICODE
-      MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, hostname, -1, buffer, size);
+      MultiByteToWideCharSysLocale(hostname, buffer, size);
 #else
       strncpy(buffer, hostname, size);
 #endif

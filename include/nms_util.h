@@ -328,11 +328,22 @@ UCS2CHAR LIBNETXMS_EXPORTABLE *ucs2_strdup(const UCS2CHAR *src);
 #endif
 
 // Character conversion functions
+#ifdef _WIN32
+#define wchar_to_mb(wstr, wlen, mstr, mlen)   (size_t)WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, (wstr), (int)(wlen), (mstr), (int)(mlen), nullptr, nullptr)
+#define mb_to_wchar(mstr, mlen, wstr, wlen)   (size_t)MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (mstr), (int)(mlen), (wstr), (int)(wlen))
+#else
+size_t LIBNETXMS_EXPORTABLE wchar_to_mb(const WCHAR *src, ssize_t srcLen, char *dst, size_t dstLen);
+size_t LIBNETXMS_EXPORTABLE mb_to_wchar(const char *src, ssize_t srcLen, WCHAR *dst, size_t dstLen);
+#endif
+
+size_t LIBNETXMS_EXPORTABLE wchar_to_mbcp(const WCHAR *src, ssize_t srcLen, char *dst, size_t dstLen, const char *codepage);
+size_t LIBNETXMS_EXPORTABLE mbcp_to_wchar(const char *src, ssize_t srcLen, WCHAR *dst, size_t dstLen, const char *codepage);
+
 size_t LIBNETXMS_EXPORTABLE ucs2_to_ucs4(const UCS2CHAR *src, ssize_t srcLen, UCS4CHAR *dst, size_t dstLen);
 size_t LIBNETXMS_EXPORTABLE ucs2_to_utf8(const UCS2CHAR *src, ssize_t srcLen, char *dst, size_t dstLen);
 size_t LIBNETXMS_EXPORTABLE ucs2_utf8len(const UCS2CHAR *src, ssize_t srcLen);
-#if defined(_WIN32) || defined(UNICODE_UCS2)
-#define ucs2_to_mb(wstr, wlen, mstr, mlen)   (size_t)WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, (wstr), (int)(wlen), (mstr), (int)(mlen), nullptr, nullptr)
+#ifdef UNICODE_UCS2
+#define ucs2_to_mb   wchar_to_mb
 #else
 size_t LIBNETXMS_EXPORTABLE ucs2_to_mb(const UCS2CHAR *src, ssize_t srcLen, char *dst, size_t dstLen);
 #endif
@@ -344,7 +355,7 @@ size_t LIBNETXMS_EXPORTABLE ucs4_ucs2len(const UCS4CHAR *src, ssize_t srcLen);
 size_t LIBNETXMS_EXPORTABLE ucs4_to_utf8(const UCS4CHAR *src, ssize_t srcLen, char *dst, size_t dstLen);
 size_t LIBNETXMS_EXPORTABLE ucs4_utf8len(const UCS4CHAR *src, ssize_t srcLen);
 #ifdef UNICODE_UCS4
-#define ucs4_to_mb(wstr, wlen, mstr, mlen)   (size_t)WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, (wstr), (int)(wlen), (mstr), (int)(mlen), nullptr, nullptr)
+#define ucs4_to_mb   wchar_to_mb
 #else
 size_t LIBNETXMS_EXPORTABLE ucs4_to_mb(const UCS4CHAR *src, ssize_t srcLen, char *dst, size_t dstLen);
 #endif
@@ -360,12 +371,12 @@ size_t LIBNETXMS_EXPORTABLE utf8_to_ASCII(const char *src, ssize_t srcLen, char 
 size_t LIBNETXMS_EXPORTABLE utf8_to_ISO8859_1(const char *src, ssize_t srcLen, char *dst, size_t dstLen);
 
 #ifdef UNICODE_UCS4
-#define mb_to_ucs4(mstr, mlen, wstr, wlen)   (size_t)MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (mstr), (int)(mlen), (wstr), (int)(wlen))
+#define mb_to_ucs4   mb_to_wchar
 #else
 size_t LIBNETXMS_EXPORTABLE mb_to_ucs4(const char *src, ssize_t srcLen, UCS4CHAR *dst, size_t dstLen);
 #endif
-#if defined(_WIN32) || defined(UNICODE_UCS2)
-#define mb_to_ucs2(mstr, mlen, wstr, wlen)   (size_t)MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (mstr), (int)(mlen), (wstr), (int)(wlen))
+#ifdef UNICODE_UCS2
+#define mb_to_ucs2   mb_to_wchar
 #else
 size_t LIBNETXMS_EXPORTABLE mb_to_ucs2(const char *src, ssize_t srcLen, UCS2CHAR *dst, size_t dstLen);
 #endif
@@ -382,15 +393,13 @@ size_t LIBNETXMS_EXPORTABLE ISO8859_1_to_ucs4(const char *src, ssize_t srcLen, U
 #define utf8_wcharlen   utf8_ucs4len
 #define wchar_to_utf8   ucs4_to_utf8
 #define wchar_utf8len   ucs4_utf8len
-#define wchar_to_mb     ucs4_to_mb
-#define mb_to_wchar     mb_to_ucs4
+#define wchar_to_ASCII  ucs4_to_ASCII
 #else
 #define utf8_to_wchar   utf8_to_ucs2
 #define utf8_wcharlen   utf8_ucs2len
 #define wchar_to_utf8   ucs2_to_utf8
 #define wchar_utf8len   ucs2_utf8len
-#define wchar_to_mb     ucs2_to_mb
-#define mb_to_wchar     mb_to_ucs2
+#define wchar_to_ASCII  ucs2_to_ASCII
 #endif
 
 #ifdef UNICODE
@@ -1217,8 +1226,9 @@ public:
 
    void appendPreallocated(TCHAR *str) { if (str != nullptr) { append(str); MemFree(str); } }
 
-   void appendMBString(const char *str, size_t len, int codePage) { insertMBString(m_length, str, len, codePage); }
-   void appendWideString(const WCHAR *str, size_t len) { insertWideString(m_length, str, len); }
+   void appendMBString(const char *str, ssize_t len = -1) { insertMBString(m_length, str, len); }
+   void appendUtf8String(const char *str, ssize_t len = -1) { insertUtf8String(m_length, str, len); }
+   void appendWideString(const WCHAR *str, ssize_t len = -1) { insertWideString(m_length, str, len); }
 
    void appendFormattedString(const TCHAR *format, ...);
    void appendFormattedStringV(const TCHAR *format, va_list args) { insertFormattedStringV(m_length, format, args); }
@@ -1237,8 +1247,9 @@ public:
 
    void insertPreallocated(size_t index, TCHAR *str) { if (str != nullptr) { insert(index, str); MemFree(str); } }
 
-   void insertMBString(size_t index, const char *str, size_t len, int codePage);
-   void insertWideString(size_t index, const WCHAR *str, size_t len);
+   void insertMBString(size_t index, const char *str, ssize_t len = -1);
+   void insertUtf8String(size_t index, const char *str, ssize_t len = -1);
+   void insertWideString(size_t index, const WCHAR *str, ssize_t len = -1);
 
    void insertFormattedString(size_t index, const TCHAR *format, ...);
    void insertFormattedStringV(size_t index, const TCHAR *format, va_list args);
@@ -4237,12 +4248,6 @@ UINT32 LIBNETXMS_EXPORTABLE inet_addr_w(const WCHAR *pszAddr);
 #ifndef _WIN32
 
 bool LIBNETXMS_EXPORTABLE SetDefaultCodepage(const char *cp);
-int LIBNETXMS_EXPORTABLE WideCharToMultiByte(int iCodePage, UINT32 dwFlags, const WCHAR *pWideCharStr,
-                                             int cchWideChar, char *pByteStr, int cchByteChar,
-                                             char *pDefaultChar, BOOL *pbUsedDefChar);
-int LIBNETXMS_EXPORTABLE MultiByteToWideChar(int iCodePage, UINT32 dwFlags, const char *pByteStr,
-                                             int cchByteChar, WCHAR *pWideCharStr,
-                                             int cchWideChar);
 
 DWORD LIBNETXMS_EXPORTABLE GetEnvironmentVariable(const TCHAR *var, TCHAR *buffer, DWORD size);
 BOOL LIBNETXMS_EXPORTABLE SetEnvironmentVariable(const TCHAR *var, const TCHAR *value);
@@ -4266,7 +4271,7 @@ int LIBNETXMS_EXPORTABLE nx_vswscanf(const WCHAR *str, const WCHAR *format, va_l
 #endif	/* _WIN32 */
 
 #ifdef _WITH_ENCRYPTION
-WCHAR LIBNETXMS_EXPORTABLE *ERR_error_string_W(int nError, WCHAR *pwszBuffer);
+WCHAR LIBNETXMS_EXPORTABLE *ERR_error_string_W(int errorCode, WCHAR *buffer);
 #endif
 
 #if !defined(_WIN32) && !HAVE_WSTAT

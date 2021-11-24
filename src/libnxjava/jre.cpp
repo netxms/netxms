@@ -143,7 +143,7 @@ TCHAR LIBNXJAVA_EXPORTABLE *FindJavaRuntime(TCHAR *buffer, size_t size)
    if ((jvm[0] == 0) || (_access(jvm, F_OK) != 0))
    {
       const char *javaHome = getenv("JAVA_HOME");
-      if ((javaHome != NULL) && (*javaHome != 0))
+      if ((javaHome != nullptr) && (*javaHome != 0))
       {
 #ifdef _WIN32
          snprintf(jvm, MAX_PATH, "%s\\bin\\server\\jvm.dll", javaHome);
@@ -172,10 +172,10 @@ TCHAR LIBNXJAVA_EXPORTABLE *FindJavaRuntime(TCHAR *buffer, size_t size)
 #endif
 
    if ((jvm[0] == 0) || (_access(jvm, F_OK) != 0))
-      return NULL;
+      return nullptr;
 
 #ifdef UNICODE
-   MultiByteToWideChar(CP_UTF8, 0, jvm, -1, buffer, (int)size);
+   MultiByteToWideCharSysLocale(jvm, buffer, size);
    buffer[size - 1] = 0;
 #else
    strlcpy(buffer, jvm, size);

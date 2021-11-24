@@ -2842,7 +2842,7 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
                         s++;
                         Trim(s);
 #ifdef UNICODE
-                        WideCharToMultiByte(CP_UTF8, 0, s, -1, entryPoint, MAX_IDENTIFIER_LENGTH, NULL, NULL);
+                        wchar_to_utf8(s, -1, entryPoint, MAX_IDENTIFIER_LENGTH);
                         entryPoint[MAX_IDENTIFIER_LENGTH - 1] = 0;
 #else
                         strlcpy(entryPoint, s, MAX_IDENTIFIER_LENGTH);

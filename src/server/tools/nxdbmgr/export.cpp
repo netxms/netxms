@@ -1,6 +1,6 @@
 /*
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004-2020 Victor Kirhenshtein
+** Copyright (C) 2004-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -103,14 +103,14 @@ static bool ExportTable(sqlite3 *db, const TCHAR *name)
                if (IsTimestampColumn(name, cname))
                {
                   selectQuery.append(_T("date_part('epoch',"));
-                  selectQuery.appendMBString(cname, strlen(cname), CP_UTF8);
+                  selectQuery.appendUtf8String(cname);
                   selectQuery.append(_T(")::int AS "));
-                  selectQuery.appendMBString(cname, strlen(cname), CP_UTF8);
+                  selectQuery.appendUtf8String(cname);
                   selectQuery.append(_T(","));
                }
                else
                {
-                  selectQuery.appendMBString(cname, strlen(cname), CP_UTF8);
+                  selectQuery.appendUtf8String(cname);
                   selectQuery.append(_T(","));
                }
             }
@@ -139,7 +139,7 @@ static bool ExportTable(sqlite3 *db, const TCHAR *name)
          for(i = 0; i < columnCount; i++)
          {
             DBGetColumnNameA(hResult, i, cname, 256);
-            query.appendMBString(cname, strlen(cname), CP_UTF8);
+            query.appendUtf8String(cname);
             query.append(_T(","));
          }
          query.shrink();

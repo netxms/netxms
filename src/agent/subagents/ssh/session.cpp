@@ -1,6 +1,6 @@
 /*
 ** NetXMS SSH subagent
-** Copyright (C) 2004-2020 Victor Kirhenshtein
+** Copyright (C) 2004-2021 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -29,11 +29,11 @@ SSHSession::SSHSession(const InetAddress& addr, UINT16 port, INT32 id)
    m_id = id;
    m_addr = addr;
    m_port = port;
-   m_session = NULL;
+   m_session = nullptr;
    m_lastAccess = 0;
    m_user[0] = 0;
    m_busy = false;
-   _sntprintf(m_name, MAX_SSH_SESSION_NAME_LEN, _T("nobody@%s:%d/%d"), (const TCHAR *)m_addr.toString(), m_port, m_id);
+   _sntprintf(m_name, MAX_SSH_SESSION_NAME_LEN, _T("nobody@%s:%d/%d"), m_addr.toString().cstr(), m_port, m_id);
 }
 
 /**
@@ -92,7 +92,7 @@ bool SSHSession::connect(const TCHAR *user, const TCHAR *password, const shared_
    ssh_options_set(m_session, SSH_OPTIONS_TIMEOUT_USEC, &timeout);
 #ifdef UNICODE
    char mbuser[256];
-   WideCharToMultiByte(CP_UTF8, 0, user, -1, mbuser, 256, NULL, NULL);
+   wchar_to_utf8(user, -1, mbuser, 256);
    ssh_options_set(m_session, SSH_OPTIONS_USER, mbuser);
 #else
    ssh_options_set(m_session, SSH_OPTIONS_USER, user);

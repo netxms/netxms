@@ -28,12 +28,12 @@
  */
 SNMP_MIBObject::SNMP_MIBObject()
 {
-   Initialize();
+   initialize();
 
    m_dwOID = 0;
-   m_pszName = NULL;
-   m_pszDescription = NULL;
-	m_pszTextualConvention = NULL;
+   m_pszName = nullptr;
+   m_pszDescription = nullptr;
+	m_pszTextualConvention = nullptr;
    m_iStatus = -1;
    m_iAccess = -1;
    m_iType = -1;
@@ -46,12 +46,12 @@ SNMP_MIBObject::SNMP_MIBObject(UINT32 dwOID, const TCHAR *pszName, int iType,
                                int iStatus, int iAccess, const TCHAR *pszDescription,
 										 const TCHAR *pszTextualConvention)
 {
-   Initialize();
+   initialize();
 
    m_dwOID = dwOID;
-   m_pszName = (pszName != NULL) ? _tcsdup(pszName) : NULL;
-   m_pszDescription = (pszDescription != NULL) ? _tcsdup(pszDescription) : NULL;
-   m_pszTextualConvention = (pszTextualConvention != NULL) ? _tcsdup(pszTextualConvention) : NULL;
+   m_pszName = MemCopyString(pszName);
+   m_pszDescription = MemCopyString(pszDescription);
+   m_pszTextualConvention = MemCopyString(pszTextualConvention);
    m_iStatus = iStatus;
    m_iAccess = iAccess;
    m_iType = iType;
@@ -62,12 +62,12 @@ SNMP_MIBObject::SNMP_MIBObject(UINT32 dwOID, const TCHAR *pszName, int iType,
  */
 SNMP_MIBObject::SNMP_MIBObject(UINT32 dwOID, const TCHAR *pszName)
 {
-   Initialize();
+   initialize();
 
    m_dwOID = dwOID;
-   m_pszName = (pszName != NULL) ? _tcsdup(pszName) : NULL;
-   m_pszDescription = NULL;
-	m_pszTextualConvention = NULL;
+   m_pszName = MemCopyString(pszName);
+   m_pszDescription = nullptr;
+	m_pszTextualConvention = nullptr;
    m_iStatus = -1;
    m_iAccess = -1;
    m_iType = -1;
@@ -76,13 +76,13 @@ SNMP_MIBObject::SNMP_MIBObject(UINT32 dwOID, const TCHAR *pszName)
 /**
  * Common initialization
  */
-void SNMP_MIBObject::Initialize()
+void SNMP_MIBObject::initialize()
 {
-   m_pParent = NULL;
-   m_pNext = NULL;
-   m_pPrev = NULL;
-   m_pFirst = NULL;
-   m_pLast = NULL;
+   m_pParent = nullptr;
+   m_pNext = nullptr;
+   m_pPrev = nullptr;
+   m_pFirst = nullptr;
+   m_pLast = nullptr;
 }
 
 /**
@@ -92,7 +92,7 @@ SNMP_MIBObject::~SNMP_MIBObject()
 {
    SNMP_MIBObject *pCurr, *pNext;
 
-   for(pCurr = m_pFirst; pCurr != NULL; pCurr = pNext)
+   for(pCurr = m_pFirst; pCurr != nullptr; pCurr = pNext)
    {
       pNext = pCurr->getNext();
       delete pCurr;
@@ -107,7 +107,7 @@ SNMP_MIBObject::~SNMP_MIBObject()
  */
 void SNMP_MIBObject::addChild(SNMP_MIBObject *pObject)
 {
-   if (m_pLast == NULL)
+   if (m_pLast == nullptr)
    {
       m_pFirst = m_pLast = pObject;
    }
@@ -115,7 +115,7 @@ void SNMP_MIBObject::addChild(SNMP_MIBObject *pObject)
    {
       m_pLast->m_pNext = pObject;
       pObject->m_pPrev = m_pLast;
-      pObject->m_pNext = NULL;
+      pObject->m_pNext = nullptr;
       m_pLast = pObject;
    }
    pObject->setParent(this);
@@ -126,12 +126,10 @@ void SNMP_MIBObject::addChild(SNMP_MIBObject *pObject)
  */
 SNMP_MIBObject *SNMP_MIBObject::findChildByID(UINT32 dwOID)
 {
-   SNMP_MIBObject *pCurr;
-
-   for(pCurr = m_pFirst; pCurr != NULL; pCurr = pCurr->getNext())
+   for(SNMP_MIBObject *pCurr = m_pFirst; pCurr != nullptr; pCurr = pCurr->getNext())
       if (pCurr->m_dwOID == dwOID)
          return pCurr;
-   return NULL;
+   return nullptr;
 }
 
 /**
@@ -144,8 +142,8 @@ void SNMP_MIBObject::setInfo(int iType, int iStatus, int iAccess, const TCHAR *p
    m_iType = iType;
    m_iStatus = iStatus;
    m_iAccess = iAccess;
-   m_pszDescription = (pszDescription != NULL) ? _tcsdup(pszDescription) : NULL;
-	m_pszTextualConvention = (pszTextualConvention != NULL) ? _tcsdup(pszTextualConvention) : NULL;
+   m_pszDescription = MemCopyString(pszDescription);
+	m_pszTextualConvention = MemCopyString(pszTextualConvention);
 }
 
 /**
@@ -174,13 +172,12 @@ static void WriteStringToFile(ZFile *pFile, const TCHAR *pszStr)
    char *pszBuffer;
 #endif
 
-   wLen = (WORD)_tcslen(pszStr);
+   wLen = (WORD)wchar_utf8len(pszStr, -1);
    wTemp = htons(wLen);
    pFile->write(&wTemp, 2);
 #ifdef UNICODE
    pszBuffer = (char *)MemAlloc(wLen + 1);
-	WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, 
-		                 pszStr, -1, pszBuffer, wLen + 1, NULL, NULL);
+	wchar_to_utf8(pszStr, -1, pszBuffer, wLen + 1);
    pFile->write(pszBuffer, wLen);
    MemFree(pszBuffer);
 #else
@@ -316,7 +313,7 @@ static TCHAR *ReadStringFromFile(ZFile *pFile)
 #ifdef UNICODE
       pszBuffer = (char *)MemAlloc(wLen + 1);
       pFile->read(pszBuffer, wLen);
-      MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, pszBuffer, wLen, pszStr, wLen + 1);
+      utf8_to_wchar(pszBuffer, wLen, pszStr, wLen + 1);
       MemFree(pszBuffer);
 #else
       pFile->read(pszStr, wLen);
@@ -325,7 +322,7 @@ static TCHAR *ReadStringFromFile(ZFile *pFile)
    }
    else
    {
-      pszStr = NULL;
+      pszStr = nullptr;
    }
    return pszStr;
 }

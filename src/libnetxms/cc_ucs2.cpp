@@ -210,34 +210,26 @@ size_t LIBNETXMS_EXPORTABLE ucs2_to_mb(const UCS2CHAR *src, ssize_t srcLen, char
       return ucs2_to_ISO8859_1(src, srcLen, dst, dstLen);
 
 #if HAVE_ICONV && !defined(__DISABLE_ICONV)
-   iconv_t cd;
-   const char *inbuf;
-   char *outbuf;
-   size_t count, inbytes, outbytes;
-
-   cd = IconvOpen(g_cpDefault, UCS2_CODEPAGE_NAME);
+   iconv_t cd = IconvOpen(g_cpDefault, UCS2_CODEPAGE_NAME);
    if (cd == (iconv_t) (-1))
    {
       return ucs2_to_ASCII(src, srcLen, dst, dstLen);
    }
 
-   inbuf = reinterpret_cast<const char*>(src);
-   inbytes = ((srcLen == -1) ? ucs2_strlen(src) + 1 : srcLen) * sizeof(UCS2CHAR);
-   outbuf = reinterpret_cast<char*>(dst);
-   outbytes = dstLen;
-   count = iconv(cd, (ICONV_CONST char **) &inbuf, &inbytes, &outbuf, &outbytes);
+   const char *inbuf = reinterpret_cast<const char*>(src);
+   size_t inbytes = ((srcLen == -1) ? ucs2_strlen(src) + 1 : srcLen) * sizeof(UCS2CHAR);
+   char *outbuf = reinterpret_cast<char*>(dst);
+   size_t outbytes = dstLen;
+   size_t count = iconv(cd, (ICONV_CONST char **) &inbuf, &inbytes, &outbuf, &outbytes);
    IconvClose(cd);
 
-   if (count == (size_t) - 1)
+   if ((count != (size_t)(-1)) || (errno == EILSEQ))
    {
-      if (errno == EILSEQ)
-      {
-         count = (dstLen * sizeof(char) - outbytes) / sizeof(char);
-      }
-      else
-      {
-         count = 0;
-      }
+      count = dstLen - outbytes;
+   }
+   else
+   {
+      count = 0;
    }
    if ((srcLen == -1) && (outbytes >= sizeof(char)))
    {

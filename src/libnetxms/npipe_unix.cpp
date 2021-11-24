@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -174,10 +174,10 @@ void NamedPipeListener::serverThread()
 #else
             struct passwd *pw = getpwuid(uid);
 #endif
-            if (pw != NULL)
+            if (pw != nullptr)
             {
 #ifdef UNICODE
-               MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, pw->pw_name, -1, user, 64);
+               MultiByteToWideCharSysLocale(pw->pw_name, user, 64);
 #else
                strlcpy(user, pw->pw_name, 64);
 #endif
