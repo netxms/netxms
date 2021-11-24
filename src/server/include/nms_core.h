@@ -1307,6 +1307,7 @@ static inline void EnumerateClientSessions(void (*handler)(ClientSession*))
 void NXCORE_EXPORTABLE NotifyClientSessions(uint32_t code, uint32_t data);
 void NXCORE_EXPORTABLE NotifyClientSessions(const NXCPMessage& msg, const TCHAR *channel);
 void NXCORE_EXPORTABLE NotifyClientSession(session_id_t sessionId, uint32_t code, uint32_t data);
+void NXCORE_EXPORTABLE NotifyClientSession(session_id_t sessionId, NXCPMessage *data);
 void NXCORE_EXPORTABLE NotifyClientsOnGraphUpdate(const NXCPMessage& msg, uint32_t graphId);
 void NotifyClientsOnPolicyUpdate(const NXCPMessage& msg, const Template& object);
 void NotifyClientsOnPolicyDelete(uuid guid, const Template& object);

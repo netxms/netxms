@@ -1475,6 +1475,7 @@ typedef struct
 #define VID_TICKET_COUNT            ((uint32_t)776)
 #define VID_COMMENTS_SOURCE         ((uint32_t)777)
 #define VID_WEB_SERVICE_PROXY       ((uint32_t)778)
+#define VID_MATCH                   ((uint32_t)779)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

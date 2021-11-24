@@ -561,6 +561,19 @@ void NXCORE_EXPORTABLE NotifyClientSession(session_id_t sessionId, uint32_t code
 }
 
 /**
+ * Send notification to specified user session
+ */
+void NXCORE_EXPORTABLE NotifyClientSession(session_id_t sessionId, NXCPMessage *data)
+{
+   RWLockReadLock(s_sessionListLock);
+   ClientSession *session = s_sessions.get(sessionId);
+   if (session != nullptr)
+      session->sendMessage(data);
+   RWLockUnlock(s_sessionListLock);
+}
+
+
+/**
  * Get number of active user sessions
  */
 int GetSessionCount(bool includeSystemAccount, bool includeNonAuthenticated, int typeFilter, const TCHAR *loginFilter)
