@@ -331,6 +331,7 @@ public:
 
    virtual void updateFromTemplate(DCObject *dcObject);
    virtual void updateFromImport(ConfigEntry *config);
+   virtual void updateCache() = 0;
 
    virtual bool saveToDatabase(DB_HANDLE hdb);
    virtual void deleteFromDatabase();
@@ -492,6 +493,7 @@ public:
    virtual void deleteFromDatabase() override;
    virtual bool loadThresholdsFromDB(DB_HANDLE hdb) override;
 
+   virtual void updateCache() override { updateCacheSize(); }
    void updateCacheSize(UINT32 conditionId = 0) { lock(); updateCacheSizeInternal(true, conditionId); unlock(); }
    void reloadCache(bool forceReload);
 
@@ -754,6 +756,7 @@ public:
 
    virtual void updateFromTemplate(DCObject *dcObject) override;
    virtual void updateFromImport(ConfigEntry *config) override;
+   virtual void updateCache() override;
 
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
    virtual void deleteFromDatabase() override;
