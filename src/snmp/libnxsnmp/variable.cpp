@@ -401,7 +401,7 @@ TCHAR *SNMP_Variable::getValueAsString(TCHAR *buffer, size_t bufferSize, const c
          if (length > 0)
          {
 #ifdef UNICODE
-            int cch = mbcp_to_wchar((char *)m_value, length, buffer, bufferSize, codepage);
+            size_t cch = mbcp_to_wchar((char *)m_value, length, buffer, bufferSize, codepage);
             if (cch > 0)
             {
                length = cch;  // length can be different for multibyte character set
@@ -474,7 +474,7 @@ TCHAR *SNMP_Variable::getValueAsPrintableString(TCHAR *buffer, size_t bufferSize
          if (!conversionNeeded)
          {
 #ifdef UNICODE
-            int cch = mbcp_to_wchar((char *)m_value, length, buffer, bufferSize, codepage);
+            size_t cch = mbcp_to_wchar((char *)m_value, length, buffer, bufferSize, codepage);
             if (cch > 0)
             {
                length = cch;  // length can be different for multibyte character set

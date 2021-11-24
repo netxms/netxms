@@ -225,7 +225,7 @@ void NXSL_ProgramBuilder::addRequiredModule(const char *name, int lineNumber, bo
 {
 #ifdef UNICODE
    WCHAR mname[MAX_PATH];
-   int cch = utf8_to_wchar(name, -1, mname, MAX_PATH - 1);
+   size_t cch = utf8_to_wchar(name, -1, mname, MAX_PATH - 1);
 #else
    char mname[MAX_PATH];
    size_t cch = utf8_to_mb(name, -1, mname, MAX_PATH);

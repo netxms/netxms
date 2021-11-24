@@ -483,7 +483,7 @@ char LIBNETXMS_EXPORTABLE *UTF8StringFromWideString(const WCHAR *src)
 {
    if (src == nullptr)
       return nullptr;
-   int len = wchar_utf8len(src, -1);
+   size_t len = wchar_utf8len(src, -1);
    char *out = MemAllocStringA(len);
    wchar_to_utf8(src, -1, out, len);
    return out;
@@ -631,11 +631,196 @@ char LIBNETXMS_EXPORTABLE *MBStringFromUCS4String(const UCS4CHAR *src)
 #ifdef _WIN32
 
 /**
- * Get WIndows code page number from code page name
+ * Code page
+ */
+struct CodePage
+{
+   const char *name;
+   size_t length;
+   int value;
+
+   CodePage(const char *n, int value)
+   {
+      name = n;
+      length = (n != nullptr) ? strlen(n) : 0;
+   }
+};
+
+/**
+ * Code page mappings
+ */
+static CodePage s_codePages[] =
+{
+   CodePage("ARABIC", 708),
+   CodePage("ASCII", 20127),
+   CodePage("ASMO-449+", 709),
+   CodePage("ASMO-708", 708),
+   CodePage("BIG-5", 950),
+   CodePage("BIG-FIVE", 950),
+   CodePage("BIG5", 950),
+   CodePage("BIGFIVE", 950),
+   CodePage("CN-BIG5", 950),
+   CodePage("CN-GB", 936),
+   CodePage("CP-IS", 861),
+   CodePage("CP-GR", 869),
+   CodePage("CP1250", 1250),
+   CodePage("CP1251", 1251),
+   CodePage("CP1252", 1252),
+   CodePage("CP1253", 1253),
+   CodePage("CP1254", 1254),
+   CodePage("CP1255", 1255),
+   CodePage("CP1256", 1256),
+   CodePage("CP1257", 1257),
+   CodePage("CP1258", 1258),
+   CodePage("CP1361", 1361),
+   CodePage("CP367", 20127),
+   CodePage("CP437", 437),
+   CodePage("CP737", 737),
+   CodePage("CP775", 775),
+   CodePage("CP819", 28591),
+   CodePage("CP852", 852),
+   CodePage("CP855", 855),
+   CodePage("CP857", 857),
+   CodePage("CP858", 858),
+   CodePage("CP860", 860),
+   CodePage("CP861", 861),
+   CodePage("CP863", 863),
+   CodePage("CP864", 864),
+   CodePage("CP865", 865),
+   CodePage("CP866", 866),
+   CodePage("CP869", 869),
+   CodePage("CP875", 875),
+   CodePage("CS", 437),
+   CodePage("CSASCII", 20127),
+   CodePage("CSBIG5", 950),
+   CodePage("CSGB2312", 936),
+   CodePage("CSIBM855", 855),
+   CodePage("CSIBM857", 857),
+   CodePage("CSIBM860", 860),
+   CodePage("CSIBM861", 861),
+   CodePage("CSIBM863", 863),
+   CodePage("CSIBM864", 864),
+   CodePage("CSIBM865", 865),
+   CodePage("CSIBM869", 869),
+   CodePage("CSKOI8R", 20866),
+   CodePage("CSKSC56011987", 949),
+   CodePage("CSMACINTOSH", 10000),
+   CodePage("CSPC775BALTIC", 775),
+   CodePage("CSPCP852", 852),
+   CodePage("CSSHIFTJIS", 932),
+   CodePage("CYRILLIC", 28595),
+   CodePage("DOS-720", 720),
+   CodePage("DOS-862", 862),
+   CodePage("ECMA-114", 708),
+   CodePage("EUC-CN", 936),
+   CodePage("EUCCN", 936),
+   CodePage("GB2312", 936),
+   CodePage("IBM037", 37),
+   CodePage("IBM1026", 1026),
+   CodePage("IBM1047", 1047),
+   CodePage("IBM1140", 1140),
+   CodePage("IBM1141", 1141),
+   CodePage("IBM1142", 1142),
+   CodePage("IBM1143", 1143),
+   CodePage("IBM1144", 1144),
+   CodePage("IBM1145", 1145),
+   CodePage("IBM1146", 1146),
+   CodePage("IBM1147", 1147),
+   CodePage("IBM1148", 1148),
+   CodePage("IBM1149", 1149),
+   CodePage("IBM367", 20127),
+   CodePage("IBM437", 437),
+   CodePage("IBM500", 500),
+   CodePage("IBM737", 737),
+   CodePage("IBM775", 775),
+   CodePage("IBM819", 28591),
+   CodePage("IBM850", 850),
+   CodePage("IBM852", 852),
+   CodePage("IBM855", 855),
+   CodePage("IBM857", 857),
+   CodePage("IBM858", 858),
+   CodePage("IBM860", 860),
+   CodePage("IBM861", 861),
+   CodePage("IBM863", 863),
+   CodePage("IBM864", 864),
+   CodePage("IBM865", 865),
+   CodePage("IBM869", 869),
+   CodePage("IBM870", 870),
+   CodePage("ISO-8859-1", 28591),
+   CodePage("ISO-8859-2", 28592),
+   CodePage("ISO-8859-3", 28593),
+   CodePage("ISO-8859-4", 28594),
+   CodePage("ISO-8859-5", 28595),
+   CodePage("ISO-8859-6", 28596),
+   CodePage("ISO-8859-7", 28597),
+   CodePage("ISO-8859-8", 28598),
+   CodePage("ISO-8859-9", 28599),
+   CodePage("ISO-8859-13", 28603),
+   CodePage("ISO-8859-15", 28605),
+   CodePage("ISO-IR-149", 949),
+   CodePage("JOHAB", 1361),
+   CodePage("KOI8-R", 20866),
+   CodePage("KOI8-U", 21866),
+   CodePage("KOREAN KSC_5601", 949),
+   CodePage("KS_C_5601-1987", 949),
+   CodePage("KS_C_5601-1989", 949),
+   CodePage("LATIN1", 28591),
+   CodePage("LATIN2", 28592),
+   CodePage("LATIN3", 28593),
+   CodePage("LATIN4", 28594),
+   CodePage("MAC", 10000),
+   CodePage("MACINTOSH", 10000),
+   CodePage("MACROMAN", 10000),
+   CodePage("MS-ANSI", 1252),
+   CodePage("MS-ARAB", 1256),
+   CodePage("MS-CYRL", 1251),
+   CodePage("MS-EE", 1250),
+   CodePage("MS-GREEK", 1253),
+   CodePage("MS-HEBR", 1255),
+   CodePage("MS-TURK", 1254),
+   CodePage("MS_KANJI", 932),
+   CodePage("SHIFT-JIS", 932),
+   CodePage("SHIFT_JIS", 932),
+   CodePage("SJIS", 932),
+   CodePage("US", 20127),
+   CodePage("US-ASCII", 20127),
+   CodePage("UTF-7", 65000),
+   CodePage("WINBALTRIM", 1257),
+   CodePage("WINDOWS-1250", 1250),
+   CodePage("WINDOWS-1251", 1251),
+   CodePage("WINDOWS-1252", 1252),
+   CodePage("WINDOWS-1253", 1253),
+   CodePage("WINDOWS-1254", 1254),
+   CodePage("WINDOWS-1255", 1255),
+   CodePage("WINDOWS-1256", 1256),
+   CodePage("WINDOWS-1257", 1257),
+   CodePage("WINDOWS-1258", 1258),
+   CodePage("WINDOWS-874", 874),
+   CodePage(nullptr, 0)
+};
+
+/**
+ * Get Windows code page number from code page name
  */
 static int GetCodePageNumber(const char *codepage)
 {
-   return 0;
+   char cp[32];
+   size_t clen = strlen(codepage);
+   if (clen > 31)
+      return CP_ACP;
+
+   memcpy(cp, codepage, clen + 1);
+   strupr(cp);
+
+   for (int i = 0; s_codePages[i].value != 0; i++)
+   {
+      if (s_codePages[i].length != clen)
+         continue;
+      if (!memcmp(s_codePages[i].name, cp, clen))
+         return s_codePages[i].value;
+   }
+
+   return CP_ACP;
 }
 
 #endif
