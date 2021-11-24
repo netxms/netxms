@@ -113,3 +113,72 @@ bool LIBNETXMS_EXPORTABLE DeflateFile(const TCHAR *inputFile, const TCHAR *outpu
    fclose(out);
    return rc == Z_OK;
 }
+
+/**
+ * Inflate given file stream
+ */
+int LIBNETXMS_EXPORTABLE InflateFile(FILE *source, ByteStream *output, bool gzipFormat)
+{
+   /* allocate inflate state */
+   z_stream strm;
+   strm.zalloc = Z_NULL;
+   strm.zfree = Z_NULL;
+   strm.opaque = Z_NULL;
+
+   int ret = inflateInit2(&strm, gzipFormat ? (15 + 16) : 15);
+   if (ret != Z_OK)
+      return ret;
+
+   /* compress until end of file */
+   BYTE in[16384];
+   BYTE out[16384];
+   int flush;
+   do
+   {
+      strm.avail_in = static_cast<uInt>(fread(in, 1, 16384, source));
+      if (ferror(source))
+      {
+         inflateEnd(&strm);
+         return Z_ERRNO;
+      }
+      flush = feof(source) ? Z_FINISH : Z_NO_FLUSH;
+      strm.next_in = in;
+
+      do
+      {
+         strm.avail_out = 16384;
+         strm.next_out = out;
+         ret = inflate(&strm, flush);
+         if (ret == Z_STREAM_ERROR)
+         {
+            inflateEnd(&strm);
+            return ret;
+         }
+         int bytesOut = 16384 - strm.avail_out;
+         output->write(out, bytesOut);
+      } while(strm.avail_out == 0);
+
+   } while (flush != Z_FINISH);
+
+   inflateEnd(&strm);
+   return Z_OK;
+}
+
+/**
+ * Inflate given file
+ */
+bool LIBNETXMS_EXPORTABLE InflateFile(const TCHAR *inputFile, ByteStream *output)
+{
+#ifdef _WIN32
+   FILE *in = _tfopen(inputFile, _T("rb"));
+#else
+   FILE *in = _tfopen(inputFile, _T("r"));
+#endif
+   if (in == nullptr)
+      return false;
+
+   int rc = InflateFile(in, output, true);
+
+   fclose(in);
+   return rc == Z_OK;
+}
