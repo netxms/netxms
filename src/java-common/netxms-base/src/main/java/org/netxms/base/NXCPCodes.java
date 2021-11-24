@@ -1223,6 +1223,24 @@ public class NXCPCodes
    public static final long VID_HASH_CRC32 = 759;
    public static final long VID_HASH_MD5 = 760;
    public static final long VID_HASH_SHA256 = 761;
+   public static final long VID_HTTP_REQUEST_TYPE = 762;
+   public static final long VID_WEB_SWC_RESPONSE_CODE = 763;
+   public static final long VID_WEB_SWC_RESPONSE = 764;
+   public static final long VID_WEB_SWC_ERROR_TEXT = 765;
+   public static final long VID_REQUEST_DATA = 766;
+   public static final long VID_ENABLE_FILE_UPLOAD_RESUMING = 767;
+   public static final long VID_CHECK_COUNT = 768;
+   public static final long VID_CHECK_ID  = 769;
+   public static final long VID_BUSINESS_SERVICE_CHECK_RELATED_OBJECT = 770;
+   public static final long VID_RELATED_DCI = 771;
+   public static final long VID_THRESHOLD = 772;
+   public static final long VID_OBJECT_STATUS_THRESHOLD = 773;
+   public static final long VID_DCI_STATUS_THRESHOLD = 774;
+   public static final long VID_BUSINESS_SERVICE_UPTIME = 775;
+   public static final long VID_TICKET_COUNT = 776;
+   public static final long VID_COMMENTS_SOURCE = 777;
+   public static final long VID_WEB_SERVICE_PROXY = 778;
+   public static final long VID_MATCH = 779;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;

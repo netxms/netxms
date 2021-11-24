@@ -1458,6 +1458,18 @@ typedef struct
 #define VID_WEB_SWC_ERROR_TEXT      ((uint32_t)765)
 #define VID_REQUEST_DATA            ((uint32_t)766)
 #define VID_ENABLE_FILE_UPLOAD_RESUMING ((uint32_t)767)
+#define VID_CHECK_COUNT             ((uint32_t)768)
+#define VID_CHECK_ID                ((uint32_t)769)
+#define VID_PROTOTYPE_ID            ((uint32_t)770)
+#define VID_RELATED_DCI             ((uint32_t)771)
+#define VID_THRESHOLD               ((uint32_t)772)
+#define VID_OBJECT_STATUS_THRESHOLD ((uint32_t)773)
+#define VID_DCI_STATUS_THRESHOLD    ((uint32_t)774)
+#define VID_BUSINESS_SERVICE_UPTIME ((uint32_t)775)
+#define VID_TICKET_COUNT            ((uint32_t)776)
+#define VID_COMMENTS_SOURCE         ((uint32_t)777)
+#define VID_WEB_SERVICE_PROXY       ((uint32_t)778)
+#define VID_MATCH                   ((uint32_t)779)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)
