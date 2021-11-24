@@ -1264,3 +1264,63 @@ IntegerArray<UINT32> *DCTable::getThresholdIdList()
    unlock();
    return list;
 }
+
+/**
+ * Loads DCTable last value
+ */
+void DCTable::updateCache()
+{
+   if (m_lastValue == nullptr)
+   {
+      TCHAR query[512];
+      switch(g_dbSyntax)
+      {
+         case DB_SYNTAX_MSSQL:
+            _sntprintf(query, 512, _T("SELECT TOP 1 tdata_value FROM tdata_%u WHERE item_id=%u ORDER BY tdata_timestamp DESC"),
+                     m_ownerId, m_id);
+            break;
+         case DB_SYNTAX_ORACLE:
+            _sntprintf(query, 512, _T("SELECT * FROM (SELECT tdata_value FROM tdata_%u WHERE item_id=%u ORDER BY tdata_timestamp DESC) WHERE ROWNUM<=1"),
+                     m_ownerId, m_id);
+            break;
+         case DB_SYNTAX_MYSQL:
+         case DB_SYNTAX_PGSQL:
+         case DB_SYNTAX_SQLITE:
+         case DB_SYNTAX_TSDB:
+            _sntprintf(query, 512, _T("SELECT tdata_value FROM tdata_%u WHERE item_id=%u ORDER BY tdata_timestamp DESC LIMIT 1"),
+                     m_ownerId, m_id);
+            break;
+         case DB_SYNTAX_DB2:
+            _sntprintf(query, 512, _T("SELECT tdata_value FROM tdata_%u WHERE item_id=%u ORDER BY tdata_timestamp DESC FETCH FIRST 1 ROWS ONLY"),
+                     m_ownerId, m_id);
+            break;
+         default:
+            DbgPrintf(1, _T("INTERNAL ERROR: unsupported database in DCTable::updateCache"));
+            query[0] = 0;   // Unsupported database
+      }
+
+      char *encodedTable = nullptr;
+      if (query[0] != 0)
+      {
+         DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+         DB_RESULT hResult = DBSelect(hdb, query);
+         if (hResult != nullptr)
+         {
+            if (DBGetNumRows(hResult) > 0)
+            {
+               encodedTable = DBGetFieldUTF8(hResult, 0, 0, nullptr, 0);
+            }
+            DBFreeResult(hResult);
+         }
+         DBConnectionPoolReleaseConnection(hdb);
+      }
+
+      lock();
+      if (encodedTable != nullptr && m_lastValue == nullptr) //m_lastValue can be changed while query is executed
+      {
+         m_lastValue = shared_ptr<Table>(Table::createFromPackedXML(encodedTable));
+      }
+      unlock();
+      MemFree(encodedTable);
+   }
+}

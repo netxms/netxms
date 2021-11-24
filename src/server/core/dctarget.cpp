@@ -262,15 +262,12 @@ bool DataCollectionTarget::saveToDatabase(DB_HANDLE hdb)
  */
 void DataCollectionTarget::updateDciCache()
 {
-	readLockDciAccess();
+   readLockDciAccess();
    for(int i = 0; i < m_dcObjects->size(); i++)
-	{
-		if (m_dcObjects->get(i)->getType() == DCO_TYPE_ITEM)
-		{
-			static_cast<DCItem*>(m_dcObjects->get(i))->updateCacheSize();
-		}
-	}
-	unlockDciAccess();
+   {
+      m_dcObjects->get(i)->updateCache();
+   }
+   unlockDciAccess();
 }
 
 /**
