@@ -84,7 +84,7 @@ NXMBDispatcher::~NXMBDispatcher()
  */
 void NXMBDispatcher::workerThread()
 {
-   nxlog_debug(3, _T("NXMB: dispatcher thread started"));
+   nxlog_debug_tag(NXMB_DEBUG_TAG, 3, _T("NXMB dispatcher thread started"));
    m_startCondition.set();
 	while(true)
 	{
@@ -105,7 +105,7 @@ void NXMBDispatcher::workerThread()
 		m_subscriberListAccess.unlock();
 		delete msg;
 	}
-   nxlog_debug(3, _T("NXMB: dispatcher thread stopped"));
+   nxlog_debug_tag(NXMB_DEBUG_TAG, 3, _T("NXMB dispatcher thread stopped"));
 }
 
 /**
@@ -216,11 +216,11 @@ bool NXMBDispatcher::call(const TCHAR *callName, const void *input, void *output
    m_callHandlerAccess.unlock();
    if (handler == nullptr)
    {
-      nxlog_debug(7, _T("NXMB: call handler %s not registered"), callName);
+      nxlog_debug_tag(NXMB_DEBUG_TAG, 7, _T("NXMB call handler %s not registered"), callName);
       return false;
    }
    bool success = handler(callName, input, output);
-   nxlog_debug(7, _T("NXMB: call to %s %s"), callName, success ? _T("successful") : _T("failed"));
+   nxlog_debug_tag(NXMB_DEBUG_TAG, 7, _T("NXMB call to %s %s"), callName, success ? _T("successful") : _T("failed"));
    return success;
 }
 

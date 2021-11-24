@@ -26,5 +26,6 @@
 
 #include <nxmbapi.h>
 
+#define NXMB_DEBUG_TAG  _T("nxmb")
 
 #endif
