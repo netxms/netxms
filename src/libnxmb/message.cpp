@@ -28,8 +28,8 @@
  */
 NXMBMessage::NXMBMessage()
 {
-	m_type = _tcsdup(_T("NONE"));
-	m_senderId = _tcsdup(_T("UNKNOWN"));
+	m_type = MemCopyString(_T("NONE"));
+	m_senderId = MemCopyString(_T("UNKNOWN"));
 }
 
 /**
@@ -37,8 +37,8 @@ NXMBMessage::NXMBMessage()
  */
 NXMBMessage::NXMBMessage(const TCHAR *type, const TCHAR *senderId)
 {
-	m_type = _tcsdup(CHECK_NULL(type));
-	m_senderId = _tcsdup(CHECK_NULL(senderId));
+	m_type = MemCopyString(CHECK_NULL(type));
+	m_senderId = MemCopyString(CHECK_NULL(senderId));
 }
 
 /**
