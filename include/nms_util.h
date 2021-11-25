@@ -4682,7 +4682,7 @@ bool LIBNETXMS_EXPORTABLE DeflateFile(const TCHAR *inputFile, const TCHAR *outpu
 int LIBNETXMS_EXPORTABLE DeflateFileStream(FILE *source, FILE *dest, bool gzipFormat);
 
 bool LIBNETXMS_EXPORTABLE InflateFile(const TCHAR *inputFile, ByteStream *output);
-int LIBNETXMS_EXPORTABLE InflateFile(FILE *source, ByteStream *output, bool gzipFormat);
+int LIBNETXMS_EXPORTABLE InflateFileStream(FILE *source, ByteStream *output, bool gzipFormat);
 
 TCHAR LIBNETXMS_EXPORTABLE *FormatTimestamp(time_t t, TCHAR *buffer);
 String LIBNETXMS_EXPORTABLE FormatTimestamp(time_t t);

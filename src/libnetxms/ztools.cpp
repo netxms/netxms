@@ -117,7 +117,7 @@ bool LIBNETXMS_EXPORTABLE DeflateFile(const TCHAR *inputFile, const TCHAR *outpu
 /**
  * Inflate given file stream
  */
-int LIBNETXMS_EXPORTABLE InflateFile(FILE *source, ByteStream *output, bool gzipFormat)
+int LIBNETXMS_EXPORTABLE InflateFileStream(FILE *source, ByteStream *output, bool gzipFormat)
 {
    /* allocate inflate state */
    z_stream strm;
@@ -177,7 +177,7 @@ bool LIBNETXMS_EXPORTABLE InflateFile(const TCHAR *inputFile, ByteStream *output
    if (in == nullptr)
       return false;
 
-   int rc = InflateFile(in, output, true);
+   int rc = InflateFileStream(in, output, true);
 
    fclose(in);
    return rc == Z_OK;
