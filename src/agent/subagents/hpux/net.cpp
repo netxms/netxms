@@ -158,7 +158,7 @@ static int GetInterfaceList(NETIF **iflist)
 #if HAVE_DECL_SIOCGIFNAME
 				IfIndexToName(iface.ifIndex, curr->ifName);
 #else
-				nx_strncpy(curr->ifName, iface.ifDescr, MAX_NAME_LENGTH);
+				strlcpy(curr->ifName, iface.ifDescr, MAX_NAME_LENGTH);
 #endif
 			}
 			close_mib(mib);

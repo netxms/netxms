@@ -91,7 +91,7 @@ InterfaceList *ExtremeDriver::getInterfaces(SNMP_Transport *snmp, NObject *node,
          continue;
 
       TCHAR ifName[64];
-      nx_strncpy(ifName, iface->name, 64);
+      _tcslcpy(ifName, iface->name, 64);
       TCHAR *p = _tcschr(ifName, _T(':'));
       if (p == nullptr)
          continue;

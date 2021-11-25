@@ -172,8 +172,8 @@ static void AddContributionItems()
       for(int i = 0, j = 0; j < (int)s_subagentInfo.numActions; j++)
       {
          s_subagentInfo.actions[j].arg = _tcsdup(actions->get(i++));
-         nx_strncpy(s_subagentInfo.actions[j].name, actions->get(i++), MAX_PARAM_NAME);
-         nx_strncpy(s_subagentInfo.actions[j].description, actions->get(i++), MAX_DB_STRING);
+         _tcslcpy(s_subagentInfo.actions[j].name, actions->get(i++), MAX_PARAM_NAME);
+         _tcslcpy(s_subagentInfo.actions[j].description, actions->get(i++), MAX_DB_STRING);
          s_subagentInfo.actions[j].handler = ActionHandler;
       }
    }
@@ -188,8 +188,8 @@ static void AddContributionItems()
       for(int i = 0, j = 0; j < (int)s_subagentInfo.numParameters; j++)
       {
          s_subagentInfo.parameters[j].arg = _tcsdup(parameters->get(i++));
-         nx_strncpy(s_subagentInfo.parameters[j].name, parameters->get(i++), MAX_PARAM_NAME);
-         nx_strncpy(s_subagentInfo.parameters[j].description, parameters->get(i++), MAX_DB_STRING);
+         _tcslcpy(s_subagentInfo.parameters[j].name, parameters->get(i++), MAX_PARAM_NAME);
+         _tcslcpy(s_subagentInfo.parameters[j].description, parameters->get(i++), MAX_DB_STRING);
          s_subagentInfo.parameters[j].dataType = (int)_tcstol(parameters->get(i++), NULL, 10);
          s_subagentInfo.parameters[j].handler = ParameterHandler;
       }
@@ -205,8 +205,8 @@ static void AddContributionItems()
       for(int i = 0, j = 0; j < (int)s_subagentInfo.numLists; j++)
       {
          s_subagentInfo.lists[j].arg = _tcsdup(lists->get(i++));
-         nx_strncpy(s_subagentInfo.lists[j].name, lists->get(i++), MAX_PARAM_NAME);
-         nx_strncpy(s_subagentInfo.lists[j].description, lists->get(i++), MAX_DB_STRING);
+         _tcslcpy(s_subagentInfo.lists[j].name, lists->get(i++), MAX_PARAM_NAME);
+         _tcslcpy(s_subagentInfo.lists[j].description, lists->get(i++), MAX_DB_STRING);
          s_subagentInfo.lists[j].handler = ListHandler;
       }
    }
@@ -221,8 +221,8 @@ static void AddContributionItems()
       for(int i = 0, j = 0; j < (int)s_subagentInfo.numPushParameters; j++)
       {
          i++;  // skip ID
-         nx_strncpy(s_subagentInfo.pushParameters[j].name, pushParameters->get(i++), MAX_PARAM_NAME);
-         nx_strncpy(s_subagentInfo.pushParameters[j].description, pushParameters->get(i++), MAX_DB_STRING);
+         _tcslcpy(s_subagentInfo.pushParameters[j].name, pushParameters->get(i++), MAX_PARAM_NAME);
+         _tcslcpy(s_subagentInfo.pushParameters[j].description, pushParameters->get(i++), MAX_DB_STRING);
          s_subagentInfo.pushParameters[j].dataType = (int)_tcstol(pushParameters->get(i++), NULL, 10);
       }
    }
@@ -237,8 +237,8 @@ static void AddContributionItems()
       for(int i = 1, j = 0; j < (int)s_subagentInfo.numTables; j++)
       {
          s_subagentInfo.tables[j].arg = _tcsdup(tables->get(i++));
-         nx_strncpy(s_subagentInfo.tables[j].name, tables->get(i++), MAX_PARAM_NAME);
-         nx_strncpy(s_subagentInfo.tables[j].description, tables->get(i++), MAX_DB_STRING);
+         _tcslcpy(s_subagentInfo.tables[j].name, tables->get(i++), MAX_PARAM_NAME);
+         _tcslcpy(s_subagentInfo.tables[j].description, tables->get(i++), MAX_DB_STRING);
          s_subagentInfo.tables[j].handler = TableHandler;
          s_subagentInfo.tables[j].numColumns = (int)_tcstol(tables->get(i++), NULL, 10);
          if (s_subagentInfo.tables[j].numColumns > 0)
@@ -246,8 +246,8 @@ static void AddContributionItems()
             s_subagentInfo.tables[j].columns = (NETXMS_SUBAGENT_TABLE_COLUMN *)calloc(s_subagentInfo.tables[j].numColumns, sizeof(NETXMS_SUBAGENT_TABLE_COLUMN));
             for(int col = 0; col < s_subagentInfo.tables[j].numColumns; col++)
             {
-               nx_strncpy(s_subagentInfo.tables[j].columns[col].name, tables->get(i++), MAX_COLUMN_NAME);
-               nx_strncpy(s_subagentInfo.tables[j].columns[col].displayName, tables->get(i++), MAX_COLUMN_NAME);
+               _tcslcpy(s_subagentInfo.tables[j].columns[col].name, tables->get(i++), MAX_COLUMN_NAME);
+               _tcslcpy(s_subagentInfo.tables[j].columns[col].displayName, tables->get(i++), MAX_COLUMN_NAME);
                s_subagentInfo.tables[j].columns[col].dataType = (int)_tcstol(tables->get(i++), NULL, 10);
                s_subagentInfo.tables[j].columns[col].isInstance = !_tcscmp(tables->get(i++), _T("T"));
                if (s_subagentInfo.tables[j].columns[col].isInstance)

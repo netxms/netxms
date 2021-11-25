@@ -80,44 +80,44 @@ static UINT32 HandlerIfList(SNMP_Variable *varbind, SNMP_Transport *transport, v
    InterfaceList *ifList = (InterfaceList *)arg;
 
    size_t nameLen = varbind->getName().length();
-   UINT32 oidName[MAX_OID_LEN];
-   memcpy(oidName, varbind->getName().value(), nameLen * sizeof(UINT32));
+   uint32_t oidName[MAX_OID_LEN];
+   memcpy(oidName, varbind->getName().value(), nameLen * sizeof(uint32_t));
 
-	InterfaceInfo *iface = new InterfaceInfo(varbind->getValueAsUInt());
+   InterfaceInfo *iface = new InterfaceInfo(varbind->getValueAsUInt());
 
-	oidName[10] = 2;	// nsIfName
-	UINT32 rc = SnmpGetEx(transport, NULL, oidName, nameLen, iface->name, MAX_DB_STRING * sizeof(TCHAR), SG_STRING_RESULT, NULL);
-	if (rc != SNMP_ERR_SUCCESS)
+   oidName[10] = 2;	// nsIfName
+   uint32_t rc = SnmpGetEx(transport, NULL, oidName, nameLen, iface->name, MAX_DB_STRING * sizeof(TCHAR), SG_STRING_RESULT, NULL);
+   if (rc != SNMP_ERR_SUCCESS)
    {
       delete iface;
-		return rc;
+      return rc;
    }
-	nx_strncpy(iface->description, iface->name, MAX_DB_STRING);
+   _tcslcpy(iface->description, iface->name, MAX_DB_STRING);
 
-	oidName[10] = 11;	// nsIfMAC
-	rc = SnmpGetEx(transport, NULL, oidName, nameLen, iface->macAddr, 6, SG_RAW_RESULT, NULL);
-	if (rc != SNMP_ERR_SUCCESS)
+   oidName[10] = 11;	// nsIfMAC
+   rc = SnmpGetEx(transport, NULL, oidName, nameLen, iface->macAddr, 6, SG_RAW_RESULT, NULL);
+   if (rc != SNMP_ERR_SUCCESS)
    {
       delete iface;
-		return rc;
-   }
-
-	oidName[10] = 6;	// nsIfIp
-   UINT32 ipAddr;
-	rc = SnmpGetEx(transport, NULL, oidName, nameLen, &ipAddr, sizeof(UINT32), 0, NULL);
-	if (rc != SNMP_ERR_SUCCESS)
-   {
-      delete iface;
-		return rc;
+      return rc;
    }
 
-	oidName[10] = 7;	// nsIfNetmask
-   UINT32 ipNetMask;
-	rc = SnmpGetEx(transport, NULL, oidName, nameLen, &ipNetMask, sizeof(UINT32), 0, NULL);
-	if (rc != SNMP_ERR_SUCCESS)
+   oidName[10] = 6;	// nsIfIp
+   uint32_t ipAddr;
+   rc = SnmpGetEx(transport, NULL, oidName, nameLen, &ipAddr, sizeof(UINT32), 0, NULL);
+   if (rc != SNMP_ERR_SUCCESS)
    {
       delete iface;
-		return rc;
+      return rc;
+   }
+
+   oidName[10] = 7;	// nsIfNetmask
+   uint32_t ipNetMask;
+   rc = SnmpGetEx(transport, NULL, oidName, nameLen, &ipNetMask, sizeof(UINT32), 0, NULL);
+   if (rc != SNMP_ERR_SUCCESS)
+   {
+      delete iface;
+      return rc;
    }
 
    iface->ipAddrList.add(InetAddress(ipAddr, ipNetMask));

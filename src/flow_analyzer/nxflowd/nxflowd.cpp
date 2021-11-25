@@ -291,7 +291,7 @@ int main(int argc, char *argv[])
 				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, g_configFile, MAX_PATH);
 				g_configFile[MAX_PATH - 1] = 0;
 #else
-				nx_strncpy(g_configFile, optarg, MAX_PATH);
+				strlcpy(g_configFile, optarg, MAX_PATH);
 #endif
 				break;
 #ifdef _WIN32
@@ -309,7 +309,7 @@ int main(int argc, char *argv[])
 				break;
 #else
 			case 'p':
-				nx_strncpy(s_pidFile, optarg, MAX_PATH);
+				strlcpy(s_pidFile, optarg, MAX_PATH);
 				break;
 #endif
 			case '?':

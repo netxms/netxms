@@ -135,7 +135,7 @@ BOOL LockComponent(UINT32 dwId, int sessionId, const TCHAR *pszOwnerInfo, UINT32
    if (m_locks[dwId].dwLockStatus == UNLOCKED)
    {
       m_locks[dwId].dwLockStatus = (UINT32)sessionId;
-      nx_strncpy(m_locks[dwId].szOwnerInfo, pszOwnerInfo, MAX_OWNER_INFO);
+      _tcslcpy(m_locks[dwId].szOwnerInfo, pszOwnerInfo, MAX_OWNER_INFO);
       bSuccess = TRUE;
       DbgPrintf(5, _T("*Locks* Component \"%s\" successfully locked by %d (%s)"),
                 m_locks[dwId].pszName, sessionId, pszOwnerInfo != NULL ? pszOwnerInfo : _T("NULL"));

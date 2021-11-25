@@ -49,7 +49,7 @@ LONG H_DatabaseParameter(const TCHAR *parameter, const TCHAR *argument, TCHAR *v
 	if (!AgentGetParameterArg(parameter, 1, dbId, MAX_STR))
 		return ret;
 	if (!AgentGetParameterArg(parameter, 2, entity, MAX_STR) || entity[0] == _T('\0'))
-		nx_strncpy(entity, DB_NULLARG_MAGIC, MAX_STR);
+		_tcslcpy(entity, DB_NULLARG_MAGIC, MAX_STR);
 
 	AgentWriteDebugLog(5, _T("%s: ***** got request for params: dbid='%s', param='%s'"), MYNAMESTR, dbId, parameter);
 
