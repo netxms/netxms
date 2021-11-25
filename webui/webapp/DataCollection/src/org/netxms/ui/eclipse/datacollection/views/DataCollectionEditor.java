@@ -69,6 +69,7 @@ import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DataCollectionTable;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.DataCollectionTarget;
 import org.netxms.client.objects.Template;
 import org.netxms.ui.eclipse.actions.ExportToCsvAction;
@@ -1045,7 +1046,7 @@ public class DataCollectionEditor extends ViewPart
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 				monitor.beginTask(Messages.get(getDisplay()).DataCollectionEditor_ConvertJob_TaskName, 4);
-				
+
 				boolean needApply = true;
 				for(long id : template.getChildIdList())
 				{
@@ -1054,15 +1055,23 @@ public class DataCollectionEditor extends ViewPart
 						needApply = false;
 						break;
 					}
+
+               // Check if this template applied on parent cluster
+               Cluster cluster = session.findObjectById(id, Cluster.class);
+               if ((cluster != null) && cluster.isDirectParentOf(dciConfig.getOwnerId()))
+               {
+                  needApply = false;
+                  break;
+               }
 				}
 				monitor.worked(1);
-				
+
 				dciConfig.copyObjects(template.getObjectId(), dciList);
 				for(long id : dciList)
 					dciConfig.deleteObject(id);
 				dciConfig.close();
 				monitor.worked(1);
-						
+
 				if (needApply)
 				{
 					boolean success = false;
@@ -1084,7 +1093,7 @@ public class DataCollectionEditor extends ViewPart
 					} while(!success && (retries > 0));
 				}
 				monitor.worked(1);
-				
+
 				boolean success = false;
 				int retries = 5;
 				do
