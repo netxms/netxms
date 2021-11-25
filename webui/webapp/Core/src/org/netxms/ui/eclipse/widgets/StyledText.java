@@ -355,4 +355,9 @@ public class StyledText extends Composite
          styleLine(line.toString(), lineStartPos);
       }
    }
+
+   public String getText()
+   {
+      return content.toString();
+   }
 }
