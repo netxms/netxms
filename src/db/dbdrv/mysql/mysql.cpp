@@ -1157,18 +1157,18 @@ static void *GetFieldUnbufferedInternal(MYSQL_UNBUFFERED_RESULT *hResult, int iC
    }
    else
    {
-      int iLen = std::min((int)hResult->lengthFields[iColumn], iBufSize - 1);
-      if (iLen > 0)
+      if (hResult->lengthFields[iColumn] > 0)
       {
          if (utf8)
          {
-            memcpy(pBuffer, hResult->pCurrRow[iColumn], iLen);
-            ((char *)pBuffer)[iLen] = 0;
+            int l = std::min((int)hResult->lengthFields[iColumn], iBufSize - 1);
+            memcpy(pBuffer, hResult->pCurrRow[iColumn], l);
+            ((char *)pBuffer)[l] = 0;
          }
          else
          {
-            int cch = MultiByteToWideChar(CP_UTF8, 0, hResult->pCurrRow[iColumn], iLen, (WCHAR *)pBuffer, iBufSize);
-            ((WCHAR *)pBuffer)[cch] = 0;
+            size_t l = utf8_to_wchar(hResult->pCurrRow[iColumn], hResult->lengthFields[iColumn], (WCHAR *)pBuffer, iBufSize);
+            ((WCHAR *)pBuffer)[l] = 0;
          }
       }
       else

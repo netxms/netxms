@@ -35,34 +35,32 @@ static bool m_useUnicode = true;
  */
 static DWORD GetSQLErrorInfo(SQLSMALLINT nHandleType, SQLHANDLE hHandle, NETXMS_WCHAR *errorText)
 {
-   SQLRETURN nRet;
-   SQLSMALLINT nChars;
-   DWORD dwError;
-   char szState[16];
-
 	// Get state information and convert it to NetXMS database error code
-   nRet = SQLGetDiagFieldA(nHandleType, hHandle, 1, SQL_DIAG_SQLSTATE, szState, 16, &nChars);
+   DWORD errorCode;
+   SQLSMALLINT nChars;
+   char sqlState[16];
+   SQLRETURN nRet = SQLGetDiagFieldA(nHandleType, hHandle, 1, SQL_DIAG_SQLSTATE, sqlState, 16, &nChars);
    if (nRet == SQL_SUCCESS)
    {
-      if ((!strcmp(szState, "08003")) ||     // Connection does not exist
-          (!strcmp(szState, "08S01")) ||     // Communication link failure
-          (!strcmp(szState, "HYT00")) ||     // Timeout expired
-          (!strcmp(szState, "HYT01")))       // Connection timeout expired
+      if ((!strcmp(sqlState, "08003")) ||     // Connection does not exist
+          (!strcmp(sqlState, "08S01")) ||     // Communication link failure
+          (!strcmp(sqlState, "HYT00")) ||     // Timeout expired
+          (!strcmp(sqlState, "HYT01")))       // Connection timeout expired
       {
-         dwError = DBERR_CONNECTION_LOST;
+         errorCode = DBERR_CONNECTION_LOST;
       }
       else
       {
-         dwError = DBERR_OTHER_ERROR;
+         errorCode = DBERR_OTHER_ERROR;
       }
    }
    else
    {
-      dwError = DBERR_OTHER_ERROR;
+      errorCode = DBERR_OTHER_ERROR;
    }
 
 	// Get error message
-	if (errorText != NULL)
+	if (errorText != nullptr)
 	{
 #if UNICODE_UCS2
 		nRet = SQLGetDiagFieldW(nHandleType, hHandle, 1, SQL_DIAG_MESSAGE_TEXT, errorText, DBDRV_MAX_ERROR_TEXT, &nChars);
@@ -74,7 +72,7 @@ static DWORD GetSQLErrorInfo(SQLSMALLINT nHandleType, SQLHANDLE hHandle, NETXMS_
 		{
 #if UNICODE_UCS4
 			buffer[DBDRV_MAX_ERROR_TEXT - 1] = 0;
-			MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, buffer, -1, errorText, DBDRV_MAX_ERROR_TEXT);
+			mb_to_wchar(buffer, -1, errorText, DBDRV_MAX_ERROR_TEXT);
 #endif
 			RemoveTrailingCRLFW(errorText);
 		}
@@ -83,8 +81,8 @@ static DWORD GetSQLErrorInfo(SQLSMALLINT nHandleType, SQLHANDLE hHandle, NETXMS_
 			wcscpy(errorText, L"Unable to obtain description for this error");
 		}
    }
-   
-   return dwError;
+
+   return errorCode;
 }
 
 /**
@@ -92,7 +90,7 @@ static DWORD GetSQLErrorInfo(SQLSMALLINT nHandleType, SQLHANDLE hHandle, NETXMS_
  */
 static void ClearPendingResults(SQLHSTMT stmt)
 {
-	while(1)
+	while(true)
 	{
 		SQLRETURN rc = SQLMoreResults(stmt);
 		if ((rc != SQL_SUCCESS) && (rc != SQL_SUCCESS_WITH_INFO))
@@ -195,7 +193,7 @@ extern "C" DBDRV_CONNECTION __EXPORT DrvConnect(const char *pszHost, const char 
    long iResult;
 
    // Allocate our connection structure
-   ODBCDRV_CONN *pConn = MemAllocStruct<ODBCDRV_CONN>();
+   auto pConn = MemAllocStruct<ODBCDRV_CONN>();
 
    // Allocate environment
    iResult = SQLAllocHandle(SQL_HANDLE_ENV, SQL_NULL_HANDLE, &pConn->sqlEnv);
@@ -260,8 +258,8 @@ connect_failure_1:
    SQLFreeHandle(SQL_HANDLE_ENV, pConn->sqlEnv);
 
 connect_failure_0:
-   free(pConn);
-   return NULL;
+   MemFree(pConn);
+   return nullptr;
 }
 
 /**
@@ -770,15 +768,13 @@ static NETXMS_WCHAR *GetFieldData(SQLHSTMT sqlStatement, short column)
 static ODBCDRV_QUERY_RESULT *ProcessSelectResults(SQLHSTMT stmt)
 {
    // Allocate result buffer and determine column info
-   ODBCDRV_QUERY_RESULT *pResult = (ODBCDRV_QUERY_RESULT *)malloc(sizeof(ODBCDRV_QUERY_RESULT));
+   auto pResult = MemAllocStruct<ODBCDRV_QUERY_RESULT>();
    short wNumCols;
    SQLNumResultCols(stmt, &wNumCols);
    pResult->numColumns = wNumCols;
-   pResult->numRows = 0;
-   pResult->pValues = NULL;
 
 	// Get column names
-	pResult->columnNames = (char **)malloc(sizeof(char *) * pResult->numColumns);
+	pResult->columnNames = MemAllocArray<char*>(pResult->numColumns);
 	for(int i = 0; i < (int)pResult->numColumns; i++)
 	{
 		char name[256];
@@ -800,8 +796,7 @@ static ODBCDRV_QUERY_RESULT *ProcessSelectResults(SQLHSTMT stmt)
    // Fetch all data
    long iCurrValue = 0;
 	SQLRETURN iResult;
-   while(iResult = SQLFetch(stmt), 
-         (iResult == SQL_SUCCESS) || (iResult == SQL_SUCCESS_WITH_INFO))
+   while(iResult = SQLFetch(stmt), (iResult == SQL_SUCCESS) || (iResult == SQL_SUCCESS_WITH_INFO))
    {
       pResult->numRows++;
       pResult->pValues = (NETXMS_WCHAR **)realloc(pResult->pValues, 
@@ -1029,11 +1024,8 @@ extern "C" DBDRV_UNBUFFERED_RESULT __EXPORT DrvSelectUnbuffered(ODBCDRV_CONN *pC
 			{
 				char name[256];
 				SQLSMALLINT len;
-
-				iResult = SQLColAttributeA(sqlStatement, (SQLSMALLINT)(i + 1),
-				                           SQL_DESC_NAME, name, 256, &len, NULL); 
-				if ((iResult == SQL_SUCCESS) || 
-					 (iResult == SQL_SUCCESS_WITH_INFO))
+				iResult = SQLColAttributeA(sqlStatement, (SQLSMALLINT)(i + 1), SQL_DESC_NAME, name, 256, &len, nullptr);
+				if ((iResult == SQL_SUCCESS) || (iResult == SQL_SUCCESS_WITH_INFO))
 				{
 					name[len] = 0;
 					pResult->columnNames[i] = MemCopyStringA(name);
@@ -1072,14 +1064,14 @@ extern "C" DBDRV_UNBUFFERED_RESULT __EXPORT DrvSelectUnbuffered(ODBCDRV_CONN *pC
  */
 extern "C" DBDRV_UNBUFFERED_RESULT __EXPORT DrvSelectPreparedUnbuffered(ODBCDRV_CONN *pConn, ODBCDRV_STATEMENT *stmt, DWORD *pdwError, NETXMS_WCHAR *errorText)
 {
-   ODBCDRV_UNBUFFERED_QUERY_RESULT *pResult = NULL;
+   ODBCDRV_UNBUFFERED_QUERY_RESULT *pResult = nullptr;
 
    pConn->mutexQuery->lock();
 	SQLRETURN rc = SQLExecute(stmt->handle);
    if ((rc == SQL_SUCCESS) || (rc == SQL_SUCCESS_WITH_INFO))
    {
       // Allocate result buffer and determine column info
-      pResult = (ODBCDRV_UNBUFFERED_QUERY_RESULT *)malloc(sizeof(ODBCDRV_UNBUFFERED_QUERY_RESULT));
+      pResult = MemAllocStruct<ODBCDRV_UNBUFFERED_QUERY_RESULT>();
       pResult->sqlStatement = stmt->handle;
       pResult->isPrepared = true;
       
@@ -1116,7 +1108,7 @@ extern "C" DBDRV_UNBUFFERED_RESULT __EXPORT DrvSelectPreparedUnbuffered(ODBCDRV_
 		*pdwError = GetSQLErrorInfo(SQL_HANDLE_STMT, stmt->handle, errorText);
    }
 
-   if (pResult == NULL) // Unlock mutex if query has failed
+   if (pResult == nullptr) // Unlock mutex if query has failed
       pConn->mutexQuery->unlock();
 	return pResult;
 }
@@ -1128,7 +1120,7 @@ extern "C" bool __EXPORT DrvFetch(ODBCDRV_UNBUFFERED_QUERY_RESULT *pResult)
 {
    bool success = false;
 
-   if (pResult != NULL)
+   if (pResult != nullptr)
    {
       SQLRETURN rc = SQLFetch(pResult->sqlStatement);
       success = ((rc == SQL_SUCCESS) || (rc == SQL_SUCCESS_WITH_INFO));
@@ -1153,7 +1145,7 @@ extern "C" bool __EXPORT DrvFetch(ODBCDRV_UNBUFFERED_QUERY_RESULT *pResult)
  */
 extern "C" LONG __EXPORT DrvGetFieldLengthUnbuffered(ODBCDRV_UNBUFFERED_QUERY_RESULT *result, int col)
 {
-   if (result == NULL)
+   if (result == nullptr)
       return -1;
 
    if ((col >= result->numColumns) || (col < 0))
@@ -1168,12 +1160,12 @@ extern "C" LONG __EXPORT DrvGetFieldLengthUnbuffered(ODBCDRV_UNBUFFERED_QUERY_RE
 extern "C" NETXMS_WCHAR __EXPORT *DrvGetFieldUnbuffered(ODBCDRV_UNBUFFERED_QUERY_RESULT *result, int col, NETXMS_WCHAR *buffer, int bufferSize)
 {
    // Check if we have valid result handle
-   if (result == NULL)
-      return NULL;
+   if (result == nullptr)
+      return nullptr;
 
    // Check if there are valid fetched row
    if (result->noMoreRows)
-      return NULL;
+      return nullptr;
 
    if ((col >= 0) && (col < result->numColumns) && (result->values[col] != NULL))
    {
@@ -1192,7 +1184,7 @@ extern "C" NETXMS_WCHAR __EXPORT *DrvGetFieldUnbuffered(ODBCDRV_UNBUFFERED_QUERY
  */
 extern "C" int __EXPORT DrvGetColumnCountUnbuffered(ODBCDRV_UNBUFFERED_QUERY_RESULT *pResult)
 {
-	return (pResult != NULL) ? pResult->numColumns : 0;
+	return (pResult != nullptr) ? pResult->numColumns : 0;
 }
 
 /**
@@ -1200,7 +1192,7 @@ extern "C" int __EXPORT DrvGetColumnCountUnbuffered(ODBCDRV_UNBUFFERED_QUERY_RES
  */
 extern "C" const char __EXPORT *DrvGetColumnNameUnbuffered(ODBCDRV_UNBUFFERED_QUERY_RESULT *pResult, int column)
 {
-	return ((pResult != NULL) && (column >= 0) && (column < pResult->numColumns)) ? pResult->columnNames[column] : NULL;
+	return ((pResult != nullptr) && (column >= 0) && (column < pResult->numColumns)) ? pResult->columnNames[column] : nullptr;
 }
 
 /**
@@ -1208,7 +1200,7 @@ extern "C" const char __EXPORT *DrvGetColumnNameUnbuffered(ODBCDRV_UNBUFFERED_QU
  */
 extern "C" void __EXPORT DrvFreeUnbufferedResult(ODBCDRV_UNBUFFERED_QUERY_RESULT *pResult)
 {
-   if (pResult == NULL)
+   if (pResult == nullptr)
       return;
 
    if (pResult->isPrepared)
@@ -1231,24 +1223,22 @@ extern "C" void __EXPORT DrvFreeUnbufferedResult(ODBCDRV_UNBUFFERED_QUERY_RESULT
  */
 extern "C" DWORD __EXPORT DrvBegin(ODBCDRV_CONN *pConn)
 {
-   SQLRETURN nRet;
-   DWORD dwResult;
-
-	if (pConn == NULL)
+	if (pConn == nullptr)
       return DBERR_INVALID_HANDLE;
 
+   DWORD result;
 	pConn->mutexQuery->lock();
-   nRet = SQLSetConnectAttr(pConn->sqlConn, SQL_ATTR_AUTOCOMMIT, (SQLPOINTER)SQL_AUTOCOMMIT_OFF, 0);
+	SQLRETURN nRet = SQLSetConnectAttr(pConn->sqlConn, SQL_ATTR_AUTOCOMMIT, (SQLPOINTER)SQL_AUTOCOMMIT_OFF, 0);
    if ((nRet == SQL_SUCCESS) || (nRet == SQL_SUCCESS_WITH_INFO))
    {
-      dwResult = DBERR_SUCCESS;
+      result = DBERR_SUCCESS;
    }
    else
    {
-      dwResult = GetSQLErrorInfo(SQL_HANDLE_DBC, pConn->sqlConn, NULL);
+      result = GetSQLErrorInfo(SQL_HANDLE_DBC, pConn->sqlConn, NULL);
    }
 	pConn->mutexQuery->unlock();
-   return dwResult;
+   return result;
 }
 
 /**
@@ -1256,13 +1246,11 @@ extern "C" DWORD __EXPORT DrvBegin(ODBCDRV_CONN *pConn)
  */
 extern "C" DWORD __EXPORT DrvCommit(ODBCDRV_CONN *pConn)
 {
-   SQLRETURN nRet;
-
-	if (pConn == NULL)
+	if (pConn == nullptr)
       return DBERR_INVALID_HANDLE;
 
 	pConn->mutexQuery->lock();
-   nRet = SQLEndTran(SQL_HANDLE_DBC, pConn->sqlConn, SQL_COMMIT);
+	SQLRETURN nRet = SQLEndTran(SQL_HANDLE_DBC, pConn->sqlConn, SQL_COMMIT);
    SQLSetConnectAttr(pConn->sqlConn, SQL_ATTR_AUTOCOMMIT, (SQLPOINTER)SQL_AUTOCOMMIT_ON, 0);
 	pConn->mutexQuery->unlock();
    return ((nRet == SQL_SUCCESS) || (nRet == SQL_SUCCESS_WITH_INFO)) ? DBERR_SUCCESS : DBERR_OTHER_ERROR;
@@ -1273,13 +1261,11 @@ extern "C" DWORD __EXPORT DrvCommit(ODBCDRV_CONN *pConn)
  */
 extern "C" DWORD __EXPORT DrvRollback(ODBCDRV_CONN *pConn)
 {
-   SQLRETURN nRet;
-
-	if (pConn == NULL)
+	if (pConn == nullptr)
       return DBERR_INVALID_HANDLE;
 
 	pConn->mutexQuery->lock();
-   nRet = SQLEndTran(SQL_HANDLE_DBC, pConn->sqlConn, SQL_ROLLBACK);
+	SQLRETURN nRet = SQLEndTran(SQL_HANDLE_DBC, pConn->sqlConn, SQL_ROLLBACK);
    SQLSetConnectAttr(pConn->sqlConn, SQL_ATTR_AUTOCOMMIT, (SQLPOINTER)SQL_AUTOCOMMIT_ON, 0);
 	pConn->mutexQuery->unlock();
    return ((nRet == SQL_SUCCESS) || (nRet == SQL_SUCCESS_WITH_INFO)) ? DBERR_SUCCESS : DBERR_OTHER_ERROR;
