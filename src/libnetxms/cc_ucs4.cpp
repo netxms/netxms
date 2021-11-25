@@ -184,6 +184,8 @@ size_t LIBNETXMS_EXPORTABLE ucs4_to_mb(const UCS4CHAR *src, ssize_t srcLen, char
       return ucs4_to_ASCII(src, srcLen, dst, dstLen);
    if (g_defaultCodePageType == CodePageType::ISO8859_1)
       return ucs4_to_ISO8859_1(src, srcLen, dst, dstLen);
+   if (g_defaultCodePageType == CodePageType::UTF8)
+      return ucs4_to_utf8(src, srcLen, dst, dstLen);
 
 #if HAVE_ICONV && !defined(__DISABLE_ICONV)
    iconv_t cd = IconvOpen(g_cpDefault, UCS4_CODEPAGE_NAME);

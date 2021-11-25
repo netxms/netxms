@@ -99,13 +99,12 @@ void TestStringConversion()
    }
    EndTest(GetCurrentTimeMs() - start);
 
-#ifdef UNICODE_UCS4
    StartTest(_T("Multibyte to UCS-4 conversion performance"));
    start = GetCurrentTimeMs();
    for(int i = 0; i < 10000; i++)
    {
       WCHAR buffer[1024];
-      MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, mbText, -1, buffer, 1024);
+      mb_to_ucs4(mbText, -1, buffer, 1024);
    }
    EndTest(GetCurrentTimeMs() - start);
 
@@ -114,10 +113,9 @@ void TestStringConversion()
    for(int i = 0; i < 10000; i++)
    {
       char buffer[1024];
-      WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, wcText, -1, buffer, 1024, NULL, NULL);
+      ucs4_to_mb(wcText, -1, buffer, 1024);
    }
    EndTest(GetCurrentTimeMs() - start);
-#endif
 #endif   /* !WITH_ADDRESS_SANITIZER */
 
    StartTest(_T("ucs2_to_ucs4"));

@@ -208,6 +208,8 @@ size_t LIBNETXMS_EXPORTABLE ucs2_to_mb(const UCS2CHAR *src, ssize_t srcLen, char
       return ucs2_to_ASCII(src, srcLen, dst, dstLen);
    if (g_defaultCodePageType == CodePageType::ISO8859_1)
       return ucs2_to_ISO8859_1(src, srcLen, dst, dstLen);
+   if (g_defaultCodePageType == CodePageType::UTF8)
+      return ucs2_to_utf8(src, srcLen, dst, dstLen);
 
 #if HAVE_ICONV && !defined(__DISABLE_ICONV)
    iconv_t cd = IconvOpen(g_cpDefault, UCS2_CODEPAGE_NAME);
