@@ -64,6 +64,7 @@ import org.netxms.client.datacollection.LocalChangeListener;
 import org.netxms.client.datacollection.RemoteChangeListener;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.DataCollectionTarget;
 import org.netxms.client.objects.Template;
 import org.netxms.nxmc.PreferenceStore;
@@ -111,7 +112,6 @@ import org.xnap.commons.i18n.I18n;
  */
 public class DataCollectionView extends ObjectView
 {
-   public static final String JOB_FAMILY = "DataCollectionEditorJob"; //$NON-NLS-1$
    private static final I18n i18n = LocalizationHelper.getI18n(DataCollectionView.class);
 
    // Columns for "last values" mode
@@ -120,7 +120,7 @@ public class DataCollectionView extends ObjectView
    public static final int LV_COLUMN_VALUE = 2;
    public static final int LV_COLUMN_TIMESTAMP = 3;
    public static final int LV_COLUMN_THRESHOLD = 4;
-   
+
    // Columns for "data collection configuration" mode
    public static final int DC_COLUMN_ID = 0;
    public static final int DC_COLUMN_ORIGIN = 1;
@@ -985,12 +985,12 @@ public class DataCollectionView extends ObjectView
       for(int i = 0; (i < dciList.length) && it.hasNext(); i++)
          dciList[i] = getObjectId(it.next());
 
-      new Job(i18n.tr("Convert data collection items for ") + object.getObjectName() + i18n.tr(" to template items"), this) {
+      new Job(String.format(i18n.tr("Convert data collection items for %s to template items"), object.getObjectName()), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
             monitor.beginTask(i18n.tr("Convert DCIs to template DCIs"), 4);
-            
+
             boolean needApply = true;
             for(long id : template.getChildIdList())
             {
@@ -999,15 +999,23 @@ public class DataCollectionView extends ObjectView
                   needApply = false;
                   break;
                }
+
+               // Check if this template applied on parent cluster
+               Cluster cluster = session.findObjectById(id, Cluster.class);
+               if ((cluster != null) && cluster.isDirectParentOf(dciConfig.getOwnerId()))
+               {
+                  needApply = false;
+                  break;
+               }
             }
             monitor.worked(1);
-            
+
             dciConfig.copyObjects(template.getObjectId(), dciList);
             for(long id : dciList)
                dciConfig.deleteObject(id);
             dciConfig.close();
             monitor.worked(1);
-                  
+
             if (needApply)
             {
                boolean success = false;
@@ -1029,7 +1037,7 @@ public class DataCollectionView extends ObjectView
                } while(!success && (retries > 0));
             }
             monitor.worked(1);
-            
+
             boolean success = false;
             int retries = 5;
             do
@@ -1054,7 +1062,7 @@ public class DataCollectionView extends ObjectView
          @Override
          protected String getErrorMessage()
          {
-            return i18n.tr("Cannot convert data collection item for ") + object.getObjectName() + i18n.tr(" to template item");
+            return String.format(i18n.tr("Cannot convert data collection item for %s to template item"), object.getObjectName());
          }
       }.start();
    }
@@ -1066,8 +1074,7 @@ public class DataCollectionView extends ObjectView
    {
       if (!viewer.getTable().isDisposed())
       {
-         addMessage(MessageArea.INFORMATION,
-               "Changes in policies will be deployed to nodes the moment when the tab is closed", true);
+         addMessage(MessageArea.INFORMATION, i18n.tr("Changes in policies will be deployed to nodes the moment when the tab is closed"), true);
       }
    }
 
