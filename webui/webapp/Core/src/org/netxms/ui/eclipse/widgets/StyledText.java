@@ -74,7 +74,8 @@ public class StyledText extends Composite
 
    /**
     * Set widget text
-    * @param text
+    *
+    * @param text new text
     */
    public void setText(String text)
    {
@@ -356,6 +357,11 @@ public class StyledText extends Composite
       }
    }
 
+   /**
+    * Get widget text.
+    *
+    * @return text from widget
+    */
    public String getText()
    {
       return content.toString();
