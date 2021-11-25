@@ -425,7 +425,7 @@ void StringList::splitAndAdd(const TCHAR *src, const TCHAR *separator)
  */
 static int sortcb_asc_case(const void *s1, const void *s2)
 {
-   return _tcscmp((const TCHAR *)s1, (const TCHAR *)s2);
+   return _tcscmp(*static_cast<TCHAR const * const *>(s1), *static_cast<TCHAR const * const *>(s2));
 }
 
 /**
@@ -433,7 +433,7 @@ static int sortcb_asc_case(const void *s1, const void *s2)
  */
 static int sortcb_asc_nocase(const void *s1, const void *s2)
 {
-   return _tcsicmp((const TCHAR *)s1, (const TCHAR *)s2);
+   return _tcsicmp(*static_cast<TCHAR const * const *>(s1), *static_cast<TCHAR const * const *>(s2));
 }
 
 /**
@@ -441,7 +441,7 @@ static int sortcb_asc_nocase(const void *s1, const void *s2)
  */
 static int sortcb_desc_case(const void *s1, const void *s2)
 {
-   return -_tcscmp((const TCHAR *)s1, (const TCHAR *)s2);
+   return -_tcscmp(*static_cast<TCHAR const * const *>(s1), *static_cast<TCHAR const * const *>(s2));
 }
 
 /**
@@ -449,7 +449,7 @@ static int sortcb_desc_case(const void *s1, const void *s2)
  */
 static int sortcb_desc_nocase(const void *s1, const void *s2)
 {
-   return -_tcsicmp((const TCHAR *)s1, (const TCHAR *)s2);
+   return -_tcsicmp(*static_cast<TCHAR const * const *>(s1), *static_cast<TCHAR const * const *>(s2));
 }
 
 /**

@@ -81,7 +81,9 @@ static void TestStringList()
    AssertTrue(!_tcscmp(s3->get(3), _T("text2")));
    AssertTrue(!_tcsncmp(s3->get(4), _T("3.1415"), 6));
    delete s3;
+   EndTest();
    
+   StartTest(_T("String list - sort"));
    StringList *s4 = new StringList();
    s4->add(1);
    s4->add(3);
