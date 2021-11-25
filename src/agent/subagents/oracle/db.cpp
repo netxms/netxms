@@ -212,7 +212,7 @@ bool DatabaseInstance::poll()
                DBGetColumnName(hResult, col, &tag[tagBaseLen], 256 - tagBaseLen);
                size_t tagLen = _tcslen(tag);
                tag[tagLen++] = _T('@');
-               nx_strncpy(&tag[tagLen], instance, 256 - tagLen);
+               _tcslcpy(&tag[tagLen], instance, 256 - tagLen);
                data->setPreallocated(_tcsdup(tag), DBGetField(hResult, row, col, NULL, 0));
             }
          }

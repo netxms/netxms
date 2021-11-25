@@ -71,7 +71,7 @@ static bool SubAgentInit(Config *config)
 	const TCHAR *value = config->getValue(_T("/SMS/Device"));
 	if (value != NULL)
 	{
-		nx_strncpy(m_szDevice, value, MAX_PATH);
+		_tcslcpy(m_szDevice, value, MAX_PATH);
 		if (!InitSender(m_szDevice))
 			return false;
 	}

@@ -739,7 +739,7 @@ bool AddExternalSubagent(const TCHAR *config)
 {
 	TCHAR buffer[1024], user[256] = _T("*");
 
-	nx_strncpy(buffer, config, 1024);
+	_tcslcpy(buffer, config, 1024);
 	TCHAR *ptr = _tcschr(buffer, _T(':'));
 	if (ptr != nullptr)
 	{

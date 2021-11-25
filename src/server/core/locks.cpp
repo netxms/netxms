@@ -114,7 +114,7 @@ BOOL LockEPP(int sessionId, const TCHAR *pszOwnerInfo, UINT32 *pdwCurrentOwner, 
    if (s_eppLock.dwLockStatus == UNLOCKED)
    {
       s_eppLock.dwLockStatus = (UINT32)sessionId;
-      nx_strncpy(s_eppLock.szOwnerInfo, pszOwnerInfo, MAX_OWNER_INFO);
+      _tcslcpy(s_eppLock.szOwnerInfo, pszOwnerInfo, MAX_OWNER_INFO);
       bSuccess = TRUE;
       DbgPrintf(5, _T("*Locks* Event Processing Policy successfully locked by %d (%s)"),
                 sessionId, pszOwnerInfo != NULL ? pszOwnerInfo : _T("NULL"));
