@@ -127,7 +127,7 @@ public class ImageLibraryTest extends AbstractSessionTest
 		}
 		catch(NXCException e)
 		{
-			assertEquals(RCC.ACCESS_DENIED, e.getErrorCode());
+         assertEquals(RCC.PROTECTED_IMAGE, e.getErrorCode());
 		}
 
 		final LibraryImage image = session.getImage(UUID.fromString("1ddb76a3-a05f-4a42-acda-22021768feaf")); // ATM
