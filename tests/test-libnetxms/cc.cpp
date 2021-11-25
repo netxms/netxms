@@ -79,9 +79,11 @@ void TestStringConversion()
    AssertTrue(mbBuffer[11] == 0x7F);
    EndTest();
 
+   UCS4CHAR ucs4buffer[1024];
+
 #if !WITH_ADDRESS_SANITIZER
    StartTest(_T("Multibyte to UCS-2 conversion performance"));
-   INT64 start = GetCurrentTimeMs();
+   int64_t start = GetCurrentTimeMs();
    for(int i = 0; i < 10000; i++)
    {
       UCS2CHAR buffer[1024];
@@ -103,23 +105,23 @@ void TestStringConversion()
    start = GetCurrentTimeMs();
    for(int i = 0; i < 10000; i++)
    {
-      WCHAR buffer[1024];
+      UCS4CHAR buffer[1024];
       mb_to_ucs4(mbText, -1, buffer, 1024);
    }
    EndTest(GetCurrentTimeMs() - start);
 
    StartTest(_T("UCS-4 to multibyte conversion performance"));
+   mb_to_ucs4(mbText, -1, ucs4buffer, 1024);
    start = GetCurrentTimeMs();
    for(int i = 0; i < 10000; i++)
    {
       char buffer[1024];
-      ucs4_to_mb(wcText, -1, buffer, 1024);
+      ucs4_to_mb(ucs4buffer, -1, buffer, 1024);
    }
    EndTest(GetCurrentTimeMs() - start);
 #endif   /* !WITH_ADDRESS_SANITIZER */
 
    StartTest(_T("ucs2_to_ucs4"));
-   UCS4CHAR ucs4buffer[1024];
    len = ucs2_to_ucs4(ucs2TextSurrogates, -1, ucs4buffer, 128);
    AssertEquals(len, 14);
    AssertTrue(!memcmp(ucs4buffer, ucs4TextSurrogates, len * sizeof(UCS4CHAR)));
