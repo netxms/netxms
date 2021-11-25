@@ -318,7 +318,7 @@ static UINT32 HandlerWirelessStationList(SNMP_Variable *var, SNMP_Transport *tra
       memcpy(info->macAddr, var->getValue(), MAC_ADDR_LENGTH);
       info->ipAddr = ipAddr;
       info->vlan = vlanInfex;
-      nx_strncpy(info->ssid, ssid, MAX_OBJECT_NAME);
+      _tcslcpy(info->ssid, ssid, MAX_OBJECT_NAME);
       info->rfIndex = rfIndex;
       info->apMatchPolicy = AP_MATCH_BY_RFINDEX;
 

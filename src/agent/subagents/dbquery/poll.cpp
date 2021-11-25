@@ -86,7 +86,7 @@ void Query::setError(const TCHAR *msg)
 {
    lock();
    m_status = QUERY_STATUS_ERROR;
-   nx_strncpy(m_statusText, msg, MAX_RESULT_LENGTH);
+   _tcslcpy(m_statusText, msg, MAX_RESULT_LENGTH);
    if (m_result != NULL)
    {
       DBFreeResult(m_result);

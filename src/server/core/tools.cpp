@@ -56,7 +56,7 @@ void GetSysInfoStr(TCHAR *pszBuffer, int nMaxSize)
 #if HAVE_POSIX_STRERROR_R
 		_tcserror_r(errno, pszBuffer, nMaxSize);
 #else
-		nx_strncpy(pszBuffer, _tcserror(errno), nMaxSize);
+      _tcslcpy(pszBuffer, _tcserror(errno), nMaxSize);
 #endif
 	}
 # else

@@ -73,7 +73,7 @@ INT32 DCTable::columnIdFromName(const TCHAR *name)
 			if (hResult != nullptr)
 			{
 				entry = &buffer;
-				nx_strncpy(entry->name, name, MAX_COLUMN_NAME);
+				_tcslcpy(entry->name, name, MAX_COLUMN_NAME);
 				if (DBGetNumRows(hResult) > 0)
 				{
 					// found in database

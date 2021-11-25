@@ -338,7 +338,7 @@ int main(int argc, char *argv[])
 #else
    pszEnv = _tgetenv(_T("NXCPROXY_CONFIG"));
    if (pszEnv != NULL)
-      nx_strncpy(g_configFile, pszEnv, MAX_PATH);
+      _tcslcpy(g_configFile, pszEnv, MAX_PATH);
 #endif
 
    // Parse command line
@@ -372,7 +372,7 @@ int main(int argc, char *argv[])
 				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, g_configFile, MAX_PATH);
 				g_configFile[MAX_PATH - 1] = 0;
 #else
-            nx_strncpy(g_configFile, optarg, MAX_PATH);
+            strlcpy(g_configFile, optarg, MAX_PATH);
 #endif
             break;
 #if !defined(_WIN32)
@@ -381,7 +381,7 @@ int main(int argc, char *argv[])
 				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, g_pidFile, MAX_PATH);
 				g_pidFile[MAX_PATH - 1] = 0;
 #else
-            nx_strncpy(g_pidFile, optarg, MAX_PATH);
+            strlcpy(g_pidFile, optarg, MAX_PATH);
 #endif
             break;
 #endif

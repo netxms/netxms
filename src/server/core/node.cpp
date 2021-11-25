@@ -10566,9 +10566,9 @@ void Node::setSshCredentials(const TCHAR *login, const TCHAR *password)
 {
    lockProperties();
    if (login != nullptr)
-      nx_strncpy(m_sshLogin, login, MAX_SSH_LOGIN_LEN);
+      _tcslcpy(m_sshLogin, login, MAX_SSH_LOGIN_LEN);
    if (password != nullptr)
-      nx_strncpy(m_sshPassword, password, MAX_SSH_PASSWORD_LEN);
+      _tcslcpy(m_sshPassword, password, MAX_SSH_PASSWORD_LEN);
    setModified(MODIFY_NODE_PROPERTIES);
    unlockProperties();
 }

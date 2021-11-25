@@ -2295,10 +2295,10 @@ void NXSL_ClientSessionEnv::trace(int level, const TCHAR *text)
  */
 NXSL_VM *FindHookScript(const TCHAR *hookName, shared_ptr<NetObj> object)
 {
-	TCHAR scriptName[MAX_PATH] = _T("Hook::");
-	nx_strncpy(&scriptName[6], hookName, MAX_PATH - 6);
-	NXSL_VM *vm = CreateServerScriptVM(scriptName, object);
-	if (vm == nullptr)
-		DbgPrintf(7, _T("FindHookScript: hook script \"%s\" not found"), scriptName);
+   TCHAR scriptName[MAX_PATH] = _T("Hook::");
+   _tcslcpy(&scriptName[6], hookName, MAX_PATH - 6);
+   NXSL_VM *vm = CreateServerScriptVM(scriptName, object);
+   if (vm == nullptr)
+      DbgPrintf(7, _T("FindHookScript: hook script \"%s\" not found"), scriptName);
    return vm;
 }

@@ -409,11 +409,11 @@ BOOL AddParameter(TCHAR *pszName, LONG (* fpHandler)(const TCHAR *, const TCHAR 
                   sizeof(NETXMS_SUBAGENT_PARAM) * s_info.numParameters);
    }
 
-   nx_strncpy(s_info.parameters[i].name, pszName, MAX_PARAM_NAME);
+   _tcslcpy(s_info.parameters[i].name, pszName, MAX_PARAM_NAME);
    s_info.parameters[i].handler = fpHandler;
    s_info.parameters[i].arg = pArg;
    s_info.parameters[i].dataType = iDataType;
-   nx_strncpy(s_info.parameters[i].description, pszDescription, MAX_DB_STRING);
+   _tcslcpy(s_info.parameters[i].description, pszDescription, MAX_DB_STRING);
 
    return TRUE;
 }
