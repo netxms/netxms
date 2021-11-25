@@ -105,14 +105,14 @@ private:
    FILE *m_pFile;
    z_stream m_stream;
    int m_nLastZLibError;
-   int m_nBufferSize;
+   size_t m_nBufferSize;
    BYTE *m_pDataBuffer;
    BYTE *m_pCompBuffer;
    BYTE *m_pBufferPos;
 
-   int zwrite(const void *pBuf, int nLen);
+   int zwrite(const void *buffer, size_t size);
    int zputc(int ch);
-   int zread(void *pBuf, int nLen);
+   int zread(void *buffer, size_t size);
    int zgetc();
    int zclose();
 
@@ -122,10 +122,10 @@ public:
    ZFile(FILE *pFile, BOOL bCompress, BOOL bWrite);
    ~ZFile();
 
-   size_t write(const void *pBuf, int nLen) { return m_bCompress ? zwrite(pBuf, nLen) : fwrite(pBuf, 1, nLen, m_pFile); }
+   size_t write(const void *buffer, size_t size) { return m_bCompress ? zwrite(buffer, size) : fwrite(buffer, 1, size, m_pFile); }
    int writeByte(int ch) { return m_bCompress ? zputc(ch) : fputc(ch, m_pFile); }
 
-   size_t read(void *pBuf, int nLen) { return m_bCompress ? zread(pBuf, nLen) : fread(pBuf, 1, nLen, m_pFile); }
+   size_t read(void *buffer, size_t size) { return m_bCompress ? zread(buffer, size) : fread(buffer, 1, size, m_pFile); }
    int readByte() { return m_bCompress ? zgetc() : fgetc(m_pFile); }
 
    int close() { return m_bCompress ? zclose() : fclose(m_pFile); }

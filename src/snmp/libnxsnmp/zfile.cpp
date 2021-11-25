@@ -72,15 +72,15 @@ ZFile::~ZFile()
 /**
  * Write block to compressed file
  */
-int ZFile::zwrite(const void *pBuf, int nLen)
+int ZFile::zwrite(const void *buffer, size_t size)
 {
-   int nBytes, nSrcPos, nRet;
-
-   for(nSrcPos = 0, nRet = 0; nSrcPos < nLen; nSrcPos += nBytes)
+   int result = 0;
+   size_t bytes;
+   for(size_t srcPos = 0; srcPos < size; srcPos += bytes)
    {
-      nBytes = std::min(nLen - nSrcPos, DATA_BUFFER_SIZE - m_nBufferSize);
-      memcpy(&m_pDataBuffer[m_nBufferSize], (BYTE *)pBuf + nSrcPos, nBytes);
-      m_nBufferSize += nBytes;
+      bytes = std::min(size - srcPos, DATA_BUFFER_SIZE - m_nBufferSize);
+      memcpy(&m_pDataBuffer[m_nBufferSize], (BYTE *)buffer + srcPos, bytes);
+      m_nBufferSize += bytes;
       if (m_nBufferSize == DATA_BUFFER_SIZE)
       {
          // Buffer is full, compress and write it to file
@@ -92,14 +92,14 @@ int ZFile::zwrite(const void *pBuf, int nLen)
             m_stream.avail_out = DATA_BUFFER_SIZE;
             deflate(&m_stream, Z_NO_FLUSH);
             if (fwrite(m_pCompBuffer, 1, DATA_BUFFER_SIZE - m_stream.avail_out, m_pFile) != DATA_BUFFER_SIZE - m_stream.avail_out)
-               nRet = -1;
+               result = -1;
          } while(m_stream.avail_in > 0);
          m_nBufferSize = 0;
       }
-      if (nRet != -1)
-         nRet += nBytes;
+      if (result != -1)
+         result += bytes;
    }
-   return nRet;
+   return result;
 }
 
 /**
@@ -107,9 +107,7 @@ int ZFile::zwrite(const void *pBuf, int nLen)
  */
 int ZFile::zputc(int ch)
 {
-   BYTE bt;
-
-   bt = (BYTE)ch;
+   BYTE bt = (BYTE)ch;
    return (zwrite(&bt, 1) == 1) ? ch : -1;
 }
 
@@ -150,20 +148,19 @@ BOOL ZFile::fillDataBuffer()
 /**
  * Read block from compressed file
  */
-int ZFile::zread(void *pBuf, int nLen)
+int ZFile::zread(void *buffer, size_t size)
 {
-   int nBytes, nDstPos;
-
-   for(nDstPos = 0; nDstPos < nLen; nDstPos += nBytes)
+   size_t bytes;
+   for(size_t nDstPos = 0; nDstPos < size; nDstPos += bytes)
    {
       if (!fillDataBuffer())
          return 0;   // EOF or error
-      nBytes = std::min(nLen - nDstPos, m_nBufferSize);
-      memcpy((BYTE *)pBuf + nDstPos, m_pBufferPos, nBytes);
-      m_pBufferPos += nBytes;
-      m_nBufferSize -= nBytes;
+      bytes = std::min(size - nDstPos, m_nBufferSize);
+      memcpy((BYTE *)buffer + nDstPos, m_pBufferPos, bytes);
+      m_pBufferPos += bytes;
+      m_nBufferSize -= bytes;
    }
-   return nLen;
+   return size;
 }
 
 /**
@@ -172,7 +169,6 @@ int ZFile::zread(void *pBuf, int nLen)
 int ZFile::zgetc()
 {
    BYTE ch;
-
    return (zread(&ch, 1) == 1) ? ch : -1;
 }
 

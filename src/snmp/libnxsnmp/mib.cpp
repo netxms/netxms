@@ -165,23 +165,22 @@ void SNMP_MIBObject::print(int nIndent)
 /**
  * Write string to file
  */
-static void WriteStringToFile(ZFile *pFile, const TCHAR *pszStr)
+static void WriteStringToFile(ZFile *file, const TCHAR *str)
 {
-   WORD wLen, wTemp;
 #ifdef UNICODE
-   char *pszBuffer;
-#endif
-
-   wLen = (WORD)wchar_utf8len(pszStr, -1);
-   wTemp = htons(wLen);
-   pFile->write(&wTemp, 2);
-#ifdef UNICODE
-   pszBuffer = (char *)MemAlloc(wLen + 1);
-	wchar_to_utf8(pszStr, -1, pszBuffer, wLen + 1);
-   pFile->write(pszBuffer, wLen);
-   MemFree(pszBuffer);
+   size_t len = wchar_utf8len(str, -1);
 #else
-   pFile->write(pszStr, wLen);
+   size_t len = strlen(str);
+#endif
+   uint16_t nlen = htons(static_cast<uint16_t>(len));
+   file->write(&nlen, 2);
+#ifdef UNICODE
+   char *utf8str = MemAllocStringA(len + 1);
+	wchar_to_utf8(str, -1, utf8str, len + 1);
+   file->write(utf8str, len);
+   MemFree(utf8str);
+#else
+   pFile->write(str, len);
 #endif
 }
 
