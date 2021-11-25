@@ -1005,37 +1005,6 @@ public:
 };
 
 /**
- * Pair class (stores pair of items)
- */
-template <typename T1, typename T2> class Pair
-{
-private:
-   T1 value1;
-   T2 value2;
-
-public:
-   Pair() { }
-   Pair(const T1& v1, const T2& v2)
-   {
-      value1 = v1;
-      value2 = v2;
-   }
-   Pair(const Pair<T1, T2>& src)
-   {
-      value1 = src.value1;
-      value2 = src.value2;
-   }
-
-   Pair<T1, T2>& operator=(const Pair<T1, T2> &src)
-   {
-      return Pair<T1, T2>(src.value1, src.value2);
-   }
-
-   const T1& first() const { return value1; }
-   const T2& second() const { return value2; }
-};
-
-/**
  * uuid_t wrapper class
  */
 class uuid;

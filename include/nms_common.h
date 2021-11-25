@@ -1313,6 +1313,15 @@ enum class Ownership : bool
 #endif
 
 /**
+ * "deprecated" attribute
+ */
+#if defined(__GNUC__) || defined(__clang__)
+#define __DEPRECATED__ __attribute__((deprecated))
+#else
+#define __DEPRECATED__
+#endif
+
+/**
  * Header tags
  */
 #define __NX_BINARY_VERSION_TAG static const char __UNUSED__ __netxms_tag_version[] = "$nxtag.version${" NETXMS_VERSION_STRING_A "}$";
