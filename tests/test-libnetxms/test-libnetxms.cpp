@@ -81,7 +81,17 @@ static void TestStringList()
    AssertTrue(!_tcscmp(s3->get(3), _T("text2")));
    AssertTrue(!_tcsncmp(s3->get(4), _T("3.1415"), 6));
    delete s3;
-   EndTest();
+   
+   StringList *s4 = new StringList();
+   s4->add(1);
+   s4->add(3);
+   s4->add(2);
+   s4->sort();
+   AssertTrue(!_tcscmp(s4->get(0), _T("1")));
+   AssertTrue(!_tcscmp(s4->get(1), _T("2")));
+   AssertTrue(!_tcscmp(s4->get(2), _T("3")));
+   delete s4;
+   EndTest();   
 
 #if !WITH_ADDRESS_SANITIZER
    StartTest(_T("String list - performance"));
