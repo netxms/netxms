@@ -499,9 +499,9 @@ static void OnConfigVariableChange(bool isCLOB, const TCHAR *name, const TCHAR *
    {
       UpdateAlarmExpirationTimes();
    }
-   else if (!_tcscmp(name, _T("AlarmSummaryEmailSchedule")))
+   else if (!_tcscmp(name, _T("Alarms.SummaryEmail.Schedule")))
    {
-      if (ConfigReadBoolean(_T("EnableAlarmSummaryEmails"), false))
+      if (ConfigReadBoolean(_T("Alarms.SummaryEmail.Enable"), false))
          EnableAlarmSummaryEmails();  // this call will update schedule for existing task
    }
    else if (!_tcsncmp(name, _T("CAS."), 4))
@@ -544,15 +544,15 @@ static void OnConfigVariableChange(bool isCLOB, const TCHAR *name, const TCHAR *
    {
       OnDBWriterMaxQueueSizeChange();
    }
-   else if (!_tcscmp(name, _T("DefaultDCIPollingInterval")))
+   else if (!_tcscmp(name, _T("DataCollection.DefaultDCIPollingInterval")))
    {
       DCObject::m_defaultPollingInterval = _tcstol(value, nullptr, 0);
    }
-   else if (!_tcscmp(name, _T("DefaultDCIRetentionTime")))
+   else if (!_tcscmp(name, _T("DataCollection.DefaultDCIRetentionTime")))
    {
       DCObject::m_defaultRetentionTime = _tcstol(value, nullptr, 0);
    }
-   else if (!_tcscmp(name, _T("EnableAlarmSummaryEmails")))
+   else if (!_tcscmp(name, _T("Alarms.SummaryEmail.Enable")))
    {
       if (_tcstol(value, nullptr, 0))
          EnableAlarmSummaryEmails();
@@ -661,7 +661,7 @@ static void OnConfigVariableChange(bool isCLOB, const TCHAR *name, const TCHAR *
    {
       g_snmpTrapStormDurationThreshold = ConvertToUint32(value, 15);
    }
-   else if (!_tcscmp(name, _T("StrictAlarmStatusFlow")))
+   else if (!_tcscmp(name, _T("Alarms.StrictStatusFlow")))
    {
       NotifyClientSessions(NX_NOTIFY_ALARM_STATUS_FLOW_CHANGED, _tcstol(value, nullptr, 0));
    }

@@ -517,7 +517,7 @@ User::User() : UserDatabaseObject()
 	m_fullName[0] = 0;
 	_tcscpy(m_description, _T("Built-in system account"));
 	CalculatePasswordHash(_T("netxms"), PWD_HASH_SHA256, &m_password);
-	m_graceLogins = ConfigReadInt(_T("GraceLoginCount"), 5);
+	m_graceLogins = ConfigReadInt(_T("Server.Security.GraceLoginCount"), 5);
 	m_authMethod = UserAuthenticationMethod::LOCAL;
 	m_certMappingMethod = MAP_CERTIFICATE_BY_CN;
 	m_certMappingData = nullptr;
@@ -538,7 +538,7 @@ User::User() : UserDatabaseObject()
 User::User(uint32_t id, const TCHAR *name, UserAuthenticationMethod authMethod) : UserDatabaseObject(id, name)
 {
 	m_fullName[0] = 0;
-	m_graceLogins = ConfigReadInt(_T("GraceLoginCount"), 5);
+	m_graceLogins = ConfigReadInt(_T("Server.Security.GraceLoginCount"), 5);
 	m_authMethod = authMethod;
 	m_certMappingMethod = MAP_CERTIFICATE_BY_CN;
 	m_certMappingData = nullptr;
@@ -744,7 +744,7 @@ bool User::validatePassword(const TCHAR *password)
 void User::setPassword(const TCHAR *password, bool clearChangePasswdFlag)
 {
    CalculatePasswordHash(password, PWD_HASH_SHA256, &m_password);
-	m_graceLogins = ConfigReadInt(_T("GraceLoginCount"), 5);;
+	m_graceLogins = ConfigReadInt(_T("Server.Security.GraceLoginCount"), 5);;
 	m_flags |= UF_MODIFIED;
 	if (clearChangePasswdFlag)
 		m_flags &= ~UF_CHANGE_PASSWORD;
@@ -837,10 +837,10 @@ void User::increaseAuthFailures()
 {
 	m_authFailures++;
 
-	int lockoutThreshold = ConfigReadInt(_T("IntruderLockoutThreshold"), 0);
+	int lockoutThreshold = ConfigReadInt(_T("Server.Security.IntruderLockoutThreshold"), 0);
 	if ((lockoutThreshold > 0) && (m_authFailures >= lockoutThreshold))
 	{
-		m_disabledUntil = time(NULL) + ConfigReadInt(_T("IntruderLockoutTime"), 30) * 60;
+		m_disabledUntil = time(NULL) + ConfigReadInt(_T("Server.Security.IntruderLockoutTime"), 30) * 60;
 		m_flags |= UF_DISABLED | UF_INTRUDER_LOCKOUT;
 	}
 
@@ -854,7 +854,7 @@ void User::increaseAuthFailures()
 void User::enable()
 {
 	m_authFailures = 0;
-	m_graceLogins = ConfigReadInt(_T("GraceLoginCount"), 5);
+	m_graceLogins = ConfigReadInt(_T("Server.Security.GraceLoginCount"), 5);
 	m_disabledUntil = 0;
 	m_flags &= ~(UF_DISABLED | UF_INTRUDER_LOCKOUT);
 	m_flags |= UF_MODIFIED;

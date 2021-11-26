@@ -107,7 +107,7 @@ static StringBuffer CreateAlarmSummary()
 void EnableAlarmSummaryEmails()
 {
    TCHAR schedule[MAX_DB_STRING];
-   ConfigReadStr(_T("AlarmSummaryEmailSchedule"), schedule, MAX_DB_STRING, _T("0 0 * * *"));
+   ConfigReadStr(_T("Alarm.SummaryEmail.Schedule"), schedule, MAX_DB_STRING, _T("0 0 * * *"));
 
    ScheduledTask *task = FindScheduledTaskByHandlerId(ALARM_SUMMARY_EMAIL_TASK_ID);
    if (task != NULL)
@@ -136,6 +136,6 @@ void SendAlarmSummaryEmail(const shared_ptr<ScheduledTaskParameters>& parameters
 
    TCHAR channelName[MAX_OBJECT_NAME];
    ConfigReadStr(_T("DefaultNotificationChannel.SMTP.Html"), channelName, MAX_OBJECT_NAME, _T("SMTP-HTML"));
-   ConfigReadStr(_T("AlarmSummaryEmailRecipients"), s_recipients, MAX_CONFIG_VALUE, _T(""));
+   ConfigReadStr(_T("Alarms.SummaryEmail.Recipients"), s_recipients, MAX_CONFIG_VALUE, _T(""));
    SendNotification(channelName, s_recipients, subject, summary);
 }

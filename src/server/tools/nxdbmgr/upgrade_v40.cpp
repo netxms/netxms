@@ -24,6 +24,136 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 40.81 to 40.82
+ */
+static bool H_UpgradeFromV81()
+{
+   CHK_EXEC(SQLQuery(_T("DELETE FROM config WHERE var_name='AgentDefaultSharedSecret' OR var_name='EnableAuditLog' OR var_name='MailEncoding' OR var_name LIKE 'SMTP.%'")));
+
+   static const TCHAR *batch =
+      _T("UPDATE config SET var_name='Agent.CommandTimeout' WHERE var_name='AgentCommandTimeout'\n")
+      _T("UPDATE config SET var_name='Agent.DefaultCacheMode' WHERE var_name='DefaultAgentCacheMode'\n")
+      _T("UPDATE config SET var_name='Agent.DefaultEncryptionPolicy' WHERE var_name='DefaultEncryptionPolicy'\n")
+      _T("UPDATE config SET var_name='Agent.DefaultProtocolCompressionMode' WHERE var_name='DefaultAgentProtocolCompressionMode'\n")
+      _T("UPDATE config SET var_name='Agent.EnableRegistration' WHERE var_name='EnableAgentRegistration'\n")
+      _T("UPDATE config SET var_name='Agent.Upgrade.NumberOfThreads' WHERE var_name='NumberOfUpgradeThreads'\n")
+      _T("UPDATE config SET var_name='Agent.Upgrade.WaitTime' WHERE var_name='AgentUpgradeWaitTime'\n")
+      _T("UPDATE config SET var_name='Alarms.DeleteAlarmsOfDeletedObject' WHERE var_name='DeleteAlarmsOfDeletedObject'\n")
+      _T("UPDATE config SET var_name='Alarms.EnableTimedAck' WHERE var_name='EnableTimedAlarmAck'\n")
+      _T("UPDATE config SET var_name='Alarms.HistoryRetentionTime' WHERE var_name='AlarmHistoryRetentionTime'\n")
+      _T("UPDATE config SET var_name='Alarms.StrictStatusFlow' WHERE var_name='StrictAlarmStatusFlow'\n")
+      _T("UPDATE config SET var_name='Alarms.SummaryEmail.Enable' WHERE var_name='EnableAlarmSummaryEmails'\n")
+      _T("UPDATE config SET var_name='Alarms.SummaryEmail.Recipients' WHERE var_name='AlarmSummaryEmailRecipients'\n")
+      _T("UPDATE config SET var_name='Alarms.SummaryEmail.Schedule' WHERE var_name='AlarmSummaryEmailSchedule'\n")
+      _T("UPDATE config SET var_name='AuditLog.External.Facility' WHERE var_name='ExternalAuditFacility'\n")
+      _T("UPDATE config SET var_name='AuditLog.External.Port' WHERE var_name='ExternalAuditPort'\n")
+      _T("UPDATE config SET var_name='AuditLog.External.Server' WHERE var_name='ExternalAuditServer'\n")
+      _T("UPDATE config SET var_name='AuditLog.External.Severity' WHERE var_name='ExternalAuditSeverity'\n")
+      _T("UPDATE config SET var_name='AuditLog.External.Tag' WHERE var_name='ExternalAuditTag'\n")
+      _T("UPDATE config SET var_name='AuditLog.RetentionTime' WHERE var_name='AuditLogRetentionTime'\n")
+      _T("UPDATE config SET var_name='Client.DashboardDataExport.EnableInterpolation' WHERE var_name='DashboardDataExportEnableInterpolation'\n")
+      _T("UPDATE config SET var_name='Client.DefaultConsoleDateFormat' WHERE var_name='DefaultConsoleDateFormat'\n")
+      _T("UPDATE config SET var_name='Client.DefaultConsoleShortTimeFormat' WHERE var_name='DefaultConsoleShortTimeFormat'\n")
+      _T("UPDATE config SET var_name='Client.DefaultConsoleTimeFormat' WHERE var_name='DefaultConsoleTimeFormat'\n")
+      _T("UPDATE config SET var_name='Client.KeepAliveInterval' WHERE var_name='KeepAliveInterval'\n")
+      _T("UPDATE config SET var_name='Client.ListenerPort' WHERE var_name='ClientListenerPort'\n")
+      _T("UPDATE config SET var_name='Client.TileServerURL' WHERE var_name='TileServerURL'\n")
+      _T("UPDATE config SET var_name='DataCollection.ApplyDCIFromTemplateToDisabledDCI' WHERE var_name='ApplyDCIFromTemplateToDisabledDCI'\n")
+      _T("UPDATE config SET var_name='DataCollection.DefaultDCIPollingInterval' WHERE var_name='DefaultDCIPollingInterval'\n")
+      _T("UPDATE config SET var_name='DataCollection.DefaultDCIRetentionTime' WHERE var_name='DefaultDCIRetentionTime'\n")
+      _T("UPDATE config SET var_name='DataCollection.InstancePollingInterval' WHERE var_name='InstancePollingInterval'\n")
+      _T("UPDATE config SET var_name='DataCollection.OfflineDataRelevanceTime' WHERE var_name='OfflineDataRelevanceTime'\n")
+      _T("UPDATE config SET var_name='DataCollection.ThresholdRepeatInterval' WHERE var_name='ThresholdRepeatInterval'\n")
+      _T("UPDATE config SET var_name='Events.DeleteEventsOfDeletedObject' WHERE var_name='DeleteEventsOfDeletedObject'\n")
+      _T("UPDATE config SET var_name='Events.LogRetentionTime' WHERE var_name='EventLogRetentionTime'\n")
+      _T("UPDATE config SET var_name='Events.ReceiveForwardedEvents' WHERE var_name='ReceiveForwardedEvents'\n")
+      _T("UPDATE config SET var_name='NetworkDiscovery.FilterFlags' WHERE var_name='DiscoveryFilterFlags'\n")
+      _T("UPDATE config SET var_name='NetworkDiscovery.Filter' WHERE var_name='DiscoveryFilter'\n")
+      _T("UPDATE config SET var_name='NetworkDiscovery.UseDNSNameForDiscoveredNodes' WHERE var_name='UseDNSNameForDiscoveredNodes'\n")
+      _T("UPDATE config SET var_name='NetworkDiscovery.UseFQDNForNodeNames' WHERE var_name='UseFQDNForNodeNames'\n")
+      _T("UPDATE config SET var_name='NetworkDiscovery.UseSNMPTraps' WHERE var_name='UseSNMPTrapsForDiscovery'\n")
+      _T("UPDATE config SET var_name='NetworkDiscovery.UseSyslog' WHERE var_name='UseSyslogForDiscovery'\n")
+      _T("UPDATE config SET var_name='Objects.Conditions.PollingInterval' WHERE var_name='ConditionPollingInterval'\n")
+      _T("UPDATE config SET var_name='Objects.ConfigurationPollingInterval' WHERE var_name='ConfigurationPollingInterval'\n")
+      _T("UPDATE config SET var_name='Objects.DeleteUnreachableNodesPeriod' WHERE var_name='DeleteUnreachableNodesPeriod'\n")
+      _T("UPDATE config SET var_name='Objects.EnableZoning' WHERE var_name='EnableZoning'\n")
+      _T("UPDATE config SET var_name='Objects.NetworkMaps.DefaultBackgroundColor' WHERE var_name='DefaultMapBackgroundColor'\n")
+      _T("UPDATE config SET var_name='Objects.PollCountForStatusChange' WHERE var_name='PollCountForStatusChange'\n")
+      _T("UPDATE config SET var_name='Objects.StatusCalculation.CalculationAlgorithm' WHERE var_name='StatusCalculationAlgorithm'\n")
+      _T("UPDATE config SET var_name='Objects.StatusCalculation.FixedStatusValue' WHERE var_name='FixedStatusValue'\n")
+      _T("UPDATE config SET var_name='Objects.StatusCalculation.PropagationAlgorithm' WHERE var_name='StatusPropagationAlgorithm'\n")
+      _T("UPDATE config SET var_name='Objects.StatusCalculation.Shift' WHERE var_name='StatusShift'\n")
+      _T("UPDATE config SET var_name='Objects.StatusCalculation.SingleThreshold' WHERE var_name='StatusSingleThreshold'\n")
+      _T("UPDATE config SET var_name='Objects.StatusCalculation.Thresholds' WHERE var_name='StatusThresholds'\n")
+      _T("UPDATE config SET var_name='Objects.StatusCalculation.Translation' WHERE var_name='StatusTranslation'\n")
+      _T("UPDATE config SET var_name='Objects.StatusPollingInterval' WHERE var_name='StatusPollingInterval'\n")
+      _T("UPDATE config SET var_name='Objects.Subnets.DefaultSubnetMaskIPv4' WHERE var_name='DefaultSubnetMaskIPv4'\n")
+      _T("UPDATE config SET var_name='Objects.Subnets.DefaultSubnetMaskIPv6' WHERE var_name='DefaultSubnetMaskIPv6'\n")
+      _T("UPDATE config SET var_name='Objects.Subnets.DeleteEmpty' WHERE var_name='DeleteEmptySubnets'\n")
+      _T("UPDATE config SET var_name='Objects.SyncInterval' WHERE var_name='SyncInterval'\n")
+      _T("UPDATE config SET var_name='RADIUS.AuthMethod' WHERE var_name='RADIUSAuthMethod'\n")
+      _T("UPDATE config SET var_name='RADIUS.NumRetries' WHERE var_name='RADIUSNumRetries'\n")
+      _T("UPDATE config SET var_name='RADIUS.Port' WHERE var_name='RADIUSPort'\n")
+      _T("UPDATE config SET var_name='RADIUS.SecondaryPort' WHERE var_name='RADIUSSecondaryPort'\n")
+      _T("UPDATE config SET var_name='RADIUS.SecondarySecret' WHERE var_name='RADIUSSecondarySecret'\n")
+      _T("UPDATE config SET var_name='RADIUS.SecondaryServer' WHERE var_name='RADIUSSecondaryServer'\n")
+      _T("UPDATE config SET var_name='RADIUS.Secret' WHERE var_name='RADIUSSecret'\n")
+      _T("UPDATE config SET var_name='RADIUS.Server' WHERE var_name='RADIUSServer'\n")
+      _T("UPDATE config SET var_name='RADIUS.Timeout' WHERE var_name='RADIUSTimeout'\n")
+      _T("UPDATE config SET var_name='ReportingServer.Enable' WHERE var_name='EnableReportingServer'\n")
+      _T("UPDATE config SET var_name='ReportingServer.Hostname' WHERE var_name='ReportingServerHostname'\n")
+      _T("UPDATE config SET var_name='ReportingServer.Port' WHERE var_name='ReportingServerPort'\n")
+      _T("UPDATE config SET var_name='Server.AllowedCiphers' WHERE var_name='AllowedCiphers'\n")
+      _T("UPDATE config SET var_name='Server.Color' WHERE var_name='ServerColor'\n")
+      _T("UPDATE config SET var_name='Server.CommandOutputTimeout' WHERE var_name='ServerCommandOutputTimeout'\n")
+      _T("UPDATE config SET var_name='Server.EscapeLocalCommands' WHERE var_name='EscapeLocalCommands'\n")
+      _T("UPDATE config SET var_name='Server.ImportConfigurationOnStartup' WHERE var_name='ImportConfigurationOnStartup'\n")
+      _T("UPDATE config SET var_name='Server.MessageOfTheDay' WHERE var_name='MessageOfTheDay'\n")
+      _T("UPDATE config SET var_name='Server.Name' WHERE var_name='ServerName'\n")
+      _T("UPDATE config SET var_name='Server.RoamingMode' WHERE var_name='RoamingServer'\n")
+      _T("UPDATE config SET var_name='Server.Security.CaseInsensitiveLoginNames' WHERE var_name='CaseInsensitiveLoginNames'\n")
+      _T("UPDATE config SET var_name='Server.Security.ExtendedLogQueryAccessControl' WHERE var_name='ExtendedLogQueryAccessControl'\n")
+      _T("UPDATE config SET var_name='Server.Security.GraceLoginCount' WHERE var_name='GraceLoginCount'\n")
+      _T("UPDATE config SET var_name='Server.Security.IntruderLockoutThreshold' WHERE var_name='IntruderLockoutThreshold'\n")
+      _T("UPDATE config SET var_name='Server.Security.IntruderLockoutTime' WHERE var_name='IntruderLockoutTime'\n")
+      _T("UPDATE config SET var_name='Server.Security.MinPasswordLength' WHERE var_name='MinPasswordLength'\n")
+      _T("UPDATE config SET var_name='Server.Security.PasswordComplexity' WHERE var_name='PasswordComplexity'\n")
+      _T("UPDATE config SET var_name='Server.Security.PasswordExpiration' WHERE var_name='PasswordExpiration'\n")
+      _T("UPDATE config SET var_name='Server.Security.PasswordHistoryLength' WHERE var_name='PasswordHistoryLength'\n")
+      _T("UPDATE config SET var_name='SNMP.RequestTimeout' WHERE var_name='SNMPRequestTimeout'\n")
+      _T("UPDATE config SET var_name='SNMP.Traps.LogRetentionTime' WHERE var_name='SNMPTrapLogRetentionTime'\n")
+      _T("UPDATE config SET var_name='SNMP.Traps.SourcesInAllZones' WHERE var_name='TrapSourcesInAllZones'\n")
+      _T("UPDATE config SET var_name='Topology.RoutingTableUpdateInterval' WHERE var_name='RoutingTableUpdateInterval'\n")
+      _T("UPDATE config SET var_name='XMPP.Enable' WHERE var_name='EnableXMPPConnector'\n")
+      _T("UPDATE config SET var_name='XMPP.Login' WHERE var_name='XMPPLogin'\n")
+      _T("UPDATE config SET var_name='XMPP.Password' WHERE var_name='XMPPPassword'\n")
+      _T("UPDATE config SET var_name='XMPP.Port' WHERE var_name='XMPPPort'\n")
+      _T("UPDATE config SET var_name='XMPP.Server' WHERE var_name='XMPPServer'\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+
+   static const TCHAR *batch2 =
+      _T("UPDATE config_values SET var_name='Agent.DefaultCacheMode' WHERE var_name='DefaultAgentCacheMode'\n")
+      _T("UPDATE config_values SET var_name='Agent.DefaultEncryptionPolicy' WHERE var_name='DefaultEncryptionPolicy'\n")
+      _T("UPDATE config_values SET var_name='Agent.DefaultProtocolCompressionMode' WHERE var_name='DefaultAgentProtocolCompressionMode'\n")
+      _T("UPDATE config_values SET var_name='AuditLog.External.Port' WHERE var_name='ExternalAuditPort'\n")
+      _T("UPDATE config_values SET var_name='Client.ListenerPort' WHERE var_name='ClientListenerPort'\n")
+      _T("UPDATE config_values SET var_name='Objects.StatusCalculation.CalculationAlgorithm' WHERE var_name='StatusCalculationAlgorithm'\n")
+      _T("UPDATE config_values SET var_name='Objects.StatusCalculation.PropagationAlgorithm' WHERE var_name='StatusPropagationAlgorithm'\n")
+      _T("UPDATE config_values SET var_name='RADIUS.Port' WHERE var_name='RADIUSPort'\n")
+      _T("UPDATE config_values SET var_name='RADIUS.SecondaryPort' WHERE var_name='RADIUSSecondaryPort'\n")
+      _T("UPDATE config_values SET var_name='ReportingServer.Port' WHERE var_name='ReportingServerPort'\n")
+      _T("UPDATE config_values SET var_name='Server.AllowedCiphers' WHERE var_name='AllowedCiphers'\n")
+      _T("UPDATE config_values SET var_name='Server.ImportConfigurationOnStartup' WHERE var_name='ImportConfigurationOnStartup'\n")
+      _T("UPDATE config_values SET var_name='XMPP.Port' WHERE var_name='XMPPPort'\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch2));
+
+   CHK_EXEC(SetMinorSchemaVersion(82));
+   return true;
+}
+
+/**
  * Upgrade from 40.80 to 40.81
  */
 static bool H_UpgradeFromV80()
@@ -2609,6 +2739,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 81, 40, 82, H_UpgradeFromV81 },
    { 80, 40, 81, H_UpgradeFromV80 },
    { 79, 40, 80, H_UpgradeFromV79 },
    { 78, 40, 79, H_UpgradeFromV78 },

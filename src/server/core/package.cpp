@@ -124,7 +124,7 @@ uint32_t UninstallPackage(uint32_t packageId)
 static void DeploymentThread(PackageDeploymentTask *task)
 {
    // Read configuration
-   uint32_t dwMaxWait = ConfigReadULong(_T("AgentUpgradeWaitTime"), 600);
+   uint32_t dwMaxWait = ConfigReadULong(_T("Agent.Upgrade.WaitTime"), 600);
    if (dwMaxWait % 20 != 0)
       dwMaxWait += 20 - (dwMaxWait % 20);
 
@@ -288,7 +288,7 @@ static void DeploymentThread(PackageDeploymentTask *task)
 void DeploymentManager(PackageDeploymentTask *task)
 {
    // Read number of upgrade threads
-   int numThreads = ConfigReadInt(_T("NumberOfUpgradeThreads"), 10);
+   int numThreads = ConfigReadInt(_T("Agent.Upgrade.NumberOfThreads"), 10);
    if (numThreads > task->nodeList.size())
       numThreads = task->nodeList.size();
 

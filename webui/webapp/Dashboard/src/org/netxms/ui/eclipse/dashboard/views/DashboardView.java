@@ -103,10 +103,10 @@ public class DashboardView extends ViewPart implements ISaveablePart
 	private Action actionAddSnmpTrapMonitor;
 	private Action actionAddSyslogMonitor;
 	private Action actionFullScreenDisplay;
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
-	 */
+
+   /**
+    * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
+    */
 	@Override
 	public void init(IViewSite site) throws PartInitException
 	{
@@ -277,7 +277,7 @@ public class DashboardView extends ViewPart implements ISaveablePart
 		};
 		actionExportValues.setActionDefinitionId("org.netxms.ui.eclipse.dashboard.commands.export_line_chart_values"); //$NON-NLS-1$
       handlerService.activateHandler(actionExportValues.getActionDefinitionId(), new ActionHandler(actionExportValues));
-		
+
 		actionEditMode = new Action(Messages.get().DashboardView_EditMode, Action.AS_CHECK_BOX) {
 			@Override
 			public void run()
@@ -589,7 +589,7 @@ public class DashboardView extends ViewPart implements ISaveablePart
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            boolean doInterpolation = session.getPublicServerVariableAsBoolean("DashboardDataExportEnableInterpolation"); //$NON-NLS-1$
+            boolean doInterpolation = session.getPublicServerVariableAsBoolean("Client.DashboardDataExport.EnableInterpolation"); //$NON-NLS-1$
             
             // Build combined time series
             // Time stamps in series are reversed - latest value first

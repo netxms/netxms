@@ -1961,11 +1961,11 @@ void ClientSession::sendServerInfo(UINT32 dwRqId)
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(dwRqId);
 
-	// Generate challenge for certificate authentication
+   // Generate challenge for certificate authentication
 #ifdef _WITH_ENCRYPTION
-	RAND_bytes(m_challenge, CLIENT_CHALLENGE_SIZE);
+   RAND_bytes(m_challenge, CLIENT_CHALLENGE_SIZE);
 #else
-	memset(m_challenge, 0, CLIENT_CHALLENGE_SIZE);
+   memset(m_challenge, 0, CLIENT_CHALLENGE_SIZE);
 #endif
 
    // Fill message with server info
@@ -1979,22 +1979,22 @@ void ClientSession::sendServerInfo(UINT32 dwRqId)
    msg.setField(VID_TIMESTAMP, (UINT32)time(nullptr));
 
    GetSystemTimeZone(szBuffer, sizeof(szBuffer) / sizeof(TCHAR));
-	msg.setField(VID_TIMEZONE, szBuffer);
-	debugPrintf(2, _T("Server time zone: %s"), szBuffer);
+   msg.setField(VID_TIMEZONE, szBuffer);
+   debugPrintf(2, _T("Server time zone: %s"), szBuffer);
 
-	ConfigReadStr(_T("TileServerURL"), szBuffer, MAX_CONFIG_VALUE, _T("http://tile.openstreetmap.org/"));
-	msg.setField(VID_TILE_SERVER_URL, szBuffer);
+   ConfigReadStr(_T("Client.TileServerURL"), szBuffer, MAX_CONFIG_VALUE, _T("http://tile.netxms.org/osm/"));
+   msg.setField(VID_TILE_SERVER_URL, szBuffer);
 
-	ConfigReadStr(_T("DefaultConsoleDateFormat"), szBuffer, MAX_CONFIG_VALUE, _T("dd.MM.yyyy"));
-	msg.setField(VID_DATE_FORMAT, szBuffer);
+   ConfigReadStr(_T("Client.DefaultConsoleDateFormat"), szBuffer, MAX_CONFIG_VALUE, _T("dd.MM.yyyy"));
+   msg.setField(VID_DATE_FORMAT, szBuffer);
 
-	ConfigReadStr(_T("DefaultConsoleTimeFormat"), szBuffer, MAX_CONFIG_VALUE, _T("HH:mm:ss"));
-	msg.setField(VID_TIME_FORMAT, szBuffer);
+   ConfigReadStr(_T("Client.DefaultConsoleTimeFormat"), szBuffer, MAX_CONFIG_VALUE, _T("HH:mm:ss"));
+   msg.setField(VID_TIME_FORMAT, szBuffer);
 
-	ConfigReadStr(_T("DefaultConsoleShortTimeFormat"), szBuffer, MAX_CONFIG_VALUE, _T("HH:mm"));
-	msg.setField(VID_SHORT_TIME_FORMAT, szBuffer);
+   ConfigReadStr(_T("Client.DefaultConsoleShortTimeFormat"), szBuffer, MAX_CONFIG_VALUE, _T("HH:mm"));
+   msg.setField(VID_SHORT_TIME_FORMAT, szBuffer);
 
-	FillComponentsMessage(&msg);
+   FillComponentsMessage(&msg);
 
    sendMessage(msg);
 }
@@ -2007,11 +2007,11 @@ uint32_t ClientSession::authenticateUserByPassword(const NXCPMessage& request, L
    request.getFieldAsString(VID_LOGIN_NAME, loginInfo->loginName, MAX_USER_NAME);
    TCHAR password[1024];
 #ifdef UNICODE
-	request.getFieldAsString(VID_PASSWORD, password, 256);
+   request.getFieldAsString(VID_PASSWORD, password, 256);
 #else
-	request.getFieldAsUtf8String(VID_PASSWORD, password, 1024);
+   request.getFieldAsUtf8String(VID_PASSWORD, password, 1024);
 #endif
-	return AuthenticateUser(loginInfo->loginName, password, 0, nullptr, nullptr, &m_dwUserId, &m_systemAccessRights, &loginInfo->changePassword,
+   return AuthenticateUser(loginInfo->loginName, password, 0, nullptr, nullptr, &m_dwUserId, &m_systemAccessRights, &loginInfo->changePassword,
          &loginInfo->intruderLockout, &loginInfo->closeOtherSessions, false, &loginInfo->graceLogins);
 }
 
@@ -2281,12 +2281,12 @@ void ClientSession::finalizeLogin(const NXCPMessage& request, NXCPMessage *respo
       response->setField(VID_ZONING_ENABLED, (uint16_t)((g_flags & AF_ENABLE_ZONING) ? 1 : 0));
       response->setField(VID_POLLING_INTERVAL, (int32_t)DCObject::m_defaultPollingInterval);
       response->setField(VID_RETENTION_TIME, (int32_t)DCObject::m_defaultRetentionTime);
-      response->setField(VID_ALARM_STATUS_FLOW_STATE, ConfigReadBoolean(_T("StrictAlarmStatusFlow"), false));
-      response->setField(VID_TIMED_ALARM_ACK_ENABLED, ConfigReadBoolean(_T("EnableTimedAlarmAck"), false));
+      response->setField(VID_ALARM_STATUS_FLOW_STATE, ConfigReadBoolean(_T("Alarms.StrictStatusFlow"), false));
+      response->setField(VID_TIMED_ALARM_ACK_ENABLED, ConfigReadBoolean(_T("Alarms.EnableTimedAck"), false));
       response->setField(VID_VIEW_REFRESH_INTERVAL, (uint16_t)ConfigReadInt(_T("Client.MinViewRefreshInterval"), 300));
       response->setField(VID_HELPDESK_LINK_ACTIVE, (uint16_t)((g_flags & AF_HELPDESK_LINK_ACTIVE) ? 1 : 0));
       response->setField(VID_ALARM_LIST_DISP_LIMIT, ConfigReadULong(_T("Client.AlarmList.DisplayLimit"), 4096));
-      response->setField(VID_SERVER_COMMAND_TIMEOUT, ConfigReadULong(_T("ServerCommandOutputTimeout"), 60));
+      response->setField(VID_SERVER_COMMAND_TIMEOUT, ConfigReadULong(_T("Server.CommandOutputTimeout"), 60));
       response->setField(VID_GRACE_LOGINS, m_loginInfo->graceLogins);
 
       GetClientConfigurationHints(response);
@@ -2304,13 +2304,13 @@ void ClientSession::finalizeLogin(const NXCPMessage& request, NXCPMessage *respo
       }
 
       TCHAR buffer[MAX_DB_STRING];
-      ConfigReadStr(_T("ServerName"), buffer, MAX_DB_STRING, _T(""));
+      ConfigReadStr(_T("Server.Name"), buffer, MAX_DB_STRING, _T(""));
       response->setField(VID_SERVER_NAME, buffer);
 
-      ConfigReadStr(_T("ServerColor"), buffer, MAX_DB_STRING, _T(""));
+      ConfigReadStr(_T("Server.Color"), buffer, MAX_DB_STRING, _T(""));
       response->setField(VID_SERVER_COLOR, buffer);
 
-      ConfigReadStr(_T("MessageOfTheDay"), buffer, MAX_DB_STRING, _T(""));
+      ConfigReadStr(_T("Server.MessageOfTheDay"), buffer, MAX_DB_STRING, _T(""));
       response->setField(VID_MESSAGE_OF_THE_DAY, buffer);
 
       debugPrintf(3, _T("User %s authenticated (language=%s clientInfo=\"%s\")"), m_sessionName, m_language, m_clientInfo);
@@ -6665,7 +6665,7 @@ void ClientSession::updateAlarmStatusFlow(NXCPMessage *request)
    NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
    int status = request->getFieldAsUInt32(VID_ALARM_STATUS_FLOW_STATE);
 
-   ConfigWriteInt(_T("StrictAlarmStatusFlow"), status, false);
+   ConfigWriteInt(_T("Alarms.StrictStatusFlow"), status, false);
    response.setField(VID_RCC, RCC_SUCCESS);
 
    sendMessage(response);
@@ -10579,7 +10579,7 @@ void ClientSession::registerAgent(NXCPMessage *pRequest)
 {
    NXCPMessage msg(CMD_REQUEST_COMPLETED, pRequest->getId());
 
-	if (ConfigReadBoolean(_T("EnableAgentRegistration"), false))
+	if (ConfigReadBoolean(_T("Agent.EnableRegistration"), false))
 	{
 	   int32_t zoneUIN = pRequest->getFieldAsUInt32(VID_ZONE_UIN);
       shared_ptr<Node> node = FindNodeByIP(zoneUIN, m_clientAddr);

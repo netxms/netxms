@@ -168,7 +168,7 @@ shared_ptr<Node> NXCORE_EXPORTABLE PollNewNode(NewNodeData *newNodeData)
       node->enterMaintenanceMode(0, _T("Automatic maintenance for new node"));
 
 	// Use DNS name as primary name if required
-	if ((newNodeData->origin == NODE_ORIGIN_NETWORK_DISCOVERY) && ConfigReadBoolean(_T("UseDNSNameForDiscoveredNodes"), false))
+	if ((newNodeData->origin == NODE_ORIGIN_NETWORK_DISCOVERY) && ConfigReadBoolean(_T("NetworkDiscovery.UseDNSNameForDiscoveredNodes"), false))
 	{
       TCHAR dnsName[MAX_DNS_NAME];
       bool addressResolved = false;
@@ -812,7 +812,7 @@ static bool AcceptNewNode(NewNodeData *newNodeData, BYTE *macAddr)
 	}
 
    // Read configuration
-   ConfigReadStr(_T("DiscoveryFilter"), szFilter, MAX_CONFIG_VALUE, _T(""));
+   ConfigReadStr(_T("NetworkDiscovery.Filter"), szFilter, MAX_CONFIG_VALUE, _T(""));
    Trim(szFilter);
 
    // Initialize discovered node data
@@ -822,7 +822,7 @@ static bool AcceptNewNode(NewNodeData *newNodeData, BYTE *macAddr)
    uint32_t autoFilterFlags = 0;
    if (!_tcsicmp(szFilter, _T("auto")))
    {
-      autoFilterFlags = ConfigReadULong(_T("DiscoveryFilterFlags"), DFF_ALLOW_AGENT | DFF_ALLOW_SNMP);
+      autoFilterFlags = ConfigReadULong(_T("NetworkDiscovery.FilterFlags"), DFF_ALLOW_AGENT | DFF_ALLOW_SNMP);
       nxlog_debug_tag(DEBUG_TAG, 4, _T("AcceptNewNode(%s): auto filter, flags=%04X"), szIpAddr, autoFilterFlags);
 
       if (autoFilterFlags & DFF_ONLY_RANGE)

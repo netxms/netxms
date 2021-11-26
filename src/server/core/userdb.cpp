@@ -483,7 +483,7 @@ uint32_t AuthenticateUser(const TCHAR *login, const TCHAR *password, size_t sigL
             else
             {
                // Check if password was expired
-               int passwordExpirationTime = ConfigReadInt(_T("PasswordExpiration"), 0);
+               int passwordExpirationTime = ConfigReadInt(_T("Server.Security.PasswordExpiration"), 0);
                if ((authMethod == UserAuthenticationMethod::LOCAL) &&
                    (passwordExpirationTime > 0) &&
                    ((user->getFlags() & UF_PASSWORD_NEVER_EXPIRES) == 0) &&
@@ -1302,7 +1302,7 @@ static bool IsStringContainsSubsequence(const TCHAR *str, const TCHAR *sequence,
  */
 static bool CheckPasswordComplexity(const TCHAR *password)
 {
-	int flags = ConfigReadInt(_T("PasswordComplexity"), 0);
+   int flags = ConfigReadInt(_T("Server.Security.PasswordComplexity"), 0);
 
 	if ((flags & PSWD_MUST_CONTAIN_DIGITS) && (_tcspbrk(password, _T("0123456789")) == NULL))
 		return false;
@@ -1376,7 +1376,7 @@ uint32_t NXCORE_EXPORTABLE SetUserPassword(uint32_t id, const TCHAR *newPassword
       }
 
       // Check password length
-      int minLength = (user->getMinMasswordLength() == -1) ? ConfigReadInt(_T("MinPasswordLength"), 0) : user->getMinMasswordLength();
+      int minLength = (user->getMinMasswordLength() == -1) ? ConfigReadInt(_T("Server.Security.MinPasswordLength"), 0) : user->getMinMasswordLength();
       if ((int)_tcslen(newPassword) < minLength)
       {
          rcc = RCC_WEAK_PASSWORD;
@@ -1391,7 +1391,7 @@ uint32_t NXCORE_EXPORTABLE SetUserPassword(uint32_t id, const TCHAR *newPassword
       }
 
       // Update password history
-      int passwordHistoryLength = ConfigReadInt(_T("PasswordHistoryLength"), 0);
+      int passwordHistoryLength = ConfigReadInt(_T("Server.Security.PasswordHistoryLength"), 0);
       if (passwordHistoryLength > 0)
       {
          DB_HANDLE hdb = DBConnectionPoolAcquireConnection();

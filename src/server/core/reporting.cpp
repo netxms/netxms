@@ -217,11 +217,11 @@ static RSConnector *s_connector = nullptr;
  */
 void ReportingServerConnector()
 {
-	TCHAR hostname[256];
-	ConfigReadStr(_T("ReportingServerHostname"), hostname, 256, _T("localhost"));
-   uint16_t port = static_cast<uint16_t>(ConfigReadInt(_T("ReportingServerPort"), 4710));
+   TCHAR hostname[256];
+   ConfigReadStr(_T("ReportingServer.Hostname"), hostname, 256, _T("127.0.0.1"));
+   uint16_t port = static_cast<uint16_t>(ConfigReadInt(_T("ReportingServer.Port"), 4710));
 
-	nxlog_debug_tag(DEBUG_TAG, 1, _T("Reporting Server connector started (%s:%d)"), hostname, port);
+   nxlog_debug_tag(DEBUG_TAG, 1, _T("Reporting Server connector started (%s:%d)"), hostname, port);
 
    // Keep connection open
    s_connector = new RSConnector(InetAddress::resolveHostName(hostname), port);

@@ -250,13 +250,13 @@ static THREAD_RESULT THREAD_CALL XMPPConnectionManager(void *arg)
    TCHAR tmpLogin[64];
    TCHAR tmpPassword[MAX_PASSWORD];
 
-   ConfigReadStr(_T("XMPPLogin"), tmpLogin, 64, _T("netxms@localhost"));
-   ConfigReadStr(_T("XMPPPassword"), tmpPassword, MAX_PASSWORD, _T("netxms"));
+   ConfigReadStr(_T("XMPP.Login"), tmpLogin, 64, _T("netxms@localhost"));
+   ConfigReadStr(_T("XMPP.Password"), tmpPassword, MAX_PASSWORD, _T("netxms"));
    DecryptPassword(tmpLogin, tmpPassword, tmpPassword, MAX_PASSWORD);
 
    char login[64], password[MAX_PASSWORD];
 #ifdef UNICODE
-   ConfigReadStrA(_T("XMPPLogin"), login, 64, "netxms@localhost");
+   ConfigReadStrA(_T("XMPP.Login"), login, 64, "netxms@localhost");
    char *_tmpPassword = UTF8StringFromWideString(tmpPassword);
    strlcpy(password, _tmpPassword, MAX_PASSWORD);
    free(_tmpPassword);
@@ -267,8 +267,8 @@ static THREAD_RESULT THREAD_CALL XMPPConnectionManager(void *arg)
    nxlog_debug_tag(DEBUG_TAG, 1, _T("XMPP connection manager started"));
 
    char server[256];
-   ConfigReadStrA(_T("XMPPServer"), server, 256, "");
-   UINT16 port = static_cast<UINT16>(ConfigReadInt(_T("XMPPPort"), 5222));
+   ConfigReadStrA(_T("XMPP.Server"), server, 256, "");
+   UINT16 port = static_cast<UINT16>(ConfigReadInt(_T("XMPP.Port"), 5222));
 
    // outer loop - try to reconnect after disconnect
    do

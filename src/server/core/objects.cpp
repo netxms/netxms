@@ -187,13 +187,13 @@ static void MapUpdateThread()
 void ObjectsInit()
 {
    // Load default status calculation info
-   m_iStatusCalcAlg = ConfigReadInt(_T("StatusCalculationAlgorithm"), SA_CALCULATE_MOST_CRITICAL);
-   m_iStatusPropAlg = ConfigReadInt(_T("StatusPropagationAlgorithm"), SA_PROPAGATE_UNCHANGED);
-   m_iFixedStatus = ConfigReadInt(_T("FixedStatusValue"), STATUS_NORMAL);
-   m_iStatusShift = ConfigReadInt(_T("StatusShift"), 0);
-   ConfigReadByteArray(_T("StatusTranslation"), m_iStatusTranslation, 4, STATUS_WARNING);
-   m_iStatusSingleThreshold = ConfigReadInt(_T("StatusSingleThreshold"), 75);
-   ConfigReadByteArray(_T("StatusThresholds"), m_iStatusThresholds, 4, 50);
+   m_iStatusCalcAlg = ConfigReadInt(_T("Objects.StatusCalculation.CalculationAlgorithm"), SA_CALCULATE_MOST_CRITICAL);
+   m_iStatusPropAlg = ConfigReadInt(_T("Objects.StatusCalculation.PropagationAlgorithm"), SA_PROPAGATE_UNCHANGED);
+   m_iFixedStatus = ConfigReadInt(_T("Objects.StatusCalculation.FixedStatusValue"), STATUS_NORMAL);
+   m_iStatusShift = ConfigReadInt(_T("Objects.StatusCalculation.Shift"), 0);
+   ConfigReadByteArray(_T("Objects.StatusCalculation.Translation"), m_iStatusTranslation, 4, STATUS_WARNING);
+   m_iStatusSingleThreshold = ConfigReadInt(_T("Objects.StatusCalculation.SingleThreshold"), 75);
+   ConfigReadByteArray(_T("Objects.StatusCalculation.Thresholds"), m_iStatusThresholds, 4, 50);
 
    // Create "Entire Network" object
    g_entireNetwork = make_shared<Network>();

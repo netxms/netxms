@@ -45,7 +45,7 @@ BOOL EF_ProcessMessage(ISCSession *, NXCPMessage *, NXCPMessage *);
 static ISC_SERVICE m_serviceList[] = 
 {
 	{ ISC_SERVICE_EVENT_FORWARDER, _T("EventForwarder"),
-	  _T("ReceiveForwardedEvents"), EF_SetupSession, EF_CloseSession, EF_ProcessMessage },
+	  _T("Events.ReceiveForwardedEvents"), EF_SetupSession, EF_CloseSession, EF_ProcessMessage },
 	{ 0, NULL, NULL }
 };
 

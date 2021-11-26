@@ -1794,7 +1794,7 @@ shared_ptr<Interface> Node::createNewInterface(InterfaceInfo *info, bool manuall
                if (addr.getMaskBits() == 0)
                {
                   bSyntheticMask = true;
-                  addr.setMaskBits((addr.getFamily() == AF_INET) ? ConfigReadInt(_T("DefaultSubnetMaskIPv4"), 24) : ConfigReadInt(_T("DefaultSubnetMaskIPv6"), 64));
+                  addr.setMaskBits((addr.getFamily() == AF_INET) ? ConfigReadInt(_T("Objects.Subnets.DefaultSubnetMaskIPv4"), 24) : ConfigReadInt(_T("Objects.Subnets.DefaultSubnetMaskIPv6"), 64));
                   info->ipAddrList.replace(addr);
                }
 
@@ -2976,7 +2976,7 @@ restart_status_poll:
    // Check if the node has to be deleted due to long downtime
    if (rqId == 0)
    {
-      time_t unreachableDeleteDays = (time_t)ConfigReadInt(_T("DeleteUnreachableNodesPeriod"), 0);
+      time_t unreachableDeleteDays = (time_t)ConfigReadInt(_T("Objects.DeleteUnreachableNodesPeriod"), 0);
       if ((unreachableDeleteDays > 0) && (m_downSince > 0) &&
           (time(nullptr) - m_downSince > unreachableDeleteDays * 24 * 3600))
       {
@@ -9700,7 +9700,7 @@ void Node::checkSubnetBinding()
             else
             {
                DbgPrintf(6, _T("Zero subnet mask on interface %s [%d]"), iface->getName(), iface->getIfIndex());
-               addr.setMaskBits((addr.getFamily() == AF_INET) ? ConfigReadInt(_T("DefaultSubnetMaskIPv4"), 24) : ConfigReadInt(_T("DefaultSubnetMaskIPv6"), 64));
+               addr.setMaskBits((addr.getFamily() == AF_INET) ? ConfigReadInt(_T("Objects.Subnets.DefaultSubnetMaskIPv4"), 24) : ConfigReadInt(_T("Objects.Subnets.DefaultSubnetMaskIPv6"), 64));
                pSubnet = createSubnet(addr, true);
             }
          }
@@ -9740,7 +9740,7 @@ void Node::checkSubnetBinding()
       else
       {
          InetAddress addr(m_ipAddress);
-         addr.setMaskBits((addr.getFamily() == AF_INET) ? ConfigReadInt(_T("DefaultSubnetMaskIPv4"), 24) : ConfigReadInt(_T("DefaultSubnetMaskIPv6"), 64));
+         addr.setMaskBits((addr.getFamily() == AF_INET) ? ConfigReadInt(_T("Objects.Subnets.DefaultSubnetMaskIPv4"), 24) : ConfigReadInt(_T("Objects.Subnets.DefaultSubnetMaskIPv6"), 64));
          createSubnet(addr, true);
       }
    }
@@ -10660,7 +10660,7 @@ void Node::setSshCredentials(const TCHAR *login, const TCHAR *password)
 bool Node::isAgentCompressionAllowed()
 {
    if (m_agentCompressionMode == NODE_AGENT_COMPRESSION_DEFAULT)
-      return ConfigReadInt(_T("DefaultAgentProtocolCompressionMode"), NODE_AGENT_COMPRESSION_ENABLED) == NODE_AGENT_COMPRESSION_ENABLED;
+      return ConfigReadInt(_T("Agent.DefaultProtocolCompressionMode"), NODE_AGENT_COMPRESSION_ENABLED) == NODE_AGENT_COMPRESSION_ENABLED;
    return m_agentCompressionMode == NODE_AGENT_COMPRESSION_ENABLED;
 }
 

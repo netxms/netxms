@@ -157,7 +157,6 @@ uint32_t g_icmpPollingInterval;
 uint32_t g_icmpPingSize;
 uint32_t g_icmpPingTimeout = 1500;    // ICMP ping timeout (milliseconds)
 uint32_t g_auditFlags;
-uint32_t g_slmPollingInterval;
 uint32_t g_offlineDataRelevanceTime = 86400;
 uint32_t g_pollsBetweenPrimaryIpUpdate = 1;
 PrimaryIPUpdateMode g_primaryIpUpdateMode = PrimaryIPUpdateMode::NEVER;
@@ -394,25 +393,24 @@ static void LoadGlobalConfig()
       g_flags |= AF_SINGLE_TABLE_PERF_DATA;
    }
 
-   g_conditionPollingInterval = ConfigReadInt(_T("ConditionPollingInterval"), 60);
-   g_configurationPollingInterval = ConfigReadInt(_T("ConfigurationPollingInterval"), 3600);
+   g_conditionPollingInterval = ConfigReadInt(_T("Objects.Conditions.PollingInterval"), 60);
+   g_configurationPollingInterval = ConfigReadInt(_T("Objects.ConfigurationPollingInterval"), 3600);
    g_discoveryPollingInterval = ConfigReadInt(_T("NetworkDiscovery.PassiveDiscovery.Interval"), 900);
    g_icmpPollingInterval = ConfigReadInt(_T("ICMP.PollingInterval"), 60);
-   g_instancePollingInterval = ConfigReadInt(_T("InstancePollingInterval"), 600);
-   g_routingTableUpdateInterval = ConfigReadInt(_T("RoutingTableUpdateInterval"), 300);
-   g_slmPollingInterval = ConfigReadInt(_T("SlmPollingInterval"), 60);
-   g_statusPollingInterval = ConfigReadInt(_T("StatusPollingInterval"), 60);
+   g_instancePollingInterval = ConfigReadInt(_T("DataCollection.InstancePollingInterval"), 600);
+   g_routingTableUpdateInterval = ConfigReadInt(_T("Topology.RoutingTableUpdateInterval"), 300);
+   g_statusPollingInterval = ConfigReadInt(_T("Objects.StatusPollingInterval"), 60);
    g_topologyPollingInterval = ConfigReadInt(_T("Topology.PollingInterval"), 1800);
-   DCObject::m_defaultPollingInterval = ConfigReadInt(_T("DefaultDCIPollingInterval"), 60);
-   DCObject::m_defaultRetentionTime = ConfigReadInt(_T("DefaultDCIRetentionTime"), 30);
-   g_defaultAgentCacheMode = (INT16)ConfigReadInt(_T("DefaultAgentCacheMode"), AGENT_CACHE_OFF);
+   DCObject::m_defaultPollingInterval = ConfigReadInt(_T("DataCollection.DefaultDCIPollingInterval"), 60);
+   DCObject::m_defaultRetentionTime = ConfigReadInt(_T("DataCollection.DefaultDCIRetentionTime"), 30);
+   g_defaultAgentCacheMode = (INT16)ConfigReadInt(_T("Agent.DefaultCacheMode"), AGENT_CACHE_OFF);
    if ((g_defaultAgentCacheMode != AGENT_CACHE_ON) && (g_defaultAgentCacheMode != AGENT_CACHE_OFF))
    {
-      nxlog_debug_tag(_T("dc"), 1, _T("Invalid value %d of DefaultAgentCacheMode: reset to %d (OFF)"), g_defaultAgentCacheMode, AGENT_CACHE_OFF);
-      ConfigWriteInt(_T("DefaultAgentCacheMode"), AGENT_CACHE_OFF, true, true, true);
+      nxlog_debug_tag(_T("dc"), 1, _T("Invalid value %d of Agent.DefaultCacheMode: reset to %d (OFF)"), g_defaultAgentCacheMode, AGENT_CACHE_OFF);
+      ConfigWriteInt(_T("Agent.DefaultCacheMode"), AGENT_CACHE_OFF, true, true, true);
       g_defaultAgentCacheMode = AGENT_CACHE_OFF;
    }
-   if (ConfigReadBoolean(_T("DeleteEmptySubnets"), true))
+   if (ConfigReadBoolean(_T("Objects.Subnets.DeleteEmpty"), true))
       g_flags |= AF_DELETE_EMPTY_SUBNETS;
    if (ConfigReadBoolean(_T("SNMP.Traps.Enable"), true))
       g_flags |= AF_ENABLE_SNMP_TRAPD;
@@ -422,11 +420,11 @@ static void LoadGlobalConfig()
       g_flags |= AF_LOG_ALL_SNMP_TRAPS;
    if (ConfigReadBoolean(_T("SNMP.Traps.AllowVarbindsConversion"), true))
       g_flags |= AF_ALLOW_TRAP_VARBIND_CONVERSION;
-   if (ConfigReadBoolean(_T("EnableZoning"), false))
+   if (ConfigReadBoolean(_T("Objects.EnableZoning"), false))
       g_flags |= AF_ENABLE_ZONING;
-   if (ConfigReadBoolean(_T("UseSNMPTrapsForDiscovery"), false))
+   if (ConfigReadBoolean(_T("NetworkDiscovery.UseSNMPTraps"), false))
       g_flags |= AF_SNMP_TRAP_DISCOVERY;
-   if (ConfigReadBoolean(_T("UseSyslogForDiscovery"), false))
+   if (ConfigReadBoolean(_T("NetworkDiscovery.UseSyslog"), false))
       g_flags |= AF_SYSLOG_DISCOVERY;
    if (ConfigReadBoolean(_T("Objects.Interfaces.Enable8021xStatusPoll"), true))
       g_flags |= AF_ENABLE_8021X_STATUS_POLL;
@@ -450,13 +448,13 @@ static void LoadGlobalConfig()
       g_flags |= AF_ENABLE_NXSL_FILE_IO_FUNCTIONS;
       nxlog_debug_tag(_T("nxsl"), 3, _T("NXSL file I/O functions enabled"));
    }
-   if (ConfigReadBoolean(_T("UseFQDNForNodeNames"), true))
+   if (ConfigReadBoolean(_T("NetworkDiscovery.UseFQDNForNodeNames"), true))
       g_flags |= AF_USE_FQDN_FOR_NODE_NAMES;
-   if (ConfigReadBoolean(_T("ApplyDCIFromTemplateToDisabledDCI"), true))
+   if (ConfigReadBoolean(_T("DataCollection.ApplyDCIFromTemplateToDisabledDCI"), true))
       g_flags |= AF_APPLY_TO_DISABLED_DCI_FROM_TEMPLATE;
-   if (ConfigReadBoolean(_T("CaseInsensitiveLoginNames"), false))
+   if (ConfigReadBoolean(_T("Server.Security.CaseInsensitiveLoginNames"), false))
       g_flags |= AF_CASE_INSENSITIVE_LOGINS;
-   if (ConfigReadBoolean(_T("TrapSourcesInAllZones"), false))
+   if (ConfigReadBoolean(_T("SNMP.Traps.SourcesInAllZones"), false))
       g_flags |= AF_TRAP_SOURCES_IN_ALL_ZONES;
    if (ConfigReadBoolean(_T("ICMP.CollectPollStatistics"), true))
       g_flags |= AF_COLLECT_ICMP_STATISTICS;
@@ -506,13 +504,13 @@ static void LoadGlobalConfig()
       SetNetXMSDataDirectory(g_netxmsdDataDir);
    }
 
-   g_icmpPingTimeout = ConfigReadInt(_T("IcmpPingTimeout"), 1500);
-   g_icmpPingSize = ConfigReadInt(_T("IcmpPingSize"), 46);
-   g_agentCommandTimeout = ConfigReadInt(_T("AgentCommandTimeout"), 4000);
+   g_icmpPingTimeout = ConfigReadInt(_T("ICMP.PingTimeout"), 1500);
+   g_icmpPingSize = ConfigReadInt(_T("ICMP.PingSize"), 46);
+   g_agentCommandTimeout = ConfigReadInt(_T("Agent.CommandTimeout"), 4000);
    g_agentRestartWaitTime = ConfigReadInt(_T("Agent.RestartWaitTime"), 0);
-   g_thresholdRepeatInterval = ConfigReadInt(_T("ThresholdRepeatInterval"), 0);
-   g_requiredPolls = ConfigReadInt(_T("PollCountForStatusChange"), 1);
-   g_offlineDataRelevanceTime = ConfigReadInt(_T("OfflineDataRelevanceTime"), 86400);
+   g_thresholdRepeatInterval = ConfigReadInt(_T("DataCollection.ThresholdRepeatInterval"), 0);
+   g_requiredPolls = ConfigReadInt(_T("Objects.PollCountForStatusChange"), 1);
+   g_offlineDataRelevanceTime = ConfigReadInt(_T("DataCollection.OfflineDataRelevanceTime"), 86400);
    g_instanceRetentionTime = ConfigReadInt(_T("DataCollection.InstanceRetentionTime"), 7); // Config values are in days
    g_snmpTrapStormCountThreshold = ConfigReadInt(_T("SNMP.Traps.RateLimit.Threshold"), 0);
    g_snmpTrapStormDurationThreshold = ConfigReadInt(_T("SNMP.Traps.RateLimit.Duration"), 15);
@@ -531,7 +529,7 @@ static void LoadGlobalConfig()
    }
    g_pollsBetweenPrimaryIpUpdate = ConfigReadULong(_T("Objects.Nodes.ResolveDNSToIPOnStatusPoll.Interval"), 1);
 
-   SnmpSetDefaultTimeout(ConfigReadInt(_T("SNMPRequestTimeout"), 1500));
+   SnmpSetDefaultTimeout(ConfigReadInt(_T("SNMP.RequestTimeout"), 1500));
 }
 
 /**
@@ -540,7 +538,7 @@ static void LoadGlobalConfig()
 static bool InitCryptography()
 {
 #ifdef _WITH_ENCRYPTION
-   if (!InitCryptoLib(ConfigReadULong(_T("AllowedCiphers"), 0x7F)))
+   if (!InitCryptoLib(ConfigReadULong(_T("Server.AllowedCiphers"), 0x7F)))
       return false;
    nxlog_debug_tag(_T("crypto"), 4, _T("Supported ciphers: %s"), NXCPGetSupportedCiphersAsText().cstr());
 
@@ -610,7 +608,7 @@ static bool InitCryptography()
       }
    }
 
-   int iPolicy = ConfigReadInt(_T("DefaultEncryptionPolicy"), 1);
+   int iPolicy = ConfigReadInt(_T("Agent.DefaultEncryptionPolicy"), 1);
    if ((iPolicy < 0) || (iPolicy > 3))
       iPolicy = 1;
    SetAgentDEP(iPolicy);
@@ -684,7 +682,7 @@ static bool PeerNodeIsRunning(const InetAddress& addr)
          RSA_free(key);
    }
 
-   uint16_t port = static_cast<uint16_t>(ConfigReadInt(_T("ClientListenerPort"), SERVER_LISTEN_PORT_FOR_CLIENTS));
+   uint16_t port = static_cast<uint16_t>(ConfigReadInt(_T("Client.ListenerPort"), SERVER_LISTEN_PORT_FOR_CLIENTS));
    return TcpPing(addr, port, 5000) == TCP_PING_SUCCESS;
 }
 
@@ -1202,7 +1200,7 @@ retry_db_lock:
 
    LoadObjectQueries();
 
-   int importMode = ConfigReadInt(_T("ImportConfigurationOnStartup"), 1);
+   int importMode = ConfigReadInt(_T("Server.ImportConfigurationOnStartup"), 1);
    if (importMode > 0)
       ImportLocalConfiguration(importMode == 2);
 
@@ -1259,7 +1257,7 @@ retry_db_lock:
       ThreadCreate(ISCListener);
 
    // Start reporting server connector
-   if (ConfigReadBoolean(_T("EnableReportingServer"), false))
+   if (ConfigReadBoolean(_T("ReportingServer.Enable"), false))
       ThreadCreate(ReportingServerConnector);
 
    // Start LDAP synchronization
@@ -1291,7 +1289,7 @@ retry_db_lock:
    AddUniqueRecurrentScheduledTask(RENEW_AGENT_CERTIFICATES_TASK_ID, _T("0 12 * * *"), _T(""), nullptr, 0, 0, SYSTEM_ACCESS_FULL, _T("Renew agent certificates"), nullptr, true);
 
    // Send summary emails
-   if (ConfigReadBoolean(_T("EnableAlarmSummaryEmails"), false))
+   if (ConfigReadBoolean(_T("Alarms.SummaryEmail.Enable"), false))
       EnableAlarmSummaryEmails();
    else
       DeleteScheduledTaskByHandlerId(ALARM_SUMMARY_EMAIL_TASK_ID);
@@ -1318,7 +1316,7 @@ retry_db_lock:
    CALL_ALL_MODULES(pfServerStarted, ());
 
 #if XMPP_SUPPORTED
-   if (ConfigReadBoolean(_T("EnableXMPPConnector"), true))
+   if (ConfigReadBoolean(_T("XMPP.Enable"), true))
    {
       StartXMPPConnector();
    }

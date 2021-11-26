@@ -367,13 +367,13 @@ static void HouseKeeper()
 		CleanAlarmHistory(hdb);
 
 		// Remove expired log records
-		if (!DeleteExpiredLogRecords(_T("event log"), _T("event_log"), _T("event_timestamp"), _T("EventLogRetentionTime"), hdb, cycleStartTime))
+		if (!DeleteExpiredLogRecords(_T("event log"), _T("event_log"), _T("event_timestamp"), _T("Events.LogRetentionTime"), hdb, cycleStartTime))
 		   break;
       if (!DeleteExpiredLogRecords(_T("syslog"), _T("syslog"), _T("msg_timestamp"), _T("Syslog.RetentionTime"), hdb, cycleStartTime))
          break;
       if (!DeleteExpiredLogRecords(_T("windows event log"), _T("win_event_log"), _T("event_timestamp"), _T("WindowsEvents.LogRetentionTime"), hdb, cycleStartTime))
          break;
-      if (!DeleteExpiredLogRecords(_T("SNMP trap log"), _T("snmp_trap_log"), _T("trap_timestamp"), _T("SNMPTrapLogRetentionTime"), hdb, cycleStartTime))
+      if (!DeleteExpiredLogRecords(_T("SNMP trap log"), _T("snmp_trap_log"), _T("trap_timestamp"), _T("SNMP.Traps.LogRetentionTime"), hdb, cycleStartTime))
          break;
       if (!DeleteExpiredLogRecords(_T("server action execution log"), _T("server_action_execution_log"), _T("action_timestamp"), _T("ActionExecutionLog.RetentionTime"), hdb, cycleStartTime))
          break;
@@ -381,7 +381,7 @@ static void HouseKeeper()
          break;
 
 		// Remove outdated audit log records
-		int32_t retentionTime = ConfigReadULong(_T("AuditLogRetentionTime"), 90);
+		int32_t retentionTime = ConfigReadULong(_T("AuditLog.RetentionTime"), 90);
 		if (retentionTime > 0)
 		{
          nxlog_debug_tag(DEBUG_TAG, 2, _T("Clearing audit log (retention time %d days)"), retentionTime);

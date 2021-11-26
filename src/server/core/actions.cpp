@@ -319,7 +319,7 @@ static bool ExecuteRemoteSshAction(const TCHAR *pszTarget, const TCHAR *pszActio
  */
 static void RunCommand(TCHAR *command)
 {
-   if (ConfigReadBoolean(_T("EscapeLocalCommands"), false))
+   if (ConfigReadBoolean(_T("Server.EscapeLocalCommands"), false))
    {
       StringBuffer s(command);
 #ifdef _WIN32

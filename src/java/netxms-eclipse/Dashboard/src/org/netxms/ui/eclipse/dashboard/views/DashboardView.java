@@ -613,7 +613,7 @@ public class DashboardView extends ViewPart implements ISaveablePart
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            boolean doInterpolation = session.getPublicServerVariableAsBoolean("DashboardDataExportEnableInterpolation"); //$NON-NLS-1$
+            boolean doInterpolation = session.getPublicServerVariableAsBoolean("Client.DashboardDataExport.EnableInterpolation"); //$NON-NLS-1$
             
             // Build combined time series
             // Time stamps in series are reversed - latest value first
@@ -672,8 +672,8 @@ public class DashboardView extends ViewPart implements ISaveablePart
                   lastValue = currentValue;
                }
                combinedData.add(ySeries);
-            }            
-            
+            }
+
             BufferedWriter writer = new BufferedWriter(new FileWriter(fileName));
             try
             {

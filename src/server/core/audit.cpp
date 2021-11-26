@@ -119,14 +119,14 @@ void InitAuditLog()
 
 	// External audit server
 	TCHAR temp[256];
-	ConfigReadStr(_T("ExternalAuditServer"), temp, 256, _T("none"));
+	ConfigReadStr(_T("AuditLog.External.Server"), temp, 256, _T("none"));
 	if (_tcscmp(temp, _T("none")))
 	{
 		s_auditServerAddr = InetAddress::resolveHostName(temp);
-		s_auditServerPort = (WORD)ConfigReadInt(_T("ExternalAuditPort"), 514);
-		s_auditFacility = ConfigReadInt(_T("ExternalAuditFacility"), 13);  // default is log audit facility
-		s_auditSeverity = ConfigReadInt(_T("ExternalAuditSeverity"), SYSLOG_SEVERITY_NOTICE);
-		ConfigReadStrA(_T("ExternalAuditTag"), s_auditTag, MAX_SYSLOG_TAG_LEN, "netxmsd-audit");
+		s_auditServerPort = (WORD)ConfigReadInt(_T("AuditLog.External.Port"), 514);
+		s_auditFacility = ConfigReadInt(_T("AuditLog.External.Facility"), 13);  // default is log audit facility
+		s_auditSeverity = ConfigReadInt(_T("AuditLog.External.Severity"), SYSLOG_SEVERITY_NOTICE);
+		ConfigReadStrA(_T("AuditLog.External.Tag"), s_auditTag, MAX_SYSLOG_TAG_LEN, "netxmsd-audit");
 
 		// Get local host name
 #ifdef _WIN32

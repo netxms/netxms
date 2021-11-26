@@ -679,11 +679,11 @@ static int DoRadiusAuth(const char *login, const char *passwd, bool useSecondary
 	BYTE vector[AUTH_VECTOR_LEN];
 	char szSecret[256];
 
-	ConfigReadStrA(useSecondaryServer ? _T("RADIUSSecondaryServer") : _T("RADIUSServer"), serverName, 256, "none");
-	ConfigReadStrA(useSecondaryServer ? _T("RADIUSSecondarySecret"): _T("RADIUSSecret"), szSecret, 256, "netxms");
-	port = ConfigReadInt(useSecondaryServer ? _T("RADIUSSecondaryPort") : _T("RADIUSPort"), PW_AUTH_UDP_PORT);
-	nRetries = ConfigReadInt(_T("RADIUSNumRetries"), 5);
-	nTimeout = ConfigReadInt(_T("RADIUSTimeout"), 3);
+	ConfigReadStrA(useSecondaryServer ? _T("RADIUS.SecondaryServer") : _T("RADIUS.Server"), serverName, 256, "none");
+	ConfigReadStrA(useSecondaryServer ? _T("RADIUS.SecondarySecret"): _T("RADIUS.Secret"), szSecret, 256, "netxms");
+	port = ConfigReadInt(useSecondaryServer ? _T("RADIUS.SecondaryPort") : _T("RADIUS.Port"), PW_AUTH_UDP_PORT);
+	nRetries = ConfigReadInt(_T("RADIUS.NumRetries"), 5);
+	nTimeout = ConfigReadInt(_T("RADIUS.Timeout"), 3);
 
 	if (!strcmp(serverName, "none"))
 	{
@@ -708,7 +708,7 @@ static int DoRadiusAuth(const char *login, const char *passwd, bool useSecondary
 	pairadd(&req, vp);
 
    char authMethod[16];
-   ConfigReadStrA(_T("RADIUSAuthMethod"), authMethod, 16, "PAP");
+   ConfigReadStrA(_T("RADIUS.AuthMethod"), authMethod, 16, "PAP");
 	nxlog_debug_tag(DEBUG_TAG, 4, _T("Authenticating user %hs on RADIUS server %hs using %hs"), login, serverName, authMethod);
    if (!stricmp(authMethod, "PAP"))
    {
@@ -917,17 +917,17 @@ if (rc_avpair_add(rh, &request, (type), (value), len, (vendor)) == NULL) \
  */
 static int DoRadiusAuth(const char *login, const char *passwd, bool useSecondaryServer, char *serverName)
 {
-   ConfigReadStrA(useSecondaryServer ? _T("RADIUSSecondaryServer") : _T("RADIUSServer"), serverName, 256, "none");
+   ConfigReadStrA(useSecondaryServer ? _T("RADIUS.SecondaryServer") : _T("RADIUS.Server"), serverName, 256, "none");
    if (!strcmp(serverName, "none"))
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("%s RADIUS server set to none, skipping"), useSecondaryServer ? _T("Secondary") : _T("Primary"));
       return -127;
    }
 
-   int port = ConfigReadInt(useSecondaryServer ? _T("RADIUSSecondaryPort") : _T("RADIUSPort"), PW_AUTH_UDP_PORT);
+   int port = ConfigReadInt(useSecondaryServer ? _T("RADIUS.SecondaryPort") : _T("RADIUS.Port"), PW_AUTH_UDP_PORT);
 
    char secret[256];
-   ConfigReadStrA(useSecondaryServer ? _T("RADIUSSecondarySecret"): _T("RADIUSSecret"), secret, 256, "netxms");
+   ConfigReadStrA(useSecondaryServer ? _T("RADIUS.SecondarySecret"): _T("RADIUS.Secret"), secret, 256, "netxms");
 
    rc_handle *rh = rc_new();
    if (rc_config_init(rh) == NULL)
@@ -949,10 +949,10 @@ static int DoRadiusAuth(const char *login, const char *passwd, bool useSecondary
    rc_add_config(rh, "authserver", connectString, __FILE__, __LINE__);
 
    char temp[64];
-   ConfigReadStrA(_T("RADIUSNumRetries"), temp, 64, "5");
+   ConfigReadStrA(_T("RADIUS.NumRetries"), temp, 64, "5");
    rc_add_config(rh, "radius_retries", temp, __FILE__, __LINE__);
 
-   ConfigReadStrA(_T("RADIUSTimeout"), temp, 64, "3");
+   ConfigReadStrA(_T("RADIUS.Timeout"), temp, 64, "3");
    rc_add_config(rh, "radius_timeout", temp, __FILE__, __LINE__);
 
    VALUE_PAIR *request = NULL;
@@ -961,7 +961,7 @@ static int DoRadiusAuth(const char *login, const char *passwd, bool useSecondary
    PAIR_ADD(PW_SERVICE_TYPE, &service);
 
    char authMethod[16];
-   ConfigReadStrA(_T("RADIUSAuthMethod"), authMethod, 16, "PAP");
+   ConfigReadStrA(_T("RADIUS.AuthMethod"), authMethod, 16, "PAP");
 	nxlog_debug_tag(DEBUG_TAG, 4, _T("Authenticating user %hs on RADIUS server %hs using %hs"), login, serverName, authMethod);
    if (!stricmp(authMethod, "PAP"))
    {

@@ -115,7 +115,7 @@ static void ClientSessionManager()
    ThreadSetName("ClientManager");
 
    // Read configuration
-   uint32_t interval = ConfigReadInt(_T("KeepAliveInterval"), 60);
+   uint32_t interval = ConfigReadInt(_T("Client.KeepAliveInterval"), 60);
    if (interval > 300)
       interval = 300;
    nxlog_debug_tag(DEBUG_TAG, 1, _T("Client session manager started (check interval %u seconds)"), interval);
@@ -218,7 +218,7 @@ ConnectionProcessingResult ClientListener::processConnection(SOCKET s, const Ine
 void ClientListenerThread()
 {
    ThreadSetName("ClientListener");
-   uint16_t listenPort = static_cast<uint16_t>(ConfigReadInt(_T("ClientListenerPort"), SERVER_LISTEN_PORT_FOR_CLIENTS));
+   uint16_t listenPort = static_cast<uint16_t>(ConfigReadInt(_T("Client.ListenerPort"), SERVER_LISTEN_PORT_FOR_CLIENTS));
    ClientListener listener(listenPort);
    listener.setListenAddress(g_szListenAddress);
    if (!listener.initialize())

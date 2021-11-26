@@ -1606,7 +1606,6 @@ extern uint32_t g_agentCommandTimeout;
 extern uint32_t g_agentRestartWaitTime;
 extern uint32_t g_thresholdRepeatInterval;
 extern uint32_t g_requiredPolls;
-extern uint32_t g_slmPollingInterval;
 extern uint32_t g_offlineDataRelevanceTime;
 extern int32_t g_instanceRetentionTime;
 extern uint32_t g_snmpTrapStormCountThreshold;

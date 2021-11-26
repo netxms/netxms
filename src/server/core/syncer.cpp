@@ -192,7 +192,7 @@ void Syncer()
 {
    ThreadSetName("Syncer");
 
-   int syncInterval = ConfigReadInt(_T("SyncInterval"), 60);
+   int syncInterval = ConfigReadInt(_T("Objects.SyncInterval"), 60);
    UINT32 watchdogId = WatchdogAddThread(_T("Syncer Thread"), 30);
 
    nxlog_debug_tag(DEBUG_TAG_SYNC, 1, _T("Syncer thread started, sync_interval = %d"), syncInterval);

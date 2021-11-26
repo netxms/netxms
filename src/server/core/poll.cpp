@@ -167,7 +167,7 @@ static bool LocalMgmtNodeComparator(NetObj *object, void *data)
  */
 void CheckForMgmtNode()
 {
-   bool roaming = ConfigReadBoolean(_T("RoamingServer"), false);
+   bool roaming = ConfigReadBoolean(_T("Server.RoamingMode"), false);
 
    if (roaming)
    {
@@ -873,12 +873,12 @@ void ResetDiscoveryPoller()
          break;
    }
 
-   if (ConfigReadBoolean(_T("UseSNMPTrapsForDiscovery"), false))
+   if (ConfigReadBoolean(_T("NetworkDiscovery.UseSNMPTraps"), false))
       g_flags |= AF_SNMP_TRAP_DISCOVERY;
    else
       g_flags &= ~AF_SNMP_TRAP_DISCOVERY;
 
-   if (ConfigReadBoolean(_T("UseSyslogForDiscovery"), false))
+   if (ConfigReadBoolean(_T("NetworkDiscovery.UseSyslog"), false))
       g_flags |= AF_SYSLOG_DISCOVERY;
    else
       g_flags &= ~AF_SYSLOG_DISCOVERY;
