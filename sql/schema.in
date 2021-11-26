@@ -424,6 +424,7 @@ CREATE TABLE nodes
   cip_status integer not null,
   cip_state integer not null,
   cip_vendor_code integer not null,
+  syslog_codepage varchar(15) null,
   PRIMARY KEY(id)
 ) TABLE_TYPE;
 

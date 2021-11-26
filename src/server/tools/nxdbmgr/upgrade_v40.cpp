@@ -23,6 +23,17 @@
 #include "nxdbmgr.h"
 #include <nxevent.h>
 
+
+/**
+ * Upgrade from 40.82 to 40.83
+ */
+static bool H_UpgradeFromV82()
+{
+   CHK_EXEC(SQLQuery(_T("ALTER TABLE nodes ADD syslog_codepage varchar(15)\n")));
+   CHK_EXEC(SetMinorSchemaVersion(83));
+   return true;
+}
+
 /**
  * Upgrade from 40.81 to 40.82
  */
@@ -2739,6 +2750,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 82, 40, 83, H_UpgradeFromV82 },
    { 81, 40, 82, H_UpgradeFromV81 },
    { 80, 40, 81, H_UpgradeFromV80 },
    { 79, 40, 80, H_UpgradeFromV79 },

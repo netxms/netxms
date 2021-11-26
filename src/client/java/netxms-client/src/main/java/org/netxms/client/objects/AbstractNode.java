@@ -190,6 +190,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
    protected CertificateMappingMethod agentCertificateMappingMethod;
    protected String agentCertificateMappingData;
    protected String agentCertificateSubject;
+   protected String syslogCodepage;
 
 	/**
 	 * Create new node object.
@@ -291,6 +292,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
       agentCertificateMappingMethod = CertificateMappingMethod.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_CERT_MAPPING_METHOD));
       agentCertificateMappingData = msg.getFieldAsString(NXCPCodes.VID_CERT_MAPPING_DATA);
       agentCertificateSubject = msg.getFieldAsString(NXCPCodes.VID_AGENT_CERT_SUBJECT);
+      syslogCodepage = msg.getFieldAsString(NXCPCodes.VID_CODEPAGE);
       
       chassisPlacement = null;
       String config = msg.getFieldAsString(NXCPCodes.VID_CHASSIS_PLACEMENT_CONFIG);
@@ -1276,5 +1278,15 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
    public String getAgentCertificateSubject()
    {
       return agentCertificateSubject;
+   }
+
+   /**
+    * Get syslog codepage
+    *
+    * @return syslog codepage
+    */
+   public String getCodepage()
+   {
+      return syslogCodepage;
    }
 }

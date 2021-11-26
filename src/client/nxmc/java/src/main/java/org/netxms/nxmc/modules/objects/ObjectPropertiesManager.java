@@ -64,6 +64,7 @@ import org.netxms.nxmc.modules.objects.propertypages.SNMP;
 import org.netxms.nxmc.modules.objects.propertypages.SSH;
 import org.netxms.nxmc.modules.objects.propertypages.SensorProperties;
 import org.netxms.nxmc.modules.objects.propertypages.StatusCalculation;
+import org.netxms.nxmc.modules.objects.propertypages.Syslog;
 import org.netxms.nxmc.modules.objects.propertypages.TrustedNodes;
 import org.netxms.nxmc.modules.objects.propertypages.VPNSubnets;
 import org.netxms.nxmc.modules.objects.propertypages.WebServices;
@@ -116,6 +117,7 @@ public class ObjectPropertiesManager
       pageClasses.add(SNMP.class);
       pageClasses.add(SSH.class);
       pageClasses.add(StatusCalculation.class);
+      pageClasses.add(Syslog.class);
       pageClasses.add(TrustedNodes.class);
       pageClasses.add(VPNSubnets.class);
       pageClasses.add(WebServices.class);

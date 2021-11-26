@@ -3082,6 +3082,7 @@ protected:
    uint16_t m_cipStatus;
    uint8_t m_cipState;
    uint16_t m_cipVendorCode;
+   char m_syslogCodepage[16];
 
    virtual bool isDataCollectionDisabled() override;
    virtual void collectProxyInfo(ProxyInfo *info) override;
@@ -3299,6 +3300,7 @@ public:
    uint16_t getCipStatus() const { return m_cipStatus; }
    uint8_t getCipState() const { return m_cipState; }
    uint16_t getCipVendorCode() const { return m_cipVendorCode; }
+   const char *getCodepage() const { return m_syslogCodepage; }
 
    bool isDown() { return (m_state & DCSF_UNREACHABLE) ? true : false; }
    time_t getDownSince() const { return m_downSince; }

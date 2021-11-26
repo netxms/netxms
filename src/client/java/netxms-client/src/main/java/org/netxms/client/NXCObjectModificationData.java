@@ -183,6 +183,7 @@ public class NXCObjectModificationData
    private Integer objectStatusThreshold;
    private Integer dciStatusThreshold;
    private Long sourceNode;
+   private String syslogCodepage;
 
    /**
     * Constructor for creating modification data for given object
@@ -2234,5 +2235,21 @@ public class NXCObjectModificationData
    public Long getSourceNode()
    {
       return sourceNode;
+   }
+
+   /**
+    * @param syslogCodepage the syslog codepage to set
+    */
+   public void setCodepage(String syslogCodepage)
+   {
+      this.syslogCodepage = syslogCodepage;
+   }
+
+   /**
+    * @return the syslogCodepage
+    */
+   public String getCodepage()
+   {
+      return syslogCodepage;
    }
 }

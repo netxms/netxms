@@ -95,6 +95,7 @@ public class CreateNodeDialog extends Dialog
 	private String sshPassword; 
 	private boolean showAgain = false;
 	private boolean enableShowAgainFlag = true;
+	private String codepage = "";
 
 	/**
 	 * @param parentShell
@@ -250,7 +251,7 @@ public class CreateNodeDialog extends Dialog
             }
          });
       }
-      
+
       checkDisableAutomaticSNMPConfig = new Button(optionsGroup, SWT.CHECK);
       checkDisableAutomaticSNMPConfig.setText(i18n.tr("Prevent automatic SNMP configuration changes"));
       checkDisableAutomaticSNMPConfig.setSelection((creationFlags & NXCObjectCreationData.CF_SNMP_SETTINGS_LOCKED) != 0);

@@ -1250,6 +1250,7 @@ public class NXCPCodes
    public static final long VID_COMMENTS_SOURCE = 777;
    public static final long VID_WEB_SERVICE_PROXY = 778;
    public static final long VID_MATCH = 779;
+	public static final long VID_CODEPAGE = 780;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;

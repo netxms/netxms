@@ -186,6 +186,7 @@ Node::Node() : super(Pollable::STATUS | Pollable::CONFIGURATION | Pollable::DISC
    m_cipState = 0;
    m_cipStatus = 0;
    m_cipVendorCode = 0;
+   m_syslogCodepage[0] = 0;
 }
 
 /**
@@ -305,6 +306,7 @@ Node::Node(const NewNodeData *newNodeData, UINT32 flags) : super(Pollable::STATU
    m_cipStatus = 0;
    m_cipVendorCode = 0;
    m_webServiceProxy = newNodeData->webServiceProxyId;
+   m_syslogCodepage[0] = 0;
 }
 
 /**
@@ -372,7 +374,7 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
       _T("rack_image_rear,agent_id,agent_cert_subject,hypervisor_type,hypervisor_info,icmp_poll_mode,")
       _T("chassis_placement_config,vendor,product_code,product_name,product_version,serial_number,cip_device_type,")
       _T("cip_status,cip_state,eip_proxy,eip_port,hardware_id,cip_vendor_code,agent_cert_mapping_method,")
-      _T("agent_cert_mapping_data,snmp_engine_id,ssh_port,ssh_key_id FROM nodes WHERE id=?"));
+      _T("agent_cert_mapping_data,snmp_engine_id,ssh_port,ssh_key_id,syslog_codepage FROM nodes WHERE id=?"));
    if (hStmt == nullptr)
       return false;
 
@@ -534,6 +536,8 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    m_agentCertMappingData = DBGetField(hResult, 0, 70, nullptr, 0);
    if ((m_agentCertMappingData != nullptr) && (m_agentCertMappingData[0] == 0))
       MemFreeAndNull(m_agentCertMappingData);
+
+   DBGetFieldUTF8(hResult, 0, 74, m_syslogCodepage, 16);
 
    DBFreeResult(hResult);
    DBFreeStatement(hStmt);
@@ -861,7 +865,7 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
          _T("agent_cert_subject"), _T("hypervisor_type"), _T("hypervisor_info"), _T("icmp_poll_mode"), _T("chassis_placement_config"),
          _T("vendor"), _T("product_code"), _T("product_name"), _T("product_version"), _T("serial_number"), _T("cip_device_type"),
          _T("cip_status"), _T("cip_state"), _T("eip_proxy"), _T("eip_port"), _T("hardware_id"), _T("cip_vendor_code"),
-         _T("agent_cert_mapping_method"), _T("agent_cert_mapping_data"), _T("snmp_engine_id"),
+         _T("agent_cert_mapping_method"), _T("agent_cert_mapping_data"), _T("snmp_engine_id"), _T("syslog_codepage"),
          nullptr
       };
 
@@ -991,7 +995,8 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
          {
             DBBind(hStmt, 74, DB_SQLTYPE_VARCHAR, _T(""), DB_BIND_STATIC);
          }
-         DBBind(hStmt, 75, DB_SQLTYPE_INTEGER, m_id);
+         DBBind(hStmt, 75, DB_SQLTYPE_TEXT, DB_CTYPE_UTF8_STRING, m_syslogCodepage, DB_BIND_STATIC);
+         DBBind(hStmt, 76, DB_SQLTYPE_INTEGER, m_id);
 
          success = DBExecute(hStmt);
          DBFreeStatement(hStmt);
@@ -7431,6 +7436,7 @@ void Node::fillMessageInternal(NXCPMessage *msg, UINT32 userId)
    msg->setField(VID_CERT_MAPPING_METHOD, static_cast<int16_t>(m_agentCertMappingMethod));
    msg->setField(VID_CERT_MAPPING_DATA, m_agentCertMappingData);
    msg->setField(VID_AGENT_CERT_SUBJECT, m_agentCertSubject);
+   msg->setFieldFromUtf8String(VID_CODEPAGE, m_syslogCodepage);
 }
 
 /**
@@ -7766,6 +7772,11 @@ uint32_t Node::modifyFromMessageInternal(const NXCPMessage& msg)
       MemFree(oldMappingData);
    }
 
+   if (msg.isFieldExist(VID_CODEPAGE))
+   {
+      msg.getFieldAsUtf8String(VID_CODEPAGE, m_syslogCodepage, 16);
+   }
+      
    return super::modifyFromMessageInternal(msg);
 }
 
@@ -10877,6 +10888,7 @@ json_t *Node::toJson()
    json_object_set_new(root, "icmpStatCollectionMode", json_integer((int)m_icmpStatCollectionMode));
    json_object_set_new(root, "icmpTargets", m_icmpTargets.toJson());
    json_object_set_new(root, "chassisPlacementConfig", json_string_t(m_chassisPlacementConf));
+   json_object_set_new(root, "syslogCodepage", json_string_a(m_syslogCodepage));
    unlockProperties();
    return root;
 }

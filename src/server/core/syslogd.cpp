@@ -454,7 +454,24 @@ static void ProcessSyslogMessage(SyslogMessage *msg)
 			WCHAR wtag[MAX_SYSLOG_TAG_LEN];
 			WCHAR wmsg[MAX_LOG_MSG_LENGTH];
 			mb_to_wchar(msg->getTag(), -1, wtag, MAX_SYSLOG_TAG_LEN);
-			mb_to_wchar(msg->getMessage(), -1, wmsg, MAX_LOG_MSG_LENGTH);
+         shared_ptr<Node> node = msg->getNode();
+         if (node != nullptr && node->getCodepage() != nullptr)
+         {
+            mbcp_to_wchar(msg->getMessage(), -1, wmsg, MAX_LOG_MSG_LENGTH, node->getCodepage());
+         }
+         else
+         {
+            char codepage[16];
+            ConfigReadStrUTF8(_T("Syslog.Codepage"), codepage, 16, "");
+            if(codepage[0] != 0)
+            {
+               mbcp_to_wchar(msg->getMessage(), -1, wmsg, MAX_LOG_MSG_LENGTH, codepage);
+            }
+            else
+            {
+               mb_to_wchar(msg->getMessage(), -1, wmsg, MAX_LOG_MSG_LENGTH);
+            }
+         }
 			s_parser->matchEvent(wtag, msg->getFacility(), 1 << msg->getSeverity(), wmsg, nullptr, 0,
 			         msg->getNodeId(), 0, nullptr, &writeToDatabase);
 #else
