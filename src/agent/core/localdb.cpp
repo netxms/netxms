@@ -40,7 +40,7 @@ TCHAR *ReadMetadata(const TCHAR *attr, TCHAR *buffer)
    if (s_db == NULL)
       return NULL;
 
-   TCHAR query[256], *value = NULL;
+   TCHAR query[256], *value = nullptr;
    _sntprintf(query, 256, _T("SELECT value FROM metadata WHERE attribute='%s'"), attr);
 
    DB_RESULT hResult = DBSelect(s_db, query);
@@ -59,7 +59,7 @@ TCHAR *ReadMetadata(const TCHAR *attr, TCHAR *buffer)
 INT32 ReadMetadataAsInt(const TCHAR *attr)
 {
    TCHAR buffer[MAX_DB_STRING];
-   if (ReadMetadata(attr, buffer) == NULL)
+   if (ReadMetadata(attr, buffer) == nullptr)
       return 0;
    return _tcstol(buffer, NULL, 0);
 }
@@ -69,7 +69,7 @@ INT32 ReadMetadataAsInt(const TCHAR *attr)
  */
 bool WriteMetadata(const TCHAR *name, const TCHAR *value)
 {
-   if (s_db == NULL)
+   if (s_db == nullptr)
       return false;
 
    TCHAR query[1024];
@@ -215,7 +215,7 @@ static const TCHAR *s_dbInitQueries[] =
  */
 static bool InitDatabase()
 {
-   for(int i = 0; s_dbInitQueries[i] != NULL; i++)
+   for(int i = 0; s_dbInitQueries[i] != nullptr; i++)
       if (!DBQuery(s_db, s_dbInitQueries[i]))
          return false;
    nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_LOCALDB, _T("Empty local database successfully initialized"));

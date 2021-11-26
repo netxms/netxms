@@ -129,7 +129,7 @@ LONG H_NetIfAdmStatus(const char *pszParam, const char *pArg, char *pValue, Abst
 				int flags;
 
 				memset(&ifr, 0, sizeof(ifr));
-				nx_strncpy(ifr.ifr_name, szArg, sizeof(ifr.ifr_name));
+				strlcpy(ifr.ifr_name, szArg, sizeof(ifr.ifr_name));
 				if (ioctl(nSocket, SIOCGIFFLAGS, (caddr_t)&ifr) >= 0)
 				{
 					flags = ifr.ifr_flags;
@@ -184,7 +184,7 @@ LONG H_NetIfLink(const char *pszParam, const char *pArg, char *pValue, AbstractC
 				struct ifmediareq ifmr;
 
 				memset(&ifmr, 0, sizeof(ifmr));
-				nx_strncpy(ifmr.ifm_name, szArg, sizeof(ifmr.ifm_name));
+				strlcpy(ifmr.ifm_name, szArg, sizeof(ifmr.ifm_name));
 				if (ioctl(nSocket, SIOCGIFMEDIA, (caddr_t)&ifmr) >= 0)
 				{
 					if ((ifmr.ifm_status & IFM_AVALID) == 0 ||

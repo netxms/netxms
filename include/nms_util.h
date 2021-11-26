@@ -3929,13 +3929,6 @@ typedef struct _dir_struc_w
 #endif   /* _WIN32 */
 
 
-/***** For compatibility *****/
-#ifdef UNICODE
-#define nx_strncpy      wcslcpy
-#else
-#define nx_strncpy      strlcpy
-#endif
-
 //
 // Functions
 //

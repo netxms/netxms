@@ -54,7 +54,7 @@ static void BuildProcessCommandLine(kvm_t *kd, struct kinfo_proc2 *p, char *cmdL
 			{
 				if (i > 0)
 					cmdLine[pos++] = ' ';
-				nx_strncpy(&cmdLine[pos], argv[i], maxSize - pos);
+				strlcpy(&cmdLine[pos], argv[i], maxSize - pos);
 				pos += strlen(argv[i]);
 			}
 		}
@@ -62,7 +62,7 @@ static void BuildProcessCommandLine(kvm_t *kd, struct kinfo_proc2 *p, char *cmdL
 		{
 			// Use process name if command line is empty
 			cmdLine[0] = '[';
-			nx_strncpy(&cmdLine[1], p->p_comm, maxSize - 2);
+			strlcpy(&cmdLine[1], p->p_comm, maxSize - 2);
 			strcat(cmdLine, "]");
 		}
 	}
@@ -70,7 +70,7 @@ static void BuildProcessCommandLine(kvm_t *kd, struct kinfo_proc2 *p, char *cmdL
 	{
 		// Use process name if command line cannot be obtained
 		cmdLine[0] = '[';
-		nx_strncpy(&cmdLine[1], p->p_comm, maxSize - 2);
+		strlcpy(&cmdLine[1], p->p_comm, maxSize - 2);
 		strcat(cmdLine, "]");
 	}
 }
