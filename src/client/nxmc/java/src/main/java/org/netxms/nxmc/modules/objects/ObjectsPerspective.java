@@ -19,6 +19,7 @@
 package org.netxms.nxmc.modules.objects;
 
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
@@ -260,6 +261,7 @@ public abstract class ObjectsPerspective extends Perspective
 
       addObjectMenu(i18n.tr("Tools"), ObjectMenuFactory.createToolsMenu(new StructuredSelection(object), null, objectToolBar, new ViewPlacement(this)));
       addObjectMenu(i18n.tr("Poll"), ObjectMenuFactory.createPollMenu(new StructuredSelection(object), null, objectToolBar, new ViewPlacement(this)));
+      addObjectMenu(i18n.tr("Create"), new ObjectCreateMenuManager(getWindow().getShell(), null, object));
    }
 
    /**
@@ -270,9 +272,24 @@ public abstract class ObjectsPerspective extends Perspective
     */
    private void addObjectMenu(String name, final Menu menu)
    {
-      if ((menu == null) || (menu.getItemCount() == 0))
-         return;
+      if ((menu != null) && (menu.getItemCount() != 0))
+         createMenuToolItem(name, null, menu);
+   }
 
+   /**
+    * Add drop-down menu for current object
+    *
+    * @param name menu name
+    * @param menu menu
+    */
+   private void addObjectMenu(String name, final MenuManager menuManager)
+   {
+      if ((menuManager != null) && !menuManager.isEmpty())
+         createMenuToolItem(name, menuManager, null);
+   }
+
+   private void createMenuToolItem(String name, final MenuManager menuManager, final Menu menu)
+   {
       ToolItem item = new ToolItem(objectMenuBar, SWT.PUSH);
       item.setText("  " + name + " \u25BE  ");
       item.addSelectionListener(new SelectionAdapter() {
@@ -282,8 +299,9 @@ public abstract class ObjectsPerspective extends Perspective
             Rectangle rect = item.getBounds();
             Point pt = new Point(rect.x, rect.y + rect.height);
             pt = objectMenuBar.toDisplay(pt);
-            menu.setLocation(pt.x, pt.y);
-            menu.setVisible(true);
+            Menu m = (menuManager != null) ? menuManager.createContextMenu(objectToolBar) : menu;
+            m.setLocation(pt.x, pt.y);
+            m.setVisible(true);
          }
       });
    }
