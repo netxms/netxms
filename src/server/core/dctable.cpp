@@ -1386,7 +1386,7 @@ void DCTable::loadCache()
    lock();
    if (encodedTable != nullptr && m_lastValue == nullptr) //m_lastValue can be changed while query is executed
    {
-      m_lastValue = shared_ptr<Table>(Table::createFromPackedXML(encodedTable));
+      m_lastValue = Table::createFromPackedXML(encodedTable);
    }
    unlock();
    MemFree(encodedTable);
