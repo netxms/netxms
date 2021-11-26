@@ -1195,6 +1195,14 @@ void DCItem::updateCacheSizeInternal(bool allowLoad, uint32_t conditionId)
 }
 
 /**
+ * Load cache from database
+ */
+void DCItem::loadCache()
+{
+   updateCacheSize();
+}
+
+/**
  * Reload cache from database
  */
 void DCItem::reloadCache(bool forceReload)
@@ -1450,17 +1458,17 @@ void DCItem::fillLastValueMessage(NXCPMessage *msg, uint32_t baseId)
       }
       if (mostCritical != -1)
       {
-         msg->setField(baseId++, (WORD)1);
+         msg->setField(baseId++, static_cast<uint16_t>(1));
          m_thresholds->get(mostCritical)->fillMessage(msg, baseId);
       }
       else
       {
-         msg->setField(baseId++, (WORD)0);
+         msg->setField(baseId++, static_cast<uint16_t>(0));
       }
 	}
 	else
 	{
-      msg->setField(baseId++, (WORD)0);
+      msg->setField(baseId++, static_cast<uint16_t>(0));
 	}
 
 	unlock();
