@@ -276,7 +276,7 @@ void DataCollectionTarget::updateDciCache()
    readLockDciAccess();
    for(int i = 0; i < m_dcObjects->size(); i++)
    {
-      m_dcObjects->get(i)->updateCache();
+      m_dcObjects->get(i)->loadCache();
    }
    unlockDciAccess();
 }

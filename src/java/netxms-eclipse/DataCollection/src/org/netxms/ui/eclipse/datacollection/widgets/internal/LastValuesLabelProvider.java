@@ -36,7 +36,6 @@ import org.netxms.ui.eclipse.datacollection.ThresholdLabelProvider;
 import org.netxms.ui.eclipse.datacollection.propertypages.Thresholds;
 import org.netxms.ui.eclipse.datacollection.widgets.LastValuesWidget;
 
-
 /**
  * Label provider for last values view
  */
@@ -57,7 +56,7 @@ public class LastValuesLabelProvider extends LabelProvider implements ITableLabe
 		stateImages[0] = Activator.getImageDescriptor("icons/active.gif").createImage(); //$NON-NLS-1$
 		stateImages[1] = Activator.getImageDescriptor("icons/disabled.gif").createImage(); //$NON-NLS-1$
 		stateImages[2] = Activator.getImageDescriptor("icons/unsupported.gif").createImage(); //$NON-NLS-1$
-		
+
 		thresholdLabelProvider = new ThresholdLabelProvider();
 	}
 
@@ -107,27 +106,30 @@ public class LastValuesLabelProvider extends LabelProvider implements ITableLabe
 					return null;
 				return RegionalSettings.getDateTimeFormat().format(((DciValue)element).getTimestamp());
 			case LastValuesWidget.COLUMN_THRESHOLD:
-				return formatThreshold(((DciValue)element).getActiveThreshold());
+            return formatThreshold((DciValue)element);
 		}
 		return null;
 	}
-	
+
 	/**
-	 * Format threshold
-	 * 
-	 * @param activeThreshold
-	 * @return
-	 */
-	private String formatThreshold(Threshold threshold)
+    * Format threshold
+    * 
+    * @param value DCI value to format threshold for
+    * @return formatted threshold
+    */
+   private String formatThreshold(DciValue value)
 	{
-		if (threshold == null)
-			return Messages.get().LastValuesLabelProvider_OK;
-		return thresholdLabelProvider.getColumnText(threshold, Thresholds.COLUMN_OPERATION);
+      Threshold threshold = value.getActiveThreshold();
+      if (threshold == null)
+         return Messages.get().LastValuesLabelProvider_OK;
+      if (value.getDcObjectType() == DataCollectionObject.DCO_TYPE_TABLE)
+         return threshold.getValue(); // For table DCIs server sends pre-formatted condition in "value" field
+      return thresholdLabelProvider.getColumnText(threshold, Thresholds.COLUMN_OPERATION);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.IBaseLabelProvider#dispose()
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.IBaseLabelProvider#dispose()
+    */
 	@Override
 	public void dispose()
 	{
@@ -153,9 +155,9 @@ public class LastValuesLabelProvider extends LabelProvider implements ITableLabe
 		this.useMultipliers = useMultipliers;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ITableColorProvider#getForeground(java.lang.Object, int)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.ITableColorProvider#getForeground(java.lang.Object, int)
+    */
 	@Override
 	public Color getForeground(Object element, int columnIndex)
 	{
@@ -166,9 +168,9 @@ public class LastValuesLabelProvider extends LabelProvider implements ITableLabe
 		return null;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ITableColorProvider#getBackground(java.lang.Object, int)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.ITableColorProvider#getBackground(java.lang.Object, int)
+    */
 	@Override
 	public Color getBackground(Object element, int columnIndex)
 	{

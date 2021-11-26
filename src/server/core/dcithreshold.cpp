@@ -598,21 +598,21 @@ ThresholdCheckResult Threshold::checkError(UINT32 dwErrorCount)
 /**
  * Fill NXCP message with threshold data
  */
-void Threshold::fillMessage(NXCPMessage *msg, UINT32 baseId) const
+void Threshold::fillMessage(NXCPMessage *msg, uint32_t baseId) const
 {
-	UINT32 varId = baseId;
-	msg->setField(varId++, m_id);
-	msg->setField(varId++, m_eventCode);
-	msg->setField(varId++, m_rearmEventCode);
-	msg->setField(varId++, (WORD)m_function);
-	msg->setField(varId++, (WORD)m_operation);
-	msg->setField(varId++, (UINT32)m_sampleCount);
-	msg->setField(varId++, CHECK_NULL_EX(m_scriptSource));
-	msg->setField(varId++, (UINT32)m_repeatInterval);
-	msg->setField(varId++, m_value.getString());
-	msg->setField(varId++, (WORD)m_isReached);
-	msg->setField(varId++, (WORD)m_currentSeverity);
-	msg->setField(varId++, (UINT32)m_lastEventTimestamp);
+	uint32_t fieldId = baseId;
+	msg->setField(fieldId++, m_id);
+	msg->setField(fieldId++, m_eventCode);
+	msg->setField(fieldId++, m_rearmEventCode);
+	msg->setField(fieldId++, static_cast<uint16_t>(m_function));
+	msg->setField(fieldId++, static_cast<uint16_t>(m_operation));
+	msg->setField(fieldId++, static_cast<uint32_t>(m_sampleCount));
+	msg->setField(fieldId++, CHECK_NULL_EX(m_scriptSource));
+	msg->setField(fieldId++, static_cast<uint32_t>(m_repeatInterval));
+	msg->setField(fieldId++, m_value.getString());
+	msg->setField(fieldId++, m_isReached);
+	msg->setField(fieldId++, static_cast<uint16_t>(m_currentSeverity));
+	msg->setFieldFromTime(fieldId++, m_lastEventTimestamp);
 }
 
 /**
