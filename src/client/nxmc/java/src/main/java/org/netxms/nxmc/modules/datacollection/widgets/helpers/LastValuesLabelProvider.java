@@ -46,7 +46,7 @@ public class LastValuesLabelProvider extends LabelProvider implements ITableLabe
 	private boolean useMultipliers = true;
 	private boolean showErrors = true;
 	private ThresholdLabelProvider thresholdLabelProvider;
-	
+
 	/**
 	 * Default constructor 
 	 */
@@ -57,10 +57,10 @@ public class LastValuesLabelProvider extends LabelProvider implements ITableLabe
       stateImages[0] = ResourceManager.getImageDescriptor("icons/dci/active.gif").createImage();
       stateImages[1] = ResourceManager.getImageDescriptor("icons/dci/disabled.gif").createImage();
       stateImages[2] = ResourceManager.getImageDescriptor("icons/dci/unsupported.gif").createImage();
-		
+
 		thresholdLabelProvider = new ThresholdLabelProvider();
 	}
-	
+
    /**
     * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
     */
@@ -107,22 +107,25 @@ public class LastValuesLabelProvider extends LabelProvider implements ITableLabe
 					return null;
             return DateFormatFactory.getDateTimeFormat().format(((DciValue)element).getTimestamp());
 			case DataCollectionView.LV_COLUMN_THRESHOLD:
-				return formatThreshold(((DciValue)element).getActiveThreshold());
+            return formatThreshold((DciValue)element);
 		}
 		return null;
 	}
-	
+
 	/**
-	 * Format threshold
-	 * 
-	 * @param activeThreshold
-	 * @return
-	 */
-	private String formatThreshold(Threshold threshold)
+    * Format threshold
+    * 
+    * @param value DCI value to format threshold for
+    * @return formatted threshold
+    */
+   private String formatThreshold(DciValue value)
 	{
-		if (threshold == null)
+      Threshold threshold = value.getActiveThreshold();
+      if (threshold == null)
          return i18n.tr("OK");
-		return thresholdLabelProvider.getColumnText(threshold, Thresholds.COLUMN_OPERATION);
+      if (value.getDcObjectType() == DataCollectionObject.DCO_TYPE_TABLE)
+         return threshold.getValue(); // For table DCIs server sends pre-formatted condition in "value" field
+      return thresholdLabelProvider.getColumnText(threshold, Thresholds.COLUMN_OPERATION);
 	}
 
    /**

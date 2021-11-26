@@ -186,7 +186,7 @@ public:
    ThresholdCheckResult check(ItemValue &value, ItemValue **ppPrevValues, ItemValue &fvalue, ItemValue &tvalue, shared_ptr<NetObj> target, DCItem *dci);
    ThresholdCheckResult checkError(UINT32 dwErrorCount);
 
-   void fillMessage(NXCPMessage *msg, UINT32 baseId) const;
+   void fillMessage(NXCPMessage *msg, uint32_t baseId) const;
    void updateFromMessage(const NXCPMessage& msg, uint32_t baseId);
 
    void createId();
@@ -332,11 +332,11 @@ public:
 
    virtual void updateFromTemplate(DCObject *dcObject);
    virtual void updateFromImport(ConfigEntry *config);
-   virtual void updateCache() = 0;
 
    virtual bool saveToDatabase(DB_HANDLE hdb);
    virtual void deleteFromDatabase();
    virtual bool loadThresholdsFromDB(DB_HANDLE hdb);
+   virtual void loadCache() = 0;
 
    void processNewError(bool noInstance);
    virtual void processNewError(bool noInstance, time_t now);
@@ -492,9 +492,9 @@ public:
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
    virtual void deleteFromDatabase() override;
    virtual bool loadThresholdsFromDB(DB_HANDLE hdb) override;
+   virtual void loadCache() override;
 
-   virtual void updateCache() override { updateCacheSize(); }
-   void updateCacheSize(UINT32 conditionId = 0) { lock(); updateCacheSizeInternal(true, conditionId); unlock(); }
+   void updateCacheSize(uint32_t conditionId = 0) { lock(); updateCacheSizeInternal(true, conditionId); unlock(); }
    void reloadCache(bool forceReload);
 
    int getDataType() const { return m_dataType; }
@@ -640,7 +640,7 @@ public:
 
    const ObjectArray<DCTableCondition> *getConditions() const { return m_conditions; }
 
-   UINT32 fillMessage(NXCPMessage *msg, UINT32 baseId) const;
+   uint32_t fillMessage(NXCPMessage *msg, uint32_t baseId) const;
    json_t *toJson() const;
 
    bool equals(DCTableConditionGroup *g) const;
@@ -674,50 +674,66 @@ public:
    void setActive() { m_active = true; }
 };
 
+#ifdef _WIN32
+template class NXCORE_EXPORTABLE ObjectArray<DCTableConditionGroup>;
+template class NXCORE_EXPORTABLE StringObjectMap<DCTableThresholdInstance>;
+#endif
+
 /**
  * Threshold definition for tabe DCI
  */
 class NXCORE_EXPORTABLE DCTableThreshold
 {
 private:
-   UINT32 m_id;
-   ObjectArray<DCTableConditionGroup> *m_groups;
-   UINT32 m_activationEvent;
-   UINT32 m_deactivationEvent;
+   uint32_t m_id;
+   ObjectArray<DCTableConditionGroup> m_groups;
+   uint32_t m_activationEvent;
+   uint32_t m_deactivationEvent;
    int m_sampleCount;
-   StringObjectMap<DCTableThresholdInstance> *m_instances;
-   StringObjectMap<DCTableThresholdInstance> *m_instancesBeforeMaint;
+   StringObjectMap<DCTableThresholdInstance> m_instances;
+   StringObjectMap<DCTableThresholdInstance> m_instancesBeforeMaint;
 
    void loadConditions(DB_HANDLE hdb);
    void loadInstances(DB_HANDLE hdb);
+
+   DCTableThresholdInstance *findInstance(const TCHAR *instance, bool originalList)
+   {
+      return originalList ? m_instances.get(instance) : m_instancesBeforeMaint.get(instance);
+   }
+
+   static EnumerationCallbackResult eventGenerationCallback(const TCHAR *key, const DCTableThresholdInstance *value, TableThresholdCbData *context);
 
 public:
    DCTableThreshold();
    DCTableThreshold(DB_HANDLE hdb, DB_RESULT hResult, int row);
    DCTableThreshold(const NXCPMessage& msg, uint32_t *baseId);
-   DCTableThreshold(DCTableThreshold *src, bool shadowCopy);
+   DCTableThreshold(const DCTableThreshold *src, bool shadowCopy);
    DCTableThreshold(ConfigEntry *e);
-   ~DCTableThreshold();
 
    void copyState(DCTableThreshold *src);
 
    ThresholdCheckResult check(Table *value, int row, const TCHAR *instance);
    void updateBeforeMaintenanceState();
    void generateEventsBasedOnThrDiff(TableThresholdCbData *data);
-   DCTableThresholdInstance *findInstance(const TCHAR *instance, bool originalList);
 
-   bool saveToDatabase(DB_HANDLE hdb, UINT32 tableId, int seq);
-   UINT32 fillMessage(NXCPMessage *msg, UINT32 baseId);
+   bool saveToDatabase(DB_HANDLE hdb, uint32_t tableId, int seq) const;
+   uint32_t fillMessage(NXCPMessage *msg, uint32_t baseId) const;
 
    void createExportRecord(StringBuffer &xml, int id) const;
    json_t *toJson() const;
 
    bool equals(const DCTableThreshold *t) const;
 
-   UINT32 getId() const { return m_id; }
-   UINT32 getActivationEvent() const { return m_activationEvent; }
-   UINT32 getDeactivationEvent() const { return m_deactivationEvent; }
+   uint32_t getId() const { return m_id; }
+   uint32_t getActivationEvent() const { return m_activationEvent; }
+   uint32_t getDeactivationEvent() const { return m_deactivationEvent; }
    int getSampleCount() const { return m_sampleCount; }
+   StringBuffer getConditionAsText() const;
+
+   bool isActive() const
+   {
+      return m_instances.findElement([] (const TCHAR *key, const void *value, void *context) { return static_cast<const DCTableThresholdInstance*>(value)->isActive(); }, nullptr);
+   }
 };
 
 /**
@@ -757,10 +773,10 @@ public:
 
    virtual void updateFromTemplate(DCObject *dcObject) override;
    virtual void updateFromImport(ConfigEntry *config) override;
-   virtual void updateCache() override;
 
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
    virtual void deleteFromDatabase() override;
+   virtual void loadCache() override;
 
    virtual void processNewError(bool noInstance, time_t now) override;
    virtual void updateThresholdsBeforeMaintenanceState() override;
@@ -779,7 +795,7 @@ public:
    bool processNewValue(time_t nTimeStamp, const shared_ptr<Table>& value, bool *updateStatus);
 
 	void fillLastValueMessage(NXCPMessage *msg);
-   void fillLastValueSummaryMessage(NXCPMessage *pMsg, UINT32 dwId);
+   void fillLastValueSummaryMessage(NXCPMessage *msg, uint32_t baseId);
 
    int getColumnDataType(const TCHAR *name) const;
    const ObjectArray<DCTableColumn>& getColumns() const { return *m_columns; }

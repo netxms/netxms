@@ -174,18 +174,18 @@ DCTable::DCTable(DB_HANDLE hdb, DB_RESULT hResult, int row, const shared_ptr<Dat
 	m_dwResourceId = DBGetFieldULong(hResult, row, 12);
 	m_sourceNode = DBGetFieldULong(hResult, row, 13);
 	m_pszPerfTabSettings = DBGetField(hResult, row, 14, nullptr, 0);
-   TCHAR *pszTmp = DBGetField(hResult, row, 15, nullptr, 0);
+   TCHAR *tmp = DBGetField(hResult, row, 15, nullptr, 0);
+   setTransformationScript(tmp);
+   MemFree(tmp);
    m_comments = DBGetField(hResult, row, 16, nullptr, 0);
    m_guid = DBGetFieldGUID(hResult, row, 17);
-   setTransformationScript(pszTmp);
-   MemFree(pszTmp);
    m_instanceDiscoveryMethod = (WORD)DBGetFieldLong(hResult, row, 18);
    m_instanceDiscoveryData = DBGetField(hResult, row, 19, readBuffer, 4096);
    m_instanceFilterSource = nullptr;
    m_instanceFilter = nullptr;
-   pszTmp = DBGetField(hResult, row, 20, nullptr, 0);
-   setInstanceFilter(pszTmp);
-   MemFree(pszTmp);
+   tmp = DBGetField(hResult, row, 20, nullptr, 0);
+   setInstanceFilter(tmp);
+   MemFree(tmp);
    m_instance = DBGetField(hResult, row, 21, readBuffer, 4096);
    m_instanceRetentionTime = DBGetFieldLong(hResult, row, 22);
    m_instanceGracePeriodStart = DBGetFieldLong(hResult, row, 23);
@@ -856,24 +856,67 @@ void DCTable::fillLastValueMessage(NXCPMessage *msg)
 /**
  * Get summary of last collected value (to show along simple DCI values)
  */
-void DCTable::fillLastValueSummaryMessage(NXCPMessage *pMsg, UINT32 dwId)
+void DCTable::fillLastValueSummaryMessage(NXCPMessage *msg, uint32_t fieldId)
 {
-	lock();
-   pMsg->setField(dwId++, m_id);
-   pMsg->setField(dwId++, m_name);
-   pMsg->setField(dwId++, m_flags);
-   pMsg->setField(dwId++, m_description);
-   pMsg->setField(dwId++, (WORD)m_source);
-   pMsg->setField(dwId++, (WORD)DCI_DT_NULL);  // compatibility: data type
-   pMsg->setField(dwId++, _T(""));             // compatibility: value
-   pMsg->setField(dwId++, (UINT32)m_lastPoll);
-   pMsg->setField(dwId++, (WORD)(matchClusterResource() ? m_status : ITEM_STATUS_DISABLED)); // show resource-bound DCIs as inactive if cluster resource is not on this node
-	pMsg->setField(dwId++, (WORD)getType());
-	pMsg->setField(dwId++, m_dwErrorCount);
-	pMsg->setField(dwId++, m_dwTemplateItemId);
-   pMsg->setField(dwId++, (WORD)0);            // compatibility: number of thresholds
+   lock();
 
-	unlock();
+   msg->setField(fieldId++, m_id);
+   msg->setField(fieldId++, m_name);
+   msg->setField(fieldId++, m_flags);
+   msg->setField(fieldId++, m_description);
+   msg->setField(fieldId++, static_cast<uint16_t>(m_source));
+   msg->setField(fieldId++, static_cast<uint16_t>(DCI_DT_NULL));  // compatibility: data type
+   msg->setField(fieldId++, _T(""));             // compatibility: value
+   msg->setFieldFromTime(fieldId++, m_lastPoll);
+   msg->setField(fieldId++, static_cast<uint16_t>(matchClusterResource() ? m_status : ITEM_STATUS_DISABLED)); // show resource-bound DCIs as inactive if cluster resource is not on this node
+   msg->setField(fieldId++, static_cast<uint16_t>(getType()));
+   msg->setField(fieldId++, m_dwErrorCount);
+   msg->setField(fieldId++, m_dwTemplateItemId);
+
+   if (m_thresholds != nullptr)
+   {
+      int severity = -1;
+      DCTableThreshold *threshold = nullptr;
+      for(int i = 0; (i < m_thresholds->size()) && (severity != STATUS_CRITICAL); i++)
+      {
+         DCTableThreshold *t = m_thresholds->get(i);
+         if (t->isActive())
+         {
+            shared_ptr<EventTemplate> event = FindEventTemplateByCode(t->getActivationEvent());
+            if ((event != nullptr) && (event->getSeverity() > severity))
+            {
+               threshold = t;
+               severity = event->getSeverity();
+            }
+         }
+      }
+      if (severity != -1)
+      {
+         msg->setField(fieldId++, static_cast<uint16_t>(1));   // number of thresholds
+         msg->setField(fieldId++, threshold->getId());
+         msg->setField(fieldId++, threshold->getActivationEvent());
+         msg->setField(fieldId++, threshold->getDeactivationEvent());
+         msg->setField(fieldId++, static_cast<uint16_t>(0));   // function
+         msg->setField(fieldId++, static_cast<uint16_t>(0));   // operation
+         msg->setField(fieldId++, static_cast<uint32_t>(threshold->getSampleCount()));
+         msg->setField(fieldId++, _T(""));   // script source
+         msg->setField(fieldId++, static_cast<uint32_t>(0));   // compatibility: repeat interval
+         msg->setField(fieldId++, threshold->getConditionAsText());
+         msg->setField(fieldId++, true);  // Is active
+         msg->setField(fieldId++, static_cast<uint16_t>(severity));
+         msg->setFieldFromTime(fieldId++, static_cast<uint32_t>(0)); // compatibility: last activation timestamp
+      }
+      else
+      {
+         msg->setField(fieldId++, static_cast<uint16_t>(0));   // number of thresholds
+      }
+   }
+   else
+   {
+      msg->setField(fieldId++, static_cast<uint16_t>(0));   // number of thresholds
+   }
+
+   unlock();
 }
 
 /**
@@ -1268,59 +1311,60 @@ IntegerArray<UINT32> *DCTable::getThresholdIdList()
 /**
  * Loads DCTable last value
  */
-void DCTable::updateCache()
+void DCTable::loadCache()
 {
-   if (m_lastValue == nullptr)
+   if (m_lastValue != nullptr)
+      return;  // Value already collected
+
+   TCHAR query[512];
+   switch(g_dbSyntax)
    {
-      TCHAR query[512];
-      switch(g_dbSyntax)
-      {
-         case DB_SYNTAX_MSSQL:
-            _sntprintf(query, 512, _T("SELECT TOP 1 tdata_value FROM tdata_%u WHERE item_id=%u ORDER BY tdata_timestamp DESC"),
-                     m_ownerId, m_id);
-            break;
-         case DB_SYNTAX_ORACLE:
-            _sntprintf(query, 512, _T("SELECT * FROM (SELECT tdata_value FROM tdata_%u WHERE item_id=%u ORDER BY tdata_timestamp DESC) WHERE ROWNUM<=1"),
-                     m_ownerId, m_id);
-            break;
-         case DB_SYNTAX_MYSQL:
-         case DB_SYNTAX_PGSQL:
-         case DB_SYNTAX_SQLITE:
-         case DB_SYNTAX_TSDB:
-            _sntprintf(query, 512, _T("SELECT tdata_value FROM tdata_%u WHERE item_id=%u ORDER BY tdata_timestamp DESC LIMIT 1"),
-                     m_ownerId, m_id);
-            break;
-         case DB_SYNTAX_DB2:
-            _sntprintf(query, 512, _T("SELECT tdata_value FROM tdata_%u WHERE item_id=%u ORDER BY tdata_timestamp DESC FETCH FIRST 1 ROWS ONLY"),
-                     m_ownerId, m_id);
-            break;
-         default:
-            DbgPrintf(1, _T("INTERNAL ERROR: unsupported database in DCTable::updateCache"));
-            query[0] = 0;   // Unsupported database
-      }
-
-      char *encodedTable = nullptr;
-      if (query[0] != 0)
-      {
-         DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-         DB_RESULT hResult = DBSelect(hdb, query);
-         if (hResult != nullptr)
-         {
-            if (DBGetNumRows(hResult) > 0)
-            {
-               encodedTable = DBGetFieldUTF8(hResult, 0, 0, nullptr, 0);
-            }
-            DBFreeResult(hResult);
-         }
-         DBConnectionPoolReleaseConnection(hdb);
-      }
-
-      lock();
-      if (encodedTable != nullptr && m_lastValue == nullptr) //m_lastValue can be changed while query is executed
-      {
-         m_lastValue = shared_ptr<Table>(Table::createFromPackedXML(encodedTable));
-      }
-      unlock();
-      MemFree(encodedTable);
+      case DB_SYNTAX_MSSQL:
+         _sntprintf(query, 512, _T("SELECT TOP 1 tdata_value FROM tdata_%u WHERE item_id=%u ORDER BY tdata_timestamp DESC"),
+                  m_ownerId, m_id);
+         break;
+      case DB_SYNTAX_ORACLE:
+         _sntprintf(query, 512, _T("SELECT * FROM (SELECT tdata_value FROM tdata_%u WHERE item_id=%u ORDER BY tdata_timestamp DESC) WHERE ROWNUM<=1"),
+                  m_ownerId, m_id);
+         break;
+      case DB_SYNTAX_MYSQL:
+      case DB_SYNTAX_PGSQL:
+      case DB_SYNTAX_SQLITE:
+      case DB_SYNTAX_TSDB:
+         _sntprintf(query, 512, _T("SELECT tdata_value FROM tdata_%u WHERE item_id=%u ORDER BY tdata_timestamp DESC LIMIT 1"),
+                  m_ownerId, m_id);
+         break;
+      case DB_SYNTAX_DB2:
+         _sntprintf(query, 512, _T("SELECT tdata_value FROM tdata_%u WHERE item_id=%u ORDER BY tdata_timestamp DESC FETCH FIRST 1 ROWS ONLY"),
+                  m_ownerId, m_id);
+         break;
+      default:
+         nxlog_debug_tag(_T("dc"), 2, _T("INTERNAL ERROR: unsupported database in DCTable::loadCache"));
+         query[0] = 0;   // Unsupported database
+         break;
    }
+
+   char *encodedTable = nullptr;
+   if (query[0] != 0)
+   {
+      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+      DB_RESULT hResult = DBSelect(hdb, query);
+      if (hResult != nullptr)
+      {
+         if (DBGetNumRows(hResult) > 0)
+         {
+            encodedTable = DBGetFieldUTF8(hResult, 0, 0, nullptr, 0);
+         }
+         DBFreeResult(hResult);
+      }
+      DBConnectionPoolReleaseConnection(hdb);
+   }
+
+   lock();
+   if (encodedTable != nullptr && m_lastValue == nullptr) //m_lastValue can be changed while query is executed
+   {
+      m_lastValue = shared_ptr<Table>(Table::createFromPackedXML(encodedTable));
+   }
+   unlock();
+   MemFree(encodedTable);
 }

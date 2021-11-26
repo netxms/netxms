@@ -28,7 +28,7 @@ import org.netxms.base.NXCPMessage;
  */
 public class TableThreshold
 {
-   private static final String[] OPERATIONS = { "<", "<=", "==", ">=", ">", "!=", "like", "!like" };
+   private static final String[] OPERATIONS = { "<", "<=", "==", ">=", ">", "!=", "LIKE", "NOT LIKE" };
 
    private long id;
    private int activationEvent;
