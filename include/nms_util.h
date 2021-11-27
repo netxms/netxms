@@ -3850,6 +3850,20 @@ ssize_t LIBNETXMS_EXPORTABLE SendEx(SOCKET hSocket, const void *data, size_t len
 ssize_t LIBNETXMS_EXPORTABLE RecvEx(SOCKET hSocket, void *data, size_t len, int flags, uint32_t timeout, SOCKET controlSocket = INVALID_SOCKET);
 bool LIBNETXMS_EXPORTABLE RecvAll(SOCKET s, void *buffer, size_t size, uint32_t timeout);
 
+static inline bool SocketCanRead(SOCKET hSocket, uint32_t timeout)
+{
+   SocketPoller sp;
+   sp.add(hSocket);
+   return sp.poll(timeout) > 0;
+}
+
+static inline bool SocketCanWrite(SOCKET hSocket, uint32_t timeout)
+{
+   SocketPoller sp(true);
+   sp.add(hSocket);
+   return sp.poll(timeout) > 0;
+}
+
 SOCKET LIBNETXMS_EXPORTABLE ConnectToHost(const InetAddress& addr, uint16_t port, uint32_t timeout);
 SOCKET LIBNETXMS_EXPORTABLE ConnectToHostUDP(const InetAddress& addr, uint16_t port);
 

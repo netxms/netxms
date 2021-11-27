@@ -1,19 +1,28 @@
-/* $Id$ */
+/*
+** NetXMS - Network Management System
+** Copyright (C) 2003-2021 Raden Solutions
+**
+** This program is free software; you can redistribute it and/or modify
+** it under the terms of the GNU General Public License as published by
+** the Free Software Foundation; either version 2 of the License, or
+** (at your option) any later version.
+**
+** This program is distributed in the hope that it will be useful,
+** but WITHOUT ANY WARRANTY; without even the implied warranty of
+** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+** GNU General Public License for more details.
+**
+** You should have received a copy of the GNU General Public License
+** along with this program; if not, write to the Free Software
+** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+**
+** File: main.cpp
+**
+**/
 
-#include <nms_common.h>
-#include <nms_agent.h>
+#include "portcheck.h"
 #include <nxcldefs.h>
-#include <nxcpapi.h>
 #include <netxms-version.h>
-
-#ifdef _WIN32
-#define PORTCHECK_EXPORTABLE __declspec(dllexport) __cdecl
-#else
-#define PORTCHECK_EXPORTABLE
-#endif
-
-#include "main.h"
-#include "net.h"
 
 /**
  * Global variables
@@ -21,7 +30,24 @@
 char g_szDomainName[128] = "netxms.org";
 char g_hostName[128] = "";
 char g_szFailedDir[1024] = "";
-UINT32 g_serviceCheckFlags = 0;
+uint32_t g_serviceCheckFlags = 0;
+
+/**
+ * Default request timeout
+ */
+uint32_t s_defaultTimeout = 3000;
+
+/**
+ * Connect to given host
+ */
+SOCKET NetConnectTCP(const char *hostname, const InetAddress& addr, uint16_t port, uint32_t dwTimeout)
+{
+   InetAddress hostAddr = (hostname != nullptr) ? InetAddress::resolveHostName(hostname) : addr;
+   if (!hostAddr.isValidUnicast() && !hostAddr.isLoopback())
+      return INVALID_SOCKET;
+
+   return ConnectToHost(hostAddr, port, (dwTimeout != 0) ? dwTimeout : s_defaultTimeout);
+}
 
 /**
  * Command handler
@@ -146,11 +172,6 @@ bool CommandHandler(UINT32 dwCommand, NXCPMessage *pRequest, NXCPMessage *pRespo
 }
 
 /**
- * Default request timeout
- */
-UINT32 m_dwDefaultTimeout = 3000;
-
-/**
  * Configuration template
  */
 static NX_CFG_TEMPLATE m_cfgTemplate[] =
@@ -159,7 +180,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
 	{ _T("FailedDirectory"), CT_MB_STRING, 0, 0, 1024, 0, &g_szFailedDir },
    { _T("HostName"), CT_MB_STRING, 0, 0, 128, 0, g_hostName },
    { _T("NegativeResponseTimeOnError"), CT_BOOLEAN_FLAG_32, 0, 0, SCF_NEGATIVE_TIME_ON_ERROR, 0, &g_serviceCheckFlags },
-   { _T("Timeout"), CT_LONG, 0, 0, 0, 0, &m_dwDefaultTimeout },
+   { _T("Timeout"), CT_LONG, 0, 0, 0, 0, &s_defaultTimeout },
 	{ _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
 };
 
@@ -175,7 +196,7 @@ static bool SubagentInit(Config *config)
 /**
  * Supported parameters
  */
-static NETXMS_SUBAGENT_PARAM m_parameters[] =
+static NETXMS_SUBAGENT_PARAM s_parameters[] =
 {
 	{ _T("ServiceCheck.Custom(*)"),        H_CheckCustom, _T("C"),	 DCI_DT_INT, _T("Status of remote TCP service") },
 	{ _T("ServiceCheck.HTTP(*)"),          H_CheckHTTP,   _T("C"),  DCI_DT_INT, _T("Status of remote HTTP service") },
@@ -196,20 +217,18 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 /**
  * Subagent information
  */
-static NETXMS_SUBAGENT_INFO m_info =
+static NETXMS_SUBAGENT_INFO s_info =
 {
 	NETXMS_SUBAGENT_INFO_MAGIC,
 	_T("PORTCHECK"),
 	NETXMS_VERSION_STRING,
-	SubagentInit, NULL, // init and shutdown routines
-	CommandHandler,
-	NULL,    // notification handler
-	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
-	m_parameters,
-	0, NULL,	// lists
-	0, NULL,	// tables
-   0, NULL,	// actions
-	0, NULL	// push parameters
+	SubagentInit, nullptr, CommandHandler, nullptr,
+	sizeof(s_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
+	s_parameters,
+	0, nullptr,	// lists
+	0, nullptr,	// tables
+   0, nullptr,	// actions
+	0, nullptr	// push parameters
 };
 
 /**
@@ -217,7 +236,7 @@ static NETXMS_SUBAGENT_INFO m_info =
  */
 DECLARE_SUBAGENT_ENTRY_POINT(PORTCHECK)
 {
-	*ppInfo = &m_info;
+	*ppInfo = &s_info;
 	return true;
 }
 

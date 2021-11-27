@@ -1,13 +1,27 @@
-#include <nms_common.h>
-#include <nms_agent.h>
+/*
+** NetXMS - Network Management System
+** Copyright (C) 2003-2021 Raden Solutions
+**
+** This program is free software; you can redistribute it and/or modify
+** it under the terms of the GNU General Public License as published by
+** the Free Software Foundation; either version 2 of the License, or
+** (at your option) any later version.
+**
+** This program is distributed in the hope that it will be useful,
+** but WITHOUT ANY WARRANTY; without even the implied warranty of
+** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+** GNU General Public License for more details.
+**
+** You should have received a copy of the GNU General Public License
+** along with this program; if not, write to the Free Software
+** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+**
+** File: http.cpp
+**
+**/
+
+#include "portcheck.h"
 #include <netxms-regex.h>
-
-#ifdef _WITH_ENCRYPTION
-#include <openssl/ssl.h>
-#endif
-
-#include "main.h"
-#include "net.h"
 
 /**
  * Save HTTP(s) responce to file for later investigation
@@ -18,7 +32,7 @@ static void SaveResponse(char *host, const InetAddress& ip, char *buffer)
    if (g_szFailedDir[0] == 0)
       return;
 
-   time_t now = time(NULL);
+   time_t now = time(nullptr);
    char fileName[2048];
    char tmp[64];
    snprintf(fileName, 2048, "%s%s%s-%d",
@@ -123,7 +137,7 @@ int CheckHTTP(char *szAddr, const InetAddress& addr, short nPort, char *szURI, c
 				"GET %s HTTP/1.1\r\nConnection: close\r\nAccept: */*\r\n%s\r\n",
 				szURI, szHostHeader);
 
-		if (NetWrite(nSd, szTmp, (int)strlen(szTmp)) > 0)
+		if (NetWrite(nSd, szTmp, strlen(szTmp)))
 		{
 #define READ_TIMEOUT 5000
 #define CHUNK_SIZE 10240
@@ -131,7 +145,7 @@ int CheckHTTP(char *szAddr, const InetAddress& addr, short nPort, char *szURI, c
 			ssize_t offset = 0;
 			ssize_t buffSize = CHUNK_SIZE;
 
-			while(NetCanRead(nSd, READ_TIMEOUT))
+			while(SocketCanRead(nSd, READ_TIMEOUT))
 			{
 				ssize_t nBytes = NetRead(nSd, buff + offset, buffSize - offset);
 				if (nBytes > 0) 
@@ -163,7 +177,7 @@ int CheckHTTP(char *szAddr, const InetAddress& addr, short nPort, char *szURI, c
 				buff[offset] = 0;
 
 				int ovector[30];
-            if (pcre_exec(preg, NULL, buff, static_cast<int>(strlen(buff)), 0, 0, ovector, 30) >= 0)
+            if (pcre_exec(preg, nullptr, buff, static_cast<int>(strlen(buff)), 0, 0, ovector, 30) >= 0)
 				{
 					nRet = PC_ERR_NONE;
 				}
