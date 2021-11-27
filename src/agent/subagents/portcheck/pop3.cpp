@@ -1,10 +1,26 @@
-/* $Id$ */
+/*
+** NetXMS - Network Management System
+** Copyright (C) 2003-2021 Raden Solutions
+**
+** This program is free software; you can redistribute it and/or modify
+** it under the terms of the GNU General Public License as published by
+** the Free Software Foundation; either version 2 of the License, or
+** (at your option) any later version.
+**
+** This program is distributed in the hope that it will be useful,
+** but WITHOUT ANY WARRANTY; without even the implied warranty of
+** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+** GNU General Public License for more details.
+**
+** You should have received a copy of the GNU General Public License
+** along with this program; if not, write to the Free Software
+** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+**
+** File: http.cpp
+**
+**/
 
-#include <nms_common.h>
-#include <nms_agent.h>
-
-#include "main.h"
-#include "net.h"
+#include "portcheck.h"
 
 /**
  * Check POP3 service - parameter handler
@@ -62,18 +78,18 @@ int CheckPOP3(char *szAddr, const InetAddress& addr, short nPort, char *szUser, 
 
 		nRet = PC_ERR_HANDSHAKE;
 
-#define CHECK_OK (NetCanRead(nSd, 1000) && (NetRead(nSd, szBuff, sizeof(szBuff)) > 3) \
+#define CHECK_OK (SocketCanRead(nSd, 1000) && (NetRead(nSd, szBuff, sizeof(szBuff)) > 3) \
 				&& (strncmp(szBuff, "+OK", 3) == 0))
 
 		if (CHECK_OK)
 		{
 			snprintf(szTmp, sizeof(szTmp), "USER %s\r\n", szUser);
-			if (NetWrite(nSd, szTmp, (int)strlen(szTmp)) > 0)
+			if (NetWrite(nSd, szTmp, strlen(szTmp)))
 			{
 				if (CHECK_OK)
 				{
 					snprintf(szTmp, sizeof(szTmp), "PASS %s\r\n", szPass);
-					if (NetWrite(nSd, szTmp, (int)strlen(szTmp)) > 0)
+					if (NetWrite(nSd, szTmp, strlen(szTmp)))
 					{
 						if (CHECK_OK)
 						{

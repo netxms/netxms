@@ -1,8 +1,26 @@
-#include <nms_common.h>
-#include <nms_agent.h>
+/*
+** NetXMS - Network Management System
+** Copyright (C) 2003-2021 Raden Solutions
+**
+** This program is free software; you can redistribute it and/or modify
+** it under the terms of the GNU General Public License as published by
+** the Free Software Foundation; either version 2 of the License, or
+** (at your option) any later version.
+**
+** This program is distributed in the hope that it will be useful,
+** but WITHOUT ANY WARRANTY; without even the implied warranty of
+** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+** GNU General Public License for more details.
+**
+** You should have received a copy of the GNU General Public License
+** along with this program; if not, write to the Free Software
+** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+**
+** File: smtp.cpp
+**
+**/
 
-#include "main.h"
-#include "net.h"
+#include "portcheck.h"
 
 /**
  * Check SMTP service - parameter handler
@@ -23,8 +41,8 @@ LONG H_CheckSMTP(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCom
 		return SYSINFO_RC_ERROR;
 	}
 
-	UINT32 dwTimeout = _tcstoul(szTimeout, NULL, 0);
-   INT64 start = GetCurrentTimeMs();
+	uint32_t dwTimeout = _tcstoul(szTimeout, NULL, 0);
+   int64_t start = GetCurrentTimeMs();
 	int result = CheckSMTP(szHost, InetAddress::INVALID, 25, szTo, dwTimeout);
    if (*arg == 'R')
    {
@@ -61,14 +79,13 @@ int CheckSMTP(char *szAddr, const InetAddress& addr, short nPort, char *szTo, UI
 		nRet = PC_ERR_HANDSHAKE;
 
 #define CHECK_OK(x) nErr = 1; while(1) { \
-	if (NetCanRead(nSd, (dwTimeout != 0) ? dwTimeout : 1000)) { \
+	if (SocketCanRead(nSd, (dwTimeout != 0) ? dwTimeout : 1000)) { \
 		if (NetRead(nSd, szBuff, sizeof(szBuff)) > 3) { \
 			if (szBuff[3] == '-') { continue; } \
 			if (strncmp(szBuff, x" ", 4) == 0) { nErr = 0; } break; \
 		} else { break; } \
 	} else { break; } } \
 	if (nErr == 0)
-
 
 		CHECK_OK("220")
 		{
@@ -89,17 +106,17 @@ int CheckSMTP(char *szAddr, const InetAddress& addr, short nPort, char *szTo, UI
 		   }
 			
 			snprintf(szTmp, sizeof(szTmp), "HELO %s\r\n", szHostname);
-			if (NetWrite(nSd, szTmp, (int)strlen(szTmp)) > 0)
+			if (NetWrite(nSd, szTmp, strlen(szTmp)))
 			{
 				CHECK_OK("250")
 				{
 					snprintf(szTmp, sizeof(szTmp), "MAIL FROM: noreply@%s\r\n", g_szDomainName);
-					if (NetWrite(nSd, szTmp, (int)strlen(szTmp)) > 0)
+					if (NetWrite(nSd, szTmp, strlen(szTmp)))
 					{
 						CHECK_OK("250")
 						{
 							snprintf(szTmp, sizeof(szTmp), "RCPT TO: %s\r\n", szTo);
-							if (NetWrite(nSd, szTmp, (int)strlen(szTmp)) > 0)
+							if (NetWrite(nSd, szTmp, strlen(szTmp)))
 							{
 								CHECK_OK("250")
 								{
@@ -125,11 +142,11 @@ int CheckSMTP(char *szAddr, const InetAddress& addr, short nPort, char *szTo, UI
 											snprintf(szBuff, sizeof(szBuff), "From: <noreply@%s>\r\nTo: <%s>\r\nSubject: NetXMS test mail\r\nDate: %s\r\n\r\nNetXMS test mail\r\n.\r\n",
 											         szHostname, szTo, szTime);
 											
-											if (NetWrite(nSd, szBuff, (int)strlen(szBuff)) > 0)
+											if (NetWrite(nSd, szBuff, strlen(szBuff)))
 											{
 												CHECK_OK("250")
 												{
-													if (NetWrite(nSd, "QUIT\r\n", 6) > 0)
+													if (NetWrite(nSd, "QUIT\r\n", 6))
 													{
 														CHECK_OK("221")
 														{

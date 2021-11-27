@@ -1,12 +1,12 @@
 SUBAGENT = portcheck
 
 pkglib_LTLIBRARIES = portcheck.la
-portcheck_la_SOURCES = custom.cpp http.cpp main.cpp net.cpp pop3.cpp smtp.cpp ssh.cpp telnet.cpp
+portcheck_la_SOURCES = custom.cpp http.cpp main.cpp pop3.cpp smtp.cpp ssh.cpp telnet.cpp
 portcheck_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/build
 portcheck_la_LDFLAGS = -module -avoid-version -export-symbols ../subagent.sym
 portcheck_la_LIBADD = ../../libnxagent/libnxagent.la ../../../libnetxms/libnetxms.la
 
-EXTRA_DIST = main.h net.h portcheck.vcxproj portcheck.vcxproj.filters
+EXTRA_DIST = portcheck.h portcheck.vcxproj portcheck.vcxproj.filters
 
 if !STATIC_BUILD
 install-exec-hook:

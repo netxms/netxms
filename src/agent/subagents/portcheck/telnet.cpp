@@ -1,8 +1,26 @@
-#include <nms_common.h>
-#include <nms_agent.h>
+/*
+** NetXMS - Network Management System
+** Copyright (C) 2003-2021 Raden Solutions
+**
+** This program is free software; you can redistribute it and/or modify
+** it under the terms of the GNU General Public License as published by
+** the Free Software Foundation; either version 2 of the License, or
+** (at your option) any later version.
+**
+** This program is distributed in the hope that it will be useful,
+** but WITHOUT ANY WARRANTY; without even the implied warranty of
+** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+** GNU General Public License for more details.
+**
+** You should have received a copy of the GNU General Public License
+** along with this program; if not, write to the Free Software
+** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+**
+** File: telnet.cpp
+**
+**/
 
-#include "main.h"
-#include "net.h"
+#include "portcheck.h"
 
 /**
  * Check telnet service - parameter handler
@@ -31,8 +49,8 @@ LONG H_CheckTelnet(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractC
 		nPort = 23;
 	}
 
-	UINT32 dwTimeout = _tcstoul(szTimeout, NULL, 0);
-   INT64 start = GetCurrentTimeMs();
+	uint32_t dwTimeout = _tcstoul(szTimeout, NULL, 0);
+   int64_t start = GetCurrentTimeMs();
 	int result = CheckTelnet(szHost, InetAddress::INVALID, nPort, NULL, NULL, dwTimeout);
    if (*arg == 'R')
    {
@@ -56,15 +74,13 @@ LONG H_CheckTelnet(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractC
 int CheckTelnet(char *szAddr, const InetAddress& addr, short nPort, char *szUser, char *szPass, UINT32 dwTimeout)
 {
 	int nRet = 0;
-	SOCKET nSd;
-
-	nSd = NetConnectTCP(szAddr, addr, nPort, dwTimeout);
+	SOCKET nSd = NetConnectTCP(szAddr, addr, nPort, dwTimeout);
 	if (nSd != INVALID_SOCKET)
 	{
 		unsigned char szBuff[512];
 
 		nRet = PC_ERR_HANDSHAKE;
-		while(NetCanRead(nSd, 1000) && nRet == PC_ERR_HANDSHAKE) // 1sec
+		while(SocketCanRead(nSd, 1000) && nRet == PC_ERR_HANDSHAKE) // 1sec
 		{
 			ssize_t size = NetRead(nSd, (char *)szBuff, sizeof(szBuff));
 			unsigned char out[4];
@@ -93,7 +109,7 @@ int CheckTelnet(char *szAddr, const InetAddress& addr, short nPort, char *szUser
 					out[2] = szBuff[i];
 
 					// send reject
-					NetWrite(nSd, (char *)out, 3);
+					NetWrite(nSd, out, 3);
 
 					memset(out, 0, sizeof(out));
 					continue;
