@@ -24,9 +24,6 @@
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="net.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="pop3.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -41,10 +38,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="main.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="net.h">
+    <ClInclude Include="portcheck.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\nms_agent.h">

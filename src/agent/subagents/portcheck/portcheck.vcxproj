@@ -182,7 +182,6 @@
     <ClCompile Include="custom.cpp" />
     <ClCompile Include="http.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="net.cpp" />
     <ClCompile Include="pop3.cpp" />
     <ClCompile Include="smtp.cpp" />
     <ClCompile Include="ssh.cpp" />
@@ -194,8 +193,7 @@
     <ClInclude Include="..\..\..\..\include\nms_threads.h" />
     <ClInclude Include="..\..\..\..\include\nms_util.h" />
     <ClInclude Include="..\..\..\..\include\nxlog.h" />
-    <ClInclude Include="main.h" />
-    <ClInclude Include="net.h" />
+    <ClInclude Include="portcheck.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\libnetxms\libnetxms.vcxproj">

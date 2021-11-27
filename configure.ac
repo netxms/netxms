@@ -1057,7 +1057,7 @@ if test $? = 0; then
 		STATIC_SUBAGENT_LIST="$PROPOSED_STATIC_SUBAGENTS"
 	fi
 
-	SUBAGENT_LIBS="../subagents/ecs/ecs.la ../subagents/filemgr/filemgr.la ../subagents/logwatch/logwatch.la ../subagents/ping/ping.la ../subagents/portCheck/portcheck.la ../subagents/ups/ups.la"
+	SUBAGENT_LIBS="../subagents/ecs/ecs.la ../subagents/filemgr/filemgr.la ../subagents/logwatch/logwatch.la ../subagents/ping/ping.la ../subagents/portcheck/portcheck.la ../subagents/ups/ups.la"
 
 	check_substr "$STATIC_SUBAGENT_LIST" "asterisk"
 	if test $? = 0; then
@@ -4871,7 +4871,7 @@ AC_CONFIG_FILES([
 	src/agent/subagents/oracle/Makefile
 	src/agent/subagents/pgsql/Makefile
 	src/agent/subagents/ping/Makefile
-	src/agent/subagents/portCheck/Makefile
+	src/agent/subagents/portcheck/Makefile
 	src/agent/subagents/python/Makefile
 	src/agent/subagents/rpi/Makefile
 	src/agent/subagents/sms/Makefile
