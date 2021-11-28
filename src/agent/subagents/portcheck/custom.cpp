@@ -27,26 +27,24 @@
  */
 LONG H_CheckCustom(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
-	char szHost[1024];
-	TCHAR szPort[1024];
-	TCHAR szTimeout[64];
+   char host[1024];
+   TCHAR portText[32], timeoutText[64];
+   AgentGetParameterArgA(param, 1, host, sizeof(host));
+   AgentGetParameterArg(param, 2, portText, sizeof(portText) / sizeof(TCHAR));
+   AgentGetParameterArg(param, 3, timeoutText, sizeof(timeoutText) / sizeof(TCHAR));
 
-   AgentGetParameterArgA(param, 1, szHost, sizeof(szHost));
-   AgentGetParameterArg(param, 2, szPort, sizeof(szPort));
-   AgentGetParameterArg(param, 3, szTimeout, sizeof(szTimeout));
-
-	if (szHost[0] == 0 || szPort[0] == 0)
+	if (host[0] == 0 || portText[0] == 0)
 		return SYSINFO_RC_ERROR;
 
-	uint16_t nPort = static_cast<uint16_t>(_tcstol(szPort, nullptr, 10));
-	if (nPort == 0)
+	uint16_t port = static_cast<uint16_t>(_tcstol(portText, nullptr, 10));
+	if (port == 0)
 		return SYSINFO_RC_ERROR;
 
-   LONG nRet = SYSINFO_RC_SUCCESS;
+   LONG rc = SYSINFO_RC_SUCCESS;
 
-	uint32_t dwTimeout = _tcstoul(szTimeout, nullptr, 0);
+	uint32_t timeout = _tcstoul(timeoutText, nullptr, 0);
    int64_t start = GetCurrentTimeMs();
-   int result = CheckCustom(szHost, InetAddress::INVALID, nPort, dwTimeout);
+   int result = CheckCustom(host, InetAddress::INVALID, port, timeout);
    if (*arg == 'R')
    {
       if (result == PC_ERR_NONE)
@@ -54,34 +52,34 @@ LONG H_CheckCustom(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractC
       else if (g_serviceCheckFlags & SCF_NEGATIVE_TIME_ON_ERROR)
          ret_int(value, -result);
       else
-         nRet = SYSINFO_RC_ERROR;
+         rc = SYSINFO_RC_ERROR;
    }
    else
    {
 	   ret_int(value, result);
    }
-   return nRet;
+   return rc;
 }
 
 /**
  * Check custom service
  */
-int CheckCustom(char *hostname, const InetAddress& addr, short nPort, UINT32 dwTimeout)
+int CheckCustom(char *hostname, const InetAddress& addr, uint16_t port, uint32_t timeout)
 {
-	int nRet;
-	SOCKET nSd = NetConnectTCP(hostname, addr, nPort, dwTimeout);
-	if (nSd != INVALID_SOCKET)
+	int status;
+	SOCKET hSocket = NetConnectTCP(hostname, addr, port, timeout);
+	if (hSocket != INVALID_SOCKET)
 	{
-		nRet = PC_ERR_NONE;
-		NetClose(nSd);
+		status = PC_ERR_NONE;
+		NetClose(hSocket);
 	}
 	else
 	{
-		nRet = PC_ERR_CONNECT;
+		status = PC_ERR_CONNECT;
 	}
 
    char buffer[64];
-   nxlog_debug_tag(SUBAGENT_DEBUG_TAG, 7, _T("CheckCustom(%hs, %d): result=%d"), (hostname != NULL) ? hostname : addr.toStringA(buffer), (int)nPort, nRet);
+   nxlog_debug_tag(SUBAGENT_DEBUG_TAG, 7, _T("CheckCustom(%hs, %d): result=%d"), (hostname != nullptr) ? hostname : addr.toStringA(buffer), (int)port, status);
 
-	return nRet;
+	return status;
 }

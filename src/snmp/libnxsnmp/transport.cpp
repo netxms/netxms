@@ -461,9 +461,7 @@ int SNMP_UDPTransport::recvData(UINT32 dwTimeout, struct sockaddr *pSender, sock
 retry_wait:
    if (dwTimeout != INFINITE)
    {
-      SocketPoller sp;
-      sp.add(m_hSocket);
-      if (sp.poll(dwTimeout) <= 0)
+      if (!SocketCanRead(m_hSocket, dwTimeout))
          return 0;
    }
 

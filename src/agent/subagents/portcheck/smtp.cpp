@@ -30,20 +30,18 @@ LONG H_CheckSMTP(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCom
 	LONG nRet = SYSINFO_RC_SUCCESS;
 	char szHost[256];
 	char szTo[256];
-	TCHAR szTimeout[64];
 
 	AgentGetParameterArgA(param, 1, szHost, sizeof(szHost));
 	AgentGetParameterArgA(param, 2, szTo, sizeof(szTo));
-   AgentGetParameterArg(param, 3, szTimeout, sizeof(szTimeout));
 
 	if (szHost[0] == 0 || szTo[0] == 0)
 	{
 		return SYSINFO_RC_ERROR;
 	}
 
-	uint32_t dwTimeout = _tcstoul(szTimeout, NULL, 0);
+   uint32_t timeout = GetTimeoutFromArgs(param, 3);
    int64_t start = GetCurrentTimeMs();
-	int result = CheckSMTP(szHost, InetAddress::INVALID, 25, szTo, dwTimeout);
+	int result = CheckSMTP(szHost, InetAddress::INVALID, 25, szTo, timeout);
    if (*arg == 'R')
    {
       if (result == PC_ERR_NONE)

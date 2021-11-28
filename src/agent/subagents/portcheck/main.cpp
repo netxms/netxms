@@ -38,6 +38,19 @@ uint32_t g_serviceCheckFlags = 0;
 uint32_t s_defaultTimeout = 3000;
 
 /**
+ * Get timeout from metric arguments
+ */
+uint32_t GetTimeoutFromArgs(const TCHAR *metric, int argIndex)
+{
+   TCHAR timeoutText[64];
+   if (!AgentGetParameterArg(metric, argIndex, timeoutText, 64))
+      return s_defaultTimeout;
+   TCHAR *eptr;
+   uint32_t timeout = _tcstol(timeoutText, &eptr, 0);
+   return ((timeout != 0) && (*eptr == 0)) ? timeout : s_defaultTimeout;
+}
+
+/**
  * Connect to given host
  */
 SOCKET NetConnectTCP(const char *hostname, const InetAddress& addr, uint16_t port, uint32_t dwTimeout)
@@ -54,77 +67,70 @@ SOCKET NetConnectTCP(const char *hostname, const InetAddress& addr, uint16_t por
  */
 bool CommandHandler(UINT32 dwCommand, NXCPMessage *pRequest, NXCPMessage *pResponse, AbstractCommSession *session)
 {
-	bool bHandled = true;
-	WORD wType, wPort;
-	char szRequest[1024 * 10];
-	char szResponse[1024 * 10];
-	UINT32 nRet;
+   if (dwCommand != CMD_CHECK_NETWORK_SERVICE)
+      return false;
 
-	if (dwCommand != CMD_CHECK_NETWORK_SERVICE)
-	{
-		return false;
-	}
-
-	wType = pRequest->getFieldAsUInt16(VID_SERVICE_TYPE);
-	wPort = pRequest->getFieldAsUInt16(VID_IP_PORT);
+	uint16_t serviceType = pRequest->getFieldAsUInt16(VID_SERVICE_TYPE);
+	uint16_t port = pRequest->getFieldAsUInt16(VID_IP_PORT);
 	InetAddress addr = pRequest->getFieldAsInetAddress(VID_IP_ADDRESS);
-	pRequest->getFieldAsMBString(VID_SERVICE_REQUEST, szRequest, sizeof(szRequest));
-	pRequest->getFieldAsMBString(VID_SERVICE_RESPONSE, szResponse, sizeof(szResponse));
 
-   INT64 start = GetCurrentTimeMs();
+	char serviceRequest[1024 * 10], serviceResponse[1024 * 10];
+	pRequest->getFieldAsMBString(VID_SERVICE_REQUEST, serviceRequest, sizeof(serviceRequest));
+	pRequest->getFieldAsMBString(VID_SERVICE_RESPONSE, serviceResponse, sizeof(serviceResponse));
 
-	switch(wType)
+   int64_t start = GetCurrentTimeMs();
+   bool bHandled = true;
+   uint32_t status;
+
+	switch(serviceType)
 	{
 		case NETSRV_CUSTOM:
-			// unsupported for now
-			nRet = CheckCustom(NULL, addr, wPort, 0);
+			status = CheckCustom(nullptr, addr, port, s_defaultTimeout);
 			pResponse->setField(VID_RCC, ERR_SUCCESS);
-			pResponse->setField(VID_SERVICE_STATUS, (UINT32)nRet);
+         pResponse->setField(VID_SERVICE_STATUS, status);
 			break;
 		case NETSRV_SSH:
-			nRet = CheckSSH(NULL, addr, wPort, NULL, NULL, 0);
-
+			status = CheckSSH(nullptr, addr, port, nullptr, nullptr, s_defaultTimeout);
 			pResponse->setField(VID_RCC, ERR_SUCCESS);
-			pResponse->setField(VID_SERVICE_STATUS, (UINT32)nRet);
+         pResponse->setField(VID_SERVICE_STATUS, status);
 			break;
 		case NETSRV_TELNET:
-			nRet = CheckTelnet(NULL, addr, wPort, NULL, NULL, 0);
-
+			status = CheckTelnet(nullptr, addr, port, nullptr, nullptr, s_defaultTimeout);
 			pResponse->setField(VID_RCC, ERR_SUCCESS);
-			pResponse->setField(VID_SERVICE_STATUS, (UINT32)nRet);
+         pResponse->setField(VID_SERVICE_STATUS, status);
 			break;
 		case NETSRV_POP3:
 			{
 				char *pUser, *pPass;
-				nRet = PC_ERR_BAD_PARAMS;
+				status = PC_ERR_BAD_PARAMS;
 
-				pUser = szRequest;
-				pPass = strchr(szRequest, ':');
+				pUser = serviceRequest;
+				pPass = strchr(serviceRequest, ':');
 				if (pPass != NULL)
 				{
 					*pPass = 0;
 					pPass++;
 
-					nRet = CheckPOP3(NULL, addr, wPort, pUser, pPass, 0);
+					status = CheckPOP3(nullptr, addr, port, pUser, pPass, s_defaultTimeout);
 
 				}
 
 				pResponse->setField(VID_RCC, ERR_SUCCESS);
-				pResponse->setField(VID_SERVICE_STATUS, (UINT32)nRet);
+	         pResponse->setField(VID_SERVICE_STATUS, status);
 			}
 			break;
 		case NETSRV_SMTP:
-			nRet = PC_ERR_BAD_PARAMS;
+			status = PC_ERR_BAD_PARAMS;
 
-			if (szRequest[0] != 0)
+			if (serviceRequest[0] != 0)
 			{
-				nRet = CheckSMTP(NULL, addr, wPort, szRequest, 0);
+				status = CheckSMTP(nullptr, addr, port, serviceRequest, s_defaultTimeout);
 				pResponse->setField(VID_RCC, ERR_SUCCESS);
-				pResponse->setField(VID_SERVICE_STATUS, (UINT32)nRet);
+	         pResponse->setField(VID_SERVICE_STATUS, status);
 			}
 
 			pResponse->setField(VID_RCC, ERR_SUCCESS);
-			pResponse->setField(VID_SERVICE_STATUS, (UINT32)nRet);
+         pResponse->setField(VID_SERVICE_STATUS, status);
 			break;
 		case NETSRV_FTP:
 			bHandled = FALSE;
@@ -135,29 +141,34 @@ bool CommandHandler(UINT32 dwCommand, NXCPMessage *pRequest, NXCPMessage *pRespo
 				char *pHost;
 				char *pURI;
 
-				nRet = PC_ERR_BAD_PARAMS;
+				status = PC_ERR_BAD_PARAMS;
 
-				pHost = szRequest;
-				pURI = strchr(szRequest, ':');
+				pHost = serviceRequest;
+				pURI = strchr(serviceRequest, ':');
 				if (pURI != NULL)
 				{
 					*pURI = 0;
 					pURI++;
 
-               if (wType == NETSRV_HTTP)
+               if (serviceType == NETSRV_HTTP)
                {
-                  nRet = CheckHTTP(NULL, addr, wPort, pURI, pHost, szResponse, 0);
+                  status = CheckHTTP(NULL, addr, port, pURI, pHost, serviceResponse, s_defaultTimeout);
                }
                else
                {
-                  nRet = CheckHTTPS(NULL, addr, wPort, pURI, pHost, szResponse, 0);
+                  status = CheckHTTPS(NULL, addr, port, pURI, pHost, serviceResponse, s_defaultTimeout);
                }
 				}
 
 				pResponse->setField(VID_RCC, ERR_SUCCESS);
-				pResponse->setField(VID_SERVICE_STATUS, (UINT32)nRet);
+	         pResponse->setField(VID_SERVICE_STATUS, status);
 			}
 			break;
+      case NETSRV_TLS:
+         status = CheckTLS(nullptr, addr, port, s_defaultTimeout);
+         pResponse->setField(VID_RCC, ERR_SUCCESS);
+         pResponse->setField(VID_SERVICE_STATUS, status);
+         break;
 		default:
 			bHandled = false;
 			break;
@@ -165,8 +176,8 @@ bool CommandHandler(UINT32 dwCommand, NXCPMessage *pRequest, NXCPMessage *pRespo
 
    if (bHandled)
    {
-      INT64 elapsed = GetCurrentTimeMs() - start;
-      pResponse->setField(VID_RESPONSE_TIME, (INT32)elapsed);
+      uint32_t elapsed = static_cast<uint32_t>(GetCurrentTimeMs() - start);
+      pResponse->setField(VID_RESPONSE_TIME, elapsed);
    }
 	return bHandled;
 }
@@ -198,20 +209,28 @@ static bool SubagentInit(Config *config)
  */
 static NETXMS_SUBAGENT_PARAM s_parameters[] =
 {
-	{ _T("ServiceCheck.Custom(*)"),        H_CheckCustom, _T("C"),	 DCI_DT_INT, _T("Status of remote TCP service") },
-	{ _T("ServiceCheck.HTTP(*)"),          H_CheckHTTP,   _T("C"),  DCI_DT_INT, _T("Status of remote HTTP service") },
-	{ _T("ServiceCheck.HTTPS(*)"),         H_CheckHTTP,   _T("CS"), DCI_DT_INT, _T("Status of remote HTTPS service") },
-	{ _T("ServiceCheck.POP3(*)"),          H_CheckPOP3,   _T("C"),  DCI_DT_INT, _T("Status of remote POP3 service") },
-	{ _T("ServiceCheck.SMTP(*)"),          H_CheckSMTP,   _T("C"),	 DCI_DT_INT, _T("Status of remote SMTP service") },
-	{ _T("ServiceCheck.SSH(*)"),           H_CheckSSH,    _T("C"),	 DCI_DT_INT, _T("Status of remote SSH service") },
-	{ _T("ServiceCheck.Telnet(*)"),        H_CheckTelnet, _T("C"),	 DCI_DT_INT, _T("Status of remote TELNET service") },
-	{ _T("ServiceResponseTime.Custom(*)"), H_CheckCustom, _T("R"),	 DCI_DT_INT, _T("Response time of remote TCP service") },
-	{ _T("ServiceResponseTime.HTTP(*)"),   H_CheckHTTP,   _T("R"),	 DCI_DT_INT, _T("Response time of remote HTTP service") },
-	{ _T("ServiceResponseTime.HTTPS(*)"),  H_CheckHTTP,   _T("RS"), DCI_DT_INT, _T("Response time of remote HTTPS service") },
-	{ _T("ServiceResponseTime.POP3(*)"),   H_CheckPOP3,   _T("R"),  DCI_DT_INT, _T("Response time of remote POP3 service") },
-	{ _T("ServiceResponseTime.SMTP(*)"),   H_CheckSMTP,   _T("R"),  DCI_DT_INT, _T("Response time of remote SMTP service") },
-	{ _T("ServiceResponseTime.SSH(*)"),    H_CheckSSH,    _T("R"),  DCI_DT_INT, _T("Response time of remote SSH service") },
-	{ _T("ServiceResponseTime.Telnet(*)"), H_CheckTelnet, _T("R"),  DCI_DT_INT, _T("Response time of remote TELNET service") }
+	{ _T("ServiceCheck.Custom(*)"), H_CheckCustom, _T("C"),	DCI_DT_INT, _T("Status of remote TCP service") },
+	{ _T("ServiceCheck.HTTP(*)"), H_CheckHTTP, _T("C"), DCI_DT_INT, _T("Status of remote HTTP service") },
+	{ _T("ServiceCheck.HTTPS(*)"), H_CheckHTTP, _T("CS"), DCI_DT_INT, _T("Status of remote HTTPS service") },
+	{ _T("ServiceCheck.POP3(*)"), H_CheckPOP3, _T("C"), DCI_DT_INT, _T("Status of remote POP3 service") },
+	{ _T("ServiceCheck.SMTP(*)"), H_CheckSMTP, _T("C"), DCI_DT_INT, _T("Status of remote SMTP service") },
+	{ _T("ServiceCheck.SSH(*)"), H_CheckSSH, _T("C"), DCI_DT_INT, _T("Status of remote SSH service") },
+	{ _T("ServiceCheck.Telnet(*)"), H_CheckTelnet, _T("C"), DCI_DT_INT, _T("Status of remote TELNET service") },
+   { _T("ServiceCheck.TLS(*)"), H_CheckTLS, _T("C"), DCI_DT_INT, _T("Status of remote TLS service") },
+	{ _T("ServiceResponseTime.Custom(*)"), H_CheckCustom, _T("R"),	DCI_DT_INT, _T("Response time of remote TCP service") },
+	{ _T("ServiceResponseTime.HTTP(*)"), H_CheckHTTP, _T("R"), DCI_DT_INT, _T("Response time of remote HTTP service") },
+	{ _T("ServiceResponseTime.HTTPS(*)"), H_CheckHTTP, _T("RS"), DCI_DT_INT, _T("Response time of remote HTTPS service") },
+	{ _T("ServiceResponseTime.POP3(*)"), H_CheckPOP3, _T("R"), DCI_DT_INT, _T("Response time of remote POP3 service") },
+	{ _T("ServiceResponseTime.SMTP(*)"), H_CheckSMTP, _T("R"), DCI_DT_INT, _T("Response time of remote SMTP service") },
+	{ _T("ServiceResponseTime.SSH(*)"), H_CheckSSH, _T("R"), DCI_DT_INT, _T("Response time of remote SSH service") },
+	{ _T("ServiceResponseTime.Telnet(*)"), H_CheckTelnet, _T("R"), DCI_DT_INT, _T("Response time of remote TELNET service") },
+   { _T("ServiceResponseTime.Telnet(*)"), H_CheckTLS, _T("R"), DCI_DT_INT, _T("Response time of remote TLS service") },
+   { _T("TLS.Certificate.ExpirationDate(*)"), H_TLSCertificateInfo, _T("D"),  DCI_DT_STRING, _T("Expiration date (YYYY-MM-DD) of X.509 certificate of remote TLS service") },
+   { _T("TLS.Certificate.ExpirationTime(*)"), H_TLSCertificateInfo, _T("E"),  DCI_DT_UINT64, _T("Expiration time of X.509 certificate of remote TLS service") },
+   { _T("TLS.Certificate.ExpiresIn(*)"), H_TLSCertificateInfo, _T("U"),  DCI_DT_INT, _T("Days until expiration of X.509 certificate of remote TLS service") },
+   { _T("TLS.Certificate.Issuer(*)"), H_TLSCertificateInfo, _T("I"), DCI_DT_STRING, _T("Issuer of X.509 certificate of remote TLS service") },
+   { _T("TLS.Certificate.Subject(*)"), H_TLSCertificateInfo, _T("S"), DCI_DT_STRING, _T("Subject of X.509 certificate of remote TLS service") },
+   { _T("TLS.Certificate.TemplateID(*)"), H_TLSCertificateInfo, _T("T"), DCI_DT_STRING, _T("Template ID of X.509 certificate of remote TLS service") }
 };
 
 /**

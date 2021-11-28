@@ -113,12 +113,7 @@ bool SocketConnection::connectTCP(const InetAddress& ip, uint16_t port, uint32_t
  */
 bool SocketConnection::canRead(uint32_t timeout)
 {
-   if (m_dataSize > 0)
-      return true;
-
-   SocketPoller p;
-   p.add(m_socket);
-   return p.poll(timeout) > 0;
+   return (m_dataSize > 0) ? true : SocketCanRead(m_socket, timeout);
 }
 
 /**
