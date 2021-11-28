@@ -31,27 +31,23 @@ LONG H_CheckSSH(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractComm
 
 	char szHost[256];
 	TCHAR szPort[256];
-	TCHAR szTimeout[64];
-	unsigned short nPort;
-
    AgentGetParameterArgA(param, 1, szHost, sizeof(szHost));
    AgentGetParameterArg(param, 2, szPort, sizeof(szPort));
-   AgentGetParameterArg(param, 3, szTimeout, sizeof(szTimeout));
 
 	if (szHost[0] == 0)
 	{
 		return SYSINFO_RC_ERROR;
 	}
 
-	nPort = (unsigned short)_tcstoul(szPort, NULL, 10);
+	uint16_t nPort = static_cast<uint16_t>(_tcstoul(szPort, nullptr, 10));
 	if (nPort == 0)
 	{
 		nPort = 22;
 	}
 
-	UINT32 dwTimeout = _tcstoul(szTimeout, NULL, 0);
-   INT64 start = GetCurrentTimeMs();
-	int result = CheckSSH(szHost, InetAddress::INVALID, nPort, NULL, NULL, dwTimeout);
+   uint32_t timeout = GetTimeoutFromArgs(param, 3);
+   int64_t start = GetCurrentTimeMs();
+	int result = CheckSSH(szHost, InetAddress::INVALID, nPort, nullptr, nullptr, timeout);
    if (*arg == 'R')
    {
       if (result == PC_ERR_NONE)
@@ -73,20 +69,18 @@ LONG H_CheckSSH(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractComm
  */
 int CheckSSH(char *szAddr, const InetAddress& addr, short nPort, char *szUser, char *szPass, UINT32 dwTimeout)
 {
-	int nRet = 0;
-	SOCKET nSd;
-
-	nSd = NetConnectTCP(szAddr, addr, nPort, dwTimeout);
-	if (nSd != INVALID_SOCKET)
+	int rc;
+	SOCKET hSocket = NetConnectTCP(szAddr, addr, nPort, dwTimeout);
+	if (hSocket != INVALID_SOCKET)
 	{
 		char szBuff[512];
 		char szTmp[128];
 
-		nRet = PC_ERR_HANDSHAKE;
+		rc = PC_ERR_HANDSHAKE;
 
-		if (SocketCanRead(nSd, 1000))
+		if (SocketCanRead(hSocket, 1000))
 		{
-			if (NetRead(nSd, szBuff, sizeof(szBuff)) >= 8)
+			if (NetRead(hSocket, szBuff, sizeof(szBuff)) >= 8)
 			{
 				int nMajor, nMinor;
 
@@ -94,20 +88,19 @@ int CheckSSH(char *szAddr, const InetAddress& addr, short nPort, char *szUser, c
 				{
 					snprintf(szTmp, sizeof(szTmp), "SSH-%d.%d-NetXMS\n",
 							nMajor, nMinor);
-					if (NetWrite(nSd, szTmp, (int)strlen(szTmp)) > 0)
+					if (NetWrite(hSocket, szTmp, (int)strlen(szTmp)) > 0)
 					{
-						nRet = PC_ERR_NONE;
+						rc = PC_ERR_NONE;
 					}
 				}
 			}
 		}
 
-		NetClose(nSd);
+		NetClose(hSocket);
 	}
 	else
 	{
-		nRet = PC_ERR_CONNECT;
+		rc = PC_ERR_CONNECT;
 	}
-
-	return nRet;
+	return rc;
 }

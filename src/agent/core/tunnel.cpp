@@ -992,24 +992,22 @@ bool Tunnel::connectToServer()
       return false;
    }
 
-   char *subj = X509_NAME_oneline(X509_get_subject_name(cert), NULL ,0);
-   char *issuer = X509_NAME_oneline(X509_get_issuer_name(cert), NULL ,0);
-   debugPrintf(4, _T("Server certificate subject is %hs"), subj);
-   debugPrintf(4, _T("Server certificate issuer is %hs"), issuer);
+   String subject = GetCertificateSubjectString(cert);
+   String issuer = GetCertificateIssuerString(cert);
+   debugPrintf(4, _T("Server certificate subject is %s"), subject.cstr());
+   debugPrintf(4, _T("Server certificate issuer is %s"), issuer.cstr());
 
    bool isValid = true;
    if (g_dwFlags & AF_CHECK_SERVER_CERTIFICATE)
    {
       debugPrintf(3, _T("Verifying server certificate"));
       isValid = VerifyServerCertificate(cert);
-      debugPrintf(3, _T("Certificate \"%hs\" for issuer %hs - verification %s"), subj, issuer, isValid ? _T("successful") : _T("failed"));
+      debugPrintf(3, _T("Certificate \"%s\" for issuer %s - verification %s"), subject.cstr(), issuer.cstr(), isValid ? _T("successful") : _T("failed"));
    }
    else
    {
       debugPrintf(3, _T("Server certificate verification is disabled"));
    }
-   OPENSSL_free(subj);
-   OPENSSL_free(issuer);
 
    X509_free(cert);
    if (!isValid)

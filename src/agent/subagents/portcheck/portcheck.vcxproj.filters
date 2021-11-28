@@ -36,6 +36,9 @@
     <ClCompile Include="telnet.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="tls.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="portcheck.h">

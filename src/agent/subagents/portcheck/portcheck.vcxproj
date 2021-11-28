@@ -186,6 +186,7 @@
     <ClCompile Include="smtp.cpp" />
     <ClCompile Include="ssh.cpp" />
     <ClCompile Include="telnet.cpp" />
+    <ClCompile Include="tls.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\include\nms_agent.h" />
