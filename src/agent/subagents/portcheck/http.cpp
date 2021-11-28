@@ -59,32 +59,27 @@ LONG H_CheckHTTP(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCom
 	char szURI[1024];
 	char szHeader[1024];
 	char szMatch[1024];
-	TCHAR szTimeout[64];
-	unsigned short nPort;
 
 	AgentGetParameterArgA(param, 1, szHost, sizeof(szHost));
-	AgentGetParameterArg(param, 2, szPort, sizeof(szPort));
+	AgentGetParameterArg(param, 2, szPort, sizeof(szPort) / sizeof(TCHAR));
 	AgentGetParameterArgA(param, 3, szURI, sizeof(szURI));
 	AgentGetParameterArgA(param, 4, szHeader, sizeof(szHeader));
 	AgentGetParameterArgA(param, 5, szMatch, sizeof(szMatch));
-   AgentGetParameterArg(param, 6, szTimeout, sizeof(szTimeout));
 
 	if (szHost[0] == 0 || szPort[0] == 0 || szURI[0] == 0)
-	{
 		return SYSINFO_RC_ERROR;
-	}
 
-	nPort = (unsigned short)_tcstoul(szPort, NULL, 10);
+	uint16_t nPort = static_cast<uint16_t>(_tcstoul(szPort, nullptr, 10));
 	if (nPort == 0)
 	{
 		nPort = 80;
 	}
 
-	UINT32 dwTimeout = _tcstoul(szTimeout, NULL, 0);
-   INT64 start = GetCurrentTimeMs();
+   uint32_t timeout = GetTimeoutFromArgs(param, 6);
+   int64_t start = GetCurrentTimeMs();
    int result = (arg[1] == 'S') ?
-            CheckHTTPS(szHost, InetAddress::INVALID, nPort, szURI, szHeader, szMatch, dwTimeout) :
-            CheckHTTP(szHost, InetAddress::INVALID, nPort, szURI, szHeader, szMatch, dwTimeout);
+            CheckHTTPS(szHost, InetAddress::INVALID, nPort, szURI, szHeader, szMatch, timeout) :
+            CheckHTTP(szHost, InetAddress::INVALID, nPort, szURI, szHeader, szMatch, timeout);
    if (*arg == 'R')
    {
       if (result == PC_ERR_NONE)
@@ -221,16 +216,20 @@ int CheckHTTPS(char *szAddr, const InetAddress& addr, short nPort, char *szURI, 
 
    int ret = PC_ERR_INTERNAL;
 
-   SSL_CTX *ctx = SSL_CTX_new(SSLv23_client_method());
-   if (ctx != NULL)
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+   const SSL_METHOD *method = TLS_method();
+#else
+   const SSL_METHOD *method = SSLv23_method();
+#endif
+   SSL_CTX *ctx = SSL_CTX_new(method);
+   if (ctx != nullptr)
    {
       SSL *ssl = SSL_new(ctx);
-      if (ssl != NULL)
+      if (ssl != nullptr)
       {
          SSL_set_connect_state(ssl);
-
          BIO *ssl_bio = BIO_new(BIO_f_ssl());
-         if (ssl_bio != NULL)
+         if (ssl_bio != nullptr)
          {
             BIO_set_ssl(ssl_bio, ssl, BIO_CLOSE);
 
@@ -254,8 +253,8 @@ int CheckHTTPS(char *szAddr, const InetAddress& addr, short nPort, char *szURI, 
 #endif
                }
 #if OPENSSL_VERSION_NUMBER >= 0x10100000L
-	       char portText[32];
-	       snprintf(portText, 32, "%d", (int)nPort);
+               char portText[32];
+               snprintf(portText, 32, "%d", (int)nPort);
                BIO_set_conn_port(out, portText);
 #else
                int intPort = nPort;

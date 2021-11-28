@@ -31,27 +31,21 @@ LONG H_CheckTelnet(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractC
 
 	char szHost[256];
 	TCHAR szPort[256];
-	TCHAR szTimeout[64];
-	unsigned short nPort;
-
 	AgentGetParameterArgA(param, 1, szHost, sizeof(szHost));
 	AgentGetParameterArg(param, 2, szPort, sizeof(szPort));
-   AgentGetParameterArg(param, 3, szTimeout, sizeof(szTimeout));
 
 	if (szHost[0] == 0)
-	{
 		return SYSINFO_RC_ERROR;
-	}
 
-	nPort = (unsigned short)_tcstoul(szPort, NULL, 10);
+	uint16_t nPort = static_cast<uint16_t>(_tcstoul(szPort, nullptr, 10));
 	if (nPort == 0)
 	{
 		nPort = 23;
 	}
 
-	uint32_t dwTimeout = _tcstoul(szTimeout, NULL, 0);
+   uint32_t timeout = GetTimeoutFromArgs(param, 3);
    int64_t start = GetCurrentTimeMs();
-	int result = CheckTelnet(szHost, InetAddress::INVALID, nPort, NULL, NULL, dwTimeout);
+	int result = CheckTelnet(szHost, InetAddress::INVALID, nPort, nullptr, nullptr, timeout);
    if (*arg == 'R')
    {
       if (result == PC_ERR_NONE)
@@ -73,14 +67,14 @@ LONG H_CheckTelnet(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractC
  */
 int CheckTelnet(char *szAddr, const InetAddress& addr, short nPort, char *szUser, char *szPass, UINT32 dwTimeout)
 {
-	int nRet = 0;
+	int status = 0;
 	SOCKET nSd = NetConnectTCP(szAddr, addr, nPort, dwTimeout);
 	if (nSd != INVALID_SOCKET)
 	{
 		unsigned char szBuff[512];
 
-		nRet = PC_ERR_HANDSHAKE;
-		while(SocketCanRead(nSd, 1000) && nRet == PC_ERR_HANDSHAKE) // 1sec
+		status = PC_ERR_HANDSHAKE;
+		while(SocketCanRead(nSd, 1000) && status == PC_ERR_HANDSHAKE) // 1sec
 		{
 			ssize_t size = NetRead(nSd, (char *)szBuff, sizeof(szBuff));
 			unsigned char out[4];
@@ -116,7 +110,7 @@ int CheckTelnet(char *szAddr, const InetAddress& addr, short nPort, char *szUser
 				}
 
 				// end of handshake, get out from here
-				nRet = PC_ERR_NONE;
+				status = PC_ERR_NONE;
 				break;
 			}
 		}
@@ -125,8 +119,8 @@ int CheckTelnet(char *szAddr, const InetAddress& addr, short nPort, char *szUser
 	}
 	else
 	{
-		nRet = PC_ERR_CONNECT;
+		status = PC_ERR_CONNECT;
 	}
 
-	return nRet;
+	return status;
 }

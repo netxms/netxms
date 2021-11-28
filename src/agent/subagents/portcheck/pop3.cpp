@@ -31,21 +31,17 @@ LONG H_CheckPOP3(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCom
 	char szHost[256];
 	char szUser[256];
 	char szPassword[256];
-	TCHAR szTimeout[64];
 
 	AgentGetParameterArgA(param, 1, szHost, sizeof(szHost));
 	AgentGetParameterArgA(param, 2, szUser, sizeof(szUser));
 	AgentGetParameterArgA(param, 3, szPassword, sizeof(szPassword));
-   AgentGetParameterArg(param, 4, szTimeout, sizeof(szTimeout));
 
 	if (szHost[0] == 0 || szUser[0] == 0 || szPassword[0] == 0)
-	{
 		return SYSINFO_RC_ERROR;
-	}
 
-	UINT32 dwTimeout = _tcstoul(szTimeout, NULL, 0);
-   INT64 start = GetCurrentTimeMs();
-	int result = CheckPOP3(szHost, InetAddress::INVALID, 110, szUser, szPassword, dwTimeout);
+   uint32_t timeout = GetTimeoutFromArgs(param, 4);
+   int64_t start = GetCurrentTimeMs();
+	int result = CheckPOP3(szHost, InetAddress::INVALID, 110, szUser, szPassword, timeout);
    if (*arg == 'R')
    {
       if (result == PC_ERR_NONE)
@@ -67,45 +63,43 @@ LONG H_CheckPOP3(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCom
  */
 int CheckPOP3(char *szAddr, const InetAddress& addr, short nPort, char *szUser, char *szPass, UINT32 dwTimeout)
 {
-	int nRet = 0;
-	SOCKET nSd;
-
-	nSd = NetConnectTCP(szAddr, addr, nPort, dwTimeout);
-	if (nSd != INVALID_SOCKET)
+	int status = 0;
+	SOCKET hSocket = NetConnectTCP(szAddr, addr, nPort, dwTimeout);
+	if (hSocket != INVALID_SOCKET)
 	{
 		char szBuff[512];
 		char szTmp[128];
 
-		nRet = PC_ERR_HANDSHAKE;
+		status = PC_ERR_HANDSHAKE;
 
-#define CHECK_OK (SocketCanRead(nSd, 1000) && (NetRead(nSd, szBuff, sizeof(szBuff)) > 3) \
+#define CHECK_OK (SocketCanRead(hSocket, 1000) && (NetRead(hSocket, szBuff, sizeof(szBuff)) > 3) \
 				&& (strncmp(szBuff, "+OK", 3) == 0))
 
 		if (CHECK_OK)
 		{
 			snprintf(szTmp, sizeof(szTmp), "USER %s\r\n", szUser);
-			if (NetWrite(nSd, szTmp, strlen(szTmp)))
+			if (NetWrite(hSocket, szTmp, strlen(szTmp)))
 			{
 				if (CHECK_OK)
 				{
 					snprintf(szTmp, sizeof(szTmp), "PASS %s\r\n", szPass);
-					if (NetWrite(nSd, szTmp, strlen(szTmp)))
+					if (NetWrite(hSocket, szTmp, strlen(szTmp)))
 					{
 						if (CHECK_OK)
 						{
-							nRet = PC_ERR_NONE;
+							status = PC_ERR_NONE;
 						}
 					}
 				}
 			}
 		}
 
-		NetClose(nSd);
+		NetClose(hSocket);
 	}
 	else
 	{
-		nRet = PC_ERR_CONNECT;
+		status = PC_ERR_CONNECT;
 	}
 
-	return nRet;
+	return status;
 }
