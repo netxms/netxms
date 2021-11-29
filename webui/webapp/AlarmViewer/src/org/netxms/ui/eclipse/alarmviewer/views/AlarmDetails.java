@@ -80,6 +80,7 @@ import org.netxms.client.events.Alarm;
 import org.netxms.client.events.AlarmComment;
 import org.netxms.client.events.EventInfo;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.DataCollectionTarget;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.alarmviewer.Activator;
 import org.netxms.ui.eclipse.alarmviewer.Messages;
@@ -511,7 +512,16 @@ public class AlarmDetails extends ViewPart
 				final Alarm alarm = session.getAlarm(alarmId);
 				final List<AlarmComment> comments = session.getAlarmComments(alarmId);
 				
-				final DciValue[] lastValues = session.getLastValues(alarm.getSourceObjectId());
+				AbstractObject sourceObject = session.findObjectById(alarm.getSourceObjectId());
+				final DciValue[] lastValues; 
+				if (sourceObject instanceof DataCollectionTarget)
+				{
+				   lastValues = session.getLastValues(alarm.getSourceObjectId());
+				}
+				else
+				{
+				   lastValues = new DciValue[] {};
+				}
 				
             List<EventInfo> _events = null;
             try
