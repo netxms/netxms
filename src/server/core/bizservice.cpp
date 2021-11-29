@@ -91,7 +91,7 @@ bool BusinessService::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
    if (!Pollable::loadFromDatabase(hdb, m_id))
       return false;
 
-   m_serviceState = getMostCriticalCheckStatus();
+   m_serviceState = getMostCriticalCheckState();
    return true;
 }
 
@@ -141,18 +141,18 @@ void BusinessService::fillMessageInternal(NXCPMessage *msg, uint32_t userId)
 }
 
 /**
- * Returns most critical service check status
+ * Returns most critical service check state
  */
-int BusinessService::getMostCriticalCheckStatus()
+int BusinessService::getMostCriticalCheckState()
 {
-   int status = STATUS_NORMAL;
+   int state = STATUS_NORMAL;
    unique_ptr<SharedObjectArray<BusinessServiceCheck>> checks = getChecks();
    for (const shared_ptr<BusinessServiceCheck>& check : *checks)
    {
-      if (check->getStatus() > status)
-         status = check->getStatus();
+      if (check->getState() > state)
+         state = check->getState();
    }
-   return status;
+   return state;
 }
 
 /**
@@ -160,7 +160,7 @@ int BusinessService::getMostCriticalCheckStatus()
  */
 int BusinessService::getAdditionalMostCriticalStatus()
 {
-   return getMostCriticalCheckStatus();
+   return getMostCriticalCheckState();
 }
 
 /**
@@ -187,7 +187,7 @@ void BusinessService::statusPoll(PollerInfo *poller, ClientSession *session, UIN
    poller->setStatus(_T("executing checks"));
    sendPollerMsg(_T("Executing business service checks\r\n"));
 
-   int mostCriticalCheckStatus = STATUS_NORMAL;
+   int mostCriticalCheckState = STATUS_NORMAL;
    unique_ptr<SharedObjectArray<BusinessServiceCheck>> checks = getChecks();
    for (const shared_ptr<BusinessServiceCheck>& check : *checks)
    {
@@ -196,8 +196,8 @@ void BusinessService::statusPoll(PollerInfo *poller, ClientSession *session, UIN
 
       nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("BusinessService::statusPoll(%s [%u]): executing check %s [%u]"), m_name, m_id, checkDescription.cstr(), check->getId());
       sendPollerMsg(_T("   Executing business service check \"%s\"\r\n"), checkDescription.cstr());
-      int oldCheckStatus = check->getStatus();
-      int newCheckStatus = check->execute(&data);
+      int oldCheckState = check->getState();
+      int newCheckState = check->execute(&data);
 
       if (data.ticketId != 0)
       {
@@ -205,19 +205,19 @@ void BusinessService::statusPoll(PollerInfo *poller, ClientSession *session, UIN
          for (const shared_ptr<NetObj>& parent : *parents)
             static_cast<BusinessService&>(*parent).addChildTicket(data);
       }
-      if (oldCheckStatus != newCheckStatus)
+      if (oldCheckState != newCheckState)
       {
-         nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("BusinessService::statusPoll(%s [%u]): status of check %s [%u] changed to %s"),
-               m_name, m_id, checkDescription.cstr(), check->getId(), GetStatusAsText(newCheckStatus, true));
-         sendPollerMsg(_T("   State of business service check \"%s\" changed to %s\r\n"), checkDescription.cstr(), GetStatusAsText(newCheckStatus, true));
+         nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("BusinessService::statusPoll(%s [%u]): state of check %s [%u] changed to %s"),
+               m_name, m_id, checkDescription.cstr(), check->getId(), GetStatusAsText(newCheckState, true));
+         sendPollerMsg(_T("   State of business service check \"%s\" changed to %s\r\n"), checkDescription.cstr(), GetStatusAsText(newCheckState, true));
          NotifyClientsOnBusinessServiceCheckUpdate(*this, check);
       }
-      if (newCheckStatus > mostCriticalCheckStatus)
+      if (newCheckState > mostCriticalCheckState)
       {
-         mostCriticalCheckStatus = newCheckStatus;
+         mostCriticalCheckState = newCheckState;
       }
    }
-   m_serviceState = mostCriticalCheckStatus;
+   m_serviceState = mostCriticalCheckState;
    sendPollerMsg(_T("All business service checks executed\r\n"));
 
    if (prevState != m_serviceState)
@@ -490,6 +490,14 @@ bool BusinessService::lockForConfigurationPoll()
 }
 
 /**
+ * Create NXSL object for this object
+ */
+NXSL_Value *BusinessService::createNXSLObject(NXSL_VM *vm)
+{
+   return vm->createValue(new NXSL_Object(vm, &g_nxslBusinessServiceClass, new shared_ptr<BusinessService>(self())));
+}
+
+/**
  * Get business service uptime in percents
  */
 double GetServiceUptime(uint32_t serviceId, time_t from, time_t to)
@@ -502,12 +510,12 @@ double GetServiceUptime(uint32_t serviceId, time_t from, time_t to)
    if (hStmt != nullptr)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, serviceId);
-      DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (uint32_t)from);
-      DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (uint32_t)to);
-      DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (uint32_t)from);
-      DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, (uint32_t)to);
-      DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, (uint32_t)from);
-      DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, (uint32_t)to);
+      DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(from));
+      DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(to));
+      DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(from));
+      DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(to));
+      DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(from));
+      DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(to));
       DB_RESULT hResult = DBSelectPrepared(hStmt);
       if (hResult != nullptr)
       {
@@ -515,11 +523,11 @@ double GetServiceUptime(uint32_t serviceId, time_t from, time_t to)
          int count = DBGetNumRows(hResult);
          for (int i = 0; i < count; i++)
          {
-            time_t from_timestamp = DBGetFieldUInt64(hResult, i, 0);
-            time_t to_timestamp = DBGetFieldUInt64(hResult, i, 1);
-            if (to_timestamp == 0)
-               to_timestamp = to;
-            time_t downtime = (to_timestamp > to ? to : to_timestamp) - (from_timestamp < from ? from : from_timestamp);
+            time_t fromTimestamp = DBGetFieldUInt64(hResult, i, 0);
+            time_t toTimestamp = DBGetFieldUInt64(hResult, i, 1);
+            if (toTimestamp == 0)
+               toTimestamp = to;
+            time_t downtime = (toTimestamp > to ? to : toTimestamp) - (fromTimestamp < from ? from : fromTimestamp);
             totalUptime -= downtime;
          }
          res = (double)totalUptime / (double)((to - from) / 100);

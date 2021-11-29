@@ -169,6 +169,29 @@ public:
 };
 
 /**
+ * NXSL "BusinessService" class
+ */
+class NXSL_BusinessServiceClass : public NXSL_NetObjClass
+{
+public:
+   NXSL_BusinessServiceClass();
+
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr) override;
+};
+
+/**
+ * NXSL "BusinessServiceCheck" class
+ */
+class NXSL_BusinessServiceCheckClass : public NXSL_Class
+{
+public:
+   NXSL_BusinessServiceCheckClass();
+
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr) override;
+   virtual void onObjectDelete(NXSL_Object *object) override;
+};
+
+/**
  * NXSL "Event" class
  */
 class NXSL_EventClass : public NXSL_Class
@@ -446,6 +469,8 @@ bool ParseValueList(NXSL_VM *vm, TCHAR **start, ObjectRefArray<NXSL_Value> &args
 extern NXSL_AccessPointClass g_nxslAccessPointClass;
 extern NXSL_AlarmClass g_nxslAlarmClass;
 extern NXSL_AlarmCommentClass g_nxslAlarmCommentClass;
+extern NXSL_BusinessServiceClass g_nxslBusinessServiceClass;
+extern NXSL_BusinessServiceCheckClass g_nxslBusinessServiceCheckClass;
 extern NXSL_ChassisClass g_nxslChassisClass;
 extern NXSL_ClusterClass g_nxslClusterClass;
 extern NXSL_ContainerClass g_nxslContainerClass;

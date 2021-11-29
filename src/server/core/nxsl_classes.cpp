@@ -2907,6 +2907,146 @@ NXSL_Value *NXSL_ContainerClass::getAttr(NXSL_Object *object, const char *attr)
 }
 
 /**
+ * NXSL class "BusinessService" constructor
+ */
+NXSL_BusinessServiceClass::NXSL_BusinessServiceClass() : NXSL_NetObjClass()
+{
+   setName(_T("BusinessService"));
+}
+
+/**
+ * NXSL class "BusinessService" attributes
+ */
+NXSL_Value *NXSL_BusinessServiceClass::getAttr(NXSL_Object *object, const char *attr)
+{
+   NXSL_Value *value = NXSL_NetObjClass::getAttr(object, attr);
+   if (value != nullptr)
+      return value;
+
+   NXSL_VM *vm = object->vm();
+   auto businessService = SharedObjectFromData<BusinessService>(object);
+   if (compareAttributeName(attr, "checks"))
+   {
+      unique_ptr<SharedObjectArray<BusinessServiceCheck>> checks = businessService->getChecks();
+      NXSL_Array *array = new NXSL_Array(vm);
+      for(int i = 0; i < checks->size(); i++)
+         array->append(vm->createValue(new NXSL_Object(vm, &g_nxslBusinessServiceCheckClass, new shared_ptr<BusinessServiceCheck>(checks->getShared(i)))));
+      value = vm->createValue(array);
+   }
+   else if (compareAttributeName(attr, "instance"))
+   {
+      value = vm->createValue(businessService->getInstance());
+   }
+   else if (compareAttributeName(attr, "prototypeId"))
+   {
+      value = vm->createValue(businessService->getPrototypeId());
+   }
+   else if (compareAttributeName(attr, "serviceState"))
+   {
+      value = vm->createValue(businessService->getServiceState());
+   }
+   return value;
+}
+
+/**
+ * NXSL class "BusinessServiceCheck" constructor
+ */
+NXSL_BusinessServiceCheckClass::NXSL_BusinessServiceCheckClass() : NXSL_Class()
+{
+   setName(_T("BusinessServiceCheck"));
+}
+
+/**
+ * NXSL object destructor for class "BusinessServiceCheck"
+ */
+void NXSL_BusinessServiceCheckClass::onObjectDelete(NXSL_Object *object)
+{
+   delete static_cast<shared_ptr<BusinessServiceCheck>*>(object->getData());
+}
+
+/**
+ * NXSL class "BusinessService" attributes
+ */
+NXSL_Value *NXSL_BusinessServiceCheckClass::getAttr(NXSL_Object *object, const char *attr)
+{
+   NXSL_Value *value = NXSL_Class::getAttr(object, attr);
+   if (value != nullptr)
+      return value;
+
+   NXSL_VM *vm = object->vm();
+   BusinessServiceCheck *check = (object->getData() != nullptr) ? static_cast<shared_ptr<BusinessServiceCheck>*>(object->getData())->get() : nullptr;
+
+   if (compareAttributeName(attr, "currentTicketId"))
+   {
+      value = vm->createValue(check->getCurrentTicket());
+   }
+   else if (compareAttributeName(attr, "description"))
+   {
+      value = vm->createValue(check->getDescription());
+   }
+   else if (compareAttributeName(attr, "failureReason"))
+   {
+      value = vm->createValue(check->getFailureReason());
+   }
+   else if (compareAttributeName(attr, "id"))
+   {
+      value = vm->createValue(check->getId());
+   }
+   else if (compareAttributeName(attr, "relatedDCI"))
+   {
+      uint32_t dciId = check->getRelatedDCI();
+      uint32_t objectId = check->getRelatedObject();
+      if ((dciId != 0) && (objectId != 0))
+      {
+         shared_ptr<NetObj> object = FindObjectById(objectId);
+         if ((object != nullptr) && object->isDataCollectionTarget())
+         {
+            shared_ptr<DCObject> dci = static_cast<DataCollectionTarget&>(*object).getDCObjectById(dciId, 0);
+            value = (dci != nullptr) ? dci->createNXSLObject(vm) : vm->createValue();
+         }
+         else
+         {
+            value = vm->createValue();
+         }
+      }
+      else
+      {
+         value = vm->createValue();
+      }
+   }
+   else if (compareAttributeName(attr, "relatedDCIId"))
+   {
+      value = vm->createValue(check->getRelatedDCI());
+   }
+   else if (compareAttributeName(attr, "relatedObject"))
+   {
+      uint32_t id = check->getRelatedObject();
+      if (id != 0)
+      {
+         shared_ptr<NetObj> object = FindObjectById(id);
+         value = (object != nullptr) ? object->createNXSLObject(vm) : vm->createValue();
+      }
+      else
+      {
+         value = vm->createValue();
+      }
+   }
+   else if (compareAttributeName(attr, "relatedObjectId"))
+   {
+      value = vm->createValue(check->getRelatedObject());
+   }
+   else if (compareAttributeName(attr, "state"))
+   {
+      value = vm->createValue(check->getState());
+   }
+   else if (compareAttributeName(attr, "type"))
+   {
+      value = vm->createValue(static_cast<int32_t>(check->getType()));
+   }
+   return value;
+}
+
+/**
  * Template::applyTo(object)
  */
 NXSL_METHOD_DEFINITION(Template, applyTo)
@@ -3322,7 +3462,7 @@ NXSL_Value *NXSL_EventClass::getAttr(NXSL_Object *object, const char *attr)
    }
    else if (compareAttributeName(attr, "dci"))
    {
-      UINT32 dciId = event->getDciId();
+      uint32_t dciId = event->getDciId();
       if (dciId != 0)
       {
          shared_ptr<NetObj> object = FindObjectById(event->getSourceId());
@@ -4728,6 +4868,8 @@ void NXSL_WebServiceCallResult::onObjectDelete(NXSL_Object *object)
 NXSL_AccessPointClass g_nxslAccessPointClass;
 NXSL_AlarmClass g_nxslAlarmClass;
 NXSL_AlarmCommentClass g_nxslAlarmCommentClass;
+NXSL_BusinessServiceClass g_nxslBusinessServiceClass;
+NXSL_BusinessServiceCheckClass g_nxslBusinessServiceCheckClass;
 NXSL_ChassisClass g_nxslChassisClass;
 NXSL_ClusterClass g_nxslClusterClass;
 NXSL_ContainerClass g_nxslContainerClass;

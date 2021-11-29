@@ -4223,18 +4223,18 @@ class NXCORE_EXPORTABLE BusinessServiceCheck
 {
 protected:
    uint32_t m_id;
+   uint32_t m_serviceId;
    SharedString m_description;
    BusinessServiceCheckType m_type;
-   int m_status;
-   uint32_t m_serviceId;
-   Mutex m_mutex;
+   uint32_t m_relatedObject;
+   uint32_t m_relatedDCI;
+   int m_state;
+   int m_statusThreshold;
    TCHAR *m_script;
    NXSL_Program *m_compiledScript;
    TCHAR m_reason[256];
-   uint32_t m_relatedObject;
-   uint32_t m_relatedDCI;
    uint32_t m_currentTicket;
-   int m_statusThreshold;
+   Mutex m_mutex;
 
    bool insertTicket(BusinessServiceTicketData* ticket);
    void closeTicket();
@@ -4252,9 +4252,11 @@ public:
 
    uint32_t getId() const { return m_id; }
    BusinessServiceCheckType getType() const { return m_type; }
+   int getState() const { return m_state; }
+   const TCHAR *getFailureReason() const { return m_reason; }
+   uint32_t getCurrentTicket() const { return m_currentTicket; }
    uint32_t getRelatedObject() const { return m_relatedObject; }
    uint32_t getRelatedDCI() const { return m_relatedDCI; }
-   int getStatus() const { return m_status; }
    SharedString getDescription() const { return GetStringAttributeWithLock(m_description, m_mutex); }
 
    int execute(BusinessServiceTicketData* ticket);
@@ -4343,7 +4345,7 @@ protected:
 
    virtual int getAdditionalMostCriticalStatus() override;
 
-   int getMostCriticalCheckStatus();
+   int getMostCriticalCheckState();
 
    void validateAutomaticObjectChecks();
    void validateAutomaticDCIChecks();
@@ -4354,6 +4356,9 @@ public:
    BusinessService(const BaseBusinessService& prototype, const TCHAR *name, const TCHAR *instance);
    virtual ~BusinessService();
 
+   shared_ptr<BusinessService> self() { return static_pointer_cast<BusinessService>(NObject::self()); }
+   shared_ptr<const BusinessService> self() const { return static_pointer_cast<const BusinessService>(NObject::self()); }
+
    virtual int getObjectClass() const override { return OBJECT_BUSINESS_SERVICE; }
 
    virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
@@ -4361,6 +4366,8 @@ public:
 
    virtual bool lockForStatusPoll() override;
    virtual bool lockForConfigurationPoll() override;
+
+   virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;
 
    int getServiceState() const { return m_serviceState; }
    uint32_t getPrototypeId() const { return m_prototypeId; }
