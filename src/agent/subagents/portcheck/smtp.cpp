@@ -27,21 +27,17 @@
  */
 LONG H_CheckSMTP(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
-	LONG nRet = SYSINFO_RC_SUCCESS;
-	char szHost[256];
-	char szTo[256];
+	char host[256], recipient[256];
+	AgentGetParameterArgA(param, 1, host, sizeof(host));
+	AgentGetParameterArgA(param, 2, recipient, sizeof(recipient));
 
-	AgentGetParameterArgA(param, 1, szHost, sizeof(szHost));
-	AgentGetParameterArgA(param, 2, szTo, sizeof(szTo));
+	if ((host[0] == 0) || (recipient[0] == 0))
+		return SYSINFO_RC_UNSUPPORTED;
 
-	if (szHost[0] == 0 || szTo[0] == 0)
-	{
-		return SYSINFO_RC_ERROR;
-	}
-
+   LONG rc = SYSINFO_RC_SUCCESS;
    uint32_t timeout = GetTimeoutFromArgs(param, 3);
    int64_t start = GetCurrentTimeMs();
-	int result = CheckSMTP(szHost, InetAddress::INVALID, 25, szTo, timeout);
+	int result = CheckSMTP(host, InetAddress::INVALID, 25, recipient, timeout);
    if (*arg == 'R')
    {
       if (result == PC_ERR_NONE)
@@ -49,13 +45,13 @@ LONG H_CheckSMTP(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCom
       else if (g_serviceCheckFlags & SCF_NEGATIVE_TIME_ON_ERROR)
          ret_int(value, -result);
       else
-         nRet = SYSINFO_RC_ERROR;
+         rc = SYSINFO_RC_ERROR;
    }
    else
    {
 	   ret_int(value, result);
    }
-	return nRet;
+	return rc;
 }
 
 /**
@@ -63,18 +59,17 @@ LONG H_CheckSMTP(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCom
  */
 int CheckSMTP(char *szAddr, const InetAddress& addr, short nPort, char *szTo, UINT32 dwTimeout)
 {
-	int nRet = 0;
-	SOCKET nSd;
-	int nErr = 0; 
+	int status = PC_ERR_NONE;
+	int nErr = 0;
 
-	nSd = NetConnectTCP(szAddr, addr, nPort, dwTimeout);
+	SOCKET nSd = NetConnectTCP(szAddr, addr, nPort, dwTimeout);
 	if (nSd != INVALID_SOCKET)
 	{
 		char szBuff[2048];
 		char szTmp[128];
 		char szHostname[128];
 
-		nRet = PC_ERR_HANDSHAKE;
+		status = PC_ERR_HANDSHAKE;
 
 #define CHECK_OK(x) nErr = 1; while(1) { \
 	if (SocketCanRead(nSd, (dwTimeout != 0) ? dwTimeout : 1000)) { \
@@ -148,7 +143,7 @@ int CheckSMTP(char *szAddr, const InetAddress& addr, short nPort, char *szTo, UI
 													{
 														CHECK_OK("221")
 														{
-															nRet = PC_ERR_NONE;
+															status = PC_ERR_NONE;
 														}
 													}
 												}
@@ -167,8 +162,8 @@ int CheckSMTP(char *szAddr, const InetAddress& addr, short nPort, char *szTo, UI
 	}
 	else
 	{
-		nRet = PC_ERR_CONNECT;
+		status = PC_ERR_CONNECT;
 	}
 
-	return nRet;
+	return status;
 }
