@@ -23,6 +23,17 @@
 #include "nxdbmgr.h"
 #include <nxevent.h>
 
+/**
+ * Upgrade from 40.83 to 40.84
+ */
+static bool H_UpgradeFromV83()
+{
+   CHK_EXEC(CreateConfigParam(_T("Syslog.AllowUnknownSources"), _T("0"),
+         _T("Enable or disable processing of syslog messages from unknown sources"),
+         nullptr, 'B', true, false, false, false));
+   CHK_EXEC(SetMinorSchemaVersion(84));
+   return true;
+}
 
 /**
  * Upgrade from 40.82 to 40.83
@@ -30,6 +41,8 @@
 static bool H_UpgradeFromV82()
 {
    CHK_EXEC(SQLQuery(_T("ALTER TABLE nodes ADD syslog_codepage varchar(15)\n")));
+   CHK_EXEC(CreateConfigParam(_T("Syslog.Codepage"), _T(""),
+         _T("Default server syslog codepage"), nullptr, 'B', true, false, false, false));
    CHK_EXEC(SetMinorSchemaVersion(83));
    return true;
 }
@@ -2750,6 +2763,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 83, 40, 84, H_UpgradeFromV83 },
    { 82, 40, 83, H_UpgradeFromV82 },
    { 81, 40, 82, H_UpgradeFromV81 },
    { 80, 40, 81, H_UpgradeFromV80 },

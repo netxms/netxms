@@ -81,6 +81,7 @@ static THREAD s_writerThread = INVALID_THREAD_HANDLE;
 static bool s_running = true;
 static bool s_alwaysUseServerTime = false;
 static bool s_enableStorage = true;
+static bool s_allowUnknownSources = false;
 
 /**
  * Parse timestamp field
@@ -437,8 +438,14 @@ static void ProcessSyslogMessage(SyslogMessage *msg)
    {
       InterlockedIncrement64(&g_syslogMessagesReceived);
 
+      if (!msg->bindToNode() && !s_allowUnknownSources)
+      {
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("ProcessSyslogMessage: message from unknown source ignored"));
+         delete msg;
+         return;
+      }
+
       msg->setId(s_msgId++);
-      msg->bindToNode();
 
       // Send message to all connected clients
       EnumerateClientSessions(BroadcastSyslogMessage, msg);
@@ -815,7 +822,12 @@ void ReinitializeSyslogParser()
  */
 void OnSyslogConfigurationChange(const TCHAR *name, const TCHAR *value)
 {
-   if (!_tcscmp(name, _T("Syslog.EnableStorage")))
+   if (!_tcscmp(name, _T("Syslog.AllowUnknownSources")))
+   {
+      s_allowUnknownSources = _tcstol(value, nullptr, 0) ? true : false;
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Unknown syslog sources are %s"), s_allowUnknownSources ? _T("allowed") : _T("not allowed"));
+   }
+   else if (!_tcscmp(name, _T("Syslog.EnableStorage")))
    {
       s_enableStorage = _tcstol(value, nullptr, 0) ? true : false;
       nxlog_debug_tag(DEBUG_TAG, 4, _T("Local syslog storage is %s"), s_enableStorage ? _T("enabled") : _T("disabled"));
@@ -906,6 +918,7 @@ void StartSyslogServer()
    s_nodeMatchingPolicy = (NodeMatchingPolicy)ConfigReadInt(_T("Syslog.NodeMatchingPolicy"), SOURCE_IP_THEN_HOSTNAME);
    s_alwaysUseServerTime = ConfigReadBoolean(_T("Syslog.IgnoreMessageTimestamp"), false);
    s_enableStorage = ConfigReadBoolean(_T("Syslog.EnableStorage"), false);
+   s_allowUnknownSources = ConfigReadBoolean(_T("Syslog.AllowUnknownSources"), false);
 
    // Determine first available message id
    uint64_t id = ConfigReadUInt64(_T("FirstFreeSyslogId"), s_msgId);
