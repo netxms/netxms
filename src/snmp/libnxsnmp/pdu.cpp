@@ -88,6 +88,7 @@ SNMP_PDU::SNMP_PDU() : m_variables(0, 16, Ownership::True)
 	m_dwAgentAddr = 0;
 	m_timestamp = 0;
 	m_signatureOffset = 0;
+   m_codepage[0] = 0;
 }
 
 /**
@@ -113,6 +114,7 @@ SNMP_PDU::SNMP_PDU(SNMP_Command command, uint32_t requestId, SNMP_Version versio
    m_dwAgentAddr = 0;
    m_timestamp = 0;
    m_signatureOffset = 0;
+   m_codepage[0] = 0;
 }
 
 /**
@@ -136,6 +138,7 @@ SNMP_PDU::SNMP_PDU(SNMP_Command command, SNMP_Version version, const SNMP_Object
    m_dwAgentAddr = 0;
    m_timestamp = 0;
    m_signatureOffset = 0;
+   m_codepage[0] = 0;
 
    setTrapId(trapId);
    if (version != SNMP_VERSION_1)
@@ -177,6 +180,7 @@ SNMP_PDU::SNMP_PDU(const SNMP_PDU& src) : m_authoritativeEngine(&src.m_authorita
    m_dwAgentAddr = 0;
    m_timestamp = 0;
    m_signatureOffset = src.m_signatureOffset;
+   m_codepage[0] = 0;
 }
 
 /**

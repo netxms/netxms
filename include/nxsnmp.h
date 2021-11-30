@@ -447,6 +447,7 @@ private:
    uint32_t m_type;
    size_t m_valueLength;
    BYTE *m_value;
+   const char* m_codepage;
 
    bool decodeContent(const BYTE *data, size_t dataLength, bool enclosedInOpaque);
 
@@ -486,6 +487,8 @@ public:
    void setValueFromString(uint32_t type, const TCHAR *value, const char *codepage = nullptr);
    void setValueFromUInt32(uint32_t type, uint32_t value);
    void setValueFromObjectId(uint32_t type, const SNMP_ObjectId& value);
+
+   void setCodepage(const char* codepage) { m_codepage = codepage; }
 };
 
 /**
@@ -627,6 +630,7 @@ private:
 	char m_contextName[SNMP_MAX_CONTEXT_NAME];
 	BYTE m_salt[8];
 	bool m_reportable;
+   char m_codepage[16];
 
 	// The following attributes only used by parser and
 	// valid only for received PDUs
@@ -665,7 +669,15 @@ public:
 
    SNMP_Command getCommand() const { return m_command; }
    int getNumVariables() const { return m_variables.size(); }
-   SNMP_Variable *getVariable(int index) const { return m_variables.get(index); }
+   SNMP_Variable *getVariable(int index)
+   {
+      auto var = m_variables.get(index);
+      if (var != nullptr && m_codepage[0] != 0)
+      {
+         var->setCodepage(m_codepage);
+      }
+      return var;
+   }
    SNMP_Version getVersion() const { return m_version; }
    SNMP_ErrorCode getErrorCode() const { return static_cast<SNMP_ErrorCode>(m_errorCode); }
 
@@ -707,6 +719,8 @@ public:
       m_variables.clear();
       m_variables.setOwner(Ownership::True);
    }
+
+   void setCodepage(const char* codepage) { strlcpy(m_codepage, codepage, 16); }
 };
 
 /**
@@ -722,6 +736,7 @@ protected:
 	bool m_updatePeerOnRecv;
 	bool m_reliable;
 	SNMP_Version m_snmpVersion;
+   char m_codepage[16];
 
 	uint32_t doEngineIdDiscovery(SNMP_PDU *originalRequest, uint32_t timeout, int numRetries);
 
@@ -752,6 +767,8 @@ public:
 
 	void setSnmpVersion(SNMP_Version version) { m_snmpVersion = version; }
 	SNMP_Version getSnmpVersion() const { return m_snmpVersion; }
+
+   void setCodepage(const char* codepage) { strlcpy(m_codepage, codepage, 16); }
 };
 
 /**

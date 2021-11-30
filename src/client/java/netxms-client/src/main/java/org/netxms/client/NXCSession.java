@@ -6620,6 +6620,11 @@ public class NXCSession
          msg.setField(NXCPCodes.VID_SYSLOG_CODEPAGE, data.getSyslogCodepage());
       }
 
+      if (data.getSNMPCodepage() != null)
+      {
+         msg.setField(NXCPCodes.VID_SNMP_CODEPAGE, data.getSNMPCodepage());
+      }
+
       modifyCustomObject(data, userData, msg);
 
       sendMessage(msg);

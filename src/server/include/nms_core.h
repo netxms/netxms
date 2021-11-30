@@ -1612,6 +1612,7 @@ extern uint32_t g_snmpTrapStormCountThreshold;
 extern uint32_t g_snmpTrapStormDurationThreshold;
 extern uint32_t g_pollsBetweenPrimaryIpUpdate;
 extern PrimaryIPUpdateMode g_primaryIpUpdateMode;
+extern char g_snmpCodepage[16];
 
 extern TCHAR g_szDbDriver[];
 extern TCHAR g_szDbDrvParams[];

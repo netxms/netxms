@@ -639,6 +639,10 @@ static void OnConfigVariableChange(bool isCLOB, const TCHAR *name, const TCHAR *
       else
          InterlockedAnd64(reinterpret_cast<VolatileCounter64*>(&g_flags), ~AF_RESOLVE_NODE_NAMES);
    }
+   else if (!_tcscmp(name, _T("SNMP.Codepage")))
+   {
+      tchar_to_utf8(value, -1, g_snmpCodepage, sizeof(g_snmpCodepage));
+   }
    else if (!_tcscmp(name, _T("SNMP.Traps.AllowVarbindsConversion")))
    {
       if (_tcstol(value, nullptr, 0))

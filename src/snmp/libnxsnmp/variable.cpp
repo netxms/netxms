@@ -31,6 +31,7 @@ SNMP_Variable::SNMP_Variable()
    m_value = nullptr;
    m_type = ASN_NULL;
    m_valueLength = 0;
+   m_codepage = nullptr;
 }
 
 /**
@@ -42,6 +43,7 @@ SNMP_Variable::SNMP_Variable(const TCHAR *name)
    m_value = nullptr;
    m_type = ASN_NULL;
    m_valueLength = 0;
+   m_codepage = nullptr;
 }
 
 /**
@@ -52,6 +54,7 @@ SNMP_Variable::SNMP_Variable(const UINT32 *name, size_t nameLen) : m_name(name, 
    m_value = nullptr;
    m_type = ASN_NULL;
    m_valueLength = 0;
+   m_codepage = nullptr;
 }
 
 /**
@@ -62,6 +65,7 @@ SNMP_Variable::SNMP_Variable(const SNMP_ObjectId &name) : m_name(name)
    m_value = nullptr;
    m_type = ASN_NULL;
    m_valueLength = 0;
+   m_codepage = nullptr;
 }
 
 /**
@@ -73,6 +77,7 @@ SNMP_Variable::SNMP_Variable(const SNMP_Variable *src)
    m_value = (src->m_value != nullptr) ? MemCopyBlock(src->m_value, src->m_valueLength) : nullptr;
    m_type = src->m_type;
    m_name = src->m_name;
+   m_codepage = nullptr;
 }
 
 /**
@@ -401,6 +406,10 @@ TCHAR *SNMP_Variable::getValueAsString(TCHAR *buffer, size_t bufferSize, const c
          if (length > 0)
          {
 #ifdef UNICODE
+            if (codepage == nullptr && m_codepage != nullptr)
+            {
+               codepage = m_codepage;
+            }
             size_t cch = mbcp_to_wchar((char *)m_value, length, buffer, bufferSize, codepage);
             if (cch > 0)
             {
@@ -474,6 +483,11 @@ TCHAR *SNMP_Variable::getValueAsPrintableString(TCHAR *buffer, size_t bufferSize
          if (!conversionNeeded)
          {
 #ifdef UNICODE
+            if (codepage == nullptr && m_codepage != nullptr)
+            {
+               codepage = m_codepage;
+            }
+
             size_t cch = mbcp_to_wchar((char *)m_value, length, buffer, bufferSize, codepage);
             if (cch > 0)
             {
@@ -664,6 +678,10 @@ void SNMP_Variable::setValueFromString(uint32_t type, const TCHAR *value, const 
 #ifdef UNICODE
          length = wcslen(value) + 1;
          m_value = reinterpret_cast<BYTE*>(MemAllocStringA(length));
+         if (codepage == nullptr && m_codepage != nullptr)
+         {
+            codepage = m_codepage;
+         }
          wchar_to_mbcp(value, -1, reinterpret_cast<char*>(m_value), length, codepage);
 #else
          m_value = reinterpret_cast<BYTE*>(MemCopyString(value));

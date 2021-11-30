@@ -24,6 +24,18 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 40.85 to 40.86
+ */
+static bool H_UpgradeFromV85()
+{
+   CHK_EXEC(SQLQuery(_T("ALTER TABLE nodes ADD snmp_codepage varchar(15)\n")));
+   CHK_EXEC(CreateConfigParam(_T("SNMP.Codepage"), _T(""),
+         _T("Default server SNMP codepage"), nullptr, 'B', true, false, false, false));
+   CHK_EXEC(SetMinorSchemaVersion(86));
+   return true;
+}
+
+/**
  * Upgrade from 40.84 to 40.85
  */
 static bool H_UpgradeFromV84()
@@ -2781,6 +2793,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 85, 40, 86, H_UpgradeFromV85 },
    { 84, 40, 85, H_UpgradeFromV84 },
    { 83, 40, 84, H_UpgradeFromV83 },
    { 82, 40, 83, H_UpgradeFromV82 },

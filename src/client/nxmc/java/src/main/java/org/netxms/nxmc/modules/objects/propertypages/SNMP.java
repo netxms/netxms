@@ -59,6 +59,7 @@ public class SNMP extends ObjectPropertyPage
    private LabeledText snmpAuthName;
    private LabeledText snmpAuthPassword;
    private LabeledText snmpPrivPassword;
+   private LabeledText snmpCodepage;
    private Button snmpSettingsLocked;
 
    /**
@@ -215,6 +216,15 @@ public class SNMP extends ObjectPropertyPage
       fd.right = new FormAttachment(100, 0);
       fd.top = new FormAttachment(snmpProxy, 0, SWT.BOTTOM);
       snmpSettingsLocked.setLayoutData(fd);
+
+      snmpCodepage = new LabeledText(dialogArea, SWT.NONE);
+      snmpCodepage.setLabel(i18n.tr("Codepage"));
+      snmpCodepage.setText(node.getSNMPCodepage());
+      fd = new FormData();
+      fd.left = new FormAttachment(0, 0);
+      fd.right = new FormAttachment(100, 0);
+      fd.top = new FormAttachment(snmpSettingsLocked, 0, SWT.BOTTOM);
+      snmpCodepage.setLayoutData(fd);
       
       return dialogArea;
    }
@@ -295,6 +305,8 @@ public class SNMP extends ObjectPropertyPage
          flags &= ~AbstractNode.NF_SNMP_SETTINGS_LOCKED;
       md.setObjectFlags(flags, AbstractNode.NF_SNMP_SETTINGS_LOCKED);
 
+      md.setSNMPCodepage(snmpCodepage.getText());
+
       final NXCSession session = Registry.getSession();
       new Job(String.format("Updating SNMP settings for node %s", node.getObjectName()), null) {
          @Override
@@ -343,5 +355,6 @@ public class SNMP extends ObjectPropertyPage
       snmpPrivPassword.setText(""); //$NON-NLS-1$
       snmpProxy.setObjectId(0);
       onSnmpVersionChange();
+      snmpCodepage.setText("");
    }
 }

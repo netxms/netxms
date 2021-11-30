@@ -182,6 +182,7 @@ InetAddressList g_peerNodeAddrList;
 Condition g_dbPasswordReady(true);
 TCHAR g_startupSqlScriptPath[MAX_PATH] = _T("");
 TCHAR g_dbSessionSetupSqlScriptPath[MAX_PATH] = _T("");
+char g_snmpCodepage[16] = "";
 
 /**
  * Static data

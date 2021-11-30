@@ -184,6 +184,7 @@ public class NXCObjectModificationData
    private Integer dciStatusThreshold;
    private Long sourceNode;
    private String syslogCodepage;
+   private String snmpCodepage;
 
    /**
     * Constructor for creating modification data for given object
@@ -2251,5 +2252,21 @@ public class NXCObjectModificationData
    public String getSyslogCodepage()
    {
       return syslogCodepage;
+   }
+
+   /**
+    * @param snmpCodepage the SNMP codepage to set
+    */
+   public void setSNMPCodepage(String snmpCodepage)
+   {
+      this.snmpCodepage = snmpCodepage;
+   }
+
+   /**
+    * @return the snmpCodepage
+    */
+   public String getSNMPCodepage()
+   {
+      return snmpCodepage;
    }
 }
