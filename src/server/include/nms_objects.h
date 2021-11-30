@@ -781,6 +781,7 @@ struct NXCORE_EXPORTABLE NewNodeData
 #define MODIFY_ICMP_POLL_SETTINGS   0x010000
 #define MODIFY_DC_TARGET            0x020000
 #define MODIFY_BIZSVC_PROPERTIES    0x040000
+#define MODIFY_POLL_TIMES           0x080000
 #define MODIFY_ALL                  0xFFFFFF
 
 /**
@@ -903,12 +904,14 @@ private:
    time_t m_lastCompleted;
    ManualGauge64 m_timer;
    Mutex m_lock;
+   bool m_saveNeeded;
 
 public:
-   PollState(const TCHAR *name) : m_timer(name, 1, 1000), m_lock(MutexType::FAST)
+   PollState(const TCHAR *name, bool saveNeeded = false) : m_timer(name, 1, 1000), m_lock(MutexType::FAST)
    {
       m_pollerCount = 0;
       m_lastCompleted = TIMESTAMP_NEVER;
+      m_saveNeeded = saveNeeded;
    }
 
    /**
@@ -960,6 +963,14 @@ public:
    void setLastCompleted(time_t lastCompleted)
    {
       m_lastCompleted = lastCompleted;
+   }
+
+   /**
+    * Check if save is needed after this poll completion
+    */
+   bool isSaveNeeded()
+   {
+      return m_saveNeeded;
    }
 
    /**
@@ -1214,7 +1225,7 @@ public:
    void hide();
    void unhide();
    void markAsModified(uint32_t flags) { setModified(flags); }  // external API to mark object as modified
-   void markAsSaved() { m_modified = 0; }
+   void markAsSaved() { InterlockedAnd(&m_modified, 0); }
 
    virtual bool saveToDatabase(DB_HANDLE hdb);
    virtual bool saveRuntimeData(DB_HANDLE hdb);
@@ -2151,16 +2162,6 @@ void ResetObjectPollTimers(const shared_ptr<ScheduledTaskParameters>& parameters
  */
 #define DCT_RESET_POLL_TIMERS_TASK_ID _T("System.ResetPollTimers")
 
-/**
- * Scheduled task for comments macros expansion
- */
-void ExpandCommentMacrosTask(const shared_ptr<ScheduledTaskParameters> &parameters);
-
-/**
- * "Expand comments macros" scheduled task
- */
-#define UPDATE_OBJECT_COMMENTS_TASK_ID _T("Objects.expandCommentMacros")
-
 #define pollerLock(name) \
    _pollerLock(); \
    uint64_t __pollStartTime = GetCurrentTimeMs(); \
@@ -2168,7 +2169,8 @@ void ExpandCommentMacrosTask(const shared_ptr<ScheduledTaskParameters> &paramete
 
 #define pollerUnlock() \
    __pollState->complete(GetCurrentTimeMs() - __pollStartTime); \
-   setModified(MODIFY_DC_TARGET, false);\
+   if (__pollState->isSaveNeeded()) \
+      setModified(MODIFY_POLL_TIMES, false);\
    _pollerUnlock();
 
 /**

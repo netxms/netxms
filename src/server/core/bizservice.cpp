@@ -223,6 +223,7 @@ void BusinessService::statusPoll(PollerInfo *poller, ClientSession *session, UIN
    if (prevState != m_serviceState)
    {
       sendPollerMsg(_T("State of business service changed to %s\r\n"), GetStatusAsText(m_serviceState, true));
+      nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("BusinessService::statusPoll(%s [%u]): state of business service changed to %s"), m_name, m_id, GetStatusAsText(m_serviceState, true));
       if (m_serviceState > prevState)
       {
          if  (m_serviceState == STATUS_CRITICAL)

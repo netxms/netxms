@@ -92,6 +92,7 @@ void ProcessUnboundTunnels(const shared_ptr<ScheduledTaskParameters>& parameters
 void RenewAgentCertificates(const shared_ptr<ScheduledTaskParameters>& parameters);
 void ReloadCRLs(const shared_ptr<ScheduledTaskParameters>& parameters);
 void ExecuteReport(const shared_ptr<ScheduledTaskParameters>& parameters);
+void ExpandCommentMacrosTask(const shared_ptr<ScheduledTaskParameters> &parameters);
 
 void InitCountryList();
 void InitCurrencyList();
@@ -1285,7 +1286,7 @@ retry_db_lock:
    RegisterSchedulerTaskHandler(UNBOUND_TUNNEL_PROCESSOR_TASK_ID, ProcessUnboundTunnels, 0); //No access right because it will be used only by server
    RegisterSchedulerTaskHandler(RENEW_AGENT_CERTIFICATES_TASK_ID, RenewAgentCertificates, 0); //No access right because it will be used only by server
    RegisterSchedulerTaskHandler(RELOAD_CRLS_TASK_ID, ReloadCRLs, 0); //No access right because it will be used only by server
-   RegisterSchedulerTaskHandler(UPDATE_OBJECT_COMMENTS_TASK_ID, ExpandCommentMacrosTask, 0);     // No access right because it will be used only by server
+   RegisterSchedulerTaskHandler(_T("Objects.ExpandCommentMacros"), ExpandCommentMacrosTask, 0);     // No access right because it will be used only by server
    RegisterSchedulerTaskHandler(DCT_RESET_POLL_TIMERS_TASK_ID, ResetObjectPollTimers, 0); //No access right because it will be used only by server
    RegisterSchedulerTaskHandler(EXECUTE_REPORT_TASK_ID, ExecuteReport, SYSTEM_ACCESS_REPORTING_SERVER);
    RegisterSchedulerTaskHandler(_T("DataCollection.RemoveTemplate"), DataCollectionTarget::removeTemplate, 0);
@@ -1305,7 +1306,7 @@ retry_db_lock:
    AddUniqueRecurrentScheduledTask(RELOAD_CRLS_TASK_ID, _T("0 */4 * * *"), _T(""), nullptr, 0, 0, SYSTEM_ACCESS_FULL, _T("Reload certificate revocation lists"), nullptr, true);
 
    // Schedule automatic comments macros expansion
-   AddUniqueRecurrentScheduledTask(UPDATE_OBJECT_COMMENTS_TASK_ID, _T("0 */4 * * *"), _T(""), nullptr, 0, 0, SYSTEM_ACCESS_FULL, _T("Expand object comments"), nullptr, true);
+   AddUniqueRecurrentScheduledTask(_T("Objects.ExpandCommentMacros"), _T("0 */4 * * *"), _T(""), nullptr, 0, 0, SYSTEM_ACCESS_FULL, _T("Expand macros in object comments"), nullptr, true);
 
    // Schedule poll timers reset
    AddUniqueRecurrentScheduledTask(DCT_RESET_POLL_TIMERS_TASK_ID, _T("0 0 1 * *"), _T(""), nullptr, 0, 0, SYSTEM_ACCESS_FULL, _T(""), nullptr, true);

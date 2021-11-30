@@ -25,7 +25,7 @@
 /**
  * Pollable object constructor
  */
-Pollable::Pollable(NetObj *_this, uint32_t acceptablePolls) : m_statusPollState(_T("status")), m_configurationPollState(_T("configuration")), m_instancePollState(_T("instance")), 
+Pollable::Pollable(NetObj *_this, uint32_t acceptablePolls) : m_statusPollState(_T("status")), m_configurationPollState(_T("configuration"), true), m_instancePollState(_T("instance"), true),
          m_discoveryPollState(_T("discovery")), m_topologyPollState(_T("topology")), m_routingPollState(_T("routing")), m_icmpPollState(_T("icmp"))
 {
    m_this = _this;

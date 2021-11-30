@@ -208,7 +208,7 @@ bool NetObj::saveToDatabase(DB_HANDLE hdb)
    if (success)
       success = saveACLToDB(hdb);
 
-   if (success && isPollable())
+   if (success && (m_modified & MODIFY_POLL_TIMES) && isPollable())
    {
       success = getAsPollable()->saveToDatabase(hdb);
    }
