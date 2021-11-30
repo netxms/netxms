@@ -1285,7 +1285,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
     *
     * @return syslog codepage
     */
-   public String getCodepage()
+   public String getSyslogCodepage()
    {
       return syslogCodepage;
    }

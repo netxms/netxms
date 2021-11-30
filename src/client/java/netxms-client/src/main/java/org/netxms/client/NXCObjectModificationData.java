@@ -2240,7 +2240,7 @@ public class NXCObjectModificationData
    /**
     * @param syslogCodepage the syslog codepage to set
     */
-   public void setCodepage(String syslogCodepage)
+   public void setSyslogCodepage(String syslogCodepage)
    {
       this.syslogCodepage = syslogCodepage;
    }
@@ -2248,7 +2248,7 @@ public class NXCObjectModificationData
    /**
     * @return the syslogCodepage
     */
-   public String getCodepage()
+   public String getSyslogCodepage()
    {
       return syslogCodepage;
    }

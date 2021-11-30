@@ -455,9 +455,9 @@ static void ProcessSyslogMessage(SyslogMessage *msg)
 			WCHAR wmsg[MAX_LOG_MSG_LENGTH];
 			mb_to_wchar(msg->getTag(), -1, wtag, MAX_SYSLOG_TAG_LEN);
          shared_ptr<Node> node = msg->getNode();
-         if (node != nullptr && node->getCodepage() != nullptr)
+         if (node != nullptr && node->getSyslogCodepage() != nullptr)
          {
-            mbcp_to_wchar(msg->getMessage(), -1, wmsg, MAX_LOG_MSG_LENGTH, node->getCodepage());
+            mbcp_to_wchar(msg->getMessage(), -1, wmsg, MAX_LOG_MSG_LENGTH, node->getSyslogCodepage());
          }
          else
          {

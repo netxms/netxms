@@ -105,7 +105,7 @@ public class Syslog extends ObjectPropertyPage
       codepage = new LabeledText(dialogArea, SWT.NONE);
       codepage.setLabel("Codepage");
       codepage.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-      codepage.setText(node.getCodepage());
+      codepage.setText(node.getSyslogCodepage());
       
       return dialogArea;
    }
@@ -122,7 +122,7 @@ public class Syslog extends ObjectPropertyPage
       if (isApply)
          setValid(false);
 
-      md.setCodepage(codepage.getText());
+      md.setSyslogCodepage(codepage.getText());
 
       new Job(String.format(i18n.tr("Updating syslog codepage for object %s"), node.getObjectName()), null) {
          @Override

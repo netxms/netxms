@@ -6615,9 +6615,9 @@ public class NXCSession
          msg.setFieldInt32(NXCPCodes.VID_WEB_SERVICE_PROXY, data.getWebServiceProxy().intValue());
       }
 
-      if (data.getCodepage() != null)
+      if (data.getSyslogCodepage() != null)
       {
-         msg.setField(NXCPCodes.VID_CODEPAGE, data.getCodepage());
+         msg.setField(NXCPCodes.VID_CODEPAGE, data.getSyslogCodepage());
       }
 
       modifyCustomObject(data, userData, msg);
