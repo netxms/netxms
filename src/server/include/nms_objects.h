@@ -1920,7 +1920,8 @@ void ResetObjectPollTimers(const shared_ptr<ScheduledTaskParameters>& parameters
 
 #define pollerUnlock() \
    __pollState->complete(GetCurrentTimeMs() - __pollStartTime); \
-   setModified(MODIFY_DC_TARGET, false);\
+   if (__pollState->isSaveNeeded()) \
+      setModified(MODIFY_DC_TARGET, false);\
    _pollerUnlock();
 
 /**
@@ -1947,12 +1948,14 @@ private:
    time_t m_lastCompleted;
    ManualGauge64 *m_timer;
    MUTEX m_lock;
+   bool m_saveNeeded;
 
 public:
-   PollState(const TCHAR *name)
+   PollState(const TCHAR *name, bool saveNeeded = false)
    {
       m_pollerCount = 0;
       m_lastCompleted = TIMESTAMP_NEVER;
+      m_saveNeeded = saveNeeded;
       m_timer = new ManualGauge64(name, 1, 1000);
       m_lock = MutexCreateFast();
    }
@@ -2012,6 +2015,14 @@ public:
    void setLastCompleted(time_t lastCompleted)
    {
       m_lastCompleted = lastCompleted;
+   }
+
+   /**
+    * Check if save is needed after this poll completion
+    */
+   bool isSaveNeeded()
+   {
+      return m_saveNeeded;
    }
 
    /**
