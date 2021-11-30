@@ -339,9 +339,10 @@ bool SyslogMessage::bindToNode()
 #endif
       }
    }
-   else if (m_hostName[0] == 0)
+   else
    {
-      m_sourceAddress.toStringA(m_hostName);
+      if (m_hostName[0] == 0)
+         m_sourceAddress.toStringA(m_hostName);
       m_nodeId = 0;
    }
 
@@ -455,7 +456,7 @@ static void ProcessSyslogMessage(SyslogMessage *msg)
 			WCHAR wmsg[MAX_LOG_MSG_LENGTH];
 			mb_to_wchar(msg->getTag(), -1, wtag, MAX_SYSLOG_TAG_LEN);
          shared_ptr<Node> node = msg->getNode();
-         if (node != nullptr && node->getSyslogCodepage() != nullptr)
+         if (*node->getSyslogCodepage() != 0)
          {
             mbcp_to_wchar(msg->getMessage(), -1, wmsg, MAX_LOG_MSG_LENGTH, node->getSyslogCodepage());
          }
@@ -463,7 +464,7 @@ static void ProcessSyslogMessage(SyslogMessage *msg)
          {
             char codepage[16];
             ConfigReadStrUTF8(_T("Syslog.Codepage"), codepage, 16, "");
-            if(codepage[0] != 0)
+            if (codepage[0] != 0)
             {
                mbcp_to_wchar(msg->getMessage(), -1, wmsg, MAX_LOG_MSG_LENGTH, codepage);
             }
