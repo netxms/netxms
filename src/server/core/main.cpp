@@ -141,7 +141,7 @@ uint64_t g_maxLogSize = 16384 * 1024;
 uint32_t g_logHistorySize = 4;
 TCHAR g_szDailyLogFileSuffix[64] = _T("");
 NXCORE_EXPORTABLE_VAR(TCHAR g_szDumpDir[MAX_PATH]) = DEFAULT_DUMP_DIR;
-char g_szCodePage[256] = ICONV_DEFAULT_CODEPAGE;
+char g_codePage[256] = "";
 NXCORE_EXPORTABLE_VAR(TCHAR g_szListenAddress[MAX_PATH]) = _T("*");
 #ifndef _WIN32
 NXCORE_EXPORTABLE_VAR(TCHAR g_szPIDFile[MAX_PATH]) = _T("/var/run/netxmsd.pid");
@@ -839,14 +839,21 @@ BOOL NXCORE_EXPORTABLE Initialize()
 
 	// Set code page
 #ifndef _WIN32
-	if (SetDefaultCodepage(g_szCodePage))
-	{
-		nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_STARTUP, _T("Code page set to %hs"), g_szCodePage);
-	}
-	else
-	{
-		nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_STARTUP, _T("Unable to set codepage to %hs"), g_szCodePage);
-	}
+   if (g_codePage[0] != 0)
+   {
+      if (SetDefaultCodepage(g_codePage))
+      {
+         nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_STARTUP, _T("Code page set to %hs"), g_codePage);
+      }
+      else
+      {
+         nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_STARTUP, _T("Unable to set codepage to %hs"), g_codePage);
+      }
+   }
+   else
+   {
+      nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_STARTUP, _T("Using system default codepage"));
+   }
 #endif
 
 	// Set process affinity mask

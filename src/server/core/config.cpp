@@ -26,7 +26,7 @@
 /**
  * Externals
  */
-extern char g_szCodePage[];
+extern char g_codePage[];
 extern StringList g_moduleLoadList;
 extern TCHAR *g_pdsLoadList;
 extern InetAddressList g_peerNodeAddrList;
@@ -79,7 +79,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
 {
    { _T("AuditLogKey"), CT_MB_STRING, 0, 0, 128, 0, g_auditLogKey, nullptr },
    { _T("BackgroundLogWriter"), CT_BOOLEAN_FLAG_64, 0, 0, AF_BACKGROUND_LOG_WRITER, 0, &g_flags, nullptr },
-   { _T("CodePage"), CT_MB_STRING, 0, 0, 256, 0, g_szCodePage, nullptr },
+   { _T("CodePage"), CT_MB_STRING, 0, 0, 256, 0, g_codePage, nullptr },
    { _T("CreateCrashDumps"), CT_BOOLEAN_FLAG_64, 0, 0, AF_CATCH_EXCEPTIONS, 0, &g_flags, nullptr },
    { _T("CRL"), CT_STRING_SET, 0, 0, 0, 0, &g_crlList, nullptr },
    { _T("DailyLogFileSuffix"), CT_STRING, 0, 0, 64, 0, g_szDailyLogFileSuffix, nullptr },
