@@ -69,13 +69,13 @@ uint32_t LIBNXSNMP_EXPORTABLE SnmpGet(SNMP_Version version, SNMP_Transport *tran
    {
       SNMP_Version v = transport->getSnmpVersion();
       transport->setSnmpVersion(version);
-      uint32_t rc = SnmpGetEx(transport, oidStr, oidBinary, oidLen, value, bufferSize, flags, nullptr);
+      uint32_t rc = SnmpGetEx(transport, oidStr, oidBinary, oidLen, value, bufferSize, flags, nullptr, nullptr);
       transport->setSnmpVersion(v);
       return rc;
    }
    else
    {
-      return SnmpGetEx(transport, oidStr, oidBinary, oidLen, value, bufferSize, flags, nullptr);
+      return SnmpGetEx(transport, oidStr, oidBinary, oidLen, value, bufferSize, flags, nullptr, nullptr);
    }
 }
 
@@ -86,8 +86,8 @@ uint32_t LIBNXSNMP_EXPORTABLE SnmpGet(SNMP_Version version, SNMP_Transport *tran
  * If SG_RAW_RESULT flag given and dataLen is not NULL actual data length will be stored there
  * Note: buffer size is in bytes
  */
-uint32_t LIBNXSNMP_EXPORTABLE SnmpGetEx(SNMP_Transport *pTransport, const TCHAR *oidStr,
-         const uint32_t *oidBinary, size_t dwOidLen, void *value, size_t bufferSize, uint32_t flags, uint32_t *dataLen)
+uint32_t LIBNXSNMP_EXPORTABLE SnmpGetEx(SNMP_Transport *pTransport, const TCHAR *oidStr, const uint32_t *oidBinary, size_t oidLen,
+      void *value, size_t bufferSize, uint32_t flags, uint32_t *dataLen, const char *codepage)
 {
 	if (pTransport == nullptr)
 		return SNMP_ERR_COMM;
@@ -114,8 +114,8 @@ uint32_t LIBNXSNMP_EXPORTABLE SnmpGetEx(SNMP_Transport *pTransport, const TCHAR 
    }
    else
    {
-      memcpy(varName, oidBinary, dwOidLen * sizeof(uint32_t));
-      nameLength = dwOidLen;
+      memcpy(varName, oidBinary, oidLen * sizeof(uint32_t));
+      nameLength = oidLen;
    }
 
    if (result == SNMP_ERR_SUCCESS)   // Still no errors
@@ -154,12 +154,12 @@ uint32_t LIBNXSNMP_EXPORTABLE SnmpGetEx(SNMP_Transport *pTransport, const TCHAR 
                }
                else if (flags & SG_STRING_RESULT)
                {
-                  pVar->getValueAsString((TCHAR *)value, bufferSize / sizeof(TCHAR));
+                  pVar->getValueAsString((TCHAR *)value, bufferSize / sizeof(TCHAR), codepage);
                }
                else if (flags & SG_PSTRING_RESULT)
                {
 						bool convert = true;
-                  pVar->getValueAsPrintableString((TCHAR *)value, bufferSize / sizeof(TCHAR), &convert);
+                  pVar->getValueAsPrintableString((TCHAR *)value, bufferSize / sizeof(TCHAR), &convert, codepage);
                }
                else
                {
@@ -201,7 +201,7 @@ uint32_t LIBNXSNMP_EXPORTABLE SnmpGetEx(SNMP_Transport *pTransport, const TCHAR 
                            *((uint32_t *)value) = ntohl(pVar->getValueAsUInt());
                         break;
                      case ASN_OCTET_STRING:
-                        pVar->getValueAsString((TCHAR *)value, bufferSize / sizeof(TCHAR));
+                        pVar->getValueAsString((TCHAR *)value, bufferSize / sizeof(TCHAR), codepage);
                         break;
                      case ASN_OBJECT_ID:
                         pVar->getValueAsString((TCHAR *)value, bufferSize / sizeof(TCHAR));

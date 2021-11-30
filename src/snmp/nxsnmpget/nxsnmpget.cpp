@@ -43,6 +43,7 @@ static SNMP_EncryptionMethod m_encryptionMethod = SNMP_ENCRYPT_NONE;
 static uint16_t m_port = 161;
 static SNMP_Version m_snmpVersion = SNMP_VERSION_2C;
 static uint32_t m_timeout = 3000;
+static const char *s_codepage = nullptr;
 
 /**
  * Get data
@@ -119,7 +120,7 @@ int GetData(int argc, TCHAR *argv[])
                   SNMP_Variable *subvar = var->decodeOpaque();
                   bool convert = true;
                   TCHAR typeName[256];
-                  subvar->getValueAsPrintableString(szBuffer, 1024, &convert);
+                  subvar->getValueAsPrintableString(szBuffer, 1024, &convert, s_codepage);
                   _tprintf(_T("%s [OPAQUE]: [%s]: %s\n"), (const TCHAR *)var->getName().toString(),
                         convert ? _T("Hex-STRING") : SNMPDataTypeName(subvar->getType(), typeName, 256), szBuffer);
                   delete subvar;
@@ -128,7 +129,7 @@ int GetData(int argc, TCHAR *argv[])
                {
 						bool convert = true;
 						TCHAR typeName[256];
-						var->getValueAsPrintableString(szBuffer, 1024, &convert);
+						var->getValueAsPrintableString(szBuffer, 1024, &convert, s_codepage);
 						_tprintf(_T("%s [%s]: %s\n"), (const TCHAR *)var->getName().toString(),
 						      convert ? _T("Hex-STRING") : SNMPDataTypeName(var->getType(), typeName, 256), szBuffer);
                }
@@ -163,7 +164,7 @@ int main(int argc, char *argv[])
 
    // Parse command line
    opterr = 1;
-	while((ch = getopt(argc, argv, "a:A:c:e:E:hp:u:v:w:")) != -1)
+	while((ch = getopt(argc, argv, "a:A:c:C:e:E:hp:u:v:w:")) != -1)
    {
       switch(ch)
       {
@@ -173,6 +174,7 @@ int main(int argc, char *argv[])
 						   _T("   -a <method>  : Authentication method for SNMP v3 USM. Valid methods are MD5, SHA1, SHA224, SHA256, SHA384, SHA512\n")
                      _T("   -A <passwd>  : User's authentication password for SNMP v3 USM\n")
                      _T("   -c <string>  : Community string. Default is \"public\"\n")
+                     _T("   -C <codepage> : Codepage for remote system\n")
 						   _T("   -e <method>  : Encryption method for SNMP v3 USM. Valid methods are DES and AES\n")
                      _T("   -E <passwd>  : User's encryption password for SNMP v3 USM\n")
                      _T("   -h           : Display help and exit\n")
@@ -186,6 +188,9 @@ int main(int argc, char *argv[])
             break;
          case 'c':   // Community
             strlcpy(m_community, optarg, 256);
+            break;
+         case 'C':
+            s_codepage = optarg;
             break;
          case 'u':   // User
             strlcpy(m_user, optarg, 256);

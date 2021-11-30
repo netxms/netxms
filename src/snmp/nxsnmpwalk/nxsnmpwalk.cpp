@@ -1,6 +1,6 @@
 /* 
 ** nxsnmpwalk - command line tool used to retrieve parameters from SNMP agent
-** Copyright (C) 2004-2020 Victor Kirhenshtein
+** Copyright (C) 2004-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -42,6 +42,7 @@ static SNMP_EncryptionMethod m_encryptionMethod = SNMP_ENCRYPT_NONE;
 static uint16_t m_port = 161;
 static SNMP_Version m_snmpVersion = SNMP_VERSION_2C;
 static uint32_t m_timeout = 3000;
+static const char *s_codepage = nullptr;
 
 /**
  * Walk callback
@@ -55,7 +56,7 @@ static uint32_t WalkCallback(SNMP_Variable *var, SNMP_Transport *transport, void
       if (subvar != nullptr)
       {
          bool convert = true;
-         subvar->getValueAsPrintableString(buffer, 1024, &convert);
+         subvar->getValueAsPrintableString(buffer, 1024, &convert, s_codepage);
          _tprintf(_T("%s [OPAQUE]: [%s]: %s\n"), (const TCHAR *)var->getName().toString(),
                convert ? _T("Hex-STRING") : SNMPDataTypeName(subvar->getType(), typeName, 256), buffer);
          delete subvar;
@@ -68,7 +69,7 @@ static uint32_t WalkCallback(SNMP_Variable *var, SNMP_Transport *transport, void
    else
    {
       bool convert = true;
-      var->getValueAsPrintableString(buffer, 1024, &convert);
+      var->getValueAsPrintableString(buffer, 1024, &convert, s_codepage);
       _tprintf(_T("%s [%s]: %s\n"), (const TCHAR *)var->getName().toString(),
             convert ? _T("Hex-STRING") : SNMPDataTypeName(var->getType(), typeName, 256), buffer);
    }
@@ -135,30 +136,34 @@ int main(int argc, char *argv[])
 
    // Parse command line
    opterr = 1;
-	while((ch = getopt(argc, argv, "a:A:c:e:E:hn:p:u:v:w:")) != -1)
+	while((ch = getopt(argc, argv, "a:A:c:C:e:E:hn:p:u:v:w:")) != -1)
    {
       switch(ch)
       {
          case 'h':   // Display help and exit
             _tprintf(_T("Usage: nxsnmpwalk [<options>] <host> <start_oid>\n")
                      _T("Valid options are:\n")
-                     _T("   -a <method>  : Authentication method for SNMP v3 USM. Valid methods are MD5, SHA1, SHA224, SHA256, SHA384, SHA512\n")
-                     _T("   -A <passwd>  : User's authentication password for SNMP v3 USM\n")
-                     _T("   -c <string>  : Community string. Default is \"public\"\n")
-						   _T("   -e <method>  : Encryption method for SNMP v3 USM. Valid methods are DES and AES\n")
-                     _T("   -E <passwd>  : User's encryption password for SNMP v3 USM\n")
-                     _T("   -h           : Display help and exit\n")
-						   _T("   -n <name>    : SNMP v3 context name\n")
-                     _T("   -p <port>    : Agent's port number. Default is 161\n")
-                     _T("   -u <user>    : User name for SNMP v3 USM\n")
-                     _T("   -v <version> : SNMP version to use (valid values is 1, 2c, and 3)\n")
-                     _T("   -w <seconds> : Request timeout (default is 3 seconds)\n")
+                     _T("   -a <method>   : Authentication method for SNMP v3 USM. Valid methods are MD5, SHA1, SHA224, SHA256, SHA384, SHA512\n")
+                     _T("   -A <passwd>   : User's authentication password for SNMP v3 USM\n")
+                     _T("   -c <string>   : Community string. Default is \"public\"\n")
+                     _T("   -C <codepage> : Codepage for remote system\n")
+						   _T("   -e <method>   : Encryption method for SNMP v3 USM. Valid methods are DES and AES\n")
+                     _T("   -E <passwd>   : User's encryption password for SNMP v3 USM\n")
+                     _T("   -h            : Display help and exit\n")
+						   _T("   -n <name>     : SNMP v3 context name\n")
+                     _T("   -p <port>     : Agent's port number. Default is 161\n")
+                     _T("   -u <user>     : User name for SNMP v3 USM\n")
+                     _T("   -v <version>  : SNMP version to use (valid values is 1, 2c, and 3)\n")
+                     _T("   -w <seconds>  : Request timeout (default is 3 seconds)\n")
                      _T("\n"));
             iExit = 0;
             bStart = FALSE;
             break;
          case 'c':   // Community
             strlcpy(m_community, optarg, 256);
+            break;
+         case 'C':
+            s_codepage = optarg;
             break;
          case 'u':   // User
             strlcpy(m_user, optarg, 256);
