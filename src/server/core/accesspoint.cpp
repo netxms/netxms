@@ -217,15 +217,15 @@ void AccessPoint::fillMessageInternal(NXCPMessage *msg, UINT32 userId)
 /**
  * Modify object from message
  */
-UINT32 AccessPoint::modifyFromMessageInternal(NXCPMessage *request)
+uint32_t AccessPoint::modifyFromMessageInternal(const NXCPMessage& msg)
 {
-   if (request->isFieldExist(VID_FLAGS))
+   if (msg.isFieldExist(VID_FLAGS))
    {
-      UINT32 mask = request->isFieldExist(VID_FLAGS_MASK) ? request->getFieldAsUInt32(VID_FLAGS_MASK) : 0xFFFFFFFF;
+      uint32_t mask = msg.isFieldExist(VID_FLAGS_MASK) ? msg.getFieldAsUInt32(VID_FLAGS_MASK) : 0xFFFFFFFF;
       m_flags &= ~mask;
-      m_flags |= request->getFieldAsUInt32(VID_FLAGS) & mask;
+      m_flags |= msg.getFieldAsUInt32(VID_FLAGS) & mask;
    }
-   return super::modifyFromMessageInternal(request);
+   return super::modifyFromMessageInternal(msg);
 }
 
 /**

@@ -25,21 +25,21 @@
 /**
  * Create address list element from NXCP message
  */
-InetAddressListElement::InetAddressListElement(NXCPMessage *msg, UINT32 baseId)
+InetAddressListElement::InetAddressListElement(const NXCPMessage& msg, uint32_t baseId)
 {
-   m_type = (AddressListElementType)msg->getFieldAsInt16(baseId);
-   m_baseAddress = msg->getFieldAsInetAddress(baseId + 1);
+   m_type = (AddressListElementType)msg.getFieldAsInt16(baseId);
+   m_baseAddress = msg.getFieldAsInetAddress(baseId + 1);
    if (m_type == InetAddressListElement_SUBNET)
    {
-      m_baseAddress.setMaskBits(msg->getFieldAsInt16(baseId + 2));
+      m_baseAddress.setMaskBits(msg.getFieldAsInt16(baseId + 2));
    }
    else
    {
-      m_endAddress = msg->getFieldAsInetAddress(baseId + 2);
+      m_endAddress = msg.getFieldAsInetAddress(baseId + 2);
    }
-   m_zoneUIN = msg->getFieldAsInt32(baseId + 3);
-   m_proxyId = msg->getFieldAsInt32(baseId + 4);
-   msg->getFieldAsString(baseId + 5, m_comments, MAX_ADDRESS_LIST_COMMENTS_LEN);
+   m_zoneUIN = msg.getFieldAsInt32(baseId + 3);
+   m_proxyId = msg.getFieldAsInt32(baseId + 4);
+   msg.getFieldAsString(baseId + 5, m_comments, MAX_ADDRESS_LIST_COMMENTS_LEN);
 }
 
 /**
@@ -71,7 +71,7 @@ InetAddressListElement::InetAddressListElement(const InetAddress& baseAddr, int 
 /**
  * Create new "range" type address list element with zone and proxy id
  */
-InetAddressListElement::InetAddressListElement(const InetAddress& baseAddr, const InetAddress& endAddr, int32_t zoneUIN, UINT32 proxyId)
+InetAddressListElement::InetAddressListElement(const InetAddress& baseAddr, const InetAddress& endAddr, int32_t zoneUIN, uint32_t proxyId)
 {
    m_type = InetAddressListElement_RANGE;
    m_baseAddress = baseAddr;
@@ -122,12 +122,12 @@ InetAddressListElement::InetAddressListElement(DB_RESULT hResult, int row)
 /**
  * Fill NXCP message
  */
-void InetAddressListElement::fillMessage(NXCPMessage *msg, UINT32 baseId) const
+void InetAddressListElement::fillMessage(NXCPMessage *msg, uint32_t baseId) const
 {
-   msg->setField(baseId, static_cast<INT16>(m_type));
+   msg->setField(baseId, static_cast<int16_t>(m_type));
    msg->setField(baseId + 1, m_baseAddress);
    if (m_type == InetAddressListElement_SUBNET)
-      msg->setField(baseId + 2, static_cast<INT16>(m_baseAddress.getMaskBits()));
+      msg->setField(baseId + 2, static_cast<int16_t>(m_baseAddress.getMaskBits()));
    else
       msg->setField(baseId + 2, m_endAddress);
    msg->setField(baseId + 3, m_zoneUIN);
@@ -170,18 +170,18 @@ String InetAddressListElement::toString() const
 /**
  * Update address list from NXCP message
  */
-bool UpdateAddressListFromMessage(NXCPMessage *msg)
+bool UpdateAddressListFromMessage(const NXCPMessage& msg)
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
-   int listType = msg->getFieldAsInt32(VID_ADDR_LIST_TYPE);
+   int listType = msg.getFieldAsInt32(VID_ADDR_LIST_TYPE);
 
    DBBegin(hdb);
 
    bool success = ExecuteQueryOnObject(hdb, listType, _T("DELETE FROM address_lists WHERE list_type=?"));
    if (success)
    {
-      int count = msg->getFieldAsInt32(VID_NUM_RECORDS);
+      int count = msg.getFieldAsInt32(VID_NUM_RECORDS);
       if (count > 0)
       {
          DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO address_lists (list_type,addr_type,addr1,addr2,community_id,zone_uin,proxy_id,comments) VALUES (?,?,?,?,?,?,?,?)"), count > 1);

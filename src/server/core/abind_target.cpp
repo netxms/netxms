@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Raden Solutions
+** Copyright (C) 2003-2021 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -99,27 +99,27 @@ void AutoBindTarget::setAutoBindFilter(int filterNumber, const TCHAR *filter)
 /**
  * Modify object from NXCP message
  */
-void AutoBindTarget::modifyFromMessage(const NXCPMessage& request)
+void AutoBindTarget::modifyFromMessage(const NXCPMessage& msg)
 {
-   if (request.isFieldExist(VID_AUTOBIND_FLAGS))
+   if (msg.isFieldExist(VID_AUTOBIND_FLAGS))
    {
       internalLock();
-      m_autoBindFlags = request.getFieldAsUInt32(VID_AUTOBIND_FLAGS);
+      m_autoBindFlags = msg.getFieldAsUInt32(VID_AUTOBIND_FLAGS);
       internalUnlock();
    }
 
    // Change apply filter
-   if (request.isFieldExist(VID_AUTOBIND_FILTER))
+   if (msg.isFieldExist(VID_AUTOBIND_FILTER))
    {
-      TCHAR *filter = request.getFieldAsString(VID_AUTOBIND_FILTER);
+      TCHAR *filter = msg.getFieldAsString(VID_AUTOBIND_FILTER);
       setAutoBindFilter(0, filter);
       MemFree(filter);
    }
 
    // Change apply filter
-   if (request.isFieldExist(VID_AUTOBIND_FILTER_2))
+   if (msg.isFieldExist(VID_AUTOBIND_FILTER_2))
    {
-      TCHAR *filter = request.getFieldAsString(VID_AUTOBIND_FILTER_2);
+      TCHAR *filter = msg.getFieldAsString(VID_AUTOBIND_FILTER_2);
       setAutoBindFilter(1, filter);
       MemFree(filter);
    }

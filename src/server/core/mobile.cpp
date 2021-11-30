@@ -189,9 +189,9 @@ void MobileDevice::fillMessageInternal(NXCPMessage *msg, UINT32 userId)
 /**
  * Modify object from message
  */
-UINT32 MobileDevice::modifyFromMessageInternal(NXCPMessage *pRequest)
+uint32_t MobileDevice::modifyFromMessageInternal(const NXCPMessage& msg)
 {
-   return super::modifyFromMessageInternal(pRequest);
+   return super::modifyFromMessageInternal(msg);
 }
 
 /**

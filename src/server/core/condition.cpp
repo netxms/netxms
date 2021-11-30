@@ -237,54 +237,54 @@ void ConditionObject::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
 /**
  * Modify object from NXCP message
  */
-UINT32 ConditionObject::modifyFromMessageInternal(NXCPMessage *pRequest)
+uint32_t ConditionObject::modifyFromMessageInternal(const NXCPMessage& msg)
 {
    // Change script
-   if (pRequest->isFieldExist(VID_SCRIPT))
+   if (msg.isFieldExist(VID_SCRIPT))
    {
       TCHAR szError[1024];
 
       MemFree(m_scriptSource);
       delete m_script;
-      m_scriptSource = pRequest->getFieldAsString(VID_SCRIPT);
+      m_scriptSource = msg.getFieldAsString(VID_SCRIPT);
       m_script = NXSLCompile(m_scriptSource, szError, 1024, nullptr);
       if (m_script == nullptr)
          nxlog_write(NXLOG_ERROR, _T("Failed to compile evaluation script for condition object %s [%u] (%s)"), m_name, m_id, szError);
    }
 
    // Change activation event
-   if (pRequest->isFieldExist(VID_ACTIVATION_EVENT))
-      m_activationEventCode = pRequest->getFieldAsUInt32(VID_ACTIVATION_EVENT);
+   if (msg.isFieldExist(VID_ACTIVATION_EVENT))
+      m_activationEventCode = msg.getFieldAsUInt32(VID_ACTIVATION_EVENT);
 
    // Change deactivation event
-   if (pRequest->isFieldExist(VID_DEACTIVATION_EVENT))
-      m_deactivationEventCode = pRequest->getFieldAsUInt32(VID_DEACTIVATION_EVENT);
+   if (msg.isFieldExist(VID_DEACTIVATION_EVENT))
+      m_deactivationEventCode = msg.getFieldAsUInt32(VID_DEACTIVATION_EVENT);
 
    // Change source object
-   if (pRequest->isFieldExist(VID_SOURCE_OBJECT))
-      m_sourceObject = pRequest->getFieldAsUInt32(VID_SOURCE_OBJECT);
+   if (msg.isFieldExist(VID_SOURCE_OBJECT))
+      m_sourceObject = msg.getFieldAsUInt32(VID_SOURCE_OBJECT);
 
    // Change active status
-   if (pRequest->isFieldExist(VID_ACTIVE_STATUS))
-      m_activeStatus = pRequest->getFieldAsUInt16(VID_ACTIVE_STATUS);
+   if (msg.isFieldExist(VID_ACTIVE_STATUS))
+      m_activeStatus = msg.getFieldAsUInt16(VID_ACTIVE_STATUS);
 
    // Change inactive status
-   if (pRequest->isFieldExist(VID_INACTIVE_STATUS))
-      m_inactiveStatus = pRequest->getFieldAsUInt16(VID_INACTIVE_STATUS);
+   if (msg.isFieldExist(VID_INACTIVE_STATUS))
+      m_inactiveStatus = msg.getFieldAsUInt16(VID_INACTIVE_STATUS);
 
    // Change DCI list
-   if (pRequest->isFieldExist(VID_NUM_ITEMS))
+   if (msg.isFieldExist(VID_NUM_ITEMS))
    {
       m_dciList.clear();
-      int dciCount = pRequest->getFieldAsInt32(VID_NUM_ITEMS);
+      int dciCount = msg.getFieldAsInt32(VID_NUM_ITEMS);
       uint32_t dwId = VID_DCI_LIST_BASE;
       for(int i = 0; (i < dciCount) && (dwId < (VID_DCI_LIST_LAST + 1)); i++)
       {
          INPUT_DCI dci;
-         dci.id = pRequest->getFieldAsUInt32(dwId++);
-         dci.nodeId = pRequest->getFieldAsUInt32(dwId++);
-         dci.function = pRequest->getFieldAsUInt16(dwId++);
-         dci.polls = pRequest->getFieldAsUInt16(dwId++);
+         dci.id = msg.getFieldAsUInt32(dwId++);
+         dci.nodeId = msg.getFieldAsUInt32(dwId++);
+         dci.function = msg.getFieldAsUInt16(dwId++);
+         dci.polls = msg.getFieldAsUInt16(dwId++);
          m_dciList.add(dci);
          dwId += 6;
       }
@@ -300,7 +300,7 @@ UINT32 ConditionObject::modifyFromMessageInternal(NXCPMessage *pRequest)
       }
    }
 
-   return super::modifyFromMessageInternal(pRequest);
+   return super::modifyFromMessageInternal(msg);
 }
 
 /**

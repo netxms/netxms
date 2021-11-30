@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -217,7 +217,7 @@ void VPNConnector::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
    pMsg->setField(VID_NUM_LOCAL_NETS, (UINT32)m_localNetworks->size());
    pMsg->setField(VID_NUM_REMOTE_NETS, (UINT32)m_remoteNetworks->size());
 
-   UINT32 fieldId;
+   uint32_t fieldId;
    int i;
 
    for(i = 0, fieldId = VID_VPN_NETWORK_BASE; i < m_localNetworks->size(); i++)
@@ -230,31 +230,31 @@ void VPNConnector::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
 /**
  * Modify object from message
  */
-UINT32 VPNConnector::modifyFromMessageInternal(NXCPMessage *pRequest)
+uint32_t VPNConnector::modifyFromMessageInternal(const NXCPMessage& msg)
 {
    // Peer gateway
-   if (pRequest->isFieldExist(VID_PEER_GATEWAY))
-      m_dwPeerGateway = pRequest->getFieldAsUInt32(VID_PEER_GATEWAY);
+   if (msg.isFieldExist(VID_PEER_GATEWAY))
+      m_dwPeerGateway = msg.getFieldAsUInt32(VID_PEER_GATEWAY);
 
    // Network list
-   if ((pRequest->isFieldExist(VID_NUM_LOCAL_NETS)) &&
-       (pRequest->isFieldExist(VID_NUM_REMOTE_NETS)))
+   if ((msg.isFieldExist(VID_NUM_LOCAL_NETS)) &&
+       (msg.isFieldExist(VID_NUM_REMOTE_NETS)))
    {
       int i;
-      UINT32 fieldId = VID_VPN_NETWORK_BASE;
+      uint32_t fieldId = VID_VPN_NETWORK_BASE;
 
       m_localNetworks->clear();
-      int count = pRequest->getFieldAsInt32(VID_NUM_LOCAL_NETS);
+      int count = msg.getFieldAsInt32(VID_NUM_LOCAL_NETS);
       for(i = 0; i < count; i++)
-         m_localNetworks->add(new InetAddress(pRequest->getFieldAsInetAddress(fieldId++)));
+         m_localNetworks->add(new InetAddress(msg.getFieldAsInetAddress(fieldId++)));
 
       m_remoteNetworks->clear();
-      count = pRequest->getFieldAsInt32(VID_NUM_REMOTE_NETS);
+      count = msg.getFieldAsInt32(VID_NUM_REMOTE_NETS);
       for(i = 0; i < count; i++)
-         m_remoteNetworks->add(new InetAddress(pRequest->getFieldAsInetAddress(fieldId++)));
+         m_remoteNetworks->add(new InetAddress(msg.getFieldAsInetAddress(fieldId++)));
    }
 
-   return super::modifyFromMessageInternal(pRequest);
+   return super::modifyFromMessageInternal(msg);
 }
 
 /**

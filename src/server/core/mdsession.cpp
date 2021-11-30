@@ -199,7 +199,7 @@ void MobileDeviceSession::processRequest(NXCPMessage *request)
          sendServerInfo(request->getId());
          break;
       case CMD_LOGIN:
-         login(request);
+         login(*request);
          break;
       case CMD_REQUEST_ENCRYPTION:
          setupEncryption(request);
@@ -218,7 +218,7 @@ void MobileDeviceSession::processRequest(NXCPMessage *request)
          int status = NXMOD_COMMAND_IGNORED;
          ENUMERATE_MODULES(pfMobileDeviceCommandHandler)
          {
-            status = CURRENT_MODULE.pfMobileDeviceCommandHandler(command, request, this);
+            status = CURRENT_MODULE.pfMobileDeviceCommandHandler(command, *request, this);
             if (status != NXMOD_COMMAND_IGNORED)
             {
                if (status == NXMOD_COMMAND_ACCEPTED_ASYNC)
@@ -318,7 +318,7 @@ void MobileDeviceSession::sendServerInfo(uint32_t requestId)
 /**
  * Authenticate client
  */
-void MobileDeviceSession::login(NXCPMessage *request)
+void MobileDeviceSession::login(const NXCPMessage& request)
 {
    TCHAR szLogin[MAX_USER_NAME], szPassword[1024];
 	int nAuthType;
@@ -328,31 +328,31 @@ void MobileDeviceSession::login(NXCPMessage *request)
 	X509 *pCert;
 #endif
 
-   NXCPMessage msg(CMD_LOGIN_RESPONSE, request->getId());
+   NXCPMessage msg(CMD_LOGIN_RESPONSE, request.getId());
 
    // Get client info string
-   if (request->isFieldExist(VID_CLIENT_INFO))
+   if (request.isFieldExist(VID_CLIENT_INFO))
    {
       TCHAR clientInfo[32], osInfo[32], libVersion[16];
-      request->getFieldAsString(VID_CLIENT_INFO, clientInfo, 32);
-      request->getFieldAsString(VID_OS_INFO, osInfo, 32);
-      request->getFieldAsString(VID_LIBNXCL_VERSION, libVersion, 16);
+      request.getFieldAsString(VID_CLIENT_INFO, clientInfo, 32);
+      request.getFieldAsString(VID_OS_INFO, osInfo, 32);
+      request.getFieldAsString(VID_LIBNXCL_VERSION, libVersion, 16);
       _sntprintf(m_clientInfo, 96, _T("%s (%s; libnxcl %s)"), clientInfo, osInfo, libVersion);
    }
 
    if (!m_authenticated)
    {
-      request->getFieldAsString(VID_LOGIN_NAME, szLogin, MAX_USER_NAME);
-		nAuthType = (int)request->getFieldAsUInt16(VID_AUTH_TYPE);
-		UINT64 userRights;
-		UINT32 graceLogins;
+      request.getFieldAsString(VID_LOGIN_NAME, szLogin, MAX_USER_NAME);
+		nAuthType = (int)request.getFieldAsUInt16(VID_AUTH_TYPE);
+		uint64_t userRights;
+		uint32_t graceLogins;
 		switch(nAuthType)
 		{
 			case NETXMS_AUTH_TYPE_PASSWORD:
 #ifdef UNICODE
-				request->getFieldAsString(VID_PASSWORD, szPassword, 256);
+				request.getFieldAsString(VID_PASSWORD, szPassword, 256);
 #else
-				request->getFieldAsUtf8String(VID_PASSWORD, szPassword, 1024);
+				request.getFieldAsUtf8String(VID_PASSWORD, szPassword, 1024);
 #endif
 				dwResult = AuthenticateUser(szLogin, szPassword, 0, nullptr, nullptr, &m_userId,
 													 &userRights, &changePasswd, &intruderLockout,
@@ -364,7 +364,7 @@ void MobileDeviceSession::login(NXCPMessage *request)
 				if (pCert != nullptr)
 				{
                size_t sigLen;
-					const BYTE *signature = request->getBinaryFieldPtr(VID_SIGNATURE, &sigLen);
+					const BYTE *signature = request.getBinaryFieldPtr(VID_SIGNATURE, &sigLen);
                if (signature != nullptr)
                {
                   dwResult = AuthenticateUser(szLogin, reinterpret_cast<const TCHAR *>(signature), sigLen,
@@ -396,7 +396,7 @@ void MobileDeviceSession::login(NXCPMessage *request)
 			if (userRights & SYSTEM_ACCESS_MOBILE_DEVICE_LOGIN)
 			{
 				TCHAR deviceId[MAX_OBJECT_NAME] = _T("");
-				request->getFieldAsString(VID_DEVICE_ID, deviceId, MAX_OBJECT_NAME);
+				request.getFieldAsString(VID_DEVICE_ID, deviceId, MAX_OBJECT_NAME);
 				shared_ptr<MobileDevice> md = FindMobileDeviceByDeviceID(deviceId);
 				if (md != nullptr)
 				{
@@ -449,7 +449,7 @@ void MobileDeviceSession::login(NXCPMessage *request)
    }
 
    // Send response
-   sendMessage(&msg);
+   sendMessage(msg);
 }
 
 /**

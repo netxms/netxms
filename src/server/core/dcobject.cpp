@@ -1615,7 +1615,7 @@ shared_ptr<DCObjectInfo> DCObject::createDescriptor() const
  */
 shared_ptr<DCObjectInfo> DCObject::createDescriptorInternal() const
 {
-   return shared_ptr<DCObjectInfo>(new DCObjectInfo(this));
+   return make_shared<DCObjectInfo>(*this);
 }
 
 /**
@@ -1723,49 +1723,49 @@ const TCHAR *DCObject::getDataProviderName(int dataProvider)
 /**
  * Data collection object info - constructor
  */
-DCObjectInfo::DCObjectInfo(const DCObject *object)
+DCObjectInfo::DCObjectInfo(const DCObject& object)
 {
-   m_id = object->m_id;
-   m_ownerId = object->getOwnerId();
-   m_templateId = object->m_dwTemplateId;
-   m_templateItemId = object->m_dwTemplateItemId;
-   m_type = object->getType();
-   _tcslcpy(m_name, object->m_name, MAX_ITEM_NAME);
-   _tcslcpy(m_description, object->m_description, MAX_DB_STRING);
-   _tcslcpy(m_systemTag, object->m_systemTag, MAX_DB_STRING);
-   _tcslcpy(m_instance, object->m_instance, MAX_DB_STRING);
-   m_instanceData = MemCopyString(object->m_instanceDiscoveryData);
-   m_comments = MemCopyString(object->m_comments);
-   m_dataType = (m_type == DCO_TYPE_ITEM) ? static_cast<const DCItem*>(object)->m_dataType : -1;
-   m_origin = object->m_source;
-   m_status = object->m_status;
-   m_errorCount = object->m_dwErrorCount;
-   m_pollingInterval = object->getEffectivePollingInterval();
-   m_lastPollTime = object->m_lastPoll;
+   m_id = object.m_id;
+   m_ownerId = object.getOwnerId();
+   m_templateId = object.m_dwTemplateId;
+   m_templateItemId = object.m_dwTemplateItemId;
+   m_type = object.getType();
+   _tcslcpy(m_name, object.m_name, MAX_ITEM_NAME);
+   _tcslcpy(m_description, object.m_description, MAX_DB_STRING);
+   _tcslcpy(m_systemTag, object.m_systemTag, MAX_DB_STRING);
+   _tcslcpy(m_instance, object.m_instance, MAX_DB_STRING);
+   m_instanceData = MemCopyString(object.m_instanceDiscoveryData);
+   m_comments = MemCopyString(object.m_comments);
+   m_dataType = (m_type == DCO_TYPE_ITEM) ? static_cast<const DCItem&>(object).m_dataType : -1;
+   m_origin = object.m_source;
+   m_status = object.m_status;
+   m_errorCount = object.m_dwErrorCount;
+   m_pollingInterval = object.getEffectivePollingInterval();
+   m_lastPollTime = object.m_lastPoll;
    m_hasActiveThreshold = false;
    m_thresholdSeverity = SEVERITY_NORMAL;
-   m_relatedObject = object->getRelatedObject();
+   m_relatedObject = object.getRelatedObject();
 }
 
 /**
  * Data collection object info - constructor for client provided DCI info
  */
-DCObjectInfo::DCObjectInfo(const NXCPMessage *msg, const DCObject *object)
+DCObjectInfo::DCObjectInfo(const NXCPMessage& msg, const DCObject *object)
 {
-   m_id = msg->getFieldAsUInt32(VID_DCI_ID);
-   m_ownerId = msg->getFieldAsUInt32(VID_OBJECT_ID);
+   m_id = msg.getFieldAsUInt32(VID_DCI_ID);
+   m_ownerId = msg.getFieldAsUInt32(VID_OBJECT_ID);
    m_templateId = (object != nullptr) ? object->getTemplateId() : 0;
    m_templateItemId = (object != nullptr) ? object->getTemplateItemId() : 0;
-   m_type = msg->getFieldAsInt16(VID_DCOBJECT_TYPE);
-   msg->getFieldAsString(VID_NAME, m_name, MAX_ITEM_NAME);
-   msg->getFieldAsString(VID_DESCRIPTION, m_description, MAX_DB_STRING);
-   msg->getFieldAsString(VID_SYSTEM_TAG, m_systemTag, MAX_DB_STRING);
-   msg->getFieldAsString(VID_INSTANCE, m_instance, MAX_DB_STRING);
-   m_instanceData = msg->getFieldAsString(VID_INSTD_DATA);
-   m_comments = msg->getFieldAsString(VID_COMMENTS);
-   m_dataType = (m_type == DCO_TYPE_ITEM) ? msg->getFieldAsInt16(VID_DCI_DATA_TYPE) : -1;
-   m_origin = msg->getFieldAsInt16(VID_DCI_SOURCE_TYPE);
-   m_status = msg->getFieldAsInt16(VID_DCI_STATUS);
+   m_type = msg.getFieldAsInt16(VID_DCOBJECT_TYPE);
+   msg.getFieldAsString(VID_NAME, m_name, MAX_ITEM_NAME);
+   msg.getFieldAsString(VID_DESCRIPTION, m_description, MAX_DB_STRING);
+   msg.getFieldAsString(VID_SYSTEM_TAG, m_systemTag, MAX_DB_STRING);
+   msg.getFieldAsString(VID_INSTANCE, m_instance, MAX_DB_STRING);
+   m_instanceData = msg.getFieldAsString(VID_INSTD_DATA);
+   m_comments = msg.getFieldAsString(VID_COMMENTS);
+   m_dataType = (m_type == DCO_TYPE_ITEM) ? msg.getFieldAsInt16(VID_DCI_DATA_TYPE) : -1;
+   m_origin = msg.getFieldAsInt16(VID_DCI_SOURCE_TYPE);
+   m_status = msg.getFieldAsInt16(VID_DCI_STATUS);
    m_pollingInterval = (object != nullptr) ? object->getEffectivePollingInterval() : 0;
    m_errorCount = (object != nullptr) ? object->getErrorCount() : 0;
    m_lastPollTime = (object != nullptr) ? object->getLastPollTime() : 0;

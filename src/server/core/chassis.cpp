@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -169,27 +169,27 @@ void Chassis::fillMessageInternal(NXCPMessage *msg, UINT32 userId)
 /**
  * Modify object from NXCP message
  */
-UINT32 Chassis::modifyFromMessageInternal(NXCPMessage *request)
+uint32_t Chassis::modifyFromMessageInternal(const NXCPMessage& msg)
 {
-   if (request->isFieldExist(VID_CONTROLLER_ID))
-      m_controllerId = request->getFieldAsUInt32(VID_CONTROLLER_ID);
-   if (request->isFieldExist(VID_PHYSICAL_CONTAINER_ID))
+   if (msg.isFieldExist(VID_CONTROLLER_ID))
+      m_controllerId = msg.getFieldAsUInt32(VID_CONTROLLER_ID);
+   if (msg.isFieldExist(VID_PHYSICAL_CONTAINER_ID))
    {
-      m_rackId = request->getFieldAsUInt32(VID_PHYSICAL_CONTAINER_ID);
+      m_rackId = msg.getFieldAsUInt32(VID_PHYSICAL_CONTAINER_ID);
       ThreadPoolExecute(g_mainThreadPool, this, &Chassis::updateRackBinding);
    }
-   if (request->isFieldExist(VID_RACK_IMAGE_FRONT))
-      m_rackImageFront = request->getFieldAsGUID(VID_RACK_IMAGE_FRONT);
-   if (request->isFieldExist(VID_RACK_IMAGE_REAR))
-      m_rackImageRear = request->getFieldAsGUID(VID_RACK_IMAGE_REAR);
-   if (request->isFieldExist(VID_RACK_POSITION))
-      m_rackPosition = request->getFieldAsInt16(VID_RACK_POSITION);
-   if (request->isFieldExist(VID_RACK_HEIGHT))
-      m_rackHeight = request->getFieldAsInt16(VID_RACK_HEIGHT);
-   if (request->isFieldExist(VID_RACK_ORIENTATION))
-      m_rackOrientation = static_cast<RackOrientation>(request->getFieldAsInt16(VID_RACK_ORIENTATION));
+   if (msg.isFieldExist(VID_RACK_IMAGE_FRONT))
+      m_rackImageFront = msg.getFieldAsGUID(VID_RACK_IMAGE_FRONT);
+   if (msg.isFieldExist(VID_RACK_IMAGE_REAR))
+      m_rackImageRear = msg.getFieldAsGUID(VID_RACK_IMAGE_REAR);
+   if (msg.isFieldExist(VID_RACK_POSITION))
+      m_rackPosition = msg.getFieldAsInt16(VID_RACK_POSITION);
+   if (msg.isFieldExist(VID_RACK_HEIGHT))
+      m_rackHeight = msg.getFieldAsInt16(VID_RACK_HEIGHT);
+   if (msg.isFieldExist(VID_RACK_ORIENTATION))
+      m_rackOrientation = static_cast<RackOrientation>(msg.getFieldAsInt16(VID_RACK_ORIENTATION));
 
-   return super::modifyFromMessageInternal(request);
+   return super::modifyFromMessageInternal(msg);
 }
 
 /**

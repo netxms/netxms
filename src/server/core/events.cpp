@@ -98,16 +98,16 @@ EventTemplate::EventTemplate(DB_RESULT hResult, int row)
 /**
  * Create event template from message
  */
-EventTemplate::EventTemplate(NXCPMessage *msg)
+EventTemplate::EventTemplate(const NXCPMessage& msg)
 {
    m_guid = uuid::generate();
    m_code = CreateUniqueId(IDG_EVENT);
-   msg->getFieldAsString(VID_NAME, m_name, MAX_EVENT_NAME);
-   m_severity = msg->getFieldAsInt32(VID_SEVERITY);
-   m_flags = msg->getFieldAsInt32(VID_FLAGS);
-   m_messageTemplate = msg->getFieldAsString(VID_MESSAGE);
-   m_description = msg->getFieldAsString(VID_DESCRIPTION);
-   m_tags = msg->getFieldAsString(VID_TAGS);
+   msg.getFieldAsString(VID_NAME, m_name, MAX_EVENT_NAME);
+   m_severity = msg.getFieldAsInt32(VID_SEVERITY);
+   m_flags = msg.getFieldAsInt32(VID_FLAGS);
+   m_messageTemplate = msg.getFieldAsString(VID_MESSAGE);
+   m_description = msg.getFieldAsString(VID_DESCRIPTION);
+   m_tags = msg.getFieldAsString(VID_TAGS);
 }
 
 /**
@@ -155,18 +155,18 @@ json_t *EventTemplate::toJson() const
 /**
  * Modify event template from message
  */
-void EventTemplate::modifyFromMessage(NXCPMessage *msg)
+void EventTemplate::modifyFromMessage(const NXCPMessage& msg)
 {
-   m_code = msg->getFieldAsUInt32(VID_EVENT_CODE);
-   msg->getFieldAsString(VID_NAME, m_name, MAX_EVENT_NAME);
-   m_severity = msg->getFieldAsInt32(VID_SEVERITY);
-   m_flags = msg->getFieldAsInt32(VID_FLAGS);
+   m_code = msg.getFieldAsUInt32(VID_EVENT_CODE);
+   msg.getFieldAsString(VID_NAME, m_name, MAX_EVENT_NAME);
+   m_severity = msg.getFieldAsInt32(VID_SEVERITY);
+   m_flags = msg.getFieldAsInt32(VID_FLAGS);
    MemFree(m_messageTemplate);
-   m_messageTemplate = msg->getFieldAsString(VID_MESSAGE);
+   m_messageTemplate = msg.getFieldAsString(VID_MESSAGE);
    MemFree(m_description);
-   m_description = msg->getFieldAsString(VID_DESCRIPTION);
+   m_description = msg.getFieldAsString(VID_DESCRIPTION);
    MemFree(m_tags);
-   m_tags = msg->getFieldAsString(VID_TAGS);
+   m_tags = msg.getFieldAsString(VID_TAGS);
 }
 
 /**
@@ -1682,14 +1682,14 @@ static void SendEventDBChangeNotification(ClientSession *session, NXCPMessage *m
 /**
  * Update or create new event object from request
  */
-uint32_t UpdateEventTemplate(NXCPMessage *request, NXCPMessage *response, json_t **oldValue, json_t **newValue)
+uint32_t UpdateEventTemplate(const NXCPMessage& request, NXCPMessage *response, json_t **oldValue, json_t **newValue)
 {
    TCHAR name[MAX_EVENT_NAME] = _T("");
-   request->getFieldAsString(VID_NAME, name, MAX_EVENT_NAME);
+   request.getFieldAsString(VID_NAME, name, MAX_EVENT_NAME);
    if (!IsValidObjectName(name, TRUE))
       return RCC_INVALID_OBJECT_NAME;
 
-   uint32_t eventCode = request->getFieldAsUInt32(VID_EVENT_CODE);
+   uint32_t eventCode = request.getFieldAsUInt32(VID_EVENT_CODE);
    shared_ptr<EventTemplate> et = FindEventTemplateByName(name);
    if ((et != nullptr) && (et->getCode() != eventCode))
       return RCC_NAME_ALEARDY_EXISTS;

@@ -95,28 +95,28 @@ NewNodeData::NewNodeData(const InetAddress& ipAddr)
 /**
  * Create NewNodeData from NXCPMessage
  */
-NewNodeData::NewNodeData(const NXCPMessage *msg, const InetAddress& ipAddr)
+NewNodeData::NewNodeData(const NXCPMessage& msg, const InetAddress& ipAddr)
 {
    this->ipAddr = ipAddr;
-   this->ipAddr.setMaskBits(msg->getFieldAsInt32(VID_IP_NETMASK));
-   creationFlags = msg->getFieldAsUInt32(VID_CREATION_FLAGS);
-   agentPort = msg->getFieldAsUInt16(VID_AGENT_PORT);
-   snmpPort = msg->getFieldAsUInt16(VID_SNMP_PORT);
-   eipPort = msg->getFieldAsUInt16(VID_ETHERNET_IP_PORT);
-   msg->getFieldAsString(VID_OBJECT_NAME, name, MAX_OBJECT_NAME);
-   agentProxyId = msg->getFieldAsUInt32(VID_AGENT_PROXY);
-   snmpProxyId = msg->getFieldAsUInt32(VID_SNMP_PROXY);
-   eipProxyId = msg->getFieldAsUInt32(VID_ETHERNET_IP_PROXY);
-   icmpProxyId = msg->getFieldAsUInt32(VID_ICMP_PROXY);
-   sshProxyId = msg->getFieldAsUInt32(VID_SSH_PROXY);
-   msg->getFieldAsString(VID_SSH_LOGIN, sshLogin, MAX_SSH_LOGIN_LEN);
-   msg->getFieldAsString(VID_SSH_PASSWORD, sshPassword, MAX_SSH_PASSWORD_LEN);
-   sshPort = msg->getFieldAsUInt16(VID_SSH_PORT);
-   zoneUIN = msg->getFieldAsUInt32(VID_ZONE_UIN);
+   this->ipAddr.setMaskBits(msg.getFieldAsInt32(VID_IP_NETMASK));
+   creationFlags = msg.getFieldAsUInt32(VID_CREATION_FLAGS);
+   agentPort = msg.getFieldAsUInt16(VID_AGENT_PORT);
+   snmpPort = msg.getFieldAsUInt16(VID_SNMP_PORT);
+   eipPort = msg.getFieldAsUInt16(VID_ETHERNET_IP_PORT);
+   msg.getFieldAsString(VID_OBJECT_NAME, name, MAX_OBJECT_NAME);
+   agentProxyId = msg.getFieldAsUInt32(VID_AGENT_PROXY);
+   snmpProxyId = msg.getFieldAsUInt32(VID_SNMP_PROXY);
+   eipProxyId = msg.getFieldAsUInt32(VID_ETHERNET_IP_PROXY);
+   icmpProxyId = msg.getFieldAsUInt32(VID_ICMP_PROXY);
+   sshProxyId = msg.getFieldAsUInt32(VID_SSH_PROXY);
+   msg.getFieldAsString(VID_SSH_LOGIN, sshLogin, MAX_SSH_LOGIN_LEN);
+   msg.getFieldAsString(VID_SSH_PASSWORD, sshPassword, MAX_SSH_PASSWORD_LEN);
+   sshPort = msg.getFieldAsUInt16(VID_SSH_PORT);
+   zoneUIN = msg.getFieldAsUInt32(VID_ZONE_UIN);
    doConfPoll = false;
    origin = NODE_ORIGIN_MANUAL;
    snmpSecurity = nullptr;
-   webServiceProxyId = msg->getFieldAsUInt32(VID_WEB_SERVICE_PROXY);
+   webServiceProxyId = msg.getFieldAsUInt32(VID_WEB_SERVICE_PROXY);
 }
 
 /**

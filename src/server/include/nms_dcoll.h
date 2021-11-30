@@ -829,10 +829,10 @@ class DCObjectInfo
    friend class DCTable;
 
 private:
-   UINT32 m_id;
-   UINT32 m_ownerId;
-   UINT32 m_templateId;
-   UINT32 m_templateItemId;
+   uint32_t m_id;
+   uint32_t m_ownerId;
+   uint32_t m_templateId;
+   uint32_t m_templateItemId;
    int m_type;
    TCHAR m_name[MAX_ITEM_NAME];
    TCHAR m_description[MAX_DB_STRING];
@@ -843,23 +843,21 @@ private:
    int m_dataType;
    int m_origin;
    int m_status;
-   UINT32 m_errorCount;
-   INT32 m_pollingInterval;
+   uint32_t m_errorCount;
+   int32_t m_pollingInterval;
    time_t m_lastPollTime;
    bool m_hasActiveThreshold;
    int m_thresholdSeverity;
-   UINT32 m_relatedObject;
-
-protected:
-   DCObjectInfo(const DCObject *object);
+   uint32_t m_relatedObject;
 
 public:
-   DCObjectInfo(const NXCPMessage *msg, const DCObject *object);
+   DCObjectInfo(const DCObject& object);
+   DCObjectInfo(const NXCPMessage& msg, const DCObject *object);
    ~DCObjectInfo();
 
-   UINT32 getId() const { return m_id; }
-   UINT32 getTemplateId() const { return m_templateId; }
-   UINT32 getTemplateItemId() const { return m_templateItemId; }
+   uint32_t getId() const { return m_id; }
+   uint32_t getTemplateId() const { return m_templateId; }
+   uint32_t getTemplateItemId() const { return m_templateItemId; }
    int getType() const { return m_type; }
    const TCHAR *getName() const { return m_name; }
    const TCHAR *getDescription() const { return m_description; }
@@ -870,13 +868,13 @@ public:
    int getDataType() const { return m_dataType; }
    int getOrigin() const { return m_origin; }
    int getStatus() const { return m_status; }
-   UINT32 getErrorCount() const { return m_errorCount; }
-   INT32 getPollingInterval() const { return m_pollingInterval; }
+   uint32_t getErrorCount() const { return m_errorCount; }
+   int32_t getPollingInterval() const { return m_pollingInterval; }
    time_t getLastPollTime() const { return m_lastPollTime; }
    uint32_t getOwnerId() const { return m_ownerId; }
    bool hasActiveThreshold() const { return m_hasActiveThreshold; }
    int getThresholdSeverity() const { return m_thresholdSeverity; }
-   UINT32 getRelatedObject() const { return m_relatedObject; }
+   uint32_t getRelatedObject() const { return m_relatedObject; }
 };
 
 /**

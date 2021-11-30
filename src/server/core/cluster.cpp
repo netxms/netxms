@@ -361,49 +361,45 @@ void Cluster::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
 /**
  * Modify object from message
  */
-UINT32 Cluster::modifyFromMessageInternal(NXCPMessage *pRequest)
+uint32_t Cluster::modifyFromMessageInternal(const NXCPMessage& msg)
 {
-   if (pRequest->isFieldExist(VID_FLAGS))
-      m_flags = pRequest->getFieldAsUInt32(VID_FLAGS);
+   if (msg.isFieldExist(VID_FLAGS))
+      m_flags = msg.getFieldAsUInt32(VID_FLAGS);
 
    // Change cluster type
-   if (pRequest->isFieldExist(VID_CLUSTER_TYPE))
-      m_dwClusterType = pRequest->getFieldAsUInt32(VID_CLUSTER_TYPE);
+   if (msg.isFieldExist(VID_CLUSTER_TYPE))
+      m_dwClusterType = msg.getFieldAsUInt32(VID_CLUSTER_TYPE);
 
    // Change sync subnets
-   if (pRequest->isFieldExist(VID_NUM_SYNC_SUBNETS))
+   if (msg.isFieldExist(VID_NUM_SYNC_SUBNETS))
 	{
       m_syncNetworks->clear();
-      int count = pRequest->getFieldAsInt32(VID_NUM_SYNC_SUBNETS);
-      UINT32 fieldId = VID_SYNC_SUBNETS_BASE;
+      int count = msg.getFieldAsInt32(VID_NUM_SYNC_SUBNETS);
+      uint32_t fieldId = VID_SYNC_SUBNETS_BASE;
       for(int i = 0; i < count; i++)
       {
-         m_syncNetworks->add(new InetAddress(pRequest->getFieldAsInetAddress(fieldId++)));
+         m_syncNetworks->add(new InetAddress(msg.getFieldAsInetAddress(fieldId++)));
       }
 	}
 
    // Change resource list
-   if (pRequest->isFieldExist(VID_NUM_RESOURCES))
+   if (msg.isFieldExist(VID_NUM_RESOURCES))
 	{
-		UINT32 i, j, dwId, dwCount;
-		CLUSTER_RESOURCE *pList;
-
-      dwCount = pRequest->getFieldAsUInt32(VID_NUM_RESOURCES);
-		if (dwCount > 0)
+      uint32_t count = msg.getFieldAsUInt32(VID_NUM_RESOURCES);
+		if (count > 0)
 		{
-			pList = (CLUSTER_RESOURCE *)malloc(sizeof(CLUSTER_RESOURCE) * dwCount);
-			memset(pList, 0, sizeof(CLUSTER_RESOURCE) * dwCount);
-			for(i = 0, dwId = VID_RESOURCE_LIST_BASE; i < dwCount; i++, dwId += 7)
+			auto pList = MemAllocArray<CLUSTER_RESOURCE>(count);
+			for(uint32_t i = 0, fieldId = VID_RESOURCE_LIST_BASE; i < count; i++, fieldId += 7)
 			{
-				pList[i].dwId = pRequest->getFieldAsUInt32(dwId++);
-				pRequest->getFieldAsString(dwId++, pList[i].szName, MAX_DB_STRING);
-				pList[i].ipAddr = pRequest->getFieldAsInetAddress(dwId++);
+				pList[i].dwId = msg.getFieldAsUInt32(fieldId++);
+				msg.getFieldAsString(fieldId++, pList[i].szName, MAX_DB_STRING);
+				pList[i].ipAddr = msg.getFieldAsInetAddress(fieldId++);
 			}
 
 			// Update current owner information in existing resources
-			for(i = 0; i < m_dwNumResources; i++)
+			for(uint32_t i = 0; i < m_dwNumResources; i++)
 			{
-				for(j = 0; j < dwCount; j++)
+				for(uint32_t j = 0; j < count; j++)
 				{
 					if (m_pResourceList[i].dwId == pList[j].dwId)
 					{
@@ -421,12 +417,12 @@ UINT32 Cluster::modifyFromMessageInternal(NXCPMessage *pRequest)
 		{
 			MemFreeAndNull(m_pResourceList);
 		}
-		m_dwNumResources = dwCount;
+		m_dwNumResources = count;
 	}
 
-   AutoBindTarget::modifyFromMessage(pRequest);
+   AutoBindTarget::modifyFromMessage(msg);
 
-   return super::modifyFromMessageInternal(pRequest);
+   return super::modifyFromMessageInternal(msg);
 }
 
 /**

@@ -416,10 +416,10 @@ void Template::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
 /**
  * Modify template object from NXCP message
  */
-UINT32 Template::modifyFromMessageInternal(NXCPMessage *pRequest)
+uint32_t Template::modifyFromMessageInternal(const NXCPMessage& msg)
 {
-   AutoBindTarget::modifyFromMessage(pRequest);
-   return super::modifyFromMessageInternal(pRequest);
+   AutoBindTarget::modifyFromMessage(msg);
+   return super::modifyFromMessageInternal(msg);
 }
 
 /**
@@ -645,7 +645,7 @@ uuid Template::updatePolicyFromMessage(const NXCPMessage& request)
    if (updated)
    {
       msg.setField(VID_TEMPLATE_ID, m_id);
-      NotifyClientsOnPolicyUpdate(&msg, *this);
+      NotifyClientsOnPolicyUpdate(msg, *this);
    }
    return guid;
 }

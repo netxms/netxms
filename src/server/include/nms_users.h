@@ -263,7 +263,7 @@ public:
 	virtual bool deleteFromDatabase(DB_HANDLE hdb);
 
 	virtual void fillMessage(NXCPMessage *msg);
-	virtual void modifyFromMessage(NXCPMessage *msg);
+	virtual void modifyFromMessage(const NXCPMessage& msg);
 
 	virtual json_t *toJson() const;
 
@@ -400,13 +400,13 @@ public:
 	User(uint32_t id, const TCHAR *name, UserAuthenticationMethod authMethod = UserAuthenticationMethod::LOCAL);
 	virtual ~User();
 
-	virtual bool saveToDatabase(DB_HANDLE hdb);
-	virtual bool deleteFromDatabase(DB_HANDLE hdb);
+	virtual bool saveToDatabase(DB_HANDLE hdb) override;
+	virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
 
-	virtual void fillMessage(NXCPMessage *msg);
-	virtual void modifyFromMessage(NXCPMessage *msg);
+	virtual void fillMessage(NXCPMessage *msg) override;
+	virtual void modifyFromMessage(const NXCPMessage& msg) override;
 
-   virtual json_t *toJson() const;
+   virtual json_t *toJson() const override;
 
 	const TCHAR *getFullName() const { return m_fullName; }
 	int getGraceLogins() const { return m_graceLogins; }
@@ -442,7 +442,7 @@ public:
    uint32_t modify2FABinding(const TCHAR* methodName, char* configuration);
    bool delete2FABinding(const TCHAR* methodName);
 
-   virtual NXSL_Value *createNXSLObject(NXSL_VM *vm);
+   virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;
 };
 
 /**
@@ -460,13 +460,13 @@ public:
 	Group(uint32_t id, const TCHAR *name);
 	virtual ~Group();
 
-	virtual void fillMessage(NXCPMessage *msg);
-	virtual void modifyFromMessage(NXCPMessage *msg);
+	virtual void fillMessage(NXCPMessage *msg) override;
+	virtual void modifyFromMessage(const NXCPMessage& msg) override;
 
-	virtual bool saveToDatabase(DB_HANDLE hdb);
-	virtual bool deleteFromDatabase(DB_HANDLE hdb);
+	virtual bool saveToDatabase(DB_HANDLE hdb) override;
+	virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
 
-   virtual json_t *toJson() const;
+   virtual json_t *toJson() const override;
 
 	void addUser(uint32_t userId);
 	void deleteUser(uint32_t userId);
@@ -474,7 +474,7 @@ public:
 	const IntegerArray<uint32_t>& getMembers() const { return *m_members; }
 	int getMemberCount() const { return m_members->size(); }
 
-   virtual NXSL_Value *createNXSLObject(NXSL_VM *vm);
+   virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;
 };
 
 /**
@@ -536,7 +536,7 @@ bool CheckUserMembershipInternal(UINT32 userId, UINT32 groupId, IntegerArray<UIN
 bool NXCORE_EXPORTABLE CheckUserMembership(UINT32 userId, UINT32 groupId);
 uint32_t NXCORE_EXPORTABLE DeleteUserDatabaseObject(uint32_t id);
 uint32_t NXCORE_EXPORTABLE CreateNewUser(const TCHAR *name, bool isGroup, uint32_t *id);
-uint32_t NXCORE_EXPORTABLE ModifyUserDatabaseObject(NXCPMessage *msg, json_t **oldData, json_t **newData);
+uint32_t NXCORE_EXPORTABLE ModifyUserDatabaseObject(const NXCPMessage& msg, json_t **oldData, json_t **newData);
 uint32_t NXCORE_EXPORTABLE DetachLDAPUser(uint32_t id);
 Iterator<UserDatabaseObject> NXCORE_EXPORTABLE OpenUserDatabase();
 void NXCORE_EXPORTABLE CloseUserDatabase();

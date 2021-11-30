@@ -984,7 +984,7 @@ void CommSession::webServiceCustomRequest(NXCPMessage *request)
 void CommSession::action(NXCPMessage *pRequest, NXCPMessage *pMsg)
 {
    if ((g_dwFlags & AF_ENABLE_ACTIONS) && m_controlServer)
-      ExecuteAction(pRequest, pMsg, self());
+      ExecuteAction(*pRequest, pMsg, self());
    else
       pMsg->setField(VID_RCC, ERR_ACCESS_DENIED);
 }
@@ -1026,7 +1026,7 @@ void CommSession::mergeFiles(NXCPMessage *request, NXCPMessage *response)
          TCHAR destinationFileName[MAX_PATH], destinationFullPath[MAX_PATH];
          request->getFieldAsString(VID_DESTINATION_FILE_NAME, destinationFileName, MAX_PATH);
          BuildFullPath(destinationFileName, destinationFullPath);
-         StringList partFiles(request, VID_FILE_LIST_BASE, VID_FILE_COUNT);
+         StringList partFiles(*request, VID_FILE_LIST_BASE, VID_FILE_COUNT);
          if (!partFiles.isEmpty())
          {
             bool success = true;

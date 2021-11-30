@@ -55,7 +55,7 @@ void CleanupActions();
 bool ExecuteAction(uint32_t actionId, const Event *event, const Alarm *alarm);
 uint32_t CreateAction(const TCHAR *name, uint32_t *id);
 uint32_t DeleteAction(uint32_t actionId);
-uint32_t ModifyActionFromMessage(const NXCPMessage *msg);
+uint32_t ModifyActionFromMessage(const NXCPMessage& msg);
 void UpdateChannelNameInActions(std::pair<TCHAR*, TCHAR*> *names);
 bool CheckChannelIsUsedInAction(TCHAR *name);
 void SendActionsToClient(ClientSession *session, uint32_t requestId);

@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -26,26 +26,26 @@
 /**
  * Create mapping table object from NXCP message
  */
-MappingTable *MappingTable::createFromMessage(NXCPMessage *msg)
+MappingTable *MappingTable::createFromMessage(const NXCPMessage& msg)
 {
-	MappingTable *mt = new MappingTable((LONG)msg->getFieldAsUInt32(VID_MAPPING_TABLE_ID),
-	                                    msg->getFieldAsString(VID_NAME), 
-													msg->getFieldAsUInt32(VID_FLAGS), 
-													msg->getFieldAsString(VID_DESCRIPTION));
+	MappingTable *mt = new MappingTable((LONG)msg.getFieldAsUInt32(VID_MAPPING_TABLE_ID),
+	                                    msg.getFieldAsString(VID_NAME),
+													msg.getFieldAsUInt32(VID_FLAGS),
+													msg.getFieldAsString(VID_DESCRIPTION));
 
-	int count = (int)msg->getFieldAsUInt32(VID_NUM_ELEMENTS);
+	int count = (int)msg.getFieldAsUInt32(VID_NUM_ELEMENTS);
 	UINT32 varId = VID_ELEMENT_LIST_BASE;
 	for(int i = 0; i < count; i++)
 	{
 		TCHAR key[64];
-		msg->getFieldAsString(varId++, key, 64);
+		msg.getFieldAsString(varId++, key, 64);
 		if (mt->m_flags & MTF_NUMERIC_KEYS)
 		{
 			long n = _tcstol(key, NULL, 0);
 			_sntprintf(key, 64, _T("%ld"), n);
 		}
-		TCHAR *value = msg->getFieldAsString(varId++);
-		TCHAR *description = msg->getFieldAsString(varId++);
+		TCHAR *value = msg.getFieldAsString(varId++);
+		TCHAR *description = msg.getFieldAsString(varId++);
 		mt->m_data->set(key, new MappingTableElement(value, description));
 		varId += 7;
 	}
@@ -336,7 +336,7 @@ static void NotifyClients(ClientSession *session, std::pair<UINT32, UINT32> *con
  * @param msg NXCP message with table's data
  * @return RCC
  */
-UINT32 UpdateMappingTable(NXCPMessage *msg, LONG *newId)
+UINT32 UpdateMappingTable(const NXCPMessage& msg, LONG *newId)
 {
 	UINT32 rcc;
 	MappingTable *mt = MappingTable::createFromMessage(msg);

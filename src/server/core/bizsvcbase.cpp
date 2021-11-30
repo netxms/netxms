@@ -212,18 +212,18 @@ uint32_t BaseBusinessService::modifyCheckFromMessage(const NXCPMessage& request)
 /**
  * Modify business service from request
  */
-uint32_t BaseBusinessService::modifyFromMessageInternal(NXCPMessage *request)
+uint32_t BaseBusinessService::modifyFromMessageInternal(const NXCPMessage& msg)
 {
-   AutoBindTarget::modifyFromMessage(request);
-   if (request->isFieldExist(VID_OBJECT_STATUS_THRESHOLD))
+   AutoBindTarget::modifyFromMessage(msg);
+   if (msg.isFieldExist(VID_OBJECT_STATUS_THRESHOLD))
    {
-      m_objectStatusThreshhold = request->getFieldAsUInt32(VID_OBJECT_STATUS_THRESHOLD);
+      m_objectStatusThreshhold = msg.getFieldAsUInt32(VID_OBJECT_STATUS_THRESHOLD);
    }
-   if (request->isFieldExist(VID_DCI_STATUS_THRESHOLD))
+   if (msg.isFieldExist(VID_DCI_STATUS_THRESHOLD))
    {
-      m_dciStatusThreshhold = request->getFieldAsUInt32(VID_DCI_STATUS_THRESHOLD);
+      m_dciStatusThreshhold = msg.getFieldAsUInt32(VID_DCI_STATUS_THRESHOLD);
    }
-   return super::modifyFromMessageInternal(request);
+   return super::modifyFromMessageInternal(msg);
 }
 
 /**

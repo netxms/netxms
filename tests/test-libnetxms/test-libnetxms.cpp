@@ -73,7 +73,7 @@ static void TestStringList()
    s2->fillMessage(&msg, 100, 1);
    delete s2;
 
-   StringList *s3 = new StringList(&msg, 100, 1);
+   StringList *s3 = new StringList(msg, 100, 1);
    AssertEquals(s3->size(), 5);
    AssertTrue(!_tcscmp(s3->get(0), _T("1")));
    AssertTrue(!_tcscmp(s3->get(1), _T("12345000000001")));

@@ -244,20 +244,20 @@ void Zone::fillMessageInternalStage2(NXCPMessage *msg, UINT32 userId)
 /**
  * Modify object from message
  */
-UINT32 Zone::modifyFromMessageInternal(NXCPMessage *request)
+uint32_t Zone::modifyFromMessageInternal(const NXCPMessage& msg)
 {
-   return super::modifyFromMessageInternal(request);
+   return super::modifyFromMessageInternal(msg);
 }
 
 /**
  * Modify object from message (stage 2)
  */
-UINT32 Zone::modifyFromMessageInternalStage2(NXCPMessage *request)
+uint32_t Zone::modifyFromMessageInternalStage2(const NXCPMessage& msg)
 {
-   if (request->isFieldExist(VID_ZONE_PROXY_LIST))
+   if (msg.isFieldExist(VID_ZONE_PROXY_LIST))
    {
       IntegerArray<uint32_t> newProxyList;
-      request->getFieldAsInt32Array(VID_ZONE_PROXY_LIST, &newProxyList);
+      msg.getFieldAsInt32Array(VID_ZONE_PROXY_LIST, &newProxyList);
       for (int i = 0; i < newProxyList.size(); i++)
       {
          if (!m_proxyNodes.contains(newProxyList.get(i)))
@@ -282,7 +282,7 @@ UINT32 Zone::modifyFromMessageInternalStage2(NXCPMessage *request)
             m_proxyNodes.remove(proxyId);
       }
    }
-   return super::modifyFromMessageInternalStage2(request);
+   return super::modifyFromMessageInternalStage2(msg);
 }
 
 /**

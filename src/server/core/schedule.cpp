@@ -945,9 +945,9 @@ void GetSchedulerTaskHandlers(NXCPMessage *msg, uint64_t accessRights)
 /**
  * Creates scheduled task from message
  */
-uint32_t CreateScheduledTaskFromMsg(NXCPMessage *request, uint32_t owner, uint64_t systemAccessRights)
+uint32_t CreateScheduledTaskFromMsg(const NXCPMessage& request, uint32_t owner, uint64_t systemAccessRights)
 {
-   TCHAR *taskHandler = request->getFieldAsString(VID_TASK_HANDLER);
+   TCHAR *taskHandler = request.getFieldAsString(VID_TASK_HANDLER);
    SchedulerCallback *callback = s_callbacks.get(taskHandler);
    if ((callback != nullptr) && ((callback->m_accessRight == 0) || ((callback->m_accessRight & systemAccessRights) != callback->m_accessRight)))
    {
@@ -957,7 +957,7 @@ uint32_t CreateScheduledTaskFromMsg(NXCPMessage *request, uint32_t owner, uint64
       return RCC_ACCESS_DENIED;
    }
 
-   uint32_t objectId = request->getFieldAsInt32(VID_OBJECT_ID);
+   uint32_t objectId = request.getFieldAsInt32(VID_OBJECT_ID);
    if (!_tcsncmp(taskHandler, _T("Maintenance."), 12))   // Do additional check on maintenance enter/leave
    {
       shared_ptr<NetObj> object = FindObjectById(objectId);
@@ -974,19 +974,19 @@ uint32_t CreateScheduledTaskFromMsg(NXCPMessage *request, uint32_t owner, uint64
       }
    }
 
-   TCHAR *persistentData = request->getFieldAsString(VID_PARAMETER);
-   TCHAR *comments = request->getFieldAsString(VID_COMMENTS);
-   TCHAR *key = request->getFieldAsString(VID_TASK_KEY);
+   TCHAR *persistentData = request.getFieldAsString(VID_PARAMETER);
+   TCHAR *comments = request.getFieldAsString(VID_COMMENTS);
+   TCHAR *key = request.getFieldAsString(VID_TASK_KEY);
    uint32_t rcc;
-   if (request->isFieldExist(VID_SCHEDULE))
+   if (request.isFieldExist(VID_SCHEDULE))
    {
-      TCHAR *schedule = request->getFieldAsString(VID_SCHEDULE);
+      TCHAR *schedule = request.getFieldAsString(VID_SCHEDULE);
       rcc = AddRecurrentScheduledTask(taskHandler, schedule, persistentData, nullptr, owner, objectId, systemAccessRights, comments, key);
       MemFree(schedule);
    }
    else
    {
-      rcc = AddOneTimeScheduledTask(taskHandler, request->getFieldAsTime(VID_EXECUTION_TIME),
+      rcc = AddOneTimeScheduledTask(taskHandler, request.getFieldAsTime(VID_EXECUTION_TIME),
                persistentData, nullptr, owner, objectId, systemAccessRights, comments, key);
    }
    MemFree(taskHandler);
@@ -999,25 +999,25 @@ uint32_t CreateScheduledTaskFromMsg(NXCPMessage *request, uint32_t owner, uint64
 /**
  * Update scheduled task from message
  */
-uint32_t UpdateScheduledTaskFromMsg(NXCPMessage *request,  uint32_t owner, uint64_t systemAccessRights)
+uint32_t UpdateScheduledTaskFromMsg(const NXCPMessage& request,  uint32_t owner, uint64_t systemAccessRights)
 {
-   uint32_t taskId = request->getFieldAsInt32(VID_SCHEDULED_TASK_ID);
-   TCHAR *taskHandler = request->getFieldAsString(VID_TASK_HANDLER);
-   TCHAR *persistentData = request->getFieldAsString(VID_PARAMETER);
-   TCHAR *comments = request->getFieldAsString(VID_COMMENTS);
-   uint32_t objectId = request->getFieldAsInt32(VID_OBJECT_ID);
-   bool disabled = request->getFieldAsBoolean(VID_TASK_IS_DISABLED);
+   uint32_t taskId = request.getFieldAsInt32(VID_SCHEDULED_TASK_ID);
+   TCHAR *taskHandler = request.getFieldAsString(VID_TASK_HANDLER);
+   TCHAR *persistentData = request.getFieldAsString(VID_PARAMETER);
+   TCHAR *comments = request.getFieldAsString(VID_COMMENTS);
+   uint32_t objectId = request.getFieldAsInt32(VID_OBJECT_ID);
+   bool disabled = request.getFieldAsBoolean(VID_TASK_IS_DISABLED);
    uint32_t rcc;
-   if (request->isFieldExist(VID_SCHEDULE))
+   if (request.isFieldExist(VID_SCHEDULE))
    {
-      TCHAR *schedule = request->getFieldAsString(VID_SCHEDULE);
+      TCHAR *schedule = request.getFieldAsString(VID_SCHEDULE);
       rcc = UpdateRecurrentScheduledTask(taskId, taskHandler, schedule, persistentData, nullptr,
                comments, owner, objectId, systemAccessRights, disabled);
       MemFree(schedule);
    }
    else
    {
-      rcc = UpdateOneTimeScheduledTask(taskId, taskHandler, request->getFieldAsTime(VID_EXECUTION_TIME),
+      rcc = UpdateOneTimeScheduledTask(taskId, taskHandler, request.getFieldAsTime(VID_EXECUTION_TIME),
                persistentData, nullptr, comments, owner, objectId, systemAccessRights, disabled);
    }
    MemFree(taskHandler);

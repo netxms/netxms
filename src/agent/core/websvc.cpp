@@ -855,7 +855,7 @@ void QueryWebService(NXCPMessage *request, AbstractCommSession *session)
       {
          case WebServiceRequestType::PARAMETER:
          {
-            StringList params(request, VID_PARAM_LIST_BASE, VID_NUM_PARAMETERS);
+            StringList params(*request, VID_PARAM_LIST_BASE, VID_NUM_PARAMETERS);
             result = cachedEntry->getParams(&params, &response);
             break;
          }

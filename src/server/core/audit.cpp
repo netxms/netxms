@@ -299,7 +299,7 @@ void NXCORE_EXPORTABLE WriteAuditLogWithValues2(const TCHAR *subsys, bool isSucc
    msg.setField(VID_SESSION_ID, sessionId);
 	msg.setField(VID_OBJECT_ID, objectId);
 	msg.setField(VID_MESSAGE, text);
-	NotifyClientSessions(&msg, NXC_CHANNEL_AUDIT_LOG);
+	NotifyClientSessions(msg, NXC_CHANNEL_AUDIT_LOG);
 
 	if (s_auditServerAddr.isValidUnicast())
 	{

@@ -310,7 +310,7 @@ void FillGraphListMsg(NXCPMessage *msg, UINT32 userId, bool templageGraphs, UINT
 /**
  * Save graph
  */
-void SaveGraph(NXCPMessage *pRequest, UINT32 userId, NXCPMessage *msg)
+void SaveGraph(const NXCPMessage& request, uint32_t userId, NXCPMessage *response)
 {
 	bool isNew, sucess;
 	UINT32 id, graphUserId, graphAccess, accessRightStatus, flags;
@@ -318,11 +318,11 @@ void SaveGraph(NXCPMessage *pRequest, UINT32 userId, NXCPMessage *msg)
 	TCHAR szQuery[16384], graphName[256];
 	int i, nACLSize;
 
-   uint32_t graphId = pRequest->getFieldAsUInt32(VID_GRAPH_ID);
-	pRequest->getFieldAsString(VID_NAME, graphName, 256);
-	bool overwrite = pRequest->getFieldAsBoolean(VID_OVERWRITE);
+   uint32_t graphId = request.getFieldAsUInt32(VID_GRAPH_ID);
+	request.getFieldAsString(VID_NAME, graphName, 256);
+	bool overwrite = request.getFieldAsBoolean(VID_OVERWRITE);
 
-   std::pair<uint32_t, uint32_t> nameCheckResult = IsGraphNameExists(graphName, pRequest->getFieldAsUInt32(VID_FLAGS));
+   std::pair<uint32_t, uint32_t> nameCheckResult = IsGraphNameExists(graphName, request.getFieldAsUInt32(VID_FLAGS));
    if (nameCheckResult.first == graphId)
    {
       nameCheckResult.second = RCC_SUCCESS;
@@ -352,7 +352,7 @@ void SaveGraph(NXCPMessage *pRequest, UINT32 userId, NXCPMessage *msg)
    else
    {
       sucess = false;
-      msg->setField(VID_RCC, accessRightStatus ? accessRightStatus : nameCheckResult.second);
+      response->setField(VID_RCC, accessRightStatus ? accessRightStatus : nameCheckResult.second);
    }
 
 	// Create/update graph
@@ -361,10 +361,10 @@ void SaveGraph(NXCPMessage *pRequest, UINT32 userId, NXCPMessage *msg)
 		DbgPrintf(5, _T("SaveGraph: %s graph %d"), isNew ? _T("Creating") : _T("Updating"), graphId);
       DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
-      flags = pRequest->getFieldAsUInt32(VID_FLAGS);
-      name = pRequest->getFieldAsString(VID_NAME);
-      config = pRequest->getFieldAsString(VID_GRAPH_CONFIG);
-      filters = pRequest->getFieldAsString(VID_FILTER);
+      flags = request.getFieldAsUInt32(VID_FLAGS);
+      name = request.getFieldAsString(VID_NAME);
+      config = request.getFieldAsString(VID_GRAPH_CONFIG);
+      filters = request.getFieldAsString(VID_FILTER);
 		if (DBBegin(hdb))
 		{
          DB_STATEMENT hStmt;
@@ -401,31 +401,31 @@ void SaveGraph(NXCPMessage *pRequest, UINT32 userId, NXCPMessage *msg)
 			if (sucess)
 			{
 				// Insert new ACL
-				nACLSize = (int)pRequest->getFieldAsUInt32(VID_ACL_SIZE);
+				nACLSize = (int)request.getFieldAsUInt32(VID_ACL_SIZE);
 				for(i = 0, id = VID_GRAPH_ACL_BASE; i < nACLSize; i++)
 				{
-					graphUserId = pRequest->getFieldAsUInt32(id++);
-					graphAccess = pRequest->getFieldAsUInt32(id++);
+					graphUserId = request.getFieldAsUInt32(id++);
+					graphAccess = request.getFieldAsUInt32(id++);
 					_sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("INSERT INTO graph_acl (graph_id,user_id,user_rights) VALUES (%d,%d,%d)"),
 					          graphId, graphUserId, graphAccess);
 					if (!DBQuery(hdb, szQuery))
 					{
 						sucess = false;
-						msg->setField(VID_RCC, RCC_DB_FAILURE);
+						response->setField(VID_RCC, RCC_DB_FAILURE);
 						break;
 					}
 				}
 			}
 			else
 			{
-            msg->setField(VID_RCC, RCC_DB_FAILURE);
+            response->setField(VID_RCC, RCC_DB_FAILURE);
 			}
 
 			if (sucess)
 			{
 				DBCommit(hdb);
-				msg->setField(VID_RCC, RCC_SUCCESS);
-				msg->setField(VID_GRAPH_ID, graphId);
+				response->setField(VID_RCC, RCC_SUCCESS);
+				response->setField(VID_GRAPH_ID, graphId);
 
             //send notificaion
 				NXCPMessage update;
@@ -466,7 +466,7 @@ void SaveGraph(NXCPMessage *pRequest, UINT32 userId, NXCPMessage *msg)
             }
             update.setField(VID_NUM_GRAPHS, 1);
 
-            NotifyClientsOnGraphUpdate(&update, graphId);
+            NotifyClientsOnGraphUpdate(update, graphId);
 			}
 			else
 			{
@@ -478,7 +478,7 @@ void SaveGraph(NXCPMessage *pRequest, UINT32 userId, NXCPMessage *msg)
 		}
 		else
 		{
-			msg->setField(VID_RCC, RCC_DB_FAILURE);
+			response->setField(VID_RCC, RCC_DB_FAILURE);
 		}
       DBConnectionPoolReleaseConnection(hdb);
 	}

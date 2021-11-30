@@ -288,14 +288,14 @@ static uint32_t ResolveScriptGuid(const uuid& guid)
 /**
  * Update or create new script
  */
-uint32_t UpdateScript(const NXCPMessage *request, uint32_t *scriptId, ClientSession *session)
+uint32_t UpdateScript(const NXCPMessage& request, uint32_t *scriptId, ClientSession *session)
 {
-   TCHAR *scriptSource = request->getFieldAsString(VID_SCRIPT_CODE);
+   TCHAR *scriptSource = request.getFieldAsString(VID_SCRIPT_CODE);
    if (scriptSource == nullptr)
       return RCC_INVALID_REQUEST;
 
    TCHAR scriptName[MAX_DB_STRING];
-   request->getFieldAsString(VID_NAME, scriptName, MAX_DB_STRING);
+   request.getFieldAsString(VID_NAME, scriptName, MAX_DB_STRING);
 
    uint32_t rcc = RCC_DB_FAILURE;
    if (IsValidScriptName(scriptName))

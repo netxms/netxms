@@ -126,7 +126,7 @@ void AgentConnectionEx::onTrap(NXCPMessage *pMsg)
 			   }
 			   debugPrintf(3, _T("Event from trap: %d"), dwEventCode);
 
-			   StringList parameters(pMsg, VID_EVENT_ARG_BASE, VID_NUM_ARGS);
+			   StringList parameters(*pMsg, VID_EVENT_ARG_BASE, VID_NUM_ARGS);
 			   PostEvent(dwEventCode, EventOrigin::AGENT, pMsg->getFieldAsTime(VID_TIMESTAMP), node->getId(), parameters);
 		   }
       }

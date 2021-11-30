@@ -145,28 +145,28 @@ void BusinessServicePrototype::fillMessageInternal(NXCPMessage *msg, uint32_t us
 /**
  * Modify business service prototype from request
  */
-uint32_t BusinessServicePrototype::modifyFromMessageInternal(NXCPMessage *request)
+uint32_t BusinessServicePrototype::modifyFromMessageInternal(const NXCPMessage& msg)
 {
-   if (request->isFieldExist(VID_INSTD_METHOD))
-      m_instanceDiscoveryMethod = request->getFieldAsUInt32(VID_INSTD_METHOD);
+   if (msg.isFieldExist(VID_INSTD_METHOD))
+      m_instanceDiscoveryMethod = msg.getFieldAsUInt32(VID_INSTD_METHOD);
 
-   if (request->isFieldExist(VID_NODE_ID))
-      m_instanceSource = request->getFieldAsUInt32(VID_NODE_ID);
+   if (msg.isFieldExist(VID_NODE_ID))
+      m_instanceSource = msg.getFieldAsUInt32(VID_NODE_ID);
 
-   if (request->isFieldExist(VID_INSTD_DATA))
+   if (msg.isFieldExist(VID_INSTD_DATA))
    {
       MemFree(m_instanceDiscoveryData);
-      m_instanceDiscoveryData = request->getFieldAsString(VID_INSTD_DATA);
+      m_instanceDiscoveryData = msg.getFieldAsString(VID_INSTD_DATA);
    }
 
-   if (request->isFieldExist(VID_INSTD_FILTER))
+   if (msg.isFieldExist(VID_INSTD_FILTER))
    {
       MemFree(m_instanceDiscoveryFilter);
-      m_instanceDiscoveryFilter = request->getFieldAsString(VID_INSTD_FILTER);
+      m_instanceDiscoveryFilter = msg.getFieldAsString(VID_INSTD_FILTER);
       compileInstanceDiscoveryFilterScript();
    }
 
-   return super::modifyFromMessageInternal(request);
+   return super::modifyFromMessageInternal(msg);
 }
 
 /**

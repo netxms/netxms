@@ -60,7 +60,7 @@ private:
 
 public:
    EventTemplate(DB_RESULT hResult, int row);
-   EventTemplate(NXCPMessage *msg);
+   EventTemplate(const NXCPMessage& msg);
    ~EventTemplate();
 
    const uuid& getGuid() const { return m_guid; }
@@ -72,7 +72,7 @@ public:
    const TCHAR *getDescription() const { return m_description; }
    const TCHAR *getTags() const { return m_tags; }
 
-   void modifyFromMessage(NXCPMessage *msg);
+   void modifyFromMessage(const NXCPMessage& msg);
    void fillMessage(NXCPMessage *msg, uint32_t base) const;
    bool saveToDatabase() const;
 
@@ -371,7 +371,7 @@ struct EventProcessingThreadStats
 bool InitEventSubsystem();
 void ShutdownEventSubsystem();
 void ReloadEvents();
-uint32_t UpdateEventTemplate(NXCPMessage *request, NXCPMessage *response, json_t **oldValue, json_t **newValue);
+uint32_t UpdateEventTemplate(const NXCPMessage& request, NXCPMessage *response, json_t **oldValue, json_t **newValue);
 uint32_t DeleteEventTemplate(uint32_t eventCode);
 void GetEventConfiguration(NXCPMessage *msg);
 void CreateEventTemplateExportRecord(StringBuffer &str, uint32_t eventCode);

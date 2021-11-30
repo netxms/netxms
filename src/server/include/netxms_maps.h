@@ -167,7 +167,7 @@ protected:
 public:
 	NetworkMapElement(uint32_t id, uint32_t flags = 0);
 	NetworkMapElement(uint32_t id, Config *config, uint32_t flags = 0);
-	NetworkMapElement(NXCPMessage *msg, uint32_t baseId);
+	NetworkMapElement(const NXCPMessage& msg, uint32_t baseId);
 	virtual ~NetworkMapElement();
 
    virtual void updateInternalFields(NetworkMapElement *e);
@@ -197,7 +197,7 @@ protected:
 public:
 	NetworkMapObject(uint32_t id, uint32_t objectId, uint32_t flags = 0);
 	NetworkMapObject(uint32_t id, Config *config, uint32_t flags = 0);
-	NetworkMapObject(NXCPMessage *msg, uint32_t baseId);
+	NetworkMapObject(const NXCPMessage& msg, uint32_t baseId);
 	virtual ~NetworkMapObject();
 
 	virtual void updateConfig(Config *config) override;
@@ -222,7 +222,7 @@ protected:
 public:
 	NetworkMapDecoration(uint32_t id, LONG decorationType, uint32_t flags = 0);
 	NetworkMapDecoration(uint32_t id, Config *config, uint32_t flags = 0);
-	NetworkMapDecoration(NXCPMessage *msg, uint32_t baseId);
+	NetworkMapDecoration(const NXCPMessage& msg, uint32_t baseId);
 	virtual ~NetworkMapDecoration();
 
 	virtual void updateConfig(Config *config) override;
@@ -248,7 +248,7 @@ protected:
 public:
 	NetworkMapDCIContainer(uint32_t id, TCHAR* objectDCIList, uint32_t flags = 0);
 	NetworkMapDCIContainer(uint32_t id, Config *config, uint32_t flags = 0);
-	NetworkMapDCIContainer(NXCPMessage *msg, uint32_t baseId);
+	NetworkMapDCIContainer(const NXCPMessage& msg, uint32_t baseId);
 	virtual ~NetworkMapDCIContainer();
 
 	virtual void updateConfig(Config *config) override;
@@ -269,7 +269,7 @@ protected:
 public:
 	NetworkMapTextBox(uint32_t id, TCHAR* objectDCIList, uint32_t flags = 0);
 	NetworkMapTextBox(uint32_t id, Config *config, uint32_t flags = 0);
-	NetworkMapTextBox(NXCPMessage *msg, uint32_t baseId);
+	NetworkMapTextBox(const NXCPMessage& msg, uint32_t baseId);
 	virtual ~NetworkMapTextBox();
 
 	virtual void updateConfig(Config *config) override;
@@ -290,7 +290,7 @@ protected:
 public:
    NetworkMapDCIImage(uint32_t id, TCHAR* objectDCIList, uint32_t flags = 0);
    NetworkMapDCIImage(uint32_t id, Config *config, uint32_t flags = 0);
-   NetworkMapDCIImage(NXCPMessage *msg, uint32_t baseId);
+   NetworkMapDCIImage(const NXCPMessage& msg, uint32_t baseId);
    virtual ~NetworkMapDCIImage();
 
    virtual void updateConfig(Config *config) override;
@@ -333,7 +333,7 @@ protected:
 
 public:
 	NetworkMapLink(uint32_t id, uint32_t e1, uint32_t e2, int type);
-	NetworkMapLink(NXCPMessage *msg, uint32_t baseId);
+	NetworkMapLink(const NXCPMessage& msg, uint32_t baseId);
    NetworkMapLink(const NetworkMapLink& src);
 	virtual ~NetworkMapLink();
 

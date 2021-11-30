@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -199,32 +199,32 @@ void Dashboard::fillMessageInternal(NXCPMessage *msg, UINT32 userId)
 /**
  * Modify object from NXCP message
  */
-UINT32 Dashboard::modifyFromMessageInternal(NXCPMessage *request)
+uint32_t Dashboard::modifyFromMessageInternal(const NXCPMessage& msg)
 {
-	if (request->isFieldExist(VID_NUM_COLUMNS))
-		m_numColumns = (int)request->getFieldAsUInt16(VID_NUM_COLUMNS);
+	if (msg.isFieldExist(VID_NUM_COLUMNS))
+		m_numColumns = (int)msg.getFieldAsUInt16(VID_NUM_COLUMNS);
 
-	if (request->isFieldExist(VID_FLAGS))
-	   m_options = (int)request->getFieldAsUInt32(VID_FLAGS);
+	if (msg.isFieldExist(VID_FLAGS))
+	   m_options = (int)msg.getFieldAsUInt32(VID_FLAGS);
 
-	if (request->isFieldExist(VID_NUM_ELEMENTS))
+	if (msg.isFieldExist(VID_NUM_ELEMENTS))
 	{
 		m_elements->clear();
 
-		int count = (int)request->getFieldAsUInt32(VID_NUM_ELEMENTS);
+		int count = (int)msg.getFieldAsUInt32(VID_NUM_ELEMENTS);
 		UINT32 varId = VID_ELEMENT_LIST_BASE;
 		for(int i = 0; i < count; i++)
 		{
 			DashboardElement *e = new DashboardElement;
-			e->m_type = (int)request->getFieldAsUInt16(varId++);
-			e->m_data = request->getFieldAsString(varId++);
-			e->m_layout = request->getFieldAsString(varId++);
+			e->m_type = (int)msg.getFieldAsUInt16(varId++);
+			e->m_data = msg.getFieldAsString(varId++);
+			e->m_layout = msg.getFieldAsString(varId++);
 			varId += 7;
 			m_elements->add(e);
 		}
 	}
 
-	return super::modifyFromMessageInternal(request);
+	return super::modifyFromMessageInternal(msg);
 }
 
 /**

@@ -741,7 +741,7 @@ struct NXCORE_EXPORTABLE NewNodeData
    uuid agentId;
 
    NewNodeData(const InetAddress& ipAddr);
-   NewNodeData(const NXCPMessage *msg, const InetAddress& ipAddr);
+   NewNodeData(const NXCPMessage& msg, const InetAddress& ipAddr);
    ~NewNodeData();
 };
 
@@ -853,7 +853,7 @@ private:
    TCHAR *m_description;
 
 public:
-   ObjectUrl(NXCPMessage *msg, uint32_t baseId);
+   ObjectUrl(const NXCPMessage& msg, uint32_t baseId);
    ObjectUrl(DB_RESULT hResult, int row);
    ~ObjectUrl();
 
@@ -1129,8 +1129,8 @@ protected:
 
    virtual void fillMessageInternal(NXCPMessage *msg, UINT32 userId);
    virtual void fillMessageInternalStage2(NXCPMessage *msg, UINT32 userId);
-   virtual UINT32 modifyFromMessageInternal(NXCPMessage *msg);
-   virtual UINT32 modifyFromMessageInternalStage2(NXCPMessage *msg);
+   virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg);
+   virtual uint32_t modifyFromMessageInternalStage2(const NXCPMessage& msg);
 
    bool isGeoLocationHistoryTableExists(DB_HANDLE hdb) const;
    bool createGeoLocationHistoryTable(DB_HANDLE hdb);
@@ -1241,7 +1241,7 @@ public:
    virtual void leaveMaintenanceMode(uint32_t userId);
 
    void fillMessage(NXCPMessage *msg, UINT32 userId);
-   UINT32 modifyFromMessage(NXCPMessage *msg);
+   uint32_t modifyFromMessage(const NXCPMessage& msg);
 
    virtual void postModify();
 
@@ -1508,7 +1508,7 @@ protected:
    NXSL_Program *m_autoBindFilters[MAX_AUTOBIND_TARGET_FILTERS];
    uint32_t m_autoBindFlags;
 
-   void modifyFromMessage(const NXCPMessage& request);
+   void modifyFromMessage(const NXCPMessage& msg);
    void fillMessage(NXCPMessage* msg) const;
 
    bool loadFromDatabase(DB_HANDLE hdb, uint32_t objectId);
@@ -1586,7 +1586,7 @@ protected:
    virtual void prepareForDeletion() override;
 
    virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId) override;
-   virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest) override;
+   virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg) override;
 
    virtual void onDataCollectionLoad() { }
    virtual void onDataCollectionChange() { }
@@ -1792,7 +1792,7 @@ protected:
    virtual void onDataCollectionChange() override;
 
    virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId) override;
-   virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest) override;
+   virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg) override;
 
    void forceDeployPolicies(const shared_ptr<Node>& target);
 
@@ -1882,7 +1882,7 @@ protected:
    virtual void prepareForDeletion() override;
 
    virtual void fillMessageInternal(NXCPMessage *msg, UINT32 userId) override;
-   virtual UINT32 modifyFromMessageInternal(NXCPMessage *request) override;
+   virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg) override;
 
    void setExpectedStateInternal(int state);
 
@@ -2082,7 +2082,7 @@ protected:
    virtual void onObjectDelete(UINT32 objectId) override;
 
    virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId) override;
-   virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest) override;
+   virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg) override;
 
 public:
    NetworkService();
@@ -2118,7 +2118,7 @@ protected:
    ObjectArray<InetAddress> *m_remoteNetworks;
 
    virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId) override;
-   virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest) override;
+   virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg) override;
 
    shared_ptr<Node> getParentNode() const;
 
@@ -2211,14 +2211,12 @@ protected:
    IntegerArray<uint32_t> m_geoAreas;
    bool m_geoLocationRestrictionsViolated;
    bool m_instanceDiscoveryPending;
-
-   atomic<double> m_proxyLoadFactor;
-
    uint32_t m_webServiceProxy;
+   atomic<double> m_proxyLoadFactor;
 
    virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId) override;
    virtual void fillMessageInternalStage2(NXCPMessage *pMsg, UINT32 userId) override;
-   virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest) override;
+   virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg) override;
 
    virtual void onDataCollectionLoad() override;
    virtual void onDataCollectionChange() override;
@@ -2393,7 +2391,7 @@ protected:
    int16_t m_direction;
 
    virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId) override;
-   virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest) override;
+   virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg) override;
 
 public:
    MobileDevice();
@@ -2456,7 +2454,7 @@ protected:
    AccessPointState m_prevState;
 
    virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId) override;
-   virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest) override;
+   virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg) override;
 
    virtual void configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) override;
 
@@ -2521,7 +2519,7 @@ protected:
    int32_t m_zoneUIN;
 
    virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId) override;
-   virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest) override;
+   virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg) override;
 
    virtual void onDataCollectionChange() override;
    UINT32 getResourceOwnerInternal(UINT32 id, const TCHAR *name);
@@ -2594,7 +2592,7 @@ protected:
    RackOrientation m_rackOrientation;
 
    virtual void fillMessageInternal(NXCPMessage *msg, UINT32 userId) override;
-   virtual UINT32 modifyFromMessageInternal(NXCPMessage *request) override;
+   virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg) override;
 
    virtual void onDataCollectionChange() override;
    virtual void collectProxyInfo(ProxyInfo *info) override;
@@ -2675,7 +2673,7 @@ protected:
    uint32_t m_proxyNodeId;
 
    virtual void fillMessageInternal(NXCPMessage *msg, UINT32 userId) override;
-   virtual UINT32 modifyFromMessageInternal(NXCPMessage *request) override;
+   virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg) override;
 
    virtual void statusPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) override;
    virtual void configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) override;
@@ -2689,10 +2687,10 @@ protected:
    void buildInternalCommunicationTopologyInternal(NetworkMapObjectList *topology, bool checkAllProxies);
 
 public:
-   static shared_ptr<Sensor> create(const TCHAR *name, const NXCPMessage *msg);
+   static shared_ptr<Sensor> create(const TCHAR *name, const NXCPMessage& request);
 
    Sensor();
-   Sensor(const TCHAR *name, const NXCPMessage *msg); // Intended for use by create() call only
+   Sensor(const TCHAR *name, const NXCPMessage& request); // Intended for use by create() call only
    virtual ~Sensor();
 
    shared_ptr<Sensor> self() { return static_pointer_cast<Sensor>(NObject::self()); }
@@ -3090,7 +3088,7 @@ protected:
    virtual void onObjectDelete(UINT32 objectId) override;
 
    virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId) override;
-   virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest) override;
+   virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg) override;
 
    virtual void onDataCollectionChange() override;
 
@@ -3584,7 +3582,7 @@ private:
 
 protected:
    virtual void fillMessageInternal(NXCPMessage *msg, UINT32 userId) override;
-   virtual UINT32 modifyFromMessageInternal(NXCPMessage *request) override;
+   virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg) override;
 
 public:
    AbstractContainer();
@@ -3611,8 +3609,8 @@ class NXCORE_EXPORTABLE Container : public AbstractContainer, public AutoBindTar
 protected:
    typedef AbstractContainer super;
 
-   virtual UINT32 modifyFromMessageInternal(NXCPMessage *request) override;
    virtual void fillMessageInternal(NXCPMessage *msg, UINT32 userId) override;
+   virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg) override;
 
 public:
    Container() : super(), AutoBindTarget(this) {}
@@ -3707,7 +3705,7 @@ protected:
    ObjectArray<RackPassiveElement> *m_passiveElements;
 
    virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId) override;
-   virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest) override;
+   virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg) override;
 
    virtual void prepareForDeletion() override;
 
@@ -3822,8 +3820,8 @@ protected:
 
    virtual void fillMessageInternal(NXCPMessage *msg, uint32_t userId) override;
    virtual void fillMessageInternalStage2(NXCPMessage *msg, uint32_t userId) override;
-   virtual uint32_t modifyFromMessageInternal(NXCPMessage *request) override;
-   virtual uint32_t modifyFromMessageInternalStage2(NXCPMessage *request) override;
+   virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg) override;
+   virtual uint32_t modifyFromMessageInternalStage2(const NXCPMessage& msg) override;
 
    void updateProxyLoadData(shared_ptr<Node> node);
    void migrateProxyLoad(ZoneProxy *source, ZoneProxy *target);
@@ -3943,7 +3941,7 @@ protected:
    bool m_queuedForPolling;
 
    virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId) override;
-   virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest) override;
+   virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg) override;
    virtual void statusPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId) override;
    void check();
 
@@ -4049,7 +4047,7 @@ protected:
    StructArray<NetworkMapObjectLocation> m_deletedObjects;
 
    virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId) override;
-   virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest) override;
+   virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg) override;
 
    void updateObjects(NetworkMapObjectList *objects);
    void updateLinks();
@@ -4136,7 +4134,7 @@ protected:
    ObjectArray<DashboardElement> *m_elements;
 
    virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId) override;
-   virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest) override;
+   virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg) override;
 
 public:
    Dashboard();
@@ -4303,7 +4301,7 @@ protected:
    uint32_t m_dciStatusThreshhold;
    Mutex m_checkMutex;
 
-   virtual uint32_t modifyFromMessageInternal(NXCPMessage *request) override;
+   virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg) override;
    virtual void fillMessageInternal(NXCPMessage *msg, UINT32 userId) override;
 
    void checksLock() const { m_checkMutex.lock(); }
@@ -4390,7 +4388,7 @@ protected:
    TCHAR* m_instanceDiscoveryFilter;
    NXSL_Program *m_compiledInstanceDiscoveryFilter;
 
-   virtual uint32_t modifyFromMessageInternal(NXCPMessage *pRequest) override;
+   virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg) override;
    virtual void fillMessageInternal(NXCPMessage *msg, UINT32 userId) override;
 
    virtual void instanceDiscoveryPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) override;
@@ -4639,7 +4637,7 @@ void LoadGeoAreas();
 
 void FillMessageWithSshKeys(NXCPMessage *msg, bool withPublicKey);
 uint32_t GenerateSshKey(const TCHAR *name);
-void CreateOrEditSshKey(NXCPMessage *msg);
+void CreateOrEditSshKey(const NXCPMessage& request);
 void DeleteSshKey(NXCPMessage *response, uint32_t id, bool forceDelete);
 void FindSshKeyById(uint32_t id, NXCPMessage *msg);
 void LoadSshKeys();

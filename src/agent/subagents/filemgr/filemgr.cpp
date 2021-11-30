@@ -1083,9 +1083,9 @@ static uint16_t ConvertFilePermissions(mode_t mode)
 /**
  * Handler for "get file set details" command
  */
-static void CH_GetFileSetDetails(NXCPMessage *request, NXCPMessage *response, AbstractCommSession *session)
+static void CH_GetFileSetDetails(const NXCPMessage& request, NXCPMessage *response, AbstractCommSession *session)
 {
-   bool allowPathExpansion = request->getFieldAsBoolean(VID_ALLOW_PATH_EXPANSION);
+   bool allowPathExpansion = request.getFieldAsBoolean(VID_ALLOW_PATH_EXPANSION);
    StringList files(request, VID_ELEMENT_LIST_BASE, VID_NUM_ELEMENTS);
    uint32_t fieldId = VID_ELEMENT_LIST_BASE;
 
@@ -1525,7 +1525,7 @@ static void CH_GetFileFingerprint(NXCPMessage *request, NXCPMessage *response, A
 /**
  * Handler for "merge files" command
  */
-static void CH_MergeFiles(NXCPMessage *request, NXCPMessage *response, AbstractCommSession *session)
+static void CH_MergeFiles(const NXCPMessage& request, NXCPMessage *response, AbstractCommSession *session)
 {
    if (!session->isMasterServer())
    {
@@ -1534,14 +1534,14 @@ static void CH_MergeFiles(NXCPMessage *request, NXCPMessage *response, AbstractC
    }
 
    TCHAR destinationFileName[MAX_PATH];
-   request->getFieldAsString(VID_DESTINATION_FILE_NAME, destinationFileName, MAX_PATH);
-   ConvertPathToHost(destinationFileName, request->getFieldAsBoolean(VID_ALLOW_PATH_EXPANSION), session->isMasterServer());
+   request.getFieldAsString(VID_DESTINATION_FILE_NAME, destinationFileName, MAX_PATH);
+   ConvertPathToHost(destinationFileName, request.getFieldAsBoolean(VID_ALLOW_PATH_EXPANSION), session->isMasterServer());
 
    TCHAR *destinationFullPath;
    if (CheckFullPath(destinationFileName, &destinationFullPath, false))
    {
       size_t size;
-      const BYTE *md5 = request->getBinaryFieldPtr(VID_HASH_MD5, &size);
+      const BYTE *md5 = request.getBinaryFieldPtr(VID_HASH_MD5, &size);
       if ((md5 != nullptr) && (size ==  MD5_DIGEST_SIZE))
       {
          StringList partFiles(request, VID_FILE_LIST_BASE, VID_FILE_COUNT);
@@ -1553,7 +1553,7 @@ static void CH_MergeFiles(NXCPMessage *request, NXCPMessage *response, AbstractC
             {
                TCHAR sourceFileName[MAX_PATH];
                _tcslcpy(sourceFileName, partFiles.get(i), MAX_PATH);
-               ConvertPathToHost(sourceFileName, request->getFieldAsBoolean(VID_ALLOW_PATH_EXPANSION), session->isMasterServer());
+               ConvertPathToHost(sourceFileName, request.getFieldAsBoolean(VID_ALLOW_PATH_EXPANSION), session->isMasterServer());
                TCHAR *sourceFullPath;
                if (CheckFullPath(sourceFileName, &sourceFullPath, false))
                {
@@ -1577,7 +1577,7 @@ static void CH_MergeFiles(NXCPMessage *request, NXCPMessage *response, AbstractC
                {
                   TCHAR sourceFileName[MAX_PATH];
                   _tcslcpy(sourceFileName, partFiles.get(i), MAX_PATH);
-                  ConvertPathToHost(sourceFileName, request->getFieldAsBoolean(VID_ALLOW_PATH_EXPANSION), session->isMasterServer());
+                  ConvertPathToHost(sourceFileName, request.getFieldAsBoolean(VID_ALLOW_PATH_EXPANSION), session->isMasterServer());
                   TCHAR *sourceFullPath;
                   if (CheckFullPath(sourceFileName, &sourceFullPath, false))
                   {
@@ -1635,7 +1635,7 @@ static bool ProcessCommands(UINT32 command, NXCPMessage *request, NXCPMessage *r
          CH_GetFileDetails(request, response, session);
          break;
       case CMD_GET_FILE_SET_DETAILS:
-         CH_GetFileSetDetails(request, response, session);
+         CH_GetFileSetDetails(*request, response, session);
          break;
       case CMD_FILEMGR_DELETE_FILE:
          CH_DeleteFile(request, response, session);
@@ -1671,7 +1671,7 @@ static bool ProcessCommands(UINT32 command, NXCPMessage *request, NXCPMessage *r
          CH_GetFileFingerprint(request, response, session);
          break;
       case CMD_FILEMGR_MERGE_FILES:
-         CH_MergeFiles(request, response, session);
+         CH_MergeFiles(*request, response, session);
          break;
       default:
          return false;

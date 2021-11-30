@@ -163,7 +163,7 @@ void MasterAgentListener()
 						H_GetList(msg, &response);
 						break;
                case CMD_EXECUTE_ACTION:
-                  ExecuteAction(msg, &response, MakeSharedCommSession<ProxySession>(msg));
+                  ExecuteAction(*msg, &response, MakeSharedCommSession<ProxySession>(msg));
                   break;
 					case CMD_GET_PARAMETER_LIST:
 						response.setField(VID_RCC, ERR_SUCCESS);

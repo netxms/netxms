@@ -265,12 +265,12 @@ void GetPredictionEngines(NXCPMessage *msg)
 /**
  * Get predicted data for DCI
  */
-bool GetPredictedData(ClientSession *session, const NXCPMessage *request, NXCPMessage *response, const DataCollectionTarget& dcTarget)
+bool GetPredictedData(ClientSession *session, const NXCPMessage& request, NXCPMessage *response, const DataCollectionTarget& dcTarget)
 {
-   static UINT32 s_rowSize[] = { 8, 8, 16, 16, 516, 16, 8, 8, 16 };
+   static uint32_t s_rowSize[] = { 8, 8, 16, 16, 516, 16, 8, 8, 16 };
 
    // Find DCI object
-   shared_ptr<DCObject> dci = dcTarget.getDCObjectById(request->getFieldAsUInt32(VID_DCI_ID), session->getUserId());
+   shared_ptr<DCObject> dci = dcTarget.getDCObjectById(request.getFieldAsUInt32(VID_DCI_ID), session->getUserId());
    if (dci == nullptr)
    {
       response->setField(VID_RCC, RCC_INVALID_DCI_ID);
@@ -291,8 +291,8 @@ bool GetPredictedData(ClientSession *session, const NXCPMessage *request, NXCPMe
    session->sendMessage(response);
 
    int dataType = static_cast<DCItem*>(dci.get())->getDataType();
-   time_t timeFrom = request->getFieldAsTime(VID_TIME_FROM);
-   time_t timestamp = request->getFieldAsTime(VID_TIME_TO);
+   time_t timeFrom = request.getFieldAsTime(VID_TIME_FROM);
+   time_t timestamp = request.getFieldAsTime(VID_TIME_TO);
    time_t interval = dci->getEffectivePollingInterval();
 
    // Allocate memory for data and prepare data header
@@ -346,7 +346,7 @@ bool GetPredictedData(ClientSession *session, const NXCPMessage *request, NXCPMe
 
    // Prepare and send raw message with fetched data
    NXCP_MESSAGE *msg =
-      CreateRawNXCPMessage(CMD_DCI_DATA, request->getId(), 0,
+      CreateRawNXCPMessage(CMD_DCI_DATA, request.getId(), 0,
                            pData, count * s_rowSize[dataType] + sizeof(DCI_DATA_HEADER),
                            nullptr, session->isCompressionEnabled());
    MemFree(pData);

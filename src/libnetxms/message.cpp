@@ -126,7 +126,7 @@ NXCPMessage::NXCPMessage(int version) : m_pool(NXCP_DEFAULT_SIZE_HINT)
 /**
  * Create message with given code and ID
  */
-NXCPMessage::NXCPMessage(UINT16 code, UINT32 id, int version) : m_pool(NXCP_DEFAULT_SIZE_HINT)
+NXCPMessage::NXCPMessage(uint16_t code, uint32_t id, int version) : m_pool(NXCP_DEFAULT_SIZE_HINT)
 {
    m_code = code;
    m_id = id;
@@ -141,19 +141,19 @@ NXCPMessage::NXCPMessage(UINT16 code, UINT32 id, int version) : m_pool(NXCP_DEFA
 /**
  * Create a copy of prepared CSCP message
  */
-NXCPMessage::NXCPMessage(NXCPMessage *msg) : m_pool(msg->m_pool.regionSize())
+NXCPMessage::NXCPMessage(const NXCPMessage& msg) : m_pool(msg.m_pool.regionSize())
 {
-   m_code = msg->m_code;
-   m_id = msg->m_id;
-   m_flags = msg->m_flags;
-   m_version = msg->m_version;
-   m_controlData = msg->m_controlData;
+   m_code = msg.m_code;
+   m_id = msg.m_id;
+   m_flags = msg.m_flags;
+   m_version = msg.m_version;
+   m_controlData = msg.m_controlData;
    m_fields = nullptr;
 
    if (m_flags & MF_BINARY)
    {
-      m_dataSize = msg->m_dataSize;
-      m_data = m_pool.copyMemoryBlock(msg->m_data, m_dataSize);
+      m_dataSize = msg.m_dataSize;
+      m_data = m_pool.copyMemoryBlock(msg.m_data, m_dataSize);
    }
    else
    {
@@ -161,7 +161,7 @@ NXCPMessage::NXCPMessage(NXCPMessage *msg) : m_pool(msg->m_pool.regionSize())
       m_dataSize = 0;
 
       MessageField *entry, *tmp;
-      HASH_ITER(hh, msg->m_fields, entry, tmp)
+      HASH_ITER(hh, msg.m_fields, entry, tmp)
       {
          MessageField *f = m_pool.copyMemoryBlock(entry, entry->size);
          HASH_ADD_INT(m_fields, id, f);

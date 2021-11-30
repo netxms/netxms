@@ -741,7 +741,7 @@ UINT32 ChangeObjectToolStatus(UINT32 toolId, bool enabled)
 /**
  * Update/Insert object tool from NXCP message
  */
-UINT32 UpdateObjectToolFromMessage(NXCPMessage *pMsg)
+uint32_t UpdateObjectToolFromMessage(const NXCPMessage& msg)
 {
    TCHAR buffer[MAX_DB_STRING];
    UINT32 i, aclSize, *pdwAcl;
@@ -755,8 +755,8 @@ UINT32 UpdateObjectToolFromMessage(NXCPMessage *pMsg)
 	}
 
    // Insert or update common properties
-   int nType = pMsg->getFieldAsUInt16(VID_TOOL_TYPE);
-   UINT32 toolId = pMsg->getFieldAsUInt32(VID_TOOL_ID);
+   int nType = msg.getFieldAsUInt16(VID_TOOL_TYPE);
+   UINT32 toolId = msg.getFieldAsUInt32(VID_TOOL_ID);
    bool newTool = false;
    DB_STATEMENT hStmt;
    if (IsDatabaseRecordExist(hdb, _T("object_tools"), _T("tool_id"), toolId))
@@ -779,18 +779,18 @@ UINT32 UpdateObjectToolFromMessage(NXCPMessage *pMsg)
    if (hStmt == nullptr)
       return ReturnDBFailure(hdb, hStmt);
 
-   DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, pMsg->getFieldAsString(VID_NAME), DB_BIND_DYNAMIC);
+   DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, msg.getFieldAsString(VID_NAME), DB_BIND_DYNAMIC);
    DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, nType);
-   DBBind(hStmt, 3, DB_SQLTYPE_TEXT, pMsg->getFieldAsString(VID_TOOL_DATA), DB_BIND_DYNAMIC);
-   DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, pMsg->getFieldAsString(VID_DESCRIPTION), DB_BIND_DYNAMIC);
-   DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, pMsg->getFieldAsUInt32(VID_FLAGS));
-   DBBind(hStmt, 6, DB_SQLTYPE_TEXT, pMsg->getFieldAsString(VID_TOOL_FILTER), DB_BIND_DYNAMIC);
-   DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, pMsg->getFieldAsString(VID_CONFIRMATION_TEXT), DB_BIND_DYNAMIC);
-   DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, pMsg->getFieldAsString(VID_COMMAND_NAME), DB_BIND_DYNAMIC);
-   DBBind(hStmt, 9, DB_SQLTYPE_VARCHAR, pMsg->getFieldAsString(VID_COMMAND_SHORT_NAME), DB_BIND_DYNAMIC);
+   DBBind(hStmt, 3, DB_SQLTYPE_TEXT, msg.getFieldAsString(VID_TOOL_DATA), DB_BIND_DYNAMIC);
+   DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, msg.getFieldAsString(VID_DESCRIPTION), DB_BIND_DYNAMIC);
+   DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, msg.getFieldAsUInt32(VID_FLAGS));
+   DBBind(hStmt, 6, DB_SQLTYPE_TEXT, msg.getFieldAsString(VID_TOOL_FILTER), DB_BIND_DYNAMIC);
+   DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, msg.getFieldAsString(VID_CONFIRMATION_TEXT), DB_BIND_DYNAMIC);
+   DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, msg.getFieldAsString(VID_COMMAND_NAME), DB_BIND_DYNAMIC);
+   DBBind(hStmt, 9, DB_SQLTYPE_VARCHAR, msg.getFieldAsString(VID_COMMAND_SHORT_NAME), DB_BIND_DYNAMIC);
 
    size_t size;
-   const BYTE *imageData = pMsg->getBinaryFieldPtr(VID_IMAGE_DATA, &size);
+   const BYTE *imageData = msg.getBinaryFieldPtr(VID_IMAGE_DATA, &size);
    if (size > 0)
    {
       TCHAR *imageHexData = MemAllocString(size * 2 + 1);
@@ -821,11 +821,11 @@ UINT32 UpdateObjectToolFromMessage(NXCPMessage *pMsg)
       return ReturnDBFailure(hdb, hStmt);
    DBFreeStatement(hStmt);
 
-   aclSize = pMsg->getFieldAsUInt32(VID_ACL_SIZE);
+   aclSize = msg.getFieldAsUInt32(VID_ACL_SIZE);
    if (aclSize > 0)
    {
       pdwAcl = MemAllocArray<UINT32>(aclSize);
-      pMsg->getFieldAsInt32Array(VID_ACL, aclSize, pdwAcl);
+      msg.getFieldAsInt32Array(VID_ACL, aclSize, pdwAcl);
       hStmt = DBPrepare(hdb, _T("INSERT INTO object_tools_acl (tool_id,user_id) VALUES (?,?)"), aclSize > 1);
       if (hStmt == nullptr)
          return ReturnDBFailure(hdb, hStmt);
@@ -852,7 +852,7 @@ UINT32 UpdateObjectToolFromMessage(NXCPMessage *pMsg)
 
    if ((nType == TOOL_TYPE_SNMP_TABLE) || (nType == TOOL_TYPE_AGENT_LIST))
    {
-      uint32_t numColumns = pMsg->getFieldAsUInt16(VID_NUM_COLUMNS);
+      uint32_t numColumns = msg.getFieldAsUInt16(VID_NUM_COLUMNS);
       if (numColumns > 0)
       {
          hStmt = DBPrepare(hdb, _T("INSERT INTO object_tools_table_columns (tool_id,")
@@ -864,14 +864,14 @@ UINT32 UpdateObjectToolFromMessage(NXCPMessage *pMsg)
          uint32_t fieldId;
          for(i = 0, fieldId = VID_COLUMN_INFO_BASE; i < numColumns; i++)
          {
-            pMsg->getFieldAsString(fieldId++, buffer, MAX_DB_STRING);
+            msg.getFieldAsString(fieldId++, buffer, MAX_DB_STRING);
 
             DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, toolId);
             DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, i);
             DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, buffer, DB_BIND_STATIC);
-            DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, pMsg->getFieldAsString(fieldId++), DB_BIND_DYNAMIC);
-            DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, pMsg->getFieldAsUInt16(fieldId++));
-            DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, pMsg->getFieldAsUInt16(fieldId++));
+            DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, msg.getFieldAsString(fieldId++), DB_BIND_DYNAMIC);
+            DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, msg.getFieldAsUInt16(fieldId++));
+            DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, msg.getFieldAsUInt16(fieldId++));
 
             if (!DBExecute(hStmt))
                return ReturnDBFailure(hdb, hStmt);
@@ -889,7 +889,7 @@ UINT32 UpdateObjectToolFromMessage(NXCPMessage *pMsg)
       return ReturnDBFailure(hdb, hStmt);
    DBFreeStatement(hStmt);
 
-   uint32_t numFields = pMsg->getFieldAsUInt16(VID_NUM_FIELDS);
+   uint32_t numFields = msg.getFieldAsUInt16(VID_NUM_FIELDS);
    if (numFields > 0)
    {
       hStmt = DBPrepare(hdb, _T("INSERT INTO input_fields (category,owner_id,name,input_type,display_name,flags,sequence_num) VALUES ('T',?,?,?,?,?,?)"), numFields > 1);
@@ -900,11 +900,11 @@ UINT32 UpdateObjectToolFromMessage(NXCPMessage *pMsg)
       uint32_t fieldId = VID_FIELD_LIST_BASE;
       for(i = 0; i < numFields; i++)
       {
-         DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, pMsg->getFieldAsString(fieldId++), DB_BIND_DYNAMIC);
-         DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, pMsg->getFieldAsUInt16(fieldId++));
-         DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, pMsg->getFieldAsString(fieldId++), DB_BIND_DYNAMIC);
-         DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, pMsg->getFieldAsUInt32(fieldId++));
-         DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, pMsg->getFieldAsInt16(fieldId++));
+         DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, msg.getFieldAsString(fieldId++), DB_BIND_DYNAMIC);
+         DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, msg.getFieldAsUInt16(fieldId++));
+         DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, msg.getFieldAsString(fieldId++), DB_BIND_DYNAMIC);
+         DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, msg.getFieldAsUInt32(fieldId++));
+         DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, msg.getFieldAsInt16(fieldId++));
          fieldId += 5;
 
          if (!DBExecute(hStmt))
@@ -1572,21 +1572,21 @@ cleanup:
 /**
  * Command execution data constructor
  */
-ServerCommandExecutor::ServerCommandExecutor(NXCPMessage *request, ClientSession *session) : ProcessExecutor(nullptr)
+ServerCommandExecutor::ServerCommandExecutor(const NXCPMessage& request, ClientSession *session) : ProcessExecutor(nullptr)
 {
-   shared_ptr<NetObj> object = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID));
+   shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
    if (object != nullptr)
    {
       StringMap *inputFields;
-      int count = request->getFieldAsInt16(VID_NUM_FIELDS);
+      int count = request.getFieldAsInt16(VID_NUM_FIELDS);
       if (count > 0)
       {
          inputFields = new StringMap();
          uint32_t fieldId = VID_FIELD_LIST_BASE;
          for(int i = 0; i < count; i++)
          {
-            TCHAR *name = request->getFieldAsString(fieldId++);
-            TCHAR *value = request->getFieldAsString(fieldId++);
+            TCHAR *name = request.getFieldAsString(fieldId++);
+            TCHAR *value = request.getFieldAsString(fieldId++);
             inputFields->setPreallocated(name, value);
          }
       }
@@ -1595,10 +1595,10 @@ ServerCommandExecutor::ServerCommandExecutor(NXCPMessage *request, ClientSession
          inputFields = nullptr;
       }
 
-      TCHAR *cmd = request->getFieldAsString(VID_COMMAND);
+      TCHAR *cmd = request.getFieldAsString(VID_COMMAND);
       m_cmd = MemCopyString(object->expandText(cmd, nullptr, nullptr, shared_ptr<DCObjectInfo>(), session->getLoginName(), nullptr, nullptr, inputFields, nullptr));
 
-      if (request->getFieldAsInt32(VID_NUM_MASKED_FIELDS) > 0)
+      if (request.getFieldAsInt32(VID_NUM_MASKED_FIELDS) > 0)
       {
          StringList list(request, VID_MASKED_FIELD_LIST_BASE, VID_NUM_MASKED_FIELDS);
          for (int i = 0; i < list.size(); i++)
@@ -1615,10 +1615,10 @@ ServerCommandExecutor::ServerCommandExecutor(NXCPMessage *request, ClientSession
       MemFree(cmd);
    }
 
-   m_sendOutput = request->getFieldAsBoolean(VID_RECEIVE_OUTPUT);
+   m_sendOutput = request.getFieldAsBoolean(VID_RECEIVE_OUTPUT);
    if (m_sendOutput)
    {
-      m_requestId = request->getId();
+      m_requestId = request.getId();
       m_session = session;
       m_session->incRefCount();
    }

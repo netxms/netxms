@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Raden Solutions
+** Copyright (C) 2003-2021 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -178,22 +178,22 @@ void Rack::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
 /**
  * Modify object from message
  */
-UINT32 Rack::modifyFromMessageInternal(NXCPMessage *request)
+uint32_t Rack::modifyFromMessageInternal(const NXCPMessage& msg)
 {
-	if (request->isFieldExist(VID_HEIGHT))
-		m_height = request->getFieldAsUInt16(VID_HEIGHT);
+	if (msg.isFieldExist(VID_HEIGHT))
+		m_height = msg.getFieldAsUInt16(VID_HEIGHT);
 
-   if (request->isFieldExist(VID_TOP_BOTTOM))
-      m_topBottomNumbering = request->getFieldAsBoolean(VID_TOP_BOTTOM);
+   if (msg.isFieldExist(VID_TOP_BOTTOM))
+      m_topBottomNumbering = msg.getFieldAsBoolean(VID_TOP_BOTTOM);
 
-   if (request->isFieldExist(VID_NUM_ELEMENTS))
+   if (msg.isFieldExist(VID_NUM_ELEMENTS))
    {
-      int count = request->getFieldAsInt32(VID_NUM_ELEMENTS);
+      int count = msg.getFieldAsInt32(VID_NUM_ELEMENTS);
       ObjectArray<RackPassiveElement> newElements(count);
       UINT32 fieldId = VID_ELEMENT_LIST_BASE;
       for(int i = 0; i < count; i++)
       {
-         newElements.add(new RackPassiveElement(*request, fieldId));
+         newElements.add(new RackPassiveElement(msg, fieldId));
          fieldId += 10;
       }
 
@@ -218,7 +218,7 @@ UINT32 Rack::modifyFromMessageInternal(NXCPMessage *request)
       }
    }
 
-   return super::modifyFromMessageInternal(request);
+   return super::modifyFromMessageInternal(msg);
 }
 
 /**

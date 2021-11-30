@@ -482,12 +482,12 @@ void NObject::setCustomAttributesFromDatabase(DB_RESULT hResult)
 /**
  * Set custom attribute from message
  */
-bool NObject::setCustomAttributeFromMessage(const NXCPMessage *msg, uint32_t base)
+bool NObject::setCustomAttributeFromMessage(const NXCPMessage& msg, uint32_t base)
 {
    bool success = false;
-   TCHAR *name = msg->getFieldAsString(base++);
-   TCHAR *value = msg->getFieldAsString(base++);
-   uint32_t flags = msg->getFieldAsUInt32(base++);
+   TCHAR *name = msg.getFieldAsString(base++);
+   TCHAR *value = msg.getFieldAsString(base++);
+   uint32_t flags = msg.getFieldAsUInt32(base++);
    if ((name != nullptr) && (value != nullptr))
    {
       setCustomAttribute(name, value, (flags & CAF_INHERITABLE) > 0 ? StateChange::SET : StateChange::CLEAR);
@@ -501,18 +501,18 @@ bool NObject::setCustomAttributeFromMessage(const NXCPMessage *msg, uint32_t bas
 /**
  * Set custom attributes from NXCP message
  */
-void NObject::setCustomAttributesFromMessage(const NXCPMessage *msg)
+void NObject::setCustomAttributesFromMessage(const NXCPMessage& msg)
 {
    StringList existingAttibutes;
    StringList deletionList;
    ObjectArray<std::pair<String, uint32_t>> updateList(0, 16, Ownership::True);
 
-   int count = msg->getFieldAsUInt32(VID_NUM_CUSTOM_ATTRIBUTES);
+   int count = msg.getFieldAsUInt32(VID_NUM_CUSTOM_ATTRIBUTES);
    uint32_t fieldId = VID_CUSTOM_ATTRIBUTES_BASE;
    for(int i = 0; i < count; i++, fieldId += 3)
    {
       if (setCustomAttributeFromMessage(msg, fieldId))
-         existingAttibutes.addPreallocated(msg->getFieldAsString(fieldId));
+         existingAttibutes.addPreallocated(msg.getFieldAsString(fieldId));
    }
 
    lockCustomAttributes();

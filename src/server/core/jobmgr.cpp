@@ -136,10 +136,10 @@ int NXCORE_EXPORTABLE GetJobCount(uint32_t objectId, const TCHAR *type)
 /**
  * Implementation for job status changing operations: cancel, hold, unhold
  */
-static uint32_t ChangeJobStatus(uint32_t userId, NXCPMessage *msg, int operation)
+static uint32_t ChangeJobStatus(uint32_t userId, const NXCPMessage& request, int operation)
 {
 	uint32_t rcc = RCC_INVALID_JOB_ID;
-	uint32_t jobId = msg->getFieldAsUInt32(VID_JOB_ID);
+	uint32_t jobId = request.getFieldAsUInt32(VID_JOB_ID);
    ServerJobQueue *queue = s_jobQueueIndex.get(jobId);
    if (queue != nullptr)
    {
@@ -188,25 +188,25 @@ static uint32_t ChangeJobStatus(uint32_t userId, NXCPMessage *msg, int operation
 /**
  * Cancel job
  */
-UINT32 NXCORE_EXPORTABLE CancelJob(UINT32 userId, NXCPMessage *msg)
+uint32_t NXCORE_EXPORTABLE CancelJob(uint32_t userId, const NXCPMessage& request)
 {
-	return ChangeJobStatus(userId, msg, CANCEL_JOB);
+	return ChangeJobStatus(userId, request, CANCEL_JOB);
 }
 
 /**
  * Hold job
  */
-UINT32 NXCORE_EXPORTABLE HoldJob(UINT32 userId, NXCPMessage *msg)
+uint32_t NXCORE_EXPORTABLE HoldJob(uint32_t userId, const NXCPMessage& request)
 {
-	return ChangeJobStatus(userId, msg, HOLD_JOB);
+	return ChangeJobStatus(userId, request, HOLD_JOB);
 }
 
 /**
  * Unhold job
  */
-UINT32 NXCORE_EXPORTABLE UnholdJob(UINT32 userId, NXCPMessage *msg)
+uint32_t NXCORE_EXPORTABLE UnholdJob(uint32_t userId, const NXCPMessage& request)
 {
-	return ChangeJobStatus(userId, msg, UNHOLD_JOB);
+	return ChangeJobStatus(userId, request, UNHOLD_JOB);
 }
 
 /**

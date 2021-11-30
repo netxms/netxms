@@ -45,9 +45,12 @@ private:
 
 public:
    PhysicalLink(DB_RESULT hResult, int row);
-   PhysicalLink(const NXCPMessage *request);
+   PhysicalLink(const NXCPMessage& msg);
    PhysicalLink();
-   ~PhysicalLink() { MemFree(m_description); }
+   ~PhysicalLink()
+   {
+      MemFree(m_description);
+   }
 
    uint32_t getId() const { return m_id; }
    uint32_t getLeftObjectId() const { return m_leftObjectId; }
@@ -98,25 +101,25 @@ PhysicalLink::PhysicalLink(DB_RESULT hResult, int row)
 /**
  * Physical link constructor from message
  */
-PhysicalLink::PhysicalLink(const NXCPMessage *request)
+PhysicalLink::PhysicalLink(const NXCPMessage& msg)
 {
    long base = VID_LINK_LIST_BASE;
-   m_id = request->getFieldAsInt32(base++);
-   m_description = request->getFieldAsString(base++);
+   m_id = msg.getFieldAsInt32(base++);
+   m_description = msg.getFieldAsString(base++);
 
-   m_leftObjectId = request->getFieldAsInt32(base++);
+   m_leftObjectId = msg.getFieldAsInt32(base++);
    shared_ptr<NetObj> object = FindObjectById(m_leftObjectId, OBJECT_INTERFACE);
    m_leftInterfaceParent = (object != nullptr) ? static_cast<Interface&>(*object).getParentNodeId() : 0;
-   m_leftPatchPannelId = request->getFieldAsInt32(base++);
-   m_leftPortNumber = request->getFieldAsInt32(base++);
-   m_leftFront = request->getFieldAsBoolean(base++);
+   m_leftPatchPannelId = msg.getFieldAsInt32(base++);
+   m_leftPortNumber = msg.getFieldAsInt32(base++);
+   m_leftFront = msg.getFieldAsBoolean(base++);
 
-   m_rightObjectId = request->getFieldAsInt32(base++);
+   m_rightObjectId = msg.getFieldAsInt32(base++);
    object = FindObjectById(m_rightObjectId, OBJECT_INTERFACE);
    m_rightInterfaceParent = (object != nullptr) ? static_cast<Interface&>(*object).getParentNodeId() : 0;
-   m_rightPatchPannelId = request->getFieldAsInt32(base++);
-   m_rightPortNumber = request->getFieldAsInt32(base++);
-   m_rightFront = request->getFieldAsBoolean(base++);
+   m_rightPatchPannelId = msg.getFieldAsInt32(base++);
+   m_rightPortNumber = msg.getFieldAsInt32(base++);
+   m_rightFront = msg.getFieldAsBoolean(base++);
 }
 
 /**
@@ -495,7 +498,7 @@ static bool FindPLinksWithSameEndpoint(PhysicalLink *link, EndPointSearchData *c
 /**
  * Add new physical link
  */
-uint32_t AddPhysicalLink(const NXCPMessage *msg, uint32_t userId)
+uint32_t AddPhysicalLink(const NXCPMessage& msg, uint32_t userId)
 {
    auto link = make_shared<PhysicalLink>(msg);
 

@@ -104,13 +104,12 @@ void AbstractContainer::fillMessageInternal(NXCPMessage *msg, UINT32 userId)
 /**
  * Modify object from message
  */
-UINT32 AbstractContainer::modifyFromMessageInternal(NXCPMessage *request)
+uint32_t AbstractContainer::modifyFromMessageInternal(const NXCPMessage& msg)
 {
-   // Change flags
-   if (request->isFieldExist(VID_FLAGS))
-		m_flags = request->getFieldAsUInt32(VID_FLAGS);
+   if (msg.isFieldExist(VID_FLAGS))
+		m_flags = msg.getFieldAsUInt32(VID_FLAGS);
 
-   return super::modifyFromMessageInternal(request);
+   return super::modifyFromMessageInternal(msg);
 }
 
 /**
@@ -299,10 +298,10 @@ bool Container::showThresholdSummary() const
 /**
  * Modify object from message
  */
-UINT32 Container::modifyFromMessageInternal(NXCPMessage *request)
+uint32_t Container::modifyFromMessageInternal(const NXCPMessage& msg)
 {
-   AutoBindTarget::modifyFromMessage(request);
-   return super::modifyFromMessageInternal(request);
+   AutoBindTarget::modifyFromMessage(msg);
+   return super::modifyFromMessageInternal(msg);
 }
 
 /**

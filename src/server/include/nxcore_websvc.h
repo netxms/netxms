@@ -52,7 +52,7 @@ private:
    uint32_t m_flags;
 
 public:
-   WebServiceDefinition(const NXCPMessage *msg);
+   WebServiceDefinition(const NXCPMessage& msg);
    WebServiceDefinition(const ConfigEntry *config, uint32_t id);
    WebServiceDefinition(DB_HANDLE hdb, DB_RESULT hResult, int row);
    ~WebServiceDefinition();

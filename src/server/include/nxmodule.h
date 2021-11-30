@@ -100,8 +100,8 @@ typedef struct
 	void (*pfShutdown)();
 	void (*pfLoadObjects)();
 	void (*pfLinkObjects)();
-   int (*pfClientCommandHandler)(UINT32 dwCommand, NXCPMessage *pMsg, ClientSession *pSession);
-   int (*pfMobileDeviceCommandHandler)(uint32_t dwCommand, NXCPMessage *pMsg, MobileDeviceSession *pSession);
+   int (*pfClientCommandHandler)(UINT32 dwCommand, const NXCPMessage& request, ClientSession *pSession);
+   int (*pfMobileDeviceCommandHandler)(uint32_t dwCommand, const NXCPMessage& request, MobileDeviceSession *pSession);
    bool (*pfTrapHandler)(SNMP_PDU *pdu, const shared_ptr<Node>& node);
    bool (*pfEventHandler)(Event *event);
    void (*pfAlarmChangeHook)(uint32_t changeCode, const Alarm *alarm);
@@ -114,11 +114,11 @@ typedef struct
 	void (*pfPostObjectCreate)(const shared_ptr<NetObj>& object);
 	void (*pfPostObjectLoad)(const shared_ptr<NetObj>& object);
 	void (*pfPreObjectDelete)(NetObj *object);
-	shared_ptr<NetObj> (*pfCreateObject)(int objectClass, const TCHAR *name, const shared_ptr<NetObj>& parent, NXCPMessage *msg);
+	shared_ptr<NetObj> (*pfCreateObject)(int objectClass, const TCHAR *name, const shared_ptr<NetObj>& parent, const NXCPMessage& request);
 	bool (*pfIsValidParentClass)(int childClass, int parentClass);
 	bool (*pfGetObjectAttribute)(const NetObj& object, const TCHAR *name, TCHAR **value, bool *isAllocated);
 	bool (*pfAcceptNewNode)(const InetAddress& addr, uint32_t zoneId, BYTE *macAddr);
-	uint32_t (*pfValidateObjectCreation)(int objectClass, const TCHAR *name, const InetAddress& ipAddr, uint32_t zoneId, NXCPMessage *request);
+	uint32_t (*pfValidateObjectCreation)(int objectClass, const TCHAR *name, const InetAddress& ipAddr, uint32_t zoneId, const NXCPMessage& request);
    uint32_t (*pfAdditionalLoginCheck)(uint32_t userId, const NXCPMessage& request);
    void (*pfOnNodeMgmtStatusChange)(const shared_ptr<Node>& node, bool isManaged);
    void (*pfClientSessionClose)(ClientSession *session);

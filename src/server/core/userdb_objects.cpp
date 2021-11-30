@@ -185,39 +185,39 @@ void UserDatabaseObject::fillMessage(NXCPMessage *msg)
 /**
  * Modify object from NXCP message
  */
-void UserDatabaseObject::modifyFromMessage(NXCPMessage *msg)
+void UserDatabaseObject::modifyFromMessage(const NXCPMessage& msg)
 {
-	uint32_t fields = msg->getFieldAsUInt32(VID_FIELDS);
+	uint32_t fields = msg.getFieldAsUInt32(VID_FIELDS);
 	nxlog_debug_tag(DEBUG_TAG, 5, _T("UserDatabaseObject::modifyFromMessage(): id=%d fields=%08X"), m_id, fields);
 
 	if (fields & USER_MODIFY_DESCRIPTION)
-	   msg->getFieldAsString(VID_USER_DESCRIPTION, m_description, MAX_USER_DESCR);
+	   msg.getFieldAsString(VID_USER_DESCRIPTION, m_description, MAX_USER_DESCR);
 	if (fields & USER_MODIFY_LOGIN_NAME)
-	   msg->getFieldAsString(VID_USER_NAME, m_name, MAX_USER_NAME);
+	   msg.getFieldAsString(VID_USER_NAME, m_name, MAX_USER_NAME);
 
 	// Update custom attributes only if VID_NUM_CUSTOM_ATTRIBUTES exist -
 	// older client versions may not be aware of custom attributes
-	if ((fields & USER_MODIFY_CUSTOM_ATTRIBUTES) || msg->isFieldExist(VID_NUM_CUSTOM_ATTRIBUTES))
+	if ((fields & USER_MODIFY_CUSTOM_ATTRIBUTES) || msg.isFieldExist(VID_NUM_CUSTOM_ATTRIBUTES))
 	{
 		UINT32 i, varId, count;
 		TCHAR *name, *value;
 
-		count = msg->getFieldAsUInt32(VID_NUM_CUSTOM_ATTRIBUTES);
+		count = msg.getFieldAsUInt32(VID_NUM_CUSTOM_ATTRIBUTES);
 		m_attributes.clear();
 		for(i = 0, varId = VID_CUSTOM_ATTRIBUTES_BASE; i < count; i++)
 		{
-			name = msg->getFieldAsString(varId++);
-			value = msg->getFieldAsString(varId++);
+			name = msg.getFieldAsString(varId++);
+			value = msg.getFieldAsString(varId++);
 			m_attributes.setPreallocated((name != NULL) ? name : _tcsdup(_T("")), (value != NULL) ? value : _tcsdup(_T("")));
 		}
 	}
 
 	if ((m_id != 0) && (fields & USER_MODIFY_ACCESS_RIGHTS))
-		m_systemRights = msg->getFieldAsUInt64(VID_USER_SYS_RIGHTS);
+		m_systemRights = msg.getFieldAsUInt64(VID_USER_SYS_RIGHTS);
 
 	if (fields & USER_MODIFY_FLAGS)
 	{
-	   uint32_t flags = msg->getFieldAsUInt16(VID_USER_FLAGS);
+	   uint32_t flags = msg.getFieldAsUInt16(VID_USER_FLAGS);
 		// Modify only UF_DISABLED, UF_CHANGE_PASSWORD, UF_CANNOT_CHANGE_PASSWORD and UF_CLOSE_OTHER_SESSIONS flags from message
 		// Ignore all but CHANGE_PASSWORD flag for superuser and "everyone" group
 		m_flags &= ~(UF_DISABLED | UF_CHANGE_PASSWORD | UF_CANNOT_CHANGE_PASSWORD | UF_CLOSE_OTHER_SESSIONS);
@@ -777,12 +777,12 @@ void User::fillMessage(NXCPMessage *msg)
 /**
  * Modify user object from NXCP message
  */
-void User::modifyFromMessage(NXCPMessage *msg)
+void User::modifyFromMessage(const NXCPMessage& msg)
 {
-   uint32_t fields = msg->getFieldAsUInt32(VID_FIELDS);
+   uint32_t fields = msg.getFieldAsUInt32(VID_FIELDS);
    if (fields & USER_MODIFY_FLAGS)
    {
-      uint32_t flags = msg->getFieldAsUInt16(VID_USER_FLAGS);
+      uint32_t flags = msg.getFieldAsUInt16(VID_USER_FLAGS);
       if (((m_flags & UF_DISABLED) != 0) && ((flags & UF_DISABLED) == 0))
       {
          // user is being enabled, update enable time so it will not be disabled again immediately by inactivity timer
@@ -793,33 +793,33 @@ void User::modifyFromMessage(NXCPMessage *msg)
 	UserDatabaseObject::modifyFromMessage(msg);
 
 	if (fields & USER_MODIFY_FULL_NAME)
-		msg->getFieldAsString(VID_USER_FULL_NAME, m_fullName, MAX_USER_FULLNAME);
+		msg.getFieldAsString(VID_USER_FULL_NAME, m_fullName, MAX_USER_FULLNAME);
 	if (fields & USER_MODIFY_AUTH_METHOD)
-	   m_authMethod = UserAuthenticationMethodFromInt(msg->getFieldAsUInt16(VID_AUTH_METHOD));
+	   m_authMethod = UserAuthenticationMethodFromInt(msg.getFieldAsUInt16(VID_AUTH_METHOD));
 	if (fields & USER_MODIFY_PASSWD_LENGTH)
-	   m_minPasswordLength = msg->getFieldAsUInt16(VID_MIN_PASSWORD_LENGTH);
+	   m_minPasswordLength = msg.getFieldAsUInt16(VID_MIN_PASSWORD_LENGTH);
 	if (fields & USER_MODIFY_TEMP_DISABLE)
-	   m_disabledUntil = (time_t)msg->getFieldAsUInt32(VID_DISABLED_UNTIL);
+	   m_disabledUntil = (time_t)msg.getFieldAsUInt32(VID_DISABLED_UNTIL);
 	if (fields & USER_MODIFY_CERT_MAPPING)
 	{
-		m_certMappingMethod = static_cast<CertificateMappingMethod>(msg->getFieldAsUInt16(VID_CERT_MAPPING_METHOD));
+		m_certMappingMethod = static_cast<CertificateMappingMethod>(msg.getFieldAsUInt16(VID_CERT_MAPPING_METHOD));
 		MemFree(m_certMappingData);
-		m_certMappingData = msg->getFieldAsString(VID_CERT_MAPPING_DATA);
+		m_certMappingData = msg.getFieldAsString(VID_CERT_MAPPING_DATA);
 	}
 	if (fields & USER_MODIFY_XMPP_ID)
-		msg->getFieldAsString(VID_XMPP_ID, &m_xmppId);
+		msg.getFieldAsString(VID_XMPP_ID, &m_xmppId);
    if (fields & USER_MODIFY_EMAIL)
-      msg->getFieldAsString(VID_EMAIL, &m_email);
+      msg.getFieldAsString(VID_EMAIL, &m_email);
    if (fields & USER_MODIFY_PHONE_NUMBER)
-      msg->getFieldAsString(VID_PHONE_NUMBER, &m_phoneNumber);
+      msg.getFieldAsString(VID_PHONE_NUMBER, &m_phoneNumber);
    if (fields & USER_MODIFY_GROUP_MEMBERSHIP)
    {
-      size_t count = msg->getFieldAsUInt32(VID_NUM_GROUPS);
+      size_t count = msg.getFieldAsUInt32(VID_NUM_GROUPS);
       uint32_t *groups = nullptr;
       if (count > 0)
       {
          groups = MemAllocArrayNoInit<uint32_t>(count);
-         msg->getFieldAsInt32Array(VID_GROUPS, count, groups);
+         msg.getFieldAsInt32Array(VID_GROUPS, count, groups);
       }
       UpdateGroupMembership(m_id, count, groups);
       MemFree(groups);
@@ -1355,22 +1355,22 @@ void Group::fillMessage(NXCPMessage *msg)
 /**
  * Modify group object from NXCP message
  */
-void Group::modifyFromMessage(NXCPMessage *msg)
+void Group::modifyFromMessage(const NXCPMessage& msg)
 {
 	UserDatabaseObject::modifyFromMessage(msg);
 
-	uint32_t fields = msg->getFieldAsUInt32(VID_FIELDS);
+	uint32_t fields = msg.getFieldAsUInt32(VID_FIELDS);
 	if (fields & USER_MODIFY_MEMBERS)
 	{
       auto members = m_members;
-		int count = msg->getFieldAsInt32(VID_NUM_MEMBERS);
+		int count = msg.getFieldAsInt32(VID_NUM_MEMBERS);
       m_members = new IntegerArray<uint32_t>(count);
 		if (count > 0)
 		{
 			uint32_t varId = VID_GROUP_MEMBER_BASE;
 			for(int i = 0; i < count; i++, varId++)
          {
-				uint32_t userId = msg->getFieldAsUInt32(varId);
+				uint32_t userId = msg.getFieldAsUInt32(varId);
 				m_members->add(userId);
 
             // check if new member

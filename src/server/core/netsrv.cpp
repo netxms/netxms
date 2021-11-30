@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -218,26 +218,24 @@ void NetworkService::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
 /**
  * Modify object from message
  */
-UINT32 NetworkService::modifyFromMessageInternal(NXCPMessage *pRequest)
+uint32_t NetworkService::modifyFromMessageInternal(const NXCPMessage& msg)
 {
    // Polling node
-   if (pRequest->isFieldExist(VID_POLLER_NODE_ID))
+   if (msg.isFieldExist(VID_POLLER_NODE_ID))
    {
-      UINT32 dwNodeId;
-
-      dwNodeId = pRequest->getFieldAsUInt32(VID_POLLER_NODE_ID);
-      if (dwNodeId == 0)
+      uint32_t nodeId = msg.getFieldAsUInt32(VID_POLLER_NODE_ID);
+      if (nodeId == 0)
       {
          m_pollerNode = 0;
       }
       else
       {
-         shared_ptr<NetObj> pObject = FindObjectById(dwNodeId);
+         shared_ptr<NetObj> pObject = FindObjectById(nodeId);
          if (pObject != nullptr)
          {
             if (pObject->getObjectClass() == OBJECT_NODE)
             {
-               m_pollerNode = dwNodeId;
+               m_pollerNode = nodeId;
             }
             else
             {
@@ -254,40 +252,40 @@ UINT32 NetworkService::modifyFromMessageInternal(NXCPMessage *pRequest)
    }
 
    // Listen IP address
-   if (pRequest->isFieldExist(VID_IP_ADDRESS))
-      m_ipAddress = pRequest->getFieldAsInetAddress(VID_IP_ADDRESS);
+   if (msg.isFieldExist(VID_IP_ADDRESS))
+      m_ipAddress = msg.getFieldAsInetAddress(VID_IP_ADDRESS);
 
    // Service type
-   if (pRequest->isFieldExist(VID_SERVICE_TYPE))
-      m_serviceType = (int)pRequest->getFieldAsUInt16(VID_SERVICE_TYPE);
+   if (msg.isFieldExist(VID_SERVICE_TYPE))
+      m_serviceType = msg.getFieldAsInt16(VID_SERVICE_TYPE);
 
    // IP protocol
-   if (pRequest->isFieldExist(VID_IP_PROTO))
-      m_proto = pRequest->getFieldAsUInt16(VID_IP_PROTO);
+   if (msg.isFieldExist(VID_IP_PROTO))
+      m_proto = msg.getFieldAsUInt16(VID_IP_PROTO);
 
    // TCP/UDP port
-   if (pRequest->isFieldExist(VID_IP_PORT))
-      m_port = pRequest->getFieldAsUInt16(VID_IP_PORT);
+   if (msg.isFieldExist(VID_IP_PORT))
+      m_port = msg.getFieldAsUInt16(VID_IP_PORT);
 
    // Number of required polls
-   if (pRequest->isFieldExist(VID_REQUIRED_POLLS))
-      m_requiredPollCount = (int)pRequest->getFieldAsUInt16(VID_REQUIRED_POLLS);
+   if (msg.isFieldExist(VID_REQUIRED_POLLS))
+      m_requiredPollCount = msg.getFieldAsUInt16(VID_REQUIRED_POLLS);
 
    // Check request
-   if (pRequest->isFieldExist(VID_SERVICE_REQUEST))
+   if (msg.isFieldExist(VID_SERVICE_REQUEST))
    {
       MemFree(m_request);
-      m_request = pRequest->getFieldAsString(VID_SERVICE_REQUEST);
+      m_request = msg.getFieldAsString(VID_SERVICE_REQUEST);
    }
 
    // Check response
-   if (pRequest->isFieldExist(VID_SERVICE_RESPONSE))
+   if (msg.isFieldExist(VID_SERVICE_RESPONSE))
    {
       MemFree(m_response);
-      m_response = pRequest->getFieldAsString(VID_SERVICE_RESPONSE);
+      m_response = msg.getFieldAsString(VID_SERVICE_RESPONSE);
    }
 
-   return super::modifyFromMessageInternal(pRequest);
+   return super::modifyFromMessageInternal(msg);
 }
 
 /**

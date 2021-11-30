@@ -953,27 +953,27 @@ void Interface::fillMessageInternal(NXCPMessage *msg, UINT32 userId)
 /**
  * Modify object from message
  */
-UINT32 Interface::modifyFromMessageInternal(NXCPMessage *request)
+uint32_t Interface::modifyFromMessageInternal(const NXCPMessage& msg)
 {
    // Flags
-   if (request->isFieldExist(VID_FLAGS))
+   if (msg.isFieldExist(VID_FLAGS))
    {
-      UINT32 mask = request->isFieldExist(VID_FLAGS_MASK) ? (request->getFieldAsUInt32(VID_FLAGS_MASK) & IF_USER_FLAGS_MASK) : IF_USER_FLAGS_MASK;
+      UINT32 mask = msg.isFieldExist(VID_FLAGS_MASK) ? (msg.getFieldAsUInt32(VID_FLAGS_MASK) & IF_USER_FLAGS_MASK) : IF_USER_FLAGS_MASK;
       m_flags &= ~mask;
-      m_flags |= request->getFieldAsUInt32(VID_FLAGS) & mask;
+      m_flags |= msg.getFieldAsUInt32(VID_FLAGS) & mask;
    }
 
    // Number of required polls
-   if (request->isFieldExist(VID_REQUIRED_POLLS))
-      m_requiredPollCount = (int)request->getFieldAsUInt16(VID_REQUIRED_POLLS);
+   if (msg.isFieldExist(VID_REQUIRED_POLLS))
+      m_requiredPollCount = msg.getFieldAsInt16(VID_REQUIRED_POLLS);
 
 	// Expected interface state
-	if (request->isFieldExist(VID_EXPECTED_STATE))
+	if (msg.isFieldExist(VID_EXPECTED_STATE))
 	{
-		setExpectedStateInternal(request->getFieldAsInt16(VID_EXPECTED_STATE));
+		setExpectedStateInternal(msg.getFieldAsInt16(VID_EXPECTED_STATE));
 	}
 
-   return super::modifyFromMessageInternal(request);
+   return super::modifyFromMessageInternal(msg);
 }
 
 /**

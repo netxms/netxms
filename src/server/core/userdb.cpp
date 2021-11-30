@@ -771,12 +771,12 @@ uint32_t NXCORE_EXPORTABLE CreateNewUser(const TCHAR *name, bool isGroup, uint32
 /**
  * Modify user database object
  */
-uint32_t NXCORE_EXPORTABLE ModifyUserDatabaseObject(NXCPMessage *msg, json_t **oldData, json_t **newData)
+uint32_t NXCORE_EXPORTABLE ModifyUserDatabaseObject(const NXCPMessage& msg, json_t **oldData, json_t **newData)
 {
    uint32_t rcc = RCC_INVALID_USER_ID;
    bool updateAccessRights = false;
 
-   uint32_t id = msg->getFieldAsUInt32(VID_USER_ID);
+   uint32_t id = msg.getFieldAsUInt32(VID_USER_ID);
 
    RWLockWriteLock(s_userDatabaseLock);
 
@@ -785,10 +785,10 @@ uint32_t NXCORE_EXPORTABLE ModifyUserDatabaseObject(NXCPMessage *msg, json_t **o
    {
       TCHAR name[MAX_USER_NAME], prevName[MAX_USER_NAME];
 
-      uint32_t fields = msg->getFieldAsUInt32(VID_FIELDS);
+      uint32_t fields = msg.getFieldAsUInt32(VID_FIELDS);
       if (fields & USER_MODIFY_LOGIN_NAME)
       {
-         msg->getFieldAsString(VID_USER_NAME, name, MAX_USER_NAME);
+         msg.getFieldAsString(VID_USER_NAME, name, MAX_USER_NAME);
          if (IsValidObjectName(name))
          {
             _tcslcpy(prevName, object->getName(), MAX_USER_NAME);
@@ -806,7 +806,7 @@ uint32_t NXCORE_EXPORTABLE ModifyUserDatabaseObject(NXCPMessage *msg, json_t **o
          *newData = object->toJson();
          SendUserDBUpdate(USER_DB_MODIFY, id, object);
          rcc = RCC_SUCCESS;
-         updateAccessRights = ((msg->getFieldAsUInt32(VID_FIELDS) & (USER_MODIFY_ACCESS_RIGHTS | USER_MODIFY_GROUP_MEMBERSHIP | USER_MODIFY_MEMBERS)) != 0);
+         updateAccessRights = ((msg.getFieldAsUInt32(VID_FIELDS) & (USER_MODIFY_ACCESS_RIGHTS | USER_MODIFY_GROUP_MEMBERSHIP | USER_MODIFY_MEMBERS)) != 0);
       }
 
       if ((rcc == RCC_SUCCESS) && (fields & USER_MODIFY_LOGIN_NAME))

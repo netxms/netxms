@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -58,6 +58,7 @@ public class DataCollectionTarget extends GenericObject
       tooltipDciData = new ArrayList<DciValue>(0);
       geoLocationControlMode = GeoLocationControlMode.NO_CONTROL;
       geoAreas = new long[0];
+      webServiceProxyId = 0;
    }
 
    /**

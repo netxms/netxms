@@ -837,9 +837,9 @@ void DataCollectionOwner::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
 /**
  * Modify object from NXCP message
  */
-UINT32 DataCollectionOwner::modifyFromMessageInternal(NXCPMessage *pRequest)
+uint32_t DataCollectionOwner::modifyFromMessageInternal(const NXCPMessage& msg)
 {
-   return super::modifyFromMessageInternal(pRequest);
+   return super::modifyFromMessageInternal(msg);
 }
 
 /**

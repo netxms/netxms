@@ -44,20 +44,20 @@ NetworkMapLink::NetworkMapLink(uint32_t id, uint32_t e1, uint32_t e2, int type)
 /**
  * Constuctor: create link object from NXCP message
  */
-NetworkMapLink::NetworkMapLink(NXCPMessage *msg, uint32_t baseId)
+NetworkMapLink::NetworkMapLink(const NXCPMessage& msg, uint32_t baseId)
 {
-   m_id = msg->getFieldAsUInt32(baseId);
-   m_name = msg->getFieldAsString(baseId + 1);
-	m_type = msg->getFieldAsUInt16(baseId + 2);
-	m_connectorName1 = msg->getFieldAsString(baseId + 3);
-	m_connectorName2 = msg->getFieldAsString(baseId + 4);
-	m_element1 = msg->getFieldAsUInt32(baseId + 5);
-	m_element2 = msg->getFieldAsUInt32(baseId + 6);
-	m_flags = msg->getFieldAsUInt32(baseId + 7);
-   m_colorSource = static_cast<MapLinkColorSource>(msg->getFieldAsInt16(baseId + 8));
-   m_color = msg->getFieldAsUInt32(baseId + 9);
-   m_colorProvider = msg->getFieldAsString(baseId + 10);
-   m_config = msg->getFieldAsString(baseId + 11);
+   m_id = msg.getFieldAsUInt32(baseId);
+   m_name = msg.getFieldAsString(baseId + 1);
+	m_type = msg.getFieldAsUInt16(baseId + 2);
+	m_connectorName1 = msg.getFieldAsString(baseId + 3);
+	m_connectorName2 = msg.getFieldAsString(baseId + 4);
+	m_element1 = msg.getFieldAsUInt32(baseId + 5);
+	m_element2 = msg.getFieldAsUInt32(baseId + 6);
+	m_flags = msg.getFieldAsUInt32(baseId + 7);
+   m_colorSource = static_cast<MapLinkColorSource>(msg.getFieldAsInt16(baseId + 8));
+   m_color = msg.getFieldAsUInt32(baseId + 9);
+   m_colorProvider = msg.getFieldAsString(baseId + 10);
+   m_config = msg.getFieldAsString(baseId + 11);
 }
 
 /**

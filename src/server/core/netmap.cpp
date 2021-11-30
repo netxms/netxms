@@ -646,85 +646,85 @@ void NetworkMap::fillMessageInternal(NXCPMessage *msg, UINT32 userId)
 /**
  * Update network map object from NXCP message
  */
-UINT32 NetworkMap::modifyFromMessageInternal(NXCPMessage *request)
+uint32_t NetworkMap::modifyFromMessageInternal(const NXCPMessage& msg)
 {
-	if (request->isFieldExist(VID_MAP_TYPE))
-		m_mapType = (int)request->getFieldAsUInt16(VID_MAP_TYPE);
+	if (msg.isFieldExist(VID_MAP_TYPE))
+		m_mapType = msg.getFieldAsInt16(VID_MAP_TYPE);
 
-	if (request->isFieldExist(VID_LAYOUT))
-		m_layout = (int)request->getFieldAsUInt16(VID_LAYOUT);
+	if (msg.isFieldExist(VID_LAYOUT))
+		m_layout = msg.getFieldAsInt16(VID_LAYOUT);
 
-	if (request->isFieldExist(VID_FLAGS))
+	if (msg.isFieldExist(VID_FLAGS))
 	{
-	   UINT32 mask = request->isFieldExist(VID_FLAGS_MASK) ? request->getFieldAsUInt32(VID_FLAGS_MASK) : 0xFFFFFFFF;
+	   uint32_t mask = msg.isFieldExist(VID_FLAGS_MASK) ? msg.getFieldAsUInt32(VID_FLAGS_MASK) : 0xFFFFFFFF;
 	   m_flags &= ~mask;
-		m_flags |= (request->getFieldAsUInt32(VID_FLAGS) & mask);
+		m_flags |= (msg.getFieldAsUInt32(VID_FLAGS) & mask);
 	}
 
-	if (request->isFieldExist(VID_SEED_OBJECTS))
-		request->getFieldAsInt32Array(VID_SEED_OBJECTS, &m_seedObjects);
+	if (msg.isFieldExist(VID_SEED_OBJECTS))
+		msg.getFieldAsInt32Array(VID_SEED_OBJECTS, &m_seedObjects);
 
-	if (request->isFieldExist(VID_DISCOVERY_RADIUS))
-		m_discoveryRadius = (int)request->getFieldAsUInt32(VID_DISCOVERY_RADIUS);
+	if (msg.isFieldExist(VID_DISCOVERY_RADIUS))
+		m_discoveryRadius = msg.getFieldAsInt32(VID_DISCOVERY_RADIUS);
 
-	if (request->isFieldExist(VID_LINK_COLOR))
-		m_defaultLinkColor = (int)request->getFieldAsUInt32(VID_LINK_COLOR);
+	if (msg.isFieldExist(VID_LINK_COLOR))
+		m_defaultLinkColor = msg.getFieldAsInt32(VID_LINK_COLOR);
 
-	if (request->isFieldExist(VID_LINK_ROUTING))
-		m_defaultLinkRouting = (int)request->getFieldAsInt16(VID_LINK_ROUTING);
+	if (msg.isFieldExist(VID_LINK_ROUTING))
+		m_defaultLinkRouting = msg.getFieldAsInt16(VID_LINK_ROUTING);
 
-	if (request->isFieldExist(VID_DISPLAY_MODE))
-      m_objectDisplayMode = (int)request->getFieldAsInt16(VID_DISPLAY_MODE);
+	if (msg.isFieldExist(VID_DISPLAY_MODE))
+      m_objectDisplayMode = msg.getFieldAsInt16(VID_DISPLAY_MODE);
 
-	if (request->isFieldExist(VID_BACKGROUND_COLOR))
-		m_backgroundColor = (int)request->getFieldAsUInt32(VID_BACKGROUND_COLOR);
+	if (msg.isFieldExist(VID_BACKGROUND_COLOR))
+		m_backgroundColor = msg.getFieldAsInt32(VID_BACKGROUND_COLOR);
 
-	if (request->isFieldExist(VID_BACKGROUND))
+	if (msg.isFieldExist(VID_BACKGROUND))
 	{
-		m_background = request->getFieldAsGUID(VID_BACKGROUND);
-		m_backgroundLatitude = request->getFieldAsDouble(VID_BACKGROUND_LATITUDE);
-		m_backgroundLongitude = request->getFieldAsDouble(VID_BACKGROUND_LONGITUDE);
-		m_backgroundZoom = (int)request->getFieldAsUInt16(VID_BACKGROUND_ZOOM);
+		m_background = msg.getFieldAsGUID(VID_BACKGROUND);
+		m_backgroundLatitude = msg.getFieldAsDouble(VID_BACKGROUND_LATITUDE);
+		m_backgroundLongitude = msg.getFieldAsDouble(VID_BACKGROUND_LONGITUDE);
+		m_backgroundZoom = msg.getFieldAsInt16(VID_BACKGROUND_ZOOM);
 	}
 
-   if (request->isFieldExist(VID_FILTER))
+   if (msg.isFieldExist(VID_FILTER))
    {
-      TCHAR *filter = Trim(request->getFieldAsString(VID_FILTER));
+      TCHAR *filter = Trim(msg.getFieldAsString(VID_FILTER));
       setFilter(filter);
       MemFree(filter);
    }
 
-	if (request->isFieldExist(VID_NUM_ELEMENTS))
+	if (msg.isFieldExist(VID_NUM_ELEMENTS))
 	{
 	   ObjectArray<NetworkMapElement> newElements(0, 64, Ownership::False);
 
-		int numElements = (int)request->getFieldAsUInt32(VID_NUM_ELEMENTS);
+		int numElements = (int)msg.getFieldAsUInt32(VID_NUM_ELEMENTS);
 		if (numElements > 0)
 		{
 			uint32_t fieldId = VID_ELEMENT_LIST_BASE;
 			for(int i = 0; i < numElements; i++)
 			{
 				NetworkMapElement *e;
-				int type = (int)request->getFieldAsUInt16(fieldId + 1);
+				int type = (int)msg.getFieldAsUInt16(fieldId + 1);
 				switch(type)
 				{
 					case MAP_ELEMENT_OBJECT:
-						e = new NetworkMapObject(request, fieldId);
+						e = new NetworkMapObject(msg, fieldId);
 						break;
 					case MAP_ELEMENT_DECORATION:
-						e = new NetworkMapDecoration(request, fieldId);
+						e = new NetworkMapDecoration(msg, fieldId);
 						break;
                case MAP_ELEMENT_DCI_CONTAINER:
-                  e = new NetworkMapDCIContainer(request, fieldId);
+                  e = new NetworkMapDCIContainer(msg, fieldId);
                   break;
                case MAP_ELEMENT_DCI_IMAGE:
-                  e = new NetworkMapDCIImage(request, fieldId);
+                  e = new NetworkMapDCIImage(msg, fieldId);
                   break;
                case MAP_ELEMENT_TEXT_BOX:
-                  e = new NetworkMapTextBox(request, fieldId);
+                  e = new NetworkMapTextBox(msg, fieldId);
                   break;
 					default:		// Unknown type, create generic element
-						e = new NetworkMapElement(request, fieldId);
+						e = new NetworkMapElement(msg, fieldId);
 						break;
 				}
 				newElements.add(e);
@@ -798,13 +798,13 @@ UINT32 NetworkMap::modifyFromMessageInternal(NXCPMessage *request)
 		m_elements.addAll(newElements);
 
 		m_links.clear();
-		int numLinks = request->getFieldAsUInt32(VID_NUM_LINKS);
+		int numLinks = msg.getFieldAsUInt32(VID_NUM_LINKS);
 		if (numLinks > 0)
 		{
 			UINT32 varId = VID_LINK_LIST_BASE;
 			for(int i = 0; i < numLinks; i++)
 			{
-			   auto l = new NetworkMapLink(request, varId);
+			   auto l = new NetworkMapLink(msg, varId);
 				m_links.add(l);
 				varId += 20;
 
@@ -814,7 +814,7 @@ UINT32 NetworkMap::modifyFromMessageInternal(NXCPMessage *request)
 		}
 	}
 
-	return super::modifyFromMessageInternal(request);
+	return super::modifyFromMessageInternal(msg);
 }
 
 /**

@@ -40,7 +40,7 @@ public:
    static shared_ptr<SshKeyPair> generate(const TCHAR *name);
 
    SshKeyPair();
-   SshKeyPair(NXCPMessage *msg);
+   SshKeyPair(const NXCPMessage& msg);
    SshKeyPair(DB_RESULT result, int row);
    ~SshKeyPair();
 
@@ -71,15 +71,15 @@ SshKeyPair::SshKeyPair()
 /**
  * Constructor from NXCP message
  */
-SshKeyPair::SshKeyPair(NXCPMessage *msg)
+SshKeyPair::SshKeyPair(const NXCPMessage& msg)
 {
-   if (msg->getFieldAsInt32(VID_SSH_KEY_ID) != 0)
-      m_id = msg->getFieldAsInt32(VID_SSH_KEY_ID);
+   if (msg.getFieldAsInt32(VID_SSH_KEY_ID) != 0)
+      m_id = msg.getFieldAsInt32(VID_SSH_KEY_ID);
    else
       m_id = CreateUniqueId(IDG_SSH_KEY);
-   msg->getFieldAsString(VID_NAME, m_name, MAX_SSH_KEY_NAME);
-   m_publicKey = msg->getFieldAsString(VID_PUBLIC_KEY);
-   m_privateKey = msg->getFieldAsMBString(VID_PRIVATE_KEY);
+   msg.getFieldAsString(VID_NAME, m_name, MAX_SSH_KEY_NAME);
+   m_publicKey = msg.getFieldAsString(VID_PUBLIC_KEY);
+   m_privateKey = msg.getFieldAsMBString(VID_PRIVATE_KEY);
 }
 
 /**
@@ -337,12 +337,12 @@ uint32_t GenerateSshKey(const TCHAR *name)
 /**
  * Generate SSH key
  */
-void CreateOrEditSshKey(NXCPMessage *msg)
+void CreateOrEditSshKey(const NXCPMessage& request)
 {
-   uint32_t id = msg->getFieldAsInt32(VID_SSH_KEY_ID);
-   shared_ptr<SshKeyPair> newKey = make_shared<SshKeyPair>(msg);
+   uint32_t id = request.getFieldAsInt32(VID_SSH_KEY_ID);
+   shared_ptr<SshKeyPair> newKey = make_shared<SshKeyPair>(request);
 
-   if (!msg->isFieldExist(VID_PRIVATE_KEY) && id != 0)
+   if (!request.isFieldExist(VID_PRIVATE_KEY) && (id != 0))
    {
       shared_ptr<SshKeyPair> oldKey = s_sshKeys.getShared(id);
       newKey->updateKeys(oldKey);

@@ -88,12 +88,12 @@ void UnregisterClientSession(session_id_t id);
 void ResetDiscoveryPoller();
 NXCPMessage *ForwardMessageToReportingServer(NXCPMessage *request, ClientSession *session);
 void RemovePendingFileTransferRequests(ClientSession *session);
-bool UpdateAddressListFromMessage(NXCPMessage *msg);
+bool UpdateAddressListFromMessage(const NXCPMessage& msg);
 void FillComponentsMessage(NXCPMessage *msg);
 void GetClientConfigurationHints(NXCPMessage *msg);
 
 void GetPredictionEngines(NXCPMessage *msg);
-bool GetPredictedData(ClientSession *session, const NXCPMessage *request, NXCPMessage *response, const DataCollectionTarget& dcTarget);
+bool GetPredictedData(ClientSession *session, const NXCPMessage& request, NXCPMessage *response, const DataCollectionTarget& dcTarget);
 
 void GetAgentTunnels(NXCPMessage *msg);
 uint32_t BindAgentTunnel(uint32_t tunnelId, uint32_t nodeId, uint32_t userId);
@@ -102,7 +102,7 @@ uint32_t UnbindAgentTunnel(uint32_t nodeId, uint32_t userId);
 void StartManualActiveDiscovery(ObjectArray<InetAddressListElement> *addressList);
 
 void GetObjectPhysicalLinks(const NetObj *object, uint32_t userId, uint32_t patchPanelId, NXCPMessage *msg);
-uint32_t AddPhysicalLink(const NXCPMessage *msg, uint32_t userId);
+uint32_t AddPhysicalLink(const NXCPMessage& msg, uint32_t userId);
 bool DeletePhysicalLink(uint32_t id, uint32_t userId);
 
 /**
@@ -889,647 +889,647 @@ void ClientSession::processRequest(NXCPMessage *request)
          login(*request);
          break;
       case CMD_GET_SERVER_INFO:
-         sendServerInfo(request->getId());
+         sendServerInfo(*request);
          break;
       case CMD_GET_MY_CONFIG:
-         sendConfigForAgent(request);
+         sendConfigForAgent(*request);
          break;
       case CMD_GET_OBJECTS:
-         getObjects(request);
+         getObjects(*request);
          break;
       case CMD_GET_SELECTED_OBJECTS:
-         getSelectedObjects(request);
+         getSelectedObjects(*request);
          break;
       case CMD_QUERY_OBJECTS:
-         queryObjects(request);
+         queryObjects(*request);
          break;
       case CMD_QUERY_OBJECT_DETAILS:
-         queryObjectDetails(request);
+         queryObjectDetails(*request);
          break;
       case CMD_GET_OBJECT_QUERIES:
-         getObjectQueries(request);
+         getObjectQueries(*request);
          break;
       case CMD_MODIFY_OBJECT_QUERY:
-         modifyObjectQuery(request);
+         modifyObjectQuery(*request);
          break;
       case CMD_DELETE_OBJECT_QUERY:
-         deleteObjectQuery(request);
+         deleteObjectQuery(*request);
          break;
       case CMD_GET_CONFIG_VARLIST:
-         getConfigurationVariables(request->getId());
+         getConfigurationVariables(*request);
          break;
       case CMD_GET_PUBLIC_CONFIG_VAR:
-         getPublicConfigurationVariable(request);
+         getPublicConfigurationVariable(*request);
          break;
       case CMD_SET_CONFIG_VARIABLE:
-         setConfigurationVariable(request);
+         setConfigurationVariable(*request);
          break;
       case CMD_SET_CONFIG_TO_DEFAULT:
-         setDefaultConfigurationVariableValues(request);
+         setDefaultConfigurationVariableValues(*request);
          break;
       case CMD_DELETE_CONFIG_VARIABLE:
-         deleteConfigurationVariable(request);
+         deleteConfigurationVariable(*request);
          break;
       case CMD_CONFIG_GET_CLOB:
-         getConfigCLOB(request);
+         getConfigCLOB(*request);
          break;
       case CMD_CONFIG_SET_CLOB:
-         setConfigCLOB(request);
+         setConfigCLOB(*request);
          break;
       case CMD_GET_ALARM_CATEGORIES:
-         getAlarmCategories(request->getId());
+         getAlarmCategories(*request);
          break;
       case CMD_MODIFY_ALARM_CATEGORY:
-         modifyAlarmCategory(request);
+         modifyAlarmCategory(*request);
          break;
       case CMD_DELETE_ALARM_CATEGORY:
-         deleteAlarmCategory(request);
+         deleteAlarmCategory(*request);
          break;
       case CMD_LOAD_EVENT_DB:
-         sendEventDB(request);
+         getEventTemplates(*request);
          break;
       case CMD_SET_EVENT_INFO:
-         modifyEventTemplate(request);
+         modifyEventTemplate(*request);
          break;
       case CMD_DELETE_EVENT_TEMPLATE:
-         deleteEventTemplate(request);
+         deleteEventTemplate(*request);
          break;
       case CMD_GENERATE_EVENT_CODE:
-         generateEventCode(request->getId());
+         generateEventCode(*request);
          break;
       case CMD_MODIFY_OBJECT:
-         modifyObject(request);
+         modifyObject(*request);
          break;
       case CMD_SET_OBJECT_MGMT_STATUS:
-         changeObjectMgmtStatus(request);
+         changeObjectMgmtStatus(*request);
          break;
       case CMD_ENTER_MAINT_MODE:
-         enterMaintenanceMode(request);
+         enterMaintenanceMode(*request);
          break;
       case CMD_LEAVE_MAINT_MODE:
-         leaveMaintenanceMode(request);
+         leaveMaintenanceMode(*request);
          break;
       case CMD_LOAD_USER_DB:
-         sendUserDB(request->getId());
+         sendUserDB(*request);
          break;
       case CMD_GET_SELECTED_USERS:
-         getSelectedUsers(request);
+         getSelectedUsers(*request);
          break;
       case CMD_CREATE_USER:
-         createUser(request);
+         createUser(*request);
          break;
       case CMD_UPDATE_USER:
-         updateUser(request);
+         updateUser(*request);
          break;
       case CMD_DETACH_LDAP_USER:
-         detachLdapUser(request);
+         detachLdapUser(*request);
          break;
       case CMD_DELETE_USER:
-         deleteUser(request);
+         deleteUser(*request);
          break;
       case CMD_SET_PASSWORD:
-         setPassword(request);
+         setPassword(*request);
          break;
       case CMD_VALIDATE_PASSWORD:
-         validatePassword(request);
+         validatePassword(*request);
          break;
       case CMD_GET_NODE_DCI_LIST:
-         openNodeDCIList(request);
+         openNodeDCIList(*request);
          break;
       case CMD_UNLOCK_NODE_DCI_LIST:
-         closeNodeDCIList(request);
+         closeNodeDCIList(*request);
          break;
       case CMD_MODIFY_NODE_DCI:
       case CMD_DELETE_NODE_DCI:
-         modifyNodeDCI(request);
+         modifyNodeDCI(*request);
          break;
       case CMD_SET_DCI_STATUS:
-         changeDCIStatus(request);
+         changeDCIStatus(*request);
          break;
       case CMD_COPY_DCI:
-         copyDCI(request);
+         copyDCI(*request);
          break;
       case CMD_BULK_DCI_UPDATE:
-         bulkDCIUpdate(request);
+         bulkDCIUpdate(*request);
          break;
       case CMD_APPLY_TEMPLATE:
-         applyTemplate(request);
+         applyTemplate(*request);
          break;
       case CMD_GET_DCI_DATA:
-         getCollectedData(request);
+         getCollectedData(*request);
          break;
       case CMD_GET_TABLE_DCI_DATA:
-         getTableCollectedData(request);
+         getTableCollectedData(*request);
          break;
       case CMD_CLEAR_DCI_DATA:
-         clearDCIData(request);
+         clearDCIData(*request);
          break;
       case CMD_DELETE_DCI_ENTRY:
-         deleteDCIEntry(request);
+         deleteDCIEntry(*request);
          break;
       case CMD_FORCE_DCI_POLL:
-         forceDCIPoll(request);
+         forceDCIPoll(*request);
          break;
       case CMD_RECALCULATE_DCI_VALUES:
-         recalculateDCIValues(request);
+         recalculateDCIValues(*request);
          break;
       case CMD_GET_MIB_TIMESTAMP:
-         sendMIBTimestamp(request->getId());
+         sendMIBTimestamp(*request);
          break;
       case CMD_GET_MIB:
-         sendMib(request);
+         sendMib(*request);
          break;
       case CMD_CREATE_OBJECT:
-         createObject(request);
+         createObject(*request);
          break;
       case CMD_BIND_OBJECT:
-         changeObjectBinding(request, TRUE);
+         changeObjectBinding(*request, TRUE);
          break;
       case CMD_UNBIND_OBJECT:
-         changeObjectBinding(request, FALSE);
+         changeObjectBinding(*request, FALSE);
          break;
       case CMD_ADD_CLUSTER_NODE:
-         addClusterNode(request);
+         addClusterNode(*request);
          break;
       case CMD_GET_ALL_ALARMS:
-         getAlarms(request);
+         getAlarms(*request);
          break;
       case CMD_GET_ALARM_COMMENTS:
-         getAlarmComments(request);
+         getAlarmComments(*request);
          break;
       case CMD_SET_ALARM_STATUS_FLOW:
-         updateAlarmStatusFlow(request);
+         updateAlarmStatusFlow(*request);
          break;
       case CMD_UPDATE_ALARM_COMMENT:
-         updateAlarmComment(request);
+         updateAlarmComment(*request);
          break;
       case CMD_DELETE_ALARM_COMMENT:
-         deleteAlarmComment(request);
+         deleteAlarmComment(*request);
          break;
       case CMD_GET_ALARM:
-         getAlarm(request);
+         getAlarm(*request);
          break;
       case CMD_GET_ALARM_EVENTS:
-         getAlarmEvents(request);
+         getAlarmEvents(*request);
          break;
       case CMD_ACK_ALARM:
-         acknowledgeAlarm(request);
+         acknowledgeAlarm(*request);
          break;
       case CMD_RESOLVE_ALARM:
-         resolveAlarm(request, false);
+         resolveAlarm(*request, false);
          break;
       case CMD_TERMINATE_ALARM:
-         resolveAlarm(request, true);
+         resolveAlarm(*request, true);
          break;
       case CMD_DELETE_ALARM:
-         deleteAlarm(request);
+         deleteAlarm(*request);
          break;
       case CMD_BULK_RESOLVE_ALARMS:
-         bulkResolveAlarms(request, false);
+         bulkResolveAlarms(*request, false);
          break;
       case CMD_BULK_TERMINATE_ALARMS:
-         bulkResolveAlarms(request, true);
+         bulkResolveAlarms(*request, true);
          break;
       case CMD_OPEN_HELPDESK_ISSUE:
-         openHelpdeskIssue(request);
+         openHelpdeskIssue(*request);
          break;
       case CMD_GET_HELPDESK_URL:
-         getHelpdeskUrl(request);
+         getHelpdeskUrl(*request);
          break;
       case CMD_UNLINK_HELPDESK_ISSUE:
-         unlinkHelpdeskIssue(request);
+         unlinkHelpdeskIssue(*request);
          break;
       case CMD_CREATE_ACTION:
-         createAction(request);
+         createAction(*request);
          break;
       case CMD_MODIFY_ACTION:
-         updateAction(request);
+         updateAction(*request);
          break;
       case CMD_DELETE_ACTION:
-         deleteAction(request);
+         deleteAction(*request);
          break;
       case CMD_LOAD_ACTIONS:
-         sendAllActions(request->getId());
+         sendAllActions(*request);
          break;
       case CMD_DELETE_OBJECT:
-         deleteObject(request);
+         deleteObject(*request);
          break;
       case CMD_POLL_NODE:
-         forcedNodePoll(request);
+         forcedNodePoll(*request);
          break;
       case CMD_TRAP:
-         onTrap(request);
+         onTrap(*request);
          break;
       case CMD_WAKEUP_NODE:
-         onWakeUpNode(request);
+         onWakeUpNode(*request);
          break;
       case CMD_CREATE_TRAP:
-         editTrap(TRAP_CREATE, request);
+         editTrap(*request, TRAP_CREATE);
          break;
       case CMD_MODIFY_TRAP:
-         editTrap(TRAP_UPDATE, request);
+         editTrap(*request, TRAP_UPDATE);
          break;
       case CMD_DELETE_TRAP:
-         editTrap(TRAP_DELETE, request);
+         editTrap(*request, TRAP_DELETE);
          break;
       case CMD_LOAD_TRAP_CFG:
-         sendAllTraps(request->getId());
+         sendAllTraps(*request);
          break;
       case CMD_GET_TRAP_CFG_RO:
-         sendAllTraps2(request->getId());
+         sendAllTraps2(*request);
          break;
       case CMD_QUERY_PARAMETER:
-         queryParameter(request);
+         queryParameter(*request);
          break;
       case CMD_QUERY_TABLE:
-         queryAgentTable(request);
+         queryAgentTable(*request);
          break;
       case CMD_GET_PACKAGE_LIST:
-         getInstalledPackages(request->getId());
+         getInstalledPackages(*request);
          break;
       case CMD_INSTALL_PACKAGE:
-         installPackage(request);
+         installPackage(*request);
          break;
       case CMD_REMOVE_PACKAGE:
-         removePackage(request);
+         removePackage(*request);
          break;
       case CMD_GET_PARAMETER_LIST:
-         getParametersList(request);
+         getParametersList(*request);
          break;
       case CMD_DEPLOY_PACKAGE:
-         deployPackage(request);
+         deployPackage(*request);
          break;
       case CMD_GET_LAST_VALUES:
-         getLastValues(request);
+         getLastValues(*request);
          break;
       case CMD_GET_DCI_VALUES:
-         getLastValuesByDciId(request);
+         getLastValuesByDciId(*request);
          break;
       case CMD_GET_TOOLTIP_LAST_VALUES:
-         getTooltipLastValues(request);
+         getTooltipLastValues(*request);
          break;
       case CMD_GET_TABLE_LAST_VALUE:
-         getTableLastValue(request);
+         getTableLastValue(*request);
          break;
       case CMD_GET_DCI_LAST_VALUE:
-         getLastValue(request);
+         getLastValue(*request);
          break;
       case CMD_GET_ACTIVE_THRESHOLDS:
-         getActiveThresholds(request);
+         getActiveThresholds(*request);
          break;
       case CMD_GET_THRESHOLD_SUMMARY:
-         getThresholdSummary(request);
+         getThresholdSummary(*request);
          break;
       case CMD_GET_USER_VARIABLE:
-         getUserVariable(request);
+         getUserVariable(*request);
          break;
       case CMD_SET_USER_VARIABLE:
-         setUserVariable(request);
+         setUserVariable(*request);
          break;
       case CMD_DELETE_USER_VARIABLE:
-         deleteUserVariable(request);
+         deleteUserVariable(*request);
          break;
       case CMD_ENUM_USER_VARIABLES:
-         enumUserVariables(request);
+         enumUserVariables(*request);
          break;
       case CMD_COPY_USER_VARIABLE:
-         copyUserVariable(request);
+         copyUserVariable(*request);
          break;
       case CMD_CHANGE_ZONE:
-         changeObjectZone(request);
+         changeObjectZone(*request);
          break;
       case CMD_REQUEST_ENCRYPTION:
-         setupEncryption(request);
+         setupEncryption(*request);
          break;
       case CMD_READ_AGENT_CONFIG_FILE:
-         readAgentConfigFile(request);
+         readAgentConfigFile(*request);
          break;
       case CMD_WRITE_AGENT_CONFIG_FILE:
-         writeAgentConfigFile(request);
+         writeAgentConfigFile(*request);
          break;
       case CMD_EXECUTE_ACTION:
-         executeAction(request);
+         executeAction(*request);
          break;
       case CMD_GET_OBJECT_TOOLS:
-         getObjectTools(request->getId());
+         getObjectTools(*request);
          break;
       case CMD_EXEC_TABLE_TOOL:
-         execTableTool(request);
+         execTableTool(*request);
          break;
       case CMD_GET_OBJECT_TOOL_DETAILS:
-         getObjectToolDetails(request);
+         getObjectToolDetails(*request);
          break;
       case CMD_UPDATE_OBJECT_TOOL:
-         updateObjectTool(request);
+         updateObjectTool(*request);
          break;
       case CMD_DELETE_OBJECT_TOOL:
-         deleteObjectTool(request);
+         deleteObjectTool(*request);
          break;
       case CMD_CHANGE_OBJECT_TOOL_STATUS:
-         changeObjectToolStatus(request);
+         changeObjectToolStatus(*request);
          break;
       case CMD_GENERATE_OBJECT_TOOL_ID:
-         generateObjectToolId(request->getId());
+         generateObjectToolId(*request);
          break;
       case CMD_CHANGE_SUBSCRIPTION:
-         changeSubscription(request);
+         changeSubscription(*request);
          break;
       case CMD_GET_SERVER_STATS:
-         sendServerStats(request->getId());
+         sendServerStats(*request);
          break;
       case CMD_GET_SCRIPT_LIST:
-         sendScriptList(request->getId());
+         sendScriptList(*request);
          break;
       case CMD_GET_SCRIPT:
-         sendScript(request);
+         sendScript(*request);
          break;
       case CMD_UPDATE_SCRIPT:
-         updateScript(request);
+         updateScript(*request);
          break;
       case CMD_RENAME_SCRIPT:
-         renameScript(request);
+         renameScript(*request);
          break;
       case CMD_DELETE_SCRIPT:
-         deleteScript(request);
+         deleteScript(*request);
          break;
       case CMD_GET_SESSION_LIST:
-         getSessionList(request->getId());
+         getSessionList(*request);
          break;
       case CMD_KILL_SESSION:
-         killSession(request);
+         killSession(*request);
          break;
       case CMD_START_SNMP_WALK:
-         startSnmpWalk(request);
+         startSnmpWalk(*request);
          break;
       case CMD_RESOLVE_DCI_NAMES:
-         resolveDCINames(request);
+         resolveDCINames(*request);
          break;
       case CMD_GET_DCI_INFO:
-         SendDCIInfo(request);
+         getDCIInfo(*request);
          break;
       case CMD_GET_DCI_THRESHOLDS:
-         sendDCIThresholds(request);
+         sendDCIThresholds(*request);
          break;
       case CMD_GET_RELATED_EVENTS_LIST:
-         getRelatedEventList(request);
+         getRelatedEventList(*request);
          break;
       case CMD_GET_DCI_SCRIPT_LIST:
-         getDCIScriptList(request);
+         getDCIScriptList(*request);
          break;
       case CMD_GET_PERFTAB_DCI_LIST:
-         sendPerfTabDCIList(request);
+         sendPerfTabDCIList(*request);
          break;
       case CMD_PUSH_DCI_DATA:
-         pushDCIData(request);
+         pushDCIData(*request);
          break;
       case CMD_GET_AGENT_CONFIGURATION_LIST:
-         getAgentConfigurationList(request->getId());
+         getAgentConfigurationList(*request);
          break;
       case CMD_GET_AGENT_CONFIGURATION:
-         getAgentConfiguration(request);
+         getAgentConfiguration(*request);
          break;
       case CMD_UPDATE_AGENT_CONFIGURATION:
-         updateAgentConfiguration(request);
+         updateAgentConfiguration(*request);
          break;
       case CMD_DELETE_AGENT_CONFIGURATION:
-         deleteAgentConfiguration(request);
+         deleteAgentConfiguration(*request);
          break;
       case CMD_SWAP_AGENT_CONFIGURATIONS:
-         swapAgentConfigurations(request);
+         swapAgentConfigurations(*request);
          break;
       case CMD_GET_OBJECT_COMMENTS:
-         getObjectComments(request);
+         getObjectComments(*request);
          break;
       case CMD_UPDATE_OBJECT_COMMENTS:
-         updateObjectComments(request);
+         updateObjectComments(*request);
          break;
       case CMD_GET_ADDR_LIST:
-         getAddrList(request);
+         getAddrList(*request);
          break;
       case CMD_SET_ADDR_LIST:
-         setAddrList(request);
+         setAddrList(*request);
          break;
       case CMD_RESET_COMPONENT:
-         resetComponent(request);
+         resetComponent(*request);
          break;
       case CMD_EXPORT_CONFIGURATION:
-         exportConfiguration(request);
+         exportConfiguration(*request);
          break;
       case CMD_IMPORT_CONFIGURATION:
-         importConfiguration(request);
+         importConfiguration(*request);
          break;
       case CMD_GET_GRAPH_LIST:
-         sendGraphList(request);
+         getGraphList(*request);
          break;
       case CMD_GET_GRAPH:
-         sendGraph(request);
+         getGraph(*request);
          break;
       case CMD_SAVE_GRAPH:
-         saveGraph(request);
+         saveGraph(*request);
          break;
       case CMD_DELETE_GRAPH:
-         deleteGraph(request);
+         deleteGraph(*request);
          break;
       case CMD_QUERY_L2_TOPOLOGY:
-         queryL2Topology(request);
+         queryL2Topology(*request);
          break;
       case CMD_QUERY_INTERNAL_TOPOLOGY:
-         queryInternalCommunicationTopology(request);
+         queryInternalCommunicationTopology(*request);
          break;
       case CMD_SEND_NOTIFICATION:
-         sendNotification(request);
+         sendNotification(*request);
          break;
       case CMD_GET_COMMUNITY_LIST:
       case CMD_GET_USM_CREDENTIALS:
       case CMD_GET_SNMP_PORT_LIST:
       case CMD_GET_SHARED_SECRET_LIST:
-         sendNetworkCredList(request);
+         sendNetworkCredList(*request);
          break;
       case CMD_UPDATE_COMMUNITY_LIST:
-         updateCommunityList(request);
+         updateCommunityList(*request);
          break;
       case CMD_UPDATE_SHARED_SECRET_LIST:
-         updateSharedSecretList(request);
+         updateSharedSecretList(*request);
          break;
       case CMD_UPDATE_SNMP_PORT_LIST:
-         updateSNMPPortList(request);
+         updateSNMPPortList(*request);
          break;
       case CMD_UPDATE_USM_CREDENTIALS:
-         updateUsmCredentials(request);
+         updateUsmCredentials(*request);
          break;
       case CMD_GET_PERSISTENT_STORAGE:
-         getPersistantStorage(request->getId());
+         getPersistantStorage(*request);
          break;
       case CMD_SET_PSTORAGE_VALUE:
-         setPstorageValue(request);
+         setPstorageValue(*request);
          break;
       case CMD_DELETE_PSTORAGE_VALUE:
-         deletePstorageValue(request);
+         deletePstorageValue(*request);
          break;
       case CMD_REGISTER_AGENT:
-         registerAgent(request);
+         registerAgent(*request);
          break;
       case CMD_GET_SERVER_FILE:
-         getServerFile(request);
+         getServerFile(*request);
          break;
       case CMD_GET_AGENT_FILE:
-         getAgentFile(request);
+         getAgentFile(*request);
          break;
       case CMD_CANCEL_FILE_MONITORING:
          cancelFileMonitoring(request);
          break;
       case CMD_TEST_DCI_TRANSFORMATION:
-         testDCITransformation(request);
+         testDCITransformation(*request);
          break;
       case CMD_EXECUTE_SCRIPT:
-         executeScript(request);
+         executeScript(*request);
          break;
       case CMD_EXECUTE_LIBRARY_SCRIPT:
-         executeLibraryScript(request);
+         executeLibraryScript(*request);
          break;
       case CMD_GET_JOB_LIST:
-         sendJobList(request->getId());
+         sendJobList(*request);
          break;
       case CMD_CANCEL_JOB:
-         cancelJob(request);
+         cancelJob(*request);
          break;
       case CMD_HOLD_JOB:
-         holdJob(request);
+         holdJob(*request);
          break;
       case CMD_UNHOLD_JOB:
-         unholdJob(request);
+         unholdJob(*request);
          break;
       case CMD_GET_CURRENT_USER_ATTR:
-         getUserCustomAttribute(request);
+         getUserCustomAttribute(*request);
          break;
       case CMD_SET_CURRENT_USER_ATTR:
-         setUserCustomAttribute(request);
+         setUserCustomAttribute(*request);
          break;
       case CMD_OPEN_SERVER_LOG:
-         openServerLog(request);
+         openServerLog(*request);
          break;
       case CMD_CLOSE_SERVER_LOG:
-         closeServerLog(request);
+         closeServerLog(*request);
          break;
       case CMD_QUERY_LOG:
-         queryServerLog(request);
+         queryServerLog(*request);
          break;
       case CMD_GET_LOG_DATA:
-         getServerLogQueryData(request);
+         getServerLogQueryData(*request);
          break;
       case CMD_GET_LOG_RECORD_DETAILS:
-         getServerLogRecordDetails(request);
+         getServerLogRecordDetails(*request);
          break;
       case CMD_FIND_NODE_CONNECTION:
-         findNodeConnection(request);
+         findNodeConnection(*request);
          break;
       case CMD_FIND_MAC_LOCATION:
-         findMacAddress(request);
+         findMacAddress(*request);
          break;
       case CMD_FIND_IP_LOCATION:
-         findIpAddress(request);
+         findIpAddress(*request);
          break;
       case CMD_FIND_HOSTNAME_LOCATION:
-         findHostname(request);
+         findHostname(*request);
          break;
       case CMD_GET_IMAGE:
-         sendLibraryImage(request);
+         sendLibraryImage(*request);
          break;
       case CMD_CREATE_IMAGE:
-         updateLibraryImage(request);
+         updateLibraryImage(*request);
          break;
       case CMD_DELETE_IMAGE:
-         deleteLibraryImage(request);
+         deleteLibraryImage(*request);
          break;
       case CMD_MODIFY_IMAGE:
-         updateLibraryImage(request);
+         updateLibraryImage(*request);
          break;
       case CMD_LIST_IMAGES:
-         listLibraryImages(request);
+         listLibraryImages(*request);
          break;
       case CMD_EXECUTE_SERVER_COMMAND:
-         executeServerCommand(request);
+         executeServerCommand(*request);
          break;
       case CMD_STOP_SERVER_COMMAND:
-         stopServerCommand(request);
+         stopServerCommand(*request);
          break;
       case CMD_LIST_SERVER_FILES:
-         listServerFileStore(request);
+         listServerFileStore(*request);
          break;
       case CMD_UPLOAD_FILE_TO_AGENT:
-         uploadFileToAgent(request);
+         uploadFileToAgent(*request);
          break;
       case CMD_UPLOAD_FILE:
-         receiveFile(request);
+         receiveFile(*request);
          break;
       case CMD_DELETE_FILE:
-         deleteFile(request);
+         deleteFile(*request);
          break;
       case CMD_OPEN_CONSOLE:
-         openConsole(request->getId());
+         openConsole(*request);
          break;
       case CMD_CLOSE_CONSOLE:
-         closeConsole(request->getId());
+         closeConsole(*request);
          break;
       case CMD_ADM_REQUEST:
-         processConsoleCommand(request);
+         processConsoleCommand(*request);
          break;
       case CMD_GET_VLANS:
-         getVlans(request);
+         getVlans(*request);
          break;
       case CMD_GET_NETWORK_PATH:
-         getNetworkPath(request);
+         getNetworkPath(*request);
          break;
       case CMD_GET_NODE_COMPONENTS:
-         getNodeComponents(request);
+         getNodeComponents(*request);
          break;
       case CMD_GET_NODE_SOFTWARE:
-         getNodeSoftware(request);
+         getNodeSoftware(*request);
          break;
       case CMD_GET_NODE_HARDWARE:
-         getNodeHardware(request);
+         getNodeHardware(*request);
          break;
       case CMD_GET_WINPERF_OBJECTS:
-         getWinPerfObjects(request);
+         getWinPerfObjects(*request);
          break;
       case CMD_LIST_MAPPING_TABLES:
-         listMappingTables(request);
+         listMappingTables(*request);
          break;
       case CMD_GET_MAPPING_TABLE:
-         getMappingTable(request);
+         getMappingTable(*request);
          break;
       case CMD_UPDATE_MAPPING_TABLE:
-         updateMappingTable(request);
+         updateMappingTable(*request);
          break;
       case CMD_DELETE_MAPPING_TABLE:
-         deleteMappingTable(request);
+         deleteMappingTable(*request);
          break;
       case CMD_GET_WIRELESS_STATIONS:
-         getWirelessStations(request);
+         getWirelessStations(*request);
          break;
       case CMD_GET_SUMMARY_TABLES:
-         getSummaryTables(request->getId());
+         getSummaryTables(*request);
          break;
       case CMD_GET_SUMMARY_TABLE_DETAILS:
-         getSummaryTableDetails(request);
+         getSummaryTableDetails(*request);
          break;
       case CMD_MODIFY_SUMMARY_TABLE:
-         modifySummaryTable(request);
+         modifySummaryTable(*request);
          break;
       case CMD_DELETE_SUMMARY_TABLE:
-         deleteSummaryTable(request);
+         deleteSummaryTable(*request);
          break;
       case CMD_QUERY_SUMMARY_TABLE:
-         querySummaryTable(request);
+         querySummaryTable(*request);
          break;
       case CMD_QUERY_ADHOC_SUMMARY_TABLE:
-         queryAdHocSummaryTable(request);
+         queryAdHocSummaryTable(*request);
          break;
       case CMD_GET_SUBNET_ADDRESS_MAP:
-         getSubnetAddressMap(request);
+         getSubnetAddressMap(*request);
          break;
       case CMD_GET_EFFECTIVE_RIGHTS:
-         getEffectiveRights(request);
+         getEffectiveRights(*request);
          break;
       case CMD_GET_FOLDER_CONTENT:
       case CMD_GET_FOLDER_SIZE:
@@ -1545,235 +1545,235 @@ void ClientSession::processRequest(NXCPMessage *request)
          uploadUserFileToAgent(request);
          break;
       case CMD_GET_SWITCH_FDB:
-         getSwitchForwardingDatabase(request);
+         getSwitchForwardingDatabase(*request);
          break;
       case CMD_GET_ROUTING_TABLE:
-         getRoutingTable(request);
+         getRoutingTable(*request);
          break;
       case CMD_GET_LOC_HISTORY:
-         getLocationHistory(request);
+         getLocationHistory(*request);
          break;
       case CMD_TAKE_SCREENSHOT:
-         getScreenshot(request);
+         getScreenshot(*request);
          break;
       case CMD_COMPILE_SCRIPT:
-         compileScript(request);
+         compileScript(*request);
          break;
       case CMD_CLEAN_AGENT_DCI_CONF:
-         cleanAgentDciConfiguration(request);
+         cleanAgentDciConfiguration(*request);
          break;
       case CMD_RESYNC_AGENT_DCI_CONF:
-         resyncAgentDciConfiguration(request);
+         resyncAgentDciConfiguration(*request);
          break;
       case CMD_LIST_SCHEDULE_CALLBACKS:
-         getSchedulerTaskHandlers(request);
+         getSchedulerTaskHandlers(*request);
          break;
       case CMD_LIST_SCHEDULES:
-         getScheduledTasks(request);
+         getScheduledTasks(*request);
          break;
       case CMD_ADD_SCHEDULE:
-         addScheduledTask(request);
+         addScheduledTask(*request);
          break;
       case CMD_UPDATE_SCHEDULE:
-         updateScheduledTask(request);
+         updateScheduledTask(*request);
          break;
       case CMD_REMOVE_SCHEDULE:
-         removeScheduledTask(request);
+         removeScheduledTask(*request);
          break;
       case CMD_GET_REPOSITORIES:
-         getRepositories(request);
+         getRepositories(*request);
          break;
       case CMD_ADD_REPOSITORY:
-         addRepository(request);
+         addRepository(*request);
          break;
       case CMD_MODIFY_REPOSITORY:
-         modifyRepository(request);
+         modifyRepository(*request);
          break;
       case CMD_DELETE_REPOSITORY:
-         deleteRepository(request);
+         deleteRepository(*request);
          break;
       case CMD_GET_AGENT_TUNNELS:
-         getAgentTunnels(request);
+         getAgentTunnels(*request);
          break;
       case CMD_BIND_AGENT_TUNNEL:
-         bindAgentTunnel(request);
+         bindAgentTunnel(*request);
          break;
       case CMD_UNBIND_AGENT_TUNNEL:
-         unbindAgentTunnel(request);
+         unbindAgentTunnel(*request);
          break;
       case CMD_GET_PREDICTION_ENGINES:
-         getPredictionEngines(request);
+         getPredictionEngines(*request);
          break;
       case CMD_GET_PREDICTED_DATA:
-         getPredictedData(request);
+         getPredictedData(*request);
          break;
       case CMD_EXPAND_MACROS:
-         expandMacros(request);
+         expandMacros(*request);
          break;
       case CMD_SETUP_TCP_PROXY:
-         setupTcpProxy(request);
+         setupTcpProxy(*request);
          break;
       case CMD_GET_AGENT_POLICY_LIST:
-         getPolicyList(request);
+         getPolicyList(*request);
          break;
       case CMD_GET_AGENT_POLICY:
-         getPolicy(request);
+         getPolicy(*request);
          break;
       case CMD_UPDATE_AGENT_POLICY:
-         updatePolicy(request);
+         updatePolicy(*request);
          break;
       case CMD_DELETE_AGENT_POLICY:
-         deletePolicy(request);
+         deletePolicy(*request);
          break;
       case CMD_GET_DEPENDENT_NODES:
-         getDependentNodes(request);
+         getDependentNodes(*request);
          break;
       case CMD_POLICY_EDITOR_CLOSED:
-         onPolicyEditorClose(request);
+         onPolicyEditorClose(*request);
          break;
       case CMD_POLICY_FORCE_APPLY:
-         forceApplyPolicy(request);
+         forceApplyPolicy(*request);
          break;
       case CMD_GET_MATCHING_DCI:
-         getMatchingDCI(request);
+         getMatchingDCI(*request);
          break;
       case CMD_GET_UA_NOTIFICATIONS:
-         getUserAgentNotification(request);
+         getUserAgentNotification(*request);
          break;
       case CMD_ADD_UA_NOTIFICATION:
-         addUserAgentNotification(request);
+         addUserAgentNotification(*request);
          break;
       case CMD_RECALL_UA_NOTIFICATION:
-         recallUserAgentNotification(request);
+         recallUserAgentNotification(*request);
          break;
       case CMD_GET_NOTIFICATION_CHANNELS:
-         getNotificationChannels(request->getId());
+         getNotificationChannels(*request);
          break;
       case CMD_ADD_NOTIFICATION_CHANNEL:
-         addNotificationChannel(request);
+         addNotificationChannel(*request);
          break;
       case CMD_UPDATE_NOTIFICATION_CHANNEL:
-         updateNotificationChannel(request);
+         updateNotificationChannel(*request);
          break;
       case CMD_DELETE_NOTIFICATION_CHANNEL:
-         removeNotificationChannel(request);
+         removeNotificationChannel(*request);
          break;
       case CMD_RENAME_NOTIFICATION_CHANNEL:
-         renameNotificationChannel(request);
+         renameNotificationChannel(*request);
          break;
       case CMD_GET_NOTIFICATION_DRIVERS:
-         getNotificationDrivers(request);
+         getNotificationDrivers(*request);
          break;
       case CMD_START_ACTIVE_DISCOVERY:
-         startActiveDiscovery(request);
+         startActiveDiscovery(*request);
          break;
       case CMD_GET_PHYSICAL_LINKS:
-         getPhysicalLinks(request);
+         getPhysicalLinks(*request);
          break;
       case CMD_UPDATE_PHYSICAL_LINK:
-         updatePhysicalLink(request);
+         updatePhysicalLink(*request);
          break;
       case CMD_DELETE_PHYSICAL_LINK:
-         deletePhysicalLink(request);
+         deletePhysicalLink(*request);
          break;
       case CMD_GET_WEB_SERVICES:
-         getWebServices(request);
+         getWebServices(*request);
          break;
       case CMD_MODIFY_WEB_SERVICE:
-         modifyWebService(request);
+         modifyWebService(*request);
          break;
       case CMD_DELETE_WEB_SERVICE:
-         deleteWebService(request);
+         deleteWebService(*request);
          break;
       case CMD_GET_OBJECT_CATEGORIES:
-         getObjectCategories(request);
+         getObjectCategories(*request);
          break;
       case CMD_MODIFY_OBJECT_CATEGORY:
-         modifyObjectCategory(request);
+         modifyObjectCategory(*request);
          break;
       case CMD_DELETE_OBJECT_CATEGORY:
-         deleteObjectCategory(request);
+         deleteObjectCategory(*request);
          break;
       case CMD_GET_GEO_AREAS:
-         getGeoAreas(request);
+         getGeoAreas(*request);
          break;
       case CMD_MODIFY_GEO_AREA:
-         modifyGeoArea(request);
+         modifyGeoArea(*request);
          break;
       case CMD_DELETE_GEO_AREA:
-         deleteGeoArea(request);
+         deleteGeoArea(*request);
          break;
       case CMD_FIND_PROXY_FOR_NODE:
-         findProxyForNode(request);
+         findProxyForNode(*request);
          break;
       case CMD_GET_SCHEDULED_REPORTING_TASKS:
-         getScheduledReportingTasks(request);
+         getScheduledReportingTasks(*request);
          break;
       case CMD_GET_SSH_KEYS_LIST:
-         getSshKeys(request);
+         getSshKeys(*request);
          break;
       case CMD_DELETE_SSH_KEY:
-         deleteSshKey(request);
+         deleteSshKey(*request);
          break;
       case CMD_UPDATE_SSH_KEYS:
-         updateSshKey(request);
+         updateSshKey(*request);
          break;
       case CMD_GENERATE_SSH_KEYS:
-         generateSshKey(request);
+         generateSshKey(*request);
          break;
       case CMD_2FA_PREPARE_CHALLENGE:
-         prepare2FAChallenge(request);
+         prepare2FAChallenge(*request);
          break;
       case CMD_2FA_VALIDATE_RESPONSE:
-         validate2FAResponse(request);
+         validate2FAResponse(*request);
          break;
       case CMD_2FA_GET_DRIVERS:
-         get2FADrivers(request);
+         get2FADrivers(*request);
          break;
       case CMD_2FA_GET_METHODS:
-         get2FAMethods(request);
+         get2FAMethods(*request);
          break;
       case CMD_2FA_GET_METHOD_DETAILS:
-         get2FAMethodDetails(request);
+         get2FAMethodDetails(*request);
          break;
       case CMD_2FA_MODIFY_METHOD:
-         modify2FAMethod(request);
+         modify2FAMethod(*request);
          break;
       case CMD_2FA_RENAME_METHOD:
-         rename2FAMethod(request);
+         rename2FAMethod(*request);
          break;
       case CMD_2FA_DELETE_METHOD:
-         delete2FAMethod(request);
+         delete2FAMethod(*request);
          break;
       case CMD_2FA_GET_USER_BINDINGS:
-         getUser2FABindings(request);
+         getUser2FABindings(*request);
          break;
       case CMD_2FA_GET_USER_BINDING_DETAILS:
-         getUser2FABindingDetails(request);
+         getUser2FABindingDetails(*request);
          break;
       case CMD_2FA_MODIFY_USER_BINDING:
-         modifyUser2FABinding(request);
+         modifyUser2FABinding(*request);
          break;
       case CMD_2FA_DELETE_USER_BINDING:
-         deleteUser2FABinding(request);
+         deleteUser2FABinding(*request);
          break;
       case CMD_GET_BIZSVC_CHECK_LIST:
-         getBusinessServiceCheckList(request);
+         getBusinessServiceCheckList(*request);
          break;
       case CMD_UPDATE_BIZSVC_CHECK:
-         modifyBusinessServiceCheck(request);
+         modifyBusinessServiceCheck(*request);
          break;
       case CMD_DELETE_BIZSVC_CHECK:
-         deleteBusinessServiceCheck(request);
+         deleteBusinessServiceCheck(*request);
          break;
       case CMD_GET_BUSINESS_SERVICE_UPTIME:
-         getBusinessServiceUptime(request);
+         getBusinessServiceUptime(*request);
          break;
       case CMD_GET_BUSINESS_SERVICE_TICKETS:
-         getBusinessServiceTickets(request);
+         getBusinessServiceTickets(*request);
          break;
       case CMD_SSH_COMMAND:
-         executeSshCommand(request);
+         executeSshCommand(*request);
          break;
       default:
          if ((code >> 8) == 0x11)
@@ -1787,7 +1787,7 @@ void ClientSession::processRequest(NXCPMessage *request)
             bool processedByModule = false;
             ENUMERATE_MODULES(pfClientCommandHandler)
             {
-               int status = CURRENT_MODULE.pfClientCommandHandler(code, request, this);
+               int status = CURRENT_MODULE.pfClientCommandHandler(code, *request, this);
                if (status != NXMOD_COMMAND_IGNORED)
                {
                   if (status == NXMOD_COMMAND_ACCEPTED_ASYNC)
@@ -1941,9 +1941,9 @@ bool ClientSession::sendFile(const TCHAR *file, uint32_t requestId, long ofset, 
 /**
  * Send server information to client
  */
-void ClientSession::sendServerInfo(UINT32 dwRqId)
+void ClientSession::sendServerInfo(const NXCPMessage& request)
 {
-   static UINT32 protocolVersions[] = {
+   static uint32_t protocolVersions[] = {
       CLIENT_PROTOCOL_VERSION_BASE,
       CLIENT_PROTOCOL_VERSION_ALARMS,
       CLIENT_PROTOCOL_VERSION_PUSH,
@@ -1953,13 +1953,10 @@ void ClientSession::sendServerInfo(UINT32 dwRqId)
       CLIENT_PROTOCOL_VERSION_TCPPROXY,
       CLIENT_PROTOCOL_VERSION_SCHEDULER
    };
-   NXCPMessage msg;
 	TCHAR szBuffer[MAX_CONFIG_VALUE];
 	String strURL;
 
-   // Prepare response message
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(dwRqId);
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
 
    // Generate challenge for certificate authentication
 #ifdef _WITH_ENCRYPTION
@@ -2201,11 +2198,11 @@ void ClientSession::login(const NXCPMessage& request)
 /**
  * Prepares 2FA challenge for user
  */
-void ClientSession::prepare2FAChallenge(NXCPMessage *request)
+void ClientSession::prepare2FAChallenge(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
    TCHAR method[MAX_OBJECT_NAME];
-   request->getFieldAsString(VID_2FA_METHOD, method, MAX_OBJECT_NAME);
+   request.getFieldAsString(VID_2FA_METHOD, method, MAX_OBJECT_NAME);
    delete m_loginInfo->token;
    m_loginInfo->token = Prepare2FAChallenge(method, m_dwUserId);
    if (m_loginInfo->token != nullptr)
@@ -2217,22 +2214,22 @@ void ClientSession::prepare2FAChallenge(NXCPMessage *request)
    {
       msg.setField(VID_RCC, RCC_FAILED_2FA_PREPARATION);
    }
-   sendMessage(&msg);
+   sendMessage(msg);
 }
 
 /**
  * Validating user 2FA response
  */
-void ClientSession::validate2FAResponse(NXCPMessage *request)
+void ClientSession::validate2FAResponse(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
    if (m_loginInfo != nullptr)
    {
       TCHAR response[1024];
-      request->getFieldAsString(VID_2FA_RESPONSE, response, 1024);
+      request.getFieldAsString(VID_2FA_RESPONSE, response, 1024);
       if (Validate2FAResponse(m_loginInfo->token, response))
       {
-         finalizeLogin(*request, &msg);
+         finalizeLogin(request, &msg);
       }
       else
       {
@@ -2244,7 +2241,7 @@ void ClientSession::validate2FAResponse(NXCPMessage *request)
    {
       msg.setField(VID_RCC, RCC_OUT_OF_STATE_REQUEST);
    }
-   sendMessage(&msg);
+   sendMessage(msg);
 }
 
 /**
@@ -2351,16 +2348,16 @@ void ClientSession::updateSystemAccessRights()
       NXCPMessage msg;
       msg.setCode(CMD_UPDATE_SYSTEM_ACCESS_RIGHTS);
       msg.setField(VID_USER_SYS_RIGHTS, systemAccessRights);
-      postMessage(&msg);
+      postMessage(msg);
    }
 }
 
 /**
  * Send alarm categories to client
 */
-void ClientSession::getAlarmCategories(UINT32 requestId)
+void ClientSession::getAlarmCategories(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, requestId);
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
    if (checkSysAccessRights(SYSTEM_ACCESS_EPP))
    {
       GetAlarmCategories(&msg);
@@ -2370,15 +2367,15 @@ void ClientSession::getAlarmCategories(UINT32 requestId)
    {
       msg.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
-   sendMessage(&msg);
+   sendMessage(msg);
 }
 
 /**
 * Update alarm category
 */
-void ClientSession::modifyAlarmCategory(NXCPMessage *request)
+void ClientSession::modifyAlarmCategory(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
    if (checkSysAccessRights(SYSTEM_ACCESS_EPP))
    {
       uint32_t id = 0;
@@ -2395,12 +2392,12 @@ void ClientSession::modifyAlarmCategory(NXCPMessage *request)
 /**
 * Delete alarm category
 */
-void ClientSession::deleteAlarmCategory(NXCPMessage *request)
+void ClientSession::deleteAlarmCategory(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
    if (checkSysAccessRights(SYSTEM_ACCESS_EPP))
    {
-      uint32_t categoryId = request->getFieldAsInt32(VID_CATEGORY_ID);
+      uint32_t categoryId = request.getFieldAsInt32(VID_CATEGORY_ID);
       if (!g_pEventPolicy->isCategoryInUse(categoryId))
       {
          msg.setField(VID_RCC, DeleteAlarmCategory(categoryId));
@@ -2418,11 +2415,11 @@ void ClientSession::deleteAlarmCategory(NXCPMessage *request)
 }
 
 /**
- * Send event configuration to client
+ * Get configured event templates
  */
-void ClientSession::sendEventDB(NXCPMessage *pRequest)
+void ClientSession::getEventTemplates(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, pRequest->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
    if (checkSysAccessRights(SYSTEM_ACCESS_VIEW_EVENT_DB) || checkSysAccessRights(SYSTEM_ACCESS_EDIT_EVENT_DB) || checkSysAccessRights(SYSTEM_ACCESS_EPP))
    {
       if (!(g_flags & AF_DB_CONNECTION_LOST))
@@ -2435,57 +2432,53 @@ void ClientSession::sendEventDB(NXCPMessage *pRequest)
    {
       msg.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
-   sendMessage(&msg);
+   sendMessage(msg);
 }
 
 /**
  * Update event template
  */
-void ClientSession::modifyEventTemplate(NXCPMessage *pRequest)
+void ClientSession::modifyEventTemplate(const NXCPMessage& request)
 {
-   NXCPMessage msg;
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
-   // Prepare reply message
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(pRequest->getId());
    // Check access rights
    if (checkSysAccessRights(SYSTEM_ACCESS_EDIT_EVENT_DB))
    {
       json_t *oldValue, *newValue;
-      UINT32 rcc = UpdateEventTemplate(pRequest, &msg, &oldValue, &newValue);
+      uint32_t rcc = UpdateEventTemplate(request, &response, &oldValue, &newValue);
       if (rcc == RCC_SUCCESS)
       {
          TCHAR name[MAX_EVENT_NAME];
-         pRequest->getFieldAsString(VID_NAME, name, MAX_EVENT_NAME);
-         writeAuditLogWithValues(AUDIT_SYSCFG, true, 0, oldValue, newValue, _T("Event template %s [%d] modified"), name, pRequest->getFieldAsUInt32(VID_EVENT_CODE));
+         request.getFieldAsString(VID_NAME, name, MAX_EVENT_NAME);
+         writeAuditLogWithValues(AUDIT_SYSCFG, true, 0, oldValue, newValue, _T("Event template %s [%d] modified"), name, request.getFieldAsUInt32(VID_EVENT_CODE));
          json_decref(oldValue);
          json_decref(newValue);
       }
-      msg.setField(VID_RCC, rcc);
+      response.setField(VID_RCC, rcc);
    }
    else
    {
-      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
-      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on modify event template [%d]"), pRequest->getFieldAsUInt32(VID_EVENT_CODE)); // TODO change message
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
+      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on modify event template [%d]"), request.getFieldAsUInt32(VID_EVENT_CODE)); // TODO change message
    }
 
-   // Send response
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
  * Delete event template
  */
-void ClientSession::deleteEventTemplate(NXCPMessage *pRequest)
+void ClientSession::deleteEventTemplate(const NXCPMessage& request)
 {
    NXCPMessage msg;
    UINT32 dwEventCode;
 
    // Prepare reply message
    msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(pRequest->getId());
+   msg.setId(request.getId());
 
-   dwEventCode = pRequest->getFieldAsUInt32(VID_EVENT_CODE);
+   dwEventCode = request.getFieldAsUInt32(VID_EVENT_CODE);
 
    // Check access rights
    if (checkSysAccessRights(SYSTEM_ACCESS_EDIT_EVENT_DB) && (dwEventCode >= FIRST_USER_EVENT_ID))
@@ -2509,26 +2502,18 @@ void ClientSession::deleteEventTemplate(NXCPMessage *pRequest)
 /**
  * Generate event code for new event template
  */
-void ClientSession::generateEventCode(UINT32 dwRqId)
+void ClientSession::generateEventCode(const NXCPMessage& request)
 {
-   NXCPMessage msg;
-
-   // Prepare reply message
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(dwRqId);
-
-   // Check access rights
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
    if (checkSysAccessRights(SYSTEM_ACCESS_EDIT_EVENT_DB))
    {
-      msg.setField(VID_EVENT_CODE, CreateUniqueId(IDG_EVENT));
+      response.setField(VID_EVENT_CODE, CreateUniqueId(IDG_EVENT));
    }
    else
    {
-      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
-
-   // Send response
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
@@ -2553,22 +2538,22 @@ static bool SessionObjectFilter(NetObj *object, void *data)
 /**
  * Send all objects to client
  */
-void ClientSession::getObjects(NXCPMessage *request)
+void ClientSession::getObjects(const NXCPMessage& request)
 {
-   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
    response.setField(VID_RCC, RCC_SUCCESS);
    sendMessage(&response);    // Send confirmation message
    response.deleteAllFields();
 
    // Change "sync comments" flag
-   if (request->getFieldAsBoolean(VID_SYNC_COMMENTS))
+   if (request.getFieldAsBoolean(VID_SYNC_COMMENTS))
       InterlockedOr(&m_flags, CSF_SYNC_OBJECT_COMMENTS);
    else
       InterlockedAnd(&m_flags, ~CSF_SYNC_OBJECT_COMMENTS);
 
    // Set sync components flag
    bool syncNodeComponents = false;
-   if (request->getFieldAsBoolean(VID_SYNC_NODE_COMPONENTS))
+   if (request.getFieldAsBoolean(VID_SYNC_NODE_COMPONENTS))
       syncNodeComponents = true;
 
    // Prepare message
@@ -2577,7 +2562,7 @@ void ClientSession::getObjects(NXCPMessage *request)
    // Send objects, one per message
    SessionObjectFilterData data;
    data.session = this;
-   data.baseTimeStamp = request->getFieldAsTime(VID_TIMESTAMP);
+   data.baseTimeStamp = request.getFieldAsTime(VID_TIMESTAMP);
 	unique_ptr<SharedObjectArray<NetObj>> objects = g_idxObjectById.getObjects(SessionObjectFilter, &data);
 	for(int i = 0; i < objects->size(); i++)
 	{
@@ -2613,23 +2598,23 @@ void ClientSession::getObjects(NXCPMessage *request)
 /**
  * Send selected objects to client
  */
-void ClientSession::getSelectedObjects(NXCPMessage *request)
+void ClientSession::getSelectedObjects(const NXCPMessage& request)
 {
-   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
    response.setField(VID_RCC, RCC_SUCCESS);
    sendMessage(&response);    // Send confirmation message
    response.deleteAllFields();
 
    // Change "sync comments" flag
-   if (request->getFieldAsBoolean(VID_SYNC_COMMENTS))
+   if (request.getFieldAsBoolean(VID_SYNC_COMMENTS))
       InterlockedOr(&m_flags, CSF_SYNC_OBJECT_COMMENTS);
    else
       InterlockedAnd(&m_flags, ~CSF_SYNC_OBJECT_COMMENTS);
 
-   time_t timestamp = request->getFieldAsTime(VID_TIMESTAMP);
+   time_t timestamp = request.getFieldAsTime(VID_TIMESTAMP);
 	IntegerArray<uint32_t> objects;
-	request->getFieldAsInt32Array(VID_OBJECT_LIST, &objects);
-	uint32_t options = request->getFieldAsUInt16(VID_FLAGS);
+	request.getFieldAsInt32Array(VID_OBJECT_LIST, &objects);
+	uint32_t options = request.getFieldAsUInt16(VID_FLAGS);
 
    // Prepare message
 	response.setCode((options & OBJECT_SYNC_SEND_UPDATES) ? CMD_OBJECT_UPDATE : CMD_OBJECT);
@@ -2671,11 +2656,11 @@ void ClientSession::getSelectedObjects(NXCPMessage *request)
 /**
  * Query objects
  */
-void ClientSession::queryObjects(NXCPMessage *request)
+void ClientSession::queryObjects(const NXCPMessage& request)
 {
-   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
-   TCHAR *query = request->getFieldAsString(VID_QUERY);
+   TCHAR *query = request.getFieldAsString(VID_QUERY);
    TCHAR errorMessage[1024];
    unique_ptr<ObjectArray<ObjectQueryResult>> objects = QueryObjects(query, m_dwUserId, errorMessage, 1024);
    if (objects != nullptr)
@@ -2701,17 +2686,17 @@ void ClientSession::queryObjects(NXCPMessage *request)
 /**
  * Query object details
  */
-void ClientSession::queryObjectDetails(NXCPMessage *request)
+void ClientSession::queryObjectDetails(const NXCPMessage& request)
 {
-   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
-   TCHAR *query = request->getFieldAsString(VID_QUERY);
+   TCHAR *query = request.getFieldAsString(VID_QUERY);
    StringList fields(request, VID_FIELD_LIST_BASE, VID_FIELDS);
    StringList orderBy(request, VID_ORDER_FIELD_LIST_BASE, VID_ORDER_FIELDS);
    StringMap inputFields(request, VID_INPUT_FIELD_BASE, VID_INPUT_FIELD_COUNT);
    TCHAR errorMessage[1024];
    unique_ptr<ObjectArray<ObjectQueryResult>> objects = QueryObjects(query, m_dwUserId, errorMessage, 1024,
-            request->getFieldAsBoolean(VID_READ_ALL_FIELDS), &fields, &orderBy, &inputFields, request->getFieldAsUInt32(VID_RECORD_LIMIT));
+            request.getFieldAsBoolean(VID_READ_ALL_FIELDS), &fields, &orderBy, &inputFields, request.getFieldAsUInt32(VID_RECORD_LIMIT));
    if (objects != nullptr)
    {
       uint32_t *idList = static_cast<uint32_t*>MemAllocLocal(objects->size() * sizeof(uint32_t));
@@ -2739,9 +2724,9 @@ void ClientSession::queryObjectDetails(NXCPMessage *request)
 /**
  * Get object queries
  */
-void ClientSession::getObjectQueries(NXCPMessage *request)
+void ClientSession::getObjectQueries(const NXCPMessage& request)
 {
-   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
    response.setField(VID_RCC, GetObjectQueries(&response));
    sendMessage(response);
 }
@@ -2749,13 +2734,13 @@ void ClientSession::getObjectQueries(NXCPMessage *request)
 /**
  * Create or modify object query
  */
-void ClientSession::modifyObjectQuery(NXCPMessage *request)
+void ClientSession::modifyObjectQuery(const NXCPMessage& request)
 {
-   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
    if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_OBJECT_QUERIES)
    {
       uint32_t queryId;
-      uint32_t rcc = ModifyObjectQuery(*request, &queryId);
+      uint32_t rcc = ModifyObjectQuery(request, &queryId);
       response.setField(VID_RCC, rcc);
       if (rcc == RCC_SUCCESS)
       {
@@ -2774,12 +2759,12 @@ void ClientSession::modifyObjectQuery(NXCPMessage *request)
 /**
  * Delete object query
  */
-void ClientSession::deleteObjectQuery(NXCPMessage *request)
+void ClientSession::deleteObjectQuery(const NXCPMessage& request)
 {
-   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
    if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_OBJECT_QUERIES)
    {
-      uint32_t queryId = request->getFieldAsUInt32(VID_QUERY_ID);
+      uint32_t queryId = request.getFieldAsUInt32(VID_QUERY_ID);
       uint32_t rcc = DeleteObjectQuery(queryId);
       response.setField(VID_RCC, rcc);
       if (rcc == RCC_SUCCESS)
@@ -2796,9 +2781,9 @@ void ClientSession::deleteObjectQuery(NXCPMessage *request)
 /**
  * Send all configuration variables to client
  */
-void ClientSession::getConfigurationVariables(UINT32 requestId)
+void ClientSession::getConfigurationVariables(const NXCPMessage& request)
 {
-   NXCPMessage response(CMD_REQUEST_COMPLETED, requestId);
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    // Check user rights
    if ((m_dwUserId == 0) || (m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONFIG))
@@ -2863,9 +2848,9 @@ void ClientSession::getConfigurationVariables(UINT32 requestId)
 /**
  * Get public configuration variable by name
  */
-void ClientSession::getPublicConfigurationVariable(NXCPMessage *request)
+void ClientSession::getPublicConfigurationVariable(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
@@ -2873,7 +2858,7 @@ void ClientSession::getPublicConfigurationVariable(NXCPMessage *request)
    if (hStmt != nullptr)
    {
       TCHAR name[64];
-      request->getFieldAsString(VID_NAME, name, 64);
+      request.getFieldAsString(VID_NAME, name, 64);
       DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, name, DB_BIND_STATIC);
 
       DB_RESULT hResult = DBSelectPrepared(hStmt);
@@ -2910,17 +2895,17 @@ void ClientSession::getPublicConfigurationVariable(NXCPMessage *request)
 /**
  * Set configuration variable's value
  */
-void ClientSession::setConfigurationVariable(NXCPMessage *pRequest)
+void ClientSession::setConfigurationVariable(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, pRequest->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
 
    TCHAR name[MAX_OBJECT_NAME];
-   pRequest->getFieldAsString(VID_NAME, name, MAX_OBJECT_NAME);
+   request.getFieldAsString(VID_NAME, name, MAX_OBJECT_NAME);
 
    if ((m_dwUserId == 0) || (m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONFIG))
    {
       TCHAR oldValue[MAX_CONFIG_VALUE], newValue[MAX_CONFIG_VALUE];
-      pRequest->getFieldAsString(VID_VALUE, newValue, MAX_CONFIG_VALUE);
+      request.getFieldAsString(VID_VALUE, newValue, MAX_CONFIG_VALUE);
       ConfigReadStr(name, oldValue, MAX_CONFIG_VALUE, _T(""));
       if (ConfigWriteStr(name, newValue, true))
       {
@@ -2946,9 +2931,9 @@ void ClientSession::setConfigurationVariable(NXCPMessage *pRequest)
 /**
  * Set configuration variable's values to default
  */
-void ClientSession::setDefaultConfigurationVariableValues(NXCPMessage *pRequest)
+void ClientSession::setDefaultConfigurationVariableValues(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, pRequest->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
    UINT32 rcc = RCC_SUCCESS;
 
    if (checkSysAccessRights(SYSTEM_ACCESS_SERVER_CONFIG))
@@ -2957,12 +2942,12 @@ void ClientSession::setDefaultConfigurationVariableValues(NXCPMessage *pRequest)
       DB_STATEMENT stmt = DBPrepare(hdb, _T("SELECT default_value FROM config WHERE var_name=?"));
       if (stmt != nullptr)
       {
-         int numVars = pRequest->getFieldAsInt32(VID_NUM_VARIABLES);
+         int numVars = request.getFieldAsInt32(VID_NUM_VARIABLES);
          UINT32 fieldId = VID_VARLIST_BASE;
          TCHAR varName[64], defValue[MAX_CONFIG_VALUE];
          for(int i = 0; i < numVars; i++)
          {
-            pRequest->getFieldAsString(fieldId++, varName, 64);
+            request.getFieldAsString(fieldId++, varName, 64);
             DBBind(stmt, 1, DB_SQLTYPE_VARCHAR, varName, DB_BIND_STATIC);
 
             DB_RESULT result = DBSelectPrepared(stmt);
@@ -2999,12 +2984,12 @@ void ClientSession::setDefaultConfigurationVariableValues(NXCPMessage *pRequest)
 /**
  * Delete configuration variable
  */
-void ClientSession::deleteConfigurationVariable(NXCPMessage *pRequest)
+void ClientSession::deleteConfigurationVariable(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, pRequest->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
 
    TCHAR name[MAX_OBJECT_NAME];
-   pRequest->getFieldAsString(VID_NAME, name, MAX_OBJECT_NAME);
+   request.getFieldAsString(VID_NAME, name, MAX_OBJECT_NAME);
 
    if ((m_dwUserId == 0) || (m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONFIG))
    {
@@ -3031,15 +3016,15 @@ void ClientSession::deleteConfigurationVariable(NXCPMessage *pRequest)
 /**
  * Set configuration clob
  */
-void ClientSession::setConfigCLOB(NXCPMessage *pRequest)
+void ClientSession::setConfigCLOB(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, pRequest->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
 
    TCHAR name[MAX_OBJECT_NAME];
-   pRequest->getFieldAsString(VID_NAME, name, MAX_OBJECT_NAME);
+   request.getFieldAsString(VID_NAME, name, MAX_OBJECT_NAME);
 	if (m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONFIG)
 	{
-		TCHAR *newValue = pRequest->getFieldAsString(VID_VALUE);
+		TCHAR *newValue = request.getFieldAsString(VID_VALUE);
 		if (newValue != nullptr)
 		{
 		   TCHAR *oldValue = ConfigReadCLOB(name, _T(""));
@@ -3073,17 +3058,17 @@ void ClientSession::setConfigCLOB(NXCPMessage *pRequest)
 /**
  * Get value of configuration clob
  */
-void ClientSession::getConfigCLOB(NXCPMessage *pRequest)
+void ClientSession::getConfigCLOB(const NXCPMessage& request)
 {
    NXCPMessage msg;
    TCHAR name[MAX_OBJECT_NAME], *value;
 
-	msg.setId(pRequest->getId());
+	msg.setId(request.getId());
 	msg.setCode(CMD_REQUEST_COMPLETED);
 
 	if (m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONFIG)
 	{
-      pRequest->getFieldAsString(VID_NAME, name, MAX_OBJECT_NAME);
+      request.getFieldAsString(VID_NAME, name, MAX_OBJECT_NAME);
 		value = ConfigReadCLOB(name, nullptr);
 		if (value != nullptr)
 		{
@@ -3291,12 +3276,12 @@ static void SetNodesConflictString(NXCPMessage *msg, int32_t zoneUIN, const Inet
 /**
  * Modify object
  */
-void ClientSession::modifyObject(NXCPMessage *pRequest)
+void ClientSession::modifyObject(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, pRequest->getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    uint32_t rcc = RCC_SUCCESS;
-   uint32_t dwObjectId = pRequest->getFieldAsUInt32(VID_OBJECT_ID);
+   uint32_t dwObjectId = request.getFieldAsUInt32(VID_OBJECT_ID);
    shared_ptr<NetObj> object = FindObjectById(dwObjectId);
    if (object != nullptr)
    {
@@ -3306,14 +3291,14 @@ void ClientSession::modifyObject(NXCPMessage *pRequest)
 
          // If user attempts to change object's ACL, check
          // if he has OBJECT_ACCESS_ACL permission
-         if (pRequest->isFieldExist(VID_ACL_SIZE))
+         if (request.isFieldExist(VID_ACL_SIZE))
             if (!object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_ACL))
                rcc = RCC_ACCESS_DENIED;
 
          // If allowed, change object and set completion code
          if (rcc == RCC_SUCCESS)
 			{
-            rcc = object->modifyFromMessage(pRequest);
+            rcc = object->modifyFromMessage(request);
 	         if (rcc == RCC_SUCCESS)
 				{
 					object->postModify();
@@ -3322,20 +3307,20 @@ void ClientSession::modifyObject(NXCPMessage *pRequest)
 				{
                // Add information about conflicting nodes
                InetAddress ipAddr;
-
-               if (pRequest->isFieldExist(VID_IP_ADDRESS))
+               if (request.isFieldExist(VID_IP_ADDRESS))
                {
-                  ipAddr = pRequest->getFieldAsInetAddress(VID_IP_ADDRESS);
-               } else if (pRequest->isFieldExist(VID_PRIMARY_NAME))
+                  ipAddr = request.getFieldAsInetAddress(VID_IP_ADDRESS);
+               }
+               else if (request.isFieldExist(VID_PRIMARY_NAME))
                {
                   TCHAR primaryName[MAX_DNS_NAME];
-                  pRequest->getFieldAsString(VID_PRIMARY_NAME, primaryName, MAX_DNS_NAME);
+                  request.getFieldAsString(VID_PRIMARY_NAME, primaryName, MAX_DNS_NAME);
                   ipAddr = InetAddress::resolveHostName(primaryName);
                }
-               SetNodesConflictString(&msg, static_cast<Node&>(*object).getZoneUIN(), ipAddr);
+               SetNodesConflictString(&response, static_cast<Node&>(*object).getZoneUIN(), ipAddr);
             }
 			}
-         msg.setField(VID_RCC, rcc);
+         response.setField(VID_RCC, rcc);
 
 			if (rcc == RCC_SUCCESS)
 			{
@@ -3347,25 +3332,25 @@ void ClientSession::modifyObject(NXCPMessage *pRequest)
       }
       else
       {
-         msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
 			writeAuditLog(AUDIT_OBJECTS, false, dwObjectId, _T("Access denied on object modification"));
       }
    }
    else
    {
-      msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
    }
 
    // Send response
-   sendMessage(msg);
+   sendMessage(response);
 }
 
 /**
  * Send users database to client
  */
-void ClientSession::sendUserDB(UINT32 dwRqId)
+void ClientSession::sendUserDB(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, dwRqId);
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
    msg.setField(VID_RCC, RCC_SUCCESS);
    sendMessage(msg);
 	msg.deleteAllFields();
@@ -3390,15 +3375,15 @@ void ClientSession::sendUserDB(UINT32 dwRqId)
 /**
  * Get users from given set
  */
-void ClientSession::getSelectedUsers(NXCPMessage *request)
+void ClientSession::getSelectedUsers(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
    msg.setField(VID_RCC, RCC_SUCCESS);
    sendMessage(msg);
    msg.deleteAllFields();
 
    IntegerArray<uint32_t> userIds;
-   request->getFieldAsInt32Array(VID_OBJECT_LIST, &userIds);
+   request.getFieldAsInt32Array(VID_OBJECT_LIST, &userIds);
 
    // Prepare message
    msg.setCode(CMD_USER_DATA);
@@ -3422,9 +3407,9 @@ void ClientSession::getSelectedUsers(NXCPMessage *request)
 /**
  * Create new user
  */
-void ClientSession::createUser(NXCPMessage *request)
+void ClientSession::createUser(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
 
    // Check user rights
    if (!(m_systemAccessRights & SYSTEM_ACCESS_MANAGE_USERS))
@@ -3434,10 +3419,10 @@ void ClientSession::createUser(NXCPMessage *request)
    else
    {
       TCHAR szUserName[MAX_USER_NAME];
-      request->getFieldAsString(VID_USER_NAME, szUserName, MAX_USER_NAME);
+      request.getFieldAsString(VID_USER_NAME, szUserName, MAX_USER_NAME);
       if (IsValidObjectName(szUserName))
       {
-         bool isGroup = request->getFieldAsBoolean(VID_IS_GROUP);
+         bool isGroup = request.getFieldAsBoolean(VID_IS_GROUP);
          uint32_t userId;
          uint32_t rcc = CreateNewUser(szUserName, isGroup, &userId);
          msg.setField(VID_RCC, rcc);
@@ -3459,9 +3444,9 @@ void ClientSession::createUser(NXCPMessage *request)
 /**
  * Update existing user's data
  */
-void ClientSession::updateUser(NXCPMessage *request)
+void ClientSession::updateUser(const NXCPMessage& request)
 {
-   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_USERS)
    {
@@ -3470,7 +3455,7 @@ void ClientSession::updateUser(NXCPMessage *request)
       if (result == RCC_SUCCESS)
       {
          TCHAR name[MAX_USER_NAME];
-         uint32_t id = request->getFieldAsUInt32(VID_USER_ID);
+         uint32_t id = request.getFieldAsUInt32(VID_USER_ID);
          writeAuditLogWithValues(AUDIT_SECURITY, true, 0, oldData, newData,
                _T("%s %s modified"), (id & GROUP_FLAG) ? _T("Group") : _T("User"), ResolveUserId(id, name, true));
       }
@@ -3489,10 +3474,10 @@ void ClientSession::updateUser(NXCPMessage *request)
 /**
  * Detach LDAP user
  */
-void ClientSession::detachLdapUser(NXCPMessage *request)
+void ClientSession::detachLdapUser(const NXCPMessage& request)
 {
-   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
-   uint32_t id = request->getFieldAsUInt32(VID_USER_ID);
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+   uint32_t id = request.getFieldAsUInt32(VID_USER_ID);
 
    if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_USERS)
    {
@@ -3516,21 +3501,21 @@ void ClientSession::detachLdapUser(NXCPMessage *request)
 /**
  * Delete user
  */
-void ClientSession::deleteUser(NXCPMessage *pRequest)
+void ClientSession::deleteUser(const NXCPMessage& request)
 {
    NXCPMessage msg;
    UINT32 dwUserId;
 
    // Prepare response message
    msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(pRequest->getId());
+   msg.setId(request.getId());
 
    // Check user rights
    if (!(m_systemAccessRights & SYSTEM_ACCESS_MANAGE_USERS))
    {
       msg.setField(VID_RCC, RCC_ACCESS_DENIED);
 
-      dwUserId = pRequest->getFieldAsUInt32(VID_USER_ID);
+      dwUserId = request.getFieldAsUInt32(VID_USER_ID);
       TCHAR name[MAX_USER_NAME];
       ResolveUserId(dwUserId, name, true);
       writeAuditLog(AUDIT_SECURITY, false, 0, _T("Access denied on delete %s %s [%d]"), (dwUserId & GROUP_FLAG) ? _T("group") : _T("user"), name, dwUserId);
@@ -3538,7 +3523,7 @@ void ClientSession::deleteUser(NXCPMessage *pRequest)
    else
    {
       // Get Id of user to be deleted
-      dwUserId = pRequest->getFieldAsUInt32(VID_USER_ID);
+      dwUserId = request.getFieldAsUInt32(VID_USER_ID);
 
       if ((dwUserId != 0) && (dwUserId != GROUP_EVERYONE))
       {
@@ -3573,12 +3558,12 @@ void ClientSession::deleteUser(NXCPMessage *pRequest)
 /**
  * Change management status for the object
  */
-void ClientSession::changeObjectMgmtStatus(NXCPMessage *pRequest)
+void ClientSession::changeObjectMgmtStatus(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, pRequest->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
 
    // Get object id and check access rights
-   uint32_t dwObjectId = pRequest->getFieldAsUInt32(VID_OBJECT_ID);
+   uint32_t dwObjectId = request.getFieldAsUInt32(VID_OBJECT_ID);
    shared_ptr<NetObj> object = FindObjectById(dwObjectId);
    if (object != nullptr)
    {
@@ -3588,7 +3573,7 @@ void ClientSession::changeObjectMgmtStatus(NXCPMessage *pRequest)
 				 (object->getObjectClass() != OBJECT_TEMPLATEGROUP) &&
 				 (object->getObjectClass() != OBJECT_TEMPLATEROOT))
 			{
-				bool bIsManaged = pRequest->getFieldAsBoolean(VID_MGMT_STATUS);
+				bool bIsManaged = request.getFieldAsBoolean(VID_MGMT_STATUS);
 				object->setMgmtStatus(bIsManaged);
 				msg.setField(VID_RCC, RCC_SUCCESS);
             WriteAuditLog(AUDIT_OBJECTS, TRUE, m_dwUserId, m_workstation, m_id, object->getId(),
@@ -3610,20 +3595,18 @@ void ClientSession::changeObjectMgmtStatus(NXCPMessage *pRequest)
    }
 
    // Send response
-   sendMessage(&msg);
+   sendMessage(msg);
 }
 
 /**
  * Enter maintenance mode for object
  */
-void ClientSession::enterMaintenanceMode(NXCPMessage *request)
+void ClientSession::enterMaintenanceMode(const NXCPMessage& request)
 {
-   NXCPMessage msg;
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
 
    // Get object id and check access rights
-   shared_ptr<NetObj> object = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID));
+   shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
    if (object != nullptr)
    {
       if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MAINTENANCE))
@@ -3640,7 +3623,7 @@ void ClientSession::enterMaintenanceMode(NXCPMessage *request)
              (object->getObjectClass() == OBJECT_SERVICEROOT)||
              (object->getObjectClass() == OBJECT_SENSOR))
          {
-            TCHAR *comments = request->getFieldAsString(VID_COMMENTS);
+            TCHAR *comments = request.getFieldAsString(VID_COMMENTS);
             object->enterMaintenanceMode(m_dwUserId, comments);
             MemFree(comments);
             msg.setField(VID_RCC, RCC_SUCCESS);
@@ -3664,20 +3647,18 @@ void ClientSession::enterMaintenanceMode(NXCPMessage *request)
       msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
    }
 
-   sendMessage(&msg);
+   sendMessage(msg);
 }
 
 /**
  * Leave maintenance mode for object
  */
-void ClientSession::leaveMaintenanceMode(NXCPMessage *request)
+void ClientSession::leaveMaintenanceMode(const NXCPMessage& request)
 {
-   NXCPMessage msg;
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
 
    // Get object id and check access rights
-   shared_ptr<NetObj> object = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID));
+   shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
    if (object != nullptr)
    {
       if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MAINTENANCE))
@@ -3716,54 +3697,52 @@ void ClientSession::leaveMaintenanceMode(NXCPMessage *request)
       msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
    }
 
-   sendMessage(&msg);
+   sendMessage(msg);
 }
 
 /**
  * Validate password for currently logged in user
  */
-void ClientSession::validatePassword(NXCPMessage *request)
+void ClientSession::validatePassword(const NXCPMessage& request)
 {
-   NXCPMessage msg;
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
 
 #ifdef UNICODE
    TCHAR password[256];
-   request->getFieldAsString(VID_PASSWORD, password, 256);
+   request.getFieldAsString(VID_PASSWORD, password, 256);
 #else
    char password[256];
-   request->getFieldAsUtf8String(VID_PASSWORD, password, 256);
+   request.getFieldAsUtf8String(VID_PASSWORD, password, 256);
 #endif
 
    bool isValid = false;
    msg.setField(VID_RCC, ValidateUserPassword(m_dwUserId, m_loginName, password, &isValid));
    msg.setField(VID_PASSWORD_IS_VALID, (INT16)(isValid ? 1 : 0));
 
-   sendMessage(&msg);
+   sendMessage(msg);
 }
 
 /**
  * Set user's password
  */
-void ClientSession::setPassword(NXCPMessage *request)
+void ClientSession::setPassword(const NXCPMessage& request)
 {
    NXCPMessage msg;
    msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request->getId());
+   msg.setId(request.getId());
 
-   UINT32 userId = request->getFieldAsUInt32(VID_USER_ID);
+   UINT32 userId = request.getFieldAsUInt32(VID_USER_ID);
    if ((m_systemAccessRights & SYSTEM_ACCESS_MANAGE_USERS) || (userId == m_dwUserId))     // User can change password for itself
    {
       TCHAR newPassword[1024], oldPassword[1024];
 #ifdef UNICODE
-      request->getFieldAsString(VID_PASSWORD, newPassword, 256);
-		if (request->isFieldExist(VID_OLD_PASSWORD))
-			request->getFieldAsString(VID_OLD_PASSWORD, oldPassword, 256);
+      request.getFieldAsString(VID_PASSWORD, newPassword, 256);
+		if (request.isFieldExist(VID_OLD_PASSWORD))
+			request.getFieldAsString(VID_OLD_PASSWORD, oldPassword, 256);
 #else
-      request->getFieldAsUtf8String(VID_PASSWORD, newPassword, 1024);
-		if (request->isFieldExist(VID_OLD_PASSWORD))
-			request->getFieldAsUtf8String(VID_OLD_PASSWORD, oldPassword, 1024);
+      request.getFieldAsUtf8String(VID_PASSWORD, newPassword, 1024);
+		if (request.isFieldExist(VID_OLD_PASSWORD))
+			request.getFieldAsUtf8String(VID_OLD_PASSWORD, oldPassword, 1024);
 #endif
 		else
 			oldPassword[0] = 0;
@@ -3791,13 +3770,13 @@ void ClientSession::setPassword(NXCPMessage *request)
 /**
  * Send node's DCIs to client and lock data collection settings
  */
-void ClientSession::openNodeDCIList(NXCPMessage *request)
+void ClientSession::openNodeDCIList(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
    bool success = false;
 
    // Get node id and check object class and access rights
-   uint32_t objectId = request->getFieldAsUInt32(VID_OBJECT_ID);
+   uint32_t objectId = request.getFieldAsUInt32(VID_OBJECT_ID);
    shared_ptr<NetObj> object = FindObjectById(objectId);
    if (object != nullptr)
    {
@@ -3807,7 +3786,7 @@ void ClientSession::openNodeDCIList(NXCPMessage *request)
          {
             success = true;
             msg.setField(VID_RCC, RCC_SUCCESS);
-            if (!request->getFieldAsBoolean(VID_IS_REFRESH))
+            if (!request.getFieldAsBoolean(VID_IS_REFRESH))
             {
                m_openDataCollectionConfigurations.put(objectId);
             }
@@ -3832,18 +3811,18 @@ void ClientSession::openNodeDCIList(NXCPMessage *request)
 
    // If DCI list was successfully locked, send it to client
    if (success)
-      static_cast<DataCollectionOwner&>(*object).sendItemsToClient(this, request->getId());
+      static_cast<DataCollectionOwner&>(*object).sendItemsToClient(this, request.getId());
 }
 
 /**
  * Unlock node's data collection settings
  */
-void ClientSession::closeNodeDCIList(NXCPMessage *request)
+void ClientSession::closeNodeDCIList(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
 
    // Get node id and check object class and access rights
-   uint32_t objectId = request->getFieldAsUInt32(VID_OBJECT_ID);
+   uint32_t objectId = request.getFieldAsUInt32(VID_OBJECT_ID);
    shared_ptr<NetObj> object = FindObjectById(objectId);
    if (object != nullptr)
    {
@@ -3877,12 +3856,12 @@ void ClientSession::closeNodeDCIList(NXCPMessage *request)
 /**
  * Create, modify, or delete data collection item for node
  */
-void ClientSession::modifyNodeDCI(NXCPMessage *request)
+void ClientSession::modifyNodeDCI(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    // Get node id and check object class and access rights
-   uint32_t dwObjectId = request->getFieldAsUInt32(VID_OBJECT_ID);
+   uint32_t dwObjectId = request.getFieldAsUInt32(VID_OBJECT_ID);
    shared_ptr<NetObj> object = FindObjectById(dwObjectId);
    if (object != nullptr)
    {
@@ -3895,14 +3874,14 @@ void ClientSession::modifyNodeDCI(NXCPMessage *request)
             json_t *oldValue = object->toJson();
 
             uint32_t itemId;
-            int dcObjectType = request->getFieldAsInt16(VID_DCOBJECT_TYPE);
-            switch(request->getCode())
+            int dcObjectType = request.getFieldAsInt16(VID_DCOBJECT_TYPE);
+            switch(request.getCode())
             {
                case CMD_MODIFY_NODE_DCI:
-                  itemId = request->getFieldAsUInt32(VID_DCI_ID);
+                  itemId = request.getFieldAsUInt32(VID_DCI_ID);
                   if (itemId == 0) // create new if id is 0
                   {
-                     int dcObjectType = (int)request->getFieldAsUInt16(VID_DCOBJECT_TYPE);
+                     int dcObjectType = (int)request.getFieldAsUInt16(VID_DCOBJECT_TYPE);
                      // Create dummy DCI
                      DCObject *dcObject;
                      switch(dcObjectType)
@@ -3925,21 +3904,20 @@ void ClientSession::modifyNodeDCI(NXCPMessage *request)
                         if (static_cast<DataCollectionOwner&>(*object).addDCObject(dcObject, false, false))
                         {
                            itemId = dcObject->getId();
-                           msg.setField(VID_RCC, RCC_SUCCESS);
+                           response.setField(VID_RCC, RCC_SUCCESS);
                            success = true;
                            // Return new item id to client
-                           msg.setField(VID_DCI_ID, dcObject->getId());
-                           request->setField(VID_DCI_ID, dcObject->getId());
+                           response.setField(VID_DCI_ID, dcObject->getId());
                         }
                         else  // Unable to add item to node
                         {
                            delete dcObject;
-                           msg.setField(VID_RCC, RCC_DUPLICATE_DCI);
+                           response.setField(VID_RCC, RCC_DUPLICATE_DCI);
                         }
                      }
                      else
                      {
-                        msg.setField(VID_RCC, RCC_INVALID_ARGUMENT);
+                        response.setField(VID_RCC, RCC_INVALID_ARGUMENT);
                      }
                   }
                   else
@@ -3954,7 +3932,7 @@ void ClientSession::modifyNodeDCI(NXCPMessage *request)
                      success = static_cast<DataCollectionOwner&>(*object).updateDCObject(itemId, request, &mapCount, &mapIndex, &mapId, m_dwUserId);
                      if (success)
                      {
-                        msg.setField(VID_RCC, RCC_SUCCESS);
+                        response.setField(VID_RCC, RCC_SUCCESS);
                         shared_ptr<DCObject> dco = static_cast<DataCollectionOwner&>(*object).getDCObjectById(itemId, 0, true);
                         if (dco != nullptr)
                            NotifyClientsOnDCIUpdate(static_cast<DataCollectionOwner&>(*object), dco.get());
@@ -3962,28 +3940,28 @@ void ClientSession::modifyNodeDCI(NXCPMessage *request)
                         // Send index to id mapping for newly created thresholds to client
                         if (dcObjectType == DCO_TYPE_ITEM)
                         {
-                           msg.setField(VID_DCI_NUM_MAPS, mapCount);
+                           response.setField(VID_DCI_NUM_MAPS, mapCount);
                            for(uint32_t i = 0; i < mapCount; i++)
                            {
                               mapId[i] = htonl(mapId[i]);
                               mapIndex[i] = htonl(mapIndex[i]);
                            }
-                           msg.setField(VID_DCI_MAP_IDS, reinterpret_cast<BYTE*>(mapId), sizeof(uint32_t) * mapCount);
-                           msg.setField(VID_DCI_MAP_INDEXES, reinterpret_cast<BYTE*>(mapIndex), sizeof(uint32_t) * mapCount);
+                           response.setField(VID_DCI_MAP_IDS, reinterpret_cast<BYTE*>(mapId), sizeof(uint32_t) * mapCount);
+                           response.setField(VID_DCI_MAP_INDEXES, reinterpret_cast<BYTE*>(mapIndex), sizeof(uint32_t) * mapCount);
                            MemFree(mapId);
                            MemFree(mapIndex);
                         }
                      }
                      else
                      {
-                        msg.setField(VID_RCC, RCC_INVALID_DCI_ID);
+                        response.setField(VID_RCC, RCC_INVALID_DCI_ID);
                      }
                   }
                   break;
                case CMD_DELETE_NODE_DCI:
-                  itemId = request->getFieldAsUInt32(VID_DCI_ID);
+                  itemId = request.getFieldAsUInt32(VID_DCI_ID);
                   success = static_cast<DataCollectionOwner&>(*object).deleteDCObject(itemId, true, m_dwUserId);
-                  msg.setField(VID_RCC, success ? RCC_SUCCESS : RCC_INVALID_DCI_ID);
+                  response.setField(VID_RCC, success ? RCC_SUCCESS : RCC_INVALID_DCI_ID);
                   break;
             }
             if (success)
@@ -4000,33 +3978,32 @@ void ClientSession::modifyNodeDCI(NXCPMessage *request)
          }
          else  // User doesn't have MODIFY rights on object
          {
-            msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+            response.setField(VID_RCC, RCC_ACCESS_DENIED);
             writeAuditLog(AUDIT_OBJECTS, false, dwObjectId, _T("Access denied on changing data collection configuration for object %s"), object->getName());
          }
       }
       else     // Object is not a node
       {
-         msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+         response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
       }
    }
    else  // No object with given ID
    {
-      msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
    }
 
-   // Send response
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
  * Change status for one or more DCIs
  */
-void ClientSession::changeDCIStatus(NXCPMessage *request)
+void ClientSession::changeDCIStatus(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    // Get node id and check object class and access rights
-   shared_ptr<NetObj> object = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID));
+   shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
    if (object != nullptr)
    {
       if (object->isDataCollectionTarget() || (object->getObjectClass() == OBJECT_TEMPLATE))
@@ -4036,50 +4013,49 @@ void ClientSession::changeDCIStatus(NXCPMessage *request)
             UINT32 dwNumItems, *pdwItemList;
             int iStatus;
 
-            iStatus = request->getFieldAsUInt16(VID_DCI_STATUS);
-            dwNumItems = request->getFieldAsUInt32(VID_NUM_ITEMS);
+            iStatus = request.getFieldAsUInt16(VID_DCI_STATUS);
+            dwNumItems = request.getFieldAsUInt32(VID_NUM_ITEMS);
             pdwItemList = MemAllocArray<UINT32>(dwNumItems);
-            request->getFieldAsInt32Array(VID_ITEM_LIST, dwNumItems, pdwItemList);
+            request.getFieldAsInt32Array(VID_ITEM_LIST, dwNumItems, pdwItemList);
             if (static_cast<DataCollectionOwner&>(*object).setItemStatus(dwNumItems, pdwItemList, iStatus))
-               msg.setField(VID_RCC, RCC_SUCCESS);
+               response.setField(VID_RCC, RCC_SUCCESS);
             else
-               msg.setField(VID_RCC, RCC_INVALID_DCI_ID);
+               response.setField(VID_RCC, RCC_INVALID_DCI_ID);
             MemFree(pdwItemList);
          }
          else  // User doesn't have MODIFY rights on object
          {
-            msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+            response.setField(VID_RCC, RCC_ACCESS_DENIED);
          }
       }
       else     // Object is not a node
       {
-         msg.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+         response.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
       }
    }
    else  // No object with given ID
    {
-      msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
    }
 
-   // Send response
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
  * Recalculate values for DCI
  */
-void ClientSession::recalculateDCIValues(NXCPMessage *request)
+void ClientSession::recalculateDCIValues(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
-   shared_ptr<NetObj> object = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID));
+   shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
    if (object != nullptr)
    {
       if (object->isDataCollectionTarget())
       {
          if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
          {
-            UINT32 dciId = request->getFieldAsUInt32(VID_DCI_ID);
+            UINT32 dciId = request.getFieldAsUInt32(VID_DCI_ID);
             debugPrintf(4, _T("recalculateDCIValues: request for DCI %d at target %s [%d]"), dciId, object->getName(), object->getId());
             shared_ptr<DCObject> dci = static_cast<DataCollectionTarget&>(*object).getDCObjectById(dciId, m_dwUserId);
             if (dci != nullptr)
@@ -4090,68 +4066,68 @@ void ClientSession::recalculateDCIValues(NXCPMessage *request)
                   DCIRecalculationJob *job = new DCIRecalculationJob(static_pointer_cast<DataCollectionTarget>(object), static_cast<DCItem*>(dci.get()), m_dwUserId);
                   if (AddJob(job))
                   {
-                     msg.setField(VID_RCC, RCC_SUCCESS);
-                     msg.setField(VID_JOB_ID, job->getId());
+                     response.setField(VID_RCC, RCC_SUCCESS);
+                     response.setField(VID_JOB_ID, job->getId());
                      writeAuditLog(AUDIT_OBJECTS, true, object->getId(), _T("Data recalculation for DCI \"%s\" [%d] on object \"%s\" [%d] started (job ID %d)"),
                               dci->getDescription().cstr(), dci->getId(), object->getName(), object->getId(), job->getId());
                   }
                   else
                   {
                      delete job;
-                     msg.setField(VID_RCC, RCC_INTERNAL_ERROR);
+                     response.setField(VID_RCC, RCC_INTERNAL_ERROR);
                   }
                }
                else
                {
-                  msg.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+                  response.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
                }
             }
             else
             {
-               msg.setField(VID_RCC, RCC_INVALID_DCI_ID);
+               response.setField(VID_RCC, RCC_INVALID_DCI_ID);
                debugPrintf(4, _T("recalculateDCIValues: DCI %d at target %s [%d] not found"), dciId, object->getName(), object->getId());
             }
          }
          else  // User doesn't have MODIFY rights on object
          {
-            msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+            response.setField(VID_RCC, RCC_ACCESS_DENIED);
             writeAuditLog(AUDIT_OBJECTS, false, object->getId(), _T("Access denied on recalculating DCI data"));
          }
       }
       else     // Object is not a node
       {
-         msg.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+         response.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
       }
    }
    else  // No object with given ID
    {
-      msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
    }
 
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
  * Clear all collected data for DCI
  */
-void ClientSession::clearDCIData(NXCPMessage *request)
+void ClientSession::clearDCIData(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    // Get node id and check object class and access rights
-   shared_ptr<NetObj> object = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID));
+   shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
    if (object != nullptr)
    {
       if (object->isDataCollectionTarget())
       {
          if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
          {
-				UINT32 dciId = request->getFieldAsUInt32(VID_DCI_ID);
+				uint32_t dciId = request.getFieldAsUInt32(VID_DCI_ID);
 				debugPrintf(4, _T("ClearDCIData: request for DCI %d at node %d"), dciId, object->getId());
             shared_ptr<DCObject> dci = static_cast<DataCollectionOwner&>(*object).getDCObjectById(dciId, m_dwUserId);
 				if (dci != nullptr)
 				{
-					msg.setField(VID_RCC, dci->deleteAllData() ? RCC_SUCCESS : RCC_DB_FAILURE);
+					response.setField(VID_RCC, dci->deleteAllData() ? RCC_SUCCESS : RCC_DB_FAILURE);
 					debugPrintf(4, _T("ClearDCIData: DCI %d at node %d"), dciId, object->getId());
 	            writeAuditLog(AUDIT_OBJECTS, true, object->getId(), _T("Collected data for DCI \"%s\" [%d] on object \"%s\" [%d] cleared"),
 	                     dci->getDescription().cstr(), dci->getId(), object->getName(), object->getId());
@@ -4159,51 +4135,51 @@ void ClientSession::clearDCIData(NXCPMessage *request)
 				}
 				else
 				{
-					msg.setField(VID_RCC, RCC_INVALID_DCI_ID);
+					response.setField(VID_RCC, RCC_INVALID_DCI_ID);
 					debugPrintf(4, _T("ClearDCIData: DCI %d at node %d not found"), dciId, object->getId());
 				}
          }
          else  // User doesn't have DELETE rights on object
          {
             writeAuditLog(AUDIT_OBJECTS, false, object->getId(), _T("Access denied on clear DCI data"));
-            msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+            response.setField(VID_RCC, RCC_ACCESS_DENIED);
          }
       }
       else     // Object is not a node
       {
-         msg.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+         response.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
       }
    }
    else  // No object with given ID
    {
-      msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
    }
 
    // Send response
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
  * Delete single entry from collected DCI data
  */
-void ClientSession::deleteDCIEntry(NXCPMessage *request)
+void ClientSession::deleteDCIEntry(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
 
    // Get node id and check object class and access rights
-   shared_ptr<NetObj> object = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID));
+   shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
    if (object != nullptr)
    {
       if (object->isDataCollectionTarget())
       {
          if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
          {
-            UINT32 dciId = request->getFieldAsUInt32(VID_DCI_ID);
+            UINT32 dciId = request.getFieldAsUInt32(VID_DCI_ID);
             debugPrintf(4, _T("DeleteDCIEntry: request for DCI %d at node %d"), dciId, object->getId());
             shared_ptr<DCObject> dci = static_cast<DataCollectionOwner&>(*object).getDCObjectById(dciId, m_dwUserId);
             if (dci != nullptr)
             {
-               msg.setField(VID_RCC, dci->deleteEntry(request->getFieldAsUInt32(VID_TIMESTAMP)) ? RCC_SUCCESS : RCC_DB_FAILURE);
+               msg.setField(VID_RCC, dci->deleteEntry(request.getFieldAsUInt32(VID_TIMESTAMP)) ? RCC_SUCCESS : RCC_DB_FAILURE);
                debugPrintf(4, _T("DeleteDCIEntry: DCI %d at node %d"), dciId, object->getId());
                writeAuditLog(AUDIT_OBJECTS, true, object->getId(), _T("Collected data entry for DCI \"%s\" [%d] on object \"%s\" [%d] was deleted"),
                         dci->getDescription().cstr(), dci->getId(), object->getName(), object->getId());
@@ -4237,19 +4213,19 @@ void ClientSession::deleteDCIEntry(NXCPMessage *request)
 /**
  * Force DCI data poll for given DCI
  */
-void ClientSession::forceDCIPoll(NXCPMessage *request)
+void ClientSession::forceDCIPoll(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
 
    // Get node id and check object class and access rights
-   shared_ptr<NetObj> object = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID));
+   shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
    if (object != nullptr)
    {
       if (object->isDataCollectionTarget())
       {
          if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
          {
-				uint32_t dciId = request->getFieldAsUInt32(VID_DCI_ID);
+				uint32_t dciId = request.getFieldAsUInt32(VID_DCI_ID);
 				debugPrintf(4, _T("ForceDCIPoll: request for DCI %d at node %d"), dciId, object->getId());
             shared_ptr<DCObject> dci = static_cast<DataCollectionOwner&>(*object).getDCObjectById(dciId, m_dwUserId);
 				if (dci != nullptr)
@@ -4286,24 +4262,24 @@ void ClientSession::forceDCIPoll(NXCPMessage *request)
 /**
  * Copy or move DCI from one node or template to another
  */
-void ClientSession::copyDCI(NXCPMessage *pRequest)
+void ClientSession::copyDCI(const NXCPMessage& request)
 {
    NXCPMessage msg;
 
    // Prepare response message
    msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(pRequest->getId());
+   msg.setId(request.getId());
 
    // Get source and destination
-   shared_ptr<NetObj> pSource = FindObjectById(pRequest->getFieldAsUInt32(VID_SOURCE_OBJECT_ID));
-   shared_ptr<NetObj> pDestination = FindObjectById(pRequest->getFieldAsUInt32(VID_DESTINATION_OBJECT_ID));
+   shared_ptr<NetObj> pSource = FindObjectById(request.getFieldAsUInt32(VID_SOURCE_OBJECT_ID));
+   shared_ptr<NetObj> pDestination = FindObjectById(request.getFieldAsUInt32(VID_DESTINATION_OBJECT_ID));
    if ((pSource != nullptr) && (pDestination != nullptr))
    {
       // Check object types
       if ((pSource->isDataCollectionTarget() || (pSource->getObjectClass() == OBJECT_TEMPLATE)) &&
 		    (pDestination->isDataCollectionTarget() || (pDestination->getObjectClass() == OBJECT_TEMPLATE)))
       {
-         bool doMove = pRequest->getFieldAsBoolean(VID_MOVE_FLAG);
+         bool doMove = request.getFieldAsBoolean(VID_MOVE_FLAG);
          // Check access rights
          if ((pSource->checkAccessRights(m_dwUserId, doMove ? (OBJECT_ACCESS_READ | OBJECT_ACCESS_MODIFY) : OBJECT_ACCESS_READ)) &&
              (pDestination->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY)))
@@ -4312,9 +4288,9 @@ void ClientSession::copyDCI(NXCPMessage *pRequest)
             int iErrors = 0;
 
             // Get list of items to be copied/moved
-            dwNumItems = pRequest->getFieldAsUInt32(VID_NUM_ITEMS);
+            dwNumItems = request.getFieldAsUInt32(VID_NUM_ITEMS);
             pdwItemList = MemAllocArray<UINT32>(dwNumItems);
-            pRequest->getFieldAsInt32Array(VID_ITEM_LIST, dwNumItems, pdwItemList);
+            request.getFieldAsInt32Array(VID_ITEM_LIST, dwNumItems, pdwItemList);
 
             // Copy items
             for(i = 0; i < dwNumItems; i++)
@@ -4380,19 +4356,19 @@ void ClientSession::copyDCI(NXCPMessage *pRequest)
 /**
  * Perform bulk update of DCI set
  */
-void ClientSession::bulkDCIUpdate(NXCPMessage *request)
+void ClientSession::bulkDCIUpdate(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
 
    // Get node id and check object class and access rights
-   shared_ptr<NetObj> object = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID));
+   shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
    if (object != nullptr)
    {
       if (object->isDataCollectionTarget() || (object->getObjectClass() == OBJECT_TEMPLATE))
       {
          if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
          {
-            msg.setField(VID_NUM_ITEMS, static_cast<DataCollectionOwner&>(*object).updateMultipleDCObjects(*request));
+            msg.setField(VID_NUM_ITEMS, static_cast<DataCollectionOwner&>(*object).updateMultipleDCObjects(request));
             msg.setField(VID_RCC, RCC_SUCCESS);
             writeAuditLog(AUDIT_OBJECTS, true, object->getId(), _T("Successful bulk DCI update"));
          }
@@ -4419,19 +4395,19 @@ void ClientSession::bulkDCIUpdate(NXCPMessage *request)
 /**
  * Send list of thresholds for DCI
  */
-void ClientSession::sendDCIThresholds(NXCPMessage *request)
+void ClientSession::sendDCIThresholds(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
 
    // Get node id and check object class and access rights
-   shared_ptr<NetObj> object = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID));
+   shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
    if (object != nullptr)
    {
       if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
       {
 			if (object->isDataCollectionTarget())
 			{
-				shared_ptr<DCObject> dci = static_cast<DataCollectionTarget&>(*object).getDCObjectById(request->getFieldAsUInt32(VID_DCI_ID), m_dwUserId);
+				shared_ptr<DCObject> dci = static_cast<DataCollectionTarget&>(*object).getDCObjectById(request.getFieldAsUInt32(VID_DCI_ID), m_dwUserId);
 				if ((dci != nullptr) && (dci->getType() == DCO_TYPE_ITEM))
 				{
 				   static_cast<DCItem&>(*dci).fillMessageWithThresholds(&msg, false);
@@ -4760,10 +4736,10 @@ static void ProcessTableDataSelectResults(DB_UNBUFFERED_RESULT hResult, ClientSe
 /**
  * Get collected data for table or simple DCI
  */
-bool ClientSession::getCollectedDataFromDB(NXCPMessage *request, NXCPMessage *response, const DataCollectionTarget& dcTarget, int dciType, HistoricalDataType historicalDataType)
+bool ClientSession::getCollectedDataFromDB(const NXCPMessage& request, NXCPMessage *response, const DataCollectionTarget& dcTarget, int dciType, HistoricalDataType historicalDataType)
 {
 	// Find DCI object
-	shared_ptr<DCObject> dci = dcTarget.getDCObjectById(request->getFieldAsUInt32(VID_DCI_ID), 0);
+	shared_ptr<DCObject> dci = dcTarget.getDCObjectById(request.getFieldAsUInt32(VID_DCI_ID), 0);
 	if (dci == nullptr)
 	{
 		response->setField(VID_RCC, RCC_INVALID_DCI_ID);
@@ -4787,16 +4763,16 @@ bool ClientSession::getCollectedDataFromDB(NXCPMessage *request, NXCPMessage *re
 	}
 
 	// Check that all required data present in message
-	if ((dciType == DCO_TYPE_TABLE) && (historicalDataType != HDT_FULL_TABLE) && (!request->isFieldExist(VID_DATA_COLUMN) || !request->isFieldExist(VID_INSTANCE)))
+	if ((dciType == DCO_TYPE_TABLE) && (historicalDataType != HDT_FULL_TABLE) && (!request.isFieldExist(VID_DATA_COLUMN) || !request.isFieldExist(VID_INSTANCE)))
 	{
 		response->setField(VID_RCC, RCC_INVALID_ARGUMENT);
 		return false;
 	}
 
 	// Get request parameters
-	uint32_t maxRows = request->getFieldAsUInt32(VID_MAX_ROWS);
-	uint32_t timeFrom = request->getFieldAsUInt32(VID_TIME_FROM);
-	uint32_t timeTo = request->getFieldAsUInt32(VID_TIME_TO);
+	uint32_t maxRows = request.getFieldAsUInt32(VID_MAX_ROWS);
+	uint32_t timeFrom = request.getFieldAsUInt32(VID_TIME_FROM);
+	uint32_t timeTo = request.getFieldAsUInt32(VID_TIME_TO);
 
 	if ((maxRows == 0) || (maxRows > MAX_DCI_DATA_RECORDS))
 		maxRows = MAX_DCI_DATA_RECORDS;
@@ -4819,7 +4795,7 @@ bool ClientSession::getCollectedDataFromDB(NXCPMessage *request, NXCPMessage *re
 	   }
 	   else
 	   {
-         request->getFieldAsString(VID_DATA_COLUMN, dataColumn, MAX_COLUMN_NAME);
+         request.getFieldAsString(VID_DATA_COLUMN, dataColumn, MAX_COLUMN_NAME);
          shared_ptr<Table> t = static_cast<DCTable&>(*dci).getLastValue();
          if (t == nullptr)
             goto read_from_db;
@@ -4829,7 +4805,7 @@ bool ClientSession::getCollectedDataFromDB(NXCPMessage *request, NXCPMessage *re
             goto read_from_db;
 
          TCHAR instance[256];
-         request->getFieldAsString(VID_INSTANCE, instance, 256);
+         request.getFieldAsString(VID_INSTANCE, instance, 256);
          int row = t->findRowByInstance(instance);
 
          switch(static_cast<DCTable*>(dci.get())->getColumnDataType(dataColumn))
@@ -4917,7 +4893,7 @@ bool ClientSession::getCollectedDataFromDB(NXCPMessage *request, NXCPMessage *re
 
       // Prepare and send raw message with fetched data
       NXCP_MESSAGE *msg =
-         CreateRawNXCPMessage(CMD_DCI_DATA, request->getId(), 0,
+         CreateRawNXCPMessage(CMD_DCI_DATA, request.getId(), 0,
                               pData, s_rowSize[dataType] + sizeof(DCI_DATA_HEADER),
                               nullptr, isCompressionEnabled());
       MemFree(pData);
@@ -4958,8 +4934,8 @@ read_from_db:
 		DBBind(hStmt, pos++, DB_SQLTYPE_INTEGER, dci->getId());
 		if (dciType == DCO_TYPE_TABLE)
 		{
-			request->getFieldAsString(VID_DATA_COLUMN, dataColumn, MAX_COLUMN_NAME);
-         request->getFieldAsString(VID_INSTANCE, instance, 256);
+			request.getFieldAsString(VID_DATA_COLUMN, dataColumn, MAX_COLUMN_NAME);
+         request.getFieldAsString(VID_INSTANCE, instance, 256);
 		}
 		if (timeFrom != 0)
 			DBBind(hStmt, pos++, DB_SQLTYPE_INTEGER, timeFrom);
@@ -4976,9 +4952,9 @@ read_from_db:
 			sendMessage(response);
 
 			if (historicalDataType == HDT_FULL_TABLE)
-            ProcessTableDataSelectResults(hResult, this, request->getId());
+            ProcessTableDataSelectResults(hResult, this, request.getId());
 			else
-			   ProcessDataSelectResults(hResult, this, request->getId(), dci, historicalDataType, dataColumn, instance);
+			   ProcessDataSelectResults(hResult, this, request.getId(), dci, historicalDataType, dataColumn, instance);
 
 		   DBFreeResult(hResult);
 		}
@@ -4999,12 +4975,12 @@ read_from_db:
 /**
  * Get collected data
  */
-void ClientSession::getCollectedData(NXCPMessage *request)
+void ClientSession::getCollectedData(const NXCPMessage& request)
 {
-   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 	bool success = false;
 
-   shared_ptr<NetObj> object = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID));
+   shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
    if (object != nullptr)
    {
 		if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
@@ -5014,7 +4990,7 @@ void ClientSession::getCollectedData(NXCPMessage *request)
 				if (!(g_flags & AF_DB_CONNECTION_LOST))
 				{
 					success = getCollectedDataFromDB(request, &response, static_cast<DataCollectionTarget&>(*object),
-					         DCO_TYPE_ITEM, static_cast<HistoricalDataType>(request->getFieldAsInt16(VID_HISTORICAL_DATA_TYPE)));
+					         DCO_TYPE_ITEM, static_cast<HistoricalDataType>(request.getFieldAsInt16(VID_HISTORICAL_DATA_TYPE)));
 				}
 				else
 				{
@@ -5044,12 +5020,12 @@ void ClientSession::getCollectedData(NXCPMessage *request)
 /**
  * Get collected data for table DCI
  */
-void ClientSession::getTableCollectedData(NXCPMessage *request)
+void ClientSession::getTableCollectedData(const NXCPMessage& request)
 {
-   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 	bool success = false;
 
-   shared_ptr<NetObj> object = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID));
+   shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
    if (object != nullptr)
    {
 		if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
@@ -5059,7 +5035,7 @@ void ClientSession::getTableCollectedData(NXCPMessage *request)
 				if (!(g_flags & AF_DB_CONNECTION_LOST))
 				{
 					success = getCollectedDataFromDB(request, &response, static_cast<DataCollectionTarget&>(*object),
-					         DCO_TYPE_TABLE, static_cast<HistoricalDataType>(request->getFieldAsInt16(VID_HISTORICAL_DATA_TYPE)));
+					         DCO_TYPE_TABLE, static_cast<HistoricalDataType>(request.getFieldAsInt16(VID_HISTORICAL_DATA_TYPE)));
 				}
 				else
 				{
@@ -5088,12 +5064,12 @@ void ClientSession::getTableCollectedData(NXCPMessage *request)
 /**
  * Send latest collected values for all DCIs of given node
  */
-void ClientSession::getLastValues(NXCPMessage *pRequest)
+void ClientSession::getLastValues(const NXCPMessage& request)
 {
-   NXCPMessage response(CMD_REQUEST_COMPLETED, pRequest->getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    // Get node id and check object class and access rights
-   shared_ptr<NetObj> object = FindObjectById(pRequest->getFieldAsUInt32(VID_OBJECT_ID));
+   shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
    if (object != nullptr)
    {
       if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
@@ -5102,9 +5078,9 @@ void ClientSession::getLastValues(NXCPMessage *pRequest)
          {
             response.setField(VID_RCC,
                static_cast<DataCollectionTarget&>(*object).getLastValues(&response,
-                  pRequest->getFieldAsBoolean(VID_OBJECT_TOOLTIP_ONLY),
-                  pRequest->getFieldAsBoolean(VID_OVERVIEW_ONLY),
-                  pRequest->getFieldAsBoolean(VID_INCLUDE_NOVALUE_OBJECTS),
+                  request.getFieldAsBoolean(VID_OBJECT_TOOLTIP_ONLY),
+                  request.getFieldAsBoolean(VID_OVERVIEW_ONLY),
+                  request.getFieldAsBoolean(VID_INCLUDE_NOVALUE_OBJECTS),
                   m_dwUserId));
          }
          else
@@ -5130,23 +5106,23 @@ void ClientSession::getLastValues(NXCPMessage *pRequest)
  * Error message will never be returned. Will be returned only
  * possible DCI values.
  */
-void ClientSession::getLastValuesByDciId(NXCPMessage *pRequest)
+void ClientSession::getLastValuesByDciId(const NXCPMessage& request)
 {
-   NXCPMessage response(CMD_REQUEST_COMPLETED, pRequest->getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
-   int size = pRequest->getFieldAsInt32(VID_NUM_ITEMS);
+   int size = request.getFieldAsInt32(VID_NUM_ITEMS);
    uint32_t incomingIndex = VID_DCI_VALUES_BASE;
    uint32_t outgoingIndex = VID_DCI_VALUES_BASE;
    for(int i = 0; i < size; i++, incomingIndex += 10)
    {
-      shared_ptr<NetObj> object = FindObjectById(pRequest->getFieldAsUInt32(incomingIndex));
+      shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(incomingIndex));
       if (object != nullptr)
       {
          if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
          {
             if (object->isDataCollectionTarget() || (object->getObjectClass() == OBJECT_TEMPLATE))
             {
-               uint32_t dciID = pRequest->getFieldAsUInt32(incomingIndex+1);
+               uint32_t dciID = request.getFieldAsUInt32(incomingIndex+1);
                shared_ptr<DCObject> dcoObj = static_cast<DataCollectionTarget&>(*object).getDCObjectById(dciID, m_dwUserId);
                if (dcoObj == nullptr)
                   continue;
@@ -5156,8 +5132,8 @@ void ClientSession::getLastValuesByDciId(NXCPMessage *pRequest)
                StringBuffer value;
                if (dcoObj->getType() == DCO_TYPE_TABLE)
                {
-                  TCHAR *column = pRequest->getFieldAsString(incomingIndex + 2);
-                  TCHAR *instance = pRequest->getFieldAsString(incomingIndex + 3);
+                  TCHAR *column = request.getFieldAsString(incomingIndex + 2);
+                  TCHAR *instance = request.getFieldAsString(incomingIndex + 3);
                   if ((column == nullptr) || (instance == nullptr) || (column[0] == 0) || (instance[0] == 0))
                   {
                      MemFree(column);
@@ -5213,12 +5189,12 @@ void ClientSession::getLastValuesByDciId(NXCPMessage *pRequest)
  * Error message will never be returned. Will be returned only
  * possible DCI values.
  */
-void ClientSession::getTooltipLastValues(NXCPMessage *request)
+void ClientSession::getTooltipLastValues(const NXCPMessage& request)
 {
-   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    IntegerArray<uint32_t> nodes;
-   request->getFieldAsInt32Array(VID_OBJECT_LIST, &nodes);
+   request.getFieldAsInt32Array(VID_OBJECT_LIST, &nodes);
    uint32_t index = VID_DCI_VALUES_BASE;
    for(int i = 0; i < nodes.size(); i++)
    {
@@ -5244,19 +5220,19 @@ void ClientSession::getTooltipLastValues(NXCPMessage *request)
 /**
  * Send latest collected value for given table DCI of given node
  */
-void ClientSession::getTableLastValue(NXCPMessage *request)
+void ClientSession::getTableLastValue(const NXCPMessage& request)
 {
-   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    // Get node id and check object class and access rights
-   shared_ptr<NetObj> object = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID));
+   shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
    if (object != nullptr)
    {
       if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
       {
          if (object->isDataCollectionTarget())
          {
-				response.setField(VID_RCC, static_cast<DataCollectionTarget&>(*object).getTableLastValue(request->getFieldAsUInt32(VID_DCI_ID), &response));
+				response.setField(VID_RCC, static_cast<DataCollectionTarget&>(*object).getTableLastValue(request.getFieldAsUInt32(VID_DCI_ID), &response));
          }
          else
          {
@@ -5280,19 +5256,19 @@ void ClientSession::getTableLastValue(NXCPMessage *request)
 /**
  * Send latest collected value for given DCI (table or single valued) of given node
  */
-void ClientSession::getLastValue(NXCPMessage *request)
+void ClientSession::getLastValue(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
 
    // Get node id and check object class and access rights
-   shared_ptr<NetObj> object = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID));
+   shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
    if (object != nullptr)
    {
       if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
       {
          if (object->isDataCollectionTarget())
          {
-            msg.setField(VID_RCC, static_cast<DataCollectionTarget&>(*object).getDciLastValue(request->getFieldAsUInt32(VID_DCI_ID), &msg));
+            msg.setField(VID_RCC, static_cast<DataCollectionTarget&>(*object).getDciLastValue(request.getFieldAsUInt32(VID_DCI_ID), &msg));
          }
          else
          {
@@ -5316,21 +5292,21 @@ void ClientSession::getLastValue(NXCPMessage *request)
 /**
  * Send only active DCI thresholds for given DCI config
  */
-void ClientSession::getActiveThresholds(NXCPMessage *pRequest)
+void ClientSession::getActiveThresholds(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, pRequest->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
 
    UINT32 base = VID_DCI_VALUES_BASE;
-   int numItems = pRequest->getFieldAsInt32(VID_NUM_ITEMS);
+   int numItems = request.getFieldAsInt32(VID_NUM_ITEMS);
 
    for(int i = 0; i < numItems; i++, base+=2)
    {
-      shared_ptr<NetObj> object = FindObjectById(pRequest->getFieldAsUInt32(base));
+      shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(base));
       if (object != nullptr && object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
       {
          if (object->isDataCollectionTarget() || (object->getObjectClass() == OBJECT_TEMPLATE))
          {
-            shared_ptr<DCObject> dcObject = static_cast<DataCollectionTarget&>(*object).getDCObjectById(pRequest->getFieldAsUInt32(base + 1), m_dwUserId);
+            shared_ptr<DCObject> dcObject = static_cast<DataCollectionTarget&>(*object).getDCObjectById(request.getFieldAsUInt32(base + 1), m_dwUserId);
             if (dcObject != nullptr)
                static_cast<DCItem&>(*dcObject).fillMessageWithThresholds(&msg, true);
          }
@@ -5512,7 +5488,7 @@ void ClientSession::processEventProcessingPolicyRecord(NXCPMessage *request)
    {
       if (m_dwRecordsUploaded < m_dwNumRecordsToUpload)
       {
-         m_ppEPPRuleList[m_dwRecordsUploaded] = new EPRule(request);
+         m_ppEPPRuleList[m_dwRecordsUploaded] = new EPRule(*request);
          m_dwRecordsUploaded++;
          if (m_dwRecordsUploaded == m_dwNumRecordsToUpload)
          {
@@ -5549,27 +5525,23 @@ void ClientSession::processEventProcessingPolicyRecord(NXCPMessage *request)
 /**
  * Send compiled MIB file to client
  */
-void ClientSession::sendMib(NXCPMessage *request)
+void ClientSession::sendMib(const NXCPMessage& request)
 {
    TCHAR mibFile[MAX_PATH];
-
    _tcscpy(mibFile, g_netxmsdDataDir);
    _tcscat(mibFile, DFILE_COMPILED_MIB);
-	sendFile(mibFile, request->getId(), 0);
+	sendFile(mibFile, request.getId(), 0);
 }
 
 /**
  * Send timestamp of compiled MIB file to client
  */
-void ClientSession::sendMIBTimestamp(UINT32 dwRqId)
+void ClientSession::sendMIBTimestamp(const NXCPMessage& request)
 {
-   NXCPMessage msg;
    TCHAR szBuffer[MAX_PATH];
    UINT32 dwResult, dwTimeStamp;
 
-   // Prepare response message
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(dwRqId);
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
 
    _tcscpy(szBuffer, g_netxmsdDataDir);
    _tcscat(szBuffer, DFILE_COMPILED_MIB);
@@ -5603,17 +5575,15 @@ void ClientSession::sendMIBTimestamp(UINT32 dwRqId)
 /**
  * Create new object
  */
-void ClientSession::createObject(NXCPMessage *request)
+void ClientSession::createObject(const NXCPMessage& request)
 {
-   NXCPMessage msg;
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
 
-   int objectClass = request->getFieldAsUInt16(VID_OBJECT_CLASS);
-   int32_t zoneUIN = request->getFieldAsUInt32(VID_ZONE_UIN);
+   int objectClass = request.getFieldAsUInt16(VID_OBJECT_CLASS);
+   int32_t zoneUIN = request.getFieldAsUInt32(VID_ZONE_UIN);
 
    // Find parent object
-   shared_ptr<NetObj> parent = FindObjectById(request->getFieldAsUInt32(VID_PARENT_ID));
+   shared_ptr<NetObj> parent = FindObjectById(request.getFieldAsUInt32(VID_PARENT_ID));
 
    TCHAR nodePrimaryName[MAX_DNS_NAME];
    InetAddress ipAddr;
@@ -5621,14 +5591,14 @@ void ClientSession::createObject(NXCPMessage *request)
 
    if (objectClass == OBJECT_NODE)
    {
-		if (request->isFieldExist(VID_PRIMARY_NAME))
+		if (request.isFieldExist(VID_PRIMARY_NAME))
 		{
-			request->getFieldAsString(VID_PRIMARY_NAME, nodePrimaryName, MAX_DNS_NAME);
+			request.getFieldAsString(VID_PRIMARY_NAME, nodePrimaryName, MAX_DNS_NAME);
          ipAddr = ResolveHostName(zoneUIN, nodePrimaryName);
 		}
 		else
 		{
-         ipAddr = request->getFieldAsInetAddress(VID_IP_ADDRESS);
+         ipAddr = request.getFieldAsInetAddress(VID_IP_ADDRESS);
          ipAddr.toString(nodePrimaryName);
 		}
       if ((parent == nullptr) && ipAddr.isValidUnicast())
@@ -5662,7 +5632,7 @@ void ClientSession::createObject(NXCPMessage *request)
 				if (zoneIsValid)
 				{
 				   TCHAR objectName[MAX_OBJECT_NAME];
-					request->getFieldAsString(VID_OBJECT_NAME, objectName, MAX_OBJECT_NAME);
+					request.getFieldAsString(VID_OBJECT_NAME, objectName, MAX_OBJECT_NAME);
 
 					// Do additional validation by modules
                UINT32 moduleRCC = RCC_SUCCESS;
@@ -5685,7 +5655,7 @@ void ClientSession::createObject(NXCPMessage *request)
                   switch(objectClass)
                   {
                      case OBJECT_BUSINESS_SERVICE_PROTOTYPE:
-                        object = make_shared<BusinessServicePrototype>(objectName, request->getFieldAsUInt32(VID_INSTD_METHOD));
+                        object = make_shared<BusinessServicePrototype>(objectName, request.getFieldAsUInt32(VID_INSTD_METHOD));
                         NetObjInsert(object, true, false);
                         break;
                      case OBJECT_BUSINESS_SERVICE:
@@ -5693,7 +5663,7 @@ void ClientSession::createObject(NXCPMessage *request)
                         NetObjInsert(object, true, false);
                         break;
                      case OBJECT_CHASSIS:
-                        object = make_shared<Chassis>(objectName, request->getFieldAsUInt32(VID_CONTROLLER_ID));
+                        object = make_shared<Chassis>(objectName, request.getFieldAsUInt32(VID_CONTROLLER_ID));
                         NetObjInsert(object, true, false);
                         break;
                      case OBJECT_CLUSTER:
@@ -5706,7 +5676,7 @@ void ClientSession::createObject(NXCPMessage *request)
                         NetObjInsert(object, true, false);
                         break;
                      case OBJECT_CONTAINER:
-                        object = make_shared<Container>(objectName, request->getFieldAsUInt32(VID_CATEGORY));
+                        object = make_shared<Container>(objectName, request.getFieldAsUInt32(VID_CATEGORY));
                         NetObjInsert(object, true, false);
                         object->calculateCompoundStatus();  // Force status change to NORMAL
                         break;
@@ -5721,23 +5691,23 @@ void ClientSession::createObject(NXCPMessage *request)
                         break;
                      case OBJECT_INTERFACE:
                         {
-                           InterfaceInfo ifInfo(request->getFieldAsUInt32(VID_IF_INDEX));
+                           InterfaceInfo ifInfo(request.getFieldAsUInt32(VID_IF_INDEX));
                            _tcslcpy(ifInfo.name, objectName, MAX_DB_STRING);
-                           InetAddress addr = request->getFieldAsInetAddress(VID_IP_ADDRESS);
+                           InetAddress addr = request.getFieldAsInetAddress(VID_IP_ADDRESS);
                            if (addr.isValidUnicast())
                               ifInfo.ipAddrList.add(addr);
-                           ifInfo.type = request->getFieldAsUInt32(VID_IF_TYPE);
-                           request->getFieldAsBinary(VID_MAC_ADDR, ifInfo.macAddr, MAC_ADDR_LENGTH);
-                           ifInfo.location.chassis = request->getFieldAsUInt32(VID_PHY_CHASSIS);
-                           ifInfo.location.module = request->getFieldAsUInt32(VID_PHY_MODULE);
-                           ifInfo.location.pic = request->getFieldAsUInt32(VID_PHY_PIC);
-                           ifInfo.location.port = request->getFieldAsUInt32(VID_PHY_PORT);
-                           ifInfo.isPhysicalPort = request->getFieldAsBoolean(VID_IS_PHYS_PORT);
+                           ifInfo.type = request.getFieldAsUInt32(VID_IF_TYPE);
+                           request.getFieldAsBinary(VID_MAC_ADDR, ifInfo.macAddr, MAC_ADDR_LENGTH);
+                           ifInfo.location.chassis = request.getFieldAsUInt32(VID_PHY_CHASSIS);
+                           ifInfo.location.module = request.getFieldAsUInt32(VID_PHY_MODULE);
+                           ifInfo.location.pic = request.getFieldAsUInt32(VID_PHY_PIC);
+                           ifInfo.location.port = request.getFieldAsUInt32(VID_PHY_PORT);
+                           ifInfo.isPhysicalPort = request.getFieldAsBoolean(VID_IS_PHYS_PORT);
                            object = static_cast<Node&>(*parent).createNewInterface(&ifInfo, true, false);
                         }
                         break;
                      case OBJECT_MOBILEDEVICE:
-                        request->getFieldAsString(VID_DEVICE_ID, deviceId, MAX_OBJECT_NAME);
+                        request.getFieldAsString(VID_DEVICE_ID, deviceId, MAX_OBJECT_NAME);
                         object = make_shared<MobileDevice>(objectName, deviceId);
                         NetObjInsert(object, true, false);
                         break;
@@ -5749,8 +5719,8 @@ void ClientSession::createObject(NXCPMessage *request)
                      case OBJECT_NETWORKMAP:
                         {
                            IntegerArray<uint32_t> seeds;
-                           request->getFieldAsInt32Array(VID_SEED_OBJECTS, &seeds);
-                           object = make_shared<NetworkMap>((int)request->getFieldAsUInt16(VID_MAP_TYPE), &seeds);
+                           request.getFieldAsInt32Array(VID_SEED_OBJECTS, &seeds);
+                           object = make_shared<NetworkMap>((int)request.getFieldAsUInt16(VID_MAP_TYPE), &seeds);
                            object->setName(objectName);
                            NetObjInsert(object, true, false);
                         }
@@ -5761,11 +5731,11 @@ void ClientSession::createObject(NXCPMessage *request)
                         object->calculateCompoundStatus();  // Force status change to NORMAL
                         break;
                      case OBJECT_NETWORKSERVICE:
-                        object = make_shared<NetworkService>(request->getFieldAsInt16(VID_SERVICE_TYPE),
-                                                    request->getFieldAsUInt16(VID_IP_PROTO),
-                                                    request->getFieldAsUInt16(VID_IP_PORT),
-                                                    request->getFieldAsString(VID_SERVICE_REQUEST),
-                                                    request->getFieldAsString(VID_SERVICE_RESPONSE),
+                        object = make_shared<NetworkService>(request.getFieldAsInt16(VID_SERVICE_TYPE),
+                                                    request.getFieldAsUInt16(VID_IP_PROTO),
+                                                    request.getFieldAsUInt16(VID_IP_PORT),
+                                                    request.getFieldAsString(VID_SERVICE_REQUEST),
+                                                    request.getFieldAsString(VID_SERVICE_RESPONSE),
                                                     static_pointer_cast<Node>(parent));
                         object->setName(objectName);
                         NetObjInsert(object, true, false);
@@ -5783,12 +5753,12 @@ void ClientSession::createObject(NXCPMessage *request)
                         break;
                      }
                      case OBJECT_RACK:
-                        object = make_shared<Rack>(objectName, (int)request->getFieldAsUInt16(VID_HEIGHT));
+                        object = make_shared<Rack>(objectName, (int)request.getFieldAsUInt16(VID_HEIGHT));
                         NetObjInsert(object, true, false);
                         break;
                      case OBJECT_SUBNET:
                      {
-                        auto ipAddr = request->getFieldAsInetAddress(VID_IP_ADDRESS);
+                        auto ipAddr = request.getFieldAsInetAddress(VID_IP_ADDRESS);
                         IntegerArray<uint32_t> objects = CheckSubnetOverlap(ipAddr, zoneUIN);
                         if (objects.size() > 0)
                         {
@@ -5853,7 +5823,7 @@ void ClientSession::createObject(NXCPMessage *request)
                         {
                            static_cast<Cluster&>(*parent).applyToTarget(static_pointer_cast<DataCollectionTarget>(object));
                         }
-                        else if ((object->getObjectClass() == OBJECT_NETWORKSERVICE) && request->getFieldAsBoolean(VID_CREATE_STATUS_DCI))
+                        else if ((object->getObjectClass() == OBJECT_NETWORKSERVICE) && request.getFieldAsBoolean(VID_CREATE_STATUS_DCI))
                         {
                            TCHAR dciName[MAX_DB_STRING], dciDescription[MAX_DB_STRING];
                            _sntprintf(dciName, MAX_DB_STRING, _T("ChildStatus(%d)"), object->getId());
@@ -5863,7 +5833,7 @@ void ClientSession::createObject(NXCPMessage *request)
                         }
                      }
 
-                     TCHAR *comments = request->getFieldAsString(VID_COMMENTS);
+                     TCHAR *comments = request.getFieldAsString(VID_COMMENTS);
                      if (comments != nullptr)
                      {
                         object->setComments(comments);
@@ -5932,12 +5902,12 @@ void ClientSession::createObject(NXCPMessage *request)
 /**
  * Add cluster node
  */
-void ClientSession::addClusterNode(NXCPMessage *request)
+void ClientSession::addClusterNode(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
-   shared_ptr<NetObj> cluster = FindObjectById(request->getFieldAsUInt32(VID_PARENT_ID));
-   shared_ptr<NetObj> node = FindObjectById(request->getFieldAsUInt32(VID_CHILD_ID));
+   shared_ptr<NetObj> cluster = FindObjectById(request.getFieldAsUInt32(VID_PARENT_ID));
+   shared_ptr<NetObj> node = FindObjectById(request.getFieldAsUInt32(VID_CHILD_ID));
 	if ((cluster != nullptr) && (node != nullptr))
 	{
 		if ((cluster->getObjectClass() == OBJECT_CLUSTER) && (node->getObjectClass() == OBJECT_NODE))
@@ -5949,14 +5919,14 @@ void ClientSession::addClusterNode(NXCPMessage *request)
 				{
 					static_cast<Cluster&>(*cluster).addNode(static_pointer_cast<Node>(node));
 
-					msg.setField(VID_RCC, RCC_SUCCESS);
+					response.setField(VID_RCC, RCC_SUCCESS);
 					WriteAuditLog(AUDIT_OBJECTS, TRUE, m_dwUserId, m_workstation, m_id, cluster->getId(),
 									  _T("Node %s [%d] added to cluster %s [%d]"),
 									  node->getName(), node->getId(), cluster->getName(), cluster->getId());
 				}
 				else
 				{
-					msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+					response.setField(VID_RCC, RCC_ACCESS_DENIED);
 					WriteAuditLog(AUDIT_OBJECTS, FALSE, m_dwUserId, m_workstation, m_id, cluster->getId(),
 									  _T("Access denied on adding node %s [%d] to cluster %s [%d]"),
 									  node->getName(), node->getId(), cluster->getName(), cluster->getId());
@@ -5964,33 +5934,32 @@ void ClientSession::addClusterNode(NXCPMessage *request)
 			}
 			else
 			{
-				msg.setField(VID_RCC, RCC_CLUSTER_MEMBER_ALREADY);
+				response.setField(VID_RCC, RCC_CLUSTER_MEMBER_ALREADY);
 			}
 		}
 		else
 		{
-			msg.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+			response.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
 		}
 	}
 	else
 	{
-		msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+		response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
 	}
 
-   // Send response
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
  * Bind/unbind object
  */
-void ClientSession::changeObjectBinding(NXCPMessage *pRequest, BOOL bBind)
+void ClientSession::changeObjectBinding(const NXCPMessage& request, bool bind)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, pRequest->getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    // Get parent and child objects
-   shared_ptr<NetObj> pParent = FindObjectById(pRequest->getFieldAsUInt32(VID_PARENT_ID));
-   shared_ptr<NetObj> pChild = FindObjectById(pRequest->getFieldAsUInt32(VID_CHILD_ID));
+   shared_ptr<NetObj> pParent = FindObjectById(request.getFieldAsUInt32(VID_PARENT_ID));
+   shared_ptr<NetObj> pChild = FindObjectById(request.getFieldAsUInt32(VID_CHILD_ID));
 
    // Check access rights and change binding
    if ((pParent != nullptr) && (pChild != nullptr))
@@ -6004,7 +5973,7 @@ void ClientSession::changeObjectBinding(NXCPMessage *pRequest, BOOL bBind)
          // For unbind, it can also be template or cluster
          if (IsValidParentClass(pChild->getObjectClass(), pParent->getObjectClass()))
          {
-            if (bBind)
+            if (bind)
             {
                // Prevent loops
                if (!pChild->isChild(pParent->getId()))
@@ -6012,11 +5981,11 @@ void ClientSession::changeObjectBinding(NXCPMessage *pRequest, BOOL bBind)
                   pParent->addChild(pChild);
                   pChild->addParent(pParent);
                   pParent->calculateCompoundStatus();
-                  msg.setField(VID_RCC, RCC_SUCCESS);
+                  response.setField(VID_RCC, RCC_SUCCESS);
                }
                else
                {
-                  msg.setField(VID_RCC, RCC_OBJECT_LOOP);
+                  response.setField(VID_RCC, RCC_OBJECT_LOOP);
                }
             }
             else
@@ -6026,32 +5995,31 @@ void ClientSession::changeObjectBinding(NXCPMessage *pRequest, BOOL bBind)
                pParent->calculateCompoundStatus();
                if ((pParent->getObjectClass() == OBJECT_TEMPLATE) && pChild->isDataCollectionTarget())
                {
-                  static_cast<Template&>(*pParent).queueRemoveFromTarget(pChild->getId(), pRequest->getFieldAsBoolean(VID_REMOVE_DCI));
+                  static_cast<Template&>(*pParent).queueRemoveFromTarget(pChild->getId(), request.getFieldAsBoolean(VID_REMOVE_DCI));
                }
                else if ((pParent->getObjectClass() == OBJECT_CLUSTER) && (pChild->getObjectClass() == OBJECT_NODE))
                {
                   static_pointer_cast<Cluster>(pParent)->removeNode(static_pointer_cast<Node>(pChild));
                }
-               msg.setField(VID_RCC, RCC_SUCCESS);
+               response.setField(VID_RCC, RCC_SUCCESS);
             }
          }
          else
          {
-            msg.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+            response.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
          }
       }
       else
       {
-         msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
       }
    }
    else
    {
-      msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
    }
 
-   // Send response
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
@@ -6065,12 +6033,12 @@ static void DeleteObjectWorker(const shared_ptr<NetObj>& object)
 /**
  * Delete object
  */
-void ClientSession::deleteObject(NXCPMessage *pRequest)
+void ClientSession::deleteObject(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, pRequest->getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    // Find object to be deleted
-   shared_ptr<NetObj> object = FindObjectById(pRequest->getFieldAsUInt32(VID_OBJECT_ID));
+   shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
    if (object != nullptr)
    {
       // Check if it is a built-in object, like "Entire Network"
@@ -6082,33 +6050,32 @@ void ClientSession::deleteObject(NXCPMessage *pRequest)
 				if ((object->getObjectClass() != OBJECT_ZONE) || object->isEmpty())
 				{
                ThreadPoolExecute(g_clientThreadPool, DeleteObjectWorker, object);
-					msg.setField(VID_RCC, RCC_SUCCESS);
+					response.setField(VID_RCC, RCC_SUCCESS);
                WriteAuditLog(AUDIT_OBJECTS, TRUE, m_dwUserId, m_workstation, m_id, object->getId(), _T("Object %s deleted"), object->getName());
 				}
 				else
 				{
-	            msg.setField(VID_RCC, RCC_ZONE_NOT_EMPTY);
+	            response.setField(VID_RCC, RCC_ZONE_NOT_EMPTY);
 				}
          }
          else
          {
-            msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+            response.setField(VID_RCC, RCC_ACCESS_DENIED);
             WriteAuditLog(AUDIT_OBJECTS, FALSE, m_dwUserId, m_workstation, m_id, object->getId(), _T("Access denied on delete object %s"), object->getName());
          }
       }
       else
       {
-         msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
          WriteAuditLog(AUDIT_OBJECTS, FALSE, m_dwUserId, m_workstation, m_id, object->getId(), _T("Access denied on delete object %s"), object->getName());
       }
    }
    else
    {
-      msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
    }
 
-   // Send response
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
@@ -6119,7 +6086,7 @@ void ClientSession::alarmUpdateWorker(Alarm *alarm)
    NXCPMessage msg(CMD_ALARM_UPDATE, 0);
    alarm->fillMessage(&msg);
    m_mutexSendAlarms.lock();
-   sendMessage(&msg);
+   sendMessage(msg);
    m_mutexSendAlarms.unlock();
    delete alarm;
 }
@@ -6146,22 +6113,22 @@ void ClientSession::onAlarmUpdate(UINT32 code, const Alarm *alarm)
 /**
  * Send all alarms to client
  */
-void ClientSession::getAlarms(NXCPMessage *request)
+void ClientSession::getAlarms(const NXCPMessage& request)
 {
    m_mutexSendAlarms.lock();
-   SendAlarmsToClient(request->getId(), this);
+   SendAlarmsToClient(request.getId(), this);
    m_mutexSendAlarms.unlock();
 }
 
 /**
  * Get specific alarm object
  */
-void ClientSession::getAlarm(NXCPMessage *request)
+void ClientSession::getAlarm(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
 
    // Get alarm id and it's source object
-   uint32_t alarmId = request->getFieldAsUInt32(VID_ALARM_ID);
+   uint32_t alarmId = request.getFieldAsUInt32(VID_ALARM_ID);
    shared_ptr<NetObj> object = GetAlarmSourceObject(alarmId);
    if (object != nullptr)
    {
@@ -6189,16 +6156,16 @@ void ClientSession::getAlarm(NXCPMessage *request)
 /**
  * Get all related events for specific alarm object
  */
-void ClientSession::getAlarmEvents(NXCPMessage *request)
+void ClientSession::getAlarmEvents(const NXCPMessage& request)
 {
    NXCPMessage msg;
 
    // Prepare response message
    msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request->getId());
+   msg.setId(request.getId());
 
    // Get alarm id and it's source object
-   UINT32 alarmId = request->getFieldAsUInt32(VID_ALARM_ID);
+   UINT32 alarmId = request.getFieldAsUInt32(VID_ALARM_ID);
    shared_ptr<NetObj> object = GetAlarmSourceObject(alarmId);
    if (object != nullptr)
    {
@@ -6228,28 +6195,28 @@ void ClientSession::getAlarmEvents(NXCPMessage *request)
 /**
  * Acknowledge alarm
  */
-void ClientSession::acknowledgeAlarm(NXCPMessage *pRequest)
+void ClientSession::acknowledgeAlarm(const NXCPMessage& request)
 {
    NXCPMessage msg;
 
    // Prepare response message
    msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(pRequest->getId());
+   msg.setId(request.getId());
 
    // Get alarm id and it's source object
    UINT32 alarmId;
    TCHAR hdref[MAX_HELPDESK_REF_LEN];
    shared_ptr<NetObj> object;
    bool byHelpdeskRef;
-   if (pRequest->isFieldExist(VID_HELPDESK_REF))
+   if (request.isFieldExist(VID_HELPDESK_REF))
    {
-      pRequest->getFieldAsString(VID_HELPDESK_REF, hdref, MAX_HELPDESK_REF_LEN);
+      request.getFieldAsString(VID_HELPDESK_REF, hdref, MAX_HELPDESK_REF_LEN);
       object = GetAlarmSourceObject(hdref);
       byHelpdeskRef = true;
    }
    else
    {
-      alarmId = pRequest->getFieldAsUInt32(VID_ALARM_ID);
+      alarmId = request.getFieldAsUInt32(VID_ALARM_ID);
       object = GetAlarmSourceObject(alarmId);
       byHelpdeskRef = false;
    }
@@ -6260,8 +6227,8 @@ void ClientSession::acknowledgeAlarm(NXCPMessage *pRequest)
       {
 			msg.setField(VID_RCC,
             byHelpdeskRef ?
-            AckAlarmByHDRef(hdref, this, pRequest->getFieldAsUInt16(VID_STICKY_FLAG) != 0, pRequest->getFieldAsUInt32(VID_TIMESTAMP)) :
-            AckAlarmById(alarmId, this, pRequest->getFieldAsUInt16(VID_STICKY_FLAG) != 0, pRequest->getFieldAsUInt32(VID_TIMESTAMP), false));
+            AckAlarmByHDRef(hdref, this, request.getFieldAsUInt16(VID_STICKY_FLAG) != 0, request.getFieldAsUInt32(VID_TIMESTAMP)) :
+            AckAlarmById(alarmId, this, request.getFieldAsUInt16(VID_STICKY_FLAG) != 0, request.getFieldAsUInt32(VID_TIMESTAMP), false));
       }
       else
       {
@@ -6283,14 +6250,14 @@ void ClientSession::acknowledgeAlarm(NXCPMessage *pRequest)
 /**
  * Terminate bulk alarms
  */
-void ClientSession::bulkResolveAlarms(NXCPMessage *pRequest, bool terminate)
+void ClientSession::bulkResolveAlarms(const NXCPMessage& request, bool terminate)
 {
    NXCPMessage msg;
    msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(pRequest->getId());
+   msg.setId(request.getId());
 
    IntegerArray<UINT32> alarmIds, failIds, failCodes;
-   pRequest->getFieldAsInt32Array(VID_ALARM_ID_LIST, &alarmIds);
+   request.getFieldAsInt32Array(VID_ALARM_ID_LIST, &alarmIds);
 
    ResolveAlarmsById(&alarmIds, &failIds, &failCodes, this, terminate, false);
    msg.setField(VID_RCC, RCC_SUCCESS);
@@ -6306,27 +6273,27 @@ void ClientSession::bulkResolveAlarms(NXCPMessage *pRequest, bool terminate)
 /**
  * Resolve/Terminate alarm
  */
-void ClientSession::resolveAlarm(NXCPMessage *pRequest, bool terminate)
+void ClientSession::resolveAlarm(const NXCPMessage& request, bool terminate)
 {
    NXCPMessage msg;
    // Prepare response message
    msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(pRequest->getId());
+   msg.setId(request.getId());
 
    // Get alarm id and its source object
    UINT32 alarmId;
    TCHAR hdref[MAX_HELPDESK_REF_LEN];
    shared_ptr<NetObj> object;
    bool byHelpdeskRef;
-   if (pRequest->isFieldExist(VID_HELPDESK_REF))
+   if (request.isFieldExist(VID_HELPDESK_REF))
    {
-      pRequest->getFieldAsString(VID_HELPDESK_REF, hdref, MAX_HELPDESK_REF_LEN);
+      request.getFieldAsString(VID_HELPDESK_REF, hdref, MAX_HELPDESK_REF_LEN);
       object = GetAlarmSourceObject(hdref);
       byHelpdeskRef = true;
    }
    else
    {
-      alarmId = pRequest->getFieldAsUInt32(VID_ALARM_ID);
+      alarmId = request.getFieldAsUInt32(VID_ALARM_ID);
       object = GetAlarmSourceObject(alarmId);
       byHelpdeskRef = false;
    }
@@ -6361,16 +6328,16 @@ void ClientSession::resolveAlarm(NXCPMessage *pRequest, bool terminate)
 /**
  * Delete alarm
  */
-void ClientSession::deleteAlarm(NXCPMessage *pRequest)
+void ClientSession::deleteAlarm(const NXCPMessage& request)
 {
    NXCPMessage msg;
 
    // Prepare response message
    msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(pRequest->getId());
+   msg.setId(request.getId());
 
    // Get alarm id and it's source object
-   UINT32 alarmId = pRequest->getFieldAsUInt32(VID_ALARM_ID);
+   UINT32 alarmId = request.getFieldAsUInt32(VID_ALARM_ID);
    shared_ptr<NetObj> object = GetAlarmSourceObject(alarmId);
    if (object != nullptr)
    {
@@ -6402,16 +6369,16 @@ void ClientSession::deleteAlarm(NXCPMessage *pRequest)
 /**
  * Open issue in helpdesk system from given alarm
  */
-void ClientSession::openHelpdeskIssue(NXCPMessage *request)
+void ClientSession::openHelpdeskIssue(const NXCPMessage& request)
 {
    NXCPMessage msg;
 
    // Prepare response message
    msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request->getId());
+   msg.setId(request.getId());
 
    // Get alarm id and it's source object
-   UINT32 alarmId = request->getFieldAsUInt32(VID_ALARM_ID);
+   UINT32 alarmId = request.getFieldAsUInt32(VID_ALARM_ID);
    shared_ptr<NetObj> object = GetAlarmSourceObject(alarmId);
    if (object != nullptr)
    {
@@ -6444,16 +6411,16 @@ void ClientSession::openHelpdeskIssue(NXCPMessage *request)
 /**
  * Get helpdesk URL for given alarm
  */
-void ClientSession::getHelpdeskUrl(NXCPMessage *request)
+void ClientSession::getHelpdeskUrl(const NXCPMessage& request)
 {
    NXCPMessage msg;
 
    // Prepare response message
    msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request->getId());
+   msg.setId(request.getId());
 
    // Get alarm id and it's source object
-   UINT32 alarmId = request->getFieldAsUInt32(VID_ALARM_ID);
+   UINT32 alarmId = request.getFieldAsUInt32(VID_ALARM_ID);
    shared_ptr<NetObj> object = GetAlarmSourceObject(alarmId);
    if (object != nullptr)
    {
@@ -6484,24 +6451,24 @@ void ClientSession::getHelpdeskUrl(NXCPMessage *request)
 /**
  * Unlink helpdesk issue from alarm
  */
-void ClientSession::unlinkHelpdeskIssue(NXCPMessage *request)
+void ClientSession::unlinkHelpdeskIssue(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
 
    // Get alarm id and it's source object
    UINT32 alarmId;
    TCHAR hdref[MAX_HELPDESK_REF_LEN];
    shared_ptr<NetObj> object;
    bool byHelpdeskRef;
-   if (request->isFieldExist(VID_HELPDESK_REF))
+   if (request.isFieldExist(VID_HELPDESK_REF))
    {
-      request->getFieldAsString(VID_HELPDESK_REF, hdref, MAX_HELPDESK_REF_LEN);
+      request.getFieldAsString(VID_HELPDESK_REF, hdref, MAX_HELPDESK_REF_LEN);
       object = GetAlarmSourceObject(hdref);
       byHelpdeskRef = true;
    }
    else
    {
-      alarmId = request->getFieldAsUInt32(VID_ALARM_ID);
+      alarmId = request.getFieldAsUInt32(VID_ALARM_ID);
       object = GetAlarmSourceObject(alarmId);
       byHelpdeskRef = false;
    }
@@ -6536,16 +6503,16 @@ void ClientSession::unlinkHelpdeskIssue(NXCPMessage *request)
 /**
  * Get comments for given alarm
  */
-void ClientSession::getAlarmComments(NXCPMessage *request)
+void ClientSession::getAlarmComments(const NXCPMessage& request)
 {
    NXCPMessage msg;
 
    // Prepare response message
    msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request->getId());
+   msg.setId(request.getId());
 
    // Get alarm id and it's source object
-   UINT32 alarmId = request->getFieldAsUInt32(VID_ALARM_ID);
+   UINT32 alarmId = request.getFieldAsUInt32(VID_ALARM_ID);
    shared_ptr<NetObj> object = GetAlarmSourceObject(alarmId);
    if (object != nullptr)
    {
@@ -6573,24 +6540,24 @@ void ClientSession::getAlarmComments(NXCPMessage *request)
 /**
  * Update alarm comment
  */
-void ClientSession::updateAlarmComment(NXCPMessage *request)
+void ClientSession::updateAlarmComment(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
 
    // Get alarm id and it's source object
    UINT32 alarmId;
    TCHAR hdref[MAX_HELPDESK_REF_LEN];
    shared_ptr<NetObj> object;
    bool byHelpdeskRef;
-   if (request->isFieldExist(VID_HELPDESK_REF))
+   if (request.isFieldExist(VID_HELPDESK_REF))
    {
-      request->getFieldAsString(VID_HELPDESK_REF, hdref, MAX_HELPDESK_REF_LEN);
+      request.getFieldAsString(VID_HELPDESK_REF, hdref, MAX_HELPDESK_REF_LEN);
       object = GetAlarmSourceObject(hdref);
       byHelpdeskRef = true;
    }
    else
    {
-      alarmId = request->getFieldAsUInt32(VID_ALARM_ID);
+      alarmId = request.getFieldAsUInt32(VID_ALARM_ID);
       object = GetAlarmSourceObject(alarmId);
       byHelpdeskRef = false;
    }
@@ -6599,8 +6566,8 @@ void ClientSession::updateAlarmComment(NXCPMessage *request)
       // User should have "update alarm" right to the object
 		if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_UPDATE_ALARMS))
       {
-			UINT32 commentId = request->getFieldAsUInt32(VID_COMMENT_ID);
-			TCHAR *text = request->getFieldAsString(VID_COMMENTS);
+			UINT32 commentId = request.getFieldAsUInt32(VID_COMMENT_ID);
+			TCHAR *text = request.getFieldAsString(VID_COMMENTS);
 			msg.setField(VID_RCC,
             byHelpdeskRef ?
             AddAlarmComment(hdref, CHECK_NULL(text), m_dwUserId) :
@@ -6626,19 +6593,19 @@ void ClientSession::updateAlarmComment(NXCPMessage *request)
 /**
  * Delete alarm comment
  */
-void ClientSession::deleteAlarmComment(NXCPMessage *request)
+void ClientSession::deleteAlarmComment(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
 
    // Get alarm id and it's source object
-   UINT32 alarmId = request->getFieldAsUInt32(VID_ALARM_ID);
+   UINT32 alarmId = request.getFieldAsUInt32(VID_ALARM_ID);
    shared_ptr<NetObj> object = GetAlarmSourceObject(alarmId);
    if (object != nullptr)
    {
       // User should have "acknowledge alarm" right to the object
 		if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_UPDATE_ALARMS))
       {
-			UINT32 commentId = request->getFieldAsUInt32(VID_COMMENT_ID);
+			UINT32 commentId = request.getFieldAsUInt32(VID_COMMENT_ID);
 			msg.setField(VID_RCC, DeleteAlarmCommentByID(alarmId, commentId));
       }
       else
@@ -6660,10 +6627,10 @@ void ClientSession::deleteAlarmComment(NXCPMessage *request)
 /**
  * Update alarm status flow mode
  */
-void ClientSession::updateAlarmStatusFlow(NXCPMessage *request)
+void ClientSession::updateAlarmStatusFlow(const NXCPMessage& request)
 {
-   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
-   int status = request->getFieldAsUInt32(VID_ALARM_STATUS_FLOW_STATE);
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+   int status = request.getFieldAsUInt32(VID_ALARM_STATUS_FLOW_STATE);
 
    ConfigWriteInt(_T("Alarms.StrictStatusFlow"), status, false);
    response.setField(VID_RCC, RCC_SUCCESS);
@@ -6674,14 +6641,14 @@ void ClientSession::updateAlarmStatusFlow(NXCPMessage *request)
 /**
  * Create new server action
  */
-void ClientSession::createAction(NXCPMessage *request)
+void ClientSession::createAction(const NXCPMessage& request)
 {
-   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_ACTIONS)
    {
       TCHAR actionName[MAX_OBJECT_NAME];
-      request->getFieldAsString(VID_ACTION_NAME, actionName, MAX_OBJECT_NAME);
+      request.getFieldAsString(VID_ACTION_NAME, actionName, MAX_OBJECT_NAME);
       uint32_t actionId;
       uint32_t rcc = CreateAction(actionName, &actionId);
       response.setField(VID_RCC, rcc);
@@ -6699,10 +6666,9 @@ void ClientSession::createAction(NXCPMessage *request)
 /**
  * Update existing action's data
  */
-void ClientSession::updateAction(NXCPMessage *request)
+void ClientSession::updateAction(const NXCPMessage& request)
 {
-   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
-
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
    if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_ACTIONS)
    {
       response.setField(VID_RCC, ModifyActionFromMessage(request));
@@ -6711,21 +6677,20 @@ void ClientSession::updateAction(NXCPMessage *request)
    {
       response.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
-
    sendMessage(response);
 }
 
 /**
  * Delete action
  */
-void ClientSession::deleteAction(NXCPMessage *request)
+void ClientSession::deleteAction(const NXCPMessage& request)
 {
-   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_ACTIONS)
    {
       // Get Id of action to be deleted
-      uint32_t actionId = request->getFieldAsUInt32(VID_ACTION_ID);
+      uint32_t actionId = request.getFieldAsUInt32(VID_ACTION_ID);
       if (!g_pEventPolicy->isActionInUse(actionId))
       {
          response.setField(VID_RCC, DeleteAction(actionId));
@@ -6774,44 +6739,38 @@ void ClientSession::onActionDBUpdate(UINT32 dwCode, const Action *action)
 /**
  * Send all actions to client
  */
-void ClientSession::sendAllActions(UINT32 dwRqId)
+void ClientSession::sendAllActions(const NXCPMessage& request)
 {
-   NXCPMessage msg;
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
 
-   // Prepare response message
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(dwRqId);
-
-   // Check user rights
-   if ((m_systemAccessRights & SYSTEM_ACCESS_MANAGE_ACTIONS) ||
-       (m_systemAccessRights & SYSTEM_ACCESS_EPP))
+   if ((m_systemAccessRights & SYSTEM_ACCESS_MANAGE_ACTIONS) || (m_systemAccessRights & SYSTEM_ACCESS_EPP))
    {
       msg.setField(VID_RCC, RCC_SUCCESS);
-      sendMessage(&msg);
+      sendMessage(msg);
       m_mutexSendActions.lock();
-      SendActionsToClient(this, dwRqId);
+      SendActionsToClient(this, request.getId());
       m_mutexSendActions.unlock();
    }
    else
    {
       msg.setField(VID_RCC, RCC_ACCESS_DENIED);
-      sendMessage(&msg);
+      sendMessage(msg);
    }
 }
 
 /**
  * Perform a forced node poll
  */
-void ClientSession::forcedNodePoll(NXCPMessage *pRequest)
+void ClientSession::forcedNodePoll(const NXCPMessage& request)
 {
-   NXCPMessage response(CMD_REQUEST_COMPLETED, pRequest->getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    bool isValidPoll = false;
-   int pollType = pRequest->getFieldAsUInt16(VID_POLL_TYPE);
+   int pollType = request.getFieldAsUInt16(VID_POLL_TYPE);
 
    // Find object to be polled
    Pollable *pollableObject;
-   shared_ptr<NetObj> object = FindObjectById(pRequest->getFieldAsUInt32(VID_OBJECT_ID));
+   shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
    if (object != nullptr)
    {
       pollableObject = object->getAsPollable();
@@ -6840,7 +6799,7 @@ void ClientSession::forcedNodePoll(NXCPMessage *pRequest)
          if (((pollType == POLL_CONFIGURATION_FULL) && object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY)) ||
                ((pollType != POLL_CONFIGURATION_FULL) && object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ)))
          {
-            sendPollerMsg(pRequest->getId(), _T("Poll request accepted, waiting for outstanding polling requests to complete...\r\n"));
+            sendPollerMsg(request.getId(), _T("Poll request accepted, waiting for outstanding polling requests to complete...\r\n"));
             response.setField(VID_RCC, RCC_SUCCESS);
          }
          else
@@ -6867,39 +6826,39 @@ void ClientSession::forcedNodePoll(NXCPMessage *pRequest)
       switch(pollType)
       {
          case POLL_STATUS:
-            pollableObject->doForcedStatusPoll(RegisterPoller(PollerType::STATUS, object), this, pRequest->getId());
+            pollableObject->doForcedStatusPoll(RegisterPoller(PollerType::STATUS, object), this, request.getId());
             break;
          case POLL_CONFIGURATION_FULL:
             if (object->getObjectClass() == OBJECT_NODE)
                static_cast<Node&>(*object).setRecheckCapsFlag();
             // intentionally no break here
          case POLL_CONFIGURATION_NORMAL:
-            pollableObject->doForcedConfigurationPoll(RegisterPoller(PollerType::CONFIGURATION, object), this, pRequest->getId());
+            pollableObject->doForcedConfigurationPoll(RegisterPoller(PollerType::CONFIGURATION, object), this, request.getId());
             break;
          case POLL_INSTANCE_DISCOVERY:
-            pollableObject->doForcedInstanceDiscoveryPoll(RegisterPoller(PollerType::INSTANCE_DISCOVERY, object), this, pRequest->getId());
+            pollableObject->doForcedInstanceDiscoveryPoll(RegisterPoller(PollerType::INSTANCE_DISCOVERY, object), this, request.getId());
             break;
          case POLL_TOPOLOGY:
-            pollableObject->doForcedTopologyPoll(RegisterPoller(PollerType::TOPOLOGY, object), this, pRequest->getId());
+            pollableObject->doForcedTopologyPoll(RegisterPoller(PollerType::TOPOLOGY, object), this, request.getId());
             break;
          case POLL_ROUTING_TABLE:
-            pollableObject->doForcedRoutingTablePoll(RegisterPoller(PollerType::ROUTING_TABLE, object), this, pRequest->getId());
+            pollableObject->doForcedRoutingTablePoll(RegisterPoller(PollerType::ROUTING_TABLE, object), this, request.getId());
             break;
          case POLL_DISCOVERY:
-            pollableObject->doForcedDiscoveryPoll(RegisterPoller(PollerType::DISCOVERY, object), this, pRequest->getId());
+            pollableObject->doForcedDiscoveryPoll(RegisterPoller(PollerType::DISCOVERY, object), this, request.getId());
             break;
          case POLL_INTERFACE_NAMES:
             if (object->getObjectClass() == OBJECT_NODE)
             {
-               static_cast<Node&>(*object).updateInterfaceNames(this, pRequest->getId());
+               static_cast<Node&>(*object).updateInterfaceNames(this, request.getId());
             }
             break;
          default:
-            sendPollerMsg(pRequest->getId(), _T("Invalid poll type requested\r\n"));
+            sendPollerMsg(request.getId(), _T("Invalid poll type requested\r\n"));
             break;
       }
 
-      NXCPMessage msg(CMD_POLLING_INFO, pRequest->getId());
+      NXCPMessage msg(CMD_POLLING_INFO, request.getId());
       msg.setField(VID_RCC, RCC_SUCCESS);
       sendMessage(&msg);
    }
@@ -6919,12 +6878,12 @@ void ClientSession::sendPollerMsg(uint32_t requestId, const TCHAR *text)
 /**
  * Receive event from user
  */
-void ClientSession::onTrap(NXCPMessage *request)
+void ClientSession::onTrap(const NXCPMessage& request)
 {
-   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    // Find event's source object
-   uint32_t objectId = request->getFieldAsUInt32(VID_OBJECT_ID);
+   uint32_t objectId = request.getFieldAsUInt32(VID_OBJECT_ID);
    shared_ptr<NetObj> object;
    if (objectId != 0)
 	{
@@ -6947,18 +6906,18 @@ void ClientSession::onTrap(NXCPMessage *request)
       // User should have SEND_EVENTS access right to object
       if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_SEND_EVENTS))
       {
-         uint32_t eventCode = request->getFieldAsUInt32(VID_EVENT_CODE);
-			if ((eventCode == 0) && request->isFieldExist(VID_EVENT_NAME))
+         uint32_t eventCode = request.getFieldAsUInt32(VID_EVENT_CODE);
+			if ((eventCode == 0) && request.isFieldExist(VID_EVENT_NAME))
 			{
 				TCHAR eventName[256];
-				request->getFieldAsString(VID_EVENT_NAME, eventName, 256);
+				request.getFieldAsString(VID_EVENT_NAME, eventName, 256);
 				eventCode = EventCodeFromName(eventName, 0);
 			}
 		   TCHAR userTag[MAX_USERTAG_LENGTH] = _T("");
-			request->getFieldAsString(VID_USER_TAG, userTag, MAX_USERTAG_LENGTH);
+			request.getFieldAsString(VID_USER_TAG, userTag, MAX_USERTAG_LENGTH);
 			Trim(userTag);
 			StringList parameters(request, VID_EVENT_ARG_BASE, VID_NUM_ARGS);
-         bool success = PostEventWithTag(eventCode, EventOrigin::CLIENT, request->getFieldAsTime(VID_ORIGIN_TIMESTAMP), object->getId(), userTag, parameters);
+         bool success = PostEventWithTag(eventCode, EventOrigin::CLIENT, request.getFieldAsTime(VID_ORIGIN_TIMESTAMP), object->getId(), userTag, parameters);
          response.setField(VID_RCC, success ? RCC_SUCCESS : RCC_INVALID_EVENT_CODE);
       }
       else
@@ -6977,12 +6936,12 @@ void ClientSession::onTrap(NXCPMessage *request)
 /**
  * Wake up node
  */
-void ClientSession::onWakeUpNode(NXCPMessage *request)
+void ClientSession::onWakeUpNode(const NXCPMessage& request)
 {
-   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    // Find node or interface object
-   shared_ptr<NetObj> object = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID));
+   shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
    if (object != nullptr)
    {
       if ((object->getObjectClass() == OBJECT_NODE) ||
@@ -7019,19 +6978,19 @@ void ClientSession::onWakeUpNode(NXCPMessage *request)
 /**
  * Query specific parameter from node
  */
-void ClientSession::queryParameter(NXCPMessage *request)
+void ClientSession::queryParameter(const NXCPMessage& request)
 {
-   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    // Find node object
-   shared_ptr<NetObj> object = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID));
+   shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
    if (object != nullptr)
    {
       if (object->getObjectClass() == OBJECT_NODE)
       {
          TCHAR value[256], name[MAX_PARAM_NAME];
-         request->getFieldAsString(VID_NAME, name, MAX_PARAM_NAME);
-         uint32_t rcc = static_cast<Node&>(*object).getMetricForClient(request->getFieldAsUInt16(VID_DCI_SOURCE_TYPE), m_dwUserId, name, value, 256);
+         request.getFieldAsString(VID_NAME, name, MAX_PARAM_NAME);
+         uint32_t rcc = static_cast<Node&>(*object).getMetricForClient(request.getFieldAsUInt16(VID_DCI_SOURCE_TYPE), m_dwUserId, name, value, 256);
          response.setField(VID_RCC, rcc);
          if (rcc == RCC_SUCCESS)
             response.setField(VID_VALUE, value);
@@ -7053,18 +7012,18 @@ void ClientSession::queryParameter(NXCPMessage *request)
 /**
  * Query specific table from node
  */
-void ClientSession::queryAgentTable(NXCPMessage *request)
+void ClientSession::queryAgentTable(const NXCPMessage& request)
 {
-   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    // Find node object
-   shared_ptr<NetObj> object = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID));
+   shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
    if (object != nullptr)
    {
       if (object->getObjectClass() == OBJECT_NODE)
       {
          TCHAR name[MAX_PARAM_NAME];
-         request->getFieldAsString(VID_NAME, name, MAX_PARAM_NAME);
+         request.getFieldAsString(VID_NAME, name, MAX_PARAM_NAME);
 
          // Allow access to agent table Agent.SessionAgents if user has access rights for taking screenshots
          // Data from this table required by client to determine correct UI session name
@@ -7101,19 +7060,16 @@ void ClientSession::queryAgentTable(NXCPMessage *request)
 /**
  * Edit trap configuration record
  */
-void ClientSession::editTrap(int iOperation, NXCPMessage *pRequest)
+void ClientSession::editTrap(const NXCPMessage& request, int operation)
 {
-   NXCPMessage msg;
-   UINT32 dwTrapId, dwResult;
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
 
-   // Prepare response message
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(pRequest->getId());
+   UINT32 dwTrapId, dwResult;
 
    // Check access rights
    if (checkSysAccessRights(SYSTEM_ACCESS_CONFIGURE_TRAPS))
    {
-      switch(iOperation)
+      switch(operation)
       {
          case TRAP_CREATE:
             dwResult = CreateNewTrap(&dwTrapId);
@@ -7122,10 +7078,10 @@ void ClientSession::editTrap(int iOperation, NXCPMessage *pRequest)
                msg.setField(VID_TRAP_ID, dwTrapId);   // Send id of new trap to client
             break;
          case TRAP_UPDATE:
-            msg.setField(VID_RCC, UpdateTrapFromMsg(pRequest));
+            msg.setField(VID_RCC, UpdateTrapFromMsg(request));
             break;
          case TRAP_DELETE:
-            dwTrapId = pRequest->getFieldAsUInt32(VID_TRAP_ID);
+            dwTrapId = request.getFieldAsUInt32(VID_TRAP_ID);
             msg.setField(VID_RCC, DeleteTrap(dwTrapId));
             break;
          default:
@@ -7146,21 +7102,19 @@ void ClientSession::editTrap(int iOperation, NXCPMessage *pRequest)
 /**
  * Send all trap configuration records to client
  */
-void ClientSession::sendAllTraps(UINT32 dwRqId)
+void ClientSession::sendAllTraps(const NXCPMessage& request)
 {
-   NXCPMessage msg;
    BOOL bSuccess = FALSE;
 
    // Prepare response message
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(dwRqId);
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
 
 	if (checkSysAccessRights(SYSTEM_ACCESS_CONFIGURE_TRAPS))
    {
       msg.setField(VID_RCC, RCC_SUCCESS);
-      sendMessage(&msg);
+      sendMessage(msg);
       bSuccess = TRUE;
-      SendTrapsToClient(this, dwRqId);
+      SendTrapsToClient(this, request.getId());
    }
    else
    {
@@ -7170,41 +7124,35 @@ void ClientSession::sendAllTraps(UINT32 dwRqId)
 
    // Send response
    if (!bSuccess)
-      sendMessage(&msg);
+      sendMessage(msg);
 }
 
 /**
  * Send all trap configuration records to client
  * Send all in one message with less information and don't need a lock
  */
-void ClientSession::sendAllTraps2(UINT32 dwRqId)
+void ClientSession::sendAllTraps2(const NXCPMessage& request)
 {
-   NXCPMessage msg;
-
-   // Prepare response message
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(dwRqId);
-
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 	if (checkSysAccessRights(SYSTEM_ACCESS_CONFIGURE_TRAPS))
    {
-      msg.setField(VID_RCC, RCC_SUCCESS);
-      CreateTrapCfgMessage(&msg);
+      response.setField(VID_RCC, RCC_SUCCESS);
+      CreateTrapCfgMessage(&response);
    }
    else
    {
       // Current user has no rights for trap management
-      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
-
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
  * Send list of all installed packages to client
  */
-void ClientSession::getInstalledPackages(UINT32 requestId)
+void ClientSession::getInstalledPackages(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, requestId);
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
 
    BOOL bSuccess = FALSE;
    TCHAR szBuffer[MAX_DB_STRING];
@@ -7230,12 +7178,12 @@ void ClientSession::getInstalledPackages(UINT32 requestId)
             msg.setField(VID_FILE_NAME, DBGetField(hResult, 3, szBuffer, MAX_DB_STRING));
             msg.setField(VID_PACKAGE_NAME, DBGetField(hResult, 4, szBuffer, MAX_DB_STRING));
             msg.setField(VID_DESCRIPTION, DBGetField(hResult, 5, szBuffer, MAX_DB_STRING));
-            sendMessage(&msg);
+            sendMessage(msg);
             msg.deleteAllFields();
          }
 
          msg.setField(VID_PACKAGE_ID, (UINT32)0);
-         sendMessage(&msg);
+         sendMessage(msg);
 
          DBFreeResult(hResult);
       }
@@ -7253,15 +7201,15 @@ void ClientSession::getInstalledPackages(UINT32 requestId)
 
    // Send response
    if (!bSuccess)
-      sendMessage(&msg);
+      sendMessage(msg);
 }
 
 /**
  * Install package to server
  */
-void ClientSession::installPackage(NXCPMessage *request)
+void ClientSession::installPackage(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
 
    if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_PACKAGES)
    {
@@ -7269,11 +7217,11 @@ void ClientSession::installPackage(NXCPMessage *request)
       TCHAR szPkgVersion[MAX_AGENT_VERSION_LEN], szFileName[MAX_DB_STRING];
       TCHAR szPlatform[MAX_PLATFORM_NAME_LEN];
 
-      request->getFieldAsString(VID_PACKAGE_NAME, szPkgName, MAX_PACKAGE_NAME_LEN);
-      request->getFieldAsString(VID_DESCRIPTION, szDescription, MAX_DB_STRING);
-      request->getFieldAsString(VID_FILE_NAME, szFileName, MAX_DB_STRING);
-      request->getFieldAsString(VID_PACKAGE_VERSION, szPkgVersion, MAX_AGENT_VERSION_LEN);
-      request->getFieldAsString(VID_PLATFORM_NAME, szPlatform, MAX_PLATFORM_NAME_LEN);
+      request.getFieldAsString(VID_PACKAGE_NAME, szPkgName, MAX_PACKAGE_NAME_LEN);
+      request.getFieldAsString(VID_DESCRIPTION, szDescription, MAX_DB_STRING);
+      request.getFieldAsString(VID_FILE_NAME, szFileName, MAX_DB_STRING);
+      request.getFieldAsString(VID_PACKAGE_VERSION, szPkgVersion, MAX_AGENT_VERSION_LEN);
+      request.getFieldAsString(VID_PLATFORM_NAME, szPlatform, MAX_PLATFORM_NAME_LEN);
 
       // Remove possible path specification from file name
       const TCHAR *pszCleanFileName = GetCleanFileName(szFileName);
@@ -7300,7 +7248,7 @@ void ClientSession::installPackage(NXCPMessage *request)
                {
                   uint32_t uploadData = CreateUniqueId(IDG_PACKAGE);
                   fInfo->setUploadData(uploadData);
-                  m_downloadFileMap.set(request->getId(), fInfo);
+                  m_downloadFileMap.set(request.getId(), fInfo);
                   msg.setField(VID_RCC, RCC_SUCCESS);
                   msg.setField(VID_PACKAGE_ID, uploadData);
 
@@ -7341,13 +7289,13 @@ void ClientSession::installPackage(NXCPMessage *request)
 /**
  * Remove package from server
  */
-void ClientSession::removePackage(NXCPMessage *request)
+void ClientSession::removePackage(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
 
    if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_PACKAGES)
    {
-      UINT32 pkgId = request->getFieldAsUInt32(VID_PACKAGE_ID);
+      UINT32 pkgId = request.getFieldAsUInt32(VID_PACKAGE_ID);
       msg.setField(VID_RCC, UninstallPackage(pkgId));
    }
    else
@@ -7363,31 +7311,31 @@ void ClientSession::removePackage(NXCPMessage *request)
 /**
  * Get list of parameters supported by given node
  */
-void ClientSession::getParametersList(NXCPMessage *request)
+void ClientSession::getParametersList(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
 
-   shared_ptr<NetObj> object = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID));
+   shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
    if (object != nullptr)
    {
-      int origin = request->isFieldExist(VID_DCI_SOURCE_TYPE) ? request->getFieldAsInt16(VID_DCI_SOURCE_TYPE) : DS_NATIVE_AGENT;
+      int origin = request.isFieldExist(VID_DCI_SOURCE_TYPE) ? request.getFieldAsInt16(VID_DCI_SOURCE_TYPE) : DS_NATIVE_AGENT;
       switch(object->getObjectClass())
       {
          case OBJECT_NODE:
             msg.setField(VID_RCC, RCC_SUCCESS);
-				static_cast<Node&>(*object).writeParamListToMessage(&msg, origin, request->getFieldAsUInt16(VID_FLAGS));
+				static_cast<Node&>(*object).writeParamListToMessage(&msg, origin, request.getFieldAsUInt16(VID_FLAGS));
             break;
          case OBJECT_CLUSTER:
          case OBJECT_TEMPLATE:
             msg.setField(VID_RCC, RCC_SUCCESS);
-            WriteFullParamListToMessage(&msg, origin, request->getFieldAsUInt16(VID_FLAGS));
+            WriteFullParamListToMessage(&msg, origin, request.getFieldAsUInt16(VID_FLAGS));
             break;
          case OBJECT_CHASSIS:
             if (static_cast<Chassis&>(*object).getControllerId() != 0)
             {
                shared_ptr<NetObj> controller = FindObjectById(static_cast<Chassis&>(*object).getControllerId(), OBJECT_NODE);
                if (controller != nullptr)
-                  static_cast<Node&>(*controller).writeParamListToMessage(&msg, origin, request->getFieldAsUInt16(VID_FLAGS));
+                  static_cast<Node&>(*controller).writeParamListToMessage(&msg, origin, request.getFieldAsUInt16(VID_FLAGS));
             }
             break;
          default:
@@ -7407,9 +7355,9 @@ void ClientSession::getParametersList(NXCPMessage *request)
 /**
  * Deplay package to node(s)
  */
-void ClientSession::deployPackage(NXCPMessage *request)
+void ClientSession::deployPackage(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
    PackageDeploymentTask *task = nullptr;
 
    if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_PACKAGES)
@@ -7417,7 +7365,7 @@ void ClientSession::deployPackage(NXCPMessage *request)
       bool success = true;
 
       // Get package ID
-      uint32_t packageId = request->getFieldAsUInt32(VID_PACKAGE_ID);
+      uint32_t packageId = request.getFieldAsUInt32(VID_PACKAGE_ID);
       if (IsValidPackageId(packageId))
       {
          DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
@@ -7437,8 +7385,8 @@ void ClientSession::deployPackage(NXCPMessage *request)
 
                // Create list of nodes to be upgraded
                IntegerArray<uint32_t> objectList;
-               request->getFieldAsInt32Array(VID_OBJECT_LIST, &objectList);
-		         task = new PackageDeploymentTask(this, request->getId(), packageId, szPlatform, szPkgFile, szVersion);
+               request.getFieldAsInt32Array(VID_OBJECT_LIST, &objectList);
+		         task = new PackageDeploymentTask(this, request.getId(), packageId, szPlatform, szPkgFile, szVersion);
                for(int i = 0; i < objectList.size(); i++)
                {
                   shared_ptr<NetObj> object = FindObjectById(objectList.get(i));
@@ -7514,7 +7462,7 @@ void ClientSession::deployPackage(NXCPMessage *request)
    }
 
    // Send response
-   sendMessage(&msg);
+   sendMessage(msg);
 
    // Start deployment thread
    if (task != nullptr)
@@ -7527,17 +7475,13 @@ void ClientSession::deployPackage(NXCPMessage *request)
 /**
  * Apply data collection template to node or mobile device
  */
-void ClientSession::applyTemplate(NXCPMessage *pRequest)
+void ClientSession::applyTemplate(const NXCPMessage& request)
 {
-   NXCPMessage msg;
-
-   // Prepare response message
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(pRequest->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
 
    // Get source and destination
-   shared_ptr<NetObj> pSource = FindObjectById(pRequest->getFieldAsUInt32(VID_SOURCE_OBJECT_ID));
-   shared_ptr<NetObj> pDestination = FindObjectById(pRequest->getFieldAsUInt32(VID_DESTINATION_OBJECT_ID));
+   shared_ptr<NetObj> pSource = FindObjectById(request.getFieldAsUInt32(VID_SOURCE_OBJECT_ID));
+   shared_ptr<NetObj> pDestination = FindObjectById(request.getFieldAsUInt32(VID_DESTINATION_OBJECT_ID));
    if ((pSource != nullptr) && (pDestination != nullptr))
    {
       // Check object types
@@ -7567,17 +7511,17 @@ void ClientSession::applyTemplate(NXCPMessage *pRequest)
    }
 
    // Send response
-   sendMessage(&msg);
+   sendMessage(msg);
 }
 
 /**
  * Get user variable
  */
-void ClientSession::getUserVariable(NXCPMessage *pRequest)
+void ClientSession::getUserVariable(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, pRequest->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
 
-   uint32_t dwUserId = pRequest->isFieldExist(VID_USER_ID) ? pRequest->getFieldAsUInt32(VID_USER_ID) : m_dwUserId;
+   uint32_t dwUserId = request.isFieldExist(VID_USER_ID) ? request.getFieldAsUInt32(VID_USER_ID) : m_dwUserId;
    if ((dwUserId == m_dwUserId) || (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_USERS))
    {
       DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
@@ -7587,7 +7531,7 @@ void ClientSession::getUserVariable(NXCPMessage *pRequest)
       if (hStmt != nullptr)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, dwUserId);
-         DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, pRequest->getFieldAsString(VID_NAME, nullptr, 0), DB_BIND_DYNAMIC);
+         DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, request.getFieldAsString(VID_NAME, nullptr, 0), DB_BIND_DYNAMIC);
          DB_RESULT hResult = DBSelectPrepared(hStmt);
          if (hResult != nullptr)
          {
@@ -7627,7 +7571,7 @@ void ClientSession::getUserVariable(NXCPMessage *pRequest)
 /**
  * Set user variable
  */
-void ClientSession::setUserVariable(NXCPMessage *pRequest)
+void ClientSession::setUserVariable(const NXCPMessage& request)
 {
    NXCPMessage msg;
    TCHAR szVarName[MAX_USERVAR_NAME_LENGTH];
@@ -7637,13 +7581,13 @@ void ClientSession::setUserVariable(NXCPMessage *pRequest)
 
    // Prepare response message
    msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(pRequest->getId());
+   msg.setId(request.getId());
 
-   dwUserId = pRequest->isFieldExist(VID_USER_ID) ? pRequest->getFieldAsUInt32(VID_USER_ID) : m_dwUserId;
+   dwUserId = request.isFieldExist(VID_USER_ID) ? request.getFieldAsUInt32(VID_USER_ID) : m_dwUserId;
    if ((dwUserId == m_dwUserId) || (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_USERS))
    {
       // Check variable name
-      pRequest->getFieldAsString(VID_NAME, szVarName, MAX_USERVAR_NAME_LENGTH);
+      request.getFieldAsString(VID_NAME, szVarName, MAX_USERVAR_NAME_LENGTH);
       if (IsValidObjectName(szVarName))
       {
          DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
@@ -7676,7 +7620,7 @@ void ClientSession::setUserVariable(NXCPMessage *pRequest)
          {
             DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, dwUserId);
             DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, szVarName, DB_BIND_STATIC, MAX_USERVAR_NAME_LENGTH - 1);
-            DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, pRequest->getFieldAsString(VID_VALUE), DB_BIND_DYNAMIC);
+            DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, request.getFieldAsString(VID_VALUE), DB_BIND_DYNAMIC);
 
             if (DBExecute(hStmt))
                msg.setField(VID_RCC, RCC_SUCCESS);
@@ -7702,7 +7646,7 @@ void ClientSession::setUserVariable(NXCPMessage *pRequest)
 /**
  * Enum user variables
  */
-void ClientSession::enumUserVariables(NXCPMessage *pRequest)
+void ClientSession::enumUserVariables(const NXCPMessage& request)
 {
    NXCPMessage msg;
    TCHAR szPattern[MAX_USERVAR_NAME_LENGTH], szQuery[256], szName[MAX_DB_STRING];
@@ -7711,12 +7655,12 @@ void ClientSession::enumUserVariables(NXCPMessage *pRequest)
 
    // Prepare response message
    msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(pRequest->getId());
+   msg.setId(request.getId());
 
-   dwUserId = pRequest->isFieldExist(VID_USER_ID) ? pRequest->getFieldAsUInt32(VID_USER_ID) : m_dwUserId;
+   dwUserId = request.isFieldExist(VID_USER_ID) ? request.getFieldAsUInt32(VID_USER_ID) : m_dwUserId;
    if ((dwUserId == m_dwUserId) || (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_USERS))
    {
-      pRequest->getFieldAsString(VID_SEARCH_PATTERN, szPattern, MAX_USERVAR_NAME_LENGTH);
+      request.getFieldAsString(VID_SEARCH_PATTERN, szPattern, MAX_USERVAR_NAME_LENGTH);
       DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
       _sntprintf(szQuery, 256, _T("SELECT var_name FROM user_profiles WHERE user_id=%d"), dwUserId);
       hResult = DBSelect(hdb, szQuery);
@@ -7754,7 +7698,7 @@ void ClientSession::enumUserVariables(NXCPMessage *pRequest)
 /**
  * Delete user variable(s)
  */
-void ClientSession::deleteUserVariable(NXCPMessage *pRequest)
+void ClientSession::deleteUserVariable(const NXCPMessage& request)
 {
    NXCPMessage msg;
    TCHAR szVarName[MAX_USERVAR_NAME_LENGTH];
@@ -7762,15 +7706,15 @@ void ClientSession::deleteUserVariable(NXCPMessage *pRequest)
 
    // Prepare response message
    msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(pRequest->getId());
+   msg.setId(request.getId());
 
-   dwUserId = pRequest->isFieldExist(VID_USER_ID) ? pRequest->getFieldAsUInt32(VID_USER_ID) : m_dwUserId;
+   dwUserId = request.isFieldExist(VID_USER_ID) ? request.getFieldAsUInt32(VID_USER_ID) : m_dwUserId;
    if ((dwUserId == m_dwUserId) || (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_USERS))
    {
       DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
       // Try to delete variable from database
-      pRequest->getFieldAsString(VID_NAME, szVarName, MAX_USERVAR_NAME_LENGTH);
+      request.getFieldAsString(VID_NAME, szVarName, MAX_USERVAR_NAME_LENGTH);
       TranslateStr(szVarName, _T("*"), _T("%"));
       DB_STATEMENT hStmt = DBPrepare(hdb, _T("DELETE FROM user_profiles WHERE user_id=? AND var_name LIKE ?"));
       if (hStmt != nullptr)
@@ -7799,7 +7743,7 @@ void ClientSession::deleteUserVariable(NXCPMessage *pRequest)
 /**
  * Copy or move user variable(s) to another user
  */
-void ClientSession::copyUserVariable(NXCPMessage *pRequest)
+void ClientSession::copyUserVariable(const NXCPMessage& request)
 {
    NXCPMessage msg;
    TCHAR szVarName[MAX_USERVAR_NAME_LENGTH], szCurrVar[MAX_USERVAR_NAME_LENGTH];
@@ -7810,16 +7754,16 @@ void ClientSession::copyUserVariable(NXCPMessage *pRequest)
 
    // Prepare response message
    msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(pRequest->getId());
+   msg.setId(request.getId());
 
    if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_USERS)
    {
       DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
-      dwSrcUserId = pRequest->isFieldExist(VID_USER_ID) ? pRequest->getFieldAsUInt32(VID_USER_ID) : m_dwUserId;
-      dwDstUserId = pRequest->getFieldAsUInt32(VID_DST_USER_ID);
-      bMove = (BOOL)pRequest->getFieldAsUInt16(VID_MOVE_FLAG);
-      pRequest->getFieldAsString(VID_NAME, szVarName, MAX_USERVAR_NAME_LENGTH);
+      dwSrcUserId = request.isFieldExist(VID_USER_ID) ? request.getFieldAsUInt32(VID_USER_ID) : m_dwUserId;
+      dwDstUserId = request.getFieldAsUInt32(VID_DST_USER_ID);
+      bMove = (BOOL)request.getFieldAsUInt16(VID_MOVE_FLAG);
+      request.getFieldAsString(VID_NAME, szVarName, MAX_USERVAR_NAME_LENGTH);
       TranslateStr(szVarName, _T("*"), _T("%"));
       DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT var_name,var_value FROM user_profiles WHERE user_id=? AND var_name LIKE ?"));
       if (hStmt != nullptr)
@@ -7929,23 +7873,23 @@ void ClientSession::copyUserVariable(NXCPMessage *pRequest)
 /**
  * Change object's zone
  */
-void ClientSession::changeObjectZone(NXCPMessage *pRequest)
+void ClientSession::changeObjectZone(const NXCPMessage& request)
 {
    NXCPMessage msg;
 
    // Prepare response message
    msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(pRequest->getId());
+   msg.setId(request.getId());
 
    // Get object id and check prerequisites
-   shared_ptr<NetObj> object = FindObjectById(pRequest->getFieldAsUInt32(VID_OBJECT_ID));
+   shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
    if (object != nullptr)
    {
       if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
       {
 			if (object->getObjectClass() == OBJECT_NODE)
 			{
-			   int32_t zoneUIN = pRequest->getFieldAsUInt32(VID_ZONE_UIN);
+			   int32_t zoneUIN = request.getFieldAsUInt32(VID_ZONE_UIN);
 				shared_ptr<Zone> zone = FindZoneByUIN(zoneUIN);
 				if (zone != nullptr)
 				{
@@ -7989,18 +7933,18 @@ void ClientSession::changeObjectZone(NXCPMessage *pRequest)
 /**
  * Setup encryption with client
  */
-void ClientSession::setupEncryption(NXCPMessage *request)
+void ClientSession::setupEncryption(const NXCPMessage& request)
 {
    NXCPMessage msg;
 
 #ifdef _WITH_ENCRYPTION
-	m_encryptionRqId = request->getId();
+	m_encryptionRqId = request.getId();
    m_encryptionResult = RCC_TIMEOUT;
 
    // Send request for session key
-	PrepareKeyRequestMsg(&msg, g_pServerKey, request->getFieldAsBoolean(VID_USE_X509_KEY_FORMAT));
-	msg.setId(request->getId());
-   sendMessage(&msg);
+	PrepareKeyRequestMsg(&msg, g_pServerKey, request.getFieldAsBoolean(VID_USE_X509_KEY_FORMAT));
+	msg.setId(request.getId());
+   sendMessage(msg);
    msg.deleteAllFields();
 
    // Wait for encryption setup
@@ -8008,26 +7952,26 @@ void ClientSession::setupEncryption(NXCPMessage *request)
 
    // Send response
    msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request->getId());
+   msg.setId(request.getId());
    msg.setField(VID_RCC, m_encryptionResult);
 #else    /* _WITH_ENCRYPTION not defined */
    msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request->getId());
+   msg.setId(request.getId());
    msg.setField(VID_RCC, RCC_NO_ENCRYPTION_SUPPORT);
 #endif
 
-   sendMessage(&msg);
+   sendMessage(msg);
 }
 
 /**
  * Get agent's configuration file
  */
-void ClientSession::readAgentConfigFile(NXCPMessage *request)
+void ClientSession::readAgentConfigFile(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
 
    // Get object id and check prerequisites
-   shared_ptr<NetObj> object = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID));
+   shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
    if (object != nullptr)
    {
       if (object->getObjectClass() == OBJECT_NODE)
@@ -8082,12 +8026,12 @@ void ClientSession::readAgentConfigFile(NXCPMessage *request)
 /**
  * Write agent's configuration file
  */
-void ClientSession::writeAgentConfigFile(NXCPMessage *request)
+void ClientSession::writeAgentConfigFile(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
 
    // Get object id and check prerequisites
-   shared_ptr<NetObj> object = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID));
+   shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
    if (object != nullptr)
    {
       if (object->getObjectClass() == OBJECT_NODE)
@@ -8097,11 +8041,11 @@ void ClientSession::writeAgentConfigFile(NXCPMessage *request)
             shared_ptr<AgentConnectionEx> pConn = static_cast<Node&>(*object).createAgentConnection();
             if (pConn != nullptr)
             {
-               TCHAR *content = request->getFieldAsString(VID_CONFIG_FILE);
+               TCHAR *content = request.getFieldAsString(VID_CONFIG_FILE);
                uint32_t agentRCC = pConn->writeConfigFile(content);
                MemFree(content);
 
-               if ((request->getFieldAsUInt16(VID_APPLY_FLAG) != 0) && (agentRCC == ERR_SUCCESS))
+               if ((request.getFieldAsUInt16(VID_APPLY_FLAG) != 0) && (agentRCC == ERR_SUCCESS))
                {
                   StringList list;
                   agentRCC = pConn->executeCommand(_T("Agent.Restart"), list);
@@ -8194,21 +8138,21 @@ static void ActionExecuteCallback(ActionCallbackEvent e, const TCHAR *text, void
 /**
  * Execute action on agent
  */
-void ClientSession::executeAction(NXCPMessage *request)
+void ClientSession::executeAction(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
 
    // Get object id and check prerequisites
-   shared_ptr<NetObj> object = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID));
+   shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
    if (object != nullptr)
    {
       if (object->getObjectClass() == OBJECT_NODE)
       {
          TCHAR action[MAX_PARAM_NAME];
          TCHAR originalActionString[MAX_PARAM_NAME];
-         request->getFieldAsString(VID_ACTION_NAME, action, MAX_PARAM_NAME);
+         request.getFieldAsString(VID_ACTION_NAME, action, MAX_PARAM_NAME);
          _tcsncpy(originalActionString, action, MAX_PARAM_NAME);
-         bool expandString = request->getFieldAsBoolean(VID_EXPAND_STRING);
+         bool expandString = request.getFieldAsBoolean(VID_EXPAND_STRING);
 
          if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_CONTROL))
          {
@@ -8220,8 +8164,8 @@ void ClientSession::executeAction(NXCPMessage *request)
                Alarm *alarm = nullptr;
                if (expandString)
                {
-                  inputFields.loadMessage(*request, VID_INPUT_FIELD_BASE, VID_INPUT_FIELD_COUNT);
-                  alarm = FindAlarmById(request->getFieldAsUInt32(VID_ALARM_ID));
+                  inputFields.loadMessage(request, VID_INPUT_FIELD_BASE, VID_INPUT_FIELD_COUNT);
+                  alarm = FindAlarmById(request.getFieldAsUInt32(VID_ALARM_ID));
                   if ((alarm != nullptr) && !object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ_ALARMS) && !alarm->checkCategoryAccess(this))
                   {
                      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
@@ -8235,7 +8179,7 @@ void ClientSession::executeAction(NXCPMessage *request)
                }
                else
                {
-                  int argc = request->getFieldAsInt16(VID_NUM_ARGS);
+                  int argc = request.getFieldAsInt16(VID_NUM_ARGS);
                   if (argc > 64)
                   {
                      debugPrintf(4, _T("executeAction: too many arguments (%d)"), argc);
@@ -8245,14 +8189,14 @@ void ClientSession::executeAction(NXCPMessage *request)
                   list = new StringList();
                   uint32_t fieldId = VID_ACTION_ARG_BASE;
                   for(int i = 0; i < argc; i++)
-                     list->addPreallocated(request->getFieldAsString(fieldId++));
+                     list->addPreallocated(request.getFieldAsString(fieldId++));
                }
 
                uint32_t rcc;
-               bool withOutput = request->getFieldAsBoolean(VID_RECEIVE_OUTPUT);
+               bool withOutput = request.getFieldAsBoolean(VID_RECEIVE_OUTPUT);
                if (withOutput)
                {
-                  ActionExecutionData data(this, request->getId());
+                  ActionExecutionData data(this, request.getId());
                   rcc = pConn->executeCommand(action, *list, true, ActionExecuteCallback, &data);
                }
                else
@@ -8261,7 +8205,7 @@ void ClientSession::executeAction(NXCPMessage *request)
                }
                debugPrintf(4, _T("executeAction: rcc=%d"), rcc);
 
-               if (expandString && (request->getFieldAsInt32(VID_NUM_MASKED_FIELDS) > 0))
+               if (expandString && (request.getFieldAsInt32(VID_NUM_MASKED_FIELDS) > 0))
                {
                   delete list;
                   StringList maskedFields(request, VID_MASKED_FIELD_LIST_BASE, VID_NUM_MASKED_FIELDS);
@@ -8327,136 +8271,131 @@ void ClientSession::executeAction(NXCPMessage *request)
 /**
  * Send tool list to client
  */
-void ClientSession::getObjectTools(UINT32 requestId)
+void ClientSession::getObjectTools(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, requestId);
-   msg.setField(VID_RCC, GetObjectToolsIntoMessage(&msg, m_dwUserId, checkSysAccessRights(SYSTEM_ACCESS_MANAGE_TOOLS)));
-   sendMessage(&msg);
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+   response.setField(VID_RCC, GetObjectToolsIntoMessage(&response, m_dwUserId, checkSysAccessRights(SYSTEM_ACCESS_MANAGE_TOOLS)));
+   sendMessage(response);
 }
 
 /**
  * Send tool list to client
  */
-void ClientSession::getObjectToolDetails(NXCPMessage *request)
+void ClientSession::getObjectToolDetails(const NXCPMessage& request)
 {
-   NXCPMessage msg;
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request->getId());
-
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
    if (checkSysAccessRights(SYSTEM_ACCESS_MANAGE_TOOLS))
    {
-      msg.setField(VID_RCC, GetObjectToolDetailsIntoMessage(request->getFieldAsUInt32(VID_TOOL_ID), &msg));
+      response.setField(VID_RCC, GetObjectToolDetailsIntoMessage(request.getFieldAsUInt32(VID_TOOL_ID), &response));
    }
    else
    {
-      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
       WriteAuditLog(AUDIT_SYSCFG, FALSE, m_dwUserId, m_workstation, m_id, 0, _T("Access denied on reading object tool details"));
    }
-
-   sendMessage(&msg);
-   return;
+   sendMessage(response);
 }
 
 /**
  * Update object tool
  */
-void ClientSession::updateObjectTool(NXCPMessage *request)
+void ClientSession::updateObjectTool(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
    if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_TOOLS)
    {
       uint32_t rcc = UpdateObjectToolFromMessage(request);
-      msg.setField(VID_RCC, rcc);
+      response.setField(VID_RCC, rcc);
       if (rcc == RCC_SUCCESS)
-         writeAuditLog(AUDIT_SYSCFG, true, 0, _T("Object tool [%u] updated"), request->getFieldAsUInt32(VID_TOOL_ID));
+         writeAuditLog(AUDIT_SYSCFG, true, 0, _T("Object tool [%u] updated"), request.getFieldAsUInt32(VID_TOOL_ID));
    }
    else
    {
-      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on updating object tool [%u]"), request->getFieldAsUInt32(VID_TOOL_ID));
-      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on updating object tool [%u]"), request.getFieldAsUInt32(VID_TOOL_ID));
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
  * Delete object tool
  */
-void ClientSession::deleteObjectTool(NXCPMessage *request)
+void ClientSession::deleteObjectTool(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
-   uint32_t toolId = request->getFieldAsUInt32(VID_TOOL_ID);
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+   uint32_t toolId = request.getFieldAsUInt32(VID_TOOL_ID);
    if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_TOOLS)
    {
       uint32_t rcc = DeleteObjectToolFromDB(toolId);
-      msg.setField(VID_RCC, rcc);
+      response.setField(VID_RCC, rcc);
       if (rcc == RCC_SUCCESS)
          writeAuditLog(AUDIT_SYSCFG, true, 0, _T("Object tool [%u] deleted"), toolId);
    }
    else
    {
       writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on deleting object tool [%u]"), toolId);
-      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
  * Change Object Tool status (enabled/disabled)
  */
-void ClientSession::changeObjectToolStatus(NXCPMessage *request)
+void ClientSession::changeObjectToolStatus(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
    if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_TOOLS)
    {
-      uint32_t toolID = request->getFieldAsUInt32(VID_TOOL_ID);
-      msg.setField(VID_RCC, ChangeObjectToolStatus(toolID, request->getFieldAsBoolean(VID_STATE)));
+      uint32_t toolID = request.getFieldAsUInt32(VID_TOOL_ID);
+      response.setField(VID_RCC, ChangeObjectToolStatus(toolID, request.getFieldAsBoolean(VID_STATE)));
    }
    else
    {
-      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
  * Generate ID for new object tool
  */
-void ClientSession::generateObjectToolId(uint32_t requestId)
+void ClientSession::generateObjectToolId(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, requestId);
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
    if (checkSysAccessRights(SYSTEM_ACCESS_MANAGE_TOOLS))
    {
-      msg.setField(VID_TOOL_ID, CreateUniqueId(IDG_OBJECT_TOOL));
+      response.setField(VID_TOOL_ID, CreateUniqueId(IDG_OBJECT_TOOL));
    }
    else
    {
-      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
  * Execute table tool (either SNMP or agent table)
  */
-void ClientSession::execTableTool(NXCPMessage *pRequest)
+void ClientSession::execTableTool(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, pRequest->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
 
    // Check if tool exist and has correct type
-   uint32_t dwToolId = pRequest->getFieldAsUInt32(VID_TOOL_ID);
+   uint32_t dwToolId = request.getFieldAsUInt32(VID_TOOL_ID);
    if (IsTableTool(dwToolId))
    {
       // Check access
       if (CheckObjectToolAccess(dwToolId, m_dwUserId))
       {
-         shared_ptr<NetObj> object = FindObjectById(pRequest->getFieldAsUInt32(VID_OBJECT_ID));
+         shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
          if (object != nullptr)
          {
             if (object->getObjectClass() == OBJECT_NODE)
             {
                msg.setField(VID_RCC,
                                ExecuteTableTool(dwToolId, static_pointer_cast<Node>(object),
-                                                pRequest->getId(), this));
+                                                request.getId(), this));
             }
             else
             {
@@ -8485,20 +8424,20 @@ void ClientSession::execTableTool(NXCPMessage *pRequest)
 /**
  * Change current subscription
  */
-void ClientSession::changeSubscription(NXCPMessage *request)
+void ClientSession::changeSubscription(const NXCPMessage& request)
 {
    NXCPMessage msg;
    msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request->getId());
+   msg.setId(request.getId());
 
    TCHAR channel[64];
-   request->getFieldAsString(VID_NAME, channel, 64);
+   request.getFieldAsString(VID_NAME, channel, 64);
    Trim(channel);
    if (channel[0] != 0)
    {
       m_subscriptionLock.lock();
       uint32_t *count = m_subscriptions.get(channel);
-      if (request->getFieldAsBoolean(VID_OPERATION))
+      if (request.getFieldAsBoolean(VID_OPERATION))
       {
          // Subscribe
          if (count == nullptr)
@@ -8546,16 +8485,9 @@ static void DciCountCallback(NetObj *object, uint32_t *count)
 /**
  * Send server statistics
  */
-void ClientSession::sendServerStats(UINT32 dwRqId)
+void ClientSession::sendServerStats(const NXCPMessage& request)
 {
-   NXCPMessage msg;
-#ifdef _WIN32
-   PROCESS_MEMORY_COUNTERS mc;
-#endif
-
-   // Prepare response
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(dwRqId);
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
    msg.setField(VID_RCC, RCC_SUCCESS);
 
    // Server version, etc.
@@ -8577,6 +8509,7 @@ void ClientSession::sendServerStats(UINT32 dwRqId)
 
    // Process info
 #ifdef _WIN32
+   PROCESS_MEMORY_COUNTERS mc;
    mc.cb = sizeof(PROCESS_MEMORY_COUNTERS);
    if (GetProcessMemoryInfo(GetCurrentProcess(), &mc, sizeof(PROCESS_MEMORY_COUNTERS)))
    {
@@ -8596,37 +8529,37 @@ void ClientSession::sendServerStats(UINT32 dwRqId)
 	msg.setField(VID_QSIZE_NODE_POLLER, static_cast<uint32_t>(GetDiscoveryPollerQueueSize()));
 
    // Send response
-   sendMessage(&msg);
+   sendMessage(msg);
 }
 
 /**
  * Send script list
  */
-void ClientSession::sendScriptList(UINT32 dwRqId)
+void ClientSession::sendScriptList(const NXCPMessage& request)
 {
-   NXCPMessage msg;
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(dwRqId);
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
    if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_SCRIPTS)
    {
-      GetServerScriptLibrary()->fillMessage(&msg);
-      msg.setField(VID_RCC, RCC_SUCCESS);;
+      GetServerScriptLibrary()->fillMessage(&response);
+      response.setField(VID_RCC, RCC_SUCCESS);;
    }
    else
-      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
-   sendMessage(&msg);
+   {
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
+   }
+   sendMessage(response);
 }
 
 /**
  * Send script
  */
-void ClientSession::sendScript(NXCPMessage *pRequest)
+void ClientSession::sendScript(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, pRequest->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
 
    if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_SCRIPTS)
    {
-      uint32_t id = pRequest->getFieldAsUInt32(VID_SCRIPT_ID);
+      uint32_t id = request.getFieldAsUInt32(VID_SCRIPT_ID);
       NXSL_LibraryScript *script = GetServerScriptLibrary()->findScript(id);
       if (script != nullptr)
          script->fillMessage(&msg);
@@ -8644,9 +8577,9 @@ void ClientSession::sendScript(NXCPMessage *pRequest)
 /**
  * Update script in library
  */
-void ClientSession::updateScript(NXCPMessage *request)
+void ClientSession::updateScript(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
    if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_SCRIPTS)
    {
       uint32_t scriptId = 0;
@@ -8657,7 +8590,7 @@ void ClientSession::updateScript(NXCPMessage *request)
    {
       msg.setField(VID_RCC, RCC_ACCESS_DENIED);
       TCHAR scriptName[MAX_DB_STRING];
-      request->getFieldAsString(VID_NAME, scriptName, MAX_DB_STRING);
+      request.getFieldAsString(VID_NAME, scriptName, MAX_DB_STRING);
       uint32_t scriptId = ResolveScriptName(scriptName);
       if (scriptId == 0)
          writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on creating library script %s"), scriptName);
@@ -8670,20 +8603,20 @@ void ClientSession::updateScript(NXCPMessage *request)
 /**
  * Rename script
  */
-void ClientSession::renameScript(NXCPMessage *request)
+void ClientSession::renameScript(const NXCPMessage& request)
 {
    NXCPMessage msg;
 
    msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request->getId());
+   msg.setId(request.getId());
    if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_SCRIPTS)
    {
-      uint32_t scriptId = request->getFieldAsUInt32(VID_SCRIPT_ID);
+      uint32_t scriptId = request.getFieldAsUInt32(VID_SCRIPT_ID);
       TCHAR oldName[MAX_DB_STRING];
       if (GetScriptName(scriptId, oldName, MAX_DB_STRING))
       {
          TCHAR newName[MAX_DB_STRING];
-         request->getFieldAsString(VID_NAME, newName, MAX_DB_STRING);
+         request.getFieldAsString(VID_NAME, newName, MAX_DB_STRING);
          uint32_t rcc = RenameScript(scriptId, newName);
          msg.setField(VID_RCC, rcc);
          if (rcc == RCC_SUCCESS)
@@ -8701,7 +8634,7 @@ void ClientSession::renameScript(NXCPMessage *request)
       msg.setField(VID_RCC, RCC_ACCESS_DENIED);
       TCHAR newName[MAX_DB_STRING];
       writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on renaming library script with ID %u to %s"),
-               request->getFieldAsUInt32(VID_SCRIPT_ID), request->getFieldAsString(VID_NAME, newName, MAX_DB_STRING));
+               request.getFieldAsUInt32(VID_SCRIPT_ID), request.getFieldAsString(VID_NAME, newName, MAX_DB_STRING));
    }
    sendMessage(&msg);
 }
@@ -8709,10 +8642,10 @@ void ClientSession::renameScript(NXCPMessage *request)
 /**
  * Delete script from library
  */
-void ClientSession::deleteScript(NXCPMessage *request)
+void ClientSession::deleteScript(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
-   uint32_t scriptId = request->getFieldAsUInt32(VID_SCRIPT_ID);
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
+   uint32_t scriptId = request.getFieldAsUInt32(VID_SCRIPT_ID);
    if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_SCRIPTS)
    {
       TCHAR scriptName[MAX_DB_STRING];
@@ -8760,9 +8693,9 @@ static void CopySessionData(ClientSession *pSession, NXCPMessage *msg)
 /**
  * Send list of connected client sessions
  */
-void ClientSession::getSessionList(uint32_t requestId)
+void ClientSession::getSessionList(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, requestId);
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
    if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_SESSIONS)
    {
       msg.setField(VID_NUM_SESSIONS, (UINT32)0);
@@ -8773,18 +8706,18 @@ void ClientSession::getSessionList(uint32_t requestId)
    {
       msg.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
-   sendMessage(&msg);
+   sendMessage(msg);
 }
 
 /**
  * Forcibly terminate client's session
  */
-void ClientSession::killSession(NXCPMessage *request)
+void ClientSession::killSession(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
    if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_SESSIONS)
    {
-      session_id_t id = request->getFieldAsInt32(VID_SESSION_ID);
+      session_id_t id = request.getFieldAsInt32(VID_SESSION_ID);
       bool success = KillClientSession(id);
       msg.setField(VID_RCC, success ? RCC_SUCCESS : RCC_INVALID_SESSION_HANDLE);
    }
@@ -8792,7 +8725,7 @@ void ClientSession::killSession(NXCPMessage *request)
    {
       msg.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
-   sendMessage(&msg);
+   sendMessage(msg);
 }
 
 /**
@@ -8911,11 +8844,11 @@ static void SNMP_WalkerThread(SNMP_WalkerThreadArgs *args)
 /**
  * Start SNMP walk
  */
-void ClientSession::startSnmpWalk(NXCPMessage *request)
+void ClientSession::startSnmpWalk(const NXCPMessage& request)
 {
-   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
-   shared_ptr<NetObj> object = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID));
+   shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
    if (object != nullptr)
    {
       if (object->getObjectClass() == OBJECT_NODE)
@@ -8926,8 +8859,8 @@ void ClientSession::startSnmpWalk(NXCPMessage *request)
 
             InterlockedIncrement(&m_refCount);
 
-            SNMP_WalkerThreadArgs *args = new SNMP_WalkerThreadArgs(this, request->getId(), static_pointer_cast<Node>(object));
-            args->baseOID = request->getFieldAsString(VID_SNMP_OID);
+            SNMP_WalkerThreadArgs *args = new SNMP_WalkerThreadArgs(this, request.getId(), static_pointer_cast<Node>(object));
+            args->baseOID = request.getFieldAsString(VID_SNMP_OID);
             ThreadPoolExecute(g_clientThreadPool, SNMP_WalkerThread, args);
          }
          else
@@ -8992,15 +8925,15 @@ uint32_t ClientSession::resolveDCIName(uint32_t nodeId, uint32_t dciId, TCHAR *n
 /**
  * Resolve DCI identifiers to names
  */
-void ClientSession::resolveDCINames(NXCPMessage *request)
+void ClientSession::resolveDCINames(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
 
-   uint32_t count = request->getFieldAsUInt32(VID_NUM_ITEMS);
+   uint32_t count = request.getFieldAsUInt32(VID_NUM_ITEMS);
    uint32_t *nodeList = MemAllocArray<uint32_t>(count);
    uint32_t *dciList = MemAllocArray<uint32_t>(count);
-   request->getFieldAsInt32Array(VID_NODE_LIST, count, nodeList);
-   request->getFieldAsInt32Array(VID_DCI_LIST, count, dciList);
+   request.getFieldAsInt32Array(VID_NODE_LIST, count, nodeList);
+   request.getFieldAsInt32Array(VID_DCI_LIST, count, dciList);
 
    UINT32 rcc = RCC_INVALID_ARGUMENT;
    uint32_t i = 0;
@@ -9026,9 +8959,9 @@ void ClientSession::resolveDCINames(NXCPMessage *request)
 /**
  * Get list of available agent configurations
  */
-void ClientSession::getAgentConfigurationList(uint32_t requestId)
+void ClientSession::getAgentConfigurationList(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, requestId);
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
 
    if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_AGENT_CFG)
    {
@@ -9060,20 +8993,20 @@ void ClientSession::getAgentConfigurationList(uint32_t requestId)
       msg.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
 
-   sendMessage(&msg);
+   sendMessage(msg);
 }
 
 /**
  *  Get server-stored agent's configuration file
  */
-void ClientSession::getAgentConfiguration(NXCPMessage *request)
+void ClientSession::getAgentConfiguration(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
 
    if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_AGENT_CFG)
    {
       DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-      uint32_t configId = request->getFieldAsUInt32(VID_CONFIG_ID);
+      uint32_t configId = request.getFieldAsUInt32(VID_CONFIG_ID);
       TCHAR query[256];
       _sntprintf(query, 256, _T("SELECT config_name,config_file,config_filter,sequence_number FROM agent_configs WHERE config_id=%u"), configId);
       DB_RESULT hResult = DBSelect(hdb, query);
@@ -9120,20 +9053,20 @@ void ClientSession::getAgentConfiguration(NXCPMessage *request)
 /**
  * Update server-stored agent's configuration
  */
-void ClientSession::updateAgentConfiguration(NXCPMessage *request)
+void ClientSession::updateAgentConfiguration(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
 
    if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_AGENT_CFG)
    {
       DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-      uint32_t configId = request->getFieldAsUInt32(VID_CONFIG_ID);
+      uint32_t configId = request.getFieldAsUInt32(VID_CONFIG_ID);
 
       uint32_t sequence;
       DB_STATEMENT hStmt;
       if (IsDatabaseRecordExist(hdb, _T("agent_configs"), _T("config_id"), configId))
       {
-         sequence = request->getFieldAsUInt32(VID_SEQUENCE_NUMBER);
+         sequence = request.getFieldAsUInt32(VID_SEQUENCE_NUMBER);
          hStmt = DBPrepare(hdb, _T("UPDATE agent_configs SET config_name=?,config_filter=?,config_file=?,sequence_number=? WHERE config_id=?"));
       }
       else
@@ -9162,15 +9095,15 @@ void ClientSession::updateAgentConfiguration(NXCPMessage *request)
          }
          else
          {
-            sequence = request->getFieldAsUInt32(VID_SEQUENCE_NUMBER);
+            sequence = request.getFieldAsUInt32(VID_SEQUENCE_NUMBER);
          }
          hStmt = DBPrepare(hdb,  _T("INSERT INTO agent_configs (config_name,config_filter,config_file,sequence_number,config_id) VALUES (?,?,?,?,?)"));
       }
       if (hStmt != nullptr)
       {
-         DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, request->getFieldAsString(VID_NAME), DB_BIND_DYNAMIC);
-         DBBind(hStmt, 2, DB_SQLTYPE_TEXT, request->getFieldAsString(VID_FILTER), DB_BIND_DYNAMIC);
-         DBBind(hStmt, 3, DB_SQLTYPE_TEXT, request->getFieldAsString(VID_CONFIG_FILE), DB_BIND_DYNAMIC);
+         DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, request.getFieldAsString(VID_NAME), DB_BIND_DYNAMIC);
+         DBBind(hStmt, 2, DB_SQLTYPE_TEXT, request.getFieldAsString(VID_FILTER), DB_BIND_DYNAMIC);
+         DBBind(hStmt, 3, DB_SQLTYPE_TEXT, request.getFieldAsString(VID_CONFIG_FILE), DB_BIND_DYNAMIC);
          DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, sequence);
          DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, configId);
          if (DBExecute(hStmt))
@@ -9200,14 +9133,14 @@ void ClientSession::updateAgentConfiguration(NXCPMessage *request)
 /**
  * Delete agent's configuration
  */
-void ClientSession::deleteAgentConfiguration(NXCPMessage *request)
+void ClientSession::deleteAgentConfiguration(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
 
    if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_AGENT_CFG)
    {
       DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-      uint32_t configId = request->getFieldAsUInt32(VID_CONFIG_ID);
+      uint32_t configId = request.getFieldAsUInt32(VID_CONFIG_ID);
       if (IsDatabaseRecordExist(hdb, _T("agent_configs"), _T("config_id"), configId))
       {
          if (ExecuteQueryOnObject(hdb, configId, _T("DELETE FROM agent_configs WHERE config_id=?")))
@@ -9236,9 +9169,9 @@ void ClientSession::deleteAgentConfiguration(NXCPMessage *request)
 /**
  * Swap sequence numbers of two agent configs
  */
-void ClientSession::swapAgentConfigurations(NXCPMessage *request)
+void ClientSession::swapAgentConfigurations(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
 
    if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_AGENT_CFG)
    {
@@ -9246,7 +9179,7 @@ void ClientSession::swapAgentConfigurations(NXCPMessage *request)
 
       TCHAR query[256];
       _sntprintf(query, 256, _T("SELECT config_id,sequence_number FROM agent_configs WHERE config_id=%d OR config_id=%d"),
-                 request->getFieldAsUInt32(VID_CONFIG_ID), request->getFieldAsUInt32(VID_CONFIG_ID_2));
+                 request.getFieldAsUInt32(VID_CONFIG_ID), request.getFieldAsUInt32(VID_CONFIG_ID_2));
       DB_RESULT hResult = DBSelect(hdb, query);
       if (hResult != nullptr)
       {
@@ -9303,15 +9236,15 @@ void ClientSession::swapAgentConfigurations(NXCPMessage *request)
 /**
  * Send config to agent on request
  */
-void ClientSession::sendConfigForAgent(NXCPMessage *request)
+void ClientSession::sendConfigForAgent(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
 
    TCHAR platform[MAX_DB_STRING];
-   request->getFieldAsString(VID_PLATFORM_NAME, platform, MAX_DB_STRING);
-   uint16_t versionMajor = request->getFieldAsUInt16(VID_VERSION_MAJOR);
-   uint16_t versionMinor = request->getFieldAsUInt16(VID_VERSION_MINOR);
-   uint16_t versionRelease = request->getFieldAsUInt16(VID_VERSION_RELEASE);
+   request.getFieldAsString(VID_PLATFORM_NAME, platform, MAX_DB_STRING);
+   uint16_t versionMajor = request.getFieldAsUInt16(VID_VERSION_MAJOR);
+   uint16_t versionMinor = request.getFieldAsUInt16(VID_VERSION_MINOR);
+   uint16_t versionRelease = request.getFieldAsUInt16(VID_VERSION_RELEASE);
    debugPrintf(3, _T("Finding config for agent at %s: platform=\"%s\", version=\"%d.%d.%d\""),
             m_clientAddr.toString().cstr(), platform, (int)versionMajor, (int)versionMinor, (int)versionRelease);
 
@@ -9398,11 +9331,11 @@ void ClientSession::sendConfigForAgent(NXCPMessage *request)
 /**
  * Send object comments to client
  */
-void ClientSession::getObjectComments(NXCPMessage *request)
+void ClientSession::getObjectComments(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
 
-   shared_ptr<NetObj> object = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID));
+   shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
    if (object != nullptr)
    {
       if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
@@ -9427,16 +9360,16 @@ void ClientSession::getObjectComments(NXCPMessage *request)
  * Update object comments from client.
  * Recieves comments source, expands it and sends expanded comments to all clients via setModified in setComments.
  */
-void ClientSession::updateObjectComments(NXCPMessage *pRequest)
+void ClientSession::updateObjectComments(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, pRequest->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
 
-   shared_ptr<NetObj> object = FindObjectById(pRequest->getFieldAsUInt32(VID_OBJECT_ID));
+   shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
    if (object != nullptr)
    {
       if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
       {
-         TCHAR *commentsSource = pRequest->getFieldAsString(VID_COMMENTS);
+         TCHAR *commentsSource = request.getFieldAsString(VID_COMMENTS);
          object->setComments(commentsSource);
          MemFree(commentsSource);
       }
@@ -9476,11 +9409,11 @@ struct ClientDataPushElement
 /**
  * Push DCI data
  */
-void ClientSession::pushDCIData(NXCPMessage *request)
+void ClientSession::pushDCIData(const NXCPMessage& request)
 {
-   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
-   int count = request->getFieldAsInt32(VID_NUM_ITEMS);
+   int count = request.getFieldAsInt32(VID_NUM_ITEMS);
    if (count > 0)
    {
       ObjectArray<ClientDataPushElement> values(count, 16, Ownership::True);
@@ -9494,7 +9427,7 @@ void ClientSession::pushDCIData(NXCPMessage *request)
 
          // Find object either by ID or name (id ID==0)
          shared_ptr<NetObj> object;
-         UINT32 objectId = request->getFieldAsUInt32(fieldId++);
+         UINT32 objectId = request.getFieldAsUInt32(fieldId++);
          if (objectId != 0)
          {
             object = FindObjectById(objectId);
@@ -9502,7 +9435,7 @@ void ClientSession::pushDCIData(NXCPMessage *request)
          else
          {
             TCHAR name[256];
-            request->getFieldAsString(fieldId++, name, 256);
+            request.getFieldAsString(fieldId++, name, 256);
 				if (name[0] == _T('@'))
 				{
                InetAddress ipAddr = InetAddress::resolveHostName(&name[1]);
@@ -9522,7 +9455,7 @@ void ClientSession::pushDCIData(NXCPMessage *request)
                if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_PUSH_DATA))
                {
                   // Object OK, find DCI by ID or name (if ID==0)
-                  UINT32 dciId = request->getFieldAsUInt32(fieldId++);
+                  UINT32 dciId = request.getFieldAsUInt32(fieldId++);
 						shared_ptr<DCObject> pItem;
                   if (dciId != 0)
                   {
@@ -9531,7 +9464,7 @@ void ClientSession::pushDCIData(NXCPMessage *request)
                   else
                   {
                      TCHAR name[256];
-                     request->getFieldAsString(fieldId++, name, 256);
+                     request.getFieldAsString(fieldId++, name, 256);
                      pItem = static_cast<DataCollectionTarget&>(*object).getDCObjectByName(name, m_dwUserId);
                   }
 
@@ -9539,7 +9472,7 @@ void ClientSession::pushDCIData(NXCPMessage *request)
                   {
                      if (pItem->getDataSource() == DS_PUSH_AGENT)
                      {
-                        values.add(new ClientDataPushElement(static_pointer_cast<DataCollectionTarget>(object), pItem, request->getFieldAsString(fieldId++)));
+                        values.add(new ClientDataPushElement(static_pointer_cast<DataCollectionTarget>(object), pItem, request.getFieldAsString(fieldId++)));
                         bOK = TRUE;
                      }
                      else
@@ -9571,7 +9504,7 @@ void ClientSession::pushDCIData(NXCPMessage *request)
       // If all items was checked OK, push data
       if (bOK)
       {
-         time_t t = request->getFieldAsTime(VID_TIMESTAMP);
+         time_t t = request.getFieldAsTime(VID_TIMESTAMP);
          if (t == 0)
             t = time(nullptr);
          shared_ptr<Table> tableValue; // Empty pointer to pass to processNewDCValue()
@@ -9602,15 +9535,15 @@ void ClientSession::pushDCIData(NXCPMessage *request)
 /**
  * Get address list
  */
-void ClientSession::getAddrList(NXCPMessage *request)
+void ClientSession::getAddrList(const NXCPMessage& request)
 {
    NXCPMessage msg;
    msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request->getId());
+   msg.setId(request.getId());
 
    if (m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONFIG)
    {
-      ObjectArray<InetAddressListElement> *list = LoadServerAddressList(request->getFieldAsInt32(VID_ADDR_LIST_TYPE));
+      ObjectArray<InetAddressListElement> *list = LoadServerAddressList(request.getFieldAsInt32(VID_ADDR_LIST_TYPE));
       if (list != nullptr)
       {
          msg.setField(VID_NUM_RECORDS, (INT32)list->size());
@@ -9640,13 +9573,13 @@ void ClientSession::getAddrList(NXCPMessage *request)
 /**
  * Set address list
  */
-void ClientSession::setAddrList(NXCPMessage *request)
+void ClientSession::setAddrList(const NXCPMessage& request)
 {
    NXCPMessage msg;
    msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request->getId());
+   msg.setId(request.getId());
 
-   int listType = request->getFieldAsInt32(VID_ADDR_LIST_TYPE);
+   int listType = request.getFieldAsInt32(VID_ADDR_LIST_TYPE);
    if (m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONFIG)
    {
       if (UpdateAddressListFromMessage(request))
@@ -9671,17 +9604,17 @@ void ClientSession::setAddrList(NXCPMessage *request)
 /**
  * Reset server component
  */
-void ClientSession::resetComponent(NXCPMessage *pRequest)
+void ClientSession::resetComponent(const NXCPMessage& request)
 {
    NXCPMessage msg;
    UINT32 dwCode;
 
    msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(pRequest->getId());
+   msg.setId(request.getId());
 
    if (m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONFIG)
    {
-      dwCode = pRequest->getFieldAsUInt32(VID_COMPONENT_ID);
+      dwCode = request.getFieldAsUInt32(VID_COMPONENT_ID);
       switch(dwCode)
       {
          case SRV_COMPONENT_DISCOVERY_MGR:
@@ -9704,13 +9637,13 @@ void ClientSession::resetComponent(NXCPMessage *pRequest)
 /**
  * Get list of events used by template's or node's DCIs
  */
-void ClientSession::getRelatedEventList(NXCPMessage *request)
+void ClientSession::getRelatedEventList(const NXCPMessage& request)
 {
    NXCPMessage msg;
    msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request->getId());
+   msg.setId(request.getId());
 
-   shared_ptr<NetObj> object = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID));
+   shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
    if (object != nullptr)
    {
       if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
@@ -9764,14 +9697,14 @@ static bool ScriptNamesCallback(const TCHAR *name, void *arg)
 /**
  * Get list of scripts used by template's or node's DCIs
  */
-void ClientSession::getDCIScriptList(NXCPMessage *request)
+void ClientSession::getDCIScriptList(const NXCPMessage& request)
 {
    NXCPMessage msg;
 
    msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request->getId());
+   msg.setId(request.getId());
 
-   shared_ptr<NetObj> object = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID));
+   shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
    if (object != nullptr)
    {
       if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
@@ -9807,18 +9740,18 @@ void ClientSession::getDCIScriptList(NXCPMessage *request)
 /**
  * Export server configuration (event, templates, etc.)
  */
-void ClientSession::exportConfiguration(NXCPMessage *pRequest)
+void ClientSession::exportConfiguration(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, pRequest->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
 
    if (checkSysAccessRights(SYSTEM_ACCESS_CONFIGURE_TRAPS | SYSTEM_ACCESS_VIEW_EVENT_DB | SYSTEM_ACCESS_EPP))
    {
       uint32_t *pdwTemplateList;
-      uint32_t dwNumTemplates = pRequest->getFieldAsUInt32(VID_NUM_OBJECTS);
+      uint32_t dwNumTemplates = request.getFieldAsUInt32(VID_NUM_OBJECTS);
       if (dwNumTemplates > 0)
       {
          pdwTemplateList = MemAllocArray<uint32_t>(dwNumTemplates);
-         pRequest->getFieldAsInt32Array(VID_OBJECT_LIST, dwNumTemplates, pdwTemplateList);
+         request.getFieldAsInt32Array(VID_OBJECT_LIST, dwNumTemplates, pdwTemplateList);
       }
       else
       {
@@ -9861,16 +9794,16 @@ void ClientSession::exportConfiguration(NXCPMessage *pRequest)
                   NETXMS_VERSION_STRING _T("</version>\n\t\t<buildTag>") NETXMS_BUILD_TAG _T("</buildTag>\n\t\t<operatingSystem>"));
          xml.appendPreallocated(EscapeStringForXML(osVersion, -1));
          xml.append(_T("</operatingSystem>\n\t</server>\n\t<description>"));
-			TCHAR *description = pRequest->getFieldAsString(VID_DESCRIPTION);
+			TCHAR *description = request.getFieldAsString(VID_DESCRIPTION);
 			xml.appendPreallocated(EscapeStringForXML(description, -1));
 			MemFree(description);
          xml.append(_T("</description>\n"));
 
          // Write events
          xml += _T("\t<events>\n");
-         uint32_t count = pRequest->getFieldAsUInt32(VID_NUM_EVENTS);
+         uint32_t count = request.getFieldAsUInt32(VID_NUM_EVENTS);
          uint32_t *pdwList = MemAllocArray<uint32_t>(count);
-         pRequest->getFieldAsInt32Array(VID_EVENT_LIST, count, pdwList);
+         request.getFieldAsInt32Array(VID_EVENT_LIST, count, pdwList);
          for(i = 0; i < count; i++)
             CreateEventTemplateExportRecord(xml, pdwList[i]);
          MemFree(pdwList);
@@ -9890,9 +9823,9 @@ void ClientSession::exportConfiguration(NXCPMessage *pRequest)
 
          // Write traps
          xml += _T("\t<traps>\n");
-         count = pRequest->getFieldAsUInt32(VID_NUM_TRAPS);
+         count = request.getFieldAsUInt32(VID_NUM_TRAPS);
          pdwList = MemAllocArray<UINT32>(count);
-         pRequest->getFieldAsInt32Array(VID_TRAP_LIST, count, pdwList);
+         request.getFieldAsInt32Array(VID_TRAP_LIST, count, pdwList);
          for(i = 0; i < count; i++)
             CreateTrapExportRecord(xml, pdwList[i]);
          MemFree(pdwList);
@@ -9900,12 +9833,12 @@ void ClientSession::exportConfiguration(NXCPMessage *pRequest)
 
          // Write rules
          xml += _T("\t<rules>\n");
-         count = pRequest->getFieldAsUInt32(VID_NUM_RULES);
+         count = request.getFieldAsUInt32(VID_NUM_RULES);
          DWORD varId = VID_RULE_LIST_BASE;
          uuid_t guid;
          for(i = 0; i < count; i++)
          {
-            pRequest->getFieldAsBinary(varId++, guid, UUID_LENGTH);
+            request.getFieldAsBinary(varId++, guid, UUID_LENGTH);
             g_pEventPolicy->exportRule(xml, guid);
          }
          xml += _T("\t</rules>\n");
@@ -9919,9 +9852,9 @@ void ClientSession::exportConfiguration(NXCPMessage *pRequest)
 
          // Write scripts
          xml.append(_T("\t<scripts>\n"));
-         count = pRequest->getFieldAsUInt32(VID_NUM_SCRIPTS);
+         count = request.getFieldAsUInt32(VID_NUM_SCRIPTS);
          pdwList = MemAllocArray<UINT32>(count);
-         pRequest->getFieldAsInt32Array(VID_SCRIPT_LIST, count, pdwList);
+         request.getFieldAsInt32Array(VID_SCRIPT_LIST, count, pdwList);
          for(i = 0; i < count; i++)
             CreateScriptExportRecord(xml, pdwList[i]);
          MemFree(pdwList);
@@ -9929,9 +9862,9 @@ void ClientSession::exportConfiguration(NXCPMessage *pRequest)
 
          // Write object tools
          xml.append(_T("\t<objectTools>\n"));
-         count = pRequest->getFieldAsUInt32(VID_NUM_TOOLS);
+         count = request.getFieldAsUInt32(VID_NUM_TOOLS);
          pdwList = MemAllocArray<UINT32>(count);
-         pRequest->getFieldAsInt32Array(VID_TOOL_LIST, count, pdwList);
+         request.getFieldAsInt32Array(VID_TOOL_LIST, count, pdwList);
          for(i = 0; i < count; i++)
             CreateObjectToolExportRecord(xml, pdwList[i]);
          MemFree(pdwList);
@@ -9939,9 +9872,9 @@ void ClientSession::exportConfiguration(NXCPMessage *pRequest)
 
          // Write DCI summary tables
          xml.append(_T("\t<dciSummaryTables>\n"));
-         count = pRequest->getFieldAsUInt32(VID_NUM_SUMMARY_TABLES);
+         count = request.getFieldAsUInt32(VID_NUM_SUMMARY_TABLES);
          pdwList = MemAllocArray<UINT32>(count);
-         pRequest->getFieldAsInt32Array(VID_SUMMARY_TABLE_LIST, count, pdwList);
+         request.getFieldAsInt32Array(VID_SUMMARY_TABLE_LIST, count, pdwList);
          for(i = 0; i < count; i++)
             CreateSummaryTableExportRecord(pdwList[i], xml);
          MemFree(pdwList);
@@ -9949,9 +9882,9 @@ void ClientSession::exportConfiguration(NXCPMessage *pRequest)
 
          // Write actions
          xml.append(_T("\t<actions>\n"));
-         count = pRequest->getFieldAsUInt32(VID_NUM_ACTIONS);
+         count = request.getFieldAsUInt32(VID_NUM_ACTIONS);
          pdwList = MemAllocArray<UINT32>(count);
-         pRequest->getFieldAsInt32Array(VID_ACTION_LIST, count, pdwList);
+         request.getFieldAsInt32Array(VID_ACTION_LIST, count, pdwList);
          for(i = 0; i < count; i++)
             CreateActionExportRecord(xml, pdwList[i]);
          MemFree(pdwList);
@@ -9959,9 +9892,9 @@ void ClientSession::exportConfiguration(NXCPMessage *pRequest)
 
          // Write web service definition
          xml.append(_T("\t<webServiceDefinitions>\n"));
-         count = pRequest->getFieldAsUInt32(VID_WEB_SERVICE_DEF_COUNT);
+         count = request.getFieldAsUInt32(VID_WEB_SERVICE_DEF_COUNT);
          pdwList = MemAllocArray<UINT32>(count);
-         pRequest->getFieldAsInt32Array(VID_WEB_SERVICE_DEF_LIST, count, pdwList);
+         request.getFieldAsInt32Array(VID_WEB_SERVICE_DEF_LIST, count, pdwList);
          CreateWebServiceDefinitionExportRecord(xml, count, pdwList);
          MemFree(pdwList);
          xml.append(_T("\t</webServiceDefinitions>\n"));
@@ -9987,18 +9920,18 @@ void ClientSession::exportConfiguration(NXCPMessage *pRequest)
 /**
  * Import server configuration (events, templates, etc.)
  */
-void ClientSession::importConfiguration(NXCPMessage *pRequest)
+void ClientSession::importConfiguration(const NXCPMessage& request)
 {
    NXCPMessage msg;
    TCHAR szLockInfo[MAX_SESSION_NAME], szError[1024];
    UINT32 dwFlags;
 
    msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(pRequest->getId());
+   msg.setId(request.getId());
 
    if (checkSysAccessRights(SYSTEM_ACCESS_IMPORT_CONFIGURATION))
    {
-      char *content = pRequest->getFieldAsUtf8String(VID_NXMP_CONTENT);
+      char *content = request.getFieldAsUtf8String(VID_NXMP_CONTENT);
       if (content != nullptr)
       {
          Config config(false);
@@ -10010,7 +9943,7 @@ void ClientSession::importConfiguration(NXCPMessage *pRequest)
                InterlockedOr(&m_flags, CSF_EPP_LOCKED);
 
                // Validate and import configuration
-               dwFlags = pRequest->getFieldAsUInt32(VID_FLAGS);
+               dwFlags = request.getFieldAsUInt32(VID_FLAGS);
                if (ValidateConfig(config, dwFlags, szError, 1024))
                {
                   msg.setField(VID_RCC, ImportConfig(config, dwFlags));
@@ -10051,23 +9984,20 @@ void ClientSession::importConfiguration(NXCPMessage *pRequest)
 }
 
 /**
- * Send basic DCI info to client
+ * Get basic DCI info
  */
-void ClientSession::SendDCIInfo(NXCPMessage *pRequest)
+void ClientSession::getDCIInfo(const NXCPMessage& request)
 {
-   NXCPMessage msg;
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
 
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(pRequest->getId());
-
-   shared_ptr<NetObj> object = FindObjectById(pRequest->getFieldAsUInt32(VID_OBJECT_ID));
+   shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
    if (object != nullptr)
    {
       if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
       {
          if (object->isDataCollectionTarget() || (object->getObjectClass() == OBJECT_TEMPLATE))
          {
-            shared_ptr<DCObject> dcObject = static_cast<DataCollectionOwner&>(*object).getDCObjectById(pRequest->getFieldAsUInt32(VID_DCI_ID), m_dwUserId);
+            shared_ptr<DCObject> dcObject = static_cast<DataCollectionOwner&>(*object).getDCObjectById(request.getFieldAsUInt32(VID_DCI_ID), m_dwUserId);
 				if ((dcObject != nullptr) && (dcObject->getType() == DCO_TYPE_ITEM))
 				{
 					msg.setField(VID_TEMPLATE_ID, dcObject->getTemplateId());
@@ -10101,102 +10031,93 @@ void ClientSession::SendDCIInfo(NXCPMessage *pRequest)
    sendMessage(&msg);
 }
 
-void ClientSession::sendGraph(NXCPMessage *request)
+/**
+ * Get graph list
+ */
+void ClientSession::getGraph(const NXCPMessage& request)
 {
-   NXCPMessage msg;
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request->getId());
-   UINT32 rcc = GetGraphAccessCheckResult(request->getFieldAsUInt32(VID_GRAPH_ID), m_dwUserId);
-   if(rcc == RCC_SUCCESS)
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+   uint32_t rcc = GetGraphAccessCheckResult(request.getFieldAsUInt32(VID_GRAPH_ID), m_dwUserId);
+   if (rcc == RCC_SUCCESS)
    {
-      FillGraphListMsg(&msg, m_dwUserId, false, request->getFieldAsUInt32(VID_GRAPH_ID));
+      FillGraphListMsg(&response, m_dwUserId, false, request.getFieldAsUInt32(VID_GRAPH_ID));
    }
-   else
-      msg.setField(VID_RCC, rcc);
-
-   sendMessage(&msg);
+   response.setField(VID_RCC, rcc);
+   sendMessage(response);
 }
 
 /**
  * Send list of available graphs to client
  */
-void ClientSession::sendGraphList(NXCPMessage *request)
+void ClientSession::getGraphList(const NXCPMessage& request)
 {
-   NXCPMessage msg;
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request->getId());
-   bool templageGraphs = request->getFieldAsBoolean(VID_GRAPH_TEMPALTE);
-   FillGraphListMsg(&msg, m_dwUserId, templageGraphs, 0);
-   sendMessage(&msg);
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+   FillGraphListMsg(&response, m_dwUserId, request.getFieldAsBoolean(VID_GRAPH_TEMPALTE), 0);
+   sendMessage(response);
 }
 
 /**
  * Save graph
  */
-void ClientSession::saveGraph(NXCPMessage *pRequest)
+void ClientSession::saveGraph(const NXCPMessage& request)
 {
-   NXCPMessage msg;
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(pRequest->getId());
-   SaveGraph(pRequest, m_dwUserId, &msg);
-   sendMessage(&msg);
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+   SaveGraph(request, m_dwUserId, &response);
+   sendMessage(response);
 }
 
 /**
  * Delete graph
  */
-void ClientSession::deleteGraph(NXCPMessage *pRequest)
+void ClientSession::deleteGraph(const NXCPMessage& request)
 {
-   NXCPMessage msg;
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(pRequest->getId());
-   UINT32 result = DeleteGraph(pRequest->getFieldAsUInt32(VID_GRAPH_ID), m_dwUserId);
-   msg.setField(VID_RCC, result);
-   sendMessage(&msg);
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+   response.setField(VID_RCC, DeleteGraph(request.getFieldAsUInt32(VID_GRAPH_ID), m_dwUserId));
+   sendMessage(response);
 }
 
 /**
  * Send list of DCIs to be shown in performance tab
  */
-void ClientSession::sendPerfTabDCIList(NXCPMessage *pRequest)
+void ClientSession::sendPerfTabDCIList(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, pRequest->getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
-	shared_ptr<NetObj> object = FindObjectById(pRequest->getFieldAsUInt32(VID_OBJECT_ID));
+	shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
 	if (object != nullptr)
 	{
 		if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
 		{
 			if (object->isDataCollectionTarget())
 			{
-				msg.setField(VID_RCC, static_cast<DataCollectionTarget&>(*object).getPerfTabDCIList(&msg, m_dwUserId));
+				response.setField(VID_RCC, static_cast<DataCollectionTarget&>(*object).getPerfTabDCIList(&response, m_dwUserId));
 			}
 			else
 			{
-				msg.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+				response.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
 			}
 		}
 		else
 		{
-			msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+			response.setField(VID_RCC, RCC_ACCESS_DENIED);
 		}
 	}
 	else
 	{
-		msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+		response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
 	}
 
-   sendMessage(&msg);
+   sendMessage(&response);
 }
 
 /**
  * Query layer 2 topology from device
  */
-void ClientSession::queryL2Topology(NXCPMessage *pRequest)
+void ClientSession::queryL2Topology(const NXCPMessage& request)
 {
-   NXCPMessage response(CMD_REQUEST_COMPLETED, pRequest->getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
-	shared_ptr<NetObj> object = FindObjectById(pRequest->getFieldAsUInt32(VID_OBJECT_ID));
+	shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
 	if (object != nullptr)
 	{
 		if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
@@ -10244,11 +10165,11 @@ void ClientSession::queryL2Topology(NXCPMessage *pRequest)
 /**
  * Query object internal connection topology
  */
-void ClientSession::queryInternalCommunicationTopology(NXCPMessage *pRequest)
+void ClientSession::queryInternalCommunicationTopology(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, pRequest->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
 
-   shared_ptr<NetObj> object = FindObjectById(pRequest->getFieldAsUInt32(VID_OBJECT_ID));
+   shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
    if (object != nullptr)
    {
       if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
@@ -10289,11 +10210,11 @@ void ClientSession::queryInternalCommunicationTopology(NXCPMessage *pRequest)
 /**
  * Get list of dependent nodes
  */
-void ClientSession::getDependentNodes(NXCPMessage *request)
+void ClientSession::getDependentNodes(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
 
-   shared_ptr<NetObj> object = FindObjectById(request->getFieldAsUInt32(VID_NODE_ID));
+   shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_NODE_ID));
    if (object != nullptr)
    {
       if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
@@ -10333,22 +10254,22 @@ void ClientSession::getDependentNodes(NXCPMessage *request)
 /**
  * Send notification
  */
-void ClientSession::sendNotification(NXCPMessage *pRequest)
+void ClientSession::sendNotification(const NXCPMessage& request)
 {
    NXCPMessage msg;
 	TCHAR channelName[MAX_OBJECT_NAME], *phone, *message, *subject;
 
-	msg.setId(pRequest->getId());
+	msg.setId(request.getId());
 	msg.setCode(CMD_REQUEST_COMPLETED);
 
 	if ((m_systemAccessRights & SYSTEM_ACCESS_SEND_NOTIFICATION))
 	{
-	   pRequest->getFieldAsString(VID_CHANNEL_NAME, channelName, MAX_OBJECT_NAME);
+	   request.getFieldAsString(VID_CHANNEL_NAME, channelName, MAX_OBJECT_NAME);
 	   if (IsNotificationChannelExists(channelName))
 	   {
-	      phone = pRequest->getFieldAsString(VID_RCPT_ADDR);
-	      subject = pRequest->getFieldAsString(VID_EMAIL_SUBJECT);
-	      message = pRequest->getFieldAsString(VID_MESSAGE);
+	      phone = request.getFieldAsString(VID_RCPT_ADDR);
+	      subject = request.getFieldAsString(VID_EMAIL_SUBJECT);
+	      message = request.getFieldAsString(VID_MESSAGE);
 	      SendNotification(channelName, phone, subject, message);
 	      msg.setField(VID_RCC, RCC_SUCCESS);
 	      MemFree(phone);
@@ -10371,18 +10292,18 @@ void ClientSession::sendNotification(NXCPMessage *pRequest)
 /**
  * Send SNMP community list
  */
-void ClientSession::sendNetworkCredList(NXCPMessage *request)
+void ClientSession::sendNetworkCredList(const NXCPMessage& request)
 {
    NXCPMessage msg;
-	msg.setId(request->getId());
+	msg.setId(request.getId());
 	msg.setCode(CMD_REQUEST_COMPLETED);
 
 	if (m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONFIG)
 	{
-	   bool allZones = !request->isFieldExist(VID_ZONE_UIN);
+	   bool allZones = !request.isFieldExist(VID_ZONE_UIN);
 	   if (allZones)
 	   {
-	      switch (request->getCode())
+	      switch (request.getCode())
 	      {
 	         case CMD_GET_COMMUNITY_LIST:
 	            GetFullCommunityList(&msg);
@@ -10400,7 +10321,7 @@ void ClientSession::sendNetworkCredList(NXCPMessage *request)
 	   }
 	   else
 	   {
-	      int32_t zoneUIN = request->getFieldAsInt32(VID_ZONE_UIN);
+	      int32_t zoneUIN = request.getFieldAsInt32(VID_ZONE_UIN);
 	      shared_ptr<Zone> zone = FindZoneByUIN(zoneUIN);
 	      if (zone == nullptr && zoneUIN != SNMP_CONFIG_GLOBAL)
 	      {
@@ -10408,7 +10329,7 @@ void ClientSession::sendNetworkCredList(NXCPMessage *request)
 	      }
 	      else
 	      {
-	         switch(request->getCode())
+	         switch(request.getCode())
 	         {
                case CMD_GET_COMMUNITY_LIST:
                   GetZoneCommunityList(&msg, zoneUIN);
@@ -10437,17 +10358,15 @@ void ClientSession::sendNetworkCredList(NXCPMessage *request)
 /**
  * Update SNMP community list
  */
-void ClientSession::updateCommunityList(NXCPMessage *pRequest)
+void ClientSession::updateCommunityList(const NXCPMessage& request)
 {
-   NXCPMessage msg;
-	UINT32 rcc = RCC_SUCCESS;
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
-	msg.setId(pRequest->getId());
-	msg.setCode(CMD_REQUEST_COMPLETED);
+   uint32_t rcc = RCC_SUCCESS;
 
 	if (m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONFIG)
 	{
-      int32_t zoneUIN = pRequest->getFieldAsInt32(VID_ZONE_UIN);
+      int32_t zoneUIN = request.getFieldAsInt32(VID_ZONE_UIN);
       shared_ptr<Zone> zone = FindZoneByUIN(zoneUIN);
       if (zoneUIN == -1 || zone != nullptr)
       {
@@ -10459,12 +10378,12 @@ void ClientSession::updateCommunityList(NXCPMessage *pRequest)
             DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO snmp_communities (id,community,zone) VALUES(?,?,?)"), true);
             if (hStmt != nullptr)
             {
-               int count = pRequest->getFieldAsUInt32(VID_NUM_STRINGS);
+               int count = request.getFieldAsUInt32(VID_NUM_STRINGS);
                DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, zoneUIN);
                for(int i = 0; i < count; i++)
                {
                   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, i + 1);
-                  DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, pRequest->getFieldAsString(stringBase++), DB_BIND_DYNAMIC);
+                  DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, request.getFieldAsString(stringBase++), DB_BIND_DYNAMIC);
                   if (!DBExecute(hStmt))
                   {
                      rcc = RCC_DB_FAILURE;
@@ -10474,7 +10393,9 @@ void ClientSession::updateCommunityList(NXCPMessage *pRequest)
                DBFreeStatement(hStmt);
             }
             else
+            {
                rcc = RCC_DB_FAILURE;
+            }
 
             if (rcc == RCC_SUCCESS)
             {
@@ -10482,58 +10403,62 @@ void ClientSession::updateCommunityList(NXCPMessage *pRequest)
                NotifyClientSessions(NX_NOTIFY_COMMUNITIES_CONFIG_CHANGED, zoneUIN);
             }
             else
+            {
                DBRollback(hdb);
+            }
          }
          else
+         {
             rcc = RCC_DB_FAILURE;
+         }
          DBConnectionPoolReleaseConnection(hdb);
       }
       else
+      {
          rcc = RCC_INVALID_ZONE_ID;
+      }
 	}
 	else
+	{
 		rcc = RCC_ACCESS_DENIED;
+	}
 
-	msg.setField(VID_RCC, rcc);
-	sendMessage(&msg);
+	response.setField(VID_RCC, rcc);
+	sendMessage(&response);
 }
 
 /**
  * Send Persistant Storage list to client
  */
-void ClientSession::getPersistantStorage(UINT32 dwRqId)
+void ClientSession::getPersistantStorage(const NXCPMessage& request)
 {
-   NXCPMessage msg;
-
-	msg.setId(dwRqId);
-	msg.setCode(CMD_REQUEST_COMPLETED);
-
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 	if (m_systemAccessRights & SYSTEM_ACCESS_PERSISTENT_STORAGE)
 	{
-		GetPersistentStorageList(&msg);
+		GetPersistentStorageList(&response);
 	}
 	else
 	{
-		msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+		response.setField(VID_RCC, RCC_ACCESS_DENIED);
 	}
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
  * Set persistent storage value
  */
-void ClientSession::setPstorageValue(NXCPMessage *pRequest)
+void ClientSession::setPstorageValue(const NXCPMessage& request)
 {
    NXCPMessage msg;
 
-	msg.setId(pRequest->getId());
+	msg.setId(request.getId());
 	msg.setCode(CMD_REQUEST_COMPLETED);
 
 	if (m_systemAccessRights & SYSTEM_ACCESS_PERSISTENT_STORAGE)
 	{
       TCHAR key[256], *value;
-		pRequest->getFieldAsString(VID_PSTORAGE_KEY, key, 256);
-		value = pRequest->getFieldAsString(VID_PSTORAGE_VALUE);
+		request.getFieldAsString(VID_PSTORAGE_KEY, key, 256);
+		value = request.getFieldAsString(VID_PSTORAGE_VALUE);
 		SetPersistentStorageValue(key, value);
 		free(value);
       msg.setField(VID_RCC, RCC_SUCCESS);
@@ -10549,18 +10474,18 @@ void ClientSession::setPstorageValue(NXCPMessage *pRequest)
 /**
  * Delete persistent storage value
  */
-void ClientSession::deletePstorageValue(NXCPMessage *pRequest)
+void ClientSession::deletePstorageValue(const NXCPMessage& request)
 {
    NXCPMessage msg;
 
-	msg.setId(pRequest->getId());
+	msg.setId(request.getId());
 	msg.setCode(CMD_REQUEST_COMPLETED);
 
 	if (m_systemAccessRights & SYSTEM_ACCESS_PERSISTENT_STORAGE)
 	{
       TCHAR key[256];
       //key[0]=0;
-		pRequest->getFieldAsString(VID_PSTORAGE_KEY, key, 256);
+		request.getFieldAsString(VID_PSTORAGE_KEY, key, 256);
 		bool success = DeletePersistentStorageValue(key);
 		msg.setField(VID_RCC, success ? RCC_SUCCESS : RCC_INVALID_PSTORAGE_KEY);
 	}
@@ -10575,13 +10500,13 @@ void ClientSession::deletePstorageValue(NXCPMessage *pRequest)
 /**
  * Register agent
  */
-void ClientSession::registerAgent(NXCPMessage *pRequest)
+void ClientSession::registerAgent(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, pRequest->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
 
 	if (ConfigReadBoolean(_T("Agent.EnableRegistration"), false))
 	{
-	   int32_t zoneUIN = pRequest->getFieldAsUInt32(VID_ZONE_UIN);
+	   int32_t zoneUIN = request.getFieldAsUInt32(VID_ZONE_UIN);
       shared_ptr<Node> node = FindNodeByIP(zoneUIN, m_clientAddr);
       if (node != nullptr)
       {
@@ -10612,12 +10537,12 @@ void ClientSession::registerAgent(NXCPMessage *pRequest)
 /**
  * Get file from server
  */
-void ClientSession::getServerFile(NXCPMessage *request)
+void ClientSession::getServerFile(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
 
    TCHAR name[MAX_PATH];
-   request->getFieldAsString(VID_FILE_NAME, name, MAX_PATH);
+   request.getFieldAsString(VID_FILE_NAME, name, MAX_PATH);
    TCHAR *extension = _tcsrchr(name, _T('.'));
    bool soundFile = (extension != nullptr) && m_soundFileTypes.contains(extension);
 
@@ -10632,7 +10557,7 @@ void ClientSession::getServerFile(NXCPMessage *request)
 		if (_taccess(fname, 0) == 0)
 		{
 			debugPrintf(5, _T("getServerFile: Sending file %s"), fname);
-			if (SendFileOverNXCP(m_socket, request->getId(), fname, m_encryptionContext.get(), 0, nullptr, nullptr, &m_mutexSocketWrite))
+			if (SendFileOverNXCP(m_socket, request.getId(), fname, m_encryptionContext.get(), 0, nullptr, nullptr, &m_mutexSocketWrite))
 			{
 				debugPrintf(5, _T("getServerFile: File %s was successfully sent"), fname);
 		      msg.setField(VID_RCC, RCC_SUCCESS);
@@ -10660,13 +10585,13 @@ void ClientSession::getServerFile(NXCPMessage *request)
 /**
  * Get file from agent
  */
-void ClientSession::getAgentFile(NXCPMessage *request)
+void ClientSession::getAgentFile(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
 
 	bool success = false;
 
-	shared_ptr<NetObj> object = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID));
+	shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
 	if (object != nullptr)
 	{
 		if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_DOWNLOAD))
@@ -10674,31 +10599,31 @@ void ClientSession::getAgentFile(NXCPMessage *request)
 			if (object->getObjectClass() == OBJECT_NODE)
 			{
 			   TCHAR remoteFile[MAX_PATH];
-				request->getFieldAsString(VID_FILE_NAME, remoteFile, MAX_PATH);
-            bool monitor = request->getFieldAsBoolean(VID_FILE_FOLLOW);
+				request.getFieldAsString(VID_FILE_NAME, remoteFile, MAX_PATH);
+            bool monitor = request.getFieldAsBoolean(VID_FILE_FOLLOW);
             shared_ptr<FileDownloadTask> task;
-            if (request->getFieldAsBoolean(VID_EXPAND_STRING))
+            if (request.getFieldAsBoolean(VID_EXPAND_STRING))
             {
                StringMap inputFields;
-               inputFields.loadMessage(*request, VID_INPUT_FIELD_BASE, VID_INPUT_FIELD_COUNT);
-               Alarm *alarm = FindAlarmById(request->getFieldAsUInt32(VID_ALARM_ID));
+               inputFields.loadMessage(request, VID_INPUT_FIELD_BASE, VID_INPUT_FIELD_COUNT);
+               Alarm *alarm = FindAlarmById(request.getFieldAsUInt32(VID_ALARM_ID));
                if ((alarm != nullptr) && !object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ_ALARMS) && !alarm->checkCategoryAccess(this))
                {
                   msg.setField(VID_RCC, RCC_ACCESS_DENIED);
                }
                else
                {
-                  task = make_shared<FileDownloadTask>(static_pointer_cast<Node>(object), this, request->getId(),
+                  task = make_shared<FileDownloadTask>(static_pointer_cast<Node>(object), this, request.getId(),
                            object->expandText(remoteFile, alarm, nullptr, shared_ptr<DCObjectInfo>(), m_loginName, nullptr, nullptr, &inputFields, nullptr),
-                           true, request->getFieldAsUInt32(VID_FILE_SIZE_LIMIT), monitor);
+                           true, request.getFieldAsUInt32(VID_FILE_SIZE_LIMIT), monitor);
                   success = true;
                }
                delete alarm;
             }
             else
             {
-               task = make_shared<FileDownloadTask>(static_pointer_cast<Node>(object), this, request->getId(),
-                        remoteFile, false, request->getFieldAsUInt32(VID_FILE_SIZE_LIMIT), monitor);
+               task = make_shared<FileDownloadTask>(static_pointer_cast<Node>(object), this, request.getId(),
+                        remoteFile, false, request.getFieldAsUInt32(VID_FILE_SIZE_LIMIT), monitor);
                success = true;
             }
 
@@ -10733,12 +10658,7 @@ void ClientSession::getAgentFile(NXCPMessage *request)
  */
 void ClientSession::cancelFileMonitoring(NXCPMessage *request)
 {
-   NXCPMessage msg;
-   NXCPMessage* response;
-	UINT32 rcc = 0xFFFFFFFF;
-
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request->getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
 
 	shared_ptr<NetObj> object = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID));
 	if (object != nullptr)
@@ -10757,73 +10677,73 @@ void ClientSession::cancelFileMonitoring(NXCPMessage *request)
          {
             request->setProtocolVersion(conn->getProtocolVersion());
             request->setId(conn->generateRequestId());
-            response = conn->customRequest(request);
-            if (response != nullptr)
+            NXCPMessage *agentResponse = conn->customRequest(request);
+            if (agentResponse != nullptr)
             {
-               rcc = response->getFieldAsUInt32(VID_RCC);
+               uint32_t rcc = agentResponse->getFieldAsUInt32(VID_RCC);
                if (rcc == ERR_SUCCESS)
                {
-                  msg.setField(VID_RCC, rcc);
+                  response.setField(VID_RCC, RCC_SUCCESS);
                   debugPrintf(6, _T("cancelFileMonitoring(%s): success"), file.fileName);
                }
                else
                {
-                  msg.setField(VID_RCC, AgentErrorToRCC(rcc));
+                  response.setField(VID_RCC, AgentErrorToRCC(rcc));
                   debugPrintf(6, _T("cancelFileMonitoring(%s): agent error %d (%s)"), file.fileName, rcc, AgentErrorCodeToText(rcc));
                }
-               delete response;
+               delete agentResponse;
             }
             else
             {
-               msg.setField(VID_RCC, RCC_INTERNAL_ERROR);
+               response.setField(VID_RCC, RCC_INTERNAL_ERROR);
             }
          }
          else
          {
-            msg.setField(VID_RCC, RCC_INTERNAL_ERROR);
+            response.setField(VID_RCC, RCC_INTERNAL_ERROR);
             debugPrintf(6, _T("cancelFileMonitoring(%s): connection with node have been lost"), file.fileName);
          }
       }
       else
       {
-         msg.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+         response.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
       }
 	}
 	else
 	{
-		msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+		response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
 	}
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
  * Test DCI transformation script
  */
-void ClientSession::testDCITransformation(NXCPMessage *pRequest)
+void ClientSession::testDCITransformation(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, pRequest->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
 
    // Get node id and check object class and access rights
-   shared_ptr<NetObj> object = FindObjectById(pRequest->getFieldAsUInt32(VID_OBJECT_ID));
+   shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
    if (object != nullptr)
    {
       if (object->isDataCollectionTarget())
       {
          if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
          {
-				TCHAR *script = pRequest->getFieldAsString(VID_SCRIPT);
+				TCHAR *script = request.getFieldAsString(VID_SCRIPT);
 				if (script != nullptr)
 				{
 				   shared_ptr<DCObjectInfo> dcObjectInfo;
-				   if (pRequest->isFieldExist(VID_DCI_ID))
+				   if (request.isFieldExist(VID_DCI_ID))
 				   {
-				      UINT32 dciId = pRequest->getFieldAsUInt32(VID_DCI_ID);
+				      UINT32 dciId = request.getFieldAsUInt32(VID_DCI_ID);
 				      shared_ptr<DCObject> dcObject = static_cast<DataCollectionTarget&>(*object).getDCObjectById(dciId, m_dwUserId);
-				      dcObjectInfo = make_shared<DCObjectInfo>(pRequest, dcObject.get());
+				      dcObjectInfo = make_shared<DCObjectInfo>(request, dcObject.get());
 				   }
 
 				   TCHAR value[256], result[256];
-					pRequest->getFieldAsString(VID_VALUE, value, sizeof(value) / sizeof(TCHAR));
+					request.getFieldAsString(VID_VALUE, value, sizeof(value) / sizeof(TCHAR));
                bool success = DCItem::testTransformation(static_cast<DataCollectionTarget*>(object.get()), dcObjectInfo, script, value, result, sizeof(result) / sizeof(TCHAR));
 					MemFree(script);
 					msg.setField(VID_RCC, RCC_SUCCESS);
@@ -10857,7 +10777,7 @@ void ClientSession::testDCITransformation(NXCPMessage *pRequest)
 /**
  * Execute script in object's context
  */
-void ClientSession::executeScript(NXCPMessage *request)
+void ClientSession::executeScript(const NXCPMessage& request)
 {
    NXCPMessage msg;
    bool success = false;
@@ -10865,10 +10785,10 @@ void ClientSession::executeScript(NXCPMessage *request)
 
    // Prepare response message
    msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request->getId());
+   msg.setId(request.getId());
 
    // Get node id and check object class and access rights
-   shared_ptr<NetObj> object = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID));
+   shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
    if (object != nullptr)
    {
       if ((object->getObjectClass() == OBJECT_NODE) ||
@@ -10883,7 +10803,7 @@ void ClientSession::executeScript(NXCPMessage *request)
           (object->getObjectClass() == OBJECT_NETWORK) ||
           (object->getObjectClass() == OBJECT_SERVICEROOT))
       {
-         TCHAR *script = request->getFieldAsString(VID_SCRIPT);
+         TCHAR *script = request.getFieldAsString(VID_SCRIPT);
          if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
          {
 				if (script != nullptr)
@@ -10931,12 +10851,12 @@ void ClientSession::executeScript(NXCPMessage *request)
    {
       msg.setCode(CMD_EXECUTE_SCRIPT_UPDATE);
 
-      int count = request->getFieldAsInt16(VID_NUM_FIELDS);
+      int count = request.getFieldAsInt16(VID_NUM_FIELDS);
       ObjectRefArray<NXSL_Value> sargs(count, 1);
-      if (request->isFieldExist(VID_PARAMETER))
+      if (request.isFieldExist(VID_PARAMETER))
       {
          TCHAR parameters[1024];
-         request->getFieldAsString(VID_PARAMETER, parameters, 1024);
+         request.getFieldAsString(VID_PARAMETER, parameters, 1024);
          TCHAR *p = parameters;
          ParseValueList(vm, &p, sargs, false);
       }
@@ -10945,7 +10865,7 @@ void ClientSession::executeScript(NXCPMessage *request)
          UINT32 fieldId = VID_FIELD_LIST_BASE;
          for(int i = 0; i < count; i++)
          {
-            SharedString value = request->getFieldAsSharedString(fieldId++);
+            SharedString value = request.getFieldAsSharedString(fieldId++);
             sargs.add(vm->createValue(value));
          }
       }
@@ -11021,21 +10941,21 @@ static void ExecuteLibraryScript(void *arg)
 /**
  * Execute library script in object's context
  */
-void ClientSession::executeLibraryScript(NXCPMessage *request)
+void ClientSession::executeLibraryScript(const NXCPMessage& request)
 {
    NXCPMessage msg;
    bool success = false;
    NXSL_VM *vm = nullptr;
    StringList *args = nullptr;
-   bool withOutput = request->getFieldAsBoolean(VID_RECEIVE_OUTPUT);
+   bool withOutput = request.getFieldAsBoolean(VID_RECEIVE_OUTPUT);
 
    // Prepare response message
    msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request->getId());
+   msg.setId(request.getId());
 
    // Get node id and check object class and access rights
-   shared_ptr<NetObj> object = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID));
-   TCHAR *script = request->getFieldAsString(VID_SCRIPT);
+   shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
+   TCHAR *script = request.getFieldAsString(VID_SCRIPT);
    if (object != nullptr)
    {
       if ((object->getObjectClass() == OBJECT_NODE) ||
@@ -11055,15 +10975,15 @@ void ClientSession::executeLibraryScript(NXCPMessage *request)
                if (object->getObjectClass() == OBJECT_NODE)
                {
                   StringMap *inputFields;
-                  int count = request->getFieldAsInt16(VID_NUM_FIELDS);
+                  int count = request.getFieldAsInt16(VID_NUM_FIELDS);
                   if (count > 0)
                   {
                      inputFields = new StringMap();
                      UINT32 fieldId = VID_FIELD_LIST_BASE;
                      for(int i = 0; i < count; i++)
                      {
-                        TCHAR *name = request->getFieldAsString(fieldId++);
-                        TCHAR *value = request->getFieldAsString(fieldId++);
+                        TCHAR *name = request.getFieldAsString(fieldId++);
+                        TCHAR *value = request.getFieldAsString(fieldId++);
                         inputFields->setPreallocated(name, value);
                      }
                   }
@@ -11072,7 +10992,7 @@ void ClientSession::executeLibraryScript(NXCPMessage *request)
                      inputFields = nullptr;
                   }
 
-                  Alarm *alarm = FindAlarmById(request->getFieldAsUInt32(VID_ALARM_ID));
+                  Alarm *alarm = FindAlarmById(request.getFieldAsUInt32(VID_ALARM_ID));
                   if(alarm != nullptr && !object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ_ALARMS) && !alarm->checkCategoryAccess(this))
                   {
                      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
@@ -11169,8 +11089,7 @@ void ClientSession::executeLibraryScript(NXCPMessage *request)
    }
    else
    {
-      // Send response
-      sendMessage(&msg);
+      sendMessage(msg);
    }
 
    MemFree(script);
@@ -11180,96 +11099,81 @@ void ClientSession::executeLibraryScript(NXCPMessage *request)
 /**
  * Send list of server jobs
  */
-void ClientSession::sendJobList(UINT32 dwRqId)
+void ClientSession::sendJobList(const NXCPMessage& request)
 {
-	NXCPMessage msg;
-
-	msg.setCode(CMD_REQUEST_COMPLETED);
-	msg.setId(dwRqId);
-	msg.setField(VID_RCC, RCC_SUCCESS);
-	GetJobList(&msg);
-	sendMessage(&msg);
+	NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+	response.setField(VID_RCC, RCC_SUCCESS);
+	GetJobList(&response);
+	sendMessage(response);
 }
 
 /**
  * Cancel server job
  */
-void ClientSession::cancelJob(NXCPMessage *request)
+void ClientSession::cancelJob(const NXCPMessage& request)
 {
-	NXCPMessage msg;
-
-	msg.setCode(CMD_REQUEST_COMPLETED);
-	msg.setId(request->getId());
-	msg.setField(VID_RCC, ::CancelJob(m_dwUserId, request));
-	sendMessage(&msg);
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+   response.setField(VID_RCC, CancelJob(m_dwUserId, request));
+   sendMessage(response);
 }
 
 /**
  * put server job on hold
  */
-void ClientSession::holdJob(NXCPMessage *request)
+void ClientSession::holdJob(const NXCPMessage& request)
 {
-	NXCPMessage msg;
-
-	msg.setCode(CMD_REQUEST_COMPLETED);
-	msg.setId(request->getId());
-	msg.setField(VID_RCC, ::HoldJob(m_dwUserId, request));
-	sendMessage(&msg);
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+   response.setField(VID_RCC, HoldJob(m_dwUserId, request));
+   sendMessage(response);
 }
 
 /**
  * Allow server job on hold for execution
  */
-void ClientSession::unholdJob(NXCPMessage *request)
+void ClientSession::unholdJob(const NXCPMessage& request)
 {
-	NXCPMessage msg;
-
-	msg.setCode(CMD_REQUEST_COMPLETED);
-	msg.setId(request->getId());
-	msg.setField(VID_RCC, ::UnholdJob(m_dwUserId, request));
-	sendMessage(&msg);
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+	response.setField(VID_RCC, UnholdJob(m_dwUserId, request));
+	sendMessage(response);
 }
 
 /**
  * Get custom attribute for current user
  */
-void ClientSession::getUserCustomAttribute(NXCPMessage *request)
+void ClientSession::getUserCustomAttribute(const NXCPMessage& request)
 {
-	NXCPMessage msg;
+	NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
-	msg.setCode(CMD_REQUEST_COMPLETED);
-	msg.setId(request->getId());
-
-	TCHAR *name = request->getFieldAsString(VID_NAME);
+	TCHAR *name = request.getFieldAsString(VID_NAME);
 	if ((name != nullptr) && (*name == _T('.')))
 	{
 		const TCHAR *value = GetUserDbObjectAttr(m_dwUserId, name);
-		msg.setField(VID_VALUE, CHECK_NULL_EX(value));
-		msg.setField(VID_RCC, RCC_SUCCESS);
+		response.setField(VID_VALUE, CHECK_NULL_EX(value));
+		response.setField(VID_RCC, RCC_SUCCESS);
 	}
 	else
 	{
-		msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+		response.setField(VID_RCC, RCC_ACCESS_DENIED);
 	}
 	MemFree(name);
 
-	sendMessage(&msg);
+	sendMessage(&response);
 }
 
 /**
  * Set custom attribute for current user
  */
-void ClientSession::setUserCustomAttribute(NXCPMessage *request)
+void ClientSession::setUserCustomAttribute(const NXCPMessage& request)
 {
 	NXCPMessage msg;
 
 	msg.setCode(CMD_REQUEST_COMPLETED);
-	msg.setId(request->getId());
+	msg.setId(request.getId());
 
-	TCHAR *name = request->getFieldAsString(VID_NAME);
+	TCHAR *name = request.getFieldAsString(VID_NAME);
 	if ((name != nullptr) && (*name == _T('.')))
 	{
-		TCHAR *value = request->getFieldAsString(VID_VALUE);
+		TCHAR *value = request.getFieldAsString(VID_VALUE);
 		SetUserDbObjectAttr(m_dwUserId, name, CHECK_NULL_EX(value));
 		msg.setField(VID_RCC, RCC_SUCCESS);
 		MemFree(value);
@@ -11286,15 +11190,15 @@ void ClientSession::setUserCustomAttribute(NXCPMessage *request)
 /**
  * Open server log
  */
-void ClientSession::openServerLog(NXCPMessage *request)
+void ClientSession::openServerLog(const NXCPMessage& request)
 {
 	NXCPMessage msg;
 
 	msg.setCode(CMD_REQUEST_COMPLETED);
-	msg.setId(request->getId());
+	msg.setId(request.getId());
 
 	TCHAR name[256];
-	request->getFieldAsString(VID_LOG_NAME, name, 256);
+	request.getFieldAsString(VID_LOG_NAME, name, 256);
 
 	uint32_t rcc;
 	int32_t handle = OpenLog(name, this, &rcc);
@@ -11318,14 +11222,14 @@ void ClientSession::openServerLog(NXCPMessage *request)
 /**
  * Close server log
  */
-void ClientSession::closeServerLog(NXCPMessage *request)
+void ClientSession::closeServerLog(const NXCPMessage& request)
 {
 	NXCPMessage msg;
 
 	msg.setCode(CMD_REQUEST_COMPLETED);
-	msg.setId(request->getId());
+	msg.setId(request.getId());
 
-	int handle = (int)request->getFieldAsUInt32(VID_LOG_HANDLE);
+	int handle = (int)request.getFieldAsUInt32(VID_LOG_HANDLE);
 	msg.setField(VID_RCC, CloseLog(this, handle));
 
 	sendMessage(&msg);
@@ -11334,19 +11238,19 @@ void ClientSession::closeServerLog(NXCPMessage *request)
 /**
  * Query server log
  */
-void ClientSession::queryServerLog(NXCPMessage *request)
+void ClientSession::queryServerLog(const NXCPMessage& request)
 {
 	NXCPMessage msg;
 
 	msg.setCode(CMD_REQUEST_COMPLETED);
-	msg.setId(request->getId());
+	msg.setId(request.getId());
 
-	int32_t handle = request->getFieldAsInt32(VID_LOG_HANDLE);
+	int32_t handle = request.getFieldAsInt32(VID_LOG_HANDLE);
 	shared_ptr<LogHandle> log = AcquireLogHandleObject(this, handle);
 	if (log != nullptr)
 	{
 		INT64 rowCount;
-		msg.setField(VID_RCC, log->query(new LogFilter(*request, log.get()), &rowCount, getUserId()) ? RCC_SUCCESS : RCC_DB_FAILURE);
+		msg.setField(VID_RCC, log->query(new LogFilter(request, log.get()), &rowCount, getUserId()) ? RCC_SUCCESS : RCC_DB_FAILURE);
 		msg.setField(VID_NUM_ROWS, rowCount);
 		log->release();
 	}
@@ -11361,21 +11265,21 @@ void ClientSession::queryServerLog(NXCPMessage *request)
 /**
  * Get log data from query result
  */
-void ClientSession::getServerLogQueryData(NXCPMessage *request)
+void ClientSession::getServerLogQueryData(const NXCPMessage& request)
 {
 	NXCPMessage msg;
 	Table *data = nullptr;
 
 	msg.setCode(CMD_REQUEST_COMPLETED);
-	msg.setId(request->getId());
+	msg.setId(request.getId());
 
-	int32_t handle = (int)request->getFieldAsUInt32(VID_LOG_HANDLE);
+	int32_t handle = (int)request.getFieldAsUInt32(VID_LOG_HANDLE);
 	shared_ptr<LogHandle> log = AcquireLogHandleObject(this, handle);
 	if (log != nullptr)
 	{
-		INT64 startRow = request->getFieldAsUInt64(VID_START_ROW);
-		INT64 numRows = request->getFieldAsUInt64(VID_NUM_ROWS);
-		bool refresh = request->getFieldAsUInt16(VID_FORCE_RELOAD) ? true : false;
+		INT64 startRow = request.getFieldAsUInt64(VID_START_ROW);
+		INT64 numRows = request.getFieldAsUInt64(VID_NUM_ROWS);
+		bool refresh = request.getFieldAsUInt16(VID_FORCE_RELOAD) ? true : false;
 		data = log->getData(startRow, numRows, refresh, m_dwUserId); // pass user id from session
 		log->release();
 		if (data != nullptr)
@@ -11411,18 +11315,18 @@ void ClientSession::getServerLogQueryData(NXCPMessage *request)
 /**
  * Get details for server log record
  */
-void ClientSession::getServerLogRecordDetails(NXCPMessage *request)
+void ClientSession::getServerLogRecordDetails(const NXCPMessage& request)
 {
    NXCPMessage msg;
 
    msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request->getId());
+   msg.setId(request.getId());
 
-   int32_t handle = request->getFieldAsInt32(VID_LOG_HANDLE);
+   int32_t handle = request.getFieldAsInt32(VID_LOG_HANDLE);
    shared_ptr<LogHandle> log = AcquireLogHandleObject(this, handle);
    if (log != nullptr)
    {
-      log->getRecordDetails(request->getFieldAsInt64(VID_RECORD_ID), &msg);
+      log->getRecordDetails(request.getFieldAsInt64(VID_RECORD_ID), &msg);
       log->release();
    }
    else
@@ -11436,17 +11340,17 @@ void ClientSession::getServerLogRecordDetails(NXCPMessage *request)
 /**
  * Update SNMP v3 USM credentials
  */
-void ClientSession::updateUsmCredentials(NXCPMessage *request)
+void ClientSession::updateUsmCredentials(const NXCPMessage& request)
 {
    NXCPMessage msg;
 
-	msg.setId(request->getId());
+	msg.setId(request.getId());
 	msg.setCode(CMD_REQUEST_COMPLETED);
    UINT32 rcc = RCC_SUCCESS;
 
 	if (m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONFIG)
 	{
-      int32_t zoneUIN = request->getFieldAsInt32(VID_ZONE_UIN);
+      int32_t zoneUIN = request.getFieldAsInt32(VID_ZONE_UIN);
       shared_ptr<Zone> zone = FindZoneByUIN(zoneUIN);
       if (zoneUIN == -1 || zone != nullptr)
       {
@@ -11459,17 +11363,17 @@ void ClientSession::updateUsmCredentials(NXCPMessage *request)
                if (hStmt != nullptr)
                {
                   UINT32 id = VID_USM_CRED_LIST_BASE;
-                  int count = (int)request->getFieldAsUInt32(VID_NUM_RECORDS);
+                  int count = (int)request.getFieldAsUInt32(VID_NUM_RECORDS);
                   DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, zoneUIN);
                   for(int i = 0; i < count; i++, id += 4)
                   {
                      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, i + 1);
-                     DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, request->getFieldAsString(id++), DB_BIND_DYNAMIC);
-                     DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (int)request->getFieldAsUInt16(id++)); // Auth method
-                     DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (int)request->getFieldAsUInt16(id++)); // Priv method
-                     DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, request->getFieldAsString(id++), DB_BIND_DYNAMIC);
-                     DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, request->getFieldAsString(id++), DB_BIND_DYNAMIC);
-                     DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, request->getFieldAsString(id++), DB_BIND_DYNAMIC);
+                     DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, request.getFieldAsString(id++), DB_BIND_DYNAMIC);
+                     DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (int)request.getFieldAsUInt16(id++)); // Auth method
+                     DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (int)request.getFieldAsUInt16(id++)); // Priv method
+                     DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, request.getFieldAsString(id++), DB_BIND_DYNAMIC);
+                     DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, request.getFieldAsString(id++), DB_BIND_DYNAMIC);
+                     DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, request.getFieldAsString(id++), DB_BIND_DYNAMIC);
                      if (!DBExecute(hStmt))
                      {
                         rcc = RCC_DB_FAILURE;
@@ -11515,11 +11419,11 @@ void ClientSession::updateUsmCredentials(NXCPMessage *request)
 /**
  * Find connection point for the node
  */
-void ClientSession::findNodeConnection(NXCPMessage *request)
+void ClientSession::findNodeConnection(const NXCPMessage& request)
 {
-   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
-	uint32_t objectId = request->getFieldAsUInt32(VID_OBJECT_ID);
+	uint32_t objectId = request.getFieldAsUInt32(VID_OBJECT_ID);
 	shared_ptr<NetObj> object = FindObjectById(objectId);
 	if ((object != nullptr) && !object->isDeleted())
 	{
@@ -11598,11 +11502,11 @@ void ClientSession::findNodeConnection(NXCPMessage *request)
 /**
  * Find connection port for given MAC address
  */
-void ClientSession::findMacAddress(NXCPMessage *request)
+void ClientSession::findMacAddress(const NXCPMessage& request)
 {
-   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
-	MacAddress macAddr = request->getFieldAsMacAddress(VID_MAC_ADDR);
+	MacAddress macAddr = request.getFieldAsMacAddress(VID_MAC_ADDR);
 	int type;
 	shared_ptr<NetObj> cp = FindInterfaceConnectionPoint(macAddr, &type);
 	response.setField(VID_RCC, RCC_SUCCESS);
@@ -11683,16 +11587,16 @@ void ClientSession::findMacAddress(NXCPMessage *request)
 /**
  * Find connection port for given IP address
  */
-void ClientSession::findIpAddress(NXCPMessage *request)
+void ClientSession::findIpAddress(const NXCPMessage& request)
 {
    TCHAR ipAddrText[64];
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
 	msg.setField(VID_RCC, RCC_SUCCESS);
 
 	MacAddress macAddr;
 	bool found = false;
-	int32_t zoneUIN = request->getFieldAsUInt32(VID_ZONE_UIN);
-	InetAddress ipAddr = request->getFieldAsInetAddress(VID_IP_ADDRESS);
+	int32_t zoneUIN = request.getFieldAsUInt32(VID_ZONE_UIN);
+	InetAddress ipAddr = request.getFieldAsInetAddress(VID_IP_ADDRESS);
 	shared_ptr<Interface> iface = FindInterfaceByIP(zoneUIN, ipAddr);
 	if ((iface != nullptr) && iface->getMacAddr().isValid())
 	{
@@ -11785,14 +11689,14 @@ void ClientSession::findIpAddress(NXCPMessage *request)
 /**
  * Find nodes by hostname
  */
-void ClientSession::findHostname(NXCPMessage *request)
+void ClientSession::findHostname(const NXCPMessage& request)
 {
-   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
    response.setField(VID_RCC, RCC_SUCCESS);
 
-   int32_t zoneUIN = request->getFieldAsUInt32(VID_ZONE_UIN);
+   int32_t zoneUIN = request.getFieldAsUInt32(VID_ZONE_UIN);
    TCHAR hostname[MAX_DNS_NAME];
-   request->getFieldAsString(VID_HOSTNAME, hostname, MAX_DNS_NAME);
+   request.getFieldAsString(VID_HOSTNAME, hostname, MAX_DNS_NAME);
 
    unique_ptr<SharedObjectArray<NetObj>> nodes = FindNodesByHostname(zoneUIN, hostname);
 
@@ -11810,15 +11714,15 @@ void ClientSession::findHostname(NXCPMessage *request)
 /**
  * Send image from library to client
  */
-void ClientSession::sendLibraryImage(NXCPMessage *request)
+void ClientSession::sendLibraryImage(const NXCPMessage& request)
 {
-	NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
+	NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
 	TCHAR guidText[64], absFileName[MAX_PATH];
 	uint32_t rcc = RCC_SUCCESS;
 
 	uuid_t guid;
-	request->getFieldAsBinary(VID_GUID, guid, UUID_LENGTH);
+	request.getFieldAsBinary(VID_GUID, guid, UUID_LENGTH);
 	_uuid_to_string(guid, guidText);
 	debugPrintf(5, _T("sendLibraryImage: guid=%s"), guidText);
 
@@ -11878,7 +11782,7 @@ void ClientSession::sendLibraryImage(NXCPMessage *request)
 	sendMessage(&response);
 
 	if (rcc == RCC_SUCCESS)
-		sendFile(absFileName, request->getId(), 0);
+		sendFile(absFileName, request.getId(), 0);
 }
 
 /**
@@ -11898,9 +11802,9 @@ void ClientSession::onLibraryImageChange(const uuid& guid, bool removed)
 /**
  * Update library image from client
  */
-void ClientSession::updateLibraryImage(NXCPMessage *request)
+void ClientSession::updateLibraryImage(const NXCPMessage& request)
 {
-	NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+	NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
    if (!checkSysAccessRights(SYSTEM_ACCESS_MANAGE_IMAGE_LIB))
    {
 	   msg.setField(VID_RCC, RCC_ACCESS_DENIED);
@@ -11913,16 +11817,16 @@ void ClientSession::updateLibraryImage(NXCPMessage *request)
 	TCHAR mimetype[MAX_DB_STRING] = _T("");
 	TCHAR absFileName[MAX_PATH] = _T("");
 
-	uuid guid = request->getFieldAsGUID(VID_GUID);
+	uuid guid = request.getFieldAsGUID(VID_GUID);
 	if (guid.isNull())
 	   guid = uuid::generate();
 
 	TCHAR guidText[64];
 	guid.toString(guidText);
 
-	request->getFieldAsString(VID_NAME, name, MAX_OBJECT_NAME);
-	request->getFieldAsString(VID_CATEGORY, category, MAX_OBJECT_NAME);
-	request->getFieldAsString(VID_IMAGE_MIMETYPE, mimetype, MAX_DB_STRING);
+	request.getFieldAsString(VID_NAME, name, MAX_OBJECT_NAME);
+	request.getFieldAsString(VID_CATEGORY, category, MAX_OBJECT_NAME);
+	request.getFieldAsString(VID_IMAGE_MIMETYPE, mimetype, MAX_DB_STRING);
 
 	// Set default values for empty fields
 	if (name[0] == 0)
@@ -11983,7 +11887,7 @@ void ClientSession::updateLibraryImage(NXCPMessage *request)
             if (dInfo->open())
             {
                dInfo->setImageGuid(guid);
-               m_downloadFileMap.set(request->getId(), dInfo);
+               m_downloadFileMap.set(request.getId(), dInfo);
             }
             else
             {
@@ -12016,9 +11920,9 @@ void ClientSession::updateLibraryImage(NXCPMessage *request)
 /**
  * Delete image from library
  */
-void ClientSession::deleteLibraryImage(NXCPMessage *request)
+void ClientSession::deleteLibraryImage(const NXCPMessage& request)
 {
-	NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+	NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
 
    if (!checkSysAccessRights(SYSTEM_ACCESS_MANAGE_IMAGE_LIB))
    {
@@ -12027,7 +11931,7 @@ void ClientSession::deleteLibraryImage(NXCPMessage *request)
       return;
    }
 
-	uuid guid = request->getFieldAsGUID(VID_GUID);
+	uuid guid = request.getFieldAsGUID(VID_GUID);
    TCHAR guidText[64];
 	guid.toString(guidText);
 	debugPrintf(5, _T("deleteLibraryImage: guid=%s"), guidText);
@@ -12087,16 +11991,16 @@ void ClientSession::deleteLibraryImage(NXCPMessage *request)
 /**
  * Send list of available images (in category)
  */
-void ClientSession::listLibraryImages(NXCPMessage *request)
+void ClientSession::listLibraryImages(const NXCPMessage& request)
 {
-	NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+	NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
 
 	uint32_t rcc = RCC_SUCCESS;
 
    TCHAR category[MAX_DB_STRING];
-	if (request->isFieldExist(VID_CATEGORY))
+	if (request.isFieldExist(VID_CATEGORY))
 	{
-		request->getFieldAsString(VID_CATEGORY, category, MAX_DB_STRING);
+		request.getFieldAsString(VID_CATEGORY, category, MAX_DB_STRING);
 	}
 	else
 	{
@@ -12154,14 +12058,14 @@ void ClientSession::listLibraryImages(NXCPMessage *request)
 /**
  * Execute server side command on object
  */
-void ClientSession::executeServerCommand(NXCPMessage *request)
+void ClientSession::executeServerCommand(const NXCPMessage& request)
 {
 	NXCPMessage msg;
 
-	msg.setId(request->getId());
+	msg.setId(request.getId());
 	msg.setCode(CMD_REQUEST_COMPLETED);
 
-	uint32_t nodeId = request->getFieldAsUInt32(VID_OBJECT_ID);
+	uint32_t nodeId = request.getFieldAsUInt32(VID_OBJECT_ID);
 	shared_ptr<NetObj> object = FindObjectById(nodeId);
 	if (object != nullptr)
 	{
@@ -12207,11 +12111,11 @@ void ClientSession::executeServerCommand(NXCPMessage *request)
 /**
  * Stop server command
  */
-void ClientSession::stopServerCommand(NXCPMessage *request)
+void ClientSession::stopServerCommand(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
 
-   shared_ptr<ProcessExecutor> cmd = m_serverCommands.get(static_cast<pid_t>(request->getFieldAsUInt64(VID_COMMAND_ID)));
+   shared_ptr<ProcessExecutor> cmd = m_serverCommands.get(static_cast<pid_t>(request.getFieldAsUInt64(VID_COMMAND_ID)));
    if (cmd != nullptr)
    {
       cmd->stop();
@@ -12250,11 +12154,11 @@ void ClientSession::unregisterServerCommand(pid_t taskId)
 /**
  * Upload file from server to agent
  */
-void ClientSession::uploadFileToAgent(NXCPMessage *request)
+void ClientSession::uploadFileToAgent(const NXCPMessage& request)
 {
-	NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+	NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
 
-	uint32_t nodeId = request->getFieldAsUInt32(VID_OBJECT_ID);
+	uint32_t nodeId = request.getFieldAsUInt32(VID_OBJECT_ID);
 	shared_ptr<NetObj> object = FindObjectById(nodeId);
 	if (object != nullptr)
 	{
@@ -12262,11 +12166,11 @@ void ClientSession::uploadFileToAgent(NXCPMessage *request)
 		{
 			if (object->getObjectClass() == OBJECT_NODE)
 			{
-				TCHAR *localFile = request->getFieldAsString(VID_FILE_NAME);
-				TCHAR *remoteFile = request->getFieldAsString(VID_DESTINATION_FILE_NAME);
+				TCHAR *localFile = request.getFieldAsString(VID_FILE_NAME);
+				TCHAR *remoteFile = request.getFieldAsString(VID_DESTINATION_FILE_NAME);
 				if (localFile != nullptr)
 				{
-					auto job = new FileUploadJob(static_pointer_cast<Node>(object), localFile, remoteFile, m_dwUserId, request->getFieldAsBoolean(VID_CREATE_JOB_ON_HOLD));
+					auto job = new FileUploadJob(static_pointer_cast<Node>(object), localFile, remoteFile, m_dwUserId, request.getFieldAsBoolean(VID_CREATE_JOB_ON_HOLD));
 					if (AddJob(job))
 					{
 						writeAuditLog(AUDIT_OBJECTS, true, nodeId, _T("File upload to node %s initiated, local=\"%s\", remote=\"%s\""), object->getName(), CHECK_NULL(localFile), CHECK_NULL(remoteFile));
@@ -12308,13 +12212,13 @@ void ClientSession::uploadFileToAgent(NXCPMessage *request)
 /**
  * Send to client list of files in server's file store
  */
-void ClientSession::listServerFileStore(NXCPMessage *request)
+void ClientSession::listServerFileStore(const NXCPMessage& request)
 {
 	NXCPMessage msg;
-	msg.setId(request->getId());
+	msg.setId(request.getId());
 	msg.setCode(CMD_REQUEST_COMPLETED);
 
-	int length = (int)request->getFieldAsUInt32(VID_EXTENSION_COUNT);
+	int length = (int)request.getFieldAsUInt32(VID_EXTENSION_COUNT);
 	debugPrintf(8, _T("ClientSession::listServerFileStore: length of filter type array is %d."), length);
 
    uint32_t varId = VID_EXTENSION_LIST_BASE;
@@ -12323,7 +12227,7 @@ void ClientSession::listServerFileStore(NXCPMessage *request)
 	for(int i = 0; i < length; i++)
    {
 	   TCHAR ext[256];
-	   request->getFieldAsString(varId++, ext, 256);
+	   request.getFieldAsString(varId++, ext, 256);
 	   if (!m_soundFileTypes.contains(ext))
 	      soundFiles = false;;
       extensionList.add(ext);
@@ -12402,12 +12306,9 @@ void ClientSession::listServerFileStore(NXCPMessage *request)
 /**
  * Open server console
  */
-void ClientSession::openConsole(UINT32 rqId)
+void ClientSession::openConsole(const NXCPMessage& request)
 {
-	NXCPMessage msg;
-
-	msg.setId(rqId);
-	msg.setCode(CMD_REQUEST_COMPLETED);
+	NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
 	if (m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONSOLE)
 	{
@@ -12416,25 +12317,22 @@ void ClientSession::openConsole(UINT32 rqId)
          InterlockedOr(&m_flags, CSF_CONSOLE_OPEN);
          m_console = new ClientSessionConsole(this);
       }
-      msg.setField(VID_RCC, RCC_SUCCESS);
+      response.setField(VID_RCC, RCC_SUCCESS);
 	}
 	else
 	{
-		msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+		response.setField(VID_RCC, RCC_ACCESS_DENIED);
 	}
 
-	sendMessage(&msg);
+	sendMessage(response);
 }
 
 /**
  * Close server console
  */
-void ClientSession::closeConsole(UINT32 rqId)
+void ClientSession::closeConsole(const NXCPMessage& request)
 {
-	NXCPMessage msg;
-
-	msg.setId(rqId);
-	msg.setCode(CMD_REQUEST_COMPLETED);
+	NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
 	if (m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONSOLE)
 	{
@@ -12442,32 +12340,32 @@ void ClientSession::closeConsole(UINT32 rqId)
 		{
 		   InterlockedAnd(&m_flags, ~CSF_CONSOLE_OPEN);
 			delete_and_null(m_console);
-			msg.setField(VID_RCC, RCC_SUCCESS);
+			response.setField(VID_RCC, RCC_SUCCESS);
 		}
 		else
 		{
-			msg.setField(VID_RCC, RCC_OUT_OF_STATE_REQUEST);
+			response.setField(VID_RCC, RCC_OUT_OF_STATE_REQUEST);
 		}
 	}
 	else
 	{
-		msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+		response.setField(VID_RCC, RCC_ACCESS_DENIED);
 	}
 
-	sendMessage(&msg);
+	sendMessage(response);
 }
 
 /**
  * Process console command
  */
-void ClientSession::processConsoleCommand(NXCPMessage *request)
+void ClientSession::processConsoleCommand(const NXCPMessage& request)
 {
-	NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+	NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
 
 	if ((m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONSOLE) && (m_flags & CSF_CONSOLE_OPEN))
 	{
 		TCHAR command[256];
-		request->getFieldAsString(VID_COMMAND, command, 256);
+		request.getFieldAsString(VID_COMMAND, command, 256);
 		int rc = ProcessConsoleCommand(command, m_console);
       switch(rc)
       {
@@ -12493,14 +12391,14 @@ void ClientSession::processConsoleCommand(NXCPMessage *request)
 /**
  * Get VLANs configured on device
  */
-void ClientSession::getVlans(NXCPMessage *request)
+void ClientSession::getVlans(const NXCPMessage& request)
 {
 	NXCPMessage msg;
 
 	msg.setCode(CMD_REQUEST_COMPLETED);
-	msg.setId(request->getId());
+	msg.setId(request.getId());
 
-	shared_ptr<NetObj> object = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID));
+	shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
 	if (object != nullptr)
 	{
 		if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
@@ -12541,27 +12439,27 @@ void ClientSession::getVlans(NXCPMessage *request)
 /**
  * Receive file from client
  */
-void ClientSession::receiveFile(NXCPMessage *request)
+void ClientSession::receiveFile(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
 
 	if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_SERVER_FILES)
    {
 		TCHAR fileName[MAX_PATH];
 		TCHAR fullPath[MAX_PATH];
 
-      request->getFieldAsString(VID_FILE_NAME, fileName, MAX_PATH);
+      request.getFieldAsString(VID_FILE_NAME, fileName, MAX_PATH);
       const TCHAR *cleanFileName = GetCleanFileName(fileName);
       _tcscpy(fullPath, g_netxmsdDataDir);
       _tcscat(fullPath, DDIR_FILES);
       _tcscat(fullPath, FS_PATH_SEPARATOR);
       _tcscat(fullPath, cleanFileName);
 
-      ServerDownloadFileInfo *fInfo = new ServerDownloadFileInfo(fullPath, CMD_UPLOAD_FILE, request->getFieldAsTime(VID_MODIFICATION_TIME));
+      ServerDownloadFileInfo *fInfo = new ServerDownloadFileInfo(fullPath, CMD_UPLOAD_FILE, request.getFieldAsTime(VID_MODIFICATION_TIME));
 
       if (fInfo->open())
       {
-         m_downloadFileMap.set(request->getId(), fInfo);
+         m_downloadFileMap.set(request.getId(), fInfo);
          msg.setField(VID_RCC, RCC_SUCCESS);
          writeAuditLog(AUDIT_SYSCFG, true, 0, _T("Started upload of file \"%s\" to server"), fileName);
          NotifyClientSessions(NX_NOTIFY_FILE_LIST_CHANGED, 0);
@@ -12585,20 +12483,20 @@ void ClientSession::receiveFile(NXCPMessage *request)
 /**
  * Delete file in store
  */
-void ClientSession::deleteFile(NXCPMessage *request)
+void ClientSession::deleteFile(const NXCPMessage& request)
 {
    NXCPMessage msg;
 
    // Prepare response message
    msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request->getId());
+   msg.setId(request.getId());
 
 	if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_SERVER_FILES)
    {
 		TCHAR fileName[MAX_PATH];
 		TCHAR fullPath[MAX_PATH];
 
-      request->getFieldAsString(VID_FILE_NAME, fileName, MAX_PATH);
+      request.getFieldAsString(VID_FILE_NAME, fileName, MAX_PATH);
       const TCHAR *cleanFileName = GetCleanFileName(fileName);
 
       _tcslcpy(fullPath, g_netxmsdDataDir, MAX_PATH);
@@ -12628,15 +12526,15 @@ void ClientSession::deleteFile(NXCPMessage *request)
 /**
  * Get network path between two nodes
  */
-void ClientSession::getNetworkPath(NXCPMessage *request)
+void ClientSession::getNetworkPath(const NXCPMessage& request)
 {
 	NXCPMessage msg;
 
 	msg.setCode(CMD_REQUEST_COMPLETED);
-	msg.setId(request->getId());
+	msg.setId(request.getId());
 
-	shared_ptr<NetObj> node1 = FindObjectById(request->getFieldAsUInt32(VID_SOURCE_OBJECT_ID));
-	shared_ptr<NetObj> node2 = FindObjectById(request->getFieldAsUInt32(VID_DESTINATION_OBJECT_ID));
+	shared_ptr<NetObj> node1 = FindObjectById(request.getFieldAsUInt32(VID_SOURCE_OBJECT_ID));
+	shared_ptr<NetObj> node2 = FindObjectById(request.getFieldAsUInt32(VID_DESTINATION_OBJECT_ID));
 
 	if ((node1 != nullptr) && (node2 != nullptr))
 	{
@@ -12677,16 +12575,16 @@ void ClientSession::getNetworkPath(NXCPMessage *request)
 /**
  * Get physical components of the node
  */
-void ClientSession::getNodeComponents(NXCPMessage *request)
+void ClientSession::getNodeComponents(const NXCPMessage& request)
 {
    NXCPMessage msg;
 
    // Prepare response message
    msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request->getId());
+   msg.setId(request.getId());
 
    // Get node id and check object class and access rights
-   shared_ptr<NetObj> node = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID), OBJECT_NODE);
+   shared_ptr<NetObj> node = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID), OBJECT_NODE);
    if (node != nullptr)
    {
       if (node->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
@@ -12719,16 +12617,16 @@ void ClientSession::getNodeComponents(NXCPMessage *request)
 /**
  * Get list of software packages installed on node
  */
-void ClientSession::getNodeSoftware(NXCPMessage *request)
+void ClientSession::getNodeSoftware(const NXCPMessage& request)
 {
    NXCPMessage msg;
 
    // Prepare response message
    msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request->getId());
+   msg.setId(request.getId());
 
    // Get node id and check object class and access rights
-   shared_ptr<NetObj> node = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID), OBJECT_NODE);
+   shared_ptr<NetObj> node = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID), OBJECT_NODE);
    if (node != nullptr)
    {
       if (node->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
@@ -12752,14 +12650,14 @@ void ClientSession::getNodeSoftware(NXCPMessage *request)
 /**
  * Get list of hardware installed on node
  */
-void ClientSession::getNodeHardware(NXCPMessage *request)
+void ClientSession::getNodeHardware(const NXCPMessage& request)
 {
    NXCPMessage msg;
 
    msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request->getId());
+   msg.setId(request.getId());
 
-   shared_ptr<NetObj> node = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID), OBJECT_NODE);
+   shared_ptr<NetObj> node = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID), OBJECT_NODE);
    if (node != nullptr)
    {
       if (node->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
@@ -12776,16 +12674,16 @@ void ClientSession::getNodeHardware(NXCPMessage *request)
 /**
  * Get list of Windows performance objects supported by node
  */
-void ClientSession::getWinPerfObjects(NXCPMessage *request)
+void ClientSession::getWinPerfObjects(const NXCPMessage& request)
 {
    NXCPMessage msg;
 
    // Prepare response message
    msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request->getId());
+   msg.setId(request.getId());
 
    // Get node id and check object class and access rights
-   shared_ptr<NetObj> node = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID), OBJECT_NODE);
+   shared_ptr<NetObj> node = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID), OBJECT_NODE);
    if (node != nullptr)
    {
       if (node->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
@@ -12809,16 +12707,16 @@ void ClientSession::getWinPerfObjects(NXCPMessage *request)
 /**
  * Get threshold summary for underlying data collection targets
  */
-void ClientSession::getThresholdSummary(NXCPMessage *request)
+void ClientSession::getThresholdSummary(const NXCPMessage& request)
 {
    NXCPMessage msg;
 
    // Prepare response message
    msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request->getId());
+   msg.setId(request.getId());
 
    // Get object id and check object class and access rights
-   shared_ptr<NetObj> object = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID));
+   shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
    if (object != nullptr)
    {
       if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
@@ -12857,9 +12755,9 @@ void ClientSession::getThresholdSummary(NXCPMessage *request)
 /**
  * List configured mapping tables
  */
-void ClientSession::listMappingTables(NXCPMessage *request)
+void ClientSession::listMappingTables(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
 
 	if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_MAPPING_TBLS)
 	{
@@ -12877,14 +12775,14 @@ void ClientSession::listMappingTables(NXCPMessage *request)
 /**
  * Get content of specific mapping table
  */
-void ClientSession::getMappingTable(NXCPMessage *request)
+void ClientSession::getMappingTable(const NXCPMessage& request)
 {
    NXCPMessage msg;
 
    // Prepare response message
    msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request->getId());
-	msg.setField(VID_RCC, GetMappingTable((LONG)request->getFieldAsUInt32(VID_MAPPING_TABLE_ID), &msg));
+   msg.setId(request.getId());
+	msg.setField(VID_RCC, GetMappingTable((LONG)request.getFieldAsUInt32(VID_MAPPING_TABLE_ID), &msg));
 
    // Send response
    sendMessage(&msg);
@@ -12893,13 +12791,13 @@ void ClientSession::getMappingTable(NXCPMessage *request)
 /**
  * Create or update mapping table
  */
-void ClientSession::updateMappingTable(NXCPMessage *request)
+void ClientSession::updateMappingTable(const NXCPMessage& request)
 {
    NXCPMessage msg;
 
    // Prepare response message
    msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request->getId());
+   msg.setId(request.getId());
 
 	if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_MAPPING_TBLS)
 	{
@@ -12919,17 +12817,17 @@ void ClientSession::updateMappingTable(NXCPMessage *request)
 /**
  * Delete mapping table
  */
-void ClientSession::deleteMappingTable(NXCPMessage *request)
+void ClientSession::deleteMappingTable(const NXCPMessage& request)
 {
    NXCPMessage msg;
 
    // Prepare response message
    msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request->getId());
+   msg.setId(request.getId());
 
 	if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_MAPPING_TBLS)
 	{
-		msg.setField(VID_RCC, DeleteMappingTable((LONG)request->getFieldAsUInt32(VID_MAPPING_TABLE_ID)));
+		msg.setField(VID_RCC, DeleteMappingTable((LONG)request.getFieldAsUInt32(VID_MAPPING_TABLE_ID)));
 	}
 	else
 	{
@@ -12943,12 +12841,12 @@ void ClientSession::deleteMappingTable(NXCPMessage *request)
 /**
  * Get list of wireless stations registered on controller
  */
-void ClientSession::getWirelessStations(NXCPMessage *request)
+void ClientSession::getWirelessStations(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
 
    // Get object id and check object class and access rights
-	shared_ptr<NetObj> node = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID), OBJECT_NODE);
+	shared_ptr<NetObj> node = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID), OBJECT_NODE);
    if (node != nullptr)
    {
       if (node->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
@@ -12980,9 +12878,9 @@ void ClientSession::getWirelessStations(NXCPMessage *request)
 /**
  * Get list of configured DCI summary tables
  */
-void ClientSession::getSummaryTables(UINT32 rqId)
+void ClientSession::getSummaryTables(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, rqId);
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    DB_RESULT hResult = DBSelect(hdb, _T("SELECT id,menu_path,title,flags,guid FROM dci_summary_tables"));
@@ -13019,13 +12917,13 @@ void ClientSession::getSummaryTables(UINT32 rqId)
 /**
  * Get details of DCI summary table
  */
-void ClientSession::getSummaryTableDetails(NXCPMessage *request)
+void ClientSession::getSummaryTableDetails(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
 
 	if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_SUMMARY_TBLS)
 	{
-      LONG id = (LONG)request->getFieldAsUInt32(VID_SUMMARY_TABLE_ID);
+      LONG id = (LONG)request.getFieldAsUInt32(VID_SUMMARY_TABLE_ID);
       DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
       DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT menu_path,title,node_filter,flags,columns,guid,table_dci_name FROM dci_summary_tables WHERE id=?"));
       if (hStmt != nullptr)
@@ -13087,9 +12985,9 @@ void ClientSession::getSummaryTableDetails(NXCPMessage *request)
 /**
  * Modify DCI summary table
  */
-void ClientSession::modifySummaryTable(NXCPMessage *request)
+void ClientSession::modifySummaryTable(const NXCPMessage& request)
 {
-   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
 	if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_SUMMARY_TBLS)
 	{
@@ -13108,13 +13006,13 @@ void ClientSession::modifySummaryTable(NXCPMessage *request)
 /**
  * Delete DCI summary table
  */
-void ClientSession::deleteSummaryTable(NXCPMessage *request)
+void ClientSession::deleteSummaryTable(const NXCPMessage& request)
 {
-   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
 	if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_SUMMARY_TBLS)
 	{
-		response.setField(VID_RCC, DeleteSummaryTable((LONG)request->getFieldAsUInt32(VID_SUMMARY_TABLE_ID)));
+		response.setField(VID_RCC, DeleteSummaryTable((LONG)request.getFieldAsUInt32(VID_SUMMARY_TABLE_ID)));
 	}
 	else
 	{
@@ -13127,13 +13025,13 @@ void ClientSession::deleteSummaryTable(NXCPMessage *request)
 /**
  * Query DCI summary table
  */
-void ClientSession::querySummaryTable(NXCPMessage *request)
+void ClientSession::querySummaryTable(const NXCPMessage& request)
 {
-   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    uint32_t rcc;
-   Table *result = QuerySummaryTable(request->getFieldAsUInt32(VID_SUMMARY_TABLE_ID), nullptr,
-         request->getFieldAsUInt32(VID_OBJECT_ID), m_dwUserId, &rcc);
+   Table *result = QuerySummaryTable(request.getFieldAsUInt32(VID_SUMMARY_TABLE_ID), nullptr,
+         request.getFieldAsUInt32(VID_OBJECT_ID), m_dwUserId, &rcc);
    if (result != nullptr)
    {
       debugPrintf(6, _T("querySummaryTable: %d rows in resulting table"), result->getNumRows());
@@ -13152,14 +13050,14 @@ void ClientSession::querySummaryTable(NXCPMessage *request)
 /**
  * Query ad hoc DCI summary table
  */
-void ClientSession::queryAdHocSummaryTable(NXCPMessage *request)
+void ClientSession::queryAdHocSummaryTable(const NXCPMessage& request)
 {
-   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    SummaryTable *tableDefinition = new SummaryTable(request);
 
    uint32_t rcc;
-   Table *result = QuerySummaryTable(0, tableDefinition, request->getFieldAsUInt32(VID_OBJECT_ID), m_dwUserId, &rcc);
+   Table *result = QuerySummaryTable(0, tableDefinition, request.getFieldAsUInt32(VID_OBJECT_ID), m_dwUserId, &rcc);
    if (result != nullptr)
    {
       debugPrintf(6, _T("querySummaryTable: %d rows in resulting table"), result->getNumRows());
@@ -13214,12 +13112,12 @@ void ClientSession::forwardToReportingServer(NXCPMessage *request)
 /**
  * Get address map for a subnet
  */
-void ClientSession::getSubnetAddressMap(NXCPMessage *request)
+void ClientSession::getSubnetAddressMap(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    // Get node id and check object class and access rights
-   shared_ptr<NetObj> subnet = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID), OBJECT_SUBNET);
+   shared_ptr<NetObj> subnet = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID), OBJECT_SUBNET);
    if (subnet != nullptr)
    {
       if (subnet->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
@@ -13228,50 +13126,48 @@ void ClientSession::getSubnetAddressMap(NXCPMessage *request)
          UINT32 *map = static_cast<Subnet&>(*subnet).buildAddressMap(&length);
 			if (map != nullptr)
 			{
-				msg.setField(VID_RCC, RCC_SUCCESS);
-            msg.setFieldFromInt32Array(VID_ADDRESS_MAP, (UINT32)length, map);
+				response.setField(VID_RCC, RCC_SUCCESS);
+            response.setFieldFromInt32Array(VID_ADDRESS_MAP, (UINT32)length, map);
             MemFree(map);
 			}
 			else
 			{
-				msg.setField(VID_RCC, RCC_INTERNAL_ERROR);
+				response.setField(VID_RCC, RCC_INTERNAL_ERROR);
 			}
       }
       else
       {
-         msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
       }
    }
    else  // No object with given ID
    {
-      msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
    }
 
-   // Send response
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
  * Get effective rights for object
  */
-void ClientSession::getEffectiveRights(NXCPMessage *request)
+void ClientSession::getEffectiveRights(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    // Get node id and check object class and access rights
-   shared_ptr<NetObj> object = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID));
+   shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
    if (object != nullptr)
    {
-      msg.setField(VID_EFFECTIVE_RIGHTS, object->getUserRights(m_dwUserId));
-		msg.setField(VID_RCC, RCC_SUCCESS);
+      response.setField(VID_EFFECTIVE_RIGHTS, object->getUserRights(m_dwUserId));
+		response.setField(VID_RCC, RCC_SUCCESS);
    }
    else  // No object with given ID
    {
-      msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
    }
 
-   // Send response
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
@@ -13558,12 +13454,12 @@ void ClientSession::uploadUserFileToAgent(NXCPMessage *request)
 /**
  * Get switch forwarding database
  */
-void ClientSession::getSwitchForwardingDatabase(NXCPMessage *request)
+void ClientSession::getSwitchForwardingDatabase(const NXCPMessage& request)
 {
-   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    // Get node id and check object class and access rights
-   shared_ptr<NetObj> node = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID), OBJECT_NODE);
+   shared_ptr<NetObj> node = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID), OBJECT_NODE);
    if (node != nullptr)
    {
       if (node->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
@@ -13597,12 +13493,12 @@ void ClientSession::getSwitchForwardingDatabase(NXCPMessage *request)
 /**
  * Get routing table
  */
-void ClientSession::getRoutingTable(NXCPMessage *request)
+void ClientSession::getRoutingTable(const NXCPMessage& request)
 {
-   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    // Get node id and check object class and access rights
-   shared_ptr<NetObj> node = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID), OBJECT_NODE);
+   shared_ptr<NetObj> node = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID), OBJECT_NODE);
    if (node != nullptr)
    {
       if (node->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
@@ -13659,12 +13555,12 @@ void ClientSession::getRoutingTable(NXCPMessage *request)
 /**
  * Get location history for object
  */
-void ClientSession::getLocationHistory(NXCPMessage *request)
+void ClientSession::getLocationHistory(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
 
    // Get node id and check object class and access rights
-   shared_ptr<NetObj> device = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID), OBJECT_MOBILEDEVICE);
+   shared_ptr<NetObj> device = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID), OBJECT_MOBILEDEVICE);
    if (device != nullptr)
    {
       if (device->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
@@ -13672,13 +13568,13 @@ void ClientSession::getLocationHistory(NXCPMessage *request)
          DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
          TCHAR query[256];
          _sntprintf(query, 255, _T("SELECT latitude,longitude,accuracy,start_timestamp,end_timestamp FROM gps_history_%d")
-                                             _T(" WHERE start_timestamp<? AND end_timestamp>?"), request->getFieldAsUInt32(VID_OBJECT_ID));
+                                             _T(" WHERE start_timestamp<? AND end_timestamp>?"), request.getFieldAsUInt32(VID_OBJECT_ID));
 
          DB_STATEMENT hStmt = DBPrepare(hdb, query);
          if (hStmt != nullptr)
          {
-            DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (INT64)request->getFieldAsTime(VID_TIME_TO));
-            DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (INT64)request->getFieldAsTime(VID_TIME_FROM));
+            DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (INT64)request.getFieldAsTime(VID_TIME_TO));
+            DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (INT64)request.getFieldAsTime(VID_TIME_FROM));
             DB_RESULT hResult = DBSelectPrepared(hStmt);
             if (hResult != nullptr)
             {
@@ -13725,14 +13621,14 @@ void ClientSession::getLocationHistory(NXCPMessage *request)
 /**
  * Get screenshot of object
  */
-void ClientSession::getScreenshot(NXCPMessage *request)
+void ClientSession::getScreenshot(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
 
-   TCHAR* sessionName = request->getFieldAsString(VID_NAME);
+   TCHAR* sessionName = request.getFieldAsString(VID_NAME);
    if(sessionName == nullptr)
       sessionName = _tcsdup(_T("Console"));
-   UINT32 objectId = request->getFieldAsUInt32(VID_NODE_ID);
+   UINT32 objectId = request.getFieldAsUInt32(VID_NODE_ID);
 	shared_ptr<NetObj> object = FindObjectById(objectId);
 	if (object != nullptr)
 	{
@@ -13786,11 +13682,11 @@ void ClientSession::getScreenshot(NXCPMessage *request)
 /**
  * Compile script
  */
-void ClientSession::compileScript(NXCPMessage *request)
+void ClientSession::compileScript(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
 
-	TCHAR *source = request->getFieldAsString(VID_SCRIPT);
+	TCHAR *source = request.getFieldAsString(VID_SCRIPT);
 	if (source != nullptr)
 	{
       TCHAR errorMessage[256];
@@ -13799,7 +13695,7 @@ void ClientSession::compileScript(NXCPMessage *request)
       if (script != nullptr)
       {
          msg.setField(VID_COMPILATION_STATUS, (INT16)1);
-         if (request->getFieldAsBoolean(VID_SERIALIZE))
+         if (request.getFieldAsBoolean(VID_SERIALIZE))
          {
             ByteStream bs;
             script->serialize(bs);
@@ -13830,11 +13726,11 @@ void ClientSession::compileScript(NXCPMessage *request)
 /**
  * Clean configuration and collected data of DCIs on agent
  */
-void ClientSession::cleanAgentDciConfiguration(NXCPMessage *request)
+void ClientSession::cleanAgentDciConfiguration(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
 
-   uint32_t objectId = request->getFieldAsUInt32(VID_NODE_ID);
+   uint32_t objectId = request.getFieldAsUInt32(VID_NODE_ID);
 	shared_ptr<NetObj> object = FindObjectById(objectId);
 	if (object != nullptr)
 	{
@@ -13874,11 +13770,11 @@ void ClientSession::cleanAgentDciConfiguration(NXCPMessage *request)
 /**
  * Triggers offline DCI configuration synchronization with node
  */
-void ClientSession::resyncAgentDciConfiguration(NXCPMessage *request)
+void ClientSession::resyncAgentDciConfiguration(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
 
-   UINT32 objectId = request->getFieldAsUInt32(VID_NODE_ID);
+   UINT32 objectId = request.getFieldAsUInt32(VID_NODE_ID);
 	shared_ptr<NetObj> node = FindObjectById(objectId);
    if (node != nullptr)
 	{
@@ -13910,9 +13806,9 @@ void ClientSession::resyncAgentDciConfiguration(NXCPMessage *request)
 /**
  * List all possible Schedule ID's
  */
-void ClientSession::getSchedulerTaskHandlers(NXCPMessage *request)
+void ClientSession::getSchedulerTaskHandlers(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
    GetSchedulerTaskHandlers(&msg, m_systemAccessRights);
    msg.setField(VID_RCC, RCC_SUCCESS);
    sendMessage(&msg);
@@ -13921,9 +13817,9 @@ void ClientSession::getSchedulerTaskHandlers(NXCPMessage *request)
 /**
  * List all existing schedules
  */
-void ClientSession::getScheduledTasks(NXCPMessage *request)
+void ClientSession::getScheduledTasks(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
    GetScheduledTasks(&msg, m_dwUserId, m_systemAccessRights);
    msg.setField(VID_RCC, RCC_SUCCESS);
    sendMessage(&msg);
@@ -13932,9 +13828,9 @@ void ClientSession::getScheduledTasks(NXCPMessage *request)
 /**
  * Add new schedule
  */
-void ClientSession::addScheduledTask(NXCPMessage *request)
+void ClientSession::addScheduledTask(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
    uint32_t result = CreateScheduledTaskFromMsg(request, m_dwUserId, m_systemAccessRights);
    msg.setField(VID_RCC, result);
    sendMessage(&msg);
@@ -13943,9 +13839,9 @@ void ClientSession::addScheduledTask(NXCPMessage *request)
 /**
  * Update existing schedule
  */
-void ClientSession::updateScheduledTask(NXCPMessage *request)
+void ClientSession::updateScheduledTask(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
    uint32_t result = UpdateScheduledTaskFromMsg(request, m_dwUserId, m_systemAccessRights);
    msg.setField(VID_RCC, result);
    sendMessage(&msg);
@@ -13954,10 +13850,10 @@ void ClientSession::updateScheduledTask(NXCPMessage *request)
 /**
  * Remove/delete schedule
  */
-void ClientSession::removeScheduledTask(NXCPMessage *request)
+void ClientSession::removeScheduledTask(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
-   uint32_t result = DeleteScheduledTask(request->getFieldAsUInt32(VID_SCHEDULED_TASK_ID), m_dwUserId, m_systemAccessRights);
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
+   uint32_t result = DeleteScheduledTask(request.getFieldAsUInt32(VID_SCHEDULED_TASK_ID), m_dwUserId, m_systemAccessRights);
    msg.setField(VID_RCC, result);
    sendMessage(&msg);
 }
@@ -13987,10 +13883,10 @@ static bool ReportingScheduledTaskFilter(const ScheduledTask *task, void *contex
  *
  * Get list of scheduled executions for given report
  */
-void ClientSession::getScheduledReportingTasks(NXCPMessage *request)
+void ClientSession::getScheduledReportingTasks(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
-   uuid reportId = request->getFieldAsGUID(VID_REPORT_DEFINITION);
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
+   uuid reportId = request.getFieldAsGUID(VID_REPORT_DEFINITION);
    GetScheduledTasks(&msg, m_dwUserId, m_systemAccessRights, ReportingScheduledTaskFilter, &reportId);
    msg.setField(VID_RCC, RCC_SUCCESS);
    sendMessage(&msg);
@@ -13999,9 +13895,9 @@ void ClientSession::getScheduledReportingTasks(NXCPMessage *request)
 /**
  * Get list of registered prediction engines
  */
-void ClientSession::getPredictionEngines(NXCPMessage *request)
+void ClientSession::getPredictionEngines(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
    GetPredictionEngines(&msg);
    msg.setField(VID_RCC, RCC_SUCCESS);
    sendMessage(&msg);
@@ -14010,12 +13906,12 @@ void ClientSession::getPredictionEngines(NXCPMessage *request)
 /**
  * Get predicted data
  */
-void ClientSession::getPredictedData(NXCPMessage *request)
+void ClientSession::getPredictedData(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
    bool success = false;
 
-   shared_ptr<NetObj> object = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID));
+   shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
    if (object != nullptr)
    {
       if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
@@ -14054,9 +13950,9 @@ void ClientSession::getPredictedData(NXCPMessage *request)
 /**
  * Get list of agent tunnels
  */
-void ClientSession::getAgentTunnels(NXCPMessage *request)
+void ClientSession::getAgentTunnels(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
    if (m_systemAccessRights & SYSTEM_ACCESS_REGISTER_AGENTS)
    {
       GetAgentTunnels(&msg);
@@ -14074,13 +13970,13 @@ void ClientSession::getAgentTunnels(NXCPMessage *request)
 /**
  * Bind agent tunnel to node
  */
-void ClientSession::bindAgentTunnel(NXCPMessage *request)
+void ClientSession::bindAgentTunnel(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
    if (m_systemAccessRights & SYSTEM_ACCESS_REGISTER_AGENTS)
    {
-      UINT32 nodeId = request->getFieldAsUInt32(VID_NODE_ID);
-      UINT32 tunnelId = request->getFieldAsUInt32(VID_TUNNEL_ID);
+      UINT32 nodeId = request.getFieldAsUInt32(VID_NODE_ID);
+      UINT32 tunnelId = request.getFieldAsUInt32(VID_TUNNEL_ID);
       UINT32 rcc = BindAgentTunnel(tunnelId, nodeId, m_dwUserId);
       msg.setField(VID_RCC, rcc);
       if (rcc == RCC_SUCCESS)
@@ -14099,12 +13995,12 @@ void ClientSession::bindAgentTunnel(NXCPMessage *request)
 /**
  * Unbind agent tunnel from node
  */
-void ClientSession::unbindAgentTunnel(NXCPMessage *request)
+void ClientSession::unbindAgentTunnel(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
    if (m_systemAccessRights & SYSTEM_ACCESS_REGISTER_AGENTS)
    {
-      UINT32 nodeId = request->getFieldAsUInt32(VID_NODE_ID);
+      UINT32 nodeId = request.getFieldAsUInt32(VID_NODE_ID);
       UINT32 rcc = UnbindAgentTunnel(nodeId, m_dwUserId);
       msg.setField(VID_RCC, rcc);
       if (rcc == RCC_SUCCESS)
@@ -14123,12 +14019,12 @@ void ClientSession::unbindAgentTunnel(NXCPMessage *request)
 /**
  * Setup TCP proxy via agent
  */
-void ClientSession::setupTcpProxy(NXCPMessage *request)
+void ClientSession::setupTcpProxy(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
    if (m_systemAccessRights & SYSTEM_ACCESS_SETUP_TCP_PROXY)
    {
-      shared_ptr<NetObj> object = FindObjectById(request->getFieldAsUInt32(VID_NODE_ID));
+      shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_NODE_ID));
       if (object != nullptr)
       {
          if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_CONTROL))
@@ -14158,8 +14054,8 @@ void ClientSession::setupTcpProxy(NXCPMessage *request)
                if (conn != nullptr)
                {
                   conn->setTcpProxySession(this);
-                  InetAddress ipAddr = request->getFieldAsInetAddress(VID_IP_ADDRESS);
-                  uint16_t port = request->getFieldAsUInt16(VID_PORT);
+                  InetAddress ipAddr = request.getFieldAsInetAddress(VID_IP_ADDRESS);
+                  uint16_t port = request.getFieldAsUInt16(VID_PORT);
                   uint32_t agentChannelId;
                   rcc = conn->setupTcpProxy(ipAddr, port, &agentChannelId);
                   if (rcc == ERR_SUCCESS)
@@ -14212,11 +14108,11 @@ void ClientSession::setupTcpProxy(NXCPMessage *request)
 /**
  * Close TCP proxy session
  */
-void ClientSession::closeTcpProxy(NXCPMessage *request)
+void ClientSession::closeTcpProxy(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
 
-   uint32_t clientChannelId = request->getFieldAsUInt32(VID_CHANNEL_ID);
+   uint32_t clientChannelId = request.getFieldAsUInt32(VID_CHANNEL_ID);
 
    shared_ptr<AgentConnectionEx> conn;
    uint32_t agentChannelId, nodeId;
@@ -14328,19 +14224,19 @@ void ClientSession::processTcpProxyAgentDisconnect(AgentConnectionEx *conn)
 /**
  * Expand event processing macros
  */
-void ClientSession::expandMacros(NXCPMessage *request)
+void ClientSession::expandMacros(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
 
-   StringMap inputFields(*request, VID_INPUT_FIELD_BASE, VID_INPUT_FIELD_COUNT);
+   StringMap inputFields(request, VID_INPUT_FIELD_BASE, VID_INPUT_FIELD_COUNT);
 
-   int fieldCount = request->getFieldAsUInt32(VID_STRING_COUNT);
+   int fieldCount = request.getFieldAsUInt32(VID_STRING_COUNT);
    uint32_t inFieldId = VID_EXPAND_STRING_BASE;
    uint32_t outFieldId = VID_EXPAND_STRING_BASE;
    for(int i = 0; i < fieldCount; i++, inFieldId += 2, outFieldId++)
    {
-      TCHAR *textToExpand = request->getFieldAsString(inFieldId++);
-      shared_ptr<NetObj> object = FindObjectById(request->getFieldAsUInt32(inFieldId++));
+      TCHAR *textToExpand = request.getFieldAsString(inFieldId++);
+      shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(inFieldId++));
       if (object == nullptr)
       {
          msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
@@ -14348,7 +14244,7 @@ void ClientSession::expandMacros(NXCPMessage *request)
          MemFree(textToExpand);
          return;
       }
-      Alarm *alarm = FindAlarmById(request->getFieldAsUInt32(inFieldId++));
+      Alarm *alarm = FindAlarmById(request.getFieldAsUInt32(inFieldId++));
       if (!object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ) ||
           ((alarm != nullptr) && !object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ_ALARMS) && !alarm->checkCategoryAccess(this)))
       {
@@ -14373,11 +14269,11 @@ void ClientSession::expandMacros(NXCPMessage *request)
 /**
  * Update or create policy from message
  */
-void ClientSession::updatePolicy(NXCPMessage *request)
+void ClientSession::updatePolicy(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
 
-   shared_ptr<NetObj> templateObject = FindObjectById(request->getFieldAsUInt32(VID_TEMPLATE_ID), OBJECT_TEMPLATE);
+   shared_ptr<NetObj> templateObject = FindObjectById(request.getFieldAsUInt32(VID_TEMPLATE_ID), OBJECT_TEMPLATE);
    if (templateObject != nullptr)
    {
       if (templateObject->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
@@ -14409,16 +14305,16 @@ void ClientSession::updatePolicy(NXCPMessage *request)
 /**
  * Delete agent policy from template
  */
-void ClientSession::deletePolicy(NXCPMessage *request)
+void ClientSession::deletePolicy(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
 
-   shared_ptr<NetObj> templateObject = FindObjectById(request->getFieldAsUInt32(VID_TEMPLATE_ID), OBJECT_TEMPLATE);
+   shared_ptr<NetObj> templateObject = FindObjectById(request.getFieldAsUInt32(VID_TEMPLATE_ID), OBJECT_TEMPLATE);
    if(templateObject != nullptr)
    {
       if (templateObject->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
       {
-         if (static_cast<Template&>(*templateObject).removePolicy(request->getFieldAsGUID(VID_GUID)))
+         if (static_cast<Template&>(*templateObject).removePolicy(request.getFieldAsGUID(VID_GUID)))
             msg.setField(VID_RCC, RCC_SUCCESS);
          else
             msg.setField(VID_RCC, RCC_NO_SUCH_POLICY);
@@ -14439,11 +14335,11 @@ void ClientSession::deletePolicy(NXCPMessage *request)
 /**
  * Get policy list for template
  */
-void ClientSession::getPolicyList(NXCPMessage *request)
+void ClientSession::getPolicyList(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
 
-   shared_ptr<NetObj> templateObject = FindObjectById(request->getFieldAsUInt32(VID_TEMPLATE_ID), OBJECT_TEMPLATE);
+   shared_ptr<NetObj> templateObject = FindObjectById(request.getFieldAsUInt32(VID_TEMPLATE_ID), OBJECT_TEMPLATE);
    if (templateObject != nullptr)
    {
       if (templateObject->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
@@ -14467,16 +14363,16 @@ void ClientSession::getPolicyList(NXCPMessage *request)
 /**
  * Get policy list for template
  */
-void ClientSession::getPolicy(NXCPMessage *request)
+void ClientSession::getPolicy(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
 
-   shared_ptr<NetObj> templateObject = FindObjectById(request->getFieldAsUInt32(VID_TEMPLATE_ID), OBJECT_TEMPLATE);
+   shared_ptr<NetObj> templateObject = FindObjectById(request.getFieldAsUInt32(VID_TEMPLATE_ID), OBJECT_TEMPLATE);
    if (templateObject != nullptr)
    {
       if (templateObject->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
       {
-         uuid guid = request->getFieldAsGUID(VID_GUID);
+         uuid guid = request.getFieldAsGUID(VID_GUID);
          if (static_cast<Template&>(*templateObject).fillPolicyDetailsMessage(&msg, guid))
             msg.setField(VID_RCC, RCC_SUCCESS);
          else
@@ -14506,10 +14402,10 @@ static void ApplyPolicyChanges(const shared_ptr<NetObj>& templateObject)
 /**
  * Get policy list for template
  */
-void ClientSession::onPolicyEditorClose(NXCPMessage *request)
+void ClientSession::onPolicyEditorClose(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
-   shared_ptr<NetObj> templateObject = FindObjectById(request->getFieldAsUInt32(VID_TEMPLATE_ID), OBJECT_TEMPLATE);
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
+   shared_ptr<NetObj> templateObject = FindObjectById(request.getFieldAsUInt32(VID_TEMPLATE_ID), OBJECT_TEMPLATE);
    if(templateObject != nullptr)
    {
       ThreadPoolExecute(g_clientThreadPool, ApplyPolicyChanges, templateObject);
@@ -14533,32 +14429,31 @@ static void ForceApplyPolicyChanges(const shared_ptr<NetObj>& templateObject)
 /**
  * Force apply
  */
-void ClientSession::forceApplyPolicy(NXCPMessage *pRequest)
+void ClientSession::forceApplyPolicy(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, pRequest->getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    // Get source and destination
-   shared_ptr<NetObj> templateObject = FindObjectById(pRequest->getFieldAsUInt32(VID_TEMPLATE_ID), OBJECT_TEMPLATE);
+   shared_ptr<NetObj> templateObject = FindObjectById(request.getFieldAsUInt32(VID_TEMPLATE_ID), OBJECT_TEMPLATE);
    if (templateObject != nullptr)
    {
       // Check access rights
       if (templateObject->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
       {
          ThreadPoolExecute(g_clientThreadPool, ForceApplyPolicyChanges, templateObject);
-         msg.setField(VID_RCC, RCC_SUCCESS);
+         response.setField(VID_RCC, RCC_SUCCESS);
       }
       else  // User doesn't have enough rights on object(s)
       {
-         msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
       }
    }
    else  // No object(s) with given ID
    {
-      msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
    }
 
-   // Send response
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
@@ -14615,20 +14510,20 @@ unique_ptr<SharedObjectArray<DCObject>> ClientSession::resolveDCOsByRegex(UINT32
  *
  * @param request
  */
-void ClientSession::getMatchingDCI(NXCPMessage *request)
+void ClientSession::getMatchingDCI(const NXCPMessage& request)
 {
-   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    TCHAR objectName[MAX_OBJECT_NAME], dciName[MAX_OBJECT_NAME];
    objectName[0] = 0, dciName[0] = 0;
    uint32_t objectId = 0;
 
-   if (request->isFieldExist(VID_OBJECT_NAME))
-      request->getFieldAsString(VID_OBJECT_NAME, objectName, MAX_OBJECT_NAME);
+   if (request.isFieldExist(VID_OBJECT_NAME))
+      request.getFieldAsString(VID_OBJECT_NAME, objectName, MAX_OBJECT_NAME);
    else
-      objectId = request->getFieldAsUInt32(VID_OBJECT_ID);
-   uint32_t flags = request->getFieldAsInt32(VID_FLAGS);
-   request->getFieldAsString(VID_DCI_NAME, dciName, MAX_OBJECT_NAME);
+      objectId = request.getFieldAsUInt32(VID_OBJECT_ID);
+   uint32_t flags = request.getFieldAsInt32(VID_FLAGS);
+   request.getFieldAsString(VID_DCI_NAME, dciName, MAX_OBJECT_NAME);
 
    unique_ptr<SharedObjectArray<DCObject>> dcoList = resolveDCOsByRegex(objectId, objectName, dciName, (flags & DCI_RES_SEARCH_NAME));
    if (dcoList != nullptr)
@@ -14664,9 +14559,9 @@ void ClientSession::getMatchingDCI(NXCPMessage *request)
 /**
  * Get list of user agent messages
  */
-void ClientSession::getUserAgentNotification(NXCPMessage *request)
+void ClientSession::getUserAgentNotification(const NXCPMessage& request)
 {
-   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    if (m_systemAccessRights & SYSTEM_ACCESS_UA_NOTIFICATIONS)
    {
@@ -14692,16 +14587,16 @@ void ClientSession::getUserAgentNotification(NXCPMessage *request)
 /**
  * Create new user agent message and send to the nodes
  */
-void ClientSession::addUserAgentNotification(NXCPMessage *request)
+void ClientSession::addUserAgentNotification(const NXCPMessage& request)
 {
    NXCPMessage msg;
    msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request->getId());
+   msg.setId(request.getId());
 
    if (m_systemAccessRights & SYSTEM_ACCESS_UA_NOTIFICATIONS)
    {
       IntegerArray<UINT32> objectList(16, 16);
-      request->getFieldAsInt32Array(VID_UA_NOTIFICATION_BASE + 1, &objectList);
+      request.getFieldAsInt32Array(VID_UA_NOTIFICATION_BASE + 1, &objectList);
       UINT32 rcc = RCC_SUCCESS;
       for (int i = 0; i < objectList.size(); i++)
       {
@@ -14721,9 +14616,9 @@ void ClientSession::addUserAgentNotification(NXCPMessage *request)
       if (rcc == RCC_SUCCESS)
       {
          TCHAR tmp[MAX_USER_AGENT_MESSAGE_SIZE];
-         UserAgentNotificationItem *uan = CreateNewUserAgentNotification(request->getFieldAsString(VID_UA_NOTIFICATION_BASE, tmp, MAX_USER_AGENT_MESSAGE_SIZE),
-               objectList, request->getFieldAsTime(VID_UA_NOTIFICATION_BASE + 2), request->getFieldAsTime(VID_UA_NOTIFICATION_BASE + 3),
-               request->getFieldAsBoolean(VID_UA_NOTIFICATION_BASE + 4), m_dwUserId);
+         UserAgentNotificationItem *uan = CreateNewUserAgentNotification(request.getFieldAsString(VID_UA_NOTIFICATION_BASE, tmp, MAX_USER_AGENT_MESSAGE_SIZE),
+               objectList, request.getFieldAsTime(VID_UA_NOTIFICATION_BASE + 2), request.getFieldAsTime(VID_UA_NOTIFICATION_BASE + 3),
+               request.getFieldAsBoolean(VID_UA_NOTIFICATION_BASE + 4), m_dwUserId);
          json_t *objData = uan->toJson();
          WriteAuditLogWithJsonValues(AUDIT_OBJECTS, true, m_dwUserId, m_workstation, m_id, uan->getId(), nullptr, objData,
                _T("User agent notification %d created"), uan->getId());
@@ -14744,18 +14639,16 @@ void ClientSession::addUserAgentNotification(NXCPMessage *request)
 /**
  * Recall user user message
  */
-void ClientSession::recallUserAgentNotification(NXCPMessage *request)
+void ClientSession::recallUserAgentNotification(const NXCPMessage& request)
 {
-   NXCPMessage msg;
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request->getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    if (m_systemAccessRights & SYSTEM_ACCESS_UA_NOTIFICATIONS)
    {
       g_userAgentNotificationListMutex.lock();
       int base = VID_UA_NOTIFICATION_BASE;
       UserAgentNotificationItem *uan = nullptr;
-      UINT32 objectId = request->getFieldAsUInt32(VID_OBJECT_ID);
+      uint32_t objectId = request.getFieldAsUInt32(VID_OBJECT_ID);
       for(int i = 0; i < g_userAgentNotificationList.size(); i++, base+=10)
       {
          UserAgentNotificationItem *tmp = g_userAgentNotificationList.get(i);
@@ -14772,7 +14665,7 @@ void ClientSession::recallUserAgentNotification(NXCPMessage *request)
       }
       g_userAgentNotificationListMutex.unlock();
 
-      if(uan != nullptr)
+      if (uan != nullptr)
       {
          json_t *objData = uan->toJson();
          WriteAuditLogWithJsonValues(AUDIT_OBJECTS, true, m_dwUserId, m_workstation, m_id, uan->getId(), nullptr, objData,
@@ -14780,116 +14673,113 @@ void ClientSession::recallUserAgentNotification(NXCPMessage *request)
          json_decref(objData);
          ThreadPoolExecute(g_clientThreadPool, uan, &UserAgentNotificationItem::processUpdate);
          NotifyClientSessions(NX_NOTIFY_USER_AGENT_MESSAGE_CHANGED, (UINT32)uan->getId());
-         msg.setField(VID_RCC, RCC_SUCCESS);
+         response.setField(VID_RCC, RCC_SUCCESS);
       }
       else
-         msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
-
+      {
+         response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+      }
    }
    else
    {
-      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
       writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on user agent notification recall"));
    }
 
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
  * Get notification channel
  */
-void ClientSession::getNotificationChannels(UINT32 requestId)
+void ClientSession::getNotificationChannels(const NXCPMessage& request)
 {
-   NXCPMessage msg;
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(requestId);
-   if(m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONFIG)
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+   if (m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONFIG)
    {
-      GetNotificationChannels(&msg);
-      msg.setField(VID_RCC, RCC_SUCCESS);
+      GetNotificationChannels(&response);
+      response.setField(VID_RCC, RCC_SUCCESS);
    }
    else
    {
       writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on reading notification channel list"));
-      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
  * Add notification channel
  */
-void ClientSession::addNotificationChannel(NXCPMessage *request)
+void ClientSession::addNotificationChannel(const NXCPMessage& request)
 {
-   NXCPMessage msg;
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request->getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
    if (m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONFIG)
    {
       TCHAR name[MAX_OBJECT_NAME];
-      request->getFieldAsString(VID_NAME, name, MAX_OBJECT_NAME);
+      request.getFieldAsString(VID_NAME, name, MAX_OBJECT_NAME);
       if (name[0] != 0)
       {
          TCHAR driverName[MAX_OBJECT_NAME];
-         request->getFieldAsString(VID_DRIVER_NAME, driverName, MAX_OBJECT_NAME);
+         request.getFieldAsString(VID_DRIVER_NAME, driverName, MAX_OBJECT_NAME);
          if (driverName[0] != 0)
          {
             if (!IsNotificationChannelExists(name))
             {
                TCHAR description[MAX_NC_DESCRIPTION];
-               request->getFieldAsString(VID_DESCRIPTION, description, MAX_NC_DESCRIPTION);
-               char *configuration = request->getFieldAsMBString(VID_XML_CONFIG, nullptr, 0);
+               request.getFieldAsString(VID_DESCRIPTION, description, MAX_NC_DESCRIPTION);
+               char *configuration = request.getFieldAsMBString(VID_XML_CONFIG, nullptr, 0);
                CreateNotificationChannelAndSave(name, description, driverName, configuration);
-               msg.setField(VID_RCC, RCC_SUCCESS);
+               response.setField(VID_RCC, RCC_SUCCESS);
                NotifyClientSessions(NX_NOTIFY_NC_CHANNEL_CHANGED, 0);
                writeAuditLog(AUDIT_SYSCFG, true, 0, _T("Created new notification channel %s"), name);
             }
             else
             {
-               msg.setField(VID_RCC, RCC_CHANNEL_ALREADY_EXIST);
+               response.setField(VID_RCC, RCC_CHANNEL_ALREADY_EXIST);
             }
          }
          else
          {
-            msg.setField(VID_RCC, RCC_INVALID_DRIVER_NAME);
+            response.setField(VID_RCC, RCC_INVALID_DRIVER_NAME);
          }
       }
       else
       {
-         msg.setField(VID_RCC, RCC_INVALID_CHANNEL_NAME);
+         response.setField(VID_RCC, RCC_INVALID_CHANNEL_NAME);
       }
    }
    else
    {
       writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on new notification channel creation"));
-      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
-   sendMessage(&msg);
+   sendMessage(&response);
 }
 
 /**
  * Update notificaiton channel
  */
-void ClientSession::updateNotificationChannel(NXCPMessage *request)
+void ClientSession::updateNotificationChannel(const NXCPMessage& request)
 {
    NXCPMessage msg;
    msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request->getId());
+   msg.setId(request.getId());
    if (m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONFIG)
    {
       TCHAR name[MAX_OBJECT_NAME];
-      request->getFieldAsString(VID_NAME, name, MAX_OBJECT_NAME);
+      request.getFieldAsString(VID_NAME, name, MAX_OBJECT_NAME);
       if (name[0] != 0)
       {
          TCHAR driverName[MAX_OBJECT_NAME];
-         request->getFieldAsString(VID_DRIVER_NAME, driverName, MAX_OBJECT_NAME);
+         request.getFieldAsString(VID_DRIVER_NAME, driverName, MAX_OBJECT_NAME);
          if (driverName[0] != 0)
          {
             if (IsNotificationChannelExists(name))
             {
                TCHAR description[MAX_NC_DESCRIPTION];
-               request->getFieldAsString(VID_DESCRIPTION, description, MAX_NC_DESCRIPTION);
-               char *configuration = request->getFieldAsMBString(VID_XML_CONFIG, nullptr, 0);
+               request.getFieldAsString(VID_DESCRIPTION, description, MAX_NC_DESCRIPTION);
+               char *configuration = request.getFieldAsMBString(VID_XML_CONFIG, nullptr, 0);
                UpdateNotificationChannel(name, description, driverName, configuration);
                msg.setField(VID_RCC, RCC_SUCCESS);
                NotifyClientSessions(NX_NOTIFY_NC_CHANNEL_CHANGED, 0);
@@ -14923,15 +14813,15 @@ void ClientSession::updateNotificationChannel(NXCPMessage *request)
 /**
  * Remove notification channel
  */
-void ClientSession::removeNotificationChannel(NXCPMessage *request)
+void ClientSession::removeNotificationChannel(const NXCPMessage& request)
 {
    NXCPMessage msg;
    msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request->getId());
+   msg.setId(request.getId());
    if (m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONFIG)
    {
       TCHAR name[MAX_OBJECT_NAME];
-      request->getFieldAsString(VID_NAME, name, MAX_OBJECT_NAME);
+      request.getFieldAsString(VID_NAME, name, MAX_OBJECT_NAME);
       if (!CheckChannelIsUsedInAction(name))
       {
          if (DeleteNotificationChannel(name))
@@ -14961,19 +14851,19 @@ void ClientSession::removeNotificationChannel(NXCPMessage *request)
 /**
  * Rename notification channel
  */
-void ClientSession::renameNotificationChannel(NXCPMessage *request)
+void ClientSession::renameNotificationChannel(const NXCPMessage& request)
 {
    NXCPMessage msg;
    msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request->getId());
+   msg.setId(request.getId());
    if (m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONFIG)
    {
-      TCHAR *name = request->getFieldAsString(VID_NAME);
+      TCHAR *name = request.getFieldAsString(VID_NAME);
       if (name[0] != 0)
       {
          if (IsNotificationChannelExists(name))
          {
-            TCHAR *newName = request->getFieldAsString(VID_NEW_NAME);
+            TCHAR *newName = request.getFieldAsString(VID_NEW_NAME);
             if (!IsNotificationChannelExists(newName))
             {
                writeAuditLog(AUDIT_SYSCFG, true, 0, _T("Notification channel %s renamed to %s"), name, newName);
@@ -15011,9 +14901,9 @@ void ClientSession::renameNotificationChannel(NXCPMessage *request)
 /**
  * Get list of available notification drivers
  */
-void ClientSession::getNotificationDrivers(NXCPMessage *request)
+void ClientSession::getNotificationDrivers(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
    if (m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONFIG)
    {
       GetNotificationDrivers(&msg);
@@ -15030,13 +14920,13 @@ void ClientSession::getNotificationDrivers(NXCPMessage *request)
 /**
  * Start active discovery with provided range
  */
-void ClientSession::startActiveDiscovery(NXCPMessage *request)
+void ClientSession::startActiveDiscovery(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
 
    if (m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONFIG)
    {
-      int count = request->getFieldAsInt32(VID_NUM_RECORDS);
+      int count = request.getFieldAsInt32(VID_NUM_RECORDS);
       if (count > 0)
       {
          UINT32 fieldId = VID_ADDR_LIST_BASE;
@@ -15067,12 +14957,12 @@ void ClientSession::startActiveDiscovery(NXCPMessage *request)
 /**
  * Get physical links
  */
-void ClientSession::getPhysicalLinks(NXCPMessage *request)
+void ClientSession::getPhysicalLinks(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
    bool success = true;
-   shared_ptr<NetObj> object = FindObjectById(request->getFieldAsInt32(VID_OBJECT_ID));
-   if(request->isFieldExist(VID_OBJECT_ID)) //Field won't exist if we need full list
+   shared_ptr<NetObj> object = FindObjectById(request.getFieldAsInt32(VID_OBJECT_ID));
+   if(request.isFieldExist(VID_OBJECT_ID)) //Field won't exist if we need full list
    {
       if (object == nullptr)
       {
@@ -15089,7 +14979,7 @@ void ClientSession::getPhysicalLinks(NXCPMessage *request)
 
    if (success)
    {
-      GetObjectPhysicalLinks(object.get(), getUserId(), request->getFieldAsInt32(VID_PATCH_PANNEL_ID), &msg);
+      GetObjectPhysicalLinks(object.get(), getUserId(), request.getFieldAsInt32(VID_PATCH_PANNEL_ID), &msg);
       msg.setField(VID_RCC, RCC_SUCCESS);
    }
 
@@ -15099,19 +14989,19 @@ void ClientSession::getPhysicalLinks(NXCPMessage *request)
 /**
  * Create or modify physical link
  */
-void ClientSession::updatePhysicalLink(NXCPMessage *request)
+void ClientSession::updatePhysicalLink(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
 
    uint32_t rcc = AddPhysicalLink(request, getUserId());
    if (rcc == RCC_SUCCESS)
    {
       msg.setField(VID_RCC, RCC_SUCCESS);
-      WriteAuditLog(AUDIT_SYSCFG, true, m_dwUserId, m_workstation, m_id, 0, _T("Physical link [%u] updated"), request->getFieldAsUInt32(VID_OBJECT_LINKS_BASE));
+      WriteAuditLog(AUDIT_SYSCFG, true, m_dwUserId, m_workstation, m_id, 0, _T("Physical link [%u] updated"), request.getFieldAsUInt32(VID_OBJECT_LINKS_BASE));
    }
    else if (rcc == RCC_ACCESS_DENIED)
    {
-      WriteAuditLog(AUDIT_SYSCFG, false, m_dwUserId, m_workstation, m_id, 0, _T("Access denied on physical link [%u] update"), request->getFieldAsUInt32(VID_OBJECT_LINKS_BASE));
+      WriteAuditLog(AUDIT_SYSCFG, false, m_dwUserId, m_workstation, m_id, 0, _T("Access denied on physical link [%u] update"), request.getFieldAsUInt32(VID_OBJECT_LINKS_BASE));
       msg.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
    else
@@ -15125,18 +15015,18 @@ void ClientSession::updatePhysicalLink(NXCPMessage *request)
 /**
  * Delete physical link
  */
-void ClientSession::deletePhysicalLink(NXCPMessage *request)
+void ClientSession::deletePhysicalLink(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
 
-   if (DeletePhysicalLink(request->getFieldAsUInt32(VID_PHYSICAL_LINK_ID), getUserId()))
+   if (DeletePhysicalLink(request.getFieldAsUInt32(VID_PHYSICAL_LINK_ID), getUserId()))
    {
-      WriteAuditLog(AUDIT_SYSCFG, true, m_dwUserId, m_workstation, m_id, 0, _T("Physical link [%u] deleted"), request->getFieldAsUInt32(VID_PHYSICAL_LINK_ID));
+      WriteAuditLog(AUDIT_SYSCFG, true, m_dwUserId, m_workstation, m_id, 0, _T("Physical link [%u] deleted"), request.getFieldAsUInt32(VID_PHYSICAL_LINK_ID));
       msg.setField(VID_RCC, RCC_SUCCESS);
    }
    else
    {
-      WriteAuditLog(AUDIT_SYSCFG, false, m_dwUserId, m_workstation, m_id, 0, _T("Access denied on physical link [%u] delete"), request->getFieldAsUInt32(VID_PHYSICAL_LINK_ID));
+      WriteAuditLog(AUDIT_SYSCFG, false, m_dwUserId, m_workstation, m_id, 0, _T("Access denied on physical link [%u] delete"), request.getFieldAsUInt32(VID_PHYSICAL_LINK_ID));
       msg.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
 
@@ -15146,9 +15036,9 @@ void ClientSession::deletePhysicalLink(NXCPMessage *request)
 /**
  * Get configured web service definitions
  */
-void ClientSession::getWebServices(NXCPMessage *request)
+void ClientSession::getWebServices(const NXCPMessage& request)
 {
-   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    if (m_systemAccessRights & SYSTEM_ACCESS_WEB_SERVICE_DEFINITIONS)
    {
@@ -15179,16 +15069,16 @@ void ClientSession::getWebServices(NXCPMessage *request)
 /**
  * Modify web service definition
  */
-void ClientSession::modifyWebService(NXCPMessage *request)
+void ClientSession::modifyWebService(const NXCPMessage& request)
 {
-   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    if (m_systemAccessRights & SYSTEM_ACCESS_WEB_SERVICE_DEFINITIONS)
    {
-      SharedString name = request->getFieldAsSharedString(VID_NAME);
+      SharedString name = request.getFieldAsSharedString(VID_NAME);
       uint32_t rcc;
       auto existing = FindWebServiceDefinition(name);
-      if (existing != nullptr && request->getFieldAsUInt32(VID_WEBSVC_ID) != existing->getId()) //Prevent new web service definition creation with the same name
+      if (existing != nullptr && request.getFieldAsUInt32(VID_WEBSVC_ID) != existing->getId()) //Prevent new web service definition creation with the same name
       {
          rcc = RCC_NAME_ALEARDY_EXISTS;
       }
@@ -15217,13 +15107,13 @@ void ClientSession::modifyWebService(NXCPMessage *request)
 /**
  * Delete web service definition
  */
-void ClientSession::deleteWebService(NXCPMessage *request)
+void ClientSession::deleteWebService(const NXCPMessage& request)
 {
-   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    if (m_systemAccessRights & SYSTEM_ACCESS_WEB_SERVICE_DEFINITIONS)
    {
-      uint32_t id = request->getFieldAsUInt32(VID_WEBSVC_ID);
+      uint32_t id = request.getFieldAsUInt32(VID_WEBSVC_ID);
       uint32_t rcc = DeleteWebServiceDefinition(id);
       response.setField(VID_RCC, rcc);
       if (rcc == RCC_SUCCESS)
@@ -15241,9 +15131,9 @@ void ClientSession::deleteWebService(NXCPMessage *request)
 /**
  * Get configured object categories
  */
-void ClientSession::getObjectCategories(NXCPMessage *request)
+void ClientSession::getObjectCategories(const NXCPMessage& request)
 {
-   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
    ObjectCategoriesToMessage(&response);
    response.setField(VID_RCC, RCC_SUCCESS);
    sendMessage(&response);
@@ -15252,14 +15142,14 @@ void ClientSession::getObjectCategories(NXCPMessage *request)
 /**
  * Modify object category
  */
-void ClientSession::modifyObjectCategory(NXCPMessage *request)
+void ClientSession::modifyObjectCategory(const NXCPMessage& request)
 {
-   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    if (m_systemAccessRights & SYSTEM_ACCESS_OBJECT_CATEGORIES)
    {
       uint32_t categoryId;
-      uint32_t rcc = ModifyObjectCategory(*request, &categoryId);
+      uint32_t rcc = ModifyObjectCategory(request, &categoryId);
       if (rcc == RCC_SUCCESS)
       {
          response.setField(VID_CATEGORY_ID, categoryId);
@@ -15281,14 +15171,14 @@ void ClientSession::modifyObjectCategory(NXCPMessage *request)
 /**
  * Delete object category
  */
-void ClientSession::deleteObjectCategory(NXCPMessage *request)
+void ClientSession::deleteObjectCategory(const NXCPMessage& request)
 {
-   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    if (m_systemAccessRights & SYSTEM_ACCESS_OBJECT_CATEGORIES)
    {
-      uint32_t id = request->getFieldAsUInt32(VID_CATEGORY_ID);
-      uint32_t rcc = DeleteObjectCategory(id, request->getFieldAsBoolean(VID_FORCE_DELETE));
+      uint32_t id = request.getFieldAsUInt32(VID_CATEGORY_ID);
+      uint32_t rcc = DeleteObjectCategory(id, request.getFieldAsBoolean(VID_FORCE_DELETE));
       response.setField(VID_RCC, rcc);
       if (rcc == RCC_SUCCESS)
          writeAuditLog(AUDIT_SYSCFG, true, 0, _T("Object category [%u] deleted"), id);
@@ -15305,9 +15195,9 @@ void ClientSession::deleteObjectCategory(NXCPMessage *request)
 /**
  * Get configured geo areas
  */
-void ClientSession::getGeoAreas(NXCPMessage *request)
+void ClientSession::getGeoAreas(const NXCPMessage& request)
 {
-   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
    GeoAreasToMessage(&response);
    response.setField(VID_RCC, RCC_SUCCESS);
    sendMessage(&response);
@@ -15316,14 +15206,14 @@ void ClientSession::getGeoAreas(NXCPMessage *request)
 /**
  * Modify geo area
  */
-void ClientSession::modifyGeoArea(NXCPMessage *request)
+void ClientSession::modifyGeoArea(const NXCPMessage& request)
 {
-   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_GEO_AREAS)
    {
       uint32_t areaId;
-      uint32_t rcc = ModifyGeoArea(*request, &areaId);
+      uint32_t rcc = ModifyGeoArea(request, &areaId);
       if (rcc == RCC_SUCCESS)
       {
          response.setField(VID_AREA_ID, areaId);
@@ -15345,14 +15235,14 @@ void ClientSession::modifyGeoArea(NXCPMessage *request)
 /**
  * Delete geo area
  */
-void ClientSession::deleteGeoArea(NXCPMessage *request)
+void ClientSession::deleteGeoArea(const NXCPMessage& request)
 {
-   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_GEO_AREAS)
    {
-      uint32_t id = request->getFieldAsUInt32(VID_AREA_ID);
-      uint32_t rcc = DeleteGeoArea(id, request->getFieldAsBoolean(VID_FORCE_DELETE));
+      uint32_t id = request.getFieldAsUInt32(VID_AREA_ID);
+      uint32_t rcc = DeleteGeoArea(id, request.getFieldAsBoolean(VID_FORCE_DELETE));
       response.setField(VID_RCC, rcc);
       if (rcc == RCC_SUCCESS)
          writeAuditLog(AUDIT_SYSCFG, true, 0, _T("Geo area [%u] deleted"), id);
@@ -15369,34 +15259,31 @@ void ClientSession::deleteGeoArea(NXCPMessage *request)
 /**
  * Update shared secret list
  */
-void ClientSession::updateSharedSecretList(NXCPMessage *pRequest)
+void ClientSession::updateSharedSecretList(const NXCPMessage& request)
 {
-   NXCPMessage msg;
-   UINT32 rcc = RCC_SUCCESS;
-
-   msg.setId(pRequest->getId());
-   msg.setCode(CMD_REQUEST_COMPLETED);
+   NXCPMessage msg(request.getId(), CMD_REQUEST_COMPLETED);
 
    if (m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONFIG)
    {
-      int32_t zoneUIN = pRequest->getFieldAsInt32(VID_ZONE_UIN);
+      int32_t zoneUIN = request.getFieldAsInt32(VID_ZONE_UIN);
       shared_ptr<Zone> zone = FindZoneByUIN(zoneUIN);
       if (zoneUIN == -1 || zone != nullptr)
       {
          DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
          if (DBBegin(hdb))
          {
+            uint32_t rcc = RCC_SUCCESS;
             ExecuteQueryOnObject(hdb, zoneUIN, _T("DELETE FROM shared_secrets WHERE zone=?"));
-            UINT32 baseId = VID_SHARED_SECRET_LIST_BASE;
+            uint32_t baseId = VID_SHARED_SECRET_LIST_BASE;
             DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO shared_secrets (id,secret,zone) VALUES(?,?,?)"), true);
             if (hStmt != nullptr)
             {
                DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, zoneUIN);
-               int count = pRequest->getFieldAsUInt32(VID_NUM_ELEMENTS);
+               int count = request.getFieldAsUInt32(VID_NUM_ELEMENTS);
                for(int i = 0; i < count; i++)
                {
                   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, i + 1);
-                  DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, pRequest->getFieldAsString(baseId++), DB_BIND_DYNAMIC);
+                  DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, request.getFieldAsString(baseId++), DB_BIND_DYNAMIC);
                   if (!DBExecute(hStmt))
                   {
                      rcc = RCC_DB_FAILURE;
@@ -15406,7 +15293,9 @@ void ClientSession::updateSharedSecretList(NXCPMessage *pRequest)
                DBFreeStatement(hStmt);
             }
             else
+            {
                rcc = RCC_DB_FAILURE;
+            }
 
             if (rcc == RCC_SUCCESS)
             {
@@ -15414,31 +15303,39 @@ void ClientSession::updateSharedSecretList(NXCPMessage *pRequest)
                NotifyClientSessions(NX_NOTIFY_SECRET_CONFIG_CHANGED, zoneUIN);
             }
             else
+            {
                DBRollback(hdb);
+            }
+            msg.setField(VID_RCC, rcc);
          }
          else
-            rcc = RCC_DB_FAILURE;
+         {
+            msg.setField(VID_RCC, RCC_DB_FAILURE);
+         }
          DBConnectionPoolReleaseConnection(hdb);
       }
       else
-         rcc = RCC_INVALID_ZONE_ID;
+      {
+         msg.setField(VID_RCC, RCC_INVALID_ZONE_ID);
+      }
    }
    else
-      rcc = RCC_ACCESS_DENIED;
+   {
+      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+   }
 
-   msg.setField(VID_RCC, rcc);
-   sendMessage(&msg);
+   sendMessage(msg);
 }
 
 /**
  * Update SNMP port list
  */
-void ClientSession::updateSNMPPortList(NXCPMessage *request)
+void ClientSession::updateSNMPPortList(const NXCPMessage& request)
 {
    uint32_t rcc = RCC_SUCCESS;
    if (m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONFIG)
    {
-      int32_t zoneUIN = request->getFieldAsInt32(VID_ZONE_UIN);
+      int32_t zoneUIN = request.getFieldAsInt32(VID_ZONE_UIN);
       shared_ptr<Zone> zone = FindZoneByUIN(zoneUIN);
       if (zoneUIN == -1 || zone != nullptr)
       {
@@ -15450,12 +15347,12 @@ void ClientSession::updateSNMPPortList(NXCPMessage *request)
             DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO snmp_ports (id,port,zone) VALUES(?,?,?)"), true);
             if (hStmt != nullptr)
             {
-               int count = request->getFieldAsUInt32(VID_ZONE_SNMP_PORT_COUNT);
+               int count = request.getFieldAsUInt32(VID_ZONE_SNMP_PORT_COUNT);
                DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, zoneUIN);
                for(int i = 0; i < count; i++)
                {
                   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, i + 1);
-                  DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, request->getFieldAsUInt16(baseId++));
+                  DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, request.getFieldAsUInt16(baseId++));
                   if (!DBExecute(hStmt))
                   {
                      rcc = RCC_DB_FAILURE;
@@ -15495,7 +15392,7 @@ void ClientSession::updateSNMPPortList(NXCPMessage *request)
       rcc = RCC_ACCESS_DENIED;
    }
 
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
    msg.setField(VID_RCC, rcc);
    sendMessage(&msg);
 }
@@ -15503,11 +15400,11 @@ void ClientSession::updateSNMPPortList(NXCPMessage *request)
 /**
  * Find proxy for node
  */
-void ClientSession::findProxyForNode(NXCPMessage *request)
+void ClientSession::findProxyForNode(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
 
-   shared_ptr<Node> node = static_pointer_cast<Node>(FindObjectById(request->getFieldAsUInt32(VID_NODE_ID), OBJECT_NODE));
+   shared_ptr<Node> node = static_pointer_cast<Node>(FindObjectById(request.getFieldAsUInt32(VID_NODE_ID), OBJECT_NODE));
    if (node != nullptr)
    {
       if (node->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
@@ -15531,10 +15428,10 @@ void ClientSession::findProxyForNode(NXCPMessage *request)
 /**
  * Get SSH key list
  */
-void ClientSession::getSshKeys(NXCPMessage *request)
+void ClientSession::getSshKeys(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
-   FillMessageWithSshKeys(&msg, request->getFieldAsBoolean(VID_INCLUDE_PUBLIC_KEY));
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
+   FillMessageWithSshKeys(&msg, request.getFieldAsBoolean(VID_INCLUDE_PUBLIC_KEY));
    msg.setField(VID_RCC, RCC_SUCCESS);
    sendMessage(&msg);
 }
@@ -15542,69 +15439,65 @@ void ClientSession::getSshKeys(NXCPMessage *request)
 /**
  * Delete ssh key data
  */
-void ClientSession::deleteSshKey(NXCPMessage *request)
+void ClientSession::deleteSshKey(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
    if (m_systemAccessRights & SYSTEM_ACCESS_SSH_KEY_CONFIGURATION)
    {
-
-      DeleteSshKey(&msg, request->getFieldAsInt32(VID_SSH_KEY_ID), request->getFieldAsBoolean(VID_FORCE_DELETE));
+      DeleteSshKey(&response, request.getFieldAsInt32(VID_SSH_KEY_ID), request.getFieldAsBoolean(VID_FORCE_DELETE));
    }
    else
    {
       writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on delete SSH key"));
-      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
-
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
  * Update or create ssh key data entry
  */
-void ClientSession::updateSshKey(NXCPMessage *request)
+void ClientSession::updateSshKey(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
    if (m_systemAccessRights & SYSTEM_ACCESS_SSH_KEY_CONFIGURATION)
    {
       CreateOrEditSshKey(request);
-      msg.setField(VID_RCC, RCC_SUCCESS);
+      response.setField(VID_RCC, RCC_SUCCESS);
    }
    else
    {
       writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on update SSH key"));
-      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
-
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
  * Generate new SSH key
  */
-void ClientSession::generateSshKey(NXCPMessage *request)
+void ClientSession::generateSshKey(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
    if (m_systemAccessRights & SYSTEM_ACCESS_SSH_KEY_CONFIGURATION)
    {
-      String name = request->getFieldAsSharedString(VID_NAME);
-      msg.setField(VID_RCC, GenerateSshKey(name));
+      String name = request.getFieldAsSharedString(VID_NAME);
+      response.setField(VID_RCC, GenerateSshKey(name));
    }
    else
    {
       writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on generate SSH key"));
-      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
-
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
  * Get notification driver names
  */
-void ClientSession::get2FADrivers(NXCPMessage *request)
+void ClientSession::get2FADrivers(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
    if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_2FA_METHODS)
    {
       Get2FADrivers(&msg);
@@ -15621,9 +15514,9 @@ void ClientSession::get2FADrivers(NXCPMessage *request)
 /**
  * Returns list of configured 2FA methods with method name, description and method loading status
  */
-void ClientSession::get2FAMethods(NXCPMessage *request)
+void ClientSession::get2FAMethods(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
    Get2FAMethods(&msg);
    msg.setField(VID_RCC, RCC_SUCCESS);
    sendMessage(&msg);
@@ -15632,13 +15525,13 @@ void ClientSession::get2FAMethods(NXCPMessage *request)
 /**
  * Returns 2FA method with method name, description, configuration and method loading status
  */
-void ClientSession::get2FAMethodDetails(NXCPMessage *request)
+void ClientSession::get2FAMethodDetails(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
    if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_2FA_METHODS)
    {
       TCHAR name[MAX_OBJECT_NAME];
-      request->getFieldAsString(VID_NAME, name, MAX_OBJECT_NAME);
+      request.getFieldAsString(VID_NAME, name, MAX_OBJECT_NAME);
       Get2FAMethodDetails(name, &msg);
       msg.setField(VID_RCC, RCC_SUCCESS);
    }
@@ -15653,16 +15546,16 @@ void ClientSession::get2FAMethodDetails(NXCPMessage *request)
 /**
  * API call for creating or modifying 2FA method
  */
-void ClientSession::modify2FAMethod(NXCPMessage *request)
+void ClientSession::modify2FAMethod(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
    if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_2FA_METHODS)
    {
       TCHAR name[MAX_OBJECT_NAME], driver[MAX_OBJECT_NAME], description[MAX_2FA_DESCRIPTION];
-      request->getFieldAsString(VID_NAME, name, MAX_OBJECT_NAME);
-      request->getFieldAsString(VID_DRIVER_NAME, driver, MAX_OBJECT_NAME);
-      request->getFieldAsString(VID_DESCRIPTION, description, MAX_2FA_DESCRIPTION);
-      char *configuration = request->getFieldAsUtf8String(VID_CONFIG_FILE_DATA);
+      request.getFieldAsString(VID_NAME, name, MAX_OBJECT_NAME);
+      request.getFieldAsString(VID_DRIVER_NAME, driver, MAX_OBJECT_NAME);
+      request.getFieldAsString(VID_DESCRIPTION, description, MAX_2FA_DESCRIPTION);
+      char *configuration = request.getFieldAsUtf8String(VID_CONFIG_FILE_DATA);
       msg.setField(VID_RCC, Modify2FAMethod(name, driver, description, configuration));
       MemFree(configuration);
    }
@@ -15677,17 +15570,17 @@ void ClientSession::modify2FAMethod(NXCPMessage *request)
 /**
  * Rename two-factor authentication method
  */
-void ClientSession::rename2FAMethod(NXCPMessage *request)
+void ClientSession::rename2FAMethod(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
    if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_2FA_METHODS)
    {
-      TCHAR *name = request->getFieldAsString(VID_NAME);
+      TCHAR *name = request.getFieldAsString(VID_NAME);
       if ((name != nullptr) && (name[0] != 0))
       {
          if (Is2FAMethodExists(name))
          {
-            TCHAR *newName = request->getFieldAsString(VID_NEW_NAME);
+            TCHAR *newName = request.getFieldAsString(VID_NEW_NAME);
             if ((newName != nullptr) && (newName[0] != 0) && !Is2FAMethodExists(newName))
             {
                writeAuditLog(AUDIT_SYSCFG, true, 0, _T("Two-factor authentication method \"%s\" renamed to \"%s\""), name, newName);
@@ -15722,13 +15615,13 @@ void ClientSession::rename2FAMethod(NXCPMessage *request)
 /**
  * Delete 2FA method
  */
-void ClientSession::delete2FAMethod(NXCPMessage *request)
+void ClientSession::delete2FAMethod(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
    if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_2FA_METHODS)
    {
       TCHAR name[MAX_OBJECT_NAME];
-      request->getFieldAsString(VID_NAME, name, MAX_OBJECT_NAME);
+      request.getFieldAsString(VID_NAME, name, MAX_OBJECT_NAME);
       msg.setField(VID_RCC, Delete2FAMethod(name));
    }
    else
@@ -15742,10 +15635,10 @@ void ClientSession::delete2FAMethod(NXCPMessage *request)
 /**
  * Returns list of configured 2FA method bindings with method name and description
  */
-void ClientSession::getUser2FABindings(NXCPMessage *request)
+void ClientSession::getUser2FABindings(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
-   uint32_t userId = request->getFieldAsUInt32(VID_USER_ID);
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
+   uint32_t userId = request.getFieldAsUInt32(VID_USER_ID);
    if ((userId == m_dwUserId) || (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_USERS))
    {
       GetUser2FABindingNames(userId, &msg);
@@ -15762,14 +15655,14 @@ void ClientSession::getUser2FABindings(NXCPMessage *request)
 /**
  * Get details of specific 2FA methid binding
  */
-void ClientSession::getUser2FABindingDetails(NXCPMessage *request)
+void ClientSession::getUser2FABindingDetails(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
-   uint32_t userId = request->getFieldAsUInt32(VID_USER_ID);
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
+   uint32_t userId = request.getFieldAsUInt32(VID_USER_ID);
    if ((userId == m_dwUserId) || (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_USERS))
    {
       TCHAR methodName[MAX_OBJECT_NAME];
-      request->getFieldAsString(VID_2FA_METHOD, methodName, MAX_OBJECT_NAME);
+      request.getFieldAsString(VID_2FA_METHOD, methodName, MAX_OBJECT_NAME);
       shared_ptr<Config> binding = GetUser2FABindingInfo(userId, methodName);
       if (binding != nullptr)
       {
@@ -15793,15 +15686,15 @@ void ClientSession::getUser2FABindingDetails(NXCPMessage *request)
 /**
  * API call for creating or modifying 2FA method binding
  */
-void ClientSession::modifyUser2FABinding(NXCPMessage *request)
+void ClientSession::modifyUser2FABinding(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
-   uint32_t userId = request->getFieldAsUInt32(VID_USER_ID);
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
+   uint32_t userId = request.getFieldAsUInt32(VID_USER_ID);
    if ((userId == m_dwUserId) || (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_USERS))
    {
       TCHAR methodName[MAX_OBJECT_NAME];
-      request->getFieldAsString(VID_2FA_RESPONSE, methodName, MAX_OBJECT_NAME);
-      char* configuration = request->getFieldAsUtf8String(VID_2FA_RESPONSE + 1);
+      request.getFieldAsString(VID_2FA_RESPONSE, methodName, MAX_OBJECT_NAME);
+      char* configuration = request.getFieldAsUtf8String(VID_2FA_RESPONSE + 1);
       msg.setField(VID_RCC, ModifyUser2FABinding(userId, methodName, configuration));
       MemFree(configuration);
    }
@@ -15817,14 +15710,14 @@ void ClientSession::modifyUser2FABinding(NXCPMessage *request)
 /**
  * Delete 2FA method
  */
-void ClientSession::deleteUser2FABinding(NXCPMessage *request)
+void ClientSession::deleteUser2FABinding(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
-   uint32_t userId = request->getFieldAsUInt32(VID_USER_ID);
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
+   uint32_t userId = request.getFieldAsUInt32(VID_USER_ID);
    if ((userId == m_dwUserId) || (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_USERS))
    {
       TCHAR name[MAX_OBJECT_NAME];
-      request->getFieldAsString(VID_2FA_RESPONSE, name, MAX_OBJECT_NAME);
+      request.getFieldAsString(VID_2FA_RESPONSE, name, MAX_OBJECT_NAME);
       msg.setField(VID_RCC, DeleteUser2FABinding(userId, name));
    }
    else
@@ -15852,10 +15745,10 @@ void ClientSession::deleteUser2FABinding(NXCPMessage *request)
  * VID_CHECK_LIST_BASE + offset + 6  Script text for script check
  * VID_RCC                           Request Completion Code
  */
-void ClientSession::getBusinessServiceCheckList(NXCPMessage *request)
+void ClientSession::getBusinessServiceCheckList(const NXCPMessage& request)
 {
-   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
-   shared_ptr<NetObj> object = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID));
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+   shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
    if (object != nullptr)
    {
       if ((object->getObjectClass() == OBJECT_BUSINESS_SERVICE) || (object->getObjectClass() == OBJECT_BUSINESS_SERVICE_PROTOTYPE))
@@ -15905,10 +15798,10 @@ void ClientSession::getBusinessServiceCheckList(NXCPMessage *request)
  * Return values:
  * VID_RCC                       Request Completion Code
  */
-void ClientSession::modifyBusinessServiceCheck(NXCPMessage *request)
+void ClientSession::modifyBusinessServiceCheck(const NXCPMessage& request)
 {
-   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
-   shared_ptr<NetObj> object = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID));
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+   shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
    if (object != nullptr)
    {
       if ((object->getObjectClass() == OBJECT_BUSINESS_SERVICE) || (object->getObjectClass() == OBJECT_BUSINESS_SERVICE_PROTOTYPE))
@@ -15945,10 +15838,10 @@ void ClientSession::modifyBusinessServiceCheck(NXCPMessage *request)
  * Return values:
  * VID_RCC                       Request Completion Code
  */
-void ClientSession::deleteBusinessServiceCheck(NXCPMessage *request)
+void ClientSession::deleteBusinessServiceCheck(const NXCPMessage& request)
 {
-   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
-   shared_ptr<NetObj> object = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID));
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+   shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
    if (object != nullptr)
    {
       if ((object->getObjectClass() == OBJECT_BUSINESS_SERVICE) || (object->getObjectClass() == OBJECT_BUSINESS_SERVICE_PROTOTYPE))
@@ -15956,7 +15849,7 @@ void ClientSession::deleteBusinessServiceCheck(NXCPMessage *request)
          if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
          {
             writeAuditLog(AUDIT_OBJECTS, true, object->getId(), _T("Business service check deleted"));
-            response.setField(VID_RCC, static_cast<BaseBusinessService&>(*object).deleteCheck(request->getFieldAsUInt32(VID_CHECK_ID)));
+            response.setField(VID_RCC, static_cast<BaseBusinessService&>(*object).deleteCheck(request.getFieldAsUInt32(VID_CHECK_ID)));
          }
          else
          {
@@ -15987,23 +15880,23 @@ void ClientSession::deleteBusinessServiceCheck(NXCPMessage *request)
  * VID_BUSINESS_SERVICE_UPTIME   Business service uptime in percents. Double.
  * VID_RCC                       Request Completion Code
  */
-void ClientSession::getBusinessServiceUptime(NXCPMessage *request)
+void ClientSession::getBusinessServiceUptime(const NXCPMessage& request)
 {
-   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
-   shared_ptr<NetObj> object = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID), OBJECT_BUSINESS_SERVICE);
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+   shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID), OBJECT_BUSINESS_SERVICE);
    if (object != nullptr)
    {
       if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
       {
          time_t from = 0;
-         if (request->isFieldExist(VID_TIME_FROM))
+         if (request.isFieldExist(VID_TIME_FROM))
          {
-            from = request->getFieldAsUInt64(VID_TIME_FROM);
+            from = request.getFieldAsUInt64(VID_TIME_FROM);
          }
          time_t to = time(nullptr);
-         if (request->isFieldExist(VID_TIME_TO))
+         if (request.isFieldExist(VID_TIME_TO))
          {
-            to = request->getFieldAsUInt64(VID_TIME_TO);
+            to = request.getFieldAsUInt64(VID_TIME_TO);
          }
 
          response.setField(VID_BUSINESS_SERVICE_UPTIME, GetServiceUptime(object->getId(), from, to));
@@ -16040,23 +15933,23 @@ void ClientSession::getBusinessServiceUptime(NXCPMessage *request)
  * VID_TICKET_LIST_BASE + offset + 6 Business service check description
  * VID_RCC                           Request Completion Code
  */
-void ClientSession::getBusinessServiceTickets(NXCPMessage *request)
+void ClientSession::getBusinessServiceTickets(const NXCPMessage& request)
 {
-   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
-   shared_ptr<NetObj> object = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID), OBJECT_BUSINESS_SERVICE);
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+   shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID), OBJECT_BUSINESS_SERVICE);
    if (object != nullptr)
    {
       if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
       {
          time_t from = 0;
-         if (request->isFieldExist(VID_TIME_FROM))
+         if (request.isFieldExist(VID_TIME_FROM))
          {
-            from = request->getFieldAsUInt64(VID_TIME_FROM);
+            from = request.getFieldAsUInt64(VID_TIME_FROM);
          }
          time_t to = time(nullptr);
-         if (request->isFieldExist(VID_TIME_TO))
+         if (request.isFieldExist(VID_TIME_TO))
          {
-            to = request->getFieldAsUInt64(VID_TIME_TO);
+            to = request.getFieldAsUInt64(VID_TIME_TO);
          }
          GetServiceTickets(object->getId(), from, to, &response);
          response.setField(VID_RCC, RCC_SUCCESS);
@@ -16084,14 +15977,14 @@ void ClientSession::getBusinessServiceTickets(NXCPMessage *request)
  * Return values:
  * VID_RCC                           Request Completion Code
  */
-void ClientSession::executeSshCommand(NXCPMessage *request)
+void ClientSession::executeSshCommand(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
-   shared_ptr<Node> node = static_pointer_cast<Node>(FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID), OBJECT_NODE));
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
+   shared_ptr<Node> node = static_pointer_cast<Node>(FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID), OBJECT_NODE));
    if (node != nullptr)
    {
       TCHAR command[MAX_PARAM_NAME];
-      request->getFieldAsString(VID_COMMAND, command, MAX_PARAM_NAME);
+      request.getFieldAsString(VID_COMMAND, command, MAX_PARAM_NAME);
 
       if (node->checkAccessRights(m_dwUserId, OBJECT_ACCESS_CONTROL))
       {
@@ -16112,10 +16005,10 @@ void ClientSession::executeSshCommand(NXCPMessage *request)
                list.add(node->getSshKeyId());
 
                uint32_t rcc;
-               bool withOutput = request->getFieldAsBoolean(VID_RECEIVE_OUTPUT);
+               bool withOutput = request.getFieldAsBoolean(VID_RECEIVE_OUTPUT);
                if (withOutput)
                {
-                  ActionExecutionData data(this, request->getId());
+                  ActionExecutionData data(this, request.getId());
                   rcc = conn->executeCommand(_T("SSH.Command"), list, true, ActionExecuteCallback, &data);
                }
                else

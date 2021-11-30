@@ -48,21 +48,21 @@ Sensor::Sensor() : super(Pollable::STATUS | Pollable::CONFIGURATION)
 /**
  * Constructor with all fields for Sensor class
  */
-Sensor::Sensor(const TCHAR *name, const NXCPMessage *request) : super(Pollable::STATUS | Pollable::CONFIGURATION)
+Sensor::Sensor(const TCHAR *name, const NXCPMessage& request) : super(Pollable::STATUS | Pollable::CONFIGURATION)
 {
    m_runtimeFlags |= ODF_CONFIGURATION_POLL_PENDING;
-   m_flags = request->getFieldAsUInt32(VID_SENSOR_FLAGS);
-   m_macAddress = request->getFieldAsMacAddress(VID_MAC_ADDR);
-	m_deviceClass = request->getFieldAsUInt32(VID_DEVICE_CLASS);
-	m_vendor = request->getFieldAsString(VID_VENDOR);
-	m_commProtocol = request->getFieldAsUInt32(VID_COMM_PROTOCOL);
-	m_xmlRegConfig = request->getFieldAsString(VID_XML_REG_CONFIG);
-	m_xmlConfig = request->getFieldAsString(VID_XML_CONFIG);
-	m_serialNumber = request->getFieldAsString(VID_SERIAL_NUMBER);
-	m_deviceAddress = request->getFieldAsString(VID_DEVICE_ADDRESS);
-	m_metaType = request->getFieldAsString(VID_META_TYPE);
-	m_description = request->getFieldAsString(VID_DESCRIPTION);
-	m_proxyNodeId = request->getFieldAsUInt32(VID_SENSOR_PROXY);
+   m_flags = request.getFieldAsUInt32(VID_SENSOR_FLAGS);
+   m_macAddress = request.getFieldAsMacAddress(VID_MAC_ADDR);
+	m_deviceClass = request.getFieldAsUInt32(VID_DEVICE_CLASS);
+	m_vendor = request.getFieldAsString(VID_VENDOR);
+	m_commProtocol = request.getFieldAsUInt32(VID_COMM_PROTOCOL);
+	m_xmlRegConfig = request.getFieldAsString(VID_XML_REG_CONFIG);
+	m_xmlConfig = request.getFieldAsString(VID_XML_CONFIG);
+	m_serialNumber = request.getFieldAsString(VID_SERIAL_NUMBER);
+	m_deviceAddress = request.getFieldAsString(VID_DEVICE_ADDRESS);
+	m_metaType = request.getFieldAsString(VID_META_TYPE);
+	m_description = request.getFieldAsString(VID_DESCRIPTION);
+	m_proxyNodeId = request.getFieldAsUInt32(VID_SENSOR_PROXY);
    m_lastConnectionTime = 0;
 	m_frameCount = 0; //zero when no info
    m_signalStrenght = 1; //+1 when no information(cannot be +)
@@ -74,11 +74,11 @@ Sensor::Sensor(const TCHAR *name, const NXCPMessage *request) : super(Pollable::
 /**
  * Create new sensor
  */
-shared_ptr<Sensor> Sensor::create(const TCHAR *name, const NXCPMessage *request)
+shared_ptr<Sensor> Sensor::create(const TCHAR *name, const NXCPMessage& request)
 {
    shared_ptr<Sensor> sensor = make_shared<Sensor>(name, request);
    sensor->generateGuid();
-   switch(request->getFieldAsUInt32(VID_COMM_PROTOCOL))
+   switch(request.getFieldAsUInt32(VID_COMM_PROTOCOL))
    {
       case COMM_LORAWAN:
          if (!registerLoraDevice(sensor.get()))
@@ -357,49 +357,49 @@ void Sensor::fillMessageInternal(NXCPMessage *msg, UINT32 userId)
 /**
  * Modify object from NXCP message
  */
-UINT32 Sensor::modifyFromMessageInternal(NXCPMessage *request)
+uint32_t Sensor::modifyFromMessageInternal(const NXCPMessage& msg)
 {
-   if (request->isFieldExist(VID_FLAGS))
-      m_flags = request->getFieldAsUInt32(VID_FLAGS);
+   if (msg.isFieldExist(VID_FLAGS))
+      m_flags = msg.getFieldAsUInt32(VID_FLAGS);
 
-   if (request->isFieldExist(VID_MAC_ADDR))
-      m_macAddress = request->getFieldAsMacAddress(VID_MAC_ADDR);
-   if (request->isFieldExist(VID_VENDOR))
+   if (msg.isFieldExist(VID_MAC_ADDR))
+      m_macAddress = msg.getFieldAsMacAddress(VID_MAC_ADDR);
+   if (msg.isFieldExist(VID_VENDOR))
    {
       free(m_vendor);
-      m_vendor = request->getFieldAsString(VID_VENDOR);
+      m_vendor = msg.getFieldAsString(VID_VENDOR);
    }
-   if (request->isFieldExist(VID_DEVICE_CLASS))
-      m_deviceClass = request->getFieldAsUInt32(VID_DEVICE_CLASS);
-   if (request->isFieldExist(VID_SERIAL_NUMBER))
+   if (msg.isFieldExist(VID_DEVICE_CLASS))
+      m_deviceClass = msg.getFieldAsUInt32(VID_DEVICE_CLASS);
+   if (msg.isFieldExist(VID_SERIAL_NUMBER))
    {
       free(m_serialNumber);
-      m_serialNumber = request->getFieldAsString(VID_SERIAL_NUMBER);
+      m_serialNumber = msg.getFieldAsString(VID_SERIAL_NUMBER);
    }
-   if (request->isFieldExist(VID_DEVICE_ADDRESS))
+   if (msg.isFieldExist(VID_DEVICE_ADDRESS))
    {
       free(m_deviceAddress);
-      m_deviceAddress = request->getFieldAsString(VID_DEVICE_ADDRESS);
+      m_deviceAddress = msg.getFieldAsString(VID_DEVICE_ADDRESS);
    }
-   if (request->isFieldExist(VID_META_TYPE))
+   if (msg.isFieldExist(VID_META_TYPE))
    {
       free(m_metaType);
-      m_metaType = request->getFieldAsString(VID_META_TYPE);
+      m_metaType = msg.getFieldAsString(VID_META_TYPE);
    }
-   if (request->isFieldExist(VID_DESCRIPTION))
+   if (msg.isFieldExist(VID_DESCRIPTION))
    {
       free(m_description);
-      m_description = request->getFieldAsString(VID_DESCRIPTION);
+      m_description = msg.getFieldAsString(VID_DESCRIPTION);
    }
-   if (request->isFieldExist(VID_SENSOR_PROXY))
-      m_proxyNodeId = request->getFieldAsUInt32(VID_SENSOR_PROXY);
-   if (request->isFieldExist(VID_XML_CONFIG))
+   if (msg.isFieldExist(VID_SENSOR_PROXY))
+      m_proxyNodeId = msg.getFieldAsUInt32(VID_SENSOR_PROXY);
+   if (msg.isFieldExist(VID_XML_CONFIG))
    {
       free(m_xmlConfig);
-      m_xmlConfig = request->getFieldAsString(VID_XML_CONFIG);
+      m_xmlConfig = msg.getFieldAsString(VID_XML_CONFIG);
    }
 
-   return super::modifyFromMessageInternal(request);
+   return super::modifyFromMessageInternal(msg);
 }
 
 /**

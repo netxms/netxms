@@ -53,12 +53,12 @@ NetworkMapElement::NetworkMapElement(uint32_t id, Config *config, uint32_t flags
 /**
  * Generic element NXCP constructor
  */
-NetworkMapElement::NetworkMapElement(NXCPMessage *msg, uint32_t baseId)
+NetworkMapElement::NetworkMapElement(const NXCPMessage& msg, uint32_t baseId)
 {
-	m_id = msg->getFieldAsUInt32(baseId);
-	m_type = (LONG)msg->getFieldAsUInt16(baseId + 1);
-	m_posX = (LONG)msg->getFieldAsUInt32(baseId + 2);
-	m_posY = (LONG)msg->getFieldAsUInt32(baseId + 3);
+	m_id = msg.getFieldAsUInt32(baseId);
+	m_type = msg.getFieldAsInt16(baseId + 1);
+	m_posX = msg.getFieldAsInt32(baseId + 2);
+	m_posY = msg.getFieldAsInt32(baseId + 3);
    m_flags = 0;
 }
 
@@ -150,11 +150,11 @@ NetworkMapObject::NetworkMapObject(uint32_t id, Config *config, uint32_t flags) 
 /**
  * Object element NXCP constructor
  */
-NetworkMapObject::NetworkMapObject(NXCPMessage *msg, uint32_t baseId) : NetworkMapElement(msg, baseId)
+NetworkMapObject::NetworkMapObject(const NXCPMessage& msg, uint32_t baseId) : NetworkMapElement(msg, baseId)
 {
-	m_objectId = msg->getFieldAsUInt32(baseId + 10);
-	m_width = msg->getFieldAsUInt32(baseId + 11);
-   m_height = msg->getFieldAsUInt32(baseId + 12);
+	m_objectId = msg.getFieldAsUInt32(baseId + 10);
+	m_width = msg.getFieldAsUInt32(baseId + 11);
+   m_height = msg.getFieldAsUInt32(baseId + 12);
 }
 
 /**
@@ -230,13 +230,13 @@ NetworkMapDecoration::NetworkMapDecoration(uint32_t id, Config *config, uint32_t
 /**
  * Decoration element NXCP constructor
  */
-NetworkMapDecoration::NetworkMapDecoration(NXCPMessage *msg, uint32_t baseId) : NetworkMapElement(msg, baseId)
+NetworkMapDecoration::NetworkMapDecoration(const NXCPMessage& msg, uint32_t baseId) : NetworkMapElement(msg, baseId)
 {
-	m_decorationType = (LONG)msg->getFieldAsUInt32(baseId + 10);
-	m_color = msg->getFieldAsUInt32(baseId + 11);
-	m_title = msg->getFieldAsString(baseId + 12);
-	m_width = (LONG)msg->getFieldAsUInt32(baseId + 13);
-	m_height = (LONG)msg->getFieldAsUInt32(baseId + 14);
+	m_decorationType = msg.getFieldAsInt32(baseId + 10);
+	m_color = msg.getFieldAsUInt32(baseId + 11);
+	m_title = msg.getFieldAsString(baseId + 12);
+	m_width = msg.getFieldAsInt32(baseId + 13);
+	m_height = msg.getFieldAsInt32(baseId + 14);
 }
 
 /**
@@ -311,9 +311,9 @@ NetworkMapDCIContainer::NetworkMapDCIContainer(uint32_t id, Config *config, uint
 /**
  * DCI container NXCP constructor
  */
-NetworkMapDCIContainer::NetworkMapDCIContainer(NXCPMessage *msg, uint32_t baseId) : NetworkMapElement(msg, baseId)
+NetworkMapDCIContainer::NetworkMapDCIContainer(const NXCPMessage& msg, uint32_t baseId) : NetworkMapElement(msg, baseId)
 {
-   m_xmlDCIList = msg->getFieldAsString(baseId + 10);
+   m_xmlDCIList = msg.getFieldAsString(baseId + 10);
 }
 
 /**
@@ -376,9 +376,9 @@ NetworkMapDCIImage::NetworkMapDCIImage(uint32_t id, Config *config, uint32_t fla
 /**
  * DCI image NXCP constructor
  */
-NetworkMapDCIImage::NetworkMapDCIImage(NXCPMessage *msg, uint32_t baseId) : NetworkMapElement(msg, baseId)
+NetworkMapDCIImage::NetworkMapDCIImage(const NXCPMessage& msg, uint32_t baseId) : NetworkMapElement(msg, baseId)
 {
-   m_config = msg->getFieldAsString(baseId + 10);
+   m_config = msg.getFieldAsString(baseId + 10);
 }
 
 /**
@@ -441,9 +441,9 @@ NetworkMapTextBox::NetworkMapTextBox(uint32_t id, Config *config, uint32_t flags
 /**
  * DCI image NXCP constructor
  */
-NetworkMapTextBox::NetworkMapTextBox(NXCPMessage *msg, uint32_t baseId) : NetworkMapElement(msg, baseId)
+NetworkMapTextBox::NetworkMapTextBox(const NXCPMessage& msg, uint32_t baseId) : NetworkMapElement(msg, baseId)
 {
-   m_config = msg->getFieldAsString(baseId + 10);
+   m_config = msg.getFieldAsString(baseId + 10);
 }
 
 /**

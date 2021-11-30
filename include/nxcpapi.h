@@ -77,8 +77,8 @@ private:
 
 public:
    NXCPMessage(int version = NXCP_VERSION);
-   NXCPMessage(UINT16 code, UINT32 id, int version = NXCP_VERSION);
-   NXCPMessage(NXCPMessage *msg);
+   NXCPMessage(uint16_t code, uint32_t id, int version = NXCP_VERSION);
+   NXCPMessage(const NXCPMessage& msg);
    ~NXCPMessage();
 
    static NXCPMessage *deserialize(const NXCP_MESSAGE *rawMsg, int version = NXCP_VERSION);

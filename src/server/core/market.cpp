@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2016 Raden Solutions
+** Copyright (C) 2003-2021 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -68,11 +68,11 @@ static int CheckRepositoryId(INT32 id)
 /**
  * Get configured repositories
  */
-void ClientSession::getRepositories(NXCPMessage *request)
+void ClientSession::getRepositories(const NXCPMessage& request)
 {
    NXCPMessage msg;
    msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request->getId());
+   msg.setId(request.getId());
 
    if (checkSysAccessRights(SYSTEM_ACCESS_MANAGE_REPOSITORIES) || checkSysAccessRights(SYSTEM_ACCESS_VIEW_REPOSITORIES))
    {
@@ -114,11 +114,11 @@ void ClientSession::getRepositories(NXCPMessage *request)
 /**
  * Add repository
  */
-void ClientSession::addRepository(NXCPMessage *request)
+void ClientSession::addRepository(const NXCPMessage& request)
 {
    NXCPMessage msg;
    msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request->getId());
+   msg.setId(request.getId());
 
    if (checkSysAccessRights(SYSTEM_ACCESS_MANAGE_REPOSITORIES))
    {
@@ -129,9 +129,9 @@ void ClientSession::addRepository(NXCPMessage *request)
          DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO config_repositories (id,url,auth_token,description) VALUES (?,?,?,?)"));
          if (hStmt != NULL)
          {
-            TCHAR *url = request->getFieldAsString(VID_URL);
-            TCHAR *authToken = request->getFieldAsString(VID_AUTH_TOKEN);
-            TCHAR *description = request->getFieldAsString(VID_DESCRIPTION);
+            TCHAR *url = request.getFieldAsString(VID_URL);
+            TCHAR *authToken = request.getFieldAsString(VID_AUTH_TOKEN);
+            TCHAR *description = request.getFieldAsString(VID_DESCRIPTION);
 
             DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, id);
             DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, url, DB_BIND_STATIC);
@@ -177,13 +177,13 @@ void ClientSession::addRepository(NXCPMessage *request)
 /**
  * Add repository
  */
-void ClientSession::modifyRepository(NXCPMessage *request)
+void ClientSession::modifyRepository(const NXCPMessage& request)
 {
    NXCPMessage msg;
    msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request->getId());
+   msg.setId(request.getId());
 
-   INT32 id = request->getFieldAsInt32(VID_REPOSITORY_ID);
+   INT32 id = request.getFieldAsInt32(VID_REPOSITORY_ID);
    if (checkSysAccessRights(SYSTEM_ACCESS_MANAGE_REPOSITORIES))
    {
       int check = CheckRepositoryId(id);
@@ -193,9 +193,9 @@ void ClientSession::modifyRepository(NXCPMessage *request)
          DB_STATEMENT hStmt = DBPrepare(hdb, _T("UPDATE config_repositories SET url=?,auth_token=?,description=? WHERE id=?"));
          if (hStmt != NULL)
          {
-            TCHAR *url = request->getFieldAsString(VID_URL);
-            TCHAR *authToken = request->getFieldAsString(VID_AUTH_TOKEN);
-            TCHAR *description = request->getFieldAsString(VID_DESCRIPTION);
+            TCHAR *url = request.getFieldAsString(VID_URL);
+            TCHAR *authToken = request.getFieldAsString(VID_AUTH_TOKEN);
+            TCHAR *description = request.getFieldAsString(VID_DESCRIPTION);
 
             DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, url, DB_BIND_STATIC);
             DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, authToken, DB_BIND_STATIC);
@@ -244,13 +244,13 @@ void ClientSession::modifyRepository(NXCPMessage *request)
 /**
  * Delete repository
  */
-void ClientSession::deleteRepository(NXCPMessage *request)
+void ClientSession::deleteRepository(const NXCPMessage& request)
 {
    NXCPMessage msg;
    msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request->getId());
+   msg.setId(request.getId());
 
-   INT32 id = request->getFieldAsInt32(VID_REPOSITORY_ID);
+   INT32 id = request.getFieldAsInt32(VID_REPOSITORY_ID);
    if (checkSysAccessRights(SYSTEM_ACCESS_MANAGE_REPOSITORIES))
    {
       int check = CheckRepositoryId(id);

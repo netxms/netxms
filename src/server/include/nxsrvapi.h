@@ -534,7 +534,7 @@ private:
    Mutex m_customAttributeLock;
 
    SharedString getCustomAttributeFromParent(const TCHAR *name);
-   bool setCustomAttributeFromMessage(const NXCPMessage *msg, uint32_t base);
+   bool setCustomAttributeFromMessage(const NXCPMessage& msg, uint32_t base);
    void setCustomAttribute(const TCHAR *name, SharedString value, uint32_t parent);
    void deletePopulatedCustomAttribute(const TCHAR *name);
    void populate(const TCHAR *name, SharedString value, uint32_t parentId);
@@ -627,7 +627,7 @@ public:
    void setCustomAttribute(const TCHAR *key, int64_t value);
    void setCustomAttribute(const TCHAR *key, uint64_t value);
 
-   void setCustomAttributesFromMessage(const NXCPMessage *msg);
+   void setCustomAttributesFromMessage(const NXCPMessage& msg);
    void setCustomAttributesFromDatabase(DB_RESULT hResult);
    void deleteCustomAttribute(const TCHAR *name);
    void updateOrDeleteCustomAttributeOnParentRemove(const TCHAR *name);

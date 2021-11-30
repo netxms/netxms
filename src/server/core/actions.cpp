@@ -261,21 +261,21 @@ static bool ExecuteRemoteAction(const TCHAR *pszTarget, const TCHAR *pszAction)
 /**
  * Execute command on remote node by SSH. Node should have valid ssh proxy.
  */
-static bool ExecuteRemoteSshAction(const TCHAR *pszTarget, const TCHAR *pszAction)
+static bool ExecuteRemoteSshAction(const TCHAR *target, const TCHAR *action)
 {
    shared_ptr<Node> node;
    uint32_t proxyId = 0;
-   if ((pszTarget[0] == '@') || (pszTarget[0] == '#'))
+   if ((target[0] == '@') || (target[0] == '#'))
    {
       // Resolve object name or ID.
-      node = (pszTarget[0] == '@') ?
-            static_pointer_cast<Node>(FindObjectByName(&pszTarget[1], OBJECT_NODE)) :
-            static_pointer_cast<Node>(FindObjectById(_tcstoul(&pszTarget[1], nullptr, 0), OBJECT_NODE));
+      node = (target[0] == '@') ?
+            static_pointer_cast<Node>(FindObjectByName(&target[1], OBJECT_NODE)) :
+            static_pointer_cast<Node>(FindObjectById(_tcstoul(&target[1], nullptr, 0), OBJECT_NODE));
    }
    else
    {
       // Resolve hostname
-      InetAddress addr = InetAddress::resolveHostName(pszTarget);
+      InetAddress addr = InetAddress::resolveHostName(target);
       if (!addr.isValid())
          return false;
 
@@ -303,7 +303,7 @@ static bool ExecuteRemoteSshAction(const TCHAR *pszTarget, const TCHAR *pszActio
          list.add(node->getSshPort());
          list.add(node->getSshLogin());
          list.add(node->getSshPassword());
-         list.add(pszAction);
+         list.add(action);
          list.add(node->getSshKeyId());
          uint32_t rcc = conn->executeCommand(_T("SSH.Command"), list);
          nxlog_debug_tag(DEBUG_TAG, 4, _T("Agent action execution result: %d (%s)"), rcc, AgentErrorCodeToText(rcc));
@@ -683,25 +683,25 @@ uint32_t DeleteAction(uint32_t actionId)
 /**
  * Modify action record from message
  */
-uint32_t ModifyActionFromMessage(const NXCPMessage *msg)
+uint32_t ModifyActionFromMessage(const NXCPMessage& msg)
 {
    uint32_t rcc = RCC_INVALID_ACTION_ID;
 
    TCHAR name[MAX_OBJECT_NAME];
-   msg->getFieldAsString(VID_ACTION_NAME, name, MAX_OBJECT_NAME);
-   uint32_t actionId = msg->getFieldAsUInt32(VID_ACTION_ID);
+   msg.getFieldAsString(VID_ACTION_NAME, name, MAX_OBJECT_NAME);
+   uint32_t actionId = msg.getFieldAsUInt32(VID_ACTION_ID);
 
    shared_ptr<Action> tmp = s_actions.getShared(actionId);
    if (tmp != nullptr)
    {
       auto action = make_shared<Action>(*tmp);
-      action->isDisabled = msg->getFieldAsBoolean(VID_IS_DISABLED);
-      action->type = static_cast<ServerActionType>(msg->getFieldAsUInt16(VID_ACTION_TYPE));
+      action->isDisabled = msg.getFieldAsBoolean(VID_IS_DISABLED);
+      action->type = static_cast<ServerActionType>(msg.getFieldAsUInt16(VID_ACTION_TYPE));
       MemFree(action->data);
-      action->data = msg->getFieldAsString(VID_ACTION_DATA);
-      msg->getFieldAsString(VID_EMAIL_SUBJECT, action->emailSubject, MAX_EMAIL_SUBJECT_LEN);
-      msg->getFieldAsString(VID_RCPT_ADDR, action->rcptAddr, MAX_RCPT_ADDR_LEN);
-      msg->getFieldAsString(VID_CHANNEL_NAME, action->channelName, MAX_OBJECT_NAME);
+      action->data = msg.getFieldAsString(VID_ACTION_DATA);
+      msg.getFieldAsString(VID_EMAIL_SUBJECT, action->emailSubject, MAX_EMAIL_SUBJECT_LEN);
+      msg.getFieldAsString(VID_RCPT_ADDR, action->rcptAddr, MAX_RCPT_ADDR_LEN);
+      msg.getFieldAsString(VID_CHANNEL_NAME, action->channelName, MAX_OBJECT_NAME);
       _tcscpy(action->name, name);
 
       action->saveToDatabase();

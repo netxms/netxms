@@ -1111,7 +1111,7 @@ void Tunnel::checkConnection()
    else
    {
       NXCPMessage msg(CMD_KEEPALIVE, InterlockedIncrement(&m_requestId), 4);
-      if (sendMessage(&msg))
+      if (sendMessage(msg))
       {
          NXCPMessage *response = waitForMessage(CMD_KEEPALIVE, msg.getId());
          if (response == nullptr)
@@ -1309,7 +1309,7 @@ void Tunnel::processBindRequest(NXCPMessage *request)
    char *country = request->getFieldAsUtf8String(VID_COUNTRY);
    char *org = request->getFieldAsUtf8String(VID_ORGANIZATION);
 
-   EVP_PKEY *key = NULL;
+   EVP_PKEY *key = nullptr;
    X509_REQ *req = createCertificateRequest(country, org, cn, &key);
 
    MemFree(country);
@@ -1324,7 +1324,7 @@ void Tunnel::processBindRequest(NXCPMessage *request)
       {
          NXCPMessage certRequest(CMD_REQUEST_CERTIFICATE, request->getId(), 4);
          certRequest.setField(VID_CERTIFICATE, buffer, len);
-         sendMessage(&certRequest);
+         sendMessage(certRequest);
          OPENSSL_free(buffer);
 
          NXCPMessage *certResponse = waitForMessage(CMD_NEW_CERTIFICATE, request->getId());
@@ -1388,7 +1388,7 @@ void Tunnel::processBindRequest(NXCPMessage *request)
       response.setField(VID_RCC, ERR_ENCRYPTION_ERROR);
    }
 
-   sendMessage(&response);
+   sendMessage(response);
    delete request;
 }
 
@@ -1425,7 +1425,7 @@ void Tunnel::createSession(const NXCPMessage& request)
       response.setField(VID_RCC, ERR_OUT_OF_RESOURCES);
    }
 
-   sendMessage(&response);
+   sendMessage(response);
 }
 
 /**
@@ -1480,7 +1480,7 @@ void Tunnel::closeChannel(TunnelCommChannel *channel)
    {
       NXCPMessage msg(CMD_CLOSE_CHANNEL, 0, 4);
       msg.setField(VID_CHANNEL_ID, id);
-      sendMessage(&msg);
+      sendMessage(msg);
    }
 }
 

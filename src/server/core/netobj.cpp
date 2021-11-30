@@ -1356,7 +1356,7 @@ void NetObj::setModified(uint32_t flags, bool notify)
 /**
  * Modify object from NXCP message - common wrapper
  */
-UINT32 NetObj::modifyFromMessage(NXCPMessage *msg)
+uint32_t NetObj::modifyFromMessage(const NXCPMessage& msg)
 {
    lockProperties();
    uint32_t rcc = modifyFromMessageInternal(msg);
@@ -1370,12 +1370,12 @@ UINT32 NetObj::modifyFromMessage(NXCPMessage *msg)
 /**
  * Modify object from NXCP message
  */
-UINT32 NetObj::modifyFromMessageInternal(NXCPMessage *pRequest)
+uint32_t NetObj::modifyFromMessageInternal(const NXCPMessage& msg)
 {
    // Change object's name
-   if (pRequest->isFieldExist(VID_OBJECT_NAME))
+   if (msg.isFieldExist(VID_OBJECT_NAME))
    {
-      pRequest->getFieldAsString(VID_OBJECT_NAME, m_name, MAX_OBJECT_NAME);
+      msg.getFieldAsString(VID_OBJECT_NAME, m_name, MAX_OBJECT_NAME);
 
       // Cleanup
       for(int i = 0; m_name[i] != 0; i++)
@@ -1390,59 +1390,59 @@ UINT32 NetObj::modifyFromMessageInternal(NXCPMessage *pRequest)
       }
    }
 
-   if (pRequest->isFieldExist(VID_ALIAS))
-      m_alias = pRequest->getFieldAsSharedString(VID_ALIAS);
+   if (msg.isFieldExist(VID_ALIAS))
+      m_alias = msg.getFieldAsSharedString(VID_ALIAS);
 
-   if (pRequest->isFieldExist(VID_NAME_ON_MAP))
-      m_nameOnMap = pRequest->getFieldAsSharedString(VID_NAME_ON_MAP);
+   if (msg.isFieldExist(VID_NAME_ON_MAP))
+      m_nameOnMap = msg.getFieldAsSharedString(VID_NAME_ON_MAP);
 
    // Change object's status calculation/propagation algorithms
-   if (pRequest->isFieldExist(VID_STATUS_CALCULATION_ALG))
+   if (msg.isFieldExist(VID_STATUS_CALCULATION_ALG))
    {
-      m_statusCalcAlg = pRequest->getFieldAsInt16(VID_STATUS_CALCULATION_ALG);
-      m_statusPropAlg = pRequest->getFieldAsInt16(VID_STATUS_PROPAGATION_ALG);
-      m_fixedStatus = pRequest->getFieldAsInt16(VID_FIXED_STATUS);
-      m_statusShift = pRequest->getFieldAsInt16(VID_STATUS_SHIFT);
-      m_statusTranslation[0] = pRequest->getFieldAsInt16(VID_STATUS_TRANSLATION_1);
-      m_statusTranslation[1] = pRequest->getFieldAsInt16(VID_STATUS_TRANSLATION_2);
-      m_statusTranslation[2] = pRequest->getFieldAsInt16(VID_STATUS_TRANSLATION_3);
-      m_statusTranslation[3] = pRequest->getFieldAsInt16(VID_STATUS_TRANSLATION_4);
-      m_statusSingleThreshold = pRequest->getFieldAsInt16(VID_STATUS_SINGLE_THRESHOLD);
-      m_statusThresholds[0] = pRequest->getFieldAsInt16(VID_STATUS_THRESHOLD_1);
-      m_statusThresholds[1] = pRequest->getFieldAsInt16(VID_STATUS_THRESHOLD_2);
-      m_statusThresholds[2] = pRequest->getFieldAsInt16(VID_STATUS_THRESHOLD_3);
-      m_statusThresholds[3] = pRequest->getFieldAsInt16(VID_STATUS_THRESHOLD_4);
+      m_statusCalcAlg = msg.getFieldAsInt16(VID_STATUS_CALCULATION_ALG);
+      m_statusPropAlg = msg.getFieldAsInt16(VID_STATUS_PROPAGATION_ALG);
+      m_fixedStatus = msg.getFieldAsInt16(VID_FIXED_STATUS);
+      m_statusShift = msg.getFieldAsInt16(VID_STATUS_SHIFT);
+      m_statusTranslation[0] = msg.getFieldAsInt16(VID_STATUS_TRANSLATION_1);
+      m_statusTranslation[1] = msg.getFieldAsInt16(VID_STATUS_TRANSLATION_2);
+      m_statusTranslation[2] = msg.getFieldAsInt16(VID_STATUS_TRANSLATION_3);
+      m_statusTranslation[3] = msg.getFieldAsInt16(VID_STATUS_TRANSLATION_4);
+      m_statusSingleThreshold = msg.getFieldAsInt16(VID_STATUS_SINGLE_THRESHOLD);
+      m_statusThresholds[0] = msg.getFieldAsInt16(VID_STATUS_THRESHOLD_1);
+      m_statusThresholds[1] = msg.getFieldAsInt16(VID_STATUS_THRESHOLD_2);
+      m_statusThresholds[2] = msg.getFieldAsInt16(VID_STATUS_THRESHOLD_3);
+      m_statusThresholds[3] = msg.getFieldAsInt16(VID_STATUS_THRESHOLD_4);
    }
 
 	// Change image
-	if (pRequest->isFieldExist(VID_IMAGE))
-		m_mapImage = pRequest->getFieldAsGUID(VID_IMAGE);
+	if (msg.isFieldExist(VID_IMAGE))
+		m_mapImage = msg.getFieldAsGUID(VID_IMAGE);
 
 	// Object category
-	if (pRequest->isFieldExist(VID_CATEGORY_ID))
-	   m_categoryId = pRequest->getFieldAsUInt32(VID_CATEGORY_ID);
+	if (msg.isFieldExist(VID_CATEGORY_ID))
+	   m_categoryId = msg.getFieldAsUInt32(VID_CATEGORY_ID);
 
    // Change object's ACL
-   if (pRequest->isFieldExist(VID_ACL_SIZE))
+   if (msg.isFieldExist(VID_ACL_SIZE))
    {
       lockACL();
-      m_inheritAccessRights = pRequest->getFieldAsBoolean(VID_INHERIT_RIGHTS);
+      m_inheritAccessRights = msg.getFieldAsBoolean(VID_INHERIT_RIGHTS);
       m_accessList.deleteAll();
-      int count = pRequest->getFieldAsUInt32(VID_ACL_SIZE);
+      int count = msg.getFieldAsUInt32(VID_ACL_SIZE);
       for(int i = 0; i < count; i++)
-         m_accessList.addElement(pRequest->getFieldAsUInt32(VID_ACL_USER_BASE + i), pRequest->getFieldAsUInt32(VID_ACL_RIGHTS_BASE + i));
+         m_accessList.addElement(msg.getFieldAsUInt32(VID_ACL_USER_BASE + i), msg.getFieldAsUInt32(VID_ACL_RIGHTS_BASE + i));
       unlockACL();
    }
 
 	// Change trusted nodes list
-   if (pRequest->isFieldExist(VID_NUM_TRUSTED_NODES))
+   if (msg.isFieldExist(VID_NUM_TRUSTED_NODES))
    {
-      int count = pRequest->getFieldAsInt32(VID_NUM_TRUSTED_NODES);
+      int count = msg.getFieldAsInt32(VID_NUM_TRUSTED_NODES);
       if (count > 0)
       {
          if (m_trustedNodes == nullptr)
             m_trustedNodes = new IntegerArray<uint32_t>(count);
-         pRequest->getFieldAsInt32Array(VID_TRUSTED_NODES, m_trustedNodes);
+         msg.getFieldAsInt32Array(VID_TRUSTED_NODES, m_trustedNodes);
       }
       else
       {
@@ -1451,62 +1451,62 @@ UINT32 NetObj::modifyFromMessageInternal(NXCPMessage *pRequest)
    }
 
 	// Change geolocation
-	if (pRequest->isFieldExist(VID_GEOLOCATION_TYPE))
+	if (msg.isFieldExist(VID_GEOLOCATION_TYPE))
 	{
-		m_geoLocation = GeoLocation(*pRequest);
+		m_geoLocation = GeoLocation(msg);
 		TCHAR key[32];
 		_sntprintf(key, 32, _T("GLupd-%u"), m_id);
 		ThreadPoolExecuteSerialized(g_mainThreadPool, key, self(), &NetObj::updateGeoLocationHistory, m_geoLocation);
 	}
 
-	if (pRequest->isFieldExist(VID_DRILL_DOWN_OBJECT_ID))
+	if (msg.isFieldExist(VID_DRILL_DOWN_OBJECT_ID))
 	{
-		m_submapId = pRequest->getFieldAsUInt32(VID_DRILL_DOWN_OBJECT_ID);
+		m_submapId = msg.getFieldAsUInt32(VID_DRILL_DOWN_OBJECT_ID);
 	}
 
-   if (pRequest->isFieldExist(VID_COUNTRY))
+   if (msg.isFieldExist(VID_COUNTRY))
    {
       TCHAR buffer[64];
-      pRequest->getFieldAsString(VID_COUNTRY, buffer, 64);
+      msg.getFieldAsString(VID_COUNTRY, buffer, 64);
       m_postalAddress.setCountry(buffer);
    }
 
-   if (pRequest->isFieldExist(VID_CITY))
+   if (msg.isFieldExist(VID_CITY))
    {
       TCHAR buffer[64];
-      pRequest->getFieldAsString(VID_CITY, buffer, 64);
+      msg.getFieldAsString(VID_CITY, buffer, 64);
       m_postalAddress.setCity(buffer);
    }
 
-   if (pRequest->isFieldExist(VID_STREET_ADDRESS))
+   if (msg.isFieldExist(VID_STREET_ADDRESS))
    {
       TCHAR buffer[256];
-      pRequest->getFieldAsString(VID_STREET_ADDRESS, buffer, 256);
+      msg.getFieldAsString(VID_STREET_ADDRESS, buffer, 256);
       m_postalAddress.setStreetAddress(buffer);
    }
 
-   if (pRequest->isFieldExist(VID_POSTCODE))
+   if (msg.isFieldExist(VID_POSTCODE))
    {
       TCHAR buffer[32];
-      pRequest->getFieldAsString(VID_POSTCODE, buffer, 32);
+      msg.getFieldAsString(VID_POSTCODE, buffer, 32);
       m_postalAddress.setPostCode(buffer);
    }
 
    // Change dashboard list
-   if (pRequest->isFieldExist(VID_DASHBOARDS))
+   if (msg.isFieldExist(VID_DASHBOARDS))
    {
-      pRequest->getFieldAsInt32Array(VID_DASHBOARDS, &m_dashboards);
+      msg.getFieldAsInt32Array(VID_DASHBOARDS, &m_dashboards);
    }
 
    // Update URL list
-   if (pRequest->isFieldExist(VID_NUM_URLS))
+   if (msg.isFieldExist(VID_NUM_URLS))
    {
       m_urls.clear();
-      int count = pRequest->getFieldAsInt32(VID_NUM_URLS);
+      int count = msg.getFieldAsInt32(VID_NUM_URLS);
       uint32_t fieldId = VID_URL_LIST_BASE;
       for(int i = 0; i < count; i++)
       {
-         m_urls.add(new ObjectUrl(pRequest, fieldId));
+         m_urls.add(new ObjectUrl(msg, fieldId));
          fieldId += 10;
       }
    }
@@ -1520,15 +1520,15 @@ UINT32 NetObj::modifyFromMessageInternal(NXCPMessage *pRequest)
  * used when more direct control over locks is needed (for example when
  * code should lock parent or children list without holding property lock).
  */
-UINT32 NetObj::modifyFromMessageInternalStage2(NXCPMessage *request)
+uint32_t NetObj::modifyFromMessageInternalStage2(const NXCPMessage& msg)
 {
    // Change custom attributes
-   if (request->isFieldExist(VID_NUM_CUSTOM_ATTRIBUTES))
+   if (msg.isFieldExist(VID_NUM_CUSTOM_ATTRIBUTES))
    {
-      setCustomAttributesFromMessage(request);
+      setCustomAttributesFromMessage(msg);
    }
 
-   int count = request->getFieldAsInt32(VID_RESPONSIBLE_USERS_COUNT);
+   int count = msg.getFieldAsInt32(VID_RESPONSIBLE_USERS_COUNT);
    lockResponsibleUsersList();
    if (count > 0)
    {
@@ -1541,8 +1541,8 @@ UINT32 NetObj::modifyFromMessageInternalStage2(NXCPMessage *request)
       for(int i = 0; i < count; i++)
       {
          ResponsibleUser *r = m_responsibleUsers->addPlaceholder();
-         r->userId = request->getFieldAsUInt32(fieldId++);
-         r->escalationLevel = request->getFieldAsUInt32(fieldId++);
+         r->userId = msg.getFieldAsUInt32(fieldId++);
+         r->escalationLevel = msg.getFieldAsUInt32(fieldId++);
          fieldId += 8;
       }
    }

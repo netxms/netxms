@@ -143,22 +143,22 @@ SNMPTrapConfiguration::SNMPTrapConfiguration(const ConfigEntry& entry, const uui
 /**
  * Create SNMP trap configuration object from NXCPMessage
  */
-SNMPTrapConfiguration::SNMPTrapConfiguration(NXCPMessage *msg) : m_mappings(8, 8, Ownership::True)
+SNMPTrapConfiguration::SNMPTrapConfiguration(const NXCPMessage& msg) : m_mappings(8, 8, Ownership::True)
 {
-   UINT32 buffer[MAX_OID_LENGTH];
+   uint32_t buffer[MAX_OID_LENGTH];
 
-   m_id = msg->getFieldAsUInt32(VID_TRAP_ID);
-   msg->getFieldAsInt32Array(VID_TRAP_OID, msg->getFieldAsUInt32(VID_TRAP_OID_LEN), buffer);
-   m_objectId = SNMP_ObjectId(buffer, msg->getFieldAsUInt32(VID_TRAP_OID_LEN));
-   m_eventCode = msg->getFieldAsUInt32(VID_EVENT_CODE);
-   m_description = msg->getFieldAsString(VID_DESCRIPTION);
-   m_eventTag = msg->getFieldAsString(VID_USER_TAG);
-   m_scriptSource = msg->getFieldAsString(VID_TRANSFORMATION_SCRIPT);
+   m_id = msg.getFieldAsUInt32(VID_TRAP_ID);
+   msg.getFieldAsInt32Array(VID_TRAP_OID, msg.getFieldAsUInt32(VID_TRAP_OID_LEN), buffer);
+   m_objectId = SNMP_ObjectId(buffer, msg.getFieldAsUInt32(VID_TRAP_OID_LEN));
+   m_eventCode = msg.getFieldAsUInt32(VID_EVENT_CODE);
+   m_description = msg.getFieldAsString(VID_DESCRIPTION);
+   m_eventTag = msg.getFieldAsString(VID_USER_TAG);
+   m_scriptSource = msg.getFieldAsString(VID_TRANSFORMATION_SCRIPT);
    m_script = nullptr;
 
    // Read new mappings from message
-   int count = msg->getFieldAsInt32(VID_TRAP_NUM_MAPS);
-   UINT32 base = VID_TRAP_PBASE;
+   int count = msg.getFieldAsInt32(VID_TRAP_NUM_MAPS);
+   uint32_t base = VID_TRAP_PBASE;
    for(int i = 0; i < count; i++, base += 10)
    {
       m_mappings.add(new SNMPTrapParameterMapping(msg, base));
@@ -313,20 +313,20 @@ SNMPTrapParameterMapping::SNMPTrapParameterMapping(ConfigEntry *entry)
 /**
  * Create SNMP trap parameter map object from NXCPMessage
  */
-SNMPTrapParameterMapping::SNMPTrapParameterMapping(NXCPMessage *msg, UINT32 base)
+SNMPTrapParameterMapping::SNMPTrapParameterMapping(const NXCPMessage& msg, uint32_t base)
 {
-   m_flags = msg->getFieldAsUInt32(base);
-   m_description = msg->getFieldAsString(base + 1);
-   if (msg->getFieldAsUInt32(base + 2) == BY_POSITION)
+   m_flags = msg.getFieldAsUInt32(base);
+   m_description = msg.getFieldAsString(base + 1);
+   if (msg.getFieldAsUInt32(base + 2) == BY_POSITION)
    {
       m_objectId = nullptr;
-      m_position = msg->getFieldAsUInt32(base + 3);
+      m_position = msg.getFieldAsUInt32(base + 3);
    }
    else
    {
-      UINT32 buffer[MAX_OID_LENGTH];
-      msg->getFieldAsInt32Array(base + 3, msg->getFieldAsUInt32(base + 4), buffer);
-      m_objectId = new SNMP_ObjectId(buffer, msg->getFieldAsUInt32(base + 4));
+      uint32_t buffer[MAX_OID_LENGTH];
+      msg.getFieldAsInt32Array(base + 3, msg.getFieldAsUInt32(base + 4), buffer);
+      m_objectId = new SNMP_ObjectId(buffer, msg.getFieldAsUInt32(base + 4));
    }
 }
 
@@ -342,7 +342,7 @@ SNMPTrapParameterMapping::~SNMPTrapParameterMapping()
 /**
  * Fill NXCP message with trap parameter map configuration data
  */
-void SNMPTrapParameterMapping::fillMessage(NXCPMessage *msg, UINT32 base) const
+void SNMPTrapParameterMapping::fillMessage(NXCPMessage *msg, uint32_t base) const
 {
    msg->setField(base, isPositional());
    if (isPositional())
@@ -1123,12 +1123,12 @@ UINT32 CreateNewTrap(UINT32 *pdwTrapId)
 /**
  * Update trap configuration record from message
  */
-UINT32 UpdateTrapFromMsg(NXCPMessage *pMsg)
+uint32_t UpdateTrapFromMsg(const NXCPMessage& msg)
 {
-   UINT32 rcc = RCC_INVALID_TRAP_ID;
+   uint32_t rcc = RCC_INVALID_TRAP_ID;
    TCHAR oid[1024];
 
-   UINT32 id = pMsg->getFieldAsUInt32(VID_TRAP_ID);
+   uint32_t id = msg.getFieldAsUInt32(VID_TRAP_ID);
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
    for(int i = 0; i < m_trapCfgList.size(); i++)
@@ -1138,7 +1138,7 @@ UINT32 UpdateTrapFromMsg(NXCPMessage *pMsg)
          DB_STATEMENT hStmt = DBPrepare(hdb, _T("UPDATE snmp_trap_cfg SET snmp_oid=?,event_code=?,description=?,user_tag=?,transformation_script=? WHERE trap_id=?"));
          if (hStmt != nullptr)
          {
-            SNMPTrapConfiguration *trapCfg = new SNMPTrapConfiguration(pMsg);
+            SNMPTrapConfiguration *trapCfg = new SNMPTrapConfiguration(msg);
             trapCfg->getOid().toString(oid, 1024);
             DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, oid, DB_BIND_STATIC);
             DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, trapCfg->getEventCode());
