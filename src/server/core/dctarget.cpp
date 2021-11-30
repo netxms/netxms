@@ -58,7 +58,7 @@ extern ThreadPool *g_pollerThreadPool;
  * Default constructor
  */
 DataCollectionTarget::DataCollectionTarget() : super(), m_statusPollState(_T("status")),
-         m_configurationPollState(_T("configuration")), m_instancePollState(_T("instance")),
+         m_configurationPollState(_T("configuration"), true), m_instancePollState(_T("instance"), true),
          m_deletedItems(0, 32), m_deletedTables(0, 32), m_geoAreas(0, 16), m_proxyLoadFactor(0)
 {
    m_hPollerMutex = MutexCreate();
