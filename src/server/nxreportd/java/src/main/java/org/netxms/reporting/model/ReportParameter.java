@@ -19,6 +19,7 @@
 package org.netxms.reporting.model;
 
 import java.util.ResourceBundle;
+import org.netxms.base.NXCPMessage;
 import net.sf.jasperreports.engine.JRExpression;
 import net.sf.jasperreports.engine.JRParameter;
 import net.sf.jasperreports.engine.JRPropertiesMap;
@@ -34,6 +35,7 @@ public class ReportParameter
    private String description;
    private String type;
    private String defaultValue;
+   private String multiselectValues;
    private int span;
 
    /**
@@ -52,6 +54,7 @@ public class ReportParameter
       type = ReportDefinition.getPropertyFromMap(propertiesMap, "logicalType", jrParameter.getValueClass().getName());
       this.index = ReportDefinition.getPropertyFromMap(propertiesMap, "index", index);
       dependsOn = ReportDefinition.getPropertyFromMap(propertiesMap, "dependsOn", "");
+      multiselectValues = ReportDefinition.getPropertyFromMap(propertiesMap, "multiselectValues", "");
       span = ReportDefinition.getPropertyFromMap(propertiesMap, "span", 1);
       if (span < 1)
          span = 1;
@@ -60,47 +63,42 @@ public class ReportParameter
       this.defaultValue = (defaultValue != null) ? defaultValue.getText() : null;
    }
 
-   public int getIndex()
+   /**
+    * Fill NXCP message with parameter's data.
+    *
+    * @param msg NXCP message
+    * @param baseId base field ID
+    */
+   public void fillMessage(NXCPMessage msg, long baseId)
    {
-      return index;
+      msg.setFieldInt32(baseId, index);
+      msg.setField(baseId + 1, name);
+      msg.setField(baseId + 2, description);
+      msg.setField(baseId + 3, type);
+      msg.setField(baseId + 4, defaultValue);
+      msg.setField(baseId + 5, dependsOn);
+      msg.setFieldInt32(baseId + 6, span);
+      msg.setField(baseId + 7, multiselectValues);
    }
 
+   /**
+    * Get parameter's name.
+    *
+    * @return parameter's name
+    */
    public String getName()
    {
       return name;
    }
 
-   public String getDependsOn()
-   {
-      return dependsOn;
-   }
-
-   public String getDescription()
-   {
-      return description;
-   }
-
-   public String getType()
-   {
-      return type;
-   }
-
-   public String getDefaultValue()
-   {
-      return defaultValue;
-   }
-
-   public int getSpan()
-   {
-      return span;
-   }
-
+   /**
+    * @see java.lang.Object#toString()
+    */
    @Override
    public String toString()
    {
-      return "ReportParameter{" + "index=" + index + ", name='" + name + '\'' + ", dependsOn='" + dependsOn + '\''
-            + ", description='" + description + '\'' + ", type='" + type + '\'' + ", defaultValue='" + defaultValue + '\''
-            + ", span=" + span + '}';
+      return "ReportParameter [index=" + index + ", name=" + name + ", dependsOn=" + dependsOn + ", description=" + description + ", type=" + type + ", defaultValue=" + defaultValue +
+            ", multiselectValues=" + multiselectValues + ", span=" + span + "]";
    }
 
    /**

@@ -102,25 +102,25 @@ public class ReportExecutionForm extends Composite
 	public static final int COLUMN_RESULT_EXEC_TIME = 0;
    public static final int COLUMN_RESULT_STARTED_BY = 1;
    public static final int COLUMN_RESULT_STATUS = 2;
-	
-	private NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-	
+
+   private NXCSession session = ConsoleSharedData.getSession();
+
 	private IWorkbenchPart workbenchPart = null;
 	private FormToolkit toolkit;
 	private Form form;
 	private ImageCache imageCache;
 	private SortableTableViewer resultList;
 	private SortableTableViewer scheduleList;
-	
+
 	private ReportDefinition report;
 	private List<ReportParameter> parameters;
 	private List<FieldEditor> fields = new ArrayList<FieldEditor>();
-	
+
 	private Action actionDeleteSchedule;
    private Action actionDeleteResult;
    private Action actionRenderXLS;
    private Action actionRenderPDF;
-	
+
 	/**
 	 * @param parent
 	 * @param style
@@ -452,7 +452,7 @@ public class ReportExecutionForm extends Composite
       layout.numColumns = 2;
       layout.verticalSpacing = 10;
       parent.setLayout(layout);
-      
+
 		final IExtensionRegistry reg = Platform.getExtensionRegistry();
 		IConfigurationElement[] elements = reg.getConfigurationElementsFor("org.netxms.ui.eclipse.reporter.customfields"); //$NON-NLS-1$
 		sortFieldProviders(elements);
