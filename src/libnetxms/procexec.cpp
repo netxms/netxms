@@ -113,6 +113,7 @@ ProcessExecutor::ProcessExecutor(const TCHAR *cmd, bool shellExec, bool selfDest
    m_outputThread = INVALID_THREAD_HANDLE;
    m_started = false;
    m_running = false;
+   m_exitCode = -1;
 }
 
 /**
