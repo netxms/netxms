@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -48,14 +48,16 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
  */
 public class Location extends PropertyPage
 {
-	private AbstractObject object;
-	private LabeledText latitude;
-	private LabeledText longitude;
-	private Button radioTypeUndefined;
-	private Button radioTypeManual;
-	private Button radioTypeAuto;
-	private LabeledText country;
+   private AbstractObject object;
+   private LabeledText latitude;
+   private LabeledText longitude;
+   private Button radioTypeUndefined;
+   private Button radioTypeManual;
+   private Button radioTypeAuto;
+   private LabeledText country;
+   private LabeledText region;
    private LabeledText city;
+   private LabeledText district;
    private LabeledText streetAddress;
    private LabeledText postcode;
 
@@ -140,16 +142,26 @@ public class Location extends PropertyPage
 		country.setText(object.getPostalAddress().country);
 		country.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
       
+      region = new LabeledText(dialogArea, SWT.NONE);
+      region.setLabel("Region");
+      region.setText(object.getPostalAddress().region);
+      region.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
+
       city = new LabeledText(dialogArea, SWT.NONE);
       city.setLabel(Messages.get().Location_City);
       city.setText(object.getPostalAddress().city);
       city.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
       
+      district = new LabeledText(dialogArea, SWT.NONE);
+      district.setLabel("District");
+      district.setText(object.getPostalAddress().district);
+      district.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
+
       streetAddress = new LabeledText(dialogArea, SWT.NONE);
       streetAddress.setLabel(Messages.get().Location_StreetAddress);
       streetAddress.setText(object.getPostalAddress().streetAddress);
       streetAddress.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
-      
+
       postcode = new LabeledText(dialogArea, SWT.NONE);
       postcode.setLabel(Messages.get().Location_Postcode);
       postcode.setText(object.getPostalAddress().postcode);
@@ -191,8 +203,9 @@ public class Location extends PropertyPage
 		
 		final NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
 		md.setGeolocation(location);		
-		md.setPostalAddress(new PostalAddress(country.getText().trim(), city.getText().trim(), streetAddress.getText().trim(), postcode.getText().trim()));
-		
+		md.setPostalAddress(new PostalAddress(country.getText().trim(), region.getText().trim(), city.getText().trim(),
+		      district.getText().trim(), streetAddress.getText().trim(), postcode.getText().trim()));
+
 		if (isApply)
 			setValid(false);
 

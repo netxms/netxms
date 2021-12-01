@@ -1470,6 +1470,10 @@ typedef struct
 #define VID_COMMENTS_SOURCE         ((uint32_t)777)
 #define VID_WEB_SERVICE_PROXY       ((uint32_t)778)
 #define VID_MATCH                   ((uint32_t)779)
+#define VID_SYSLOG_CODEPAGE         ((uint32_t)780)
+#define VID_SNMP_CODEPAGE           ((uint32_t)781)
+#define VID_REGION                  ((uint32_t)782)
+#define VID_DISTRICT                ((uint32_t)783)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)
