@@ -24,11 +24,25 @@
 #include <nxevent.h>
 
 /**
- * Upgrade from 39.13 to 40.0
+ * Upgrade from 39.14 to 40.0
+ */
+static bool H_UpgradeFromV14()
+{
+   CHK_EXEC(SetMajorSchemaVersion(40, 0));
+   return true;
+}
+
+/**
+ * Upgrade from 39.13 to 39.14
  */
 static bool H_UpgradeFromV13()
 {
-   CHK_EXEC(SetMajorSchemaVersion(40, 0));
+   static const TCHAR *batch =
+      _T("ALTER TABLE object_properties ADD region varchar(63)\n")
+      _T("ALTER TABLE object_properties ADD district varchar(63)\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(SetMinorSchemaVersion(14));
    return true;
 }
 
@@ -449,7 +463,8 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
-   { 13, 40, 0,  H_UpgradeFromV13 },
+   { 14, 40, 0,  H_UpgradeFromV14 },
+   { 13, 39, 14, H_UpgradeFromV13 },
    { 12, 39, 13, H_UpgradeFromV12 },
    { 11, 39, 12, H_UpgradeFromV11 },
    { 10, 39, 11, H_UpgradeFromV10 },

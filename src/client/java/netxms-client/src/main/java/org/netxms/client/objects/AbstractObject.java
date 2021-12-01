@@ -162,7 +162,7 @@ public abstract class AbstractObject
 	protected final List<ObjectUrl> urls = new ArrayList<ObjectUrl>(0);
    protected final List<ResponsibleUser> responsibleUsers = new ArrayList<ResponsibleUser>(0);
 	protected Map<String, Object> moduleData = null;
-	
+
 	@Internal private int effectiveRights = 0;
 	@Internal private boolean effectiveRightsCached = false;
 

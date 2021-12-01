@@ -4765,7 +4765,9 @@ class LIBNETXMS_EXPORTABLE PostalAddress
 {
 private:
    TCHAR *m_country;
+   TCHAR *m_region;
    TCHAR *m_city;
+   TCHAR *m_district;
    TCHAR *m_streetAddress;
    TCHAR *m_postcode;
 
@@ -4777,21 +4779,25 @@ private:
 
 public:
    PostalAddress();
-   PostalAddress(const TCHAR *country, const TCHAR *city, const TCHAR *streetAddress, const TCHAR *postcode);
+   PostalAddress(const TCHAR *country, const TCHAR *region, const TCHAR *city, const TCHAR *district, const TCHAR *streetAddress, const TCHAR *postcode);
    PostalAddress(const PostalAddress& src);
    ~PostalAddress();
 
    PostalAddress& operator =(const PostalAddress& src);
 
    const TCHAR *getCountry() const { return CHECK_NULL_EX(m_country); }
+   const TCHAR *getRegion() const { return CHECK_NULL_EX(m_region); }
    const TCHAR *getCity() const { return CHECK_NULL_EX(m_city); }
+   const TCHAR *getDistrict() const { return CHECK_NULL_EX(m_district); }
    const TCHAR *getStreetAddress() const { return CHECK_NULL_EX(m_streetAddress); }
    const TCHAR *getPostCode() const { return CHECK_NULL_EX(m_postcode); }
 
    json_t *toJson() const;
 
    void setCountry(const TCHAR *country) { setField(&m_country, country); }
+   void setRegion(const TCHAR *region) { setField(&m_region, region); }
    void setCity(const TCHAR *city) { setField(&m_city, city); }
+   void setDistrict(const TCHAR *district) { setField(&m_district, district); }
    void setStreetAddress(const TCHAR *streetAddress) { setField(&m_streetAddress, streetAddress); }
    void setPostCode(const TCHAR *postcode) { setField(&m_postcode, postcode); }
 };

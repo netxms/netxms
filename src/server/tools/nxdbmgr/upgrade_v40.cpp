@@ -24,6 +24,24 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 40.84 to 40.85
+ */
+static bool H_UpgradeFromV84()
+{
+   if (GetSchemaLevelForMajorVersion(39) < 14)
+   {
+      static const TCHAR *batch =
+         _T("ALTER TABLE object_properties ADD region varchar(63)\n")
+         _T("ALTER TABLE object_properties ADD district varchar(63)\n")
+         _T("<END>");
+      CHK_EXEC(SQLBatch(batch));
+      CHK_EXEC(SetSchemaLevelForMajorVersion(39, 14));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(85));
+   return true;
+}
+
+/**
  * Upgrade from 40.83 to 40.84
  */
 static bool H_UpgradeFromV83()
@@ -2763,6 +2781,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 84, 40, 85, H_UpgradeFromV84 },
    { 83, 40, 84, H_UpgradeFromV83 },
    { 82, 40, 83, H_UpgradeFromV82 },
    { 81, 40, 82, H_UpgradeFromV81 },

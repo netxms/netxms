@@ -223,9 +223,10 @@ bool NetObj::saveToDatabase(DB_HANDLE hdb)
       _T("name"), _T("status"), _T("is_deleted"), _T("inherit_access_rights"), _T("last_modified"), _T("status_calc_alg"),
       _T("status_prop_alg"), _T("status_fixed_val"), _T("status_shift"), _T("status_translation"), _T("status_single_threshold"),
       _T("status_thresholds"), _T("comments"), _T("is_system"), _T("location_type"), _T("latitude"), _T("longitude"),
-      _T("location_accuracy"), _T("location_timestamp"), _T("guid"), _T("map_image"), _T("submap_id"), _T("country"), _T("city"),
-      _T("street_address"), _T("postcode"), _T("maint_event_id"), _T("state_before_maint"), _T("state"), _T("flags"),
-      _T("creation_time"), _T("maint_initiator"), _T("alias"), _T("name_on_map"), _T("category"), _T("comments_source"), nullptr
+      _T("location_accuracy"), _T("location_timestamp"), _T("guid"), _T("map_image"), _T("submap_id"), _T("country"),
+      _T("region"), _T("city"), _T("district"), _T("street_address"), _T("postcode"), _T("maint_event_id"),
+      _T("state_before_maint"), _T("state"), _T("flags"), _T("creation_time"), _T("maint_initiator"), _T("alias"),
+      _T("name_on_map"), _T("category"), _T("comments_source"), nullptr
    };
 
    DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("object_properties"), _T("object_id"), m_id, columns);
@@ -266,20 +267,22 @@ bool NetObj::saveToDatabase(DB_HANDLE hdb)
    DBBind(hStmt, 21, DB_SQLTYPE_VARCHAR, m_mapImage);
    DBBind(hStmt, 22, DB_SQLTYPE_INTEGER, m_submapId);
    DBBind(hStmt, 23, DB_SQLTYPE_VARCHAR, m_postalAddress.getCountry(), DB_BIND_STATIC);
-   DBBind(hStmt, 24, DB_SQLTYPE_VARCHAR, m_postalAddress.getCity(), DB_BIND_STATIC);
-   DBBind(hStmt, 25, DB_SQLTYPE_VARCHAR, m_postalAddress.getStreetAddress(), DB_BIND_STATIC);
-   DBBind(hStmt, 26, DB_SQLTYPE_VARCHAR, m_postalAddress.getPostCode(), DB_BIND_STATIC);
-   DBBind(hStmt, 27, DB_SQLTYPE_BIGINT, m_maintenanceEventId);
-   DBBind(hStmt, 28, DB_SQLTYPE_INTEGER, m_stateBeforeMaintenance);
-   DBBind(hStmt, 29, DB_SQLTYPE_INTEGER, m_state);
-   DBBind(hStmt, 30, DB_SQLTYPE_INTEGER, m_flags);
-   DBBind(hStmt, 31, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_creationTime));
-   DBBind(hStmt, 32, DB_SQLTYPE_INTEGER, m_maintenanceInitiator);
-   DBBind(hStmt, 33, DB_SQLTYPE_VARCHAR, m_alias, DB_BIND_STATIC);
-   DBBind(hStmt, 34, DB_SQLTYPE_VARCHAR, m_nameOnMap, DB_BIND_STATIC);
-   DBBind(hStmt, 35, DB_SQLTYPE_INTEGER, m_categoryId);
-   DBBind(hStmt, 36, DB_SQLTYPE_TEXT, m_commentsSource, DB_BIND_STATIC);
-   DBBind(hStmt, 37, DB_SQLTYPE_INTEGER, m_id);
+   DBBind(hStmt, 24, DB_SQLTYPE_VARCHAR, m_postalAddress.getRegion(), DB_BIND_STATIC);
+   DBBind(hStmt, 25, DB_SQLTYPE_VARCHAR, m_postalAddress.getCity(), DB_BIND_STATIC);
+   DBBind(hStmt, 26, DB_SQLTYPE_VARCHAR, m_postalAddress.getDistrict(), DB_BIND_STATIC);
+   DBBind(hStmt, 27, DB_SQLTYPE_VARCHAR, m_postalAddress.getStreetAddress(), DB_BIND_STATIC);
+   DBBind(hStmt, 28, DB_SQLTYPE_VARCHAR, m_postalAddress.getPostCode(), DB_BIND_STATIC);
+   DBBind(hStmt, 29, DB_SQLTYPE_BIGINT, m_maintenanceEventId);
+   DBBind(hStmt, 30, DB_SQLTYPE_INTEGER, m_stateBeforeMaintenance);
+   DBBind(hStmt, 31, DB_SQLTYPE_INTEGER, m_state);
+   DBBind(hStmt, 32, DB_SQLTYPE_INTEGER, m_flags);
+   DBBind(hStmt, 33, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_creationTime));
+   DBBind(hStmt, 34, DB_SQLTYPE_INTEGER, m_maintenanceInitiator);
+   DBBind(hStmt, 35, DB_SQLTYPE_VARCHAR, m_alias, DB_BIND_STATIC);
+   DBBind(hStmt, 36, DB_SQLTYPE_VARCHAR, m_nameOnMap, DB_BIND_STATIC);
+   DBBind(hStmt, 37, DB_SQLTYPE_INTEGER, m_categoryId);
+   DBBind(hStmt, 38, DB_SQLTYPE_TEXT, m_commentsSource, DB_BIND_STATIC);
+   DBBind(hStmt, 39, DB_SQLTYPE_INTEGER, m_id);
 
    success = DBExecute(hStmt);
    DBFreeStatement(hStmt);
@@ -528,9 +531,9 @@ bool NetObj::loadCommonProperties(DB_HANDLE hdb)
                                   _T("SELECT name,status,is_deleted,inherit_access_rights,last_modified,status_calc_alg,")
                                   _T("status_prop_alg,status_fixed_val,status_shift,status_translation,status_single_threshold,")
                                   _T("status_thresholds,comments,is_system,location_type,latitude,longitude,location_accuracy,")
-                                  _T("location_timestamp,guid,map_image,submap_id,country,city,street_address,postcode,maint_event_id,")
-                                  _T("state_before_maint,maint_initiator,state,flags,creation_time,alias,name_on_map,category,comments_source ")
-                                  _T("FROM object_properties WHERE object_id=?"));
+                                  _T("location_timestamp,guid,map_image,submap_id,country,region,city,district,street_address,")
+                                  _T("postcode,maint_event_id,state_before_maint,maint_initiator,state,flags,creation_time,alias,")
+                                  _T("name_on_map,category,comments_source FROM object_properties WHERE object_id=?"));
    if (hStmt != nullptr)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -574,22 +577,24 @@ bool NetObj::loadCommonProperties(DB_HANDLE hdb)
 
             TCHAR buffer[256];
             m_postalAddress.setCountry(DBGetField(hResult, 0, 22, buffer, 64));
-            m_postalAddress.setCity(DBGetField(hResult, 0, 23, buffer, 64));
-            m_postalAddress.setStreetAddress(DBGetField(hResult, 0, 24, buffer, 256));
-            m_postalAddress.setPostCode(DBGetField(hResult, 0, 25, buffer, 32));
+            m_postalAddress.setRegion(DBGetField(hResult, 0, 23, buffer, 64));
+            m_postalAddress.setCity(DBGetField(hResult, 0, 24, buffer, 64));
+            m_postalAddress.setDistrict(DBGetField(hResult, 0, 25, buffer, 64));
+            m_postalAddress.setStreetAddress(DBGetField(hResult, 0, 26, buffer, 256));
+            m_postalAddress.setPostCode(DBGetField(hResult, 0, 27, buffer, 32));
 
-            m_maintenanceEventId = DBGetFieldUInt64(hResult, 0, 26);
-            m_stateBeforeMaintenance = DBGetFieldULong(hResult, 0, 27);
-            m_maintenanceInitiator = DBGetFieldULong(hResult, 0, 28);
+            m_maintenanceEventId = DBGetFieldUInt64(hResult, 0, 28);
+            m_stateBeforeMaintenance = DBGetFieldULong(hResult, 0, 29);
+            m_maintenanceInitiator = DBGetFieldULong(hResult, 0, 30);
 
-            m_state = m_savedState = DBGetFieldULong(hResult, 0, 29);
+            m_state = m_savedState = DBGetFieldULong(hResult, 0, 31);
             m_runtimeFlags = 0;
-            m_flags = DBGetFieldULong(hResult, 0, 30);
-            m_creationTime = static_cast<time_t>(DBGetFieldULong(hResult, 0, 31));
-            m_alias = DBGetFieldAsSharedString(hResult, 0, 32);
-            m_nameOnMap = DBGetFieldAsSharedString(hResult, 0, 33);
-            m_categoryId = DBGetFieldULong(hResult, 0, 34);
-            m_commentsSource = DBGetFieldAsSharedString(hResult, 0, 35);
+            m_flags = DBGetFieldULong(hResult, 0, 32);
+            m_creationTime = static_cast<time_t>(DBGetFieldULong(hResult, 0, 33));
+            m_alias = DBGetFieldAsSharedString(hResult, 0, 34);
+            m_nameOnMap = DBGetFieldAsSharedString(hResult, 0, 35);
+            m_categoryId = DBGetFieldULong(hResult, 0, 36);
+            m_commentsSource = DBGetFieldAsSharedString(hResult, 0, 37);
             success = true;
          }
          DBFreeResult(hResult);
@@ -1199,7 +1204,6 @@ void NetObj::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
    pMsg->setField(VID_FLAGS, m_flags);
    pMsg->setField(VID_PRIMARY_ZONE_PROXY_ID, m_primaryZoneProxyId);
    pMsg->setField(VID_BACKUP_ZONE_PROXY_ID, m_backupZoneProxyId);
-
    pMsg->setField(VID_INHERIT_RIGHTS, m_inheritAccessRights);
    pMsg->setField(VID_STATUS_CALCULATION_ALG, (WORD)m_statusCalcAlg);
    pMsg->setField(VID_STATUS_PROPAGATION_ALG, (WORD)m_statusPropAlg);
@@ -1239,12 +1243,14 @@ void NetObj::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
 	m_geoLocation.fillMessage(*pMsg);
 
    pMsg->setField(VID_COUNTRY, m_postalAddress.getCountry());
+   pMsg->setField(VID_REGION, m_postalAddress.getRegion());
    pMsg->setField(VID_CITY, m_postalAddress.getCity());
+   pMsg->setField(VID_DISTRICT, m_postalAddress.getDistrict());
    pMsg->setField(VID_STREET_ADDRESS, m_postalAddress.getStreetAddress());
    pMsg->setField(VID_POSTCODE, m_postalAddress.getPostCode());
 
    pMsg->setField(VID_NUM_URLS, static_cast<uint32_t>(m_urls.size()));
-   UINT32 fieldId = VID_URL_LIST_BASE;
+   uint32_t fieldId = VID_URL_LIST_BASE;
    for(int i = 0; i < m_urls.size(); i++)
    {
       const ObjectUrl *url = m_urls.get(i);
@@ -1471,11 +1477,25 @@ uint32_t NetObj::modifyFromMessageInternal(const NXCPMessage& msg)
       m_postalAddress.setCountry(buffer);
    }
 
+   if (msg.isFieldExist(VID_REGION))
+   {
+      TCHAR buffer[64];
+      msg.getFieldAsString(VID_REGION, buffer, 64);
+      m_postalAddress.setRegion(buffer);
+   }
+
    if (msg.isFieldExist(VID_CITY))
    {
       TCHAR buffer[64];
       msg.getFieldAsString(VID_CITY, buffer, 64);
       m_postalAddress.setCity(buffer);
+   }
+
+   if (msg.isFieldExist(VID_DISTRICT))
+   {
+      TCHAR buffer[64];
+      msg.getFieldAsString(VID_DISTRICT, buffer, 64);
+      m_postalAddress.setDistrict(buffer);
    }
 
    if (msg.isFieldExist(VID_STREET_ADDRESS))

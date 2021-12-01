@@ -6617,7 +6617,7 @@ public class NXCSession
 
       if (data.getSyslogCodepage() != null)
       {
-         msg.setField(NXCPCodes.VID_CODEPAGE, data.getSyslogCodepage());
+         msg.setField(NXCPCodes.VID_SYSLOG_CODEPAGE, data.getSyslogCodepage());
       }
 
       modifyCustomObject(data, userData, msg);

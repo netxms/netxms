@@ -7436,7 +7436,7 @@ void Node::fillMessageInternal(NXCPMessage *msg, UINT32 userId)
    msg->setField(VID_CERT_MAPPING_METHOD, static_cast<int16_t>(m_agentCertMappingMethod));
    msg->setField(VID_CERT_MAPPING_DATA, m_agentCertMappingData);
    msg->setField(VID_AGENT_CERT_SUBJECT, m_agentCertSubject);
-   msg->setFieldFromUtf8String(VID_CODEPAGE, m_syslogCodepage);
+   msg->setFieldFromUtf8String(VID_SYSLOG_CODEPAGE, m_syslogCodepage);
 }
 
 /**
@@ -7772,11 +7772,11 @@ uint32_t Node::modifyFromMessageInternal(const NXCPMessage& msg)
       MemFree(oldMappingData);
    }
 
-   if (msg.isFieldExist(VID_CODEPAGE))
+   if (msg.isFieldExist(VID_SYSLOG_CODEPAGE))
    {
-      msg.getFieldAsUtf8String(VID_CODEPAGE, m_syslogCodepage, 16);
+      msg.getFieldAsUtf8String(VID_SYSLOG_CODEPAGE, m_syslogCodepage, 16);
    }
-      
+
    return super::modifyFromMessageInternal(msg);
 }
 

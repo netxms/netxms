@@ -760,6 +760,10 @@ NXSL_Value *NXSL_NetObjClass::getAttr(NXSL_Object *_object, const char *attr)
    {
       value = object->getCustomAttributesForNXSL(vm);
    }
+   else if (compareAttributeName(attr, "district"))
+   {
+      value = vm->createValue(object->getPostalAddress().getDistrict());
+   }
    else if (compareAttributeName(attr, "geolocation"))
    {
       value = NXSL_GeoLocationClass::createObject(vm, object->getGeoLocation());
@@ -824,6 +828,10 @@ NXSL_Value *NXSL_NetObjClass::getAttr(NXSL_Object *_object, const char *attr)
    else if (compareAttributeName(attr, "primaryZoneProxyId"))
    {
       value = vm->createValue(object->getAssignedZoneProxyId(false));
+   }
+   else if (compareAttributeName(attr, "region"))
+   {
+      value = vm->createValue(object->getPostalAddress().getRegion());
    }
    else if (compareAttributeName(attr, "responsibleUsers"))
    {
