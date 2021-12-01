@@ -59,6 +59,7 @@ import org.netxms.client.constants.UserAccessRights;
 import org.netxms.client.events.Alarm;
 import org.netxms.client.events.AlarmHandle;
 import org.netxms.client.events.BulkAlarmStateChangeData;
+import org.netxms.client.events.EventTemplate;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Zone;
 import org.netxms.nxmc.PreferenceStore;
@@ -149,7 +150,7 @@ public class AlarmList extends CompositeWithMessageArea
 
    private final SearchQueryAttribute[] attributeProposals = {
          new SearchQueryAttribute("AcknowledgedBy:"),
-         new SearchQueryAttribute("Event:"),
+         new SearchQueryAttribute("Event:", new EventAttributeValueProvider()),
          new SearchQueryAttribute("HasComments:", "yes", "no"),
          new SearchQueryAttribute("NOT"),
          new SearchQueryAttribute("RepeatCount:"),
@@ -1281,6 +1282,30 @@ public class AlarmList extends CompositeWithMessageArea
    public SearchQueryAttribute[] getAttributeProposals()
    {
       return attributeProposals;
+   }
+
+   /**
+    * Value provider for attribute "event"
+    */
+   private class EventAttributeValueProvider implements SearchQueryAttributeValueProvider
+   {
+      /**
+       * @see org.netxms.ui.eclipse.widgets.helpers.SearchQueryAttributeValueProvider#getValues()
+       */
+      @Override
+      public String[] getValues()
+      {
+         Set<Long> eventCodes = new HashSet<Long>();
+         for(AlarmHandle a : displayList.values())
+            eventCodes.add(Long.valueOf(a.alarm.getSourceEventCode()));
+         List<EventTemplate> eventTemplates = session.findMultipleEventTemplates(eventCodes);
+         if (eventTemplates.isEmpty())
+            return null;
+         String[] values = new String[eventTemplates.size()];
+         for(int i = 0; i < values.length; i++)
+            values[i] = eventTemplates.get(i).getName();
+         return values;
+      }
    }
 
    /**

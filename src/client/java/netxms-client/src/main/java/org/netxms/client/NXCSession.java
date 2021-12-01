@@ -8115,15 +8115,13 @@ public class NXCSession
    }
 
    /**
-    * Find multiple event templates by event codes in event template database
-    * internally maintained by session object. You must call
-    * NXCSession.syncEventObjects() first to make local copy of event template
-    * database.
+    * Find multiple event templates by event codes in event template database internally maintained by session object. You must call
+    * <code>NXCSession.syncEventObjects()</code> first to make local copy of event template database.
     *
-    * @param codes List of event codes
+    * @param codes set of event codes
     * @return List of found event templates
     */
-   public List<EventTemplate> findMultipleEventTemplates(final Long[] codes)
+   public List<EventTemplate> findMultipleEventTemplates(Collection<Long> codes)
    {
       List<EventTemplate> list = new ArrayList<EventTemplate>();
       synchronized(eventTemplates)

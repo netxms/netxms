@@ -1330,7 +1330,7 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 						@Override
 						public void run()
 						{
-						   for(EventTemplate e : session.findMultipleEventTemplates(eventCodes.toArray(new Long[eventCodes.size()])))
+                     for(EventTemplate e : session.findMultipleEventTemplates(eventCodes))
 						   {
 						      events.put(e.getCode(), e);
 						   }
@@ -1372,7 +1372,7 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 			setModified();
 			if (eventCodes.size() > 0)
 			{
-				for(EventTemplate t : session.findMultipleEventTemplates(eventCodes.toArray(new Long[eventCodes.size()])))
+            for(EventTemplate t : session.findMultipleEventTemplates(eventCodes))
 				{
 				   events.put(t.getCode(), t);
 				}
@@ -1405,7 +1405,7 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 			setModified();
 			if (eventCodes.size() > 0)
 			{
-				for(EventTemplate t : session.findMultipleEventTemplates(eventCodes.toArray(new Long[eventCodes.size()])))
+            for(EventTemplate t : session.findMultipleEventTemplates(eventCodes))
 				{
 				   events.put(t.getCode(), t);
 				}

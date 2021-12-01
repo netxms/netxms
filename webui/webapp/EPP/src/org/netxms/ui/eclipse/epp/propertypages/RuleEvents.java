@@ -101,7 +101,7 @@ public class RuleEvents extends PropertyPage
 			}
       });
 
-      for(EventTemplate o : session.findMultipleEventTemplates(rule.getEvents().toArray(new Long[0])))
+      for(EventTemplate o : session.findMultipleEventTemplates(rule.getEvents()))
       	events.put(o.getCode(), o);
       viewer.setInput(events.values().toArray());
       
