@@ -2278,7 +2278,7 @@ restart_status_poll:
                   if (g_primaryIpUpdateMode == PrimaryIPUpdateMode::ON_FAILURE)
                   {
                      InetAddress addr = ResolveHostName(m_zoneUIN, m_primaryHostName);
-                     if (!m_ipAddress.equals(addr))
+                     if (addr.isValidUnicast() && !m_ipAddress.equals(addr))
                      {
                         nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): primary IP address changed, restarting poll"), m_name);
                         forceResolveHostName = true;
@@ -2366,7 +2366,7 @@ restart_status_poll:
                if (g_primaryIpUpdateMode == PrimaryIPUpdateMode::ON_FAILURE)
                {
                   InetAddress addr = ResolveHostName(m_zoneUIN, m_primaryHostName);
-                  if (!m_ipAddress.equals(addr))
+                  if (addr.isValidUnicast() && !m_ipAddress.equals(addr))
                   {
                      nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): primary IP address changed, restarting poll"), m_name);
                      forceResolveHostName = true;
@@ -2435,7 +2435,7 @@ restart_status_poll:
          }
          else
          {
-            m_pollCountAgent = 0;
+            m_pollCountEtherNetIP = 0;
          }
 
          m_cipState = identity->state;
@@ -2463,6 +2463,17 @@ restart_status_poll:
             m_pollCountEtherNetIP++;
             if (m_pollCountEtherNetIP >= requiredPolls)
             {
+               if (g_primaryIpUpdateMode == PrimaryIPUpdateMode::ON_FAILURE)
+               {
+                  InetAddress addr = ResolveHostName(m_zoneUIN, m_primaryHostName);
+                  if (addr.isValidUnicast() && !m_ipAddress.equals(addr))
+                  {
+                     nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): primary IP address changed, restarting poll"), m_name);
+                     forceResolveHostName = true;
+                     goto restart_status_poll;
+                  }
+               }
+
                m_state |= NSF_ETHERNET_IP_UNREACHABLE;
                PostSystemEventEx(eventQueue, EVENT_ETHERNET_IP_UNREACHABLE, m_id, nullptr);
                m_failTimeEtherNetIP = now;
