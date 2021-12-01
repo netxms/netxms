@@ -31,6 +31,7 @@ public class ReportParameter
 	private String description;
 	private String type;
 	private String defaultValue;
+   private String multiselectValues;
 	private int span;
 
    /**
@@ -48,6 +49,7 @@ public class ReportParameter
       defaultValue = msg.getFieldAsString(baseId + 4);
       dependsOn = msg.getFieldAsString(baseId + 5);
       span = msg.getFieldAsInt32(baseId + 6);
+      multiselectValues = msg.getFieldAsString(baseId + 7);
    }
 
 	/**
@@ -111,22 +113,32 @@ public class ReportParameter
 	}
 
 	/**
-	 * Get column span for this parameter
-	 * 
-	 * @return column span for this parameter
-	 */
+    * Get possible values for multiselect field.
+    *
+    * @return possible values for multiselect field
+    */
+   public String getMultiselectValues()
+   {
+      return multiselectValues;
+   }
+
+   /**
+    * Get column span for this parameter
+    * 
+    * @return column span for this parameter
+    */
 	public int getSpan()
 	{
 		return span;
 	}
 
-	/* (non-Javadoc)
-	 * @see java.lang.Object#toString()
-	 */
-	@Override
-	public String toString()
-	{
-		return "ReportParameter [index=" + index + ", name=" + name + ", dependsOn=" + dependsOn + ", description=" + description
-				+ ", type=" + type + ", defaultValue=" + defaultValue + ", span=" + span + "]";
-	}
+   /**
+    * @see java.lang.Object#toString()
+    */
+   @Override
+   public String toString()
+   {
+      return "ReportParameter [index=" + index + ", name=" + name + ", dependsOn=" + dependsOn + ", description=" + description + ", type=" + type + ", defaultValue=" + defaultValue +
+            ", multiselectValues=" + multiselectValues + ", span=" + span + "]";
+   }
 }

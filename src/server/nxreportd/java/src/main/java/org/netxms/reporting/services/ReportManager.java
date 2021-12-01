@@ -447,9 +447,6 @@ public class ReportManager
       URLClassLoader reportClassLoader = new URLClassLoader(new URL[] {}, getClass().getClassLoader());
       localParameters.put(JRParameter.REPORT_CLASS_LOADER, reportClassLoader);
 
-      prepareParameters(jobConfiguration.executionParameters, report, localParameters);
-      logger.debug("Report parameters: " + localParameters);
-
       ThreadLocalReportInfo.setReportLocation(subrepoDirectory);
       ThreadLocalReportInfo.setServer(server);
 
@@ -457,6 +454,9 @@ public class ReportManager
       final String outputFile = new File(getOutputDirectory(jobConfiguration.reportId), jobId.toString() + FILE_SUFFIX_FILLED).getPath();
       try
       {
+         prepareParameters(jobConfiguration.executionParameters, report, localParameters);
+         logger.debug("Report parameters: " + localParameters);
+
          dbConnection = server.createDatabaseConnection();
 
          executeHook("PreparationHook", subrepoDirectory, localParameters, dbConnection);
@@ -572,8 +572,9 @@ public class ReportManager
     * @param parameters input parameters
     * @param report report object
     * @param localParameters local report parameters
+    * @throws Exception if report parameters cannot be procesed
     */
-   private static void prepareParameters(Map<String, String> parameters, JasperReport report, HashMap<String, Object> localParameters)
+   private static void prepareParameters(Map<String, String> parameters, JasperReport report, HashMap<String, Object> localParameters) throws Exception
    {
       final JRParameter[] jrParameters = report.getParameters();
       for(JRParameter jrParameter : jrParameters)
@@ -617,6 +618,10 @@ public class ReportManager
             { // not "<any>"
                localParameters.put(jrName, convertCommaSeparatedToIntList(input));
             }
+         }
+         else if ("MULTISELECT".equalsIgnoreCase(logicalType))
+         {
+            localParameters.put(jrName, convertMultiSelectValue(input, jrParameter.getNestedType()));
          }
          else if (Boolean.class.equals(valueClass))
          {
@@ -726,8 +731,9 @@ public class ReportManager
     * 
     * @param input input string
     * @return resulting list
+    * @throws NumberFormatException when list element cannot be parsed as number
     */
-   private static List<Integer> convertCommaSeparatedToIntList(String input)
+   private static List<Integer> convertCommaSeparatedToIntList(String input) throws NumberFormatException
    {
       if (input == null)
          return null;
@@ -742,11 +748,45 @@ public class ReportManager
          }
          catch(NumberFormatException e)
          {
-            // TODO: handle
             logger.error("Invalid ID in comma separated list: " + input);
+            throw e;
          }
       }
       return ret;
+   }
+
+   /**
+    * Convert multiselect value into collection of objects of given class.
+    *
+    * @param input input string with valuies separated by semicolons
+    * @param valueType value type for report parameter
+    * @return collection with values
+    * @throws Exception if values cannot be parsed or paraneter value type is unsupported
+    */
+   private static Collection<?> convertMultiSelectValue(String input, Class<?> valueType) throws Exception
+   {
+      if (input.isEmpty())
+         return new ArrayList<Object>(0);
+
+      String[] parts = input.split(";");
+
+      if (valueType.getName().equals("java.lang.String"))
+         return Arrays.asList(parts);
+
+      ValueParser parser;
+      if (valueType.getName().equals("java.lang.Long"))
+         parser = new LongValueParser();
+      else if (valueType.getName().equals("java.lang.Integer"))
+         parser = new IntegerValueParser();
+      else
+         throw new ServerException("Unsupported multiselect value type " + valueType.getName());
+      
+      List<Object> values = new ArrayList<>(parts.length);
+      for(String v : parts)
+      {
+         values.add(parser.parse(v));
+      }
+      return values;
    }
 
    /**
@@ -1047,5 +1087,37 @@ public class ReportManager
          server.getSmtpSender().sendMail(r, "New report is available", text, fileName, renderResult);
       if (renderResult != null)
          renderResult.delete();
+   }
+
+   /**
+    * Generic value parser interface
+    */
+   private interface ValueParser
+   {
+      Object parse(String input) throws Exception;
+   }
+
+   /**
+    * Value parser for class Integer
+    */
+   private static class IntegerValueParser implements ValueParser
+   {
+      @Override
+      public Object parse(String input) throws Exception
+      {
+         return Integer.parseInt(input);
+      }
+   }
+
+   /**
+    * Value parser for class Long
+    */
+   private static class LongValueParser implements ValueParser
+   {
+      @Override
+      public Object parse(String input) throws Exception
+      {
+         return Long.parseLong(input);
+      }
    }
 }
