@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,6 +27,7 @@ import org.netxms.ui.eclipse.reporter.widgets.BooleanFieldEditor;
 import org.netxms.ui.eclipse.reporter.widgets.DateFieldEditor;
 import org.netxms.ui.eclipse.reporter.widgets.EventFieldEditor;
 import org.netxms.ui.eclipse.reporter.widgets.FieldEditor;
+import org.netxms.ui.eclipse.reporter.widgets.MultiSelectFieldEditor;
 import org.netxms.ui.eclipse.reporter.widgets.NumberFieldEditor;
 import org.netxms.ui.eclipse.reporter.widgets.NumericConditionFieldEditor;
 import org.netxms.ui.eclipse.reporter.widgets.ObjectFieldEditor;
@@ -42,9 +43,10 @@ import org.netxms.ui.eclipse.reporter.widgets.UserFieldEditor;
  */
 public class StandardTypesControlFactory implements CustomControlFactory
 {
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.reporter.api.CustomControlFactory#editorForType(org.eclipse.swt.widgets.Composite, org.netxms.api.client.reporting.ReportParameter, org.eclipse.ui.forms.widgets.FormToolkit)
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.reporter.api.CustomControlFactory#editorForType(org.eclipse.swt.widgets.Composite,
+    *      org.netxms.api.client.reporting.ReportParameter, org.eclipse.ui.forms.widgets.FormToolkit)
+    */
 	@Override
 	public FieldEditor editorForType(Composite parent, ReportParameter parameter, FormToolkit toolkit)
 	{
@@ -65,6 +67,10 @@ public class StandardTypesControlFactory implements CustomControlFactory
       else if (type.equals("EVENT_CODE")) //$NON-NLS-1$
       {
          fieldEditor = new EventFieldEditor(parameter, toolkit, parent);
+      }
+      else if (type.equals("MULTISELECT")) //$NON-NLS-1$
+      {
+         fieldEditor = new MultiSelectFieldEditor(parameter, toolkit, parent);
       }
       else if (type.equals("NUMBER")) //$NON-NLS-1$
       {

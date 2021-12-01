@@ -115,27 +115,11 @@ public class ReportDefinition
       message.setField(NXCPCodes.VID_REQUIRES_DATA_VIEW, requiresDataView);
 
       final Set<Map.Entry<String, ReportParameter>> entries = parameters.entrySet();
-      long index = NXCPCodes.VID_ROW_DATA_BASE;
+      long fieldId = NXCPCodes.VID_ROW_DATA_BASE;
       for(Map.Entry<String, ReportParameter> entry : entries)
       {
-         final ReportParameter parameter = entry.getValue();
-
-         // 0
-         message.setFieldInt32(index++, parameter.getIndex());
-         // 1
-         message.setField(index++, parameter.getName());
-         // 2
-         message.setField(index++, parameter.getDescription());
-         // 3
-         message.setField(index++, parameter.getType());
-         // 4
-         message.setField(index++, parameter.getDefaultValue());
-         // 5
-         message.setField(index++, parameter.getDependsOn());
-         // 6
-         message.setFieldInt32(index++, parameter.getSpan());
-         // 7-9
-         index += 3;
+         entry.getValue().fillMessage(message, fieldId);
+         fieldId += 10;
       }
    }
 

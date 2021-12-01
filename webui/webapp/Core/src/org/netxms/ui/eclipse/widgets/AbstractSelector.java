@@ -90,7 +90,7 @@ public class AbstractSelector extends Composite
 		layout.marginHeight = 0;
 		layout.numColumns = ((options & SHOW_CLEAR_BUTTON) != 0) ? 3 : 2;
 		setLayout(layout);
-		
+
 		if ((options & HIDE_LABEL) == 0)
 		{
 			label = new Label(this, SWT.NONE);
