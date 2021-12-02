@@ -9201,7 +9201,7 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, UINT32 rqId
 
             // Remove peer information if more than one MAC address detected on port
             // Do not change information when interface is down
-            if ((iface->getConfirmedOperState() == IF_OPER_STATE_UP) && nbs->isMultipointInterface(iface->getIfIndex()))
+            if ((iface->getConfirmedOperState() == IF_OPER_STATE_UP) && (iface->getPeerDiscoveryProtocol() == LL_PROTO_FDB) && nbs->isMultipointInterface(iface->getIfIndex()))
             {
                shared_ptr<Interface> ifPeer = static_pointer_cast<Interface>(FindObjectById(iface->getPeerInterfaceId(), OBJECT_INTERFACE));
                if (ifPeer != nullptr)
@@ -9325,7 +9325,7 @@ void Node::addHostConnections(LinkLayerNeighbors *nbs)
    if (fdb == nullptr)
       return;
 
-   DbgPrintf(5, _T("Node::addHostConnections(%s [%d]): FDB retrieved"), m_name, (int)m_id);
+   nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 5, _T("Node::addHostConnections(%s [%d]): FDB retrieved"), m_name, (int)m_id);
 
    readLockChildList();
    for(int i = 0; i < getChildList().size(); i++)
@@ -9338,12 +9338,12 @@ void Node::addHostConnections(LinkLayerNeighbors *nbs)
       if (fdb->isSingleMacOnPort(ifLocal->getIfIndex(), macAddr))
       {
          TCHAR buffer[64];
-         DbgPrintf(6, _T("Node::addHostConnections(%s [%d]): found single MAC %s on interface %s"),
+         nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 6, _T("Node::addHostConnections(%s [%d]): found single MAC %s on interface %s"),
             m_name, (int)m_id, MACToStr(macAddr, buffer), ifLocal->getName());
          shared_ptr<Interface> ifRemote = FindInterfaceByMAC(macAddr);
          if (ifRemote != nullptr)
          {
-            DbgPrintf(6, _T("Node::addHostConnections(%s [%d]): found remote interface %s [%d]"),
+            nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 6, _T("Node::addHostConnections(%s [%d]): found remote interface %s [%d]"),
                m_name, (int)m_id, ifRemote->getName(), ifRemote->getId());
             shared_ptr<Node> peerNode = ifRemote->getParentNode();
             if (peerNode != nullptr)
@@ -9402,15 +9402,6 @@ void Node::addExistingConnections(LinkLayerNeighbors *nbs)
 }
 
 /**
- * Comparator for sorting VLAN list
- */
-static int VlanIdComparator(const void *e1, const void *e2)
-{
-   return (*static_cast<const uint32_t*>(e1) < *static_cast<const uint32_t*>(e2)) ? -1 :
-            ((*static_cast<const uint32_t*>(e1) == *static_cast<const uint32_t*>(e2)) ? 0 : 1);
-}
-
-/**
  * Resolve port indexes in VLAN list
  */
 void Node::resolveVlanPorts(VlanList *vlanList)
@@ -9457,7 +9448,7 @@ void Node::resolveVlanPorts(VlanList *vlanList)
       {
          IntegerArray<uint32_t> *vlans = vlansByIface.get(o->getId());
          if (vlans != nullptr)
-            vlans->sort(VlanIdComparator);
+            vlans->sortAscending();
          static_cast<Interface*>(o)->updateVlans(vlans);
       }
    }
