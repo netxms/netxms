@@ -32,23 +32,6 @@
 #define MAX_SYSLOG_MSG_LEN    1024
 
 /**
- * Fill NXCP message with syslog message data
- */
-void SyslogMessage::fillNXCPMessage(NXCPMessage *msg) const
-{
-   uint32_t fieldId = VID_SYSLOG_MSG_BASE;
-   msg->setField(VID_NUM_RECORDS, static_cast<uint32_t>(1));
-   msg->setField(fieldId++, m_id);
-   msg->setFieldFromTime(fieldId++, m_timestamp);
-   msg->setField(fieldId++, m_facility);
-   msg->setField(fieldId++, m_severity);
-   msg->setField(fieldId++, m_nodeId);
-   msg->setFieldFromMBString(fieldId++, m_hostName);
-   msg->setFieldFromMBString(fieldId++, m_tag);
-   msg->setFieldFromUtf8String(fieldId++, m_message);
-}
-
-/**
  * Queues
  */
 ObjectQueue<SyslogMessage> g_syslogProcessingQueue(1024, Ownership::False);
@@ -81,8 +64,8 @@ static THREAD s_writerThread = INVALID_THREAD_HANDLE;
 static bool s_running = true;
 static bool s_alwaysUseServerTime = false;
 static bool s_enableStorage = true;
-static char s_syslogCodepage[16] = {};
 static bool s_allowUnknownSources = false;
+static char s_syslogCodepage[16] = "";
 
 /**
  * Parse timestamp field
@@ -254,12 +237,25 @@ bool SyslogMessage::parse()
    currPtr -= i;
    currPos -= i;
 
-   size_t msgLen = m_rawDataLen - currPos;
-   m_message = MemAllocStringA(msgLen + 1);
-   memcpy(m_message, currPtr, msgLen);
-   m_message[msgLen] = 0;
-
+   m_rawMessage = currPtr;
    return true;
+}
+
+/**
+ * Fill NXCP message with syslog message data
+ */
+void SyslogMessage::fillNXCPMessage(NXCPMessage *msg) const
+{
+   uint32_t fieldId = VID_SYSLOG_MSG_BASE;
+   msg->setField(VID_NUM_RECORDS, static_cast<uint32_t>(1));
+   msg->setField(fieldId++, m_id);
+   msg->setFieldFromTime(fieldId++, m_timestamp);
+   msg->setField(fieldId++, m_facility);
+   msg->setField(fieldId++, m_severity);
+   msg->setField(fieldId++, m_nodeId);
+   msg->setFieldFromMBString(fieldId++, m_hostName);
+   msg->setFieldFromMBString(fieldId++, m_tag);
+   msg->setField(fieldId++, m_message);
 }
 
 /**
@@ -351,12 +347,6 @@ bool SyslogMessage::bindToNode()
    return m_node != nullptr;
 }
 
-void SyslogMessage::setMessage(char* message)
-{
-   MemFree(m_message);
-   m_message = message;
-}
-
 /**
  * Handler for EnumerateSessions()
  */
@@ -406,12 +396,11 @@ static void SyslogWriterThread()
 #ifdef UNICODE
          DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, WideStringFromMBString(msg->getHostName()), DB_BIND_DYNAMIC);
          DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, WideStringFromMBString(msg->getTag()), DB_BIND_DYNAMIC);
-         DBBind(hStmt, 9, DB_SQLTYPE_VARCHAR, WideStringFromUTF8String(msg->getMessage()), DB_BIND_DYNAMIC);
 #else
          DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, msg->getHostName(), DB_BIND_STATIC);
          DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, msg->getTag(), DB_BIND_STATIC);
-         DBBind(hStmt, 9, DB_SQLTYPE_VARCHAR, msg->getMessage(), DB_BIND_STATIC);
 #endif
+         DBBind(hStmt, 9, DB_SQLTYPE_VARCHAR, msg->getMessage(), DB_BIND_STATIC);
 
          if (!DBExecute(hStmt))
          {
@@ -453,9 +442,17 @@ static void ProcessSyslogMessage(SyslogMessage *msg)
       }
 
       msg->setId(s_msgId++);
+      const char *codepage = (s_syslogCodepage[0] != 0) ? s_syslogCodepage : nullptr;
+      if (msg->getNodeId() != 0)
+      {
+         const char *nodecp = msg->getNode()->getSyslogCodepage();
+         if (nodecp[0] != 0)
+            codepage = nodecp;
+      }
+      msg->convertRawMessage(codepage);
 
 		TCHAR ipAddr[64];
-		nxlog_debug_tag(DEBUG_TAG, 6, _T("Syslog message: ipAddr=%s zone=%d objectId=%d tag=\"%hs\" msg=\"%hs\""),
+		nxlog_debug_tag(DEBUG_TAG, 6, _T("Syslog message: ipAddr=%s zone=%d objectId=%d tag=\"%hs\" msg=\"%s\""),
 		            msg->getSourceAddress().toString(ipAddr), msg->getZoneUIN(), msg->getNodeId(), msg->getTag(), msg->getMessage());
 
 		bool writeToDatabase = true;
@@ -464,31 +461,10 @@ static void ProcessSyslogMessage(SyslogMessage *msg)
 		{
 #ifdef UNICODE
 			WCHAR wtag[MAX_SYSLOG_TAG_LEN];
-			WCHAR wmsg[MAX_LOG_MSG_LENGTH];
-			mb_to_wchar(msg->getTag(), -1, wtag, MAX_SYSLOG_TAG_LEN);
-         shared_ptr<Node> node = msg->getNode();
-         if (*node->getSyslogCodepage() != 0)
-         {
-            mbcp_to_wchar(msg->getMessage(), -1, wmsg, MAX_LOG_MSG_LENGTH, node->getSyslogCodepage());
-            msg->setMessage(UTF8StringFromWideString(wmsg));
-         }
-         else
-         {
-            if (s_syslogCodepage[0] != 0)
-            {
-               mbcp_to_wchar(msg->getMessage(), -1, wmsg, MAX_LOG_MSG_LENGTH, s_syslogCodepage);
-               msg->setMessage(UTF8StringFromWideString(wmsg));
-            }
-            else
-            {
-               mb_to_wchar(msg->getMessage(), -1, wmsg, MAX_LOG_MSG_LENGTH);
-            }
-         }
-			s_parser->matchEvent(wtag, msg->getFacility(), 1 << msg->getSeverity(), wmsg, nullptr, 0,
-			         msg->getNodeId(), 0, nullptr, &writeToDatabase);
+			mbcp_to_wchar(msg->getTag(), -1, wtag, MAX_SYSLOG_TAG_LEN, codepage);
+			s_parser->matchEvent(wtag, msg->getFacility(), 1 << msg->getSeverity(), msg->getMessage(), nullptr, 0, msg->getNodeId(), 0, nullptr, &writeToDatabase);
 #else
-			s_parser->matchEvent(msg->getTag(), msg->getFacility(), 1 << msg->getSeverity(), msg->getMessage(),
-			         nullptr, 0, msg->getNodeId(), 0, nullptr, &writeToDatabase);
+			s_parser->matchEvent(msg->getTag(), msg->getFacility(), 1 << msg->getSeverity(), msg->getMessage(), nullptr, 0, msg->getNodeId(), 0, nullptr, &writeToDatabase);
 #endif
 		}
 		s_parserLock.unlock();
@@ -834,6 +810,11 @@ void OnSyslogConfigurationChange(const TCHAR *name, const TCHAR *value)
       s_allowUnknownSources = _tcstol(value, nullptr, 0) ? true : false;
       nxlog_debug_tag(DEBUG_TAG, 4, _T("Unknown syslog sources are %s"), s_allowUnknownSources ? _T("allowed") : _T("not allowed"));
    }
+   else if (!_tcscmp(name, _T("Syslog.Codepage")))
+   {
+      tchar_to_utf8(value, -1, s_syslogCodepage, sizeof(s_syslogCodepage));
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Server syslog default codepage is set as: %s"), value);
+   }
    else if (!_tcscmp(name, _T("Syslog.EnableStorage")))
    {
       s_enableStorage = _tcstol(value, nullptr, 0) ? true : false;
@@ -843,11 +824,6 @@ void OnSyslogConfigurationChange(const TCHAR *name, const TCHAR *value)
    {
       s_alwaysUseServerTime = _tcstol(value, nullptr, 0) ? true : false;
       nxlog_debug_tag(DEBUG_TAG, 4, _T("Ignore message timestamp option set to %s"), s_alwaysUseServerTime ? _T("ON") : _T("OFF"));
-   }
-   else if (!_tcscmp(name, _T("Syslog.Codepage")))
-   {
-      tchar_to_utf8(value, -1, s_syslogCodepage, sizeof(s_syslogCodepage));
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("Server syslog default codepage is set as: %s"), value);
    }
 }
 
@@ -927,11 +903,11 @@ uint64_t GetNextSyslogId()
  */
 void StartSyslogServer()
 {
-   s_nodeMatchingPolicy = (NodeMatchingPolicy)ConfigReadInt(_T("Syslog.NodeMatchingPolicy"), SOURCE_IP_THEN_HOSTNAME);
-   s_alwaysUseServerTime = ConfigReadBoolean(_T("Syslog.IgnoreMessageTimestamp"), false);
-   s_enableStorage = ConfigReadBoolean(_T("Syslog.EnableStorage"), false);
    ConfigReadStrUTF8(_T("Syslog.Codepage"), s_syslogCodepage, 16, "");
    s_allowUnknownSources = ConfigReadBoolean(_T("Syslog.AllowUnknownSources"), false);
+   s_alwaysUseServerTime = ConfigReadBoolean(_T("Syslog.IgnoreMessageTimestamp"), false);
+   s_enableStorage = ConfigReadBoolean(_T("Syslog.EnableStorage"), false);
+   s_nodeMatchingPolicy = static_cast<NodeMatchingPolicy>(ConfigReadInt(_T("Syslog.NodeMatchingPolicy"), SOURCE_IP_THEN_HOSTNAME));
 
    // Determine first available message id
    uint64_t id = ConfigReadUInt64(_T("FirstFreeSyslogId"), s_msgId);

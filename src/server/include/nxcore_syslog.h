@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -40,7 +40,8 @@ private:
    shared_ptr<Node> m_node;
    char m_hostName[MAX_SYSLOG_HOSTNAME_LEN];
    char m_tag[MAX_SYSLOG_TAG_LEN];
-   char *m_message;
+   char *m_rawMessage;
+   TCHAR *m_message;
    InetAddress m_sourceAddress;
    char *m_rawData;
    size_t m_rawDataLen;
@@ -58,6 +59,7 @@ public:
       m_severity = SYSLOG_SEVERITY_NOTICE;
       m_hostName[0] = 0;
       m_tag[0] = 0;
+      m_rawMessage = nullptr;
       m_message = nullptr;
    }
 
@@ -73,18 +75,32 @@ public:
       m_severity = SYSLOG_SEVERITY_NOTICE;
       m_hostName[0] = 0;
       m_tag[0] = 0;
+      m_rawMessage = nullptr;
       m_message = nullptr;
    }
 
    ~SyslogMessage()
    {
       MemFree(m_rawData);
+#ifdef UNICODE
       MemFree(m_message);
+#endif
    }
 
    bool parse();
    bool bindToNode();
    void setId(uint64_t id) { m_id = id; }
+
+   void convertRawMessage(const char *codepage)
+   {
+#ifdef UNICODE
+      size_t len = strlen(m_rawMessage) + 1;
+      m_message = MemAllocStringW(len);
+      mbcp_to_wchar(m_rawMessage, -1, m_message, len, codepage);
+#else
+      m_message = m_rawMessage;
+#endif
+   }
 
    void fillNXCPMessage(NXCPMessage *msg) const;
 
@@ -97,8 +113,7 @@ public:
    shared_ptr<Node> getNode() const { return m_node; }
    uint16_t getFacility() const { return m_facility; }
    uint16_t getSeverity() const { return m_severity; }
-   const char *getMessage() const { return m_message; }
-   void setMessage(char* message);
+   const TCHAR *getMessage() const { return m_message; }
    const char *getHostName() const { return m_hostName; }
    const char *getTag() const { return m_tag; }
 };
