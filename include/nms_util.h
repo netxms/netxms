@@ -1491,6 +1491,7 @@ public:
 	bool unlink(int index) { return Array::unlink(index); }
    bool unlink(T *object) { return Array::unlink((void *)object); }
 
+   using Array::sort;
    void sort(int (*cb)(const T **, const T **)) { Array::sort((int (*)(const void *, const void *))cb); }
    template<typename C> void sort(int (*cb)(C *, const T **, const T **), C *context) { Array::sort((int (*)(void *, const void *, const void *))cb, (void *)context); }
    T *find(const T *key, int (*cb)(const T **, const T **)) const
@@ -1557,6 +1558,16 @@ template <class T> class IntegerArray : public Array
 private:
 	static void destructor(void *element, Array *array) { }
 
+	static int ascendingComparator(const T *e1, const T *e2)
+	{
+	   return (*e1 < *e2) ? -1 : ((*e1 == *e2) ? 0 : 1);
+	}
+
+	static int descendingComparator(const T *e1, const T *e2)
+   {
+      return (*e1 > *e2) ? -1 : ((*e1 == *e2) ? 0 : 1);
+   }
+
 public:
 	IntegerArray(int initial = 0, int grow = 16) : Array(nullptr, initial, grow, sizeof(T)) { m_objectDestructor = destructor; m_storePointers = (sizeof(T) == sizeof(void *)); }
 	IntegerArray(const IntegerArray<T> *src) : Array(src) { }
@@ -1572,6 +1583,12 @@ public:
    bool contains(T value) const { return indexOf(value) >= 0; }
    void set(int index, T value) { Array::set(index, m_storePointers ? CAST_TO_POINTER(value, void *) : &value); }
    void replace(int index, T value) { Array::replace(index, m_storePointers ? CAST_TO_POINTER(value, void *) : &value); }
+
+   using Array::sort;
+   void sort(int (*cb)(const T *, const T *)) { Array::sort((int (*)(const void *, const void *))cb); }
+   template<typename C> void sort(int (*cb)(C *, const T *, const T *), C *context) { Array::sort((int (*)(void *, const void *, const void *))cb, (void *)context); }
+   void sortAscending() { sort(ascendingComparator); }
+   void sortDescending() { sort(descendingComparator); }
 
    T *getBuffer() const { return (T*)__getBuffer(); }
 

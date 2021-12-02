@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -119,16 +119,6 @@ void NetworkMapObjectList::filterObjects(bool (*filter)(uint32_t, void *), void 
 }
 
 /**
- * Compare object IDs
- */
-static int CompareObjectId(const void *e1, const void *e2)
-{
-   uint32_t id1 = *((uint32_t *)e1);
-   uint32_t id2 = *((uint32_t *)e2);
-   return (id1 < id2) ? -1 : ((id1 > id2) ? 1 : 0);
-}
-
-/**
  * Add object to list
  */
 void NetworkMapObjectList::addObject(uint32_t id)
@@ -136,7 +126,7 @@ void NetworkMapObjectList::addObject(uint32_t id)
    if (!isObjectExist(id))
    {
       m_objectList.add(id);
-      m_objectList.sort(CompareObjectId);
+      m_objectList.sortAscending();
    }
 }
 
@@ -342,6 +332,16 @@ ObjLink *NetworkMapObjectList::getLink(uint32_t objectId1, uint32_t objectId2, i
          return l;
    }
    return nullptr;
+}
+
+/**
+ * Compare object IDs
+ */
+static int CompareObjectId(const void *e1, const void *e2)
+{
+   uint32_t id1 = *static_cast<const uint32_t*>(e1);
+   uint32_t id2 = *static_cast<const uint32_t*>(e2);
+   return (id1 < id2) ? -1 : ((id1 > id2) ? 1 : 0);
 }
 
 /**
