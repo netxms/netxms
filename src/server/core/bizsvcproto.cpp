@@ -405,7 +405,7 @@ void BusinessServicePrototype::instanceDiscoveryPoll(PollerInfo *poller, ClientS
    m_pollRequestor = session;
    m_pollRequestId = rqId;
 
-   sendPollerMsg(_T("Started instance discovery poll for business service prototype \"%s\"\r\n"), m_name);
+   sendPollerMsg(_T("Started instance discovery poll of business service prototype %s\r\n"), m_name);
    unique_ptr<StringMap> instances = getInstances();
    if (instances != nullptr)
    {
@@ -452,6 +452,7 @@ void BusinessServicePrototype::instanceDiscoveryPoll(PollerInfo *poller, ClientS
       sendPollerMsg(POLLER_WARNING _T("   Cannot read list of instances\r\n"));
    }
 
+   sendPollerMsg(_T("Finished instance discovery poll of business service prototype %s\r\n"), m_name);
    pollerUnlock();
 }
 

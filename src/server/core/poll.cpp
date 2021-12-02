@@ -451,14 +451,14 @@ void DiscoveryPoller(PollerInfo *poller)
    Node *node = static_cast<Node*>(poller->getObject());
 	if (node->isDeleteInitiated() || IsShutdownInProgress())
 	{
-	   nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Discovery poll for node %s (%s) in zone %d aborted"),
+	   nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Discovery poll of node %s (%s) in zone %d aborted"),
 	             node->getName(), (const TCHAR *)node->getIpAddress().toString(), (int)node->getZoneUIN());
       node->completeDiscoveryPoll(GetCurrentTimeMs() - startTime);
       delete poller;
       return;
 	}
 
-   nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("Starting discovery poll for node %s (%s) in zone %d"),
+   nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("Starting discovery poll of node %s (%s) in zone %d"),
 	          node->getName(), (const TCHAR *)node->getIpAddress().toString(), (int)node->getZoneUIN());
 
    // Retrieve and analyze node's ARP cache
@@ -475,7 +475,7 @@ void DiscoveryPoller(PollerInfo *poller)
 
    if (node->isDeleteInitiated() || IsShutdownInProgress())
    {
-      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Discovery poll for node %s (%s) in zone %d aborted"),
+      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Discovery poll of node %s (%s) in zone %d aborted"),
                 node->getName(), (const TCHAR *)node->getIpAddress().toString(), (int)node->getZoneUIN());
       node->completeDiscoveryPoll(GetCurrentTimeMs() - startTime);
       delete poller;
@@ -483,7 +483,7 @@ void DiscoveryPoller(PollerInfo *poller)
    }
 
 	// Retrieve and analyze node's routing table
-   nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 5, _T("Discovery poll for node %s (%s) - reading routing table"),
+   nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 5, _T("Discovery poll of node %s (%s) - reading routing table"),
              node->getName(), (const TCHAR *)node->getIpAddress().toString());
 	RoutingTable *rt = node->getRoutingTable();
 	if (rt != nullptr)
@@ -500,7 +500,7 @@ void DiscoveryPoller(PollerInfo *poller)
 
 	node->executeHookScript(_T("DiscoveryPoll"));
 
-   nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("Finished discovery poll for node %s (%s)"),
+   nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("Finished discovery poll of node %s (%s)"),
              node->getName(), (const TCHAR *)node->getIpAddress().toString());
    node->completeDiscoveryPoll(GetCurrentTimeMs() - startTime);
    delete poller;

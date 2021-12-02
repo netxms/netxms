@@ -553,7 +553,7 @@ void AccessPoint::configurationPoll(PollerInfo *poller, ClientSession *session, 
 
    m_pollRequestor = session;
    m_pollRequestId = rqId;
-   nxlog_debug(5, _T("Starting configuration poll for access point %s (ID: %d), m_flags: %d"), m_name, m_id, m_flags);
+   nxlog_debug(5, _T("Starting configuration poll of access point %s (ID: %d), m_flags: %d"), m_name, m_id, m_flags);
 
    poller->setStatus(_T("autobind"));
    if (ConfigReadBoolean(_T("Objects.AccessPoints.TemplateAutoApply"), false))
@@ -565,7 +565,7 @@ void AccessPoint::configurationPoll(PollerInfo *poller, ClientSession *session, 
    poller->setStatus(_T("hook"));
    executeHookScript(_T("ConfigurationPoll"), rqId);
 
-   sendPollerMsg(_T("Finished configuration poll for access point %s\r\n"), m_name);
+   sendPollerMsg(_T("Finished configuration poll of access point %s\r\n"), m_name);
 
    lockProperties();
    m_runtimeFlags &= ~ODF_CONFIGURATION_POLL_PENDING;
@@ -573,7 +573,7 @@ void AccessPoint::configurationPoll(PollerInfo *poller, ClientSession *session, 
    unlockProperties();
 
    pollerUnlock();
-   nxlog_debug(5, _T("Finished configuration poll for access point %s (ID: %d)"), m_name, m_id);
+   nxlog_debug(5, _T("Finished configuration poll of access point %s (ID: %d)"), m_name, m_id);
 }
 
 /**

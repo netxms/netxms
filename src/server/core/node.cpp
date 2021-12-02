@@ -2136,8 +2136,8 @@ void Node::statusPoll(PollerInfo *poller, ClientSession *pSession, UINT32 rqId)
       return;
    }
 
-   sendPollerMsg(_T("Starting status poll for node %s\r\n"), m_name);
-   nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("Starting status poll for node %s (ID: %d)"), m_name, m_id);
+   sendPollerMsg(_T("Starting status poll of node %s\r\n"), m_name);
+   nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("Starting status poll of node %s (ID: %d)"), m_name, m_id);
 
    // Read capability expiration time and current time
    time_t capabilityExpirationTime = static_cast<time_t>(ConfigReadULong(_T("Objects.Nodes.CapabilityExpirationTime"), 604800));
@@ -2979,7 +2979,7 @@ restart_status_poll:
       }
    }
 
-   sendPollerMsg(_T("Finished status poll for node %s\r\n"), m_name);
+   sendPollerMsg(_T("Finished status poll of node %s\r\n"), m_name);
    sendPollerMsg(_T("Node status after poll is %s\r\n"), GetStatusAsText(m_status, true));
 
    lockProperties();
@@ -2987,7 +2987,7 @@ restart_status_poll:
    unlockProperties();
 
    pollerUnlock();
-   nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("Finished status poll for node %s (ID: %d)"), m_name, m_id);
+   nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("Finished status poll of node %s (ID: %d)"), m_name, m_id);
 
    // Check if the node has to be deleted due to long downtime
    if (rqId == 0)
@@ -3818,8 +3818,8 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
    uint32_t oldCapabilities = m_capabilities;
    uint32_t modified = 0;
 
-   sendPollerMsg(_T("Starting configuration poll for node %s\r\n"), m_name);
-   nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("Starting configuration poll for node %s (ID: %d)"), m_name, m_id);
+   sendPollerMsg(_T("Starting configuration of for node %s\r\n"), m_name);
+   nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("Starting configuration poll of node %s (ID: %d)"), m_name, m_id);
 
    // Check for forced capabilities recheck
    if (m_runtimeFlags & NDF_RECHECK_CAPABILITIES)
@@ -3993,7 +3993,7 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
             pollerUnlock();
 
             duplicateNode->reconcileWithDuplicateNode(this);
-            nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("Aborted configuration poll for node %s (ID: %d)"), m_name, m_id);
+            nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("Aborted configuration poll of node %s (ID: %d)"), m_name, m_id);
             ThreadPoolExecute(g_pollerThreadPool, DeleteDuplicateNode, new DeleteDuplicateNodeData(duplicateNode, self(), reason));
             return;
          }
@@ -4108,7 +4108,7 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
       updateContainerMembership();
       updateClusterMembership();
 
-      sendPollerMsg(_T("Finished configuration poll for node %s\r\n"), m_name);
+      sendPollerMsg(_T("Finished configuration poll of node %s\r\n"), m_name);
       sendPollerMsg(_T("Node configuration was%schanged after poll\r\n"), (modified != 0) ? _T(" ") : _T(" not "));
 
       m_runtimeFlags &= ~ODF_CONFIGURATION_POLL_PENDING;
@@ -4121,7 +4121,7 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
    m_runtimeFlags &= ~NDF_RECHECK_CAPABILITIES;
    unlockProperties();
    pollerUnlock();
-   nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("Finished configuration poll for node %s (ID: %d)"), m_name, m_id);
+   nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("Finished configuration poll of node %s (ID: %d)"), m_name, m_id);
 
    if (modified != 0)
    {
@@ -9124,8 +9124,8 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, UINT32 rqId
       return;
    }
 
-   sendPollerMsg(_T("Starting topology poll for node %s\r\n"), m_name);
-   nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 4, _T("Started topology poll for node %s [%d]"), m_name, m_id);
+   sendPollerMsg(_T("Starting topology poll of node %s\r\n"), m_name);
+   nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 4, _T("Started topology poll of node %s [%d]"), m_name, m_id);
 
    if (m_driver != nullptr)
    {
@@ -9378,11 +9378,11 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, UINT32 rqId
    poller->setStatus(_T("hook"));
    executeHookScript(_T("TopologyPoll"), rqId);
 
-   sendPollerMsg(_T("Finished topology poll for node %s\r\n"), m_name);
+   sendPollerMsg(_T("Finished topology poll of node %s\r\n"), m_name);
 
    pollerUnlock();
 
-   nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 4, _T("Finished topology poll for node %s [%d]"), m_name, m_id);
+   nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 4, _T("Finished topology poll of node %s [%d]"), m_name, m_id);
 }
 
 /**
@@ -9825,8 +9825,8 @@ void Node::updateInterfaceNames(ClientSession *pSession, UINT32 rqId)
       return;
    }
 
-   sendPollerMsg(_T("Starting interface names poll for node %s\r\n"), m_name);
-   nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("Starting interface names poll for node %s (ID: %d)"), m_name, m_id);
+   sendPollerMsg(_T("Starting interface names poll of node %s\r\n"), m_name);
+   nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("Starting interface names poll of node %s (ID: %d)"), m_name, m_id);
 
    // Retrieve interface list
    InterfaceList *pIfList = getInterfaceList();
@@ -9877,9 +9877,9 @@ void Node::updateInterfaceNames(ClientSession *pSession, UINT32 rqId)
    }
 
    // Finish poll
-   sendPollerMsg(_T("Finished interface names poll for node %s\r\n"), m_name);
+   sendPollerMsg(_T("Finished interface names poll of node %s\r\n"), m_name);
    _pollerUnlock();
-   nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("Finished interface names poll for node %s (ID: %d)"), m_name, m_id);
+   nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("Finished interface names poll of node %s (ID: %d)"), m_name, m_id);
 }
 
 /**

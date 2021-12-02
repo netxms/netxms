@@ -554,7 +554,7 @@ void Sensor::configurationPoll(PollerInfo *poller, ClientSession *session, UINT3
 
    m_pollRequestor = session;
    m_pollRequestId = rqId;
-   nxlog_debug(5, _T("Starting configuration poll for sensor %s (ID: %d), m_flags: %d"), m_name, m_id, m_flags);
+   nxlog_debug(5, _T("Starting configuration poll of sensor %s (ID: %d), m_flags: %d"), m_name, m_id, m_flags);
 
    bool hasChanges = false;
 
@@ -591,7 +591,7 @@ void Sensor::configurationPoll(PollerInfo *poller, ClientSession *session, UINT3
    poller->setStatus(_T("hook"));
    executeHookScript(_T("ConfigurationPoll"), rqId);
 
-   sendPollerMsg(_T("Finished configuration poll for sensor %s\r\n"), m_name);
+   sendPollerMsg(_T("Finished configuration poll of sensor %s\r\n"), m_name);
    sendPollerMsg(_T("Sensor configuration was%schanged after poll\r\n"), hasChanges ? _T(" ") : _T(" not "));
 
    lockProperties();
@@ -600,7 +600,7 @@ void Sensor::configurationPoll(PollerInfo *poller, ClientSession *session, UINT3
    unlockProperties();
 
    pollerUnlock();
-   nxlog_debug(5, _T("Finished configuration poll for sensor %s (ID: %d)"), m_name, m_id);
+   nxlog_debug(5, _T("Finished configuration poll of sensor %s (ID: %d)"), m_name, m_id);
 
    if (hasChanges)
    {
@@ -643,8 +643,8 @@ void Sensor::statusPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId)
 
    m_pollRequestor = session;
    m_pollRequestId = rqId;
-   sendPollerMsg(_T("Starting status poll for sensor %s\r\n"), m_name);
-   nxlog_debug(5, _T("Starting status poll for sensor %s (ID: %d)"), m_name, m_id);
+   sendPollerMsg(_T("Starting status poll of sensor %s\r\n"), m_name);
+   nxlog_debug(5, _T("Starting status poll of sensor %s (ID: %d)"), m_name, m_id);
 
    UINT32 prevState = m_state;
 
@@ -739,11 +739,11 @@ void Sensor::statusPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId)
       setModified(MODIFY_SENSOR_PROPERTIES);
    unlockProperties();
 
-   sendPollerMsg(_T("Finished status poll for sensor %s\r\n"), m_name);
+   sendPollerMsg(_T("Finished status poll of sensor %s\r\n"), m_name);
    sendPollerMsg(_T("Sensor status after poll is %s\r\n"), GetStatusAsText(m_status, true));
 
    pollerUnlock();
-   nxlog_debug(5, _T("Finished status poll for sensor %s (ID: %d)"), m_name, m_id);
+   nxlog_debug(5, _T("Finished status poll of sensor %s (ID: %d)"), m_name, m_id);
 }
 
 /**

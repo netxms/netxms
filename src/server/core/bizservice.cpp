@@ -181,7 +181,7 @@ void BusinessService::statusPoll(PollerInfo *poller, ClientSession *session, UIN
    pollerLock(status);
 
    nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("BusinessService::statusPoll(%s [%u]): poll started"), m_name, m_id);
-   sendPollerMsg(_T("Started status poll of business service %s [%d] \r\n"), m_name, (int)m_id);
+   sendPollerMsg(_T("Starting status poll of business service %s\r\n"), m_name);
    int prevState = m_serviceState;
 
    poller->setStatus(_T("executing checks"));
@@ -269,7 +269,7 @@ void BusinessService::statusPoll(PollerInfo *poller, ClientSession *session, UIN
    calculateCompoundStatus();
 
    lockProperties();
-   sendPollerMsg(_T("Finished status poll of business service %s [%u] \r\n"), m_name, m_id);
+   sendPollerMsg(_T("Finished status poll of business service %s\r\n"), m_name);
    nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("BusinessService::statusPoll(%s [%u]): poll finished"), m_name, m_id);
    unlockProperties();
 

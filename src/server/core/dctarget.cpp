@@ -2132,8 +2132,8 @@ void DataCollectionTarget::instanceDiscoveryPoll(PollerInfo *poller, ClientSessi
       return;
    }
 
-   sendPollerMsg(_T("Starting instance discovery poll for %s %s\r\n"), getObjectClassName(), m_name);
-   DbgPrintf(4, _T("Starting instance discovery poll for %s %s (ID: %d)"), getObjectClassName(), m_name, m_id);
+   sendPollerMsg(_T("Starting instance discovery poll of %s %s\r\n"), getObjectClassName(), m_name);
+   DbgPrintf(4, _T("Starting instance discovery poll of %s %s (ID: %d)"), getObjectClassName(), m_name, m_id);
 
    // Check if DataCollectionTarget is marked as unreachable
    if (!(m_state & DCSF_UNREACHABLE))
@@ -2157,7 +2157,7 @@ void DataCollectionTarget::instanceDiscoveryPoll(PollerInfo *poller, ClientSessi
    // Finish instance discovery poll
    poller->setStatus(_T("cleanup"));
    pollerUnlock();
-   DbgPrintf(4, _T("Finished instance discovery poll for %s %s (ID: %d)"), getObjectClassName(), m_name, m_id);
+   DbgPrintf(4, _T("Finished instance discovery poll of %s %s (ID: %d)"), getObjectClassName(), m_name, m_id);
 }
 
 /**
