@@ -73,12 +73,11 @@ public class ObjectToolsCache
 			}
 			catch(CoreException e)
 			{
-				e.printStackTrace();
-				// TODO: add logging
+            Activator.logError("Cannot register internal object tool handler", e);
 			}
 		}
 	}
-	
+
 	/**
 	 * @param session
 	 */
