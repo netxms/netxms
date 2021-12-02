@@ -155,9 +155,9 @@ int CreateConfig(bool forceCreate, const char *masterServers, const char *logFil
  * Valid options for getopt()
  */
 #if defined(_WIN32)
-#define VALID_OPTIONS   "B:c:CdD:e:EfFG:hHiIkKlM:n:N:P:r:RsSTUvW:X:Z:z:"
+#define VALID_OPTIONS   "B:c:CdD:e:EfFG:hHiIkKlM:n:N:P:Q:r:RsSTUvW:X:Z:z:"
 #else
-#define VALID_OPTIONS   "B:c:CdD:fFg:G:hkKlM:p:P:r:STu:vW:xX:Z:z:"
+#define VALID_OPTIONS   "B:c:CdD:fFg:G:hkKlM:p:P:Q:r:STu:vW:xX:Z:z:"
 #endif
 
 /**
@@ -172,6 +172,7 @@ enum class Command
    INSTALL_EVENT_SOURCE,
    INSTALL_SERVICE,
    NONE,
+   QUERY_CONFIG,
    REMOVE_EVENT_SOURCE,
    REMOVE_SERVICE,
    RESET_IDENTITY,
@@ -412,11 +413,11 @@ static TCHAR m_szHelpText[] =
 #ifdef _WIN32
    _T("   -n <name>  : Service name\n")
    _T("   -N <name>  : Service display name\n")
-#endif
-#if !defined(_WIN32)
+#else
    _T("   -p         : Path to pid file (default: /var/run/nxagentd.pid)\n")
 #endif
    _T("   -P <text>  : Set platform suffix to <text>\n")
+   _T("   -Q <entry> : Load configuration file, query values for given entry, and exit\n")
    _T("   -r <addr>  : Register agent on management server <addr>\n")
 #ifdef _WIN32
    _T("   -R         : Remove Windows service\n")
@@ -1827,6 +1828,20 @@ static void UpdateEnvironment()
 }
 
 /**
+ * Query values of configuration entry
+ */
+static int QueryConfig(const Config& config, const TCHAR *path)
+{
+   ConfigEntry *e = config.getEntry(path);
+   if ((e == nullptr) || (e->getValueCount() == 0))
+      return 2;
+
+   for(int i = 0; i < e->getValueCount(); i++)
+      ConsolePrintf(_T("%s\n"), e->getValue(i));
+   return 0;
+}
+
+/**
  * Application entry point
  */
 int main(int argc, char *argv[])
@@ -1834,9 +1849,10 @@ int main(int argc, char *argv[])
    Command command = Command::RUN_AGENT;
    int exitCode = 0;
    BOOL bRestart = FALSE;
-   UINT32 dwOldPID, dwMainPID;
+   uint32_t dwOldPID, dwMainPID;
 	char *eptr;
    TCHAR configSection[MAX_DB_STRING] = DEFAULT_CONFIG_SECTION;
+   TCHAR configEntry[MAX_DB_STRING];
    const char *extraConfigValues = NULL;
    bool forceCreateConfig = false;
    bool restartExternalProcesses = false;
@@ -2004,6 +2020,15 @@ int main(int argc, char *argv[])
 				g_szPlatformSuffix[MAX_PSUFFIX_LENGTH - 1] = 0;
 #else
             strlcpy(g_szPlatformSuffix, optarg, MAX_PSUFFIX_LENGTH);
+#endif
+            break;
+         case 'Q':   // Query config
+            command = Command::QUERY_CONFIG;
+#ifdef UNICODE
+            MultiByteToWideCharSysLocale(optarg, configEntry, MAX_DB_STRING);
+            configEntry[MAX_DB_STRING - 1] = 0;
+#else
+            strlcpy(configEntry, optarg, MAX_DB_STRING);
 #endif
             break;
          case 'T':   // Reset identity
@@ -2460,6 +2485,21 @@ int main(int argc, char *argv[])
             if (!validConfig)
             {
                ConsolePrintf(_T("Configuration file check failed\n"));
+               exitCode = 2;
+            }
+         }
+         break;
+      case Command::QUERY_CONFIG:
+         {
+            bool validConfig = LoadConfig(configSection, true);
+            if (validConfig)
+            {
+               config = g_config;
+               exitCode = QueryConfig(*config, configEntry);
+            }
+            else
+            {
+               ConsolePrintf(_T("Configuration file load failed\n"));
                exitCode = 2;
             }
          }
