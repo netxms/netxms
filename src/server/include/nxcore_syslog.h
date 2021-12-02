@@ -98,6 +98,7 @@ public:
    uint16_t getFacility() const { return m_facility; }
    uint16_t getSeverity() const { return m_severity; }
    const char *getMessage() const { return m_message; }
+   void setMessage(char* message);
    const char *getHostName() const { return m_hostName; }
    const char *getTag() const { return m_tag; }
 };

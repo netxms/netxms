@@ -45,7 +45,7 @@ void SyslogMessage::fillNXCPMessage(NXCPMessage *msg) const
    msg->setField(fieldId++, m_nodeId);
    msg->setFieldFromMBString(fieldId++, m_hostName);
    msg->setFieldFromMBString(fieldId++, m_tag);
-   msg->setFieldFromMBString(fieldId++, m_message);
+   msg->setFieldFromUtf8String(fieldId++, m_message);
 }
 
 /**
@@ -81,6 +81,7 @@ static THREAD s_writerThread = INVALID_THREAD_HANDLE;
 static bool s_running = true;
 static bool s_alwaysUseServerTime = false;
 static bool s_enableStorage = true;
+static char s_syslogCodepage[16] = {};
 static bool s_allowUnknownSources = false;
 
 /**
@@ -350,6 +351,12 @@ bool SyslogMessage::bindToNode()
    return m_node != nullptr;
 }
 
+void SyslogMessage::setMessage(char* message)
+{
+   MemFree(m_message);
+   m_message = message;
+}
+
 /**
  * Handler for EnumerateSessions()
  */
@@ -399,7 +406,7 @@ static void SyslogWriterThread()
 #ifdef UNICODE
          DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, WideStringFromMBString(msg->getHostName()), DB_BIND_DYNAMIC);
          DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, WideStringFromMBString(msg->getTag()), DB_BIND_DYNAMIC);
-         DBBind(hStmt, 9, DB_SQLTYPE_VARCHAR, WideStringFromMBString(msg->getMessage()), DB_BIND_DYNAMIC);
+         DBBind(hStmt, 9, DB_SQLTYPE_VARCHAR, WideStringFromUTF8String(msg->getMessage()), DB_BIND_DYNAMIC);
 #else
          DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, msg->getHostName(), DB_BIND_STATIC);
          DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, msg->getTag(), DB_BIND_STATIC);
@@ -447,9 +454,6 @@ static void ProcessSyslogMessage(SyslogMessage *msg)
 
       msg->setId(s_msgId++);
 
-      // Send message to all connected clients
-      EnumerateClientSessions(BroadcastSyslogMessage, msg);
-
 		TCHAR ipAddr[64];
 		nxlog_debug_tag(DEBUG_TAG, 6, _T("Syslog message: ipAddr=%s zone=%d objectId=%d tag=\"%hs\" msg=\"%hs\""),
 		            msg->getSourceAddress().toString(ipAddr), msg->getZoneUIN(), msg->getNodeId(), msg->getTag(), msg->getMessage());
@@ -466,14 +470,14 @@ static void ProcessSyslogMessage(SyslogMessage *msg)
          if (*node->getSyslogCodepage() != 0)
          {
             mbcp_to_wchar(msg->getMessage(), -1, wmsg, MAX_LOG_MSG_LENGTH, node->getSyslogCodepage());
+            msg->setMessage(UTF8StringFromWideString(wmsg));
          }
          else
          {
-            char codepage[16];
-            ConfigReadStrUTF8(_T("Syslog.Codepage"), codepage, 16, "");
-            if (codepage[0] != 0)
+            if (s_syslogCodepage[0] != 0)
             {
-               mbcp_to_wchar(msg->getMessage(), -1, wmsg, MAX_LOG_MSG_LENGTH, codepage);
+               mbcp_to_wchar(msg->getMessage(), -1, wmsg, MAX_LOG_MSG_LENGTH, s_syslogCodepage);
+               msg->setMessage(UTF8StringFromWideString(wmsg));
             }
             else
             {
@@ -488,6 +492,9 @@ static void ProcessSyslogMessage(SyslogMessage *msg)
 #endif
 		}
 		s_parserLock.unlock();
+
+      // Send message to all connected clients
+      EnumerateClientSessions(BroadcastSyslogMessage, msg);
 
 	   if ((msg->getNodeId() == 0) && (g_flags & AF_SYSLOG_DISCOVERY))  // unknown node, discovery enabled
 	   {
@@ -837,6 +844,11 @@ void OnSyslogConfigurationChange(const TCHAR *name, const TCHAR *value)
       s_alwaysUseServerTime = _tcstol(value, nullptr, 0) ? true : false;
       nxlog_debug_tag(DEBUG_TAG, 4, _T("Ignore message timestamp option set to %s"), s_alwaysUseServerTime ? _T("ON") : _T("OFF"));
    }
+   else if (!_tcscmp(name, _T("Syslog.Codepage")))
+   {
+      tchar_to_utf8(value, -1, s_syslogCodepage, sizeof(s_syslogCodepage));
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Server syslog default codepage is set as: %s"), value);
+   }
 }
 
 /**
@@ -918,6 +930,7 @@ void StartSyslogServer()
    s_nodeMatchingPolicy = (NodeMatchingPolicy)ConfigReadInt(_T("Syslog.NodeMatchingPolicy"), SOURCE_IP_THEN_HOSTNAME);
    s_alwaysUseServerTime = ConfigReadBoolean(_T("Syslog.IgnoreMessageTimestamp"), false);
    s_enableStorage = ConfigReadBoolean(_T("Syslog.EnableStorage"), false);
+   ConfigReadStrUTF8(_T("Syslog.Codepage"), s_syslogCodepage, 16, "");
    s_allowUnknownSources = ConfigReadBoolean(_T("Syslog.AllowUnknownSources"), false);
 
    // Determine first available message id
