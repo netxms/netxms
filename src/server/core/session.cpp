@@ -1787,7 +1787,7 @@ void ClientSession::processRequest(NXCPMessage *request)
             bool processedByModule = false;
             ENUMERATE_MODULES(pfClientCommandHandler)
             {
-               int status = CURRENT_MODULE.pfClientCommandHandler(code, *request, this);
+               int status = CURRENT_MODULE.pfClientCommandHandler(code, request, this);
                if (status != NXMOD_COMMAND_IGNORED)
                {
                   if (status == NXMOD_COMMAND_ACCEPTED_ASYNC)

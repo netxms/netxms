@@ -100,7 +100,7 @@ typedef struct
 	void (*pfShutdown)();
 	void (*pfLoadObjects)();
 	void (*pfLinkObjects)();
-   int (*pfClientCommandHandler)(UINT32 dwCommand, const NXCPMessage& request, ClientSession *pSession);
+   int (*pfClientCommandHandler)(uint32_t command, NXCPMessage *request, ClientSession *session);
    int (*pfMobileDeviceCommandHandler)(uint32_t dwCommand, const NXCPMessage& request, MobileDeviceSession *pSession);
    bool (*pfTrapHandler)(SNMP_PDU *pdu, const shared_ptr<Node>& node);
    bool (*pfEventHandler)(Event *event);
