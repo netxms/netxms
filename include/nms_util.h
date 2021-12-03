@@ -1052,12 +1052,21 @@ public:
 	size_t length() const { return m_length; }
 	bool isEmpty() const { return m_length == 0; }
 
+   ssize_t find(const TCHAR *str, size_t start = 0) const;
+   ssize_t findIgnoreCase(const TCHAR *str, size_t start = 0) const;
+
 	bool equals(const String& s) const;
 	bool equals(const TCHAR *s) const;
+   bool equalsIgnoreCase(const String& s) const;
+   bool equalsIgnoreCase(const TCHAR *s) const;
    bool startsWith(const String& s) const;
    bool startsWith(const TCHAR *s) const;
    bool endsWith(const String& s) const;
    bool endsWith(const TCHAR *s) const;
+   bool contains(const String& s) const { return find(s.m_buffer, 0) != npos; }
+   bool contains(const TCHAR *s) const { return find(s, 0) != npos; }
+   bool containsIgnoreCase(const String& s) const { return findIgnoreCase(s.m_buffer, 0) != npos; }
+   bool containsIgnoreCase(const TCHAR *s) const { return findIgnoreCase(s, 0) != npos; }
 
 	TCHAR charAt(size_t pos) const { return (pos < m_length) ? m_buffer[pos] : 0; }
 
@@ -1065,8 +1074,6 @@ public:
 	TCHAR *substring(size_t start, ssize_t len, TCHAR *buffer) const;
 	String left(size_t len) const { return substring(0, static_cast<ssize_t>(len)); }
    String right(size_t len) const { return substring((m_length > len) ? m_length - len : 0, static_cast<ssize_t>(len)); }
-
-   ssize_t find(const TCHAR *str, size_t start = 0) const;
 
    StringList *split(const TCHAR *separator) const { return String::split(m_buffer, m_length, separator); }
    static StringList *split(TCHAR *str, size_t len, const TCHAR *separator);
@@ -4384,6 +4391,14 @@ int LIBNETXMS_EXPORTABLE wcscasecmp(const wchar_t *s1, const wchar_t *s2);
 
 #if !HAVE_WCSNCASECMP && !defined(_WIN32)
 int LIBNETXMS_EXPORTABLE wcsncasecmp(const wchar_t *s1, const wchar_t *s2, size_t n);
+#endif
+
+#if !HAVE_STRCASESTR
+char LIBNETXMS_EXPORTABLE *strcasestr(const char *s, const char *ss);
+#endif
+
+#if !HAVE_WCSCASESTR
+WCHAR LIBNETXMS_EXPORTABLE *wcscasestr(const WCHAR *s, const WCHAR *ss);
 #endif
 
 #if !HAVE_MEMMEM
