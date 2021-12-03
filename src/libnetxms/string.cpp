@@ -182,13 +182,13 @@ TCHAR *String::substring(size_t start, ssize_t len, TCHAR *buffer) const
 		{
 			count = std::min(static_cast<size_t>(len), m_length - start);
 		}
-		s = (buffer != NULL) ? buffer : (TCHAR *)MemAlloc((count + 1) * sizeof(TCHAR));
+		s = (buffer != nullptr) ? buffer : (TCHAR *)MemAlloc((count + 1) * sizeof(TCHAR));
 		memcpy(s, &m_buffer[start], count * sizeof(TCHAR));
 		s[count] = 0;
 	}
 	else
 	{
-		s = (buffer != NULL) ? buffer : (TCHAR *)MemAlloc(sizeof(TCHAR));
+		s = (buffer != nullptr) ? buffer : (TCHAR *)MemAlloc(sizeof(TCHAR));
 		*s = 0;
 	}
 	return s;
@@ -203,7 +203,19 @@ ssize_t String::find(const TCHAR *str, size_t start) const
 		return npos;
 
 	TCHAR *p = _tcsstr(&m_buffer[start], str);
-	return (p != NULL) ? (ssize_t)(((char *)p - (char *)m_buffer) / sizeof(TCHAR)) : npos;
+	return (p != nullptr) ? (ssize_t)(((char *)p - (char *)m_buffer) / sizeof(TCHAR)) : npos;
+}
+
+/**
+ * Find substring in a string ignoring the case of both
+ */
+ssize_t String::findIgnoreCase(const TCHAR *str, size_t start) const
+{
+   if (start >= m_length)
+      return npos;
+
+   TCHAR *p = _tcsistr(&m_buffer[start], str);
+   return (p != nullptr) ? (ssize_t)(((char *)p - (char *)m_buffer) / sizeof(TCHAR)) : npos;
 }
 
 /**
@@ -233,9 +245,29 @@ bool String::equals(const String& s) const
  */
 bool String::equals(const TCHAR *s) const
 {
-   if (s == NULL)
+   if (s == nullptr)
       return false;
    return !_tcscmp(CHECK_NULL_EX(m_buffer), s);
+}
+
+/**
+ * Check that two strings are equal ignoring the case of both
+ */
+bool String::equalsIgnoreCase(const String& s) const
+{
+   if (m_length != s.m_length)
+      return false;
+   return !_tcsicmp(m_buffer, s.m_buffer);
+}
+
+/**
+ * Check that two strings are equal ignoring the case of both
+ */
+bool String::equalsIgnoreCase(const TCHAR *s) const
+{
+   if (s == nullptr)
+      return false;
+   return !_tcsicmp(CHECK_NULL_EX(m_buffer), s);
 }
 
 /**

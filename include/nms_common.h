@@ -1147,13 +1147,15 @@ inline WCHAR *MemCopyStringW(const WCHAR *src)
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 
 /**
- * Define _tcsicmp() for non-windows
+ * Define case ignoring functions for non-Windows platforms
  */
 #ifndef _WIN32
 #define stricmp   strcasecmp
 #define strnicmp  strncasecmp
+#define stristr   strcasestr
 #define wcsicmp   wcscasecmp
 #define wcsnicmp  wcsncasecmp
+#define wcsistr   wcscasestr
 #endif
 
 /**

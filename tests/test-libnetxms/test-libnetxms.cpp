@@ -277,6 +277,13 @@ static void TestStringFunctionsA()
    AssertTrue(!strcmp(buffer, "part1part2long text: 1234567890"));
 
    EndTest();
+
+   StartTest(_T("stristr"));
+   static const char *s = "One Two Three";
+   AssertEquals(s, stristr(s, ""));
+   AssertEquals(&s[4], stristr(s, "two"));
+   AssertNull(stristr(s, "TwoThree"));
+   EndTest();
 }
 
 /**
@@ -328,6 +335,13 @@ static void TestStringFunctionsW()
    wcslwr(textToLower);
    AssertTrue(!wcscmp(textToLower, L"text 123 abcd"));
    EndTest();
+
+   StartTest(_T("wcsistr"));
+   static const WCHAR *s = L"One Two Three";
+   AssertEquals(s, wcsistr(s, L""));
+   AssertEquals(&s[4], wcsistr(s, L"two"));
+   AssertNull(wcsistr(s, L"TwoThree"));
+   EndTest();
 }
 
 /**
@@ -354,6 +368,27 @@ static void TestPatternMatching()
 static void TestString()
 {
    StringBuffer s;
+
+   StartTest(_T("String - equals"));
+   String s1 = _T("alpha beta gamma");
+   String s2 = _T("alpha beta gamma");
+   String s3 = _T("alpha beta");
+   String s4 = _T("Alpha Beta Gamma");
+   AssertTrue(s1.equals(s2));
+   AssertTrue(s1.equals(_T("alpha beta gamma")));
+   AssertFalse(s1.equals(s3));
+   AssertFalse(s1.equals(_T("alpha beta")));
+   AssertFalse(s1.equals(s4));
+   EndTest();
+
+   StartTest(_T("String - equalsIgnoreCase"));
+   AssertTrue(s1.equalsIgnoreCase(s2));
+   AssertTrue(s1.equalsIgnoreCase(_T("alpha beta gamma")));
+   AssertFalse(s1.equalsIgnoreCase(s3));
+   AssertFalse(s1.equalsIgnoreCase(_T("alpha beta")));
+   AssertTrue(s1.equalsIgnoreCase(s4));
+   AssertTrue(s1.equalsIgnoreCase(_T("Alpha Beta Gamma")));
+   EndTest();
 
    StartTest(_T("String - append"));
    for(int i = 0; i < 256; i++)
@@ -470,6 +505,19 @@ static void TestString()
    StartTest(_T("String - right #2"));
    s = _T("alpha");
    AssertTrue(s.right(15).equals(_T("alpha")));
+   EndTest();
+
+   StartTest(_T("String - find"));
+   s = _T("alpha beta gamma");
+   AssertEquals(s.find(_T("beta")), 6);
+   AssertEquals(s.find(_T("Beta")), String::npos);
+   EndTest();
+
+   StartTest(_T("String - findIgnoreCase"));
+   s = _T("alpha beta gamma");
+   AssertEquals(s.findIgnoreCase(_T("beta")), 6);
+   AssertEquals(s.findIgnoreCase(_T("Beta")), 6);
+   AssertEquals(s.findIgnoreCase(_T("BetaGamma")), String::npos);
    EndTest();
 
    StartTest(_T("String - split"));
