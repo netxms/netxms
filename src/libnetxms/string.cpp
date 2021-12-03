@@ -648,8 +648,8 @@ void StringBuffer::insertMBString(size_t index, const char *str, ssize_t len)
    insertPlaceholder(index, len);
    if (index < m_length)
    {
-      int wchars = mb_to_wchar(str, len, &m_buffer[index], len + 1);
-      if (static_cast<size_t>(wchars) < len)
+      size_t wchars = mb_to_wchar(str, len, &m_buffer[index], len + 1);
+      if (static_cast<ssize_t>(wchars) < len)
       {
          memmove(&m_buffer[index + len], &m_buffer[index + wchars], (len - wchars) * sizeof(WCHAR));
       }
@@ -680,7 +680,7 @@ void StringBuffer::insertUtf8String(size_t index, const char *str, ssize_t len)
 #else
       size_t wchars = utf8_to_mb(str, len, &m_buffer[index], len + 1);
 #endif
-      if (wchars < len)
+      if (static_cast<ssize_t>(wchars) < len)
       {
          memmove(&m_buffer[index + len], &m_buffer[index + wchars], (len - wchars) * sizeof(TCHAR));
       }
