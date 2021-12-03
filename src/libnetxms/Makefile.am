@@ -8,12 +8,12 @@ libnetxms_la_SOURCES = \
 	inetaddr.cpp log.cpp lz4.c main.cpp macaddr.cpp md5.cpp memmem.c mempool.cpp \
 	message.cpp msgrecv.cpp msgwq.cpp net.cpp nxcp.cpp npipe.cpp npipe_unix.cpp \
 	pa.cpp procexec.cpp qsort.c queue.cpp rbuffer.cpp rwlock.cpp scandir.c serial.cpp \
-	sha1.cpp sha2.cpp socket_listener.cpp spoll.cpp streamcomp.cpp \
+	sha1.cpp sha2.cpp socket_listener.cpp spoll.cpp strcasestr.cpp streamcomp.cpp \
 	string.cpp stringlist.cpp strlcat.c strlcpy.c strmap.cpp \
 	strmapbase.cpp strptime.c strset.cpp strtoll.c strtoull.c \
 	subproc.cpp table.cpp threads.cpp timegm.c \
 	tools.cpp tp.cpp unicode.cpp uuid.cpp wcstoll.c wcstoull.c xml.cpp \
-	wcscasecmp.cpp wcslcat.c wcslcpy.c wcsncasecmp.cpp ztools.cpp
+	wcscasecmp.cpp wcscasestr.cpp wcslcat.c wcslcpy.c wcsncasecmp.cpp ztools.cpp
 
 libnetxms_la_CPPFLAGS=-I@top_srcdir@/include -DLIBNETXMS_EXPORTS -I@top_srcdir@/build
 if USE_INTERNAL_EXPAT
