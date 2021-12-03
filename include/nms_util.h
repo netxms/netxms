@@ -4405,6 +4405,16 @@ WCHAR LIBNETXMS_EXPORTABLE *wcscasestr(const WCHAR *s, const WCHAR *ss);
 void LIBNETXMS_EXPORTABLE *memmem(const void *h0, size_t k, const void *n0, size_t l);
 #endif
 
+#ifdef _WIN32
+#define stristr strcasestr
+#define wcsistr wcscasestr
+#ifdef UNICODE
+#define _tcsistr wcscasestr
+#else
+#define _tcsistr strcasestr
+#endif
+#endif
+
 #if !defined(_WIN32) && (!HAVE_WCSFTIME || !WORKING_WCSFTIME)
 size_t LIBNETXMS_EXPORTABLE nx_wcsftime(WCHAR *buffer, size_t bufsize, const WCHAR *format, const struct tm *t);
 #undef wcsftime

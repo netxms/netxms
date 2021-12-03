@@ -237,6 +237,7 @@
     <ClCompile Include="sha2.cpp" />
     <ClCompile Include="socket_listener.cpp" />
     <ClCompile Include="spoll.cpp" />
+    <ClCompile Include="strcasestr.cpp" />
     <ClCompile Include="streamcomp.cpp" />
     <ClCompile Include="string.cpp" />
     <ClCompile Include="stringlist.cpp" />
@@ -256,6 +257,7 @@
     <ClCompile Include="tp.cpp" />
     <ClCompile Include="unicode.cpp" />
     <ClCompile Include="uuid.cpp" />
+    <ClCompile Include="wcscasestr.cpp" />
     <ClCompile Include="wcslcat.c" />
     <ClCompile Include="wcslcpy.c" />
     <ClCompile Include="wcstoll.c" />

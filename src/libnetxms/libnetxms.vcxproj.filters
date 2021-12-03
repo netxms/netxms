@@ -240,6 +240,12 @@
     <ClCompile Include="memmem.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="strcasestr.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="wcscasestr.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\base64.h">

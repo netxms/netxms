@@ -2471,32 +2471,26 @@ void ClientSession::modifyEventTemplate(const NXCPMessage& request)
  */
 void ClientSession::deleteEventTemplate(const NXCPMessage& request)
 {
-   NXCPMessage msg;
-   UINT32 dwEventCode;
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
 
-   // Prepare reply message
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request.getId());
-
-   dwEventCode = request.getFieldAsUInt32(VID_EVENT_CODE);
+   uint32_t eventCode = request.getFieldAsUInt32(VID_EVENT_CODE);
 
    // Check access rights
-   if (checkSysAccessRights(SYSTEM_ACCESS_EDIT_EVENT_DB) && (dwEventCode >= FIRST_USER_EVENT_ID))
+   if (checkSysAccessRights(SYSTEM_ACCESS_EDIT_EVENT_DB) && (eventCode >= FIRST_USER_EVENT_ID))
    {
-      UINT32 rcc = DeleteEventTemplate(dwEventCode);
+      uint32_t rcc = DeleteEventTemplate(eventCode);
       if (rcc == RCC_SUCCESS)
-			writeAuditLog(AUDIT_SYSCFG, true, 0, _T("Event template [%d] deleted"), dwEventCode);
+			writeAuditLog(AUDIT_SYSCFG, true, 0, _T("Event template [%u] deleted"), eventCode);
 
       msg.setField(VID_RCC, rcc);
    }
    else
    {
       msg.setField(VID_RCC, RCC_ACCESS_DENIED);
-      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on delete event template [%d]"), dwEventCode);
+      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on delete event template [%u]"), eventCode);
    }
 
-   // Send response
-   sendMessage(&msg);
+   sendMessage(msg);
 }
 
 /**
