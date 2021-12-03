@@ -41,7 +41,7 @@ char LIBNETXMS_EXPORTABLE *strcasestr(const char *s, const char *ss)
          if ((sc = *s++) == 0)
             return nullptr;
       } while(static_cast<char>(tolower(sc)) != c);
-   } while (strncasecmp(s, ss, sslen) != 0);
+   } while (strnicmp(s, ss, sslen) != 0);
    s--;
    return const_cast<char*>(s);
 }
