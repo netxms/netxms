@@ -849,7 +849,7 @@ TCHAR LIBNXSNMP_EXPORTABLE *SNMPConvertOIDToText(size_t length, const uint32_t *
 size_t LIBNXSNMP_EXPORTABLE SNMPParseOID(const TCHAR *text, uint32_t *buffer, size_t bufferSize);
 bool LIBNXSNMP_EXPORTABLE SNMPIsCorrectOID(const TCHAR *oid);
 size_t LIBNXSNMP_EXPORTABLE SNMPGetOIDLength(const TCHAR *oid);
-uint32_t LIBNXSNMP_EXPORTABLE SNMPSaveMIBTree(const TCHAR *fileName, SNMP_MIBObject *pRoot, uint32_t flags);
+uint32_t LIBNXSNMP_EXPORTABLE SNMPSaveMIBTree(const TCHAR *fileName, SNMP_MIBObject *root, uint32_t flags);
 uint32_t LIBNXSNMP_EXPORTABLE SNMPLoadMIBTree(const TCHAR *fileName, SNMP_MIBObject **ppRoot);
 uint32_t LIBNXSNMP_EXPORTABLE SNMPGetMIBTreeTimestamp(const TCHAR *fileName, uint32_t *pdwTimestamp);
 uint32_t LIBNXSNMP_EXPORTABLE SNMPResolveDataType(const TCHAR *type);

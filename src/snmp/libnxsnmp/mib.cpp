@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** SNMP support library
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -180,7 +180,7 @@ static void WriteStringToFile(ZFile *file, const TCHAR *str)
    file->write(utf8str, len);
    MemFree(utf8str);
 #else
-   pFile->write(str, len);
+   file->write(str, len);
 #endif
 }
 
@@ -264,33 +264,24 @@ void SNMP_MIBObject::writeToFile(ZFile *pFile, UINT32 dwFlags)
 /**
  * Save MIB tree to file
  */
-uint32_t LIBNXSNMP_EXPORTABLE SNMPSaveMIBTree(const TCHAR *pszFile, SNMP_MIBObject *pRoot, uint32_t flags)
+uint32_t LIBNXSNMP_EXPORTABLE SNMPSaveMIBTree(const TCHAR *fileName, SNMP_MIBObject *root, uint32_t flags)
 {
-   FILE *pFile;
-   ZFile *pZFile;
-   SNMP_MIB_HEADER header;
-   uint32_t dwRet = SNMP_ERR_SUCCESS;
+   FILE *file = _tfopen(fileName, _T("wb"));
+   if (file == nullptr)
+      return SNMP_ERR_FILE_IO;
 
-   pFile = _tfopen(pszFile, _T("wb"));
-   if (pFile != nullptr)
-   {
-      memcpy(header.chMagic, MIB_FILE_MAGIC, 6);
-      header.bVersion = MIB_FILE_VERSION;
-      header.bHeaderSize = sizeof(SNMP_MIB_HEADER);
-      header.flags = htons((WORD)flags);
-      header.dwTimeStamp = htonl((UINT32)time(nullptr));
-      memset(header.bReserved, 0, sizeof(header.bReserved));
-      fwrite(&header, sizeof(SNMP_MIB_HEADER), 1, pFile);
-      pZFile = new ZFile(pFile, flags & SMT_COMPRESS_DATA, TRUE);
-      pRoot->writeToFile(pZFile, flags);
-      pZFile->close();
-      delete pZFile;
-   }
-   else
-   {
-      dwRet = SNMP_ERR_FILE_IO;
-   }
-   return dwRet;
+   SNMP_MIB_HEADER header;
+   memcpy(header.chMagic, MIB_FILE_MAGIC, 6);
+   header.bVersion = MIB_FILE_VERSION;
+   header.bHeaderSize = sizeof(SNMP_MIB_HEADER);
+   header.flags = htons((WORD)flags);
+   header.dwTimeStamp = htonl((UINT32)time(nullptr));
+   memset(header.bReserved, 0, sizeof(header.bReserved));
+   fwrite(&header, sizeof(SNMP_MIB_HEADER), 1, file);
+   ZFile zfile(file, flags & SMT_COMPRESS_DATA, true);
+   root->writeToFile(&zfile, flags);
+   zfile.close();
+   return SNMP_ERR_SUCCESS;
 }
 
 /**

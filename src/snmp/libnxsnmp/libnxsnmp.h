@@ -53,24 +53,24 @@
 /**
  * Buffer structure for BER_DecodeContent for ASN_OBJECT_ID type
  */
-typedef struct
+struct SNMP_OID
 {
    uint32_t length;
    uint32_t *value;
-} SNMP_OID;
+};
 
 /**
  * Header structure for compiled MIB file
  */
-typedef struct
+struct SNMP_MIB_HEADER
 {
    char chMagic[6];
    BYTE bHeaderSize;    // Header size in bytes
    BYTE bVersion;
-   WORD flags;
+   uint16_t flags;
    BYTE bReserved[2];
-   UINT32 dwTimeStamp;   // Server's timestamp
-} SNMP_MIB_HEADER;
+   uint32_t dwTimeStamp;   // Server's timestamp
+};
 
 /**
  * MIB file header constants
