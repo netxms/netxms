@@ -1211,6 +1211,9 @@ if test $? = 0; then
 	if test "x$DISABLE_ENCRYPTION" = "xyes"; then
 		AC_MSG_ERROR(Encryption support is required for server build.)
 	fi
+	if test "x$BUILD_UNICODE" = "xno"; then
+		AC_MSG_ERROR(Only UNICODE server builds are supported.)
+	fi
 
 	BUILD_SERVER="yes"
 	MODULES="$MODULES libnxsl libnxcc server ncdrivers nxscript"
