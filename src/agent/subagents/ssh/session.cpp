@@ -200,26 +200,31 @@ void SSHSession::disconnect()
    m_session = NULL;
 }
 
+/**
+ * Execute command and capture output
+ */
 StringList* SSHSession::execute(const TCHAR *command)
 {
-   StringList* output = new StringList();
-   bool result = execute(command, output, nullptr);
-   if (!result)
+   auto output = new StringList();
+   if (!execute(command, output, nullptr))
    {
       delete_and_null(output);
    }
    return output;
 }
 
+/**
+ * Execute command and feed output to provided action context
+ */
 bool SSHSession::execute(const TCHAR *command, const shared_ptr<ActionContext>& context)
 {
    return execute(command, nullptr, context.get());
 }
 
 /**
- * Execute command and capture output
+ * Execute command process output as requested
  */
-bool SSHSession::execute(const TCHAR *command, StringList* output, ActionContext *context)
+bool SSHSession::execute(const TCHAR *command, StringList *output, ActionContext *context)
 {
    if ((m_session == nullptr) || !ssh_is_connected(m_session))
    {
@@ -293,7 +298,6 @@ bool SSHSession::execute(const TCHAR *command, StringList* output, ActionContext
          else
          {
             nxlog_debug_tag(DEBUG_TAG, 6, _T("SSHSession::execute: read error: %hs"), ssh_get_error(m_session));
-            delete_and_null(output);
          }
       }
       else
