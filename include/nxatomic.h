@@ -107,6 +107,14 @@ static inline int32_t InterlockedCompareExchange(VolatileCounter *target, int32_
 }
 
 /**
+ * Atomically exchange 64-bit values
+ */
+static inline int64_t InterlockedCompareExchange(VolatileCounter64 *target, int64_t exchange, int64_t comparand)
+{
+   return atomic_cas_64((volatile uint64_t *)target, (uint64_t)comparand, (uint64_t)exchange);
+}
+
+/**
  * Atomically increment 64-bit value by 1
  */
 static inline int64_t InterlockedIncrement64(VolatileCounter64 *v)
@@ -144,6 +152,22 @@ static inline void InterlockedOr(VolatileCounter *target, uint32_t bits)
 static inline void InterlockedAnd(VolatileCounter *target, uint32_t bits)
 {
    atomic_and_32((volatile uint32_t *)target, bits);
+}
+
+/**
+ * Atomic bitwise OR 64 bit
+ */
+static inline void InterlockedOr64(VolatileCounter64 *target, uint64_t bits)
+{
+   atomic_or_64((volatile uint64_t *)target, bits);
+}
+
+/**
+ * Atomic bitwise AND 64 bit
+ */
+static inline void InterlockedAnd64(VolatileCounter64 *target, uint64_t bits)
+{
+   atomic_and_64((volatile uint64_t *)target, bits);
 }
 
 #elif defined(__HP_aCC)
@@ -188,6 +212,20 @@ static inline int32_t InterlockedCompareExchange(VolatileCounter *target, int32_
    _Asm_mf(_DFLT_FENCE);
    _Asm_mov_to_ar(_AREG_CCV, (uint64_t)comparand);
    return (int32_t)_Asm_cmpxchg(_SZ_W, _SEM_ACQ, (void *)target, (uint64_t)exchange, _LDHINT_NONE);
+#endif
+}
+
+/**
+ * Atomically exchange 64-bit values
+ */
+static inline int64_t InterlockedCompareExchange64(VolatileCounter64 *target, int64_t exchange, int64_t comparand)
+{
+#if HAVE_ATOMIC_H
+   return (int64_t)atomic_cas_64((volatile uint64_t *)target, (uint64_t)comparand, (uint64_t)exchange);
+#else
+   _Asm_mf(_DFLT_FENCE);
+   _Asm_mov_to_ar(_AREG_CCV, (uint64_t)comparand);
+   return (int64_t)_Asm_cmpxchg(_SZ_D, _SEM_ACQ, (void *)target, (uint64_t)exchange, _LDHINT_NONE);
 #endif
 }
 
@@ -263,6 +301,30 @@ static inline void InterlockedAnd(VolatileCounter *target, uint32_t bits)
    } while(InterlockedCompareExchange(target, (int32_t)((uint32_t)c & bits), c) != c);
 }
 
+/**
+ * Atomic bitwise OR 64 bit
+ */
+static inline void InterlockedOr64(VolatileCounter64 *target, uint64_t bits)
+{
+   int64_t c;
+   do
+   {
+      c = *target;
+   } while(InterlockedCompareExchange64(target, (int64_t)((uint64_t)c | bits), c) != c);
+}
+
+/**
+ * Atomic bitwise AND 64 bit
+ */
+static inline void InterlockedAnd64(VolatileCounter64 *target, uint64_t bits)
+{
+   int64_t c;
+   do
+   {
+      c = *target;
+   } while(InterlockedCompareExchange64(target, (int64_t)((uint64_t)c & bits), c) != c);
+}
+
 #elif defined(_AIX)
 
 typedef volatile int32_t VolatileCounter;
@@ -309,6 +371,20 @@ static inline int32_t InterlockedCompareExchange(VolatileCounter *target, int32_
 {
 #if !HAVE_DECL___SYNC_VAL_COMPARE_AND_SWAP
    int32_t oldval = comparand;
+   __compare_and_swap(target, &oldval, exchange);
+   return oldval;
+#else
+   return __sync_val_compare_and_swap(target, comparand, exchange);
+#endif
+}
+
+/**
+ * Atomically exchange 64-bit values
+ */
+static inline int64_t InterlockedCompareExchange64(VolatileCounter64 *target, int64_t exchange, int64_t comparand)
+{
+#if !HAVE_DECL___SYNC_VAL_COMPARE_AND_SWAP
+   int64_t oldval = comparand;
    __compare_and_swap(target, &oldval, exchange);
    return oldval;
 #else
@@ -398,6 +474,38 @@ static inline void InterlockedAnd(VolatileCounter *target, uint32_t bits)
    {
       c = *target;
    } while(InterlockedCompareExchange(target, (int32_t)((uint32_t)c & bits), c) != c);
+#else
+   __sync_and_and_fetch(target, bits);
+#endif
+}
+
+/**
+ * Atomic bitwise OR 64 bit
+ */
+static inline void InterlockedOr64(VolatileCounter64 *target, uint64_t bits)
+{
+#if !HAVE_DECL___SYNC_OR_AND_FETCH
+   int64_t c;
+   do
+   {
+      c = *target;
+   } while(InterlockedCompareExchange64(target, (int64_t)((uint64_t)c | bits), c) != c);
+#else
+   __sync_or_and_fetch(target, bits);
+#endif
+}
+
+/**
+ * Atomic bitwise AND 64 bit
+ */
+static inline void InterlockedAnd64(VolatileCounter64 *target, uint64_t bits)
+{
+#if !HAVE_DECL___SYNC_AND_AND_FETCH
+   int64_t c;
+   do
+   {
+      c = *target;
+   } while(InterlockedCompareExchange(target, (int64_t)((uint64_t)c & bits), c) != c);
 #else
    __sync_and_and_fetch(target, bits);
 #endif
@@ -537,6 +645,42 @@ static inline void InterlockedAnd(VolatileCounter *target, uint32_t bits)
    {
       c = *target;
    } while(InterlockedCompareExchange(target, (int32_t)((uint32_t)c & bits), c) != c)
+#elif HAVE_ATOMIC_BUILTINS
+   __atomic_and_fetch(target, bits, __ATOMIC_SEQ_CST);
+#else
+   __sync_and_and_fetch(target, bits);
+#endif
+}
+
+/**
+ * Atomic bitwise OR 64 bit
+ */
+static inline void InterlockedOr64(VolatileCounter64 *target, uint64_t bits)
+{
+#if defined(__GNUC__) && ((__GNUC__ < 4) || (__GNUC_MINOR__ < 1)) && (defined(__i386__) || defined(__x86_64__))
+   int64_t c;
+   do
+   {
+      c = *target;
+   } while(InterlockedCompareExchange64(target, (int64_t)((uint64_t)c | bits), c) != c)
+#elif HAVE_ATOMIC_BUILTINS
+   __atomic_or_fetch(target, bits, __ATOMIC_SEQ_CST);
+#else
+   __sync_or_and_fetch(target, bits);
+#endif
+}
+
+/**
+ * Atomic bitwise AND 64 bit
+ */
+static inline void InterlockedAnd64(VolatileCounter64 *target, uint64_t bits)
+{
+#if defined(__GNUC__) && ((__GNUC__ < 4) || (__GNUC_MINOR__ < 1)) && (defined(__i386__) || defined(__x86_64__))
+   int64_t c;
+   do
+   {
+      c = *target;
+   } while(InterlockedCompareExchange(target, (int64_t)((uint64_t)c & bits), c) != c)
 #elif HAVE_ATOMIC_BUILTINS
    __atomic_and_fetch(target, bits, __ATOMIC_SEQ_CST);
 #else
