@@ -3057,9 +3057,8 @@ if test "$CXX" != "CC"; then
 	AC_MSG_CHECKING([for gcc __atomic builtins])
 	AC_LINK_IFELSE([AC_LANG_PROGRAM([[]],
 		[[
-			char l;
 			unsigned long v;
-			__atomic_test_and_set(&l, __ATOMIC_RELAXED);
+			__atomic_exchange_n(&v, 1, __ATOMIC_SEQ_CST);
 			__atomic_store_n(&v, 1, __ATOMIC_RELEASE);
 			__atomic_load_n(&v, __ATOMIC_ACQUIRE);
 			__atomic_fetch_add(&v, 1, __ATOMIC_SEQ_CST);
@@ -3236,7 +3235,7 @@ fi
 
 if test "x$PLATFORM" = "xAIX"; then
 	AC_CHECK_HEADERS([procinfo.h],,,[[ ]])
-	AC_CHECK_DECLS([getkerninfo, getprocs, getprocs64, __sync_add_and_fetch, __sync_sub_and_fetch, __sync_or_and_fetch, __sync_and_and_fetch, __sync_val_compare_and_swap, __sync_lock_test_and_set],,,[
+	AC_CHECK_DECLS([getkerninfo, getprocs, getprocs64],,,[
 #if HAVE_PROCINFO_H
 #include <procinfo.h>
 #endif

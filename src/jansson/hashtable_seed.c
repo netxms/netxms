@@ -195,13 +195,23 @@ static uint32_t generate_seed() {
 volatile uint32_t hashtable_seed = 0;
 
 #if defined(HAVE_ATOMIC_BUILTINS) && (defined(HAVE_SCHED_YIELD) || !defined(_WIN32))
+#ifdef _AIX
+static volatile int seed_initialized = 0;
+#else
 static volatile char seed_initialized = 0;
+#endif
 
 void JANSSON_API json_object_seed(size_t seed) {
     uint32_t new_seed = (uint32_t)seed;
 
     if (hashtable_seed == 0) {
+#ifdef _AIX
+        // __atomic_test_and_set is not supported on AIX
+        int expected = 0;
+        if (__atomic_compare_exchange_n(&seed_initialized, &expected, 1, false, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST)) {
+#else
         if (__atomic_test_and_set(&seed_initialized, __ATOMIC_RELAXED) == 0) {
+#endif
             /* Do the seeding ourselves */
             if (new_seed == 0)
                 new_seed = generate_seed();
