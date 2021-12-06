@@ -511,9 +511,9 @@ static void OnConfigVariableChange(bool isCLOB, const TCHAR *name, const TCHAR *
    else if (!_tcscmp(name, _T("Objects.Security.CheckTrustedNodes")))
    {
       if (_tcstol(value, nullptr, 0))
-         g_flags |= AF_CHECK_TRUSTED_NODES;
+         InterlockedOr64(reinterpret_cast<VolatileCounter64*>(&g_flags), AF_CHECK_TRUSTED_NODES);
       else
-         g_flags &= ~AF_CHECK_TRUSTED_NODES;
+         InterlockedAnd64(reinterpret_cast<VolatileCounter64*>(&g_flags), ~AF_CHECK_TRUSTED_NODES);
    }
    else if (!_tcscmp(name, _T("DataCollection.InstanceRetentionTime")))
    {
@@ -525,15 +525,15 @@ static void OnConfigVariableChange(bool isCLOB, const TCHAR *name, const TCHAR *
       {
          case 0:  // Auto
             if (g_dbSyntax == DB_SYNTAX_MSSQL)
-               g_flags |= AF_DBWRITER_HK_INTERLOCK;
+               InterlockedOr64(reinterpret_cast<VolatileCounter64*>(&g_flags), AF_DBWRITER_HK_INTERLOCK);
             else
-               g_flags &= ~AF_DBWRITER_HK_INTERLOCK;
+               InterlockedAnd64(reinterpret_cast<VolatileCounter64*>(&g_flags), ~AF_DBWRITER_HK_INTERLOCK);
             break;
          case 1:  // Off
-            g_flags &= ~AF_DBWRITER_HK_INTERLOCK;
+            InterlockedAnd64(reinterpret_cast<VolatileCounter64*>(&g_flags), ~AF_DBWRITER_HK_INTERLOCK);
             break;
          case 2:  // On
-            g_flags |= AF_DBWRITER_HK_INTERLOCK;
+            InterlockedOr64(reinterpret_cast<VolatileCounter64*>(&g_flags), AF_DBWRITER_HK_INTERLOCK);
             break;
          default:
             break;
@@ -562,9 +562,9 @@ static void OnConfigVariableChange(bool isCLOB, const TCHAR *name, const TCHAR *
    else if (!_tcscmp(name, _T("ICMP.CollectPollStatistics")))
    {
       if (_tcstol(value, nullptr, 0))
-         g_flags |= AF_COLLECT_ICMP_STATISTICS;
+         InterlockedOr64(reinterpret_cast<VolatileCounter64*>(&g_flags), AF_COLLECT_ICMP_STATISTICS);
       else
-         g_flags &= ~AF_COLLECT_ICMP_STATISTICS;
+         InterlockedAnd64(reinterpret_cast<VolatileCounter64*>(&g_flags), ~AF_COLLECT_ICMP_STATISTICS);
    }
    else if (!_tcscmp(name, _T("ICMP.PollingInterval")))
    {
@@ -584,16 +584,16 @@ static void OnConfigVariableChange(bool isCLOB, const TCHAR *name, const TCHAR *
    else if (!_tcscmp(name, _T("NetworkDiscovery.EnableParallelProcessing")))
    {
       if (_tcstol(value, nullptr, 0))
-         g_flags |= AF_PARALLEL_NETWORK_DISCOVERY;
+         InterlockedOr64(reinterpret_cast<VolatileCounter64*>(&g_flags), AF_PARALLEL_NETWORK_DISCOVERY);
       else
-         g_flags &= ~AF_PARALLEL_NETWORK_DISCOVERY;
+         InterlockedAnd64(reinterpret_cast<VolatileCounter64*>(&g_flags), ~AF_PARALLEL_NETWORK_DISCOVERY);
    }
    else if (!_tcscmp(name, _T("NetworkDiscovery.MergeDuplicateNodes")))
    {
       if (_tcstol(value, nullptr, 0))
-         g_flags |= AF_MERGE_DUPLICATE_NODES;
+         InterlockedOr64(reinterpret_cast<VolatileCounter64*>(&g_flags), AF_MERGE_DUPLICATE_NODES);
       else
-         g_flags &= ~AF_MERGE_DUPLICATE_NODES;
+         InterlockedAnd64(reinterpret_cast<VolatileCounter64*>(&g_flags), ~AF_MERGE_DUPLICATE_NODES);
    }
    else if (!_tcscmp(name, _T("NetworkDiscovery.PassiveDiscovery.Interval")))
    {
@@ -602,16 +602,16 @@ static void OnConfigVariableChange(bool isCLOB, const TCHAR *name, const TCHAR *
    else if (!_tcscmp(name, _T("NXSL.EnableContainerFunctions")))
    {
       if (_tcstol(value, nullptr, 0))
-         g_flags |= AF_ENABLE_NXSL_CONTAINER_FUNCTIONS;
+         InterlockedOr64(reinterpret_cast<VolatileCounter64*>(&g_flags), AF_ENABLE_NXSL_CONTAINER_FUNCTIONS);
       else
-         g_flags &= ~AF_ENABLE_NXSL_CONTAINER_FUNCTIONS;
+         InterlockedAnd64(reinterpret_cast<VolatileCounter64*>(&g_flags), ~AF_ENABLE_NXSL_CONTAINER_FUNCTIONS);
    }
    else if (!_tcscmp(name, _T("Objects.Interfaces.Enable8021xStatusPoll")))
    {
       if (_tcstol(value, nullptr, 0))
-         g_flags |= AF_ENABLE_8021X_STATUS_POLL;
+         InterlockedOr64(reinterpret_cast<VolatileCounter64*>(&g_flags), AF_ENABLE_8021X_STATUS_POLL);
       else
-         g_flags &= ~AF_ENABLE_8021X_STATUS_POLL;
+         InterlockedAnd64(reinterpret_cast<VolatileCounter64*>(&g_flags), ~AF_ENABLE_8021X_STATUS_POLL);
    }
    else if (!_tcscmp(name, _T("Objects.Nodes.ResolveDNSToIPOnStatusPoll")))
    {
@@ -632,26 +632,33 @@ static void OnConfigVariableChange(bool isCLOB, const TCHAR *name, const TCHAR *
    {
       g_pollsBetweenPrimaryIpUpdate = ConvertToUint32(value, 1);
    }
+   else if (!_tcscmp(name, _T("Objects.Nodes.ResolveNames")))
+   {
+      if (_tcstol(value, nullptr, 0))
+         InterlockedOr64(reinterpret_cast<VolatileCounter64*>(&g_flags), AF_RESOLVE_NODE_NAMES);
+      else
+         InterlockedAnd64(reinterpret_cast<VolatileCounter64*>(&g_flags), ~AF_RESOLVE_NODE_NAMES);
+   }
    else if (!_tcscmp(name, _T("SNMP.Traps.AllowVarbindsConversion")))
    {
       if (_tcstol(value, nullptr, 0))
-         g_flags |= AF_ALLOW_TRAP_VARBIND_CONVERSION;
+         InterlockedOr64(reinterpret_cast<VolatileCounter64*>(&g_flags), AF_ALLOW_TRAP_VARBIND_CONVERSION);
       else
-         g_flags &= ~AF_ALLOW_TRAP_VARBIND_CONVERSION;
+         InterlockedAnd64(reinterpret_cast<VolatileCounter64*>(&g_flags), ~AF_ALLOW_TRAP_VARBIND_CONVERSION);
    }
    else if (!_tcscmp(name, _T("SNMP.Traps.LogAll")))
    {
       if (_tcstol(value, nullptr, 0))
-         g_flags |= AF_LOG_ALL_SNMP_TRAPS;
+         InterlockedOr64(reinterpret_cast<VolatileCounter64*>(&g_flags), AF_LOG_ALL_SNMP_TRAPS);
       else
-         g_flags &= ~AF_LOG_ALL_SNMP_TRAPS;
+         InterlockedAnd64(reinterpret_cast<VolatileCounter64*>(&g_flags), ~AF_LOG_ALL_SNMP_TRAPS);
    }
    else if (!_tcscmp(name, _T("SNMP.Traps.ProcessUnmanagedNodes")))
    {
       if (_tcstol(value, nullptr, 0))
-         g_flags |= AF_TRAPS_FROM_UNMANAGED_NODES;
+         InterlockedOr64(reinterpret_cast<VolatileCounter64*>(&g_flags), AF_TRAPS_FROM_UNMANAGED_NODES);
       else
-         g_flags &= ~AF_TRAPS_FROM_UNMANAGED_NODES;
+         InterlockedAnd64(reinterpret_cast<VolatileCounter64*>(&g_flags), ~AF_TRAPS_FROM_UNMANAGED_NODES);
    }
    else if (!_tcscmp(name, _T("SNMP.Traps.RateLimit.Threshold")))
    {
