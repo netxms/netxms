@@ -167,12 +167,10 @@ SearchQuery::~SearchQuery()
  */
 bool SearchQuery::match(const SearchAttributeProvider &provider) const
 {
-   nxlog_debug(3, _T("### MATCH"));
    if (m_excludedTexts != nullptr)
    {
       for (const TCHAR *s : *m_excludedTexts)
       {
-         nxlog_debug(3, _T("### !MATCH1 %s %s"), provider.getText().cstr(), s);
          if (_tcsistr(provider.getText(), s) != nullptr)
          {
             return false;
@@ -183,7 +181,6 @@ bool SearchQuery::match(const SearchAttributeProvider &provider) const
    {
       for (const TCHAR *s : *m_includedTexts)
       {
-         nxlog_debug(3, _T("### MATCH1 %s %s"), provider.getText().cstr(), s);
          if (_tcsistr(provider.getText(), s) == nullptr)
          {
             return false;
@@ -196,12 +193,10 @@ bool SearchQuery::match(const SearchAttributeProvider &provider) const
       for (KeyValuePair<StringSet> *tiem : *m_excludedAttributes)
       {
          SharedString text = provider.getAttribute(tiem->key);
-         nxlog_debug(3, _T("### !Key %s"), tiem->key);
          if (!text.isNull())
          {
             for (const TCHAR *s : *(tiem->value))
             {
-               nxlog_debug(3, _T("### !MATCH2 %s %s"), text.cstr(), s);
                if (_tcsistr(text, s) != nullptr)
                {
                   return false;
@@ -215,13 +210,11 @@ bool SearchQuery::match(const SearchAttributeProvider &provider) const
    {
       for (KeyValuePair<StringSet> *tiem : *m_includedAttributes)
       {
-         nxlog_debug(3, _T("### Key %s"), tiem->key);
          SharedString text = provider.getAttribute(tiem->key);
          if (!text.isNull())
          {
             for (const TCHAR *s : *(tiem->value))
             {
-               nxlog_debug(3, _T("### MATCH2 %s %s"), text.cstr(), s);
                if (_tcsistr(text, s) == nullptr)
                {
                   return false;

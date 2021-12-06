@@ -2629,7 +2629,6 @@ void DataCollectionTarget::findDcis(const SearchQuery &query, uint32_t userId, O
       {
          if (query.match(*dci))
          {
-            nxlog_debug(3, _T("### MATCHED %s"),dci->getDescription().cstr());
             list->add(dci->clone());
          }
       }
