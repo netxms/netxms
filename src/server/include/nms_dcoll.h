@@ -31,10 +31,10 @@
 /**
  * Interface for objects that can be searched
  */
-class SearchAttributeProvider
+class NXCORE_EXPORTABLE SearchAttributeProvider
 {
 public:
-   virtual ~SearchAttributeProvider() {}
+   virtual ~SearchAttributeProvider() = default;
 
    virtual String getText() const = 0;
    virtual SharedString getAttribute(const String &attribute) const = 0;
