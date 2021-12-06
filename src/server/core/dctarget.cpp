@@ -140,13 +140,13 @@ void DataCollectionTarget::fillMessageInternalStage2(NXCPMessage *msg, UINT32 us
          if  (dci->isShowInObjectOverview())
          {
             countOverview++;
-            ((DCItem *)dci)->fillLastValueMessage(msg, fieldIdOverview);
+            ((DCItem *)dci)->fillLastValueSummaryMessage(msg, fieldIdOverview);
             fieldIdOverview += 50;
          }
          if  (dci->isShowOnObjectTooltip())
          {
             countTooltip++;
-            ((DCItem *)dci)->fillLastValueMessage(msg, fieldIdTooltip);
+            ((DCItem *)dci)->fillLastValueSummaryMessage(msg, fieldIdTooltip);
             fieldIdTooltip += 50;
          }
 		}
@@ -589,14 +589,7 @@ uint32_t DataCollectionTarget::getDciLastValue(uint32_t dciId, NXCPMessage *msg)
       if (object->getId() == dciId)
       {
          msg->setField(VID_DCOBJECT_TYPE, static_cast<int16_t>(object->getType()));
-         if (object->getType() == DCO_TYPE_TABLE)
-         {
-            static_cast<DCTable*>(object)->fillLastValueMessage(msg);
-         }
-         else
-         {
-            static_cast<DCItem*>(object)->fillLastValueMessage(msg);
-         }
+         object->fillLastValueMessage(msg);
          rcc = RCC_SUCCESS;
          break;
       }
@@ -860,7 +853,7 @@ UINT32 DataCollectionTarget::getThresholdSummary(NXCPMessage *msg, UINT32 baseId
 		{
 			if (static_cast<DCItem*>(object)->hasActiveThreshold())
 			{
-			   static_cast<DCItem*>(object)->fillLastValueMessage(msg, varId);
+			   static_cast<DCItem*>(object)->fillLastValueSummaryMessage(msg, varId);
 				varId += 50;
 				count++;
 			}
@@ -2396,18 +2389,9 @@ uint32_t DataCollectionTarget::getLastValues(NXCPMessage *msg, bool objectToolti
           (!overviewOnly || object->isShowInObjectOverview()) &&
           object->hasAccess(userId))
       {
-         if (object->getType() == DCO_TYPE_ITEM)
-         {
-            static_cast<DCItem*>(object)->fillLastValueMessage(msg, fieldId);
-            fieldId += 50;
-            dwCount++;
-         }
-         else if (object->getType() == DCO_TYPE_TABLE)
-         {
-            static_cast<DCTable*>(object)->fillLastValueSummaryMessage(msg, fieldId);
-            fieldId += 50;
-            dwCount++;
-         }
+         static_cast<DCItem*>(object)->fillLastValueSummaryMessage(msg, fieldId);
+         fieldId += 50;
+         dwCount++;
       }
    }
    msg->setField(VID_NUM_ITEMS, dwCount);
@@ -2431,16 +2415,8 @@ void DataCollectionTarget::getTooltipLastValues(NXCPMessage *msg, uint32_t userI
       {
          if (object->getType() == DCO_TYPE_ITEM)
          {
-            msg->setField(*index + 1, object->getId());
-            msg->setField(*index + 2, CHECK_NULL_EX(static_cast<DCItem*>(object)->getLastValue()));
-            msg->setField(*index + 3, static_cast<DCItem*>(object)->getDataType());
-            msg->setField(*index + 4, static_cast<int16_t>(object->getStatus()));
-            msg->setField(*index + 5, getId());
-            msg->setField(*index + 6, static_cast<int16_t>(object->getDataSource()));
-            msg->setField(*index + 7, object->getName());
-            msg->setField(*index + 8, object->getDescription());
-            msg->setField(*index + 9, static_cast<DCItem*>(object)->getThresholdSeverity());
-            *index += 10;
+            object->fillLastValueSummaryMessage(msg, *index);
+            *index += 50;
          }
       }
    }
@@ -2640,4 +2616,23 @@ void DataCollectionTarget::updateGeoLocation(const GeoLocation& geoLocation)
          m_geoLocationRestrictionsViolated = false;
       }
    }
+}
+
+
+void DataCollectionTarget::findDcis(const SearchQuery &query, uint32_t userId, ObjectArray<DCObject> *list)
+{
+   readLockDciAccess();
+   for(int i = 0; i < m_dcObjects->size(); i++)
+   {
+      DCObject *dci = m_dcObjects->get(i);
+      if (dci->hasAccess(userId))
+      {
+         if (query.match(*dci))
+         {
+            nxlog_debug(3, _T("### MATCHED %s"),dci->getDescription().cstr());
+            list->add(dci->clone());
+         }
+      }
+   }
+   unlockDciAccess();
 }

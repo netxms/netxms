@@ -1406,9 +1406,10 @@ void DCItem::fillLastValueMessage(NXCPMessage *msg)
 /**
  * Put last value into NXCP message
  */
-void DCItem::fillLastValueMessage(NXCPMessage *msg, uint32_t baseId)
+void DCItem::fillLastValueSummaryMessage(NXCPMessage *msg, uint32_t baseId, const TCHAR *column, const TCHAR *instance)
 {
 	lock();
+   msg->setField(baseId++, m_ownerId);
    msg->setField(baseId++, m_id);
    msg->setField(baseId++, m_name);
    msg->setField(baseId++, m_flags);

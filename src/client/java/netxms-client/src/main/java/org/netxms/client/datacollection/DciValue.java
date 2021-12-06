@@ -42,7 +42,6 @@ public abstract class DciValue
    protected DataOrigin source;  // data source (agent, SNMP, etc.)
 	protected DataType dataType;
 	protected int status;				// status (active, disabled, etc.)
-   protected Severity mostCriticalSeverity; //used only in simple dci
 	private int errorCount;
 	private int dcObjectType;		// Data collection object type (item, table, etc.)
 	private Date timestamp;
@@ -52,20 +51,19 @@ public abstract class DciValue
 	/**
 	 * Factory method to create correct DciValue subclass from NXCP message.
 	 * 
-	 * @param nodeId owning node ID
 	 * @param msg NXCP message
 	 * @param base Base variable ID for value object
 	 * @return DciValue object
 	 */
-	public static DciValue createFromMessage(long nodeId, NXCPMessage msg, long base)
+	public static DciValue createFromMessage(NXCPMessage msg, long base)
 	{
-		int type = msg.getFieldAsInt32(base + 9);
+		int type = msg.getFieldAsInt32(base + 10);
 		switch(type)
 		{
 			case DataCollectionObject.DCO_TYPE_ITEM:
-				return new SimpleDciValue(nodeId, msg, base);
+				return new SimpleDciValue(msg, base);
 			case DataCollectionObject.DCO_TYPE_TABLE:
-				return new TableDciValue(nodeId, msg, base);
+				return new TableDciValue(msg, base);
 			default:
 				return null;
 		}
@@ -81,15 +79,14 @@ public abstract class DciValue
 	/**
 	 * Constructor for creating DciValue from NXCP message
 	 * 
-	 * @param nodeId owning node ID
 	 * @param msg NXCP message
 	 * @param base Base field ID for value object
 	 */
-	protected DciValue(long nodeId, NXCPMessage msg, long base)
+	protected DciValue(NXCPMessage msg, long base)
 	{
 		long fieldId = base;
-	
-		this.nodeId = nodeId;
+
+      nodeId = msg.getFieldAsInt64(fieldId++);
 		id = msg.getFieldAsInt64(fieldId++);
 		name = msg.getFieldAsString(fieldId++);
       flags = msg.getFieldAsInt32(fieldId++);
@@ -257,14 +254,6 @@ public abstract class DciValue
     */
    public Severity getMostCriticalSeverity()
    {
-      return mostCriticalSeverity;
-   }
-
-   /**
-    * @param mostCriticalSeverity the mostCriticalSeverity to set
-    */
-   public void setMostCriticalSeverity(Severity mostCriticalSeverity)
-   {
-      this.mostCriticalSeverity = mostCriticalSeverity;
+      return getThresholdSeverity();
    }
 }

@@ -29,6 +29,18 @@
 #define MAX_NPE_NAME_LEN            16
 
 /**
+ * Interface for objects that can be searched
+ */
+class SearchAttributeProvider
+{
+public:
+   virtual ~SearchAttributeProvider() {}
+
+   virtual String getText() const = 0;
+   virtual SharedString getAttribute(const String &attribute) const = 0;
+};
+
+/**
  * Instance discovery data
  */
 class InstanceDiscoveryData
@@ -246,7 +258,7 @@ template class NXCORE_EXPORTABLE weak_ptr<DataCollectionOwner>;
 /**
  * Generic data collection object
  */
-class NXCORE_EXPORTABLE DCObject
+class NXCORE_EXPORTABLE DCObject : public SearchAttributeProvider
 {
    friend class DCObjectInfo;
 
@@ -343,6 +355,9 @@ public:
    virtual void updateThresholdsBeforeMaintenanceState();
    virtual void generateEventsBasedOnThrDiff();
 
+   virtual void fillLastValueSummaryMessage(NXCPMessage *bsg, uint32_t baseId, const TCHAR *column = nullptr, const TCHAR *instance = nullptr) = 0;
+   virtual void fillLastValueMessage(NXCPMessage *msg) = 0;
+
    shared_ptr<DCObjectInfo> createDescriptor() const;
 
    uint32_t getId() const { return m_id; }
@@ -435,6 +450,9 @@ public:
    static DCObjectStorageClass storageClassFromRetentionTime(int retentionTime);
    static const TCHAR *getStorageClassName(DCObjectStorageClass storageClass);
    static const TCHAR *getDataProviderName(int dataProvider);
+
+   virtual String getText() const override;
+   virtual SharedString getAttribute(const String &attribute) const override;
 };
 
 /**
@@ -515,8 +533,8 @@ public:
    virtual void updateThresholdsBeforeMaintenanceState() override;
    virtual void generateEventsBasedOnThrDiff() override;
 
-   void fillLastValueMessage(NXCPMessage *bsg, uint32_t baseId);
-   void fillLastValueMessage(NXCPMessage *msg);
+   virtual void fillLastValueSummaryMessage(NXCPMessage *bsg, uint32_t baseId,const TCHAR *column = nullptr, const TCHAR *instance = nullptr) override;
+   virtual void fillLastValueMessage(NXCPMessage *msg) override;
    NXSL_Value *getValueForNXSL(NXSL_VM *vm, int function, int sampleCount);
    NXSL_Value *getRawValueForNXSL(NXSL_VM *vm);
    const TCHAR *getLastValue();
@@ -794,8 +812,8 @@ public:
 
    bool processNewValue(time_t nTimeStamp, const shared_ptr<Table>& value, bool *updateStatus);
 
-	void fillLastValueMessage(NXCPMessage *msg);
-   void fillLastValueSummaryMessage(NXCPMessage *msg, uint32_t baseId);
+   virtual void fillLastValueSummaryMessage(NXCPMessage *bsg, uint32_t baseId,const TCHAR *column = nullptr, const TCHAR *instance = nullptr) override;
+   virtual void fillLastValueMessage(NXCPMessage *msg) override;
 
    int getColumnDataType(const TCHAR *name) const;
    const ObjectArray<DCTableColumn>& getColumns() const { return *m_columns; }

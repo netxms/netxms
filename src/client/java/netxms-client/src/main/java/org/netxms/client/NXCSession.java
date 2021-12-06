@@ -4911,7 +4911,7 @@ public class NXCSession
       List<DciValue> result = new ArrayList<DciValue>(count);
       
       Long base = NXCPCodes.VID_DCI_VALUES_BASE;
-      for(int i = 0; i < count; i++, base += 10)
+      for(int i = 0; i < count; i++, base += 50)
       {
          result.add(new SimpleDciValue(response, base));
       }
@@ -4947,7 +4947,7 @@ public class NXCSession
       long base = NXCPCodes.VID_DCI_VALUES_BASE;
       for(int i = 0; i < count; i++, base += 50)
       {
-         list[i] = DciValue.createFromMessage(nodeId, response, base);
+         list[i] = DciValue.createFromMessage(response, base);
       }
 
       return list;
@@ -4987,7 +4987,7 @@ public class NXCSession
       long base = NXCPCodes.VID_DCI_VALUES_BASE;
       List<DciValue> values = null;
       Long nodeId = 0L;
-      for (int i = 0; i < count; i++, base += 10)
+      for (int i = 0; i < count; i++, base += 50)
       {
          DciValue v = (DciValue)new SimpleDciValue(response, base);
          if(nodeId != v.getNodeId())
@@ -5069,7 +5069,7 @@ public class NXCSession
       int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_ITEMS);
       DciValue[] list = new DciValue[count];
       long base = NXCPCodes.VID_DCI_VALUES_BASE;
-      for(int i = 0; i < count; i++, base += 10)
+      for(int i = 0; i < count; i++, base += 50)
       {
          list[i] = (DciValue)new SimpleDciValue(response, base);
       }
@@ -5082,8 +5082,8 @@ public class NXCSession
     *
     * @param dciConfig Dci config
     * @return list of active thresholds
-    * @throws IOException TODO
-    * @throws NXCException TODO
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public List<Threshold> getActiveThresholds(List<SingleDciConfig> dciConfig) throws IOException, NXCException
    {
@@ -12922,5 +12922,33 @@ public class NXCSession
          fieldId += 10;
       }
       return tickets;
+   }
+
+   /**
+    * Send request for last values using prepared message
+    *
+    * @param rootObjectId root object id
+    * @param query qury string
+    * @return The DCI values
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public DciValue[] findDCI(long rootObjectId, String query) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_FIND_DCI);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)rootObjectId);
+      msg.setField(NXCPCodes.VID_SEARCH_PATTERN, query);
+      sendMessage(msg);
+      final NXCPMessage response = waitForRCC(msg.getMessageId());
+
+      int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_ITEMS);
+      DciValue[] list = new DciValue[count];
+      long base = NXCPCodes.VID_DCI_VALUES_BASE;
+      for(int i = 0; i < count; i++, base += 50)
+      {
+         list[i] = DciValue.createFromMessage(response, base);
+      }
+
+      return list;
    }
 }

@@ -1040,6 +1040,22 @@ public:
 };
 
 /**
+ * Class to make advanced search
+ */
+class SearchQuery
+{
+   StringSet *m_excludedTexts;
+   StringSet *m_includedTexts;
+   StringObjectMap<StringSet> *m_excludedAttributes;
+   StringObjectMap<StringSet> *m_includedAttributes;
+
+public:
+   SearchQuery(const String &searchString);
+   ~SearchQuery();
+   bool match(const SearchAttributeProvider &provider) const;
+};
+
+/**
  * Base class for network objects
  */
 class NXCORE_EXPORTABLE NetObj : public NObject
@@ -2327,6 +2343,8 @@ public:
    int getDciThreshold(uint32_t dciId);
 
    virtual bool lockForInstanceDiscoveryPoll() override;
+
+   void findDcis(const SearchQuery &query, uint32_t userId, ObjectArray<DCObject> *list);
 };
 
 /**

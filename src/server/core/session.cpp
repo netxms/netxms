@@ -1775,6 +1775,9 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_SSH_COMMAND:
          executeSshCommand(*request);
          break;
+      case CMD_FIND_DCI:
+         findDci(*request);
+         break;
       default:
          if ((code >> 8) == 0x11)
          {
@@ -5107,6 +5110,7 @@ void ClientSession::getLastValuesByDciId(const NXCPMessage& request)
    int size = request.getFieldAsInt32(VID_NUM_ITEMS);
    uint32_t incomingIndex = VID_DCI_VALUES_BASE;
    uint32_t outgoingIndex = VID_DCI_VALUES_BASE;
+   uint32_t itemCount = 0;
    for(int i = 0; i < size; i++, incomingIndex += 10)
    {
       shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(incomingIndex));
@@ -5121,58 +5125,16 @@ void ClientSession::getLastValuesByDciId(const NXCPMessage& request)
                if (dcoObj == nullptr)
                   continue;
 
-               int16_t type;
-               uint32_t mostCriticalSeverity;
-               StringBuffer value;
-               if (dcoObj->getType() == DCO_TYPE_TABLE)
-               {
-                  TCHAR *column = request.getFieldAsString(incomingIndex + 2);
-                  TCHAR *instance = request.getFieldAsString(incomingIndex + 3);
-                  if ((column == nullptr) || (instance == nullptr) || (column[0] == 0) || (instance[0] == 0))
-                  {
-                     MemFree(column);
-                     MemFree(instance);
-                     continue;
-                  }
-
-                  shared_ptr<Table> t = static_cast<DCTable&>(*dcoObj).getLastValue();
-                  int columnIndex =  t->getColumnIndex(column);
-                  int rowIndex = t->findRowByInstance(instance);
-                  type = t->getColumnDataType(columnIndex);
-                  value = t->getAsString(rowIndex, columnIndex);
-                  mostCriticalSeverity = SEVERITY_NORMAL;
-
-                  MemFree(column);
-                  MemFree(instance);
-               }
-               else if (dcoObj->getType() == DCO_TYPE_ITEM)
-               {
-                  DCItem* item = static_cast<DCItem*>(dcoObj.get());
-                  type = item->getDataType();
-                  value = item->getLastValue();
-                  mostCriticalSeverity = item->getThresholdSeverity();
-               }
-               else
-               {
-                  continue;
-               }
-
-               response.setField(outgoingIndex + 1, dciID);
-               response.setField(outgoingIndex + 2, value);
-               response.setField(outgoingIndex + 3, type);
-               response.setField(outgoingIndex + 4, static_cast<INT16>(dcoObj->getStatus()));
-               response.setField(outgoingIndex + 5, object->getId());
-               response.setField(outgoingIndex + 6, static_cast<INT16>(dcoObj->getDataSource()));
-               response.setField(outgoingIndex + 7, dcoObj->getName());
-               response.setField(outgoingIndex + 8, dcoObj->getDescription());
-               response.setField(outgoingIndex + 9, mostCriticalSeverity);
-               outgoingIndex += 10;
+               SharedString column = request.getFieldAsSharedString(incomingIndex + 2);
+               SharedString instance = request.getFieldAsSharedString(incomingIndex + 3);
+               dcoObj->fillLastValueSummaryMessage(&response, outgoingIndex, column, instance);
+               outgoingIndex += 50;
             }
          }
       }
    }
 
-   response.setField(VID_NUM_ITEMS, (outgoingIndex - VID_DCI_VALUES_BASE) / 10);
+   response.setField(VID_NUM_ITEMS, (outgoingIndex - VID_DCI_VALUES_BASE) / 50);
    response.setField(VID_RCC, RCC_SUCCESS);
 
    sendMessage(response);
@@ -5205,7 +5167,7 @@ void ClientSession::getTooltipLastValues(const NXCPMessage& request)
       }
    }
 
-   response.setField(VID_NUM_ITEMS, (index - VID_DCI_VALUES_BASE) / 10);
+   response.setField(VID_NUM_ITEMS, (index - VID_DCI_VALUES_BASE) / 50);
    response.setField(VID_RCC, RCC_SUCCESS);
 
    sendMessage(&response);
@@ -14527,16 +14489,8 @@ void ClientSession::getMatchingDCI(const NXCPMessage& request)
       {
          if (dcoList->get(i)->getType() == DCO_TYPE_ITEM)
          {
-            DCItem *item = static_cast<DCItem *>(dcoList->get(i));
-            response.setField(dciBase + 1, item->getId());
-            response.setField(dciBase + 2, CHECK_NULL_EX(item->getLastValue()));
-            response.setField(dciBase + 3, item->getType());
-            response.setField(dciBase + 4, item->getStatus());
-            response.setField(dciBase + 5, item->getOwnerId());
-            response.setField(dciBase + 6, item->getDataSource());
-            response.setField(dciBase + 7, item->getName());
-            response.setField(dciBase + 8, item->getDescription());
-            dciBase += 10;
+            dcoList->get(i)->fillLastValueSummaryMessage(&response, dciBase);
+            dciBase += 50;
             count++;
          }
       }
@@ -16041,4 +15995,68 @@ void ClientSession::executeSshCommand(const NXCPMessage& request)
 
    // Send response
    sendMessage(&msg);
+}
+
+/**
+ * Find DCI by given parameters
+ * Expected input parameters:
+ * VID_OBJECT_ID                 Root object id
+ * VID_SEARCH_PATTERN            Search string
+ *
+ * Return values:
+ * VID_NUM_ITEMS                 Number of found DCIs. Ofset 50
+ * VID_DCI_VALUES_BASE           TODO:
+ * ...
+ * VID_RCC                       Request Completion Code
+ */
+void ClientSession::findDci(const NXCPMessage &request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   shared_ptr<NetObj> rootObject = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
+   if (rootObject != nullptr)
+   {
+      if (rootObject->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+      {
+         //parse search string
+         SearchQuery query = SearchQuery(request.getFieldAsSharedString(VID_SEARCH_PATTERN));
+         ObjectArray<DCObject> filteredDcis(0, 16, Ownership::True);
+
+
+         SharedObjectArray<DataCollectionTarget> targets;
+         if (rootObject->isDataCollectionTarget())
+         {
+            targets.add(static_pointer_cast<DataCollectionTarget>(rootObject));
+         }
+         else
+         {
+            rootObject->addChildDCTargetsToList(&targets, m_dwUserId);
+         }
+         UINT32 varId = VID_THRESHOLD_BASE;
+         for(int i = 0; i < targets.size(); i++)
+         {
+            if (targets.get(i)->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+               targets.get(i)->findDcis(query, m_dwUserId, &filteredDcis);
+         }
+
+         uint32_t fieldId = VID_DCI_VALUES_BASE, dwCount = 0;
+         for(DCObject *dco : filteredDcis)
+         {
+            dco->fillLastValueSummaryMessage(&response, fieldId);
+            fieldId += 50;
+            dwCount++;
+         }
+         response.setField(VID_NUM_ITEMS, dwCount);
+      }
+      else
+      {
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
+      }
+   }
+   else  // No object with given ID
+   {
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+
+   sendMessage(response);
 }

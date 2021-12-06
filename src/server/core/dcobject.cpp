@@ -1720,6 +1720,52 @@ const TCHAR *DCObject::getDataProviderName(int dataProvider)
    return ((dataProvider >= DS_INTERNAL) && (dataProvider <= DS_DEVICE_DRIVER)) ? names[dataProvider] : _T("unknown");
 }
 
+
+String DCObject::getText() const
+{
+   return m_description;
+}
+
+SharedString DCObject::getAttribute(const String &attribute) const
+{
+   SharedString value;
+   StringBuffer tmp;
+   if (!_tcsicmp(attribute, _T("description")))
+   {
+      value = m_description;
+   }
+   else if (!_tcsicmp(attribute, _T("guid")))
+   {
+      value = m_guid.toString();
+   }
+   else if (!_tcsicmp(attribute, _T("id")))
+   {
+      tmp.append(m_id);
+      value = tmp;
+   }
+   else if (!_tcsicmp(attribute, _T("name")))
+   {
+      value = m_name;
+   }
+   else if (!_tcsicmp(attribute, _T("pollingInterval")))
+   {
+      tmp.append(m_pollingInterval);
+      value = tmp;
+   }
+   else if (!_tcsicmp(attribute, _T("retentionTime")))
+   {
+      tmp.append(m_retentionTime);
+      value = tmp;
+   }
+   else if (!_tcsicmp(attribute, _T("sourceNode")))
+   {
+      auto owner = m_owner.lock();
+      if (owner != nullptr)
+         value = owner->getName();
+   }
+   return value;
+}
+
 /**
  * Data collection object info - constructor
  */

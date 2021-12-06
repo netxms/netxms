@@ -19,9 +19,6 @@
 package org.netxms.client.datacollection;
 
 import org.netxms.base.NXCPMessage;
-import org.netxms.client.constants.DataOrigin;
-import org.netxms.client.constants.DataType;
-import org.netxms.client.constants.Severity;
 
 /**
  * DCI value for simple (single-valued) DCI
@@ -31,32 +28,11 @@ public class SimpleDciValue extends DciValue
 	/**
 	 * Create simple DCI value from NXCP message
 	 * 
-    * @param nodeId owning node ID
-    * @param msg NXCP message
-    * @param base Base field ID for value object
-	 */
-	protected SimpleDciValue(long nodeId, NXCPMessage msg, long base)
-	{
-		super(nodeId, msg, base);
-	}
-	
-	/**
-    * Create simple DCI value from NXCP message (with node ID passed in message)
-    * 
     * @param msg NXCP message
     * @param base Base field ID for value object
 	 */
 	public SimpleDciValue(NXCPMessage msg, long base)
-   {
-      super();
-      this.id = msg.getFieldAsInt64(base + 1);
-      this.value = msg.getFieldAsString(base + 2);
-      this.dataType = DataType.getByValue(msg.getFieldAsInt32(base + 3));
-      this.status = msg.getFieldAsInt32(base + 4);
-      this.nodeId = msg.getFieldAsInt64(base + 5);
-      this.source = DataOrigin.getByValue(msg.getFieldAsInt32(base + 6));
-      this.name = msg.getFieldAsString(base + 7);
-      this.description = msg.getFieldAsString(base + 8);
-      this.mostCriticalSeverity = Severity.getByValue(msg.getFieldAsInt32(base + 9));
-   }
+	{
+		super(msg, base);
+	}
 }

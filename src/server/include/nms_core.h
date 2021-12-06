@@ -900,10 +900,12 @@ private:
    void getBusinessServiceUptime(const NXCPMessage& request);
    void getBusinessServiceTickets(const NXCPMessage& request);
    void executeSshCommand(const NXCPMessage& request);
+   void findDci(const NXCPMessage& request);
 
    void alarmUpdateWorker(Alarm *alarm);
    void sendActionDBUpdateMessage(NXCP_MESSAGE *msg);
    void sendObjectUpdates();
+
    void finalizeFileTransferToAgent(shared_ptr<AgentConnection> conn, uint32_t requestId);
    uint32_t resolveDCIName(uint32_t nodeId, uint32_t dciId, TCHAR *name);
 

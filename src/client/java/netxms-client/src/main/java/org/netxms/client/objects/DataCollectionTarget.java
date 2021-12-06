@@ -76,7 +76,7 @@ public class DataCollectionTarget extends GenericObject
       long fieldId = NXCPCodes.VID_OVERVIEW_DCI_LIST_BASE;
       for(int i = 0; i < count; i++)
       {
-         overviewDciData.add(DciValue.createFromMessage(objectId, msg, fieldId));
+         overviewDciData.add(DciValue.createFromMessage(msg, fieldId));
          fieldId += 50;
       }
 
@@ -85,7 +85,7 @@ public class DataCollectionTarget extends GenericObject
       fieldId = NXCPCodes.VID_TOOLTIP_DCI_LIST_BASE;
       for(int i = 0; i < count; i++)
       {
-         tooltipDciData.add(DciValue.createFromMessage(objectId, msg, fieldId));
+         tooltipDciData.add(DciValue.createFromMessage(msg, fieldId));
          fieldId += 50;
       }
 

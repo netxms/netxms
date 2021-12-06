@@ -28,12 +28,11 @@ public class TableDciValue extends DciValue
    /**
     * Create from NXCP message.
     *
-    * @param nodeId owning node ID
     * @param msg NXCP message
     * @param baseId base field ID
     */
-   protected TableDciValue(long nodeId, NXCPMessage msg, long baseId)
+   protected TableDciValue(NXCPMessage msg, long baseId)
    {
-      super(nodeId, msg, baseId);
+      super(msg, baseId);
    }
 }

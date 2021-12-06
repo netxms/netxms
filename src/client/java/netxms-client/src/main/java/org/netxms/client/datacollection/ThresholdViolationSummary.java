@@ -45,7 +45,7 @@ public class ThresholdViolationSummary
 		long varId = baseId + 2;
 		for(int i = 0; i < count; i++)
 		{
-			dciList.add(DciValue.createFromMessage(nodeId, msg, varId));
+			dciList.add(DciValue.createFromMessage(msg, varId));
 			varId += 50;
 		}
 	}

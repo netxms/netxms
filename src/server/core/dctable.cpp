@@ -856,17 +856,28 @@ void DCTable::fillLastValueMessage(NXCPMessage *msg)
 /**
  * Get summary of last collected value (to show along simple DCI values)
  */
-void DCTable::fillLastValueSummaryMessage(NXCPMessage *msg, uint32_t fieldId)
+void DCTable::fillLastValueSummaryMessage(NXCPMessage *msg, uint32_t fieldId, const TCHAR *column, const TCHAR *instance)
 {
    lock();
-
+   msg->setField(fieldId++, m_ownerId);
    msg->setField(fieldId++, m_id);
    msg->setField(fieldId++, m_name);
    msg->setField(fieldId++, m_flags);
    msg->setField(fieldId++, m_description);
    msg->setField(fieldId++, static_cast<uint16_t>(m_source));
-   msg->setField(fieldId++, static_cast<uint16_t>(DCI_DT_NULL));  // compatibility: data type
-   msg->setField(fieldId++, _T(""));             // compatibility: value
+   if (instance != nullptr && column != nullptr)
+   {
+      shared_ptr<Table> t = getLastValue();
+      int columnIndex =  t->getColumnIndex(column);
+      int rowIndex = t->findRowByInstance(instance);
+      msg->setField(fieldId++, t->getColumnDataType(columnIndex));
+      msg->setField(fieldId++, t->getAsString(rowIndex, columnIndex));
+   }
+   else
+   {
+      msg->setField(fieldId++, static_cast<uint16_t>(DCI_DT_NULL));  // compatibility: data type
+      msg->setField(fieldId++, _T(""));             // compatibility: value
+   }
    msg->setFieldFromTime(fieldId++, m_lastPoll);
    msg->setField(fieldId++, static_cast<uint16_t>(matchClusterResource() ? m_status : ITEM_STATUS_DISABLED)); // show resource-bound DCIs as inactive if cluster resource is not on this node
    msg->setField(fieldId++, static_cast<uint16_t>(getType()));

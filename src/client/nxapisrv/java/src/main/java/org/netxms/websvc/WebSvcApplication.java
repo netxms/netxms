@@ -30,6 +30,7 @@ import org.netxms.websvc.handlers.BusinessServiceUptime;
 import org.netxms.websvc.handlers.DCObjectLastValue;
 import org.netxms.websvc.handlers.DataCollectionConfigurationHandler;
 import org.netxms.websvc.handlers.DataCollectionObjectHandler;
+import org.netxms.websvc.handlers.DataCollectionQueryHandler;
 import org.netxms.websvc.handlers.Events;
 import org.netxms.websvc.handlers.GrafanaAlarms;
 import org.netxms.websvc.handlers.GrafanaDataCollection;
@@ -107,6 +108,7 @@ public class WebSvcApplication extends Application
       router.attach("/objects/{object-id}/checks", BusinessServiceChecks.class);
       router.attach("/objects/{object-id}/checks/{id}", BusinessServiceChecks.class);
       router.attach("/objects/{object-id}/datacollection", DataCollectionConfigurationHandler.class);
+      router.attach("/objects/{object-id}/datacollection/query", DataCollectionQueryHandler.class);
       router.attach("/objects/{object-id}/datacollection/{id}", DataCollectionObjectHandler.class);
       router.attach("/objects/{object-id}/datacollection/{id}/values", HistoricalData.class);
       router.attach("/objects/{object-id}/datacollection/{id}/lastvalue", DCObjectLastValue.class);
