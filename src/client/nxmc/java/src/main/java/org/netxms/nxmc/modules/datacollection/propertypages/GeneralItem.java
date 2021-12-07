@@ -611,6 +611,7 @@ public class GeneralItem extends AbstractDCIPropertyPage
 	 * 
 	 * @param isApply true if update operation caused by "Apply" button
 	 */
+   @Override
 	protected boolean applyChanges(final boolean isApply)
 	{
 		dci.setDescription(description.getText().trim());
@@ -645,24 +646,6 @@ public class GeneralItem extends AbstractDCIPropertyPage
 		
 		editor.modify();
 		return true;
-	}
-
-   /**
-    * @see org.eclipse.jface.preference.PreferencePage#performOk()
-    */
-	@Override
-	public boolean performOk()
-	{
-		return applyChanges(false);
-	}
-
-   /**
-    * @see org.eclipse.jface.preference.PreferencePage#performApply()
-    */
-	@Override
-	protected void performApply()
-	{
-		applyChanges(true);
 	}
 
    /**

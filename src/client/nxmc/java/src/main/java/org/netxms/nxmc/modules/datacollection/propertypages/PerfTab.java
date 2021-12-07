@@ -265,8 +265,12 @@ public class PerfTab extends AbstractDCIPropertyPage
 	 * 
 	 * @param isApply true if APPLY button was used
 	 */
-	private void applyChanges(final boolean isApply)
+   @Override
+   protected boolean applyChanges(boolean isApply)
 	{
+      if (!yAxisRange.validate(true))
+         return false;
+      
 		settings.setEnabled(checkShow.getSelection());
 		settings.setLogScaleEnabled(checkLogScale.getSelection());
 		settings.setTitle(title.getText());
@@ -301,27 +305,6 @@ public class PerfTab extends AbstractDCIPropertyPage
 		}
 
 		editor.modify();
-	}
-
-   /**
-    * @see org.eclipse.jface.preference.PreferencePage#performApply()
-    */
-	@Override
-	protected void performApply()
-	{
-      if (yAxisRange.validate(true))
-         applyChanges(true);
-	}
-
-   /**
-    * @see org.eclipse.jface.preference.PreferencePage#performOk()
-    */
-	@Override
-	public boolean performOk()
-	{
-      if (!yAxisRange.validate(true))
-         return false;
-		applyChanges(false);
 		return true;
 	}
 

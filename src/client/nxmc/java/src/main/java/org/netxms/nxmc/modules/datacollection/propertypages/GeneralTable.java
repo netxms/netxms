@@ -145,7 +145,7 @@ public class GeneralTable extends AbstractDCIPropertyPage
       parameter.setText(dci.getName());
       
       selectButton = new Button(groupData, SWT.PUSH);
-      selectButton.setText(i18n.tr("Messages.get().GeneralTable_Select)Select..."));
+      selectButton.setText(i18n.tr("&Select..."));
       selectButton.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
@@ -526,6 +526,7 @@ public class GeneralTable extends AbstractDCIPropertyPage
 	 * 
 	 * @param isApply true if update operation caused by "Apply" button
 	 */
+   @Override
 	protected boolean applyChanges(final boolean isApply)
 	{
 		dci.setDescription(description.getText().trim());
@@ -556,24 +557,6 @@ public class GeneralTable extends AbstractDCIPropertyPage
 
 		editor.modify();
 		return true;
-	}
-
-   /**
-    * @see org.eclipse.jface.preference.PreferencePage#performOk()
-    */
-	@Override
-	public boolean performOk()
-	{
-		return applyChanges(false);
-	}
-
-   /**
-    * @see org.eclipse.jface.preference.PreferencePage#performApply()
-    */
-	@Override
-	protected void performApply()
-	{
-		applyChanges(true);
 	}
 
    /**

@@ -250,30 +250,13 @@ public class AccessControl extends AbstractDCIPropertyPage
 	 * 
 	 * @param isApply true if update operation caused by "Apply" button
 	 */
-	protected void applyChanges(final boolean isApply)
+	@Override
+	protected boolean applyChanges(final boolean isApply)
 	{
 		List<Long> list = new ArrayList<Long>(acl.size());
 		for(AbstractUserObject o : acl)
 			list.add(o.getId());
-		dco.setAccessList(list);
-	}
-
-   /**
-    * @see org.eclipse.jface.preference.PreferencePage#performApply()
-    */
-	@Override
-	protected void performApply()
-	{
-		applyChanges(true);
-	}
-
-   /**
-    * @see org.eclipse.jface.preference.PreferencePage#performOk()
-    */
-	@Override
-	public boolean performOk()
-	{
-		applyChanges(false);
+		dco.setAccessList(list);		
 		return true;
 	}
 

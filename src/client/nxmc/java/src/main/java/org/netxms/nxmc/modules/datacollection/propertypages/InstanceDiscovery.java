@@ -228,7 +228,8 @@ public class InstanceDiscovery extends AbstractDCIPropertyPage
 	 * 
 	 * @param isApply true if update operation caused by "Apply" button
 	 */
-	protected void applyChanges(final boolean isApply)
+   @Override
+	protected boolean applyChanges(final boolean isApply)
 	{
 	   dco.setInstanceDiscoveryMethod(discoveryMethod.getSelectionIndex());
 	   dco.setInstanceDiscoveryData(discoveryData.getText());
@@ -238,25 +239,7 @@ public class InstanceDiscovery extends AbstractDCIPropertyPage
 	   else
 	      dco.setInstanceRetentionTime(instanceRetentionTime.getSelection());
 		editor.modify();
-	}
-
-   /**
-    * @see org.eclipse.jface.preference.PreferencePage#performOk()
-    */
-	@Override
-	public boolean performOk()
-	{
-		applyChanges(false);
 		return true;
-	}
-
-   /**
-    * @see org.eclipse.jface.preference.PreferencePage#performApply()
-    */
-	@Override
-	protected void performApply()
-	{
-		applyChanges(true);
 	}
 
    /**

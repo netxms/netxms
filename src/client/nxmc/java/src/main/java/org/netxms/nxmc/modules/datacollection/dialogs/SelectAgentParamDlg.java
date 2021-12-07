@@ -68,7 +68,7 @@ public class SelectAgentParamDlg extends AbstractSelectParamDlg
       this.origin = origin;
       queryObject = object;
 
-      actionQuery = new Action(i18n.tr("Messages.get().SelectAgentParamDlg_Query)Query...")) {
+      actionQuery = new Action(i18n.tr("&Query...")) {
          @Override
          public void run()
          {

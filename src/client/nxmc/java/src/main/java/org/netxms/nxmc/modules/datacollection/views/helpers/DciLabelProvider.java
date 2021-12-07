@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.nxmc.modules.datacollection.widgets.helpers;
+package org.netxms.nxmc.modules.datacollection.views.helpers;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -41,6 +41,7 @@ import org.netxms.client.objects.Template;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.datacollection.views.DataCollectionView;
+import org.netxms.nxmc.modules.datacollection.widgets.helpers.DataCollectionDisplayInfo;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.xnap.commons.i18n.I18n;
 

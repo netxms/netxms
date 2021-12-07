@@ -173,11 +173,11 @@ public class TableValueViewer extends BaseTableValueViewer
          AbstractObject object = session.findObjectById(objectId);
          if (p != null)
          {
-            p.addMainView(new HistoricalDataView(object, dciId, tableName, instance, column.getName()), true, false);
+            p.addMainView(new HistoricalDataView(object, object.getObjectId(), dciId, tableName, instance, column.getName()), true, false);
          }
          else
          {
-            PopOutViewWindow window = new PopOutViewWindow(new HistoricalDataView(object, dciId, tableName, instance, column.getName()));
+            PopOutViewWindow window = new PopOutViewWindow(new HistoricalDataView(object, object.getObjectId(), dciId, tableName, instance, column.getName()));
             window.open();
          }
       }

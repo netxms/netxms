@@ -167,6 +167,7 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
    public HistoricalGraphView(AbstractObject contextObject, List<ChartDciConfig> items)
    {
       super(i18n.tr("Graph"), ResourceManager.getImageDescriptor("icons/object-views/performance.png"), buildId(contextObject, items), false);
+      fullName = i18n.tr("Graph");
       objectId = contextObject.getObjectId();
 
       refreshController = new ViewRefreshController(this, -1, new Runnable() {

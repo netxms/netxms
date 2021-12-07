@@ -451,39 +451,21 @@ public class Thresholds extends AbstractDCIPropertyPage
 		thresholdList.setLabelProvider(new ThresholdLabelProvider());
 	}
 
-   /**
-    * @see org.eclipse.jface.preference.PreferencePage#performApply()
-    */
-	@Override
-	protected void performApply()
-	{
-		saveSettings();
-		applyChanges(true);
-	}
-
-   /**
-    * @see org.eclipse.jface.preference.PreferencePage#performOk()
-    */
-	@Override
-	public boolean performOk()
-	{
-		saveSettings();
-		applyChanges(false);
-		return true;
-	}
-
 	/**
 	 * Apply changes
 	 * 
 	 * @param isApply true if update operation caused by "Apply" button
 	 */
-	protected void applyChanges(final boolean isApply)
+	protected boolean applyChanges(final boolean isApply)
 	{
+      saveSettings();
+      
 		dci.setInstance(instance.getText());
 		dci.setProcessAllThresholds(checkAllThresholds.getSelection());
 		dci.getThresholds().clear();
 		dci.getThresholds().addAll(thresholds);
-		editor.modify();
+		editor.modify();		
+		return true;
 	}
 
    /**

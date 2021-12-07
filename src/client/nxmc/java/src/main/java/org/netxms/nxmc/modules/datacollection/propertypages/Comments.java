@@ -90,33 +90,16 @@ public class Comments extends AbstractDCIPropertyPage
 	 * 
 	 * @param isApply true if update operation caused by "Apply" button
 	 */
-	protected void applyChanges(final boolean isApply)
+   @Override
+	protected boolean applyChanges(final boolean isApply)
 	{
 		if (initialComments.equals(comments.getText()))
-			return;	// Nothing to apply
+			return true;	// Nothing to apply
 		
 		final String newComments = new String(comments.getText());
 		dci.setComments(newComments);
 		editor.modify();
-	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performOk()
-	 */
-	@Override
-	public boolean performOk()
-	{
-		applyChanges(false);
 		return true;
-	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performApply()
-	 */
-	@Override
-	protected void performApply()
-	{
-		applyChanges(true);
 	}
 
 	/* (non-Javadoc)

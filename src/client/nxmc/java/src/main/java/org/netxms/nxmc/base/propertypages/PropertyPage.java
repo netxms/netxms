@@ -51,6 +51,9 @@ public abstract class PropertyPage extends PreferencePage
    @Override
    protected final void performApply()
    {
+      if (!isControlCreated())
+         return;
+      
       changed = true;
       applyChanges(true);
       super.performApply();
@@ -62,6 +65,9 @@ public abstract class PropertyPage extends PreferencePage
    @Override
    public final boolean performOk()
    {
+      if (!isControlCreated())
+         return true;
+      
       if (!applyChanges(false))
          return false;
       changed = true;

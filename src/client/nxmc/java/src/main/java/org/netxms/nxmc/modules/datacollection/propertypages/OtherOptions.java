@@ -75,7 +75,7 @@ public class OtherOptions extends AbstractDCIPropertyPage
       dialogArea.setLayout(layout);
 
       checkShowOnTooltip = new Button(dialogArea, SWT.CHECK);
-      checkShowOnTooltip.setText(i18n.tr("Messages.get().NetworkMaps_ShowInTooltips)Show last value in object tooltips"));
+      checkShowOnTooltip.setText(i18n.tr("&Show last value in object tooltips"));
       checkShowOnTooltip.setSelection(dci.isShowOnObjectTooltip());
 
       checkShowInOverview = new Button(dialogArea, SWT.CHECK);
@@ -113,7 +113,8 @@ public class OtherOptions extends AbstractDCIPropertyPage
 	 * 
 	 * @param isApply true if update operation caused by "Apply" button
 	 */
-	protected void applyChanges(final boolean isApply)
+   @Override
+	protected boolean applyChanges(final boolean isApply)
 	{
 		dci.setShowOnObjectTooltip(checkShowOnTooltip.getSelection());
 		dci.setShowInObjectOverview(checkShowInOverview.getSelection());
@@ -122,25 +123,7 @@ public class OtherOptions extends AbstractDCIPropertyPage
       dci.setMultiplierSelection(useMultipliers.getSelectionIndex());
       dci.setRelatedObject(relatedObject.getObjectId());
 		editor.modify();
-	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performOk()
-	 */
-	@Override
-	public boolean performOk()
-	{
-		applyChanges(false);
 		return true;
-	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performApply()
-	 */
-	@Override
-	protected void performApply()
-	{
-		applyChanges(true);
 	}
 
 	/* (non-Javadoc)

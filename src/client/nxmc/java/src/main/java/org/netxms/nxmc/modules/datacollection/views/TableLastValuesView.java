@@ -39,7 +39,8 @@ public class TableLastValuesView extends ObjectView
 {
    private static final I18n i18n = LocalizationHelper.getI18n(TableLastValuesView.class);
 	
-	private long objectId;
+	private long contextId;
+   private long ownerId;
 	private long dciId;
    private String fullName;
    private TableValueViewer viewer;
@@ -66,12 +67,13 @@ public class TableLastValuesView extends ObjectView
       return sb.toString();
    }  
 
-   public TableLastValuesView(AbstractObject contextObject, long dciId)
+   public TableLastValuesView(AbstractObject contextObject, long ownerId, long dciId)
    {
       super(i18n.tr("Table Last Value"), ResourceManager.getImageDescriptor("icons/object-views/table.gif"), 
             buildId(contextObject, dciId), true);
       
-      objectId = contextObject.getObjectId();
+      contextId = contextObject.getObjectId();
+      this.ownerId = ownerId;
       this.dciId = dciId;
       
       String nodeName = contextObject.getObjectName();
@@ -86,7 +88,8 @@ public class TableLastValuesView extends ObjectView
    public View cloneView()
    {
       TableLastValuesView view = (TableLastValuesView)super.cloneView();
-      view.objectId = objectId;
+      view.contextId = contextId;
+      view.ownerId = ownerId;
       view.dciId = dciId;
       view.fullName = fullName;
       return view;
@@ -117,7 +120,7 @@ public class TableLastValuesView extends ObjectView
 		setFilterClient(viewer.getViewer(), viewer.getFilter());
 		createActions();
 	
-		viewer.setObject(objectId, dciId);
+		viewer.setObject(ownerId, dciId);
 		refresh();
 	}
 
@@ -160,13 +163,13 @@ public class TableLastValuesView extends ObjectView
    @Override
    public boolean isValidForContext(Object context)
    {
-      return (context != null) && (context instanceof AbstractObject) && (((AbstractObject)context).getObjectId() == objectId);
+      return (context != null) && (context instanceof AbstractObject) && (((AbstractObject)context).getObjectId() == contextId);
    }
 
    @Override
    protected void contextChanged(Object oldContext, Object newContext)
    {
-      if ((newContext == null) || !(newContext instanceof AbstractObject) || (((AbstractObject)newContext).getObjectId() != objectId))
+      if ((newContext == null) || !(newContext instanceof AbstractObject) || (((AbstractObject)newContext).getObjectId() != contextId))
          return;
       
       refresh();

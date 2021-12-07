@@ -84,29 +84,12 @@ public class OtherOptionsTable extends AbstractDCIPropertyPage
 	 * 
 	 * @param isApply true if update operation caused by "Apply" button
 	 */
-	protected void applyChanges(final boolean isApply)
+   @Override
+	protected boolean applyChanges(final boolean isApply)
 	{
       dci.setRelatedObject(relatedObject.getObjectId());
 		editor.modify();
-	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performOk()
-	 */
-	@Override
-	public boolean performOk()
-	{
-		applyChanges(false);
 		return true;
-	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performApply()
-	 */
-	@Override
-	protected void performApply()
-	{
-		applyChanges(true);
 	}
 
 	/* (non-Javadoc)

@@ -18,13 +18,13 @@
  */
 package org.netxms.nxmc.modules.datacollection.propertypages;
 
-import org.eclipse.jface.preference.PreferencePage;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
+import org.netxms.nxmc.base.propertypages.PropertyPage;
 import org.netxms.nxmc.modules.datacollection.DataCollectionObjectEditor;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.ThemeEngine;
@@ -32,7 +32,7 @@ import org.netxms.nxmc.resources.ThemeEngine;
 /**
  * Property page for DCI`s
  */
-public abstract class AbstractDCIPropertyPage extends PreferencePage
+public abstract class AbstractDCIPropertyPage extends PropertyPage
 {
    protected DataCollectionObjectEditor editor;
 

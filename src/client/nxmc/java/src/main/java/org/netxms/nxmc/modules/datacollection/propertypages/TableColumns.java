@@ -174,7 +174,7 @@ public class TableColumns extends AbstractDCIPropertyPage
       leftButtons.setLayout(buttonsLayout);
 
       upButton = new Button(leftButtons, SWT.PUSH);
-      upButton.setText(i18n.tr("Messages.get().TableColumns_Up)Up"));
+      upButton.setText(i18n.tr("&Up"));
       RowData rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       upButton.setLayoutData(rd);
@@ -193,7 +193,7 @@ public class TableColumns extends AbstractDCIPropertyPage
 		});
 
       downButton = new Button(leftButtons, SWT.PUSH);
-      downButton.setText(i18n.tr("DoMessages.get().TableColumns_Down)wn"));
+      downButton.setText(i18n.tr("Do&wn"));
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       downButton.setLayoutData(rd);
@@ -245,7 +245,7 @@ public class TableColumns extends AbstractDCIPropertyPage
       });
             
       addButton = new Button(buttons, SWT.PUSH);
-      addButton.setText(i18n.tr("Messages.get().TableColumns_Add)Add..."));
+      addButton.setText(i18n.tr("&Add..."));
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       addButton.setLayoutData(rd);
@@ -264,7 +264,7 @@ public class TableColumns extends AbstractDCIPropertyPage
 		});
       
       modifyButton = new Button(buttons, SWT.PUSH);
-      modifyButton.setText(i18n.tr("Messages.get().TableColumns_Edit)Edit..."));
+      modifyButton.setText(i18n.tr("&Edit..."));
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       modifyButton.setLayoutData(rd);
@@ -284,7 +284,7 @@ public class TableColumns extends AbstractDCIPropertyPage
       });
       
       deleteButton = new Button(buttons, SWT.PUSH);
-      deleteButton.setText(i18n.tr("Messages.get().TableColumns_Delete)Delete"));
+      deleteButton.setText(i18n.tr("&Delete"));
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       deleteButton.setLayoutData(rd);
@@ -501,31 +501,13 @@ public class TableColumns extends AbstractDCIPropertyPage
 	 * 
 	 * @param isApply true if update operation caused by "Apply" button
 	 */
-	protected void applyChanges(final boolean isApply)
+	protected boolean applyChanges(final boolean isApply)
 	{
+      saveSettings();
+	   
 		dci.getColumns().clear();
 		dci.getColumns().addAll(columns);
-		editor.modify();
-	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performApply()
-	 */
-	@Override
-	protected void performApply()
-	{
-		saveSettings();
-		applyChanges(true);
-	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performOk()
-	 */
-	@Override
-	public boolean performOk()
-	{
-		saveSettings();
-		applyChanges(false);
+		editor.modify();		
 		return true;
 	}
 	

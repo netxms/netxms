@@ -25,14 +25,9 @@ import java.util.List;
 import java.util.Set;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
-import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
-import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.action.ToolBarManager;
-import org.eclipse.jface.preference.PreferenceDialog;
-import org.eclipse.jface.preference.PreferenceManager;
-import org.eclipse.jface.preference.PreferenceNode;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
@@ -46,15 +41,12 @@ import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.Menu;
-import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
 import org.netxms.client.constants.DataOrigin;
 import org.netxms.client.constants.RCC;
-import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.DataCollectionConfiguration;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.DataCollectionObject;
@@ -69,7 +61,6 @@ import org.netxms.client.objects.DataCollectionTarget;
 import org.netxms.client.objects.Template;
 import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.Registry;
-import org.netxms.nxmc.base.actions.ExportToCsvAction;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.widgets.MessageArea;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
@@ -77,32 +68,14 @@ import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.datacollection.DataCollectionObjectEditor;
 import org.netxms.nxmc.modules.datacollection.dialogs.BulkUpdateDialog;
 import org.netxms.nxmc.modules.datacollection.dialogs.helpers.BulkDciUpdateElementUI;
-import org.netxms.nxmc.modules.datacollection.propertypages.AccessControl;
-import org.netxms.nxmc.modules.datacollection.propertypages.ClusterOptions;
-import org.netxms.nxmc.modules.datacollection.propertypages.Comments;
-import org.netxms.nxmc.modules.datacollection.propertypages.CustomSchedule;
-import org.netxms.nxmc.modules.datacollection.propertypages.GeneralItem;
-import org.netxms.nxmc.modules.datacollection.propertypages.GeneralTable;
-import org.netxms.nxmc.modules.datacollection.propertypages.InstanceDiscovery;
-import org.netxms.nxmc.modules.datacollection.propertypages.OtherOptions;
-import org.netxms.nxmc.modules.datacollection.propertypages.OtherOptionsTable;
-import org.netxms.nxmc.modules.datacollection.propertypages.PerfTab;
-import org.netxms.nxmc.modules.datacollection.propertypages.TableColumns;
-import org.netxms.nxmc.modules.datacollection.propertypages.Thresholds;
-import org.netxms.nxmc.modules.datacollection.propertypages.Transformation;
-import org.netxms.nxmc.modules.datacollection.widgets.helpers.DciComparator;
-import org.netxms.nxmc.modules.datacollection.widgets.helpers.DciFilter;
-import org.netxms.nxmc.modules.datacollection.widgets.helpers.DciLabelProvider;
-import org.netxms.nxmc.modules.datacollection.widgets.helpers.LastValuesComparator;
-import org.netxms.nxmc.modules.datacollection.widgets.helpers.LastValuesFilter;
-import org.netxms.nxmc.modules.datacollection.widgets.helpers.LastValuesLabelProvider;
+import org.netxms.nxmc.modules.datacollection.views.helpers.DciComparator;
+import org.netxms.nxmc.modules.datacollection.views.helpers.DciFilter;
+import org.netxms.nxmc.modules.datacollection.views.helpers.DciLabelProvider;
 import org.netxms.nxmc.modules.objects.dialogs.ObjectSelectionDialog;
-import org.netxms.nxmc.modules.objects.views.ObjectView;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
 import org.netxms.nxmc.tools.DialogData;
 import org.netxms.nxmc.tools.MessageDialogHelper;
-import org.netxms.nxmc.tools.ViewRefreshController;
 import org.netxms.nxmc.tools.VisibilityValidator;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
@@ -110,16 +83,9 @@ import org.xnap.commons.i18n.I18n;
 /**
  * "Data Collection" view
  */
-public class DataCollectionView extends ObjectView
+public class DataCollectionView extends BaseDataCollectionView
 {
    private static final I18n i18n = LocalizationHelper.getI18n(DataCollectionView.class);
-
-   // Columns for "last values" mode
-   public static final int LV_COLUMN_ID = 0;
-   public static final int LV_COLUMN_DESCRIPTION = 1;
-   public static final int LV_COLUMN_VALUE = 2;
-   public static final int LV_COLUMN_TIMESTAMP = 3;
-   public static final int LV_COLUMN_THRESHOLD = 4;
 
    // Columns for "data collection configuration" mode
    public static final int DC_COLUMN_ID = 0;
@@ -137,18 +103,9 @@ public class DataCollectionView extends ObjectView
 
    private boolean editMode;
    private Composite parent;
-   private NXCSession session;
    private AbstractObject object;
-   private SortableTableViewer viewer;
    private SessionListener clientListener = null;
    private DataCollectionConfiguration dciConfig = null;
-
-   private LastValuesLabelProvider labelProvider;
-   private LastValuesComparator comparator;
-   private LastValuesFilter lvFilter;
-   private boolean autoRefreshEnabled = false;
-   private int autoRefreshInterval = 30;  // in seconds
-   private ViewRefreshController refreshController;
 
    private DciFilter dcFilter;
    private boolean hideModificationWarnings;
@@ -166,28 +123,16 @@ public class DataCollectionView extends ObjectView
    private Action actionActivate;
    private Action actionDisable;
    private Action actionBulkUpdate;
-   private Action actionLineChart;
-   private Action actionRawLineChart;
-   private Action actionUseMultipliers;
-   private Action actionShowErrors;
-   private Action actionShowDisabled;
-   private Action actionShowUnsupported;
-   private Action actionShowHidden;
-   private Action actionExportToCsv;
-   private Action actionExportAllToCsv;
-   private Action actionCopyToClipboard;
-   private Action actionCopyDciName;
-   private Action actionShowHistoryData;
 
+   
    /**
-    * @param name
-    * @param image
+    * Constructor
     */
    public DataCollectionView()
    {
-      super(i18n.tr("Data Collection"), ResourceManager.getImageDescriptor("icons/object-views/last_values.png"), "DataCollection", true); 
+      super("DataCollection", true);
    }
-
+   
    /**
     * @see org.netxms.nxmc.base.views.View#createContent(org.eclipse.swt.widgets.Composite)
     */
@@ -196,7 +141,7 @@ public class DataCollectionView extends ObjectView
    {
       this.parent = parent;
       session = Registry.getSession();
-
+      
       VisibilityValidator validator = new VisibilityValidator() { 
          @Override
          public boolean isVisible()
@@ -209,7 +154,7 @@ public class DataCollectionView extends ObjectView
          createDataCollectionViewer(parent);  
       else 
          createLastValuesViewer(parent, validator);
-
+      
       createActions();
    }
 
@@ -325,25 +270,74 @@ public class DataCollectionView extends ObjectView
          }
       };   
    }
-
+   
    /**
-    * Create pop-up menu
+    * Actions to make after last values view was created
+    * 
+    * @param configPrefix
+    * @param validator
     */
-   private void createPopupMenu()
+   @Override
+   protected void postLastValueViewCreation(String configPrefix, VisibilityValidator validator)
    {
-      // Create menu manager.
-      MenuManager menuMgr = new MenuManager();
-      menuMgr.setRemoveAllWhenShown(true);
-      menuMgr.addMenuListener(new IMenuListener() {
-         public void menuAboutToShow(IMenuManager mgr)
+      super.postLastValueViewCreation(configPrefix, validator);
+
+      viewer.addSelectionChangedListener(new ISelectionChangedListener() {
+         @Override
+         public void selectionChanged(SelectionChangedEvent event)
          {
-            fillContextMenu(mgr);
+            IStructuredSelection selection = (IStructuredSelection)event.getSelection();
+            if (selection != null)
+            {
+               actionEdit.setEnabled(selection.size() == 1);
+               actionDelete.setEnabled(selection.size() > 0);
+               actionCopy.setEnabled(selection.size() > 0);
+               actionMove.setEnabled(selection.size() > 0);
+               actionConvert.setEnabled(selection.size() > 0);
+               actionDuplicate.setEnabled(selection.size() > 0);
+               actionBulkUpdate.setEnabled(selection.size() > 0);
+               
+               Iterator<?> it = selection.iterator();
+               boolean canActivate = false;
+               boolean canDisable = false;
+               while(it.hasNext() && (!canActivate || !canDisable))
+               {
+                  DciValue dci = (DciValue)it.next();
+                  if (dci.getStatus() != DataCollectionObject.ACTIVE)
+                     canActivate = true;
+                  if (dci.getStatus() != DataCollectionObject.DISABLED)
+                     canDisable = true;
+               }
+               actionActivate.setEnabled(canActivate);
+               actionDisable.setEnabled(canDisable);
+            }
          }
       });
 
-      // Create menu.
-      Menu menu = menuMgr.createContextMenu(viewer.getControl());
-      viewer.getControl().setMenu(menu);
+      final Display display = viewer.getControl().getDisplay();
+      clientListener = new SessionListener() {
+         @Override
+         public void notificationHandler(SessionNotification n)
+         {
+            if (((n.getCode() == SessionNotification.FORCE_DCI_POLL) ||
+                  (n.getCode() == SessionNotification.DCI_UPDATE) ||
+                  (n.getCode() == SessionNotification.DCI_DELETE) ||
+                  (n.getCode() == SessionNotification.DCI_STATE_CHANGE) ) &&
+                (DataCollectionView.this.object != null) &&
+                (n.getSubCode() == DataCollectionView.this.object.getObjectId()))
+            {
+               display.asyncExec(new Runnable() {
+                  @Override
+                  public void run()
+                  {
+                     refresh();
+                  }
+               }); 
+            }
+         }        
+      };
+      
+      session.addListener(clientListener);
    }
 
    /**
@@ -351,6 +345,7 @@ public class DataCollectionView extends ObjectView
     * 
     * @param mgr Menu manager
     */
+   @Override
    protected void fillContextMenu(final IMenuManager manager)
    {
       boolean isTemplate = object instanceof Template;
@@ -407,24 +402,11 @@ public class DataCollectionView extends ObjectView
    /**
     * Create actions
     */
-   private void createActions()
+   @Override
+   protected void createActions()
    {
-      actionCreateItem = new Action(i18n.tr("&New parameter..."), SharedIcons.ADD_OBJECT) {
-         @Override
-         public void run()
-         {
-            createItem();
-         }
-      };
-
-      actionCreateTable = new Action(i18n.tr("Ne&w table...")) {
-         @Override
-         public void run()
-         {
-            createTable();
-         }
-      };
-
+      super.createActions();      
+      
       actionEdit = new Action(i18n.tr("&Edit..."), SharedIcons.EDIT) {
          @Override
          public void run()
@@ -508,97 +490,23 @@ public class DataCollectionView extends ObjectView
          }
       };
       actionDisable.setEnabled(false);
-
-      actionExportToCsv = new ExportToCsvAction(this, viewer, true); 
-      actionExportAllToCsv = new ExportToCsvAction(this, viewer, false);
       
-      /*last values */
-      
-      actionUseMultipliers = new Action(i18n.tr("Use &multipliers"), Action.AS_CHECK_BOX) {
+      actionCreateItem = new Action(i18n.tr("&New parameter..."), SharedIcons.ADD_OBJECT) {
          @Override
          public void run()
          {
-            setUseMultipliers(actionUseMultipliers.isChecked());
-         }
-      };
-      actionUseMultipliers.setChecked(areMultipliersUsed());
-
-      actionShowErrors = new Action(i18n.tr("Show collection &errors"), Action.AS_CHECK_BOX) {
-         @Override
-         public void run()
-         {
-            setShowErrors(actionShowErrors.isChecked());
-         }
-      };
-      actionShowErrors.setChecked(isShowErrors());
-
-      actionShowUnsupported = new Action(i18n.tr("Show &unsupported"), Action.AS_CHECK_BOX) {
-         @Override
-         public void run()
-         {
-            setShowUnsupported(actionShowUnsupported.isChecked());
-         }
-      };
-      actionShowUnsupported.setChecked(isShowUnsupported());
-      
-      actionShowHidden = new Action(i18n.tr("Show &hidden"), Action.AS_CHECK_BOX) {
-         @Override
-         public void run()
-         {
-            setShowHidden(actionShowHidden.isChecked());
-         }
-      };
-      actionShowHidden.setChecked(isShowHidden());
-      
-      actionShowDisabled = new Action(i18n.tr("Show disabled"), Action.AS_CHECK_BOX) {
-         @Override
-         public void run()
-         {
-            setShowDisabled(actionShowDisabled.isChecked());
-         }
-      };
-      actionShowDisabled.setChecked(isShowDisabled());      
-      
-      actionCopyToClipboard = new Action(i18n.tr("&Copy to clipboard"), SharedIcons.COPY) {
-         @Override
-         public void run()
-         {
-            copySelection();
-         }
-      };
-      
-      actionCopyDciName = new Action(i18n.tr("Copy DCI name"), SharedIcons.COPY) {
-         @Override
-         public void run()
-         {
-            copySelectionDciName();
+            createItem();
          }
       };
 
-      actionLineChart = new Action(i18n.tr("&Line chart"), ResourceManager.getImageDescriptor("icons/chart_line.png")) {
+      actionCreateTable = new Action(i18n.tr("Ne&w table...")) {
          @Override
          public void run()
          {
-            showLineChart(false);
-         }
-      };
-
-      actionRawLineChart = new Action(i18n.tr("&Raw Data Line chart"), ResourceManager.getImageDescriptor("icons/chart_line.png")) {
-         @Override
-         public void run()
-         {
-            showLineChart(true);
+            createTable();
          }
       };
       
-      actionShowHistoryData = new Action(i18n.tr("History data"), SharedIcons.EDIT) {
-         @Override
-         public void run()
-         {
-            showHistoryData();
-         }
-      };
-
       actionToggleEditMode = new Action(i18n.tr("&Edit mode"), SharedIcons.EDIT) {
          @Override
          public void run()
@@ -609,6 +517,7 @@ public class DataCollectionView extends ObjectView
       }; 
       actionToggleEditMode.setChecked(editMode);
       addKeyBinding("Ctrl+E", actionToggleEditMode);
+      
    }
 
    /**
@@ -645,42 +554,32 @@ public class DataCollectionView extends ObjectView
          getDataFromServer();
       }
    }
-
+   
    /**
-    * @see org.netxms.nxmc.base.views.View#dispose()
+    * Get DCI id
     */
    @Override
-   public void dispose()
+   protected long getDciId(Object dci)
    {
-      if (dciConfig != null)
-      {
-         new Job(String.format(i18n.tr("Unlock data collection configuration for %s"), object.getObjectName()), this) {
-            @Override
-            protected void run(IProgressMonitor monitor) throws Exception
-            {
-               dciConfig.close();
-               dciConfig = null;
-            }
-
-            @Override
-            protected String getErrorMessage()
-            {
-               return String.format(i18n.tr("Cannot unlock data collection configuration for %s"), object.getObjectName());
-            }
-         }.start();
-      }
-      super.dispose();
+      return editMode ? ((DataCollectionObject)dci).getId() : ((DciValue)dci).getId();
    }
    
    /**
     * Get object id
     */
-   private long getObjectId(Object dci)
+   @Override
+   protected long getObjectId(Object dci)
    {
-      return editMode ? ((DataCollectionObject)dci).getId() : ((DciValue)dci).getId();
+      return editMode ? ((DataCollectionObject)dci).getNodeId() : ((DciValue)dci).getNodeId();
    }
 
-   private DataCollectionObject getDataCollectionObject(Object dci)
+   /**
+    * Get data collection object from given object
+    * 
+    * @param dci dci object
+    * @return DCO
+    */
+   protected DataCollectionObject getDataCollectionObject(Object dci)
    {
       DataCollectionObject dco;
       if (editMode)
@@ -693,80 +592,6 @@ public class DataCollectionView extends ObjectView
          dco = dciConfig.findItem(value.getId());
       }
       return dco;
-   }
-
-   /**
-    * Change status for selected items
-    * 
-    * @param newStatus New status
-    */
-   private void setItemStatus(final int newStatus)
-   {
-      final IStructuredSelection selection = viewer.getStructuredSelection();
-      if (selection.isEmpty())
-         return;
-      
-      new Job(String.format(i18n.tr("Change status of data collection items for %s"), object.getObjectName()), this) {
-         @Override
-         protected void run(IProgressMonitor monitor) throws Exception
-         {
-            final long[] itemList = new long[selection.size()];
-            int pos = 0;
-            for(Object dci : selection.toList())
-            {
-               itemList[pos++] = getObjectId(dci);
-            }
-            dciConfig.setObjectStatus(itemList, newStatus);
-            runInUIThread(new Runnable() {
-               @Override
-               public void run()
-               {
-                  for(Object dci : selection.toList())
-                  {
-                     DataCollectionObject dco = getDataCollectionObject(dci);
-                     dco.setStatus(newStatus);
-                     new DataCollectionObjectEditor(dco).modify();
-                  }
-               }
-            });
-         }
-
-         @Override
-         protected String getErrorMessage()
-         {
-            return String.format(i18n.tr("Cannot change status of data collection items for %s"), object.getObjectName());
-         }
-      }.start();
-   }
-
-   /**
-    * Delete currently selected DCIs
-    */
-   private void deleteItems()
-   {
-      final IStructuredSelection selection = viewer.getStructuredSelection();
-      if (selection.isEmpty())
-         return;
-      
-      if (!MessageDialogHelper.openConfirm(getWindow().getShell(), i18n.tr("Delete Data Collection Items"), i18n.tr("Do you really want to delete selected data collection items?")))
-         return;
-
-      new Job(i18n.tr(String.format("Delete data collection items for %s"), object.getObjectName()), this) {
-         @Override
-         protected void run(IProgressMonitor monitor) throws Exception
-         {
-            for(Object dci : selection.toList())
-            {
-               dciConfig.deleteObject(getObjectId(dci));
-            }
-         }
-
-         @Override
-         protected String getErrorMessage()
-         {
-            return String.format(i18n.tr("Cannot delete data collection items for %s"), object.getObjectName());
-         }
-      }.start();
    }
    
    /**
@@ -810,9 +635,83 @@ public class DataCollectionView extends ObjectView
    }
 
    /**
+    * Change status for selected items
+    * 
+    * @param newStatus New status
+    */
+   private void setItemStatus(final int newStatus)
+   {
+      final IStructuredSelection selection = viewer.getStructuredSelection();
+      if (selection.isEmpty())
+         return;
+      
+      new Job(String.format(i18n.tr("Change status of data collection items for %s"), object.getObjectName()), this) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            final long[] itemList = new long[selection.size()];
+            int pos = 0;
+            for(Object dci : selection.toList())
+            {
+               itemList[pos++] = getDciId(dci);
+            }
+            dciConfig.setObjectStatus(itemList, newStatus);
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
+                  for(Object dci : selection.toList())
+                  {
+                     DataCollectionObject dco = getDataCollectionObject(dci);
+                     dco.setStatus(newStatus);
+                     new DataCollectionObjectEditor(dco).modify();
+                  }
+               }
+            });
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return String.format(i18n.tr("Cannot change status of data collection items for %s"), object.getObjectName());
+         }
+      }.start();
+   }
+
+   /**
+    * Delete currently selected DCIs
+    */
+   private void deleteItems()
+   {
+      final IStructuredSelection selection = viewer.getStructuredSelection();
+      if (selection.isEmpty())
+         return;
+      
+      if (!MessageDialogHelper.openConfirm(getWindow().getShell(), i18n.tr("Delete Data Collection Items"), i18n.tr("Do you really want to delete selected data collection items?")))
+         return;
+
+      new Job(String.format(i18n.tr("Delete data collection items for %s"), object.getObjectName()), this) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            for(Object dci : selection.toList())
+            {
+               dciConfig.deleteObject(getDciId(dci));
+            }
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return String.format(i18n.tr("Cannot delete data collection items for %s"), object.getObjectName());
+         }
+      }.start();
+   }
+
+   /**
     * Edit selected object
     */
-   private void editSelectedObject()
+   protected void editSelectedObject()
    {
       IStructuredSelection selection = viewer.getStructuredSelection();
       if (selection.size() != 1)
@@ -846,7 +745,7 @@ public class DataCollectionView extends ObjectView
       Iterator<?> it = selection.iterator();
       final long[] dciList = new long[selection.size()];
       for(int i = 0; (i < dciList.length) && it.hasNext(); i++)
-         dciList[i] = getObjectId(it.next());
+         dciList[i] = getDciId(it.next());
       
       new Job(String.format(i18n.tr("Duplicate data collection items for %s"), object.getObjectName()), this) {
          @Override
@@ -889,7 +788,7 @@ public class DataCollectionView extends ObjectView
       Iterator<?> it = selection.iterator();
       final long[] dciList = new long[selection.size()];
       for(int i = 0; (i < dciList.length) && it.hasNext(); i++)
-         dciList[i] = getObjectId(it.next());
+         dciList[i] = getDciId(it.next());
 
       new Job(String.format(i18n.tr("Copy data collection items from %s"), object.getObjectName()), this) {
          @Override
@@ -983,7 +882,7 @@ public class DataCollectionView extends ObjectView
       Iterator<?> it = selection.iterator();
       final long[] dciList = new long[selection.size()];
       for(int i = 0; (i < dciList.length) && it.hasNext(); i++)
-         dciList[i] = getObjectId(it.next());
+         dciList[i] = getDciId(it.next());
 
       new Job(String.format(i18n.tr("Convert data collection items for %s to template items"), object.getObjectName()), this) {
          @Override
@@ -1077,190 +976,6 @@ public class DataCollectionView extends ObjectView
          addMessage(MessageArea.INFORMATION, i18n.tr("Changes in policies will be deployed to nodes the moment when the tab is closed"), true);
       }
    }
-
-   /**
-    * Show Graph configuration dialog
-    * 
-    * @param trap Object tool details object
-    * @return true if OK was pressed
-    */
-   private boolean showDCIPropertyPages(final DataCollectionObject object)
-   {
-      DataCollectionObjectEditor dce = new DataCollectionObjectEditor(object);
-      PreferenceManager pm = new PreferenceManager();  
-      if (dce.getObject() instanceof DataCollectionItem)
-         pm.addToRoot(new PreferenceNode("general", new GeneralItem(dce)));             
-      else
-         pm.addToRoot(new PreferenceNode("general", new GeneralTable(dce)));   
-      pm.addToRoot(new PreferenceNode("clisterOptions", new ClusterOptions(dce)));    
-      pm.addToRoot(new PreferenceNode("customSchedulte", new CustomSchedule(dce)));    
-      if (dce.getObject() instanceof DataCollectionTable)
-         pm.addToRoot(new PreferenceNode("columns", new TableColumns(dce)));    
-      pm.addToRoot(new PreferenceNode("transformation", new Transformation(dce)));             
-      pm.addToRoot(new PreferenceNode("thresholds", new Thresholds(dce)));        
-      pm.addToRoot(new PreferenceNode("instanceDiscovery", new InstanceDiscovery(dce)));
-      if (dce.getObject() instanceof DataCollectionItem)
-         pm.addToRoot(new PreferenceNode("performanceTab", new PerfTab(dce)));
-      pm.addToRoot(new PreferenceNode("accessControl", new AccessControl(dce)));
-      if (dce.getObject() instanceof DataCollectionItem)
-         pm.addToRoot(new PreferenceNode("otherOptions", new OtherOptions(dce)));             
-      else
-         pm.addToRoot(new PreferenceNode("otherOptions", new OtherOptionsTable(dce)));   
-      pm.addToRoot(new PreferenceNode("comments", new Comments(dce)));  
-
-      PreferenceDialog dlg = new PreferenceDialog(getWindow().getShell(), pm) {
-         @Override
-         protected void configureShell(Shell newShell)
-         {
-            super.configureShell(newShell);
-            newShell.setText(String.format(i18n.tr("Properties for %s"), object.getName()));
-         }
-      };
-      dlg.setBlockOnOpen(true);
-      return dlg.open() == Window.OK;
-   }
-   
-   /**
-    * Create last values view
-    */
-   private void createLastValuesViewer(Composite parent, VisibilityValidator validator)
-   {
-      String configPrefix = "LastValues";
-
-      final PreferenceStore ds = PreferenceStore.getInstance();
-      
-      parent.setLayout(new FillLayout());
-      
-      // Setup table columns
-      final String[] names = { i18n.tr("ID"), i18n.tr("Description"), i18n.tr("Value"), i18n.tr("Timestamp"), i18n.tr("Threshold") };
-      final int[] widths = { 70, 250, 150, 120, 150 };
-      viewer = new SortableTableViewer(parent, names, widths, 0, SWT.DOWN, SortableTableViewer.DEFAULT_STYLE);
-   
-      labelProvider = new LastValuesLabelProvider();
-      comparator = new LastValuesComparator();
-      lvFilter = new LastValuesFilter();
-      viewer.setLabelProvider(labelProvider);
-      viewer.setContentProvider(new ArrayContentProvider());
-      viewer.setComparator(comparator);
-      viewer.addFilter(lvFilter);
-      setFilterClient(viewer, lvFilter); 
-      WidgetHelper.restoreTableViewerSettings(viewer, configPrefix);
-
-      refreshController = new ViewRefreshController(this, -1, new Runnable() {
-         @Override
-         public void run()
-         {
-            if (viewer.getTable().isDisposed())
-               return;
-            
-            getDataFromServer();
-         }
-      }, validator);
-      viewer.getTable().addDisposeListener(new DisposeListener() {
-         @Override
-         public void widgetDisposed(DisposeEvent e)
-         {
-            refreshController.dispose();
-         }
-      });
-      
-      viewer.addDoubleClickListener(new IDoubleClickListener() {
-         @Override
-         public void doubleClick(DoubleClickEvent event)
-         {
-            showLineChart(false);
-         }
-      });
-
-      viewer.getTable().addDisposeListener(new DisposeListener() {
-         @Override
-         public void widgetDisposed(DisposeEvent e)
-         {
-            WidgetHelper.saveTableViewerSettings(viewer, configPrefix);
-            ds.set(configPrefix + ".autoRefresh", autoRefreshEnabled);
-            ds.set(configPrefix + ".autoRefreshInterval", autoRefreshEnabled);
-            ds.set(configPrefix + ".useMultipliers", labelProvider.areMultipliersUsed());
-            ds.set(configPrefix + ".showErrors", isShowErrors());
-            ds.set(configPrefix + ".showDisabled", isShowDisabled());
-            ds.set(configPrefix + ".showUnsupported", isShowUnsupported());
-            ds.set(configPrefix + ".showHidden", isShowHidden());
-         }
-      });      
-
-      viewer.addSelectionChangedListener(new ISelectionChangedListener() {
-         @Override
-         public void selectionChanged(SelectionChangedEvent event)
-         {
-            IStructuredSelection selection = (IStructuredSelection)event.getSelection();
-            if (selection != null)
-            {
-               actionEdit.setEnabled(selection.size() == 1);
-               actionDelete.setEnabled(selection.size() > 0);
-               actionCopy.setEnabled(selection.size() > 0);
-               actionMove.setEnabled(selection.size() > 0);
-               actionConvert.setEnabled(selection.size() > 0);
-               actionDuplicate.setEnabled(selection.size() > 0);
-               actionBulkUpdate.setEnabled(selection.size() > 0);
-               
-               Iterator<?> it = selection.iterator();
-               boolean canActivate = false;
-               boolean canDisable = false;
-               while(it.hasNext() && (!canActivate || !canDisable))
-               {
-                  DciValue dci = (DciValue)it.next();
-                  if (dci.getStatus() != DataCollectionObject.ACTIVE)
-                     canActivate = true;
-                  if (dci.getStatus() != DataCollectionObject.DISABLED)
-                     canDisable = true;
-               }
-               actionActivate.setEnabled(canActivate);
-               actionDisable.setEnabled(canDisable);
-            }
-         }
-      });
-      
-      autoRefreshInterval = ds.getAsInteger(configPrefix + ".autoRefreshInterval", autoRefreshInterval);
-      setAutoRefreshEnabled(ds.getAsBoolean(configPrefix + ".autoRefresh", true));
-      labelProvider.setUseMultipliers(ds.getAsBoolean(configPrefix + ".useMultipliers", true));
-
-      boolean showErrors = ds.getAsBoolean(configPrefix + ".showErrors", true);
-      labelProvider.setShowErrors(showErrors);
-      comparator.setShowErrors(showErrors);
-
-      lvFilter.setShowDisabled(ds.getAsBoolean(configPrefix + ".showDisabled", false));
-      lvFilter.setShowUnsupported(ds.getAsBoolean(configPrefix + ".showUnsupported", false));
-      lvFilter.setShowHidden(ds.getAsBoolean(configPrefix + ".showHidden", false));
-      
-      createPopupMenu();
-
-      if ((validator == null) || validator.isVisible())
-         getDataFromServer();
-
-      final Display display = viewer.getControl().getDisplay();
-      clientListener = new SessionListener() {
-         @Override
-         public void notificationHandler(SessionNotification n)
-         {
-            if (((n.getCode() == SessionNotification.FORCE_DCI_POLL) ||
-                  (n.getCode() == SessionNotification.DCI_UPDATE) ||
-                  (n.getCode() == SessionNotification.DCI_DELETE) ||
-                  (n.getCode() == SessionNotification.DCI_STATE_CHANGE) ) &&
-                (DataCollectionView.this.object != null) &&
-                (n.getSubCode() == DataCollectionView.this.object.getObjectId()))
-            {
-               display.asyncExec(new Runnable() {
-                  @Override
-                  public void run()
-                  {
-                     refresh();
-                  }
-               }); 
-            }
-         }        
-      };
-      
-      session.addListener(clientListener);
-   }
    
    /**
     * Switch between "data collection configuration" and "last values" modes
@@ -1336,7 +1051,7 @@ public class DataCollectionView extends ObjectView
          return;
       }
 
-      actionToggleEditMode.setEnabled(!(object instanceof Template));
+      actionToggleEditMode.setEnabled(!(object instanceof Template)); 
 
       // Request server to open data collection configuration
       new Job(String.format(i18n.tr("Open data collection configuration for %s"), object.getObjectName()), this) {
@@ -1363,7 +1078,7 @@ public class DataCollectionView extends ObjectView
                   }
                });
             }
-
+            
             //load all related objects
             if (!session.areObjectsSynchronized())
             {
@@ -1397,7 +1112,7 @@ public class DataCollectionView extends ObjectView
          {
             return String.format(i18n.tr("Cannot open data collection configuration for "), object.getObjectName());
          }
-      }.start();  
+      }.start(); 
       
       if (isActive())
          refresh();
@@ -1412,329 +1127,30 @@ public class DataCollectionView extends ObjectView
       super.fillLocalToolbar(manager);
       manager.add(actionToggleEditMode);
    }
-
+   
    /**
-    * @see org.netxms.nxmc.base.views.View#getPriority()
+    * @see org.netxms.nxmc.base.views.View#dispose()
     */
    @Override
-   public int getPriority()
+   public void dispose()
    {
-      return 30;
-   }
-
-   /**
-    * Get data from server
-    */
-   private void getDataFromServer()
-   {
-      if (object == null)
+      if (dciConfig != null)
       {
-         viewer.setInput(new DciValue[0]);
-         return;
-      }
+         new Job(String.format(i18n.tr("Unlock data collection configuration for %s"), object.getObjectName()), this) {
+            @Override
+            protected void run(IProgressMonitor monitor) throws Exception
+            {
+               dciConfig.close();
+               dciConfig = null;
+            }
 
-      final DataCollectionTarget jobTarget = (DataCollectionTarget)object;
-      Job job = new Job(String.format(i18n.tr("Get DCI values for node %s"), jobTarget.getObjectName()), this) {
-         @Override
-         protected void run(IProgressMonitor monitor) throws Exception
-         {
-            final DciValue[] data = session.getLastValues(jobTarget.getObjectId());
-            runInUIThread(new Runnable() {
-               @Override
-               public void run()
-               {
-                  if (!viewer.getTable().isDisposed() && (object != null) && (object.getObjectId() == jobTarget.getObjectId()))
-                  {
-                     viewer.setInput(data);
-                     clearMessages();
-                  }
-               }
-            });
-         }
-
-         @Override
-         protected String getErrorMessage()
-         {
-            return String.format(i18n.tr("Cannot get DCI values for node %s"), jobTarget.getObjectName());
-         }
-      };
-      job.setUser(false);
-      job.start();
-   }
-
-   /**
-    * @return the autoRefreshEnabled
-    */
-   public boolean isAutoRefreshEnabled()
-   {
-      return autoRefreshEnabled;
-   }
-
-   /**
-    * @param autoRefreshEnabled the autoRefreshEnabled to set
-    */
-   public void setAutoRefreshEnabled(boolean autoRefreshEnabled)
-   {
-      this.autoRefreshEnabled = autoRefreshEnabled;
-      refreshController.setInterval(autoRefreshEnabled ? autoRefreshInterval : -1);
-   }
-
-   /**
-    * @return the autoRefreshInterval
-    */
-   public int getAutoRefreshInterval()
-   {
-      return autoRefreshInterval;
-   }
-
-   /**
-    * @param autoRefreshInterval the autoRefreshInterval to set
-    */
-   public void setAutoRefreshInterval(int autoRefreshInterval)
-   {
-      this.autoRefreshInterval = autoRefreshInterval;
-   }
-   
-   /**
-    * @return the useMultipliers
-    */
-   public boolean areMultipliersUsed()
-   {
-      return (labelProvider != null) ? labelProvider.areMultipliersUsed() : false;
-   }
-
-   /**
-    * @param useMultipliers the useMultipliers to set
-    */
-   public void setUseMultipliers(boolean useMultipliers)
-   {
-      if (labelProvider != null)
-      {
-         labelProvider.setUseMultipliers(useMultipliers);
-         if (viewer != null)
-         {
-            viewer.refresh(true);
-         }
-      }
-   }
-   
-   /**
-    * @return
-    */
-   public boolean isShowErrors()
-   {
-      return (labelProvider != null) ? labelProvider.isShowErrors() : false;
-   }
-
-   /**
-    * @param show
-    */
-   public void setShowErrors(boolean show)
-   {
-      labelProvider.setShowErrors(show);
-      comparator.setShowErrors(show);
-      if (viewer != null)
-      {
-         viewer.refresh(true);
-      }
-   }
-   
-   /**
-    * @return
-    */
-   public boolean isShowDisabled()
-   {
-      return (lvFilter != null) ? lvFilter.isShowDisabled() : false;
-   }
-
-   /**
-    * @param show
-    */
-   public void setShowDisabled(boolean show)
-   {
-      lvFilter.setShowDisabled(show);
-      if (viewer != null)
-      {
-         viewer.refresh(true);
-      }
-   }
-
-   /**
-    * @return
-    */
-   public boolean isShowUnsupported()
-   {
-      return (lvFilter != null) ? lvFilter.isShowUnsupported() : false;
-   }
-
-   /**
-    * @param show
-    */
-   public void setShowUnsupported(boolean show)
-   {
-      lvFilter.setShowUnsupported(show);
-      if (viewer != null)
-      {
-         viewer.refresh(true);
-      }
-   }
-
-   /**
-    * @return
-    */
-   public boolean isShowHidden()
-   {
-      return (lvFilter != null) ? lvFilter.isShowHidden() : false;
-   }
-
-   /**
-    * @param show
-    */
-   public void setShowHidden(boolean show)
-   {
-      lvFilter.setShowHidden(show);
-      if (viewer != null)
-      {
-         viewer.refresh(true);
-      }
-   }
-
-   /**
-    * @return the actionUseMultipliers
-    */
-   public Action getActionUseMultipliers()
-   {
-      return actionUseMultipliers;
-   }
-
-   /**
-    * @return the actionUseMultipliers
-    */
-   public Action getActionShowDisabled()
-   {
-      return actionShowDisabled;
-   }
-
-   /**
-    * @return the actionUseMultipliers
-    */
-   public Action getActionShowErrors()
-   {
-      return actionShowErrors;
-   }
-
-   /**
-    * @return the actionUseMultipliers
-    */
-   public Action getActionShowUnsupported()
-   {
-      return actionShowUnsupported;
-   }
-
-   /**
-    * @return the actionUseMultipliers
-    */
-   public Action getActionShowHidden()
-   {
-      return actionShowHidden;
-   }
-
-   /**
-    * Show line chart for selected items
-    */
-   private void showLineChart(boolean useRawValues)
-   {
-      IStructuredSelection selection = viewer.getStructuredSelection();
-      if (selection.isEmpty())
-         return;
-
-      List<ChartDciConfig> items = new ArrayList<ChartDciConfig>(selection.size());
-      for(Object o : selection.toList())
-      {
-         ChartDciConfig config = editMode ? new ChartDciConfig((DataCollectionObject)o) : new ChartDciConfig((DciValue)o);
-         config.useRawValues = useRawValues;
-         items.add(config);
-      }
-
-      openView(new HistoricalGraphView(getObject(), items));
-   }
-
-   /**
-    * Show line chart for selected items
-    */
-   private void showHistoryData()
-   {
-      IStructuredSelection selection = viewer.getStructuredSelection();
-      if (selection.isEmpty())
-         return;
-
-      AbstractObject object = getObject();
-      for(Object dcObject : selection.toList())
-      {
-         if ((dcObject instanceof DataCollectionTable) || ((dcObject instanceof DciValue) &&
-               ((DciValue)dcObject).getDcObjectType() == DataCollectionObject.DCO_TYPE_TABLE))
-         {
-            openView(new TableLastValuesView(object, getObjectId(dcObject)));
-         }
-         else 
-         {
-            openView(new HistoricalDataView(object, getObjectId(dcObject), null, null, null));
-         }
-      }
-   }
-
-   /**
-    * Copy selection to clipboard
-    */
-   private void copySelection()
-   {
-      IStructuredSelection selection = viewer.getStructuredSelection();
-      if (selection.isEmpty())
-         return;
-
-      final String nl = WidgetHelper.getNewLineCharacters();
-      StringBuilder sb = new StringBuilder();
-      for(Object o : selection.toList())
-      {
-         if (sb.length() > 0)
-            sb.append(nl);
-         DciValue v = (DciValue)o;
-         sb.append(v.getDescription());
-         sb.append(" = "); //$NON-NLS-1$
-         sb.append(v.getValue());
-      }
-      if (selection.size() > 1)
-         sb.append(nl);
-      WidgetHelper.copyToClipboard(sb.toString());
-   }
-   
-   /**
-    * Copy DCI name of selection
-    */
-   private void copySelectionDciName()
-   {
-      IStructuredSelection selection = viewer.getStructuredSelection();
-      if (selection.isEmpty())
-         return;
-      
-      StringBuilder dciName = new StringBuilder();
-      for(Object o : selection.toList())
-      {
-         if (dciName.length() > 0)
-            dciName.append(' ');
-         DciValue v = (DciValue)o;
-         dciName.append(v.getName());
-      }
-      WidgetHelper.copyToClipboard(dciName.toString());
-   }
-
-   /**
-    * @see org.netxms.nxmc.base.views.View#activate()
-    */
-   @Override
-   public void activate()
-   {
-      refresh();
-      super.activate();
+            @Override
+            protected String getErrorMessage()
+            {
+               return String.format(i18n.tr("Cannot unlock data collection configuration for %s"), object.getObjectName());
+            }
+         }.start();
+      }  
+      super.dispose();
    }
 }

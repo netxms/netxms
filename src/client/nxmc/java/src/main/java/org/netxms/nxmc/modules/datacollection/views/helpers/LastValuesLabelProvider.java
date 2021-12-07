@@ -16,22 +16,28 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.nxmc.modules.datacollection.widgets.helpers;
+package org.netxms.nxmc.modules.datacollection.views.helpers;
 
 import org.eclipse.jface.viewers.ITableColorProvider;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
+import org.netxms.client.NXCSession;
 import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.constants.Severity;
 import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.datacollection.Threshold;
+import org.netxms.client.objects.AbstractObject;
+import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.localization.DateFormatFactory;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.datacollection.propertypages.Thresholds;
-import org.netxms.nxmc.modules.datacollection.views.DataCollectionView;
+import org.netxms.nxmc.modules.datacollection.views.BaseDataCollectionView;
+import org.netxms.nxmc.modules.datacollection.widgets.helpers.ThresholdLabelProvider;
+import org.netxms.nxmc.modules.objects.widgets.helpers.BaseObjectLabelProvider;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.StatusDisplayInfo;
 import org.xnap.commons.i18n.I18n;
@@ -46,19 +52,26 @@ public class LastValuesLabelProvider extends LabelProvider implements ITableLabe
 	private boolean useMultipliers = true;
 	private boolean showErrors = true;
 	private ThresholdLabelProvider thresholdLabelProvider;
+   private BaseObjectLabelProvider objectLabelProvider;
+   private NXCSession session;
+   private SortableTableViewer viewer;
 
 	/**
 	 * Default constructor 
 	 */
-	public LastValuesLabelProvider()
+	public LastValuesLabelProvider(SortableTableViewer viewer)
 	{
 		super();
+		
+      this.viewer = viewer;
 
       stateImages[0] = ResourceManager.getImageDescriptor("icons/dci/active.gif").createImage();
       stateImages[1] = ResourceManager.getImageDescriptor("icons/dci/disabled.gif").createImage();
       stateImages[2] = ResourceManager.getImageDescriptor("icons/dci/unsupported.gif").createImage();
 
 		thresholdLabelProvider = new ThresholdLabelProvider();
+      objectLabelProvider = new BaseObjectLabelProvider();
+      session = Registry.getSession();
 	}
 
    /**
@@ -67,11 +80,14 @@ public class LastValuesLabelProvider extends LabelProvider implements ITableLabe
 	@Override
 	public Image getColumnImage(Object element, int columnIndex)
 	{
-		switch(columnIndex)
+		switch((Integer)viewer.getTable().getColumn(columnIndex).getData("ID"))
 		{
-			case DataCollectionView.LV_COLUMN_ID:
+         case BaseDataCollectionView.LV_COLUMN_OWNER:
+            AbstractObject object = session.findObjectById(((DciValue)element).getNodeId());
+            return (object != null) ? objectLabelProvider.getImage(object) : null;
+			case BaseDataCollectionView.LV_COLUMN_ID:
 				return stateImages[((DciValue)element).getStatus()];
-			case DataCollectionView.LV_COLUMN_THRESHOLD:
+			case BaseDataCollectionView.LV_COLUMN_THRESHOLD:
 				Threshold threshold = ((DciValue)element).getActiveThreshold();
 				return (threshold != null) ? thresholdLabelProvider.getColumnImage(threshold, Thresholds.COLUMN_EVENT) : StatusDisplayInfo.getStatusImage(Severity.NORMAL);
 		}
@@ -84,13 +100,16 @@ public class LastValuesLabelProvider extends LabelProvider implements ITableLabe
 	@Override
 	public String getColumnText(Object element, int columnIndex)
 	{
-		switch(columnIndex)
+		switch((Integer)viewer.getTable().getColumn(columnIndex).getData("ID"))
 		{
-			case DataCollectionView.LV_COLUMN_ID:
+         case BaseDataCollectionView.LV_COLUMN_OWNER:
+            AbstractObject object = session.findObjectById(((DciValue)element).getNodeId());
+            return (object != null) ? object.getObjectName() : ("[" + Long.toString(((DciValue)element).getNodeId()) + "]");
+			case BaseDataCollectionView.LV_COLUMN_ID:
 				return Long.toString(((DciValue)element).getId());
-			case DataCollectionView.LV_COLUMN_DESCRIPTION:
+			case BaseDataCollectionView.LV_COLUMN_DESCRIPTION:
 				return ((DciValue)element).getDescription();
-			case DataCollectionView.LV_COLUMN_VALUE:
+			case BaseDataCollectionView.LV_COLUMN_VALUE:
 				if (showErrors && ((DciValue)element).getErrorCount() > 0)
                return i18n.tr("<< ERROR >>");
 				if (((DciValue)element).getDcObjectType() == DataCollectionObject.DCO_TYPE_TABLE)
@@ -102,11 +121,11 @@ public class LastValuesLabelProvider extends LabelProvider implements ITableLabe
 				   return ((DciValue)element).format("%*s");
 				else
                return ((DciValue)element).getValue();				   
-			case DataCollectionView.LV_COLUMN_TIMESTAMP:
+			case BaseDataCollectionView.LV_COLUMN_TIMESTAMP:
 				if (((DciValue)element).getTimestamp().getTime() <= 1000)
 					return null;
             return DateFormatFactory.getDateTimeFormat().format(((DciValue)element).getTimestamp());
-			case DataCollectionView.LV_COLUMN_THRESHOLD:
+			case BaseDataCollectionView.LV_COLUMN_THRESHOLD:
             return formatThreshold((DciValue)element);
 		}
 		return null;
@@ -137,6 +156,7 @@ public class LastValuesLabelProvider extends LabelProvider implements ITableLabe
 		for(int i = 0; i < stateImages.length; i++)
 			stateImages[i].dispose();
 		thresholdLabelProvider.dispose();
+      objectLabelProvider.dispose();
 		super.dispose();
 	}
 

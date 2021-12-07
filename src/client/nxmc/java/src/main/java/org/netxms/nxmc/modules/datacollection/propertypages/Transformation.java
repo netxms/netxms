@@ -138,34 +138,13 @@ public class Transformation extends AbstractDCIPropertyPage
 	 * 
 	 * @param isApply true if update operation caused by "Apply" button
 	 */
-	protected void applyChanges(final boolean isApply)
-	{
-	   if(editor == null)
-	      return;
-	   
+	protected boolean applyChanges(final boolean isApply)
+	{	   
 		if (editor.getObject() instanceof DataCollectionItem)
 			editor.getObjectAsItem().setDeltaCalculation(deltaCalculation.getSelectionIndex());
 		editor.getObject().setTransformationScript(transformationScript.getText());
-		editor.modify();
-	}
-
-   /**
-    * @see org.eclipse.jface.preference.PreferencePage#performOk()
-    */
-	@Override
-	public boolean performOk()
-	{
-		applyChanges(false);
+		editor.modify();		
 		return true;
-	}
-
-   /**
-    * @see org.eclipse.jface.preference.PreferencePage#performApply()
-    */
-	@Override
-	protected void performApply()
-	{
-		applyChanges(true);
 	}
 
    /**

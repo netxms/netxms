@@ -63,7 +63,8 @@ public class HistoricalDataView extends ViewWithContext
    public static final int COLUMN_DATA = 1;
 	
 	private NXCSession session;
-	private long objectId;
+	private long contextId;
+   private long ownerId;
 	private long dciId;
    private String fullName;
 	private String nodeName;
@@ -125,14 +126,15 @@ public class HistoricalDataView extends ViewWithContext
     * @param instance instance for table data
     * @param column column name for table data
     */
-   public HistoricalDataView(AbstractObject contextObject, long dciId, String tableName, String instance, String column)
+   public HistoricalDataView(AbstractObject contextObject, long ownerId, long dciId, String tableName, String instance, String column)
    {
       super(i18n.tr("Historical Data"), ResourceManager.getImageDescriptor("icons/object-views/data_history.gif"), 
             buildId(contextObject, dciId, tableName, instance, column), true);
 
       session = Registry.getSession();
       
-      objectId = contextObject.getObjectId();
+      contextId = contextObject.getObjectId();
+      this.ownerId = ownerId;
       this.dciId = dciId;
       this.tableName = tableName; 
       this.instance = instance; 
@@ -151,8 +153,9 @@ public class HistoricalDataView extends ViewWithContext
    public View cloneView()
    {
       HistoricalDataView view = (HistoricalDataView)super.cloneView();
-      view.objectId = objectId;
+      view.contextId = contextId;
       view.dciId = dciId;
+      view.ownerId = ownerId;
       view.tableName = tableName;
       view.instance = instance;
       view.column = column;
@@ -277,9 +280,9 @@ public class HistoricalDataView extends ViewWithContext
 			{
 			   final DciData data;
 			   if (tableName != null)
-			      data = session.getCollectedTableData(objectId, dciId, instance, column, timeFrom, timeTo, recordLimit);
+			      data = session.getCollectedTableData(ownerId, dciId, instance, column, timeFrom, timeTo, recordLimit);
 			   else
-               data = session.getCollectedData(objectId, dciId, timeFrom, timeTo, recordLimit, HistoricalDataType.RAW_AND_PROCESSED);
+               data = session.getCollectedData(ownerId, dciId, timeFrom, timeTo, recordLimit, HistoricalDataType.RAW_AND_PROCESSED);
 			   
 				runInUIThread(new Runnable() {
 					@Override
@@ -330,13 +333,13 @@ public class HistoricalDataView extends ViewWithContext
          {
             List<DciDataRow> list = selection.toList();
             for(DciDataRow r : list)
-               session.deleteDciEntry(objectId, dciId, r.getTimestamp().getTime() / 1000); // Convert back to seconds
+               session.deleteDciEntry(contextId, dciId, r.getTimestamp().getTime() / 1000); // Convert back to seconds
 
             final DciData data;
             if (tableName != null)
-               data = session.getCollectedTableData(objectId, dciId, instance, column, timeFrom, timeTo, recordLimit);
+               data = session.getCollectedTableData(contextId, dciId, instance, column, timeFrom, timeTo, recordLimit);
             else
-               data = session.getCollectedData(objectId, dciId, timeFrom, timeTo, recordLimit, HistoricalDataType.RAW_AND_PROCESSED);
+               data = session.getCollectedData(contextId, dciId, timeFrom, timeTo, recordLimit, HistoricalDataType.RAW_AND_PROCESSED);
 
             runInUIThread(new Runnable() {
                @Override
@@ -362,7 +365,7 @@ public class HistoricalDataView extends ViewWithContext
    @Override
    public boolean isValidForContext(Object context)
    {
-      return (context != null) && (context instanceof AbstractObject) && (((AbstractObject)context).getObjectId() == objectId);
+      return (context != null) && (context instanceof AbstractObject) && (((AbstractObject)context).getObjectId() == contextId);
    }
 
    /**
@@ -371,7 +374,7 @@ public class HistoricalDataView extends ViewWithContext
    @Override
    protected void contextChanged(Object oldContext, Object newContext)
    {
-      if ((newContext == null) || !(newContext instanceof AbstractObject) || (((AbstractObject)newContext).getObjectId() != objectId))
+      if ((newContext == null) || !(newContext instanceof AbstractObject) || (((AbstractObject)newContext).getObjectId() != contextId))
          return;
       
       refresh();

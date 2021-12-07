@@ -62,7 +62,7 @@ public abstract class View implements MessageAreaHolder
    private Perspective perspective;
    private Composite viewArea;
    private MessageArea messageArea;
-   protected FilterText filterText;
+   protected FilterText filterText; //FIXME: change to private
    private Composite clientArea;
    private boolean hasFilter;
    private boolean filterEnabled;

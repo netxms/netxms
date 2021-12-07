@@ -16,17 +16,20 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.nxmc.modules.datacollection.widgets.helpers;
+package org.netxms.nxmc.modules.datacollection.views.helpers;
 
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.widgets.TableColumn;
 import org.netxms.client.constants.DataType;
 import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DciValue;
+import org.netxms.client.objects.AbstractObject;
+import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
-import org.netxms.nxmc.modules.datacollection.views.DataCollectionView;
+import org.netxms.nxmc.modules.datacollection.views.BaseDataCollectionView;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -44,29 +47,39 @@ public class LastValuesComparator extends ViewerComparator
 	@Override
 	public int compare(Viewer viewer, Object e1, Object e2)
 	{
-		int result;
-		
-		DciValue v1 = (DciValue)e1;
-		DciValue v2 = (DciValue)e2;
-
-      switch((Integer)((SortableTableViewer)viewer).getTable().getSortColumn().getData("ID")) //$NON-NLS-1$
-		{
-			case DataCollectionView.LV_COLUMN_ID:
-				result = (int)(v1.getId() - v2.getId());
-				break;
-			case DataCollectionView.LV_COLUMN_DESCRIPTION:
-				result = v1.getDescription().compareToIgnoreCase(v2.getDescription());
-				break;
-			case DataCollectionView.LV_COLUMN_VALUE:
-				result = compareValue(v1, v2);
-				break;
-			case DataCollectionView.LV_COLUMN_TIMESTAMP:
-				result = v1.getTimestamp().compareTo(v2.getTimestamp());
-				break;
-			default:
-				result = 0;
-				break;
-		}
+	   TableColumn sortColumn = ((SortableTableViewer)viewer).getTable().getSortColumn();
+      if (sortColumn == null)
+         return 0;
+      
+      DciValue v1 = (DciValue)e1;
+      DciValue v2 = (DciValue)e2;
+      
+      int result = 0;
+      switch((Integer)sortColumn.getData("ID")) //$NON-NLS-1$
+      {
+         case BaseDataCollectionView.LV_COLUMN_OWNER:
+            AbstractObject obj1 = Registry.getSession().findObjectById(v1.getNodeId());
+            AbstractObject obj2 = Registry.getSession().findObjectById(v2.getNodeId());
+            String name1 = (obj1 != null) ? obj1.getObjectName() : "[" + Long.toString(v1.getNodeId()) + "]";
+            String name2 = (obj2 != null) ? obj2.getObjectName() : "[" + Long.toString(v2.getNodeId()) + "]";
+            result = name1.compareToIgnoreCase(name2);
+            break;
+         case BaseDataCollectionView.LV_COLUMN_ID:
+            result = (int)(v1.getId() - v2.getId());
+            break;
+         case BaseDataCollectionView.LV_COLUMN_DESCRIPTION:
+            result = v1.getDescription().compareToIgnoreCase(v2.getDescription());
+            break;
+         case BaseDataCollectionView.LV_COLUMN_VALUE:
+            result = compareValue(v1, v2);
+            break;
+         case BaseDataCollectionView.LV_COLUMN_TIMESTAMP:
+            result = v1.getTimestamp().compareTo(v2.getTimestamp());
+            break;
+         default:
+            result = 0;
+            break;
+      }
 		return (((SortableTableViewer)viewer).getTable().getSortDirection() == SWT.UP) ? result : -result;
 	}
 	
