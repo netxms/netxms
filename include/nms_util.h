@@ -1077,6 +1077,13 @@ public:
 
    StringList *split(const TCHAR *separator) const { return String::split(m_buffer, m_length, separator); }
    static StringList *split(TCHAR *str, size_t len, const TCHAR *separator);
+
+   static String toString(int32_t v, const TCHAR *format = nullptr);
+   static String toString(uint32_t v, const TCHAR *format = nullptr);
+   static String toString(int64_t v, const TCHAR *format = nullptr);
+   static String toString(uint64_t v, const TCHAR *format = nullptr);
+   static String toString(double v, const TCHAR *format = nullptr);
+   static String toString(const BYTE *v, size_t len);
 };
 
 /**
