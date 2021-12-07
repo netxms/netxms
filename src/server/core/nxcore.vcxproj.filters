@@ -483,6 +483,9 @@
     <ClCompile Include="bizsvcproto.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="search_query.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\include\dbdrv.h">
