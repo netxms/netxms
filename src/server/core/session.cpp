@@ -16018,10 +16018,8 @@ void ClientSession::findDci(const NXCPMessage &request)
    {
       if (rootObject->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
       {
-         //parse search string
-         SearchQuery query = SearchQuery(request.getFieldAsSharedString(VID_SEARCH_PATTERN));
-         ObjectArray<DCObject> filteredDcis(0, 16, Ownership::True);
-
+         SearchQuery query(request.getFieldAsSharedString(VID_SEARCH_PATTERN));
+         SharedObjectArray<DCObject> result(0, 64);
 
          SharedObjectArray<DataCollectionTarget> targets;
          if (rootObject->isDataCollectionTarget())
@@ -16032,21 +16030,21 @@ void ClientSession::findDci(const NXCPMessage &request)
          {
             rootObject->addChildDCTargetsToList(&targets, m_dwUserId);
          }
-         UINT32 varId = VID_THRESHOLD_BASE;
          for(int i = 0; i < targets.size(); i++)
          {
             if (targets.get(i)->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
-               targets.get(i)->findDcis(query, m_dwUserId, &filteredDcis);
+               targets.get(i)->findDcis(query, m_dwUserId, &result);
          }
 
-         uint32_t fieldId = VID_DCI_VALUES_BASE, dwCount = 0;
-         for(DCObject *dco : filteredDcis)
+         uint32_t fieldId = VID_DCI_VALUES_BASE;
+         uint32_t count = 0;
+         for(const shared_ptr<DCObject>& dci : result)
          {
-            dco->fillLastValueSummaryMessage(&response, fieldId);
+            dci->fillLastValueSummaryMessage(&response, fieldId);
             fieldId += 50;
-            dwCount++;
+            count++;
          }
-         response.setField(VID_NUM_ITEMS, dwCount);
+         response.setField(VID_NUM_ITEMS, count);
       }
       else
       {

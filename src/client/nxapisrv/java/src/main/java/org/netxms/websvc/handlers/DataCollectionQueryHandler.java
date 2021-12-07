@@ -33,7 +33,6 @@ public class DataCollectionQueryHandler extends AbstractObjectHandler
    @Override
    protected Object getCollection(Map<String, String> query) throws Exception
    {
-      System.out.println("Request came");
       StringBuilder queryText = new StringBuilder();
       for (String key : query.keySet())
       {
@@ -50,9 +49,9 @@ public class DataCollectionQueryHandler extends AbstractObjectHandler
             queryText.append(" ");            
          }
       }      
-      
+
       NXCSession session = getSession();
-      DciValue[] foundDcis = session.findDCI(getObjectId(), queryText.toString());
-      return foundDcis;
+      DciValue[] result = session.findDCI(getObjectId(), queryText.toString());
+      return result;
    }
 }

@@ -154,6 +154,9 @@ SearchQuery::SearchQuery(const String &searchString)
    }
 }
 
+/**
+ * Search query destructor
+ */
 SearchQuery::~SearchQuery()
 {
    delete m_excludedTexts;

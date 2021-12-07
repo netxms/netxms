@@ -2618,19 +2618,18 @@ void DataCollectionTarget::updateGeoLocation(const GeoLocation& geoLocation)
    }
 }
 
-
-void DataCollectionTarget::findDcis(const SearchQuery &query, uint32_t userId, ObjectArray<DCObject> *list)
+/**
+ * Find matching DCIs using search query object
+ */
+void DataCollectionTarget::findDcis(const SearchQuery &query, uint32_t userId, SharedObjectArray<DCObject> *result)
 {
    readLockDciAccess();
    for(int i = 0; i < m_dcObjects->size(); i++)
    {
-      DCObject *dci = m_dcObjects->get(i);
-      if (dci->hasAccess(userId))
+      shared_ptr<DCObject> dci = m_dcObjects->getShared(i);
+      if (dci->hasAccess(userId) && query.match(*dci))
       {
-         if (query.match(*dci))
-         {
-            list->add(dci->clone());
-         }
+         result->add(dci);
       }
    }
    unlockDciAccess();

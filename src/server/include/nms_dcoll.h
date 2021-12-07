@@ -36,8 +36,8 @@ class NXCORE_EXPORTABLE SearchAttributeProvider
 public:
    virtual ~SearchAttributeProvider() = default;
 
-   virtual String getText() const = 0;
-   virtual SharedString getAttribute(const String &attribute) const = 0;
+   virtual SharedString getText() const = 0;
+   virtual SharedString getAttribute(const TCHAR *attribute) const = 0;
 };
 
 /**
@@ -451,8 +451,8 @@ public:
    static const TCHAR *getStorageClassName(DCObjectStorageClass storageClass);
    static const TCHAR *getDataProviderName(int dataProvider);
 
-   virtual String getText() const override;
-   virtual SharedString getAttribute(const String &attribute) const override;
+   virtual SharedString getText() const override;
+   virtual SharedString getAttribute(const TCHAR *attribute) const override;
 };
 
 /**

@@ -1720,16 +1720,20 @@ const TCHAR *DCObject::getDataProviderName(int dataProvider)
    return ((dataProvider >= DS_INTERNAL) && (dataProvider <= DS_DEVICE_DRIVER)) ? names[dataProvider] : _T("unknown");
 }
 
-
-String DCObject::getText() const
+/**
+ * Get text for this object (part of interface SearchAttributeProvider)
+ */
+SharedString DCObject::getText() const
 {
    return m_description;
 }
 
-SharedString DCObject::getAttribute(const String &attribute) const
+/**
+ * Get named attribute for this object (part of interface SearchAttributeProvider)
+ */
+SharedString DCObject::getAttribute(const TCHAR *attribute) const
 {
    SharedString value;
-   StringBuffer tmp;
    if (!_tcsicmp(attribute, _T("description")))
    {
       value = m_description;
@@ -1740,8 +1744,7 @@ SharedString DCObject::getAttribute(const String &attribute) const
    }
    else if (!_tcsicmp(attribute, _T("id")))
    {
-      tmp.append(m_id);
-      value = tmp;
+      value = String::toString(m_id);
    }
    else if (!_tcsicmp(attribute, _T("name")))
    {
@@ -1749,17 +1752,15 @@ SharedString DCObject::getAttribute(const String &attribute) const
    }
    else if (!_tcsicmp(attribute, _T("pollingInterval")))
    {
-      tmp.append(m_pollingInterval);
-      value = tmp;
+      value = String::toString(m_pollingInterval);
    }
    else if (!_tcsicmp(attribute, _T("retentionTime")))
    {
-      tmp.append(m_retentionTime);
-      value = tmp;
+      value = String::toString(m_retentionTime);
    }
    else if (!_tcsicmp(attribute, _T("sourceNode")))
    {
-      auto owner = m_owner.lock();
+      shared_ptr<DataCollectionOwner> owner = m_owner.lock();
       if (owner != nullptr)
          value = owner->getName();
    }

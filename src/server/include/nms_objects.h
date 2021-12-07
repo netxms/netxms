@@ -2287,9 +2287,12 @@ public:
    virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
 
    virtual bool isDataCollectionTarget() const override;
+   virtual bool isEventSource() const override;
 
    virtual void enterMaintenanceMode(uint32_t userId, const TCHAR *comments) override;
    virtual void leaveMaintenanceMode(uint32_t userId) override;
+
+   virtual bool lockForInstanceDiscoveryPoll() override;
 
    virtual DataCollectionError getInternalMetric(const TCHAR *name, TCHAR *buffer, size_t size);
    virtual DataCollectionError getInternalTable(const TCHAR *name, shared_ptr<Table> *result);
@@ -2304,6 +2307,8 @@ public:
 
    virtual uint32_t getEffectiveSourceNode(DCObject *dco);
 
+   uint32_t getEffectiveWebServiceProxy();
+
    virtual json_t *toJson() override;
 
    NXSL_Array *getTemplatesForNXSL(NXSL_VM *vm);
@@ -2316,6 +2321,10 @@ public:
    uint32_t getLastValues(NXCPMessage *msg, bool objectTooltipOnly, bool overviewOnly, bool includeNoValueObjects, uint32_t userId);
    void getTooltipLastValues(NXCPMessage *msg, uint32_t userId, uint32_t *index);
    double getProxyLoadFactor() const { return m_proxyLoadFactor.load(); }
+   int getDciThreshold(uint32_t dciId);
+   void findDcis(const SearchQuery &query, uint32_t userId, SharedObjectArray<DCObject> *result);
+
+   uint64_t getCacheMemoryUsage();
 
    void updateDciCache();
    void updateDCItemCacheSize(UINT32 dciId, UINT32 conditionId = 0);
@@ -2331,20 +2340,7 @@ public:
    bool applyTemplateItem(uint32_t templateId, DCObject *dcObject);
    void cleanDeletedTemplateItems(uint32_t templateId, const IntegerArray<uint32_t>& dciList);
    virtual void onTemplateRemove(const shared_ptr<DataCollectionOwner>& templateObject, bool removeDCI);
-
-   virtual bool isEventSource() const override;
-
-   uint32_t getEffectiveWebServiceProxy();
-
-   uint64_t getCacheMemoryUsage();
-
    static void removeTemplate(const shared_ptr<ScheduledTaskParameters>& parameters);
-
-   int getDciThreshold(uint32_t dciId);
-
-   virtual bool lockForInstanceDiscoveryPoll() override;
-
-   void findDcis(const SearchQuery &query, uint32_t userId, ObjectArray<DCObject> *list);
 };
 
 /**
