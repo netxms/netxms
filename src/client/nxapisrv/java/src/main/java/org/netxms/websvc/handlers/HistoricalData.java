@@ -18,15 +18,23 @@
  */
 package org.netxms.websvc.handlers;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
+import org.netxms.client.Table;
+import org.netxms.client.TableColumnDefinition;
 import org.netxms.client.constants.HistoricalDataType;
 import org.netxms.client.constants.RCC;
 import org.netxms.client.constants.TimeUnit;
+import org.netxms.client.datacollection.DataCollectionConfiguration;
+import org.netxms.client.datacollection.DataCollectionObject;
+import org.netxms.client.datacollection.DataCollectionTable;
 import org.netxms.client.datacollection.DciData;
+import org.netxms.client.datacollection.DciDataRow;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.DataCollectionTarget;
 import org.netxms.websvc.json.ResponseContainer;
@@ -59,35 +67,109 @@ public class HistoricalData extends AbstractObjectHandler
       
       String timeFrom = query.get("from");
       String timeTo = query.get("to");
-      String timeInteval = query.get("timeInterval");
+      String timeInterval = query.get("timeInterval");
       String itemCount = query.get("itemCount");
 
       DciData data = null;
+      DataCollectionConfiguration dataCollectionConfiguration = session.openDataCollectionConfiguration(getObjectId());
+      DataCollectionObject dataCollectionObject = dataCollectionConfiguration.findItem(dciId);
+      HistoricalDataType valueType = HistoricalDataType.PROCESSED;
 
-      if (timeFrom != null || timeTo != null)
-      {
-         data = session.getCollectedData(object.getObjectId(), dciId,
-               new Date(parseLong(timeFrom, 0) * 1000), new Date(parseLong(timeTo, System.currentTimeMillis() / 1000) * 1000),
-               parseInt(itemCount, 0), HistoricalDataType.PROCESSED);
+      if (dataCollectionObject instanceof DataCollectionTable) {
+         valueType = HistoricalDataType.FULL_TABLE;
       }
-      else if (timeInteval != null)
-      {
+
+      if (timeFrom != null || timeTo != null) {
+         data = session.getCollectedData(object.getObjectId(), dciId, new Date(parseLong(timeFrom, 0) * 1000),
+               new Date(parseLong(timeTo, System.currentTimeMillis() / 1000) * 1000), parseInt(itemCount, 0),
+               valueType);
+      } else if (timeInterval != null) {
          Date now = new Date();
-         long from = now.getTime() - parseLong(timeInteval, 0) * 1000;
-         data  = session.getCollectedData(object.getObjectId(), dciId, new Date(from), new Date(), parseInt(itemCount, 0), HistoricalDataType.PROCESSED);         
-      }
-      else if (itemCount != null)
-      {         
-         data  = session.getCollectedData(object.getObjectId(), dciId, null, null, parseInt(itemCount, 0), HistoricalDataType.PROCESSED);
-      }  
-      else
-      {
+         long from = now.getTime() - parseLong(timeInterval, 0) * 1000;
+         data = session.getCollectedData(object.getObjectId(), dciId, new Date(from), new Date(),
+               parseInt(itemCount, 0), valueType);
+      } else if (itemCount != null) {
+         data = session.getCollectedData(object.getObjectId(), dciId, null, null, parseInt(itemCount, 0), valueType);
+      } else {
          Date now = new Date();
          long from = now.getTime() - 3600000; // one hour
-         data  = session.getCollectedData(object.getObjectId(), dciId, new Date(from), now, parseInt(itemCount, 0), HistoricalDataType.PROCESSED);           
+         data = session.getCollectedData(object.getObjectId(), dciId, new Date(from), now, parseInt(itemCount, 0),
+               valueType);
+      }
+
+      if (dataCollectionObject instanceof DataCollectionTable) {
+         return new ResponseContainer("values", transformTableDataOutput(data));
       }
 
       return new ResponseContainer("values", data);
+   }
+
+   /**
+    * Transforms Full historical table data into consumable JSON format
+    */
+   private Map<Object, Object> transformTableDataOutput(DciData data) throws Exception {
+      HashMap<Object, Object> response = new HashMap<Object, Object>();
+      DciDataRow[] tableValues = data.getValues();
+
+      // All the columns will be the same regardless of the table,
+      // getting the first one to figure out the structure
+      Table firstTable = (Table) tableValues[0].getValue();
+
+      response.put("nodeId", data.getNodeId());
+      response.put("dciId", data.getDciId());
+      response.put("dataType", data.getDataType());
+      response.put("source", firstTable.getSource());
+      response.put("title", firstTable.getTitle());
+      response.put("columns", firstTable.getColumns());
+
+      // Get the instance columns
+      // Assumes that table has atleast 1 instance column
+      ArrayList<TableColumnDefinition> instanceColumns = new ArrayList<TableColumnDefinition>();
+      for (TableColumnDefinition column : firstTable.getColumns()) {
+         if (column.isInstanceColumn()) {
+            instanceColumns.add(column);
+         }
+      }
+      if (instanceColumns.isEmpty()) {
+         throw new Exception("No instance column found in table");
+      }
+
+      Map<String, HashMap<String, ArrayList<HashMap<String, Object>>>> transformedData = new HashMap<>();
+      for (int i = 0; i < tableValues.length; i++) {
+         long timestamp = tableValues[i].getTimestamp().getTime();
+         Table table = (Table) tableValues[i].getValue();
+         for (int j = 0; j < table.getRowCount(); j++) {
+
+            String instanceKey = null;
+            for (TableColumnDefinition instanceColumn : instanceColumns) {
+               if (instanceKey != null) {
+                  instanceKey += "-";
+               }
+               instanceKey += table.getCellValue(j, table.getColumnIndex(instanceColumn.getName()));
+            }
+
+            if (transformedData.get(instanceKey) == null) {
+               transformedData.put(instanceKey, new HashMap<String, ArrayList<HashMap<String, Object>>>());
+            }
+
+            for (TableColumnDefinition column : table.getColumns()) {
+               HashMap<String, Object> cell = new HashMap<String, Object>();
+               cell.put("value", table.getCellValue(j, table.getColumnIndex(column.getName())));
+               cell.put("timestamp", timestamp);
+               if (transformedData.get(instanceKey).get(column.getName()) == null) {
+                  transformedData.get(instanceKey).put(column.getName(), new ArrayList<HashMap<String, Object>>());
+               }
+               transformedData.get(instanceKey).get(column.getName()).add(cell);
+            }
+         }
+      }
+
+      ArrayList<Object> dataList = new ArrayList<Object>();
+      for (Object _dataItem : transformedData.values()) {
+         dataList.add(_dataItem);
+      }
+      response.put("data", dataList);
+      return response;
    }
 
    /**
