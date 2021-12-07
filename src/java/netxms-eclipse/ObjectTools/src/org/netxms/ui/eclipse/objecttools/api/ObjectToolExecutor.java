@@ -48,6 +48,7 @@ import org.netxms.ui.eclipse.objectbrowser.dialogs.InputFieldReadDialog;
 import org.netxms.ui.eclipse.objects.ObjectContext;
 import org.netxms.ui.eclipse.objecttools.Activator;
 import org.netxms.ui.eclipse.objecttools.Messages;
+import org.netxms.ui.eclipse.objecttools.dialogs.ToolExecutionStatusDialog;
 import org.netxms.ui.eclipse.objecttools.views.AgentActionResults;
 import org.netxms.ui.eclipse.objecttools.views.LocalCommandResults;
 import org.netxms.ui.eclipse.objecttools.views.MultiNodeCommandExecutor;
@@ -119,20 +120,18 @@ public final class ObjectToolExecutor
     */
    public static void execute(final Set<ObjectContext> allNodes, final ObjectTool tool)
    {
-      //Filter allowed and applicable nodes for execution
-      final Set<ObjectContext> nodes = new HashSet<ObjectContext>();
       ObjectToolHandler handler = ObjectToolsCache.findHandler(tool.getData());
-      if ((tool.getToolType() != ObjectTool.TYPE_INTERNAL) || handler != null)
+      if ((tool.getToolType() == ObjectTool.TYPE_INTERNAL) && (handler == null))
       {
-         for(ObjectContext n : allNodes)
-            if (((tool.getToolType() != ObjectTool.TYPE_INTERNAL) || handler.canExecuteOnNode(n.object, tool)) 
-                  && tool.isApplicableForNode(n.object))
-               nodes.add(n);
-      }
-      else
-      {
+         Activator.logInfo("Cannot find handler for internal object tool " + tool.getData());
          return;
       }
+
+      // Filter allowed and applicable nodes for execution
+      final Set<ObjectContext> nodes = new HashSet<ObjectContext>();
+      for(ObjectContext n : allNodes)
+         if (((tool.getToolType() != ObjectTool.TYPE_INTERNAL) || handler.canExecuteOnNode(n.object, tool)) && tool.isApplicableForNode(n.object))
+            nodes.add(n);
 
       final List<String> maskedFields = new ArrayList<String>();
       final Map<String, String> inputValues;
@@ -242,7 +241,7 @@ public final class ObjectToolExecutor
             }
 
             int i = 0;               
-            if (nodes.size() != 1 && (tool.getToolType() == ObjectTool.TYPE_LOCAL_COMMAND || tool.getToolType() == ObjectTool.TYPE_SERVER_COMMAND ||
+            if ((nodes.size() > 1) && (tool.getToolType() == ObjectTool.TYPE_LOCAL_COMMAND || tool.getToolType() == ObjectTool.TYPE_SERVER_COMMAND ||
                   tool.getToolType() == ObjectTool.TYPE_ACTION || tool.getToolType() == ObjectTool.TYPE_SERVER_SCRIPT) && ((tool.getFlags() & ObjectTool.GENERATES_OUTPUT) != 0))
             {
                final List<String> finalExpandedText = expandedText;
@@ -256,16 +255,48 @@ public final class ObjectToolExecutor
             }
             else
             {
+               // Create execution status dialog if tools may report success or failure messages and executed on multiple nodes
+               final ToolExecutionStatusDialog statusDialog;
+               if ((nodes.size() > 1) &&
+                     (tool.getToolType() == ObjectTool.TYPE_SERVER_COMMAND || tool.getToolType() == ObjectTool.TYPE_ACTION || tool.getToolType() == ObjectTool.TYPE_SERVER_SCRIPT) &&
+                     ((tool.getFlags() & ObjectTool.GENERATES_OUTPUT) == 0))
+               {
+                  ToolExecutionStatusDialog[] container = new ToolExecutionStatusDialog[1];
+                  getDisplay().syncExec(new Runnable() {
+                     @Override
+                     public void run()
+                     {
+                        ToolExecutionStatusDialog dlg = new ToolExecutionStatusDialog(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(), nodes);
+                        container[0] = dlg;
+                     }
+                  });
+                  statusDialog = container[0];
+                  if (statusDialog != null)
+                  {
+                     getDisplay().asyncExec(new Runnable() {
+                        @Override
+                        public void run()
+                        {
+                           container[0].open();
+                        }
+                     });
+                  }
+               }
+               else
+               {
+                  statusDialog = null;
+               }
+
                for(final ObjectContext n : nodes)
                {
                   if (tool.getToolType() == ObjectTool.TYPE_URL || tool.getToolType() == ObjectTool.TYPE_LOCAL_COMMAND)
                   {
-                     final String tmp = expandedText.get(i++);
+                     final String data = expandedText.get(i++);
                      getDisplay().syncExec(new Runnable() {
                         @Override
                         public void run()
                         {
-                           executeOnNode(n, tool, inputValues, maskedFields, tmp);
+                           executeOnNode(n, tool, inputValues, maskedFields, data, statusDialog);
                         }
                      });
                   }
@@ -275,7 +306,7 @@ public final class ObjectToolExecutor
                         @Override
                         public void run()
                         {
-                           executeOnNode(n, tool, inputValues, maskedFields, null);
+                           executeOnNode(n, tool, inputValues, maskedFields, null, statusDialog);
                         }
                      });                  
                   }
@@ -325,12 +356,12 @@ public final class ObjectToolExecutor
     * @param expandedToolData expanded tool data
     */
    private static void executeOnNode(final ObjectContext node, final ObjectTool tool, Map<String, String> inputValues,
-         List<String> maskedFields, String expandedToolData)
+         List<String> maskedFields, String expandedToolData, ToolExecutionStatusDialog statusDialog)
    {
       switch(tool.getToolType())
       {
          case ObjectTool.TYPE_ACTION:
-            executeAgentAction(node, tool, inputValues, maskedFields);
+            executeAgentAction(node, tool, inputValues, maskedFields, statusDialog);
             break;
          case ObjectTool.TYPE_FILE_DOWNLOAD:
             executeFileDownload(node, tool, inputValues);
@@ -342,13 +373,13 @@ public final class ObjectToolExecutor
             executeLocalCommand(node, tool, inputValues, expandedToolData);
             break;
          case ObjectTool.TYPE_SERVER_COMMAND:
-            executeServerCommand(node, tool, inputValues, maskedFields);
+            executeServerCommand(node, tool, inputValues, maskedFields, statusDialog);
             break;
          case ObjectTool.TYPE_SSH_COMMAND:
-            executeSshCommand(node, tool);
+            executeSshCommand(node, tool, statusDialog);
             break;
          case ObjectTool.TYPE_SERVER_SCRIPT:
-            executeServerScript(node, tool, inputValues);
+            executeServerScript(node, tool, inputValues, statusDialog);
             break;
          case ObjectTool.TYPE_AGENT_LIST:
          case ObjectTool.TYPE_AGENT_TABLE:
@@ -409,11 +440,15 @@ public final class ObjectToolExecutor
    }
    
    /**
+    * Execute agent action.
+    *
     * @param node
     * @param tool
-    * @param inputValues 
+    * @param inputValues
+    * @param maskedFields
+    * @param statusDialog
     */
-   private static void executeAgentAction(final ObjectContext node, final ObjectTool tool, final Map<String, String> inputValues, final List<String> maskedFields)
+   private static void executeAgentAction(final ObjectContext node, final ObjectTool tool, final Map<String, String> inputValues, final List<String> maskedFields, final ToolExecutionStatusDialog statusDialog)
    {
       final NXCSession session = ConsoleSharedData.getSession();
 
@@ -429,14 +464,36 @@ public final class ObjectToolExecutor
             @Override
             protected void runInternal(IProgressMonitor monitor) throws Exception
             {
-               final String action = session.executeActionWithExpansion(node.object.getObjectId(), node.getAlarmId(), tool.getData(), inputValues, maskedFields);
-               runInUIThread(new Runnable() {
-                  @Override
-                  public void run()
+               try
+               {
+                  final String action = session.executeActionWithExpansion(node.object.getObjectId(), node.getAlarmId(), tool.getData(), inputValues, maskedFields);
+                  if (statusDialog != null)
                   {
-                     MessageDialogHelper.openInformation(null, Messages.get().ObjectToolsDynamicMenu_ToolExecution, String.format(Messages.get().ObjectToolsDynamicMenu_ExecSuccess, action, node.object.getObjectName()));
+                     statusDialog.updateExecutionStatus(node.object.getObjectId(), null);
                   }
-               });
+                  else
+                  {
+                     runInUIThread(new Runnable() {
+                        @Override
+                        public void run()
+                        {
+                           MessageDialogHelper.openInformation(null, Messages.get().ObjectToolsDynamicMenu_ToolExecution,
+                                 String.format(Messages.get().ObjectToolsDynamicMenu_ExecSuccess, action, node.object.getObjectName()));
+                        }
+                     });
+                  }
+               }
+               catch(Exception e)
+               {
+                  if (statusDialog != null)
+                  {
+                     statusDialog.updateExecutionStatus(node.object.getObjectId(), e.getLocalizedMessage());
+                  }
+                  else
+                  {
+                     throw e;
+                  }
+               }
             }
          }.start();
       }
@@ -461,25 +518,48 @@ public final class ObjectToolExecutor
     * 
     * @param node
     * @param tool
-    * @param inputValues 
+    * @param inputValues
+    * @param maskedFields
+    * @param statusDialog
     */
-   private static void executeServerCommand(final ObjectContext node, final ObjectTool tool, final Map<String, String> inputValues, final List<String> maskedFields)
+   private static void executeServerCommand(final ObjectContext node, final ObjectTool tool, final Map<String, String> inputValues, final List<String> maskedFields, final ToolExecutionStatusDialog statusDialog)
    {
-      final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+      final NXCSession session = ConsoleSharedData.getSession();
       if ((tool.getFlags() & ObjectTool.GENERATES_OUTPUT) == 0)
       {
          new ConsoleJob(Messages.get().ObjectToolsDynamicMenu_ExecuteServerCmd, null, Activator.PLUGIN_ID, null) {
             @Override
             protected void runInternal(IProgressMonitor monitor) throws Exception
             {
-               session.executeServerCommand(node.object.getObjectId(), tool.getData(), inputValues, maskedFields);
-               runInUIThread(new Runnable() {
-                  @Override
-                  public void run()
+               try
+               {
+                  session.executeServerCommand(node.object.getObjectId(), tool.getData(), inputValues, maskedFields);
+                  if (statusDialog != null)
                   {
-                     MessageDialogHelper.openInformation(null, Messages.get().ObjectToolsDynamicMenu_Information, Messages.get().ObjectToolsDynamicMenu_ServerCommandExecuted);
+                     statusDialog.updateExecutionStatus(node.object.getObjectId(), null);
                   }
-               });
+                  else
+                  {
+                     runInUIThread(new Runnable() {
+                        @Override
+                        public void run()
+                        {
+                           MessageDialogHelper.openInformation(null, Messages.get().ObjectToolsDynamicMenu_Information, Messages.get().ObjectToolsDynamicMenu_ServerCommandExecuted);
+                        }
+                     });
+                  }
+               }
+               catch(Exception e)
+               {
+                  if (statusDialog != null)
+                  {
+                     statusDialog.updateExecutionStatus(node.object.getObjectId(), e.getLocalizedMessage());
+                  }
+                  else
+                  {
+                     throw e;
+                  }
+               }
             }
             
             @Override
@@ -511,7 +591,7 @@ public final class ObjectToolExecutor
     * @param node
     * @param tool
     */
-   private static void executeSshCommand(final ObjectContext node, final ObjectTool tool)
+   private static void executeSshCommand(final ObjectContext node, final ObjectTool tool, final ToolExecutionStatusDialog statusDialog)
    {
       final NXCSession session = ConsoleSharedData.getSession();
 
@@ -519,22 +599,44 @@ public final class ObjectToolExecutor
       {
          new ConsoleJob(String.format(Messages.get().ObjectToolsDynamicMenu_ExecuteOnNode, node.object.getObjectName()), null, Activator.PLUGIN_ID, null) {
             @Override
-            protected String getErrorMessage()
+            protected void runInternal(IProgressMonitor monitor) throws Exception
             {
-               return String.format(Messages.get().ObjectToolsDynamicMenu_CannotExecuteOnNode, node.object.getObjectName());
+               try
+               {
+                  session.executeSshCommand(node.object.getObjectId(), tool.getData(), false, null, null);
+                  if (statusDialog != null)
+                  {
+                     statusDialog.updateExecutionStatus(node.object.getObjectId(), null);
+                  }
+                  else
+                  {
+                     runInUIThread(new Runnable() {
+                        @Override
+                        public void run()
+                        {
+                           MessageDialogHelper.openInformation(null, Messages.get().ObjectToolsDynamicMenu_ToolExecution,
+                                 String.format(Messages.get().ObjectToolsDynamicMenu_ExecSuccess, tool.getData(), node.object.getObjectName()));
+                        }
+                     });
+                  }
+               }
+               catch(Exception e)
+               {
+                  if (statusDialog != null)
+                  {
+                     statusDialog.updateExecutionStatus(node.object.getObjectId(), e.getLocalizedMessage());
+                  }
+                  else
+                  {
+                     throw e;
+                  }
+               }
             }
 
             @Override
-            protected void runInternal(IProgressMonitor monitor) throws Exception
+            protected String getErrorMessage()
             {
-               session.executeSshCommand(node.object.getObjectId(), tool.getData(), false, null, null);
-               runInUIThread(new Runnable() {
-                  @Override
-                  public void run()
-                  {
-                     MessageDialogHelper.openInformation(null, Messages.get().ObjectToolsDynamicMenu_ToolExecution, String.format(Messages.get().ObjectToolsDynamicMenu_ExecSuccess, tool.getData(), node.object.getObjectName()));
-                  }
-               });
+               return String.format(Messages.get().ObjectToolsDynamicMenu_CannotExecuteOnNode, node.object.getObjectName());
             }
          }.start();
       }
@@ -562,23 +664,44 @@ public final class ObjectToolExecutor
     * @param tool
     * @param inputValues 
     */
-   private static void executeServerScript(final ObjectContext node, final ObjectTool tool, final Map<String, String> inputValues)
+   private static void executeServerScript(final ObjectContext node, final ObjectTool tool, final Map<String, String> inputValues, final ToolExecutionStatusDialog statusDialog)
    {
-      final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+      final NXCSession session = ConsoleSharedData.getSession();
       if ((tool.getFlags() & ObjectTool.GENERATES_OUTPUT) == 0)
       {      
          new ConsoleJob("Execute server script", null, Activator.PLUGIN_ID, null) {
             @Override
             protected void runInternal(IProgressMonitor monitor) throws Exception
             {
-               session.executeLibraryScript(node.object.getObjectId(), node.getAlarmId(), tool.getData(), inputValues, null);
-               runInUIThread(new Runnable() {
-                  @Override
-                  public void run()
+               try
+               {
+                  session.executeLibraryScript(node.object.getObjectId(), node.getAlarmId(), tool.getData(), inputValues, null);
+                  if (statusDialog != null)
                   {
-                     MessageDialogHelper.openInformation(null, Messages.get().ObjectToolsDynamicMenu_Information, Messages.get().ObjectToolsDynamicMenu_ServerScriptExecuted);
+                     statusDialog.updateExecutionStatus(node.object.getObjectId(), null);
                   }
-               });
+                  else
+                  {
+                     runInUIThread(new Runnable() {
+                        @Override
+                        public void run()
+                        {
+                           MessageDialogHelper.openInformation(null, Messages.get().ObjectToolsDynamicMenu_Information, Messages.get().ObjectToolsDynamicMenu_ServerScriptExecuted);
+                        }
+                     });
+                  }
+               }
+               catch(Exception e)
+               {
+                  if (statusDialog != null)
+                  {
+                     statusDialog.updateExecutionStatus(node.object.getObjectId(), e.getLocalizedMessage());
+                  }
+                  else
+                  {
+                     throw e;
+                  }
+               }
             }
             
             @Override
