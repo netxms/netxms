@@ -363,6 +363,71 @@ StringList *String::split(TCHAR *str, size_t len, const TCHAR *separator)
 }
 
 /**
+ * Convert 32 bit signed integer to string representation
+ */
+String String::toString(int32_t v, const TCHAR *format)
+{
+   String s;
+   _sntprintf(s.m_buffer, STRING_INTERNAL_BUFFER_SIZE, (format != nullptr) ? format : _T("%d"), v);
+   return s;
+}
+
+/**
+ * Convert 32 bit unsigned integer to string representation
+ */
+String String::toString(uint32_t v, const TCHAR *format)
+{
+   String s;
+   _sntprintf(s.m_buffer, STRING_INTERNAL_BUFFER_SIZE, (format != nullptr) ? format : _T("%u"), v);
+   return s;
+}
+
+/**
+ * Convert 64 bit signed integer to string representation
+ */
+String String::toString(int64_t v, const TCHAR *format)
+{
+   String s;
+   _sntprintf(s.m_buffer, STRING_INTERNAL_BUFFER_SIZE, (format != nullptr) ? format : INT64_FMT, v);
+   return s;
+}
+
+/**
+ * Convert 64 bit unsigned integer to string representation
+ */
+String String::toString(uint64_t v, const TCHAR *format)
+{
+   String s;
+   _sntprintf(s.m_buffer, STRING_INTERNAL_BUFFER_SIZE, (format != nullptr) ? format : UINT64_FMT, v);
+   return s;
+}
+
+/**
+ * Convert double to string representation
+ */
+String String::toString(double v, const TCHAR *format)
+{
+   String s;
+   _sntprintf(s.m_buffer, STRING_INTERNAL_BUFFER_SIZE, (format != nullptr) ? format : _T("%f"), v);
+   return s;
+}
+
+/**
+ * Convert byte array to string representation
+ */
+String String::toString(const BYTE *v, size_t len)
+{
+   String s;
+   s.m_length = len * 2;
+   if (s.m_length >= STRING_INTERNAL_BUFFER_SIZE)
+   {
+      s.m_buffer = MemAllocString(s.m_length + 1);
+   }
+   BinToStr(v, len, s.m_buffer);
+   return s;
+}
+
+/**
  * Create empty string buffer
  */
 StringBuffer::StringBuffer() : String()
