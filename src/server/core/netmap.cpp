@@ -1138,7 +1138,7 @@ void NetworkMap::updateLinks()
          {
             nxlog_debug_tag(DEBUG_TAG_NETMAP, 4, _T("NetworkMap::updateLinks(%s [%u]): color provider script \"%s\" execution error: %s"),
                       m_name, m_id, link->getColorProvider(), vm->getErrorText());
-            PostSystemEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", link->getColorProvider(), vm->getErrorText(), 0);
+            PostScriptErrorEvent(CONTEXT_NETMAP, m_id, 0, vm->getErrorText(), link->getColorProvider());
          }
          vm.destroy();
       }
@@ -1252,10 +1252,8 @@ bool NetworkMap::isAllowedOnMap(const shared_ptr<NetObj>& object)
 		}
 		else
 		{
-			TCHAR buffer[1024];
-			_sntprintf(buffer, 1024, _T("NetworkMap::%s::Filter"), m_name);
-			PostSystemEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", buffer, m_filter->getErrorText(), 0);
-         nxlog_write(NXLOG_WARNING, _T("Failed to execute filter script for network map object %s [%u] (%s)"), m_name, m_id, m_filter->getErrorText());
+			PostScriptErrorEvent(CONTEXT_NETMAP, object != nullptr ? object->getId() : 0, 0, m_filter->getErrorText(), _T("NetworkMap::%s::Filter"), m_name);
+			nxlog_write(NXLOG_WARNING, _T("Failed to execute filter script for network map object %s [%u] (%s)"), m_name, m_id, m_filter->getErrorText());
 		}
 	}
 	unlockProperties();

@@ -445,7 +445,9 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Parameters:' CONCAT CRLF CONCAT
 		'   1) Script name' CONCAT CRLF CONCAT
 		'   2) Error text' CONCAT CRLF CONCAT
-		'   3) DCI ID if script is DCI transformation script, or 0 otherwise'
+		'   3) DCI ID if script is DCI related script, or 0 otherwise' CONCAT CRLF CONCAT
+		'   4) Related object ID if applicable, or 0 otherwise' CONCAT CRLF CONCAT
+		'   5) Context'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(

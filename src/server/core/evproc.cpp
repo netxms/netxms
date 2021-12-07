@@ -281,7 +281,7 @@ static void ProcessEvent(Event *event, int processorId)
       {
          if (event->getCode() != EVENT_SCRIPT_ERROR) // To avoid infinite loop
          {
-            PostSystemEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", _T("Hook::EventProcessor"), vm->getErrorText(), 0);
+            PostScriptErrorEvent(CONTEXT_EVENT_PROC, event->getSourceId(), 0, vm->getErrorText(), _T("Hook::EventProcessor"));
          }
          nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Event processor hook script execution error (%s)"), vm->getErrorText());
       }

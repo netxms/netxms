@@ -96,8 +96,7 @@ static void ExecuteScriptInBackground(NXSL_VM *vm, const TCHAR *scriptName)
 {
    if (!vm->run())
    {
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("Tunnel hook script execution error (%s)"), vm->getErrorText());
-      PostSystemEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", scriptName, vm->getErrorText(), 0);
+      PostScriptErrorEvent(CONTEXT_TUNNEL, 0, 0, vm->getErrorText(), scriptName);
    }
    delete vm;
 }

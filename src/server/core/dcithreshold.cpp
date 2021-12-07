@@ -339,9 +339,7 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
                time_t now = time(nullptr);
                if (m_lastScriptErrorReport + ConfigReadInt(_T("DataCollection.ScriptErrorReportInterval"), 86400) < now)
                {
-                  TCHAR buffer[1024];
-                  _sntprintf(buffer, 1024, _T("DCI::%s::%d::%d::ThresholdScript"), target->getName(), dci->getId(), m_id);
-                  PostDciEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, dci->getId(), "ssd", buffer, vm->getErrorText(), dci->getId());
+                  PostScriptErrorEvent(CONTEXT_DCI, target->getId(), dci->getId(), vm->getErrorText(), _T("DCI::%s::%d::%d::ThresholdScript"), target->getName(), dci->getId(), m_id);
                   nxlog_write(NXLOG_WARNING, _T("Failed to execute threshold script for node %s [%u] DCI %s [%u] threshold %u (%s)"),
                            target->getName(), target->getId(), dci->getName().cstr(), dci->getId(), m_id, vm->getErrorText());
                   m_lastScriptErrorReport = now;
@@ -354,9 +352,7 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
             time_t now = time(nullptr);
             if (m_lastScriptErrorReport + ConfigReadInt(_T("DataCollection.ScriptErrorReportInterval"), 86400) < now)
             {
-               TCHAR buffer[1024];
-               _sntprintf(buffer, 1024, _T("DCI::%s::%d::%d::ThresholdScript"), target->getName(), dci->getId(), m_id);
-               PostDciEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, dci->getId(), "ssd", buffer, _T("Script load failed"), dci->getId());
+               PostScriptErrorEvent(CONTEXT_DCI, target->getId(), dci->getId(), _T("Script load failed"), _T("DCI::%s::%d::%d::ThresholdScript"), target->getName(), dci->getId(), m_id);
                nxlog_write(NXLOG_WARNING, _T("Failed to load threshold script for node %s [%u] DCI %s [%u] threshold %u"),
                         target->getName(), target->getId(), dci->getName().cstr(), dci->getId(), m_id);
                m_lastScriptErrorReport = now;
@@ -987,10 +983,9 @@ void Threshold::setScript(TCHAR *script)
          m_script = NXSLCompile(m_scriptSource, errorText, 1024, nullptr);
          if (m_script == nullptr)
          {
-            TCHAR buffer[1024], defaultName[32];
+            TCHAR defaultName[32];
             _sntprintf(defaultName, 32, _T("[%d]"), m_targetId);
-            _sntprintf(buffer, 1024, _T("DCI::%s::%d::%d::ThresholdScript"), GetObjectName(m_targetId, defaultName), m_itemId, m_id);
-            PostDciEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, m_itemId, "ssd", buffer, errorText, m_itemId);
+            PostScriptErrorEvent(CONTEXT_DCI, m_targetId, m_itemId, errorText, _T("DCI::%s::%d::%d::ThresholdScript"), GetObjectName(m_targetId, defaultName), m_itemId, m_id);
             nxlog_write(NXLOG_WARNING, _T("Failed to compile threshold script for node %s [%u] DCI %u threshold %u (%s)"),
                      GetObjectName(m_targetId, defaultName), m_targetId, m_itemId, m_id, errorText);
          }

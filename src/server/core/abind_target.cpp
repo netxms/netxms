@@ -82,9 +82,7 @@ void AutoBindTarget::setAutoBindFilter(int filterNumber, const TCHAR *filter)
       m_autoBindFilters[filterNumber] = NXSLCompile(filter, error, 256, nullptr);
       if (m_autoBindFilters[filterNumber] == nullptr)
       {
-         TCHAR buffer[1024];
-         _sntprintf(buffer, 1024, _T("AutoBind::%s::%s::%d"), m_this->getObjectClassName(), m_this->getName(), filterNumber);
-         PostSystemEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", buffer, error, 0);
+         PostScriptErrorEvent(CONTEXT_AUTOBIND, m_this->getId(), 0, error, _T("AutoBind::%s::%s::%d"), m_this->getObjectClassName(), m_this->getName(), filterNumber);
          nxlog_write(NXLOG_WARNING, _T("Failed to compile autobind script #%d for object %s [%u] (%s)"), filterNumber, m_this->getName(), m_this->getId(), error);
       }
    }
@@ -227,9 +225,7 @@ AutoBindDecision AutoBindTarget::isApplicable(const shared_ptr<NetObj>& target, 
       filter = CreateServerScriptVM(filterProgram, target);
       if (filter == nullptr)
       {
-         TCHAR buffer[1024];
-         _sntprintf(buffer, 1024, _T("AutoBind::%s::%s::%d"), m_this->getObjectClassName(), m_this->getName(), filterNumber);
-         PostSystemEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", buffer, _T("Script load error"), 0);
+         PostScriptErrorEvent(CONTEXT_AUTOBIND, m_this->getId(), 0, _T("Script load error"), _T("AutoBind::%s::%s::%d"), m_this->getObjectClassName(), m_this->getName(), filterNumber);
          nxlog_write(NXLOG_WARNING, _T("Failed to load autobind script for object %s [%u]"), m_this->getName(), m_this->getId());
       }
    }
@@ -252,9 +248,7 @@ AutoBindDecision AutoBindTarget::isApplicable(const shared_ptr<NetObj>& target, 
    }
    else
    {
-      TCHAR buffer[1024];
-      _sntprintf(buffer, 1024, _T("AutoBind::%s::%s::%d"), m_this->getObjectClassName(), m_this->getName(), filterNumber);
-      PostSystemEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", buffer, filter->getErrorText(), 0);
+      PostScriptErrorEvent(CONTEXT_AUTOBIND, m_this->getId(), dci != nullptr ? dci->getId() : 0, filter->getErrorText(), _T("AutoBind::%s::%s::%d"), m_this->getObjectClassName(), m_this->getName(), filterNumber);
       nxlog_write(NXLOG_WARNING, _T("Failed to execute autobind script for object %s [%u] (%s)"), m_this->getName(), m_this->getId(), filter->getErrorText());
    }
    delete filter;

@@ -1135,6 +1135,26 @@ bool NXCORE_EXPORTABLE PostDciEvent(uint32_t eventCode, uint32_t sourceId, uint3
 }
 
 /**
+ * Post script error event to system event queue.
+ *
+ * @param context script context
+ * @param objectId NetObj ID
+ * @param dciId DCI ID
+ * @param errorText error text
+ * @param nameFormat script name as formatted string
+ */
+bool NXCORE_EXPORTABLE PostScriptErrorEvent(const TCHAR* context, uint32_t objectId, uint32_t dciId, const TCHAR *errorText, const TCHAR *nameFormat, ...)
+{
+   TCHAR name[1024];
+   va_list args;
+   va_start(args, nameFormat);
+   _vsntprintf(name, 1024, nameFormat, args);
+   va_end(args);
+
+   return PostDciEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, dciId, "ssdds", name, errorText, dciId, objectId, context);
+}
+
+/**
  * Post event to system event queue and return ID of new event (0 in case of failure).
  *
  * @param eventCode Event code

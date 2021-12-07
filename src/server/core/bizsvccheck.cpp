@@ -157,9 +157,7 @@ void BusinessServiceCheck::compileScript()
 	m_compiledScript = NXSLCompile(m_script, errorMsg, sizeof(errorMsg) / sizeof(TCHAR), nullptr);
    if (m_compiledScript == nullptr)
    {
-      TCHAR buffer[1024];
-      _sntprintf(buffer, 1024, _T("BusinessServiceCheck::%u"), m_id);
-      PostSystemEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", buffer, errorMsg, 0);
+      PostScriptErrorEvent(CONTEXT_BIZSVC, m_serviceId, 0, errorMsg, _T("BusinessServiceCheck::%u"), m_id);
       nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Failed to compile script for service check %s [%u] (%s)"), m_description.cstr(), m_id, errorMsg);
    }
 }
@@ -316,9 +314,7 @@ int BusinessServiceCheck::execute(BusinessServiceTicketData* ticket)
 					}
 					else
 					{
-						TCHAR buffer[1024];
-						_sntprintf(buffer, 1024, _T("BusinessServiceCheck::%u"), m_id);
-						PostSystemEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", buffer, vm->getErrorText(), 0);
+						PostScriptErrorEvent(CONTEXT_BIZSVC, m_serviceId, 0, vm->getErrorText(), _T("BusinessServiceCheck::%u"), m_id);
 						nxlog_write_tag(2, DEBUG_TAG, _T("Failed to execute script for service check object %s [%u] (%s)"), m_description.cstr(), m_id, vm->getErrorText());
 						m_state = STATUS_NORMAL;
 					}

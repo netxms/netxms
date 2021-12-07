@@ -999,7 +999,7 @@ static bool AcceptNewNode(NewNodeData *newNodeData, BYTE *macAddr)
          {
             nxlog_debug_tag(DEBUG_TAG, 4, _T("AcceptNewNode(%s): Filter script execution error: %s"),
                       szIpAddr, vm->getErrorText());
-            PostSystemEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", szFilter, vm->getErrorText(), 0);
+            PostScriptErrorEvent(CONTEXT_NODE, 0, 0, vm->getErrorText(), szFilter);
          }
          delete vm;
       }

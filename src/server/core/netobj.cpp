@@ -2559,7 +2559,7 @@ void NetObj::executeHookScript(const TCHAR *hookName, uint32_t pollRequestId)
    {
       nxlog_debug_tag(DEBUG_TAG_OBJECT_LIFECYCLE, 4, _T("NetObj::executeHookScript(%s [%u]): hook script \"%s\" execution error: %s"),
                 m_name, m_id, scriptName, vm->getErrorText());
-      PostSystemEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", scriptName, vm->getErrorText(), 0);
+      PostScriptErrorEvent(CONTEXT_NETOBJ, m_id, 0, vm->getErrorText(), scriptName);
    }
    vm.destroy();
 }
@@ -2901,7 +2901,7 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
                         {
                            DbgPrintf(4, _T("NetObj::ExpandText(%d, \"%s\"): Script %s execution error: %s"),
                                      (int)((event != nullptr) ? event->getCode() : 0), textTemplate, buffer, vm->getErrorText());
-                           PostSystemEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", buffer, vm->getErrorText(), 0);
+                           PostScriptErrorEvent(CONTEXT_NETOBJ, m_id, 0, vm->getErrorText(), buffer);
                         }
                         delete vm;
                      }

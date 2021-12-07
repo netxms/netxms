@@ -9258,16 +9258,13 @@ void ClientSession::sendConfigForAgent(const NXCPMessage& request)
             }
             else
             {
-               _sntprintf(errorMessage, 256, _T("AgentCfg::%d"), configId);
-               PostSystemEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", errorMessage, filter->getErrorText(), 0);
+               PostScriptErrorEvent(CONTEXT_AGENT_CFG, 0, 0, filter->getErrorText(), _T("AgentCfg::%d"), configId);
             }
             delete filter;
          }
          else
          {
-            TCHAR scriptName[256];
-            _sntprintf(scriptName, 256, _T("AgentCfg::%d"), configId);
-            PostSystemEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", scriptName, errorMessage, 0);
+            PostScriptErrorEvent(CONTEXT_AGENT_CFG, 0, 0, errorMessage, _T("AgentCfg::%d"), configId);
          }
       }
       DBFreeResult(hResult);

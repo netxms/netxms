@@ -467,7 +467,7 @@ StringBuffer DCObject::expandMacros(const TCHAR *src, size_t dstLen)
 				{
 		         DbgPrintf(4, _T("DCObject::expandMacros(%d,\"%s\"): Script %s execution error: %s"),
 					          m_id, src, &macro[7], vm->getErrorText());
-					PostSystemEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", &macro[7], vm->getErrorText(), m_id);
+		         PostScriptErrorEvent(CONTEXT_DCI, m_ownerId, m_id, vm->getErrorText(), &macro[7]);
 				}
             delete vm;
 			}
@@ -1129,9 +1129,7 @@ void DCObject::setTransformationScript(const TCHAR *source)
          m_transformationScript = NXSLCompile(m_transformationScriptSource, errorText, 1024, nullptr);
          if (m_transformationScript == nullptr)
          {
-            TCHAR buffer[1024];
-            _sntprintf(buffer, 1024, _T("DCI::%s::%d::TransformationScript"), getOwnerName(), m_id);
-            PostSystemEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", buffer, errorText, m_id);
+            PostScriptErrorEvent(CONTEXT_DCI, m_ownerId, m_id, errorText, _T("DCI::%s::%d::TransformationScript"), getOwnerName(), m_id);
             nxlog_write(NXLOG_WARNING, _T("Failed to compile transformation script for object %s [%u] DCI %s [%u] (%s)"),
                      getOwnerName(), getOwnerId(), m_name.cstr(), m_id, errorText);
          }
@@ -1413,9 +1411,7 @@ static EnumerationCallbackResult FilterCallback(const TCHAR *key, const TCHAR *v
    }
    else
    {
-      TCHAR szBuffer[1024];
-      _sntprintf(szBuffer, 1024, _T("DCI::%s::%d::InstanceFilter"), dco->getOwnerName(), dco->getId());
-      PostDciEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, dco->getId(), "ssd", szBuffer, instanceFilter->getErrorText(), dco->getId());
+      PostScriptErrorEvent(CONTEXT_DCI, dco->getOwnerId(), dco->getId(), instanceFilter->getErrorText(), _T("DCI::%s::%d::InstanceFilter"), dco->getOwnerName(), dco->getId());
       data->filteredInstances->set(key, new InstanceDiscoveryData((const TCHAR *)value, 0));
    }
    return _CONTINUE;
@@ -1450,9 +1446,7 @@ StringObjectMap<InstanceDiscoveryData> *DCObject::filterInstanceList(StringMap *
    data.instanceFilter->setUserData(getOwner().get());
    if (!data.instanceFilter->load(m_instanceFilter))
    {
-      TCHAR scriptIdentification[1024];
-      _sntprintf(scriptIdentification, 1024, _T("DCI::%s::%d::InstanceFilter"), getOwnerName(), m_id);
-      PostDciEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, m_id, "ssd", scriptIdentification, data.instanceFilter->getErrorText(), m_id);
+      PostScriptErrorEvent(CONTEXT_DCI, m_ownerId, m_id, data.instanceFilter->getErrorText(), _T("DCI::%s::%d::InstanceFilter"), getOwnerName(), m_id);
    }
    unlock();
 
@@ -1487,9 +1481,7 @@ void DCObject::setInstanceFilter(const TCHAR *script)
                nxlog_write(NXLOG_WARNING, _T("Failed to compile instance filter script for object %s [%u] DCI %s [%u] (%s)"),
                         owner->getName(), owner->getId(), m_name.cstr(), m_id, errorText);
 
-               TCHAR scriptIdentification[1024];
-               _sntprintf(scriptIdentification, 1024, _T("DCI::%s::%d::InstanceFilter"), owner->getName(), m_id);
-               PostDciEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, m_id, "ssd", scriptIdentification, errorText, m_id);
+               PostScriptErrorEvent(CONTEXT_DCI, owner->getId(), m_id, errorText, _T("DCI::%s::%d::InstanceFilter"), owner->getName(), m_id);
             }
          }
       }

@@ -436,7 +436,7 @@ static bool ExecuteActionScript(const TCHAR *script, const Event *event)
          else
          {
             nxlog_debug_tag(DEBUG_TAG, 4, _T("ExecuteActionScript: Script %s execution error: %s"), name, vm->getErrorText());
-            PostSystemEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", name, vm->getErrorText(), 0);
+            PostScriptErrorEvent(CONTEXT_ACTION_SCRIPT, event->getSourceId(), 0, vm->getErrorText(), name);
          }
       }
       else

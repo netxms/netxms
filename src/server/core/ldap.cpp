@@ -758,7 +758,7 @@ void LDAPConnection::fillLists(LDAPMessage *searchResult)
          else
          {
             nxlog_debug_tag(LDAP_DEBUG_TAG, 4, _T("LDAPConnection::fillLists(): hook script execution error (%s)"), vm->getErrorText());
-            PostSystemEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", _T("Hook::LDAPSynchronization"), vm->getErrorText(), 0);
+            PostScriptErrorEvent(CONTEXT_LDAP, 0, 0, vm->getErrorText(), _T("Hook::LDAPSynchronization"));
          }
       }
       if (ldapObject != nullptr)

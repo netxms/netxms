@@ -517,9 +517,7 @@ bool EPRule::matchScript(Event *event) const
    {
       if (vm.failureReason() != ScriptVMFailureReason::SCRIPT_IS_EMPTY)
       {
-         TCHAR buffer[1024];
-         _sntprintf(buffer, 1024, _T("EPP::%d"), m_id + 1);
-         PostSystemEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", buffer, _T("Script load failed"), 0);
+         PostScriptErrorEvent(CONTEXT_EPP, event->getSourceId(), 0, _T("Script load failed"), _T("EPP::%d"), m_id + 1);
          nxlog_write(NXLOG_ERROR, _T("Cannot create NXSL VM for evaluation script for event processing policy rule #%u"), m_id + 1);
       }
       return true;
@@ -557,9 +555,7 @@ bool EPRule::matchScript(Event *event) const
    }
    else
    {
-      TCHAR buffer[1024];
-      _sntprintf(buffer, 1024, _T("EPP::%d"), m_id + 1);
-      PostSystemEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", buffer, vm->getErrorText(), 0);
+      PostScriptErrorEvent(CONTEXT_EPP, event->getSourceId(), 0, vm->getErrorText(), _T("EPP::%d"), m_id + 1);
       nxlog_write(NXLOG_ERROR, _T("Failed to execute evaluation script for event processing policy rule #%u (%s)"), m_id + 1, vm->getErrorText());
    }
    delete globals;
@@ -717,7 +713,7 @@ uint32_t EPRule::generateAlarm(Event *event) const
 	         }
 	         else
 	         {
-	            PostSystemEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", m_rcaScriptName, vm->getErrorText(), 0);
+	            PostScriptErrorEvent(CONTEXT_EPP, event->getSourceId(), 0, vm->getErrorText(), m_rcaScriptName);
 	            nxlog_write(NXLOG_ERROR, _T("Failed to execute root cause analysis script for event processing policy rule #%u (%s)"), m_id + 1, vm->getErrorText());
 	         }
 	         delete vm;

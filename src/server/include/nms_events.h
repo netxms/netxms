@@ -43,6 +43,24 @@ enum class EventOrigin
    WINDOWS_EVENT = 7
 };
 
+
+#define CONTEXT_AUTOBIND _T("Autobind")
+#define CONTEXT_ACTION_SCRIPT _T("Action script")
+#define CONTEXT_ALARM _T("Alarm")
+#define CONTEXT_BIZSVC _T("Business service")
+#define CONTEXT_DCI _T("DCI")
+#define CONTEXT_EPP _T("EPP")
+#define CONTEXT_EVENT_PROC _T("Event processing")
+#define CONTEXT_LDAP _T("LDAP")
+#define CONTEXT_NETMAP _T("Network map")
+#define CONTEXT_NETOBJ _T("NetObj")
+#define CONTEXT_NODE _T("Node")
+#define CONTEXT_OBJECT_QUERY _T("Object query")
+#define CONTEXT_AGENT_CFG _T("Agent configuration")
+#define CONTEXT_SNMP_TRAP _T("SNMP Trap")
+#define CONTEXT_TUNNEL _T("Tunnel")
+
+
 /**
  * Event template
  */
@@ -408,6 +426,7 @@ bool NXCORE_EXPORTABLE PostSystemEventEx(ObjectQueue<Event> *queue, uint32_t eve
 void NXCORE_EXPORTABLE ResendEvents(ObjectQueue<Event> *queue);
 bool NXCORE_EXPORTABLE TransformAndPostEvent(uint32_t eventCode, EventOrigin origin, time_t originTimestamp, uint32_t sourceId, const TCHAR *tag, StringMap *parameters, NXSL_VM *vm);
 bool NXCORE_EXPORTABLE TransformAndPostSystemEvent(uint32_t eventCode, uint32_t sourceId, const TCHAR *tag, StringMap *parameters, NXSL_VM *vm);
+bool NXCORE_EXPORTABLE PostScriptErrorEvent(const TCHAR *context, uint32_t objectId, uint32_t dciId, const TCHAR *errorText, const TCHAR *nameFormat, ...);
 
 const TCHAR NXCORE_EXPORTABLE *GetStatusAsText(int status, bool allCaps);
 

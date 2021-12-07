@@ -24,6 +24,24 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 40.86 to 40.87
+ */
+static bool H_UpgradeFromV86()
+{
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET description=")
+		   _T("'Generated when server encounters NXSL script execution error.\r\n")
+		   _T("Parameters:\r\n")
+		   _T("   1) Script name\r\n")
+		   _T("   2) Error text\r\n")
+		   _T("   3) DCI ID if script is DCI related script, or 0 otherwise\r\n")
+		   _T("   4) Related object ID if applicable, or 0 otherwise\r\n")
+		   _T("   5) Context'")
+		   _T(" WHERE guid='2cc78efe-357a-4278-932f-91e36754c775'\n")));
+   CHK_EXEC(SetMinorSchemaVersion(87));
+   return true;
+}
+
+/**
  * Upgrade from 40.85 to 40.86
  */
 static bool H_UpgradeFromV85()
@@ -2793,6 +2811,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 86, 40, 87, H_UpgradeFromV86 },
    { 85, 40, 86, H_UpgradeFromV85 },
    { 84, 40, 85, H_UpgradeFromV84 },
    { 83, 40, 84, H_UpgradeFromV83 },
