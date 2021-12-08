@@ -27,6 +27,7 @@ import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
+import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -81,6 +82,9 @@ public class ServicesTab extends ObjectTab
    private SortableTableViewer viewer;
    private Action actionStart;
    private Action actionStop;
+   private Action actionSetAutoStart;
+   private Action actionSetManualStart;
+   private Action actionDisable;
    private boolean showFilter;
    private String filterString = null;
 
@@ -202,6 +206,30 @@ public class ServicesTab extends ObjectTab
             executeAgentAction("Service.Stop");
          }
       };
+
+      actionSetAutoStart = new Action("&Automatic") {
+         @Override
+         public void run()
+         {
+            executeAgentAction("Service.SetStartType.Automatic");
+         }
+      };
+
+      actionSetManualStart = new Action("&Manual") {
+         @Override
+         public void run()
+         {
+            executeAgentAction("Service.SetStartType.Manual");
+         }
+      };
+
+      actionDisable = new Action("&Disabled") {
+         @Override
+         public void run()
+         {
+            executeAgentAction("Service.SetStartType.Disabled");
+         }
+      };
    }
 
    /**
@@ -231,8 +259,15 @@ public class ServicesTab extends ObjectTab
     */
    protected void fillContextMenu(IMenuManager manager)
    {
+      MenuManager startTypeMenu = new MenuManager("&Change start type");
+      startTypeMenu.add(actionSetAutoStart);
+      startTypeMenu.add(actionSetManualStart);
+      startTypeMenu.add(actionDisable);
+
       manager.add(actionStart);
       manager.add(actionStop);
+      manager.add(new Separator());
+      manager.add(startTypeMenu);
    }
 
    /**
