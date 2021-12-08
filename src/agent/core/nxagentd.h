@@ -176,7 +176,7 @@ struct ACTION
       TCHAR *cmdLine;
       struct __subagentAction
       {
-         uint32_t (*handler)(const shared_ptr<ActionContext>&);
+         uint32_t (*handler)(const shared_ptr<ActionExecutionContext>&);
          const void *arg;
          const TCHAR *subagentName;
       } sa;
@@ -777,8 +777,7 @@ bool LoadSubAgent(const TCHAR *moduleName);
 void UnloadAllSubAgents();
 bool ProcessCommandBySubAgent(uint32_t command, NXCPMessage *request, NXCPMessage *response, AbstractCommSession *session);
 void NotifySubAgents(uint32_t code, void *data);
-bool AddAction(const TCHAR *name, bool isExternal, const void *arg, uint32_t (*handler)(const shared_ptr<ActionContext>&),
-         const TCHAR *subAgent, const TCHAR *description);
+bool AddAction(const TCHAR *name, bool isExternal, const void *arg, uint32_t (*handler)(const shared_ptr<ActionExecutionContext>&), const TCHAR *subAgent, const TCHAR *description);
 bool AddActionFromConfig(const TCHAR *config);
 
 void StartExternalParameterProviders();

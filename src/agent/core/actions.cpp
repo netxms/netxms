@@ -64,7 +64,7 @@ static ACTION *FindAction(const TCHAR *name)
  * Add action
  */
 bool AddAction(const TCHAR *name, bool isExternal, const void *arg,
-         uint32_t (*handler)(const shared_ptr<ActionContext>&),
+         uint32_t (*handler)(const shared_ptr<ActionExecutionContext>&),
          const TCHAR *subAgent, const TCHAR *description)
 {
    ACTION *action = FindAction(name);
@@ -95,7 +95,7 @@ bool AddAction(const TCHAR *name, bool isExternal, const void *arg,
       _tcslcpy(newAction.description, description, MAX_DB_STRING);
       if (isExternal)
       {
-         newAction.handler.cmdLine = MemCopyString((const TCHAR*)arg);
+         newAction.handler.cmdLine = MemCopyString(static_cast<const TCHAR*>(arg));
       }
       else
       {
@@ -181,7 +181,7 @@ static void ExecutorCleanup(ExternalActionExecutor *executor)
 /**
  * Wrapper for internal action handlers
  */
-static void InternalActionExecutor(uint32_t (*handler)(const shared_ptr<ActionContext>&), shared_ptr<ActionContext> context)
+static void InternalActionExecutor(uint32_t (*handler)(const shared_ptr<ActionExecutionContext>&), shared_ptr<ActionExecutionContext> context)
 {
    context->markAsCompleted(handler(context));
 }
@@ -215,7 +215,7 @@ static uint32_t ExecuteAction(const TCHAR *name, const StringList& args, const s
    else
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("Executing internal action %s"), name);
-      auto context = make_shared<ActionContext>(name, args, action->handler.sa.arg, session, requestId, sendOutput);
+      auto context = make_shared<ActionExecutionContext>(name, args, action->handler.sa.arg, session, requestId, sendOutput);
       ThreadCreate(InternalActionExecutor, action->handler.sa.handler, context);
       rcc = context->waitForCompletion();
       nxlog_debug_tag(DEBUG_TAG, 7, _T("Internal action execution result: %d"), rcc);
@@ -264,7 +264,6 @@ ExternalActionExecutor::ExternalActionExecutor(const TCHAR *command, const Strin
          _sntprintf(macro, 3, _T("$%d"), i + 1);
          sb.replace(macro, args.get(i));
       }
-      MemFree(m_cmd);
       m_cmd = MemCopyString(sb);
    }
    else

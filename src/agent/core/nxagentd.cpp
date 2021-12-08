@@ -143,6 +143,8 @@ void LIBNXAGENT_EXPORTABLE InitSubAgentAPI(
 int CreateConfig(bool forceCreate, const char *masterServers, const char *logFile, const char *fileStore,
    const char *configIncludeDir, int numSubAgents, char **subAgentList, const char *extraValues);
 
+uint32_t H_SystemExecute(const shared_ptr<ActionExecutionContext>& context);
+
 /**
  * OpenSSL APPLINK
  */
@@ -739,7 +741,7 @@ LONG RestartAgent()
 /**
  * Handler for Agent.Restart action
  */
-static uint32_t H_RestartAgent(const shared_ptr<ActionContext>& context)
+static uint32_t H_RestartAgent(const shared_ptr<ActionExecutionContext>& context)
 {
    return RestartAgent();
 }
@@ -747,17 +749,9 @@ static uint32_t H_RestartAgent(const shared_ptr<ActionContext>& context)
 /**
  * Handler for Agent.RotateLog action
  */
-static uint32_t H_RotateLog(const shared_ptr<ActionContext>& context)
+static uint32_t H_RotateLog(const shared_ptr<ActionExecutionContext>& context)
 {
    return nxlog_rotate() ? ERR_SUCCESS : ERR_INTERNAL_ERROR;
-}
-
-/**
- * Handler for System.Execute action
- */
-static uint32_t H_SystemExecute(const shared_ptr<ActionContext>& context)
-{
-   return ERR_NOT_IMPLEMENTED;
 }
 
 #ifdef _WIN32
@@ -765,19 +759,12 @@ static uint32_t H_SystemExecute(const shared_ptr<ActionContext>& context)
 /**
  * Handler for System.ExecuteInAllSessions action
  */
-static uint32_t H_SystemExecuteInAllSessions(const shared_ptr<ActionContext>& context)
+static uint32_t H_SystemExecuteInAllSessions(const shared_ptr<ActionExecutionContext>& context)
 {
    if (!context->hasArgs())
       return ERR_BAD_ARGUMENTS;
 
-   StringBuffer command;
-   for (int i = 0; i < context->getArgCount(); i++)
-   {
-      command.append(command.isEmpty() ? _T("\"") : _T(" \""));
-      command.append(context->getArg(i));
-      command.append(_T("\""));
-   }
-   return ExecuteInAllSessions(command) ? ERR_SUCCESS : ERR_EXEC_FAILED;
+   return ExecuteInAllSessions(context->getArg(0)) ? ERR_SUCCESS : ERR_EXEC_FAILED;
 }
 
 #else
@@ -785,7 +772,7 @@ static uint32_t H_SystemExecuteInAllSessions(const shared_ptr<ActionContext>& co
 /**
  * Handler for action Process.Terminate
  */
-static uint32_t H_TerminateProcess(const shared_ptr<ActionContext>& context)
+static uint32_t H_TerminateProcess(const shared_ptr<ActionExecutionContext>& context)
 {
    if (!context->hasArgs())
       return ERR_BAD_ARGUMENTS;

@@ -60,10 +60,10 @@ static void RebootThread(const char *mode)
 /**
  * Handler for hard shutdown/restart actions
  */
-static uint32_t H_HardShutdown(const shared_ptr<ActionContext>& context)
+static uint32_t H_HardShutdown(const shared_ptr<ActionExecutionContext>& context)
 {
 #if HAVE_REBOOT
-   TCHAR mode = *static_cast<const TCHAR*>(context->getData());
+   TCHAR mode = *context->getData<TCHAR>();
    if (mode == _T('R'))
    {
 #if HAVE_DECL_RB_AUTOBOOT
@@ -90,9 +90,9 @@ static uint32_t H_HardShutdown(const shared_ptr<ActionContext>& context)
 /**
  * Handler for soft shutdown/restart actions
  */
-static uint32_t H_SoftShutdown(const shared_ptr<ActionContext>& context)
+static uint32_t H_SoftShutdown(const shared_ptr<ActionExecutionContext>& context)
 {
-   TCHAR mode = *static_cast<const TCHAR*>(context->getData());
+   TCHAR mode = *context->getData<TCHAR>();
    char cmd[128];
    snprintf(cmd, 128, "shutdown %s now", (mode == _T('R')) ? "-r" : "-h");
    return (system(cmd) >= 0) ? ERR_SUCCESS : ERR_INTERNAL_ERROR;

@@ -801,31 +801,32 @@ template <class C, typename... Args> shared_ptr<C> MakeSharedCommSession(Args&&.
 }
 
 /**
- *  Executor for internal actions
+ *  Action execution context
  */
-class ActionContext
+class ActionExecutionContext
 {
 private:
    uint32_t m_requestId;
    shared_ptr<AbstractCommSession> m_session;
-   bool m_sendOutput;
    TCHAR* m_name;
    const void* m_data;
    StringList m_args;
+   bool m_sendOutput;
    uint32_t m_rcc;
    Condition m_completionCondition;
 
 public:
-   ActionContext(const TCHAR *name, const StringList& args, const void *data, const shared_ptr<AbstractCommSession>& session, uint32_t requestId, bool sendOutput)
-                        : m_session(session), m_args(args), m_completionCondition(true), m_data(data)
+   ActionExecutionContext(const TCHAR *name, const StringList& args, const void *data, const shared_ptr<AbstractCommSession>& session, uint32_t requestId, bool sendOutput)
+                        : m_session(session), m_args(args), m_completionCondition(true)
    {
       m_name = MemCopyString(name);
       m_requestId = requestId;
+      m_data = data;
       m_sendOutput = sendOutput;
       m_rcc = ERR_INTERNAL_ERROR;
    }
 
-   ~ActionContext()
+   ~ActionExecutionContext()
    {
       MemFree(m_name);
    }
@@ -892,12 +893,16 @@ public:
    }
 
    const TCHAR *getName() const { return m_name; }
+   const void *getData() const { return m_data; }
+   template<typename T> const T *getData() const { return static_cast<const T*>(m_data); }
+
    const shared_ptr<AbstractCommSession>& getSession() const { return m_session; }
+   uint32_t getRequestId() const { return m_requestId; }
    const StringList& getArgs() const { return m_args; }
    int getArgCount() const { return m_args.size(); }
    bool hasArgs() const { return !m_args.isEmpty(); }
    const TCHAR *getArg(int index) const { return m_args.get(index); }
-   const void *getData() const { return m_data; }
+   bool isOutputRequested() const { return m_sendOutput; }
 };
 
 /**
@@ -964,7 +969,7 @@ struct NETXMS_SUBAGENT_TABLE
 struct NETXMS_SUBAGENT_ACTION
 {
    TCHAR name[MAX_PARAM_NAME];
-   uint32_t (* handler)(const shared_ptr<ActionContext>&);
+   uint32_t (* handler)(const shared_ptr<ActionExecutionContext>&);
    const void *arg;
    TCHAR description[MAX_DB_STRING];
 };

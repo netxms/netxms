@@ -33,13 +33,13 @@ static SubAgent *s_subAgent = nullptr;
 /**
  * Action handler
  */
-static uint32_t ActionHandler(const shared_ptr<ActionContext>& context)
+static uint32_t ActionHandler(const shared_ptr<ActionExecutionContext>& context)
 {
    if (s_subAgent == nullptr)
       return SYSINFO_RC_ERROR;
 
-   AgentWriteDebugLog(6, _T("JAVA: ActionHandler(action=%s, id=%s)"), context->getName(), (const TCHAR*)context->getData());
-   uint32_t rc = s_subAgent->actionHandler(context->getName(), context->getArgs(), (const TCHAR*)context->getData());
+   AgentWriteDebugLog(6, _T("JAVA: ActionHandler(action=%s, id=%s)"), context->getName(), context->getData<TCHAR>());
+   uint32_t rc = s_subAgent->actionHandler(context->getName(), context->getArgs(), context->getData<TCHAR>());
    DetachThreadFromJavaVM();
    return rc;
 }

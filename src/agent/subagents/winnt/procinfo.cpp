@@ -631,7 +631,7 @@ LONG H_ProcessTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCo
 /**
  * Handler for Process.Terminate action
  */
-uint32_t H_TerminateProcess(const shared_ptr<ActionContext>& context)
+uint32_t H_TerminateProcess(const shared_ptr<ActionExecutionContext>& context)
 {
    if (!context->hasArgs())
       return ERR_BAD_ARGUMENTS;

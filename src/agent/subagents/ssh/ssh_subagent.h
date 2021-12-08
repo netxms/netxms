@@ -1,6 +1,6 @@
 /*
 ** NetXMS SSH subagent
-** Copyright (C) 2004-2016 Victor Kirhenshtein
+** Copyright (C) 2004-2021 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -53,36 +53,36 @@ struct KeyPair
 class SSHSession
 {
 private:
-   INT32 m_id;
+   int32_t m_id;
    InetAddress m_addr;
-   unsigned int m_port;
+   uint16_t m_port;
    TCHAR m_user[MAX_SSH_LOGIN_LEN];
    ssh_session m_session;
    time_t m_lastAccess;
    bool m_busy;
    TCHAR m_name[MAX_SSH_SESSION_NAME_LEN];
 
-   bool execute(const TCHAR *command, StringList* output, ActionContext* context);
+   bool execute(const TCHAR *command, StringList* output, ActionExecutionContext* context);
 
 public:
-   SSHSession(const InetAddress& addr, UINT16 port, INT32 id = 0);
+   SSHSession(const InetAddress& addr, uint16_t port, int32_t id = 0);
    ~SSHSession();
 
    bool connect(const TCHAR *user, const TCHAR *password, const shared_ptr<KeyPair>& keys);
    void disconnect();
-   bool isConnected() const { return (m_session != NULL) && ssh_is_connected(m_session); }
+   bool isConnected() const { return (m_session != nullptr) && ssh_is_connected(m_session); }
 
    const TCHAR *getName() const { return m_name; }
    time_t getLastAccessTime() const { return m_lastAccess; }
    bool isBusy() const { return m_busy; }
 
-   bool match(const InetAddress& addr, UINT16 port, const TCHAR *user) const;
+   bool match(const InetAddress& addr, uint16_t port, const TCHAR *user) const;
 
    bool acquire();
    void release();
 
    StringList *execute(const TCHAR *command);
-   bool execute(const TCHAR *command, const shared_ptr<ActionContext>& context);
+   bool execute(const TCHAR *command, const shared_ptr<ActionExecutionContext>& context);
 };
 
 /* Key functions */
@@ -97,7 +97,7 @@ void ReleaseSession(SSHSession *session);
 /* handlers */
 LONG H_SSHCommand(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_SSHCommandList(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session);
-uint32_t H_SSHCommandAction(const shared_ptr<ActionContext>& context);
+uint32_t H_SSHCommandAction(const shared_ptr<ActionExecutionContext>& context);
 
 /* globals */
 extern uint32_t g_sshConnectTimeout;

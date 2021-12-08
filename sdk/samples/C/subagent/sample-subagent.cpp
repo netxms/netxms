@@ -63,10 +63,10 @@ static LONG H_List(const TCHAR *parameter, const TCHAR *arguments, StringList *v
 /**
  * Action handler functions
  */
-static void H_ActionSample(shared_ptr<ActionContext> context)
+static void H_ActionSample(const shared_ptr<ActionExecutionContext>& context)
 {
    nxlog_write(NXLOG_INFO, _T("Sample action executed"));
-	context->markAsCompleted(ERR_SUCCESS);
+   context->markAsCompleted(ERR_SUCCESS);
 }
 
 /**

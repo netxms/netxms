@@ -24,7 +24,7 @@
 /**
  * SSH session constructor
  */
-SSHSession::SSHSession(const InetAddress& addr, UINT16 port, INT32 id)
+SSHSession::SSHSession(const InetAddress& addr, uint16_t port, int32_t id)
 {
    m_id = id;
    m_addr = addr;
@@ -47,9 +47,9 @@ SSHSession::~SSHSession()
 /**
  * Check if session match for given target
  */
-bool SSHSession::match(const InetAddress& addr, UINT16 port, const TCHAR *user) const
+bool SSHSession::match(const InetAddress& addr, uint16_t port, const TCHAR *user) const
 {
-   return addr.equals(m_addr) && ((unsigned int)port == m_port) && !_tcscmp(m_user, user);
+   return addr.equals(m_addr) && (port == m_port) && !_tcscmp(m_user, user);
 }
 
 /**
@@ -76,11 +76,11 @@ void SSHSession::release()
  */
 bool SSHSession::connect(const TCHAR *user, const TCHAR *password, const shared_ptr<KeyPair>& keys)
 {
-   if (m_session != NULL)
+   if (m_session != nullptr)
       return false;  // already connected
 
    m_session = ssh_new();
-   if (m_session == NULL)
+   if (m_session == nullptr)
       return false;  // cannot create session
 
    bool success = false;
@@ -216,7 +216,7 @@ StringList* SSHSession::execute(const TCHAR *command)
 /**
  * Execute command and feed output to provided action context
  */
-bool SSHSession::execute(const TCHAR *command, const shared_ptr<ActionContext>& context)
+bool SSHSession::execute(const TCHAR *command, const shared_ptr<ActionExecutionContext>& context)
 {
    return execute(command, nullptr, context.get());
 }
@@ -224,7 +224,7 @@ bool SSHSession::execute(const TCHAR *command, const shared_ptr<ActionContext>& 
 /**
  * Execute command process output as requested
  */
-bool SSHSession::execute(const TCHAR *command, StringList *output, ActionContext *context)
+bool SSHSession::execute(const TCHAR *command, StringList *output, ActionExecutionContext *context)
 {
    if ((m_session == nullptr) || !ssh_is_connected(m_session))
    {

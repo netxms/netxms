@@ -66,7 +66,7 @@ LONG H_ProcessTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCo
 LONG H_ProcCount(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_ProcCountSpecific(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_ProcInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
-uint32_t H_ServiceControl(const shared_ptr<ActionContext>& context);
+uint32_t H_ServiceControl(const shared_ptr<ActionExecutionContext>& context);
 LONG H_ServiceList(const TCHAR *pszCmd, const TCHAR *pArg, StringList *value, AbstractCommSession *session);
 LONG H_ServiceState(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_ServiceTable(const TCHAR *pszCmd, const TCHAR *pArg, Table *value, AbstractCommSession *session);
@@ -79,7 +79,7 @@ LONG H_SystemProductInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, Abstr
 LONG H_SystemUname(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_SystemVersionInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_SysUpdateTime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
-uint32_t H_TerminateProcess(const shared_ptr<ActionContext>& context);
+uint32_t H_TerminateProcess(const shared_ptr<ActionExecutionContext>& context);
 LONG H_ThreadCount(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_Uptime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_WindowsFirewallCurrentProfile(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
@@ -134,19 +134,19 @@ static BOOL SetCurrentPrivilege(LPCTSTR privilege, BOOL enable)
 /**
  * Shutdown system
  */
-static uint32_t H_ActionShutdown(const shared_ptr<ActionContext>& context)
+static uint32_t H_ActionShutdown(const shared_ptr<ActionExecutionContext>& context)
 {
-	if (!SetCurrentPrivilege(SE_SHUTDOWN_NAME, TRUE))
+   if (!SetCurrentPrivilege(SE_SHUTDOWN_NAME, TRUE))
       return ERR_INTERNAL_ERROR;
 
-   return InitiateSystemShutdown(nullptr, nullptr, 0, TRUE, (*static_cast<const TCHAR*>(context->getData()) == _T('R')) ? TRUE : FALSE) ? ERR_SUCCESS : ERR_INTERNAL_ERROR;
+   return InitiateSystemShutdown(nullptr, nullptr, 0, TRUE, (*context->getData<TCHAR>() == _T('R')) ? TRUE : FALSE) ? ERR_SUCCESS : ERR_INTERNAL_ERROR;
 }
 
 /**
  * Change user's password
  * Parameters: user new_password
  */
-static uint32_t H_ChangeUserPassword(const shared_ptr<ActionContext>& context)
+static uint32_t H_ChangeUserPassword(const shared_ptr<ActionExecutionContext>& context)
 {
    if (context->getArgCount() < 2)
       return ERR_BAD_ARGUMENTS;

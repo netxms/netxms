@@ -1,6 +1,6 @@
 /*
  ** Raspberry Pi subagent
- ** Copyright (C) 2013 Victor Kirhenshtein
+ ** Copyright (C) 2013-2021 Victor Kirhenshtein
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -90,7 +90,7 @@ static LONG H_PinState(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abstr
 /**
  * Set GPIO pin state
  */
-static uint32_t H_SetPinState(const shared_ptr<ActionContext>& context)
+static uint32_t H_SetPinState(const shared_ptr<ActionExecutionContext>& context)
 {
    const TCHAR *pinStr = context->getArg(0);
    const TCHAR *stateStr = context->getArg(1);

@@ -242,7 +242,7 @@ LONG H_ServiceTable(const TCHAR *pszCmd, const TCHAR *pArg, Table *value, Abstra
 /**
  * Handler for service control actions
  */
-uint32_t H_ServiceControl(const shared_ptr<ActionContext>& context)
+uint32_t H_ServiceControl(const shared_ptr<ActionExecutionContext>& context)
 {
    if (!context->hasArgs())
       return ERR_BAD_ARGUMENTS;
@@ -256,7 +256,7 @@ uint32_t H_ServiceControl(const shared_ptr<ActionContext>& context)
    if (hService != nullptr)
    {
       SERVICE_STATUS ss;
-      switch (*static_cast<const TCHAR*>(context->getData()))
+      switch (*context->getData<TCHAR>())
       {
          case 's':
             if (StartService(hService, 0, nullptr))

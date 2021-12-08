@@ -194,6 +194,81 @@ LONG H_ExternalTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractC
    return status;
 }
 
+/**
+ * Process executor that sends command output to server using action execution context
+ */
+class SystemActionProcessExecutor : public ProcessExecutor
+{
+private:
+   ActionExecutionContext *m_context;
+
+protected:
+   virtual void onOutput(const char *text) override;
+   virtual void endOfOutput() override;
+
+public:
+   SystemActionProcessExecutor(const TCHAR *command, ActionExecutionContext *context) : ProcessExecutor(command)
+   {
+      m_context = context;
+      m_sendOutput = true;
+   }
+   virtual ~SystemActionProcessExecutor() = default;
+};
+
+/**
+ * Handle process output
+ */
+void SystemActionProcessExecutor::onOutput(const char *text)
+{
+#ifdef UNICODE
+   TCHAR *buffer = WideStringFromMBStringSysLocale(text);
+   m_context->sendOutput(buffer);
+   MemFree(buffer);
+#else
+   m_context->sendOutput(text);
+#endif
+}
+
+/**
+ * Handle end of output
+ */
+void SystemActionProcessExecutor::endOfOutput()
+{
+   m_context->sendEndOfOutputMarker();
+}
+
+/**
+ * Handler for System.Execute action
+ */
+uint32_t H_SystemExecute(const shared_ptr<ActionExecutionContext>& context)
+{
+   if (!context->hasArgs())
+      return ERR_BAD_ARGUMENTS;
+
+   const TCHAR *command = context->getArg(0);
+   if (context->isOutputRequested())
+   {
+      SystemActionProcessExecutor executor(command, context.get());
+      if (executor.execute())
+      {
+         context->markAsCompleted(ERR_SUCCESS);
+         nxlog_debug_tag(_T("actions"), 4, _T("H_SystemExecute: started execution of command %s"), command);
+         executor.waitForCompletion(g_externalCommandTimeout);
+         return ERR_SUCCESS;
+      }
+      else
+      {
+         nxlog_debug_tag(_T("actions"), 4, _T("H_SystemExecute: execution failed for command %s"), command);
+         return ERR_EXEC_FAILED;
+      }
+   }
+   else
+   {
+      nxlog_debug_tag(_T("actions"), 4, _T("H_SystemExecute: starting command %s"), command);
+      return ProcessExecutor::execute(command) ? ERR_SUCCESS : ERR_EXEC_FAILED;
+   }
+}
+
 #ifdef _WIN32
 
 /**

@@ -34,7 +34,7 @@ static LONG H_SourcePkg(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue,
 /**
  * Handler for shutdown/restart actions
  */
-static void H_Shutdown(shared_ptr<ActionContext> context)
+static void H_Shutdown(shared_ptr<ActionExecutionContext> context)
 {
 	TCHAR mode = 0;
 	if (context->getData() != nullptr)

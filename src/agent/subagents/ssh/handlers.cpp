@@ -182,7 +182,7 @@ LONG H_SSHCommandList(const TCHAR *param, const TCHAR *arg, StringList *value, A
 /**
  * Generic handler to execute command on host by ssh
  */
-uint32_t H_SSHCommandAction(const shared_ptr<ActionContext>& context)
+uint32_t H_SSHCommandAction(const shared_ptr<ActionExecutionContext>& context)
 {
 	if (context->getArgCount() < 6)
       return ERR_MALFORMED_COMMAND;

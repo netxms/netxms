@@ -38,17 +38,17 @@ static TCHAR m_szDevice[MAX_PATH];
  */
 static LONG H_StringConst(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
-	ret_string(pValue, pArg);
-	return SYSINFO_RC_SUCCESS;
+   ret_string(pValue, pArg);
+   return SYSINFO_RC_SUCCESS;
 }
 
 /**
  * Handler for SMS.Send action
  */
-static uint32_t H_SendSMS(const shared_ptr<ActionContext>& context)
+static uint32_t H_SendSMS(const shared_ptr<ActionExecutionContext>& context)
 {
-	if (context->getArgCount() < 2)
-		return ERR_BAD_ARGUMENTS;
+   if (context->getArgCount() < 2)
+      return ERR_BAD_ARGUMENTS;
 
 #ifdef UNICODE
    char *rcpt = MBStringFromWideString(context->getArg(0));
