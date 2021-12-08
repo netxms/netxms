@@ -36,7 +36,7 @@ static bool H_UpgradeFromV86()
 		   _T("   3) DCI ID if script is DCI related script, or 0 otherwise\r\n")
 		   _T("   4) Related object ID if applicable, or 0 otherwise\r\n")
 		   _T("   5) Context'")
-		   _T(" WHERE guid='2cc78efe-357a-4278-932f-91e36754c775'\n")));
+		   _T(" WHERE guid='2cc78efe-357a-4278-932f-91e36754c775'")));
    CHK_EXEC(SetMinorSchemaVersion(87));
    return true;
 }
