@@ -240,6 +240,22 @@ LONG H_ServiceTable(const TCHAR *pszCmd, const TCHAR *pArg, Table *value, Abstra
 }
 
 /**
+ * Change start type for given service
+ */
+static uint32_t ChangeServiceStartType(SC_HANDLE hService, DWORD startType, const TCHAR *serviceName)
+{
+   if (ChangeServiceConfig(hService, SERVICE_NO_CHANGE, startType, SERVICE_NO_CHANGE, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr))
+   {
+      nxlog_debug_tag(DEBUG_TAG, 3, _T("H_ServiceControl: start type for service \"%s\" changed to %u"), serviceName, startType);
+      return ERR_SUCCESS;
+   }
+
+   TCHAR buffer[1024];
+   nxlog_debug_tag(DEBUG_TAG, 3, _T("H_ServiceControl: cannot stop service \"%s\" (%s)"), serviceName, GetSystemErrorText(GetLastError(), buffer, 1024));
+   return ERR_INTERNAL_ERROR;
+}
+
+/**
  * Handler for service control actions
  */
 uint32_t H_ServiceControl(const shared_ptr<ActionExecutionContext>& context)
@@ -251,13 +267,37 @@ uint32_t H_ServiceControl(const shared_ptr<ActionExecutionContext>& context)
    if (hManager == nullptr)
       return ERR_INTERNAL_ERROR;
 
+   TCHAR operation = *context->getData<TCHAR>();
+   DWORD accessLevel;
+   switch (operation)
+   {
+      case 's':
+         accessLevel = SERVICE_START;
+         break;
+      case 'S':
+         accessLevel = SERVICE_STOP;
+         break;
+      default:
+         accessLevel = SERVICE_CHANGE_CONFIG;
+         break;
+   }
+
    uint32_t rc;
-   SC_HANDLE hService = OpenService(hManager, context->getArg(0), SERVICE_START | SERVICE_STOP);
+   SC_HANDLE hService = OpenService(hManager, context->getArg(0), accessLevel);
    if (hService != nullptr)
    {
       SERVICE_STATUS ss;
-      switch (*context->getData<TCHAR>())
+      switch (operation)
       {
+         case 'A':   // Disable service
+            rc = ChangeServiceStartType(hService, SERVICE_AUTO_START, context->getArg(0));
+            break;
+         case 'D':   // Disable service
+            rc = ChangeServiceStartType(hService, SERVICE_DISABLED, context->getArg(0));
+            break;
+         case 'M':   // Manual start
+            rc = ChangeServiceStartType(hService, SERVICE_DEMAND_START, context->getArg(0));
+            break;
          case 's':
             if (StartService(hService, 0, nullptr))
             {

@@ -458,6 +458,9 @@ static NETXMS_SUBAGENT_TABLE s_tables[] =
 static NETXMS_SUBAGENT_ACTION s_actions[] =
 {
 	{ _T("Process.Terminate"), H_TerminateProcess, nullptr, _T("Terminate process") },
+   { _T("Service.SetStartType.Automatic"), H_ServiceControl, _T("A"), _T("Set service start type to \"automatic\"") },
+   { _T("Service.SetStartType.Disabled"), H_ServiceControl, _T("D"), _T("Set service start type to \"disabled\"") },
+   { _T("Service.SetStartType.Manual"), H_ServiceControl, _T("M"), _T("Set service start type to \"manual\"") },
    { _T("Service.Start"), H_ServiceControl, _T("s"), _T("Start service") },
    { _T("Service.Stop"), H_ServiceControl, _T("S"), _T("Stop service") },
    { _T("System.Restart"), H_ActionShutdown, _T("R"), _T("Restart system") },
