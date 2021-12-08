@@ -240,6 +240,22 @@ LONG H_ServiceTable(const TCHAR *pszCmd, const TCHAR *pArg, Table *value, Abstra
 }
 
 /**
+ * Change start type for given service
+ */
+static LONG ChangeServiceStartType(SC_HANDLE hService, DWORD startType, const TCHAR *serviceName)
+{
+   if (ChangeServiceConfig(hService, SERVICE_NO_CHANGE, startType, SERVICE_NO_CHANGE, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr))
+   {
+      nxlog_debug_tag(DEBUG_TAG, 3, _T("H_ServiceControl: start type for service \"%s\" changed to %u"), serviceName, startType);
+      return ERR_SUCCESS;
+   }
+
+   TCHAR buffer[1024];
+   nxlog_debug_tag(DEBUG_TAG, 3, _T("H_ServiceControl: cannot stop service \"%s\" (%s)"), serviceName, GetSystemErrorText(GetLastError(), buffer, 1024));
+   return ERR_INTERNAL_ERROR;
+}
+
+/**
  * Handler for service control actions
  */
 LONG H_ServiceControl(const TCHAR *action, const StringList *args, const TCHAR *data, AbstractCommSession *session)
@@ -251,13 +267,36 @@ LONG H_ServiceControl(const TCHAR *action, const StringList *args, const TCHAR *
    if (hManager == nullptr)
       return ERR_INTERNAL_ERROR;
 
+   DWORD accessLevel;
+   switch (*data)
+   {
+      case 's':
+         accessLevel = SERVICE_START;
+         break;
+      case 'S':
+         accessLevel = SERVICE_STOP;
+         break;
+      default:
+         accessLevel = SERVICE_CHANGE_CONFIG;
+         break;
+   }
+
    LONG rc;
-   SC_HANDLE hService = OpenService(hManager, args->get(0), SERVICE_START | SERVICE_STOP);
+   SC_HANDLE hService = OpenService(hManager, args->get(0), accessLevel);
    if (hService != nullptr)
    {
       SERVICE_STATUS ss;
       switch (*data)
       {
+         case 'A':   // Disable service
+            rc = ChangeServiceStartType(hService, SERVICE_AUTO_START, args->get(0));
+            break;
+         case 'D':   // Disable service
+            rc = ChangeServiceStartType(hService, SERVICE_DISABLED, args->get(0));
+            break;
+         case 'M':   // Manual start
+            rc = ChangeServiceStartType(hService, SERVICE_DEMAND_START, args->get(0));
+            break;
          case 's':
             if (StartService(hService, 0, nullptr))
             {
