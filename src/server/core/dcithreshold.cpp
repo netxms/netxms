@@ -776,8 +776,6 @@ static uint64_t noop64(uint64_t v)
  */
 void Threshold::calculateMDValue(ItemValue *result, const ItemValue &lastValue, ItemValue **prevValues)
 {
-   int i;
-
    switch(m_dataType)
    {
       case DCI_DT_INT:
