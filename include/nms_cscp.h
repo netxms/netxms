@@ -1481,6 +1481,7 @@ typedef struct
 #define VID_SNMP_CODEPAGE           ((uint32_t)781)
 #define VID_REGION                  ((uint32_t)782)
 #define VID_DISTRICT                ((uint32_t)783)
+#define VID_PACKAGE_TYPE            ((uint32_t)784)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

@@ -106,9 +106,6 @@
     <ClCompile Include="tunnel.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="upgrade.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="watchdog.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

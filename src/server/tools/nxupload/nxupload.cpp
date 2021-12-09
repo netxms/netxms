@@ -33,8 +33,11 @@ NETXMS_EXECUTABLE_HEADER(nxupload)
  */
 static bool s_doNotSplit = false;
 static bool s_verbose = true;
+static bool s_install = false;
 static bool s_upgrade = false;
-static TCHAR s_destinationFile[MAX_PATH] = {0};
+static TCHAR s_destinationFile[MAX_PATH] = _T("");
+static TCHAR s_packageType[16] = _T("executable");
+static TCHAR s_packageOptions[256] = _T("");
 static NXCPStreamCompressionMethod s_compression = NXCP_STREAM_COMPRESSION_NONE;
 
 /**
@@ -106,6 +109,22 @@ static int UpgradeAgent(AgentConnection *conn, const TCHAR *pszPkgName, RSA *ser
 }
 
 /**
+ * Do package installation
+ */
+static int InstallPackage(AgentConnection *conn, const TCHAR *pszPkgName)
+{
+   uint32_t rcc = conn->installPackage(pszPkgName, s_packageType, s_packageOptions);
+   if (s_verbose)
+   {
+      if (rcc == ERR_SUCCESS)
+         _tprintf(_T("Package installation completed successfully\n"));
+      else
+         _ftprintf(stderr, _T("Cannot install package (%d: %s)\n"), rcc, AgentErrorCodeToText(rcc));
+   }
+   return (rcc == ERR_SUCCESS) ? 0 : 1;
+}
+
+/**
  * Upload progress callback
  */
 static void ProgressCallback(size_t bytesTransferred, void *cbArg)
@@ -120,17 +139,28 @@ static bool ParseAdditionalOptionCb(const char ch, const TCHAR *optarg)
 {
    switch(ch)
    {
+      case 'C':
+        _tcslcpy(s_packageOptions, optarg, 256);
+        break;
       case 'd':
         _tcslcpy(s_destinationFile, optarg, MAX_PATH);
         break;
+      case 'i':   // Install package
+         s_install = true;
+         s_upgrade = false;
+         break;
       case 'n':   // Do not split file into chunks
          s_doNotSplit = true;
          break;
       case 'q':   // Quiet mode
          s_verbose = false;
          break;
+      case 't':
+        _tcslcpy(s_packageType, optarg, 16);
+        break;
       case 'u':   // Upgrade agent
          s_upgrade = true;
+         s_install = false;
          break;
       case 'z':
          s_compression = NXCP_STREAM_COMPRESSION_LZ4;
@@ -155,46 +185,40 @@ static bool IsArgMissingCb(int currentCount)
 /**
  * Execute command callback
  */
-static int ExecuteCommandCb(AgentConnection *conn, int argc, TCHAR **argv, int optind, RSA *pServerKey)
+static int ExecuteCommandCb(AgentConnection *conn, int argc, TCHAR **argv, int optind, RSA *serverKey)
 {
-   uint32_t dwError;
-   int exitCode;
-   int64_t nElapsedTime;
-
-   nElapsedTime = GetCurrentTimeMs();
+   int64_t elapsedTime = GetCurrentTimeMs();
    if (s_verbose)
       _tprintf(_T("Upload:                 "));
-   dwError = conn->uploadFile(argv[optind + 1], s_destinationFile[0] != 0 ? s_destinationFile : NULL, false, s_verbose ? ProgressCallback : NULL, NULL, s_compression, s_doNotSplit);
+   uint32_t rcc = conn->uploadFile(argv[optind + 1], s_destinationFile[0] != 0 ? s_destinationFile : nullptr, false, s_verbose ? ProgressCallback : nullptr, nullptr, s_compression, s_doNotSplit);
    if (s_verbose)
       _tprintf(_T("\r                        \r"));
-   nElapsedTime = GetCurrentTimeMs() - nElapsedTime;
+   elapsedTime = GetCurrentTimeMs() - elapsedTime;
    if (s_verbose)
    {
-      if (dwError == ERR_SUCCESS)
+      if (rcc == ERR_SUCCESS)
       {
-         QWORD qwBytes;
-
-         qwBytes = FileSize(argv[optind + 1]);
+         uint64_t bytes = FileSize(argv[optind + 1]);
          _tprintf(_T("File transferred successfully\n") UINT64_FMT _T(" bytes in %d.%03d seconds (%.2f KB/sec)\n"),
-                  qwBytes, (LONG)(nElapsedTime / 1000),
-                  (LONG)(nElapsedTime % 1000),
-                  ((double)((INT64)qwBytes / 1024) / (double)nElapsedTime) * 1000);
+               bytes, static_cast<int32_t>(elapsedTime / 1000), static_cast<int32_t>(elapsedTime % 1000),
+               (static_cast<double>(static_cast<int64_t>(bytes) / 1024) / static_cast<double>(elapsedTime)) * 1000);
       }
       else
       {
-         _tprintf(_T("%d: %s\n"), dwError, AgentErrorCodeToText(dwError));
+         _tprintf(_T("%d: %s\n"), rcc, AgentErrorCodeToText(rcc));
       }
    }
 
-   if (s_upgrade && (dwError == RCC_SUCCESS))
-   {
-      exitCode = UpgradeAgent(conn, argv[optind + 1], pServerKey);
-   }
-   else
-   {
-      exitCode = (dwError == ERR_SUCCESS) ? 0 : 1;
-   }
-   return exitCode;
+   if (rcc != ERR_SUCCESS)
+      return 1;
+
+   if (s_upgrade)
+      return UpgradeAgent(conn, argv[optind + 1], serverKey);
+
+   if (s_install)
+      return InstallPackage(conn, argv[optind + 1]);
+
+   return 0;
 }
 
 /**
@@ -211,13 +235,16 @@ int main(int argc, char *argv[])
    tool.argv = argv;
    tool.mainHelpText = _T("Usage: nxupload [<options>] <host> <file>\n")
                        _T("Tool specific options are:\n")
+                       _T("   -C <options> : Set package deployment options or command line (depending on package type)\n")
                        _T("   -d <file>    : Fully qualified destination file name\n")
+                       _T("   -i           : Start installation of uploaded package.\n")
                        _T("   -n           : Do not split file into chunks.\n")
                        _T("   -q           : Quiet mode.\n")
+                       _T("   -t <type>    : Set package type (default is \"executable\").\n")
                        _T("   -u           : Start agent upgrade from uploaded package.\n")
                        _T("   -z           : Compress data stream with LZ4.\n")
                        _T("   -Z           : Compress data stream with DEFLATE.\n");
-   tool.additionalOptions = "d:nquzZ";
+   tool.additionalOptions = "C:d:inqt:uzZ";
    tool.executeCommandCb = &ExecuteCommandCb;
    tool.parseAdditionalOptionCb = &ParseAdditionalOptionCb;
    tool.isArgMissingCb = &IsArgMissingCb;

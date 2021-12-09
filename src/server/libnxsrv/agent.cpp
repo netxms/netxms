@@ -2092,6 +2092,34 @@ uint32_t AgentConnection::startUpgrade(const TCHAR *pkgName)
 }
 
 /**
+ * Send package installation command
+ */
+uint32_t AgentConnection::installPackage(const TCHAR *pkgName, const TCHAR *pkgType, const TCHAR *command)
+{
+   if (!m_isConnected)
+      return ERR_NOT_CONNECTED;
+
+   NXCPMessage request(CMD_INSTALL_PACKAGE, generateRequestId(), m_nProtocolVersion);
+   int i;
+   for(i = (int)_tcslen(pkgName) - 1;
+       (i >= 0) && (pkgName[i] != '\\') && (pkgName[i] != '/'); i--);
+   request.setField(VID_FILE_NAME, &pkgName[i + 1]);
+   request.setField(VID_PACKAGE_TYPE, pkgType);
+   request.setField(VID_COMMAND, command);
+
+   uint32_t rcc;
+   if (sendMessage(&request))
+   {
+      rcc = waitForRCC(request.getId(), m_commandTimeout);
+   }
+   else
+   {
+      rcc = ERR_CONNECTION_BROKEN;
+   }
+   return rcc;
+}
+
+/**
  * Check status of network service via agent
  */
 uint32_t AgentConnection::checkNetworkService(uint32_t *status, const InetAddress& addr, int serviceType, uint16_t port,

@@ -41,10 +41,10 @@ ServerDownloadFileInfo::~ServerDownloadFileInfo()
 /**
  * Update database information about agent package
  */
-void ServerDownloadFileInfo::updateAgentPkgDBInfo(const TCHAR *description, const TCHAR *pkgName, const TCHAR *pkgVersion, const TCHAR *platform, const TCHAR *cleanFileName)
+void ServerDownloadFileInfo::updatePackageDBInfo(const TCHAR *description, const TCHAR *pkgName, const TCHAR *pkgVersion, const TCHAR *pkgType, const TCHAR *platform, const TCHAR *cleanFileName, const TCHAR *command)
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO agent_pkg (pkg_id,pkg_name,version,description,platform,pkg_file) VALUES (?,?,?,?,?,?)"));
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO agent_pkg (pkg_id,pkg_name,version,description,platform,pkg_file,pkg_type,command) VALUES (?,?,?,?,?,?,?,?)"));
    if (hStmt != nullptr)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_uploadData);
@@ -53,6 +53,8 @@ void ServerDownloadFileInfo::updateAgentPkgDBInfo(const TCHAR *description, cons
       DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, description, DB_BIND_STATIC);
       DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, platform, DB_BIND_STATIC);
       DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, cleanFileName, DB_BIND_STATIC);
+      DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, pkgType, DB_BIND_STATIC);
+      DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, command, DB_BIND_STATIC);
       DBExecute(hStmt);
       DBFreeStatement(hStmt);
    }

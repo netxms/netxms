@@ -608,6 +608,9 @@ void CommSession::processingThread()
             case CMD_MERGE_FILES:
                mergeFiles(request, &response);
                break;
+            case CMD_INSTALL_PACKAGE:
+               response.setField(VID_RCC, installPackage(request));
+               break;
             case CMD_UPGRADE_AGENT:
                response.setField(VID_RCC, upgrade(request));
                break;
@@ -1121,7 +1124,7 @@ bool CommSession::sendFile(uint32_t requestId, const TCHAR *file, off_t offset, 
 /**
  * Upgrade agent from package in the file store
  */
-UINT32 CommSession::upgrade(NXCPMessage *request)
+uint32_t CommSession::upgrade(NXCPMessage *request)
 {
    if (m_masterServer)
    {
@@ -1139,6 +1142,143 @@ UINT32 CommSession::upgrade(NXCPMessage *request)
    else
    {
       writeLog(NXLOG_WARNING, _T("Upgrade request from server which is not master (upgrade will not start)"));
+      return ERR_ACCESS_DENIED;
+   }
+}
+
+/**
+ * Process executor for package installer
+ */
+class PackageInstallerProcessExecutor : public ProcessExecutor
+{
+private:
+   CommSession *m_session;
+
+protected:
+   virtual void onOutput(const char *text)
+   {
+      m_session->debugPrintf(4, _T("Installer output: %hs"), text);
+   }
+
+public:
+   PackageInstallerProcessExecutor(const TCHAR *command, CommSession *session) : ProcessExecutor(command)
+   {
+      m_session = session;
+      m_sendOutput = true;
+   }
+};
+
+/**
+ * Install package previously uploaded to the file store
+ */
+uint32_t CommSession::installPackage(NXCPMessage *request)
+{
+   if (m_masterServer)
+   {
+      char packageType[16] = "";
+      request->getFieldAsMBString(VID_PACKAGE_TYPE, packageType, 16);
+
+      TCHAR packageName[MAX_PATH] = _T("");
+      request->getFieldAsString(VID_FILE_NAME, packageName, MAX_PATH);
+      TCHAR fullPath[MAX_PATH];
+      BuildFullPath(packageName, fullPath);
+
+      TCHAR command[MAX_PATH] = _T("");
+      request->getFieldAsString(VID_COMMAND, command, MAX_PATH);
+
+      StringBuffer commandLine;
+      if (!stricmp(packageType, "executable"))
+      {
+         TCHAR command[MAX_PATH] = _T("");
+         request->getFieldAsString(VID_COMMAND, command, MAX_PATH);
+         if (command[0] != 0)
+         {
+            commandLine.append(command);
+            commandLine.replace(_T("${file}"), fullPath);
+         }
+         else
+         {
+            commandLine.append(_T("\""));
+            commandLine.append(fullPath);
+            commandLine.append(_T("\""));
+         }
+      }
+#ifdef _WIN32
+      else if (!stricmp(packageType, "msi"))
+      {
+         commandLine.append(_T("msiexec.exe /i \""));
+         commandLine.append(fullPath);
+         commandLine.append(_T("\" /qn"));
+         if (command[0] != 0)
+         {
+            commandLine.append(_T(" "));
+            commandLine.append(command);
+         }
+      }
+      else if (!stricmp(packageType, "msp"))
+      {
+         commandLine.append(_T("msiexec.exe /p \""));
+         commandLine.append(fullPath);
+         commandLine.append(_T("\" /qn"));
+         if (command[0] != 0)
+         {
+            commandLine.append(_T(" "));
+            commandLine.append(command);
+         }
+         commandLine.append(_T(" REINSTALLMODE=\"ecmus\" REINSTALL=\"ALL\""));
+      }
+#else
+      else if (!stricmp(packageType, "deb"))
+      {
+         commandLine.append(_T("/usr/bin/dpkg -i"));
+         if (command[0] != 0)
+         {
+            commandLine.append(_T(" "));
+            commandLine.append(command);
+         }
+         commandLine.append(_T(" '"));
+         commandLine.append(fullPath);
+         commandLine.append(_T("'"));
+      }
+      else if (!stricmp(packageType, "/usr/bin/rpm"))
+      {
+         commandLine.append(_T("rpm -i"));
+         if (command[0] != 0)
+         {
+            commandLine.append(_T(" "));
+            commandLine.append(command);
+         }
+         commandLine.append(_T(" '"));
+         commandLine.append(fullPath);
+         commandLine.append(_T("'"));
+      }
+      else if (!stricmp(packageType, "tgz"))
+      {
+         commandLine.append(_T("tar"));
+         if (command[0] != 0)
+         {
+            commandLine.append(_T(" -C '"));
+            commandLine.append(command);
+            commandLine.append(_T("'"));
+         }
+         commandLine.append(_T(" zxf '"));
+         commandLine.append(fullPath);
+         commandLine.append(_T("'"));
+      }
+#endif
+
+      writeLog(NXLOG_INFO, _T("Starting package installation using command line %s"), commandLine.cstr());
+      PackageInstallerProcessExecutor executor(commandLine, this);
+      if (!executor.execute())
+      {
+         writeLog(NXLOG_INFO, _T("Package installer execution failed"));
+         return ERR_EXEC_FAILED;
+      }
+      return executor.waitForCompletion(600000) ? ERR_SUCCESS : ERR_REQUEST_TIMEOUT; // FIXME: what timeout to use?
+   }
+   else
+   {
+      writeLog(NXLOG_WARNING, _T("Package installation request from server which is not master (installation will not start)"));
       return ERR_ACCESS_DENIED;
    }
 }
@@ -1230,7 +1370,7 @@ void CommSession::getHostNameByAddr(NXCPMessage *request, NXCPMessage *response)
 /**
  * Setup proxy connection
  */
-UINT32 CommSession::setupProxyConnection(NXCPMessage *request)
+uint32_t CommSession::setupProxyConnection(NXCPMessage *request)
 {
    if (!m_masterServer || !(g_dwFlags & AF_ENABLE_PROXY))
       return ERR_ACCESS_DENIED;

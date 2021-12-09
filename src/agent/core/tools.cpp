@@ -21,7 +21,27 @@
 **/
 
 #include "nxagentd.h"
-#include <stdarg.h>
+#include <netxms-version.h>
+
+/**
+ * Upgrade agent from given package file
+ */
+uint32_t UpgradeAgent(const TCHAR *pkgFile)
+{
+   TCHAR cmdLine[1024];
+#if defined(_WIN32)
+   _sntprintf(cmdLine, 1024, _T("\"%s\" /VERYSILENT /SUPPRESSMSGBOXES /LOG /FORCECLOSEAPPLICATIONS /NORESTART"), pkgFile);
+#else
+   _tchmod(pkgFile, 0700);   // Set execute permissions on package file
+   _sntprintf(cmdLine, 1024, _T("\"%s\" version=") NETXMS_VERSION_STRING
+                             _T(" prefix=") PREFIX
+#ifdef __DISABLE_ICONV
+                             _T(" opt=--disable-iconv")
+#endif
+                             _T(" config=%s"), pkgFile, g_szConfigFile);
+#endif
+   return ProcessExecutor::execute(cmdLine) ? ERR_SUCCESS : ERR_EXEC_FAILED;
+}
 
 /**
  * Print message to the console if allowed to do so

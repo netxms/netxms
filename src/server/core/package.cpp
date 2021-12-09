@@ -64,7 +64,7 @@ bool IsValidPackageId(uint32_t packageId)
  */
 bool IsPackageFileExist(const TCHAR *fileName)
 {
-   StringBuffer fullPath = g_netxmsdDataDir;
+   StringBuffer fullPath(g_netxmsdDataDir);
    fullPath.append(DDIR_PACKAGES);
    fullPath.append(FS_PATH_SEPARATOR);
    fullPath.append(fileName);
@@ -88,7 +88,7 @@ uint32_t UninstallPackage(uint32_t packageId)
       if (DBGetNumRows(hResult) > 0)
       {
          // Delete file from directory
-         StringBuffer fileName = g_netxmsdDataDir;
+         StringBuffer fileName(g_netxmsdDataDir);
          fileName.append(DDIR_PACKAGES);
          fileName.append(FS_PATH_SEPARATOR);
          fileName.appendPreallocated(DBGetField(hResult, 0, 0, nullptr, 0));
@@ -119,15 +119,85 @@ uint32_t UninstallPackage(uint32_t packageId)
 }
 
 /**
+ * Upgrade agent
+ */
+static bool UpgradeAgent(PackageDeploymentTask *task, Node *node, AgentConnectionEx *upgradeConnection, NXCPMessage *msg, const TCHAR **errorMessage)
+{
+   bool success = false;
+   if (upgradeConnection->startUpgrade(task->packageFile) == ERR_SUCCESS)
+   {
+      bool connected = false;
+
+      upgradeConnection->disconnect();
+
+      // Change deployment status to "Package installation"
+      msg->setField(VID_DEPLOYMENT_STATUS, static_cast<uint16_t>(DEPLOYMENT_STATUS_INSTALLATION));
+      task->session->sendMessage(msg);
+
+      // Wait for agent's restart
+      // Read configuration
+      uint32_t maxWaitTime = ConfigReadULong(_T("Agent.Upgrade.WaitTime"), 600);
+      if (maxWaitTime % 20 != 0)
+         maxWaitTime += 20 - (maxWaitTime % 20);
+
+      shared_ptr<AgentConnectionEx> testConnection;
+      ThreadSleep(20);
+      for(uint32_t i = 20; i < maxWaitTime; i += 20)
+      {
+         ThreadSleep(20);
+         testConnection = node->createAgentConnection();
+         if (testConnection != nullptr)
+         {
+            connected = true;
+            break;   // Connected successfully
+         }
+      }
+
+      // Last attempt to reconnect
+      if (!connected)
+      {
+         testConnection = node->createAgentConnection();
+         if (testConnection != nullptr)
+            connected = true;
+      }
+
+      if (connected)
+      {
+         // Check version
+         TCHAR version[MAX_AGENT_VERSION_LEN];
+         if (testConnection->getParameter(_T("Agent.Version"), version, MAX_AGENT_VERSION_LEN) == ERR_SUCCESS)
+         {
+            if (!_tcsicmp(version, task->version))
+            {
+               success = true;
+            }
+            else
+            {
+               *errorMessage = _T("Agent's version doesn't match package version after upgrade");
+            }
+         }
+         else
+         {
+            *errorMessage = _T("Unable to get agent's version after upgrade");
+         }
+      }
+      else
+      {
+         *errorMessage = _T("Unable to contact agent after upgrade");
+      }
+   }
+   else
+   {
+      *errorMessage = _T("Unable to start upgrade process");
+   }
+   return success;
+}
+
+/**
  * Package deployment worker thread
  */
 static void DeploymentThread(PackageDeploymentTask *task)
 {
-   // Read configuration
-   uint32_t dwMaxWait = ConfigReadULong(_T("Agent.Upgrade.WaitTime"), 600);
-   if (dwMaxWait % 20 != 0)
-      dwMaxWait += 20 - (dwMaxWait % 20);
-
    // Notification message
    NXCPMessage msg(CMD_INSTALLER_INFO, task->requestId);
 
@@ -144,131 +214,100 @@ static void DeploymentThread(PackageDeploymentTask *task)
       // Preset node id in notification message
       msg.setField(VID_OBJECT_ID, node->getId());
 
-      // Check if node is a management server itself
-      if (!(node->getCapabilities() & NC_IS_LOCAL_MGMT))
+      // Check if user has rights to deploy packages on that specific node
+      if (node->checkAccessRights(task->session->getUserId(), OBJECT_ACCESS_MODIFY | OBJECT_ACCESS_CONTROL | OBJECT_ACCESS_UPLOAD))
       {
-         // Change deployment status to "Initializing"
-         msg.setField(VID_DEPLOYMENT_STATUS, static_cast<uint16_t>(DEPLOYMENT_STATUS_INITIALIZE));
-         task->session->sendMessage(&msg);
-
-         // Create agent connection
-         shared_ptr<AgentConnectionEx> agentConn = node->createAgentConnection();
-         if (agentConn != nullptr)
+         // Check if node is a management server itself
+         if (!(node->getCapabilities() & NC_IS_LOCAL_MGMT) || _tcscmp(task->packageType, _T("agent-installer")))
          {
-            bool targetCheckOK = false;
-            TCHAR szBuffer[MAX_PATH];
+            // Change deployment status to "Initializing"
+            msg.setField(VID_DEPLOYMENT_STATUS, static_cast<uint16_t>(DEPLOYMENT_STATUS_INITIALIZE));
+            task->session->sendMessage(msg);
 
-            // Check if package can be deployed on target node
-            if (!_tcsicmp(task->platform, _T("src")))
+            // Create agent connection
+            shared_ptr<AgentConnectionEx> agentConn = node->createAgentConnection();
+            if (agentConn != nullptr)
             {
-               // Source package, check if target node
-               // supports source packages
-               if (agentConn->getParameter(_T("Agent.SourcePackageSupport"), szBuffer, 32) == ERR_SUCCESS)
-               {
-                  targetCheckOK = (_tcstol(szBuffer, nullptr, 0) != 0);
-               }
-            }
-            else
-            {
-               // Binary package, check target platform
-               if (agentConn->getParameter(_T("System.PlatformName"), szBuffer, MAX_PATH) == ERR_SUCCESS)
-               {
-                  targetCheckOK = (_tcsicmp(szBuffer, task->platform) == 0);
-               }
-            }
+               bool targetCheckOK = false;
 
-            if (targetCheckOK)
-            {
-               // Change deployment status to "File Transfer"
-               msg.setField(VID_DEPLOYMENT_STATUS, static_cast<uint16_t>(DEPLOYMENT_STATUS_TRANSFER));
-               task->session->sendMessage(&msg);
-
-               // Upload package file to agent
-               _tcslcpy(szBuffer, g_netxmsdDataDir, MAX_PATH);
-               _tcslcat(szBuffer, DDIR_PACKAGES, MAX_PATH);
-               _tcslcat(szBuffer, FS_PATH_SEPARATOR, MAX_PATH);
-               _tcslcat(szBuffer, task->packageFile, MAX_PATH);
-               if (agentConn->uploadFile(szBuffer) == ERR_SUCCESS)
+               // Check if package can be deployed on target node
+               if (!_tcsicmp(task->platform, _T("src")) && !_tcscmp(task->packageType, _T("agent-installer")))
                {
-                  if (agentConn->startUpgrade(task->packageFile) == ERR_SUCCESS)
+                  // Source package, check if target node
+                  // supports source packages
+                  TCHAR value[32];
+                  if (agentConn->getParameter(_T("Agent.SourcePackageSupport"), value, 32) == ERR_SUCCESS)
                   {
-                     bool connected = false;
-
-                     // Delete current connection
-                     agentConn.reset();
-
-                     // Change deployment status to "Package installation"
-                     msg.setField(VID_DEPLOYMENT_STATUS, static_cast<uint16_t>(DEPLOYMENT_STATUS_INSTALLATION));
-                     task->session->sendMessage(&msg);
-
-                     // Wait for agent's restart
-                     ThreadSleep(20);
-                     for(uint32_t i = 20; i < dwMaxWait; i += 20)
-                     {
-                        ThreadSleep(20);
-                        agentConn = node->createAgentConnection();
-                        if (agentConn != nullptr)
-                        {
-                           connected = true;
-                           break;   // Connected successfully
-                        }
-                     }
-
-                     // Last attempt to reconnect
-                     if (!connected)
-                     {
-                        agentConn = node->createAgentConnection();
-                        if (agentConn != nullptr)
-                           connected = true;
-                     }
-
-                     if (connected)
-                     {
-                        // Check version
-                        if (agentConn->getParameter(_T("Agent.Version"), szBuffer, MAX_AGENT_VERSION_LEN) == ERR_SUCCESS)
-                        {
-                           if (!_tcsicmp(szBuffer, task->version))
-                           {
-                              success = true;
-                           }
-                           else
-                           {
-                              errorMessage = _T("Agent's version doesn't match package version after upgrade");
-                           }
-                        }
-                        else
-                        {
-                           errorMessage = _T("Unable to get agent's version after upgrade");
-                        }
-                     }
-                     else
-                     {
-                        errorMessage = _T("Unable to contact agent after upgrade");
-                     }
-                  }
-                  else
-                  {
-                     errorMessage = _T("Unable to start upgrade process");
+                     targetCheckOK = (_tcstol(value, nullptr, 0) != 0);
                   }
                }
                else
                {
-                  errorMessage = _T("File transfer failed");
+                  // Binary package, check target platform
+                  TCHAR platform[MAX_RESULT_LENGTH];
+                  if (agentConn->getParameter(_T("System.PlatformName"), platform, MAX_RESULT_LENGTH) == ERR_SUCCESS)
+                  {
+                     targetCheckOK = MatchString(task->platform, platform, false);
+                  }
+               }
+
+               if (targetCheckOK)
+               {
+                  // Change deployment status to "File Transfer"
+                  msg.setField(VID_DEPLOYMENT_STATUS, static_cast<uint16_t>(DEPLOYMENT_STATUS_TRANSFER));
+                  task->session->sendMessage(&msg);
+
+                  // Upload package file to agent
+                  StringBuffer packageFile(g_netxmsdDataDir);
+                  packageFile.append(DDIR_PACKAGES);
+                  packageFile.append(FS_PATH_SEPARATOR);
+                  packageFile.append(task->packageFile);
+                  if (agentConn->uploadFile(packageFile) == ERR_SUCCESS)
+                  {
+                     if (!_tcscmp(task->packageType, _T("agent-installer")))
+                     {
+                        success = UpgradeAgent(task, node, agentConn.get(), &msg, &errorMessage);
+                     }
+                     else
+                     {
+                        uint32_t maxWaitTime = ConfigReadULong(_T("Agent.Upgrade.WaitTime"), 600);
+                        if (maxWaitTime < 30)
+                           maxWaitTime = 30;
+                        agentConn->setCommandTimeout(maxWaitTime * 1000);
+                        uint32_t rcc = agentConn->installPackage(task->packageFile, task->packageType, task->command);
+                        if (rcc == ERR_SUCCESS)
+                        {
+                           success = true;
+                        }
+                        else
+                        {
+                           errorMessage = AgentErrorCodeToText(rcc);
+                        }
+                     }
+                  }
+                  else
+                  {
+                     errorMessage = _T("File transfer failed");
+                  }
+               }
+               else
+               {
+                  errorMessage = _T("Package is not compatible with target machine");
                }
             }
             else
             {
-               errorMessage = _T("Package is not compatible with target machine");
+               errorMessage = _T("Unable to connect to agent");
             }
          }
          else
          {
-            errorMessage = _T("Unable to connect to agent");
+            errorMessage = _T("Management server cannot deploy agent to itself");
          }
       }
       else
       {
-         errorMessage = _T("Management server cannot deploy agent to itself");
+         errorMessage = _T("Access denied");
       }
 
       // Finish node processing
