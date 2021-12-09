@@ -343,8 +343,9 @@ private:
    void mergeFiles(NXCPMessage *pRequest, NXCPMessage *pMsg);
    void getLocalFile(NXCPMessage *pRequest, NXCPMessage *pMsg);
    void cancelFileMonitoring(NXCPMessage *pRequest, NXCPMessage *pMsg);
-   UINT32 upgrade(NXCPMessage *request);
-   UINT32 setupProxyConnection(NXCPMessage *pRequest);
+   uint32_t installPackage(NXCPMessage *request);
+   uint32_t upgrade(NXCPMessage *request);
+   uint32_t setupProxyConnection(NXCPMessage *pRequest);
    void setupTcpProxy(NXCPMessage *request, NXCPMessage *response);
    uint32_t closeTcpProxy(NXCPMessage *request);
    void proxySnmpRequest(NXCPMessage *request);

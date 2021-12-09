@@ -35,17 +35,21 @@ struct PackageDeploymentTask
    ObjectQueue<Node> queue;  // Used internally by deployment manager
    TCHAR *platform;
    TCHAR *packageFile;
-   TCHAR *version;
+   TCHAR packageType[16];
+   TCHAR version[32];
+   TCHAR *command;
 
    PackageDeploymentTask(ClientSession *_session, uint32_t _requestId, uint32_t _packageId,
-            const TCHAR *_platform, const TCHAR *_packageFile, const TCHAR *_version)
+            const TCHAR *_platform, const TCHAR *_packageFile, const TCHAR *_packageType, const TCHAR *_version, const TCHAR *_command)
    {
       session = _session;
       requestId = _requestId;
       packageId = _packageId;
       platform = MemCopyString(_platform);
       packageFile = MemCopyString(_packageFile);
-      version = MemCopyString(_version);
+      _tcslcpy(packageType, _packageType, 16);
+      _tcslcpy(version, _version, 32);
+      command = MemCopyString(_command);
    }
 
    ~PackageDeploymentTask()
@@ -53,7 +57,7 @@ struct PackageDeploymentTask
       session->decRefCount();
       MemFree(platform);
       MemFree(packageFile);
-      MemFree(version);
+      MemFree(command);
    }
 };
 

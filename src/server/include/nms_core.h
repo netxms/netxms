@@ -422,7 +422,7 @@ public:
 
    void setUploadData(uint32_t data) { m_uploadData = data; }
    void setImageGuid(const uuid& guid) { m_uploadImageGuid = guid; }
-   void updateAgentPkgDBInfo(const TCHAR *description, const TCHAR *pkgName, const TCHAR *pkgVersion, const TCHAR *platform, const TCHAR *cleanFileName);
+   void updatePackageDBInfo(const TCHAR *description, const TCHAR *pkgName, const TCHAR *pkgVersion, const TCHAR *pkgType, const TCHAR *platform, const TCHAR *cleanFileName, const TCHAR *command);
 };
 
 /**

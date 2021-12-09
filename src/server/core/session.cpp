@@ -7257,35 +7257,37 @@ void ClientSession::installPackage(NXCPMessage *request)
 
    if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_PACKAGES)
    {
-      TCHAR szPkgName[MAX_PACKAGE_NAME_LEN], szDescription[MAX_DB_STRING];
-      TCHAR szPkgVersion[MAX_AGENT_VERSION_LEN], szFileName[MAX_DB_STRING];
-      TCHAR szPlatform[MAX_PLATFORM_NAME_LEN];
+      TCHAR packageName[MAX_PACKAGE_NAME_LEN], description[MAX_DB_STRING];
+      TCHAR packageVersion[MAX_AGENT_VERSION_LEN], packageType[16], fileName[MAX_DB_STRING];
+      TCHAR platform[MAX_PLATFORM_NAME_LEN], command[MAX_DB_STRING];
 
-      request->getFieldAsString(VID_PACKAGE_NAME, szPkgName, MAX_PACKAGE_NAME_LEN);
-      request->getFieldAsString(VID_DESCRIPTION, szDescription, MAX_DB_STRING);
-      request->getFieldAsString(VID_FILE_NAME, szFileName, MAX_DB_STRING);
-      request->getFieldAsString(VID_PACKAGE_VERSION, szPkgVersion, MAX_AGENT_VERSION_LEN);
-      request->getFieldAsString(VID_PLATFORM_NAME, szPlatform, MAX_PLATFORM_NAME_LEN);
+      request->getFieldAsString(VID_PACKAGE_NAME, packageName, MAX_PACKAGE_NAME_LEN);
+      request->getFieldAsString(VID_DESCRIPTION, description, MAX_DB_STRING);
+      request->getFieldAsString(VID_FILE_NAME, fileName, MAX_DB_STRING);
+      request->getFieldAsString(VID_PACKAGE_VERSION, packageVersion, MAX_AGENT_VERSION_LEN);
+      request->getFieldAsString(VID_PACKAGE_TYPE, packageType, 16);
+      request->getFieldAsString(VID_PLATFORM_NAME, platform, MAX_PLATFORM_NAME_LEN);
+      request->getFieldAsString(VID_COMMAND, command, MAX_DB_STRING);
 
       // Remove possible path specification from file name
-      const TCHAR *pszCleanFileName = GetCleanFileName(szFileName);
+      const TCHAR *cleanFileName = GetCleanFileName(fileName);
 
-      if (IsValidObjectName(pszCleanFileName) &&
-          IsValidObjectName(szPkgName) &&
-          IsValidObjectName(szPkgVersion) &&
-          IsValidObjectName(szPlatform))
+      if (IsValidObjectName(cleanFileName) &&
+          IsValidObjectName(packageName) &&
+          IsValidObjectName(packageVersion) &&
+          IsValidObjectName(platform))
       {
          // Check if same package already exist
-         if (!IsPackageInstalled(szPkgName, szPkgVersion, szPlatform))
+         if (!IsPackageInstalled(packageName, packageVersion, platform))
          {
             // Check for duplicate file name
-            if (!IsPackageFileExist(pszCleanFileName))
+            if (!IsPackageFileExist(cleanFileName))
             {
                TCHAR fullFileName[MAX_PATH];
                _tcscpy(fullFileName, g_netxmsdDataDir);
                _tcscat(fullFileName, DDIR_PACKAGES);
                _tcscat(fullFileName, FS_PATH_SEPARATOR);
-               _tcscat(fullFileName, pszCleanFileName);
+               _tcscat(fullFileName, cleanFileName);
 
                ServerDownloadFileInfo *fInfo = new ServerDownloadFileInfo(fullFileName, CMD_INSTALL_PACKAGE);
                if (fInfo->open())
@@ -7297,7 +7299,7 @@ void ClientSession::installPackage(NXCPMessage *request)
                   msg.setField(VID_PACKAGE_ID, uploadData);
 
                   // Create record in database
-                  fInfo->updateAgentPkgDBInfo(szDescription, szPkgName, szPkgVersion, szPlatform, pszCleanFileName);
+                  fInfo->updatePackageDBInfo(description, packageName, packageVersion, packageType, platform, cleanFileName, command);
                }
                else
                {
@@ -7339,7 +7341,7 @@ void ClientSession::removePackage(NXCPMessage *request)
 
    if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_PACKAGES)
    {
-      UINT32 pkgId = request->getFieldAsUInt32(VID_PACKAGE_ID);
+      uint32_t pkgId = request->getFieldAsUInt32(VID_PACKAGE_ID);
       msg.setField(VID_RCC, UninstallPackage(pkgId));
    }
    else
@@ -7416,21 +7418,23 @@ void ClientSession::deployPackage(NXCPMessage *request)
 
          // Read package information
          TCHAR query[256];
-         _sntprintf(query, 256, _T("SELECT platform,pkg_file,version FROM agent_pkg WHERE pkg_id=%u"), packageId);
+         _sntprintf(query, 256, _T("SELECT platform,pkg_file,pkg_type,version,command FROM agent_pkg WHERE pkg_id=%u"), packageId);
          DB_RESULT hResult = DBSelect(hdb, query);
          if (hResult != nullptr)
          {
             if (DBGetNumRows(hResult) > 0)
             {
-               TCHAR szPkgFile[MAX_PATH], szVersion[MAX_AGENT_VERSION_LEN], szPlatform[MAX_PLATFORM_NAME_LEN];
-               DBGetField(hResult, 0, 0, szPlatform, MAX_PLATFORM_NAME_LEN);
-               DBGetField(hResult, 0, 1, szPkgFile, MAX_PATH);
-               DBGetField(hResult, 0, 2, szVersion, MAX_AGENT_VERSION_LEN);
+               TCHAR packageFile[256], packageType[16], version[MAX_AGENT_VERSION_LEN], platform[MAX_PLATFORM_NAME_LEN], command[256];
+               DBGetField(hResult, 0, 0, platform, MAX_PLATFORM_NAME_LEN);
+               DBGetField(hResult, 0, 1, packageFile, 256);
+               DBGetField(hResult, 0, 2, packageType, 16);
+               DBGetField(hResult, 0, 3, version, MAX_AGENT_VERSION_LEN);
+               DBGetField(hResult, 0, 4, command, 256);
 
                // Create list of nodes to be upgraded
                IntegerArray<uint32_t> objectList;
                request->getFieldAsInt32Array(VID_OBJECT_LIST, &objectList);
-		         task = new PackageDeploymentTask(this, request->getId(), packageId, szPlatform, szPkgFile, szVersion);
+               task = new PackageDeploymentTask(this, request->getId(), packageId, platform, packageFile, packageType, version, command);
                for(int i = 0; i < objectList.size(); i++)
                {
                   shared_ptr<NetObj> object = FindObjectById(objectList.get(i));
@@ -7472,7 +7476,7 @@ void ClientSession::deployPackage(NXCPMessage *request)
             }
             else
             {
-               msg.setField(VID_RCC, RCC_DB_FAILURE);
+               msg.setField(VID_RCC, RCC_INVALID_PACKAGE_ID);
                success = false;
             }
             DBFreeResult(hResult);
