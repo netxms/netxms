@@ -368,7 +368,7 @@ StringList *String::split(TCHAR *str, size_t len, const TCHAR *separator)
 String String::toString(int32_t v, const TCHAR *format)
 {
    String s;
-   _sntprintf(s.m_buffer, STRING_INTERNAL_BUFFER_SIZE, (format != nullptr) ? format : _T("%d"), v);
+   s.m_length = _sntprintf(s.m_buffer, STRING_INTERNAL_BUFFER_SIZE, (format != nullptr) ? format : _T("%d"), v);
    return s;
 }
 
@@ -378,7 +378,7 @@ String String::toString(int32_t v, const TCHAR *format)
 String String::toString(uint32_t v, const TCHAR *format)
 {
    String s;
-   _sntprintf(s.m_buffer, STRING_INTERNAL_BUFFER_SIZE, (format != nullptr) ? format : _T("%u"), v);
+   s.m_length = _sntprintf(s.m_buffer, STRING_INTERNAL_BUFFER_SIZE, (format != nullptr) ? format : _T("%u"), v);
    return s;
 }
 
@@ -388,7 +388,7 @@ String String::toString(uint32_t v, const TCHAR *format)
 String String::toString(int64_t v, const TCHAR *format)
 {
    String s;
-   _sntprintf(s.m_buffer, STRING_INTERNAL_BUFFER_SIZE, (format != nullptr) ? format : INT64_FMT, v);
+   s.m_length = _sntprintf(s.m_buffer, STRING_INTERNAL_BUFFER_SIZE, (format != nullptr) ? format : INT64_FMT, v);
    return s;
 }
 
@@ -398,7 +398,7 @@ String String::toString(int64_t v, const TCHAR *format)
 String String::toString(uint64_t v, const TCHAR *format)
 {
    String s;
-   _sntprintf(s.m_buffer, STRING_INTERNAL_BUFFER_SIZE, (format != nullptr) ? format : UINT64_FMT, v);
+   s.m_length = _sntprintf(s.m_buffer, STRING_INTERNAL_BUFFER_SIZE, (format != nullptr) ? format : UINT64_FMT, v);
    return s;
 }
 
@@ -408,7 +408,7 @@ String String::toString(uint64_t v, const TCHAR *format)
 String String::toString(double v, const TCHAR *format)
 {
    String s;
-   _sntprintf(s.m_buffer, STRING_INTERNAL_BUFFER_SIZE, (format != nullptr) ? format : _T("%f"), v);
+   s.m_length = _sntprintf(s.m_buffer, STRING_INTERNAL_BUFFER_SIZE, (format != nullptr) ? format : _T("%f"), v);
    return s;
 }
 
