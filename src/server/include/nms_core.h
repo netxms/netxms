@@ -686,6 +686,7 @@ private:
    void sendAllTraps2(UINT32 dwRqId);
    void getInstalledPackages(UINT32 requestId);
    void installPackage(NXCPMessage *request);
+   void updatePackageMetadata(NXCPMessage *request);
    void removePackage(NXCPMessage *request);
    void deployPackage(NXCPMessage *request);
    void getParametersList(NXCPMessage *pRequest);

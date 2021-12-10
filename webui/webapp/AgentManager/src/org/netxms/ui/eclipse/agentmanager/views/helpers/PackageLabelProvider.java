@@ -29,36 +29,40 @@ import org.netxms.ui.eclipse.agentmanager.views.PackageManager;
  */
 public class PackageLabelProvider extends LabelProvider implements ITableLabelProvider
 {
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
+    */
 	@Override
 	public Image getColumnImage(Object element, int columnIndex)
 	{
 		return null;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
+    */
 	@Override
 	public String getColumnText(Object element, int columnIndex)
 	{
 		PackageInfo p = (PackageInfo)element;
 		switch(columnIndex)
 		{
+         case PackageManager.COLUMN_COMMAND:
+            return p.getCommand();
+         case PackageManager.COLUMN_DESCRIPTION:
+            return p.getDescription();
+         case PackageManager.COLUMN_FILE:
+            return p.getFileName();
 			case PackageManager.COLUMN_ID:
 				return Long.toString(p.getId());
 			case PackageManager.COLUMN_NAME:
 				return p.getName();
-			case PackageManager.COLUMN_DESCRIPTION:
-				return p.getDescription();
+         case PackageManager.COLUMN_PLATFORM:
+            return p.getPlatform();
+         case PackageManager.COLUMN_TYPE:
+            return p.getType();
 			case PackageManager.COLUMN_VERSION:
 				return p.getVersion();
-			case PackageManager.COLUMN_PLATFORM:
-				return p.getPlatform();
-			case PackageManager.COLUMN_FILE:
-				return p.getFileName();
 		}
 		return null;
 	}

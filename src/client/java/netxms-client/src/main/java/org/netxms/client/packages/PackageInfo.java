@@ -34,15 +34,40 @@ public class PackageInfo
 	private String name;
 	private String description;
 	private String fileName;
+   private String type;
 	private String platform;
 	private String version;
-	
-	/**
-	 * Create package information from NPI file
-	 * 
-	 * @param npiFile NPI file with package description
-	 * @throws IOException  if NPI file cannot be read
-	 */
+   private String command;
+
+   /**
+    * Create new package information object from scratch.
+    *
+    * @param name package name
+    * @param description package description
+    * @param fileName package file name
+    * @param type package type
+    * @param platform target platform
+    * @param version package version
+    * @param command package options or command for executable packages
+    */
+   public PackageInfo(String name, String description, String fileName, String type, String platform, String version, String command)
+   {
+      id = 0;
+      this.name = name;
+      this.description = description;
+      this.fileName = fileName;
+      this.type = type;
+      this.platform = platform;
+      this.version = version;
+      this.command = command;
+   }
+
+   /**
+    * Create package information from NPI file
+    * 
+    * @param npiFile NPI file with package description
+    * @throws IOException if NPI file cannot be read
+    */
 	public PackageInfo(File npiFile) throws IOException
 	{
 		id = 0;
@@ -84,8 +109,10 @@ public class PackageInfo
 			if (reader != null)
 				reader.close();
 		}
+      type = "agent-installer";
+      command = "";
 	}
-	
+
 	/**
 	 * Create package information from NXCP message
 	 * 
@@ -97,10 +124,12 @@ public class PackageInfo
 		name = msg.getFieldAsString(NXCPCodes.VID_PACKAGE_NAME);
 		description = msg.getFieldAsString(NXCPCodes.VID_DESCRIPTION);
 		fileName = msg.getFieldAsString(NXCPCodes.VID_FILE_NAME);
+      type = msg.getFieldAsString(NXCPCodes.VID_PACKAGE_TYPE);
 		platform = msg.getFieldAsString(NXCPCodes.VID_PLATFORM_NAME);
 		version = msg.getFieldAsString(NXCPCodes.VID_PACKAGE_VERSION);
+      command = msg.getFieldAsString(NXCPCodes.VID_COMMAND);
 	}
-	
+
 	/**
 	 * Fill NXCP message with package information
 	 *  
@@ -112,8 +141,10 @@ public class PackageInfo
 		msg.setField(NXCPCodes.VID_PACKAGE_NAME, name);
 		msg.setField(NXCPCodes.VID_DESCRIPTION, description);
 		msg.setField(NXCPCodes.VID_FILE_NAME, fileName);
+      msg.setField(NXCPCodes.VID_PACKAGE_TYPE, type);
 		msg.setField(NXCPCodes.VID_PLATFORM_NAME, platform);
 		msg.setField(NXCPCodes.VID_PACKAGE_VERSION, version);
+      msg.setField(NXCPCodes.VID_COMMAND, command);
 	}
 
 	/**
@@ -157,8 +188,24 @@ public class PackageInfo
 	}
 
 	/**
-	 * @return the platform
-	 */
+    * @return the type
+    */
+   public String getType()
+   {
+      return type;
+   }
+
+   /**
+    * @return the command
+    */
+   public String getCommand()
+   {
+      return command;
+   }
+
+   /**
+    * @return the platform
+    */
 	public String getPlatform()
 	{
 		return platform;
@@ -171,4 +218,60 @@ public class PackageInfo
 	{
 		return version;
 	}
+
+   /**
+    * @param name the name to set
+    */
+   public void setName(String name)
+   {
+      this.name = name;
+   }
+
+   /**
+    * @param description the description to set
+    */
+   public void setDescription(String description)
+   {
+      this.description = description;
+   }
+
+   /**
+    * @param fileName the fileName to set
+    */
+   public void setFileName(String fileName)
+   {
+      this.fileName = fileName;
+   }
+
+   /**
+    * @param type the type to set
+    */
+   public void setType(String type)
+   {
+      this.type = type;
+   }
+
+   /**
+    * @param platform the platform to set
+    */
+   public void setPlatform(String platform)
+   {
+      this.platform = platform;
+   }
+
+   /**
+    * @param version the version to set
+    */
+   public void setVersion(String version)
+   {
+      this.version = version;
+   }
+
+   /**
+    * @param command the command to set
+    */
+   public void setCommand(String command)
+   {
+      this.command = command;
+   }
 }

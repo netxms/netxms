@@ -454,6 +454,17 @@ public class NXCPCodes
    public static final int CMD_2FA_GET_USER_BINDING_INFO = 0x01B5;
    public static final int CMD_2FA_MODIFY_USER_BINDING = 0x01B6;
    public static final int CMD_2FA_DELETE_USER_BINDING = 0x01B7;
+   public static final int CMD_WEB_SERVICE_CUSTOM_REQUEST = 0x01B8;
+   public static final int CMD_MERGE_FILES = 0x01B9;
+   public static final int CMD_FILEMGR_MERGE_FILES = 0x01BA;
+   public static final int CMD_GET_BIZSVC_CHECK_LIST = 0x01BB;
+   public static final int CMD_UPDATE_BIZSVC_CHECK = 0x01BC;
+   public static final int CMD_DELETE_BIZSVC_CHECK = 0x01BD;
+   public static final int CMD_GET_BUSINESS_SERVICE_UPTIME = 0x01BE;
+   public static final int CMD_GET_BUSINESS_SERVICE_TICKETS = 0x01BF;
+   public static final int CMD_SSH_COMMAND = 0x01C0;
+   public static final int CMD_FIND_DCI = 0x01C1;
+   public static final int CMD_UPDATE_PACKAGE_METADATA = 0x01C2;
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;
@@ -1245,6 +1256,7 @@ public class NXCPCodes
    public static final long VID_SNMP_CODEPAGE = 781;
    public static final long VID_REGION = 782;
    public static final long VID_DISTRICT = 783;
+   public static final long VID_PACKAGE_TYPE = 784;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;

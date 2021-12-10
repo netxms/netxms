@@ -24,6 +24,21 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 39.14 to 39.15
+ */
+static bool H_UpgradeFromV14()
+{
+   static const TCHAR *batch =
+      _T("ALTER TABLE agent_pkg ADD pkg_type varchar(15)\n")
+      _T("ALTER TABLE agent_pkg ADD command varchar(255)\n")
+      _T("UPDATE agent_pkg SET pkg_type='agent-installer'\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(SetMinorSchemaVersion(15));
+   return true;
+}
+
+/**
  * Upgrade from 39.13 to 39.14
  */
 static bool H_UpgradeFromV13()
@@ -455,6 +470,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 14, 39, 15, H_UpgradeFromV14 },
    { 13, 39, 14, H_UpgradeFromV13 },
    { 12, 39, 13, H_UpgradeFromV12 },
    { 11, 39, 12, H_UpgradeFromV11 },

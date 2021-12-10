@@ -1140,14 +1140,17 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_INSTALL_PACKAGE:
          installPackage(request);
          break;
+      case CMD_UPDATE_PACKAGE_METADATA:
+         updatePackageMetadata(request);
+         break;
       case CMD_REMOVE_PACKAGE:
          removePackage(request);
          break;
-      case CMD_GET_PARAMETER_LIST:
-         getParametersList(request);
-         break;
       case CMD_DEPLOY_PACKAGE:
          deployPackage(request);
+         break;
+      case CMD_GET_PARAMETER_LIST:
+         getParametersList(request);
          break;
       case CMD_GET_LAST_VALUES:
          getLastValues(request);
@@ -7204,7 +7207,7 @@ void ClientSession::getInstalledPackages(UINT32 requestId)
    if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_PACKAGES)
    {
       DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-      DB_UNBUFFERED_RESULT hResult = DBSelectUnbuffered(hdb, _T("SELECT pkg_id,version,platform,pkg_file,pkg_name,description FROM agent_pkg"));
+      DB_UNBUFFERED_RESULT hResult = DBSelectUnbuffered(hdb, _T("SELECT pkg_id,version,platform,pkg_file,pkg_type,pkg_name,description,command FROM agent_pkg"));
       if (hResult != nullptr)
       {
          msg.setField(VID_RCC, RCC_SUCCESS);
@@ -7220,9 +7223,11 @@ void ClientSession::getInstalledPackages(UINT32 requestId)
             msg.setField(VID_PACKAGE_VERSION, DBGetField(hResult, 1, szBuffer, MAX_DB_STRING));
             msg.setField(VID_PLATFORM_NAME, DBGetField(hResult, 2, szBuffer, MAX_DB_STRING));
             msg.setField(VID_FILE_NAME, DBGetField(hResult, 3, szBuffer, MAX_DB_STRING));
-            msg.setField(VID_PACKAGE_NAME, DBGetField(hResult, 4, szBuffer, MAX_DB_STRING));
-            msg.setField(VID_DESCRIPTION, DBGetField(hResult, 5, szBuffer, MAX_DB_STRING));
-            sendMessage(&msg);
+            msg.setField(VID_PACKAGE_TYPE, DBGetField(hResult, 4, szBuffer, MAX_DB_STRING));
+            msg.setField(VID_PACKAGE_NAME, DBGetField(hResult, 5, szBuffer, MAX_DB_STRING));
+            msg.setField(VID_DESCRIPTION, DBGetField(hResult, 6, szBuffer, MAX_DB_STRING));
+            msg.setField(VID_COMMAND, DBGetField(hResult, 7, szBuffer, MAX_DB_STRING));
+            sendMessage(msg);
             msg.deleteAllFields();
          }
 
@@ -7253,7 +7258,7 @@ void ClientSession::getInstalledPackages(UINT32 requestId)
  */
 void ClientSession::installPackage(NXCPMessage *request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
 
    if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_PACKAGES)
    {
@@ -7272,10 +7277,7 @@ void ClientSession::installPackage(NXCPMessage *request)
       // Remove possible path specification from file name
       const TCHAR *cleanFileName = GetCleanFileName(fileName);
 
-      if (IsValidObjectName(cleanFileName) &&
-          IsValidObjectName(packageName) &&
-          IsValidObjectName(packageVersion) &&
-          IsValidObjectName(platform))
+      if (IsValidObjectName(cleanFileName, true) && IsValidObjectName(packageName))
       {
          // Check if same package already exist
          if (!IsPackageInstalled(packageName, packageVersion, platform))
@@ -7295,8 +7297,8 @@ void ClientSession::installPackage(NXCPMessage *request)
                   uint32_t uploadData = CreateUniqueId(IDG_PACKAGE);
                   fInfo->setUploadData(uploadData);
                   m_downloadFileMap.set(request->getId(), fInfo);
-                  msg.setField(VID_RCC, RCC_SUCCESS);
-                  msg.setField(VID_PACKAGE_ID, uploadData);
+                  response.setField(VID_RCC, RCC_SUCCESS);
+                  response.setField(VID_PACKAGE_ID, uploadData);
 
                   // Create record in database
                   fInfo->updatePackageDBInfo(description, packageName, packageVersion, packageType, platform, cleanFileName, command);
@@ -7304,22 +7306,85 @@ void ClientSession::installPackage(NXCPMessage *request)
                else
                {
                   delete fInfo;
-                  msg.setField(VID_RCC, RCC_IO_ERROR);
+                  response.setField(VID_RCC, RCC_IO_ERROR);
                }
             }
             else
             {
-               msg.setField(VID_RCC, RCC_PACKAGE_FILE_EXIST);
+               response.setField(VID_RCC, RCC_PACKAGE_FILE_EXIST);
             }
          }
          else
          {
-            msg.setField(VID_RCC, RCC_DUPLICATE_PACKAGE);
+            response.setField(VID_RCC, RCC_DUPLICATE_PACKAGE);
          }
       }
       else
       {
-         msg.setField(VID_RCC, RCC_INVALID_OBJECT_NAME);
+         response.setField(VID_RCC, RCC_INVALID_OBJECT_NAME);
+      }
+   }
+   else
+   {
+      // Current user has no rights for package management
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
+   }
+
+   // Send response
+   sendMessage(&response);
+}
+
+/**
+ * Update metadata for already installed package
+ */
+void ClientSession::updatePackageMetadata(NXCPMessage *request)
+{
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+
+   if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_PACKAGES)
+   {
+      TCHAR packageName[MAX_PACKAGE_NAME_LEN], description[MAX_DB_STRING];
+      TCHAR packageVersion[MAX_AGENT_VERSION_LEN], packageType[16];
+      TCHAR platform[MAX_PLATFORM_NAME_LEN], command[MAX_DB_STRING];
+
+      request->getFieldAsString(VID_PACKAGE_NAME, packageName, MAX_PACKAGE_NAME_LEN);
+      request->getFieldAsString(VID_DESCRIPTION, description, MAX_DB_STRING);
+      request->getFieldAsString(VID_PACKAGE_VERSION, packageVersion, MAX_AGENT_VERSION_LEN);
+      request->getFieldAsString(VID_PACKAGE_TYPE, packageType, 16);
+      request->getFieldAsString(VID_PLATFORM_NAME, platform, MAX_PLATFORM_NAME_LEN);
+      request->getFieldAsString(VID_COMMAND, command, MAX_DB_STRING);
+
+      uint32_t packageId = request->getFieldAsUInt32(VID_PACKAGE_ID);
+      if (IsValidPackageId(packageId))
+      {
+         if (IsValidObjectName(packageName))
+         {
+            bool success = false;
+            DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+            DB_STATEMENT hStmt = DBPrepare(hdb, _T("UPDATE agent_pkg SET pkg_name=?,version=?,description=?,platform=?,pkg_type=?,command=? WHERE pkg_id=?"));
+            if (hStmt != nullptr)
+            {
+               DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, packageName, DB_BIND_STATIC);
+               DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, packageVersion, DB_BIND_STATIC);
+               DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, description, DB_BIND_STATIC);
+               DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, platform, DB_BIND_STATIC);
+               DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, packageType, DB_BIND_STATIC);
+               DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, command, DB_BIND_STATIC);
+               DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, packageId);
+               success = DBExecute(hStmt);
+               DBFreeStatement(hStmt);
+            }
+            DBConnectionPoolReleaseConnection(hdb);
+            msg.setField(VID_RCC, success ? RCC_SUCCESS : RCC_DB_FAILURE);
+         }
+         else
+         {
+            msg.setField(VID_RCC, RCC_INVALID_OBJECT_NAME);
+         }
+      }
+      else
+      {
+         msg.setField(VID_RCC, RCC_INVALID_PACKAGE_ID);
       }
    }
    else
@@ -7328,8 +7393,7 @@ void ClientSession::installPackage(NXCPMessage *request)
       msg.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
 
-   // Send response
-   sendMessage(&msg);
+   sendMessage(msg);
 }
 
 /**
@@ -7337,21 +7401,20 @@ void ClientSession::installPackage(NXCPMessage *request)
  */
 void ClientSession::removePackage(NXCPMessage *request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
 
    if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_PACKAGES)
    {
       uint32_t pkgId = request->getFieldAsUInt32(VID_PACKAGE_ID);
-      msg.setField(VID_RCC, UninstallPackage(pkgId));
+      response.setField(VID_RCC, UninstallPackage(pkgId));
    }
    else
    {
       // Current user has no rights for package management
-      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
 
-   // Send response
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**

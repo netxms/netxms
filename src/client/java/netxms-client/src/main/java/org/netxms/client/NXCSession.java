@@ -10493,6 +10493,21 @@ public class NXCSession
    }
 
    /**
+    * Update metadata for existing package.
+    *
+    * @param info package information (file name field will be ignored)
+    * @throws IOException if socket or file I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void updatePackageMetadata(PackageInfo info) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_UPDATE_PACKAGE_METADATA);
+      info.fillMessage(msg);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
+
+   /**
     * Get list of installed packages
     *
     * @return List of PackageInfo objects
