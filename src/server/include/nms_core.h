@@ -1498,6 +1498,7 @@ void ScanAddressRange(const InetAddress& from, const InetAddress& to, void(*call
  * Identification column appended to provided column list
  */
 DB_STATEMENT NXCORE_EXPORTABLE DBPrepareMerge(DB_HANDLE hdb, const TCHAR *table, const TCHAR *idColumn, UINT32 id, const TCHAR * const *columns);
+DB_STATEMENT NXCORE_EXPORTABLE DBPrepareMerge(DB_HANDLE hdb, const TCHAR *table, const TCHAR *idColumn, const TCHAR *id, const TCHAR * const *columns);
 
 /**
  * Monitored file

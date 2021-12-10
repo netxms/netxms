@@ -188,6 +188,8 @@ public:
 
    virtual bool send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body) override;
 
+   virtual bool checkHealth() override;
+
    bool isShutdown() const { return m_shutdownFlag; }
    void processUpdate(json_t *data);
 
@@ -751,6 +753,25 @@ bool TelegramDriver::send(const TCHAR *recipient, const TCHAR *subject, const TC
       nxlog_debug_tag(DEBUG_TAG, 4, _T("Cannot find chat ID for recipient %s and bot %s"), recipient, m_botName);
    }
    return success;
+}
+
+/**
+ * Returns driver health status
+ */
+bool TelegramDriver::checkHealth()
+{
+   bool status = false;
+   json_t *info = SendTelegramRequest(m_authToken, m_proxy, m_ipVersion, "getMe", nullptr);
+   if (info != nullptr)
+   {
+      json_t *ok = json_object_get(info, "ok");
+      if (json_is_true(ok))
+      {
+         status = true;
+      }
+      json_decref(info);
+   }
+   return status;
 }
 
 /**

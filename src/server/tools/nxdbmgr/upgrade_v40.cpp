@@ -24,6 +24,52 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 40.88 to 40.89
+ */
+static bool H_UpgradeFromV88()
+{
+   CHK_EXEC(CreateEventTemplate(EVENT_NOTIFICATION_CHANNEL_DOWN, _T("SYS_NOTIFICATION_CHANNEL_DOWN"),
+      EVENT_SEVERITY_MAJOR, EF_LOG, _T("5696d263-0a1c-4c3b-b5bb-d6be8993ac0d"),
+      _T("Notification channel is down"),
+      _T("Generated when notification channel fails health check.\r\n")
+      _T("Parameters:\r\n")
+		_T("   1) Notification channel name\r\n")
+		_T("   2) Notification channel driver name\r\n")));
+
+   CHK_EXEC(CreateEventTemplate(EVENT_NOTIFICATION_CHANNEL_OK, _T("SYS_NOTIFICATION_CHANNEL_OK"),
+      EVENT_SEVERITY_NORMAL, EF_LOG, _T("19536ccb-96ed-417a-8695-94dc6d504d73"),
+      _T("Notification channel restored"),
+      _T("Generated when notification channel passes health check.\r\n")
+      _T("Parameters:\r\n")
+		_T("   1) Notification channel name\r\n")
+		_T("   2) Notification channel driver name\r\n")));
+
+   int ruleId = NextFreeEPPruleID();
+
+   TCHAR query[1024];
+   _sntprintf(query, 1024, _T("INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event) ")
+                           _T("VALUES (%d,'96061edf-a46f-407a-a049-a55fa1ffb7e8',7944,'Generated alarm when notification channel fails health check.','%%m',5,'NOTIFICATION_CHANNEL_FAILED_%%1_%%2','',0,%d)"),
+         ruleId, EVENT_ALARM_TIMEOUT);
+   CHK_EXEC(SQLQuery(query));
+
+   _sntprintf(query, 1024, _T("INSERT INTO policy_event_list (rule_id,event_code) VALUES (%d,%d)"), ruleId, EVENT_NOTIFICATION_CHANNEL_DOWN);
+   CHK_EXEC(SQLQuery(query));
+
+   ruleId++;
+
+   _sntprintf(query, 1024, _T("INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event) ")
+                           _T("VALUES (%d,'75640293-d630-4bfc-9b5e-9655cf59fd00',7944,'Terminate alarm when notification channel passes health check again.','%%m',6,'NOTIFICATION_CHANNEL_FAILED_%%1_%%2','',0,%d)"),
+         ruleId, EVENT_ALARM_TIMEOUT);
+   CHK_EXEC(SQLQuery(query));
+
+   _sntprintf(query, 1024, _T("INSERT INTO policy_event_list (rule_id,event_code) VALUES (%d,%d)"), ruleId, EVENT_NOTIFICATION_CHANNEL_OK);
+   CHK_EXEC(SQLQuery(query));
+
+   CHK_EXEC(SetMinorSchemaVersion(89));
+   return true;
+}
+
+/**
  * Upgrade from 40.87 to 40.88
  */
 static bool H_UpgradeFromV87()
@@ -2830,6 +2876,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 88, 40, 89, H_UpgradeFromV88 },
    { 87, 40, 88, H_UpgradeFromV87 },
    { 86, 40, 87, H_UpgradeFromV86 },
    { 85, 40, 86, H_UpgradeFromV85 },

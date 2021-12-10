@@ -1497,6 +1497,28 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
       'Generated when node is unreachable by ICMP.'
    );
 
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+   (
+      EVENT_NOTIFICATION_CHANNEL_DOWN, 'SYS_NOTIFICATION_CHANNEL_DOWN', '5696d263-0a1c-4c3b-b5bb-d6be8993ac0d',
+      EVENT_SEVERITY_MAJOR, 1,
+      'Notification channel is down',
+      'Generated when notification channel fails health check' CONCAT CRLF CONCAT
+      'Parameters:' CONCAT CRLF CONCAT
+      '   1) Notification channel name' CONCAT CRLF CONCAT
+      '   2) Notification channel driver name'
+   );
+
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+   (
+      EVENT_NOTIFICATION_CHANNEL_OK, 'SYS_NOTIFICATION_CHANNEL_OK', '19536ccb-96ed-417a-8695-94dc6d504d73',
+      EVENT_SEVERITY_NORMAL, 1,
+      'Notification channel restored',
+      'Generated when notification channel passes health check' CONCAT CRLF CONCAT
+      'Parameters:' CONCAT CRLF CONCAT
+      '   1) Notification channel name' CONCAT CRLF CONCAT
+      '   2) Notification channel driver name'
+   );
+
 /*
 ** SNMP traps
 */

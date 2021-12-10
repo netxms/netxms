@@ -536,7 +536,7 @@ ObjectArray<ObjectsDistance> *FindNearestObjects(uint32_t currObjectId, int maxD
  * Prepare MERGE statement if possible, otherwise INSERT or UPDATE depending on record existence
  * Identification column appended to provided column list
  */
-DB_STATEMENT NXCORE_EXPORTABLE DBPrepareMerge(DB_HANDLE hdb, const TCHAR *table, const TCHAR *idColumn, UINT32 id, const TCHAR * const *columns)
+static DB_STATEMENT DBPrepareMerge(DB_HANDLE hdb, const TCHAR *table, const TCHAR *idColumn, void *id, int cType, int sqlType, int allocType, const TCHAR * const *columns)
 {
    StringBuffer query;
    if (((g_dbSyntax == DB_SYNTAX_PGSQL) || (g_dbSyntax == DB_SYNTAX_TSDB)) && (g_flags & AF_DB_SUPPORTS_MERGE))
@@ -641,7 +641,7 @@ DB_STATEMENT NXCORE_EXPORTABLE DBPrepareMerge(DB_HANDLE hdb, const TCHAR *table,
       query.append(idColumn);
       query.append(_T(')'));
    }
-   else if (IsDatabaseRecordExist(hdb, table, idColumn, id))
+   else if (IsDatabaseRecordExist(hdb, table, idColumn, id, cType, sqlType, allocType))
    {
       query.append(_T("UPDATE "));
       query.append(table);
@@ -675,6 +675,24 @@ DB_STATEMENT NXCORE_EXPORTABLE DBPrepareMerge(DB_HANDLE hdb, const TCHAR *table,
       query.append(_T(')'));
    }
    return DBPrepare(hdb, query);
+}
+
+/**
+ * Prepare MERGE statement if possible, otherwise INSERT or UPDATE depending on record existence
+ * Identification column appended to provided column list
+ */
+DB_STATEMENT NXCORE_EXPORTABLE DBPrepareMerge(DB_HANDLE hdb, const TCHAR *table, const TCHAR *idColumn, uint32_t id, const TCHAR * const *columns)
+{
+   return DBPrepareMerge(hdb, table, idColumn, &id, DB_CTYPE_UINT32, DB_SQLTYPE_INTEGER, DB_BIND_TRANSIENT, columns);
+}
+
+/**
+ * Prepare MERGE statement if possible, otherwise INSERT or UPDATE depending on record existence
+ * Identification column appended to provided column list
+ */
+DB_STATEMENT NXCORE_EXPORTABLE DBPrepareMerge(DB_HANDLE hdb, const TCHAR *table, const TCHAR *idColumn, const TCHAR *id, const TCHAR * const *columns)
+{
+   return DBPrepareMerge(hdb, table, idColumn, const_cast<TCHAR*>(id), DB_CTYPE_STRING, DB_SQLTYPE_VARCHAR, DB_BIND_STATIC, columns);
 }
 
 /**

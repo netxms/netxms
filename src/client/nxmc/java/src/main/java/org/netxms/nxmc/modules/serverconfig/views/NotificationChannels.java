@@ -315,7 +315,7 @@ public class NotificationChannels extends ConfigurationView
          @Override
          protected String getErrorMessage()
          {
-            return i18n.tr("Error updating notifiction channel");
+            return i18n.tr("Error updating notification channel");
          }
       }.start();
    }

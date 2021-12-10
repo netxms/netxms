@@ -53,7 +53,7 @@ static bool ExecuteQuery(DB_HANDLE hdb, const TCHAR *query)
 /**
  * Check if given record exists in database
  */
-static bool IsDatabaseRecordExist(DB_HANDLE hdb, const TCHAR *table, const TCHAR *idColumn, void *id, int cType, int sqlType, int allocType)
+bool LIBNXDB_EXPORTABLE IsDatabaseRecordExist(DB_HANDLE hdb, const TCHAR *table, const TCHAR *idColumn, void *id, int cType, int sqlType, int allocType)
 {
    bool exist = false;
 
