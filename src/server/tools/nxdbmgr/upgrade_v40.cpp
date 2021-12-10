@@ -24,6 +24,25 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 40.87 to 40.88
+ */
+static bool H_UpgradeFromV87()
+{
+   if (GetSchemaLevelForMajorVersion(39) < 15)
+   {
+      static const TCHAR *batch =
+         _T("ALTER TABLE agent_pkg ADD pkg_type varchar(15)\n")
+         _T("ALTER TABLE agent_pkg ADD command varchar(255)\n")
+         _T("UPDATE agent_pkg SET pkg_type='agent-installer'\n")
+         _T("<END>");
+      CHK_EXEC(SQLBatch(batch));
+      CHK_EXEC(SetSchemaLevelForMajorVersion(39, 15));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(88));
+   return true;
+}
+
+/**
  * Upgrade from 40.86 to 40.87
  */
 static bool H_UpgradeFromV86()
@@ -2811,6 +2830,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 87, 40, 88, H_UpgradeFromV87 },
    { 86, 40, 87, H_UpgradeFromV86 },
    { 85, 40, 86, H_UpgradeFromV85 },
    { 84, 40, 85, H_UpgradeFromV84 },

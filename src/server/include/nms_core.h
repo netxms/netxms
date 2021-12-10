@@ -704,6 +704,7 @@ private:
    void sendAllTraps2(const NXCPMessage& request);
    void getInstalledPackages(const NXCPMessage& request);
    void installPackage(const NXCPMessage& request);
+   void updatePackageMetadata(const NXCPMessage& request);
    void removePackage(const NXCPMessage& request);
    void deployPackage(const NXCPMessage& request);
    void getParametersList(const NXCPMessage& request);

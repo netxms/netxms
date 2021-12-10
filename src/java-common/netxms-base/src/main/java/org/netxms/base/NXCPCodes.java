@@ -464,6 +464,7 @@ public class NXCPCodes
    public static final int CMD_GET_BUSINESS_SERVICE_TICKETS = 0x01BF;
    public static final int CMD_SSH_COMMAND = 0x01C0;
    public static final int CMD_FIND_DCI = 0x01C1;
+   public static final int CMD_UPDATE_PACKAGE_METADATA = 0x01C2;
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;
@@ -1255,6 +1256,7 @@ public class NXCPCodes
    public static final long VID_SNMP_CODEPAGE = 781;
    public static final long VID_REGION = 782;
    public static final long VID_DISTRICT = 783;
+   public static final long VID_PACKAGE_TYPE = 784;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;
