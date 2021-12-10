@@ -193,12 +193,12 @@ bool SearchQuery::match(const SearchAttributeProvider &provider) const
 
    if (m_excludedAttributes != nullptr)
    {
-      for (KeyValuePair<StringSet> *tiem : *m_excludedAttributes)
+      for (KeyValuePair<StringSet> *attr : *m_excludedAttributes)
       {
-         SharedString text = provider.getAttribute(tiem->key);
+         SharedString text = provider.getAttribute(attr->key);
          if (!text.isNull())
          {
-            for (const TCHAR *s : *(tiem->value))
+            for (const TCHAR *s : *(attr->value))
             {
                if (_tcsistr(text, s) != nullptr)
                {
@@ -211,12 +211,12 @@ bool SearchQuery::match(const SearchAttributeProvider &provider) const
 
    if (m_includedAttributes != nullptr)
    {
-      for (KeyValuePair<StringSet> *tiem : *m_includedAttributes)
+      for (KeyValuePair<StringSet> *attr : *m_includedAttributes)
       {
-         SharedString text = provider.getAttribute(tiem->key);
+         SharedString text = provider.getAttribute(attr->key);
          if (!text.isNull())
          {
-            for (const TCHAR *s : *(tiem->value))
+            for (const TCHAR *s : *(attr->value))
             {
                if (_tcsistr(text, s) == nullptr)
                {
