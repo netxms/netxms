@@ -294,7 +294,7 @@ public class PackageManager extends ViewPart
 	{
 		FileDialog fd = new FileDialog(getSite().getShell(), SWT.OPEN);
 		fd.setText(Messages.get().PackageManager_SelectFile);
-      fd.setFilterExtensions(new String[] { "*.apkg", "*.exe", "*.msi", "*.msp", "*.npi", "*.tar.gz", "*.tgz", "*.*" });
+      fd.setFilterExtensions(new String[] { "*.apkg", "*.exe", "*.msi", "*.msp", "*.msu", "*.npi", "*.tgz;*.tar.gz", "*.*" });
 		String packageFileName = fd.open();
       if (packageFileName == null)
          return;
@@ -384,7 +384,7 @@ public class PackageManager extends ViewPart
                   packageInfo = new PackageInfo(name, "", name, "executable", "windows-x64", "", "");
                }
             }
-            else if (packageFileName.endsWith(".msi") || packageFileName.endsWith(".msp"))
+            else if (packageFileName.endsWith(".msi") || packageFileName.endsWith(".msp") || packageFileName.endsWith(".msu"))
             {
                packageInfo = new PackageInfo(name.substring(0, name.lastIndexOf('.')), "", name, name.substring(name.lastIndexOf('.') + 1), "windows-x64", "", "");
             }

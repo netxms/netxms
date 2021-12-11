@@ -294,9 +294,9 @@ public class PackageManager extends ViewPart
 	{
 		FileDialog fd = new FileDialog(getSite().getShell(), SWT.OPEN);
 		fd.setText(Messages.get().PackageManager_SelectFile);
-      fd.setFilterExtensions(new String[] { "*.apkg", "*.exe", "*.msi", "*.msp", "*.npi", "*.tar.gz", "*.tgz", "*.*" }); //$NON-NLS-1$ //$NON-NLS-2$
-      fd.setFilterNames(new String[] { "NetXMS Agent Package", "Executable", "Windows Installer Package", "Windows Installer Patch", Messages.get().PackageManager_FileTypePackage,
-            "TAR Archive", "TAR Archive", Messages.get().PackageManager_FileTypeAll });
+      fd.setFilterExtensions(new String[] { "*.apkg", "*.exe", "*.msi", "*.msp", "*.msu", "*.npi", "*.tgz;*.tar.gz", "*.*" });
+      fd.setFilterNames(new String[] { "NetXMS Agent Package", "Executable", "Windows Installer Package", "Windows Installer Patch", "Windows Update Package",
+            Messages.get().PackageManager_FileTypePackage, "Compressed TAR Archive", Messages.get().PackageManager_FileTypeAll });
 		String packageFileName = fd.open();
       if (packageFileName == null)
          return;
@@ -386,7 +386,7 @@ public class PackageManager extends ViewPart
                   packageInfo = new PackageInfo(name, "", name, "executable", "windows-x64", "", "");
                }
             }
-            else if (packageFileName.endsWith(".msi") || packageFileName.endsWith(".msp"))
+            else if (packageFileName.endsWith(".msi") || packageFileName.endsWith(".msp") || packageFileName.endsWith(".msu"))
             {
                packageInfo = new PackageInfo(name.substring(0, name.lastIndexOf('.')), "", name, name.substring(name.lastIndexOf('.') + 1), "windows-x64", "", "");
             }

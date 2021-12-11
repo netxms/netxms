@@ -1227,6 +1227,17 @@ uint32_t CommSession::installPackage(NXCPMessage *request)
          }
          commandLine.append(_T(" REINSTALLMODE=\"ecmus\" REINSTALL=\"ALL\""));
       }
+      else if (!stricmp(packageType, "msu"))
+      {
+         commandLine.append(_T("wusa.exe \""));
+         commandLine.append(fullPath);
+         commandLine.append(_T("\" /quiet"));
+         if (command[0] != 0)
+         {
+            commandLine.append(_T(" "));
+            commandLine.append(command);
+         }
+      }
 #else
       else if (!stricmp(packageType, "deb"))
       {
