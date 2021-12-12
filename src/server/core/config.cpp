@@ -276,6 +276,7 @@ bool NXCORE_EXPORTABLE LoadConfig(int *debugLevel)
  */
 static StringMap s_metadataCache;
 static RWLOCK s_metadataCacheLock = RWLockCreate();
+static bool s_metadataCacheLoaded = false;
 
 /**
  * Pre-load metadata
@@ -293,6 +294,7 @@ void MetaDataPreLoad()
       {
          s_metadataCache.setPreallocated(DBGetField(hResult, i, 0, nullptr, 0), DBGetField(hResult, i, 1, nullptr, 0));
       }
+      s_metadataCacheLoaded = true;
       RWLockUnlock(s_metadataCacheLock);
       DBFreeResult(hResult);
    }
@@ -304,7 +306,7 @@ void MetaDataPreLoad()
  */
 bool NXCORE_EXPORTABLE MetaDataReadStr(const TCHAR *name, TCHAR *buffer, int bufSize, const TCHAR *defaultValue)
 {
-   bool bSuccess = false;
+   bool success = false;
 
    _tcslcpy(buffer, defaultValue, bufSize);
    if (_tcslen(name) > 127)
@@ -315,11 +317,11 @@ bool NXCORE_EXPORTABLE MetaDataReadStr(const TCHAR *name, TCHAR *buffer, int buf
    if (value != nullptr)
    {
       _tcslcpy(buffer, value, bufSize);
-      bSuccess = true;
+      success = true;
    }
    RWLockUnlock(s_metadataCacheLock);
 
-   if (!bSuccess)
+   if (!success && !s_metadataCacheLoaded)
    {
       DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
       DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT var_value FROM metadata WHERE var_name=?"));
@@ -335,7 +337,7 @@ bool NXCORE_EXPORTABLE MetaDataReadStr(const TCHAR *name, TCHAR *buffer, int buf
                RWLockWriteLock(s_metadataCacheLock);
                s_metadataCache.setPreallocated(_tcsdup(name), DBGetField(hResult, 0, 0, nullptr, 0));
                RWLockUnlock(s_metadataCacheLock);
-               bSuccess = true;
+               success = true;
             }
             DBFreeResult(hResult);
          }
@@ -343,7 +345,7 @@ bool NXCORE_EXPORTABLE MetaDataReadStr(const TCHAR *name, TCHAR *buffer, int buf
       }
       DBConnectionPoolReleaseConnection(hdb);
    }
-   return bSuccess;
+   return success;
 }
 
 /**
@@ -440,6 +442,7 @@ bool NXCORE_EXPORTABLE MetaDataWriteInt32(const TCHAR *variable, int32_t value)
  */
 static StringMap s_configCache;
 static RWLOCK s_configCacheLock = RWLockCreate();
+static bool s_configCacheLoaded = false;
 
 /**
  * Pre-load configuration
@@ -457,6 +460,7 @@ void ConfigPreLoad()
       {
          s_configCache.setPreallocated(DBGetField(hResult, i, 0, nullptr, 0), DBGetField(hResult, i, 1, nullptr, 0));
       }
+      s_configCacheLoaded = true;
       RWLockUnlock(s_configCacheLock);
       DBFreeResult(hResult);
    }
@@ -706,6 +710,9 @@ bool NXCORE_EXPORTABLE ConfigReadStrEx(DB_HANDLE dbHandle, const TCHAR *variable
       return true;
    }
 
+   if (s_configCacheLoaded)
+      return false;
+
    bool success = false;
    DB_HANDLE hdb = (dbHandle == nullptr) ? DBConnectionPoolAcquireConnection() : dbHandle;
 	DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT var_value FROM config WHERE var_name=?"));
@@ -788,6 +795,18 @@ bool NXCORE_EXPORTABLE ConfigReadStrUTF8(const TCHAR *variable, char *buffer, si
    if (defaultValue != nullptr)
       strlcpy(buffer, defaultValue, size);
    if (_tcslen(variable) > 127)
+      return false;
+
+   RWLockReadLock(s_configCacheLock);
+   const TCHAR *value = s_configCache.get(variable);
+   RWLockUnlock(s_configCacheLock);
+   if (value != nullptr)
+   {
+      wchar_to_utf8(value, -1, buffer, size);
+      return true;
+   }
+
+   if (s_configCacheLoaded)
       return false;
 
    bool success = false;
