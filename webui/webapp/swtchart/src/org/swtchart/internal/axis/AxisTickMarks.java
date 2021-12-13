@@ -183,8 +183,8 @@ public class AxisTickMarks implements PaintListener
       ArrayList<Integer> tickLabelPositions = axis.getTick().getAxisTickLabels().getTickLabelPositions();
       e.gc.setBackground(chart.getBackground());
       e.gc.setForeground(getForeground());
-      //Rectangle oldClipping = e.gc.getClipping();
-      //e.gc.setClipping(bounds);
+      Rectangle oldClipping = e.gc.getClipping();
+      e.gc.setClipping(bounds);
       if (axis.isHorizontalAxis())
       {
          drawXTickMarks(e.gc, tickLabelPositions, axis.getPosition());
@@ -193,7 +193,7 @@ public class AxisTickMarks implements PaintListener
       {
          drawYTickMarks(e.gc, tickLabelPositions, axis.getPosition());
       }
-      //e.gc.setClipping(oldClipping);
+      e.gc.setClipping(oldClipping);
    }
 
    /**
@@ -206,7 +206,7 @@ public class AxisTickMarks implements PaintListener
    private void drawXTickMarks(GC gc, ArrayList<Integer> tickLabelPositions, Position position)
    {
       // draw tick marks
-      //gc.setLineStyle(SWT.LINE_SOLID);
+      gc.setLineStyle(SWT.LINE_SOLID);
       if (axis.isValidCategoryAxis())
       {
          if (tickLabelPositions.size() > 1)
@@ -267,7 +267,7 @@ public class AxisTickMarks implements PaintListener
    private void drawYTickMarks(GC gc, ArrayList<Integer> tickLabelPositions, Position position)
    {
       // draw tick marks
-      //gc.setLineStyle(SWT.LINE_SOLID);
+      gc.setLineStyle(SWT.LINE_SOLID);
       if (axis.isValidCategoryAxis())
       {
          if (tickLabelPositions.size() > 1)

@@ -205,7 +205,6 @@ public class AxisTickMarks implements PaintListener
     */
    private void drawXTickMarks(GC gc, ArrayList<Integer> tickLabelPositions, Position position)
    {
-
       // draw tick marks
       gc.setLineStyle(SWT.LINE_SOLID);
       if (axis.isValidCategoryAxis())
@@ -267,7 +266,6 @@ public class AxisTickMarks implements PaintListener
     */
    private void drawYTickMarks(GC gc, ArrayList<Integer> tickLabelPositions, Position position)
    {
-
       // draw tick marks
       gc.setLineStyle(SWT.LINE_SOLID);
       if (axis.isValidCategoryAxis())

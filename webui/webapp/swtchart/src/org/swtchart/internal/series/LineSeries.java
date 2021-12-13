@@ -15,6 +15,7 @@ import org.swtchart.ILineSeries;
 import org.swtchart.LineStyle;
 import org.swtchart.Range;
 import org.swtchart.IAxis.Direction;
+import org.swtchart.internal.Util;
 import org.swtchart.internal.axis.Axis;
 import org.swtchart.internal.compress.CompressLineSeries;
 import org.swtchart.internal.compress.CompressScatterSeries;
@@ -496,8 +497,8 @@ public class LineSeries extends Series implements ILineSeries
 			}
 		}
 
-        //gc.setLineStyle(Util.getIndexDefinedInSWT(lineStyle));
-        gc.setForeground(getLineColor());
+		gc.setLineStyle(Util.getIndexDefinedInSWT(lineStyle));
+		gc.setForeground(getLineColor());
 
 		boolean isHorizontal = xAxis.isHorizontalAxis();
 		if (stepEnabled || areaEnabled || stackEnabled)
@@ -705,12 +706,12 @@ public class LineSeries extends Series implements ILineSeries
 				gc.fillPolygon(invertedTriangleArray);
 				break;
 			case CROSS:
-				//gc.setLineStyle(SWT.LINE_SOLID);
+				gc.setLineStyle(SWT.LINE_SOLID);
 				gc.drawLine(h - symbolSize, v - symbolSize, h + symbolSize, v + symbolSize);
 				gc.drawLine(h - symbolSize, v + symbolSize, h + symbolSize, v - symbolSize);
 				break;
 			case PLUS:
-				//gc.setLineStyle(SWT.LINE_SOLID);
+				gc.setLineStyle(SWT.LINE_SOLID);
 				gc.drawLine(h, v - symbolSize, h, v + symbolSize);
 				gc.drawLine(h - symbolSize, v, h + symbolSize, v);
 				break;

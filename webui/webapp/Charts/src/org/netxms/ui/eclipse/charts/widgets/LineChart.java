@@ -492,7 +492,7 @@ public class LineChart extends Chart implements HistoricalDataChart
                   int y = axis.getPixelCoordinate(Integer.parseInt(tr[j].getValue()));
                   final EventTemplate event = (EventTemplate)session.findEventTemplateByCode(((Threshold)tr[j]).getFireEvent());
                   gc.setForeground(StatusDisplayInfo.getStatusColor(event.getSeverity()));
-                  //gc.setLineStyle(SWT.LINE_DOT);
+                  gc.setLineStyle(SWT.LINE_DOT);
                   gc.setLineWidth(3);
                   gc.drawLine(0, y, clientArea.width, y);
                }

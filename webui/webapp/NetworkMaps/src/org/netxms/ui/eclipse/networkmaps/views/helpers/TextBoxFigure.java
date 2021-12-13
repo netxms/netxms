@@ -49,26 +49,26 @@ public class TextBoxFigure extends DecorationLayerAbstractFigure
     */
    public TextBoxFigure(NetworkMapTextBox decoration, MapLabelProvider labelProvider, ExtendedGraphViewer viewer)
    {
-	  super(decoration, viewer);
-	  this.textBoxElement = decoration;
-	  this.labelProvider = labelProvider;
-	  
-	  setLayoutManager(new BorderLayout());
-	
-	  text = new Label(textBoxElement.getText());
-	  text.setFont(new Font(Display.getCurrent(), "Verdana", textBoxElement.getFontSize(), SWT.NONE));
-	  text.setLabelAlignment(PositionConstants.CENTER);
-	  
-	  Dimension d = text.getPreferredSize();
-	  text.setSize(d);
-	  
-	  Point p = text.getLocation();
-	  p.translate(MARGIN_X*4, MARGIN_Y);
-	  text.setLocation(p);
-	  add(text);
-	  setSize(d.width + MARGIN_X*8, d.height + MARGIN_Y*2);
-	  
-	  text.setForegroundColor(labelProvider.getColors().create(ColorConverter.rgbFromInt(textBoxElement.getTextColor())));
+      super(decoration, viewer);
+      this.textBoxElement = decoration;
+      this.labelProvider = labelProvider;
+      
+      setLayoutManager(new BorderLayout());
+
+      text = new Label(textBoxElement.getText());
+      text.setFont(new Font(Display.getCurrent(), "Verdana", textBoxElement.getFontSize(), SWT.NONE));
+      text.setLabelAlignment(PositionConstants.CENTER);
+      
+      Dimension d = text.getPreferredSize();
+      text.setSize(d);
+      
+      Point p = text.getLocation();
+      p.translate(MARGIN_X*4, MARGIN_Y);
+      text.setLocation(p);
+      add(text);
+      setSize(d.width + MARGIN_X*8, d.height + MARGIN_Y*2);
+      
+      text.setForegroundColor(labelProvider.getColors().create(ColorConverter.rgbFromInt(textBoxElement.getTextColor())));  
    }
    
    /* (non-Javadoc)
@@ -97,7 +97,7 @@ public class TextBoxFigure extends DecorationLayerAbstractFigure
          
          gc.setForegroundColor(labelProvider.getColors().create(ColorConverter.rgbFromInt(textBoxElement.getBorderColor())));
          gc.setLineWidth(BORDER_SIZE);
-         gc.setLineStyle(Graphics.LINE_SOLID);
+         gc.setLineStyle(SWT.LINE_SOLID);
          gc.drawRoundRectangle(rect, 8, 8);         
       }
    }

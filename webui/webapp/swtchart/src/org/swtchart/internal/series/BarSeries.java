@@ -432,7 +432,7 @@ public class BarSeries extends Series implements IBarSeries {
         gc.setBackground(getBarColor());
         gc.fillRectangle(h, v, width, height);
 
-        //gc.setLineStyle(SWT.LINE_SOLID);
+        gc.setLineStyle(SWT.LINE_SOLID);
         Color frameColor = getFrameColor(getBarColor());
         gc.setForeground(frameColor);
         gc.drawRectangle(h, v, width, height);

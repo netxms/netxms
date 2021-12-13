@@ -853,7 +853,7 @@ public class ExtendedGraphViewer extends GraphViewer
 		@Override
 		protected void paintFigure(Graphics gc)
 		{
-			gc.setLineStyle(Graphics.LINE_DOT);
+			gc.setLineStyle(SWT.LINE_DOT);
 			Dimension size = getSize();
 			gc.drawLine(0, crosshairY, size.width, crosshairY);
 			gc.drawLine(crosshairX, 0, crosshairX, size.height);
@@ -879,7 +879,7 @@ public class ExtendedGraphViewer extends GraphViewer
 		@Override
 		protected void paintFigure(Graphics gc)
 		{
-			gc.setLineStyle(Graphics.LINE_DOT);
+			gc.setLineStyle(SWT.LINE_DOT);
 			Dimension size = getSize();
 			for(int x = gridSize; x < size.width; x += gridSize)
 				gc.drawLine(x, 0, x, size.height);
