@@ -575,14 +575,12 @@ int main(int argc, char* argv[])
 
          // Remove database lock
          if (g_flags & AF_DB_LOCKED)
-         {
             UnlockDatabase();
-            ShutdownDatabase();
-         }
+         ShutdownDatabase();
          nxlog_close();
          return 3;
       }
-      Main(NULL);
+      Main(nullptr);
    }
 #else    /* not _WIN32 */
    if (!IsStandalone() && !(g_flags & AF_SYSTEMD_DAEMON))
@@ -609,10 +607,9 @@ int main(int argc, char* argv[])
 
       // Remove database lock
       if (g_flags & AF_DB_LOCKED)
-      {
          UnlockDatabase();
-         ShutdownDatabase();
-      }
+
+      ShutdownDatabase();
       nxlog_close();
       return 3;
    }
