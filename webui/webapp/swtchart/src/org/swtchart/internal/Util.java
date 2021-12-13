@@ -6,10 +6,12 @@
  *******************************************************************************/
 package org.swtchart.internal;
 
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Display;
+import org.swtchart.LineStyle;
 
 /**
  * A utility class providing generic methods.
@@ -40,4 +42,30 @@ public final class Util
 		gc.dispose();
 		return e;
 	}
+
+    /**
+     * Gets the index defined in SWT.
+     * 
+     * @param lineStyle
+     *            the line style
+     * @return the index defined in SWT.
+     */
+    public static int getIndexDefinedInSWT(LineStyle lineStyle) {
+        switch (lineStyle) {
+        case NONE:
+            return SWT.NONE;
+        case SOLID:
+            return SWT.LINE_SOLID;
+        case DASH:
+            return SWT.LINE_DASH;
+        case DOT:
+            return SWT.LINE_DOT;
+        case DASHDOT:
+            return SWT.LINE_DASHDOT;
+        case DASHDOTDOT:
+            return SWT.LINE_DASHDOTDOT;
+        default:
+            return SWT.LINE_SOLID;
+        }
+    }
 }

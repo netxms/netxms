@@ -98,7 +98,7 @@ public class DCIContainerFigure extends DecorationLayerAbstractFigure
 
    
    public void refresh()
-   {      
+   {
       //Set new label text   
       String text = dciValueProvider.getDciDataAsString(container.getDciAsList());      
       label.setText(text.isEmpty() ? Messages.get().DCIContainerFigure_NoValue : text);
