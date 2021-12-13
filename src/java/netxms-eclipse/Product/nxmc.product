@@ -72,7 +72,6 @@ Copyright (c) 2003-2021 Raden Solutions
       <plugin id="org.apache.commons.logging"/>
       <plugin id="org.apache.felix.gogo.runtime"/>
       <plugin id="org.apache.felix.scr"/>
-      <plugin id="org.apache.log4j"/>
       <plugin id="org.apache.xerces"/>
       <plugin id="org.apache.xml.resolver"/>
       <plugin id="org.apache.xmlgraphics"/>
