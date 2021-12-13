@@ -223,9 +223,9 @@ public class SlotView extends Canvas implements PaintListener, MouseListener, Mo
 		
 		if (selection == p)
 		{
-			//gc.setLineStyle(SWT.LINE_DOT);
+			gc.setLineStyle(SWT.LINE_DOT);
 			gc.drawRectangle(rect.x + 2, rect.y + 2, rect.width - 4, rect.height - 4);
-			//gc.setLineStyle(SWT.LINE_SOLID);
+			gc.setLineStyle(SWT.LINE_SOLID);
 		}
 
 		Point ext = gc.textExtent(label);

@@ -20,6 +20,7 @@ package org.netxms.ui.eclipse.charts.widgets;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Point;
@@ -163,6 +164,7 @@ public class BarChart extends GenericComparisonChart
       gc.drawLine(MARGIN_WIDTH + labelWidth, MARGIN_HEIGHT, MARGIN_WIDTH + labelWidth, size.y - MARGIN_HEIGHT);
 
       // Draw labels and grid
+      gc.setLineStyle(SWT.LINE_DOT);
       Color gridColor = getColorFromPreferences("Chart.Grid.Y.Color"); //$NON-NLS-1$
       float y = MARGIN_HEIGHT;
       for(int i = 0; i < labels.size(); i++, y += pointsStep)
@@ -176,6 +178,7 @@ public class BarChart extends GenericComparisonChart
             gc.drawLine(MARGIN_WIDTH + labelWidth, (int)y, size.x - MARGIN_WIDTH, (int)y);
          }
       }
+      gc.setLineStyle(SWT.LINE_SOLID);
 
       // Draw data blocks
       if (itemWidth >= 4)
@@ -245,6 +248,7 @@ public class BarChart extends GenericComparisonChart
       gc.drawLine(MARGIN_WIDTH, size.y - MARGIN_HEIGHT - labelHeight, size.x - MARGIN_WIDTH, size.y - MARGIN_HEIGHT - labelHeight);
 
       // Draw labels and grid
+      gc.setLineStyle(SWT.LINE_DOT);
       Color gridColor = getColorFromPreferences("Chart.Grid.X.Color"); //$NON-NLS-1$
       float x = MARGIN_WIDTH;
       for(int i = 0; i < labels.size(); i++, x += pointsStep)
@@ -258,6 +262,7 @@ public class BarChart extends GenericComparisonChart
             gc.drawLine((int)x, MARGIN_HEIGHT, (int)x, size.y - MARGIN_HEIGHT - labelHeight);
          }
       }
+      gc.setLineStyle(SWT.LINE_SOLID);
 
       // Draw data blocks
       if (itemHeight >= 4)

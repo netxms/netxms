@@ -231,7 +231,7 @@ public class ErrorBar implements IErrorBar {
 
         int oldLineWidth = gc.getLineWidth();
         gc.setLineWidth(lineWidth);
-        //gc.setLineStyle(SWT.LINE_SOLID);
+        gc.setLineStyle(SWT.LINE_SOLID);
         gc.setForeground(getColor());
 
         // get plus/minus error

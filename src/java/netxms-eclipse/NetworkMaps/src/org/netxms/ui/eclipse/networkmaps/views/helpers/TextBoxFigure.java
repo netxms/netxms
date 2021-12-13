@@ -120,5 +120,4 @@ public class TextBoxFigure extends DecorationLayerAbstractFigure
       
       repaint();
    }
-
 }
