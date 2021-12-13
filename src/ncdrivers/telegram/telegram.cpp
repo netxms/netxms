@@ -277,6 +277,7 @@ static json_t *SendTelegramRequest(const char *token, const ProxyInfo *proxy, lo
       curl_easy_setopt(curl, CURLOPT_POSTFIELDS, json);
       headers = curl_slist_append(headers, "Content-Type: application/json");
       curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+      nxlog_debug_tag(DEBUG_TAG, 7, _T("Request to send: %hs"), json);
    }
    else
    {
