@@ -21,12 +21,14 @@ package org.netxms.websvc.handlers;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.Table;
 import org.netxms.client.TableColumnDefinition;
+import org.netxms.client.TableRow;
 import org.netxms.client.constants.HistoricalDataType;
 import org.netxms.client.constants.RCC;
 import org.netxms.client.constants.TimeUnit;
@@ -38,6 +40,8 @@ import org.netxms.client.datacollection.DciDataRow;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.DataCollectionTarget;
 import org.netxms.websvc.json.ResponseContainer;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 
 /**
  * Objects request handler
@@ -53,7 +57,7 @@ public class HistoricalData extends AbstractObjectHandler
       NXCSession session = getSession();
       AbstractObject object = getObject();
       long dciId = 0;
-      try 
+      try
       {
          dciId = Long.parseLong(id);
       }
@@ -64,7 +68,7 @@ public class HistoricalData extends AbstractObjectHandler
 
       if ((object == null) || (dciId == 0) || !(object instanceof DataCollectionTarget))
          throw new NXCException(RCC.INVALID_OBJECT_ID);
-      
+
       String timeFrom = query.get("from");
       String timeTo = query.get("to");
       String timeInterval = query.get("timeInterval");
@@ -75,107 +79,215 @@ public class HistoricalData extends AbstractObjectHandler
       DataCollectionObject dataCollectionObject = dataCollectionConfiguration.findItem(dciId);
       HistoricalDataType valueType = HistoricalDataType.PROCESSED;
 
-      if (dataCollectionObject instanceof DataCollectionTable) {
+      if (dataCollectionObject instanceof DataCollectionTable)
+      {
          valueType = HistoricalDataType.FULL_TABLE;
       }
 
-      if (timeFrom != null || timeTo != null) {
-         data = session.getCollectedData(object.getObjectId(), dciId, new Date(parseLong(timeFrom, 0) * 1000),
-               new Date(parseLong(timeTo, System.currentTimeMillis() / 1000) * 1000), parseInt(itemCount, 0),
-               valueType);
-      } else if (timeInterval != null) {
+      if (timeFrom != null || timeTo != null)
+      {
+         data = session.getCollectedData(object.getObjectId(), dciId, new Date(parseLong(timeFrom, 0) * 1000), new Date(parseLong(timeTo, System.currentTimeMillis() / 1000) * 1000),
+               parseInt(itemCount, 0), valueType);
+      }
+      else if (timeInterval != null)
+      {
          Date now = new Date();
          long from = now.getTime() - parseLong(timeInterval, 0) * 1000;
-         data = session.getCollectedData(object.getObjectId(), dciId, new Date(from), new Date(),
-               parseInt(itemCount, 0), valueType);
-      } else if (itemCount != null) {
+         data = session.getCollectedData(object.getObjectId(), dciId, new Date(from), new Date(), parseInt(itemCount, 0), valueType);
+      }
+      else if (itemCount != null)
+      {
          data = session.getCollectedData(object.getObjectId(), dciId, null, null, parseInt(itemCount, 0), valueType);
-      } else {
+      }
+      else
+      {
          Date now = new Date();
          long from = now.getTime() - 3600000; // one hour
-         data = session.getCollectedData(object.getObjectId(), dciId, new Date(from), now, parseInt(itemCount, 0),
-               valueType);
+         data = session.getCollectedData(object.getObjectId(), dciId, new Date(from), now, parseInt(itemCount, 0), valueType);
       }
 
-      if (dataCollectionObject instanceof DataCollectionTable) {
-         return new ResponseContainer("values", transformTableDataOutput(data));
-      }
-
-      return new ResponseContainer("values", data);
+      return (dataCollectionObject instanceof DataCollectionTable) ? transformTableDataOutput(data, query.get("outputFormat")) : data;
    }
 
    /**
     * Transforms Full historical table data into consumable JSON format
     */
-   private Map<Object, Object> transformTableDataOutput(DciData data) throws Exception {
+   private Object transformTableDataOutput(DciData data, String outputFormat) throws Exception
+   {
       HashMap<Object, Object> response = new HashMap<Object, Object>();
       DciDataRow[] tableValues = data.getValues();
 
       // All the columns will be the same regardless of the table,
       // getting the first one to figure out the structure
-      Table firstTable = (Table) tableValues[0].getValue();
+      Table firstTable = (Table)tableValues[0].getValue();
 
       response.put("nodeId", data.getNodeId());
       response.put("dciId", data.getDciId());
-      response.put("dataType", data.getDataType());
       response.put("source", firstTable.getSource());
       response.put("title", firstTable.getTitle());
       response.put("columns", firstTable.getColumns());
 
       // Get the instance columns
-      // Assumes that table has atleast 1 instance column
-      ArrayList<TableColumnDefinition> instanceColumns = new ArrayList<TableColumnDefinition>();
-      for (TableColumnDefinition column : firstTable.getColumns()) {
-         if (column.isInstanceColumn()) {
-            instanceColumns.add(column);
+      List<Integer> instanceColumns = new ArrayList<Integer>();
+      for(int i = 0; i < firstTable.getColumnCount(); i++)
+      {
+         if (firstTable.getColumnDefinition(i).isInstanceColumn())
+            instanceColumns.add(Integer.valueOf(i));
+      }
+
+      Object outputData;
+      if ((outputFormat == null) || outputFormat.isEmpty() || outputFormat.equalsIgnoreCase("RowColumn"))
+         outputData = transformTableDataOutputByRowColumn(tableValues, instanceColumns);
+      else if (outputFormat.equalsIgnoreCase("ColumnRow"))
+         outputData = transformTableDataOutputByColumnRow(tableValues);
+      else if (outputFormat.equalsIgnoreCase("InstanceColumnRow"))
+         outputData = transformTableDataOutputByInstanceColumnRow(tableValues, instanceColumns);
+      else
+         throw new Exception("Invalid table output format");
+
+      response.put("values", outputData);
+      return response;
+   }
+
+   /**
+    * Transforms Full historical table data into consumable JSON format, grouped by row and column
+    */
+   private Object transformTableDataOutputByRowColumn(DciDataRow[] tableValues, List<Integer> instanceColumns) throws Exception
+   {
+      JsonArray output = new JsonArray(tableValues.length);
+      for(int i = 0; i < tableValues.length; i++)
+      {
+         Table table = (Table)tableValues[i].getValue();
+
+         JsonObject entry = new JsonObject();
+         entry.addProperty("timestamp", tableValues[i].getTimestamp().getTime() / 1000);
+
+         JsonArray rows = new JsonArray(table.getRowCount());
+         for(int j = 0; j < table.getRowCount(); j++)
+         {
+            TableRow r = table.getRow(j);
+            JsonObject jr = new JsonObject();
+            jr.addProperty("__instance", instanceKeyForRow(table, j, instanceColumns));
+            for(int k = 0; k < table.getColumnCount(); k++)
+            {
+               jr.addProperty(table.getColumnName(k), r.getValue(k));
+            }
+            rows.add(jr);
          }
-      }
-      if (instanceColumns.isEmpty()) {
-         throw new Exception("No instance column found in table");
-      }
+         entry.add("rows", rows);
 
-      Map<String, HashMap<String, ArrayList<HashMap<String, Object>>>> transformedData = new HashMap<>();
-      for (int i = 0; i < tableValues.length; i++) {
-         long timestamp = tableValues[i].getTimestamp().getTime();
-         Table table = (Table) tableValues[i].getValue();
-         for (int j = 0; j < table.getRowCount(); j++) {
+         output.add(entry);
+      }
+      return output;
+   }
 
-            String instanceKey = null;
-            for (TableColumnDefinition instanceColumn : instanceColumns) {
-               if (instanceKey != null) {
-                  instanceKey += "-";
-               }
-               instanceKey += table.getCellValue(j, table.getColumnIndex(instanceColumn.getName()));
+   /**
+    * Transforms Full historical table data into consumable JSON format, grouped by column and row
+    */
+   private Object transformTableDataOutputByColumnRow(DciDataRow[] tableValues) throws Exception
+   {
+      JsonArray output = new JsonArray(tableValues.length);
+      for(int i = 0; i < tableValues.length; i++)
+      {
+         Table table = (Table)tableValues[i].getValue();
+
+         JsonObject entry = new JsonObject();
+         entry.addProperty("timestamp", tableValues[i].getTimestamp().getTime() / 1000);
+
+         JsonObject columns = new JsonObject();
+         for(int j = 0; j < table.getColumnCount(); j++)
+         {
+            TableColumnDefinition c = table.getColumnDefinition(j);
+            JsonArray jc = new JsonArray(table.getRowCount());
+            for(int k = 0; k < table.getRowCount(); k++)
+            {
+               jc.add(table.getCellValue(k, j));
+            }
+            columns.add(c.getName(), jc);
+         }
+         entry.add("columns", columns);
+
+         output.add(entry);
+      }
+      return output;
+   }
+
+   /**
+    * Transforms Full historical table data into consumable JSON format, grouped by instance, column, and row
+    */
+   @SuppressWarnings("unchecked")
+   private Object transformTableDataOutputByInstanceColumnRow(DciDataRow[] tableValues, List<Integer> instanceColumns) throws Exception
+   {
+      if (instanceColumns.isEmpty())
+         throw new Exception("No instance columns in requested table");
+
+      Map<String, Map<String, Object>> transformedData = new HashMap<>();
+      for(int i = 0; i < tableValues.length; i++)
+      {
+         long timestamp = tableValues[i].getTimestamp().getTime() / 1000;
+         Table table = (Table)tableValues[i].getValue();
+         for(int j = 0; j < table.getRowCount(); j++)
+         {
+            String instanceKey = instanceKeyForRow(table, j, instanceColumns);
+            if (transformedData.get(instanceKey) == null)
+            {
+               Map<String, Object> data = new HashMap<>();
+               data.put("__instance", instanceKey);
+               transformedData.put(instanceKey, data);
             }
 
-            if (transformedData.get(instanceKey) == null) {
-               transformedData.put(instanceKey, new HashMap<String, ArrayList<HashMap<String, Object>>>());
-            }
-
-            for (TableColumnDefinition column : table.getColumns()) {
+            for(TableColumnDefinition column : table.getColumns())
+            {
                HashMap<String, Object> cell = new HashMap<String, Object>();
                cell.put("value", table.getCellValue(j, table.getColumnIndex(column.getName())));
                cell.put("timestamp", timestamp);
-               if (transformedData.get(instanceKey).get(column.getName()) == null) {
-                  transformedData.get(instanceKey).put(column.getName(), new ArrayList<HashMap<String, Object>>());
+               List<Map<String, Object>> cells = (List<Map<String, Object>>)transformedData.get(instanceKey).get(column.getName());
+               if (cells == null)
+               {
+                  cells = new ArrayList<Map<String, Object>>();
+                  transformedData.get(instanceKey).put(column.getName(), cells);
                }
-               transformedData.get(instanceKey).get(column.getName()).add(cell);
+               cells.add(cell);
             }
          }
       }
 
       ArrayList<Object> dataList = new ArrayList<Object>();
-      for (Object _dataItem : transformedData.values()) {
+      for(Object _dataItem : transformedData.values())
+      {
          dataList.add(_dataItem);
       }
-      response.put("data", dataList);
-      return response;
+      return dataList;
+   }
+
+   /**
+    * Build instance key for given table row.
+    *
+    * @param table table object
+    * @param row row number
+    * @param instanceColumns list of instance column indexes
+    * @return instance key
+    */
+   private static String instanceKeyForRow(Table table, int row, List<Integer> instanceColumns)
+   {
+      if (instanceColumns.isEmpty())
+         return null;
+
+      StringBuilder instanceKey = new StringBuilder();
+      for(Integer column : instanceColumns)
+      {
+         if (instanceKey.length() > 0)
+            instanceKey.append('-');
+         instanceKey.append(table.getCellValue(row, column));
+      }
+      return instanceKey.toString();
    }
 
    /**
     * @see org.netxms.websvc.handlers.AbstractHandler#getCollection(java.util.Map)
     */
-   @Override protected Object getCollection(Map<String, String> query) throws Exception
+   @Override
+   protected Object getCollection(Map<String, String> query) throws Exception
    {
       NXCSession session = getSession();
 
@@ -186,7 +298,7 @@ public class HistoricalData extends AbstractObjectHandler
 
       HashMap<Long, DciData> dciData = new HashMap<Long, DciData>();
 
-      for (int i = 0; i < requestPairs.length; i++)
+      for(int i = 0; i < requestPairs.length; i++)
       {
          String[] dciPairs = requestPairs[i].split(",");
          if (dciPairs == null)
@@ -206,9 +318,8 @@ public class HistoricalData extends AbstractObjectHandler
 
          if (!timeFrom.equals("0") || !timeTo.equals("0"))
          {
-            collectedData = session.getCollectedData(parseLong(nodeId, 0), parseLong(dciId, 0),
-                  new Date(parseLong(timeFrom, 0) * 1000), new Date(parseLong(timeTo, System.currentTimeMillis() / 1000) * 1000),
-                  0, HistoricalDataType.PROCESSED);
+            collectedData = session.getCollectedData(parseLong(nodeId, 0), parseLong(dciId, 0), new Date(parseLong(timeFrom, 0) * 1000),
+                  new Date(parseLong(timeTo, System.currentTimeMillis() / 1000) * 1000), 0, HistoricalDataType.PROCESSED);
          }
          else if (!timeInterval.equals("0"))
          {
