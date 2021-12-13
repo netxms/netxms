@@ -91,10 +91,8 @@ static VOID WINAPI CoreServiceMain(DWORD argc, LPTSTR *argv)
 
       // Remove database lock
       if (g_flags & AF_DB_LOCKED)
-      {
          UnlockDatabase();
-         ShutdownDatabase();
-      }
+      ShutdownDatabase();
 
       // Now service is stopped
       status.dwCurrentState = SERVICE_STOPPED;
