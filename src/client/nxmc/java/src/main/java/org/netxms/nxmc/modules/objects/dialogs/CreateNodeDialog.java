@@ -95,7 +95,6 @@ public class CreateNodeDialog extends Dialog
 	private String sshPassword; 
 	private boolean showAgain = false;
 	private boolean enableShowAgainFlag = true;
-	private String codepage = "";
 
 	/**
 	 * @param parentShell
