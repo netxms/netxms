@@ -123,7 +123,7 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
       this.view = view;
 
 		colorCache = new ColorCache(this);
-		
+
       imageZoomIn = ResourceManager.getImage("icons/worldmap/zoom_in.png");
       imageZoomOut = ResourceManager.getImage("icons/worldmap/zoom_out.png");
 
@@ -323,10 +323,10 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 	protected abstract void onMapLoad();
 
 	/**
-	 * Load missing tiles in tile set
-	 * 
-	 * @param tiles
-	 */
+    * Load missing tiles in tile set
+    * 
+    * @param tiles tile set to load tiles for
+    */
 	private void loadMissingTiles(final TileSet tiles)
 	{
       Job job = new Job(i18n.tr("Loading missing tiles"), view) {
@@ -549,12 +549,8 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 	 */
 	protected abstract void drawContent(GC gc, GeoLocation currentLocation, int imgW, int imgH);
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.netxms.ui.eclipse.osm.GeoLocationCacheListener#geoLocationCacheChanged
-	 * (org.netxms.client.objects.AbstractObject, org.netxms.client.GeoLocation)
+	/**
+	 * @see org.netxms.nxmc.modules.worldmap.GeoLocationCacheListener#geoLocationCacheChanged(org.netxms.client.objects.AbstractObject, org.netxms.base.GeoLocation)
 	 */
 	@Override
 	public void geoLocationCacheChanged(final AbstractObject object, final GeoLocation prevLocation)
@@ -580,13 +576,13 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
     * @see org.eclipse.swt.events.MouseWheelListener#mouseScrolled(org.eclipse.swt.events.MouseEvent)
     */
 	@Override
-	public void mouseScrolled(MouseEvent event)
+	public void mouseScrolled(MouseEvent e)
 	{
       if (!enableControls)
          return;
 
 		int zoom = accessor.getZoom();
-		if (event.count > 0)
+		if (e.count > 0)
 		{
 			if (zoom < MapAccessor.MAX_MAP_ZOOM)
 				zoom++;
@@ -596,10 +592,24 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 			if (zoom > 1)
 				zoom--;
 		}
-		
+
 		if (zoom != accessor.getZoom())
 		{
-			accessor.setZoom(zoom);
+         // When zooming in get current location under cursor and make sure that it is still visible after zoom
+         if (zoom > accessor.getZoom())
+         {
+            Point pt = new Point(e.x, e.y);
+            GeoLocation oldLocation = getLocationAtPoint(pt);
+
+            Point mapSize = new Point(accessor.getMapWidth(), accessor.getMapHeight());
+            Area newCoverage = GeoLocationCache.calculateCoverage(mapSize, accessor.getCenterPoint(), GeoLocationCache.CENTER, zoom);
+            Point cp = GeoLocationCache.coordinateToDisplay(new GeoLocation(newCoverage.getxHigh(), newCoverage.getyLow()), zoom);
+            GeoLocation newLocation = GeoLocationCache.displayToCoordinates(new Point(cp.x + pt.x, cp.y + pt.y), zoom);
+
+            accessor.setLatitude(accessor.getLatitude() - (newLocation.getLatitude() - oldLocation.getLatitude()));
+            accessor.setLongitude(accessor.getLongitude() - (newLocation.getLongitude() - oldLocation.getLongitude()));
+         }
+         accessor.setZoom(zoom);
 			reloadMap();
 			notifyOnZoomChange();
 		}
@@ -619,7 +629,7 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
       {
          int step = ((e.stateMask & SWT.SHIFT) != 0) ? 4 : 1;
          zoom = (zoom + step > MapAccessor.MAX_MAP_ZOOM) ? MapAccessor.MAX_MAP_ZOOM : zoom + step;
-         
+
          final GeoLocation geoLocation = getLocationAtPoint(new Point(e.x, e.y));
          accessor.setZoom(zoom);
          accessor.setLatitude(geoLocation.getLatitude());
@@ -784,7 +794,7 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 	{
 		return new Point(currentPoint.x, currentPoint.y);
 	}
-	
+
 	/**
 	 * Get location at given point within widget
 	 * 
@@ -796,7 +806,7 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 		Point cp = GeoLocationCache.coordinateToDisplay(new GeoLocation(coverage.getxHigh(), coverage.getyLow()), accessor.getZoom());
 		return GeoLocationCache.displayToCoordinates(new Point(cp.x + p.x, cp.y + p.y), accessor.getZoom());
 	}
-	
+
 	/**
 	 * @return the title
 	 */

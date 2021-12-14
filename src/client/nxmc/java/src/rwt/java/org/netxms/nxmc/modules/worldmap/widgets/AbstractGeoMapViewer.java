@@ -129,7 +129,7 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
       this.view = view;
 
 		colorCache = new ColorCache(this);
-		
+
       imageZoomIn = ResourceManager.getImage("icons/worldmap/zoom_in.png");
       imageZoomOut = ResourceManager.getImage("icons/worldmap/zoom_out.png");
 
@@ -369,10 +369,10 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 	protected abstract void onMapLoad();
 
 	/**
-	 * Load missing tiles in tile set
-	 * 
-	 * @param tiles
-	 */
+    * Load missing tiles in tile set
+    * 
+    * @param tiles tile set to load tiles for
+    */
 	private void loadMissingTiles(final TileSet tiles)
 	{
       Job job = new Job(i18n.tr("Loading missing tiles"), view) {
@@ -595,12 +595,8 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 	 */
 	protected abstract void drawContent(GC gc, GeoLocation currentLocation, int imgW, int imgH);
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.netxms.ui.eclipse.osm.GeoLocationCacheListener#geoLocationCacheChanged
-	 * (org.netxms.client.objects.AbstractObject, org.netxms.client.GeoLocation)
+	/**
+	 * @see org.netxms.nxmc.modules.worldmap.GeoLocationCacheListener#geoLocationCacheChanged(org.netxms.client.objects.AbstractObject, org.netxms.base.GeoLocation)
 	 */
 	@Override
 	public void geoLocationCacheChanged(final AbstractObject object, final GeoLocation prevLocation)
@@ -636,7 +632,7 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
       {
          int step = ((e.stateMask & SWT.SHIFT) != 0) ? 4 : 1;
          zoom = (zoom + step > MapAccessor.MAX_MAP_ZOOM) ? MapAccessor.MAX_MAP_ZOOM : zoom + step;
-         
+
          final GeoLocation geoLocation = getLocationAtPoint(new Point(e.x, e.y));
          accessor.setZoom(zoom);
          accessor.setLatitude(geoLocation.getLatitude());
@@ -801,7 +797,7 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 	{
 		return new Point(currentPoint.x, currentPoint.y);
 	}
-	
+
 	/**
 	 * Get location at given point within widget
 	 * 
@@ -813,7 +809,7 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 		Point cp = GeoLocationCache.coordinateToDisplay(new GeoLocation(coverage.getxHigh(), coverage.getyLow()), accessor.getZoom());
 		return GeoLocationCache.displayToCoordinates(new Point(cp.x + p.x, cp.y + p.y), accessor.getZoom());
 	}
-	
+
 	/**
 	 * @return the title
 	 */
