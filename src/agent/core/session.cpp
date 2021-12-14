@@ -271,7 +271,7 @@ void CommSession::readThread()
 
                         NXCPMessage response(CMD_REQUEST_COMPLETED, msg->getId(), m_protocolVersion);
                         response.setField(VID_RCC, ERR_SUCCESS);
-                        sendMessage(&response);
+                        sendMessage(response);
                      }
                   }
                   else
