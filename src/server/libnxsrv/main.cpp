@@ -88,11 +88,9 @@ static struct
 /**
  * Resolve agent's error code to text
  */
-const TCHAR LIBNXSRV_EXPORTABLE *AgentErrorCodeToText(UINT32 err)
+const TCHAR LIBNXSRV_EXPORTABLE *AgentErrorCodeToText(uint32_t err)
 {
-   int i;
-
-   for(i = 0; m_agentErrors[i].pszText != NULL; i++)
+   for(int i = 0; m_agentErrors[i].pszText != NULL; i++)
       if (err == (UINT32)m_agentErrors[i].iCode)
          return m_agentErrors[i].pszText;
    return _T("Unknown error code");
@@ -101,7 +99,7 @@ const TCHAR LIBNXSRV_EXPORTABLE *AgentErrorCodeToText(UINT32 err)
 /**
  * Convert agent error code to client RCC
  */
-UINT32 LIBNXSRV_EXPORTABLE AgentErrorToRCC(UINT32 err)
+uint32_t LIBNXSRV_EXPORTABLE AgentErrorToRCC(uint32_t err)
 {
    switch(err)
    {
@@ -132,7 +130,7 @@ UINT32 LIBNXSRV_EXPORTABLE AgentErrorToRCC(UINT32 err)
 }
 
 /**
- * Route comparision callback
+ * Route comparison callback
  */
 static int CompareRoutes(const void *p1, const void *p2)
 {

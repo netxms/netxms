@@ -68,7 +68,7 @@ public final class RCC extends CommonRCC
 	public static final int INVALID_MAP_ID = 59;
 	public static final int ACCOUNT_DISABLED = 60;
 	public static final int NO_GRACE_LOGINS = 61;
-	public static final int CONNECTION_BROKEN = 62;
+   public static final int NO_CONNECTION_TO_AGENT = 62;
 	public static final int INVALID_CONFIG_ID = 63;
 	public static final int DB_CONNECTION_LOST = 64;
 	public static final int ALARM_OPEN_IN_HELPDESK = 65;

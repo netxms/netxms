@@ -764,13 +764,12 @@ public class AgentFileManager extends ViewPart
     */
    private void uploadFile(final boolean overvrite)
    {
-      IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      IStructuredSelection selection = viewer.getStructuredSelection();
       if (selection.isEmpty())
          return;
 
       final Object[] objects = selection.toArray();
-      final AgentFile uploadFolder = ((AgentFile)objects[0]).isDirectory() ? ((AgentFile)objects[0]) : ((AgentFile)objects[0])
-            .getParent();
+      final AgentFile uploadFolder = ((AgentFile)objects[0]).isDirectory() ? ((AgentFile)objects[0]) : ((AgentFile)objects[0]).getParent();
 
       final StartClientToServerFileUploadDialog dlg = new StartClientToServerFileUploadDialog(getSite().getShell());
       if (dlg.open() == Window.OK)
@@ -799,8 +798,7 @@ public class AgentFileManager extends ViewPart
                            @Override
                            public void setTotalWorkAmount(long workTotal)
                            {
-                              monitor.beginTask(Messages.get(getDisplay()).UploadFileToServer_TaskNamePrefix + localFile.getAbsolutePath(),
-                                    (int)workTotal);
+                              monitor.beginTask(Messages.get(getDisplay()).UploadFileToServer_TaskNamePrefix + localFile.getAbsolutePath(), (int)workTotal);
                            }
 
                            @Override
@@ -816,14 +814,13 @@ public class AgentFileManager extends ViewPart
                      @Override
                      public void executeSameFunctionWithOverwrite() throws IOException, NXCException
                      {
-                        session.uploadLocalFileToAgent(objectId, localFile, uploadFolder.getFullName()+"/"+rFileName, true, new ProgressListener() { //$NON-NLS-1$
+                        session.uploadLocalFileToAgent(objectId, localFile, uploadFolder.getFullName() + "/" + rFileName, true, new ProgressListener() { //$NON-NLS-1$
                            private long prevWorkDone = 0;
 
                            @Override
                            public void setTotalWorkAmount(long workTotal)
                            {
-                              monitor.beginTask(Messages.get(getDisplay()).UploadFileToServer_TaskNamePrefix + localFile.getAbsolutePath(),
-                                    (int)workTotal);
+                              monitor.beginTask(Messages.get(getDisplay()).UploadFileToServer_TaskNamePrefix + localFile.getAbsolutePath(), (int)workTotal);
                            }
 
                            @Override
