@@ -119,10 +119,10 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 
 		imageZoomIn = Activator.getImageDescriptor("icons/map_zoom_in.png").createImage(); //$NON-NLS-1$
       imageZoomOut = Activator.getImageDescriptor("icons/map_zoom_out.png").createImage(); //$NON-NLS-1$
-      
+
       mapTitleFont = FontTools.createFont(TITLE_FONTS, 2, SWT.BOLD);
 
-		labelProvider = WorkbenchLabelProvider.getDecoratingWorkbenchLabelProvider();
+      labelProvider = WorkbenchLabelProvider.getDecoratingWorkbenchLabelProvider();
 		mapLoader = new MapLoader(getDisplay());
 
 		setBackground(MAP_BACKGROUND);
@@ -259,7 +259,7 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 		if (currentImage != null)
 			currentImage.dispose();
 		currentImage = null;
-		
+
 		if (!accessor.isValid())
 			return;
 
@@ -309,12 +309,12 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 		job.setUser(false);
 		job.start();
 	}
-	
+
 	/**
 	 * Map load handler. Called on UI thread after map was (re)loaded.
 	 */
 	protected abstract void onMapLoad();
-	
+
 	/**
 	 * Load missing tiles in tile set
 	 * 
@@ -344,7 +344,7 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 					}
 				});
 			}
-			
+
 			@Override
 			protected String getErrorMessage()
 			{
@@ -567,13 +567,13 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
     * @see org.eclipse.swt.events.MouseWheelListener#mouseScrolled(org.eclipse.swt.events.MouseEvent)
     */
 	@Override
-	public void mouseScrolled(MouseEvent event)
+	public void mouseScrolled(MouseEvent e)
 	{
       if (!enableControls)
          return;
 
 		int zoom = accessor.getZoom();
-		if (event.count > 0)
+		if (e.count > 0)
 		{
 			if (zoom < MapAccessor.MAX_MAP_ZOOM)
 				zoom++;
@@ -583,10 +583,24 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 			if (zoom > 1)
 				zoom--;
 		}
-		
+
 		if (zoom != accessor.getZoom())
 		{
-			accessor.setZoom(zoom);
+         // When zooming in get current location under cursor and make sure that it is still visible after zoom
+         if (zoom > accessor.getZoom())
+         {
+            Point pt = new Point(e.x, e.y);
+            GeoLocation oldLocation = getLocationAtPoint(pt);
+
+            Point mapSize = new Point(accessor.getMapWidth(), accessor.getMapHeight());
+            Area newCoverage = GeoLocationCache.calculateCoverage(mapSize, accessor.getCenterPoint(), GeoLocationCache.CENTER, zoom);
+            Point cp = GeoLocationCache.coordinateToDisplay(new GeoLocation(newCoverage.getxHigh(), newCoverage.getyLow()), zoom);
+            GeoLocation newLocation = GeoLocationCache.displayToCoordinates(new Point(cp.x + pt.x, cp.y + pt.y), zoom);
+
+            accessor.setLatitude(accessor.getLatitude() - (newLocation.getLatitude() - oldLocation.getLatitude()));
+            accessor.setLongitude(accessor.getLongitude() - (newLocation.getLongitude() - oldLocation.getLongitude()));
+         }
+         accessor.setZoom(zoom);
 			reloadMap();
 			notifyOnZoomChange();
 		}
@@ -606,7 +620,7 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
       {
          int step = ((e.stateMask & SWT.SHIFT) != 0) ? 4 : 1;
          zoom = (zoom + step > MapAccessor.MAX_MAP_ZOOM) ? MapAccessor.MAX_MAP_ZOOM : zoom + step;
-         
+
          final GeoLocation geoLocation = getLocationAtPoint(new Point(e.x, e.y));
          accessor.setZoom(zoom);
          accessor.setLatitude(geoLocation.getLatitude());
@@ -771,7 +785,7 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 	{
 		return new Point(currentPoint.x, currentPoint.y);
 	}
-	
+
 	/**
 	 * Get location at given point within widget
 	 * 
@@ -783,7 +797,7 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 		Point cp = GeoLocationCache.coordinateToDisplay(new GeoLocation(coverage.getxHigh(), coverage.getyLow()), accessor.getZoom());
 		return GeoLocationCache.displayToCoordinates(new Point(cp.x + p.x, cp.y + p.y), accessor.getZoom());
 	}
-	
+
 	/**
 	 * @return the viewPart
 	 */
