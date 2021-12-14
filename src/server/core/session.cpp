@@ -572,12 +572,14 @@ void ClientSession::finalize()
 void ClientSession::finalizeFileTransferToAgent(shared_ptr<AgentConnection> conn, uint32_t requestId)
 {
    debugPrintf(6, _T("Waiting for final file transfer confirmation from agent for request ID %u"), requestId);
-   uint32_t rcc = conn->waitForRCC(requestId, conn->getCommandTimeout());
+   uint32_t rcc = conn->waitForRCC(requestId, 60000); // Wait up to 60 seconds for final confirmation
    debugPrintf(6, _T("File transfer request %u: %s"), requestId, AgentErrorCodeToText(rcc));
 
+   // Send final confirmation to client
    NXCPMessage response(CMD_REQUEST_COMPLETED, requestId);
+   response.setEndOfSequence();
    response.setField(VID_RCC, AgentErrorToRCC(rcc));
-   sendMessage(&response);
+   sendMessage(response);
    decRefCount();
 }
 
@@ -632,8 +634,8 @@ void ClientSession::processFileTransferMessage(NXCPMessage *msg)
          if (msg->getCode() == CMD_FILE_DATA)
          {
             // Check if we should start caching file on file system - this could happen if connection to agent is much slower
-            // then connection from client
-            if ((ft->fileName == nullptr) && (ThreadPoolGetSerializedRequestCount(g_clientThreadPool, ft->key) > 100))
+            // than connection from client (32 requests is about 1MB of file data)
+            if ((ft->fileName == nullptr) && (ThreadPoolGetSerializedRequestCount(g_clientThreadPool, ft->key) > 32))
             {
                debugPrintf(6, _T("Slow file send to agent (request ID %u), start caching on file system"), msg->getId());
                TCHAR fileName[MAX_PATH];
@@ -641,6 +643,7 @@ void ClientSession::processFileTransferMessage(NXCPMessage *msg)
                _tcslcat(fileName, FS_PATH_SEPARATOR, MAX_PATH);
                _tcslcat(fileName, ft->key, MAX_PATH);
                ft->fileName = MemCopyString(fileName);
+               incRefCount();
                ThreadPoolExecuteSerialized(g_clientThreadPool, ft->key, this, &ClientSession::agentFileTransferFromFile, ft);
             }
 
@@ -719,6 +722,31 @@ void ClientSession::sendAgentFileTransferMessage(shared_ptr<AgentFileTransfer> f
             ThreadPoolExecuteSerialized(g_clientThreadPool, ft->key, this, &ClientSession::finalizeFileTransferToAgent, ft->connection, msg->getId());
             m_agentFileTransfers.remove(msg->getId());
          }
+         else if (ft->reportProgress)
+         {
+            // Update number of bytes transferred
+            uint64_t bytes;
+            if (msg->isCompressedStream())
+            {
+               const BYTE *payload = msg->getBinaryData();
+               bytes = (static_cast<uint64_t>(payload[2]) << 8) | static_cast<uint64_t>(payload[3]);
+            }
+            else
+            {
+               bytes = msg->getBinaryDataSize();
+            }
+            ft->bytesTransferred += bytes;
+
+            time_t now = time(nullptr);
+            if (now - ft->lastReportTime >= 2)
+            {
+               NXCPMessage response(CMD_REQUEST_COMPLETED, msg->getId());
+               response.setField(VID_RCC, RCC_SUCCESS);
+               response.setField(VID_FILE_SIZE, ft->bytesTransferred);
+               sendMessage(response);
+               ft->lastReportTime = now;
+            }
+         }
       }
       else
       {
@@ -727,7 +755,7 @@ void ClientSession::sendAgentFileTransferMessage(shared_ptr<AgentFileTransfer> f
 
          NXCPMessage response(CMD_REQUEST_COMPLETED, msg->getId());
          response.setField(VID_RCC, RCC_COMM_FAILURE);
-         sendMessage(&response);
+         sendMessage(response);
       }
    }
    delete msg;
@@ -759,6 +787,8 @@ bool ClientSession::sendDataFromCacheFile(AgentFileTransfer *ft)
    }
 
    bool success = true;
+   uint32_t msgCount = 0;
+   time_t lastProbeTime = time(nullptr);
    size_t bufferSize = FILE_BUFFER_SIZE + 64;
    char *buffer = MemAllocArrayNoInit<char>(bufferSize);
 
@@ -806,6 +836,49 @@ bool ClientSession::sendDataFromCacheFile(AgentFileTransfer *ft)
          debugPrintf(6, _T("Cannot send data from file transfer cache file %s"), tempFileName);
          break;
       }
+      msgCount++;
+
+      // Call nop() method on agent connection to send keepalive request
+      // This will throttle file transfer (because server will wait for agent response) and
+      // prevent timeout in background poller on server side
+      time_t now = time(nullptr);
+      if ((now - lastProbeTime > 5) || (msgCount > 8))
+      {
+         uint32_t rcc = ft->connection->nop();
+         if (rcc != ERR_SUCCESS)
+         {
+            debugPrintf(6, _T("Agent connection validation failed for file transfer %u (%s)"), ft->requestId, AgentErrorCodeToText(rcc));
+            success = false;
+            break;
+         }
+         lastProbeTime = now;
+         msgCount = 0;
+      }
+
+      if (ft->reportProgress)
+      {
+         // Update number of bytes transferred
+         uint16_t flags = ntohs(reinterpret_cast<NXCP_MESSAGE*>(buffer)->flags);
+         uint64_t dataBytes;
+         if ((flags & (MF_COMPRESSED | MF_STREAM)) == (MF_COMPRESSED | MF_STREAM))
+         {
+            dataBytes = ntohs(*reinterpret_cast<uint16_t*>(buffer + NXCP_HEADER_SIZE + 2));
+         }
+         else
+         {
+            dataBytes = ntohl(reinterpret_cast<NXCP_MESSAGE*>(buffer)->numFields);
+         }
+         ft->bytesTransferred += dataBytes;
+
+         if (now - ft->lastReportTime >= 5)
+         {
+            NXCPMessage notification(CMD_REQUEST_COMPLETED, ft->requestId);
+            notification.setField(VID_RCC, RCC_SUCCESS);
+            notification.setField(VID_FILE_SIZE, ft->bytesTransferred);
+            sendMessage(notification);
+            ft->lastReportTime = now;
+         }
+      }
    }
 
    _close(fd);
@@ -819,6 +892,10 @@ bool ClientSession::sendDataFromCacheFile(AgentFileTransfer *ft)
  */
 void ClientSession::agentFileTransferFromFile(shared_ptr<AgentFileTransfer> ft)
 {
+   // If server switched to cached file transfer mode it means that connection to agent is slow
+   // Increase command timeout on agent connection so connection checks does not fail
+   ft->connection->setCommandTimeout(60000);
+
    bool failure = false;
    while(ft->active)
    {
@@ -848,7 +925,7 @@ void ClientSession::agentFileTransferFromFile(shared_ptr<AgentFileTransfer> ft)
    {
       NXCPMessage response(CMD_REQUEST_COMPLETED, ft->requestId);
       response.setField(VID_RCC, RCC_IO_ERROR);
-      sendMessage(&response);
+      sendMessage(response);
 
       NXCP_MESSAGE *msg = CreateRawNXCPMessage(CMD_FILE_DATA, ft->requestId, MF_STREAM | MF_END_OF_FILE, nullptr, 0, nullptr, false);
       ft->connection->sendRawMessage(msg);
@@ -13395,12 +13472,9 @@ void ClientSession::fileManagerControl(NXCPMessage *request)
  */
 void ClientSession::uploadUserFileToAgent(NXCPMessage *request)
 {
-   NXCPMessage msg, *response = nullptr, *responseMessage;
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage *response = nullptr, *responseMessage = &msg;
 	uint32_t rcc = RCC_INTERNAL_ERROR;
-   responseMessage = &msg;
-
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request->getId());
 
    TCHAR fileName[MAX_PATH];
    request->getFieldAsString(VID_FILE_NAME, fileName, MAX_PATH);
@@ -13427,8 +13501,9 @@ void ClientSession::uploadUserFileToAgent(NXCPMessage *request)
                      writeAuditLog(AUDIT_OBJECTS, true, objectId, _T("Started direct upload of file \"%s\" to node %s"), fileName, object->getName());
                      response->setCode(CMD_REQUEST_COMPLETED);
                      response->setField(VID_ENABLE_COMPRESSION, conn->isCompressionAllowed());
+                     response->setField(VID_REPORT_PROGRESS, true);    // Indicate that server will report transfer progress to client
                      responseMessage = response;
-                     m_agentFileTransfers.put(request->getId(), make_shared<AgentFileTransfer>(m_id, request->getId(), conn));
+                     m_agentFileTransfers.put(request->getId(), make_shared<AgentFileTransfer>(m_id, request->getId(), conn, request->getFieldAsBoolean(VID_REPORT_PROGRESS)));
                   }
                   else
                   {

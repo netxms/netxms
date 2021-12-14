@@ -793,19 +793,25 @@ public class AgentFileManager extends ViewPart
                      public void executeAction() throws NXCException, IOException
                      {                        
                         session.uploadLocalFileToAgent(objectId, localFile, uploadFolder.getFullName() + "/" + rFileName, overvrite, new ProgressListener() { //$NON-NLS-1$
-                           private long prevWorkDone = 0;
+                           private long unitSize;
+                           private int progress = 0;
 
                            @Override
                            public void setTotalWorkAmount(long workTotal)
                            {
-                              monitor.beginTask(Messages.get(getDisplay()).UploadFileToServer_TaskNamePrefix + localFile.getAbsolutePath(), (int)workTotal);
+                              unitSize = workTotal / 1000;
+                              monitor.beginTask(Messages.get(getDisplay()).UploadFileToServer_TaskNamePrefix + localFile.getAbsolutePath(), 1000);
                            }
 
                            @Override
                            public void markProgress(long workDone)
                            {
-                              monitor.worked((int)(workDone - prevWorkDone));
-                              prevWorkDone = workDone;
+                              int fullUnitsCompleted = (int)(workDone / unitSize);
+                              if (fullUnitsCompleted > progress)
+                              {
+                                 monitor.worked(fullUnitsCompleted - progress);
+                                 progress = fullUnitsCompleted;
+                              }
                            }
                         });
                         monitor.done(); 

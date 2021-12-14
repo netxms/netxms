@@ -9941,8 +9941,7 @@ public class NXCSession
     * @throws IOException  if socket or file I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public long uploadFileToAgent(long nodeId, String serverFileName, String remoteFileName, boolean jobOnHold)
-         throws IOException, NXCException
+   public long uploadFileToAgent(long nodeId, String serverFileName, String remoteFileName, boolean jobOnHold) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_UPLOAD_FILE_TO_AGENT);
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
@@ -10000,9 +9999,30 @@ public class NXCSession
       msg.setField(NXCPCodes.VID_FILE_NAME, remoteFileName);
       msg.setField(NXCPCodes.VID_MODIFICATION_TIME, new Date(localFile.lastModified()));
       msg.setField(NXCPCodes.VID_OVERWRITE, overwrite);
+      msg.setField(NXCPCodes.VID_REPORT_PROGRESS, true); // Indicate that client can accept intermediate progress reports
       sendMessage(msg);
       NXCPMessage response = waitForRCC(msg.getMessageId());
-      sendFile(msg.getMessageId(), localFile, listener, response.getFieldAsBoolean(NXCPCodes.VID_ENABLE_COMPRESSION));
+      boolean serverSideProgressReport = response.getFieldAsBoolean(NXCPCodes.VID_REPORT_PROGRESS);
+      sendFile(msg.getMessageId(), localFile, serverSideProgressReport ? null : listener, response.getFieldAsBoolean(NXCPCodes.VID_ENABLE_COMPRESSION));
+      if (serverSideProgressReport)
+      {
+         // Newer protocol variant, receive progress updates from server
+         if (listener != null)
+            listener.setTotalWorkAmount(localFile.length());
+         while(true)
+         {
+            response = waitForRCC(msg.getMessageId(), 900000);
+            if (response.isEndOfSequence())
+               break;
+            if (listener != null)
+               listener.markProgress(response.getFieldAsInt64(NXCPCodes.VID_FILE_SIZE));
+         }
+      }
+      else
+      {
+         // Older protocol variant, just wait for final confirmation from server
+         waitForRCC(msg.getMessageId(), 900000);
+      }
    }
 
    /**
