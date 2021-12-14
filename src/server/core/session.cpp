@@ -13329,7 +13329,7 @@ void ClientSession::fileManagerControl(NXCPMessage *request)
             }
             else
             {
-               msg.setField(VID_RCC, RCC_CONNECTION_BROKEN);
+               msg.setField(VID_RCC, RCC_NO_CONNECTION_TO_AGENT);
             }
 			}
 			else
@@ -13443,7 +13443,7 @@ void ClientSession::uploadUserFileToAgent(NXCPMessage *request)
             }
             else
             {
-               msg.setField(VID_RCC, RCC_CONNECTION_BROKEN);
+               msg.setField(VID_RCC, RCC_NO_CONNECTION_TO_AGENT);
             }
 			}
 			else
@@ -13677,7 +13677,7 @@ void ClientSession::getScreenshot(const NXCPMessage& request)
             }
             else
             {
-               msg.setField(VID_RCC, RCC_CONNECTION_BROKEN);
+               msg.setField(VID_RCC, RCC_NO_CONNECTION_TO_AGENT);
             }
 			}
 			else
@@ -13766,7 +13766,7 @@ void ClientSession::cleanAgentDciConfiguration(const NXCPMessage& request)
             }
             else
             {
-               msg.setField(VID_RCC, RCC_CONNECTION_BROKEN);
+               msg.setField(VID_RCC, RCC_NO_CONNECTION_TO_AGENT);
             }
 			}
 			else

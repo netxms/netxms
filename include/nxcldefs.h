@@ -600,7 +600,7 @@ enum SessionState
 #define RCC_INVALID_MAP_ID                ((uint32_t)59)
 #define RCC_ACCOUNT_DISABLED              ((uint32_t)60)
 #define RCC_NO_GRACE_LOGINS               ((uint32_t)61)
-#define RCC_CONNECTION_BROKEN             ((uint32_t)62)
+#define RCC_NO_CONNECTION_TO_AGENT        ((uint32_t)62)
 #define RCC_INVALID_CONFIG_ID             ((uint32_t)63)
 #define RCC_DB_CONNECTION_LOST            ((uint32_t)64)
 #define RCC_ALARM_OPEN_IN_HELPDESK        ((uint32_t)65)

@@ -9989,8 +9989,7 @@ public class NXCSession
     * @throws IOException if socket or file I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void uploadLocalFileToAgent(long nodeId, File localFile, String remoteFileName, boolean overwrite,
-         ProgressListener listener) throws IOException, NXCException
+   public void uploadLocalFileToAgent(long nodeId, File localFile, String remoteFileName, boolean overwrite, ProgressListener listener) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_FILEMGR_UPLOAD);
       if ((remoteFileName == null) || remoteFileName.isEmpty())
