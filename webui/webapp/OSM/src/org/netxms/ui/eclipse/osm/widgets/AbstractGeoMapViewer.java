@@ -126,10 +126,10 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 
 		imageZoomIn = Activator.getImageDescriptor("icons/map_zoom_in.png").createImage(); //$NON-NLS-1$
       imageZoomOut = Activator.getImageDescriptor("icons/map_zoom_out.png").createImage(); //$NON-NLS-1$
-      
+
       mapTitleFont = FontTools.createFont(TITLE_FONTS, 2, SWT.BOLD);
 
-		labelProvider = WorkbenchLabelProvider.getDecoratingWorkbenchLabelProvider();
+      labelProvider = WorkbenchLabelProvider.getDecoratingWorkbenchLabelProvider();
 		mapLoader = new MapLoader(getDisplay());
 
 		setBackground(MAP_BACKGROUND);
@@ -339,7 +339,7 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 	 * Map load handler. Called on UI thread after map was (re)loaded.
 	 */
 	protected abstract void onMapLoad();
-	
+
 	/**
 	 * Load missing tiles in tile set
 	 * 
@@ -556,7 +556,7 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
       {
          int step = ((e.stateMask & SWT.SHIFT) != 0) ? 4 : 1;
          zoom = (zoom + step > MapAccessor.MAX_MAP_ZOOM) ? MapAccessor.MAX_MAP_ZOOM : zoom + step;
-         
+
          final GeoLocation geoLocation = getLocationAtPoint(new Point(e.x, e.y));
          accessor.setZoom(zoom);
          accessor.setLatitude(geoLocation.getLatitude());
@@ -721,7 +721,7 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 	{
 		return new Point(currentPoint.x, currentPoint.y);
 	}
-	
+
 	/**
 	 * Get location at given point within widget
 	 * 
@@ -733,7 +733,7 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 		Point cp = GeoLocationCache.coordinateToDisplay(new GeoLocation(coverage.getxHigh(), coverage.getyLow()), accessor.getZoom());
 		return GeoLocationCache.displayToCoordinates(new Point(cp.x + p.x, cp.y + p.y), accessor.getZoom());
 	}
-	
+
 	/**
 	 * @return the viewPart
 	 */

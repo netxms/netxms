@@ -171,7 +171,7 @@ public class NetworkMapWidget extends Composite
          }
       });
 	}
-	
+
 	/**
 	 * Open drill-down object for currently selected object
 	 * 
@@ -182,7 +182,7 @@ public class NetworkMapWidget extends Composite
       long objectId = (object instanceof NetworkMap) ? object.getObjectId() : object.getDrillDownObjectId();
       if (objectId == 0)
          return;
-      
+
       Object test = ConsoleSharedData.getSession().findObjectById(objectId);
       if (test instanceof NetworkMap)
       {
@@ -211,7 +211,7 @@ public class NetworkMapWidget extends Composite
          }
       }
 	}
-	
+
 	/**
 	 * Go back map history
 	 */
@@ -230,7 +230,7 @@ public class NetworkMapWidget extends Composite
 	   if (history.isEmpty())
 	      viewer.hideBackButton();
 	}
-	
+
    /**
     * Called by session listener when NetXMS object was changed.
     * 

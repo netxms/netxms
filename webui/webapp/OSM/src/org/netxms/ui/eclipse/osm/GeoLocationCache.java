@@ -211,7 +211,7 @@ public class GeoLocationCache implements SessionListener
 			listeners.remove(listener);
 		}
 	}
-	
+
 	/**
 	 * Convert location to abstract display coordinates (coordinates on virtual map covering entire world)
 	 * 
@@ -231,7 +231,7 @@ public class GeoLocationCache implements SessionListener
 		y = y / 2 * (numberOfTiles * TILE_SIZE);
 		return new Point((int)x, (int)y);
 	}
-	
+
 	/**
 	 * Convert abstract display coordinates (coordinates on virtual map covering entire world) to location
 	 * 
@@ -246,10 +246,9 @@ public class GeoLocationCache implements SessionListener
 		latitude = Math.toDegrees(Math.atan(Math.sinh(latitude)));
 		if (latitude <= (-89.998))
 		   latitude = -89.997; // Needed because tan() is undefined for angles of 90 degrees
-		
 		return new GeoLocation(latitude, longitude);
 	}
-	
+
 	/**
 	 * Calculate map coverage.
 	 * 
