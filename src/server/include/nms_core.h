@@ -472,8 +472,11 @@ struct AgentFileTransfer
    MUTEX mutex;
    bool active;
    bool failure;
+   bool reportProgress;
+   time_t lastReportTime;
+   uint64_t bytesTransferred;
 
-   AgentFileTransfer(session_id_t sessionId, uint32_t _requestId, const shared_ptr<AgentConnection>& _connection) : connection(_connection)
+   AgentFileTransfer(session_id_t sessionId, uint32_t _requestId, const shared_ptr<AgentConnection>& _connection, bool _reportProgress) : connection(_connection)
    {
       requestId = _requestId;
       _sntprintf(key, 24, _T("FT_%d_%u"), sessionId, _requestId);
@@ -481,6 +484,9 @@ struct AgentFileTransfer
       mutex = MutexCreateFast();
       active = true;
       failure = false;
+      reportProgress = _reportProgress;
+      lastReportTime = time(nullptr);
+      bytesTransferred = 0;
    }
 
    ~AgentFileTransfer()

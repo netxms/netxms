@@ -119,7 +119,7 @@ public:
    {
       m_debugId = connection->m_debugId;
       m_messageReceiver = new CommChannelMessageReceiver(m_channel, 4096, MAX_MSG_SIZE);
-      m_recvTimeout = connection->m_recvTimeout; // 7 minutes
+      m_recvTimeout = connection->m_recvTimeout;
       _sntprintf(m_threadPoolKey, 16, _T("RECV-%u"), m_debugId);
       m_attached = true;
    }
@@ -1380,7 +1380,7 @@ bool AgentConnection::sendRawMessage(NXCP_MESSAGE *pMsg)
       if (pEnMsg != nullptr)
       {
          success = (channel->send(pEnMsg, ntohl(pEnMsg->size), m_mutexSocketWrite) == (int)ntohl(pEnMsg->size));
-         free(pEnMsg);
+         MemFree(pEnMsg);
       }
       else
       {
