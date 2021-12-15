@@ -1448,13 +1448,6 @@ WatchdogState WatchdogGetState(const TCHAR *name);
 void WatchdogGetThreads(StringList *out);
 
 /**
- * Housekeeper control
- */
-void StartHouseKeeper();
-void StopHouseKeeper();
-void RunHouseKeeper();
-
-/**
  * NXSL script functions
  */
 uint32_t UpdateScript(const NXCPMessage *request, uint32_t *scriptId, ClientSession *session);

@@ -46,6 +46,8 @@ void RangeScanCallback(const InetAddress& addr, int32_t zoneUIN, const Node *pro
 void CheckRange(const InetAddressListElement& range, void(*callback)(const InetAddress&, int32_t, const Node *, uint32_t, ServerConsole *, void *), ServerConsole *console, void *context);
 void ShowSyncerStats(ServerConsole *console);
 void ShowAuthenticationTokens(ServerConsole *console);
+void RunHouseKeeper(ServerConsole *console);
+
 
 /**
  * Format string to show value of global flag
@@ -367,8 +369,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
    }
    else if (IsCommand(_T("HKRUN"), szBuffer, 2))
    {
-      ConsoleWrite(pCtx, _T("Starting housekeeper\n"));
-      RunHouseKeeper();
+      RunHouseKeeper(pCtx);
    }
    else if (IsCommand(_T("LDAPSYNC"), szBuffer, 4))
    {
