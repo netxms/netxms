@@ -36,9 +36,9 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
 public class ActionExecutionConfigurationDialog extends Dialog
 {
    private ActionExecutionConfiguration configuration;
-   private LabeledSpinner timerDelay;
+   private LabeledText timerDelay;
    private LabeledText timerKey;
-   private LabeledSpinner snoozeTime;
+   private LabeledText snoozeTime;
    private LabeledText blockingTimerKey;
 
    /**
@@ -75,10 +75,9 @@ public class ActionExecutionConfigurationDialog extends Dialog
       layout.numColumns = 2;
       dialogArea.setLayout(layout);
       
-      timerDelay = new LabeledSpinner(dialogArea, SWT.NONE);
+      timerDelay = new LabeledText(dialogArea, SWT.NONE);
       timerDelay.setLabel("Delay");
-      timerDelay.setRange(0, 100000000);
-      timerDelay.setSelection(configuration.getTimerDelay());
+      timerDelay.setText(configuration.getTimerDelay());
       
       timerKey = new LabeledText(dialogArea, SWT.NONE);
       timerKey.setLabel("Delay timer key");
@@ -89,10 +88,9 @@ public class ActionExecutionConfigurationDialog extends Dialog
       gd.widthHint = 400;
       timerKey.setLayoutData(gd);
       
-      snoozeTime = new LabeledSpinner(dialogArea, SWT.NONE);
+      snoozeTime = new LabeledText(dialogArea, SWT.NONE);
       snoozeTime.setLabel("Snooze time");
-      snoozeTime.setRange(0, 100000000);
-      snoozeTime.setSelection(configuration.getSnoozeTime()); 
+      snoozeTime.setText(configuration.getSnoozeTime());
       
       blockingTimerKey = new LabeledText(dialogArea, SWT.NONE);
       blockingTimerKey.setLabel("Snooze/blocking timer key (Do not run action if this timer exists)");
@@ -112,9 +110,9 @@ public class ActionExecutionConfigurationDialog extends Dialog
    @Override
    protected void okPressed()
    {
-      configuration.setTimerDelay(timerDelay.getSelection());
+      configuration.setTimerDelay(timerDelay.getText().trim());
       configuration.setTimerKey(timerKey.getText().trim());
-      configuration.setSnoozeTime(snoozeTime.getSelection());
+      configuration.setSnoozeTime(snoozeTime.getText().trim());
       configuration.setBlockingTimerKey(blockingTimerKey.getText().trim());
       super.okPressed();
    }

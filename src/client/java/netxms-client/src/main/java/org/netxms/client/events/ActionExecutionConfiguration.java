@@ -26,8 +26,8 @@ import org.netxms.base.NXCPMessage;
 public class ActionExecutionConfiguration
 {
    private long actionId;
-   private int timerDelay;
-   private int snoozeTime;
+   private String timerDelay;
+   private String snoozeTime;
    private String timerKey;
    private String blockingTimerKey;
    
@@ -39,8 +39,8 @@ public class ActionExecutionConfiguration
    ActionExecutionConfiguration(long actionId)
    {
       this.actionId = actionId;
-      this.timerDelay = 0;
-      this.snoozeTime = 0;
+      this.timerDelay = null;
+      this.snoozeTime = null;
       this.timerKey = null;
       this.blockingTimerKey = null;
    }
@@ -54,7 +54,7 @@ public class ActionExecutionConfiguration
     * @param timerKey timer key
     * @param blockingTimerKey timer key for blocking the action
     */
-   public ActionExecutionConfiguration(long actionId, int timerDelay, int snoozeTime, String timerKey, String blockingTimerKey)
+   public ActionExecutionConfiguration(long actionId, String timerDelay, String snoozeTime, String timerKey, String blockingTimerKey)
    {
       this.actionId = actionId;
       this.timerDelay = timerDelay;
@@ -72,10 +72,10 @@ public class ActionExecutionConfiguration
    protected ActionExecutionConfiguration(NXCPMessage msg, long baseId)
    {
       actionId = msg.getFieldAsInt64(baseId);
-      timerDelay = msg.getFieldAsInt32(baseId + 1);
+      timerDelay = msg.getFieldAsString(baseId + 1);
       timerKey = msg.getFieldAsString(baseId + 2);
       blockingTimerKey = msg.getFieldAsString(baseId + 3);
-      snoozeTime = msg.getFieldAsInt32(baseId + 4);
+      snoozeTime = msg.getFieldAsString(baseId + 4);
    }
 
    /**
@@ -101,10 +101,10 @@ public class ActionExecutionConfiguration
    public void fillMessage(NXCPMessage msg, long baseId)
    {
       msg.setFieldInt32(baseId, (int)actionId);
-      msg.setFieldInt32(baseId + 1, timerDelay);
+      msg.setField(baseId + 1, timerDelay);
       msg.setField(baseId + 2, timerKey);
       msg.setField(baseId + 3, blockingTimerKey);
-      msg.setFieldInt32(baseId + 4, snoozeTime);
+      msg.setField(baseId + 4, snoozeTime);
    }
    
    /**
@@ -112,9 +112,9 @@ public class ActionExecutionConfiguration
     * 
     * @return timer delay in seconds
     */
-   public int getTimerDelay()
+   public String getTimerDelay()
    {
-      return timerDelay;
+      return (timerDelay != null) ? timerDelay : "";
    }
 
    /**
@@ -122,7 +122,7 @@ public class ActionExecutionConfiguration
     * 
     * @param timerDelay timer delay in seconds
     */
-   public void setTimerDelay(int timerDelay)
+   public void setTimerDelay(String timerDelay)
    {
       this.timerDelay = timerDelay;
    }
@@ -180,15 +180,15 @@ public class ActionExecutionConfiguration
    /**
     * @return the snoozeTime
     */
-   public int getSnoozeTime()
+   public String getSnoozeTime()
    {
-      return snoozeTime;
+      return (snoozeTime != null) ? snoozeTime : "";
    }
 
    /**
     * @param snoozeTime the snoozeTime to set
     */
-   public void setSnoozeTime(int snoozeTime)
+   public void setSnoozeTime(String snoozeTime)
    {
       this.snoozeTime = snoozeTime;
    }

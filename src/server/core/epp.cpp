@@ -148,21 +148,21 @@ EPRule::EPRule(const ConfigEntry& config) : m_actions(0, 16, Ownership::True)
       for(int i = 0; i < actions->size(); i++)
       {
          uuid guid = actions->get(i)->getSubEntryValueAsUUID(_T("guid"));
-         UINT32 timerDelay = actions->get(i)->getSubEntryValueAsUInt(_T("timerDelay"));
+         const TCHAR *timerDelay = actions->get(i)->getSubEntryValue(_T("timerDelay"));
          const TCHAR *timerKey = actions->get(i)->getSubEntryValue(_T("timerKey"));
          const TCHAR *blockingTimerKey = actions->get(i)->getSubEntryValue(_T("blockingTimerKey"));
-         UINT32 snoozeTime = actions->get(i)->getSubEntryValueAsUInt(_T("snoozeTime"));
+         const TCHAR *snoozeTime = actions->get(i)->getSubEntryValue(_T("snoozeTime"));
          if (!guid.isNull())
          {
             UINT32 actionId = FindActionByGUID(guid);
             if (actionId != 0)
-               m_actions.add(new ActionExecutionConfiguration(actionId, timerDelay, snoozeTime, MemCopyString(timerKey), MemCopyString(blockingTimerKey)));
+               m_actions.add(new ActionExecutionConfiguration(actionId, MemCopyString(timerDelay), MemCopyString(snoozeTime), MemCopyString(timerKey), MemCopyString(blockingTimerKey)));
          }
          else
          {
             UINT32 actionId = actions->get(i)->getId();
             if (IsValidActionId(actionId))
-               m_actions.add(new ActionExecutionConfiguration(actionId, timerDelay, snoozeTime, MemCopyString(timerKey), MemCopyString(blockingTimerKey)));
+               m_actions.add(new ActionExecutionConfiguration(actionId, MemCopyString(timerDelay), MemCopyString(snoozeTime), MemCopyString(timerKey), MemCopyString(blockingTimerKey)));
          }
       }
       delete actions;
@@ -235,7 +235,7 @@ EPRule::EPRule(const NXCPMessage& msg) : m_actions(0, 16, Ownership::True)
       msg.getFieldAsInt32Array(VID_RULE_ACTIONS, &actions);
       for(int i = 0; i < actions.size(); i++)
       {
-         m_actions.add(new ActionExecutionConfiguration(actions.get(i), 0, 0, nullptr, nullptr));
+         m_actions.add(new ActionExecutionConfiguration(actions.get(i), nullptr, nullptr, nullptr, nullptr));
       }
    }
    else
@@ -245,10 +245,10 @@ EPRule::EPRule(const NXCPMessage& msg) : m_actions(0, 16, Ownership::True)
       for(int i = 0; i < count; i++)
       {
          uint32_t actionId = msg.getFieldAsUInt32(fieldId++);
-         uint32_t timerDelay = msg.getFieldAsUInt32(fieldId++);
+         TCHAR *timerDelay = msg.getFieldAsString(fieldId++);
          TCHAR *timerKey = msg.getFieldAsString(fieldId++);
          TCHAR *blockingTimerKey = msg.getFieldAsString(fieldId++);
-         uint32_t snoozeTime = msg.getFieldAsUInt32(fieldId++);
+         TCHAR *snoozeTime = msg.getFieldAsString(fieldId++);
          fieldId += 5;
          m_actions.add(new ActionExecutionConfiguration(actionId, timerDelay, snoozeTime, timerKey, blockingTimerKey));
       }
@@ -397,13 +397,13 @@ void EPRule::createExportRecord(StringBuffer &xml) const
       xml.append(_T("\">\n\t\t\t\t\t<guid>"));
       xml.append(GetActionGUID(a->actionId));
       xml.append(_T("</guid>\n\t\t\t\t\t<timerDelay>"));
-      xml.append(a->timerDelay);
+      xml.append((const TCHAR *)EscapeStringForXML2(a->timerDelay));
       xml.append(_T("</timerDelay>\n\t\t\t\t\t<timerKey>"));
       xml.append((const TCHAR *)EscapeStringForXML2(a->timerKey));
       xml.append(_T("</timerKey>\n\t\t\t\t\t<blockingTimerKey>"));
       xml.append((const TCHAR *)EscapeStringForXML2(a->blockingTimerKey));
       xml.append(_T("</blockingTimerKey>\n\t\t\t\t\t<snoozeTime>"));
-      xml.append(a->snoozeTime);
+      xml.append((const TCHAR *)EscapeStringForXML2(a->snoozeTime));
       xml.append(_T("</snoozeTime>\n\t\t\t\t</action>\n"));
    }
 
@@ -617,7 +617,8 @@ bool EPRule::processEvent(Event *event) const
 
          if (execute)
          {
-            if (a->timerDelay == 0)
+            uint64_t timerDelay = _tcstoul(event->expandText(a->timerDelay, alarm).cstr(), nullptr, 10);
+            if (timerDelay == 0)
             {
                ExecuteAction(a->actionId, event, alarm);
             }
@@ -627,18 +628,19 @@ bool EPRule::processEvent(Event *event) const
                _sntprintf(parameters, 64, _T("action=%u;event=") UINT64_FMT _T(";alarm=%u"), a->actionId, event->getId(), (alarm != nullptr) ? alarm->getAlarmId() : 0);
                _sntprintf(comments, 256, _T("Delayed action execution for event %s"), event->getName());
                String key = ((a->timerKey != nullptr) && (*a->timerKey != 0)) ? event->expandText(a->timerKey, alarm) : String();
-               AddOneTimeScheduledTask(_T("Execute.Action"), time(nullptr) + a->timerDelay, parameters,
+               AddOneTimeScheduledTask(_T("Execute.Action"), time(nullptr) + timerDelay, parameters,
                         new ActionExecutionTransientData(event, alarm), 0, event->getSourceId(), SYSTEM_ACCESS_FULL,
                         comments, key.isEmpty() ? nullptr : key.cstr(), true);
             }
 
-            if (a->snoozeTime != 0 && a->blockingTimerKey != nullptr && a->blockingTimerKey[0] != 0)
+            uint64_t snoozeTime = _tcstoul(event->expandText(a->snoozeTime, alarm).cstr(), nullptr, 10);
+            if (snoozeTime != 0 && a->blockingTimerKey != nullptr && a->blockingTimerKey[0] != 0)
             {
                TCHAR parameters[64], comments[256];
                _sntprintf(parameters, 64, _T("action=%u;event=") UINT64_FMT _T(";alarm=%u"), a->actionId, event->getId(), (alarm != nullptr) ? alarm->getAlarmId() : 0);
                _sntprintf(comments, 256, _T("Snooze action execution for event %s"), event->getName());
                String key = ((a->blockingTimerKey != nullptr) && (*a->blockingTimerKey != 0)) ? event->expandText(a->blockingTimerKey, alarm) : String();
-               AddOneTimeScheduledTask(_T("Dummy"), time(nullptr) + a->snoozeTime, parameters,
+               AddOneTimeScheduledTask(_T("Dummy"), time(nullptr) + snoozeTime, parameters,
                         nullptr, 0, event->getSourceId(), SYSTEM_ACCESS_FULL, comments, key.isEmpty() ? nullptr : key.cstr(), true);
             }
          }
@@ -781,10 +783,10 @@ bool EPRule::loadFromDB(DB_HANDLE hdb)
       for(int i = 0; i < count; i++)
       {
          uint32_t actionId = DBGetFieldULong(hResult, i, 0);
-         uint32_t timerDelay = DBGetFieldULong(hResult, i, 1);
+         TCHAR *timerDelay = DBGetField(hResult, i, 1, nullptr, 0);
          TCHAR *timerKey = DBGetField(hResult, i, 2, nullptr, 0);
          TCHAR *blockingTimerKey = DBGetField(hResult, i, 3, nullptr, 0);
-         uint32_t snoozeTime = DBGetFieldULong(hResult, i, 4);
+         TCHAR *snoozeTime = DBGetField(hResult, i, 4, nullptr, 0);
          m_actions.add(new ActionExecutionConfiguration(actionId, timerDelay, snoozeTime, timerKey, blockingTimerKey));
       }
       DBFreeResult(hResult);
@@ -914,10 +916,10 @@ bool EPRule::saveToDB(DB_HANDLE hdb) const
          {
             const ActionExecutionConfiguration *a = m_actions.get(i);
             DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, a->actionId);
-            DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, a->timerDelay);
+            DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, a->timerDelay, DB_BIND_STATIC, 127);
             DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, a->timerKey, DB_BIND_STATIC, 127);
             DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, a->blockingTimerKey, DB_BIND_STATIC, 127);
-            DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, a->snoozeTime);
+            DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, a->snoozeTime, DB_BIND_STATIC, 127);
             success = DBExecute(hStmt);
          }
          DBFreeStatement(hStmt);
@@ -1069,10 +1071,10 @@ json_t *EPRule::toJson() const
       const ActionExecutionConfiguration *d = m_actions.get(i);
       json_t *action = json_object();
       json_object_set_new(action, "id", json_integer(d->actionId));
-      json_object_set_new(action, "timerDelay", json_integer(d->timerDelay));
+      json_object_set_new(action, "timerDelay", json_string_t(d->timerDelay));
       json_object_set_new(action, "timerKey", json_string_t(d->timerKey));
       json_object_set_new(action, "blockingTimerKey", json_string_t(d->blockingTimerKey));
-      json_object_set_new(action, "snoozeTime", json_integer(d->snoozeTime));
+      json_object_set_new(action, "snoozeTime", json_string_t(d->snoozeTime));
       json_array_append_new(actions, action);
    }
    json_object_set_new(root, "actions", actions);

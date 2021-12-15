@@ -198,7 +198,7 @@ public class RuleServerActions extends PropertyPage
 		if (dlg.open() == Window.OK)
 		{
 			for(ServerAction a : dlg.getSelectedActions())
-				actions.put(a.getId(), new ActionExecutionConfiguration(a.getId(), 0, 0, null, null));
+				actions.put(a.getId(), new ActionExecutionConfiguration(a.getId(), null, null, null, null));
 		}
       viewer.setInput(actions.values().toArray());
 	}

@@ -24,6 +24,25 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 40.89 to 40.90
+ */
+static bool H_UpgradeFromV89()
+{
+   static const TCHAR *batch =
+      _T("ALTER TABLE policy_action_list ADD timer_delay_text varchar(127)\n")
+      _T("ALTER TABLE policy_action_list ADD snooze_time_text varchar(127)\n")
+      _T("UPDATE policy_action_list SET timer_delay_text=CAST(timer_delay AS varchar),snooze_time_text=CAST(snooze_time AS varchar)\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(DBDropColumn(g_dbHandle, _T("policy_action_list"), _T("timer_delay")));
+   CHK_EXEC(DBDropColumn(g_dbHandle, _T("policy_action_list"), _T("snooze_time")));
+   CHK_EXEC(DBRenameColumn(g_dbHandle, _T("policy_action_list"), _T("timer_delay_text"), _T("timer_delay")));
+   CHK_EXEC(DBRenameColumn(g_dbHandle, _T("policy_action_list"), _T("snooze_time_text"), _T("snooze_time")));
+   CHK_EXEC(SetMinorSchemaVersion(90));
+   return true;
+}
+
+/**
  * Upgrade from 40.88 to 40.89
  */
 static bool H_UpgradeFromV88()
@@ -2876,6 +2895,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 89, 40, 90, H_UpgradeFromV89 },
    { 88, 40, 89, H_UpgradeFromV88 },
    { 87, 40, 88, H_UpgradeFromV87 },
    { 86, 40, 87, H_UpgradeFromV86 },

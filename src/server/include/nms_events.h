@@ -258,12 +258,12 @@ public:
 struct ActionExecutionConfiguration
 {
    uint32_t actionId;
-   uint32_t timerDelay;
-   uint32_t snoozeTime;
+   TCHAR *timerDelay;
+   TCHAR *snoozeTime;
    TCHAR *timerKey;
    TCHAR *blockingTimerKey;
 
-   ActionExecutionConfiguration(uint32_t i, uint32_t d, uint32_t st, TCHAR *k, TCHAR *bk)
+   ActionExecutionConfiguration(uint32_t i, TCHAR *d, TCHAR *st, TCHAR *k, TCHAR *bk)
    {
       actionId = i;
       timerDelay = d;
@@ -274,6 +274,8 @@ struct ActionExecutionConfiguration
 
    ~ActionExecutionConfiguration()
    {
+      MemFree(timerDelay);
+      MemFree(snoozeTime);
       MemFree(timerKey);
       MemFree(blockingTimerKey);
    }

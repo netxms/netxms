@@ -805,7 +805,7 @@ public class RuleEditor extends Composite
                }
                else
                {
-                  clabel.setText(String.format("Delayed by %d seconds with timer key set to \"%s\"", c.getTimerDelay(), c.getTimerKey()));
+                  clabel.setText(String.format("Delayed by %s seconds with timer key set to \"%s\"", c.getTimerDelay(), c.getTimerKey()));
                }
             }
             if (!c.getBlockingTimerKey().isEmpty())
@@ -818,7 +818,7 @@ public class RuleEditor extends Composite
             {
                clabel = createCLabel(clientArea, 2, false);
                clabel.addMouseListener(listener);
-               clabel.setText(String.format("Set snooze timer for %d seconds after execution with key %s", c.getSnoozeTime(), c.getBlockingTimerKey()));                
+               clabel.setText(String.format("Set snooze timer for %s seconds after execution with key %s", c.getSnoozeTime(), c.getBlockingTimerKey()));
             }
          }
       }
