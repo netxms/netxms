@@ -189,20 +189,20 @@ INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_s
         '%m',6,'BUSINESS_SERVICE_NOT_OK_%i','',0,EVENT_ALARM_TIMEOUT);
 
 INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event)
-    VALUES (45,'9169a40b-cd9d-4328-b113-f690ef57773e',7944,'Generated alarm when node is unreachable by ICMP.',
+    VALUES (45,'9169a40b-cd9d-4328-b113-f690ef57773e',7944,'Generated alarm when node is unreachable by ICMP',
         '%m',5,'ICMP_UNREACHABLE_%i','',0,EVENT_ALARM_TIMEOUT);
 
 INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event)
-    VALUES (46,'81320995-d6db-4a3c-9670-12400eba4fe6',7944,'Terminate alarm when node started responding to ICMP again.',
+    VALUES (46,'81320995-d6db-4a3c-9670-12400eba4fe6',7944,'Terminate alarm when node started responding to ICMP again',
         '%m',6,'ICMP_UNREACHABLE_%i','',0,EVENT_ALARM_TIMEOUT);
 
 INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event)
-    VALUES (47,'96061edf-a46f-407a-a049-a55fa1ffb7e8',7944,'Generated alarm when notification channel fails health check',
-        '%m',5,'NOTIFICATION_CHANNEL_FAILED_%1_%2','',0,EVENT_ALARM_TIMEOUT);
+    VALUES (47,'96061edf-a46f-407a-a049-a55fa1ffb7e8',7944,'Generated alarm when notification channel is down',
+        '%m',5,'NOTIFICATION_CHANNEL_DOWN_%1','',0,EVENT_ALARM_TIMEOUT);
 
 INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event)
-    VALUES (48,'75640293-d630-4bfc-9b5e-9655cf59fd00',7944,'Terminate alarm when notification channel passes health check again.',
-        '%m',6,'NOTIFICATION_CHANNEL_FAILED_%1_%2','',0,EVENT_ALARM_TIMEOUT);
+    VALUES (48,'75640293-d630-4bfc-9b5e-9655cf59fd00',7944,'Terminate notification channel down alarm when notification channel is back up',
+        '%m',6,'NOTIFICATION_CHANNEL_DOWN_%1','',0,EVENT_ALARM_TIMEOUT);
 
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (0,EVENT_NODE_DOWN);
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (1,EVENT_NODE_UP);
@@ -262,4 +262,4 @@ INSERT INTO policy_event_list (rule_id,event_code) VALUES (44,EVENT_BUSINESS_SER
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (45,EVENT_ICMP_UNREACHABLE);
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (46,EVENT_ICMP_OK);
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (47,EVENT_NOTIFICATION_CHANNEL_DOWN);
-INSERT INTO policy_event_list (rule_id,event_code) VALUES (48,EVENT_NOTIFICATION_CHANNEL_OK);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (48,EVENT_NOTIFICATION_CHANNEL_UP);

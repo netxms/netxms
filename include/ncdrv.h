@@ -29,7 +29,7 @@
 /**
  * API version
  */
-#define NCDRV_API_VERSION           2
+#define NCDRV_API_VERSION           3
 
 /**
  * Notification channel configuration template

@@ -205,7 +205,7 @@ private:
    TCHAR m_errorMessage[MAX_NC_ERROR_MESSAGE];
    NCDriverServerStorageManager *m_storageManager;
    NCSendStatus m_lastStatus;
-   bool m_lastDriverStatus;
+   bool m_lastHealthCheckStatus;
 
    void setError(const TCHAR *message)
    {
@@ -243,7 +243,7 @@ public:
    void update(const TCHAR *description, const TCHAR *driverName, const char *config);
    void updateName(const TCHAR *newName) { _tcslcpy(m_name, newName, MAX_OBJECT_NAME); }
    void saveToDatabase();
-   void driverStatusCheck();
+   void checkHealth();
 };
 
 /**
@@ -262,7 +262,6 @@ struct NCDriverDescriptor
 static StringObjectMap<NCDriverDescriptor> s_driverList(Ownership::True);
 static SharedStringObjectMap<NotificationChannel> s_channelList;
 static Mutex s_channelListLock;
-static THREAD s_notificationChannelDriverHealthCheckThread = INVALID_THREAD_HANDLE;
 
 /**
  * Last used notification ID
@@ -314,7 +313,7 @@ NotificationChannel::NotificationChannel(NCDriver *driver, NCDriverServerStorage
    _tcslcpy(m_errorMessage, errorMessage, MAX_NC_ERROR_MESSAGE);
    m_lastStatus = NCSendStatus::UNKNOWN;
    m_workerThread = ThreadCreateEx(this, &NotificationChannel::workerThread);
-   m_lastDriverStatus = false;
+   m_lastHealthCheckStatus = false;
 }
 
 /**
@@ -370,28 +369,23 @@ void NotificationChannel::workerThread()
 }
 
 /**
- * Checks notification driver health
+ * Checks notification channel health
  */
-void NotificationChannel::driverStatusCheck()
+void NotificationChannel::checkHealth()
 {
-   bool driverStatus = false;
+   bool status = false;
+
    m_driverLock.lock();
    if (m_driver != nullptr)
    {
-      driverStatus = m_driver->checkHealth();
+      status = m_driver->checkHealth();
    }
    m_driverLock.unlock();
-   if (driverStatus != m_lastDriverStatus)
+
+   if (status != m_lastHealthCheckStatus)
    {
-      if (driverStatus)
-      {
-         PostSystemEvent(EVENT_NOTIFICATION_CHANNEL_OK, g_dwMgmtNode, "ss", m_name, m_driverName);
-      }
-      else
-      {
-         PostSystemEvent(EVENT_NOTIFICATION_CHANNEL_DOWN, g_dwMgmtNode, "ss", m_name, m_driverName);
-      }
-      m_lastDriverStatus = driverStatus;
+      PostSystemEvent(status ? EVENT_NOTIFICATION_CHANNEL_UP : EVENT_NOTIFICATION_CHANNEL_DOWN, g_dwMgmtNode, "ss", m_name, m_driverName);
+      m_lastHealthCheckStatus = status;
    }
 }
 
@@ -451,14 +445,15 @@ void NotificationChannel::update(const TCHAR *description, const TCHAR *driverNa
             }
             else
             {
-               nxlog_debug_tag(DEBUG_TAG, 1, _T("Cannot create driver %s using configuration: %hs"), m_name, config);
+               nxlog_debug_tag(DEBUG_TAG, 1, _T("Cannot create driver instance for channel %s using configuration %hs"), m_name, config);
             }
          }
          else
          {
-            nxlog_debug_tag(DEBUG_TAG, 1, _T("Cannot parse driver %s configuration: %hs"), m_name, config);
+            nxlog_debug_tag(DEBUG_TAG, 1, _T("Cannot parse driver configuration for channel %s (original configuration: %hs)"), m_name, config);
          }
       }
+
       if (driver != nullptr)
       {
          clearError();
@@ -467,10 +462,12 @@ void NotificationChannel::update(const TCHAR *description, const TCHAR *driverNa
       {
          setError(_T("Driver not initialized"));
       }
+
       m_driverLock.lock();
       delete m_driver;
       m_driver = driver;
       m_driverLock.unlock();
+
       m_confTemplate = confTemplate;
       _tcslcpy(m_driverName, driverName, MAX_OBJECT_NAME);
       MemFree(m_configuration);
@@ -876,7 +873,7 @@ void LoadNotificationChannelDrivers()
    if (dir != nullptr)
    {
       _tcscat(path, FS_PATH_SEPARATOR);
-      int insPos = (int)_tcslen(path);
+      size_t insPos = _tcslen(path);
 
       struct _tdirent *f;
       while((f = _treaddir(dir)) != nullptr)
@@ -904,20 +901,25 @@ static void CheckNotificationDriversHealth()
    {
       SharedObjectArray<NotificationChannel> channels;
       s_channelListLock.lock();
-      for( auto it : s_channelList)
-         channels.add(*it->value);
+      for(auto channel : s_channelList)
+         channels.add(*channel->value);
       s_channelListLock.unlock();
 
       for (int i = 0; i < channels.size(); i++)
       {
          if (channels.getShared(i) != nullptr)
-            channels.getShared(i)->driverStatusCheck();
+            channels.getShared(i)->checkHealth();
       }
 
       if (SleepAndCheckForShutdown(60)) //sleep 1 minute
          break;
    }
 }
+
+/**
+ * Health check thread handle
+ */
+static THREAD s_healthCheckThread = INVALID_THREAD_HANDLE;
 
 /**
  * Load notification channel configuration form database
@@ -962,7 +964,7 @@ void LoadNotificationChannels()
    }
    nxlog_debug_tag(DEBUG_TAG, 1, _T("%d notification channels added"), numberOfAddedDrivers);
 
-   s_notificationChannelDriverHealthCheckThread = ThreadCreateEx(CheckNotificationDriversHealth);
+   s_healthCheckThread = ThreadCreateEx(CheckNotificationDriversHealth);
 
    DBConnectionPoolReleaseConnection(hdb);
 }
