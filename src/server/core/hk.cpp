@@ -30,6 +30,11 @@
 static CONDITION s_wakeupCondition = INVALID_CONDITION_HANDLE;
 
 /**
+ * Housekeeper run flag
+ */
+static bool s_running = false;
+
+/**
  * Housekeeper shutdown flag
  */
 static bool s_shutdown = false;
@@ -359,6 +364,7 @@ static void HouseKeeper()
          break;
 
       nxlog_debug_tag(DEBUG_TAG, 2, _T("Wakeup"));
+      s_running = true;
       time_t cycleStartTime = time(nullptr);
       PostSystemEvent(EVENT_HOUSEKEEPER_STARTED, g_dwMgmtNode, nullptr);
 
@@ -495,6 +501,7 @@ static void HouseKeeper()
 
       ThreadSleep(1);   // to prevent multiple executions if processing took less then 1 second
       sleepTime = GetSleepTime(hour, minute, 0);
+      s_running = false;
    }
 
    nxlog_debug_tag(DEBUG_TAG, 1, _T("Housekeeper thread terminated"));
@@ -528,7 +535,13 @@ void StopHouseKeeper()
 /**
  * Run housekeeper
  */
-void RunHouseKeeper()
+void RunHouseKeeper(ServerConsole *console)
 {
+   if (s_running)
+   {
+      console->print(_T("Housekeeper process already running\n"));
+      return;
+   }
+   console->print(_T("Starting housekeeper\n"));
    ConditionSet(s_wakeupCondition);
 }
