@@ -82,6 +82,8 @@ void StopObjectMaintenanceThreads();
 bool LoadPhysicalLinks();
 void LoadObjectQueries();
 THREAD StartEventProcessor();
+void StartHouseKeeper();
+void StopHouseKeeper();
 
 void CheckUserAuthenticationTokens(const shared_ptr<ScheduledTaskParameters>& parameters);
 void ExecuteScheduledAction(const shared_ptr<ScheduledTaskParameters>& parameters);
