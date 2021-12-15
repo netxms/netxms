@@ -1519,6 +1519,36 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
       '   2) Notification channel driver name'
    );
 
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+   (
+      EVENT_AGENT_FILE_CHANGED, 'SYS_AGENT_FILE_CHANGED', '04c3e538-a668-4c27-a238-d1891b34f3df',
+      EVENT_SEVERITY_WARNING, 1,
+      'File %1 changed',
+      'Generated when agent monitored file is changed.' CONCAT CRLF CONCAT
+      'Parameters:' CONCAT CRLF CONCAT
+      '   1) Path to changed file'
+   );
+
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+   (
+      EVENT_AGENT_FILE_ADDED, 'SYS_AGENT_FILE_ADDED', '2f139a92-cb1c-4974-8a7c-0ad714a04394',
+      EVENT_SEVERITY_WARNING, 1,
+      'File %1 added',
+      'Generated when new file in agent monitored directory is created.' CONCAT CRLF CONCAT
+      'Parameters:' CONCAT CRLF CONCAT
+      '   1) Path to new file'
+   );
+
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+   (
+      EVENT_AGENT_FILE_DELETED, 'SYS_AGENT_FILE_DELETED', '11c6a29d-94e8-4eb6-a177-deece3a83483',
+      EVENT_SEVERITY_WARNING, 1,
+      'File %1 deleted',
+      'Generated when agent monitored file is deleted.' CONCAT CRLF CONCAT
+      'Parameters:' CONCAT CRLF CONCAT
+      '   1) Path to deleted file'
+   );
+
 /*
 ** SNMP traps
 */

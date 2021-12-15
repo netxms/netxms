@@ -1346,6 +1346,7 @@ void LIBNXAGENT_EXPORTABLE ReloadAllCRLs();
 
 /**
  * Wrapper for SleepAndCheckForShutdownEx (for backward compatibility)
+ * @return True if shutdown was initiated.
  */
 inline bool AgentSleepAndCheckForShutdown(UINT32 milliseconds)
 {

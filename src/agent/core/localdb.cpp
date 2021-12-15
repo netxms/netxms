@@ -207,6 +207,13 @@ static const TCHAR *s_dbInitQueries[] =
    _T("  serialized_data TEXT not null,")
    _T("  PRIMARY KEY(server_id,id))"),
 
+   _T("CREATE TABLE file_integrity (")
+   _T("  path varchar(4096) not null,")
+   _T("  hash varchar(64) not null,")
+   _T("  mod_time integer not null,")
+   _T("  permissions integer not null,")
+   _T("  PRIMARY KEY(path))"),
+
    nullptr
 };
 

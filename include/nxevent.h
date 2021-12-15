@@ -181,6 +181,9 @@
 #define EVENT_BUSINESS_SERVICE_DEGRADED             124
 #define EVENT_NOTIFICATION_CHANNEL_DOWN             125
 #define EVENT_NOTIFICATION_CHANNEL_UP               126
+#define EVENT_AGENT_FILE_CHANGED                    127
+#define EVENT_AGENT_FILE_ADDED                      128
+#define EVENT_AGENT_FILE_DELETED                    129
 
 #define EVENT_SNMP_UNMATCHED_TRAP                   500
 #define EVENT_SNMP_COLD_START                       501

@@ -1290,6 +1290,7 @@ BOOL Initialize()
       MemFree(s_externalTablesConfig);
    }
 
+   // Parse external tables (ConfigEntry)
    ObjectArray<ConfigEntry> *extTables = config->getSubEntries(_T("/ExternalTable"));
    if (extTables != nullptr)
    {
@@ -1317,8 +1318,8 @@ BOOL Initialize()
       MemFree(s_externalParameterProvidersConfig);
    }
 
-	if (!(g_dwFlags & AF_SUBAGENT_LOADER))
-	{
+   if (!(g_dwFlags & AF_SUBAGENT_LOADER))
+   {
       // Parse external subagents list
 	   if (!(g_dwFlags & AF_SUBAGENT_LOADER) && (s_externalSubAgentsList != NULL))
       {
@@ -1461,6 +1462,9 @@ BOOL Initialize()
 
    ThreadSleep(1);
 
+   // Start file integrity check process
+   StartFileIntegrityCheck(config);
+
 	// Start watchdog process
    if (s_startupFlags & SF_ENABLE_WATCHDOG)
       StartWatchdog();
@@ -1546,6 +1550,8 @@ void Shutdown()
    {
       ThreadJoin(s_syslogReceiverThread);
    }
+
+   StopFileIntegrityCheck();
 
    StopExternalParameterProviders();
    StopNotificationProcessor();

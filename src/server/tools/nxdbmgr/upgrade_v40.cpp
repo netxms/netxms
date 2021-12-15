@@ -24,6 +24,39 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 40.90 to 40.91
+ */
+static bool H_UpgradeFromV90()
+{
+   CHK_EXEC(CreateEventTemplate(EVENT_AGENT_FILE_CHANGED, _T("SYS_AGENT_FILE_CHANGED"),
+            SEVERITY_WARNING, EF_LOG, _T("04c3e538-a668-4c27-a238-d1891b34f3df"),
+            _T("File %1 changed"),
+            _T("Generated when agent monitored file is changed.\r\n")
+            _T("Parameters:\r\n")
+            _T("   1) Path to changed file")
+            ));
+   
+   CHK_EXEC(CreateEventTemplate(EVENT_AGENT_FILE_ADDED, _T("SYS_AGENT_FILE_ADDED"),
+            SEVERITY_WARNING, EF_LOG, _T("2f139a92-cb1c-4974-8a7c-0ad714a04394"),
+            _T("File %1 added"),
+            _T("Generated when new file in agent monitored directory is created.\r\n")
+            _T("Parameters:\r\n")
+            _T("   1) Path to new file")
+            ));
+
+   CHK_EXEC(CreateEventTemplate(EVENT_AGENT_FILE_DELETED, _T("SYS_AGENT_FILE_DELETED"),
+            SEVERITY_WARNING, EF_LOG, _T("11c6a29d-94e8-4eb6-a177-deece3a83483"),
+            _T("File %1 deleted"),
+            _T("Generated when agent monitored file is deleted.\r\n")
+            _T("Parameters:\r\n")
+            _T("   1) Path to deleted file")
+            ));
+
+   CHK_EXEC(SetMinorSchemaVersion(91));
+   return true;
+}
+
+/**
  * Upgrade from 40.89 to 40.90
  */
 static bool H_UpgradeFromV89()
@@ -2895,6 +2928,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 90, 40, 91, H_UpgradeFromV90 },
    { 89, 40, 90, H_UpgradeFromV89 },
    { 88, 40, 89, H_UpgradeFromV88 },
    { 87, 40, 88, H_UpgradeFromV87 },
