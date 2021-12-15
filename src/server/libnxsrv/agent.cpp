@@ -1706,6 +1706,41 @@ uint32_t AgentConnection::executeCommand(const TCHAR *command, const StringList 
 }
 
 /**
+ * Context for file upload
+ */
+struct FileUploadContext
+{
+   AgentConnection *connection;
+   void (* userCallback)(size_t, void *);
+   void *userContext;
+   time_t lastProbeTime;
+   uint32_t messageCount;
+};
+
+/**
+ * NXCP file upload progress callback
+ */
+static void FileUploadProgressCalback(size_t bytesTransferred, void *_context)
+{
+   auto context = static_cast<FileUploadContext*>(_context);
+
+   context->messageCount++;
+   time_t now = time(nullptr);
+   if ((now - context->lastProbeTime > 5) || (context->messageCount > 8))
+   {
+      // Call nop() method on agent connection to send keepalive request
+      // This will throttle file transfer (because server will wait for agent response) and
+      // prevent timeout in background poller on server side
+      context->connection->nop();
+      context->messageCount = 0;
+      context->lastProbeTime = now;
+   }
+
+   if (context->userCallback != nullptr)
+      context->userCallback(bytesTransferred, context->userContext);
+}
+
+/**
  * Upload file to agent
  */
 uint32_t AgentConnection::uploadFileInternal(const TCHAR *localFile, const TCHAR *destinationFile, bool allowPathExpansion,
@@ -1766,7 +1801,15 @@ uint32_t AgentConnection::uploadFileInternal(const TCHAR *localFile, const TCHAR
                   localFile, (compMethod == NXCP_STREAM_COMPRESSION_NONE) ? _T("without") : _T("with"));
          m_fileUploadInProgress = true;
          shared_ptr<NXCPEncryptionContext> ctx = acquireEncryptionContext();
-         if (SendFileOverNXCP(channel.get(), requestId, localFile, ctx.get(), offset, progressCallback, cbArg, m_mutexSocketWrite, compMethod, nullptr, chunkSize))
+
+         FileUploadContext context;
+         context.connection = this;
+         context.userCallback = progressCallback;
+         context.userContext = cbArg;
+         context.lastProbeTime = time(nullptr);
+         context.messageCount = 0;
+
+         if (SendFileOverNXCP(channel.get(), requestId, localFile, ctx.get(), offset, FileUploadProgressCalback, &context, m_mutexSocketWrite, compMethod, nullptr, chunkSize))
          {
             rcc = waitForRCC(requestId, std::max(m_commandTimeout, static_cast<uint32_t>(30000)));  // Wait at least 30 seconds for file transfer confirmation
          }
