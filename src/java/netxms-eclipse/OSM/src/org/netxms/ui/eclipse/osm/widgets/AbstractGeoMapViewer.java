@@ -586,21 +586,19 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 
 		if (zoom != accessor.getZoom())
 		{
-         // When zooming in get current location under cursor and make sure that it is still visible after zoom
-         if (zoom > accessor.getZoom())
-         {
-            Point pt = new Point(e.x, e.y);
-            GeoLocation oldLocation = getLocationAtPoint(pt);
+         // Get current location under cursor and make sure that it is still visible after zoom
+         Point pt = new Point(e.x, e.y);
+         GeoLocation oldLocation = getLocationAtPoint(pt);
 
-            Point mapSize = new Point(accessor.getMapWidth(), accessor.getMapHeight());
-            Area newCoverage = GeoLocationCache.calculateCoverage(mapSize, accessor.getCenterPoint(), GeoLocationCache.CENTER, zoom);
-            Point cp = GeoLocationCache.coordinateToDisplay(new GeoLocation(newCoverage.getxHigh(), newCoverage.getyLow()), zoom);
-            GeoLocation newLocation = GeoLocationCache.displayToCoordinates(new Point(cp.x + pt.x, cp.y + pt.y), zoom);
+         Point mapSize = new Point(accessor.getMapWidth(), accessor.getMapHeight());
+         Area newCoverage = GeoLocationCache.calculateCoverage(mapSize, accessor.getCenterPoint(), GeoLocationCache.CENTER, zoom);
+         Point cp = GeoLocationCache.coordinateToDisplay(new GeoLocation(newCoverage.getxHigh(), newCoverage.getyLow()), zoom);
+         GeoLocation newLocation = GeoLocationCache.displayToCoordinates(new Point(cp.x + pt.x, cp.y + pt.y), zoom);
 
-            accessor.setLatitude(accessor.getLatitude() - (newLocation.getLatitude() - oldLocation.getLatitude()));
-            accessor.setLongitude(accessor.getLongitude() - (newLocation.getLongitude() - oldLocation.getLongitude()));
-         }
+         accessor.setLatitude(accessor.getLatitude() - (newLocation.getLatitude() - oldLocation.getLatitude()));
+         accessor.setLongitude(accessor.getLongitude() - (newLocation.getLongitude() - oldLocation.getLongitude()));
          accessor.setZoom(zoom);
+
 			reloadMap();
 			notifyOnZoomChange();
 		}
