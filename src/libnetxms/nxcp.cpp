@@ -678,8 +678,6 @@ bool LIBNETXMS_EXPORTABLE SendFileOverNXCP(AbstractCommChannel *channel, uint32_
       msg->flags = htons(MF_BINARY | MF_STREAM | ((compressionMethod != NXCP_STREAM_COMPRESSION_NONE) ? MF_COMPRESSED : 0));
 
       size_t bufferSize = FILE_BUFFER_SIZE;
-      uint32_t delay = 0;
-      int successCount = 0;
 
       while(true)
       {
@@ -725,7 +723,6 @@ bool LIBNETXMS_EXPORTABLE SendFileOverNXCP(AbstractCommChannel *channel, uint32_
          if (stream->eof() || ((chunkSize > 0) && (bytesRemaining == 0)))
             msg->flags |= htons(MF_END_OF_FILE);
 
-         int64_t startTime = GetCurrentTimeMs();
          if (ectx != nullptr)
          {
             NXCP_ENCRYPTED_MESSAGE *emsg = ectx->encryptMessage(msg);
@@ -741,27 +738,6 @@ bool LIBNETXMS_EXPORTABLE SendFileOverNXCP(AbstractCommChannel *channel, uint32_
                break;	// Send error
          }
 
-         // Throttling
-         uint32_t elapsedTime = static_cast<uint32_t>(GetCurrentTimeMs() - startTime);
-         if ((elapsedTime > 200) && ((bufferSize > 1024) || (delay < 1000)))
-         {
-            bufferSize = MAX(bufferSize / (elapsedTime / 200), 1024);
-            delay = MIN(delay + 50 * (elapsedTime / 200), 1000);
-         }
-         else if ((elapsedTime < 50) && ((bufferSize < FILE_BUFFER_SIZE) || (delay > 0)))
-         {
-            successCount++;
-            if (successCount > 10)
-            {
-               successCount = 0;
-               bufferSize = std::min(bufferSize + bufferSize / 16, FILE_BUFFER_SIZE);
-               if (delay >= 5)
-                  delay -= 5;
-               else
-                  delay = 0;
-            }
-         }
-
          if (progressCallback != nullptr)
          {
             bytesTransferred += bytes;
@@ -774,9 +750,6 @@ bool LIBNETXMS_EXPORTABLE SendFileOverNXCP(AbstractCommChannel *channel, uint32_
             success = true;
             break;
          }
-
-         if (delay > 0)
-            ThreadSleepMs(delay);
       }
 
       MemFree(compBuffer);
