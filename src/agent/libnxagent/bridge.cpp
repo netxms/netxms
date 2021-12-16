@@ -30,7 +30,6 @@ static void (* s_fpPostEvent1)(uint32_t, const TCHAR *, time_t, const char *, va
 static void (* s_fpPostEvent2)(uint32_t, const TCHAR *, time_t, int, const TCHAR **) = nullptr;
 static shared_ptr<AbstractCommSession> (* s_fpFindServerSession)(uint64_t) = nullptr;
 static bool (* s_fpEnumerateSessions)(EnumerationCallbackResult (*)(AbstractCommSession *, void *), void *) = nullptr;
-static bool (* s_fpSendFile)(void *, uint32_t, const TCHAR *, off_t, bool, VolatileCounter *) = nullptr;
 static bool (* s_fpPushData)(const TCHAR *, const TCHAR *, UINT32, time_t) = nullptr;
 static const TCHAR *s_dataDirectory = nullptr;
 static DB_HANDLE (*s_fpGetLocalDatabaseHandle)() = nullptr;
@@ -47,7 +46,6 @@ void LIBNXAGENT_EXPORTABLE InitSubAgentAPI(
       void (*postEvent2)(uint32_t, const TCHAR *, time_t, int, const TCHAR **),
       bool (*enumerateSessions)(EnumerationCallbackResult (*)(AbstractCommSession *, void *), void*),
       shared_ptr<AbstractCommSession> (*findServerSession)(uint64_t),
-      bool (*sendFile)(void *, uint32_t, const TCHAR *, off_t, bool, VolatileCounter *),
       bool (*pushData)(const TCHAR *, const TCHAR *, UINT32, time_t),
       DB_HANDLE (*getLocalDatabaseHandle)(),
       const TCHAR *dataDirectory,
@@ -60,7 +58,6 @@ void LIBNXAGENT_EXPORTABLE InitSubAgentAPI(
 	s_fpPostEvent2 = postEvent2;
 	s_fpEnumerateSessions = enumerateSessions;
    s_fpFindServerSession = findServerSession;
-	s_fpSendFile = sendFile;
 	s_fpPushData = pushData;
    s_dataDirectory = dataDirectory;
    s_fpGetLocalDatabaseHandle = getLocalDatabaseHandle;
@@ -167,17 +164,6 @@ void LIBNXAGENT_EXPORTABLE AgentPostEvent2(uint32_t eventCode, const TCHAR *even
 bool LIBNXAGENT_EXPORTABLE AgentEnumerateSessions(EnumerationCallbackResult (* callback)(AbstractCommSession *, void *), void *data)
 {
    return (s_fpEnumerateSessions != nullptr) ? s_fpEnumerateSessions(callback, data) : false;
-}
-
-/**
- * Send file to server
- */
-bool LIBNXAGENT_EXPORTABLE AgentSendFileToServer(void *session, uint32_t requestId, const TCHAR *file,
-         off_t offset, bool allowCompression, VolatileCounter *cancellationFlag)
-{
-	if ((s_fpSendFile == nullptr) || (session == nullptr) || (file == nullptr))
-		return false;
-	return s_fpSendFile(session, requestId, file, offset, allowCompression, cancellationFlag);
 }
 
 /**

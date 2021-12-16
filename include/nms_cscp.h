@@ -1476,6 +1476,7 @@ typedef struct
 #define VID_DISTRICT                ((uint32_t)783)
 #define VID_PACKAGE_TYPE            ((uint32_t)784)
 #define VID_REPORT_PROGRESS         ((uint32_t)785)
+#define VID_ACCEPT_KEEPALIVE        ((uint32_t)786)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

@@ -1239,10 +1239,11 @@ uint32_t AgentConnection::setServerCapabilities()
    NXCPMessage msg(m_nProtocolVersion);
    uint32_t requestId = generateRequestId();
    msg.setCode(CMD_SET_SERVER_CAPABILITIES);
-   msg.setField(VID_ENABLED, (INT16)1);   // Enables IPv6 on pre-2.0 agents
-   msg.setField(VID_IPV6_SUPPORT, (INT16)1);
-   msg.setField(VID_BULK_RECONCILIATION, (INT16)1);
-   msg.setField(VID_ENABLE_COMPRESSION, (INT16)(m_allowCompression ? 1 : 0));
+   msg.setField(VID_ENABLED, true);   // Enables IPv6 on pre-2.0 agents
+   msg.setField(VID_IPV6_SUPPORT, true);
+   msg.setField(VID_BULK_RECONCILIATION, true);
+   msg.setField(VID_ENABLE_COMPRESSION, m_allowCompression);
+   msg.setField(VID_ACCEPT_KEEPALIVE, true);
    msg.setId(requestId);
    if (!sendMessage(&msg))
       return ERR_CONNECTION_BROKEN;

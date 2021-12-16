@@ -133,7 +133,6 @@ void LIBNXAGENT_EXPORTABLE InitSubAgentAPI(
       void (*postEvent2)(uint32_t, const TCHAR *, time_t, int, const TCHAR **),
       bool (*enumerateSessions)(EnumerationCallbackResult(*)(AbstractCommSession *, void *), void*),
       shared_ptr<AbstractCommSession> (*findServerSession)(uint64_t),
-      bool (*sendFile)(void *, uint32_t, const TCHAR *, off_t, bool, VolatileCounter *),
       bool (*pushData)(const TCHAR *, const TCHAR *, UINT32, time_t),
       DB_HANDLE (*getLocalDatabaseHandle)(),
       const TCHAR *dataDirectory,
@@ -883,16 +882,6 @@ static void LoadPlatformSubagent()
 }
 
 /**
- * Send file to server (subagent API)
- */
-static bool SendFileToServer(void *session, uint32_t requestId, const TCHAR *file, off_t offset, bool allowCompression, VolatileCounter *cancellationFlag)
-{
-	if (session == nullptr)
-		return false;
-	return static_cast<CommSession*>(session)->sendFile(requestId, file, offset, allowCompression, cancellationFlag);
-}
-
-/**
  * Configure agent directory: construct directory name and create it if needed
  */
 static void ConfigureAgentDirectory(TCHAR *generatedPath, const TCHAR *suffix, const TCHAR *contentDescription)
@@ -1075,7 +1064,7 @@ BOOL Initialize()
 
    // Initialize API for subagents
    InitSubAgentAPI(WriteSubAgentMsg, PostEvent, PostEvent, EnumerateSessions, FindServerSessionByServerId,
-         SendFileToServer, PushData, GetLocalDatabaseHandle, g_szDataDirectory, ExecuteAction,
+         PushData, GetLocalDatabaseHandle, g_szDataDirectory, ExecuteAction,
          GetScreenInfoForUserSession, QueueNotificationMessage);
    nxlog_debug(1, _T("Subagent API initialized"));
 

@@ -72,33 +72,6 @@ public:
    void setOffset(ssize_t offset) { m_offset = offset; }
 };
 
-struct MessageData
-{
-   TCHAR *fileName;
-   TCHAR *fileNameCode;
-   bool follow;
-   bool allowCompression;
-   uint32_t id;
-   long offset;
-	shared_ptr<AbstractCommSession> session;
-
-	MessageData(const shared_ptr<AbstractCommSession>& _session) : session(_session)
-	{
-	   fileName = nullptr;
-	   fileNameCode = nullptr;
-	   follow = false;
-	   allowCompression = false;
-	   id = 0;
-	   offset = 0;
-	}
-
-	~MessageData()
-	{
-	   MemFree(fileName);
-	   MemFree(fileNameCode);
-	}
-};
-
 /**
  * List of monitored files
  */
