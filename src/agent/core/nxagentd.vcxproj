@@ -210,7 +210,7 @@
     <ClCompile Include="exec.cpp" />
     <ClCompile Include="extagent.cpp" />
     <ClCompile Include="getparam.cpp" />
-    <ClCompile Include="fileintegritycheck.cpp" />
+    <ClCompile Include="filemon.cpp" />
     <ClCompile Include="hddinfo.cpp" />
     <ClCompile Include="localdb.cpp" />
     <ClCompile Include="master.cpp" />

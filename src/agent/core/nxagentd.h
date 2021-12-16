@@ -68,7 +68,6 @@
 #endif
 
 #define DEBUG_TAG_LOCALDB        _T("db.agent")
-#define DEBUG_TAG_FIC _T("FileIntegrityCheck")
 
 #define DEFAULT_CONFIG_SECTION   _T("CORE")
 
@@ -871,9 +870,6 @@ void RemoveEventSource();
 bool ExecuteInAllSessions(const TCHAR *command);
 
 #endif
-
-void StartFileIntegrityCheck(const shared_ptr<Config> &config);
-void StopFileIntegrityCheck();
 
 /**
  * Global variables

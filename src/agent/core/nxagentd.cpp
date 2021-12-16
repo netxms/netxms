@@ -117,6 +117,9 @@ void ParseTunnelList(const StringSet& tunnels);
 
 void StartWebServiceHousekeeper();
 
+void StartFileMonitor(const shared_ptr<Config>& config);
+void StopFileMonitor();
+
 #if !defined(_WIN32)
 void InitStaticSubagents();
 #endif
@@ -1458,12 +1461,11 @@ BOOL Initialize()
       s_tunnelManagerThread = ThreadCreateEx(TunnelManager);
 
       ThreadPoolScheduleRelative(g_commThreadPool, s_crlReloadInterval, ScheduledCRLReload);
-	}
+   }
 
    ThreadSleep(1);
 
-   // Start file integrity check process
-   StartFileIntegrityCheck(config);
+   StartFileMonitor(config);
 
 	// Start watchdog process
    if (s_startupFlags & SF_ENABLE_WATCHDOG)
@@ -1551,7 +1553,7 @@ void Shutdown()
       ThreadJoin(s_syslogReceiverThread);
    }
 
-   StopFileIntegrityCheck();
+   StopFileMonitor();
 
    StopExternalParameterProviders();
    StopNotificationProcessor();

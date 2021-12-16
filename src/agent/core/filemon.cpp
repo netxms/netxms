@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** File: fileintegritycheck.cpp
+** File: filemon.cpp
 **
 **/
 
@@ -24,6 +24,8 @@
 #include <netxms-version.h>
 #include <nxevent.h>
 #include <nxstat.h>
+
+#define DEBUG_TAG _T("filemon")
 
 /**
  * Contains information about a file that shoud be monitored + a tecnical flag checkPassed
@@ -37,7 +39,7 @@ struct FileInfo
 };
 
 static StringObjectMap<FileInfo> s_files(Ownership::True);
-static THREAD s_fileHashCheckerThread = INVALID_THREAD_HANDLE;
+static THREAD s_monitorThread = INVALID_THREAD_HANDLE;
 static StringSet s_configPaths;
 static uint32_t s_interval = 21600; // File integrity check interval in seconds (6 hours by default)
 
@@ -115,6 +117,9 @@ static bool LoadFromDB()
    return success;
 }
 
+/**
+ * Process regular file
+ */
 static void ProcessFile(const TCHAR *path, const NX_STAT_STRUCT *stat)
 {
    FileInfo *oldFi = s_files.get(path);
@@ -135,7 +140,7 @@ static void ProcessFile(const TCHAR *path, const NX_STAT_STRUCT *stat)
       s_files.set(path, new FileInfo(fi));
       SaveToDB(path, &fi);
       PostEvent(EVENT_AGENT_FILE_ADDED, nullptr, 0, "s", path);
-      nxlog_debug_tag(DEBUG_TAG_FIC, 3, _T("New file added %s"), path);
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Detected new file %s"), path);
    }
    else
    {
@@ -148,7 +153,7 @@ static void ProcessFile(const TCHAR *path, const NX_STAT_STRUCT *stat)
          oldFi->permissions = stat->st_mode;
 
          SaveToDB(path, oldFi);
-         nxlog_debug_tag(DEBUG_TAG_FIC, 3, _T("File changed %s"), path);
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("Detected change in file %s"), path);
          PostEvent(EVENT_AGENT_FILE_CHANGED, nullptr, 0, "s", path);
       }
       oldFi->checkPassed = true;
@@ -157,6 +162,9 @@ static void ProcessFile(const TCHAR *path, const NX_STAT_STRUCT *stat)
 
 static void CheckFilesFromDirTree(TCHAR *path);
 
+/**
+ * Process directory
+ */
 static void ProcessDirectory(TCHAR *path)
 {
    size_t rootPathLen = _tcslen(path);
@@ -208,14 +216,17 @@ static void CheckFilesFromDirTree(TCHAR *path)
    }
 }
 
+/**
+ * File monitor worker thread
+ */
 static void FileMonitoringThread()
 {
-   nxlog_debug_tag(DEBUG_TAG_FIC, 3, _T("Thread start"));
+   nxlog_debug_tag(DEBUG_TAG, 3, _T("File monitor thread started"));
    do
    {
       for (const TCHAR *e : s_configPaths)
       {
-         nxlog_debug_tag(DEBUG_TAG_FIC, 7, _T("Checking files in %s"), e);
+         nxlog_debug_tag(DEBUG_TAG, 7, _T("Checking files in %s"), e);
          TCHAR path[MAX_PATH];
          _tcscpy(path, e);
          CheckFilesFromDirTree(path);
@@ -231,7 +242,7 @@ static void FileMonitoringThread()
          }
          else
          {
-            nxlog_debug_tag(DEBUG_TAG_FIC, 3, _T("File deleted %s"), e->key);
+            nxlog_debug_tag(DEBUG_TAG, 4, _T("Detected deletion of file %s"), e->key);
             PostEvent(EVENT_AGENT_FILE_DELETED, nullptr, 0, "s", e->key);
             DeleteFromDB(e->key);
             i.remove();
@@ -239,38 +250,41 @@ static void FileMonitoringThread()
       }
    }
    while (!AgentSleepAndCheckForShutdown(s_interval * 1000));
-   nxlog_debug_tag(DEBUG_TAG_FIC, 3, _T("Thread shutdown"));
+   nxlog_debug_tag(DEBUG_TAG, 3, _T("File monitor thread stopped"));
 }
 
 /**
- * Runs integrity checks of files theat are specified in config by their hash, modification time and permissions.
+ * Start file monitor (detects changes in files under given directories)
  */
-void StartFileIntegrityCheck(const shared_ptr<Config> &config)
+void StartFileMonitor(const shared_ptr<Config>& config)
 {
-   ConfigEntry *ficPaths = config->getEntry(_T("/FileIntegrityCheck/Path"));
-   if (ficPaths != nullptr)
+   ConfigEntry *paths = config->getEntry(_T("/FileIntegrityCheck/Path"));
+   if (paths == nullptr)
    {
-      s_interval = config->getValueAsUInt(_T("/FileIntegrityCheck/Interval"), s_interval);
-      nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_FIC, _T("File integrity check interval set to %d"), s_interval);
-
-      for (int i = 0; i < ficPaths->getValueCount(); i++)
-      {
-         const TCHAR *path = ficPaths->getValue(i);
-         s_configPaths.add(path);
-         nxlog_debug_tag(DEBUG_TAG_FIC, 1, _T("Added for integrity check %s"), path);
-      }
-
-      if (!LoadFromDB())
-         nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_FIC, _T("Failed to load file data from database"));
-
-      s_fileHashCheckerThread = ThreadCreateEx(&FileMonitoringThread);
+      nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Path list for file monitor is empty"));
+      return;
    }
+
+   s_interval = config->getValueAsUInt(_T("/FileIntegrityCheck/Interval"), s_interval);
+   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("File check interval set to %d"), s_interval);
+
+   for (int i = 0; i < paths->getValueCount(); i++)
+   {
+      const TCHAR *path = paths->getValue(i);
+      s_configPaths.add(path);
+      nxlog_debug_tag(DEBUG_TAG, 2, _T("Path %s added to file monitor"), path);
+   }
+
+   if (!LoadFromDB())
+      nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Cannot load file monitor persistent data from agent database"));
+
+   s_monitorThread = ThreadCreateEx(&FileMonitoringThread);
 }
 
 /**
- * Stops file integrity checking thread.
+ * Stops file monitor
  */
-void StopFileIntegrityCheck()
+void StopFileMonitor()
 {
-   ThreadJoin(s_fileHashCheckerThread);
+   ThreadJoin(s_monitorThread);
 }

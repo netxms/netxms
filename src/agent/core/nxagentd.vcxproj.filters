@@ -52,7 +52,7 @@
     <ClCompile Include="extagent.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="fileintegritycheck.cpp">
+    <ClCompile Include="filemon.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="getparam.cpp">
