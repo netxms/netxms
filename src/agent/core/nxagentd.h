@@ -320,8 +320,9 @@ private:
    bool m_acceptFileUpdates;
    bool m_ipv6Aware;
    bool m_bulkReconciliationSupported;
-   HashMap<uint32_t, DownloadFileInfo> m_downloadFileMap;
    bool m_allowCompression;   // allow compression for structured messages
+   bool m_acceptKeepalive;    // true if server will respond to keepalive messages
+   HashMap<uint32_t, DownloadFileInfo> m_downloadFileMap;
 	shared_ptr<NXCPEncryptionContext> m_encryptionContext;
    time_t m_ts;               // Last activity timestamp
    SOCKET m_hProxySocket;     // Socket for proxy connection

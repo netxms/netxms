@@ -115,6 +115,7 @@ CommSession::CommSession(const shared_ptr<AbstractCommChannel>& channel, const I
    m_bulkReconciliationSupported = false;
    m_disconnected = false;
    m_allowCompression = false;
+   m_acceptKeepalive = false;
    m_ts = time(nullptr);
    m_socketWriteMutex = MutexCreate();
    m_responseQueue = new MsgWaitQueue();
@@ -714,6 +715,7 @@ void CommSession::processingThread()
                m_ipv6Aware = request->isFieldExist(VID_IPV6_SUPPORT) ? request->getFieldAsBoolean(VID_IPV6_SUPPORT) : request->getFieldAsBoolean(VID_ENABLED);
                m_bulkReconciliationSupported = request->getFieldAsBoolean(VID_BULK_RECONCILIATION);
                m_allowCompression = request->getFieldAsBoolean(VID_ENABLE_COMPRESSION);
+               m_acceptKeepalive = request->getFieldAsBoolean(VID_ACCEPT_KEEPALIVE);
                response.setField(VID_RCC, ERR_SUCCESS);
                response.setField(VID_FLAGS, static_cast<uint16_t>((m_controlServer ? 0x01 : 0x00) | (m_masterServer ? 0x02 : 0x00)));
                response.setField(VID_ENABLE_FILE_UPLOAD_RESUMING, 1);
@@ -1106,11 +1108,41 @@ uint32_t CommSession::openFile(TCHAR *szFullPath, uint32_t requestId, time_t fil
 }
 
 /**
- * Progress callback for file sending
+ * File sending context
+ */
+struct FileSendContext
+{
+   CommSession *session;
+   time_t lastProbeTime;
+   uint32_t msgCount;
+};
+
+/**
+ * Progress callback for file sending with keepalive messages
+ */
+static void SendFileProgressCallbackWithKeepalive(size_t bytesTransferred, void *cbArg)
+{
+   auto context = static_cast<FileSendContext*>(cbArg);
+   context->session->updateTimeStamp();
+   context->msgCount++;
+   time_t now = time(nullptr);
+   if ((now - context->lastProbeTime > 5) || (context->msgCount > 8))
+   {
+      NXCPMessage request(CMD_KEEPALIVE, static_cast<uint32_t>(now));
+      context->session->sendMessage(request);
+      NXCPMessage *response = context->session->waitForMessage(CMD_REQUEST_COMPLETED, request.getId(), 30000);
+      delete response;   // FIXME: do actual check and allow callback to abort file transfer?
+      context->lastProbeTime = now;
+      context->msgCount = 0;
+   }
+}
+
+/**
+ * Progress callback for file sending without keepalive messages
  */
 static void SendFileProgressCallback(size_t bytesTransferred, void *cbArg)
 {
-	static_cast<CommSession*>(cbArg)->updateTimeStamp();
+   static_cast<CommSession*>(cbArg)->updateTimeStamp();
 }
 
 /**
@@ -1120,8 +1152,19 @@ bool CommSession::sendFile(uint32_t requestId, const TCHAR *file, off_t offset, 
 {
    if (m_disconnected)
       return false;
-   return SendFileOverNXCP(m_channel.get(), requestId, file, m_encryptionContext.get(), offset, SendFileProgressCallback, this, m_socketWriteMutex,
+
+   if (!m_acceptKeepalive)
+   {
+      return SendFileOverNXCP(m_channel.get(), requestId, file, m_encryptionContext.get(), offset, SendFileProgressCallback, this, m_socketWriteMutex,
             allowCompression ? NXCP_STREAM_COMPRESSION_DEFLATE : NXCP_STREAM_COMPRESSION_NONE, cancellationFlag);
+   }
+
+   FileSendContext context;
+   context.session = this;
+   context.lastProbeTime = time(nullptr);
+   context.msgCount = 0;
+   return SendFileOverNXCP(m_channel.get(), requestId, file, m_encryptionContext.get(), offset, SendFileProgressCallbackWithKeepalive, &context,
+         m_socketWriteMutex, allowCompression ? NXCP_STREAM_COMPRESSION_DEFLATE : NXCP_STREAM_COMPRESSION_NONE, cancellationFlag);
 }
 
 /**
