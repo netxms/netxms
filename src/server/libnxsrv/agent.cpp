@@ -407,6 +407,19 @@ MessageReceiverResult AgentConnectionReceiver::readMessage(bool allowChannelRead
                delete msg;
             }
             break;
+         case CMD_KEEPALIVE:
+            if (g_agentConnectionThreadPool != nullptr)
+            {
+               NXCPMessage *response = new NXCPMessage(CMD_REQUEST_COMPLETED, msg->getId());
+               connection->postMessage(response);  // Response will be deleted by postMessage
+            }
+            else
+            {
+               NXCPMessage response(CMD_REQUEST_COMPLETED, msg->getId());
+               connection->sendMessage(&response);
+            }
+            delete msg;
+            break;
          default:
             if (connection->processCustomMessage(msg))
                delete msg;
