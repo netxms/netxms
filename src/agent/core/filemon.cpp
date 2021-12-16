@@ -38,10 +38,10 @@ struct FileInfo
    bool checkPassed; // Flag to identity files that have passed checks for monitoring mulpiple path occurences and deleted files
 };
 
+static StringSet s_rootPaths;
 static StringObjectMap<FileInfo> s_files(Ownership::True);
-static THREAD s_monitorThread = INVALID_THREAD_HANDLE;
-static StringSet s_configPaths;
 static uint32_t s_interval = 21600; // File integrity check interval in seconds (6 hours by default)
+static THREAD s_monitorThread = INVALID_THREAD_HANDLE;
 
 /**
  * Saves file info to file_integrity table in agent's local DB
@@ -169,12 +169,9 @@ static void ProcessDirectory(TCHAR *path)
 {
    size_t rootPathLen = _tcslen(path);
    if (rootPathLen >= MAX_PATH - 2)
-   {
       return; // Path is too long
-   }
 
    _TDIR *dir = _topendir(path);
-
    if (dir == nullptr)
       return;
 
@@ -192,6 +189,7 @@ static void ProcessDirectory(TCHAR *path)
       _tcslcpy(&path[rootPathLen], e->d_name, MAX_PATH - rootPathLen);
       CheckFilesFromDirTree(path);
    }
+
    _tclosedir(dir);
 }
 
@@ -201,7 +199,6 @@ static void ProcessDirectory(TCHAR *path)
 static void CheckFilesFromDirTree(TCHAR *path)
 {
    NX_STAT_STRUCT stat;
-
    if (CALL_STAT_FOLLOW_SYMLINK(path, &stat) != 0) // Ingore entity if can't read it's stat
       return;
 
@@ -224,7 +221,7 @@ static void FileMonitoringThread()
    nxlog_debug_tag(DEBUG_TAG, 3, _T("File monitor thread started"));
    do
    {
-      for (const TCHAR *e : s_configPaths)
+      for (const TCHAR *e : s_rootPaths)
       {
          nxlog_debug_tag(DEBUG_TAG, 7, _T("Checking files in %s"), e);
          TCHAR path[MAX_PATH];
@@ -258,27 +255,27 @@ static void FileMonitoringThread()
  */
 void StartFileMonitor(const shared_ptr<Config>& config)
 {
-   ConfigEntry *paths = config->getEntry(_T("/FileIntegrityCheck/Path"));
+   ConfigEntry *paths = config->getEntry(_T("/FileMonitor/Path"));
    if (paths == nullptr)
    {
       nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Path list for file monitor is empty"));
       return;
    }
 
-   s_interval = config->getValueAsUInt(_T("/FileIntegrityCheck/Interval"), s_interval);
+   s_interval = config->getValueAsUInt(_T("/FileMonitor/Interval"), s_interval);
    nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("File check interval set to %d"), s_interval);
 
    for (int i = 0; i < paths->getValueCount(); i++)
    {
       const TCHAR *path = paths->getValue(i);
-      s_configPaths.add(path);
+      s_rootPaths.add(path);
       nxlog_debug_tag(DEBUG_TAG, 2, _T("Path %s added to file monitor"), path);
    }
 
    if (!LoadFromDB())
       nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Cannot load file monitor persistent data from agent database"));
 
-   s_monitorThread = ThreadCreateEx(&FileMonitoringThread);
+   s_monitorThread = ThreadCreateEx(FileMonitoringThread);
 }
 
 /**
