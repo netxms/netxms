@@ -916,6 +916,7 @@ private:
 	int m_hCurrFile;
 	TCHAR m_currentFileName[MAX_PATH];
 	uint32_t m_downloadRequestId;
+	time_t m_downloadActivityTimestamp;
 	CONDITION m_condFileDownload;
 	bool m_fileDownloadSucceeded;
 	void (*m_downloadProgressCallback)(size_t, void*);
