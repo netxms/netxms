@@ -624,24 +624,6 @@ static bool Delete(const TCHAR *name)
 }
 
 /**
- * Send file
- */
- static void SendFile(MessageData *data)
-{
-   nxlog_debug_tag(DEBUG_TAG, 5, _T("CommSession::getLocalFile(): request for file \"%s\", follow = %s, compress = %s"),
-               data->fileName, data->follow ? _T("true") : _T("false"), data->allowCompression ? _T("true") : _T("false"));
-   bool success = AgentSendFileToServer(data->session.get(), data->id, data->fileName, (int)data->offset, data->allowCompression, s_downloadFileStopMarkers->get(data->id));
-   if (data->follow && success)
-   {
-      g_monitorFileList.add(data->fileNameCode);
-      FollowData *flData = new FollowData(data->fileName, data->fileNameCode, 0, data->session->getServerAddress());
-      ThreadCreateEx(SendFileUpdatesOverNXCP, 0, flData);
-   }
-   s_downloadFileStopMarkers->remove(data->id);
-   delete data;
-}
-
-/**
  * Get folder information
  */
 static void GetFolderInfo(const TCHAR *folder, UINT64 *fileCount, UINT64 *folderSize)
@@ -1137,34 +1119,73 @@ static void CH_GetFileSetDetails(const NXCPMessage& request, NXCPMessage *respon
 }
 
 /**
+ * Data for file sending thread
+ */
+struct FileSendData
+{
+   TCHAR *fileName;
+   TCHAR *fileId;
+   bool follow;
+   bool allowCompression;
+   uint32_t id;
+   off_t offset;
+   shared_ptr<AbstractCommSession> session;
+
+   FileSendData(const shared_ptr<AbstractCommSession>& _session, TCHAR *_fileName, const NXCPMessage& request) : session(_session)
+   {
+      fileName = _fileName;
+      fileId = request.getFieldAsString(VID_NAME);
+      follow = request.getFieldAsBoolean(VID_FILE_FOLLOW);
+      allowCompression = request.getFieldAsBoolean(VID_ENABLE_COMPRESSION);
+      id = request.getId();
+      offset = request.getFieldAsUInt32(VID_FILE_OFFSET);
+   }
+
+   ~FileSendData()
+   {
+      MemFree(fileName);
+      MemFree(fileId);
+   }
+};
+
+/**
+ * Send file
+ */
+static void SendFile(FileSendData *data)
+{
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("SendFile: request for file \"%s\", follow = %s, compress = %s"),
+               data->fileName, data->follow ? _T("true") : _T("false"), data->allowCompression ? _T("true") : _T("false"));
+   bool success = data->session->sendFile(data->id, data->fileName, data->offset, data->allowCompression, s_downloadFileStopMarkers->get(data->id));
+   if (data->follow && success)
+   {
+      g_monitorFileList.add(data->fileId);
+      auto flData = new FollowData(data->fileName, data->fileId, 0, data->session->getServerAddress());
+      ThreadCreateEx(SendFileUpdatesOverNXCP, 0, flData);
+   }
+   s_downloadFileStopMarkers->remove(data->id);
+   delete data;
+}
+
+/**
  * Handler for "get file" command
  */
-static void CH_GetFile(NXCPMessage *request, NXCPMessage *response, AbstractCommSession *session)
+static void CH_GetFile(const NXCPMessage& request, NXCPMessage *response, AbstractCommSession *session)
 {
-   if (request->getFieldAsBoolean(VID_FILE_FOLLOW) && !session->isMasterServer())
+   if (request.getFieldAsBoolean(VID_FILE_FOLLOW) && !session->isMasterServer())
    {
       response->setField(VID_RCC, ERR_ACCESS_DENIED);
       return;
    }
 
    TCHAR fileName[MAX_PATH];
-   request->getFieldAsString(VID_FILE_NAME, fileName, MAX_PATH);
-   ConvertPathToHost(fileName, request->getFieldAsBoolean(VID_ALLOW_PATH_EXPANSION), session->isMasterServer());
+   request.getFieldAsString(VID_FILE_NAME, fileName, MAX_PATH);
+   ConvertPathToHost(fileName, request.getFieldAsBoolean(VID_ALLOW_PATH_EXPANSION), session->isMasterServer());
 
    TCHAR *fullPath;
    if (CheckFullPath(fileName, &fullPath, false))
    {
-      MessageData *data = new MessageData(session->self());
-      data->fileName = fullPath;
-      data->fileNameCode = request->getFieldAsString(VID_NAME);
-      data->follow = request->getFieldAsBoolean(VID_FILE_FOLLOW);
-      data->allowCompression = request->getFieldAsBoolean(VID_ENABLE_COMPRESSION);
-      data->id = request->getId();
-      data->offset = request->getFieldAsUInt32(VID_FILE_OFFSET);
-      s_downloadFileStopMarkers->set(request->getId(), new VolatileCounter(0));
-
-      ThreadCreateEx(SendFile, data);
-
+      s_downloadFileStopMarkers->set(request.getId(), new VolatileCounter(0));
+      ThreadCreateEx(SendFile, new FileSendData(session->self(), fullPath, request));
       response->setField(VID_RCC, ERR_SUCCESS);
    }
    else
@@ -1653,7 +1674,7 @@ static bool ProcessCommands(UINT32 command, NXCPMessage *request, NXCPMessage *r
          CH_Upload(request, response, session);
          break;
       case CMD_GET_AGENT_FILE:
-         CH_GetFile(request, response, session);
+         CH_GetFile(*request, response, session);
          break;
       case CMD_CANCEL_FILE_DOWNLOAD:
          CH_CancelFileDownload(request, response);
