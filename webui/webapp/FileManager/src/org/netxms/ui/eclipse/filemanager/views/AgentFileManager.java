@@ -1164,7 +1164,7 @@ public class AgentFileManager extends ViewPart
          @Override
          protected String getErrorMessage()
          {
-            return Messages.get().AgentFileManager_DirectoryReadError;
+            return "Download from agent failed";
          }
       };
       job.start();
@@ -1228,7 +1228,7 @@ public class AgentFileManager extends ViewPart
          }
       }.start();
    }
-   
+
    /**
     * Copy agent file
     * 
@@ -1262,12 +1262,12 @@ public class AgentFileManager extends ViewPart
                }
             };
             verify.run(viewer.getControl().getDisplay());
-            
-            if(verify.isOkPressed())
+
+            if (verify.isOkPressed())
             {
                target.setChildren(session.listAgentFiles(target, target.getFullName(), objectId));
                object.getParent().setChildren(session.listAgentFiles(object.getParent(), object.getParent().getFullName(), objectId));
-               
+
                runInUIThread(new Runnable() {
                   @Override
                   public void run()
