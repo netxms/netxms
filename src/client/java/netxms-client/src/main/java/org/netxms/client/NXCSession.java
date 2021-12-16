@@ -1980,17 +1980,17 @@ public class NXCSession
    /**
     * Wait for specific file to arrive
     *
-    * @param id      Message ID
-    * @param timeout Wait timeout in milliseconds
+    * @param id Message ID
+    * @param timeout Timeout (since arrival of last received file part) in milliseconds to consider file transfer as timed out
     * @return Received file or null in case of failure
     */
    public ReceivedFile waitForFile(final long id, final int timeout)
    {
-      int timeRemaining = timeout;
       File file = null;
       int status = ReceivedFile.FAILED;
+      long timestamp = System.currentTimeMillis();
 
-      while(timeRemaining > 0)
+      while(true)
       {
          synchronized(receivedFiles)
          {
@@ -2006,20 +2006,25 @@ public class NXCSession
                   }
                   break;
                }
+               timestamp = rf.getTimestamp();
             }
 
-            long startTime = System.currentTimeMillis();
+            if (System.currentTimeMillis() - timestamp > timeout)
+            {
+               status = ReceivedFile.TIMEOUT;
+               break;
+            }
+
             try
             {
-               receivedFiles.wait(timeRemaining);
+               receivedFiles.wait(timeout);
             }
             catch(InterruptedException e)
             {
             }
-            timeRemaining -= System.currentTimeMillis() - startTime;
          }
       }
-      return new ReceivedFile(file, timeRemaining <= 0 ? ReceivedFile.TIMEOUT : status);
+      return new ReceivedFile(file, status);
    }
 
    /**
@@ -9626,7 +9631,7 @@ public class NXCSession
       msg.setField(NXCPCodes.VID_GUID, guid);
       sendMessage(msg);
       final NXCPMessage response = waitForRCC(msg.getMessageId());
-      final ReceivedFile imageFile = waitForFile(msg.getMessageId(), 600000);
+      final ReceivedFile imageFile = waitForFile(msg.getMessageId(), 60000);
       if (imageFile.isFailed())
          throw new NXCException(RCC.IO_ERROR);
       return new LibraryImage(response, imageFile.getFile());
@@ -10144,7 +10149,7 @@ public class NXCSession
          }
       }
 
-      ReceivedFile remoteFile = waitForFile(msg.getMessageId(), 36000000);
+      ReceivedFile remoteFile = waitForFile(msg.getMessageId(), 120000); // 120 seconds timeout for next file part
       if (remoteFile.isFailed())
          throw new NXCException(RCC.AGENT_FILE_DOWNLOAD_ERROR);
       AgentFileData file = new AgentFileData(id, remoteFileName, remoteFile.getFile());
@@ -10174,7 +10179,7 @@ public class NXCSession
       msg.setField(NXCPCodes.VID_FILE_NAME, remoteFileName);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
-      return waitForFile(msg.getMessageId(), 3600000).getFile();
+      return waitForFile(msg.getMessageId(), 60000).getFile();
    }
 
    /**
@@ -11268,7 +11273,7 @@ public class NXCSession
       msg.setFieldInt32(NXCPCodes.VID_RENDER_FORMAT, format.getCode());
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
-      final ReceivedFile file = waitForFile(msg.getMessageId(), 600000);
+      final ReceivedFile file = waitForFile(msg.getMessageId(), 60000);
       if (file.isFailed())
       {
          throw new NXCException(RCC.IO_ERROR);

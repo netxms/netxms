@@ -509,6 +509,7 @@ AgentConnection::AgentConnection(const InetAddress& addr, uint16_t port, const T
    m_fileUpdateConnection = false;
    m_sendToClientMessageCallback = nullptr;
    m_downloadRequestId = 0;
+   m_downloadActivityTimestamp = 0;
    m_downloadProgressCallback = nullptr;
    m_downloadProgressCallbackArg = nullptr;
    m_bulkDataProcessing = 0;
@@ -2690,9 +2691,7 @@ NXCPMessage *AgentConnection::customRequest(NXCPMessage *request, const TCHAR *r
 		if (rcc != ERR_SUCCESS)
 		{
 			// Create fake response message
-			msg = new NXCPMessage;
-			msg->setCode(CMD_REQUEST_COMPLETED);
-			msg->setId(requestId);
+			msg = new NXCPMessage(CMD_REQUEST_COMPLETED, requestId);
 			msg->setField(VID_RCC, rcc);
 		}
 	}
@@ -2704,18 +2703,25 @@ NXCPMessage *AgentConnection::customRequest(NXCPMessage *request, const TCHAR *r
       {
          if (msg->getFieldAsUInt32(VID_RCC) == ERR_SUCCESS)
          {
-            if (m_condFileDownload.wait(1800000))	 // 30 min timeout
+            while(true)
             {
-               if (!m_fileDownloadSucceeded)
+               if (m_condFileDownload.wait(120000))	 // 120 seconds inactivity timeout
                {
-                  msg->setField(VID_RCC, ERR_IO_FAILURE);
-                  if (m_deleteFileOnDownloadFailure)
-                     _tremove(recvFile);
+                  if (!m_fileDownloadSucceeded)
+                  {
+                     msg->setField(VID_RCC, ERR_IO_FAILURE);
+                     if (m_deleteFileOnDownloadFailure)
+                        _tremove(recvFile);
+                  }
+                  break;
                }
-            }
-            else
-            {
-               msg->setField(VID_RCC, ERR_REQUEST_TIMEOUT);
+
+               // Check if server didn't receive any updates from agent within 300 seconds
+               if (time(nullptr) - m_downloadActivityTimestamp > 300)
+               {
+                  msg->setField(VID_RCC, ERR_REQUEST_TIMEOUT);
+                  break;
+               }
             }
          }
          else
@@ -2789,6 +2795,7 @@ uint32_t AgentConnection::prepareFileDownload(const TCHAR *fileName, uint32_t rq
       }
 
       m_downloadRequestId = rqId;
+      m_downloadActivityTimestamp = time(nullptr);
       m_downloadProgressCallback = downloadProgressCallback;
       m_downloadProgressCallbackArg = cbArg;
 
@@ -2801,6 +2808,7 @@ uint32_t AgentConnection::prepareFileDownload(const TCHAR *fileName, uint32_t rq
       m_condFileDownload.reset();
 
       m_downloadRequestId = rqId;
+      m_downloadActivityTimestamp = time(nullptr);
       m_downloadProgressCallback = downloadProgressCallback;
       m_downloadProgressCallbackArg = cbArg;
 
@@ -2815,6 +2823,7 @@ uint32_t AgentConnection::prepareFileDownload(const TCHAR *fileName, uint32_t rq
  */
 void AgentConnection::processFileData(NXCPMessage *msg)
 {
+   m_downloadActivityTimestamp = time(nullptr);
    if (m_sendToClientMessageCallback != nullptr)
    {
       m_sendToClientMessageCallback(msg, m_downloadProgressCallbackArg);
