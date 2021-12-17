@@ -35,8 +35,6 @@ static const TCHAR *s_states[4] = { _T("<td style=\"background:gold\">Outstandin
  */
 static StringBuffer CreateAlarmSummary()
 {
-   TCHAR timeFmt[128];
-
    StringBuffer summary(_T("<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">\n"));
    summary.append(_T("<html xmlns=\"http://www.w3.org/1999/xhtml\">\n"));
    summary.append(_T("<head>\n"));
@@ -62,32 +60,37 @@ static StringBuffer CreateAlarmSummary()
    summary.append(_T("<th>Last change</th>\n"));
    summary.append(_T("</tr>\n"));
 
+   TCHAR userName[MAX_USER_NAME], timeFmt[128];
    ObjectArray<Alarm> *alarms = GetAlarms(0);
    for(int i = 0; i < alarms->size(); i++)
    {
+      Alarm *alarm = alarms->get(i);
       summary.append(_T("<tr>\n"));
-      summary.append(s_severities[alarms->get(i)->getCurrentSeverity()]);
-      summary.append(s_states[alarms->get(i)->getState() & ALARM_STATE_MASK]);
+      summary.append(s_severities[alarm->getCurrentSeverity()]);
+      summary.append(s_states[alarm->getState() & ALARM_STATE_MASK]);
       summary.append(_T("<td>"));
-      summary.append(EscapeStringForXML2(GetObjectName(alarms->get(i)->getSourceObject(), _T("Unknown node"))));
+      summary.append(EscapeStringForXML2(GetObjectName(alarm->getSourceObject(), _T("Unknown node"))));
       summary.append(_T("</td>\n"));
       summary.append(_T("<td>"));
-      summary.append(EscapeStringForXML2(alarms->get(i)->getMessage()));
+      summary.append(EscapeStringForXML2(alarm->getMessage()));
       summary.append(_T("</td>\n"));
       summary.append(_T("<td>"));
-      summary.append(alarms->get(i)->getRepeatCount());
+      summary.append(alarm->getRepeatCount());
       summary.append(_T("</td>\n"));
       summary.append(_T("<td>"));
-      summary.append(alarms->get(i)->getHelpDeskRef());
+      summary.append(alarm->getHelpDeskRef());
       summary.append(_T("</td>\n"));
       summary.append(_T("<td>"));
-      summary.append(alarms->get(i)->getResolvedByUser());
+      if ((alarm->getState() & ALARM_STATE_MASK) == ALARM_STATE_ACKNOWLEDGED)
+         summary.append(ResolveUserId(alarm->getAckByUser(), userName, true));
+      else if ((alarm->getState() & ALARM_STATE_MASK) == ALARM_STATE_RESOLVED)
+         summary.append(ResolveUserId(alarm->getResolvedByUser(), userName, true));
       summary.append(_T("</td>\n"));
       summary.append(_T("<td>"));
-      summary.append(FormatTimestamp(alarms->get(i)->getCreationTime(), timeFmt));
+      summary.append(FormatTimestamp(alarm->getCreationTime(), timeFmt));
       summary.append(_T("</td>\n"));
       summary.append(_T("<td>"));
-      summary.append(FormatTimestamp(alarms->get(i)->getLastChangeTime(), timeFmt));
+      summary.append(FormatTimestamp(alarm->getLastChangeTime(), timeFmt));
       summary.append(_T("</td>\n"));
       summary.append(_T("</tr>\n"));
    }
