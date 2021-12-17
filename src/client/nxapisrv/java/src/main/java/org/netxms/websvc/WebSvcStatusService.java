@@ -92,7 +92,10 @@ public class WebSvcStatusService extends StatusService
       {
          case RCC.ACCESS_DENIED:
             return Status.CLIENT_ERROR_UNAUTHORIZED;
-         case RCC.CONNECTION_BROKEN:
+         case RCC.COMM_FAILURE:
+         case RCC.DB_CONNECTION_LOST:
+         case RCC.NO_CONNECTION_TO_AGENT:
+         case RCC.NO_LDAP_CONNECTION:
             return Status.CLIENT_ERROR_GONE;
          case RCC.INCOMPATIBLE_OPERATION:
             return Status.CLIENT_ERROR_METHOD_NOT_ALLOWED;

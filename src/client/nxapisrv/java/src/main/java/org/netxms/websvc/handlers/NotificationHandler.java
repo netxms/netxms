@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2019 Raden Solutions
+ * Copyright (C) 2003-2021 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,7 +29,7 @@ import org.netxms.websvc.json.ResponseContainer;
  */
 public class NotificationHandler extends AbstractHandler
 {
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.websvc.handlers.AbstractHandler#getCollection(java.util.Map)
     */
    @Override
@@ -37,7 +37,7 @@ public class NotificationHandler extends AbstractHandler
    {
       List<SessionNotification> notifications = getSessionToken().pollNotificationQueue(60);
       if (!getSession().isConnected())
-         return createErrorResponseRepresentation(RCC.CONNECTION_BROKEN);
+         return createErrorResponseRepresentation(RCC.COMM_FAILURE);
       if (notifications.isEmpty())
          return createErrorResponseRepresentation(RCC.TIMEOUT);
       return new ResponseContainer("notifications", notifications);
