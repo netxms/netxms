@@ -53,14 +53,14 @@ typedef struct
 } cpuUsageHistory;
 
 static THREAD m_cpuUsageCollector = INVALID_THREAD_HANDLE;
-static MUTEX m_cpuUsageMutex = INVALID_MUTEX_HANDLE;
+static Mutex s_cpuUsageMutex(MutexType::FAST);
 static bool volatile m_stopCollectorThread = false;
 static cpuUsageHistory *s_cpuUsageHistory;
 static unsigned int s_maxCPU;
 static int s_currentSlot;
 
 /**
- * Calculate average usage of selected type for specific CPU core over a number of iterations. Assumes m_cpuUsageMutex is locked when called
+ * Calculate average usage of selected type for specific CPU core over a number of iterations. Assumes s_cpuUsageMutex is locked when called
  */
 static float AverageUsage(const float *const avgUsage, int iterationCount)
 {
@@ -109,7 +109,7 @@ LONG H_CpuUsage(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abstrac
          return SYSINFO_RC_UNSUPPORTED;
    }
 
-   MutexLock(m_cpuUsageMutex);
+   s_cpuUsageMutex.lock();
 
    // Calculate CPU usage estimate
    float usage = 0;
@@ -139,7 +139,7 @@ LONG H_CpuUsage(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abstrac
       }
    }
 
-   MutexUnlock(m_cpuUsageMutex);
+   s_cpuUsageMutex.unlock();
 
    usage /= s_maxCPU;
    ret_double(pValue, usage);
@@ -191,7 +191,7 @@ LONG H_CpuUsageEx(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abstr
          return SYSINFO_RC_UNSUPPORTED;
    }
 
-   MutexLock(m_cpuUsageMutex);
+   s_cpuUsageMutex.lock();
 
    // Calculate CPU usage estimate
    switch (CPU_USAGE_PARAM_SOURCE(pArg))
@@ -215,7 +215,7 @@ LONG H_CpuUsageEx(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abstr
          return SYSINFO_RC_UNSUPPORTED;
    }
 
-   MutexUnlock(m_cpuUsageMutex);
+   s_cpuUsageMutex.unlock();
 
    return SYSINFO_RC_SUCCESS;
 }
@@ -229,7 +229,7 @@ static void CpuUsageCollector()
    processor_info_array_t infoArray;
    mach_msg_type_number_t count = PROCESSOR_CPU_LOAD_INFO_COUNT;
 
-   MutexLock(m_cpuUsageMutex);
+   s_cpuUsageMutex.lock();
 
    // Get data for all cores
    if (host_processor_info(mach_host_self(), PROCESSOR_CPU_LOAD_INFO, &cpuCount, &infoArray, &count) == KERN_SUCCESS)
@@ -295,7 +295,7 @@ static void CpuUsageCollector()
       vm_deallocate(mach_task_self(), (vm_address_t)infoArray, count);
    }
 
-   MutexUnlock(m_cpuUsageMutex);
+   s_cpuUsageMutex.unlock();
 }
 
 static void CpuUsageCollectorThread()
@@ -312,8 +312,6 @@ static void CpuUsageCollectorThread()
  */
 void StartCpuUsageCollector(void)
 {
-   m_cpuUsageMutex = MutexCreate();
-
    // Get core count
    natural_t cpuCount;
    processor_info_array_t infoArray;
@@ -364,6 +362,5 @@ void ShutdownCpuUsageCollector(void)
 {
    m_stopCollectorThread = true;
    ThreadJoin(m_cpuUsageCollector);
-   delete(s_cpuUsageHistory);
-   MutexDestroy(m_cpuUsageMutex);
+   delete s_cpuUsageHistory;
 }
