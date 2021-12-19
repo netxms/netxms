@@ -42,13 +42,13 @@ public class MapTilesHousekeeper implements LoginListener
 	public void afterLogin(NXCSession session, Display display)
 	{
 		GeoLocationCache.getInstance().initialize(session);
-      Job housekeeper = new Job("Map tiles housekeeper", null) {
+      Job housekeeper = new Job("Map tiles housekeeper", null, null, display) {
          @Override
          protected void run(IProgressMonitor monitor)
          {
             try
             {
-               File base = new File(Registry.getStateDir(), "MapTiles");
+               File base = new File(Registry.getStateDir(getDisplay()), "MapTiles");
                if (base.isDirectory())
                {
                   cleanTileFiles(base.listFiles());

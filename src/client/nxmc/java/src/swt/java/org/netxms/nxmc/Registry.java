@@ -25,6 +25,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.TimeZone;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.TrayItem;
 import org.netxms.client.NXCSession;
 import org.netxms.nxmc.base.views.ConfigurationPerspective;
@@ -48,7 +49,7 @@ public final class Registry
    private static Registry instance = new Registry();
    
    /**
-    * Get registry instance
+    * Get registry instance.
     *
     * @return registry instance
     */
@@ -56,7 +57,18 @@ public final class Registry
    {
       return instance;
    }
- 
+
+   /**
+    * Get registry instance.
+    *
+    * @param display display to use for registry access
+    * @return registry instance
+    */
+   public static Registry getInstance(Display display)
+   {
+      return instance;
+   }
+
    /**
     * Get current NetXMS client library session
     * 
@@ -65,6 +77,17 @@ public final class Registry
    public static NXCSession getSession()
    {
       return getInstance().session;
+   }
+
+   /**
+    * Get current NetXMS client library session
+    *
+    * @param display display to use
+    * @return Current session
+    */
+   public static NXCSession getSession(Display display)
+   {
+      return getInstance(display).session;
    }
 
    /**
@@ -85,6 +108,17 @@ public final class Registry
    public static File getStateDir()
    {
       return getInstance().stateDir;
+   }
+
+   /**
+    * Get application's state directory.
+    * 
+    * @param display display to use
+    * @return application's state directory
+    */
+   public static File getStateDir(Display display)
+   {
+      return getInstance(display).stateDir;
    }
 
    /**

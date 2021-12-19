@@ -20,6 +20,16 @@
 
   <servlet-mapping>
     <servlet-name>rwtServlet</servlet-name>
-    <url-pattern>/nxmc</url-pattern>
+    <url-pattern>*.app</url-pattern>
+  </servlet-mapping>
+
+  <servlet>
+    <servlet-name>redirectServlet</servlet-name>
+    <servlet-class>org.netxms.nxmc.RedirectServlet</servlet-class>
+  </servlet>
+
+  <servlet-mapping>
+    <servlet-name>redirectServlet</servlet-name>
+    <url-pattern></url-pattern>
   </servlet-mapping>
 </web-app>

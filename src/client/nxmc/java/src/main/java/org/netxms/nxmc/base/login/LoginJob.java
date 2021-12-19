@@ -261,7 +261,7 @@ public class LoginJob implements IRunnableWithProgress
          logger.debug("Calling login listener " + l.toString());
          try
          {
-            l.afterLogin(session, Display.getCurrent());
+            l.afterLogin(session, display);
          }
          catch(Exception e)
          {

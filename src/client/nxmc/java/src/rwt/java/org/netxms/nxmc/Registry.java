@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.TimeZone;
 import org.eclipse.rap.rwt.RWT;
+import org.eclipse.swt.widgets.Display;
 import org.netxms.client.NXCSession;
 import org.netxms.nxmc.base.views.ConfigurationPerspective;
 import org.netxms.nxmc.base.views.Perspective;
@@ -46,7 +47,7 @@ import org.netxms.nxmc.modules.worldmap.WorldMapPerspective;
 public final class Registry
 {
    /**
-    * Get registry instance
+    * Get registry instance.
     *
     * @return registry instance
     */
@@ -60,7 +61,24 @@ public final class Registry
       }
       return instance;
    }
- 
+
+   /**
+    * Get registry instance.
+    *
+    * @param display display to use for registry access
+    * @return registry instance
+    */
+   public static Registry getInstance(Display display)
+   {
+      Registry instance = (Registry)RWT.getUISession(display).getAttribute("netxms.registry");
+      if (instance == null)
+      {
+         instance = new Registry();
+         RWT.getUISession(display).setAttribute("netxms.registry", instance);
+      }
+      return instance;
+   }
+
    /**
     * Get current NetXMS client library session
     * 
@@ -69,6 +87,17 @@ public final class Registry
    public static NXCSession getSession()
    {
       return getInstance().session;
+   }
+
+   /**
+    * Get current NetXMS client library session
+    *
+    * @param display display to use
+    * @return Current session
+    */
+   public static NXCSession getSession(Display display)
+   {
+      return getInstance(display).session;
    }
 
    /**
@@ -92,6 +121,17 @@ public final class Registry
    }
 
    /**
+    * Get application's state directory.
+    * 
+    * @param display display to use
+    * @return application's state directory
+    */
+   public static File getStateDir(Display display)
+   {
+      return getInstance(display).stateDir;
+   }
+
+   /**
     * Get application's main window.
     * 
     * @return application's main window
@@ -110,6 +150,18 @@ public final class Registry
    public static Object getProperty(String name)
    {
       return RWT.getUISession().getAttribute("netxms." + name);
+   }
+
+   /**
+    * Get named property using given display.
+    *
+    * @param name property name
+    * @param display display to use
+    * @return value of property or null
+    */
+   public static Object getProperty(String name, Display display)
+   {
+      return RWT.getUISession(display).getAttribute("netxms." + name);
    }
 
    /**

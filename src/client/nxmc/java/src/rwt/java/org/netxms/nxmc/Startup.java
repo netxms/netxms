@@ -34,6 +34,8 @@ import org.eclipse.jface.window.Window;
 import org.eclipse.rap.rwt.RWT;
 import org.eclipse.rap.rwt.application.EntryPoint;
 import org.eclipse.rap.rwt.client.service.StartupParameters;
+import org.eclipse.rap.rwt.internal.application.ApplicationContextImpl;
+import org.eclipse.rap.rwt.internal.service.StartupPage;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.FileDialog;
@@ -90,6 +92,15 @@ public class Startup implements EntryPoint, StartupParameters
 
       logger.info("NetXMS Management Console version " + VersionInfo.version() + " starting");
       logger.info("State directory: " + stateDir.getAbsolutePath());
+
+      StringBuilder sb = new StringBuilder();
+      for(String themeId : ((ApplicationContextImpl)RWT.getApplicationContext()).getThemeManager().getRegisteredThemeIds())
+      {
+         if (sb.length() > 0)
+            sb.append(", ");
+         sb.append(themeId);
+      }
+      logger.info("Registered themes: " + sb.toString());
 
       PreferenceStore.open(stateDir.getAbsolutePath());
       SharedIcons.init();
