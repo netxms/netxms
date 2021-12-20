@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.nxmc.modules.objects.propertypages;
+package org.netxms.ui.eclipse.objectmanager.propertypages;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.SWT;
@@ -24,63 +24,23 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractNode;
-import org.netxms.client.objects.AbstractObject;
-import org.netxms.nxmc.Registry;
-import org.netxms.nxmc.base.jobs.Job;
-import org.netxms.nxmc.base.widgets.LabeledText;
-import org.netxms.nxmc.localization.LocalizationHelper;
-import org.xnap.commons.i18n.I18n;
+import org.netxms.ui.eclipse.jobs.ConsoleJob;
+import org.netxms.ui.eclipse.objectmanager.Activator;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.widgets.LabeledText;
 
 /**
- * "Syslog" property page for node
+ * "SSH" property page for node
  */
-public class Syslog extends ObjectPropertyPage
+public class Syslog extends PropertyPage
 {
-   private static I18n i18n = LocalizationHelper.getI18n(Syslog.class);
-
    private AbstractNode node;
    private LabeledText codepage;
    private NXCSession session;
-
-   /**
-    * Create new page.
-    *
-    * @param object object to edit
-    */
-   public Syslog(AbstractObject object)
-   {
-      super(i18n.tr("Syslog"), object);
-   }
-
-   /**
-    * @see org.netxms.nxmc.modules.objects.propertypages.ObjectPropertyPage#getId()
-    */
-   @Override
-   public String getId()
-   {
-      return "communication.syslog";
-   }
-
-   /**
-    * @see org.netxms.nxmc.modules.objects.propertypages.ObjectPropertyPage#getParentId()
-    */
-   @Override
-   public String getParentId()
-   {
-      return "communication";
-   }
-
-   /**
-    * @see org.netxms.nxmc.modules.objects.propertypages.ObjectPropertyPage#isVisible()
-    */
-   @Override
-   public boolean isVisible()
-   {
-      return object instanceof AbstractNode;
-   }
 
    /**
     * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
@@ -88,8 +48,8 @@ public class Syslog extends ObjectPropertyPage
    @Override
    protected Control createContents(Composite parent)
    {
-      node = (AbstractNode)object;
-      session = Registry.getSession();
+      node = (AbstractNode)getElement().getAdapter(AbstractNode.class);
+      session = ConsoleSharedData.getSession();
 
       Composite dialogArea = new Composite(parent, SWT.NONE);
       GridLayout dialogLayout = new GridLayout();
@@ -100,7 +60,7 @@ public class Syslog extends ObjectPropertyPage
 
       codepage = new LabeledText(dialogArea, SWT.NONE);
       codepage.setLabel("Codepage");
-      codepage.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+      codepage.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
       codepage.setText(node.getSyslogCodepage());
 
       return dialogArea;
@@ -120,9 +80,9 @@ public class Syslog extends ObjectPropertyPage
 
       md.setSyslogCodepage(codepage.getText());
 
-      new Job(String.format(i18n.tr("Updating syslog codepage for node %s"), node.getObjectName()), null) {
+      new ConsoleJob(String.format("Updating syslog codepage for node %s", node.getObjectName()), null, Activator.PLUGIN_ID, null) {
          @Override
-         protected void run(IProgressMonitor monitor) throws Exception
+         protected void runInternal(IProgressMonitor monitor) throws Exception
          {
             session.modifyObject(md);
          }
@@ -130,7 +90,7 @@ public class Syslog extends ObjectPropertyPage
          @Override
          protected String getErrorMessage()
          {
-            return String.format(i18n.tr("Cannot update syslog codepage for node %s"), node.getObjectName());
+            return String.format("Cannot update syslog codepage for node %s", node.getObjectName());
          }
 
          @Override
@@ -152,6 +112,24 @@ public class Syslog extends ObjectPropertyPage
    }
 
    /**
+    * @see org.eclipse.jface.preference.PreferencePage#performOk()
+    */
+   @Override
+   public boolean performOk()
+   {
+      return applyChanges(false);
+   }
+
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performApply()
+    */
+   @Override
+   protected void performApply()
+   {
+      applyChanges(true);
+   }
+
+   /* (non-Javadoc)
     * @see org.eclipse.jface.preference.PreferencePage#performDefaults()
     */
    @Override

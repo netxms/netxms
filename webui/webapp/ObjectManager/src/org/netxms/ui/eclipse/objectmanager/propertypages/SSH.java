@@ -54,7 +54,7 @@ public class SSH extends PropertyPage
    private List<SshKeyPair> keyList;
    private NXCSession session;
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
     */
    @Override
@@ -138,7 +138,6 @@ public class SSH extends PropertyPage
       job.start();  
    }
 
-
    /**
     * Apply changes
     * 
@@ -162,7 +161,7 @@ public class SSH extends PropertyPage
             setValid(true);
          return false;
       }
-      
+
       int selection = sshKey.getSelectionIndex();
       if (selection > 0)
       {
@@ -170,13 +169,14 @@ public class SSH extends PropertyPage
          md.setSshKeyId(d.getId());
       }
       else
+      {
          md.setSshKeyId(0);
-         
+      }
+
       md.setSshProxy(sshProxy.getObjectId());
       md.setSshLogin(sshLogin.getText().trim());
       md.setSshPassword(sshPassword.getText());
 
-      final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
       new ConsoleJob(String.format("Updating SSH settings for node %s", node.getObjectName()), null, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
@@ -208,7 +208,7 @@ public class SSH extends PropertyPage
       return true;
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.preference.PreferencePage#performOk()
     */
    @Override
@@ -217,7 +217,7 @@ public class SSH extends PropertyPage
       return applyChanges(false);
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.preference.PreferencePage#performApply()
     */
    @Override
@@ -226,7 +226,7 @@ public class SSH extends PropertyPage
       applyChanges(true);
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.preference.PreferencePage#performDefaults()
     */
    @Override

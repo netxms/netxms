@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -208,24 +208,24 @@ public class SNMP extends ObjectPropertyPage
       fd.top = new FormAttachment(0, 0);
       snmpPort.setLayoutData(fd);
       
-      snmpSettingsLocked = new Button(dialogArea, SWT.CHECK);
-      snmpSettingsLocked.setText("&Prevent automatic SNMP configuration changes");
-      snmpSettingsLocked.setSelection(node.isSnmpSettingsLocked());
-      fd = new FormData();
-      fd.left = new FormAttachment(0, 0);
-      fd.right = new FormAttachment(100, 0);
-      fd.top = new FormAttachment(snmpProxy, 0, SWT.BOTTOM);
-      snmpSettingsLocked.setLayoutData(fd);
-
       snmpCodepage = new LabeledText(dialogArea, SWT.NONE);
       snmpCodepage.setLabel(i18n.tr("Codepage"));
       snmpCodepage.setText(node.getSNMPCodepage());
       fd = new FormData();
       fd.left = new FormAttachment(0, 0);
       fd.right = new FormAttachment(100, 0);
-      fd.top = new FormAttachment(snmpSettingsLocked, 0, SWT.BOTTOM);
+      fd.top = new FormAttachment(snmpProxy, 0, SWT.BOTTOM);
       snmpCodepage.setLayoutData(fd);
-      
+
+      snmpSettingsLocked = new Button(dialogArea, SWT.CHECK);
+      snmpSettingsLocked.setText(i18n.tr("&Prevent automatic SNMP configuration changes"));
+      snmpSettingsLocked.setSelection(node.isSnmpSettingsLocked());
+      fd = new FormData();
+      fd.left = new FormAttachment(0, 0);
+      fd.right = new FormAttachment(100, 0);
+      fd.top = new FormAttachment(snmpCodepage, 0, SWT.BOTTOM);
+      snmpSettingsLocked.setLayoutData(fd);
+
       return dialogArea;
    }
 
@@ -297,6 +297,7 @@ public class SNMP extends ObjectPropertyPage
       }
       md.setSnmpProxy(snmpProxy.getObjectId());
       md.setSnmpAuthentication(snmpAuthName.getText(), snmpAuth.getSelectionIndex(), snmpAuthPassword.getText(), snmpPriv.getSelectionIndex(), snmpPrivPassword.getText());
+      md.setSNMPCodepage(snmpCodepage.getText());
 
       int flags = node.getFlags();
       if (snmpSettingsLocked.getSelection())
@@ -304,8 +305,6 @@ public class SNMP extends ObjectPropertyPage
       else
          flags &= ~AbstractNode.NF_SNMP_SETTINGS_LOCKED;
       md.setObjectFlags(flags, AbstractNode.NF_SNMP_SETTINGS_LOCKED);
-
-      md.setSNMPCodepage(snmpCodepage.getText());
 
       final NXCSession session = Registry.getSession();
       new Job(String.format("Updating SNMP settings for node %s", node.getObjectName()), null) {
@@ -350,9 +349,9 @@ public class SNMP extends ObjectPropertyPage
       snmpVersion.select(0);
       snmpAuth.select(0);
       snmpPriv.select(0);
-      snmpAuthName.setText("public"); //$NON-NLS-1$
-      snmpAuthPassword.setText(""); //$NON-NLS-1$
-      snmpPrivPassword.setText(""); //$NON-NLS-1$
+      snmpAuthName.setText("public");
+      snmpAuthPassword.setText("");
+      snmpPrivPassword.setText("");
       snmpProxy.setObjectId(0);
       onSnmpVersionChange();
       snmpCodepage.setText("");

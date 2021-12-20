@@ -462,6 +462,17 @@
               </instanceof>
            </enabledWhen>
         </page>
+        <page
+              category="org.netxms.ui.eclipse.objectmanager.propertypages.Communication#10"
+              class="org.netxms.ui.eclipse.objectmanager.propertypages.Syslog"
+              id="org.netxms.ui.eclipse.objectmanager.propertypages.Syslog"
+              name="Syslog">
+           <enabledWhen>
+              <instanceof
+                    value="org.netxms.client.objects.Node">
+              </instanceof>
+           </enabledWhen>
+        </page>
   </extension>
 
    <extension
