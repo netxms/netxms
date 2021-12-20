@@ -184,7 +184,7 @@ static bool SubagentInit(Config *config)
          if (!alreadyRegistered)
          {
             s_rootDirectories->add(folder);
-            nxlog_debug_tag(DEBUG_TAG, 5, _T("Added file manager root directory \"%s\" (%s)"), folder->getFolder(), folder->isReadOnly() ? _T("R/O") : _T("R/W"));
+            nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Added file manager root directory \"%s\" (%s)"), folder->getFolder(), folder->isReadOnly() ? _T("R/O") : _T("R/W"));
          }
          else
          {
@@ -193,7 +193,14 @@ static bool SubagentInit(Config *config)
          }
       }
    }
-   nxlog_debug_tag(DEBUG_TAG, 2, _T("File manager subagent initialized"));
+
+   if (s_rootDirectories->isEmpty())
+   {
+      nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("No root directories in file manager configuration"));
+      return false;
+   }
+
+   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("File manager subagent initialized"));
    return true;
 }
 
