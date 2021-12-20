@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -57,7 +57,7 @@ static APPAGENT_MSG *GetMetric(WCHAR *name, int length)
 #ifdef UNICODE
 	wcslcpy(metricName, name, std::min(length, 256));
 #else
-	WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, name, length, metricName, 256, NULL, NULL);
+	wchar_to_mb(name, length, metricName, 256);
 	metricName[std::min(length, 255)] = 0;
 #endif
 
@@ -76,7 +76,7 @@ static APPAGENT_MSG *GetMetric(WCHAR *name, int length)
 #ifdef UNICODE
 				wcscpy((WCHAR *)msg->payload, value);
 #else
-				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, value, -1, (WCHAR *)msg->payload, len);
+				mb_to_wchar(value, -1, (WCHAR *)msg->payload, len);
 #endif
 			}
 			else
@@ -103,7 +103,7 @@ static BYTE *EncodeString(BYTE *data, const TCHAR *str)
 #ifdef UNICODE
    memcpy(curr, str, len * sizeof(TCHAR));
 #else
-	MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, str, -1, (WCHAR *)curr, len);
+	mb_to_wchar(str, -1, (WCHAR *)curr, len);
 #endif
    curr += len * sizeof(WCHAR);
    return curr;
@@ -120,12 +120,12 @@ static APPAGENT_MSG *ListMetrics()
       msgLen += (int)((_tcslen(s_config.metrics[i].name) + _tcslen(s_config.metrics[i].description) + 2) * sizeof(TCHAR) + sizeof(INT16));
 
    APPAGENT_MSG *msg = NewMessage(APPAGENT_CMD_REQUEST_COMPLETED, APPAGENT_RCC_SUCCESS, msgLen);
-   *((INT16 *)msg->payload) = (INT16)s_config.numMetrics;
+   *((int16_t *)msg->payload) = (int16_t)s_config.numMetrics;
 
-   BYTE *curr = (BYTE *)msg->payload + sizeof(INT16);
+   BYTE *curr = (BYTE *)msg->payload + sizeof(int16_t);
    for(i = 0; i < s_config.numMetrics; i++)
    {
-      *((INT16 *)curr) = (INT16)s_config.metrics[i].type;
+      *((int16_t *)curr) = (int16_t)s_config.metrics[i].type;
       curr = EncodeString(curr + sizeof(INT16), s_config.metrics[i].name);
       EncodeString(curr, s_config.metrics[i].description);
    }
@@ -144,7 +144,7 @@ static void ProcessRequest(NamedPipe *pipe, void *arg)
 	while(true)
 	{
 		APPAGENT_MSG *msg = ReadMessageFromPipe(pipe->handle(), mb);
-		if (msg == NULL)
+		if (msg == nullptr)
 			break;
 		AppAgentWriteLog(7, _T("ProcessRequest: received message %04X"), (unsigned int)msg->command);
 		APPAGENT_MSG *response;
@@ -188,7 +188,7 @@ bool APPAGENT_EXPORTABLE AppAgentInit(APPAGENT_INIT *initData)
 		return false;	// already initialized
 
 	memcpy(&s_config, initData, sizeof(APPAGENT_INIT));
-	if ((s_config.name == NULL) || (s_config.name[0] == 0))
+	if ((s_config.name == nullptr) || (s_config.name[0] == 0))
 		return false;
 
 #if defined(_AIX) || defined(__sun)
@@ -202,20 +202,20 @@ bool APPAGENT_EXPORTABLE AppAgentInit(APPAGENT_INIT *initData)
 /**
  * Pipe listener
  */
-static NamedPipeListener *s_listener = NULL;
+static NamedPipeListener *s_listener = nullptr;
 
 /**
  * Start application agent
  */
 void APPAGENT_EXPORTABLE AppAgentStart()
 {
-   if (!s_initialized || (s_listener != NULL))
+   if (!s_initialized || (s_listener != nullptr))
       return;
 
    TCHAR name[64];
    _sntprintf(name, 64, _T("appagent.%s"), s_config.name);
-   s_listener = NamedPipeListener::create(name, ProcessRequest, NULL, s_config.userId);
-   if (s_listener != NULL)
+   s_listener = NamedPipeListener::create(name, ProcessRequest, nullptr, s_config.userId);
+   if (s_listener != nullptr)
    {
       s_listener->start();
       AppAgentWriteLog(1, _T("Application agent %s started"), s_config.name);
@@ -227,7 +227,7 @@ void APPAGENT_EXPORTABLE AppAgentStart()
  */
 void APPAGENT_EXPORTABLE AppAgentStop()
 {
-	if (s_initialized && (s_listener != NULL))
+	if (s_initialized && (s_listener != nullptr))
 	{
 	   s_listener->stop();
 	   delete_and_null(s_listener);

@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -91,14 +91,14 @@ int APPAGENT_EXPORTABLE AppAgentGetMetric(HPIPE hPipe, const TCHAR *name, TCHAR 
 #ifdef UNICODE
 	wcscpy((WCHAR *)request->payload, name);
 #else
-	MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, name, -1, (WCHAR *)request->payload, (int)strlen(name) + 1);
+	mb_to_wchar(name, -1, (WCHAR *)request->payload, (int)strlen(name) + 1);
 #endif
 
 	if (SendMessageToPipe(hPipe, request))
 	{
 		AppAgentMessageBuffer *mb = new AppAgentMessageBuffer;
 		APPAGENT_MSG *response = ReadMessageFromPipe(hPipe, mb);
-		if (response != NULL)
+		if (response != nullptr)
 		{
 			if (response->command == APPAGENT_CMD_REQUEST_COMPLETED)
 			{
@@ -109,7 +109,7 @@ int APPAGENT_EXPORTABLE AppAgentGetMetric(HPIPE hPipe, const TCHAR *name, TCHAR 
 #ifdef UNICODE
 					wcslcpy(value, (WCHAR *)response->payload, std::min(valueLen, bufferSize));
 #else
-					WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, (WCHAR *)response->payload, valueLen, value, bufferSize, NULL, NULL);
+					wchar_to_mb((WCHAR *)response->payload, valueLen, value, bufferSize);
 					value[std::min(valueLen, bufferSize - 1)] = 0;
 #endif
 				}
