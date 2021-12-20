@@ -64,9 +64,20 @@ static bool H_UpgradeFromV89()
    static const TCHAR *batch =
       _T("ALTER TABLE policy_action_list ADD timer_delay_text varchar(127)\n")
       _T("ALTER TABLE policy_action_list ADD snooze_time_text varchar(127)\n")
-      _T("UPDATE policy_action_list SET timer_delay_text=CAST(timer_delay AS varchar),snooze_time_text=CAST(snooze_time AS varchar)\n")
       _T("<END>");
    CHK_EXEC(SQLBatch(batch));
+   switch(g_dbSyntax)
+   {
+      case DB_SYNTAX_MYSQL:
+         CHK_EXEC(SQLQuery(_T("UPDATE policy_action_list SET timer_delay_text=CAST(timer_delay AS char),snooze_time_text=CAST(snooze_time AS char)")));
+         break;
+      case DB_SYNTAX_ORACLE:
+         CHK_EXEC(SQLQuery(_T("UPDATE policy_action_list SET timer_delay_text=CAST(timer_delay AS varchar(127)),snooze_time_text=CAST(snooze_time AS varchar(127))")));
+         break;
+      default:
+         CHK_EXEC(SQLQuery(_T("UPDATE policy_action_list SET timer_delay_text=CAST(timer_delay AS varchar),snooze_time_text=CAST(snooze_time AS varchar)")));
+         break;
+   }
    CHK_EXEC(DBDropColumn(g_dbHandle, _T("policy_action_list"), _T("timer_delay")));
    CHK_EXEC(DBDropColumn(g_dbHandle, _T("policy_action_list"), _T("snooze_time")));
    CHK_EXEC(DBRenameColumn(g_dbHandle, _T("policy_action_list"), _T("timer_delay_text"), _T("timer_delay")));
