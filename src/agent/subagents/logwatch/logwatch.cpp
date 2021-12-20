@@ -143,10 +143,10 @@ static void LogParserMatch(UINT32 eventCode, const TCHAR *eventName, const TCHAR
          const StringList *variables, UINT64 recordId, UINT32 objectId, int repeatCount,
          time_t timestamp, void *context)
 {
-   int count = cgs->size() + ((eventTag != NULL) ? 1 : 0) + 1 + ((variables != NULL) ? variables->size() : 0);
+   int count = cgs->size() + ((eventTag != nullptr) ? 1 : 0) + 1 + ((variables != nullptr) ? variables->size() : 0);
    TCHAR eventIdText[16], severityText[16], repeatCountText[16], recordIdText[32];
    _sntprintf(repeatCountText, 16, _T("%d"), repeatCount);
-   if (source != NULL)
+   if (source != nullptr)
    {
       _sntprintf(eventIdText, 16, _T("%u"), eventId);
       _sntprintf(severityText, 16, _T("%u"), severity);
@@ -158,7 +158,7 @@ static void LogParserMatch(UINT32 eventCode, const TCHAR *eventName, const TCHAR
    int i;
    for(i = 0; i < cgs->size(); i++)
       list[i] = cgs->get(i);
-   if (eventTag != NULL)
+   if (eventTag != nullptr)
       list[i++] = eventTag;
 
    if (source != nullptr)

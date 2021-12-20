@@ -534,7 +534,7 @@ static void SyslogParserCallback(UINT32 eventCode, const TCHAR *eventName, const
 	nxlog_debug_tag(DEBUG_TAG, 7, _T("Syslog message matched, capture group count = %d, repeat count = %d"), captureGroups->size(), repeatCount);
 
    shared_ptr<Node> node = static_pointer_cast<Node>(FindObjectById(objectId, OBJECT_NODE));
-   if (node == nullptr || (node->getStatus() != STATUS_UNMANAGED) || (g_flags & AF_TRAPS_FROM_UNMANAGED_NODES))
+   if ((node != nullptr) && ((node->getStatus() != STATUS_UNMANAGED) || (g_flags & AF_TRAPS_FROM_UNMANAGED_NODES)))
    {
       StringMap pmap;
       for(int i = 0; i < captureGroups->size(); i++)
@@ -563,7 +563,7 @@ static void CreateParserFromConfig()
 	if (wxml != nullptr)
 	{
 		xml = UTF8StringFromWideString(wxml);
-		free(wxml);
+		MemFree(wxml);
 	}
 	else
 	{
@@ -588,7 +588,7 @@ static void CreateParserFromConfig()
 		{
 			nxlog_write(NXLOG_ERROR, _T("Cannot initialize syslog parser (%s)"), parseError);
 		}
-		free(xml);
+		MemFree(xml);
 		delete parsers;
 	}
 	s_parserLock.unlock();

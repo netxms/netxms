@@ -528,8 +528,7 @@ Event::Event(const EventTemplate *eventTemplate, EventOrigin origin, time_t orig
 /**
  * Create event from template
  */
-Event::Event(const EventTemplate *eventTemplate, EventOrigin origin, time_t originTimestamp, uint32_t sourceId,
-         uint32_t dciId, const StringMap& args)
+Event::Event(const EventTemplate *eventTemplate, EventOrigin origin, time_t originTimestamp, uint32_t sourceId, uint32_t dciId, const StringMap& args)
 {
    init(eventTemplate, origin, originTimestamp, sourceId, dciId);
    auto it = args.begin();
@@ -919,15 +918,6 @@ void ReloadEvents()
 }
 
 /**
- * Callback for adding event tags
- */
-static bool AddEventTags(const TCHAR *tag, Event *event)
-{
-   event->addTag(tag);
-   return true;
-}
-
-/**
  * Post event to given event queue.
  *
  * @param queue event queue to post events to
@@ -975,7 +965,7 @@ static bool RealPostEvent(ObjectQueue<Event> *queue, uint64_t *eventId, uint32_t
          event->addTag(eventTag);
       if (eventTags != nullptr)
       {
-         eventTags->forEach(AddEventTags, event);
+         eventTags->forEach([](const TCHAR *tag, void *event) { static_cast<Event*>(event)->addTag(tag); return true; }, event);
       }
 
       // Using transformation within PostEvent may cause deadlock if called from within locked object or DCI

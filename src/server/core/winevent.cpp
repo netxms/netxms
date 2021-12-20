@@ -274,7 +274,7 @@ static void WindwsEventParserCallback(UINT32 eventCode, const TCHAR *eventName, 
    nxlog_debug_tag(DEBUG_TAG, 7, _T("Windows event message matched, capture group count = %d, repeat count = %d"), captureGroups->size(), repeatCount);
 
    shared_ptr<Node> node = static_pointer_cast<Node>(FindObjectById(objectId, OBJECT_NODE));
-   if (node == nullptr || (node->getStatus() != STATUS_UNMANAGED) || (g_flags & AF_TRAPS_FROM_UNMANAGED_NODES))
+   if ((node != nullptr) && ((node->getStatus() != STATUS_UNMANAGED) || (g_flags & AF_TRAPS_FROM_UNMANAGED_NODES)))
    {
       StringMap pmap;
       for(int i = 0; i < captureGroups->size(); i++)
@@ -283,7 +283,29 @@ static void WindwsEventParserCallback(UINT32 eventCode, const TCHAR *eventName, 
          _sntprintf(name, 32, _T("cg%d"), i + 1);
          pmap.set(name, captureGroups->get(i));
       }
+
+      if (eventTag != nullptr)
+         pmap.set(_T("eventTag"), eventTag);
+
+      if (source != nullptr)
+      {
+         pmap.set(_T("wevtSource"), source);
+         pmap.set(_T("wevtId"), facility);
+         pmap.set(_T("wevtLevel"), severity);
+         pmap.set(_T("wevtRecordId"), recordId);
+      }
+
       pmap.set(_T("repeatCount"), repeatCount);
+
+      if (variables != nullptr)
+      {
+         TCHAR name[32];
+         for (int j = 0; j < variables->size(); j++)
+         {
+            _sntprintf(name, 32, _T("wevtVariable%d"), j + 1);
+            pmap.set(name, variables->get(j));
+         }
+      }
 
       PostEventWithTagAndNames(eventCode, EventOrigin::WINDOWS_EVENT, timestamp, objectId, eventTag, &pmap);
    }
