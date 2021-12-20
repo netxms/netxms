@@ -40,15 +40,6 @@ static THREAD s_threadLogger = INVALID_THREAD_HANDLE;
 static ObjectQueue<Event> s_loggerQueue(4096, Ownership::True);
 
 /**
- * Handler for EnumerateSessions()
- */
-static void BroadcastEvent(ClientSession *session, Event *event)
-{
-   if (session->isAuthenticated())
-      session->onNewEvent(event);
-}
-
-/**
  * Event storm detector thread
  */
 static void EventStormDetector()
@@ -289,7 +280,13 @@ static void ProcessEvent(Event *event, int processorId)
    }
 
    // Send event to all connected clients
-   EnumerateClientSessions(BroadcastEvent, event);
+   if (!(event->getFlags() & EF_DO_NOT_MONITOR))
+   {
+      EnumerateClientSessions([](ClientSession *session, void *event) {
+         if (session->isAuthenticated())
+            session->onNewEvent(static_cast<Event*>(event));
+      }, event);
+   }
 
    // Write event information to debug
    if (nxlog_get_debug_level_tag(DEBUG_TAG) >= 5)

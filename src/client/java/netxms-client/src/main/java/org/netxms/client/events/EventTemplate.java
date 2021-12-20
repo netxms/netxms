@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2019 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,7 +32,8 @@ import org.netxms.client.constants.Severity;
 public class EventTemplate
 {
    public static final int FLAG_WRITE_TO_LOG = 0x0001;
-   
+   public static final int FLAG_DO_NOT_MONITOR = 0x0002;
+
    private long code;
    private UUID guid;
    private String name;
@@ -42,7 +43,7 @@ public class EventTemplate
 	private int flags;
 	private String tagList; 
    private Set<String> tags;
-	
+
 	/**
 	 * Create new empty event template.
 	 * 
@@ -60,7 +61,7 @@ public class EventTemplate
 		tagList= "";
 		tags = new HashSet<String>();
 	}
-	
+
 	/**
 	 * Create event template object from NXCP message.
 	 * 

@@ -23,38 +23,35 @@
 #ifndef _nxevent_h_
 #define _nxevent_h_
 
-//
-// Event flags
-//
-
+/**
+ * Event flags
+ */
 #define EF_LOG                   0x00000001
+#define EF_DO_NOT_MONITOR        0x00000002
 
-
-//
-// Event flags used by client library (has no meaning for server)
-//
-
+/**
+ * Event flags used by client library (has no meaning for server)
+ */
 #define EF_MODIFIED              0x01000000
 #define EF_DELETED               0x02000000
 
+/**
+ * Bit mask for server-side flags
+ */
 #define SERVER_FLAGS_BITS        0x00FFFFFF
 
-
-//
-// Event severity codes
-//
-
+/**
+ * Event severity codes
+ */
 #define EVENT_SEVERITY_NORMAL    0
 #define EVENT_SEVERITY_WARNING   1
 #define EVENT_SEVERITY_MINOR     2
 #define EVENT_SEVERITY_MAJOR     3
 #define EVENT_SEVERITY_CRITICAL  4
 
-
-//
-// System-defined events
-//
-
+/**
+ * System-defined events
+ */
 #define EVENT_NODE_ADDED                            1
 #define EVENT_SUBNET_ADDED                          2
 #define EVENT_INTERFACE_ADDED                       3
