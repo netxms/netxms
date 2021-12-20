@@ -34,7 +34,7 @@ public class Notifications extends PropertyPage
 	private Button sendReport;
 	private Button sendNotify;
 	private Button pdfFormat;
-	private Button xlsFormat;
+	private Button xlsxFormat;
 
    private ReportingJob job = null;
 
@@ -61,7 +61,7 @@ public class Notifications extends PropertyPage
          {
             job.setNotifyOnCompletion(sendNotify.getSelection());
             recursiveSetEnabled(emailGroup, sendNotify.getSelection());
-            xlsFormat.setEnabled(sendReport.isEnabled() && sendReport.getSelection());
+            xlsxFormat.setEnabled(sendReport.isEnabled() && sendReport.getSelection());
             pdfFormat.setEnabled(sendReport.isEnabled() && sendReport.getSelection());
             emailGroup.layout(true, true);
          }
@@ -133,7 +133,7 @@ public class Notifications extends PropertyPage
          @Override
          public void widgetSelected(SelectionEvent e)
          {
-            xlsFormat.setEnabled(sendReport.getSelection());
+            xlsxFormat.setEnabled(sendReport.getSelection());
             pdfFormat.setEnabled(sendReport.getSelection());
          }
       });
@@ -143,9 +143,9 @@ public class Notifications extends PropertyPage
 		pdfFormat.setText("PDF"); //$NON-NLS-1$
 		pdfFormat.setSelection(true);
 		
-		xlsFormat = new Button(attachmentGroup, SWT.RADIO);
-		xlsFormat.setEnabled(sendReport.getSelection());
-		xlsFormat.setText("XLS"); //$NON-NLS-1$
+		xlsxFormat = new Button(attachmentGroup, SWT.RADIO);
+		xlsxFormat.setEnabled(sendReport.getSelection());
+      xlsxFormat.setText("XLSX"); //$NON-NLS-1$
 
 		recursiveSetEnabled(emailGroup, false);
 		return dialogArea;
@@ -173,7 +173,7 @@ public class Notifications extends PropertyPage
 			listViewer.setInput(job.getEmailRecipients().toArray());
 		}
 	}
-	
+
 	/**
 	 * Remove selected mails
 	 */
@@ -209,7 +209,7 @@ public class Notifications extends PropertyPage
 	public boolean performOk()
 	{
 	   if (sendReport.getSelection())
-	      job.setRenderFormat(pdfFormat.getSelection() ? ReportRenderFormat.PDF : ReportRenderFormat.XLS);
+         job.setRenderFormat(pdfFormat.getSelection() ? ReportRenderFormat.PDF : ReportRenderFormat.XLSX);
 	   else
 	      job.setRenderFormat(ReportRenderFormat.NONE);
 		return true;

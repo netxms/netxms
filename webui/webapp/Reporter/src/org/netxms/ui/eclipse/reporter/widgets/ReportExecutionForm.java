@@ -115,7 +115,7 @@ public class ReportExecutionForm extends Composite
 
 	private Action actionDeleteSchedule;
    private Action actionDeleteResult;
-   private Action actionRenderXLS;
+   private Action actionRenderXLSX;
    private Action actionRenderPDF;
 
 	/**
@@ -270,14 +270,14 @@ public class ReportExecutionForm extends Composite
       };
       actionRenderPDF.setEnabled(false);
 
-      actionRenderXLS = new Action("Render to &XLS", Activator.getImageDescriptor("icons/xls.png")) {
+      actionRenderXLSX = new Action("Render to &XLSX", Activator.getImageDescriptor("icons/xls.png")) {
          @Override
          public void run()
          {
-            renderSelectedResult(ReportRenderFormat.XLS);
+            renderSelectedResult(ReportRenderFormat.XLSX);
          }
       };
-      actionRenderXLS.setEnabled(false);
+      actionRenderXLSX.setEnabled(false);
 	}
 	
 	/**
@@ -398,7 +398,7 @@ public class ReportExecutionForm extends Composite
             IStructuredSelection selection = resultList.getStructuredSelection();
             actionDeleteResult.setEnabled(selection.size() > 0);
             actionRenderPDF.setEnabled(selection.size() == 1);
-            actionRenderXLS.setEnabled(selection.size() == 1);
+            actionRenderXLSX.setEnabled(selection.size() == 1);
          }
       });
 	}
@@ -432,7 +432,7 @@ public class ReportExecutionForm extends Composite
       if ((selection.size() == 1) && ((ReportResult)selection.getFirstElement()).isSuccess())
       {
          manager.add(actionRenderPDF);
-         manager.add(actionRenderXLS);
+         manager.add(actionRenderXLSX);
          manager.add(new Separator());
       }
       manager.add(actionDeleteResult);

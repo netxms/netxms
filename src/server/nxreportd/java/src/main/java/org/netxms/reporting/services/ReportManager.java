@@ -67,12 +67,12 @@ import net.sf.jasperreports.engine.JasperCompileManager;
 import net.sf.jasperreports.engine.JasperFillManager;
 import net.sf.jasperreports.engine.JasperReport;
 import net.sf.jasperreports.engine.export.JRPdfExporter;
-import net.sf.jasperreports.engine.export.JRXlsExporter;
+import net.sf.jasperreports.engine.export.ooxml.JRXlsxExporter;
 import net.sf.jasperreports.engine.query.QueryExecuterFactory;
 import net.sf.jasperreports.engine.util.JRLoader;
 import net.sf.jasperreports.export.SimpleExporterInput;
 import net.sf.jasperreports.export.SimpleOutputStreamExporterOutput;
-import net.sf.jasperreports.export.SimpleXlsReportConfiguration;
+import net.sf.jasperreports.export.SimpleXlsxReportConfiguration;
 
 /**
  * Report manager
@@ -919,8 +919,8 @@ public class ReportManager
             case PDF:
                renderPDF(dataFile, outputFile);
                break;
-            case XLS:
-               renderXLS(dataFile, outputFile, loadReport(reportId));
+            case XLSX:
+               renderXLSX(dataFile, outputFile, loadReport(reportId));
                break;
             default:
                logger.error("Unsupported rendering format " + format);
@@ -952,16 +952,16 @@ public class ReportManager
    }
 
    /**
-    * Render report to XLS format.
+    * Render report to XLSX format.
     *
     * @param inputFile input file
     * @param outputFile output file
     * @param report report object
     * @throws Exception on error
     */
-   private static void renderXLS(File inputFile, File outputFile, JasperReport report) throws Exception
+   private static void renderXLSX(File inputFile, File outputFile, JasperReport report) throws Exception
    {
-      SimpleXlsReportConfiguration configuration = new SimpleXlsReportConfiguration();
+      SimpleXlsxReportConfiguration configuration = new SimpleXlsxReportConfiguration();
       if (report != null)
          configuration.setSheetNames(new String[] { prepareXlsSheetName(report.getName()) });
       configuration.setIgnoreCellBorder(false);
@@ -977,7 +977,7 @@ public class ReportManager
       configuration.setFontSizeFixEnabled(true);
       configuration.setIgnoreGraphics(false);
 
-      JRXlsExporter exporter = new JRXlsExporter();
+      JRXlsxExporter exporter = new JRXlsxExporter();
       exporter.setConfiguration(configuration);
       exporter.setExporterInput(new SimpleExporterInput(inputFile));
       exporter.setExporterOutput(new SimpleOutputStreamExporterOutput(new FileOutputStream(outputFile)));
