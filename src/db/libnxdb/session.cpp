@@ -294,7 +294,7 @@ bool LIBNXDB_EXPORTABLE DBQueryEx(DB_HANDLE hConn, const TCHAR *szQuery, TCHAR *
    hConn->m_mutexTransLock->unlock();
 
 #ifndef UNICODE
-	WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, wcErrorText, -1, errorText, DBDRV_MAX_ERROR_TEXT, NULL, NULL);
+	wchar_to_mb(wcErrorText, -1, errorText, DBDRV_MAX_ERROR_TEXT);
 	errorText[DBDRV_MAX_ERROR_TEXT - 1] = 0;
 #endif
 
@@ -307,9 +307,9 @@ bool LIBNXDB_EXPORTABLE DBQueryEx(DB_HANDLE hConn, const TCHAR *szQuery, TCHAR *
 	}
 
 #ifndef UNICODE
-   free(pwszQuery);
+   MemFree(pwszQuery);
 #endif
-   
+
    return dwResult == DBERR_SUCCESS;
 #undef pwszQuery
 #undef wcErrorText
@@ -968,8 +968,7 @@ TCHAR LIBNXDB_EXPORTABLE *DBGetField(DB_UNBUFFERED_RESULT hResult, int iColumn, 
 		pwszBuffer = MemAllocStringW(iBufSize);
 		if (hResult->m_driver->m_fpDrvGetFieldUnbuffered(hResult->m_data, iColumn, pwszBuffer, (int)iBufSize) != NULL)
 		{
-			WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR,
-									  pwszBuffer, -1, pBuffer, iBufSize, NULL, NULL);
+			wchar_to_mb(pwszBuffer, -1, pBuffer, iBufSize);
 			pszRet = pBuffer;
 		}
 		else
@@ -1543,7 +1542,7 @@ bool LIBNXDB_EXPORTABLE DBExecuteEx(DB_STATEMENT hStmt, TCHAR *errorText)
    hConn->m_mutexTransLock->unlock();
 
 #ifndef UNICODE
-	WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, wcErrorText, -1, errorText, DBDRV_MAX_ERROR_TEXT, NULL, NULL);
+	wchar_to_mb(wcErrorText, -1, errorText, DBDRV_MAX_ERROR_TEXT);
 	errorText[DBDRV_MAX_ERROR_TEXT - 1] = 0;
 #endif
 
