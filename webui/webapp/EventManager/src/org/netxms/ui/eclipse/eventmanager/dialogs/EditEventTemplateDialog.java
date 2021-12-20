@@ -27,6 +27,7 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.constants.Severity;
 import org.netxms.client.events.EventTemplate;
@@ -51,6 +52,7 @@ public class EditEventTemplateDialog extends Dialog
 	private LabeledText description;
 	private Combo severity;
 	private Button optionLog;
+   private Button optionDoNotMonitor;
 	
 	/**
 	 * Default constructor.
@@ -66,9 +68,9 @@ public class EditEventTemplateDialog extends Dialog
 		this.isNew = isNew;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createDialogArea(Composite parent)
 	{
@@ -104,7 +106,7 @@ public class EditEventTemplateDialog extends Dialog
       severity.add(StatusDisplayInfo.getStatusText(Severity.MAJOR));
       severity.add(StatusDisplayInfo.getStatusText(Severity.CRITICAL));
       severity.select(eventTemplate.getSeverity().getValue());
-      
+
       name = new LabeledText(dialogArea, SWT.NONE);
       name.setLabel(Messages.get().EditEventTemplateDialog_EventName);
       name.setText(eventTemplate.getName());
@@ -112,17 +114,30 @@ public class EditEventTemplateDialog extends Dialog
       gd.horizontalSpan = 2;
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
+      gd.verticalAlignment = SWT.TOP;
       name.setLayoutData(gd);
-      
-      optionLog = new Button(dialogArea, SWT.CHECK);
+
+      Group optionGroup = new Group(dialogArea, SWT.NONE);
+      optionGroup.setText("Options");
+      GridLayout optionLayout = new GridLayout();
+      optionGroup.setLayout(optionLayout);
+
+      optionLog = new Button(optionGroup, SWT.CHECK);
       optionLog.setText(Messages.get().EditEventTemplateDialog_WriteToLog);
       optionLog.setSelection((eventTemplate.getFlags() & EventTemplate.FLAG_WRITE_TO_LOG) != 0);
       gd = new GridData();
-      gd.grabExcessHorizontalSpace = false;
-      gd.horizontalAlignment = SWT.RIGHT;
-      gd.verticalAlignment = SWT.BOTTOM;
+      gd.horizontalAlignment = SWT.LEFT;
+      gd.verticalAlignment = SWT.CENTER;
       optionLog.setLayoutData(gd);
-      
+
+      optionDoNotMonitor = new Button(optionGroup, SWT.CHECK);
+      optionDoNotMonitor.setText("Hide from event &monitor");
+      optionDoNotMonitor.setSelection((eventTemplate.getFlags() & EventTemplate.FLAG_DO_NOT_MONITOR) != 0);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.LEFT;
+      gd.verticalAlignment = SWT.CENTER;
+      optionDoNotMonitor.setLayoutData(gd);
+
       message = new LabeledText(dialogArea, SWT.NONE);
       message.setLabel(Messages.get().EditEventTemplateDialog_Message);
       message.setText(eventTemplate.getMessage());
@@ -132,12 +147,12 @@ public class EditEventTemplateDialog extends Dialog
       gd.horizontalAlignment = SWT.FILL;
       gd.widthHint = 450;
       message.setLayoutData(gd);
-		
+
       tags = new LabeledText(dialogArea, SWT.NONE);
       tags.setLabel("Tags");
       tags.setText(eventTemplate.getTagList());
       gd = new GridData();
-      gd.horizontalSpan = 2;
+      gd.horizontalSpan = 3;
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
       gd.widthHint = 450;
@@ -147,20 +162,20 @@ public class EditEventTemplateDialog extends Dialog
       description.setLabel(Messages.get().EditEventTemplateDialog_Description);
       description.setText(eventTemplate.getDescription());
       gd = new GridData();
-      gd.horizontalSpan = 2;
+      gd.horizontalSpan = 3;
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
       gd.heightHint = 200;
       gd.widthHint = 450;
       gd.verticalAlignment = SWT.FILL;
       description.setLayoutData(gd);
-		
+
 		return dialogArea;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#okPressed()
-	 */
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#okPressed()
+    */
 	@Override
 	protected void okPressed()
 	{
@@ -168,21 +183,21 @@ public class EditEventTemplateDialog extends Dialog
 		eventTemplate.setSeverity(Severity.getByValue(severity.getSelectionIndex()));
 		eventTemplate.setMessage(message.getText());
 		eventTemplate.setDescription(description.getText());
-		eventTemplate.setFlags(optionLog.getSelection() ? EventTemplate.FLAG_WRITE_TO_LOG : 0);
-		
+      eventTemplate.setFlags((optionLog.getSelection() ? EventTemplate.FLAG_WRITE_TO_LOG : 0) | (optionDoNotMonitor.getSelection() ? EventTemplate.FLAG_DO_NOT_MONITOR : 0));
+
 		HashSet<String> tagSet = new HashSet<String>();
 		for(String s : tags.getText().split(","))
 		{
 		   tagSet.add(s.trim());
 		}
 		eventTemplate.setTags(tagSet);
-		
+
 		super.okPressed();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
-	 */
+   /**
+    * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
+    */
 	@Override
 	protected void configureShell(Shell newShell)
 	{

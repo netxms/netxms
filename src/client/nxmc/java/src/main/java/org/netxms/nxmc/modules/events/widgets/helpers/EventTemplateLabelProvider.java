@@ -59,23 +59,24 @@ public class EventTemplateLabelProvider extends LabelProvider implements ITableL
 	@Override
 	public String getColumnText(Object element, int columnIndex)
 	{
+      EventTemplate eventTemplate = (EventTemplate)element;
 		switch(columnIndex)
 		{
 			case EventTemplateList.COLUMN_CODE:
-				return Long.toString(((EventTemplate)element).getCode());
+            return Long.toString(eventTemplate.getCode());
 			case EventTemplateList.COLUMN_NAME:
-				return ((EventTemplate)element).getName();
+            return eventTemplate.getName();
 			case EventTemplateList.COLUMN_SEVERITY_OR_TAGS:
             if (isDialog)
-	            return ((EventTemplate)element).getTagList();			      
+               return eventTemplate.getTagList();
 			   else
-			      return StatusDisplayInfo.getStatusText(((EventTemplate)element).getSeverity());
+               return StatusDisplayInfo.getStatusText(eventTemplate.getSeverity());
 			case EventTemplateList.COLUMN_FLAGS:
-            return ((((EventTemplate)element).getFlags() & EventTemplate.FLAG_WRITE_TO_LOG) != 0) ? "L" : "-";
+            return (((eventTemplate.getFlags() & EventTemplate.FLAG_WRITE_TO_LOG) != 0) ? "L" : "-") + (((eventTemplate.getFlags() & EventTemplate.FLAG_DO_NOT_MONITOR) != 0) ? "H" : "-");
 			case EventTemplateList.COLUMN_MESSAGE:
-            return ((EventTemplate)element).getMessage();
+            return eventTemplate.getMessage();
          case EventTemplateList.COLUMN_TAGS:
-            return ((EventTemplate)element).getTagList();
+            return eventTemplate.getTagList();
 		}
 		return null;
 	}
