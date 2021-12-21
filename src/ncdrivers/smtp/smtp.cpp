@@ -168,7 +168,7 @@ SmtpDriver *SmtpDriver::createInstance(Config *config)
       { _T("Port"), CT_LONG, 0, 0, 0, 0, &(driver->m_port) },                                                        // 25
       { _T("RetryCount"), CT_LONG, 0, 0, 0, 0, &(driver->m_retryCount) },                                            // 1
       { _T("Server"), CT_STRING, 0, 0, sizeof(driver->m_server) / sizeof(TCHAR), 0, driver->m_server },              // localhost
-      { _T("TLSMode"), CT_STRING, 0, 0, 9, 0, tlsModeBuff },                                                         // TLSMode::NONE
+      { _T("TLSMode"), CT_STRING, 0, 0, 9, 0, tlsModeBuff },                                                         // NONE
       { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, nullptr }
    };
 
@@ -211,9 +211,9 @@ SmtpDriver::SmtpDriver()
    m_retryCount = 1;
    m_port = 0;
    m_localHostName[0] = 0;
-   strcmp(m_fromName, "NetXMS Server");
-   strcmp(m_fromAddr, "netxms@localhost");
-   strcmp(m_encoding, "utf8");
+   strcpy(m_fromName, "NetXMS Server");
+   strcpy(m_fromAddr, "netxms@localhost");
+   strcpy(m_encoding, "utf8");
    m_isHtml = false;
    m_tlsMode = TLSMode::NONE;
    m_enableSSLInfoCallback = true;
