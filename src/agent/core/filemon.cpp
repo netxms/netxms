@@ -33,7 +33,7 @@
 struct FileInfo
 {
    BYTE hash[SHA256_DIGEST_SIZE];
-   uint32_t modTime; // Last modification time
+   time_t modTime; // Last modification time
    uint32_t permissions;
    bool checkPassed; // Flag to identity files that have passed checks for monitoring mulpiple path occurences and deleted files
 };
@@ -57,7 +57,7 @@ static void SaveToDB(const TCHAR *path, const FileInfo *fi)
          TCHAR hashAsString[SHA256_DIGEST_SIZE * 2 + 1];
          DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, path, DB_BIND_STATIC);
          DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, BinToStr(fi->hash, SHA256_DIGEST_SIZE, hashAsString), DB_BIND_STATIC);
-         DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, fi->modTime);
+         DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, static_cast<int64_t>(fi->modTime));
          DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, fi->permissions);
          DBExecute(hStmt);
          DBFreeStatement(hStmt);
@@ -104,7 +104,7 @@ static bool LoadFromDB()
                DBGetField(result, row, 1, hashAsString, SHA256_DIGEST_SIZE * 2 + 1);
                StrToBin(hashAsString, fi.hash, SHA256_DIGEST_SIZE);
 
-               fi.modTime = DBGetFieldLong(result, row, 2);
+               fi.modTime = static_cast<time_t>(DBGetFieldInt64(result, row, 2));
                fi.permissions = DBGetFieldLong(result, row, 3);
                fi.checkPassed = false;
                s_files.set(path, new FileInfo(fi));

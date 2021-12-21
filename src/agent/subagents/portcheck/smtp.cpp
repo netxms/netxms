@@ -113,7 +113,7 @@ int CheckSMTP(char *szAddr, const InetAddress& addr, short nPort, char *szTo, UI
 							{
 								CHECK_OK("250")
 								{
-									if (NetWrite(nSd, "DATA\r\n", 6) > 0)
+									if (NetWrite(nSd, "DATA\r\n", 6))
 									{
 										CHECK_OK("354")
 										{
