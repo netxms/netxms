@@ -86,9 +86,8 @@ int CheckSSH(char *szAddr, const InetAddress& addr, short nPort, char *szUser, c
 
 				if (sscanf(szBuff, "SSH-%d.%d-", &nMajor, &nMinor) == 2)
 				{
-					snprintf(szTmp, sizeof(szTmp), "SSH-%d.%d-NetXMS\n",
-							nMajor, nMinor);
-					if (NetWrite(hSocket, szTmp, (int)strlen(szTmp)) > 0)
+					snprintf(szTmp, sizeof(szTmp), "SSH-%d.%d-NetXMS\n", nMajor, nMinor);
+					if (NetWrite(hSocket, szTmp, (int)strlen(szTmp)))
 					{
 						rc = PC_ERR_NONE;
 					}
