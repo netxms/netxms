@@ -159,7 +159,7 @@ SmtpDriver *SmtpDriver::createInstance(Config *config)
    TCHAR tlsModeBuff[9] = _T("NONE");
 
    NX_CFG_TEMPLATE configTemplate[] = {
-      { _T("EnableSSLTrace"), CT_BOOLEAN, 0, 0, 1, 0, &driver->m_enableSSLInfoCallback },                        // true
+      { _T("EnableSSLTrace"), CT_BOOLEAN, 0, 0, 1, 0, &driver->m_enableSSLInfoCallback },                        // false
       { _T("FromAddr"), CT_MB_STRING, 0, 0, sizeof(driver->m_fromAddr) / sizeof(TCHAR), 0, driver->m_fromAddr }, // netxms@localhost
       { _T("FromName"), CT_MB_STRING, 0, 0, sizeof(driver->m_fromName) / sizeof(TCHAR), 0, driver->m_fromName }, // NetXMS Server
       { _T("IsHTML"), CT_BOOLEAN, 0, 0, 1, 0, &driver->m_isHtml },                                               // false
@@ -216,7 +216,7 @@ SmtpDriver::SmtpDriver()
    strcpy(m_encoding, "utf8");
    m_isHtml = false;
    m_tlsMode = TLSMode::NONE;
-   m_enableSSLInfoCallback = true;
+   m_enableSSLInfoCallback = false;
 }
 
 MAIL_ENVELOPE *SmtpDriver::prepareMail(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body)
@@ -470,16 +470,16 @@ static void SSLInfoCallback(const SSL *ssl, int where, int ret)
 {
    if (where & SSL_CB_ALERT)
    {
-      nxlog_debug_tag(_T("ssl"), 4, _T("SSL %s alert: %hs (%hs)"), (where & SSL_CB_READ) ? _T("read") : _T("write"),
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("SSL %s alert: %hs (%hs)"), (where & SSL_CB_READ) ? _T("read") : _T("write"),
                       SSL_alert_type_string_long(ret), SSL_alert_desc_string_long(ret));
    }
    else if (where & SSL_CB_HANDSHAKE_START)
    {
-      nxlog_debug_tag(_T("ssl"), 6, _T("SSL handshake start (%hs)"), SSL_state_string_long(ssl));
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("SSL handshake start (%hs)"), SSL_state_string_long(ssl));
    }
    else if (where & SSL_CB_HANDSHAKE_DONE)
    {
-      nxlog_debug_tag(_T("ssl"), 6, _T("SSL handshake done (%hs)"), SSL_state_string_long(ssl));
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("SSL handshake done (%hs)"), SSL_state_string_long(ssl));
    }
    else
    {
@@ -494,14 +494,14 @@ static void SSLInfoCallback(const SSL *ssl, int where, int ret)
 
       if (where & SSL_CB_LOOP)
       {
-         nxlog_debug_tag(_T("ssl"), 6, _T("%s: %hs"), prefix, SSL_state_string_long(ssl));
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("%s: %hs"), prefix, SSL_state_string_long(ssl));
       }
       else if (where & SSL_CB_EXIT)
       {
          if (ret == 0)
-            nxlog_debug_tag(_T("ssl"), 3, _T("%s: failed in %hs"), prefix, SSL_state_string_long(ssl));
+            nxlog_debug_tag(DEBUG_TAG, 3, _T("%s: failed in %hs"), prefix, SSL_state_string_long(ssl));
          else if (ret < 0)
-            nxlog_debug_tag(_T("ssl"), 3, _T("%s: error in %hs"), prefix, SSL_state_string_long(ssl));
+            nxlog_debug_tag(DEBUG_TAG, 3, _T("%s: error in %hs"), prefix, SSL_state_string_long(ssl));
       }
    }
 }
