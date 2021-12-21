@@ -204,8 +204,11 @@ public class Dot1xStatusView extends ObjectView
    @Override
    public boolean isValidForContext(Object context)
    {
-      return (context != null) && ((context instanceof Container) || (context instanceof Node) || (context instanceof Cluster)
-            || (context instanceof Rack) || (context instanceof Subnet) || (context instanceof Zone));
+      if (context == null)
+         return false;
+      if (context instanceof Node)
+         return ((Node)context).is8021xSupported();
+      return (context instanceof Container) || (context instanceof Cluster) || (context instanceof Rack) || (context instanceof Subnet) || (context instanceof Zone);
    }
 
    /**

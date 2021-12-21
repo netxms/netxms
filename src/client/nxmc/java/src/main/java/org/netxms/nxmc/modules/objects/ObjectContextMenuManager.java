@@ -18,21 +18,28 @@
  */
 package org.netxms.nxmc.modules.objects;
 
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.dialogs.InputDialog;
 import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Shell;
+import org.netxms.client.NXCSession;
+import org.netxms.client.ScheduledTask;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.views.ViewPlacement;
 import org.netxms.nxmc.base.widgets.helpers.MenuContributionItem;
 import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.objects.dialogs.MaintanenceScheduleDialog;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -44,6 +51,11 @@ public class ObjectContextMenuManager extends MenuManager
 
    private View view;
    private ISelectionProvider selectionProvider;
+   private Action actionManage;
+   private Action actionUnmanage;
+   private Action actionEnterMaintenance;
+   private Action actionLeaveMaintenance;
+   private Action actionScheduleMaintenance;
    private Action actionProperties;
 
    public ObjectContextMenuManager(View view, ISelectionProvider selectionProvider)
@@ -65,7 +77,47 @@ public class ObjectContextMenuManager extends MenuManager
     */
    private void createActions()
    {
-      actionProperties = new Action("&Properties...") {
+      actionManage = new Action(i18n.tr("&Manage")) {
+         @Override
+         public void run()
+         {
+            changeObjectManagementState(true);
+         }
+      };
+
+      actionUnmanage = new Action(i18n.tr("&Unmanage")) {
+         @Override
+         public void run()
+         {
+            changeObjectManagementState(false);
+         }
+      };
+
+      actionEnterMaintenance = new Action(i18n.tr("&Enter maintenance mode...")) {
+         @Override
+         public void run()
+         {
+            changeObjectMaintenanceState(true);
+         }
+      };
+
+      actionLeaveMaintenance = new Action(i18n.tr("&Leave maintenance mode")) {
+         @Override
+         public void run()
+         {
+            changeObjectMaintenanceState(false);
+         }
+      };
+
+      actionScheduleMaintenance = new Action(i18n.tr("&Schedule maintenance...")) {
+         @Override
+         public void run()
+         {
+            scheduleMaintenance();
+         }
+      };
+
+      actionProperties = new Action(i18n.tr("&Properties...")) {
          @Override
          public void run()
          {
@@ -79,9 +131,26 @@ public class ObjectContextMenuManager extends MenuManager
     */
    protected void fillContextMenu()
    {
-      MenuManager createMenu = new ObjectCreateMenuManager(getShell(), view, getObjectFromSelection());
-      if (!createMenu.isEmpty())
-         add(createMenu);
+      boolean singleObject = ((IStructuredSelection)selectionProvider.getSelection()).size() == 1;
+
+      if (singleObject)
+      {
+         MenuManager createMenu = new ObjectCreateMenuManager(getShell(), view, getObjectFromSelection());
+         if (!createMenu.isEmpty())
+         {
+            add(createMenu);
+            add(new Separator());
+         }
+      }
+
+      add(actionManage);
+      add(actionUnmanage);
+
+      MenuManager maintenanceMenu = new MenuManager(i18n.tr("&Maintenance"));
+      maintenanceMenu.add(actionEnterMaintenance);
+      maintenanceMenu.add(actionLeaveMaintenance);
+      maintenanceMenu.add(actionScheduleMaintenance);
+      add(maintenanceMenu);
 
       final Menu toolsMenu = ObjectMenuFactory.createToolsMenu((IStructuredSelection)selectionProvider.getSelection(), getMenu(), null, new ViewPlacement(view));
       if (toolsMenu != null)
@@ -97,8 +166,11 @@ public class ObjectContextMenuManager extends MenuManager
          add(new MenuContributionItem(i18n.tr("&Poll"), pollsMenu));
       }
 
-      add(new Separator());
-      add(actionProperties);
+      if (singleObject)
+      {
+         add(new Separator());
+         add(actionProperties);
+      }
    }
 
    /**
@@ -135,5 +207,113 @@ public class ObjectContextMenuManager extends MenuManager
       if (selection.size() != 1)
          return 0;
       return ((AbstractObject)selection.getFirstElement()).getObjectId();
+   }
+
+   /**
+    * Change management status for selected objects
+    *
+    * @param managed true to manage objects
+    */
+   private void changeObjectManagementState(final boolean managed)
+   {
+      final Object[] objects = ((IStructuredSelection)selectionProvider.getSelection()).toArray();
+      final NXCSession session = Registry.getSession();
+      new Job(i18n.tr("Change object management status"), view) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            for(Object o : objects)
+            {
+               if (o instanceof AbstractObject)
+                  session.setObjectManaged(((AbstractObject)o).getObjectId(), managed);
+               else if (o instanceof ObjectWrapper)
+                  session.setObjectManaged(((ObjectWrapper)o).getObjectId(), managed);
+            }
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return i18n.tr("Cannot change object management status");
+         }
+      }.start();
+   }
+
+   /**
+    * Change maintenance state for selected objects
+    *
+    * @param enter true to enter maintenance
+    */
+   private void changeObjectMaintenanceState(final boolean enter)
+   {
+      final String comments;
+      if (enter)
+      {
+         InputDialog dlg = new InputDialog(null, i18n.tr("Enter Maintenance"), i18n.tr("Additional comments"), "", null);
+         if (dlg.open() != Window.OK)
+            return;
+         comments = dlg.getValue().trim();
+      }
+      else
+      {
+         comments = null;
+      }
+
+      final Object[] objects = ((IStructuredSelection)selectionProvider.getSelection()).toArray();
+      final NXCSession session = Registry.getSession();
+      new Job(i18n.tr("Change object maintenance state"), view) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            for(Object o : objects)
+            {
+               if (o instanceof AbstractObject)
+                  session.setObjectMaintenanceMode(((AbstractObject)o).getObjectId(), enter, comments);
+               else if (o instanceof ObjectWrapper)
+                  session.setObjectMaintenanceMode(((ObjectWrapper)o).getObjectId(), enter, comments);
+            }
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return i18n.tr("Cannot change object maintenance state");
+         }
+      }.start();
+   }
+
+   /**
+    * Schedule maintenance
+    */
+   private void scheduleMaintenance()
+   {
+      final MaintanenceScheduleDialog dialog = new MaintanenceScheduleDialog(view.getWindow().getShell());
+      if (dialog.open() != Window.OK)
+         return;
+
+      final Object[] objects = ((IStructuredSelection)selectionProvider.getSelection()).toArray();
+      final NXCSession session = Registry.getSession();
+      new Job(i18n.tr("Schedule maintenance"), view) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            for(Object o : objects)
+            {
+               if (o instanceof AbstractObject)
+               {
+                  ScheduledTask taskStart = new ScheduledTask("Maintenance.Enter", "", "", dialog.getComments(), dialog.getStartTime(), ScheduledTask.SYSTEM, ((AbstractObject)o).getObjectId());
+                  ScheduledTask taskEnd = new ScheduledTask("Maintenance.Leave", "", "", dialog.getComments(), dialog.getEndTime(), ScheduledTask.SYSTEM, ((AbstractObject)o).getObjectId());
+                  session.addScheduledTask(taskStart);
+                  session.addScheduledTask(taskEnd);
+               }
+            }
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return i18n.tr("Cannot schedule maintenance");
+         }
+      }.start();
    }
 }

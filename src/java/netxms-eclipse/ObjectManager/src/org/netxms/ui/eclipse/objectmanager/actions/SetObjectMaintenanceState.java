@@ -42,7 +42,7 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 class SetObjectMaintenanceState extends AbstractHandler
 {
    private boolean enter;
-   
+
    /**
     * @param manage
     */
@@ -52,7 +52,7 @@ class SetObjectMaintenanceState extends AbstractHandler
       this.enter = enter;
    }
    
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.core.commands.AbstractHandler#execute(org.eclipse.core.commands.ExecutionEvent)
     */
    @Override
@@ -75,7 +75,7 @@ class SetObjectMaintenanceState extends AbstractHandler
       {
          comments = null;
       }
-      
+
       final Object[] objects = ((IStructuredSelection)selection).toArray();
       final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
       new ConsoleJob(Messages.get().SetObjectManagementState_JobTitle, null, Activator.PLUGIN_ID, null) {
