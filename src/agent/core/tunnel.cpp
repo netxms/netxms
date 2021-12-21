@@ -1499,12 +1499,12 @@ ssize_t Tunnel::sendChannelData(uint32_t id, const void *data, size_t len)
 
 /**
  * Create tunnel object from configuration record
- * Record format is address[:port][,certificate[,password]]
+ * Record format is address[:port][,certificate[%password]]
  */
 Tunnel *Tunnel::createFromConfig(const TCHAR *config)
 {
    StringBuffer sb(config);
-   
+
    // Get certificate option
    TCHAR *certificate = nullptr, *password = nullptr;
    TCHAR *p = _tcschr(sb.getBuffer(), _T(','));

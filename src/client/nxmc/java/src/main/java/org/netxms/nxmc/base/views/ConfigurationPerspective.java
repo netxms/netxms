@@ -132,6 +132,11 @@ public class ConfigurationPerspective extends Perspective
             imageCache.dispose();
             super.dispose();
          }
+
+         @Override
+         public void setSelection(Object selection)
+         {
+         }
       });
    }
 

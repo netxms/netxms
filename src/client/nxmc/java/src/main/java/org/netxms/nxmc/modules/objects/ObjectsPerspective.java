@@ -101,6 +101,7 @@ public abstract class ObjectsPerspective extends Perspective
    {
       super.configurePerspective(configuration);
       configuration.hasNavigationArea = true;
+      configuration.enableNavigationHistory = true;
       configuration.hasSupplementalArea = false;
       configuration.multiViewNavigationArea = false;
       configuration.multiViewMainArea = true;

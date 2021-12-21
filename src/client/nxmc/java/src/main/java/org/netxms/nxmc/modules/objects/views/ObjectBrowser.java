@@ -22,6 +22,7 @@ import java.util.HashSet;
 import java.util.Set;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.ISelectionProvider;
+import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
@@ -56,6 +57,16 @@ public class ObjectBrowser extends NavigationView
    public ISelectionProvider getSelectionProvider()
    {
       return (objectTree != null) ? objectTree.getSelectionProvider() : null;
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.NavigationView#setSelection(java.lang.Object)
+    */
+   @Override
+   public void setSelection(Object selection)
+   {
+      objectTree.getTreeViewer().setSelection(new StructuredSelection(selection));
+      objectTree.getTreeViewer().reveal(selection);
    }
 
    /**

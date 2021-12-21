@@ -40,12 +40,15 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.ToolBar;
 import org.eclipse.swt.widgets.ToolItem;
 import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.base.views.helpers.NavigationHistory;
 import org.netxms.nxmc.base.windows.PopOutViewWindow;
 import org.netxms.nxmc.keyboard.KeyBindingManager;
 import org.netxms.nxmc.keyboard.KeyStroke;
+import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.resources.SharedIcons;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.xnap.commons.i18n.I18n;
 
 /**
  * View stack
@@ -54,6 +57,7 @@ public class ViewStack extends Composite
 {
    private static final Logger logger = LoggerFactory.getLogger(ViewStack.class);
 
+   private I18n i18n = LocalizationHelper.getI18n(ViewStack.class);
    private Window window;
    private Perspective perspective;
    private CTabFolder tabFolder;
@@ -62,7 +66,10 @@ public class ViewStack extends Composite
    private ToolBar viewToolBar;
    private ToolBar viewControlBar;
    private ToolItem enableFilter = null;
+   private ToolItem navigationBack = null;
+   private ToolItem navigationForward = null;
    private Object context;
+   private NavigationHistory navigationHistory = null;
    private boolean allViewsAreCloseable = false;
    private boolean useGlobalViewId = false;
    private Map<String, View> views = new HashMap<String, View>();
@@ -80,7 +87,7 @@ public class ViewStack extends Composite
     * @param enableViewExtraction enable/disable view extraction into separate window
     * @param enableViewPinning nable/disable view extraction into "Pinboard" perspective
     */
-   public ViewStack(Window window, Perspective perspective, Composite parent, boolean enableViewExtraction, boolean enableViewPinning)
+   public ViewStack(Window window, Perspective perspective, Composite parent, boolean enableViewExtraction, boolean enableViewPinning, boolean enableNavigationHistory)
    {
       super(parent, SWT.NONE);
       this.window = window;
@@ -122,8 +129,50 @@ public class ViewStack extends Composite
       viewControlBar = new ToolBar(topRightControl, SWT.FLAT | SWT.WRAP | SWT.RIGHT);
       viewControlBar.setLayoutData(new GridData(SWT.RIGHT, SWT.FILL, false, true));
 
+      if (enableNavigationHistory)
+      {
+         navigationBack = new ToolItem(viewControlBar, SWT.PUSH);
+         navigationBack.setImage(SharedIcons.IMG_NAV_BACKWARD);
+         navigationBack.setToolTipText(i18n.tr("Back (Alt+Left)"));
+         navigationBack.setEnabled(false);
+         navigationBack.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e)
+            {
+               navigateBack();
+            }
+         });
+         keyBindingManager.addBinding(SWT.ALT, SWT.ARROW_LEFT, new Action() {
+            @Override
+            public void run()
+            {
+               navigateBack();
+            }
+         });
+
+         navigationForward = new ToolItem(viewControlBar, SWT.PUSH);
+         navigationForward.setImage(SharedIcons.IMG_NAV_FORWARD);
+         navigationForward.setToolTipText(i18n.tr("Forward (Alt+Right)"));
+         navigationForward.setEnabled(false);
+         navigationForward.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e)
+            {
+               navigateForward();
+            }
+         });
+         keyBindingManager.addBinding(SWT.ALT, SWT.ARROW_RIGHT, new Action() {
+            @Override
+            public void run()
+            {
+               navigateForward();
+            }
+         });
+      }
+
       ToolItem refreshView = new ToolItem(viewControlBar, SWT.PUSH);
       refreshView.setImage(SharedIcons.IMG_REFRESH);
+      refreshView.setToolTipText(i18n.tr("Refresh (F5)"));
       refreshView.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
@@ -293,8 +342,9 @@ public class ViewStack extends Composite
       {
          if (enableFilter == null)
          {
-            enableFilter = new ToolItem(viewControlBar, SWT.CHECK, 0);
+            enableFilter = new ToolItem(viewControlBar, SWT.CHECK, (navigationBack != null) ? 2 : 0);
             enableFilter.setImage(SharedIcons.IMG_FILTER);
+            enableFilter.setToolTipText(String.format(i18n.tr("Show filter (%s)"), KeyStroke.normalizeDefinition("M1+F2")));
             enableFilter.addSelectionListener(new SelectionAdapter() {
                @Override
                public void widgetSelected(SelectionEvent e)
@@ -313,6 +363,13 @@ public class ViewStack extends Composite
       {
          enableFilter.dispose();
          enableFilter = null;
+      }
+
+      if ((navigationBack != null) && (navigationForward != null))
+      {
+         navigationHistory = (view instanceof NavigationView) ? ((NavigationView)view).getNavigationHistory() : null;
+         navigationForward.setEnabled((navigationHistory != null) && navigationHistory.canGoForward());
+         navigationBack.setEnabled((navigationHistory != null) && navigationHistory.canGoBackward());
       }
 
       view.activate();
@@ -436,6 +493,55 @@ public class ViewStack extends Composite
          return null;
       CTabItem selection = tabFolder.getSelection();
       return ((selection != null) && !selection.isDisposed()) ? (View)selection.getData("view") : null;
+   }
+
+   /**
+    * Navigate back
+    */
+   private void navigateBack()
+   {
+      if ((navigationHistory == null) || !navigationHistory.canGoBackward())
+         return;
+      navigationHistory.lock();
+      ((NavigationView)getActiveView()).setSelection(navigationHistory.back());
+      navigationHistory.unlock();
+      navigationBack.setEnabled(navigationHistory.canGoBackward());
+      navigationForward.setEnabled(navigationHistory.canGoForward());
+   }
+
+   /**
+    * Navigate forward
+    */
+   private void navigateForward()
+   {
+      if ((navigationHistory == null) || !navigationHistory.canGoForward())
+         return;
+      navigationHistory.lock();
+      ((NavigationView)getActiveView()).setSelection(navigationHistory.forward());
+      navigationHistory.unlock();
+      navigationBack.setEnabled(navigationHistory.canGoBackward());
+      navigationForward.setEnabled(navigationHistory.canGoForward());
+   }
+
+   /**
+    * Get current navigation history object.
+    *
+    * @return current navigation history object or null
+    */
+   public NavigationHistory getNavigationHistory()
+   {
+      return navigationHistory;
+   }
+
+   /**
+    * Update navigation controls according to current navigation history status
+    */
+   protected void updateNavigationControls()
+   {
+      if (navigationForward != null)
+         navigationForward.setEnabled((navigationHistory != null) && navigationHistory.canGoForward());
+      if (navigationBack != null)
+         navigationBack.setEnabled((navigationHistory != null) && navigationHistory.canGoBackward());
    }
 
    /**

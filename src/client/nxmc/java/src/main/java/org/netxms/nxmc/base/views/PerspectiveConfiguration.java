@@ -27,6 +27,7 @@ public class PerspectiveConfiguration
 {
    public boolean hasNavigationArea = true;
    public boolean multiViewNavigationArea = true;
+   public boolean enableNavigationHistory = false;
    public boolean multiViewMainArea = true;
    public boolean hasHeaderArea = false;
    public boolean hasSupplementalArea = false;

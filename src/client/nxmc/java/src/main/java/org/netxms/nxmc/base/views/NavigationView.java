@@ -20,12 +20,15 @@ package org.netxms.nxmc.base.views;
 
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.ISelectionProvider;
+import org.netxms.nxmc.base.views.helpers.NavigationHistory;
 
 /**
  * Base class for all navigation views. Those views intended for placement in navigation area within perspective.
  */
 public abstract class NavigationView extends View
 {
+   private NavigationHistory navigationHistory = new NavigationHistory();
+
    /**
     * Create navigation view with specific ID.
     *
@@ -42,9 +45,26 @@ public abstract class NavigationView extends View
    }
 
    /**
+    * Get navigation history for this view.
+    *
+    * @return navigation history for this view
+    */
+   public NavigationHistory getNavigationHistory()
+   {
+      return navigationHistory;
+   }
+
+   /**
     * Get selection provider for navigation selection.
     *
     * @return selection provider
     */
    public abstract ISelectionProvider getSelectionProvider();
+
+   /**
+    * Set selection in navigation view.
+    *
+    * @param selection new selection
+    */
+   public abstract void setSelection(Object selection);
 }

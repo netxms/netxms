@@ -129,21 +129,22 @@ public class KeyStroke
    public static KeyStroke parse(String definition)
    {
       int modifiers = 0;
-      
+      boolean isMacOS = false; // FIXME: MAC OS detect
+
       String[] parts = definition.split("\\+");
       for(int i = 0; i < parts.length - 1; i++)
       {
          String m = parts[i];
-         if (m.equalsIgnoreCase("Alt"))
+         if (m.equalsIgnoreCase("Alt") || (m.equalsIgnoreCase("M3") && !isMacOS))
             modifiers |= SWT.ALT;
-         else if (m.equalsIgnoreCase("Command"))
+         else if (m.equalsIgnoreCase("Command") || (m.equalsIgnoreCase("M1") && isMacOS))
             modifiers |= SWT.COMMAND;
-         else if (m.equalsIgnoreCase("Ctrl"))
+         else if (m.equalsIgnoreCase("Ctrl") || (m.equalsIgnoreCase("M1") && !isMacOS) || (m.equalsIgnoreCase("M4") && isMacOS))
             modifiers |= SWT.CTRL;
-         else if (m.equalsIgnoreCase("Shift"))
+         else if (m.equalsIgnoreCase("Shift") || m.equalsIgnoreCase("M2"))
             modifiers |= SWT.SHIFT;
       }
-      
+
       int key;
       String k = parts[parts.length - 1].toUpperCase();
       if (k.length() == 1)
@@ -157,6 +158,17 @@ public class KeyStroke
       }
 
       return new KeyStroke(modifiers, key);
+   }
+
+   /**
+    * Normalize keystroke definition.
+    *
+    * @param definition keystroke definition
+    * @return normalized keystroke definition
+    */
+   public static String normalizeDefinition(String definition)
+   {
+      return parse(definition).toString();
    }
 
    private int modifiers;

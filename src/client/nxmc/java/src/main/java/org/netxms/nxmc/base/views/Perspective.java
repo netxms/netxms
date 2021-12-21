@@ -31,6 +31,7 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.netxms.nxmc.base.views.helpers.NavigationHistory;
 import org.netxms.nxmc.keyboard.KeyStroke;
 import org.netxms.nxmc.tools.ImageCache;
 import org.slf4j.Logger;
@@ -105,6 +106,18 @@ public abstract class Perspective
          mainFolder.setContext(selection.getFirstElement());
       else if (mainArea != null)
          mainArea.setContext(selection.getFirstElement());
+      if (configuration.enableNavigationHistory)
+      {
+         NavigationHistory navigationHistory = (navigationArea != null) ? navigationArea.getNavigationHistory() : navigationFolder.getNavigationHistory();
+         if (navigationHistory != null)
+         {
+            navigationHistory.add(selection.getFirstElement());
+            if (navigationArea != null)
+               navigationArea.updateNavigationControls();
+            else
+               navigationFolder.updateNavigationControls();
+         }
+      }
    }
 
    /**
@@ -193,7 +206,7 @@ public abstract class Perspective
          verticalSplitter = new SashForm(content, SWT.HORIZONTAL);
          if (configuration.multiViewNavigationArea)
          {
-            navigationFolder = new ViewStack(window, this, verticalSplitter, false, false);
+            navigationFolder = new ViewStack(window, this, verticalSplitter, false, false, configuration.enableNavigationHistory);
             navigationFolder.addSelectionListener(new ViewStackSelectionListener() {
                @Override
                public void viewSelected(View view)
@@ -206,7 +219,7 @@ public abstract class Perspective
          }
          else
          {
-            navigationArea = new ViewContainer(window, this, verticalSplitter, false, false);
+            navigationArea = new ViewContainer(window, this, verticalSplitter, false, false, configuration.enableNavigationHistory);
          }
       }
       if (configuration.hasSupplementalArea)
@@ -239,7 +252,7 @@ public abstract class Perspective
 
       if (configuration.multiViewMainArea)
       {
-         mainFolder = new ViewStack(window, this, mainAreaHolder, configuration.enableViewExtraction, configuration.enableViewPinning);
+         mainFolder = new ViewStack(window, this, mainAreaHolder, configuration.enableViewExtraction, configuration.enableViewPinning, false);
          mainFolder.setAllViewsAsCloseable(configuration.allViewsAreCloseable);
          mainFolder.setUseGlobalViewId(configuration.useGlobalViewId);
          if (configuration.hasHeaderArea)
@@ -247,7 +260,7 @@ public abstract class Perspective
       }
       else
       {
-         mainArea = new ViewContainer(window, this, mainAreaHolder, configuration.enableViewExtraction, configuration.enableViewPinning);
+         mainArea = new ViewContainer(window, this, mainAreaHolder, configuration.enableViewExtraction, configuration.enableViewPinning, false);
          if (configuration.hasHeaderArea)
             mainArea.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
       }
@@ -256,7 +269,7 @@ public abstract class Perspective
       {
          if (configuration.multiViewSupplementalArea)
          {
-            supplementaryFolder = new ViewStack(window, this, horizontalSpliter, configuration.enableViewExtraction, configuration.enableViewPinning);
+            supplementaryFolder = new ViewStack(window, this, horizontalSpliter, configuration.enableViewExtraction, configuration.enableViewPinning, false);
             supplementaryFolder.setAllViewsAsCloseable(configuration.allViewsAreCloseable);
          }
          else
