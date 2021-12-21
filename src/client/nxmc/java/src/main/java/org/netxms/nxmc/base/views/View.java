@@ -62,9 +62,11 @@ public abstract class View implements MessageAreaHolder
    private Perspective perspective;
    private Composite viewArea;
    private MessageArea messageArea;
-   protected FilterText filterText; //FIXME: change to private
+   private FilterText filterText;
    private Composite clientArea;
    private boolean hasFilter;
+   private boolean showFilterTooltip;
+   private boolean showFilterLabel;
    private boolean filterEnabled;
    private AbstractViewerFilter filter;
    private StructuredViewer viewer;
@@ -79,14 +81,47 @@ public abstract class View implements MessageAreaHolder
     * @param name view name
     * @param image view image
     * @param baseId view base ID
-    * @param hasFileter true if view should contain filter
+    */
+   public View(String name, ImageDescriptor image, String baseId)
+   {
+      this(name, image, baseId, false, false, false);
+   }
+
+   /**
+    * Create new view with specific base ID. Actual view ID will be derived from base ID, possibly by classes derived from base view
+    * class. This will not create actual widgets that composes view - creation can be delayed by framework until view actually has
+    * to be shown for the first time.
+    *
+    * @param name view name
+    * @param image view image
+    * @param baseId view base ID
+    * @param hasFilter true if view should contain filter
     */
    public View(String name, ImageDescriptor image, String baseId, boolean hasFilter)
+   {
+      this(name, image, baseId, hasFilter, false, false);
+   }
+
+   /**
+    * Create new view with specific base ID. Actual view ID will be derived from base ID, possibly by classes derived from base view
+    * class. This will not create actual widgets that composes view - creation can be delayed by framework until view actually has
+    * to be shown for the first time.
+    *
+    * @param name view name
+    * @param image view image
+    * @param baseId view base ID
+    * @param hasFilter true if view should contain filter
+    * @param showFilterTooltip true if view filter should have tooltip icon
+    * @param showFilterLabel true if view filter should contain label on the left of text input field
+    */
+   public View(String name, ImageDescriptor image, String baseId, boolean hasFilter, boolean showFilterTooltip, boolean showFilterLabel)
    {
       this.baseId = baseId;
       this.name = name;
       this.imageDescriptor = image;
       this.hasFilter = hasFilter;
+      this.showFilterTooltip = showFilterTooltip;
+      this.showFilterLabel = showFilterLabel;
    }
 
    /**
@@ -111,6 +146,8 @@ public abstract class View implements MessageAreaHolder
          view.name = name;
          view.imageDescriptor = imageDescriptor;
          view.hasFilter = hasFilter;
+         view.showFilterTooltip = showFilterTooltip;
+         view.showFilterLabel = showFilterLabel;
          view.filterEnabled = filterEnabled;
          return view;
       }
@@ -142,7 +179,7 @@ public abstract class View implements MessageAreaHolder
       messageArea = new MessageArea(viewArea, SWT.NONE);
       if (hasFilter)
       {  
-         filterText = new FilterText(viewArea, SWT.NONE);
+         filterText = new FilterText(viewArea, SWT.NONE, showFilterTooltip ? "" : null, true, showFilterLabel);
          filterText.addModifyListener(new ModifyListener() {
             @Override
             public void modifyText(ModifyEvent e)
@@ -507,14 +544,46 @@ public abstract class View implements MessageAreaHolder
    }
 
    /**
+    * Set tooltip to be shown on filter's "information" icon (if present).
+    *
+    * @param tooltip new filter information tooltip text
+    */
+   public void setFilterTooltip(String tooltip)
+   {
+      filterText.setTooltip(tooltip);
+   }
+
+   /**
+    * Add filter modify listener
+    *
+    * @param listener filter modify listener to add
+    */
+   public void addFilterModifyListener(ModifyListener listener)
+   {
+      if (filterText != null)
+         filterText.addModifyListener(listener);
+   }
+
+   /**
+    * Remove filter modify listener
+    *
+    * @param listener filter modify listener to remove
+    */
+   public void removeFilterModifyListener(ModifyListener listener)
+   {
+      if (filterText != null)
+         filterText.removeModifyListener(listener);
+   }
+
+   /**
     * Handler for filter modification
     */
    protected void onFilterModify()
    {
-      if (filter != null && viewer != null)
+      if ((filter != null) && (viewer != null))
          defaultOnFilterModify();
    }
-   
+
    /**
     * Set viewer and filter that will be managed by default filter string handler
     * 
@@ -589,6 +658,40 @@ public abstract class View implements MessageAreaHolder
    public boolean isFilterEnabled()
    {
       return filterEnabled;
+   }
+
+   /**
+    * Get current filter text.
+    *
+    * @return current filter text or null
+    */
+   public String getFilterText()
+   {
+      return (hasFilter && filterEnabled) ? filterText.getText() : null;
+   }
+
+   /**
+    * Set filter text.
+    *
+    * @param text new filter text
+    */
+   public void setFilterText(String text)
+   {
+      if (hasFilter && filterEnabled)
+      {
+         filterText.setText(text);
+         onFilterModify();
+      }
+   }
+
+   /**
+    * Get filter text control from this view
+    *
+    * @return filter text control from this view
+    */
+   public FilterText getFilterTextControl()
+   {
+      return filterText;
    }
 
    /**

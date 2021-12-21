@@ -22,7 +22,9 @@ import java.util.Collections;
 import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.dialogs.Dialog;
+import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Combo;
@@ -40,7 +42,7 @@ import org.netxms.nxmc.tools.WidgetHelper;
 /**
  * Notification channel dialog
  */
-public class NotificationChannelDialog extends Dialog
+public class NotificationChannelPropertiesDialog extends Dialog
 {
    private NotificationChannel nc;
    private LabeledText textName;
@@ -50,13 +52,19 @@ public class NotificationChannelDialog extends Dialog
    private boolean isNameChangeds;
    private String newName;
 
-   public NotificationChannelDialog(Shell parentShell, NotificationChannel nc)
+   /**
+    * Create new notification channel properties dialog.
+    *
+    * @param parentShell parent shell
+    * @param nc notification channel to edit
+    */
+   public NotificationChannelPropertiesDialog(Shell parentShell, NotificationChannel nc)
    {
       super(parentShell);
       this.nc = nc;
    }
-   
-   /* (non-Javadoc)
+
+   /**
     * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
     */
    @Override
@@ -90,18 +98,19 @@ public class NotificationChannelDialog extends Dialog
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
-      comboDriverName = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, "Driver name", gd);
-      
+      comboDriverName = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, "Driver", gd);
+
       textConfiguraiton = new LabeledText(dialogArea, SWT.NONE, SWT.MULTI | SWT.BORDER);
-      textConfiguraiton.setLabel("Driver Configuration");
+      textConfiguraiton.setLabel("Driver configuration");
+      textConfiguraiton.getTextControl().setFont(JFaceResources.getTextFont());
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       gd.heightHint = 300;
       gd.widthHint = 900;
-      textConfiguraiton.setLayoutData(gd);          
+      textConfiguraiton.setLayoutData(gd);
 
-      if(nc != null)
+      if (nc != null)
       {
          textName.setText(nc.getName());
          textDescription.setText(nc.getDescription());
@@ -133,7 +142,7 @@ public class NotificationChannelDialog extends Dialog
       
       return dialogArea;
    }
-   
+
    private void updateUI(List<String> ncList)
    {
       for(int i = 0; i < ncList.size(); i++)

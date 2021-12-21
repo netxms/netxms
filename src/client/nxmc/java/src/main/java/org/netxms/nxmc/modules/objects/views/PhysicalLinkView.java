@@ -338,7 +338,7 @@ public class PhysicalLinkView extends ObjectView
    @Override
    protected void onFilterModify()
    {
-      final String text = filterText.getText();
+      final String text = getFilterText();
       filter.setFilterString(text);
       viewer.refresh(false);
    }

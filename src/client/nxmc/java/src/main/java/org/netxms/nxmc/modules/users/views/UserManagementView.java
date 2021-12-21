@@ -575,7 +575,7 @@ public class UserManagementView extends ConfigurationView
    @Override
    protected void onFilterModify()
    {
-      final String text = filterText.getText();
+      final String text = getFilterText();
       filter.setFilterString(text);
       viewer.refresh(false);
    }

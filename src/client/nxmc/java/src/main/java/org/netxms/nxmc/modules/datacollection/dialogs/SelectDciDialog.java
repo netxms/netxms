@@ -135,10 +135,10 @@ public class SelectDciDialog extends Dialog
 			splitter = new SashForm(dialogArea, SWT.HORIZONTAL);
 			
          objectTree = new ObjectTree(splitter, SWT.BORDER, ObjectTree.NONE,
-               ObjectSelectionDialog.createDataCollectionTargetSelectionFilter(), true, false);
+               ObjectSelectionDialog.createDataCollectionTargetSelectionFilter(), null, true, false);
          String text = settings.getAsString("SelectDciDialog.Filter");
 			if (text != null)
-				objectTree.setFilter(text);
+				objectTree.setFilterText(text);
 		}
 
       dciList = new DciList(null, (fixedNode == 0) ? splitter : dialogArea, SWT.BORDER, null,
@@ -202,7 +202,7 @@ public class SelectDciDialog extends Dialog
       settings.set("SelectDciDialog.hight", size.y); //$NON-NLS-1$
 		if (fixedNode == 0)
 		{
-         settings.set("SelectDciDialog.Filter", objectTree.getFilter()); //$NON-NLS-1$
+         settings.set("SelectDciDialog.Filter", objectTree.getFilterText()); //$NON-NLS-1$
 			
 			int[] weights = splitter.getWeights();
          settings.set("SelectDciDialog.weight1", weights[0]); //$NON-NLS-1$

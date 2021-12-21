@@ -90,7 +90,7 @@ public class ConfigurationPerspective extends Perspective
    @Override
    protected void configureViews()
    {
-      addNavigationView(new NavigationView("Configuration", null, "Configuration", true) {
+      addNavigationView(new NavigationView("Configuration", null, "Configuration", true, false, false) {
          private ImageCache imageCache;
          private TableViewer viewer;
 

@@ -32,11 +32,13 @@ public abstract class NavigationView extends View
     * @param name view name
     * @param image view image
     * @param id view ID
-    * @param hasFileter true if view should contain filter
+    * @param hasFilter true if view should contain filter
+    * @param showFilterTooltip true if view filter should have tooltip icon
+    * @param showFilterLabel true if view filter should contain label on the left of text input field
     */
-   public NavigationView(String name, ImageDescriptor image, String id, boolean hasFilter)
+   public NavigationView(String name, ImageDescriptor image, String id, boolean hasFilter, boolean showFilterTooltip, boolean showFilterLabel)
    {
-      super(name, image, id, hasFilter);
+      super(name, image, id, hasFilter, showFilterTooltip, showFilterLabel);
    }
 
    /**

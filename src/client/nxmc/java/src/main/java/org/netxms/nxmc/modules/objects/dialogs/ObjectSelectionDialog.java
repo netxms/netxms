@@ -273,11 +273,11 @@ public class ObjectSelectionDialog extends Dialog
 		layout.verticalSpacing = WidgetHelper.DIALOG_SPACING;
 		dialogArea.setLayout(layout);
 
-		objectTree = new ObjectTree(dialogArea, SWT.NONE, multiSelection ? ObjectTree.MULTI : 0, classFilter, showFilterToolTip, showFilterCloseButton);
+      objectTree = new ObjectTree(dialogArea, SWT.NONE, multiSelection ? ObjectTree.MULTI : 0, classFilter, null, showFilterToolTip, showFilterCloseButton);
 
       String text = settings.getAsString("ObjectSelectionDialog.Filter");
 		if (text != null)
-			objectTree.setFilter(text);
+			objectTree.setFilterText(text);
 
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -352,7 +352,7 @@ public class ObjectSelectionDialog extends Dialog
       PreferenceStore settings = PreferenceStore.getInstance();
 
       settings.set("ObjectSelectionDialog.Size", size);
-      settings.set("ObjectSelectionDialog.Filter", objectTree.getFilter());
+      settings.set("ObjectSelectionDialog.Filter", objectTree.getFilterText());
 	}
 
 	/**

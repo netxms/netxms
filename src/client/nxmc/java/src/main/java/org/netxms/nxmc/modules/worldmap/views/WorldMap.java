@@ -227,7 +227,7 @@ public class WorldMap extends View
    @Override
 	protected void onFilterModify()
 	{
-      map.setFilterString(filterText.getText().trim().toLowerCase());
+      map.setFilterString(getFilterText().trim().toLowerCase());
 	   map.reloadMap();
 	}
 

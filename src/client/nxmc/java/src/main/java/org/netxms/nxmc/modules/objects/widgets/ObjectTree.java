@@ -66,6 +66,7 @@ import org.netxms.client.objects.Subnet;
 import org.netxms.client.objects.Zone;
 import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.widgets.FilterText;
 import org.netxms.nxmc.modules.objects.ObjectOpenListener;
 import org.netxms.nxmc.modules.objects.widgets.helpers.DecoratingObjectLabelProvider;
@@ -85,11 +86,9 @@ public class ObjectTree extends Composite
    public static final int CHECKBOXES = 0x01;
    public static final int MULTI = 0x02;
 
-   private boolean filterEnabled = true;
-   private boolean statusIndicatorEnabled = false;
+   private View view;
    private ObjectTreeViewer objectTree;
    private FilterText filterText;
-   private String tooltip = null;
    private ObjectFilter filter;
    private Set<Long> checkedObjects = new HashSet<Long>(0);
    private SessionListener sessionListener = null;
@@ -100,16 +99,26 @@ public class ObjectTree extends Composite
    private TreeListener statusIndicatorTreeListener;
    private Set<ObjectOpenListener> openListeners = new HashSet<ObjectOpenListener>(0);
    private ObjectTreeContentProvider contentProvider;
+   private boolean filterEnabled = true;
+   private boolean statusIndicatorEnabled = false;
    private boolean objectsFullySync;
 
    /**
-    * @param parent
-    * @param style
+    * Create object tree control. If vie wis specified then use view's filter instead of own.
+    *
+    * @param parent parent composite
+    * @param style control style bits
+    * @param options object tree options (either NONE, or combination of CHECKBOXES and MULTI)
+    * @param classFilter class filter for objects to be displayed
+    * @param view owning view or null
+    * @param showFilterToolTip tru to show filter's tooltips
+    * @param showFilterCloseButton true to show filter's close button
     */
-   public ObjectTree(Composite parent, int style, int options,
-         Set<Integer> classFilter, boolean showFilterToolTip, boolean showFilterCloseButton)
+   public ObjectTree(Composite parent, int style, int options, Set<Integer> classFilter, View view, boolean showFilterToolTip, boolean showFilterCloseButton)
    {
       super(parent, style);
+
+      this.view = view;
 
       PreferenceStore store = PreferenceStore.getInstance();
       objectsFullySync = store.getAsBoolean("ObjectBrowser.FullSync", false);
@@ -132,25 +141,39 @@ public class ObjectTree extends Composite
 
       FormLayout formLayout = new FormLayout();
       setLayout(formLayout);
-      if (showFilterToolTip)
-         tooltip = " > - Search by IP address part \n ^ - Search by exact IP address \n # - Search by ID \n / - Search by comment \n @ - Search by Zone ID";
+
       // Create filter area
-      filterText = new FilterText(this, SWT.NONE, tooltip, showFilterCloseButton);
+      final String tooltip = showFilterToolTip ? " > - Search by IP address part \n ^ - Search by exact IP address \n # - Search by ID \n / - Search by comment \n @ - Search by Zone ID" : null;
+      if (view != null)
+      {
+         view.addFilterModifyListener(new ModifyListener() {
+            @Override
+            public void modifyText(ModifyEvent e)
+            {
+               onFilterModify();
+            }
+         });
+         view.setFilterTooltip(tooltip);
+      }
+      else
+      {
+         filterText = new FilterText(this, SWT.NONE, tooltip, showFilterCloseButton);
+         filterText.addModifyListener(new ModifyListener() {
+            @Override
+            public void modifyText(ModifyEvent e)
+            {
+               onFilterModify();
+            }
+         });
+         filterText.setCloseAction(new Action() {
+            @Override
+            public void run()
+            {
+               enableFilter(false);
+            }
+         });
+      }
       setupFilterText(true);
-      filterText.addModifyListener(new ModifyListener() {
-         @Override
-         public void modifyText(ModifyEvent e)
-         {
-            onFilterModify();
-         }
-      });
-      filterText.setCloseAction(new Action() {
-         @Override
-         public void run()
-         {
-            enableFilter(false);
-         }
-      });
 
       // Create object tree control
       objectTree = new ObjectTreeViewer(this, SWT.VIRTUAL | (((options & MULTI) == MULTI) ? SWT.MULTI : SWT.SINGLE)
@@ -255,16 +278,19 @@ public class ObjectTree extends Composite
       // Setup layout
       FormData fd = new FormData();
       fd.left = new FormAttachment(0, 0);
-      fd.top = new FormAttachment(filterText);
+      fd.top = (filterText != null) ? new FormAttachment(filterText) : new FormAttachment(0, 0);
       fd.right = new FormAttachment(100, 0);
       fd.bottom = new FormAttachment(100, 0);
       objectTree.getTree().setLayoutData(fd);
 
-      fd = new FormData();
-      fd.left = new FormAttachment(0, 0);
-      fd.top = new FormAttachment(0, 0);
-      fd.right = new FormAttachment(100, 0);
-      filterText.setLayoutData(fd);
+      if (filterText != null)
+      {
+         fd = new FormData();
+         fd.left = new FormAttachment(0, 0);
+         fd.top = new FormAttachment(0, 0);
+         fd.right = new FormAttachment(100, 0);
+         filterText.setLayoutData(fd);
+      }
 
       // Add client library listener
       sessionListener = new SessionListener() {
@@ -295,7 +321,7 @@ public class ObjectTree extends Composite
       });
 
       // Set initial focus to filter input line
-      if (filterEnabled)
+      if (filterEnabled && (filterText != null))
          filterText.setFocus();
       else
          enableFilter(false); // Will hide filter area correctly
@@ -330,6 +356,10 @@ public class ObjectTree extends Composite
     */
    private void setupFilterText(boolean addListener)
    {
+      FilterText filterText = (view != null) ? view.getFilterTextControl() : this.filterText;
+      if (filterText == null)
+         return;
+
       PreferenceStore ps = PreferenceStore.getInstance();
       if (ps.getAsBoolean("ObjectBrowser.UseServerFilterSettings", true))
       {
@@ -389,6 +419,9 @@ public class ObjectTree extends Composite
    public void enableFilter(boolean enable)
    {
       filterEnabled = enable;
+      if (filterText == null)
+         return; // External filter
+
       filterText.setVisible(filterEnabled);
       FormData fd = (FormData)objectTree.getTree().getLayoutData();
       fd.top = enable ? new FormAttachment(filterText) : new FormAttachment(0, 0);
@@ -401,7 +434,7 @@ public class ObjectTree extends Composite
       if (enable)
          filterText.setFocus();
       else
-         setFilter(""); //$NON-NLS-1$
+         setFilterText(""); //$NON-NLS-1$
    }
 
    /**
@@ -417,9 +450,12 @@ public class ObjectTree extends Composite
     * 
     * @param text New filter text
     */
-   public void setFilter(final String text)
+   public void setFilterText(final String text)
    {
-      filterText.setText(text);
+      if (view != null)
+         view.setFilterText(text);
+      else
+         filterText.setText(text);
       onFilterModify();
    }
 
@@ -428,9 +464,9 @@ public class ObjectTree extends Composite
     * 
     * @return Current filter text
     */
-   public String getFilter()
+   public String getFilterText()
    {
-      return filterText.getText();
+      return (view != null) ? view.getFilterText() : filterText.getText();
    }
 
    /**
@@ -498,7 +534,8 @@ public class ObjectTree extends Composite
    {
       super.setEnabled(enabled);
       objectTree.getControl().setEnabled(enabled);
-      filterText.setEnabled(enabled);
+      if (filterText != null)
+         filterText.setEnabled(enabled);
    }
 
    /**
@@ -506,7 +543,7 @@ public class ObjectTree extends Composite
     */
    private void onFilterModify()
    {
-      final String text = filterText.getText();
+      final String text = getFilterText();
       filter.setFilterString(text);
       AbstractObject obj = filter.getLastMatch();
       if (obj != null)
@@ -625,7 +662,8 @@ public class ObjectTree extends Composite
     */
    public void setFilterCloseAction(Action action)
    {
-      filterText.setCloseAction(action);
+      if (filterText != null)
+         filterText.setCloseAction(action);
    }
 
    /**
@@ -642,7 +680,7 @@ public class ObjectTree extends Composite
          statusIndicator = new ObjectStatusIndicator(this, SWT.NONE);
          FormData fd = new FormData();
          fd.left = new FormAttachment(0, 0);
-         fd.top = filterEnabled ? new FormAttachment(filterText) : new FormAttachment(0, 0);
+         fd.top = (filterEnabled && (filterText != null)) ? new FormAttachment(filterText) : new FormAttachment(0, 0);
          fd.bottom = new FormAttachment(100, 0);
          statusIndicator.setLayoutData(fd);
 

@@ -47,7 +47,7 @@ import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.ConfigurationView;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
-import org.netxms.nxmc.modules.serverconfig.dialogs.NotificationChannelDialog;
+import org.netxms.nxmc.modules.serverconfig.dialogs.NotificationChannelPropertiesDialog;
 import org.netxms.nxmc.modules.serverconfig.views.helpers.NotificationChannelFilter;
 import org.netxms.nxmc.modules.serverconfig.views.helpers.NotificationChannelLabelProvider;
 import org.netxms.nxmc.modules.serverconfig.views.helpers.NotificationChannelListComparator;
@@ -266,7 +266,7 @@ public class NotificationChannels extends ConfigurationView
     */
    private void createNewChannel()
    {
-      final NotificationChannelDialog dlg = new NotificationChannelDialog(getWindow().getShell(), null);
+      final NotificationChannelPropertiesDialog dlg = new NotificationChannelPropertiesDialog(getWindow().getShell(), null);
       if (dlg.open() != Window.OK)
          return;
       
@@ -297,7 +297,7 @@ public class NotificationChannels extends ConfigurationView
          return;
       
       selectedChannel = (NotificationChannel)selection.getFirstElement();
-      final NotificationChannelDialog dlg = new NotificationChannelDialog(getWindow().getShell(), selectedChannel);
+      final NotificationChannelPropertiesDialog dlg = new NotificationChannelPropertiesDialog(getWindow().getShell(), selectedChannel);
       if (dlg.open() != Window.OK)
          return;
       

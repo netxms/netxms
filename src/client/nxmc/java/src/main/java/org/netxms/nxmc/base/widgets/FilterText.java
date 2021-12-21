@@ -61,6 +61,7 @@ public class FilterText extends Composite
 	private Composite buttonArea;
 	private Composite textArea;
 	private List<Button> attrButtons = new ArrayList<Button>(4);
+   private Label tooltipIcon;
 	private Label closeButton;
 	private Label clearButton;
 	private Action closeAction = null;
@@ -175,16 +176,15 @@ public class FilterText extends Composite
 
 		if (tooltip != null) 
 		{
-   		final Label icon = new Label(textArea, SWT.NONE);
-   		icon.setImage(SharedIcons.IMG_INFORMATION);
+         tooltipIcon = new Label(textArea, SWT.NONE);
+         tooltipIcon.setImage(SharedIcons.IMG_INFORMATION);
          gd = new GridData();
          gd.verticalAlignment = SWT.CENTER;
-         icon.setLayoutData(gd);
-         icon.setToolTipText(tooltip);
-         
-         icon.setBackground(text.getBackground());
+         tooltipIcon.setLayoutData(gd);
+         tooltipIcon.setToolTipText(tooltip);
+         tooltipIcon.setBackground(text.getBackground());
 		}
-		
+
 		textArea.setBackground(text.getBackground());
 		
       enableAutoComplete(proposalProvider);
@@ -512,6 +512,17 @@ public class FilterText extends Composite
    public void setMinLength(int minLength)
    {
       this.minLength = minLength;
+   }
+
+   /**
+    * Set tooltip to be shown on "information" icon (if present).
+    *
+    * @param tooltip new information tooltip text
+    */
+   public void setTooltip(String tooltip)
+   {
+      if (tooltipIcon != null)
+         tooltipIcon.setToolTipText(tooltip);
    }
 
    /**
