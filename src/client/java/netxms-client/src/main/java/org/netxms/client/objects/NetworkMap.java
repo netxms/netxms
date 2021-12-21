@@ -55,6 +55,7 @@ public class NetworkMap extends GenericObject
 	public static final int MF_CALCULATE_STATUS       = 0x000010;
    public static final int MF_FILTER_OBJECTS         = 0x000020;
    public static final int MF_SHOW_LINK_DIRECTION    = 0x000040;
+   public static final int MF_USE_L1_TOPOLOGY        = 0x000080;
 
 	private int mapType;
 	private MapLayoutAlgorithm layout;

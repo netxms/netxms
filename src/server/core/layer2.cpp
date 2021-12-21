@@ -25,12 +25,15 @@
 /**
  * Build layer 2 topology for switch
  */
-void BuildL2Topology(NetworkMapObjectList &topology, Node *root, int depth, bool includeEndNodes)
+void BuildL2Topology(NetworkMapObjectList &topology, Node *root, int depth, bool includeEndNodes, bool useL1Topology)
 {
 	if (topology.isObjectExist(root->getId()))
 		return;  // loop in object connections
 
 	topology.addObject(root->getId());
+
+	if (depth <= 0)
+	   return;
 
 	shared_ptr<LinkLayerNeighbors> nbs = root->getLinkLayerNeighbors();
 	if (nbs == nullptr)
@@ -42,9 +45,9 @@ void BuildL2Topology(NetworkMapObjectList &topology, Node *root, int depth, bool
 		if (info != nullptr)
 		{
 			shared_ptr<Node> node = static_pointer_cast<Node>(FindObjectById(info->objectId, OBJECT_NODE));
-			if ((node != nullptr) && (depth > 0) && (node->isBridge() || includeEndNodes))
+			if ((node != nullptr) && (node->isBridge() || includeEndNodes))
 			{
-				BuildL2Topology(topology, node.get(), depth - 1, includeEndNodes);
+				BuildL2Topology(topology, node.get(), depth - 1, includeEndNodes, useL1Topology);
 				shared_ptr<Interface> ifLocal = root->findInterfaceByIndex(info->ifLocal);
 				shared_ptr<Interface> ifRemote = node->findInterfaceByIndex(info->ifRemote);
 				nxlog_debug_tag(_T("topo.layer2"), 5, _T("BuildL2Topology: root=%s [%d], node=%s [%d], ifLocal=%d %s, ifRemote=%d %s"),
@@ -58,6 +61,32 @@ void BuildL2Topology(NetworkMapObjectList &topology, Node *root, int depth, bool
 			}
 		}
 	}
+
+	if(!useL1Topology)
+	   return;
+
+	const ObjectArray<L1_NEIGHBOR_INFO> &l1Neibors = GetL1Neighbors(root);
+   for(int i = 0; i < l1Neibors.size(); i++)
+   {
+      L1_NEIGHBOR_INFO *info = l1Neibors.get(i);
+      shared_ptr<Node> node = static_pointer_cast<Node>(FindObjectById(info->objectId, OBJECT_NODE));
+      if ((node != nullptr) && (node->isBridge() || includeEndNodes))
+      {
+         BuildL2Topology(topology, node.get(), depth - 1, includeEndNodes, useL1Topology);
+         shared_ptr<Interface> ifLocal = static_pointer_cast<Interface>(FindObjectById(info->ifLocal, OBJECT_INTERFACE));
+         shared_ptr<Interface> ifRemote = static_pointer_cast<Interface>(FindObjectById(info->ifRemote, OBJECT_INTERFACE));
+         uint32_t ifLocalIndex = ifLocal->getIfIndex();
+         uint32_t ifRemoteIndex = ifRemote->getIfIndex();
+         nxlog_debug_tag(_T("topo.layer2"), 5, _T("BuildL1Topology: root=%s [%d], node=%s [%d], ifLocal=%d %s, ifRemote=%d %s"),
+               root->getName(), root->getId(), node->getName(), node->getId(), ifLocalIndex,
+               (ifLocal != nullptr) ? ifLocal->getName() : _T("(null)"), ifRemoteIndex,
+               (ifRemote != nullptr) ? ifRemote->getName() : _T("(null)"));
+         topology.linkObjectsEx(root->getId(), node->getId(),
+               (ifLocal != nullptr) ? ifLocal->getName() : _T("N/A"),
+               (ifRemote != nullptr) ? ifRemote->getName() : _T("N/A"),
+                     ifLocalIndex, ifRemoteIndex, info->routeInfo);
+      }
+   }
 }
 
 /**

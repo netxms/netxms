@@ -88,14 +88,14 @@ PhysicalLink::PhysicalLink(DB_RESULT hResult, int row)
    m_leftInterfaceParent = (object != nullptr) ? static_cast<Interface&>(*object).getParentNodeId() : 0;
    m_leftPatchPannelId = DBGetFieldLong(hResult, row, 3);
    m_leftPortNumber = DBGetFieldLong(hResult, row, 4);
-   m_leftFront = DBGetFieldLong(hResult, 0, 5) ? true : false;
+   m_leftFront = DBGetFieldLong(hResult, row, 5) ? true : false;
 
    m_rightObjectId = DBGetFieldLong(hResult, row, 6);
    object = FindObjectById(m_rightObjectId, OBJECT_INTERFACE);
    m_rightInterfaceParent = (object != nullptr) ? static_cast<Interface&>(*object).getParentNodeId() : 0;
    m_rightPatchPannelId = DBGetFieldLong(hResult, row, 7);
    m_rightPortNumber = DBGetFieldLong(hResult, row, 8);
-   m_rightFront = DBGetFieldLong(hResult, 0, 9) ? true : false;
+   m_rightFront = DBGetFieldLong(hResult, row, 9) ? true : false;
 }
 
 /**
@@ -366,6 +366,147 @@ void GetObjectPhysicalLinks(const NetObj *object, uint32_t userId, uint32_t patc
    data.base = VID_LINK_LIST_BASE;
    s_physicalLinks.forEach(FillMessageCallback, &data);
    msg->setField(VID_LINK_COUNT, data.objCount);
+}
+
+static StringBuffer GetRackComment(shared_ptr<Rack> rack, uint32_t patchPannelId, uint32_t portNumber)
+{
+   StringBuffer tmp;
+   tmp.append(rack->getName());
+   tmp.append(_T("/"));
+   tmp.append(rack->getRackPasiveElementDescription(patchPannelId));
+   tmp.append(_T("/"));
+   tmp.append(portNumber);
+   return tmp;
+}
+
+/**
+ * Wrapper for link part
+ */
+class LinkPart
+{
+   shared_ptr<PhysicalLink> link;
+   bool right;
+public:
+
+   LinkPart(const shared_ptr<PhysicalLink> &l, bool isRight) : link(l)
+   {
+      right = isRight;
+   }
+
+   /**
+    * Change reference to link and side
+    */
+   void update(const shared_ptr<PhysicalLink> &l, bool isRight)
+   {
+      link = l;
+      right = isRight;
+   }
+
+   uint32_t getParentId() const
+   {
+      return right ? link->getRightParentId() : link->getLeftParentId();
+   }
+   uint32_t getObjectId() const
+   {
+      return right ? link->getRightObjectId() : link->getLeftObjectId();
+   }
+   uint32_t getPatchPanelId() const
+   {
+      return right ? link->getRightPatchPanelId() : link->getLeftPatchPanelId();
+   }
+   uint32_t getPortNumber() const
+   {
+      return right ? link->getRightPortNumber() : link->getLeftPortNumber();
+   }
+   bool isFront() const
+   {
+      return right ? link->isRightFront() :  link->isLeftFront();
+   }
+};
+
+/**
+ * Go thought all patch panel connections to collect rout information in routeInformation and return end node
+ */
+bool GetEndNode(LinkPart *part, StringBuffer *routeInformation)
+{
+   if (!routeInformation->isEmpty())
+   {
+      routeInformation->append(_T(" -> "));
+   }
+   shared_ptr<NetObj> remoteObject = FindObjectById(part->getObjectId(), OBJECT_RACK);
+   routeInformation->append(GetRackComment(static_pointer_cast<Rack>(remoteObject), part->getPatchPanelId(), part->getPortNumber()));
+
+   bool found = false;
+   unique_ptr<SharedObjectArray<PhysicalLink>> links = s_physicalLinks.getAll();
+   for (const shared_ptr<PhysicalLink> &link : *links)
+   {
+      if (link->getLeftObjectId() == part->getObjectId() && link->getLeftPatchPanelId() == part->getPatchPanelId()
+            && link->getLeftPortNumber() == part->getPortNumber() && link->isLeftFront() != part->isFront())
+      {
+         part->update(link, true);
+         found = true;
+         break;
+      }
+      if (link->getRightObjectId() == part->getObjectId() && link->getRightPatchPanelId() == part->getPatchPanelId()
+            && link->getRightPortNumber() == part->getPortNumber() && (link->isRightFront() != part->isFront()))
+      {
+         part->update(link, false);
+         found = true;
+         break;
+      }
+   }
+
+   if (!found)
+      return false;
+
+   if (part->getParentId() == 0)
+   {
+      return GetEndNode(part, routeInformation);
+   }
+   else
+   {
+      return true;
+   }
+}
+
+static bool FindAllNodeLinks(PhysicalLink *link, uint32_t *id)
+{
+   return (link->getLeftParentId() == *id) || (link->getRightParentId() == *id);
+}
+
+/**
+ * Get physical links for node
+ */
+ObjectArray<L1_NEIGHBOR_INFO> GetL1Neighbors(const Node *root)
+{
+   ObjectArray<L1_NEIGHBOR_INFO> result(0, 16, Ownership::True);
+   uint32_t id = root->getId();
+   unique_ptr<SharedObjectArray<PhysicalLink>> links = s_physicalLinks.findAll(FindAllNodeLinks, &id);
+   for (const shared_ptr<PhysicalLink> &link : *links)
+   {
+      LinkPart localLinkPart(link, false);
+      LinkPart remoteLinkPart(link, true);
+
+      if (link->getRightParentId() == root->getId()) //swap links with direction if required
+      {
+         localLinkPart = LinkPart(link, true);
+         remoteLinkPart = LinkPart(link, false);
+      }
+
+      StringBuffer path;
+      if (remoteLinkPart.getParentId() != 0 || GetEndNode(&remoteLinkPart, &path))
+      {
+         L1_NEIGHBOR_INFO *info = new L1_NEIGHBOR_INFO();
+         info->ifLocal = localLinkPart.getObjectId();
+         info->ifRemote = remoteLinkPart.getObjectId();
+         info->objectId = remoteLinkPart.getParentId();
+         info->routeInfo = path;
+
+         result.add(info);
+      }
+   }
+
+   return result;
 }
 
 /**

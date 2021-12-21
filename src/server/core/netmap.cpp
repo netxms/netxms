@@ -837,7 +837,7 @@ void NetworkMap::updateContent()
             switch(m_mapType)
             {
                case MAP_TYPE_LAYER2_TOPOLOGY:
-                  topology = seed->buildL2Topology(&status, m_discoveryRadius, (m_flags & MF_SHOW_END_NODES) != 0);
+                  topology = seed->buildL2Topology(&status, m_discoveryRadius, (m_flags & MF_SHOW_END_NODES) != 0, (m_flags & MF_USE_L1_TOPOLOGY) != 0);
                   break;
                case MAP_TYPE_IP_TOPOLOGY:
                   topology = shared_ptr<NetworkMapObjectList>(BuildIPTopology(seed, m_discoveryRadius, (m_flags & MF_SHOW_END_NODES) != 0).release());

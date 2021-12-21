@@ -179,6 +179,17 @@ enum LinkLayerProtocol
 /**
  * Link layer neighbor information
  */
+struct L1_NEIGHBOR_INFO
+{
+   uint32_t ifLocal;           // Local interface index
+   uint32_t ifRemote;          // Remote interface index
+   uint32_t objectId;          // ID of connected object
+   StringBuffer routeInfo;           // Information about route between links
+};
+
+/**
+ * Link layer neighbor information
+ */
 struct LL_NEIGHBOR_INFO
 {
    uint32_t ifLocal;           // Local interface index
@@ -294,7 +305,7 @@ public:
 //
 
 shared_ptr<NetworkPath> TraceRoute(const shared_ptr<Node>& src, const shared_ptr<Node>& dest);
-void BuildL2Topology(NetworkMapObjectList &topology, Node *root, int depth, bool includeEndNodes);
+void BuildL2Topology(NetworkMapObjectList &topology, Node *root, int depth, bool includeEndNodes, bool useL1Topology);
 shared_ptr<ForwardingDatabase> GetSwitchForwardingDatabase(Node *node);
 shared_ptr<NetObj> FindInterfaceConnectionPoint(const MacAddress& macAddr, int *type);
 

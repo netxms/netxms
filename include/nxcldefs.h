@@ -1109,6 +1109,8 @@ enum AggregationFunction
 #define MF_SHOW_END_NODES        0x00000008
 #define MF_CALCULATE_STATUS      0x00000010
 #define MF_FILTER_OBJECTS        0x00000020
+#define MF_SHOW_LINK_DIRECTION   0x00000040
+#define MF_USE_L1_TOPOLOGY       0x00000080
 
 /**
  * Network map layouts

@@ -465,11 +465,11 @@ shared_ptr<ForwardingDatabase> GetSwitchForwardingDatabase(Node *node)
 				if (node->callSnmpEnumerate(_T(".1.3.6.1.2.1.17.4.3.1.1"), FDBHandler, fdb.get(), context) != SNMP_ERR_SUCCESS)
 				{
                // Some Cisco switches may not return data for certain system VLANs
-				   nxlog_debug_tag(DEBUG_TAG_TOPO_FDB, 5, _T("FDB: cannot read  FDB in context %s"), context);
+				   nxlog_debug_tag(DEBUG_TAG_TOPO_FDB, 5, _T("FDB: cannot read  FDB in context %hs"), context);
             }
             else
             {
-               nxlog_debug_tag(DEBUG_TAG_TOPO_FDB, 5, _T("FDB: %d entries read from dot1dTpFdbTable in context %s"), fdb->getSize() - size, context);
+               nxlog_debug_tag(DEBUG_TAG_TOPO_FDB, 5, _T("FDB: %d entries read from dot1dTpFdbTable in context %hs"), fdb->getSize() - size, context);
             }
 				size = fdb->getSize();
 			}

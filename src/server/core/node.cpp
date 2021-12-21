@@ -9087,7 +9087,7 @@ shared_ptr<NetworkMapObjectList> Node::getL2Topology()
 /**
  * Rebuild layer 2 topology and return it as dynamically reated list which should be destroyed by caller
  */
-shared_ptr<NetworkMapObjectList> Node::buildL2Topology(uint32_t *status, int radius, bool includeEndNodes)
+shared_ptr<NetworkMapObjectList> Node::buildL2Topology(uint32_t *status, int radius, bool includeEndNodes, bool useL1Topology)
 {
    shared_ptr<NetworkMapObjectList> result;
    int nDepth = (radius < 0) ? ConfigReadInt(_T("Topology.DefaultDiscoveryRadius"), 5) : radius;
@@ -9098,7 +9098,7 @@ shared_ptr<NetworkMapObjectList> Node::buildL2Topology(uint32_t *status, int rad
       m_topologyMutex.unlock();
 
       result = make_shared<NetworkMapObjectList>();
-      BuildL2Topology(*result, this, nDepth, includeEndNodes);
+      BuildL2Topology(*result, this, nDepth, includeEndNodes, useL1Topology);
 
       m_topologyMutex.lock();
       m_topology = result;

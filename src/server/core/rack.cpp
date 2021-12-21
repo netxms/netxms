@@ -250,6 +250,33 @@ json_t *Rack::toJson()
    return root;
 }
 
+String Rack::getRackPasiveElementDescription(uint32_t id)
+{
+   StringBuffer description;
+   lockProperties();
+   const RackPassiveElement *el = nullptr;
+   for(int i = 0; i < m_passiveElements->size(); i++)
+   {
+      if (m_passiveElements->get(i)->getId() == id)
+      {
+         el = m_passiveElements->get(i);
+         break;
+      }
+   }
+   if (el == nullptr)
+   {
+      description.append(_T("["));
+      description.append(id);
+      description.append(_T("]"));
+   }
+   else
+   {
+      description = el->toString();
+   }
+   unlockProperties();
+   return description;
+}
+
 /**
  * Default constructor for rack passive element
  */
@@ -359,4 +386,26 @@ void RackPassiveElement::fillMessage(NXCPMessage *pMsg, uint32_t base) const
    pMsg->setField(base++, m_position);
    pMsg->setField(base++, m_orientation);
    pMsg->setField(base++, m_portCount);
+}
+
+
+static const TCHAR *s_passiveElementTypeLabel[] = {
+    _T("FILL"),
+    _T("FRONT"),
+    _T("REAR")
+};
+
+/**
+ * Rack Passive element representation
+ */
+String RackPassiveElement::toString() const
+{
+   StringBuffer sb;
+   sb.append(s_passiveElementTypeLabel[m_orientation]);
+   sb.append(_T(" "));
+   sb.append(m_position);
+   sb.append(_T(" ("));
+   sb.append(m_name);
+   sb.append(_T(")"));
+   return sb;
 }

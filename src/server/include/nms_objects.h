@@ -3455,7 +3455,7 @@ public:
       const char *context = nullptr, bool failOnShutdown = false);
 
    shared_ptr<NetworkMapObjectList> getL2Topology();
-   shared_ptr<NetworkMapObjectList> buildL2Topology(uint32_t *status, int radius, bool includeEndNodes);
+   shared_ptr<NetworkMapObjectList> buildL2Topology(uint32_t *status, int radius, bool includeEndNodes, bool useL1Topology);
    shared_ptr<ForwardingDatabase> getSwitchForwardingDatabase();
    shared_ptr<NetObj> findConnectionPoint(UINT32 *localIfId, BYTE *localMacAddr, int *type);
    void addHostConnections(LinkLayerNeighbors *nbs);
@@ -3709,6 +3709,7 @@ public:
 
    RackElementType getType() const { return m_type; }
    uint32_t getId() const { return m_id; }
+   String toString() const;
 };
 
 /**
@@ -3742,6 +3743,8 @@ public:
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
    virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
+
+   String getRackPasiveElementDescription(uint32_t id);
 
    virtual json_t *toJson() override;
 };
@@ -4641,6 +4644,7 @@ UserAgentNotificationItem *CreateNewUserAgentNotification(const TCHAR *message, 
 
 void DeleteObjectFromPhysicalLinks(UINT32 id);
 void DeletePatchPanelFromPhysicalLinks(UINT32 rackId, UINT32 patchPanelId);
+ObjectArray<L1_NEIGHBOR_INFO> GetL1Neighbors(const Node *root);
 
 shared_ptr<ObjectCategory> NXCORE_EXPORTABLE GetObjectCategory(uint32_t id);
 shared_ptr<ObjectCategory> NXCORE_EXPORTABLE FindObjectCategoryByName(const TCHAR *name);

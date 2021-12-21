@@ -207,7 +207,7 @@ static void UpdatePortNames(ObjLink *link, const TCHAR *port1, const TCHAR *port
 /**
  * Link two objects with named links
  */
-void NetworkMapObjectList::linkObjectsEx(uint32_t id1, uint32_t id2, const TCHAR *port1, const TCHAR *port2, uint32_t portId1, uint32_t portId2)
+void NetworkMapObjectList::linkObjectsEx(uint32_t id1, uint32_t id2, const TCHAR *port1, const TCHAR *port2, uint32_t portId1, uint32_t portId2, const TCHAR *name)
 {
    bool linkExists = false;
    if ((m_objectList.indexOf(id1) != -1) && (m_objectList.indexOf(id2) != -1))  // if both objects exist
@@ -220,9 +220,9 @@ void NetworkMapObjectList::linkObjectsEx(uint32_t id1, uint32_t id2, const TCHAR
 				int j;
 				for(j = 0; j < m_linkList.get(i)->portIdCount; j++)
 				{
-					// assume point-to-point interfaces, therefore "or" is enough
-					if ((m_linkList.get(i)->portIdArray1[j] == portId1) || (m_linkList.get(i)->portIdArray2[j] == portId2))
+					if ((m_linkList.get(i)->portIdArray1[j] == portId1) && (m_linkList.get(i)->portIdArray2[j] == portId2))
                {
+					   m_linkList.get(i)->name = name;
                   linkExists = true;
                   break;
                }
@@ -234,6 +234,7 @@ void NetworkMapObjectList::linkObjectsEx(uint32_t id1, uint32_t id2, const TCHAR
 					m_linkList.get(i)->portIdCount++;
 					UpdatePortNames(m_linkList.get(i), port1, port2);
 					m_linkList.get(i)->type = LINK_TYPE_MULTILINK;
+               m_linkList.get(i)->name = name;
                linkExists = true;
 				}
 				break;
@@ -243,9 +244,9 @@ void NetworkMapObjectList::linkObjectsEx(uint32_t id1, uint32_t id2, const TCHAR
 				int j;
 				for(j = 0; j < m_linkList.get(i)->portIdCount; j++)
 				{
-					// assume point-to-point interfaces, therefore or is enough
-					if ((m_linkList.get(i)->portIdArray1[j] == portId2) || (m_linkList.get(i)->portIdArray2[j] == portId1))
+					if ((m_linkList.get(i)->portIdArray1[j] == portId2) && (m_linkList.get(i)->portIdArray2[j] == portId1))
 					{
+                  m_linkList.get(i)->name = name;
                   linkExists = true;
                   break;
                }
@@ -257,6 +258,7 @@ void NetworkMapObjectList::linkObjectsEx(uint32_t id1, uint32_t id2, const TCHAR
 					m_linkList.get(i)->portIdCount++;
 					UpdatePortNames(m_linkList.get(i), port2, port1);
 					m_linkList.get(i)->type = LINK_TYPE_MULTILINK;
+               m_linkList.get(i)->name = name;
                linkExists = true;
 				}
 				break;
@@ -271,6 +273,7 @@ void NetworkMapObjectList::linkObjectsEx(uint32_t id1, uint32_t id2, const TCHAR
 			obj->portIdCount = 1;
 			obj->portIdArray1[0] = portId1;
 			obj->portIdArray2[0] = portId2;
+         obj->name = name;
 			_tcslcpy(obj->port1, port1, MAX_CONNECTOR_NAME);
 			_tcslcpy(obj->port2, port2, MAX_CONNECTOR_NAME);
 			m_linkList.add(obj);

@@ -53,6 +53,7 @@ public class MapOptions extends PropertyPage
 	private Button checkShowStatusFrame;
    private Button checkShowStatusBkgnd;
    private Button checkShowLinkDirection;
+   private Button checkUseL1Topology;
    private Combo objectDisplayMode;
 	private Combo routingAlgorithm;
 	private Button radioColorDefault;
@@ -188,6 +189,10 @@ public class MapOptions extends PropertyPage
 	      checkIncludeEndNodes.setText(Messages.get().MapOptions_IncludeEndNodes);
 	      checkIncludeEndNodes.setSelection((object.getFlags() & NetworkMap.MF_SHOW_END_NODES) != 0);
 	      
+	      checkUseL1Topology = new Button(topoGroup, SWT.CHECK);
+	      checkUseL1Topology.setText("Use physical links for topology investigation");
+	      checkUseL1Topology.setSelection((object.getFlags() & NetworkMap.MF_USE_L1_TOPOLOGY) != 0);
+	      
 	      checkCustomRadius = new Button(topoGroup, SWT.CHECK);
 	      checkCustomRadius.setText(Messages.get().MapOptions_CustomDiscoRadius);
 	      checkCustomRadius.setSelection(object.getDiscoveryRadius() > 0);
@@ -250,7 +255,9 @@ public class MapOptions extends PropertyPage
 			flags |= NetworkMap.MF_CALCULATE_STATUS;
 		if (checkShowLinkDirection.getSelection())
 		   flags |= NetworkMap.MF_SHOW_LINK_DIRECTION;
-		md.setObjectFlags(flags, 0x5F);
+      if (checkUseL1Topology.getSelection())
+         flags |= NetworkMap.MF_USE_L1_TOPOLOGY;
+		md.setObjectFlags(flags, 0xDF);
 		
 		md.setMapObjectDisplayMode(MapObjectDisplayMode.getByValue(objectDisplayMode.getSelectionIndex()));
 		md.setConnectionRouting(routingAlgorithm.getSelectionIndex() + 1);
