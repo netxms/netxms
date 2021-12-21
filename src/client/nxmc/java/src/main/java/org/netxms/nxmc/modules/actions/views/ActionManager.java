@@ -172,7 +172,7 @@ public class ActionManager extends ConfigurationView
    {
       refresh();
    }   
-   
+
    /**
     * @see org.netxms.nxmc.base.views.ConfigurationView#isModified()
     */

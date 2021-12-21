@@ -34,7 +34,6 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.custom.CLabel;
 import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
@@ -65,7 +64,6 @@ import org.netxms.nxmc.modules.snmp.views.helpers.SnmpWalkFilter;
 import org.netxms.nxmc.modules.snmp.widgets.MibBrowser;
 import org.netxms.nxmc.modules.snmp.widgets.MibObjectDetails;
 import org.netxms.nxmc.resources.ResourceManager;
-import org.netxms.nxmc.resources.ThemeEngine;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
@@ -82,7 +80,6 @@ public class MibExplorer extends ObjectView implements SnmpWalkListener
 	public static final int COLUMN_TYPE = 2;
 	public static final int COLUMN_VALUE = 3;
 	
-	private CLabel header;
 	private Font headerFont;
 	private MibBrowser mibBrowser;
 	private MibObjectDetails details;
@@ -132,13 +129,6 @@ public class MibExplorer extends ObjectView implements SnmpWalkListener
 		layout.marginWidth = 0;
 		layout.verticalSpacing = 0;
 		parent.setLayout(layout);
-		
-		header = new CLabel(parent, SWT.BORDER);
-		header.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
-		header.setFont(headerFont);
-      header.setBackground(ThemeEngine.getBackgroundColor(ID + ".Header"));
-      header.setForeground(ThemeEngine.getForegroundColor(ID + ".Header"));
-		header.setText((currentNode != null) ? currentNode.getObjectName() : ""); //$NON-NLS-1$
 		
 		SashForm splitter = new SashForm(parent, SWT.VERTICAL);
 		splitter.setLayout(new FillLayout());
@@ -440,16 +430,17 @@ public class MibExplorer extends ObjectView implements SnmpWalkListener
 		
 		WidgetHelper.restoreColumnSettings(viewer.getTable(), ID); //$NON-NLS-1$
 	}
-	
-	
+
+   /**
+    * @see org.netxms.nxmc.modules.objects.views.ObjectView#onObjectChange(org.netxms.client.objects.AbstractObject)
+    */
 	@Override
    protected void onObjectChange(AbstractObject object)
    {
       currentNode = (AbstractNode)object;
       actionWalk.setEnabled((object != null) && !walkActive);
-      header.setText((currentNode != null) ? currentNode.getObjectName() : ""); //$NON-NLS-1$
    }
-	
+
 	/**
 	 * Do SNMP walk
 	 */
