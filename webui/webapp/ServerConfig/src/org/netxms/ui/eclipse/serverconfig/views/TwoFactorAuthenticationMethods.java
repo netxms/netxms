@@ -52,8 +52,8 @@ import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.serverconfig.Activator;
 import org.netxms.ui.eclipse.serverconfig.dialogs.TwoFactorAuthMethodEditDialog;
-import org.netxms.ui.eclipse.serverconfig.views.helpers.NotificationChannelLabelProvider;
-import org.netxms.ui.eclipse.serverconfig.views.helpers.NotificationChannelListComparator;
+import org.netxms.ui.eclipse.serverconfig.views.helpers.TwoFactorMethodLabelProvider;
+import org.netxms.ui.eclipse.serverconfig.views.helpers.TwoFactorMethodListComparator;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -68,8 +68,9 @@ public class TwoFactorAuthenticationMethods extends ViewPart
 
    // Columns
    public static final int COLUMN_NAME = 0;
-   public static final int COLUMN_DESCRIPTION = 1;
-   public static final int COLUMN_DRIVER = 2;
+   public static final int COLUMN_DRIVER = 1;
+   public static final int COLUMN_STATUS = 2;
+   public static final int COLUMN_DESCRIPTION = 3;
 
    private NXCSession session = ConsoleSharedData.getSession();
    private SessionListener listener;
@@ -85,12 +86,12 @@ public class TwoFactorAuthenticationMethods extends ViewPart
    @Override
    public void createPartControl(Composite parent)
    {
-      final int[] widths = { 80, 200, 80, 80, 400 };
-      final String[] names = { "Name", "Description", "Driver" };
+      final int[] widths = { 160, 120, 80, 500 };
+      final String[] names = { "Name", "Driver", "Status", "Description" };
       viewer = new SortableTableViewer(parent, names, widths, COLUMN_NAME, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
       viewer.setContentProvider(new ArrayContentProvider());
-      viewer.setLabelProvider(new NotificationChannelLabelProvider());
-      viewer.setComparator(new NotificationChannelListComparator());
+      viewer.setLabelProvider(new TwoFactorMethodLabelProvider());
+      viewer.setComparator(new TwoFactorMethodListComparator());
       viewer.addDoubleClickListener(new IDoubleClickListener() {
          @Override
          public void doubleClick(DoubleClickEvent event)
@@ -177,7 +178,7 @@ public class TwoFactorAuthenticationMethods extends ViewPart
          }
       };
 
-      actionNewMethod = new Action("&Add...", SharedIcons.ADD_OBJECT) {
+      actionNewMethod = new Action("&New...", SharedIcons.ADD_OBJECT) {
          @Override
          public void run()
          {
@@ -252,10 +253,6 @@ public class TwoFactorAuthenticationMethods extends ViewPart
       // Create menu.
       Menu menu = menuMgr.createContextMenu(viewer.getControl());
       viewer.getControl().setMenu(menu);
-
-      // Register menu for extension.
-      getSite().setSelectionProvider(viewer);
-      getSite().registerContextMenu(menuMgr, viewer);
    }
 
    /**
@@ -275,7 +272,7 @@ public class TwoFactorAuthenticationMethods extends ViewPart
     */
    private void refresh()
    {
-      new ConsoleJob("Get notification channels", this, Activator.PLUGIN_ID, null) {
+      new ConsoleJob("Get two-factor authentication methods", this, Activator.PLUGIN_ID) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
@@ -307,7 +304,7 @@ public class TwoFactorAuthenticationMethods extends ViewPart
          return;
 
       final TwoFactorAuthenticationMethod method = dlg.getMethod();
-      new ConsoleJob("Create notification channel", this, Activator.PLUGIN_ID, null) {
+      new ConsoleJob("Create two-factor authentication method", this, Activator.PLUGIN_ID) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
@@ -317,7 +314,7 @@ public class TwoFactorAuthenticationMethods extends ViewPart
          @Override
          protected String getErrorMessage()
          {
-            return "Error creating notifiction channel";
+            return "Cannot create two-factor authentication method";
          }
       }.start();
    }
@@ -336,7 +333,7 @@ public class TwoFactorAuthenticationMethods extends ViewPart
       if (dlg.open() != Window.OK)
          return;
 
-      new ConsoleJob("Update two-factor authentication method", this, Activator.PLUGIN_ID, null) {
+      new ConsoleJob("Update two-factor authentication method", this, Activator.PLUGIN_ID) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
@@ -350,7 +347,7 @@ public class TwoFactorAuthenticationMethods extends ViewPart
          @Override
          protected String getErrorMessage()
          {
-            return "Cannot update two-factor notification channel";
+            return "Cannot update two-factor authentication method";
          }
       }.start();
    }
@@ -374,7 +371,7 @@ public class TwoFactorAuthenticationMethods extends ViewPart
             methods.add(((TwoFactorAuthenticationMethod)o).getName());
       }
 
-      new ConsoleJob("Delete two-factor authentication method", this, Activator.PLUGIN_ID, null) {
+      new ConsoleJob("Delete two-factor authentication method", this, Activator.PLUGIN_ID) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -58,61 +58,62 @@ public class SystemRights extends PropertyPage
    private String filterText = "";
    private FilterText filter;
    private CheckboxTableViewer viewer;
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
-	 */
+
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createContents(Composite parent)
 	{
 		session = ConsoleSharedData.getSession();
       object = (AbstractUserObject)getElement().getAdapter(AbstractUserObject.class);
 
-      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_UNLINK_ISSUES, Messages.get().SystemRights_UnlinkTicket));
-      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_MANAGE_ACTIONS, Messages.get().SystemRights_ConfigureActions));
-      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_VIEW_ALL_ALARMS, "View all alarm categories"));
-      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_EDIT_EVENT_DB, Messages.get().SystemRights_ConfigureEvents));
-      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_VIEW_EVENT_DB, Messages.get().SystemRights_ViewEventConfig));
-      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_PERSISTENT_STORAGE, "Manage persistent storage"));
-      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_EPP, Messages.get().SystemRights_EditEPP));
-      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_MANAGE_SCRIPTS, Messages.get().SystemRights_ManageScripts));
-      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_MANAGE_TOOLS, Messages.get().SystemRights_ConfigureObjTools));
-      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_MANAGE_SUMMARY_TBLS, Messages.get().SystemRights_ManageDCISummaryTables));
-      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_CONFIGURE_TRAPS, Messages.get().SystemRights_ConfigureTraps));
-      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_MANAGE_AGENT_CFG, Messages.get().SystemRights_ManageAgents));
-      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_MANAGE_PACKAGES, Messages.get().SystemRights_ManagePackages));
-      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_VIEW_EVENT_LOG, Messages.get().SystemRights_ViewEventLog));
-      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_VIEW_AUDIT_LOG, Messages.get().SystemRights_ViewAuditLog));
-      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_VIEW_TRAP_LOG, Messages.get().SystemRights_ViewTrapLog));
-      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_VIEW_SYSLOG, Messages.get().SystemRights_ViewSyslog));
-      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_MANAGE_MAPPING_TBLS, Messages.get().SystemRights_ManageMappingTables));
-      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_SERVER_CONFIG, Messages.get().SystemRights_EditServerConfig));
-      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_READ_SERVER_FILES, Messages.get().SystemRights_ReadFiles));
-      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_MANAGE_SERVER_FILES, Messages.get().SystemRights_ManageFiles));
-      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_SERVER_CONSOLE, Messages.get().SystemRights_AccessConsole));
-      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_XMPP_COMMANDS, Messages.get().SystemRights_ExecuteXMPPCommands));
-      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_MANAGE_SESSIONS, Messages.get().SystemRights_ControlSessions));
-      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_MANAGE_USERS, Messages.get().SystemRights_ManageUsers));
-      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_SEND_NOTIFICATION, "Send notifications"));
-      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_REGISTER_AGENTS, Messages.get().SystemRights_RegisterAgents));
-      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_MOBILE_DEVICE_LOGIN, Messages.get().SystemRights_LoginAsMobile));
-      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_MANAGE_IMAGE_LIB, Messages.get().SystemRights_ManageImageLibrary));
-      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_REPORTING_SERVER, Messages.get().SystemRights_ReportingServerAccess));
-      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_USER_SCHEDULED_TASKS, Messages.get().SystemRights_ManageUserScheduledTasks));
-      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_OWN_SCHEDULED_TASKS, Messages.get().SystemRights_ManageOwnScheduledTasks));
       attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_ALL_SCHEDULED_TASKS, Messages.get().SystemRights_ManageAllScheduledTasks));
-      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_SCHEDULE_SCRIPT, Messages.get().SystemRights_ScheduleScriptTask));
+      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_CONFIGURE_TRAPS, Messages.get().SystemRights_ConfigureTraps));
+      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_EDIT_EVENT_DB, Messages.get().SystemRights_ConfigureEvents));
+      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_EPP, Messages.get().SystemRights_EditEPP));
+      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_EXTERNAL_INTEGRATION, "External tool integration account"));
+      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_IMPORT_CONFIGURATION, "Import configuration"));
+      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_MANAGE_2FA_METHODS, "Manage two-factor authentication methods"));
+      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_MANAGE_ACTIONS, Messages.get().SystemRights_ConfigureActions));
+      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_MANAGE_AGENT_CFG, Messages.get().SystemRights_ManageAgents));
+      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_MANAGE_GEO_AREAS, "Manage geographical areas"));
+      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_MANAGE_IMAGE_LIB, Messages.get().SystemRights_ManageImageLibrary));
+      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_MANAGE_MAPPING_TBLS, Messages.get().SystemRights_ManageMappingTables));
+      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_MANAGE_OBJECT_QUERIES, "Manage object queries"));
+      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_MANAGE_PACKAGES, Messages.get().SystemRights_ManagePackages));
+      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_MANAGE_SCRIPTS, Messages.get().SystemRights_ManageScripts));
+      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_MANAGE_SERVER_FILES, Messages.get().SystemRights_ManageFiles));
+      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_MANAGE_SESSIONS, Messages.get().SystemRights_ControlSessions));
+      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_MANAGE_SUMMARY_TBLS, Messages.get().SystemRights_ManageDCISummaryTables));
+      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_MANAGE_TOOLS, Messages.get().SystemRights_ConfigureObjTools));
+      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_MANAGE_USERS, Messages.get().SystemRights_ManageUsers));
+      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_MOBILE_DEVICE_LOGIN, Messages.get().SystemRights_LoginAsMobile));
+      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_OBJECT_CATEGORIES, "Manage object categories"));
+      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_OWN_SCHEDULED_TASKS, Messages.get().SystemRights_ManageOwnScheduledTasks));
+      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_PERSISTENT_STORAGE, "Manage persistent storage"));
+      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_READ_SERVER_FILES, Messages.get().SystemRights_ReadFiles));
+      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_REGISTER_AGENTS, Messages.get().SystemRights_RegisterAgents));
+      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_REPORTING_SERVER, Messages.get().SystemRights_ReportingServerAccess));
       attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_SCHEDULE_FILE_UPLOAD, Messages.get().SystemRights_ScheduleFileUploadTask)); 
       attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_SCHEDULE_MAINTENANCE, Messages.get().SystemRights_ScheduleObjectMaint));
-      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_EXTERNAL_INTEGRATION, "External tool integration account")); 
+      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_SCHEDULE_SCRIPT, Messages.get().SystemRights_ScheduleScriptTask));
+      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_SEND_NOTIFICATION, "Send notifications"));
+      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_SERVER_CONFIG, Messages.get().SystemRights_EditServerConfig));
+      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_SERVER_CONSOLE, Messages.get().SystemRights_AccessConsole));
       attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_SETUP_TCP_PROXY, "Initiate TCP proxy sessions")); 
-      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_IMPORT_CONFIGURATION, "Import configuration")); 
-      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_UA_NOTIFICATIONS, "Manage user agent notifications")); 
-      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_WEB_SERVICE_DEFINITIONS, "Manage web service definitions"));
-      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_OBJECT_CATEGORIES, "Manage object categories"));
-      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_MANAGE_GEO_AREAS, "Manage geographical areas"));
       attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_SSH_KEY_CONFIGURATION, "Manage SSH keys"));
-      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_MANAGE_OBJECT_QUERIES, "Manage object queries"));
+      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_UA_NOTIFICATIONS, "Manage user agent notifications")); 
+      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_UNLINK_ISSUES, Messages.get().SystemRights_UnlinkTicket));
+      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_USER_SCHEDULED_TASKS, Messages.get().SystemRights_ManageUserScheduledTasks));
+      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_VIEW_ALL_ALARMS, "View all alarm categories"));
+      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_VIEW_AUDIT_LOG, Messages.get().SystemRights_ViewAuditLog));
+      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_VIEW_EVENT_DB, Messages.get().SystemRights_ViewEventConfig));
+      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_VIEW_EVENT_LOG, Messages.get().SystemRights_ViewEventLog));
+      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_VIEW_SYSLOG, Messages.get().SystemRights_ViewSyslog));
+      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_VIEW_TRAP_LOG, Messages.get().SystemRights_ViewTrapLog));
+      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_WEB_SERVICE_DEFINITIONS, "Manage web service definitions"));
+      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_XMPP_COMMANDS, Messages.get().SystemRights_ExecuteXMPPCommands));
 
       Composite dialogArea = new Composite(parent, SWT.BORDER);
       dialogArea.setBackground(parent.getDisplay().getSystemColor(SWT.COLOR_LIST_BACKGROUND));
@@ -121,7 +122,7 @@ public class SystemRights extends PropertyPage
 		layout.marginWidth = 0;
 		layout.marginHeight = 0;
 		dialogArea.setLayout(layout);
-		
+
       filter = new FilterText(dialogArea, SWT.NONE, null, false, false);
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
@@ -240,9 +241,9 @@ public class SystemRights extends PropertyPage
 		}.start();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performOk()
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performOk()
+    */
 	@Override
 	public boolean performOk()
 	{
@@ -250,9 +251,9 @@ public class SystemRights extends PropertyPage
 		return true;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performApply()
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performApply()
+    */
 	@Override
 	protected void performApply()
 	{

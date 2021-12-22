@@ -22,6 +22,7 @@ import java.util.Collections;
 import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.dialogs.Dialog;
+import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -101,6 +102,7 @@ public class NotificationChannelEditDialog extends Dialog
       
       textConfiguraiton = new LabeledText(dialogArea, SWT.NONE, SWT.MULTI | SWT.BORDER);
       textConfiguraiton.setLabel("Driver Configuration");
+      textConfiguraiton.getTextControl().setFont(JFaceResources.getTextFont());
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;

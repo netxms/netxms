@@ -73,7 +73,7 @@ public class TwoFactorResponseDialog extends Dialog
       layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
       dialogArea.setLayout(layout);
 
-      if (challenge != null)
+      if ((challenge != null) && !challenge.isEmpty())
       {
          LabeledText challengeText = new LabeledText(dialogArea, SWT.NONE);
          challengeText.setLabel("Challenge");

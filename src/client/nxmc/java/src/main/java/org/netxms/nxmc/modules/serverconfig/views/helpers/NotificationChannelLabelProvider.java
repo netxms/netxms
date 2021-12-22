@@ -32,31 +32,27 @@ public class NotificationChannelLabelProvider extends LabelProvider implements I
 {
    private Image imageInactive;
    private Image imageActive;
-   
+
    public NotificationChannelLabelProvider()
    {
-      imageInactive = ResourceManager.getImageDescriptor("icons/inactive.gif").createImage(); //$NON-NLS-1$
-      imageActive = ResourceManager.getImageDescriptor("icons/active.gif").createImage(); //$NON-NLS-1$
+      imageInactive = ResourceManager.getImageDescriptor("icons/inactive.gif").createImage();
+      imageActive = ResourceManager.getImageDescriptor("icons/active.gif").createImage();
    }
    
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
+    */
 	@Override
 	public Image getColumnImage(Object element, int columnIndex)
 	{
-	   if(columnIndex == NotificationChannels.COLUMN_NAME)
-	      if(((NotificationChannel)element).isActive())
-            return imageActive; 	      
-	      else
-	         return imageInactive; 
-         
+      if (columnIndex == 0)
+         return ((NotificationChannel)element).isActive() ? imageActive : imageInactive;
 		return null;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
+    */
 	@Override
 	public String getColumnText(Object element, int columnIndex)
 	{
@@ -76,7 +72,7 @@ public class NotificationChannelLabelProvider extends LabelProvider implements I
 		return null;
 	}
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.viewers.BaseLabelProvider#dispose()
     */
    @Override

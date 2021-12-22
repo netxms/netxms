@@ -22,6 +22,7 @@ import java.util.Collections;
 import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.dialogs.Dialog;
+import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -101,6 +102,7 @@ public class TwoFactorAuthMethodEditDialog extends Dialog
       
       textConfiguraiton = new LabeledText(dialogArea, SWT.NONE, SWT.MULTI | SWT.BORDER);
       textConfiguraiton.setLabel("Driver Configuration");
+      textConfiguraiton.getTextControl().setFont(JFaceResources.getTextFont());
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
@@ -116,7 +118,7 @@ public class TwoFactorAuthMethodEditDialog extends Dialog
       }
 
       final NXCSession session = ConsoleSharedData.getSession();
-      new ConsoleJob("Get driver names", null, Activator.PLUGIN_ID, null) {
+      new ConsoleJob("Get two-factor authentication method driver names", null, Activator.PLUGIN_ID) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
@@ -134,10 +136,10 @@ public class TwoFactorAuthMethodEditDialog extends Dialog
          @Override
          protected String getErrorMessage()
          {
-            return "Cannot get list of two-factor authentication drivers";
+            return "Cannot get list of two-factor authentication method drivers";
          }
       }.start(); 
-      
+
       return dialogArea;
    }
 

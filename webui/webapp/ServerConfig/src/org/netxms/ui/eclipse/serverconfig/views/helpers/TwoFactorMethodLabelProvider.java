@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,24 +21,24 @@ package org.netxms.ui.eclipse.serverconfig.views.helpers;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
-import org.netxms.client.NotificationChannel;
+import org.netxms.client.users.TwoFactorAuthenticationMethod;
 import org.netxms.ui.eclipse.serverconfig.Activator;
-import org.netxms.ui.eclipse.serverconfig.views.NotificationChannels;
+import org.netxms.ui.eclipse.serverconfig.views.TwoFactorAuthenticationMethods;
 
 /**
- * Label provider for notification channel elements
+ * Label provider for two factor authentication method list
  */
-public class NotificationChannelLabelProvider extends LabelProvider implements ITableLabelProvider
+public class TwoFactorMethodLabelProvider extends LabelProvider implements ITableLabelProvider
 {
    private Image imageInactive;
    private Image imageActive;
-
-   public NotificationChannelLabelProvider()
+   
+   public TwoFactorMethodLabelProvider()
    {
       imageInactive = Activator.getImageDescriptor("icons/inactive.gif").createImage(); //$NON-NLS-1$
       imageActive = Activator.getImageDescriptor("icons/active.gif").createImage(); //$NON-NLS-1$
    }
-   
+
    /**
     * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
     */
@@ -46,7 +46,7 @@ public class NotificationChannelLabelProvider extends LabelProvider implements I
 	public Image getColumnImage(Object element, int columnIndex)
 	{
       if (columnIndex == 0)
-         return ((NotificationChannel)element).isActive() ? imageActive : imageInactive;
+         return ((TwoFactorAuthenticationMethod)element).isLoaded() ? imageActive : imageInactive;
 		return null;
 	}
 
@@ -58,16 +58,14 @@ public class NotificationChannelLabelProvider extends LabelProvider implements I
 	{
 		switch(columnIndex)
 		{
-			case NotificationChannels.COLUMN_NAME:
-				return ((NotificationChannel)element).getName();
-			case NotificationChannels.COLUMN_DESCRIPTION:
-				return ((NotificationChannel)element).getDescription();
-			case NotificationChannels.COLUMN_DRIVER:
-				return ((NotificationChannel)element).getDriverName();
-         case NotificationChannels.COLUMN_LAST_STATUS:
-            return ((NotificationChannel)element).getLastStatusAsString();
-         case NotificationChannels.COLUMN_ERROR_MESSAGE:
-            return ((NotificationChannel)element).getErrorMessage();
+         case TwoFactorAuthenticationMethods.COLUMN_NAME:
+            return ((TwoFactorAuthenticationMethod)element).getName();
+         case TwoFactorAuthenticationMethods.COLUMN_DESCRIPTION:
+            return ((TwoFactorAuthenticationMethod)element).getDescription();
+         case TwoFactorAuthenticationMethods.COLUMN_DRIVER:
+            return ((TwoFactorAuthenticationMethod)element).getDriver();
+         case TwoFactorAuthenticationMethods.COLUMN_STATUS:
+            return ((TwoFactorAuthenticationMethod)element).isLoaded() ? "OK" : "FAIL";
 		}
 		return null;
 	}
