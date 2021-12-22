@@ -115,6 +115,8 @@ void UpdateUserAgentsEnvironment();
 
 void ParseTunnelList(const StringSet& tunnels);
 
+void ParseTunnelListFromConfigEntry(ObjectArray<ConfigEntry> *config);
+
 void StartWebServiceHousekeeper();
 
 void StartFileMonitor(const shared_ptr<Config>& config);
@@ -1147,9 +1149,16 @@ BOOL Initialize()
 		// Parse outgoing server connection (tunnel) list
       ParseTunnelList(s_serverConnectionList);
 
-		// Parse server lists
-		if (m_pszMasterServerList != nullptr)
-			ParseServerList(m_pszMasterServerList, true, true);
+      ObjectArray<ConfigEntry> *servConConfig = config->getSubEntries(_T("/ServerConnection"));
+      if (servConConfig != nullptr)
+      {
+         ParseTunnelListFromConfigEntry(servConConfig);
+         delete servConConfig;
+      }
+
+      // Parse server lists
+      if (m_pszMasterServerList != nullptr)
+         ParseServerList(m_pszMasterServerList, true, true);
 		if (m_pszControlServerList != nullptr)
 			ParseServerList(m_pszControlServerList, true, false);
 		if (m_pszServerList != nullptr)

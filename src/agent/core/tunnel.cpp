@@ -116,8 +116,9 @@ private:
    Mutex m_channelLock;
    int m_tlsHandshakeFailures;
    bool m_ignoreClientCertificate;
+   BYTE *m_fingerprint; // Server certificate fingerprint
 
-   Tunnel(const TCHAR *hostname, uint16_t port, const TCHAR *certificate, const TCHAR *pkeyPassword);
+   Tunnel(const TCHAR *hostname, uint16_t port, const TCHAR *certificate, const TCHAR *pkeyPassword, const BYTE *fingerprint);
 
    bool connectToServer();
    int sslWrite(const void *data, size_t size);
@@ -139,6 +140,8 @@ private:
    void recvThread();
    static THREAD_RESULT THREAD_CALL recvThreadStarter(void *arg);
 
+   bool verifyServerCertificateFingerprint(STACK_OF(X509) * certChain);
+
 public:
    ~Tunnel();
 
@@ -154,12 +157,14 @@ public:
    void debugPrintf(int level, const TCHAR *format, ...);
 
    static Tunnel *createFromConfig(const TCHAR *config);
+   static Tunnel *createFromConfig(ConfigEntry *ce);
 };
 
 /**
  * Tunnel constructor
  */
-Tunnel::Tunnel(const TCHAR *hostname, uint16_t port, const TCHAR *certificate, const TCHAR *pkeyPassword) : m_channelLock(MutexType::FAST)
+Tunnel::Tunnel(const TCHAR *hostname, uint16_t port, const TCHAR *certificate, const TCHAR *pkeyPassword, const BYTE *fingerprint = nullptr)
+   : m_channelLock(MutexType::FAST)
 {
    m_hostname = MemCopyString(hostname);
    m_port = port;
@@ -180,6 +185,7 @@ Tunnel::Tunnel(const TCHAR *hostname, uint16_t port, const TCHAR *certificate, c
    m_queue = nullptr;
    m_tlsHandshakeFailures = 0;
    m_ignoreClientCertificate = false;
+   m_fingerprint = fingerprint == nullptr ? nullptr : MemCopyBlock(fingerprint, SHA256_DIGEST_SIZE);
 }
 
 /**
@@ -197,6 +203,7 @@ Tunnel::~Tunnel()
    MemFree(m_hostname);
    MemFree(m_certificate);
    MemFree(m_pkeyPassword);
+   MemFree(m_fingerprint);
 }
 
 /**
@@ -849,6 +856,29 @@ static bool VerifyServerCertificate(X509 *cert)
 }
 
 /**
+ * Verify server certificate
+ */
+bool Tunnel::verifyServerCertificateFingerprint(STACK_OF(X509) * chain)
+{
+   bool valid = false;
+   if (chain != nullptr)
+   {
+      for (int i = 0; i < sk_X509_num(chain); i++)
+      {
+         X509 *cert = sk_X509_value(chain, i);
+         BYTE md[SHA256_DIGEST_SIZE];
+
+         if (X509_digest(cert, EVP_sha256(), md, nullptr) && !memcmp(md, m_fingerprint, SHA256_DIGEST_SIZE))
+         {
+            valid = true;
+            break;
+         }
+      }
+   }
+   return valid;
+}
+
+/**
  * Connect to server
  */
 bool Tunnel::connectToServer()
@@ -998,7 +1028,7 @@ bool Tunnel::connectToServer()
    debugPrintf(4, _T("Server certificate issuer is %s"), issuer.cstr());
 
    bool isValid = true;
-   if (g_dwFlags & AF_CHECK_SERVER_CERTIFICATE)
+   if ((g_dwFlags & AF_CHECK_SERVER_CERTIFICATE) || (m_fingerprint != nullptr))
    {
       debugPrintf(3, _T("Verifying server certificate"));
       isValid = VerifyServerCertificate(cert);
@@ -1007,6 +1037,20 @@ bool Tunnel::connectToServer()
    else
    {
       debugPrintf(3, _T("Server certificate verification is disabled"));
+   }
+
+   if (isValid)
+   {
+      if (m_fingerprint != nullptr)
+      {
+         debugPrintf(3, _T("Verifying server certificate fingerprint"));
+         isValid = verifyServerCertificateFingerprint(SSL_get_peer_cert_chain(m_ssl));
+         debugPrintf(3, _T("Certificate \"%s\" for issuer %s - fingerprint verification %s"), subject.cstr(), issuer.cstr(), isValid ? _T("successful") : _T("failed"));
+      }
+      else
+      {
+         debugPrintf(3, _T("Server certificate pinning is disabled"));
+      }
    }
 
    X509_free(cert);
@@ -1539,6 +1583,35 @@ Tunnel *Tunnel::createFromConfig(const TCHAR *config)
 }
 
 /**
+ * Create tunnel object from ConfigEntry
+ */
+Tunnel *Tunnel::createFromConfig(ConfigEntry *ce)
+{
+   const TCHAR *hostname = ce->getSubEntryValue(_T("Hostname"), 0, nullptr);
+   if (hostname == nullptr)
+      hostname = ce->getName();
+
+   uint16_t port = ce->getSubEntryValueAsUInt(_T("Port"), 0, AGENT_TUNNEL_PORT);
+
+   const TCHAR *certificate = ce->getSubEntryValue(_T("Certificate"), 0, nullptr);
+   const TCHAR *password = nullptr;
+   if (certificate != nullptr)
+      password = ce->getSubEntryValue(_T("Password"), 0, nullptr);
+
+   StringBuffer fingerprintString = ce->getSubEntryValue(_T("ServerCertificateFingerprint"), 0, nullptr);
+
+   if (!fingerprintString.isEmpty())
+   {
+      fingerprintString.replace(_T(":"), _T(""));
+      BYTE fingerprint[SHA256_DIGEST_SIZE];
+      StrToBin(fingerprintString, fingerprint, SHA256_DIGEST_SIZE);
+      return new Tunnel(hostname, port, certificate, password, fingerprint);
+   }
+
+   return new Tunnel(hostname, port, certificate, password);
+}
+
+/**
  * Channel constructor
  */
 TunnelCommChannel::TunnelCommChannel(Tunnel *tunnel) : AbstractCommChannel(), m_buffer(32768, 32768)
@@ -1780,6 +1853,30 @@ void ParseTunnelList(const StringSet& tunnels)
    {
       const TCHAR *config = it.next();
       Tunnel *t = Tunnel::createFromConfig(config);
+      if (t != nullptr)
+      {
+         s_tunnels.add(t);
+         nxlog_debug_tag(DEBUG_TAG, 1, _T("Added server tunnel %s"), t->getHostname());
+      }
+      else
+      {
+         nxlog_write(NXLOG_ERROR, _T("Invalid server connection configuration record \"%s\""), config);
+      }
+   }
+#endif
+}
+
+/**
+ * Parser server connection (tunnel) list from ConfigEntry
+ */
+void ParseTunnelListFromConfigEntry(ObjectArray<ConfigEntry> *config)
+{
+#ifdef _WITH_ENCRYPTION
+   Iterator<ConfigEntry> it = config->begin();
+   while (it.hasNext())
+   {
+      ConfigEntry *ce = it.next();
+      Tunnel *t = Tunnel::createFromConfig(ce);
       if (t != nullptr)
       {
          s_tunnels.add(t);
