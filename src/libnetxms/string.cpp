@@ -1087,15 +1087,24 @@ MutableString& MutableString::operator =(const TCHAR *src)
 {
    if (!isInternalBuffer())
       MemFree(m_buffer);
-   m_length = _tcslen(src);
-   if (m_length < STRING_INTERNAL_BUFFER_SIZE)
+   if (src != nullptr)
    {
-      m_buffer = m_internalBuffer;
-      memcpy(m_buffer, src, (m_length + 1) * sizeof(TCHAR));
+      m_length = _tcslen(src);
+      if (m_length < STRING_INTERNAL_BUFFER_SIZE)
+      {
+         m_buffer = m_internalBuffer;
+         memcpy(m_buffer, src, (m_length + 1) * sizeof(TCHAR));
+      }
+      else
+      {
+         m_buffer = MemCopyString(src);
+      }
    }
    else
    {
-      m_buffer = MemCopyString(src);
+      m_buffer = m_internalBuffer;
+      m_length = 0;
+      m_buffer[0] = 0;
    }
    return *this;
 }
