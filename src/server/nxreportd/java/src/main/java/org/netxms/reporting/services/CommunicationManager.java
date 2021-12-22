@@ -28,12 +28,12 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Properties;
 import java.util.UUID;
-import org.netxms.base.CommonRCC;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPException;
 import org.netxms.base.NXCPMessage;
 import org.netxms.base.NXCPMessageReceiver;
 import org.netxms.client.SessionNotification;
+import org.netxms.client.constants.RCC;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.reporting.ReportRenderFormat;
 import org.netxms.client.reporting.ReportResult;
@@ -288,7 +288,7 @@ public class CommunicationManager
       {
          case NXCPCodes.CMD_ISC_CONNECT_TO_SERVICE: // ignore and reply "Ok"
          case NXCPCodes.CMD_KEEPALIVE:
-            reply.setFieldInt32(NXCPCodes.VID_RCC, CommonRCC.SUCCESS);
+            reply.setFieldInt32(NXCPCodes.VID_RCC, RCC.SUCCESS);
             break;
          case NXCPCodes.CMD_GET_NXCP_CAPS:
             reply.setMessageCode(NXCPCodes.CMD_NXCP_CAPS);
@@ -297,7 +297,7 @@ public class CommunicationManager
             break;
          case NXCPCodes.CMD_CONFIGURE_REPORTING_SERVER:
             configureServer(request);
-            reply.setFieldInt32(NXCPCodes.VID_RCC, CommonRCC.SUCCESS);
+            reply.setFieldInt32(NXCPCodes.VID_RCC, RCC.SUCCESS);
             break;
          case NXCPCodes.CMD_RS_LIST_REPORTS:
             listReports(reply);
@@ -318,7 +318,7 @@ public class CommunicationManager
             deleteResult(request, reply);
             break;
          default:
-            reply.setFieldInt32(NXCPCodes.VID_RCC, CommonRCC.NOT_IMPLEMENTED);
+            reply.setFieldInt32(NXCPCodes.VID_RCC, RCC.NOT_IMPLEMENTED);
             break;
       }
       return new MessageProcessingResult(reply, file);
@@ -355,7 +355,7 @@ public class CommunicationManager
          UUID uuid = list.get(i);
          reply.setField(NXCPCodes.VID_UUID_LIST_BASE + i, uuid);
       }
-      reply.setFieldInt32(NXCPCodes.VID_RCC, CommonRCC.SUCCESS);
+      reply.setFieldInt32(NXCPCodes.VID_RCC, RCC.SUCCESS);
    }
 
    /**
@@ -381,12 +381,12 @@ public class CommunicationManager
       if (definition != null)
       {
          logger.debug("Successfully retrieved report definition: " + definition);
-         response.setFieldInt32(NXCPCodes.VID_RCC, CommonRCC.SUCCESS);
+         response.setFieldInt32(NXCPCodes.VID_RCC, RCC.SUCCESS);
          definition.fillMessage(response);
       }
       else
       {
-         response.setFieldInt32(NXCPCodes.VID_RCC, CommonRCC.INTERNAL_ERROR);
+         response.setFieldInt32(NXCPCodes.VID_RCC, RCC.INTERNAL_ERROR);
       }
    }
 
@@ -398,7 +398,7 @@ public class CommunicationManager
     */
    private void getResults(NXCPMessage request, NXCPMessage reply)
    {
-      reply.setFieldInt32(NXCPCodes.VID_RCC, CommonRCC.SUCCESS);
+      reply.setFieldInt32(NXCPCodes.VID_RCC, RCC.SUCCESS);
       final int userId = request.getFieldAsInt32(NXCPCodes.VID_USER_ID);
       final UUID reportId = request.getFieldAsUUID(NXCPCodes.VID_REPORT_DEFINITION);
       logger.debug("Loading report results for {} (user={})", reportId, userId);
@@ -411,7 +411,7 @@ public class CommunicationManager
          fieldId += 10;
       }
       reply.setFieldInt32(NXCPCodes.VID_NUM_ITEMS, list.size());
-      reply.setFieldInt32(NXCPCodes.VID_RCC, CommonRCC.SUCCESS);
+      reply.setFieldInt32(NXCPCodes.VID_RCC, RCC.SUCCESS);
    }
 
    /**
@@ -430,7 +430,7 @@ public class CommunicationManager
       catch(Exception e)
       {
          logger.error("Cannot parse report execution parameters", e);
-         response.setFieldInt32(NXCPCodes.VID_RCC, CommonRCC.INVALID_ARGUMENT);
+         response.setFieldInt32(NXCPCodes.VID_RCC, RCC.INVALID_ARGUMENT);
          return;
       }
 
@@ -447,7 +447,7 @@ public class CommunicationManager
          }
       });
       response.setField(NXCPCodes.VID_JOB_ID, jobId);
-      response.setFieldInt32(NXCPCodes.VID_RCC, CommonRCC.SUCCESS);
+      response.setFieldInt32(NXCPCodes.VID_RCC, RCC.SUCCESS);
    }
 
    /**
@@ -476,7 +476,7 @@ public class CommunicationManager
       final int formatCode = request.getFieldAsInt32(NXCPCodes.VID_RENDER_FORMAT);
       final ReportRenderFormat format = ReportRenderFormat.valueOf(formatCode);
       File file = server.getReportManager().renderResult(reportId, jobId, format);
-      response.setFieldInt32(NXCPCodes.VID_RCC, (file != null) ? CommonRCC.SUCCESS : CommonRCC.IO_ERROR);
+      response.setFieldInt32(NXCPCodes.VID_RCC, (file != null) ? RCC.SUCCESS : RCC.IO_ERROR);
       return file;
    }
 
@@ -491,7 +491,7 @@ public class CommunicationManager
       final UUID reportId = request.getFieldAsUUID(NXCPCodes.VID_REPORT_DEFINITION);
       final UUID jobId = request.getFieldAsUUID(NXCPCodes.VID_JOB_ID);
       reply.setFieldInt32(NXCPCodes.VID_RCC,
-            server.getReportManager().deleteResult(reportId, jobId) ? CommonRCC.SUCCESS : CommonRCC.IO_ERROR);
+            server.getReportManager().deleteResult(reportId, jobId) ? RCC.SUCCESS : RCC.IO_ERROR);
       sendNotification(SessionNotification.RS_RESULTS_MODIFIED, 0);
    }
 

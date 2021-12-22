@@ -6,7 +6,6 @@ package org.netxms.websvc;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.netxms.base.CommonRCC;
 import org.netxms.client.NXCException;
 import org.netxms.client.constants.RCC;
 import org.restlet.Request;
@@ -27,8 +26,8 @@ import org.slf4j.LoggerFactory;
 public class WebSvcStatusService extends StatusService
 {
    private Logger log = LoggerFactory.getLogger(WebSvcStatusService.class);
-   
-   /* (non-Javadoc)
+
+   /**
     * @see org.restlet.service.StatusService#toStatus(java.lang.Throwable, org.restlet.Request, org.restlet.Response)
     */
    @Override
@@ -54,7 +53,7 @@ public class WebSvcStatusService extends StatusService
       return super.toStatus(throwable, request, response);
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.restlet.service.StatusService#toStatus(java.lang.Throwable, org.restlet.resource.Resource)
     */
    @Override
@@ -180,7 +179,7 @@ public class WebSvcStatusService extends StatusService
       {
          try
          {
-            json.put("error", CommonRCC.INVALID_ARGUMENT);
+            json.put("error", RCC.INVALID_ARGUMENT);
             json.put("description", status.getThrowable().getMessage());
          }
          catch(JSONException e1)
@@ -192,7 +191,7 @@ public class WebSvcStatusService extends StatusService
          log.debug("Internal error", status.getThrowable());
          try
          {
-            json.put("error", CommonRCC.INTERNAL_ERROR);
+            json.put("error", RCC.INTERNAL_ERROR);
             json.put("description", (status.getThrowable() != null) ? status.getThrowable().getMessage() : "Internal error");
          }
          catch(JSONException e1)
