@@ -28,4 +28,17 @@
          </action>
       </objectContribution>
    </extension>
+   <extension
+         point="org.eclipse.ui.propertyPages">
+      <page
+            class="org.netxms.ui.eclipse.slm.propertypages.InstanceDiscovery"
+            id="org.netxms.ui.eclipse.slm.propertypages.BusinessServiceInstanceDiscovery#30"
+            name="Instance Discovery">
+         <enabledWhen>
+            <instanceof
+                  value="org.netxms.client.objects.BusinessServicePrototype">
+            </instanceof>
+         </enabledWhen>
+      </page>
+   </extension>
 </plugin>

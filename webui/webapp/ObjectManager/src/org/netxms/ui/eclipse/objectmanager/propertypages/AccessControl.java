@@ -67,14 +67,14 @@ public class AccessControl extends PropertyPage
 	private Button checkInherit;
 	private NXCSession session;
 	
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createContents(Composite parent)
 	{
 		object = (AbstractObject)getElement().getAdapter(AbstractObject.class);
-      session = (NXCSession)ConsoleSharedData.getSession();
+      session = ConsoleSharedData.getSession();
 		
 		AccessListElement[] origAcl = object.getAccessList();
 		acl = new HashMap<Long, AccessListElement>(origAcl.length);
@@ -381,9 +381,9 @@ public class AccessControl extends PropertyPage
 		}.start();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performOk()
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performOk()
+    */
 	@Override
 	public boolean performOk()
 	{
@@ -391,18 +391,18 @@ public class AccessControl extends PropertyPage
 		return true;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performApply()
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performApply()
+    */
 	@Override
 	protected void performApply()
 	{
 		applyChanges(true);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performDefaults()
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performDefaults()
+    */
 	@Override
 	protected void performDefaults()
 	{
