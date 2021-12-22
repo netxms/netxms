@@ -1158,7 +1158,10 @@ public:
    }
    SharedString& operator=(const TCHAR *str)
    {
-      m_string = make_shared<String>(str);
+      if (str != nullptr)
+         m_string =  make_shared<String>(str);
+      else
+         m_string.reset();
       return *this;
    }
 
