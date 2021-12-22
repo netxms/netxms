@@ -97,7 +97,7 @@ public class PopOutViewWindow extends Window implements MessageAreaHolder
       messageArea = new MessageArea(windowArea, SWT.NONE);
       messageArea.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
 
-      viewContainer = new ViewContainer(this, null, windowArea, false, false) {
+      viewContainer = new ViewContainer(this, null, windowArea, false, false, false) {
          @Override
          public Point computeSize(int wHint, int hHint, boolean changed)
          {
