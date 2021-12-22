@@ -34,7 +34,7 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
 /**
- * "SSH" property page for node
+ * "Syslog" property page for node
  */
 public class Syslog extends PropertyPage
 {
@@ -129,7 +129,7 @@ public class Syslog extends PropertyPage
       applyChanges(true);
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.preference.PreferencePage#performDefaults()
     */
    @Override
@@ -139,4 +139,3 @@ public class Syslog extends PropertyPage
       codepage.setText("");
    }
 }
-

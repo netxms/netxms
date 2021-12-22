@@ -473,6 +473,17 @@
               </instanceof>
            </enabledWhen>
         </page>
+        <page
+              category="org.netxms.ui.eclipse.objectmanager.propertypages.Communication#10"
+              class="org.netxms.ui.eclipse.objectmanager.propertypages.WebServices"
+              id="org.netxms.ui.eclipse.objectmanager.propertypages.WebServices"
+              name="Web Services">
+           <enabledWhen>
+              <instanceof
+                    value="org.netxms.client.objects.DataCollectionTarget">
+              </instanceof>
+           </enabledWhen>
+        </page>
   </extension>
 
    <extension

@@ -27,19 +27,19 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
-import org.netxms.client.objects.AbstractNode;
+import org.netxms.client.objects.DataCollectionTarget;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
+import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
 import org.netxms.ui.eclipse.objectmanager.Activator;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
-import org.netxms.ui.eclipse.widgets.LabeledText;
 
 /**
- * "Syslog" property page for node
+ * "Web Services" property page for data collection target
  */
-public class Syslog extends PropertyPage
+public class WebServices extends PropertyPage
 {
-   private AbstractNode node;
-   private LabeledText codepage;
+   private DataCollectionTarget dcTarget;
+   private ObjectSelector webServiceProxy;
    private NXCSession session;
 
    /**
@@ -48,7 +48,7 @@ public class Syslog extends PropertyPage
    @Override
    protected Control createContents(Composite parent)
    {
-      node = (AbstractNode)getElement().getAdapter(AbstractNode.class);
+      dcTarget = (DataCollectionTarget)getElement().getAdapter(DataCollectionTarget.class);
       session = ConsoleSharedData.getSession();
 
       Composite dialogArea = new Composite(parent, SWT.NONE);
@@ -58,10 +58,11 @@ public class Syslog extends PropertyPage
       dialogLayout.makeColumnsEqualWidth = true;
       dialogArea.setLayout(dialogLayout);
 
-      codepage = new LabeledText(dialogArea, SWT.NONE);
-      codepage.setLabel("Codepage");
-      codepage.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
-      codepage.setText(node.getSyslogCodepage());
+      webServiceProxy = new ObjectSelector(dialogArea, SWT.NONE, true);
+      webServiceProxy.setLabel("Proxy");
+      webServiceProxy.setEmptySelectionName("<default>");
+      webServiceProxy.setObjectId(dcTarget.getWebServiceProxyId());
+      webServiceProxy.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
 
       return dialogArea;
    }
@@ -73,14 +74,14 @@ public class Syslog extends PropertyPage
     */
    protected boolean applyChanges(final boolean isApply)
    {
-      final NXCObjectModificationData md = new NXCObjectModificationData(node.getObjectId());
+      final NXCObjectModificationData md = new NXCObjectModificationData(dcTarget.getObjectId());
       
       if (isApply)
          setValid(false);
 
-      md.setSyslogCodepage(codepage.getText());
+      md.setWebServiceProxy(webServiceProxy.getObjectId());
 
-      new ConsoleJob(String.format("Updating syslog codepage for node %s", node.getObjectName()), null, Activator.PLUGIN_ID, null) {
+      new ConsoleJob(String.format("Updating web service settings for object %s", dcTarget.getObjectName()), null, Activator.PLUGIN_ID) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
@@ -90,7 +91,7 @@ public class Syslog extends PropertyPage
          @Override
          protected String getErrorMessage()
          {
-            return String.format("Cannot update syslog codepage for node %s", node.getObjectName());
+            return String.format("Cannot update web service settings for object %s", dcTarget.getObjectName());
          }
 
          @Override
@@ -102,7 +103,7 @@ public class Syslog extends PropertyPage
                   @Override
                   public void run()
                   {
-                     Syslog.this.setValid(true);
+                     WebServices.this.setValid(true);
                   }
                });
             }
@@ -136,6 +137,6 @@ public class Syslog extends PropertyPage
    protected void performDefaults()
    {
       super.performDefaults();
-      codepage.setText("");
+      webServiceProxy.setObjectId(0);
    }
 }
