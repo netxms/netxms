@@ -8,7 +8,7 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-SUBDIRS = nxaevent nxappget nxapush nxhwid nxreload
+SUBDIRS = nxaevent nxappget nxapush nxhwid nxreload scripts
 
 bin_PROGRAMS = nxaevent/nxaevent nxappget/nxappget nxapush/nxapush nxhwid/nxhwid
 

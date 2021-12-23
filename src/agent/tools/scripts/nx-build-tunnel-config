@@ -1,0 +1,49 @@
+#! /bin/sh
+
+if [ -z "$1" ] \
+   || [ "$1" = "-h" ] \
+   || [ "$1" = "--h" ] \
+   || [ "$1" = "-help" ] \
+   || [ "$1" = "--help" ];
+then
+   echo 'Usage: nx-build-tunnel-config <hostname> [<port>] [<certificate>] [<password>]'
+   echo 'Note: Server must be running on the specified host when using this script.'
+   exit 1
+fi
+
+HOSTNAME=$1
+
+PORT=4703
+if ! [ -z "$2" ]
+then
+   PORT=$2
+fi
+
+FINGERPRINT=$(echo | openssl s_client -showcerts -connect 10.2.1.146:4703 2>/dev/null | openssl x509 -noout -fingerprint -sha256 | grep Fingerprint | cut -d = -f 2)
+
+if [ -z "$FINGERPRINT" ]
+then
+  exit 2
+fi
+
+echo '[ServerConnection/'$HOSTNAME']'
+echo 'Hostname='$HOSTNAME
+echo 'Port='$PORT
+echo 'ServerCertificateFingerprint='$FINGERPRINT
+   
+if ! [ -z "$3" ]
+then
+   echo 'Certificate='$3
+
+   if ! [ -z "$4" ]
+   then
+      echo 'Password='$4
+   fi
+fi
+
+exit 0
+
+
+
+
+
