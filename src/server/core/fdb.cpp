@@ -436,7 +436,7 @@ shared_ptr<ForwardingDatabase> GetSwitchForwardingDatabase(Node *node)
                if (node->callSnmpEnumerate(_T(".1.3.6.1.2.1.17.1.4.1.2"), Dot1dPortTableHandler, fdb.get(), context, true) != SNMP_ERR_SUCCESS)
                {
                   // Some Cisco switches may not return data for certain system VLANs
-                  nxlog_debug_tag(DEBUG_TAG_TOPO_FDB, 5, _T("FDB: cannot read port table in context %s"), context);
+                  nxlog_debug_tag(DEBUG_TAG_TOPO_FDB, 5, _T("FDB: cannot read port table in context %hs"), context);
                }
             }
          }
