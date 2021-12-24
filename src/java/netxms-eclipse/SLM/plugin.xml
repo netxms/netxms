@@ -41,4 +41,13 @@
          </enabledWhen>
       </page>
    </extension>
+   <extension
+         point="org.netxms.ui.eclipse.objectview.tabs">
+      <tab
+            class="org.netxms.ui.eclipse.slm.objecttabs.BusinessServiceChecks"
+            icon="icons/service_check.gif"
+            id="org.netxms.ui.eclipse.slm.objecttabs.BusinessServiceChecks"
+            name="Checks">
+      </tab>
+   </extension>
 </plugin>

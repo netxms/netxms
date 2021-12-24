@@ -8,6 +8,7 @@ Bundle-RequiredExecutionEnvironment: JavaSE-11
 Bundle-ClassPath: .
 Export-Package: org.netxms.client,
  org.netxms.client.agent.config,
+ org.netxms.client.businessservices,
  org.netxms.client.constants,
  org.netxms.client.dashboards,
  org.netxms.client.datacollection,

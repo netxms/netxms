@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2019 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.nxmc.modules.businessservice.views;
+package org.netxms.ui.eclipse.slm.objecttabs;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -44,28 +44,25 @@ import org.netxms.client.SessionNotification;
 import org.netxms.client.businessservices.BusinessServiceCheck;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.BusinessService;
-import org.netxms.nxmc.Registry;
-import org.netxms.nxmc.base.jobs.Job;
-import org.netxms.nxmc.base.widgets.SortableTableViewer;
-import org.netxms.nxmc.localization.LocalizationHelper;
-import org.netxms.nxmc.modules.businessservice.dialogs.EditBusinessServiceCheckDlg;
-import org.netxms.nxmc.modules.businessservice.views.helpers.BusinessServiceCheckFilter;
-import org.netxms.nxmc.modules.businessservice.views.helpers.BusinessServiceCheckLabelProvider;
-import org.netxms.nxmc.modules.businessservice.views.helpers.BusinessServiceComparator;
-import org.netxms.nxmc.modules.objects.views.ObjectView;
-import org.netxms.nxmc.resources.ResourceManager;
-import org.netxms.nxmc.resources.SharedIcons;
-import org.netxms.nxmc.tools.MessageDialogHelper;
-import org.netxms.nxmc.tools.WidgetHelper;
-import org.xnap.commons.i18n.I18n;
+import org.netxms.ui.eclipse.console.resources.SharedIcons;
+import org.netxms.ui.eclipse.jobs.ConsoleJob;
+import org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.slm.Activator;
+import org.netxms.ui.eclipse.slm.dialogs.EditBusinessServiceCheckDlg;
+import org.netxms.ui.eclipse.slm.objecttabs.helpers.BusinessServiceCheckFilter;
+import org.netxms.ui.eclipse.slm.objecttabs.helpers.BusinessServiceCheckLabelProvider;
+import org.netxms.ui.eclipse.slm.objecttabs.helpers.BusinessServiceComparator;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
+import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
- * Business service "Checks" view
+ * Checks for business services
  */
-public class BusinessServiceChecksView extends ObjectView
+public class BusinessServiceChecks extends ObjectTab
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(BusinessServiceChecksView.class);
-   private static final String ID = "BusinessServiceChecks";
+   public static final String ID = "org.netxms.ui.eclipse.slm.objecttabs.BusinessServiceChecks";
 
    public static final int COLUMN_ID = 0;
    public static final int COLUMN_DESCRIPTION = 1;
@@ -85,41 +82,23 @@ public class BusinessServiceChecksView extends ObjectView
    private Map<Long, BusinessServiceCheck> checks;
 
    /**
-    * @param name
-    * @param image
-    */
-   public BusinessServiceChecksView()
-   {
-      super(i18n.tr("Checks"), ResourceManager.getImageDescriptor("icons/object-views/service_check.gif"), "BusinessServiceChecks", true);
-   }
-
-   /**
-    * @see org.netxms.nxmc.base.views.View#createContent(org.eclipse.swt.widgets.Composite)
+    * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#createTabContent(org.eclipse.swt.widgets.Composite)
     */
    @Override
-   protected void createContent(Composite parent)
-   {
-      session = Registry.getSession();
-      
+   protected void createTabContent(Composite parent)
+   { 
+      session = ConsoleSharedData.getSession();
+
       // Setup table columns
-      final String[] names = { 
-            i18n.tr("ID"), 
-            i18n.tr("Description"),
-            i18n.tr("Type"),
-            i18n.tr("Object"),
-            i18n.tr("DCI"),
-            i18n.tr("Status"),
-            i18n.tr("Reason")
-         };
+      final String[] names = { "ID", "Description", "Type", "Object", "DCI", "Status", "Reason" };
       final int[] widths = { 70, 200, 100, 200, 200, 70, 300 };
       viewer = new SortableTableViewer(parent, names, widths, 0, SWT.DOWN, SortableTableViewer.DEFAULT_STYLE);
       labelProvider = new BusinessServiceCheckLabelProvider();
-      BusinessServiceCheckFilter filter = new BusinessServiceCheckFilter(labelProvider);
-      setFilterClient(viewer, filter);
+      viewer.addFilter(new BusinessServiceCheckFilter(labelProvider));
       viewer.setComparator(new BusinessServiceComparator(labelProvider));
       viewer.setLabelProvider(labelProvider);
       viewer.setContentProvider(new ArrayContentProvider());
-      viewer.addSelectionChangedListener(new ISelectionChangedListener() {         
+      viewer.addSelectionChangedListener(new ISelectionChangedListener() {
          @Override
          public void selectionChanged(SelectionChangedEvent event)
          {
@@ -129,23 +108,23 @@ public class BusinessServiceChecksView extends ObjectView
          }
       });
       
-      WidgetHelper.restoreColumnSettings(viewer.getTable(), ID);
+      WidgetHelper.restoreColumnSettings(viewer.getTable(), Activator.getDefault().getDialogSettings(), ID);
       viewer.getTable().addDisposeListener(new DisposeListener() {
          @Override
          public void widgetDisposed(DisposeEvent e)
          {
-            WidgetHelper.saveColumnSettings(viewer.getTable(), ID);
+            WidgetHelper.saveColumnSettings(viewer.getTable(), Activator.getDefault().getDialogSettings(), ID);
          }
       });
-      
+
       viewer.addDoubleClickListener(new IDoubleClickListener() {
          @Override
          public void doubleClick(DoubleClickEvent event)
          {
-            actionEdit.run();            
+            actionEdit.run();
          }
       });
-      
+
       createActions();
       createPopupMenu();
 
@@ -183,36 +162,33 @@ public class BusinessServiceChecksView extends ObjectView
    }
 
    /**
-    * @see org.netxms.nxmc.base.views.View#refresh()
+    * Create actions
     */
-   @Override
-   public void refresh()
+   private void createActions()
    {
-      if (getObject() == null)
-         return;
-
-      new Job(i18n.tr("Get business service checks"), this) {
+      actionCreate = new Action("&New...", SharedIcons.ADD_OBJECT) {
          @Override
-         protected void run(IProgressMonitor monitor) throws Exception
+         public void run()
          {
-            Map<Long, BusinessServiceCheck> checks = session.getBusinessServiceChecks(getObject().getObjectId());
-            runInUIThread(new Runnable() {               
-               @Override
-               public void run()
-               {
-                  BusinessServiceChecksView.this.checks = checks;
-                  viewer.setInput(checks.values());
-                  updateDciLabels(checks.values());
-               }
-            });
+            createCheck();
          }
+      };
 
+      actionEdit = new Action("&Edit...", SharedIcons.EDIT) {
          @Override
-         protected String getErrorMessage()
+         public void run()
          {
-            return i18n.tr("Cannot get checks for business service {0}", getObject().getObjectName());
+            editCheck();
          }
-      }.start();
+      };
+
+      actionDelete = new Action("&Delete", SharedIcons.DELETE_OBJECT) {
+         @Override
+         public void run()
+         {
+            deleteCheck();
+         }
+      };
    }
 
    /**
@@ -248,132 +224,64 @@ public class BusinessServiceChecksView extends ObjectView
    }
 
    /**
-    * Create actions
+    * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#showForObject(org.netxms.client.objects.AbstractObject)
     */
-   private void createActions()
+   @Override
+   public boolean showForObject(AbstractObject object)
    {
-      actionCreate = new Action(i18n.tr("&Create new"), SharedIcons.ADD_OBJECT) 
-      {
-         @Override
-         public void run()
-         {
-            createCheck();
-         }
-      };
-
-      actionEdit = new Action(i18n.tr("&Edit..."), SharedIcons.EDIT) 
-      {
-         @Override
-         public void run()
-         {
-            editCheck();
-         }
-      };
-
-      actionDelete = new Action(i18n.tr("&Delete"), SharedIcons.DELETE_OBJECT) 
-      {
-         @Override
-         public void run()
-         {
-            deleteCheck();
-         }
-      };
+      return object instanceof BusinessService;
    }
 
    /**
-    * Delete selected check(s)
+    * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#selected()
     */
-   protected void deleteCheck()
+   @Override
+   public void selected()
    {
-      IStructuredSelection selection = viewer.getStructuredSelection();
-      if (selection.isEmpty())
-         return;
+      super.selected();
+      refresh();
+   }
 
-      if (!MessageDialogHelper.openQuestion(getWindow().getShell(), i18n.tr("Confirm Delete"),
-            i18n.tr("Do you really want to delete selected check?")))
-         return;
+   /**
+    * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#objectChanged(org.netxms.client.objects.AbstractObject)
+    */
+   @Override
+   public void objectChanged(AbstractObject object)
+   {
+      viewer.setInput(new Object[0]);
+      refresh();
+   }
 
-      final Object[] objects = selection.toArray();
-      new Job(i18n.tr("Delete business service check"), this) {
+   /**
+    * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#refresh()
+    */
+   @Override
+   public void refresh()
+   {
+      new ConsoleJob("Get business service checks", getViewPart(), Activator.PLUGIN_ID) {
          @Override
-         protected void run(IProgressMonitor monitor) throws Exception
+         protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            for(int i = 0; i < objects.length; i++)
-            {
-               session.deleteBusinessServiceCheck(getObject().getObjectId(), ((BusinessServiceCheck)objects[i]).getId());
-            }
+            Map<Long, BusinessServiceCheck> checks = session.getBusinessServiceChecks(getObject().getObjectId());
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
+                  if (viewer.getControl().isDisposed())
+                     return;
+                  BusinessServiceChecks.this.checks = checks;
+                  viewer.setInput(checks.values());
+                  updateDciLabels(checks.values());
+               }
+            });
          }
 
          @Override
          protected String getErrorMessage()
          {
-            return i18n.tr("Cannot delete business service check");
+            return String.format("Cannot get checks for business service %s", getObject().getObjectName());
          }
-      }.start();      
-   }
-
-   /**
-    * Edit selected check
-    */
-   protected void editCheck()
-   {
-      IStructuredSelection selection = viewer.getStructuredSelection();
-      if (selection.size() != 1)
-         return;
-
-      final BusinessServiceCheck check = new BusinessServiceCheck((BusinessServiceCheck)selection.getFirstElement());
-      final EditBusinessServiceCheckDlg dlg = new EditBusinessServiceCheckDlg(getWindow().getShell(), check, false);
-      if (dlg.open() == Window.OK)
-      {
-         new Job(i18n.tr("Update business service check"), this) {
-            @Override
-            protected void run(IProgressMonitor monitor) throws Exception
-            {
-               session.modifyBusinessServiceCheck(getObject().getObjectId(), check);
-            }
-
-            @Override
-            protected String getErrorMessage()
-            {
-               return i18n.tr("Cannot update business service check");
-            }
-         }.start();
-      }
-   }
-
-   /**
-    * Create new check
-    */
-   private void createCheck()
-   {
-      final BusinessServiceCheck check = new BusinessServiceCheck();
-      final EditBusinessServiceCheckDlg dlg = new EditBusinessServiceCheckDlg(getWindow().getShell(), check, false);
-      if (dlg.open() == Window.OK)
-      {
-         new Job(i18n.tr("Create business service check"), this) {
-            @Override
-            protected void run(IProgressMonitor monitor) throws Exception
-            {
-               session.modifyBusinessServiceCheck(getObject().getObjectId(), check);
-            }
-
-            @Override
-            protected String getErrorMessage()
-            {
-               return i18n.tr("Cannot create business service check");
-            }
-         }.start();
-      }
-   }
-
-   /**
-    * @see org.netxms.nxmc.modules.objects.views.ObjectView#onObjectChange(org.netxms.client.objects.AbstractObject)
-    */
-   @Override
-   protected void onObjectChange(AbstractObject object)
-   {
-      viewer.setInput(new Object[0]);
-      refresh();
+      }.start();
    }
 
    /**
@@ -383,12 +291,11 @@ public class BusinessServiceChecksView extends ObjectView
     */
    public void updateDciLabels(Collection<BusinessServiceCheck> checks)
    {
-      new Job(i18n.tr("Resolve DCI names"), null) {
+      ConsoleJob job = new ConsoleJob("Resolve DCI names", getViewPart(), Activator.PLUGIN_ID) {
          @Override
-         protected void run(IProgressMonitor monitor) throws Exception
-         {            
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
             final Map<Long, String> names = session.dciIdsToNames(checks);
-            
             runInUIThread(new Runnable() {
                @Override
                public void run()
@@ -402,36 +309,95 @@ public class BusinessServiceChecksView extends ObjectView
          @Override
          protected String getErrorMessage()
          {
-            return i18n.tr("Cannot resolve DCI names");
+            return "Cannot resolve DCI names";
+         }
+      };
+      job.setUser(false);
+      job.start();
+   }
+
+   /**
+    * Delete selected check(s)
+    */
+   protected void deleteCheck()
+   {
+      IStructuredSelection selection = viewer.getStructuredSelection();
+      if (selection.isEmpty())
+         return;
+
+      if (!MessageDialogHelper.openQuestion(getViewPart().getSite().getShell(), "Confirm Delete", "Do you really want to delete selected check?"))
+         return;
+
+      final Object[] objects = selection.toArray();
+      new ConsoleJob("Delete business service check", getViewPart(), Activator.PLUGIN_ID) {
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            for(int i = 0; i < objects.length; i++)
+            {
+               session.deleteBusinessServiceCheck(getObject().getObjectId(), ((BusinessServiceCheck)objects[i]).getId());
+            }
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return "Cannot delete business service check";
          }
       }.start();
    }
 
    /**
-    * @see org.netxms.nxmc.modules.objects.views.ObjectView#isValidForContext(java.lang.Object)
+    * Edit selected check
     */
-   @Override
-   public boolean isValidForContext(Object context)
+   protected void editCheck()
    {
-      return (context != null) && (context instanceof BusinessService);
+      IStructuredSelection selection = viewer.getStructuredSelection();
+      if (selection.size() != 1)
+         return;
+
+      final BusinessServiceCheck check = new BusinessServiceCheck((BusinessServiceCheck)selection.getFirstElement());
+      final EditBusinessServiceCheckDlg dlg = new EditBusinessServiceCheckDlg(getViewPart().getSite().getShell(), check, false);
+      if (dlg.open() == Window.OK)
+      {
+         new ConsoleJob("Update business service check", getViewPart(), Activator.PLUGIN_ID) {
+            @Override
+            protected void runInternal(IProgressMonitor monitor) throws Exception
+            {
+               session.modifyBusinessServiceCheck(getObject().getObjectId(), check);
+            }
+
+            @Override
+            protected String getErrorMessage()
+            {
+               return "Cannot update business service check";
+            }
+         }.start();
+      }
    }
 
    /**
-    * @see org.netxms.nxmc.base.views.View#getPriority()
+    * Create new check
     */
-   @Override
-   public int getPriority()
+   private void createCheck()
    {
-      return 60;
-   }
+      final BusinessServiceCheck check = new BusinessServiceCheck();
+      final EditBusinessServiceCheckDlg dlg = new EditBusinessServiceCheckDlg(getViewPart().getSite().getShell(), check, false);
+      if (dlg.open() == Window.OK)
+      {
+         new ConsoleJob("Create business service check", getViewPart(), Activator.PLUGIN_ID) {
+            @Override
+            protected void runInternal(IProgressMonitor monitor) throws Exception
+            {
+               session.modifyBusinessServiceCheck(getObject().getObjectId(), check);
+            }
 
-   /**
-    * @see org.netxms.nxmc.base.views.View#dispose()
-    */
-   @Override
-   public void dispose()
-   {
-      session.removeListener(sessionListener);
-      super.dispose();
+            @Override
+            protected String getErrorMessage()
+            {
+               return "Cannot create business service check";
+            }
+         }.start();
+      }
    }
 }

@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.nxmc.modules.businessservice.views.helpers;
+package org.netxms.ui.eclipse.slm.objecttabs.helpers;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -25,37 +25,34 @@ import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.client.NXCSession;
 import org.netxms.client.businessservices.BusinessServiceCheck;
 import org.netxms.client.constants.BusinessServiceCheckType;
 import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.nxmc.Registry;
-import org.netxms.nxmc.localization.LocalizationHelper;
-import org.netxms.nxmc.modules.businessservice.views.BusinessServiceChecksView;
-import org.netxms.nxmc.modules.objects.widgets.helpers.BaseObjectLabelProvider;
-import org.netxms.nxmc.resources.StatusDisplayInfo;
-import org.xnap.commons.i18n.I18n;
+import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.slm.objecttabs.BusinessServiceChecks;
 
 /**
  * Label provider for interface list
  */
 public class BusinessServiceCheckLabelProvider extends LabelProvider implements ITableLabelProvider, ITableColorProvider
 {
-   private final I18n i18n = LocalizationHelper.getI18n(BusinessServiceCheckLabelProvider.class);
-   private final String[] TYPES = { i18n.tr("None"), i18n.tr("Script"), i18n.tr("DCI threshold"), i18n.tr("Object status"), };
+   private static final String[] TYPES = { "None", "Script", "DCI threshold", "Object status", };
 
-   private NXCSession session = Registry.getSession();
+   private NXCSession session = ConsoleSharedData.getSession();
    private Map<Long, String> dciNameCache = new HashMap<Long, String>();
-   private BaseObjectLabelProvider objectLabelProvider = new BaseObjectLabelProvider();
-   
+   private WorkbenchLabelProvider objectLabelProvider = new WorkbenchLabelProvider();
+
    /**
     * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
     */
 	@Override
 	public Image getColumnImage(Object element, int columnIndex)
    {
-      if (columnIndex != BusinessServiceChecksView.COLUMN_OBJECT)
+      if (columnIndex != BusinessServiceChecks.COLUMN_OBJECT)
          return null;
 
       BusinessServiceCheck check = (BusinessServiceCheck)element;
@@ -72,19 +69,19 @@ public class BusinessServiceCheckLabelProvider extends LabelProvider implements 
 		BusinessServiceCheck check = (BusinessServiceCheck)element;
 		switch(columnIndex)
 		{
-         case BusinessServiceChecksView.COLUMN_ID:				
+         case BusinessServiceChecks.COLUMN_ID:
 				return Long.toString(check.getId());
-         case BusinessServiceChecksView.COLUMN_DESCRIPTION:    
+         case BusinessServiceChecks.COLUMN_DESCRIPTION:
             return check.getDescription();
-         case BusinessServiceChecksView.COLUMN_TYPE:  
+         case BusinessServiceChecks.COLUMN_TYPE:
             return getTypeName(check);  
-         case BusinessServiceChecksView.COLUMN_OBJECT:  
+         case BusinessServiceChecks.COLUMN_OBJECT:
             return getObjectName(check);  
-         case BusinessServiceChecksView.COLUMN_DCI:  
+         case BusinessServiceChecks.COLUMN_DCI:
             return getDciName(check);  
-         case BusinessServiceChecksView.COLUMN_STATUS:    
+         case BusinessServiceChecks.COLUMN_STATUS:
             return getCheckStateText(check);
-         case BusinessServiceChecksView.COLUMN_FAIL_REASON:    
+         case BusinessServiceChecks.COLUMN_FAIL_REASON:
             return check.getFailureReason();
 		}
 		return null;
@@ -101,11 +98,11 @@ public class BusinessServiceCheckLabelProvider extends LabelProvider implements 
       switch(check.getState())
       {
          case OPERATIONAL:
-            return i18n.tr("OK");
+            return "OK";
          case DEGRADED:
-            return i18n.tr("Degraded");
+            return "Degraded";
          case FAILED:
-            return i18n.tr("Failed");
+            return "Failed";
       }
       return null;
    }
@@ -163,7 +160,7 @@ public class BusinessServiceCheckLabelProvider extends LabelProvider implements 
 	@Override
 	public Color getForeground(Object element, int columnIndex)
 	{
-      if (columnIndex != BusinessServiceChecksView.COLUMN_STATUS)
+      if (columnIndex != BusinessServiceChecks.COLUMN_STATUS)
          return null;
 
       switch(((BusinessServiceCheck)element).getState())
