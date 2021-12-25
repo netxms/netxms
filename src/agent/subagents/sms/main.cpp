@@ -57,7 +57,7 @@ static uint32_t H_SendSMS(const shared_ptr<ActionExecutionContext>& context)
    MemFree(rcpt);
    MemFree(text);
 #else
-   uint32_t rc = SendSMS(context->getArgs()->get(0), context->getArgs()->get(1)) ? ERR_SUCCESS : ERR_INTERNAL_ERROR;
+   uint32_t rc = SendSMS(context->getArg(0), context->getArg(1)) ? ERR_SUCCESS : ERR_INTERNAL_ERROR;
 #endif
    return rc;
 }
