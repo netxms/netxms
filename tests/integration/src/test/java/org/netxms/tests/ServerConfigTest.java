@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -54,15 +54,15 @@ public class ServerConfigTest extends AbstractSessionTest
 
 		session.disconnect();
 	}
-	
+
 	public void testGetPublicVariable() throws Exception
 	{
       final NXCSession session = connect();
 
-      String value = session.getPublicServerVariable("DashboardDataExportEnableInterpolation");
+      String value = session.getPublicServerVariable("Client.DashboardDataExport.EnableInterpolation");
       assertNotNull(value);
       System.out.println("value=" + value); 
-      
+
       session.disconnect();
 	}
 }
