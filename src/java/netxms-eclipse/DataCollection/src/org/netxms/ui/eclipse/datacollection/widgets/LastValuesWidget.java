@@ -122,22 +122,20 @@ public class LastValuesWidget extends CompositeWithMessageBar
 	public LastValuesWidget(ViewPart viewPart, Composite parent, int style, AbstractObject dcTarget, final String configPrefix, VisibilityValidator validator)
 	{
 		super(parent, style);
-		session = (NXCSession)ConsoleSharedData.getSession();
+      session = ConsoleSharedData.getSession();
 		this.viewPart = viewPart;		
 		setDataCollectionTarget(dcTarget);
-		
+
 		registerOpenHandlers();
-		
+
 		final IDialogSettings ds = Activator.getDefault().getDialogSettings();
-		
+
 		refreshController = new ViewRefreshController(viewPart, -1, new Runnable() {
 			@Override
 			public void run()
 			{
-				if (isDisposed())
-					return;
-				
-				getDataFromServer();
+            if (!isDisposed())
+               getDataFromServer();
 			}
 		}, validator);
 		addDisposeListener(new DisposeListener() {
@@ -149,7 +147,7 @@ public class LastValuesWidget extends CompositeWithMessageBar
       });
 
       getContent().setLayout(new FormLayout());
-		
+
 		// Create filter area
 		filterText = new FilterText(getContent(), SWT.NONE);
 		filterText.addModifyListener(new ModifyListener() {
@@ -252,13 +250,13 @@ public class LastValuesWidget extends CompositeWithMessageBar
 		filter.setShowDisabled(ds.getBoolean(configPrefix + ".showDisabled")); //$NON-NLS-1$
 		filter.setShowUnsupported(ds.getBoolean(configPrefix + ".showUnsupported")); //$NON-NLS-1$
       filter.setShowHidden(ds.getBoolean(configPrefix + ".showHidden")); //$NON-NLS-1$
-		
+
 		createActions();
 		createPopupMenu();
 
 		if ((validator == null) || validator.isVisible())
 		   getDataFromServer();
-		
+
 		// Set initial focus to filter input line
 		if (filterEnabled)
 			filterText.setFocus();

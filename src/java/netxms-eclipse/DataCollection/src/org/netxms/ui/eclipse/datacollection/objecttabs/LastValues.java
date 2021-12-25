@@ -134,13 +134,18 @@ public class LastValues extends ObjectTab
 		dataView.enableFilter(enabled);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#selected()
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#selected()
+    */
 	@Override
 	public void selected()
 	{
 		super.selected();
 		refresh();
+      ICommandService service = (ICommandService)PlatformUI.getWorkbench().getService(ICommandService.class);
+      Command command = service.getCommand("org.netxms.ui.eclipse.datacollection.commands.show_dci_filter"); //$NON-NLS-1$
+      State state = command.getState("org.netxms.ui.eclipse.datacollection.commands.show_dci_filter.state"); //$NON-NLS-1$
+      state.setValue(dataView.isFilterEnabled());
+      service.refreshElements(command.getId(), null);
 	}
 }

@@ -242,8 +242,8 @@ public class BusinessServiceChecksView extends ObjectView
     */
    protected void fillContextMenu(IMenuManager manager)
    {
-      manager.add(actionEdit);
       manager.add(actionCreate);
+      manager.add(actionEdit);
       manager.add(actionDelete);
    }
 

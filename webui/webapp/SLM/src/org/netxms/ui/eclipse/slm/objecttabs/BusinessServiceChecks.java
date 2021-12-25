@@ -21,11 +21,14 @@ package org.netxms.ui.eclipse.slm.objecttabs;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
+import org.eclipse.core.commands.Command;
+import org.eclipse.core.commands.State;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
+import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
@@ -36,8 +39,15 @@ import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.layout.FormAttachment;
+import org.eclipse.swt.layout.FormData;
+import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
+import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.commands.ICommandService;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
@@ -55,6 +65,7 @@ import org.netxms.ui.eclipse.slm.objecttabs.helpers.BusinessServiceCheckLabelPro
 import org.netxms.ui.eclipse.slm.objecttabs.helpers.BusinessServiceComparator;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.ui.eclipse.widgets.FilterText;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
@@ -62,8 +73,6 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
  */
 public class BusinessServiceChecks extends ObjectTab
 {
-   public static final String ID = "org.netxms.ui.eclipse.slm.objecttabs.BusinessServiceChecks";
-
    public static final int COLUMN_ID = 0;
    public static final int COLUMN_DESCRIPTION = 1;
    public static final int COLUMN_TYPE = 2;
@@ -72,10 +81,16 @@ public class BusinessServiceChecks extends ObjectTab
    public static final int COLUMN_STATUS = 5;
    public static final int COLUMN_FAIL_REASON = 6;
 
+   private static final String CONFIG_PREFIX = "BusinessServiceChecks";
+
    private NXCSession session;
    private SessionListener sessionListener;
+   private Composite content;
    private SortableTableViewer viewer;
+   private FilterText filterText;
+   private boolean filterEnabled;
    private BusinessServiceCheckLabelProvider labelProvider;
+   private BusinessServiceCheckFilter filter;
    private Action actionEdit;
    private Action actionCreate;
    private Action actionDelete;
@@ -89,14 +104,39 @@ public class BusinessServiceChecks extends ObjectTab
    { 
       session = ConsoleSharedData.getSession();
 
+      content = new Composite(parent, SWT.NONE);
+      content.setLayout(new FormLayout());
+
+      filterText = new FilterText(content, SWT.NONE);
+      filterText.addModifyListener(new ModifyListener() {
+         @Override
+         public void modifyText(ModifyEvent e)
+         {
+            onFilterModify();
+         }
+      });
+      filterText.setCloseAction(new Action() {
+         @Override
+         public void run()
+         {
+            enableFilter(false);
+            ICommandService service = (ICommandService)PlatformUI.getWorkbench().getService(ICommandService.class);
+            Command command = service.getCommand("org.netxms.ui.eclipse.slm.commands.show_checks_filter"); //$NON-NLS-1$
+            State state = command.getState("org.netxms.ui.eclipse.slm.commands.show_checks_filter.state"); //$NON-NLS-1$
+            state.setValue(false);
+            service.refreshElements(command.getId(), null);
+         }
+      });
+
       // Setup table columns
       final String[] names = { "ID", "Description", "Type", "Object", "DCI", "Status", "Reason" };
       final int[] widths = { 70, 200, 100, 200, 200, 70, 300 };
-      viewer = new SortableTableViewer(parent, names, widths, 0, SWT.DOWN, SortableTableViewer.DEFAULT_STYLE);
+      viewer = new SortableTableViewer(content, names, widths, 0, SWT.DOWN, SortableTableViewer.DEFAULT_STYLE);
       labelProvider = new BusinessServiceCheckLabelProvider();
-      viewer.addFilter(new BusinessServiceCheckFilter(labelProvider));
-      viewer.setComparator(new BusinessServiceComparator(labelProvider));
       viewer.setLabelProvider(labelProvider);
+      viewer.setComparator(new BusinessServiceComparator(labelProvider));
+      filter = new BusinessServiceCheckFilter(labelProvider);
+      viewer.addFilter(filter);
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.addSelectionChangedListener(new ISelectionChangedListener() {
          @Override
@@ -107,13 +147,16 @@ public class BusinessServiceChecks extends ObjectTab
             actionDelete.setEnabled(selection.size() > 0);
          }
       });
-      
-      WidgetHelper.restoreColumnSettings(viewer.getTable(), Activator.getDefault().getDialogSettings(), ID);
+
+      final IDialogSettings settings = Activator.getDefault().getDialogSettings();
+      filterEnabled = settings.getBoolean(CONFIG_PREFIX + ".EnableFilter");
+      WidgetHelper.restoreColumnSettings(viewer.getTable(), settings, CONFIG_PREFIX + ".TableSettings");
       viewer.getTable().addDisposeListener(new DisposeListener() {
          @Override
          public void widgetDisposed(DisposeEvent e)
          {
-            WidgetHelper.saveColumnSettings(viewer.getTable(), Activator.getDefault().getDialogSettings(), ID);
+            WidgetHelper.saveColumnSettings(viewer.getTable(), settings, CONFIG_PREFIX + ".TableSettings");
+            settings.put(CONFIG_PREFIX + ".EnableFilter", filterEnabled);
          }
       });
 
@@ -159,6 +202,26 @@ public class BusinessServiceChecks extends ObjectTab
          }
       };
       session.addListener(sessionListener);
+
+      // Setup layout
+      FormData fd = new FormData();
+      fd.left = new FormAttachment(0, 0);
+      fd.top = new FormAttachment(filterText);
+      fd.right = new FormAttachment(100, 0);
+      fd.bottom = new FormAttachment(100, 0);
+      viewer.getTable().setLayoutData(fd);
+
+      fd = new FormData();
+      fd.left = new FormAttachment(0, 0);
+      fd.top = new FormAttachment(0, 0);
+      fd.right = new FormAttachment(100, 0);
+      filterText.setLayoutData(fd);
+
+      // Set initial focus to filter input line
+      if (filterEnabled)
+         filterText.setFocus();
+      else
+         enableFilter(false); // Will hide filter area correctly
    }
 
    /**
@@ -218,8 +281,8 @@ public class BusinessServiceChecks extends ObjectTab
     */
    protected void fillContextMenu(IMenuManager manager)
    {
-      manager.add(actionEdit);
       manager.add(actionCreate);
+      manager.add(actionEdit);
       manager.add(actionDelete);
    }
 
@@ -240,6 +303,11 @@ public class BusinessServiceChecks extends ObjectTab
    {
       super.selected();
       refresh();
+      ICommandService service = (ICommandService)PlatformUI.getWorkbench().getService(ICommandService.class);
+      Command command = service.getCommand("org.netxms.ui.eclipse.slm.commands.show_checks_filter"); //$NON-NLS-1$
+      State state = command.getState("org.netxms.ui.eclipse.slm.commands.show_checks_filter.state"); //$NON-NLS-1$
+      state.setValue(filterEnabled);
+      service.refreshElements(command.getId(), null);
    }
 
    /**
@@ -258,11 +326,15 @@ public class BusinessServiceChecks extends ObjectTab
    @Override
    public void refresh()
    {
+      final AbstractObject object = getObject();
+      if (object == null)
+         return;
+
       new ConsoleJob("Get business service checks", getViewPart(), Activator.PLUGIN_ID) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            Map<Long, BusinessServiceCheck> checks = session.getBusinessServiceChecks(getObject().getObjectId());
+            Map<Long, BusinessServiceCheck> checks = session.getBusinessServiceChecks(object.getObjectId());
             runInUIThread(new Runnable() {
                @Override
                public void run()
@@ -279,7 +351,7 @@ public class BusinessServiceChecks extends ObjectTab
          @Override
          protected String getErrorMessage()
          {
-            return String.format("Cannot get checks for business service %s", getObject().getObjectName());
+            return String.format("Cannot get checks for business service %s", object.getObjectName());
          }
       }.start();
    }
@@ -398,6 +470,39 @@ public class BusinessServiceChecks extends ObjectTab
                return "Cannot create business service check";
             }
          }.start();
+      }
+   }
+
+   /**
+    * Handler for filter modification
+    */
+   private void onFilterModify()
+   {
+      final String text = filterText.getText();
+      filter.setFilterString(text);
+      viewer.refresh(false);
+   }
+
+   /**
+    * Enable or disable filter
+    * 
+    * @param enable New filter state
+    */
+   public void enableFilter(boolean enable)
+   {
+      filterEnabled = enable;
+      filterText.setVisible(filterEnabled);
+      FormData fd = (FormData)viewer.getTable().getLayoutData();
+      fd.top = enable ? new FormAttachment(filterText, 0, SWT.BOTTOM) : new FormAttachment(0, 0);
+      content.layout();
+      if (enable)
+      {
+         filterText.setFocus();
+      }
+      else
+      {
+         filter.setFilterString(""); //$NON-NLS-1$
+         viewer.refresh(false);
       }
    }
 }
