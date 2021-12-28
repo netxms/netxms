@@ -68,7 +68,7 @@ GoogleChatDriver *GoogleChatDriver::createInstance(Config *config)
 {
    GoogleChatDriver *driver = new GoogleChatDriver();
 
-   ObjectArray<ConfigEntry> *rooms = config->getSubEntries(_T("/Rooms"), nullptr);
+   unique_ptr<ObjectArray<ConfigEntry>> rooms = config->getSubEntries(_T("/Rooms"), nullptr);
    if (rooms != NULL)
    {
       for (int i = 0; i < rooms->size(); i++)
@@ -77,7 +77,6 @@ GoogleChatDriver *GoogleChatDriver::createInstance(Config *config)
          driver->m_rooms.set(room->getName(), room->getValue());
          nxlog_debug_tag(DEBUG_TAG, 5, _T("Added room mapping %s = %s"), room->getName(), room->getValue());
       }
-      delete rooms;
    }
    nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Google Chat driver instantiated"));
 

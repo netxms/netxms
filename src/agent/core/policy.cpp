@@ -50,19 +50,18 @@ static void UpdateEnvironment()
 {
    shared_ptr<Config> oldConfig = g_config;
    StringList currEnvList;
-   ObjectArray<ConfigEntry> *entrySet = oldConfig->getSubEntries(_T("/ENV"), _T("*"));
+   unique_ptr<ObjectArray<ConfigEntry>> entrySet = oldConfig->getSubEntries(_T("/ENV"), _T("*"));
    if (entrySet != nullptr)
    {
       for(int i = 0; i < entrySet->size(); i++)
          currEnvList.add(entrySet->get(i)->getName());
-      delete entrySet;
    }
 
    if (LoadConfig(oldConfig->getAlias(_T("agent")), false))
    {
       StringList newEnvList;
       shared_ptr<Config> newConfig = g_config;
-      ObjectArray<ConfigEntry> *newEntrySet = newConfig->getSubEntries(_T("/ENV"), _T("*"));
+      unique_ptr<ObjectArray<ConfigEntry>> newEntrySet = newConfig->getSubEntries(_T("/ENV"), _T("*"));
       if (newEntrySet != nullptr)
       {
          for(int i = 0; i < newEntrySet->size(); i++)
@@ -72,7 +71,6 @@ static void UpdateEnvironment()
             SetEnvironmentVariable(e->getName(), e->getValue());
             newEnvList.add(e->getName());
          }
-         delete newEntrySet;
       }
 
       for(int i = 0; i < currEnvList.size(); i++)
@@ -103,12 +101,11 @@ static void CheckEnvSectionAndReload(const char *content, size_t contentLength)
    bool validConfig = config.loadConfigFromMemory(content, contentLength, DEFAULT_CONFIG_SECTION, nullptr, true, false);
    if (validConfig)
    {
-      ObjectArray<ConfigEntry> *entrySet = config.getSubEntries(_T("/ENV"), _T("*"));
+      unique_ptr<ObjectArray<ConfigEntry>> entrySet = config.getSubEntries(_T("/ENV"), _T("*"));
       if (entrySet != nullptr)
       {
          nxlog_debug_tag(DEBUG_TAG, 7, _T("CheckEnvSectionAndReload(): ENV section exists"));
          UpdateEnvironment();
-         delete entrySet;
       }
    }
 }

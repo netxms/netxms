@@ -110,9 +110,9 @@ public:
 
 	ConfigEntry *createEntry(const TCHAR *name);
 	ConfigEntry *findEntry(const TCHAR *name) const;
-	ObjectArray<ConfigEntry> *getSubEntries(const TCHAR *mask = nullptr) const;
-	ObjectArray<ConfigEntry> *getOrderedSubEntries(const TCHAR *mask = nullptr) const;
-	void unlinkEntry(ConfigEntry *entry);
+   unique_ptr<ObjectArray<ConfigEntry>> getSubEntries(const TCHAR *mask = nullptr) const;
+   unique_ptr<ObjectArray<ConfigEntry>> getOrderedSubEntries(const TCHAR *mask = nullptr) const;
+   void unlinkEntry(ConfigEntry *entry);
 
    void addSubTree(const ConfigEntry *root, bool merge);
 
@@ -181,8 +181,8 @@ public:
 	uint64_t getValueAsUInt64(const TCHAR *path, uint64_t defaultValue, int index = 0) const;
 	bool getValueAsBoolean(const TCHAR *path, bool defaultValue, int index = 0) const;
 	uuid getValueAsUUID(const TCHAR *path, int index = 0) const;
-	ObjectArray<ConfigEntry> *getSubEntries(const TCHAR *path, const TCHAR *mask = nullptr) const;
-	ObjectArray<ConfigEntry> *getOrderedSubEntries(const TCHAR *path, const TCHAR *mask = nullptr) const;
+   unique_ptr<ObjectArray<ConfigEntry>> getSubEntries(const TCHAR *path, const TCHAR *mask = nullptr) const;
+   unique_ptr<ObjectArray<ConfigEntry>> getOrderedSubEntries(const TCHAR *path, const TCHAR *mask = nullptr) const;
 
 	bool setValue(const TCHAR *path, const TCHAR *value);
 	bool setValue(const TCHAR *path, int32_t value);

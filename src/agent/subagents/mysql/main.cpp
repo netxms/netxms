@@ -149,7 +149,7 @@ static bool SubAgentInit(Config *config)
 	ConfigEntry *metricRoot = config->getEntry(_T("/mysql/databases"));
    if (metricRoot != NULL)
    {
-      ObjectArray<ConfigEntry> *metrics = metricRoot->getSubEntries(_T("*"));
+      unique_ptr<ObjectArray<ConfigEntry>> metrics = metricRoot->getSubEntries(_T("*"));
       for(int i = 0; i < metrics->size(); i++)
       {
          TCHAR section[MAX_DB_STRING];
@@ -174,7 +174,6 @@ static bool SubAgentInit(Config *config)
 
          s_instances->add(new DatabaseInstance(&s_dbInfo));
       }
-      delete metrics;
    }
 
 	// Exit if no usable configuration found

@@ -427,7 +427,7 @@ static BOOL H_UpgradeFromV1(int currVersion, int newVersion)
    }
 
    //Move policy data form registry file to agent database
-   ObjectArray<ConfigEntry> *list = registry->getSubEntries(_T("/policyRegistry"), NULL);
+   unique_ptr<ObjectArray<ConfigEntry>> list = registry->getSubEntries(_T("/policyRegistry"), NULL);
    DB_STATEMENT hStmt = DBPrepare(s_db,
                  _T("INSERT INTO agent_policy (guid,type,server_info,server_id,version)")
                  _T(" VALUES (?,?,?,0,0)"));
@@ -446,7 +446,6 @@ static BOOL H_UpgradeFromV1(int currVersion, int newVersion)
                CHK_EXEC(DBExecute(hStmt));
             }
          }
-         delete list;
       }
       DBFreeStatement(hStmt);
 	}

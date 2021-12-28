@@ -195,7 +195,7 @@ JNIEXPORT jobjectArray JNICALL Java_org_netxms_agent_Config_getSubEntries(JNIEnv
    {
       TCHAR *path = CStringFromJavaString(jenv, jpath);
       TCHAR *mask = CStringFromJavaString(jenv, jmask);
-      ObjectArray<ConfigEntry> *configEntryList = config->getSubEntries(path, mask);
+      unique_ptr<ObjectArray<ConfigEntry>> configEntryList = config->getSubEntries(path, mask);
       if (configEntryList != NULL)
       {
          for (int i = 0; i < configEntryList->size(); i++)
@@ -208,7 +208,6 @@ JNIEXPORT jobjectArray JNICALL Java_org_netxms_agent_Config_getSubEntries(JNIEnv
             }
             jenv->SetObjectArrayElement(jresult, (jsize) i, jconfigEntry);
          }
-         delete configEntryList;
       }
       free(path);
       free(mask);
@@ -233,7 +232,7 @@ JNIEXPORT jobjectArray JNICALL Java_org_netxms_agent_Config_getOrderedSubEntries
    {
       TCHAR *path = CStringFromJavaString(jenv, jpath);
       TCHAR *mask = CStringFromJavaString(jenv, jmask);
-      ObjectArray<ConfigEntry> *configEntryList = config->getOrderedSubEntries(path, mask);
+      unique_ptr<ObjectArray<ConfigEntry>> configEntryList = config->getOrderedSubEntries(path, mask);
       for (int i = 0; i < configEntryList->size(); i++)
       {
          ConfigEntry *configEntry = configEntryList->get(i);
@@ -639,7 +638,7 @@ JNIEXPORT jobjectArray JNICALL Java_org_netxms_agent_ConfigEntry_getSubEntries(J
    if (jmask != NULL)
    {
       TCHAR *mask = CStringFromJavaString(jenv, jmask);
-      ObjectArray<ConfigEntry> *configEntryList = configEntry->getSubEntries(mask);
+      unique_ptr<ObjectArray<ConfigEntry>> configEntryList = configEntry->getSubEntries(mask);
       if (configEntryList != NULL)
       {
          for (int i = 0; i < configEntryList->size(); i++)
@@ -652,7 +651,6 @@ JNIEXPORT jobjectArray JNICALL Java_org_netxms_agent_ConfigEntry_getSubEntries(J
             }
             jenv->SetObjectArrayElement(jresult, (jsize) i, jconfigEntry);
          }
-         delete configEntryList;
       }
       free(mask);
    }
@@ -675,7 +673,7 @@ JNIEXPORT jobjectArray JNICALL Java_org_netxms_agent_ConfigEntry_getOrderedSubEn
    if (jmask != NULL)
    {
       TCHAR *mask = CStringFromJavaString(jenv, jmask);
-      ObjectArray<ConfigEntry> *configEntryList = configEntry->getSubEntries(mask);
+      unique_ptr<ObjectArray<ConfigEntry>> configEntryList = configEntry->getSubEntries(mask);
       if (configEntryList != NULL)
       {
          for(int i = 0; i < configEntryList->size(); i++)
@@ -688,7 +686,6 @@ JNIEXPORT jobjectArray JNICALL Java_org_netxms_agent_ConfigEntry_getOrderedSubEn
             }
             jenv->SetObjectArrayElement(jresult, (jsize) i, jconfigEntry);
          }
-         delete configEntryList;
       }
       free(mask);
    }

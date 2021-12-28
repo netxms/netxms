@@ -98,7 +98,7 @@ static bool InitModule(Config *config)
    }
 
    // Setup extra data string
-   ObjectArray<ConfigEntry> *extraDataEntries = config->getSubEntries(_T("/LEEF/ExtraData"));
+   unique_ptr<ObjectArray<ConfigEntry>> extraDataEntries = config->getSubEntries(_T("/LEEF/ExtraData"));
    if (extraDataEntries != nullptr)
    {
       ByteStream extraDataBuilder;
@@ -114,7 +114,6 @@ static bool InitModule(Config *config)
          MemFree(name);
          MemFree(value);
       }
-      delete extraDataEntries;
       if (extraDataBuilder.size() > 0)
       {
          extraDataBuilder.write(static_cast<BYTE>(0));

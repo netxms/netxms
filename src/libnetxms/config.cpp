@@ -275,9 +275,9 @@ void ConfigEntry::unlinkEntry(ConfigEntry *entry)
  * Get all subentries with names matched to mask.
  * Returned list ordered by ID
  */
-ObjectArray<ConfigEntry> *ConfigEntry::getSubEntries(const TCHAR *mask) const
+unique_ptr<ObjectArray<ConfigEntry>> ConfigEntry::getSubEntries(const TCHAR *mask) const
 {
-   auto list = new ObjectArray<ConfigEntry>(16, 16, Ownership::False);
+   auto list = make_unique<ObjectArray<ConfigEntry>>(16, 16, Ownership::False);
    for(ConfigEntry *e = m_first; e != nullptr; e = e->getNext())
       if ((mask == nullptr) || MatchString(mask, e->getName(), FALSE))
       {
@@ -297,9 +297,9 @@ static int CompareById(const ConfigEntry **e1, const ConfigEntry **e2)
 /**
  * Get all subentries with names matched to mask ordered by id
  */
-ObjectArray<ConfigEntry> *ConfigEntry::getOrderedSubEntries(const TCHAR *mask) const
+unique_ptr<ObjectArray<ConfigEntry>> ConfigEntry::getOrderedSubEntries(const TCHAR *mask) const
 {
-   ObjectArray<ConfigEntry> *list = getSubEntries(mask);
+   unique_ptr<ObjectArray<ConfigEntry>> list = getSubEntries(mask);
    list->sort(CompareById);
    return list;
 }
@@ -1062,7 +1062,7 @@ uuid Config::getValueAsUUID(const TCHAR *path, int index) const
 /**
  * Get subentries
  */
-ObjectArray<ConfigEntry> *Config::getSubEntries(const TCHAR *path, const TCHAR *mask) const
+unique_ptr<ObjectArray<ConfigEntry>> Config::getSubEntries(const TCHAR *path, const TCHAR *mask) const
 {
    ConfigEntry *entry = getEntry(path);
    return (entry != nullptr) ? entry->getSubEntries(mask) : nullptr;
@@ -1071,7 +1071,7 @@ ObjectArray<ConfigEntry> *Config::getSubEntries(const TCHAR *path, const TCHAR *
 /**
  * Get subentries ordered by id
  */
-ObjectArray<ConfigEntry> *Config::getOrderedSubEntries(const TCHAR *path, const TCHAR *mask) const
+unique_ptr<ObjectArray<ConfigEntry>> Config::getOrderedSubEntries(const TCHAR *path, const TCHAR *mask) const
 {
    ConfigEntry *entry = getEntry(path);
    return (entry != nullptr) ? entry->getOrderedSubEntries(mask) : nullptr;

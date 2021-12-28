@@ -98,19 +98,17 @@ MicrosoftTeamsDriver *MicrosoftTeamsDriver::createInstance(Config *config)
    MicrosoftTeamsDriver *driver = new MicrosoftTeamsDriver(flags, themeColor);
    nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Microsoft Teams driver instantiated"));
 
-	ObjectArray<ConfigEntry> *channels = config->getSubEntries(_T("/Channels"), _T("*"));
-	if (channels != NULL)
-	{
+   unique_ptr<ObjectArray<ConfigEntry>> channels = config->getSubEntries(_T("/Channels"), _T("*"));
+   if (channels != NULL)
+   {
 	   for(int i = 0; i < channels->size(); i++)
 	   {
 	      ConfigEntry *channel = channels->get(i);
 	      driver->m_channels.set(channel->getName(), channel->getValue());
          nxlog_debug_tag(DEBUG_TAG, 5, _T("Added channel mapping %s = %s"), channel->getName(), channel->getValue());
-	   }
-	   delete channels;
-	}
-
-	return driver;
+      }
+   }
+   return driver;
 }
 
 /**

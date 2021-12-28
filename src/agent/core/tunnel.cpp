@@ -1869,7 +1869,7 @@ void ParseTunnelList(const StringSet& tunnels)
 /**
  * Parser server connection (tunnel) list from ConfigEntry
  */
-void ParseTunnelListFromConfigEntry(ObjectArray<ConfigEntry> *config)
+void ParseTunnelListFromConfigEntry(const unique_ptr<ObjectArray<ConfigEntry>>& config)
 {
 #ifdef _WITH_ENCRYPTION
    Iterator<ConfigEntry> it = config->begin();
@@ -1884,7 +1884,7 @@ void ParseTunnelListFromConfigEntry(ObjectArray<ConfigEntry> *config)
       }
       else
       {
-         nxlog_write(NXLOG_ERROR, _T("Invalid server connection configuration record \"%s\""), config);
+         nxlog_write(NXLOG_ERROR, _T("Invalid server connection configuration record \"%s\""), ce->getName());
       }
    }
 #endif

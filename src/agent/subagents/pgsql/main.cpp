@@ -517,9 +517,9 @@ static bool SubAgentInit(Config *config)
 	ConfigEntry *metricRoot = config->getEntry(_T("/pgsql/servers"));
 	if (metricRoot != NULL)
 	{
-		ObjectArray<ConfigEntry> *metrics = metricRoot->getSubEntries(_T("*"));
-		for(int i = 0; i < metrics->size(); i++)
-		{
+      unique_ptr<ObjectArray<ConfigEntry>> metrics = metricRoot->getSubEntries(_T("*"));
+      for (int i = 0; i < metrics->size(); i++)
+      {
 			TCHAR section[MAX_DB_STRING];
 			ConfigEntry *e = metrics->get(i);
 			s_dbInfo.connectionTTL = 3600;
@@ -541,9 +541,8 @@ static bool SubAgentInit(Config *config)
 			DecryptPassword(s_dbInfo.login, s_dbInfo.password, s_dbInfo.password, MAX_DB_PASSWORD);
 
 			s_instances->add(new DatabaseInstance(&s_dbInfo));
-		}
-		delete metrics;
-	}
+      }
+   }
 
 	// Exit if no usable configuration found
 	if (s_instances->size() == 0)

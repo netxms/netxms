@@ -52,7 +52,7 @@ AsteriskSystem *AsteriskSystem::createFromConfig(ConfigEntry *config, bool defau
    ConfigEntry *registrationsRoot = config->findEntry(_T("SIPRegistrationTests"));
    if (registrationsRoot != NULL)
    {
-      ObjectArray<ConfigEntry> *registrations = registrationsRoot->getSubEntries(NULL);
+      unique_ptr<ObjectArray<ConfigEntry>> registrations = registrationsRoot->getSubEntries(NULL);
       for(int i = 0; i < registrations->size(); i++)
       {
          char defaultProxy[128] = "sip:";
@@ -62,7 +62,6 @@ AsteriskSystem *AsteriskSystem::createFromConfig(ConfigEntry *config, bool defau
          nxlog_debug_tag(DEBUG_TAG, 3, _T("Added SIP registration test %s (%hs@%hs via %hs every %d seconds)"),
                   r->getName(), r->getLogin(), r->getDomain(), r->getProxy(), r->getInterval() / 1000);
       }
-      delete registrations;
    }
 
    return as;

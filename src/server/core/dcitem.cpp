@@ -218,15 +218,14 @@ DCItem::DCItem(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& owner
 	ConfigEntry *thresholdsRoot = config->findEntry(_T("thresholds"));
 	if (thresholdsRoot != nullptr)
 	{
-		ObjectArray<ConfigEntry> *thresholds = thresholdsRoot->getSubEntries(_T("threshold#*"));
-		m_thresholds = new ObjectArray<Threshold>(thresholds->size(), 8, Ownership::True);
-		for(int i = 0; i < thresholds->size(); i++)
+      unique_ptr<ObjectArray<ConfigEntry>> thresholds = thresholdsRoot->getSubEntries(_T("threshold#*"));
+      m_thresholds = new ObjectArray<Threshold>(thresholds->size(), 8, Ownership::True);
+      for(int i = 0; i < thresholds->size(); i++)
 		{
 			m_thresholds->add(new Threshold(thresholds->get(i), this));
-		}
-		delete thresholds;
-	}
-	else
+      }
+   }
+   else
 	{
 		m_thresholds = nullptr;
 	}
@@ -2115,7 +2114,7 @@ void DCItem::updateFromImport(ConfigEntry *config)
    ConfigEntry *thresholdsRoot = config->findEntry(_T("thresholds"));
    if (thresholdsRoot != nullptr)
    {
-      ObjectArray<ConfigEntry> *thresholds = thresholdsRoot->getSubEntries(_T("threshold#*"));
+      unique_ptr<ObjectArray<ConfigEntry>> thresholds = thresholdsRoot->getSubEntries(_T("threshold#*"));
       if (m_thresholds != nullptr)
          m_thresholds->clear();
       else
@@ -2124,7 +2123,6 @@ void DCItem::updateFromImport(ConfigEntry *config)
       {
          m_thresholds->add(new Threshold(thresholds->get(i), this));
       }
-      delete thresholds;
    }
    else
    {

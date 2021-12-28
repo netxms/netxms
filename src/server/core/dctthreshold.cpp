@@ -310,7 +310,7 @@ DCTableConditionGroup::DCTableConditionGroup(ConfigEntry *e)
 	ConfigEntry *root = e->findEntry(_T("conditions"));
 	if (root != NULL)
 	{
-		ObjectArray<ConfigEntry> *conditions = root->getSubEntries(_T("condition#*"));
+      unique_ptr<ObjectArray<ConfigEntry>> conditions = root->getSubEntries(_T("condition#*"));
       m_conditions = new ObjectArray<DCTableCondition>(conditions->size(), 4, Ownership::True);
 		for(int i = 0; i < conditions->size(); i++)
 		{
@@ -319,11 +319,10 @@ DCTableConditionGroup::DCTableConditionGroup(ConfigEntry *e)
          const TCHAR *value = c->getSubEntryValue(_T("value"), 0, _T(""));
          int op = c->getSubEntryValueAsInt(_T("operation"));
 			m_conditions->add(new DCTableCondition(column, op, value));
-		}
-		delete conditions;
-	}
-	else
-	{
+      }
+   }
+   else
+   {
    	m_conditions = new ObjectArray<DCTableCondition>(8, 8, Ownership::True);
 	}
 }
@@ -476,13 +475,12 @@ DCTableThreshold::DCTableThreshold(ConfigEntry *e) : m_groups(0, 8, Ownership::T
 	ConfigEntry *groupsRoot = e->findEntry(_T("groups"));
 	if (groupsRoot != nullptr)
 	{
-		ObjectArray<ConfigEntry> *groups = groupsRoot->getSubEntries(_T("group#*"));
-		for(int i = 0; i < groups->size(); i++)
-		{
+      unique_ptr<ObjectArray<ConfigEntry>> groups = groupsRoot->getSubEntries(_T("group#*"));
+      for (int i = 0; i < groups->size(); i++)
+      {
 			m_groups.add(new DCTableConditionGroup(groups->get(i)));
-		}
-		delete groups;
-	}
+      }
+   }
 }
 
 /**

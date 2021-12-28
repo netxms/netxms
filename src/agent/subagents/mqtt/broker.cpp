@@ -109,7 +109,7 @@ MqttBroker *MqttBroker::createFromConfig(const ConfigEntry *config, StructArray<
    const ConfigEntry *metricRoot = config->findEntry(_T("Metrics"));
    if (metricRoot != NULL)
    {
-      ObjectArray<ConfigEntry> *metrics = metricRoot->getSubEntries(_T("*"));
+      unique_ptr<ObjectArray<ConfigEntry>> metrics = metricRoot->getSubEntries(_T("*"));
       for(int i = 0; i < metrics->size(); i++)
       {
          ConfigEntry *e = metrics->get(i);
@@ -125,22 +125,19 @@ MqttBroker *MqttBroker::createFromConfig(const ConfigEntry *config, StructArray<
          _sntprintf(p.description, MAX_DB_STRING, _T("MQTT topic %hs"), t->getPattern());
          parameters->add(&p);
       }
-      delete metrics;
    }
 
    const ConfigEntry *eventRoot = config->findEntry(_T("Events"));
    if (eventRoot != NULL)
    {
-      ObjectArray<ConfigEntry> *events = eventRoot->getSubEntries(_T("*"));
+      unique_ptr<ObjectArray<ConfigEntry>> events = eventRoot->getSubEntries(_T("*"));
       for(int i = 0; i < events->size(); i++)
       {
          ConfigEntry *e = events->get(i);
          Topic *t = new Topic(e->getValue(), e->getName());
          broker->m_topics.add(t);
       }
-      delete events;
    }
-
    return broker;
 }
 

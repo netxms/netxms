@@ -59,7 +59,7 @@ EPRule::EPRule(const ConfigEntry& config) : m_actions(0, 16, Ownership::True)
 	ConfigEntry *eventsRoot = config.findEntry(_T("events"));
    if (eventsRoot != nullptr)
    {
-		ObjectArray<ConfigEntry> *events = eventsRoot->getSubEntries(_T("event#*"));
+      unique_ptr<ObjectArray<ConfigEntry>> events = eventsRoot->getSubEntries(_T("event#*"));
       for(int i = 0; i < events->size(); i++)
       {
          shared_ptr<EventTemplate> e = FindEventTemplateByName(events->get(i)->getSubEntryValue(_T("name"), 0, _T("<unknown>")));
@@ -68,7 +68,6 @@ EPRule::EPRule(const ConfigEntry& config) : m_actions(0, 16, Ownership::True)
             m_events.add(e->getCode());
          }
       }
-      delete events;
    }
 
    m_comments = _tcsdup(config.getSubEntryValue(_T("comments"), 0, _T("")));
@@ -83,25 +82,23 @@ EPRule::EPRule(const ConfigEntry& config) : m_actions(0, 16, Ownership::True)
    ConfigEntry *pStorageEntry = config.findEntry(_T("pStorageActions"));
    if (pStorageEntry != nullptr)
    {
-      ObjectArray<ConfigEntry> *tmp = pStorageEntry->getSubEntries(_T("set#*"));
+      unique_ptr<ObjectArray<ConfigEntry>> tmp = pStorageEntry->getSubEntries(_T("set#*"));
       for(int i = 0; i < tmp->size(); i++)
       {
          m_pstorageSetActions.set(tmp->get(i)->getAttribute(_T("key")), tmp->get(i)->getValue());
       }
-      delete tmp;
 
       tmp = pStorageEntry->getSubEntries(_T("delete#*"));
       for(int i = 0; i < tmp->size(); i++)
       {
          m_pstorageDeleteActions.add(tmp->get(i)->getAttribute(_T("key")));
       }
-      delete tmp;
    }
 
    ConfigEntry *alarmCategoriesEntry = config.findEntry(_T("alarmCategories"));
    if(alarmCategoriesEntry != nullptr)
    {
-      ObjectArray<ConfigEntry> *categories = alarmCategoriesEntry->getSubEntries(_T("category#*"));
+      unique_ptr<ObjectArray<ConfigEntry>> categories = alarmCategoriesEntry->getSubEntries(_T("category#*"));
       if (categories != nullptr)
       {
          for (int i = 0; i < categories->size(); i++)
@@ -122,7 +119,6 @@ EPRule::EPRule(const ConfigEntry& config) : m_actions(0, 16, Ownership::True)
                }
             }
          }
-         delete categories;
       }
    }
 
@@ -144,7 +140,7 @@ EPRule::EPRule(const ConfigEntry& config) : m_actions(0, 16, Ownership::True)
    ConfigEntry *actionsRoot = config.findEntry(_T("actions"));
    if (actionsRoot != nullptr)
    {
-      ObjectArray<ConfigEntry> *actions = actionsRoot->getSubEntries(_T("action#*"));
+      unique_ptr<ObjectArray<ConfigEntry>> actions = actionsRoot->getSubEntries(_T("action#*"));
       for(int i = 0; i < actions->size(); i++)
       {
          uuid guid = actions->get(i)->getSubEntryValueAsUUID(_T("guid"));
@@ -165,7 +161,6 @@ EPRule::EPRule(const ConfigEntry& config) : m_actions(0, 16, Ownership::True)
                m_actions.add(new ActionExecutionConfiguration(actionId, MemCopyString(timerDelay), MemCopyString(snoozeTime), MemCopyString(timerKey), MemCopyString(blockingTimerKey)));
          }
       }
-      delete actions;
    }
 
    ConfigEntry *timerCancellationsRoot = config.findEntry(_T("timerCancellations"));

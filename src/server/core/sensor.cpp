@@ -788,9 +788,9 @@ void Sensor::prepareDlmsDciParameters(StringBuffer &parameter)
 	   {
 	      parameter.append(_T("("));
 	   }
-      ObjectArray<ConfigEntry> *credentials = configRoot->getSubEntries(_T("/cred"));
-		for(int i = 0; i < credentials->size(); i++)
-		{
+      unique_ptr<ObjectArray<ConfigEntry>> credentials = configRoot->getSubEntries(_T("/cred"));
+      for (int i = 0; i < credentials->size(); i++)
+      {
 			ConfigEntry *cred = credentials->get(i);
          parameter.append(_T(","));
          parameter.append(cred->getSubEntryValueAsInt(_T("/lineType")));
@@ -808,8 +808,7 @@ void Sensor::prepareDlmsDciParameters(StringBuffer &parameter)
          parameter.append(cred->getSubEntryValueAsInt(_T("/linkParams")));
 		}
       parameter.append(_T(")"));
-      delete credentials;
-	}
+   }
 
    /*
    config.

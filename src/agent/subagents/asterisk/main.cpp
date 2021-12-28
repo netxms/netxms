@@ -132,7 +132,7 @@ static LONG H_CommandOutput(const TCHAR *param, const TCHAR *arg, StringList *va
  */
 static bool SubagentInit(Config *config)
 {
-   ObjectArray<ConfigEntry> *systems = config->getSubEntries(_T("/Asterisk/Systems"), nullptr);
+   unique_ptr<ObjectArray<ConfigEntry>> systems = config->getSubEntries(_T("/Asterisk/Systems"), nullptr);
    if (systems != nullptr)
    {
       for(int i = 0; i < systems->size(); i++)
@@ -149,7 +149,6 @@ static bool SubagentInit(Config *config)
             AgentWriteLog(NXLOG_WARNING, _T("Asterisk: cannot add system %s definition from config"), systems->get(i)->getName());
          }
       }
-      delete systems;
    }
 
    // Create default "LOCAL" system if explicitly enabled or other systems are not defined

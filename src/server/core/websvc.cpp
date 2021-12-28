@@ -72,13 +72,12 @@ WebServiceDefinition::WebServiceDefinition(const ConfigEntry *config, uint32_t i
    ConfigEntry *headerRoot = config->findEntry(_T("headers"));
    if (headerRoot != nullptr)
    {
-     ObjectArray<ConfigEntry> *headers = headerRoot->getSubEntries(_T("header*"));
-     for(int i = 0; i < headers->size(); i++)
-     {
-        ConfigEntry *e = headers->get(i);
-        m_headers.set(e->getSubEntryValue(_T("name")), e->getSubEntryValue(_T("value")));
+      unique_ptr<ObjectArray<ConfigEntry>> headers = headerRoot->getSubEntries(_T("header*"));
+      for (int i = 0; i < headers->size(); i++)
+      {
+         ConfigEntry *e = headers->get(i);
+         m_headers.set(e->getSubEntryValue(_T("name")), e->getSubEntryValue(_T("value")));
      }
-     delete headers;
    }
 
 }

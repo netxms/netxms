@@ -254,7 +254,7 @@ bool NXCORE_EXPORTABLE LoadConfig(int *debugLevel)
    }
 
    // Update environment from config
-   ObjectArray<ConfigEntry> *environment = g_serverConfig.getSubEntries(_T("/ENV"), _T("*"));
+   unique_ptr<ObjectArray<ConfigEntry>> environment = g_serverConfig.getSubEntries(_T("/ENV"), _T("*"));
    if (environment != nullptr)
    {
       for (int i = 0; i < environment->size(); i++)
@@ -262,7 +262,6 @@ bool NXCORE_EXPORTABLE LoadConfig(int *debugLevel)
          ConfigEntry *e = environment->get(i);
          SetEnvironmentVariable(e->getName(), e->getValue());
       }
-      delete environment;
    }
 
    if (bSuccess)

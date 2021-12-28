@@ -442,7 +442,7 @@ void Template::updateFromImport(ConfigEntry *config)
    ConfigEntry *policyRoot = config->findEntry(_T("agentPolicies"));
    if (policyRoot != nullptr)
    {
-      ObjectArray<ConfigEntry> *policies = policyRoot->getSubEntries(_T("agentPolicy#*"));
+      unique_ptr<ObjectArray<ConfigEntry>> policies = policyRoot->getSubEntries(_T("agentPolicy#*"));
       for(int i = 0; i < policies->size(); i++)
       {
          ConfigEntry *e = policies->get(i);
@@ -459,7 +459,6 @@ void Template::updateFromImport(ConfigEntry *config)
          else
             m_policyList->add(curr);
       }
-      delete policies;
    }
 
    setModified(MODIFY_ALL);

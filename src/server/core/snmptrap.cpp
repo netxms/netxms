@@ -123,7 +123,7 @@ SNMPTrapConfiguration::SNMPTrapConfiguration(const ConfigEntry& entry, const uui
    const ConfigEntry *parametersRoot = entry.findEntry(_T("parameters"));
    if (parametersRoot != nullptr)
    {
-      ObjectArray<ConfigEntry> *parameters = parametersRoot->getOrderedSubEntries(_T("parameter#*"));
+      unique_ptr<ObjectArray<ConfigEntry>> parameters = parametersRoot->getOrderedSubEntries(_T("parameter#*"));
       if (parameters->size() > 0)
       {
          for(int i = 0; i < parameters->size(); i++)
@@ -134,7 +134,6 @@ SNMPTrapConfiguration::SNMPTrapConfiguration(const ConfigEntry& entry, const uui
             m_mappings.add(param);
          }
       }
-      delete parameters;
    }
 
    compileScript();

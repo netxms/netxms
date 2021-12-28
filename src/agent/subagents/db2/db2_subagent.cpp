@@ -579,7 +579,7 @@ static bool DB2Init(Config *config)
          return false;
       }
 
-      ObjectArray<ConfigEntry> *db2SubXmlSubEntries = db2SubXmlEntry->getSubEntries(_T("db2#*"));
+      unique_ptr<ObjectArray<ConfigEntry>> db2SubXmlSubEntries = db2SubXmlEntry->getSubEntries(_T("db2#*"));
       numOfPossibleThreads = db2SubXmlSubEntries->size();
       AgentWriteDebugLog(7, _T("%s: '%s' loaded with number of db2 entries: %d"), SUBAGENT_NAME, pathToXml, numOfPossibleThreads);
       arrDb2Info = new DB2_INFO*[numOfPossibleThreads];
@@ -600,7 +600,6 @@ static bool DB2Init(Config *config)
          arrDb2Info[s_threadCount] = db2Info;
          s_threadCount++;
       }
-      delete db2SubXmlSubEntries;
    }
 
    if (s_threadCount > 0)
@@ -789,14 +788,12 @@ static LONG GetParameter(const TCHAR *parameter, const TCHAR *arg, TCHAR *value,
 
 static DB2_INFO *GetConfigs(Config *config, ConfigEntry *configEntry, const TCHAR *entryName)
 {
-   ObjectArray<ConfigEntry> *entryList = configEntry->getSubEntries(_T("*"));
+   unique_ptr<ObjectArray<ConfigEntry>> entryList = configEntry->getSubEntries(_T("*"));
    if (entryList->size() == 0)
    {
       AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("%s: entry '%s' contained no values"), SUBAGENT_NAME, entryName);
-      delete entryList;
       return NULL;
    }
-   delete entryList;
 
    DB2_INFO *db2Info = new DB2_INFO();
    BOOL noErr = TRUE;

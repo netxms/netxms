@@ -293,7 +293,7 @@ static bool H_UpgradeFromV0()
                Config cfg;
                if (cfg.loadXmlConfigFromMemory(xml, strlen(xml), NULL, "passiveElementGroup", false))
                {
-                  ObjectArray<ConfigEntry> *list = cfg.getSubEntries(_T("/elements"), NULL);
+                  unique_ptr<ObjectArray<ConfigEntry>> list = cfg.getSubEntries(_T("/elements"), NULL);
                   if (list != NULL)
                   {
                      for(int i = 0; i < list->size(); i++)
@@ -324,11 +324,9 @@ static bool H_UpgradeFromV0()
                            MemFree(xml);
                            DBFreeStatement(hStmt);
                            DBFreeResult(hResult);
-                           delete list;
                            return false;
                         }
                      }
-                     delete list;
                   }
                }
             }

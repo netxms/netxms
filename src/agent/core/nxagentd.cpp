@@ -115,7 +115,7 @@ void UpdateUserAgentsEnvironment();
 
 void ParseTunnelList(const StringSet& tunnels);
 
-void ParseTunnelListFromConfigEntry(ObjectArray<ConfigEntry> *config);
+void ParseTunnelListFromConfigEntry(const unique_ptr<ObjectArray<ConfigEntry>>& config);
 
 void StartWebServiceHousekeeper();
 
@@ -1149,11 +1149,10 @@ BOOL Initialize()
 		// Parse outgoing server connection (tunnel) list
       ParseTunnelList(s_serverConnectionList);
 
-      ObjectArray<ConfigEntry> *servConConfig = config->getSubEntries(_T("/ServerConnection"));
+      unique_ptr<ObjectArray<ConfigEntry>> servConConfig = config->getSubEntries(_T("/ServerConnection"));
       if (servConConfig != nullptr)
       {
          ParseTunnelListFromConfigEntry(servConConfig);
-         delete servConConfig;
       }
 
       // Parse server lists
@@ -1292,7 +1291,7 @@ BOOL Initialize()
    }
 
    // Parse external tables (ConfigEntry)
-   ObjectArray<ConfigEntry> *extTables = config->getSubEntries(_T("/ExternalTable"));
+   unique_ptr<ObjectArray<ConfigEntry>> extTables = config->getSubEntries(_T("/ExternalTable"));
    if (extTables != nullptr)
    {
       for (int i = 0; i < extTables->size(); i++)
@@ -1301,7 +1300,6 @@ BOOL Initialize()
          if (!AddExternalTable(e))
             nxlog_write(NXLOG_WARNING, _T("Unable to add external table \"%s\""), e->getName());
       }
-      delete extTables;
    }
 
    // Parse external parameters providers list
@@ -1337,14 +1335,13 @@ BOOL Initialize()
       }
 
       // Additional external subagents implicitly defined by EXT:* config sections
-      ObjectArray<ConfigEntry> *entries = config->getSubEntries(_T("/"), _T("EXT:*"));
+      unique_ptr<ObjectArray<ConfigEntry>> entries = config->getSubEntries(_T("/"), _T("EXT:*"));
       for(int i = 0; i < entries->size(); i++)
       {
          const TCHAR *name = entries->get(i)->getName() + 4;
          if (!AddExternalSubagent(name))
             nxlog_write(NXLOG_WARNING, _T("Unable to add external subagent \"%s\""), name);
       }
-      delete entries;
 
       // Parse application agents list
 	   if (!(g_dwFlags & AF_SUBAGENT_LOADER) && (s_appAgentsList != NULL))
@@ -1805,7 +1802,7 @@ static int ResetIdentity()
 static void UpdateEnvironment()
 {
    shared_ptr<Config> config = g_config;
-   ObjectArray<ConfigEntry> *entrySet = config->getSubEntries(_T("/ENV"), _T("*"));
+   unique_ptr<ObjectArray<ConfigEntry>> entrySet = config->getSubEntries(_T("/ENV"), _T("*"));
    if (entrySet == nullptr)
       return;
 
@@ -1814,8 +1811,6 @@ static void UpdateEnvironment()
       ConfigEntry *e = entrySet->get(i);
       SetEnvironmentVariable(e->getName(), e->getValue());
    }
-   delete entrySet;
-
    UpdateUserAgentsEnvironment();
 }
 

@@ -514,14 +514,13 @@ void ServiceEntry::getListFromXML(const TCHAR *path, StringList *result)
       nxlog_debug_tag(DEBUG_TAG, 9, _T("XML: %s"), m_content.xml->createXml().cstr());
    nxlog_debug_tag(DEBUG_TAG, 8, _T("ServiceEntry::getListFromXML(): Get child tag list for path \"%s\""), path);
    ConfigEntry *entry = m_content.xml->getEntry(path);
-   ObjectArray<ConfigEntry> *elements = entry != nullptr ? entry->getSubEntries(_T("*")) : nullptr;
+   unique_ptr<ObjectArray<ConfigEntry>> elements = entry != nullptr ? entry->getSubEntries(_T("*")) : nullptr;
    if (elements != nullptr)
    {
       for(int i = 0; i < elements->size(); i++)
       {
          result->add(elements->get(i)->getName());
       }
-      delete elements;
    }
 }
 

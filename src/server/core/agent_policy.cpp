@@ -406,7 +406,7 @@ static void BuildFileList(ConfigEntry *currEntry, StringBuffer *currPath, Object
 
    currPath->append(_T("/"));
 
-   ObjectArray<ConfigEntry> *elements = children->getSubEntries(_T("*"));
+   unique_ptr<ObjectArray<ConfigEntry>> elements = children->getSubEntries(_T("*"));
    if (elements != nullptr)
    {
       for(int i = 0; i < elements->size(); i++)
@@ -424,9 +424,7 @@ static void BuildFileList(ConfigEntry *currEntry, StringBuffer *currPath, Object
             if (updateGuid)
             {
                f->newGuid = uuid::generate();
-               ObjectArray<ConfigEntry> *values = e->getSubEntries(_T("guid"));
-               values->get(0)->setValue(f->newGuid.toString());
-               delete values;
+               e->getSubEntries(_T("guid"))->get(0)->setValue(f->newGuid.toString());
             }
          }
          else
@@ -434,7 +432,6 @@ static void BuildFileList(ConfigEntry *currEntry, StringBuffer *currPath, Object
             BuildFileList(e, currPath, files, updateGuid, includeDirectories);
          }
       }
-      delete elements;
    }
 
    currPath->shrink(currPath->length() - pathPos);
@@ -448,7 +445,7 @@ static unique_ptr<ObjectArray<FileInfo>> GetFilesFromConfig(const char* content)
    auto files = make_unique<ObjectArray<FileInfo>>(64, 64, Ownership::True);
    Config data;
    data.loadXmlConfigFromMemory(content, static_cast<int>(strlen(content)), nullptr, "FileDeliveryPolicy", false);
-   ObjectArray<ConfigEntry> *rootElements = data.getSubEntries(_T("/elements"), _T("*"));
+   unique_ptr<ObjectArray<ConfigEntry>> rootElements = data.getSubEntries(_T("/elements"), _T("*"));
    if (rootElements != nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("Found elements"));
@@ -458,7 +455,6 @@ static unique_ptr<ObjectArray<FileInfo>> GetFilesFromConfig(const char* content)
          nxlog_debug_tag(DEBUG_TAG, 4, _T("Building file list"));
          BuildFileList(rootElements->get(i), &path, files.get(), true, false);
       }
-      delete rootElements;
    }
    return files;
 }
@@ -559,7 +555,7 @@ void FileDeliveryPolicy::importAdditionalData(const ConfigEntry *config)
    ConfigEntry *fileRoot = config->findEntry(_T("files"));
    if (fileRoot != nullptr)
    {
-      ObjectArray<ConfigEntry> *files = fileRoot->getSubEntries(_T("file"));
+      unique_ptr<ObjectArray<ConfigEntry>> files = fileRoot->getSubEntries(_T("file"));
       for (int i = 0; i < files->size(); i++)
       {
          ConfigEntry* file = files->get(i);
@@ -615,7 +611,6 @@ void FileDeliveryPolicy::importAdditionalData(const ConfigEntry *config)
             }
          }
       }
-      delete files;
    }
 }
 
@@ -634,7 +629,7 @@ uint32_t FileDeliveryPolicy::modifyFromMessage(const NXCPMessage& request)
       ObjectArray<FileInfo> files(64, 64, Ownership::True);
       Config data;
       data.loadXmlConfigFromMemory(m_content, static_cast<int>(strlen(m_content)), nullptr, "FileDeliveryPolicy", false);
-      ObjectArray<ConfigEntry> *rootElements = data.getSubEntries(_T("/elements"), _T("*"));
+      unique_ptr<ObjectArray<ConfigEntry>> rootElements = data.getSubEntries(_T("/elements"), _T("*"));
       if (rootElements != nullptr)
       {
          for (int i = 0; i < rootElements->size(); i++)
@@ -642,7 +637,6 @@ uint32_t FileDeliveryPolicy::modifyFromMessage(const NXCPMessage& request)
             StringBuffer path;
             BuildFileList(rootElements->get(i), &path, &files, true, false);
          }
-         delete rootElements;
       }
       MemFree(m_content);
       data.setTopLevelTag(_T("FileDeliveryPolicy"));

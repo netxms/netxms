@@ -527,7 +527,7 @@ LONG H_GetVMDiskTable(const TCHAR *cmd, const TCHAR *arg, Table *value, Abstract
 	value->addColumn(_T("CTYPE"), DCI_DT_STRING, _T("VM controller type"));
 	value->addColumn(_T("ADDRESS"), DCI_DT_STRING, _T("Address"));
 
-   ObjectArray<ConfigEntry> *deviceList = config.getSubEntries(_T("/devices"), _T("disk"));
+   unique_ptr<ObjectArray<ConfigEntry>> deviceList = config.getSubEntries(_T("/devices"), _T("disk"));
    if (deviceList != nullptr)
    {
       for(int i = 0; i < deviceList->size(); i++)
@@ -555,7 +555,6 @@ LONG H_GetVMDiskTable(const TCHAR *cmd, const TCHAR *arg, Table *value, Abstract
             value->set(5, address);
          }
       }
-      delete deviceList;
    }
 
    return SYSINFO_RC_SUCCESS;
@@ -596,7 +595,7 @@ LONG H_GetVMControllerTable(const TCHAR *cmd, const TCHAR *arg, Table *value, Ab
 	value->addColumn(_T("INDEX"), DCI_DT_INT, _T("Index"));
 	value->addColumn(_T("MODEL"), DCI_DT_STRING, _T("Model"));
 
-   ObjectArray<ConfigEntry> *deviceList = conf.getSubEntries(_T("/devices"), _T("controller"));
+   unique_ptr<ObjectArray<ConfigEntry>> deviceList = conf.getSubEntries(_T("/devices"), _T("controller"));
    if (deviceList != nullptr)
    {
       for(int i = 0; i < deviceList->size(); i++)
@@ -607,7 +606,6 @@ LONG H_GetVMControllerTable(const TCHAR *cmd, const TCHAR *arg, Table *value, Ab
          value->set(1, item->getAttributeAsInt(_T("index"), 0));
          value->set(2, item->getAttribute(_T("model")));
       }
-      delete deviceList;
    }
 
    return SYSINFO_RC_SUCCESS;
@@ -649,7 +647,7 @@ LONG H_GetVMInterfaceTable(const TCHAR *cmd, const TCHAR *arg, Table *value, Abs
 	value->addColumn(_T("SOURCE"), DCI_DT_STRING, _T("Source"));
 	value->addColumn(_T("MODEL"), DCI_DT_STRING, _T("Model"));
 
-   ObjectArray<ConfigEntry> *deviceList = config.getSubEntries(_T("/devices"), _T("interface"));
+   unique_ptr<ObjectArray<ConfigEntry>> deviceList = config.getSubEntries(_T("/devices"), _T("interface"));
    if (deviceList != nullptr)
    {
       for(int i = 0; i < deviceList->size(); i++)
@@ -667,7 +665,6 @@ LONG H_GetVMInterfaceTable(const TCHAR *cmd, const TCHAR *arg, Table *value, Abs
          if(tmp != nullptr)
             value->set(3, tmp->getAttribute(_T("type")));
       }
-      delete deviceList;
    }
 
    return SYSINFO_RC_SUCCESS;
@@ -707,7 +704,7 @@ LONG H_GetVMVideoTable(const TCHAR *cmd, const TCHAR *arg, Table *value, Abstrac
 	value->addColumn(_T("TYPE"), DCI_DT_STRING, _T("Type"), true);
 	value->addColumn(_T("VRAM"), DCI_DT_UINT64, _T("Video RAM"));
 
-   ObjectArray<ConfigEntry> *deviceList = config.getSubEntries(_T("/devices"), _T("video"));
+   unique_ptr<ObjectArray<ConfigEntry>> deviceList = config.getSubEntries(_T("/devices"), _T("video"));
    if (deviceList != nullptr)
    {
       for(int i = 0; i < deviceList->size(); i++)
@@ -721,9 +718,7 @@ LONG H_GetVMVideoTable(const TCHAR *cmd, const TCHAR *arg, Table *value, Abstrac
             value->set(1, tmp->getAttributeAsUInt64(_T("vram")) * 1024);
          }
       }
-      delete deviceList;
    }
-
    return SYSINFO_RC_SUCCESS;
 }
 
@@ -752,7 +747,7 @@ EnumerationCallbackResult FillNetworkData(const TCHAR *key, const NXvirNetwork *
 
    //concat all interfaces
    StringBuffer ifaces;
-   ObjectArray<ConfigEntry> *ifaceList = config.getSubEntries(_T("/forward"), _T("interface"));
+   unique_ptr<ObjectArray<ConfigEntry>> ifaceList = config.getSubEntries(_T("/forward"), _T("interface"));
    if (ifaceList != nullptr)
    {
       for(int i = 0; i < ifaceList->size(); i++)
@@ -763,12 +758,11 @@ EnumerationCallbackResult FillNetworkData(const TCHAR *key, const NXvirNetwork *
             ifaces.append(_T(", "));
       }
       value->set(2, ifaces);
-      delete ifaceList;
    }
 
    //concat all portgroups
    StringBuffer portgroup;
-   ObjectArray<ConfigEntry> *portgroupList = config.getSubEntries(_T("/"), _T("portgroup"));
+   unique_ptr<ObjectArray<ConfigEntry>> portgroupList = config.getSubEntries(_T("/"), _T("portgroup"));
    if (portgroupList != nullptr)
    {
       for(int i = 0; i < portgroupList->size(); i++)
@@ -779,7 +773,6 @@ EnumerationCallbackResult FillNetworkData(const TCHAR *key, const NXvirNetwork *
             portgroup.append(_T(", "));
       }
       value->set(3, portgroup);
-      delete portgroupList;
    }
 
    return _CONTINUE;

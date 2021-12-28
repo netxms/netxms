@@ -61,7 +61,7 @@ static LONG H_BrokersTable(const TCHAR *param, const TCHAR *arg, Table *value, A
  */
 static void RegisterBrokers(StructArray<NETXMS_SUBAGENT_PARAM> *parameters, Config *config)
 {
-   ObjectArray<ConfigEntry> *brokers = config->getSubEntries(_T("/MQTT/Brokers"), _T("*"));
+   unique_ptr<ObjectArray<ConfigEntry>> brokers = config->getSubEntries(_T("/MQTT/Brokers"), _T("*"));
    if (brokers != NULL)
    {
       for(int i = 0; i < brokers->size(); i++)
@@ -76,7 +76,6 @@ static void RegisterBrokers(StructArray<NETXMS_SUBAGENT_PARAM> *parameters, Conf
             AgentWriteLog(NXLOG_WARNING, _T("MQTT: cannot add broker %s definition from config"), brokers->get(i)->getName());
          }
       }
-      delete brokers;
    }
    nxlog_debug(3, _T("MQTT: %d parameters added from configuration"), parameters->size());
 }

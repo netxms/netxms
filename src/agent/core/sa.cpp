@@ -359,7 +359,7 @@ void SessionAgentConnector::updateUserAgentConfig()
 void SessionAgentConnector::updateUserAgentEnvironment()
 {
    shared_ptr<Config> config = g_config;
-   ObjectArray<ConfigEntry> *entrySet = config->getSubEntries(_T("/ENV"), _T("*"));
+   unique_ptr<ObjectArray<ConfigEntry>> entrySet = config->getSubEntries(_T("/ENV"), _T("*"));
    if (entrySet == nullptr)
       return;
 
@@ -373,8 +373,6 @@ void SessionAgentConnector::updateUserAgentEnvironment()
       msg.setField(fieldId++, e->getName());
       msg.setField(fieldId++, e->getValue());
    }
-   delete entrySet;
-
    sendMessage(&msg);
 }
 

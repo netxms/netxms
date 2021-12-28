@@ -460,7 +460,7 @@ static StringBuffer BuildColumnList(ConfigEntry *root)
       return StringBuffer();
 
    StringBuffer s;
-   ObjectArray<ConfigEntry> *columns = root->getOrderedSubEntries(_T("column#*"));
+   unique_ptr<ObjectArray<ConfigEntry>> columns = root->getOrderedSubEntries(_T("column#*"));
    for(int i = 0; i < columns->size(); i++)
    {
       if (i > 0)
@@ -475,7 +475,6 @@ static StringBuffer BuildColumnList(ConfigEntry *root)
       s.append(_T("^#^"));
       s.append(c->getSubEntryValue(_T("separator")));
    }
-   delete columns;
    return s;
 }
 

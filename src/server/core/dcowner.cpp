@@ -995,7 +995,7 @@ void DataCollectionOwner::updateFromImport(ConfigEntry *config)
    ConfigEntry *dcRoot = config->findEntry(_T("dataCollection"));
    if (dcRoot != nullptr)
    {
-      ObjectArray<ConfigEntry> *dcis = dcRoot->getSubEntries(_T("dci#*"));
+      unique_ptr<ObjectArray<ConfigEntry>> dcis = dcRoot->getSubEntries(_T("dci#*"));
       for(int i = 0; i < dcis->size(); i++)
       {
          ConfigEntry *e = dcis->get(i);
@@ -1013,9 +1013,8 @@ void DataCollectionOwner::updateFromImport(ConfigEntry *config)
          }
          guidList.add(new uuid(guid));
       }
-      delete dcis;
 
-      ObjectArray<ConfigEntry> *dctables = dcRoot->getSubEntries(_T("dctable#*"));
+      unique_ptr<ObjectArray<ConfigEntry>> dctables = dcRoot->getSubEntries(_T("dctable#*"));
       for(int i = 0; i < dctables->size(); i++)
       {
          ConfigEntry *e = dctables->get(i);
@@ -1033,7 +1032,6 @@ void DataCollectionOwner::updateFromImport(ConfigEntry *config)
          }
          guidList.add(new uuid(guid));
       }
-      delete dctables;
    }
 
    // Delete DCIs missing in import

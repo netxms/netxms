@@ -137,7 +137,7 @@ void MenuItem::loadSubItems(ConfigEntry *config)
    if (*m_path != 0)
       m_subItems->add(new MenuItem(this));   // Add "back" item
 
-   ObjectArray<ConfigEntry> *items = config->getSubEntries(_T("item"));
+   unique_ptr<ObjectArray<ConfigEntry>> items = config->getSubEntries(_T("item"));
    for (int i = 0; i < items->size(); i++)
    {
       MenuItem *item = new MenuItem(this, items->get(i), m_path);
@@ -171,7 +171,6 @@ void MenuItem::loadSubItems(ConfigEntry *config)
          delete item;
       }
    }
-   delete items;
 
    m_subItems->sort(MenuItemComparator);
 }

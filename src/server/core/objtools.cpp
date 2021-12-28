@@ -1053,7 +1053,7 @@ bool ImportObjectTool(ConfigEntry *config, bool overwrite)
    	ConfigEntry *root = config->findEntry(_T("columns"));
 	   if (root != nullptr)
 	   {
-		   ObjectArray<ConfigEntry> *columns = root->getOrderedSubEntries(_T("column#*"));
+         unique_ptr<ObjectArray<ConfigEntry>> columns = root->getOrderedSubEntries(_T("column#*"));
          if (columns->size() > 0)
          {
             hStmt = DBPrepare(hdb, _T("INSERT INTO object_tools_table_columns (tool_id,")
@@ -1073,14 +1073,10 @@ bool ImportObjectTool(ConfigEntry *config, bool overwrite)
                DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, (INT32)c->getSubEntryValueAsInt(_T("captureGroup")));
 
                if (!DBExecute(hStmt))
-               {
-                  delete columns;
                   return ImportFailure(hdb, hStmt);
-               }
             }
             DBFreeStatement(hStmt);
          }
-         delete columns;
       }
    }
 
@@ -1091,7 +1087,7 @@ bool ImportObjectTool(ConfigEntry *config, bool overwrite)
 	ConfigEntry *inputFieldsRoot = config->findEntry(_T("inputFields"));
    if (inputFieldsRoot != nullptr)
    {
-	   ObjectArray<ConfigEntry> *inputFields = inputFieldsRoot->getOrderedSubEntries(_T("inputField#*"));
+      unique_ptr<ObjectArray<ConfigEntry>> inputFields = inputFieldsRoot->getOrderedSubEntries(_T("inputField#*"));
       if (inputFields->size() > 0)
       {
          hStmt = DBPrepare(hdb, _T("INSERT INTO input_fields (category,owner_id,name,input_type,display_name,flags,sequence_num) VALUES ('T',?,?,?,?,?,?)"));
@@ -1109,14 +1105,10 @@ bool ImportObjectTool(ConfigEntry *config, bool overwrite)
             DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, i + 1);
 
             if (!DBExecute(hStmt))
-            {
-               delete inputFields;
                return ImportFailure(hdb, hStmt);
-            }
          }
          DBFreeStatement(hStmt);
       }
-      delete inputFields;
    }
 
    DBCommit(hdb);
