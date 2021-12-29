@@ -139,8 +139,8 @@ static void ProcessFile(const TCHAR *path, const NX_STAT_STRUCT *stat)
       fi.checkPassed = true;
       s_files.set(path, new FileInfo(fi));
       SaveToDB(path, &fi);
-      PostEvent(EVENT_AGENT_FILE_ADDED, nullptr, 0, "s", path);
       nxlog_debug_tag(DEBUG_TAG, 4, _T("Detected new file %s"), path);
+      PostEvent(EVENT_AGENT_FILE_ADDED, nullptr, 0, "s", path);
    }
    else
    {
