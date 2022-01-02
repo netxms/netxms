@@ -16,14 +16,14 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.nxmc.modules.businessservice.views.helpers;
+package org.netxms.ui.eclipse.slm.objecttabs.helpers;
 
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
 import org.netxms.client.businessservices.BusinessServiceTicket;
-import org.netxms.nxmc.base.widgets.SortableTableViewer;
-import org.netxms.nxmc.modules.businessservice.views.BusinessServiceAvailabilityView;
+import org.netxms.ui.eclipse.slm.objecttabs.BusinessServiceAvailability;
+import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
  * Comparator for business service tickets
@@ -42,25 +42,25 @@ public class BusinessServiceTicketComparator extends ViewerComparator
 		int result = 0;
 		switch((Integer)((SortableTableViewer)viewer).getTable().getSortColumn().getData("ID")) //$NON-NLS-1$
 		{
-         case BusinessServiceAvailabilityView.COLUMN_ID:   
+         case BusinessServiceAvailability.COLUMN_ID:
             result = Long.signum(t1.getId() - t2.getId());  
             break;
-         case BusinessServiceAvailabilityView.COLUMN_SERVICE_ID:      
+         case BusinessServiceAvailability.COLUMN_SERVICE_ID:
             result = Long.signum(t1.getServiceId() - t2.getServiceId());  
             break; 
-         case BusinessServiceAvailabilityView.COLUMN_CHECK_ID:     
+         case BusinessServiceAvailability.COLUMN_CHECK_ID:
             result = Long.signum(t1.getCheckId() - t2.getCheckId());  
             break;  
-         case BusinessServiceAvailabilityView.COLUMN_CHECK_DESCRIPTION:     
+         case BusinessServiceAvailability.COLUMN_CHECK_DESCRIPTION:
             result = t1.getCheckDescription().compareTo(t2.getCheckDescription());  
             break;    
-         case BusinessServiceAvailabilityView.COLUMN_CREATION_TIME:   
+         case BusinessServiceAvailability.COLUMN_CREATION_TIME:
             result = t1.getCreationTime().compareTo(t2.getCreationTime());  
             break;             
-         case BusinessServiceAvailabilityView.COLUMN_TERMINATION_TIME:  
+         case BusinessServiceAvailability.COLUMN_TERMINATION_TIME:
             result = t1.getCloseTime().compareTo(t2.getCloseTime());  
             break;             
-         case BusinessServiceAvailabilityView.COLUMN_REASON:   
+         case BusinessServiceAvailability.COLUMN_REASON:
             result = t1.getReason().compareTo(t2.getReason());  
             break;     
 		}

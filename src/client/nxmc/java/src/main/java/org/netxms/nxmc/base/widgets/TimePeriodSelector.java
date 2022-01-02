@@ -56,11 +56,11 @@ public class TimePeriodSelector extends Composite
    public TimePeriodSelector(Composite parent, int style, TimePeriod period)
    {
       super(parent, style);
-      
+
       setLayout(new FillLayout());
-      
+
       Group timeGroup = new Group(parent, SWT.NONE);
-      timeGroup.setText(I18n.marktr("Time Period"));
+      timeGroup.setText(i18n.tr("Time Period"));
       GridLayout layout = new GridLayout();
       layout.marginWidth = WidgetHelper.OUTER_SPACING;
       layout.marginHeight = WidgetHelper.OUTER_SPACING;
@@ -68,7 +68,7 @@ public class TimePeriodSelector extends Composite
       layout.makeColumnsEqualWidth = true;
       layout.numColumns = 2;
       timeGroup.setLayout(layout);
-      
+
       final SelectionListener listener = new SelectionListener() {
          @Override
          public void widgetSelected(SelectionEvent e)
@@ -78,7 +78,7 @@ public class TimePeriodSelector extends Composite
             timeFrom.setEnabled(radioFixedInterval.getSelection());
             timeTo.setEnabled(radioFixedInterval.getSelection());
          }
-         
+
          @Override
          public void widgetDefaultSelected(SelectionEvent e)
          {
@@ -127,7 +127,7 @@ public class TimePeriodSelector extends Composite
       gd.grabExcessHorizontalSpace = true;
       gd.verticalAlignment = SWT.TOP;
       timeFixedGroup.setLayoutData(gd);
-      
+
       final WidgetFactory factory = new WidgetFactory() {
          @Override
          public Control createControl(Composite parent, int style)

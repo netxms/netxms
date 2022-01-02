@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.nxmc.modules.businessservice.views.helpers;
+package org.netxms.ui.eclipse.slm.objecttabs.helpers;
 
 import org.eclipse.jface.viewers.ITableColorProvider;
 import org.eclipse.jface.viewers.ITableLabelProvider;
@@ -25,9 +25,9 @@ import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
 import org.netxms.client.businessservices.BusinessServiceTicket;
 import org.netxms.client.constants.ObjectStatus;
-import org.netxms.nxmc.localization.DateFormatFactory;
-import org.netxms.nxmc.modules.businessservice.views.BusinessServiceAvailabilityView;
-import org.netxms.nxmc.resources.StatusDisplayInfo;
+import org.netxms.ui.eclipse.console.resources.RegionalSettings;
+import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
+import org.netxms.ui.eclipse.slm.objecttabs.BusinessServiceAvailability;
 
 /**
  * Label provider for business service tickets
@@ -52,19 +52,19 @@ public class BusinessServiceTicketLabelProvider extends LabelProvider implements
 	   BusinessServiceTicket ticket = (BusinessServiceTicket)element;
 		switch(columnIndex)
 		{
-         case BusinessServiceAvailabilityView.COLUMN_ID:				
+         case BusinessServiceAvailability.COLUMN_ID:
 				return Long.toString(ticket.getId());
-         case BusinessServiceAvailabilityView.COLUMN_SERVICE_ID:    
+         case BusinessServiceAvailability.COLUMN_SERVICE_ID:
             return Long.toString(ticket.getServiceId());
-         case BusinessServiceAvailabilityView.COLUMN_CHECK_ID:  
+         case BusinessServiceAvailability.COLUMN_CHECK_ID:
             return Long.toString(ticket.getCheckId());
-         case BusinessServiceAvailabilityView.COLUMN_CHECK_DESCRIPTION:    
+         case BusinessServiceAvailability.COLUMN_CHECK_DESCRIPTION:
             return ticket.getCheckDescription();  
-         case BusinessServiceAvailabilityView.COLUMN_CREATION_TIME:    
-            return DateFormatFactory.getDateTimeFormat().format(ticket.getCreationTime());
-         case BusinessServiceAvailabilityView.COLUMN_TERMINATION_TIME:    
-            return ticket.getCloseTime().getTime() == 0 ? "" : DateFormatFactory.getDateTimeFormat().format(ticket.getCloseTime());
-         case BusinessServiceAvailabilityView.COLUMN_REASON:    
+         case BusinessServiceAvailability.COLUMN_CREATION_TIME:
+            return RegionalSettings.getDateTimeFormat().format(ticket.getCreationTime());
+         case BusinessServiceAvailability.COLUMN_TERMINATION_TIME:
+            return ticket.getCloseTime().getTime() == 0 ? "" : RegionalSettings.getDateTimeFormat().format(ticket.getCloseTime());
+         case BusinessServiceAvailability.COLUMN_REASON:
             return ticket.getReason();
 		}
 		return null;

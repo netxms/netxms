@@ -28,19 +28,19 @@ import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.netxms.client.NXCObjectCreationData;
 import org.netxms.client.NXCSession;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.BusinessService;
 import org.netxms.client.objects.BusinessServiceRoot;
-import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.slm.Activator;
 import org.netxms.ui.eclipse.slm.Messages;
-import org.netxms.ui.eclipse.slm.dialogs.CreateBusinessServiceDialog;
+import org.netxms.ui.eclipse.slm.dialogs.CreateBusinessServicePrototypeDialog;
 
 /**
- * Create business service object
+ * Create business service prototype object
  */
-public class CreateBusinessService implements IObjectActionDelegate
+public class CreateBusinessServicePrototype implements IObjectActionDelegate
 {
 	private IWorkbenchWindow window;
 	private IWorkbenchPart part;
@@ -62,16 +62,18 @@ public class CreateBusinessService implements IObjectActionDelegate
 	@Override
 	public void run(IAction action)
 	{
-		final CreateBusinessServiceDialog dlg = new CreateBusinessServiceDialog(window.getShell());
+      final CreateBusinessServicePrototypeDialog dlg = new CreateBusinessServicePrototypeDialog(window.getShell());
 		if (dlg.open() != Window.OK)
 			return;
-		
+
       final NXCSession session = ConsoleSharedData.getSession();
-		new ConsoleJob(Messages.get().CreateBusinessService_JobTitle, part, Activator.PLUGIN_ID, null) {
+      new ConsoleJob(Messages.get().CreateBusinessService_JobTitle, part, Activator.PLUGIN_ID) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				session.createObject(new NXCObjectCreationData(AbstractObject.OBJECT_BUSINESSSERVICE, dlg.getName(), parentId));
+            NXCObjectCreationData cd = new NXCObjectCreationData(AbstractObject.OBJECT_BUSINESSSERVICE_PROTOTYPE, dlg.getName(), parentId);
+            cd.setInstanceDiscoveryMethod(dlg.getInstanceDiscoveyMethod());
+            session.createObject(cd);
 			}
 
 			@Override
@@ -104,7 +106,6 @@ public class CreateBusinessService implements IObjectActionDelegate
 		{
 			parentId = -1;
 		}
-
 		action.setEnabled(parentId != -1);
 	}
 }

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,7 +21,8 @@ package org.netxms.nxmc.base.widgets;
 import java.util.Calendar;
 import java.util.Date;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.layout.RowLayout;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.DateTime;
 import org.netxms.nxmc.tools.WidgetHelper;
@@ -33,7 +34,7 @@ public class DateTimeSelector extends Composite
 {
 	private DateTime datePicker;
 	private DateTime timePicker;
-	
+
 	/**
 	 * @param parent
 	 * @param style
@@ -41,17 +42,17 @@ public class DateTimeSelector extends Composite
 	public DateTimeSelector(Composite parent, int style)
 	{
 		super(parent, style);
-		RowLayout layout = new RowLayout();
-		layout.type = SWT.HORIZONTAL;
-		layout.marginBottom = 0;
-		layout.marginTop = 0;
-		layout.marginLeft = 0;
-		layout.marginRight = 0;
-		layout.spacing = WidgetHelper.INNER_SPACING;
+      GridLayout layout = new GridLayout();
+      layout.numColumns = 2;
+      layout.marginHeight = 0;
+      layout.marginWidth = 0;
+      layout.horizontalSpacing = WidgetHelper.INNER_SPACING;
 		setLayout(layout);
 
 		datePicker = new DateTime(this, SWT.DATE | SWT.DROP_DOWN);
+      datePicker.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false));
 		timePicker = new DateTime(this, SWT.TIME);
+      timePicker.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false));
 	}
 
 	/**
@@ -80,9 +81,9 @@ public class DateTimeSelector extends Composite
 		timePicker.setTime(c.get(Calendar.HOUR_OF_DAY), c.get(Calendar.MINUTE), c.get(Calendar.SECOND));
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.swt.widgets.Control#setEnabled(boolean)
-	 */
+   /**
+    * @see org.eclipse.swt.widgets.Control#setEnabled(boolean)
+    */
 	@Override
 	public void setEnabled(boolean enabled)
 	{

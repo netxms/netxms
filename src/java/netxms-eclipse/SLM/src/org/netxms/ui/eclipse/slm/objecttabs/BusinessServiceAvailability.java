@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Reden Solutions
+ * Copyright (C) 2003-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,12 +16,13 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.nxmc.modules.businessservice.views;
+package org.netxms.ui.eclipse.slm.objecttabs;
 
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
@@ -44,30 +45,25 @@ import org.netxms.client.datacollection.GraphItem;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.BusinessService;
 import org.netxms.client.objects.BusinessServicePrototype;
-import org.netxms.nxmc.Registry;
-import org.netxms.nxmc.base.jobs.Job;
-import org.netxms.nxmc.base.widgets.DateTimeSelector;
-import org.netxms.nxmc.base.widgets.SortableTableViewer;
-import org.netxms.nxmc.localization.LocalizationHelper;
-import org.netxms.nxmc.modules.businessservice.views.helpers.BusinessServiceTicketComparator;
-import org.netxms.nxmc.modules.businessservice.views.helpers.BusinessServiceTicketLabelProvider;
-import org.netxms.nxmc.modules.charts.api.ChartColor;
-import org.netxms.nxmc.modules.charts.api.ChartType;
-import org.netxms.nxmc.modules.charts.widgets.Chart;
-import org.netxms.nxmc.modules.objects.views.ObjectView;
-import org.netxms.nxmc.resources.ResourceManager;
-import org.netxms.nxmc.tools.DateBuilder;
-import org.netxms.nxmc.tools.WidgetHelper;
-import org.xnap.commons.i18n.I18n;
+import org.netxms.ui.eclipse.charts.api.ChartColor;
+import org.netxms.ui.eclipse.charts.api.ChartType;
+import org.netxms.ui.eclipse.charts.widgets.Chart;
+import org.netxms.ui.eclipse.jobs.ConsoleJob;
+import org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.slm.Activator;
+import org.netxms.ui.eclipse.slm.objecttabs.helpers.BusinessServiceTicketComparator;
+import org.netxms.ui.eclipse.slm.objecttabs.helpers.BusinessServiceTicketLabelProvider;
+import org.netxms.ui.eclipse.tools.DateBuilder;
+import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.ui.eclipse.widgets.DateTimeSelector;
+import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
- * Business service "Availability" view
+ * Availability view for business services
  */
-public class BusinessServiceAvailabilityView extends ObjectView
+public class BusinessServiceAvailability extends ObjectTab
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(BusinessServiceAvailabilityView.class);
-   private static final String ID = "BusinessServiceAvailability";   
-
    public static final int COLUMN_ID = 0;
    public static final int COLUMN_SERVICE_ID = 1;
    public static final int COLUMN_CHECK_ID = 2;
@@ -75,6 +71,8 @@ public class BusinessServiceAvailabilityView extends ObjectView
    public static final int COLUMN_CREATION_TIME = 4;
    public static final int COLUMN_TERMINATION_TIME = 5;
    public static final int COLUMN_REASON = 6;
+
+   private static final String CONFIG_PREFIX = "BusinessServiceAvailability";
 
    private NXCSession session;
    private DateTimeSelector startDateSelector;
@@ -84,21 +82,12 @@ public class BusinessServiceAvailabilityView extends ObjectView
    private SortableTableViewer ticketViewer;
 
    /**
-    * @param name
-    * @param image
-    */
-   public BusinessServiceAvailabilityView()
-   {
-      super(i18n.tr("Availability"), ResourceManager.getImageDescriptor("icons/object-views/availability_chart.png"), "BusinessServiceAvailability", false);
-   }
-
-   /**
-    * @see org.netxms.nxmc.base.views.View#createContent(org.eclipse.swt.widgets.Composite)
+    * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#createTabContent(org.eclipse.swt.widgets.Composite)
     */
    @Override
-   protected void createContent(Composite parent)
-   {
-      session = Registry.getSession();   
+   protected void createTabContent(Composite parent)
+   { 
+      session = ConsoleSharedData.getSession();
 
       GridLayout layout = new GridLayout();
       layout.marginHeight = 0;
@@ -150,18 +139,18 @@ public class BusinessServiceAvailabilityView extends ObjectView
       gd.horizontalAlignment = SWT.LEFT;
       buttonGroup.setLayoutData(gd);
 
-      createQuickSetButton(buttonGroup, i18n.tr("Today"), new DateBuilder().setMidnight().create(), null);
-      createQuickSetButton(buttonGroup, i18n.tr("Yesterday"), new DateBuilder().setMidnight().add(Calendar.DATE, -1).create(),
+      createQuickSetButton(buttonGroup, "Today", new DateBuilder().setMidnight().create(), null);
+      createQuickSetButton(buttonGroup, "Yesterday", new DateBuilder().setMidnight().add(Calendar.DATE, -1).create(),
             new DateBuilder().setMidnight().add(Calendar.SECOND, -1).create());
-      createQuickSetButton(buttonGroup, i18n.tr("This month"), new DateBuilder().set(Calendar.DAY_OF_MONTH, 1).setMidnight().create(), null);
-      createQuickSetButton(buttonGroup, i18n.tr("Last month"), new DateBuilder().add(Calendar.MONTH, -1).set(Calendar.DAY_OF_MONTH, 1).setMidnight().create(),
+      createQuickSetButton(buttonGroup, "This month", new DateBuilder().set(Calendar.DAY_OF_MONTH, 1).setMidnight().create(), null);
+      createQuickSetButton(buttonGroup, "Last month", new DateBuilder().add(Calendar.MONTH, -1).set(Calendar.DAY_OF_MONTH, 1).setMidnight().create(),
             new DateBuilder().add(Calendar.MONTH, -1).setLastDayOfMonth().setMidnight().add(Calendar.SECOND, -1).create());
-      createQuickSetButton(buttonGroup, i18n.tr("This year"), new DateBuilder().set(Calendar.DAY_OF_YEAR, 1).setMidnight().create(), null);
-      createQuickSetButton(buttonGroup, i18n.tr("Last year"), new DateBuilder().add(Calendar.YEAR, -1).set(Calendar.DAY_OF_YEAR, 1).setMidnight().create(),
+      createQuickSetButton(buttonGroup, "This year", new DateBuilder().set(Calendar.DAY_OF_YEAR, 1).setMidnight().create(), null);
+      createQuickSetButton(buttonGroup, "Last year", new DateBuilder().add(Calendar.YEAR, -1).set(Calendar.DAY_OF_YEAR, 1).setMidnight().create(),
             new DateBuilder().set(Calendar.DAY_OF_YEAR, 1).setMidnight().add(Calendar.SECOND, -1).create());
 
       buttonQuery = new Button(queryGroup, SWT.PUSH);
-      buttonQuery.setText(i18n.tr("Query"));
+      buttonQuery.setText("Query");
       buttonQuery.addSelectionListener(new SelectionListener() {
          @Override
          public void widgetSelected(SelectionEvent arg0)
@@ -192,9 +181,9 @@ public class BusinessServiceAvailabilityView extends ObjectView
       chartConfiguration.setTranslucent(false);
 
       chart = new Chart(parent, SWT.NONE, ChartType.PIE, chartConfiguration);
-      chart.setBackground(getDisplay().getSystemColor(SWT.COLOR_WIDGET_BACKGROUND));
-      chart.addParameter(new GraphItem(DataType.FLOAT, i18n.tr("Uptime"), i18n.tr("Uptime"), "%s"));
-      chart.addParameter(new GraphItem(DataType.FLOAT, i18n.tr("Downtime"), i18n.tr("Downtime"), "%s"));
+      chart.setBackground(chart.getDisplay().getSystemColor(SWT.COLOR_WIDGET_BACKGROUND));
+      chart.addParameter(new GraphItem(DataType.FLOAT, "Uptime", "Uptime", "%s"));
+      chart.addParameter(new GraphItem(DataType.FLOAT, "Downtime", "Downtime", "%s"));
       chart.setPaletteEntry(0, new ChartColor(127, 154, 72));
       chart.setPaletteEntry(1, new ChartColor(158, 65, 62));
       chart.rebuild();
@@ -212,19 +201,20 @@ public class BusinessServiceAvailabilityView extends ObjectView
       gd.grabExcessHorizontalSpace = true;
       separator.setLayoutData(gd);
 
-      final String[] names = { i18n.tr("ID"), i18n.tr("Service"), i18n.tr("Check ID"), i18n.tr("Description"), i18n.tr("Created"), i18n.tr("Closed"), i18n.tr("Reason") };
+      final String[] names = { "ID", "Service", "Check ID", "Description", "Created", "Closed", "Reason" };
       final int[] widths = {70, 200, 70, 300, 150, 150, 300};
       ticketViewer = new SortableTableViewer(parent, names, widths, 0, SWT.DOWN, SortableTableViewer.DEFAULT_STYLE);
       ticketViewer.setContentProvider(new ArrayContentProvider());
       ticketViewer.setLabelProvider(new BusinessServiceTicketLabelProvider());
       ticketViewer.setComparator(new BusinessServiceTicketComparator());
 
-      WidgetHelper.restoreColumnSettings(ticketViewer.getTable(), ID);
+      final IDialogSettings settings = Activator.getDefault().getDialogSettings();
+      WidgetHelper.restoreColumnSettings(ticketViewer.getTable(), settings, CONFIG_PREFIX);
       ticketViewer.getTable().addDisposeListener(new DisposeListener() {
          @Override
          public void widgetDisposed(DisposeEvent e)
          {
-            WidgetHelper.saveColumnSettings(ticketViewer.getTable(), ID);
+            WidgetHelper.saveColumnSettings(ticketViewer.getTable(), settings, CONFIG_PREFIX);
          }
       });
 
@@ -264,30 +254,39 @@ public class BusinessServiceAvailabilityView extends ObjectView
    }
 
    /**
-    * @see org.netxms.nxmc.modules.objects.views.ObjectView#onObjectChange(org.netxms.client.objects.AbstractObject)
+    * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#showForObject(org.netxms.client.objects.AbstractObject)
     */
    @Override
-   protected void onObjectChange(AbstractObject object)
+   public boolean showForObject(AbstractObject object)
    {
-      ticketViewer.setInput(new Object[0]);
-      chart.clearParameters();
-      chart.refresh();      
+      return (object instanceof BusinessService) && !(object instanceof BusinessServicePrototype);
    }
 
    /**
-    * @see org.netxms.nxmc.base.views.View#refresh()
+    * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#objectChanged(org.netxms.client.objects.AbstractObject)
+    */
+   @Override
+   public void objectChanged(AbstractObject object)
+   {
+      ticketViewer.setInput(new Object[0]);
+      chart.clearParameters();
+      chart.refresh();
+   }
+
+   /**
+    * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#refresh()
     */
    @Override
    public void refresh()
    {
       TimePeriod timePeriod = new TimePeriod(TimeFrameType.FIXED, 0, null, startDateSelector.getValue(), endDateSelector.getValue());
-      Job availabilityJob = new Job(i18n.tr("Get business ervice availability"), this) {
+      ConsoleJob availabilityJob = new ConsoleJob("Get business ervice availability", getViewPart(), Activator.PLUGIN_ID) {
          @Override
-         protected void run(IProgressMonitor monitor) throws Exception
+         protected void runInternal(IProgressMonitor monitor) throws Exception
          {
             double availability = session.getBusinessServiceAvailablity(getObject().getObjectId(), timePeriod);
-            
-            runInUIThread(new Runnable() {               
+
+            runInUIThread(new Runnable() {
                @Override
                public void run()
                {
@@ -302,18 +301,18 @@ public class BusinessServiceAvailabilityView extends ObjectView
          @Override
          protected String getErrorMessage()
          {
-            return i18n.tr("Cannot get availability for business service {0}", getObject().getObjectName());
+            return String.format("Cannot get availability for business service %s", getObject().getObjectName());
          }
       };
       availabilityJob.setUser(false);
       availabilityJob.start();
-      Job ticketJob = new Job(i18n.tr("Get business service tickets"), this) {
+      ConsoleJob ticketJob = new ConsoleJob("Get business service tickets", getViewPart(), Activator.PLUGIN_ID) {
          @Override
-         protected void run(IProgressMonitor monitor) throws Exception
+         protected void runInternal(IProgressMonitor monitor) throws Exception
          {
             List<BusinessServiceTicket> tickets = session.getBusinessServiceTickets(getObject().getObjectId(), timePeriod);
-            
-            runInUIThread(new Runnable() {               
+
+            runInUIThread(new Runnable() {
                @Override
                public void run()
                {
@@ -325,28 +324,10 @@ public class BusinessServiceAvailabilityView extends ObjectView
          @Override
          protected String getErrorMessage()
          {
-            return i18n.tr("Cannot get tickets for business service {0}", getObject().getObjectName());
+            return String.format("Cannot get tickets for business service %s", getObject().getObjectName());
          }
       };
       ticketJob.setUser(false);
       ticketJob.start();
-   }
-
-   /**
-    * @see org.netxms.nxmc.modules.objects.views.ObjectView#isValidForContext(java.lang.Object)
-    */
-   @Override
-   public boolean isValidForContext(Object context)
-   {
-      return (context != null) && (context instanceof BusinessService) && !(context instanceof BusinessServicePrototype);
-   }
-
-   /**
-    * @see org.netxms.nxmc.base.views.View#getPriority()
-    */
-   @Override
-   public int getPriority()
-   {
-      return 70;
    }
 }

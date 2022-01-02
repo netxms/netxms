@@ -14,6 +14,13 @@
                label="%action.label.CreateBusinessService"
                menubarPath="CreateObjectSubmenu/additions">
          </action>
+         <action
+               class="org.netxms.ui.eclipse.slm.actions.CreateBusinessServicePrototype"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.createBusinessServicePrototype_BusinessServiceRoot"
+               label="Business service &amp;prototype..."
+               menubarPath="CreateObjectSubmenu/additions">
+         </action>
       </objectContribution>
       <objectContribution
             adaptable="false"
@@ -24,6 +31,13 @@
                enablesFor="1"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.createBusinessService_BusinessService"
                label="%action.label.CreateBusinessService"
+               menubarPath="CreateObjectSubmenu/additions">
+         </action>
+         <action
+               class="org.netxms.ui.eclipse.slm.actions.CreateBusinessServicePrototype"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.createBusinessServicePrototype_BusinessService"
+               label="Business service &amp;prototype..."
                menubarPath="CreateObjectSubmenu/additions">
          </action>
       </objectContribution>
@@ -48,7 +62,15 @@
             contextId="org.netxms.ui.eclipse.datacollection.context.BusinessServiceChecks"
             icon="icons/service_check.gif"
             id="org.netxms.ui.eclipse.slm.objecttabs.BusinessServiceChecks"
-            name="Checks">
+            name="Checks"
+            order="60">
+      </tab>
+      <tab
+            class="org.netxms.ui.eclipse.slm.objecttabs.BusinessServiceAvailability"
+            icon="icons/availability_chart.png"
+            id="org.netxms.ui.eclipse.slm.objecttabs.BusinessServiceAvailability"
+            name="Availability"
+            order="70">
       </tab>
    </extension>
    <extension

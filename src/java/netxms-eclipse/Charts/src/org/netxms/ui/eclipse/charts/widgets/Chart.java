@@ -497,7 +497,16 @@ public class Chart extends Composite
       items.clear();
       dataSeries.clear();
    }
-   
+
+   /**
+    * Remove data metrics from chart
+    */
+   public void clearParameters()
+   {
+      for(int i = 0; i < dataSeries.size(); i++)
+         dataSeries.set(i, new DataSeries(0));
+   }
+
    /**
     * Set threshold configuraiton
     * 
