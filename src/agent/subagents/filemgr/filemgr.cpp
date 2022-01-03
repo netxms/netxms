@@ -1,6 +1,6 @@
 /*
  ** File management subagent
- ** Copyright (C) 2014-2021 Raden Solutions
+ ** Copyright (C) 2014-2022 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -1704,7 +1704,7 @@ static bool ProcessCommands(UINT32 command, NXCPMessage *request, NXCPMessage *r
 /**
  * Subagent information
  */
-static NETXMS_SUBAGENT_INFO m_info =
+static NETXMS_SUBAGENT_INFO s_info =
 {
    NETXMS_SUBAGENT_INFO_MAGIC,
    _T("FILEMGR"), NETXMS_VERSION_STRING,
@@ -1721,7 +1721,7 @@ static NETXMS_SUBAGENT_INFO m_info =
  */
 DECLARE_SUBAGENT_ENTRY_POINT(FILEMGR)
 {
-   *ppInfo = &m_info;
+   *ppInfo = &s_info;
    return true;
 }
 

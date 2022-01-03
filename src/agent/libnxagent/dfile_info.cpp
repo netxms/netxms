@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2017 Raden Solutions
+** Copyright (C) 2017-2022 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -50,7 +50,10 @@ DownloadFileInfo::~DownloadFileInfo()
  */
 bool DownloadFileInfo::open()
 {
-   m_fileHandle = _topen(m_fileName, O_CREAT | O_TRUNC | O_WRONLY | O_BINARY, S_IRUSR | S_IWUSR);
+   TCHAR tempFileName[MAX_PATH];
+   _tcslcpy(tempFileName, m_fileName, MAX_PATH);
+   _tcslcat(tempFileName, _T(".part"), MAX_PATH);
+   m_fileHandle = _topen(tempFileName, O_CREAT | O_TRUNC | O_WRONLY | O_BINARY, S_IRUSR | S_IWUSR);
    return m_fileHandle != -1;
 }
 
@@ -105,14 +108,22 @@ void DownloadFileInfo::close(bool success)
    _close(m_fileHandle);
    m_fileHandle = -1;
 
+   TCHAR tempFileName[MAX_PATH];
+   _tcslcpy(tempFileName, m_fileName, MAX_PATH);
+   _tcslcat(tempFileName, _T(".part"), MAX_PATH);
+
    if (success)
    {
-      if (m_fileModificationTime != 0)
-         SetLastModificationTime(m_fileName, m_fileModificationTime);
+      _tremove(m_fileName);
+      if (_trename(tempFileName, m_fileName) == 0)
+      {
+         if (m_fileModificationTime != 0)
+            SetLastModificationTime(m_fileName, m_fileModificationTime);
+      }
    }
    else
    {
-      // Remove received file in case of failure
-      _tunlink(m_fileName);
+      // Remove received file part in case of failure
+      _tunlink(tempFileName);
    }
 }
