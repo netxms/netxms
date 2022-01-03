@@ -4,4 +4,5 @@ org.netxms.nxmc.modules.nxsl.ScriptLibraryConfigurationElement
 org.netxms.nxmc.modules.serverconfig.ServerVariableElement
 org.netxms.nxmc.modules.serverconfig.NotificationChannelsElement
 org.netxms.nxmc.modules.snmp.SNMPTrapConfigurationElement
+org.netxms.nxmc.modules.agentmanagement.TunnelConfigurationElement
 org.netxms.nxmc.modules.users.UserManagerConfigurationElement
