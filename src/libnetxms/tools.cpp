@@ -4185,6 +4185,19 @@ bool LIBNETXMS_EXPORTABLE MoveFileOrDirectory(const TCHAR *oldName, const TCHAR 
 bool LIBNETXMS_EXPORTABLE VerifyFileSignature(const TCHAR *file)
 {
 #ifdef _WIN32
+   HKEY hKey;
+   if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T("Software\\NetXMS"), 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
+   {
+      DWORD value = 0;
+      DWORD size = sizeof(DWORD);
+      if (RegQueryValueEx(hKey, _T("DisableFileSignatureVerification"), nullptr, nullptr, reinterpret_cast<BYTE*>(&value), &size) == ERROR_SUCCESS)
+      {
+         if (value != 0)
+            return true;
+      }
+      RegCloseKey(hKey);
+   }
+
    WINTRUST_FILE_INFO fi;
    fi.cbStruct = sizeof(WINTRUST_FILE_INFO);
 #ifdef UNICODE
