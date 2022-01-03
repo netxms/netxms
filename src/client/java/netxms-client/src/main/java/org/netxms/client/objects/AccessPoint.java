@@ -25,12 +25,13 @@ import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.AccessPointState;
+import org.netxms.client.objects.interfaces.NodeChild;
 import org.netxms.client.topology.RadioInterface;
 
 /**
  * Access point class
  */
-public class AccessPoint extends DataCollectionTarget
+public class AccessPoint extends DataCollectionTarget implements NodeChild
 {
 	private long nodeId;
 	private int index;

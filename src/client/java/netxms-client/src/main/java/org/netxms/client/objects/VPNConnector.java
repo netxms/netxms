@@ -24,11 +24,12 @@ import org.netxms.base.InetAddressEx;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.NXCSession;
+import org.netxms.client.objects.interfaces.NodeChild;
 
 /**
  * VPN connector object
  */
-public class VPNConnector extends GenericObject
+public class VPNConnector extends GenericObject implements NodeChild
 {
    private long peerGatewayId;
    private List<InetAddressEx> localSubnets;

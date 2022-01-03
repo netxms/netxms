@@ -18,8 +18,10 @@
  */
 package org.netxms.ui.eclipse.slm.objecttabs;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import org.eclipse.core.commands.Command;
 import org.eclipse.core.commands.State;
@@ -54,6 +56,7 @@ import org.netxms.client.SessionNotification;
 import org.netxms.client.businessservices.BusinessServiceCheck;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.BusinessService;
+import org.netxms.client.objects.interfaces.NodeItemPair;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab;
@@ -183,7 +186,9 @@ public class BusinessServiceChecks extends ObjectTab
                      public void run()
                      {
                         checks.put(n.getSubCode(), (BusinessServiceCheck)n.getObject());
-                        updateDciLabels(Arrays.asList((BusinessServiceCheck)n.getObject()));
+                        List<BusinessServiceCheck> newCheckArray = Arrays.asList((BusinessServiceCheck)n.getObject());
+                        updateDciLabels(newCheckArray);
+                        syncMissingObjects(newCheckArray);
                         viewer.refresh();
                      }
                   });
@@ -343,6 +348,7 @@ public class BusinessServiceChecks extends ObjectTab
                      return;
                   BusinessServiceChecks.this.checks = checks;
                   viewer.setInput(checks.values());
+                  syncMissingObjects(checks.values());
                   updateDciLabels(checks.values());
                }
             });
@@ -382,6 +388,44 @@ public class BusinessServiceChecks extends ObjectTab
          protected String getErrorMessage()
          {
             return "Cannot resolve DCI names";
+         }
+      };
+      job.setUser(false);
+      job.start();
+   }
+
+   /**
+    * Sync missing objects
+    * 
+    * @param checks
+    */
+   public void syncMissingObjects(Collection<BusinessServiceCheck> checks)
+   {
+      ConsoleJob job = new ConsoleJob("Sync objects", getViewPart(), Activator.PLUGIN_ID) {
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {            
+            List<Long> relatedOpbjects = new ArrayList<Long>();
+            for (NodeItemPair pair : checks)
+            {
+               if (pair.getNodeId() != 0)
+               relatedOpbjects.add(pair.getNodeId());
+            }
+            session.syncMissingObjects(relatedOpbjects, true, NXCSession.OBJECT_SYNC_WAIT);
+            
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
+                  viewer.refresh(true);
+               }
+            });
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return "Failed to sync objects";
          }
       };
       job.setUser(false);

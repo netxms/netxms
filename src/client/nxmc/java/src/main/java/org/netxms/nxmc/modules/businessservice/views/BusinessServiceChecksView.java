@@ -18,8 +18,10 @@
  */
 package org.netxms.nxmc.modules.businessservice.views;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
@@ -44,6 +46,7 @@ import org.netxms.client.SessionNotification;
 import org.netxms.client.businessservices.BusinessServiceCheck;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.BusinessService;
+import org.netxms.client.objects.interfaces.NodeItemPair;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
@@ -161,7 +164,9 @@ public class BusinessServiceChecksView extends ObjectView
                      public void run()
                      {
                         checks.put(n.getSubCode(), (BusinessServiceCheck)n.getObject());
-                        updateDciLabels(Arrays.asList((BusinessServiceCheck)n.getObject()));
+                        List<BusinessServiceCheck> newCheckArray = Arrays.asList((BusinessServiceCheck)n.getObject());
+                        updateDciLabels(newCheckArray);
+                        syncMissingObjects(newCheckArray);
                         viewer.refresh();
                      }
                   });
@@ -202,6 +207,7 @@ public class BusinessServiceChecksView extends ObjectView
                {
                   BusinessServiceChecksView.this.checks = checks;
                   viewer.setInput(checks.values());
+                  syncMissingObjects(checks.values());
                   updateDciLabels(checks.values());
                }
             });
@@ -403,6 +409,42 @@ public class BusinessServiceChecksView extends ObjectView
          protected String getErrorMessage()
          {
             return i18n.tr("Cannot resolve DCI names");
+         }
+      }.start();
+   }
+
+   /**
+    * Sync missing objects
+    * 
+    * @param checks
+    */
+   public void syncMissingObjects(Collection<BusinessServiceCheck> checks)
+   {
+      new Job(i18n.tr("Sync objects"), null) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {            
+            List<Long> relatedOpbjects = new ArrayList<Long>();
+            for (NodeItemPair pair : checks)
+            {
+               if (pair.getNodeId() != 0)
+               relatedOpbjects.add(pair.getNodeId());
+            }
+            session.syncMissingObjects(relatedOpbjects, true, NXCSession.OBJECT_SYNC_WAIT);
+            
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
+                  viewer.refresh(true);
+               }
+            });
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return i18n.tr("Failed to sync objects");
          }
       }.start();
    }

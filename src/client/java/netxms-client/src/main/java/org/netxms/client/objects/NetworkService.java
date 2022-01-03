@@ -22,11 +22,12 @@ import org.netxms.base.InetAddressEx;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.NXCSession;
+import org.netxms.client.objects.interfaces.NodeChild;
 
 /**
  * Network Service object
  */
-public class NetworkService extends GenericObject
+public class NetworkService extends GenericObject implements NodeChild
 {
 	public static final int CUSTOM = 0;
 	public static final int SSH = 1;

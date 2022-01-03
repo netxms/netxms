@@ -30,7 +30,9 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.businessservices.BusinessServiceCheck;
 import org.netxms.client.constants.BusinessServiceCheckType;
 import org.netxms.client.constants.ObjectStatus;
+import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.interfaces.NodeChild;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.slm.objecttabs.BusinessServiceChecks;
@@ -115,15 +117,30 @@ public class BusinessServiceCheckLabelProvider extends LabelProvider implements 
     */
 	public String getObjectName(BusinessServiceCheck check)
 	{
-	   String name = "";
+	   StringBuilder name = new StringBuilder();
       if (check.getCheckType() == BusinessServiceCheckType.OBJECT || check.getCheckType() == BusinessServiceCheckType.DCI ||
             (check.getCheckType() == BusinessServiceCheckType.SCRIPT) && check.getObjectId() != 0)
       {
          AbstractObject object = session.findObjectById(check.getObjectId());
-         name = (object != null) ? object.getObjectName() : ("[" + Long.toString(check.getObjectId()) + "]");
+         if (object != null)
+         {
+            name.append(object.getObjectName());
+            if (object instanceof NodeChild)
+            {
+               name.append(" @ ");
+               AbstractNode node = ((NodeChild)object).getParentNode();
+               name.append(node.getObjectName());
+            }
+         }
+         else
+         {
+            name.append("[");
+            name.append(Long.toString(check.getObjectId()));
+            name.append("]");
+         }
       }
 	   
-	   return name;
+	   return name.toString();
 	}
 
    /**
