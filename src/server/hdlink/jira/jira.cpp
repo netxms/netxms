@@ -114,7 +114,9 @@ bool JiraLink::init()
    }
    ConfigReadStrUTF8(_T("JiraServerURL"), m_serverUrl, MAX_OBJECT_NAME, "http://localhost");
    ConfigReadStrUTF8(_T("JiraLogin"), m_login, JIRA_MAX_LOGIN_LEN, "netxms");
-   ConfigReadStrUTF8(_T("JiraPassword"), m_password, JIRA_MAX_PASSWORD_LEN, "");
+   char tmpPwd[MAX_PASSWORD];
+   ConfigReadStrUTF8(_T("JiraPassword"), tmpPwd, MAX_PASSWORD, "");
+   DecryptPasswordA(m_login, tmpPwd, m_password, JIRA_MAX_PASSWORD_LEN);
    nxlog_debug(5, _T("Jira: server URL set to %hs"), m_serverUrl);
    return true;
 }
