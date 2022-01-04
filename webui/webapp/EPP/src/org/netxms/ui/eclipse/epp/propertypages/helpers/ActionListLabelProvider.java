@@ -69,11 +69,11 @@ public class ActionListLabelProvider extends LabelProvider implements ITableLabe
             ServerAction action = policyEditor.findActionById(c.getActionId());
             return (action != null) ? wbLabelProvider.getText(action) : null;
          case 1:
-            return Integer.toString(c.getTimerDelay());
+            return c.getTimerDelay();
          case 2:
             return c.getTimerKey();
          case 3:
-            return Integer.toString(c.getSnoozeTime());
+            return c.getSnoozeTime();
          case 4:
             return c.getBlockingTimerKey();
       }
