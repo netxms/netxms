@@ -190,6 +190,7 @@ int main(int argc, char *argv[])
    ServerCommandLineTool tool;
    tool.argc = argc;
    tool.argv = argv;
+   tool.displayName = _T("Agent File Download Tool");
    tool.mainHelpText = _T("Usage: nxdownload [<options>] <host> <path to source file> [<path to destination file>]\n")
                        _T("Tool specific options are:\n")
                        _T("   -F           : Get file fingerprints instead of download.\n")

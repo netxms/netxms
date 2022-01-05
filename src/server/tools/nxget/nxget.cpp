@@ -1,6 +1,6 @@
 /*
 ** nxget - command line tool used to retrieve parameters from NetXMS agent
-** Copyright (C) 2004-2020 Raden Solutions
+** Copyright (C) 2004-2022 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -471,6 +471,7 @@ int main(int argc, char *argv[])
    ServerCommandLineTool tool;
    tool.argc = argc;
    tool.argv = argv;
+   tool.displayName = _T("Agent Query Tool");
    tool.mainHelpText = _T("Usage: nxget [<options>] <host> [<parameter> [<parameter> ...]]\n")
                        _T("Tool specific options are:\n")
                        _T("   -b           : Batch mode - get all parameters listed on command line.\n")

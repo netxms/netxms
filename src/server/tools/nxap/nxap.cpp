@@ -141,6 +141,7 @@ int main(int argc, char *argv[])
    ServerCommandLineTool tool;
    tool.argc = argc;
    tool.argv = argv;
+   tool.displayName = _T("Agent Policy Manager");
    tool.mainHelpText = _T("Usage: nxap [<options>] -l <host>\n")
                        _T("   or: nxap [<options>] -u <guid> <host>\n")
                        _T("Tool specific options are:\n")

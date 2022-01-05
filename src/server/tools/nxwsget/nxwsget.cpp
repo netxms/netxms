@@ -1,7 +1,6 @@
 /*
-** nxwsget - command line tool used to retrieve web service parameters
-**           from NetXMS agent
-** Copyright (C) 2004-2020 Raden Solutions
+** nxwsget - command line tool used to query web services via NetXMS agent
+** Copyright (C) 2004-2022 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -233,6 +232,7 @@ int main(int argc, char *argv[])
    ServerCommandLineTool tool;
    tool.argc = argc;
    tool.argv = argv;
+   tool.displayName = _T("Web Service Query Tool");
    tool.mainHelpText = _T("Usage: nxwsget [<options>] <host> <URL> <path> [<path> ...]\n\n")
                        _T("Tool specific options:\n")
                        _T("   -c           : Do not verify service certificate.\n")

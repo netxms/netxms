@@ -1,6 +1,6 @@
 /* 
 ** nxupload - command line tool used to upload files to NetXMS agent
-** Copyright (C) 2004-2021 Raden Solutions
+** Copyright (C) 2004-2022 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -233,6 +233,7 @@ int main(int argc, char *argv[])
    ServerCommandLineTool tool;
    tool.argc = argc;
    tool.argv = argv;
+   tool.displayName = _T("Agent File Upload Tool");
    tool.mainHelpText = _T("Usage: nxupload [<options>] <host> <file>\n")
                        _T("Tool specific options are:\n")
                        _T("   -C <options> : Set package deployment options or command line (depending on package type)\n")
