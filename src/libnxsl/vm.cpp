@@ -2028,64 +2028,69 @@ bool NXSL_VM::setHashMapElement(NXSL_Value *hashMap, NXSL_Value *key, NXSL_Value
  */
 void NXSL_VM::getOrUpdateHashMapElement(int opcode, NXSL_Value *hashMap, NXSL_Value *key)
 {
-	if (key->isString())
-	{
-      if ((opcode != OPCODE_GET_ELEMENT) && (opcode != OPCODE_PEEK_ELEMENT))
-         hashMap->copyOnWrite();
-		NXSL_Value *element = hashMap->getValueAsHashMap()->get(key->getValueAsCString());
-
-      if (opcode == OPCODE_INCP_ELEMENT)
-      {
-         if (element->isNumeric())
-         {
-            element->increment();
-         }
-         else
-         {
-            error(NXSL_ERR_NOT_NUMBER);
-         }
-      }
-      else if (opcode == OPCODE_DECP_ELEMENT)
-      {
-         if (element->isNumeric())
-         {
-            element->decrement();
-         }
-         else
-         {
-            error(NXSL_ERR_NOT_NUMBER);
-         }
-      }
-
-      m_dataStack->push((element != nullptr) ? createValue(element) : createValue());
-
-      if (opcode == OPCODE_INC_ELEMENT)
-      {
-         if (element->isNumeric())
-         {
-            element->increment();
-         }
-         else
-         {
-            error(NXSL_ERR_NOT_NUMBER);
-         }
-      }
-      else if (opcode == OPCODE_DEC_ELEMENT)
-      {
-         if (element->isNumeric())
-         {
-            element->decrement();
-         }
-         else
-         {
-            error(NXSL_ERR_NOT_NUMBER);
-         }
-      }
-	}
-	else
-	{
+	if (!key->isString())
+   {
       error(NXSL_ERR_KEY_NOT_STRING);
-	}
+      return;
+   }
+
+   NXSL_Value *element = hashMap->getValueAsHashMap()->get(key->getValueAsCString());
+   if (element == nullptr)
+   {
+      error(NXSL_ERR_NULL_VALUE);
+      return;
+   }
+
+   if ((opcode != OPCODE_GET_ELEMENT) && (opcode != OPCODE_PEEK_ELEMENT))
+      hashMap->copyOnWrite();
+
+   if (opcode == OPCODE_INCP_ELEMENT)
+   {
+      if (element->isNumeric())
+      {
+         element->increment();
+      }
+      else
+      {
+         error(NXSL_ERR_NOT_NUMBER);
+      }
+   }
+   else if (opcode == OPCODE_DECP_ELEMENT)
+   {
+      if (element->isNumeric())
+      {
+         element->decrement();
+      }
+      else
+      {
+         error(NXSL_ERR_NOT_NUMBER);
+      }
+   }
+
+   m_dataStack->push((element != nullptr) ? createValue(element) : createValue());
+
+   if (opcode == OPCODE_INC_ELEMENT)
+   {
+      if (element->isNumeric())
+      {
+         element->increment();
+      }
+      else
+      {
+         error(NXSL_ERR_NOT_NUMBER);
+      }
+   }
+   else if (opcode == OPCODE_DEC_ELEMENT)
+   {
+      if (element->isNumeric())
+      {
+         element->decrement();
+      }
+      else
+      {
+         error(NXSL_ERR_NOT_NUMBER);
+      }
+   }
 }
 
 /**
