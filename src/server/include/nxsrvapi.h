@@ -1185,9 +1185,9 @@ struct ServerCommandLineTool
    int argc;
    const TCHAR *mainHelpText;
    const char *additionalOptions;
-   bool(*parseAdditionalOptionCb)(const char, const TCHAR*);
+   bool (*parseAdditionalOptionCb)(const char, const TCHAR*);
    bool (*isArgMissingCb)(int);
-   int(*executeCommandCb)(AgentConnection*, int, TCHAR**, int, RSA*);
+   int (*executeCommandCb)(AgentConnection*, int, TCHAR**, int, RSA*);
 };
 
 /**
