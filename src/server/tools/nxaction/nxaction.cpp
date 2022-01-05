@@ -99,6 +99,7 @@ int main(int argc, char *argv[])
    ServerCommandLineTool tool;
    tool.argc = argc;
    tool.argv = argv;
+   tool.displayName = _T("Agent Action Executor");
    tool.mainHelpText = _T("Usage: nxaction [<options>] <host> <action> [<action args>]\n")
                        _T("Tool specific options are:\n")
                        _T("   -o           : Show action's output.\n");
