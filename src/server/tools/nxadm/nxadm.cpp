@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Local administration tool
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -39,7 +39,7 @@ NETXMS_EXECUTABLE_HEADER(nxadm)
 static void Help()
 {
    _tprintf(_T("NetXMS Server Administration Tool  Version ") NETXMS_VERSION_STRING _T("\n")
-            _T("Copyright (c) 2004-2016 Raden Solutions\n\n")
+            _T("Copyright (c) 2004-2022 Raden Solutions\n\n")
             _T("Usage: nxadm -c <command>\n")
             _T("       nxadm -i\n")
             _T("       nxadm -h\n\n")

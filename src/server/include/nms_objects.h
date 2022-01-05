@@ -4545,6 +4545,7 @@ public:
    time_t getStartTime() const { return m_startTime; }
    time_t getCreationTime() const { return m_creationTime; }
    bool isRecalled() const { return m_recall; }
+   const TCHAR *getMessage() const { return m_message; }
 
    void recall() { m_recall = true; processUpdate(); };
    void processUpdate();
