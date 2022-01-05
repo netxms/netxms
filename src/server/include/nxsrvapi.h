@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Server Library
-** Copyright (C) 2003-2021 Reden Solutions
+** Copyright (C) 2003-2022 Reden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -1137,6 +1137,7 @@ struct ServerCommandLineTool
    char **argv;
 #endif
    int argc;
+   const TCHAR *displayName;
    const TCHAR *mainHelpText;
    const char *additionalOptions;
    bool (*parseAdditionalOptionCb)(const char, const TCHAR*);

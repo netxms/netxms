@@ -150,7 +150,7 @@ int ExecuteServerCommandLineTool(ServerCommandLineTool *tool)
             proxySecret = MemCopyString(_toptarg);
             break;
          case 'v':   // Print version and exit
-            _tprintf(_T("NetXMS GET command-line utility Version ") NETXMS_VERSION_STRING _T("\n"));
+            _tprintf(_T("NetXMS %s Version ") NETXMS_VERSION_STRING _T("\n"), tool->displayName);
             start = false;
             break;
          case 'w':   // Command timeout
