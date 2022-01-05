@@ -15,7 +15,7 @@ else
 	fi
 fi
 
-pid=`ps -ae | grep $exec | grep -v grep | grep -v capture_netxmsd_threads | grep -v tail | grep -v less | grep -v log/$exec | grep -v $exec-asan | awk '{ print $1; }'`
+pid=`ps -ae | grep $exec | grep -v grep | grep -v capture | grep -v tail | grep -v less | grep -v log/$exec | grep -v $exec-asan | awk '{ print $1; }'`
 
 if [ "x$pid" = "x" ]; then
     echo "Unable to find $exec process. Aborting."
