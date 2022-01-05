@@ -2115,7 +2115,7 @@ void NXSL_VM::doBinaryOperation(int nOpCode)
          pVal1 = m_env->getConstantValue(*(m_instructionSet.get(m_cp)->m_operand.m_identifier), this);
          if (pVal1 == nullptr)
          {
-            var = m_constants->find(*(m_instructionSet.get(m_cp)->m_operand.m_identifier));
+            var = (m_constants != nullptr) ? m_constants->find(*(m_instructionSet.get(m_cp)->m_operand.m_identifier)) : nullptr;
             if (var != nullptr)
             {
                pVal1 = var->getValue();
