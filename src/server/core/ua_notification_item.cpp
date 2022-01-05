@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2019-2020 Raden Solutions
+** Copyright (C) 2019-2022 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,6 +21,8 @@
 **/
 
 #include "nxcore.h"
+
+#define DEBUG_TAG _T("useragent")
 
 Mutex g_userAgentNotificationListMutex;
 ObjectArray<UserAgentNotificationItem> g_userAgentNotificationList(0, 16, Ownership::True);
@@ -43,7 +45,7 @@ void InitUserAgentNotifications()
       DBFreeResult(hResult);
    }
    DBConnectionPoolReleaseConnection(hdb);
-   DbgPrintf(2, _T("%d user agent messages loaded"), g_userAgentNotificationList.size());
+   nxlog_debug_tag(DEBUG_TAG, 2, _T("%d user agent messages loaded"), g_userAgentNotificationList.size());
 }
 
 /**
@@ -107,6 +109,8 @@ UserAgentNotificationItem *CreateNewUserAgentNotification(const TCHAR *message, 
    uan->incRefCount();
    uan->incRefCount();
    g_userAgentNotificationListMutex.unlock();
+
+   nxlog_debug_tag(DEBUG_TAG, 4, _T("New user agent notification created (id=%u msg=%s)"), uan->getId(), uan->getMessage());
 
    ThreadPoolExecute(g_clientThreadPool, uan, &UserAgentNotificationItem::processUpdate);
    NotifyClientSessions(NX_NOTIFY_USER_AGENT_MESSAGE_CHANGED, uan->getId());
