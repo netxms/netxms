@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Raden Solutions
+** Copyright (C) 2003-2022 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -2155,105 +2155,123 @@ void NXSL_ServerEnv::configureVM(NXSL_VM *vm)
  */
 NXSL_Value *NXSL_ServerEnv::getConstantValue(const NXSL_Identifier& name, NXSL_ValueManager *vm)
 {
-   // Severity codes
-   NXSL_ENV_CONSTANT("Severity::NORMAL", SEVERITY_NORMAL);
-   NXSL_ENV_CONSTANT("Severity::WARNING", SEVERITY_WARNING);
-   NXSL_ENV_CONSTANT("Severity::MINOR", SEVERITY_MINOR);
-   NXSL_ENV_CONSTANT("Severity::MAJOR", SEVERITY_MAJOR);
-   NXSL_ENV_CONSTANT("Severity::CRITICAL", SEVERITY_CRITICAL);
+   if (name.value[0] == 'B')
+   {
+      // Business service states
+      NXSL_ENV_CONSTANT("BusinessServiceState::OPERATIONAL", STATUS_NORMAL);
+      NXSL_ENV_CONSTANT("BusinessServiceState::DEGRADED", STATUS_MINOR);
+      NXSL_ENV_CONSTANT("BusinessServiceState::FAILED", STATUS_CRITICAL);
 
-   // Object status codes
-   NXSL_ENV_CONSTANT("Status::NORMAL", STATUS_NORMAL);
-   NXSL_ENV_CONSTANT("Status::WARNING", STATUS_WARNING);
-   NXSL_ENV_CONSTANT("Status::MINOR", STATUS_MINOR);
-   NXSL_ENV_CONSTANT("Status::MAJOR", STATUS_MAJOR);
-   NXSL_ENV_CONSTANT("Status::CRITICAL", STATUS_CRITICAL);
-   NXSL_ENV_CONSTANT("Status::UNKNOWN", STATUS_UNKNOWN);
-   NXSL_ENV_CONSTANT("Status::UNMANAGED", STATUS_UNMANAGED);
-   NXSL_ENV_CONSTANT("Status::DISABLED", STATUS_DISABLED);
-   NXSL_ENV_CONSTANT("Status::TESTING", STATUS_TESTING);
+      // Business service types
+      NXSL_ENV_CONSTANT("BusinessServiceType::DCI", static_cast<int32_t>(BusinessServiceCheckType::DCI));
+      NXSL_ENV_CONSTANT("BusinessServiceType::NONE", static_cast<int32_t>(BusinessServiceCheckType::NONE));
+      NXSL_ENV_CONSTANT("BusinessServiceType::OBJECT", static_cast<int32_t>(BusinessServiceCheckType::OBJECT));
+      NXSL_ENV_CONSTANT("BusinessServiceType::SCRIPT", static_cast<int32_t>(BusinessServiceCheckType::SCRIPT));
+   }
 
-   // Status colors
-   NXSL_ENV_CONSTANT("StatusColor::NORMAL", _T("rgb(0, 192, 0)"));
-   NXSL_ENV_CONSTANT("StatusColor::WARNING", _T("rgb(0, 255, 255)"));
-   NXSL_ENV_CONSTANT("StatusColor::MINOR", _T("rgb(231, 226, 0)"));
-   NXSL_ENV_CONSTANT("StatusColor::MAJOR", _T("rgb(255, 128, 0)"));
-   NXSL_ENV_CONSTANT("StatusColor::CRITICAL", _T("rgb(192, 0, 0)"));
-   NXSL_ENV_CONSTANT("StatusColor::UNKNOWN", _T("rgb(0, 0, 128)"));
-   NXSL_ENV_CONSTANT("StatusColor::UNMANAGED", _T("rgb(192, 192, 192)"));
-   NXSL_ENV_CONSTANT("StatusColor::DISABLED", _T("rgb(128, 64, 0)"));
-   NXSL_ENV_CONSTANT("StatusColor::TESTING", _T("rgb(255, 128, 255)"));
+   if (name.value[0] == 'C')
+   {
+      // Cluster state flags
+      NXSL_ENV_CONSTANT("ClusterState::Unreachable", DCSF_UNREACHABLE);
+      NXSL_ENV_CONSTANT("ClusterState::NetworkPathProblem", DCSF_NETWORK_PATH_PROBLEM);
+      NXSL_ENV_CONSTANT("ClusterState::Down", CLSF_DOWN);
+   }
 
-   // DCI data types
-   NXSL_ENV_CONSTANT("DCI::INT32", DCI_DT_INT);
-   NXSL_ENV_CONSTANT("DCI::UINT32", DCI_DT_UINT);
-   NXSL_ENV_CONSTANT("DCI::COUNTER32", DCI_DT_COUNTER32);
-   NXSL_ENV_CONSTANT("DCI::INT64", DCI_DT_INT64);
-   NXSL_ENV_CONSTANT("DCI::UINT64", DCI_DT_UINT64);
-   NXSL_ENV_CONSTANT("DCI::COUNTER64", DCI_DT_COUNTER64);
-   NXSL_ENV_CONSTANT("DCI::FLOAT", DCI_DT_FLOAT);
-   NXSL_ENV_CONSTANT("DCI::STRING", DCI_DT_STRING);
-   NXSL_ENV_CONSTANT("DCI::NULL", DCI_DT_NULL);
+   if (name.value[0] == 'D')
+   {
+      // DCI data source (origin)
+      NXSL_ENV_CONSTANT("DataSource::AGENT", DS_NATIVE_AGENT);
+      NXSL_ENV_CONSTANT("DataSource::DEVICE_DRIVER", DS_DEVICE_DRIVER);
+      NXSL_ENV_CONSTANT("DataSource::INTERNAL", DS_INTERNAL);
+      NXSL_ENV_CONSTANT("DataSource::MQTT", DS_MQTT);
+      NXSL_ENV_CONSTANT("DataSource::PUSH", DS_PUSH_AGENT);
+      NXSL_ENV_CONSTANT("DataSource::SCRIPT", DS_SCRIPT);
+      NXSL_ENV_CONSTANT("DataSource::SMCLP", DS_SMCLP);
+      NXSL_ENV_CONSTANT("DataSource::SNMP", DS_SNMP_AGENT);
+      NXSL_ENV_CONSTANT("DataSource::SSH", DS_SSH);
+      NXSL_ENV_CONSTANT("DataSource::WEB_SERVICE", DS_WEB_SERVICE);
+      NXSL_ENV_CONSTANT("DataSource::WINPERF", DS_WINPERF);
 
-   // DCI states
-   NXSL_ENV_CONSTANT("DCI::ACTIVE", ITEM_STATUS_ACTIVE);
-   NXSL_ENV_CONSTANT("DCI::DISABLED", ITEM_STATUS_DISABLED);
-   NXSL_ENV_CONSTANT("DCI::UNSUPPORTED", ITEM_STATUS_NOT_SUPPORTED);
+      // DCI data types
+      NXSL_ENV_CONSTANT("DCI::INT32", DCI_DT_INT);
+      NXSL_ENV_CONSTANT("DCI::UINT32", DCI_DT_UINT);
+      NXSL_ENV_CONSTANT("DCI::COUNTER32", DCI_DT_COUNTER32);
+      NXSL_ENV_CONSTANT("DCI::INT64", DCI_DT_INT64);
+      NXSL_ENV_CONSTANT("DCI::UINT64", DCI_DT_UINT64);
+      NXSL_ENV_CONSTANT("DCI::COUNTER64", DCI_DT_COUNTER64);
+      NXSL_ENV_CONSTANT("DCI::FLOAT", DCI_DT_FLOAT);
+      NXSL_ENV_CONSTANT("DCI::STRING", DCI_DT_STRING);
+      NXSL_ENV_CONSTANT("DCI::NULL", DCI_DT_NULL);
 
-   // DCI data source (origin)
-   NXSL_ENV_CONSTANT("DataSource::AGENT", DS_NATIVE_AGENT);
-   NXSL_ENV_CONSTANT("DataSource::DEVICE_DRIVER", DS_DEVICE_DRIVER);
-   NXSL_ENV_CONSTANT("DataSource::INTERNAL", DS_INTERNAL);
-   NXSL_ENV_CONSTANT("DataSource::MQTT", DS_MQTT);
-   NXSL_ENV_CONSTANT("DataSource::PUSH", DS_PUSH_AGENT);
-   NXSL_ENV_CONSTANT("DataSource::SCRIPT", DS_SCRIPT);
-   NXSL_ENV_CONSTANT("DataSource::SMCLP", DS_SMCLP);
-   NXSL_ENV_CONSTANT("DataSource::SNMP", DS_SNMP_AGENT);
-   NXSL_ENV_CONSTANT("DataSource::SSH", DS_SSH);
-   NXSL_ENV_CONSTANT("DataSource::WEB_SERVICE", DS_WEB_SERVICE);
-   NXSL_ENV_CONSTANT("DataSource::WINPERF", DS_WINPERF);
+      // DCI states
+      NXSL_ENV_CONSTANT("DCI::ACTIVE", ITEM_STATUS_ACTIVE);
+      NXSL_ENV_CONSTANT("DCI::DISABLED", ITEM_STATUS_DISABLED);
+      NXSL_ENV_CONSTANT("DCI::UNSUPPORTED", ITEM_STATUS_NOT_SUPPORTED);
+   }
 
-   // Event origin
-   NXSL_ENV_CONSTANT("EventOrigin::AGENT", static_cast<int32_t>(EventOrigin::AGENT));
-   NXSL_ENV_CONSTANT("EventOrigin::CLIENT", static_cast<int32_t>(EventOrigin::CLIENT));
-   NXSL_ENV_CONSTANT("EventOrigin::NXSL", static_cast<int32_t>(EventOrigin::NXSL));
-   NXSL_ENV_CONSTANT("EventOrigin::REMOTE_SERVER", static_cast<int32_t>(EventOrigin::REMOTE_SERVER));
-   NXSL_ENV_CONSTANT("EventOrigin::SNMP", static_cast<int32_t>(EventOrigin::SNMP));
-   NXSL_ENV_CONSTANT("EventOrigin::SYSLOG", static_cast<int32_t>(EventOrigin::SYSLOG));
-   NXSL_ENV_CONSTANT("EventOrigin::SYSTEM", static_cast<int32_t>(EventOrigin::SYSTEM));
-   NXSL_ENV_CONSTANT("EventOrigin::WINDOWS_EVENT", static_cast<int32_t>(EventOrigin::WINDOWS_EVENT));
+   if (name.value[0] == 'E')
+   {
+      // Event origin
+      NXSL_ENV_CONSTANT("EventOrigin::AGENT", static_cast<int32_t>(EventOrigin::AGENT));
+      NXSL_ENV_CONSTANT("EventOrigin::CLIENT", static_cast<int32_t>(EventOrigin::CLIENT));
+      NXSL_ENV_CONSTANT("EventOrigin::NXSL", static_cast<int32_t>(EventOrigin::NXSL));
+      NXSL_ENV_CONSTANT("EventOrigin::REMOTE_SERVER", static_cast<int32_t>(EventOrigin::REMOTE_SERVER));
+      NXSL_ENV_CONSTANT("EventOrigin::SNMP", static_cast<int32_t>(EventOrigin::SNMP));
+      NXSL_ENV_CONSTANT("EventOrigin::SYSLOG", static_cast<int32_t>(EventOrigin::SYSLOG));
+      NXSL_ENV_CONSTANT("EventOrigin::SYSTEM", static_cast<int32_t>(EventOrigin::SYSTEM));
+      NXSL_ENV_CONSTANT("EventOrigin::WINDOWS_EVENT", static_cast<int32_t>(EventOrigin::WINDOWS_EVENT));
+   }
 
-   // Node state flags
-   NXSL_ENV_CONSTANT("NodeState::Unreachable", DCSF_UNREACHABLE);
-   NXSL_ENV_CONSTANT("NodeState::NetworkPathProblem", DCSF_NETWORK_PATH_PROBLEM);
-   NXSL_ENV_CONSTANT("NodeState::AgentUnreachable", NSF_AGENT_UNREACHABLE);
-   NXSL_ENV_CONSTANT("NodeState::EtherNetIPUnreachable", NSF_ETHERNET_IP_UNREACHABLE);
-   NXSL_ENV_CONSTANT("NodeState::SNMPUnreachable", NSF_SNMP_UNREACHABLE);
-   NXSL_ENV_CONSTANT("NodeState::CacheModeNotSupported", NSF_CACHE_MODE_NOT_SUPPORTED);
+   if (name.value[0] == 'N')
+   {
+      // Node state flags
+      NXSL_ENV_CONSTANT("NodeState::Unreachable", DCSF_UNREACHABLE);
+      NXSL_ENV_CONSTANT("NodeState::NetworkPathProblem", DCSF_NETWORK_PATH_PROBLEM);
+      NXSL_ENV_CONSTANT("NodeState::AgentUnreachable", NSF_AGENT_UNREACHABLE);
+      NXSL_ENV_CONSTANT("NodeState::EtherNetIPUnreachable", NSF_ETHERNET_IP_UNREACHABLE);
+      NXSL_ENV_CONSTANT("NodeState::SNMPUnreachable", NSF_SNMP_UNREACHABLE);
+      NXSL_ENV_CONSTANT("NodeState::CacheModeNotSupported", NSF_CACHE_MODE_NOT_SUPPORTED);
+   }
 
-   // Cluster state flags
-   NXSL_ENV_CONSTANT("ClusterState::Unreachable", DCSF_UNREACHABLE);
-   NXSL_ENV_CONSTANT("ClusterState::NetworkPathProblem", DCSF_NETWORK_PATH_PROBLEM);
-   NXSL_ENV_CONSTANT("ClusterState::Down", CLSF_DOWN);
+   if (name.value[0] == 'S')
+   {
+      // Sensor state flags
+      NXSL_ENV_CONSTANT("SensorState::Unreachable", DCSF_UNREACHABLE);
+      NXSL_ENV_CONSTANT("SensorState::NetworkPathProblem", DCSF_NETWORK_PATH_PROBLEM);
+      NXSL_ENV_CONSTANT("SensorState::Provisioned", SSF_PROVISIONED);
+      NXSL_ENV_CONSTANT("SensorState::Registered", SSF_REGISTERED);
+      NXSL_ENV_CONSTANT("SensorState::Active", SSF_ACTIVE);
+      NXSL_ENV_CONSTANT("SensorState::PendingConfigUpdate", SSF_CONF_UPDATE_PENDING);
 
-   // Sensor state flags
-   NXSL_ENV_CONSTANT("SensorState::Unreachable", DCSF_UNREACHABLE);
-   NXSL_ENV_CONSTANT("SensorState::NetworkPathProblem", DCSF_NETWORK_PATH_PROBLEM);
-   NXSL_ENV_CONSTANT("SensorState::Provisioned", SSF_PROVISIONED);
-   NXSL_ENV_CONSTANT("SensorState::Registered", SSF_REGISTERED);
-   NXSL_ENV_CONSTANT("SensorState::Active", SSF_ACTIVE);
-   NXSL_ENV_CONSTANT("SensorState::PendingConfigUpdate", SSF_CONF_UPDATE_PENDING);
+      // Severity codes
+      NXSL_ENV_CONSTANT("Severity::NORMAL", SEVERITY_NORMAL);
+      NXSL_ENV_CONSTANT("Severity::WARNING", SEVERITY_WARNING);
+      NXSL_ENV_CONSTANT("Severity::MINOR", SEVERITY_MINOR);
+      NXSL_ENV_CONSTANT("Severity::MAJOR", SEVERITY_MAJOR);
+      NXSL_ENV_CONSTANT("Severity::CRITICAL", SEVERITY_CRITICAL);
 
-   // Business service states
-   NXSL_ENV_CONSTANT("BusinessServiceState::OPERATIONAL", STATUS_NORMAL);
-   NXSL_ENV_CONSTANT("BusinessServiceState::DEGRADED", STATUS_MINOR);
-   NXSL_ENV_CONSTANT("BusinessServiceState::FAILED", STATUS_CRITICAL);
+      // Object status codes
+      NXSL_ENV_CONSTANT("Status::NORMAL", STATUS_NORMAL);
+      NXSL_ENV_CONSTANT("Status::WARNING", STATUS_WARNING);
+      NXSL_ENV_CONSTANT("Status::MINOR", STATUS_MINOR);
+      NXSL_ENV_CONSTANT("Status::MAJOR", STATUS_MAJOR);
+      NXSL_ENV_CONSTANT("Status::CRITICAL", STATUS_CRITICAL);
+      NXSL_ENV_CONSTANT("Status::UNKNOWN", STATUS_UNKNOWN);
+      NXSL_ENV_CONSTANT("Status::UNMANAGED", STATUS_UNMANAGED);
+      NXSL_ENV_CONSTANT("Status::DISABLED", STATUS_DISABLED);
+      NXSL_ENV_CONSTANT("Status::TESTING", STATUS_TESTING);
 
-   // Business service types
-   NXSL_ENV_CONSTANT("BusinessServiceType::DCI", static_cast<int32_t>(BusinessServiceCheckType::DCI));
-   NXSL_ENV_CONSTANT("BusinessServiceType::NONE", static_cast<int32_t>(BusinessServiceCheckType::NONE));
-   NXSL_ENV_CONSTANT("BusinessServiceType::OBJECT", static_cast<int32_t>(BusinessServiceCheckType::OBJECT));
-   NXSL_ENV_CONSTANT("BusinessServiceType::SCRIPT", static_cast<int32_t>(BusinessServiceCheckType::SCRIPT));
+      // Status colors
+      NXSL_ENV_CONSTANT("StatusColor::NORMAL", _T("rgb(0, 192, 0)"));
+      NXSL_ENV_CONSTANT("StatusColor::WARNING", _T("rgb(0, 255, 255)"));
+      NXSL_ENV_CONSTANT("StatusColor::MINOR", _T("rgb(231, 226, 0)"));
+      NXSL_ENV_CONSTANT("StatusColor::MAJOR", _T("rgb(255, 128, 0)"));
+      NXSL_ENV_CONSTANT("StatusColor::CRITICAL", _T("rgb(192, 0, 0)"));
+      NXSL_ENV_CONSTANT("StatusColor::UNKNOWN", _T("rgb(0, 0, 128)"));
+      NXSL_ENV_CONSTANT("StatusColor::UNMANAGED", _T("rgb(192, 192, 192)"));
+      NXSL_ENV_CONSTANT("StatusColor::DISABLED", _T("rgb(128, 64, 0)"));
+      NXSL_ENV_CONSTANT("StatusColor::TESTING", _T("rgb(255, 128, 255)"));
+   }
 
    return NXSL_Environment::getConstantValue(name, vm);
 }
