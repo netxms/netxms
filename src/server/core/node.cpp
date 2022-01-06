@@ -11263,11 +11263,12 @@ void Node::updateClusterMembership()
       return;
 
    sendPollerMsg(_T("Processing cluster autobind rules\r\n"));
+   NXSL_VM *cachedFilterVM = nullptr;
    unique_ptr<SharedObjectArray<NetObj>> clusters = g_idxObjectById.getObjects(ClusterSelectionFilter);
    for(int i = 0; i < clusters->size(); i++)
    {
       Cluster *cluster = static_cast<Cluster*>(clusters->get(i));
-      AutoBindDecision decision = cluster->isApplicable(self());
+      AutoBindDecision decision = cluster->isApplicable(&cachedFilterVM, self());
       if (decision == AutoBindDecision_Bind)
       {
          if (!cluster->isDirectChild(m_id))
@@ -11295,4 +11296,5 @@ void Node::updateClusterMembership()
          }
       }
    }
+   delete cachedFilterVM;
 }

@@ -356,11 +356,12 @@ void BusinessService::validateAutomaticObjectChecks()
 
    nxlog_debug_tag(DEBUG_TAG_BIZSVC, 6, _T("BusinessService::validateAutomaticObjectChecks(%s): validating object based checks"), m_name);
    sendPollerMsg(_T("Validating automatically created object based checks\r\n"));
+   NXSL_VM *cachedFilterVM = nullptr;
    unique_ptr<SharedObjectArray<NetObj>> objects = g_idxObjectById.getObjects();
    for (int i = 0; i < objects->size(); i++)
    {
       shared_ptr<NetObj> object = objects->getShared(i);
-      AutoBindDecision decision = isApplicable(object);
+      AutoBindDecision decision = isApplicable(&cachedFilterVM, object);
       if (decision != AutoBindDecision_Ignore)
       {
          shared_ptr<BusinessServiceCheck> selectedCheck;
@@ -395,6 +396,7 @@ void BusinessService::validateAutomaticObjectChecks()
          }
       }
    }
+   delete cachedFilterVM;
 }
 
 /**
@@ -410,6 +412,7 @@ void BusinessService::validateAutomaticDCIChecks()
 
    nxlog_debug_tag(DEBUG_TAG_BIZSVC, 6, _T("BusinessService::validateAutomaticObjectChecks(%s): validating DCI based checks"), m_name);
    sendPollerMsg(_T("Validating automatically created DCI based checks\r\n"));
+   NXSL_VM *cachedFilterVM = nullptr;
    unique_ptr<SharedObjectArray<NetObj>> objects = g_idxObjectById.getObjects();
    for (int i = 0; i < objects->size(); i++)
    {
@@ -420,7 +423,7 @@ void BusinessService::validateAutomaticDCIChecks()
       unique_ptr<SharedObjectArray<DCObject>> allDCOObjects = static_pointer_cast<DataCollectionTarget>(object)->getAllDCObjects();
       for (shared_ptr<DCObject> dci : *allDCOObjects)
       {
-         AutoBindDecision decision = isApplicable(object, dci, 1);
+         AutoBindDecision decision = isApplicable(&cachedFilterVM, object, dci, 1);
          if (decision != AutoBindDecision_Ignore)
          {
             shared_ptr<BusinessServiceCheck> selectedCheck;
@@ -456,6 +459,7 @@ void BusinessService::validateAutomaticDCIChecks()
          }
       }
    }
+   delete cachedFilterVM;
 }
 
 /**

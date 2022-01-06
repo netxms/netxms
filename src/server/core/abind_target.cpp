@@ -207,29 +207,37 @@ bool AutoBindTarget::deleteFromDatabase(DB_HANDLE hdb)
 
 /**
  * Check if object should be automatically applied to given data collection target using given filter.
+ * Filter VM will be cached in location pointed by cachedFilterVM and must be destroyed by the caller.
  * Returns AutoBindDecision_Bind if applicable, AutoBindDecision_Unbind if not,
  * AutoBindDecision_Ignore if no change required (script error or no auto apply)
  */
-AutoBindDecision AutoBindTarget::isApplicable(const shared_ptr<NetObj>& target, const shared_ptr<DCObject>& dci, int filterNumber) const
+AutoBindDecision AutoBindTarget::isApplicable(NXSL_VM **cachedFilterVM, const shared_ptr<NetObj>& target, const shared_ptr<DCObject>& dci, int filterNumber) const
 {
    AutoBindDecision result = AutoBindDecision_Ignore;
 
    if (!isAutoBindEnabled(filterNumber))
       return result;
 
-   NXSL_VM *filter = nullptr;
-   internalLock();
-   NXSL_Program *filterProgram = m_autoBindFilters[filterNumber];
-   if ((filterProgram != nullptr) && !filterProgram->isEmpty())
+   NXSL_VM *filter = *cachedFilterVM;
+   if (filter == nullptr)
    {
-      filter = CreateServerScriptVM(filterProgram, target);
-      if (filter == nullptr)
+      internalLock();
+      NXSL_Program *filterProgram = m_autoBindFilters[filterNumber];
+      if ((filterProgram != nullptr) && !filterProgram->isEmpty())
       {
-         PostScriptErrorEvent(CONTEXT_AUTOBIND, m_this->getId(), 0, _T("Script load error"), _T("AutoBind::%s::%s::%d"), m_this->getObjectClassName(), m_this->getName(), filterNumber);
-         nxlog_write(NXLOG_WARNING, _T("Failed to load autobind script for object %s [%u]"), m_this->getName(), m_this->getId());
+         filter = CreateServerScriptVM(filterProgram, target);
+         if (filter != nullptr)
+         {
+            *cachedFilterVM = filter;
+         }
+         else
+         {
+            PostScriptErrorEvent(CONTEXT_AUTOBIND, m_this->getId(), 0, _T("Script load error"), _T("AutoBind::%s::%s::%d"), m_this->getObjectClassName(), m_this->getName(), filterNumber);
+            nxlog_write(NXLOG_WARNING, _T("Failed to load autobind script for object %s [%u]"), m_this->getName(), m_this->getId());
+         }
       }
+      internalUnlock();
    }
-   internalUnlock();
 
    if (filter == nullptr)
       return result;
@@ -251,7 +259,6 @@ AutoBindDecision AutoBindTarget::isApplicable(const shared_ptr<NetObj>& target, 
       PostScriptErrorEvent(CONTEXT_AUTOBIND, m_this->getId(), dci != nullptr ? dci->getId() : 0, filter->getErrorText(), _T("AutoBind::%s::%s::%d"), m_this->getObjectClassName(), m_this->getName(), filterNumber);
       nxlog_write(NXLOG_WARNING, _T("Failed to execute autobind script for object %s [%u] (%s)"), m_this->getName(), m_this->getId(), filter->getErrorText());
    }
-   delete filter;
    return result;
 }
 

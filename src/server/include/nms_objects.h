@@ -1550,7 +1550,7 @@ public:
    AutoBindTarget(NetObj *_this);
    virtual ~AutoBindTarget();
 
-   AutoBindDecision isApplicable(const shared_ptr<NetObj>& object, const shared_ptr<DCObject>& dci = shared_ptr<DCObject>(), int filterNumber = 0) const;
+   AutoBindDecision isApplicable(NXSL_VM **cachedFilterVM, const shared_ptr<NetObj>& object, const shared_ptr<DCObject>& dci = shared_ptr<DCObject>(), int filterNumber = 0) const;
 
    bool isAutoBindEnabled(int filterNumber = 0) const { return (filterNumber >= 0) && (filterNumber < MAX_AUTOBIND_TARGET_FILTERS) && (m_autoBindFlags & (AAF_AUTO_APPLY_1 << filterNumber * 2)); }
    bool isAutoUnbindEnabled(int filterNumber = 0) const { return isAutoBindEnabled(filterNumber) && (m_autoBindFlags & (AAF_AUTO_REMOVE_1 << filterNumber * 2)); }

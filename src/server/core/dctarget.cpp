@@ -1942,11 +1942,12 @@ void DataCollectionTarget::applyTemplates()
 
    sendPollerMsg(_T("Processing template autoapply rules\r\n"));
    int gracePeriod = ConfigReadInt(_T("DataCollection.TemplateRemovalGracePeriod"), 0);
+   NXSL_VM *cachedFilterVM = nullptr;
    unique_ptr<SharedObjectArray<NetObj>> templates = g_idxObjectById.getObjects(TemplateSelectionFilter);
    for (int i = 0; i < templates->size(); i++)
    {
       Template *templateObject = static_cast<Template*>(templates->get(i));
-      AutoBindDecision decision = templateObject->isApplicable(self());
+      AutoBindDecision decision = templateObject->isApplicable(&cachedFilterVM, self());
       if (decision == AutoBindDecision_Bind)
       {
          TCHAR key[50];
@@ -1979,6 +1980,7 @@ void DataCollectionTarget::applyTemplates()
          }
       }
    }
+   delete cachedFilterVM;
 }
 
 /**
@@ -2029,11 +2031,12 @@ void DataCollectionTarget::updateContainerMembership()
       return;
 
    sendPollerMsg(_T("Processing container autobind rules\r\n"));
+   NXSL_VM *cachedFilterVM = nullptr;
    unique_ptr<SharedObjectArray<NetObj>> containers = g_idxObjectById.getObjects(ContainerSelectionFilter);
    for(int i = 0; i < containers->size(); i++)
    {
       Container *container = static_cast<Container*>(containers->get(i));
-      AutoBindDecision decision = container->isApplicable(self());
+      AutoBindDecision decision = container->isApplicable(&cachedFilterVM, self());
       if (decision == AutoBindDecision_Bind)
       {
          if (!container->isDirectChild(m_id))
@@ -2061,6 +2064,7 @@ void DataCollectionTarget::updateContainerMembership()
          }
       }
    }
+   delete cachedFilterVM;
 }
 
 /**
