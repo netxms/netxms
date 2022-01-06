@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -52,7 +52,7 @@ inline void InitializeMutex(win_mutex_t *m, DWORD spinCount)
  */
 inline void DestroyMutex(win_mutex_t *m)
 {
-   if (m->condition != NULL)
+   if (m->condition != nullptr)
       CloseHandle(m->condition);
 }
 
@@ -92,10 +92,10 @@ inline bool LockMutex(win_mutex_t *m, DWORD timeout)
    if (TryLockMutex(m))
       return true;
 
-   if (m->condition == NULL)
+   if (m->condition == nullptr)
    {
-      HANDLE condition = CreateEvent(NULL, FALSE, FALSE, NULL);
-      if (InterlockedCompareExchangePointer(&m->condition, condition, NULL) != NULL)
+      HANDLE condition = CreateEvent(nullptr, FALSE, FALSE, nullptr);
+      if (InterlockedCompareExchangePointer(&m->condition, condition, nullptr) != nullptr)
          CloseHandle(condition);    // condition already created by other thread
       if (TryLockMutex(m))
          return true;
@@ -121,7 +121,7 @@ inline void UnlockMutex(win_mutex_t *m)
       _WriteBarrier();
       m->owner = 0;
       _ReadWriteBarrier();
-      if (m->condition != NULL)
+      if (m->condition != nullptr)
          SetEvent(m->condition);
    }
 }
