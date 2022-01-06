@@ -57,36 +57,33 @@ void TestMutex()
    EndTest();
 }
 
-static THREAD_RESULT THREAD_CALL RWLockWrapperWorkerThread(void *arg)
+static void RWLockWorkerThread(RWLock *rwlock)
 {
-   RWLock l = *((RWLock *)arg);
    ThreadSleepMs(rand() % 10);
-   l.writeLock();
+   rwlock->writeLock();
    for(int i = 0; i < 10000; i++)
       s_val = s_val + s_increment / 2;
-   l.unlock();
-   return THREAD_OK;
+   rwlock->unlock();
 }
 
-void TestRWLockWrapper()
+void TestRWLock()
 {
-   StartTest(_T("R/W lock wrapper"));
+   StartTest(_T("R/W lock"));
 
    for(int n = 0; n < 10; n++)
    {
       s_val = 0;
-      srand((unsigned int)time(NULL));
+      srand((unsigned int)time(nullptr));
       s_count = 100 + (rand() % 100);
       s_increment = (rand() % 5 + 1) * 2;
 
-      RWLock l1;
-      RWLock l2 = l1;
+      RWLock rwlock;
 
       THREAD t[200];
-      l1.readLock();
+      rwlock.readLock();
       for(int i = 0; i < s_count; i++)
-         t[i] = ThreadCreateEx(RWLockWrapperWorkerThread, 0, i % 2 ? &l2 : &l1);
-      l2.unlock();
+         t[i] = ThreadCreateEx(RWLockWorkerThread, &rwlock);
+      rwlock.unlock();
       for(int i = 0; i < s_count; i++)
          ThreadJoin(t[i]);
 

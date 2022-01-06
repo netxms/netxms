@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -71,7 +71,7 @@ void LoadLastEventId(DB_HANDLE hdb)
  */
 static SharedHashMap<UINT32, EventTemplate> s_eventTemplates;
 static SharedStringObjectMap<EventTemplate> s_eventNameIndex;
-static RWLOCK s_eventTemplatesLock;
+static RWLock s_eventTemplatesLock;
 
 #if VA_LIST_IS_POINTER
 #define DUMMY_VA_LIST   nullptr
@@ -875,9 +875,6 @@ static bool LoadEventConfiguration()
  */
 bool InitEventSubsystem()
 {
-   // Create object access mutex
-   s_eventTemplatesLock = RWLockCreate();
-
    // Load events from database
    bool success = LoadEventConfiguration();
 
@@ -902,7 +899,6 @@ bool InitEventSubsystem()
 void ShutdownEventSubsystem()
 {
    delete g_pEventPolicy;
-   RWLockDestroy(s_eventTemplatesLock);
 }
 
 /**
@@ -910,11 +906,11 @@ void ShutdownEventSubsystem()
  */
 void ReloadEvents()
 {
-   RWLockWriteLock(s_eventTemplatesLock);
+   s_eventTemplatesLock.writeLock();
    s_eventTemplates.clear();
    s_eventNameIndex.clear();
    LoadEventConfiguration();
-   RWLockUnlock(s_eventTemplatesLock);
+   s_eventTemplatesLock.unlock();
 }
 
 /**
@@ -948,9 +944,9 @@ static bool RealPostEvent(ObjectQueue<Event> *queue, uint64_t *eventId, uint32_t
          time_t originTimestamp, uint32_t sourceId, uint32_t dciId, const TCHAR *eventTag, const StringSet *eventTags,
          const StringMap *namedArgs, const char *format, const TCHAR **names, va_list args, NXSL_VM *vm)
 {
-   RWLockReadLock(s_eventTemplatesLock);
+   s_eventTemplatesLock.readLock();
    shared_ptr<EventTemplate> eventTemplate = s_eventTemplates.getShared(eventCode);
-   RWLockUnlock(s_eventTemplatesLock);
+   s_eventTemplatesLock.unlock();
 
    bool success;
    if (eventTemplate != nullptr)
@@ -1573,7 +1569,7 @@ void CreateEventTemplateExportRecord(StringBuffer &str, uint32_t eventCode)
 {
    String strText, strDescr;
 
-   RWLockReadLock(s_eventTemplatesLock);
+   s_eventTemplatesLock.readLock();
 
    // Find event template
    EventTemplate *e = s_eventTemplates.get(eventCode);
@@ -1600,7 +1596,7 @@ void CreateEventTemplateExportRecord(StringBuffer &str, uint32_t eventCode)
       str.append(_T("</tags>\n\t\t</event>\n"));
    }
 
-   RWLockUnlock(s_eventTemplatesLock);
+   s_eventTemplatesLock.unlock();
 }
 
 /**
@@ -1610,7 +1606,7 @@ bool EventNameFromCode(UINT32 eventCode, TCHAR *buffer)
 {
    bool bRet = false;
 
-   RWLockReadLock(s_eventTemplatesLock);
+   s_eventTemplatesLock.readLock();
 
    EventTemplate *e = s_eventTemplates.get(eventCode);
    if (e != nullptr)
@@ -1623,7 +1619,7 @@ bool EventNameFromCode(UINT32 eventCode, TCHAR *buffer)
       _tcscpy(buffer, _T("UNKNOWN_EVENT"));
    }
 
-   RWLockUnlock(s_eventTemplatesLock);
+   s_eventTemplatesLock.unlock();
    return bRet;
 }
 
@@ -1632,9 +1628,9 @@ bool EventNameFromCode(UINT32 eventCode, TCHAR *buffer)
  */
 shared_ptr<EventTemplate> FindEventTemplateByCode(uint32_t code)
 {
-   RWLockReadLock(s_eventTemplatesLock);
+   s_eventTemplatesLock.readLock();
    shared_ptr<EventTemplate> e = s_eventTemplates.getShared(code);
-   RWLockUnlock(s_eventTemplatesLock);
+   s_eventTemplatesLock.unlock();
    return e;
 }
 
@@ -1643,9 +1639,9 @@ shared_ptr<EventTemplate> FindEventTemplateByCode(uint32_t code)
  */
 shared_ptr<EventTemplate> FindEventTemplateByName(const TCHAR *name)
 {
-   RWLockReadLock(s_eventTemplatesLock);
+   s_eventTemplatesLock.readLock();
    shared_ptr<EventTemplate> e = s_eventNameIndex.getShared(name);
-   RWLockUnlock(s_eventTemplatesLock);
+   s_eventTemplatesLock.unlock();
    return e;
 }
 
@@ -1704,7 +1700,7 @@ uint32_t UpdateEventTemplate(const NXCPMessage& request, NXCPMessage *response, 
    if ((et != nullptr) && (et->getCode() != eventCode))
       return RCC_NAME_ALEARDY_EXISTS;
 
-   RWLockWriteLock(s_eventTemplatesLock);
+   s_eventTemplatesLock.writeLock();
 
    shared_ptr<EventTemplate> e;
    if (eventCode == 0)
@@ -1719,7 +1715,7 @@ uint32_t UpdateEventTemplate(const NXCPMessage& request, NXCPMessage *response, 
       e = s_eventTemplates.getShared(eventCode);
       if (e == nullptr)
       {
-         RWLockUnlock(s_eventTemplatesLock);
+         s_eventTemplatesLock.unlock();
          return RCC_INVALID_EVENT_CODE;
       }
       *oldValue = e->toJson();
@@ -1740,7 +1736,7 @@ uint32_t UpdateEventTemplate(const NXCPMessage& request, NXCPMessage *response, 
       response->setField(VID_EVENT_CODE, e->getCode());
    }
 
-   RWLockUnlock(s_eventTemplatesLock);
+   s_eventTemplatesLock.unlock();
 
    if (!success)
    {
@@ -1765,7 +1761,7 @@ uint32_t DeleteEventTemplate(uint32_t eventCode)
    uint32_t rcc = RCC_SUCCESS;
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
-   RWLockWriteLock(s_eventTemplatesLock);
+   s_eventTemplatesLock.writeLock();
    auto e = s_eventTemplates.get(eventCode);
    if (e != nullptr)
    {
@@ -1786,7 +1782,7 @@ uint32_t DeleteEventTemplate(uint32_t eventCode)
       nmsg.setField(VID_EVENT_CODE, eventCode);
       EnumerateClientSessions(SendEventDBChangeNotification, &nmsg);
    }
-   RWLockUnlock(s_eventTemplatesLock);
+   s_eventTemplatesLock.unlock();
 
    DBConnectionPoolReleaseConnection(hdb);
    return rcc;
@@ -1797,7 +1793,7 @@ uint32_t DeleteEventTemplate(uint32_t eventCode)
  */
 void GetEventConfiguration(NXCPMessage *msg)
 {
-   RWLockWriteLock(s_eventTemplatesLock);
+   s_eventTemplatesLock.writeLock();
    uint32_t base = VID_ELEMENT_LIST_BASE;
    msg->setField(VID_NUM_EVENTS, s_eventTemplates.size());
    auto it = s_eventTemplates.begin();
@@ -1806,5 +1802,5 @@ void GetEventConfiguration(NXCPMessage *msg)
       it.next()->fillMessage(msg, base);
       base += 10;
    }
-   RWLockUnlock(s_eventTemplatesLock);
+   s_eventTemplatesLock.unlock();
 }

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -101,8 +101,8 @@ bool AccessPoint::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    // Load DCI and access list
    loadACLFromDB(hdb);
    loadItemsFromDB(hdb);
-   for(int i = 0; i < m_dcObjects->size(); i++)
-      if (!m_dcObjects->get(i)->loadThresholdsFromDB(hdb))
+   for(int i = 0; i < m_dcObjects.size(); i++)
+      if (!m_dcObjects.get(i)->loadThresholdsFromDB(hdb))
          return false;
    loadDCIListForCleanup(hdb);
 

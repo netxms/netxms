@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -316,8 +316,8 @@ void Template::createExportRecord(StringBuffer &xml)
    xml.append(_T("\t\t\t</path>\n\t\t\t<dataCollection>\n"));
 
    readLockDciAccess();
-   for(int i = 0; i < m_dcObjects->size(); i++)
-      m_dcObjects->get(i)->createExportRecord(xml);
+   for(int i = 0; i < m_dcObjects.size(); i++)
+      m_dcObjects.get(i)->createExportRecord(xml);
    unlockDciAccess();
 
    xml.append(_T("\t\t\t</dataCollection>\n\t\t\t<agentPolicies>\n"));

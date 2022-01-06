@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -34,20 +34,20 @@ MappingTable *MappingTable::createFromMessage(const NXCPMessage& msg)
 													msg.getFieldAsString(VID_DESCRIPTION));
 
 	int count = (int)msg.getFieldAsUInt32(VID_NUM_ELEMENTS);
-	UINT32 varId = VID_ELEMENT_LIST_BASE;
+	uint32_t fieldId = VID_ELEMENT_LIST_BASE;
 	for(int i = 0; i < count; i++)
 	{
 		TCHAR key[64];
-		msg.getFieldAsString(varId++, key, 64);
+		msg.getFieldAsString(fieldId++, key, 64);
 		if (mt->m_flags & MTF_NUMERIC_KEYS)
 		{
 			long n = _tcstol(key, NULL, 0);
 			_sntprintf(key, 64, _T("%ld"), n);
 		}
-		TCHAR *value = msg.getFieldAsString(varId++);
-		TCHAR *description = msg.getFieldAsString(varId++);
+		TCHAR *value = msg.getFieldAsString(fieldId++);
+		TCHAR *description = msg.getFieldAsString(fieldId++);
 		mt->m_data->set(key, new MappingTableElement(value, description));
-		varId += 7;
+		fieldId += 7;
 	}
 
 	return mt;
@@ -58,35 +58,35 @@ MappingTable *MappingTable::createFromMessage(const NXCPMessage& msg)
  */
 MappingTable *MappingTable::createFromDatabase(DB_HANDLE hdb, LONG id)
 {
-	MappingTable *mt = NULL;
+	MappingTable *mt = nullptr;
 
 	DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT name,flags,description FROM mapping_tables WHERE id=?"));
-	if (hStmt != NULL)
+	if (hStmt != nullptr)
 	{
 		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, id);
 		DB_RESULT hResult = DBSelectPrepared(hStmt);
-		if (hResult != NULL)
+		if (hResult != nullptr)
 		{
 			if (DBGetNumRows(hResult) > 0)
 			{
 				mt = new MappingTable(id, 
-					DBGetField(hResult, 0, 0, NULL, 0),		// name
+					DBGetField(hResult, 0, 0, nullptr, 0),		// name
 					DBGetFieldULong(hResult, 0, 1),			// flags
-					DBGetField(hResult, 0, 2, NULL, 0));	// description
+					DBGetField(hResult, 0, 2, nullptr, 0));	// description
 			}
 			DBFreeResult(hResult);
 		}
 		DBFreeStatement(hStmt);
 	}
 
-	if (mt != NULL)
+	if (mt != nullptr)
 	{
 		hStmt = DBPrepare(hdb, _T("SELECT md_key,md_value,description FROM mapping_data WHERE table_id=?"));
-		if (hStmt != NULL)
+		if (hStmt != nullptr)
 		{
 			DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, id);
 			DB_RESULT hResult = DBSelectPrepared(hStmt);
-			if (hResult != NULL)
+			if (hResult != nullptr)
 			{
 				int count = DBGetNumRows(hResult);
 				for(int i = 0; i < count; i++)
@@ -98,7 +98,7 @@ MappingTable *MappingTable::createFromDatabase(DB_HANDLE hdb, LONG id)
 						long n = _tcstol(key, NULL, 0);
 						_sntprintf(key, 64, _T("%ld"), n);
 					}
-					mt->m_data->set(key, new MappingTableElement(DBGetField(hResult, i, 1, NULL, 0), DBGetField(hResult, i, 2, NULL, 0)));
+					mt->m_data->set(key, new MappingTableElement(DBGetField(hResult, i, 1, nullptr, 0), DBGetField(hResult, i, 2, nullptr, 0)));
 				}
 				DBFreeResult(hResult);
 			}
@@ -285,25 +285,23 @@ bool MappingTable::deleteFromDatabase()
 const TCHAR *MappingTable::get(const TCHAR *key)
 {
 	MappingTableElement *e = m_data->get(key);
-	return (e != NULL) ? e->getValue() : NULL;
+	return (e != nullptr) ? e->getValue() : nullptr;
 }
 
 /**
  * Defined mapping tables
  */
 static ObjectArray<MappingTable> s_mappingTables(0, 16, Ownership::True);
-static RWLOCK s_mappingTablesLock;
+static RWLock s_mappingTablesLock;
 
 /**
  * Init mapping tables
  */
 void InitMappingTables()
 {
-	s_mappingTablesLock = RWLockCreate();
-
 	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 	DB_RESULT hResult = DBSelect(hdb, _T("SELECT id FROM mapping_tables"));
-	if (hResult == NULL)
+	if (hResult == nullptr)
 	{
 	   DBConnectionPoolReleaseConnection(hdb);
 		return;
@@ -313,7 +311,7 @@ void InitMappingTables()
 	for(int i = 0; i < count; i++)
 	{
 		MappingTable *mt = MappingTable::createFromDatabase(hdb, DBGetFieldLong(hResult, i, 0));
-		if (mt != NULL)
+		if (mt != nullptr)
 			s_mappingTables.add(mt);
 	}
 	DBFreeResult(hResult);
@@ -324,7 +322,7 @@ void InitMappingTables()
 /**
  * Callback for client notification
  */
-static void NotifyClients(ClientSession *session, std::pair<UINT32, UINT32> *context)
+static void NotifyClients(ClientSession *session, std::pair<uint32_t, uint32_t> *context)
 {
 	session->notify(context->first, context->second);
 }
@@ -336,11 +334,11 @@ static void NotifyClients(ClientSession *session, std::pair<UINT32, UINT32> *con
  * @param msg NXCP message with table's data
  * @return RCC
  */
-UINT32 UpdateMappingTable(const NXCPMessage& msg, LONG *newId)
+uint32_t UpdateMappingTable(const NXCPMessage& msg, LONG *newId)
 {
-	UINT32 rcc;
+	uint32_t rcc;
 	MappingTable *mt = MappingTable::createFromMessage(msg);
-	RWLockWriteLock(s_mappingTablesLock);
+	s_mappingTablesLock.writeLock();
 	if (mt->getId() != 0)
 	{
 		rcc = RCC_INVALID_MAPPING_TABLE_ID;
@@ -379,9 +377,9 @@ UINT32 UpdateMappingTable(const NXCPMessage& msg, LONG *newId)
 		}
 	}
 
-	std::pair<UINT32, UINT32> context(NX_NOTIFY_MAPTBL_CHANGED, mt->getId());
+	std::pair<uint32_t, uint32_t> context(NX_NOTIFY_MAPTBL_CHANGED, mt->getId());
 
-	RWLockUnlock(s_mappingTablesLock);
+	s_mappingTablesLock.unlock();
 
 	if (rcc == RCC_SUCCESS)
 	{
@@ -401,10 +399,10 @@ UINT32 UpdateMappingTable(const NXCPMessage& msg, LONG *newId)
  * @param id mapping table ID
  * @return RCC
  */
-UINT32 DeleteMappingTable(LONG id)
+uint32_t DeleteMappingTable(LONG id)
 {
-	UINT32 rcc = RCC_INVALID_MAPPING_TABLE_ID;
-	RWLockWriteLock(s_mappingTablesLock);
+   uint32_t rcc = RCC_INVALID_MAPPING_TABLE_ID;
+	s_mappingTablesLock.writeLock();
 	for(int i = 0; i < s_mappingTables.size(); i++)
 	{
 		MappingTable *mt = s_mappingTables.get(i);
@@ -423,10 +421,10 @@ UINT32 DeleteMappingTable(LONG id)
 			break;
 		}
 	}
-	RWLockUnlock(s_mappingTablesLock);
+	s_mappingTablesLock.unlock();
 	if (rcc == RCC_SUCCESS)
 	{
-	   std::pair<UINT32, UINT32> context(NX_NOTIFY_MAPTBL_DELETED, id);
+	   std::pair<uint32_t, uint32_t> context(NX_NOTIFY_MAPTBL_DELETED, id);
 		EnumerateClientSessions(NotifyClients, &context);
 	}
 	return rcc;
@@ -439,10 +437,10 @@ UINT32 DeleteMappingTable(LONG id)
  * @param msg NXCP message to fill
  * @return RCC
  */
-UINT32 GetMappingTable(LONG id, NXCPMessage *msg)
+uint32_t GetMappingTable(LONG id, NXCPMessage *msg)
 {
-	UINT32 rcc = RCC_INVALID_MAPPING_TABLE_ID;
-	RWLockReadLock(s_mappingTablesLock);
+   uint32_t rcc = RCC_INVALID_MAPPING_TABLE_ID;
+	s_mappingTablesLock.readLock();
 	for(int i = 0; i < s_mappingTables.size(); i++)
 	{
 		if (s_mappingTables.get(i)->getId() == id)
@@ -452,7 +450,7 @@ UINT32 GetMappingTable(LONG id, NXCPMessage *msg)
 			break;
 		}
 	}
-	RWLockUnlock(s_mappingTablesLock);
+	s_mappingTablesLock.unlock();
 	return rcc;
 }
 
@@ -462,21 +460,21 @@ UINT32 GetMappingTable(LONG id, NXCPMessage *msg)
  * @param msg NXCP mesage to fill
  * @return RCC
  */
-UINT32 ListMappingTables(NXCPMessage *msg)
+uint32_t ListMappingTables(NXCPMessage *msg)
 {
-	UINT32 varId = VID_ELEMENT_LIST_BASE;
-	RWLockReadLock(s_mappingTablesLock);
-	msg->setField(VID_NUM_ELEMENTS, (UINT32)s_mappingTables.size());
+	uint32_t fieldId = VID_ELEMENT_LIST_BASE;
+	s_mappingTablesLock.readLock();
+	msg->setField(VID_NUM_ELEMENTS, static_cast<uint32_t>(s_mappingTables.size()));
 	for(int i = 0; i < s_mappingTables.size(); i++)
 	{
 		MappingTable *mt = s_mappingTables.get(i);
-		msg->setField(varId++, (UINT32)mt->getId());
-		msg->setField(varId++, mt->getName());
-		msg->setField(varId++, mt->getDescription());
-		msg->setField(varId++, mt->getFlags());
-		varId += 6;
+		msg->setField(fieldId++, (UINT32)mt->getId());
+		msg->setField(fieldId++, mt->getName());
+		msg->setField(fieldId++, mt->getDescription());
+		msg->setField(fieldId++, mt->getFlags());
+		fieldId += 6;
 	}
-	RWLockUnlock(s_mappingTablesLock);
+	s_mappingTablesLock.unlock();
 	return RCC_SUCCESS;
 }
 
@@ -495,8 +493,8 @@ int F_map(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 		return NXSL_ERR_NOT_STRING;
 
 	LONG tableId = (argv[0]->isInteger()) ? argv[0]->getValueAsInt32() : 0;
-	const TCHAR *value = NULL;
-	RWLockReadLock(s_mappingTablesLock);
+	const TCHAR *value = nullptr;
+	s_mappingTablesLock.readLock();
 	for(int i = 0; i < s_mappingTables.size(); i++)
 	{
 		MappingTable *mt = s_mappingTables.get(i);
@@ -506,8 +504,8 @@ int F_map(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 			break;
 		}
 	}
-	*result = (value != NULL) ? vm->createValue(value) : ((argc == 3) ? vm->createValue(argv[2]) : vm->createValue());
-	RWLockUnlock(s_mappingTablesLock);
+	*result = (value != nullptr) ? vm->createValue(value) : ((argc == 3) ? vm->createValue(argv[2]) : vm->createValue());
+	s_mappingTablesLock.unlock();
 
 	return 0;
 }
@@ -533,8 +531,8 @@ int F_mapList(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
    TCHAR **strings = SplitString(argv[1]->getValueAsCString(), argv[2]->getValueAsCString()[0], &count);
 
    LONG tableId = (argv[0]->isInteger()) ? argv[0]->getValueAsInt32() : 0;
-   MappingTable *mt = NULL;
-   RWLockReadLock(s_mappingTablesLock);
+   MappingTable *mt = nullptr;
+   s_mappingTablesLock.readLock();
    for(int i = 0; i < s_mappingTables.size(); i++)
    {
       MappingTable *t = s_mappingTables.get(i);
@@ -545,7 +543,7 @@ int F_mapList(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
       }
    }
 
-   if (mt != NULL)
+   if (mt != nullptr)
    {
       StringBuffer mappedList;
       for(int i = 0; i < count; i++)
@@ -554,8 +552,8 @@ int F_mapList(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
             mappedList.append(argv[2]->getValueAsCString());
 
          const TCHAR *v = mt->get(strings[i]);
-         mappedList.append((v != NULL) ? v : ((argc == 4) ? argv[3]->getValueAsCString() : _T("")));
-         free(strings[i]);
+         mappedList.append((v != nullptr) ? v : ((argc == 4) ? argv[3]->getValueAsCString() : _T("")));
+         MemFree(strings[i]);
       }
       *result = vm->createValue(mappedList);
    }
@@ -564,10 +562,10 @@ int F_mapList(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
       // mapping table not found, return original value
       *result = vm->createValue(argv[0]);
       for(int i = 0; i < count; i++)
-         free(strings[i]);
+         MemFree(strings[i]);
    }
-   RWLockUnlock(s_mappingTablesLock);
+   s_mappingTablesLock.unlock();
 
-   free(strings);
+   MemFree(strings);
    return 0;
 }

@@ -1,6 +1,6 @@
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@
  * Session agent list
  */
 static SharedObjectArray<SessionAgentConnector> s_agents(8, 8);
-static RWLOCK s_lock = RWLockCreate();
+static RWLock s_lock;
 static int s_sessionAgentCount = 0;
 static int s_userAgentCount = 0;
 
@@ -41,7 +41,7 @@ static Mutex s_userAgentNotificationsLock;
  */
 static void RegisterSessionAgent(const shared_ptr<SessionAgentConnector>& newConnector)
 {
-   RWLockWriteLock(s_lock);
+   s_lock.writeLock();
    bool idFound = false;
    for (int i = 0; i < s_agents.size(); i++)
    {
@@ -90,7 +90,7 @@ static void RegisterSessionAgent(const shared_ptr<SessionAgentConnector>& newCon
          }
       }
    }
-   RWLockUnlock(s_lock);
+   s_lock.unlock();
 }
 
 /**
@@ -98,7 +98,7 @@ static void RegisterSessionAgent(const shared_ptr<SessionAgentConnector>& newCon
  */
 static void UnregisterSessionAgent(uint32_t id)
 {
-   RWLockWriteLock(s_lock);
+   s_lock.writeLock();
    for(int i = 0; i < s_agents.size(); i++)
    {
       if (s_agents.get(i)->getId() == id)
@@ -110,7 +110,7 @@ static void UnregisterSessionAgent(uint32_t id)
          break;
       }
    }
-   RWLockUnlock(s_lock);
+   s_lock.unlock();
 }
 
 /**
@@ -267,19 +267,19 @@ void SessionAgentConnector::takeScreenshot(NXCPMessage *masterResponse)
    }
 
    NXCPMessage *response = m_msgQueue.waitForMessage(CMD_REQUEST_COMPLETED, msg.getId(), 5000);
-   if (response == NULL)
+   if (response == nullptr)
    {
       masterResponse->setField(VID_RCC, ERR_REQUEST_TIMEOUT);
       return;
    }
 
-   UINT32 rcc = response->getFieldAsUInt32(VID_RCC);
+   uint32_t rcc = response->getFieldAsUInt32(VID_RCC);
    if (rcc == ERR_SUCCESS)
    {
       masterResponse->setField(VID_RCC, ERR_SUCCESS);
       size_t imageSize;
       const BYTE *image = response->getBinaryFieldPtr(VID_FILE_DATA, &imageSize);
-      if (image != NULL)
+      if (image != nullptr)
       {
          masterResponse->disableCompression();  // image is already compressed
          masterResponse->setField(VID_FILE_DATA, image, imageSize);
@@ -320,7 +320,7 @@ bool SessionAgentConnector::getScreenInfo(uint32_t *width, uint32_t *height, uin
 static ConfigEntry *SupportAppMergeStrategy(ConfigEntry *parent, const TCHAR *name)
 {
    if (!_tcsicmp(name, _T("item")))
-      return NULL;
+      return nullptr;
    return parent->findEntry(name);
 }
 
@@ -336,7 +336,7 @@ void SessionAgentConnector::updateUserAgentConfig()
    {
       shared_ptr<Config> agentConfig = g_config;
       const ConfigEntry *e = agentConfig->getEntry(_T("/UserAgent"));
-      if (e != NULL)
+      if (e != nullptr)
       {
          nxlog_debug(5, _T("SA-%d: adding local policy to user agent configuration"), m_id);
          config.addSubTree(_T("/"), e);
@@ -383,11 +383,9 @@ void SessionAgentConnector::updateUserAgentEnvironment()
  */
 void SessionAgentConnector::updateUserAgentNotifications()
 {
-   NXCPMessage msg;
-   msg.setCode(CMD_UPDATE_UA_NOTIFICATIONS);
-   msg.setId(nextRequestId());
+   NXCPMessage msg(CMD_UPDATE_UA_NOTIFICATIONS, nextRequestId());
 
-   UINT32 count = 0, baseId = VID_UA_NOTIFICATION_BASE;
+   uint32_t count = 0, baseId = VID_UA_NOTIFICATION_BASE;
    Iterator<UserAgentNotification> it = s_userAgentNotifications.begin();
    while (it.hasNext())
    {
@@ -405,9 +403,7 @@ void SessionAgentConnector::updateUserAgentNotifications()
  */
 void SessionAgentConnector::addUserAgentNotification(UserAgentNotification *n)
 {
-   NXCPMessage msg;
-   msg.setCode(CMD_ADD_UA_NOTIFICATION);
-   msg.setId(nextRequestId());
+   NXCPMessage msg(CMD_ADD_UA_NOTIFICATION, nextRequestId());
    n->fillMessage(&msg, VID_UA_NOTIFICATION_BASE);
    sendMessage(&msg);
 }
@@ -417,9 +413,7 @@ void SessionAgentConnector::addUserAgentNotification(UserAgentNotification *n)
  */
 void SessionAgentConnector::removeUserAgentNotification(const ServerObjectKey& id)
 {
-   NXCPMessage msg;
-   msg.setCode(CMD_RECALL_UA_NOTIFICATION);
-   msg.setId(nextRequestId());
+   NXCPMessage msg(CMD_RECALL_UA_NOTIFICATION, nextRequestId());
    msg.setField(VID_UA_NOTIFICATION_BASE, id.objectId);
    msg.setField(VID_UA_NOTIFICATION_BASE + 1, id.serverId);
    sendMessage(&msg);
@@ -540,7 +534,7 @@ static void SessionAgentWatchdog()
 {
    while(!(g_dwFlags & AF_SHUTDOWN))
    {
-      RWLockReadLock(s_lock);
+      s_lock.readLock();
 
       for(int i = 0; i < s_agents.size(); i++)
       {
@@ -552,7 +546,7 @@ static void SessionAgentWatchdog()
          }
       }
 
-      RWLockUnlock(s_lock);
+      s_lock.unlock();
 
       ThreadSleep(30);
    }
@@ -581,7 +575,7 @@ shared_ptr<SessionAgentConnector> AcquireSessionAgentConnector(const TCHAR *sess
 {
    shared_ptr<SessionAgentConnector> c;
 
-   RWLockReadLock(s_lock);
+   s_lock.readLock();
    for(int i = 0; i < s_agents.size(); i++)
    {
       if (!_tcsicmp(s_agents.get(i)->getSessionName(), sessionName))
@@ -590,7 +584,7 @@ shared_ptr<SessionAgentConnector> AcquireSessionAgentConnector(const TCHAR *sess
          break;
       }
    }
-   RWLockUnlock(s_lock);
+   s_lock.unlock();
 
    return c;
 }
@@ -602,7 +596,7 @@ shared_ptr<SessionAgentConnector> AcquireSessionAgentConnector(uint32_t sessionI
 {
    shared_ptr<SessionAgentConnector> c;
 
-   RWLockReadLock(s_lock);
+   s_lock.readLock();
    for (int i = 0; i < s_agents.size(); i++)
    {
       if (s_agents.get(i)->getSessionId() == sessionId)
@@ -611,7 +605,7 @@ shared_ptr<SessionAgentConnector> AcquireSessionAgentConnector(uint32_t sessionI
          break;
       }
    }
-   RWLockUnlock(s_lock);
+   s_lock.unlock();
 
    return c;
 }
@@ -629,7 +623,7 @@ LONG H_SessionAgents(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractC
    value->addColumn(_T("AGENT_TYPE"), DCI_DT_INT, _T("Agent type"));
    value->addColumn(_T("AGENT_PID"), DCI_DT_INT, _T("Agent PID"));
 
-   RWLockReadLock(s_lock);
+   s_lock.readLock();
    for(int i = 0; i < s_agents.size(); i++)
    {
       SessionAgentConnector *c = s_agents.get(i);
@@ -642,7 +636,7 @@ LONG H_SessionAgents(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractC
       value->set(5, c->isUserAgent() ? 1 : 0);
       value->set(6, c->getProcessId());
    }
-   RWLockUnlock(s_lock);
+   s_lock.unlock();
 
    return SYSINFO_RC_SUCCESS;
 }
@@ -661,14 +655,14 @@ LONG H_SessionAgentCount(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abs
  */
 void UpdateUserAgentsConfiguration()
 {
-   RWLockReadLock(s_lock);
+   s_lock.readLock();
    for (int i = 0; i < s_agents.size(); i++)
    {
       SessionAgentConnector *c = s_agents.get(i);
       if (c->isUserAgent())
          c->updateUserAgentConfig();
    }
-   RWLockUnlock(s_lock);
+   s_lock.unlock();
 }
 
 /**
@@ -676,14 +670,14 @@ void UpdateUserAgentsConfiguration()
  */
 void UpdateUserAgentsEnvironment()
 {
-   RWLockReadLock(s_lock);
+   s_lock.readLock();
    for (int i = 0; i < s_agents.size(); i++)
    {
       SessionAgentConnector *c = s_agents.get(i);
       if (c->isUserAgent())
          c->updateUserAgentEnvironment();
    }
-   RWLockUnlock(s_lock);
+   s_lock.unlock();
 }
 
 /**
@@ -691,12 +685,12 @@ void UpdateUserAgentsEnvironment()
  */
 void ShutdownSessionAgents(bool restart)
 {
-   RWLockReadLock(s_lock);
+   s_lock.readLock();
    for (int i = 0; i < s_agents.size(); i++)
    {
       s_agents.get(i)->shutdown(restart);
    }
-   RWLockUnlock(s_lock);
+   s_lock.unlock();
 }
 
 /**
@@ -738,14 +732,14 @@ uint32_t AddUserAgentNotification(uint64_t serverId, NXCPMessage *request)
       n->saveToDatabase(db);
    }
 
-   RWLockReadLock(s_lock);
+   s_lock.readLock();
    for (int i = 0; i < s_agents.size(); i++)
    {
       SessionAgentConnector *c = s_agents.get(i);
       if (c->isUserAgent())
          c->addUserAgentNotification(n);
    }
-   RWLockUnlock(s_lock);
+   s_lock.unlock();
 
    if (n->isInstant())
       delete n;
@@ -771,14 +765,14 @@ uint32_t RemoveUserAgentNotification(uint64_t serverId, NXCPMessage *request)
    DB_HANDLE db = GetLocalDatabaseHandle();
    DBQuery(db, query);
 
-   RWLockReadLock(s_lock);
+   s_lock.readLock();
    for (int i = 0; i < s_agents.size(); i++)
    {
       SessionAgentConnector *c = s_agents.get(i);
       if (c->isUserAgent())
          c->removeUserAgentNotification(id);
    }
-   RWLockUnlock(s_lock);
+   s_lock.unlock();
 
    return RCC_SUCCESS;
 }
@@ -808,14 +802,14 @@ uint32_t UpdateUserAgentNotifications(uint64_t serverId, NXCPMessage *request)
       n->saveToDatabase(db);
    }
 
-   RWLockReadLock(s_lock);
+   s_lock.readLock();
    for (int i = 0; i < s_agents.size(); i++)
    {
       SessionAgentConnector *c = s_agents.get(i);
       if (c->isUserAgent())
          c->updateUserAgentNotifications();
    }
-   RWLockUnlock(s_lock);
+   s_lock.unlock();
 
    s_userAgentNotificationsLock.unlock();
 

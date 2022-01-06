@@ -120,9 +120,6 @@
     <ClCompile Include="rbuffer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="rwlock.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="scandir.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -309,9 +306,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\nxstat.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\rwlock.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="sha1.h">

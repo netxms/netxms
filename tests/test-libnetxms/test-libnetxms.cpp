@@ -21,7 +21,7 @@ void TestMsgWaitQueue();
 void TestMessageClass();
 void TestMutex();
 void TestCondition();
-void TestRWLockWrapper();
+void TestRWLock();
 void TestThreadCountAndMaxWaitTime();
 void TestProcessExecutor(const char *procname);
 void TestProcessExecutorWorker();
@@ -2125,7 +2125,7 @@ int main(int argc, char *argv[])
 
    TestMutex();
    TestCondition();
-   TestRWLockWrapper();
+   TestRWLock();
    TestGauge64();
    TestMemoryPool();
    TestObjectMemoryPool();

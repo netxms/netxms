@@ -82,9 +82,9 @@ public:
  * Mapping tables API
  */
 void InitMappingTables();
-UINT32 UpdateMappingTable(const NXCPMessage& msg, LONG *newId);
-UINT32 DeleteMappingTable(LONG id);
-UINT32 GetMappingTable(LONG id, NXCPMessage *msg);
-UINT32 ListMappingTables(NXCPMessage *msg);
+uint32_t UpdateMappingTable(const NXCPMessage& msg, LONG *newId);
+uint32_t DeleteMappingTable(LONG id);
+uint32_t GetMappingTable(LONG id, NXCPMessage *msg);
+uint32_t ListMappingTables(NXCPMessage *msg);
 
 #endif

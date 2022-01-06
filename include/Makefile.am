@@ -57,7 +57,6 @@ include_HEADERS = \
 	nxstat.h \
 	nxtools.h \
 	nxtux.h \
-	rwlock.h \
 	socket_listener.h \
 	strophe.h \
 	symbol_visibility.h \

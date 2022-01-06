@@ -532,7 +532,7 @@ class NXCORE_EXPORTABLE InetAddressIndex
 {
 private:
    InetAddressIndexEntry *m_root;
-   RWLOCK m_lock;
+   RWLock m_lock;
 
 public:
    InetAddressIndex();
@@ -1595,6 +1595,10 @@ public:
    static IcmpStatCollector *loadFromDatabase(DB_HANDLE hdb, uint32_t objectId, const TCHAR *target, int period);
 };
 
+#ifdef _WIN32
+template class NXCORE_EXPORTABLE SharedObjectArray<DCObject>;
+#endif
+
 /**
  * Data collection owner class
  */
@@ -1604,11 +1608,11 @@ private:
    typedef NetObj super;
 
 protected:
-   SharedObjectArray<DCObject> *m_dcObjects;
+   SharedObjectArray<DCObject> m_dcObjects;
+   RWLock m_dciAccessLock;
    bool m_dciListModified;
    bool m_instanceDiscoveryChanges;
    TCHAR m_szCurrDCIOwner[MAX_SESSION_NAME];
-   RWLOCK m_dciAccessLock;
 
    virtual void prepareForDeletion() override;
 
@@ -1623,9 +1627,9 @@ protected:
    void destroyItems();
    void updateInstanceDiscoveryItems(DCObject *dci);
 
-   void readLockDciAccess() const { RWLockReadLock(m_dciAccessLock); }
-   void writeLockDciAccess() { RWLockWriteLock(m_dciAccessLock); }
-   void unlockDciAccess() const { RWLockUnlock(m_dciAccessLock); }
+   void readLockDciAccess() const { m_dciAccessLock.readLock(); }
+   void writeLockDciAccess() { m_dciAccessLock.writeLock(); }
+   void unlockDciAccess() const { m_dciAccessLock.unlock(); }
 
    void deleteChildDCIs(uint32_t dcObjectId);
    void deleteDCObject(DCObject *object);
@@ -1646,7 +1650,7 @@ public:
 
    virtual json_t *toJson() override;
 
-   int getItemCount() const { return m_dcObjects->size(); }
+   int getItemCount() const { return m_dcObjects.size(); }
    bool addDCObject(DCObject *object, bool alreadyLocked = false, bool notify = true);
    bool updateDCObject(uint32_t dcObjectId, const NXCPMessage& msg, uint32_t *numMaps, uint32_t **mapIndex, uint32_t **mapId, uint32_t userId);
    bool deleteDCObject(uint32_t dcObjectId, bool needLock, uint32_t userId);

@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Server Library
-** Copyright (C) 2003-2021 Raden Solutions
+** Copyright (C) 2003-2022 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -31,8 +31,6 @@ NObject::NObject() : m_customAttributes(Ownership::True), m_parentList(8, 8), m_
 {
    m_id = 0;
    m_name[0] = 0;
-   m_rwlockParentList = RWLockCreate();
-   m_rwlockChildList = RWLockCreate();
 }
 
 /**
@@ -40,8 +38,6 @@ NObject::NObject() : m_customAttributes(Ownership::True), m_parentList(8, 8), m_
  */
 NObject::~NObject()
 {
-   RWLockDestroy(m_rwlockParentList);
-   RWLockDestroy(m_rwlockChildList);
 }
 
 /**

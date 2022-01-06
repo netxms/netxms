@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -131,7 +131,7 @@ static THREAD s_queueMonitorThread = INVALID_THREAD_HANDLE;
 /**
  * IDATA tables write lock
  */
-static RWLOCK s_idataWriteLock = RWLockCreate();
+static RWLock s_idataWriteLock;
 static bool s_idataWriteLockActive = false;
 
 /**
@@ -141,7 +141,7 @@ void LockIDataWrites()
 {
    if (g_flags & AF_DBWRITER_HK_INTERLOCK)
    {
-      RWLockWriteLock(s_idataWriteLock);
+      s_idataWriteLock.writeLock();
       s_idataWriteLockActive = true;
    }
 }
@@ -154,7 +154,7 @@ void UnlockIDataWrites()
    if (s_idataWriteLockActive)
    {
       s_idataWriteLockActive = false;
-      RWLockUnlock(s_idataWriteLock);
+      s_idataWriteLock.unlock();
    }
 }
 
@@ -347,7 +347,7 @@ static THREAD_RESULT THREAD_CALL IDataWriteThread(void *arg)
       bool idataLock;
       if (g_flags & AF_DBWRITER_HK_INTERLOCK)
       {
-         RWLockReadLock(s_idataWriteLock);
+         s_idataWriteLock.readLock();
          idataLock = true;
       }
       else
@@ -413,7 +413,7 @@ static THREAD_RESULT THREAD_CALL IDataWriteThread(void *arg)
 		DBConnectionPoolReleaseConnection(hdb);
 
 		if (idataLock)
-		   RWLockUnlock(s_idataWriteLock);
+		   s_idataWriteLock.unlock();
 
       if (rq == INVALID_POINTER_VALUE)   // End-of-job indicator
          break;
@@ -441,7 +441,7 @@ static THREAD_RESULT THREAD_CALL IDataWriteThreadSingleTable_Generic(void *arg)
       bool idataLock;
       if (g_flags & AF_DBWRITER_HK_INTERLOCK)
       {
-         RWLockReadLock(s_idataWriteLock);
+         s_idataWriteLock.readLock();
          idataLock = true;
       }
       else
@@ -480,7 +480,7 @@ static THREAD_RESULT THREAD_CALL IDataWriteThreadSingleTable_Generic(void *arg)
       DBConnectionPoolReleaseConnection(hdb);
 
       if (idataLock)
-         RWLockUnlock(s_idataWriteLock);
+         s_idataWriteLock.unlock();
 
       if (rq == INVALID_POINTER_VALUE)   // End-of-job indicator
          break;
@@ -533,7 +533,7 @@ static THREAD_RESULT THREAD_CALL IDataWriteThreadSingleTable_PostgreSQL(void *ar
       {
          if (g_flags & AF_DBWRITER_HK_INTERLOCK)
          {
-            RWLockReadLock(s_idataWriteLock);
+            s_idataWriteLock.readLock();
             idataLock = true;
          }
          else
@@ -594,7 +594,7 @@ static THREAD_RESULT THREAD_CALL IDataWriteThreadSingleTable_PostgreSQL(void *ar
       DBConnectionPoolReleaseConnection(hdb);
 
       if (idataLock)
-         RWLockUnlock(s_idataWriteLock);
+         s_idataWriteLock.unlock();
 
       if (rq == INVALID_POINTER_VALUE)   // End-of-job indicator
          break;
@@ -620,7 +620,7 @@ static THREAD_RESULT THREAD_CALL IDataWriteThreadSingleTable_Oracle(void *arg)
       bool idataLock;
       if (g_flags & AF_DBWRITER_HK_INTERLOCK)
       {
-         RWLockReadLock(s_idataWriteLock);
+         s_idataWriteLock.readLock();
          idataLock = true;
       }
       else
@@ -668,7 +668,7 @@ static THREAD_RESULT THREAD_CALL IDataWriteThreadSingleTable_Oracle(void *arg)
       DBConnectionPoolReleaseConnection(hdb);
 
       if (idataLock)
-         RWLockUnlock(s_idataWriteLock);
+         s_idataWriteLock.unlock();
 
       if (rq == INVALID_POINTER_VALUE)   // End-of-job indicator
          break;

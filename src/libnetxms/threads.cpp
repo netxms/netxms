@@ -1,6 +1,6 @@
 /* 
 ** libnetxms - Common NetXMS utility library
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -21,55 +21,6 @@
 **/
 
 #include "libnetxms.h"
-
-/**
- * R/W Lock class constructor
- */
-RWLock::RWLock()
-{
-   m_rwlock = RWLockCreate();
-   m_refCount = new VolatileCounter(1);
-}
-
-/**
- * R/W Lock class copy constructor
- */
-RWLock::RWLock(const RWLock& src)
-{
-   InterlockedIncrement(src.m_refCount);
-   m_rwlock = src.m_rwlock;
-   m_refCount = src.m_refCount;
-}
-
-/**
- * R/W Lock destructor
- */
-RWLock::~RWLock()
-{
-   if (InterlockedDecrement(m_refCount) == 0)
-   {
-      RWLockDestroy(m_rwlock);
-      delete m_refCount;
-   }
-}
-
-/**
- * R/W Lock assignment operator
- */
-RWLock& RWLock::operator =(const RWLock& src)
-{
-   if (&src == this)
-      return *this;
-   if (InterlockedDecrement(m_refCount))
-   {
-      RWLockDestroy(m_rwlock);
-      delete m_refCount;
-   }
-   InterlockedIncrement(src.m_refCount);
-   m_rwlock = src.m_rwlock;
-   m_refCount = src.m_refCount;
-   return *this;
-}
 
 #ifndef _WIN32
 
@@ -100,14 +51,14 @@ void LIBNETXMS_EXPORTABLE BlockAllSignals(bool processWide, bool allowInterrupt)
 #endif
    if (processWide)
    {
-      sigprocmask(SIG_BLOCK, &signals, NULL);
+      sigprocmask(SIG_BLOCK, &signals, nullptr);
    }
    else
    {
 #ifdef _USE_GNU_PTH
-      pth_sigmask(SIG_BLOCK, &signals, NULL);
+      pth_sigmask(SIG_BLOCK, &signals, nullptr);
 #else
-      pthread_sigmask(SIG_BLOCK, &signals, NULL);
+      pthread_sigmask(SIG_BLOCK, &signals, nullptr);
 #endif
    }
 }
@@ -117,45 +68,42 @@ void LIBNETXMS_EXPORTABLE BlockAllSignals(bool processWide, bool allowInterrupt)
  */
 void LIBNETXMS_EXPORTABLE StartMainLoop(ThreadFunction pfSignalHandler, ThreadFunction pfMain)
 {
-   THREAD hThread;
-   struct utsname un;
-   int nModel = 0;
+   int model = 0;
 
+   struct utsname un;
    if (uname(&un) != -1)
    {
-      char *ptr;
-
-      ptr = strchr(un.release, '.');
-      if (ptr != NULL)
+      char *ptr = strchr(un.release, '.');
+      if (ptr != nullptr)
          *ptr = 0;
       if (!stricmp(un.sysname, "FreeBSD") && (atoi(un.release) >= 5))
-         nModel = 1;
+         model = 1;
    }
 
-   if (pfMain != NULL)
+   if (pfMain != nullptr)
    {
-      if (nModel == 0)
+      if (model == 0)
       {
-         hThread = ThreadCreateEx(pfMain, 0, NULL);
-         pfSignalHandler(NULL);
+         THREAD hThread = ThreadCreateEx(pfMain, 0, nullptr);
+         pfSignalHandler(nullptr);
          ThreadJoin(hThread);
       }
       else
       {
-         hThread = ThreadCreateEx(pfSignalHandler, 0, NULL);
-         pfMain(NULL);
+         THREAD hThread = ThreadCreateEx(pfSignalHandler, 0, nullptr);
+         pfMain(nullptr);
          ThreadJoin(hThread);
       }
    }
    else
    {
-      if (nModel == 0)
+      if (model == 0)
       {
-         pfSignalHandler(NULL);
+         pfSignalHandler(nullptr);
       }
       else
       {
-         hThread = ThreadCreateEx(pfSignalHandler, 0, NULL);
+         THREAD hThread = ThreadCreateEx(pfSignalHandler, 0, nullptr);
          ThreadJoin(hThread);
       }
    }
@@ -171,7 +119,7 @@ extern HRESULT (WINAPI *imp_SetThreadDescription)(HANDLE, PCWSTR);
 */
 void LIBNETXMS_EXPORTABLE ThreadSetName(THREAD thread, const char *name)
 {
-   if (imp_SetThreadDescription != NULL)
+   if (imp_SetThreadDescription != nullptr)
    {
       WCHAR wname[256];
       MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, name, -1, wname, 256);

@@ -230,7 +230,6 @@
     <ClCompile Include="procexec.cpp" />
     <ClCompile Include="queue.cpp" />
     <ClCompile Include="rbuffer.cpp" />
-    <ClCompile Include="rwlock.cpp" />
     <ClCompile Include="scandir.c" />
     <ClCompile Include="serial.cpp" />
     <ClCompile Include="sha1.cpp" />
@@ -285,7 +284,6 @@
     <ClInclude Include="..\..\include\nxqueue.h" />
     <ClInclude Include="..\..\include\nxsocket.h" />
     <ClInclude Include="..\..\include\nxstat.h" />
-    <ClInclude Include="..\..\include\rwlock.h" />
     <ClInclude Include="..\..\include\unicode.h" />
     <ClInclude Include="..\..\include\uthash.h" />
     <ClInclude Include="..\..\include\uuid.h" />

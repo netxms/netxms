@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -129,9 +129,9 @@ void DataCollectionTarget::fillMessageInternalStage2(NXCPMessage *msg, UINT32 us
    uint32_t fieldIdTooltip = VID_TOOLTIP_DCI_LIST_BASE;
    uint32_t countTooltip = 0;
    readLockDciAccess();
-   for(int i = 0; i < m_dcObjects->size(); i++)
+   for(int i = 0; i < m_dcObjects.size(); i++)
 	{
-      DCObject *dci = m_dcObjects->get(i);
+      DCObject *dci = m_dcObjects.get(i);
       if ((dci->getType() == DCO_TYPE_ITEM) &&
           (dci->getStatus() == ITEM_STATUS_ACTIVE) &&
           (dci->getInstanceDiscoveryMethod() == IDM_NONE) &&
@@ -263,9 +263,9 @@ bool DataCollectionTarget::saveToDatabase(DB_HANDLE hdb)
 void DataCollectionTarget::updateDciCache()
 {
    readLockDciAccess();
-   for(int i = 0; i < m_dcObjects->size(); i++)
+   for(int i = 0; i < m_dcObjects.size(); i++)
    {
-      m_dcObjects->get(i)->loadCache();
+      m_dcObjects.get(i)->loadCache();
    }
    unlockDciAccess();
 }
@@ -278,9 +278,9 @@ void DataCollectionTarget::calculateDciCutoffTimes(time_t *cutoffTimeIData, time
    time_t now = time(nullptr);
 
    readLockDciAccess();
-   for(int i = 0; i < m_dcObjects->size(); i++)
+   for(int i = 0; i < m_dcObjects.size(); i++)
    {
-      DCObject *o = m_dcObjects->get(i);
+      DCObject *o = m_dcObjects.get(i);
       DCObjectStorageClass sclass = o->getStorageClass();
       if (sclass == DCObjectStorageClass::DEFAULT)
          continue;
@@ -336,9 +336,9 @@ void DataCollectionTarget::cleanDCIData(DB_HANDLE hdb)
    bool sameRetentionTimeTables = true;
    int retentionTimeItems = -1;
    int retentionTimeTables = -1;
-   for(int i = 0; (i < m_dcObjects->size()) && (sameRetentionTimeItems || sameRetentionTimeTables); i++)
+   for(int i = 0; (i < m_dcObjects.size()) && (sameRetentionTimeItems || sameRetentionTimeTables); i++)
    {
-      DCObject *o = m_dcObjects->get(i);
+      DCObject *o = m_dcObjects.get(i);
       if (!o->isDataStorageEnabled())
          continue;   // Ignore "do not store" objects
 
@@ -368,9 +368,9 @@ void DataCollectionTarget::cleanDCIData(DB_HANDLE hdb)
 
    if (!sameRetentionTimeItems || !sameRetentionTimeTables)
    {
-      for(int i = 0; i < m_dcObjects->size(); i++)
+      for(int i = 0; i < m_dcObjects.size(); i++)
       {
-         DCObject *o = m_dcObjects->get(i);
+         DCObject *o = m_dcObjects.get(i);
          if (!o->isDataStorageEnabled())
             continue;   // Ignore "do not store" objects
 
@@ -460,9 +460,9 @@ void DataCollectionTarget::cleanDCIData(DB_HANDLE hdb)
 void DataCollectionTarget::queuePredictionEngineTraining()
 {
    readLockDciAccess();
-   for(int i = 0; i < m_dcObjects->size(); i++)
+   for(int i = 0; i < m_dcObjects.size(); i++)
    {
-      DCObject *o = m_dcObjects->get(i);
+      DCObject *o = m_dcObjects.get(i);
       if (o->getType() == DCO_TYPE_ITEM)
       {
          DCItem *dci = static_cast<DCItem*>(o);
@@ -583,9 +583,9 @@ uint32_t DataCollectionTarget::getDciLastValue(uint32_t dciId, NXCPMessage *msg)
 
    readLockDciAccess();
 
-   for(int i = 0; i < m_dcObjects->size(); i++)
+   for(int i = 0; i < m_dcObjects.size(); i++)
    {
-      DCObject *object = m_dcObjects->get(i);
+      DCObject *object = m_dcObjects.get(i);
       if (object->getId() == dciId)
       {
          msg->setField(VID_DCOBJECT_TYPE, static_cast<int16_t>(object->getType()));
@@ -608,9 +608,9 @@ int DataCollectionTarget::getDciThreshold(uint32_t dciId)
 
    readLockDciAccess();
 
-   for(int i = 0; i < m_dcObjects->size(); i++)
+   for(int i = 0; i < m_dcObjects.size(); i++)
    {
-      DCObject *object = m_dcObjects->get(i);
+      DCObject *object = m_dcObjects.get(i);
       if (object->getId() == dciId)
       {
          if (object->getType() == DCO_TYPE_TABLE)
@@ -638,9 +638,9 @@ uint32_t DataCollectionTarget::getTableLastValue(uint32_t dciId, NXCPMessage *ms
 
    readLockDciAccess();
 
-   for(int i = 0; i < m_dcObjects->size(); i++)
+   for(int i = 0; i < m_dcObjects.size(); i++)
 	{
-		DCObject *object = m_dcObjects->get(i);
+		DCObject *object = m_dcObjects.get(i);
 		if (object->getId() == dciId)
 		{
 		   if (object->getType() == DCO_TYPE_TABLE)
@@ -674,12 +674,12 @@ bool DataCollectionTarget::applyTemplateItem(uint32_t templateId, DCObject *dcOb
 
    // Check if that template item exists
 	int i;
-   for(i = 0; i < m_dcObjects->size(); i++)
-      if ((m_dcObjects->get(i)->getTemplateId() == templateId) &&
-          (m_dcObjects->get(i)->getTemplateItemId() == dcObject->getId()))
+   for(i = 0; i < m_dcObjects.size(); i++)
+      if ((m_dcObjects.get(i)->getTemplateId() == templateId) &&
+          (m_dcObjects.get(i)->getTemplateItemId() == dcObject->getId()))
          break;   // Item with specified id already exist
 
-   if (i == m_dcObjects->size())
+   if (i == m_dcObjects.size())
    {
       // New item from template, just add it
 		DCObject *newObject = dcObject->clone();
@@ -690,7 +690,7 @@ bool DataCollectionTarget::applyTemplateItem(uint32_t templateId, DCObject *dcOb
    else
    {
       // Update existing item unless it is disabled
-      DCObject *curr = m_dcObjects->get(i);
+      DCObject *curr = m_dcObjects.get(i);
       curr->updateFromTemplate(dcObject);
       NotifyClientsOnDCIUpdate(*this, curr);
       if (curr->getInstanceDiscoveryMethod() != IDM_NONE)
@@ -716,17 +716,17 @@ void DataCollectionTarget::cleanDeletedTemplateItems(uint32_t templateId, const 
    writeLockDciAccess();  // write lock
 
    IntegerArray<uint32_t> deleteList;
-   for(int i = 0; i < m_dcObjects->size(); i++)
-      if (m_dcObjects->get(i)->getTemplateId() == templateId)
+   for(int i = 0; i < m_dcObjects.size(); i++)
+      if (m_dcObjects.get(i)->getTemplateId() == templateId)
       {
          int j;
          for(j = 0; j < dciList.size(); j++)
-            if (m_dcObjects->get(i)->getTemplateItemId() == dciList.get(j))
+            if (m_dcObjects.get(i)->getTemplateItemId() == dciList.get(j))
                break;
 
          // Delete DCI if it's not in list
          if (j == dciList.size())
-            deleteList.add(m_dcObjects->get(i)->getId());
+            deleteList.add(m_dcObjects.get(i)->getId());
       }
 
    for(int i = 0; i < deleteList.size(); i++)
@@ -751,14 +751,14 @@ void DataCollectionTarget::onTemplateRemove(const shared_ptr<DataCollectionOwner
    {
       writeLockDciAccess();  // write lock
 
-      uint32_t *deleteList = MemAllocArray<uint32_t>(m_dcObjects->size());
+      uint32_t *deleteList = MemAllocArray<uint32_t>(m_dcObjects.size());
 		int numDeleted = 0;
 
 		int i;
-      for(i = 0; i < m_dcObjects->size(); i++)
-         if (m_dcObjects->get(i)->getTemplateId() == templateId)
+      for(i = 0; i < m_dcObjects.size(); i++)
+         if (m_dcObjects.get(i)->getTemplateId() == templateId)
          {
-            deleteList[numDeleted++] = m_dcObjects->get(i)->getId();
+            deleteList[numDeleted++] = m_dcObjects.get(i)->getId();
          }
 
 		for(i = 0; i < numDeleted; i++)
@@ -771,10 +771,10 @@ void DataCollectionTarget::onTemplateRemove(const shared_ptr<DataCollectionOwner
    {
       readLockDciAccess();
 
-      for(int i = 0; i < m_dcObjects->size(); i++)
-         if (m_dcObjects->get(i)->getTemplateId() == templateId)
+      for(int i = 0; i < m_dcObjects.size(); i++)
+         if (m_dcObjects.get(i)->getTemplateId() == templateId)
          {
-            m_dcObjects->get(i)->setTemplateId(0, 0);
+            m_dcObjects.get(i)->setTemplateId(0, 0);
          }
 
       unlockDciAccess();
@@ -789,9 +789,9 @@ UINT32 DataCollectionTarget::getPerfTabDCIList(NXCPMessage *pMsg, UINT32 userId)
 	readLockDciAccess();
 
 	UINT32 dwId = VID_SYSDCI_LIST_BASE, dwCount = 0;
-   for(int i = 0; i < m_dcObjects->size(); i++)
+   for(int i = 0; i < m_dcObjects.size(); i++)
 	{
-		DCObject *object = m_dcObjects->get(i);
+		DCObject *object = m_dcObjects.get(i);
       if ((object->getPerfTabSettings() != nullptr) &&
           object->hasValue() &&
           (object->getStatus() == ITEM_STATUS_ACTIVE) &&
@@ -846,9 +846,9 @@ UINT32 DataCollectionTarget::getThresholdSummary(NXCPMessage *msg, UINT32 baseId
 	UINT32 count = 0;
 
 	readLockDciAccess();
-   for(int i = 0; i < m_dcObjects->size(); i++)
+   for(int i = 0; i < m_dcObjects.size(); i++)
 	{
-		DCObject *object = m_dcObjects->get(i);
+		DCObject *object = m_dcObjects.get(i);
 		if (object->hasValue() && (object->getType() == DCO_TYPE_ITEM) && (object->getStatus() == ITEM_STATUS_ACTIVE) && object->hasAccess(userId))
 		{
 			if (static_cast<DCItem*>(object)->hasActiveThreshold())
@@ -899,10 +899,10 @@ void DataCollectionTarget::queueItemsForPolling()
    time_t currTime = time(nullptr);
 
    readLockDciAccess();
-   for(int i = 0; i < m_dcObjects->size(); i++)
+   for(int i = 0; i < m_dcObjects.size(); i++)
    {
-		DCObject *object = m_dcObjects->get(i);
-      if (m_dcObjects->get(i)->isReadyForPolling(currTime))
+		DCObject *object = m_dcObjects.get(i);
+      if (m_dcObjects.get(i)->isReadyForPolling(currTime))
       {
          object->setBusyFlag();
 
@@ -915,11 +915,11 @@ void DataCollectionTarget::queueItemsForPolling()
             uint32_t sourceNodeId = getEffectiveSourceNode(object);
             TCHAR key[32];
             _sntprintf(key, 32, _T("%08X/%s"), (sourceNodeId != 0) ? sourceNodeId : m_id, object->getDataProviderName());
-            ThreadPoolExecuteSerialized(g_dataCollectorThreadPool, key, DataCollector, m_dcObjects->getShared(i));
+            ThreadPoolExecuteSerialized(g_dataCollectorThreadPool, key, DataCollector, m_dcObjects.getShared(i));
          }
          else
          {
-            ThreadPoolExecute(g_dataCollectorThreadPool, DataCollector, m_dcObjects->getShared(i));
+            ThreadPoolExecute(g_dataCollectorThreadPool, DataCollector, m_dcObjects.getShared(i));
          }
 			nxlog_debug_tag(_T("obj.dc.queue"), 8, _T("DataCollectionTarget(%s)->QueueItemsForPolling(): item %d \"%s\" added to queue"),
 			         m_name, object->getId(), object->getName().cstr());
@@ -934,9 +934,9 @@ void DataCollectionTarget::queueItemsForPolling()
 void DataCollectionTarget::updateDataCollectionTimeIntervals()
 {
    readLockDciAccess();
-   for(int i = 0; i < m_dcObjects->size(); i++)
+   for(int i = 0; i < m_dcObjects.size(); i++)
    {
-      m_dcObjects->get(i)->updateTimeIntervals();
+      m_dcObjects.get(i)->updateTimeIntervals();
    }
    unlockDciAccess();
 }
@@ -1551,9 +1551,9 @@ void DataCollectionTarget::getItemDciValuesSummary(SummaryTable *tableDefinition
    for(int i = 0; i < tableDefinition->getNumColumns(); i++)
    {
       SummaryTableColumn *tc = tableDefinition->getColumn(i);
-      for(int j = 0; j < m_dcObjects->size(); j++)
+      for(int j = 0; j < m_dcObjects.size(); j++)
 	   {
-		   DCObject *object = m_dcObjects->get(j);
+		   DCObject *object = m_dcObjects.get(j);
          if ((object->getType() == DCO_TYPE_ITEM) && object->hasValue() && object->hasAccess(userId) &&
              (object->getStatus() == ITEM_STATUS_ACTIVE) && MatchDCItem(tc, object))
          {
@@ -1637,9 +1637,9 @@ void DataCollectionTarget::getItemDciValuesSummary(SummaryTable *tableDefinition
 void DataCollectionTarget::getTableDciValuesSummary(SummaryTable *tableDefinition, Table *tableData, UINT32 userId)
 {
    readLockDciAccess();
-   for(int i = 0; i < m_dcObjects->size(); i++)
+   for(int i = 0; i < m_dcObjects.size(); i++)
    {
-      DCObject *o = m_dcObjects->get(i);
+      DCObject *o = m_dcObjects.get(i);
       if ((o->getType() == DCO_TYPE_TABLE) && o->hasValue() &&
            (o->getStatus() == ITEM_STATUS_ACTIVE) &&
            !_tcsicmp(o->getName(), tableDefinition->getTableDciName()) &&
@@ -1682,9 +1682,9 @@ int DataCollectionTarget::getAdditionalMostCriticalStatus()
 {
    int status = -1;
    readLockDciAccess();
-   for(int i = 0; i < m_dcObjects->size(); i++)
+   for(int i = 0; i < m_dcObjects.size(); i++)
 	{
-		DCObject *curr = m_dcObjects->get(i);
+		DCObject *curr = m_dcObjects.get(i);
       if (curr->isStatusDCO() && (curr->getType() == DCO_TYPE_ITEM) &&
           curr->hasValue() && (curr->getStatus() == ITEM_STATUS_ACTIVE))
       {
@@ -1713,9 +1713,9 @@ void DataCollectionTarget::enterMaintenanceMode(uint32_t userId, const TCHAR *co
    UINT64 eventId = PostSystemEvent2(EVENT_MAINTENANCE_MODE_ENTERED, m_id, "sds", CHECK_NULL_EX(comments), userId, userName);
 
    readLockDciAccess();
-   for(int i = 0; i < m_dcObjects->size(); i++)
+   for(int i = 0; i < m_dcObjects.size(); i++)
    {
-      DCObject *dco = m_dcObjects->get(i);
+      DCObject *dco = m_dcObjects.get(i);
       if (dco->getStatus() == ITEM_STATUS_DISABLED)
          continue;
 
@@ -1743,9 +1743,9 @@ void DataCollectionTarget::leaveMaintenanceMode(uint32_t userId)
    PostSystemEvent(EVENT_MAINTENANCE_MODE_LEFT, m_id, "ds", userId, userName);
 
    readLockDciAccess();
-   for(int i = 0; i < m_dcObjects->size(); i++)
+   for(int i = 0; i < m_dcObjects.size(); i++)
    {
-      DCObject *dco = m_dcObjects->get(i);
+      DCObject *dco = m_dcObjects.get(i);
       if (dco->getStatus() == ITEM_STATUS_DISABLED)
       {
          continue;
@@ -1893,9 +1893,9 @@ void DataCollectionTarget::collectProxyInfo(ProxyInfo *info)
       return;
 
    readLockDciAccess();
-   for(int i = 0; i < m_dcObjects->size(); i++)
+   for(int i = 0; i < m_dcObjects.size(); i++)
    {
-      DCObject *dco = m_dcObjects->get(i);
+      DCObject *dco = m_dcObjects.get(i);
       if (dco->getStatus() == ITEM_STATUS_DISABLED)
          continue;
 
@@ -2185,9 +2185,9 @@ void DataCollectionTarget::doInstanceDiscovery(UINT32 requestId)
    // collect instance discovery DCIs
    SharedObjectArray<DCObject> rootObjects;
    readLockDciAccess();
-   for(int i = 0; i < m_dcObjects->size(); i++)
+   for(int i = 0; i < m_dcObjects.size(); i++)
    {
-      shared_ptr<DCObject> object = m_dcObjects->getShared(i);
+      shared_ptr<DCObject> object = m_dcObjects.getShared(i);
       if ((object->getInstanceDiscoveryMethod() != IDM_NONE) && (object->getStatus() != ITEM_STATUS_DISABLED))
       {
          object->setBusyFlag();
@@ -2295,9 +2295,9 @@ bool DataCollectionTarget::updateInstances(DCObject *root, StringObjectMap<Insta
 
    // Delete DCIs for missing instances and update existing
    IntegerArray<UINT32> deleteList;
-   for(int i = 0; i < m_dcObjects->size(); i++)
+   for(int i = 0; i < m_dcObjects.size(); i++)
    {
-      DCObject *object = m_dcObjects->get(i);
+      DCObject *object = m_dcObjects.get(i);
       if ((object->getTemplateId() != m_id) || (object->getTemplateItemId() != root->getId()))
          continue;
 
@@ -2381,9 +2381,9 @@ uint32_t DataCollectionTarget::getLastValues(NXCPMessage *msg, bool objectToolti
    readLockDciAccess();
 
    uint32_t fieldId = VID_DCI_VALUES_BASE, dwCount = 0;
-   for(int i = 0; i < m_dcObjects->size(); i++)
+   for(int i = 0; i < m_dcObjects.size(); i++)
    {
-      DCObject *object = m_dcObjects->get(i);
+      DCObject *object = m_dcObjects.get(i);
       if ((object->hasValue() || includeNoValueObjects) &&
           (!objectTooltipOnly || object->isShowOnObjectTooltip()) &&
           (!overviewOnly || object->isShowInObjectOverview()) &&
@@ -2407,9 +2407,9 @@ void DataCollectionTarget::getTooltipLastValues(NXCPMessage *msg, uint32_t userI
 {
    readLockDciAccess();
 
-   for(int i = 0; i < m_dcObjects->size(); i++)
+   for(int i = 0; i < m_dcObjects.size(); i++)
    {
-      DCObject *object = m_dcObjects->get(i);
+      DCObject *object = m_dcObjects.get(i);
       if (object->hasValue() && object->isShowOnObjectTooltip() &&
           object->hasAccess(userId))
       {
@@ -2460,9 +2460,9 @@ void DataCollectionTarget::calculateProxyLoad()
 {
    double loadFactor = 0;
    readLockDciAccess();
-   for(int i = 0; i < m_dcObjects->size(); i++)
+   for(int i = 0; i < m_dcObjects.size(); i++)
    {
-      DCObject *object = m_dcObjects->get(i);
+      DCObject *object = m_dcObjects.get(i);
       if ((object->getDataSource() == DS_SNMP_AGENT) && (object->getStatus() == ITEM_STATUS_ACTIVE))
       {
          if (object->isAdvancedSchedule())
@@ -2505,9 +2505,9 @@ uint64_t DataCollectionTarget::getCacheMemoryUsage()
 {
    uint64_t cacheSize = 0;
    readLockDciAccess();
-   for(int i = 0; i < m_dcObjects->size(); i++)
+   for(int i = 0; i < m_dcObjects.size(); i++)
    {
-      DCObject *object = m_dcObjects->get(i);
+      DCObject *object = m_dcObjects.get(i);
       if (object->getType() == DCO_TYPE_ITEM)
       {
          cacheSize += static_cast<DCItem*>(object)->getCacheMemoryUsage();
@@ -2624,9 +2624,9 @@ void DataCollectionTarget::updateGeoLocation(const GeoLocation& geoLocation)
 void DataCollectionTarget::findDcis(const SearchQuery &query, uint32_t userId, SharedObjectArray<DCObject> *result)
 {
    readLockDciAccess();
-   for(int i = 0; i < m_dcObjects->size(); i++)
+   for(int i = 0; i < m_dcObjects.size(); i++)
    {
-      shared_ptr<DCObject> dci = m_dcObjects->getShared(i);
+      shared_ptr<DCObject> dci = m_dcObjects.getShared(i);
       if (dci->hasAccess(userId) && query.match(*dci))
       {
          result->add(dci);

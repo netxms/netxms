@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -39,7 +39,7 @@ int32_t g_maxClientSessions = 256;
  * Static data
  */
 static HashMap<session_id_t, ClientSession> s_sessions;
-static RWLOCK s_sessionListLock = RWLockCreate();
+static RWLock s_sessionListLock;
 static session_id_t *s_freeList = nullptr;
 static size_t s_freePos = 0;
 static ObjectArray<BackgroundSocketPollerHandle> s_pollers(8, 8, Ownership::True);
@@ -51,7 +51,7 @@ static uint32_t s_maxClientSessionsPerPoller = std::min(256, SOCKET_POLLER_MAX_S
 static bool RegisterClientSession(ClientSession *session)
 {
    bool success;
-   RWLockWriteLock(s_sessionListLock);
+   s_sessionListLock.writeLock();
    if (s_freePos < g_maxClientSessions)
    {
       // Select socket poller
@@ -82,7 +82,7 @@ static bool RegisterClientSession(ClientSession *session)
    {
       success = false;
    }
-   RWLockUnlock(s_sessionListLock);
+   s_sessionListLock.unlock();
 
    if (success)
       nxlog_debug_tag(DEBUG_TAG, 3, _T("Client session with ID %d registered"), session->getId());
@@ -97,13 +97,13 @@ static bool RegisterClientSession(ClientSession *session)
  */
 void UnregisterClientSession(session_id_t id)
 {
-   RWLockWriteLock(s_sessionListLock);
+   s_sessionListLock.writeLock();
    if (s_sessions.contains(id))
    {
       s_sessions.remove(id);
       s_freeList[--s_freePos] = id;
    }
-   RWLockUnlock(s_sessionListLock);
+   s_sessionListLock.unlock();
    nxlog_debug_tag(DEBUG_TAG, 3, _T("Client session with ID %d unregistered"), id);
 }
 
@@ -130,7 +130,7 @@ static void ClientSessionManager()
 
       msg.setFieldFromTime(VID_TIMESTAMP, time(nullptr));
 
-      RWLockReadLock(s_sessionListLock);
+      s_sessionListLock.readLock();
       auto it = s_sessions.begin();
       while(it.hasNext())
       {
@@ -141,7 +141,7 @@ static void ClientSessionManager()
             session->runHousekeeper();
          }
       }
-      RWLockUnlock(s_sessionListLock);
+      s_sessionListLock.unlock();
    }
 
    nxlog_debug_tag(DEBUG_TAG, 1, _T("Client session manager thread stopped"));
@@ -228,13 +228,13 @@ void ClientListenerThread()
    listener.shutdown();
 
    nxlog_debug_tag(DEBUG_TAG, 3, _T("Terminating client sessions that are still active..."));
-   RWLockReadLock(s_sessionListLock);
+   s_sessionListLock.readLock();
    auto it = s_sessions.begin();
    while(it.hasNext())
    {
       it.next()->terminate();
    }
-   RWLockUnlock(s_sessionListLock);
+   s_sessionListLock.unlock();
 
    while(GetSessionCount(true, true, -1, nullptr) > 0)
       ThreadSleepMs(100);
@@ -251,7 +251,7 @@ void DumpClientSessions(ServerConsole *pCtx)
 	static const TCHAR *pszClientType[] = { _T("DESKTOP"), _T("WEB"), _T("MOBILE"), _T("TABLET"), _T("APP") };
 
    ConsolePrintf(pCtx, _T("ID  CIPHER   CLTYPE  USER [CLIENT]\n"));
-   RWLockReadLock(s_sessionListLock);
+   s_sessionListLock.readLock();
    auto it = s_sessions.begin();
    while(it.hasNext())
    {
@@ -266,7 +266,7 @@ void DumpClientSessions(ServerConsole *pCtx)
                     session->getSessionName(), webServer, session->getClientInfo());
    }
    int count = s_sessions.size();
-   RWLockUnlock(s_sessionListLock);
+   s_sessionListLock.unlock();
    ConsolePrintf(pCtx, _T("\n%d active session%s\n\n"), count, count == 1 ? _T("") : _T("s"));
 }
 
@@ -276,14 +276,14 @@ void DumpClientSessions(ServerConsole *pCtx)
 bool NXCORE_EXPORTABLE KillClientSession(session_id_t id)
 {
    bool success = false;
-   RWLockReadLock(s_sessionListLock);
+   s_sessionListLock.readLock();
    ClientSession *session = s_sessions.get(id);
    if (session != nullptr)
    {
       session->terminate();
       success = true;
    }
-   RWLockUnlock(s_sessionListLock);
+   s_sessionListLock.unlock();
    return success;
 }
 
@@ -303,9 +303,9 @@ static EnumerationCallbackResult EnumerateClientSessionsCB(const session_id_t& i
 void NXCORE_EXPORTABLE EnumerateClientSessions(void (*handler)(ClientSession *, void *), void *context)
 {
    std::pair<void (*)(ClientSession*, void*), void*> data(handler, context);
-   RWLockReadLock(s_sessionListLock);
+   s_sessionListLock.readLock();
    s_sessions.forEach(EnumerateClientSessionsCB, &data);
-   RWLockUnlock(s_sessionListLock);
+   s_sessionListLock.unlock();
 }
 
 /**
@@ -328,7 +328,7 @@ void SendUserDBUpdate(int code, UINT32 id, UserDatabaseObject *object)
          break;
    }
 
-   RWLockReadLock(s_sessionListLock);
+   s_sessionListLock.readLock();
    auto it = s_sessions.begin();
    while(it.hasNext())
    {
@@ -336,7 +336,7 @@ void SendUserDBUpdate(int code, UINT32 id, UserDatabaseObject *object)
       if (session->isAuthenticated() && !session->isTerminated() && session->isSubscribedTo(NXC_CHANNEL_USERDB))
          session->postMessage(msg);
    }
-   RWLockUnlock(s_sessionListLock);
+   s_sessionListLock.unlock();
 }
 
 /**
@@ -344,7 +344,7 @@ void SendUserDBUpdate(int code, UINT32 id, UserDatabaseObject *object)
  */
 void NXCORE_EXPORTABLE NotifyClientsOnGraphUpdate(const NXCPMessage& msg, uint32_t graphId)
 {
-   RWLockReadLock(s_sessionListLock);
+   s_sessionListLock.readLock();
    auto it = s_sessions.begin();
    while(it.hasNext())
    {
@@ -352,7 +352,7 @@ void NXCORE_EXPORTABLE NotifyClientsOnGraphUpdate(const NXCPMessage& msg, uint32
       if (session->isAuthenticated() && !session->isTerminated() && (GetGraphAccessCheckResult(graphId, session->getUserId()) == RCC_SUCCESS))
          session->postMessage(msg);
    }
-   RWLockUnlock(s_sessionListLock);
+   s_sessionListLock.unlock();
 }
 
 /**
@@ -360,7 +360,7 @@ void NXCORE_EXPORTABLE NotifyClientsOnGraphUpdate(const NXCPMessage& msg, uint32
  */
 void NotifyClientsOnPolicyUpdate(const NXCPMessage& msg, const Template& object)
 {
-   RWLockReadLock(s_sessionListLock);
+   s_sessionListLock.readLock();
    auto it = s_sessions.begin();
    while(it.hasNext())
    {
@@ -368,7 +368,7 @@ void NotifyClientsOnPolicyUpdate(const NXCPMessage& msg, const Template& object)
       if (session->isAuthenticated() && !session->isTerminated() && object.checkAccessRights(session->getUserId(), OBJECT_ACCESS_MODIFY))
          session->postMessage(msg);
    }
-   RWLockUnlock(s_sessionListLock);
+   s_sessionListLock.unlock();
 }
 
 /**
@@ -388,7 +388,7 @@ void NotifyClientsOnPolicyDelete(uuid guid, const Template& object)
  */
 void NotifyClientsOnBusinessServiceCheckUpdate(const NXCPMessage& msg, const NetObj& object)
 {
-   RWLockReadLock(s_sessionListLock);
+   s_sessionListLock.readLock();
    auto it = s_sessions.begin();
    while(it.hasNext())
    {
@@ -398,7 +398,7 @@ void NotifyClientsOnBusinessServiceCheckUpdate(const NXCPMessage& msg, const Net
          session->postMessage(msg);
       }
    }
-   RWLockUnlock(s_sessionListLock);
+   s_sessionListLock.unlock();
 }
 
 /**
@@ -465,7 +465,7 @@ void NotifyClientsOnDCIStatusChange(const DataCollectionOwner& object, uint32_t 
  */
 void NotifyClientsOnDCIUpdate(const NXCPMessage& msg, const NetObj& object)
 {
-   RWLockReadLock(s_sessionListLock);
+   s_sessionListLock.readLock();
    auto it = s_sessions.begin();
    while(it.hasNext())
    {
@@ -477,7 +477,7 @@ void NotifyClientsOnDCIUpdate(const NXCPMessage& msg, const NetObj& object)
          session->postMessage(msg);
       }
    }
-   RWLockUnlock(s_sessionListLock);
+   s_sessionListLock.unlock();
 }
 
 /**
@@ -497,7 +497,7 @@ void NotifyClientsOnThresholdChange(UINT32 objectId, UINT32 dciId, UINT32 thresh
       msg.setField(VID_INSTANCE, instance);
    msg.setField(VID_STATE, change == ThresholdCheckResult::ACTIVATED);
 
-   RWLockReadLock(s_sessionListLock);
+   s_sessionListLock.readLock();
    auto it = s_sessions.begin();
    while(it.hasNext())
    {
@@ -509,7 +509,7 @@ void NotifyClientsOnThresholdChange(UINT32 objectId, UINT32 dciId, UINT32 thresh
          session->postMessage(msg);
       }
    }
-   RWLockUnlock(s_sessionListLock);
+   s_sessionListLock.unlock();
 }
 
 /**
@@ -517,7 +517,7 @@ void NotifyClientsOnThresholdChange(UINT32 objectId, UINT32 dciId, UINT32 thresh
  */
 void NXCORE_EXPORTABLE NotifyClientSessions(const NXCPMessage& msg, const TCHAR *channel)
 {
-   RWLockReadLock(s_sessionListLock);
+   s_sessionListLock.readLock();
    auto it = s_sessions.begin();
    while(it.hasNext())
    {
@@ -527,7 +527,7 @@ void NXCORE_EXPORTABLE NotifyClientSessions(const NXCPMessage& msg, const TCHAR 
          session->postMessage(msg);
       }
    }
-   RWLockUnlock(s_sessionListLock);
+   s_sessionListLock.unlock();
 }
 
 /**
@@ -535,7 +535,7 @@ void NXCORE_EXPORTABLE NotifyClientSessions(const NXCPMessage& msg, const TCHAR 
  */
 void NXCORE_EXPORTABLE NotifyClientSessions(uint32_t code, uint32_t data)
 {
-   RWLockReadLock(s_sessionListLock);
+   s_sessionListLock.readLock();
    auto it = s_sessions.begin();
    while(it.hasNext())
    {
@@ -545,7 +545,7 @@ void NXCORE_EXPORTABLE NotifyClientSessions(uint32_t code, uint32_t data)
          session->notify(code, data);
       }
    }
-   RWLockUnlock(s_sessionListLock);
+   s_sessionListLock.unlock();
 }
 
 /**
@@ -553,11 +553,11 @@ void NXCORE_EXPORTABLE NotifyClientSessions(uint32_t code, uint32_t data)
  */
 void NXCORE_EXPORTABLE NotifyClientSession(session_id_t sessionId, uint32_t code, uint32_t data)
 {
-   RWLockReadLock(s_sessionListLock);
+   s_sessionListLock.readLock();
    ClientSession *session = s_sessions.get(sessionId);
    if (session != nullptr)
       session->notify(code, data);
-   RWLockUnlock(s_sessionListLock);
+   s_sessionListLock.unlock();
 }
 
 /**
@@ -565,11 +565,11 @@ void NXCORE_EXPORTABLE NotifyClientSession(session_id_t sessionId, uint32_t code
  */
 void NXCORE_EXPORTABLE NotifyClientSession(session_id_t sessionId, NXCPMessage *data)
 {
-   RWLockReadLock(s_sessionListLock);
+   s_sessionListLock.readLock();
    ClientSession *session = s_sessions.get(sessionId);
    if (session != nullptr)
       session->sendMessage(data);
-   RWLockUnlock(s_sessionListLock);
+   s_sessionListLock.unlock();
 }
 
 
@@ -580,7 +580,7 @@ int GetSessionCount(bool includeSystemAccount, bool includeNonAuthenticated, int
 {
    int count = 0;
 
-   RWLockReadLock(s_sessionListLock);
+   s_sessionListLock.readLock();
    auto it = s_sessions.begin();
    while(it.hasNext())
    {
@@ -593,7 +593,7 @@ int GetSessionCount(bool includeSystemAccount, bool includeNonAuthenticated, int
          count++;
       }
    }
-   RWLockUnlock(s_sessionListLock);
+   s_sessionListLock.unlock();
    return count;
 }
 
@@ -603,7 +603,7 @@ int GetSessionCount(bool includeSystemAccount, bool includeNonAuthenticated, int
 bool IsLoggedIn(uint32_t userId)
 {
    bool result = false;
-   RWLockReadLock(s_sessionListLock);
+   s_sessionListLock.readLock();
    auto it = s_sessions.begin();
    while(it.hasNext())
    {
@@ -614,7 +614,7 @@ bool IsLoggedIn(uint32_t userId)
          break;
       }
    }
-   RWLockUnlock(s_sessionListLock);
+   s_sessionListLock.unlock();
    return result;
 }
 
@@ -623,7 +623,7 @@ bool IsLoggedIn(uint32_t userId)
  */
 void CloseOtherSessions(uint32_t userId, session_id_t thisSession)
 {
-   RWLockReadLock(s_sessionListLock);
+   s_sessionListLock.readLock();
    auto it = s_sessions.begin();
    while(it.hasNext())
    {
@@ -634,5 +634,5 @@ void CloseOtherSessions(uint32_t userId, session_id_t thisSession)
          session->terminate();
       }
    }
-   RWLockUnlock(s_sessionListLock);
+   s_sessionListLock.unlock();
 }

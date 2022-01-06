@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -275,7 +275,7 @@ bool NXCORE_EXPORTABLE LoadConfig(int *debugLevel)
  * Metadata cache
  */
 static StringMap s_metadataCache;
-static RWLOCK s_metadataCacheLock = RWLockCreate();
+static RWLock s_metadataCacheLock;
 static bool s_metadataCacheLoaded = false;
 
 /**
@@ -287,7 +287,7 @@ void MetaDataPreLoad()
    DB_RESULT hResult = DBSelect(hdb, _T("SELECT var_name,var_value FROM metadata"));
    if (hResult != nullptr)
    {
-      RWLockWriteLock(s_metadataCacheLock);
+      s_metadataCacheLock.writeLock();
       s_metadataCache.clear();
       int count = DBGetNumRows(hResult);
       for(int i = 0; i < count; i++)
@@ -295,7 +295,7 @@ void MetaDataPreLoad()
          s_metadataCache.setPreallocated(DBGetField(hResult, i, 0, nullptr, 0), DBGetField(hResult, i, 1, nullptr, 0));
       }
       s_metadataCacheLoaded = true;
-      RWLockUnlock(s_metadataCacheLock);
+      s_metadataCacheLock.unlock();
       DBFreeResult(hResult);
    }
    DBConnectionPoolReleaseConnection(hdb);
@@ -312,14 +312,14 @@ bool NXCORE_EXPORTABLE MetaDataReadStr(const TCHAR *name, TCHAR *buffer, int buf
    if (_tcslen(name) > 127)
       return false;
 
-   RWLockReadLock(s_metadataCacheLock);
+   s_metadataCacheLock.readLock();
    const TCHAR *value = s_metadataCache.get(name);
    if (value != nullptr)
    {
       _tcslcpy(buffer, value, bufSize);
       success = true;
    }
-   RWLockUnlock(s_metadataCacheLock);
+   s_metadataCacheLock.unlock();
 
    if (!success && !s_metadataCacheLoaded)
    {
@@ -334,9 +334,9 @@ bool NXCORE_EXPORTABLE MetaDataReadStr(const TCHAR *name, TCHAR *buffer, int buf
             if (DBGetNumRows(hResult) > 0)
             {
                DBGetField(hResult, 0, 0, buffer, bufSize);
-               RWLockWriteLock(s_metadataCacheLock);
+               s_metadataCacheLock.writeLock();
                s_metadataCache.setPreallocated(_tcsdup(name), DBGetField(hResult, 0, 0, nullptr, 0));
-               RWLockUnlock(s_metadataCacheLock);
+               s_metadataCacheLock.unlock();
                success = true;
             }
             DBFreeResult(hResult);
@@ -374,9 +374,9 @@ bool NXCORE_EXPORTABLE MetaDataWriteStr(const TCHAR *variable, const TCHAR *valu
    if (_tcslen(variable) > 63)
       return false;
 
-   RWLockWriteLock(s_metadataCacheLock);
+   s_metadataCacheLock.writeLock();
    s_metadataCache.set(variable, value);
-   RWLockUnlock(s_metadataCacheLock);
+   s_metadataCacheLock.unlock();
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
@@ -441,7 +441,7 @@ bool NXCORE_EXPORTABLE MetaDataWriteInt32(const TCHAR *variable, int32_t value)
  * Config cache
  */
 static StringMap s_configCache;
-static RWLOCK s_configCacheLock = RWLockCreate();
+static RWLock s_configCacheLock;
 static bool s_configCacheLoaded = false;
 
 /**
@@ -453,7 +453,7 @@ void ConfigPreLoad()
    DB_RESULT hResult = DBSelect(hdb, _T("SELECT var_name,var_value FROM config"));
    if (hResult != nullptr)
    {
-      RWLockWriteLock(s_configCacheLock);
+      s_configCacheLock.writeLock();
       s_configCache.clear();
       int count = DBGetNumRows(hResult);
       for(int i = 0; i < count; i++)
@@ -461,7 +461,7 @@ void ConfigPreLoad()
          s_configCache.setPreallocated(DBGetField(hResult, i, 0, nullptr, 0), DBGetField(hResult, i, 1, nullptr, 0));
       }
       s_configCacheLoaded = true;
-      RWLockUnlock(s_configCacheLock);
+      s_configCacheLock.unlock();
       DBFreeResult(hResult);
    }
    DBConnectionPoolReleaseConnection(hdb);
@@ -482,9 +482,9 @@ static uint32_t ConvertToUint32(const TCHAR *value, uint32_t defaultValue)
  */
 static void OnConfigVariableChange(bool isCLOB, const TCHAR *name, const TCHAR *value)
 {
-   RWLockWriteLock(s_configCacheLock);
+   s_configCacheLock.writeLock();
    s_configCache.set(name, value);
-   RWLockUnlock(s_configCacheLock);
+   s_configCacheLock.unlock();
 
 	// Restart syslog parser if configuration was changed
 	if (isCLOB && !_tcscmp(name, _T("SyslogParser")))
@@ -700,9 +700,9 @@ bool NXCORE_EXPORTABLE ConfigReadStrEx(DB_HANDLE dbHandle, const TCHAR *variable
    if (_tcslen(variable) > 127)
       return false;
 
-   RWLockReadLock(s_configCacheLock);
+   s_configCacheLock.readLock();
    const TCHAR *value = s_configCache.get(variable);
-   RWLockUnlock(s_configCacheLock);
+   s_configCacheLock.unlock();
    if (value != nullptr)
    {
       _tcslcpy(buffer, value, size);
@@ -737,9 +737,9 @@ bool NXCORE_EXPORTABLE ConfigReadStrEx(DB_HANDLE dbHandle, const TCHAR *variable
 
    if (success)
    {
-      RWLockWriteLock(s_configCacheLock);
+      s_configCacheLock.writeLock();
       s_configCache.set(variable, buffer);
-      RWLockUnlock(s_configCacheLock);
+      s_configCacheLock.unlock();
    }
 
    return success;
@@ -797,9 +797,9 @@ bool NXCORE_EXPORTABLE ConfigReadStrUTF8(const TCHAR *variable, char *buffer, si
    if (_tcslen(variable) > 127)
       return false;
 
-   RWLockReadLock(s_configCacheLock);
+   s_configCacheLock.readLock();
    const TCHAR *value = s_configCache.get(variable);
-   RWLockUnlock(s_configCacheLock);
+   s_configCacheLock.unlock();
    if (value != nullptr)
    {
       wchar_to_utf8(value, -1, buffer, size);
@@ -1069,9 +1069,9 @@ bool NXCORE_EXPORTABLE ConfigDelete(const TCHAR *variable)
 
    if (success)
    {
-      RWLockWriteLock(s_configCacheLock);
+      s_configCacheLock.writeLock();
       s_configCache.remove(variable);
-      RWLockUnlock(s_configCacheLock);
+      s_configCacheLock.unlock();
    }
 
    return success;
@@ -1212,9 +1212,9 @@ void GetClientConfigurationHints(NXCPMessage *msg)
    data.fieldId = VID_CONFIG_HINT_LIST_BASE;
    data.msg = msg;
 
-   RWLockReadLock(s_configCacheLock);
+   s_configCacheLock.readLock();
    s_configCache.forEach(GetClientConfigurationHints_Callback, &data);
-   RWLockUnlock(s_configCacheLock);
+   s_configCacheLock.unlock();
 
    msg->setField(VID_CONFIG_HINT_COUNT, data.count);
 }

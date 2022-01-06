@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -32,24 +32,24 @@ NXCORE_EXPORTABLE_VAR(ThreadPool *g_mobileThreadPool) = nullptr;
  * Static data
  */
 static MobileDeviceSession *s_sessionList[MAX_DEVICE_SESSIONS];
-static RWLOCK s_sessionListLock;
+static RWLock s_sessionListLock;
 
 /**
  * Register new session in list
  */
 static BOOL RegisterMobileDeviceSession(MobileDeviceSession *pSession)
 {
-   RWLockWriteLock(s_sessionListLock);
+   s_sessionListLock.writeLock();
    for(int i = 0; i < MAX_DEVICE_SESSIONS; i++)
       if (s_sessionList[i] == nullptr)
       {
          s_sessionList[i] = pSession;
          pSession->setId(i);
-         RWLockUnlock(s_sessionListLock);
+         s_sessionListLock.unlock();
          return TRUE;
       }
 
-   RWLockUnlock(s_sessionListLock);
+   s_sessionListLock.unlock();
    nxlog_write(NXLOG_WARNING, _T("Too many mobile device sessions open - unable to accept new client connection"));
    return FALSE;
 }
@@ -59,9 +59,9 @@ static BOOL RegisterMobileDeviceSession(MobileDeviceSession *pSession)
  */
 void UnregisterMobileDeviceSession(int id)
 {
-   RWLockWriteLock(s_sessionListLock);
+   s_sessionListLock.writeLock();
    s_sessionList[id] = nullptr;
-   RWLockUnlock(s_sessionListLock);
+   s_sessionListLock.unlock();
 }
 
 /**
@@ -70,7 +70,6 @@ void UnregisterMobileDeviceSession(int id)
 void InitMobileDeviceListeners()
 {
    memset(s_sessionList, 0, sizeof(s_sessionList));
-   s_sessionListLock = RWLockCreate();
    g_mobileThreadPool = ThreadPoolCreate(_T("MOBILE"),
          ConfigReadInt(_T("ThreadPool.MobileDevices.BaseSize"), 4),
          ConfigReadInt(_T("ThreadPool.MobileDevices.MaxSize"), MAX_DEVICE_SESSIONS));
@@ -141,7 +140,7 @@ void DumpMobileDeviceSessions(CONSOLE_CTX pCtx)
    static const TCHAR *pszCipherName[] = { _T("NONE"), _T("AES-256"), _T("BLOWFISH"), _T("IDEA"), _T("3DES"), _T("AES-128") };
 
    ConsolePrintf(pCtx, _T("ID  CIPHER   USER [CLIENT]\n"));
-   RWLockReadLock(s_sessionListLock);
+   s_sessionListLock.readLock();
    for(i = 0, iCount = 0; i < MAX_DEVICE_SESSIONS; i++)
       if (s_sessionList[i] != NULL)
       {
@@ -151,6 +150,6 @@ void DumpMobileDeviceSessions(CONSOLE_CTX pCtx)
                        s_sessionList[i]->getClientInfo());
          iCount++;
       }
-   RWLockUnlock(s_sessionListLock);
+   s_sessionListLock.unlock();
    ConsolePrintf(pCtx, _T("\n%d active session%s\n\n"), iCount, iCount == 1 ? _T("") : _T("s"));
 }

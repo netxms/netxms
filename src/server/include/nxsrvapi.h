@@ -545,8 +545,8 @@ protected:
    uuid m_guid;
    TCHAR m_name[MAX_OBJECT_NAME];
 
-   RWLOCK m_rwlockParentList; // Lock for parent list
-   RWLOCK m_rwlockChildList;  // Lock for child list
+   RWLock m_rwlockParentList; // Lock for parent list
+   RWLock m_rwlockChildList;  // Lock for child list
 
    const SharedObjectArray<NObject> &getChildList() const { return m_childList; }
    const SharedObjectArray<NObject> &getParentList() const { return m_parentList; }
@@ -572,13 +572,13 @@ protected:
    void lockCustomAttributes() const { m_customAttributeLock.lock(); }
    void unlockCustomAttributes() const { m_customAttributeLock.unlock(); }
 
-   void readLockParentList() const { RWLockReadLock(m_rwlockParentList); }
-   void writeLockParentList() { RWLockWriteLock(m_rwlockParentList); }
-   void unlockParentList() const { RWLockUnlock(m_rwlockParentList); }
+   void readLockParentList() const { m_rwlockParentList.readLock(); }
+   void writeLockParentList() { m_rwlockParentList.writeLock(); }
+   void unlockParentList() const { m_rwlockParentList.unlock(); }
 
-   void readLockChildList() const { RWLockReadLock(m_rwlockChildList); }
-   void writeLockChildList() { RWLockWriteLock(m_rwlockChildList); }
-   void unlockChildList() const { RWLockUnlock(m_rwlockChildList); }
+   void readLockChildList() const { m_rwlockChildList.readLock(); }
+   void writeLockChildList() { m_rwlockChildList.writeLock(); }
+   void unlockChildList() const { m_rwlockChildList.unlock(); }
 
    virtual void onCustomAttributeChange();
    virtual bool getObjectAttribute(const TCHAR *name, TCHAR **value, bool *isAllocated) const;

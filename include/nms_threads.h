@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -770,8 +770,6 @@ template<typename T, typename B> THREAD ThreadCreateEx(const shared_ptr<T>& obje
    return thread;
 }
 
-#include <rwlock.h>
-
 /**
  * String list
  */
@@ -806,7 +804,7 @@ struct ThreadPoolInfo
 /**
  * Worker function for thread pool
  */
-typedef void (* ThreadPoolWorkerFunction)(void *);
+typedef void (*ThreadPoolWorkerFunction)(void *);
 
 /* Thread pool functions */
 ThreadPool LIBNETXMS_EXPORTABLE *ThreadPoolCreate(const TCHAR *name, int minThreads, int maxThreads, int stackSize = 0);
@@ -1846,20 +1844,203 @@ public:
  */
 class LIBNETXMS_EXPORTABLE RWLock
 {
+   DISABLE_COPY_CTOR(RWLock)
+   DISABLE_ASSIGNMENT_OP(RWLock)
+
 private:
-   RWLOCK m_rwlock;
-   VolatileCounter *m_refCount;
+#if HAVE_PTHREAD_RWLOCK
+   pthread_rwlock_t m_rwlock;
+#elif defined(_USE_GNU_PTH)
+   pth_rwlock_t m_rwlock;
+#else
+#ifdef _WIN32
+   CRITICAL_SECTION m_mutex;
+   CONDITION_VARIABLE m_condRead;
+   CONDITION_VARIABLE m_condWrite;
+#else
+   pthread_mutex_t m_mutex;
+   pthread_cond_t m_condRead;
+   pthread_cond_t m_condWrite;
+#endif
+   uint32_t m_waitReaders;
+   uint32_t m_waitWriters;
+   int32_t m_refCount;  // -1 for write lock, otherwise number of read locks
+   uint32_t m_writerThreadId;
+#endif
 
 public:
-   RWLock();
-   RWLock(const RWLock& src);
-   ~RWLock();
+   RWLock()
+   {
+#if HAVE_PTHREAD_RWLOCK
+      pthread_rwlock_init(&m_rwlock, nullptr);
+#elif defined(_USE_GNU_PTH)
+      pth_rwlock_init(&m_rwlock);
+#else
+#ifdef _WIN32
+      InitializeCriticalSectionAndSpinCount(&m_mutex, 4000);
+      InitializeConditionVariable(&m_condRead);
+      InitializeConditionVariable(&m_condWrite);
+#else
+#if HAVE_DECL_PTHREAD_MUTEX_ADAPTIVE_NP
+      pthread_mutexattr_t a;
+      pthread_mutexattr_init(&a);
+      MUTEXATTR_SETTYPE(&a, PTHREAD_MUTEX_ADAPTIVE_NP);
+      pthread_mutex_init(&m_mutex, &a);
+      pthread_mutexattr_destroy(&a);
+#else
+      pthread_mutex_init(&m_mutex, nullptr);
+#endif
+      pthread_cond_init(&m_condRead, nullptr);
+      pthread_cond_init(&m_condWrite, nullptr);
+#endif
+      m_waitReaders = 0;
+      m_waitWriters = 0;
+      m_refCount = 0;
+      m_writerThreadId = 0;
+#endif
+   }
 
-   RWLock& operator =(const RWLock &src);
+   ~RWLock()
+   {
+#if HAVE_PTHREAD_RWLOCK
+      pthread_rwlock_destroy(&m_rwlock);
+#elif defined(_USE_GNU_PTH)
+      // No cleanup for rwlock
+#elif defined(_WIN32)
+      DeleteCriticalSection(&m_mutex);
+#else
+      pthread_mutex_destroy(&m_mutex);
+      pthread_cond_destroy(&m_condRead);
+      pthread_cond_destroy(&m_condWrite);
+#endif
+   }
 
-   void readLock() { RWLockReadLock(m_rwlock); }
-   void writeLock() { RWLockWriteLock(m_rwlock); }
-   void unlock() { RWLockUnlock(m_rwlock); }
+   /**
+    * Lock for reading (non-exclusive lock)
+    */
+   void readLock() const
+   {
+#if HAVE_PTHREAD_RWLOCK
+      pthread_rwlock_rdlock(const_cast<pthread_rwlock_t*>(&m_rwlock));
+#elif defined(_USE_GNU_PTH)
+      pth_rwlock_acquire(const_cast<pth_rwlock_t*>(&m_rwlock), PTH_RWLOCK_RD, FALSE, nullptr);
+#elif defined(_WIN32)
+      EnterCriticalSection(const_cast<CRITICAL_SECTION*>(&m_mutex));
+      while ((m_refCount == -1) || (m_waitWriters > 0))
+      {
+         // Object is locked for writing or somebody wish to lock it for writing
+         m_waitReaders++;
+         SleepConditionVariableCS(const_cast<CONDITION_VARIABLE*>(&m_condRead), const_cast<CRITICAL_SECTION*>(&m_mutex), INFINITE);
+         m_waitReaders--;
+      }
+      m_refCount++;
+      LeaveCriticalSection(const_cast<CRITICAL_SECTION*>(&m_mutex));
+#else
+      pthread_mutex_lock(const_cast<pthread_mutex_t*>(&m_mutex));
+      while ((m_refCount == -1) || (m_waitWriters > 0))
+      {
+         // Object is locked for writing or somebody wish to lock it for writing
+         m_waitReaders++;
+         pthread_cond_wait(const_cast<pthread_cond_t*>(&m_condRead), const_cast<pthread_mutex_t*>(&m_mutex));
+         m_waitReaders--;
+      }
+      m_refCount++;
+      pthread_mutex_unlock(const_cast<pthread_mutex_t*>(&m_mutex));
+#endif
+   }
+
+   /**
+    * Lock for writing (exclusive lock)
+    */
+   void writeLock()
+   {
+#if HAVE_PTHREAD_RWLOCK
+      pthread_rwlock_wrlock(&m_rwlock);
+#elif defined(_USE_GNU_PTH)
+      pth_rwlock_acquire(&m_rwlock, PTH_RWLOCK_RW, FALSE, nullptr);
+#elif defined(_WIN32)
+      EnterCriticalSection(&m_mutex);
+      while (m_refCount != 0)
+      {
+         // Object is locked, wait for unlock
+         m_waitWriters++;
+         SleepConditionVariableCS(&m_condWrite, &m_mutex, INFINITE);
+         m_waitWriters--;
+      }
+      m_refCount--;
+      m_writerThreadId = GetCurrentThreadId();
+      LeaveCriticalSection(&m_mutex);
+#else
+      pthread_mutex_lock(&m_mutex);
+      while (m_refCount != 0)
+      {
+         // Object is locked, wait for unlock
+         m_waitWriters++;
+         pthread_cond_wait(&m_condWrite, &m_mutex);
+         m_waitWriters--;
+      }
+      m_refCount--;
+      m_writerThreadId = GetCurrentThreadId();
+      pthread_mutex_unlock(&hLock->m_mutex);
+#endif
+   }
+
+   /**
+    * Unlock
+    */
+   void unlock() const
+   {
+#if HAVE_PTHREAD_RWLOCK
+      pthread_rwlock_unlock(const_cast<pthread_rwlock_t*>(&m_rwlock));
+#elif defined(_USE_GNU_PTH)
+      pth_rwlock_release(const_cast<pth_rwlock_t*>(&m_rwlock));
+#else
+      // Acquire access to handle
+#ifdef _WIN32
+      EnterCriticalSection(const_cast<CRITICAL_SECTION*>(&m_mutex));
+#else
+      pthread_mutex_lock(const_cast<pthread_mutex_t*>(&m_mutex));
+#endif
+
+      // Remove lock
+      if (m_refCount > 0)
+      {
+         m_refCount--;
+      }
+      else if (m_refCount == -1)
+      {
+         m_refCount = 0;
+         m_writerThreadId = 0;
+      }
+
+      // Notify waiting threads
+      if (m_waitWriters > 0)
+      {
+         if (m_refCount == 0)
+         {
+#ifdef _WIN32
+            WakeConditionVariable(const_cast<CONDITION_VARIABLE*>(&m_condWrite));
+#else
+            pthread_cond_signal(const_cast<pthread_cond_t*>(&m_condWrite));
+#endif
+         }
+      }
+      else if (m_waitReaders > 0)
+      {
+#ifdef _WIN32
+         WakeAllConditionVariable(const_cast<CONDITION_VARIABLE*>(&m_condRead));
+#else
+         pthread_cond_broadcast(const_cast<pthread_cond_t*>(&m_condRead));
+#endif
+      }
+
+#ifdef _WIN32
+      LeaveCriticalSection(const_cast<CRITICAL_SECTION*>(&m_mutex));
+#else
+      pthread_mutex_unlock(const_cast<pthread_mutex_t*>(&m_mutex));
+#endif
+#endif
+   }
 };
 
 #endif   /* __cplusplus */

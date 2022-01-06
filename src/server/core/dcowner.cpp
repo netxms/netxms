@@ -26,11 +26,9 @@
 /**
  * Data collection owner object constructor
  */
-DataCollectionOwner::DataCollectionOwner() : super()
+DataCollectionOwner::DataCollectionOwner() : super(), m_dcObjects(0, 128)
 {
-	m_dcObjects = new SharedObjectArray<DCObject>(0, 128);
    m_status = STATUS_NORMAL;
-   m_dciAccessLock = RWLockCreate();
    m_dciListModified = false;
    m_instanceDiscoveryChanges = false;
 }
@@ -38,13 +36,11 @@ DataCollectionOwner::DataCollectionOwner() : super()
 /**
  * Constructor for new data collection owner object
  */
-DataCollectionOwner::DataCollectionOwner(const TCHAR *name, const uuid& guid) : super()
+DataCollectionOwner::DataCollectionOwner(const TCHAR *name, const uuid& guid) : super(), m_dcObjects(0, 128)
 {
    _tcslcpy(m_name, name, MAX_OBJECT_NAME);
-	m_dcObjects = new SharedObjectArray<DCObject>(0, 128);
    m_status = STATUS_NORMAL;
    m_isHidden = true;
-   m_dciAccessLock = RWLockCreate();
    m_dciListModified = false;
    m_instanceDiscoveryChanges = false;
    setCreationTime();
@@ -58,8 +54,6 @@ DataCollectionOwner::DataCollectionOwner(const TCHAR *name, const uuid& guid) : 
  */
 DataCollectionOwner::~DataCollectionOwner()
 {
-	delete m_dcObjects;
-	RWLockDestroy(m_dciAccessLock);
 }
 
 /**
@@ -67,7 +61,7 @@ DataCollectionOwner::~DataCollectionOwner()
  */
 void DataCollectionOwner::destroyItems()
 {
-	m_dcObjects->clear();
+	m_dcObjects.clear();
 }
 
 /**
@@ -87,8 +81,8 @@ bool DataCollectionOwner::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
    // Load DCI and access list
    loadACLFromDB(hdb);
    loadItemsFromDB(hdb);
-   for(int i = 0; i < m_dcObjects->size(); i++)
-      if (!m_dcObjects->get(i)->loadThresholdsFromDB(hdb))
+   for(int i = 0; i < m_dcObjects.size(); i++)
+      if (!m_dcObjects.get(i)->loadThresholdsFromDB(hdb))
          success = false;
 
 	m_status = STATUS_NORMAL;
@@ -107,8 +101,8 @@ bool DataCollectionOwner::saveToDatabase(DB_HANDLE hdb)
 	if (success && (m_modified & MODIFY_DATA_COLLECTION))
 	{
       readLockDciAccess();
-      for(int i = 0; success && (i < m_dcObjects->size()); i++)
-         success = m_dcObjects->get(i)->saveToDatabase(hdb);
+      for(int i = 0; success && (i < m_dcObjects.size()); i++)
+         success = m_dcObjects.get(i)->saveToDatabase(hdb);
       unlockDciAccess();
 	}
 
@@ -191,9 +185,9 @@ bool DataCollectionOwner::deleteFromDatabase(DB_HANDLE hdb)
    {
       StringBuffer listItems, listTables, listTableThresholds, listAll;
       int countItems = 0, countTables = 0, countTableThresholds = 0, countAll = 0;
-      for(int i = 0; (i < m_dcObjects->size()) && success; i++)
+      for(int i = 0; (i < m_dcObjects.size()) && success; i++)
       {
-         DCObject *o = m_dcObjects->get(i);
+         DCObject *o = m_dcObjects.get(i);
          if (!listAll.isEmpty())
             listAll.append(_T(','));
          listAll.append(o->getId());
@@ -303,7 +297,7 @@ void DataCollectionOwner::loadItemsFromDB(DB_HANDLE hdb)
 		{
 			int count = DBGetNumRows(hResult);
 			for(int i = 0; i < count; i++)
-				m_dcObjects->add(make_shared<DCItem>(hdb, hResult, i, self(), useStartupDelay));
+				m_dcObjects.add(make_shared<DCItem>(hdb, hResult, i, self(), useStartupDelay));
 			DBFreeResult(hResult);
 		}
 		DBFreeStatement(hStmt);
@@ -325,7 +319,7 @@ void DataCollectionOwner::loadItemsFromDB(DB_HANDLE hdb)
 		{
 			int count = DBGetNumRows(hResult);
 			for(int i = 0; i < count; i++)
-				m_dcObjects->add(new DCTable(hdb, hResult, i, self(), useStartupDelay));
+				m_dcObjects.add(new DCTable(hdb, hResult, i, self(), useStartupDelay));
 			DBFreeResult(hResult);
 		}
 		DBFreeStatement(hStmt);
@@ -346,13 +340,13 @@ bool DataCollectionOwner::addDCObject(DCObject *object, bool alreadyLocked, bool
 
    // Check if that object exists
    int i;
-   for(i = 0; i < m_dcObjects->size(); i++)
-      if (m_dcObjects->get(i)->getId() == object->getId())
+   for(i = 0; i < m_dcObjects.size(); i++)
+      if (m_dcObjects.get(i)->getId() == object->getId())
          break;   // Object with specified id already exist
 
-   if (i == m_dcObjects->size())     // Add new item
+   if (i == m_dcObjects.size())     // Add new item
    {
-		m_dcObjects->add(object);
+		m_dcObjects.add(object);
       object->setLastPollTime(0);    // Cause item to be polled immediately
       if (object->getStatus() != ITEM_STATUS_DISABLED)
          object->setStatus(ITEM_STATUS_ACTIVE, false);
@@ -385,15 +379,15 @@ bool DataCollectionOwner::deleteDCObject(uint32_t dcObjectId, bool needLock, uin
 		writeLockDciAccess();  // write lock
 
    // Check if that item exists
-   for(int i = 0; i < m_dcObjects->size(); i++)
+   for(int i = 0; i < m_dcObjects.size(); i++)
 	{
-		DCObject *object = m_dcObjects->get(i);
+		DCObject *object = m_dcObjects.get(i);
       if (object->getId() == dcObjectId)
       {
          if (object->hasAccess(userId))
          {
-            shared_ptr<DCObject> ref = m_dcObjects->getShared(i);  // Prevent destruction by call to remove
-            m_dcObjects->remove(i);
+            shared_ptr<DCObject> ref = m_dcObjects.getShared(i);  // Prevent destruction by call to remove
+            m_dcObjects.remove(i);
 
             // Check if it is instance DCI
             if (object->getInstanceDiscoveryMethod() != IDM_NONE)
@@ -433,15 +427,15 @@ bool DataCollectionOwner::deleteDCObject(uint32_t dcObjectId, bool needLock, uin
  */
 void DataCollectionOwner::deleteChildDCIs(uint32_t dcObjectId)
 {
-   for(int i = 0; i < m_dcObjects->size(); i++)
+   for(int i = 0; i < m_dcObjects.size(); i++)
    {
-      DCObject *subObject = m_dcObjects->get(i);
+      DCObject *subObject = m_dcObjects.get(i);
       if (subObject->getTemplateItemId() == dcObjectId)
       {
          nxlog_debug_tag(_T("obj.dc"), 7, _T("DataCollectionOwner::DeleteDCObject: deleting DCObject %d created by DCObject %d instance discovery from object %d"), (int)subObject->getId(), (int)dcObjectId, (int)m_id);
          deleteDCObject(subObject);
          NotifyClientsOnDCIDelete(*this, subObject->getId());
-         m_dcObjects->remove(i);
+         m_dcObjects.remove(i);
          i--;
       }
    }
@@ -476,9 +470,9 @@ bool DataCollectionOwner::updateDCObject(uint32_t dcObjectId, const NXCPMessage&
    readLockDciAccess();
 
    // Check if that item exists
-   for(int i = 0; i < m_dcObjects->size(); i++)
+   for(int i = 0; i < m_dcObjects.size(); i++)
 	{
-		DCObject *object = m_dcObjects->get(i);
+		DCObject *object = m_dcObjects.get(i);
       if (object->getId() == dcObjectId)
       {
          if (object->hasAccess(userId))
@@ -524,9 +518,9 @@ bool DataCollectionOwner::updateDCObject(uint32_t dcObjectId, const NXCPMessage&
  */
 void DataCollectionOwner::updateInstanceDiscoveryItems(DCObject *dci)
 {
-   for(int i = 0; i < m_dcObjects->size(); i++)
+   for(int i = 0; i < m_dcObjects.size(); i++)
 	{
-		DCObject *object = m_dcObjects->get(i);
+		DCObject *object = m_dcObjects.get(i);
       if ((object->getTemplateId() == m_id) && (object->getTemplateItemId() == dci->getId()))
       {
          object->updateFromTemplate(dci);
@@ -546,15 +540,15 @@ bool DataCollectionOwner::setItemStatus(UINT32 dwNumItems, UINT32 *pdwItemList, 
    for(UINT32 i = 0; i < dwNumItems; i++)
    {
 		int j;
-      for(j = 0; j < m_dcObjects->size(); j++)
+      for(j = 0; j < m_dcObjects.size(); j++)
       {
-         if (m_dcObjects->get(j)->getId() == pdwItemList[i])
+         if (m_dcObjects.get(j)->getId() == pdwItemList[i])
          {
-            m_dcObjects->get(j)->setStatus(iStatus, true);
+            m_dcObjects.get(j)->setStatus(iStatus, true);
             break;
          }
       }
-      if (j == m_dcObjects->size())
+      if (j == m_dcObjects.size())
          success = false;     // Invalid DCI ID provided
    }
    unlockDciAccess();
@@ -587,9 +581,9 @@ int DataCollectionOwner::updateMultipleDCObjects(const NXCPMessage& request)
    for(int i = 0; i < idList.size(); i++)
    {
       int j;
-      for(j = 0; j < m_dcObjects->size(); j++)
+      for(j = 0; j < m_dcObjects.size(); j++)
       {
-         DCObject *dci = m_dcObjects->get(j);
+         DCObject *dci = m_dcObjects.get(j);
          if (dci->getId() == idList.get(i))
          {
             if (!pollingIntervalSrc.isNull())
@@ -650,9 +644,9 @@ void DataCollectionOwner::sendItemsToClient(ClientSession *session, uint32_t req
    readLockDciAccess();
 
    // Walk through items list
-   for(int i = 0; i < m_dcObjects->size(); i++)
+   for(int i = 0; i < m_dcObjects.size(); i++)
    {
-      DCObject *dco = m_dcObjects->get(i);
+      DCObject *dco = m_dcObjects.get(i);
       if (dco->hasAccess(session->getUserId()))
       {
          dco->createMessage(&msg);
@@ -682,13 +676,13 @@ shared_ptr<DCObject> DataCollectionOwner::getDCObjectById(uint32_t itemId, uint3
    if (lock)
       readLockDciAccess();
 
-   for(int i = 0; i < m_dcObjects->size(); i++)
+   for(int i = 0; i < m_dcObjects.size(); i++)
 	{
-      DCObject *curr = m_dcObjects->get(i);
+      DCObject *curr = m_dcObjects.get(i);
       if (curr->getId() == itemId)
 		{
          if (curr->hasAccess(userId))
-            object = m_dcObjects->getShared(i);
+            object = m_dcObjects.getShared(i);
          else
             nxlog_debug_tag(_T("obj.dc"), 6, _T("DataCollectionOwner::getDCObjectById: denied access to DCObject %u for user %u"), itemId, userId);
          break;
@@ -709,13 +703,13 @@ shared_ptr<DCObject> DataCollectionOwner::getDCObjectByTemplateId(uint32_t tmplI
 
    readLockDciAccess();
    // Check if that item exists
-   for(int i = 0; i < m_dcObjects->size(); i++)
+   for(int i = 0; i < m_dcObjects.size(); i++)
 	{
-      DCObject *curr = m_dcObjects->get(i);
+      DCObject *curr = m_dcObjects.get(i);
       if (curr->getTemplateItemId() == tmplItemId)
 		{
          if (curr->hasAccess(userId))
-            object = m_dcObjects->getShared(i);
+            object = m_dcObjects.getShared(i);
          else
             nxlog_debug_tag(_T("obj.dc"), 6, _T("DataCollectionOwner::getDCObjectByTemplateId: denied access to DCObject %u for user %u"), curr->getId(), userId);
          break;
@@ -735,13 +729,13 @@ shared_ptr<DCObject> DataCollectionOwner::getDCObjectByName(const TCHAR *name, u
 
    readLockDciAccess();
    // Check if that item exists
-   for(int i = 0; i < m_dcObjects->size(); i++)
+   for(int i = 0; i < m_dcObjects.size(); i++)
 	{
-      DCObject *curr = m_dcObjects->get(i);
+      DCObject *curr = m_dcObjects.get(i);
       if (!_tcsicmp(curr->getName(), name))
 		{
          if (curr->hasAccess(userId))
-            object = m_dcObjects->getShared(i);
+            object = m_dcObjects.getShared(i);
          else
             nxlog_debug_tag(_T("obj.dc"), 6, _T("DataCollectionOwner::getDCObjectByName: denied access to DCObject %u for user %u"), curr->getId(), userId);
          break;
@@ -760,13 +754,13 @@ shared_ptr<DCObject> DataCollectionOwner::getDCObjectByDescription(const TCHAR *
 
    readLockDciAccess();
    // Check if that item exists
-   for(int i = 0; i < m_dcObjects->size(); i++)
+   for(int i = 0; i < m_dcObjects.size(); i++)
 	{
-      DCObject *curr = m_dcObjects->get(i);
+      DCObject *curr = m_dcObjects.get(i);
       if (!_tcsicmp(curr->getDescription(), description))
 		{
          if (curr->hasAccess(userId))
-            object = m_dcObjects->getShared(i);
+            object = m_dcObjects.getShared(i);
          else
             nxlog_debug_tag(_T("obj.dc"), 6, _T("DataCollectionOwner::getDCObjectByDescription: denied access to DCObject %u for user %u"), curr->getId(), userId);
          break;
@@ -787,13 +781,13 @@ shared_ptr<DCObject> DataCollectionOwner::getDCObjectByGUID(const uuid& guid, ui
       readLockDciAccess();
 
    // Check if that item exists
-   for(int i = 0; i < m_dcObjects->size(); i++)
+   for(int i = 0; i < m_dcObjects.size(); i++)
    {
-      DCObject *curr = m_dcObjects->get(i);
+      DCObject *curr = m_dcObjects.get(i);
       if (guid.equals(curr->getGuid()))
       {
          if (curr->hasAccess(userId))
-            object = m_dcObjects->getShared(i);
+            object = m_dcObjects.getShared(i);
          else
             nxlog_debug_tag(_T("obj.dc"), 6, _T("DataCollectionOwner::getDCObjectByGUID: denied access to DCObject %u for user %u"), curr->getId(), userId);
          break;
@@ -812,9 +806,9 @@ NXSL_Value *DataCollectionOwner::getAllDCObjectsForNXSL(NXSL_VM *vm, const TCHAR
 {
    NXSL_Array *list = new NXSL_Array(vm);
    readLockDciAccess();
-   for(int i = 0; i < m_dcObjects->size(); i++)
+   for(int i = 0; i < m_dcObjects.size(); i++)
 	{
-		DCObject *curr = m_dcObjects->get(i);
+		DCObject *curr = m_dcObjects.get(i);
       if (((name == NULL) || MatchString(name, curr->getName(), false)) &&
           ((description == NULL) || MatchString(description, curr->getDescription(), false)) &&
           curr->hasAccess(userID))
@@ -859,13 +853,13 @@ bool DataCollectionOwner::applyToTarget(const shared_ptr<DataCollectionTarget>& 
    // Copy items
    readLockDciAccess();
 
-   IntegerArray<uint32_t> dciList(m_dcObjects->size());
+   IntegerArray<uint32_t> dciList(m_dcObjects.size());
    nxlog_debug_tag(_T("obj.dc"), 4, _T("Apply %d metric items from template \"%s\" to target \"%s\""),
-                   m_dcObjects->size(), m_name, target->getName());
+                   m_dcObjects.size(), m_name, target->getName());
 
-   for(int i = 0; i < m_dcObjects->size(); i++)
+   for(int i = 0; i < m_dcObjects.size(); i++)
    {
-		DCObject *object = m_dcObjects->get(i);
+		DCObject *object = m_dcObjects.get(i);
 		dciList.add(object->getId());
       if (!target->applyTemplateItem(m_id, object))
       {
@@ -920,9 +914,9 @@ HashSet<uint32_t> *DataCollectionOwner::getRelatedEventsList() const
 {
    HashSet<uint32_t> *eventList = new HashSet<uint32_t>();
    readLockDciAccess();
-   for(int i = 0; i < m_dcObjects->size(); i++)
+   for(int i = 0; i < m_dcObjects.size(); i++)
    {
-      m_dcObjects->get(i)->getEventList(eventList);
+      m_dcObjects.get(i)->getEventList(eventList);
    }
    unlockDciAccess();
 
@@ -936,9 +930,9 @@ unique_ptr<StringSet> DataCollectionOwner::getDCIScriptList() const
 {
    StringSet *scripts = new StringSet();
    readLockDciAccess();
-   for(int i = 0; i < m_dcObjects->size(); i++)
+   for(int i = 0; i < m_dcObjects.size(); i++)
    {
-      m_dcObjects->get(i)->getScriptDependencies(scripts);
+      m_dcObjects.get(i)->getScriptDependencies(scripts);
    }
    unlockDciAccess();
    return unique_ptr<StringSet>(scripts);
@@ -952,9 +946,9 @@ bool DataCollectionOwner::enumDCObjects(bool (*callback)(const shared_ptr<DCObje
 	bool success = true;
 
 	readLockDciAccess();
-	for(int i = 0; i < m_dcObjects->size(); i++)
+	for(int i = 0; i < m_dcObjects.size(); i++)
 	{
-		if (!callback(m_dcObjects->getShared(i), i, context))
+		if (!callback(m_dcObjects.getShared(i), i, context))
 		{
 			success = false;
 			break;
@@ -970,8 +964,8 @@ bool DataCollectionOwner::enumDCObjects(bool (*callback)(const shared_ptr<DCObje
 void DataCollectionOwner::associateItems()
 {
 	readLockDciAccess();
-	for(int i = 0; i < m_dcObjects->size(); i++)
-		m_dcObjects->get(i)->changeBinding(0, self(), false);
+	for(int i = 0; i < m_dcObjects.size(); i++)
+		m_dcObjects.get(i)->changeBinding(0, self(), false);
 	unlockDciAccess();
 }
 
@@ -1014,7 +1008,7 @@ void DataCollectionOwner::updateFromImport(ConfigEntry *config)
          else
          {
             auto dci = make_shared<DCItem>(e, self());
-            m_dcObjects->add(dci);
+            m_dcObjects.add(dci);
             guid = dci->getGuid();  // For case when export file does not contain valid GUID
          }
          guidList.add(new uuid(guid));
@@ -1034,7 +1028,7 @@ void DataCollectionOwner::updateFromImport(ConfigEntry *config)
          else
          {
             auto dci = make_shared<DCTable>(e, self());
-            m_dcObjects->add(dci);
+            m_dcObjects.add(dci);
             guid = dci->getGuid();  // For case when export file does not contain valid GUID
          }
          guidList.add(new uuid(guid));
@@ -1044,12 +1038,12 @@ void DataCollectionOwner::updateFromImport(ConfigEntry *config)
 
    // Delete DCIs missing in import
    IntegerArray<uint32_t> deleteList;
-   for(int i = 0; i < m_dcObjects->size(); i++)
+   for(int i = 0; i < m_dcObjects.size(); i++)
    {
       bool found = false;
       for(int j = 0; j < guidList.size(); j++)
       {
-         if (guidList.get(j)->equals(m_dcObjects->get(i)->getGuid()))
+         if (guidList.get(j)->equals(m_dcObjects.get(i)->getGuid()))
          {
             found = true;
             break;
@@ -1058,7 +1052,7 @@ void DataCollectionOwner::updateFromImport(ConfigEntry *config)
 
       if (!found)
       {
-         deleteList.add(m_dcObjects->get(i)->getId());
+         deleteList.add(m_dcObjects.get(i)->getId());
       }
    }
 
@@ -1095,9 +1089,9 @@ bool DataCollectionOwner::isDataCollectionSource(UINT32 nodeId) const
 {
    bool result = false;
    readLockDciAccess();
-   for(int i = 0; i < m_dcObjects->size(); i++)
+   for(int i = 0; i < m_dcObjects.size(); i++)
    {
-      if (m_dcObjects->get(i)->getSourceNode() == nodeId)
+      if (m_dcObjects.get(i)->getSourceNode() == nodeId)
       {
          result = true;
          break;
@@ -1125,11 +1119,11 @@ unique_ptr<SharedObjectArray<DCObject>> DataCollectionOwner::getDCObjectsByRegex
 
    readLockDciAccess();
 
-   auto result = make_unique<SharedObjectArray<DCObject>>(m_dcObjects->size());
+   auto result = make_unique<SharedObjectArray<DCObject>>(m_dcObjects.size());
 
-   for(int i = 0; i < m_dcObjects->size(); i++)
+   for(int i = 0; i < m_dcObjects.size(); i++)
    {
-      DCObject *o = m_dcObjects->get(i);
+      DCObject *o = m_dcObjects.get(i);
       if (!o->hasAccess(userId))
          continue;
 
@@ -1137,7 +1131,7 @@ unique_ptr<SharedObjectArray<DCObject>> DataCollectionOwner::getDCObjectsByRegex
       int ovector[30];
       if (_pcre_exec_t(preg, nullptr, reinterpret_cast<const PCRE_TCHAR*>(subj), static_cast<int>(_tcslen(subj)), 0, 0, ovector, 30) >= 0)
       {
-         result->add(m_dcObjects->getShared(i));
+         result->add(m_dcObjects.getShared(i));
       }
    }
 
@@ -1153,10 +1147,10 @@ unique_ptr<SharedObjectArray<DCObject>> DataCollectionOwner::getDCObjectsByRegex
 unique_ptr<SharedObjectArray<DCObject>> DataCollectionOwner::getAllDCObjects() const
 {
    readLockDciAccess();
-   auto result = make_unique<SharedObjectArray<DCObject>>(m_dcObjects->size());
-   for(int i = 0; i < m_dcObjects->size(); i++)
+   auto result = make_unique<SharedObjectArray<DCObject>>(m_dcObjects.size());
+   for(int i = 0; i < m_dcObjects.size(); i++)
    {
-      result->add(m_dcObjects->getShared(i));
+      result->add(m_dcObjects.getShared(i));
    }
    unlockDciAccess();
    return result;

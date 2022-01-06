@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Raden Solutions
+** Copyright (C) 2003-2022 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -34,7 +34,7 @@ DEFINE_MODULE_METADATA("NTCB", "Raden Solutions", NETXMS_VERSION_STRING_A, NETXM
  */
 static int32_t s_maxDeviceSessions = 256;
 static SharedHashMap<session_id_t, NTCBDeviceSession> s_sessions;
-static RWLOCK s_sessionListLock = nullptr;
+static RWLock s_sessionListLock;
 static session_id_t *s_freeList = nullptr;
 static size_t s_freePos = 0;
 static uint16_t s_listenerPort = 2000;
@@ -45,7 +45,7 @@ static uint16_t s_listenerPort = 2000;
 static bool RegisterSession(const shared_ptr<NTCBDeviceSession>& session)
 {
    bool success;
-   RWLockWriteLock(s_sessionListLock);
+   s_sessionListLock.writeLock();
    if (s_freePos < s_maxDeviceSessions)
    {
       session->setId(s_freeList[s_freePos++]);
@@ -56,7 +56,7 @@ static bool RegisterSession(const shared_ptr<NTCBDeviceSession>& session)
    {
       success = false;
    }
-   RWLockUnlock(s_sessionListLock);
+   s_sessionListLock.unlock();
 
    if (success)
       nxlog_debug_tag(DEBUG_TAG_NTCB, 3, _T("Device session with ID %d registered"), session->getId());
@@ -71,13 +71,13 @@ static bool RegisterSession(const shared_ptr<NTCBDeviceSession>& session)
  */
 void UnregisterNTCBDeviceSession(session_id_t id)
 {
-   RWLockWriteLock(s_sessionListLock);
+   s_sessionListLock.writeLock();
    if (s_sessions.contains(id))
    {
       s_sessions.remove(id);
       s_freeList[--s_freePos] = id;
    }
-   RWLockUnlock(s_sessionListLock);
+   s_sessionListLock.unlock();
    nxlog_debug_tag(DEBUG_TAG_NTCB, 3, _T("Device session with ID %d unregistered"), id);
 }
 
@@ -148,7 +148,6 @@ static bool InitModule(Config *config)
    s_listenerPort = static_cast<uint16_t>(config->getValueAsInt(_T("/NTCB/ListenerPort"), 2000));
    s_maxDeviceSessions = config->getValueAsInt(_T("/NTCB/MaxDeviceSessions"), 256);
 
-   s_sessionListLock = RWLockCreate();
    s_freeList = MemAllocArrayNoInit<session_id_t>(s_maxDeviceSessions);
    for(int i = 0; i < s_maxDeviceSessions; i++)
       s_freeList[i] = i;
@@ -174,25 +173,24 @@ static void ShutdownModule()
    ThreadJoin(s_listenerThread);
 
    nxlog_debug_tag(DEBUG_TAG_NTCB, 2, _T("Terminating active NTCB sessions"));
-   RWLockReadLock(s_sessionListLock);
+   s_sessionListLock.readLock();
    for(shared_ptr<NTCBDeviceSession> session : s_sessions)
       session->terminate();
-   RWLockUnlock(s_sessionListLock);
+   s_sessionListLock.unlock();
 
    while(true)
    {
-      RWLockReadLock(s_sessionListLock);
+      s_sessionListLock.readLock();
       if (s_sessions.size() == 0)
       {
-         RWLockUnlock(s_sessionListLock);
+         s_sessionListLock.unlock();
          break;
       }
-      RWLockUnlock(s_sessionListLock);
+      s_sessionListLock.unlock();
       ThreadSleepMs(500);
    }
 
    MemFree(s_freeList);
-   RWLockDestroy(s_sessionListLock);
    nxlog_debug_tag(DEBUG_TAG_NTCB, 2, _T("NTCB module shutdown completed"));
 }
 
@@ -211,14 +209,14 @@ static bool ConsoleCommandHandler(const TCHAR *command, ServerConsole *console)
    {
       console->print(_T(" ID  | Address         | Device\n"));
       console->print(_T("-----+-----------------+-----------------------------------------------\n"));
-      RWLockReadLock(s_sessionListLock);
+      s_sessionListLock.readLock();
       for(shared_ptr<NTCBDeviceSession> session : s_sessions)
       {
          shared_ptr<MobileDevice> device = session->getDevice();
          console->printf(_T(" %3d | %-15s | %s\n"), session->getId(), session->getAddress().toString().cstr(),
                   (device != nullptr) ? device->getName() : _T(""));
       }
-      RWLockUnlock(s_sessionListLock);
+      s_sessionListLock.unlock();
    }
    else
    {

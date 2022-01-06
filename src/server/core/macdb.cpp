@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Raden Solutions
+** Copyright (C) 2003-2022 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -46,7 +46,7 @@ static MacDbEntry *s_data = nullptr;
 /**
  * Access lock
  */
-static RWLOCK s_lock = RWLockCreate();
+static RWLock s_lock;
 
 /**
  * Get parent object
@@ -86,7 +86,7 @@ void NXCORE_EXPORTABLE MacDbAddObject(const MacAddress& macAddr, const shared_pt
        (!memcmp(macAddr.value(), "\x00\x05\x73\xA0", 4) && ((macAddr.value()[4] & 0xF0) == 0x00))) // HSRP IPv6
       return;
 
-   RWLockWriteLock(s_lock);
+   s_lock.writeLock();
    MacDbEntry *entry;
    HASH_FIND(hh, s_data, macAddr.value(), MAC_ADDR_LENGTH, entry);
    if (entry == nullptr)
@@ -143,7 +143,7 @@ void NXCORE_EXPORTABLE MacDbAddObject(const MacAddress& macAddr, const shared_pt
          }
       }
    }
-   RWLockUnlock(s_lock);
+   s_lock.unlock();
 }
 
 /**
@@ -173,7 +173,7 @@ void NXCORE_EXPORTABLE MacDbRemoveObject(const MacAddress& macAddr, const uint32
    if (!memcmp(macAddr.value(), "\x00\x00\x00\x00\x00\x00", 6))
       return;
 
-   RWLockWriteLock(s_lock);
+   s_lock.writeLock();
    MacDbEntry *entry;
    HASH_FIND(hh, s_data, macAddr.value(), MAC_ADDR_LENGTH, entry);
    if (entry != nullptr)
@@ -193,7 +193,7 @@ void NXCORE_EXPORTABLE MacDbRemoveObject(const MacAddress& macAddr, const uint32
          delete entry;
       }
    }
-   RWLockUnlock(s_lock);
+   s_lock.unlock();
 }
 
 /**
@@ -217,11 +217,11 @@ void NXCORE_EXPORTABLE MacDbRemoveInterface(const Interface& iface)
  */
 shared_ptr<NetObj> NXCORE_EXPORTABLE MacDbFind(const BYTE *macAddr)
 {
-   RWLockReadLock(s_lock);
+   s_lock.readLock();
    MacDbEntry *entry;
    HASH_FIND(hh, s_data, macAddr, MAC_ADDR_LENGTH, entry);
    shared_ptr<NetObj> object = (entry != nullptr) ? entry->objects.getShared(entry->objects.size() - 1) : shared_ptr<NetObj>();
-   RWLockUnlock(s_lock);
+   s_lock.unlock();
    return object;
 }
 

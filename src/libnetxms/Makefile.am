@@ -7,7 +7,7 @@ libnetxms_la_SOURCES = \
 	hashmapbase.cpp hashsetbase.cpp ice.c icmp.cpp iconv.cpp inet_pton.c \
 	inetaddr.cpp log.cpp lz4.c main.cpp macaddr.cpp md5.cpp memmem.c mempool.cpp \
 	message.cpp msgrecv.cpp msgwq.cpp net.cpp nxcp.cpp npipe.cpp npipe_unix.cpp \
-	pa.cpp procexec.cpp qsort.c queue.cpp rbuffer.cpp rwlock.cpp scandir.c serial.cpp \
+	pa.cpp procexec.cpp qsort.c queue.cpp rbuffer.cpp scandir.c serial.cpp \
 	sha1.cpp sha2.cpp socket_listener.cpp spoll.cpp strcasestr.cpp streamcomp.cpp \
 	string.cpp stringlist.cpp strlcat.c strlcpy.c strmap.cpp \
 	strmapbase.cpp strptime.c strset.cpp strtoll.c strtoull.c \

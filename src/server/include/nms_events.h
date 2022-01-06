@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -346,27 +346,25 @@ class EventPolicy
 {
 private:
    ObjectArray<EPRule> m_rules;
-   RWLOCK m_rwlock;
+   RWLock m_rwlock;
 
-   void readLock() const { RWLockReadLock(m_rwlock); }
-   void writeLock() { RWLockWriteLock(m_rwlock); }
-   void unlock() const { RWLockUnlock(m_rwlock); }
+   void readLock() const { m_rwlock.readLock(); }
+   void writeLock() { m_rwlock.writeLock(); }
+   void unlock() const { m_rwlock.unlock(); }
    int findRuleIndexByGuid(const uuid& guid, int shift = 0) const;
 
 public:
-   EventPolicy();
-   ~EventPolicy();
+   EventPolicy() : m_rules(128, 128, Ownership::True) { }
 
-   UINT32 getNumRules() const { return m_rules.size(); }
+   uint32_t getNumRules() const { return m_rules.size(); }
    bool loadFromDB();
    bool saveToDB() const;
    void processEvent(Event *pEvent);
-   void sendToClient(ClientSession *pSession, UINT32 dwRqId) const;
-   void replacePolicy(UINT32 dwNumRules, EPRule **ppRuleList);
+   void sendToClient(ClientSession *session, uint32_t requestId) const;
+   void replacePolicy(uint32_t numRules, EPRule **ruleList);
    void exportRule(StringBuffer& xml, const uuid& guid) const;
    void exportRuleOrgering(StringBuffer& xml) const;
    void importRule(EPRule *rule, bool overwrite, ObjectArray<uuid> *ruleOrdering);
-   void removeRuleCategory (UINT32 categoryId);
    json_t *toJson() const;
 
    bool isActionInUse(uint32_t actionId) const;

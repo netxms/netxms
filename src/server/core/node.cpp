@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Raden Solutions
+** Copyright (C) 2003-2022 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -587,12 +587,12 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 
    // Walk through all items in the node and load appropriate thresholds
    bResult = true;
-   for(i = 0; i < m_dcObjects->size(); i++)
+   for(i = 0; i < m_dcObjects.size(); i++)
    {
-      if (!m_dcObjects->get(i)->loadThresholdsFromDB(hdb))
+      if (!m_dcObjects.get(i)->loadThresholdsFromDB(hdb))
       {
          DbgPrintf(3, _T("Cannot load thresholds for DCI %d of node %d (%s)"),
-                   m_dcObjects->get(i)->getId(), dwId, m_name);
+                   m_dcObjects.get(i)->getId(), dwId, m_name);
          bResult = false;
       }
    }
@@ -4254,17 +4254,17 @@ void Node::reconcileWithDuplicateNode(Node *node)
    node->readLockDciAccess();
    writeLockDciAccess();
 
-   for(int i = 0; i < node->m_dcObjects->size(); i++)
+   for(int i = 0; i < node->m_dcObjects.size(); i++)
    {
-      DCObject *dci = node->m_dcObjects->get(i);
+      DCObject *dci = node->m_dcObjects.get(i);
       if (dci->getTemplateId() != 0)
          continue;
 
       // Check if this node already have same DCI
       bool found = false;
-      for(int j = 0; j < m_dcObjects->size(); j++)
+      for(int j = 0; j < m_dcObjects.size(); j++)
       {
-         DCObject *curr = m_dcObjects->get(j);
+         DCObject *curr = m_dcObjects.get(j);
          if ((curr->getDataSource() == dci->getDataSource()) &&
              (curr->getSourceNode() == dci->getSourceNode()) &&
              !_tcsicmp(curr->getName(), dci->getName()))
@@ -10330,9 +10330,9 @@ void Node::syncDataCollectionWithAgent(AgentConnectionEx *conn)
       uint32_t baseInfoFieldId = VID_ELEMENT_LIST_BASE;
       uint32_t extraInfoFieldId = VID_EXTRA_DCI_INFO_BASE;
       readLockDciAccess();
-      for(int i = 0; i < m_dcObjects->size(); i++)
+      for(int i = 0; i < m_dcObjects.size(); i++)
       {
-         DCObject *dco = m_dcObjects->get(i);
+         DCObject *dco = m_dcObjects.get(i);
          if ((dco->getStatus() != ITEM_STATUS_DISABLED) &&
              dco->hasValue() &&
              (dco->getAgentCacheMode() == AGENT_CACHE_ON) &&
@@ -10640,9 +10640,9 @@ void Node::collectProxyInfo(ProxyInfo *info)
    bool isTarget = false;
 
    readLockDciAccess();
-   for(int i = 0; i < m_dcObjects->size(); i++)
+   for(int i = 0; i < m_dcObjects.size(); i++)
    {
-      DCObject *dco = m_dcObjects->get(i);
+      DCObject *dco = m_dcObjects.get(i);
       if (dco->getStatus() == ITEM_STATUS_DISABLED)
          continue;
 

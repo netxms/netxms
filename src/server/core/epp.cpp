@@ -1112,22 +1112,6 @@ bool EPRule::isActionInUse(UINT32 actionId) const
 }
 
 /**
- * Event processing policy constructor
- */
-EventPolicy::EventPolicy() : m_rules(128, 128, Ownership::True)
-{
-   m_rwlock = RWLockCreate();
-}
-
-/**
- * Event processing policy destructor
- */
-EventPolicy::~EventPolicy()
-{
-   RWLockDestroy(m_rwlock);
-}
-
-/**
  * Load event processing policy from database
  */
 bool EventPolicy::loadFromDB()
@@ -1212,17 +1196,15 @@ void EventPolicy::processEvent(Event *pEvent)
 /**
  * Send event policy to client
  */
-void EventPolicy::sendToClient(ClientSession *pSession, UINT32 dwRqId) const
+void EventPolicy::sendToClient(ClientSession *session, uint32_t requestId) const
 {
-   NXCPMessage msg;
+   NXCPMessage msg(CMD_EPP_RECORD, requestId);
 
    readLock();
-   msg.setCode(CMD_EPP_RECORD);
-   msg.setId(dwRqId);
    for(int i = 0; i < m_rules.size(); i++)
    {
       m_rules.get(i)->createMessage(&msg);
-      pSession->sendMessage(&msg);
+      session->sendMessage(&msg);
       msg.deleteAllFields();
    }
    unlock();
@@ -1231,15 +1213,15 @@ void EventPolicy::sendToClient(ClientSession *pSession, UINT32 dwRqId) const
 /**
  * Replace policy with new one
  */
-void EventPolicy::replacePolicy(UINT32 dwNumRules, EPRule **ppRuleList)
+void EventPolicy::replacePolicy(uint32_t numRules, EPRule **ruleList)
 {
    writeLock();
    m_rules.clear();
-   if (ppRuleList != nullptr)
+   if (ruleList != nullptr)
    {
-      for(int i = 0; i < (int)dwNumRules; i++)
+      for(int i = 0; i < (int)numRules; i++)
       {
-         EPRule *r = ppRuleList[i];
+         EPRule *r = ruleList[i];
          r->setId(i);
          m_rules.add(r);
       }

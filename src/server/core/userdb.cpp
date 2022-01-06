@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -54,7 +54,7 @@ static StringObjectMap<User> s_ldapUserId(Ownership::False);
 static StringObjectMap<Group> s_ldapGroupId(Ownership::False);
 static StringObjectMap<User> s_users(Ownership::False);
 static StringObjectMap<Group> s_groups(Ownership::False);
-static RWLOCK s_userDatabaseLock = RWLockCreate();
+static RWLock s_userDatabaseLock;
 static THREAD s_statusUpdateThread = INVALID_THREAD_HANDLE;
 
 /**
@@ -145,13 +145,13 @@ static uint64_t GetEffectiveSystemRights(User *user)
 uint64_t NXCORE_EXPORTABLE GetEffectiveSystemRights(uint32_t userId)
 {
    uint64_t systemRights = 0;
-   RWLockReadLock(s_userDatabaseLock);
+   s_userDatabaseLock.readLock();
    UserDatabaseObject *user = s_userDatabase.get(userId);
    if ((user != nullptr) && !user->isGroup())
    {
       systemRights = GetEffectiveSystemRights(static_cast<User*>(user));
    }
-   RWLockUnlock(s_userDatabaseLock);
+   s_userDatabaseLock.unlock();
    return systemRights;
 }
 
@@ -168,7 +168,7 @@ static THREAD_RESULT THREAD_CALL AccountStatusUpdater(void *arg)
 
 		time_t blockInactiveAccounts = (time_t)ConfigReadInt(_T("BlockInactiveUserAccounts"), 0) * 86400;
 
-		RWLockWriteLock(s_userDatabaseLock);
+		s_userDatabaseLock.writeLock();
 		time_t now = time(NULL);
 		Iterator<UserDatabaseObject> it = s_userDatabase.begin();
 		while(it.hasNext())
@@ -195,7 +195,7 @@ static THREAD_RESULT THREAD_CALL AccountStatusUpdater(void *arg)
 				nxlog_debug_tag(DEBUG_TAG, 3, _T("User account \"%s\" disabled due to inactivity"), user->getName());
 			}
 		}
-		RWLockUnlock(s_userDatabaseLock);
+		s_userDatabaseLock.unlock();
 	}
 
 	nxlog_debug_tag(DEBUG_TAG, 2, _T("User account status update thread stopped"));
@@ -312,7 +312,7 @@ bool LoadUsers()
 void SaveUsers(DB_HANDLE hdb, uint32_t watchdogId)
 {
    // Save users
-   RWLockWriteLock(s_userDatabaseLock);
+   s_userDatabaseLock.writeLock();
    Iterator<UserDatabaseObject> it = s_userDatabase.begin();
    while(it.hasNext())
    {
@@ -329,7 +329,7 @@ void SaveUsers(DB_HANDLE hdb, uint32_t watchdogId)
 			object->saveToDatabase(hdb);
       }
    }
-   RWLockUnlock(s_userDatabaseLock);
+   s_userDatabaseLock.unlock();
 }
 
 /**
@@ -345,16 +345,16 @@ uint32_t AuthenticateUser(const TCHAR *login, const TCHAR *password, size_t sigL
          BYTE *pChallenge, uint32_t *pdwId, uint64_t *pdwSystemRights, bool *pbChangePasswd, bool *pbIntruderLockout,
          bool *closeOtherSessions, bool ssoAuth, uint32_t *graceLogins)
 {
-   RWLockReadLock(s_userDatabaseLock);
+   s_userDatabaseLock.readLock();
    User *user = s_users.get(login);
    if ((user == nullptr) || user->isDeleted())
    {
       // no such user
-      RWLockUnlock(s_userDatabaseLock);
+      s_userDatabaseLock.unlock();
       return RCC_ACCESS_DENIED;
    }
    user = new User(user);  // create copy for authentication
-   RWLockUnlock(s_userDatabaseLock);
+   s_userDatabaseLock.unlock();
 
    uint32_t rcc = RCC_ACCESS_DENIED;
    bool passwordValid = false;
@@ -448,12 +448,12 @@ uint32_t AuthenticateUser(const TCHAR *login, const TCHAR *password, size_t sigL
    }
 
    delete user;   // delete copy
-   RWLockWriteLock(s_userDatabaseLock);
+   s_userDatabaseLock.writeLock();
    user = s_users.get(login);
    if ((user == nullptr) || user->isDeleted() || (user->getId() != *pdwId))
    {
       // User was deleted while authenticating
-      RWLockUnlock(s_userDatabaseLock);
+      s_userDatabaseLock.unlock();
       return RCC_ACCESS_DENIED;
    }
    if (passwordValid)
@@ -535,7 +535,7 @@ uint32_t AuthenticateUser(const TCHAR *login, const TCHAR *password, size_t sigL
       user->increaseAuthFailures();
       *pbIntruderLockout = user->isIntruderLockoutActive();
    }
-   RWLockUnlock(s_userDatabaseLock);
+   s_userDatabaseLock.unlock();
    return rcc;
 }
 
@@ -566,11 +566,11 @@ bool NXCORE_EXPORTABLE CheckUserMembership(UINT32 userId, UINT32 groupId)
    bool result = false;
    IntegerArray<UINT32> searchPath(16, 16);
 
-   RWLockReadLock(s_userDatabaseLock);
+   s_userDatabaseLock.readLock();
 
    result = CheckUserMembershipInternal(userId, groupId, &searchPath);
 
-   RWLockUnlock(s_userDatabaseLock);
+   s_userDatabaseLock.unlock();
 
    return result;
 }
@@ -635,13 +635,13 @@ void UpdateGroupMembership(uint32_t userId, size_t numGroups, uint32_t *groups)
  */
 TCHAR NXCORE_EXPORTABLE *ResolveUserId(uint32_t id, TCHAR *buffer, bool noFail)
 {
-   RWLockReadLock(s_userDatabaseLock);
+   s_userDatabaseLock.readLock();
    UserDatabaseObject *object = s_userDatabase.get(id);
    if (object != nullptr)
       _tcslcpy(buffer, object->getName(), MAX_USER_NAME);
    else if (noFail)
       _sntprintf(buffer, MAX_USER_NAME, _T("{%u}"), id);
-   RWLockUnlock(s_userDatabaseLock);
+   s_userDatabaseLock.unlock();
 	return ((object != nullptr) || noFail) ? buffer : nullptr;
 }
 
@@ -690,7 +690,7 @@ static uint32_t DeleteUserDatabaseObjectInternal(uint32_t id, bool alreadyLocked
    }
 
    if (!alreadyLocked)
-      RWLockWriteLock(s_userDatabaseLock);
+      s_userDatabaseLock.writeLock();
 
    UserDatabaseObject *object = s_userDatabase.get(id);
    if (object != nullptr)
@@ -711,7 +711,7 @@ static uint32_t DeleteUserDatabaseObjectInternal(uint32_t id, bool alreadyLocked
    }
 
    if (!alreadyLocked)
-      RWLockUnlock(s_userDatabaseLock);
+      s_userDatabaseLock.unlock();
 
    // Update system access rights in all connected sessions
    // Use separate thread to avoid deadlocks
@@ -740,7 +740,7 @@ uint32_t NXCORE_EXPORTABLE CreateNewUser(const TCHAR *name, bool isGroup, uint32
 {
    uint32_t rcc = RCC_SUCCESS;
 
-   RWLockWriteLock(s_userDatabaseLock);
+   s_userDatabaseLock.writeLock();
 
    // Check for duplicate name
    UserDatabaseObject *object = isGroup ? (UserDatabaseObject *)s_groups.get(name) : (UserDatabaseObject *)s_users.get(name);
@@ -764,7 +764,7 @@ uint32_t NXCORE_EXPORTABLE CreateNewUser(const TCHAR *name, bool isGroup, uint32
       *id = object->getId();
    }
 
-   RWLockUnlock(s_userDatabaseLock);
+   s_userDatabaseLock.unlock();
    return rcc;
 }
 
@@ -778,7 +778,7 @@ uint32_t NXCORE_EXPORTABLE ModifyUserDatabaseObject(const NXCPMessage& msg, json
 
    uint32_t id = msg.getFieldAsUInt32(VID_USER_ID);
 
-   RWLockWriteLock(s_userDatabaseLock);
+   s_userDatabaseLock.writeLock();
 
    UserDatabaseObject *object = s_userDatabase.get(id);
    if (object != nullptr)
@@ -830,7 +830,7 @@ uint32_t NXCORE_EXPORTABLE ModifyUserDatabaseObject(const NXCPMessage& msg, json
       }
    }
 
-   RWLockUnlock(s_userDatabaseLock);
+   s_userDatabaseLock.unlock();
 
    // Use separate thread to avoid deadlocks
    if (updateAccessRights)
@@ -873,7 +873,7 @@ static inline TCHAR *GenerateUniqueName(const TCHAR *ldapName, uint32_t userId, 
  */
 void UpdateLDAPUser(const TCHAR *dn, const LDAP_Object *ldapObject)
 {
-   RWLockWriteLock(s_userDatabaseLock);
+   s_userDatabaseLock.writeLock();
 
    bool userModified = false;
    bool conflict = false;
@@ -989,7 +989,7 @@ void UpdateLDAPUser(const TCHAR *dn, const LDAP_Object *ldapObject)
       }
       nxlog_debug_tag(DEBUG_TAG, 4, _T("UpdateLDAPUser(): User added: ID: %s DN: %s, login name: %s, full name: %s, description: %s"), CHECK_NULL(ldapObject->m_id), dn, userName, CHECK_NULL(ldapObject->m_fullName), CHECK_NULL(ldapObject->m_description));
    }
-   RWLockUnlock(s_userDatabaseLock);
+   s_userDatabaseLock.unlock();
 }
 
 /**
@@ -998,7 +998,7 @@ void UpdateLDAPUser(const TCHAR *dn, const LDAP_Object *ldapObject)
  */
 void RemoveDeletedLDAPEntries(StringObjectMap<LDAP_Object> *entryListDn, StringObjectMap<LDAP_Object> *entryListId, uint32_t m_action, bool isUser)
 {
-   RWLockWriteLock(s_userDatabaseLock);
+   s_userDatabaseLock.writeLock();
    Iterator<UserDatabaseObject> it = s_userDatabase.begin();
    while(it.hasNext())
    {
@@ -1024,7 +1024,7 @@ void RemoveDeletedLDAPEntries(StringObjectMap<LDAP_Object> *entryListDn, StringO
          }
 		}
    }
-   RWLockUnlock(s_userDatabaseLock);
+   s_userDatabaseLock.unlock();
 }
 
 /**
@@ -1033,7 +1033,7 @@ void RemoveDeletedLDAPEntries(StringObjectMap<LDAP_Object> *entryListDn, StringO
  */
 void SyncLDAPGroupMembers(const TCHAR *dn, const LDAP_Object *ldapObject)
 {
-   RWLockWriteLock(s_userDatabaseLock);
+   s_userDatabaseLock.writeLock();
 
    // Check existing user/group with same DN
    UserDatabaseObject *object;
@@ -1045,14 +1045,14 @@ void SyncLDAPGroupMembers(const TCHAR *dn, const LDAP_Object *ldapObject)
    if ((object != nullptr) && !object->isGroup())
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("SyncGroupMembers(): Ignore LDAP object %s"), dn);
-      RWLockUnlock(s_userDatabaseLock);
+      s_userDatabaseLock.unlock();
       return;
    }
 
    if (object == nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("SyncGroupMembers(): Unable to find LDAP object %s"), dn);
-      RWLockUnlock(s_userDatabaseLock);
+      s_userDatabaseLock.unlock();
       return;
    }
 
@@ -1100,7 +1100,7 @@ void SyncLDAPGroupMembers(const TCHAR *dn, const LDAP_Object *ldapObject)
       }
    }
 
-   RWLockUnlock(s_userDatabaseLock);
+   s_userDatabaseLock.unlock();
 }
 
 /**
@@ -1108,7 +1108,7 @@ void SyncLDAPGroupMembers(const TCHAR *dn, const LDAP_Object *ldapObject)
  */
 void UpdateLDAPGroup(const TCHAR *dn, const LDAP_Object *ldapObject) //no full name, add users inside group, and delete removed from the group
 {
-   RWLockWriteLock(s_userDatabaseLock);
+   s_userDatabaseLock.writeLock();
 
    bool groupModified = false;
    bool conflict = false;
@@ -1213,7 +1213,7 @@ void UpdateLDAPGroup(const TCHAR *dn, const LDAP_Object *ldapObject) //no full n
       AddDatabaseObject(group);
       nxlog_debug_tag(DEBUG_TAG, 4, _T("UpdateLDAPGroup(): Group added: ID: %s DN: %s, login name: %s, description: %s"), CHECK_NULL(ldapObject->m_id), dn, ldapObject->m_loginName, CHECK_NULL(ldapObject->m_description));
    }
-   RWLockUnlock(s_userDatabaseLock);
+   s_userDatabaseLock.unlock();
 }
 
 /**
@@ -1226,7 +1226,7 @@ void DumpUsers(CONSOLE_CTX pCtx)
    ConsolePrintf(pCtx, _T("Login name           GUID                                 System rights\n")
                        _T("-----------------------------------------------------------------------\n"));
 
-   RWLockReadLock(s_userDatabaseLock);
+   s_userDatabaseLock.readLock();
    Iterator<UserDatabaseObject> it = s_userDatabase.begin();
    while(it.hasNext())
    {
@@ -1238,7 +1238,7 @@ void DumpUsers(CONSOLE_CTX pCtx)
          ConsolePrintf(pCtx, _T("%-20s %-36s 0x") UINT64X_FMT(_T("016")) _T("\n"), object->getName(), object->getGuidAsText(szGUID), systemRights);
 		}
 	}
-   RWLockUnlock(s_userDatabaseLock);
+   s_userDatabaseLock.unlock();
    ConsolePrintf(pCtx, _T("\n"));
 }
 
@@ -1249,7 +1249,7 @@ uint32_t NXCORE_EXPORTABLE DetachLDAPUser(uint32_t id)
 {
    uint32_t rcc = RCC_INVALID_USER_ID;
 
-   RWLockWriteLock(s_userDatabaseLock);
+   s_userDatabaseLock.writeLock();
 
    UserDatabaseObject *object = s_userDatabase.get(id);
    if (object != nullptr)
@@ -1260,7 +1260,7 @@ uint32_t NXCORE_EXPORTABLE DetachLDAPUser(uint32_t id)
       rcc = RCC_SUCCESS;
    }
 
-   RWLockUnlock(s_userDatabaseLock);
+   s_userDatabaseLock.unlock();
    return rcc;
 }
 
@@ -1356,13 +1356,13 @@ uint32_t NXCORE_EXPORTABLE SetUserPassword(uint32_t id, const TCHAR *newPassword
 	if (id & GROUP_FLAG)
 		return RCC_INVALID_USER_ID;
 
-   RWLockWriteLock(s_userDatabaseLock);
+   s_userDatabaseLock.writeLock();
 
    // Find user
    User *user = static_cast<User*>(s_userDatabase.get(id));
    if (user == nullptr)
    {
-      RWLockUnlock(s_userDatabaseLock);
+      s_userDatabaseLock.unlock();
       return RCC_INVALID_USER_ID;
    }
 
@@ -1470,7 +1470,7 @@ uint32_t NXCORE_EXPORTABLE SetUserPassword(uint32_t id, const TCHAR *newPassword
    rcc = RCC_SUCCESS;
 
 finish:
-   RWLockUnlock(s_userDatabaseLock);
+   s_userDatabaseLock.unlock();
    return rcc;
 }
 
@@ -1483,7 +1483,7 @@ uint32_t NXCORE_EXPORTABLE ValidateUserPassword(uint32_t userId, const TCHAR *lo
 		return RCC_INVALID_USER_ID;
 
 	uint32_t rcc = RCC_INVALID_USER_ID;
-   RWLockReadLock(s_userDatabaseLock);
+   s_userDatabaseLock.readLock();
 
    // Find user
    User *user = static_cast<User*>(s_userDatabase.get(userId));
@@ -1526,7 +1526,7 @@ uint32_t NXCORE_EXPORTABLE ValidateUserPassword(uint32_t userId, const TCHAR *lo
       }
    }
 
-   RWLockUnlock(s_userDatabaseLock);
+   s_userDatabaseLock.unlock();
    return rcc;
 }
 
@@ -1535,7 +1535,7 @@ uint32_t NXCORE_EXPORTABLE ValidateUserPassword(uint32_t userId, const TCHAR *lo
  */
 Iterator<UserDatabaseObject> NXCORE_EXPORTABLE OpenUserDatabase()
 {
-   RWLockReadLock(s_userDatabaseLock);
+   s_userDatabaseLock.readLock();
 	return s_userDatabase.begin();
 }
 
@@ -1544,7 +1544,7 @@ Iterator<UserDatabaseObject> NXCORE_EXPORTABLE OpenUserDatabase()
  */
 void NXCORE_EXPORTABLE CloseUserDatabase()
 {
-   RWLockUnlock(s_userDatabaseLock);
+   s_userDatabaseLock.unlock();
 }
 
 /**
@@ -1553,7 +1553,7 @@ void NXCORE_EXPORTABLE CloseUserDatabase()
 unique_ptr<ObjectArray<UserDatabaseObject>> FindUserDBObjects(const IntegerArray<uint32_t>& ids)
 {
    auto userDB = make_unique<ObjectArray<UserDatabaseObject>>(ids.size(), 16, Ownership::True);
-   RWLockReadLock(s_userDatabaseLock);
+   s_userDatabaseLock.readLock();
    for(int i = 0; i < ids.size(); i++)
    {
       UserDatabaseObject *object = s_userDatabase.get(ids.get(i));
@@ -1565,7 +1565,7 @@ unique_ptr<ObjectArray<UserDatabaseObject>> FindUserDBObjects(const IntegerArray
             userDB->add(new User(static_cast<User*>(object)));
       }
    }
-   RWLockUnlock(s_userDatabaseLock);
+   s_userDatabaseLock.unlock();
    return userDB;
 }
 
@@ -1575,7 +1575,7 @@ unique_ptr<ObjectArray<UserDatabaseObject>> FindUserDBObjects(const IntegerArray
 unique_ptr<ObjectArray<UserDatabaseObject>> FindUserDBObjects(const StructArray<ResponsibleUser>& ids)
 {
    auto userDB = make_unique<ObjectArray<UserDatabaseObject>>(ids.size(), 16, Ownership::True);
-   RWLockReadLock(s_userDatabaseLock);
+   s_userDatabaseLock.readLock();
    for(int i = 0; i < ids.size(); i++)
    {
       UserDatabaseObject *object = s_userDatabase.get(ids.get(i)->userId);
@@ -1587,7 +1587,7 @@ unique_ptr<ObjectArray<UserDatabaseObject>> FindUserDBObjects(const StructArray<
             userDB->add(new User(static_cast<User*>(object)));
       }
    }
-   RWLockUnlock(s_userDatabaseLock);
+   s_userDatabaseLock.unlock();
    return userDB;
 }
 
@@ -1596,13 +1596,13 @@ unique_ptr<ObjectArray<UserDatabaseObject>> FindUserDBObjects(const StructArray<
  */
 void GetUser2FABindingNames(uint32_t userId, NXCPMessage *response)
 {
-   RWLockReadLock(s_userDatabaseLock);
+   s_userDatabaseLock.readLock();
    UserDatabaseObject *object = s_userDatabase.get(userId);
    if ((object != nullptr) && !object->isGroup())
    {
       static_cast<User*>(object)->get2FABindings()->fillMessage(response, VID_2FA_METHODS_LIST_BASE, VID_2FA_METHODS_COUNT);
    }
-   RWLockUnlock(s_userDatabaseLock);
+   s_userDatabaseLock.unlock();
 }
 
 /**
@@ -1611,14 +1611,14 @@ void GetUser2FABindingNames(uint32_t userId, NXCPMessage *response)
 shared_ptr<Config> GetUser2FABindingInfo(int userId, const TCHAR* methodName)
 {
    shared_ptr<Config> binding;
-   RWLockReadLock(s_userDatabaseLock);
+   s_userDatabaseLock.readLock();
    UserDatabaseObject *object = s_userDatabase.get(userId);
    if (object != NULL && !object->isGroup())
    {
       User* user = static_cast<User*>(object);
       binding = user->get2FABindingInfo(methodName);
    }
-   RWLockUnlock(s_userDatabaseLock);
+   s_userDatabaseLock.unlock();
    return binding;
 }
 
@@ -1628,14 +1628,14 @@ shared_ptr<Config> GetUser2FABindingInfo(int userId, const TCHAR* methodName)
 uint32_t ModifyUser2FABinding(uint32_t userId, const TCHAR* methodName, char* configuration)
 {
    uint32_t rcc = RCC_INVALID_USER_ID;
-   RWLockReadLock(s_userDatabaseLock);
+   s_userDatabaseLock.readLock();
    UserDatabaseObject *object = s_userDatabase.get(userId);
    if ((object != nullptr) && !object->isGroup())
    {
       User* user = static_cast<User*>(object);
       rcc = user->modify2FABinding(methodName, configuration);
    }
-   RWLockUnlock(s_userDatabaseLock);
+   s_userDatabaseLock.unlock();
    return rcc;
 }
 
@@ -1645,7 +1645,7 @@ uint32_t ModifyUser2FABinding(uint32_t userId, const TCHAR* methodName, char* co
 uint32_t DeleteUser2FABinding(uint32_t userId, const TCHAR* methodName)
 {
    uint32_t rcc = RCC_INVALID_USER_ID;
-   RWLockReadLock(s_userDatabaseLock);
+   s_userDatabaseLock.readLock();
    UserDatabaseObject *object = s_userDatabase.get(userId);
    if ((object != nullptr) && !object->isGroup())
    {
@@ -1666,50 +1666,48 @@ uint32_t DeleteUser2FABinding(uint32_t userId, const TCHAR* methodName)
          rcc = RCC_NO_SUCH_2FA_BINDING;
       }
    }
-   RWLockUnlock(s_userDatabaseLock);
+   s_userDatabaseLock.unlock();
    return rcc;
 }
 
 /**
  * Get custom attribute's value
  */
-const TCHAR NXCORE_EXPORTABLE *GetUserDbObjectAttr(UINT32 id, const TCHAR *name)
+const TCHAR NXCORE_EXPORTABLE *GetUserDbObjectAttr(uint32_t id, const TCHAR *name)
 {
-	const TCHAR *value = NULL;
+	const TCHAR *value = nullptr;
 
-   RWLockReadLock(s_userDatabaseLock);
+   s_userDatabaseLock.readLock();
 
    UserDatabaseObject *object = s_userDatabase.get(id);
-   if (object != NULL)
+   if (object != nullptr)
       value = object->getAttribute(name);
 
-   RWLockUnlock(s_userDatabaseLock);
+   s_userDatabaseLock.unlock();
 	return value;
 }
 
 /**
  * Get custom attribute's value as unsigned integer
  */
-UINT32 NXCORE_EXPORTABLE GetUserDbObjectAttrAsULong(UINT32 id, const TCHAR *name)
+uint32_t NXCORE_EXPORTABLE GetUserDbObjectAttrAsULong(uint32_t id, const TCHAR *name)
 {
 	const TCHAR *value = GetUserDbObjectAttr(id, name);
-	return (value != NULL) ? _tcstoul(value, NULL, 0) : 0;
+	return (value != nullptr) ? _tcstoul(value, nullptr, 0) : 0;
 }
 
 /**
  * Set custom attribute's value
  */
-void NXCORE_EXPORTABLE SetUserDbObjectAttr(UINT32 id, const TCHAR *name, const TCHAR *value)
+void NXCORE_EXPORTABLE SetUserDbObjectAttr(uint32_t id, const TCHAR *name, const TCHAR *value)
 {
-   RWLockWriteLock(s_userDatabaseLock);
-
+   s_userDatabaseLock.writeLock();
    UserDatabaseObject *object = s_userDatabase.get(id);
-   if (object != NULL)
+   if (object != nullptr)
    {
       object->setAttribute(name, value);
    }
-
-   RWLockUnlock(s_userDatabaseLock);
+   s_userDatabaseLock.unlock();
 }
 
 /**
@@ -1733,7 +1731,7 @@ bool AuthenticateUserForXMPPSubscription(const char *xmppId)
    if (sep != NULL)
       *sep = 0;
 
-   RWLockReadLock(s_userDatabaseLock);
+   s_userDatabaseLock.readLock();
    Iterator<UserDatabaseObject> it = s_userDatabase.begin();
    while(it.hasNext())
    {
@@ -1753,7 +1751,7 @@ bool AuthenticateUserForXMPPSubscription(const char *xmppId)
          break;
       }
    }
-   RWLockUnlock(s_userDatabaseLock);
+   s_userDatabaseLock.unlock();
 
    MemFree(_xmppId);
    return success;
@@ -1780,7 +1778,7 @@ bool AuthenticateUserForXMPPCommands(const char *xmppId)
    if (sep != NULL)
       *sep = 0;
 
-   RWLockReadLock(s_userDatabaseLock);
+   s_userDatabaseLock.readLock();
    Iterator<UserDatabaseObject> it = s_userDatabase.begin();
    while(it.hasNext())
    {
@@ -1809,7 +1807,7 @@ bool AuthenticateUserForXMPPCommands(const char *xmppId)
          break;
       }
    }
-   RWLockUnlock(s_userDatabaseLock);
+   s_userDatabaseLock.unlock();
 
    MemFree(_xmppId);
    return success;

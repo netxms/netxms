@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -40,7 +40,6 @@ struct InetAddressIndexEntry
 InetAddressIndex::InetAddressIndex()
 {
    m_root = nullptr;
-   m_lock = RWLockCreate();
 }
 
 /**
@@ -55,7 +54,6 @@ InetAddressIndex::~InetAddressIndex()
       entry->object.~shared_ptr();
       MemFree(entry);
    }
-   RWLockDestroy(m_lock);
 }
 
 /**
@@ -75,7 +73,7 @@ bool InetAddressIndex::put(const InetAddress& addr, const shared_ptr<NetObj>& ob
    BYTE key[18];
    addr.buildHashKey(key);
 
-   RWLockWriteLock(m_lock);
+   m_lock.writeLock();
 
    InetAddressIndexEntry *entry;
    HASH_FIND(hh, m_root, key, sizeof(key), entry);
@@ -90,7 +88,7 @@ bool InetAddressIndex::put(const InetAddress& addr, const shared_ptr<NetObj>& ob
    }
    entry->object = object;
 
-   RWLockUnlock(m_lock);
+   m_lock.unlock();
    return replace;
 }
 
@@ -123,7 +121,7 @@ void InetAddressIndex::remove(const InetAddress& addr)
    BYTE key[18];
    addr.buildHashKey(key);
 
-   RWLockWriteLock(m_lock);
+   m_lock.writeLock();
 
    InetAddressIndexEntry *entry;
    HASH_FIND(hh, m_root, key, sizeof(key), entry);
@@ -133,7 +131,7 @@ void InetAddressIndex::remove(const InetAddress& addr)
       entry->object.~shared_ptr();
       MemFree(entry);
    }
-   RWLockUnlock(m_lock);
+   m_lock.unlock();
 }
 
 /**
@@ -149,7 +147,7 @@ shared_ptr<NetObj> InetAddressIndex::get(const InetAddress& addr) const
    BYTE key[18];
    addr.buildHashKey(key);
 
-   RWLockReadLock(m_lock);
+   m_lock.readLock();
 
    InetAddressIndexEntry *entry;
    HASH_FIND(hh, m_root, key, sizeof(key), entry);
@@ -157,7 +155,7 @@ shared_ptr<NetObj> InetAddressIndex::get(const InetAddress& addr) const
    {
       object = entry->object;
    }
-   RWLockUnlock(m_lock);
+   m_lock.unlock();
    return object;
 }
 
@@ -168,7 +166,7 @@ shared_ptr<NetObj> InetAddressIndex::find(bool (*comparator)(NetObj *, void *), 
 {
    shared_ptr<NetObj> object;
 
-   RWLockReadLock(m_lock);
+   m_lock.readLock();
 
    InetAddressIndexEntry *entry, *tmp;
    HASH_ITER(hh, m_root, entry, tmp)
@@ -180,7 +178,7 @@ shared_ptr<NetObj> InetAddressIndex::find(bool (*comparator)(NetObj *, void *), 
       }
    }
 
-   RWLockUnlock(m_lock);
+   m_lock.unlock();
    return object;
 }
 
@@ -189,9 +187,9 @@ shared_ptr<NetObj> InetAddressIndex::find(bool (*comparator)(NetObj *, void *), 
  */
 int InetAddressIndex::size() const
 {
-   RWLockReadLock(m_lock);
+   m_lock.readLock();
    int s = HASH_COUNT(m_root);
-   RWLockUnlock(m_lock);
+   m_lock.unlock();
    return s;
 }
 
@@ -202,7 +200,7 @@ unique_ptr<SharedObjectArray<NetObj>> InetAddressIndex::getObjects(bool (*filter
 {
    unique_ptr<SharedObjectArray<NetObj>> objects = make_unique<SharedObjectArray<NetObj>>();
 
-   RWLockReadLock(m_lock);
+   m_lock.readLock();
    InetAddressIndexEntry *entry, *tmp;
    HASH_ITER(hh, m_root, entry, tmp)
    {
@@ -211,7 +209,7 @@ unique_ptr<SharedObjectArray<NetObj>> InetAddressIndex::getObjects(bool (*filter
          objects->add(entry->object);
       }
    }
-   RWLockUnlock(m_lock);
+   m_lock.unlock();
    return objects;
 }
 
@@ -220,11 +218,11 @@ unique_ptr<SharedObjectArray<NetObj>> InetAddressIndex::getObjects(bool (*filter
  */
 void InetAddressIndex::forEach(void (*callback)(const InetAddress& addr, NetObj *, void *), void *context) const
 {
-   RWLockReadLock(m_lock);
+   m_lock.readLock();
    InetAddressIndexEntry *entry, *tmp;
    HASH_ITER(hh, m_root, entry, tmp)
    {
       callback(entry->addr, entry->object.get(), context);
    }
-   RWLockUnlock(m_lock);
+   m_lock.unlock();
 }

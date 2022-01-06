@@ -540,9 +540,9 @@ uint32_t NXCORE_EXPORTABLE ModifyUserDatabaseObject(const NXCPMessage& msg, json
 uint32_t NXCORE_EXPORTABLE DetachLDAPUser(uint32_t id);
 Iterator<UserDatabaseObject> NXCORE_EXPORTABLE OpenUserDatabase();
 void NXCORE_EXPORTABLE CloseUserDatabase();
-const TCHAR NXCORE_EXPORTABLE *GetUserDbObjectAttr(UINT32 id, const TCHAR *name);
-UINT32 NXCORE_EXPORTABLE GetUserDbObjectAttrAsULong(UINT32 id, const TCHAR *name);
-void NXCORE_EXPORTABLE SetUserDbObjectAttr(UINT32 id, const TCHAR *name, const TCHAR *value);
+const TCHAR NXCORE_EXPORTABLE *GetUserDbObjectAttr(uint32_t id, const TCHAR *name);
+uint32_t NXCORE_EXPORTABLE GetUserDbObjectAttrAsULong(uint32_t id, const TCHAR *name);
+void NXCORE_EXPORTABLE SetUserDbObjectAttr(uint32_t id, const TCHAR *name, const TCHAR *value);
 TCHAR NXCORE_EXPORTABLE *ResolveUserId(uint32_t id, TCHAR *buffer, bool noFail = false);
 void UpdateLDAPUser(const TCHAR *dn, const LDAP_Object *ldapObject);
 void RemoveDeletedLDAPEntries(StringObjectMap<LDAP_Object> *entryListDn, StringObjectMap<LDAP_Object> *entryListId, uint32_t m_action, bool isUser);
