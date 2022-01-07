@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NXSL-based installer tool collection
-** Copyright (C) 2005-2020 Victor Kirhenshtein
+** Copyright (C) 2005-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -38,8 +38,6 @@ int g_traceLevel = 0;
 int main(int argc, char *argv[])
 {
    TCHAR *pszSource, szError[1024];
-   NXSL_Program *pScript;
-   NXSL_Value **ppArgs;
    int i, ch;
    bool dump = false, printResult = false, quiet = false;
 
@@ -107,20 +105,18 @@ int main(int argc, char *argv[])
 #endif
 	if (pszSource != nullptr)
 	{
-		pScript = NXSLCompile(pszSource, szError, 1024, nullptr);
+      NXSL_VM *vm = NXSLCompileAndCreateVM(pszSource, szError, 1024, new NXSL_InstallerEnvironment());
 		MemFree(pszSource);
-		if (pScript != nullptr)
+		if (vm != nullptr)
 		{
 			if (dump)
-				pScript->dump(stdout);
-
-         // Create VM
-         NXSL_VM *vm = new NXSL_VM(new NXSL_InstallerEnvironment);
+				vm->dump(stdout);
 
 			// Prepare arguments
-			if (argc - optind > 1)
+         NXSL_Value **ppArgs;
+         if (argc - optind > 1)
 			{
-				ppArgs = (NXSL_Value **)malloc(sizeof(NXSL_Value *) * (argc - optind - 1));
+				ppArgs = MemAllocArray<NXSL_Value*>(argc - optind - 1);
 				for(i = optind + 1; i < argc; i++)
 					ppArgs[i - optind - 1] = vm->createValue(argv[i]);
 			}
@@ -129,7 +125,7 @@ int main(int argc, char *argv[])
 				ppArgs = nullptr;
 			}
 
-			if (vm->load(pScript) && vm->run(argc - optind - 1, ppArgs))
+			if (vm->run(argc - optind - 1, ppArgs))
 			{
 				NXSL_Value *result = vm->getResult();
 				if (printResult)
@@ -139,7 +135,6 @@ int main(int argc, char *argv[])
 			{
 				_tprintf(_T("%s\n"), vm->getErrorText());
 			}
-			delete pScript;
          delete vm;
 			MemFree(ppArgs);
 		}

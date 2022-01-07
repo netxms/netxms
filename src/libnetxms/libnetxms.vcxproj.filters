@@ -353,6 +353,9 @@
     <ClInclude Include="..\..\include\winrwlock.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\tls_conn.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\..\build\netxms-build-tag.rc">

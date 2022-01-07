@@ -141,11 +141,11 @@ int CheckHTTP(bool tls, const InetAddress& addr, short port, char* uri, char* he
       if (tc.send(tmp, strlen(tmp)))
       {
 #define CHUNK_SIZE 10240
-         char* buff = (char*)malloc(CHUNK_SIZE);
+         char* buff = (char*)MemAlloc(CHUNK_SIZE);
          ssize_t offset = 0;
          ssize_t buffSize = CHUNK_SIZE;
 
-         while (tc.canRecv(5000))
+         while (tc.poll(5000))
          {
             ssize_t bytes = tc.recv(buff + offset, buffSize - offset);
             if (bytes > 0)

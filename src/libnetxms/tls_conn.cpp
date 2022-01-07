@@ -54,7 +54,7 @@ ssize_t TLSConnection::tlsRecv(void* data, const size_t size, const uint32_t tim
       bytes = SSL_read(m_ssl, data, static_cast<int>(size));
       if (bytes <= 0)
       {
-         int err = SSL_get_error(m_ssl, bytes);
+         int err = SSL_get_error(m_ssl, static_cast<int>(bytes));
          if ((err == SSL_ERROR_WANT_READ) || (err == SSL_ERROR_WANT_WRITE))
          {
             SocketPoller sp(err == SSL_ERROR_WANT_READ);
@@ -87,7 +87,7 @@ ssize_t TLSConnection::tlsSend(const void* data, const size_t size, const uint32
       bytes = SSL_write(m_ssl, data, static_cast<int>(size));
       if (bytes <= 0)
       {
-         int err = SSL_get_error(m_ssl, bytes);
+         int err = SSL_get_error(m_ssl, static_cast<int>(bytes));
          if ((err == SSL_ERROR_WANT_READ) || (err == SSL_ERROR_WANT_WRITE))
          {
             SocketPoller sp(err == SSL_ERROR_WANT_WRITE);
@@ -177,24 +177,20 @@ bool TLSConnection::startTLS(uint32_t timeout)
    const SSL_METHOD* method = SSLv23_method();
 #endif
 
-#define RETURN_FALSE \
-   stopTLS();        \
-   return false;
-
    if (method == nullptr)
    {
       nxlog_debug_tag(m_debugTag, 4, _T("Cannot obtain TLS method"));
-      RETURN_FALSE
+      goto failure;
    }
 
    m_context = SSL_CTX_new((SSL_METHOD*)method);
    if (m_context == nullptr)
    {
       nxlog_debug_tag(m_debugTag, 4, _T("Cannot create TLS context"));
-      RETURN_FALSE
+      goto failure;
    }
 
-   if (m_enableSSLInfoCallback)
+   if (m_enableSSLTrace)
       SSL_CTX_set_info_callback(m_context, SSLInfoCallback);
 
 #ifdef SSL_OP_NO_COMPRESSION
@@ -207,7 +203,7 @@ bool TLSConnection::startTLS(uint32_t timeout)
    if (m_ssl == nullptr)
    {
       nxlog_debug_tag(m_debugTag, 4, _T("Cannot create SSL object"));
-      RETURN_FALSE
+      goto failure;
    }
 
    SSL_set_connect_state(m_ssl);
@@ -229,7 +225,7 @@ bool TLSConnection::startTLS(uint32_t timeout)
                continue;
             }
             nxlog_debug_tag(m_debugTag, 4, _T("TLS handshake failed (timeout on %s)"), (sslErr == SSL_ERROR_WANT_READ) ? _T("read") : _T("write"));
-            RETURN_FALSE
+            goto failure;
          }
          else
          {
@@ -242,11 +238,15 @@ bool TLSConnection::startTLS(uint32_t timeout)
                ERR_error_string_n(error, buffer, sizeof(buffer));
                nxlog_debug_tag(m_debugTag, 5, _T("Caused by: %hs"), buffer);
             }
-            RETURN_FALSE
+            goto failure;
          }
       }
       break;
    }
 
    return true;
+
+failure:
+   stopTLS();  // Will destroy SSL context and SSL connection
+   return false;
 }

@@ -285,6 +285,7 @@
     <ClInclude Include="..\..\include\nxqueue.h" />
     <ClInclude Include="..\..\include\nxsocket.h" />
     <ClInclude Include="..\..\include\nxstat.h" />
+    <ClInclude Include="..\..\include\tls_conn.h" />
     <ClInclude Include="..\..\include\unicode.h" />
     <ClInclude Include="..\..\include\uthash.h" />
     <ClInclude Include="..\..\include\uuid.h" />

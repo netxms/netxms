@@ -30,12 +30,10 @@
 // Default timeout for TLS handshake/send/recieve + SOCKET connect
 #define TLS_CONN_DEFAULT_TIMEOUT 10000
 
-#define MAX_DEBUG_TAG_LEN 20
-
 /**
  * All things that are nessesary for TLS connection. Will automatically send/recieve data via TLS or without it.
  *
- * @note Destructor will close SSL connection and SOCKET automatically.
+ * @note Destructor will close SSL connection and socket automatically.
  *
  * @note BY DEFAULT TIMEOUTS IN METHODS ARE NOT 0! They are equal to TLS_CONN_DEFAULT_TIMEOUT. This value can be changed by setDefaultTimeout() method.
  *
@@ -47,8 +45,8 @@ private:
    SOCKET m_socket;
    SSL* m_ssl;
    SSL_CTX* m_context;
-   TCHAR m_debugTag[MAX_DEBUG_TAG_LEN];
-   bool m_enableSSLInfoCallback;
+   TCHAR m_debugTag[20];
+   bool m_enableSSLTrace;
    uint32_t m_defaultTimeout;
 
    ssize_t tlsRecv(void* data, size_t size, uint32_t timeout);
@@ -58,17 +56,19 @@ public:
    /**
     * @param _debugTag will be copied.
     */
-   TLSConnection(const TCHAR* debugTag, bool enableSSLInfoCallback = false, uint32_t defaultTimeout = TLS_CONN_DEFAULT_TIMEOUT)
+   TLSConnection(const TCHAR* debugTag, bool enableSSLTrace = false, uint32_t defaultTimeout = TLS_CONN_DEFAULT_TIMEOUT)
    {
-      _tcslcpy(m_debugTag, CHECK_NULL_EX(debugTag), MAX_DEBUG_TAG_LEN);
-      m_enableSSLInfoCallback = enableSSLInfoCallback;
-
+      _tcslcpy(m_debugTag, CHECK_NULL_EX(debugTag), sizeof(m_debugTag) / sizeof(TCHAR));
+      m_enableSSLTrace = enableSSLTrace;
       m_defaultTimeout = defaultTimeout;
       m_socket = INVALID_SOCKET;
       m_ssl = nullptr;
       m_context = nullptr;
    }
 
+   /**
+    * Destructor
+    */
    ~TLSConnection()
    {
       stopTLS();
@@ -76,32 +76,39 @@ public:
       closesocket(m_socket);
    }
 
+   bool connect(const InetAddress& addr, uint16_t port, bool tls, uint32_t timeout = TLS_CONN_DEFAULT_TIMEOUT);
+   bool startTLS(uint32_t timeout = 0);
+
    /**
     * Recieves data from socket considering if TLS is on or off.
     * @return number of bytes read on success, <= 0 on error.
     */
-   ssize_t recv(void* data, const size_t size, uint32_t timeout = 0)
+   ssize_t recv(void* data, size_t size, uint32_t timeout = 0)
    {
       if (timeout == 0)
          timeout = m_defaultTimeout;
-      if (isTLS())
-         return tlsRecv(data, size, timeout);
-      else
-         return RecvEx(m_socket, data, size, 0, timeout);
+      return isTLS() ? tlsRecv(data, size, timeout) : RecvEx(m_socket, data, size, 0, timeout);
    }
 
    /**
     * Sends data to socket considering is TLS is on or off.
     * @return number of bytes sent.
     */
-   ssize_t send(const void* data, const size_t size, uint32_t timeout = 0)
+   ssize_t send(const void* data, size_t size, uint32_t timeout = 0)
    {
       if (timeout == 0)
          timeout = m_defaultTimeout;
-      if (isTLS())
-         return tlsSend(data, size, timeout);
-      else
-         return SendEx(m_socket, data, size, 0, nullptr);
+      return isTLS() ? tlsSend(data, size, timeout) : SendEx(m_socket, data, size, 0, nullptr);
+   }
+
+   /**
+    * Poll socket for read rediness
+    */
+   bool poll(uint32_t timeout = 0)
+   {
+      SocketPoller sp;
+      sp.add(m_socket);
+      return sp.poll((timeout != 0) ? timeout : m_defaultTimeout) > 0;
    }
 
    /**
@@ -119,7 +126,10 @@ public:
     * Checks if TLS connection is established or not.
     * @return TRUE if TLS is connected.
     */
-   bool isTLS() { return m_ssl != nullptr; }
+   bool isTLS()
+   {
+      return m_ssl != nullptr;
+   }
 
    /**
     * Sets TLSConnection global timeout that will be used as default one. Overrides actual default values in methods' definitions.
@@ -130,18 +140,6 @@ public:
    {
       m_defaultTimeout = timeout;
    }
-
-   bool canRecv(uint32_t timeout = 0)
-   {
-      if (timeout == 0)
-         timeout = m_defaultTimeout;
-      SocketPoller sp;
-      sp.add(m_socket);
-      return sp.poll(timeout) > 0;
-   }
-
-   bool connect(const InetAddress& addr, uint16_t port, bool tls, uint32_t timeout = TLS_CONN_DEFAULT_TIMEOUT);
-   bool startTLS(uint32_t timeout = 0);
 };
 
 #endif // _tls_conn_h_
