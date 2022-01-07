@@ -186,7 +186,8 @@ void SNMPTrapConfiguration::compileScript()
    if ((m_scriptSource != nullptr) && (*m_scriptSource != 0))
    {
       TCHAR errorMessage[1024];
-      m_script = NXSLCompile(m_scriptSource, errorMessage, 1024, nullptr);
+      NXSL_ServerEnv env;
+      m_script = NXSLCompile(m_scriptSource, errorMessage, 1024, nullptr, &env);
       if (m_script == nullptr)
       {
          PostScriptErrorEvent(CONTEXT_SNMP_TRAP, 0, 0, errorMessage, _T("SNMPTrap::%u"), m_id);

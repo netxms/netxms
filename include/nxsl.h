@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -120,25 +120,13 @@ struct NXSL_FileHeader
 /**
  * Exportable classes
  */
-#ifdef __cplusplus
 #include <nxsl_classes.h>
-#else
-struct NXSL_Program;
-#endif
 
 /**
  * Functions
  */
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-NXSL_Program LIBNXSL_EXPORTABLE *NXSLCompile(const TCHAR *source, TCHAR *errorMessage, size_t errorMessageLen, int *errorLineNumber);
+NXSL_Program LIBNXSL_EXPORTABLE *NXSLCompile(const TCHAR *source, TCHAR *errorMessage, size_t errorMessageLen, int *errorLineNumber, NXSL_Environment *env);
 NXSL_VM LIBNXSL_EXPORTABLE *NXSLCompileAndCreateVM(const TCHAR *source, TCHAR *errorMessage, size_t errorMessageLen, NXSL_Environment *env);
 TCHAR LIBNXSL_EXPORTABLE *NXSLLoadFile(const TCHAR *fileName);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif

@@ -79,7 +79,8 @@ void AutoBindTarget::setAutoBindFilter(int filterNumber, const TCHAR *filter)
    {
       TCHAR error[256];
       m_autoBindFilterSources[filterNumber] = MemCopyString(filter);
-      m_autoBindFilters[filterNumber] = NXSLCompile(filter, error, 256, nullptr);
+      NXSL_ServerEnv env;
+      m_autoBindFilters[filterNumber] = NXSLCompile(filter, error, 256, nullptr, &env);
       if (m_autoBindFilters[filterNumber] == nullptr)
       {
          PostScriptErrorEvent(CONTEXT_AUTOBIND, m_this->getId(), 0, error, _T("AutoBind::%s::%s::%d"), m_this->getObjectClassName(), m_this->getName(), filterNumber);

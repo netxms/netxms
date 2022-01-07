@@ -980,7 +980,8 @@ void Threshold::setScript(TCHAR *script)
       if (m_scriptSource[0] != 0)
       {
          TCHAR errorText[1024];
-         m_script = NXSLCompile(m_scriptSource, errorText, 1024, nullptr);
+         NXSL_ServerEnv env;
+         m_script = NXSLCompile(m_scriptSource, errorText, 1024, nullptr, &env);
          if (m_script == nullptr)
          {
             TCHAR defaultName[32];

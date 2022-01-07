@@ -64,9 +64,10 @@ static const char *s_nxslCommandMnemonic[] =
 /**
  * Constructor
  */
-NXSL_ProgramBuilder::NXSL_ProgramBuilder() : NXSL_ValueManager(), m_instructionSet(256, 256),
+NXSL_ProgramBuilder::NXSL_ProgramBuilder(NXSL_Environment *env) : NXSL_ValueManager(), m_instructionSet(256, 256),
          m_constants(this, Ownership::True), m_functions(64, 64), m_requiredModules(0, 16)
 {
+   m_environment = env;
    m_expressionVariables = nullptr;
 }
 
@@ -81,8 +82,7 @@ NXSL_ProgramBuilder::~NXSL_ProgramBuilder()
 }
 
 /**
- * Add new constant. Name expected to be dynamically allocated and
- * will be destroyed by NXSL_ProgramBuilder when no longer needed.
+ * Add new constant. Value should be created by same program builder.
  */
 bool NXSL_ProgramBuilder::addConstant(const NXSL_Identifier& name, NXSL_Value *value)
 {
@@ -92,7 +92,22 @@ bool NXSL_ProgramBuilder::addConstant(const NXSL_Identifier& name, NXSL_Value *v
       m_constants.set(name, value);
       success = true;
    }
+   else
+   {
+      destroyValue(value);
+   }
    return success;
+}
+
+/**
+ * Get value of named constant
+ */
+NXSL_Value *NXSL_ProgramBuilder::getConstantValue(const NXSL_Identifier& name)
+{
+   NXSL_Value *v = m_constants.get(name);
+   if (v != nullptr)
+      return createValue(v);
+   return (m_environment != nullptr) ? m_environment->getConstantValue(name, this) : nullptr;
 }
 
 /**

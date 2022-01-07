@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -26,10 +26,10 @@
 /**
  * Interface to compiler
  */
-NXSL_Program LIBNXSL_EXPORTABLE *NXSLCompile(const TCHAR *source, TCHAR *errorMessage, size_t errorMessageLen, int *errorLine)
+NXSL_Program LIBNXSL_EXPORTABLE *NXSLCompile(const TCHAR *source, TCHAR *errorMessage, size_t errorMessageLen, int *errorLine, NXSL_Environment *env)
 {
    NXSL_Compiler compiler;
-   NXSL_Program *pResult = compiler.compile(source);
+   NXSL_Program *pResult = compiler.compile(source, env);
    if (pResult == nullptr)
    {
       if (errorMessage != nullptr)
@@ -45,7 +45,7 @@ NXSL_Program LIBNXSL_EXPORTABLE *NXSLCompile(const TCHAR *source, TCHAR *errorMe
  */
 NXSL_VM LIBNXSL_EXPORTABLE *NXSLCompileAndCreateVM(const TCHAR *source, TCHAR *errorMessage, size_t errorMessageLen, NXSL_Environment *env)
 {
-   NXSL_Program *p = NXSLCompile(source, errorMessage, errorMessageLen, nullptr);
+   NXSL_Program *p = NXSLCompile(source, errorMessage, errorMessageLen, nullptr, env);
    if (p == nullptr)
    {
       delete env;

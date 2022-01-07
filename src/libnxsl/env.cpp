@@ -342,7 +342,7 @@ bool NXSL_Environment::loadModule(NXSL_VM *vm, const NXSL_ModuleImport *importIn
       TCHAR *source = NXSLLoadFile(fileName);
       if (source != nullptr)
       {
-         NXSL_Program *pScript = NXSLCompile(source, nullptr, 0, nullptr);
+         NXSL_Program *pScript = NXSLCompile(source, nullptr, 0, nullptr, this);
          if (pScript != nullptr)
          {
             vm->loadModule(pScript, importInfo);

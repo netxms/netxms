@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -111,26 +111,24 @@ ScriptVMHandle NXCORE_EXPORTABLE CreateServerScriptVM(const NXSL_Program *script
  */
 void LoadScripts()
 {
-   DB_RESULT hResult;
-   NXSL_LibraryScript *pScript;
-   TCHAR buffer[MAX_DB_STRING];
-
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   hResult = DBSelect(hdb, _T("SELECT script_id,guid,script_name,script_code FROM script_library"));
+   DB_RESULT hResult = DBSelect(hdb, _T("SELECT script_id,guid,script_name,script_code FROM script_library"));
    if (hResult != nullptr)
    {
+      NXSL_ServerEnv env;
       int numRows = DBGetNumRows(hResult);
       for(int i = 0; i < numRows; i++)
       {
-         pScript = new NXSL_LibraryScript(DBGetFieldULong(hResult, i, 0), DBGetFieldGUID(hResult, i, 1),
-                  DBGetField(hResult, i, 2, buffer, MAX_DB_STRING), DBGetField(hResult, i, 3, nullptr, 0));
-         if (!pScript->isValid())
+         TCHAR buffer[MAX_DB_STRING];
+         auto script = new NXSL_LibraryScript(DBGetFieldULong(hResult, i, 0), DBGetFieldGUID(hResult, i, 1),
+                  DBGetField(hResult, i, 2, buffer, MAX_DB_STRING), DBGetField(hResult, i, 3, nullptr, 0), &env);
+         if (!script->isValid())
          {
-            nxlog_write(NXLOG_WARNING, _T("Error compiling library script %s [%u] (%s)"),
-                     pScript->getName(), pScript->getId(), pScript->getError());
+            nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_BASE, _T("Error compiling library script %s [%u] (%s)"),
+                     script->getName(), script->getId(), script->getError());
          }
-         s_scriptLibrary.addScript(pScript);
-         nxlog_debug_tag(DEBUG_TAG_BASE,  2, _T("Script %s added to library"), pScript->getName());
+         s_scriptLibrary.addScript(script);
+         nxlog_debug_tag(DEBUG_TAG_BASE,  2, _T("Script %s added to library"), script->getName());
       }
       DBFreeResult(hResult);
    }
@@ -156,8 +154,9 @@ static NXSL_LibraryScript *LoadScriptFromDatabase(uint32_t id)
          if (DBGetNumRows(hResult) > 0)
          {
             TCHAR name[MAX_DB_STRING];
+            NXSL_ServerEnv env;
             script = new NXSL_LibraryScript(DBGetFieldULong(hResult, 0, 0), DBGetFieldGUID(hResult, 0, 1),
-                     DBGetField(hResult, 0, 2, name, MAX_DB_STRING), DBGetField(hResult, 0, 3, nullptr, 0));
+                     DBGetField(hResult, 0, 2, name, MAX_DB_STRING), DBGetField(hResult, 0, 3, nullptr, 0), &env);
          }
          DBFreeResult(hResult);
       }
@@ -182,7 +181,7 @@ void ReloadScript(uint32_t id)
 
    if (!script->isValid())
    {
-      nxlog_write(NXLOG_WARNING, _T("Error compiling library script %s [%u] (%s)"), script->getName(), id, script->getError());
+      nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_BASE, _T("Error compiling library script %s [%u] (%s)"), script->getName(), id, script->getError());
    }
 
    s_scriptLibrary.lock();

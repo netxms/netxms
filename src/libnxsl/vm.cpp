@@ -797,12 +797,12 @@ void NXSL_VM::execute()
             }
             else
             {
-               m_dataStack->push(createValue());
+               error(NXSL_ERR_NO_SUCH_CONSTANT);
             }
          }
          else
          {
-            m_dataStack->push(createValue());
+            error(NXSL_ERR_NO_SUCH_CONSTANT);
          }
          break;
       case OPCODE_CLEAR_EXPRVARS:

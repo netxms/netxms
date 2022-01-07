@@ -1126,7 +1126,8 @@ void DCObject::setTransformationScript(const TCHAR *source)
       if (m_transformationScriptSource[0] != 0)
       {
          TCHAR errorText[1024];
-         m_transformationScript = NXSLCompile(m_transformationScriptSource, errorText, 1024, nullptr);
+         NXSL_ServerEnv env;
+         m_transformationScript = NXSLCompile(m_transformationScriptSource, errorText, 1024, nullptr, &env);
          if (m_transformationScript == nullptr)
          {
             PostScriptErrorEvent(CONTEXT_DCI, m_ownerId, m_id, errorText, _T("DCI::%s::%d::TransformationScript"), getOwnerName(), m_id);
@@ -1470,7 +1471,8 @@ void DCObject::setInstanceFilter(const TCHAR *script)
       if (m_instanceFilterSource[0] != 0)
       {
          TCHAR errorText[1024];
-         m_instanceFilter = NXSLCompile(m_instanceFilterSource, errorText, 1024, nullptr);
+         NXSL_ServerEnv env;
+         m_instanceFilter = NXSLCompile(m_instanceFilterSource, errorText, 1024, nullptr, &env);
          if (m_instanceFilter == nullptr)
          {
             // node can be nullptr if this DCO was just created from template

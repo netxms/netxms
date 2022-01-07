@@ -154,7 +154,8 @@ void BusinessServiceCheck::compileScript()
 
 	delete m_compiledScript;
    TCHAR errorMsg[256];
-	m_compiledScript = NXSLCompile(m_script, errorMsg, sizeof(errorMsg) / sizeof(TCHAR), nullptr);
+   NXSL_ServerEnv env;
+	m_compiledScript = NXSLCompile(m_script, errorMsg, sizeof(errorMsg) / sizeof(TCHAR), nullptr, &env);
    if (m_compiledScript == nullptr)
    {
       PostScriptErrorEvent(CONTEXT_BIZSVC, m_serviceId, 0, errorMsg, _T("BusinessServiceCheck::%u"), m_id);

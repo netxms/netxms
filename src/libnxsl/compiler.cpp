@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -26,7 +26,7 @@
 /**
  * Externals
  */
-int yyparse(yyscan_t scanner, NXSL_Lexer *, NXSL_Compiler *, NXSL_ProgramBuilder *);
+int yyparse(yyscan_t scanner, NXSL_Lexer*, NXSL_Compiler*, NXSL_ProgramBuilder*);
 void yyset_extra(NXSL_Lexer *, yyscan_t);
 int yylex_init(yyscan_t *);
 int yylex_destroy(yyscan_t);
@@ -87,16 +87,16 @@ void NXSL_Compiler::error(const char *pszMsg)
 /**
  * Compile source code
  */
-NXSL_Program *NXSL_Compiler::compile(const TCHAR *pszSourceCode)
+NXSL_Program *NXSL_Compiler::compile(const TCHAR *sourceCode, NXSL_Environment *env)
 {
-   m_lexer = new NXSL_Lexer(this, pszSourceCode);
+   m_lexer = new NXSL_Lexer(this, sourceCode);
 
 	yyscan_t scanner;
 	yylex_init(&scanner);
 	yyset_extra(m_lexer, scanner);
 
 	NXSL_Program *code = nullptr;
-   NXSL_ProgramBuilder builder;
+   NXSL_ProgramBuilder builder(env);
    if (yyparse(scanner, m_lexer, this, &builder) == 0)
    {
       builder.resolveFunctions();
@@ -110,10 +110,9 @@ NXSL_Program *NXSL_Compiler::compile(const TCHAR *pszSourceCode)
 /**
  * yyerror() for parser
  */
-void yyerror(yyscan_t scanner, NXSL_Lexer *pLexer, NXSL_Compiler *pCompiler,
-             NXSL_ProgramBuilder *pScript, const char *pszText)
+void yyerror(yyscan_t scanner, NXSL_Lexer *lexer, NXSL_Compiler *compiler, NXSL_ProgramBuilder *builder, const char *text)
 {
-   pCompiler->error(pszText);
+   compiler->error(text);
 }
 
 /**

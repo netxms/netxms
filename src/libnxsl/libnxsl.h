@@ -222,6 +222,7 @@ protected:
    StructArray<NXSL_IdentifierLocation> *m_expressionVariables;
    NXSL_Identifier m_currentExpressionVariable;
    StringMap m_metadata;
+   NXSL_Environment *m_environment;
 
    uint32_t getFinalJumpDestination(uint32_t addr, int srcJump);
    uint32_t getExpressionVariableCodeBlock(const NXSL_Identifier& identifier);
@@ -237,7 +238,7 @@ protected:
    }
 
 public:
-   NXSL_ProgramBuilder();
+   NXSL_ProgramBuilder(NXSL_Environment *env);
    virtual ~NXSL_ProgramBuilder();
 
    void addInstruction(int line, int16_t opCode)
@@ -277,6 +278,7 @@ public:
    void optimize();
    void removeInstructions(uint32_t start, int count);
    bool addConstant(const NXSL_Identifier& name, NXSL_Value *value);
+   NXSL_Value *getConstantValue(const NXSL_Identifier& name);
    void enableExpressionVariables();
    void disableExpressionVariables(int line);
    void registerExpressionVariable(const NXSL_Identifier& identifier);
@@ -286,6 +288,7 @@ public:
    bool isEmpty() const { return m_instructionSet.isEmpty() || ((m_instructionSet.size() == 1) && (m_instructionSet.get(0)->m_opCode == 28)); }
    StringList *getRequiredModules() const;
    const NXSL_Identifier& getCurrentExpressionVariable() const { return m_currentExpressionVariable; }
+   NXSL_Environment *getEnvironment() { return m_environment; }
 
    virtual uint64_t getMemoryUsage() const override;
 
@@ -340,7 +343,7 @@ public:
    NXSL_Compiler();
    ~NXSL_Compiler();
 
-   NXSL_Program *compile(const TCHAR *pszSourceCode);
+   NXSL_Program *compile(const TCHAR *sourceCode, NXSL_Environment *env);
    void error(const char *pszMsg);
 
    const TCHAR *getErrorText() { return CHECK_NULL(m_errorText); }

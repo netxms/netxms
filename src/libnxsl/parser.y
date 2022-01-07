@@ -13,8 +13,7 @@
 #include "libnxsl.h"
 #include "parser.tab.hpp"
 
-void yyerror(yyscan_t scanner, NXSL_Lexer *pLexer, NXSL_Compiler *pCompiler,
-      NXSL_ProgramBuilder *pScript, const char *pszText);
+void yyerror(yyscan_t scanner, NXSL_Lexer *lexer, NXSL_Compiler *compiler, NXSL_ProgramBuilder *builder, const char *text);
 int yylex(YYSTYPE *lvalp, yyscan_t scanner);
 
 %}
@@ -23,9 +22,9 @@ int yylex(YYSTYPE *lvalp, yyscan_t scanner);
 %pure-parser
 %lex-param		{yyscan_t scanner}
 %parse-param	{yyscan_t scanner}
-%parse-param	{NXSL_Lexer *pLexer}
-%parse-param	{NXSL_Compiler *pCompiler}
-%parse-param	{NXSL_ProgramBuilder *pScript}
+%parse-param	{NXSL_Lexer *lexer}
+%parse-param	{NXSL_Compiler *compiler}
+%parse-param	{NXSL_ProgramBuilder *builder}
 
 %union
 {
@@ -116,7 +115,7 @@ int yylex(YYSTYPE *lvalp, yyscan_t scanner);
 %type <simpleStatement> SimpleStatementKeyword
 
 %destructor { MemFree($$); } <valStr>
-%destructor { pScript->destroyValue($$); } <constant>
+%destructor { builder->destroyValue($$); } <constant>
 
 %start Script
 
@@ -129,26 +128,26 @@ Script:
 	char szErrorText[256];
 
 	// Add implicit main() function
-	if (!pScript->addFunction("$main", 0, szErrorText))
+	if (!builder->addFunction("$main", 0, szErrorText))
 	{
-		pCompiler->error(szErrorText);
+		compiler->error(szErrorText);
 		YYERROR;
 	}
 	
 	// Implicit return
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_RET_NULL);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_RET_NULL);
 }
 |	ExpressionStatement
 {
 	char szErrorText[256];
 
 	// Add implicit return
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_RETURN);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_RETURN);
 
 	// Add implicit main() function
-	if (!pScript->addFunction("$main", 0, szErrorText))
+	if (!builder->addFunction("$main", 0, szErrorText))
 	{
-		pCompiler->error(szErrorText);
+		compiler->error(szErrorText);
 		YYERROR;
 	}
 }
@@ -157,12 +156,12 @@ Script:
 	char szErrorText[256];
 
 	// Add implicit return
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_RET_NULL);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_RET_NULL);
 
 	// Add implicit main() function
-	if (!pScript->addFunction("$main", 0, szErrorText))
+	if (!builder->addFunction("$main", 0, szErrorText))
 	{
-		pCompiler->error(szErrorText);
+		compiler->error(szErrorText);
 		YYERROR;
 	}
 }
@@ -192,10 +191,10 @@ ConstList:
 ConstDefinition:
 	T_IDENTIFIER '=' Constant
 {
-	if (!pScript->addConstant($1, $3))
+	if (!builder->addConstant($1, $3))
 	{
-		pCompiler->error("Constant already defined");
-		pScript->destroyValue($3);
+		compiler->error("Constant already defined");
+		builder->destroyValue($3);
 		$3 = nullptr;
 		YYERROR;
 	}
@@ -206,7 +205,7 @@ ConstDefinition:
 UseStatement:
 	T_USE AnyIdentifier ';'
 {
-	pScript->addRequiredModule($2.v, pLexer->getCurrLine(), false);
+	builder->addRequiredModule($2.v, lexer->getCurrLine(), false);
 }
 ;
 
@@ -220,19 +219,19 @@ Function:
 	{
 		char szErrorText[256];
 
-		pScript->addInstruction(pLexer->getCurrLine(), OPCODE_JMP, INVALID_ADDRESS);
+		builder->addInstruction(lexer->getCurrLine(), OPCODE_JMP, INVALID_ADDRESS);
 		
-		if (!pScript->addFunction($2, INVALID_ADDRESS, szErrorText))
+		if (!builder->addFunction($2, INVALID_ADDRESS, szErrorText))
 		{
-			pCompiler->error(szErrorText);
+			compiler->error(szErrorText);
 			YYERROR;
 		}
-		pCompiler->setIdentifierOperation(OPCODE_BIND);
+		compiler->setIdentifierOperation(OPCODE_BIND);
 	}
 	ParameterDeclaration Block
 	{
-		pScript->addInstruction(pLexer->getCurrLine(), OPCODE_RET_NULL);
-		pScript->resolveLastJump(OPCODE_JMP);
+		builder->addInstruction(lexer->getCurrLine(), OPCODE_RET_NULL);
+		builder->resolveLastJump(OPCODE_JMP);
 	}
 ;
 
@@ -244,12 +243,12 @@ ParameterDeclaration:
 IdentifierList:
 	T_IDENTIFIER 
 	{
-		pScript->addInstruction(pLexer->getCurrLine(), pCompiler->getIdentifierOperation(), $1);
+		builder->addInstruction(lexer->getCurrLine(), compiler->getIdentifierOperation(), $1);
 	}
 	',' IdentifierList
 |	T_IDENTIFIER
 	{
-		pScript->addInstruction(pLexer->getCurrLine(), pCompiler->getIdentifierOperation(), $1);
+		builder->addInstruction(lexer->getCurrLine(), compiler->getIdentifierOperation(), $1);
 	}
 ;
 
@@ -271,40 +270,40 @@ StatementOrBlock:
 TryCatchBlock:
 	T_TRY 
 	{
-		pScript->addInstruction(pLexer->getCurrLine(), OPCODE_CATCH, INVALID_ADDRESS);
+		builder->addInstruction(lexer->getCurrLine(), OPCODE_CATCH, INVALID_ADDRESS);
 	} 
 	Block T_CATCH 
 	{
-		pScript->addInstruction(pLexer->getCurrLine(), OPCODE_CPOP);
-		pScript->addInstruction(pLexer->getCurrLine(), OPCODE_JMP, INVALID_ADDRESS);
-		pScript->resolveLastJump(OPCODE_CATCH);
+		builder->addInstruction(lexer->getCurrLine(), OPCODE_CPOP);
+		builder->addInstruction(lexer->getCurrLine(), OPCODE_JMP, INVALID_ADDRESS);
+		builder->resolveLastJump(OPCODE_CATCH);
 	} 
 	Block
 	{
-		pScript->resolveLastJump(OPCODE_JMP);
+		builder->resolveLastJump(OPCODE_JMP);
 	}
 ;
 
 Statement:
 	ExpressionStatement ';'
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_POP, static_cast<int16_t>(1));
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_POP, static_cast<int16_t>(1));
 }
 |	BuiltinStatement
 |	';'
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_NOP);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_NOP);
 }
 ;
 
 ExpressionStatement:
 	T_WITH
 {
-	pScript->enableExpressionVariables();
+	builder->enableExpressionVariables();
 } 
 	WithAssignmentList Expression
 {
-	pScript->disableExpressionVariables(pLexer->getCurrLine());
+	builder->disableExpressionVariables(lexer->getCurrLine());
 }
 |	Expression
 ;
@@ -317,12 +316,12 @@ WithAssignmentList:
 WithAssignment:
 	T_IDENTIFIER
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_JMP, INVALID_ADDRESS);
-	pScript->registerExpressionVariable($1);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_JMP, INVALID_ADDRESS);
+	builder->registerExpressionVariable($1);
 }
 	WithMetadata '=' WithCalculationBlock
 {
-	pScript->resolveLastJump(OPCODE_JMP);
+	builder->resolveLastJump(OPCODE_JMP);
 }	
 ;
 
@@ -341,16 +340,16 @@ WithMetadataValue:
 {
    TCHAR key[1024];
 #ifdef UNICODE
-   size_t l = utf8_to_wchar(pScript->getCurrentExpressionVariable().value, -1, key, 1024);
+   size_t l = utf8_to_wchar(builder->getCurrentExpressionVariable().value, -1, key, 1024);
 	key[l - 1] = L'.';
    utf8_to_wchar($1.v, -1, &key[l], 1024 - l);
 #else
-	strlcpy(key, pScript->getCurrentExpressionVariable().value, 1024);
+	strlcpy(key, builder->getCurrentExpressionVariable().value, 1024);
 	strlcat(key, ".", 1024);
 	strlcat(key, $1.v, 1024);
 #endif
-   pScript->setMetadata(key, $3->getValueAsCString());
-	pScript->destroyValue($3);
+   builder->setMetadata(key, $3->getValueAsCString());
+	builder->destroyValue($3);
 	$3 = nullptr;
 }
 ;
@@ -358,11 +357,11 @@ WithMetadataValue:
 WithCalculationBlock:
 	'{' StatementList '}'
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_RET_NULL);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_RET_NULL);
 }
 |	'{' Expression '}'
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_RETURN);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_RETURN);
 }
 ;
 
@@ -370,348 +369,348 @@ Expression:
 	'(' Expression ')'
 |	T_IDENTIFIER '=' Expression
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_SET, $1);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_SET, $1);
 }
-|	T_IDENTIFIER T_ASSIGN_ADD { pScript->addPushVariableInstruction($1, pLexer->getCurrLine()); } Expression
+|	T_IDENTIFIER T_ASSIGN_ADD { builder->addPushVariableInstruction($1, lexer->getCurrLine()); } Expression
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_ADD);
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_SET, $1);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_ADD);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_SET, $1);
 }
-|	T_IDENTIFIER T_ASSIGN_SUB { pScript->addPushVariableInstruction($1, pLexer->getCurrLine()); } Expression
+|	T_IDENTIFIER T_ASSIGN_SUB { builder->addPushVariableInstruction($1, lexer->getCurrLine()); } Expression
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_SUB);
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_SET, $1);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_SUB);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_SET, $1);
 }
-|	T_IDENTIFIER T_ASSIGN_MUL { pScript->addPushVariableInstruction($1, pLexer->getCurrLine()); } Expression
+|	T_IDENTIFIER T_ASSIGN_MUL { builder->addPushVariableInstruction($1, lexer->getCurrLine()); } Expression
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_MUL);
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_SET, $1);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_MUL);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_SET, $1);
 }
-|	T_IDENTIFIER T_ASSIGN_DIV { pScript->addPushVariableInstruction($1, pLexer->getCurrLine()); } Expression
+|	T_IDENTIFIER T_ASSIGN_DIV { builder->addPushVariableInstruction($1, lexer->getCurrLine()); } Expression
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_DIV);
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_SET, $1);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_DIV);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_SET, $1);
 }
-|	T_IDENTIFIER T_ASSIGN_REM { pScript->addPushVariableInstruction($1, pLexer->getCurrLine()); } Expression
+|	T_IDENTIFIER T_ASSIGN_REM { builder->addPushVariableInstruction($1, lexer->getCurrLine()); } Expression
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_REM);
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_SET, $1);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_REM);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_SET, $1);
 }
-|	T_IDENTIFIER T_ASSIGN_CONCAT { pScript->addPushVariableInstruction($1, pLexer->getCurrLine()); } Expression
+|	T_IDENTIFIER T_ASSIGN_CONCAT { builder->addPushVariableInstruction($1, lexer->getCurrLine()); } Expression
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_CONCAT);
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_SET, $1);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_CONCAT);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_SET, $1);
 }
-|	T_IDENTIFIER T_ASSIGN_AND { pScript->addPushVariableInstruction($1, pLexer->getCurrLine()); } Expression
+|	T_IDENTIFIER T_ASSIGN_AND { builder->addPushVariableInstruction($1, lexer->getCurrLine()); } Expression
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_BIT_AND);
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_SET, $1);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_BIT_AND);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_SET, $1);
 }
-|	T_IDENTIFIER T_ASSIGN_OR { pScript->addPushVariableInstruction($1, pLexer->getCurrLine()); } Expression
+|	T_IDENTIFIER T_ASSIGN_OR { builder->addPushVariableInstruction($1, lexer->getCurrLine()); } Expression
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_BIT_OR);
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_SET, $1);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_BIT_OR);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_SET, $1);
 }
-|	T_IDENTIFIER T_ASSIGN_XOR { pScript->addPushVariableInstruction($1, pLexer->getCurrLine()); } Expression
+|	T_IDENTIFIER T_ASSIGN_XOR { builder->addPushVariableInstruction($1, lexer->getCurrLine()); } Expression
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_BIT_XOR);
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_SET, $1);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_BIT_XOR);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_SET, $1);
 }
-|	StorageItem T_ASSIGN_ADD { pScript->addInstruction(pLexer->getCurrLine(), OPCODE_STORAGE_READ, static_cast<int16_t>(1)); } Expression
+|	StorageItem T_ASSIGN_ADD { builder->addInstruction(lexer->getCurrLine(), OPCODE_STORAGE_READ, static_cast<int16_t>(1)); } Expression
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_ADD);
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_STORAGE_WRITE);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_ADD);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_STORAGE_WRITE);
 }
-|	StorageItem T_ASSIGN_SUB { pScript->addInstruction(pLexer->getCurrLine(), OPCODE_STORAGE_READ, static_cast<int16_t>(1)); } Expression
+|	StorageItem T_ASSIGN_SUB { builder->addInstruction(lexer->getCurrLine(), OPCODE_STORAGE_READ, static_cast<int16_t>(1)); } Expression
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_SUB);
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_STORAGE_WRITE);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_SUB);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_STORAGE_WRITE);
 }
-|	StorageItem T_ASSIGN_MUL { pScript->addInstruction(pLexer->getCurrLine(), OPCODE_STORAGE_READ, static_cast<int16_t>(1)); } Expression
+|	StorageItem T_ASSIGN_MUL { builder->addInstruction(lexer->getCurrLine(), OPCODE_STORAGE_READ, static_cast<int16_t>(1)); } Expression
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_MUL);
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_STORAGE_WRITE);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_MUL);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_STORAGE_WRITE);
 }
-|	StorageItem T_ASSIGN_DIV { pScript->addInstruction(pLexer->getCurrLine(), OPCODE_STORAGE_READ, static_cast<int16_t>(1)); } Expression
+|	StorageItem T_ASSIGN_DIV { builder->addInstruction(lexer->getCurrLine(), OPCODE_STORAGE_READ, static_cast<int16_t>(1)); } Expression
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_DIV);
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_STORAGE_WRITE);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_DIV);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_STORAGE_WRITE);
 }
-|	StorageItem T_ASSIGN_REM { pScript->addInstruction(pLexer->getCurrLine(), OPCODE_STORAGE_READ, static_cast<int16_t>(1)); } Expression
+|	StorageItem T_ASSIGN_REM { builder->addInstruction(lexer->getCurrLine(), OPCODE_STORAGE_READ, static_cast<int16_t>(1)); } Expression
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_REM);
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_STORAGE_WRITE);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_REM);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_STORAGE_WRITE);
 }
-|	StorageItem T_ASSIGN_CONCAT { pScript->addInstruction(pLexer->getCurrLine(), OPCODE_STORAGE_READ, static_cast<int16_t>(1)); } Expression
+|	StorageItem T_ASSIGN_CONCAT { builder->addInstruction(lexer->getCurrLine(), OPCODE_STORAGE_READ, static_cast<int16_t>(1)); } Expression
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_CONCAT);
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_STORAGE_WRITE);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_CONCAT);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_STORAGE_WRITE);
 }
-|	StorageItem T_ASSIGN_AND { pScript->addInstruction(pLexer->getCurrLine(), OPCODE_STORAGE_READ, static_cast<int16_t>(1)); } Expression
+|	StorageItem T_ASSIGN_AND { builder->addInstruction(lexer->getCurrLine(), OPCODE_STORAGE_READ, static_cast<int16_t>(1)); } Expression
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_BIT_AND);
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_STORAGE_WRITE);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_BIT_AND);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_STORAGE_WRITE);
 }
-|	StorageItem T_ASSIGN_OR { pScript->addInstruction(pLexer->getCurrLine(), OPCODE_STORAGE_READ, static_cast<int16_t>(1)); } Expression
+|	StorageItem T_ASSIGN_OR { builder->addInstruction(lexer->getCurrLine(), OPCODE_STORAGE_READ, static_cast<int16_t>(1)); } Expression
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_BIT_OR);
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_STORAGE_WRITE);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_BIT_OR);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_STORAGE_WRITE);
 }
-|	StorageItem T_ASSIGN_XOR { pScript->addInstruction(pLexer->getCurrLine(), OPCODE_STORAGE_READ, static_cast<int16_t>(1)); } Expression
+|	StorageItem T_ASSIGN_XOR { builder->addInstruction(lexer->getCurrLine(), OPCODE_STORAGE_READ, static_cast<int16_t>(1)); } Expression
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_BIT_XOR);
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_STORAGE_WRITE);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_BIT_XOR);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_STORAGE_WRITE);
 }
 |	Expression '[' Expression ']' '=' Expression
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_SET_ELEMENT);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_SET_ELEMENT);
 }
-|	Expression '[' Expression ']' T_ASSIGN_ADD { pScript->addInstruction(pLexer->getCurrLine(), OPCODE_PEEK_ELEMENT); } Expression
+|	Expression '[' Expression ']' T_ASSIGN_ADD { builder->addInstruction(lexer->getCurrLine(), OPCODE_PEEK_ELEMENT); } Expression
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_ADD);
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_SET_ELEMENT);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_ADD);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_SET_ELEMENT);
 }
-|	Expression '[' Expression ']' T_ASSIGN_SUB { pScript->addInstruction(pLexer->getCurrLine(), OPCODE_PEEK_ELEMENT); } Expression
+|	Expression '[' Expression ']' T_ASSIGN_SUB { builder->addInstruction(lexer->getCurrLine(), OPCODE_PEEK_ELEMENT); } Expression
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_SUB);
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_SET_ELEMENT);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_SUB);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_SET_ELEMENT);
 }
-|	Expression '[' Expression ']' T_ASSIGN_MUL { pScript->addInstruction(pLexer->getCurrLine(), OPCODE_PEEK_ELEMENT); } Expression
+|	Expression '[' Expression ']' T_ASSIGN_MUL { builder->addInstruction(lexer->getCurrLine(), OPCODE_PEEK_ELEMENT); } Expression
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_MUL);
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_SET_ELEMENT);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_MUL);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_SET_ELEMENT);
 }
-|	Expression '[' Expression ']' T_ASSIGN_DIV { pScript->addInstruction(pLexer->getCurrLine(), OPCODE_PEEK_ELEMENT); } Expression
+|	Expression '[' Expression ']' T_ASSIGN_DIV { builder->addInstruction(lexer->getCurrLine(), OPCODE_PEEK_ELEMENT); } Expression
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_DIV);
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_SET_ELEMENT);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_DIV);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_SET_ELEMENT);
 }
-|	Expression '[' Expression ']' T_ASSIGN_CONCAT { pScript->addInstruction(pLexer->getCurrLine(), OPCODE_PEEK_ELEMENT); } Expression
+|	Expression '[' Expression ']' T_ASSIGN_CONCAT { builder->addInstruction(lexer->getCurrLine(), OPCODE_PEEK_ELEMENT); } Expression
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_CONCAT);
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_SET_ELEMENT);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_CONCAT);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_SET_ELEMENT);
 }
-|	Expression '[' Expression ']' T_ASSIGN_AND { pScript->addInstruction(pLexer->getCurrLine(), OPCODE_PEEK_ELEMENT); } Expression
+|	Expression '[' Expression ']' T_ASSIGN_AND { builder->addInstruction(lexer->getCurrLine(), OPCODE_PEEK_ELEMENT); } Expression
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_BIT_AND);
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_SET_ELEMENT);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_BIT_AND);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_SET_ELEMENT);
 }
-|	Expression '[' Expression ']' T_ASSIGN_OR { pScript->addInstruction(pLexer->getCurrLine(), OPCODE_PEEK_ELEMENT); } Expression
+|	Expression '[' Expression ']' T_ASSIGN_OR { builder->addInstruction(lexer->getCurrLine(), OPCODE_PEEK_ELEMENT); } Expression
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_BIT_OR);
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_SET_ELEMENT);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_BIT_OR);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_SET_ELEMENT);
 }
-|	Expression '[' Expression ']' T_ASSIGN_XOR { pScript->addInstruction(pLexer->getCurrLine(), OPCODE_PEEK_ELEMENT); } Expression
+|	Expression '[' Expression ']' T_ASSIGN_XOR { builder->addInstruction(lexer->getCurrLine(), OPCODE_PEEK_ELEMENT); } Expression
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_BIT_XOR);
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_SET_ELEMENT);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_BIT_XOR);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_SET_ELEMENT);
 }
 |	Expression '[' Expression ']'
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_GET_ELEMENT);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_GET_ELEMENT);
 }
 |	Expression '[' ExpressionOrNone ':' ExpressionOrNone ']'
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_GET_RANGE);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_GET_RANGE);
 }
 |	StorageItem '=' Expression
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_STORAGE_WRITE);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_STORAGE_WRITE);
 }
 |	StorageItem
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_STORAGE_READ);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_STORAGE_READ);
 }
 |	Expression T_REF T_IDENTIFIER '=' Expression
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_SET_ATTRIBUTE, $3);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_SET_ATTRIBUTE, $3);
 }
 |	Expression T_REF T_IDENTIFIER
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_GET_ATTRIBUTE, $3);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_GET_ATTRIBUTE, $3);
 }
 |	Expression T_REF FunctionName ParameterList ')'
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_CALL_METHOD, $3, $4);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_CALL_METHOD, $3, $4);
 }
 |	Expression T_REF FunctionName ')'
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_CALL_METHOD, $3, 0);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_CALL_METHOD, $3, 0);
 }
 |	T_IDENTIFIER '@' Expression
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_SAFE_GET_ATTR, $1);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_SAFE_GET_ATTR, $1);
 }
 |	'-' Expression		%prec NEGATE
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_NEG);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_NEG);
 }
 |	T_NOT Expression
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_NOT);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_NOT);
 }
 |	'~' Expression
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_BIT_NOT);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_BIT_NOT);
 }
 |	T_INC T_IDENTIFIER
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_INCP, $2);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_INCP, $2);
 }
 |	T_DEC T_IDENTIFIER
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_DECP, $2);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_DECP, $2);
 }
 |	T_IDENTIFIER T_INC	%prec T_POST_INC
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_INC, $1);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_INC, $1);
 }
 |	T_IDENTIFIER T_DEC	%prec T_POST_DEC
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_DEC, $1);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_DEC, $1);
 }
 |	T_INC StorageItem
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_STORAGE_INCP);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_STORAGE_INCP);
 }
 |	T_DEC StorageItem
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_STORAGE_DECP);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_STORAGE_DECP);
 }
 |	StorageItem T_INC	%prec T_POST_INC
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_STORAGE_INC);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_STORAGE_INC);
 }
 |	StorageItem T_DEC	%prec T_POST_DEC
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_STORAGE_DEC);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_STORAGE_DEC);
 }
 |	T_INC '(' Expression '[' Expression ']' ')'
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_INCP_ELEMENT);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_INCP_ELEMENT);
 }
 |	T_DEC '(' Expression '[' Expression ']' ')'
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_DECP_ELEMENT);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_DECP_ELEMENT);
 }
 |	Expression '[' Expression ']' T_INC	%prec T_POST_INC
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_INC_ELEMENT);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_INC_ELEMENT);
 }
 |	Expression '[' Expression ']' T_DEC	%prec T_POST_DEC
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_DEC_ELEMENT);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_DEC_ELEMENT);
 }
 |	Expression '+' Expression	
 { 
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_ADD);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_ADD);
 }
 |	Expression '-' Expression
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_SUB);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_SUB);
 }
 |	Expression '*' Expression
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_MUL);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_MUL);
 }
 |	Expression '/' Expression
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_DIV);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_DIV);
 }
 |	Expression '%' Expression
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_REM);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_REM);
 }
 |	Expression T_LIKE Expression
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_LIKE);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_LIKE);
 }
 |	Expression T_ILIKE Expression
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_ILIKE);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_ILIKE);
 }
 |	Expression T_MATCH Expression
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_MATCH);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_MATCH);
 }
 |	Expression T_IMATCH Expression
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_IMATCH);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_IMATCH);
 }
 |	Expression T_IN Expression
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_IN);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_IN);
 }
 |	Expression T_EQ Expression
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_EQ);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_EQ);
 }
 |	Expression T_NE Expression
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_NE);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_NE);
 }
 |	Expression '<' Expression
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_LT);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_LT);
 }
 |	Expression T_LE Expression
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_LE);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_LE);
 }
 |	Expression '>' Expression
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_GT);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_GT);
 }
 |	Expression T_GE Expression
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_GE);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_GE);
 }
 |	Expression '&' Expression
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_BIT_AND);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_BIT_AND);
 }
 |	Expression '|' Expression
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_BIT_OR);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_BIT_OR);
 }
 |	Expression '^' Expression
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_BIT_XOR);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_BIT_XOR);
 }
-|	Expression T_AND { pScript->addInstruction(pLexer->getCurrLine(), OPCODE_JZ_PEEK, INVALID_ADDRESS); } Expression
+|	Expression T_AND { builder->addInstruction(lexer->getCurrLine(), OPCODE_JZ_PEEK, INVALID_ADDRESS); } Expression
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_AND);
-	pScript->resolveLastJump(OPCODE_JZ_PEEK);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_AND);
+	builder->resolveLastJump(OPCODE_JZ_PEEK);
 }
-|	Expression T_OR { pScript->addInstruction(pLexer->getCurrLine(), OPCODE_JNZ_PEEK, INVALID_ADDRESS); } Expression
+|	Expression T_OR { builder->addInstruction(lexer->getCurrLine(), OPCODE_JNZ_PEEK, INVALID_ADDRESS); } Expression
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_OR);
-	pScript->resolveLastJump(OPCODE_JNZ_PEEK);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_OR);
+	builder->resolveLastJump(OPCODE_JNZ_PEEK);
 }
 |	Expression T_LSHIFT Expression
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_LSHIFT);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_LSHIFT);
 }
 |	Expression T_RSHIFT Expression
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_RSHIFT);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_RSHIFT);
 }
 |	Expression '.' Expression
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_CONCAT);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_CONCAT);
 }
 |	Expression '?'
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_JZ, INVALID_ADDRESS);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_JZ, INVALID_ADDRESS);
 }
 	Expression ':'
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_JMP, INVALID_ADDRESS);
-	pScript->resolveLastJump(OPCODE_JZ);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_JMP, INVALID_ADDRESS);
+	builder->resolveLastJump(OPCODE_JZ);
 }	 
 	Expression
 {
-	pScript->resolveLastJump(OPCODE_JMP);
+	builder->resolveLastJump(OPCODE_JMP);
 }
 |	Operand
 ;
@@ -720,7 +719,7 @@ ExpressionOrNone:
 	Expression
 |
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_PUSH_CONSTANT, pScript->createValue());
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_PUSH_CONSTANT, builder->createValue());
 }
 ;
 
@@ -732,19 +731,27 @@ Operand:
 |	New
 |	T_IDENTIFIER
 {
-	pScript->addPushVariableInstruction($1, pLexer->getCurrLine());
+	builder->addPushVariableInstruction($1, lexer->getCurrLine());
 }
 |	T_COMPOUND_IDENTIFIER
 {
    // Special case for VM properties
    if (!strcmp($1.v, "NXSL::Classes") || !strcmp($1.v, "NXSL::Functions"))
-      pScript->addInstruction(pLexer->getCurrLine(), OPCODE_PUSH_PROPERTY, $1);
+   {
+      builder->addInstruction(lexer->getCurrLine(), OPCODE_PUSH_PROPERTY, $1);
+   }
    else
-		pScript->addInstruction(pLexer->getCurrLine(), OPCODE_PUSH_CONSTREF, $1);
+   {
+      NXSL_Value *constValue = builder->getConstantValue($1);
+      if (constValue != nullptr)
+	      builder->addInstruction(lexer->getCurrLine(), OPCODE_PUSH_CONSTANT, constValue);
+      else
+		   builder->addInstruction(lexer->getCurrLine(), OPCODE_PUSH_CONSTREF, $1);
+   }
 }
 |	Constant
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_PUSH_CONSTANT, $1);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_PUSH_CONSTANT, $1);
 	$1 = nullptr;
 }
 ;
@@ -752,43 +759,43 @@ Operand:
 TypeCast:
 	BuiltinType '(' Expression ')'
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_CAST, static_cast<int16_t>($1));
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_CAST, static_cast<int16_t>($1));
 }
 ;
 
 ArrayInitializer:
 	'%' '(' 
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_NEW_ARRAY);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_NEW_ARRAY);
 }
 	ArrayElements ')'
 |	'%' '(' ')'
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_NEW_ARRAY);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_NEW_ARRAY);
 }
 ;
 
 ArrayElements:
 	Expression 
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_ADD_TO_ARRAY);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_ADD_TO_ARRAY);
 }
 	',' ArrayElements
 |	Expression
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_ADD_TO_ARRAY);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_ADD_TO_ARRAY);
 }
 ;
 
 HashMapInitializer:
 	'%' '{' 
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_NEW_HASHMAP);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_NEW_HASHMAP);
 }
 	HashMapElements '}'
 |	'%' '{' '}'
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_NEW_HASHMAP);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_NEW_HASHMAP);
 }
 ;
 
@@ -800,7 +807,7 @@ HashMapElements:
 HashMapElement:
 	Expression ':' Expression
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_HASHMAP_SET);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_HASHMAP_SET);
 }
 
 BuiltinType:
@@ -848,27 +855,27 @@ BuiltinStatement:
 |	GlobalStatement
 |	T_BREAK ';'
 {
-	if (pCompiler->canUseBreak())
+	if (compiler->canUseBreak())
 	{
-		pScript->addInstruction(pLexer->getCurrLine(), OPCODE_NOP);
-		pCompiler->addBreakAddr(pScript->getCodeSize() - 1);
+		builder->addInstruction(lexer->getCurrLine(), OPCODE_NOP);
+		compiler->addBreakAddr(builder->getCodeSize() - 1);
 	}
 	else
 	{
-		pCompiler->error("\"break\" statement can be used only within loops, \"switch\", and \"select\" statements");
+		compiler->error("\"break\" statement can be used only within loops, \"switch\", and \"select\" statements");
 		YYERROR;
 	}
 }
 |	T_CONTINUE ';'
 {
-	uint32_t addr = pCompiler->peekAddr();
+	uint32_t addr = compiler->peekAddr();
 	if (addr != INVALID_ADDRESS)
 	{
-		pScript->addInstruction(pLexer->getCurrLine(), OPCODE_JMP, addr);
+		builder->addInstruction(lexer->getCurrLine(), OPCODE_JMP, addr);
 	}
 	else
 	{
-		pCompiler->error("\"continue\" statement can be used only within loops");
+		compiler->error("\"continue\" statement can be used only within loops");
 		YYERROR;
 	}
 }
@@ -877,38 +884,38 @@ BuiltinStatement:
 SimpleStatement:
 	SimpleStatementKeyword Expression
 {
-	pScript->addInstruction($1.sourceLine, $1.opCode);
+	builder->addInstruction($1.sourceLine, $1.opCode);
 }
 |	SimpleStatementKeyword
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_PUSH_CONSTANT, pScript->createValue());
-	pScript->addInstruction($1.sourceLine, $1.opCode);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_PUSH_CONSTANT, builder->createValue());
+	builder->addInstruction($1.sourceLine, $1.opCode);
 }
 ;
 
 SimpleStatementKeyword:
 	T_ABORT
 {
-	$$.sourceLine = pLexer->getCurrLine();
+	$$.sourceLine = lexer->getCurrLine();
 	$$.opCode = OPCODE_ABORT;
 }
 |	T_EXIT
 {
-	$$.sourceLine = pLexer->getCurrLine();
+	$$.sourceLine = lexer->getCurrLine();
 	$$.opCode = OPCODE_EXIT;
 }
 |	T_RETURN
 {
-   if (pCompiler->getTemporaryStackItems() > 0)
+   if (compiler->getTemporaryStackItems() > 0)
    {
-	   pScript->addInstruction(pLexer->getCurrLine(), OPCODE_POP, static_cast<int16_t>(pCompiler->getTemporaryStackItems()));
+	   builder->addInstruction(lexer->getCurrLine(), OPCODE_POP, static_cast<int16_t>(compiler->getTemporaryStackItems()));
    }
-	$$.sourceLine = pLexer->getCurrLine();
+	$$.sourceLine = lexer->getCurrLine();
 	$$.opCode = OPCODE_RETURN;
 }
 |	T_PRINT
 {
-	$$.sourceLine = pLexer->getCurrLine();
+	$$.sourceLine = lexer->getCurrLine();
 	$$.opCode = OPCODE_PRINT;
 }
 ;
@@ -916,21 +923,21 @@ SimpleStatementKeyword:
 PrintlnStatement:
 	T_PRINTLN Expression ';'
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_PUSH_CONSTANT, pScript->createValue(_T("\n")));
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_CONCAT);
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_PRINT);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_PUSH_CONSTANT, builder->createValue(_T("\n")));
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_CONCAT);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_PRINT);
 }
 |	T_PRINTLN ';'
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_PUSH_CONSTANT, pScript->createValue(_T("\n")));
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_PRINT);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_PUSH_CONSTANT, builder->createValue(_T("\n")));
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_PRINT);
 }
 ;
 
 IfStatement:
 	T_IF '(' Expression ')' 
 	{
-		pScript->addInstruction(pLexer->getCurrLine(), OPCODE_JZ, INVALID_ADDRESS);
+		builder->addInstruction(lexer->getCurrLine(), OPCODE_JZ, INVALID_ADDRESS);
 	} 
 	IfBody
 ;
@@ -938,19 +945,19 @@ IfStatement:
 IfBody:
 	StatementOrBlock
 {
-	pScript->resolveLastJump(OPCODE_JZ);
+	builder->resolveLastJump(OPCODE_JZ);
 }
 |	StatementOrBlock ElseStatement
 {
-	pScript->resolveLastJump(OPCODE_JMP);
+	builder->resolveLastJump(OPCODE_JMP);
 }
 ;
 
 ElseStatement:
 	T_ELSE
 	{
-		pScript->addInstruction(pLexer->getCurrLine(), OPCODE_JMP, INVALID_ADDRESS);
-		pScript->resolveLastJump(OPCODE_JZ);
+		builder->addInstruction(lexer->getCurrLine(), OPCODE_JMP, INVALID_ADDRESS);
+		builder->resolveLastJump(OPCODE_JZ);
 	}
 	StatementOrBlock
 ;
@@ -958,155 +965,159 @@ ElseStatement:
 ForStatement:
 	T_FOR '(' Expression ';'
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_POP, static_cast<int16_t>(1));
-	pCompiler->pushAddr(pScript->getCodeSize());
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_POP, static_cast<int16_t>(1));
+	compiler->pushAddr(builder->getCodeSize());
 }
 	Expression ';'
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_JZ, INVALID_ADDRESS);
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_JMP, INVALID_ADDRESS);
-	pCompiler->pushAddr(pScript->getCodeSize());
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_JZ, INVALID_ADDRESS);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_JMP, INVALID_ADDRESS);
+	compiler->pushAddr(builder->getCodeSize());
 }
 	Expression ')'
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_POP, static_cast<int16_t>(1));
-	uint32_t addrPart3 = pCompiler->popAddr();
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_JMP, pCompiler->popAddr());
-	pCompiler->pushAddr(addrPart3);
-	pCompiler->newBreakLevel();
-	pScript->resolveLastJump(OPCODE_JMP);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_POP, static_cast<int16_t>(1));
+	uint32_t addrPart3 = compiler->popAddr();
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_JMP, compiler->popAddr());
+	compiler->pushAddr(addrPart3);
+	compiler->newBreakLevel();
+	builder->resolveLastJump(OPCODE_JMP);
 }	
 	StatementOrBlock
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_JMP, pCompiler->popAddr());
-	pScript->resolveLastJump(OPCODE_JZ);
-	pCompiler->closeBreakLevel(pScript);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_JMP, compiler->popAddr());
+	builder->resolveLastJump(OPCODE_JZ);
+	compiler->closeBreakLevel(builder);
 }
 ;
 
 ForEachStatement:
-	ForEach { pCompiler->incTemporaryStackItems(); } ForEachBody { pCompiler->decTemporaryStackItems(); }
+	ForEach { compiler->incTemporaryStackItems(); } ForEachBody { compiler->decTemporaryStackItems(); }
 ;
 
 ForEach:
 	T_FOREACH '(' T_IDENTIFIER ':'
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_PUSH_CONSTANT, pScript->createValue($3.v));
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_PUSH_CONSTANT, builder->createValue($3.v));
 }
 |
 	T_FOR '(' T_IDENTIFIER ':'
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_PUSH_CONSTANT, pScript->createValue($3.v));
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_PUSH_CONSTANT, builder->createValue($3.v));
 }
 ;
 
 ForEachBody:
 	Expression ')'
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_FOREACH);
-	pCompiler->pushAddr(pScript->getCodeSize());
-	pCompiler->newBreakLevel();
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_NEXT);
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_JZ, INVALID_ADDRESS);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_FOREACH);
+	compiler->pushAddr(builder->getCodeSize());
+	compiler->newBreakLevel();
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_NEXT);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_JZ, INVALID_ADDRESS);
 }
 	StatementOrBlock
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_JMP, pCompiler->popAddr());
-	pScript->resolveLastJump(OPCODE_JZ);
-	pCompiler->closeBreakLevel(pScript);
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_POP, static_cast<int16_t>(1));
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_JMP, compiler->popAddr());
+	builder->resolveLastJump(OPCODE_JZ);
+	compiler->closeBreakLevel(builder);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_POP, static_cast<int16_t>(1));
 }
 ;
 
 WhileStatement:
 	T_WHILE
 {
-	pCompiler->pushAddr(pScript->getCodeSize());
-	pCompiler->newBreakLevel();
+	compiler->pushAddr(builder->getCodeSize());
+	compiler->newBreakLevel();
 }
 	'(' Expression ')'
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_JZ, INVALID_ADDRESS);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_JZ, INVALID_ADDRESS);
 }
 	StatementOrBlock
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_JMP, pCompiler->popAddr());
-	pScript->resolveLastJump(OPCODE_JZ);
-	pCompiler->closeBreakLevel(pScript);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_JMP, compiler->popAddr());
+	builder->resolveLastJump(OPCODE_JZ);
+	compiler->closeBreakLevel(builder);
 }
 ;
 
 DoStatement:
 	T_DO
 {
-	pCompiler->pushAddr(pScript->getCodeSize());
-	pCompiler->newBreakLevel();
+	compiler->pushAddr(builder->getCodeSize());
+	compiler->newBreakLevel();
 }
 	StatementOrBlock T_WHILE '(' Expression ')' ';'
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_JNZ, pCompiler->popAddr());
-	pCompiler->closeBreakLevel(pScript);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_JNZ, compiler->popAddr());
+	compiler->closeBreakLevel(builder);
 }
 ;
 
 SwitchStatement:
 	T_SWITCH
 { 
-	pCompiler->newBreakLevel();
+	compiler->newBreakLevel();
 }
 	'(' Expression ')'
 {
-	pCompiler->incTemporaryStackItems();
+	compiler->incTemporaryStackItems();
 }
 	'{' CaseList Default '}'
 {
-	pCompiler->closeBreakLevel(pScript);
-	pCompiler->decTemporaryStackItems();
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_POP, static_cast<int16_t>(1));
+	compiler->closeBreakLevel(builder);
+	compiler->decTemporaryStackItems();
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_POP, static_cast<int16_t>(1));
 }
 ;
 
 CaseList:
 	Case
 { 
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_JMP, pScript->getCodeSize() + 5);
-	pScript->resolveLastJump(OPCODE_JZ);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_JMP, builder->getCodeSize() + 5);
+	builder->resolveLastJump(OPCODE_JZ);
 }
 	CaseList
 |	RangeCase
 { 
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_JMP, pScript->getCodeSize() + 5);
-	pScript->resolveLastJump(OPCODE_JNZ);
-	pScript->resolveLastJump(OPCODE_JNZ);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_JMP, builder->getCodeSize() + 5);
+	builder->resolveLastJump(OPCODE_JNZ);
+	builder->resolveLastJump(OPCODE_JNZ);
 }
 	CaseList
 |	Case
 {
-	pScript->resolveLastJump(OPCODE_JZ);
+	builder->resolveLastJump(OPCODE_JZ);
 }
 |	RangeCase
 {
-	pScript->resolveLastJump(OPCODE_JNZ);
-	pScript->resolveLastJump(OPCODE_JNZ);
+	builder->resolveLastJump(OPCODE_JNZ);
+	builder->resolveLastJump(OPCODE_JNZ);
 }
 ;
 
 Case:
 	T_CASE Constant
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_CASE, $2);
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_JZ, INVALID_ADDRESS);
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_NOP);	// Needed to match number of instructions in case and range case
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_NOP);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_CASE, $2);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_JZ, INVALID_ADDRESS);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_NOP);	// Needed to match number of instructions in case and range case
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_NOP);
 	$2 = nullptr;
 } 
 	':' StatementList
 |	T_CASE AnyIdentifier
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_CASE_CONST, $2);
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_JZ, INVALID_ADDRESS);
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_NOP);	// Needed to match number of instructions in case and range case
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_NOP);
+   NXSL_Value *constValue = builder->getConstantValue($2);
+   if (constValue != nullptr)
+      builder->addInstruction(lexer->getCurrLine(), OPCODE_CASE, constValue);
+   else
+      builder->addInstruction(lexer->getCurrLine(), OPCODE_CASE_CONST, $2);
+   builder->addInstruction(lexer->getCurrLine(), OPCODE_JZ, INVALID_ADDRESS);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_NOP);	// Needed to match number of instructions in case and range case
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_NOP);
 } 
 	':' StatementList
 ;
@@ -1114,11 +1125,11 @@ Case:
 RangeCase:
 	T_CASE CaseRangeLeft
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_JNZ, INVALID_ADDRESS);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_JNZ, INVALID_ADDRESS);
 }
 T_RANGE CaseRangeRight 
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_JNZ, INVALID_ADDRESS);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_JNZ, INVALID_ADDRESS);
 }
 	':' StatementList
 ;
@@ -1126,24 +1137,32 @@ T_RANGE CaseRangeRight
 CaseRangeLeft:
 	Constant
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_CASE_LT, $1);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_CASE_LT, $1);
 	$1 = nullptr;
 }
 |	AnyIdentifier
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_CASE_CONST_LT, $1);
+   NXSL_Value *constValue = builder->getConstantValue($1);
+   if (constValue != nullptr)
+      builder->addInstruction(lexer->getCurrLine(), OPCODE_CASE_LT, constValue);
+   else
+      builder->addInstruction(lexer->getCurrLine(), OPCODE_CASE_CONST_LT, $1);
 }
 ;
 
 CaseRangeRight:
 	Constant
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_CASE_GT, $1);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_CASE_GT, $1);
 	$1 = nullptr;
 }
 |	AnyIdentifier
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_CASE_CONST_GT, $1);
+   NXSL_Value *constValue = builder->getConstantValue($1);
+   if (constValue != nullptr)
+      builder->addInstruction(lexer->getCurrLine(), OPCODE_CASE_GT, constValue);
+   else
+      builder->addInstruction(lexer->getCurrLine(), OPCODE_CASE_CONST_GT, $1);
 }
 ;
 
@@ -1155,20 +1174,20 @@ Default:
 SelectStatement:
 	T_SELECT
 { 
-	pCompiler->newBreakLevel();
-	pCompiler->newSelectLevel();
+	compiler->newBreakLevel();
+	compiler->newSelectLevel();
 }
 	T_IDENTIFIER SelectOptions	'{' SelectList '}'
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_SELECT, $3, $6);
-	pCompiler->closeBreakLevel(pScript);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_SELECT, $3, $6);
+	compiler->closeBreakLevel(builder);
 
-	uint32_t addr = pCompiler->popSelectJumpAddr();
+	uint32_t addr = compiler->popSelectJumpAddr();
 	if (addr != INVALID_ADDRESS)
 	{
-		pScript->createJumpAt(addr, pScript->getCodeSize());
+		builder->createJumpAt(addr, builder->getCodeSize());
 	}
-	pCompiler->closeSelectLevel();
+	compiler->closeSelectLevel();
 }
 ;
 
@@ -1176,7 +1195,7 @@ SelectOptions:
 	'(' Expression ')'
 |
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_PUSH_CONSTANT, pScript->createValue());
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_PUSH_CONSTANT, builder->createValue());
 }
 ;
 
@@ -1197,25 +1216,25 @@ SelectEntry:
 } 
 	Expression
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_PUSHCP, static_cast<int16_t>(2));
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_JMP, INVALID_ADDRESS);
-	uint32_t addr = pCompiler->popSelectJumpAddr();
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_PUSHCP, static_cast<int16_t>(2));
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_JMP, INVALID_ADDRESS);
+	uint32_t addr = compiler->popSelectJumpAddr();
 	if (addr != INVALID_ADDRESS)
 	{
-		pScript->createJumpAt(addr, pScript->getCodeSize());
+		builder->createJumpAt(addr, builder->getCodeSize());
 	}
 } 
 	':' StatementList
 {
-	pCompiler->pushSelectJumpAddr(pScript->getCodeSize());
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_NOP);
-	pScript->resolveLastJump(OPCODE_JMP);
+	compiler->pushSelectJumpAddr(builder->getCodeSize());
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_NOP);
+	builder->resolveLastJump(OPCODE_JMP);
 }
 ;
 
 ArrayStatement:
-	T_ARRAY { pCompiler->setIdentifierOperation(OPCODE_ARRAY); } IdentifierList ';'
-|	T_GLOBAL T_ARRAY { pCompiler->setIdentifierOperation(OPCODE_GLOBAL_ARRAY); } IdentifierList ';'
+	T_ARRAY { compiler->setIdentifierOperation(OPCODE_ARRAY); } IdentifierList ';'
+|	T_GLOBAL T_ARRAY { compiler->setIdentifierOperation(OPCODE_GLOBAL_ARRAY); } IdentifierList ';'
 ;
 
 GlobalStatement:
@@ -1230,11 +1249,11 @@ GlobalVariableList:
 GlobalVariableDeclaration:
 	T_IDENTIFIER
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_GLOBAL, $1, 0);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_GLOBAL, $1, 0);
 }
 |	T_IDENTIFIER '=' Expression
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_GLOBAL, $1, 1);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_GLOBAL, $1, 1);
 }
 ;
 
@@ -1243,30 +1262,30 @@ New:
 {
 	char fname[256];
 	snprintf(fname, 256, "__new@%s", $2.v); 
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_CALL_EXTERNAL, fname, 0);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_CALL_EXTERNAL, fname, 0);
 }
 |	T_NEW T_IDENTIFIER '(' ParameterList ')'
 {
 	char fname[256];
 	snprintf(fname, 256, "__new@%s", $2.v); 
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_CALL_EXTERNAL, fname, $4);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_CALL_EXTERNAL, fname, $4);
 }
 |	T_NEW T_IDENTIFIER '(' ')'
 {
 	char fname[256];
 	snprintf(fname, 256, "__new@%s", $2.v); 
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_CALL_EXTERNAL, fname, 0);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_CALL_EXTERNAL, fname, 0);
 }
 ;
 
 FunctionCall:
 	FunctionName ParameterList ')'
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_CALL_EXTERNAL, $1, $2);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_CALL_EXTERNAL, $1, $2);
 }
 |	FunctionName ')'
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_CALL_EXTERNAL, $1, 0);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_CALL_EXTERNAL, $1, 0);
 }
 ;
 
@@ -1279,7 +1298,7 @@ Parameter:
 	Expression
 |	T_IDENTIFIER ':' Expression
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_NAME, $1);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_NAME, $1);
 }
 ;
 
@@ -1291,14 +1310,14 @@ FunctionName:
 |	T_COMPOUND_IDENTIFIER '('
 {
 	$$ = $1;
-	pScript->addRequiredModule($1.v, pLexer->getCurrLine(), true);
+	builder->addRequiredModule($1.v, lexer->getCurrLine(), true);
 }
 ;
 
 StorageItem:
 	'#' T_IDENTIFIER
 {
-	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_PUSH_CONSTANT, pScript->createValue($2.v));
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_PUSH_CONSTANT, builder->createValue($2.v));
 }
 |	'#' '(' Expression ')'
 ;	
@@ -1307,44 +1326,44 @@ Constant:
 	T_STRING
 {
 #ifdef UNICODE
-	$$ = pScript->createValue($1);
+	$$ = builder->createValue($1);
 #else
 	char *mbString = MBStringFromUTF8String($1);
-	$$ = pScript->createValue(mbString);
+	$$ = builder->createValue(mbString);
 	MemFree(mbString);
 #endif
 	MemFreeAndNull($1);
 }
 |	T_INT32
 {
-	$$ = pScript->createValue($1);
+	$$ = builder->createValue($1);
 }
 |	T_UINT32
 {
-	$$ = pScript->createValue($1);
+	$$ = builder->createValue($1);
 }
 |	T_INT64
 {
-	$$ = pScript->createValue($1);
+	$$ = builder->createValue($1);
 }
 |	T_UINT64
 {
-	$$ = pScript->createValue($1);
+	$$ = builder->createValue($1);
 }
 |	T_REAL
 {
-	$$ = pScript->createValue($1);
+	$$ = builder->createValue($1);
 }
 |	T_TRUE
 {
-	$$ = pScript->createValue(true);
+	$$ = builder->createValue(true);
 }
 |	T_FALSE
 {
-	$$ = pScript->createValue(false);
+	$$ = builder->createValue(false);
 }
 |	T_NULL
 {
-	$$ = pScript->createValue();
+	$$ = builder->createValue();
 }
 ;

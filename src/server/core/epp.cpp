@@ -126,7 +126,8 @@ EPRule::EPRule(const ConfigEntry& config) : m_actions(0, 16, Ownership::True)
    if ((m_scriptSource != nullptr) && (*m_scriptSource != 0))
    {
       TCHAR errorText[256];
-      m_script = NXSLCompile(m_scriptSource, errorText, 256, nullptr);
+      NXSL_ServerEnv env;
+      m_script = NXSLCompile(m_scriptSource, errorText, 256, nullptr, &env);
       if (m_script == nullptr)
       {
          nxlog_write(NXLOG_ERROR, _T("Failed to compile evaluation script for event processing policy rule #%u (%s)"), m_id + 1, errorText);
@@ -198,7 +199,8 @@ EPRule::EPRule(DB_RESULT hResult, int row) : m_actions(0, 16, Ownership::True)
    if ((m_scriptSource != nullptr) && (*m_scriptSource != 0))
    {
       TCHAR errorText[256];
-      m_script = NXSLCompile(m_scriptSource, errorText, 256, nullptr);
+      NXSL_ServerEnv env;
+      m_script = NXSLCompile(m_scriptSource, errorText, 256, nullptr, &env);
       if (m_script == nullptr)
       {
          nxlog_write(NXLOG_ERROR, _T("Failed to compile evaluation script for event processing policy rule #%u (%s)"), m_id + 1, errorText);
@@ -285,7 +287,8 @@ EPRule::EPRule(const NXCPMessage& msg) : m_actions(0, 16, Ownership::True)
    if ((m_scriptSource != nullptr) && (*m_scriptSource != 0))
    {
       TCHAR errorText[256];
-      m_script = NXSLCompile(m_scriptSource, errorText, 256, nullptr);
+      NXSL_ServerEnv env;
+      m_script = NXSLCompile(m_scriptSource, errorText, 256, nullptr, &env);
       if (m_script == nullptr)
       {
          nxlog_write(NXLOG_ERROR, _T("Failed to compile evaluation script for event processing policy rule #%u (%s)"), m_id + 1, errorText);

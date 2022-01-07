@@ -96,7 +96,8 @@ ObjectQuery::ObjectQuery(DB_HANDLE hdb, DB_RESULT hResult, int row) :
 void ObjectQuery::compile()
 {
    TCHAR errorMessage[256];
-   m_script = NXSLCompile(m_source, errorMessage, 256, nullptr);
+   NXSL_ServerEnv env;
+   m_script = NXSLCompile(m_source, errorMessage, 256, nullptr, &env);
    if (m_script == nullptr)
    {
       PostScriptErrorEvent(CONTEXT_OBJECT_QUERY, 0, 0, errorMessage, _T("ObjectQuery::%s"), m_name);

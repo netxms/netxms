@@ -1424,12 +1424,13 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
          {
             const int errorMsgLen = 512;
             TCHAR errorMsg[errorMsgLen];
+            NXSL_ServerEnv env;
 #ifdef UNICODE
             WCHAR *wscript = WideStringFromUTF8String(script);
-            compiledScript = NXSLCompile(wscript, errorMsg, errorMsgLen, nullptr);
+            compiledScript = NXSLCompile(wscript, errorMsg, errorMsgLen, nullptr, &env);
             MemFree(wscript);
 #else
-            compiledScript = NXSLCompile(script, errorMsg, errorMsgLen, nullptr);
+            compiledScript = NXSLCompile(script, errorMsg, errorMsgLen, nullptr, &env);
 #endif
             MemFree(script);
             if (compiledScript == nullptr)

@@ -181,7 +181,8 @@ void BusinessServicePrototype::compileInstanceDiscoveryFilterScript()
    TCHAR errorMsg[errorMsgLen];
 
    delete m_compiledInstanceDiscoveryFilter;
-   m_compiledInstanceDiscoveryFilter = NXSLCompile(m_instanceDiscoveryFilter, errorMsg, errorMsgLen, nullptr);
+   NXSL_ServerEnv env;
+   m_compiledInstanceDiscoveryFilter = NXSLCompile(m_instanceDiscoveryFilter, errorMsg, errorMsgLen, nullptr, &env);
    if (m_compiledInstanceDiscoveryFilter == nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG_BIZSVC, 2, _T("Failed to compile filter script for service instance discovery %s [%u] (%s)"), m_name, m_id, errorMsg);

@@ -1012,7 +1012,7 @@ protected:
 
 public:
    NXSL_LibraryScript();
-   NXSL_LibraryScript(uint32_t id, uuid guid, const TCHAR *name, TCHAR *source);
+   NXSL_LibraryScript(uint32_t id, uuid guid, const TCHAR *name, TCHAR *source, NXSL_Environment *env);
    ~NXSL_LibraryScript();
 
    bool isValid() const { return m_program != nullptr; }

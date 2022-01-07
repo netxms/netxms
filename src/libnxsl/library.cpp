@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -216,13 +216,13 @@ NXSL_LibraryScript::NXSL_LibraryScript()
 /**
  * Create NXSL Script
  */
-NXSL_LibraryScript::NXSL_LibraryScript(uint32_t id, uuid guid, const TCHAR *name, TCHAR *source)
+NXSL_LibraryScript::NXSL_LibraryScript(uint32_t id, uuid guid, const TCHAR *name, TCHAR *source, NXSL_Environment *env)
 {
    m_id = id;
    m_guid = guid;
    _tcslcpy(m_name, name, 1024);
    m_source = source;
-   m_program = NXSLCompile(m_source, m_error, 1024, nullptr);
+   m_program = NXSLCompile(m_source, m_error, 1024, nullptr, env);
 }
 
 /**

@@ -105,7 +105,8 @@ bool ConditionObject::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    DBFreeResult(hResult);
 
    // Compile script
-   m_script = NXSLCompile(m_scriptSource, szQuery, 512, nullptr);
+   NXSL_ServerEnv env;
+   m_script = NXSLCompile(m_scriptSource, szQuery, 512, nullptr, &env);
    if (m_script == nullptr)
       nxlog_write(NXLOG_ERROR, _T("Failed to compile evaluation script for condition object %s [%u] (%s)"), m_name, m_id, szQuery);
 
@@ -247,7 +248,8 @@ uint32_t ConditionObject::modifyFromMessageInternal(const NXCPMessage& msg)
       MemFree(m_scriptSource);
       delete m_script;
       m_scriptSource = msg.getFieldAsString(VID_SCRIPT);
-      m_script = NXSLCompile(m_scriptSource, szError, 1024, nullptr);
+      NXSL_ServerEnv env;
+      m_script = NXSLCompile(m_scriptSource, szError, 1024, nullptr, &env);
       if (m_script == nullptr)
          nxlog_write(NXLOG_ERROR, _T("Failed to compile evaluation script for condition object %s [%u] (%s)"), m_name, m_id, szError);
    }

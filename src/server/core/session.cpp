@@ -13786,7 +13786,8 @@ void ClientSession::compileScript(const NXCPMessage& request)
 	{
       TCHAR errorMessage[256];
       int errorLine;
-      NXSL_Program *script = NXSLCompile(source, errorMessage, 256, &errorLine);
+      NXSL_ServerEnv env;
+      NXSL_Program *script = NXSLCompile(source, errorMessage, 256, &errorLine, &env);
       if (script != nullptr)
       {
          msg.setField(VID_COMPILATION_STATUS, (INT16)1);

@@ -170,7 +170,8 @@ int main(int argc, char *argv[])
          return 1;
       }
 
-		pScript = NXSLCompile(pszSource, szError, 1024, NULL);
+	   NXSL_TestEnv env;
+		pScript = NXSLCompile(pszSource, szError, 1024, nullptr, &env);
 		MemFree(pszSource);
    }
 

@@ -19,12 +19,14 @@ static void TestCompiler()
 
    StartTest(_T("NXSLCompile"));
 
-   NXSL_Program *p = NXSLCompile(s_prog1, errorMessage, 256, &errorLine);
+   NXSL_Environment compileTimeEnvironment;
+
+   NXSL_Program *p = NXSLCompile(s_prog1, errorMessage, 256, &errorLine, &compileTimeEnvironment);
    AssertNotNull(p);
    AssertEquals(errorLine, -1);
    delete p;
 
-   p = NXSLCompile(s_prog2, errorMessage, 256, &errorLine);
+   p = NXSLCompile(s_prog2, errorMessage, 256, &errorLine, &compileTimeEnvironment);
    AssertNull(p);
    AssertEquals(errorLine, 2);
    // Some BISON versions may not report ", unexpected '{'" after "syntax error"
