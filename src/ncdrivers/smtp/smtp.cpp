@@ -24,12 +24,9 @@
 #include <ncdrv.h>
 #include <nms_util.h>
 #include <nxcldefs.h>
-#include <openssl/err.h>
-#include <openssl/ssl.h>
+#include <tls_conn.h>
 
 #define DEBUG_TAG _T("ncd.smtp")
-
-#define TLS_REQUEST_TIMEOUT 10000
 
 static const NCConfigurationTemplate s_config(true, true);
 
@@ -92,36 +89,6 @@ enum class TLSMode
    STARTTLS // Opportunistic TLS
 };
 
-struct TLSSocket
-{
-   SOCKET socket;
-   SSL *ssl;
-   SSL_CTX *context;
-
-   TLSSocket(SOCKET _socket)
-   {
-      socket = _socket;
-      ssl = nullptr;
-      context = nullptr;
-   }
-
-   ~TLSSocket()
-   {
-      if (ssl != nullptr)
-         SSL_free(ssl);
-      if (context != nullptr)
-         SSL_CTX_free(context);
-      // Shutdown communication channel
-      shutdown(socket, SHUT_RDWR);
-      closesocket(socket);
-   }
-
-   int recv(char *buffer, size_t size);
-   void send(const void *data, size_t len);
-   int TLSRead(void *data, const size_t size);
-   int TLSWrite(const void *data, const size_t size);
-};
-
 /**
  * SMTP driver class
  */
@@ -141,7 +108,6 @@ private:
 
    SmtpDriver();
    UINT32 sendMail(const char *pszRcpt, const char *pszSubject, const char *pszText, const char *encoding, bool isHtml, bool isUtf8);
-   bool createTLSConnection(TLSSocket *socket);
 
 public:
    virtual bool send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body) override;
@@ -275,109 +241,9 @@ static char *FindEOL(char *pszBuffer, size_t len)
 }
 
 /**
- * Write to TLS
- * @return Number of bytes written
- */
-int TLSSocket::TLSWrite(const void *data, const size_t size)
-{
-   bool canRetry;
-   int bytes;
-   do
-   {
-      canRetry = false;
-      bytes = SSL_write(ssl, data, static_cast<int>(size));
-      if (bytes <= 0)
-      {
-         int err = SSL_get_error(ssl, bytes);
-         if ((err == SSL_ERROR_WANT_READ) || (err == SSL_ERROR_WANT_WRITE))
-         {
-            SocketPoller sp(err == SSL_ERROR_WANT_WRITE);
-            sp.add(socket);
-            if (sp.poll(TLS_REQUEST_TIMEOUT) > 0)
-               canRetry = true;
-         }
-         else
-         {
-            nxlog_debug_tag(DEBUG_TAG, 7, _T("SSL_write error (bytes=%d ssl_err=%d socket_err=%d)"), bytes, err, WSAGetLastError());
-            if (err == SSL_ERROR_SSL)
-               LogOpenSSLErrorStack(7);
-         }
-      }
-   }
-   while (canRetry);
-   return bytes;
-}
-
-/**
- * Sends data to hSocket considering if TLS connection is established or not.
- * @return Number of bytes sent
- */
-void TLSSocket::send(const void *data, size_t len)
-{
-   if (ssl != nullptr)
-   {
-      TLSWrite(data, len);
-   }
-   else
-   {
-      SendEx(socket, data, len, 0, nullptr);
-   }
-}
-
-/**
- * Read from TLS
- * @return Number of bytes read
- */
-int TLSSocket::TLSRead(void *data, const size_t size)
-{
-   bool canRetry;
-   int bytes;
-   do
-   {
-      canRetry = false;
-      bytes = SSL_read(ssl, data, static_cast<int>(size));
-      if (bytes <= 0)
-      {
-         int err = SSL_get_error(ssl, bytes);
-         if ((err == SSL_ERROR_WANT_READ) || (err == SSL_ERROR_WANT_WRITE))
-         {
-            SocketPoller sp(err == SSL_ERROR_WANT_READ);
-            sp.add(socket);
-            if (sp.poll(TLS_REQUEST_TIMEOUT) > 0)
-               canRetry = true;
-         }
-         else
-         {
-            nxlog_debug_tag(DEBUG_TAG, 7, _T("SSL_read error (bytes=%d ssl_err=%d socket_err=%d)"), bytes, err, WSAGetLastError());
-            if (err == SSL_ERROR_SSL)
-               LogOpenSSLErrorStack(7);
-         }
-      }
-   }
-   while (canRetry);
-   return bytes;
-}
-
-/**
- * Reads data from hSocket into buffer considering if TLS connection is established or not.
- * @return number of bytes read on success, <= 0 on error
- */
-int TLSSocket::recv(char *buffer, size_t size)
-{
-   if (ssl != nullptr)
-   {
-      return TLSRead(buffer, size);
-   }
-   else
-   {
-      return RecvEx(socket, buffer, size, 0, 30000);
-   }
-}
-
-/**
  * Read line from socket
  */
-static bool ReadLineFromSocket(TLSSocket *ts, char *pszBuffer, size_t *pnBufPos, char *pszLine)
+static bool ReadLineFromSocket(TLSConnection *tc, char *pszBuffer, size_t *pnBufPos, char *pszLine)
 {
    char *ptr;
    do
@@ -385,7 +251,7 @@ static bool ReadLineFromSocket(TLSSocket *ts, char *pszBuffer, size_t *pnBufPos,
       ptr = FindEOL(pszBuffer, *pnBufPos);
       if (ptr == nullptr)
       {
-         ssize_t bytes = ts->recv(&pszBuffer[*pnBufPos], SMTP_BUFFER_SIZE - *pnBufPos);
+         ssize_t bytes = tc->recv(&pszBuffer[*pnBufPos], SMTP_BUFFER_SIZE - *pnBufPos);
          if (bytes <= 0)
             return false;
          *pnBufPos += bytes;
@@ -401,13 +267,13 @@ static bool ReadLineFromSocket(TLSSocket *ts, char *pszBuffer, size_t *pnBufPos,
 /**
  * Read SMTP response code from socket
  */
-static int GetSMTPResponse(TLSSocket *ts, char *pszBuffer, size_t *pnBufPos)
+static int GetSMTPResponse(TLSConnection *tc, char *pszBuffer, size_t *pnBufPos)
 {
    char szLine[SMTP_BUFFER_SIZE];
 
    while(1)
    {
-      if (!ReadLineFromSocket(ts, pszBuffer, pnBufPos, szLine))
+      if (!ReadLineFromSocket(tc, pszBuffer, pnBufPos, szLine))
          return -1;
       if (strlen(szLine) < 4)
          return -2;
@@ -464,127 +330,6 @@ static char *EncodeHeader(const char *header, const char *encoding, const char *
 }
 
 /**
- * SSL message callback
- */
-static void SSLInfoCallback(const SSL *ssl, int where, int ret)
-{
-   if (where & SSL_CB_ALERT)
-   {
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("SSL %s alert: %hs (%hs)"), (where & SSL_CB_READ) ? _T("read") : _T("write"),
-                      SSL_alert_type_string_long(ret), SSL_alert_desc_string_long(ret));
-   }
-   else if (where & SSL_CB_HANDSHAKE_START)
-   {
-      nxlog_debug_tag(DEBUG_TAG, 6, _T("SSL handshake start (%hs)"), SSL_state_string_long(ssl));
-   }
-   else if (where & SSL_CB_HANDSHAKE_DONE)
-   {
-      nxlog_debug_tag(DEBUG_TAG, 6, _T("SSL handshake done (%hs)"), SSL_state_string_long(ssl));
-   }
-   else
-   {
-      int method = where & ~SSL_ST_MASK;
-      const TCHAR *prefix;
-      if (method & SSL_ST_CONNECT)
-         prefix = _T("SSL_connect");
-      else if (method & SSL_ST_ACCEPT)
-         prefix = _T("SSL_accept");
-      else
-         prefix = _T("undefined");
-
-      if (where & SSL_CB_LOOP)
-      {
-         nxlog_debug_tag(DEBUG_TAG, 6, _T("%s: %hs"), prefix, SSL_state_string_long(ssl));
-      }
-      else if (where & SSL_CB_EXIT)
-      {
-         if (ret == 0)
-            nxlog_debug_tag(DEBUG_TAG, 3, _T("%s: failed in %hs"), prefix, SSL_state_string_long(ssl));
-         else if (ret < 0)
-            nxlog_debug_tag(DEBUG_TAG, 3, _T("%s: error in %hs"), prefix, SSL_state_string_long(ssl));
-      }
-   }
-}
-
-bool SmtpDriver::createTLSConnection(TLSSocket *ts)
-{
-   // Setup secure connection
-#if OPENSSL_VERSION_NUMBER >= 0x10100000L
-   const SSL_METHOD *method = TLS_method();
-#else
-   const SSL_METHOD *method = SSLv23_method();
-#endif
-   if (method == nullptr)
-   {
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("Cannot obtain TLS method"));
-      return false;
-   }
-
-   ts->context = SSL_CTX_new((SSL_METHOD *)method);
-   if (ts->context == nullptr)
-   {
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("Cannot create TLS context"));
-      return false;
-   }
-
-   if (m_enableSSLInfoCallback)
-   {
-      SSL_CTX_set_info_callback(ts->context, SSLInfoCallback);
-   }
-#ifdef SSL_OP_NO_COMPRESSION
-   SSL_CTX_set_options(ts->context, SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3 | SSL_OP_NO_COMPRESSION);
-#else
-   SSL_CTX_set_options(ts->context, SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3);
-#endif
-
-   ts->ssl = SSL_new(ts->context);
-   if (ts->ssl == nullptr)
-   {
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("Cannot create SSL object"));
-      return false;
-   }
-
-   SSL_set_connect_state(ts->ssl);
-   SSL_set_fd(ts->ssl, static_cast<int>(ts->socket));
-
-   while (true)
-   {
-      int rc = SSL_do_handshake(ts->ssl);
-      if (rc != 1)
-      {
-         int sslErr = SSL_get_error(ts->ssl, rc);
-         if ((sslErr == SSL_ERROR_WANT_READ) || (sslErr == SSL_ERROR_WANT_WRITE))
-         {
-            SocketPoller poller(sslErr == SSL_ERROR_WANT_WRITE);
-            poller.add(ts->socket);
-            if (poller.poll(TLS_REQUEST_TIMEOUT) > 0)
-            {
-               nxlog_debug_tag(DEBUG_TAG, 8, _T("TLS handshake: %s wait completed"), (sslErr == SSL_ERROR_WANT_READ) ? _T("read") : _T("write"));
-               continue;
-            }
-            nxlog_debug_tag(DEBUG_TAG, 4, _T("TLS handshake failed (timeout on %s)"), (sslErr == SSL_ERROR_WANT_READ) ? _T("read") : _T("write"));
-            return false;
-         }
-         else
-         {
-            char buffer[128];
-            nxlog_debug_tag(DEBUG_TAG, 4, _T("TLS handshake failed (%hs)"), ERR_error_string(sslErr, buffer));
-
-            unsigned long error;
-            while ((error = ERR_get_error()) != 0)
-            {
-               ERR_error_string_n(error, buffer, sizeof(buffer));
-               nxlog_debug_tag(DEBUG_TAG, 5, _T("Caused by: %hs"), buffer);
-            }
-            return false;
-         }
-      }
-      break;
-   }
-   return true;
-}
-
-/**
  * Send e-mail
  */
 UINT32 SmtpDriver::sendMail(const char *pszRcpt, const char *pszSubject, const char *pszText, const char *encoding, bool isHtml, bool isUtf8)
@@ -616,22 +361,17 @@ UINT32 SmtpDriver::sendMail(const char *pszRcpt, const char *pszSubject, const c
    }
 
    // Create socket and connect to server
-   TLSSocket ts(ConnectToHost(addr, m_port, 3000));
+   TLSConnection tc(DEBUG_TAG);
 
-   if (ts.socket == INVALID_SOCKET)
+   if (!tc.connect(addr, m_port, m_tlsMode == TLSMode::TLS, 3000))
       return SMTP_ERR_COMM_FAILURE;
-
-   if (m_tlsMode == TLSMode::TLS && !createTLSConnection(&ts))
-   {
-      return SMTP_ERR_COMM_FAILURE;
-   }
 
    char szBuffer[SMTP_BUFFER_SIZE];
    size_t nBufPos = 0;
    int iState = STATE_INITIAL;
    while((iState != STATE_FINISHED) && (iState != STATE_ERROR))
    {
-      int iResp = GetSMTPResponse(&ts, szBuffer, &nBufPos);
+      int iResp = GetSMTPResponse(&tc, szBuffer, &nBufPos);
       nxlog_debug_tag(DEBUG_TAG, 8, _T("SMTP RESPONSE: %03d (state=%d)"), iResp, iState);
       if (iResp > 0)
       {
@@ -644,7 +384,7 @@ UINT32 SmtpDriver::sendMail(const char *pszRcpt, const char *pszSubject, const c
                   iState = STATE_HELLO;
                   char command[280];
                   snprintf(command, 280, "HELO %s\r\n", m_localHostName);
-                  ts.send(command, strlen(command));
+                  tc.send(command, strlen(command));
                }
                else
                {
@@ -655,7 +395,7 @@ UINT32 SmtpDriver::sendMail(const char *pszRcpt, const char *pszSubject, const c
                // Server should send 220 text after STARTTLS command
                if (iResp == 220)
                {
-                  if (!createTLSConnection(&ts))
+                  if (!tc.startTLS())
                   {
                      iState = STATE_ERROR;
                      break;
@@ -663,7 +403,7 @@ UINT32 SmtpDriver::sendMail(const char *pszRcpt, const char *pszSubject, const c
                   iState = STATE_HELLO;
                   char command[280];
                   snprintf(command, 280, "HELO %s\r\n", m_localHostName);
-                  ts.send(command, strlen(command));
+                  tc.send(command, strlen(command));
                }
                else
                {
@@ -674,16 +414,16 @@ UINT32 SmtpDriver::sendMail(const char *pszRcpt, const char *pszSubject, const c
                // Server should respond with 250 text to our HELO command
                if (iResp == 250)
                {
-                  if (m_tlsMode == TLSMode::STARTTLS && ts.ssl == nullptr)
+                  if (m_tlsMode == TLSMode::STARTTLS && !tc.isTLS())
                   {
                      iState = STATE_STARTTLS;
-                     ts.send("STARTTLS\r\n", 11);
+                     tc.send("STARTTLS\r\n", 11);
                   }
                   else
                   {
                      iState = STATE_FROM;
                      snprintf(szBuffer, SMTP_BUFFER_SIZE, "MAIL FROM: <%s>\r\n", m_fromAddr);
-                     ts.send(szBuffer, strlen(szBuffer));
+                     tc.send(szBuffer, strlen(szBuffer));
                   }
                }
                else
@@ -697,7 +437,7 @@ UINT32 SmtpDriver::sendMail(const char *pszRcpt, const char *pszSubject, const c
                {
                   iState = STATE_RCPT;
                   snprintf(szBuffer, SMTP_BUFFER_SIZE, "RCPT TO: <%s>\r\n", pszRcpt);
-                  ts.send(szBuffer, strlen(szBuffer));
+                  tc.send(szBuffer, strlen(szBuffer));
                }
                else
                {
@@ -709,7 +449,7 @@ UINT32 SmtpDriver::sendMail(const char *pszRcpt, const char *pszSubject, const c
                if (iResp == 250)
                {
                   iState = STATE_DATA;
-                  ts.send("DATA\r\n", 6);
+                  tc.send("DATA\r\n", 6);
                }
                else
                {
@@ -726,13 +466,13 @@ UINT32 SmtpDriver::sendMail(const char *pszRcpt, const char *pszSubject, const c
                   // from
                   char from[512];
                   snprintf(szBuffer, SMTP_BUFFER_SIZE, "From: \"%s\" <%s>\r\n", EncodeHeader(nullptr, encoding, fromName, from, 512), m_fromAddr);
-                  ts.send(szBuffer, strlen(szBuffer));
+                  tc.send(szBuffer, strlen(szBuffer));
                   // to
                   snprintf(szBuffer, SMTP_BUFFER_SIZE, "To: <%s>\r\n", pszRcpt);
-                  ts.send(szBuffer, strlen(szBuffer));
+                  tc.send(szBuffer, strlen(szBuffer));
                   // subject
                   EncodeHeader("Subject", encoding, pszSubject, szBuffer, SMTP_BUFFER_SIZE);
-                  ts.send(szBuffer, strlen(szBuffer));
+                  tc.send(szBuffer, strlen(szBuffer));
 
                   // date
                   time_t currentTime;
@@ -773,16 +513,16 @@ UINT32 SmtpDriver::sendMail(const char *pszRcpt, const char *pszSubject, const c
                   strftime(szBuffer, sizeof(szBuffer), "Date: %a, %d %b %Y %H:%M:%S %z\r\n", pCurrentTM);
 #endif
 
-                  ts.send(szBuffer, strlen(szBuffer));
+                  tc.send(szBuffer, strlen(szBuffer));
                   // content-type
                   snprintf(szBuffer, SMTP_BUFFER_SIZE,
                                     "Content-Type: text/%s; charset=%s\r\n"
                                     "Content-Transfer-Encoding: 8bit\r\n\r\n", isHtml ? "html" : "plain", encoding);
-                  ts.send(szBuffer, strlen(szBuffer));
+                  tc.send(szBuffer, strlen(szBuffer));
 
                   // Mail body
-                  ts.send(pszText, strlen(pszText));
-                  ts.send("\r\n.\r\n", 5);
+                  tc.send(pszText, strlen(pszText));
+                  tc.send("\r\n.\r\n", 5);
                }
                else
                {
@@ -794,7 +534,7 @@ UINT32 SmtpDriver::sendMail(const char *pszRcpt, const char *pszSubject, const c
                if (iResp == 250)
                {
                   iState = STATE_QUIT;
-                  ts.send("QUIT\r\n", 6);
+                  tc.send("QUIT\r\n", 6);
                }
                else
                {

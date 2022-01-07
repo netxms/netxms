@@ -16,32 +16,48 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** File: http.cpp
+** File: pop3.cpp
 **
 **/
 
 #include "portcheck.h"
+#include <tls_conn.h>
 
 /**
- * Check POP3 service - parameter handler
+ * Check POP3/POP3S service - parameter handler
  */
-LONG H_CheckPOP3(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+LONG H_CheckPOP3(const TCHAR* param, const TCHAR* arg, TCHAR* value, AbstractCommSession* session)
 {
-	LONG nRet = SYSINFO_RC_SUCCESS;
-	char szHost[256];
-	char szUser[256];
-	char szPassword[256];
+   LONG ret = SYSINFO_RC_SUCCESS;
+   char host[256];
+   char user[256];
+   char pass[256];
+   char portAsChar[256];
+   uint16_t port;
 
-	AgentGetParameterArgA(param, 1, szHost, sizeof(szHost));
-	AgentGetParameterArgA(param, 2, szUser, sizeof(szUser));
-	AgentGetParameterArgA(param, 3, szPassword, sizeof(szPassword));
-
-	if (szHost[0] == 0 || szUser[0] == 0 || szPassword[0] == 0)
-		return SYSINFO_RC_ERROR;
-
+   AgentGetParameterArgA(param, 1, host, sizeof(host));
+   AgentGetParameterArgA(param, 2, user, sizeof(user));
+   AgentGetParameterArgA(param, 3, pass, sizeof(pass));
    uint32_t timeout = GetTimeoutFromArgs(param, 4);
+   AgentGetParameterArgA(param, 5, portAsChar, sizeof(portAsChar));
+
+   if (host[0] == 0 || user[0] == 0 || pass[0] == 0)
+      return SYSINFO_RC_UNSUPPORTED;
+
+   if (portAsChar[0] == 0)
+   {
+      port = (arg[1] == 'S') ? 995 : 110;
+   }
+   else
+   {
+      port = ParsePort(portAsChar);
+      if (port == 0)
+         return SYSINFO_RC_UNSUPPORTED;
+   }
+
    int64_t start = GetCurrentTimeMs();
-	int result = CheckPOP3(szHost, InetAddress::INVALID, 110, szUser, szPassword, timeout);
+
+   int result = CheckPOP3(arg[1] == 'S', InetAddress::resolveHostName(host), port, user, pass, timeout);
    if (*arg == 'R')
    {
       if (result == PC_ERR_NONE)
@@ -49,57 +65,54 @@ LONG H_CheckPOP3(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCom
       else if (g_serviceCheckFlags & SCF_NEGATIVE_TIME_ON_ERROR)
          ret_int(value, -result);
       else
-         nRet = SYSINFO_RC_ERROR;
+         ret = SYSINFO_RC_ERROR;
    }
    else
    {
-	   ret_int(value, result);
+      ret_int(value, result);
    }
-	return nRet;
+   return ret;
 }
 
 /**
- * Check POP3 service
+ * Check POP3/POP3S service
  */
-int CheckPOP3(char *szAddr, const InetAddress& addr, short nPort, char *szUser, char *szPass, UINT32 dwTimeout)
+int CheckPOP3(bool enableTLS, const InetAddress& addr, uint16_t port, const char* user, const char* pass, uint32_t timeout)
 {
-	int status = 0;
-	SOCKET hSocket = NetConnectTCP(szAddr, addr, nPort, dwTimeout);
-	if (hSocket != INVALID_SOCKET)
-	{
-		char szBuff[512];
-		char szTmp[128];
+   int status = 0;
+   TLSConnection tc(SUBAGENT_DEBUG_TAG, false, timeout);
+   if (tc.connect(addr, port, enableTLS, timeout))
+   {
+      char buff[512];
+      char tmp[128];
 
-		status = PC_ERR_HANDSHAKE;
+      status = PC_ERR_HANDSHAKE;
 
-#define CHECK_OK (SocketCanRead(hSocket, 1000) && (NetRead(hSocket, szBuff, sizeof(szBuff)) > 3) \
-				&& (strncmp(szBuff, "+OK", 3) == 0))
+#define CHECK_OK (tc.recv(buff, sizeof(buff)) > 3) && (strncmp(buff, "+OK", 3) == 0)
 
-		if (CHECK_OK)
-		{
-			snprintf(szTmp, sizeof(szTmp), "USER %s\r\n", szUser);
-			if (NetWrite(hSocket, szTmp, strlen(szTmp)))
-			{
-				if (CHECK_OK)
-				{
-					snprintf(szTmp, sizeof(szTmp), "PASS %s\r\n", szPass);
-					if (NetWrite(hSocket, szTmp, strlen(szTmp)))
-					{
-						if (CHECK_OK)
-						{
-							status = PC_ERR_NONE;
-						}
-					}
-				}
-			}
-		}
+      if (CHECK_OK)
+      {
+         snprintf(tmp, sizeof(tmp), "USER %s\r\n", user);
+         if (tc.send(tmp, strlen(tmp)))
+         {
+            if (CHECK_OK)
+            {
+               snprintf(tmp, sizeof(tmp), "PASS %s\r\n", pass);
+               if (tc.send(tmp, strlen(tmp)))
+               {
+                  if (CHECK_OK)
+                  {
+                     status = PC_ERR_NONE;
+                  }
+               }
+            }
+         }
+      }
+   }
+   else
+   {
+      status = PC_ERR_CONNECT;
+   }
 
-		NetClose(hSocket);
-	}
-	else
-	{
-		status = PC_ERR_CONNECT;
-	}
-
-	return status;
+   return status;
 }

@@ -252,6 +252,7 @@
     <ClCompile Include="table.cpp" />
     <ClCompile Include="threads.cpp" />
     <ClCompile Include="timegm.c" />
+    <ClCompile Include="tls_conn.cpp" />
     <ClCompile Include="tools.cpp" />
     <ClCompile Include="tp.cpp" />
     <ClCompile Include="unicode.cpp" />

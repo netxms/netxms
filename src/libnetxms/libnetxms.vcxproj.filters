@@ -177,6 +177,9 @@
     <ClCompile Include="timegm.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="tls_conn.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="tools.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

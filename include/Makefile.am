@@ -61,6 +61,7 @@ include_HEADERS = \
 	socket_listener.h \
 	strophe.h \
 	symbol_visibility.h \
+	tls_conn.h \
 	unicode.h \
 	uthash.h \
 	uuid.h \

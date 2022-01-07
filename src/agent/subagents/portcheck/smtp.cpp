@@ -21,23 +21,38 @@
 **/
 
 #include "portcheck.h"
+#include <tls_conn.h>
 
 /**
- * Check SMTP service - parameter handler
+ * Check SMTP/SMTPS service - parameter handler
  */
-LONG H_CheckSMTP(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+LONG H_CheckSMTP(const TCHAR* param, const TCHAR* arg, TCHAR* value, AbstractCommSession* session)
 {
-	char host[256], recipient[256];
-	AgentGetParameterArgA(param, 1, host, sizeof(host));
-	AgentGetParameterArgA(param, 2, recipient, sizeof(recipient));
+   char host[256], recipient[256], portAsChar[256];
+   uint16_t port;
 
-	if ((host[0] == 0) || (recipient[0] == 0))
-		return SYSINFO_RC_UNSUPPORTED;
+   AgentGetParameterArgA(param, 1, host, sizeof(host));
+   AgentGetParameterArgA(param, 2, recipient, sizeof(recipient));
+   uint32_t timeout = GetTimeoutFromArgs(param, 3);
+   AgentGetParameterArgA(param, 4, portAsChar, sizeof(portAsChar));
+
+   if ((host[0] == 0) || (recipient[0] == 0))
+      return SYSINFO_RC_UNSUPPORTED;
+
+   if (portAsChar[0] == 0)
+   {
+      port = (arg[1] == 'S') ? 465 : 25;
+   }
+   else
+   {
+      port = ParsePort(portAsChar);
+      if (port == 0)
+         return SYSINFO_RC_UNSUPPORTED;
+   }
 
    LONG rc = SYSINFO_RC_SUCCESS;
-   uint32_t timeout = GetTimeoutFromArgs(param, 3);
    int64_t start = GetCurrentTimeMs();
-	int result = CheckSMTP(host, InetAddress::INVALID, 25, recipient, timeout);
+   int result = CheckSMTP(arg[1] == 'S', InetAddress::resolveHostName(host), port, recipient, timeout);
    if (*arg == 'R')
    {
       if (result == PC_ERR_NONE)
@@ -49,121 +64,128 @@ LONG H_CheckSMTP(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCom
    }
    else
    {
-	   ret_int(value, result);
+      ret_int(value, result);
    }
-	return rc;
+   return rc;
 }
 
 /**
- * Check SMTP service
+ * Check SMTP/SMTPS service
  */
-int CheckSMTP(char *szAddr, const InetAddress& addr, short nPort, char *szTo, UINT32 dwTimeout)
+int CheckSMTP(bool enableTLS, const InetAddress& addr, uint16_t port, const char* to, uint32_t timeout)
 {
-	int status = PC_ERR_NONE;
-	int nErr = 0;
+   int status = PC_ERR_NONE;
+   int err = 0;
 
-	SOCKET nSd = NetConnectTCP(szAddr, addr, nPort, dwTimeout);
-	if (nSd != INVALID_SOCKET)
-	{
-		char szBuff[2048];
-		char szTmp[128];
-		char szHostname[128];
+   TLSConnection tc(SUBAGENT_DEBUG_TAG, false, timeout);
 
-		status = PC_ERR_HANDSHAKE;
+   if (tc.connect(addr, port, enableTLS, timeout))
+   {
+      char buff[2048];
+      char tmp[128];
+      char hostname[128];
 
-#define CHECK_OK(x) nErr = 1; while(1) { \
-	if (SocketCanRead(nSd, (dwTimeout != 0) ? dwTimeout : 1000)) { \
-		if (NetRead(nSd, szBuff, sizeof(szBuff)) > 3) { \
-			if (szBuff[3] == '-') { continue; } \
-			if (strncmp(szBuff, x" ", 4) == 0) { nErr = 0; } break; \
-		} else { break; } \
-	} else { break; } } \
-	if (nErr == 0)
+      status = PC_ERR_HANDSHAKE;
 
-		CHECK_OK("220")
-		{
-         strlcpy(szHostname, g_hostName, sizeof(szHostname));
-		   if (szHostname[0] == 0)
-		   {
+#define CHECK_OK(x)                        \
+   err = 1;                                \
+   while (1)                               \
+   {                                       \
+      if (tc.recv(buff, sizeof(buff)) > 3) \
+      {                                    \
+         if (buff[3] == '-')               \
+            continue;                      \
+         if (strncmp(buff, x " ", 4) == 0) \
+            err = 0;                       \
+         break;                            \
+      }                                    \
+      else                                 \
+         break;                            \
+   }                                       \
+   if (err == 0)
+
+      CHECK_OK("220")
+      {
+         strlcpy(hostname, g_hostName, sizeof(hostname));
+         if (hostname[0] == 0)
+         {
 #ifdef UNICODE
-		      WCHAR wname[128] = L"";
+            WCHAR wname[128] = L"";
             GetLocalHostName(wname, 128, true);
-            wchar_to_utf8(wname, -1, szHostname, sizeof(szHostname));
+            wchar_to_utf8(wname, -1, hostname, sizeof(hostname));
 #else
-		      GetLocalHostName(szHostname, sizeof(szHostname), true);
+            GetLocalHostName(szHostname, sizeof(szHostname), true);
 #endif
-	         if (szHostname[0] == 0)
+            if (hostname[0] == 0)
             {
-               strcpy(szHostname, "netxms-portcheck");
+               strcpy(hostname, "netxms-portcheck");
             }
-		   }
-			
-			snprintf(szTmp, sizeof(szTmp), "HELO %s\r\n", szHostname);
-			if (NetWrite(nSd, szTmp, strlen(szTmp)))
-			{
-				CHECK_OK("250")
-				{
-					snprintf(szTmp, sizeof(szTmp), "MAIL FROM: noreply@%s\r\n", g_szDomainName);
-					if (NetWrite(nSd, szTmp, strlen(szTmp)))
-					{
-						CHECK_OK("250")
-						{
-							snprintf(szTmp, sizeof(szTmp), "RCPT TO: %s\r\n", szTo);
-							if (NetWrite(nSd, szTmp, strlen(szTmp)))
-							{
-								CHECK_OK("250")
-								{
-									if (NetWrite(nSd, "DATA\r\n", 6))
-									{
-										CHECK_OK("354")
-										{
-											// date
-											time_t currentTime;
-											struct tm *pCurrentTM;
-											char szTime[64];
+         }
 
-											time(&currentTime);
+         snprintf(tmp, sizeof(tmp), "HELO %s\r\n", hostname);
+         if (tc.send(tmp, strlen(tmp)))
+         {
+            CHECK_OK("250")
+            {
+               snprintf(tmp, sizeof(tmp), "MAIL FROM: noreply@%s\r\n", g_szDomainName);
+               if (tc.send(tmp, strlen(tmp)))
+               {
+                  CHECK_OK("250")
+                  {
+                     snprintf(tmp, sizeof(tmp), "RCPT TO: %s\r\n", to);
+                     if (tc.send(tmp, strlen(tmp)))
+                     {
+                        CHECK_OK("250")
+                        {
+                           if (tc.send("DATA\r\n", 6))
+                           {
+                              CHECK_OK("354")
+                              {
+                                 // date
+                                 time_t currentTime;
+                                 struct tm* pCurrentTM;
+                                 char timeAsChar[64];
+
+                                 time(&currentTime);
 #ifdef HAVE_LOCALTIME_R
-											struct tm currentTM;
-											localtime_r(&currentTime, &currentTM);
-											pCurrentTM = &currentTM;
+                                 struct tm currentTM;
+                                 localtime_r(&currentTime, &currentTM);
+                                 pCurrentTM = &currentTM;
 #else
-											pCurrentTM = localtime(&currentTime);
+                                 pCurrentTM = localtime(&currentTime);
 #endif
-											strftime(szTime, sizeof(szTime), "%a, %d %b %Y %H:%M:%S %z\r\n", pCurrentTM);
+                                 strftime(timeAsChar, sizeof(timeAsChar), "%a, %d %b %Y %H:%M:%S %z\r\n", pCurrentTM);
 
-											snprintf(szBuff, sizeof(szBuff), "From: <noreply@%s>\r\nTo: <%s>\r\nSubject: NetXMS test mail\r\nDate: %s\r\n\r\nNetXMS test mail\r\n.\r\n",
-											         szHostname, szTo, szTime);
-											
-											if (NetWrite(nSd, szBuff, strlen(szBuff)))
-											{
-												CHECK_OK("250")
-												{
-													if (NetWrite(nSd, "QUIT\r\n", 6))
-													{
-														CHECK_OK("221")
-														{
-															status = PC_ERR_NONE;
-														}
-													}
-												}
-											}
-										}
-									}
-								}
-							}
-						}
-					}
-				}
-			}
-		}
+                                 snprintf(buff, sizeof(buff), "From: <noreply@%s>\r\nTo: <%s>\r\nSubject: NetXMS test mail\r\nDate: %s\r\n\r\nNetXMS test mail\r\n.\r\n",
+                                          hostname, to, timeAsChar);
 
-		NetClose(nSd);
-	}
-	else
-	{
-		status = PC_ERR_CONNECT;
-	}
+                                 if (tc.send(buff, strlen(buff)))
+                                 {
+                                    CHECK_OK("250")
+                                    {
+                                       if (tc.send("QUIT\r\n", 6))
+                                       {
+                                          CHECK_OK("221")
+                                          {
+                                             status = PC_ERR_NONE;
+                                          }
+                                       }
+                                    }
+                                 }
+                              }
+                           }
+                        }
+                     }
+                  }
+               }
+            }
+         }
+      }
+   }
+   else
+   {
+      status = PC_ERR_CONNECT;
+   }
 
-	return status;
+   return status;
 }

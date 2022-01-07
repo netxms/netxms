@@ -35,13 +35,13 @@ enum
    PROTOCOL_TCP
 };
 
-uint32_t GetTimeoutFromArgs(const TCHAR *metric, int argIndex);
-SOCKET NetConnectTCP(const char *hostname, const InetAddress& addr, uint16_t port, uint32_t timeout);
+uint32_t GetTimeoutFromArgs(const TCHAR* metric, int argIndex);
+SOCKET NetConnectTCP(const char* hostname, const InetAddress& addr, uint16_t port, uint32_t timeout);
 
 /**
  * Write to the socket
  */
-static inline bool NetWrite(SOCKET hSocket, const void *data, size_t size)
+static inline bool NetWrite(SOCKET hSocket, const void* data, size_t size)
 {
    return SendEx(hSocket, data, size, 0, nullptr) == static_cast<ssize_t>(size);
 }
@@ -49,7 +49,7 @@ static inline bool NetWrite(SOCKET hSocket, const void *data, size_t size)
 /**
  * Read from socket
  */
-static inline ssize_t NetRead(SOCKET hSocket, void *buffer, size_t size)
+static inline ssize_t NetRead(SOCKET hSocket, void* buffer, size_t size)
 {
 #ifdef _WIN32
    return recv(hSocket, static_cast<char*>(buffer), static_cast<int>(size), 0);
@@ -58,7 +58,8 @@ static inline ssize_t NetRead(SOCKET hSocket, void *buffer, size_t size)
    do
    {
       rc = recv(hSocket, static_cast<char*>(buffer), size, 0);
-   } while((rc == -1) && (errno == EINTR));
+   }
+   while ((rc == -1) && (errno == EINTR));
    return rc;
 #endif
 }
@@ -73,38 +74,51 @@ static inline void NetClose(SOCKET nSocket)
 }
 
 /**
+ * Parses portAsChar to a port number.
+ * @return port number if parsing ended successfully or 0 if not.
+ */
+static inline uint16_t ParsePort(char* portAsChar)
+{
+   char* tmp;
+   long lport = strtol(portAsChar, &tmp, 0);
+   if (*tmp != 0 || lport > USHRT_MAX || lport <= 0)
+      return 0;
+   else
+      return static_cast<uint16_t>(lport);
+}
+
+/**
  * Service check return codes
  */
 enum
 {
-	PC_ERR_NONE,
-	PC_ERR_BAD_PARAMS,
-	PC_ERR_CONNECT,
-	PC_ERR_HANDSHAKE,
-	PC_ERR_INTERNAL
+   PC_ERR_NONE,
+   PC_ERR_BAD_PARAMS,
+   PC_ERR_CONNECT,
+   PC_ERR_HANDSHAKE,
+   PC_ERR_INTERNAL
 };
 
 /**
  * Flags
  */
-#define SCF_NEGATIVE_TIME_ON_ERROR  0x0001
+#define SCF_NEGATIVE_TIME_ON_ERROR 0x0001
 
-LONG H_CheckPOP3(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
-int CheckPOP3(char *, const InetAddress&, short, char *, char *, UINT32);
-LONG H_CheckSSH(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
-int CheckSSH(char *, const InetAddress&, short, char *, char *, UINT32);
-LONG H_CheckSMTP(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
-int CheckSMTP(char *, const InetAddress&, short, char *, UINT32);
-LONG H_CheckHTTP(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
-int CheckHTTP(char *, const InetAddress&, short, char *, char *, char *, UINT32);
-int CheckHTTPS(char *, const InetAddress&, short, char *, char *, char *, UINT32);
-LONG H_CheckCustom(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
-int CheckCustom(char *hostname, const InetAddress& addr, uint16_t port, uint32_t timeout);
-LONG H_CheckTelnet(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
-int CheckTelnet(char *, const InetAddress&, short, char *, char *, UINT32);
-LONG H_CheckTLS(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
-int CheckTLS(char *hostname, const InetAddress& addr, uint16_t port, uint32_t timeout);
-LONG H_TLSCertificateInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_CheckPOP3(const TCHAR* param, const TCHAR* arg, TCHAR* value, AbstractCommSession* session);
+int CheckPOP3(bool, const InetAddress&, uint16_t, const char*, const char*, uint32_t);
+LONG H_CheckSSH(const TCHAR* param, const TCHAR* arg, TCHAR* value, AbstractCommSession* session);
+int CheckSSH(char*, const InetAddress&, short, char*, char*, UINT32);
+LONG H_CheckSMTP(const TCHAR* param, const TCHAR* arg, TCHAR* value, AbstractCommSession* session);
+int CheckSMTP(bool, const InetAddress&, uint16_t, const char*, uint32_t);
+LONG H_CheckHTTP(const TCHAR* param, const TCHAR* arg, TCHAR* value, AbstractCommSession* session);
+int CheckHTTP(bool, const InetAddress&, short, char*, char*, char*, uint32_t, char* hostname = nullptr);
+LONG H_CheckCustom(const TCHAR* param, const TCHAR* arg, TCHAR* value, AbstractCommSession* session);
+int CheckCustom(char* hostname, const InetAddress& addr, uint16_t port, uint32_t timeout);
+LONG H_CheckTelnet(const TCHAR* param, const TCHAR* arg, TCHAR* value, AbstractCommSession* session);
+int CheckTelnet(char*, const InetAddress&, short, char*, char*, UINT32);
+LONG H_CheckTLS(const TCHAR* param, const TCHAR* arg, TCHAR* value, AbstractCommSession* session);
+int CheckTLS(char* hostname, const InetAddress& addr, uint16_t port, uint32_t timeout);
+LONG H_TLSCertificateInfo(const TCHAR* param, const TCHAR* arg, TCHAR* value, AbstractCommSession* session);
 
 extern char g_szDomainName[];
 extern char g_hostName[];
