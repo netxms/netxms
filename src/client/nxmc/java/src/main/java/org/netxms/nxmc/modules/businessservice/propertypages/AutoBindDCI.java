@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -50,7 +50,7 @@ import org.xnap.commons.i18n.I18n;
 public class AutoBindDCI extends ObjectPropertyPage
 {
    private static I18n i18n = LocalizationHelper.getI18n(AutoBindDCI.class);
-   
+
    private BusinessService businessService;
 	private Button checkboxEnableBind;
 	private Button checkboxEnableUnbind;
@@ -60,7 +60,7 @@ public class AutoBindDCI extends ObjectPropertyPage
    private boolean initialUnbind;
 	private String initialAutoBindFilter;
    private int initialStatusThreshold;
-	
+
    public AutoBindDCI(AbstractObject object)
    {
       super(i18n.tr("DCI Auto Bind"), object);
@@ -233,6 +233,6 @@ public class AutoBindDCI extends ObjectPropertyPage
    @Override
    public int getPriority()
    {
-      return 21;
+      return 27;
    }
 }
