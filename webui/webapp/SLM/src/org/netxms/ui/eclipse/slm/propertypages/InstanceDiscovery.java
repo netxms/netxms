@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Raden Solutions
+ * Copyright (C) 2003-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -45,7 +45,7 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
 /**
- * "Instance Discovery" property page for DCO
+ * "Instance Discovery" property page for business service prototype
  */
 public class InstanceDiscovery extends PropertyPage
 {
@@ -212,7 +212,7 @@ public class InstanceDiscovery extends PropertyPage
             return "Cannot modify instance discovery settings";
          }
       }.start();
-      
+
       return true;
 	}
 

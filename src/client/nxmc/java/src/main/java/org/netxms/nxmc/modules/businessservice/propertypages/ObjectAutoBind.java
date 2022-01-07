@@ -44,11 +44,11 @@ import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
- * "Auto Bind" property page
+ * "Object Auto Bind" property page
  */
-public class AutoBindBusinessService extends ObjectPropertyPage
+public class ObjectAutoBind extends ObjectPropertyPage
 {
-   private static I18n i18n = LocalizationHelper.getI18n(AutoBindBusinessService.class);
+   private static I18n i18n = LocalizationHelper.getI18n(ObjectAutoBind.class);
 
    private BusinessService businessService;
 	private Button checkboxEnableBind;
@@ -60,7 +60,7 @@ public class AutoBindBusinessService extends ObjectPropertyPage
 	private String initialAutoBindFilter;
    private int initialStatusThreshold;
 	
-   public AutoBindBusinessService(AbstractObject object)
+   public ObjectAutoBind(AbstractObject object)
    {
       super(i18n.tr("Object Auto Bind"), object);
    }
@@ -72,7 +72,7 @@ public class AutoBindBusinessService extends ObjectPropertyPage
 	protected Control createContents(Composite parent)
 	{
       Composite dialogArea = new Composite(parent, SWT.NONE);
-		
+
 		businessService = (BusinessService)object;
 		if (businessService == null)	// Paranoid check
 			return dialogArea;
@@ -200,7 +200,7 @@ public class AutoBindBusinessService extends ObjectPropertyPage
 						@Override
 						public void run()
 						{
-							AutoBindBusinessService.this.setValid(true);
+							ObjectAutoBind.this.setValid(true);
 						}
 					});
 				}
@@ -216,12 +216,18 @@ public class AutoBindBusinessService extends ObjectPropertyPage
 		return true;
 	}
 
+   /**
+    * @see org.netxms.nxmc.modules.objects.propertypages.ObjectPropertyPage#getId()
+    */
    @Override
    public String getId()
    {
-      return "autoBindBusinessService";
+      return "objectAutoBind";
    }
 
+   /**
+    * @see org.netxms.nxmc.modules.objects.propertypages.ObjectPropertyPage#isVisible()
+    */
    @Override
    public boolean isVisible()
    {

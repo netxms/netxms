@@ -33,7 +33,6 @@ import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.BusinessService;
-import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.interfaces.AutoBindDCIObject;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
@@ -47,9 +46,9 @@ import org.xnap.commons.i18n.I18n;
 /**
  * "DCI Auto Bind" property page
  */
-public class AutoBindDCI extends ObjectPropertyPage
+public class DCIAutoBind extends ObjectPropertyPage
 {
-   private static I18n i18n = LocalizationHelper.getI18n(AutoBindDCI.class);
+   private static I18n i18n = LocalizationHelper.getI18n(DCIAutoBind.class);
 
    private BusinessService businessService;
 	private Button checkboxEnableBind;
@@ -61,7 +60,7 @@ public class AutoBindDCI extends ObjectPropertyPage
 	private String initialAutoBindFilter;
    private int initialStatusThreshold;
 
-   public AutoBindDCI(AbstractObject object)
+   public DCIAutoBind(AbstractObject object)
    {
       super(i18n.tr("DCI Auto Bind"), object);
    }
@@ -171,7 +170,7 @@ public class AutoBindDCI extends ObjectPropertyPage
 			setValid(false);
 		
 		final NXCSession session =  Registry.getSession();
-		final NXCObjectModificationData md = new NXCObjectModificationData(((GenericObject)businessService).getObjectId());
+      final NXCObjectModificationData md = new NXCObjectModificationData(businessService.getObjectId());
 		md.setAutoBindFilter2(filterSource.getText());      
 		int flags = businessService.getAutoBindFlags();
       flags = apply ? flags | AutoBindDCIObject.DCI_BIND_FLAG : flags & ~AutoBindDCIObject.DCI_BIND_FLAG;  
@@ -199,7 +198,7 @@ public class AutoBindDCI extends ObjectPropertyPage
 						@Override
 						public void run()
 						{
-							AutoBindDCI.this.setValid(true);
+							DCIAutoBind.this.setValid(true);
 						}
 					});
 				}
@@ -208,7 +207,7 @@ public class AutoBindDCI extends ObjectPropertyPage
 			@Override
 			protected String getErrorMessage()
 			{
-				return i18n.tr("Cannot change dci automatic bind options");
+            return i18n.tr("Cannot change DCI automatic bind options for business service");
 			}
 		}.start();
 		

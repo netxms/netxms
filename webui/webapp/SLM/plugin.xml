@@ -54,6 +54,26 @@
             </instanceof>
          </enabledWhen>
       </page>
+      <page
+            class="org.netxms.ui.eclipse.slm.propertypages.DCIAutoBind"
+            id="org.netxms.ui.eclipse.slm.propertypages.DCIAutoBind#27"
+            name="DCI Auto Bind">
+         <enabledWhen>
+            <instanceof
+                  value="org.netxms.client.objects.BusinessService">
+            </instanceof>
+         </enabledWhen>
+      </page>
+      <page
+            class="org.netxms.ui.eclipse.slm.propertypages.ObjectAutoBind"
+            id="org.netxms.ui.eclipse.slm.propertypages.ObjectAutoBind#25"
+            name="Object Auto Bind">
+         <enabledWhen>
+            <instanceof
+                  value="org.netxms.client.objects.BusinessService">
+            </instanceof>
+         </enabledWhen>
+      </page>
    </extension>
    <extension
          point="org.netxms.ui.eclipse.objectview.tabs">

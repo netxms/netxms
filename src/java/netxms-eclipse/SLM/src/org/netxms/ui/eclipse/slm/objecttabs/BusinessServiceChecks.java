@@ -185,6 +185,8 @@ public class BusinessServiceChecks extends ObjectTab
                      @Override
                      public void run()
                      {
+                        if (checks == null)
+                           return;
                         checks.put(n.getSubCode(), (BusinessServiceCheck)n.getObject());
                         List<BusinessServiceCheck> newCheckArray = Arrays.asList((BusinessServiceCheck)n.getObject());
                         updateDciLabels(newCheckArray);
@@ -198,6 +200,8 @@ public class BusinessServiceChecks extends ObjectTab
                      @Override
                      public void run()
                      {
+                        if (checks == null)
+                           return;
                         checks.remove(n.getSubCode());
                         viewer.refresh();
                      }
