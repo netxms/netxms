@@ -1524,9 +1524,19 @@ public:
       return Iterator<T>(new ArrayIterator(this));
    }
 
+   ConstIterator<T> begin() const
+   {
+      return ConstIterator<T>(new ArrayIterator(const_cast<ObjectArray<T>*>(this)));
+   }
+
    Iterator<T> end()
    {
       return Iterator<T>(new ArrayIterator(this, size() - 1));
+   }
+
+   ConstIterator<T> end() const
+   {
+      return ConstIterator<T>(new ArrayIterator(const_cast<ObjectArray<T>*>(this), size() - 1));
    }
 };
 
@@ -1561,9 +1571,19 @@ public:
       return Iterator<T>(new ArrayIterator(this));
    }
 
+   ConstIterator<T> begin() const
+   {
+      return ConstIterator<T>(new ArrayIterator(const_cast<ObjectArray<T>*>(this)));
+   }
+
    Iterator<T> end()
    {
       return Iterator<T>(new ArrayIterator(this, size() - 1));
+   }
+
+   ConstIterator<T> end() const
+   {
+      return ConstIterator<T>(new ArrayIterator(const_cast<ObjectArray<T>*>(this), size() - 1));
    }
 };
 

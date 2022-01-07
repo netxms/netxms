@@ -157,7 +157,7 @@ public:
    void debugPrintf(int level, const TCHAR *format, ...);
 
    static Tunnel *createFromConfig(const TCHAR *config);
-   static Tunnel *createFromConfig(ConfigEntry *ce);
+   static Tunnel *createFromConfig(const ConfigEntry& ce);
 };
 
 /**
@@ -1585,21 +1585,20 @@ Tunnel *Tunnel::createFromConfig(const TCHAR *config)
 /**
  * Create tunnel object from ConfigEntry
  */
-Tunnel *Tunnel::createFromConfig(ConfigEntry *ce)
+Tunnel *Tunnel::createFromConfig(const ConfigEntry& ce)
 {
-   const TCHAR *hostname = ce->getSubEntryValue(_T("Hostname"), 0, nullptr);
+   const TCHAR *hostname = ce.getSubEntryValue(_T("Hostname"), 0, nullptr);
    if (hostname == nullptr)
-      hostname = ce->getName();
+      hostname = ce.getName();
 
-   uint16_t port = ce->getSubEntryValueAsUInt(_T("Port"), 0, AGENT_TUNNEL_PORT);
+   uint16_t port = ce.getSubEntryValueAsUInt(_T("Port"), 0, AGENT_TUNNEL_PORT);
 
-   const TCHAR *certificate = ce->getSubEntryValue(_T("Certificate"), 0, nullptr);
+   const TCHAR *certificate = ce.getSubEntryValue(_T("Certificate"), 0, nullptr);
    const TCHAR *password = nullptr;
    if (certificate != nullptr)
-      password = ce->getSubEntryValue(_T("Password"), 0, nullptr);
+      password = ce.getSubEntryValue(_T("Password"), 0, nullptr);
 
-   StringBuffer fingerprintString = ce->getSubEntryValue(_T("ServerCertificateFingerprint"), 0, nullptr);
-
+   StringBuffer fingerprintString = ce.getSubEntryValue(_T("ServerCertificateFingerprint"), 0, nullptr);
    if (!fingerprintString.isEmpty())
    {
       fingerprintString.replace(_T(":"), _T(""));
@@ -1867,16 +1866,14 @@ void ParseTunnelList(const StringSet& tunnels)
 }
 
 /**
- * Parser server connection (tunnel) list from ConfigEntry
+ * Parser server connection (tunnel) list from separate configuration sections
  */
-void ParseTunnelListFromConfigEntry(const unique_ptr<ObjectArray<ConfigEntry>>& config)
+void ParseTunnelList(const ObjectArray<ConfigEntry>& config)
 {
 #ifdef _WITH_ENCRYPTION
-   Iterator<ConfigEntry> it = config->begin();
-   while (it.hasNext())
+   for (ConfigEntry *ce : config)
    {
-      ConfigEntry *ce = it.next();
-      Tunnel *t = Tunnel::createFromConfig(ce);
+      Tunnel *t = Tunnel::createFromConfig(*ce);
       if (t != nullptr)
       {
          s_tunnels.add(t);

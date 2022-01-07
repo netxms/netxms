@@ -114,8 +114,7 @@ void UpdatePolicyInventory();
 void UpdateUserAgentsEnvironment();
 
 void ParseTunnelList(const StringSet& tunnels);
-
-void ParseTunnelListFromConfigEntry(const unique_ptr<ObjectArray<ConfigEntry>>& config);
+void ParseTunnelList(const ObjectArray<ConfigEntry>& config);
 
 void StartWebServiceHousekeeper();
 
@@ -1148,12 +1147,9 @@ BOOL Initialize()
 
 		// Parse outgoing server connection (tunnel) list
       ParseTunnelList(s_serverConnectionList);
-
-      unique_ptr<ObjectArray<ConfigEntry>> servConConfig = config->getSubEntries(_T("/ServerConnection"));
-      if (servConConfig != nullptr)
-      {
-         ParseTunnelListFromConfigEntry(servConConfig);
-      }
+      unique_ptr<ObjectArray<ConfigEntry>> connections = config->getSubEntries(_T("/ServerConnection"));
+      if (connections != nullptr)
+         ParseTunnelList(*connections);
 
       // Parse server lists
       if (m_pszMasterServerList != nullptr)
