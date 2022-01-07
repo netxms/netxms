@@ -152,6 +152,7 @@ BUILD_CLIENT="no"
 BUILD_STATIC_AGENT="no"
 BUILD_SDK="no"
 MODULES="libnetxms install"
+TEST_MODULES=""
 TOOLS=""
 STATIC_SUBAGENT_LIST=""
 PROPOSED_STATIC_SUBAGENTS="default"
@@ -951,6 +952,7 @@ AC_ARG_WITH(dist,
 [AS_HELP_STRING(--with-dist,for maintainers only)],
 	DB_DRIVERS="mysql mariadb pgsql odbc mssql sqlite oracle db2 informix"
 	MODULES="appagent jansson java-common libexpat libstrophe zlib libnetxms libnxjava install sqlite snmp ethernetip flow-collector libnxsl libnxmb libnxlp libnxpython libnxcc db client server ncdrivers agent nxscript nxcproxy"
+	TEST_MODULES="test-libnxcc test-libnxsl test-libnxsnmp"
 	TOOLS="nxlptest"
 	SUBAGENT_DIRS="linux ds18x20 freebsd openbsd minix mqtt mysql pgsql netbsd sunos aix hpux informix oracle lmsensors darwin rpi java jmx opcua ubntlw bind9 netsvc db2 tuxedo mongodb ssh vmgr xen lorawan asterisk python"
 	AGENT_DIRS="libnxtux"
@@ -1013,6 +1015,7 @@ fi
 check_substr "$COMPONENTS" "snmp"
 if test $? = 0; then
 	MODULES="$MODULES snmp"
+	TEST_MODULES="$TEST_MODULES test-libnxsnmp"
 fi
 
 check_substr "$COMPONENTS" "ethernetip"
@@ -1217,6 +1220,7 @@ if test $? = 0; then
 
 	BUILD_SERVER="yes"
 	MODULES="$MODULES libnxsl libnxcc server ncdrivers nxscript"
+	TEST_MODULES="$TEST_MODULES test-libnxcc test-libnxsl"
 	TOP_LEVEL_MODULES="$TOP_LEVEL_MODULES sql images"
 	CONTRIB_MODULES="$CONTRIB_MODULES mibs backgrounds music templates"
 	NCDRV_MODULES="$NCDRV_MODULES nxagent"
@@ -1327,6 +1331,7 @@ if test $? = 0; then
 		MODULES="$MODULES appagent client"
 	else
 		MODULES="$MODULES appagent client libnxsl libnxlp libnxcc db nxscript ncdrivers snmp"
+		TEST_MODULES="$TEST_MODULES test-libnxcc test-libnxsl test-libnxsnmp"
 		TOOLS="$TOOLS nxlptest"
 	fi
 fi
@@ -4784,6 +4789,7 @@ AC_SUBST(SQLFLAGS)
 AC_SUBST(STATIC_SUBAGENT_LIST)
 AC_SUBST(SUBAGENT_DIRS)
 AC_SUBST(SUBAGENT_LIBS)
+AC_SUBST(TEST_MODULES)
 AC_SUBST(TOOLS)
 AC_SUBST(TOP_LEVEL_MODULES)
 AC_SUBST(TUXEDO_CPPFLAGS)
