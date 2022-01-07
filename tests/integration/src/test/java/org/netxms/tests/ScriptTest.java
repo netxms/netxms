@@ -298,7 +298,7 @@ public class ScriptTest extends AbstractSessionTest implements TextOutputListene
       executeScript("/eventFunctions.nxsl", params);
    }
    
-   public void testNXSLMiscelaniousFunctions() throws Exception
+   public void testNXSLMiscellaneousFunctions() throws Exception
    {
       session = connect();
       List<String> params = new ArrayList<String>();
@@ -364,7 +364,7 @@ public class ScriptTest extends AbstractSessionTest implements TextOutputListene
       
       try
       {
-         executeScript("/miscelaniousFunctions.nxsl", params);
+         executeScript("/miscellaneousFunctions.nxsl", params);
    
          //Check if new notification was created by nxsl
          notificaitons = session.getUserAgentNotifications();
