@@ -3383,6 +3383,7 @@ public:
    AccessPointState getAccessPointState(AccessPoint *ap, SNMP_Transport *snmpTransport, const ObjectArray<RadioInterfaceInfo> *radioInterfaces);
 
    void forceConfigurationPoll() { lockProperties(); m_runtimeFlags |= ODF_FORCE_CONFIGURATION_POLL; unlockProperties(); }
+   virtual void startForcedConfigurationPoll() override;
 
    virtual bool setMgmtStatus(bool isManaged) override;
    virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE) override;

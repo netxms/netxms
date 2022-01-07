@@ -266,6 +266,7 @@
  */
 #define NDF_RECHECK_CAPABILITIES       0x00010000
 #define NDF_NEW_TUNNEL_BIND            0x00020000
+#define NDF_IGNORE_UNREACHABLE_STATE   0x00040000
 
 /**
  * Data collection object state flags

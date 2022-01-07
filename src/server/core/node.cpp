@@ -3790,6 +3790,17 @@ static void DeleteDuplicateNode(DeleteDuplicateNodeData *data)
 } while(0)
 
 /**
+ * Start forced configuration poll on node
+ */
+void Node::startForcedConfigurationPoll()
+{
+   lockProperties();
+   m_runtimeFlags |= NDF_IGNORE_UNREACHABLE_STATE;
+   unlockProperties();
+   Pollable::startForcedConfigurationPoll();
+}
+
+/**
  * Perform configuration poll on node
  */
 void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId)
@@ -3851,12 +3862,7 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
    }
 
    // Check if node is marked as unreachable
-   if ((m_state & DCSF_UNREACHABLE) && !(m_runtimeFlags & NDF_RECHECK_CAPABILITIES))
-   {
-      sendPollerMsg(POLLER_WARNING _T("Node is marked as unreachable, configuration poll aborted\r\n"));
-      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("Node is marked as unreachable, configuration poll aborted"));
-   }
-   else
+   if (!(m_state & DCSF_UNREACHABLE) || (m_runtimeFlags & (NDF_RECHECK_CAPABILITIES | NDF_IGNORE_UNREACHABLE_STATE)))
    {
       updatePrimaryIpAddr();
 
@@ -3992,7 +3998,7 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
 
             poller->setStatus(_T("cleanup"));
             lockProperties();
-            m_runtimeFlags &= ~(ODF_CONFIGURATION_POLL_PENDING | NDF_RECHECK_CAPABILITIES);
+            m_runtimeFlags &= ~(ODF_CONFIGURATION_POLL_PENDING | NDF_RECHECK_CAPABILITIES | NDF_IGNORE_UNREACHABLE_STATE);
             unlockProperties();
             pollerUnlock();
 
@@ -4118,11 +4124,16 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
       m_runtimeFlags &= ~ODF_CONFIGURATION_POLL_PENDING;
       m_runtimeFlags |= ODF_CONFIGURATION_POLL_PASSED;
    }
+   else
+   {
+      sendPollerMsg(POLLER_WARNING _T("Node is marked as unreachable, configuration poll aborted\r\n"));
+      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("Node is marked as unreachable, configuration poll aborted"));
+   }
 
    // Finish configuration poll
    poller->setStatus(_T("cleanup"));
    lockProperties();
-   m_runtimeFlags &= ~NDF_RECHECK_CAPABILITIES;
+   m_runtimeFlags &= ~(NDF_RECHECK_CAPABILITIES | NDF_IGNORE_UNREACHABLE_STATE);
    unlockProperties();
    pollerUnlock();
    nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("Finished configuration poll of node %s (ID: %d)"), m_name, m_id);
