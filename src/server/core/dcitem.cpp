@@ -86,10 +86,8 @@ DCItem::DCItem(const DCItem *src, bool shadowCopy) : DCObject(src, shadowCopy)
  */
 DCItem::DCItem(DB_HANDLE hdb, DB_RESULT hResult, int row, const shared_ptr<DataCollectionOwner>& owner, bool useStartupDelay) : DCObject(owner)
 {
-   TCHAR readBuffer[4096];
-
    m_id = DBGetFieldULong(hResult, row, 0);
-   m_name = DBGetField(hResult, row, 1, readBuffer, 4096);
+   m_name = DBGetFieldAsSharedString(hResult, row, 1);
    m_source = (BYTE)DBGetFieldLong(hResult, row, 2);
    m_dataType = (BYTE)DBGetFieldLong(hResult, row, 3);
    m_pollingInterval = DBGetFieldLong(hResult, row, 4);
@@ -100,8 +98,8 @@ DCItem::DCItem(DB_HANDLE hdb, DB_RESULT hResult, int row, const shared_ptr<DataC
    setTransformationScript(pszTmp);
    MemFree(pszTmp);
    m_dwTemplateId = DBGetFieldULong(hResult, row, 9);
-   m_description = DBGetField(hResult, row, 10, readBuffer, 4096);
-   m_instance = DBGetField(hResult, row, 11, readBuffer, 4096);
+   m_description = DBGetFieldAsSharedString(hResult, row, 10);
+   m_instanceName = DBGetFieldAsSharedString(hResult, row, 11);
    m_dwTemplateItemId = DBGetFieldULong(hResult, row, 12);
    m_thresholds = nullptr;
    m_cacheSize = 0;
@@ -116,11 +114,11 @@ DCItem::DCItem(DB_HANDLE hdb, DB_RESULT hResult, int row, const shared_ptr<DataC
 	m_nMultiplier = DBGetFieldLong(hResult, row, 17);
 	m_customUnitName = DBGetField(hResult, row, 18, nullptr, 0);
 	m_pszPerfTabSettings = DBGetField(hResult, row, 19, nullptr, 0);
-	m_systemTag = DBGetField(hResult, row, 20, readBuffer, 4096);
+	m_systemTag = DBGetFieldAsSharedString(hResult, row, 20);
 	m_snmpPort = static_cast<UINT16>(DBGetFieldLong(hResult, row, 21));
 	m_snmpRawValueType = (WORD)DBGetFieldLong(hResult, row, 22);
 	m_instanceDiscoveryMethod = (WORD)DBGetFieldLong(hResult, row, 23);
-	m_instanceDiscoveryData = DBGetField(hResult, row, 24, readBuffer, 4096);
+	m_instanceDiscoveryData = DBGetFieldAsSharedString(hResult, row, 24);
 	m_instanceFilterSource = nullptr;
    m_instanceFilter = nullptr;
    pszTmp = DBGetField(hResult, row, 25, nullptr, 0);
@@ -333,7 +331,7 @@ bool DCItem::saveToDatabase(DB_HANDLE hdb)
 	DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, (INT32)m_deltaCalculation);
 	DBBind(hStmt, 10, DB_SQLTYPE_TEXT, m_transformationScriptSource, DB_BIND_STATIC);
 	DBBind(hStmt, 11, DB_SQLTYPE_VARCHAR, m_description, DB_BIND_STATIC, MAX_DB_STRING - 1);
-	DBBind(hStmt, 12, DB_SQLTYPE_VARCHAR, m_instance, DB_BIND_STATIC, MAX_INSTANCE_LEN - 1);
+	DBBind(hStmt, 12, DB_SQLTYPE_VARCHAR, m_instanceName, DB_BIND_STATIC, MAX_INSTANCE_LEN - 1);
 	DBBind(hStmt, 13, DB_SQLTYPE_INTEGER, m_dwTemplateItemId);
 	DBBind(hStmt, 14, DB_SQLTYPE_INTEGER, m_flags);
 	DBBind(hStmt, 15, DB_SQLTYPE_INTEGER, m_dwResourceId);
@@ -444,7 +442,7 @@ void DCItem::checkThresholds(ItemValue &value)
             {
                PostDciEventWithNames(t->getEventCode(), m_ownerId, m_id, "ssssisds",
                      s_paramNamesReach, m_name.cstr(), m_description.cstr(), thresholdValue.getString(),
-                     checkValue.getString(), m_id, m_instance.cstr(), 0, value.getString());
+                     checkValue.getString(), m_id, m_instanceName.cstr(), 0, value.getString());
 				   shared_ptr<EventTemplate> evt = FindEventTemplateByCode(t->getEventCode());
 				   if (evt != nullptr)
 				   {
@@ -457,7 +455,7 @@ void DCItem::checkThresholds(ItemValue &value)
             break;
          case ThresholdCheckResult::DEACTIVATED:
             PostDciEventWithNames(t->getRearmEventCode(), m_ownerId, m_id, "ssissss",
-                  s_paramNamesRearm, m_name.cstr(), m_description.cstr(), m_id, m_instance.cstr(),
+                  s_paramNamesRearm, m_name.cstr(), m_description.cstr(), m_id, m_instanceName.cstr(),
                   thresholdValue.getString(), checkValue.getString(), value.getString());
             if (!(m_flags & DCF_ALL_THRESHOLDS))
             {
@@ -475,7 +473,7 @@ void DCItem::checkThresholds(ItemValue &value)
 				   {
                   PostDciEventWithNames(t->getEventCode(), m_ownerId, m_id, "ssssisds",
                         s_paramNamesReach, m_name.cstr(), m_description.cstr(), thresholdValue.getString(),
-                        checkValue.getString(), m_id, m_instance.cstr(), 1, value.getString());
+                        checkValue.getString(), m_id, m_instanceName.cstr(), 1, value.getString());
                   shared_ptr<EventTemplate> evt = FindEventTemplateByCode(t->getEventCode());
 					   if (evt != nullptr)
 					   {
@@ -803,7 +801,7 @@ void DCItem::processNewError(bool noInstance, time_t now)
             {
                PostDciEventWithNames(t->getEventCode(), m_ownerId, m_id, "ssssisds",
 					   s_paramNamesReach, m_name.cstr(), m_description.cstr(), _T(""), _T(""),
-                  m_id, m_instance.cstr(), 0, _T(""));
+                  m_id, m_instanceName.cstr(), 0, _T(""));
                shared_ptr<EventTemplate> evt = FindEventTemplateByCode(t->getEventCode());
 				   if (evt != nullptr)
 				   {
@@ -818,7 +816,7 @@ void DCItem::processNewError(bool noInstance, time_t now)
             break;
          case ThresholdCheckResult::DEACTIVATED:
             PostDciEventWithNames(t->getRearmEventCode(), m_ownerId, m_id, "ssissss",
-					s_paramNamesRearm, m_name.cstr(), m_description.cstr(), m_id, m_instance.cstr(), _T(""), _T(""), _T(""));
+					s_paramNamesRearm, m_name.cstr(), m_description.cstr(), m_id, m_instanceName.cstr(), _T(""), _T(""), _T(""));
             NotifyClientsOnThresholdChange(m_ownerId, m_id, t->getId(), nullptr, result);
             break;
          case ThresholdCheckResult::ALREADY_ACTIVE:
@@ -829,7 +827,7 @@ void DCItem::processNewError(bool noInstance, time_t now)
 				   {
 					   PostDciEventWithNames(t->getEventCode(), m_ownerId, m_id, "ssssisds",
 						   s_paramNamesReach, m_name.cstr(), m_description.cstr(), _T(""), _T(""),
-						   m_id, m_instance.cstr(), 1, _T(""));
+						   m_id, m_instanceName.cstr(), 1, _T(""));
 					   shared_ptr<EventTemplate> evt = FindEventTemplateByCode(t->getEventCode());
 					   if (evt != nullptr)
 					   {
@@ -880,13 +878,13 @@ void DCItem::generateEventsBasedOnThrDiff()
          {
             PostDciEventWithNames(t->getEventCode(), ownerId, m_id, "ssssisds",
                               s_paramNamesReach, m_name.cstr(), m_description.cstr(), t->getStringValue(),
-                              t->getLastCheckValue().getString(), m_id, m_instance.cstr(), 0,
+                              t->getLastCheckValue().getString(), m_id, m_instanceName.cstr(), 0,
                               (m_bCacheLoaded && (m_cacheSize > 0)) ? m_ppValueCache[0]->getString() : _T(""));
          }
          else
          {
             PostDciEventWithNames(t->getRearmEventCode(), ownerId, m_id, "ssissss",
-                              s_paramNamesRearm, m_name.cstr(), m_description.cstr(), m_id, m_instance.cstr(), t->getStringValue(),
+                              s_paramNamesRearm, m_name.cstr(), m_description.cstr(), m_id, m_instanceName.cstr(), t->getStringValue(),
                               t->getLastCheckValue().getString(),
                               (m_bCacheLoaded && (m_cacheSize > 0)) ? m_ppValueCache[0]->getString() : _T(""));
          }
@@ -1854,7 +1852,6 @@ void DCItem::createExportRecord(StringBuffer &xml)
                           _T("\t\t\t\t\t<interval>%s</interval>\n")
                           _T("\t\t\t\t\t<retentionType>%d</retentionType>\n")
                           _T("\t\t\t\t\t<retention>%s</retention>\n")
-                          _T("\t\t\t\t\t<instance>%s</instance>\n")
                           _T("\t\t\t\t\t<systemTag>%s</systemTag>\n")
                           _T("\t\t\t\t\t<delta>%d</delta>\n")
                           _T("\t\t\t\t\t<flags>%d</flags>\n")
@@ -1873,7 +1870,6 @@ void DCItem::createExportRecord(StringBuffer &xml)
                           (const TCHAR *)EscapeStringForXML2(m_pollingIntervalSrc),
                           m_retentionType,
                           (const TCHAR *)EscapeStringForXML2(m_retentionTimeSrc),
-                          (const TCHAR *)EscapeStringForXML2(m_instance),
                           (const TCHAR *)EscapeStringForXML2(m_systemTag),
 								  (int)m_deltaCalculation, m_flags,
 								  (int)m_snmpRawValueType, (int)m_snmpPort, (int)m_snmpVersion,
@@ -1916,6 +1912,13 @@ void DCItem::createExportRecord(StringBuffer &xml)
 		xml.appendPreallocated(EscapeStringForXML(m_pszPerfTabSettings, -1));
 		xml.append(_T("</perfTabSettings>\n"));
 	}
+
+   if (m_instanceName != nullptr)
+   {
+      xml.append(_T("\t\t\t\t\t<instance>"));
+      xml.appendPreallocated(EscapeStringForXML(m_instanceName, -1));
+      xml.append(_T("</instance>\n"));
+   }
 
    if (m_instanceDiscoveryData != nullptr)
 	{

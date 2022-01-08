@@ -1357,7 +1357,7 @@ void ClientSession::processRequest(NXCPMessage *request)
          getDCIScriptList(*request);
          break;
       case CMD_GET_PERFTAB_DCI_LIST:
-         sendPerfTabDCIList(*request);
+         getPerfTabDCIList(*request);
          break;
       case CMD_PUSH_DCI_DATA:
          pushDCIData(*request);
@@ -8795,18 +8795,18 @@ static void CopySessionData(ClientSession *pSession, NXCPMessage *msg)
  */
 void ClientSession::getSessionList(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
    if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_SESSIONS)
    {
-      msg.setField(VID_NUM_SESSIONS, (UINT32)0);
-      EnumerateClientSessions(CopySessionData, &msg);
-      msg.setField(VID_RCC, RCC_SUCCESS);
+      response.setField(VID_NUM_SESSIONS, (UINT32)0);
+      EnumerateClientSessions(CopySessionData, &response);
+      response.setField(VID_RCC, RCC_SUCCESS);
    }
    else
    {
-      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
-   sendMessage(msg);
+   sendMessage(response);
 }
 
 /**
@@ -8937,7 +8937,7 @@ static void SNMP_WalkerThread(SNMP_WalkerThreadArgs *args)
    args->node->callSnmpEnumerate(args->baseOID, WalkerCallback, &context);
    msg.setField(VID_NUM_VARIABLES, context.dwNumVars);
    msg.setEndOfSequence();
-   args->session->sendMessage(&msg);
+   args->session->sendMessage(msg);
    delete args;
 }
 
@@ -8996,7 +8996,7 @@ uint32_t ClientSession::resolveDCIName(uint32_t nodeId, uint32_t dciId, TCHAR *n
 				shared_ptr<DCObject> dci = static_cast<DataCollectionOwner&>(*object).getDCObjectById(dciId, m_dwUserId);
 				if (dci != nullptr)
 				{
-               _tcsncpy(name, dci->getDescription(), MAX_DB_STRING);
+               _tcslcpy(name, dci->getDescription(), MAX_DB_STRING);
 					rcc = RCC_SUCCESS;
 				}
 				else
@@ -9027,7 +9027,7 @@ uint32_t ClientSession::resolveDCIName(uint32_t nodeId, uint32_t dciId, TCHAR *n
  */
 void ClientSession::resolveDCINames(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    uint32_t count = request.getFieldAsUInt32(VID_NUM_ITEMS);
    uint32_t *nodeList = MemAllocArray<uint32_t>(count);
@@ -9035,7 +9035,7 @@ void ClientSession::resolveDCINames(const NXCPMessage& request)
    request.getFieldAsInt32Array(VID_NODE_LIST, count, nodeList);
    request.getFieldAsInt32Array(VID_DCI_LIST, count, dciList);
 
-   UINT32 rcc = RCC_INVALID_ARGUMENT;
+   uint32_t rcc = RCC_INVALID_ARGUMENT;
    uint32_t i = 0;
    uint32_t fieldId = VID_DCI_LIST_BASE;
    for(; i < count; i++)
@@ -9044,16 +9044,16 @@ void ClientSession::resolveDCINames(const NXCPMessage& request)
       rcc = resolveDCIName(nodeList[i], dciList[i], m_description);
       if (rcc != RCC_SUCCESS)
          break;
-      msg.setField(fieldId++, dciList[i]);
-      msg.setField(fieldId++, m_description);
+      response.setField(fieldId++, dciList[i]);
+      response.setField(fieldId++, m_description);
    }
-   msg.setField(VID_NUM_ITEMS, i);
+   response.setField(VID_NUM_ITEMS, i);
 
    MemFree(nodeList);
    MemFree(dciList);
 
-   msg.setField(VID_RCC, rcc);
-   sendMessage(&msg);
+   response.setField(VID_RCC, rcc);
+   sendMessage(response);
 }
 
 /**
@@ -9061,7 +9061,7 @@ void ClientSession::resolveDCINames(const NXCPMessage& request)
  */
 void ClientSession::getAgentConfigurationList(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_AGENT_CFG)
    {
@@ -9070,30 +9070,30 @@ void ClientSession::getAgentConfigurationList(const NXCPMessage& request)
       if (hResult != nullptr)
       {
          int count = DBGetNumRows(hResult);
-         msg.setField(VID_RCC, RCC_SUCCESS);
-         msg.setField(VID_NUM_RECORDS, count);
+         response.setField(VID_RCC, RCC_SUCCESS);
+         response.setField(VID_NUM_RECORDS, count);
          uint32_t fieldId = VID_AGENT_CFG_LIST_BASE;
          for(int i = 0; i < count; i++, fieldId += 7)
          {
-            msg.setField(fieldId++, DBGetFieldULong(hResult, i, 0));
+            response.setField(fieldId++, DBGetFieldULong(hResult, i, 0));
             TCHAR name[MAX_DB_STRING];
-            msg.setField(fieldId++, DBGetField(hResult, i, 1, name, MAX_DB_STRING));
-            msg.setField(fieldId++, DBGetFieldULong(hResult, i, 2));
+            response.setField(fieldId++, DBGetField(hResult, i, 1, name, MAX_DB_STRING));
+            response.setField(fieldId++, DBGetFieldULong(hResult, i, 2));
          }
          DBFreeResult(hResult);
       }
       else
       {
-         msg.setField(VID_RCC, RCC_DB_FAILURE);
+         response.setField(VID_RCC, RCC_DB_FAILURE);
       }
       DBConnectionPoolReleaseConnection(hdb);
    }
    else
    {
-      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
 
-   sendMessage(msg);
+   sendMessage(response);
 }
 
 /**
@@ -10174,9 +10174,9 @@ void ClientSession::deleteGraph(const NXCPMessage& request)
 }
 
 /**
- * Send list of DCIs to be shown in performance tab
+ * Get list of DCIs to be shown in performance tab
  */
-void ClientSession::sendPerfTabDCIList(const NXCPMessage& request)
+void ClientSession::getPerfTabDCIList(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -320,7 +320,7 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
    else if (m_function == F_SCRIPT)
    {
       tvalue = m_expandValue ?
-               ItemValue(target->expandText(m_value.getString(), nullptr, nullptr, dci->createDescriptor(), nullptr, nullptr, dci->getInstance(), nullptr, nullptr), m_value.getTimeStamp()) :
+               ItemValue(target->expandText(m_value.getString(), nullptr, nullptr, dci->createDescriptor(), nullptr, nullptr, dci->getInstanceName(), nullptr, nullptr), m_value.getTimeStamp()) :
                m_value;
       if ((m_script != nullptr) && !m_script->isEmpty())
       {
@@ -368,7 +368,7 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
    else
    {
       tvalue = m_expandValue ?
-               ItemValue(target->expandText(m_value.getString(), nullptr, nullptr, dci->createDescriptor(), nullptr, nullptr, dci->getInstance(), nullptr, nullptr), m_value.getTimeStamp()) :
+               ItemValue(target->expandText(m_value.getString(), nullptr, nullptr, dci->createDescriptor(), nullptr, nullptr, dci->getInstanceName(), nullptr, nullptr), m_value.getTimeStamp()) :
                m_value;
       switch(m_operation)
       {

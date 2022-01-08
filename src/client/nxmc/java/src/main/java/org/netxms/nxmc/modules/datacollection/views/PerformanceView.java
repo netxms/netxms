@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Raden Solutions
+ * Copyright (C) 2003-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -136,7 +136,7 @@ public class PerformanceView extends ObjectView
          {
             try
             {
-               final PerfTabDci[] items = session.getPerfTabItems(object.getObjectId());
+               final List<PerfTabDci> items = session.getPerfTabItems(object.getObjectId());
                runInUIThread(new Runnable() {
                   @Override
                   public void run()
@@ -179,21 +179,21 @@ public class PerformanceView extends ObjectView
     * 
     * @param items Performance tab items
     */
-   private void update(final PerfTabDci[] items)
+   private void update(final List<PerfTabDci> items)
    {
       for(PerfTabGraph chart : charts.values())
          chart.dispose();
       charts.clear();
 
-      List<PerfTabGraphSettings> settings = new ArrayList<PerfTabGraphSettings>(items.length);
-      for(int i = 0; i < items.length; i++)
+      List<PerfTabGraphSettings> settings = new ArrayList<PerfTabGraphSettings>(items.size());
+      for(PerfTabDci dci : items)
       {
          try
          {
-            PerfTabGraphSettings s = PerfTabGraphSettings.createFromXml(items[i].getPerfTabSettings());
+            PerfTabGraphSettings s = PerfTabGraphSettings.createFromXml(dci.getPerfTabSettings());
             if (s.isEnabled())
             {
-               s.setRuntimeDciInfo(items[i]);
+               s.setRuntimeDciInfo(dci);
                settings.add(s);
             }
          }

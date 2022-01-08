@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,14 +25,21 @@ import org.netxms.base.NXCPMessage;
  */
 public class PerfTabDci
 {
-	private long id;		// DCI ID
-	private long templateDciId;	  // ID of related template DCI, or 0 for standalone DCIs
-	private long rootTemplateDciId; // Root template DCI ID (for DCI created by instance discovery from template)
-	private int status;
-	private String description;
-	private String perfTabSettings;
-	private String instance;
-	
+   private long id; // DCI ID
+   private long templateDciId; // ID of related template DCI, or 0 for standalone DCIs
+   private long rootTemplateDciId; // Root template DCI ID (for DCI created by instance discovery from template)
+   private int status;
+   private String description;
+   private String perfTabSettings;
+   private String instance;
+   private String instanceName;
+
+   /**
+    * Create performance tab DCI information object from NXCP message
+    *
+    * @param msg NXCP message
+    * @param baseId base field ID
+    */
 	public PerfTabDci(NXCPMessage msg, long baseId)
 	{
 		id = msg.getFieldAsInt64(baseId);
@@ -43,7 +50,10 @@ public class PerfTabDci
 		instance = msg.getFieldAsString(baseId + 6);
 		if (instance == null)
 			instance = "";
-		rootTemplateDciId = msg.getFieldAsInt64(baseId + 7);
+      instanceName = msg.getFieldAsString(baseId + 7);
+      if (instanceName == null)
+         instanceName = instance;
+      rootTemplateDciId = msg.getFieldAsInt64(baseId + 8);
 	}
 
 	/**
@@ -101,4 +111,12 @@ public class PerfTabDci
 	{
 		return instance;
 	}
+
+   /**
+    * @return the instanceName
+    */
+   public String getInstanceName()
+   {
+      return instanceName;
+   }
 }

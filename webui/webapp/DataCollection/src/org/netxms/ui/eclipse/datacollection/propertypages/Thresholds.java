@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Raden Solutions
+ * Copyright (C) 2003-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -90,7 +90,7 @@ public class Thresholds extends AbstractDCIPropertyPage
 
 		Composite dialogArea = (Composite)super.createContents(parent);
 		dci = editor.getObjectAsItem();
-		
+
 		thresholds = new ArrayList<Threshold>(dci.getThresholds().size());
 		for(Threshold t : dci.getThresholds())
 			thresholds.add(new Threshold(t));
@@ -103,7 +103,7 @@ public class Thresholds extends AbstractDCIPropertyPage
 
 		instance = new LabeledText(dialogArea, SWT.NONE);
 		instance.setLabel(Messages.get().Thresholds_Instance);
-		instance.setText(dci.getInstance());
+		instance.setText(dci.getInstanceName());
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -476,18 +476,16 @@ public class Thresholds extends AbstractDCIPropertyPage
 	 */
 	protected void applyChanges(final boolean isApply)
 	{
-		dci.setInstance(instance.getText());
+		dci.setInstanceName(instance.getText());
 		dci.setProcessAllThresholds(checkAllThresholds.getSelection());
 		dci.getThresholds().clear();
 		dci.getThresholds().addAll(thresholds);
 		editor.modify();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.eclipse.jface.preference.PreferencePage#performCancel()
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performCancel()
+    */
 	@Override
 	public boolean performCancel()
 	{

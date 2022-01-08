@@ -111,7 +111,7 @@ DCObject::DCObject(const shared_ptr<DataCollectionOwner>& owner) : m_owner(owner
 DCObject::DCObject(const DCObject *src, bool shadowCopy) :
          m_owner(src->m_owner), m_name(src->m_name), m_description(src->m_description),
          m_systemTag(src->m_systemTag), m_instanceDiscoveryData(src->m_instanceDiscoveryData),
-         m_instance(src->m_instance), m_mutex(MutexType::RECURSIVE)
+         m_instanceName(src->m_instanceName), m_mutex(MutexType::RECURSIVE)
 {
    m_id = src->m_id;
    m_guid = src->m_guid;
@@ -165,7 +165,7 @@ DCObject::DCObject(const DCObject *src, bool shadowCopy) :
 DCObject::DCObject(UINT32 id, const TCHAR *name, int source, const TCHAR *pollingInterval, const TCHAR *retentionTime,
          const shared_ptr<DataCollectionOwner>& owner, const TCHAR *description, const TCHAR *systemTag) :
          m_owner(owner), m_name(name), m_description(description), m_systemTag(systemTag),
-         m_instanceDiscoveryData(_T("")), m_instance(_T("")), m_mutex(MutexType::RECURSIVE)
+         m_instanceDiscoveryData(_T("")), m_instanceName(_T("")), m_mutex(MutexType::RECURSIVE)
 {
    m_id = id;
    m_guid = uuid::generate();
@@ -294,7 +294,7 @@ DCObject::DCObject(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& o
    m_instanceFilterSource = nullptr;
    m_instanceFilter = nullptr;
    setInstanceFilter(config->getSubEntryValue(_T("instanceFilter")));
-   m_instance = config->getSubEntryValue(_T("instance"));
+   m_instanceName = config->getSubEntryValue(_T("instance"));
    m_accessList = new IntegerArray<UINT32>(0, 16);
    m_instanceRetentionTime = config->getSubEntryValueAsInt(_T("instanceRetentionTime"), 0, -1);
    m_instanceGracePeriodStart = 0;
@@ -517,7 +517,7 @@ void DCObject::changeBinding(UINT32 newId, shared_ptr<DataCollectionOwner> newOw
 	{
 		m_name = expandMacros(m_name, MAX_ITEM_NAME);
 		m_description = expandMacros(m_description, MAX_DB_STRING);
-		m_instance = expandMacros(m_instance, MAX_ITEM_NAME);
+		m_instanceName = expandMacros(m_instanceName, MAX_ITEM_NAME);
 	}
 
    updateTimeIntervalsInternal();
@@ -819,7 +819,7 @@ void DCObject::createMessage(NXCPMessage *pMsg)
    pMsg->setField(VID_INSTD_METHOD, m_instanceDiscoveryMethod);
    pMsg->setField(VID_INSTD_DATA, m_instanceDiscoveryData);
    pMsg->setField(VID_INSTD_FILTER, m_instanceFilterSource);
-   pMsg->setField(VID_INSTANCE, m_instance);
+   pMsg->setField(VID_INSTANCE, m_instanceName);
    pMsg->setFieldFromInt32Array(VID_ACL, m_accessList);
    pMsg->setField(VID_INSTANCE_RETENTION, m_instanceRetentionTime);
    pMsg->setField(VID_RELATED_OBJECT, m_relatedObject);
@@ -893,7 +893,7 @@ void DCObject::updateFromMessage(const NXCPMessage& msg)
    setInstanceFilter(pszStr);
    MemFree(pszStr);
 
-   m_instance = msg.getFieldAsSharedString(VID_INSTANCE, MAX_INSTANCE_LEN);
+   m_instanceName = msg.getFieldAsSharedString(VID_INSTANCE, MAX_INSTANCE_LEN);
 
    m_accessList->clear();
    msg.getFieldAsInt32Array(VID_ACL, m_accessList);
@@ -1001,12 +1001,12 @@ void DCObject::expandInstance()
 {
    StringBuffer temp = m_name;
    temp.replace(_T("{instance}"), m_instanceDiscoveryData);
-   temp.replace(_T("{instance-name}"), m_instance);
+   temp.replace(_T("{instance-name}"), m_instanceName);
    m_name = temp;
 
    temp = m_description;
    temp.replace(_T("{instance}"), m_instanceDiscoveryData);
-   temp.replace(_T("{instance-name}"), m_instance);
+   temp.replace(_T("{instance-name}"), m_instanceName);
    m_description = temp;
 }
 
@@ -1054,7 +1054,7 @@ void DCObject::updateFromTemplate(DCObject *src)
    }
    else
    {
-      m_instance = expandMacros(src->m_instance, MAX_ITEM_NAME);
+      m_instanceName = expandMacros(src->m_instanceName, MAX_ITEM_NAME);
       m_instanceDiscoveryMethod = src->m_instanceDiscoveryMethod;
       m_instanceDiscoveryData = src->m_instanceDiscoveryData;
       MemFreeAndNull(m_instanceFilterSource);
@@ -1258,7 +1258,7 @@ void DCObject::updateFromImport(ConfigEntry *config)
    m_instanceDiscoveryMethod = (WORD)config->getSubEntryValueAsInt(_T("instanceDiscoveryMethod"));
    m_instanceDiscoveryData = config->getSubEntryValue(_T("instanceDiscoveryData"));
    setInstanceFilter(config->getSubEntryValue(_T("instanceFilter")));
-   m_instance = config->getSubEntryValue(_T("instance"));
+   m_instanceName = config->getSubEntryValue(_T("instance"));
    m_instanceRetentionTime = config->getSubEntryValueAsInt(_T("instanceRetentionTime"), 0, -1);
 
    unlock();
@@ -1506,7 +1506,7 @@ void DCObject::updateTimeIntervalsInternal()
 {
    if ((m_retentionTimeSrc != nullptr) && (*m_retentionTimeSrc != 0))
    {
-      StringBuffer exp = m_owner.lock()->expandText(m_retentionTimeSrc, nullptr, nullptr, createDescriptorInternal(), nullptr, nullptr, m_instance, nullptr, nullptr);
+      StringBuffer exp = m_owner.lock()->expandText(m_retentionTimeSrc, nullptr, nullptr, createDescriptorInternal(), nullptr, nullptr, m_instanceName, nullptr, nullptr);
       m_retentionTime = _tcstol(exp, nullptr, 10);
    }
    else
@@ -1516,7 +1516,7 @@ void DCObject::updateTimeIntervalsInternal()
 
    if ((m_pollingIntervalSrc != nullptr) && (*m_pollingIntervalSrc != 0))
    {
-      StringBuffer exp = m_owner.lock()->expandText(m_pollingIntervalSrc, nullptr, nullptr, createDescriptorInternal(), nullptr, nullptr, m_instance, nullptr, nullptr);
+      StringBuffer exp = m_owner.lock()->expandText(m_pollingIntervalSrc, nullptr, nullptr, createDescriptorInternal(), nullptr, nullptr, m_instanceName, nullptr, nullptr);
       m_pollingInterval = _tcstol(exp, nullptr, 10);
    }
    else
@@ -1586,7 +1586,7 @@ json_t *DCObject::toJson()
    json_object_set_new(root, "instanceDiscoveryMethod", json_integer(m_instanceDiscoveryMethod));
    json_object_set_new(root, "instanceDiscoveryData", json_string_t(m_instanceDiscoveryData));
    json_object_set_new(root, "instanceFilter", json_string_t(m_instanceFilterSource));
-   json_object_set_new(root, "instance", json_string_t(m_instance));
+   json_object_set_new(root, "instanceName", json_string_t(m_instanceName));
    json_object_set_new(root, "accessList", m_accessList->toJson());
    json_object_set_new(root, "instanceRetentionTime", json_integer(m_instanceRetentionTime));
    unlock();
@@ -1774,7 +1774,7 @@ DCObjectInfo::DCObjectInfo(const DCObject& object)
    _tcslcpy(m_name, object.m_name, MAX_ITEM_NAME);
    _tcslcpy(m_description, object.m_description, MAX_DB_STRING);
    _tcslcpy(m_systemTag, object.m_systemTag, MAX_DB_STRING);
-   _tcslcpy(m_instance, object.m_instance, MAX_DB_STRING);
+   _tcslcpy(m_instanceName, object.m_instanceName, MAX_DB_STRING);
    m_instanceData = MemCopyString(object.m_instanceDiscoveryData);
    m_comments = MemCopyString(object.m_comments);
    m_dataType = (m_type == DCO_TYPE_ITEM) ? static_cast<const DCItem&>(object).m_dataType : -1;
@@ -1801,7 +1801,7 @@ DCObjectInfo::DCObjectInfo(const NXCPMessage& msg, const DCObject *object)
    msg.getFieldAsString(VID_NAME, m_name, MAX_ITEM_NAME);
    msg.getFieldAsString(VID_DESCRIPTION, m_description, MAX_DB_STRING);
    msg.getFieldAsString(VID_SYSTEM_TAG, m_systemTag, MAX_DB_STRING);
-   msg.getFieldAsString(VID_INSTANCE, m_instance, MAX_DB_STRING);
+   msg.getFieldAsString(VID_INSTANCE, m_instanceName, MAX_DB_STRING);
    m_instanceData = msg.getFieldAsString(VID_INSTD_DATA);
    m_comments = msg.getFieldAsString(VID_COMMENTS);
    m_dataType = (m_type == DCO_TYPE_ITEM) ? msg.getFieldAsInt16(VID_DCI_DATA_TYPE) : -1;

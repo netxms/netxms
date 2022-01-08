@@ -784,12 +784,12 @@ void DataCollectionTarget::onTemplateRemove(const shared_ptr<DataCollectionOwner
 /**
  * Get list of DCIs to be shown on performance tab
  */
-UINT32 DataCollectionTarget::getPerfTabDCIList(NXCPMessage *pMsg, UINT32 userId)
+uint32_t DataCollectionTarget::getPerfTabDCIList(NXCPMessage *msg, uint32_t userId)
 {
 	readLockDciAccess();
 
-	UINT32 dwId = VID_SYSDCI_LIST_BASE, dwCount = 0;
-   for(int i = 0; i < m_dcObjects.size(); i++)
+	uint32_t fieldId = VID_SYSDCI_LIST_BASE, count = 0;
+   for (int i = 0; i < m_dcObjects.size(); i++)
 	{
 		DCObject *object = m_dcObjects.get(i);
       if ((object->getPerfTabSettings() != nullptr) &&
@@ -798,37 +798,21 @@ UINT32 DataCollectionTarget::getPerfTabDCIList(NXCPMessage *pMsg, UINT32 userId)
           object->matchClusterResource() &&
           object->hasAccess(userId))
 		{
-			pMsg->setField(dwId++, object->getId());
-			pMsg->setField(dwId++, object->getDescription());
-			pMsg->setField(dwId++, (WORD)object->getStatus());
-			pMsg->setField(dwId++, object->getPerfTabSettings());
-			pMsg->setField(dwId++, (WORD)object->getType());
-			pMsg->setField(dwId++, object->getTemplateItemId());
-			if (object->getType() == DCO_TYPE_ITEM)
-			{
-				pMsg->setField(dwId++, ((DCItem *)object)->getInstance());
-            if ((object->getTemplateItemId() != 0) && (object->getTemplateId() == m_id))
-            {
-               // DCI created via instance discovery - send ID of root template item
-               // to allow UI to resolve double template case
-               // (template -> instance discovery item on node -> actual item on node)
-               shared_ptr<DCObject> src = getDCObjectById(object->getTemplateItemId(), userId, false);
-               pMsg->setField(dwId++, (src != nullptr) ? src->getTemplateItemId() : 0);
-               dwId += 2;
-            }
-            else
-            {
-				   dwId += 3;
-            }
-			}
-			else
-			{
-				dwId += 4;
-			}
-			dwCount++;
+			msg->setField(fieldId++, object->getId());
+			msg->setField(fieldId++, object->getDescription());
+			msg->setField(fieldId++, static_cast<uint16_t>(object->getStatus()));
+			msg->setField(fieldId++, object->getPerfTabSettings());
+			msg->setField(fieldId++, static_cast<uint16_t>(object->getType()));
+			msg->setField(fieldId++, object->getTemplateItemId());
+         msg->setField(fieldId++, object->getInstanceDiscoveryData());
+         msg->setField(fieldId++, object->getInstanceName());
+         shared_ptr<DCObject> src = getDCObjectById(object->getTemplateItemId(), userId, false);
+         msg->setField(fieldId++, (src != nullptr) ? src->getTemplateItemId() : 0);
+         fieldId++;
+			count++;
 		}
 	}
-   pMsg->setField(VID_NUM_ITEMS, dwCount);
+   msg->setField(VID_NUM_ITEMS, count);
 
 	unlockDciAccess();
    return RCC_SUCCESS;
@@ -837,13 +821,13 @@ UINT32 DataCollectionTarget::getPerfTabDCIList(NXCPMessage *pMsg, UINT32 userId)
 /**
  * Get threshold violation summary into NXCP message
  */
-UINT32 DataCollectionTarget::getThresholdSummary(NXCPMessage *msg, UINT32 baseId, UINT32 userId)
+uint32_t DataCollectionTarget::getThresholdSummary(NXCPMessage *msg, uint32_t baseId, uint32_t userId)
 {
-	UINT32 varId = baseId;
+   uint32_t varId = baseId;
 
 	msg->setField(varId++, m_id);
-	UINT32 countId = varId++;
-	UINT32 count = 0;
+	uint32_t countId = varId++;
+	uint32_t count = 0;
 
 	readLockDciAccess();
    for(int i = 0; i < m_dcObjects.size(); i++)
@@ -1522,7 +1506,7 @@ DataCollectionError DataCollectionTarget::getStringMapFromScript(const TCHAR *pa
 /**
  * Get last (current) DCI values for summary table.
  */
-void DataCollectionTarget::getDciValuesSummary(SummaryTable *tableDefinition, Table *tableData, UINT32 userId)
+void DataCollectionTarget::getDciValuesSummary(SummaryTable *tableDefinition, Table *tableData, uint32_t userId)
 {
    if (tableDefinition->isTableDciSource())
       getTableDciValuesSummary(tableDefinition, tableData, userId);
@@ -1561,7 +1545,7 @@ void DataCollectionTarget::getItemDciValuesSummary(SummaryTable *tableDefinition
             if (tableDefinition->isMultiInstance())
             {
                // Find instance
-               const TCHAR *instance = object->getInstance();
+               const TCHAR *instance = object->getInstanceName();
                for(row = baseRow; row < tableData->getNumRows(); row++)
                {
                   const TCHAR *v = tableData->getAsString(row, 1);
@@ -2277,7 +2261,7 @@ static EnumerationCallbackResult CreateInstanceDCI(const TCHAR *key, const Insta
    DCObject *dco = root->clone();
 
    dco->setTemplateId(object->getId(), root->getId());
-   dco->setInstance(value->getInstance());
+   dco->setInstanceName(value->getInstanceName());
    dco->setInstanceDiscoveryMethod(IDM_NONE);
    dco->setInstanceDiscoveryData(key);
    dco->setInstanceFilter(nullptr);
@@ -2298,7 +2282,7 @@ bool DataCollectionTarget::updateInstances(DCObject *root, StringObjectMap<Insta
    writeLockDciAccess();
 
    // Delete DCIs for missing instances and update existing
-   IntegerArray<UINT32> deleteList;
+   IntegerArray<uint32_t> deleteList;
    for(int i = 0; i < m_dcObjects.size(); i++)
    {
       DCObject *object = m_dcObjects.get(i);
@@ -2312,11 +2296,11 @@ bool DataCollectionTarget::updateInstances(DCObject *root, StringObjectMap<Insta
          nxlog_debug(5, _T("DataCollectionTarget::updateInstances(%s [%u], %s [%u]): instance \"%s\" found"),
                    m_name, m_id, root->getName().cstr(), root->getId(), dcoInstance.cstr());
          InstanceDiscoveryData *instanceObject = instances->get(dcoInstance);
-         const TCHAR *name = instanceObject->getInstance();
+         const TCHAR *name = instanceObject->getInstanceName();
          bool notify = false;
-         if (_tcscmp(name, object->getInstance()))
+         if (_tcscmp(name, object->getInstanceName()))
          {
-            object->setInstance(name);
+            object->setInstanceName(name);
             object->updateFromTemplate(root);
             changed = true;
             notify = true;

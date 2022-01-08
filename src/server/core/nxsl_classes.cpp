@@ -4003,11 +4003,11 @@ NXSL_Value *NXSL_DciClass::getAttr(NXSL_Object *object, const char *attr)
    }
    else if (compareAttributeName(attr, "instance"))
    {
-		value = vm->createValue(dci->getInstance());
+      value = vm->createValue(dci->getInstanceData());
    }
-   else if (compareAttributeName(attr, "instanceData"))
+   else if (compareAttributeName(attr, "instanceName"))
    {
-		value = vm->createValue(dci->getInstanceData());
+		value = vm->createValue(dci->getInstanceName());
    }
    else if (compareAttributeName(attr, "lastPollTime"))
    {

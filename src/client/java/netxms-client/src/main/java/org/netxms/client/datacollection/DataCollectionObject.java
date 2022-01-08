@@ -97,7 +97,7 @@ public abstract class DataCollectionObject
 	protected ArrayList<String> schedules;
 	protected Object userData;
    protected String comments;
-   protected String instance;
+   protected String instanceName;
    protected int instanceDiscoveryMethod;
    protected String instanceDiscoveryData;
    protected String instanceDiscoveryFilter;
@@ -146,7 +146,7 @@ public abstract class DataCollectionObject
 			schedules.add(msg.getFieldAsString(varId));
 		}
 		
-      instance = msg.getFieldAsString(NXCPCodes.VID_INSTANCE);
+      instanceName = msg.getFieldAsString(NXCPCodes.VID_INSTANCE);
       instanceDiscoveryMethod = msg.getFieldAsInt32(NXCPCodes.VID_INSTD_METHOD);
       instanceDiscoveryData = msg.getFieldAsString(NXCPCodes.VID_INSTD_DATA);
       instanceDiscoveryFilter = msg.getFieldAsString(NXCPCodes.VID_INSTD_FILTER);      
@@ -190,7 +190,7 @@ public abstract class DataCollectionObject
       snmpVersion = SnmpVersion.DEFAULT;
 		schedules = new ArrayList<String>(0);
 		comments = "";
-      instance = "";
+      instanceName = "";
       accessList = new ArrayList<Long>(0);
       instanceRetentionTime = -1;
       relatedObject = 0;
@@ -257,7 +257,7 @@ public abstract class DataCollectionObject
 	   schedules = new ArrayList<String>(src.schedules);
 	   userData = src.userData;
 	   comments = src.comments;
-	   instance = src.instance;
+	   instanceName = src.instanceName;
 	   instanceDiscoveryMethod = src.instanceDiscoveryMethod;
 	   instanceDiscoveryData = src.instanceDiscoveryData;
 	   instanceDiscoveryFilter = src.instanceDiscoveryFilter;
@@ -301,7 +301,7 @@ public abstract class DataCollectionObject
 			msg.setField(varId++, schedules.get(i));
 		}
 
-      msg.setField(NXCPCodes.VID_INSTANCE, instance);
+      msg.setField(NXCPCodes.VID_INSTANCE, instanceName);
       msg.setFieldInt16(NXCPCodes.VID_INSTD_METHOD, instanceDiscoveryMethod);
       if (instanceDiscoveryData != null)
          msg.setField(NXCPCodes.VID_INSTD_DATA, instanceDiscoveryData);
@@ -808,21 +808,21 @@ public abstract class DataCollectionObject
    }
 
    /**
-    * @return the instance
+    * @return instance name
     */
-   public String getInstance()
+   public String getInstanceName()
    {
-      return instance;
+      return instanceName;
    }
 
    /**
-    * @param instance the instance to set
+    * @param instanceName the instance to set
     */
-   public void setInstance(String instance)
+   public void setInstanceName(String instanceName)
    {
-      this.instance = instance;
+      this.instanceName = instanceName;
    }
-   
+
    /**
     * @return the instanceDiscoveryMethod
     */

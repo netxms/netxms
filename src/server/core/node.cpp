@@ -6217,7 +6217,7 @@ DataCollectionError Node::getTableFromSNMP(UINT16 port, SNMP_Version version, co
 /**
  * Callback for SnmpWalk in Node::getListFromSNMP
  */
-static UINT32 SNMPGetListCallback(SNMP_Variable *varbind, SNMP_Transport *snmp, void *arg)
+static uint32_t SNMPGetListCallback(SNMP_Variable *varbind, SNMP_Transport *snmp, void *arg)
 {
    bool convert = false;
    TCHAR buffer[256];
@@ -6236,7 +6236,7 @@ DataCollectionError Node::getListFromSNMP(UINT16 port, SNMP_Version version, con
       return DCE_COMM_ERROR;
 
    *list = new StringList;
-   UINT32 rc = SnmpWalk(snmp, oid, SNMPGetListCallback, *list);
+   uint32_t rc = SnmpWalk(snmp, oid, SNMPGetListCallback, *list);
    delete snmp;
    if (rc != SNMP_ERR_SUCCESS)
    {
@@ -6258,7 +6258,7 @@ struct SNMPOIDSuffixListCallback_Data
 /**
  * Callback for SnmpWalk in Node::getOIDSuffixListFromSNMP
  */
-static UINT32 SNMPOIDSuffixListCallback(SNMP_Variable *varbind, SNMP_Transport *snmp, void *arg)
+static uint32_t SNMPOIDSuffixListCallback(SNMP_Variable *varbind, SNMP_Transport *snmp, void *arg)
 {
    SNMPOIDSuffixListCallback_Data *data = (SNMPOIDSuffixListCallback_Data *)arg;
    const SNMP_ObjectId& oid = varbind->getName();
@@ -6287,7 +6287,7 @@ DataCollectionError Node::getOIDSuffixListFromSNMP(UINT16 port, SNMP_Version ver
       return DCE_COMM_ERROR;
 
    SNMPOIDSuffixListCallback_Data data;
-   UINT32 oidBin[256];
+   uint32_t oidBin[256];
    data.oidLen = SNMPParseOID(oid, oidBin, 256);
    if (data.oidLen == 0)
    {
@@ -6296,7 +6296,7 @@ DataCollectionError Node::getOIDSuffixListFromSNMP(UINT16 port, SNMP_Version ver
    }
 
    data.values = new StringMap;
-   UINT32 rc = SnmpWalk(snmp, oid, SNMPOIDSuffixListCallback, &data);
+   uint32_t rc = SnmpWalk(snmp, oid, SNMPOIDSuffixListCallback, &data);
    delete snmp;
    if (rc == SNMP_ERR_SUCCESS)
    {

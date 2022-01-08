@@ -1,6 +1,6 @@
 /*
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2020-2021 Raden Solutions
+** Copyright (C) 2020-2022 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,6 +22,56 @@
 
 #include "nxdbmgr.h"
 #include <nxevent.h>
+
+/**
+ * Upgrade from 40.91 to 40.92
+ */
+static bool H_UpgradeFromV91()
+{
+   DB_RESULT hResult = SQLSelect(_T("SELECT item_id,perftab_settings FROM items WHERE perftab_settings LIKE '%{instance}%'"));
+   if (hResult != nullptr)
+   {
+      int count = DBGetNumRows(hResult);
+      if (count > 0)
+      {
+         DB_STATEMENT hStmt = DBPrepare(g_dbHandle, _T("UPDATE items SET perftab_settings=? WHERE item_id=?"), count > 1);
+         if (hStmt != nullptr)
+         {
+            StringBuffer sb;
+            for(int i = 0; i < count; i++)
+            {
+               sb.clear();
+               sb.appendPreallocated(DBGetField(hResult, i, 1, nullptr, 0));
+               sb.replace(_T("{instance}"), _T("{instance-name}"));
+               DBBind(hStmt, 1, DB_SQLTYPE_TEXT, sb, DB_BIND_STATIC);
+               DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, DBGetFieldULong(hResult, i, 0));
+               if (!SQLExecute(hStmt))
+               {
+                  if (!g_ignoreErrors)
+                  {
+                     DBFreeStatement(hStmt);
+                     DBFreeResult(hResult);
+                     return false;
+                  }
+               }
+            }
+            DBFreeStatement(hStmt);
+         }
+         else if (!g_ignoreErrors)
+         {
+            DBFreeResult(hResult);
+            return false;
+         }
+      }
+      DBFreeResult(hResult);
+   }
+   else if (!g_ignoreErrors)
+   {
+      return false;
+   }
+   CHK_EXEC(SetMinorSchemaVersion(92));
+   return true;
+}
 
 /**
  * Upgrade from 40.90 to 40.91
@@ -2939,6 +2989,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 91, 40, 92, H_UpgradeFromV91 },
    { 90, 40, 91, H_UpgradeFromV90 },
    { 89, 40, 90, H_UpgradeFromV89 },
    { 88, 40, 89, H_UpgradeFromV88 },

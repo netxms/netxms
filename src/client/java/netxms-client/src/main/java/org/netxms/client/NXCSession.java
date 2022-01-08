@@ -5163,7 +5163,7 @@ public class NXCSession
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public PerfTabDci[] getPerfTabItems(final long nodeId) throws IOException, NXCException
+   public List<PerfTabDci> getPerfTabItems(final long nodeId) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_PERFTAB_DCI_LIST);
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
@@ -5172,12 +5172,10 @@ public class NXCSession
       final NXCPMessage response = waitForRCC(msg.getMessageId());
 
       int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_ITEMS);
-      PerfTabDci[] list = new PerfTabDci[count];
-      long base = NXCPCodes.VID_SYSDCI_LIST_BASE;
-      for(int i = 0; i < count; i++, base += 10)
-      {
-         list[i] = new PerfTabDci(response, base);
-      }
+      List<PerfTabDci> list = new ArrayList<PerfTabDci>(count);
+      long baseId = NXCPCodes.VID_SYSDCI_LIST_BASE;
+      for(int i = 0; i < count; i++, baseId += 10)
+         list.add(new PerfTabDci(response, baseId));
 
       return list;
    }

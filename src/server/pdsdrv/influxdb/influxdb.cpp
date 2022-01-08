@@ -2,7 +2,7 @@
  ** NetXMS - Network Management System
  ** Performance Data Storage Driver for InfluxDB
  ** Copyright (C) 2019 Sebastian YEPES FERNANDEZ & Julien DERIVIERE
- ** Copyright (C) 2021 Raden Solutions
+ ** Copyright (C) 2021-2022 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU Lesser General Public License as published by
@@ -221,7 +221,7 @@ bool InfluxDBStorageDriver::saveDCItemValue(DCItem *dci, time_t timestamp, const
    nxlog_debug_tag(DEBUG_TAG, 8,
             _T("Raw metric: OwnerName:%s DataSource:%i Type:%i Name:%s Description: %s Instance:%s DataType:%i DeltaCalculationMethod:%i RelatedObject:%i Value:%s timestamp:") INT64_FMT,
             dci->getOwnerName(), dci->getDataSource(), dci->getType(), dci->getName().cstr(), dci->getDescription().cstr(),
-            dci->getInstance().cstr(), dci->getDataType(), dci->getDeltaCalculationMethod(), dci->getRelatedObject(),
+            dci->getInstanceName().cstr(), dci->getDataType(), dci->getDeltaCalculationMethod(), dci->getRelatedObject(),
             value, static_cast<INT64>(timestamp));
 
    // Dont't try to send empty values
@@ -377,7 +377,7 @@ bool InfluxDBStorageDriver::saveDCItemValue(DCItem *dci, time_t timestamp, const
    }
 
    // Instance
-   StringBuffer instance = NormalizeString(dci->getInstance());
+   StringBuffer instance = NormalizeString(dci->getInstanceName());
    if (instance.isEmpty())
    {
       instance = _T("none");

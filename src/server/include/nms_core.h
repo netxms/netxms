@@ -756,7 +756,7 @@ private:
    void getRelatedEventList(const NXCPMessage& request);
    void getDCIScriptList(const NXCPMessage& request);
 	void getDCIInfo(const NXCPMessage& request);
-   void sendPerfTabDCIList(const NXCPMessage& request);
+   void getPerfTabDCIList(const NXCPMessage& request);
    void exportConfiguration(const NXCPMessage& request);
    void importConfiguration(const NXCPMessage& request);
    void getGraph(const NXCPMessage& request);

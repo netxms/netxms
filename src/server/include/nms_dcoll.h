@@ -46,21 +46,21 @@ public:
 class InstanceDiscoveryData
 {
 private:
-   TCHAR *m_instance;
+   TCHAR *m_instanceName;
    uint32_t m_relatedObjectId;
 
 public:
-   InstanceDiscoveryData(const TCHAR *instance, uint32_t relatedObject)
+   InstanceDiscoveryData(const TCHAR *instanceName, uint32_t relatedObject)
    {
-      m_instance = MemCopyString(instance);
+      m_instanceName = MemCopyString(instanceName);
       m_relatedObjectId = relatedObject;
    }
    ~InstanceDiscoveryData()
    {
-      MemFree(m_instance);
+      MemFree(m_instanceName);
    }
 
-   const TCHAR *getInstance() const { return m_instance; }
+   const TCHAR *getInstanceName() const { return m_instanceName; }
    uint32_t getRelatedObject() const { return m_relatedObjectId; }
 };
 
@@ -287,10 +287,10 @@ protected:
    Mutex m_mutex;
    StringList *m_schedules;
    time_t m_tLastCheck;          // Last schedule checking time
-   UINT32 m_dwErrorCount;        // Consequtive collection error count
-	UINT32 m_dwResourceId;	   	// Associated cluster resource ID
-	UINT32 m_sourceNode;          // Source node ID or 0 to disable
-	UINT16 m_snmpPort;            // Custom SNMP port or 0 for node default
+   uint32_t m_dwErrorCount;        // Consequtive collection error count
+   uint32_t m_dwResourceId;	   	// Associated cluster resource ID
+   uint32_t m_sourceNode;          // Source node ID or 0 to disable
+	uint16_t m_snmpPort;            // Custom SNMP port or 0 for node default
 	SNMP_Version m_snmpVersion;   // Custom SNMP version or SNMP_VERSION_DEFAULT for node default
 	TCHAR *m_pszPerfTabSettings;
    TCHAR *m_transformationScriptSource;   // Transformation script (source code)
@@ -300,10 +300,10 @@ protected:
 	bool m_doForcePoll;                    // Force poll indicator
 	ClientSession *m_pollingSession;       // Force poll requestor session
    uint16_t m_instanceDiscoveryMethod;
-   SharedString m_instanceDiscoveryData;
+   SharedString m_instanceDiscoveryData;  // Instance discovery data (instance value for discovered DCIs and method specific data for prototype)
    TCHAR *m_instanceFilterSource;
    NXSL_Program *m_instanceFilter;
-   SharedString m_instance;
+   SharedString m_instanceName;           // Instance display name (used only for display purposes)
    IntegerArray<UINT32> *m_accessList;
    time_t m_instanceGracePeriodStart;  // Start of grace period for missing instance
    int32_t m_instanceRetentionTime;      // Retention time if instance is not found
@@ -335,7 +335,6 @@ protected:
    DCObject(const DCObject *src, bool shadowCopy);
 
 public:
-
 	virtual ~DCObject();
 
    virtual DCObject *clone() const = 0;
@@ -430,11 +429,11 @@ public:
 	SharedString getInstanceDiscoveryData() const { return GetAttributeWithLock(m_instanceDiscoveryData, m_mutex); }
    int32_t getInstanceRetentionTime() const { return m_instanceRetentionTime; }
    StringObjectMap<InstanceDiscoveryData> *filterInstanceList(StringMap *instances);
-   void setInstanceDiscoveryMethod(WORD method) { m_instanceDiscoveryMethod = method; }
+   void setInstanceDiscoveryMethod(uint16_t method) { m_instanceDiscoveryMethod = method; }
    void setInstanceDiscoveryData(const TCHAR *data) { lock(); m_instanceDiscoveryData = data; unlock(); }
    void setInstanceFilter(const TCHAR *script);
-   void setInstance(const TCHAR *instance) { lock(); m_instance = instance; unlock(); }
-   SharedString getInstance() const { return GetAttributeWithLock(m_instance, m_mutex); }
+   void setInstanceName(const TCHAR *instanceName) { lock(); m_instanceName = instanceName; unlock(); }
+   SharedString getInstanceName() const { return GetAttributeWithLock(m_instanceName, m_mutex); }
    void expandInstance();
    time_t getInstanceGracePeriodStart() const { return m_instanceGracePeriodStart; }
    void setInstanceGracePeriodStart(time_t t) { m_instanceGracePeriodStart = t; }
@@ -855,7 +854,7 @@ private:
    TCHAR m_name[MAX_ITEM_NAME];
    TCHAR m_description[MAX_DB_STRING];
    TCHAR m_systemTag[MAX_DB_STRING];
-   TCHAR m_instance[MAX_DB_STRING];
+   TCHAR m_instanceName[MAX_DB_STRING];
    TCHAR *m_instanceData;
    TCHAR *m_comments;
    int m_dataType;
@@ -880,7 +879,7 @@ public:
    const TCHAR *getName() const { return m_name; }
    const TCHAR *getDescription() const { return m_description; }
    const TCHAR *getSystemTag() const { return m_systemTag; }
-   const TCHAR *getInstance() const { return m_instance; }
+   const TCHAR *getInstanceName() const { return m_instanceName; }
    const TCHAR *getInstanceData() const { return m_instanceData; }
    const TCHAR *getComments() const { return m_comments; }
    int getDataType() const { return m_dataType; }

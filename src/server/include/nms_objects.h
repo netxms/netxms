@@ -2321,9 +2321,9 @@ public:
 
    uint32_t getTableLastValue(uint32_t dciId, NXCPMessage *msg);
    uint32_t getDciLastValue(uint32_t dciId, NXCPMessage *msg);
-   UINT32 getThresholdSummary(NXCPMessage *msg, UINT32 baseId, UINT32 userId);
-   UINT32 getPerfTabDCIList(NXCPMessage *pMsg, UINT32 userId);
-   void getDciValuesSummary(SummaryTable *tableDefinition, Table *tableData, UINT32 userId);
+   uint32_t getThresholdSummary(NXCPMessage *msg, uint32_t baseId, uint32_t userId);
+   uint32_t getPerfTabDCIList(NXCPMessage *msg, uint32_t userId);
+   void getDciValuesSummary(SummaryTable *tableDefinition, Table *tableData, uint32_t userId);
    uint32_t getLastValues(NXCPMessage *msg, bool objectTooltipOnly, bool overviewOnly, bool includeNoValueObjects, uint32_t userId);
    void getTooltipLastValues(NXCPMessage *msg, uint32_t userId, uint32_t *index);
    double getProxyLoadFactor() const { return m_proxyLoadFactor.load(); }

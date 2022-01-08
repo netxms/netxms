@@ -133,7 +133,7 @@ public class PerformanceTab extends ObjectTab
 			{
 				try
 				{
-					final PerfTabDci[] items = session.getPerfTabItems(object.getObjectId());
+               final List<PerfTabDci> items = session.getPerfTabItems(object.getObjectId());
 					final Display display = PerformanceTab.this.getClientArea().getDisplay();
 					new UIJob(display, Messages.get().PerformanceTab_JobName) {
 						@Override
@@ -165,7 +165,7 @@ public class PerformanceTab extends ObjectTab
 	 * 
 	 * @param items Performance tab items
 	 */
-	private void update(final PerfTabDci[] items)
+   private void update(final List<PerfTabDci> items)
 	{
 		if (waitingImage != null)
 		{
@@ -177,15 +177,15 @@ public class PerformanceTab extends ObjectTab
 			chart.dispose();
 		charts.clear();
 
-		List<PerfTabGraphSettings> settings = new ArrayList<PerfTabGraphSettings>(items.length);
-		for(int i = 0; i < items.length; i++)
+      List<PerfTabGraphSettings> settings = new ArrayList<PerfTabGraphSettings>(items.size());
+      for(PerfTabDci dci : items)
 		{
 			try
 			{
-				PerfTabGraphSettings s = PerfTabGraphSettings.createFromXml(items[i].getPerfTabSettings());
+            PerfTabGraphSettings s = PerfTabGraphSettings.createFromXml(dci.getPerfTabSettings());
 				if (s.isEnabled())
 				{
-					s.setRuntimeDciInfo(items[i]);
+               s.setRuntimeDciInfo(dci);
 					settings.add(s);
 				}
 			}

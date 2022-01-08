@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -157,20 +157,18 @@ DCTable::DCTable(UINT32 id, const TCHAR *name, int source, const TCHAR *pollingI
  */
 DCTable::DCTable(DB_HANDLE hdb, DB_RESULT hResult, int row, const shared_ptr<DataCollectionOwner>& owner, bool useStartupDelay) : DCObject(owner)
 {
-   TCHAR readBuffer[4096];
-
    m_id = DBGetFieldULong(hResult, row, 0);
    m_dwTemplateId = DBGetFieldULong(hResult, row, 1);
    m_dwTemplateItemId = DBGetFieldULong(hResult, row, 2);
-	m_name = DBGetField(hResult, row, 3, readBuffer, 4096);
-   m_description = DBGetField(hResult, row, 4, readBuffer, 4096);
+	m_name = DBGetFieldAsSharedString(hResult, row, 3);
+   m_description = DBGetFieldAsSharedString(hResult, row, 4);
    m_flags = DBGetFieldLong(hResult, row, 5);
    m_source = (BYTE)DBGetFieldLong(hResult, row, 6);
 	m_snmpPort = static_cast<UINT16>(DBGetFieldLong(hResult, row, 7));
    m_pollingInterval = DBGetFieldLong(hResult, row, 8);
    m_retentionTime = DBGetFieldLong(hResult, row, 9);
    m_status = (BYTE)DBGetFieldLong(hResult, row, 10);
-	m_systemTag = DBGetField(hResult, row, 11, readBuffer, 4096);
+	m_systemTag = DBGetFieldAsSharedString(hResult, row, 11);
 	m_dwResourceId = DBGetFieldULong(hResult, row, 12);
 	m_sourceNode = DBGetFieldULong(hResult, row, 13);
 	m_pszPerfTabSettings = DBGetField(hResult, row, 14, nullptr, 0);
@@ -180,13 +178,13 @@ DCTable::DCTable(DB_HANDLE hdb, DB_RESULT hResult, int row, const shared_ptr<Dat
    m_comments = DBGetField(hResult, row, 16, nullptr, 0);
    m_guid = DBGetFieldGUID(hResult, row, 17);
    m_instanceDiscoveryMethod = (WORD)DBGetFieldLong(hResult, row, 18);
-   m_instanceDiscoveryData = DBGetField(hResult, row, 19, readBuffer, 4096);
+   m_instanceDiscoveryData = DBGetFieldAsSharedString(hResult, row, 19);
    m_instanceFilterSource = nullptr;
    m_instanceFilter = nullptr;
    tmp = DBGetField(hResult, row, 20, nullptr, 0);
    setInstanceFilter(tmp);
    MemFree(tmp);
-   m_instance = DBGetField(hResult, row, 21, readBuffer, 4096);
+   m_instanceName = DBGetFieldAsSharedString(hResult, row, 21);
    m_instanceRetentionTime = DBGetFieldLong(hResult, row, 22);
    m_instanceGracePeriodStart = DBGetFieldLong(hResult, row, 23);
    m_relatedObject = DBGetFieldLong(hResult, row, 24);
@@ -602,7 +600,7 @@ bool DCTable::saveToDatabase(DB_HANDLE hdb)
    DBBind(hStmt, 19, DB_SQLTYPE_INTEGER, (INT32)m_instanceDiscoveryMethod);
    DBBind(hStmt, 20, DB_SQLTYPE_VARCHAR, m_instanceDiscoveryData, DB_BIND_STATIC, MAX_INSTANCE_LEN - 1);
    DBBind(hStmt, 21, DB_SQLTYPE_TEXT, m_instanceFilterSource, DB_BIND_STATIC);
-   DBBind(hStmt, 22, DB_SQLTYPE_VARCHAR, m_instance, DB_BIND_STATIC, MAX_INSTANCE_LEN - 1);
+   DBBind(hStmt, 22, DB_SQLTYPE_VARCHAR, m_instanceName, DB_BIND_STATIC, MAX_INSTANCE_LEN - 1);
    DBBind(hStmt, 23, DB_SQLTYPE_INTEGER, m_instanceRetentionTime);
    DBBind(hStmt, 24, DB_SQLTYPE_INTEGER, (INT32)m_instanceGracePeriodStart);
    DBBind(hStmt, 25, DB_SQLTYPE_INTEGER, m_relatedObject);
@@ -1150,7 +1148,7 @@ void DCTable::createExportRecord(StringBuffer &xml)
    xml.append(_T("</snmpVersion>\n\t\t\t\t\t<instanceDiscoveryMethod>"));
    xml.append(m_instanceDiscoveryMethod);
    xml.append(_T("</instanceDiscoveryMethod>\n\t\t\t\t\t<instance>"));
-   xml.append(EscapeStringForXML2(m_instance));
+   xml.append(EscapeStringForXML2(m_instanceName));
    xml.append(_T("</instance>\n\t\t\t\t\t<instanceRetentionTime>"));
    xml.append(m_instanceRetentionTime);
    xml.append(_T("</instanceRetentionTime>\n\t\t\t\t\t<comments>"));

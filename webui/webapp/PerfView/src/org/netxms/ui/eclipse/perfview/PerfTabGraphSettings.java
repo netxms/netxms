@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -187,7 +187,8 @@ public class PerfTabGraphSettings
 	public String getRuntimeTitle()
 	{
 		String t = ((title == null) || title.isEmpty()) ? ((runtimeDciInfo != null) ? runtimeDciInfo.getDescription() : "") : title; //$NON-NLS-1$
-		return t.replace("{instance}", (runtimeDciInfo != null) ? runtimeDciInfo.getInstance() : ""); //$NON-NLS-1$ //$NON-NLS-2$
+      return t.replace("{instance}", (runtimeDciInfo != null) ? runtimeDciInfo.getInstance() : "") //$NON-NLS-1$ //$NON-NLS-2$
+            .replace("{instance-name}", (runtimeDciInfo != null) ? runtimeDciInfo.getInstanceName() : ""); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
 	/**
@@ -252,7 +253,7 @@ public class PerfTabGraphSettings
    public String getGroupName()
    {
       if (groupName != null)
-         return runtimeDciInfo != null ? groupName.replace("{instance}", runtimeDciInfo.getInstance()) : groupName; 
+         return runtimeDciInfo != null ? groupName.replace("{instance}", runtimeDciInfo.getInstance()).replace("{instance-name}", runtimeDciInfo.getInstanceName()) : groupName;
       return parentDciId != 0 ? "##" + Long.toString(parentDciId) : "";
    }
 
@@ -306,7 +307,8 @@ public class PerfTabGraphSettings
 	public String getRuntimeName()
 	{
 		String n = ((name == null) || name.isEmpty()) ? ((runtimeDciInfo != null) ? runtimeDciInfo.getDescription() : "") : name; //$NON-NLS-1$
-		return n.replace("{instance}", (runtimeDciInfo != null) ? runtimeDciInfo.getInstance() : ""); //$NON-NLS-1$ //$NON-NLS-2$
+      return n.replace("{instance}", (runtimeDciInfo != null) ? runtimeDciInfo.getInstance() : "") //$NON-NLS-1$ //$NON-NLS-2$
+            .replace("{instance-name}", (runtimeDciInfo != null) ? runtimeDciInfo.getInstanceName() : ""); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
 	/**
