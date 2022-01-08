@@ -72,9 +72,6 @@
     <ClCompile Include="selectors.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="stack.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="storage.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

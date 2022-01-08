@@ -355,7 +355,7 @@ public:
 
 	void addBreakAddr(uint32_t addr);
 	void closeBreakLevel(NXSL_ProgramBuilder *pScript);
-	BOOL canUseBreak() { return m_breakStack->getSize() > 0; }
+	bool canUseBreak() { return m_breakStack->getPosition() > 0; }
 	void newBreakLevel() { m_breakStack->push(new Queue); }
 
 	void newSelectLevel() { m_selectStack->push(new Queue); }

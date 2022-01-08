@@ -131,21 +131,83 @@ struct LIBNXSL_EXPORTABLE NXSL_Identifier
 class LIBNXSL_EXPORTABLE NXSL_Stack
 {
 private:
-   int m_nStackSize;
-   int m_nStackPos;
-   void **m_ppData;
+   int m_size;
+   int m_pos;
+   void **m_data;
 
 public:
-   NXSL_Stack();
-   virtual ~NXSL_Stack();
+   NXSL_Stack()
+   {
+      m_size = 0;
+      m_pos = 0;
+      m_data = nullptr;
+   }
 
-   void push(void *data);
-   void *pop();
-   void *peek();
-   void *peekAt(int offset);
-   void **peekList(int level) { return &m_ppData[m_nStackPos - level]; }
+   ~NXSL_Stack()
+   {
+      MemFree(m_data);
+   }
 
-   int getSize() { return m_nStackPos; }
+   /**
+    * Push value to stack
+    */
+   void push(void *data)
+   {
+      if (m_pos >= m_size)
+      {
+         m_size += 128;
+         m_data = MemReallocArray(m_data, m_size);
+      }
+      m_data[m_pos++] = data;
+   }
+
+   /**
+    * Pop value from stack
+    */
+   void *pop()
+   {
+      return (m_pos > 0) ? m_data[--m_pos] : nullptr;
+   }
+
+   /**
+    * Peek (get without removing) value from stack
+    */
+   void *peek()
+   {
+      return (m_pos > 0) ? m_data[m_pos - 1] : nullptr;
+   }
+
+   /**
+    * Peek (get without removing) value from stack at given offset from top
+    */
+   void *peekAt(int offset)
+   {
+      return ((offset > 0) && (m_pos > offset - 1)) ? m_data[m_pos - offset] : nullptr;
+   }
+
+   /**
+    * Peek list of elements
+    */
+   void **peekList(int level)
+   {
+      return &m_data[m_pos - level];
+   }
+
+   /**
+    * Reste stack
+    */
+   void reset()
+   {
+      m_pos = 0;
+   }
+
+   /**
+    * Get current stack position
+    */
+   int getPosition() const
+   {
+      return m_pos;
+   }
 };
 
 /**
@@ -155,7 +217,6 @@ template <typename T> class NXSL_ObjectStack : public NXSL_Stack
 {
 public:
    NXSL_ObjectStack() : NXSL_Stack() { }
-   virtual ~NXSL_ObjectStack() { }
 
    void push(T *data) { NXSL_Stack::push(data); }
    T *pop() { return (T*)NXSL_Stack::pop(); }
@@ -1135,9 +1196,9 @@ protected:
    bool m_stopFlag;
 
    uint32_t m_subLevel;
-   NXSL_ObjectStack<NXSL_Value> *m_dataStack;
-   NXSL_Stack *m_codeStack;
-   NXSL_Stack *m_catchStack;
+   NXSL_Stack m_codeStack;
+   NXSL_ObjectStack<NXSL_Value> m_dataStack;
+   NXSL_ObjectStack<NXSL_CatchPoint> m_catchStack;
    int m_nBindPos;
 
    NXSL_VariableSystem *m_constants;

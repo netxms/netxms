@@ -217,7 +217,6 @@
     <ClCompile Include="parser.tab.cpp" />
     <ClCompile Include="program.cpp" />
     <ClCompile Include="selectors.cpp" />
-    <ClCompile Include="stack.cpp" />
     <ClCompile Include="storage.cpp" />
     <ClCompile Include="table.cpp" />
     <ClCompile Include="value.cpp" />

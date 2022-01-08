@@ -29,7 +29,7 @@
  */
 int NXSL_Iterator::createIterator(NXSL_VM *vm, NXSL_Stack *stack)
 {
-	if (stack->getSize() < 2)
+	if (stack->getPosition() < 2)
 		return NXSL_ERR_DATA_STACK_UNDERFLOW;
 
 	int rc = 0;
