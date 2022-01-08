@@ -165,3 +165,50 @@ void NXSL_HashMap::toString(StringBuffer *stringBuffer, const TCHAR *separator, 
    if (withBrackets)
       stringBuffer->append(_T("}"));
 }
+
+/**
+ * Call method on array
+ */
+int NXSL_HashMap::callMethod(const NXSL_Identifier& name, int argc, NXSL_Value **argv, NXSL_Value **result)
+{
+   if (!strcmp(name.value, "contains"))
+   {
+      if (argc != 1)
+         return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
+      NXSL_Value *key = argv[0];
+      if (!key->isString())
+         return NXSL_ERR_NOT_STRING;
+
+      uint32_t keyLen;
+      const TCHAR *keyStr = key->getValueAsString(&keyLen);
+      *result = m_vm->createValue(m_values->contains(keyStr, keyLen));
+   }
+   else if (!strcmp(name.value, "remove"))
+   {
+      if (argc != 1)
+         return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
+      NXSL_Value *key = argv[0];
+      if (!key->isString())
+         return NXSL_ERR_NOT_STRING;
+
+      uint32_t keyLen;
+      const TCHAR *keyStr = key->getValueAsString(&keyLen);
+      NXSL_Value *currentValue = m_values->get(keyStr, keyLen);
+      if (currentValue != nullptr)
+      {
+         *result = m_vm->createValue(currentValue);
+         m_values->remove(keyStr, keyLen);
+      }
+      else
+      {
+         *result = m_vm->createValue();
+      }
+   }
+   else
+   {
+      return NXSL_ERR_NO_SUCH_METHOD;
+   }
+   return 0;
+}

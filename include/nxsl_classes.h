@@ -353,7 +353,7 @@ public:
    void insert(int index, NXSL_Value *value);
    void remove(int index);
 
-   int callMethod(const NXSL_Identifier& name, int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+   int callMethod(const NXSL_Identifier& name, int argc, NXSL_Value **argv, NXSL_Value **result);
 };
 
 /**
@@ -374,6 +374,7 @@ public:
    void set(const TCHAR *key, NXSL_Value *object) { setObject((TCHAR *)key, (void *)object, false); }
    void setPreallocated(TCHAR *key, NXSL_Value *object) { setObject((TCHAR *)key, (void *)object, true); }
    NXSL_Value *get(const TCHAR *key) const { return (NXSL_Value*)getObject(key); }
+   NXSL_Value *get(const TCHAR *key, size_t keyLen) const { return (NXSL_Value*)getObject(key, keyLen); }
 };
 
 /**
@@ -400,6 +401,8 @@ public:
    void toString(StringBuffer *stringBuffer, const TCHAR *separator, bool withBrackets) const;
 
 	int size() const { return m_values->size(); }
+
+   int callMethod(const NXSL_Identifier& name, int argc, NXSL_Value **argv, NXSL_Value **result);
 };
 
 /**

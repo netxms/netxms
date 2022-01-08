@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -174,9 +174,9 @@ void *StringMapBase::getObject(const TCHAR *key, size_t len) const
 /**
  * Delete value
  */
-void StringMapBase::remove(const TCHAR *key)
+void StringMapBase::remove(const TCHAR *key, size_t keyLen)
 {
-   StringMapEntry *entry = find(key, _tcslen(key) * sizeof(TCHAR));
+   StringMapEntry *entry = find(key, keyLen * sizeof(TCHAR));
    if (entry != nullptr)
    {
       HASH_DEL(m_data, entry);

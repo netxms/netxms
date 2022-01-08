@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -185,8 +185,8 @@ void NXSL_Array::set(int index, NXSL_Value *value)
 {
 	NXSL_ArrayElement *element, key;
 	key.index = index;
-	element = (m_size > 0) ? (NXSL_ArrayElement *)bsearch(&key, m_data, m_size, sizeof(NXSL_ArrayElement), CompareElements) : NULL;
-	if (element != NULL)
+	element = (m_size > 0) ? (NXSL_ArrayElement *)bsearch(&key, m_data, m_size, sizeof(NXSL_ArrayElement), CompareElements) : nullptr;
+	if (element != nullptr)
 	{
 		m_vm->destroyValue(element->value);
 		element->value = value;
@@ -196,7 +196,7 @@ void NXSL_Array::set(int index, NXSL_Value *value)
 		if (m_size == m_allocated)
 		{
 			m_allocated += 64;
-			m_data = (NXSL_ArrayElement *)realloc(m_data, sizeof(NXSL_ArrayElement) * m_allocated);
+			m_data = MemReallocArray(m_data, m_allocated);
 		}
 		m_data[m_size].index = index;
 		m_data[m_size].value = value;
@@ -224,7 +224,7 @@ void NXSL_Array::insert(int index, NXSL_Value *value)
    if (m_size == m_allocated)
    {
       m_allocated += 32;
-      m_data = (NXSL_ArrayElement *)realloc(m_data, sizeof(NXSL_ArrayElement) * m_allocated);
+      m_data = MemReallocArray(m_data, m_allocated);
    }
 
    i++;
@@ -259,7 +259,7 @@ void NXSL_Array::remove(int index)
 /**
  * Call method on array
  */
-int NXSL_Array::callMethod(const NXSL_Identifier& name, int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+int NXSL_Array::callMethod(const NXSL_Identifier& name, int argc, NXSL_Value **argv, NXSL_Value **result)
 {
    if (!strcmp(name.value, "append") || !strcmp(name.value, "push"))
    {

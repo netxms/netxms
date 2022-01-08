@@ -1390,9 +1390,25 @@ void NXSL_VM::execute()
                pValue->copyOnWrite();  // All array methods can cause content change
                NXSL_Array *array = pValue->getValueAsArray();
                NXSL_Value *result;
-               nRet = array->callMethod(*cp->m_operand.m_identifier, cp->m_stackItems,
-                                        (NXSL_Value **)m_dataStack->peekList(cp->m_stackItems),
-                                        &result, this);
+               nRet = array->callMethod(*cp->m_operand.m_identifier, cp->m_stackItems, (NXSL_Value **)m_dataStack->peekList(cp->m_stackItems), &result);
+               if (nRet == 0)
+               {
+                  for(i = 0; i < cp->m_stackItems + 1; i++)
+                     destroyValue(m_dataStack->pop());
+                  m_dataStack->push(result);
+               }
+               else
+               {
+                  // Execution error inside method
+                  error(nRet);
+               }
+            }
+            else if (pValue->getDataType() == NXSL_DT_HASHMAP)
+            {
+               pValue->copyOnWrite();  // Some methods can cause content change
+               NXSL_HashMap *hashMap = pValue->getValueAsHashMap();
+               NXSL_Value *result;
+               nRet = hashMap->callMethod(*cp->m_operand.m_identifier, cp->m_stackItems, (NXSL_Value **)m_dataStack->peekList(cp->m_stackItems), &result);
                if (nRet == 0)
                {
                   for(i = 0; i < cp->m_stackItems + 1; i++)

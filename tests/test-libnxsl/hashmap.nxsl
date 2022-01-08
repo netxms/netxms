@@ -2,15 +2,24 @@
 
 m1 = %{ "alpha":1, "beta":2, "gamma":3 };
 assert("alpha" in m1);
-assert(!(1 in m1));
+assert(not (1 in m1));
 assert(m1["alpha"] == 1);
 assert(m1["beta"] == 2);
+assert(m1->contains("alpha"));
 
 m2 = m1;
 assert(m2["alpha"] == 1);
+assert(m2->contains("gamma"));
 
 m2["delta"] = null;
 assert("delta" in m2);
 assert(m2["delta"] == null);
+
+v = m2->remove("beta");
+assert(v == 2);
+assert(not ("beta" in m2));
+assert(!m2->contains("beta"));
+assert(m2->remove("beta") == null);
+assert(m1->contains("beta"));
 
 return 0;

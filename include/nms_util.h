@@ -1847,7 +1847,8 @@ public:
    void setOwner(Ownership owner) { m_objectOwner = (owner == Ownership::True); }
    void setIgnoreCase(bool ignore);
 
-   void remove(const TCHAR *key);
+   void remove(const TCHAR *key) { remove(key, _tcslen(key)); }
+   void remove(const TCHAR *key, size_t keyLen);
    void clear();
    void filterElements(bool (*filter)(const TCHAR *, const void *, void *), void *userData);
 
