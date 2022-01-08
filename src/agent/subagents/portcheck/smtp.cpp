@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Raden Solutions
+** Copyright (C) 2003-2022 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -114,7 +114,7 @@ int CheckSMTP(bool enableTLS, const InetAddress& addr, uint16_t port, const char
             GetLocalHostName(wname, 128, true);
             wchar_to_utf8(wname, -1, hostname, sizeof(hostname));
 #else
-            GetLocalHostName(szHostname, sizeof(szHostname), true);
+            GetLocalHostName(hostname, sizeof(hostname), true);
 #endif
             if (hostname[0] == 0)
             {
