@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,13 +26,12 @@ import org.netxms.client.NXCSession;
 /**
  * Business service representation
  */
-public class BusinessServicePrototype extends BusinessService
+public class BusinessServicePrototype extends BaseBusinessService
 {
-   protected String instance;
-   protected int instanceDiscoveryMethod;
-   protected String instanceDiscoveryData;
-   protected String instanceDiscoveryFilter;
-   protected long sourceNode;
+   private int instanceDiscoveryMethod;
+   private String instanceDiscoveryData;
+   private String instanceDiscoveryFilter;
+   private long sourceNode;
 
    /**
     * Constructor
@@ -43,16 +42,15 @@ public class BusinessServicePrototype extends BusinessService
 	public BusinessServicePrototype(NXCPMessage msg, NXCSession session)
 	{
 		super(msg, session);
-      instance = msg.getFieldAsString(NXCPCodes.VID_INSTANCE);
       instanceDiscoveryMethod = msg.getFieldAsInt32(NXCPCodes.VID_INSTD_METHOD);
       instanceDiscoveryData = msg.getFieldAsString(NXCPCodes.VID_INSTD_DATA);
       instanceDiscoveryFilter = msg.getFieldAsString(NXCPCodes.VID_INSTD_FILTER); 
       sourceNode = msg.getFieldAsInt32(NXCPCodes.VID_NODE_ID);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.client.objects.GenericObject#getObjectClassName()
-	 */
+   /**
+    * @see org.netxms.client.objects.GenericObject#getObjectClassName()
+    */
 	@Override
 	public String getObjectClassName()
 	{
@@ -60,15 +58,9 @@ public class BusinessServicePrototype extends BusinessService
 	}
 
    /**
-    * @return the instance
-    */
-   public String getInstance()
-   {
-      return instance;
-   }
-
-   /**
-    * @return the instanceDiscoveryMethod
+    * Get instance discovery method.
+    *
+    * @return instance discovery method
     */
    public int getInstanceDiscoveryMethod()
    {
@@ -76,7 +68,9 @@ public class BusinessServicePrototype extends BusinessService
    }
 
    /**
-    * @return the instanceDiscoveryData
+    * Get instance discovery data (specific to selected method).
+    *
+    * @return instance discovery data
     */
    public String getInstanceDiscoveryData()
    {
@@ -84,19 +78,26 @@ public class BusinessServicePrototype extends BusinessService
    }
 
    /**
-    * @return the instanceDiscoveryFilter
+    * Get instance discovery filter.
+    *
+    * @return instance discovery filter
     */
    public String getInstanceDiscoveryFilter()
    {
       return instanceDiscoveryFilter;
    }
 
+   /**
+    * Get source node (node to get instances from).
+    *
+    * @return source node ID or 0 if none set
+    */
    public long getSourceNode()
    {
       return sourceNode;
    }
-   
-   /* (non-Javadoc)
+
+   /**
     * @see org.netxms.client.objects.AbstractObject#getStrings()
     */
    @Override

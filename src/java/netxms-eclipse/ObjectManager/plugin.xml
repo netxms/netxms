@@ -898,6 +898,50 @@
                path="objectcreation">
          </menu>
       </objectContribution>
+      <objectContribution
+            adaptable="false"
+            id="org.netxms.ui.eclipse.objectmanager.actions.popup.object.BusinessService"
+            objectClass="org.netxms.client.objects.BusinessService">
+         <menu
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.PollMenu_BusinessService"
+               label="%menu.label.Poll"
+               path="objectcontrol">
+         </menu>
+         <action
+               class="org.netxms.ui.eclipse.objectmanager.actions.StatusPoll"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.StatusPoll_BusinessService"
+               label="%action.label.StatusPoll"
+               menubarPath="org.netxms.ui.eclipse.objectmanager.popupActions.PollMenu_BusinessService/additions"
+               style="push">
+         </action>
+         <action
+               class="org.netxms.ui.eclipse.objectmanager.actions.NormalConfigurationPoll"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.ConfigurationPoll_BusinessService"
+               label="%action.label.ConfPoll"
+               menubarPath="org.netxms.ui.eclipse.objectmanager.popupActions.PollMenu_BusinessService/additions"
+               style="push">
+         </action>
+      </objectContribution>
+      <objectContribution
+            adaptable="false"
+            id="org.netxms.ui.eclipse.objectmanager.actions.popup.object.BusinessServicePrototype"
+            objectClass="org.netxms.client.objects.BusinessServicePrototype">
+         <menu
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.PollMenu_BusinessServicePrototype"
+               label="%menu.label.Poll"
+               path="objectcontrol">
+         </menu>
+         <action
+               class="org.netxms.ui.eclipse.objectmanager.actions.InstanceDiscoveryPoll"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.InstanceDiscoveryPoll_BusinessServicePrototype"
+               label="%action.label.InstanceDiscoveryPoll"
+               menubarPath="org.netxms.ui.eclipse.objectmanager.popupActions.PollMenu_BusinessServicePrototype/additions"
+               style="push">
+         </action>
+      </objectContribution>
    </extension>
    <extension
          point="org.eclipse.ui.views">

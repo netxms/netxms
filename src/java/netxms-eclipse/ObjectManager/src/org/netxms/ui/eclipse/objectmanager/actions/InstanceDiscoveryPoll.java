@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-202 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,9 +25,9 @@ import org.netxms.client.constants.NodePollType;
  */
 public class InstanceDiscoveryPoll extends AbstractNodePoll
 {
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.objectmanager.actions.AbstractNodePoll#getPollType()
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.objectmanager.actions.AbstractNodePoll#getPollType()
+    */
 	@Override
 	protected NodePollType getPollType()
 	{

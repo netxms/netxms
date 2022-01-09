@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Raden Solutions
+ * Copyright (C) 2003-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,7 +32,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
-import org.netxms.client.objects.BusinessService;
+import org.netxms.client.objects.BaseBusinessService;
 import org.netxms.client.objects.interfaces.AutoBindObject;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -46,7 +46,7 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class ObjectAutoBind extends PropertyPage
 {
-   private BusinessService businessService;
+   private BaseBusinessService businessService;
    private Button checkboxEnableBind;
    private Button checkboxEnableUnbind;
    private Combo thresholdCombo;
@@ -64,7 +64,7 @@ public class ObjectAutoBind extends PropertyPage
 	{		
       Composite dialogArea = new Composite(parent, SWT.NONE);
 
-      businessService = (BusinessService)getElement().getAdapter(BusinessService.class);
+      businessService = (BaseBusinessService)getElement().getAdapter(BaseBusinessService.class);
 
       initialBind = businessService.isAutoBindEnabled();
       initialUnbind = businessService.isAutoUnbindEnabled();

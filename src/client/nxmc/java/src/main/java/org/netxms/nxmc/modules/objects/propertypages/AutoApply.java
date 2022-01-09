@@ -42,7 +42,6 @@ import org.xnap.commons.i18n.I18n;
 
 /**
  * "Auto apply" property page for template object
- *
  */
 public class AutoApply extends ObjectPropertyPage
 {
@@ -56,7 +55,11 @@ public class AutoApply extends ObjectPropertyPage
    private boolean initialUnbind;
 	private String initialApplyFilter;
 	
-
+   /**
+    * Create "auto apply" property page for given object
+    *
+    * @param object object to create property page for
+    */
    public AutoApply(AbstractObject object)
    {
       super(i18n.tr("Auto apply"), object);
@@ -111,13 +114,13 @@ public class AutoApply extends ObjectPropertyPage
 				}
 			}
       });
-      
+
       // Enable/disable check box
       checkboxEnableRemove = new Button(dialogArea, SWT.CHECK);
       checkboxEnableRemove.setText(i18n.tr("Remove this template automatically when object no longer passes through filter"));
       checkboxEnableRemove.setSelection(template.isAutoRemoveEnabled());
       checkboxEnableRemove.setEnabled(template.isAutoApplyEnabled());
-      
+
       // Filtering script
       Label label = new Label(dialogArea, SWT.NONE);
       label.setText(i18n.tr("Filtering script"));
@@ -202,17 +205,21 @@ public class AutoApply extends ObjectPropertyPage
 		return true;
 	}
 
+   /**
+    * @see org.netxms.nxmc.modules.objects.propertypages.ObjectPropertyPage#getId()
+    */
    @Override
    public String getId()
    {
       return "autoApply";
    }
 
+   /**
+    * @see org.netxms.nxmc.modules.objects.propertypages.ObjectPropertyPage#isVisible()
+    */
    @Override
    public boolean isVisible()
    {
       return object instanceof Template;
    }
-   
-   
 }

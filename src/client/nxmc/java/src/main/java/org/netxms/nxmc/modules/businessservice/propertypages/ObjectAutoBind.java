@@ -32,7 +32,7 @@ import org.eclipse.swt.widgets.Label;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.client.objects.BusinessService;
+import org.netxms.client.objects.BaseBusinessService;
 import org.netxms.client.objects.interfaces.AutoBindObject;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
@@ -50,7 +50,7 @@ public class ObjectAutoBind extends ObjectPropertyPage
 {
    private static I18n i18n = LocalizationHelper.getI18n(ObjectAutoBind.class);
 
-   private BusinessService businessService;
+   private BaseBusinessService businessService;
 	private Button checkboxEnableBind;
 	private Button checkboxEnableUnbind;
    private Combo thresholdCombo;
@@ -73,7 +73,7 @@ public class ObjectAutoBind extends ObjectPropertyPage
 	{
       Composite dialogArea = new Composite(parent, SWT.NONE);
 
-		businessService = (BusinessService)object;
+      businessService = (BaseBusinessService)object;
 		if (businessService == null)	// Paranoid check
 			return dialogArea;
 
@@ -231,7 +231,7 @@ public class ObjectAutoBind extends ObjectPropertyPage
    @Override
    public boolean isVisible()
    {
-      return object instanceof BusinessService;
+      return object instanceof BaseBusinessService;
    }
 
    /**

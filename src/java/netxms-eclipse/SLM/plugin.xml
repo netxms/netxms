@@ -60,7 +60,7 @@
             name="DCI Auto Bind">
          <enabledWhen>
             <instanceof
-                  value="org.netxms.client.objects.BusinessService">
+                  value="org.netxms.client.objects.BaseBusinessService">
             </instanceof>
          </enabledWhen>
       </page>
@@ -70,7 +70,7 @@
             name="Object Auto Bind">
          <enabledWhen>
             <instanceof
-                  value="org.netxms.client.objects.BusinessService">
+                  value="org.netxms.client.objects.BaseBusinessService">
             </instanceof>
          </enabledWhen>
       </page>

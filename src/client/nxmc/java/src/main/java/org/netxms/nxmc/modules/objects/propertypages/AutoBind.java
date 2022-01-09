@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,7 +31,7 @@ import org.eclipse.swt.widgets.Label;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.client.objects.BusinessService;
+import org.netxms.client.objects.BaseBusinessService;
 import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.Container;
 import org.netxms.client.objects.GenericObject;
@@ -58,6 +58,11 @@ public class AutoBind extends ObjectPropertyPage
    private boolean initialUnbind;
 	private String initialAutoBindFilter;
 	
+   /**
+    * Create "auto bind" property page for given object
+    *
+    * @param object object to create property page for
+    */
    public AutoBind(AbstractObject object)
    {
       super(i18n.tr("Auto Bind"), object);
@@ -208,15 +213,21 @@ public class AutoBind extends ObjectPropertyPage
 		return true;
 	}
 
+   /**
+    * @see org.netxms.nxmc.modules.objects.propertypages.ObjectPropertyPage#getId()
+    */
    @Override
    public String getId()
    {
       return "autoBind";
    }
 
+   /**
+    * @see org.netxms.nxmc.modules.objects.propertypages.ObjectPropertyPage#isVisible()
+    */
    @Override
    public boolean isVisible()
    {
-      return (object instanceof AutoBindObject) && !(object instanceof BusinessService);
+      return (object instanceof AutoBindObject) && !(object instanceof BaseBusinessService);
    }
 }
