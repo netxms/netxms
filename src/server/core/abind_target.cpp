@@ -239,6 +239,16 @@ AutoBindDecision AutoBindTarget::isApplicable(NXSL_VM **cachedFilterVM, const sh
       }
       internalUnlock();
    }
+   else
+   {
+      // Update variables in cached VM
+      filter->setGlobalVariable("$object", target->createNXSLObject(filter));
+      if (target->getObjectClass() == OBJECT_NODE)
+         filter->setGlobalVariable("$node", target->createNXSLObject(filter));
+      else
+         filter->removeGlobalVariable("$node");
+      filter->setGlobalVariable("$isCluster", filter->createValue(target->getObjectClass() == OBJECT_CLUSTER));
+   }
 
    if (filter == nullptr)
       return result;
@@ -248,6 +258,8 @@ AutoBindDecision AutoBindTarget::isApplicable(NXSL_VM **cachedFilterVM, const sh
    filter->setGlobalVariable("$template", m_this->createNXSLObject(filter));
    if (dci != nullptr)
       filter->setGlobalVariable("$dci", dci->createNXSLObject(filter));
+   else
+      filter->removeGlobalVariable("$dci");
    filter->setUserData(target.get());  // For PollerTrace()
    if (filter->run())
    {

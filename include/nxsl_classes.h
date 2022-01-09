@@ -978,6 +978,7 @@ public:
    NXSL_Variable *create(const NXSL_Identifier& name, NXSL_Value *value = nullptr);
    void merge(NXSL_VariableSystem *src, bool overwrite = false);
    void addAll(const NXSL_ValueHashMap<NXSL_Identifier>& src);
+   void remove(const NXSL_Identifier& name);
    void clear();
    bool isConstant() const { return m_type == NXSL_VariableSystemType::CONSTANT; }
 
@@ -1254,7 +1255,8 @@ public:
 
    void loadModule(NXSL_Program *module, const NXSL_ModuleImport *importInfo);
 
-	void setGlobalVariable(const NXSL_Identifier& name, NXSL_Value *pValue);
+	void setGlobalVariable(const NXSL_Identifier& name, NXSL_Value *value);
+	void removeGlobalVariable(const NXSL_Identifier& name) { m_globalVariables->remove(name); }
 	NXSL_Variable *findGlobalVariable(const NXSL_Identifier& name) { return m_globalVariables->find(name); }
 
 	bool addConstant(const NXSL_Identifier& name, NXSL_Value *value);

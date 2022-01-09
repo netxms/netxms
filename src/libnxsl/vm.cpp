@@ -518,15 +518,15 @@ bool NXSL_VM::addConstant(const NXSL_Identifier& name, NXSL_Value *value)
 }
 
 /**
- * Set global variale
+ * Set global variable
  */
-void NXSL_VM::setGlobalVariable(const NXSL_Identifier& name, NXSL_Value *pValue)
+void NXSL_VM::setGlobalVariable(const NXSL_Identifier& name, NXSL_Value *value)
 {
    NXSL_Variable *var = m_globalVariables->find(name);
    if (var == nullptr)
-		m_globalVariables->create(name, pValue);
+		m_globalVariables->create(name, value);
 	else
-		var->setValue(pValue);
+		var->setValue(value);
 }
 
 /**

@@ -194,6 +194,20 @@ NXSL_Variable *NXSL_VariableSystem::create(const NXSL_Identifier& name, NXSL_Val
 }
 
 /**
+ * Remove variable
+ */
+void NXSL_VariableSystem::remove(const NXSL_Identifier& name)
+{
+   NXSL_VariablePtr *var;
+   HASH_FIND(hh, m_variables, name.value, name.length, var);
+   if (var != nullptr)
+   {
+      HASH_DEL(m_variables, var);
+      var->v.~NXSL_Variable();
+   }
+}
+
+/**
  * Create restore point for variable reference
  */
 bool NXSL_VariableSystem::createVariableReferenceRestorePoint(uint32_t addr, NXSL_Identifier *identifier)
