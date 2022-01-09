@@ -117,7 +117,7 @@ public class DCIAutoBind extends PropertyPage
       thresholdCombo.add("Default");
       for(int i = 1; i <= 4; i++)
          thresholdCombo.add(StatusDisplayInfo.getStatusText(i));
-      thresholdCombo.select(businessService.getObjectStatusThreshold());
+      thresholdCombo.select(businessService.getDciStatusThreshold());
 
       // Filtering script
       Label label = new Label(dialogArea, SWT.NONE);
@@ -129,8 +129,8 @@ public class DCIAutoBind extends PropertyPage
 
       filterSource = new ScriptEditor(dialogArea, SWT.BORDER, SWT.H_SCROLL | SWT.V_SCROLL, true,
             "Variables:\r\n\t$node\tnode being tested (null if object is not a node).\r\n\t$object\tobject being tested.\r\n\t$dci\tDCI object being tested.\r\n\r\nReturn value: true to bind dci to this business service, false to unbind, null to make no changes.");
-      filterSource.setText(businessService.getAutoBindFilter());
-      filterSource.setEnabled(businessService.isAutoBindEnabled());
+      filterSource.setText(businessService.getDciAutoBindFilter());
+      filterSource.setEnabled(businessService.isDciAutoBindEnabled());
 
       gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
