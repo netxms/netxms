@@ -21,17 +21,12 @@ package org.netxms.ui.eclipse.objecttools.widgets;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.part.ViewPart;
-import org.netxms.client.NXCSession;
 import org.netxms.client.TextOutputListener;
 import org.netxms.client.objecttools.ObjectTool;
-import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objects.ObjectContext;
-import org.netxms.ui.eclipse.objecttools.Activator;
 import org.netxms.ui.eclipse.objecttools.Messages;
-import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.widgets.TextConsole.IOConsoleOutputStream;
 
 /**
@@ -69,52 +64,13 @@ public class ActionExecutor extends AbstractObjectToolExecutor implements TextOu
    }
 
    /**
-    * @see org.netxms.ui.eclipse.objecttools.widgets.AbstractObjectToolExecutor#execute()
+    * @see org.netxms.ui.eclipse.objecttools.widgets.AbstractObjectToolExecutor#executeInternal()
     */
    @Override
-   public void execute()
+   protected void executeInternal() throws Exception
    {
-      setRunning(true);
-      final NXCSession session = ConsoleSharedData.getSession();
-      out = console.newOutputStream();
-      ConsoleJob job = new ConsoleJob(String.format(Messages.get().ObjectToolsDynamicMenu_ExecuteOnNode, session.getObjectName(nodeId)), null, Activator.PLUGIN_ID, null) {
-         @Override
-         protected String getErrorMessage()
-         {
-            return String.format(Messages.get().ObjectToolsDynamicMenu_CannotExecuteOnNode, session.getObjectName(nodeId));
-         }
-
-         @Override
-         protected void runInternal(IProgressMonitor monitor) throws Exception
-         {
-            try
-            {
-               session.executeActionWithExpansion(nodeId, alarmId, executionString, true, inputValues, maskedFields, ActionExecutor.this, null);
-               out.write(Messages.get(getDisplay()).LocalCommandResults_Terminated);
-            }
-            finally
-            {
-               out.close();
-               out = null;
-            }
-         }
-
-         @Override
-         protected void jobFinalize()
-         {
-            runInUIThread(new Runnable() {
-               @Override
-               public void run()
-               {
-                  setRunning(false);
-               }
-            });
-         }
-      };
-      job.setUser(false);
-      job.setSystem(true);
-      job.start();
-
+      session.executeActionWithExpansion(nodeId, alarmId, executionString, true, inputValues, maskedFields, ActionExecutor.this, null);
+      out.write(Messages.get().LocalCommandResults_Terminated);
    }
 
    /**
@@ -131,26 +87,6 @@ public class ActionExecutor extends AbstractObjectToolExecutor implements TextOu
       catch(IOException e)
       {
       }
-   }
-
-   /**
-    * @see org.eclipse.ui.part.WorkbenchPart#dispose()
-    */
-   @Override
-   public void dispose()
-   {
-      if (out != null)
-      {
-         try
-         {
-            out.close();
-         }
-         catch(IOException e)
-         {
-         }
-         out = null;
-      }
-      super.dispose();
    }
 
    /**

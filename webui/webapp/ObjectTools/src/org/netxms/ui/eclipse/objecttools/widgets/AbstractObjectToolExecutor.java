@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2020 Raden Soultions
+ * Copyright (C) 2020-2022 Raden Soultions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,14 +18,17 @@
  */
 package org.netxms.ui.eclipse.objecttools.widgets;
 
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.action.ToolBarManager;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.swt.SWT;
@@ -36,15 +39,22 @@ import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.ToolBar;
 import org.eclipse.ui.part.ViewPart;
+import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objects.ObjectContext;
+import org.netxms.ui.eclipse.objecttools.Activator;
+import org.netxms.ui.eclipse.objecttools.Messages;
 import org.netxms.ui.eclipse.objecttools.widgets.helpers.ExecutorStateChangeListener;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.TextConsole;
+import org.netxms.ui.eclipse.widgets.TextConsole.IOConsoleOutputStream;
 
 /**
  * Base class for object tool execution widget
@@ -56,10 +66,13 @@ public abstract class AbstractObjectToolExecutor extends Composite
    protected ToolBarManager toolBarManager;
    protected ToolBar toolBar;
    protected ViewPart viewPart;
+   protected IOConsoleOutputStream out;
+   protected NXCSession session;
 
    private Font headerFont;
    private ActionSet actions;
    private Set<ExecutorStateChangeListener> stateChangeListeners = new HashSet<ExecutorStateChangeListener>();
+   private String failureReason = null;
    private boolean running = false;
    private boolean restartEnabled = false;
    private boolean terminateEnabled = false;
@@ -78,6 +91,7 @@ public abstract class AbstractObjectToolExecutor extends Composite
       this.viewPart = viewPart;
       this.objectContext = objectContext;
       this.actions = actions;
+      this.session = ConsoleSharedData.getSession();
 
       setVisible(false);
 
@@ -142,6 +156,24 @@ public abstract class AbstractObjectToolExecutor extends Composite
       createPopupMenu();
 
       toolBarManager.update(true);
+
+      addDisposeListener(new DisposeListener() {
+         @Override
+         public void widgetDisposed(DisposeEvent e)
+         {
+            if (out != null)
+            {
+               try
+               {
+                  out.close();
+               }
+               catch(IOException ex)
+               {
+               }
+               out = null;
+            }
+         }
+      });
    }
 
    /**
@@ -222,7 +254,61 @@ public abstract class AbstractObjectToolExecutor extends Composite
     * 
     * @param result 
     */
-   public abstract void execute();
+   public final void execute()
+   {
+      if (isRunning())
+      {
+         MessageDialog.openError(Display.getCurrent().getActiveShell(), "Error", "Command already running!");
+         return;
+      }
+
+      failureReason = null;
+      setRunning(true);
+      out = console.newOutputStream();
+      ConsoleJob job = new ConsoleJob(String.format(Messages.get().ObjectToolsDynamicMenu_ExecuteOnNode, objectContext.object.getObjectName()), null, Activator.PLUGIN_ID, null) {
+         @Override
+         protected String getErrorMessage()
+         {
+            return String.format(Messages.get().ObjectToolsDynamicMenu_CannotExecuteOnNode, objectContext.object.getObjectName());
+         }
+
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            try
+            {
+               executeInternal();
+            }
+            catch(Exception e)
+            {
+               Activator.logError("Error executing object tool", e);
+               failureReason = e.getLocalizedMessage();
+               if (failureReason.isEmpty())
+                  failureReason = "Internal error - " + e.getClass().getName();
+            }
+            if (out != null)
+            {
+               out.close();
+               out = null;
+            }
+         }
+
+         @Override
+         protected void jobFinalize()
+         {
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
+                  setRunning(false);
+               }
+            });
+         }
+      };
+      job.setUser(false);
+      job.setSystem(true);
+      job.start();
+   }
 
    /**
     * Terminate running command. Default implementation does nothing.
@@ -230,6 +316,13 @@ public abstract class AbstractObjectToolExecutor extends Composite
    public void terminate()
    {
    }
+
+   /**
+    * Do actual tool execution (called by execute() inside background job).
+    *
+    * @throws Exception on any error
+    */
+   protected abstract void executeInternal() throws Exception;
 
    /**
     * Check if "terminate" action is supported. Default implementation returns false.
@@ -263,6 +356,26 @@ public abstract class AbstractObjectToolExecutor extends Composite
       enableTerminate(isTerminateSupported() && running);
       for(ExecutorStateChangeListener l : stateChangeListeners)
          l.runningStateChanged(running);
+   }
+
+   /**
+    * Check if tool execution failed.
+    *
+    * @return true if tool execution failed
+    */
+   public boolean isFailed()
+   {
+      return failureReason != null;
+   }
+
+   /**
+    * Get failure reason.
+    *
+    * @return failure reason
+    */
+   public String getFailureReason()
+   {
+      return failureReason;
    }
 
    /**

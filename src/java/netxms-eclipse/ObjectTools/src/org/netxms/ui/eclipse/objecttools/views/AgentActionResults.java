@@ -48,14 +48,14 @@ public class AgentActionResults extends AbstractCommandResults implements TextOu
    private long alarmId;
    private Map<String, String> inputValues;
    private List<String> maskedFields;
-   
+
    /**
     * Create actions
     */
    protected void createActions()
    {
       super.createActions();
-      
+
       actionRestart = new Action(Messages.get().LocalCommandResults_Restart, SharedIcons.RESTART) {
          @Override
          public void run()
@@ -101,7 +101,7 @@ public class AgentActionResults extends AbstractCommandResults implements TextOu
       manager.add(new Separator());
       super.fillContextMenu(manager);
    }
-   
+
    /**
     * @param action
     */
@@ -189,7 +189,7 @@ public class AgentActionResults extends AbstractCommandResults implements TextOu
       super.dispose();
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.client.TextOutputListener#setStreamId(long)
     */
    @Override
@@ -197,6 +197,9 @@ public class AgentActionResults extends AbstractCommandResults implements TextOu
    {
    }
 
+   /**
+    * @see org.netxms.client.TextOutputListener#onError()
+    */
    @Override
    public void onError()
    {

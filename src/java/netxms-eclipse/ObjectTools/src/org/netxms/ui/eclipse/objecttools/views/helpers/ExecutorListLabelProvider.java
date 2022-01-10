@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Raden Solutions
+ * Copyright (C) 2003-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,6 +22,9 @@ import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
+import org.netxms.client.constants.Severity;
+import org.netxms.ui.eclipse.console.resources.SharedIcons;
+import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.objecttools.widgets.AbstractObjectToolExecutor;
 
 /**
@@ -37,10 +40,17 @@ public class ExecutorListLabelProvider extends LabelProvider implements ITableLa
    @Override
    public Image getColumnImage(Object element, int columnIndex)
    {
-      if (columnIndex == 0)
+      AbstractObjectToolExecutor e = (AbstractObjectToolExecutor)element;
+      switch(columnIndex)
       {
-         AbstractObjectToolExecutor e = (AbstractObjectToolExecutor)element;
-         return wbLabelProvider.getImage(e.getObject());
+         case 0:
+            return wbLabelProvider.getImage(e.getObject());
+         case 1:
+            if (e.isRunning())
+               return SharedIcons.IMG_EXECUTE;
+            if (e.isFailed())
+               return StatusDisplayInfo.getStatusImage(Severity.CRITICAL);
+            return StatusDisplayInfo.getStatusImage(Severity.NORMAL);
       }
       return null;
    }
@@ -57,9 +67,8 @@ public class ExecutorListLabelProvider extends LabelProvider implements ITableLa
          case 0:
             return e.getObject().getObjectName();
          case 1:
-            return e.isRunning() ? "Running" : "Completed";
-         default:
-            return null;
+            return e.isRunning() ? "Running" : (e.isFailed() ? "Failed (" + e.getFailureReason() + ")" : "Completed");
       }
+      return null;
    }
 }
