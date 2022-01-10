@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2020 Raden Soultions
+ * Copyright (C) 2020-2022 Raden Soultions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,9 +22,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.TextOutputListener;
@@ -69,63 +67,13 @@ public class ServerCommandExecutor extends AbstractObjectToolExecutor implements
    }
 
    /**
-    * @see org.netxms.ui.eclipse.objecttools.widgets.AbstractObjectToolExecutor#execute()
+    * @see org.netxms.ui.eclipse.objecttools.widgets.AbstractObjectToolExecutor#executeInternal()
     */
    @Override
-   public void execute()
+   protected void executeInternal() throws Exception
    {
-      if (isRunning())
-      {
-         MessageDialog.openError(Display.getCurrent().getActiveShell(), "Error", "Command already running!");
-         return;
-      }
-      
-      setRunning(true);
-      out = console.newOutputStream();
-      final String terminated = Messages.get().LocalCommandResults_Terminated;
-      ConsoleJob job = new ConsoleJob(
-            String.format(Messages.get().ObjectToolsDynamicMenu_ExecuteOnNode, objectContext.object.getObjectName()), null,
-            Activator.PLUGIN_ID, null) {
-         @Override
-         protected String getErrorMessage()
-         {
-            return String.format(Messages.get().ObjectToolsDynamicMenu_CannotExecuteOnNode, objectContext.object.getObjectName());
-         }
-
-         @Override
-         protected void runInternal(IProgressMonitor monitor) throws Exception
-         {
-            try
-            {
-               session.executeServerCommand(objectContext.object.getObjectId(), lastCommand, lastInputValues, maskedFields, true,
-                     ServerCommandExecutor.this, null);
-               out.write(terminated);
-            }
-            finally
-            {
-               if (out != null)
-               {
-                  out.close();
-                  out = null;
-               }
-            }
-         }
-
-         @Override
-         protected void jobFinalize()
-         {
-            runInUIThread(new Runnable() {
-               @Override
-               public void run()
-               {
-                  setRunning(false);
-               }
-            });
-         }
-      };
-      job.setUser(false);
-      job.setSystem(true);
-      job.start();
+      session.executeServerCommand(objectContext.object.getObjectId(), lastCommand, lastInputValues, maskedFields, true, ServerCommandExecutor.this, null);
+      out.write(Messages.get().LocalCommandResults_Terminated);
    }
 
    /**
