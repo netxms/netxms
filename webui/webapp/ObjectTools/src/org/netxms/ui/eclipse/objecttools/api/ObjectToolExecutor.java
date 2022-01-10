@@ -238,8 +238,9 @@ public final class ObjectToolExecutor
                }
             }
 
-            int i = 0;               
-            if ((nodes.size() > 1) && (tool.getToolType() == ObjectTool.TYPE_LOCAL_COMMAND || tool.getToolType() == ObjectTool.TYPE_SERVER_COMMAND ||
+            int i = 0;
+            if ((nodes.size() > 1) &&
+                  (tool.getToolType() == ObjectTool.TYPE_LOCAL_COMMAND || tool.getToolType() == ObjectTool.TYPE_SERVER_COMMAND || tool.getToolType() == ObjectTool.TYPE_SSH_COMMAND ||
                   tool.getToolType() == ObjectTool.TYPE_ACTION || tool.getToolType() == ObjectTool.TYPE_SERVER_SCRIPT) && ((tool.getFlags() & ObjectTool.GENERATES_OUTPUT) != 0))
             {
                final List<String> finalExpandedText = expandedText;

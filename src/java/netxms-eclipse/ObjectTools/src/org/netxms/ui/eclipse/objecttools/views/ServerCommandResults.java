@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2017 Raden Solutions
+ * Copyright (C) 2003-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -61,7 +61,7 @@ public class ServerCommandResults extends AbstractCommandResults implements Text
    protected void createActions()
    {
       super.createActions();
-      session = (NXCSession)ConsoleSharedData.getSession();
+      session = ConsoleSharedData.getSession();
       
       actionRestart = new Action(Messages.get().LocalCommandResults_Restart, SharedIcons.RESTART) {
          @Override

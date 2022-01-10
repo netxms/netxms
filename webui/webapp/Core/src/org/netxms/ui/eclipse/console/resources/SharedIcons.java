@@ -109,7 +109,7 @@ public class SharedIcons
 	public static Image IMG_XML;
 	public static Image IMG_ZOOM_IN;
 	public static Image IMG_ZOOM_OUT;
-	
+
 	/**
 	 * Initialize static members. Intended to be called once by library activator.
 	 */

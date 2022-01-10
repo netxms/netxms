@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2020 Raden Soultions
+ * Copyright (C) 2020-2022 Raden Soultions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -55,6 +55,7 @@ import org.netxms.ui.eclipse.objecttools.views.helpers.ExecutorListLabelProvider
 import org.netxms.ui.eclipse.objecttools.widgets.AbstractObjectToolExecutor;
 import org.netxms.ui.eclipse.objecttools.widgets.ActionExecutor;
 import org.netxms.ui.eclipse.objecttools.widgets.LocalCommandExecutor;
+import org.netxms.ui.eclipse.objecttools.widgets.SSHExecutor;
 import org.netxms.ui.eclipse.objecttools.widgets.ServerCommandExecutor;
 import org.netxms.ui.eclipse.objecttools.widgets.ServerScriptExecutor;
 import org.netxms.ui.eclipse.objecttools.widgets.helpers.ExecutorStateChangeListener;
@@ -291,6 +292,9 @@ public class MultiNodeCommandExecutor extends ViewPart
                break;
             case ObjectTool.TYPE_SERVER_COMMAND:
                executor = new ServerCommandExecutor(resultArea, this, ctx, actions, tool, inputValues, maskedFields);
+               break;
+            case ObjectTool.TYPE_SSH_COMMAND:
+               executor = new SSHExecutor(resultArea, this, ctx, actions, tool);
                break;
             case ObjectTool.TYPE_SERVER_SCRIPT:
                executor = new ServerScriptExecutor(resultArea, this, ctx, actions, tool, inputValues);

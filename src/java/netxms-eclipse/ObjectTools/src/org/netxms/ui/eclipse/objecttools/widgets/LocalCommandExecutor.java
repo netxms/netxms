@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2020 Raden Soultions
+ * Copyright (C) 2020-2022 Raden Soultions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,12 +21,11 @@ package org.netxms.ui.eclipse.objecttools.widgets;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
-import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Platform;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.ui.console.IOConsoleOutputStream;
 import org.eclipse.ui.part.ViewPart;
-import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objects.ObjectContext;
 import org.netxms.ui.eclipse.objecttools.Activator;
 import org.netxms.ui.eclipse.objecttools.Messages;
@@ -52,13 +51,26 @@ public class LocalCommandExecutor extends AbstractObjectToolExecutor
    {
       super(resultArea, view, objectContext, actionSet);
       this.command = command;
+      addDisposeListener(new DisposeListener() {
+         @Override
+         public void widgetDisposed(DisposeEvent e)
+         {
+            synchronized(mutex)
+            {
+               if (processRunning)
+               {
+                  process.destroy();
+               }
+            }
+         }
+      });
    }
    
    /**
-    * @see org.netxms.ui.eclipse.objecttools.widgets.AbstractObjectToolExecutor#execute()
+    * @see org.netxms.ui.eclipse.objecttools.widgets.AbstractObjectToolExecutor#executeInternal()
     */
    @Override
-   public void execute()
+   protected void executeInternal() throws Exception
    {
       synchronized(mutex)
       {
@@ -74,82 +86,47 @@ public class LocalCommandExecutor extends AbstractObjectToolExecutor
             }
          }
          processRunning = true;
-         setRunning(true);
       }
-      
-      final IOConsoleOutputStream out = console.newOutputStream();
-      ConsoleJob job = new ConsoleJob(Messages.get().LocalCommandResults_JobTitle, viewPart, Activator.PLUGIN_ID, null) {
-         @Override
-         protected String getErrorMessage()
+
+      process = Runtime.getRuntime().exec(command);
+      InputStream in = process.getInputStream();
+      try
+      {
+         byte[] data = new byte[16384];
+         boolean isWindows = Platform.getOS().equals(Platform.OS_WIN32);
+         while(true)
          {
-            return Messages.get().LocalCommandResults_JobError;
+            int bytes = in.read(data);
+            if (bytes == -1)
+               break;
+            String s = new String(Arrays.copyOf(data, bytes));
+
+            // The following is a workaround for issue NX-65
+            // Problem is that on Windows XP many system commands
+            // (like ping, tracert, etc.) generates output with lines
+            // ending in 0x0D 0x0D 0x0A
+            if (isWindows)
+               out.write(s.replace("\r\r\n", " \r\n")); //$NON-NLS-1$ //$NON-NLS-2$
+            else
+               out.write(s);
          }
 
-         @Override
-         protected void runInternal(IProgressMonitor monitor) throws Exception
+         out.write(Messages.get().LocalCommandResults_Terminated);
+      }
+      catch(IOException e)
+      {
+         Activator.logError("Exception while running local command", e); //$NON-NLS-1$
+      }
+      finally
+      {
+         in.close();
+         synchronized(mutex)
          {
-            process = Runtime.getRuntime().exec(command);
-            InputStream in = process.getInputStream();
-            try
-            {
-               byte[] data = new byte[16384];
-               boolean isWindows = Platform.getOS().equals(Platform.OS_WIN32);
-               while(true)
-               {
-                  int bytes = in.read(data);
-                  if (bytes == -1)
-                     break;
-                  String s = new String(Arrays.copyOf(data, bytes));
-                  
-                  // The following is a workaround for issue NX-65
-                  // Problem is that on Windows XP many system commands
-                  // (like ping, tracert, etc.) generates output with lines
-                  // ending in 0x0D 0x0D 0x0A
-                  if (isWindows)
-                     out.write(s.replace("\r\r\n", " \r\n")); //$NON-NLS-1$ //$NON-NLS-2$
-                  else
-                     out.write(s);
-               }
-               
-               out.write(Messages.get().LocalCommandResults_Terminated);
-            }
-            catch(IOException e)
-            {
-               Activator.logError("Exception while running local command", e); //$NON-NLS-1$
-            }
-            finally
-            {
-               in.close();
-               out.close();
-            }
+            processRunning = false;
+            process = null;
+            mutex.notifyAll();
          }
-
-         @Override
-         protected void jobFinalize()
-         {
-            synchronized(mutex)
-            {
-               processRunning = false;
-               process = null;
-               mutex.notifyAll();
-            }
-
-            runInUIThread(new Runnable() {
-               @Override
-               public void run()
-               {
-                  synchronized(mutex)
-                  {
-                     setRunning(processRunning);
-                  }
-               }
-            });
-         }
-      };
-      job.setUser(false);
-      job.setSystem(true);
-      job.start();
-
+      }
    }
 
    /**
@@ -174,21 +151,5 @@ public class LocalCommandExecutor extends AbstractObjectToolExecutor
    protected boolean isTerminateSupported()
    {
       return true;
-   }
-
-   /**
-    * @see org.eclipse.ui.part.WorkbenchPart#dispose()
-    */
-   @Override
-   public void dispose()
-   {
-      synchronized(mutex)
-      {
-         if (processRunning)
-         {
-            process.destroy();
-         }
-      }
-      super.dispose();
    }
 }
