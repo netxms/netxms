@@ -62,9 +62,6 @@ int F_assert(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
    if ((argc < 1) || (argc > 2))
       return NXSL_ERR_INVALID_ARGUMENT_COUNT;
 
-   if (!argv[0]->isBoolean())
-      return NXSL_ERR_NOT_BOOLEAN;
-
    if ((argc > 1) && !argv[0]->isString())
       return NXSL_ERR_NOT_STRING;
 
@@ -502,17 +499,7 @@ int F_strftime(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 			return NXSL_ERR_NOT_INTEGER;
 		tTime = argv[1]->isNull() ? time(nullptr) : (time_t)argv[1]->getValueAsUInt64();
 
-		if (argc > 2)
-		{
-			if (!argv[2]->isBoolean())
-				return NXSL_ERR_NOT_BOOLEAN;
-			useLocalTime = argv[2]->isTrue();
-		}
-		else
-		{
-			// No third argument, assume localtime
-			useLocalTime = true;
-		}
+		useLocalTime = (argc > 2) ? argv[2]->isTrue() : true;
 	}
 	else
 	{

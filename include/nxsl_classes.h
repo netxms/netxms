@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -640,7 +640,6 @@ public:
    bool isReal() const { return (m_dataType == NXSL_DT_REAL); }
    bool isInteger() const { return (m_dataType > NXSL_DT_REAL); }
    bool isUnsigned() const { return (m_dataType >= NXSL_DT_UINT32); }
-   bool isBoolean() const { return (m_dataType == NXSL_DT_BOOLEAN) || isNumeric() || isNull() || isArray() || isObject(); }
    bool isFalse() const;
    bool isTrue() const;
 

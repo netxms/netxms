@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -953,12 +953,8 @@ bool NXSL_Value::isTrue() const
       case NXSL_DT_NULL:
          result = false;
          break;
-      case NXSL_DT_ARRAY:
-      case NXSL_DT_OBJECT:
-         result = true;
-         break;
       default:
-         result = false;
+         result = true;
          break;
    }
    return result;

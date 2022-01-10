@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -26,7 +26,7 @@
 /**
  * Constants
  */
-#define MAX_ERROR_NUMBER         40
+#define MAX_ERROR_NUMBER         38
 #define CONTROL_STACK_LIMIT      32768
 
 /**
@@ -41,7 +41,7 @@ static const TCHAR *s_runtimeErrorMessage[MAX_ERROR_NUMBER] =
 {
 	_T("Data stack underflow"),
 	_T("Control stack underflow"),
-	_T("Condition value is not a number"),
+   _T("Assertion failed"),
 	_T("Bad arithmetic conversion"),
 	_T("Invalid operation with NULL value"),
 	_T("Internal error"),
@@ -76,9 +76,7 @@ static const TCHAR *s_runtimeErrorMessage[MAX_ERROR_NUMBER] =
    _T("Hash map key is not a string"),
    _T("Selector not found"),
    _T("Object constructor not found"),
-   _T("Invalid number of object constructor's arguments"),
-   _T("Assertion failed"),
-   _T("Function or operation argument cannot be interpreted as boolean value")
+   _T("Invalid number of object constructor's arguments")
 };
 
 /**
@@ -1253,15 +1251,8 @@ void NXSL_VM::execute()
          pValue = m_dataStack.pop();
          if (pValue != nullptr)
          {
-            if (pValue->isBoolean())
-            {
-               if (cp->m_opCode == OPCODE_JZ ? pValue->isFalse() : pValue->isTrue())
-                  dwNext = cp->m_operand.m_addr;
-            }
-            else
-            {
-               error(NXSL_ERR_BAD_CONDITION);
-            }
+            if (cp->m_opCode == OPCODE_JZ ? pValue->isFalse() : pValue->isTrue())
+               dwNext = cp->m_operand.m_addr;
             destroyValue(pValue);
          }
          else
@@ -1274,25 +1265,8 @@ void NXSL_VM::execute()
 			pValue = m_dataStack.peek();
          if (pValue != nullptr)
          {
-            if (pValue->isBoolean())
-            {
-					if (cp->m_opCode == OPCODE_JZ_PEEK ? pValue->isFalse() : pValue->isTrue())
-                  dwNext = cp->m_operand.m_addr;
-            }
-            else if (pValue->isNull())
-            {
-               // If on top of the stack is nullptr convert it into integer
-               pValue = m_dataStack.pop();
-               destroyValue(pValue);
-               m_dataStack.push(createValue(0));
-               bool result = (cp->m_opCode == OPCODE_JZ_PEEK);
-               if (result)
-                  dwNext = cp->m_operand.m_addr;
-            }
-            else
-            {
-               error(NXSL_ERR_BAD_CONDITION);
-            }
+            if (cp->m_opCode == OPCODE_JZ_PEEK ? pValue->isFalse() : pValue->isTrue())
+               dwNext = cp->m_operand.m_addr;
          }
          else
          {
@@ -2263,7 +2237,7 @@ void NXSL_VM::doBinaryOperation(int nOpCode)
                error(NXSL_ERR_REAL_VALUE);
             }
          }
-         else if (((nOpCode == OPCODE_AND) || (nOpCode == OPCODE_OR)) && pVal1->isBoolean() && pVal2->isBoolean())
+         else if ((nOpCode == OPCODE_AND) || (nOpCode == OPCODE_OR))
          {
             bool result = (nOpCode == OPCODE_AND) ? (pVal1->isTrue() && pVal2->isTrue()) : (pVal1->isTrue() || pVal2->isTrue());
             pRes = createValue(result);
@@ -2417,7 +2391,7 @@ void NXSL_VM::doUnaryOperation(int nOpCode)
    NXSL_Value *value = m_dataStack.peek();
    if (value != nullptr)
    {
-      if ((nOpCode == OPCODE_NOT) && value->isBoolean())
+      if (nOpCode == OPCODE_NOT)
       {
          value->set(value->isFalse());
       }
@@ -2448,7 +2422,7 @@ void NXSL_VM::doUnaryOperation(int nOpCode)
       }
       else
       {
-         error((nOpCode == OPCODE_NOT) ? NXSL_ERR_NOT_BOOLEAN : NXSL_ERR_NOT_NUMBER);
+         error(NXSL_ERR_NOT_NUMBER);
       }
    }
    else

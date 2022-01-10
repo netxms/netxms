@@ -88,14 +88,7 @@ NXSL_METHOD_DEFINITION(Table, addColumn)
       displayName = argv[2]->getValueAsCString();
    }
 
-   bool isInstance = false;
-   if (argc >= 4)
-   {
-      if (!argv[3]->isBoolean())
-         return NXSL_ERR_NOT_BOOLEAN;
-      isInstance = argv[3]->isTrue();
-   }
-
+   bool isInstance = (argc >= 4) ? argv[3]->isTrue() : false;
    *result = vm->createValue(static_cast<shared_ptr<Table>*>(object->getData())->get()->addColumn(argv[0]->getValueAsCString(), dataType, displayName, isInstance));
    return 0;
 }

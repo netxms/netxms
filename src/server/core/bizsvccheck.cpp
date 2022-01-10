@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Raden Solutions
+** Copyright (C) 2003-2022 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -290,14 +290,7 @@ int BusinessServiceCheck::execute(BusinessServiceTicketData* ticket)
 						}
 						else
 						{
-							if (value->isBoolean())
-							{
-								m_state = value->isTrue() ? STATUS_NORMAL : STATUS_CRITICAL;
-							}
-							else
-							{
-								m_state = STATUS_NORMAL;
-							}
+                     m_state = value->isTrue() ? STATUS_NORMAL : STATUS_CRITICAL;
 							if (m_state == STATUS_CRITICAL)
 							{
 								NXSL_Variable *reason = globals->find("$reason");

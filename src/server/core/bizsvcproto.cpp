@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Raden Solutions
+** Copyright (C) 2003-2022 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -336,7 +336,7 @@ unique_ptr<StringMap> BusinessServicePrototype::getInstances()
                      resultMap->set(value->getValueAsArray()->get(0)->getValueAsCString(), value->getValueAsArray()->get(1)->getValueAsCString());
                   }
                }
-               if (value->isBoolean() && value->getValueAsBoolean())
+               if (value->isTrue())
                {
                   resultMap->set(instance->key, instance->value);
                }

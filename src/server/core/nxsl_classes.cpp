@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -69,9 +69,6 @@ template<typename T> static T *SharedObjectFromData(NXSL_Object *nxslObject)
  */
 static int ChangeFlagMethod(NXSL_Object *object, NXSL_Value *arg, NXSL_Value **result, uint32_t flag, bool invert)
 {
-   if (!arg->isBoolean())
-      return NXSL_ERR_NOT_BOOLEAN;
-
    NetObj *nobject = static_cast<shared_ptr<NetObj>*>(object->getData())->get();
    if (arg->isTrue())
    {
@@ -397,9 +394,6 @@ NXSL_METHOD_DEFINITION(NetObj, setCustomAttribute)
 
    if (!argv[0]->isString() || !argv[1]->isString())
       return NXSL_ERR_NOT_STRING;
-
-   if(argc == 3 && !argv[2]->isBoolean())
-      return NXSL_ERR_NOT_BOOLEAN;
 
    NetObj *netxmsObject = static_cast<shared_ptr<NetObj>*>(object->getData())->get();
    const TCHAR *name = argv[0]->getValueAsCString();
@@ -2202,9 +2196,6 @@ NXSL_METHOD_DEFINITION(Interface, enableSNMPStatusPolling)
  */
 NXSL_METHOD_DEFINITION(Interface, setExcludeFromTopology)
 {
-   if (!argv[0]->isBoolean())
-      return NXSL_ERR_NOT_BOOLEAN;
-
    Interface *iface = static_cast<shared_ptr<Interface>*>(object->getData())->get();
    iface->setExcludeFromTopology(argv[0]->getValueAsBoolean());
    *result = vm->createValue();
@@ -2246,9 +2237,6 @@ NXSL_METHOD_DEFINITION(Interface, setExpectedState)
  */
 NXSL_METHOD_DEFINITION(Interface, setIncludeInIcmpPoll)
 {
-   if (!argv[0]->isBoolean())
-      return NXSL_ERR_NOT_BOOLEAN;
-
    Interface *iface = static_cast<shared_ptr<Interface>*>(object->getData())->get();
    iface->setIncludeInIcmpPoll(argv[0]->getValueAsBoolean());
    *result = vm->createValue();
@@ -2855,9 +2843,6 @@ NXSL_Value *NXSL_ClusterClass::getAttr(NXSL_Object *object, const char *attr)
  */
 NXSL_METHOD_DEFINITION(Container, setAutoBindMode)
 {
-   if (!argv[0]->isBoolean() || !argv[1]->isBoolean())
-      return NXSL_ERR_NOT_BOOLEAN;
-
    static_cast<shared_ptr<Container>*>(object->getData())->get()->setAutoBindMode(0, argv[0]->getValueAsBoolean(), argv[1]->getValueAsBoolean());
    *result = vm->createValue();
    return 0;
@@ -3102,9 +3087,6 @@ NXSL_METHOD_DEFINITION(Template, removeFrom)
  */
 NXSL_METHOD_DEFINITION(Template, setAutoApplyMode)
 {
-   if (!argv[0]->isBoolean() || !argv[1]->isBoolean())
-      return NXSL_ERR_NOT_BOOLEAN;
-
    static_cast<shared_ptr<Template>*>(object->getData())->get()->setAutoBindMode(0, argv[0]->getValueAsBoolean(), argv[1]->getValueAsBoolean());
    *result = vm->createValue();
    return 0;
@@ -4135,38 +4117,39 @@ NXSL_METHOD_DEFINITION(SNMPTransport, get)
    if (!argv[0]->isString())
       return NXSL_ERR_NOT_STRING;
 
-   SNMP_Transport *transport = static_cast<SNMP_Transport*>(object->getData());
-
-   // Create PDU and send request
    uint32_t oid[MAX_OID_LEN];
    size_t olen = SNMPParseOID(argv[0]->getValueAsCString(), oid, MAX_OID_LEN);
    if (olen == 0)
-      return NXSL_ERR_BAD_CONDITION;
+   {
+      *result = vm->createValue();
+      return 0;
+   }
 
-   SNMP_PDU *pdu = new SNMP_PDU(SNMP_GET_REQUEST, SnmpNewRequestId(), transport->getSnmpVersion());
-   pdu->bindVariable(new SNMP_Variable(oid, olen));
+   SNMP_Transport *transport = static_cast<SNMP_Transport*>(object->getData());
 
-   SNMP_PDU *rspPDU;
-   uint32_t rc = transport->doRequest(pdu, &rspPDU, SnmpGetDefaultTimeout(), 3);
+   SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), transport->getSnmpVersion());
+   request.bindVariable(new SNMP_Variable(oid, olen));
+
+   SNMP_PDU *response;
+   uint32_t rc = transport->doRequest(&request, &response, SnmpGetDefaultTimeout(), 3);
    if (rc == SNMP_ERR_SUCCESS)
    {
-      if ((rspPDU->getNumVariables() > 0) && (rspPDU->getErrorCode() == SNMP_PDU_ERR_SUCCESS))
+      if ((response->getNumVariables() > 0) && (response->getErrorCode() == SNMP_PDU_ERR_SUCCESS))
       {
-         SNMP_Variable *pVar = rspPDU->getVariable(0);
+         SNMP_Variable *pVar = response->getVariable(0);
          *result = vm->createValue(new NXSL_Object(vm, &g_nxslSnmpVarBindClass, pVar));
-         rspPDU->unlinkVariables();
+         response->unlinkVariables();
       }
       else
       {
          *result = vm->createValue();
       }
-      delete rspPDU;
+      delete response;
    }
    else
    {
       *result = vm->createValue();
    }
-   delete pdu;
    return 0;
 }
 

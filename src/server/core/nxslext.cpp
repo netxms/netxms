@@ -1269,51 +1269,51 @@ static int F_CreateSNMPTransport(int argc, NXSL_Value **argv, NXSL_Value **ppRes
  * Return value:
  *     new SNMP_VarBind object
  */
-static int F_SNMPGet(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+static int F_SNMPGet(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
-	UINT32 len;
-	UINT32 varName[MAX_OID_LEN], result = SNMP_ERR_SUCCESS;
+   if (!argv[0]->isObject())
+      return NXSL_ERR_NOT_OBJECT;
 
-	if (!argv[0]->isObject())
-		return NXSL_ERR_NOT_OBJECT;
-	if (!argv[1]->isString())
-		return NXSL_ERR_NOT_STRING;
+   if (!argv[1]->isString())
+      return NXSL_ERR_NOT_STRING;
 
-	NXSL_Object *obj = argv[0]->getValueAsObject();
-	if (!obj->getClass()->instanceOf(g_nxslSnmpTransportClass.getName()))
+	NXSL_Object *object = argv[0]->getValueAsObject();
+	if (!object->getClass()->instanceOf(g_nxslSnmpTransportClass.getName()))
 		return NXSL_ERR_BAD_CLASS;
 
-	SNMP_Transport *trans = (SNMP_Transport*)obj->getData();
-
    // Create PDU and send request
-   size_t nameLen = SNMPParseOID(argv[1]->getValueAsString(&len), varName, MAX_OID_LEN);
+   uint32_t oid[MAX_OID_LEN];
+   size_t nameLen = SNMPParseOID(argv[1]->getValueAsCString(), oid, MAX_OID_LEN);
    if (nameLen == 0)
-		return NXSL_ERR_BAD_CONDITION;
-
-   SNMP_PDU *pdu = new SNMP_PDU(SNMP_GET_REQUEST, SnmpNewRequestId(), trans->getSnmpVersion());
-	pdu->bindVariable(new SNMP_Variable(varName, nameLen));
-
-	SNMP_PDU *rspPDU;
-   result = trans->doRequest(pdu, &rspPDU, SnmpGetDefaultTimeout(), 3);
-   if (result == SNMP_ERR_SUCCESS)
    {
-      if ((rspPDU->getNumVariables() > 0) && (rspPDU->getErrorCode() == SNMP_PDU_ERR_SUCCESS))
+      *result = vm->createValue();
+      return 0;
+   }
+
+   SNMP_Transport *transport = static_cast<SNMP_Transport*>(object->getData());
+
+   SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), transport->getSnmpVersion());
+	request.bindVariable(new SNMP_Variable(oid, nameLen));
+
+	SNMP_PDU *response;
+   if (transport->doRequest(&request, &response, SnmpGetDefaultTimeout(), 3) == SNMP_ERR_SUCCESS)
+   {
+      if ((response->getNumVariables() > 0) && (response->getErrorCode() == SNMP_PDU_ERR_SUCCESS))
       {
-         SNMP_Variable *pVar = rspPDU->getVariable(0);
-		   *ppResult = vm->createValue(new NXSL_Object(vm, &g_nxslSnmpVarBindClass, pVar));
-         rspPDU->unlinkVariables();
+         SNMP_Variable *pVar = response->getVariable(0);
+		   *result = vm->createValue(new NXSL_Object(vm, &g_nxslSnmpVarBindClass, pVar));
+         response->unlinkVariables();
 	   }
       else
       {
-   		*ppResult = vm->createValue();
+   		*result = vm->createValue();
       }
-      delete rspPDU;
+      delete response;
    }
 	else
 	{
-		*ppResult = vm->createValue();
+		*result = vm->createValue();
 	}
-   delete pdu;
 	return 0;
 }
 
@@ -1327,29 +1327,28 @@ static int F_SNMPGet(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM
  * Return value:
  *     value for the given oid
  */
-static int F_SNMPGetValue(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+static int F_SNMPGetValue(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
-	TCHAR buffer[4096];
-	UINT32 len;
-
 	if (!argv[0]->isObject())
 		return NXSL_ERR_NOT_OBJECT;
+
 	if (!argv[1]->isString())
 		return NXSL_ERR_NOT_STRING;
 
-	NXSL_Object *obj = argv[0]->getValueAsObject();
-	if (!obj->getClass()->instanceOf(g_nxslSnmpTransportClass.getName()))
+	NXSL_Object *object = argv[0]->getValueAsObject();
+	if (!object->getClass()->instanceOf(g_nxslSnmpTransportClass.getName()))
 		return NXSL_ERR_BAD_CLASS;
 
-	SNMP_Transport *trans = (SNMP_Transport*)obj->getData();
+   SNMP_Transport *transport = static_cast<SNMP_Transport*>(object->getData());
 
-	if (SnmpGetEx(trans, argv[1]->getValueAsString(&len), nullptr, 0, buffer, sizeof(buffer), SG_STRING_RESULT, nullptr) == SNMP_ERR_SUCCESS)
+   TCHAR buffer[4096];
+	if (SnmpGetEx(transport, argv[1]->getValueAsCString(), nullptr, 0, buffer, sizeof(buffer), SG_STRING_RESULT, nullptr) == SNMP_ERR_SUCCESS)
 	{
-		*ppResult = vm->createValue(buffer);
+		*result = vm->createValue(buffer);
 	}
 	else
 	{
-		*ppResult = vm->createValue();
+		*result = vm->createValue();
 	}
 
 	return 0;
@@ -1830,10 +1829,11 @@ static int F_CountScheduledTasksByKey(int argc, NXSL_Value **argv, NXSL_Value **
  * Syntax:
  *    CreateUserAgentMessage(object, message, startTime, endTime)
  * where:
- *     object    - NetXMS object
- *     message   - message to be sent
- *     startTime - start time of message delivery
- *     endTime   - end time of message delivery
+ *     object        - NetXMS object
+ *     message       - message to be sent
+ *     startTime     - start time of message delivery
+ *     endTime       - end time of message delivery
+ *     showOnStartup - true to show message on startup
  * Return value:
  *     message id
  */
@@ -1847,9 +1847,6 @@ static int F_CreateUserAgentNotification(int argc, NXSL_Value **argv, NXSL_Value
 
    if (!argv[2]->isNumeric() || !argv[3]->isNumeric())
       return NXSL_ERR_NOT_INTEGER;
-
-   if (!argv[4]->isBoolean())
-      return NXSL_ERR_NOT_BOOLEAN;
 
    NXSL_Object *object = argv[0]->getValueAsObject();
    if (!object->getClass()->instanceOf(g_nxslNetObjClass.getName()))
@@ -1925,9 +1922,6 @@ static int F_SendMail(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM 
 
 	if (!argv[0]->isString() || !argv[1]->isString() || !argv[2]->isString())
 		return NXSL_ERR_NOT_STRING;
-
-	if ((argc > 3) && !argv[3]->isBoolean())
-		return  NXSL_ERR_NOT_BOOLEAN;
 
 	StringBuffer rcpts(argv[0]->getValueAsCString());
 	rcpts.trim();
