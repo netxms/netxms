@@ -1806,3 +1806,127 @@ int F_GetThreadPoolNames(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_
    delete pools;
    return 0;
 }
+
+/**
+ * @param prefixSymbol must be 3 characters long
+ */
+static double ConvertNumber(double n, char* prefixSymbol)
+{
+   if (n == LONG_MIN)
+   {
+      strcpy(prefixSymbol, "E");
+      return -9.223372036854775807;
+   }
+   if (n < 0)
+      return -ConvertNumber(-n, prefixSymbol);
+   if (n < 1000)
+   {
+      prefixSymbol[0] = 0;
+      return n;
+   }
+   if (n < 1000000) // kilo
+   {
+      strcpy(prefixSymbol, "k");
+      return n / 1000.0;
+   }
+   else if (n < 1000000000) // mega
+   {
+      strcpy(prefixSymbol, "M");
+      return n / 1000000.0;
+   }
+   else if (n < 1000000000000) // giga
+   {
+      strcpy(prefixSymbol, "G");
+      return n / 1000000000.0;
+   }
+   else if (n < 1000000000000000) // tera
+   {
+      strcpy(prefixSymbol, "T");
+      return n / 1000000000000.0;
+   }
+   else if (n < 1000000000000000000) // peta
+   {
+      strcpy(prefixSymbol, "P");
+      return n / 1000000000000000.0;
+   }
+   else // exa
+   {
+      strcpy(prefixSymbol, "E");
+      return n / 1000000000000000000.0;
+   }
+}
+
+/**
+ * @param prefixSymbol must be 3 characters long
+ */
+static double ConvertNumberBinMul(double n, char* prefixSymbol)
+{
+   if (n < 0)
+      return -ConvertNumberBinMul(-n, prefixSymbol);
+   if (n < 1024)
+   {
+      prefixSymbol[0] = 0;
+      return n;
+   }
+   else if (n < 1048576) // kibi
+   {
+      strcpy(prefixSymbol, "Ki");
+      return n / 1024.0;
+   }
+   else if (n < 1073741824) // mebi
+   {
+      strcpy(prefixSymbol, "Mi");
+      return n / 1048576.0;
+   }
+   else if (n < 1099511627776) // gibi
+   {
+      strcpy(prefixSymbol, "Gi");
+      return n / 1073741824.0;
+   }
+   else if (n < 1125899906842620) // tebi
+   {
+      strcpy(prefixSymbol, "Ti");
+      return n / 1099511627776.0;
+   }
+   else if (n < 1152921504606850000) // pebi
+   {
+      strcpy(prefixSymbol, "Pi");
+      return n / 1125899906842620.0;
+   }
+   else // exbi
+   {
+      strcpy(prefixSymbol, "Ei");
+      return n / 1152921504606850000.0;
+   }
+}
+
+/**
+ * Convert numeric value to human-readable form with metric prefix
+ */
+int F_FormatMetricPrefix(int argc, NXSL_Value** argv, NXSL_Value** result, NXSL_VM* vm)
+{
+   if ((argc < 1) || (argc > 3))
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
+   if (!argv[0]->isNumeric())
+      return NXSL_ERR_NOT_NUMBER;
+
+   if ((argc > 2) && !argv[2]->isInteger())
+      return NXSL_ERR_NOT_INTEGER;
+
+   double inVal = argv[0]->getValueAsReal();
+   bool useBinMul = (argc > 1) ? argv[1]->isTrue() : false;
+   uint32_t precision = (argc > 2) ? argv[2]->getValueAsUInt32() : 2;
+
+   if (precision > 20)
+      precision = 20;
+
+   char prefixSymbol[3];
+   double outVal = useBinMul ? ConvertNumberBinMul(inVal, prefixSymbol) : ConvertNumber(inVal, prefixSymbol);
+
+   char outStr[128];
+   snprintf(outStr, 128, "%.*f%s\n", precision, outVal, prefixSymbol);
+
+   *result = vm->createValue(outStr);
+   return NXSL_ERR_SUCCESS;
+}

@@ -92,6 +92,7 @@ int F_AddrInSubnet(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *
 int F_ArrayToString(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_Base64Decode(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_Base64Encode(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_FormatMetricPrefix(int argc, NXSL_Value** argv, NXSL_Value** ppResult, NXSL_VM* vm);
 int F_GeoLocation(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_GetCurrentTimeMs(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_GetThreadPoolNames(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
@@ -189,6 +190,7 @@ static NXSL_ExtFunction s_builtinFunctions[] =
    { "ArrayToString", F_ArrayToString, 2 },
    { "Base64Decode", F_Base64Decode, -1 },
    { "Base64Encode", F_Base64Encode, -1 },
+   { "FormatMetricPrefix", F_FormatMetricPrefix, -1 },
    { "GetCurrentTimeMs", F_GetCurrentTimeMs, 0 },
    { "GetThreadPoolNames", F_GetThreadPoolNames, 0 },
    { "JsonParse", F_JsonParse, 1 },
