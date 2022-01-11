@@ -20,6 +20,9 @@ package org.netxms.client.users;
 
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.constants.CertificateMappingMethod;
@@ -43,6 +46,7 @@ public class User extends AbstractUserObject
    private String email;
    private String phoneNumber;
    private long[] groups;
+   private Map<String, String> twoFactorAuthMethodBindings;
 
 	/**
 	 * Default constructor
@@ -57,8 +61,9 @@ public class User extends AbstractUserObject
       email = "";
       phoneNumber = "";
 		groups = new long[0];
+      twoFactorAuthMethodBindings = new HashMap<String, String>(0);
 	}
-	
+
 	/**
 	 * Copy constructor
 	 *
@@ -81,6 +86,7 @@ public class User extends AbstractUserObject
       this.email = src.email;
       this.phoneNumber = src.phoneNumber;
 		this.groups = Arrays.copyOf(src.groups, src.groups.length);
+      this.twoFactorAuthMethodBindings = new HashMap<String, String>(src.twoFactorAuthMethodBindings);
 	}
 	
 	/**
@@ -106,8 +112,19 @@ public class User extends AbstractUserObject
 		groups = msg.getFieldAsUInt32Array(NXCPCodes.VID_GROUPS);
 		if (groups == null)
 		   groups = new long[0];
+
+      int count = msg.getFieldAsInt32(NXCPCodes.VID_2FA_METHOD_COUNT);
+      twoFactorAuthMethodBindings = new HashMap<String, String>(count);
+      long fieldId = NXCPCodes.VID_2FA_METHOD_LIST_BASE;
+      for(int i = 0; i < count; i++)
+      {
+         String name = msg.getFieldAsString(fieldId++);
+         String configuration = msg.getFieldAsString(fieldId++);
+         twoFactorAuthMethodBindings.put(name, configuration);
+         fieldId += 8;
+      }
 	}
-	
+
 	/**
 	 * Fill NXCP message with object data
 	 *
@@ -128,6 +145,15 @@ public class User extends AbstractUserObject
 		msg.setFieldInt32(NXCPCodes.VID_NUM_GROUPS, groups.length);
 		if (groups.length > 0)
 		   msg.setField(NXCPCodes.VID_GROUPS, groups);
+
+      msg.setFieldInt32(NXCPCodes.VID_2FA_METHOD_COUNT, twoFactorAuthMethodBindings.size());
+      long fieldId = NXCPCodes.VID_2FA_METHOD_LIST_BASE;
+      for(Entry<String, String> e : twoFactorAuthMethodBindings.entrySet())
+      {
+         msg.setField(fieldId++, e.getKey());
+         msg.setField(fieldId++, e.getValue());
+         fieldId += 8;
+      }
 	}
 
 	/**
@@ -355,5 +381,21 @@ public class User extends AbstractUserObject
    public void setGroups(long[] groups)
    {
       this.groups = groups;
+   }
+
+   /**
+    * @return the twoFactorAuthMethodBindings
+    */
+   public Map<String, String> getTwoFactorAuthMethodBindings()
+   {
+      return twoFactorAuthMethodBindings;
+   }
+
+   /**
+    * @param twoFactorAuthMethodBindings the twoFactorAuthMethodBindings to set
+    */
+   public void setTwoFactorAuthMethodBindings(Map<String, String> twoFactorAuthMethodBindings)
+   {
+      this.twoFactorAuthMethodBindings = twoFactorAuthMethodBindings;
    }
 }

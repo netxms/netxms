@@ -898,7 +898,6 @@ private:
    void rename2FAMethod(const NXCPMessage& request);
    void delete2FAMethod(const NXCPMessage& request);
    void getUser2FABindings(const NXCPMessage& request);
-   void getUser2FABindingDetails(const NXCPMessage& request);
    void modifyUser2FABinding(const NXCPMessage& request);
    void deleteUser2FABinding(const NXCPMessage& request);
    void getBusinessServiceCheckList(const NXCPMessage& request);

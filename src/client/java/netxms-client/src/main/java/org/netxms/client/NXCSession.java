@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  * <p>
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -2336,7 +2336,7 @@ public class NXCSession
       {
          logger.info("Two factor authentication requested by server");
 
-         List<String> methods = response.getStringListFromFields(NXCPCodes.VID_2FA_METHOD_LIST_BASE, NXCPCodes.VID_2FA_METHODS_COUNT);
+         List<String> methods = response.getStringListFromFields(NXCPCodes.VID_2FA_METHOD_LIST_BASE, NXCPCodes.VID_2FA_METHOD_COUNT);
          int selectedMethod = twoFactorAuthenticationCallback.selectMethod(methods);
          logger.debug("Selected method " + selectedMethod);
 
@@ -12777,7 +12777,7 @@ public class NXCSession
       sendMessage(msg);
 
       final NXCPMessage response = waitForRCC(msg.getMessageId());
-      int count = response.getFieldAsInt32(NXCPCodes.VID_2FA_METHODS_COUNT);
+      int count = response.getFieldAsInt32(NXCPCodes.VID_2FA_METHOD_COUNT);
       List<TwoFactorAuthenticationMethod> methods = new ArrayList<TwoFactorAuthenticationMethod>(count);
       long fieldId = NXCPCodes.VID_2FA_METHOD_LIST_BASE;
       for(int i = 0; i < count; i++, fieldId += 10)

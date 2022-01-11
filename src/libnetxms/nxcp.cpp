@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -480,7 +480,7 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(uint16_t code, TCHAR *buffer)
       _T("CMD_2FA_MODIFY_METHOD"),
       _T("CMD_2FA_DELETE_METHOD"),
       _T("CMD_2FA_GET_USER_BINDINGS"),
-      _T("CMD_2FA_GET_USER_BINDING_DETAILS"),
+      _T("CMD_0x01B5"), // unused
       _T("CMD_2FA_MODIFY_USER_BINDING"),
       _T("CMD_2FA_DELETE_USER_BINDING"),
       _T("CMD_WEB_SERVICE_CUSTOM_REQUEST"),

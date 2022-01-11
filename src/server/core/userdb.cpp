@@ -1592,31 +1592,46 @@ unique_ptr<ObjectArray<UserDatabaseObject>> FindUserDBObjects(const StructArray<
 }
 
 /**
- * Get 2FA method binding names for specific user
+ * Fill NXCP message 2FA method binding info for given user
  */
-void GetUser2FABindingNames(uint32_t userId, NXCPMessage *response)
+void FillUser2FAMethodBindingInfo(uint32_t userId, NXCPMessage *msg)
 {
    s_userDatabaseLock.readLock();
    UserDatabaseObject *object = s_userDatabase.get(userId);
    if ((object != nullptr) && !object->isGroup())
    {
-      static_cast<User*>(object)->get2FABindings()->fillMessage(response, VID_2FA_METHODS_LIST_BASE, VID_2FA_METHODS_COUNT);
+      static_cast<User*>(object)->fill2FAMethodBindingInfo(msg);
    }
    s_userDatabaseLock.unlock();
 }
 
 /**
+ * Get 2FA method binding names for specific user
+ */
+unique_ptr<StringList> GetUserConfigured2FAMethods(uint32_t userId)
+{
+   unique_ptr<StringList> methods;
+   s_userDatabaseLock.readLock();
+   UserDatabaseObject *object = s_userDatabase.get(userId);
+   if ((object != nullptr) && !object->isGroup())
+   {
+      methods = static_cast<User*>(object)->getConfigured2FAMethods();
+   }
+   s_userDatabaseLock.unlock();
+   return methods;
+}
+
+/**
  * Searching for 2FA method binding for selected user and 2FA method
  */
-shared_ptr<Config> GetUser2FABindingInfo(int userId, const TCHAR* methodName)
+shared_ptr<Config> GetUser2FAMethodBinding(int userId, const TCHAR* methodName)
 {
    shared_ptr<Config> binding;
    s_userDatabaseLock.readLock();
    UserDatabaseObject *object = s_userDatabase.get(userId);
-   if (object != NULL && !object->isGroup())
+   if ((object != nullptr) && !object->isGroup())
    {
-      User* user = static_cast<User*>(object);
-      binding = user->get2FABindingInfo(methodName);
+      binding = static_cast<User*>(object)->get2FAMethodBinding(methodName);
    }
    s_userDatabaseLock.unlock();
    return binding;
@@ -1625,15 +1640,14 @@ shared_ptr<Config> GetUser2FABindingInfo(int userId, const TCHAR* methodName)
 /**
  * Create/Modify 2FA method binding for specific user
  */
-uint32_t ModifyUser2FABinding(uint32_t userId, const TCHAR* methodName, char* configuration)
+uint32_t ModifyUser2FAMethodBinding(uint32_t userId, const TCHAR* methodName, const char* configuration)
 {
    uint32_t rcc = RCC_INVALID_USER_ID;
    s_userDatabaseLock.readLock();
    UserDatabaseObject *object = s_userDatabase.get(userId);
    if ((object != nullptr) && !object->isGroup())
    {
-      User* user = static_cast<User*>(object);
-      rcc = user->modify2FABinding(methodName, configuration);
+      rcc = static_cast<User*>(object)->modify2FAMethodBinding(methodName, configuration);
    }
    s_userDatabaseLock.unlock();
    return rcc;
@@ -1642,29 +1656,14 @@ uint32_t ModifyUser2FABinding(uint32_t userId, const TCHAR* methodName, char* co
 /**
  * Delete 2FA method binding for specific user
  */
-uint32_t DeleteUser2FABinding(uint32_t userId, const TCHAR* methodName)
+uint32_t DeleteUser2FAMethodBinding(uint32_t userId, const TCHAR* methodName)
 {
    uint32_t rcc = RCC_INVALID_USER_ID;
    s_userDatabaseLock.readLock();
    UserDatabaseObject *object = s_userDatabase.get(userId);
    if ((object != nullptr) && !object->isGroup())
    {
-      User* user = static_cast<User*>(object);
-      if (user->has2FABinding(methodName))
-      {
-         if(user->delete2FABinding(methodName))
-         {
-            rcc = RCC_SUCCESS;
-         }
-         else
-         {
-            rcc = RCC_DB_FAILURE;
-         }
-      }
-      else
-      {
-         rcc = RCC_NO_SUCH_2FA_BINDING;
-      }
+      rcc = static_cast<User*>(object)->delete2FAMethodBinding(methodName);
    }
    s_userDatabaseLock.unlock();
    return rcc;

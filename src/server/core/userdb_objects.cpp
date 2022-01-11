@@ -672,17 +672,42 @@ bool User::saveToDatabase(DB_HANDLE hdb)
 
    bool success = DBBegin(hdb);
 	if (success)
-	{
 		success = DBExecute(hStmt);
-		if (success)
-		{
-			success = saveCustomAttributes(hdb);
-		}
-		if (success)
-			DBCommit(hdb);
-		else
-			DBRollback(hdb);
-	}
+
+   if (success)
+      success = saveCustomAttributes(hdb);
+
+   if (success)
+      success = ExecuteQueryOnObject(hdb, m_id, _T("DELETE FROM two_factor_auth_bindings WHERE user_id=?"));
+
+   if (success && !m_2FABindings.isEmpty())
+   {
+      DBFreeStatement(hStmt);
+      hStmt = DBPrepare(hdb, _T("INSERT INTO two_factor_auth_bindings (user_id,name,configuration) VALUES (?,?,?)"), m_2FABindings.size() > 1);
+      if (hStmt != nullptr)
+      {
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+         for (const KeyValuePair<shared_ptr<Config>>* binding : m_2FABindings)
+         {
+            String xml = binding->value->get()->createXml();
+            DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, binding->key, DB_BIND_STATIC);
+            DBBind(hStmt, 3, DB_SQLTYPE_TEXT, xml, DB_BIND_STATIC);
+            success = DBExecute(hStmt);
+            if (!success)
+               break;
+         }
+      }
+      else
+      {
+         success = false;
+      }
+   }
+
+   if (success)
+      DBCommit(hdb);
+   else
+      DBRollback(hdb);
+
    DBFreeStatement(hStmt);
 	return success;
 }
@@ -694,24 +719,19 @@ bool User::deleteFromDatabase(DB_HANDLE hdb)
 {
 	bool success = DBBegin(hdb);
 	if (success)
-	{
 	   success = ExecuteQueryOnObject(hdb, m_id, _T("DELETE FROM users WHERE id=?"));
-	}
 
    if (success)
-   {
       success = ExecuteQueryOnObject(hdb, m_id, _T("DELETE FROM user_profiles WHERE user_id=?"));
-   }
 
    if (success)
-   {
       success = ExecuteQueryOnObject(hdb, m_id, _T("DELETE FROM userdb_custom_attributes WHERE object_id=?"));
-   }
 
    if (success)
-   {
+      success = ExecuteQueryOnObject(hdb, m_id, _T("DELETE FROM two_factor_auth_bindings WHERE user_id=?"));
+
+   if (success)
       success = ExecuteQueryOnObject(hdb, m_id, _T("DELETE FROM dci_access WHERE user_id=?"));
-   }
 
    if (success)
       DBCommit(hdb);
@@ -772,6 +792,8 @@ void User::fillMessage(NXCPMessage *msg)
    msg->setField(VID_PHONE_NUMBER, CHECK_NULL_EX(m_phoneNumber));
 
    FillGroupMembershipInfo(msg, m_id);
+
+   fill2FAMethodBindingInfo(msg);
 }
 
 /**
@@ -812,6 +834,7 @@ void User::modifyFromMessage(const NXCPMessage& msg)
       msg.getFieldAsString(VID_EMAIL, &m_email);
    if (fields & USER_MODIFY_PHONE_NUMBER)
       msg.getFieldAsString(VID_PHONE_NUMBER, &m_phoneNumber);
+
    if (fields & USER_MODIFY_GROUP_MEMBERSHIP)
    {
       size_t count = msg.getFieldAsUInt32(VID_NUM_GROUPS);
@@ -823,6 +846,25 @@ void User::modifyFromMessage(const NXCPMessage& msg)
       }
       UpdateGroupMembership(m_id, count, groups);
       MemFree(groups);
+   }
+
+   if (fields & USER_MODIFY_2FA_BINDINGS)
+   {
+      m_2FABindings.clear();
+      size_t count = msg.getFieldAsUInt32(VID_2FA_METHOD_COUNT);
+      if (count > 0)
+      {
+         uint32_t fieldId = VID_2FA_METHOD_LIST_BASE;
+         TCHAR methodName[MAX_OBJECT_NAME];
+         msg.getFieldAsString(fieldId++, methodName, MAX_OBJECT_NAME);
+         char *configSource = msg.getFieldAsUtf8String(fieldId++);
+         shared_ptr<Config> config = make_shared<Config>();
+         if (config->loadConfigFromMemory(configSource, strlen(configSource), _T("2FA"), nullptr, true, false))
+         {
+            m_2FABindings.set(methodName, config);
+         }
+         fieldId += 8;
+      }
    }
 
    // Clear intruder lockout flag if user is not disabled anymore
@@ -933,159 +975,97 @@ NXSL_Value *User::createNXSLObject(NXSL_VM *vm)
 void User::load2FABindings(DB_HANDLE hdb)
 {
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT name,configuration FROM two_factor_auth_bindings WHERE user_id=?"));
-   if (hStmt != nullptr)
+   if (hStmt == nullptr)
+      return;
+
+   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+   DB_RESULT hResult = DBSelectPrepared(hStmt);
+   if (hResult != nullptr)
    {
-      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
-      DB_RESULT hResult = DBSelectPrepared(hStmt);
-      if (hResult != nullptr)
+      int bindingCount = 0;
+      int rowCount = DBGetNumRows(hResult);
+      for (int i = 0; i < rowCount; i++)
       {
-         int bindingCount = 0;
-         int rowCount = DBGetNumRows(hResult);
-         for (int i = 0; i < rowCount; i++)
+         TCHAR methodName[MAX_OBJECT_NAME];
+         DBGetField(hResult, i, 0, methodName, MAX_OBJECT_NAME);
+         char* configuration = DBGetFieldUTF8(hResult, i, 1, nullptr, 0);
+         auto binding = make_shared<Config>();
+         if (binding->loadConfigFromMemory(configuration, strlen(configuration), _T("2FA"), nullptr, true, false))
          {
-            TCHAR methodName[MAX_OBJECT_NAME];
-            DBGetField(hResult, i, 0, methodName, MAX_OBJECT_NAME);
-            char* configuration = DBGetFieldUTF8(hResult, i, 1, nullptr, 0);
-            auto binding = make_shared<Config>();
-            if (binding->loadConfigFromMemory(configuration, strlen(configuration), _T("2FA"), nullptr, true, false))
-            {
-               m_2FABindings.set(methodName, binding);
-               bindingCount++;
-               nxlog_debug_tag(DEBUG_TAG, 5, _T("Loaded binding for authentication method %s for user %s"), methodName, m_name);
-            }
-            else
-            {
-               nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Binding for authentication method %s for user %s failed to load"), methodName, m_name);
-            }
-            MemFree(configuration);
+            m_2FABindings.set(methodName, binding);
+            bindingCount++;
+            nxlog_debug_tag(DEBUG_TAG, 5, _T("Loaded binding for two-factor authentication method %s for user %s"), methodName, m_name);
          }
-         DBFreeResult(hResult);
-         nxlog_debug_tag(DEBUG_TAG, 5, _T("%d authentication method binding%s added for user %s"), bindingCount, (bindingCount == 1) ? _T("") : _T("s"), m_name);
+         else
+         {
+            nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Binding for two-factor authentication method %s for user %s failed to load"), methodName, m_name);
+         }
+         MemFree(configuration);
       }
-      DBFreeStatement(hStmt);
+      DBFreeResult(hResult);
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("%d two-factor authentication method binding%s added for user %s"), bindingCount, (bindingCount == 1) ? _T("") : _T("s"), m_name);
    }
+   DBFreeStatement(hStmt);
 }
 
 /**
- * Get cashed user 2FA method bindings
+ * Get method names
  */
-shared_ptr<Config> User::get2FABindingInfo(const TCHAR* method)
+unique_ptr<StringList> User::getConfigured2FAMethods() const
 {
-   return m_2FABindings.getShared(method);
+   auto methods = make_unique<StringList>();
+   for (const KeyValuePair<shared_ptr<Config>>* binding : m_2FABindings)
+      methods->add(binding->key);
+   return methods;
 }
 
 /**
- * Get cashed 2FA methods names for user
+ * Fill NXCP message with 2FA method bindings
  */
-unique_ptr<StringList> User::get2FABindings()
+void User::fill2FAMethodBindingInfo(NXCPMessage *msg) const
 {
-   auto bindings = make_unique<StringList>();
-   auto it = m_2FABindings.begin();
-   while (it.hasNext())
+   uint32_t count = 0;
+   uint32_t fieldId = VID_2FA_METHOD_LIST_BASE;
+   for (const KeyValuePair<shared_ptr<Config>>* binding : m_2FABindings)
    {
-      auto value = it.next();
-      bindings->add(value->key);
+      msg->setField(fieldId++, binding->key);
+      msg->setField(fieldId++, binding->value->get()->createXml());
+      fieldId += 8;
    }
-   return bindings;
+   msg->setField(VID_2FA_METHOD_COUNT, count);
 }
 
 /**
  * Create/modify 2FA method binding for user
  */
-uint32_t User::modify2FABinding(const TCHAR* methodName, char* configuration)
+uint32_t User::modify2FAMethodBinding(const TCHAR* methodName, const char* configuration)
 {
    auto config = make_shared<Config>();
    uint32_t rcc = RCC_INVALID_2FA_BINDING_CONFIG;
    if (config->loadConfigFromMemory(configuration, strlen(configuration), _T("2FA"), nullptr, true, false))
    {
-      if (saveBindingInDB(methodName, configuration, m_2FABindings.contains(methodName)))
-      {
-         m_2FABindings.set(methodName, config);
-         rcc = RCC_SUCCESS;
-      }
-      else
-      {
-         rcc = RCC_DB_FAILURE;
-      }
+      m_2FABindings.set(methodName, config);
+      m_flags |= UF_MODIFIED;
+      rcc = RCC_SUCCESS;
+   }
+   else
+   {
+      rcc = RCC_INVALID_2FA_BINDING_CONFIG;
    }
    return rcc;
 }
 
 /**
- * Create/modify 2FA method binding for user in database
- */
-bool User::saveBindingInDB(const TCHAR* methodName, char* configuration, bool exists)
-{
-   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   DB_STATEMENT hStmt;
-   if (exists)
-   {
-      hStmt = DBPrepare(hdb, _T("UPDATE two_factor_auth_bindings SET configuration=? WHERE user_id=? AND name=?"));
-   }
-   else
-   {
-      hStmt = DBPrepare(hdb, _T("INSERT INTO two_factor_auth_bindings (configuration,user_id,name) VALUES (?,?,?)"));
-   }
-
-
-   if (hStmt != nullptr)
-   {
-      DBBind(hStmt, 1, DB_SQLTYPE_TEXT, DB_CTYPE_UTF8_STRING, configuration, DB_BIND_STATIC);
-      DBBind(hStmt, 2, DB_CTYPE_UINT32, m_id);
-      DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, methodName, DB_BIND_STATIC);
-   }
-
-   bool success = DBBegin(hdb);
-   if (success)
-   {
-      success = DBExecute(hStmt);
-      if (success)
-         DBCommit(hdb);
-      else
-         DBRollback(hdb);
-   }
-   DBFreeStatement(hStmt);
-   DBConnectionPoolReleaseConnection(hdb);
-   return success;
-}
-
-/**
  * Delete 2FA binding for user
  */
-bool User::delete2FABinding(const TCHAR* methodName)
+uint32_t User::delete2FAMethodBinding(const TCHAR* methodName)
 {
+   if (!m_2FABindings.contains(methodName))
+      return RCC_NO_SUCH_2FA_BINDING;
+
    m_2FABindings.remove(methodName);
-
-   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   DB_STATEMENT hStmt = DBPrepare(hdb,
-         _T("DELETE FROM two_factor_auth_bindings WHERE user_id=? AND name=?"));
-
-   if (hStmt != nullptr)
-   {
-      DBBind(hStmt, 1, DB_CTYPE_UINT32, m_id);
-      DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, methodName, DB_BIND_STATIC);
-   }
-
-   bool success = DBBegin(hdb);
-   if (success)
-   {
-      success = DBExecute(hStmt);
-      if (success)
-         DBCommit(hdb);
-      else
-         DBRollback(hdb);
-   }
-   DBFreeStatement(hStmt);
-   DBConnectionPoolReleaseConnection(hdb);
-   return success;
-}
-
-/**
- * Checks 2FA method binding for user
- */
-bool User::has2FABinding(const TCHAR* methodName)
-{
-   return m_2FABindings.contains(methodName);
+   m_flags |= UF_MODIFIED;
+   return RCC_SUCCESS;
 }
 
 /*****************************************************************************
@@ -1174,7 +1154,7 @@ bool Group::saveToDatabase(DB_HANDLE hdb)
    {
       hStmt = DBPrepare(hdb, _T("INSERT INTO user_groups (name,system_access,flags,description,guid,ldap_dn,ldap_unique_id,created,id) VALUES (?,?,?,?,?,?,?,?,?)"));
    }
-   if (hStmt == NULL)
+   if (hStmt == nullptr)
       return false;
 
    DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, m_name, DB_BIND_STATIC);
@@ -1189,55 +1169,39 @@ bool Group::saveToDatabase(DB_HANDLE hdb)
 
    bool success = DBBegin(hdb);
 	if (success)
-	{
       success = DBExecute(hStmt);
-		if (success)
-		{
-         DBFreeStatement(hStmt);
-         hStmt = DBPrepare(hdb, _T("DELETE FROM user_group_members WHERE group_id=?"));
-         if (hStmt != NULL)
+
+   if (success)
+      success = ExecuteQueryOnObject(hdb, m_id, _T("DELETE FROM user_group_members WHERE group_id=?"));
+
+   if (success && !m_members->isEmpty())
+   {
+      DBFreeStatement(hStmt);
+      hStmt = DBPrepare(hdb, _T("INSERT INTO user_group_members (group_id,user_id) VALUES (?,?)"), m_members->size() > 1);
+      if (hStmt != nullptr)
+      {
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+         for(int i = 0; (i < m_members->size()) && success; i++)
          {
-            DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+            DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_members->get(i));
             success = DBExecute(hStmt);
          }
-         else
-         {
-            success = false;
-         }
+      }
+      else
+      {
+         success = false;
+      }
+   }
 
-			if (success && !m_members->isEmpty())
-			{
-            DBFreeStatement(hStmt);
-            hStmt = DBPrepare(hdb, _T("INSERT INTO user_group_members (group_id,user_id) VALUES (?,?)"), m_members->size() > 1);
-            if (hStmt != nullptr)
-            {
-               DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
-				   for(int i = 0; (i < m_members->size()) && success; i++)
-				   {
-                  DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_members->get(i));
-                  success = DBExecute(hStmt);
-				   }
-            }
-            else
-            {
-               success = false;
-            }
-			}
+   if (success)
+      success = saveCustomAttributes(hdb);
 
-		   if (success)
-		   {
-			   success = saveCustomAttributes(hdb);
-		   }
-		}
-		if (success)
-			DBCommit(hdb);
-		else
-			DBRollback(hdb);
-	}
+   if (success)
+      DBCommit(hdb);
+   else
+      DBRollback(hdb);
 
-   if (hStmt != NULL)
-      DBFreeStatement(hStmt);
-
+   DBFreeStatement(hStmt);
    return success;
 }
 

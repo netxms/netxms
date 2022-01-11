@@ -673,7 +673,7 @@ typedef struct
 #define CMD_2FA_MODIFY_METHOD             0x01B2
 #define CMD_2FA_DELETE_METHOD             0x01B3
 #define CMD_2FA_GET_USER_BINDINGS         0x01B4
-#define CMD_2FA_GET_USER_BINDING_DETAILS  0x01B5
+//#define CMD_2FA_GET_USER_BINDING_DETAILS  0x01B5
 #define CMD_2FA_MODIFY_USER_BINDING       0x01B6
 #define CMD_2FA_DELETE_USER_BINDING       0x01B7
 #define CMD_WEB_SERVICE_CUSTOM_REQUEST    0x01B8
@@ -1449,7 +1449,7 @@ typedef struct
 #define VID_DATA_DIRECTORY          ((UINT32)748)
 #define VID_RULE_DESCRIPTION        ((UINT32)749)
 #define VID_READ_ALL_FIELDS         ((UINT32)750)
-#define VID_2FA_METHODS_COUNT       ((uint32_t)751)
+#define VID_2FA_METHOD_COUNT        ((uint32_t)751)
 #define VID_2FA_METHOD              ((uint32_t)752)
 #define VID_2FA_RESPONSE            ((uint32_t)753)
 #define VID_REQUIRES_DATA_VIEW      ((uint32_t)754)
@@ -1728,7 +1728,7 @@ typedef struct
 
 #define VID_ZONE_SNMP_PORT_LIST_BASE         ((UINT32)0x10000000)
 
-#define VID_2FA_METHODS_LIST_BASE   ((uint32_t)0x10000000)
+#define VID_2FA_METHOD_LIST_BASE    ((uint32_t)0x10000000)
 
 #define VID_CHECK_LIST_BASE         ((uint32_t)0x10000000)
 

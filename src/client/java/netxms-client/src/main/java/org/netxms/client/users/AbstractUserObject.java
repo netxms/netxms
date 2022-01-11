@@ -66,6 +66,7 @@ public abstract class AbstractUserObject
    public static final int MODIFY_GROUP_MEMBERSHIP  = 0x00001000;
    public static final int MODIFY_EMAIL             = 0x00002000;
    public static final int MODIFY_PHONE_NUMBER      = 0x00004000;
+   public static final int MODIFY_2FA_BINDINGS      = 0x00008000;
 
    // Well-known IDs
    public static final long WELL_KNOWN_ID_SYSTEM = 0;

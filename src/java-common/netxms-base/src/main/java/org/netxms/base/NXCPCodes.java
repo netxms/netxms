@@ -1223,7 +1223,7 @@ public class NXCPCodes
    public static final long VID_DATA_DIRECTORY = 748;
    public static final long VID_RULE_DESCRIPTION = 749;
    public static final long VID_READ_ALL_FIELDS = 750;
-   public static final long VID_2FA_METHODS_COUNT = 751;
+   public static final long VID_2FA_METHOD_COUNT = 751;
    public static final long VID_2FA_METHOD = 752;
    public static final long VID_2FA_RESPONSE = 753;
    public static final long VID_REQUIRES_DATA_VIEW = 754;

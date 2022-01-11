@@ -391,7 +391,6 @@ protected:
    SharedStringObjectMap<Config> m_2FABindings;
 
    void load2FABindings(DB_HANDLE hdb);
-   bool saveBindingInDB(const TCHAR* methodName, char* configuration, bool exists);
 
 public:
 	User();
@@ -436,11 +435,12 @@ public:
    void setPhoneNumber(const TCHAR *phoneNumber);
 	void enable();
 
-   unique_ptr<StringList> get2FABindings();
-   shared_ptr<Config> get2FABindingInfo(const TCHAR* methodName);
-   bool has2FABinding(const TCHAR* methodName);
-   uint32_t modify2FABinding(const TCHAR* methodName, char* configuration);
-   bool delete2FABinding(const TCHAR* methodName);
+   unique_ptr<StringList> getConfigured2FAMethods() const;
+   void fill2FAMethodBindingInfo(NXCPMessage *msg) const;
+   shared_ptr<Config> get2FAMethodBinding(const TCHAR* methodName) const { return m_2FABindings.getShared(methodName); }
+   bool has2FAMethodBinding(const TCHAR* methodName) const { return m_2FABindings.contains(methodName); }
+   uint32_t modify2FAMethodBinding(const TCHAR* methodName, const char* configuration);
+   uint32_t delete2FAMethodBinding(const TCHAR* methodName);
 
    virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;
 };
@@ -558,10 +558,11 @@ UserAuthenticationToken IssueAuthenticationToken(uint32_t userId, uint32_t valid
 void RevokeAuthenticationToken(const UserAuthenticationToken& token);
 bool ValidateAuthenticationToken(const UserAuthenticationToken& token, uint32_t *userId);
 
-shared_ptr<Config> GetUser2FABindingInfo(int userId, const TCHAR *method);
-void GetUser2FABindingNames(uint32_t userId, NXCPMessage *response);
-uint32_t ModifyUser2FABinding(uint32_t userId, const TCHAR* methodName, char* configuration);
-uint32_t DeleteUser2FABinding(uint32_t userId, const TCHAR* methodName);
+unique_ptr<StringList> GetUserConfigured2FAMethods(uint32_t userId);
+shared_ptr<Config> GetUser2FAMethodBinding(int userId, const TCHAR *method);
+void FillUser2FAMethodBindingInfo(uint32_t userId, NXCPMessage *msg);
+uint32_t ModifyUser2FAMethodBinding(uint32_t userId, const TCHAR* methodName, const char* configuration);
+uint32_t DeleteUser2FAMethodBinding(uint32_t userId, const TCHAR* methodName);
 
 /**
  * CAS API

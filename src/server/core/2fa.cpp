@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2021 Raden Solutions
+** Copyright (C) 2021-2022 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -115,7 +115,7 @@ public:
  */
 TwoFactorAuthenticationToken* TOTPAuthMethod::prepareChallenge(uint32_t userId)
 {
-   shared_ptr<Config> binding = GetUser2FABindingInfo(userId, m_methodName);
+   shared_ptr<Config> binding = GetUser2FAMethodBinding(userId, m_methodName);
    TwoFactorAuthenticationToken* token = nullptr;
    if (binding != nullptr)
    {
@@ -195,7 +195,7 @@ MessageAuthMethod::MessageAuthMethod(const TCHAR* name, const TCHAR* description
  */
 TwoFactorAuthenticationToken* MessageAuthMethod::prepareChallenge(uint32_t userId)
 {
-   shared_ptr<Config> binding = GetUser2FABindingInfo(userId, m_methodName);
+   shared_ptr<Config> binding = GetUser2FAMethodBinding(userId, m_methodName);
    if (binding == nullptr)
       return nullptr;
 
@@ -415,7 +415,7 @@ void Get2FAMethodDetails(const TCHAR* name, NXCPMessage *msg)
 void Get2FAMethods(NXCPMessage *msg)
 {
    unique_ptr<ObjectArray<TwoFactorAuthMethodInfo>> methodsInfo = Load2FAMethodsInfoFromDB();
-   uint32_t fieldId = VID_2FA_METHODS_LIST_BASE;
+   uint32_t fieldId = VID_2FA_METHOD_LIST_BASE;
    s_authMethodListLock.lock();
    for (int i = 0; i < methodsInfo->size(); i++)
    {
@@ -428,7 +428,7 @@ void Get2FAMethods(NXCPMessage *msg)
       fieldId += 5;
    }
    s_authMethodListLock.unlock();
-   msg->setField(VID_2FA_METHODS_COUNT, methodsInfo->size());
+   msg->setField(VID_2FA_METHOD_COUNT, methodsInfo->size());
 }
 
 /**

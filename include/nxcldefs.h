@@ -872,6 +872,7 @@ enum SessionState
 #define USER_MODIFY_GROUP_MEMBERSHIP   0x00001000
 #define USER_MODIFY_EMAIL              0x00002000
 #define USER_MODIFY_PHONE_NUMBER       0x00004000
+#define USER_MODIFY_2FA_BINDINGS       0x00008000
 
 /**
  * Certificate mapping methods

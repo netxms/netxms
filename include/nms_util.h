@@ -2096,7 +2096,17 @@ public:
       return m_data.begin();
    }
 
+   ConstIterator<KeyValuePair<shared_ptr<T>>> begin() const
+   {
+      return m_data.begin();
+   }
+
    Iterator<KeyValuePair<shared_ptr<T>>> end()
+   {
+      return m_data.end();
+   }
+
+   ConstIterator<KeyValuePair<shared_ptr<T>>> end() const
    {
       return m_data.end();
    }

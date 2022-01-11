@@ -1828,9 +1828,6 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_2FA_GET_USER_BINDINGS:
          getUser2FABindings(*request);
          break;
-      case CMD_2FA_GET_USER_BINDING_DETAILS:
-         getUser2FABindingDetails(*request);
-         break;
       case CMD_2FA_MODIFY_USER_BINDING:
          modifyUser2FABinding(*request);
          break;
@@ -2257,15 +2254,16 @@ void ClientSession::login(const NXCPMessage& request)
 
       if (rcc == RCC_SUCCESS)
       {
-         GetUser2FABindingNames(m_dwUserId, &response);
-         if (response.getFieldAsInt32(VID_2FA_METHODS_COUNT) > 0)
-         {
-            rcc = RCC_NEED_2FA;
-         }
-         else
+         unique_ptr<StringList> methods = GetUserConfigured2FAMethods(m_dwUserId);
+         if (methods->isEmpty())
          {
             finalizeLogin(request, &response);
             delete_and_null(m_loginInfo);
+         }
+         else
+         {
+            rcc = RCC_NEED_2FA;
+            methods->fillMessage(&response, VID_2FA_METHOD_LIST_BASE, VID_2FA_METHOD_COUNT);
          }
       }
       response.setField(VID_RCC, rcc);
@@ -2283,21 +2281,21 @@ void ClientSession::login(const NXCPMessage& request)
  */
 void ClientSession::prepare2FAChallenge(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
    TCHAR method[MAX_OBJECT_NAME];
    request.getFieldAsString(VID_2FA_METHOD, method, MAX_OBJECT_NAME);
    delete m_loginInfo->token;
    m_loginInfo->token = Prepare2FAChallenge(method, m_dwUserId);
    if (m_loginInfo->token != nullptr)
    {
-      msg.setField(VID_CHALLENGE, m_loginInfo->token->getChallenge());
-      msg.setField(VID_RCC, RCC_SUCCESS);
+      response.setField(VID_CHALLENGE, m_loginInfo->token->getChallenge());
+      response.setField(VID_RCC, RCC_SUCCESS);
    }
    else
    {
-      msg.setField(VID_RCC, RCC_FAILED_2FA_PREPARATION);
+      response.setField(VID_RCC, RCC_FAILED_2FA_PREPARATION);
    }
-   sendMessage(msg);
+   sendMessage(response);
 }
 
 /**
@@ -2305,26 +2303,26 @@ void ClientSession::prepare2FAChallenge(const NXCPMessage& request)
  */
 void ClientSession::validate2FAResponse(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
    if (m_loginInfo != nullptr)
    {
-      TCHAR response[1024];
-      request.getFieldAsString(VID_2FA_RESPONSE, response, 1024);
-      if (Validate2FAResponse(m_loginInfo->token, response))
+      TCHAR userResponse[1024];
+      request.getFieldAsString(VID_2FA_RESPONSE, userResponse, 1024);
+      if (Validate2FAResponse(m_loginInfo->token, userResponse))
       {
-         finalizeLogin(request, &msg);
+         finalizeLogin(request, &response);
       }
       else
       {
-         msg.setField(VID_RCC, RCC_FAILED_2FA_VALIDATION);
+         response.setField(VID_RCC, RCC_FAILED_2FA_VALIDATION);
       }
       delete_and_null(m_loginInfo);
    }
    else
    {
-      msg.setField(VID_RCC, RCC_OUT_OF_STATE_REQUEST);
+      response.setField(VID_RCC, RCC_OUT_OF_STATE_REQUEST);
    }
-   sendMessage(msg);
+   sendMessage(response);
 }
 
 /**
@@ -15585,18 +15583,18 @@ void ClientSession::generateSshKey(const NXCPMessage& request)
  */
 void ClientSession::get2FADrivers(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
    if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_2FA_METHODS)
    {
-      Get2FADrivers(&msg);
-      msg.setField(VID_RCC, RCC_SUCCESS);
+      Get2FADrivers(&response);
+      response.setField(VID_RCC, RCC_SUCCESS);
    }
    else
    {
       writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on reading two-factor authentication driver list"));
-      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
@@ -15604,10 +15602,10 @@ void ClientSession::get2FADrivers(const NXCPMessage& request)
  */
 void ClientSession::get2FAMethods(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
-   Get2FAMethods(&msg);
-   msg.setField(VID_RCC, RCC_SUCCESS);
-   sendMessage(&msg);
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+   Get2FAMethods(&response);
+   response.setField(VID_RCC, RCC_SUCCESS);
+   sendMessage(response);
 }
 
 /**
@@ -15615,20 +15613,20 @@ void ClientSession::get2FAMethods(const NXCPMessage& request)
  */
 void ClientSession::get2FAMethodDetails(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
    if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_2FA_METHODS)
    {
       TCHAR name[MAX_OBJECT_NAME];
       request.getFieldAsString(VID_NAME, name, MAX_OBJECT_NAME);
-      Get2FAMethodDetails(name, &msg);
-      msg.setField(VID_RCC, RCC_SUCCESS);
+      Get2FAMethodDetails(name, &response);
+      response.setField(VID_RCC, RCC_SUCCESS);
    }
    else
    {
       writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on getting 2FA method information"));
-      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
@@ -15636,7 +15634,7 @@ void ClientSession::get2FAMethodDetails(const NXCPMessage& request)
  */
 void ClientSession::modify2FAMethod(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
    if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_2FA_METHODS)
    {
       TCHAR name[MAX_OBJECT_NAME], driver[MAX_OBJECT_NAME], description[MAX_2FA_DESCRIPTION];
@@ -15644,15 +15642,15 @@ void ClientSession::modify2FAMethod(const NXCPMessage& request)
       request.getFieldAsString(VID_DRIVER_NAME, driver, MAX_OBJECT_NAME);
       request.getFieldAsString(VID_DESCRIPTION, description, MAX_2FA_DESCRIPTION);
       char *configuration = request.getFieldAsUtf8String(VID_CONFIG_FILE_DATA);
-      msg.setField(VID_RCC, Modify2FAMethod(name, driver, description, configuration));
+      response.setField(VID_RCC, Modify2FAMethod(name, driver, description, configuration));
       MemFree(configuration);
    }
    else
    {
       writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on modify 2FA method"));
-      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
@@ -15660,7 +15658,7 @@ void ClientSession::modify2FAMethod(const NXCPMessage& request)
  */
 void ClientSession::rename2FAMethod(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
    if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_2FA_METHODS)
    {
       TCHAR *name = request.getFieldAsString(VID_NAME);
@@ -15673,31 +15671,31 @@ void ClientSession::rename2FAMethod(const NXCPMessage& request)
             {
                writeAuditLog(AUDIT_SYSCFG, true, 0, _T("Two-factor authentication method \"%s\" renamed to \"%s\""), name, newName);
                Rename2FAMethod(name, newName);
-               msg.setField(VID_RCC, RCC_SUCCESS);
+               response.setField(VID_RCC, RCC_SUCCESS);
             }
             else
             {
-               msg.setField(VID_RCC, RCC_CHANNEL_ALREADY_EXIST);
+               response.setField(VID_RCC, RCC_CHANNEL_ALREADY_EXIST);
             }
             MemFree(newName);
          }
          else
          {
-            msg.setField(VID_RCC, RCC_NO_CHANNEL_NAME);
+            response.setField(VID_RCC, RCC_NO_CHANNEL_NAME);
          }
       }
       else
       {
-         msg.setField(VID_RCC, RCC_INVALID_CHANNEL_NAME);
+         response.setField(VID_RCC, RCC_INVALID_CHANNEL_NAME);
       }
       MemFree(name);
    }
    else
    {
       writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on two-factor authentication method rename"));
-      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
@@ -15705,19 +15703,19 @@ void ClientSession::rename2FAMethod(const NXCPMessage& request)
  */
 void ClientSession::delete2FAMethod(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
    if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_2FA_METHODS)
    {
       TCHAR name[MAX_OBJECT_NAME];
       request.getFieldAsString(VID_NAME, name, MAX_OBJECT_NAME);
-      msg.setField(VID_RCC, Delete2FAMethod(name));
+      response.setField(VID_RCC, Delete2FAMethod(name));
    }
    else
    {
       writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on deleting 2FA method"));
-      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
@@ -15725,50 +15723,19 @@ void ClientSession::delete2FAMethod(const NXCPMessage& request)
  */
 void ClientSession::getUser2FABindings(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
    uint32_t userId = request.getFieldAsUInt32(VID_USER_ID);
    if ((userId == m_dwUserId) || (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_USERS))
    {
-      GetUser2FABindingNames(userId, &msg);
-      msg.setField(VID_RCC, RCC_SUCCESS);
+      FillUser2FAMethodBindingInfo(userId, &response);
+      response.setField(VID_RCC, RCC_SUCCESS);
    }
    else
    {
       writeAuditLog(AUDIT_SECURITY, false, 0, _T("Access denied on getting 2FA method bindings"));
-      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
-   sendMessage(&msg);
-}
-
-/**
- * Get details of specific 2FA methid binding
- */
-void ClientSession::getUser2FABindingDetails(const NXCPMessage& request)
-{
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
-   uint32_t userId = request.getFieldAsUInt32(VID_USER_ID);
-   if ((userId == m_dwUserId) || (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_USERS))
-   {
-      TCHAR methodName[MAX_OBJECT_NAME];
-      request.getFieldAsString(VID_2FA_METHOD, methodName, MAX_OBJECT_NAME);
-      shared_ptr<Config> binding = GetUser2FABindingInfo(userId, methodName);
-      if (binding != nullptr)
-      {
-         msg.setField(VID_CONFIG_FILE_DATA, binding->createXml());
-         msg.setField(VID_RCC, RCC_SUCCESS);
-      }
-      else
-      {
-         msg.setField(VID_RCC, RCC_NO_SUCH_2FA_BINDING);
-      }
-   }
-   else
-   {
-      TCHAR buffer[MAX_USER_NAME];
-      writeAuditLog(AUDIT_SECURITY, false, 0, _T("Access denied on getting 2FA method binding details for user \"%s\""), ResolveUserId(userId, buffer, true));
-      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
-   }
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
@@ -15776,23 +15743,23 @@ void ClientSession::getUser2FABindingDetails(const NXCPMessage& request)
  */
 void ClientSession::modifyUser2FABinding(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
    uint32_t userId = request.getFieldAsUInt32(VID_USER_ID);
    if ((userId == m_dwUserId) || (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_USERS))
    {
       TCHAR methodName[MAX_OBJECT_NAME];
       request.getFieldAsString(VID_2FA_RESPONSE, methodName, MAX_OBJECT_NAME);
       char* configuration = request.getFieldAsUtf8String(VID_2FA_RESPONSE + 1);
-      msg.setField(VID_RCC, ModifyUser2FABinding(userId, methodName, configuration));
+      response.setField(VID_RCC, ModifyUser2FAMethodBinding(userId, methodName, configuration));
       MemFree(configuration);
    }
    else
    {
       TCHAR buffer[MAX_USER_NAME];
       writeAuditLog(AUDIT_SECURITY, false, 0, _T("Access denied on modify 2FA method binding for user \"%s\""), ResolveUserId(userId, buffer, true));
-      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
@@ -15800,21 +15767,21 @@ void ClientSession::modifyUser2FABinding(const NXCPMessage& request)
  */
 void ClientSession::deleteUser2FABinding(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
    uint32_t userId = request.getFieldAsUInt32(VID_USER_ID);
    if ((userId == m_dwUserId) || (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_USERS))
    {
       TCHAR name[MAX_OBJECT_NAME];
       request.getFieldAsString(VID_2FA_RESPONSE, name, MAX_OBJECT_NAME);
-      msg.setField(VID_RCC, DeleteUser2FABinding(userId, name));
+      response.setField(VID_RCC, DeleteUser2FAMethodBinding(userId, name));
    }
    else
    {
       TCHAR buffer[MAX_USER_NAME];
       writeAuditLog(AUDIT_SECURITY, false, 0, _T("Access denied on deleting 2FA method for user \"%s\""), ResolveUserId(userId, buffer, true));
-      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
