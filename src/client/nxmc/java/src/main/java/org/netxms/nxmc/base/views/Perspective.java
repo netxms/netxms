@@ -438,6 +438,11 @@ public abstract class Perspective
       else
          mainArea.setView(view);
    }
+   
+   protected View getMainView()
+   {
+      return mainArea.getView();
+   }
 
    /**
     * Set main view for single-view perspectives. Has no effect for multi-view perspectives.

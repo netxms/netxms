@@ -21,17 +21,17 @@ package org.netxms.nxmc.modules.agentmanagement;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.netxms.nxmc.base.views.ConfigurationView;
 import org.netxms.nxmc.localization.LocalizationHelper;
-import org.netxms.nxmc.modules.agentmanagement.views.TunnelManager;
+import org.netxms.nxmc.modules.agentmanagement.views.ServerStoredAgentConfigEditorView;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.services.ConfigurationPerspectiveElement;
 import org.xnap.commons.i18n.I18n;
 
 /**
- * Tunnel configuration element 
+ * Server stored agent configuration element
  */
-public class TunnelConfigurationElement implements ConfigurationPerspectiveElement
+public class ServerStoredAgentConfigurationElement implements ConfigurationPerspectiveElement
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(TunnelConfigurationElement.class);
+   private static final I18n i18n = LocalizationHelper.getI18n(ServerStoredAgentConfigurationElement.class);
 
    /**
     * @see org.netxms.nxmc.services.ConfigurationPerspectiveElement#getName()
@@ -39,7 +39,7 @@ public class TunnelConfigurationElement implements ConfigurationPerspectiveEleme
    @Override
    public String getName()
    {
-      return i18n.tr("Agent Tunnels");
+      return i18n.tr("Agent Configurations");
    }
 
    /**
@@ -48,7 +48,7 @@ public class TunnelConfigurationElement implements ConfigurationPerspectiveEleme
    @Override
    public ImageDescriptor getImage()
    {
-      return ResourceManager.getImageDescriptor("icons/config-views/tunnel_manager.png");
+      return ResourceManager.getImageDescriptor("icons/config-views/agent_config_manager.gif");
    }
 
    /**
@@ -57,6 +57,6 @@ public class TunnelConfigurationElement implements ConfigurationPerspectiveEleme
    @Override
    public ConfigurationView createView()
    {
-      return new TunnelManager();
+      return new ServerStoredAgentConfigEditorView();
    }
 }

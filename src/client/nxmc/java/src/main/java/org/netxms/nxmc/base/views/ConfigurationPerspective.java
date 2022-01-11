@@ -26,6 +26,7 @@ import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.LabelProvider;
+import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
@@ -47,6 +48,8 @@ public class ConfigurationPerspective extends Perspective
    private static final I18n i18n = LocalizationHelper.getI18n(ConfigurationPerspective.class);
 
    private List<ConfigurationPerspectiveElement> elements = new ArrayList<ConfigurationPerspectiveElement>();
+   private ConfigurationPerspectiveElement previousSelectedElement = null;
+   private NavigationView navigationView;
 
    /**
     * The constructor.
@@ -90,7 +93,7 @@ public class ConfigurationPerspective extends Perspective
    @Override
    protected void configureViews()
    {
-      addNavigationView(new NavigationView("Configuration", null, "Configuration", true, false, false) {
+      navigationView = new NavigationView("Configuration", null, "Configuration", true, false, false) {
          private ImageCache imageCache;
          private TableViewer viewer;
 
@@ -136,8 +139,13 @@ public class ConfigurationPerspective extends Perspective
          @Override
          public void setSelection(Object selection)
          {
+            if (selection != null)
+            {
+               viewer.setSelection(new StructuredSelection(selection), true);
+            }
          }
-      });
+      };
+      addNavigationView(navigationView);
    }
 
    /**
@@ -147,6 +155,24 @@ public class ConfigurationPerspective extends Perspective
    protected void navigationSelectionChanged(IStructuredSelection selection)
    {
       ConfigurationPerspectiveElement currentElement = (ConfigurationPerspectiveElement)selection.getFirstElement();
+      
+      if (previousSelectedElement == currentElement)
+         return; //do nothing for reselection
+
+      ConfigurationView currentView = (ConfigurationView)getMainView();
+      if (currentView != null && currentView.isModified())
+      {
+         int result = currentView.promptToSaveOnClose();
+         if (result == ConfigurationView.CANCEL)
+         {
+            navigationView.setSelection(previousSelectedElement);
+            return; //Do not change view
+         }
+         else if (result == ConfigurationView.YES)
+         {
+            currentView.save();
+         }
+      }
       if (currentElement != null)
       {
          setMainView(currentElement.createView());
@@ -155,5 +181,6 @@ public class ConfigurationPerspective extends Perspective
       {
          setMainView(null);
       }
+      previousSelectedElement = currentElement;
    }
 }
