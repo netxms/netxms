@@ -170,6 +170,21 @@ HardwareComponent::HardwareComponent(HardwareComponentCategory category, const T
    m_changeCode = CHANGE_NONE;
 }
 
+HardwareComponent::HardwareComponent(const HardwareComponent& old)
+{
+   m_category = old.getCategory();
+   m_changeCode = old.getChangeCode();
+   m_index = old.getIndex();
+   m_capacity = old.getCapacity();
+   m_type = MemCopyString(old.getType());
+   m_vendor = MemCopyString(old.getVendor());
+   m_model = MemCopyString(old.getModel());
+   m_partNumber = MemCopyString(old.getPartNumber());
+   m_serialNumber = MemCopyString(old.getSerialNumber());
+   m_location = MemCopyString(old.getLocation());
+   m_description = MemCopyString(old.getDescription());
+}
+
 /**
  * Destructor
  */

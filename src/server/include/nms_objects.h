@@ -678,6 +678,7 @@ public:
             const TCHAR *vendor, const TCHAR *model, const TCHAR *partNumber, const TCHAR *serialNumber);
    HardwareComponent(DB_RESULT result, int row);
    HardwareComponent(HardwareComponentCategory category, const Table& table, int row);
+   HardwareComponent(const HardwareComponent& old);
    ~HardwareComponent();
 
    void fillMessage(NXCPMessage *msg, UINT32 baseId) const;
@@ -3420,6 +3421,7 @@ public:
 
    virtual NXSL_Array *getParentsForNXSL(NXSL_VM *vm) override;
    NXSL_Array *getInterfacesForNXSL(NXSL_VM *vm);
+   NXSL_Value* getHardwareComponentsForNXSL(NXSL_VM* vm);
 
    ObjectArray<AgentParameterDefinition> *openParamList(int origin);
    void closeParamList() { unlockProperties(); }

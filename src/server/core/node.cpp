@@ -9956,6 +9956,22 @@ NXSL_Array *Node::getInterfacesForNXSL(NXSL_VM *vm)
    return ifaces;
 }
 
+NXSL_Value* Node::getHardwareComponentsForNXSL(NXSL_VM* vm)
+{
+   NXSL_Array* a = new NXSL_Array(vm);
+   lockProperties();
+   if (m_hardwareComponents != nullptr)
+   {
+      int hcSize = m_hardwareComponents->size();
+      for (int i = 0; i < hcSize; i++)
+      {
+         a->append(vm->createValue(new NXSL_Object(vm, &g_nxslHardwareComponent, new HardwareComponent(*m_hardwareComponents->get(i)))));
+      }
+   }
+   unlockProperties();
+   return vm->createValue(a);
+}
+
 /**
  * Get switch forwarding database
  */

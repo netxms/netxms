@@ -1823,6 +1823,10 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const char *attr)
       TCHAR buffer[HARDWARE_ID_LENGTH * 2 + 1];
       value = vm->createValue(BinToStr(node->getHardwareId().value(), HARDWARE_ID_LENGTH, buffer));
    }
+   else if (compareAttributeName(attr, "hardwareComponents"))
+   {
+      value = node->getHardwareComponentsForNXSL(vm);
+   }
    else if (compareAttributeName(attr, "hasWinPDH"))
    {
       value = vm->createValue((node->getCapabilities() & NC_HAS_WINPDH) ? 1 : 0);
@@ -2508,10 +2512,76 @@ NXSL_AccessPointClass::NXSL_AccessPointClass() : NXSL_DCTargetClass()
    setName(_T("AccessPoint"));
 }
 
+NXSL_HardwareComponent::NXSL_HardwareComponent()
+{
+   setName(_T("HardwareComponent"));
+}
+
+NXSL_Value* NXSL_HardwareComponent::getAttr(NXSL_Object* object, const char* attr)
+{
+   NXSL_Value* value = NXSL_Class::getAttr(object, attr);
+   if (value != nullptr)
+      return value;
+
+   NXSL_VM* vm = object->vm();
+
+   auto hc = static_cast<HardwareComponent*>(object->getData());
+   if (compareAttributeName(attr, "changeCode"))
+   {
+      value = vm->createValue(hc->getChangeCode());
+   }
+   else if (compareAttributeName(attr, "category"))
+   {
+      value = vm->createValue(hc->getCategory());
+   }
+   else if (compareAttributeName(attr, "index"))
+   {
+      value = vm->createValue(hc->getIndex());
+   }
+   else if (compareAttributeName(attr, "capacity"))
+   {
+      value = vm->createValue(hc->getCapacity());
+   }
+   else if (compareAttributeName(attr, "type"))
+   {
+      value = vm->createValue(hc->getType());
+   }
+   else if (compareAttributeName(attr, "vendor"))
+   {
+      value = vm->createValue(hc->getVendor());
+   }
+   else if (compareAttributeName(attr, "model"))
+   {
+      value = vm->createValue(hc->getModel());
+   }
+   else if (compareAttributeName(attr, "location"))
+   {
+      value = vm->createValue(hc->getLocation());
+   }
+   else if (compareAttributeName(attr, "partNumber"))
+   {
+      value = vm->createValue(hc->getPartNumber());
+   }
+   else if (compareAttributeName(attr, "serialNumber"))
+   {
+      value = vm->createValue(hc->getSerialNumber());
+   }
+   else if (compareAttributeName(attr, "description"))
+   {
+      value = vm->createValue(hc->getDescription());
+   }
+   return value;
+}
+
+void NXSL_HardwareComponent::onObjectDelete(NXSL_Object* object)
+{
+   delete static_cast<HardwareComponent*>(object->getData());
+}
+
 /**
  * NXSL class AccessPoint: get attribute
  */
-NXSL_Value *NXSL_AccessPointClass::getAttr(NXSL_Object *object, const char *attr)
+NXSL_Value* NXSL_AccessPointClass::getAttr(NXSL_Object* object, const char* attr)
 {
    NXSL_Value *value = NXSL_DCTargetClass::getAttr(object, attr);
    if (value != nullptr)
@@ -4889,6 +4959,7 @@ NXSL_ClusterClass g_nxslClusterClass;
 NXSL_ContainerClass g_nxslContainerClass;
 NXSL_DciClass g_nxslDciClass;
 NXSL_EventClass g_nxslEventClass;
+NXSL_HardwareComponent g_nxslHardwareComponent;
 NXSL_InterfaceClass g_nxslInterfaceClass;
 NXSL_MobileDeviceClass g_nxslMobileDeviceClass;
 NXSL_NetObjClass g_nxslNetObjClass;
