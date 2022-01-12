@@ -852,17 +852,23 @@ void User::modifyFromMessage(const NXCPMessage& msg)
    {
       m_2FABindings.clear();
       size_t count = msg.getFieldAsUInt32(VID_2FA_METHOD_COUNT);
-      if (count > 0)
+      uint32_t fieldId = VID_2FA_METHOD_LIST_BASE;
+      for(int i = 0; i < count; i++)
       {
-         uint32_t fieldId = VID_2FA_METHOD_LIST_BASE;
          TCHAR methodName[MAX_OBJECT_NAME];
          msg.getFieldAsString(fieldId++, methodName, MAX_OBJECT_NAME);
          char *configSource = msg.getFieldAsUtf8String(fieldId++);
          shared_ptr<Config> config = make_shared<Config>();
-         if (config->loadConfigFromMemory(configSource, strlen(configSource), _T("2FA"), nullptr, true, false))
+         if (config->loadConfigFromMemory(configSource, strlen(configSource), _T("MethodBinding"), nullptr, true, false))
          {
             m_2FABindings.set(methodName, config);
          }
+         else
+         {
+            nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Cannot parse two factor authentication method configuration for user %s [%u]"), m_name, m_id);
+            nxlog_debug_tag(DEBUG_TAG, 3, _T("Failed configuration: %hs"), configSource);
+         }
+         MemFree(configSource);
          fieldId += 8;
       }
    }
@@ -990,7 +996,7 @@ void User::load2FABindings(DB_HANDLE hdb)
          DBGetField(hResult, i, 0, methodName, MAX_OBJECT_NAME);
          char* configuration = DBGetFieldUTF8(hResult, i, 1, nullptr, 0);
          auto binding = make_shared<Config>();
-         if (binding->loadConfigFromMemory(configuration, strlen(configuration), _T("2FA"), nullptr, true, false))
+         if (binding->loadConfigFromMemory(configuration, strlen(configuration), _T("MethodBinding"), nullptr, true, false))
          {
             m_2FABindings.set(methodName, binding);
             bindingCount++;
@@ -1031,6 +1037,7 @@ void User::fill2FAMethodBindingInfo(NXCPMessage *msg) const
       msg->setField(fieldId++, binding->key);
       msg->setField(fieldId++, binding->value->get()->createXml());
       fieldId += 8;
+      count++;
    }
    msg->setField(VID_2FA_METHOD_COUNT, count);
 }
@@ -1042,7 +1049,7 @@ uint32_t User::modify2FAMethodBinding(const TCHAR* methodName, const char* confi
 {
    auto config = make_shared<Config>();
    uint32_t rcc = RCC_INVALID_2FA_BINDING_CONFIG;
-   if (config->loadConfigFromMemory(configuration, strlen(configuration), _T("2FA"), nullptr, true, false))
+   if (config->loadConfigFromMemory(configuration, strlen(configuration), _T("MethodBinding"), nullptr, true, false))
    {
       m_2FABindings.set(methodName, config);
       m_flags |= UF_MODIFIED;

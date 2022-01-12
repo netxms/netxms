@@ -53,7 +53,7 @@ public class User extends AbstractUserObject
 	 *
 	 * @param name user name
 	 */
-	public User(final String name)
+   public User(String name)
 	{
 		super(name, USERDB_TYPE_USER);
 		fullName = "";
@@ -69,10 +69,9 @@ public class User extends AbstractUserObject
 	 *
 	 * @param src object for copy
 	 */
-	public User(final User src)
+   public User(User src)
 	{
 		super(src);
-		
 		this.authMethod = src.authMethod;
 		this.certMappingMethod = src.certMappingMethod;
 		this.certMappingData = src.certMappingData;
@@ -94,7 +93,7 @@ public class User extends AbstractUserObject
 	 *
 	 * @param msg NXCP message
 	 */
-	public User(final NXCPMessage msg)
+   public User(NXCPMessage msg)
 	{
 		super(msg, USERDB_TYPE_USER);
       authMethod = UserAuthenticationMethod.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_AUTH_METHOD));

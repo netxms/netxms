@@ -53,11 +53,11 @@ public:
 class TOTPToken : public TwoFactorAuthenticationToken
 {
 private:
-   uint8_t* m_secret;
-   uint32_t m_secretLength;
+   void* m_secret;
+   size_t m_secretLength;
 
 public:
-   TOTPToken(const TCHAR* methodName, uint8_t* secret, uint32_t secretLength) : TwoFactorAuthenticationToken(methodName)
+   TOTPToken(const TCHAR* methodName, void* secret, size_t secretLength) : TwoFactorAuthenticationToken(methodName)
    {
       m_secret = secret;
       m_secretLength = secretLength;
@@ -67,8 +67,8 @@ public:
       MemFree(m_secret);
    };
 
-   const uint8_t* getSecret() const { return m_secret; };
-   uint32_t getSecretLength() const { return m_secretLength; };
+   const void* getSecret() const { return m_secret; };
+   size_t getSecretLength() const { return m_secretLength; };
 };
 
 /**

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,8 +18,26 @@
  */
 package org.netxms.ui.eclipse.usermanager.propertypages;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jface.viewers.ArrayContentProvider;
+import org.eclipse.jface.viewers.DoubleClickEvent;
+import org.eclipse.jface.viewers.IDoubleClickListener;
+import org.eclipse.jface.viewers.ISelectionChangedListener;
+import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.LabelProvider;
+import org.eclipse.jface.viewers.SelectionChangedEvent;
+import org.eclipse.jface.viewers.TableViewer;
+import org.eclipse.jface.viewers.Viewer;
+import org.eclipse.jface.viewers.ViewerComparator;
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -37,18 +55,20 @@ import org.netxms.client.users.AbstractUserObject;
 import org.netxms.client.users.User;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.usermanager.Activator;
 import org.netxms.ui.eclipse.usermanager.Messages;
+import org.netxms.ui.eclipse.usermanager.dialogs.TwoFactorAuthMethodEditDialog;
 
 /**
  * User's "authentication" property page
- *
  */
 public class Authentication extends PropertyPage
 {
 	private NXCSession session;
 	private User object;
+   private List<MethodBinding> twoFactorAuthMethodBindings;
 	private Button checkDisabled;
 	private Button checkChangePassword;
 	private Button checkFixedPassword;
@@ -56,7 +76,8 @@ public class Authentication extends PropertyPage
 	private Combo comboAuthMethod;
 	private Combo comboMappingMethod;
 	private Text textMappingData;
-	
+   private TableViewer twoFactorAuthMethodList;
+
 	/**
 	 * Default constructor
 	 */
@@ -73,29 +94,29 @@ public class Authentication extends PropertyPage
 	protected Control createContents(Composite parent)
 	{
 		Composite dialogArea = new Composite(parent, SWT.NONE);
-		object = (User)getElement().getAdapter(AbstractUserObject.class);
-		
+      object = getElement().getAdapter(User.class);
+
 		GridLayout layout = new GridLayout();
 		layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
       dialogArea.setLayout(layout);
 
       Group groupFlags = new Group(dialogArea, SWT.NONE);
       groupFlags.setText(Messages.get().Authentication_AccountOptions);
-      GridLayout groupFlagsLayout = new GridLayout();
-      groupFlags.setLayout(groupFlagsLayout);
-		GridData gridData = new GridData();
-		gridData.horizontalAlignment = GridData.FILL;
-		gridData.grabExcessHorizontalSpace = true;
-		groupFlags.setLayoutData(gridData);
-		
+      layout = new GridLayout();
+      groupFlags.setLayout(layout);
+		GridData gd = new GridData();
+		gd.horizontalAlignment = GridData.FILL;
+		gd.grabExcessHorizontalSpace = true;
+		groupFlags.setLayoutData(gd);
+
       checkDisabled = new Button(groupFlags, SWT.CHECK);
       checkDisabled.setText(Messages.get().Authentication_AccountDisabled);
       checkDisabled.setSelection(object.isDisabled());
-		
+
       checkChangePassword = new Button(groupFlags, SWT.CHECK);
       checkChangePassword.setText(Messages.get().Authentication_MustChangePassword);
       checkChangePassword.setSelection(object.isPasswordChangeNeeded());
-		
+
       checkFixedPassword = new Button(groupFlags, SWT.CHECK);
       checkFixedPassword.setText(Messages.get().Authentication_CannotChangePassword);
       checkFixedPassword.setSelection(object.isPasswordChangeForbidden());
@@ -103,17 +124,17 @@ public class Authentication extends PropertyPage
       checkCloseSessions = new Button(groupFlags, SWT.CHECK);
       checkCloseSessions.setText(Messages.get().Authentication_CloseOtherSessions);
       checkCloseSessions.setSelection((object.getFlags() & User.CLOSE_OTHER_SESSIONS) != 0);
-      
+
       Group groupMethod = new Group(dialogArea, SWT.NONE);
       groupMethod.setText(Messages.get().Authentication_AuthMethod_Group);
-      GridLayout groupMethodLayout = new GridLayout();
-      groupMethodLayout.numColumns = 2;
-      groupMethod.setLayout(groupMethodLayout);
-		gridData = new GridData();
-		gridData.horizontalAlignment = GridData.FILL;
-		gridData.grabExcessHorizontalSpace = true;
-		groupMethod.setLayoutData(gridData);
-		
+      layout = new GridLayout();
+      layout.numColumns = 2;
+      groupMethod.setLayout(layout);
+		gd = new GridData();
+		gd.horizontalAlignment = GridData.FILL;
+		gd.grabExcessHorizontalSpace = true;
+		groupMethod.setLayoutData(gd);
+
 		Label label = new Label(groupMethod, SWT.NONE);
 		label.setText(Messages.get().Authentication_AuthMethod_Label);
 		comboAuthMethod = new Combo(groupMethod, SWT.DROP_DOWN | SWT.READ_ONLY);
@@ -124,11 +145,11 @@ public class Authentication extends PropertyPage
 		comboAuthMethod.add(Messages.get().Authentication_CertificateOrRADIUS);
       comboAuthMethod.add(Messages.get().Authentication_LDAP);
       comboAuthMethod.select(object.getAuthMethod().getValue());
-		gridData = new GridData();
-		gridData.horizontalAlignment = GridData.FILL;
-		gridData.grabExcessHorizontalSpace = true;
-		comboAuthMethod.setLayoutData(gridData);
-		
+		gd = new GridData();
+		gd.horizontalAlignment = GridData.FILL;
+		gd.grabExcessHorizontalSpace = true;
+		comboAuthMethod.setLayoutData(gd);
+
 		label = new Label(groupMethod, SWT.NONE);
 		label.setText(Messages.get().Authentication_CertMapping);
 		comboMappingMethod = new Combo(groupMethod, SWT.DROP_DOWN | SWT.READ_ONLY);
@@ -137,22 +158,165 @@ public class Authentication extends PropertyPage
       comboMappingMethod.add(Messages.get().Authentication_CommonName);
       comboMappingMethod.add("Template ID");
       comboMappingMethod.select(object.getCertMappingMethod().getValue());
-		gridData = new GridData();
-		gridData.horizontalAlignment = GridData.FILL;
-		gridData.grabExcessHorizontalSpace = true;
-		comboMappingMethod.setLayoutData(gridData);
+		gd = new GridData();
+		gd.horizontalAlignment = GridData.FILL;
+		gd.grabExcessHorizontalSpace = true;
+		comboMappingMethod.setLayoutData(gd);
 
-		gridData = new GridData();
-		gridData.horizontalAlignment = GridData.FILL;
-		gridData.grabExcessHorizontalSpace = true;
-		gridData.horizontalSpan = 2;
-		gridData.widthHint = 300;
+		gd = new GridData();
+		gd.horizontalAlignment = GridData.FILL;
+		gd.grabExcessHorizontalSpace = true;
+		gd.horizontalSpan = 2;
+		gd.widthHint = 300;
       textMappingData = WidgetHelper.createLabeledText(groupMethod, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT, Messages.get().Authentication_MappingData,
-                                                       object.getCertMappingData(), gridData);
-      
+                                                       object.getCertMappingData(), gd);
+
+      Group twoFactorAuth = new Group(dialogArea, SWT.NONE);
+      twoFactorAuth.setText("Two-factor authentication methods");
+      layout = new GridLayout();
+      layout.numColumns = 2;
+      twoFactorAuth.setLayout(layout);
+      gd = new GridData();
+      gd.horizontalAlignment = GridData.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      twoFactorAuth.setLayoutData(gd);
+
+      twoFactorAuthMethodList = new TableViewer(twoFactorAuth, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
+      twoFactorAuthMethodList.getControl().setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+      twoFactorAuthMethodList.setContentProvider(new ArrayContentProvider());
+      twoFactorAuthMethodList.setLabelProvider(new LabelProvider() {
+         @Override
+         public String getText(Object element)
+         {
+            return ((MethodBinding)element).name;
+         }
+      });
+      twoFactorAuthMethodList.setComparator(new ViewerComparator() {
+         @Override
+         public int compare(Viewer viewer, Object e1, Object e2)
+         {
+            return ((MethodBinding)e1).name.compareToIgnoreCase(((MethodBinding)e2).name);
+         }
+      });
+
+      Composite buttons = new Composite(twoFactorAuth, SWT.NONE);
+      layout = new GridLayout();
+      layout.marginWidth = 0;
+      layout.marginHeight = 0;
+      buttons.setLayout(layout);
+      gd = new GridData();
+      gd.verticalAlignment = SWT.TOP;
+      buttons.setLayoutData(gd);
+
+      final Button addButton = new Button(buttons, SWT.PUSH);
+      gd = new GridData();
+      gd.widthHint = WidgetHelper.BUTTON_WIDTH_HINT;
+      addButton.setLayoutData(gd);
+      addButton.setText(Messages.get().Members_Add);
+      addButton.addSelectionListener(new SelectionAdapter() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            addMethod();
+         }
+      });
+
+      final Button editButton = new Button(buttons, SWT.PUSH);
+      gd = new GridData();
+      gd.widthHint = WidgetHelper.BUTTON_WIDTH_HINT;
+      editButton.setLayoutData(gd);
+      editButton.setText("&Edit...");
+      editButton.setEnabled(false);
+      editButton.addSelectionListener(new SelectionAdapter() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            editMethod();
+         }
+      });
+
+      final Button deleteButton = new Button(buttons, SWT.PUSH);
+      gd = new GridData();
+      gd.widthHint = WidgetHelper.BUTTON_WIDTH_HINT;
+      deleteButton.setLayoutData(gd);
+      deleteButton.setText(Messages.get().Members_Delete);
+      deleteButton.setEnabled(false);
+      deleteButton.addSelectionListener(new SelectionAdapter() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            IStructuredSelection selection = twoFactorAuthMethodList.getStructuredSelection();
+            for(Object o : selection.toList())
+               twoFactorAuthMethodBindings.remove(o);
+            twoFactorAuthMethodList.refresh();
+         }
+      });
+
+      twoFactorAuthMethodList.addSelectionChangedListener(new ISelectionChangedListener() {
+         @Override
+         public void selectionChanged(SelectionChangedEvent event)
+         {
+            IStructuredSelection selection = twoFactorAuthMethodList.getStructuredSelection();
+            editButton.setEnabled(selection.size() == 1);
+            deleteButton.setEnabled(!selection.isEmpty());
+         }
+      });
+      twoFactorAuthMethodList.addDoubleClickListener(new IDoubleClickListener() {
+         @Override
+         public void doubleClick(DoubleClickEvent event)
+         {
+            editMethod();
+         }
+      });
+
+      twoFactorAuthMethodBindings = new ArrayList<MethodBinding>(object.getTwoFactorAuthMethodBindings().size());
+      for(Entry<String, String> e : object.getTwoFactorAuthMethodBindings().entrySet())
+         twoFactorAuthMethodBindings.add(new MethodBinding(e.getKey(), e.getValue()));
+      twoFactorAuthMethodList.setInput(twoFactorAuthMethodBindings);
+
 		return dialogArea;
 	}
-	
+
+   /**
+    * Add new method
+    */
+   private void addMethod()
+   {
+      TwoFactorAuthMethodEditDialog dlg = new TwoFactorAuthMethodEditDialog(getShell(), null, null);
+      if (dlg.open() != Window.OK)
+         return;
+
+      for(MethodBinding b : twoFactorAuthMethodBindings)
+      {
+         if (b.name.equals(dlg.getName()))
+         {
+            MessageDialogHelper.openError(getShell(), "Error", String.format("Two-factor authentication method %s already configured", b.name));
+            return;
+         }
+      }
+
+      twoFactorAuthMethodBindings.add(new MethodBinding(dlg.getName(), dlg.getConfiguration()));
+      twoFactorAuthMethodList.refresh();
+   }
+
+   /**
+    * Edit selected method
+    */
+   private void editMethod()
+   {
+      IStructuredSelection selection = twoFactorAuthMethodList.getStructuredSelection();
+      if (selection.size() != 1)
+         return;
+
+      MethodBinding b = (MethodBinding)selection.getFirstElement();
+      TwoFactorAuthMethodEditDialog dlg = new TwoFactorAuthMethodEditDialog(getShell(), b.name, b.configuration);
+      if (dlg.open() != Window.OK)
+         return;
+
+      b.configuration = dlg.getConfiguration();
+      twoFactorAuthMethodList.refresh();
+   }
+
 	/**
 	 * Apply changes
 	 * 
@@ -172,20 +336,26 @@ public class Authentication extends PropertyPage
          flags |= AbstractUserObject.CLOSE_OTHER_SESSIONS;
 		flags |= object.getFlags() & AbstractUserObject.LDAP_USER;
 		object.setFlags(flags);
-		
+
 		// Authentication
       object.setAuthMethod(UserAuthenticationMethod.getByValue(comboAuthMethod.getSelectionIndex()));
       object.setCertMappingMethod(CertificateMappingMethod.getByValue(comboMappingMethod.getSelectionIndex()));
 		object.setCertMappingData(textMappingData.getText());
-		
+
+      // Two-factor authentication
+      Map<String, String> bindings = new HashMap<String, String>(twoFactorAuthMethodBindings.size());
+      for(MethodBinding b : twoFactorAuthMethodBindings)
+         bindings.put(b.name, b.configuration);
+      object.setTwoFactorAuthMethodBindings(bindings);
+
 		if (isApply)
 			setValid(false);
-		
-		new ConsoleJob(Messages.get().Authentication_JobTitle, null, Activator.PLUGIN_ID, null) {
+
+      new ConsoleJob(Messages.get().Authentication_JobTitle, null, Activator.PLUGIN_ID) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				session.modifyUserDBObject(object, AbstractUserObject.MODIFY_FLAGS | AbstractUserObject.MODIFY_AUTH_METHOD | AbstractUserObject.MODIFY_CERT_MAPPING);
+				session.modifyUserDBObject(object, AbstractUserObject.MODIFY_FLAGS | AbstractUserObject.MODIFY_AUTH_METHOD | AbstractUserObject.MODIFY_2FA_BINDINGS | AbstractUserObject.MODIFY_CERT_MAPPING);
 			}
 
 			@Override
@@ -211,9 +381,9 @@ public class Authentication extends PropertyPage
 		}.start();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performOk()
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performOk()
+    */
 	@Override
 	public boolean performOk()
 	{
@@ -221,12 +391,27 @@ public class Authentication extends PropertyPage
 		return true;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performApply()
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performApply()
+    */
 	@Override
 	protected void performApply()
 	{
 		applyChanges(true);
 	}
+
+   /**
+    * Two-factor authentication method binding
+    */
+   private static class MethodBinding
+   {
+      String name;
+      String configuration;
+
+      public MethodBinding(String name, String configuration)
+      {
+         this.name = name;
+         this.configuration = configuration;
+      }
+   }
 }

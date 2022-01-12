@@ -155,7 +155,7 @@ public:
 	void unlock() { m_mutex.unlock(); }
 
 	void setTopLevelTag(const TCHAR *topLevelTag) { m_root->setName(topLevelTag); }
-   
+
    void setMergeStrategy(ConfigMergeStrategy s) { m_mergeStrategy = s; }
    ConfigMergeStrategy getMergeStrategy() const { return m_mergeStrategy; }
 

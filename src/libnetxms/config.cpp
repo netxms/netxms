@@ -744,7 +744,7 @@ void ConfigEntry::createXml(StringBuffer &xml, int level) const
  */
 Config::Config(bool allowMacroExpansion)
 {
-   m_root = new ConfigEntry(_T("[root]"), nullptr, this, nullptr, 0, 0);
+   m_root = new ConfigEntry(_T("config"), nullptr, this, nullptr, 0, 0);
    m_errorCount = 0;
    m_allowMacroExpansion = allowMacroExpansion;
    m_mergeStrategy = nullptr;

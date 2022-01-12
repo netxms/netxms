@@ -78,7 +78,7 @@ bool TwoFactorAuthenticationMethod::saveToDatabase(const char *configuration) co
    }
    else
    {
-      hStmt = DBPrepare(hdb, _T("INSERT INTO two_factor_auth_methods (driver,description,configuration,name) VALUES (?,?,?)"));
+      hStmt = DBPrepare(hdb, _T("INSERT INTO two_factor_auth_methods (driver,description,configuration,name) VALUES (?,?,?,?)"));
    }
    if (hStmt != nullptr)
    {
@@ -115,17 +115,15 @@ public:
  */
 TwoFactorAuthenticationToken* TOTPAuthMethod::prepareChallenge(uint32_t userId)
 {
-   shared_ptr<Config> binding = GetUser2FAMethodBinding(userId, m_methodName);
    TwoFactorAuthenticationToken* token = nullptr;
+   shared_ptr<Config> binding = GetUser2FAMethodBinding(userId, m_methodName);
    if (binding != nullptr)
    {
-      const TCHAR* secret = binding->getValue(_T("/2FA/Secret"));
+      const TCHAR* secret = binding->getValue(_T("/MethodBinding/Secret"));
       if (secret != nullptr)
       {
-         uint32_t secretLength = static_cast<uint32_t>(_tcslen(secret) / 2);
-         uint8_t *secretData = MemAllocArray<uint8_t>(secretLength);
-         StrToBin(secret, secretData, secretLength);
-         token = new TOTPToken(m_methodName, secretData, secretLength);
+         char *secretData = UTF8StringFromTString(secret);
+         token = new TOTPToken(m_methodName, secretData, strlen(secretData));
       }
    }
    return token;
@@ -136,26 +134,24 @@ TwoFactorAuthenticationToken* TOTPAuthMethod::prepareChallenge(uint32_t userId)
  */
 bool TOTPAuthMethod::validateResponse(TwoFactorAuthenticationToken* token, const TCHAR* response)
 {
-   if (!_tcscmp(token->getMethodName(), m_methodName))
+   if (_tcscmp(token->getMethodName(), m_methodName))
+      return false;
+
+   auto totpToken = static_cast<TOTPToken*>(token);
+   time_t now = time(nullptr);
+   for (uint64_t i = 0; i < 3; i++) // we will test current time factor, previous and next
    {
-      auto pToken = static_cast<TOTPToken*>(token);
-      time_t now = time(NULL);
-      for (uint64_t i = 0; i < 3; i++) // we will test current time factor, previous and next
+      uint64_t timeFactor = htonq(((now / _ULL(30)) + i) - _ULL(2));
+      BYTE hash[SHA1_DIGEST_SIZE];
+      uint32_t hashLen;
+      HMAC(EVP_sha1(), totpToken->getSecret(), static_cast<int>(totpToken->getSecretLength()), reinterpret_cast<const BYTE*>(&timeFactor), sizeof(uint64_t), hash, &hashLen);
+      int offset = static_cast<int>(hash[SHA1_DIGEST_SIZE - 1] & 0x0F);
+      uint32_t challenge;
+      memcpy(&challenge, &hash[offset], sizeof(uint32_t));
+      challenge = (ntohl(challenge) & 0x7FFFFFFF) % 1000000;
+      if (challenge == _tcstol(response, nullptr, 10))
       {
-         //calculating TOTP challenge
-         uint64_t timeFactor = htonq(((now / 30lu) + i) - 2lu);
-         uint8_t hash[SHA1_DIGEST_SIZE];
-         uint32_t hashLen;
-         HMAC(EVP_sha1(), pToken->getSecret(), static_cast<int>(pToken->getSecretLength()),
-          reinterpret_cast<const BYTE*>(&timeFactor), sizeof(uint64_t), hash, &hashLen);
-         int offset = (int)(hash[SHA1_DIGEST_SIZE - 1] & 0x0F);
-         uint32_t challenge;
-         memcpy(&challenge, hash+offset, sizeof(uint32_t));
-         challenge = (ntohl(challenge) & 0x7FFFFFFF) % 1000000;
-         if (challenge == (uint32_t)_tcstol(response, nullptr, 10))
-         {
-            return true;
-         }
+         return true;
       }
    }
    return false;
@@ -182,11 +178,15 @@ public:
  */
 MessageAuthMethod::MessageAuthMethod(const TCHAR* name, const TCHAR* description, const Config& config) : TwoFactorAuthenticationMethod(name, description, config)
 {
-   const TCHAR* channelName = config.getValue(_T("/2FA/ChannelName"));
+   const TCHAR* channelName = config.getValue(_T("/MethodConfiguration/ChannelName"));
    if (channelName != nullptr)
    {
       _tcslcpy(m_channelName, channelName, MAX_OBJECT_NAME);
       m_isValid = true;
+   }
+   else
+   {
+      m_channelName[0] = 0;
    }
 }
 
@@ -206,8 +206,8 @@ TwoFactorAuthenticationToken* MessageAuthMethod::prepareChallenge(uint32_t userI
    _sntprintf(challengeStr, 7, _T("%06u"), challenge);
 
    TCHAR userName[MAX_USER_NAME];
-   TCHAR *recipient = MemCopyString(binding->getValue(_T("/2FA/Recipient"), ResolveUserId(userId, userName, true)));
-   const TCHAR *subject = binding->getValue(_T("/2FA/Subject"), _T("NetXMS two-factor authentication code"));
+   TCHAR *recipient = MemCopyString(binding->getValue(_T("/MethodBinding/Recipient"), ResolveUserId(userId, userName, true)));
+   const TCHAR *subject = binding->getValue(_T("/MethodBinding/Subject"), _T("NetXMS two-factor authentication code"));
    SendNotification(m_channelName, recipient, subject, challengeStr);
    MemFree(recipient);
 
@@ -219,6 +219,9 @@ TwoFactorAuthenticationToken* MessageAuthMethod::prepareChallenge(uint32_t userI
  */
 bool MessageAuthMethod::validateResponse(TwoFactorAuthenticationToken *token, const TCHAR *response)
 {
+   if (_tcscmp(token->getMethodName(), m_methodName))
+      return false;
+
    return static_cast<MessageToken*>(token)->getSecret() == _tcstol(response, nullptr, 10);
 }
 
@@ -229,13 +232,13 @@ static TwoFactorAuthenticationMethod* CreateAuthenticationMethod(const TCHAR* na
 {
    TwoFactorAuthenticationMethod* method = nullptr;
    Config config;
-   if (config.loadConfigFromMemory(configData, strlen(configData), _T("2FA"), nullptr, true, false))
+   if (config.loadConfigFromMemory(configData, strlen(configData), _T("MethodConfiguration"), nullptr, true, false))
    {
       if (!_tcscmp(driver, _T("TOTP")))
       {
          method = new TOTPAuthMethod(name, description, config);
       }
-      if (!_tcscmp(driver, _T("Message")))
+      else if (!_tcscmp(driver, _T("Message")))
       {
          method = new MessageAuthMethod(name, description, config);
       }
