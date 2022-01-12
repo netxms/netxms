@@ -9915,7 +9915,7 @@ void Node::updateInterfaceNames(ClientSession *pSession, UINT32 rqId)
 /**
  * Get list of parent objects for NXSL script
  */
-NXSL_Array *Node::getParentsForNXSL(NXSL_VM *vm)
+NXSL_Value *Node::getParentsForNXSL(NXSL_VM *vm)
 {
    NXSL_Array *parents = new NXSL_Array(vm);
    int index = 0;
@@ -9931,13 +9931,13 @@ NXSL_Array *Node::getParentsForNXSL(NXSL_VM *vm)
    }
    unlockParentList();
 
-   return parents;
+   return vm->createValue(parents);
 }
 
 /**
  * Get list of interface objects for NXSL script
  */
-NXSL_Array *Node::getInterfacesForNXSL(NXSL_VM *vm)
+NXSL_Value *Node::getInterfacesForNXSL(NXSL_VM *vm)
 {
    NXSL_Array *ifaces = new NXSL_Array(vm);
    int index = 0;
@@ -9953,10 +9953,13 @@ NXSL_Array *Node::getInterfacesForNXSL(NXSL_VM *vm)
    }
    unlockChildList();
 
-   return ifaces;
+   return vm->createValue(ifaces);
 }
 
-NXSL_Value* Node::getHardwareComponentsForNXSL(NXSL_VM* vm)
+/**
+ * Get list of hardware components for NXSL script
+ */
+NXSL_Value *Node::getHardwareComponentsForNXSL(NXSL_VM* vm)
 {
    NXSL_Array* a = new NXSL_Array(vm);
    lockProperties();

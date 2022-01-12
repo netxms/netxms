@@ -459,7 +459,7 @@ static int F_FindNodeBySysName(int argc, NXSL_Value **argv, NXSL_Value **result,
  * First argument: node object
  * Returns array of accessible parent objects
  */
-static int F_GetNodeParents(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+static int F_GetNodeParents(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
 	if (!argv[0]->isObject())
 		return NXSL_ERR_NOT_OBJECT;
@@ -469,7 +469,7 @@ static int F_GetNodeParents(int argc, NXSL_Value **argv, NXSL_Value **ppResult, 
 		return NXSL_ERR_BAD_CLASS;
 
 	Node *node = static_cast<shared_ptr<Node>*>(object->getData())->get();
-	*ppResult = vm->createValue(node->getParentsForNXSL(vm));
+	*result = node->getParentsForNXSL(vm);
 	return 0;
 }
 
@@ -497,7 +497,7 @@ static int F_GetNodeTemplates(int argc, NXSL_Value **argv, NXSL_Value **ppResult
  * First argument: NetXMS object (NetObj, Node, or Interface)
  * Returns array of accessible parent objects
  */
-static int F_GetObjectParents(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+static int F_GetObjectParents(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
 	if (!argv[0]->isObject())
 		return NXSL_ERR_NOT_OBJECT;
@@ -507,7 +507,7 @@ static int F_GetObjectParents(int argc, NXSL_Value **argv, NXSL_Value **ppResult
 		return NXSL_ERR_BAD_CLASS;
 
 	NetObj *netobj = static_cast<shared_ptr<NetObj>*>(object->getData())->get();
-	*ppResult = vm->createValue(netobj->getParentsForNXSL(vm));
+	*result = netobj->getParentsForNXSL(vm);
 	return 0;
 }
 
@@ -516,7 +516,7 @@ static int F_GetObjectParents(int argc, NXSL_Value **argv, NXSL_Value **ppResult
  * First argument: NetXMS object (NetObj, Node, or Interface)
  * Returns array of accessible child objects
  */
-static int F_GetObjectChildren(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+static int F_GetObjectChildren(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
 	if (!argv[0]->isObject())
 		return NXSL_ERR_NOT_OBJECT;
@@ -526,7 +526,7 @@ static int F_GetObjectChildren(int argc, NXSL_Value **argv, NXSL_Value **ppResul
 		return NXSL_ERR_BAD_CLASS;
 
    NetObj *netobj = static_cast<shared_ptr<NetObj>*>(object->getData())->get();
-	*ppResult = vm->createValue(netobj->getChildrenForNXSL(vm));
+	*result = netobj->getChildrenForNXSL(vm);
 	return 0;
 }
 
@@ -535,7 +535,7 @@ static int F_GetObjectChildren(int argc, NXSL_Value **argv, NXSL_Value **ppResul
  * First argument: node object
  * Returns array of interface objects
  */
-static int F_GetNodeInterfaces(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+static int F_GetNodeInterfaces(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
 	if (!argv[0]->isObject())
 		return NXSL_ERR_NOT_OBJECT;
@@ -545,7 +545,7 @@ static int F_GetNodeInterfaces(int argc, NXSL_Value **argv, NXSL_Value **ppResul
 		return NXSL_ERR_BAD_CLASS;
 
    Node *node = static_cast<shared_ptr<Node>*>(object->getData())->get();
-	*ppResult = vm->createValue(node->getInterfacesForNXSL(vm));
+	*result = node->getInterfacesForNXSL(vm);
 	return 0;
 }
 
@@ -554,7 +554,7 @@ static int F_GetNodeInterfaces(int argc, NXSL_Value **argv, NXSL_Value **ppResul
  * Returns array of accessible node objects
  * (empty array if trusted nodes check is on and current node not provided)
  */
-static int F_GetAllNodes(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+static int F_GetAllNodes(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
    if (argc > 1)
       return NXSL_ERR_INVALID_ARGUMENT_COUNT;
@@ -586,7 +586,7 @@ static int F_GetAllNodes(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXS
          }
       }
    }
-   *ppResult = vm->createValue(a);
+   *result = vm->createValue(a);
    return 0;
 }
 

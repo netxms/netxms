@@ -678,10 +678,10 @@ public:
             const TCHAR *vendor, const TCHAR *model, const TCHAR *partNumber, const TCHAR *serialNumber);
    HardwareComponent(DB_RESULT result, int row);
    HardwareComponent(HardwareComponentCategory category, const Table& table, int row);
-   HardwareComponent(const HardwareComponent& old);
+   HardwareComponent(const HardwareComponent& src);
    ~HardwareComponent();
 
-   void fillMessage(NXCPMessage *msg, UINT32 baseId) const;
+   void fillMessage(NXCPMessage *msg, uint32_t baseId) const;
    bool saveToDatabase(DB_STATEMENT hStmt) const;
 
    ChangeCode getChangeCode() const { return m_changeCode; };
@@ -1304,8 +1304,8 @@ public:
    shared_ptr<NetObj> findChildObject(const TCHAR *name, int typeFilter) const;
    shared_ptr<Node> findChildNode(const InetAddress& addr) const;
 
-   virtual NXSL_Array *getParentsForNXSL(NXSL_VM *vm);
-   virtual NXSL_Array *getChildrenForNXSL(NXSL_VM *vm);
+   virtual NXSL_Value *getParentsForNXSL(NXSL_VM *vm);
+   virtual NXSL_Value *getChildrenForNXSL(NXSL_VM *vm);
 
    virtual bool showThresholdSummary() const;
    virtual bool isEventSource() const;
@@ -3419,9 +3419,9 @@ public:
    uint32_t getMetricForClient(int origin, uint32_t userId, const TCHAR *name, TCHAR *buffer, size_t size);
    uint32_t getTableForClient(const TCHAR *name, shared_ptr<Table> *table);
 
-   virtual NXSL_Array *getParentsForNXSL(NXSL_VM *vm) override;
-   NXSL_Array *getInterfacesForNXSL(NXSL_VM *vm);
-   NXSL_Value* getHardwareComponentsForNXSL(NXSL_VM* vm);
+   virtual NXSL_Value *getParentsForNXSL(NXSL_VM *vm) override;
+   NXSL_Value *getInterfacesForNXSL(NXSL_VM *vm);
+   NXSL_Value *getHardwareComponentsForNXSL(NXSL_VM* vm);
 
    ObjectArray<AgentParameterDefinition> *openParamList(int origin);
    void closeParamList() { unlockProperties(); }

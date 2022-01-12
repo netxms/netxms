@@ -732,7 +732,7 @@ NXSL_Value *NXSL_NetObjClass::getAttr(NXSL_Object *_object, const char *attr)
    }
    else if (compareAttributeName(attr, "children"))
    {
-      value = vm->createValue(object->getChildrenForNXSL(vm));
+      value = object->getChildrenForNXSL(vm);
    }
    else if (compareAttributeName(attr, "city"))
    {
@@ -800,7 +800,7 @@ NXSL_Value *NXSL_NetObjClass::getAttr(NXSL_Object *_object, const char *attr)
    }
    else if (compareAttributeName(attr, "parents"))
    {
-      value = vm->createValue(object->getParentsForNXSL(vm));
+      value = object->getParentsForNXSL(vm);
    }
    else if (compareAttributeName(attr, "postcode"))
    {
@@ -1873,7 +1873,7 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const char *attr)
    }
    else if (compareAttributeName(attr, "interfaces"))
    {
-      value = vm->createValue(node->getInterfacesForNXSL(vm));
+      value = node->getInterfacesForNXSL(vm);
    }
    else if (compareAttributeName(attr, "isAgent"))
    {

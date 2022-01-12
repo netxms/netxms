@@ -2004,7 +2004,7 @@ bool NetObj::isTrustedNode(uint32_t id) const
 /**
  * Get list of parent objects for NXSL script
  */
-NXSL_Array *NetObj::getParentsForNXSL(NXSL_VM *vm)
+NXSL_Value *NetObj::getParentsForNXSL(NXSL_VM *vm)
 {
 	NXSL_Array *parents = new NXSL_Array(vm);
 	int index = 0;
@@ -2020,13 +2020,13 @@ NXSL_Array *NetObj::getParentsForNXSL(NXSL_VM *vm)
 	}
 	unlockParentList();
 
-	return parents;
+	return vm->createValue(parents);
 }
 
 /**
  * Get list of child objects for NXSL script
  */
-NXSL_Array *NetObj::getChildrenForNXSL(NXSL_VM *vm)
+NXSL_Value *NetObj::getChildrenForNXSL(NXSL_VM *vm)
 {
 	NXSL_Array *children = new NXSL_Array(vm);
 	int index = 0;
@@ -2038,7 +2038,7 @@ NXSL_Array *NetObj::getChildrenForNXSL(NXSL_VM *vm)
 	}
 	unlockChildList();
 
-	return children;
+	return vm->createValue(children);
 }
 
 /**

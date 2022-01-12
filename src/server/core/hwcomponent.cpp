@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Raden Solutions
+** Copyright (C) 2003-2022 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -170,19 +170,22 @@ HardwareComponent::HardwareComponent(HardwareComponentCategory category, const T
    m_changeCode = CHANGE_NONE;
 }
 
-HardwareComponent::HardwareComponent(const HardwareComponent& old)
+/**
+ * Copy constructor
+ */
+HardwareComponent::HardwareComponent(const HardwareComponent& src)
 {
-   m_category = old.getCategory();
-   m_changeCode = old.getChangeCode();
-   m_index = old.getIndex();
-   m_capacity = old.getCapacity();
-   m_type = MemCopyString(old.getType());
-   m_vendor = MemCopyString(old.getVendor());
-   m_model = MemCopyString(old.getModel());
-   m_partNumber = MemCopyString(old.getPartNumber());
-   m_serialNumber = MemCopyString(old.getSerialNumber());
-   m_location = MemCopyString(old.getLocation());
-   m_description = MemCopyString(old.getDescription());
+   m_category = src.m_category;
+   m_changeCode = src.m_changeCode;
+   m_index = src.m_index;
+   m_capacity = src.m_capacity;
+   m_type = MemCopyString(src.m_type);
+   m_vendor = MemCopyString(src.m_vendor);
+   m_model = MemCopyString(src.m_model);
+   m_partNumber = MemCopyString(src.m_partNumber);
+   m_serialNumber = MemCopyString(src.m_serialNumber);
+   m_location = MemCopyString(src.m_location);
+   m_description = MemCopyString(src.m_description);
 }
 
 /**
@@ -202,9 +205,9 @@ HardwareComponent::~HardwareComponent()
 /**
  * Fill NXCPMessage
  */
-void HardwareComponent::fillMessage(NXCPMessage *msg, UINT32 baseId) const
+void HardwareComponent::fillMessage(NXCPMessage *msg, uint32_t baseId) const
 {
-   UINT32 fieldId = baseId;
+   uint32_t fieldId = baseId;
    msg->setField(fieldId++, static_cast<INT16>(m_category));
    msg->setField(fieldId++, m_index);
    msg->setField(fieldId++, CHECK_NULL_EX(m_type));
@@ -219,7 +222,7 @@ void HardwareComponent::fillMessage(NXCPMessage *msg, UINT32 baseId) const
 
 /**
  * Save to database
- * Field oerder: node_id,category,component_index,hw_type,vendor,model,location,capacity,part_number,serial_number,description
+ * Field order: node_id,category,component_index,hw_type,vendor,model,location,capacity,part_number,serial_number,description
  */
 bool HardwareComponent::saveToDatabase(DB_STATEMENT hStmt) const
 {
