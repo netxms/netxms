@@ -4310,12 +4310,12 @@ void ClientSession::forceDCIPoll(const NXCPMessage& request)
                   dci->requestForcePoll(this);
                   response.setField(VID_RCC, RCC_SUCCESS);
                   debugPrintf(4, _T("ForceDCIPoll: DCI %d at node %d"), dciId, object->getId());
-                  writeAuditLog(AUDIT_OBJECTS, true, object->getId(), _T("Forced DCI poll initiated for DCI \"%s\" [%u]"), dci->getDescription(), dci->getId());
+                  writeAuditLog(AUDIT_OBJECTS, true, object->getId(), _T("Forced DCI poll initiated for DCI \"%s\" [%u]"), dci->getDescription().cstr(), dci->getId());
 				   }
 				   else  // User doesn't have access to this DCI
 				   {
 		            response.setField(VID_RCC, RCC_ACCESS_DENIED);
-		            writeAuditLog(AUDIT_OBJECTS, false, object->getId(), _T("Access denied on forced poll for DCI \"%s\" [%u]"), dci->getDescription(), dci->getId());
+		            writeAuditLog(AUDIT_OBJECTS, false, object->getId(), _T("Access denied on forced poll for DCI \"%s\" [%u]"), dci->getDescription().cstr(), dci->getId());
 				   }
 				}
 				else

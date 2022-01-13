@@ -2165,6 +2165,12 @@ NXSL_Value *NXSL_ServerEnv::getConstantValue(const NXSL_Identifier& name, NXSL_V
 
    if (name.value[0] == 'C')
    {
+      // Change code
+      NXSL_ENV_CONSTANT("ChangeCode::ADDED", static_cast<int32_t>(ChangeCode::CHANGE_ADDED));
+      NXSL_ENV_CONSTANT("ChangeCode::NONE", static_cast<int32_t>(ChangeCode::CHANGE_NONE));
+      NXSL_ENV_CONSTANT("ChangeCode::REMOVED", static_cast<int32_t>(ChangeCode::CHANGE_REMOVED));
+      NXSL_ENV_CONSTANT("ChangeCode::UPDATED", static_cast<int32_t>(ChangeCode::CHANGE_UPDATED));
+
       // Cluster state flags
       NXSL_ENV_CONSTANT("ClusterState::Unreachable", DCSF_UNREACHABLE);
       NXSL_ENV_CONSTANT("ClusterState::NetworkPathProblem", DCSF_NETWORK_PATH_PROBLEM);
@@ -2218,20 +2224,14 @@ NXSL_Value *NXSL_ServerEnv::getConstantValue(const NXSL_Identifier& name, NXSL_V
 
    if (name.value[0] == 'H')
    {
-      // Hardware component ChangeCode
-      NXSL_ENV_CONSTANT("HardwareComponent::NOCHANGE", static_cast<int32_t>(ChangeCode::CHANGE_NONE));
-      NXSL_ENV_CONSTANT("HardwareComponent::ADDED", static_cast<int32_t>(ChangeCode::CHANGE_ADDED));
-      NXSL_ENV_CONSTANT("HardwareComponent::UPDATED", static_cast<int32_t>(ChangeCode::CHANGE_UPDATED));
-      NXSL_ENV_CONSTANT("HardwareComponent::REMOVED", static_cast<int32_t>(ChangeCode::CHANGE_REMOVED));
-
-      // Hardware component HardwareComponentCategory
-      NXSL_ENV_CONSTANT("HardwareComponent::OTHER", static_cast<int32_t>(HardwareComponentCategory::HWC_OTHER));
-      NXSL_ENV_CONSTANT("HardwareComponent::BASEBOARD", static_cast<int32_t>(HardwareComponentCategory::HWC_BASEBOARD));
-      NXSL_ENV_CONSTANT("HardwareComponent::PROCESSOR", static_cast<int32_t>(HardwareComponentCategory::HWC_PROCESSOR));
-      NXSL_ENV_CONSTANT("HardwareComponent::MEMORY", static_cast<int32_t>(HardwareComponentCategory::HWC_MEMORY));
-      NXSL_ENV_CONSTANT("HardwareComponent::STORAGE", static_cast<int32_t>(HardwareComponentCategory::HWC_STORAGE));
-      NXSL_ENV_CONSTANT("HardwareComponent::BATTERY", static_cast<int32_t>(HardwareComponentCategory::HWC_BATTERY));
-      NXSL_ENV_CONSTANT("HardwareComponent::NETWORK_ADAPTER", static_cast<int32_t>(HardwareComponentCategory::HWC_NETWORK_ADAPTER));
+      // Hardware component category
+      NXSL_ENV_CONSTANT("HardwareComponentCategory::BASEBOARD", static_cast<int32_t>(HardwareComponentCategory::HWC_BASEBOARD));
+      NXSL_ENV_CONSTANT("HardwareComponentCategory::BATTERY", static_cast<int32_t>(HardwareComponentCategory::HWC_BATTERY));
+      NXSL_ENV_CONSTANT("HardwareComponentCategory::MEMORY", static_cast<int32_t>(HardwareComponentCategory::HWC_MEMORY));
+      NXSL_ENV_CONSTANT("HardwareComponentCategory::NETWORK_ADAPTER", static_cast<int32_t>(HardwareComponentCategory::HWC_NETWORK_ADAPTER));
+      NXSL_ENV_CONSTANT("HardwareComponentCategory::OTHER", static_cast<int32_t>(HardwareComponentCategory::HWC_OTHER));
+      NXSL_ENV_CONSTANT("HardwareComponentCategory::PROCESSOR", static_cast<int32_t>(HardwareComponentCategory::HWC_PROCESSOR));
+      NXSL_ENV_CONSTANT("HardwareComponentCategory::STORAGE", static_cast<int32_t>(HardwareComponentCategory::HWC_STORAGE));
    }
 
    if (name.value[0] == 'N')
