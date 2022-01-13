@@ -2216,6 +2216,24 @@ NXSL_Value *NXSL_ServerEnv::getConstantValue(const NXSL_Identifier& name, NXSL_V
       NXSL_ENV_CONSTANT("EventOrigin::WINDOWS_EVENT", static_cast<int32_t>(EventOrigin::WINDOWS_EVENT));
    }
 
+   if (name.value[0] == 'H')
+   {
+      // Hardware component ChangeCode
+      NXSL_ENV_CONSTANT("HardwareComponent::NOCHANGE", static_cast<int32_t>(ChangeCode::CHANGE_NONE));
+      NXSL_ENV_CONSTANT("HardwareComponent::ADDED", static_cast<int32_t>(ChangeCode::CHANGE_ADDED));
+      NXSL_ENV_CONSTANT("HardwareComponent::UPDATED", static_cast<int32_t>(ChangeCode::CHANGE_UPDATED));
+      NXSL_ENV_CONSTANT("HardwareComponent::REMOVED", static_cast<int32_t>(ChangeCode::CHANGE_REMOVED));
+
+      // Hardware component HardwareComponentCategory
+      NXSL_ENV_CONSTANT("HardwareComponent::OTHER", static_cast<int32_t>(HardwareComponentCategory::HWC_OTHER));
+      NXSL_ENV_CONSTANT("HardwareComponent::BASEBOARD", static_cast<int32_t>(HardwareComponentCategory::HWC_BASEBOARD));
+      NXSL_ENV_CONSTANT("HardwareComponent::PROCESSOR", static_cast<int32_t>(HardwareComponentCategory::HWC_PROCESSOR));
+      NXSL_ENV_CONSTANT("HardwareComponent::MEMORY", static_cast<int32_t>(HardwareComponentCategory::HWC_MEMORY));
+      NXSL_ENV_CONSTANT("HardwareComponent::STORAGE", static_cast<int32_t>(HardwareComponentCategory::HWC_STORAGE));
+      NXSL_ENV_CONSTANT("HardwareComponent::BATTERY", static_cast<int32_t>(HardwareComponentCategory::HWC_BATTERY));
+      NXSL_ENV_CONSTANT("HardwareComponent::NETWORK_ADAPTER", static_cast<int32_t>(HardwareComponentCategory::HWC_NETWORK_ADAPTER));
+   }
+
    if (name.value[0] == 'N')
    {
       // Node state flags
