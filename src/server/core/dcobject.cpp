@@ -22,6 +22,9 @@
 
 #include "nxcore.h"
 
+#define DEBUG_TAG_DC_CONFIG      _T("dc.config")
+#define DEBUG_TAG_DC_SCHEDULER   _T("dc.scheduler")
+
 /**
  * Default retention time for collected data
  */
@@ -457,11 +460,11 @@ StringBuffer DCObject::expandMacros(const TCHAR *src, size_t dstLen)
 					NXSL_Value *result = vm->getResult();
 					if (result != nullptr)
 						dst.append(result->getValueAsCString());
-		         DbgPrintf(4, _T("DCObject::expandMacros(%d,\"%s\"): Script %s executed successfully"), m_id, src, &macro[7]);
+		         nxlog_debug_tag(DEBUG_TAG_DC_CONFIG, 4, _T("DCObject::expandMacros(%d,\"%s\"): Script %s executed successfully"), m_id, src, &macro[7]);
 				}
 				else
 				{
-		         DbgPrintf(4, _T("DCObject::expandMacros(%d,\"%s\"): Script %s execution error: %s"),
+				   nxlog_debug_tag(DEBUG_TAG_DC_CONFIG, 4, _T("DCObject::expandMacros(%d,\"%s\"): Script %s execution error: %s"),
 					          m_id, src, &macro[7], vm->getErrorText());
 		         PostScriptErrorEvent(CONTEXT_DCI, m_ownerId, m_id, vm->getErrorText(), &macro[7]);
 				}
@@ -469,7 +472,7 @@ StringBuffer DCObject::expandMacros(const TCHAR *src, size_t dstLen)
 			}
 			else
 			{
-	         DbgPrintf(4, _T("DCObject::expandMacros(%d,\"%s\"): Cannot find script %s"), m_id, src, &macro[7]);
+			   nxlog_debug_tag(DEBUG_TAG_DC_CONFIG, 4, _T("DCObject::expandMacros(%d,\"%s\"): Cannot find script %s"), m_id, src, &macro[7]);
 			}
 		}
 		dst.append(rest);
@@ -604,7 +607,7 @@ String DCObject::expandSchedule(const TCHAR *schedule)
    StringBuffer expandedSchedule;
    if (_tcslen(schedule) > 4 && !_tcsncmp(schedule, _T("%["), 2))
    {
-      TCHAR *scriptName = _tcsdup(schedule + 2);
+      TCHAR *scriptName = MemCopyString(schedule + 2);
       if (scriptName != nullptr)
       {
          TCHAR *closingBracker = _tcschr(scriptName, _T(']'));
@@ -623,32 +626,32 @@ String DCObject::expandSchedule(const TCHAR *schedule)
                      const TCHAR *temp = result->getValueAsCString();
                      if (temp != nullptr)
                      {
-                        DbgPrintf(7, _T("DCObject::expandSchedule(%%[%s]) expanded to \"%s\""), scriptName, temp);
-                        expandedSchedule = StringBuffer(temp);
+                        nxlog_debug_tag(DEBUG_TAG_DC_CONFIG, 7, _T("DCObject::expandSchedule(%%[%s]) expanded to \"%s\""), scriptName, temp);
+                        expandedSchedule = temp;
                      }
                   }
                }
                else
                {
-                  DbgPrintf(4, _T("DCObject::expandSchedule(%%[%s]) script execution failed (%s)"), scriptName, vm->getErrorText());
+                  nxlog_debug_tag(DEBUG_TAG_DC_CONFIG, 4, _T("DCObject::expandSchedule(%%[%s]) script execution failed (%s)"), scriptName, vm->getErrorText());
                }
                delete vm;
             }
          }
          else
          {
-            DbgPrintf(4, _T("DCObject::expandSchedule: invalid script schedule syntax in %d [%s]"), m_id, m_name.cstr());
+            nxlog_debug_tag(DEBUG_TAG_DC_CONFIG, 4, _T("DCObject::expandSchedule: invalid script schedule syntax in %d [%s]"), m_id, m_name.cstr());
          }
-         free(scriptName);
+         MemFree(scriptName);
       }
       else
       {
-         DbgPrintf(4, _T("DCObject::expandSchedule: invalid script schedule syntax in %d [%s]"), m_id, m_name.cstr());
+         nxlog_debug_tag(DEBUG_TAG_DC_CONFIG, 4, _T("DCObject::expandSchedule: invalid script schedule syntax in %d [%s]"), m_id, m_name.cstr());
       }
    }
    else
    {
-      expandedSchedule = StringBuffer(schedule);
+      expandedSchedule = schedule;
    }
    return expandedSchedule;
 }
@@ -664,7 +667,7 @@ bool DCObject::isReadyForPolling(time_t currTime)
    // is more effective to try schedule on next run
    if (!tryLock())
    {
-      nxlog_debug_tag(_T("dc.scheduler"), 5, _T("DCObject::isReadyForPolling: cannot obtain lock for data collection object [%u]"), m_id);
+      nxlog_debug_tag(DEBUG_TAG_DC_SCHEDULER, 5, _T("DCObject::isReadyForPolling: cannot obtain lock for data collection object [%u]"), m_id);
       return false;
    }
 
@@ -680,7 +683,7 @@ bool DCObject::isReadyForPolling(time_t currTime)
       else
       {
          // DCI cannot be force polled at the moment, clear force poll request
-         nxlog_debug_tag(_T("dc.scheduler"), 6, _T("Forced poll of DC object %s [%u] on node %s [%u] cancelled"), m_name.cstr(), m_id, getOwnerName(), m_ownerId);
+         nxlog_debug_tag(DEBUG_TAG_DC_SCHEDULER, 6, _T("Forced poll of DC object %s [%u] on node %s [%u] cancelled"), m_name.cstr(), m_id, getOwnerName(), m_ownerId);
          if (m_pollingSession != nullptr)
          {
             m_pollingSession->decRefCount();
@@ -763,14 +766,14 @@ bool DCObject::isCacheLoaded()
  */
 bool DCObject::prepareForDeletion()
 {
-	DbgPrintf(9, _T("DCObject::prepareForDeletion for DCO %d"), m_id);
+   nxlog_debug_tag(DEBUG_TAG_DC_CONFIG, 9, _T("DCObject::prepareForDeletion for DCO %d"), m_id);
 
 	lock();
    m_status = ITEM_STATUS_DISABLED;   // Prevent future polls
 	m_scheduledForDeletion = 1;
 	bool canDelete = (m_busy ? false : true);
    unlock();
-	DbgPrintf(9, _T("DCObject::prepareForDeletion: completed for DCO %d, canDelete=%d"), m_id, (int)canDelete);
+   nxlog_debug_tag(DEBUG_TAG_DC_CONFIG, 9, _T("DCObject::prepareForDeletion: completed for DCO %d, canDelete=%d"), m_id, (int)canDelete);
 
 	return canDelete;
 }
@@ -1354,32 +1357,47 @@ static EnumerationCallbackResult FilterCallback(const TCHAR *key, const TCHAR *v
             NXSL_Array *array = result->getValueAsArray();
             if (array->size() > 0)
             {
-               accepted = array->get(0)->getValueAsBoolean();
-               if (accepted && (array->size() > 1))
+               int index = 0;
+
+               // If first array element is not boolean value or null, assume implicit accept and expect transformed instance as first element
+               if ((array->get(0)->getDataType() == NXSL_DT_BOOLEAN) || array->get(0)->isNull())
                {
-                  // transformed value
-                  const TCHAR *newValue = array->get(1)->getValueAsCString();
-                  if ((newValue != nullptr) && (*newValue != 0))
-                  {
-                     DbgPrintf(5, _T("DCObject::filterInstanceList(%s [%d]): instance \"%s\" replaced by \"%s\""),
-                              dcObjectName.cstr(), dco->getId(), instance, newValue);
-                     instance = newValue;
-                  }
+                  accepted = array->get(0)->getValueAsBoolean();
+                  index++;
                }
-               if (array->size() > 2)
+               else
                {
-                  // instance name
-                  const TCHAR *newName = array->get(2)->getValueAsCString();
-                  if ((newName != nullptr) && (*newName != 0))
-                  {
-                     DbgPrintf(5, _T("DCObject::filterInstanceList(%s [%d]): instance \"%s\" name set to \"%s\""),
-                              dcObjectName.cstr(), dco->getId(), instance, newName);
-                     name = newName;
-                  }
+                  accepted = true;
                }
-               if ((array->size() > 3) && array->get(3)->isObject(g_nxslNetObjClass.getName()))
+
+               if (accepted)
                {
-                  relatedObject = (*static_cast<shared_ptr<NetObj>*>(array->get(3)->getValueAsObject()->getData()))->getId();
+                  if (array->size() > index)
+                  {
+                     // transformed value
+                     const TCHAR *newValue = array->get(index++)->getValueAsCString();
+                     if ((newValue != nullptr) && (*newValue != 0))
+                     {
+                        nxlog_debug_tag(DEBUG_TAG_DC_CONFIG, 5, _T("DCObject::filterInstanceList(%s [%d]): instance \"%s\" replaced by \"%s\""),
+                                 dcObjectName.cstr(), dco->getId(), instance, newValue);
+                        instance = newValue;
+                     }
+                  }
+                  if (array->size() > index)
+                  {
+                     // instance name
+                     const TCHAR *newName = array->get(index++)->getValueAsCString();
+                     if ((newName != nullptr) && (*newName != 0))
+                     {
+                        nxlog_debug_tag(DEBUG_TAG_DC_CONFIG, 5, _T("DCObject::filterInstanceList(%s [%d]): instance \"%s\" name set to \"%s\""),
+                                 dcObjectName.cstr(), dco->getId(), instance, newName);
+                        name = newName;
+                     }
+                  }
+                  if ((array->size() > index) && array->get(index)->isObject(g_nxslNetObjClass.getName()))
+                  {
+                     relatedObject = (*static_cast<shared_ptr<NetObj>*>(array->get(index)->getValueAsObject()->getData()))->getId();
+                  }
                }
             }
             else
@@ -1402,7 +1420,7 @@ static EnumerationCallbackResult FilterCallback(const TCHAR *key, const TCHAR *v
       }
       else
       {
-         DbgPrintf(5, _T("DCObject::filterInstanceList(%s [%d]): instance \"%s\" removed by filtering script"),
+         nxlog_debug_tag(DEBUG_TAG_DC_CONFIG, 5, _T("DCObject::filterInstanceList(%s [%d]): instance \"%s\" removed by filtering script"),
                   dcObjectName.cstr(), dco->getId(), key);
       }
    }
@@ -1520,7 +1538,7 @@ void DCObject::updateTimeIntervalsInternal()
       m_pollingInterval = 0;
    }
 
-   nxlog_debug(6, _T("DCObject::updateTimeIntervalsInternal(%s [%d]): retentionTime=%d, pollingInterval=%d"), m_name.cstr(), m_id, m_retentionTime, m_pollingInterval);
+   nxlog_debug_tag(DEBUG_TAG_DC_CONFIG, 6, _T("DCObject::updateTimeIntervalsInternal(%s [%d]): retentionTime=%d, pollingInterval=%d"), m_name.cstr(), m_id, m_retentionTime, m_pollingInterval);
 }
 
 /**
