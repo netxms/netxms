@@ -627,6 +627,7 @@ private:
 
 public:
    SoftwarePackage(DB_RESULT result, int row);
+   SoftwarePackage(const SoftwarePackage& old);
    ~SoftwarePackage();
 
    void fillMessage(NXCPMessage *msg, uint32_t baseId) const;
@@ -634,6 +635,10 @@ public:
 
    const TCHAR *getName() const { return m_name; }
    const TCHAR *getVersion() const { return m_version; }
+   TCHAR *getVendor() const {return m_vendor;}
+   time_t getDate() const {return m_date;}
+   TCHAR *getUrl() { return m_url;}
+   TCHAR *getDescription() { return m_description; }
    ChangeCode getChangeCode() const { return m_changeCode; }
 
    void setChangeCode(ChangeCode c) { m_changeCode = c; }
@@ -3422,6 +3427,7 @@ public:
    virtual NXSL_Value *getParentsForNXSL(NXSL_VM *vm) override;
    NXSL_Value *getInterfacesForNXSL(NXSL_VM *vm);
    NXSL_Value *getHardwareComponentsForNXSL(NXSL_VM* vm);
+   NXSL_Value* getSoftwarePackagesForNXSL(NXSL_VM* vm);
 
    ObjectArray<AgentParameterDefinition> *openParamList(int origin);
    void closeParamList() { unlockProperties(); }

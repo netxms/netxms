@@ -2074,6 +2074,10 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const char *attr)
    {
       value = vm->createValue((LONG)node->getSNMPVersion());
    }
+   else if (compareAttributeName(attr, "softwarePackages"))
+   {
+      value = node->getSoftwarePackagesForNXSL(vm);
+   }
    else if (compareAttributeName(attr, "sysDescription"))
    {
       value = vm->createValue(node->getSysDescription());
@@ -2576,6 +2580,56 @@ NXSL_Value* NXSL_HardwareComponent::getAttr(NXSL_Object* object, const char* att
 void NXSL_HardwareComponent::onObjectDelete(NXSL_Object* object)
 {
    delete static_cast<HardwareComponent*>(object->getData());
+}
+
+NXSL_SoftwarePackage::NXSL_SoftwarePackage()
+{
+   setName(_T("SoftwarePackage"));
+}
+
+NXSL_Value* NXSL_SoftwarePackage::getAttr(NXSL_Object* object, const char* attr)
+{
+   NXSL_Value* value = NXSL_Class::getAttr(object, attr);
+   if (value != nullptr)
+      return value;
+
+   NXSL_VM* vm = object->vm();
+
+   auto hc = static_cast<SoftwarePackage*>(object->getData());
+   if (compareAttributeName(attr, "name"))
+   {
+      value = vm->createValue(hc->getName());
+   }
+   else if (compareAttributeName(attr, "version"))
+   {
+      value = vm->createValue(hc->getVersion());
+   }
+   else if (compareAttributeName(attr, "vendor"))
+   {
+      value = vm->createValue(hc->getVendor());
+   }
+   else if (compareAttributeName(attr, "date"))
+   {
+      value = vm->createValue(hc->getDate());
+   }
+   else if (compareAttributeName(attr, "url"))
+   {
+      value = vm->createValue(hc->getUrl());
+   }
+   else if (compareAttributeName(attr, "description"))
+   {
+      value = vm->createValue(hc->getDescription());
+   }
+   else if (compareAttributeName(attr, "changeCode"))
+   {
+      value = vm->createValue(hc->getChangeCode());
+   }
+   return value;
+}
+
+void NXSL_SoftwarePackage::onObjectDelete(NXSL_Object* object)
+{
+   delete static_cast<SoftwarePackage*>(object->getData());
 }
 
 /**
@@ -4968,6 +5022,7 @@ NXSL_NodeDependencyClass g_nxslNodeDependencyClass;
 NXSL_SensorClass g_nxslSensorClass;
 NXSL_SNMPTransportClass g_nxslSnmpTransportClass;
 NXSL_SNMPVarBindClass g_nxslSnmpVarBindClass;
+NXSL_SoftwarePackage g_nxslSoftwarePackage;
 NXSL_SubnetClass g_nxslSubnetClass;
 NXSL_TemplateClass g_nxslTemplateClass;
 NXSL_TunnelClass g_nxslTunnelClass;

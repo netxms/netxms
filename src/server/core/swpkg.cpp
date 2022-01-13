@@ -187,6 +187,17 @@ SoftwarePackage::SoftwarePackage(DB_RESULT result, int row)
    m_changeCode = CHANGE_NONE;
 }
 
+SoftwarePackage::SoftwarePackage(const SoftwarePackage& old)
+{
+   m_name = MemCopyString(old.m_name);
+   m_version = MemCopyString(old.m_version);
+   m_vendor = MemCopyString(old.m_vendor);
+   m_date = old.m_date;
+   m_url = MemCopyString(old.m_url);
+   m_description = MemCopyString(old.m_description);
+   m_changeCode = old.m_changeCode;
+}
+
 /**
  * Destructor
  */

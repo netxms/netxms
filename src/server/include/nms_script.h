@@ -407,6 +407,18 @@ public:
    virtual void onObjectDelete(NXSL_Object* object) override;
 };
 
+/**
+ * Software package information for NXSL
+ */
+class NXSL_SoftwarePackage : public NXSL_Class
+{
+public:
+   NXSL_SoftwarePackage();
+
+   virtual NXSL_Value* getAttr(NXSL_Object* object, const char* attr) override;
+   virtual void onObjectDelete(NXSL_Object* object) override;
+};
+
 class ScheduleParameters;
 
 /**
@@ -497,6 +509,7 @@ extern NXSL_NodeDependencyClass g_nxslNodeDependencyClass;
 extern NXSL_SensorClass g_nxslSensorClass;
 extern NXSL_SNMPTransportClass g_nxslSnmpTransportClass;
 extern NXSL_SNMPVarBindClass g_nxslSnmpVarBindClass;
+extern NXSL_SoftwarePackage g_nxslSoftwarePackage;
 extern NXSL_SubnetClass g_nxslSubnetClass;
 extern NXSL_TemplateClass g_nxslTemplateClass;
 extern NXSL_TunnelClass g_nxslTunnelClass;

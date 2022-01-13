@@ -9976,6 +9976,25 @@ NXSL_Value *Node::getHardwareComponentsForNXSL(NXSL_VM* vm)
 }
 
 /**
+ * Get list of software packages for NXSL script
+ */
+NXSL_Value* Node::getSoftwarePackagesForNXSL(NXSL_VM* vm)
+{
+   NXSL_Array* a = new NXSL_Array(vm);
+   lockProperties();
+   if (m_softwarePackages != nullptr)
+   {
+      int hcSize = m_softwarePackages->size();
+      for (int i = 0; i < hcSize; i++)
+      {
+         a->append(vm->createValue(new NXSL_Object(vm, &g_nxslSoftwarePackage, new SoftwarePackage(*m_softwarePackages->get(i)))));
+      }
+   }
+   unlockProperties();
+   return vm->createValue(a);
+}
+
+/**
  * Get switch forwarding database
  */
 shared_ptr<ForwardingDatabase> Node::getSwitchForwardingDatabase()
