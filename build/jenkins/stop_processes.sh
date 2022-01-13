@@ -8,11 +8,17 @@ if test "x$BUILD_PREFIX" = "x"; then
 fi
 
 OS=`uname -s`
-if test "$OS" = "FreeBSD"; then
-    PS_OPTIONS="-aex"
-else
-    PS_OPTIONS="-ae"
-fi
+case "$OS" in
+    FreeBSD)
+        PS_OPTIONS="-aex"
+        ;;
+    OpenBSD)
+        PS_OPTIONS="-ax"
+        ;;
+    *)
+        PS_OPTIONS="-ae"
+        ;;
+esac
 
 BINDIR="$BUILD_PREFIX/bin"
 USER=`whoami`
