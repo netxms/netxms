@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -102,13 +102,13 @@ public class DciSelector extends AbstractSelector
 			setText(emptySelectionName);
 			return;
 		}
-		
+
       new Job(i18n.tr("Resolve DCI name"), null) {
 			@Override
          protected void run(IProgressMonitor monitor) throws Exception
 			{
-				final Map<Long, String> names = session.dciIdsToNames(new ArrayList<Long> (Arrays.asList( nodeId )), 
-                  new ArrayList<Long> (Arrays.asList( DciSelector.this.dciId )));
+				final Map<Long, String> names = session.dciIdsToNames(new ArrayList<Long>(Arrays.asList(nodeId)), 
+                  new ArrayList<Long>(Arrays.asList(DciSelector.this.dciId)));
 				runInUIThread(new Runnable() {
 					@Override
 					public void run()

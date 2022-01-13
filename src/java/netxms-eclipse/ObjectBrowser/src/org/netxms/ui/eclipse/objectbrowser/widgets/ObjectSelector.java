@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,7 +22,6 @@ import java.util.HashSet;
 import java.util.Set;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Composite;
-import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.objectbrowser.Messages;
@@ -40,7 +39,7 @@ public class ObjectSelector extends AbstractSelector
 	private Set<Class<? extends AbstractObject>> objectClassSet = new HashSet<Class<? extends AbstractObject>>();
 	private Set<Integer> classFilter = null;
 	private String emptySelectionName = Messages.get().ObjectSelector_None;
-	
+
 	/**
 	 * @param parent
 	 * @param style
@@ -131,7 +130,7 @@ public class ObjectSelector extends AbstractSelector
 		}
 		else
 		{
-			object = ((NXCSession)ConsoleSharedData.getSession()).findObjectById(objectId);
+			object = ConsoleSharedData.getSession().findObjectById(objectId);
 			setText((object != null) ? object.getObjectName() : ("<" + Long.toString(objectId) + ">")); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 	}

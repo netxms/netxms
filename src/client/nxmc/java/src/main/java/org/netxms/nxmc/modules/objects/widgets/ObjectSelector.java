@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -93,7 +93,7 @@ public class ObjectSelector extends AbstractSelector
 	}
 
 	/**
-    * Get ID of selected object
+    * Get ID of selected object.
     *
     * @return ID of selected object
     */
@@ -103,13 +103,21 @@ public class ObjectSelector extends AbstractSelector
 	}
 	
    /**
-    * Get selected object
+    * Get selected object.
     *
     * @return selected object
     */
 	public AbstractObject getObject()
 	{
 	   return object;
+	}
+
+	/**
+	 * @return the object name
+	 */
+	public String getObjectName()
+	{
+		return getText();
 	}
 
 	/**

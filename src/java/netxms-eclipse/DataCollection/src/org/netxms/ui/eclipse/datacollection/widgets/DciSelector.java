@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -59,7 +59,7 @@ public class DciSelector extends AbstractSelector
 	{
 		super(parent, style, USE_TEXT | (useHyperlink ? USE_HYPERLINK : 0));
 		setText(emptySelectionName);
-		session = (NXCSession)ConsoleSharedData.getSession();
+		session = ConsoleSharedData.getSession();
 	}
 
 	/* (non-Javadoc)
@@ -100,13 +100,13 @@ public class DciSelector extends AbstractSelector
 			setText(emptySelectionName);
 			return;
 		}
-		
+
 		new ConsoleJob(Messages.get().DciSelector_JobTitle, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				final Map<Long, String> names = session.dciIdsToNames(new ArrayList<Long> (Arrays.asList( nodeId )), 
-				      new ArrayList<Long> (Arrays.asList( DciSelector.this.dciId )));
+				final Map<Long, String> names = session.dciIdsToNames(new ArrayList<Long>(Arrays.asList(nodeId)), 
+                  new ArrayList<Long>(Arrays.asList(DciSelector.this.dciId)));
 				runInUIThread(new Runnable() {
 					@Override
 					public void run()

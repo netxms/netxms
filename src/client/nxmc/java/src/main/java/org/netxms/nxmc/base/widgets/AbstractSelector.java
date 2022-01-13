@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -95,7 +95,7 @@ public class AbstractSelector extends Composite
 		layout.marginHeight = 0;
 		layout.numColumns = ((options & SHOW_CLEAR_BUTTON) != 0) ? 3 : 2;
 		setLayout(layout);
-		
+
 		if ((options & HIDE_LABEL) == 0)
 		{
 			label = new Label(this, SWT.NONE);
@@ -104,14 +104,14 @@ public class AbstractSelector extends Composite
 			gd.horizontalSpan = layout.numColumns;
 			label.setLayoutData(gd);
 		}
-		
+
 		text = ((options & USE_TEXT) != 0) ? new Text(this, SWT.BORDER | SWT.READ_ONLY) : new CLabel(this, SWT.BORDER);
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		gd.verticalAlignment = SWT.TOP;
 		text.setLayoutData(gd);
-		
+
 		if ((options & USE_HYPERLINK) != 0)
 		{
 			selectionLink = new ImageHyperlink(this, SWT.NONE);
@@ -190,12 +190,12 @@ public class AbstractSelector extends Composite
 				});
 			}
 		}
-		
+
 		createActions();
 		createContextMenu();
-		
+
 		text.setToolTipText(getTextToolTip());
-		
+
 		addDisposeListener(new DisposeListener() {
 			@Override
 			public void widgetDisposed(DisposeEvent e)
@@ -220,7 +220,7 @@ public class AbstractSelector extends Composite
 			}
 		};
 	}
-	
+
 	/**
 	 * Create context menu for text area 
 	 */
@@ -240,7 +240,7 @@ public class AbstractSelector extends Composite
 		Menu menu = menuMgr.createContextMenu(text);
 		text.setMenu(menu);
 	}
-	
+
 	/**
 	 * Fill context menu. Can be overridden by subclasses to add
 	 * and/or override context menu items.
@@ -251,7 +251,7 @@ public class AbstractSelector extends Composite
 	{
 		mgr.add(actionCopy);
 	}
-	
+
 	/**
 	 * Handler for selection button. This method intended to be overriden by subclasses.
 	 * Default implementation does nothing.
@@ -342,10 +342,10 @@ public class AbstractSelector extends Composite
 	}
 
 	/**
-	 * Set selector's image
-	 * 
-	 * @param newText
-	 */
+    * Set selector's image
+    * 
+    * @param image new image (can be null)
+    */
 	protected void setImage(final Image image)
 	{
 		if (!(text instanceof CLabel))
@@ -377,10 +377,10 @@ public class AbstractSelector extends Composite
 	}
 
 	/**
-	 * Get selector's text
-	 * 
-	 * @return Selector's text
-	 */
+    * Get selector's image
+    * 
+    * @return selector's image
+    */
 	protected Image getImage()
 	{
 		if (text instanceof CLabel)
@@ -388,9 +388,9 @@ public class AbstractSelector extends Composite
 		return null;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.swt.widgets.Control#setEnabled(boolean)
-	 */
+   /**
+    * @see org.eclipse.swt.widgets.Control#setEnabled(boolean)
+    */
 	@Override
 	public void setEnabled(boolean enabled)
 	{

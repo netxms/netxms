@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -197,12 +197,12 @@ public class AbstractSelector extends Composite
 				});
 			}
 		}
-		
+
 		createActions();
 		createContextMenu();
-		
+
 		text.setToolTipText(getTextToolTip());
-		
+
 		addDisposeListener(new DisposeListener() {
 			@Override
 			public void widgetDisposed(DisposeEvent e)
@@ -219,7 +219,7 @@ public class AbstractSelector extends Composite
 	private void createActions()
 	{
 	}
-	
+
 	/**
 	 * Create context menu for text area 
 	 */
@@ -239,7 +239,7 @@ public class AbstractSelector extends Composite
 		Menu menu = menuMgr.createContextMenu(text);
 		text.setMenu(menu);
 	}
-	
+
 	/**
 	 * Fill context menu. Can be overridden by subclasses to add
 	 * and/or override context menu items.
@@ -249,7 +249,7 @@ public class AbstractSelector extends Composite
 	protected void fillContextMenu(IMenuManager mgr)
 	{
 	}
-	
+
 	/**
 	 * Handler for selection button. This method intended to be overriden by subclasses.
 	 * Default implementation does nothing.
@@ -377,7 +377,7 @@ public class AbstractSelector extends Composite
 	/**
     * Get selector's image
     * 
-    * @return Selector's image
+    * @return selector's image
     */
 	protected Image getImage()
 	{

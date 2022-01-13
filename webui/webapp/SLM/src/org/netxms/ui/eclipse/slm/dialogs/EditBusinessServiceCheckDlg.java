@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Raden Solutions
+ * Copyright (C) 2003-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -54,6 +54,7 @@ public class EditBusinessServiceCheckDlg extends Dialog
    private Combo typeCombo;
    private Combo thresholdCombo;
    private AbstractSelector objectOrDciSelector;
+   private Label scriptLabel;
    private ScriptEditor scriptEditor;
    private Composite selectorGroup;
    private Composite dialogArea;
@@ -84,19 +85,22 @@ public class EditBusinessServiceCheckDlg extends Dialog
       dialogArea = (Composite)super.createDialogArea(parent);
       
       GridLayout layout = new GridLayout();
-      layout.horizontalSpacing = WidgetHelper.OUTER_SPACING;
-      layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
+      layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
+      layout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
+      layout.horizontalSpacing = WidgetHelper.DIALOG_SPACING;
+      layout.verticalSpacing = WidgetHelper.DIALOG_SPACING;
       layout.numColumns = 2;
       dialogArea.setLayout(layout);
-      
+
       descriptionText = new LabeledText(dialogArea, SWT.NONE);
       descriptionText.setLabel("Description");
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalSpan = 2;
+      gd.widthHint = 700;
       descriptionText.setLayoutData(gd);
-      
+
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
@@ -107,7 +111,7 @@ public class EditBusinessServiceCheckDlg extends Dialog
          @Override
          public void widgetSelected(SelectionEvent e)
          {
-            updateEditableElements();
+            updateElementVisibility();
          }
          
          @Override
@@ -146,11 +150,11 @@ public class EditBusinessServiceCheckDlg extends Dialog
          ((ObjectSelector)objectOrDciSelector).setObjectId(check.getObjectId()); 
       }
 
-      Label label = new Label(dialogArea, SWT.NONE);
-      label.setText("Check script");
+      scriptLabel = new Label(dialogArea, SWT.NONE);
+      scriptLabel.setText("Check script");
       gd = new GridData();
       gd.horizontalSpan = 2;
-      label.setLayoutData(gd);
+      scriptLabel.setLayoutData(gd);
 
       scriptEditor = new ScriptEditor(dialogArea, SWT.BORDER, SWT.H_SCROLL | SWT.V_SCROLL, true, true);
       gd = new GridData();
@@ -168,15 +172,26 @@ public class EditBusinessServiceCheckDlg extends Dialog
       typeCombo.select(check.getCheckType().getValue() - 1);
       thresholdCombo.select(check.getThreshold());
       scriptEditor.setText(check.getScript());  
-      updateEditableElements();
 
+      updateElementVisibility();
       return dialogArea;
+   }
+
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#createContents(org.eclipse.swt.widgets.Composite)
+    */
+   @Override
+   protected Control createContents(Composite parent)
+   {
+      Control content = super.createContents(parent);
+      getShell().pack(); // Needed after changes to layout made by initial call to updateElementVisibility()
+      return content;
    }
 
    /**
     * Update dialog elements for selected check type
     */
-   private void updateEditableElements()
+   private void updateElementVisibility()
    {
       BusinessServiceCheckType type = BusinessServiceCheckType.getByValue(typeCombo.getSelectionIndex() + 1);
       if (type == BusinessServiceCheckType.DCI && !(objectOrDciSelector instanceof DciSelector))
@@ -194,14 +209,28 @@ public class EditBusinessServiceCheckDlg extends Dialog
          ((ObjectSelector)objectOrDciSelector).setObjectId(check.getObjectId()); 
       }
       
-      scriptEditor.setEnabled(type == BusinessServiceCheckType.SCRIPT);
+      if (type == BusinessServiceCheckType.SCRIPT)
+      {
+         scriptEditor.setVisible(true);
+         ((GridData)scriptEditor.getLayoutData()).exclude = false;
+         scriptLabel.setVisible(true);
+         ((GridData)scriptLabel.getLayoutData()).exclude = false;
+      }
+      else
+      {
+         scriptEditor.setVisible(false);
+         ((GridData)scriptEditor.getLayoutData()).exclude = true;
+         scriptLabel.setVisible(false);
+         ((GridData)scriptLabel.getLayoutData()).exclude = true;
+      }
+
       thresholdCombo.setEnabled(type == BusinessServiceCheckType.OBJECT || type == BusinessServiceCheckType.DCI);
       if (type == BusinessServiceCheckType.OBJECT)
-         ((ObjectSelector)objectOrDciSelector).setLabel("Check object");
+         objectOrDciSelector.setLabel("Object to check");
       else if (type == BusinessServiceCheckType.SCRIPT)
-         ((ObjectSelector)objectOrDciSelector).setLabel("Related object");
+         objectOrDciSelector.setLabel("Related object");
 
-      dialogArea.layout(true, true);
+      getShell().pack();
    }
 
    /**
