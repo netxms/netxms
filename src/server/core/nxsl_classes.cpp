@@ -2516,122 +2516,6 @@ NXSL_AccessPointClass::NXSL_AccessPointClass() : NXSL_DCTargetClass()
    setName(_T("AccessPoint"));
 }
 
-NXSL_HardwareComponent::NXSL_HardwareComponent()
-{
-   setName(_T("HardwareComponent"));
-}
-
-NXSL_Value* NXSL_HardwareComponent::getAttr(NXSL_Object* object, const char* attr)
-{
-   NXSL_Value* value = NXSL_Class::getAttr(object, attr);
-   if (value != nullptr)
-      return value;
-
-   NXSL_VM* vm = object->vm();
-
-   auto hc = static_cast<HardwareComponent*>(object->getData());
-   if (compareAttributeName(attr, "changeCode"))
-   {
-      value = vm->createValue(hc->getChangeCode());
-   }
-   else if (compareAttributeName(attr, "category"))
-   {
-      value = vm->createValue(hc->getCategory());
-   }
-   else if (compareAttributeName(attr, "index"))
-   {
-      value = vm->createValue(hc->getIndex());
-   }
-   else if (compareAttributeName(attr, "capacity"))
-   {
-      value = vm->createValue(hc->getCapacity());
-   }
-   else if (compareAttributeName(attr, "type"))
-   {
-      value = vm->createValue(hc->getType());
-   }
-   else if (compareAttributeName(attr, "vendor"))
-   {
-      value = vm->createValue(hc->getVendor());
-   }
-   else if (compareAttributeName(attr, "model"))
-   {
-      value = vm->createValue(hc->getModel());
-   }
-   else if (compareAttributeName(attr, "location"))
-   {
-      value = vm->createValue(hc->getLocation());
-   }
-   else if (compareAttributeName(attr, "partNumber"))
-   {
-      value = vm->createValue(hc->getPartNumber());
-   }
-   else if (compareAttributeName(attr, "serialNumber"))
-   {
-      value = vm->createValue(hc->getSerialNumber());
-   }
-   else if (compareAttributeName(attr, "description"))
-   {
-      value = vm->createValue(hc->getDescription());
-   }
-   return value;
-}
-
-void NXSL_HardwareComponent::onObjectDelete(NXSL_Object* object)
-{
-   delete static_cast<HardwareComponent*>(object->getData());
-}
-
-NXSL_SoftwarePackage::NXSL_SoftwarePackage()
-{
-   setName(_T("SoftwarePackage"));
-}
-
-NXSL_Value* NXSL_SoftwarePackage::getAttr(NXSL_Object* object, const char* attr)
-{
-   NXSL_Value* value = NXSL_Class::getAttr(object, attr);
-   if (value != nullptr)
-      return value;
-
-   NXSL_VM* vm = object->vm();
-
-   auto hc = static_cast<SoftwarePackage*>(object->getData());
-   if (compareAttributeName(attr, "name"))
-   {
-      value = vm->createValue(hc->getName());
-   }
-   else if (compareAttributeName(attr, "version"))
-   {
-      value = vm->createValue(hc->getVersion());
-   }
-   else if (compareAttributeName(attr, "vendor"))
-   {
-      value = vm->createValue(hc->getVendor());
-   }
-   else if (compareAttributeName(attr, "date"))
-   {
-      value = vm->createValue(hc->getDate());
-   }
-   else if (compareAttributeName(attr, "url"))
-   {
-      value = vm->createValue(hc->getUrl());
-   }
-   else if (compareAttributeName(attr, "description"))
-   {
-      value = vm->createValue(hc->getDescription());
-   }
-   else if (compareAttributeName(attr, "changeCode"))
-   {
-      value = vm->createValue(hc->getChangeCode());
-   }
-   return value;
-}
-
-void NXSL_SoftwarePackage::onObjectDelete(NXSL_Object* object)
-{
-   delete static_cast<SoftwarePackage*>(object->getData());
-}
-
 /**
  * NXSL class AccessPoint: get attribute
  */
@@ -4691,7 +4575,7 @@ NXSL_Value *NXSL_UserClass::getAttr(NXSL_Object *object, const char *attr)
  */
 void NXSL_UserClass::onObjectDelete(NXSL_Object *object)
 {
-   delete (User *)object->getData();
+   delete static_cast<User*>(object->getData());
 }
 
 /**
@@ -4740,7 +4624,7 @@ NXSL_Value *NXSL_UserGroupClass::getAttr(NXSL_Object *object, const char *attr)
  */
 void NXSL_UserGroupClass::onObjectDelete(NXSL_Object *object)
 {
-   delete (Group *)object->getData();
+   delete static_cast<Group*>(object->getData());
 }
 
 /**
@@ -4796,6 +4680,144 @@ NXSL_Value *NXSL_NodeDependencyClass::getAttr(NXSL_Object *object, const char *a
 void NXSL_NodeDependencyClass::onObjectDelete(NXSL_Object *object)
 {
    delete static_cast<DependentNode*>(object->getData());
+}
+
+/**
+ * NXSL class HardwareComponent: constructor
+ */
+NXSL_HardwareComponent::NXSL_HardwareComponent()
+{
+   setName(_T("HardwareComponent"));
+}
+
+/**
+ * NXSL class HardwareComponent: get attribute
+ */
+NXSL_Value* NXSL_HardwareComponent::getAttr(NXSL_Object* object, const char* attr)
+{
+   NXSL_Value* value = NXSL_Class::getAttr(object, attr);
+   if (value != nullptr)
+      return value;
+
+   NXSL_VM* vm = object->vm();
+
+   auto component = static_cast<HardwareComponent*>(object->getData());
+   if (compareAttributeName(attr, "capacity"))
+   {
+      value = vm->createValue(component->getCapacity());
+   }
+   else if (compareAttributeName(attr, "category"))
+   {
+      value = vm->createValue(component->getCategory());
+   }
+   else if (compareAttributeName(attr, "categoryName"))
+   {
+      value = vm->createValue(component->getCategoryName());
+   }
+   else if (compareAttributeName(attr, "changeCode"))
+   {
+      value = vm->createValue(component->getChangeCode());
+   }
+   else if (compareAttributeName(attr, "description"))
+   {
+      value = vm->createValue(component->getDescription());
+   }
+   else if (compareAttributeName(attr, "index"))
+   {
+      value = vm->createValue(component->getIndex());
+   }
+   else if (compareAttributeName(attr, "location"))
+   {
+      value = vm->createValue(component->getLocation());
+   }
+   else if (compareAttributeName(attr, "model"))
+   {
+      value = vm->createValue(component->getModel());
+   }
+   else if (compareAttributeName(attr, "partNumber"))
+   {
+      value = vm->createValue(component->getPartNumber());
+   }
+   else if (compareAttributeName(attr, "serialNumber"))
+   {
+      value = vm->createValue(component->getSerialNumber());
+   }
+   else if (compareAttributeName(attr, "type"))
+   {
+      value = vm->createValue(component->getType());
+   }
+   else if (compareAttributeName(attr, "vendor"))
+   {
+      value = vm->createValue(component->getVendor());
+   }
+   return value;
+}
+
+/**
+ * NXSL class HardwareComponent: object destructor
+ */
+void NXSL_HardwareComponent::onObjectDelete(NXSL_Object* object)
+{
+   delete static_cast<HardwareComponent*>(object->getData());
+}
+
+/**
+ * NXSL class SoftwarePackage: constructor
+ */
+NXSL_SoftwarePackage::NXSL_SoftwarePackage()
+{
+   setName(_T("SoftwarePackage"));
+}
+
+/**
+ * NXSL class SoftwarePackage: get attribute
+ */
+NXSL_Value* NXSL_SoftwarePackage::getAttr(NXSL_Object* object, const char* attr)
+{
+   NXSL_Value* value = NXSL_Class::getAttr(object, attr);
+   if (value != nullptr)
+      return value;
+
+   NXSL_VM* vm = object->vm();
+
+   auto package = static_cast<SoftwarePackage*>(object->getData());
+   if (compareAttributeName(attr, "changeCode"))
+   {
+      value = vm->createValue(package->getChangeCode());
+   }
+   else if (compareAttributeName(attr, "date"))
+   {
+      value = vm->createValue(package->getDate());
+   }
+   else if (compareAttributeName(attr, "description"))
+   {
+      value = vm->createValue(package->getDescription());
+   }
+   else if (compareAttributeName(attr, "name"))
+   {
+      value = vm->createValue(package->getName());
+   }
+   else if (compareAttributeName(attr, "url"))
+   {
+      value = vm->createValue(package->getUrl());
+   }
+   else if (compareAttributeName(attr, "vendor"))
+   {
+      value = vm->createValue(package->getVendor());
+   }
+   else if (compareAttributeName(attr, "version"))
+   {
+      value = vm->createValue(package->getVersion());
+   }
+   return value;
+}
+
+/**
+ * NXSL class SoftwarePackage: object destructor
+ */
+void NXSL_SoftwarePackage::onObjectDelete(NXSL_Object* object)
+{
+   delete static_cast<SoftwarePackage*>(object->getData());
 }
 
 /**

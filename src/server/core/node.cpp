@@ -6642,7 +6642,48 @@ DataCollectionError Node::getInternalTable(const TCHAR *name, shared_ptr<Table> 
       return rc;
    rc = DCE_SUCCESS;
 
-   if (!_tcsicmp(name, _T("Topology.RoutingTable")))
+   if (!_tcsicmp(name, _T("Hardware.Components")))
+   {
+      lockProperties();
+      if (m_hardwareComponents != nullptr)
+      {
+         auto table = make_shared<Table>();
+         table->addColumn(_T("CATEGORY"), DCI_DT_STRING, _T("Category"), true);
+         table->addColumn(_T("INDEX"), DCI_DT_UINT, _T("Index"), true);
+         table->addColumn(_T("TYPE"), DCI_DT_STRING, _T("Type"));
+         table->addColumn(_T("VENDOR"), DCI_DT_STRING, _T("Vendor"));
+         table->addColumn(_T("MODEL"), DCI_DT_STRING, _T("Model"));
+         table->addColumn(_T("CAPACITY"), DCI_DT_UINT64, _T("Capacity"));
+         table->addColumn(_T("PART_NUMBER"), DCI_DT_STRING, _T("Part number"));
+         table->addColumn(_T("SERIAL_NUMBER"), DCI_DT_STRING, _T("Serial number"));
+         table->addColumn(_T("LOCATION"), DCI_DT_STRING, _T("Location"));
+         table->addColumn(_T("DESCRIPTION"), DCI_DT_STRING, _T("Description"));
+
+         int hcSize = m_hardwareComponents->size();
+         for (int i = 0; i < hcSize; i++)
+         {
+            HardwareComponent *hc = m_hardwareComponents->get(i);
+            table->addRow();
+            table->set(0, hc->getCategoryName());
+            table->set(1, hc->getIndex());
+            table->set(2, hc->getType());
+            table->set(3, hc->getVendor());
+            table->set(4, hc->getModel());
+            table->set(5, hc->getCapacity());
+            table->set(6, hc->getPartNumber());
+            table->set(7, hc->getSerialNumber());
+            table->set(8, hc->getLocation());
+            table->set(9, hc->getDescription());
+         }
+         *result = table;
+      }
+      else
+      {
+         rc = DCE_COLLECTION_ERROR;
+      }
+      unlockProperties();
+   }
+   else if (!_tcsicmp(name, _T("Topology.RoutingTable")))
    {
       RoutingTable *rt = getRoutingTable();
       if (rt != nullptr)

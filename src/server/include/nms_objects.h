@@ -691,6 +691,7 @@ public:
 
    ChangeCode getChangeCode() const { return m_changeCode; };
    HardwareComponentCategory getCategory() const { return m_category; };
+   const TCHAR *getCategoryName() const;
    uint32_t getIndex() const { return m_index; }
    uint64_t getCapacity() const { return m_capacity; }
    const TCHAR *getType() const { return CHECK_NULL_EX(m_type); };

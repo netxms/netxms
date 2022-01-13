@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -56,6 +56,8 @@ public class SelectInternalParamDlg extends AbstractSelectParamDlg
    private void fillTableList()
    {
       ArrayList<AgentTable> list = new ArrayList<AgentTable>(10);
+
+      list.add(new AgentTable("Hardware.Components", "Hardware components", new String[] { "CATEGORY", "INDEX" }));
 
       list.add(new AgentTable("Topology.RoutingTable", "Routing table", new String[] { "ID" }));
       String[] topologyInstanceColumns = { "MAC_ADDRESS" }; // Same for both topology tables

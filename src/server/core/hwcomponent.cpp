@@ -238,3 +238,13 @@ bool HardwareComponent::saveToDatabase(DB_STATEMENT hStmt) const
    DBBind(hStmt, 11, DB_SQLTYPE_VARCHAR, m_description, DB_BIND_STATIC);
    return DBExecute(hStmt);
 }
+
+/**
+ * Get category name
+ */
+const TCHAR *HardwareComponent::getCategoryName() const
+{
+   static const TCHAR *names[] = { _T("Other"), _T("Baseboard"), _T("Processor"), _T("Memory"), _T("Storage"), _T("Battery"), _T("NetworkAdapter") };
+   uint32_t index = (uint32_t)m_category;
+   return names[(index < sizeof(names) / sizeof(TCHAR*)) ? index : 0];
+}
