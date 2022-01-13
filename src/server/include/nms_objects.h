@@ -636,7 +636,7 @@ public:
    const TCHAR *getName() const { return m_name; }
    const TCHAR *getVersion() const { return m_version; }
    const TCHAR* getVendor() const { return m_vendor; }
-   time_t getDate() const {return m_date;}
+   time_t getDate() const { return m_date; }
    const TCHAR* getUrl() { return m_url; }
    const TCHAR* getDescription() { return m_description; }
    ChangeCode getChangeCode() const { return m_changeCode; }

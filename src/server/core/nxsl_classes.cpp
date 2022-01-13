@@ -4787,7 +4787,16 @@ NXSL_Value* NXSL_SoftwarePackage::getAttr(NXSL_Object* object, const char* attr)
    }
    else if (compareAttributeName(attr, "date"))
    {
-      value = vm->createValue(package->getDate());
+      time_t t = package->getDate();
+#if HAVE_LOCALTIME_R
+      struct tm tmbuffer;
+      struct tm *ltm = localtime_r(&t, &tmbuffer);
+#else
+      struct tm *ltm = localtime(&t);
+#endif
+      TCHAR buffer[32];
+      _tcsftime(buffer, 32, _T("%Y%m%d"), ltm);
+      value = vm->createValue(buffer);
    }
    else if (compareAttributeName(attr, "description"))
    {
@@ -4796,6 +4805,10 @@ NXSL_Value* NXSL_SoftwarePackage::getAttr(NXSL_Object* object, const char* attr)
    else if (compareAttributeName(attr, "name"))
    {
       value = vm->createValue(package->getName());
+   }
+   else if (compareAttributeName(attr, "timestamp"))
+   {
+      value = vm->createValue(static_cast<int64_t>(package->getDate()));
    }
    else if (compareAttributeName(attr, "url"))
    {
