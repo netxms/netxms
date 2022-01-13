@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -90,7 +90,7 @@ public class PackageManager extends ViewPart
    private Action actionRemove;
    private Action actionDeploy;
    private Action actionEditMetadata;
-	
+
    /**
     * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
     */
@@ -378,12 +378,22 @@ public class PackageManager extends ViewPart
                Matcher matcher = pattern.matcher(name);
                if (matcher.matches())
                {
-                  packageInfo = new PackageInfo("nxagent", "NetXMS Agent for Windows", name, "agent-installer", "windows" + ((matcher.group(2) == null) ? "i386" : "x64"), matcher.group(1), "");
+                  packageInfo = new PackageInfo("nxagent", "NetXMS Agent for Windows", name, "agent-installer", "windows-" + ((matcher.group(2) == null) ? "i386" : "x64"), matcher.group(1), "");
                   showMetadataDialog = false;
                }
                else
                {
-                  packageInfo = new PackageInfo(name, "", name, "executable", "windows-x64", "", "");
+                  pattern = Pattern.compile("^nxagent-atm-([0-9]+\\.[0-9]+\\.[0-9]+)(-x64)?\\.exe$", Pattern.CASE_INSENSITIVE);
+                  matcher = pattern.matcher(name);
+                  if (matcher.matches())
+                  {
+                     packageInfo = new PackageInfo("nxagent-atm", "NetXMS Agent for ATM", name, "agent-installer", "windows-" + ((matcher.group(2) == null) ? "i386" : "x64"), matcher.group(1), "");
+                     showMetadataDialog = false;
+                  }
+                  else
+                  {
+                     packageInfo = new PackageInfo(name, "", name, "executable", "windows-x64", "", "");
+                  }
                }
             }
             else if (packageFileName.endsWith(".msi") || packageFileName.endsWith(".msp") || packageFileName.endsWith(".msu"))
