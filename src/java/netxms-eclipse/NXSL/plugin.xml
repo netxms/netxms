@@ -125,41 +125,9 @@
                <iterate
                      ifEmpty="false"
                      operator="and">
-                  <or>
-                     <instanceof
-                           value="org.netxms.client.objects.AbstractNode">
-                     </instanceof>
-                     <instanceof
-                           value="org.netxms.client.objects.Container">
-                     </instanceof>
-                     <instanceof
-                           value="org.netxms.client.objects.Cluster">
-                     </instanceof>
-                     <instanceof
-                           value="org.netxms.client.objects.MobileDevice">
-                     </instanceof>
-                     <instanceof
-                           value="org.netxms.client.objects.Subnet">
-                     </instanceof>
-                     <instanceof
-                           value="org.netxms.client.objects.Sensor">
-                     </instanceof>
-                     <instanceof
-                           value="org.netxms.client.objects.Zone">
-                     </instanceof>
-                     <instanceof
-                           value="org.netxms.client.objects.Chassis">
-                     </instanceof>
-                     <instanceof
-                           value="org.netxms.client.objects.Rack">
-                     </instanceof>
-                     <instanceof
-                           value="org.netxms.client.objects.ServiceRoot">
-                     </instanceof>
-                     <instanceof
-                           value="org.netxms.client.objects.EntireNetwork">
-                     </instanceof>
-                  </or>
+                  <instanceof
+                        value="org.netxms.client.objects.AbstractObject">
+                  </instanceof>
                </iterate>
             </visibleWhen>
          </command>

@@ -10884,77 +10884,57 @@ void ClientSession::testDCITransformation(const NXCPMessage& request)
  */
 void ClientSession::executeScript(const NXCPMessage& request)
 {
-   NXCPMessage msg;
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
    bool success = false;
    NXSL_VM *vm = nullptr;
-
-   // Prepare response message
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request.getId());
 
    // Get node id and check object class and access rights
    shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
    if (object != nullptr)
    {
-      if ((object->getObjectClass() == OBJECT_NODE) ||
-          (object->getObjectClass() == OBJECT_CLUSTER) ||
-          (object->getObjectClass() == OBJECT_MOBILEDEVICE) ||
-          (object->getObjectClass() == OBJECT_CHASSIS) ||
-          (object->getObjectClass() == OBJECT_RACK) ||
-          (object->getObjectClass() == OBJECT_CONTAINER) ||
-          (object->getObjectClass() == OBJECT_ZONE) ||
-          (object->getObjectClass() == OBJECT_SUBNET) ||
-          (object->getObjectClass() == OBJECT_SENSOR) ||
-          (object->getObjectClass() == OBJECT_NETWORK) ||
-          (object->getObjectClass() == OBJECT_SERVICEROOT))
+      TCHAR *script = request.getFieldAsString(VID_SCRIPT);
+      if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
       {
-         TCHAR *script = request.getFieldAsString(VID_SCRIPT);
-         if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
+         if (script != nullptr)
          {
-				if (script != nullptr)
-				{
-               TCHAR errorMessage[256];
-               vm = NXSLCompileAndCreateVM(script, errorMessage, 256, new NXSL_ClientSessionEnv(this, &msg));
-               if (vm != nullptr)
-               {
-                  SetupServerScriptVM(vm, object, shared_ptr<DCObjectInfo>());
-                  msg.setField(VID_RCC, RCC_SUCCESS);
-                  sendMessage(&msg);
-                  success = true;
-                  writeAuditLogWithValues(AUDIT_OBJECTS, true, object->getId(), nullptr, script, 'T', _T("Executed ad-hoc script for object %s [%u]"), object->getName(), object->getId());
-               }
-               else
-               {
-                  msg.setField(VID_RCC, RCC_NXSL_COMPILATION_ERROR);
-                  msg.setField(VID_ERROR_TEXT, errorMessage);
-               }
-				}
-				else
-				{
-	            msg.setField(VID_RCC, RCC_INVALID_ARGUMENT);
-				}
+            TCHAR errorMessage[256];
+            vm = NXSLCompileAndCreateVM(script, errorMessage, 256, new NXSL_ClientSessionEnv(this, &response));
+            if (vm != nullptr)
+            {
+               SetupServerScriptVM(vm, object, shared_ptr<DCObjectInfo>());
+               response.setField(VID_RCC, RCC_SUCCESS);
+               sendMessage(response);
+               success = true;
+               writeAuditLogWithValues(AUDIT_OBJECTS, true, object->getId(), nullptr, script, 'T', _T("Executed ad-hoc script for object %s [%u]"), object->getName(), object->getId());
+            }
+            else
+            {
+               response.setField(VID_RCC, RCC_NXSL_COMPILATION_ERROR);
+               response.setField(VID_ERROR_TEXT, errorMessage);
+            }
          }
-         else  // User doesn't have READ rights on object
+         else
          {
-            writeAuditLogWithValues(AUDIT_OBJECTS, false, object->getId(), nullptr, script, 'T', _T("Access denied on ad-hoc script execution for object %s [%u]"), object->getName(), object->getId());
-            msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+            response.setField(VID_RCC, RCC_INVALID_ARGUMENT);
          }
-         MemFree(script);
       }
-      else     // Object is not a node
+      else  // User doesn't have READ rights on object
       {
-         msg.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+         writeAuditLogWithValues(AUDIT_OBJECTS, false, object->getId(), nullptr, script, 'T', _T("Access denied on ad-hoc script execution for object %s [%u]"), object->getName(), object->getId());
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
       }
+      MemFree(script);
    }
    else  // No object with given ID
    {
-      msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
    }
 
    // start execution
    if (success)
    {
-      msg.setCode(CMD_EXECUTE_SCRIPT_UPDATE);
+      response.setCode(CMD_EXECUTE_SCRIPT_UPDATE);
 
       int count = request.getFieldAsInt16(VID_NUM_FIELDS);
       ObjectRefArray<NXSL_Value> sargs(count, 1);
@@ -10967,7 +10947,7 @@ void ClientSession::executeScript(const NXCPMessage& request)
       }
       else if (count > 0)
       {
-         UINT32 fieldId = VID_FIELD_LIST_BASE;
+         uint32_t fieldId = VID_FIELD_LIST_BASE;
          for(int i = 0; i < count; i++)
          {
             SharedString value = request.getFieldAsSharedString(fieldId++);
@@ -10980,67 +10960,66 @@ void ClientSession::executeScript(const NXCPMessage& request)
          TCHAR buffer[1024];
          const TCHAR *value = vm->getResult()->getValueAsCString();
          _sntprintf(buffer, 1024, _T("\n\n*** FINISHED ***\n\nResult: %s\n\n"), CHECK_NULL(value));
-         msg.setField(VID_MESSAGE, buffer);
-			msg.setField(VID_RCC, RCC_SUCCESS);
-         msg.setEndOfSequence();
-         sendMessage(&msg);
+         response.setField(VID_MESSAGE, buffer);
+			response.setField(VID_RCC, RCC_SUCCESS);
+         response.setEndOfSequence();
+         sendMessage(response);
       }
       else
       {
-         msg.setField(VID_ERROR_TEXT, vm->getErrorText());
-			msg.setField(VID_RCC, RCC_NXSL_EXECUTION_ERROR);
-         msg.setEndOfSequence();
-         sendMessage(&msg);
+         response.setField(VID_ERROR_TEXT, vm->getErrorText());
+			response.setField(VID_RCC, RCC_NXSL_EXECUTION_ERROR);
+         response.setEndOfSequence();
+         sendMessage(response);
       }
       delete vm;
    }
    else
    {
       // Send response
-      sendMessage(&msg);
+      sendMessage(response);
    }
 }
 
 /**
  * Library script execution data
  */
-class LibraryScriptExecutionData
+struct LibraryScriptExecutionData
 {
-public:
    NXSL_VM *vm;
-   ObjectRefArray<NXSL_Value> args;
    TCHAR *name;
+   ObjectRefArray<NXSL_Value> args;
 
-   LibraryScriptExecutionData(NXSL_VM *_vm, StringList *_args) : args(16, 16)
+   LibraryScriptExecutionData(NXSL_VM *_vm, StringList *_args) : args(_args->size(), 16)
    {
       vm = _vm;
       for(int i = 1; i < _args->size(); i++)
          args.add(vm->createValue(_args->get(i)));
-      name = _tcsdup(_args->get(0));
+      name = MemCopyString(_args->get(0));
    }
+
    ~LibraryScriptExecutionData()
    {
       delete vm;
-      free(name);
+      MemFree(name);
    }
 };
 
 /**
  * Callback for executing library script on separate thread pool
  */
-static void ExecuteLibraryScript(void *arg)
+static void ExecuteLibraryScript(LibraryScriptExecutionData *context)
 {
-   LibraryScriptExecutionData *d = (LibraryScriptExecutionData *)arg;
-   nxlog_debug(6, _T("Starting background execution of library script %s"), d->name);
-   if (d->vm->run(d->args))
+   nxlog_debug(6, _T("Starting background execution of library script %s"), context->name);
+   if (context->vm->run(context->args))
    {
-      nxlog_debug(6, _T("Background execution of library script %s completed"), d->name);
+      nxlog_debug(6, _T("Background execution of library script %s completed"), context->name);
    }
    else
    {
-      nxlog_debug(6, _T("Background execution of library script %s failed (%s)"), d->name, d->vm->getErrorText());
+      nxlog_debug(6, _T("Background execution of library script %s failed (%s)"), context->name, context->vm->getErrorText());
    }
-   delete d;
+   delete context;
 }
 
 /**
@@ -11048,15 +11027,11 @@ static void ExecuteLibraryScript(void *arg)
  */
 void ClientSession::executeLibraryScript(const NXCPMessage& request)
 {
-   NXCPMessage msg;
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
    bool success = false;
    NXSL_VM *vm = nullptr;
    StringList *args = nullptr;
    bool withOutput = request.getFieldAsBoolean(VID_RECEIVE_OUTPUT);
-
-   // Prepare response message
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request.getId());
 
    // Get node id and check object class and access rights
    shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
@@ -11084,7 +11059,7 @@ void ClientSession::executeLibraryScript(const NXCPMessage& request)
                   if (count > 0)
                   {
                      inputFields = new StringMap();
-                     UINT32 fieldId = VID_FIELD_LIST_BASE;
+                     uint32_t fieldId = VID_FIELD_LIST_BASE;
                      for(int i = 0; i < count; i++)
                      {
                         TCHAR *name = request.getFieldAsString(fieldId++);
@@ -11098,10 +11073,10 @@ void ClientSession::executeLibraryScript(const NXCPMessage& request)
                   }
 
                   Alarm *alarm = FindAlarmById(request.getFieldAsUInt32(VID_ALARM_ID));
-                  if(alarm != nullptr && !object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ_ALARMS) && !alarm->checkCategoryAccess(this))
+                  if ((alarm != nullptr) && !object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ_ALARMS) && !alarm->checkCategoryAccess(this))
                   {
-                     msg.setField(VID_RCC, RCC_ACCESS_DENIED);
-                     sendMessage(&msg);
+                     response.setField(VID_RCC, RCC_ACCESS_DENIED);
+                     sendMessage(&response);
                      delete alarm;
                      delete inputFields;
                      return;
@@ -11116,46 +11091,46 @@ void ClientSession::executeLibraryScript(const NXCPMessage& request)
                args = ParseCommandLine(script);
                if (args->size() > 0)
                {
-                  NXSL_Environment *env = withOutput ? new NXSL_ClientSessionEnv(this, &msg) : new NXSL_ServerEnv();
+                  NXSL_Environment *env = withOutput ? new NXSL_ClientSessionEnv(this, &response) : new NXSL_ServerEnv();
                   vm = GetServerScriptLibrary()->createVM(args->get(0), env);
                   if (vm != nullptr)
                   {
                      SetupServerScriptVM(vm, object, shared_ptr<DCObjectInfo>());
                      WriteAuditLog(AUDIT_OBJECTS, true, m_dwUserId, m_workstation, m_id, object->getId(), _T("'%s' script successfully executed."), CHECK_NULL(script));
-                     msg.setField(VID_RCC, RCC_SUCCESS);
-                     sendMessage(&msg);
+                     response.setField(VID_RCC, RCC_SUCCESS);
+                     sendMessage(&response);
                      success = true;
                   }
                   else
                   {
-                     msg.setField(VID_RCC, RCC_INVALID_SCRIPT_NAME);
+                     response.setField(VID_RCC, RCC_INVALID_SCRIPT_NAME);
                   }
                }
                else
                {
-                  msg.setField(VID_RCC, RCC_INVALID_ARGUMENT);
+                  response.setField(VID_RCC, RCC_INVALID_ARGUMENT);
                }
             }
             else
             {
-               msg.setField(VID_RCC, RCC_INVALID_ARGUMENT);
+               response.setField(VID_RCC, RCC_INVALID_ARGUMENT);
             }
          }
          else  // User doesn't have CONTROL rights on object
          {
 			   writeAuditLog(AUDIT_OBJECTS, false, object->getId(), _T("Access denied on executing library script \"%s\" on object %s [%u]"),
                   CHECK_NULL(script), object->getName(), object->getId());
-            msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+            response.setField(VID_RCC, RCC_ACCESS_DENIED);
          }
       }
       else     // Object is not a node
       {
-         msg.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+         response.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
       }
    }
    else  // No object with given ID
    {
-      msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
    }
 
    // start execution
@@ -11167,23 +11142,23 @@ void ClientSession::executeLibraryScript(const NXCPMessage& request)
          ObjectRefArray<NXSL_Value> sargs(args->size() - 1, 1);
          for(int i = 1; i < args->size(); i++)
             sargs.add(vm->createValue(args->get(i)));
-         msg.setCode(CMD_EXECUTE_SCRIPT_UPDATE);
+         response.setCode(CMD_EXECUTE_SCRIPT_UPDATE);
          if (vm->run(sargs))
          {
             TCHAR buffer[1024];
             const TCHAR *value = vm->getResult()->getValueAsCString();
             _sntprintf(buffer, 1024, _T("\n\n*** FINISHED ***\n\nResult: %s\n\n"), CHECK_NULL(value));
-            msg.setField(VID_MESSAGE, buffer);
-            msg.setField(VID_RCC, RCC_SUCCESS);
-            msg.setEndOfSequence();
-            sendMessage(&msg);
+            response.setField(VID_MESSAGE, buffer);
+            response.setField(VID_RCC, RCC_SUCCESS);
+            response.setEndOfSequence();
+            sendMessage(&response);
          }
          else
          {
-            msg.setField(VID_ERROR_TEXT, vm->getErrorText());
-            msg.setField(VID_RCC, RCC_NXSL_EXECUTION_ERROR);
-            msg.setEndOfSequence();
-            sendMessage(&msg);
+            response.setField(VID_ERROR_TEXT, vm->getErrorText());
+            response.setField(VID_RCC, RCC_NXSL_EXECUTION_ERROR);
+            response.setEndOfSequence();
+            sendMessage(&response);
          }
          delete vm;
       }
@@ -11194,7 +11169,7 @@ void ClientSession::executeLibraryScript(const NXCPMessage& request)
    }
    else
    {
-      sendMessage(msg);
+      sendMessage(response);
    }
 
    MemFree(script);
@@ -11297,10 +11272,7 @@ void ClientSession::setUserCustomAttribute(const NXCPMessage& request)
  */
 void ClientSession::openServerLog(const NXCPMessage& request)
 {
-	NXCPMessage msg;
-
-	msg.setCode(CMD_REQUEST_COMPLETED);
-	msg.setId(request.getId());
+	NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
 	TCHAR name[256];
 	request.getFieldAsString(VID_LOG_NAME, name, 256);
@@ -11309,19 +11281,19 @@ void ClientSession::openServerLog(const NXCPMessage& request)
 	int32_t handle = OpenLog(name, this, &rcc);
 	if (handle != -1)
 	{
-		msg.setField(VID_RCC, RCC_SUCCESS);
-		msg.setField(VID_LOG_HANDLE, handle);
+		response.setField(VID_RCC, RCC_SUCCESS);
+		response.setField(VID_LOG_HANDLE, handle);
 
 		shared_ptr<LogHandle> log = AcquireLogHandleObject(this, handle);
-		log->getColumnInfo(&msg);
+		log->getColumnInfo(&response);
 		log->release();
 	}
 	else
 	{
-		msg.setField(VID_RCC, rcc);
+		response.setField(VID_RCC, rcc);
 	}
 
-	sendMessage(&msg);
+	sendMessage(response);
 }
 
 /**
@@ -11329,15 +11301,12 @@ void ClientSession::openServerLog(const NXCPMessage& request)
  */
 void ClientSession::closeServerLog(const NXCPMessage& request)
 {
-	NXCPMessage msg;
+	NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
-	msg.setCode(CMD_REQUEST_COMPLETED);
-	msg.setId(request.getId());
+	int handle = request.getFieldAsInt32(VID_LOG_HANDLE);
+	response.setField(VID_RCC, CloseLog(this, handle));
 
-	int handle = (int)request.getFieldAsUInt32(VID_LOG_HANDLE);
-	msg.setField(VID_RCC, CloseLog(this, handle));
-
-	sendMessage(&msg);
+	sendMessage(response);
 }
 
 /**
@@ -11345,26 +11314,23 @@ void ClientSession::closeServerLog(const NXCPMessage& request)
  */
 void ClientSession::queryServerLog(const NXCPMessage& request)
 {
-	NXCPMessage msg;
-
-	msg.setCode(CMD_REQUEST_COMPLETED);
-	msg.setId(request.getId());
+	NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
 	int32_t handle = request.getFieldAsInt32(VID_LOG_HANDLE);
 	shared_ptr<LogHandle> log = AcquireLogHandleObject(this, handle);
 	if (log != nullptr)
 	{
-		INT64 rowCount;
-		msg.setField(VID_RCC, log->query(new LogFilter(request, log.get()), &rowCount, getUserId()) ? RCC_SUCCESS : RCC_DB_FAILURE);
-		msg.setField(VID_NUM_ROWS, rowCount);
+		int64_t rowCount;
+		response.setField(VID_RCC, log->query(new LogFilter(request, log.get()), &rowCount, getUserId()) ? RCC_SUCCESS : RCC_DB_FAILURE);
+		response.setField(VID_NUM_ROWS, rowCount);
 		log->release();
 	}
 	else
 	{
-		msg.setField(VID_RCC, RCC_INVALID_LOG_HANDLE);
+		response.setField(VID_RCC, RCC_INVALID_LOG_HANDLE);
 	}
 
-	sendMessage(&msg);
+	sendMessage(response);
 }
 
 /**
@@ -11372,46 +11338,43 @@ void ClientSession::queryServerLog(const NXCPMessage& request)
  */
 void ClientSession::getServerLogQueryData(const NXCPMessage& request)
 {
-	NXCPMessage msg;
+	NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 	Table *data = nullptr;
-
-	msg.setCode(CMD_REQUEST_COMPLETED);
-	msg.setId(request.getId());
 
 	int32_t handle = (int)request.getFieldAsUInt32(VID_LOG_HANDLE);
 	shared_ptr<LogHandle> log = AcquireLogHandleObject(this, handle);
 	if (log != nullptr)
 	{
-		INT64 startRow = request.getFieldAsUInt64(VID_START_ROW);
-		INT64 numRows = request.getFieldAsUInt64(VID_NUM_ROWS);
+	   int64_t startRow = request.getFieldAsUInt64(VID_START_ROW);
+	   int64_t numRows = request.getFieldAsUInt64(VID_NUM_ROWS);
 		bool refresh = request.getFieldAsUInt16(VID_FORCE_RELOAD) ? true : false;
 		data = log->getData(startRow, numRows, refresh, m_dwUserId); // pass user id from session
 		log->release();
 		if (data != nullptr)
 		{
-			msg.setField(VID_RCC, RCC_SUCCESS);
+			response.setField(VID_RCC, RCC_SUCCESS);
 		}
 		else
 		{
-			msg.setField(VID_RCC, RCC_DB_FAILURE);
+			response.setField(VID_RCC, RCC_DB_FAILURE);
 		}
 	}
 	else
 	{
-		msg.setField(VID_RCC, RCC_INVALID_LOG_HANDLE);
+		response.setField(VID_RCC, RCC_INVALID_LOG_HANDLE);
 	}
 
-	sendMessage(&msg);
+	sendMessage(response);
 
 	if (data != nullptr)
 	{
-		msg.setCode(CMD_LOG_DATA);
+		response.setCode(CMD_LOG_DATA);
 		int offset = 0;
 		do
 		{
-			msg.deleteAllFields();
-			offset = data->fillMessage(msg, offset, 200);
-			sendMessage(&msg);
+			response.deleteAllFields();
+			offset = data->fillMessage(response, offset, 200);
+			sendMessage(response);
 		} while(offset < data->getNumRows());
 		delete data;
 	}
@@ -11422,24 +11385,21 @@ void ClientSession::getServerLogQueryData(const NXCPMessage& request)
  */
 void ClientSession::getServerLogRecordDetails(const NXCPMessage& request)
 {
-   NXCPMessage msg;
-
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    int32_t handle = request.getFieldAsInt32(VID_LOG_HANDLE);
    shared_ptr<LogHandle> log = AcquireLogHandleObject(this, handle);
    if (log != nullptr)
    {
-      log->getRecordDetails(request.getFieldAsInt64(VID_RECORD_ID), &msg);
+      log->getRecordDetails(request.getFieldAsInt64(VID_RECORD_ID), &response);
       log->release();
    }
    else
    {
-      msg.setField(VID_RCC, RCC_INVALID_LOG_HANDLE);
+      response.setField(VID_RCC, RCC_INVALID_LOG_HANDLE);
    }
 
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
@@ -11447,12 +11407,9 @@ void ClientSession::getServerLogRecordDetails(const NXCPMessage& request)
  */
 void ClientSession::updateUsmCredentials(const NXCPMessage& request)
 {
-   NXCPMessage msg;
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
-	msg.setId(request.getId());
-	msg.setCode(CMD_REQUEST_COMPLETED);
-   UINT32 rcc = RCC_SUCCESS;
-
+   uint32_t rcc = RCC_SUCCESS;
 	if (m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONFIG)
 	{
       int32_t zoneUIN = request.getFieldAsInt32(VID_ZONE_UIN);
@@ -11467,7 +11424,7 @@ void ClientSession::updateUsmCredentials(const NXCPMessage& request)
                DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO usm_credentials (id,user_name,auth_method,priv_method,auth_password,priv_password,comments,zone) VALUES(?,?,?,?,?,?,?,?)"), true);
                if (hStmt != nullptr)
                {
-                  UINT32 id = VID_USM_CRED_LIST_BASE;
+                  uint32_t id = VID_USM_CRED_LIST_BASE;
                   int count = (int)request.getFieldAsUInt32(VID_NUM_RECORDS);
                   DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, zoneUIN);
                   for(int i = 0; i < count; i++, id += 4)
@@ -11517,8 +11474,8 @@ void ClientSession::updateUsmCredentials(const NXCPMessage& request)
       rcc = RCC_ACCESS_DENIED;
 	}
 
-   msg.setField(VID_RCC, rcc);
-	sendMessage(&msg);
+   response.setField(VID_RCC, rcc);
+	sendMessage(response);
 }
 
 /**

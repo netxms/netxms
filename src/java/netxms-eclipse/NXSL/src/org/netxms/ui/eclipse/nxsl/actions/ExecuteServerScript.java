@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,18 +27,7 @@ import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.handlers.HandlerUtil;
-import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.client.objects.Chassis;
-import org.netxms.client.objects.Cluster;
-import org.netxms.client.objects.Container;
-import org.netxms.client.objects.EntireNetwork;
-import org.netxms.client.objects.MobileDevice;
-import org.netxms.client.objects.Rack;
-import org.netxms.client.objects.Sensor;
-import org.netxms.client.objects.ServiceRoot;
-import org.netxms.client.objects.Subnet;
-import org.netxms.client.objects.Zone;
 import org.netxms.ui.eclipse.nxsl.Messages;
 import org.netxms.ui.eclipse.nxsl.views.ScriptExecutor;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
@@ -48,7 +37,7 @@ import org.netxms.ui.eclipse.tools.MessageDialogHelper;
  */
 public class ExecuteServerScript extends AbstractHandler
 {
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.core.commands.AbstractHandler#execute(org.eclipse.core.commands.ExecutionEvent)
     */
    @Override
@@ -58,14 +47,11 @@ public class ExecuteServerScript extends AbstractHandler
       ISelection selection = window.getActivePage().getSelection();
       if ((selection == null) || !(selection instanceof IStructuredSelection) || (((IStructuredSelection)selection).size() != 1))
          return null;
-      
+
       Object object = ((IStructuredSelection)selection).getFirstElement();
-      if (!(object instanceof AbstractNode) && !(object instanceof Cluster) && !(object instanceof MobileDevice) &&
-          !(object instanceof Chassis) && !(object instanceof Rack) && !(object instanceof Container) &&
-          !(object instanceof Zone) && !(object instanceof Subnet) && !(object instanceof Sensor) &&
-          !(object instanceof ServiceRoot) && !(object instanceof EntireNetwork))
+      if (!(object instanceof AbstractObject))
          return null;
-      
+
       try
       {
          window.getActivePage().showView(ScriptExecutor.ID, Long.toString(((AbstractObject)object).getObjectId()), IWorkbenchPage.VIEW_ACTIVATE);
