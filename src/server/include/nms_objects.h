@@ -635,10 +635,10 @@ public:
 
    const TCHAR *getName() const { return m_name; }
    const TCHAR *getVersion() const { return m_version; }
-   TCHAR *getVendor() const {return m_vendor;}
+   const TCHAR* getVendor() const { return m_vendor; }
    time_t getDate() const {return m_date;}
-   TCHAR *getUrl() { return m_url;}
-   TCHAR *getDescription() { return m_description; }
+   const TCHAR* getUrl() { return m_url; }
+   const TCHAR* getDescription() { return m_description; }
    ChangeCode getChangeCode() const { return m_changeCode; }
 
    void setChangeCode(ChangeCode c) { m_changeCode = c; }
