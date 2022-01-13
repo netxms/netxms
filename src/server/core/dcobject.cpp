@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -62,7 +62,7 @@ const TCHAR *DCObject::getStorageClassName(DCObjectStorageClass storageClass)
 /**
  * Default constructor for DCObject
  */
-DCObject::DCObject(const shared_ptr<DataCollectionOwner>& owner) : m_owner(owner), m_mutex(MutexType::RECURSIVE)
+DCObject::DCObject(const shared_ptr<DataCollectionOwner>& owner) : m_owner(owner), m_mutex(MutexType::RECURSIVE), m_accessList(0, 16)
 {
    m_id = 0;
    m_guid = uuid::generate();
@@ -98,7 +98,6 @@ DCObject::DCObject(const shared_ptr<DataCollectionOwner>& owner) : m_owner(owner
    m_instanceDiscoveryMethod = IDM_NONE;
    m_instanceFilterSource = nullptr;
    m_instanceFilter = nullptr;
-   m_accessList = new IntegerArray<UINT32>(0, 16);
    m_instanceRetentionTime = -1;
    m_instanceGracePeriodStart = 0;
    m_startTime = 0;
@@ -111,7 +110,7 @@ DCObject::DCObject(const shared_ptr<DataCollectionOwner>& owner) : m_owner(owner
 DCObject::DCObject(const DCObject *src, bool shadowCopy) :
          m_owner(src->m_owner), m_name(src->m_name), m_description(src->m_description),
          m_systemTag(src->m_systemTag), m_instanceDiscoveryData(src->m_instanceDiscoveryData),
-         m_instanceName(src->m_instanceName), m_mutex(MutexType::RECURSIVE)
+         m_instanceName(src->m_instanceName), m_mutex(MutexType::RECURSIVE), m_accessList(src->m_accessList)
 {
    m_id = src->m_id;
    m_guid = src->m_guid;
@@ -152,7 +151,6 @@ DCObject::DCObject(const DCObject *src, bool shadowCopy) :
    m_instanceFilterSource = nullptr;
    m_instanceFilter = nullptr;
    setInstanceFilter(src->m_instanceFilterSource);
-   m_accessList = new IntegerArray<UINT32>(src->m_accessList);
    m_instanceRetentionTime = src->m_instanceRetentionTime;
    m_instanceGracePeriodStart = src->m_instanceGracePeriodStart;
    m_startTime = src->m_startTime;
@@ -165,7 +163,8 @@ DCObject::DCObject(const DCObject *src, bool shadowCopy) :
 DCObject::DCObject(UINT32 id, const TCHAR *name, int source, const TCHAR *pollingInterval, const TCHAR *retentionTime,
          const shared_ptr<DataCollectionOwner>& owner, const TCHAR *description, const TCHAR *systemTag) :
          m_owner(owner), m_name(name), m_description(description), m_systemTag(systemTag),
-         m_instanceDiscoveryData(_T("")), m_instanceName(_T("")), m_mutex(MutexType::RECURSIVE)
+         m_instanceDiscoveryData(_T("")), m_instanceName(_T("")), m_mutex(MutexType::RECURSIVE),
+         m_accessList(0, 16)
 {
    m_id = id;
    m_guid = uuid::generate();
@@ -199,7 +198,6 @@ DCObject::DCObject(UINT32 id, const TCHAR *name, int source, const TCHAR *pollin
    m_instanceDiscoveryMethod = IDM_NONE;
    m_instanceFilterSource = nullptr;
    m_instanceFilter = nullptr;
-   m_accessList = new IntegerArray<UINT32>(0, 16);
    m_instanceRetentionTime = -1;
    m_instanceGracePeriodStart = 0;
    m_startTime = 0;
@@ -211,7 +209,7 @@ DCObject::DCObject(UINT32 id, const TCHAR *name, int source, const TCHAR *pollin
 /**
  * Create DCObject from import file
  */
-DCObject::DCObject(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& owner) : m_owner(owner), m_mutex(MutexType::RECURSIVE)
+DCObject::DCObject(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& owner) : m_owner(owner), m_mutex(MutexType::RECURSIVE), m_accessList(0, 16)
 {
    m_id = CreateUniqueId(IDG_ITEM);
    m_guid = config->getSubEntryValueAsUUID(_T("guid"));
@@ -295,7 +293,6 @@ DCObject::DCObject(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& o
    m_instanceFilter = nullptr;
    setInstanceFilter(config->getSubEntryValue(_T("instanceFilter")));
    m_instanceName = config->getSubEntryValue(_T("instance"));
-   m_accessList = new IntegerArray<UINT32>(0, 16);
    m_instanceRetentionTime = config->getSubEntryValueAsInt(_T("instanceRetentionTime"), 0, -1);
    m_instanceGracePeriodStart = 0;
    m_startTime = 0;
@@ -318,7 +315,6 @@ DCObject::~DCObject()
    MemFree(m_comments);
    MemFree(m_instanceFilterSource);
    delete m_instanceFilter;
-   delete m_accessList;
 }
 
 /**
@@ -326,7 +322,7 @@ DCObject::~DCObject()
  */
 bool DCObject::loadAccessList(DB_HANDLE hdb)
 {
-   m_accessList->clear();
+   m_accessList.clear();
 
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT user_id FROM dci_access WHERE dci_id=?"));
    if (hStmt == nullptr)
@@ -339,7 +335,7 @@ bool DCObject::loadAccessList(DB_HANDLE hdb)
       int count = DBGetNumRows(hResult);
       for(int i = 0; i < count; i++)
       {
-         m_accessList->add(DBGetFieldULong(hResult, i, 0));
+         m_accessList.add(DBGetFieldULong(hResult, i, 0));
       }
       DBFreeResult(hResult);
    }
@@ -895,8 +891,8 @@ void DCObject::updateFromMessage(const NXCPMessage& msg)
 
    m_instanceName = msg.getFieldAsSharedString(VID_INSTANCE, MAX_INSTANCE_LEN);
 
-   m_accessList->clear();
-   msg.getFieldAsInt32Array(VID_ACL, m_accessList);
+   m_accessList.clear();
+   msg.getFieldAsInt32Array(VID_ACL, &m_accessList);
 
    m_instanceRetentionTime = msg.getFieldAsInt32(VID_INSTANCE_RETENTION);
    m_relatedObject = msg.getFieldAsUInt32(VID_RELATED_OBJECT);
@@ -938,15 +934,15 @@ bool DCObject::saveToDatabase(DB_HANDLE hdb)
 	{
 	   success = ExecuteQueryOnObject(hdb, m_id, _T("DELETE FROM dci_access WHERE dci_id=?"));
 	}
-   if (success && !m_accessList->isEmpty())
+   if (success && !m_accessList.isEmpty())
    {
-      DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO dci_access (dci_id,user_id) VALUES (?,?)"));
+      DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO dci_access (dci_id,user_id) VALUES (?,?)"), m_accessList.size() > 1);
       if (hStmt != nullptr)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
-         for(int i = 0; (i < m_accessList->size()) && success; i++)
+         for(int i = 0; (i < m_accessList.size()) && success; i++)
          {
-            DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_accessList->get(i));
+            DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_accessList.get(i));
             success = DBExecute(hStmt);
          }
          DBFreeStatement(hStmt);
@@ -1041,8 +1037,8 @@ void DCObject::updateFromTemplate(DCObject *src)
 
    setTransformationScript(src->m_transformationScriptSource);
 
-   delete m_accessList;
-   m_accessList = new IntegerArray<UINT32>(src->m_accessList);
+   m_accessList.clear();
+   m_accessList.addAll(src->m_accessList);
 
    // Copy schedules
    delete m_schedules;
@@ -1528,25 +1524,18 @@ void DCObject::updateTimeIntervalsInternal()
 }
 
 /**
- * Checks if this DCO object is visible by current user
+ * Checks if this DCO object is visible by given user
  */
-bool DCObject::hasAccess(UINT32 userId)
+bool DCObject::hasAccess(uint32_t userId)
 {
-   if (m_accessList->isEmpty() || (userId == 0))
+   if (m_accessList.isEmpty() || (userId == 0))
       return true;
 
-   for(int i = 0; i < m_accessList->size(); i++)
+   for(int i = 0; i < m_accessList.size(); i++)
    {
-      UINT32 id = m_accessList->get(i);
-      if (id & GROUP_FLAG)
-      {
-         if (CheckUserMembership(userId, id))
-            return true;
-      }
-      else if (id == userId)
-      {
+      uint32_t id = m_accessList.get(i);
+      if ((id == userId) || ((id & GROUP_FLAG) && CheckUserMembership(userId, id)))
          return true;
-      }
    }
    return false;
 }
@@ -1587,7 +1576,7 @@ json_t *DCObject::toJson()
    json_object_set_new(root, "instanceDiscoveryData", json_string_t(m_instanceDiscoveryData));
    json_object_set_new(root, "instanceFilter", json_string_t(m_instanceFilterSource));
    json_object_set_new(root, "instanceName", json_string_t(m_instanceName));
-   json_object_set_new(root, "accessList", m_accessList->toJson());
+   json_object_set_new(root, "accessList", m_accessList.toJson());
    json_object_set_new(root, "instanceRetentionTime", json_integer(m_instanceRetentionTime));
    unlock();
    return root;

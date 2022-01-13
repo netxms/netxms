@@ -304,7 +304,7 @@ protected:
    TCHAR *m_instanceFilterSource;
    NXSL_Program *m_instanceFilter;
    SharedString m_instanceName;           // Instance display name (used only for display purposes)
-   IntegerArray<UINT32> *m_accessList;
+   IntegerArray<uint32_t> m_accessList;
    time_t m_instanceGracePeriodStart;  // Start of grace period for missing instance
    int32_t m_instanceRetentionTime;      // Retention time if instance is not found
    time_t m_startTime;                 // Time to start data collection
@@ -391,7 +391,7 @@ public:
    bool isDataStorageEnabled() const { return m_retentionType != DC_RETENTION_NONE; }
    INT16 getAgentCacheMode();
    bool hasValue();
-   bool hasAccess(UINT32 userId);
+   bool hasAccess(uint32_t userId);
    uint32_t getRelatedObject() const { return m_relatedObject; }
 
 	bool matchClusterResource();

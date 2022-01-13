@@ -4249,7 +4249,7 @@ void ClientSession::deleteDCIEntry(const NXCPMessage& request)
       {
          if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
          {
-            UINT32 dciId = request.getFieldAsUInt32(VID_DCI_ID);
+            uint32_t dciId = request.getFieldAsUInt32(VID_DCI_ID);
             debugPrintf(4, _T("DeleteDCIEntry: request for DCI %d at node %d"), dciId, object->getId());
             shared_ptr<DCObject> dci = static_cast<DataCollectionOwner&>(*object).getDCObjectById(dciId, m_dwUserId);
             if (dci != nullptr)
@@ -4290,7 +4290,7 @@ void ClientSession::deleteDCIEntry(const NXCPMessage& request)
  */
 void ClientSession::forceDCIPoll(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    // Get node id and check object class and access rights
    shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
@@ -4305,33 +4305,42 @@ void ClientSession::forceDCIPoll(const NXCPMessage& request)
             shared_ptr<DCObject> dci = static_cast<DataCollectionOwner&>(*object).getDCObjectById(dciId, m_dwUserId);
 				if (dci != nullptr)
 				{
-				   dci->requestForcePoll(this);
-					msg.setField(VID_RCC, RCC_SUCCESS);
-					debugPrintf(4, _T("ForceDCIPoll: DCI %d at node %d"), dciId, object->getId());
+				   if (dci->hasAccess(m_dwUserId))
+				   {
+                  dci->requestForcePoll(this);
+                  response.setField(VID_RCC, RCC_SUCCESS);
+                  debugPrintf(4, _T("ForceDCIPoll: DCI %d at node %d"), dciId, object->getId());
+                  writeAuditLog(AUDIT_OBJECTS, true, object->getId(), _T("Forced DCI poll initiated for DCI \"%s\" [%u]"), dci->getDescription(), dci->getId());
+				   }
+				   else  // User doesn't have access to this DCI
+				   {
+		            response.setField(VID_RCC, RCC_ACCESS_DENIED);
+		            writeAuditLog(AUDIT_OBJECTS, false, object->getId(), _T("Access denied on forced poll for DCI \"%s\" [%u]"), dci->getDescription(), dci->getId());
+				   }
 				}
 				else
 				{
-					msg.setField(VID_RCC, RCC_INVALID_DCI_ID);
+					response.setField(VID_RCC, RCC_INVALID_DCI_ID);
 					debugPrintf(4, _T("ForceDCIPoll: DCI %d at node %d not found"), dciId, object->getId());
 				}
          }
          else  // User doesn't have READ rights on object
          {
-            msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+            response.setField(VID_RCC, RCC_ACCESS_DENIED);
+            writeAuditLog(AUDIT_OBJECTS, false, object->getId(), _T("Access denied on forced DCI poll"));
          }
       }
       else     // Object is not a node
       {
-         msg.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+         response.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
       }
    }
    else  // No object with given ID
    {
-      msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
    }
 
-   // Send response
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
@@ -4339,25 +4348,21 @@ void ClientSession::forceDCIPoll(const NXCPMessage& request)
  */
 void ClientSession::copyDCI(const NXCPMessage& request)
 {
-   NXCPMessage msg;
-
-   // Prepare response message
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    // Get source and destination
-   shared_ptr<NetObj> pSource = FindObjectById(request.getFieldAsUInt32(VID_SOURCE_OBJECT_ID));
-   shared_ptr<NetObj> pDestination = FindObjectById(request.getFieldAsUInt32(VID_DESTINATION_OBJECT_ID));
-   if ((pSource != nullptr) && (pDestination != nullptr))
+   shared_ptr<NetObj> sourceObject = FindObjectById(request.getFieldAsUInt32(VID_SOURCE_OBJECT_ID));
+   shared_ptr<NetObj> destinationObject = FindObjectById(request.getFieldAsUInt32(VID_DESTINATION_OBJECT_ID));
+   if ((sourceObject != nullptr) && (destinationObject != nullptr))
    {
       // Check object types
-      if ((pSource->isDataCollectionTarget() || (pSource->getObjectClass() == OBJECT_TEMPLATE)) &&
-		    (pDestination->isDataCollectionTarget() || (pDestination->getObjectClass() == OBJECT_TEMPLATE)))
+      if ((sourceObject->isDataCollectionTarget() || (sourceObject->getObjectClass() == OBJECT_TEMPLATE)) &&
+		    (destinationObject->isDataCollectionTarget() || (destinationObject->getObjectClass() == OBJECT_TEMPLATE)))
       {
          bool doMove = request.getFieldAsBoolean(VID_MOVE_FLAG);
          // Check access rights
-         if ((pSource->checkAccessRights(m_dwUserId, doMove ? (OBJECT_ACCESS_READ | OBJECT_ACCESS_MODIFY) : OBJECT_ACCESS_READ)) &&
-             (pDestination->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY)))
+         if ((sourceObject->checkAccessRights(m_dwUserId, doMove ? (OBJECT_ACCESS_READ | OBJECT_ACCESS_MODIFY) : OBJECT_ACCESS_READ)) &&
+             (destinationObject->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY)))
          {
             UINT32 i, *pdwItemList, dwNumItems;
             int iErrors = 0;
@@ -4370,19 +4375,19 @@ void ClientSession::copyDCI(const NXCPMessage& request)
             // Copy items
             for(i = 0; i < dwNumItems; i++)
             {
-               shared_ptr<DCObject> pSrcItem = static_cast<DataCollectionOwner&>(*pSource).getDCObjectById(pdwItemList[i], m_dwUserId);
-               if (pSrcItem != nullptr)
+               shared_ptr<DCObject> srcItem = static_cast<DataCollectionOwner&>(*sourceObject).getDCObjectById(pdwItemList[i], m_dwUserId);
+               if ((srcItem != nullptr) && srcItem->hasAccess(m_dwUserId))
                {
-                  DCObject *pDstItem = pSrcItem->clone();
-                  pDstItem->setTemplateId(0, 0);
-                  pDstItem->changeBinding(CreateUniqueId(IDG_ITEM),
-                           static_pointer_cast<DataCollectionOwner>(pDestination), FALSE);
-                  if (static_cast<DataCollectionOwner&>(*pDestination).addDCObject(pDstItem))
+                  DCObject *dstItem = srcItem->clone();
+                  dstItem->setTemplateId(0, 0);
+                  dstItem->changeBinding(CreateUniqueId(IDG_ITEM),
+                           static_pointer_cast<DataCollectionOwner>(destinationObject), FALSE);
+                  if (static_cast<DataCollectionOwner&>(*destinationObject).addDCObject(dstItem))
                   {
                      if (doMove)
                      {
                         // Delete original item
-                        if (!static_cast<DataCollectionOwner&>(*pSource).deleteDCObject(pdwItemList[i], true, m_dwUserId))
+                        if (!static_cast<DataCollectionOwner&>(*sourceObject).deleteDCObject(pdwItemList[i], true, m_dwUserId))
                         {
                            iErrors++;
                         }
@@ -4390,7 +4395,7 @@ void ClientSession::copyDCI(const NXCPMessage& request)
                   }
                   else
                   {
-                     delete pDstItem;
+                     delete dstItem;
                      iErrors++;
                   }
                }
@@ -4402,30 +4407,30 @@ void ClientSession::copyDCI(const NXCPMessage& request)
 
             // Cleanup
             MemFree(pdwItemList);
-            static_cast<DataCollectionOwner&>(*pDestination).applyDCIChanges(!m_openDataCollectionConfigurations.contains(pDestination->getId()));
-            msg.setField(VID_RCC, (iErrors == 0) ? RCC_SUCCESS : RCC_DCI_COPY_ERRORS);
+            static_cast<DataCollectionOwner&>(*destinationObject).applyDCIChanges(!m_openDataCollectionConfigurations.contains(destinationObject->getId()));
+            response.setField(VID_RCC, (iErrors == 0) ? RCC_SUCCESS : RCC_DCI_COPY_ERRORS);
 
             // Queue template update
-            if (pDestination->getObjectClass() == OBJECT_TEMPLATE)
-               static_cast<DataCollectionOwner&>(*pDestination).queueUpdate();
+            if (destinationObject->getObjectClass() == OBJECT_TEMPLATE)
+               static_cast<DataCollectionOwner&>(*destinationObject).queueUpdate();
          }
          else  // User doesn't have enough rights on object(s)
          {
-            msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+            response.setField(VID_RCC, RCC_ACCESS_DENIED);
          }
       }
       else     // Object(s) is not a node
       {
-         msg.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+         response.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
       }
    }
    else  // No object(s) with given ID
    {
-      msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
    }
 
    // Send response
-   sendMessage(&msg);
+   sendMessage(&response);
 }
 
 /**
@@ -4433,7 +4438,7 @@ void ClientSession::copyDCI(const NXCPMessage& request)
  */
 void ClientSession::bulkDCIUpdate(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    // Get node id and check object class and access rights
    shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
@@ -4443,28 +4448,27 @@ void ClientSession::bulkDCIUpdate(const NXCPMessage& request)
       {
          if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
          {
-            msg.setField(VID_NUM_ITEMS, static_cast<DataCollectionOwner&>(*object).updateMultipleDCObjects(request));
-            msg.setField(VID_RCC, RCC_SUCCESS);
+            response.setField(VID_NUM_ITEMS, static_cast<DataCollectionOwner&>(*object).updateMultipleDCObjects(request, m_dwUserId));
+            response.setField(VID_RCC, RCC_SUCCESS);
             writeAuditLog(AUDIT_OBJECTS, true, object->getId(), _T("Successful bulk DCI update"));
          }
          else  // User doesn't have MODIFY rights on object
          {
-            msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+            response.setField(VID_RCC, RCC_ACCESS_DENIED);
             writeAuditLog(AUDIT_OBJECTS, false, object->getId(), _T("Access denied on DCI bulk update"));
          }
       }
       else     // Object is not a node
       {
-         msg.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+         response.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
       }
    }
    else  // No object with given ID
    {
-      msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
    }
 
-   // Send response
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
@@ -4472,7 +4476,7 @@ void ClientSession::bulkDCIUpdate(const NXCPMessage& request)
  */
 void ClientSession::sendDCIThresholds(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    // Get node id and check object class and access rights
    shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
@@ -4485,31 +4489,37 @@ void ClientSession::sendDCIThresholds(const NXCPMessage& request)
 				shared_ptr<DCObject> dci = static_cast<DataCollectionTarget&>(*object).getDCObjectById(request.getFieldAsUInt32(VID_DCI_ID), m_dwUserId);
 				if ((dci != nullptr) && (dci->getType() == DCO_TYPE_ITEM))
 				{
-				   static_cast<DCItem&>(*dci).fillMessageWithThresholds(&msg, false);
-					msg.setField(VID_RCC, RCC_SUCCESS);
+				   if (dci->hasAccess(m_dwUserId))
+				   {
+                  static_cast<DCItem&>(*dci).fillMessageWithThresholds(&response, false);
+                  response.setField(VID_RCC, RCC_SUCCESS);
+				   }
+				   else
+				   {
+			         response.setField(VID_RCC, RCC_ACCESS_DENIED);
+				   }
 				}
 				else
 				{
-					msg.setField(VID_RCC, RCC_INVALID_DCI_ID);
+					response.setField(VID_RCC, RCC_INVALID_DCI_ID);
 				}
          }
          else
          {
-            msg.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+            response.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
          }
       }
       else
       {
-         msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
       }
    }
    else  // No object with given ID
    {
-		msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+		response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
    }
 
-   // Send response
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 #define SELECTION_COLUMNS (historicalDataType != HDT_RAW) ? tablePrefix : _T(""), (historicalDataType == HDT_RAW_AND_PROCESSED) ? _T("_value,raw_value") : ((historicalDataType == HDT_PROCESSED) || (historicalDataType == HDT_FULL_TABLE)) ?  _T("_value") : _T("raw_value")

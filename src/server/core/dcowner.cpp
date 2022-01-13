@@ -558,7 +558,7 @@ bool DataCollectionOwner::setItemStatus(UINT32 dwNumItems, UINT32 *pdwItemList, 
 /**
  * Update multiple data collection objects. Returns number of updated DCIs.
  */
-int DataCollectionOwner::updateMultipleDCObjects(const NXCPMessage& request)
+int DataCollectionOwner::updateMultipleDCObjects(const NXCPMessage& request, uint32_t userId)
 {
    IntegerArray<uint32_t> idList;
    request.getFieldAsInt32Array(VID_ITEM_LIST, &idList);
@@ -586,16 +586,19 @@ int DataCollectionOwner::updateMultipleDCObjects(const NXCPMessage& request)
          DCObject *dci = m_dcObjects.get(j);
          if (dci->getId() == idList.get(i))
          {
-            if (!pollingIntervalSrc.isNull())
-               dci->setPollingInterval(pollingIntervalSrc);
-            if (!retentionTimeSrc.isNull())
-               dci->setRetention(retentionTimeSrc);
-            if (pollingScheduleType != -1)
-               dci->setPollingIntervalType(static_cast<BYTE>(pollingScheduleType));
-            if (retentionType != -1)
-               dci->setRetentionType(static_cast<BYTE>(retentionType));
-            NotifyClientsOnDCIUpdate(*this, dci);
-            count++;
+            if (dci->hasAccess(userId))
+            {
+               if (!pollingIntervalSrc.isNull())
+                  dci->setPollingInterval(pollingIntervalSrc);
+               if (!retentionTimeSrc.isNull())
+                  dci->setRetention(retentionTimeSrc);
+               if (pollingScheduleType != -1)
+                  dci->setPollingIntervalType(static_cast<BYTE>(pollingScheduleType));
+               if (retentionType != -1)
+                  dci->setRetentionType(static_cast<BYTE>(retentionType));
+               NotifyClientsOnDCIUpdate(*this, dci);
+               count++;
+            }
             break;
          }
       }
