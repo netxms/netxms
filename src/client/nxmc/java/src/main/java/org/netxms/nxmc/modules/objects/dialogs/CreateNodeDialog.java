@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -212,7 +212,7 @@ public class CreateNodeDialog extends Dialog
 		optionsGroup.setLayout(new RowLayout(SWT.VERTICAL));
 		
 		checkRemoteManagementNode = new Button(optionsGroup, SWT.CHECK);
-      checkRemoteManagementNode.setText(i18n.tr("Communication through external gateway"));
+      checkRemoteManagementNode.setText(i18n.tr("Communication through external &gateway"));
       checkRemoteManagementNode.setSelection((creationFlags & NXCObjectCreationData.CF_EXTERNAL_GATEWAY) != 0);
 		
 		checkUnmanaged = new Button(optionsGroup, SWT.CHECK);
@@ -251,10 +251,6 @@ public class CreateNodeDialog extends Dialog
          });
       }
 
-      checkDisableAutomaticSNMPConfig = new Button(optionsGroup, SWT.CHECK);
-      checkDisableAutomaticSNMPConfig.setText(i18n.tr("Prevent automatic SNMP configuration changes"));
-      checkDisableAutomaticSNMPConfig.setSelection((creationFlags & NXCObjectCreationData.CF_SNMP_SETTINGS_LOCKED) != 0);
-      
 		checkDisableAgent = new Button(optionsGroup, SWT.CHECK);
 		checkDisableAgent.setText(i18n.tr("Disable usage of NetXMS &agent for all polls"));
 		checkDisableAgent.setSelection((creationFlags & NXCObjectCreationData.CF_DISABLE_NXCP) != 0);
@@ -263,14 +259,18 @@ public class CreateNodeDialog extends Dialog
 		checkDisableSNMP.setText(i18n.tr("Disable usage of &SNMP for all polls"));
 		checkDisableSNMP.setSelection((creationFlags & NXCObjectCreationData.CF_DISABLE_SNMP) != 0);
 		
+      checkDisablePing = new Button(optionsGroup, SWT.CHECK);
+      checkDisablePing.setText(i18n.tr("Disable usage of &ICMP ping for all polls"));
+      checkDisablePing.setSelection((creationFlags & NXCObjectCreationData.CF_DISABLE_ICMP) != 0);
+
       checkDisableEtherNetIP = new Button(optionsGroup, SWT.CHECK);
       checkDisableEtherNetIP.setText("Disable usage of &EtherNet/IP for all polls");
       checkDisableEtherNetIP.setSelection((creationFlags & NXCObjectCreationData.CF_DISABLE_ETHERNET_IP) != 0);
 
-		checkDisablePing = new Button(optionsGroup, SWT.CHECK);
-		checkDisablePing.setText(i18n.tr("Disable usage of &ICMP ping for all polls"));
-		checkDisablePing.setSelection((creationFlags & NXCObjectCreationData.CF_DISABLE_ICMP) != 0);
-		
+      checkDisableAutomaticSNMPConfig = new Button(optionsGroup, SWT.CHECK);
+      checkDisableAutomaticSNMPConfig.setText(i18n.tr("&Prevent automatic SNMP configuration changes"));
+      checkDisableAutomaticSNMPConfig.setSelection((creationFlags & NXCObjectCreationData.CF_SNMP_SETTINGS_LOCKED) != 0);
+
 		agentProxySelector = new ObjectSelector(dialogArea, SWT.NONE, true);
 		agentProxySelector.setLabel(i18n.tr("Proxy for NetXMS agents"));
 		agentProxySelector.setObjectClass(Node.class);
@@ -306,7 +306,7 @@ public class CreateNodeDialog extends Dialog
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       icmpProxySelector.setLayoutData(gd);
-      
+
       sshProxySelector = new ObjectSelector(dialogArea, SWT.NONE, true);
       sshProxySelector.setLabel(i18n.tr("Proxy for SSH"));
       sshProxySelector.setEmptySelectionName("<default>");
