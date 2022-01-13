@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -52,7 +52,7 @@ public class DataCollectionTest extends AbstractSessionTest
 		
 		DciValue[] list = session.getLastValues(TestConstants.NODE_ID);
 		assertEquals(true, list.length > 0);
-		
+
 		boolean statusFound = false;
 		for(int i = 0; i < list.length; i++)
 		{
@@ -61,7 +61,7 @@ public class DataCollectionTest extends AbstractSessionTest
 				statusFound = true;
 		}
 		assertEquals(true, statusFound);
-		
+
 		session.disconnect();
 	}
 
@@ -80,7 +80,7 @@ public class DataCollectionTest extends AbstractSessionTest
 				statusFound = true;
 		}
 		assertEquals(true, statusFound);
-		
+
 		session.disconnect();
 	}
 
@@ -125,11 +125,11 @@ public class DataCollectionTest extends AbstractSessionTest
 
       DataCollectionItem dci = (DataCollectionItem)dc.findItem(dciId, DataCollectionItem.class);
 		assertNotNull(dci);
-      
+
 		dci.setName("TEST");
 		dci.getThresholds().add(new Threshold());
 		dc.modifyObject(dciId);
-		
+
 		Threshold[] thresholds = session.getThresholds(TestConstants.NODE_ID, dciId);
 		assertNotNull(thresholds);
 		assertEquals(1, thresholds.length);
@@ -138,11 +138,11 @@ public class DataCollectionTest extends AbstractSessionTest
 		dc.close();
 		session.disconnect();
 	}
-	
+
 	public void testGetThresholdSummary() throws Exception
 	{
 		final NXCSession session = connect();
-		
+
 		session.syncObjects();
 
 		final List<ThresholdViolationSummary> list = session.getThresholdSummary(1);
@@ -162,34 +162,34 @@ public class DataCollectionTest extends AbstractSessionTest
 				System.out.println("   --- no threshold violations");
 			}
 		}
-		
+
 		session.disconnect();
 	}
 
 	public void testGetPerfTabItems() throws Exception
 	{
 		final NXCSession session = connect();
-		
-		PerfTabDci[] list = session.getPerfTabItems(TestConstants.NODE_ID);
+
+      List<PerfTabDci> list = session.getPerfTabItems(TestConstants.NODE_ID);
 		assertNotNull(list);
-		assertTrue(list.length > 0);
-		
+      assertFalse(list.isEmpty());
+
 		for(PerfTabDci p : list)
 		{
 			System.out.println("id=" + p.getId() + " descr='" + p.getDescription() + "' settings='" + p.getPerfTabSettings() + "'");
 		}
-		
+
 		session.disconnect();		
 	}
-	
+
 	public void testDciSummaryTables() throws Exception
 	{
 		final NXCSession session = connect();
-		
+
 		DciSummaryTable t = new DciSummaryTable("test", "Test Table");
 		t.getColumns().add(new DciSummaryTableColumn("Idle", "System.CPU.Idle"));
 		t.getColumns().add(new DciSummaryTableColumn("I/O Wait", "System.CPU.IOWait"));
-		
+
 		int id = session.modifyDciSummaryTable(t);
 		System.out.println("Assigned ID: " + id);
 		t.setId(id);
