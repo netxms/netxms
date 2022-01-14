@@ -1,6 +1,6 @@
 /*
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004-2021 Victor Kirhenshtein
+** Copyright (C) 2004-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -399,18 +399,16 @@ static void CheckClusters()
 /**
  * Returns TRUE if SELECT returns non-empty set
  */
-static BOOL CheckResultSet(TCHAR *pszQuery)
+static bool CheckResultSet(TCHAR *query)
 {
-   DB_RESULT hResult;
-   BOOL bResult = FALSE;
-
-   hResult = SQLSelect(pszQuery);
-   if (hResult != NULL)
+   bool result = false;
+   DB_RESULT hResult = SQLSelect(query);
+   if (hResult != nullptr)
    {
-      bResult = (DBGetNumRows(hResult) > 0);
+      result = (DBGetNumRows(hResult) > 0);
       DBFreeResult(hResult);
    }
-   return bResult;
+   return result;
 }
 
 /**
@@ -418,29 +416,26 @@ static BOOL CheckResultSet(TCHAR *pszQuery)
  */
 static void CheckEPP()
 {
-   DB_RESULT hResult;
-   TCHAR szQuery[1024];
-   int i, iNumRows;
-   DWORD dwId;
+   TCHAR query[1024];
 
    StartStage(_T("Event processing policy"));
 
    // Check source object ID's
-   hResult = SQLSelect(_T("SELECT object_id FROM policy_source_list"));
-   if (hResult != NULL)
+   DB_RESULT hResult = SQLSelect(_T("SELECT object_id FROM policy_source_list"));
+   if (hResult != nullptr)
    {
-      iNumRows = DBGetNumRows(hResult);
-      for(i = 0; i < iNumRows; i++)
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
       {
-         dwId = DBGetFieldULong(hResult, i, 0);
-         _sntprintf(szQuery, 1024, _T("SELECT object_id FROM object_properties WHERE object_id=%d"), dwId);
-         if (!CheckResultSet(szQuery))
+         uint32_t objectId = DBGetFieldULong(hResult, i, 0);
+         _sntprintf(query, 1024, _T("SELECT object_id FROM object_properties WHERE object_id=%d"), objectId);
+         if (!CheckResultSet(query))
          {
             g_dbCheckErrors++;
-            if (GetYesNoEx(_T("Invalid object ID %d used in policy. Delete it from policy?"), dwId))
+            if (GetYesNoEx(_T("Invalid object ID %d used in policy. Delete it from policy?"), objectId))
             {
-               _sntprintf(szQuery, 1024, _T("DELETE FROM policy_source_list WHERE object_id=%d"), dwId);
-               if (SQLQuery(szQuery))
+               _sntprintf(query, 1024, _T("DELETE FROM policy_source_list WHERE object_id=%d"), objectId);
+               if (SQLQuery(query))
                   g_dbCheckFixes++;
             }
          }
@@ -451,23 +446,20 @@ static void CheckEPP()
    // Check event ID's
    ResetBulkYesNo();
    hResult = SQLSelect(_T("SELECT event_code FROM policy_event_list"));
-   if (hResult != NULL)
+   if (hResult != nullptr)
    {
-      iNumRows = DBGetNumRows(hResult);
-      for(i = 0; i < iNumRows; i++)
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
       {
-         dwId = DBGetFieldULong(hResult, i, 0);
-         if (dwId & GROUP_FLAG)
-            _sntprintf(szQuery, 1024, _T("SELECT id FROM event_groups WHERE id=%d"), dwId);
-         else
-            _sntprintf(szQuery, 1024, _T("SELECT event_code FROM event_cfg WHERE event_code=%d"), dwId);
-         if (!CheckResultSet(szQuery))
+         uint32_t eventCode = DBGetFieldULong(hResult, i, 0);
+         _sntprintf(query, 1024, _T("SELECT event_code FROM event_cfg WHERE event_code=%u"), eventCode);
+         if (!CheckResultSet(query))
          {
             g_dbCheckErrors++;
-            if (GetYesNoEx(_T("Invalid event%s ID 0x%08X referenced in policy. Delete this reference?"), (dwId & GROUP_FLAG) ? _T(" group") : _T(""), dwId))
+            if (GetYesNoEx(_T("Invalid event code 0x%08X referenced in policy. Delete this reference?"), eventCode))
             {
-               _sntprintf(szQuery, 1024, _T("DELETE FROM policy_event_list WHERE event_code=%d"), dwId);
-               if (SQLQuery(szQuery))
+               _sntprintf(query, 1024, _T("DELETE FROM policy_event_list WHERE event_code=%u"), eventCode);
+               if (SQLQuery(query))
                   g_dbCheckFixes++;
             }
          }
@@ -478,20 +470,20 @@ static void CheckEPP()
    // Check action ID's
    ResetBulkYesNo();
    hResult = SQLSelect(_T("SELECT action_id FROM policy_action_list"));
-   if (hResult != NULL)
+   if (hResult != nullptr)
    {
-      iNumRows = DBGetNumRows(hResult);
-      for(i = 0; i < iNumRows; i++)
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
       {
-         dwId = DBGetFieldULong(hResult, i, 0);
-         _sntprintf(szQuery, 1024, _T("SELECT action_id FROM actions WHERE action_id=%d"), dwId);
-         if (!CheckResultSet(szQuery))
+         uint32_t actionId = DBGetFieldULong(hResult, i, 0);
+         _sntprintf(query, 1024, _T("SELECT action_id FROM actions WHERE action_id=%u"), actionId);
+         if (!CheckResultSet(query))
          {
             g_dbCheckErrors++;
-            if (GetYesNoEx(_T("Invalid action ID %d referenced in policy. Delete this reference?"), dwId))
+            if (GetYesNoEx(_T("Invalid action ID %d referenced in policy. Delete this reference?"), actionId))
             {
-               _sntprintf(szQuery, 1024, _T("DELETE FROM policy_action_list WHERE action_id=%d"), dwId);
-               if (SQLQuery(szQuery))
+               _sntprintf(query, 1024, _T("DELETE FROM policy_action_list WHERE action_id=%u"), actionId);
+               if (SQLQuery(query))
                   g_dbCheckFixes++;
             }
          }
@@ -628,22 +620,66 @@ BOOL CreateTDataTable(DWORD nodeId)
 }
 
 /**
+ * DCI information
+ */
+struct DciInfo
+{
+   uint32_t id;
+   uint32_t nodeId;
+};
+
+/**
+ * Cached DCI information
+ */
+static DciInfo* s_dciCache = nullptr;
+static size_t s_dciCacheSize = 0;
+static DciInfo* s_tableDciCache = nullptr;
+static size_t s_tableDciCacheSize = 0;
+
+/**
  * Check if DCI exists
  */
 static bool IsDciExists(uint32_t dciId, uint32_t nodeId, bool isTable)
 {
-   TCHAR query[256];
-   if (nodeId != 0)
-      _sntprintf(query, 256, _T("SELECT count(*) FROM %s WHERE item_id=%u AND node_id=%u"), isTable ? _T("dc_tables") : _T("items"), dciId, nodeId);
-   else
-      _sntprintf(query, 256, _T("SELECT count(*) FROM %s WHERE item_id=%u"), isTable ? _T("dc_tables") : _T("items"), dciId);
-   DB_RESULT hResult = SQLSelect(query);
-   if (hResult == nullptr)
-      return false;
+   DciInfo* cache = isTable ? s_tableDciCache : s_dciCache;
+   if (cache == nullptr)
+   {
+      TCHAR query[256];
+      _sntprintf(query, 256, _T("SELECT item_id,node_id FROM %s ORDER BY item_id"), isTable ? _T("dc_tables") : _T("items"));
+      DB_RESULT hResult = SQLSelect(query);
+      if (hResult == nullptr)
+         return false;
 
-   int count = DBGetFieldLong(hResult, 0, 0);
-   DBFreeResult(hResult);
-   return count != 0;
+      int count = DBGetNumRows(hResult);
+      if (isTable)
+      {
+         s_tableDciCache = MemAllocArrayNoInit<DciInfo>(count);
+         s_tableDciCacheSize = count;
+         cache = s_tableDciCache;
+      }
+      else
+      {
+         s_dciCache = MemAllocArrayNoInit<DciInfo>(count);
+         s_dciCacheSize = count;
+         cache = s_dciCache;
+      }
+
+      for(int i = 0; i < count; i++)
+      {
+         cache[i].id = DBGetFieldULong(hResult, i, 0);
+         cache[i].nodeId = DBGetFieldULong(hResult, i, 1);
+      }
+      DBFreeResult(hResult);
+   }
+   size_t cacheSize = isTable ? s_tableDciCacheSize : s_dciCacheSize;
+
+   DciInfo *dci = static_cast<DciInfo*>(bsearch(&dciId, cache, cacheSize, sizeof(DciInfo), [](const void *key, const void *e) -> int
+      {
+         uint32_t id = static_cast<const DciInfo*>(e)->id;
+         uint32_t k = *static_cast<const uint32_t*>(key);
+         return (k < id) ? -1 : ((k > id) ? 1 : 0);
+      }));
+   return (dci != nullptr) && ((nodeId == 0) || (nodeId == dci->nodeId));
 }
 
 /**
@@ -693,7 +729,7 @@ static void CheckCollectedData(bool isTable)
          int count = DBGetNumRows(hResult);
          for(int i = 0; i < count; i++)
          {
-            UINT32 id = DBGetFieldLong(hResult, i, 0);
+            uint32_t id = DBGetFieldLong(hResult, i, 0);
             if (!IsDciExists(id, objectId, isTable))
             {
                g_dbCheckErrors++;
@@ -753,7 +789,7 @@ static void CheckCollectedDataSingleTable(bool isTable)
       int count = DBGetNumRows(hResult);
       for(int i = 0; i < count; i++)
       {
-         UINT32 id = DBGetFieldLong(hResult, i, 0);
+         uint32_t id = DBGetFieldLong(hResult, i, 0);
          if (!IsDciExists(id, 0, isTable))
          {
             g_dbCheckErrors++;
@@ -878,7 +914,7 @@ static void CheckThresholds()
       SetStageWorkTotal(count);
       for(int i = 0; i < count; i++)
       {
-         UINT32 dciId = DBGetFieldULong(hResult, i, 1);
+         uint32_t dciId = DBGetFieldULong(hResult, i, 1);
          if (!IsDciExists(dciId, 0, false))
          {
             g_dbCheckErrors++;
@@ -1393,6 +1429,9 @@ void CheckDatabase()
       bCompleted = TRUE;
 
       UnlockDB();
+
+      MemFree(s_dciCache);
+      MemFree(s_tableDciCache);
    }
 
    _tprintf(_T("Database check %s\n"), bCompleted ? _T("completed") : _T("aborted"));
