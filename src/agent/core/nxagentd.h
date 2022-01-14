@@ -376,7 +376,7 @@ public:
    virtual void postMessage(const NXCPMessage *msg) override;
    virtual bool sendRawMessage(const NXCP_MESSAGE *msg) override;
    virtual void postRawMessage(const NXCP_MESSAGE *msg) override;
-   virtual bool sendFile(uint32_t requestId, const TCHAR *file, off_t offset, bool allowCompression, VolatileCounter *cancellationFlag) override;
+   virtual bool sendFile(uint32_t requestId, const TCHAR *file, off64_t offset, bool allowCompression, VolatileCounter *cancellationFlag) override;
    virtual uint32_t doRequest(NXCPMessage *msg, uint32_t timeout) override;
    virtual NXCPMessage *doRequestEx(NXCPMessage *msg, uint32_t timeout) override;
    virtual NXCPMessage *waitForMessage(UINT16 code, UINT32 id, UINT32 timeout) override;
@@ -443,7 +443,7 @@ public:
    virtual void postMessage(const NXCPMessage *pMsg) override { }
    virtual bool sendRawMessage(const NXCP_MESSAGE *pMsg) override { return false; }
    virtual void postRawMessage(const NXCP_MESSAGE *pMsg) override { }
-   virtual bool sendFile(uint32_t requestId, const TCHAR *file, off_t offset, bool allowCompression, VolatileCounter *cancelationFlag) override { return false; }
+   virtual bool sendFile(uint32_t requestId, const TCHAR *file, off64_t offset, bool allowCompression, VolatileCounter *cancelationFlag) override { return false; }
    virtual uint32_t doRequest(NXCPMessage *msg, uint32_t timeout) override { return RCC_NOT_IMPLEMENTED; }
    virtual NXCPMessage *doRequestEx(NXCPMessage *msg, uint32_t timeout) override { return NULL; }
    virtual NXCPMessage *waitForMessage(UINT16 code, UINT32 id, UINT32 timeout) override { return NULL; }
@@ -494,7 +494,7 @@ public:
    virtual void postMessage(const NXCPMessage *pMsg) override;
    virtual bool sendRawMessage(const NXCP_MESSAGE *pMsg) override;
    virtual void postRawMessage(const NXCP_MESSAGE *pMsg) override;
-   virtual bool sendFile(uint32_t requestId, const TCHAR *file, off_t offset, bool allowCompression, VolatileCounter *cancelationFlag) override { return false; }
+   virtual bool sendFile(uint32_t requestId, const TCHAR *file, off64_t offset, bool allowCompression, VolatileCounter *cancelationFlag) override { return false; }
    virtual uint32_t doRequest(NXCPMessage *msg, uint32_t timeout) override { return RCC_NOT_IMPLEMENTED; }
    virtual NXCPMessage *doRequestEx(NXCPMessage *msg, uint32_t timeout) override { return NULL; }
    virtual NXCPMessage *waitForMessage(UINT16 code, UINT32 id, UINT32 timeout) override { return NULL; }
