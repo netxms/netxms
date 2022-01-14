@@ -2012,7 +2012,7 @@ void ClientSession::postRawMessageAndDelete(NXCP_MESSAGE *msg)
 /**
  * Send file to client
  */
-bool ClientSession::sendFile(const TCHAR *file, uint32_t requestId, long ofset, bool allowCompression)
+bool ClientSession::sendFile(const TCHAR *file, uint32_t requestId, off64_t ofset, bool allowCompression)
 {
    return !isTerminated() ? SendFileOverNXCP(m_socket, requestId, file, m_encryptionContext.get(),
             ofset, nullptr, nullptr, &m_mutexSocketWrite, isCompressionEnabled() && allowCompression ? NXCP_STREAM_COMPRESSION_DEFLATE : NXCP_STREAM_COMPRESSION_NONE) : false;
