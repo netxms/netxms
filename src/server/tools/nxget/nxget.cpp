@@ -51,6 +51,7 @@ static TCHAR s_tableOutputDelimiter = 0;
 static Operation s_operation = CMD_GET;
 static bool s_showNames = false;
 static bool s_batchMode = false;
+static bool s_fixedType = false;
 static int s_interval = 0;
 static int s_serviceType = NETSRV_SSH;
 static uint16_t s_servicePort = 0, s_serviceProto = 0;
@@ -58,36 +59,12 @@ static InetAddress s_serviceAddr;
 static TCHAR s_serviceResponse[MAX_DB_STRING] = _T(""), s_serviceRequest[MAX_DB_STRING] = _T("");
 
 /**
- * Get single parameter
- */
-static int Get(AgentConnection *pConn, const TCHAR *pszParam, BOOL bShowName)
-{
-   UINT32 dwError;
-   TCHAR szBuffer[1024];
-
-   dwError = pConn->getParameter(pszParam, szBuffer, 1024);
-   if (dwError == ERR_SUCCESS)
-   {
-      if (bShowName)
-         WriteToTerminalEx(_T("%s = %s\n"), pszParam, szBuffer);
-      else
-         WriteToTerminalEx(_T("%s\n"), szBuffer);
-   }
-   else
-   {
-      WriteToTerminalEx(_T("%d: %s\n"), dwError, AgentErrorCodeToText(dwError));
-   }
-   fflush(stdout);
-   return (dwError == ERR_SUCCESS) ? 0 : 1;
-}
-
-/**
  * Get list of values for enum parameters
  */
-static int List(AgentConnection *pConn, const TCHAR *pszParam)
+static int GetList(AgentConnection *conn, const TCHAR *listName)
 {
    StringList *data;
-   UINT32 rcc = pConn->getList(pszParam, &data);
+   uint32_t rcc = conn->getList(listName, &data);
    if (rcc == ERR_SUCCESS)
    {
       for(int i = 0; i < data->size(); i++)
@@ -104,22 +81,48 @@ static int List(AgentConnection *pConn, const TCHAR *pszParam)
 /**
  * Get table value
  */
-static int GetTable(AgentConnection *pConn, const TCHAR *pszParam)
+static int GetTable(AgentConnection *conn, const TCHAR *tableName)
 {
-	Table *table;
-   UINT32 rcc = pConn->getTable(pszParam, &table);
+   Table *table;
+   uint32_t rcc = conn->getTable(tableName, &table);
    if (rcc == ERR_SUCCESS)
    {
       if (s_tableOutputDelimiter != 0)
          table->dump(stdout, true, s_tableOutputDelimiter);
       else
          table->writeToTerminal();
-		delete table;
+      delete table;
    }
    else
    {
+      if (!s_fixedType && (rcc == ERR_UNKNOWN_PARAMETER))
+         return GetList(conn, tableName);
       WriteToTerminalEx(_T("%u: %s\n"), rcc, AgentErrorCodeToText(rcc));
    }
+   return (rcc == ERR_SUCCESS) ? 0 : 1;
+}
+
+/**
+ * Get single parameter
+ */
+static int Get(AgentConnection *conn, const TCHAR *metric)
+{
+   TCHAR buffer[1024];
+   uint32_t rcc = conn->getParameter(metric, buffer, 1024);
+   if (rcc == ERR_SUCCESS)
+   {
+      if (s_showNames)
+         WriteToTerminalEx(_T("%s = %s\n"), metric, buffer);
+      else
+         WriteToTerminalEx(_T("%s\n"), buffer);
+   }
+   else
+   {
+      if (!s_fixedType && (rcc == ERR_UNKNOWN_PARAMETER))
+         return GetTable(conn, metric);
+      WriteToTerminalEx(_T("%d: %s\n"), rcc, AgentErrorCodeToText(rcc));
+   }
+   fflush(stdout);
    return (rcc == ERR_SUCCESS) ? 0 : 1;
 }
 
@@ -127,20 +130,19 @@ static int GetTable(AgentConnection *pConn, const TCHAR *pszParam)
  * Check network service state
  */
 static int CheckService(AgentConnection *pConn, int serviceType, const InetAddress& serviceAddr,
-                        WORD wProto, WORD wPort, const TCHAR *pszRequest, const TCHAR *pszResponse)
+      uint16_t protocol, uint16_t port, const TCHAR *request, const TCHAR *response)
 {
    UINT32 dwStatus;
-   uint32_t dwError = pConn->checkNetworkService(&dwStatus, serviceAddr, serviceType, wPort,
-                                        wProto, pszRequest, pszResponse);
-   if (dwError == ERR_SUCCESS)
+   uint32_t rcc = pConn->checkNetworkService(&dwStatus, serviceAddr, serviceType, port, protocol, request, response);
+   if (rcc == ERR_SUCCESS)
    {
       WriteToTerminalEx(_T("Service status: %d\n"), dwStatus);
    }
    else
    {
-      WriteToTerminalEx(_T("%d: %s\n"), dwError, AgentErrorCodeToText(dwError));
+      WriteToTerminalEx(_T("%d: %s\n"), rcc, AgentErrorCodeToText(rcc));
    }
-   return (dwError == ERR_SUCCESS) ? 0 : 1;
+   return (rcc == ERR_SUCCESS) ? 0 : 1;
 }
 
 /**
@@ -148,18 +150,18 @@ static int CheckService(AgentConnection *pConn, int serviceType, const InetAddre
  */
 static int ListParameters(AgentConnection *pConn)
 {
-   static const TCHAR *pszDataType[] = { _T("INT"), _T("UINT"), _T("INT64"), _T("UINT64"), _T("STRING"), _T("FLOAT"), _T("UNKNOWN") };
+   static const TCHAR *DataType[] = { _T("INT"), _T("UINT"), _T("INT64"), _T("UINT64"), _T("STRING"), _T("FLOAT"), _T("UNKNOWN") };
 
    ObjectArray<AgentParameterDefinition> *paramList;
    ObjectArray<AgentTableDefinition> *tableList;
-   UINT32 dwError = pConn->getSupportedParameters(&paramList, &tableList);
-   if (dwError == ERR_SUCCESS)
+   uint32_t rcc = pConn->getSupportedParameters(&paramList, &tableList);
+   if (rcc == ERR_SUCCESS)
    {
       for(int i = 0; i < paramList->size(); i++)
       {
 			AgentParameterDefinition *p = paramList->get(i);
          WriteToTerminalEx(_T("%s %s \"%s\"\n"), p->getName(),
-            pszDataType[(p->getDataType() < 6) && (p->getDataType() >= 0) ? p->getDataType() : 6],
+            DataType[(p->getDataType() < 6) && (p->getDataType() >= 0) ? p->getDataType() : 6],
             p->getDescription());
       }
       delete paramList;
@@ -167,9 +169,9 @@ static int ListParameters(AgentConnection *pConn)
    }
    else
    {
-      WriteToTerminalEx(_T("%d: %s\n"), dwError, AgentErrorCodeToText(dwError));
+      WriteToTerminalEx(_T("%d: %s\n"), rcc, AgentErrorCodeToText(rcc));
    }
-   return (dwError == ERR_SUCCESS) ? 0 : 1;
+   return (rcc == ERR_SUCCESS) ? 0 : 1;
 }
 
 /**
@@ -275,7 +277,8 @@ static bool ParseAdditionalOptionCb(const char ch, const TCHAR *optarg)
    switch(ch)
    {
       case 'b':   // Batch mode
-         s_batchMode = TRUE;
+         s_batchMode = true;
+         s_fixedType = true;
          break;
       case 'd':   // Dump table
          s_tableOutputDelimiter = *optarg;
@@ -295,6 +298,9 @@ static bool ParseAdditionalOptionCb(const char ch, const TCHAR *optarg)
       case 'E':
          s_operation = CMD_GET_SCREENSHOT;
          break;
+      case 'f':
+         s_fixedType = true;
+         break;
       case 'F':
          s_operation = CMD_FILE_SET_INFO;
          break;
@@ -306,12 +312,14 @@ static bool ParseAdditionalOptionCb(const char ch, const TCHAR *optarg)
          break;
       case 'l':
          s_operation = CMD_LIST;
+         s_fixedType = true;
          break;
       case 'T':
          s_operation = CMD_TABLE;
+         s_fixedType = true;
          break;
       case 'n':   // Show names
-         s_showNames = TRUE;
+         s_showNames = true;
          break;
       case 'N':   // Check service
          s_operation = CMD_CHECK_SERVICE;
@@ -319,7 +327,7 @@ static bool ParseAdditionalOptionCb(const char ch, const TCHAR *optarg)
          if (!s_serviceAddr.isValidUnicast())
          {
             _tprintf(_T("Invalid IP address \"%s\"\n"), optarg);
-            start = FALSE;
+            start = false;
          }
          break;
       case 'P':   // Port number for service check
@@ -327,11 +335,11 @@ static bool ParseAdditionalOptionCb(const char ch, const TCHAR *optarg)
          if ((*eptr != 0) || (i < 0) || (i > 65535))
          {
             _tprintf(_T("Invalid port number \"%s\"\n"), optarg);
-            start = FALSE;
+            start = false;
          }
          else
          {
-            s_servicePort = (WORD)i;
+            s_servicePort = static_cast<uint16_t>(i);
          }
          break;
       case 'r':   // Service check request string
@@ -379,7 +387,7 @@ static bool ParseAdditionalOptionCb(const char ch, const TCHAR *optarg)
             else
             {
                _tprintf(_T("Invalid service type \"%s\"\n"), optarg);
-               start = FALSE;
+               start = false;
             }
          }
          break;
@@ -388,11 +396,11 @@ static bool ParseAdditionalOptionCb(const char ch, const TCHAR *optarg)
          if ((*eptr != 0) || (i < 0) || (i > 65535))
          {
             _tprintf(_T("Invalid protocol number \"%s\"\n"), optarg);
-            start = FALSE;
+            start = false;
          }
          else
          {
-            s_serviceProto = (uint16_t)i;
+            s_serviceProto = static_cast<uint16_t>(i);
          }
          break;
       default:
@@ -424,18 +432,17 @@ static int ExecuteCommandCb(AgentConnection *conn, int argc, TCHAR **argv, int o
             pos = optind + 1;
             do
             {
-               exitCode = Get(conn, argv[pos++], s_showNames);
+               exitCode = Get(conn, argv[pos++]);
             } while((exitCode == 0) && (s_batchMode) && (pos < argc));
             break;
          case CMD_LIST:
-            exitCode = List(conn, argv[optind + 1]);
+            exitCode = GetList(conn, argv[optind + 1]);
             break;
          case CMD_TABLE:
             exitCode = GetTable(conn, argv[optind + 1]);
             break;
          case CMD_CHECK_SERVICE:
-            exitCode = CheckService(conn, s_serviceType, s_serviceAddr,
-                                     s_serviceProto, s_servicePort, s_serviceRequest, s_serviceResponse);
+            exitCode = CheckService(conn, s_serviceType, s_serviceAddr, s_serviceProto, s_servicePort, s_serviceRequest, s_serviceResponse);
             break;
          case CMD_GET_PARAMS:
             exitCode = ListParameters(conn);
@@ -478,6 +485,7 @@ int main(int argc, char *argv[])
                        _T("   -C           : Get agent's configuration file\n")
                        _T("   -d delimiter : Print table content as delimited text.\n")
                        _T("   -E           : Take screenshot. First parameter is file name, second (optional) is session name.\n")
+                       _T("   -f           : Do not try lists and tables if requested metric does not exist.\n")
                        _T("   -F           : Get information about given file set. Each parameter is separate file name.\n")
                        _T("   -i seconds   : Get specified parameter(s) continuously with given interval.\n")
                        _T("   -I           : Get list of supported parameters.\n")
@@ -491,7 +499,7 @@ int main(int argc, char *argv[])
                        _T("   -t type      : Set type of service to be checked.\n")
                        _T("                  Possible types are: custom, ssh, pop3, smtp, ftp, http, https, telnet.\n")
                        _T("   -T           : Requested parameter is a table.\n");
-   tool.additionalOptions = "bCd:EFi:IlnN:o:P:r:R:t:T";
+   tool.additionalOptions = "bCd:EfFi:IlnN:o:P:r:R:t:T";
    tool.executeCommandCb = &ExecuteCommandCb;
    tool.parseAdditionalOptionCb = &ParseAdditionalOptionCb;
    tool.isArgMissingCb = &IsArgMissingCb;
