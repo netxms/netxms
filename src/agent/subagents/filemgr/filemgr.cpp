@@ -1135,7 +1135,7 @@ struct FileSendData
    bool follow;
    bool allowCompression;
    uint32_t id;
-   off_t offset;
+   off64_t offset;
    shared_ptr<AbstractCommSession> session;
 
    FileSendData(const shared_ptr<AbstractCommSession>& _session, TCHAR *_fileName, const NXCPMessage& request) : session(_session)
@@ -1145,7 +1145,7 @@ struct FileSendData
       follow = request.getFieldAsBoolean(VID_FILE_FOLLOW);
       allowCompression = request.getFieldAsBoolean(VID_ENABLE_COMPRESSION);
       id = request.getId();
-      offset = request.getFieldAsUInt32(VID_FILE_OFFSET);
+      offset = request.getFieldAsInt32(VID_FILE_OFFSET);
    }
 
    ~FileSendData()

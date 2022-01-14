@@ -1148,7 +1148,7 @@ static void SendFileProgressCallback(size_t bytesTransferred, void *cbArg)
 /**
  * Send file to server
  */
-bool CommSession::sendFile(uint32_t requestId, const TCHAR *file, off_t offset, bool allowCompression, VolatileCounter *cancellationFlag)
+bool CommSession::sendFile(uint32_t requestId, const TCHAR *file, off64_t offset, bool allowCompression, VolatileCounter *cancellationFlag)
 {
    if (m_disconnected)
       return false;
