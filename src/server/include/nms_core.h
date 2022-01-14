@@ -940,7 +940,7 @@ public:
    }
    void sendRawMessage(NXCP_MESSAGE *msg);
    void sendPollerMsg(uint32_t requestIf, const TCHAR *text);
-	bool sendFile(const TCHAR *file, uint32_t requestId, long offset, bool allowCompression = true);
+	bool sendFile(const TCHAR *file, uint32_t requestId, off64_t offset, bool allowCompression = true);
 
    void writeAuditLog(const TCHAR *subsys, bool success, UINT32 objectId, const TCHAR *format, ...);
    void writeAuditLogWithValues(const TCHAR *subsys, bool success, UINT32 objectId, const TCHAR *oldValue, const TCHAR *newValue, char valueType, const TCHAR *format, ...);
