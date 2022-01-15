@@ -1,6 +1,6 @@
 /*
 ** NetXMS SSH subagent
-** Copyright (C) 2004-2021 Raden Solutions
+** Copyright (C) 2004-2022 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -191,13 +191,23 @@ bool SSHSession::connect(const TCHAR *user, const TCHAR *password, const shared_
  */
 void SSHSession::disconnect()
 {
-   if (m_session == NULL)
+   if (m_session == nullptr)
       return;
 
    if (ssh_is_connected(m_session))
       ssh_disconnect(m_session);
    ssh_free(m_session);
-   m_session = NULL;
+   m_session = nullptr;
+}
+
+/**
+ * Check if ssh_channel_read returned "Remote channel is closed" and current libssh version
+ * can contain bug in ssh_channel_read that cause return of such error on normal eof.
+ * https://github.com/ParallelSSH/ssh-python/issues/23
+ */
+static inline bool CheckForChannelReadBug(ssh_session session)
+{
+   return g_sshChannelReadBugWorkaround && (strstr(ssh_get_error(session), "Remote channel is closed") != nullptr);
 }
 
 /**
@@ -283,15 +293,33 @@ bool SSHSession::execute(const TCHAR *command, StringList *output, ActionExecuti
             }
             nbytes = ssh_channel_read(channel, &buffer[offset], sizeof(buffer) - offset - 1, 0);
          }
-         if (nbytes == 0)
+         if ((nbytes == 0) || CheckForChannelReadBug(m_session))
          {
             if (offset > 0)
             {
                buffer[offset] = 0;
-               char *cr = strchr(buffer, '\r');
-               if (cr != nullptr)
-                  *cr = 0;
-               output->addMBString(buffer);
+               if (context != nullptr)
+               {
+                  context->sendOutputUtf8(buffer);
+               }
+               else
+               {
+                  char *curr = buffer;
+                  char *eol = strchr(curr, '\n');
+                  while(eol != nullptr)
+                  {
+                     *eol = 0;
+                     char *cr = strchr(curr, '\r');
+                     if (cr != nullptr)
+                        *cr = 0;
+                     output->addMBString(curr);
+                     curr = eol + 1;
+                     eol = strchr(curr, '\n');
+                  }
+                  offset = strlen(curr);
+                  if (offset > 0)
+                     output->addMBString(curr);
+               }
             }
             ssh_channel_send_eof(channel);
          }

@@ -1,6 +1,6 @@
 /*
 ** NetXMS SSH subagent
-** Copyright (C) 2004-2021 Raden Solutions
+** Copyright (C) 2004-2022 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -103,5 +103,6 @@ uint32_t H_SSHCommandAction(const shared_ptr<ActionExecutionContext>& context);
 extern uint32_t g_sshConnectTimeout;
 extern uint32_t g_sshSessionIdleTimeout;
 extern char g_sshConfigFile[];
+extern bool g_sshChannelReadBugWorkaround;
 
 #endif
