@@ -1,6 +1,6 @@
 /*
 ** NetXMS SSH subagent
-** Copyright (C) 2004-2020 Victor Kirhenshtein
+** Copyright (C) 2004-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,6 +22,7 @@
 
 #include "ssh_subagent.h"
 #include <netxms-version.h>
+#include <netxms-regex.h>
 #include <libssh/callbacks.h>
 
 /**
@@ -30,6 +31,7 @@
 uint32_t g_sshConnectTimeout = 2000;
 uint32_t g_sshSessionIdleTimeout = 300;
 char g_sshConfigFile[MAX_PATH] = "";
+bool g_sshChannelReadBugWorkaround = false;
 
 #if defined(_WIN32) || _USE_GNU_PTH
 
@@ -38,7 +40,7 @@ char g_sshConfigFile[MAX_PATH] = "";
  */
 static int cb_mutex_init(void **mutex)
 {
-   *mutex = MutexCreate();
+   *mutex = MutexCreateFast();
    return 0;
 }
 
@@ -74,7 +76,7 @@ static int cb_mutex_unlock(void **mutex)
  */
 static unsigned long cb_thread_id()
 {
-   return (unsigned long)GetCurrentThreadId();
+   return static_cast<unsigned long>(GetCurrentThreadId());
 }
 
 /**
@@ -86,6 +88,20 @@ static struct ssh_threads_callbacks_struct s_threadCallbacks =
    };
 
 #endif
+
+/**
+ * Extract integer from capture group
+ */
+static uint32_t IntegerFromCGroup(const char *text, int *cgroups, int cgindex)
+{
+   char buffer[32];
+   int len = cgroups[cgindex * 2 + 1] - cgroups[cgindex * 2];
+   if (len > 31)
+      len = 31;
+   memcpy(buffer, &text[cgroups[cgindex * 2]], len);
+   buffer[len] = 0;
+   return strtoul(buffer, nullptr, 10);
+}
 
 /**
  * Configuration file template
@@ -112,9 +128,29 @@ static bool SubagentInit(Config *config)
    ssh_threads_set_callbacks(&s_threadCallbacks);
 #endif
    ssh_init();
-   nxlog_debug(2, _T("SSH: using libssh version %hs"), ssh_version(0));
+
+   const char *version = ssh_version(0);
+   nxlog_debug_tag(DEBUG_TAG, 2, _T("Using libssh version %hs"), version);
+   const char *eptr;
+   int eoffset;
+   pcre *re = pcre_compile("^([0-9]+)\\.([0-9]+)\\.([0-9]+)(/.*)?", PCRE_COMMON_FLAGS_A, &eptr, &eoffset, nullptr);
+   if (re != nullptr)
+   {
+      int pmatch[30];
+      if (pcre_exec(re, nullptr, version, static_cast<int>(strlen(version)), 0, 0, pmatch, 30) == 5)
+      {
+         uint32_t major = IntegerFromCGroup(version, pmatch, 1);
+         uint32_t minor = IntegerFromCGroup(version, pmatch, 2);
+         uint32_t release = IntegerFromCGroup(version, pmatch, 3);
+         if ((major == 0) && ((minor < 9) || ((minor == 9) && (release < 5))))
+            g_sshChannelReadBugWorkaround = true;
+      }
+      pcre_free(re);
+   }
+   nxlog_debug_tag(DEBUG_TAG, 2, _T("Workaround for ssh_channel_read bug is %s"), g_sshChannelReadBugWorkaround ? _T("enabled") : _T("disabled"));
+
    InitializeSessionPool();
-	return true;
+   return true;
 }
 
 /**
@@ -131,7 +167,7 @@ static void SubagentShutdown()
  */
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
-	{ _T("SSH.Command(*)"), H_SSHCommand, NULL, DCI_DT_STRING, _T("Result of command execution") },
+	{ _T("SSH.Command(*)"), H_SSHCommand, nullptr, DCI_DT_STRING, _T("Result of command execution") },
 };
 
 /**
@@ -139,7 +175,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
  */
 static NETXMS_SUBAGENT_LIST m_lists[] =
 {
-   { _T("SSH.Command(*)"), H_SSHCommandList, NULL, _T("Result of command execution") },
+   { _T("SSH.Command(*)"), H_SSHCommandList, nullptr, _T("Result of command execution") },
 };
 
 /**
@@ -149,14 +185,14 @@ static NETXMS_SUBAGENT_INFO m_info =
 {
    NETXMS_SUBAGENT_INFO_MAGIC,
    _T("SSH"), NETXMS_VERSION_STRING,
-   SubagentInit, SubagentShutdown, NULL, NULL,
+   SubagentInit, SubagentShutdown, nullptr, nullptr,
    sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
    m_parameters,
    sizeof(m_lists) / sizeof(NETXMS_SUBAGENT_LIST),
    m_lists,
-   0, NULL,	// tables
-   0, NULL,	// actions
-   0, NULL	// push parameters
+   0, nullptr,	// tables
+   0, nullptr,	// actions
+   0, nullptr	// push parameters
 };
 
 /**
