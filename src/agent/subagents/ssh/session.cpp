@@ -1,6 +1,6 @@
 /*
 ** NetXMS SSH subagent
-** Copyright (C) 2004-2020 Victor Kirhenshtein
+** Copyright (C) 2004-2022 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -24,16 +24,16 @@
 /**
  * SSH session constructor
  */
-SSHSession::SSHSession(const InetAddress& addr, UINT16 port, INT32 id)
+SSHSession::SSHSession(const InetAddress& addr, uint16_t port, int32_t id)
 {
    m_id = id;
    m_addr = addr;
    m_port = port;
-   m_session = NULL;
+   m_session = nullptr;
    m_lastAccess = 0;
    m_user[0] = 0;
    m_busy = false;
-   _sntprintf(m_name, MAX_SSH_SESSION_NAME_LEN, _T("nobody@%s:%d/%d"), (const TCHAR *)m_addr.toString(), m_port, m_id);
+   _sntprintf(m_name, MAX_SSH_SESSION_NAME_LEN, _T("nobody@%s:%d/%d"), m_addr.toString().cstr(), m_port, m_id);
 }
 
 /**
@@ -47,9 +47,9 @@ SSHSession::~SSHSession()
 /**
  * Check if session match for given target
  */
-bool SSHSession::match(const InetAddress& addr, UINT16 port, const TCHAR *user) const
+bool SSHSession::match(const InetAddress& addr, uint16_t port, const TCHAR *user) const
 {
-   return addr.equals(m_addr) && ((unsigned int)port == m_port) && !_tcscmp(m_user, user);
+   return addr.equals(m_addr) && (port == m_port) && !_tcscmp(m_user, user);
 }
 
 /**
@@ -76,11 +76,11 @@ void SSHSession::release()
  */
 bool SSHSession::connect(const TCHAR *user, const TCHAR *password, const shared_ptr<KeyPair>& keys)
 {
-   if (m_session != NULL)
+   if (m_session != nullptr)
       return false;  // already connected
 
    m_session = ssh_new();
-   if (m_session == NULL)
+   if (m_session == nullptr)
       return false;  // cannot create session
 
    bool success = false;
@@ -92,7 +92,7 @@ bool SSHSession::connect(const TCHAR *user, const TCHAR *password, const shared_
    ssh_options_set(m_session, SSH_OPTIONS_TIMEOUT_USEC, &timeout);
 #ifdef UNICODE
    char mbuser[256];
-   WideCharToMultiByte(CP_UTF8, 0, user, -1, mbuser, 256, NULL, NULL);
+   wchar_to_utf8(user, -1, mbuser, 256);
    ssh_options_set(m_session, SSH_OPTIONS_USER, mbuser);
 #else
    ssh_options_set(m_session, SSH_OPTIONS_USER, user);
@@ -191,13 +191,23 @@ bool SSHSession::connect(const TCHAR *user, const TCHAR *password, const shared_
  */
 void SSHSession::disconnect()
 {
-   if (m_session == NULL)
+   if (m_session == nullptr)
       return;
 
    if (ssh_is_connected(m_session))
       ssh_disconnect(m_session);
    ssh_free(m_session);
-   m_session = NULL;
+   m_session = nullptr;
+}
+
+/**
+ * Check if ssh_channel_read returned "Remote channel is closed" and current libssh version
+ * can contain bug in ssh_channel_read that cause return of such error on normal eof.
+ * https://github.com/ParallelSSH/ssh-python/issues/23
+ */
+static inline bool CheckForChannelReadBug(ssh_session session)
+{
+   return g_sshChannelReadBugWorkaround && (strstr(ssh_get_error(session), "Remote channel is closed") != nullptr);
 }
 
 /**
@@ -230,36 +240,35 @@ StringList *SSHSession::execute(const TCHAR *command)
       {
          output = new StringList();
          char buffer[8192];
-         //ThreadSleep(1);
          int nbytes = ssh_channel_read(channel, buffer, sizeof(buffer) - 1, 0);
-         int offset = 0;
+         size_t offset = 0;
          while(nbytes > 0)
          {
             buffer[nbytes + offset] = 0;
             char *curr = buffer;
             char *eol = strchr(curr, '\n');
-            while(eol != NULL)
+            while(eol != nullptr)
             {
                *eol = 0;
                char *cr = strchr(curr, '\r');
-               if (cr != NULL)
+               if (cr != nullptr)
                   *cr = 0;
                output->addMBString(curr);
                curr = eol + 1;
                eol = strchr(curr, '\n');
             }
-            offset = (int)strlen(curr);
+            offset = strlen(curr);
             if (offset > 0)
                memmove(buffer, curr, offset);
             nbytes = ssh_channel_read(channel, &buffer[offset], sizeof(buffer) - offset - 1, 0);
          }
-         if (nbytes == 0)
+         if ((nbytes == 0) || CheckForChannelReadBug(m_session))
          {
             if (offset > 0)
             {
                buffer[offset] = 0;
                char *cr = strchr(buffer, '\r');
-               if (cr != NULL)
+               if (cr != nullptr)
                   *cr = 0;
                output->addMBString(buffer);
             }
@@ -273,7 +282,7 @@ StringList *SSHSession::execute(const TCHAR *command)
       }
       else
       {
-         nxlog_debug_tag(DEBUG_TAG, 6, _T("SSHSession::execute: command \"%s\" execution on %s:%d failed"), command, (const TCHAR *)m_addr.toString(), m_port);
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("SSHSession::execute: command \"%s\" execution on %s:%d failed"), command, m_addr.toString().cstr(), m_port);
       }
       ssh_channel_close(channel);
 #ifdef UNICODE
@@ -282,9 +291,9 @@ StringList *SSHSession::execute(const TCHAR *command)
    }
    else
    {
-      nxlog_debug_tag(DEBUG_TAG, 6, _T("SSHSession::execute: cannot open channel on %s:%d"), (const TCHAR *)m_addr.toString(), m_port);
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("SSHSession::execute: cannot open channel on %s:%d"), m_addr.toString().cstr(), m_port);
    }
    ssh_channel_free(channel);
-   m_lastAccess = time(NULL);
+   m_lastAccess = time(nullptr);
    return output;
 }

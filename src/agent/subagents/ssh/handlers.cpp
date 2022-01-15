@@ -1,6 +1,6 @@
 /*
 ** NetXMS SSH subagent
-** Copyright (C) 2004-2020 Victor Kirhenshtein
+** Copyright (C) 2004-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -35,13 +35,13 @@ LONG H_SSHCommand(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCo
        !AgentGetParameterArg(param, 4, command, 256))
       return SYSINFO_RC_UNSUPPORTED;
 
-   UINT16 port = 22;
+   uint16_t port = 22;
    TCHAR *p = _tcschr(hostName, _T(':'));
    if (p != nullptr)
    {
       *p = 0;
       p++;
-      port = (UINT16)_tcstoul(p, nullptr, 10);
+      port = static_cast<uint16_t>(_tcstoul(p, nullptr, 10));
    }
 
    InetAddress addr = InetAddress::resolveHostName(hostName);
@@ -111,19 +111,19 @@ LONG H_SSHCommand(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCo
          }
          else
          {
-            nxlog_debug_tag(DEBUG_TAG, 6, _T("SSH output size is zero"));
+            nxlog_debug_tag(DEBUG_TAG, 6, _T("SSH output is empty"));
          }
          delete output;
       }
       else
       {
-         nxlog_debug_tag(DEBUG_TAG, 6, _T("SSH output is empty"));
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("SSH command execution on %s failed"), hostName);
       }
       ReleaseSession(ssh);
    }
    else
    {
-      nxlog_debug_tag(DEBUG_TAG, 6, _T("Failed to create SSH connection"));
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("Failed to create SSH connection to %s:%u"), hostName, port);
    }
    return rc;
 }
@@ -140,13 +140,13 @@ LONG H_SSHCommandList(const TCHAR *param, const TCHAR *arg, StringList *value, A
        !AgentGetParameterArg(param, 4, command, 256))
       return SYSINFO_RC_UNSUPPORTED;
 
-   UINT16 port = 22;
+   uint16_t port = 22;
    TCHAR *p = _tcschr(hostName, _T(':'));
    if (p != nullptr)
    {
       *p = 0;
       p++;
-      port = (UINT16)_tcstoul(p, nullptr, 10);
+      port = static_cast<uint16_t>(_tcstoul(p, nullptr, 10));
    }
 
    InetAddress addr = InetAddress::resolveHostName(hostName);
@@ -174,7 +174,15 @@ LONG H_SSHCommandList(const TCHAR *param, const TCHAR *arg, StringList *value, A
          rc = SYSINFO_RC_SUCCESS;
          delete output;
       }
+      else
+      {
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("SSH command execution on %s failed"), hostName);
+      }
       ReleaseSession(ssh);
+   }
+   else
+   {
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("Failed to create SSH connection to %s:%u"), hostName, port);
    }
    return rc;
 }
