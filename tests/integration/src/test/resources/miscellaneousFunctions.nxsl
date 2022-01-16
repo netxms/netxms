@@ -69,7 +69,7 @@ assert(code == 28);
 name = EventNameFromCode(28);
 assert(name == "SYS_NODE_DOWN");
 
-value = GetConfigurationVariable("TileServerURL");
+value = GetConfigurationVariable("Client.TileServerURL");
 assert(value == "https://tile.netxms.org/osm/");
 
 value = GetConfigurationVariable("Non Existing");
