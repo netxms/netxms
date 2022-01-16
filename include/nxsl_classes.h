@@ -1176,6 +1176,8 @@ public:
 
 #ifdef _WIN32
 template class LIBNXSL_EXPORTABLE ObjectArray<NXSL_Module>;
+template class LIBNXSL_EXPORTABLE NXSL_ObjectStack<NXSL_Value>;
+template class LIBNXSL_EXPORTABLE NXSL_ObjectStack<NXSL_CatchPoint>;
 #endif
 
 /**

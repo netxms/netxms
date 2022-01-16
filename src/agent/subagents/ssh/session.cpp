@@ -291,7 +291,7 @@ bool SSHSession::execute(const TCHAR *command, StringList *output, ActionExecuti
                if (offset > 0)
                   memmove(buffer, curr, offset);
             }
-            nbytes = ssh_channel_read(channel, &buffer[offset], sizeof(buffer) - offset - 1, 0);
+            nbytes = ssh_channel_read(channel, &buffer[offset], static_cast<uint32_t>(sizeof(buffer) - offset - 1), 0);
          }
          if ((nbytes == 0) || CheckForChannelReadBug(m_session))
          {
