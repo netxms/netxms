@@ -158,6 +158,7 @@ target
 /src/agent/tools/nxappget/nxappget
 /src/agent/tools/nxapush/nxapush
 /src/agent/tools/nxhwid/nxhwid
+/src/agent/tools/scripts/nxagentd-asan
 /src/client/install/Output
 /src/client/java/netxms-client/.classpath
 /src/client/java/netxms-client/.project
@@ -259,8 +260,6 @@ target
 /src/server/tools/nxwsget/nxwsget
 /src/server/tools/scripts/netxmsd-asan
 /src/server/tools/scripts/nx-collect-server-diag
-/src/server/tools/scripts/nx-run-asan-binary
-/src/server/tools/scripts/nxagentd-asan
 /src/server/tools/scripts/nxdbmgr-asan
 /src/snmp/nxmibc/lex.mp.c
 /src/snmp/nxmibc/lex.parser.cpp
@@ -277,6 +276,7 @@ target
 /src/tools/nxencpasswd/nxencpasswd
 /src/tools/nxgenguid/nxgenguid
 /src/tools/nxlptest/nxlptest
+/src/tools/scripts/nx-run-asan-binary
 /stamp-h1
 /status
 /tests/config/netxmsd.conf

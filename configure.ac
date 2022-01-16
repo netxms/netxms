@@ -4900,7 +4900,7 @@ AC_CONFIG_FILES([
 	src/agent/tools/nxapush/Makefile
 	src/agent/tools/nxhwid/Makefile
 	src/agent/tools/nxreload/Makefile
-   src/agent/tools/scripts/Makefile
+	src/agent/tools/scripts/Makefile
 	src/appagent/Makefile
 	src/client/Makefile
 	src/client/java/Makefile
@@ -5037,6 +5037,7 @@ AC_CONFIG_FILES([
 	src/tools/nxencpasswd/Makefile
 	src/tools/nxgenguid/Makefile
 	src/tools/nxlptest/Makefile
+	src/tools/scripts/Makefile
 	src/zlib/Makefile
 	sql/Makefile
 	tests/Makefile

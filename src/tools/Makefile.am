@@ -8,7 +8,7 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-SUBDIRS = nxcrashsrv nxcsum nxdevcfg nxencpasswd nxgenguid @TOOLS@
+SUBDIRS = nxcrashsrv nxcsum nxdevcfg nxencpasswd nxgenguid @TOOLS@ scripts
 
 bin_PROGRAMS = nxcsum/nxcsum nxdevcfg/nxdevcfg nxencpasswd/nxencpasswd nxgenguid/nxgenguid
 
