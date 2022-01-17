@@ -24,6 +24,20 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 40.92 to 40.93
+ */
+static bool H_UpgradeFromV92()
+{
+   CHK_EXEC(CreateEventTemplate(EVENT_TOO_MANY_SCRIPT_ERRORS, _T("SYS_TOO_MANY_SCRIPT_ERRORS"),
+            SEVERITY_WARNING, EF_LOG, _T("c71f2aa6-9345-43d4-90da-c5c3ee55f30d"),
+            _T("Too many script errors - script error reporting temporarily suspended"),
+            _T("Generated when there are too many script errors within short time period.")
+            ));
+   CHK_EXEC(SetMinorSchemaVersion(93));
+   return true;
+}
+
+/**
  * Upgrade from 40.91 to 40.92
  */
 static bool H_UpgradeFromV91()
@@ -2989,6 +3003,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 92, 40, 93, H_UpgradeFromV92 },
    { 91, 40, 92, H_UpgradeFromV91 },
    { 90, 40, 91, H_UpgradeFromV90 },
    { 89, 40, 90, H_UpgradeFromV89 },

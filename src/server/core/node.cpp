@@ -1735,7 +1735,7 @@ shared_ptr<Interface> Node::createInterfaceObject(InterfaceInfo *info, bool manu
       else
       {
          nxlog_debug_tag(DEBUG_TAG_NODE_INTERFACES, 4, _T("Node::createInterfaceObject(%s [%u]): hook script execution error: %s"), m_name, m_id, vm->getErrorText());
-         PostScriptErrorEvent(CONTEXT_NODE, m_id, 0, vm->getErrorText(), _T("Hook::CreateInterface"));
+         ReportScriptError(SCRIPT_CONTEXT_OBJECT, this, 0, vm->getErrorText(), _T("Hook::CreateInterface"));
       }
       vm.destroy();
       nxlog_debug_tag(DEBUG_TAG_NODE_INTERFACES, 6, _T("Node::createInterfaceObject(%s [%u]): interface \"%s\" (ifIndex=%d) %s by filter"),
@@ -5403,7 +5403,7 @@ void Node::executeInterfaceUpdateHook(Interface *iface)
    if (!vm->run(1, &argv))
    {
       nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("Node::executeInterfaceUpdateHook(%s [%u]): hook script execution error: %s"), m_name, m_id, vm->getErrorText());
-      PostScriptErrorEvent(CONTEXT_NODE, m_id, 0, vm->getErrorText(), _T("Hook::UpdateInterface"));
+      ReportScriptError(SCRIPT_CONTEXT_OBJECT, this, 0, vm->getErrorText(), _T("Hook::UpdateInterface"));
    }
    delete vm;
 }
@@ -9624,7 +9624,7 @@ shared_ptr<Subnet> Node::createSubnet(InetAddress& baseAddr, bool syntheticMask)
       else
       {
          nxlog_debug(4, _T("Node::createSubnet(%s [%u]): hook script execution error: %s"), m_name, m_id, vm->getErrorText());
-         PostScriptErrorEvent(CONTEXT_NODE, m_id, 0, vm->getErrorText(), _T("Hook::CreateSubnet"));
+         ReportScriptError(SCRIPT_CONTEXT_OBJECT, this, 0, vm->getErrorText(), _T("Hook::CreateSubnet"));
       }
       vm.destroy();
       DbgPrintf(6, _T("Node::createSubnet(%s [%u]): subnet \"%s\" %s by filter"),

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -1037,11 +1037,9 @@ bool DCItem::transform(ItemValue &value, time_t nElapsedTime)
             time_t now = time(nullptr);
             if (m_lastScriptErrorReport + ConfigReadInt(_T("DataCollection.ScriptErrorReportInterval"), 86400) < now)
             {
-               PostScriptErrorEvent(CONTEXT_DCI, m_ownerId, m_id, vm->getErrorText(), _T("DCI::%s::%d::TransformationScript"), getOwnerName(), m_id);
+               ReportScriptError(SCRIPT_CONTEXT_DCI, getOwner().get(), m_id, vm->getErrorText(), _T("DCI::%s::%d::TransformationScript"), getOwnerName(), m_id);
                nxlog_write(NXLOG_WARNING, _T("Failed to execute transformation script for object %s [%u] DCI %s [%u] (%s)"),
                         getOwnerName(), getOwnerId(), m_name.cstr(), m_id, vm->getErrorText());
-
-
                m_lastScriptErrorReport = now;
             }
          }
@@ -1052,7 +1050,7 @@ bool DCItem::transform(ItemValue &value, time_t nElapsedTime)
          time_t now = time(nullptr);
          if (m_lastScriptErrorReport + ConfigReadInt(_T("DataCollection.ScriptErrorReportInterval"), 86400) < now)
          {
-            PostScriptErrorEvent(CONTEXT_DCI, m_ownerId, m_id, _T("Script load failed"), _T("DCI::%s::%d::TransformationScript"), getOwnerName(), m_id);
+            ReportScriptError(SCRIPT_CONTEXT_DCI, getOwner().get(), m_id, _T("Script load failed"), _T("DCI::%s::%d::TransformationScript"), getOwnerName(), m_id);
             nxlog_write(NXLOG_WARNING, _T("Failed to load transformation script for object %s [%u] DCI %s [%u]"),
                      getOwnerName(), getOwnerId(), m_name.cstr(), m_id);
             m_lastScriptErrorReport = now;

@@ -273,7 +273,7 @@ unique_ptr<StringMap> BusinessServicePrototype::getInstancesFromScript()
    }
    else
    {
-      PostScriptErrorEvent(CONTEXT_BIZSVC, m_id, 0, vm->getErrorText(), _T("%s::%s::InstanceDiscovery"), getObjectClassName(), m_name);
+      ReportScriptError(SCRIPT_CONTEXT_BIZSVC, this, 0, vm->getErrorText(), _T("%s::%s::InstanceDiscovery"), getObjectClassName(), m_name);
       nxlog_debug_tag(DEBUG_TAG_BIZSVC, 5, _T("Failed to execute instance discovery script for business service prototype %s [%u] (%s)"), m_name, m_id, vm->getErrorText());
    }
    delete vm;
@@ -344,14 +344,14 @@ unique_ptr<StringMap> BusinessServicePrototype::getInstances()
             }
             else
             {
-               PostScriptErrorEvent(CONTEXT_BIZSVC, m_id, 0, filter->getErrorText(), _T("%s::%s::InstanceDiscoveryFilter"), getObjectClassName(), m_name);
+               ReportScriptError(SCRIPT_CONTEXT_BIZSVC, this, 0, filter->getErrorText(), _T("%s::%s::InstanceDiscoveryFilter"), getObjectClassName(), m_name);
                nxlog_debug_tag(DEBUG_TAG_BIZSVC, 5, _T("Failed to execute instance discovery filter script for business service prototype %s [%u] (%s)"), m_name, m_id, filter->getErrorText());
             }
             delete filter;
          }
          else
          {
-            PostScriptErrorEvent(CONTEXT_BIZSVC, m_id, 0, _T("Script load error"), _T("%s::%s::InstanceDiscoveryFilter"), getObjectClassName(), m_name);
+            ReportScriptError(SCRIPT_CONTEXT_BIZSVC, this, 0, _T("Script load error"), _T("%s::%s::InstanceDiscoveryFilter"), getObjectClassName(), m_name);
             nxlog_debug_tag(DEBUG_TAG_BIZSVC, 5, _T("Failed to load instance discovery filter script for business service prototype %s [%u]"), m_name, m_id);
          }
       }

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -430,7 +430,7 @@ static void ExecuteHookScript(NXSL_VM *vm)
    if (!vm->run())
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("Alarm::executeHookScript: hook script execution error (%s)"), vm->getErrorText());
-      PostScriptErrorEvent(CONTEXT_ALARM, 0, 0, vm->getErrorText(), _T("Hook::AlarmStateChange"));
+      ReportScriptError(SCRIPT_CONTEXT_ALARM, nullptr, 0, vm->getErrorText(), _T("Hook::AlarmStateChange"));
    }
    delete vm;
 }
@@ -2378,7 +2378,7 @@ static THREAD_RESULT THREAD_CALL RootCauseUpdateThread(void *arg)
             }
             else
             {
-               PostScriptErrorEvent(CONTEXT_ALARM, object != nullptr ? object->getId() : 0, 0, vm->getErrorText(), alarm->getRcaScriptName());
+               ReportScriptError(SCRIPT_CONTEXT_ALARM, object.get(), 0, vm->getErrorText(), alarm->getRcaScriptName());
                nxlog_write(NXLOG_ERROR, _T("Failed to execute background root cause analysis script %s (%s)"), alarm->getRcaScriptName(), vm->getErrorText());
             }
             delete vm;

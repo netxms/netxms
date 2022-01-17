@@ -26,6 +26,53 @@
 #define DEBUG_TAG_SCHEDULED   DEBUG_TAG_BASE _T(".scheduled")
 
 /**
+ * Script error counter
+ */
+static VolatileCounter s_scriptErrorCount = 0;
+
+/**
+ * Post script error event to system event queue.
+ *
+ * @param context script execution context
+ * @param objectId NetObj ID
+ * @param dciId DCI ID
+ * @param errorText error text
+ * @param nameFormat script name as formatted string
+ */
+bool NXCORE_EXPORTABLE ReportScriptError(const TCHAR* context, const NetObj* object, uint32_t dciId, const TCHAR *errorText, const TCHAR *nameFormat, ...)
+{
+   uint32_t count = static_cast<uint32_t>(InterlockedIncrement(&s_scriptErrorCount));
+   if (count >= 1000)
+   {
+      if (count == 1000)
+      {
+         nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_BASE, _T("Too many script errors - script error reporting temporarily disabled"));
+         PostSystemEvent(EVENT_TOO_MANY_SCRIPT_ERRORS, g_dwMgmtNode, nullptr);
+      }
+      return false;
+   }
+
+   TCHAR name[1024];
+   va_list args;
+   va_start(args, nameFormat);
+   _vsntprintf(name, 1024, nameFormat, args);
+   va_end(args);
+
+   nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_BASE, _T("Script error (object=%s objectId=%u dciId=%u context=%s name=%s): %s"),
+         (object != nullptr) ? object->getName() : _T("NONE"), (object != nullptr) ? object->getId() : 0, dciId, context, name, errorText);
+   return PostDciEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, dciId, "ssdds", name, errorText, dciId, (object != nullptr) ? object->getId() : 0, context);
+}
+
+/**
+ * Reset script error count
+ */
+void ResetScriptErrorEventCounter()
+{
+   s_scriptErrorCount = 0;
+   ThreadPoolScheduleRelative(g_mainThreadPool, 600000, ResetScriptErrorEventCounter);
+}
+
+/**
  * Script library
  */
 static NXSL_Library s_scriptLibrary;

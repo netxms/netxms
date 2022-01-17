@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Raden Solutions
+** Copyright (C) 2003-2022 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -1138,7 +1138,7 @@ void NetworkMap::updateLinks()
          {
             nxlog_debug_tag(DEBUG_TAG_NETMAP, 4, _T("NetworkMap::updateLinks(%s [%u]): color provider script \"%s\" execution error: %s"),
                       m_name, m_id, link->getColorProvider(), vm->getErrorText());
-            PostScriptErrorEvent(CONTEXT_NETMAP, m_id, 0, vm->getErrorText(), link->getColorProvider());
+            ReportScriptError(SCRIPT_CONTEXT_NETMAP, this, 0, vm->getErrorText(), link->getColorProvider());
          }
          vm.destroy();
       }
@@ -1252,8 +1252,7 @@ bool NetworkMap::isAllowedOnMap(const shared_ptr<NetObj>& object)
 		}
 		else
 		{
-			PostScriptErrorEvent(CONTEXT_NETMAP, object != nullptr ? object->getId() : 0, 0, m_filter->getErrorText(), _T("NetworkMap::%s::Filter"), m_name);
-			nxlog_write(NXLOG_WARNING, _T("Failed to execute filter script for network map object %s [%u] (%s)"), m_name, m_id, m_filter->getErrorText());
+		   ReportScriptError(SCRIPT_CONTEXT_NETMAP, object.get(), 0, m_filter->getErrorText(), _T("NetworkMap::%s::Filter"), m_name);
 		}
 	}
 	unlockProperties();

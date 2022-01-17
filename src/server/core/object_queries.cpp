@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Raden Solutions
+** Copyright (C) 2003-2022 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -100,7 +100,7 @@ void ObjectQuery::compile()
    m_script = NXSLCompile(m_source, errorMessage, 256, nullptr, &env);
    if (m_script == nullptr)
    {
-      PostScriptErrorEvent(CONTEXT_OBJECT_QUERY, 0, 0, errorMessage, _T("ObjectQuery::%s"), m_name);
+      ReportScriptError(SCRIPT_CONTEXT_OBJECT_QUERY, nullptr, 0, errorMessage, _T("ObjectQuery::%s"), m_name);
       nxlog_write(NXLOG_WARNING, _T("Failed to compile script for predefined object query %s [%u] (%s)"), m_name, m_id, errorMessage);
    }
 }

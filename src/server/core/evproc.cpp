@@ -28,6 +28,11 @@
 #define MAX_DB_QUERY_FAILED_EVENTS     30
 
 /**
+ * Reset script error counter
+ */
+void ResetScriptErrorEventCounter();
+
+/**
  * Number of processed events since start
  */
 VolatileCounter64 g_totalEventsProcessed = 0;
@@ -272,9 +277,8 @@ static void ProcessEvent(Event *event, int processorId)
       {
          if (event->getCode() != EVENT_SCRIPT_ERROR) // To avoid infinite loop
          {
-            PostScriptErrorEvent(CONTEXT_EVENT_PROC, event->getSourceId(), 0, vm->getErrorText(), _T("Hook::EventProcessor"));
+            ReportScriptError(SCRIPT_CONTEXT_EVENT_PROC, FindObjectById(event->getSourceId()).get(), 0, vm->getErrorText(), _T("Hook::EventProcessor"));
          }
-         nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Event processor hook script execution error (%s)"), vm->getErrorText());
       }
       vm.destroy();
    }
@@ -592,6 +596,7 @@ THREAD StartEventProcessor()
    memset(s_dbQueryFailedTimestamps, 0, sizeof(s_dbQueryFailedTimestamps));
    s_threadLogger = ThreadCreateEx(EventLogger);
    s_threadStormDetector = ThreadCreateEx(EventStormDetector);
+   ThreadPoolScheduleRelative(g_mainThreadPool, 600000, ResetScriptErrorEventCounter);
    return (ConfigReadInt(_T("Events.Processor.PoolSize"), 1) > 1) ? ThreadCreateEx(ParallelEventProcessor) : ThreadCreateEx(SerialEventProcessor);
 }
 

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Raden Solutions
+** Copyright (C) 2003-2022 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -758,7 +758,7 @@ void LDAPConnection::fillLists(LDAPMessage *searchResult)
          else
          {
             nxlog_debug_tag(LDAP_DEBUG_TAG, 4, _T("LDAPConnection::fillLists(): hook script execution error (%s)"), vm->getErrorText());
-            PostScriptErrorEvent(CONTEXT_LDAP, 0, 0, vm->getErrorText(), _T("Hook::LDAPSynchronization"));
+            ReportScriptError(SCRIPT_CONTEXT_LDAP, nullptr, 0, vm->getErrorText(), _T("Hook::LDAPSynchronization"));
          }
       }
       if (ldapObject != nullptr)

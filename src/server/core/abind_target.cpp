@@ -83,8 +83,7 @@ void AutoBindTarget::setAutoBindFilter(int filterNumber, const TCHAR *filter)
       m_autoBindFilters[filterNumber] = NXSLCompile(filter, error, 256, nullptr, &env);
       if (m_autoBindFilters[filterNumber] == nullptr)
       {
-         PostScriptErrorEvent(CONTEXT_AUTOBIND, m_this->getId(), 0, error, _T("AutoBind::%s::%s::%d"), m_this->getObjectClassName(), m_this->getName(), filterNumber);
-         nxlog_write(NXLOG_WARNING, _T("Failed to compile autobind script #%d for object %s [%u] (%s)"), filterNumber, m_this->getName(), m_this->getId(), error);
+         ReportScriptError(SCRIPT_CONTEXT_AUTOBIND, m_this, 0, error, _T("AutoBind::%s::%s::%d"), m_this->getObjectClassName(), m_this->getName(), filterNumber);
       }
    }
    else
@@ -233,8 +232,7 @@ AutoBindDecision AutoBindTarget::isApplicable(NXSL_VM **cachedFilterVM, const sh
          }
          else
          {
-            PostScriptErrorEvent(CONTEXT_AUTOBIND, m_this->getId(), 0, _T("Script load error"), _T("AutoBind::%s::%s::%d"), m_this->getObjectClassName(), m_this->getName(), filterNumber);
-            nxlog_write(NXLOG_WARNING, _T("Failed to load autobind script for object %s [%u]"), m_this->getName(), m_this->getId());
+            ReportScriptError(SCRIPT_CONTEXT_AUTOBIND, m_this, 0, _T("Script load error"), _T("AutoBind::%s::%s::%d"), m_this->getObjectClassName(), m_this->getName(), filterNumber);
          }
       }
       internalUnlock();
@@ -269,8 +267,7 @@ AutoBindDecision AutoBindTarget::isApplicable(NXSL_VM **cachedFilterVM, const sh
    }
    else
    {
-      PostScriptErrorEvent(CONTEXT_AUTOBIND, m_this->getId(), dci != nullptr ? dci->getId() : 0, filter->getErrorText(), _T("AutoBind::%s::%s::%d"), m_this->getObjectClassName(), m_this->getName(), filterNumber);
-      nxlog_write(NXLOG_WARNING, _T("Failed to execute autobind script for object %s [%u] (%s)"), m_this->getName(), m_this->getId(), filter->getErrorText());
+      ReportScriptError(SCRIPT_CONTEXT_AUTOBIND, m_this, dci != nullptr ? dci->getId() : 0, filter->getErrorText(), _T("AutoBind::%s::%s::%d"), m_this->getObjectClassName(), m_this->getName(), filterNumber);
    }
    return result;
 }

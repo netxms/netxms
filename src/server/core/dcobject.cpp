@@ -464,9 +464,8 @@ StringBuffer DCObject::expandMacros(const TCHAR *src, size_t dstLen)
 				}
 				else
 				{
-				   nxlog_debug_tag(DEBUG_TAG_DC_CONFIG, 4, _T("DCObject::expandMacros(%d,\"%s\"): Script %s execution error: %s"),
-					          m_id, src, &macro[7], vm->getErrorText());
-		         PostScriptErrorEvent(CONTEXT_DCI, m_ownerId, m_id, vm->getErrorText(), &macro[7]);
+				   nxlog_debug_tag(DEBUG_TAG_DC_CONFIG, 4, _T("DCObject::expandMacros(%d,\"%s\"): Script %s execution error: %s"), m_id, src, &macro[7], vm->getErrorText());
+				   ReportScriptError(SCRIPT_CONTEXT_DCI, FindObjectById(m_ownerId).get(), m_id, vm->getErrorText(), &macro[7]);
 				}
             delete vm;
 			}
@@ -1129,9 +1128,7 @@ void DCObject::setTransformationScript(const TCHAR *source)
          m_transformationScript = NXSLCompile(m_transformationScriptSource, errorText, 1024, nullptr, &env);
          if (m_transformationScript == nullptr)
          {
-            PostScriptErrorEvent(CONTEXT_DCI, m_ownerId, m_id, errorText, _T("DCI::%s::%d::TransformationScript"), getOwnerName(), m_id);
-            nxlog_write(NXLOG_WARNING, _T("Failed to compile transformation script for object %s [%u] DCI %s [%u] (%s)"),
-                     getOwnerName(), getOwnerId(), m_name.cstr(), m_id, errorText);
+            ReportScriptError(SCRIPT_CONTEXT_DCI, getOwner().get(), m_id, errorText, _T("DCI::%s::%d::TransformationScript"), getOwnerName(), m_id);
          }
       }
       else
@@ -1426,7 +1423,7 @@ static EnumerationCallbackResult FilterCallback(const TCHAR *key, const TCHAR *v
    }
    else
    {
-      PostScriptErrorEvent(CONTEXT_DCI, dco->getOwnerId(), dco->getId(), instanceFilter->getErrorText(), _T("DCI::%s::%d::InstanceFilter"), dco->getOwnerName(), dco->getId());
+      ReportScriptError(SCRIPT_CONTEXT_DCI, dco->getOwner().get(), dco->getId(), instanceFilter->getErrorText(), _T("DCI::%s::%d::InstanceFilter"), dco->getOwnerName(), dco->getId());
       data->filteredInstances->set(key, new InstanceDiscoveryData((const TCHAR *)value, 0));
    }
    return _CONTINUE;
@@ -1461,7 +1458,7 @@ StringObjectMap<InstanceDiscoveryData> *DCObject::filterInstanceList(StringMap *
    data.instanceFilter->setUserData(getOwner().get());
    if (!data.instanceFilter->load(m_instanceFilter))
    {
-      PostScriptErrorEvent(CONTEXT_DCI, m_ownerId, m_id, data.instanceFilter->getErrorText(), _T("DCI::%s::%d::InstanceFilter"), getOwnerName(), m_id);
+      ReportScriptError(SCRIPT_CONTEXT_DCI, getOwner().get(), m_id, data.instanceFilter->getErrorText(), _T("DCI::%s::%d::InstanceFilter"), getOwnerName(), m_id);
    }
    unlock();
 
@@ -1494,10 +1491,7 @@ void DCObject::setInstanceFilter(const TCHAR *script)
             auto owner = m_owner.lock();
             if (owner != nullptr)
             {
-               nxlog_write(NXLOG_WARNING, _T("Failed to compile instance filter script for object %s [%u] DCI %s [%u] (%s)"),
-                        owner->getName(), owner->getId(), m_name.cstr(), m_id, errorText);
-
-               PostScriptErrorEvent(CONTEXT_DCI, owner->getId(), m_id, errorText, _T("DCI::%s::%d::InstanceFilter"), owner->getName(), m_id);
+               ReportScriptError(SCRIPT_CONTEXT_DCI, owner.get(), m_id, errorText, _T("DCI::%s::%d::InstanceFilter"), owner->getName(), m_id);
             }
          }
       }

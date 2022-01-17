@@ -9410,13 +9410,13 @@ void ClientSession::sendConfigForAgent(const NXCPMessage& request)
             }
             else
             {
-               PostScriptErrorEvent(CONTEXT_AGENT_CFG, 0, 0, filter->getErrorText(), _T("AgentCfg::%d"), configId);
+               ReportScriptError(SCRIPT_CONTEXT_AGENT_CFG, nullptr, 0, filter->getErrorText(), _T("AgentCfg::%d"), configId);
             }
             delete filter;
          }
          else
          {
-            PostScriptErrorEvent(CONTEXT_AGENT_CFG, 0, 0, errorMessage, _T("AgentCfg::%d"), configId);
+            ReportScriptError(SCRIPT_CONTEXT_AGENT_CFG, nullptr, 0, errorMessage, _T("AgentCfg::%d"), configId);
          }
       }
       DBFreeResult(hResult);

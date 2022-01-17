@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Raden Solutions
+** Copyright (C) 2003-2022 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -190,7 +190,7 @@ void SNMPTrapConfiguration::compileScript()
       m_script = NXSLCompile(m_scriptSource, errorMessage, 1024, nullptr, &env);
       if (m_script == nullptr)
       {
-         PostScriptErrorEvent(CONTEXT_SNMP_TRAP, 0, 0, errorMessage, _T("SNMPTrap::%u"), m_id);
+         ReportScriptError(SCRIPT_CONTEXT_SNMP_TRAP, nullptr, 0, errorMessage, _T("SNMPTrap::%u"), m_id);
          nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Failed to compile SNMP trap transformation script for trap mapping [%u] (%s)"), m_id, errorMessage);
       }
    }

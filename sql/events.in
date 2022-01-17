@@ -1549,6 +1549,15 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
       '   1) Path to deleted file'
    );
 
+
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+   (
+      EVENT_TOO_MANY_SCRIPT_ERRORS, 'SYS_TOO_MANY_SCRIPT_ERRORS', 'c71f2aa6-9345-43d4-90da-c5c3ee55f30d',
+      EVENT_SEVERITY_WARNING, 1,
+      'Too many script errors - script error reporting temporarily suspended',
+      'Generated when there are too many script errors within short time period.'
+   );
+
 /*
 ** SNMP traps
 */

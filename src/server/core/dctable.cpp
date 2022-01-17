@@ -459,7 +459,7 @@ bool DCTable::transform(const shared_ptr<Table>& value)
             time_t now = time(nullptr);
             if (m_lastScriptErrorReport + ConfigReadInt(_T("DataCollection.ScriptErrorReportInterval"), 86400) < now)
             {
-               PostScriptErrorEvent(CONTEXT_DCI, m_ownerId, m_id, vm->getErrorText(), _T("DCI::%s::%d::TransformationScript"), getOwnerName(), m_id);
+               ReportScriptError(SCRIPT_CONTEXT_DCI, getOwner().get(), m_id, vm->getErrorText(), _T("DCI::%s::%d::TransformationScript"), getOwnerName(), m_id);
                nxlog_write(NXLOG_WARNING, _T("Failed to execute transformation script for object %s [%u] DCI %s [%u] (%s)"),
                         getOwnerName(), m_ownerId, m_name.cstr(), m_id, vm->getErrorText());
                m_lastScriptErrorReport = now;
@@ -473,7 +473,7 @@ bool DCTable::transform(const shared_ptr<Table>& value)
       time_t now = time(nullptr);
       if (m_lastScriptErrorReport + ConfigReadInt(_T("DataCollection.ScriptErrorReportInterval"), 86400) < now)
       {
-         PostScriptErrorEvent(CONTEXT_DCI, m_ownerId, m_id, _T("Script load error"), _T("DCI::%s::%d::TransformationScript"), getOwnerName(), m_id);
+         ReportScriptError(SCRIPT_CONTEXT_DCI, getOwner().get(), m_id, _T("Script load error"), _T("DCI::%s::%d::TransformationScript"), getOwnerName(), m_id);
          nxlog_write(NXLOG_WARNING, _T("Failed to load transformation script for object %s [%u] DCI %s [%u]"),
                   getOwnerName(), m_ownerId, m_name.cstr(), m_id);
          m_lastScriptErrorReport = now;

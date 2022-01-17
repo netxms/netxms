@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -997,9 +997,8 @@ static bool AcceptNewNode(NewNodeData *newNodeData, BYTE *macAddr)
          }
          else
          {
-            nxlog_debug_tag(DEBUG_TAG, 4, _T("AcceptNewNode(%s): Filter script execution error: %s"),
-                      szIpAddr, vm->getErrorText());
-            PostScriptErrorEvent(CONTEXT_NODE, 0, 0, vm->getErrorText(), szFilter);
+            nxlog_debug_tag(DEBUG_TAG, 4, _T("AcceptNewNode(%s): Filter script execution error: %s"), szIpAddr, vm->getErrorText());
+            ReportScriptError(SCRIPT_CONTEXT_OBJECT, nullptr, 0, vm->getErrorText(), szFilter);
          }
          delete vm;
       }

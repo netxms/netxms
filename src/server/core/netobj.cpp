@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -2559,7 +2559,7 @@ void NetObj::executeHookScript(const TCHAR *hookName, uint32_t pollRequestId)
    {
       nxlog_debug_tag(DEBUG_TAG_OBJECT_LIFECYCLE, 4, _T("NetObj::executeHookScript(%s [%u]): hook script \"%s\" execution error: %s"),
                 m_name, m_id, scriptName, vm->getErrorText());
-      PostScriptErrorEvent(CONTEXT_NETOBJ, m_id, 0, vm->getErrorText(), scriptName);
+      ReportScriptError(SCRIPT_CONTEXT_OBJECT, this, 0, vm->getErrorText(), scriptName);
    }
    vm.destroy();
 }
@@ -2901,7 +2901,7 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
                         {
                            DbgPrintf(4, _T("NetObj::ExpandText(%d, \"%s\"): Script %s execution error: %s"),
                                      (int)((event != nullptr) ? event->getCode() : 0), textTemplate, buffer, vm->getErrorText());
-                           PostScriptErrorEvent(CONTEXT_NETOBJ, m_id, 0, vm->getErrorText(), buffer);
+                           ReportScriptError(SCRIPT_CONTEXT_OBJECT, this, 0, vm->getErrorText(), buffer);
                         }
                         delete vm;
                      }

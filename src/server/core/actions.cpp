@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -436,7 +436,7 @@ static bool ExecuteActionScript(const TCHAR *script, const Event *event)
          else
          {
             nxlog_debug_tag(DEBUG_TAG, 4, _T("ExecuteActionScript: Script %s execution error: %s"), name, vm->getErrorText());
-            PostScriptErrorEvent(CONTEXT_ACTION_SCRIPT, event->getSourceId(), 0, vm->getErrorText(), name);
+            ReportScriptError(SCRIPT_CONTEXT_ACTION, FindObjectById(event->getSourceId()).get(), 0, vm->getErrorText(), name);
          }
       }
       else

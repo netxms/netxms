@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -96,7 +96,7 @@ static void ExecuteScriptInBackground(NXSL_VM *vm, const TCHAR *scriptName)
 {
    if (!vm->run())
    {
-      PostScriptErrorEvent(CONTEXT_TUNNEL, 0, 0, vm->getErrorText(), scriptName);
+      ReportScriptError(SCRIPT_CONTEXT_TUNNEL, nullptr, 0, vm->getErrorText(), scriptName);
    }
    delete vm;
 }

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -515,7 +515,7 @@ bool EPRule::matchScript(Event *event) const
    {
       if (vm.failureReason() != ScriptVMFailureReason::SCRIPT_IS_EMPTY)
       {
-         PostScriptErrorEvent(CONTEXT_EPP, event->getSourceId(), 0, _T("Script load failed"), _T("EPP::%d"), m_id + 1);
+         ReportScriptError(SCRIPT_CONTEXT_EVENT_PROC, FindObjectById(event->getSourceId()).get(), 0, _T("Script load failed"), _T("EPP::%d"), m_id + 1);
          nxlog_write(NXLOG_ERROR, _T("Cannot create NXSL VM for evaluation script for event processing policy rule #%u"), m_id + 1);
       }
       return true;
@@ -553,7 +553,7 @@ bool EPRule::matchScript(Event *event) const
    }
    else
    {
-      PostScriptErrorEvent(CONTEXT_EPP, event->getSourceId(), 0, vm->getErrorText(), _T("EPP::%d"), m_id + 1);
+      ReportScriptError(SCRIPT_CONTEXT_EVENT_PROC, FindObjectById(event->getSourceId()).get(), 0, vm->getErrorText(), _T("EPP::%d"), m_id + 1);
       nxlog_write(NXLOG_ERROR, _T("Failed to execute evaluation script for event processing policy rule #%u (%s)"), m_id + 1, vm->getErrorText());
    }
    delete globals;
@@ -713,7 +713,7 @@ uint32_t EPRule::generateAlarm(Event *event) const
 	         }
 	         else
 	         {
-	            PostScriptErrorEvent(CONTEXT_EPP, event->getSourceId(), 0, vm->getErrorText(), m_rcaScriptName);
+	            ReportScriptError(SCRIPT_CONTEXT_EVENT_PROC, FindObjectById(event->getSourceId()).get(), 0, vm->getErrorText(), m_rcaScriptName);
 	            nxlog_write(NXLOG_ERROR, _T("Failed to execute root cause analysis script for event processing policy rule #%u (%s)"), m_id + 1, vm->getErrorText());
 	         }
 	         delete vm;

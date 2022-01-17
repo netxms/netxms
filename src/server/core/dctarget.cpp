@@ -1083,7 +1083,7 @@ NXSL_VM *DataCollectionTarget::runDataCollectionScript(const TCHAR *param, DataC
          time_t lastReport = static_cast<time_t>(m_scriptErrorReports.getInt64(param, 0));
          if (lastReport + ConfigReadInt(_T("DataCollection.ScriptErrorReportInterval"), 86400) < now)
          {
-            PostScriptErrorEvent(CONTEXT_DCI, m_id, 0, vm->getErrorText(), name);
+            ReportScriptError(SCRIPT_CONTEXT_DCI, this, 0, vm->getErrorText(), name);
             m_scriptErrorReports.set(param, static_cast<uint64_t>(now));
          }
          delete_and_null(vm);

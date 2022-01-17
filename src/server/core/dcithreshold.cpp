@@ -339,7 +339,7 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
                time_t now = time(nullptr);
                if (m_lastScriptErrorReport + ConfigReadInt(_T("DataCollection.ScriptErrorReportInterval"), 86400) < now)
                {
-                  PostScriptErrorEvent(CONTEXT_DCI, target->getId(), dci->getId(), vm->getErrorText(), _T("DCI::%s::%d::%d::ThresholdScript"), target->getName(), dci->getId(), m_id);
+                  ReportScriptError(SCRIPT_CONTEXT_DCI, target.get(), dci->getId(), vm->getErrorText(), _T("DCI::%s::%d::%d::ThresholdScript"), target->getName(), dci->getId(), m_id);
                   nxlog_write(NXLOG_WARNING, _T("Failed to execute threshold script for node %s [%u] DCI %s [%u] threshold %u (%s)"),
                            target->getName(), target->getId(), dci->getName().cstr(), dci->getId(), m_id, vm->getErrorText());
                   m_lastScriptErrorReport = now;
@@ -352,7 +352,7 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
             time_t now = time(nullptr);
             if (m_lastScriptErrorReport + ConfigReadInt(_T("DataCollection.ScriptErrorReportInterval"), 86400) < now)
             {
-               PostScriptErrorEvent(CONTEXT_DCI, target->getId(), dci->getId(), _T("Script load failed"), _T("DCI::%s::%d::%d::ThresholdScript"), target->getName(), dci->getId(), m_id);
+               ReportScriptError(SCRIPT_CONTEXT_DCI, target.get(), dci->getId(), _T("Script load failed"), _T("DCI::%s::%d::%d::ThresholdScript"), target->getName(), dci->getId(), m_id);
                nxlog_write(NXLOG_WARNING, _T("Failed to load threshold script for node %s [%u] DCI %s [%u] threshold %u"),
                         target->getName(), target->getId(), dci->getName().cstr(), dci->getId(), m_id);
                m_lastScriptErrorReport = now;
@@ -986,9 +986,7 @@ void Threshold::setScript(TCHAR *script)
          {
             TCHAR defaultName[32];
             _sntprintf(defaultName, 32, _T("[%d]"), m_targetId);
-            PostScriptErrorEvent(CONTEXT_DCI, m_targetId, m_itemId, errorText, _T("DCI::%s::%d::%d::ThresholdScript"), GetObjectName(m_targetId, defaultName), m_itemId, m_id);
-            nxlog_write(NXLOG_WARNING, _T("Failed to compile threshold script for node %s [%u] DCI %u threshold %u (%s)"),
-                     GetObjectName(m_targetId, defaultName), m_targetId, m_itemId, m_id, errorText);
+            ReportScriptError(SCRIPT_CONTEXT_DCI, FindObjectById(m_targetId).get(), m_itemId, errorText, _T("DCI::%s::%d::%d::ThresholdScript"), GetObjectName(m_targetId, defaultName), m_itemId, m_id);
          }
       }
       else
