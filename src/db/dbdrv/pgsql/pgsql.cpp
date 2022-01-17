@@ -1,6 +1,6 @@
 /* 
 ** PostgreSQL Database Driver
-** Copyright (C) 2003-2021 Raden Solutions
+** Copyright (C) 2003-2022 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -30,10 +30,7 @@
 #pragma warning(disable : 4996)
 #endif
 
-DECLARE_DRIVER_HEADER("PGSQL")
-
-extern "C" void __EXPORT DrvDisconnect(PG_CONN *connection);
-static bool UnsafeDrvQuery(PG_CONN *pConn, const char *szQuery, WCHAR *errorText);
+static bool UnsafeQuery(PG_CONN *pConn, const char *szQuery, WCHAR *errorText);
 
 #ifndef _WIN32
 static void *s_libpq = nullptr;
@@ -80,7 +77,7 @@ static VolatileCounter s_statementId = 0;
 /**
  * Prepare string for using in SQL query - enclose in quotes and escape as needed
  */
-extern "C" WCHAR __EXPORT *DrvPrepareStringW(const WCHAR *str)
+static WCHAR *PrepareStringW(const WCHAR *str)
 {
 	int len = (int)wcslen(str) + 3;   // + two quotes and \0 at the end
 	int bufferSize = len + 128;
@@ -142,7 +139,7 @@ extern "C" WCHAR __EXPORT *DrvPrepareStringW(const WCHAR *str)
 /**
  * Prepare string for using in SQL query - enclose in quotes and escape as needed
  */
-extern "C" char __EXPORT *DrvPrepareStringA(const char *str)
+static char *PrepareStringA(const char *str)
 {
 	int len = (int)strlen(str) + 3;   // + two quotes and \0 at the end
 	int bufferSize = len + 128;
@@ -204,7 +201,7 @@ extern "C" char __EXPORT *DrvPrepareStringA(const char *str)
 /**
  * Initialize driver
  */
-extern "C" bool __EXPORT DrvInit(const char *cmdLine)
+static bool Initialize(const char *options)
 {
 #ifndef _WIN32
    s_libpq = dlopen("libpq.so.5", RTLD_NOW);
@@ -218,7 +215,7 @@ extern "C" bool __EXPORT DrvInit(const char *cmdLine)
 /**
  * Unload handler
  */
-extern "C" void __EXPORT DrvUnload()
+static void Unload()
 {
 #ifndef _WIN32
    if (s_libpq != nullptr)
@@ -229,8 +226,7 @@ extern "C" void __EXPORT DrvUnload()
 /**
  * Connect to database
  */
-extern "C" DBDRV_CONNECTION __EXPORT DrvConnect(const char *serverAddress,	const char *login, const char *password,
-         const char *database, const char *schema, WCHAR *errorText)
+static DBDRV_CONNECTION Connect(const char *serverAddress,	const char *login, const char *password, const char *database, const char *schema, WCHAR *errorText)
 {
 	if ((database != nullptr) && (*database == 0))
 	{
@@ -280,7 +276,7 @@ extern "C" DBDRV_CONNECTION __EXPORT DrvConnect(const char *serverAddress,	const
       {
          char query[256];
          snprintf(query, 256, "SET search_path=%s", schema);
-         if (!UnsafeDrvQuery(connection, query, errorText))
+         if (!UnsafeQuery(connection, query, errorText))
          {
             PQfinish(handle);
             delete_and_null(connection);
@@ -301,16 +297,16 @@ extern "C" DBDRV_CONNECTION __EXPORT DrvConnect(const char *serverAddress,	const
 /**
  * Disconnect from database
  */
-extern "C" void __EXPORT DrvDisconnect(PG_CONN *connection)
+static void Disconnect(DBDRV_CONNECTION connection)
 {
-   PQfinish(connection->handle);
-   delete connection;
+   PQfinish(static_cast<PG_CONN*>(connection)->handle);
+   delete static_cast<PG_CONN*>(connection);
 }
 
 /**
  * Convert query from NetXMS portable format to native PostgreSQL format
  */
-static char *ConvertQuery(WCHAR *query, char *localBuffer, size_t bufferSize)
+static char *ConvertQuery(const WCHAR *query, char *localBuffer, size_t bufferSize)
 {
    int count = NumCharsW(query, '?');
    if (count == 0)
@@ -375,28 +371,28 @@ static char *ConvertQuery(WCHAR *query, char *localBuffer, size_t bufferSize)
 /**
  * Prepare statement
  */
-extern "C" DBDRV_STATEMENT __EXPORT DrvPrepare(PG_CONN *pConn, WCHAR *pwszQuery, bool optimizeForReuse, DWORD *pdwError, WCHAR *errorText)
+static DBDRV_STATEMENT Prepare(DBDRV_CONNECTION connection, const WCHAR *pwszQuery, bool optimizeForReuse, uint32_t *errorCode, WCHAR *errorText)
 {
    char localBuffer[1024];
 	char *pszQueryUTF8 = ConvertQuery(pwszQuery, localBuffer, 1024);
 	PG_STATEMENT *hStmt = MemAllocStruct<PG_STATEMENT>();
-	hStmt->connection = pConn;
+	hStmt->connection = static_cast<PG_CONN*>(connection);
 
    if (optimizeForReuse)
    {
       snprintf(hStmt->name, 64, "netxms_stmt_%p_%d", hStmt, (int)InterlockedIncrement(&s_statementId));
 
-      pConn->mutexQueryLock.lock();
-      PGresult	*pResult = PQprepare(pConn->handle, hStmt->name, pszQueryUTF8, 0, NULL);
-      if ((pResult == NULL) || (PQresultStatus(pResult) != PGRES_COMMAND_OK))
+      static_cast<PG_CONN*>(connection)->mutexQueryLock.lock();
+      PGresult	*pResult = PQprepare(static_cast<PG_CONN*>(connection)->handle, hStmt->name, pszQueryUTF8, 0, nullptr);
+      if ((pResult == nullptr) || (PQresultStatus(pResult) != PGRES_COMMAND_OK))
       {
          MemFreeAndNull(hStmt);
 
-         *pdwError = (PQstatus(pConn->handle) == CONNECTION_BAD) ? DBERR_CONNECTION_LOST : DBERR_OTHER_ERROR;
+         *errorCode = (PQstatus(static_cast<PG_CONN*>(connection)->handle) == CONNECTION_BAD) ? DBERR_CONNECTION_LOST : DBERR_OTHER_ERROR;
 
-         if (errorText != NULL)
+         if (errorText != nullptr)
          {
-            utf8_to_wchar(PQerrorMessage(pConn->handle), -1, errorText, DBDRV_MAX_ERROR_TEXT);
+            utf8_to_wchar(PQerrorMessage(static_cast<PG_CONN*>(connection)->handle), -1, errorText, DBDRV_MAX_ERROR_TEXT);
             errorText[DBDRV_MAX_ERROR_TEXT - 1] = 0;
             RemoveTrailingCRLFW(errorText);
          }
@@ -407,9 +403,9 @@ extern "C" DBDRV_STATEMENT __EXPORT DrvPrepare(PG_CONN *pConn, WCHAR *pwszQuery,
          hStmt->allocated = 0;
          hStmt->pcount = 0;
          hStmt->buffers = nullptr;
-         *pdwError = DBERR_SUCCESS;
+         *errorCode = DBERR_SUCCESS;
       }
-      pConn->mutexQueryLock.unlock();
+      static_cast<PG_CONN*>(connection)->mutexQueryLock.unlock();
       if (pResult != nullptr)
          PQclear(pResult);
       FreeConvertedString(pszQueryUTF8, localBuffer);
@@ -428,62 +424,63 @@ extern "C" DBDRV_STATEMENT __EXPORT DrvPrepare(PG_CONN *pConn, WCHAR *pwszQuery,
 /**
  * Bind parameter to prepared statement
  */
-extern "C" void __EXPORT DrvBind(PG_STATEMENT *hStmt, int pos, int sqlType, int cType, void *buffer, int allocType)
+static void Bind(DBDRV_STATEMENT hStmt, int pos, int sqlType, int cType, void *buffer, int allocType)
 {
 	if (pos <= 0)
 		return;
 
-	if (hStmt->allocated < pos)
+	auto stmt = static_cast<PG_STATEMENT*>(hStmt);
+	if (stmt->allocated < pos)
 	{
-		int newAllocated = std::max(hStmt->allocated + 16, pos);
-		hStmt->buffers = (char **)realloc(hStmt->buffers, sizeof(char *) * newAllocated);
-		for(int i = hStmt->allocated; i < newAllocated; i++)
-			hStmt->buffers[i] = NULL;
-		hStmt->allocated = newAllocated;
+		int newAllocated = std::max(stmt->allocated + 16, pos);
+		stmt->buffers = (char **)realloc(stmt->buffers, sizeof(char *) * newAllocated);
+		for(int i = stmt->allocated; i < newAllocated; i++)
+			stmt->buffers[i] = NULL;
+		stmt->allocated = newAllocated;
 	}
-	if (hStmt->pcount < pos)
-		hStmt->pcount = pos;
+	if (stmt->pcount < pos)
+		stmt->pcount = pos;
 
-	MemFree(hStmt->buffers[pos - 1]);
+	MemFree(stmt->buffers[pos - 1]);
 
 	switch(cType)
 	{
 		case DB_CTYPE_STRING:
-			hStmt->buffers[pos - 1] = UTF8StringFromWideString((WCHAR *)buffer);
+			stmt->buffers[pos - 1] = UTF8StringFromWideString((WCHAR *)buffer);
 			break;
       case DB_CTYPE_UTF8_STRING:
          if (allocType == DB_BIND_DYNAMIC)
          {
-            hStmt->buffers[pos - 1] = (char *)buffer;
+            stmt->buffers[pos - 1] = (char *)buffer;
             buffer = NULL; // prevent deallocation
          }
          else
          {
-            hStmt->buffers[pos - 1] = strdup((char *)buffer);
+            stmt->buffers[pos - 1] = strdup((char *)buffer);
          }
          break;
 		case DB_CTYPE_INT32:
-			hStmt->buffers[pos - 1] = (char *)MemAlloc(16);
-			sprintf(hStmt->buffers[pos - 1], "%d", *((int *)buffer));
+			stmt->buffers[pos - 1] = (char *)MemAlloc(16);
+			sprintf(stmt->buffers[pos - 1], "%d", *((int *)buffer));
 			break;
 		case DB_CTYPE_UINT32:
-			hStmt->buffers[pos - 1] = (char *)MemAlloc(16);
-			sprintf(hStmt->buffers[pos - 1], "%u", *((unsigned int *)buffer));
+			stmt->buffers[pos - 1] = (char *)MemAlloc(16);
+			sprintf(stmt->buffers[pos - 1], "%u", *((unsigned int *)buffer));
 			break;
 		case DB_CTYPE_INT64:
-			hStmt->buffers[pos - 1] = (char *)MemAlloc(32);
-			sprintf(hStmt->buffers[pos - 1], INT64_FMTA, *((INT64 *)buffer));
+			stmt->buffers[pos - 1] = (char *)MemAlloc(32);
+			sprintf(stmt->buffers[pos - 1], INT64_FMTA, *((INT64 *)buffer));
 			break;
 		case DB_CTYPE_UINT64:
-			hStmt->buffers[pos - 1] = (char *)MemAlloc(32);
-			sprintf(hStmt->buffers[pos - 1], UINT64_FMTA, *((QWORD *)buffer));
+			stmt->buffers[pos - 1] = (char *)MemAlloc(32);
+			sprintf(stmt->buffers[pos - 1], UINT64_FMTA, *((QWORD *)buffer));
 			break;
 		case DB_CTYPE_DOUBLE:
-			hStmt->buffers[pos - 1] = (char *)MemAlloc(32);
-			sprintf(hStmt->buffers[pos - 1], "%f", *((double *)buffer));
+			stmt->buffers[pos - 1] = (char *)MemAlloc(32);
+			sprintf(stmt->buffers[pos - 1], "%f", *((double *)buffer));
 			break;
 		default:
-			hStmt->buffers[pos - 1] = MemCopyStringA("");
+			stmt->buffers[pos - 1] = MemCopyStringA("");
 			break;
 	}
 
@@ -494,19 +491,20 @@ extern "C" void __EXPORT DrvBind(PG_STATEMENT *hStmt, int pos, int sqlType, int 
 /**
  * Execute prepared statement
  */
-extern "C" DWORD __EXPORT DrvExecute(PG_CONN *pConn, PG_STATEMENT *hStmt, WCHAR *errorText)
+static uint32_t Execute(DBDRV_CONNECTION connection, DBDRV_STATEMENT hStmt, WCHAR *errorText)
 {
-	DWORD rc;
+	uint32_t rc;
+   auto stmt = static_cast<PG_STATEMENT*>(hStmt);
 
-	pConn->mutexQueryLock.lock();
+	static_cast<PG_CONN*>(connection)->mutexQueryLock.lock();
    bool retry;
    int retryCount = 60;
    do
    {
       retry = false;
-	   PGresult	*pResult = (hStmt->name[0] != 0) ? 
-         PQexecPrepared(pConn->handle, hStmt->name, hStmt->pcount, hStmt->buffers, nullptr, nullptr, 0) :
-         PQexecParams(pConn->handle, hStmt->query, hStmt->pcount, NULL, hStmt->buffers, nullptr, nullptr, 0);
+	   PGresult	*pResult = (stmt->name[0] != 0) ? 
+         PQexecPrepared(static_cast<PG_CONN*>(connection)->handle, stmt->name, stmt->pcount, stmt->buffers, nullptr, nullptr, 0) :
+         PQexecParams(static_cast<PG_CONN*>(connection)->handle, stmt->query, stmt->pcount, NULL, stmt->buffers, nullptr, nullptr, 0);
       if (PQresultStatus(pResult) == PGRES_COMMAND_OK)
       {
          if (errorText != nullptr)
@@ -516,7 +514,7 @@ extern "C" DWORD __EXPORT DrvExecute(PG_CONN *pConn, PG_STATEMENT *hStmt, WCHAR 
       else
       {
          const char *sqlState = PQresultErrorField(pResult, PG_DIAG_SQLSTATE);
-         if ((PQstatus(pConn->handle) != CONNECTION_BAD) &&
+         if ((PQstatus(static_cast<PG_CONN*>(connection)->handle) != CONNECTION_BAD) &&
              (sqlState != nullptr) && (!strcmp(sqlState, "53000") || !strcmp(sqlState, "53200")) && (retryCount > 0))
          {
             ThreadSleep(500);
@@ -534,54 +532,53 @@ extern "C" DWORD __EXPORT DrvExecute(PG_CONN *pConn, PG_STATEMENT *hStmt, WCHAR 
                   errorText[len] = L' ';
                   len++;
                }
-               utf8_to_wchar(PQerrorMessage(pConn->handle), -1, &errorText[len], DBDRV_MAX_ERROR_TEXT - len);
+               utf8_to_wchar(PQerrorMessage(static_cast<PG_CONN*>(connection)->handle), -1, &errorText[len], DBDRV_MAX_ERROR_TEXT - len);
                errorText[DBDRV_MAX_ERROR_TEXT - 1] = 0;
                RemoveTrailingCRLFW(errorText);
             }
-            rc = (PQstatus(pConn->handle) == CONNECTION_BAD) ? DBERR_CONNECTION_LOST : DBERR_OTHER_ERROR;
+            rc = (PQstatus(static_cast<PG_CONN*>(connection)->handle) == CONNECTION_BAD) ? DBERR_CONNECTION_LOST : DBERR_OTHER_ERROR;
          }
       }
 
       PQclear(pResult);
    }
    while(retry);
-	pConn->mutexQueryLock.unlock();
+   static_cast<PG_CONN*>(connection)->mutexQueryLock.unlock();
 	return rc;
 }
 
 /**
  * Destroy prepared statement
  */
-extern "C" void __EXPORT DrvFreeStatement(PG_STATEMENT *hStmt)
+static void FreeStatement(DBDRV_STATEMENT hStmt)
 {
-	if (hStmt == NULL)
-		return;
+   auto stmt = static_cast<PG_STATEMENT*>(hStmt);
 
-   if (hStmt->name[0] != 0)
+   if (stmt->name[0] != 0)
    {
       char query[256];
-      snprintf(query, 256, "DEALLOCATE \"%s\"", hStmt->name);
+      snprintf(query, 256, "DEALLOCATE \"%s\"", stmt->name);
 
-      hStmt->connection->mutexQueryLock.lock();
-      UnsafeDrvQuery(hStmt->connection, query, nullptr);
-      hStmt->connection->mutexQueryLock.unlock();
+      stmt->connection->mutexQueryLock.lock();
+      UnsafeQuery(stmt->connection, query, nullptr);
+      stmt->connection->mutexQueryLock.unlock();
    }
    else
    {
-      MemFree(hStmt->query);
+      MemFree(stmt->query);
    }
 
-	for(int i = 0; i < hStmt->allocated; i++)
-	   MemFree(hStmt->buffers[i]);
-	MemFree(hStmt->buffers);
+	for(int i = 0; i < stmt->allocated; i++)
+	   MemFree(stmt->buffers[i]);
+	MemFree(stmt->buffers);
 
-	MemFree(hStmt);
+	MemFree(stmt);
 }
 
 /**
  * Perform non-SELECT query - internal implementation
  */
-static bool UnsafeDrvQuery(PG_CONN *pConn, const char *szQuery, WCHAR *errorText)
+static bool UnsafeQuery(PG_CONN *pConn, const char *szQuery, WCHAR *errorText)
 {
    int retryCount = 60;
 
@@ -628,31 +625,31 @@ retry:
 /**
  * Perform non-SELECT query
  */
-extern "C" DWORD __EXPORT DrvQuery(PG_CONN *pConn, WCHAR *pwszQuery, WCHAR *errorText)
+static uint32_t Query(DBDRV_CONNECTION connection, const WCHAR *query, WCHAR *errorText)
 {
-	DWORD dwRet;
+	uint32_t rc;
 
 	char localBuffer[1024];
-   char *pszQueryUTF8 = WideStringToUTF8(pwszQuery, localBuffer, 1024);
-	pConn->mutexQueryLock.lock();
-	if (UnsafeDrvQuery(pConn, pszQueryUTF8, errorText))
+   char *pszQueryUTF8 = WideStringToUTF8(query, localBuffer, 1024);
+   static_cast<PG_CONN*>(connection)->mutexQueryLock.lock();
+	if (UnsafeQuery(static_cast<PG_CONN*>(connection), pszQueryUTF8, errorText))
    {
-      dwRet = DBERR_SUCCESS;
+      rc = DBERR_SUCCESS;
    }
    else
    {
-      dwRet = (PQstatus(pConn->handle) == CONNECTION_BAD) ? DBERR_CONNECTION_LOST : DBERR_OTHER_ERROR;
+      rc = (PQstatus(static_cast<PG_CONN*>(connection)->handle) == CONNECTION_BAD) ? DBERR_CONNECTION_LOST : DBERR_OTHER_ERROR;
    }
-	pConn->mutexQueryLock.unlock();
+	static_cast<PG_CONN*>(connection)->mutexQueryLock.unlock();
    FreeConvertedString(pszQueryUTF8, localBuffer);
 
-	return dwRet;
+	return rc;
 }
 
 /**
  * Perform SELECT query - internal implementation
  */
-static DBDRV_RESULT UnsafeDrvSelect(PG_CONN *conn, const char *query, WCHAR *errorText)
+static DBDRV_RESULT UnsafeSelect(PG_CONN *conn, const char *query, WCHAR *errorText)
 {
    int retryCount = 60;
 
@@ -698,21 +695,21 @@ retry:
 /**
  * Perform SELECT query
  */
-extern "C" DBDRV_RESULT __EXPORT DrvSelect(PG_CONN *pConn, WCHAR *query, DWORD *pdwError, WCHAR *errorText)
+static DBDRV_RESULT Select(DBDRV_CONNECTION connection, const WCHAR *query, uint32_t *errorCode, WCHAR *errorText)
 {
    char localBuffer[1024];
    char *queryUTF8 = WideStringToUTF8(query, localBuffer, 1024);
-	pConn->mutexQueryLock.lock();
-	DBDRV_RESULT pResult = UnsafeDrvSelect(pConn, queryUTF8, errorText);
+   static_cast<PG_CONN*>(connection)->mutexQueryLock.lock();
+	DBDRV_RESULT pResult = UnsafeSelect(static_cast<PG_CONN*>(connection), queryUTF8, errorText);
    if (pResult != nullptr)
    {
-      *pdwError = DBERR_SUCCESS;
+      *errorCode = DBERR_SUCCESS;
    }
    else
    {
-      *pdwError = (PQstatus(pConn->handle) == CONNECTION_BAD) ? DBERR_CONNECTION_LOST : DBERR_OTHER_ERROR;
+      *errorCode = (PQstatus(static_cast<PG_CONN*>(connection)->handle) == CONNECTION_BAD) ? DBERR_CONNECTION_LOST : DBERR_OTHER_ERROR;
    }
-	pConn->mutexQueryLock.unlock();
+   static_cast<PG_CONN*>(connection)->mutexQueryLock.unlock();
    FreeConvertedString(queryUTF8, localBuffer);
    return pResult;
 }
@@ -720,19 +717,20 @@ extern "C" DBDRV_RESULT __EXPORT DrvSelect(PG_CONN *pConn, WCHAR *query, DWORD *
 /**
  * Perform SELECT query using prepared statement
  */
-extern "C" DBDRV_RESULT __EXPORT DrvSelectPrepared(PG_CONN *conn, PG_STATEMENT *hStmt, DWORD *errorCode, WCHAR *errorText)
+static DBDRV_RESULT SelectPrepared(DBDRV_CONNECTION connection, DBDRV_STATEMENT hStmt, uint32_t *errorCode, WCHAR *errorText)
 {
+   auto stmt = static_cast<PG_STATEMENT*>(hStmt);
    PGresult	*result;
    bool retry;
    int retryCount = 60;
 
-	conn->mutexQueryLock.lock();
+   static_cast<PG_CONN*>(connection)->mutexQueryLock.lock();
    do
    {
       retry = false;
-	   result = (hStmt->name[0] != 0) ? 
-            PQexecPrepared(conn->handle, hStmt->name, hStmt->pcount, hStmt->buffers, nullptr, nullptr, 0) :
-            PQexecParams(conn->handle, hStmt->query, hStmt->pcount, nullptr, hStmt->buffers, nullptr, nullptr, 0);
+	   result = (stmt->name[0] != 0) ?
+            PQexecPrepared(static_cast<PG_CONN*>(connection)->handle, stmt->name, stmt->pcount, stmt->buffers, nullptr, nullptr, 0) :
+            PQexecParams(static_cast<PG_CONN*>(connection)->handle, stmt->query, stmt->pcount, nullptr, stmt->buffers, nullptr, nullptr, 0);
       if ((PQresultStatus(result) == PGRES_COMMAND_OK) || (PQresultStatus(result) == PGRES_TUPLES_OK))
       {
          if (errorText != nullptr)
@@ -742,7 +740,7 @@ extern "C" DBDRV_RESULT __EXPORT DrvSelectPrepared(PG_CONN *conn, PG_STATEMENT *
       else
       {
          const char *sqlState = PQresultErrorField(result, PG_DIAG_SQLSTATE);
-         if ((PQstatus(conn->handle) != CONNECTION_BAD) &&
+         if ((PQstatus(static_cast<PG_CONN*>(connection)->handle) != CONNECTION_BAD) &&
              (sqlState != nullptr) && (!strcmp(sqlState, "53000") || !strcmp(sqlState, "53200")) && (retryCount > 0))
          {
             ThreadSleep(500);
@@ -760,43 +758,40 @@ extern "C" DBDRV_RESULT __EXPORT DrvSelectPrepared(PG_CONN *conn, PG_STATEMENT *
                   errorText[len] = L' ';
                   len++;
                }
-               utf8_to_wchar(PQerrorMessage(conn->handle), -1, &errorText[len], DBDRV_MAX_ERROR_TEXT - len);
+               utf8_to_wchar(PQerrorMessage(static_cast<PG_CONN*>(connection)->handle), -1, &errorText[len], DBDRV_MAX_ERROR_TEXT - len);
                errorText[DBDRV_MAX_ERROR_TEXT - 1] = 0;
                RemoveTrailingCRLFW(errorText);
             }
          }
          PQclear(result);
          result = nullptr;
-         *errorCode = (PQstatus(conn->handle) == CONNECTION_BAD) ? DBERR_CONNECTION_LOST : DBERR_OTHER_ERROR;
+         *errorCode = (PQstatus(static_cast<PG_CONN*>(connection)->handle) == CONNECTION_BAD) ? DBERR_CONNECTION_LOST : DBERR_OTHER_ERROR;
       }
    }
    while(retry);
-	conn->mutexQueryLock.unlock();
+   static_cast<PG_CONN*>(connection)->mutexQueryLock.unlock();
 
-	return (DBDRV_RESULT)result;
+	return result;
 }
 
 /**
  * Get field length from result
  */
-extern "C" LONG __EXPORT DrvGetFieldLength(DBDRV_RESULT pResult, int nRow, int nColumn)
+static int32_t GetFieldLength(DBDRV_RESULT result, int row, int column)
 {
-	if (pResult == NULL)
-      return -1;
-
-   const char *value = PQgetvalue((PGresult *)pResult, nRow, nColumn);
-   return (value != NULL) ? (LONG)strlen(value) : (LONG)-1;
+   const char *value = PQgetvalue(static_cast<PGresult*>(result), row, column);
+   return (value != nullptr) ? static_cast<int32_t>(strlen(value)) : -1;
 }
 
 /**
  * Get field value from result
  */
-static WCHAR *UnsafeGetField(DBDRV_RESULT result, int row, int column, WCHAR *buffer, size_t size)
+static WCHAR *GetField(DBDRV_RESULT result, int row, int column, WCHAR *buffer, int size)
 {
-   if (PQfformat((PGresult *)result, column) != 0)
+   if (PQfformat(static_cast<PGresult*>(result), column) != 0)
       return nullptr;
 
-   const char *value = PQgetvalue((PGresult *)result, row, column);
+   const char *value = PQgetvalue(static_cast<PGresult*>(result), row, column);
    if (value == nullptr)
       return nullptr;
 
@@ -806,22 +801,11 @@ static WCHAR *UnsafeGetField(DBDRV_RESULT result, int row, int column, WCHAR *bu
 }
 
 /**
- * Get field value from result
- */
-extern "C" WCHAR __EXPORT *DrvGetField(DBDRV_RESULT result, int row, int column, WCHAR *buffer, int size)
-{
-	return (result != nullptr) ? UnsafeGetField(result, row, column, buffer, size) : nullptr;
-}
-
-/**
  * Get field value from result as UTF8 string
  */
-extern "C" char __EXPORT *DrvGetFieldUTF8(DBDRV_RESULT result, int row, int column, char *buffer, int size)
+static char *GetFieldUTF8(DBDRV_RESULT result, int row, int column, char *buffer, int size)
 {
-	if (result == nullptr)
-      return nullptr;
-
-	const char *value = PQgetvalue((PGresult *)result, row, column);
+	const char *value = PQgetvalue(static_cast<PGresult*>(result), row, column);
 	if (value == nullptr)
 	   return nullptr;
 
@@ -832,58 +816,46 @@ extern "C" char __EXPORT *DrvGetFieldUTF8(DBDRV_RESULT result, int row, int colu
 /**
  * Get number of rows in result
  */
-extern "C" int __EXPORT DrvGetNumRows(DBDRV_RESULT pResult)
+static int GetNumRows(DBDRV_RESULT result)
 {
-	return (pResult != nullptr) ? PQntuples((PGresult *)pResult) : 0;
+	return PQntuples(static_cast<PGresult*>(result));
 }
 
 /**
  * Get column count in query result
  */
-extern "C" int __EXPORT DrvGetColumnCount(DBDRV_RESULT hResult)
+static int GetColumnCount(DBDRV_RESULT result)
 {
-	return (hResult != nullptr) ? PQnfields((PGresult *)hResult) : 0;
+	return PQnfields(static_cast<PGresult*>(result));
 }
 
 /**
  * Get column name in query result
  */
-extern "C" const char __EXPORT *DrvGetColumnName(DBDRV_RESULT hResult, int column)
+static const char *GetColumnName(DBDRV_RESULT result, int column)
 {
-	return (hResult != nullptr) ? PQfname((PGresult *)hResult, column) : nullptr;
-}
-
-/**
- * Internal free result
- */
-static void UnsafeFreeResult(DBDRV_RESULT result)
-{
-   PQclear(static_cast<PGresult*>(result));
+	return PQfname(static_cast<PGresult*>(result), column);
 }
 
 /**
  * Free SELECT results
  */
-extern "C" void __EXPORT DrvFreeResult(DBDRV_RESULT result)
+static void FreeResult(DBDRV_RESULT result)
 {
-   if (result != nullptr)
-      UnsafeFreeResult(result);
+   PQclear(static_cast<PGresult*>(result));
 }
 
 /**
  * Perform unbuffered SELECT query
  */
-extern "C" DBDRV_UNBUFFERED_RESULT __EXPORT DrvSelectUnbuffered(PG_CONN *pConn, WCHAR *pwszQuery, DWORD *pdwError, WCHAR *errorText)
+static DBDRV_UNBUFFERED_RESULT SelectUnbuffered(DBDRV_CONNECTION connection, const WCHAR *pwszQuery, uint32_t *errorCode, WCHAR *errorText)
 {
-	if (pConn == NULL)
-		return NULL;
-
 	PG_UNBUFFERED_RESULT *result = MemAllocStruct<PG_UNBUFFERED_RESULT>();
-	result->conn = pConn;
-   result->fetchBuffer = NULL;
+	result->conn = static_cast<PG_CONN*>(connection);
+   result->fetchBuffer = nullptr;
    result->keepFetchBuffer = true;
 
-	pConn->mutexQueryLock.lock();
+   static_cast<PG_CONN*>(connection)->mutexQueryLock.lock();
 
 	bool success = false;
 	bool retry;
@@ -893,35 +865,35 @@ extern "C" DBDRV_UNBUFFERED_RESULT __EXPORT DrvSelectUnbuffered(PG_CONN *pConn, 
    do
    {
       retry = false;
-      if (PQsendQuery(pConn->handle, queryUTF8))
+      if (PQsendQuery(static_cast<PG_CONN*>(connection)->handle, queryUTF8))
       {
 #ifdef _WIN32
-         if (PQsetSingleRowMode(pConn->handle))
+         if (PQsetSingleRowMode(static_cast<PG_CONN*>(connection)->handle))
          {
             result->singleRowMode = true;
 #else
-         if ((s_PQsetSingleRowMode == NULL) || s_PQsetSingleRowMode(pConn->handle))
+         if ((s_PQsetSingleRowMode == nullptr) || s_PQsetSingleRowMode(static_cast<PG_CONN*>(connection)->handle))
          {
-            result->singleRowMode = (s_PQsetSingleRowMode != NULL);
+            result->singleRowMode = (s_PQsetSingleRowMode != nullptr);
 #endif
             result->currRow = 0;
 
             // Fetch first row (to check for errors in Select instead of Fetch call)
-            result->fetchBuffer = PQgetResult(pConn->handle);
+            result->fetchBuffer = PQgetResult(static_cast<PG_CONN*>(connection)->handle);
             if ((PQresultStatus(result->fetchBuffer) == PGRES_COMMAND_OK) ||
                 (PQresultStatus(result->fetchBuffer) == PGRES_TUPLES_OK) ||
                 (PQresultStatus(result->fetchBuffer) == PGRES_SINGLE_TUPLE))
             {
-               if (errorText != NULL)
+               if (errorText != nullptr)
                   *errorText = 0;
-               *pdwError = DBERR_SUCCESS;
+               *errorCode = DBERR_SUCCESS;
                success = true;
             }
             else
             {
                const char *sqlState = PQresultErrorField(result->fetchBuffer, PG_DIAG_SQLSTATE);
-               if ((PQstatus(pConn->handle) != CONNECTION_BAD) &&
-                   (sqlState != NULL) && (!strcmp(sqlState, "53000") || !strcmp(sqlState, "53200")) && (retryCount > 0))
+               if ((PQstatus(static_cast<PG_CONN*>(connection)->handle) != CONNECTION_BAD) &&
+                   (sqlState != nullptr) && (!strcmp(sqlState, "53000") || !strcmp(sqlState, "53200")) && (retryCount > 0))
                {
                   ThreadSleep(500);
                   retry = true;
@@ -929,7 +901,7 @@ extern "C" DBDRV_UNBUFFERED_RESULT __EXPORT DrvSelectUnbuffered(PG_CONN *pConn, 
                }
                else
                {
-                  if (errorText != NULL)
+                  if (errorText != nullptr)
                   {
                      utf8_to_wchar(CHECK_NULL_EX_A(sqlState), -1, errorText, DBDRV_MAX_ERROR_TEXT);
                      int len = (int)wcslen(errorText);
@@ -938,28 +910,28 @@ extern "C" DBDRV_UNBUFFERED_RESULT __EXPORT DrvSelectUnbuffered(PG_CONN *pConn, 
                         errorText[len] = L' ';
                         len++;
                      }
-                     utf8_to_wchar(PQerrorMessage(pConn->handle), -1, &errorText[len], DBDRV_MAX_ERROR_TEXT - len);
+                     utf8_to_wchar(PQerrorMessage(static_cast<PG_CONN*>(connection)->handle), -1, &errorText[len], DBDRV_MAX_ERROR_TEXT - len);
                      errorText[DBDRV_MAX_ERROR_TEXT - 1] = 0;
                      RemoveTrailingCRLFW(errorText);
                   }
                }
                PQclear(result->fetchBuffer);
                result->fetchBuffer = nullptr;
-               *pdwError = (PQstatus(pConn->handle) == CONNECTION_BAD) ? DBERR_CONNECTION_LOST : DBERR_OTHER_ERROR;
+               *errorCode = (PQstatus(static_cast<PG_CONN*>(connection)->handle) == CONNECTION_BAD) ? DBERR_CONNECTION_LOST : DBERR_OTHER_ERROR;
             }
          }
          else
          {
             if (errorText != nullptr)
                wcsncpy(errorText, L"Internal error (call to PQsetSingleRowMode failed)", DBDRV_MAX_ERROR_TEXT);
-            *pdwError = (PQstatus(pConn->handle) == CONNECTION_BAD) ? DBERR_CONNECTION_LOST : DBERR_OTHER_ERROR;
+            *errorCode = (PQstatus(static_cast<PG_CONN*>(connection)->handle) == CONNECTION_BAD) ? DBERR_CONNECTION_LOST : DBERR_OTHER_ERROR;
          }
       }
       else
       {
          if (errorText != nullptr)
             wcsncpy(errorText, L"Internal error (call to PQsendQuery failed)", DBDRV_MAX_ERROR_TEXT);
-         *pdwError = (PQstatus(pConn->handle) == CONNECTION_BAD) ? DBERR_CONNECTION_LOST : DBERR_OTHER_ERROR;
+         *errorCode = (PQstatus(static_cast<PG_CONN*>(connection)->handle) == CONNECTION_BAD) ? DBERR_CONNECTION_LOST : DBERR_OTHER_ERROR;
       }
    }
    while(retry);
@@ -968,25 +940,22 @@ extern "C" DBDRV_UNBUFFERED_RESULT __EXPORT DrvSelectUnbuffered(PG_CONN *pConn, 
    if (!success)
    {
       MemFreeAndNull(result);
-      pConn->mutexQueryLock.unlock();
+      static_cast<PG_CONN*>(connection)->mutexQueryLock.unlock();
    }
-   return (DBDRV_UNBUFFERED_RESULT)result;
+   return result;
 }
 
 /**
  * Perform unbuffered SELECT query using prepared statement
  */
-extern "C" DBDRV_UNBUFFERED_RESULT __EXPORT DrvSelectPreparedUnbuffered(PG_CONN *pConn, PG_STATEMENT *hStmt, DWORD *pdwError, WCHAR *errorText)
+static DBDRV_UNBUFFERED_RESULT SelectPreparedUnbuffered(DBDRV_CONNECTION connection, DBDRV_STATEMENT hStmt, uint32_t *errorCode, WCHAR *errorText)
 {
-   if (pConn == nullptr)
-      return nullptr;
-
    PG_UNBUFFERED_RESULT *result = MemAllocStruct<PG_UNBUFFERED_RESULT>();
-   result->conn = pConn;
+   result->conn = static_cast<PG_CONN*>(connection);
    result->fetchBuffer = nullptr;
    result->keepFetchBuffer = true;
 
-   pConn->mutexQueryLock.lock();
+   static_cast<PG_CONN*>(connection)->mutexQueryLock.lock();
 
    bool success = false;
    bool retry;
@@ -994,38 +963,39 @@ extern "C" DBDRV_UNBUFFERED_RESULT __EXPORT DrvSelectPreparedUnbuffered(PG_CONN 
    do
    {
       retry = false;
-      int sendSuccess = (hStmt->name[0] != 0) ? 
-            PQsendQueryPrepared(pConn->handle, hStmt->name, hStmt->pcount, hStmt->buffers, nullptr, nullptr, 0) :
-            PQsendQueryParams(pConn->handle, hStmt->query, hStmt->pcount, nullptr, hStmt->buffers, nullptr, nullptr, 0);
+      auto stmt = static_cast<PG_STATEMENT*>(hStmt);
+      int sendSuccess = (stmt->name[0] != 0) ?
+            PQsendQueryPrepared(static_cast<PG_CONN*>(connection)->handle, stmt->name, stmt->pcount, stmt->buffers, nullptr, nullptr, 0) :
+            PQsendQueryParams(static_cast<PG_CONN*>(connection)->handle, stmt->query, stmt->pcount, nullptr, stmt->buffers, nullptr, nullptr, 0);
       if (sendSuccess)
       {
 #ifdef _WIN32
-         if (PQsetSingleRowMode(pConn->handle))
+         if (PQsetSingleRowMode(static_cast<PG_CONN*>(connection)->handle))
          {
             result->singleRowMode = true;
 #else
-         if ((s_PQsetSingleRowMode == nullptr) || s_PQsetSingleRowMode(pConn->handle))
+         if ((s_PQsetSingleRowMode == nullptr) || s_PQsetSingleRowMode(static_cast<PG_CONN*>(connection)->handle))
          {
             result->singleRowMode = (s_PQsetSingleRowMode != nullptr);
 #endif
             result->currRow = 0;
 
             // Fetch first row (to check for errors in Select instead of Fetch call)
-            result->fetchBuffer = PQgetResult(pConn->handle);
+            result->fetchBuffer = PQgetResult(static_cast<PG_CONN*>(connection)->handle);
             if ((PQresultStatus(result->fetchBuffer) == PGRES_COMMAND_OK) ||
                 (PQresultStatus(result->fetchBuffer) == PGRES_TUPLES_OK) ||
                 (PQresultStatus(result->fetchBuffer) == PGRES_SINGLE_TUPLE))
             {
-               if (errorText != NULL)
+               if (errorText != nullptr)
                   *errorText = 0;
-               *pdwError = DBERR_SUCCESS;
+               *errorCode = DBERR_SUCCESS;
                success = true;
             }
             else
             {
                const char *sqlState = PQresultErrorField(result->fetchBuffer, PG_DIAG_SQLSTATE);
-               if ((PQstatus(pConn->handle) != CONNECTION_BAD) &&
-                   (sqlState != NULL) && (!strcmp(sqlState, "53000") || !strcmp(sqlState, "53200")) && (retryCount > 0))
+               if ((PQstatus(static_cast<PG_CONN*>(connection)->handle) != CONNECTION_BAD) &&
+                   (sqlState != nullptr) && (!strcmp(sqlState, "53000") || !strcmp(sqlState, "53200")) && (retryCount > 0))
                {
                   ThreadSleep(500);
                   retry = true;
@@ -1033,7 +1003,7 @@ extern "C" DBDRV_UNBUFFERED_RESULT __EXPORT DrvSelectPreparedUnbuffered(PG_CONN 
                }
                else
                {
-                  if (errorText != NULL)
+                  if (errorText != nullptr)
                   {
                      utf8_to_wchar(CHECK_NULL_EX_A(sqlState), -1, errorText, DBDRV_MAX_ERROR_TEXT);
                      int len = (int)wcslen(errorText);
@@ -1042,28 +1012,28 @@ extern "C" DBDRV_UNBUFFERED_RESULT __EXPORT DrvSelectPreparedUnbuffered(PG_CONN 
                         errorText[len] = L' ';
                         len++;
                      }
-                     utf8_to_wchar(PQerrorMessage(pConn->handle), -1, &errorText[len], DBDRV_MAX_ERROR_TEXT - len);
+                     utf8_to_wchar(PQerrorMessage(static_cast<PG_CONN*>(connection)->handle), -1, &errorText[len], DBDRV_MAX_ERROR_TEXT - len);
                      errorText[DBDRV_MAX_ERROR_TEXT - 1] = 0;
                      RemoveTrailingCRLFW(errorText);
                   }
                }
                PQclear(result->fetchBuffer);
-               result->fetchBuffer = NULL;
-               *pdwError = (PQstatus(pConn->handle) == CONNECTION_BAD) ? DBERR_CONNECTION_LOST : DBERR_OTHER_ERROR;
+               result->fetchBuffer = nullptr;
+               *errorCode = (PQstatus(static_cast<PG_CONN*>(connection)->handle) == CONNECTION_BAD) ? DBERR_CONNECTION_LOST : DBERR_OTHER_ERROR;
             }
          }
          else
          {
-            if (errorText != NULL)
+            if (errorText != nullptr)
                wcsncpy(errorText, L"Internal error (call to PQsetSingleRowMode failed)", DBDRV_MAX_ERROR_TEXT);
-            *pdwError = (PQstatus(pConn->handle) == CONNECTION_BAD) ? DBERR_CONNECTION_LOST : DBERR_OTHER_ERROR;
+            *errorCode = (PQstatus(static_cast<PG_CONN*>(connection)->handle) == CONNECTION_BAD) ? DBERR_CONNECTION_LOST : DBERR_OTHER_ERROR;
          }
       }
       else
       {
-         if (errorText != NULL)
+         if (errorText != nullptr)
             wcsncpy(errorText, L"Internal error (call to PQsendQueryPrepared/PQsendQueryParams failed)", DBDRV_MAX_ERROR_TEXT);
-         *pdwError = (PQstatus(pConn->handle) == CONNECTION_BAD) ? DBERR_CONNECTION_LOST : DBERR_OTHER_ERROR;
+         *errorCode = (PQstatus(static_cast<PG_CONN*>(connection)->handle) == CONNECTION_BAD) ? DBERR_CONNECTION_LOST : DBERR_OTHER_ERROR;
       }
    }
    while(retry);
@@ -1071,30 +1041,29 @@ extern "C" DBDRV_UNBUFFERED_RESULT __EXPORT DrvSelectPreparedUnbuffered(PG_CONN 
    if (!success)
    {
       MemFreeAndNull(result);
-      pConn->mutexQueryLock.unlock();
+      static_cast<PG_CONN*>(connection)->mutexQueryLock.unlock();
    }
-   return (DBDRV_UNBUFFERED_RESULT)result;
+   return result;
 }
 
 /**
  * Fetch next result line from asynchronous SELECT results
  */
-extern "C" bool __EXPORT DrvFetch(PG_UNBUFFERED_RESULT *result)
+static bool Fetch(DBDRV_UNBUFFERED_RESULT hResult)
 {
-   if (result == NULL)
-      return false;
+   auto result = static_cast<PG_UNBUFFERED_RESULT*>(hResult);
 
    if (!result->keepFetchBuffer)
    {
       if (result->singleRowMode)
       {
-         if (result->fetchBuffer != NULL)
+         if (result->fetchBuffer != nullptr)
             PQclear(result->fetchBuffer);
          result->fetchBuffer = PQgetResult(result->conn->handle);
       }
       else
       {
-         if (result->fetchBuffer != NULL)
+         if (result->fetchBuffer != nullptr)
          {
             result->currRow++;
             if (result->currRow >= PQntuples(result->fetchBuffer))
@@ -1115,7 +1084,7 @@ extern "C" bool __EXPORT DrvFetch(PG_UNBUFFERED_RESULT *result)
       result->keepFetchBuffer = false;
    }
 
-   if (result->fetchBuffer == NULL)
+   if (result->fetchBuffer == nullptr)
       return false;
 
    bool success;
@@ -1126,7 +1095,7 @@ extern "C" bool __EXPORT DrvFetch(PG_UNBUFFERED_RESULT *result)
    else
    {
       PQclear(result->fetchBuffer);
-      result->fetchBuffer = NULL;
+      result->fetchBuffer = nullptr;
       success = false;
    }
 
@@ -1136,102 +1105,107 @@ extern "C" bool __EXPORT DrvFetch(PG_UNBUFFERED_RESULT *result)
 /**
  * Get field length from async quety result
  */
-extern "C" LONG __EXPORT DrvGetFieldLengthUnbuffered(PG_UNBUFFERED_RESULT *result, int nColumn)
+static int32_t GetFieldLengthUnbuffered(DBDRV_UNBUFFERED_RESULT hResult, int column)
 {
-	if ((result == NULL) || (result->fetchBuffer == NULL))
+   auto result = static_cast<PG_UNBUFFERED_RESULT*>(hResult);
+
+	if (result->fetchBuffer == nullptr)
 		return 0;
 
 	// validate column index
-	if (nColumn >= PQnfields(result->fetchBuffer))
+	if (column >= PQnfields(result->fetchBuffer))
 		return 0;
 
-	char *value = PQgetvalue(result->fetchBuffer, result->currRow, nColumn);
-	if (value == NULL)
+	char *value = PQgetvalue(result->fetchBuffer, result->currRow, column);
+	if (value == nullptr)
 		return 0;
 
-	return (LONG)strlen(value);
+	return static_cast<int32_t>(strlen(value));
 }
 
 /**
  * Get field from current row in async query result
  */
-extern "C" WCHAR __EXPORT *DrvGetFieldUnbuffered(PG_UNBUFFERED_RESULT *result, int nColumn, WCHAR *pBuffer, int nBufSize)
+static WCHAR *GetFieldUnbuffered(DBDRV_UNBUFFERED_RESULT hResult, int column, WCHAR *buffer, int bufferSize)
 {
-	if ((result == NULL) || (result->fetchBuffer == NULL))
-		return NULL;
+   auto result = static_cast<PG_UNBUFFERED_RESULT*>(hResult);
+
+	if (result->fetchBuffer == nullptr)
+		return nullptr;
 
 	// validate column index
-	if (nColumn >= PQnfields(result->fetchBuffer))
-		return NULL;
+	if (column >= PQnfields(result->fetchBuffer))
+		return nullptr;
 
-	if (PQfformat(result->fetchBuffer, nColumn) != 0)
-		return NULL;
+	if (PQfformat(result->fetchBuffer, column) != 0)
+		return nullptr;
 
-	char *value = PQgetvalue(result->fetchBuffer, result->currRow, nColumn);
-	if (value == NULL)
-		return NULL;
+	char *value = PQgetvalue(result->fetchBuffer, result->currRow, column);
+	if (value == nullptr)
+		return nullptr;
 
-	utf8_to_wchar(value, -1, pBuffer, nBufSize);
-   pBuffer[nBufSize - 1] = 0;
+	utf8_to_wchar(value, -1, buffer, bufferSize);
+   buffer[bufferSize - 1] = 0;
 
-   return pBuffer;
+   return buffer;
 }
 
 /**
  * Get field from current row in async query result as UTF-8 string
  */
-extern "C" char __EXPORT *DrvGetFieldUnbufferedUTF8(PG_UNBUFFERED_RESULT *result, int nColumn, char *pBuffer, int nBufSize)
+static char *GetFieldUnbufferedUTF8(DBDRV_UNBUFFERED_RESULT hResult, int column, char *buffer, int bufferSize)
 {
-   if ((result == NULL) || (result->fetchBuffer == NULL))
-      return NULL;
+   auto result = static_cast<PG_UNBUFFERED_RESULT*>(hResult);
+
+   if (result->fetchBuffer == nullptr)
+      return nullptr;
 
    // validate column index
-   if (nColumn >= PQnfields(result->fetchBuffer))
-      return NULL;
+   if (column >= PQnfields(result->fetchBuffer))
+      return nullptr;
 
-   if (PQfformat(result->fetchBuffer, nColumn) != 0)
-      return NULL;
+   if (PQfformat(result->fetchBuffer, column) != 0)
+      return nullptr;
 
-   char *value = PQgetvalue(result->fetchBuffer, result->currRow, nColumn);
-   if (value == NULL)
-      return NULL;
+   char *value = PQgetvalue(result->fetchBuffer, result->currRow, column);
+   if (value == nullptr)
+      return nullptr;
 
-   strlcpy(pBuffer, value, nBufSize);
-   return pBuffer;
+   strlcpy(buffer, value, bufferSize);
+   return buffer;
 }
 
 /**
  * Get column count in async query result
  */
-extern "C" int __EXPORT DrvGetColumnCountUnbuffered(PG_UNBUFFERED_RESULT *result)
+static int GetColumnCountUnbuffered(DBDRV_UNBUFFERED_RESULT hResult)
 {
-	return ((result != NULL) && (result->fetchBuffer != NULL)) ? PQnfields(result->fetchBuffer) : 0;
+	return (static_cast<PG_UNBUFFERED_RESULT*>(hResult)->fetchBuffer != nullptr) ? PQnfields(static_cast<PG_UNBUFFERED_RESULT*>(hResult)->fetchBuffer) : 0;
 }
 
 /**
  * Get column name in async query result
  */
-extern "C" const char __EXPORT *DrvGetColumnNameUnbuffered(PG_UNBUFFERED_RESULT *result, int column)
+static const char *GetColumnNameUnbuffered(DBDRV_UNBUFFERED_RESULT hResult, int column)
 {
-	return ((result != NULL) && (result->fetchBuffer != NULL))? PQfname(result->fetchBuffer, column) : NULL;
+	return (static_cast<PG_UNBUFFERED_RESULT*>(hResult)->fetchBuffer != nullptr)? PQfname(static_cast<PG_UNBUFFERED_RESULT*>(hResult)->fetchBuffer, column) : nullptr;
 }
 
 /**
  * Destroy result of async query
  */
-extern "C" void __EXPORT DrvFreeUnbufferedResult(PG_UNBUFFERED_RESULT *result)
+static void FreeUnbufferedResult(DBDRV_UNBUFFERED_RESULT hResult)
 {
-   if (result == NULL)
-      return;
+   auto result = static_cast<PG_UNBUFFERED_RESULT*>(hResult);
 
-   if (result->fetchBuffer != NULL)
+   if (result->fetchBuffer != nullptr)
       PQclear(result->fetchBuffer);
 
    // read all outstanding results
    while(true)
    {
       result->fetchBuffer = PQgetResult(result->conn->handle);
-      if (result->fetchBuffer == NULL)
+      if (result->fetchBuffer == nullptr)
          break;
       PQclear(result->fetchBuffer);
    }
@@ -1243,79 +1217,110 @@ extern "C" void __EXPORT DrvFreeUnbufferedResult(PG_UNBUFFERED_RESULT *result)
 /**
  * Begin transaction
  */
-extern "C" DWORD __EXPORT DrvBegin(PG_CONN *pConn)
+static uint32_t Begin(DBDRV_CONNECTION connection)
 {
-   DWORD dwResult;
-
-	if (pConn == NULL)
-      return DBERR_INVALID_HANDLE;
-
-	pConn->mutexQueryLock.lock();
-	if (UnsafeDrvQuery(pConn, "BEGIN", nullptr))
+   uint32_t dwResult;
+   static_cast<PG_CONN*>(connection)->mutexQueryLock.lock();
+	if (UnsafeQuery(static_cast<PG_CONN*>(connection), "BEGIN", nullptr))
    {
       dwResult = DBERR_SUCCESS;
    }
    else
    {
-      dwResult = (PQstatus(pConn->handle) == CONNECTION_BAD) ? DBERR_CONNECTION_LOST : DBERR_OTHER_ERROR;
+      dwResult = (PQstatus(static_cast<PG_CONN*>(connection)->handle) == CONNECTION_BAD) ? DBERR_CONNECTION_LOST : DBERR_OTHER_ERROR;
    }
-	pConn->mutexQueryLock.unlock();
+	static_cast<PG_CONN*>(connection)->mutexQueryLock.unlock();
    return dwResult;
 }
 
 /**
  * Commit transaction
  */
-extern "C" DWORD __EXPORT DrvCommit(PG_CONN *pConn)
+static uint32_t Commit(DBDRV_CONNECTION connection)
 {
-   bool bRet;
-
-	if (pConn == NULL)
-      return DBERR_INVALID_HANDLE;
-
-	pConn->mutexQueryLock.lock();
-	bRet = UnsafeDrvQuery(pConn, "COMMIT", nullptr);
-	pConn->mutexQueryLock.unlock();
+   static_cast<PG_CONN*>(connection)->mutexQueryLock.lock();
+	bool bRet = UnsafeQuery(static_cast<PG_CONN*>(connection), "COMMIT", nullptr);
+	static_cast<PG_CONN*>(connection)->mutexQueryLock.unlock();
    return bRet ? DBERR_SUCCESS : DBERR_OTHER_ERROR;
 }
 
 /**
  * Rollback transaction
  */
-extern "C" DWORD __EXPORT DrvRollback(PG_CONN *pConn)
+static uint32_t Rollback(DBDRV_CONNECTION connection)
 {
-   bool bRet;
-
-	if (pConn == NULL)
-      return DBERR_INVALID_HANDLE;
-
-	pConn->mutexQueryLock.lock();
-	bRet = UnsafeDrvQuery(pConn, "ROLLBACK", NULL);
-	pConn->mutexQueryLock.unlock();
+	static_cast<PG_CONN*>(connection)->mutexQueryLock.lock();
+	bool bRet = UnsafeQuery(static_cast<PG_CONN*>(connection), "ROLLBACK", nullptr);
+	static_cast<PG_CONN*>(connection)->mutexQueryLock.unlock();
    return bRet ? DBERR_SUCCESS : DBERR_OTHER_ERROR;
 }
 
 /**
  * Check if table exist
  */
-extern "C" int __EXPORT DrvIsTableExist(PG_CONN *pConn, const WCHAR *name)
+static int IsTableExist(DBDRV_CONNECTION connection, const WCHAR *name)
 {
    char query[256];
    snprintf(query, 256, "SELECT count(*) FROM information_schema.tables WHERE table_catalog=current_database() AND table_schema=current_schema() AND lower(table_name)=lower('%ls')", name);
    WCHAR errorText[DBDRV_MAX_ERROR_TEXT];
    int rc = DBIsTableExist_Failure;
-   pConn->mutexQueryLock.lock();
-   DBDRV_RESULT hResult = UnsafeDrvSelect(pConn, query, errorText);
-   pConn->mutexQueryLock.unlock();
+   static_cast<PG_CONN*>(connection)->mutexQueryLock.lock();
+   DBDRV_RESULT hResult = UnsafeSelect(static_cast<PG_CONN*>(connection), query, errorText);
+   static_cast<PG_CONN*>(connection)->mutexQueryLock.unlock();
    if (hResult != nullptr)
    {
       WCHAR buffer[64] = L"";
-      UnsafeGetField(hResult, 0, 0, buffer, 64);
-      rc = (wcstol(buffer, NULL, 10) > 0) ? DBIsTableExist_Found : DBIsTableExist_NotFound;
-      UnsafeFreeResult(hResult);
+      GetField(hResult, 0, 0, buffer, 64);
+      rc = (wcstol(buffer, nullptr, 10) > 0) ? DBIsTableExist_Found : DBIsTableExist_NotFound;
+      FreeResult(hResult);
    }
    return rc;
 }
+
+/**
+ * Driver call table
+ */
+static DBDriverCallTable s_callTable =
+{
+   Initialize,
+   Connect,
+   Disconnect,
+   nullptr, // SetPrefetchLimit
+   Prepare,
+   FreeStatement,
+   nullptr, // OpenBatch
+   nullptr, // NextBatchRow
+   Bind,
+   Execute,
+   Query,
+   Select,
+   SelectUnbuffered,
+   SelectPrepared,
+   SelectPreparedUnbuffered,
+   Fetch,
+   GetFieldLength,
+   GetFieldLengthUnbuffered,
+   GetField,
+   GetFieldUTF8,
+   GetFieldUnbuffered,
+   GetFieldUnbufferedUTF8,
+   GetNumRows,
+   FreeResult,
+   FreeUnbufferedResult,
+   Begin,
+   Commit,
+   Rollback,
+   Unload,
+   GetColumnCount,
+   GetColumnName,
+   GetColumnCountUnbuffered,
+   GetColumnNameUnbuffered,
+   PrepareStringW,
+   PrepareStringA,
+   IsTableExist
+};
+
+DB_DRIVER_ENTRY_POINT("PGSQL", s_callTable)
 
 #ifdef _WIN32
 

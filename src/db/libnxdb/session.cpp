@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Database Abstraction Library
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -31,11 +31,11 @@
 /**
  * Performance counters
  */
-static uint64_t s_perfSelectQueries = 0;
-static uint64_t s_perfNonSelectQueries = 0;
-static uint64_t s_perfTotalQueries = 0;
-static uint64_t s_perfLongRunningQueries = 0;
-static uint64_t s_perfFailedQueries = 0;
+static VolatileCounter64 s_perfSelectQueries = 0;
+static VolatileCounter64 s_perfNonSelectQueries = 0;
+static VolatileCounter64 s_perfTotalQueries = 0;
+static VolatileCounter64 s_perfLongRunningQueries = 0;
+static VolatileCounter64 s_perfFailedQueries = 0;
 
 /**
  * Query trace flag
@@ -56,7 +56,7 @@ static void InvalidatePreparedStatements(DB_HANDLE hConn)
    for(int i = 0; i < hConn->m_preparedStatements->size(); i++)
    {
       db_statement_t *stmt = hConn->m_preparedStatements->get(i);
-      hConn->m_driver->m_fpDrvFreeStatement(stmt->m_statement);
+      hConn->m_driver->m_callTable.FreeStatement(stmt->m_statement);
       stmt->m_statement = nullptr;
       stmt->m_connection = nullptr;
    }
@@ -96,10 +96,10 @@ DB_HANDLE LIBNXDB_EXPORTABLE DBConnect(DB_DRIVER driver, const TCHAR *server, co
 	char *utfSchema = UTF8StringFromTString(schema);
 #ifdef UNICODE
 	errorText[0] = 0;
-	DBDRV_CONNECTION hDrvConn = driver->m_fpDrvConnect(utfServer, utfLogin, utfPassword, utfDatabase, utfSchema, errorText);
+	DBDRV_CONNECTION hDrvConn = driver->m_callTable.Connect(utfServer, utfLogin, utfPassword, utfDatabase, utfSchema, errorText);
 #else
 	WCHAR wcErrorText[DBDRV_MAX_ERROR_TEXT] = L"";
-	DBDRV_CONNECTION hDrvConn = driver->m_fpDrvConnect(utfServer, utfLogin, utfPassword, utfDatabase, utfSchema, wcErrorText);
+	DBDRV_CONNECTION hDrvConn = driver->m_callTable.Connect(utfServer, utfLogin, utfPassword, utfDatabase, utfSchema, wcErrorText);
 	wchar_to_mb(wcErrorText, -1, errorText, DBDRV_MAX_ERROR_TEXT);
 	errorText[DBDRV_MAX_ERROR_TEXT - 1] = 0;
 #endif
@@ -120,15 +120,15 @@ DB_HANDLE LIBNXDB_EXPORTABLE DBConnect(DB_DRIVER driver, const TCHAR *server, co
          hConn->m_password = utfPassword;
          hConn->m_server = utfServer;
          hConn->m_schema = utfSchema;
-         if (driver->m_fpDrvSetPrefetchLimit != nullptr)
-            driver->m_fpDrvSetPrefetchLimit(hDrvConn, driver->m_defaultPrefetchLimit);
+         if (driver->m_callTable.SetPrefetchLimit != nullptr)
+            driver->m_callTable.SetPrefetchLimit(hDrvConn, driver->m_defaultPrefetchLimit);
 		   nxlog_debug_tag(DEBUG_TAG_CONNECTION, 4, _T("New DB connection opened: handle=%p"), hConn);
          if (s_sessionInitCb != nullptr)
             s_sessionInitCb(hConn);
       }
       else
       {
-         driver->m_fpDrvDisconnect(hDrvConn);
+         driver->m_callTable.Disconnect(hDrvConn);
       }
    }
 	if (hConn == nullptr)
@@ -154,7 +154,7 @@ void LIBNXDB_EXPORTABLE DBDisconnect(DB_HANDLE hConn)
 
    InvalidatePreparedStatements(hConn);
 
-	hConn->m_driver->m_fpDrvDisconnect(hConn->m_connection);
+	hConn->m_driver->m_callTable.Disconnect(hConn->m_connection);
    delete hConn->m_mutexTransLock;
    MemFree(hConn->m_dbName);
    MemFree(hConn->m_login);
@@ -186,15 +186,15 @@ static void DBReconnect(DB_HANDLE hConn)
    nxlog_debug_tag(DEBUG_TAG_CONNECTION, 4, _T("DB reconnect: handle=%p"), hConn);
 
    InvalidatePreparedStatements(hConn);
-	hConn->m_driver->m_fpDrvDisconnect(hConn->m_connection);
+	hConn->m_driver->m_callTable.Disconnect(hConn->m_connection);
    for(nCount = 0; ; nCount++)
    {
-		hConn->m_connection = hConn->m_driver->m_fpDrvConnect(hConn->m_server, hConn->m_login,
+		hConn->m_connection = hConn->m_driver->m_callTable.Connect(hConn->m_server, hConn->m_login,
 		         hConn->m_password, hConn->m_dbName, hConn->m_schema, errorText);
       if (hConn->m_connection != nullptr)
       {
-         if (hConn->m_driver->m_fpDrvSetPrefetchLimit != nullptr)
-            hConn->m_driver->m_fpDrvSetPrefetchLimit(hConn->m_connection, hConn->m_driver->m_defaultPrefetchLimit);
+         if (hConn->m_driver->m_callTable.SetPrefetchLimit != nullptr)
+            hConn->m_driver->m_callTable.SetPrefetchLimit(hConn->m_connection, hConn->m_driver->m_defaultPrefetchLimit);
          if (s_sessionInitCb != nullptr)
             s_sessionInitCb(hConn);
          break;
@@ -240,9 +240,9 @@ void LIBNXDB_EXPORTABLE DBSetDefaultPrefetchLimit(DB_DRIVER driver, int limit)
  */
 bool LIBNXDB_EXPORTABLE DBSetPrefetchLimit(DB_HANDLE hConn, int limit)
 {
-   if (hConn->m_driver->m_fpDrvSetPrefetchLimit == nullptr)
+   if (hConn->m_driver->m_callTable.SetPrefetchLimit == nullptr)
       return false;  // Not supported by driver
-   return hConn->m_driver->m_fpDrvSetPrefetchLimit(hConn->m_connection, limit);
+   return hConn->m_driver->m_callTable.SetPrefetchLimit(hConn->m_connection, limit);
 }
 
 /**
@@ -270,11 +270,11 @@ bool LIBNXDB_EXPORTABLE DBQueryEx(DB_HANDLE hConn, const TCHAR *szQuery, TCHAR *
    hConn->m_mutexTransLock->lock();
    int64_t ms = GetCurrentTimeMs();
 
-   dwResult = hConn->m_driver->m_fpDrvQuery(hConn->m_connection, pwszQuery, wcErrorText);
+   dwResult = hConn->m_driver->m_callTable.Query(hConn->m_connection, pwszQuery, wcErrorText);
    if ((dwResult == DBERR_CONNECTION_LOST) && hConn->m_reconnectEnabled)
    {
       DBReconnect(hConn);
-      dwResult = hConn->m_driver->m_fpDrvQuery(hConn->m_connection, pwszQuery, wcErrorText);
+      dwResult = hConn->m_driver->m_callTable.Query(hConn->m_connection, pwszQuery, wcErrorText);
    }
 
    s_perfNonSelectQueries++;
@@ -328,7 +328,7 @@ DB_RESULT LIBNXDB_EXPORTABLE DBSelectEx(DB_HANDLE hConn, const TCHAR *szQuery, T
 {
    DBDRV_RESULT hResult;
 	DB_RESULT result = NULL;
-   DWORD dwError = DBERR_OTHER_ERROR;
+   uint32_t dwError = DBERR_OTHER_ERROR;
 #ifdef UNICODE
 #define pwszQuery szQuery
 #define wcErrorText errorText
@@ -340,14 +340,14 @@ DB_RESULT LIBNXDB_EXPORTABLE DBSelectEx(DB_HANDLE hConn, const TCHAR *szQuery, T
    hConn->m_mutexTransLock->lock();
    int64_t ms = GetCurrentTimeMs();
 
-   s_perfSelectQueries++;
-   s_perfTotalQueries++;
+   InterlockedIncrement64(&s_perfSelectQueries);
+   InterlockedIncrement64(&s_perfTotalQueries);
 
-   hResult = hConn->m_driver->m_fpDrvSelect(hConn->m_connection, pwszQuery, &dwError, wcErrorText);
+   hResult = hConn->m_driver->m_callTable.Select(hConn->m_connection, pwszQuery, &dwError, wcErrorText);
    if ((hResult == nullptr) && (dwError == DBERR_CONNECTION_LOST) && hConn->m_reconnectEnabled)
    {
       DBReconnect(hConn);
-      hResult = hConn->m_driver->m_fpDrvSelect(hConn->m_connection, pwszQuery, &dwError, wcErrorText);
+      hResult = hConn->m_driver->m_callTable.Select(hConn->m_connection, pwszQuery, &dwError, wcErrorText);
    }
 
    ms = GetCurrentTimeMs() - ms;
@@ -358,7 +358,7 @@ DB_RESULT LIBNXDB_EXPORTABLE DBSelectEx(DB_HANDLE hConn, const TCHAR *szQuery, T
    if ((hResult != nullptr) && ((UINT32)ms > g_sqlQueryExecTimeThreshold))
    {
       nxlog_debug_tag(DEBUG_TAG_QUERY, 3, _T("Long running query: \"%s\" [%d ms]"), szQuery, (int)ms);
-      s_perfLongRunningQueries++;
+      InterlockedIncrement64(&s_perfLongRunningQueries);
    }
    hConn->m_mutexTransLock->unlock();
 
@@ -369,7 +369,7 @@ DB_RESULT LIBNXDB_EXPORTABLE DBSelectEx(DB_HANDLE hConn, const TCHAR *szQuery, T
 
 	if (hResult == nullptr)
 	{
-	   s_perfFailedQueries++;
+	   InterlockedIncrement64(&s_perfFailedQueries);
       nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_DRIVER, _T("SQL query failed (Query = \"%s\"): %s"), szQuery, errorText);
 		if (hConn->m_driver->m_fpEventHandler != NULL)
 			hConn->m_driver->m_fpEventHandler(DBEVENT_QUERY_FAILED, pwszQuery, wcErrorText, dwError == DBERR_CONNECTION_LOST, hConn->m_driver->m_context);
@@ -420,7 +420,7 @@ DB_RESULT LIBNXDB_EXPORTABLE DBSelectFormatted(DB_HANDLE hConn, const TCHAR *que
  */
 int LIBNXDB_EXPORTABLE DBGetColumnCount(DB_RESULT hResult)
 {
-	return hResult->m_driver->m_fpDrvGetColumnCount(hResult->m_data);
+	return hResult->m_driver->m_callTable.GetColumnCount(hResult->m_data);
 }
 
 /**
@@ -428,7 +428,7 @@ int LIBNXDB_EXPORTABLE DBGetColumnCount(DB_RESULT hResult)
  */
 bool LIBNXDB_EXPORTABLE DBGetColumnName(DB_RESULT hResult, int column, TCHAR *buffer, int bufSize)
 {
-	const char *name = hResult->m_driver->m_fpDrvGetColumnName(hResult->m_data, column);
+	const char *name = hResult->m_driver->m_callTable.GetColumnName(hResult->m_data, column);
 	if (name != nullptr)
 	{
 #ifdef UNICODE
@@ -446,7 +446,7 @@ bool LIBNXDB_EXPORTABLE DBGetColumnName(DB_RESULT hResult, int column, TCHAR *bu
  */
 bool LIBNXDB_EXPORTABLE DBGetColumnNameA(DB_RESULT hResult, int column, char *buffer, int bufSize)
 {
-   const char *name = hResult->m_driver->m_fpDrvGetColumnName(hResult->m_data, column);
+   const char *name = hResult->m_driver->m_callTable.GetColumnName(hResult->m_data, column);
    if (name != nullptr)
    {
       strlcpy(buffer, name, bufSize);
@@ -459,7 +459,7 @@ bool LIBNXDB_EXPORTABLE DBGetColumnNameA(DB_RESULT hResult, int column, char *bu
  */
 int LIBNXDB_EXPORTABLE DBGetColumnCount(DB_UNBUFFERED_RESULT hResult)
 {
-	return hResult->m_driver->m_fpDrvGetColumnCountUnbuffered(hResult->m_data);
+	return hResult->m_driver->m_callTable.GetColumnCountUnbuffered(hResult->m_data);
 }
 
 /**
@@ -467,7 +467,7 @@ int LIBNXDB_EXPORTABLE DBGetColumnCount(DB_UNBUFFERED_RESULT hResult)
  */
 bool LIBNXDB_EXPORTABLE DBGetColumnName(DB_UNBUFFERED_RESULT hResult, int column, TCHAR *buffer, int bufSize)
 {
-	const char *name = hResult->m_driver->m_fpDrvGetColumnNameUnbuffered(hResult->m_data, column);
+	const char *name = hResult->m_driver->m_callTable.GetColumnNameUnbuffered(hResult->m_data, column);
 	if (name != nullptr)
 	{
 #ifdef UNICODE
@@ -485,7 +485,7 @@ bool LIBNXDB_EXPORTABLE DBGetColumnName(DB_UNBUFFERED_RESULT hResult, int column
  */
 bool LIBNXDB_EXPORTABLE DBGetColumnNameA(DB_UNBUFFERED_RESULT hResult, int column, char *buffer, int bufSize)
 {
-   const char *name = hResult->m_driver->m_fpDrvGetColumnNameUnbuffered(hResult->m_data, column);
+   const char *name = hResult->m_driver->m_callTable.GetColumnNameUnbuffered(hResult->m_data, column);
    if (name != nullptr)
    {
       strlcpy(buffer, name, bufSize);
@@ -503,12 +503,12 @@ TCHAR LIBNXDB_EXPORTABLE *DBGetField(DB_RESULT hResult, int iRow, int iColumn, T
    if (pszBuffer != nullptr)
    {
       *pszBuffer = 0;
-      return hResult->m_driver->m_fpDrvGetField(hResult->m_data, iRow, iColumn, pszBuffer, (int)nBufLen);
+      return hResult->m_driver->m_callTable.GetField(hResult->m_data, iRow, iColumn, pszBuffer, (int)nBufLen);
    }
    else
    {
       WCHAR *pszTemp;
-      LONG nLen = hResult->m_driver->m_fpDrvGetFieldLength(hResult->m_data, iRow, iColumn);
+      int32_t nLen = hResult->m_driver->m_callTable.GetFieldLength(hResult->m_data, iRow, iColumn);
       if (nLen == -1)
       {
          pszTemp = nullptr;
@@ -517,7 +517,7 @@ TCHAR LIBNXDB_EXPORTABLE *DBGetField(DB_RESULT hResult, int iRow, int iColumn, T
       {
          nLen++;
          pszTemp = MemAllocStringW(nLen);
-         hResult->m_driver->m_fpDrvGetField(hResult->m_data, iRow, iColumn, pszTemp, nLen);
+         hResult->m_driver->m_callTable.GetField(hResult->m_data, iRow, iColumn, pszTemp, nLen);
       }
       return pszTemp;
    }
@@ -540,17 +540,17 @@ SharedString LIBNXDB_EXPORTABLE DBGetFieldAsSharedString(DB_RESULT hResult, int 
  */
 char LIBNXDB_EXPORTABLE *DBGetFieldUTF8(DB_RESULT hResult, int iRow, int iColumn, char *pszBuffer, size_t nBufLen)
 {
-   if (hResult->m_driver->m_fpDrvGetFieldUTF8 != nullptr)
+   if (hResult->m_driver->m_callTable.GetFieldUTF8 != nullptr)
    {
       if (pszBuffer != nullptr)
       {
          *pszBuffer = 0;
-         return hResult->m_driver->m_fpDrvGetFieldUTF8(hResult->m_data, iRow, iColumn, pszBuffer, (int)nBufLen);
+         return hResult->m_driver->m_callTable.GetFieldUTF8(hResult->m_data, iRow, iColumn, pszBuffer, (int)nBufLen);
       }
       else
       {
          char *pszTemp;
-         LONG nLen = hResult->m_driver->m_fpDrvGetFieldLength(hResult->m_data, iRow, iColumn);
+         int32_t nLen = hResult->m_driver->m_callTable.GetFieldLength(hResult->m_data, iRow, iColumn);
          if (nLen == -1)
          {
             pszTemp = nullptr;
@@ -559,20 +559,20 @@ char LIBNXDB_EXPORTABLE *DBGetFieldUTF8(DB_RESULT hResult, int iRow, int iColumn
          {
             nLen = nLen * 2 + 1;  // increase buffer size because driver may return field length in characters
             pszTemp = (char *)malloc(nLen);
-            hResult->m_driver->m_fpDrvGetFieldUTF8(hResult->m_data, iRow, iColumn, pszTemp, nLen);
+            hResult->m_driver->m_callTable.GetFieldUTF8(hResult->m_data, iRow, iColumn, pszTemp, nLen);
          }
          return pszTemp;
       }
    }
    else
    {
-      LONG nLen = hResult->m_driver->m_fpDrvGetFieldLength(hResult->m_data, iRow, iColumn);
+      int32_t nLen = hResult->m_driver->m_callTable.GetFieldLength(hResult->m_data, iRow, iColumn);
       if (nLen == -1)
          return nullptr;
       nLen = nLen * 2 + 1;  // increase buffer size because driver may return field length in characters
 
       WCHAR *wtemp = MemAllocStringW(nLen);
-      hResult->m_driver->m_fpDrvGetField(hResult->m_data, iRow, iColumn, wtemp, nLen);
+      hResult->m_driver->m_callTable.GetField(hResult->m_data, iRow, iColumn, wtemp, nLen);
       char *value = (pszBuffer != nullptr) ? pszBuffer : (char *)malloc(nLen);
       wchar_to_utf8(wtemp, -1, value, (pszBuffer != nullptr) ? (int)nBufLen : nLen);
       MemFree(wtemp);
@@ -594,7 +594,7 @@ char LIBNXDB_EXPORTABLE *DBGetFieldA(DB_RESULT hResult, int iRow, int iColumn, c
    {
       *pszBuffer = 0;
       pwszBuffer = MemAllocStringW(nBufLen);
-      pwszData = hResult->m_driver->m_fpDrvGetField(hResult->m_data, iRow, iColumn, pwszBuffer, (int)nBufLen);
+      pwszData = hResult->m_driver->m_callTable.GetField(hResult->m_data, iRow, iColumn, pwszBuffer, (int)nBufLen);
       if (pwszData != nullptr)
       {
          wchar_to_mb(pwszData, -1, pszBuffer, (int)nBufLen);
@@ -608,7 +608,7 @@ char LIBNXDB_EXPORTABLE *DBGetFieldA(DB_RESULT hResult, int iRow, int iColumn, c
    }
    else
    {
-      nLen = hResult->m_driver->m_fpDrvGetFieldLength(hResult->m_data, iRow, iColumn);
+      nLen = hResult->m_driver->m_callTable.GetFieldLength(hResult->m_data, iRow, iColumn);
       if (nLen == -1)
       {
          pszRet = nullptr;
@@ -617,7 +617,7 @@ char LIBNXDB_EXPORTABLE *DBGetFieldA(DB_RESULT hResult, int iRow, int iColumn, c
       {
          nLen++;
          pwszBuffer = MemAllocStringW(nLen);
-         pwszData = hResult->m_driver->m_fpDrvGetField(hResult->m_data, iRow, iColumn, pwszBuffer, nLen);
+         pwszData = hResult->m_driver->m_callTable.GetField(hResult->m_data, iRow, iColumn, pwszBuffer, nLen);
          if (pwszData != nullptr)
          {
             nLen = (int)wcslen(pwszData) + 1;
@@ -815,7 +815,7 @@ uuid LIBNXDB_EXPORTABLE DBGetFieldGUID(DB_RESULT hResult, int iRow, int iColumn)
 {
    TCHAR buffer[256];
    TCHAR *value = DBGetField(hResult, iRow, iColumn, buffer, 256);
-   return (value == NULL) ? uuid::NULL_UUID : uuid::parse(value);
+   return (value == nullptr) ? uuid::NULL_UUID : uuid::parse(value);
 }
 
 /**
@@ -823,9 +823,9 @@ uuid LIBNXDB_EXPORTABLE DBGetFieldGUID(DB_RESULT hResult, int iRow, int iColumn)
  */
 int LIBNXDB_EXPORTABLE DBGetNumRows(DB_RESULT hResult)
 {
-   if (hResult == NULL)
+   if (hResult == nullptr)
       return 0;
-   return hResult->m_driver->m_fpDrvGetNumRows(hResult->m_data);
+   return hResult->m_driver->m_callTable.GetNumRows(hResult->m_data);
 }
 
 /**
@@ -833,11 +833,10 @@ int LIBNXDB_EXPORTABLE DBGetNumRows(DB_RESULT hResult)
  */
 void LIBNXDB_EXPORTABLE DBFreeResult(DB_RESULT hResult)
 {
-   if (hResult != NULL)
-	{
-      hResult->m_driver->m_fpDrvFreeResult(hResult->m_data);
-      MemFree(hResult);
-	}
+   if (hResult == nullptr)
+      return;
+   hResult->m_driver->m_callTable.FreeResult(hResult->m_data);
+   MemFree(hResult);
 }
 
 /**
@@ -859,14 +858,14 @@ DB_UNBUFFERED_RESULT LIBNXDB_EXPORTABLE DBSelectUnbufferedEx(DB_HANDLE hConn, co
    hConn->m_mutexTransLock->lock();
    int64_t ms = GetCurrentTimeMs();
 
-   s_perfSelectQueries++;
-   s_perfTotalQueries++;
+   InterlockedIncrement64(&s_perfSelectQueries);
+   InterlockedIncrement64(&s_perfTotalQueries);
 
-   hResult = hConn->m_driver->m_fpDrvSelectUnbuffered(hConn->m_connection, pwszQuery, &dwError, wcErrorText);
+   hResult = hConn->m_driver->m_callTable.SelectUnbuffered(hConn->m_connection, pwszQuery, &dwError, wcErrorText);
    if ((hResult == nullptr) && (dwError == DBERR_CONNECTION_LOST) && hConn->m_reconnectEnabled)
    {
       DBReconnect(hConn);
-      hResult = hConn->m_driver->m_fpDrvSelectUnbuffered(hConn->m_connection, pwszQuery, &dwError, wcErrorText);
+      hResult = hConn->m_driver->m_callTable.SelectUnbuffered(hConn->m_connection, pwszQuery, &dwError, wcErrorText);
    }
 
    ms = GetCurrentTimeMs() - ms;
@@ -877,11 +876,11 @@ DB_UNBUFFERED_RESULT LIBNXDB_EXPORTABLE DBSelectUnbufferedEx(DB_HANDLE hConn, co
    if ((hResult != nullptr) && ((uint32_t)ms > g_sqlQueryExecTimeThreshold))
    {
       nxlog_debug_tag(DEBUG_TAG_QUERY, 3, _T("Long running query: \"%s\" [%d ms]"), szQuery, (int)ms);
-      s_perfLongRunningQueries++;
+      InterlockedIncrement64(&s_perfLongRunningQueries);
    }
    if (hResult == nullptr)
    {
-      s_perfFailedQueries++;
+      InterlockedIncrement64(&s_perfFailedQueries);
       hConn->m_mutexTransLock->unlock();
 
 #ifndef UNICODE
@@ -911,10 +910,12 @@ DB_UNBUFFERED_RESULT LIBNXDB_EXPORTABLE DBSelectUnbufferedEx(DB_HANDLE hConn, co
 #undef wcErrorText
 }
 
+/**
+ * Unbuffered SELECT query
+ */
 DB_UNBUFFERED_RESULT LIBNXDB_EXPORTABLE DBSelectUnbuffered(DB_HANDLE hConn, const TCHAR *query)
 {
    TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
-
 	return DBSelectUnbufferedEx(hConn, query, errorText);
 }
 
@@ -923,7 +924,7 @@ DB_UNBUFFERED_RESULT LIBNXDB_EXPORTABLE DBSelectUnbuffered(DB_HANDLE hConn, cons
  */
 bool LIBNXDB_EXPORTABLE DBFetch(DB_UNBUFFERED_RESULT hResult)
 {
-	return hResult->m_driver->m_fpDrvFetch(hResult->m_data);
+	return hResult->m_driver->m_callTable.Fetch(hResult->m_data);
 }
 
 /**
@@ -934,14 +935,12 @@ TCHAR LIBNXDB_EXPORTABLE *DBGetField(DB_UNBUFFERED_RESULT hResult, int iColumn, 
 #ifdef UNICODE
    if (pBuffer != nullptr)
    {
-	   return hResult->m_driver->m_fpDrvGetFieldUnbuffered(hResult->m_data, iColumn, pBuffer, (int)iBufSize);
+	   return hResult->m_driver->m_callTable.GetFieldUnbuffered(hResult->m_data, iColumn, pBuffer, (int)iBufSize);
    }
    else
    {
-      int32_t nLen;
       WCHAR *pszTemp;
-
-      nLen = hResult->m_driver->m_fpDrvGetFieldLengthUnbuffered(hResult->m_data, iColumn);
+      int32_t nLen = hResult->m_driver->m_callTable.GetFieldLengthUnbuffered(hResult->m_data, iColumn);
       if (nLen == -1)
       {
          pszTemp = nullptr;
@@ -950,7 +949,7 @@ TCHAR LIBNXDB_EXPORTABLE *DBGetField(DB_UNBUFFERED_RESULT hResult, int iColumn, 
       {
          nLen++;
          pszTemp = MemAllocStringW(nLen);
-         if (hResult->m_driver->m_fpDrvGetFieldUnbuffered(hResult->m_data, iColumn, pszTemp, nLen) == nullptr)
+         if (hResult->m_driver->m_callTable.GetFieldUnbuffered(hResult->m_data, iColumn, pszTemp, nLen) == nullptr)
          {
             MemFree(pszTemp);
             pszTemp = nullptr;
@@ -966,7 +965,7 @@ TCHAR LIBNXDB_EXPORTABLE *DBGetField(DB_UNBUFFERED_RESULT hResult, int iColumn, 
    if (pBuffer != nullptr)
    {
 		pwszBuffer = MemAllocStringW(iBufSize);
-		if (hResult->m_driver->m_fpDrvGetFieldUnbuffered(hResult->m_data, iColumn, pwszBuffer, (int)iBufSize) != NULL)
+		if (hResult->m_driver->m_callTable.GetFieldUnbuffered(hResult->m_data, iColumn, pwszBuffer, (int)iBufSize) != NULL)
 		{
 			wchar_to_mb(pwszBuffer, -1, pBuffer, iBufSize);
 			pszRet = pBuffer;
@@ -979,7 +978,7 @@ TCHAR LIBNXDB_EXPORTABLE *DBGetField(DB_UNBUFFERED_RESULT hResult, int iColumn, 
    }
    else
    {
-		nLen = hResult->m_driver->m_fpDrvGetFieldLengthUnbuffered(hResult->m_data, iColumn);
+		nLen = hResult->m_driver->m_callTable.GetFieldLengthUnbuffered(hResult->m_data, iColumn);
       if (nLen == -1)
       {
          pszRet = nullptr;
@@ -988,7 +987,7 @@ TCHAR LIBNXDB_EXPORTABLE *DBGetField(DB_UNBUFFERED_RESULT hResult, int iColumn, 
       {
          nLen++;
          pwszBuffer = MemAllocStringW(nLen);
-			pwszData = hResult->m_driver->m_fpDrvGetFieldUnbuffered(hResult->m_data, iColumn, pwszBuffer, nLen);
+			pwszData = hResult->m_driver->m_callTable.GetFieldUnbuffered(hResult->m_data, iColumn, pwszBuffer, nLen);
          if (pwszData != nullptr)
          {
             nLen = (int)wcslen(pwszData) + 1;
@@ -1011,17 +1010,17 @@ TCHAR LIBNXDB_EXPORTABLE *DBGetField(DB_UNBUFFERED_RESULT hResult, int iColumn, 
  */
 char LIBNXDB_EXPORTABLE *DBGetFieldUTF8(DB_UNBUFFERED_RESULT hResult, int iColumn, char *buffer, size_t iBufSize)
 {
-   if (hResult->m_driver->m_fpDrvGetFieldUTF8 != nullptr)
+   if (hResult->m_driver->m_callTable.GetFieldUTF8 != nullptr)
    {
       if (buffer != nullptr)
       {
          *buffer = 0;
-         return hResult->m_driver->m_fpDrvGetFieldUnbufferedUTF8(hResult->m_data, iColumn, buffer, (int)iBufSize);
+         return hResult->m_driver->m_callTable.GetFieldUnbufferedUTF8(hResult->m_data, iColumn, buffer, (int)iBufSize);
       }
       else
       {
          char *pszTemp;
-         LONG nLen = hResult->m_driver->m_fpDrvGetFieldLengthUnbuffered(hResult->m_data, iColumn);
+         int32_t nLen = hResult->m_driver->m_callTable.GetFieldLengthUnbuffered(hResult->m_data, iColumn);
          if (nLen == -1)
          {
             pszTemp = nullptr;
@@ -1030,20 +1029,20 @@ char LIBNXDB_EXPORTABLE *DBGetFieldUTF8(DB_UNBUFFERED_RESULT hResult, int iColum
          {
             nLen = nLen * 2 + 1;  // increase buffer size because driver may return field length in characters
             pszTemp = MemAllocStringA(nLen);
-            hResult->m_driver->m_fpDrvGetFieldUnbufferedUTF8(hResult->m_data, iColumn, pszTemp, nLen);
+            hResult->m_driver->m_callTable.GetFieldUnbufferedUTF8(hResult->m_data, iColumn, pszTemp, nLen);
          }
          return pszTemp;
       }
    }
    else
    {
-      LONG nLen = hResult->m_driver->m_fpDrvGetFieldLengthUnbuffered(hResult->m_data, iColumn);
+      int32_t nLen = hResult->m_driver->m_callTable.GetFieldLengthUnbuffered(hResult->m_data, iColumn);
       if (nLen == -1)
          return nullptr;
       nLen = nLen * 2 + 1;  // increase buffer size because driver may return field length in characters
 
       WCHAR *wtemp = MemAllocStringW(nLen);
-      hResult->m_driver->m_fpDrvGetFieldUnbuffered(hResult->m_data, iColumn, wtemp, nLen);
+      hResult->m_driver->m_callTable.GetFieldUnbuffered(hResult->m_data, iColumn, wtemp, nLen);
       char *value = (buffer != nullptr) ? buffer : MemAllocStringA(nLen);
       wchar_to_utf8(wtemp, -1, value, (buffer != nullptr) ? (int)iBufSize : nLen);
       MemFree(wtemp);
@@ -1163,7 +1162,9 @@ uuid LIBNXDB_EXPORTABLE DBGetFieldGUID(DB_UNBUFFERED_RESULT hResult, int iColumn
  */
 void LIBNXDB_EXPORTABLE DBFreeResult(DB_UNBUFFERED_RESULT hResult)
 {
-	hResult->m_driver->m_fpDrvFreeUnbufferedResult(hResult->m_data);
+   if (hResult == nullptr)
+      return;
+	hResult->m_driver->m_callTable.FreeUnbufferedResult(hResult->m_data);
 	hResult->m_connection->m_mutexTransLock->unlock();
 	MemFree(hResult);
 }
@@ -1189,12 +1190,12 @@ DB_STATEMENT LIBNXDB_EXPORTABLE DBPrepareEx(DB_HANDLE hConn, const TCHAR *query,
 	if (s_queryTrace)
       ms = GetCurrentTimeMs();
 
-	DWORD errorCode;
-	DBDRV_STATEMENT stmt = hConn->m_driver->m_fpDrvPrepare(hConn->m_connection, pwszQuery, optimizeForReuse, &errorCode, wcErrorText);
+	uint32_t errorCode;
+	DBDRV_STATEMENT stmt = hConn->m_driver->m_callTable.Prepare(hConn->m_connection, pwszQuery, optimizeForReuse, &errorCode, wcErrorText);
    if ((stmt == nullptr) && (errorCode == DBERR_CONNECTION_LOST) && hConn->m_reconnectEnabled)
    {
       DBReconnect(hConn);
-		stmt = hConn->m_driver->m_fpDrvPrepare(hConn->m_connection, pwszQuery, optimizeForReuse, &errorCode, wcErrorText);
+		stmt = hConn->m_driver->m_callTable.Prepare(hConn->m_connection, pwszQuery, optimizeForReuse, &errorCode, wcErrorText);
 	}
    hConn->m_mutexTransLock->unlock();
 
@@ -1217,8 +1218,8 @@ DB_STATEMENT LIBNXDB_EXPORTABLE DBPrepareEx(DB_HANDLE hConn, const TCHAR *query,
 		if (hConn->m_driver->m_fpEventHandler != NULL)
 			hConn->m_driver->m_fpEventHandler(DBEVENT_QUERY_FAILED, pwszQuery, wcErrorText, errorCode == DBERR_CONNECTION_LOST, hConn->m_driver->m_context);
 
-		s_perfFailedQueries++;
-		s_perfTotalQueries++;
+		InterlockedIncrement64(&s_perfFailedQueries);
+		InterlockedIncrement64(&s_perfTotalQueries);
 	}
 
    if (s_queryTrace)
@@ -1266,7 +1267,7 @@ void LIBNXDB_EXPORTABLE DBFreeStatement(DB_STATEMENT hStmt)
       hStmt->m_connection->m_preparedStatements->remove(hStmt);
       hStmt->m_connection->m_preparedStatementsLock->unlock();
    }
-   hStmt->m_driver->m_fpDrvFreeStatement(hStmt->m_statement);
+   hStmt->m_driver->m_callTable.FreeStatement(hStmt->m_statement);
    MemFree(hStmt->m_query);
    MemFree(hStmt);
 }
@@ -1284,9 +1285,9 @@ const TCHAR LIBNXDB_EXPORTABLE *DBGetStatementSource(DB_STATEMENT hStmt)
  */
 bool LIBNXDB_EXPORTABLE DBOpenBatch(DB_STATEMENT hStmt)
 {
-   if (!IS_VALID_STATEMENT_HANDLE(hStmt) || (hStmt->m_driver->m_fpDrvOpenBatch == nullptr))
+   if (!IS_VALID_STATEMENT_HANDLE(hStmt) || (hStmt->m_driver->m_callTable.OpenBatch == nullptr))
       return false;
-   return hStmt->m_driver->m_fpDrvOpenBatch(hStmt->m_statement);
+   return hStmt->m_driver->m_callTable.OpenBatch(hStmt->m_statement);
 }
 
 /**
@@ -1294,8 +1295,8 @@ bool LIBNXDB_EXPORTABLE DBOpenBatch(DB_STATEMENT hStmt)
  */
 void LIBNXDB_EXPORTABLE DBNextBatchRow(DB_STATEMENT hStmt)
 {
-   if (IS_VALID_STATEMENT_HANDLE(hStmt) && (hStmt->m_driver->m_fpDrvNextBatchRow != nullptr))
-      hStmt->m_driver->m_fpDrvNextBatchRow(hStmt->m_statement);
+   if (IS_VALID_STATEMENT_HANDLE(hStmt) && (hStmt->m_driver->m_callTable.NextBatchRow != nullptr))
+      hStmt->m_driver->m_callTable.NextBatchRow(hStmt->m_statement);
 }
 
 /**
@@ -1359,7 +1360,7 @@ void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, int cTy
 		wBuffer = const_cast<void*>(buffer);
 	}
 #endif
-	hStmt->m_driver->m_fpDrvBind(hStmt->m_statement, pos, sqlType, cType, wBuffer, realAllocType);
+	hStmt->m_driver->m_callTable.Bind(hStmt->m_statement, pos, sqlType, cType, wBuffer, realAllocType);
 #undef wBuffer
 #undef realAllocType
 }
@@ -1517,10 +1518,10 @@ bool LIBNXDB_EXPORTABLE DBExecuteEx(DB_STATEMENT hStmt, TCHAR *errorText)
 	hConn->m_mutexTransLock->lock();
    uint64_t ms = GetCurrentTimeMs();
 
-   s_perfNonSelectQueries++;
-   s_perfTotalQueries++;
+   InterlockedIncrement64(&s_perfNonSelectQueries);
+   InterlockedIncrement64(&s_perfTotalQueries);
 
-	uint32_t dwResult = hConn->m_driver->m_fpDrvExecute(hConn->m_connection, hStmt->m_statement, wcErrorText);
+	uint32_t dwResult = hConn->m_driver->m_callTable.Execute(hConn->m_connection, hStmt->m_statement, wcErrorText);
    ms = GetCurrentTimeMs() - ms;
    if (s_queryTrace)
    {
@@ -1529,7 +1530,7 @@ bool LIBNXDB_EXPORTABLE DBExecuteEx(DB_STATEMENT hStmt, TCHAR *errorText)
    if ((dwResult == DBERR_SUCCESS) && ((UINT32)ms > g_sqlQueryExecTimeThreshold))
    {
       nxlog_debug_tag(DEBUG_TAG_QUERY, 3, _T("Long running query: \"%s\" [%d ms]"), hStmt->m_query, (int)ms);
-      s_perfLongRunningQueries++;
+      InterlockedIncrement64(&s_perfLongRunningQueries);
    }
 
    // Do reconnect if needed, but don't retry statement execution
@@ -1559,7 +1560,7 @@ bool LIBNXDB_EXPORTABLE DBExecuteEx(DB_STATEMENT hStmt, TCHAR *errorText)
 			MemFree(query);
 #endif
 		}
-		s_perfFailedQueries++;
+		InterlockedIncrement64(&s_perfFailedQueries);
 	}
 
    return dwResult == DBERR_SUCCESS;
@@ -1596,12 +1597,12 @@ DB_RESULT LIBNXDB_EXPORTABLE DBSelectPreparedEx(DB_STATEMENT hStmt, TCHAR *error
 	DB_HANDLE hConn = hStmt->m_connection;
    hConn->m_mutexTransLock->lock();
 
-   s_perfSelectQueries++;
-   s_perfTotalQueries++;
+   InterlockedIncrement64(&s_perfSelectQueries);
+   InterlockedIncrement64(&s_perfTotalQueries);
 
    int64_t ms = GetCurrentTimeMs();
-   DWORD dwError = DBERR_OTHER_ERROR;
-	DBDRV_RESULT hResult = hConn->m_driver->m_fpDrvSelectPrepared(hConn->m_connection, hStmt->m_statement, &dwError, wcErrorText);
+   uint32_t errorCode = DBERR_OTHER_ERROR;
+	DBDRV_RESULT hResult = hConn->m_driver->m_callTable.SelectPrepared(hConn->m_connection, hStmt->m_statement, &errorCode, wcErrorText);
 
    ms = GetCurrentTimeMs() - ms;
    if (s_queryTrace)
@@ -1612,12 +1613,12 @@ DB_RESULT LIBNXDB_EXPORTABLE DBSelectPreparedEx(DB_STATEMENT hStmt, TCHAR *error
    if ((hResult != nullptr) && ((uint32_t)ms > g_sqlQueryExecTimeThreshold))
    {
       nxlog_debug_tag(DEBUG_TAG_QUERY, 3, _T("Long running query: \"%s\" [%d ms]"), hStmt->m_query, (int)ms);
-      s_perfLongRunningQueries++;
+      InterlockedIncrement64(&s_perfLongRunningQueries);
    }
 
    // Do reconnect if needed, but don't retry statement execution
    // because it will fail anyway
-   if ((hResult == nullptr) && (dwError == DBERR_CONNECTION_LOST) && hConn->m_reconnectEnabled)
+   if ((hResult == nullptr) && (errorCode == DBERR_CONNECTION_LOST) && hConn->m_reconnectEnabled)
    {
       DBReconnect(hConn);
    }
@@ -1635,14 +1636,14 @@ DB_RESULT LIBNXDB_EXPORTABLE DBSelectPreparedEx(DB_STATEMENT hStmt, TCHAR *error
 		if (hConn->m_driver->m_fpEventHandler != NULL)
 		{
 #ifdef UNICODE
-			hConn->m_driver->m_fpEventHandler(DBEVENT_QUERY_FAILED, hStmt->m_query, wcErrorText, dwError == DBERR_CONNECTION_LOST, hConn->m_driver->m_context);
+			hConn->m_driver->m_fpEventHandler(DBEVENT_QUERY_FAILED, hStmt->m_query, wcErrorText, errorCode == DBERR_CONNECTION_LOST, hConn->m_driver->m_context);
 #else
 			WCHAR *query = WideStringFromMBString(hStmt->m_query);
-			hConn->m_driver->m_fpEventHandler(DBEVENT_QUERY_FAILED, query, wcErrorText, dwError == DBERR_CONNECTION_LOST, hConn->m_driver->m_context);
+			hConn->m_driver->m_fpEventHandler(DBEVENT_QUERY_FAILED, query, wcErrorText, errorCode == DBERR_CONNECTION_LOST, hConn->m_driver->m_context);
 			MemFree(query);
 #endif
 		}
-		s_perfFailedQueries++;
+		InterlockedIncrement64(&s_perfFailedQueries);
 	}
 
 	if (hResult != nullptr)
@@ -1687,12 +1688,12 @@ DB_UNBUFFERED_RESULT LIBNXDB_EXPORTABLE DBSelectPreparedUnbufferedEx(DB_STATEMEN
    DB_HANDLE hConn = hStmt->m_connection;
    hConn->m_mutexTransLock->lock();
 
-   s_perfSelectQueries++;
-   s_perfTotalQueries++;
+   InterlockedIncrement64(&s_perfSelectQueries);
+   InterlockedIncrement64(&s_perfTotalQueries);
 
    int64_t ms = GetCurrentTimeMs();
-   DWORD dwError = DBERR_OTHER_ERROR;
-   DBDRV_UNBUFFERED_RESULT hResult = hConn->m_driver->m_fpDrvSelectPreparedUnbuffered(hConn->m_connection, hStmt->m_statement, &dwError, wcErrorText);
+   uint32_t errorCode = DBERR_OTHER_ERROR;
+   DBDRV_UNBUFFERED_RESULT hResult = hConn->m_driver->m_callTable.SelectPreparedUnbuffered(hConn->m_connection, hStmt->m_statement, &errorCode, wcErrorText);
 
    ms = GetCurrentTimeMs() - ms;
    if (s_queryTrace)
@@ -1703,12 +1704,12 @@ DB_UNBUFFERED_RESULT LIBNXDB_EXPORTABLE DBSelectPreparedUnbufferedEx(DB_STATEMEN
    if ((hResult != nullptr) && ((uint32_t)ms > g_sqlQueryExecTimeThreshold))
    {
       nxlog_debug_tag(DEBUG_TAG_QUERY, 3, _T("Long running query: \"%s\" [%d ms]"), hStmt->m_query, (int)ms);
-      s_perfLongRunningQueries++;
+      InterlockedIncrement64(&s_perfLongRunningQueries);
    }
 
    // Do reconnect if needed, but don't retry statement execution
    // because it will fail anyway
-   if ((hResult == nullptr) && (dwError == DBERR_CONNECTION_LOST) && hConn->m_reconnectEnabled)
+   if ((hResult == nullptr) && (errorCode == DBERR_CONNECTION_LOST) && hConn->m_reconnectEnabled)
    {
       DBReconnect(hConn);
    }
@@ -1726,14 +1727,14 @@ DB_UNBUFFERED_RESULT LIBNXDB_EXPORTABLE DBSelectPreparedUnbufferedEx(DB_STATEMEN
       if (hConn->m_driver->m_fpEventHandler != nullptr)
       {
 #ifdef UNICODE
-         hConn->m_driver->m_fpEventHandler(DBEVENT_QUERY_FAILED, hStmt->m_query, wcErrorText, dwError == DBERR_CONNECTION_LOST, hConn->m_driver->m_context);
+         hConn->m_driver->m_fpEventHandler(DBEVENT_QUERY_FAILED, hStmt->m_query, wcErrorText, errorCode == DBERR_CONNECTION_LOST, hConn->m_driver->m_context);
 #else
          WCHAR *query = WideStringFromMBString(hStmt->m_query);
-         hConn->m_driver->m_fpEventHandler(DBEVENT_QUERY_FAILED, query, wcErrorText, dwError == DBERR_CONNECTION_LOST, hConn->m_driver->m_context);
+         hConn->m_driver->m_fpEventHandler(DBEVENT_QUERY_FAILED, query, wcErrorText, errorCode == DBERR_CONNECTION_LOST, hConn->m_driver->m_context);
          MemFree(query);
 #endif
       }
-      s_perfFailedQueries++;
+      InterlockedIncrement64(&s_perfFailedQueries);
    }
 
    if (hResult != nullptr)
@@ -1762,17 +1763,17 @@ DB_UNBUFFERED_RESULT LIBNXDB_EXPORTABLE DBSelectPreparedUnbuffered(DB_STATEMENT 
  */
 bool LIBNXDB_EXPORTABLE DBBegin(DB_HANDLE hConn)
 {
-   DWORD dwResult;
+   uint32_t dwResult;
    bool bRet = false;
 
    hConn->m_mutexTransLock->lock();
    if (hConn->m_transactionLevel == 0)
    {
-      dwResult = hConn->m_driver->m_fpDrvBegin(hConn->m_connection);
+      dwResult = hConn->m_driver->m_callTable.Begin(hConn->m_connection);
       if ((dwResult == DBERR_CONNECTION_LOST) && hConn->m_reconnectEnabled)
       {
          DBReconnect(hConn);
-         dwResult = hConn->m_driver->m_fpDrvBegin(hConn->m_connection);
+         dwResult = hConn->m_driver->m_callTable.Begin(hConn->m_connection);
       }
       if (dwResult == DBERR_SUCCESS)
       {
@@ -1807,7 +1808,7 @@ bool LIBNXDB_EXPORTABLE DBCommit(DB_HANDLE hConn)
    {
       hConn->m_transactionLevel--;
       if (hConn->m_transactionLevel == 0)
-         bRet = (hConn->m_driver->m_fpDrvCommit(hConn->m_connection) == DBERR_SUCCESS);
+         bRet = (hConn->m_driver->m_callTable.Commit(hConn->m_connection) == DBERR_SUCCESS);
       else
          bRet = true;
 		nxlog_debug_tag(DEBUG_TAG_QUERY, 9, _T("COMMIT TRANSACTION %s (level %d)"), bRet ? _T("successful") : _T("failed"), hConn->m_transactionLevel);
@@ -1829,7 +1830,7 @@ bool LIBNXDB_EXPORTABLE DBRollback(DB_HANDLE hConn)
    {
       hConn->m_transactionLevel--;
       if (hConn->m_transactionLevel == 0)
-         bRet = (hConn->m_driver->m_fpDrvRollback(hConn->m_connection) == DBERR_SUCCESS);
+         bRet = (hConn->m_driver->m_callTable.Rollback(hConn->m_connection) == DBERR_SUCCESS);
       else
          bRet = true;
 		nxlog_debug_tag(DEBUG_TAG_QUERY, 9, _T("ROLLBACK TRANSACTION %s (level %d)"), bRet ? _T("successful") : _T("failed"), hConn->m_transactionLevel);
@@ -1858,18 +1859,18 @@ StringBuffer LIBNXDB_EXPORTABLE DBPrepareString(DB_DRIVER drv, const TCHAR *str,
 		TCHAR *temp = (TCHAR *)malloc((maxSize + 1) * sizeof(TCHAR));
 		_tcslcpy(temp, str, maxSize + 1);
 #ifdef UNICODE
-		out.setBuffer(drv->m_fpDrvPrepareStringW(temp));
+		out.setBuffer(drv->m_callTable.PrepareStringW(temp));
 #else
-		out.setBuffer(drv->m_fpDrvPrepareStringA(temp));
+		out.setBuffer(drv->m_callTable.PrepareStringA(temp));
 #endif
 		MemFree(temp);
 	}
 	else	
 	{
 #ifdef UNICODE
-		out.setBuffer(drv->m_fpDrvPrepareStringW(CHECK_NULL_EX(str)));
+		out.setBuffer(drv->m_callTable.PrepareStringW(CHECK_NULL_EX(str)));
 #else
-		out.setBuffer(drv->m_fpDrvPrepareStringA(CHECK_NULL_EX(str)));
+		out.setBuffer(drv->m_callTable.PrepareStringA(CHECK_NULL_EX(str)));
 #endif
 	}
 	return out;
@@ -1929,11 +1930,11 @@ StringBuffer LIBNXDB_EXPORTABLE DBPrepareStringUTF8(DB_DRIVER drv, const char *s
 int LIBNXDB_EXPORTABLE DBIsTableExist(DB_HANDLE conn, const TCHAR *table)
 {
 #ifdef UNICODE
-   return conn->m_driver->m_fpDrvIsTableExist(conn->m_connection, table);
+   return conn->m_driver->m_callTable.IsTableExist(conn->m_connection, table);
 #else
    WCHAR wname[256];
    mb_to_wchar(table, -1, wname, 256);
-   return conn->m_driver->m_fpDrvIsTableExist(conn->m_connection, wname);
+   return conn->m_driver->m_callTable.IsTableExist(conn->m_connection, wname);
 #endif
 }
 
@@ -1942,9 +1943,9 @@ int LIBNXDB_EXPORTABLE DBIsTableExist(DB_HANDLE conn, const TCHAR *table)
  */
 void LIBNXDB_EXPORTABLE DBGetPerfCounters(LIBNXDB_PERF_COUNTERS *counters)
 {
-   counters->failedQueries = s_perfFailedQueries;
-   counters->longRunningQueries = s_perfLongRunningQueries;
-   counters->nonSelectQueries = s_perfNonSelectQueries;
-   counters->selectQueries = s_perfSelectQueries;
-   counters->totalQueries = s_perfTotalQueries;
+   counters->failedQueries = static_cast<uint64_t>(s_perfFailedQueries);
+   counters->longRunningQueries = static_cast<uint64_t>(s_perfLongRunningQueries);
+   counters->nonSelectQueries = static_cast<uint64_t>(s_perfNonSelectQueries);
+   counters->selectQueries = static_cast<uint64_t>(s_perfSelectQueries);
+   counters->totalQueries = static_cast<uint64_t>(s_perfTotalQueries);
 }

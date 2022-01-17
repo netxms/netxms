@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -34,20 +34,6 @@ static DB_DRIVER s_drivers[MAX_DB_DRIVERS];
 static Mutex s_driverListLock;
 
 /**
- * Get symbol address and log errors
- */
-static void *DLGetSymbolAddrEx(HMODULE hModule, const char *pszSymbol, bool mandatory = true)
-{
-   void *pFunc;
-   TCHAR szErrorText[256];
-
-   pFunc = DLGetSymbolAddr(hModule, pszSymbol, szErrorText);
-   if ((pFunc == NULL) && mandatory)
-      nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_DRIVER, _T("Unable to resolve symbol \"%hs\": %s"), pszSymbol, szErrorText);
-   return pFunc;
-}
-
-/**
  * Init DB library
  */
 bool LIBNXDB_EXPORTABLE DBInit()
@@ -66,11 +52,10 @@ bool LIBNXDB_EXPORTABLE DBInit()
 DB_DRIVER LIBNXDB_EXPORTABLE DBLoadDriver(const TCHAR *module, const TCHAR *initParameters,
          void (*eventHandler)(uint32_t, const WCHAR *, const WCHAR *, bool, void *), void *context)
 {
-   static DWORD dwVersionZero = 0;
-   bool (*fpDrvInit)(const char *);
-   DWORD *pdwAPIVersion;
    TCHAR szErrorText[256];
-	const char *driverName;
+   uint32_t *apiVersion = nullptr;
+   const char **driverName = nullptr;
+   DBDriverCallTable **callTable = nullptr;
 	DB_DRIVER driver;
 	bool alreadyLoaded = false;
 	int position = -1;
@@ -106,19 +91,19 @@ DB_DRIVER LIBNXDB_EXPORTABLE DBLoadDriver(const TCHAR *module, const TCHAR *init
    }
 
    // Check API version supported by driver
-   pdwAPIVersion = (DWORD *)DLGetSymbolAddr(driver->m_handle, "drvAPIVersion", NULL);
-   if (pdwAPIVersion == NULL)
-      pdwAPIVersion = &dwVersionZero;
-   if (*pdwAPIVersion != DBDRV_API_VERSION)
+   static uint32_t versionZero = 0;
+   apiVersion = static_cast<uint32_t*>(DLGetSymbolAddr(driver->m_handle, "drvAPIVersion", nullptr));
+   if (apiVersion == nullptr)
+      apiVersion = &versionZero;
+   if (*apiVersion != DBDRV_API_VERSION)
    {
-      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_DRIVER, _T("Database driver \"%s\" cannot be loaded because of API version mismatch (server: %d; driver: %d)"),
-               module, (int)(DBDRV_API_VERSION), (int)(*pdwAPIVersion));
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_DRIVER, _T("Database driver \"%s\" cannot be loaded because of API version mismatch (server: %u; driver: %u)"), module, DBDRV_API_VERSION, *apiVersion);
 		goto failure;
    }
 
 	// Check name
-	driverName = *((const char **)DLGetSymbolAddr(driver->m_handle, "drvName", NULL));
-	if (driverName == nullptr)
+   driverName = static_cast<const char**>(DLGetSymbolAddr(driver->m_handle, "drvName", nullptr));
+	if ((driverName == nullptr) || (*driverName == nullptr))
 	{
 	   nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_DRIVER, _T("Unable to find all required entry points in database driver \"%s\""), module);
 		goto failure;
@@ -126,7 +111,7 @@ DB_DRIVER LIBNXDB_EXPORTABLE DBLoadDriver(const TCHAR *module, const TCHAR *init
 
 	for(i = 0; i < MAX_DB_DRIVERS; i++)
 	{
-		if ((s_drivers[i] != NULL) && (!stricmp(s_drivers[i]->m_name, driverName)))
+		if ((s_drivers[i] != nullptr) && (!stricmp(s_drivers[i]->m_name, *driverName)))
 		{
 			alreadyLoaded = true;
 			position = i;
@@ -149,58 +134,13 @@ DB_DRIVER LIBNXDB_EXPORTABLE DBLoadDriver(const TCHAR *module, const TCHAR *init
 	}
 
    // Import symbols
-   fpDrvInit = (bool (*)(const char *))DLGetSymbolAddrEx(driver->m_handle, "DrvInit");
-   driver->m_fpDrvConnect = (DBDRV_CONNECTION (*)(const char *, const char *, const char *, const char *, const char *, WCHAR *))DLGetSymbolAddrEx(driver->m_handle, "DrvConnect");
-   driver->m_fpDrvDisconnect = (void (*)(DBDRV_CONNECTION))DLGetSymbolAddrEx(driver->m_handle, "DrvDisconnect");
-   driver->m_fpDrvSetPrefetchLimit = (bool (*)(DBDRV_CONNECTION, int))DLGetSymbolAddrEx(driver->m_handle, "DrvSetPrefetchLimit", false);
-	driver->m_fpDrvPrepare = (DBDRV_STATEMENT (*)(DBDRV_CONNECTION, const WCHAR *, bool, DWORD *, WCHAR *))DLGetSymbolAddrEx(driver->m_handle, "DrvPrepare");
-	driver->m_fpDrvFreeStatement = (void (*)(DBDRV_STATEMENT))DLGetSymbolAddrEx(driver->m_handle, "DrvFreeStatement");
-	driver->m_fpDrvOpenBatch = (bool (*)(DBDRV_STATEMENT))DLGetSymbolAddrEx(driver->m_handle, "DrvOpenBatch", false);
-	driver->m_fpDrvNextBatchRow = (void (*)(DBDRV_STATEMENT))DLGetSymbolAddrEx(driver->m_handle, "DrvNextBatchRow", false);
-	driver->m_fpDrvBind = (void (*)(DBDRV_STATEMENT, int, int, int, void *, int))DLGetSymbolAddrEx(driver->m_handle, "DrvBind");
-	driver->m_fpDrvExecute = (DWORD (*)(DBDRV_CONNECTION, DBDRV_STATEMENT, WCHAR *))DLGetSymbolAddrEx(driver->m_handle, "DrvExecute");
-   driver->m_fpDrvQuery = (DWORD (*)(DBDRV_CONNECTION, const WCHAR *, WCHAR *))DLGetSymbolAddrEx(driver->m_handle, "DrvQuery");
-   driver->m_fpDrvSelect = (DBDRV_RESULT (*)(DBDRV_CONNECTION, const WCHAR *, DWORD *, WCHAR *))DLGetSymbolAddrEx(driver->m_handle, "DrvSelect");
-   driver->m_fpDrvSelectUnbuffered = (DBDRV_UNBUFFERED_RESULT (*)(DBDRV_CONNECTION, const WCHAR *, DWORD *, WCHAR *))DLGetSymbolAddrEx(driver->m_handle, "DrvSelectUnbuffered");
-	driver->m_fpDrvSelectPrepared = (DBDRV_RESULT (*)(DBDRV_CONNECTION, DBDRV_STATEMENT, DWORD *, WCHAR *))DLGetSymbolAddrEx(driver->m_handle, "DrvSelectPrepared");
-   driver->m_fpDrvSelectPreparedUnbuffered = (DBDRV_UNBUFFERED_RESULT (*)(DBDRV_CONNECTION, DBDRV_STATEMENT, DWORD *, WCHAR *))DLGetSymbolAddrEx(driver->m_handle, "DrvSelectPreparedUnbuffered");
-   driver->m_fpDrvFetch = (bool (*)(DBDRV_UNBUFFERED_RESULT))DLGetSymbolAddrEx(driver->m_handle, "DrvFetch");
-   driver->m_fpDrvGetFieldLength = (LONG (*)(DBDRV_RESULT, int, int))DLGetSymbolAddrEx(driver->m_handle, "DrvGetFieldLength");
-   driver->m_fpDrvGetFieldLengthUnbuffered = (LONG (*)(DBDRV_UNBUFFERED_RESULT, int))DLGetSymbolAddrEx(driver->m_handle, "DrvGetFieldLengthUnbuffered");
-   driver->m_fpDrvGetField = (WCHAR* (*)(DBDRV_RESULT, int, int, WCHAR *, int))DLGetSymbolAddrEx(driver->m_handle, "DrvGetField");
-   driver->m_fpDrvGetFieldUTF8 = (char* (*)(DBDRV_RESULT, int, int, char *, int))DLGetSymbolAddrEx(driver->m_handle, "DrvGetFieldUTF8", false); // optional entry point
-   driver->m_fpDrvGetFieldUnbuffered = (WCHAR* (*)(DBDRV_UNBUFFERED_RESULT, int, WCHAR *, int))DLGetSymbolAddrEx(driver->m_handle, "DrvGetFieldUnbuffered");
-   driver->m_fpDrvGetFieldUnbufferedUTF8 = (char* (*)(DBDRV_UNBUFFERED_RESULT, int, char *, int))DLGetSymbolAddrEx(driver->m_handle, "DrvGetFieldUnbufferedUTF8", false); // optional entry point
-   driver->m_fpDrvGetNumRows = (int (*)(DBDRV_RESULT))DLGetSymbolAddrEx(driver->m_handle, "DrvGetNumRows");
-   driver->m_fpDrvGetColumnCount = (int (*)(DBDRV_RESULT))DLGetSymbolAddrEx(driver->m_handle, "DrvGetColumnCount");
-   driver->m_fpDrvGetColumnName = (const char* (*)(DBDRV_RESULT, int))DLGetSymbolAddrEx(driver->m_handle, "DrvGetColumnName");
-   driver->m_fpDrvGetColumnCountUnbuffered = (int (*)(DBDRV_UNBUFFERED_RESULT))DLGetSymbolAddrEx(driver->m_handle, "DrvGetColumnCountUnbuffered");
-   driver->m_fpDrvGetColumnNameUnbuffered = (const char* (*)(DBDRV_UNBUFFERED_RESULT, int))DLGetSymbolAddrEx(driver->m_handle, "DrvGetColumnNameUnbuffered");
-   driver->m_fpDrvFreeResult = (void (*)(DBDRV_RESULT))DLGetSymbolAddrEx(driver->m_handle, "DrvFreeResult");
-   driver->m_fpDrvFreeUnbufferedResult = (void (*)(DBDRV_UNBUFFERED_RESULT))DLGetSymbolAddrEx(driver->m_handle, "DrvFreeUnbufferedResult");
-   driver->m_fpDrvBegin = (DWORD (*)(DBDRV_CONNECTION))DLGetSymbolAddrEx(driver->m_handle, "DrvBegin");
-   driver->m_fpDrvCommit = (DWORD (*)(DBDRV_CONNECTION))DLGetSymbolAddrEx(driver->m_handle, "DrvCommit");
-   driver->m_fpDrvRollback = (DWORD (*)(DBDRV_CONNECTION))DLGetSymbolAddrEx(driver->m_handle, "DrvRollback");
-   driver->m_fpDrvUnload = (void (*)(void))DLGetSymbolAddrEx(driver->m_handle, "DrvUnload");
-   driver->m_fpDrvPrepareStringA = (char* (*)(const char *))DLGetSymbolAddrEx(driver->m_handle, "DrvPrepareStringA");
-   driver->m_fpDrvPrepareStringW = (WCHAR* (*)(const WCHAR *))DLGetSymbolAddrEx(driver->m_handle, "DrvPrepareStringW");
-   driver->m_fpDrvIsTableExist = (int (*)(DBDRV_CONNECTION, const WCHAR *))DLGetSymbolAddrEx(driver->m_handle, "DrvIsTableExist");
-   if ((fpDrvInit == NULL) || (driver->m_fpDrvConnect == NULL) || (driver->m_fpDrvDisconnect == NULL) ||
-	    (driver->m_fpDrvPrepare == NULL) || (driver->m_fpDrvBind == NULL) || (driver->m_fpDrvFreeStatement == NULL) ||
-       (driver->m_fpDrvQuery == NULL) || (driver->m_fpDrvSelect == NULL) || (driver->m_fpDrvGetField == NULL) ||
-       (driver->m_fpDrvGetNumRows == NULL) || (driver->m_fpDrvFreeResult == NULL) || (driver->m_fpDrvSelectPrepared == NULL) ||
-       (driver->m_fpDrvSelectPreparedUnbuffered == NULL) || (driver->m_fpDrvUnload == NULL) ||
-       (driver->m_fpDrvSelectUnbuffered == NULL) || (driver->m_fpDrvFetch == NULL) ||
-       (driver->m_fpDrvFreeUnbufferedResult == NULL) || (driver->m_fpDrvGetFieldUnbuffered == NULL) ||
-       (driver->m_fpDrvBegin == NULL) || (driver->m_fpDrvCommit == NULL) || (driver->m_fpDrvRollback == NULL) ||
-		 (driver->m_fpDrvGetColumnCount == NULL) || (driver->m_fpDrvGetColumnName == NULL) ||
-		 (driver->m_fpDrvGetColumnCountUnbuffered == NULL) || (driver->m_fpDrvGetColumnNameUnbuffered == NULL) ||
-       (driver->m_fpDrvGetFieldLength == NULL) || (driver->m_fpDrvGetFieldLengthUnbuffered == NULL) ||
-		 (driver->m_fpDrvPrepareStringA == NULL) || (driver->m_fpDrvPrepareStringW == NULL) || (driver->m_fpDrvIsTableExist == NULL))
+	callTable = (DBDriverCallTable**)DLGetSymbolAddr(driver->m_handle, "drvCallTable", nullptr);
+   if ((callTable == nullptr) || (*callTable == nullptr))
    {
       nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_DRIVER, _T("Unable to find all required entry points in database driver \"%s\""), module);
       goto failure;
    }
+   memcpy(&driver->m_callTable, *callTable, sizeof(DBDriverCallTable));
 
    // Initialize driver
 #ifdef UNICODE
@@ -214,9 +154,9 @@ DB_DRIVER LIBNXDB_EXPORTABLE DBLoadDriver(const TCHAR *module, const TCHAR *init
    {
       mbInitParameters[0] = 0;
    }
-   if (!fpDrvInit(mbInitParameters))
+   if (!driver->m_callTable.Initialize(mbInitParameters))
 #else
-   if (!fpDrvInit(CHECK_NULL_EX(initParameters)))
+   if (!driver->callTable.Initialize(CHECK_NULL_EX(initParameters)))
 #endif
    {
       nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_DRIVER, _T("Database driver \"%s\" initialization failed"), module);
@@ -225,7 +165,7 @@ DB_DRIVER LIBNXDB_EXPORTABLE DBLoadDriver(const TCHAR *module, const TCHAR *init
 
    // Success
    driver->m_mutexReconnect = new Mutex();
-	driver->m_name = driverName;
+	driver->m_name = *driverName;
 	driver->m_refCount = 1;
    driver->m_defaultPrefetchLimit = 10;
 	s_drivers[position] = driver;
@@ -266,7 +206,7 @@ void LIBNXDB_EXPORTABLE DBUnloadDriver(DB_DRIVER driver)
 			driver->m_refCount--;
 			if (driver->m_refCount <= 0)
 			{
-				driver->m_fpDrvUnload();
+				driver->m_callTable.Unload();
 				DLClose(driver->m_handle);
 				delete driver->m_mutexReconnect;
 				MemFree(driver);

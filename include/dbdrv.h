@@ -28,16 +28,17 @@
 /**
  * API version
  */
-#define DBDRV_API_VERSION           21
+#define DBDRV_API_VERSION           30
 
 /**
- * Driver header
+ * Database driver entry point declaration
  */
-#define DECLARE_DRIVER_HEADER(name) \
+#define DB_DRIVER_ENTRY_POINT(name, callTable) \
 extern "C" __EXPORT_VAR(int drvAPIVersion); \
 extern "C" __EXPORT_VAR(const char *drvName); \
 __EXPORT_VAR(int drvAPIVersion) = DBDRV_API_VERSION; \
-__EXPORT_VAR(const char *drvName) = name;
+__EXPORT_VAR(const char *drvName) = name; \
+__EXPORT_VAR(DBDriverCallTable *drvCallTable) = &callTable;
 
 /**
  * Max error text length
@@ -47,10 +48,53 @@ __EXPORT_VAR(const char *drvName) = name;
 /**
  * Datatypes
  */
-typedef void * DBDRV_CONNECTION;
-typedef void * DBDRV_STATEMENT;
-typedef void * DBDRV_RESULT;
-typedef void * DBDRV_UNBUFFERED_RESULT;
+typedef void* DBDRV_CONNECTION;
+typedef void* DBDRV_STATEMENT;
+typedef void* DBDRV_RESULT;
+typedef void* DBDRV_UNBUFFERED_RESULT;
+
+/**
+ * Driver call table
+ */
+struct DBDriverCallTable
+{
+   bool (*Initialize)(const char*);
+   DBDRV_CONNECTION (*Connect)(const char *, const char *, const char *, const char *, const char *, WCHAR *);
+   void (*Disconnect)(DBDRV_CONNECTION);
+   bool (*SetPrefetchLimit)(DBDRV_CONNECTION, int);
+   DBDRV_STATEMENT (*Prepare)(DBDRV_CONNECTION, const WCHAR *, bool, uint32_t *, WCHAR *);
+   void (*FreeStatement)(DBDRV_STATEMENT);
+   bool (*OpenBatch)(DBDRV_STATEMENT);
+   void (*NextBatchRow)(DBDRV_STATEMENT);
+   void (*Bind)(DBDRV_STATEMENT, int, int, int, void *, int);
+   uint32_t (*Execute)(DBDRV_CONNECTION, DBDRV_STATEMENT, WCHAR *);
+   uint32_t (*Query)(DBDRV_CONNECTION, const WCHAR *, WCHAR *);
+   DBDRV_RESULT (*Select)(DBDRV_CONNECTION, const WCHAR *, uint32_t *, WCHAR *);
+   DBDRV_UNBUFFERED_RESULT (*SelectUnbuffered)(DBDRV_CONNECTION, const WCHAR *, uint32_t *, WCHAR *);
+   DBDRV_RESULT (*SelectPrepared)(DBDRV_CONNECTION, DBDRV_STATEMENT, uint32_t *, WCHAR *);
+   DBDRV_UNBUFFERED_RESULT (*SelectPreparedUnbuffered)(DBDRV_CONNECTION, DBDRV_STATEMENT, uint32_t *, WCHAR *);
+   bool (*Fetch)(DBDRV_UNBUFFERED_RESULT);
+   int32_t (*GetFieldLength)(DBDRV_RESULT, int, int);
+   int32_t (*GetFieldLengthUnbuffered)(DBDRV_UNBUFFERED_RESULT, int);
+   WCHAR* (*GetField)(DBDRV_RESULT, int, int, WCHAR *, int);
+   char* (*GetFieldUTF8)(DBDRV_RESULT, int, int, char *, int);
+   WCHAR* (*GetFieldUnbuffered)(DBDRV_UNBUFFERED_RESULT, int, WCHAR *, int);
+   char* (*GetFieldUnbufferedUTF8)(DBDRV_UNBUFFERED_RESULT, int, char *, int);
+   int (*GetNumRows)(DBDRV_RESULT);
+   void (*FreeResult)(DBDRV_RESULT);
+   void (*FreeUnbufferedResult)(DBDRV_UNBUFFERED_RESULT);
+   uint32_t (*Begin)(DBDRV_CONNECTION);
+   uint32_t (*Commit)(DBDRV_CONNECTION);
+   uint32_t (*Rollback)(DBDRV_CONNECTION);
+   void (*Unload)();
+   int (*GetColumnCount)(DBDRV_RESULT);
+   const char* (*GetColumnName)(DBDRV_RESULT, int);
+   int (*GetColumnCountUnbuffered)(DBDRV_UNBUFFERED_RESULT);
+   const char* (*GetColumnNameUnbuffered)(DBDRV_UNBUFFERED_RESULT, int);
+   WCHAR* (*PrepareStringW)(const WCHAR *);
+   char* (*PrepareStringA)(const char *);
+   int (*IsTableExist)(DBDRV_CONNECTION, const WCHAR *);
+};
 
 //
 // Error codes

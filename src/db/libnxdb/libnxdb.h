@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -43,48 +43,14 @@
 struct db_driver_t
 {
 	const char *m_name;
+	DBDriverCallTable m_callTable;
+   void (*m_fpEventHandler)(uint32_t, const WCHAR *, const WCHAR *, bool, void *);
 	int m_refCount;
 	int m_reconnect;
    int m_defaultPrefetchLimit;
 	Mutex *m_mutexReconnect;
 	HMODULE m_handle;
 	void *m_context;
-	DBDRV_CONNECTION (* m_fpDrvConnect)(const char *, const char *, const char *, const char *, const char *, WCHAR *);
-	void (* m_fpDrvDisconnect)(DBDRV_CONNECTION);
-	bool (* m_fpDrvSetPrefetchLimit)(DBDRV_CONNECTION, int);
-	DBDRV_STATEMENT (* m_fpDrvPrepare)(DBDRV_CONNECTION, const WCHAR *, bool, DWORD *, WCHAR *);
-	void (* m_fpDrvFreeStatement)(DBDRV_STATEMENT);
-	bool (* m_fpDrvOpenBatch)(DBDRV_STATEMENT);
-	void (* m_fpDrvNextBatchRow)(DBDRV_STATEMENT);
-	void (* m_fpDrvBind)(DBDRV_STATEMENT, int, int, int, void *, int);
-	DWORD (* m_fpDrvExecute)(DBDRV_CONNECTION, DBDRV_STATEMENT, WCHAR *);
-	DWORD (* m_fpDrvQuery)(DBDRV_CONNECTION, const WCHAR *, WCHAR *);
-	DBDRV_RESULT (* m_fpDrvSelect)(DBDRV_CONNECTION, const WCHAR *, DWORD *, WCHAR *);
-	DBDRV_UNBUFFERED_RESULT (* m_fpDrvSelectUnbuffered)(DBDRV_CONNECTION, const WCHAR *, DWORD *, WCHAR *);
-	DBDRV_RESULT (* m_fpDrvSelectPrepared)(DBDRV_CONNECTION, DBDRV_STATEMENT, DWORD *, WCHAR *);
-   DBDRV_UNBUFFERED_RESULT (* m_fpDrvSelectPreparedUnbuffered)(DBDRV_CONNECTION, DBDRV_STATEMENT, DWORD *, WCHAR *);
-	bool (* m_fpDrvFetch)(DBDRV_UNBUFFERED_RESULT);
-	LONG (* m_fpDrvGetFieldLength)(DBDRV_RESULT, int, int);
-	LONG (* m_fpDrvGetFieldLengthUnbuffered)(DBDRV_UNBUFFERED_RESULT, int);
-	WCHAR* (* m_fpDrvGetField)(DBDRV_RESULT, int, int, WCHAR *, int);
-	char* (* m_fpDrvGetFieldUTF8)(DBDRV_RESULT, int, int, char *, int);
-	WCHAR* (* m_fpDrvGetFieldUnbuffered)(DBDRV_UNBUFFERED_RESULT, int, WCHAR *, int);
-   char* (* m_fpDrvGetFieldUnbufferedUTF8)(DBDRV_UNBUFFERED_RESULT, int, char *, int);
-	int (* m_fpDrvGetNumRows)(DBDRV_RESULT);
-	void (* m_fpDrvFreeResult)(DBDRV_RESULT);
-	void (* m_fpDrvFreeUnbufferedResult)(DBDRV_UNBUFFERED_RESULT);
-	DWORD (* m_fpDrvBegin)(DBDRV_CONNECTION);
-	DWORD (* m_fpDrvCommit)(DBDRV_CONNECTION);
-	DWORD (* m_fpDrvRollback)(DBDRV_CONNECTION);
-	void (* m_fpDrvUnload)();
-	void (* m_fpEventHandler)(uint32_t, const WCHAR *, const WCHAR *, bool, void *);
-	int (* m_fpDrvGetColumnCount)(DBDRV_RESULT);
-	const char* (* m_fpDrvGetColumnName)(DBDRV_RESULT, int);
-	int (* m_fpDrvGetColumnCountUnbuffered)(DBDRV_UNBUFFERED_RESULT);
-	const char* (* m_fpDrvGetColumnNameUnbuffered)(DBDRV_UNBUFFERED_RESULT, int);
-	WCHAR* (* m_fpDrvPrepareStringW)(const WCHAR *);
-	char* (* m_fpDrvPrepareStringA)(const char *);
-	int (* m_fpDrvIsTableExist)(DBDRV_CONNECTION, const WCHAR *);
 };
 
 /**

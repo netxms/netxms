@@ -1,6 +1,6 @@
 /* 
-** Informix Database Driver
-** Copyright (C) 2010-2021 Raden Solutinos
+** ODBC Database Driver
+** Copyright (C) 2004-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,11 +16,11 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
+** File: informix.cpp
+**
 **/
 
 #include "informixdrv.h"
-
-DECLARE_DRIVER_HEADER("INFORMIX")
 
 /**
  * Data buffer size
@@ -30,38 +30,37 @@ DECLARE_DRIVER_HEADER("INFORMIX")
 /**
  * Convert INFORMIX state to NetXMS database error code and get error text
  */
-static DWORD GetSQLErrorInfo(SQLSMALLINT nHandleType, SQLHANDLE hHandle, WCHAR *errorText)
+static uint32_t GetSQLErrorInfo(SQLSMALLINT nHandleType, SQLHANDLE hHandle, WCHAR *errorText)
 {
-	SQLRETURN nRet;
-	SQLSMALLINT nChars;
-	DWORD dwError;
-	SQLWCHAR sqlState[32];
-
 	// Get state information and convert it to NetXMS database error code
-	nRet = SQLGetDiagFieldW(nHandleType, hHandle, 1, SQL_DIAG_SQLSTATE, sqlState, 16, &nChars);
-	if (nRet == SQL_SUCCESS)
-	{
+   uint32_t errorCode;
+   SQLSMALLINT nChars;
+   SQLWCHAR sqlState[32];
+
+   SQLRETURN nRet = SQLGetDiagFieldW(nHandleType, hHandle, 1, SQL_DIAG_SQLSTATE, sqlState, 16, &nChars);
+   if (nRet == SQL_SUCCESS)
+   {
 		if (
 			(!wcscmp(sqlState, L"08003")) ||	// Connection does not exist
 			(!wcscmp(sqlState, L"08S01")) ||	// Communication link failure
 			(!wcscmp(sqlState, L"HYT00")) ||	// Timeout expired
 			(!wcscmp(sqlState, L"HYT01")) ||	// Connection timeout expired
 			(!wcscmp(sqlState, L"08506")))	// SQL30108N: A connection failed but has been re-established.
-		{
-			dwError = DBERR_CONNECTION_LOST;
-		}
-		else
-		{
-			dwError = DBERR_OTHER_ERROR;
-		}
-	}
-	else
-	{
-		dwError = DBERR_OTHER_ERROR;
-	}
+      {
+         errorCode = DBERR_CONNECTION_LOST;
+      }
+      else
+      {
+         errorCode = DBERR_OTHER_ERROR;
+      }
+   }
+   else
+   {
+      errorCode = DBERR_OTHER_ERROR;
+   }
 
 	// Get error message
-	if (errorText != NULL)
+	if (errorText != nullptr)
 	{
 		errorText[0] = L'[';
 		wcscpy(&errorText[1], sqlState);
@@ -77,23 +76,21 @@ static DWORD GetSQLErrorInfo(SQLSMALLINT nHandleType, SQLHANDLE hHandle, WCHAR *
 		{
 			wcscpy(&errorText[pos], L"Unable to obtain description for this error");
 		}
-	}
+   }
 
-	return dwError;
+   return errorCode;
 }
 
 /**
  * Clear any pending result sets on given statement
  */
-static void ClearPendingResults(SQLHSTMT statement)
+static void ClearPendingResults(SQLHSTMT stmt)
 {
-	while(1)
+	while(true)
 	{
-		SQLRETURN rc = SQLMoreResults(statement);
+		SQLRETURN rc = SQLMoreResults(stmt);
 		if ((rc != SQL_SUCCESS) && (rc != SQL_SUCCESS_WITH_INFO))
-		{
 			break;
-		}
 	}
 }
 
@@ -169,7 +166,7 @@ extern "C" char __EXPORT *DrvPrepareStringA(const char *str)
 /**
  * Initialize driver
  */
-extern "C" bool __EXPORT DrvInit(const char *cmdLine)
+static bool Initialize(const char *options)
 {
    return true;
 }
@@ -177,7 +174,7 @@ extern "C" bool __EXPORT DrvInit(const char *cmdLine)
 /**
  * Unload handler
  */
-extern "C" void __EXPORT DrvUnload()
+static void Unload()
 {
 }
 
@@ -193,20 +190,20 @@ extern "C" DBDRV_CONNECTION __EXPORT DrvConnect(char *host, char *login, char *p
 	// Allocate our connection structure
 	pConn = (INFORMIX_CONN *)malloc(sizeof(INFORMIX_CONN));
 
-	// Allocate environment
-	iResult = SQLAllocHandle(SQL_HANDLE_ENV, SQL_NULL_HANDLE, &pConn->sqlEnv);
+   // Allocate environment
+   iResult = SQLAllocHandle(SQL_HANDLE_ENV, SQL_NULL_HANDLE, &pConn->sqlEnv);
 	if ((iResult != SQL_SUCCESS) && (iResult != SQL_SUCCESS_WITH_INFO))
 	{
 		wcscpy(errorText, L"Cannot allocate environment handle");
 		goto connect_failure_0;
 	}
 
-	// Set required ODBC version
+   // Set required ODBC version
 	iResult = SQLSetEnvAttr(pConn->sqlEnv, SQL_ATTR_ODBC_VERSION, (void *)SQL_OV_ODBC3, 0);
 	if ((iResult != SQL_SUCCESS) && (iResult != SQL_SUCCESS_WITH_INFO))
 	{
 		wcscpy(errorText, L"Call to SQLSetEnvAttr failed");
-		goto connect_failure_1;
+      goto connect_failure_1;
 	}
 
 	// Allocate connection handle, set timeout
@@ -214,7 +211,7 @@ extern "C" DBDRV_CONNECTION __EXPORT DrvConnect(char *host, char *login, char *p
 	if ((iResult != SQL_SUCCESS) && (iResult != SQL_SUCCESS_WITH_INFO))
 	{
 		wcscpy(errorText, L"Cannot allocate connection handle");
-		goto connect_failure_1;
+      goto connect_failure_1;
 	}
 	SQLSetConnectAttr(pConn->sqlConn, SQL_ATTR_LOGIN_TIMEOUT, (SQLPOINTER *)15, 0);
 	SQLSetConnectAttr(pConn->sqlConn, SQL_ATTR_CONNECTION_TIMEOUT, (SQLPOINTER *)30, 0);
@@ -280,25 +277,25 @@ extern "C" DBDRV_CONNECTION __EXPORT DrvConnect(char *host, char *login, char *p
 	if ((iResult != SQL_SUCCESS) && (iResult != SQL_SUCCESS_WITH_INFO))
 	{
 		GetSQLErrorInfo(SQL_HANDLE_DBC, pConn->sqlConn, errorText);
-		goto connect_failure_2;
+      goto connect_failure_2;
 	}
 
-	// Create mutex
-	pConn->mutexQuery = new Mutex(MutexType::NORMAL);
+   // Create mutex
+   pConn->mutexQuery = new Mutex(MutexType::NORMAL);
 
-	// Success
-	return (DBDRV_CONNECTION)pConn;
+   // Success
+   return (DBDRV_CONNECTION)pConn;
 
-	// Handle failures
+   // Handle failures
 connect_failure_2:
-	SQLFreeHandle(SQL_HANDLE_DBC, pConn->sqlConn);
+   SQLFreeHandle(SQL_HANDLE_DBC, pConn->sqlConn);
 
 connect_failure_1:
-	SQLFreeHandle(SQL_HANDLE_ENV, pConn->sqlEnv);
+   SQLFreeHandle(SQL_HANDLE_ENV, pConn->sqlEnv);
 
 connect_failure_0:
-	free(pConn);
-	return NULL;
+   MemFree(pConn);
+   return nullptr;
 }
 
 /**
@@ -1055,9 +1052,9 @@ extern "C" int __EXPORT DrvIsTableExist(INFORMIX_CONN *pConn, const WCHAR *name)
  */
 bool WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
-	if (dwReason == DLL_PROCESS_ATTACH)
-		DisableThreadLibraryCalls(hInstance);
-	return true;
+   if (dwReason == DLL_PROCESS_ATTACH)
+      DisableThreadLibraryCalls(hInstance);
+   return true;
 }
 
 #endif
