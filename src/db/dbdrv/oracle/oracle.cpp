@@ -358,7 +358,7 @@ static bool SetPrefetchLimit(DBDRV_CONNECTION connection, int limit)
 /**
  * Convert query from NetXMS portable format to native Oracle format
  */
-static UCS2CHAR *ConvertQuery(const WCHAR *query, UCS2CHAR *localBuffer, size_t bufferSize)
+static const UCS2CHAR *ConvertQuery(const WCHAR *query, UCS2CHAR *localBuffer, size_t bufferSize)
 {
    int count = NumCharsW(query, L'?');
    if (count == 0)
@@ -374,7 +374,7 @@ static UCS2CHAR *ConvertQuery(const WCHAR *query, UCS2CHAR *localBuffer, size_t 
    UCS2CHAR srcQueryBuffer[1024];
 	UCS2CHAR *srcQuery = WideStringToUCS2(query, srcQueryBuffer, 1024);
 #else
-	UCS2CHAR *srcQuery = query;
+	const UCS2CHAR *srcQuery = query;
 #endif
 
 	size_t dstQuerySize = ucs2_strlen(srcQuery) + count * 3 + 1;
@@ -382,7 +382,8 @@ static UCS2CHAR *ConvertQuery(const WCHAR *query, UCS2CHAR *localBuffer, size_t 
 
 	bool inString = false;
 	int pos = 1;
-	UCS2CHAR *src, *dst;
+   const UCS2CHAR *src;
+   UCS2CHAR *dst;
 	for(src = srcQuery, dst = dstQuery; *src != 0; src++)
 	{
 		switch(*src)
@@ -441,7 +442,7 @@ static DBDRV_STATEMENT Prepare(DBDRV_CONNECTION connection, const WCHAR *query, 
 	ORACLE_STATEMENT *stmt = nullptr;
 
 	UCS2CHAR localBuffer[1024];
-	UCS2CHAR *ucs2Query = ConvertQuery(query, localBuffer, 1024);
+	const UCS2CHAR *ucs2Query = ConvertQuery(query, localBuffer, 1024);
 
 	static_cast<ORACLE_CONN*>(connection)->mutexQueryLock->lock();
    OCIStmt *handleStmt;
@@ -473,7 +474,7 @@ static DBDRV_STATEMENT Prepare(DBDRV_CONNECTION connection, const WCHAR *query, 
 
 #if UNICODE_UCS2
 	if ((ucs2Query != query) && (ucs2Query != localBuffer))
-	   MemFree(ucs2Query);
+	   MemFree(const_cast<UCS2CHAR*>(ucs2Query));
 #else
 	FreeConvertedString(ucs2Query, localBuffer);
 #endif
@@ -1197,13 +1198,13 @@ static DBDRV_RESULT Select(DBDRV_CONNECTION connection, const WCHAR *query, uint
 	UCS2CHAR localBuffer[1024];
 	UCS2CHAR *ucs2Query = WideStringToUCS2(query, localBuffer, 1024);
 #else
-	UCS2CHAR *ucs2Query = query;
+	const UCS2CHAR *ucs2Query = query;
 #endif
 
 	auto conn = static_cast<ORACLE_CONN*>(connection);
 	conn->mutexQueryLock->lock();
 	if (IsSuccess(OCIStmtPrepare2(conn->handleService, &handleStmt, conn->handleError, (text *)ucs2Query,
-	                    (ub4)ucs2_strlen(ucs2Query) * sizeof(UCS2CHAR), NULL, 0, OCI_NTV_SYNTAX, OCI_DEFAULT)))
+	                    (ub4)ucs2_strlen(ucs2Query) * sizeof(UCS2CHAR), nullptr, 0, OCI_NTV_SYNTAX, OCI_DEFAULT)))
 	{
       OCIAttrSet(handleStmt, OCI_HTYPE_STMT, &conn->prefetchLimit, 0, OCI_ATTR_PREFETCH_ROWS, conn->handleError);
 		if (IsSuccess(OCIStmtExecute(conn->handleService, handleStmt, conn->handleError,
@@ -1448,7 +1449,7 @@ static DBDRV_UNBUFFERED_RESULT SelectUnbuffered(DBDRV_CONNECTION connection, con
    UCS2CHAR localBuffer[1024];
 	UCS2CHAR *ucs2Query = WideStringToUCS2(query, localBuffer, 1024);
 #else
-	UCS2CHAR *ucs2Query = query;
+	const UCS2CHAR *ucs2Query = query;
 #endif
 
    auto pConn = static_cast<ORACLE_CONN*>(connection);
@@ -1456,7 +1457,7 @@ static DBDRV_UNBUFFERED_RESULT SelectUnbuffered(DBDRV_CONNECTION connection, con
 
 	OCIStmt *handleStmt;
 	if (IsSuccess(OCIStmtPrepare2(pConn->handleService, &handleStmt, pConn->handleError, (text *)ucs2Query,
-	                    (ub4)ucs2_strlen(ucs2Query) * sizeof(UCS2CHAR), NULL, 0, OCI_NTV_SYNTAX, OCI_DEFAULT)))
+	                    (ub4)ucs2_strlen(ucs2Query) * sizeof(UCS2CHAR), nullptr, 0, OCI_NTV_SYNTAX, OCI_DEFAULT)))
 	{
       OCIAttrSet(handleStmt, OCI_HTYPE_STMT, &pConn->prefetchLimit, 0, OCI_ATTR_PREFETCH_ROWS, pConn->handleError);
 		if (IsSuccess(OCIStmtExecute(pConn->handleService, handleStmt, pConn->handleError,

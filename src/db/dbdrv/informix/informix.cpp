@@ -84,11 +84,11 @@ static uint32_t GetSQLErrorInfo(SQLSMALLINT nHandleType, SQLHANDLE hHandle, WCHA
 /**
  * Clear any pending result sets on given statement
  */
-static void ClearPendingResults(SQLHSTMT stmt)
+static void ClearPendingResults(SQLHSTMT statement)
 {
-	while(true)
+	while(1)
 	{
-		SQLRETURN rc = SQLMoreResults(stmt);
+		SQLRETURN rc = SQLMoreResults(statement);
 		if ((rc != SQL_SUCCESS) && (rc != SQL_SUCCESS_WITH_INFO))
 			break;
 	}
@@ -97,7 +97,7 @@ static void ClearPendingResults(SQLHSTMT stmt)
 /**
  * Prepare string for using in SQL query - enclose in quotes and escape as needed
  */
-extern "C" WCHAR __EXPORT *DrvPrepareStringW(const WCHAR *str)
+static WCHAR *PrepareStringW(const WCHAR *str)
 {
 	int len = (int)wcslen(str) + 3;   // + two quotes and \0 at the end
 	int bufferSize = len + 128;
@@ -130,7 +130,10 @@ extern "C" WCHAR __EXPORT *DrvPrepareStringW(const WCHAR *str)
 	return out;
 }
 
-extern "C" char __EXPORT *DrvPrepareStringA(const char *str)
+/**
+ * Prepare string for using in SQL query - enclose in quotes and escape as needed
+ */
+static char *PrepareStringA(const char *str)
 {
 	int len = (int)strlen(str) + 3;   // + two quotes and \0 at the end
 	int bufferSize = len + 128;
@@ -182,13 +185,12 @@ static void Unload()
  * Connect to database
  * database should be set to Informix source name. Host and schema are ignored
  */
-extern "C" DBDRV_CONNECTION __EXPORT DrvConnect(char *host, char *login, char *password, char *database, const char *schema, WCHAR *errorText)
+static DBDRV_CONNECTION Connect(const char *host, const char *login, const char *password, const char *database, const char *schema, WCHAR *errorText)
 {
 	long iResult;
-	INFORMIX_CONN *pConn;
 
 	// Allocate our connection structure
-	pConn = (INFORMIX_CONN *)malloc(sizeof(INFORMIX_CONN));
+	auto pConn = MemAllocStruct<INFORMIX_CONN>();
 
    // Allocate environment
    iResult = SQLAllocHandle(SQL_HANDLE_ENV, SQL_NULL_HANDLE, &pConn->sqlEnv);
@@ -284,7 +286,7 @@ extern "C" DBDRV_CONNECTION __EXPORT DrvConnect(char *host, char *login, char *p
    pConn->mutexQuery = new Mutex(MutexType::NORMAL);
 
    // Success
-   return (DBDRV_CONNECTION)pConn;
+   return pConn;
 
    // Handle failures
 connect_failure_2:
@@ -301,69 +303,70 @@ connect_failure_0:
 /**
  * Disconnect from database
  */
-extern "C" void __EXPORT DrvDisconnect(INFORMIX_CONN *pConn)
+static void Disconnect(DBDRV_CONNECTION connection)
 {
-	pConn->mutexQuery->lock();
-	pConn->mutexQuery->unlock();
-	SQLDisconnect(pConn->sqlConn);
-	SQLFreeHandle(SQL_HANDLE_DBC, pConn->sqlConn);
-	SQLFreeHandle(SQL_HANDLE_ENV, pConn->sqlEnv);
-	delete pConn->mutexQuery;
-	MemFree(pConn);
+   auto c = static_cast<INFORMIX_CONN*>(connection);
+   c->mutexQuery->lock();
+   c->mutexQuery->unlock();
+   SQLDisconnect(c->sqlConn);
+   SQLFreeHandle(SQL_HANDLE_DBC, c->sqlConn);
+   SQLFreeHandle(SQL_HANDLE_ENV, c->sqlEnv);
+   delete c->mutexQuery;
+   MemFree(c);
 }
 
 /**
  * Prepare statement
  */
-extern "C" DBDRV_STATEMENT __EXPORT DrvPrepare(INFORMIX_CONN *pConn, WCHAR *pwszQuery, bool optimizeForReuse, DWORD *pdwError, WCHAR *errorText)
+static DBDRV_STATEMENT Prepare(DBDRV_CONNECTION connection, const WCHAR *query, bool optimizeForReuse, uint32_t *pdwError, WCHAR *errorText)
 {
-	long iResult;
-	SQLHSTMT statement;
 	INFORMIX_STATEMENT *result;
 
-	pConn->mutexQuery->lock();
+   static_cast<INFORMIX_CONN*>(connection)->mutexQuery->lock();
 
 	// Allocate statement handle
-	iResult = SQLAllocHandle(SQL_HANDLE_STMT, pConn->sqlConn, &statement);
+   SQLHSTMT statement;
+   SQLRETURN iResult = SQLAllocHandle(SQL_HANDLE_STMT, static_cast<INFORMIX_CONN*>(connection)->sqlConn, &statement);
 	if ((iResult == SQL_SUCCESS) || (iResult == SQL_SUCCESS_WITH_INFO))
 	{
 		// Prepare statement
-		iResult = SQLPrepareW(statement, (SQLWCHAR *)pwszQuery, SQL_NTS);
+		iResult = SQLPrepareW(statement, (SQLWCHAR *)query, SQL_NTS);
 		if ((iResult == SQL_SUCCESS) || (iResult == SQL_SUCCESS_WITH_INFO))
 		{
-			result = (INFORMIX_STATEMENT *)malloc(sizeof(INFORMIX_STATEMENT));
+         result = MemAllocStruct<INFORMIX_STATEMENT>();
 			result->handle = statement;
 			result->buffers = new Array(0, 16, Ownership::True);
-			result->connection = pConn;
+			result->connection = static_cast<INFORMIX_CONN*>(connection);
 			*pdwError = DBERR_SUCCESS;
 		}
 		else
 		{
 			*pdwError = GetSQLErrorInfo(SQL_HANDLE_STMT, statement, errorText);
 			SQLFreeHandle(SQL_HANDLE_STMT, statement);
-			result = NULL;
+			result = nullptr;
 		}
 	}
 	else
 	{
-		*pdwError = GetSQLErrorInfo(SQL_HANDLE_DBC, pConn->sqlConn, errorText);
-		result = NULL;
+		*pdwError = GetSQLErrorInfo(SQL_HANDLE_DBC, static_cast<INFORMIX_CONN*>(connection)->sqlConn, errorText);
+		result = nullptr;
 	}
 
-	pConn->mutexQuery->unlock();
+   static_cast<INFORMIX_CONN*>(connection)->mutexQuery->unlock();
 	return result;
 }
 
 /**
  * Bind parameter to statement
  */
-extern "C" void __EXPORT DrvBind(INFORMIX_STATEMENT *statement, int pos, int sqlType, int cType, void *buffer, int allocType)
+static void Bind(DBDRV_STATEMENT hStmt, int pos, int sqlType, int cType, void *buffer, int allocType)
 {
 	static SQLSMALLINT odbcSqlType[] = { SQL_VARCHAR, SQL_INTEGER, SQL_BIGINT, SQL_DOUBLE, SQL_LONGVARCHAR };
 	static SQLSMALLINT odbcCType[] = { SQL_C_WCHAR, SQL_C_SLONG, SQL_C_ULONG, SQL_C_SBIGINT, SQL_C_UBIGINT, SQL_C_DOUBLE, SQL_C_WCHAR };
-	static DWORD bufferSize[] = { 0, sizeof(LONG), sizeof(DWORD), sizeof(INT64), sizeof(QWORD), sizeof(double), 0 };
+	static size_t bufferSize[] = { 0, sizeof(int32_t), sizeof(uint32_t), sizeof(int64_t), sizeof(uint64_t), sizeof(double), 0 };
 
-	int length = (cType == DB_CTYPE_STRING) ? (int)wcslen((WCHAR *)buffer) + 1 : 0;
+   auto statement = static_cast<INFORMIX_STATEMENT*>(hStmt);
+   int length = (cType == DB_CTYPE_STRING) ? (int)wcslen((WCHAR *)buffer) + 1 : 0;
 
 	SQLPOINTER sqlBuffer;
 	switch(allocType)
@@ -409,47 +412,42 @@ extern "C" void __EXPORT DrvBind(INFORMIX_STATEMENT *statement, int pos, int sql
 			return;	// Invalid call
 	}
 	SQLBindParameter(statement->handle, pos, SQL_PARAM_INPUT, odbcCType[cType], odbcSqlType[sqlType],
-	                 ((cType == DB_CTYPE_STRING) || (cType == DB_CTYPE_UTF8_STRING)) ? length : 0, 0, sqlBuffer, 0, NULL);
+	                 ((cType == DB_CTYPE_STRING) || (cType == DB_CTYPE_UTF8_STRING)) ? length : 0, 0, sqlBuffer, 0, nullptr);
 }
 
 /**
  * Execute prepared statement
  */
-extern "C" DWORD __EXPORT DrvExecute(INFORMIX_CONN *pConn, INFORMIX_STATEMENT *statement, WCHAR *errorText)
+static uint32_t Execute(DBDRV_CONNECTION connection, DBDRV_STATEMENT hStmt, WCHAR *errorText)
 {
-	DWORD dwResult;
+	uint32_t dwResult;
 
-	pConn->mutexQuery->lock();
-	long rc = SQLExecute(statement->handle);
+   static_cast<INFORMIX_CONN*>(connection)->mutexQuery->lock();
+   SQLHSTMT handle = static_cast<INFORMIX_STATEMENT*>(hStmt)->handle;
+   long rc = SQLExecute(handle);
 	if (
 		(rc == SQL_SUCCESS) ||
 		(rc == SQL_SUCCESS_WITH_INFO) ||
 		(rc == SQL_NO_DATA))
 	{
-		ClearPendingResults(statement->handle);
+		ClearPendingResults(handle);
 		dwResult = DBERR_SUCCESS;
 	}
 	else
 	{
-		dwResult = GetSQLErrorInfo(SQL_HANDLE_STMT, statement->handle, errorText);
+		dwResult = GetSQLErrorInfo(SQL_HANDLE_STMT, handle, errorText);
 	}
-	pConn->mutexQuery->unlock();
+   static_cast<INFORMIX_CONN*>(connection)->mutexQuery->unlock();
 	return dwResult;
 }
 
-
-//
-// Destroy prepared statement
-//
-
-extern "C" void __EXPORT DrvFreeStatement(INFORMIX_STATEMENT *statement)
+/**
+ * Destroy prepared statement
+ */
+static void FreeStatement(DBDRV_STATEMENT hStmt)
 {
-	if (statement == NULL)
-	{
-		return;
-	}
-
-	statement->connection->mutexQuery->lock();
+   auto statement = static_cast<INFORMIX_STATEMENT*>(hStmt);
+   statement->connection->mutexQuery->lock();
 	SQLFreeHandle(SQL_HANDLE_STMT, statement->handle);
 	statement->connection->mutexQuery->unlock();
 	delete statement->buffers;
@@ -459,19 +457,19 @@ extern "C" void __EXPORT DrvFreeStatement(INFORMIX_STATEMENT *statement)
 /**
  * Perform non-SELECT query
  */
-extern "C" DWORD __EXPORT DrvQuery(INFORMIX_CONN *pConn, WCHAR *pwszQuery, WCHAR *errorText)
+static uint32_t Query(DBDRV_CONNECTION connection, const WCHAR *query, WCHAR *errorText)
 {
-	DWORD dwResult;
+	uint32_t dwResult;
 
-	pConn->mutexQuery->lock();
+   static_cast<INFORMIX_CONN*>(connection)->mutexQuery->lock();
 
 	// Allocate statement handle
    SQLHSTMT sqlStatement;
-	SQLRETURN iResult = SQLAllocHandle(SQL_HANDLE_STMT, pConn->sqlConn, &sqlStatement);
+	SQLRETURN iResult = SQLAllocHandle(SQL_HANDLE_STMT, static_cast<INFORMIX_CONN*>(connection)->sqlConn, &sqlStatement);
 	if ((iResult == SQL_SUCCESS) || (iResult == SQL_SUCCESS_WITH_INFO))
 	{
 		// Execute statement
-		iResult = SQLExecDirectW(sqlStatement, (SQLWCHAR *)pwszQuery, SQL_NTS);
+		iResult = SQLExecDirectW(sqlStatement, (SQLWCHAR *)query, SQL_NTS);
 		if ((iResult == SQL_SUCCESS) || (iResult == SQL_SUCCESS_WITH_INFO) || (iResult == SQL_NO_DATA))
 		{
 			dwResult = DBERR_SUCCESS;
@@ -484,10 +482,10 @@ extern "C" DWORD __EXPORT DrvQuery(INFORMIX_CONN *pConn, WCHAR *pwszQuery, WCHAR
 	}
 	else
 	{
-		dwResult = GetSQLErrorInfo(SQL_HANDLE_DBC, pConn->sqlConn, errorText);
+		dwResult = GetSQLErrorInfo(SQL_HANDLE_DBC, static_cast<INFORMIX_CONN*>(connection)->sqlConn, errorText);
 	}
 
-	pConn->mutexQuery->unlock();
+   static_cast<INFORMIX_CONN*>(connection)->mutexQuery->unlock();
 	return dwResult;
 }
 
@@ -497,26 +495,22 @@ extern "C" DWORD __EXPORT DrvQuery(INFORMIX_CONN *pConn, WCHAR *pwszQuery, WCHAR
 static INFORMIX_QUERY_RESULT *ProcessSelectResults(SQLHSTMT statement)
 {
 	// Allocate result buffer and determine column info
-	INFORMIX_QUERY_RESULT *pResult = (INFORMIX_QUERY_RESULT *)malloc(sizeof(INFORMIX_QUERY_RESULT));
+	INFORMIX_QUERY_RESULT *pResult = MemAllocStruct<INFORMIX_QUERY_RESULT>();
 	short wNumCols;
 	SQLNumResultCols(statement, &wNumCols);
 	pResult->numColumns = wNumCols;
-	pResult->numRows = 0;
-	pResult->values = NULL;
 
-	BYTE *pDataBuffer = (BYTE *)malloc(DATA_BUFFER_SIZE * sizeof(wchar_t));
+	BYTE *pDataBuffer = (BYTE *)MemAlloc(DATA_BUFFER_SIZE * sizeof(wchar_t));
 
 	// Get column names
-	pResult->columnNames = (char **)malloc(sizeof(char *) * pResult->numColumns);
+	pResult->columnNames = MemAllocArray<char*>(pResult->numColumns);
 	for(int i = 0; i < (int)pResult->numColumns; i++)
 	{
 		char name[256];
 		SQLSMALLINT len;
 
-		SQLRETURN iResult = SQLColAttribute(statement, (SQLSMALLINT)(i + 1), SQL_DESC_NAME, (SQLPOINTER)name, 256, &len, NULL); 
-		if (
-			(iResult == SQL_SUCCESS) || 
-			(iResult == SQL_SUCCESS_WITH_INFO))
+		SQLRETURN iResult = SQLColAttribute(statement, (SQLSMALLINT)(i + 1), SQL_DESC_NAME, (SQLPOINTER)name, 256, &len, nullptr); 
+		if ((iResult == SQL_SUCCESS) || (iResult == SQL_SUCCESS_WITH_INFO))
 		{
 			name[len] = 0;
 			pResult->columnNames[i] = MemCopyStringA(name);
@@ -533,7 +527,7 @@ static INFORMIX_QUERY_RESULT *ProcessSelectResults(SQLHSTMT statement)
 	while(iResult = SQLFetch(statement), (iResult == SQL_SUCCESS) || (iResult == SQL_SUCCESS_WITH_INFO))
 	{
 		pResult->numRows++;
-		pResult->values = (WCHAR **)realloc(pResult->values, sizeof(WCHAR *) * (pResult->numRows * pResult->numColumns));
+		pResult->values = MemRealloc(pResult->values, sizeof(WCHAR *) * (pResult->numRows * pResult->numColumns));
 		for(int i = 1; i <= (int)pResult->numColumns; i++)
 		{
 			SQLLEN iDataSize;
@@ -551,84 +545,81 @@ static INFORMIX_QUERY_RESULT *ProcessSelectResults(SQLHSTMT statement)
 		}
 	}
 
-	free(pDataBuffer);
+	MemFree(pDataBuffer);
 	return pResult;
 }
 
 /**
  * Perform SELECT query
  */
-extern "C" DBDRV_RESULT __EXPORT DrvSelect(INFORMIX_CONN *pConn, WCHAR *pwszQuery, DWORD *pdwError, WCHAR *errorText)
+static DBDRV_RESULT Select(DBDRV_CONNECTION connection, const WCHAR *query, uint32_t *errorCode, WCHAR *errorText)
 {
 	INFORMIX_QUERY_RESULT *pResult = NULL;
 
-	pConn->mutexQuery->lock();
+   static_cast<INFORMIX_CONN*>(connection)->mutexQuery->lock();
 
 	// Allocate statement handle
    SQLHSTMT sqlStatement;
-	SQLRETURN iResult = SQLAllocHandle(SQL_HANDLE_STMT, pConn->sqlConn, &sqlStatement);
+	SQLRETURN iResult = SQLAllocHandle(SQL_HANDLE_STMT, static_cast<INFORMIX_CONN*>(connection)->sqlConn, &sqlStatement);
 	if ((iResult == SQL_SUCCESS) || (iResult == SQL_SUCCESS_WITH_INFO))
 	{
 		// Execute statement
-		iResult = SQLExecDirectW(sqlStatement, (SQLWCHAR *)pwszQuery, SQL_NTS);
+		iResult = SQLExecDirectW(sqlStatement, (SQLWCHAR *)query, SQL_NTS);
 		if (
 			(iResult == SQL_SUCCESS) || 
 			(iResult == SQL_SUCCESS_WITH_INFO))
 		{
 			pResult = ProcessSelectResults(sqlStatement);
-			*pdwError = DBERR_SUCCESS;
+			*errorCode = DBERR_SUCCESS;
 		}
 		else
 		{
-			*pdwError = GetSQLErrorInfo(SQL_HANDLE_STMT, sqlStatement, errorText);
+			*errorCode = GetSQLErrorInfo(SQL_HANDLE_STMT, sqlStatement, errorText);
 		}
 		SQLFreeHandle(SQL_HANDLE_STMT, sqlStatement);
 	}
 	else
 	{
-		*pdwError = GetSQLErrorInfo(SQL_HANDLE_DBC, pConn->sqlConn, errorText);
+		*errorCode = GetSQLErrorInfo(SQL_HANDLE_DBC, static_cast<INFORMIX_CONN*>(connection)->sqlConn, errorText);
 	}
 
-	pConn->mutexQuery->unlock();
+   static_cast<INFORMIX_CONN*>(connection)->mutexQuery->unlock();
 	return pResult;
 }
 
 /**
  * Perform SELECT query using prepared statement
  */
-extern "C" DBDRV_RESULT __EXPORT DrvSelectPrepared(INFORMIX_CONN *pConn, INFORMIX_STATEMENT *statement, DWORD *pdwError, WCHAR *errorText)
+static DBDRV_RESULT SelectPrepared(DBDRV_CONNECTION connection, DBDRV_STATEMENT hStmt, uint32_t *errorCode, WCHAR *errorText)
 {
-	INFORMIX_QUERY_RESULT *pResult = NULL;
-
-	pConn->mutexQuery->lock();
-	long rc = SQLExecute(statement->handle);
+	INFORMIX_QUERY_RESULT *pResult = nullptr;
+   static_cast<INFORMIX_CONN*>(connection)->mutexQuery->lock();
+   SQLHSTMT handle = static_cast<INFORMIX_STATEMENT*>(hStmt)->handle;
+	long rc = SQLExecute(handle);
 	if ((rc == SQL_SUCCESS) || (rc == SQL_SUCCESS_WITH_INFO))
 	{
-		pResult = ProcessSelectResults(statement->handle);
-		*pdwError = DBERR_SUCCESS;
+		pResult = ProcessSelectResults(handle);
+		*errorCode = DBERR_SUCCESS;
 	}
 	else
 	{
-		*pdwError = GetSQLErrorInfo(SQL_HANDLE_STMT, statement->handle, errorText);
+		*errorCode = GetSQLErrorInfo(SQL_HANDLE_STMT, handle, errorText);
 	}
-	pConn->mutexQuery->unlock();
+   static_cast<INFORMIX_CONN*>(connection)->mutexQuery->unlock();
 	return pResult;
 }
 
 /**
  * Get field length from result
  */
-extern "C" LONG __EXPORT DrvGetFieldLength(INFORMIX_QUERY_RESULT *pResult, int iRow, int iColumn)
+static int32_t GetFieldLength(DBDRV_RESULT hResult, int iRow, int iColumn)
 {
-	LONG nLen = -1;
-
-	if (pResult != NULL)
+   auto result = static_cast<INFORMIX_QUERY_RESULT*>(hResult);
+	int32_t nLen = -1;
+	if ((iRow < result->numRows) && (iRow >= 0) &&
+			(iColumn < result->numColumns) && (iColumn >= 0))
 	{
-		if ((iRow < pResult->numRows) && (iRow >= 0) &&
-				(iColumn < pResult->numColumns) && (iColumn >= 0))
-		{
-			nLen = (LONG)wcslen(pResult->values[iRow * pResult->numColumns + iColumn]);
-		}
+		nLen =static_cast<int32_t>(wcslen(result->values[iRow * result->numColumns + iColumn]));
 	}
 	return nLen;
 }
@@ -636,116 +627,102 @@ extern "C" LONG __EXPORT DrvGetFieldLength(INFORMIX_QUERY_RESULT *pResult, int i
 /**
  * Get field value from result
  */
-extern "C" WCHAR __EXPORT *DrvGetField(INFORMIX_QUERY_RESULT *pResult, int iRow, int iColumn,
-		WCHAR *pBuffer, int nBufSize)
+static WCHAR *GetField(DBDRV_RESULT hResult, int iRow, int iColumn, WCHAR *pBuffer, int nBufSize)
 {
-	WCHAR *pValue = NULL;
-
-	if (pResult != NULL)
+   auto result = static_cast<INFORMIX_QUERY_RESULT*>(hResult);
+	WCHAR *pValue = nullptr;
+	if ((iRow < result->numRows) && (iRow >= 0) &&
+			(iColumn < result->numColumns) && (iColumn >= 0))
 	{
-		if ((iRow < pResult->numRows) && (iRow >= 0) &&
-				(iColumn < pResult->numColumns) && (iColumn >= 0))
-		{
 #ifdef _WIN32
-			wcsncpy_s(pBuffer, nBufSize, pResult->values[iRow * pResult->numColumns + iColumn], _TRUNCATE);
+		wcsncpy_s(pBuffer, nBufSize, result->values[iRow * result->numColumns + iColumn], _TRUNCATE);
 #else
-			wcsncpy(pBuffer, pResult->values[iRow * pResult->numColumns + iColumn], nBufSize);
-			pBuffer[nBufSize - 1] = 0;
+		wcsncpy(pBuffer, result->values[iRow * result->numColumns + iColumn], nBufSize);
+		pBuffer[nBufSize - 1] = 0;
 #endif
-			pValue = pBuffer;
-		}
+		pValue = pBuffer;
 	}
 	return pValue;
 }
 
-
-//
-// Get number of rows in result
-//
-
-extern "C" int __EXPORT DrvGetNumRows(INFORMIX_QUERY_RESULT *pResult)
+/**
+ * Get number of rows in result
+ */
+static int GetNumRows(DBDRV_RESULT hResult)
 {
-	return (pResult != NULL) ? pResult->numRows : 0;
+	return static_cast<INFORMIX_QUERY_RESULT*>(hResult)->numRows;
 }
 
-
-//
-// Get column count in query result
-//
-
-extern "C" int __EXPORT DrvGetColumnCount(INFORMIX_QUERY_RESULT *pResult)
+/**
+ * Get column count in query result
+ */
+static int GetColumnCount(DBDRV_RESULT hResult)
 {
-	return (pResult != NULL) ? pResult->numColumns : 0;
+	return static_cast<INFORMIX_QUERY_RESULT*>(hResult)->numColumns;
 }
 
 /**
  * Get column name in query result
  */
-extern "C" const char __EXPORT *DrvGetColumnName(INFORMIX_QUERY_RESULT *pResult, int column)
+static const char *GetColumnName(DBDRV_RESULT hResult, int column)
 {
-	return ((pResult != NULL) && (column >= 0) && (column < pResult->numColumns)) ? pResult->columnNames[column] : NULL;
+	return ((column >= 0) && (column < static_cast<INFORMIX_QUERY_RESULT*>(hResult)->numColumns)) ? static_cast<INFORMIX_QUERY_RESULT*>(hResult)->columnNames[column] : nullptr;
 }
 
 /**
  * Free SELECT results
  */
-extern "C" void __EXPORT DrvFreeResult(INFORMIX_QUERY_RESULT *pResult)
+static void FreeResult(DBDRV_RESULT hResult)
 {
-	if (pResult == NULL)
-      return;
+   auto result = static_cast<INFORMIX_QUERY_RESULT*>(hResult);
 
-	int i, iNumValues;
-
-	iNumValues = pResult->numColumns * pResult->numRows;
-	for(i = 0; i < iNumValues; i++)
+	int count = result->numColumns * result->numRows;
+	for(int i = 0; i < count; i++)
 	{
-		free(pResult->values[i]);
+		MemFree(result->values[i]);
 	}
-	free(pResult->values);
+	MemFree(result->values);
 
-	for(i = 0; i < pResult->numColumns; i++)
+	for(int i = 0; i < result->numColumns; i++)
 	{
-		free(pResult->columnNames[i]);
+		MemFree(result->columnNames[i]);
 	}
-	free(pResult->columnNames);
-
-	free(pResult);
+	MemFree(result->columnNames);
+	MemFree(result);
 }
 
 /**
  * Perform unbuffered SELECT query
  */
-extern "C" DBDRV_UNBUFFERED_RESULT __EXPORT DrvSelectUnbuffered(INFORMIX_CONN *pConn, WCHAR *pwszQuery, DWORD *pdwError, WCHAR *errorText)
+static DBDRV_UNBUFFERED_RESULT SelectUnbuffered(DBDRV_CONNECTION connection, const WCHAR *query, uint32_t *errorCode, WCHAR *errorText)
 {
-	INFORMIX_UNBUFFERED_QUERY_RESULT *pResult = NULL;
-	long iResult;
-	short wNumCols;
-	int i;
+	INFORMIX_UNBUFFERED_QUERY_RESULT *pResult = nullptr;
 
-	pConn->mutexQuery->lock();
+   static_cast<INFORMIX_CONN*>(connection)->mutexQuery->lock();
 
 	// Allocate statement handle
    SQLHSTMT sqlStatement;
-	iResult = SQLAllocHandle(SQL_HANDLE_STMT, pConn->sqlConn, &sqlStatement);
+	SQLRETURN iResult = SQLAllocHandle(SQL_HANDLE_STMT, static_cast<INFORMIX_CONN*>(connection)->sqlConn, &sqlStatement);
 	if ((iResult == SQL_SUCCESS) || (iResult == SQL_SUCCESS_WITH_INFO))
 	{
 		// Execute statement
-		iResult = SQLExecDirectW(sqlStatement, (SQLWCHAR *)pwszQuery, SQL_NTS);
+		iResult = SQLExecDirectW(sqlStatement, (SQLWCHAR *)query, SQL_NTS);
 		if ((iResult == SQL_SUCCESS) || (iResult == SQL_SUCCESS_WITH_INFO))
 		{
 			// Allocate result buffer and determine column info
-			pResult = (INFORMIX_UNBUFFERED_QUERY_RESULT *)malloc(sizeof(INFORMIX_UNBUFFERED_QUERY_RESULT));
+         pResult = MemAllocStruct<INFORMIX_UNBUFFERED_QUERY_RESULT>();
          pResult->sqlStatement = sqlStatement;
          pResult->isPrepared = false;
          
+         short wNumCols;
          SQLNumResultCols(sqlStatement, &wNumCols);
 			pResult->numColumns = wNumCols;
-			pResult->pConn = pConn;
+			pResult->pConn = static_cast<INFORMIX_CONN*>(connection);
 			pResult->noMoreRows = false;
 
 			// Get column names
 			pResult->columnNames = (char **)malloc(sizeof(char *) * pResult->numColumns);
-			for(i = 0; i < pResult->numColumns; i++)
+			for(int i = 0; i < pResult->numColumns; i++)
 			{
 				SQLWCHAR name[256];
 				SQLSMALLINT len;
@@ -764,23 +741,23 @@ extern "C" DBDRV_UNBUFFERED_RESULT __EXPORT DrvSelectUnbuffered(INFORMIX_CONN *p
 				}
 			}
 
-			*pdwError = DBERR_SUCCESS;
+			*errorCode = DBERR_SUCCESS;
 		}
 		else
 		{
-			*pdwError = GetSQLErrorInfo(SQL_HANDLE_STMT, sqlStatement, errorText);
+			*errorCode = GetSQLErrorInfo(SQL_HANDLE_STMT, sqlStatement, errorText);
 			// Free statement handle if query failed
 			SQLFreeHandle(SQL_HANDLE_STMT, sqlStatement);
 		}
 	}
 	else
 	{
-		*pdwError = GetSQLErrorInfo(SQL_HANDLE_DBC, pConn->sqlConn, errorText);
+		*errorCode = GetSQLErrorInfo(SQL_HANDLE_DBC, static_cast<INFORMIX_CONN*>(connection)->sqlConn, errorText);
 	}
 
-	if (pResult == NULL) // Unlock mutex if query has failed
+	if (pResult == nullptr) // Unlock mutex if query has failed
 	{
-		pConn->mutexQuery->unlock();
+      static_cast<INFORMIX_CONN*>(connection)->mutexQuery->unlock();
 	}
 	return pResult;
 }
@@ -788,27 +765,28 @@ extern "C" DBDRV_UNBUFFERED_RESULT __EXPORT DrvSelectUnbuffered(INFORMIX_CONN *p
 /**
  * Perform unbuffered SELECT query using prepared statement
  */
-extern "C" DBDRV_UNBUFFERED_RESULT __EXPORT DrvSelectPreparedUnbuffered(INFORMIX_CONN *pConn, INFORMIX_STATEMENT *stmt, DWORD *pdwError, WCHAR *errorText)
+static DBDRV_UNBUFFERED_RESULT SelectPreparedUnbuffered(DBDRV_CONNECTION connection, DBDRV_STATEMENT hStmt, uint32_t *errorCode, WCHAR *errorText)
 {
    INFORMIX_UNBUFFERED_QUERY_RESULT *pResult = NULL;
 
-   pConn->mutexQuery->lock();
-	SQLRETURN rc = SQLExecute(stmt->handle);
+   static_cast<INFORMIX_CONN*>(connection)->mutexQuery->lock();
+   SQLHSTMT handle = static_cast<INFORMIX_STATEMENT*>(hStmt)->handle;
+   SQLRETURN rc = SQLExecute(handle);
    if ((rc == SQL_SUCCESS) || (rc == SQL_SUCCESS_WITH_INFO))
    {
       // Allocate result buffer and determine column info
       pResult = (INFORMIX_UNBUFFERED_QUERY_RESULT *)malloc(sizeof(INFORMIX_UNBUFFERED_QUERY_RESULT));
-      pResult->sqlStatement = stmt->handle;
+      pResult->sqlStatement = handle;
       pResult->isPrepared = true;
       
       short wNumCols;
       SQLNumResultCols(pResult->sqlStatement, &wNumCols);
       pResult->numColumns = wNumCols;
-      pResult->pConn = pConn;
+      pResult->pConn = static_cast<INFORMIX_CONN*>(connection);
       pResult->noMoreRows = false;
 
 		// Get column names
-		pResult->columnNames = (char **)malloc(sizeof(char *) * pResult->numColumns);
+		pResult->columnNames = MemAllocArray<char*>(pResult->numColumns);
 		for(int i = 0; i < pResult->numColumns; i++)
 		{
 			SQLWCHAR name[256];
@@ -826,35 +804,29 @@ extern "C" DBDRV_UNBUFFERED_RESULT __EXPORT DrvSelectPreparedUnbuffered(INFORMIX
 			}
 		}
 
-      *pdwError = DBERR_SUCCESS;
+      *errorCode = DBERR_SUCCESS;
    }
    else
    {
-		*pdwError = GetSQLErrorInfo(SQL_HANDLE_STMT, stmt->handle, errorText);
+		*errorCode = GetSQLErrorInfo(SQL_HANDLE_STMT, handle, errorText);
    }
 
-   if (pResult == NULL) // Unlock mutex if query has failed
-      pConn->mutexQuery->unlock();
+   if (pResult == nullptr) // Unlock mutex if query has failed
+      static_cast<INFORMIX_CONN*>(connection)->mutexQuery->unlock();
 	return pResult;
 }
 
 /**
  * Fetch next result line from unbuffered SELECT results
  */
-extern "C" bool __EXPORT DrvFetch(INFORMIX_UNBUFFERED_QUERY_RESULT *pResult)
+static bool Fetch(DBDRV_UNBUFFERED_RESULT hResult)
 {
 	bool bResult = false;
-
-	if (pResult != NULL)
+	long iResult = SQLFetch(static_cast<INFORMIX_UNBUFFERED_QUERY_RESULT*>(hResult)->sqlStatement);
+	bResult = ((iResult == SQL_SUCCESS) || (iResult == SQL_SUCCESS_WITH_INFO));
+	if (!bResult)
 	{
-		long iResult;
-
-		iResult = SQLFetch(pResult->sqlStatement);
-		bResult = ((iResult == SQL_SUCCESS) || (iResult == SQL_SUCCESS_WITH_INFO));
-		if (!bResult)
-		{
-			pResult->noMoreRows = true;
-		}
+      static_cast<INFORMIX_UNBUFFERED_QUERY_RESULT*>(hResult)->noMoreRows = true;
 	}
 	return bResult;
 }
@@ -862,21 +834,17 @@ extern "C" bool __EXPORT DrvFetch(INFORMIX_UNBUFFERED_QUERY_RESULT *pResult)
 /**
  * Get field length from unbuffered query result
  */
-extern "C" LONG __EXPORT DrvGetFieldLengthUnbuffered(INFORMIX_UNBUFFERED_QUERY_RESULT *pResult, int iColumn)
+static int32_t GetFieldLengthUnbuffered(DBDRV_UNBUFFERED_RESULT hResult, int column)
 {
-	LONG nLen = -1;
-
-	if (pResult != NULL)
+	int32_t nLen = -1;
+	if ((column < static_cast<INFORMIX_UNBUFFERED_QUERY_RESULT*>(hResult)->numColumns) && (column >= 0))
 	{
-		if ((iColumn < pResult->numColumns) && (iColumn >= 0))
+		SQLLEN dataSize;
+		char temp[1];
+		long rc = SQLGetData(static_cast<INFORMIX_UNBUFFERED_QUERY_RESULT*>(hResult)->sqlStatement, (short)column + 1, SQL_C_CHAR, temp, 0, &dataSize);
+		if ((rc == SQL_SUCCESS) || (rc == SQL_SUCCESS_WITH_INFO))
 		{
-			SQLLEN dataSize;
-			char temp[1];
-			long rc = SQLGetData(pResult->sqlStatement, (short)iColumn + 1, SQL_C_CHAR, temp, 0, &dataSize);
-			if ((rc == SQL_SUCCESS) || (rc == SQL_SUCCESS_WITH_INFO))
-			{
-				nLen = (LONG)dataSize;
-			}
+			nLen = static_cast<int32_t>(dataSize);
 		}
 	}
 	return nLen;
@@ -885,29 +853,23 @@ extern "C" LONG __EXPORT DrvGetFieldLengthUnbuffered(INFORMIX_UNBUFFERED_QUERY_R
 /**
  * Get field from current row in unbuffered query result
  */
-extern "C" WCHAR __EXPORT *DrvGetFieldUnbuffered(INFORMIX_UNBUFFERED_QUERY_RESULT *pResult, int iColumn, WCHAR *pBuffer, int iBufSize)
+static WCHAR *GetFieldUnbuffered(DBDRV_UNBUFFERED_RESULT hResult, int iColumn, WCHAR *pBuffer, int iBufSize)
 {
-	SQLLEN iDataSize;
+   auto result = static_cast<INFORMIX_UNBUFFERED_QUERY_RESULT*>(hResult);
+
+   // Check if there are valid fetched row
+   if (result->noMoreRows)
+      return nullptr;
+
+   SQLLEN iDataSize;
 	long iResult;
 
-	// Check if we have valid result handle
-	if (pResult == NULL)
-	{
-		return NULL;
-	}
-
-	// Check if there are valid fetched row
-	if (pResult->noMoreRows)
-	{
-		return NULL;
-	}
-
-	if ((iColumn >= 0) && (iColumn < pResult->numColumns))
+	if ((iColumn >= 0) && (iColumn < result->numColumns))
 	{
 		// At least on HP-UX driver expects length in chars, not bytes
 		// otherwise it crashes
 		// TODO: check other platforms
-		iResult = SQLGetData(pResult->sqlStatement, (short)iColumn + 1, SQL_C_WCHAR, pBuffer, iBufSize, &iDataSize);
+		iResult = SQLGetData(result->sqlStatement, (short)iColumn + 1, SQL_C_WCHAR, pBuffer, iBufSize, &iDataSize);
 		if (((iResult != SQL_SUCCESS) && (iResult != SQL_SUCCESS_WITH_INFO)) || (iDataSize == SQL_NULL_DATA))
 		{
 			pBuffer[0] = 0;
@@ -923,127 +885,150 @@ extern "C" WCHAR __EXPORT *DrvGetFieldUnbuffered(INFORMIX_UNBUFFERED_QUERY_RESUL
 /**
  * Get column count in unbuffered query result
  */
-extern "C" int __EXPORT DrvGetColumnCountUnbuffered(INFORMIX_UNBUFFERED_QUERY_RESULT *pResult)
+static int GetColumnCountUnbuffered(DBDRV_UNBUFFERED_RESULT hResult)
 {
-	return (pResult != NULL) ? pResult->numColumns : 0;
+	return static_cast<INFORMIX_UNBUFFERED_QUERY_RESULT*>(hResult)->numColumns;
 }
 
 /**
  * Get column name in unbuffered query result
  */
-extern "C" const char __EXPORT *DrvGetColumnNameUnbuffered(INFORMIX_UNBUFFERED_QUERY_RESULT *pResult, int column)
+static const char *GetColumnNameUnbuffered(DBDRV_UNBUFFERED_RESULT hResult, int column)
 {
-	return ((pResult != NULL) && (column >= 0) && (column < pResult->numColumns)) ? pResult->columnNames[column] : NULL;
+	return ((column >= 0) && (column < static_cast<INFORMIX_UNBUFFERED_QUERY_RESULT*>(hResult)->numColumns)) ? static_cast<INFORMIX_UNBUFFERED_QUERY_RESULT*>(hResult)->columnNames[column] : nullptr;
 }
 
 /**
  * Destroy result of unbuffered query
  */
-extern "C" void __EXPORT DrvFreeUnbufferedResult(INFORMIX_UNBUFFERED_QUERY_RESULT *pResult)
+static void FreeUnbufferedResult(DBDRV_UNBUFFERED_RESULT hResult)
 {
-	if (pResult == NULL)
-      return;
+   auto result = static_cast<INFORMIX_UNBUFFERED_QUERY_RESULT*>(hResult);
 
-   if (pResult->isPrepared)
-   	SQLCloseCursor(pResult->sqlStatement);
+   if (result->isPrepared)
+      SQLCloseCursor(result->sqlStatement);
    else
-	   SQLFreeHandle(SQL_HANDLE_STMT, pResult->sqlStatement);
-	pResult->pConn->mutexQuery->unlock();
+      SQLFreeHandle(SQL_HANDLE_STMT, result->sqlStatement);
+   result->pConn->mutexQuery->unlock();
 
-   for(int i = 0; i < pResult->numColumns; i++)
+   for(int i = 0; i < result->numColumns; i++)
 	{
-		free(pResult->columnNames[i]);
+		MemFree(result->columnNames[i]);
 	}
-	free(pResult->columnNames);
+	MemFree(result->columnNames);
 
-   free(pResult);
+   MemFree(result);
 }
 
 /**
  * Begin transaction
  */
-extern "C" DWORD __EXPORT DrvBegin(INFORMIX_CONN *pConn)
+static uint32_t Begin(DBDRV_CONNECTION connection)
 {
-	SQLRETURN nRet;
-	DWORD dwResult;
-
-	if (pConn == NULL)
-	{
-		return DBERR_INVALID_HANDLE;
-	}
-
-	pConn->mutexQuery->lock();
-	nRet = SQLSetConnectAttr(pConn->sqlConn, SQL_ATTR_AUTOCOMMIT, (SQLPOINTER)SQL_AUTOCOMMIT_OFF, 0);
+	uint32_t dwResult;
+   static_cast<INFORMIX_CONN*>(connection)->mutexQuery->lock();
+   SQLRETURN nRet = SQLSetConnectAttr(static_cast<INFORMIX_CONN*>(connection)->sqlConn, SQL_ATTR_AUTOCOMMIT, (SQLPOINTER)SQL_AUTOCOMMIT_OFF, 0);
 	if ((nRet == SQL_SUCCESS) || (nRet == SQL_SUCCESS_WITH_INFO))
 	{
 		dwResult = DBERR_SUCCESS;
 	}
 	else
 	{
-		dwResult = GetSQLErrorInfo(SQL_HANDLE_DBC, pConn->sqlConn, NULL);
+		dwResult = GetSQLErrorInfo(SQL_HANDLE_DBC, static_cast<INFORMIX_CONN*>(connection)->sqlConn, nullptr);
 	}
-	pConn->mutexQuery->unlock();
+   static_cast<INFORMIX_CONN*>(connection)->mutexQuery->unlock();
 	return dwResult;
 }
 
 /**
  * Commit transaction
  */
-extern "C" DWORD __EXPORT DrvCommit(INFORMIX_CONN *pConn)
+static uint32_t Commit(DBDRV_CONNECTION connection)
 {
-	SQLRETURN nRet;
-
-	if (pConn == NULL)
-	{
-		return DBERR_INVALID_HANDLE;
-	}
-
-	pConn->mutexQuery->lock();
-	nRet = SQLEndTran(SQL_HANDLE_DBC, pConn->sqlConn, SQL_COMMIT);
-	SQLSetConnectAttr(pConn->sqlConn, SQL_ATTR_AUTOCOMMIT, (SQLPOINTER)SQL_AUTOCOMMIT_ON, 0);
-	pConn->mutexQuery->unlock();
+   static_cast<INFORMIX_CONN*>(connection)->mutexQuery->lock();
+   SQLRETURN nRet = SQLEndTran(SQL_HANDLE_DBC, static_cast<INFORMIX_CONN*>(connection)->sqlConn, SQL_COMMIT);
+	SQLSetConnectAttr(static_cast<INFORMIX_CONN*>(connection)->sqlConn, SQL_ATTR_AUTOCOMMIT, (SQLPOINTER)SQL_AUTOCOMMIT_ON, 0);
+   static_cast<INFORMIX_CONN*>(connection)->mutexQuery->unlock();
 	return ((nRet == SQL_SUCCESS) || (nRet == SQL_SUCCESS_WITH_INFO)) ? DBERR_SUCCESS : DBERR_OTHER_ERROR;
 }
 
 /**
  * Rollback transaction
  */
-extern "C" DWORD __EXPORT DrvRollback(INFORMIX_CONN *pConn)
+static uint32_t Rollback(DBDRV_CONNECTION connection)
 {
-	SQLRETURN nRet;
-
-	if (pConn == NULL)
-	{
-		return DBERR_INVALID_HANDLE;
-	}
-
-	pConn->mutexQuery->lock();
-	nRet = SQLEndTran(SQL_HANDLE_DBC, pConn->sqlConn, SQL_ROLLBACK);
-	SQLSetConnectAttr(pConn->sqlConn, SQL_ATTR_AUTOCOMMIT, (SQLPOINTER)SQL_AUTOCOMMIT_ON, 0);
-	pConn->mutexQuery->unlock();
+   static_cast<INFORMIX_CONN*>(connection)->mutexQuery->lock();
+   SQLRETURN nRet = SQLEndTran(SQL_HANDLE_DBC, static_cast<INFORMIX_CONN*>(connection)->sqlConn, SQL_ROLLBACK);
+	SQLSetConnectAttr(static_cast<INFORMIX_CONN*>(connection)->sqlConn, SQL_ATTR_AUTOCOMMIT, (SQLPOINTER)SQL_AUTOCOMMIT_ON, 0);
+   static_cast<INFORMIX_CONN*>(connection)->mutexQuery->unlock();
 	return ((nRet == SQL_SUCCESS) || (nRet == SQL_SUCCESS_WITH_INFO)) ? DBERR_SUCCESS : DBERR_OTHER_ERROR;
 }
 
 /**
  * Check if table exist
  */
-extern "C" int __EXPORT DrvIsTableExist(INFORMIX_CONN *pConn, const WCHAR *name)
+static int IsTableExist(DBDRV_CONNECTION connection, const WCHAR *name)
 {
    WCHAR query[256];
    swprintf(query, 256, L"SELECT count(*) FROM informix.systables WHERE tabtype='T' AND upper(tabname)=upper('%ls')", name);
-   DWORD error;
+   uint32_t error;
    WCHAR errorText[DBDRV_MAX_ERROR_TEXT];
    int rc = DBIsTableExist_Failure;
-   INFORMIX_QUERY_RESULT *hResult = (INFORMIX_QUERY_RESULT *)DrvSelect(pConn, query, &error, errorText);
-   if (hResult != NULL)
+   DBDRV_RESULT hResult = Select(connection, query, &error, errorText);
+   if (hResult != nullptr)
    {
       WCHAR buffer[64] = L"";
-      DrvGetField(hResult, 0, 0, buffer, 64);
-      rc = (wcstol(buffer, NULL, 10) > 0) ? DBIsTableExist_Found : DBIsTableExist_NotFound;
-      DrvFreeResult(hResult);
+      GetField(hResult, 0, 0, buffer, 64);
+      rc = (wcstol(buffer, nullptr, 10) > 0) ? DBIsTableExist_Found : DBIsTableExist_NotFound;
+      FreeResult(hResult);
    }
    return rc;
 }
+
+/**
+ * Driver call table
+ */
+static DBDriverCallTable s_callTable =
+{
+   Initialize,
+   Connect,
+   Disconnect,
+   nullptr, // SetPrefetchLimit
+   Prepare,
+   FreeStatement,
+   nullptr, // OpenBatch
+   nullptr, // NextBatchRow
+   Bind,
+   Execute,
+   Query,
+   Select,
+   SelectUnbuffered,
+   SelectPrepared,
+   SelectPreparedUnbuffered,
+   Fetch,
+   GetFieldLength,
+   GetFieldLengthUnbuffered,
+   GetField,
+   nullptr, //GetFieldUTF8
+   GetFieldUnbuffered,
+   nullptr, // GetFieldUnbufferedUTF8
+   GetNumRows,
+   FreeResult,
+   FreeUnbufferedResult,
+   Begin,
+   Commit,
+   Rollback,
+   Unload,
+   GetColumnCount,
+   GetColumnName,
+   GetColumnCountUnbuffered,
+   GetColumnNameUnbuffered,
+   PrepareStringW,
+   PrepareStringA,
+   IsTableExist
+};
+
+DB_DRIVER_ENTRY_POINT("INFORMIX", s_callTable)
 
 #ifdef _WIN32
 

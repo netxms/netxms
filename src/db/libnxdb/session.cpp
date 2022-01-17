@@ -846,7 +846,7 @@ DB_UNBUFFERED_RESULT LIBNXDB_EXPORTABLE DBSelectUnbufferedEx(DB_HANDLE hConn, co
 {
    DBDRV_UNBUFFERED_RESULT hResult;
 	DB_UNBUFFERED_RESULT result = NULL;
-   DWORD dwError = DBERR_OTHER_ERROR;
+   uint32_t errorCode = DBERR_OTHER_ERROR;
 #ifdef UNICODE
 #define pwszQuery szQuery
 #define wcErrorText errorText
@@ -861,11 +861,11 @@ DB_UNBUFFERED_RESULT LIBNXDB_EXPORTABLE DBSelectUnbufferedEx(DB_HANDLE hConn, co
    InterlockedIncrement64(&s_perfSelectQueries);
    InterlockedIncrement64(&s_perfTotalQueries);
 
-   hResult = hConn->m_driver->m_callTable.SelectUnbuffered(hConn->m_connection, pwszQuery, &dwError, wcErrorText);
-   if ((hResult == nullptr) && (dwError == DBERR_CONNECTION_LOST) && hConn->m_reconnectEnabled)
+   hResult = hConn->m_driver->m_callTable.SelectUnbuffered(hConn->m_connection, pwszQuery, &errorCode, wcErrorText);
+   if ((hResult == nullptr) && (errorCode == DBERR_CONNECTION_LOST) && hConn->m_reconnectEnabled)
    {
       DBReconnect(hConn);
-      hResult = hConn->m_driver->m_callTable.SelectUnbuffered(hConn->m_connection, pwszQuery, &dwError, wcErrorText);
+      hResult = hConn->m_driver->m_callTable.SelectUnbuffered(hConn->m_connection, pwszQuery, &errorCode, wcErrorText);
    }
 
    ms = GetCurrentTimeMs() - ms;
@@ -890,7 +890,7 @@ DB_UNBUFFERED_RESULT LIBNXDB_EXPORTABLE DBSelectUnbufferedEx(DB_HANDLE hConn, co
 
       nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_DRIVER, _T("SQL query failed (Query = \"%s\"): %s"), szQuery, errorText);
 		if (hConn->m_driver->m_fpEventHandler != nullptr)
-			hConn->m_driver->m_fpEventHandler(DBEVENT_QUERY_FAILED, pwszQuery, wcErrorText, dwError == DBERR_CONNECTION_LOST, hConn->m_driver->m_context);
+			hConn->m_driver->m_fpEventHandler(DBEVENT_QUERY_FAILED, pwszQuery, wcErrorText, errorCode == DBERR_CONNECTION_LOST, hConn->m_driver->m_context);
    }
 
 #ifndef UNICODE
