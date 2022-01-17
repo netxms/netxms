@@ -476,7 +476,7 @@ static DBDRV_STATEMENT Prepare(DBDRV_CONNECTION connection, const WCHAR *query, 
 	if ((ucs2Query != query) && (ucs2Query != localBuffer))
 	   MemFree(const_cast<UCS2CHAR*>(ucs2Query));
 #else
-	FreeConvertedString(ucs2Query, localBuffer);
+	FreeConvertedString(const_cast<UCS2CHAR*>(ucs2Query), localBuffer);
 #endif
 	return stmt;
 }
