@@ -22,10 +22,8 @@ import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
 import org.netxms.client.ServerAction;
-import org.netxms.client.constants.ServerActionType;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.actions.views.ActionManager;
-import org.netxms.nxmc.resources.ResourceManager;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -45,21 +43,14 @@ public class ActionLabelProvider extends LabelProvider implements ITableLabelPro
    	   i18n.tr("XMPP Message") 
 	   };
 
-   private Image[] images;
-
+   private final BaseActionLabelProvider baseActionLabelProvider;
+	
    /**
     * Create label provider.
     */
    public ActionLabelProvider()
    {
-      images = new Image[7];
-      images[ServerActionType.LOCAL_COMMAND.getValue()] = ResourceManager.getImage("icons/actions/exec_local.png");
-      images[ServerActionType.AGENT_COMMAND.getValue()] = ResourceManager.getImage("icons/actions/exec_remote.png");
-      images[ServerActionType.SSH_COMMAND.getValue()] = ResourceManager.getImage("icons/actions/exec_remote.png");
-      images[ServerActionType.NOTIFICATION.getValue()] = ResourceManager.getImage("icons/actions/email.png");
-      images[ServerActionType.FORWARD_EVENT.getValue()] = ResourceManager.getImage("icons/actions/fwd_event.png");
-      images[ServerActionType.NXSL_SCRIPT.getValue()] = ResourceManager.getImage("icons/actions/exec_script.png");
-      images[ServerActionType.XMPP_MESSAGE.getValue()] = ResourceManager.getImage("icons/actions/xmpp.png");
+      baseActionLabelProvider = new BaseActionLabelProvider();
    }
 
    /**
@@ -71,14 +62,7 @@ public class ActionLabelProvider extends LabelProvider implements ITableLabelPro
       if (columnIndex != 0)
          return null;
 
-      try
-      {
-         return images[((ServerAction)element).getType().getValue()];
-      }
-      catch(IndexOutOfBoundsException e)
-      {
-         return null;
-      }
+      return baseActionLabelProvider.getColumnImage(element, columnIndex);
 	}
 
    /**
@@ -119,10 +103,6 @@ public class ActionLabelProvider extends LabelProvider implements ITableLabelPro
    @Override
    public void dispose()
    {
-      for(Image i : images)
-         if (i != null)
-            i.dispose();
-
       super.dispose();
    }
 }
