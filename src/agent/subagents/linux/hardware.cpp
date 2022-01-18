@@ -1,0 +1,316 @@
+/*
+** NetXMS subagent for GNU/Linux
+** Copyright (C) 2004-2022 Raden Solutions
+**
+** This program is free software; you can redistribute it and/or modify
+** it under the terms of the GNU General Public License as published by
+** the Free Software Foundation; either version 2 of the License, or
+** (at your option) any later version.
+**
+** This program is distributed in the hope that it will be useful,
+** but WITHOUT ANY WARRANTY; without even the implied warranty of
+** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+** GNU General Public License for more details.
+**
+** You should have received a copy of the GNU General Public License
+** along with this program; if not, write to the Free Software
+** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+**
+** File: hardware.cpp
+**
+**/
+
+#include "linux_subagent.h"
+#include <net/if.h>
+#include <jansson.h>
+
+#define MAX_LSHW_CMD_SIZE 64
+#define MAX_LSHW_JSON_SIZE 4096
+#define LSHW_TIMEOUT 10000
+
+/**
+ * Process executor that collect process output into single MB string
+ */
+class MonoStringProcessExecutor : public ProcessExecutor
+{
+private:
+   char* m_data;
+   size_t m_writeOffset;
+   size_t m_totalSize;
+
+   void clear()
+   {
+      MemFree(m_data);
+      m_data = MemAllocStringA(1024);
+      m_writeOffset = 0;
+      m_totalSize = 1024;
+   }
+
+   void append(const char* text)
+   {
+      size_t textSize = strlen(text);
+      int textSizeAndFreeSpaceDifference = textSize - (m_totalSize - m_writeOffset - 1);
+      if (textSizeAndFreeSpaceDifference > 0)
+      {
+         m_totalSize += textSizeAndFreeSpaceDifference > 1024 ? textSizeAndFreeSpaceDifference : 1024;
+         m_data = MemRealloc(m_data, m_totalSize);
+      }
+      memcpy(m_data + m_writeOffset, text, textSize);
+      m_writeOffset += textSize;
+      m_data[m_writeOffset] = 0;
+   }
+
+protected:
+   virtual void onOutput(const char* text) override
+   {
+      append(text);
+   }
+
+public:
+   MonoStringProcessExecutor(const TCHAR* command)
+      : ProcessExecutor(command, true)
+   {
+      m_sendOutput = true;
+      m_data = nullptr;
+   }
+
+   /**
+    * Execute command
+    */
+   virtual bool execute() override
+   {
+      clear();
+      return ProcessExecutor::execute();
+   }
+
+   /**
+    * Get command output data
+    */
+   const char* getData() const { return m_data; }
+};
+
+/**
+ * Executes "lshw -c [lshwClass]" command
+ * @returns lshw output as json_t array or nullptr on failure
+ */
+json_t* RunLSHW(const TCHAR* lshwClass)
+{
+   TCHAR cmd[MAX_LSHW_CMD_SIZE];
+   _sntprintf(cmd, MAX_LSHW_CMD_SIZE, _T("lshw -json -c %s 2>/dev/null"), lshwClass);
+
+   MonoStringProcessExecutor pe(cmd);
+   if (!pe.execute())
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Failed to execute lshw command"));
+      return nullptr;
+   }
+   if (!pe.waitForCompletion(LSHW_TIMEOUT))
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Failed to execute lshw command: command timed out"));
+      return nullptr;
+   }
+
+   json_error_t error;
+   json_t* root = json_loads(pe.getData(), 0, &error);
+   // Parse json
+   if (root == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Failed to parse JSON on line %d: %hs\n"), error.line, error.text);
+      return nullptr;
+   }
+
+   if (!json_is_array(root))
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Failed to parse JSON: top level value is not an array\n"));
+      json_decref(root);
+      return nullptr;
+   }
+
+   return root;
+}
+
+/**
+ * Handler for Hardware.StorageDevices table
+ */
+LONG H_NetworkAdaptersTable(const TCHAR* cmd, const TCHAR* arg, Table* value, AbstractCommSession* session)
+{
+   // Run lshw
+   json_t* root = RunLSHW(_T("network"));
+   if (root == nullptr)
+      return SYSINFO_RC_ERROR;
+
+   value->addColumn(_T("INDEX"), DCI_DT_UINT, _T("Index"), true);
+   value->addColumn(_T("PRODUCT"), DCI_DT_STRING, _T("Product"));
+   value->addColumn(_T("MANUFACTURER"), DCI_DT_STRING, _T("Manufacturer"));
+   value->addColumn(_T("DESCRIPTION"), DCI_DT_STRING, _T("Description"));
+   value->addColumn(_T("TYPE"), DCI_DT_STRING, _T("Type"));
+   value->addColumn(_T("MAC_ADDRESS"), DCI_DT_STRING, _T("MAC address"));
+   value->addColumn(_T("IF_INDEX"), DCI_DT_UINT, _T("Interface index"));
+   value->addColumn(_T("SPEED"), DCI_DT_UINT64, _T("Speed"));
+   value->addColumn(_T("AVAILABILITY"), DCI_DT_UINT, _T("Availability"));
+
+   for (int i = 0; i < json_array_size(root); i++)
+   {
+      json_t* data = json_array_get(root, i);
+      if (!json_is_object(data))
+         continue;
+
+      value->addRow();
+
+      value->set(0, i);                                                                            // INDEX
+      value->set(1, json_object_get_string_t(data, "product", nullptr));                           // PRODUCT
+      value->set(2, json_object_get_string_t(data, "vendor", nullptr));                            // MANUFACTURER
+      value->set(3, json_object_get_string_t(data, "description", nullptr));                       // DESCRIPTION
+      json_t* wireless = json_object_get(json_object_get(data, "capabilities"), "wireless");
+      value->set(4, wireless == nullptr ? _T("Ethernet 802.3") : _T("Wireless"));                  // TYPE
+      value->set(5, json_object_get_string_t(data, "serial", nullptr));                            // MAC_ADDRESS
+      const char* ifName = json_object_get_string_a(data, "logicalname", nullptr);
+      value->set(6, ifName == nullptr ? 0 : if_nametoindex(ifName));                               // IF_INDEX
+      value->set(7, static_cast<uint64_t>(json_object_get_integer(data, "capacity", 0)));          // SPEED
+
+      // AVAILABILITY
+      json_t* disabled = json_object_get(data, "disabled");
+      json_t* link = json_object_get_by_path_a(data, "configuration/link");
+      if (disabled != nullptr && json_is_true(disabled))
+         value->set(8, 8); // Off Line
+      else if (strcmp(json_string_value(link), "yes") == 0)
+         value->set(8, 3); // Running/Full Power
+      else
+         value->set(8, 19); // Not Ready
+   }
+   json_decref(root);
+   return SYSINFO_RC_SUCCESS;
+}
+
+/**
+ * Searches bus type from it's known variants.
+ * If new types are discovered they should be added here.
+ * Only run this for disks (type == 0)
+ */
+static TCHAR* GetBusType(json_t* data, TCHAR* busType)
+{
+   // check businfo
+   json_t* busInfo = json_object_get(data, "businfo");
+   if (busInfo != nullptr)
+   {
+      if (strcasestr(json_string_value(busInfo), "scsi") != nullptr)
+         _tcscpy(busType, _T("SCSI"));
+      else if (strcasestr(json_string_value(busInfo), "sata") != nullptr)
+         _tcscpy(busType, _T("SATA"));
+      else if (strcasestr(json_string_value(busInfo), "ata") != nullptr)
+         _tcscpy(busType, _T("ATA"));
+      else if (strcasestr(json_string_value(busInfo), "sas") != nullptr)
+         _tcscpy(busType, _T("SAS"));
+      else if (strcasestr(json_string_value(busInfo), "nvme") != nullptr)
+         _tcscpy(busType, _T("NVMe"));
+
+      return busType;
+   }
+
+   // check description
+   json_t* desc = json_object_get(data, "description");
+   if (desc != nullptr)
+   {
+      if (strcasestr(json_string_value(desc), "scsi") != nullptr)
+         _tcscpy(busType, _T("SCSI"));
+      else if (strcasestr(json_string_value(desc), "sata") != nullptr)
+         _tcscpy(busType, _T("SATA"));
+      else if (strcasestr(json_string_value(desc), "ata") != nullptr)
+         _tcscpy(busType, _T("ATA"));
+      else if (strcasestr(json_string_value(desc), "sas") != nullptr)
+         _tcscpy(busType, _T("SAS"));
+      else if (strcasestr(json_string_value(desc), "nvme") != nullptr)
+         _tcscpy(busType, _T("NVMe"));
+
+      return busType;
+   }
+
+   // if nothing found
+   _tcscpy(busType, _T("Unknown"));
+   return busType;
+}
+
+/**
+ * Parse JSON into Table for storage devices
+ */
+static void GetDataForStorageDevices(json_t* root, Table* value, int* curDevice)
+{
+
+   for (int i = 0; i < json_array_size(root); i++)
+   {
+      json_t* data = json_array_get(root, i);
+      if (!json_is_object(data))
+         continue;
+
+      value->addRow();
+
+      value->set(0, (*curDevice)++); // NUMBER
+
+      if (strcmp(json_object_get_string_a(data, "class", nullptr), "storage") == 0)
+      {
+         value->set(1, 12);                             // TYPE
+         value->set(2, _T("Storage array controller")); // TYPE_DESCRIPTION
+                                                        // BUS_TYPE = nullptr
+      }
+      else
+      {
+         value->set(1, 0);                   // TYPE
+         value->set(2, _T("Direct-access")); // TYPE_DESCRIPTION
+         TCHAR busType[8];
+         value->set(3, GetBusType(data, busType)); // BUS_TYPE
+      }
+
+      // REMOVABLE
+      json_t* conf = json_object_get(data, "configuration");
+      if (conf != nullptr && json_is_object(conf))
+      {
+         json_t* driver = json_object_get(conf, "driver");
+         if (driver != nullptr && strcasestr(json_string_value(driver), "usb") != nullptr)
+            value->set(4, 1);
+         else
+            value->set(4, 0);
+      }
+      else
+      {
+         value->set(4, 0);
+      }
+
+      value->set(5, static_cast<uint64_t>(json_object_get_integer(data, "size", 0))); // SIZE
+      value->set(6, json_object_get_string_t(data, "vendor", nullptr));               // MANUFACTURER
+      value->set(7, json_object_get_string_t(data, "product", nullptr));              // PRODUCT
+      value->set(8, json_object_get_string_t(data, "version", nullptr));              // REVISION
+      value->set(9, json_object_get_string_t(data, "serial", nullptr));               // SERIAL
+
+      json_t* children = json_object_get(data, "children");
+      if (children != nullptr && json_is_array(children))
+         GetDataForStorageDevices(children, value, curDevice);
+   }
+}
+
+/**
+ * Handler for Hardware.StorageDevices table
+ */
+LONG H_StorageDeviceTable(const TCHAR* cmd, const TCHAR* arg, Table* value, AbstractCommSession* session)
+{
+   // Run lshw
+   json_t* root = RunLSHW(_T("disk -c storage"));
+   if (root == nullptr)
+      return SYSINFO_RC_ERROR;
+
+   value->addColumn(_T("NUMBER"), DCI_DT_UINT, _T("Number"), true);
+   value->addColumn(_T("TYPE"), DCI_DT_UINT, _T("Type"));
+   value->addColumn(_T("TYPE_DESCRIPTION"), DCI_DT_STRING, _T("Type description"));
+   value->addColumn(_T("BUS_TYPE"), DCI_DT_STRING, _T("Bus type"));
+   value->addColumn(_T("REMOVABLE"), DCI_DT_INT, _T("Removable"));
+   value->addColumn(_T("SIZE"), DCI_DT_UINT64, _T("Size"));
+   value->addColumn(_T("MANUFACTURER"), DCI_DT_STRING, _T("Manufacturer"));
+   value->addColumn(_T("PRODUCT"), DCI_DT_STRING, _T("Product"));
+   value->addColumn(_T("REVISION"), DCI_DT_STRING, _T("Revision"));
+   value->addColumn(_T("SERIAL"), DCI_DT_STRING, _T("Serial number"));
+
+   int i = 0;
+   GetDataForStorageDevices(root, value, &i);
+
+   json_decref(root);
+   return SYSINFO_RC_SUCCESS;
+}

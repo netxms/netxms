@@ -443,7 +443,9 @@ static NETXMS_SUBAGENT_TABLE m_tables[] =
    { _T("FileSystem.Volumes"), H_FileSystems, nullptr, _T("MOUNTPOINT"), DCTDESC_FILESYSTEM_VOLUMES },
    { _T("Hardware.Batteries"), SMBIOS_TableHandler, _T("B"), _T("HANDLE"), DCTDESC_HARDWARE_BATTERIES },
    { _T("Hardware.MemoryDevices"), SMBIOS_TableHandler, _T("M"), _T("HANDLE"), DCTDESC_HARDWARE_MEMORY_DEVICES },
+   { _T("Hardware.NetworkAdapters"), H_NetworkAdaptersTable, NULL, _T("INDEX"), DCTDESC_HARDWARE_NETWORK_ADAPTERS },
    { _T("Hardware.Processors"), SMBIOS_TableHandler, _T("P"), _T("HANDLE"), DCTDESC_HARDWARE_PROCESSORS },
+   { _T("Hardware.StorageDevices"), H_StorageDeviceTable, NULL, _T("NUMBER"), DCTDESC_HARDWARE_STORAGE_DEVICES },
    { _T("System.InstalledProducts"), H_InstalledProducts, nullptr, _T("NAME"), DCTDESC_SYSTEM_INSTALLED_PRODUCTS },
    { _T("System.OpenFiles"), H_OpenFilesTable, nullptr, _T("PID,HANDLE"), DCTDESC_SYSTEM_OPEN_FILES },
    { _T("System.Processes"), H_ProcessTable, nullptr, _T("PID"), DCTDESC_SYSTEM_PROCESSES }
