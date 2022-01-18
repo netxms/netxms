@@ -2818,7 +2818,7 @@ NXSL_Value *NXSL_ClusterClass::getAttr(NXSL_Object *object, const char *attr)
    auto cluster = SharedObjectFromData<Cluster>(object);
    if (compareAttributeName(attr, "nodes"))
    {
-      value = vm->createValue(cluster->getNodesForNXSL(vm));
+      value = cluster->getNodesForNXSL(vm);
    }
    else if (compareAttributeName(attr, "zone"))
    {
