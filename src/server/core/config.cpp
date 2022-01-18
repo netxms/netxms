@@ -502,6 +502,13 @@ static void OnConfigVariableChange(bool isCLOB, const TCHAR *name, const TCHAR *
    {
       UpdateAlarmExpirationTimes();
    }
+   else if (!_tcscmp(name, _T("Alarms.SummaryEmail.Enable")))
+   {
+      if (_tcstol(value, nullptr, 0))
+         EnableAlarmSummaryEmails();
+      else
+         DeleteScheduledTaskByHandlerId(ALARM_SUMMARY_EMAIL_TASK_ID);
+   }
    else if (!_tcscmp(name, _T("Alarms.SummaryEmail.Schedule")))
    {
       if (ConfigReadBoolean(_T("Alarms.SummaryEmail.Enable"), false))
@@ -555,13 +562,6 @@ static void OnConfigVariableChange(bool isCLOB, const TCHAR *name, const TCHAR *
    {
       DCObject::m_defaultRetentionTime = _tcstol(value, nullptr, 0);
    }
-   else if (!_tcscmp(name, _T("Alarms.SummaryEmail.Enable")))
-   {
-      if (_tcstol(value, nullptr, 0))
-         EnableAlarmSummaryEmails();
-      else
-         DeleteScheduledTaskByHandlerId(ALARM_SUMMARY_EMAIL_TASK_ID);
-   }
    else if (!_tcscmp(name, _T("ICMP.CollectPollStatistics")))
    {
       if (_tcstol(value, nullptr, 0))
@@ -609,6 +609,14 @@ static void OnConfigVariableChange(bool isCLOB, const TCHAR *name, const TCHAR *
       else
          InterlockedAnd64(reinterpret_cast<VolatileCounter64*>(&g_flags), ~AF_ENABLE_NXSL_CONTAINER_FUNCTIONS);
    }
+   else if (!_tcscmp(name, _T("Objects.AutobindPollingInterval")))
+   {
+      g_autobindPollingInterval = ConvertToUint32(value, 3600);
+   }
+   else if (!_tcscmp(name, _T("Objects.ConfigurationPollingInterval")))
+   {
+      g_configurationPollingInterval = ConvertToUint32(value, 3600);
+   }
    else if (!_tcscmp(name, _T("Objects.Interfaces.Enable8021xStatusPoll")))
    {
       if (_tcstol(value, nullptr, 0))
@@ -641,6 +649,10 @@ static void OnConfigVariableChange(bool isCLOB, const TCHAR *name, const TCHAR *
          InterlockedOr64(reinterpret_cast<VolatileCounter64*>(&g_flags), AF_RESOLVE_NODE_NAMES);
       else
          InterlockedAnd64(reinterpret_cast<VolatileCounter64*>(&g_flags), ~AF_RESOLVE_NODE_NAMES);
+   }
+   else if (!_tcscmp(name, _T("Objects.StatusPollingInterval")))
+   {
+      g_statusPollingInterval = ConvertToUint32(value, 60);
    }
    else if (!_tcscmp(name, _T("SNMP.Codepage")))
    {

@@ -100,6 +100,7 @@
 #define POLL_INSTANCE_DISCOVERY     6
 #define POLL_ROUTING_TABLE          7
 #define POLL_DISCOVERY              8
+#define POLL_AUTOBIND               9
 
 /**
  * Object types

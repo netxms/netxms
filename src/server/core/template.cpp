@@ -67,7 +67,10 @@ static GenericAgentPolicy *CreatePolicy(const TCHAR *name, const TCHAR *type, UI
    return new GenericAgentPolicy(name, type, ownerId);
 }
 
-Template::Template() : super(), AutoBindTarget(this), VersionableObject(this)
+/**
+ * Default constructor
+ */
+Template::Template() : super(), AutoBindTarget(this), Pollable(this, Pollable::AUTOBIND), VersionableObject(this)
 {
    m_policyList = new SharedObjectArray<GenericAgentPolicy>(0, 16);
    m_deletedPolicyList = new SharedObjectArray<GenericAgentPolicy>(0, 16);
@@ -76,7 +79,7 @@ Template::Template() : super(), AutoBindTarget(this), VersionableObject(this)
 /**
  * Create new template
  */
-Template::Template(const TCHAR *name, const uuid& guid) : super(name, guid), AutoBindTarget(this), VersionableObject(this)
+Template::Template(const TCHAR *name, const uuid& guid) : super(name, guid), AutoBindTarget(this), Pollable(this, Pollable::AUTOBIND), VersionableObject(this)
 {
    m_policyList = new SharedObjectArray<GenericAgentPolicy>(0, 16);
    m_deletedPolicyList = new SharedObjectArray<GenericAgentPolicy>(0, 16);
@@ -203,8 +206,13 @@ bool Template::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
 
    if (success)
       success = AutoBindTarget::loadFromDatabase(hdb, id);
+
+   if (success)
+      success = Pollable::loadFromDatabase(hdb, id);
+
    if (success)
       success = VersionableObject::loadFromDatabase(hdb, id);
+
    if (success)
    {
       DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT guid,policy_type FROM ap_common WHERE owner_id=?"));
@@ -575,7 +583,7 @@ bool Template::fillPolicyDetailsMessage(NXCPMessage *msg, const uuid& guid) cons
 void Template::fillPolicyListMessage(NXCPMessage *msg) const
 {
    lockProperties();
-   UINT32 fieldId = VID_AGENT_POLICY_BASE;
+   uint32_t fieldId = VID_AGENT_POLICY_BASE;
    int count = 0;
    for (int i = 0; i < m_policyList->size(); i++)
    {
@@ -822,4 +830,124 @@ void Template::initiatePolicyValidation()
 NXSL_Value *Template::createNXSLObject(NXSL_VM *vm)
 {
    return vm->createValue(new NXSL_Object(vm, &g_nxslTemplateClass, new shared_ptr<Template>(self())));
+}
+
+/**
+ * Lock template for autobind poll
+ */
+bool Template::lockForAutobindPoll()
+{
+   bool success = false;
+   lockProperties();
+   if (!m_isDeleted && !m_isDeleteInitiated && (m_status != STATUS_UNMANAGED) &&
+       (static_cast<uint32_t>(time(nullptr) - m_autobindPollState.getLastCompleted()) > g_autobindPollingInterval))
+   {
+      success = m_autobindPollState.schedule();
+   }
+   unlockProperties();
+   return success;
+}
+
+/**
+ * Class filter data for object selection
+ */
+struct AutoBindClassFilterData
+{
+   bool processAccessPoints;
+   bool processClusters;
+   bool processMobileDevices;
+   bool processSensors;
+};
+
+/**
+ * Object filter for autobind
+ */
+static bool AutoBindObjectFilter(NetObj* object, AutoBindClassFilterData* filterData)
+{
+   return (object->getObjectClass() == OBJECT_NODE) ||
+         (filterData->processAccessPoints && (object->getObjectClass() == OBJECT_ACCESSPOINT)) ||
+         (filterData->processClusters && (object->getObjectClass() == OBJECT_CLUSTER)) ||
+         (filterData->processMobileDevices && (object->getObjectClass() == OBJECT_MOBILEDEVICE)) ||
+         (filterData->processSensors && (object->getObjectClass() == OBJECT_SENSOR));
+}
+
+/**
+ * Perform automatic object binding
+ */
+void Template::autobindPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId)
+{
+   poller->setStatus(_T("wait for lock"));
+   pollerLock(configuration);
+
+   if (IsShutdownInProgress())
+   {
+      pollerUnlock();
+      return;
+   }
+
+   m_pollRequestor = session;
+   m_pollRequestId = rqId;
+   nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 5, _T("Starting autobind poll of template %s [%u]"), m_name, m_id);
+   poller->setStatus(_T("checking objects"));
+
+   if (!isAutoBindEnabled())
+   {
+      sendPollerMsg(_T("Automatic object binding is disabled\r\n"));
+      nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 5, _T("Finished autobind poll of template %s [%u])"), m_name, m_id);
+      pollerUnlock();
+      return;
+   }
+
+   int gracePeriod = ConfigReadInt(_T("DataCollection.TemplateRemovalGracePeriod"), 0);
+
+   AutoBindClassFilterData filterData;
+   filterData.processAccessPoints = ConfigReadBoolean(_T("Objects.AccessPoints.TemplateAutoApply"), false);
+   filterData.processClusters = ConfigReadBoolean(_T("Objects.Clusters.TemplateAutoApply"), false);
+   filterData.processMobileDevices = ConfigReadBoolean(_T("Objects.MobileDevices.TemplateAutoApply"), false);
+   filterData.processSensors = ConfigReadBoolean(_T("Objects.Sensors.TemplateAutoApply"), false);
+
+   NXSL_VM *cachedFilterVM = nullptr;
+   unique_ptr<SharedObjectArray<NetObj>> objects = g_idxObjectById.getObjects(AutoBindObjectFilter, &filterData);
+   for (int i = 0; i < objects->size(); i++)
+   {
+      shared_ptr<NetObj> object = objects->getShared(i);
+
+      AutoBindDecision decision = isApplicable(&cachedFilterVM, object);
+      if ((decision == AutoBindDecision_Ignore) || ((decision == AutoBindDecision_Unbind) && !isAutoUnbindEnabled()))
+         continue;   // Decision cannot affect checks
+
+      if (decision == AutoBindDecision_Bind)
+      {
+         TCHAR key[50];
+         _sntprintf(key, 50, _T("Delete.Template.%u.NetObj.%u"), m_id, object->getId());
+         DeleteScheduledTaskByKey(key);
+         if (!isDirectChild(object->getId()))
+         {
+            sendPollerMsg(_T("   Applying to %s\r\n"), object->getName());
+            nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 4, _T("Template::autobindPoll(): binding object \"%s\" [%u] to template \"%s\" [%u]"), object->getName(), object->getId(), m_name, m_id);
+            applyToTarget(static_pointer_cast<DataCollectionTarget>(object));
+            PostSystemEvent(EVENT_TEMPLATE_AUTOAPPLY, g_dwMgmtNode, "isis", object->getId(), object->getName(), m_id, m_name);
+         }
+      }
+      else if ((decision == AutoBindDecision_Unbind) && isDirectChild(object->getId()))
+      {
+         if (gracePeriod > 0)
+         {
+            TCHAR key[50];
+            _sntprintf(key, 50, _T("Delete.Template.%u.NetObj.%u"), m_id, object->getId());
+            AddOneTimeScheduledTask(_T("DataCollection.RemoveTemplate"), time(nullptr) + (time_t)(gracePeriod * 60 * 60 * 24),
+                     m_guid.toString(), nullptr, 0, object->getId(), SYSTEM_ACCESS_FULL, _T(""), key, true);
+            nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 4, _T("Template::autobindPoll(): scheduled template \"%s\" [%u] removal from object \"%s\" [%u]"), m_name, m_id, object->getName(), object->getId());
+            sendPollerMsg(_T("   Scheduled removal from %s\r\n"), object->getName());
+         }
+         else
+         {
+            static_cast<DataCollectionTarget&>(*object).removeTemplate(this);
+         }
+      }
+   }
+   delete cachedFilterVM;
+
+   pollerUnlock();
+   nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 5, _T("Finished autobind poll of template %s [%u])"), m_name, m_id);
 }

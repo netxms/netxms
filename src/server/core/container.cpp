@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -241,6 +241,8 @@ bool Container::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    bool success = super::loadFromDatabase(hdb, dwId);
    if (success)
       success = AutoBindTarget::loadFromDatabase(hdb, m_id);
+   if (success)
+      success = Pollable::loadFromDatabase(hdb, m_id);
    return success;
 }
 
@@ -319,4 +321,111 @@ void Container::fillMessageInternal(NXCPMessage *msg, UINT32 userId)
 NXSL_Value *Container::createNXSLObject(NXSL_VM *vm)
 {
    return vm->createValue(new NXSL_Object(vm, &g_nxslContainerClass, new shared_ptr<Container>(self())));
+}
+
+/**
+ * Lock container for autobind poll
+ */
+bool Container::lockForAutobindPoll()
+{
+   bool success = false;
+   lockProperties();
+   if (!m_isDeleted && !m_isDeleteInitiated && (m_status != STATUS_UNMANAGED) &&
+       (static_cast<uint32_t>(time(nullptr) - m_autobindPollState.getLastCompleted()) > g_autobindPollingInterval))
+   {
+      success = m_autobindPollState.schedule();
+   }
+   unlockProperties();
+   return success;
+}
+
+/**
+ * Class filter data for object selection
+ */
+struct AutoBindClassFilterData
+{
+   bool processAccessPoints;
+   bool processClusters;
+   bool processMobileDevices;
+   bool processSensors;
+};
+
+/**
+ * Object filter for autobind
+ */
+static bool AutoBindObjectFilter(NetObj* object, AutoBindClassFilterData* filterData)
+{
+   return (object->getObjectClass() == OBJECT_NODE) ||
+         (filterData->processAccessPoints && (object->getObjectClass() == OBJECT_ACCESSPOINT)) ||
+         (filterData->processClusters && (object->getObjectClass() == OBJECT_CLUSTER)) ||
+         (filterData->processMobileDevices && (object->getObjectClass() == OBJECT_MOBILEDEVICE)) ||
+         (filterData->processSensors && (object->getObjectClass() == OBJECT_SENSOR));
+}
+
+/**
+ * Perform automatic object binding
+ */
+void Container::autobindPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId)
+{
+   poller->setStatus(_T("wait for lock"));
+   pollerLock(configuration);
+
+   if (IsShutdownInProgress())
+   {
+      pollerUnlock();
+      return;
+   }
+
+   m_pollRequestor = session;
+   m_pollRequestId = rqId;
+   nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 5, _T("Starting autobind poll of container %s [%u]"), m_name, m_id);
+   poller->setStatus(_T("checking objects"));
+
+   if (!isAutoBindEnabled())
+   {
+      sendPollerMsg(_T("Automatic object binding is disabled\r\n"));
+      nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 5, _T("Finished autobind poll of container %s [%u])"), m_name, m_id);
+      pollerUnlock();
+      return;
+   }
+
+   AutoBindClassFilterData filterData;
+   filterData.processAccessPoints = ConfigReadBoolean(_T("Objects.AccessPoints.ContainerAutoBind"), false);
+   filterData.processClusters = ConfigReadBoolean(_T("Objects.Clusters.ContainerAutoBind"), false);
+   filterData.processMobileDevices = ConfigReadBoolean(_T("Objects.MobileDevices.ContainerAutoBind"), false);
+   filterData.processSensors = ConfigReadBoolean(_T("Objects.Sensors.ContainerAutoBind"), false);
+
+   NXSL_VM *cachedFilterVM = nullptr;
+   unique_ptr<SharedObjectArray<NetObj>> objects = g_idxObjectById.getObjects(AutoBindObjectFilter, &filterData);
+   for (int i = 0; i < objects->size(); i++)
+   {
+      shared_ptr<NetObj> object = objects->getShared(i);
+
+      AutoBindDecision decision = isApplicable(&cachedFilterVM, object);
+      if ((decision == AutoBindDecision_Ignore) || ((decision == AutoBindDecision_Unbind) && !isAutoUnbindEnabled()))
+         continue;   // Decision cannot affect checks
+
+      if ((decision == AutoBindDecision_Bind) && !isDirectChild(object->getId()))
+      {
+         sendPollerMsg(_T("   Binding object %s\r\n"), object->getName());
+         nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 4, _T("Container::autobindPoll(): binding object \"%s\" [%u] to container \"%s\" [%u]"), object->getName(), object->getId(), m_name, m_id);
+         addChild(object);
+         object->addParent(self());
+         PostSystemEvent(EVENT_CONTAINER_AUTOBIND, g_dwMgmtNode, "isis", object->getId(), object->getName(), m_id, m_name);
+         calculateCompoundStatus();
+      }
+      else if ((decision == AutoBindDecision_Unbind) && isDirectChild(object->getId()))
+      {
+         sendPollerMsg(_T("   Removing object %s\r\n"), object->getName());
+         nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 4, _T("Container::autobindPoll(): removing object \"%s\" [%u] from container \"%s\" [%u]"), object->getName(), object->getId(), m_name, m_id);
+         deleteChild(*object);
+         object->deleteParent(*this);
+         PostSystemEvent(EVENT_CONTAINER_AUTOUNBIND, g_dwMgmtNode, "isis", object->getId(), object->getName(), m_id, m_name);
+         calculateCompoundStatus();
+      }
+   }
+   delete cachedFilterVM;
+
+   pollerUnlock();
+   nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 5, _T("Finished autobind poll of container %s [%u])"), m_name, m_id);
 }

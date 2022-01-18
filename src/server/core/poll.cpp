@@ -85,7 +85,7 @@ PollerInfo *RegisterPoller(PollerType type, const shared_ptr<NetObj>& object)
  */
 static EnumerationCallbackResult ShowPollerInfo(const uint64_t& key, PollerInfo *poller, ServerConsole *console)
 {
-   static const TCHAR *pollerType[] = { _T("STAT"), _T("CONF"), _T("INST"), _T("ROUT"), _T("DISC"), _T("TOPO"), _T("ICMP") };
+   static const TCHAR *pollerType[] = { _T("STAT"), _T("CONF"), _T("INST"), _T("ROUT"), _T("DISC"), _T("TOPO"), _T("ICMP"), _T("BIND") };
 
    NetObj *o = poller->getObject();
 
@@ -778,6 +778,12 @@ static void QueueForPolling(NetObj *object, void *data)
    {
       nxlog_debug_tag(DEBUG_TAG_POLL_MANAGER, 6, _T("%s %s [%u] queued for ICMP poll"), object->getObjectClassName(), object->getName(), object->getId());
       ThreadPoolExecuteSerialized(g_pollerThreadPool, threadKey, pollableObject, &Pollable::doIcmpPoll, RegisterPoller(PollerType::ICMP, object->self()));
+   }
+
+   if (pollableObject->isAutobindPollAvailable() && pollableObject->lockForAutobindPoll())
+   {
+      nxlog_debug_tag(DEBUG_TAG_POLL_MANAGER, 6, _T("%s %s [%u] queued for autobind poll"), object->getObjectClassName(), object->getName(), object->getId());
+      ThreadPoolExecuteSerialized(g_pollerThreadPool, threadKey, pollableObject, &Pollable::doAutobindPoll, RegisterPoller(PollerType::AUTOBIND, object->self()));
    }
 }
 

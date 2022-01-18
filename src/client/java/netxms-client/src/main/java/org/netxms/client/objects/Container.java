@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,12 +22,14 @@ import java.util.Set;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.NXCSession;
+import org.netxms.client.constants.AgentCacheMode;
 import org.netxms.client.objects.interfaces.AutoBindObject;
+import org.netxms.client.objects.interfaces.PollingTarget;
 
 /**
  * Container object
  */
-public class Container extends GenericObject implements AutoBindObject
+public class Container extends GenericObject implements AutoBindObject, PollingTarget
 {	
    private int autoBindFlags;
 	private String autoBindFilter;
@@ -115,9 +117,75 @@ public class Container extends GenericObject implements AutoBindObject
       return strings;
    }
 
+   /**
+    * @see org.netxms.client.objects.interfaces.AutoBindObject#getAutoBindFlags()
+    */
    @Override
    public int getAutoBindFlags()
    {
       return autoBindFlags;
+   }
+
+   /**
+    * @see org.netxms.client.objects.interfaces.PollingTarget#getIfXTablePolicy()
+    */
+   @Override
+   public int getIfXTablePolicy()
+   {
+      return 0;
+   }
+
+   /**
+    * @see org.netxms.client.objects.interfaces.PollingTarget#getAgentCacheMode()
+    */
+   @Override
+   public AgentCacheMode getAgentCacheMode()
+   {
+      return null;
+   }
+
+   /**
+    * @see org.netxms.client.objects.interfaces.PollingTarget#getPollerNodeId()
+    */
+   @Override
+   public long getPollerNodeId()
+   {
+      return 0;
+   }
+
+   /**
+    * @see org.netxms.client.objects.interfaces.PollingTarget#canHaveAgent()
+    */
+   @Override
+   public boolean canHaveAgent()
+   {
+      return false;
+   }
+
+   /**
+    * @see org.netxms.client.objects.interfaces.PollingTarget#canHaveInterfaces()
+    */
+   @Override
+   public boolean canHaveInterfaces()
+   {
+      return false;
+   }
+
+   /**
+    * @see org.netxms.client.objects.interfaces.PollingTarget#canHavePollerNode()
+    */
+   @Override
+   public boolean canHavePollerNode()
+   {
+      return false;
+   }
+
+   /**
+    * @see org.netxms.client.objects.interfaces.PollingTarget#canUseEtherNetIP()
+    */
+   @Override
+   public boolean canUseEtherNetIP()
+   {
+      return false;
    }
 }

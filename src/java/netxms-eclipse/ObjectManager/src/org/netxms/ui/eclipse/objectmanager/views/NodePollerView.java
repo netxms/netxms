@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -45,7 +45,7 @@ import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.TextOutputListener;
-import org.netxms.client.constants.NodePollType;
+import org.netxms.client.constants.ObjectPollType;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.interfaces.PollingTarget;
 import org.netxms.ui.eclipse.console.resources.RegionalSettings;
@@ -68,7 +68,10 @@ public class NodePollerView extends ViewPart
          Messages.get().NodePollerView_InterfacePoll, 
          Messages.get().NodePollerView_TopologyPoll,
          Messages.get().NodePollerView_ConfigPoll, 
-         Messages.get().NodePollerView_InstanceDiscovery 
+         Messages.get().NodePollerView_InstanceDiscovery,
+         "Routing Table Poll",
+         "Network Discovery Poll",
+         "Automatic Bind Poll"
       };
    private static final Color COLOR_ERROR = new Color(Display.getCurrent(), 192, 0, 0);
    private static final Color COLOR_WARNING = new Color(Display.getCurrent(), 255, 128, 0);
@@ -77,7 +80,7 @@ public class NodePollerView extends ViewPart
 
    private NXCSession session;
    private PollingTarget target;
-   private NodePollType pollType;
+   private ObjectPollType pollType;
    private Display display;
    private StyledText textArea;
    private boolean pollActive = false;
@@ -104,7 +107,7 @@ public class NodePollerView extends ViewPart
       target = ((obj != null) && (obj instanceof PollingTarget)) ? (PollingTarget)obj : null;
       if (target == null)
          throw new PartInitException(Messages.get().NodePollerView_InvalidObjectID);
-      pollType = NodePollType.valueOf(parts[1]);
+      pollType = ObjectPollType.valueOf(parts[1]);
 
       setPartName(POLL_NAME[pollType.getValue()] + " - " + target.getObjectName()); //$NON-NLS-1$
    }

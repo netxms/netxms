@@ -18,7 +18,7 @@
  */
 package org.netxms.ui.eclipse.objectmanager.actions;
 
-import org.netxms.client.constants.NodePollType;
+import org.netxms.client.constants.ObjectPollType;
 
 /**
  * Start topology poll
@@ -30,8 +30,8 @@ public class TopologyPoll extends AbstractNodePoll
 	 * @see org.netxms.ui.eclipse.objectmanager.actions.AbstractNodePoll#getPollType()
 	 */
 	@Override
-	protected NodePollType getPollType()
+	protected ObjectPollType getPollType()
 	{
-		return NodePollType.TOPOLOGY;
+		return ObjectPollType.TOPOLOGY;
 	}
 }

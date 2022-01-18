@@ -35,7 +35,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 import org.netxms.client.NXCSession;
-import org.netxms.client.constants.NodePollType;
+import org.netxms.client.constants.ObjectPollType;
 import org.netxms.client.events.Alarm;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
@@ -46,6 +46,7 @@ import org.netxms.client.objects.Container;
 import org.netxms.client.objects.Sensor;
 import org.netxms.client.objects.ServiceRoot;
 import org.netxms.client.objects.Subnet;
+import org.netxms.client.objects.Template;
 import org.netxms.client.objects.interfaces.PollingTarget;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.nxmc.Registry;
@@ -69,7 +70,10 @@ public final class ObjectMenuFactory
          i18n.tr("Interface"), 
          i18n.tr("Topology"),
          i18n.tr("Configuration"), 
-         i18n.tr("Instance discovery") 
+         i18n.tr("Instance discovery"),
+         i18n.tr("Routing table"),
+         i18n.tr("Network discovery"),
+         i18n.tr("Automatic binding")
       };
 
    /**
@@ -93,27 +97,31 @@ public final class ObjectMenuFactory
       final Menu menu = (parentMenu != null) ? new Menu(parentMenu) : new Menu(parentControl);
 		if (object instanceof AbstractNode)
 		{
-         addPollMenuItem(menu, object, NodePollType.STATUS, viewPlacement);
-         addPollMenuItem(menu, object, NodePollType.CONFIGURATION_NORMAL, viewPlacement);
-         addPollMenuItem(menu, object, NodePollType.CONFIGURATION_FULL, viewPlacement);
-         addPollMenuItem(menu, object, NodePollType.INSTANCE_DISCOVERY, viewPlacement);
-         addPollMenuItem(menu, object, NodePollType.INTERFACES, viewPlacement);
-         addPollMenuItem(menu, object, NodePollType.TOPOLOGY, viewPlacement);
+         addPollMenuItem(menu, object, ObjectPollType.STATUS, viewPlacement);
+         addPollMenuItem(menu, object, ObjectPollType.CONFIGURATION_NORMAL, viewPlacement);
+         addPollMenuItem(menu, object, ObjectPollType.CONFIGURATION_FULL, viewPlacement);
+         addPollMenuItem(menu, object, ObjectPollType.INSTANCE_DISCOVERY, viewPlacement);
+         addPollMenuItem(menu, object, ObjectPollType.INTERFACES, viewPlacement);
+         addPollMenuItem(menu, object, ObjectPollType.TOPOLOGY, viewPlacement);
 		}
       else if (object instanceof BusinessServicePrototype)
       {
-         addPollMenuItem(menu, object, NodePollType.INSTANCE_DISCOVERY, viewPlacement);
+         addPollMenuItem(menu, object, ObjectPollType.INSTANCE_DISCOVERY, viewPlacement);
       }
-		else if (object instanceof Cluster || object instanceof BusinessService)
+      else if (object instanceof BusinessService || object instanceof Cluster)
 		{
-         addPollMenuItem(menu, object, NodePollType.STATUS, viewPlacement);
-         addPollMenuItem(menu, object, NodePollType.CONFIGURATION_NORMAL, viewPlacement);
+         addPollMenuItem(menu, object, ObjectPollType.STATUS, viewPlacement);
+         addPollMenuItem(menu, object, ObjectPollType.CONFIGURATION_NORMAL, viewPlacement);
 		}
+      else if ((object instanceof Container) || (object instanceof Template))
+      {
+         addPollMenuItem(menu, object, ObjectPollType.AUTOBIND, viewPlacement);
+      }
       else if (object instanceof Sensor)
       {
-         addPollMenuItem(menu, object, NodePollType.STATUS, viewPlacement);
-         addPollMenuItem(menu, object, NodePollType.CONFIGURATION_NORMAL, viewPlacement);
-         addPollMenuItem(menu, object, NodePollType.INSTANCE_DISCOVERY, viewPlacement);
+         addPollMenuItem(menu, object, ObjectPollType.STATUS, viewPlacement);
+         addPollMenuItem(menu, object, ObjectPollType.CONFIGURATION_NORMAL, viewPlacement);
+         addPollMenuItem(menu, object, ObjectPollType.INSTANCE_DISCOVERY, viewPlacement);
       }
 
       if (menu.getItemCount() == 0)
@@ -133,7 +141,7 @@ public final class ObjectMenuFactory
     * @param type poll type
     * @param viewPlacement view placement information (can be used for displaying messages and creating new views)
     */
-   public static void addPollMenuItem(final Menu menu, AbstractObject object, NodePollType type, ViewPlacement viewPlacement)
+   public static void addPollMenuItem(final Menu menu, AbstractObject object, ObjectPollType type, ViewPlacement viewPlacement)
    {
       final MenuItem item = new MenuItem(menu, SWT.PUSH);
       item.setText(POLL_NAME[type.getValue()]);

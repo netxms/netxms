@@ -28,24 +28,22 @@
 /**
  * Cluster class default constructor
  */
-Cluster::Cluster() : super(Pollable::STATUS | Pollable::CONFIGURATION), AutoBindTarget(this)
+Cluster::Cluster() : super(Pollable::STATUS | Pollable::CONFIGURATION | Pollable::AUTOBIND), AutoBindTarget(this), m_syncNetworks(0, 8, Ownership::True)
 {
-	m_dwClusterType = 0;
-   m_syncNetworks = new ObjectArray<InetAddress>(8, 8, Ownership::True);
+	m_clusterType = 0;
 	m_dwNumResources = 0;
-	m_pResourceList = NULL;
+	m_pResourceList = nullptr;
 	m_zoneUIN = 0;
 }
 
 /**
  * Cluster class new object constructor
  */
-Cluster::Cluster(const TCHAR *pszName, int32_t zoneUIN) : super(pszName, Pollable::STATUS | Pollable::CONFIGURATION),  AutoBindTarget(this)
+Cluster::Cluster(const TCHAR *pszName, int32_t zoneUIN) : super(pszName, Pollable::STATUS | Pollable::CONFIGURATION | Pollable::AUTOBIND), AutoBindTarget(this), m_syncNetworks(0, 8, Ownership::True)
 {
-	m_dwClusterType = 0;
-   m_syncNetworks = new ObjectArray<InetAddress>(8, 8, Ownership::True);
+	m_clusterType = 0;
 	m_dwNumResources = 0;
-	m_pResourceList = NULL;
+	m_pResourceList = nullptr;
 	m_zoneUIN = zoneUIN;
 }
 
@@ -54,7 +52,6 @@ Cluster::Cluster(const TCHAR *pszName, int32_t zoneUIN) : super(pszName, Pollabl
  */
 Cluster::~Cluster()
 {
-   delete m_syncNetworks;
 	MemFree(m_pResourceList);
 }
 
@@ -85,10 +82,10 @@ bool Cluster::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 
 	_sntprintf(szQuery, 256, _T("SELECT cluster_type,zone_guid FROM clusters WHERE id=%d"), (int)m_id);
 	hResult = DBSelect(hdb, szQuery);
-	if (hResult == NULL)
+	if (hResult == nullptr)
 		return false;
 
-	m_dwClusterType = DBGetFieldULong(hResult, 0, 0);
+	m_clusterType = DBGetFieldULong(hResult, 0, 0);
 	m_zoneUIN = DBGetFieldULong(hResult, 0, 1);
 	DBFreeResult(hResult);
 
@@ -140,7 +137,7 @@ bool Cluster::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 				{
                InetAddress *addr = new InetAddress(DBGetFieldInetAddr(hResult, i, 0));
                addr->setMaskBits(DBGetFieldLong(hResult, i, 1));
-               m_syncNetworks->add(addr);
+               m_syncNetworks.add(addr);
 				}
 				DBFreeResult(hResult);
 			}
@@ -209,7 +206,7 @@ bool Cluster::saveToDatabase(DB_HANDLE hdb)
       DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("clusters"), _T("id"), m_id, columns);
       if (hStmt != nullptr)
       {
-         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_dwClusterType);
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_clusterType);
          DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_zoneUIN);
          DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_id);
          success = DBExecute(hStmt);
@@ -254,16 +251,16 @@ bool Cluster::saveToDatabase(DB_HANDLE hdb)
    {
 		// Save sync net list
       success = executeQueryOnObject(hdb, _T("DELETE FROM cluster_sync_subnets WHERE cluster_id=?"));
-      if (success)
+      if (success && !m_syncNetworks.isEmpty())
       {
-         DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO cluster_sync_subnets (cluster_id,subnet_addr,subnet_mask) VALUES (?,?,?)"));
+         DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO cluster_sync_subnets (cluster_id,subnet_addr,subnet_mask) VALUES (?,?,?)"), m_syncNetworks.size() > 1);
          if (hStmt != nullptr)
          {
             DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
             lockProperties();
-            for(int i = 0; (i < m_syncNetworks->size()) && success; i++)
+            for(int i = 0; (i < m_syncNetworks.size()) && success; i++)
             {
-               const InetAddress *net = m_syncNetworks->get(i);
+               const InetAddress *net = m_syncNetworks.get(i);
                DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, net->toString(), DB_BIND_TRANSIENT);
                DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, net->getMaskBits());
                success = DBExecute(hStmt);
@@ -335,27 +332,27 @@ bool Cluster::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Create CSCP message with object's data
  */
-void Cluster::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
+void Cluster::fillMessageInternal(NXCPMessage *msg, UINT32 userId)
 {
-	UINT32 i, dwId;
+	super::fillMessageInternal(msg, userId);
+   msg->setField(VID_CLUSTER_TYPE, m_clusterType);
+	msg->setField(VID_ZONE_UIN, m_zoneUIN);
 
-	super::fillMessageInternal(pMsg, userId);
-   pMsg->setField(VID_CLUSTER_TYPE, m_dwClusterType);
-	pMsg->setField(VID_ZONE_UIN, m_zoneUIN);
+   msg->setField(VID_NUM_SYNC_SUBNETS, (UINT32)m_syncNetworks.size());
+   uint32_t fieldId = VID_SYNC_SUBNETS_BASE;
+   for(int i = 0; i < m_syncNetworks.size(); i++)
+      msg->setField(fieldId++, *m_syncNetworks.get(i));
 
-   pMsg->setField(VID_NUM_SYNC_SUBNETS, (UINT32)m_syncNetworks->size());
-   for(i = 0, dwId = VID_SYNC_SUBNETS_BASE; i < (UINT32)m_syncNetworks->size(); i++)
-      pMsg->setField(dwId++, *(m_syncNetworks->get(i)));
-
-   pMsg->setField(VID_NUM_RESOURCES, m_dwNumResources);
-	for(i = 0, dwId = VID_RESOURCE_LIST_BASE; i < m_dwNumResources; i++, dwId += 6)
+   msg->setField(VID_NUM_RESOURCES, m_dwNumResources);
+   fieldId = VID_RESOURCE_LIST_BASE;
+	for(uint32_t i = 0; i < m_dwNumResources; i++, fieldId += 6)
 	{
-		pMsg->setField(dwId++, m_pResourceList[i].dwId);
-		pMsg->setField(dwId++, m_pResourceList[i].szName);
-		pMsg->setField(dwId++, m_pResourceList[i].ipAddr);
-		pMsg->setField(dwId++, m_pResourceList[i].dwCurrOwner);
+		msg->setField(fieldId++, m_pResourceList[i].dwId);
+		msg->setField(fieldId++, m_pResourceList[i].szName);
+		msg->setField(fieldId++, m_pResourceList[i].ipAddr);
+		msg->setField(fieldId++, m_pResourceList[i].dwCurrOwner);
 	}
-   AutoBindTarget::fillMessage(pMsg);
+   AutoBindTarget::fillMessage(msg);
 }
 
 /**
@@ -368,17 +365,17 @@ uint32_t Cluster::modifyFromMessageInternal(const NXCPMessage& msg)
 
    // Change cluster type
    if (msg.isFieldExist(VID_CLUSTER_TYPE))
-      m_dwClusterType = msg.getFieldAsUInt32(VID_CLUSTER_TYPE);
+      m_clusterType = msg.getFieldAsUInt32(VID_CLUSTER_TYPE);
 
    // Change sync subnets
    if (msg.isFieldExist(VID_NUM_SYNC_SUBNETS))
 	{
-      m_syncNetworks->clear();
+      m_syncNetworks.clear();
       int count = msg.getFieldAsInt32(VID_NUM_SYNC_SUBNETS);
       uint32_t fieldId = VID_SYNC_SUBNETS_BASE;
       for(int i = 0; i < count; i++)
       {
-         m_syncNetworks->add(new InetAddress(msg.getFieldAsInetAddress(fieldId++)));
+         m_syncNetworks.add(new InetAddress(msg.getFieldAsInetAddress(fieldId++)));
       }
 	}
 
@@ -433,9 +430,9 @@ bool Cluster::isSyncAddr(const InetAddress& addr)
 	bool bRet = false;
 
 	lockProperties();
-	for(int i = 0; i < m_syncNetworks->size(); i++)
+	for(int i = 0; i < m_syncNetworks.size(); i++)
 	{
-		if (m_syncNetworks->get(i)->contain(addr))
+		if (m_syncNetworks.get(i)->contain(addr))
 		{
 			bRet = true;
 			break;
@@ -450,11 +447,10 @@ bool Cluster::isSyncAddr(const InetAddress& addr)
  */
 bool Cluster::isVirtualAddr(const InetAddress& addr)
 {
-	UINT32 i;
 	bool bRet = false;
 
 	lockProperties();
-	for(i = 0; i < m_dwNumResources; i++)
+	for(uint32_t i = 0; i < m_dwNumResources; i++)
 	{
       if (m_pResourceList[i].ipAddr.equals(addr))
 		{
@@ -491,14 +487,6 @@ void Cluster::configurationPoll(PollerInfo *poller, ClientSession *pSession, UIN
 
    m_pollRequestor = pSession;
    m_pollRequestId = dwRqId;
-
-   nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ClusterConfPoll(%s): applying templates"), m_name);
-   if (ConfigReadBoolean(_T("Objects.Clusters.TemplateAutoApply"), false))
-      applyTemplates();
-
-   nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ClusterConfPoll(%s): Updating container bindings"), m_name);
-   if (ConfigReadBoolean(_T("Objects.Clusters.ContainerAutoBind"), false))
-      updateContainerMembership();
 
    poller->setStatus(_T("hook"));
    executeHookScript(_T("ConfigurationPoll"), dwRqId);
@@ -694,16 +682,16 @@ void Cluster::statusPoll(PollerInfo *poller, ClientSession *pSession, UINT32 dwR
 /**
  * Check if node is current owner of resource
  */
-bool Cluster::isResourceOnNode(UINT32 dwResource, UINT32 dwNode)
+bool Cluster::isResourceOnNode(uint32_t resourceId, uint32_t nodeId)
 {
-	bool bRet = FALSE;
+	bool bRet = false;
 
 	lockProperties();
-	for(UINT32 i = 0; i < m_dwNumResources; i++)
+	for(uint32_t i = 0; i < m_dwNumResources; i++)
 	{
-		if (m_pResourceList[i].dwId == dwResource)
+		if (m_pResourceList[i].dwId == resourceId)
 		{
-			if (m_pResourceList[i].dwCurrOwner == dwNode)
+			if (m_pResourceList[i].dwCurrOwner == nodeId)
 				bRet = true;
 			break;
 		}
@@ -715,11 +703,11 @@ bool Cluster::isResourceOnNode(UINT32 dwResource, UINT32 dwNode)
 /**
  * Get node ID of resource owner
  */
-UINT32 Cluster::getResourceOwnerInternal(UINT32 id, const TCHAR *name)
+uint32_t Cluster::getResourceOwnerInternal(uint32_t id, const TCHAR *name)
 {
-   UINT32 ownerId = 0;
+   uint32_t ownerId = 0;
    lockProperties();
-   for(UINT32 i = 0; i < m_dwNumResources; i++)
+   for(uint32_t i = 0; i < m_dwNumResources; i++)
    {
       if (((name != NULL) && !_tcsicmp(name, m_pResourceList[i].szName)) ||
           (m_pResourceList[i].dwId == id))
@@ -868,7 +856,7 @@ NXSL_Value *Cluster::createNXSLObject(NXSL_VM *vm)
 /**
  * Get cluster nodes as NXSL array
  */
-NXSL_Array *Cluster::getNodesForNXSL(NXSL_VM *vm)
+NXSL_Value *Cluster::getNodesForNXSL(NXSL_VM *vm)
 {
    NXSL_Array *nodes = new NXSL_Array(vm);
    int index = 0;
@@ -883,7 +871,7 @@ NXSL_Array *Cluster::getNodesForNXSL(NXSL_VM *vm)
    }
    unlockChildList();
 
-   return nodes;
+   return vm->createValue(nodes);
 }
 
 /**
@@ -895,7 +883,7 @@ json_t *Cluster::toJson()
    AutoBindTarget::toJson(root);
 
    lockProperties();
-   json_object_set_new(root, "clusterType", json_integer(m_dwClusterType));
+   json_object_set_new(root, "clusterType", json_integer(m_clusterType));
    json_object_set_new(root, "syncNetworks", json_object_array(m_syncNetworks));
    json_object_set_new(root, "zoneUIN", json_integer(m_zoneUIN));
 
@@ -918,7 +906,7 @@ json_t *Cluster::toJson()
 /**
  * ADd node to the cluster
  */
-void Cluster::addNode(shared_ptr<Node> node)
+void Cluster::addNode(const shared_ptr<Node>& node)
 {
    applyToTarget(node);
    node->setRecheckCapsFlag();
@@ -928,9 +916,85 @@ void Cluster::addNode(shared_ptr<Node> node)
 /**
  * Remove node form cluster
  */
-void Cluster::removeNode(shared_ptr<Node> node)
+void Cluster::removeNode(const shared_ptr<Node>& node)
 {
-   queueRemoveFromTarget(node->getId(), TRUE);
+   queueRemoveFromTarget(node->getId(), true);
    node->setRecheckCapsFlag();
    node->forceConfigurationPoll();
+}
+
+/**
+ * Lock template for autobind poll
+ */
+bool Cluster::lockForAutobindPoll()
+{
+   bool success = false;
+   lockProperties();
+   if (!m_isDeleted && !m_isDeleteInitiated && (m_status != STATUS_UNMANAGED) &&
+       (static_cast<uint32_t>(time(nullptr) - m_autobindPollState.getLastCompleted()) > g_autobindPollingInterval))
+   {
+      success = m_autobindPollState.schedule();
+   }
+   unlockProperties();
+   return success;
+}
+
+/**
+ * Perform automatic object binding
+ */
+void Cluster::autobindPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId)
+{
+   poller->setStatus(_T("wait for lock"));
+   pollerLock(configuration);
+
+   if (IsShutdownInProgress())
+   {
+      pollerUnlock();
+      return;
+   }
+
+   m_pollRequestor = session;
+   m_pollRequestId = rqId;
+   nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 5, _T("Starting autobind poll of cluster %s [%u]"), m_name, m_id);
+   poller->setStatus(_T("checking objects"));
+
+   if (!isAutoBindEnabled())
+   {
+      sendPollerMsg(_T("Automatic object binding is disabled\r\n"));
+      nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 5, _T("Finished autobind poll of cluster %s [%u])"), m_name, m_id);
+      pollerUnlock();
+      return;
+   }
+
+   NXSL_VM *cachedFilterVM = nullptr;
+   unique_ptr<SharedObjectArray<NetObj>> nodes = g_idxNodeById.getObjects();
+   for (int i = 0; i < nodes->size(); i++)
+   {
+      shared_ptr<NetObj> node = nodes->getShared(i);
+
+      AutoBindDecision decision = isApplicable(&cachedFilterVM, node);
+      if ((decision == AutoBindDecision_Ignore) || ((decision == AutoBindDecision_Unbind) && !isAutoUnbindEnabled()))
+         continue;   // Decision cannot affect checks
+
+      if ((decision == AutoBindDecision_Bind) && !isDirectChild(node->getId()))
+      {
+         sendPollerMsg(_T("   Adding node %s\r\n"), node->getName());
+         nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 4, _T("Cluster::autobindPoll(): binding node \"%s\" [%u] to cluster \"%s\" [%u]"), node->getName(), node->getId(), m_name, m_id);
+         addNode(static_pointer_cast<Node>(node));
+         PostSystemEvent(EVENT_CLUSTER_AUTOADD, g_dwMgmtNode, "isis", node->getId(), node->getName(), m_id, m_name);
+         calculateCompoundStatus();
+      }
+      else if ((decision == AutoBindDecision_Unbind) && isDirectChild(node->getId()))
+      {
+         sendPollerMsg(_T("   Removing node %s\r\n"), node->getName());
+         nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 4, _T("Cluster::autobindPoll(): removing node \"%s\" [%u] from cluster \"%s\" [%u]"), node->getName(), node->getId(), m_name, m_id);
+         removeNode(static_pointer_cast<Node>(node));
+         PostSystemEvent(EVENT_CLUSTER_AUTOREMOVE, g_dwMgmtNode, "isis", node->getId(), node->getName(), m_id, m_name);
+         calculateCompoundStatus();
+      }
+   }
+   delete cachedFilterVM;
+
+   pollerUnlock();
+   nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 5, _T("Finished autobind poll of container %s [%u])"), m_name, m_id);
 }

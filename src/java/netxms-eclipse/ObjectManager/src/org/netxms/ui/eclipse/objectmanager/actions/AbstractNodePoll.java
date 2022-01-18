@@ -26,7 +26,7 @@ import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
-import org.netxms.client.constants.NodePollType;
+import org.netxms.client.constants.ObjectPollType;
 import org.netxms.client.objects.interfaces.PollingTarget;
 import org.netxms.ui.eclipse.objectmanager.Messages;
 import org.netxms.ui.eclipse.objectmanager.views.NodePollerView;
@@ -101,7 +101,7 @@ public abstract class AbstractNodePoll implements IObjectActionDelegate
 	 * 
 	 * @return
 	 */
-	abstract protected NodePollType getPollType();
+	abstract protected ObjectPollType getPollType();
 	
 	/**
 	 * @return

@@ -36,7 +36,7 @@ import org.netxms.client.ScheduledTask;
 import org.netxms.client.ScriptCompilationResult;
 import org.netxms.client.TextOutputListener;
 import org.netxms.client.UserAgentNotification;
-import org.netxms.client.constants.NodePollType;
+import org.netxms.client.constants.ObjectPollType;
 import org.netxms.client.datacollection.DataCollectionConfiguration;
 import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.events.Alarm;
@@ -236,7 +236,7 @@ public class ScriptTest extends AbstractSessionTest implements TextOutputListene
          session.executeAction(managementNode.getObjectId(), "Agent.Restart", null);
 
          Thread.sleep(10000); // Wait for agent restart         
-         session.pollObject(managementNode.getObjectId(), NodePollType.STATUS, null);
+         session.pollObject(managementNode.getObjectId(), ObjectPollType.STATUS, null);
 
          List<String> params = new ArrayList<String>();
          params.add(Long.toString(managementNode.getObjectId()));

@@ -1191,8 +1191,8 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_DELETE_OBJECT:
          deleteObject(*request);
          break;
-      case CMD_POLL_NODE:
-         forcedNodePoll(*request);
+      case CMD_POLL_OBJECT:
+         forcedObjectPoll(*request);
          break;
       case CMD_TRAP:
          onTrap(*request);
@@ -6803,9 +6803,9 @@ void ClientSession::sendAllActions(const NXCPMessage& request)
 }
 
 /**
- * Perform a forced node poll
+ * Perform a forced object poll
  */
-void ClientSession::forcedNodePoll(const NXCPMessage& request)
+void ClientSession::forcedObjectPoll(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
@@ -6834,6 +6834,8 @@ void ClientSession::forcedNodePoll(const NXCPMessage& request)
             isValidPoll = pollableObject->isRoutingTablePollAvailable();
          else if (pollType == POLL_DISCOVERY)
             isValidPoll = pollableObject->isDiscoveryPollAvailable();
+         else if (pollType == POLL_AUTOBIND)
+            isValidPoll = pollableObject->isAutobindPollAvailable();
          else if (pollType == POLL_INTERFACE_NAMES)
             isValidPoll = (object->getObjectClass() == OBJECT_NODE);
       }
@@ -6862,8 +6864,7 @@ void ClientSession::forcedNodePoll(const NXCPMessage& request)
       response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
    }
 
-   // Send response
-   sendMessage(&response);
+   sendMessage(response);
 
    if (isValidPoll)
    {
@@ -6891,6 +6892,9 @@ void ClientSession::forcedNodePoll(const NXCPMessage& request)
          case POLL_DISCOVERY:
             pollableObject->doForcedDiscoveryPoll(RegisterPoller(PollerType::DISCOVERY, object), this, request.getId());
             break;
+         case POLL_AUTOBIND:
+            pollableObject->doForcedAutobindPoll(RegisterPoller(PollerType::AUTOBIND, object), this, request.getId());
+            break;
          case POLL_INTERFACE_NAMES:
             if (object->getObjectClass() == OBJECT_NODE)
             {
@@ -6904,7 +6908,7 @@ void ClientSession::forcedNodePoll(const NXCPMessage& request)
 
       NXCPMessage msg(CMD_POLLING_INFO, request.getId());
       msg.setField(VID_RCC, RCC_SUCCESS);
-      sendMessage(&msg);
+      sendMessage(msg);
    }
 }
 

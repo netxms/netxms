@@ -555,12 +555,6 @@ void AccessPoint::configurationPoll(PollerInfo *poller, ClientSession *session, 
    m_pollRequestId = rqId;
    nxlog_debug(5, _T("Starting configuration poll of access point %s (ID: %d), m_flags: %d"), m_name, m_id, m_flags);
 
-   poller->setStatus(_T("autobind"));
-   if (ConfigReadBoolean(_T("Objects.AccessPoints.TemplateAutoApply"), false))
-      applyTemplates();
-   if (ConfigReadBoolean(_T("Objects.AccessPoints.ContainerAutoBind"), false))
-      updateContainerMembership();
-
    // Execute hook script
    poller->setStatus(_T("hook"));
    executeHookScript(_T("ConfigurationPoll"), rqId);

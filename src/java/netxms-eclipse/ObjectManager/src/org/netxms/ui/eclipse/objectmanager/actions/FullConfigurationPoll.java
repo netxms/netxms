@@ -18,7 +18,7 @@
  */
 package org.netxms.ui.eclipse.objectmanager.actions;
 
-import org.netxms.client.constants.NodePollType;
+import org.netxms.client.constants.ObjectPollType;
 import org.netxms.ui.eclipse.objectmanager.Messages;
 
 /**
@@ -30,9 +30,9 @@ public class FullConfigurationPoll extends AbstractNodePoll
 	 * @see org.netxms.ui.eclipse.objectmanager.actions.AbstractNodePoll#getPollType()
 	 */
 	@Override
-	protected NodePollType getPollType()
+	protected ObjectPollType getPollType()
 	{
-		return NodePollType.CONFIGURATION_FULL;
+		return ObjectPollType.CONFIGURATION_FULL;
 	}
 
    /* (non-Javadoc)

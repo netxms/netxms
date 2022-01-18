@@ -76,7 +76,7 @@ import org.netxms.client.constants.AuthenticationType;
 import org.netxms.client.constants.DataOrigin;
 import org.netxms.client.constants.DataType;
 import org.netxms.client.constants.HistoricalDataType;
-import org.netxms.client.constants.NodePollType;
+import org.netxms.client.constants.ObjectPollType;
 import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.constants.RCC;
 import org.netxms.client.dashboards.DashboardElement;
@@ -9715,20 +9715,19 @@ public class NXCSession
    }
 
    /**
-    * Perform a forced node poll. This method will not return until poll is
-    * complete, so it's advised to run it from separate thread. For each message
-    * received from poller listener's method onPollerMessage will be called.
+    * Perform a forced object poll. This method will not return until poll is complete, so it's advised to run it from separate
+    * thread. For each message received from poller listener's method onPollerMessage will be called.
     *
-    * @param nodeId   node object ID
+    * @param objectId object ID
     * @param pollType poll type
-    * @param listener listener
-    * @throws IOException  if socket or file I/O error occurs
+    * @param listener text output listener (can be null)
+    * @throws IOException if socket or file I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void pollObject(long nodeId, NodePollType pollType, final TextOutputListener listener) throws IOException, NXCException
+   public void pollObject(long objectId, ObjectPollType pollType, final TextOutputListener listener) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_POLL_OBJECT);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)objectId);
       msg.setFieldInt16(NXCPCodes.VID_POLL_TYPE, pollType.getValue());
 
       MessageHandler handler = new MessageHandler() {

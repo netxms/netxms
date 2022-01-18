@@ -133,10 +133,10 @@ public class ObjectBrowser extends ViewPart
 	private String initialObjectSelection = null;
 	private ObjectOpenHandlerRegistry openHandlers;
 	private ObjectActionValidator[] actionValidators;
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite, org.eclipse.ui.IMemento)
-	 */
+
+   /**
+    * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite, org.eclipse.ui.IMemento)
+    */
 	@Override
 	public void init(IViewSite site, IMemento memento) throws PartInitException
 	{
@@ -634,9 +634,9 @@ public class ObjectBrowser extends ViewPart
 		objectTree.setFocus();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#dispose()
-	 */
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#dispose()
+    */
 	@Override
 	public void dispose()
 	{

@@ -52,6 +52,7 @@ extern uint32_t g_topologyPollingInterval;
 extern uint32_t g_conditionPollingInterval;
 extern uint32_t g_instancePollingInterval;
 extern uint32_t g_icmpPollingInterval;
+extern uint32_t g_autobindPollingInterval;
 extern uint32_t g_agentRestartWaitTime;
 extern int16_t g_defaultAgentCacheMode;
 
@@ -1333,13 +1334,19 @@ public:
 
    virtual json_t *toJson();
 
-   // Debug methods
    static const WCHAR *getObjectClassNameW(int objectClass);
    static const char *getObjectClassNameA(int objectClass);
 #ifdef UNICODE
    static const WCHAR *getObjectClassName(int objectClass) { return getObjectClassNameW(objectClass); }
 #else
    static const char *getObjectClassName(int objectClass) { return getObjectClassNameA(objectClass); }
+#endif
+   static int getObjectClassByNameW(const WCHAR *name);
+   static int getObjectClassByNameA(const char *name);
+#ifdef UNICODE
+   static int getObjectClassByName(const WCHAR *name) { return getObjectClassByNameW(name); }
+#else
+   static int getObjectClassByName(const char *name) { return getObjectClassByNameA(name); }
 #endif
 };
 
@@ -1358,7 +1365,8 @@ enum class PollerType
    ROUTING_TABLE = 3,
    DISCOVERY = 4,
    TOPOLOGY = 5,
-   ICMP = 6
+   ICMP = 6,
+   AUTOBIND = 7
 };
 
 /**
@@ -1395,6 +1403,17 @@ public:
  */
 class NXCORE_EXPORTABLE Pollable
 {
+public:
+   static constexpr uint32_t NONE               = 0;
+   static constexpr uint32_t STATUS             = 0x01;
+   static constexpr uint32_t CONFIGURATION      = 0x02;
+   static constexpr uint32_t INSTANCE_DISCOVERY = 0x04;
+   static constexpr uint32_t TOPOLOGY           = 0x08;
+   static constexpr uint32_t ROUTING_TABLE      = 0x10;
+   static constexpr uint32_t DISCOVERY          = 0x20;
+   static constexpr uint32_t ICMP               = 0x40;
+   static constexpr uint32_t AUTOBIND           = 0x80;
+
 protected:
    NetObj* m_this;
 
@@ -1406,6 +1425,7 @@ protected:
    PollState m_topologyPollState;
    PollState m_routingPollState;
    PollState m_icmpPollState;
+   PollState m_autobindPollState;
 
    Mutex m_pollerMutex;
 
@@ -1415,27 +1435,19 @@ protected:
    virtual void topologyPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) {}
    virtual void routingTablePoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) {}
    virtual void icmpPoll(PollerInfo *poller) {}
+   virtual void autobindPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId) {}
 
    void _pollerLock() { m_pollerMutex.lock(); }
    void _pollerUnlock() { m_pollerMutex.unlock(); }
 
-   bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
+   bool loadFromDatabase(DB_HANDLE hdb, uint32_t id);
 
 public:
    Pollable(NetObj *_this, uint32_t acceptablePolls);
    virtual ~Pollable();
 
-   static constexpr uint32_t NONE = 0;
-   static constexpr uint32_t STATUS = (1 << 0);
-   static constexpr uint32_t CONFIGURATION = (1 << 1);
-   static constexpr uint32_t INSTANCE_DISCOVERY = (1 << 2);
-   static constexpr uint32_t TOPOLOGY = (1 << 3);
-   static constexpr uint32_t ROUTING_TABLE = (1 << 4);
-   static constexpr uint32_t DISCOVERY = (1 << 5);
-   static constexpr uint32_t ICMP = (1 << 6);
-
    // Status poll
-   bool isStatusPollAvailable() const { return m_acceptablePolls & Pollable::STATUS; }
+   bool isStatusPollAvailable() const { return (m_acceptablePolls & Pollable::STATUS) != 0; }
    void doForcedStatusPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId);
    void doForcedStatusPoll(PollerInfo *poller) { doForcedStatusPoll(poller, nullptr, 0); }
    void doStatusPoll(PollerInfo *parentPoller, ClientSession *session, uint32_t rqId);
@@ -1444,7 +1456,7 @@ public:
    virtual bool lockForStatusPoll();
 
    // Configuration poll
-   bool isConfigurationPollAvailable() const { return m_acceptablePolls & Pollable::CONFIGURATION; }
+   bool isConfigurationPollAvailable() const { return (m_acceptablePolls & Pollable::CONFIGURATION) != 0; }
    void doForcedConfigurationPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId);
    void doForcedConfigurationPoll(PollerInfo *poller) { doForcedConfigurationPoll(poller, nullptr, 0); }
    void doConfigurationPoll(PollerInfo *poller);
@@ -1452,7 +1464,7 @@ public:
    virtual bool lockForConfigurationPoll();
 
    // Instance Discovery
-   bool isInstanceDiscoveryPollAvailable() const { return m_acceptablePolls & Pollable::INSTANCE_DISCOVERY; }
+   bool isInstanceDiscoveryPollAvailable() const { return (m_acceptablePolls & Pollable::INSTANCE_DISCOVERY) != 0; }
    void doForcedInstanceDiscoveryPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId);
    void doForcedInstanceDiscoveryPoll(PollerInfo *poller) { doForcedInstanceDiscoveryPoll(poller, nullptr, 0); }
    void doInstanceDiscoveryPoll(PollerInfo *poller);
@@ -1460,7 +1472,7 @@ public:
    virtual bool lockForInstanceDiscoveryPoll() { return false; }
 
    // Topology
-   bool isTopologyPollAvailable() const { return m_acceptablePolls & Pollable::TOPOLOGY; }
+   bool isTopologyPollAvailable() const { return (m_acceptablePolls & Pollable::TOPOLOGY) != 0; }
    void doForcedTopologyPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId);
    void doForcedTopologyPoll(PollerInfo *poller) { doForcedTopologyPoll(poller, nullptr, 0); }
    void doTopologyPoll(PollerInfo *poller);
@@ -1468,15 +1480,15 @@ public:
    virtual bool lockForTopologyPoll() { return false; }
 
    // Routing Table
-   bool isRoutingTablePollAvailable() const { return m_acceptablePolls & Pollable::ROUTING_TABLE; }
+   bool isRoutingTablePollAvailable() const { return (m_acceptablePolls & Pollable::ROUTING_TABLE) != 0; }
    void doForcedRoutingTablePoll(PollerInfo *poller, ClientSession *session, uint32_t rqId);
    void doForcedRoutingTablePoll(PollerInfo *poller) { doForcedRoutingTablePoll(poller, nullptr, 0); }
    void doRoutingTablePoll(PollerInfo *poller);
    virtual void startForcedRoutingTablePoll() { m_routingPollState.manualStart(); }
    virtual bool lockForRoutingTablePoll() { return false; }
 
-   // Discovery
-   bool isDiscoveryPollAvailable() const { return m_acceptablePolls & Pollable::DISCOVERY; }
+   // Network discovery
+   bool isDiscoveryPollAvailable() const { return (m_acceptablePolls & Pollable::DISCOVERY) != 0; }
    void doForcedDiscoveryPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId);
    void doForcedDiscoveryPoll(PollerInfo *poller) { doForcedDiscoveryPoll(poller, nullptr, 0); }
    void doDiscoveryPoll(PollerInfo *poller);
@@ -1484,9 +1496,17 @@ public:
    virtual bool lockForDiscoveryPoll() { return false; }
 
    // ICMP
-   bool isIcmpPollAvailable() const { return m_acceptablePolls & Pollable::ICMP; }
+   bool isIcmpPollAvailable() const { return (m_acceptablePolls & Pollable::ICMP) != 0; }
    void doIcmpPoll(PollerInfo *poller);
    virtual bool lockForIcmpPoll() { return false; }
+
+   // Autobind
+   bool isAutobindPollAvailable() const { return (m_acceptablePolls & Pollable::AUTOBIND) != 0; }
+   void doForcedAutobindPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId);
+   void doForcedAutobindPoll(PollerInfo *poller) { doForcedAutobindPoll(poller, nullptr, 0); }
+   void doAutobindPoll(PollerInfo *poller);
+   virtual void startForcedAutobindPoll() { m_autobindPollState.manualStart(); }
+   virtual bool lockForAutobindPoll() { return false; }
 
    void resetPollTimers();
    DataCollectionError getInternalMetric(const TCHAR *name, TCHAR *buffer, size_t size);
@@ -1819,7 +1839,7 @@ public:
 /**
  * Data collection template class
  */
-class NXCORE_EXPORTABLE Template : public DataCollectionOwner, public AutoBindTarget, public VersionableObject
+class NXCORE_EXPORTABLE Template : public DataCollectionOwner, public AutoBindTarget, public Pollable, public VersionableObject
 {
 private:
    typedef DataCollectionOwner super;
@@ -1833,6 +1853,8 @@ protected:
 
    virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId) override;
    virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg) override;
+
+   virtual void autobindPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId) override;
 
    void forceDeployPolicies(const shared_ptr<Node>& target);
 
@@ -1861,6 +1883,8 @@ public:
 
    void createExportRecord(StringBuffer &xml);
    virtual HashSet<uint32_t> *getRelatedEventsList() const override;
+
+   virtual bool lockForAutobindPoll() override;
 
    bool hasPolicy(const uuid& guid) const;
    void fillPolicyListMessage(NXCPMessage *pMsg) const;
@@ -2269,10 +2293,6 @@ protected:
 
    NXSL_VM *runDataCollectionScript(const TCHAR *param, DataCollectionTarget *targetObject);
 
-   void updateContainerMembership();
-   void applyTemplates();
-   void removeTemplate(Template *templateObject);
-
    DataCollectionError queryWebService(const TCHAR *param, WebServiceRequestType queryType, TCHAR *buffer, size_t bufSize, StringList *list);
 
    void getItemDciValuesSummary(SummaryTable *tableDefinition, Table *tableData, UINT32 userId);
@@ -2352,8 +2372,9 @@ public:
 
    bool applyTemplateItem(uint32_t templateId, DCObject *dcObject);
    void cleanDeletedTemplateItems(uint32_t templateId, const IntegerArray<uint32_t>& dciList);
-   virtual void onTemplateRemove(const shared_ptr<DataCollectionOwner>& templateObject, bool removeDCI);
+   void removeTemplate(Template *templateObject);
    static void removeTemplate(const shared_ptr<ScheduledTaskParameters>& parameters);
+   virtual void onTemplateRemove(const shared_ptr<DataCollectionOwner>& templateObject, bool removeDCI);
 };
 
 /**
@@ -2541,20 +2562,21 @@ private:
    typedef DataCollectionTarget super;
 
 protected:
-   UINT32 m_dwClusterType;
-   ObjectArray<InetAddress> *m_syncNetworks;
-   UINT32 m_dwNumResources;
+   uint32_t m_clusterType;
+   ObjectArray<InetAddress> m_syncNetworks;
+   uint32_t m_dwNumResources;
    CLUSTER_RESOURCE *m_pResourceList;
    int32_t m_zoneUIN;
 
-   virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId) override;
+   virtual void fillMessageInternal(NXCPMessage *msg, UINT32 userId) override;
    virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg) override;
 
    virtual void onDataCollectionChange() override;
-   UINT32 getResourceOwnerInternal(UINT32 id, const TCHAR *name);
+   uint32_t getResourceOwnerInternal(uint32_t id, const TCHAR *name);
 
    virtual void statusPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) override;
    virtual void configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) override;
+   virtual void autobindPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId) override;
 
 public:
    Cluster();
@@ -2575,18 +2597,20 @@ public:
    virtual int32_t getZoneUIN() const override { return m_zoneUIN; }
    virtual json_t *toJson() override;
 
+   virtual bool lockForAutobindPoll() override;
+
    bool isSyncAddr(const InetAddress& addr);
    bool isVirtualAddr(const InetAddress& addr);
-   bool isResourceOnNode(UINT32 dwResource, UINT32 dwNode);
-   UINT32 getResourceOwner(UINT32 resourceId) { return getResourceOwnerInternal(resourceId, nullptr); }
-   UINT32 getResourceOwner(const TCHAR *resourceName) { return getResourceOwnerInternal(0, resourceName); }
+   bool isResourceOnNode(uint32_t resourceId, uint32_t nodeId);
+   uint32_t getResourceOwner(uint32_t resourceId) { return getResourceOwnerInternal(resourceId, nullptr); }
+   uint32_t getResourceOwner(const TCHAR *resourceName) { return getResourceOwnerInternal(0, resourceName); }
 
    uint32_t collectAggregatedData(DCItem *item, TCHAR *buffer);
    uint32_t collectAggregatedData(DCTable *table, shared_ptr<Table> *result);
 
-   NXSL_Array *getNodesForNXSL(NXSL_VM *vm);
-   void addNode(shared_ptr<Node> node);
-   void removeNode(shared_ptr<Node> node);
+   NXSL_Value *getNodesForNXSL(NXSL_VM *vm);
+   void addNode(const shared_ptr<Node>& node);
+   void removeNode(const shared_ptr<Node>& node);
 };
 
 #ifdef _WIN32
@@ -3187,8 +3211,6 @@ protected:
    void buildInternalCommunicationTopologyInternal(NetworkMapObjectList *topology, uint32_t seedNode, bool agentConnectionOnly, bool checkAllProxies);
    bool checkProxyAndLink(NetworkMapObjectList *topology, uint32_t seedNode, uint32_t proxyId, uint32_t linkType, const TCHAR *linkName, bool checkAllProxies);
 
-   void updateClusterMembership();
-
    virtual void statusPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) override;
    virtual void configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) override;
    virtual void topologyPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) override;
@@ -3640,17 +3662,18 @@ public:
 /**
  * Object container
  */
-class NXCORE_EXPORTABLE Container : public AbstractContainer, public AutoBindTarget
+class NXCORE_EXPORTABLE Container : public AbstractContainer, public AutoBindTarget, public Pollable
 {
 protected:
    typedef AbstractContainer super;
 
    virtual void fillMessageInternal(NXCPMessage *msg, UINT32 userId) override;
    virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg) override;
+   virtual void autobindPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId) override;
 
 public:
-   Container() : super(), AutoBindTarget(this) {}
-   Container(const TCHAR *pszName, UINT32 dwCategory) : super(pszName, dwCategory), AutoBindTarget(this) {}
+   Container() : super(), AutoBindTarget(this), Pollable(this, Pollable::AUTOBIND) {}
+   Container(const TCHAR *pszName, UINT32 dwCategory) : super(pszName, dwCategory), AutoBindTarget(this), Pollable(this, Pollable::AUTOBIND) {}
    virtual ~Container() {}
 
    shared_ptr<Container> self() { return static_pointer_cast<Container>(NObject::self()); }
@@ -3664,6 +3687,8 @@ public:
    virtual bool showThresholdSummary() const override;
 
    virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;
+
+   virtual bool lockForAutobindPoll() override;
 };
 
 /**

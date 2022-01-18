@@ -139,7 +139,7 @@ const char *NetObj::getObjectClassNameA() const
  */
 const WCHAR *NetObj::getObjectClassNameW(int objectClass)
 {
-   return ((objectClass >= 0) && (objectClass < static_cast<int>(sizeof(s_classNameW) / sizeof(const WCHAR *)))) ? s_classNameW[objectClass] : L"Custom";
+   return ((objectClass >= 0) && (objectClass < static_cast<int>(sizeof(s_classNameW) / sizeof(const WCHAR*)))) ? s_classNameW[objectClass] : L"Custom";
 }
 
 /**
@@ -147,7 +147,29 @@ const WCHAR *NetObj::getObjectClassNameW(int objectClass)
  */
 const char *NetObj::getObjectClassNameA(int objectClass)
 {
-   return ((objectClass >= 0) && (objectClass < static_cast<int>(sizeof(s_classNameA) / sizeof(const char *)))) ? s_classNameA[objectClass] : "Custom";
+   return ((objectClass >= 0) && (objectClass < static_cast<int>(sizeof(s_classNameA) / sizeof(const char*)))) ? s_classNameA[objectClass] : "Custom";
+}
+
+/**
+ * Get object class ID by name
+ */
+int NetObj::getObjectClassByNameW(const WCHAR *name)
+{
+   for(int i = 0; i < static_cast<int>(sizeof(s_classNameW) / sizeof(const WCHAR*)); i++)
+      if (!wcsicmp(name, s_classNameW[i]))
+         return i;
+   return OBJECT_GENERIC;
+}
+
+/**
+ * Get object class ID by name
+ */
+int NetObj::getObjectClassByNameA(const char *name)
+{
+   for(int i = 0; i < static_cast<int>(sizeof(s_classNameA) / sizeof(const char*)); i++)
+      if (!stricmp(name, s_classNameA[i]))
+         return i;
+   return OBJECT_GENERIC;
 }
 
 /**

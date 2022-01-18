@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Raden Solutions
+** Copyright (C) 2003-2022 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@
  * Pollable object constructor
  */
 Pollable::Pollable(NetObj *_this, uint32_t acceptablePolls) : m_statusPollState(_T("status")), m_configurationPollState(_T("configuration"), true), m_instancePollState(_T("instance"), true),
-         m_discoveryPollState(_T("discovery")), m_topologyPollState(_T("topology")), m_routingPollState(_T("routing")), m_icmpPollState(_T("icmp"))
+         m_discoveryPollState(_T("discovery")), m_topologyPollState(_T("topology")), m_routingPollState(_T("routing")), m_icmpPollState(_T("icmp")), m_autobindPollState(_T("autobind"))
 {
    m_this = _this;
    _this->m_asPollable = this;
@@ -234,6 +234,27 @@ void Pollable::doIcmpPoll(PollerInfo *poller)
 {
    poller->startExecution();
    icmpPoll(poller);
+   delete poller;
+}
+
+/**
+ * Start forced configuration poll
+ */
+void Pollable::doForcedAutobindPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId)
+{
+   startForcedAutobindPoll();
+   poller->startExecution();
+   autobindPoll(poller, session, rqId);
+   delete poller;
+}
+
+/**
+ * Start scheduled configuration poll
+ */
+void Pollable::doAutobindPoll(PollerInfo *poller)
+{
+   poller->startExecution();
+   autobindPoll(poller, nullptr, 0);
    delete poller;
 }
 

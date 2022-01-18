@@ -581,12 +581,6 @@ void Sensor::configurationPoll(PollerInfo *poller, ClientSession *session, UINT3
       }
    }
 
-   poller->setStatus(_T("autobind"));
-   if (ConfigReadBoolean(_T("Objects.Sensors.TemplateAutoApply"), false))
-      applyTemplates();
-   if (ConfigReadBoolean(_T("Objects.Sensors.ContainerAutoBind"), false))
-      updateContainerMembership();
-
    // Execute hook script
    poller->setStatus(_T("hook"));
    executeHookScript(_T("ConfigurationPoll"), rqId);

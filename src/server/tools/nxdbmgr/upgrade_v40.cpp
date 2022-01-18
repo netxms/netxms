@@ -24,6 +24,24 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 40.93 to 40.94
+ */
+static bool H_UpgradeFromV93()
+{
+   CHK_EXEC(CreateConfigParam(_T("BusinessServices.Check.AutobindClassFilter"), _T("AccessPoint,Cluster,Interface,NetworkService,Node"),
+         _T("Class filter for automatic creation of business service checks."), nullptr, 'S', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(_T("Objects.AutobindPollingInterval"), _T("3600"),
+         _T("Interval in seconds between automatic object binding polls."), _T("seconds"), 'I', true, false, false, false));
+   static const TCHAR *batch =
+      _T("UPDATE config SET need_server_restart=0 WHERE var_name IN ('BusinessServices.Check.Threshold.DataCollection','BusinessServices.Check.Threshold.Objects','Objects.ConfigurationPollingInterval','Objects.StatusPollingInterval')\n")
+      _T("UPDATE config SET data_type='S' WHERE var_name='SNMP.Codepage' OR var_name='Syslog.Codepage'\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(SetMinorSchemaVersion(94));
+   return true;
+}
+
+/**
  * Upgrade from 40.92 to 40.93
  */
 static bool H_UpgradeFromV92()
@@ -239,8 +257,7 @@ static bool H_UpgradeFromV86()
 static bool H_UpgradeFromV85()
 {
    CHK_EXEC(SQLQuery(_T("ALTER TABLE nodes ADD snmp_codepage varchar(15)\n")));
-   CHK_EXEC(CreateConfigParam(_T("SNMP.Codepage"), _T(""),
-         _T("Default server SNMP codepage"), nullptr, 'B', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(_T("SNMP.Codepage"), _T(""), _T("Default server SNMP codepage."), nullptr, 'S', true, false, false, false));
    CHK_EXEC(SetMinorSchemaVersion(86));
    return true;
 }
@@ -281,8 +298,7 @@ static bool H_UpgradeFromV83()
 static bool H_UpgradeFromV82()
 {
    CHK_EXEC(SQLQuery(_T("ALTER TABLE nodes ADD syslog_codepage varchar(15)\n")));
-   CHK_EXEC(CreateConfigParam(_T("Syslog.Codepage"), _T(""),
-         _T("Default server syslog codepage"), nullptr, 'B', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(_T("Syslog.Codepage"), _T(""), _T("Default server syslog codepage."), nullptr, 'S', true, false, false, false));
    CHK_EXEC(SetMinorSchemaVersion(83));
    return true;
 }
@@ -3003,6 +3019,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 93, 40, 94, H_UpgradeFromV93 },
    { 92, 40, 93, H_UpgradeFromV92 },
    { 91, 40, 92, H_UpgradeFromV91 },
    { 90, 40, 91, H_UpgradeFromV90 },

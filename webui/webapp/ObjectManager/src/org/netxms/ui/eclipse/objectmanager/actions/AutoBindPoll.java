@@ -23,7 +23,7 @@ import org.netxms.client.constants.ObjectPollType;
 /**
  * Start status poll
  */
-public class StatusPoll extends AbstractNodePoll
+public class AutoBindPoll extends AbstractNodePoll
 {
    /**
     * @see org.netxms.ui.eclipse.objectmanager.actions.AbstractNodePoll#getPollType()
@@ -31,6 +31,6 @@ public class StatusPoll extends AbstractNodePoll
 	@Override
 	protected ObjectPollType getPollType()
 	{
-		return ObjectPollType.STATUS;
+      return ObjectPollType.AUTOBIND;
 	}
 }

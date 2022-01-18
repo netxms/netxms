@@ -562,6 +562,18 @@
                label="%action.label.CreateChassis"
                menubarPath="CreateObjectSubmenu/additions">
          </action>
+         <action
+               class="org.netxms.ui.eclipse.objectmanager.actions.AutoBindPoll"
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.AutoBindPoll"
+               label="&amp;Automatic bind"
+               menubarPath="org.netxms.ui.eclipse.objectmanager.popupActions.PollMenu/additions"
+               style="push">
+         </action>
+         <menu
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.PollMenu"
+               label="%menu.label.Poll"
+               path="objectcontrol">
+         </menu>
       </objectContribution>
 
       <objectContribution
@@ -788,6 +800,13 @@
                menubarPath="org.netxms.ui.eclipse.objectmanager.popupActions.PollMenu/additions"
                style="push">
          </action>
+         <action
+               class="org.netxms.ui.eclipse.objectmanager.actions.AutoBindPoll"
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.AutoBindPoll"
+               label="&amp;Automatic bind"
+               menubarPath="org.netxms.ui.eclipse.objectmanager.popupActions.PollMenu/additions"
+               style="push">
+         </action>
       </objectContribution>
       <objectContribution
             id="org.netxms.ui.eclipse.objectmanager.actions.popup.object.EntireNetwork"
@@ -939,6 +958,23 @@
                id="org.netxms.ui.eclipse.objectmanager.popupActions.InstanceDiscoveryPoll_BusinessServicePrototype"
                label="%action.label.InstanceDiscoveryPoll"
                menubarPath="org.netxms.ui.eclipse.objectmanager.popupActions.PollMenu_BusinessServicePrototype/additions"
+               style="push">
+         </action>
+      </objectContribution>
+      <objectContribution
+            adaptable="false"
+            id="org.netxms.ui.eclipse.objectmanager.actions.popup.object.Template"
+            objectClass="org.netxms.client.objects.Template">
+         <menu
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.PollMenu"
+               label="%menu.label.Poll"
+               path="objectcontrol">
+         </menu>
+         <action
+               class="org.netxms.ui.eclipse.objectmanager.actions.AutoBindPoll"
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.AutoBindPoll"
+               label="&amp;Automatic bind"
+               menubarPath="org.netxms.ui.eclipse.objectmanager.popupActions.PollMenu/additions"
                style="push">
          </action>
       </objectContribution>

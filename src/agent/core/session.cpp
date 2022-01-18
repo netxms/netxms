@@ -1198,7 +1198,7 @@ private:
    CommSession *m_session;
 
 protected:
-   virtual void onOutput(const char *text)
+   virtual void onOutput(const char *text) override
    {
       m_session->debugPrintf(4, _T("Installer output: %hs"), text);
    }

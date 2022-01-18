@@ -2337,6 +2337,7 @@ public:
    virtual ~HashSetBase();
 
    int size() const;
+   bool isEmpty() const { return size() == 0; }
 
    void clear();
 

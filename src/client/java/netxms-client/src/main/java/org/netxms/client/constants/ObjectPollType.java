@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,9 +24,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Node poll types
+ * Object poll types
  */
-public enum NodePollType
+public enum ObjectPollType
 {
    UNKNOWN(0),
    STATUS(1),
@@ -34,13 +34,16 @@ public enum NodePollType
    INTERFACES(3),
    TOPOLOGY(4),
    CONFIGURATION_NORMAL(5),
-   INSTANCE_DISCOVERY(6);
+   INSTANCE_DISCOVERY(6),
+   ROUTING_TABLE(7),
+   NETWORK_DISCOVERY(8),
+   AUTOBIND(9);
 
-   private static Logger logger = LoggerFactory.getLogger(NodePollType.class);
-   private static Map<Integer, NodePollType> lookupTable = new HashMap<Integer, NodePollType>();
+   private static Logger logger = LoggerFactory.getLogger(ObjectPollType.class);
+   private static Map<Integer, ObjectPollType> lookupTable = new HashMap<Integer, ObjectPollType>();
    static
    {
-      for(NodePollType element : NodePollType.values())
+      for(ObjectPollType element : ObjectPollType.values())
       {
          lookupTable.put(element.value, element);
       }
@@ -53,7 +56,7 @@ public enum NodePollType
     *  
     * @param value integer value
     */
-   private NodePollType(int value)
+   private ObjectPollType(int value)
    {
       this.value = value;
    }
@@ -74,9 +77,9 @@ public enum NodePollType
     * @param value integer value
     * @return enum element corresponding to given integer value or fall-back element for invalid value
     */
-   public static NodePollType getByValue(int value)
+   public static ObjectPollType getByValue(int value)
    {
-      final NodePollType element = lookupTable.get(value);
+      final ObjectPollType element = lookupTable.get(value);
       if (element == null)
       {
          logger.warn("Unknown element " + value);

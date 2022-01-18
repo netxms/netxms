@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2019 Raden Solutions
+ * Copyright (C) 2003-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@ package org.netxms.websvc.handlers;
 import java.util.UUID;
 import org.json.JSONObject;
 import org.netxms.client.NXCSession;
-import org.netxms.client.constants.NodePollType;
+import org.netxms.client.constants.ObjectPollType;
 import org.netxms.websvc.ServerOutputListener;
 import org.netxms.websvc.json.JsonTools;
 
@@ -39,42 +39,49 @@ public class Polls extends AbstractObjectHandler
    {
       String type = JsonTools.getStringFromJson(data, "type", "");
       
-      NodePollType pollType = NodePollType.UNKNOWN;
-      if (type.equalsIgnoreCase("configuration full"))
+      final ObjectPollType pollType;
+      if (type.equals("autobind"))
       {
-         pollType = NodePollType.CONFIGURATION_FULL;
+         pollType = ObjectPollType.AUTOBIND;
+      }
+      else if (type.equalsIgnoreCase("configuration full"))
+      {
+         pollType = ObjectPollType.CONFIGURATION_FULL;
       }
       else if (type.equals("configuration"))
       {
-         pollType = NodePollType.CONFIGURATION_NORMAL;
+         pollType = ObjectPollType.CONFIGURATION_NORMAL;
       }
       else if (type.equals("discovery"))
       {
-         pollType = NodePollType.INSTANCE_DISCOVERY;
+         pollType = ObjectPollType.INSTANCE_DISCOVERY;
       }
       else if (type.equals("interface"))
       {
-         pollType = NodePollType.INTERFACES;
+         pollType = ObjectPollType.INTERFACES;
       }
       else if (type.equals("status"))
       {
-         pollType = NodePollType.STATUS;
+         pollType = ObjectPollType.STATUS;
       }
       else if (type.equals("topology"))
       {
-         pollType = NodePollType.TOPOLOGY;
+         pollType = ObjectPollType.TOPOLOGY;
+      }
+      else
+      {
+         pollType = ObjectPollType.UNKNOWN;
       }
       
       final ServerOutputListener listener = new ServerOutputListener();
       UUID uuid = UUID.randomUUID();
       PollsOutputHandler.addListener(uuid, listener);
       
-      final NodePollType tmpType = pollType;
-      NXCSession session = getSession();
+      final NXCSession session = getSession();
       Thread pollingThread = new Thread(() -> {
          try
          {
-            session.pollObject(getObjectId(), tmpType, listener);
+            session.pollObject(getObjectId(), pollType, listener);
          }
          catch(Exception e)
          {
@@ -93,6 +100,4 @@ public class Polls extends AbstractObjectHandler
       response.put("type", type);
       return response;
    }  
-   
-   
 }

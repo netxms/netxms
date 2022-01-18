@@ -111,6 +111,7 @@ template class NXCORE_EXPORTABLE SynchronizedHashSet<uint32_t>;
 #define PING_TIME_TIMEOUT     10000
 
 #define DEBUG_TAG_AGENT             _T("node.agent")
+#define DEBUG_TAG_AUTOBIND_POLL     _T("poll.autobind")
 #define DEBUG_TAG_BIZSVC            _T("bizsvc")
 #define DEBUG_TAG_CONF_POLL         _T("poll.conf")
 #define DEBUG_TAG_GEOLOCATION       _T("geolocation")
@@ -699,7 +700,7 @@ private:
    void updateAction(const NXCPMessage& request);
    void deleteAction(const NXCPMessage& request);
    void sendAllActions(const NXCPMessage& request);
-   void forcedNodePoll(const NXCPMessage& request);
+   void forcedObjectPoll(const NXCPMessage& request);
    void onTrap(const NXCPMessage& request);
    void onWakeUpNode(const NXCPMessage& request);
    void queryParameter(const NXCPMessage& request);

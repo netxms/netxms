@@ -132,7 +132,7 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(uint16_t code, TCHAR *buffer)
       _T("CMD_GET_PREDICTION_ENGINES"),
       _T("CMD_GET_PREDICTED_DATA"),
       _T("CMD_STOP_SERVER_COMMAND"),
-      _T("CMD_POLL_NODE"),
+      _T("CMD_POLL_OBJECT"),
       _T("CMD_POLLING_INFO"),
       _T("CMD_COPY_DCI"),
       _T("CMD_WAKEUP_NODE"),
