@@ -2353,7 +2353,8 @@ public class NXCSession
             if (rcc == RCC.SUCCESS)
             {
                String challenge = response.getFieldAsString(NXCPCodes.VID_CHALLENGE);
-               String userResponse = twoFactorAuthenticationCallback.getUserResponse(challenge);
+               String qrLabel = response.getFieldAsString(NXCPCodes.VID_QR_LABEL);
+               String userResponse = twoFactorAuthenticationCallback.getUserResponse(challenge, qrLabel);
                request = newMessage(NXCPCodes.CMD_2FA_VALIDATE_RESPONSE);
                request.setField(NXCPCodes.VID_2FA_RESPONSE, userResponse);
                sendMessage(request);

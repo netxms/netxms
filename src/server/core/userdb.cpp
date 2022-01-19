@@ -298,8 +298,6 @@ bool LoadUsers()
       nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("User group \"Everyone\" was created because it was not presented in database"));
    }
 
-
-
    DBConnectionPoolReleaseConnection(hdb);
    if (cachedb != nullptr)
       DBCloseInMemoryDatabase(cachedb);
@@ -837,6 +835,20 @@ uint32_t NXCORE_EXPORTABLE ModifyUserDatabaseObject(const NXCPMessage& msg, json
       ThreadPoolExecute(g_mainThreadPool, UpdateGlobalAccessRights);
 
    return rcc;
+}
+
+/**
+ * Mark user database object as modified
+ */
+void MarkUserDatabaseObjectAsModified(uint32_t id)
+{
+   s_userDatabaseLock.writeLock();
+   UserDatabaseObject *object = s_userDatabase.get(id);
+   if (object != nullptr)
+   {
+      object->setModified();
+   }
+   s_userDatabaseLock.unlock();
 }
 
 /**
@@ -1643,7 +1655,7 @@ shared_ptr<Config> GetUser2FAMethodBinding(int userId, const TCHAR* methodName)
 uint32_t ModifyUser2FAMethodBinding(uint32_t userId, const TCHAR* methodName, const StringMap& configuration)
 {
    uint32_t rcc = RCC_INVALID_USER_ID;
-   s_userDatabaseLock.readLock();
+   s_userDatabaseLock.writeLock();
    UserDatabaseObject *object = s_userDatabase.get(userId);
    if ((object != nullptr) && !object->isGroup())
    {
@@ -1659,7 +1671,7 @@ uint32_t ModifyUser2FAMethodBinding(uint32_t userId, const TCHAR* methodName, co
 uint32_t DeleteUser2FAMethodBinding(uint32_t userId, const TCHAR* methodName)
 {
    uint32_t rcc = RCC_INVALID_USER_ID;
-   s_userDatabaseLock.readLock();
+   s_userDatabaseLock.writeLock();
    UserDatabaseObject *object = s_userDatabase.get(userId);
    if ((object != nullptr) && !object->isGroup())
    {

@@ -38,14 +38,18 @@ public:
    {
       _tcslcpy(m_methodName, methodName, MAX_OBJECT_NAME);
    }
-   virtual ~TwoFactorAuthenticationToken()
-   {
-   }
+   virtual ~TwoFactorAuthenticationToken() = default;
 
    virtual const TCHAR *getChallenge() const { return nullptr; }
+   virtual const TCHAR *getQRLabel() const { return nullptr; }
 
    const TCHAR *getMethodName() const { return m_methodName; };
 };
+
+/**
+ * Secret length (in bytes) of TOTP secret
+ */
+#define TOTP_SECRET_LENGTH 64
 
 /**
  * TOTP authentication token class
@@ -53,22 +57,18 @@ public:
 class TOTPToken : public TwoFactorAuthenticationToken
 {
 private:
-   void* m_secret;
-   size_t m_secretLength;
+   BYTE m_secret[TOTP_SECRET_LENGTH];
+   bool m_newSecret;
+   TCHAR *m_uri;
 
 public:
-   TOTPToken(const TCHAR* methodName, void* secret, size_t secretLength) : TwoFactorAuthenticationToken(methodName)
-   {
-      m_secret = secret;
-      m_secretLength = secretLength;
-   }
-   virtual ~TOTPToken()
-   {
-      MemFree(m_secret);
-   };
+   TOTPToken(const TCHAR* methodName, const BYTE* secret, const TCHAR *userName, bool newSecret);
+   virtual ~TOTPToken();
+
+   virtual const TCHAR *getQRLabel() const { return m_uri; }
 
    const void* getSecret() const { return m_secret; };
-   size_t getSecretLength() const { return m_secretLength; };
+   bool isNewSecret() const { return m_newSecret; }
 };
 
 /**
@@ -92,7 +92,7 @@ public:
 
 void LoadTwoFactorAuthenticationMethods();
 TwoFactorAuthenticationToken* Prepare2FAChallenge(const TCHAR *methodName, uint32_t userId);
-bool Validate2FAResponse(TwoFactorAuthenticationToken *token, TCHAR *response);
+bool Validate2FAResponse(TwoFactorAuthenticationToken *token, TCHAR *response, uint32_t userId);
 void Get2FADrivers(NXCPMessage *msg);
 void Get2FAMethods(NXCPMessage *msg);
 void Get2FAMethodDetails(const TCHAR* methodInfo, NXCPMessage *msg);

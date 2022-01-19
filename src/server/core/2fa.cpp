@@ -26,6 +26,53 @@
 #define DEBUG_TAG _T("2fa")
 
 /**
+ * TOTP token constructor
+ */
+TOTPToken::TOTPToken(const TCHAR* methodName, const BYTE* secret, const TCHAR *userName, bool newSecret) : TwoFactorAuthenticationToken(methodName)
+{
+   memcpy(m_secret, secret, TOTP_SECRET_LENGTH);
+   m_newSecret = newSecret;
+   if (newSecret)
+   {
+      char issuer[256] = "NetXMS (";
+      ConfigReadStrUTF8(_T("Server.Name"), &issuer[8], 240, "");
+      if (issuer[8] == 0)
+         GetLocalIpAddr().toStringA(&issuer[8]);
+      strcat(issuer, ")");
+
+      char urlEncodedIssuer[1024];
+      URLEncode(issuer, urlEncodedIssuer, sizeof(urlEncodedIssuer));
+
+      char encodedSecret[TOTP_SECRET_LENGTH * 2];
+      base32_encode(reinterpret_cast<const char*>(secret), TOTP_SECRET_LENGTH, encodedSecret, sizeof(encodedSecret));
+
+      char uri[4096] = "otpauth://totp/";
+      strcat(uri, urlEncodedIssuer);
+      strcat(uri, ":");
+      size_t l = strlen(uri);
+      tchar_to_utf8(userName, -1, &uri[l], sizeof(uri) - l);
+      strlcat(uri, "?issuer=", sizeof(uri));
+      strlcat(uri, urlEncodedIssuer, sizeof(uri));
+      strlcat(uri, "&secret=", sizeof(uri));
+      strlcat(uri, encodedSecret, sizeof(uri));
+
+      m_uri = WideStringFromUTF8String(uri);
+   }
+   else
+   {
+      m_uri = nullptr;
+   }
+}
+
+/**
+ * TOTP token destructor
+ */
+TOTPToken::~TOTPToken()
+{
+   MemFree(m_uri);
+};
+
+/**
  * Authentication method base class
  */
 class TwoFactorAuthenticationMethod
@@ -42,7 +89,7 @@ public:
 
    virtual const TCHAR *getDriverName() const = 0;
    virtual TwoFactorAuthenticationToken* prepareChallenge(uint32_t userId) = 0;
-   virtual bool validateResponse(TwoFactorAuthenticationToken *token, const TCHAR *response) = 0;
+   virtual bool validateResponse(TwoFactorAuthenticationToken *token, const TCHAR *response, uint32_t userId) = 0;
    virtual unique_ptr<StringMap> extractBindingConfiguration(const Config& binding) const = 0;
    virtual void updateBindingConfiguration(Config* binding, const StringMap& updates) const = 0;
 
@@ -109,7 +156,7 @@ public:
 
    virtual const TCHAR *getDriverName() const override { return _T("TOTP"); }
    virtual TwoFactorAuthenticationToken* prepareChallenge(uint32_t userId) override;
-   virtual bool validateResponse(TwoFactorAuthenticationToken* token, const TCHAR* response) override;
+   virtual bool validateResponse(TwoFactorAuthenticationToken* token, const TCHAR* response, uint32_t userId) override;
    virtual unique_ptr<StringMap> extractBindingConfiguration(const Config& binding) const override;
    virtual void updateBindingConfiguration(Config* binding, const StringMap& updates) const override;
 };
@@ -123,12 +170,21 @@ TwoFactorAuthenticationToken* TOTPAuthMethod::prepareChallenge(uint32_t userId)
    shared_ptr<Config> binding = GetUser2FAMethodBinding(userId, m_methodName);
    if (binding != nullptr)
    {
+      BYTE secretBytes[TOTP_SECRET_LENGTH];
+      bool newSecret;
       const TCHAR* secret = binding->getValue(_T("/MethodBinding/Secret"));
-      if (secret != nullptr)
+      if (binding->getValueAsBoolean(_T("/MethodBinding/Initialized"), false) && (secret != nullptr))
       {
-         char *secretData = UTF8StringFromTString(secret);
-         token = new TOTPToken(m_methodName, secretData, strlen(secretData));
+         StrToBin(secret, secretBytes, TOTP_SECRET_LENGTH);
+         newSecret = false;
       }
+      else
+      {
+         RAND_bytes(secretBytes, TOTP_SECRET_LENGTH);
+         newSecret = true;
+      }
+      TCHAR userName[MAX_USER_NAME];
+      token = new TOTPToken(m_methodName, secretBytes, ResolveUserId(userId, userName, true), newSecret);
    }
    return token;
 }
@@ -136,7 +192,7 @@ TwoFactorAuthenticationToken* TOTPAuthMethod::prepareChallenge(uint32_t userId)
 /**
  * Validate response from user
  */
-bool TOTPAuthMethod::validateResponse(TwoFactorAuthenticationToken* token, const TCHAR* response)
+bool TOTPAuthMethod::validateResponse(TwoFactorAuthenticationToken* token, const TCHAR* response, uint32_t userId)
 {
    if (_tcscmp(token->getMethodName(), m_methodName))
       return false;
@@ -148,13 +204,25 @@ bool TOTPAuthMethod::validateResponse(TwoFactorAuthenticationToken* token, const
       uint64_t timeFactor = htonq(((now / _ULL(30)) + i) - _ULL(2));
       BYTE hash[SHA1_DIGEST_SIZE];
       uint32_t hashLen;
-      HMAC(EVP_sha1(), totpToken->getSecret(), static_cast<int>(totpToken->getSecretLength()), reinterpret_cast<const BYTE*>(&timeFactor), sizeof(uint64_t), hash, &hashLen);
+      HMAC(EVP_sha1(), totpToken->getSecret(), TOTP_SECRET_LENGTH, reinterpret_cast<const BYTE*>(&timeFactor), sizeof(uint64_t), hash, &hashLen);
       int offset = static_cast<int>(hash[SHA1_DIGEST_SIZE - 1] & 0x0F);
       uint32_t challenge;
       memcpy(&challenge, &hash[offset], sizeof(uint32_t));
       challenge = (ntohl(challenge) & 0x7FFFFFFF) % 1000000;
       if (challenge == _tcstol(response, nullptr, 10))
       {
+         if (totpToken->isNewSecret())
+         {
+            shared_ptr<Config> binding = GetUser2FAMethodBinding(userId, m_methodName);
+            if (binding != nullptr)
+            {
+               TCHAR secretText[256];
+               BinToStr(totpToken->getSecret(), TOTP_SECRET_LENGTH, secretText);
+               binding->setValue(_T("/MethodBinding/Secret"), secretText);
+               binding->setValue(_T("/MethodBinding/Initialized"), 1);
+               MarkUserDatabaseObjectAsModified(userId);
+            }
+         }
          return true;
       }
    }
@@ -192,7 +260,7 @@ public:
 
    virtual const TCHAR *getDriverName() const override { return _T("Message"); }
    virtual TwoFactorAuthenticationToken* prepareChallenge(uint32_t userId) override;
-   virtual bool validateResponse(TwoFactorAuthenticationToken* token, const TCHAR* response) override;
+   virtual bool validateResponse(TwoFactorAuthenticationToken* token, const TCHAR* response, uint32_t userId) override;
    virtual unique_ptr<StringMap> extractBindingConfiguration(const Config& binding) const override;
    virtual void updateBindingConfiguration(Config* binding, const StringMap& updates) const override;
 };
@@ -241,7 +309,7 @@ TwoFactorAuthenticationToken* MessageAuthMethod::prepareChallenge(uint32_t userI
 /**
  * Validate response from user
  */
-bool MessageAuthMethod::validateResponse(TwoFactorAuthenticationToken *token, const TCHAR *response)
+bool MessageAuthMethod::validateResponse(TwoFactorAuthenticationToken *token, const TCHAR *response, uint32_t userId)
 {
    if (_tcscmp(token->getMethodName(), m_methodName))
       return false;
@@ -408,7 +476,7 @@ TwoFactorAuthenticationToken* Prepare2FAChallenge(const TCHAR* methodName, uint3
 /**
  * Validate 2FA response
  */
-bool Validate2FAResponse(TwoFactorAuthenticationToken* token, TCHAR *response)
+bool Validate2FAResponse(TwoFactorAuthenticationToken* token, TCHAR *response, uint32_t userId)
 {
    bool success = false;
    s_authMethodListLock.lock();
@@ -417,7 +485,7 @@ bool Validate2FAResponse(TwoFactorAuthenticationToken* token, TCHAR *response)
       TwoFactorAuthenticationMethod *am = s_methods.get(token->getMethodName());
       if (am != nullptr)
       {
-         success = am->validateResponse(token, response);
+         success = am->validateResponse(token, response, userId);
       }
    }
    s_authMethodListLock.unlock();

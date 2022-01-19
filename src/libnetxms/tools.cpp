@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -4724,4 +4724,34 @@ Color Color::parseCSS(const TCHAR *css)
          return s_cssColorNames[i].value;
 
    return Color();
+}
+
+/**
+ * Encode string for URL
+ */
+char LIBNETXMS_EXPORTABLE *URLEncode(const char *src, char *dst, size_t size)
+{
+   const char *s = src;
+   char *d = dst;
+   size_t count = 0;
+   while((*s != 0) && (count < size - 1))
+   {
+      char c = *s++;
+      if (isalnum(c) || (c == '-') || (c == '_') || (c == '.') || (c == '~'))
+      {
+         *d++ = c;
+         count++;
+      }
+      else
+      {
+         if (count >= size - 3)
+            break;
+         *d++ = '%';
+         *d++ = bin2hex(static_cast<BYTE>(c) >> 4);
+         *d++ = bin2hex(static_cast<BYTE>(c) & 15);
+         count += 3;
+      }
+   }
+   *d = 0;
+   return dst;
 }

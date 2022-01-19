@@ -2289,6 +2289,7 @@ void ClientSession::prepare2FAChallenge(const NXCPMessage& request)
    if (m_loginInfo->token != nullptr)
    {
       response.setField(VID_CHALLENGE, m_loginInfo->token->getChallenge());
+      response.setField(VID_QR_LABEL, m_loginInfo->token->getQRLabel());
       response.setField(VID_RCC, RCC_SUCCESS);
    }
    else
@@ -2308,7 +2309,7 @@ void ClientSession::validate2FAResponse(const NXCPMessage& request)
    {
       TCHAR userResponse[1024];
       request.getFieldAsString(VID_2FA_RESPONSE, userResponse, 1024);
-      if (Validate2FAResponse(m_loginInfo->token, userResponse))
+      if (Validate2FAResponse(m_loginInfo->token, userResponse, m_dwUserId))
       {
          finalizeLogin(request, &response);
       }

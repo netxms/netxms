@@ -1258,6 +1258,8 @@ public class NXCPCodes
    public static final long VID_DISTRICT = 783;
    public static final long VID_PACKAGE_TYPE = 784;
    public static final long VID_REPORT_PROGRESS = 785;
+   public static final long VID_ACCEPT_KEEPALIVE = 786;
+   public static final long VID_QR_LABEL = 787;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;

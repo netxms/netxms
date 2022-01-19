@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Raden Solutions
+ * Copyright (C) 2003-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,8 +24,10 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.nxmc.base.widgets.LabeledText;
+import org.netxms.nxmc.base.widgets.QRLabel;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
@@ -38,6 +40,7 @@ public class TwoFactorResponseDialog extends Dialog
    private static final I18n i18n = LocalizationHelper.getI18n(TwoFactorResponseDialog.class);
 
    private String challenge;
+   private String qrText;
    private String response;
    private LabeledText responseText;
 
@@ -46,11 +49,13 @@ public class TwoFactorResponseDialog extends Dialog
     *
     * @param parentShell parent shell
     * @param challenge challenge provided by server
+    * @param qrText text to be displayed as QR code
     */
-   public TwoFactorResponseDialog(Shell parentShell, String challenge)
+   public TwoFactorResponseDialog(Shell parentShell, String challenge, String qrText)
    {
       super(parentShell);
       this.challenge = challenge;
+      this.qrText = qrText;
    }
 
    /**
@@ -76,6 +81,19 @@ public class TwoFactorResponseDialog extends Dialog
       layout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
       layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
       dialogArea.setLayout(layout);
+
+      if ((qrText != null) && !qrText.isEmpty())
+      {
+         Label notification = new Label(dialogArea, SWT.NONE);
+         notification.setText(i18n.tr("New secret was generated. Please scan it and use for this and subsequent logins."));
+
+         QRLabel qrLabel = new QRLabel(dialogArea, SWT.BORDER);
+         qrLabel.setText(qrText);
+         GridData gd = new GridData(SWT.CENTER, SWT.CENTER, true, true);
+         gd.minimumWidth = 300;
+         gd.minimumHeight = 300;
+         qrLabel.setLayoutData(gd);
+      }
 
       if ((challenge != null) && !challenge.isEmpty())
       {

@@ -26,17 +26,14 @@
    integer >= n/k, i.e., the ceiling of n/k.  */
 #define BASE64_LENGTH(inlen) ((((inlen) + 2) / 3) * 4)
 
-BOOL LIBNETXMS_EXPORTABLE isbase64 (char ch);
+bool LIBNETXMS_EXPORTABLE isbase64(char ch);
 
-void LIBNETXMS_EXPORTABLE base64_encode (const char *in, size_t inlen,
-			   char *out, size_t outlen);
+void LIBNETXMS_EXPORTABLE base64_encode(const char *in, size_t inlen, char *out, size_t outlen);
 
-size_t LIBNETXMS_EXPORTABLE base64_encode_alloc (const char *in, size_t inlen, char **out);
+size_t LIBNETXMS_EXPORTABLE base64_encode_alloc(const char *in, size_t inlen, char **out);
 
-BOOL LIBNETXMS_EXPORTABLE base64_decode (const char *in, size_t inlen,
-			   char *out, size_t *outlen);
+bool LIBNETXMS_EXPORTABLE base64_decode(const char *in, size_t inlen, char *out, size_t *outlen);
 
-BOOL LIBNETXMS_EXPORTABLE base64_decode_alloc (const char *in, size_t inlen,
-				 char **out, size_t *outlen);
+bool LIBNETXMS_EXPORTABLE base64_decode_alloc(const char *in, size_t inlen, char **out, size_t *outlen);
 
 #endif /* BASE64_H */

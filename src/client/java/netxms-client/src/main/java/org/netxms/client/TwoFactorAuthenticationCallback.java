@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2021 Raden Solutions
+ * Copyright (C) 2021-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,10 +34,13 @@ public interface TwoFactorAuthenticationCallback
    public int selectMethod(List<String> methods);
 
    /**
-    * Get user response with selected authentication method.
+    * Get user response with selected authentication method. This method will receive non-null <code>qrLabel</code> if there is text
+    * to be displayed to user as QR code. Usually this indicates that new secret was generated for selected authentication method
+    * and should be presented to user.
     *
     * @param challenge optional challenge text (could be null)
+    * @param qrLabel text to be displayed as QR code for scan (could be null)
     * @return user's response
     */
-   public String getUserResponse(String challenge);
+   public String getUserResponse(String challenge, String qrLabel);
 }

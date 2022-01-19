@@ -86,9 +86,7 @@ public class LoginDialog extends Dialog
       this.certMgr = certMgr;
    }
 
-   /*
-    * (non-Javadoc)
-    * 
+   /**
     * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
     */
    @Override
@@ -109,9 +107,7 @@ public class LoginDialog extends Dialog
       }
    }
 
-   /*
-    * (non-Javadoc)
-    * 
+   /**
     * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
     */
    @Override

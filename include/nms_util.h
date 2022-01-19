@@ -43,6 +43,7 @@
 #include <byteswap.h>
 #endif
 
+#include <base32.h>
 #include <base64.h>
 
 /*** Byte swapping ***/
@@ -4759,6 +4760,8 @@ bool LIBNETXMS_EXPORTABLE XMLGetAttrBoolean(const char **attrs, const char *name
 
 String LIBNETXMS_EXPORTABLE EscapeStringForJSON(const TCHAR *s);
 String LIBNETXMS_EXPORTABLE EscapeStringForAgent(const TCHAR *s);
+
+char LIBNETXMS_EXPORTABLE *URLEncode(const char *src, char *dst, size_t size);
 
 StringList LIBNETXMS_EXPORTABLE *ParseCommandLine(const TCHAR *cmdline);
 

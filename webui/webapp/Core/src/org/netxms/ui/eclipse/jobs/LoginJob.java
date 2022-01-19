@@ -148,14 +148,14 @@ public class LoginJob implements IRunnableWithProgress
             }
 
             @Override
-            public String getUserResponse(final String challenge)
+            public String getUserResponse(final String challenge, final String qrLabel)
             {
                final String[] response = new String[1];
                display.syncExec(new Runnable() {
                   @Override
                   public void run()
                   {
-                     TwoFactorResponseDialog dlg = new TwoFactorResponseDialog(null, challenge);
+                     TwoFactorResponseDialog dlg = new TwoFactorResponseDialog(null, challenge, qrLabel);
                      if (dlg.open() == Window.OK)
                         response[0] = dlg.getResponse();
                   }

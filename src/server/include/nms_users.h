@@ -282,7 +282,8 @@ public:
 	bool isModified() const { return (m_flags & UF_MODIFIED) != 0; }
 	bool isLDAPUser() const { return (m_flags & UF_LDAP_USER) != 0; }
 
-	void setDeleted() { m_flags |= UF_DELETED; }
+	void setModified() { m_flags |= UF_MODIFIED; }
+   void setDeleted() { m_flags |= UF_DELETED; }
 	void enable();
 	void disable();
 	void setFlags(uint32_t flags) { m_flags = flags; }
@@ -537,6 +538,7 @@ bool NXCORE_EXPORTABLE CheckUserMembership(UINT32 userId, UINT32 groupId);
 uint32_t NXCORE_EXPORTABLE DeleteUserDatabaseObject(uint32_t id);
 uint32_t NXCORE_EXPORTABLE CreateNewUser(const TCHAR *name, bool isGroup, uint32_t *id);
 uint32_t NXCORE_EXPORTABLE ModifyUserDatabaseObject(const NXCPMessage& msg, json_t **oldData, json_t **newData);
+void MarkUserDatabaseObjectAsModified(uint32_t id);
 uint32_t NXCORE_EXPORTABLE DetachLDAPUser(uint32_t id);
 Iterator<UserDatabaseObject> NXCORE_EXPORTABLE OpenUserDatabase();
 void NXCORE_EXPORTABLE CloseUserDatabase();

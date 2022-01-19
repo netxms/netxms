@@ -18,6 +18,9 @@
     <ClCompile Include="array.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="base32.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="base64.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -248,6 +251,9 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\include\base32.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\include\base64.h">
       <Filter>Header Files</Filter>
     </ClInclude>

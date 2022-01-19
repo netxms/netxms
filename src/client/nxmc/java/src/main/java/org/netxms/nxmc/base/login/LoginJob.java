@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Raden Solutions
+ * Copyright (C) 2003-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -140,14 +140,14 @@ public class LoginJob implements IRunnableWithProgress
             }
 
             @Override
-            public String getUserResponse(final String challenge)
+            public String getUserResponse(final String challenge, final String qrLabel)
             {
                final String[] response = new String[1];
                display.syncExec(new Runnable() {
                   @Override
                   public void run()
                   {
-                     TwoFactorResponseDialog dlg = new TwoFactorResponseDialog(null, challenge);
+                     TwoFactorResponseDialog dlg = new TwoFactorResponseDialog(null, challenge, qrLabel);
                      if (dlg.open() == Window.OK)
                         response[0] = dlg.getResponse();
                   }

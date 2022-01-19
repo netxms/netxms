@@ -283,7 +283,7 @@ static const signed char b64[0x100] = {
 /* Return true if CH is a character from the Base64 alphabet, and
    false otherwise.  Note that '=' is padding and not considered to be
    part of the alphabet.  */
-BOOL LIBNETXMS_EXPORTABLE isbase64 (char ch)
+bool LIBNETXMS_EXPORTABLE isbase64 (char ch)
 {
    return uchar_in_range (to_uchar (ch)) && 0 <= b64[to_uchar (ch)];
 }
@@ -297,7 +297,7 @@ BOOL LIBNETXMS_EXPORTABLE isbase64 (char ch)
    encountered, decoding is stopped and false is returned.  This means
    that, when applicable, you must remove any line terminators that is
    part of the data stream before calling this function.  */
-BOOL LIBNETXMS_EXPORTABLE base64_decode(const char *in, size_t inlen, char *out, size_t *outlen)
+bool LIBNETXMS_EXPORTABLE base64_decode(const char *in, size_t inlen, char *out, size_t *outlen)
 {
    size_t outleft = *outlen;
 
@@ -401,7 +401,7 @@ BOOL LIBNETXMS_EXPORTABLE base64_decode(const char *in, size_t inlen, char *out,
    decoding and memory error.)  The function returns false if the
    input was invalid, in which case *OUT is NULL and *OUTLEN is
    undefined. */
-BOOL LIBNETXMS_EXPORTABLE base64_decode_alloc(const char *in, size_t inlen, char **out, size_t *outlen)
+bool LIBNETXMS_EXPORTABLE base64_decode_alloc(const char *in, size_t inlen, char **out, size_t *outlen)
 {
    /* This may allocate a few bytes too much, depending on input,
    but it's not worth the extra CPU time to compute the exact amount.
@@ -417,7 +417,7 @@ BOOL LIBNETXMS_EXPORTABLE base64_decode_alloc(const char *in, size_t inlen, char
 
    if (!base64_decode(in, inlen, *out, &needlen))
    {
-      free (*out);
+      MemFree (*out);
       *out = NULL;
       return false;
    }
