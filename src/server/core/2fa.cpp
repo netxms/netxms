@@ -107,7 +107,7 @@ public:
       m_isValid = true;
    }
 
-   virtual const TCHAR *getDriverName() const { return _T("TOTP"); }
+   virtual const TCHAR *getDriverName() const override { return _T("TOTP"); }
    virtual TwoFactorAuthenticationToken* prepareChallenge(uint32_t userId) override;
    virtual bool validateResponse(TwoFactorAuthenticationToken* token, const TCHAR* response) override;
    virtual unique_ptr<StringMap> extractBindingConfiguration(const Config& binding) const override;
@@ -190,7 +190,7 @@ private:
 public:
    MessageAuthMethod(const TCHAR* name, const TCHAR* description, const Config& config);
 
-   virtual const TCHAR *getDriverName() const { return _T("Message"); }
+   virtual const TCHAR *getDriverName() const override { return _T("Message"); }
    virtual TwoFactorAuthenticationToken* prepareChallenge(uint32_t userId) override;
    virtual bool validateResponse(TwoFactorAuthenticationToken* token, const TCHAR* response) override;
    virtual unique_ptr<StringMap> extractBindingConfiguration(const Config& binding) const override;
