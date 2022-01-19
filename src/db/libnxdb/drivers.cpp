@@ -156,7 +156,7 @@ DB_DRIVER LIBNXDB_EXPORTABLE DBLoadDriver(const TCHAR *module, const TCHAR *init
    }
    if (!driver->m_callTable.Initialize(mbInitParameters))
 #else
-   if (!driver->callTable.Initialize(CHECK_NULL_EX(initParameters)))
+   if (!driver->m_callTable.Initialize(CHECK_NULL_EX(initParameters)))
 #endif
    {
       nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_DRIVER, _T("Database driver \"%s\" initialization failed"), module);
@@ -165,28 +165,28 @@ DB_DRIVER LIBNXDB_EXPORTABLE DBLoadDriver(const TCHAR *module, const TCHAR *init
 
    // Success
    driver->m_mutexReconnect = new Mutex();
-	driver->m_name = *driverName;
-	driver->m_refCount = 1;
+   driver->m_name = *driverName;
+   driver->m_refCount = 1;
    driver->m_defaultPrefetchLimit = 10;
-	s_drivers[position] = driver;
-	nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_DRIVER, _T("Database driver \"%s\" loaded and initialized successfully"), module);
-	s_driverListLock.unlock();
+   s_drivers[position] = driver;
+   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_DRIVER, _T("Database driver \"%s\" loaded and initialized successfully"), module);
+   s_driverListLock.unlock();
    return driver;
 
 failure:
-	if (driver->m_handle != nullptr)
-		DLClose(driver->m_handle);
-	MemFree(driver);
+   if (driver->m_handle != nullptr)
+      DLClose(driver->m_handle);
+   MemFree(driver);
    s_driverListLock.unlock();
-	return nullptr;
+   return nullptr;
 
 reuse_driver:
-	if (driver->m_handle != nullptr)
-		DLClose(driver->m_handle);
-	MemFree(driver);
-	s_drivers[position]->m_refCount++;
+   if (driver->m_handle != nullptr)
+      DLClose(driver->m_handle);
+   MemFree(driver);
+   s_drivers[position]->m_refCount++;
    s_driverListLock.unlock();
-	return s_drivers[position];
+   return s_drivers[position];
 }
 
 /**
