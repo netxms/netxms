@@ -43,6 +43,8 @@ public:
    virtual const TCHAR *getDriverName() const = 0;
    virtual TwoFactorAuthenticationToken* prepareChallenge(uint32_t userId) = 0;
    virtual bool validateResponse(TwoFactorAuthenticationToken *token, const TCHAR *response) = 0;
+   virtual unique_ptr<StringMap> extractBindingConfiguration(const Config& binding) const = 0;
+   virtual void updateBindingConfiguration(Config* binding, const StringMap& updates) const = 0;
 
    bool isValid() const { return m_isValid; };
    const TCHAR* getName() const { return m_methodName; };
@@ -108,6 +110,8 @@ public:
    virtual const TCHAR *getDriverName() const { return _T("TOTP"); }
    virtual TwoFactorAuthenticationToken* prepareChallenge(uint32_t userId) override;
    virtual bool validateResponse(TwoFactorAuthenticationToken* token, const TCHAR* response) override;
+   virtual unique_ptr<StringMap> extractBindingConfiguration(const Config& binding) const override;
+   virtual void updateBindingConfiguration(Config* binding, const StringMap& updates) const override;
 };
 
 /**
@@ -158,6 +162,24 @@ bool TOTPAuthMethod::validateResponse(TwoFactorAuthenticationToken* token, const
 }
 
 /**
+ * Extract binding configuration
+ */
+unique_ptr<StringMap> TOTPAuthMethod::extractBindingConfiguration(const Config& binding) const
+{
+   auto configuration = make_unique<StringMap>();
+   configuration->set(_T("Initialized"), binding.getValueAsBoolean(_T("/MethodBinding/Initialized"), false) ? _T("true") : _T("false"));
+   return configuration;
+}
+
+/**
+ * Update binding configuration
+ */
+void TOTPAuthMethod::updateBindingConfiguration(Config* binding, const StringMap& updates) const
+{
+   binding->setValue(_T("/MethodBinding/Initialized"), updates.getBoolean(_T("Initialized"), false) ? 1 : 0);
+}
+
+/**
  * Notification channel authentication class
  */
 class MessageAuthMethod : public TwoFactorAuthenticationMethod
@@ -171,6 +193,8 @@ public:
    virtual const TCHAR *getDriverName() const { return _T("Message"); }
    virtual TwoFactorAuthenticationToken* prepareChallenge(uint32_t userId) override;
    virtual bool validateResponse(TwoFactorAuthenticationToken* token, const TCHAR* response) override;
+   virtual unique_ptr<StringMap> extractBindingConfiguration(const Config& binding) const override;
+   virtual void updateBindingConfiguration(Config* binding, const StringMap& updates) const override;
 };
 
 /**
@@ -223,6 +247,26 @@ bool MessageAuthMethod::validateResponse(TwoFactorAuthenticationToken *token, co
       return false;
 
    return static_cast<MessageToken*>(token)->getSecret() == _tcstol(response, nullptr, 10);
+}
+
+/**
+ * Extract binding configuration
+ */
+unique_ptr<StringMap> MessageAuthMethod::extractBindingConfiguration(const Config& binding) const
+{
+   auto configuration = make_unique<StringMap>();
+   configuration->set(_T("Recipient"), binding.getValue(_T("/MethodBinding/Recipient"), _T("")));
+   configuration->set(_T("Subject"), binding.getValue(_T("/MethodBinding/Subject"), _T("")));
+   return configuration;
+}
+
+/**
+ * Update binding configuration
+ */
+void MessageAuthMethod::updateBindingConfiguration(Config* binding, const StringMap& updates) const
+{
+   binding->setValue(_T("/MethodBinding/Recipient"), CHECK_NULL_EX(updates.get(_T("Recipient"))));
+   binding->setValue(_T("/MethodBinding/Subject"), CHECK_NULL_EX(updates.get(_T("Subject"))));
 }
 
 /**
@@ -517,6 +561,37 @@ bool Is2FAMethodExists(const TCHAR* name)
    bool result = s_methods.contains(name);
    s_authMethodListLock.unlock();
    return result;
+}
+
+/**
+ * Extract 2FA method binding configuration prepared for sending to client
+ */
+unique_ptr<StringMap> Extract2FAMethodBindingConfiguration(const TCHAR* methodName, const Config& binding)
+{
+   unique_ptr<StringMap> configuration;
+   s_authMethodListLock.lock();
+   TwoFactorAuthenticationMethod *am = s_methods.get(methodName);
+   if (am != nullptr)
+   {
+      configuration = am->extractBindingConfiguration(binding);
+   }
+   s_authMethodListLock.unlock();
+   return configuration;
+}
+
+/**
+ * Update 2FA method binding configuration
+ */
+bool Update2FAMethodBindingConfiguration(const TCHAR* methodName, Config *binding, const StringMap& updates)
+{
+   s_authMethodListLock.lock();
+   TwoFactorAuthenticationMethod *am = s_methods.get(methodName);
+   if (am != nullptr)
+   {
+      am->updateBindingConfiguration(binding, updates);
+   }
+   s_authMethodListLock.unlock();
+   return am != nullptr;
 }
 
 /**

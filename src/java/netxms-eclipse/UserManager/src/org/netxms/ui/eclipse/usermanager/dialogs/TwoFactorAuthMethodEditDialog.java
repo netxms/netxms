@@ -53,7 +53,7 @@ import org.netxms.ui.eclipse.usermanager.dialogs.helpers.TOTPMethodBindingConfig
 public class TwoFactorAuthMethodEditDialog extends Dialog
 {
    private String name;
-   private String configuration;
+   private Map<String, String> configuration;
    private Map<String, TwoFactorAuthenticationMethod> availableMethods = new HashMap<>();
    private Combo methodSelector;
    private Composite configurationArea;
@@ -66,11 +66,11 @@ public class TwoFactorAuthMethodEditDialog extends Dialog
     * @param name name of selected method or null
     * @param configuration configuration for method binding
     */
-   public TwoFactorAuthMethodEditDialog(Shell parentShell, String name, String configuration)
+   public TwoFactorAuthMethodEditDialog(Shell parentShell, String name, Map<String, String> configuration)
    {
       super(parentShell);
       this.name = name;
-      this.configuration = configuration;
+      this.configuration = new HashMap<String, String>(configuration);
    }
 
    /**
@@ -118,7 +118,6 @@ public class TwoFactorAuthMethodEditDialog extends Dialog
       configurationArea.setLayout(new FillLayout());
       GridData gd = new GridData(SWT.FILL, SWT.FILL, true, true);
       gd.minimumWidth = 600;
-      // gd.heightHint = 400;
       configurationArea.setLayoutData(gd);
 
       return dialogArea;
@@ -209,7 +208,7 @@ public class TwoFactorAuthMethodEditDialog extends Dialog
       }
 
       name = methodSelector.getItem(index);
-      configuration = (methodConfigurator != null) ? methodConfigurator.getConfiguration() : "";
+      configuration = (methodConfigurator != null) ? methodConfigurator.getConfiguration() : new HashMap<String, String>(0);
       super.okPressed();
    }
 
@@ -224,7 +223,7 @@ public class TwoFactorAuthMethodEditDialog extends Dialog
    /**
     * @return the configuration
     */
-   public String getConfiguration()
+   public Map<String, String> getConfiguration()
    {
       return configuration;
    }

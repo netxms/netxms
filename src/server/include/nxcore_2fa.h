@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2021 Raden Solutions
+** Copyright (C) 2021-2022 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -100,5 +100,7 @@ uint32_t Modify2FAMethod(const TCHAR* name, const TCHAR* methodType, const TCHAR
 uint32_t Rename2FAMethod(const TCHAR *oldName, const TCHAR *newName);
 uint32_t Delete2FAMethod(const TCHAR* name);
 bool Is2FAMethodExists(const TCHAR* name);
+unique_ptr<StringMap> Extract2FAMethodBindingConfiguration(const TCHAR* methodName, const Config& binding);
+bool Update2FAMethodBindingConfiguration(const TCHAR* methodName, Config *binding, const StringMap& updates);
 
 #endif   /* _nxcore_2fa_h_ */

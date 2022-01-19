@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -46,7 +46,7 @@ public class User extends AbstractUserObject
    private String email;
    private String phoneNumber;
    private long[] groups;
-   private Map<String, String> twoFactorAuthMethodBindings;
+   private Map<String, Map<String, String>> twoFactorAuthMethodBindings;
 
 	/**
 	 * Default constructor
@@ -61,7 +61,7 @@ public class User extends AbstractUserObject
       email = "";
       phoneNumber = "";
 		groups = new long[0];
-      twoFactorAuthMethodBindings = new HashMap<String, String>(0);
+      twoFactorAuthMethodBindings = new HashMap<String, Map<String, String>>(0);
 	}
 
 	/**
@@ -72,22 +72,24 @@ public class User extends AbstractUserObject
    public User(User src)
 	{
 		super(src);
-		this.authMethod = src.authMethod;
-		this.certMappingMethod = src.certMappingMethod;
-		this.certMappingData = src.certMappingData;
-		this.fullName = src.fullName;
-		this.lastLogin = src.lastLogin;
-		this.lastPasswordChange = src.lastPasswordChange;
-		this.minPasswordLength = src.minPasswordLength;
-		this.disabledUntil = src.disabledUntil;
-		this.authFailures = src.authFailures;
-		this.xmppId = src.xmppId;
-      this.email = src.email;
-      this.phoneNumber = src.phoneNumber;
-		this.groups = Arrays.copyOf(src.groups, src.groups.length);
-      this.twoFactorAuthMethodBindings = new HashMap<String, String>(src.twoFactorAuthMethodBindings);
+      authMethod = src.authMethod;
+      certMappingMethod = src.certMappingMethod;
+      certMappingData = src.certMappingData;
+      fullName = src.fullName;
+      lastLogin = src.lastLogin;
+      lastPasswordChange = src.lastPasswordChange;
+      minPasswordLength = src.minPasswordLength;
+      disabledUntil = src.disabledUntil;
+      authFailures = src.authFailures;
+      xmppId = src.xmppId;
+      email = src.email;
+      phoneNumber = src.phoneNumber;
+      groups = Arrays.copyOf(src.groups, src.groups.length);
+      twoFactorAuthMethodBindings = new HashMap<String, Map<String, String>>(src.twoFactorAuthMethodBindings.size());
+      for(Entry<String, Map<String, String>> e : src.twoFactorAuthMethodBindings.entrySet())
+         twoFactorAuthMethodBindings.put(e.getKey(), new HashMap<String, String>(e.getValue()));
 	}
-	
+
 	/**
 	 * Create user object from NXCP message
 	 *
@@ -113,14 +115,13 @@ public class User extends AbstractUserObject
 		   groups = new long[0];
 
       int count = msg.getFieldAsInt32(NXCPCodes.VID_2FA_METHOD_COUNT);
-      twoFactorAuthMethodBindings = new HashMap<String, String>(count);
+      twoFactorAuthMethodBindings = new HashMap<String, Map<String, String>>(count);
       long fieldId = NXCPCodes.VID_2FA_METHOD_LIST_BASE;
       for(int i = 0; i < count; i++)
       {
-         String name = msg.getFieldAsString(fieldId++);
-         String configuration = msg.getFieldAsString(fieldId++);
-         twoFactorAuthMethodBindings.put(name, configuration);
-         fieldId += 8;
+         String name = msg.getFieldAsString(fieldId);
+         twoFactorAuthMethodBindings.put(name, msg.getStringMapFromFields(fieldId + 10, fieldId + 9));
+         fieldId += 1000;
       }
 	}
 
@@ -147,11 +148,11 @@ public class User extends AbstractUserObject
 
       msg.setFieldInt32(NXCPCodes.VID_2FA_METHOD_COUNT, twoFactorAuthMethodBindings.size());
       long fieldId = NXCPCodes.VID_2FA_METHOD_LIST_BASE;
-      for(Entry<String, String> e : twoFactorAuthMethodBindings.entrySet())
+      for(Entry<String, Map<String, String>> e : twoFactorAuthMethodBindings.entrySet())
       {
-         msg.setField(fieldId++, e.getKey());
-         msg.setField(fieldId++, e.getValue());
-         fieldId += 8;
+         msg.setField(fieldId, e.getKey());
+         msg.setFieldsFromStringMap(e.getValue(), fieldId + 10, fieldId + 9);
+         fieldId += 1000;
       }
 	}
 
@@ -385,7 +386,7 @@ public class User extends AbstractUserObject
    /**
     * @return the twoFactorAuthMethodBindings
     */
-   public Map<String, String> getTwoFactorAuthMethodBindings()
+   public Map<String, Map<String, String>> getTwoFactorAuthMethodBindings()
    {
       return twoFactorAuthMethodBindings;
    }
@@ -393,7 +394,7 @@ public class User extends AbstractUserObject
    /**
     * @param twoFactorAuthMethodBindings the twoFactorAuthMethodBindings to set
     */
-   public void setTwoFactorAuthMethodBindings(Map<String, String> twoFactorAuthMethodBindings)
+   public void setTwoFactorAuthMethodBindings(Map<String, Map<String, String>> twoFactorAuthMethodBindings)
    {
       this.twoFactorAuthMethodBindings = twoFactorAuthMethodBindings;
    }

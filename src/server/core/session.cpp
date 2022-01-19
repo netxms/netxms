@@ -15690,7 +15690,7 @@ void ClientSession::delete2FAMethod(const NXCPMessage& request)
 }
 
 /**
- * Returns list of configured 2FA method bindings with method name and description
+ * Returns list of configured 2FA method bindings with method name and configuration
  */
 void ClientSession::getUser2FABindings(const NXCPMessage& request)
 {
@@ -15715,18 +15715,22 @@ void ClientSession::getUser2FABindings(const NXCPMessage& request)
 void ClientSession::modifyUser2FABinding(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+   TCHAR buffer[MAX_USER_NAME];
    uint32_t userId = request.getFieldAsUInt32(VID_USER_ID);
    if ((userId == m_dwUserId) || (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_USERS))
    {
       TCHAR methodName[MAX_OBJECT_NAME];
-      request.getFieldAsString(VID_2FA_RESPONSE, methodName, MAX_OBJECT_NAME);
-      char* configuration = request.getFieldAsUtf8String(VID_2FA_RESPONSE + 1);
-      response.setField(VID_RCC, ModifyUser2FAMethodBinding(userId, methodName, configuration));
-      MemFree(configuration);
+      request.getFieldAsString(VID_2FA_METHOD, methodName, MAX_OBJECT_NAME);
+      StringMap configuration(request, VID_2FA_METHOD_LIST_BASE, VID_2FA_METHOD_COUNT);
+      uint32_t rcc = ModifyUser2FAMethodBinding(userId, methodName, configuration);
+      response.setField(VID_RCC, rcc);
+      if (rcc == RCC_SUCCESS)
+      {
+         writeAuditLog(AUDIT_SECURITY, true, 0, _T("2FA method \"%s\" binding configuration updated for user \"%s\""), methodName, ResolveUserId(userId, buffer, true));
+      }
    }
    else
    {
-      TCHAR buffer[MAX_USER_NAME];
       writeAuditLog(AUDIT_SECURITY, false, 0, _T("Access denied on modify 2FA method binding for user \"%s\""), ResolveUserId(userId, buffer, true));
       response.setField(VID_RCC, RCC_ACCESS_DENIED);
    }

@@ -1640,7 +1640,7 @@ shared_ptr<Config> GetUser2FAMethodBinding(int userId, const TCHAR* methodName)
 /**
  * Create/Modify 2FA method binding for specific user
  */
-uint32_t ModifyUser2FAMethodBinding(uint32_t userId, const TCHAR* methodName, const char* configuration)
+uint32_t ModifyUser2FAMethodBinding(uint32_t userId, const TCHAR* methodName, const StringMap& configuration)
 {
    uint32_t rcc = RCC_INVALID_USER_ID;
    s_userDatabaseLock.readLock();

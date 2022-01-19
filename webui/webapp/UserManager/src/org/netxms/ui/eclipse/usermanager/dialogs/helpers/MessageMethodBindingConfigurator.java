@@ -18,18 +18,13 @@
  */
 package org.netxms.ui.eclipse.usermanager.dialogs.helpers;
 
-import java.io.StringWriter;
+import java.util.HashMap;
+import java.util.Map;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
-import org.netxms.ui.eclipse.usermanager.Activator;
 import org.netxms.ui.eclipse.widgets.LabeledText;
-import org.simpleframework.xml.Element;
-import org.simpleframework.xml.Path;
-import org.simpleframework.xml.Root;
-import org.simpleframework.xml.Serializer;
-import org.simpleframework.xml.core.Persister;
 
 /**
  * 2FA method binding configurator for "Message" driver
@@ -63,59 +58,28 @@ public class MessageMethodBindingConfigurator extends AbstractMethodBindingConfi
    }
 
    /**
-    * @see org.netxms.ui.eclipse.usermanager.dialogs.helpers.AbstractMethodBindingConfigurator#setConfiguration(java.lang.String)
+    * @see org.netxms.ui.eclipse.usermanager.dialogs.helpers.AbstractMethodBindingConfigurator#setConfiguration(java.util.Map)
     */
    @Override
-   public void setConfiguration(String configuration)
+   public void setConfiguration(Map<String, String> configuration)
    {
-      Serializer serializer = new Persister();
-      try
-      {
-         Configuration config = serializer.read(Configuration.class, configuration);
-         subject.setText(config.subject);
-         recipient.setText(config.recipient);
-      }
-      catch(Exception e)
-      {
-         Activator.logError("Cannot parse 2FA method binding configuration", e);
-      }
+      String value = configuration.get("Subject");
+      if (value != null)
+         subject.setText(value);
+      value = configuration.get("Recipient");
+      if (value != null)
+         recipient.setText(value);
    }
 
    /**
     * @see org.netxms.ui.eclipse.usermanager.dialogs.helpers.AbstractMethodBindingConfigurator#getConfiguration()
     */
    @Override
-   public String getConfiguration()
+   public Map<String, String> getConfiguration()
    {
-      Configuration config = new Configuration();
-      config.subject = subject.getText().trim();
-      config.recipient = recipient.getText().trim();
-      Serializer serializer = new Persister();
-      StringWriter writer = new StringWriter();
-      try
-      {
-         serializer.write(config, writer);
-         return writer.toString();
-      }
-      catch(Exception e)
-      {
-         Activator.logError("Cannot serialize 2FA method binding configuration", e);
-         return "";
-      }
-   }
-
-   /**
-    * Configuration for method binding
-    */
-   @Root(name = "config", strict = false)
-   private static class Configuration
-   {
-      @Element(name = "Recipient", required = false)
-      @Path("MethodBinding")
-      String recipient;
-
-      @Element(name = "Subject", required = false)
-      @Path("MethodBinding")
-      String subject;
+      Map<String, String> config = new HashMap<String, String>();
+      config.put("Subject", subject.getText().trim());
+      config.put("Recipient", recipient.getText().trim());
+      return config;
    }
 }

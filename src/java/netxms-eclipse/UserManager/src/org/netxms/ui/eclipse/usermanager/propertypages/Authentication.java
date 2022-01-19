@@ -270,7 +270,7 @@ public class Authentication extends PropertyPage
       });
 
       twoFactorAuthMethodBindings = new ArrayList<MethodBinding>(object.getTwoFactorAuthMethodBindings().size());
-      for(Entry<String, String> e : object.getTwoFactorAuthMethodBindings().entrySet())
+      for(Entry<String, Map<String, String>> e : object.getTwoFactorAuthMethodBindings().entrySet())
          twoFactorAuthMethodBindings.add(new MethodBinding(e.getKey(), e.getValue()));
       twoFactorAuthMethodList.setInput(twoFactorAuthMethodBindings);
 
@@ -343,7 +343,7 @@ public class Authentication extends PropertyPage
 		object.setCertMappingData(textMappingData.getText());
 
       // Two-factor authentication
-      Map<String, String> bindings = new HashMap<String, String>(twoFactorAuthMethodBindings.size());
+      Map<String, Map<String, String>> bindings = new HashMap<String, Map<String, String>>(twoFactorAuthMethodBindings.size());
       for(MethodBinding b : twoFactorAuthMethodBindings)
          bindings.put(b.name, b.configuration);
       object.setTwoFactorAuthMethodBindings(bindings);
@@ -406,12 +406,12 @@ public class Authentication extends PropertyPage
    private static class MethodBinding
    {
       String name;
-      String configuration;
+      Map<String, String> configuration;
 
-      public MethodBinding(String name, String configuration)
+      public MethodBinding(String name, Map<String, String> configuration)
       {
          this.name = name;
-         this.configuration = configuration;
+         this.configuration = new HashMap<String, String>(configuration);
       }
    }
 }

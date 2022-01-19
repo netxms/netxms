@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -20,6 +20,7 @@
 **/
 
 #include "nxcore.h"
+#include <nxcore_2fa.h>
 
 #define DEBUG_TAG _T("userdb")
 
@@ -850,26 +851,30 @@ void User::modifyFromMessage(const NXCPMessage& msg)
 
    if (fields & USER_MODIFY_2FA_BINDINGS)
    {
-      m_2FABindings.clear();
       size_t count = msg.getFieldAsUInt32(VID_2FA_METHOD_COUNT);
       uint32_t fieldId = VID_2FA_METHOD_LIST_BASE;
       for(int i = 0; i < count; i++)
       {
          TCHAR methodName[MAX_OBJECT_NAME];
-         msg.getFieldAsString(fieldId++, methodName, MAX_OBJECT_NAME);
-         char *configSource = msg.getFieldAsUtf8String(fieldId++);
-         shared_ptr<Config> config = make_shared<Config>();
-         if (config->loadConfigFromMemory(configSource, strlen(configSource), _T("MethodBinding"), nullptr, true, false))
+         msg.getFieldAsString(fieldId, methodName, MAX_OBJECT_NAME);
+         StringMap configuration(msg, fieldId + 10, fieldId + 9);
+         bool newBinding = false;
+         shared_ptr<Config> binding = m_2FABindings.getShared(methodName);
+         if (binding == nullptr)
          {
-            m_2FABindings.set(methodName, config);
+            binding = make_shared<Config>();
+            newBinding = true;
+         }
+         if (Update2FAMethodBindingConfiguration(methodName, binding.get(), configuration))
+         {
+            if (newBinding)
+               m_2FABindings.set(methodName, binding);
          }
          else
          {
-            nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Cannot parse two factor authentication method configuration for user %s [%u]"), m_name, m_id);
-            nxlog_debug_tag(DEBUG_TAG, 3, _T("Failed configuration: %hs"), configSource);
+            nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Attempt to configure binding for non-existing 2FA method %s for user %s [%u]"), methodName, m_name, m_id);
          }
-         MemFree(configSource);
-         fieldId += 8;
+         fieldId += 1000;
       }
    }
 
@@ -1034,9 +1039,17 @@ void User::fill2FAMethodBindingInfo(NXCPMessage *msg) const
    uint32_t fieldId = VID_2FA_METHOD_LIST_BASE;
    for (const KeyValuePair<shared_ptr<Config>>* binding : m_2FABindings)
    {
-      msg->setField(fieldId++, binding->key);
-      msg->setField(fieldId++, binding->value->get()->createXml());
-      fieldId += 8;
+      msg->setField(fieldId, binding->key);
+      unique_ptr<StringMap> configuration = Extract2FAMethodBindingConfiguration(binding->key, **binding->value);
+      if (configuration != nullptr)
+      {
+         configuration->fillMessage(msg, fieldId + 9, fieldId + 10);
+      }
+      else
+      {
+         msg->setField(fieldId + 1, static_cast<uint32_t>(0));
+      }
+      fieldId += 1000;
       count++;
    }
    msg->setField(VID_2FA_METHOD_COUNT, count);
@@ -1045,19 +1058,26 @@ void User::fill2FAMethodBindingInfo(NXCPMessage *msg) const
 /**
  * Create/modify 2FA method binding for user
  */
-uint32_t User::modify2FAMethodBinding(const TCHAR* methodName, const char* configuration)
+uint32_t User::modify2FAMethodBinding(const TCHAR* methodName, const StringMap& configuration)
 {
-   auto config = make_shared<Config>();
-   uint32_t rcc = RCC_INVALID_2FA_BINDING_CONFIG;
-   if (config->loadConfigFromMemory(configuration, strlen(configuration), _T("MethodBinding"), nullptr, true, false))
+   uint32_t rcc;
+   bool newBinding = false;
+   shared_ptr<Config> binding = m_2FABindings.getShared(methodName);
+   if (binding == nullptr)
    {
-      m_2FABindings.set(methodName, config);
+      binding = make_shared<Config>();
+      newBinding = true;
+   }
+   if (Update2FAMethodBindingConfiguration(methodName, binding.get(), configuration))
+   {
+      if (newBinding)
+         m_2FABindings.set(methodName, binding);
       m_flags |= UF_MODIFIED;
       rcc = RCC_SUCCESS;
    }
    else
    {
-      rcc = RCC_INVALID_2FA_BINDING_CONFIG;
+      rcc = RCC_NO_SUCH_2FA_METHOD;
    }
    return rcc;
 }

@@ -439,7 +439,7 @@ public:
    void fill2FAMethodBindingInfo(NXCPMessage *msg) const;
    shared_ptr<Config> get2FAMethodBinding(const TCHAR* methodName) const { return m_2FABindings.getShared(methodName); }
    bool has2FAMethodBinding(const TCHAR* methodName) const { return m_2FABindings.contains(methodName); }
-   uint32_t modify2FAMethodBinding(const TCHAR* methodName, const char* configuration);
+   uint32_t modify2FAMethodBinding(const TCHAR* methodName, const StringMap& configuration);
    uint32_t delete2FAMethodBinding(const TCHAR* methodName);
 
    virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;
@@ -561,7 +561,7 @@ bool ValidateAuthenticationToken(const UserAuthenticationToken& token, uint32_t 
 unique_ptr<StringList> GetUserConfigured2FAMethods(uint32_t userId);
 shared_ptr<Config> GetUser2FAMethodBinding(int userId, const TCHAR *method);
 void FillUser2FAMethodBindingInfo(uint32_t userId, NXCPMessage *msg);
-uint32_t ModifyUser2FAMethodBinding(uint32_t userId, const TCHAR* methodName, const char* configuration);
+uint32_t ModifyUser2FAMethodBinding(uint32_t userId, const TCHAR* methodName, const StringMap& configuration);
 uint32_t DeleteUser2FAMethodBinding(uint32_t userId, const TCHAR* methodName);
 
 /**

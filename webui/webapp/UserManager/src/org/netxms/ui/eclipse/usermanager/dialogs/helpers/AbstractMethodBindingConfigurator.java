@@ -18,6 +18,7 @@
  */
 package org.netxms.ui.eclipse.usermanager.dialogs.helpers;
 
+import java.util.Map;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 
@@ -41,12 +42,12 @@ public abstract class AbstractMethodBindingConfigurator extends Composite
     *
     * @param configuration method binding configuration
     */
-   public abstract void setConfiguration(String configuration);
+   public abstract void setConfiguration(Map<String, String> configuration);
 
    /**
     * Get configuration from widgets.
     *
     * @return configuration from widgets
     */
-   public abstract String getConfiguration();
+   public abstract Map<String, String> getConfiguration();
 }
