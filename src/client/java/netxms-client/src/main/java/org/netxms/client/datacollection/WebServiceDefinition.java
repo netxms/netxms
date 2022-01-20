@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  * <p>
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,6 +24,7 @@ import java.util.UUID;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.constants.WebServiceAuthType;
+import org.netxms.client.constants.HttpRequestMethod;
 
 /**
  * Web service definition
@@ -33,12 +34,14 @@ public class WebServiceDefinition
    private final int FLAG_VERIFY_CERTIFICATE = 1;
    private final int FLAG_VERIFY_HOST = 2;
    private final int FLAG_PARSE_AS_TEXT = 4;
-   
+
    private int id;
    private UUID guid;
    private String name;
    private String description;
    private String url;
+   private HttpRequestMethod httpRequestMethod;
+   private String requestData;
    private WebServiceAuthType authenticationType;
    private String login;
    private String password;
@@ -59,6 +62,8 @@ public class WebServiceDefinition
       this.name = name;
       description = "";
       url = "";
+      httpRequestMethod = HttpRequestMethod.GET;
+      requestData = null;
       authenticationType = WebServiceAuthType.NONE;
       login = null;
       password = null;
@@ -80,6 +85,8 @@ public class WebServiceDefinition
       name = msg.getFieldAsString(NXCPCodes.VID_NAME);
       description = msg.getFieldAsString(NXCPCodes.VID_DESCRIPTION);
       url = msg.getFieldAsString(NXCPCodes.VID_URL);
+      httpRequestMethod = HttpRequestMethod.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_HTTP_REQUEST_METHOD));
+      requestData = msg.getFieldAsString(NXCPCodes.VID_REQUEST_DATA);
       authenticationType = WebServiceAuthType.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_AUTH_TYPE));
       login = msg.getFieldAsString(NXCPCodes.VID_LOGIN_NAME);
       password = msg.getFieldAsString(NXCPCodes.VID_PASSWORD);
@@ -101,6 +108,8 @@ public class WebServiceDefinition
       msg.setField(NXCPCodes.VID_NAME, name);
       msg.setField(NXCPCodes.VID_DESCRIPTION, description);
       msg.setField(NXCPCodes.VID_URL, url);
+      msg.setFieldInt16(NXCPCodes.VID_HTTP_REQUEST_METHOD, httpRequestMethod.getValue());
+      msg.setField(NXCPCodes.VID_REQUEST_DATA, requestData);
       msg.setFieldInt16(NXCPCodes.VID_AUTH_TYPE, authenticationType.getValue());
       msg.setField(NXCPCodes.VID_LOGIN_NAME, login);
       msg.setField(NXCPCodes.VID_PASSWORD, password);
@@ -247,6 +256,42 @@ public class WebServiceDefinition
    }
 
    /**
+    * Get HTTP request method.
+    *
+    * @return HTTP request method
+    */
+   public HttpRequestMethod getHttpRequestMethod()
+   {
+      return httpRequestMethod;
+   }
+
+   /**
+    * Set HTTP request method.
+    *
+    * @param httpRequestMethod HTTP request method
+    */
+   public void setHttpRequestMethod(HttpRequestMethod httpRequestMethod)
+   {
+      this.httpRequestMethod = httpRequestMethod;
+   }
+
+   /**
+    * @return the requestData
+    */
+   public String getRequestData()
+   {
+      return requestData;
+   }
+
+   /**
+    * @param requestData the requestData to set
+    */
+   public void setRequestData(String requestData)
+   {
+      this.requestData = requestData;
+   }
+
+   /**
     * @return the authenticationType
     */
    public WebServiceAuthType getAuthenticationType()
@@ -339,11 +384,10 @@ public class WebServiceDefinition
     */
    public void setVerifyCertificate(boolean verifyCertificate)
    {
-      if(verifyCertificate)
+      if (verifyCertificate)
          flags |= FLAG_VERIFY_CERTIFICATE;
       else
          flags &= ~FLAG_VERIFY_CERTIFICATE;
-         
    }
 
    /**
@@ -359,7 +403,7 @@ public class WebServiceDefinition
     */
    public void setVerifyHost(boolean verifyHost)
    {
-      if(verifyHost)
+      if (verifyHost)
          flags |= FLAG_VERIFY_HOST;
       else
          flags &= ~FLAG_VERIFY_HOST;         
@@ -372,7 +416,7 @@ public class WebServiceDefinition
     */
    public void setParseAsText(boolean useTextParsing)
    {
-      if(useTextParsing)
+      if (useTextParsing)
          flags |= FLAG_PARSE_AS_TEXT;
       else
          flags &= ~FLAG_PARSE_AS_TEXT;        
@@ -385,5 +429,4 @@ public class WebServiceDefinition
    {
       return (flags & FLAG_PARSE_AS_TEXT) > 0;
    }
-
 }

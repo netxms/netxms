@@ -1234,10 +1234,10 @@ public class NXCPCodes
    public static final long VID_HASH_CRC32 = 759;
    public static final long VID_HASH_MD5 = 760;
    public static final long VID_HASH_SHA256 = 761;
-   public static final long VID_HTTP_REQUEST_TYPE = 762;
-   public static final long VID_WEB_SWC_RESPONSE_CODE = 763;
-   public static final long VID_WEB_SWC_RESPONSE = 764;
-   public static final long VID_WEB_SWC_ERROR_TEXT = 765;
+   public static final long VID_HTTP_REQUEST_METHOD = 762;
+   public static final long VID_WEBSVC_RESPONSE_CODE = 763;
+   public static final long VID_WEBSVC_RESPONSE = 764;
+   public static final long VID_WEBSVC_ERROR_TEXT = 765;
    public static final long VID_REQUEST_DATA = 766;
    public static final long VID_ENABLE_FILE_UPLOAD_RESUMING = 767;
    public static final long VID_CHECK_COUNT = 768;

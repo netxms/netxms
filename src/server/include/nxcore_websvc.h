@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Raden Solutions
+** Copyright (C) 2003-2022 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -43,6 +43,8 @@ private:
    TCHAR *m_name;
    TCHAR *m_description;
    TCHAR *m_url;
+   HttpRequestMethod m_httpRequestMethod;
+   TCHAR *m_requestData;
    WebServiceAuthType m_authType;
    TCHAR *m_login;   // Or token for "bearer" auth
    TCHAR *m_password;
@@ -53,13 +55,13 @@ private:
 
 public:
    WebServiceDefinition(const NXCPMessage& msg);
-   WebServiceDefinition(const ConfigEntry *config, uint32_t id);
+   WebServiceDefinition(const ConfigEntry& config, uint32_t id);
    WebServiceDefinition(DB_HANDLE hdb, DB_RESULT hResult, int row);
    ~WebServiceDefinition();
 
    uint32_t query(DataCollectionTarget *object, WebServiceRequestType requestType, const TCHAR *path,
             const StringList& args, AgentConnection *conn, void *result) const;
-   WebServiceCallResult *makeCustomRequest(shared_ptr<Node> node, const WebServiceHTTPRequestType requestType,
+   WebServiceCallResult *makeCustomRequest(shared_ptr<Node> node, const HttpRequestMethod requestMethod,
          const StringList& args, const TCHAR *data, const TCHAR *contentType) const;
    void fillMessage(NXCPMessage *msg) const;
    void createExportRecord(StringBuffer &xml) const;
@@ -69,6 +71,8 @@ public:
    const uuid& getGuid() const { return m_guid; }
    const TCHAR *getName() const { return m_name; }
    const TCHAR *getUrl() const { return m_url; }
+   HttpRequestMethod getHttpRequestMethod() const { return m_httpRequestMethod; }
+   const TCHAR *getRequestData() const { return m_requestData; }
    const TCHAR *getDescription() const { return m_description; }
    WebServiceAuthType getAuthType() const { return m_authType; }
    const TCHAR *getLogin() const { return m_login; }
@@ -88,6 +92,6 @@ shared_ptr<WebServiceDefinition> FindWebServiceDefinition(const TCHAR *name);
 uint32_t ModifyWebServiceDefinition(shared_ptr<WebServiceDefinition> definition);
 uint32_t DeleteWebServiceDefinition(uint32_t id);
 void CreateWebServiceDefinitionExportRecord(StringBuffer &xml, uint32_t count, uint32_t *list);
-bool ImportWebServiceDefinition(ConfigEntry *config, bool overwrite);
+bool ImportWebServiceDefinition(const ConfigEntry& config, bool overwrite);
 
 #endif

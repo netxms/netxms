@@ -81,11 +81,12 @@ public class WebServiceManager extends ViewPart
 
    public static final int COLUMN_NAME = 0;
    public static final int COLUMN_URL = 1;
-   public static final int COLUMN_AUTHENTICATION = 2;
-   public static final int COLUMN_LOGIN = 3;
-   public static final int COLUMN_RETENTION_TIME = 4;
-   public static final int COLUMN_TIMEOUT = 5;
-   public static final int COLUMN_DESCRIPTION = 6;
+   public static final int COLUMN_METHOD = 2;
+   public static final int COLUMN_AUTHENTICATION = 4;
+   public static final int COLUMN_LOGIN = 5;
+   public static final int COLUMN_RETENTION_TIME = 6;
+   public static final int COLUMN_TIMEOUT = 7;
+   public static final int COLUMN_DESCRIPTION = 8;
 
    private Map<Integer, WebServiceDefinition> webServiceDefinitions = new HashMap<Integer, WebServiceDefinition>();
    private int nameCounter = 1;
@@ -126,8 +127,8 @@ public class WebServiceManager extends ViewPart
          }
       });
 
-      final String[] names = { "Name", "URL", "Authentication", "Login", "Retention Time", "Timeout", "Description" };
-      final int[] widths = { 300, 600, 100, 160, 90, 90, 600 };
+      final String[] names = { "Name", "URL", "Method", "Authentication", "Login", "Retention Time", "Timeout", "Description" };
+      final int[] widths = { 300, 600, 100, 100, 160, 90, 90, 600 };
       viewer = new SortableTableViewer(content, names, widths, 0, SWT.UP, SWT.MULTI | SWT.FULL_SELECTION);
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setLabelProvider(new WebServiceDefinitionLabelProvider());

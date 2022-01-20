@@ -1113,7 +1113,7 @@ NXSL_METHOD_DEFINITION(Node, createSNMPTransport)
  * Web service custom request with data
  */
 static int BaseWebServiceRequestWithData(WEB_SERVICE *websvc, int argc, NXSL_Value **argv,
-      NXSL_Value **result, NXSL_VM *vm, const WebServiceHTTPRequestType requestType)
+      NXSL_Value **result, NXSL_VM *vm, const HttpRequestMethod requestMethod)
 {
    if (argc < 1)
       return NXSL_ERR_INVALID_ARGUMENT_COUNT;
@@ -1156,7 +1156,7 @@ static int BaseWebServiceRequestWithData(WEB_SERVICE *websvc, int argc, NXSL_Val
    for (int i = 2; i < argc; i++)
       parameters.add(argv[i]->getValueAsCString());
 
-   WebServiceCallResult *response = websvc->first->makeCustomRequest(websvc->second, requestType, parameters, data, contentType);
+   WebServiceCallResult *response = websvc->first->makeCustomRequest(websvc->second, requestMethod, parameters, data, contentType);
    *result = vm->createValue(new NXSL_Object(vm, &g_nxslWebServiceCallResult, response));
    MemFree(data);
 
@@ -1167,20 +1167,20 @@ static int BaseWebServiceRequestWithData(WEB_SERVICE *websvc, int argc, NXSL_Val
  * Web service custom request with data
  */
 static int BaseWebServiceRequestWithoutData(WEB_SERVICE *websvc, int argc, NXSL_Value **argv,
-      NXSL_Value **result, NXSL_VM *vm, const WebServiceHTTPRequestType requestType)
+      NXSL_Value **result, NXSL_VM *vm, const HttpRequestMethod requestMethod)
 {
    StringList parameters;
    for (int i = 0 ; i < argc; i++)
       parameters.add(argv[i]->getValueAsCString());
 
-   WebServiceCallResult *response = websvc->first->makeCustomRequest(websvc->second, requestType, parameters, nullptr, nullptr);
+   WebServiceCallResult *response = websvc->first->makeCustomRequest(websvc->second, requestMethod, parameters, nullptr, nullptr);
    *result = vm->createValue(new NXSL_Object(vm, &g_nxslWebServiceCallResult, response));
 
    return 0;
 }
 
 /**
- * Node::callWebService(webSwcName, requestType, [postData], parameters...) method
+ * Node::callWebService(webSwcName, requestMethod, [postData], parameters...) method
  */
 NXSL_METHOD_DEFINITION(Node, callWebService)
 {
@@ -1199,41 +1199,36 @@ NXSL_METHOD_DEFINITION(Node, callWebService)
    if (d == nullptr)
    {
       WebServiceCallResult *webSwcResult = new WebServiceCallResult();
-      _tcsncpy(webSwcResult->errorMessage, _T("Web service definition not found"), WEB_SWC_ERROR_TEXT_MAX_SIZE);
+      _tcsncpy(webSwcResult->errorMessage, _T("Web service definition not found"), WEBSVC_ERROR_TEXT_MAX_SIZE);
       *result = vm->createValue(new NXSL_Object(vm, &g_nxslWebServiceCallResult, webSwcResult));
       return 0;
    }
 
    WEB_SERVICE websvc = WEB_SERVICE(d, *node);
-   const TCHAR *requestType = argv[1]->getValueAsCString();
-   if (!_tcsicmp(_T("GET"), requestType))
+   const TCHAR *requestMethod = argv[1]->getValueAsCString();
+   if (!_tcsicmp(_T("GET"), requestMethod))
    {
-      return BaseWebServiceRequestWithoutData(&websvc, argc - 2, argv  + 2,
-            result, vm, WebServiceHTTPRequestType::_GET);
+      return BaseWebServiceRequestWithoutData(&websvc, argc - 2, argv  + 2, result, vm, HttpRequestMethod::_GET);
    }
-   else if (!_tcsicmp(_T("DELETE"), requestType))
+   else if (!_tcsicmp(_T("DELETE"), requestMethod))
    {
-      return BaseWebServiceRequestWithoutData(&websvc, argc - 2, argv  + 2,
-            result, vm, WebServiceHTTPRequestType::_DELETE);
+      return BaseWebServiceRequestWithoutData(&websvc, argc - 2, argv  + 2, result, vm, HttpRequestMethod::_DELETE);
    }
-   else if (!_tcsicmp(_T("POST"), requestType))
+   else if (!_tcsicmp(_T("POST"), requestMethod))
    {
-      return BaseWebServiceRequestWithData(&websvc, argc - 2, argv  + 2,
-            result, vm, WebServiceHTTPRequestType::_POST);
+      return BaseWebServiceRequestWithData(&websvc, argc - 2, argv  + 2, result, vm, HttpRequestMethod::_POST);
    }
-   else if (!_tcsicmp(_T("PUT"), requestType))
+   else if (!_tcsicmp(_T("PUT"), requestMethod))
    {
-      return BaseWebServiceRequestWithData(&websvc, argc - 2, argv  + 2,
-            result, vm, WebServiceHTTPRequestType::_PUT);
+      return BaseWebServiceRequestWithData(&websvc, argc - 2, argv  + 2, result, vm, HttpRequestMethod::_PUT);
    }
-   else if (!_tcsicmp(_T("PATCH"), requestType))
+   else if (!_tcsicmp(_T("PATCH"), requestMethod))
    {
-      return BaseWebServiceRequestWithData(&websvc, argc - 2, argv  + 2,
-            result, vm, WebServiceHTTPRequestType::_PATCH);
+      return BaseWebServiceRequestWithData(&websvc, argc - 2, argv  + 2, result, vm, HttpRequestMethod::_PATCH);
    }
 
    WebServiceCallResult *webSwcResult = new WebServiceCallResult();
-   _tcsncpy(webSwcResult->errorMessage, _T("Invalid web service request type"), WEB_SWC_ERROR_TEXT_MAX_SIZE);
+   _tcslcpy(webSwcResult->errorMessage, _T("Invalid web service request method"), WEBSVC_ERROR_TEXT_MAX_SIZE);
    *result = vm->createValue(new NXSL_Object(vm, &g_nxslWebServiceCallResult, webSwcResult));
    return 0;
 }
@@ -4896,7 +4891,7 @@ void NXSL_VlanClass::onObjectDelete(NXSL_Object *object)
 NXSL_METHOD_DEFINITION(WEB_SERVICE, get)
 {
    WEB_SERVICE *websvc = static_cast<WEB_SERVICE*>(object->getData());
-   return BaseWebServiceRequestWithoutData(websvc, argc, argv, result, vm, WebServiceHTTPRequestType::_GET);
+   return BaseWebServiceRequestWithoutData(websvc, argc, argv, result, vm, HttpRequestMethod::_GET);
 }
 
 /**
@@ -4905,7 +4900,7 @@ NXSL_METHOD_DEFINITION(WEB_SERVICE, get)
 NXSL_METHOD_DEFINITION(WEB_SERVICE, post)
 {
    WEB_SERVICE *websvc = static_cast<WEB_SERVICE*>(object->getData());
-   return BaseWebServiceRequestWithData(websvc, argc, argv, result, vm, WebServiceHTTPRequestType::_POST);
+   return BaseWebServiceRequestWithData(websvc, argc, argv, result, vm, HttpRequestMethod::_POST);
 }
 
 /**
@@ -4914,7 +4909,7 @@ NXSL_METHOD_DEFINITION(WEB_SERVICE, post)
 NXSL_METHOD_DEFINITION(WEB_SERVICE, put)
 {
    WEB_SERVICE *websvc = static_cast<WEB_SERVICE*>(object->getData());
-   return BaseWebServiceRequestWithData(websvc, argc, argv, result, vm, WebServiceHTTPRequestType::_PUT);
+   return BaseWebServiceRequestWithData(websvc, argc, argv, result, vm, HttpRequestMethod::_PUT);
 }
 
 /**
@@ -4923,7 +4918,7 @@ NXSL_METHOD_DEFINITION(WEB_SERVICE, put)
 NXSL_METHOD_DEFINITION(WEB_SERVICE, delete)
 {
    WEB_SERVICE *websvc = static_cast<WEB_SERVICE*>(object->getData());
-   return BaseWebServiceRequestWithoutData(websvc, argc, argv, result, vm, WebServiceHTTPRequestType::_DELETE);
+   return BaseWebServiceRequestWithoutData(websvc, argc, argv, result, vm, HttpRequestMethod::_DELETE);
 }
 
 /**
@@ -4932,7 +4927,7 @@ NXSL_METHOD_DEFINITION(WEB_SERVICE, delete)
 NXSL_METHOD_DEFINITION(WEB_SERVICE, patch)
 {
    WEB_SERVICE *websvc = static_cast<WEB_SERVICE*>(object->getData());
-   return BaseWebServiceRequestWithData(websvc, argc, argv, result, vm, WebServiceHTTPRequestType::_PATCH);
+   return BaseWebServiceRequestWithData(websvc, argc, argv, result, vm, HttpRequestMethod::_PATCH);
 }
 
 /**

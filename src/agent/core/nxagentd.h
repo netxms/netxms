@@ -772,8 +772,8 @@ uint32_t GetTableValue(const TCHAR *param, Table *value, AbstractCommSession *se
 void GetParameterList(NXCPMessage *pMsg);
 void GetEnumList(NXCPMessage *pMsg);
 void GetTableList(NXCPMessage *pMsg);
-void QueryWebService(NXCPMessage *request, AbstractCommSession *session);
-void WebServiceCustomRequest(NXCPMessage *request, AbstractCommSession *session);
+void QueryWebService(NXCPMessage* request, AbstractCommSession *session);
+void WebServiceCustomRequest(NXCPMessage* request, AbstractCommSession *session);
 void GetActionList(NXCPMessage *msg);
 bool LoadSubAgent(const TCHAR *moduleName);
 void UnloadAllSubAgents();

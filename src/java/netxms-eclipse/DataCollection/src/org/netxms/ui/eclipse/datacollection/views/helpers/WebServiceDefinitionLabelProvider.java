@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -53,6 +53,8 @@ public class WebServiceDefinitionLabelProvider extends LabelProvider implements 
             return d.getDescription();
          case WebServiceManager.COLUMN_LOGIN:
             return d.getLogin();
+         case WebServiceManager.COLUMN_METHOD:
+            return d.getHttpRequestMethod().toString();
          case WebServiceManager.COLUMN_NAME:
             return d.getName();
          case WebServiceManager.COLUMN_RETENTION_TIME:

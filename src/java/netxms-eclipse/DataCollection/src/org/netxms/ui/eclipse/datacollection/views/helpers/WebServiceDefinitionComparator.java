@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -51,6 +51,9 @@ public class WebServiceDefinitionComparator extends ViewerComparator
 		   case WebServiceManager.COLUMN_LOGIN:
 		      result = d1.getLogin().compareToIgnoreCase(d2.getLogin());
 		      break;
+         case WebServiceManager.COLUMN_METHOD:
+            result = d1.getHttpRequestMethod().toString().compareToIgnoreCase(d2.getHttpRequestMethod().toString());
+            break;
 		   case WebServiceManager.COLUMN_NAME:
 		      result = d1.getName().compareToIgnoreCase(d2.getName());
 		      break;

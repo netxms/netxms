@@ -28,6 +28,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Group;
 import org.netxms.client.constants.WebServiceAuthType;
+import org.netxms.client.constants.HttpRequestMethod;
 import org.netxms.client.datacollection.WebServiceDefinition;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -45,6 +46,8 @@ public class WebServiceGeneral extends PreferencePage
    private Button checkVerifyCert;
    private Button checkVerifyHost;
    private Button checkTextParsing;
+   private Combo httpMethod;
+   private LabeledText requestData;
    private Combo authType;
    private LabeledText login;
    private LabeledText password;
@@ -97,32 +100,36 @@ public class WebServiceGeneral extends PreferencePage
       gd.horizontalSpan = 2;
       url.setLayoutData(gd);
       
-      checkVerifyCert = new Button(dialogArea, SWT.CHECK);
-      checkVerifyCert.setText("Verify the peer's SSL certificate");
-      checkVerifyCert.setSelection(definition.isVerifyCertificate());
+      /* method group */
+      Group groupMethod = new Group(dialogArea, SWT.NONE);
+      groupMethod.setText("HTTP request method");
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.verticalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.grabExcessVerticalSpace = true;
+      gd.horizontalSpan = 2;
+      groupMethod.setLayoutData(gd);
+      layout = new GridLayout();
+      groupMethod.setLayout(layout);
+
+      httpMethod = new Combo(groupMethod, SWT.DROP_DOWN | SWT.READ_ONLY);
+      for(HttpRequestMethod t : HttpRequestMethod.values())
+         httpMethod.add(t.toString());
+      httpMethod.select(definition.getHttpRequestMethod().getValue());
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
-      gd.horizontalSpan = 2;
-      checkVerifyCert.setLayoutData(gd);
-      
-      checkVerifyHost = new Button(dialogArea, SWT.CHECK);
-      checkVerifyHost.setText("Verify the certificate's name against host");
-      checkVerifyHost.setSelection(definition.isVerifyHost());
+      httpMethod.setLayoutData(gd);
+
+      requestData = new LabeledText(groupMethod, SWT.NONE, SWT.BORDER | SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
+      requestData.setLabel("Request data");
+      requestData.setText(definition.getRequestData());
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
-      gd.horizontalSpan = 2;
-      checkVerifyHost.setLayoutData(gd);
-      
-      checkTextParsing = new Button(dialogArea, SWT.CHECK);
-      checkTextParsing.setText("Use text parsing to get data");
-      checkTextParsing.setSelection(definition.isTextParsingUsed());
-      gd = new GridData();
-      gd.horizontalAlignment = SWT.FILL;
-      gd.grabExcessHorizontalSpace = true;
-      gd.horizontalSpan = 2;
-      checkTextParsing.setLayoutData(gd);
+      gd.heightHint = 120;
+      requestData.setLayoutData(gd);
 
       /* authentication group */
       Group groupAuth = new Group(dialogArea, SWT.NONE);
@@ -191,6 +198,30 @@ public class WebServiceGeneral extends PreferencePage
       gd.grabExcessHorizontalSpace = true;
       timeout.setLayoutData(gd);
 
+      checkVerifyCert = new Button(groupOptions, SWT.CHECK);
+      checkVerifyCert.setText("Verify peer's certificate");
+      checkVerifyCert.setSelection(definition.isVerifyCertificate());
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      checkVerifyCert.setLayoutData(gd);
+
+      checkVerifyHost = new Button(groupOptions, SWT.CHECK);
+      checkVerifyHost.setText("Verify host name in certificate");
+      checkVerifyHost.setSelection(definition.isVerifyHost());
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      checkVerifyHost.setLayoutData(gd);
+
+      checkTextParsing = new Button(groupOptions, SWT.CHECK);
+      checkTextParsing.setText("Process response as plain text");
+      checkTextParsing.setSelection(definition.isTextParsingUsed());
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      checkTextParsing.setLayoutData(gd);
+
       description = new LabeledText(dialogArea, SWT.NONE, SWT.MULTI | SWT.BORDER | SWT.H_SCROLL | SWT.V_SCROLL);
       description.setLabel("Description");
       description.setText(definition.getDescription());
@@ -198,7 +229,7 @@ public class WebServiceGeneral extends PreferencePage
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalSpan = 2;
-      gd.heightHint = 200;
+      gd.heightHint = 120;
       description.setLayoutData(gd);
 
       return dialogArea;
@@ -210,35 +241,36 @@ public class WebServiceGeneral extends PreferencePage
    @Override
    public boolean performOk()
    {
-      if (isControlCreated())
+      if (!isControlCreated())
+         return super.performOk();
+
+      String svcName = name.getText().trim();
+      if (svcName.isEmpty())
       {
-         String svcName = name.getText().trim();
-         if (svcName.isEmpty())
-         {
-            MessageDialogHelper.openWarning(getShell(), "Warning", "Web service name cannot be empty!");
-            return false;
-         }
-   
-         if (svcName.contains(":") || svcName.contains("/") || svcName.contains(",") || svcName.contains("(") || svcName.contains(")")
-               || svcName.contains("{") || svcName.contains("}") || svcName.contains("'") || svcName.contains("\""))
-         {
-            MessageDialogHelper.openWarning(getShell(), "Warning",
-                  "Web service name cannot contain following characters: / , : ' \" ( ) { }");
-            return false;
-         }
-   
-         definition.setName(svcName);
-         definition.setUrl(url.getText().trim());
-         definition.setVerifyCertificate(checkVerifyCert.getSelection());
-         definition.setVerifyHost(checkVerifyHost.getSelection());
-         definition.setParseAsText(checkTextParsing.getSelection());
-         definition.setAuthenticationType(WebServiceAuthType.getByValue(authType.getSelectionIndex()));
-         definition.setLogin(login.getText().trim());
-         definition.setPassword(password.getText());
-         definition.setCacheRetentionTime(retentionTime.getSelection());
-         definition.setRequestTimeout(timeout.getSelection());
-         definition.setDescription(description.getText());
+         MessageDialogHelper.openWarning(getShell(), "Warning", "Web service name cannot be empty!");
+         return false;
       }
+
+      if (svcName.contains(":") || svcName.contains("/") || svcName.contains(",") || svcName.contains("(") || svcName.contains(")") || svcName.contains("{") || svcName.contains("}") ||
+            svcName.contains("'") || svcName.contains("\""))
+      {
+         MessageDialogHelper.openWarning(getShell(), "Warning", "Web service name cannot contain following characters: / , : ' \" ( ) { }");
+         return false;
+      }
+
+      definition.setName(svcName);
+      definition.setUrl(url.getText().trim());
+      definition.setHttpRequestMethod(HttpRequestMethod.getByValue(httpMethod.getSelectionIndex()));
+      definition.setRequestData(requestData.getText().trim());
+      definition.setVerifyCertificate(checkVerifyCert.getSelection());
+      definition.setVerifyHost(checkVerifyHost.getSelection());
+      definition.setParseAsText(checkTextParsing.getSelection());
+      definition.setAuthenticationType(WebServiceAuthType.getByValue(authType.getSelectionIndex()));
+      definition.setLogin(login.getText().trim());
+      definition.setPassword(password.getText());
+      definition.setCacheRetentionTime(retentionTime.getSelection());
+      definition.setRequestTimeout(timeout.getSelection());
+      definition.setDescription(description.getText());
       return super.performOk();
    }
 }

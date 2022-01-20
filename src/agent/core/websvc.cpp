@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2020-2021 Raden Solutions
+** Copyright (C) 2020-2022 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -23,17 +23,14 @@
 #include "nxagentd.h"
 #include <netxms-version.h>
 
-
 #ifdef HAVE_LIBJQ
-
 extern "C" {
 #include <jq.h>
 }
-
 #else
 typedef int jv;
 #define jv_free(p)
-#endif
+#endif   /* HAVE_LIBJQ */
 
 #define DEBUG_TAG _T("websvc")
 
@@ -57,6 +54,11 @@ enum class DocumentType
    TEXT,
    XML
 };
+
+/**
+ * HTTP request methods
+ */
+static const char *s_httpRequestMethods[] = { "GET", "POST", "PUT", "DELETE", "PATCH" };
 
 /**
  * Function to replace new line to space
@@ -121,8 +123,8 @@ public:
    uint32_t getParams(StringList *params, NXCPMessage *response);
    uint32_t getList(const TCHAR *path, NXCPMessage *response);
    bool isDataExpired(uint32_t retentionTime) { return (time(nullptr) - m_lastRequestTime) >= retentionTime; }
-   uint32_t updateData(const TCHAR *url, const char *userName, const char *password, WebServiceAuthType authType,
-            struct curl_slist *headers, bool peerVerify, bool hostVerify, bool forcePlainTextParser, uint32_t requestTimeout);
+   uint32_t query(const TCHAR *url, uint16_t requestMethod, const char *requestData, const char *userName, const char *password,
+         WebServiceAuthType authType, struct curl_slist *headers, bool peerVerify, bool hostVerify, bool forcePlainTextParser, uint32_t requestTimeout);
 
    void lock() { m_mutex.lock(); }
    void unlock() { m_mutex.unlock(); }
@@ -400,7 +402,9 @@ void ServiceEntry::getListFromJSON(const TCHAR *path, StringList *resultList)
    jq_teardown(&jqState);
    MemFree(programm);
 }
+
 #else
+
 /**
  * Default implementation for build without libjq
  */
@@ -409,8 +413,6 @@ void ServiceEntry::getParamsFromJSON(StringList *params, NXCPMessage *response)
    //do nothing
 }
 
-
-
 /**
  * Get list from JSON cached data
  */
@@ -418,6 +420,7 @@ void ServiceEntry::getListFromJSON(const TCHAR *path, StringList *result)
 {
    //do nothing
 }
+
 #endif
 
 /**
@@ -637,10 +640,10 @@ static long CurlAuthType(WebServiceAuthType authType)
 }
 
 /**
- * Update cached data
+ * Query web service
  */
-uint32_t ServiceEntry::updateData(const TCHAR *url, const char *userName, const char *password, WebServiceAuthType authType,
-         struct curl_slist *headers, bool peerVerify, bool hostVerify, bool forcePlainTextParser, uint32_t requestTimeout)
+uint32_t ServiceEntry::query(const TCHAR *url, uint16_t requestMethod, const char *requestData, const char *userName, const char *password,
+      WebServiceAuthType authType, struct curl_slist *headers, bool peerVerify, bool hostVerify, bool forcePlainTextParser, uint32_t requestTimeout)
 {
    uint32_t rcc = ERR_SUCCESS;
    CURL *curl = curl_easy_init();
@@ -652,10 +655,22 @@ uint32_t ServiceEntry::updateData(const TCHAR *url, const char *userName, const 
       curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
       curl_easy_setopt(curl, CURLOPT_HEADER, static_cast<long>(0));
       curl_easy_setopt(curl, CURLOPT_TIMEOUT, static_cast<long>((requestTimeout != 0) ? requestTimeout : 10));
-      curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &OnCurlDataReceived);
+      curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, OnCurlDataReceived);
       curl_easy_setopt(curl, CURLOPT_USERAGENT, "NetXMS Agent/" NETXMS_VERSION_STRING_A);
       curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, peerVerify ? 1 : 0);
       curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, hostVerify ? 2 : 0);
+
+      curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, s_httpRequestMethods[requestMethod]);
+      if (requestData != nullptr)
+      {
+         curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, strlen(requestData));
+         curl_easy_setopt(curl, CURLOPT_POSTFIELDS, requestData);
+      }
+      else if (requestMethod == static_cast<uint16_t>(HttpRequestMethod::_POST))
+      {
+         curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, 0);
+         curl_easy_setopt(curl, CURLOPT_POSTFIELDS, "");
+      }
 
       if (authType == WebServiceAuthType::NONE)
       {
@@ -714,7 +729,7 @@ uint32_t ServiceEntry::updateData(const TCHAR *url, const char *userName, const 
                   if (!m_content.xml->loadXmlConfigFromMemory(text, static_cast<int>(size), nullptr, "*", false))
                   {
                      rcc = ERR_MALFORMED_RESPONSE;
-                     nxlog_debug_tag(DEBUG_TAG, 1, _T("ServiceEntry::updateData(): Failed to load XML"));
+                     nxlog_debug_tag(DEBUG_TAG, 1, _T("ServiceEntry::query(): Failed to load XML"));
                   }
                }
                else if (!forcePlainTextParser && (*text == '{'))
@@ -727,13 +742,13 @@ uint32_t ServiceEntry::updateData(const TCHAR *url, const char *userName, const 
                      rcc = ERR_MALFORMED_RESPONSE;
                      jv error = jv_invalid_get_msg(jv_copy(m_content.jvData));
                      char *msg = MemCopyStringA(jv_string_value(error));
-                     nxlog_debug_tag(DEBUG_TAG, 1, _T("ServiceEntry::updateData(): Failed to parse json. Error: \"%hs\""), RemoveNewLines(msg));
+                     nxlog_debug_tag(DEBUG_TAG, 1, _T("ServiceEntry::query(): Failed to parse json. Error: \"%hs\""), RemoveNewLines(msg));
                      MemFree(msg);
 
                   }
 #else
                   rcc = ERR_FUNCTION_NOT_SUPPORTED;
-                  nxlog_debug_tag(DEBUG_TAG, 1, _T("ServiceEntry::updateData(): libjq missing. Please install libjq to parse json."));
+                  nxlog_debug_tag(DEBUG_TAG, 1, _T("ServiceEntry::query(): libjq missing. Please install libjq to parse json."));
 #endif
                }
                else
@@ -746,7 +761,7 @@ uint32_t ServiceEntry::updateData(const TCHAR *url, const char *userName, const 
 #endif
                }
                m_lastRequestTime = time(nullptr);
-               nxlog_debug_tag(DEBUG_TAG, 6, _T("ServiceEntry::updateData(): response data type=%d, length=%u"), static_cast<int>(m_type), static_cast<unsigned int>(data.size()));
+               nxlog_debug_tag(DEBUG_TAG, 6, _T("ServiceEntry::query(): response data type=%d, length=%u"), static_cast<int>(m_type), static_cast<unsigned int>(data.size()));
                if (nxlog_get_debug_level_tag(DEBUG_TAG) >= 8)
                {
 #ifdef UNICODE
@@ -757,29 +772,29 @@ uint32_t ServiceEntry::updateData(const TCHAR *url, const char *userName, const 
                   for(TCHAR *s = responseText; *s != 0; s++)
                      if (*s < ' ')
                         *s = ' ';
-                  nxlog_debug_tag(DEBUG_TAG, 6, _T("ServiceEntry::updateData(): response data: %s"), responseText);
+                  nxlog_debug_tag(DEBUG_TAG, 6, _T("ServiceEntry::query(): response data: %s"), responseText);
                   MemFree(responseText);
                }
             }
             else
             {
                if (data.size() == 0)
-                  nxlog_debug_tag(DEBUG_TAG, 1, _T("ServiceEntry::updateData(): request returned empty document"));
+                  nxlog_debug_tag(DEBUG_TAG, 1, _T("ServiceEntry::query(): request returned empty document"));
                if (response_code != 200)
-                  nxlog_debug_tag(DEBUG_TAG, 1, _T("ServiceEntry::updateData(): request returned %d return code"), response_code);
+                  nxlog_debug_tag(DEBUG_TAG, 1, _T("ServiceEntry::query(): request returned %d return code"), response_code);
                m_type = DocumentType::NONE;
                rcc = ERR_MALFORMED_RESPONSE;
             }
          }
          else
          {
-            nxlog_debug_tag(DEBUG_TAG, 1, _T("ServiceEntry::updateData(): error making curl request: %hs"), errbuf);
+            nxlog_debug_tag(DEBUG_TAG, 1, _T("ServiceEntry::query(): error making curl request: %hs"), errbuf);
             rcc = ERR_MALFORMED_RESPONSE;
          }
       }
       else
       {
-         nxlog_debug_tag(DEBUG_TAG, 1, _T("ServiceEntry::updateData(): curl_easy_setopt failed for CURLOPT_URL"));
+         nxlog_debug_tag(DEBUG_TAG, 1, _T("ServiceEntry::query(): curl_easy_setopt failed for CURLOPT_URL"));
          rcc = ERR_UNKNOWN_PARAMETER;
       }
       MemFree(urlUtf8);
@@ -796,8 +811,18 @@ uint32_t ServiceEntry::updateData(const TCHAR *url, const char *userName, const 
 /**
  * Query web service
  */
-void QueryWebService(NXCPMessage *request, AbstractCommSession *session)
+void QueryWebService(NXCPMessage* request, AbstractCommSession *session)
 {
+   uint16_t requestMethodCode = request->getFieldAsInt16(VID_HTTP_REQUEST_METHOD);
+   if (requestMethodCode > static_cast<uint16_t>(HttpRequestMethod::_MAX_TYPE))
+   {
+      NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
+      response.setField(VID_RCC, ERR_INVALID_HTTP_REQUEST_CODE);
+      session->sendMessage(&response);
+      delete request;
+      return;
+   }
+
    TCHAR *url = request->getFieldAsString(VID_URL);
 
    s_serviceCacheLock.lock();
@@ -819,6 +844,7 @@ void QueryWebService(NXCPMessage *request, AbstractCommSession *session)
       char *password = request->getFieldAsUtf8String(VID_PASSWORD);
       bool verifyHost = request->isFieldExist(VID_VERIFY_HOST) ? request->getFieldAsBoolean(VID_VERIFY_HOST) : true;
       WebServiceAuthType authType = WebServiceAuthTypeFromInt(request->getFieldAsInt16(VID_AUTH_TYPE));
+      char *requestData = request->getFieldAsUtf8String(VID_REQUEST_DATA);
 
       struct curl_slist *headers = nullptr;
       uint32_t headerCount = request->getFieldAsUInt32(VID_NUM_HEADERS);
@@ -834,7 +860,7 @@ void QueryWebService(NXCPMessage *request, AbstractCommSession *session)
          headers = curl_slist_append(headers, header);
       }
 
-      result = cachedEntry->updateData(url, login, password, authType, headers,
+      result = cachedEntry->query(url, requestMethodCode, requestData, login, password, authType, headers,
                request->getFieldAsBoolean(VID_VERIFY_CERT), verifyHost,
                request->getFieldAsBoolean(VID_FORCE_PLAIN_TEXT_PARSER),
                request->getFieldAsUInt32(VID_TIMEOUT));
@@ -842,6 +868,7 @@ void QueryWebService(NXCPMessage *request, AbstractCommSession *session)
       curl_slist_free_all(headers);
       MemFree(login);
       MemFree(password);
+      MemFree(requestData);
       nxlog_debug_tag(DEBUG_TAG, 5, _T("QueryWebService(): Cache for URL \"%s\" updated"), url);
    }
    MemFree(url);
@@ -874,20 +901,19 @@ void QueryWebService(NXCPMessage *request, AbstractCommSession *session)
    delete request;
 }
 
-static const char *s_httpRequestTypes[] = {"GET", "POST", "PUT", "DELETE", "PATCH"};
-
 /**
- * Web service cusom request command executer
+ * Web service custom request command executor
  */
-void WebServiceCustomRequest(NXCPMessage *request, AbstractCommSession *session)
+void WebServiceCustomRequest(NXCPMessage* request, AbstractCommSession *session)
 {
-   uint16_t requestTypeCode = request->getFieldAsInt16(VID_HTTP_REQUEST_TYPE);
-   if (requestTypeCode > static_cast<uint16_t>(WebServiceHTTPRequestType::_MAX_TYPE))
+   uint16_t requestMethodCode = request->getFieldAsInt16(VID_HTTP_REQUEST_METHOD);
+   if (requestMethodCode > static_cast<uint16_t>(HttpRequestMethod::_MAX_TYPE))
    {
       NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
       response.setField(VID_RCC, ERR_INVALID_HTTP_REQUEST_CODE);
       session->sendMessage(&response);
       delete request;
+      return;
    }
 
    TCHAR *url = request->getFieldAsString(VID_URL);
@@ -898,7 +924,7 @@ void WebServiceCustomRequest(NXCPMessage *request, AbstractCommSession *session)
    bool peerVerify = request->getFieldAsBoolean(VID_VERIFY_CERT);
    WebServiceAuthType authType = WebServiceAuthTypeFromInt(request->getFieldAsInt16(VID_AUTH_TYPE));
    uint32_t requestTimeout = request->getFieldAsUInt32(VID_TIMEOUT);
-   const char *requestType = s_httpRequestTypes[requestTypeCode];
+   const char *requestMethod = s_httpRequestMethods[requestMethodCode];
 
    struct curl_slist *headers = nullptr;
    uint32_t headerCount = request->getFieldAsUInt32(VID_NUM_HEADERS);
@@ -918,7 +944,7 @@ void WebServiceCustomRequest(NXCPMessage *request, AbstractCommSession *session)
    uint32_t rcc = ERR_SUCCESS;
    const TCHAR *errorText = _T("Curl request failure");
    CURL *curl = curl_easy_init();
-   nxlog_debug_tag(DEBUG_TAG, 4, _T("WebServiceCustomRequest(): Request \"%s\" url, request type \"%hs\""), url, requestType);
+   nxlog_debug_tag(DEBUG_TAG, 4, _T("WebServiceCustomRequest(): %hs %s"), requestMethod, url);
    if (curl != nullptr)
    {
       char errbuf[CURL_ERROR_SIZE];
@@ -931,13 +957,13 @@ void WebServiceCustomRequest(NXCPMessage *request, AbstractCommSession *session)
       curl_easy_setopt(curl, CURLOPT_USERAGENT, "NetXMS Agent/" NETXMS_VERSION_STRING_A);
       curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, peerVerify ? 1 : 0);
       curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, hostVerify ? 2 : 0);
-      curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, requestType);
+      curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, requestMethod);
       if (data != nullptr)
       {
          curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, strlen(data));
          curl_easy_setopt(curl, CURLOPT_POSTFIELDS, data);
       }
-      else if (requestTypeCode == static_cast<uint16_t>(WebServiceHTTPRequestType::_POST))
+      else if (requestMethodCode == static_cast<uint16_t>(HttpRequestMethod::_POST))
       {
          curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, 0);
          curl_easy_setopt(curl, CURLOPT_POSTFIELDS, "");
@@ -982,12 +1008,12 @@ void WebServiceCustomRequest(NXCPMessage *request, AbstractCommSession *session)
            {
               long response_code;
               curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
-              response.setField(VID_WEB_SWC_RESPONSE_CODE, static_cast<uint32_t>(response_code));
+              response.setField(VID_WEBSVC_RESPONSE_CODE, static_cast<uint32_t>(response_code));
 
               data.write('\0');
               size_t size;
               const char *text = reinterpret_cast<const char*>(data.buffer(&size));
-              response.setFieldFromMBString(VID_WEB_SWC_RESPONSE, text);
+              response.setFieldFromMBString(VID_WEBSVC_RESPONSE, text);
               errorText = _T("");
 
               if (nxlog_get_debug_level_tag(DEBUG_TAG) >= 8)
@@ -1025,7 +1051,7 @@ void WebServiceCustomRequest(NXCPMessage *request, AbstractCommSession *session)
       rcc = ERR_INTERNAL_ERROR;
    }
 
-   response.setField(VID_WEB_SWC_ERROR_TEXT, errorText);
+   response.setField(VID_WEBSVC_ERROR_TEXT, errorText);
    response.setField(VID_RCC, rcc);
 
    curl_slist_free_all(headers);
@@ -1074,7 +1100,7 @@ void StartWebServiceHousekeeper()
 /**
  * Get parameters from web service
  */
-void QueryWebService(NXCPMessage *request, AbstractCommSession *session)
+void QueryWebService(NXCPMessage* request, AbstractCommSession *session)
 {
    nxlog_debug_tag(DEBUG_TAG, 5, _T("QueryWebService(): agent was compiled without libcurl"));
    NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
@@ -1086,7 +1112,7 @@ void QueryWebService(NXCPMessage *request, AbstractCommSession *session)
 /**
  * Web service cusom request command executer
  */
-void WebServiceCustomRequest(NXCPMessage *request, AbstractCommSession *session)
+void WebServiceCustomRequest(NXCPMessage* request, AbstractCommSession *session)
 {
    nxlog_debug_tag(DEBUG_TAG, 5, _T("WebServiceCustomRequest(): agent was compiled without libcurl"));
    NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());

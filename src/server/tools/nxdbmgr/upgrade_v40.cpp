@@ -24,6 +24,22 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 40.94 to 40.95
+ */
+static bool H_UpgradeFromV94()
+{
+   static const TCHAR *batch =
+      _T("ALTER TABLE websvc_definitions ADD http_request_method integer\n")
+      _T("ALTER TABLE websvc_definitions ADD request_data varchar(4000)\n")
+      _T("UPDATE websvc_definitions SET http_request_method=0\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("websvc_definitions"), _T("http_request_method")));
+   CHK_EXEC(SetMinorSchemaVersion(95));
+   return true;
+}
+
+/**
  * Upgrade from 40.93 to 40.94
  */
 static bool H_UpgradeFromV93()
@@ -3019,6 +3035,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 94, 40, 95, H_UpgradeFromV94 },
    { 93, 40, 94, H_UpgradeFromV93 },
    { 92, 40, 93, H_UpgradeFromV92 },
    { 91, 40, 92, H_UpgradeFromV91 },

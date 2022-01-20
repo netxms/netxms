@@ -1312,9 +1312,10 @@ DataCollectionError DataCollectionTarget::queryWebService(const TCHAR *param, We
    StringList pathList;
    pathList.add(path);
    StringMap results;
-   uint32_t agentStatus = conn->queryWebService(queryType, url, d->getRequestTimeout(), d->getCacheRetentionTime(),
-         d->getLogin(), d->getPassword(), d->getAuthType(), headers, pathList, d->isVerifyCertificate(), d->isVerifyHost(),
-         d->isForcePlainTextParser(), (queryType == WebServiceRequestType::PARAMETER) ? static_cast<void*>(&results) : static_cast<void*>(list));
+   uint32_t agentStatus = conn->queryWebService(queryType, url, d->getHttpRequestMethod(), d->getRequestData(), d->getRequestTimeout(),
+         d->getCacheRetentionTime(), d->getLogin(), d->getPassword(), d->getAuthType(), headers, pathList, d->isVerifyCertificate(),
+         d->isVerifyHost(), d->isForcePlainTextParser(),
+         (queryType == WebServiceRequestType::PARAMETER) ? static_cast<void*>(&results) : static_cast<void*>(list));
 
    DataCollectionError rc;
    if (agentStatus == ERR_SUCCESS)

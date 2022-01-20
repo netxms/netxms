@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Server Library
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -1060,9 +1060,9 @@ uint32_t AgentConnection::getParameter(const TCHAR *param, TCHAR *buffer, size_t
  * For list first element form parameters list will be used. If parameters list is empty
  * "/" will be used for XML and JSON types and "(*)" will be used for text type.
  */
-uint32_t AgentConnection::queryWebService(WebServiceRequestType requestType, const TCHAR *url, uint32_t requestTimeout,
-         uint32_t retentionTime, const TCHAR *login, const TCHAR *password, WebServiceAuthType authType, const StringMap& headers,
-         const StringList& pathList, bool verifyCert, bool verifyHost, bool forcePlainTextParser, void *results)
+uint32_t AgentConnection::queryWebService(WebServiceRequestType requestType, const TCHAR *url, HttpRequestMethod httpRequestMethod, const TCHAR *requestData,
+      uint32_t requestTimeout, uint32_t retentionTime, const TCHAR *login, const TCHAR *password, WebServiceAuthType authType, const StringMap& headers,
+      const StringList& pathList, bool verifyCert, bool verifyHost, bool forcePlainTextParser, void *results)
 {
    if (!m_isConnected)
       return ERR_NOT_CONNECTED;
@@ -1072,6 +1072,8 @@ uint32_t AgentConnection::queryWebService(WebServiceRequestType requestType, con
    msg.setCode(CMD_QUERY_WEB_SERVICE);
    msg.setId(requestId);
    msg.setField(VID_URL, url);
+   msg.setField(VID_HTTP_REQUEST_METHOD, static_cast<uint16_t>(httpRequestMethod));
+   msg.setField(VID_REQUEST_DATA, requestData);
    msg.setField(VID_TIMEOUT, requestTimeout);
    msg.setField(VID_RETENTION_TIME, retentionTime);
    msg.setField(VID_LOGIN_NAME, login);
@@ -1126,23 +1128,25 @@ uint32_t AgentConnection::queryWebService(WebServiceRequestType requestType, con
  * For list first element form parameters list will be used. If parameters list is empty:
  * "/" will be used for XML and JSOn types and "(*)" will be used for text type.
  */
-uint32_t AgentConnection::queryWebServiceList(const TCHAR *url, uint32_t requestTimeout, uint32_t retentionTime, const TCHAR *login, const TCHAR *password,
-         WebServiceAuthType authType, const StringMap& headers, const TCHAR *path, bool verifyCert, bool verifyHost, bool forcePlainTextParser, StringList *results)
+uint32_t AgentConnection::queryWebServiceList(const TCHAR *url, HttpRequestMethod httpRequestMethod, const TCHAR *requestData, uint32_t requestTimeout,
+      uint32_t retentionTime, const TCHAR *login, const TCHAR *password, WebServiceAuthType authType, const StringMap& headers, const TCHAR *path,
+      bool verifyCert, bool verifyHost, bool forcePlainTextParser, StringList *results)
 {
    StringList pathList;
    pathList.add(path);
-   return queryWebService(WebServiceRequestType::LIST, url, requestTimeout, retentionTime, login, password, authType, headers,
-            pathList, verifyCert, verifyHost, forcePlainTextParser, results);
+   return queryWebService(WebServiceRequestType::LIST, url, httpRequestMethod, requestData, requestTimeout, retentionTime, login, password,
+         authType, headers, pathList, verifyCert, verifyHost, forcePlainTextParser, results);
 }
 
 /**
  * Query web service for parameters
  */
-uint32_t AgentConnection::queryWebServiceParameters(const TCHAR *url, uint32_t requestTimeout, uint32_t retentionTime, const TCHAR *login, const TCHAR *password,
-         WebServiceAuthType authType, const StringMap& headers, const StringList& pathList, bool verifyCert, bool verifyHost, bool forcePlainTextParser, StringMap *results)
+uint32_t AgentConnection::queryWebServiceParameters(const TCHAR *url, HttpRequestMethod httpRequestMethod, const TCHAR *requestData, uint32_t requestTimeout,
+      uint32_t retentionTime, const TCHAR *login, const TCHAR *password, WebServiceAuthType authType, const StringMap& headers, const StringList& pathList,
+      bool verifyCert, bool verifyHost, bool forcePlainTextParser, StringMap *results)
 {
-   return queryWebService(WebServiceRequestType::PARAMETER, url, requestTimeout, retentionTime, login, password, authType, headers,
-            pathList, verifyCert, verifyHost, forcePlainTextParser, results);
+   return queryWebService(WebServiceRequestType::PARAMETER, url, httpRequestMethod, requestData, requestTimeout, retentionTime, login, password,
+         authType, headers, pathList, verifyCert, verifyHost, forcePlainTextParser, results);
 }
 
 /**

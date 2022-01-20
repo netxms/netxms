@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -644,7 +644,7 @@ uint32_t ImportConfig(const Config& config, uint32_t flags)
       unique_ptr<ObjectArray<ConfigEntry>> webServiceDef = webServiceDefRoot->getSubEntries(_T("webServiceDefinition#*"));
       for(int i = 0; i < webServiceDef->size(); i++)
       {
-         ImportWebServiceDefinition(webServiceDef->get(i), (flags & CFG_IMPORT_REPLACE_WEB_SVCERVICE_DEFINITIONS) != 0);
+         ImportWebServiceDefinition(*webServiceDef->get(i), (flags & CFG_IMPORT_REPLACE_WEB_SVCERVICE_DEFINITIONS) != 0);
       }
       nxlog_debug_tag(DEBUG_TAG, 5, _T("ImportConfig(): DCI summary tables imported"));
    }

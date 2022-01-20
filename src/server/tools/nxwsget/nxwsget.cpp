@@ -37,6 +37,8 @@ static uint32_t s_interval = 0;
 static uint32_t s_retentionTime = 60;
 static TCHAR s_login[MAX_CRED_LEN] = _T("");
 static TCHAR s_password[MAX_CRED_LEN] = _T("");
+static TCHAR *s_requestData = nullptr;
+static HttpRequestMethod s_httpRequestMethod = HttpRequestMethod::_GET;
 static WebServiceAuthType s_authType = WebServiceAuthType::NONE;
 static StringMap s_headers;
 static bool s_verifyCert = true;
@@ -64,21 +66,21 @@ static int QueryWebService(AgentConnection *pConn, const TCHAR *url, const Strin
       case WebServiceRequestType::PARAMETER:
       {
          StringMap results;
-         rcc = pConn->queryWebServiceParameters(url, (pConn->getCommandTimeout() - 500) / 1000, s_retentionTime,
-                  (s_login[0] == 0) ? NULL: s_login, (s_password[0] == 0) ? NULL: s_password,
-                  s_authType, s_headers, parameters, s_verifyCert, s_verifyHost, s_parseAsPlainText, &results);
+         rcc = pConn->queryWebServiceParameters(url, s_httpRequestMethod, s_requestData, (pConn->getCommandTimeout() - 500) / 1000,
+            s_retentionTime, (s_login[0] == 0) ? nullptr : s_login, (s_password[0] == 0) ? nullptr: s_password, s_authType,
+            s_headers, parameters, s_verifyCert, s_verifyHost, s_parseAsPlainText, &results);
          if (rcc == ERR_SUCCESS)
          {
-            results.forEach(PrintParameterResults, NULL);
+            results.forEach(PrintParameterResults, nullptr);
          }
          break;
       }
       case WebServiceRequestType::LIST:
       {
          StringList results;
-         rcc = pConn->queryWebServiceList(url, (pConn->getCommandTimeout() - 500) / 1000, s_retentionTime,
-                  (s_login[0] == 0) ? NULL: s_login, (s_password[0] == 0) ? NULL: s_password,
-                  s_authType, s_headers, parameters.get(0), s_verifyCert, s_verifyHost, s_parseAsPlainText, &results);
+         rcc = pConn->queryWebServiceList(url, s_httpRequestMethod, s_requestData, (pConn->getCommandTimeout() - 500) / 1000,
+            s_retentionTime, (s_login[0] == 0) ? nullptr: s_login, (s_password[0] == 0) ? nullptr: s_password, s_authType,
+            s_headers, parameters.get(0), s_verifyCert, s_verifyHost, s_parseAsPlainText, &results);
          if (rcc == ERR_SUCCESS)
          {
             for (int i = 0; i < results.size(); i++)
@@ -109,14 +111,35 @@ static bool ParseAdditionalOptionCb(const char ch, const TCHAR *optarg)
 
    switch(ch)
    {
+      case 'a':
+         if (!_tcsicmp(optarg, _T("any")))
+            s_authType = WebServiceAuthType::ANY;
+         else if (!_tcsicmp(optarg, _T("anysafe")))
+            s_authType = WebServiceAuthType::ANYSAFE;
+         else if (!_tcsicmp(optarg, _T("basic")))
+            s_authType = WebServiceAuthType::BASIC;
+         else if (!_tcsicmp(optarg, _T("bearer")))
+            s_authType = WebServiceAuthType::BEARER;
+         else if (!_tcsicmp(optarg, _T("digest")))
+            s_authType = WebServiceAuthType::DIGEST;
+         else if (!_tcsicmp(optarg, _T("none")))
+            s_authType = WebServiceAuthType::NONE;
+         else if (!_tcsicmp(optarg, _T("ntlm")))
+            s_authType = WebServiceAuthType::NTLM;
+         else
+         {
+            _tprintf(_T("Invalid authentication method \"%s\"\n"), optarg);
+            start = false;
+         }
+         break;
       case 'c':   // disable certificate check
          s_verifyCert = false;
          break;
       case 'C':   // disable certificate's host check
          s_verifyHost = false;
          break;
-      case 'd':   // debug level
-         s_parseAsPlainText = true;
+      case 'd':   // request data
+         s_requestData = MemCopyString(optarg);
          break;
       case 'i':   // Interval
          i = _tcstol(optarg, &eptr, 0);
@@ -148,6 +171,23 @@ static bool ParseAdditionalOptionCb(const char ch, const TCHAR *optarg)
       case 'l':
          s_requestType = WebServiceRequestType::LIST;
          break;
+      case 'm':
+         if (!_tcsicmp(optarg, _T("GET")))
+            s_httpRequestMethod = HttpRequestMethod::_GET;
+         else if (!_tcsicmp(optarg, _T("POST")))
+            s_httpRequestMethod = HttpRequestMethod::_POST;
+         else if (!_tcsicmp(optarg, _T("PUT")))
+            s_httpRequestMethod = HttpRequestMethod::_PUT;
+         else if (!_tcsicmp(optarg, _T("PATCH")))
+            s_httpRequestMethod = HttpRequestMethod::_PATCH;
+         else if (!_tcsicmp(optarg, _T("DELETE")))
+            s_httpRequestMethod = HttpRequestMethod::_DELETE;
+         else
+         {
+            _tprintf(_T("Invalid HTTP request method \"%s\"\n"), optarg);
+            start = false;
+         }
+         break;
       case 'L':   // Login
          _tcslcpy(s_login, optarg, MAX_CRED_LEN);
          break;
@@ -162,26 +202,8 @@ static bool ParseAdditionalOptionCb(const char ch, const TCHAR *optarg)
             start = false;
          }
          break;
-      case 't':
-         if (!_tcscmp(optarg, _T("any")))
-            s_authType = WebServiceAuthType::ANY;
-         else if (!_tcscmp(optarg, _T("anysafe")))
-            s_authType = WebServiceAuthType::ANYSAFE;
-         else if (!_tcscmp(optarg, _T("basic")))
-            s_authType = WebServiceAuthType::BASIC;
-         else if (!_tcscmp(optarg, _T("bearer")))
-            s_authType = WebServiceAuthType::BEARER;
-         else if (!_tcscmp(optarg, _T("digest")))
-            s_authType = WebServiceAuthType::DIGEST;
-         else if (!_tcscmp(optarg, _T("none")))
-            s_authType = WebServiceAuthType::NONE;
-         else if (!_tcscmp(optarg, _T("ntlm")))
-            s_authType = WebServiceAuthType::NTLM;
-         else
-         {
-            _tprintf(_T("Invalid authentication method \"%s\"\n"), optarg);
-            start = false;
-         }
+      case 't':   // debug level
+         s_parseAsPlainText = true;
          break;
       default:
          break;
@@ -235,18 +257,20 @@ int main(int argc, char *argv[])
    tool.displayName = _T("Web Service Query Tool");
    tool.mainHelpText = _T("Usage: nxwsget [<options>] <host> <URL> <path> [<path> ...]\n\n")
                        _T("Tool specific options:\n")
+                       _T("   -a auth      : HTTP authentication type. Valid methods are \"none\", \"basic\", \"digest\",\n")
+                       _T("                  \"ntlm\", \"bearer\", \"any\", or \"anysafe\". Default is \"none\".\n")
                        _T("   -c           : Do not verify service certificate.\n")
                        _T("   -C           : Do not verify certificate's name against host.\n")
-                       _T("   -d           : Use text parsing.\n")
+                       _T("   -d data      : Request data.\n")
                        _T("   -H header    : HTTP header (can be used multiple times).\n")
                        _T("   -i seconds   : Query service continuously with given interval.\n")
                        _T("   -l           : Requested parameter is a list.\n")
+                       _T("   -m method    : HTTP request method. Valid methods are GET, POST, PUT, PATCH, DELETE.\n")
                        _T("   -L login     : Web service login name.\n")
                        _T("   -P passwod   : Web service password.\n")
                        _T("   -r seconds   : Cache retention time.\n")
-                       _T("   -t auth      : HTTP authentication type. Valid methods are \"none\", \"basic\", \"digest\",\n")
-                       _T("                  \"ntlm\", \"bearer\", \"any\", or \"anysafe\". Default is \"none\".\n");
-   tool.additionalOptions = "cCdH:i:lL:P:r:t:";
+                       _T("   -t           : Use text parsing.\n");
+   tool.additionalOptions = "a:cCd:H:i:lm:L:P:r:t";
    tool.executeCommandCb = &ExecuteCommandCb;
    tool.parseAdditionalOptionCb = &ParseAdditionalOptionCb;
    tool.isArgMissingCb = &IsArgMissingCb;

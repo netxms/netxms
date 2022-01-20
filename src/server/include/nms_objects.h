@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -105,7 +105,7 @@ template class NXCORE_EXPORTABLE shared_ptr<AgentTunnel>;
 /**
  * Error message max field lenght
  */
-#define WEB_SWC_ERROR_TEXT_MAX_SIZE 256
+#define WEBSVC_ERROR_TEXT_MAX_SIZE 256
 
 /**
  * Web service custom request result data
@@ -115,7 +115,7 @@ struct WebServiceCallResult
    bool success;
    uint32_t agentErrorCode;
    uint32_t httpResponseCode;
-   TCHAR errorMessage[WEB_SWC_ERROR_TEXT_MAX_SIZE];
+   TCHAR errorMessage[WEBSVC_ERROR_TEXT_MAX_SIZE];
    TCHAR *document;
 
 public:
@@ -186,7 +186,7 @@ public:
    uint32_t deployPolicy(NXCPMessage *msg);
    uint32_t uninstallPolicy(uuid guid, const TCHAR *type, bool newTypeFormatSupported);
 
-   WebServiceCallResult *webServiceCustomRequest(const WebServiceHTTPRequestType requestType, const TCHAR *url, uint32_t requestTimeout, const TCHAR *login, const TCHAR *password,
+   WebServiceCallResult *webServiceCustomRequest(HttpRequestMethod requestMEthod, const TCHAR *url, uint32_t requestTimeout, const TCHAR *login, const TCHAR *password,
          const WebServiceAuthType authType, const StringMap& headers, bool verifyCert, bool verifyHost, const TCHAR *data);
 
    void setTunnel(const shared_ptr<AgentTunnel>& tunnel) { m_tunnel = tunnel; }

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -39,6 +39,8 @@ WebServiceDefinition::WebServiceDefinition(const NXCPMessage& msg)
    m_name = msg.getFieldAsString(VID_NAME);
    m_description = msg.getFieldAsString(VID_DESCRIPTION);
    m_url = msg.getFieldAsString(VID_URL);
+   m_httpRequestMethod = HttpRequestMethodFromInt(msg.getFieldAsInt16(VID_HTTP_REQUEST_METHOD));
+   m_requestData = msg.getFieldAsString(VID_REQUEST_DATA);
    m_authType = WebServiceAuthTypeFromInt(msg.getFieldAsInt16(VID_AUTH_TYPE));
    m_login = msg.getFieldAsString(VID_LOGIN_NAME);
    m_password = msg.getFieldAsString(VID_PASSWORD);
@@ -51,25 +53,27 @@ WebServiceDefinition::WebServiceDefinition(const NXCPMessage& msg)
 /**
  * Create web service definition from config file
  */
-WebServiceDefinition::WebServiceDefinition(const ConfigEntry *config, uint32_t id)
+WebServiceDefinition::WebServiceDefinition(const ConfigEntry& config, uint32_t id)
 {
    m_id = id;
    if (m_id == 0)
       m_id = CreateUniqueId(IDG_WEBSVC_DEFINITION);
-   m_guid = config->getSubEntryValueAsUUID(_T("guid"));
+   m_guid = config.getSubEntryValueAsUUID(_T("guid"));
    if (m_guid.isNull())
       m_guid = uuid::generate();
-   m_name = MemCopyString(config->getSubEntryValue(_T("name")));
-   m_description = MemCopyString(config->getSubEntryValue(_T("description")));
-   m_url = MemCopyString(config->getSubEntryValue(_T("url")));
-   m_authType = WebServiceAuthTypeFromInt(config->getSubEntryValueAsInt(_T("authType")));
-   m_login = MemCopyString(config->getSubEntryValue(_T("login")));
-   m_password = MemCopyString(config->getSubEntryValue(_T("password")));
-   m_cacheRetentionTime = config->getSubEntryValueAsInt(_T("retentionTime"));
-   m_requestTimeout = config->getSubEntryValueAsInt(_T("timeout"));
-   m_flags = config->getSubEntryValueAsInt(_T("flags"));
+   m_name = MemCopyString(config.getSubEntryValue(_T("name")));
+   m_description = MemCopyString(config.getSubEntryValue(_T("description")));
+   m_url = MemCopyString(config.getSubEntryValue(_T("url")));
+   m_httpRequestMethod = HttpRequestMethodFromInt(config.getSubEntryValueAsInt(_T("httpRequestMethod")));
+   m_requestData = MemCopyString(config.getSubEntryValue(_T("requestData")));
+   m_authType = WebServiceAuthTypeFromInt(config.getSubEntryValueAsInt(_T("authType")));
+   m_login = MemCopyString(config.getSubEntryValue(_T("login")));
+   m_password = MemCopyString(config.getSubEntryValue(_T("password")));
+   m_cacheRetentionTime = config.getSubEntryValueAsInt(_T("retentionTime"));
+   m_requestTimeout = config.getSubEntryValueAsInt(_T("timeout"));
+   m_flags = config.getSubEntryValueAsInt(_T("flags"));
 
-   ConfigEntry *headerRoot = config->findEntry(_T("headers"));
+   ConfigEntry *headerRoot = config.findEntry(_T("headers"));
    if (headerRoot != nullptr)
    {
       unique_ptr<ObjectArray<ConfigEntry>> headers = headerRoot->getSubEntries(_T("header*"));
@@ -79,40 +83,40 @@ WebServiceDefinition::WebServiceDefinition(const ConfigEntry *config, uint32_t i
          m_headers.set(e->getSubEntryValue(_T("name")), e->getSubEntryValue(_T("value")));
      }
    }
-
 }
 
 /**
  * Create web service definition from database record.
  * Expected field order:
- *    id,guid,name,url,auth_type,login,password,cache_retention_time,request_timeout,description,flags
+ *    id,guid,name,url,http_request_method,request_data,auth_type,login,password,cache_retention_time,request_timeout,description,flags
  */
 WebServiceDefinition::WebServiceDefinition(DB_HANDLE hdb, DB_RESULT hResult, int row)
 {
    m_id = DBGetFieldULong(hResult, row, 0);
    m_guid = DBGetFieldGUID(hResult, row, 1);
-   m_name = DBGetField(hResult, row, 2, NULL, 0);
-   m_url = DBGetField(hResult, row, 3, NULL, 0);
-   m_authType = WebServiceAuthTypeFromInt(DBGetFieldLong(hResult, row, 4));
-   m_login = DBGetField(hResult, row, 5, NULL, 0);
-   m_password = DBGetField(hResult, row, 6, NULL, 0);
-   m_cacheRetentionTime = DBGetFieldULong(hResult, row, 7);
-   m_requestTimeout = DBGetFieldULong(hResult, row, 8);
-   m_description = DBGetField(hResult, row, 9, NULL, 0);
-   m_flags = DBGetFieldULong(hResult, row, 10);
-
+   m_name = DBGetField(hResult, row, 2, nullptr, 0);
+   m_url = DBGetField(hResult, row, 3, nullptr, 0);
+   m_httpRequestMethod = HttpRequestMethodFromInt(DBGetFieldLong(hResult, row, 4));
+   m_requestData = DBGetField(hResult, row, 5, nullptr, 0);
+   m_authType = WebServiceAuthTypeFromInt(DBGetFieldLong(hResult, row, 6));
+   m_login = DBGetField(hResult, row, 7, nullptr, 0);
+   m_password = DBGetField(hResult, row, 8, nullptr, 0);
+   m_cacheRetentionTime = DBGetFieldULong(hResult, row, 9);
+   m_requestTimeout = DBGetFieldULong(hResult, row, 10);
+   m_description = DBGetField(hResult, row, 11, nullptr, 0);
+   m_flags = DBGetFieldULong(hResult, row, 12);
 
    TCHAR query[256];
    _sntprintf(query, 256, _T("SELECT name,value FROM websvc_headers WHERE websvc_id=%u"), m_id);
    DB_RESULT headers = DBSelect(hdb, query);
-   if (headers != NULL)
+   if (headers != nullptr)
    {
       int count = DBGetNumRows(headers);
       for(int i = 0; i < count; i++)
       {
-         TCHAR *name = DBGetField(headers, i, 0, NULL, 0);
-         TCHAR *value = DBGetField(headers, i, 1, NULL, 0);
-         if ((name != NULL) && (value != NULL) && (*name != 0))
+         TCHAR *name = DBGetField(headers, i, 0, nullptr, 0);
+         TCHAR *value = DBGetField(headers, i, 1, nullptr, 0);
+         if ((name != nullptr) && (value != nullptr) && (*name != 0))
          {
             m_headers.setPreallocated(name, value);
          }
@@ -134,6 +138,7 @@ WebServiceDefinition::~WebServiceDefinition()
    MemFree(m_name);
    MemFree(m_description);
    MemFree(m_url);
+   MemFree(m_requestData);
    MemFree(m_login);
    MemFree(m_password);
 }
@@ -161,7 +166,7 @@ static EnumerationCallbackResult ExpandHeaders(const TCHAR *key, const TCHAR *va
  * Query web service using this definition. Returns agent RCC.
  */
 uint32_t WebServiceDefinition::query(DataCollectionTarget *object, WebServiceRequestType requestType, const TCHAR *path,
-         const StringList& args, AgentConnection *conn, void *result) const
+      const StringList& args, AgentConnection *conn, void *result) const
 {
    StringBuffer url = object->expandText(m_url, nullptr, nullptr, shared_ptr<DCObjectInfo>(), nullptr, nullptr, nullptr, nullptr, &args);
 
@@ -176,8 +181,9 @@ uint32_t WebServiceDefinition::query(DataCollectionTarget *object, WebServiceReq
    pathList.add(path);
 
    StringMap resultSet;
-   uint32_t rcc = conn->queryWebService(requestType, url, m_requestTimeout, m_cacheRetentionTime, m_login, m_password, m_authType, headers, pathList,
-         isVerifyCertificate(), isVerifyHost(), isForcePlainTextParser(), (requestType == WebServiceRequestType::PARAMETER) ? &resultSet : result);
+   uint32_t rcc = conn->queryWebService(requestType, url, m_httpRequestMethod, m_requestData, m_requestTimeout, m_cacheRetentionTime,
+         m_login, m_password, m_authType, headers, pathList, isVerifyCertificate(), isVerifyHost(), isForcePlainTextParser(),
+         (requestType == WebServiceRequestType::PARAMETER) ? &resultSet : result);
    if ((rcc == ERR_SUCCESS) && (requestType == WebServiceRequestType::PARAMETER))
    {
       const TCHAR *value = resultSet.get(path);
@@ -192,7 +198,7 @@ uint32_t WebServiceDefinition::query(DataCollectionTarget *object, WebServiceReq
 /**
  * Make custom web service request using this definition. Returns agent WebServiceCallResult object.
  */
-WebServiceCallResult *WebServiceDefinition::makeCustomRequest(shared_ptr<Node> node, const WebServiceHTTPRequestType requestType,
+WebServiceCallResult *WebServiceDefinition::makeCustomRequest(shared_ptr<Node> node, const HttpRequestMethod requestType,
       const StringList& args, const TCHAR *data, const TCHAR *contentType) const
 {
    shared_ptr<AgentConnectionEx> conn = node->getAgentConnection();
@@ -200,7 +206,7 @@ WebServiceCallResult *WebServiceDefinition::makeCustomRequest(shared_ptr<Node> n
    {
       WebServiceCallResult *result = new WebServiceCallResult();
       result->success = false;
-      _tcsncpy(result->errorMessage, _T("No connection with agent"), WEB_SWC_ERROR_TEXT_MAX_SIZE);
+      _tcsncpy(result->errorMessage, _T("No connection with agent"), WEBSVC_ERROR_TEXT_MAX_SIZE);
       return result;
    }
    StringBuffer url = node->expandText(m_url, nullptr, nullptr, shared_ptr<DCObjectInfo>(), nullptr, nullptr, nullptr, nullptr, &args);
@@ -229,7 +235,9 @@ void WebServiceDefinition::fillMessage(NXCPMessage *msg) const
    msg->setField(VID_NAME, m_name);
    msg->setField(VID_DESCRIPTION, m_description);
    msg->setField(VID_URL, m_url);
-   msg->setField(VID_AUTH_TYPE, static_cast<INT16>(m_authType));
+   msg->setField(VID_HTTP_REQUEST_METHOD, static_cast<int16_t>(m_httpRequestMethod));
+   msg->setField(VID_REQUEST_DATA, m_requestData);
+   msg->setField(VID_AUTH_TYPE, static_cast<int16_t>(m_authType));
    msg->setField(VID_LOGIN_NAME, m_login);
    msg->setField(VID_PASSWORD, m_password);
    msg->setField(VID_RETENTION_TIME, m_cacheRetentionTime);
@@ -266,7 +274,11 @@ void WebServiceDefinition::createExportRecord(StringBuffer &xml) const
    xml.append(EscapeStringForXML2(m_description));
    xml.append(_T("</description>\n\t\t\t<url>"));
    xml.append(EscapeStringForXML2(m_url));
-   xml.append(_T("</url>\n\t\t\t<flags>"));
+   xml.append(_T("</url>\n\t\t\t<httpRequestMethod>"));
+   xml.append(static_cast<int32_t>(m_httpRequestMethod));
+   xml.append(_T("</httpRequestMethod>\n\t\t\t<requestData>"));
+   xml.append(EscapeStringForXML2(m_requestData));
+   xml.append(_T("</requestData>\n\t\t\t<flags>"));
    xml.append(m_flags);
    xml.append(_T("</flags>\n\t\t\t<authType>"));
    xml.append(static_cast<int32_t>(m_authType));
@@ -306,6 +318,8 @@ json_t *WebServiceDefinition::toJson() const
    json_object_set_new(root, "name", json_string_t(m_name));
    json_object_set_new(root, "description", json_string_t(m_description));
    json_object_set_new(root, "url", json_string_t(m_url));
+   json_object_set_new(root, "httpRequestMethod", json_integer(static_cast<int32_t>(m_httpRequestMethod)));
+   json_object_set_new(root, "requestData", json_string_t(m_requestData));
    json_object_set_new(root, "flags", json_integer(m_flags));
    json_object_set_new(root, "authType", json_integer(static_cast<int32_t>(m_authType)));
    json_object_set_new(root, "login", json_string_t(m_login));
@@ -333,33 +347,33 @@ void LoadWebServiceDefinitions()
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
-   DB_RESULT hResult = DBSelect(hdb, _T("SELECT id,guid,name,url,auth_type,login,password,cache_retention_time,request_timeout,description,flags FROM websvc_definitions"));
-   if (hResult == NULL)
+   DB_RESULT hResult = DBSelect(hdb, _T("SELECT id,guid,name,url,http_request_method,request_data,auth_type,login,password,cache_retention_time,request_timeout,description,flags FROM websvc_definitions"));
+   if (hResult == nullptr)
    {
       DBConnectionPoolReleaseConnection(hdb);
       nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Web service definitions cannot be loaded due to database failure"));
       return;
    }
 
-   DB_HANDLE cachedb = (g_flags & AF_CACHE_DB_ON_STARTUP) ? DBOpenInMemoryDatabase() : NULL;
-   if (cachedb != NULL)
+   DB_HANDLE cachedb = (g_flags & AF_CACHE_DB_ON_STARTUP) ? DBOpenInMemoryDatabase() : nullptr;
+   if (cachedb != nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG, 2, _T("Caching web service definition tables"));
       if (!DBCacheTable(cachedb, hdb, _T("websvc_headers"), _T("websvc_id,name"), _T("*")))
       {
          DBCloseInMemoryDatabase(cachedb);
-         cachedb = NULL;
+         cachedb = nullptr;
       }
    }
 
    int count = DBGetNumRows(hResult);
    for(int i = 0; i < count; i++)
-      s_webServiceDefinitions.add(make_shared<WebServiceDefinition>((cachedb != NULL) ? cachedb : hdb, hResult, i));
+      s_webServiceDefinitions.add(make_shared<WebServiceDefinition>((cachedb != nullptr) ? cachedb : hdb, hResult, i));
 
    DBFreeResult(hResult);
    DBConnectionPoolReleaseConnection(hdb);
 
-   if (cachedb != NULL)
+   if (cachedb != nullptr)
       DBCloseInMemoryDatabase(cachedb);
 
    nxlog_debug_tag(DEBUG_TAG, 2, _T("%d web service definitions loaded"), count);
@@ -438,8 +452,8 @@ uint32_t ModifyWebServiceDefinition(shared_ptr<WebServiceDefinition> definition)
    {
       bool success = false;
 
-      static const TCHAR *columns[] = { _T("guid"), _T("name"), _T("description"), _T("url"),
-               _T("auth_type"), _T("login"), _T("password"), _T("cache_retention_time"),
+      static const TCHAR *columns[] = { _T("guid"), _T("name"), _T("description"), _T("url"), _T("http_request_method"),
+               _T("request_data"), _T("auth_type"), _T("login"), _T("password"), _T("cache_retention_time"),
                _T("request_timeout"), _T("flags"), nullptr };
       DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("websvc_definitions"), _T("id"), definition->getId(), columns);
       if (hStmt != nullptr)
@@ -448,13 +462,15 @@ uint32_t ModifyWebServiceDefinition(shared_ptr<WebServiceDefinition> definition)
          DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, definition->getName(), DB_BIND_STATIC);
          DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, definition->getDescription(), DB_BIND_STATIC);
          DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, definition->getUrl(), DB_BIND_STATIC);
-         DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, static_cast<int32_t>(definition->getAuthType()));
-         DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, definition->getLogin(), DB_BIND_STATIC);
-         DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, definition->getPassword(), DB_BIND_STATIC);
-         DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, definition->getCacheRetentionTime());
-         DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, definition->getRequestTimeout());
-         DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, definition->getFlags());
-         DBBind(hStmt, 11, DB_SQLTYPE_INTEGER, definition->getId());
+         DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, static_cast<int32_t>(definition->getHttpRequestMethod()));
+         DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, definition->getRequestData(), DB_BIND_STATIC);
+         DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, static_cast<int32_t>(definition->getAuthType()));
+         DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, definition->getLogin(), DB_BIND_STATIC);
+         DBBind(hStmt, 9, DB_SQLTYPE_VARCHAR, definition->getPassword(), DB_BIND_STATIC);
+         DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, definition->getCacheRetentionTime());
+         DBBind(hStmt, 11, DB_SQLTYPE_INTEGER, definition->getRequestTimeout());
+         DBBind(hStmt, 12, DB_SQLTYPE_INTEGER, definition->getFlags());
+         DBBind(hStmt, 13, DB_SQLTYPE_INTEGER, definition->getId());
          success = DBExecute(hStmt);
          DBFreeStatement(hStmt);
       }
@@ -587,22 +603,22 @@ void CreateWebServiceDefinitionExportRecord(StringBuffer &xml, uint32_t count, u
 /**
  * Import web service definition configuration
  */
-bool ImportWebServiceDefinition(ConfigEntry *config, bool overwrite)
+bool ImportWebServiceDefinition(const ConfigEntry& config, bool overwrite)
 {
-   if (config->getSubEntryValue(_T("name")) == NULL)
+   if (config.getSubEntryValue(_T("name")) == nullptr)
    {
       nxlog_debug_tag(_T("import"), 4, _T("ImportAction: no name specified"));
       return false;
    }
 
    uint32_t rcc = RCC_ALREADY_EXIST;
-   const uuid guid = config->getSubEntryValueAsUUID(_T("guid"));
+   const uuid guid = config.getSubEntryValueAsUUID(_T("guid"));
    auto service = FindWebServiceDefinition(guid);
    TCHAR guidText[64];
    if(service == nullptr)
    {
       // Check for duplicate name
-      const TCHAR *name = config->getSubEntryValue(_T("name"));
+      const TCHAR *name = config.getSubEntryValue(_T("name"));
       if (FindWebServiceDefinition(name) != nullptr)
       {
          nxlog_debug_tag(_T("import"), 4, _T("ImportWebServiceDefinition: name \"%s\" already exists"), name);
@@ -640,7 +656,7 @@ WebServiceCallResult::WebServiceCallResult()
    agentErrorCode = ERR_SUCCESS;
    httpResponseCode = 0;
    errorMessage[0] = 0;
-   document = NULL;
+   document = nullptr;
 }
 
 /**

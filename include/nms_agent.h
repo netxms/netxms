@@ -186,9 +186,9 @@ enum class WebServiceRequestType
 };
 
 /**
- * Web service request type
+ * HTTP request method
  */
-enum class WebServiceHTTPRequestType
+enum class HttpRequestMethod
 {
    _GET = 0,
    _POST = 1,
@@ -201,10 +201,19 @@ enum class WebServiceHTTPRequestType
 /**
  * Safely get authentication type from integer value
  */
-inline WebServiceAuthType WebServiceAuthTypeFromInt(int type)
+static inline WebServiceAuthType WebServiceAuthTypeFromInt(int type)
 {
    return ((type >= static_cast<int>(WebServiceAuthType::NONE)) &&
            (type <= static_cast<int>(WebServiceAuthType::ANYSAFE))) ? static_cast<WebServiceAuthType>(type) : WebServiceAuthType::NONE;
+}
+
+/**
+ * Safely get HTTP request method from integer value
+ */
+static inline HttpRequestMethod HttpRequestMethodFromInt(int type)
+{
+   return ((type >= static_cast<int>(HttpRequestMethod::_GET)) &&
+           (type <= static_cast<int>(HttpRequestMethod::_MAX_TYPE))) ? static_cast<HttpRequestMethod>(type) : HttpRequestMethod::_GET;
 }
 
 /**
