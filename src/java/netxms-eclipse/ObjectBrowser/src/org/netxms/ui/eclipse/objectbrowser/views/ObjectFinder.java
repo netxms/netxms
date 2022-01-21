@@ -39,9 +39,15 @@ import org.eclipse.jface.dialogs.IInputValidator;
 import org.eclipse.jface.dialogs.InputDialog;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.CheckboxTableViewer;
+import org.eclipse.jface.viewers.DoubleClickEvent;
+import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.StructuredSelection;
+import org.eclipse.jface.viewers.TableViewer;
+import org.eclipse.jface.viewers.Viewer;
+import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
@@ -289,6 +295,7 @@ public class ObjectFinder extends ViewPart
    private Text ipRangeEnd;
    private CompositeWithMessageBar queryEditorMessage;
    private ScriptEditor queryEditor;
+   private TableViewer queryList;
    private Action actionStartSearch;
    private Action actionShowObjectDetails;
    private Action actionSaveAs;
@@ -499,20 +506,65 @@ public class ObjectFinder extends ViewPart
       CTabItem queryTab = new CTabItem(tabFolder, SWT.NONE);
       queryTab.setText("Query");
       queryTab.setImage(SharedIcons.IMG_FIND);
-      
+
       Composite queryArea = new Composite(tabFolder, SWT.NONE);
       layout = new GridLayout();
+      layout.numColumns = 3;
+      layout.makeColumnsEqualWidth = true;
+      layout.verticalSpacing = WidgetHelper.INNER_SPACING;
+      layout.horizontalSpacing = WidgetHelper.OUTER_SPACING;
       queryArea.setLayout(layout);
       queryTab.setControl(queryArea);
 
+      Label labelQueryEditor = new Label(queryArea, SWT.LEFT);
+      labelQueryEditor.setText("Query");
+      gd = new GridData(SWT.FILL, SWT.BOTTOM, true, false);
+      gd.horizontalSpan = 2;
+      labelQueryEditor.setLayoutData(gd);
+
+      Label labelQueryList = new Label(queryArea, SWT.LEFT);
+      labelQueryList.setText("Saved queries");
+      labelQueryList.setLayoutData(new GridData(SWT.FILL, SWT.BOTTOM, true, false));
+
       queryEditorMessage = new CompositeWithMessageBar(queryArea, SWT.BORDER);
-      queryEditorMessage.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+      gd = new GridData(SWT.FILL, SWT.FILL, true, true);
+      gd.horizontalSpan = 2;
+      queryEditorMessage.setLayoutData(gd);
 
       queryEditor = new ScriptEditor(queryEditorMessage, SWT.NONE, SWT.MULTI, true);
       queryEditorMessage.setContent(queryEditor);
 
       queryEditor.addVariables(Arrays.asList(OBJECT_ATTRIBUTES));
       queryEditor.addConstants(Arrays.asList(OBJECT_CONSTANTS));
+
+      queryList = new TableViewer(queryArea, SWT.BORDER | SWT.FULL_SELECTION);
+      queryList.setContentProvider(new ArrayContentProvider());
+      queryList.setLabelProvider(new LabelProvider() {
+         @Override
+         public String getText(Object element)
+         {
+            return ((ObjectQuery)element).getName();
+         }
+      });
+      queryList.setComparator(new ViewerComparator() {
+         @Override
+         public int compare(Viewer viewer, Object e1, Object e2)
+         {
+            return ((ObjectQuery)e1).getName().compareToIgnoreCase(((ObjectQuery)e2).getName());
+         }
+      });
+      queryList.getControl().setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+      queryList.addDoubleClickListener(new IDoubleClickListener() {
+         @Override
+         public void doubleClick(DoubleClickEvent event)
+         {
+            IStructuredSelection selection = queryList.getStructuredSelection();
+            if (selection.isEmpty())
+               return;
+            queryEditor.setText(((ObjectQuery)selection.getFirstElement()).getSource());
+         }
+      });
+      loadQueries();
 
       Button searchButtonQuery = new Button(queryArea, SWT.PUSH);
       searchButtonQuery.setText("&Search");
@@ -747,7 +799,6 @@ public class ObjectFinder extends ViewPart
     */
    private void startQuery()
    {
-      final NXCSession session = ConsoleSharedData.getSession();
       final String query = queryEditor.getText();
       new ConsoleJob("Query objects", this, Activator.PLUGIN_ID) {
          @Override
@@ -1088,6 +1139,13 @@ public class ObjectFinder extends ViewPart
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
             session.modifyObjectQuery(query);
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
+                  loadQueries();
+               }
+            });
          }
 
          @Override
@@ -1096,6 +1154,35 @@ public class ObjectFinder extends ViewPart
             return "Cannot save object query";
          }
       }.start();
+   }
+
+   /**
+    * Load saved object queries from server
+    */
+   private void loadQueries()
+   {
+      ConsoleJob job = new ConsoleJob("Load saved queries", this, Activator.PLUGIN_ID) {
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            final List<ObjectQuery> queries = session.getObjectQueries();
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
+                  queryList.setInput(queries);
+               }
+            });
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return "Cannot load saved object queries";
+         }
+      };
+      job.setUser(false);
+      job.start();
    }
 
    /**
