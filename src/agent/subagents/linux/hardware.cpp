@@ -25,67 +25,44 @@
 #include <jansson.h>
 
 #define MAX_LSHW_CMD_SIZE 64
-#define MAX_LSHW_JSON_SIZE 4096
 #define LSHW_TIMEOUT 10000
 
 /**
- * Process executor that collect process output into single MB string
+ * Process executor that collect process output into single string
  */
-class MonoStringProcessExecutor : public ProcessExecutor
+class LSHWProcessExecutor : public ProcessExecutor
 {
 private:
    char* m_data;
    size_t m_writeOffset;
    size_t m_totalSize;
 
-   void clear()
-   {
-      MemFree(m_data);
-      m_data = MemAllocStringA(1024);
-      m_writeOffset = 0;
-      m_totalSize = 256;
-   }
-
-   void append(const char* text)
-   {
-      size_t textSize = strlen(text);
-      int textSizeAndFreeSpaceDifference = textSize - (m_totalSize - m_writeOffset - 1);
-      if (textSizeAndFreeSpaceDifference > 0)
-      {
-         m_totalSize += textSizeAndFreeSpaceDifference > 256 ? textSizeAndFreeSpaceDifference : 256;
-         m_data = MemRealloc(m_data, m_totalSize);
-      }
-      memcpy(m_data + m_writeOffset, text, textSize);
-      m_writeOffset += textSize;
-      m_data[m_writeOffset] = 0;
-   }
-
 protected:
    virtual void onOutput(const char* text) override
    {
-      append(text);
+      size_t textSize = strlen(text);
+      int delta = static_cast<int>(textSize) - static_cast<int>(m_totalSize - m_writeOffset) + 1;
+      if (delta > 0)
+      {
+         m_totalSize += std::max(delta, 4096);
+         m_data = MemRealloc(m_data, m_totalSize);
+      }
+      memcpy(&m_data[m_writeOffset], text, textSize + 1);
+      m_writeOffset += textSize;
    }
 
 public:
-   MonoStringProcessExecutor(const TCHAR* command)
-      : ProcessExecutor(command, true)
+   LSHWProcessExecutor(const TCHAR* command) : ProcessExecutor(command, true)
    {
       m_sendOutput = true;
       m_data = nullptr;
+      m_writeOffset = 0;
+      m_totalSize = 0;
    }
 
-   ~MonoStringProcessExecutor()
+   ~LSHWProcessExecutor()
    {
       MemFree(m_data);
-   }
-
-   /**
-    * Execute command
-    */
-   virtual bool execute() override
-   {
-      clear();
-      return ProcessExecutor::execute();
    }
 
    /**
@@ -95,15 +72,16 @@ public:
 };
 
 /**
- * Executes "lshw -c [lshwClass]" command
+ * Executes lshw command with given options
+ *
  * @returns lshw output as json_t array or nullptr on failure
  */
-json_t* RunLSHW(const TCHAR* lshwClass)
+json_t* RunLSHW(const TCHAR* lshwOptions)
 {
    TCHAR cmd[MAX_LSHW_CMD_SIZE];
-   _sntprintf(cmd, MAX_LSHW_CMD_SIZE, _T("lshw -json -c %s 2>/dev/null"), lshwClass);
+   _sntprintf(cmd, MAX_LSHW_CMD_SIZE, _T("lshw -json %s 2>/dev/null"), lshwOptions);
 
-   MonoStringProcessExecutor pe(cmd);
+   LSHWProcessExecutor pe(cmd);
    if (!pe.execute())
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("Failed to execute lshw command"));
@@ -117,16 +95,15 @@ json_t* RunLSHW(const TCHAR* lshwClass)
 
    json_error_t error;
    json_t* root = json_loads(pe.getData(), 0, &error);
-   // Parse json
    if (root == nullptr)
    {
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("Failed to parse JSON on line %d: %hs\n"), error.line, error.text);
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Failed to parse JSON on line %d: %hs"), error.line, error.text);
       return nullptr;
    }
 
    if (!json_is_array(root))
    {
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("Failed to parse JSON: top level value is not an array\n"));
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Failed to parse JSON: top level value is not an array"));
       json_decref(root);
       return nullptr;
    }
@@ -140,7 +117,7 @@ json_t* RunLSHW(const TCHAR* lshwClass)
 LONG H_NetworkAdaptersTable(const TCHAR* cmd, const TCHAR* arg, Table* value, AbstractCommSession* session)
 {
    // Run lshw
-   json_t* root = RunLSHW(_T("network"));
+   json_t* root = RunLSHW(_T("-c network"));
    if (root == nullptr)
       return SYSINFO_RC_ERROR;
 
@@ -171,7 +148,7 @@ LONG H_NetworkAdaptersTable(const TCHAR* cmd, const TCHAR* arg, Table* value, Ab
       value->set(5, json_string_value(json_object_get(data, "serial")));                           // MAC_ADDRESS
       const char* ifName = json_string_value(json_object_get(data, "logicalname"));
       value->set(6, ifName == nullptr ? 0 : if_nametoindex(ifName));                               // IF_INDEX
-      value->set(7, static_cast<uint64_t>(json_integer_value(json_object_get(data, "capacity")))); // SPEED
+      value->set(7, json_object_get_integer(data, "capacity", 0));                                 // SPEED
 
       // AVAILABILITY
       json_t* disabled = json_object_get(data, "disabled");
@@ -280,11 +257,11 @@ static void GetDataForStorageDevices(json_t* root, Table* value, int* curDevice)
          value->set(4, 0);
       }
 
-      value->set(5, static_cast<uint64_t>(json_integer_value(json_object_get(data, "size")))); // SIZE
-      value->set(6, json_string_value(json_object_get(data, "vendor")));                       // MANUFACTURER
-      value->set(7, json_string_value(json_object_get(data, "product")));                      // PRODUCT
-      value->set(8, json_string_value(json_object_get(data, "version")));                      // REVISION
-      value->set(9, json_string_value(json_object_get(data, "serial")));                       // SERIAL
+      value->set(5, json_object_get_integer(data, "size", 0));                 // SIZE
+      value->set(6, json_string_value(json_object_get(data, "vendor")));       // MANUFACTURER
+      value->set(7, json_string_value(json_object_get(data, "product")));      // PRODUCT
+      value->set(8, json_string_value(json_object_get(data, "version")));      // REVISION
+      value->set(9, json_string_value(json_object_get(data, "serial")));       // SERIAL
 
       json_t* children = json_object_get(data, "children");
       if (children != nullptr && json_is_array(children))
@@ -298,7 +275,7 @@ static void GetDataForStorageDevices(json_t* root, Table* value, int* curDevice)
 LONG H_StorageDeviceTable(const TCHAR* cmd, const TCHAR* arg, Table* value, AbstractCommSession* session)
 {
    // Run lshw
-   json_t* root = RunLSHW(_T("disk -c storage"));
+   json_t* root = RunLSHW(_T("-c disk -c storage"));
    if (root == nullptr)
       return SYSINFO_RC_ERROR;
 
