@@ -68,10 +68,13 @@ DB_DRIVER LIBNXDB_EXPORTABLE DBLoadDriver(const TCHAR *module, const TCHAR *init
 	driver->m_context = context;
 
    // Load driver's module
+   TCHAR fullName[MAX_PATH];
 #ifdef _WIN32
-   driver->m_handle = DLOpen(module, szErrorText);
+   size_t len = _tcslen(fullName);
+   if ((len < 4) || (_tcsicmp(&fullName[len - 4], _T(".ddr")) && _tcsicmp(&fullName[len - 4], _T(".dll"))))
+      _tcslcat(fullName, _T(".ddr"), MAX_PATH);
+   driver->m_handle = DLOpen(fullName, szErrorText);
 #else
-	TCHAR fullName[MAX_PATH];
 	if (_tcscmp(module, _T(":self:")) && (_tcschr(module, _T('/')) == nullptr))
 	{
 	   TCHAR libdir[MAX_PATH];
@@ -82,6 +85,14 @@ DB_DRIVER LIBNXDB_EXPORTABLE DBLoadDriver(const TCHAR *module, const TCHAR *init
 	{
 		_tcslcpy(fullName, module, MAX_PATH);
 	}
+
+	if (_tcscmp(module, _T(":self:")))
+	{
+      size_t len = _tcslen(fullName);
+      if ((len < 4) || (_tcsicmp(&fullName[len - 4], _T(".ddr")) && _tcsicmp(&fullName[len - _tcslen(SHLIB_SUFFIX)], SHLIB_SUFFIX)))
+         _tcslcat(fullName, _T(".ddr"), MAX_PATH);
+	}
+
    driver->m_handle = DLOpen(!_tcscmp(fullName, _T(":self:")) ? nullptr : fullName, szErrorText);
 #endif
    if (driver->m_handle == nullptr)

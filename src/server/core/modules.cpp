@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,6 +22,8 @@
 
 #include "nxcore.h"
 
+#define DEBUG_TAG _T("modules")
+
 /**
  * Server config
  */
@@ -39,13 +41,14 @@ StructArray<NXMODULE> g_moduleList(0, 8);
 static bool LoadNetXMSModule(const TCHAR *name)
 {
 	bool success = false;
-   TCHAR errorText[256];
+   TCHAR errorText[256], fullName[MAX_PATH];
 
 #ifdef _WIN32
-   HMODULE hModule = DLOpen(name, errorText);
+   size_t len = _tcslen(fullName);
+   if ((len < 4) || (_tcsicmp(&fullName[len - 4], _T(".nxm")) && _tcsicmp(&fullName[len - 4], _T(".dll"))))
+      _tcslcat(fullName, _T(".nxm"), MAX_PATH);
+   HMODULE hModule = DLOpen(fullName, errorText);
 #else
-   TCHAR fullName[MAX_PATH];
-
    if (_tcschr(name, _T('/')) == nullptr)
    {
       // Assume that module name without path given
@@ -58,6 +61,11 @@ static bool LoadNetXMSModule(const TCHAR *name)
    {
       _tcslcpy(fullName, name, MAX_PATH);
    }
+
+   size_t len = _tcslen(fullName);
+   if ((len < 4) || (_tcsicmp(&fullName[len - 4], _T(".nxm")) && _tcsicmp(&fullName[len - _tcslen(SHLIB_SUFFIX)], SHLIB_SUFFIX)))
+      _tcslcat(fullName, _T(".nxm"), MAX_PATH);
+
    HMODULE hModule = DLOpen(fullName, errorText);
 #endif
 
@@ -78,36 +86,36 @@ static bool LoadNetXMSModule(const TCHAR *name)
                   module.hModule = hModule;
                   module.metadata = static_cast<NXMODULE_METADATA*>(DLGetSymbolAddr(hModule, "NXM_metadata", errorText));
                   g_moduleList.add(module);
-                  nxlog_write(NXLOG_INFO, _T("Server module %s loaded successfully"), module.szName);
+                  nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Server module %s loaded successfully"), module.szName);
                   success = true;
                }
                else
                {
-                  nxlog_write(NXLOG_ERROR, _T("Initialization of server module \"%s\" failed"), name);
+                  nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Initialization of server module \"%s\" failed"), name);
                   DLClose(hModule);
                }
             }
             else
             {
-               nxlog_write(NXLOG_ERROR, _T("Module \"%s\" has invalid magic number - probably it was compiled for different NetXMS server version"), name);
+               nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Module \"%s\" has invalid magic number - probably it was compiled for different NetXMS server version"), name);
                DLClose(hModule);
             }
          }
          else
          {
-            nxlog_write(NXLOG_ERROR, _T("Registartion of server module \"%s\" failed"), name);
+            nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Registartion of server module \"%s\" failed"), name);
             DLClose(hModule);
          }
       }
       else
       {
-         nxlog_write(NXLOG_ERROR, _T("Unable to find entry point in server module \"%s\""), name);
+         nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Unable to find entry point in server module \"%s\""), name);
          DLClose(hModule);
       }
    }
    else
    {
-      nxlog_write(NXLOG_ERROR, _T("Unable to load module \"%s\" (%s)"), name, errorText);
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Unable to load module \"%s\" (%s)"), name, errorText);
    }
    return success;
 }

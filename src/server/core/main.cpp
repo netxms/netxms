@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Raden Solutions
+** Copyright (C) 2003-2022 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -53,6 +53,7 @@
 #endif
 
 #define DEBUG_TAG_STARTUP  _T("startup")
+#define DEBUG_TAG_SHUTDOWN _T("shutdown")
 
 /**
  * Externals
@@ -915,10 +916,10 @@ BOOL NXCORE_EXPORTABLE Initialize()
 	}
 	if (hdbBootstrap == nullptr)
 	{
-		nxlog_write(NXLOG_ERROR, _T("Unable to establish connection with database (%s)"), errorText);
+		nxlog_write_tag(NXLOG_ERROR, _T("db"), _T("Unable to establish connection with database (%s)"), errorText);
 		return FALSE;
 	}
-	nxlog_debug(1, _T("Successfully connected to database %s@%s"), g_szDbName, g_szDbServer);
+	nxlog_debug_tag(_T("db"), 1, _T("Successfully connected to database %s@%s"), g_szDbName, g_szDbServer);
 
    // Run SQL commands from file if set
    if (*g_startupSqlScriptPath != 0)
@@ -930,14 +931,14 @@ BOOL NXCORE_EXPORTABLE Initialize()
 	INT32 schemaVersionMajor, schemaVersionMinor;
 	if (!DBGetSchemaVersion(hdbBootstrap, &schemaVersionMajor, &schemaVersionMinor))
 	{
-	   nxlog_write(NXLOG_ERROR, _T("Unable to get database schema version"));
+	   nxlog_write_tag(NXLOG_ERROR, _T("db"), _T("Unable to get database schema version"));
       DBDisconnect(hdbBootstrap);
       return FALSE;
 	}
 
 	if ((schemaVersionMajor != DB_SCHEMA_VERSION_MAJOR) || (schemaVersionMinor != DB_SCHEMA_VERSION_MINOR))
 	{
-		nxlog_write(NXLOG_ERROR, _T("Your database has format version %d.%d, but server is compiled for version %d.%d"), schemaVersionMajor, schemaVersionMinor, DB_SCHEMA_VERSION_MAJOR, DB_SCHEMA_VERSION_MINOR);
+		nxlog_write_tag(NXLOG_ERROR, _T("db"), _T("Your database has format version %d.%d, but server is compiled for version %d.%d"), schemaVersionMajor, schemaVersionMinor, DB_SCHEMA_VERSION_MAJOR, DB_SCHEMA_VERSION_MINOR);
 		DBDisconnect(hdbBootstrap);
 		return FALSE;
 	}
@@ -957,7 +958,7 @@ BOOL NXCORE_EXPORTABLE Initialize()
             int major, minor;
             if (sscanf(version, "PostgreSQL %d.%d.", &major, &minor) == 2)
             {
-               nxlog_debug(1, _T("Detected PostgreSQL version %d.%d"), major, minor);
+               nxlog_debug_tag(_T("db"), 1, _T("Detected PostgreSQL version %d.%d"), major, minor);
                if ((major >= 10) || ((major == 9) && (minor >= 5)))
                {
                   g_flags |= AF_DB_SUPPORTS_MERGE;
@@ -982,7 +983,7 @@ BOOL NXCORE_EXPORTABLE Initialize()
             int major, minor;
             if (sscanf(version, "%d.%d.", &major, &minor) == 2)
             {
-               nxlog_debug(1, _T("Detected TimescaleDB version %d.%d"), major, minor);
+               nxlog_debug_tag(_T("db"), 1, _T("Detected TimescaleDB version %d.%d"), major, minor);
                if (major >= 2)
                {
                   g_flags |= AF_TSDB_DROP_CHUNKS_V2;
@@ -1007,7 +1008,7 @@ BOOL NXCORE_EXPORTABLE Initialize()
 
 	if (!DBConnectionPoolStartup(g_dbDriver, g_szDbServer, g_szDbName, g_szDbLogin, g_szDbPassword, g_szDbSchema, baseSize, maxSize, cooldownTime, ttl))
 	{
-      nxlog_write(NXLOG_ERROR, _T("Failed to initialize database connection pool"));
+      nxlog_write_tag(NXLOG_ERROR, _T("db"), _T("Failed to initialize database connection pool"));
 	   return FALSE;
 	}
 
@@ -1015,7 +1016,7 @@ BOOL NXCORE_EXPORTABLE Initialize()
    if (lrt != 0)
    {
       DBSetLongRunningThreshold(lrt);
-      nxlog_write(NXLOG_INFO, _T("Long running query threshold set at %d milliseconds"), lrt);
+      nxlog_write_tag(NXLOG_INFO, _T("db"), _T("Long running query threshold set at %d milliseconds"), lrt);
    }
 
    MetaDataPreLoad();
@@ -1035,7 +1036,7 @@ BOOL NXCORE_EXPORTABLE Initialize()
       _sntprintf(buffer, 256, UINT64X_FMT(_T("016")), g_serverId);
       MetaDataWriteStr(_T("ServerID"), buffer);
    }
-   nxlog_write(NXLOG_INFO, _T("Server ID ") UINT64X_FMT(_T("016")), g_serverId);
+   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_STARTUP, _T("Server ID ") UINT64X_FMT(_T("016")), g_serverId);
 
    // Initialize locks
 retry_db_lock:
@@ -1084,7 +1085,7 @@ retry_db_lock:
    ConfigPreLoad();
    LoadGlobalConfig();
    CASReadSettings();
-   nxlog_debug(1, _T("Global configuration loaded"));
+   nxlog_debug_tag(DEBUG_TAG_STARTUP, 1, _T("Global configuration loaded"));
 
    // Setup thread pool resize parameters
    ThreadPoolSetResizeParameters(
@@ -1099,7 +1100,7 @@ retry_db_lock:
    // Initialize cryptography
    if (!InitCryptography())
    {
-      nxlog_write(NXLOG_ERROR, _T("Failed to initialize cryptography module"));
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_STARTUP, _T("Failed to initialize cryptography module"));
       return FALSE;
    }
 
@@ -1113,7 +1114,7 @@ retry_db_lock:
 #endif
 
    // Create thread pools
-   nxlog_debug(2, _T("Creating thread pools"));
+   nxlog_debug_tag(DEBUG_TAG_STARTUP, 2, _T("Creating thread pools"));
    g_mainThreadPool = ThreadPoolCreate(_T("MAIN"),
          ConfigReadInt(_T("ThreadPool.Main.BaseSize"), 8),
          ConfigReadInt(_T("ThreadPool.Main.MaxSize"), 256));
@@ -1124,7 +1125,7 @@ retry_db_lock:
    // Setup unique identifiers table
    if (!InitIdTable())
       return FALSE;
-   nxlog_debug(2, _T("ID table created"));
+   nxlog_debug_tag(DEBUG_TAG_STARTUP, 2, _T("ID table created"));
 
    InitCountryList();
    InitCurrencyList();
@@ -1279,7 +1280,7 @@ retry_db_lock:
 
    // Wait for initialization of critical threads
    pollManagerInitialized.wait(INFINITE);
-   nxlog_debug(2, _T("Poll manager initialized"));
+   nxlog_debug_tag(DEBUG_TAG_STARTUP, 2, _T("Poll manager initialized"));
 
    RegisterSchedulerTaskHandler(_T("System.CheckUserAuthTokens"), CheckUserAuthenticationTokens, 0); //No access right because it will be used only by server
    RegisterSchedulerTaskHandler(_T("Execute.Action"), ExecuteScheduledAction, SYSTEM_ACCESS_SCHEDULE_SCRIPT);
@@ -1360,7 +1361,7 @@ void NXCORE_EXPORTABLE Shutdown()
    // Notify clients
    NotifyClientSessions(NX_NOTIFY_SHUTDOWN, 0);
 
-   nxlog_write(NXLOG_INFO, _T("NetXMS Server stopped %s"), s_shutdownReasonText[static_cast<int>(s_shutdownReason)]);
+   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_SHUTDOWN, _T("NetXMS Server stopped %s"), s_shutdownReasonText[static_cast<int>(s_shutdownReason)]);
    g_flags |= AF_SHUTDOWN;     // Set shutdown flag
    InitiateProcessShutdown();
 
@@ -1388,7 +1389,7 @@ void NXCORE_EXPORTABLE Shutdown()
    ThreadJoin(s_pollManagerThread);
    ThreadJoin(s_syncerThread);
 
-   nxlog_debug(2, _T("Waiting for listener threads to stop"));
+   nxlog_debug_tag(DEBUG_TAG_SHUTDOWN, 2, _T("Waiting for listener threads to stop"));
    ThreadJoin(s_tunnelListenerThread);
    ThreadJoin(s_clientListenerThread);
    ThreadJoin(s_mobileDeviceListenerThread);
@@ -1397,7 +1398,7 @@ void NXCORE_EXPORTABLE Shutdown()
    StopSyslogServer();
    StopWindowsEventProcessing();
 
-   nxlog_debug(2, _T("Waiting for event processor to stop"));
+   nxlog_debug_tag(DEBUG_TAG_SHUTDOWN, 2, _T("Waiting for event processor to stop"));
    g_eventQueue.put(INVALID_POINTER_VALUE);
    ThreadJoin(s_eventProcessorThread);
 
@@ -1406,15 +1407,15 @@ void NXCORE_EXPORTABLE Shutdown()
 #endif
 
    ThreadSleep(1);     // Give other threads a chance to terminate in a safe way
-   nxlog_debug(2, _T("All threads were notified, continue with shutdown"));
+   nxlog_debug_tag(DEBUG_TAG_SHUTDOWN, 2, _T("All threads were notified, continue with shutdown"));
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    SaveObjects(hdb, INVALID_INDEX, true);
-   nxlog_debug(2, _T("All objects saved to database"));
+   nxlog_debug_tag(DEBUG_TAG_SHUTDOWN, 2, _T("All objects saved to database"));
    SaveUsers(hdb, INVALID_INDEX);
-   nxlog_debug(2, _T("All users saved to database"));
+   nxlog_debug_tag(DEBUG_TAG_SHUTDOWN, 2, _T("All users saved to database"));
    UpdatePStorageDatabase(hdb, INVALID_INDEX);
-   nxlog_debug(2, _T("All persistent storage values saved"));
+   nxlog_debug_tag(DEBUG_TAG_SHUTDOWN, 2, _T("All persistent storage values saved"));
    DBConnectionPoolReleaseConnection(hdb);
 
 	if (g_syncerThreadPool != nullptr)
@@ -1424,7 +1425,7 @@ void NXCORE_EXPORTABLE Shutdown()
       ThreadPoolDestroy(g_discoveryThreadPool);
 
    StopDBWriter();
-   nxlog_debug(1, _T("Database writer stopped"));
+   nxlog_debug_tag(DEBUG_TAG_SHUTDOWN, 1, _T("Database writer stopped"));
 
    CleanupUsers();
    PersistentStorageDestroy();
@@ -1435,7 +1436,7 @@ void NXCORE_EXPORTABLE Shutdown()
    ShutdownEventSubsystem();
    ShutdownAlarmManager();
    ShutdownNotificationChannels();
-   nxlog_debug(1, _T("Event processing stopped"));
+   nxlog_debug_tag(DEBUG_TAG_SHUTDOWN, 1, _T("Event processing stopped"));
 
    DisableAgentConnections();
    CleanupObjects();
@@ -1452,9 +1453,9 @@ void NXCORE_EXPORTABLE Shutdown()
 
 	DBConnectionPoolShutdown();
 	DBUnloadDriver(g_dbDriver);
-	nxlog_debug(1, _T("Database driver unloaded"));
+	nxlog_debug_tag(DEBUG_TAG_SHUTDOWN, 1, _T("Database driver unloaded"));
 
-	nxlog_debug(1, _T("Server shutdown complete"));
+	nxlog_debug_tag(DEBUG_TAG_SHUTDOWN, 1, _T("Server shutdown complete"));
 	nxlog_close();
 
 	// Remove PID file
@@ -1476,18 +1477,18 @@ void NXCORE_EXPORTABLE Shutdown()
  */
 void NXCORE_EXPORTABLE FastShutdown(ShutdownReason reason)
 {
-   nxlog_write(NXLOG_INFO, _T("NetXMS Server stopped %s using fast shutdown procedure"), s_shutdownReasonText[static_cast<int>(s_shutdownReason)]);
+   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_SHUTDOWN, _T("NetXMS Server stopped %s using fast shutdown procedure"), s_shutdownReasonText[static_cast<int>(s_shutdownReason)]);
 
 	g_flags |= AF_SHUTDOWN;     // Set shutdown flag
 	InitiateProcessShutdown();
 
 	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 	SaveObjects(hdb, INVALID_INDEX, true);
-	DbgPrintf(2, _T("All objects saved to database"));
+	nxlog_debug_tag(DEBUG_TAG_SHUTDOWN, 2, _T("All objects saved to database"));
 	SaveUsers(hdb, INVALID_INDEX);
-	DbgPrintf(2, _T("All users saved to database"));
+	nxlog_debug_tag(DEBUG_TAG_SHUTDOWN, 2, _T("All users saved to database"));
    UpdatePStorageDatabase(hdb, INVALID_INDEX);
-	DbgPrintf(2, _T("All persistent storage values saved"));
+   nxlog_debug_tag(DEBUG_TAG_SHUTDOWN, 2, _T("All persistent storage values saved"));
 	DBConnectionPoolReleaseConnection(hdb);
 
 	// Remove database lock first, because we have a chance to lose DB connection
@@ -1495,9 +1496,9 @@ void NXCORE_EXPORTABLE FastShutdown(ShutdownReason reason)
 
 	// Stop database writers
 	StopDBWriter();
-	DbgPrintf(1, _T("Database writer stopped"));
+	nxlog_debug_tag(DEBUG_TAG_SHUTDOWN, 1, _T("Database writer stopped"));
 
-   DbgPrintf(1, _T("Server shutdown complete"));
+	nxlog_debug_tag(DEBUG_TAG_SHUTDOWN, 1, _T("Server shutdown complete"));
 	nxlog_close();
 }
 

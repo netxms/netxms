@@ -22,6 +22,8 @@
 
 #include "sqlitedrv.h"
 
+#define DEBUG_TAG _T("db.drv.sqlite")
+
 /**
  * Get error message from SQLite handle
  */
@@ -129,7 +131,7 @@ static bool Initialize(const char *options)
       return false;
    sqlite3_config(SQLITE_CONFIG_MEMSTATUS, 0);
    sqlite3_enable_shared_cache(1);
-   nxlog_debug(1, _T("SQLite version %hs"), sqlite3_libversion());
+   nxlog_debug_tag(DEBUG_TAG, 1, _T("SQLite version %hs"), sqlite3_libversion());
    return true;
 }
 

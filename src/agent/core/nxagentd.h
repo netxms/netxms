@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -189,9 +189,9 @@ struct ACTION
  */
 struct SUBAGENT
 {
-   HMODULE hModule;              // Subagent's module handle
-   NETXMS_SUBAGENT_INFO *pInfo;  // Information provided by subagent
-   TCHAR szName[MAX_PATH];        // Name of the module  // to TCHAR by LWX
+   HMODULE moduleHandle;        // Subagent's module handle
+   NETXMS_SUBAGENT_INFO *info;  // Information provided by subagent
+   TCHAR moduleName[MAX_PATH];  // Name of the module  // to TCHAR by LWX
 };
 
 struct ActionList;

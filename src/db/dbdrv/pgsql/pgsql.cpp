@@ -41,6 +41,8 @@ static int (*s_PQsetSingleRowMode)(PGconn *) = nullptr;
 #define PGRES_SINGLE_TUPLE    9
 #endif
 
+#define DEBUG_TAG _T("db.drv.pgsql")
+
 /**
  * Convert wide character string to UTF-8 using internal buffer when possible
  */
@@ -205,9 +207,9 @@ static bool Initialize(const char *options)
 {
 #ifndef _WIN32
    s_libpq = dlopen("libpq.so.5", RTLD_NOW);
-   if (s_libpq != NULL)
+   if (s_libpq != nullptr)
       s_PQsetSingleRowMode = (int (*)(PGconn *))dlsym(s_libpq, "PQsetSingleRowMode");
-   nxlog_debug(2, _T("PostgreSQL driver: single row mode %s"), (s_PQsetSingleRowMode != NULL) ? _T("enabled") : _T("disabled"));
+   nxlog_debug_tag(DEBUG_TAG, 2, _T("PostgreSQL driver: single row mode %s"), (s_PQsetSingleRowMode != NULL) ? _T("enabled") : _T("disabled"));
 #endif
 	return true;
 }

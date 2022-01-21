@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@
 /**
  * Help desk link object
  */
-static HelpDeskLink *s_link = NULL;
+static HelpDeskLink *s_link = nullptr;
 
 /**
  * Load helpdesk link module
@@ -42,10 +42,14 @@ void LoadHelpDeskLink()
       return;
    }
 
-#ifndef _WIN32
    TCHAR fullName[MAX_PATH];
-
-   if (_tcschr(name, _T('/')) == NULL)
+#ifdef _WIN32
+   size_t len = _tcslen(fullName);
+   if ((len < 7) || (_tcsicmp(&fullName[len - 7], _T(".hdlink")) && _tcsicmp(&fullName[len - 4], _T(".dll"))))
+      _tcslcat(fullName, _T(".hdlink"), MAX_PATH);
+   HMODULE hModule = DLOpen(fullName, errorText);
+#else
+   if (_tcschr(name, _T('/')) == nullptr)
    {
       // Assume that module name without path given
       // Try to load it from pkglibdir
@@ -57,22 +61,25 @@ void LoadHelpDeskLink()
    {
       _tcslcpy(fullName, name, MAX_PATH);
    }
+
+   size_t len = _tcslen(fullName);
+   if ((len < 7) || (_tcsicmp(&fullName[len - 7], _T(".hdlink")) && _tcsicmp(&fullName[len - _tcslen(SHLIB_SUFFIX)], SHLIB_SUFFIX)))
+      _tcslcat(fullName, _T(".hdlink"), MAX_PATH);
+
    HMODULE hModule = DLOpen(fullName, errorText);
-#else
-   HMODULE hModule = DLOpen(name, errorText);
 #endif
 
-   if (hModule != NULL)
+   if (hModule != nullptr)
    {
       int *apiVersion = (int *)DLGetSymbolAddr(hModule, "hdlinkAPIVersion", errorText);
       HelpDeskLink *(* CreateInstance)() = (HelpDeskLink *(*)())DLGetSymbolAddr(hModule, "hdlinkCreateInstance", errorText);
 
-      if ((apiVersion != NULL) && (CreateInstance != NULL))
+      if ((apiVersion != nullptr) && (CreateInstance != nullptr))
       {
          if (*apiVersion == HDLINK_API_VERSION)
          {
             s_link = CreateInstance();
-				if (s_link != NULL)
+				if (s_link != nullptr)
 				{
                if (s_link->init())
                {

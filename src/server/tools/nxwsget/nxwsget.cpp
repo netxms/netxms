@@ -27,7 +27,6 @@
 
 NETXMS_EXECUTABLE_HEADER(nxwsget)
 
-#define MAX_LINE_SIZE      4096
 #define MAX_CRED_LEN       128
 
 /**

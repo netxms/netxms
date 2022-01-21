@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -138,7 +138,7 @@ void PerfDataStorageRequest(DCTable *dci, time_t timestamp, Table *value)
  */
 static void LoadDriver(const TCHAR *file)
 {
-   TCHAR errorText[256];
+   TCHAR errorText[256], fullName[MAX_PATH];
 #ifdef _WIN32
    bool resetDllPath = false;
 	if (_tcschr(file, _T('\\')) == nullptr)
@@ -149,13 +149,18 @@ static void LoadDriver(const TCHAR *file)
    	SetDllDirectory(path);
       resetDllPath = true;
    }
-   HMODULE hModule = DLOpen(file, errorText);
+
+   size_t len = _tcslen(fullName);
+   if ((len < 5) || (_tcsicmp(&fullName[len - 5], _T(".pdsd")) && _tcsicmp(&fullName[len - 4], _T(".dll"))))
+      _tcslcat(fullName, _T(".pdsd"), MAX_PATH);
+
+	HMODULE hModule = DLOpen(fullName, errorText);
+
    if (resetDllPath)
    {
       SetDllDirectory(nullptr);
    }
 #else
-	TCHAR fullName[MAX_PATH];
 	if (_tcschr(file, _T('/')) == nullptr)
 	{
 	   TCHAR libdir[MAX_PATH];
@@ -166,13 +171,18 @@ static void LoadDriver(const TCHAR *file)
 	{
 		_tcslcpy(fullName, file, MAX_PATH);
 	}
+
+   size_t len = _tcslen(fullName);
+   if ((len < 5) || (_tcsicmp(&fullName[len - 5], _T(".pdsd")) && _tcsicmp(&fullName[len - _tcslen(SHLIB_SUFFIX)], SHLIB_SUFFIX)))
+      _tcslcat(fullName, _T(".nxm"), MAX_PATH);
+
    HMODULE hModule = DLOpen(fullName, errorText);
 #endif
 
    if (hModule != nullptr)
    {
 		int *apiVersion = (int *)DLGetSymbolAddr(hModule, "pdsdrvAPIVersion", errorText);
-      PerfDataStorageDriver *(* CreateInstance)() = (PerfDataStorageDriver *(*)())DLGetSymbolAddr(hModule, "pdsdrvCreateInstance", errorText);
+      PerfDataStorageDriver *(*CreateInstance)() = (PerfDataStorageDriver *(*)())DLGetSymbolAddr(hModule, "pdsdrvCreateInstance", errorText);
 
       if ((apiVersion != nullptr) && (CreateInstance != nullptr))
       {

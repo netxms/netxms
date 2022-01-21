@@ -1098,9 +1098,9 @@ NXSL_VM *DataCollectionTarget::runDataCollectionScript(const TCHAR *param, DataC
    }
    else
    {
-      nxlog_debug(6, _T("DataCollectionTarget(%s)->runDataCollectionScript(%s): VM load error"), m_name, param);
+      nxlog_debug(6, _T("DataCollectionTarget(%s)::runDataCollectionScript(%s): VM load error"), m_name, param);
    }
-   nxlog_debug(7, _T("DataCollectionTarget(%s)->runDataCollectionScript(%s): %s"), m_name, param, (vm != nullptr) ? _T("success") : _T("failure"));
+   nxlog_debug(7, _T("DataCollectionTarget(%s)::runDataCollectionScript(%s): %s"), m_name, param, (vm != nullptr) ? _T("success") : _T("failure"));
    return vm;
 }
 

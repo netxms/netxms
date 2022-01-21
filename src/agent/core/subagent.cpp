@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -32,21 +32,21 @@ static StructArray<SUBAGENT> s_subAgents(8, 8);
 /**
  * Initialize subagent
  */
-bool InitSubAgent(HMODULE hModule, const TCHAR *moduleName, bool (* SubAgentRegister)(NETXMS_SUBAGENT_INFO **, Config *))
+bool InitSubAgent(HMODULE hModule, const TCHAR *moduleName, bool (*SubAgentRegister)(NETXMS_SUBAGENT_INFO**, Config*))
 {
    bool success = false;
 
-   NETXMS_SUBAGENT_INFO *pInfo;
+   NETXMS_SUBAGENT_INFO *info;
    shared_ptr<Config> config = g_config;
-   if (SubAgentRegister(&pInfo, config.get()))
+   if (SubAgentRegister(&info, config.get()))
    {
       // Check if information structure is valid
-      if (pInfo->magic == NETXMS_SUBAGENT_INFO_MAGIC)
+      if (info->magic == NETXMS_SUBAGENT_INFO_MAGIC)
       {
          // Check if subagent with given name already loaded
          SUBAGENT *sa = nullptr;
          for(int i = 0; i < s_subAgents.size(); i++)
-            if (!_tcsicmp(s_subAgents.get(i)->pInfo->name, pInfo->name))
+            if (!_tcsicmp(s_subAgents.get(i)->info->name, info->name))
             {
                sa = s_subAgents.get(i);
                break;
@@ -54,67 +54,67 @@ bool InitSubAgent(HMODULE hModule, const TCHAR *moduleName, bool (* SubAgentRegi
          if (sa == nullptr)
          {
 				// Initialize subagent
-				bool initOK = (pInfo->init != nullptr) ? pInfo->init(config.get()) : true;
+				bool initOK = (info->init != nullptr) ? info->init(config.get()) : true;
 				if (initOK)
 				{
 					// Add subagent to subagent's list
 				   SUBAGENT s;
-					s.hModule = hModule;
-					_tcslcpy(s.szName, moduleName, MAX_PATH);
-					s.pInfo = pInfo;
+					s.moduleHandle = hModule;
+					_tcslcpy(s.moduleName, moduleName, MAX_PATH);
+					s.info = info;
 					s_subAgents.add(&s);
 
 					// Add parameters provided by this subagent to common list
-					for(size_t i = 0; i < pInfo->numParameters; i++)
-						AddParameter(pInfo->parameters[i].name,
-										 pInfo->parameters[i].handler,
-										 pInfo->parameters[i].arg,
-										 pInfo->parameters[i].dataType,
-										 pInfo->parameters[i].description);
+					for(size_t i = 0; i < info->numParameters; i++)
+						AddParameter(info->parameters[i].name,
+										 info->parameters[i].handler,
+										 info->parameters[i].arg,
+										 info->parameters[i].dataType,
+										 info->parameters[i].description);
 
 					// Add push parameters provided by this subagent to common list
-					for(size_t i = 0; i < pInfo->numPushParameters; i++)
-						AddPushParameter(pInfo->pushParameters[i].name,
-						                 pInfo->pushParameters[i].dataType,
-					                    pInfo->pushParameters[i].description);
+					for(size_t i = 0; i < info->numPushParameters; i++)
+						AddPushParameter(info->pushParameters[i].name,
+						                 info->pushParameters[i].dataType,
+					                    info->pushParameters[i].description);
 
 					// Add lists provided by this subagent to common list
-					for(size_t i = 0; i < pInfo->numLists; i++)
-						AddList(pInfo->lists[i].name,
-								  pInfo->lists[i].handler,
-								  pInfo->lists[i].arg);
+					for(size_t i = 0; i < info->numLists; i++)
+						AddList(info->lists[i].name,
+								  info->lists[i].handler,
+								  info->lists[i].arg);
 
 					// Add tables provided by this subagent to common list
-					for(size_t i = 0; i < pInfo->numTables; i++)
-						AddTable(pInfo->tables[i].name,
-								   pInfo->tables[i].handler,
-								   pInfo->tables[i].arg,
-									pInfo->tables[i].instanceColumns,
-									pInfo->tables[i].description,
-                           pInfo->tables[i].numColumns,
-                           pInfo->tables[i].columns);
+					for(size_t i = 0; i < info->numTables; i++)
+						AddTable(info->tables[i].name,
+								   info->tables[i].handler,
+								   info->tables[i].arg,
+									info->tables[i].instanceColumns,
+									info->tables[i].description,
+                           info->tables[i].numColumns,
+                           info->tables[i].columns);
 
 					// Add actions provided by this subagent to common list
-					for(size_t i = 0; i < pInfo->numActions; i++)
-						AddAction(pInfo->actions[i].name,
+					for(size_t i = 0; i < info->numActions; i++)
+						AddAction(info->actions[i].name,
 									 false,
-									 pInfo->actions[i].arg,
-									 pInfo->actions[i].handler,
-									 pInfo->name,
-									 pInfo->actions[i].description);
+									 info->actions[i].arg,
+									 info->actions[i].handler,
+									 info->name,
+									 info->actions[i].description);
 
-					nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Subagent \"%s\" (%s) loaded successfully (version %s)"), pInfo->name, moduleName, pInfo->version);
+					nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Subagent \"%s\" (%s) loaded successfully (version %s)"), info->name, moduleName, info->version);
 					success = true;
 				}
 				else
 				{
-					nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Initialization of subagent \"%s\" (%s) failed"), pInfo->name, moduleName);
+					nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Initialization of subagent \"%s\" (%s) failed"), info->name, moduleName);
 					DLClose(hModule);
 				}
          }
          else
          {
-            nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Subagent \"%s\" already loaded from module \"%s\""), pInfo->name, sa->szName);
+            nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Subagent \"%s\" already loaded from module \"%s\""), info->name, sa->moduleName);
             DLClose(hModule);
          }
       }
@@ -138,14 +138,17 @@ bool InitSubAgent(HMODULE hModule, const TCHAR *moduleName, bool (* SubAgentRegi
  */
 bool LoadSubAgent(const TCHAR *moduleName)
 {
-   bool success = FALSE;
+   bool success = false;
 
-   TCHAR errorText[256];
+   TCHAR errorText[256], fullName[MAX_PATH];
 #ifdef _WIN32
-   HMODULE hModule = DLOpen(moduleName, errorText);
+   _tcslcpy(fullName, moduleName, MAX_PATH);
+   size_t len = _tcslen(fullName);
+   if ((len < 4) || (_tcsicmp(&fullName[len - 4], _T(".nsm")) && _tcsicmp(&fullName[len - 4], _T(".dll"))))
+      _tcslcat(fullName, _T(".nsm"), MAX_PATH);
+   HMODULE hModule = DLOpen(fullName, errorText);
 #else
-   TCHAR fullName[MAX_PATH];
-   if (_tcschr(moduleName, _T('/')) == NULL)
+   if (_tcschr(moduleName, _T('/')) == nullptr)
    {
       // Assume that subagent name without path given
       // Try to load it from pkglibdir
@@ -157,28 +160,33 @@ bool LoadSubAgent(const TCHAR *moduleName)
    {
       _tcslcpy(fullName, moduleName, MAX_PATH);
    }
+
+   size_t len = _tcslen(fullName);
+   if ((len < 4) || (_tcsicmp(&fullName[len - 4], _T(".nsm")) && _tcsicmp(&fullName[len - _tcslen(SHLIB_SUFFIX)], SHLIB_SUFFIX)))
+      _tcslcat(fullName, _T(".nsm"), MAX_PATH);
+
    // Workaround for Python sub-agent: dlopen it with RTLD_GLOBAL
    // so that Python C modules can access symbols from libpython
-   HMODULE hModule = DLOpenEx(fullName, _tcsstr(moduleName, _T("python.nsm")) != NULL, errorText);
+   HMODULE hModule = DLOpenEx(fullName, _tcsstr(fullName, _T("python.nsm")) != nullptr, errorText);
 #endif
 
-   if (hModule != NULL)
+   if (hModule != nullptr)
    {
       bool (* SubAgentRegister)(NETXMS_SUBAGENT_INFO **, Config *);
       SubAgentRegister = (bool (*)(NETXMS_SUBAGENT_INFO **, Config *))DLGetSymbolAddr(hModule, "NxSubAgentRegister", errorText);
-      if (SubAgentRegister != NULL)
+      if (SubAgentRegister != nullptr)
       {
-         success = InitSubAgent(hModule, moduleName, SubAgentRegister);
+         success = InitSubAgent(hModule, fullName, SubAgentRegister);
       }
       else
       {
-         nxlog_write(NXLOG_ERROR, _T("Unable to find entry point in subagent module \"%s\""), moduleName);
+         nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Unable to find entry point in subagent module \"%s\""), moduleName);
          DLClose(hModule);
       }
    }
    else
    {
-      nxlog_write(NXLOG_ERROR, _T("Error loading subagent module \"%s\" (%s)"), moduleName, errorText);
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Error loading subagent module \"%s\" (%s)"), moduleName, errorText);
    }
 
    return success;
@@ -194,9 +202,9 @@ void UnloadAllSubAgents()
    for(int i = 0; i < s_subAgents.size(); i++)
    {
       SUBAGENT *s = s_subAgents.get(i);
-      if (s->pInfo->shutdown != NULL)
-         s->pInfo->shutdown();
-      DLClose(s->hModule);
+      if (s->info->shutdown != nullptr)
+         s->info->shutdown();
+      DLClose(s->moduleHandle);
    }
 }
 
@@ -211,10 +219,10 @@ LONG H_SubAgentList(const TCHAR *cmd, const TCHAR *arg, StringList *value, Abstr
       SUBAGENT *s = s_subAgents.get(i);
 #ifdef __64BIT__
       _sntprintf(buffer, MAX_PATH + 32, _T("%s %s 0x") UINT64X_FMT(_T("016")) _T(" %s"),
-                 s->pInfo->name, s->pInfo->version, CAST_FROM_POINTER(s->hModule, QWORD), s->szName);
+                 s->info->name, s->info->version, CAST_FROM_POINTER(s->moduleHandle, uint64_t), s->moduleName);
 #else
       _sntprintf(buffer, MAX_PATH + 32, _T("%s %s 0x%08X %s"),
-                 s->pInfo->name, s->pInfo->version, CAST_FROM_POINTER(s->hModule, UINT32), s->szName);
+                 s->info->name, s->info->version, CAST_FROM_POINTER(s->moduleHandle, uint32_t), s->moduleName);
 #endif
       value->add(buffer);
    }
@@ -233,9 +241,9 @@ LONG H_SubAgentTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractC
    for(int i = 0; i < s_subAgents.size(); i++)
    {
       value->addRow();
-      value->set(0, s_subAgents.get(i)->pInfo->name);
-      value->set(1, s_subAgents.get(i)->pInfo->version);
-      value->set(2, s_subAgents.get(i)->szName);
+      value->set(0, s_subAgents.get(i)->info->name);
+      value->set(1, s_subAgents.get(i)->info->version);
+      value->set(2, s_subAgents.get(i)->moduleName);
    }
    return SYSINFO_RC_SUCCESS;
 }
@@ -251,7 +259,7 @@ LONG H_IsSubagentLoaded(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue, A
 	int rc = 0;
    for(int i = 0; i < s_subAgents.size(); i++)
    {
-		if (!_tcsicmp(name, s_subAgents.get(i)->pInfo->name))
+		if (!_tcsicmp(name, s_subAgents.get(i)->info->name))
 		{
 			rc = 1;
 			break;
@@ -269,7 +277,7 @@ bool ProcessCommandBySubAgent(uint32_t command, NXCPMessage *request, NXCPMessag
    bool processed = false;
    for(int i = 0; (i < s_subAgents.size()) && (!processed); i++)
    {
-      NETXMS_SUBAGENT_INFO *s = s_subAgents.get(i)->pInfo;
+      NETXMS_SUBAGENT_INFO *s = s_subAgents.get(i)->info;
       if (s->commandHandler != NULL)
       {
          processed = s->commandHandler(command, request, response, session);
@@ -288,7 +296,7 @@ void NotifySubAgents(uint32_t code, void *data)
    nxlog_debug_tag(DEBUG_TAG, 5, _T("NotifySubAgents(): processing notification with code %u"), code);
    for(int i = 0; i < s_subAgents.size(); i++)
    {
-      NETXMS_SUBAGENT_INFO *s = s_subAgents.get(i)->pInfo;
+      NETXMS_SUBAGENT_INFO *s = s_subAgents.get(i)->info;
       if (s->notify != NULL)
       {
          s->notify(code, data);
