@@ -1078,13 +1078,20 @@ NXSL_VM *DataCollectionTarget::runDataCollectionScript(const TCHAR *param, DataC
       }
       if (!vm->run(args))
       {
-         nxlog_debug(6, _T("DataCollectionTarget(%s)->runDataCollectionScript(%s): Script execution error: %s"), m_name, param, vm->getErrorText());
-         time_t now = time(nullptr);
-         time_t lastReport = static_cast<time_t>(m_scriptErrorReports.getInt64(param, 0));
-         if (lastReport + ConfigReadInt(_T("DataCollection.ScriptErrorReportInterval"), 86400) < now)
+         if (vm->getErrorCode() == NXSL_ERR_EXECUTION_ABORTED)
          {
-            ReportScriptError(SCRIPT_CONTEXT_DCI, this, 0, vm->getErrorText(), name);
-            m_scriptErrorReports.set(param, static_cast<uint64_t>(now));
+            nxlog_debug(6, _T("DataCollectionTarget(%s)::runDataCollectionScript(%s): Script execution aborted"), m_name, param);
+         }
+         else
+         {
+            nxlog_debug(6, _T("DataCollectionTarget(%s)::runDataCollectionScript(%s): Script execution error: %s"), m_name, param, vm->getErrorText());
+            time_t now = time(nullptr);
+            time_t lastReport = static_cast<time_t>(m_scriptErrorReports.getInt64(param, 0));
+            if (lastReport + ConfigReadInt(_T("DataCollection.ScriptErrorReportInterval"), 86400) < now)
+            {
+               ReportScriptError(SCRIPT_CONTEXT_DCI, this, 0, vm->getErrorText(), name);
+               m_scriptErrorReports.set(param, static_cast<uint64_t>(now));
+            }
          }
          delete_and_null(vm);
       }
@@ -1394,7 +1401,7 @@ DataCollectionError DataCollectionTarget::getMetricFromScript(const TCHAR *param
       }
       delete vm;
    }
-   nxlog_debug(7, _T("DataCollectionTarget(%s)->getScriptItem(%s): rc=%d"), m_name, param, rc);
+   nxlog_debug(7, _T("DataCollectionTarget(%s)::getMetricFromScript(%s): rc=%d"), m_name, param, rc);
    return rc;
 }
 
