@@ -43,7 +43,7 @@ private:
       MemFree(m_data);
       m_data = MemAllocStringA(1024);
       m_writeOffset = 0;
-      m_totalSize = 1024;
+      m_totalSize = 256;
    }
 
    void append(const char* text)
@@ -52,7 +52,7 @@ private:
       int textSizeAndFreeSpaceDifference = textSize - (m_totalSize - m_writeOffset - 1);
       if (textSizeAndFreeSpaceDifference > 0)
       {
-         m_totalSize += textSizeAndFreeSpaceDifference > 1024 ? textSizeAndFreeSpaceDifference : 1024;
+         m_totalSize += textSizeAndFreeSpaceDifference > 256 ? textSizeAndFreeSpaceDifference : 256;
          m_data = MemRealloc(m_data, m_totalSize);
       }
       memcpy(m_data + m_writeOffset, text, textSize);
@@ -72,6 +72,11 @@ public:
    {
       m_sendOutput = true;
       m_data = nullptr;
+   }
+
+   ~MonoStringProcessExecutor()
+   {
+      MemFree(m_data);
    }
 
    /**
@@ -158,15 +163,15 @@ LONG H_NetworkAdaptersTable(const TCHAR* cmd, const TCHAR* arg, Table* value, Ab
       value->addRow();
 
       value->set(0, i);                                                                            // INDEX
-      value->set(1, json_object_get_string_t(data, "product", nullptr));                           // PRODUCT
-      value->set(2, json_object_get_string_t(data, "vendor", nullptr));                            // MANUFACTURER
-      value->set(3, json_object_get_string_t(data, "description", nullptr));                       // DESCRIPTION
+      value->set(1, json_string_value(json_object_get(data, "product")));                          // PRODUCT
+      value->set(2, json_string_value(json_object_get(data, "vendor")));                           // MANUFACTURER
+      value->set(3, json_string_value(json_object_get(data, "description")));                      // DESCRIPTION
       json_t* wireless = json_object_get(json_object_get(data, "capabilities"), "wireless");
       value->set(4, wireless == nullptr ? _T("Ethernet 802.3") : _T("Wireless"));                  // TYPE
-      value->set(5, json_object_get_string_t(data, "serial", nullptr));                            // MAC_ADDRESS
-      const char* ifName = json_object_get_string_a(data, "logicalname", nullptr);
+      value->set(5, json_string_value(json_object_get(data, "serial")));                           // MAC_ADDRESS
+      const char* ifName = json_string_value(json_object_get(data, "logicalname"));
       value->set(6, ifName == nullptr ? 0 : if_nametoindex(ifName));                               // IF_INDEX
-      value->set(7, static_cast<uint64_t>(json_object_get_integer(data, "capacity", 0)));          // SPEED
+      value->set(7, static_cast<uint64_t>(json_integer_value(json_object_get(data, "capacity")))); // SPEED
 
       // AVAILABILITY
       json_t* disabled = json_object_get(data, "disabled");
@@ -246,7 +251,7 @@ static void GetDataForStorageDevices(json_t* root, Table* value, int* curDevice)
 
       value->set(0, (*curDevice)++); // NUMBER
 
-      if (strcmp(json_object_get_string_a(data, "class", nullptr), "storage") == 0)
+      if (strcmp(json_string_value(json_object_get(data, "class")), "storage") == 0)
       {
          value->set(1, 12);                             // TYPE
          value->set(2, _T("Storage array controller")); // TYPE_DESCRIPTION
@@ -275,11 +280,11 @@ static void GetDataForStorageDevices(json_t* root, Table* value, int* curDevice)
          value->set(4, 0);
       }
 
-      value->set(5, static_cast<uint64_t>(json_object_get_integer(data, "size", 0))); // SIZE
-      value->set(6, json_object_get_string_t(data, "vendor", nullptr));               // MANUFACTURER
-      value->set(7, json_object_get_string_t(data, "product", nullptr));              // PRODUCT
-      value->set(8, json_object_get_string_t(data, "version", nullptr));              // REVISION
-      value->set(9, json_object_get_string_t(data, "serial", nullptr));               // SERIAL
+      value->set(5, static_cast<uint64_t>(json_integer_value(json_object_get(data, "size")))); // SIZE
+      value->set(6, json_string_value(json_object_get(data, "vendor")));                       // MANUFACTURER
+      value->set(7, json_string_value(json_object_get(data, "product")));                      // PRODUCT
+      value->set(8, json_string_value(json_object_get(data, "version")));                      // REVISION
+      value->set(9, json_string_value(json_object_get(data, "serial")));                       // SERIAL
 
       json_t* children = json_object_get(data, "children");
       if (children != nullptr && json_is_array(children))
