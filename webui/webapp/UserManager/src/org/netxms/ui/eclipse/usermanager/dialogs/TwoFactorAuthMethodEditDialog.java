@@ -70,7 +70,7 @@ public class TwoFactorAuthMethodEditDialog extends Dialog
    {
       super(parentShell);
       this.name = name;
-      this.configuration = new HashMap<String, String>(configuration);
+      this.configuration = (configuration != null) ? new HashMap<String, String>(configuration) : null;
    }
 
    /**

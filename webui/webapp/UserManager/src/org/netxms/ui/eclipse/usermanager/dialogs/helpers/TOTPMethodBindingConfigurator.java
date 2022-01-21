@@ -56,6 +56,7 @@ public class TOTPMethodBindingConfigurator extends AbstractMethodBindingConfigur
 
       status = new LabeledText(this, SWT.NONE, SWT.BORDER | SWT.READ_ONLY);
       status.setLabel("Status");
+      status.setText("Not initialized");
       status.setLayoutData(new GridData(SWT.FILL, SWT.BOTTOM, true, false));
 
       resetButton = new Button(this, SWT.PUSH);
