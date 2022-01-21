@@ -1122,22 +1122,29 @@ NXSL_VM *DataCollectionTarget::runDataCollectionScript(const TCHAR *param, DataC
       }
       if (!vm->run(args))
       {
-         nxlog_debug(6, _T("DataCollectionTarget(%s)->runDataCollectionScript(%s): Script execution error: %s"), m_name, param, vm->getErrorText());
-         time_t now = time(nullptr);
-         time_t lastReport = static_cast<time_t>(m_scriptErrorReports.getInt64(param, 0));
-         if (lastReport + ConfigReadInt(_T("DataCollection.ScriptErrorReportInterval"), 86400) < now)
+         if (vm->getErrorCode() == NXSL_ERR_EXECUTION_ABORTED)
          {
-            PostSystemEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", name, vm->getErrorText(), m_id);
-            m_scriptErrorReports.set(param, static_cast<uint64_t>(now));
+            nxlog_debug(6, _T("DataCollectionTarget(%s)::runDataCollectionScript(%s): Script execution aborted"), m_name, param);
+         }
+         else
+         {
+            nxlog_debug(6, _T("DataCollectionTarget(%s)::runDataCollectionScript(%s): Script execution error: %s"), m_name, param, vm->getErrorText());
+            time_t now = time(nullptr);
+            time_t lastReport = static_cast<time_t>(m_scriptErrorReports.getInt64(param, 0));
+            if (lastReport + ConfigReadInt(_T("DataCollection.ScriptErrorReportInterval"), 86400) < now)
+            {
+               PostSystemEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", name, vm->getErrorText(), 0);
+               m_scriptErrorReports.set(param, static_cast<uint64_t>(now));
+            }
          }
          delete_and_null(vm);
       }
    }
    else
    {
-      nxlog_debug(6, _T("DataCollectionTarget(%s)->runDataCollectionScript(%s): VM load error"), m_name, param);
+      nxlog_debug(6, _T("DataCollectionTarget(%s)::runDataCollectionScript(%s): VM load error"), m_name, param);
    }
-   nxlog_debug(7, _T("DataCollectionTarget(%s)->runDataCollectionScript(%s): %s"), m_name, param, (vm != nullptr) ? _T("success") : _T("failure"));
+   nxlog_debug(7, _T("DataCollectionTarget(%s)::runDataCollectionScript(%s): %s"), m_name, param, (vm != nullptr) ? _T("success") : _T("failure"));
    return vm;
 }
 
@@ -1438,7 +1445,7 @@ DataCollectionError DataCollectionTarget::getMetricFromScript(const TCHAR *param
       }
       delete vm;
    }
-   nxlog_debug(7, _T("DataCollectionTarget(%s)->getScriptItem(%s): rc=%d"), m_name, param, rc);
+   nxlog_debug(7, _T("DataCollectionTarget(%s)::getMetricFromScript(%s): rc=%d"), m_name, param, rc);
    return rc;
 }
 
