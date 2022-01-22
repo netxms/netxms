@@ -5,6 +5,7 @@
 
 %x COMMENT
 %x STR
+%x STR2
 
 whitespace	[[:blank:]\t\r]+
 identifier	[A-Za-z_\$][A-Za-z_\$0-9]*
@@ -168,6 +169,7 @@ static void LexerError(const char *pszMsg, yyscan_t scanner);
 
 <INITIAL>"/*"	{ yyextra->m_nCommentLevel = 1; BEGIN COMMENT; }
 <INITIAL>\"	{ yyextra->m_nStrSize = 0; BEGIN STR; }
+<INITIAL>\'	{ yyextra->m_nStrSize = 0; BEGIN STR2; }
 
 <INITIAL>"//".*	;
 
@@ -184,7 +186,7 @@ static void LexerError(const char *pszMsg, yyscan_t scanner);
 			return LEXER_ERROR;
 		}
 
-<STR>{escape}	{		
+<STR>{escape}	{
 			if (yyextra->m_nStrSize < MAX_STRING_SIZE)
 			{
 				switch(yytext[1])
@@ -253,6 +255,29 @@ static void LexerError(const char *pszMsg, yyscan_t scanner);
 			return LEXER_ERROR;
 		}
 <STR>.		{
+			if (yyextra->m_nStrSize < MAX_STRING_SIZE)
+			{
+				yyextra->m_szStr[yyextra->m_nStrSize++] = *yytext;
+			}
+			else
+			{
+				LexerError("String constant is too long", yyscanner);
+				return LEXER_ERROR;
+			}
+		}
+
+<STR2>\'		{
+			BEGIN INITIAL;
+			yyextra->m_szStr[yyextra->m_nStrSize] = 0;
+			yylval->valStr = MemCopyStringA(yyextra->m_szStr);
+			return T_STRING;
+		}
+<STR2>\r		;
+<STR2>\n		{
+			LexerError("Newline in string constant", yyscanner);
+			return LEXER_ERROR;
+		}
+<STR2>.		{
 			if (yyextra->m_nStrSize < MAX_STRING_SIZE)
 			{
 				yyextra->m_szStr[yyextra->m_nStrSize++] = *yytext;
