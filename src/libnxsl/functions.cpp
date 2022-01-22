@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -1129,6 +1129,31 @@ int F_ltrim(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 }
 
 /**
+ * Print
+ */
+int F_print(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+   for(int i = 0; i < argc; i++)
+   {
+      if (i > 0)
+         vm->print(_T(" "));
+      vm->print(argv[i]->getValueAsCString());
+   }
+   *result = vm->createValue();
+   return 0;
+}
+
+/**
+ * Print with new line
+ */
+int F_println(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+   F_print(argc, argv, result, vm);
+   vm->print(_T("\n"));
+   return 0;
+}
+
+/**
  * Trace
  */
 int F_trace(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
@@ -1753,7 +1778,7 @@ int F_Base64Encode(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm
       ilen = strlen(in);
    }
 
-   char *out = NULL;
+   char *out = nullptr;
    base64_encode_alloc(in, ilen, &out);
    *result = vm->createValue(CHECK_NULL_EX_A(out));
 

@@ -1436,21 +1436,6 @@ void NXSL_VM::execute()
          else
             pVar->setValue(pValue);
          break;
-      case OPCODE_PRINT:
-         pValue = m_dataStack.pop();
-         if (pValue != nullptr)
-         {
-            if (pValue->convert(NXSL_DT_STRING))
-               m_env->print(pValue);
-            else
-               error(NXSL_ERR_TYPE_CAST);
-            destroyValue(pValue);
-         }
-         else
-         {
-            error(NXSL_ERR_DATA_STACK_UNDERFLOW);
-         }
-         break;
       case OPCODE_EXIT:
 			if (m_dataStack.getPosition() > 0)
          {

@@ -72,7 +72,7 @@ typedef void *yyscan_t;
 #define OPCODE_RSHIFT         27
 #define OPCODE_RET_NULL       28
 #define OPCODE_JZ             29
-#define OPCODE_PRINT          30
+//#define OPCODE_PRINT          30
 #define OPCODE_CONCAT         31
 #define OPCODE_BIND           32
 #define OPCODE_INC            33

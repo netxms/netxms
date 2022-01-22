@@ -287,7 +287,7 @@ protected:
 public:
    NXSL_ServerEnv();
 
-   virtual void print(NXSL_Value *value) override;
+   virtual void print(const TCHAR *text) override;
    virtual void trace(int level, const TCHAR *text) override;
 
    virtual void configureVM(NXSL_VM *vm) override;
@@ -308,7 +308,7 @@ protected:
 public:
    NXSL_ClientSessionEnv(ClientSession *session, NXCPMessage *response);
 
-   virtual void print(NXSL_Value *value) override;
+   virtual void print(const TCHAR *text) override;
    virtual void trace(int level, const TCHAR *text) override;
 };
 

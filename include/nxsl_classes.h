@@ -877,7 +877,7 @@ public:
    NXSL_Environment();
    virtual ~NXSL_Environment();
 
-	virtual void print(NXSL_Value *value);
+	virtual void print(const TCHAR *text);
 	virtual void trace(int level, const TCHAR *text);
 
 	virtual void configureVM(NXSL_VM *vm);
@@ -1281,6 +1281,7 @@ public:
 
    uint32_t getCodeSize() const { return m_instructionSet.size(); }
 
+   void print(const TCHAR *text) { m_env->print(text); }
 	void trace(int level, const TCHAR *text);
    void dump(FILE *fp) const;
    int getErrorCode() const { return m_errorCode; }

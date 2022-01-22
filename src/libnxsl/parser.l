@@ -80,8 +80,6 @@ static void LexerError(const char *pszMsg, yyscan_t scanner);
 <INITIAL>"NULL"     return T_NULL;
 <INITIAL>"null"     return T_NULL;
 <INITIAL>"or"       return T_OR;
-<INITIAL>"print"    return T_PRINT;
-<INITIAL>"println"  return T_PRINTLN;
 <INITIAL>"real"     return T_TYPE_REAL;
 <INITIAL>"return"   return T_RETURN;
 <INITIAL>"select"   return T_SELECT;

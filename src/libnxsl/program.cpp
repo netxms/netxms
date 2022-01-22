@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -41,7 +41,7 @@ static const char *s_nxslCommandMnemonic[] =
    "EQ", "NE", "LT", "LE", "GT", "GE",
    "BITAND", "BITOR", "BITXOR",
    "AND", "OR", "LSHIFT", "RSHIFT",
-   "NRET", "JZ", "PRINT", "CONCAT",
+   "NRET", "JZ", "OP_30", "CONCAT",
    "BIND", "INC", "DEC", "NEG", "NOT",
    "BITNOT", "CAST", "AGET", "INCP", "DECP",
    "JNZ", "LIKE", "ILIKE", "MATCH",

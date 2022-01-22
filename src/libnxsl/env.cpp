@@ -60,8 +60,10 @@ int F_md5(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_min(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_mktime(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_ord(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
-int F_pow(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
-int F_random(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
+int F_pow(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_print(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_println(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_random(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_replace(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_right(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_rindex(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
@@ -162,6 +164,8 @@ static NXSL_ExtFunction s_builtinFunctions[] =
    { "mktime", F_mktime, 1 },
    { "ord", F_ord, 1 },
    { "pow", F_pow, 2 },
+   { "print", F_print, -1 },
+   { "println", F_println, -1 },
    { "random", F_random, 2 },
    { "replace", F_replace, 3 },
    { "right", F_right, -1 },
@@ -370,9 +374,8 @@ void NXSL_Environment::trace(int level, const TCHAR *text)
  * Print text to standard output
  * Default implementation writes value as string to stdout, if it is set
  */
-void NXSL_Environment::print(NXSL_Value *value)
+void NXSL_Environment::print(const TCHAR *text)
 {
-   const TCHAR *text = value->getValueAsCString();
    if (text != nullptr)
 	{
       WriteToTerminal(text);

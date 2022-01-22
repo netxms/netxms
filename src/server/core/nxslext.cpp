@@ -2123,13 +2123,10 @@ void NXSL_ServerEnv::trace(int level, const TCHAR *text)
 /**
  * Print script output to console
  */
-void NXSL_ServerEnv::print(NXSL_Value *value)
+void NXSL_ServerEnv::print(const TCHAR *text)
 {
 	if (m_console != nullptr)
-	{
-		const TCHAR *text = value->getValueAsCString();
 		ConsolePrintf(m_console, _T("%s"), CHECK_NULL(text));
-	}
 }
 
 /**
@@ -2300,11 +2297,10 @@ NXSL_ClientSessionEnv::NXSL_ClientSessionEnv(ClientSession *session, NXCPMessage
 /**
  * Send script output to user
  */
-void NXSL_ClientSessionEnv::print(NXSL_Value *value)
+void NXSL_ClientSessionEnv::print(const TCHAR *text)
 {
 	if (m_session != nullptr && m_response != nullptr)
 	{
-		const TCHAR *text = value->getValueAsCString();
 		m_response->setField(VID_MESSAGE, text);
 		m_session->sendMessage(m_response);
 	}

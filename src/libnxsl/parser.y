@@ -57,8 +57,6 @@ int yylex(YYSTYPE *lvalp, yyscan_t scanner);
 %token T_IF
 %token T_NEW
 %token T_NULL
-%token T_PRINT
-%token T_PRINTLN
 %token T_RANGE
 %token T_RETURN
 %token T_SELECT
@@ -843,7 +841,6 @@ BuiltinType:
 
 BuiltinStatement:
 	SimpleStatement ';'
-|	PrintlnStatement
 |	IfStatement
 |	DoStatement
 |	WhileStatement
@@ -912,25 +909,6 @@ SimpleStatementKeyword:
    }
 	$$.sourceLine = lexer->getCurrLine();
 	$$.opCode = OPCODE_RETURN;
-}
-|	T_PRINT
-{
-	$$.sourceLine = lexer->getCurrLine();
-	$$.opCode = OPCODE_PRINT;
-}
-;
-
-PrintlnStatement:
-	T_PRINTLN Expression ';'
-{
-	builder->addInstruction(lexer->getCurrLine(), OPCODE_PUSH_CONSTANT, builder->createValue(_T("\n")));
-	builder->addInstruction(lexer->getCurrLine(), OPCODE_CONCAT);
-	builder->addInstruction(lexer->getCurrLine(), OPCODE_PRINT);
-}
-|	T_PRINTLN ';'
-{
-	builder->addInstruction(lexer->getCurrLine(), OPCODE_PUSH_CONSTANT, builder->createValue(_T("\n")));
-	builder->addInstruction(lexer->getCurrLine(), OPCODE_PRINT);
 }
 ;
 
