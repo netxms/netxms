@@ -218,6 +218,7 @@
     <ClCompile Include="program.cpp" />
     <ClCompile Include="selectors.cpp" />
     <ClCompile Include="storage.cpp" />
+    <ClCompile Include="string.cpp" />
     <ClCompile Include="table.cpp" />
     <ClCompile Include="value.cpp" />
     <ClCompile Include="variable.cpp" />

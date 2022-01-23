@@ -1235,10 +1235,12 @@ protected:
    void doBinaryOperation(int nOpCode);
    void getOrUpdateArrayElement(int opcode, NXSL_Value *array, NXSL_Value *index);
    bool setArrayElement(NXSL_Value *array, NXSL_Value *index, NXSL_Value *value);
-   void getArrayAttribute(NXSL_Array *a, const char *attribute, bool safe);
+   void getArrayAttribute(NXSL_Array *a, const NXSL_Identifier& attribute, bool safe);
    void getOrUpdateHashMapElement(int opcode, NXSL_Value *hashMap, NXSL_Value *key);
    bool setHashMapElement(NXSL_Value *hashMap, NXSL_Value *key, NXSL_Value *value);
-   void getHashMapAttribute(NXSL_HashMap *m, const char *attribute, bool safe);
+   void getHashMapAttribute(NXSL_HashMap *m, const NXSL_Identifier& attribute, bool safe);
+   void getStringAttribute(NXSL_Value *v, const NXSL_Identifier& attribute, bool safe);
+   int callStringMethod(NXSL_Value *s, const NXSL_Identifier& name, int argc, NXSL_Value **argv, NXSL_Value **result);
    void error(int errorCode, int sourceLine = -1);
    NXSL_Value *matchRegexp(NXSL_Value *value, NXSL_Value *regexp, bool ignoreCase);
 
