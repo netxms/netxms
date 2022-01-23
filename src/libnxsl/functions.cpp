@@ -25,6 +25,13 @@
 #include <math.h>
 
 /**
+ * String methods
+ */
+int SM_left(NXSL_Value* thisString, int argc, NXSL_Value** argv, NXSL_Value** result, NXSL_VM *vm);
+int SM_right(NXSL_Value* thisString, int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int SM_split(NXSL_Value* thisString, int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+
+/**
  * NXSL type names
  */
 const TCHAR *g_szTypeNames[] =
@@ -322,7 +329,7 @@ template<typename T, T Transform(T)> int TransformString(NXSL_Value *v, NXSL_Val
    TCHAR *s = (TCHAR *)(*result)->getValueAsString(&len);
    for(uint32_t i = 0; i < len; i++, s++)
       *s = Transform(*s);
-   return 0;
+   return NXSL_ERR_SUCCESS;
 }
 
 /**
@@ -352,22 +359,15 @@ int F_lower(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 /**
  * String length
  */
-int F_length(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+int F_length(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
-   int nRet;
-   UINT32 dwLen;
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
 
-   if (argv[0]->isString())
-   {
-      argv[0]->getValueAsString(&dwLen);
-      *ppResult = vm->createValue(dwLen);
-      nRet = 0;
-   }
-   else
-   {
-      nRet = NXSL_ERR_NOT_STRING;
-   }
-   return nRet;
+   uint32_t length;
+   argv[0]->getValueAsString(&length);
+   *result = vm->createValue(length);
+   return 0;
 }
 
 /**
@@ -827,62 +827,61 @@ int F_TIME(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
  *    substr(string, start, n) - n characters from position 'start'
  *    substr(string, NULL, n) - first n characters
  */
-int F_substr(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+int F_substr(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
-	int nStart, nCount;
-	const TCHAR *pBase;
-	UINT32 dwLen;
-
    if ((argc < 2) || (argc > 3))
       return NXSL_ERR_INVALID_ARGUMENT_COUNT;
 
    if (!argv[0]->isString())
       return NXSL_ERR_NOT_STRING;
 
+   int start;
 	if (argv[1]->isNull())
 	{
-		nStart = 0;
+		start = 0;
 	}
 	else if (argv[1]->isInteger())
 	{
-		nStart = argv[1]->getValueAsInt32();
-		if (nStart > 0)
-			nStart--;
+		start = argv[1]->getValueAsInt32();
+		if (start > 0)
+			start--;
 		else
-			nStart = 0;
+			start = 0;
 	}
 	else
 	{
 		return NXSL_ERR_NOT_INTEGER;
 	}
 
+	int count;
 	if (argc == 3)
 	{
 		if (!argv[2]->isInteger())
 			return NXSL_ERR_NOT_INTEGER;
-		nCount = argv[2]->getValueAsInt32();
-		if (nCount < 0)
-			nCount = 0;
+		count = argv[2]->getValueAsInt32();
+		if (count < 0)
+			count = 0;
 	}
 	else
 	{
-		nCount = -1;
+		count = -1;
 	}
 
-	pBase = argv[0]->getValueAsString(&dwLen);
-	if ((UINT32)nStart < dwLen)
+   uint32_t len;
+   const TCHAR *base = argv[0]->getValueAsString(&len);
+	if ((uint32_t)start < len)
 	{
-		pBase += nStart;
-		dwLen -= nStart;
-		if ((nCount == -1) || ((UINT32)nCount > dwLen))
+		base += start;
+		len -= start;
+		if ((count == -1) || ((uint32_t)count > len))
 		{
-			nCount = dwLen;
+			count = len;
 		}
-		*ppResult = vm->createValue(pBase, (UINT32)nCount);
+		*result = vm->createValue(base, (uint32_t)count);
 	}
 	else
 	{
-		*ppResult = vm->createValue(_T(""));
+		*result = vm->createValue(_T(""));
 	}
 
 	return NXSL_ERR_SUCCESS;
@@ -964,105 +963,30 @@ int F_ord(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
  * left() - take leftmost part of a string and pad or truncate it as necessary
  * Format: left(string, len, [pad])
  */
-int F_left(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+int F_left(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
    if ((argc < 2) || (argc > 3))
       return NXSL_ERR_INVALID_ARGUMENT_COUNT;
 
-   if (!argv[1]->isInteger())
-      return NXSL_ERR_NOT_INTEGER;
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
 
-   if ((!argv[0]->isString()) ||
-		 ((argc == 3) && (!argv[2]->isString())))
-		return NXSL_ERR_NOT_STRING;
-
-	int newLen = argv[1]->getValueAsInt32();
-	if (newLen > 0)
-	{
-	   TCHAR pad;
-	   if (argc == 3)
-	   {
-	      pad = *(argv[2]->getValueAsCString());
-	      if (pad == 0)
-	         pad = _T(' ');
-	   }
-	   else
-	   {
-	      pad = _T(' ');
-	   }
-
-	   UINT32 len;
-      const TCHAR *str = argv[0]->getValueAsString(&len);
-      if (len > (UINT32)newLen)
-         len = (UINT32)newLen;
-      TCHAR *newStr = (TCHAR *)malloc(newLen * sizeof(TCHAR));
-      memcpy(newStr, str, len * sizeof(TCHAR));
-      for(UINT32 i = len; i < (UINT32)newLen; i++)
-         newStr[i] = pad;
-      *ppResult = vm->createValue(newStr, newLen);
-      free(newStr);
-	}
-	else
-	{
-	   *ppResult = vm->createValue(_T(""));
-	}
-	return NXSL_ERR_SUCCESS;
+   return SM_left(argv[0], argc - 1, &argv[1], result, vm);
 }
 
 /**
  * right() - take rightmost part of a string and pad or truncate it as necessary
  * Format: right(string, len, [pad])
  */
-int F_right(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+int F_right(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
    if ((argc < 2) || (argc > 3))
       return NXSL_ERR_INVALID_ARGUMENT_COUNT;
 
-   if (!argv[1]->isInteger())
-      return NXSL_ERR_NOT_INTEGER;
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
 
-   if ((!argv[0]->isString()) ||
-		 ((argc == 3) && (!argv[2]->isString())))
-		return NXSL_ERR_NOT_STRING;
-
-   int newLen = argv[1]->getValueAsInt32();
-   if (newLen > 0)
-   {
-      TCHAR pad;
-      if (argc == 3)
-      {
-         pad = *(argv[2]->getValueAsCString());
-         if (pad == 0)
-            pad = _T(' ');
-      }
-      else
-      {
-         pad = _T(' ');
-      }
-
-      UINT32 len, shift;
-      const TCHAR *str = argv[0]->getValueAsString(&len);
-      if (len > (UINT32)newLen)
-      {
-         shift = len - (UINT32)newLen;
-         len = (UINT32)newLen;
-      }
-      else
-      {
-         shift = 0;
-      }
-      TCHAR *newStr = (TCHAR *)malloc(newLen * sizeof(TCHAR));
-      memcpy(&newStr[(UINT32)newLen - len], &str[shift], len * sizeof(TCHAR));
-      for(UINT32 i = 0; i < (UINT32)newLen - len; i++)
-         newStr[i] = pad;
-      *ppResult = vm->createValue(newStr, newLen);
-      free(newStr);
-   }
-   else
-   {
-      *ppResult = vm->createValue(_T(""));
-   }
-	return 0;
+   return SM_right(argv[0], argc - 1, &argv[1], result, vm);
 }
 
 /**
@@ -1102,43 +1026,43 @@ int F_trim(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
    {
       *result = vm->createValue(argv[0]);
    }
-   return 0;
+   return NXSL_ERR_SUCCESS;
 }
 
 /**
  * Trim trailing whitespace characters from the string
  */
-int F_rtrim(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+int F_rtrim(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
 	if (!argv[0]->isString())
 		return NXSL_ERR_NOT_STRING;
 
-	UINT32 len;
+	uint32_t len;
 	const TCHAR *string = argv[0]->getValueAsString(&len);
 	
 	int i;
 	for(i = (int)len - 1; (i >= 0) && (string[i] == _T(' ') || string[i] == _T('\t')); i--);
 
-	*ppResult = vm->createValue(string, i + 1);
-	return 0;
+	*result = vm->createValue(string, i + 1);
+	return NXSL_ERR_SUCCESS;
 }
 
 /**
  * Trim leading whitespace characters from the string
  */
-int F_ltrim(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+int F_ltrim(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
 	if (!argv[0]->isString())
 		return NXSL_ERR_NOT_STRING;
 
-	UINT32 len;
+	uint32_t len;
 	const TCHAR *string = argv[0]->getValueAsString(&len);
 	
 	int i;
 	for(i = 0; (i < (int)len) && (string[i] == _T(' ') || string[i] == _T('\t')); i++);
 
-	*ppResult = vm->createValue(&string[i], (int)len - i);
-	return 0;
+	*result = vm->createValue(&string[i], (int)len - i);
+	return NXSL_ERR_SUCCESS;
 }
 
 /**
@@ -1154,7 +1078,7 @@ int F_trace(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 
 	vm->trace(argv[0]->getValueAsInt32(), argv[1]->getValueAsCString());
 	*result = vm->createValue();
-	return 0;
+	return NXSL_ERR_SUCCESS;
 }
 
 /**
@@ -1168,7 +1092,7 @@ static int F_index_rindex(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL
 	if (!argv[0]->isString() || !argv[1]->isString())
 		return NXSL_ERR_NOT_STRING;
 
-	UINT32 strLength, substrLength;
+	uint32_t strLength, substrLength;
 	const TCHAR *str = argv[0]->getValueAsString(&strLength);
 	const TCHAR *substr = argv[1]->getValueAsString(&substrLength);
 
@@ -1195,7 +1119,7 @@ static int F_index_rindex(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL
 		start = reverse ? (int)strLength - (int)substrLength : 0;
 	}
 
-	int index = 0;	// 0 = not found
+	int32_t index = 0;	// 0 = not found
 	if ((substrLength <= strLength) && (substrLength > 0))
 	{
 		if (reverse)
@@ -1226,7 +1150,7 @@ static int F_index_rindex(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL
 		index = !memcmp(str, substr, substrLength * sizeof(TCHAR)) ? 1 : 0;
 	}
 
-	*result = vm->createValue((LONG)index);
+	*result = vm->createValue(index);
 	return 0;
 }
 
@@ -1572,30 +1496,18 @@ int F_ArrayToString(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *v
    StringBuffer s;
    argv[0]->getValueAsArray()->toString(&s, argv[1]->getValueAsCString(), false);
    *result = vm->createValue(s);
-   return 0;
+   return NXSL_ERR_SUCCESS;
 }
 
 /**
- * Convert array to string
+ * Split string into array of strings at given delimiter
  */
 int F_SplitString(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
    if (!argv[0]->isString() || !argv[1]->isString())
       return NXSL_ERR_NOT_STRING;
 
-   int count = 0;
-   TCHAR **strings = SplitString(argv[0]->getValueAsCString(), argv[1]->getValueAsCString()[0], &count);
-
-   NXSL_Array *a = new NXSL_Array(vm);
-   for(int i = 0; i < count; i++)
-   {
-      a->append(vm->createValue(strings[i]));
-      MemFree(strings[i]);
-   }
-   MemFree(strings);
-
-   *result = vm->createValue(a);
-   return 0;
+   return SM_split(argv[0], 1, &argv[1], result, vm);
 }
 
 /**
@@ -1607,7 +1519,7 @@ int F_ReadPersistentStorage(int argc, NXSL_Value **argv, NXSL_Value **result, NX
       return NXSL_ERR_NOT_STRING;
 
    *result = vm->storageRead(argv[0]->getValueAsCString());
-   return 0;
+   return NXSL_ERR_SUCCESS;
 }
 
 /**
@@ -1623,7 +1535,7 @@ int F_WritePersistentStorage(int argc, NXSL_Value **argv, NXSL_Value **result, N
    vm->destroyValue(value);
 
    *result = vm->createValue();
-   return 0;
+   return NXSL_ERR_SUCCESS;
 }
 
 /**

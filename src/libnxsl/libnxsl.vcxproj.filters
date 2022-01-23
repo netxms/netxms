@@ -78,6 +78,9 @@
     <ClCompile Include="storage.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="string.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="table.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

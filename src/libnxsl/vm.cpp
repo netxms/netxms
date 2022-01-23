@@ -1003,7 +1003,7 @@ void NXSL_VM::execute()
                   }
                   else if (container->isString())
                   {
-                     UINT32 slen;
+                     uint32_t slen;
                      const TCHAR *base = container->getValueAsString(&slen);
 
                      int startIndex = start->isNull() ? 0 : start->getValueAsInt32();
@@ -1013,7 +1013,7 @@ void NXSL_VM::execute()
                      {
                         base += startIndex;
                         slen -= startIndex;
-                        UINT32 count = static_cast<UINT32>(endIndex - startIndex);
+                        uint32_t count = static_cast<uint32_t>(endIndex - startIndex);
                         if (count > slen)
                            count = slen;
                         m_dataStack->push(createValue(base, count));
@@ -1405,6 +1405,22 @@ void NXSL_VM::execute()
                   error(nRet);
                }
             }
+            else if (pValue->isString())
+            {
+               NXSL_Value *result;
+               nRet = callStringMethod(pValue, *cp->m_operand.m_identifier, cp->m_stackItems, (NXSL_Value **)m_dataStack->peekList(cp->m_stackItems), &result);
+               if (nRet == 0)
+               {
+                  for(i = 0; i < cp->m_stackItems + 1; i++)
+                     destroyValue(m_dataStack->pop());
+                  m_dataStack->push(result);
+               }
+               else
+               {
+                  // Execution error inside method
+                  error(nRet);
+               }
+            }
             else
             {
                error(NXSL_ERR_NOT_OBJECT);
@@ -1673,11 +1689,15 @@ void NXSL_VM::execute()
             }
             else if (pValue->getDataType() == NXSL_DT_ARRAY)
             {
-               getArrayAttribute(pValue->getValueAsArray(), cp->m_operand.m_identifier->value, cp->m_opCode == OPCODE_SAFE_GET_ATTR);
+               getArrayAttribute(pValue->getValueAsArray(), *cp->m_operand.m_identifier, cp->m_opCode == OPCODE_SAFE_GET_ATTR);
             }
             else if (pValue->getDataType() == NXSL_DT_HASHMAP)
             {
-               getHashMapAttribute(pValue->getValueAsHashMap(), cp->m_operand.m_identifier->value, cp->m_opCode == OPCODE_SAFE_GET_ATTR);
+               getHashMapAttribute(pValue->getValueAsHashMap(), *cp->m_operand.m_identifier, cp->m_opCode == OPCODE_SAFE_GET_ATTR);
+            }
+            else if (pValue->isString())
+            {
+               getStringAttribute(pValue, *cp->m_operand.m_identifier, cp->m_opCode == OPCODE_SAFE_GET_ATTR);
             }
             else
             {
@@ -2821,19 +2841,23 @@ void NXSL_VM::setStorage(NXSL_Storage *storage)
 /**
  * Get array's attribute
  */
-void NXSL_VM::getArrayAttribute(NXSL_Array *a, const char *attribute, bool safe)
+void NXSL_VM::getArrayAttribute(NXSL_Array *a, const NXSL_Identifier& attribute, bool safe)
 {
-   if (!strcmp(attribute, "maxIndex"))
+   static NXSL_Identifier A_maxIndex("maxIndex");
+   static NXSL_Identifier A_minIndex("minIndex");
+   static NXSL_Identifier A_size("size");
+
+   if (A_maxIndex.equals(attribute))
    {
-      m_dataStack->push((a->size() > 0) ? createValue((INT32)a->getMaxIndex()) : createValue());
+      m_dataStack->push((a->size() > 0) ? createValue(static_cast<int32_t>(a->getMaxIndex())) : createValue());
    }
-   else if (!strcmp(attribute, "minIndex"))
+   else if (A_minIndex.equals(attribute))
    {
-      m_dataStack->push((a->size() > 0) ? createValue((INT32)a->getMinIndex()) : createValue());
+      m_dataStack->push((a->size() > 0) ? createValue(static_cast<int32_t>(a->getMinIndex())) : createValue());
    }
-   else if (!strcmp(attribute, "size"))
+   else if (A_size.equals(attribute))
    {
-      m_dataStack->push(createValue((INT32)a->size()));
+      m_dataStack->push(createValue(static_cast<int32_t>(a->size())));
    }
    else
    {
@@ -2847,17 +2871,21 @@ void NXSL_VM::getArrayAttribute(NXSL_Array *a, const char *attribute, bool safe)
 /**
  * Get hash map's attribute
  */
-void NXSL_VM::getHashMapAttribute(NXSL_HashMap *m, const char *attribute, bool safe)
+void NXSL_VM::getHashMapAttribute(NXSL_HashMap *m, const NXSL_Identifier& attribute, bool safe)
 {
-   if (!strcmp(attribute, "keys"))
+   static NXSL_Identifier A_keys("keys");
+   static NXSL_Identifier A_size("size");
+   static NXSL_Identifier A_values("values");
+
+   if (A_keys.equals(attribute))
    {
       m_dataStack->push(m->getKeys());
    }
-   else if (!strcmp(attribute, "size"))
+   else if (A_size.equals(attribute))
    {
       m_dataStack->push(createValue((INT32)m->size()));
    }
-   else if (!strcmp(attribute, "values"))
+   else if (A_values.equals(attribute))
    {
       m_dataStack->push(m->getValues());
    }
