@@ -95,7 +95,11 @@ static int SM_equalsIgnoreCase(NXSL_Value* thisString, int argc, NXSL_Value** ar
 {
    if (!argv[0]->isString())
       return NXSL_ERR_NOT_STRING;
-   *result = vm->createValue(_tcsicmp(thisString->getValueAsCString(), argv[0]->getValueAsCString()) == 0);
+
+   uint32_t l1, l2;
+   const TCHAR *s1 = thisString->getValueAsString(&l1);
+   const TCHAR *s2 = argv[0]->getValueAsString(&l2);
+   *result = vm->createValue((l1 == l2) && (_tcsicmp(s1, s2) == 0));
    return NXSL_ERR_SUCCESS;
 }
 

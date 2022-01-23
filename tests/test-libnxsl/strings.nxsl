@@ -149,6 +149,7 @@ assert(s2->compareTo(s1) > 0);
 assert(s1->compareTo("Alpha Beta Gamma") == 0);
 assert(s1->compareToIgnoreCase(s2) == 0);
 assert(s1->equalsIgnoreCase(s2));
+assert(not s1->equalsIgnoreCase("alpha beta"));
 
 assert(s1->startsWith("Alpha"));
 assert(not s1->startsWith("Beta"));
