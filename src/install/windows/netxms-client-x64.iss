@@ -3,7 +3,7 @@
 #include "..\..\..\build\netxms-build-tag.iss"
 
 [Setup]
-AppId=netxmsclient
+AppId=netxms-client
 AppName=NetXMS Client
 AppVerName=NetXMS Client {#VersionString}
 AppVersion={#VersionString}
@@ -28,7 +28,7 @@ ArchitecturesInstallIn64BitMode=x64
 ArchitecturesAllowed=x64
 
 [Components]
-Name: "nxmc"; Description: "NetXMS Management Console (nxmc)"; Types: full compact custom
+Name: "nxmc"; Description: "NetXMS GUI Client"; Types: full compact custom
 Name: "nxshell"; Description: "NetXMS Python Scripting (nxshell)"; Types: full custom
 Name: "cmdline"; Description: "Command Line Tools"; Types: full
 Name: "jre"; Description: "Java Runtime Environment"; Types: full
