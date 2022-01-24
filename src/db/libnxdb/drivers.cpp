@@ -52,20 +52,21 @@ bool LIBNXDB_EXPORTABLE DBInit()
 DB_DRIVER LIBNXDB_EXPORTABLE DBLoadDriver(const TCHAR *module, const TCHAR *initParameters,
          void (*eventHandler)(uint32_t, const WCHAR *, const WCHAR *, bool, void *), void *context)
 {
-   TCHAR szErrorText[256];
+   static uint32_t versionZero = 0;
    uint32_t *apiVersion = nullptr;
    const char **driverName = nullptr;
    DBDriverCallTable **callTable = nullptr;
-	DB_DRIVER driver;
-	bool alreadyLoaded = false;
-	int position = -1;
+   DB_DRIVER driver;
+   bool alreadyLoaded = false;
+   int position = -1;
+   TCHAR szErrorText[256];
    int i; // have to define it here because otherwise HP aCC complains at goto statements
 
-	s_driverListLock.lock();
+   s_driverListLock.lock();
 
-	driver = MemAllocStruct<db_driver_t>();
+   driver = MemAllocStruct<db_driver_t>();
    driver->m_fpEventHandler = eventHandler;
-	driver->m_context = context;
+   driver->m_context = context;
 
    // Load driver's module
    TCHAR fullName[MAX_PATH];
@@ -102,7 +103,6 @@ DB_DRIVER LIBNXDB_EXPORTABLE DBLoadDriver(const TCHAR *module, const TCHAR *init
    }
 
    // Check API version supported by driver
-   static uint32_t versionZero = 0;
    apiVersion = static_cast<uint32_t*>(DLGetSymbolAddr(driver->m_handle, "drvAPIVersion", nullptr));
    if (apiVersion == nullptr)
       apiVersion = &versionZero;
