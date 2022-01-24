@@ -37,6 +37,7 @@ LONG H_ActiveConnections(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, Abstr
 LONG H_AgentProxyStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_AgentEventSender(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_AgentUptime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_CertificateInfo(const TCHAR* param, const TCHAR* arg, TCHAR* value, AbstractCommSession* session);
 LONG H_CRC32(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_DataCollectorQueueSize(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_DirInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
@@ -436,6 +437,12 @@ static NETXMS_SUBAGENT_PARAM s_standardParams[] =
    { _T("System.Hostname"), H_HostName, nullptr, DCI_DT_STRING, DCIDESC_SYSTEM_HOSTNAME },
    { _T("System.PlatformName"), H_PlatformName, nullptr, DCI_DT_STRING, DCIDESC_SYSTEM_PLATFORMNAME },
    { _T("System.TimeZone"), H_SystemTimeZone, nullptr, DCI_DT_STRING, DCIDESC_SYSTEM_TIMEZONE },
+   { _T("X509.Certificate.ExpirationDate(*)"), H_CertificateInfo, _T("D"), DCI_DT_STRING, _T("Expiration date (YYYY-MM-DD) of X.509 certificate from file {instance}") },
+   { _T("X509.Certificate.ExpirationTime(*)"), H_CertificateInfo, _T("E"), DCI_DT_UINT64, _T("Expiration time of X.509 certificate from file {instance}") },
+   { _T("X509.Certificate.ExpiresIn(*)"), H_CertificateInfo, _T("U"), DCI_DT_INT, _T("Days until expiration of X.509 certificate from file {instance}") },
+   { _T("X509.Certificate.Issuer(*)"), H_CertificateInfo, _T("I"), DCI_DT_STRING, _T("Issuer of X.509 certificate from file {instance}") },
+   { _T("X509.Certificate.Subject(*)"), H_CertificateInfo, _T("S"), DCI_DT_STRING, _T("Subject of X.509 certificate from file {instance}") },
+   { _T("X509.Certificate.TemplateID(*)"), H_CertificateInfo, _T("T"), DCI_DT_STRING, _T("Template ID of X.509 certificate from file {instance}") },
 
    // Deprecated parameters
    { _T("Agent.GeneratedTraps"), H_AgentEventSender, _T("G"), DCI_DT_COUNTER64, DCIDESC_DEPRECATED },
