@@ -54,6 +54,7 @@ int yylex(YYSTYPE *lvalp, yyscan_t scanner);
 %token T_FOR
 %token T_FOREACH
 %token T_GLOBAL
+%token T_IDIV
 %token T_IF
 %token T_NEW
 %token T_NULL
@@ -85,7 +86,7 @@ int yylex(YYSTYPE *lvalp, yyscan_t scanner);
 %token <valUInt64> T_UINT64
 %token <valReal> T_REAL
 
-%right '=' T_ASSIGN_ADD T_ASSIGN_SUB T_ASSIGN_MUL T_ASSIGN_DIV T_ASSIGN_REM T_ASSIGN_CONCAT T_ASSIGN_AND T_ASSIGN_OR T_ASSIGN_XOR
+%right '=' T_ASSIGN_ADD T_ASSIGN_SUB T_ASSIGN_MUL T_ASSIGN_DIV T_ASSIGN_IDIV T_ASSIGN_REM T_ASSIGN_CONCAT T_ASSIGN_AND T_ASSIGN_OR T_ASSIGN_XOR
 %right ':'
 %left '?'
 %left '.'
@@ -98,7 +99,7 @@ int yylex(YYSTYPE *lvalp, yyscan_t scanner);
 %left '<' T_LE '>' T_GE
 %left T_LSHIFT T_RSHIFT
 %left '+' '-'
-%left '*' '/' '%'
+%left '*' '/' T_IDIV '%'
 %right T_INC T_DEC T_NOT '~' NEGATE
 %left T_REF '@'
 %left T_POST_INC T_POST_DEC '[' ']'
@@ -389,6 +390,11 @@ Expression:
 	builder->addInstruction(lexer->getCurrLine(), OPCODE_DIV);
 	builder->addInstruction(lexer->getCurrLine(), OPCODE_SET, $1);
 }
+|	T_IDENTIFIER T_ASSIGN_IDIV { builder->addPushVariableInstruction($1, lexer->getCurrLine()); } Expression
+{
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_IDIV);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_SET, $1);
+}
 |	T_IDENTIFIER T_ASSIGN_REM { builder->addPushVariableInstruction($1, lexer->getCurrLine()); } Expression
 {
 	builder->addInstruction(lexer->getCurrLine(), OPCODE_REM);
@@ -614,6 +620,10 @@ Expression:
 |	Expression '/' Expression
 {
 	builder->addInstruction(lexer->getCurrLine(), OPCODE_DIV);
+}
+|	Expression T_IDIV Expression
+{
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_IDIV);
 }
 |	Expression '%' Expression
 {

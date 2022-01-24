@@ -132,6 +132,7 @@ static void LexerError(const char *pszMsg, yyscan_t scanner);
 <INITIAL>"-="	return T_ASSIGN_SUB;
 <INITIAL>"*="	return T_ASSIGN_MUL;
 <INITIAL>"/="	return T_ASSIGN_DIV;
+<INITIAL>"\\="	return T_ASSIGN_IDIV;
 <INITIAL>"%="	return T_ASSIGN_REM;
 <INITIAL>".="	return T_ASSIGN_CONCAT;
 <INITIAL>"&="	return T_ASSIGN_AND;
@@ -164,6 +165,7 @@ static void LexerError(const char *pszMsg, yyscan_t scanner);
 <INITIAL>"]"	return ']';
 <INITIAL>"@"	return '@';
 <INITIAL>"#"	return '#';
+<INITIAL>"\\"	return T_IDIV;
 
 <INITIAL>"/*"	{ yyextra->m_nCommentLevel = 1; BEGIN COMMENT; }
 <INITIAL>\"	{ yyextra->m_nStrSize = 0; BEGIN STR; }

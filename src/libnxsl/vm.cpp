@@ -116,23 +116,27 @@ static const TCHAR *GetErrorMessage(int error)
 /**
  * Determine operation data type
  */
-static int SelectResultType(int nType1, int nType2, int nOp)
+static int SelectResultType(int dataTypeLeft, int dataTypeRight, int operation)
 {
    int nType;
 
-   if (nOp == OPCODE_DIV)
+   if (operation == OPCODE_DIV)
    {
       nType = NXSL_DT_REAL;
    }
    else
    {
-      if ((nType1 == NXSL_DT_REAL) || (nType2 == NXSL_DT_REAL))
+      if ((dataTypeLeft == NXSL_DT_REAL) || (dataTypeRight == NXSL_DT_REAL))
       {
-         if ((nOp == OPCODE_REM) || (nOp == OPCODE_LSHIFT) ||
-             (nOp == OPCODE_RSHIFT) || (nOp == OPCODE_BIT_AND) ||
-             (nOp == OPCODE_BIT_OR) || (nOp == OPCODE_BIT_XOR))
+         if ((operation == OPCODE_REM) || (operation == OPCODE_LSHIFT) ||
+             (operation == OPCODE_RSHIFT) || (operation == OPCODE_BIT_AND) ||
+             (operation == OPCODE_BIT_OR) || (operation == OPCODE_BIT_XOR))
          {
             nType = NXSL_DT_NULL;   // Error
+         }
+         else if (operation == OPCODE_IDIV)
+         {
+            nType = NXSL_DT_INT64;
          }
          else
          {
@@ -141,16 +145,16 @@ static int SelectResultType(int nType1, int nType2, int nOp)
       }
       else
       {
-         if (((nType1 >= NXSL_DT_UINT32) && (nType2 < NXSL_DT_UINT32)) ||
-             ((nType1 < NXSL_DT_UINT32) && (nType2 >= NXSL_DT_UINT32)))
+         if (((dataTypeLeft >= NXSL_DT_UINT32) && (dataTypeRight < NXSL_DT_UINT32)) ||
+             ((dataTypeLeft < NXSL_DT_UINT32) && (dataTypeRight >= NXSL_DT_UINT32)))
          {
             // One operand signed, other unsigned, convert both to signed
-            if (nType1 >= NXSL_DT_UINT32)
-               nType1 -= 2;
-            else if (nType2 >= NXSL_DT_UINT32)
-               nType2 -= 2;
+            if (dataTypeLeft >= NXSL_DT_UINT32)
+               dataTypeLeft -= 2;
+            else if (dataTypeRight >= NXSL_DT_UINT32)
+               dataTypeRight -= 2;
          }
-         nType = std::max(nType1, nType2);
+         nType = std::max(dataTypeLeft, dataTypeRight);
       }
    }
    return nType;
@@ -1489,6 +1493,7 @@ void NXSL_VM::execute()
       case OPCODE_SUB:
       case OPCODE_MUL:
       case OPCODE_DIV:
+      case OPCODE_IDIV:
       case OPCODE_REM:
       case OPCODE_CONCAT:
       case OPCODE_LIKE:
@@ -2159,6 +2164,7 @@ void NXSL_VM::doBinaryOperation(int nOpCode)
                         pVal1 = nullptr;
                         break;
                      case OPCODE_DIV:
+                     case OPCODE_IDIV:
                         pRes = pVal1;
                         pRes->div(pVal2);
                         pVal1 = nullptr;
@@ -2344,6 +2350,7 @@ void NXSL_VM::doBinaryOperation(int nOpCode)
                case OPCODE_SUB:
                case OPCODE_MUL:
                case OPCODE_DIV:
+               case OPCODE_IDIV:
                case OPCODE_REM:
                case OPCODE_LT:
                case OPCODE_LE:

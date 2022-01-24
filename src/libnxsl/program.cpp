@@ -41,7 +41,7 @@ static const char *s_nxslCommandMnemonic[] =
    "EQ", "NE", "LT", "LE", "GT", "GE",
    "BITAND", "BITOR", "BITXOR",
    "AND", "OR", "LSHIFT", "RSHIFT",
-   "NRET", "JZ", "OP_30", "CONCAT",
+   "NRET", "JZ", "IDIV", "CONCAT",
    "BIND", "INC", "DEC", "NEG", "NOT",
    "BITNOT", "CAST", "AGET", "INCP", "DECP",
    "JNZ", "LIKE", "ILIKE", "MATCH",
