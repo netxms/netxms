@@ -48,7 +48,6 @@ import org.netxms.nxmc.modules.agentmanagement.views.helpers.TunnelListLabelProv
 import org.netxms.nxmc.modules.agentmanagement.views.helpers.TunnelManagerFilter;
 import org.netxms.nxmc.modules.objects.dialogs.CreateNodeDialog;
 import org.netxms.nxmc.modules.objects.dialogs.ObjectSelectionDialog;
-import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.tools.MessageDialogHelper;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
@@ -89,14 +88,6 @@ public class TunnelManager extends ConfigurationView
    private Action actionUnbind;
    private Action actionHideNonProxy;
    private Action actionHideNonUA;
-
-   /**
-    * Create tunnel manager view
-    */
-   public TunnelManager()
-   {
-      super(i18n.tr("Agent Tunnels"), ResourceManager.getImageDescriptor("icons/config-views/tunnel_manager.png"), ID, true);
-   }
 
    /**
     * @see org.netxms.nxmc.base.views.View#createContent(org.eclipse.swt.widgets.Composite)

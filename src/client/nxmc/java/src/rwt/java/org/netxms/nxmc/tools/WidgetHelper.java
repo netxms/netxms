@@ -1229,4 +1229,25 @@ public class WidgetHelper
    public static void setHighInterpolation(GC gc)
    {
    }
+
+   /**
+    * Helper method to set file filter extensions (compatibility layer for RAP).
+    *
+    * @param fd file dialog to set extensions for
+    * @param extensions extension array
+    */
+   public static void setFileFilterNames(FileDialog fd, String[] extensions)
+   {
+   }
+   
+
+   /**
+    * Helper method to set file filter extension names (compatibility layer for RAP).
+    *
+    * @param fd file dialog to set extensions for
+    * @param extensions extension array
+    */
+   public static void setFileFilterNames(FileDialog fd, String[] extensions)
+   {
+   }   
 }

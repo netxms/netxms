@@ -86,7 +86,7 @@ public class PackageManager extends ViewPart
    private List<PackageInfo> packageList = null;
    private SortableTableViewer viewer;
    private Action actionRefresh;
-   private Action actionInstall;
+   private Action actionUploadToServer;
    private Action actionRemove;
    private Action actionDeploy;
    private Action actionEditMetadata;
@@ -154,7 +154,7 @@ public class PackageManager extends ViewPart
 			}
 		};
 		
-		actionInstall = new Action(Messages.get().PackageManager_InstallAction, SharedIcons.ADD_OBJECT) {
+		actionUploadToServer = new Action(Messages.get().PackageManager_InstallAction, SharedIcons.ADD_OBJECT) {
 			@Override
 			public void run()
 			{
@@ -203,7 +203,7 @@ public class PackageManager extends ViewPart
 	 */
 	private void fillLocalPullDown(IMenuManager manager)
 	{
-		manager.add(actionInstall);
+		manager.add(actionUploadToServer);
 		manager.add(actionRemove);
 		manager.add(actionDeploy);
       manager.add(new Separator());
@@ -218,7 +218,7 @@ public class PackageManager extends ViewPart
 	 */
 	private void fillLocalToolBar(IToolBarManager manager)
 	{
-		manager.add(actionInstall);
+		manager.add(actionUploadToServer);
 		manager.add(actionRefresh);
 	}
 
@@ -254,6 +254,7 @@ public class PackageManager extends ViewPart
 	{
 		manager.add(actionDeploy);
       manager.add(new Separator());
+      manager.add(actionUploadToServer);      
       manager.add(actionEditMetadata);
       manager.add(actionRemove);
 	}

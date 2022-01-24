@@ -47,6 +47,7 @@ import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.ScrollBar;
 import org.eclipse.swt.widgets.Scrollable;
@@ -1156,5 +1157,27 @@ public class WidgetHelper
    public static void setHighInterpolation(GC gc)
    {
       gc.setInterpolation(SWT.HIGH);
+   }
+
+   /**
+    * Helper method to set file filter extensions (compatibility layer for RAP).
+    *
+    * @param fd file dialog to set extensions for
+    * @param extensions extension array
+    */
+   public static void setFileFilterExtensions(FileDialog fd, String[] extensions)
+   {
+      fd.setFilterExtensions(extensions);
+   }
+
+   /**
+    * Helper method to set file filter extension names (compatibility layer for RAP).
+    *
+    * @param fd file dialog to set extensions for
+    * @param extensions extension array
+    */
+   public static void setFileFilterNames(FileDialog fd, String[] extensions)
+   {
+      fd.setFilterNames(extensions);
    }
 }

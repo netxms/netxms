@@ -33,6 +33,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
+import org.eclipse.swt.widgets.Widget;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.tools.WidgetFactory;
 import org.netxms.nxmc.tools.WidgetHelper;
@@ -101,7 +102,7 @@ public class ImagePropertiesDialog extends Dialog
 					{
 						FileDialog dialog = new FileDialog(getShell(), SWT.OPEN);
                   dialog.setText("Image Properties");
-                  dialog.setFilterNames(new String[] { i18n.tr("Image files"), i18n.tr("All files") });
+                  WidgetHelper.setFileFilterExtensions(dialog, new String[] { i18n.tr("Image files"), i18n.tr("All files") });
                   dialog.setFilterExtensions(new String[] { "*.jpg;*.jpeg;*.png;*.bmp", "*.*" });
 						final String selectedFile = dialog.open();
 						if (selectedFile != null)

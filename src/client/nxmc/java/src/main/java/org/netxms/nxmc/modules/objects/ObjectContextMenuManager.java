@@ -18,6 +18,8 @@
  */
 package org.netxms.nxmc.modules.objects;
 
+import java.util.HashSet;
+import java.util.Set;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
@@ -33,13 +35,19 @@ import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.NXCSession;
 import org.netxms.client.ScheduledTask;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.packages.PackageDeploymentListener;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
+import org.netxms.nxmc.base.views.Perspective;
 import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.views.ViewPlacement;
 import org.netxms.nxmc.base.widgets.helpers.MenuContributionItem;
+import org.netxms.nxmc.base.windows.PopOutViewWindow;
 import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.agentmanagement.dialogs.SelectDeployPackage;
+import org.netxms.nxmc.modules.agentmanagement.views.PackageDeploymentMonitor;
 import org.netxms.nxmc.modules.objects.dialogs.MaintanenceScheduleDialog;
+import org.netxms.nxmc.tools.MessageDialogHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -53,6 +61,7 @@ public class ObjectContextMenuManager extends MenuManager
    private ISelectionProvider selectionProvider;
    private Action actionManage;
    private Action actionUnmanage;
+   private Action actionDeployPackage;
    private Action actionEnterMaintenance;
    private Action actionLeaveMaintenance;
    private Action actionScheduleMaintenance;
@@ -96,6 +105,14 @@ public class ObjectContextMenuManager extends MenuManager
          public void run()
          {
             changeObjectManagementState(false);
+         }
+      };
+      
+      actionDeployPackage = new Action(i18n.tr("&Deplay Package")) {
+         @Override
+         public void run()
+         {
+            deployPackage();
          }
       };
 
@@ -149,8 +166,12 @@ public class ObjectContextMenuManager extends MenuManager
          }
       }
 
-      add(actionManage);
-      add(actionUnmanage);
+      MenuManager managementMenu = new MenuManager(i18n.tr("&Manage"));
+      managementMenu.add(actionManage);
+      managementMenu.add(actionUnmanage);
+      managementMenu.add(new Separator());
+      managementMenu.add(actionDeployPackage);      
+      add(managementMenu);
 
       MenuManager maintenanceMenu = new MenuManager(i18n.tr("&Maintenance"));
       maintenanceMenu.add(actionEnterMaintenance);
@@ -321,5 +342,100 @@ public class ObjectContextMenuManager extends MenuManager
             return i18n.tr("Cannot schedule maintenance");
          }
       }.start();
+   }
+   
+   private void deployPackage()
+   {
+      final SelectDeployPackage dialog = new SelectDeployPackage(view.getWindow().getShell());
+      if (dialog.open() != Window.OK)
+         return;
+      
+      final Object[] objectList = ((IStructuredSelection)selectionProvider.getSelection()).toArray();      
+      final Set<Long> objects = new HashSet<Long>();
+      for(Object o : objectList)
+      {
+         if (o instanceof AbstractObject)
+         {
+            objects.add(((AbstractObject)o).getObjectId());
+         }
+      }
+      final NXCSession session = Registry.getSession();
+      Job job = new Job(i18n.tr("Deploy agent package"), view) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            session.deployPackage(dialog.getSelectedPackageId(), objects.toArray(new Long[objects.size()]), new PackageDeploymentListener() {
+               private PackageDeploymentMonitor monitor = null;
+               
+               @Override
+               public void statusUpdate(long nodeId, int status, String message)
+               {
+                  if (monitor != null)
+                     monitor.viewStatusUpdate(nodeId, status, message);
+               }
+               
+               @Override
+               public void deploymentStarted()
+               {
+                  final Object sync = new Object();
+                  synchronized(sync)
+                  {
+                     runInUIThread(new Runnable() {
+                        @Override
+                        public void run()
+                        {
+                           monitor = new PackageDeploymentMonitor();  
+                           monitor.setPackageId(dialog.getSelectedPackageId());
+                           monitor.setApplicableObjects(objects);                         
+                           Perspective p = view.getPerspective();   
+                           if (p != null)
+                           {
+                              p.addMainView(monitor, true, false);
+                           }
+                           else
+                           {
+                              PopOutViewWindow window = new PopOutViewWindow(monitor);
+                              window.open();
+                           }
+                           
+                           synchronized(sync)
+                           {
+                              sync.notify();
+                           }
+                        }
+                     });
+
+                     try
+                     {
+                        sync.wait();
+                     }
+                     catch(InterruptedException e)
+                     {
+                     }
+                  }
+               }
+
+               @Override
+               public void deploymentComplete()
+               {
+                  runInUIThread(new Runnable() {
+                     @Override
+                     public void run()
+                     {
+                        MessageDialogHelper.openInformation(view.getWindow().getShell(), i18n.tr("Information"), i18n.tr("Package deployment completed"));
+                     }
+                  });
+               }
+            });
+         }
+         
+         @Override
+         protected String getErrorMessage()
+         {
+            return i18n.tr("Cannot start package deployment");
+         }
+      };
+      job.setUser(false);
+      job.start();
    }
 }

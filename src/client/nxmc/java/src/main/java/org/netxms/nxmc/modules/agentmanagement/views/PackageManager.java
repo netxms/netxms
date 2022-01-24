@@ -16,23 +16,19 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.agentmanager.views;
+package org.netxms.nxmc.modules.agentmanagement.views;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
-import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
-import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
@@ -44,35 +40,29 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Menu;
-import org.eclipse.ui.IActionBars;
-import org.eclipse.ui.IWorkbenchPage;
-import org.eclipse.ui.PartInitException;
-import org.eclipse.ui.PlatformUI;
-import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.ProgressListener;
-import org.netxms.client.objects.AbstractObject;
-import org.netxms.client.packages.PackageDeploymentListener;
 import org.netxms.client.packages.PackageInfo;
-import org.netxms.ui.eclipse.actions.RefreshAction;
-import org.netxms.ui.eclipse.agentmanager.Activator;
-import org.netxms.ui.eclipse.agentmanager.Messages;
-import org.netxms.ui.eclipse.agentmanager.dialogs.EditPackageMetadataDialog;
-import org.netxms.ui.eclipse.agentmanager.views.helpers.PackageComparator;
-import org.netxms.ui.eclipse.agentmanager.views.helpers.PackageLabelProvider;
-import org.netxms.ui.eclipse.console.resources.SharedIcons;
-import org.netxms.ui.eclipse.jobs.ConsoleJob;
-import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
-import org.netxms.ui.eclipse.shared.ConsoleSharedData;
-import org.netxms.ui.eclipse.tools.MessageDialogHelper;
-import org.netxms.ui.eclipse.widgets.SortableTableViewer;
+import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.base.jobs.Job;
+import org.netxms.nxmc.base.views.ConfigurationView;
+import org.netxms.nxmc.base.widgets.SortableTableViewer;
+import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.agentmanagement.dialogs.EditPackageMetadataDialog;
+import org.netxms.nxmc.modules.agentmanagement.views.helpers.PackageComparator;
+import org.netxms.nxmc.modules.agentmanagement.views.helpers.PackageLabelProvider;
+import org.netxms.nxmc.resources.SharedIcons;
+import org.netxms.nxmc.tools.MessageDialogHelper;
+import org.netxms.nxmc.tools.WidgetHelper;
+import org.xnap.commons.i18n.I18n;
 
 /**
  * Agent package manager
  */
-public class PackageManager extends ViewPart
+public class PackageManager extends ConfigurationView
 {
-	public static final String ID = "org.netxms.ui.eclipse.agentmanager.views.PackageManager"; //$NON-NLS-1$
+   private static I18n i18n = LocalizationHelper.getI18n(PackageManager.class);
+	public static final String ID = "PackageManager"; //$NON-NLS-1$
 	
    public static final int COLUMN_ID = 0;
    public static final int COLUMN_NAME = 1;
@@ -85,21 +75,16 @@ public class PackageManager extends ViewPart
 
    private List<PackageInfo> packageList = null;
    private SortableTableViewer viewer;
-   private Action actionRefresh;
    private Action actionUploadToServer;
    private Action actionRemove;
-   private Action actionDeploy;
    private Action actionEditMetadata;
 
-   /**
-    * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
-    */
 	@Override
-	public void createPartControl(Composite parent)
+   protected void createContent(Composite parent)
 	{
-		final String[] names = { Messages.get().PackageManager_ColumnID, Messages.get().PackageManager_ColumnName, "Type",
-		      Messages.get().PackageManager_ColumnVersion, Messages.get().PackageManager_ColumnPlatform,
-		      Messages.get().PackageManager_ColumnFile, "Command", Messages.get().PackageManager_ColumnDescription };
+		final String[] names = { i18n.tr("ID"), i18n.tr("Name"), i18n.tr("Type"),
+		      i18n.tr("Version"), i18n.tr("Platform"),
+		      i18n.tr("File"), "Command", i18n.tr("Description") };
       final int[] widths = { 70, 120, 100, 90, 120, 300, 300, 400 };
 		viewer = new SortableTableViewer(parent, names, widths, COLUMN_ID, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
 		viewer.setContentProvider(new ArrayContentProvider());
@@ -107,7 +92,6 @@ public class PackageManager extends ViewPart
 		viewer.setComparator(new PackageComparator());
 
 		createActions();
-		contributeToActionBars();
 		createPopupMenu();
 
 		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
@@ -115,7 +99,6 @@ public class PackageManager extends ViewPart
 			public void selectionChanged(SelectionChangedEvent event)
 			{
             IStructuredSelection selection = viewer.getStructuredSelection();
-				actionDeploy.setEnabled(selection.size() == 1);
             actionEditMetadata.setEnabled(selection.size() == 1);
 				actionRemove.setEnabled(selection.size() > 0);
 			}
@@ -145,16 +128,8 @@ public class PackageManager extends ViewPart
 	 * Create actions
 	 */
 	private void createActions()
-	{
-		actionRefresh = new RefreshAction(this) {
-			@Override
-			public void run()
-			{
-				refresh();
-			}
-		};
-		
-		actionUploadToServer = new Action(Messages.get().PackageManager_InstallAction, SharedIcons.ADD_OBJECT) {
+	{		
+		actionUploadToServer = new Action(i18n.tr("&Upload to server"), SharedIcons.ADD_OBJECT) {
 			@Override
 			public void run()
 			{
@@ -162,19 +137,11 @@ public class PackageManager extends ViewPart
 			}
 		};
 		
-		actionRemove = new Action(Messages.get().PackageManager_RemoveAction, SharedIcons.DELETE_OBJECT) {
+		actionRemove = new Action(i18n.tr("&Remove"), SharedIcons.DELETE_OBJECT) {
 			@Override
 			public void run()
 			{
 				removePackage();
-			}
-		};
-
-		actionDeploy = new Action(Messages.get().PackageManager_DeployAction, Activator.getImageDescriptor("icons/package_deploy.gif")) { //$NON-NLS-1$
-			@Override
-			public void run()
-			{
-				deployPackage();
 			}
 		};
 
@@ -187,42 +154,7 @@ public class PackageManager extends ViewPart
       };
 	}
 
-	/**
-	 * Contribute actions to action bars
-	 */
-	private void contributeToActionBars()
-	{
-		IActionBars bars = getViewSite().getActionBars();
-		fillLocalPullDown(bars.getMenuManager());
-		fillLocalToolBar(bars.getToolBarManager());
-	}
-
-	/**
-	 * Fill local pulldown menu
-	 * @param manager menu manager
-	 */
-	private void fillLocalPullDown(IMenuManager manager)
-	{
-		manager.add(actionUploadToServer);
-		manager.add(actionRemove);
-		manager.add(actionDeploy);
-      manager.add(new Separator());
-      manager.add(actionEditMetadata);
-		manager.add(new Separator());
-		manager.add(actionRefresh);
-	}
-
-	/**
-	 * Fill local toolbar
-	 * @param manager menu manager
-	 */
-	private void fillLocalToolBar(IToolBarManager manager)
-	{
-		manager.add(actionUploadToServer);
-		manager.add(actionRefresh);
-	}
-
-	/**
+   /**
 	 * Create pop-up menu
 	 */
 	private void createPopupMenu()
@@ -240,10 +172,6 @@ public class PackageManager extends ViewPart
 		// Create menu.
 		Menu menu = menuMgr.createContextMenu(viewer.getControl());
 		viewer.getControl().setMenu(menu);
-
-		// Register menu for extension.
-      getSite().setSelectionProvider(viewer);
-		getSite().registerContextMenu(menuMgr, viewer);
 	}
 
 	/**
@@ -252,9 +180,7 @@ public class PackageManager extends ViewPart
 	 */
 	protected void fillContextMenu(IMenuManager manager)
 	{
-		manager.add(actionDeploy);
-      manager.add(new Separator());
-      manager.add(actionUploadToServer);      
+      manager.add(actionUploadToServer);
       manager.add(actionEditMetadata);
       manager.add(actionRemove);
 	}
@@ -262,12 +188,13 @@ public class PackageManager extends ViewPart
 	/**
 	 * Refresh package list
 	 */
-	private void refresh()
+	@Override
+	public void refresh()
 	{
-		final NXCSession session = ConsoleSharedData.getSession();
-		new ConsoleJob(Messages.get().PackageManager_LoadPkgList, this, Activator.PLUGIN_ID, null) {
+		final NXCSession session = Registry.getSession();
+		new Job(i18n.tr("Load package list"), this) {
 			@Override
-			protected void runInternal(IProgressMonitor monitor) throws Exception
+			protected void run(IProgressMonitor monitor) throws Exception
 			{
 				final List<PackageInfo> list = session.getInstalledPackages();
 				runInUIThread(new Runnable() {
@@ -283,7 +210,7 @@ public class PackageManager extends ViewPart
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.get().PackageManager_PkgListLoadError;
+				return i18n.tr("Cannot get package list from server");
 			}
 		}.start();
 	}
@@ -293,11 +220,11 @@ public class PackageManager extends ViewPart
 	 */
 	private void installPackage()
 	{
-		FileDialog fd = new FileDialog(getSite().getShell(), SWT.OPEN);
-		fd.setText(Messages.get().PackageManager_SelectFile);
-      fd.setFilterExtensions(new String[] { "*.apkg", "*.exe", "*.msi", "*.msp", "*.msu", "*.npi", "*.tgz;*.tar.gz", "*.*" });
-      fd.setFilterNames(new String[] { "NetXMS Agent Package", "Executable", "Windows Installer Package", "Windows Installer Patch", "Windows Update Package",
-            Messages.get().PackageManager_FileTypePackage, "Compressed TAR Archive", Messages.get().PackageManager_FileTypeAll });
+		FileDialog fd = new FileDialog(getWindow().getShell(), SWT.OPEN);
+		fd.setText(i18n.tr("Select Package File"));
+		WidgetHelper.setFileFilterExtensions(fd, new String[] { "*.apkg", "*.exe", "*.msi", "*.msp", "*.msu", "*.npi", "*.tgz;*.tar.gz", "*.*" });
+      WidgetHelper.setFileFilterNames(fd, new String[] { "NetXMS Agent Package", "Executable", "Windows Installer Package", "Windows Installer Patch", "Windows Update Package",
+            i18n.tr("NetXMS Package Info"), "Compressed TAR Archive", i18n.tr("All files") });
 		String packageFileName = fd.open();
       if (packageFileName == null)
          return;
@@ -414,15 +341,15 @@ public class PackageManager extends ViewPart
 
          if (showMetadataDialog)
          {
-            EditPackageMetadataDialog dlg = new EditPackageMetadataDialog(getSite().getShell(), packageInfo);
+            EditPackageMetadataDialog dlg = new EditPackageMetadataDialog(getWindow().getShell(), packageInfo);
             if (dlg.open() != Window.OK)
                return;
          }
 
-         final NXCSession session = ConsoleSharedData.getSession();
-         new ConsoleJob(Messages.get().PackageManager_InstallPackage, this, Activator.PLUGIN_ID) {
+         final NXCSession session = Registry.getSession();
+         new Job(i18n.tr("Install package"), this) {
             @Override
-            protected void runInternal(final IProgressMonitor monitor) throws Exception
+            protected void run(final IProgressMonitor monitor) throws Exception
             {
                File packageFile = packageFileName.endsWith(".npi") ? new File(new File(packageFileName).getParent(), packageInfo.getFileName()) : new File(packageFileName);
                final long id = session.installPackage(packageInfo, packageFile, new ProgressListener() {
@@ -431,7 +358,7 @@ public class PackageManager extends ViewPart
                   @Override
                   public void setTotalWorkAmount(long amount)
                   {
-                     monitor.beginTask(Messages.get().PackageManager_UploadPackage, (int)amount);
+                     monitor.beginTask(i18n.tr("Upload package file"), (int)amount);
                   }
 
                   @Override
@@ -455,13 +382,13 @@ public class PackageManager extends ViewPart
             @Override
             protected String getErrorMessage()
             {
-               return Messages.get().PackageManager_InstallError;
+               return i18n.tr("Cannot install package");
             }
          }.start();
       }
       catch(IOException e)
       {
-         MessageDialogHelper.openError(getSite().getShell(), Messages.get().PackageManager_Error, Messages.get().PackageManager_PkgFileOpenError + e.getLocalizedMessage());
+         MessageDialogHelper.openError(getWindow().getShell(), i18n.tr("Error"), i18n.tr("Cannot open package information file: ") + e.getLocalizedMessage());
 		}
 	}
 
@@ -470,15 +397,15 @@ public class PackageManager extends ViewPart
 	 */
 	private void removePackage()
 	{
-		if (!MessageDialogHelper.openConfirm(getSite().getShell(), Messages.get().PackageManager_ConfirmDeleteTitle, Messages.get().PackageManager_ConfirmDeleteText))
+		if (!MessageDialogHelper.openConfirm(getWindow().getShell(), i18n.tr("Confirm Package Delete"), i18n.tr("Are you sure you wish to delete selected packages?")))
 			return;
 		
-      final NXCSession session = ConsoleSharedData.getSession();
+      final NXCSession session = Registry.getSession();
       final Object[] packages = viewer.getStructuredSelection().toArray();
 		final List<Object> removedPackages = new ArrayList<Object>();
-		new ConsoleJob(Messages.get().PackageManager_DeletePackages, this, Activator.PLUGIN_ID, null) {
+		new Job(i18n.tr("Delete agent packages"), this) {
 			@Override
-			protected void runInternal(IProgressMonitor monitor) throws Exception
+			protected void run(IProgressMonitor monitor) throws Exception
 			{
 				for(Object p : packages)
 				{
@@ -503,105 +430,9 @@ public class PackageManager extends ViewPart
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.get().PackageManager_PkgDeleteError;
+				return i18n.tr("Cannot delete package from server");
 			}
 		}.start();
-	}
-	
-	/**
-	 * Deploy package on managed nodes
-	 */
-	private void deployPackage()
-	{
-      IStructuredSelection selection = viewer.getStructuredSelection();
-		if (selection.size() != 1)
-			return;
-		final PackageInfo pkg = (PackageInfo)selection.getFirstElement();
-		
-		ObjectSelectionDialog dlg = new ObjectSelectionDialog(getSite().getShell(), ObjectSelectionDialog.createNodeSelectionFilter(false));
-		dlg.enableMultiSelection(true);
-		if (dlg.open() != Window.OK)
-			return;
-		
-		final Set<Long> objects = new HashSet<Long>();
-		for(AbstractObject o : dlg.getSelectedObjects())
-		{
-			objects.add(o.getObjectId());
-		}
-
-      final NXCSession session = ConsoleSharedData.getSession();
-		ConsoleJob job = new ConsoleJob(Messages.get().PackageManager_DeployAgentPackage, null, Activator.PLUGIN_ID, null) {
-			@Override
-			protected void runInternal(IProgressMonitor monitor) throws Exception
-			{
-				session.deployPackage(pkg.getId(), objects.toArray(new Long[objects.size()]), new PackageDeploymentListener() {
-					private PackageDeploymentMonitor monitor = null;
-					
-					@Override
-					public void statusUpdate(long nodeId, int status, String message)
-					{
-						if (monitor != null)
-							monitor.viewStatusUpdate(nodeId, status, message);
-					}
-					
-					@Override
-					public void deploymentStarted()
-					{
-						final Object sync = new Object();
-						synchronized(sync)
-						{
-							runInUIThread(new Runnable() {
-								@Override
-								public void run()
-								{
-									try
-									{
-										monitor = (PackageDeploymentMonitor)PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().showView(PackageDeploymentMonitor.ID, toString(), IWorkbenchPage.VIEW_ACTIVATE);
-										monitor.setPackageId(pkg.getId());
-									}
-									catch(PartInitException e)
-									{
-										MessageDialogHelper.openError(getSite().getShell(), Messages.get().PackageManager_Error, Messages.get().PackageManager_ErrorOpenView + e.getLocalizedMessage());
-									}
-									synchronized(sync)
-									{
-										sync.notify();
-									}
-								}
-							});
-
-							try
-							{
-								sync.wait();
-							}
-							catch(InterruptedException e)
-							{
-							}
-						}
-					}
-
-					@Override
-					public void deploymentComplete()
-					{
-						runInUIThread(new Runnable() {
-							@Override
-							public void run()
-							{
-								MessageDialogHelper.openInformation(getSite().getShell(), Messages.get().PackageManager_Information, Messages.get().PackageManager_PkgDepCompleted);
-							}
-						});
-					}
-				});
-			}
-			
-			@Override
-			protected String getErrorMessage()
-			{
-				return Messages.get().PackageManager_DepStartError;
-			}
-		};
-		job.setUser(false);
-		job.start();
 	}
 
    /**
@@ -614,14 +445,14 @@ public class PackageManager extends ViewPart
          return;
       final PackageInfo packageInfo = (PackageInfo)selection.getFirstElement();
 
-      EditPackageMetadataDialog dlg = new EditPackageMetadataDialog(getSite().getShell(), packageInfo);
+      EditPackageMetadataDialog dlg = new EditPackageMetadataDialog(getWindow().getShell(), packageInfo);
       if (dlg.open() != Window.OK)
          return;
 
-      final NXCSession session = ConsoleSharedData.getSession();
-      new ConsoleJob("Update package metadata", this, Activator.PLUGIN_ID) {
+      final NXCSession session = Registry.getSession();
+      new Job("Update package metadata", this) {
          @Override
-         protected void runInternal(IProgressMonitor monitor) throws Exception
+         protected void run(IProgressMonitor monitor) throws Exception
          {
             session.updatePackageMetadata(packageInfo);
             runInUIThread(new Runnable() {
@@ -639,5 +470,16 @@ public class PackageManager extends ViewPart
             return "Cannot update metadata for package";
          }
       }.start();
+   }
+
+   @Override
+   public boolean isModified()
+   {
+      return false;
+   }
+
+   @Override
+   public void save()
+   {
    }
 }
