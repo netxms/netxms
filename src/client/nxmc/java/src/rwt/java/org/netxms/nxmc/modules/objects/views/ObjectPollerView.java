@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,7 +29,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.client.NXCSession;
 import org.netxms.client.TextOutputListener;
-import org.netxms.client.constants.NodePollType;
+import org.netxms.client.constants.ObjectPollType;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.interfaces.PollingTarget;
 import org.netxms.nxmc.Registry;
@@ -58,7 +58,10 @@ public class ObjectPollerView extends AdHocObjectView
          i18n.tr("Interface Poll"), 
          i18n.tr("Topology Poll"),
          i18n.tr("Configuration Poll"), 
-         i18n.tr("Instance Discovery Poll") 
+         i18n.tr("Instance Discovery Poll"), 
+         i18n.tr("Routing Table Poll"),
+         i18n.tr("Network Discovery Poll"),
+         i18n.tr("Automatic Binding Poll")
       };
    private static final Color COLOR_ERROR = new Color(Display.getCurrent(), 192, 0, 0);
    private static final Color COLOR_WARNING = new Color(Display.getCurrent(), 255, 128, 0);
@@ -67,7 +70,7 @@ public class ObjectPollerView extends AdHocObjectView
 
    private NXCSession session;
    private PollingTarget target;
-   private NodePollType pollType;
+   private ObjectPollType pollType;
    private Display display;
    private StyledText textArea;
    private boolean pollActive = false;
@@ -80,7 +83,7 @@ public class ObjectPollerView extends AdHocObjectView
     * @param object object to poll
     * @param type poll type
     */
-   public ObjectPollerView(AbstractObject object, NodePollType type)
+   public ObjectPollerView(AbstractObject object, ObjectPollType type)
    {
       super(POLL_NAME[type.getValue()], ResourceManager.getImageDescriptor("icons/object-views/poller_view.png"), "ObjectPoll." + type, object.getObjectId(), false);
 
