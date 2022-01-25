@@ -82,7 +82,7 @@ DCItem::DCItem(const DCItem *src, bool shadowCopy) : DCObject(src, shadowCopy)
  *    custom_units_name,perftab_settings,system_tag,snmp_port,snmp_raw_value_type,
  *    instd_method,instd_data,instd_filter,samples,comments,guid,npe_name,
  *    instance_retention_time,grace_period_start,related_object,polling_schedule_type,
- *    retention_type,polling_interval_src,retention_time_src,snmp_version
+ *    retention_type,polling_interval_src,retention_time_src,snmp_version,state_flags
  */
 DCItem::DCItem(DB_HANDLE hdb, DB_RESULT hResult, int row, const shared_ptr<DataCollectionOwner>& owner, bool useStartupDelay) : DCObject(owner)
 {
@@ -136,6 +136,7 @@ DCItem::DCItem(DB_HANDLE hdb, DB_RESULT hResult, int row, const shared_ptr<DataC
    m_pollingIntervalSrc = (m_pollingScheduleType == DC_POLLING_SCHEDULE_CUSTOM) ? DBGetField(hResult, row, 35, nullptr, 0) : nullptr;
    m_retentionTimeSrc = (m_retentionType == DC_RETENTION_CUSTOM) ? DBGetField(hResult, row, 36, nullptr, 0) : nullptr;
    m_snmpVersion = static_cast<SNMP_Version>(DBGetFieldLong(hResult, row, 37));
+   m_stateFlags = DBGetFieldLong(hResult, row, 38);
 
    int effectivePollingInterval = getEffectivePollingInterval();
    m_startTime = (useStartupDelay && (effectivePollingInterval >= 10)) ? time(nullptr) + rand() % (effectivePollingInterval / 2) : 0;
@@ -309,8 +310,8 @@ bool DCItem::saveToDatabase(DB_HANDLE hdb)
       _T("flags"), _T("resource_id"), _T("proxy_node"), _T("base_units"), _T("unit_multiplier"), _T("custom_units_name"),
       _T("perftab_settings"), _T("system_tag"), _T("snmp_port"), _T("snmp_raw_value_type"), _T("instd_method"), _T("instd_data"),
       _T("instd_filter"), _T("samples"), _T("comments"), _T("guid"), _T("npe_name"), _T("instance_retention_time"),
-      _T("grace_period_start"),_T("related_object"), _T("polling_interval_src"), _T("retention_time_src"),
-      _T("polling_schedule_type"), _T("retention_type"), _T("snmp_version"),
+      _T("grace_period_start"), _T("related_object"), _T("polling_interval_src"), _T("retention_time_src"),
+      _T("polling_schedule_type"), _T("retention_type"), _T("snmp_version"), _T("state_flags"),
       nullptr
    };
 
@@ -363,7 +364,8 @@ bool DCItem::saveToDatabase(DB_HANDLE hdb)
    DBBind(hStmt, 36, DB_SQLTYPE_VARCHAR, pt, DB_BIND_STATIC);
    DBBind(hStmt, 37, DB_SQLTYPE_VARCHAR, rt, DB_BIND_STATIC);
    DBBind(hStmt, 38, DB_SQLTYPE_INTEGER, m_snmpVersion);
-   DBBind(hStmt, 39, DB_SQLTYPE_INTEGER, m_id);
+   DBBind(hStmt, 39, DB_SQLTYPE_INTEGER, m_stateFlags);
+   DBBind(hStmt, 40, DB_SQLTYPE_INTEGER, m_id);
 
    bool bResult = DBExecute(hStmt);
 	DBFreeStatement(hStmt);

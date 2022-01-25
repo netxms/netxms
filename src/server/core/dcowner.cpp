@@ -288,7 +288,7 @@ void DataCollectionOwner::loadItemsFromDB(DB_HANDLE hdb)
 				  _T("instd_method,instd_data,instd_filter,samples,comments,guid,npe_name,")
 				  _T("instance_retention_time,grace_period_start,related_object,")
 				  _T("polling_schedule_type,retention_type,polling_interval_src,retention_time_src,")
-				  _T("snmp_version FROM items WHERE node_id=?"));
+				  _T("snmp_version,state_flags FROM items WHERE node_id=?"));
 	if (hStmt != NULL)
 	{
 		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -310,7 +310,7 @@ void DataCollectionOwner::loadItemsFromDB(DB_HANDLE hdb)
               _T("transformation_script,comments,guid,instd_method,instd_data,")
               _T("instd_filter,instance,instance_retention_time,grace_period_start,")
               _T("related_object,polling_schedule_type,retention_type,polling_interval_src,")
-              _T("retention_time_src,snmp_version FROM dc_tables WHERE node_id=?"));
+              _T("retention_time_src,snmp_version,state_flags FROM dc_tables WHERE node_id=?"));
 	if (hStmt != NULL)
 	{
 		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -532,7 +532,7 @@ void DataCollectionOwner::updateInstanceDiscoveryItems(DCObject *dci)
 /**
  * Set status for group of DCIs
  */
-bool DataCollectionOwner::setItemStatus(UINT32 dwNumItems, UINT32 *pdwItemList, int iStatus)
+bool DataCollectionOwner::setItemStatus(UINT32 dwNumItems, UINT32 *pdwItemList, int iStatus, bool userChange)
 {
    bool success = true;
 
@@ -544,7 +544,7 @@ bool DataCollectionOwner::setItemStatus(UINT32 dwNumItems, UINT32 *pdwItemList, 
       {
          if (m_dcObjects.get(j)->getId() == pdwItemList[i])
          {
-            m_dcObjects.get(j)->setStatus(iStatus, true);
+            m_dcObjects.get(j)->setStatus(iStatus, true, userChange);
             break;
          }
       }

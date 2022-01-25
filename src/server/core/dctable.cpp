@@ -153,7 +153,7 @@ DCTable::DCTable(UINT32 id, const TCHAR *name, int source, const TCHAR *pollingI
  *    transformation_script,comments,guid,instd_method,instd_data,
  *    instd_filter,instance,instance_retention_time,grace_period_start,
  *    related_object,polling_schedule_type,retention_type,polling_interval_src,
- *    retention_time_src,snmp_version
+ *    retention_time_src,snmp_version,state_flags
  */
 DCTable::DCTable(DB_HANDLE hdb, DB_RESULT hResult, int row, const shared_ptr<DataCollectionOwner>& owner, bool useStartupDelay) : DCObject(owner)
 {
@@ -193,6 +193,7 @@ DCTable::DCTable(DB_HANDLE hdb, DB_RESULT hResult, int row, const shared_ptr<Dat
    m_pollingIntervalSrc = (m_pollingScheduleType == DC_POLLING_SCHEDULE_CUSTOM) ? DBGetField(hResult, row, 27, nullptr, 0) : nullptr;
    m_retentionTimeSrc = (m_retentionType == DC_RETENTION_CUSTOM) ? DBGetField(hResult, row, 28, nullptr, 0) : nullptr;
    m_snmpVersion = static_cast<SNMP_Version>(DBGetFieldLong(hResult, row, 29));
+   m_stateFlags = DBGetFieldLong(hResult, row, 30);
 
    int effectivePollingInterval = getEffectivePollingInterval();
    m_startTime = (useStartupDelay && (effectivePollingInterval >= 10)) ? time(nullptr) + rand() % (effectivePollingInterval / 2) : 0;
@@ -569,7 +570,7 @@ bool DCTable::saveToDatabase(DB_HANDLE hdb)
       _T("proxy_node"), _T("perftab_settings"), _T("transformation_script"), _T("comments"), _T("guid"),
       _T("instd_method"), _T("instd_data"), _T("instd_filter"), _T("instance"), _T("instance_retention_time"),
       _T("grace_period_start"), _T("related_object"), _T("polling_interval_src"), _T("retention_time_src"),
-      _T("polling_schedule_type"), _T("retention_type"), _T("snmp_version"),
+      _T("polling_schedule_type"), _T("retention_type"), _T("snmp_version"), _T("state_flags"),
       nullptr
    };
 
@@ -614,7 +615,8 @@ bool DCTable::saveToDatabase(DB_HANDLE hdb)
    DBBind(hStmt, 28, DB_SQLTYPE_VARCHAR, pt, DB_BIND_STATIC);
    DBBind(hStmt, 29, DB_SQLTYPE_VARCHAR, rt, DB_BIND_STATIC);
    DBBind(hStmt, 30, DB_SQLTYPE_INTEGER, m_snmpVersion);
-   DBBind(hStmt, 31, DB_SQLTYPE_INTEGER, m_id);
+   DBBind(hStmt, 31, DB_SQLTYPE_INTEGER, m_stateFlags);
+   DBBind(hStmt, 32, DB_SQLTYPE_INTEGER, m_id);
 
 	bool result = DBExecute(hStmt);
 	DBFreeStatement(hStmt);

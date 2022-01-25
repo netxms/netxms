@@ -1683,7 +1683,7 @@ public:
    bool addDCObject(DCObject *object, bool alreadyLocked = false, bool notify = true);
    bool updateDCObject(uint32_t dcObjectId, const NXCPMessage& msg, uint32_t *numMaps, uint32_t **mapIndex, uint32_t **mapId, uint32_t userId);
    bool deleteDCObject(uint32_t dcObjectId, bool needLock, uint32_t userId);
-   bool setItemStatus(UINT32 dwNumItems, UINT32 *pdwItemList, int iStatus);
+   bool setItemStatus(UINT32 dwNumItems, UINT32 *pdwItemList, int iStatus, bool userChange = false);
    int updateMultipleDCObjects(const NXCPMessage& request, uint32_t userId);
    shared_ptr<DCObject> getDCObjectById(uint32_t itemId, uint32_t userId, bool lock = true) const;
    shared_ptr<DCObject> getDCObjectByGUID(const uuid& guid, uint32_t userId, bool lock = true) const;

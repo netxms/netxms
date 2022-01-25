@@ -928,6 +928,11 @@ enum HistoricalDataType
 #define DCF_MULTIPLIERS_MASK         ((uint32_t)0x30000)
 
 /**
+ * DCI state flags
+ */
+#define DCO_STATE_DISABLED_BY_USER   ((uint32_t)0x00001)
+
+/**
  * Get cluster aggregation function from DCI flags
  */
 #define DCF_GET_AGGREGATION_FUNCTION(flags) (((flags) & DCF_AGGREGATE_FUNCTION_MASK) >> 4)

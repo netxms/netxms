@@ -281,9 +281,10 @@ protected:
    BYTE m_status;                // Item status: active, disabled or not supported
    BYTE m_busy;                  // 1 when item is queued for polling, 0 if not
 	BYTE m_scheduledForDeletion;  // 1 when item is scheduled for deletion, 0 if not
-	uint32_t m_flags;
-	uint32_t m_dwTemplateId;         // Related template's id
-	uint32_t m_dwTemplateItemId;     // Related template item's id
+   uint32_t m_flags;             // user flags
+   uint32_t m_stateFlags;        // runtime flags
+   uint32_t m_dwTemplateId;      // Related template's id
+   uint32_t m_dwTemplateItemId;  // Related template item's id
    Mutex m_mutex;
    StringList *m_schedules;
    time_t m_tLastCheck;          // Last schedule checking time
@@ -393,12 +394,13 @@ public:
    bool hasValue();
    bool hasAccess(uint32_t userId);
    uint32_t getRelatedObject() const { return m_relatedObject; }
+   bool isDisabledByUser() { return (m_stateFlags & DCO_STATE_DISABLED_BY_USER) ? true : false; }
 
 	bool matchClusterResource();
    bool isReadyForPolling(time_t currTime);
 	bool isScheduledForDeletion() const { return m_scheduledForDeletion ? true : false; }
    void setLastPollTime(time_t lastPoll) { m_lastPoll = lastPoll; }
-   void setStatus(int status, bool generateEvent);
+   void setStatus(int status, bool generateEvent, bool userChange = false);
    void setBusyFlag() { m_busy = 1; }
    void clearBusyFlag() { m_busy = 0; }
    void setTemplateId(UINT32 dwTemplateId, UINT32 dwItemId) { m_dwTemplateId = dwTemplateId; m_dwTemplateItemId = dwItemId; }

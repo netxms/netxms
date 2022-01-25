@@ -87,6 +87,7 @@ public abstract class DataCollectionObject
    protected DataOrigin origin;
 	protected int status;
 	protected long flags;
+   protected long stateFlags;
 	protected String transformationScript;
 	protected String name;
 	protected String description;
@@ -126,6 +127,7 @@ public abstract class DataCollectionObject
       origin = DataOrigin.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_DCI_SOURCE_TYPE));
 		status = msg.getFieldAsInt32(NXCPCodes.VID_DCI_STATUS);
 		flags = msg.getFieldAsInt32(NXCPCodes.VID_FLAGS);
+      stateFlags = msg.getFieldAsInt32(NXCPCodes.VID_STATE_FLAGS);
 		transformationScript = msg.getFieldAsString(NXCPCodes.VID_TRANSFORMATION_SCRIPT);
 		name = msg.getFieldAsString(NXCPCodes.VID_NAME);
 		description = msg.getFieldAsString(NXCPCodes.VID_DESCRIPTION);
@@ -675,6 +677,14 @@ public abstract class DataCollectionObject
 	public void setFlags(int flags)
 	{
 		this.flags = flags;
+	}
+
+   /**
+    * @return the stateFlags
+    */
+	public long getStateFlags()
+	{
+		return stateFlags;
 	}
 
 	/**

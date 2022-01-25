@@ -86,6 +86,7 @@ DCObject::DCObject(const shared_ptr<DataCollectionOwner>& owner) : m_owner(owner
    m_schedules = nullptr;
    m_tLastCheck = 0;
 	m_flags = 0;
+   m_stateFlags = 0;
    m_dwErrorCount = 0;
 	m_dwResourceId = 0;
 	m_sourceNode = 0;
@@ -134,6 +135,7 @@ DCObject::DCObject(const DCObject *src, bool shadowCopy) :
    m_tLastCheck = shadowCopy ? src->m_tLastCheck : 0;
    m_dwErrorCount = shadowCopy ? src->m_dwErrorCount : 0;
 	m_flags = src->m_flags;
+   m_stateFlags = src->m_stateFlags;
 	m_dwResourceId = src->m_dwResourceId;
 	m_sourceNode = src->m_sourceNode;
 	m_pszPerfTabSettings = MemCopyString(src->m_pszPerfTabSettings);
@@ -184,6 +186,7 @@ DCObject::DCObject(UINT32 id, const TCHAR *name, int source, const TCHAR *pollin
    m_scheduledForDeletion = 0;
    m_lastPoll = 0;
    m_flags = 0;
+   m_stateFlags = 0;
    m_schedules = nullptr;
    m_tLastCheck = 0;
    m_dwErrorCount = 0;
@@ -526,26 +529,38 @@ void DCObject::changeBinding(UINT32 newId, shared_ptr<DataCollectionOwner> newOw
 /**
  * Set DCI status
  */
-void DCObject::setStatus(int status, bool generateEvent)
+void DCObject::setStatus(int status, bool generateEvent, bool userChange)
 {
-   auto owner = m_owner.lock();
-   if ((owner != nullptr) && (m_status != (BYTE)status))
+   if ((m_status != (BYTE)status) && (userChange || !isDisabledByUser()))
    {
-      NotifyClientsOnDCIStatusChange(*owner, getId(), status);
-      if (generateEvent && IsEventSource(owner->getObjectClass()))
+      if (userChange)
       {
-         static UINT32 eventCode[3] = { EVENT_DCI_ACTIVE, EVENT_DCI_DISABLED, EVENT_DCI_UNSUPPORTED };
-         static const TCHAR *originName[11] =
+         if (status == ITEM_STATUS_DISABLED)
+            m_stateFlags |= DCO_STATE_DISABLED_BY_USER;
+         else
+            m_stateFlags &= ~DCO_STATE_DISABLED_BY_USER;
+      }
+
+      auto owner = m_owner.lock();
+      if ((owner != nullptr))
+      {
+         NotifyClientsOnDCIStatusChange(*owner, getId(), status);
+         if (generateEvent && IsEventSource(owner->getObjectClass()))
+         {
+            static UINT32 eventCode[3] = { EVENT_DCI_ACTIVE, EVENT_DCI_DISABLED, EVENT_DCI_UNSUPPORTED };
+            static const TCHAR *originName[11] =
             {
                _T("Internal"), _T("NetXMS Agent"), _T("SNMP"),
                _T("CheckPoint SNMP"), _T("Push"), _T("WinPerf"),
                _T("iLO"), _T("Script"), _T("SSH"), _T("MQTT"),
                _T("Device Driver")
             };
-         PostSystemEvent(eventCode[status], owner->getId(), "dssds", m_id, m_name.cstr(), m_description.cstr(), m_source, originName[m_source]);
+            PostSystemEvent(eventCode[status], owner->getId(), "dssds", m_id, m_name.cstr(), m_description.cstr(), m_source, originName[m_source]);
+         }
       }
+
+      m_status = (BYTE)status;
    }
-   m_status = (BYTE)status;
 }
 
 /**
@@ -790,6 +805,7 @@ void DCObject::createMessage(NXCPMessage *pMsg)
    pMsg->setField(VID_DESCRIPTION, m_description);
    pMsg->setField(VID_TRANSFORMATION_SCRIPT, CHECK_NULL_EX(m_transformationScriptSource));
    pMsg->setField(VID_FLAGS, m_flags);
+   pMsg->setField(VID_STATE_FLAGS, m_stateFlags);
    pMsg->setField(VID_SYSTEM_TAG, m_systemTag);
    pMsg->setField(VID_POLLING_SCHEDULE_TYPE, static_cast<INT16>(m_pollingScheduleType));
    pMsg->setField(VID_POLLING_INTERVAL, m_pollingIntervalSrc);
@@ -836,7 +852,7 @@ void DCObject::updateFromMessage(const NXCPMessage& msg)
    m_systemTag = msg.getFieldAsSharedString(VID_SYSTEM_TAG, MAX_DB_STRING);
 	m_flags = msg.getFieldAsUInt32(VID_FLAGS);
    m_source = (BYTE)msg.getFieldAsUInt16(VID_DCI_SOURCE_TYPE);
-   setStatus(msg.getFieldAsUInt16(VID_DCI_STATUS), true);
+   setStatus(msg.getFieldAsUInt16(VID_DCI_STATUS), true, true);
 	m_dwResourceId = msg.getFieldAsUInt32(VID_RESOURCE_ID);
 	m_sourceNode = msg.getFieldAsUInt32(VID_AGENT_PROXY);
    m_snmpPort = msg.getFieldAsUInt16(VID_SNMP_PORT);

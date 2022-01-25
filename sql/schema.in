@@ -788,6 +788,7 @@ CREATE TABLE items
   name varchar(1023) null,
   description varchar(255) null,
   flags integer not null,
+  state_flags integer not null,
   source integer not null,  // 0 for internal or 1 for native agent or 2 for SNMP
   snmp_port integer not null,
   snmp_version integer not null,
@@ -866,6 +867,7 @@ CREATE TABLE dc_tables
   name varchar(1023) null,
   description varchar(255) null,
   flags integer not null,
+  state_flags integer not null,
   source integer not null,  // 0 for internal or 1 for native agent or 2 for SNMP
   snmp_port integer not null,
   snmp_version integer not null,

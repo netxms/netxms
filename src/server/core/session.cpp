@@ -4093,7 +4093,7 @@ void ClientSession::changeDCIStatus(const NXCPMessage& request)
             dwNumItems = request.getFieldAsUInt32(VID_NUM_ITEMS);
             pdwItemList = MemAllocArray<UINT32>(dwNumItems);
             request.getFieldAsInt32Array(VID_ITEM_LIST, dwNumItems, pdwItemList);
-            if (static_cast<DataCollectionOwner&>(*object).setItemStatus(dwNumItems, pdwItemList, iStatus))
+            if (static_cast<DataCollectionOwner&>(*object).setItemStatus(dwNumItems, pdwItemList, iStatus, true))
                response.setField(VID_RCC, RCC_SUCCESS);
             else
                response.setField(VID_RCC, RCC_INVALID_DCI_ID);
