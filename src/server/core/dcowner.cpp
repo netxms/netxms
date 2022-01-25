@@ -319,7 +319,7 @@ void DataCollectionOwner::loadItemsFromDB(DB_HANDLE hdb)
 		{
 			int count = DBGetNumRows(hResult);
 			for(int i = 0; i < count; i++)
-				m_dcObjects.add(new DCTable(hdb, hResult, i, self(), useStartupDelay));
+				m_dcObjects.add(make_shared<DCTable>(hdb, hResult, i, self(), useStartupDelay));
 			DBFreeResult(hResult);
 		}
 		DBFreeStatement(hStmt);
