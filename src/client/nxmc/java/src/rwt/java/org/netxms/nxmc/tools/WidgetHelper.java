@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -1235,20 +1235,19 @@ public class WidgetHelper
     * Helper method to set file filter extensions (compatibility layer for RAP).
     *
     * @param fd file dialog to set extensions for
-    * @param extensions extension array
+    * @param extensions file extensions
     */
-   public static void setFileFilterNames(FileDialog fd, String[] extensions)
+   public static void setFileFilterExtensions(FileDialog fd, String[] extensions)
    {
    }
-   
 
    /**
     * Helper method to set file filter extension names (compatibility layer for RAP).
     *
     * @param fd file dialog to set extensions for
-    * @param extensions extension array
+    * @param names file extension names
     */
-   public static void setFileFilterNames(FileDialog fd, String[] extensions)
+   public static void setFileFilterNames(FileDialog fd, String[] names)
    {
    }   
 }
