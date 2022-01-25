@@ -798,7 +798,7 @@ bool NXCORE_EXPORTABLE ConfigReadStrUTF8(const TCHAR *variable, char *buffer, si
    RWLockUnlock(s_configCacheLock);
    if (value != nullptr)
    {
-      wchar_to_utf8(value, -1, buffer, size);
+      tchar_to_utf8(value, -1, buffer, size);
       return true;
    }
 
