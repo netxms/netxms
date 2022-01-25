@@ -531,7 +531,7 @@ void DCObject::changeBinding(UINT32 newId, shared_ptr<DataCollectionOwner> newOw
  */
 void DCObject::setStatus(int status, bool generateEvent, bool userChange)
 {
-   if ((m_status != (BYTE)status) && (userChange || !isDisabledByUser()))
+   if ((m_status != static_cast<BYTE>(status)) && (userChange || !isDisabledByUser()))
    {
       if (userChange)
       {
@@ -542,16 +542,16 @@ void DCObject::setStatus(int status, bool generateEvent, bool userChange)
       }
 
       auto owner = m_owner.lock();
-      if ((owner != nullptr))
+      if (owner != nullptr)
       {
          NotifyClientsOnDCIStatusChange(*owner, getId(), status);
          if (generateEvent && IsEventSource(owner->getObjectClass()))
          {
-            static UINT32 eventCode[3] = { EVENT_DCI_ACTIVE, EVENT_DCI_DISABLED, EVENT_DCI_UNSUPPORTED };
+            static uint32_t eventCode[3] = { EVENT_DCI_ACTIVE, EVENT_DCI_DISABLED, EVENT_DCI_UNSUPPORTED };
             static const TCHAR *originName[11] =
             {
                _T("Internal"), _T("NetXMS Agent"), _T("SNMP"),
-               _T("CheckPoint SNMP"), _T("Push"), _T("WinPerf"),
+               _T("Web Service"), _T("Push"), _T("WinPerf"),
                _T("iLO"), _T("Script"), _T("SSH"), _T("MQTT"),
                _T("Device Driver")
             };
@@ -559,7 +559,7 @@ void DCObject::setStatus(int status, bool generateEvent, bool userChange)
          }
       }
 
-      m_status = (BYTE)status;
+      m_status = static_cast<BYTE>(status);
    }
 }
 

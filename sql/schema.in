@@ -2012,6 +2012,8 @@ CREATE TABLE business_service_checks
 (
   id integer not null,
   service_id integer not null,  
+  prototype_service_id integer not null,
+  prototype_check_id integer not null,
   type integer not null, // 2 - threshold, 1 - script, 0 - object
   description varchar(1023),
   related_object integer not null,

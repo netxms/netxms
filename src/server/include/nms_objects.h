@@ -789,7 +789,8 @@ struct NXCORE_EXPORTABLE NewNodeData
 #define MODIFY_ICMP_POLL_SETTINGS   0x010000
 #define MODIFY_DC_TARGET            0x020000
 #define MODIFY_BIZSVC_PROPERTIES    0x040000
-#define MODIFY_POLL_TIMES           0x080000
+#define MODIFY_BIZSVC_CHECKS        0x080000
+#define MODIFY_POLL_TIMES           0x100000
 #define MODIFY_ALL                  0xFFFFFF
 
 /**
@@ -1579,6 +1580,7 @@ public:
 
    AutoBindDecision isApplicable(NXSL_VM **cachedFilterVM, const shared_ptr<NetObj>& object, const shared_ptr<DCObject>& dci = shared_ptr<DCObject>(), int filterNumber = 0) const;
 
+   uint32_t getAutoBindFlags() const { return m_autoBindFlags; }
    bool isAutoBindEnabled(int filterNumber = 0) const { return (filterNumber >= 0) && (filterNumber < MAX_AUTOBIND_TARGET_FILTERS) && (m_autoBindFlags & (AAF_AUTO_APPLY_1 << filterNumber * 2)); }
    bool isAutoUnbindEnabled(int filterNumber = 0) const { return isAutoBindEnabled(filterNumber) && (m_autoBindFlags & (AAF_AUTO_REMOVE_1 << filterNumber * 2)); }
    const TCHAR *getAutoBindFilterSource(int filterNumber = 0) const { return (filterNumber >= 0) && (filterNumber < MAX_AUTOBIND_TARGET_FILTERS) ? m_autoBindFilterSources[filterNumber] : nullptr; }
@@ -4286,6 +4288,8 @@ class NXCORE_EXPORTABLE BusinessServiceCheck
 protected:
    uint32_t m_id;
    uint32_t m_serviceId;
+   uint32_t m_prototypeServiceId;
+   uint32_t m_prototypeCheckId;
    SharedString m_description;
    BusinessServiceCheckType m_type;
    uint32_t m_relatedObject;
@@ -4308,11 +4312,13 @@ protected:
 public:
    BusinessServiceCheck(uint32_t serviceId);
    BusinessServiceCheck(uint32_t serviceId, BusinessServiceCheckType type, uint32_t relatedObject, uint32_t relatedDCI, const TCHAR* description, int threshhold);
-   BusinessServiceCheck(uint32_t serviceId, const BusinessServiceCheck& check);
+   BusinessServiceCheck(uint32_t serviceId, const BusinessServiceCheck& prototype);
    BusinessServiceCheck(DB_RESULT hResult, int row);
    virtual ~BusinessServiceCheck();
 
    uint32_t getId() const { return m_id; }
+   uint32_t getPrototypeServiceId() const { return m_prototypeServiceId; }
+   uint32_t getPrototypeCheckId() const { return m_prototypeCheckId; }
    BusinessServiceCheckType getType() const { return m_type; }
    int getState() const { return m_state; }
    const TCHAR *getFailureReason() const { return m_reason; }
@@ -4327,6 +4333,8 @@ public:
    void fillMessage(NXCPMessage *msg, uint32_t baseId) const;
    bool saveToDatabase() const;
    bool deleteFromDatabase();
+
+   void updateFromPrototype(const BusinessServiceCheck& prototype);
 };
 
 /**
@@ -4368,6 +4376,9 @@ protected:
    virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg) override;
    virtual void fillMessageInternal(NXCPMessage *msg, UINT32 userId) override;
 
+   virtual void onCheckModify(const shared_ptr<BusinessServiceCheck>& check);
+   virtual void onCheckDelete(uint32_t checkId);
+
    void checksLock() const { m_checkMutex.lock(); }
    void checksUnlock() const { m_checkMutex.unlock(); }
 
@@ -4380,12 +4391,67 @@ public:
    BaseBusinessService();
    virtual ~BaseBusinessService();
 
+   shared_ptr<BaseBusinessService> self() { return static_pointer_cast<BaseBusinessService>(NObject::self()); }
+   shared_ptr<const BaseBusinessService> self() const { return static_pointer_cast<const BaseBusinessService>(NObject::self()); }
+
    virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
 
    unique_ptr<SharedObjectArray<BusinessServiceCheck>> getChecks() const;
+   uint32_t getObjectStatusThreshhold() const { return m_objectStatusThreshhold; }
+   uint32_t getDciStatusThreshhold() const { return m_dciStatusThreshhold; }
+
    uint32_t modifyCheckFromMessage(const NXCPMessage& request);
    uint32_t deleteCheck(uint32_t checkId);
+};
+
+class BusinessService;
+
+/**
+ * Business service prototype
+ */
+class NXCORE_EXPORTABLE BusinessServicePrototype : public BaseBusinessService, public Pollable
+{
+   typedef BaseBusinessService super;
+
+protected:
+   uint32_t m_instanceDiscoveryMethod;
+   uint32_t m_instanceSource;
+   TCHAR* m_instanceDiscoveryData;
+   TCHAR* m_instanceDiscoveryFilter;
+   NXSL_Program *m_compiledInstanceDiscoveryFilter;
+
+   virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg) override;
+   virtual void fillMessageInternal(NXCPMessage *msg, UINT32 userId) override;
+   virtual uint32_t modifyFromMessageInternalStage2(const NXCPMessage& msg) override;
+
+   virtual void instanceDiscoveryPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) override;
+
+   virtual void onCheckModify(const shared_ptr<BusinessServiceCheck>& check) override;
+   virtual void onCheckDelete(uint32_t checkId) override;
+
+   void compileInstanceDiscoveryFilterScript();
+   unique_ptr<StringMap> getInstancesFromAgentList();
+   unique_ptr<StringMap> getInstancesFromAgentTable();
+   unique_ptr<StringMap> getInstancesFromScript();
+   unique_ptr<StringMap> getInstances();
+   unique_ptr<SharedObjectArray<BusinessService>> getServices();
+   void processRelatedServices(std::function<void (BusinessServicePrototype*, BusinessService*)> callback);
+
+public:
+   BusinessServicePrototype();
+   BusinessServicePrototype(const TCHAR *name, uint32_t method);
+   virtual ~BusinessServicePrototype();
+
+   shared_ptr<BusinessServicePrototype> self() { return static_pointer_cast<BusinessServicePrototype>(NObject::self()); }
+   shared_ptr<const BusinessServicePrototype> self() const { return static_pointer_cast<const BusinessServicePrototype>(NObject::self()); }
+
+   virtual int getObjectClass() const override { return OBJECT_BUSINESS_SERVICE_PROTOTYPE; }
+
+   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
+   virtual bool saveToDatabase(DB_HANDLE hdb) override;
+
+   virtual bool lockForInstanceDiscoveryPoll() override;
 };
 
 /**
@@ -4435,46 +4501,11 @@ public:
    uint32_t getPrototypeId() const { return m_prototypeId; }
    const TCHAR* getInstance() const { return m_instance; }
 
+   void updateFromPrototype(const BusinessServicePrototype& prototype);
+   void updateCheckFromPrototype(const BusinessServiceCheck& prototype);
+   void deleteCheckFromPrototype(uint32_t prototypeCheckId);
+
    void addChildTicket(const BusinessServiceTicketData& data);
-};
-
-/**
- * Business service prototype
- */
-class NXCORE_EXPORTABLE BusinessServicePrototype : public BaseBusinessService, public Pollable
-{
-   typedef BaseBusinessService super;
-
-protected:
-   uint32_t m_instanceDiscoveryMethod;
-   uint32_t m_instanceSource;
-   TCHAR* m_instanceDiscoveryData;
-   TCHAR* m_instanceDiscoveryFilter;
-   NXSL_Program *m_compiledInstanceDiscoveryFilter;
-
-   virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg) override;
-   virtual void fillMessageInternal(NXCPMessage *msg, UINT32 userId) override;
-
-   virtual void instanceDiscoveryPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) override;
-
-   void compileInstanceDiscoveryFilterScript();
-   unique_ptr<StringMap> getInstancesFromAgentList();
-   unique_ptr<StringMap> getInstancesFromAgentTable();
-   unique_ptr<StringMap> getInstancesFromScript();
-   unique_ptr<StringMap> getInstances();
-   unique_ptr<SharedObjectArray<BusinessService>> getServices();
-
-public:
-   BusinessServicePrototype();
-   BusinessServicePrototype(const TCHAR *name, uint32_t method);
-   virtual ~BusinessServicePrototype();
-
-   virtual int getObjectClass() const override { return OBJECT_BUSINESS_SERVICE_PROTOTYPE; }
-
-   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
-   virtual bool saveToDatabase(DB_HANDLE hdb) override;
-
-   virtual bool lockForInstanceDiscoveryPoll() override;
 };
 
 /**

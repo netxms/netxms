@@ -24,6 +24,23 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 40.96 to 40.97
+ */
+static bool H_UpgradeFromV96()
+{
+   static const TCHAR* batch =
+      _T("ALTER TABLE business_service_checks ADD prototype_service_id integer\n")
+      _T("ALTER TABLE business_service_checks ADD prototype_check_id integer\n")
+      _T("UPDATE business_service_checks SET prototype_service_id=service_id,prototype_check_id=0\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("business_service_checks"), _T("prototype_service_id")));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("business_service_checks"), _T("prototype_check_id")));
+   CHK_EXEC(SetMinorSchemaVersion(97));
+   return true;
+}
+
+/**
  * Upgrade from 40.95 to 40.96
  */
 static bool H_UpgradeFromV95()
@@ -3053,6 +3070,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 96, 40, 97, H_UpgradeFromV96 },
    { 95, 40, 96, H_UpgradeFromV95 },
    { 94, 40, 95, H_UpgradeFromV94 },
    { 93, 40, 94, H_UpgradeFromV93 },

@@ -45,7 +45,7 @@ import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
 import org.netxms.client.businessservices.BusinessServiceCheck;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.client.objects.BusinessService;
+import org.netxms.client.objects.BaseBusinessService;
 import org.netxms.client.objects.interfaces.NodeItemPair;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
@@ -459,7 +459,7 @@ public class BusinessServiceChecksView extends ObjectView
    @Override
    public boolean isValidForContext(Object context)
    {
-      return (context != null) && (context instanceof BusinessService);
+      return (context != null) && (context instanceof BaseBusinessService);
    }
 
    /**

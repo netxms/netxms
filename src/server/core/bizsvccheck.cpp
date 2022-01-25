@@ -30,6 +30,9 @@
 BusinessServiceCheck::BusinessServiceCheck(uint32_t serviceId) : m_description(_T("Unnamed")), m_mutex(MutexType::FAST)
 {
    m_id = CreateUniqueId(IDG_BUSINESS_SERVICE_CHECK);
+   m_serviceId = serviceId;
+   m_prototypeServiceId = 0;
+   m_prototypeCheckId = 0;
    m_type = BusinessServiceCheckType::OBJECT;
    m_state = STATUS_NORMAL;
    m_script = nullptr;
@@ -38,7 +41,6 @@ BusinessServiceCheck::BusinessServiceCheck(uint32_t serviceId) : m_description(_
    m_relatedObject = 0;
    m_relatedDCI = 0;
    m_currentTicket = 0;
-   m_serviceId = serviceId;
    m_statusThreshold = 0;
 }
 
@@ -49,6 +51,9 @@ BusinessServiceCheck::BusinessServiceCheck(uint32_t serviceId, BusinessServiceCh
          m_description((description != nullptr) ? description : _T("Unnamed")), m_mutex(MutexType::FAST)
 {
    m_id = CreateUniqueId(IDG_BUSINESS_SERVICE_CHECK);
+   m_serviceId = serviceId;
+   m_prototypeServiceId = 0;
+   m_prototypeCheckId = 0;
    m_type = type;
    m_state = STATUS_NORMAL;
    m_script = nullptr;
@@ -57,45 +62,49 @@ BusinessServiceCheck::BusinessServiceCheck(uint32_t serviceId, BusinessServiceCh
    m_relatedObject = relatedObject;
    m_relatedDCI = relatedDCI;
    m_currentTicket = 0;
-   m_serviceId = serviceId;
    m_statusThreshold = threshhold;
 }
 
 /**
- * Create copy of existing business service check
+ * Create business service check from prototype
  */
-BusinessServiceCheck::BusinessServiceCheck(uint32_t serviceId, const BusinessServiceCheck& check) : m_description(check.getDescription()), m_mutex(MutexType::FAST)
+BusinessServiceCheck::BusinessServiceCheck(uint32_t serviceId, const BusinessServiceCheck& prototype) : m_description(prototype.m_description), m_mutex(MutexType::FAST)
 {
    m_id = CreateUniqueId(IDG_BUSINESS_SERVICE_CHECK);
-	m_type = check.m_type;
+   m_serviceId = serviceId;
+   m_prototypeServiceId = prototype.m_serviceId;
+   m_prototypeCheckId = prototype.m_id;
+	m_type = prototype.m_type;
    m_state = STATUS_NORMAL;
-	m_script = MemCopyString(check.m_script);
+	m_script = MemCopyString(prototype.m_script);
 	m_compiledScript = nullptr;
 	m_reason[0] = 0;
-	m_relatedObject = check.m_relatedObject;
-	m_relatedDCI = check.m_relatedDCI;
+	m_relatedObject = prototype.m_relatedObject;
+	m_relatedDCI = prototype.m_relatedDCI;
 	m_currentTicket = 0;
-	m_serviceId = serviceId;
-	m_statusThreshold = check.m_statusThreshold;
+	m_statusThreshold = prototype.m_statusThreshold;
+   compileScript();
 }
 
 /**
  * Create business service check from database
- * Expected field order: id,service_id,type,description,related_object,related_dci,status_threshold,content,status,current_ticket,failure_reason
+ * Expected field order: id,service_id,prototype_service_id,prototype_check_id,type,description,related_object,related_dci,status_threshold,content,status,current_ticket,failure_reason
  */
 BusinessServiceCheck::BusinessServiceCheck(DB_RESULT hResult, int row) : m_mutex(MutexType::FAST)
 {
    m_id = DBGetFieldULong(hResult, row, 0);
    m_serviceId = DBGetFieldULong(hResult, row, 1);
-   m_type = BusinessServiceCheckTypeFromInt(DBGetFieldLong(hResult, row, 2));
-   m_description = DBGetFieldAsSharedString(hResult, row, 3);
-   m_relatedObject = DBGetFieldULong(hResult, row, 4);
-   m_relatedDCI = DBGetFieldULong(hResult, row, 5);
-   m_statusThreshold = DBGetFieldULong(hResult, row, 6);
-   m_script = DBGetField(hResult, row, 7, nullptr, 0);
-   m_state = DBGetFieldULong(hResult, row, 8);
-   m_currentTicket = DBGetFieldULong(hResult, row, 9);
-   DBGetField(hResult, row, 10, m_reason, 256);
+   m_prototypeServiceId = DBGetFieldULong(hResult, row, 2);
+   m_prototypeCheckId = DBGetFieldULong(hResult, row, 3);
+   m_type = BusinessServiceCheckTypeFromInt(DBGetFieldLong(hResult, row, 4));
+   m_description = DBGetFieldAsSharedString(hResult, row, 5);
+   m_relatedObject = DBGetFieldULong(hResult, row, 6);
+   m_relatedDCI = DBGetFieldULong(hResult, row, 7);
+   m_statusThreshold = DBGetFieldULong(hResult, row, 8);
+   m_script = DBGetField(hResult, row, 9, nullptr, 0);
+   m_state = DBGetFieldULong(hResult, row, 10);
+   m_currentTicket = DBGetFieldULong(hResult, row, 11);
+   DBGetField(hResult, row, 12, m_reason, 256);
    m_compiledScript = nullptr;
    compileScript();
 }
@@ -107,6 +116,20 @@ BusinessServiceCheck::~BusinessServiceCheck()
 {
 	MemFree(m_script);
 	delete m_compiledScript;
+}
+
+/**
+ * Update check from prototype
+ */
+void BusinessServiceCheck::updateFromPrototype(const BusinessServiceCheck& prototype)
+{
+   m_type = prototype.m_type;
+   MemFree(m_script);
+   m_script = MemCopyString(prototype.m_script);
+   compileScript();
+   m_relatedObject = prototype.m_relatedObject;
+   m_relatedDCI = prototype.m_relatedDCI;
+   m_statusThreshold = prototype.m_statusThreshold;
 }
 
 /**
@@ -177,6 +200,8 @@ void BusinessServiceCheck::fillMessage(NXCPMessage *msg, uint32_t baseId) const
    msg->setField(baseId + 6, m_description);
    msg->setField(baseId + 7, m_script);
    msg->setField(baseId + 8, m_state);
+   msg->setField(baseId + 9, m_prototypeServiceId);
+   msg->setField(baseId + 10, m_prototypeCheckId);
 	unlock();
 }
 
@@ -188,8 +213,8 @@ bool BusinessServiceCheck::saveToDatabase() const
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
    static const TCHAR *columns[] = {
-         _T("service_id") ,_T("type"), _T("description"), _T("related_object"), _T("related_dci"), _T("status_threshold"),
-         _T("content"), _T("status"), _T("current_ticket"), _T("failure_reason"), nullptr
+         _T("service_id"), _T("prototype_service_id"), _T("prototype_check_id"), _T("type"), _T("description"), _T("related_object"),
+         _T("related_dci"), _T("status_threshold"), _T("content"), _T("status"), _T("current_ticket"), _T("failure_reason"), nullptr
    };
    DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("business_service_checks"), _T("id"), m_id, columns);
 	bool success = false;
@@ -197,16 +222,18 @@ bool BusinessServiceCheck::saveToDatabase() const
 	{
 		lock();
 		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_serviceId);
-		DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_type));
-		DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_description, DB_BIND_STATIC);
-		DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, m_relatedObject);
-		DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, m_relatedDCI);
-		DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, m_statusThreshold);
-		DBBind(hStmt, 7, DB_SQLTYPE_TEXT, m_script, DB_BIND_STATIC);
-      DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, m_state);
-		DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, m_currentTicket);
-      DBBind(hStmt, 10, DB_SQLTYPE_VARCHAR, m_reason, DB_BIND_STATIC);
-		DBBind(hStmt, 11, DB_SQLTYPE_INTEGER, m_id);
+      DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_prototypeServiceId);
+      DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_prototypeCheckId);
+		DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_type));
+		DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, m_description, DB_BIND_STATIC);
+		DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, m_relatedObject);
+		DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, m_relatedDCI);
+		DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, m_statusThreshold);
+		DBBind(hStmt, 9, DB_SQLTYPE_TEXT, m_script, DB_BIND_STATIC);
+      DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, m_state);
+		DBBind(hStmt, 11, DB_SQLTYPE_INTEGER, m_currentTicket);
+      DBBind(hStmt, 12, DB_SQLTYPE_VARCHAR, m_reason, DB_BIND_STATIC);
+		DBBind(hStmt, 13, DB_SQLTYPE_INTEGER, m_id);
 		success = DBExecute(hStmt);
       unlock();
 		DBFreeStatement(hStmt);
@@ -303,13 +330,13 @@ int BusinessServiceCheck::execute(BusinessServiceTicketData* ticket)
 								}
 							}
 						}
-						delete globals;
 					}
 					else
 					{
 					   ReportScriptError(SCRIPT_CONTEXT_BIZSVC, FindObjectById(m_serviceId).get(), 0, vm->getErrorText(), _T("BusinessServiceCheck::%u"), m_id);
 						m_state = STATUS_NORMAL;
 					}
+               delete globals;
 					delete vm;
 				}
 				else

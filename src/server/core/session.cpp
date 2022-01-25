@@ -15791,7 +15791,7 @@ void ClientSession::getBusinessServiceCheckList(const NXCPMessage& request)
             for (const shared_ptr<BusinessServiceCheck>& check : *checks)
             {
                check->fillMessage(&response, fieldId);
-               fieldId += 10;
+               fieldId += 100;
             }
             response.setField(VID_CHECK_COUNT, checks->size());
             response.setField(VID_RCC, RCC_SUCCESS);

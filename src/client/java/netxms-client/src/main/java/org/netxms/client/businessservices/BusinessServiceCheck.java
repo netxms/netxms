@@ -30,6 +30,8 @@ import org.netxms.client.objects.interfaces.NodeItemPair;
 public class BusinessServiceCheck implements NodeItemPair
 {	
 	private long id;
+   private long prototypeServiceId;
+   private long prototypeCheckId;
 	private BusinessServiceCheckType type;
    private String description;
 	private String script;
@@ -45,6 +47,8 @@ public class BusinessServiceCheck implements NodeItemPair
    public BusinessServiceCheck()
    {
       id = 0;
+      prototypeServiceId = 0;
+      prototypeCheckId = 0;
       type = BusinessServiceCheckType.NONE;
       description = null;
       script = null; 
@@ -62,6 +66,8 @@ public class BusinessServiceCheck implements NodeItemPair
    public BusinessServiceCheck(BusinessServiceCheck src)
    {
       id = src.id;
+      prototypeServiceId = src.prototypeServiceId;
+      prototypeCheckId = src.prototypeCheckId;
       type = src.type;
       description = src.description;
       script = src.script; 
@@ -72,22 +78,24 @@ public class BusinessServiceCheck implements NodeItemPair
    }
 
 	/**
-    * Constructor to create object from message
+    * Constructor to create check from message
     * 
     * @param msg NXCPmessage from server with data
-    * @param base base id for object
+    * @param baseId base field ID for check
     */
-	public BusinessServiceCheck(NXCPMessage msg, long base)
+   public BusinessServiceCheck(NXCPMessage msg, long baseId)
 	{
-	   id = msg.getFieldAsInt64(base);
-		type = BusinessServiceCheckType.getByValue(msg.getFieldAsInt32(base + 1));
-      failureReason = msg.getFieldAsString(base + 2);
-      dciId = msg.getFieldAsInt64(base + 3);
-      objectId = msg.getFieldAsInt64(base + 4);
-      threshold = msg.getFieldAsInt32(base + 5); 
-		description = msg.getFieldAsString(base + 6); 
-      script = msg.getFieldAsString(base + 7);
-      state = BusinessServiceState.getByValue(msg.getFieldAsInt32(base + 8));
+	   id = msg.getFieldAsInt64(baseId);
+		type = BusinessServiceCheckType.getByValue(msg.getFieldAsInt32(baseId + 1));
+      failureReason = msg.getFieldAsString(baseId + 2);
+      dciId = msg.getFieldAsInt64(baseId + 3);
+      objectId = msg.getFieldAsInt64(baseId + 4);
+      threshold = msg.getFieldAsInt32(baseId + 5); 
+		description = msg.getFieldAsString(baseId + 6); 
+      script = msg.getFieldAsString(baseId + 7);
+      state = BusinessServiceState.getByValue(msg.getFieldAsInt32(baseId + 8));
+      prototypeServiceId = msg.getFieldAsInt64(baseId + 9);
+      prototypeCheckId = msg.getFieldAsInt64(baseId + 10);
 	}
 
 	/**
@@ -144,6 +152,27 @@ public class BusinessServiceCheck implements NodeItemPair
    public long getId()
    {
       return id;
+   }
+
+   /**
+    * Get ID of business service prototype this check was created from. Will be equal to owning service ID if check was created by
+    * instance discovery.
+    *
+    * @return ID of business service prototype or 0
+    */
+   public long getPrototypeServiceId()
+   {
+      return prototypeServiceId;
+   }
+
+   /**
+    * Get ID of business service check from business service prototype this check was created from.
+    *
+    * @return ID of business service check from business service prototype or 0
+    */
+   public long getPrototypeCheckId()
+   {
+      return prototypeCheckId;
    }
 
    /**

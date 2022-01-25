@@ -80,6 +80,116 @@ BusinessService::~BusinessService()
 }
 
 /**
+ * Update business service from prototype
+ */
+void BusinessService::updateFromPrototype(const BusinessServicePrototype& prototype)
+{
+   nxlog_debug_tag(DEBUG_TAG_BIZSVC, 5, _T("Updating business service \"%s\" [%u] from prototype \"%s\" [%u]"), m_name, m_id, prototype.getName(), prototype.getId());
+
+   lockProperties();
+   m_objectStatusThreshhold = prototype.getObjectStatusThreshhold();
+   m_dciStatusThreshhold = prototype.getDciStatusThreshhold();
+   unlockProperties();
+
+   m_autoBindFlags = prototype.getAutoBindFlags();
+   for(int i = 0; i < MAX_AUTOBIND_TARGET_FILTERS; i++)
+      setAutoBindFilter(i, prototype.getAutoBindFilterSource(i));
+
+   unique_ptr<SharedObjectArray<BusinessServiceCheck>> prototypeChecks = prototype.getChecks();
+
+   checksLock();
+   for (const shared_ptr<BusinessServiceCheck>& p : *prototypeChecks)
+   {
+      bool found = false;
+      for (const shared_ptr<BusinessServiceCheck>& c : m_checks)
+      {
+         if (c->getPrototypeCheckId() == p->getId())
+         {
+            c->updateFromPrototype(*p);
+            found = true;
+            break;
+         }
+      }
+      if (!found)
+         m_checks.add(make_shared<BusinessServiceCheck>(m_id, *p));
+   }
+
+   SharedPtrIterator<BusinessServiceCheck> it = m_checks.begin();
+   while(it.hasNext())
+   {
+      const shared_ptr<BusinessServiceCheck>& c = it.next();
+      bool found = false;
+      for (const shared_ptr<BusinessServiceCheck>& p : *prototypeChecks)
+      {
+         if (c->getPrototypeCheckId() == p->getId())
+         {
+            found = true;
+            break;
+         }
+      }
+      if (!found && (c->getPrototypeServiceId() == prototype.getId()))
+      {
+         c->deleteFromDatabase();
+         it.remove();
+      }
+   }
+   checksUnlock();
+
+   setModified(MODIFY_BIZSVC_CHECKS);
+}
+
+/**
+ * Update check created from prototype
+ */
+void BusinessService::updateCheckFromPrototype(const BusinessServiceCheck& prototype)
+{
+   nxlog_debug_tag(DEBUG_TAG_BIZSVC, 5, _T("Updating check with prototype ID = %u in business service \"%s\" [%u]"), prototype.getId(), m_name, m_id);
+
+   checksLock();
+   bool found = false;
+   for(int i = 0; i < m_checks.size(); i++)
+   {
+      BusinessServiceCheck *c = m_checks.get(i);
+      if (c->getPrototypeCheckId() == prototype.getId())
+      {
+         c->updateFromPrototype(prototype);
+         c->saveToDatabase();
+         found = true;
+         break;
+      }
+   }
+   if (!found)
+   {
+      auto c = make_shared<BusinessServiceCheck>(m_id, prototype);
+      m_checks.add(c);
+      c->saveToDatabase();
+   }
+   checksUnlock();
+}
+
+/**
+ * Delete check created from prototype
+ */
+void BusinessService::deleteCheckFromPrototype(uint32_t prototypeCheckId)
+{
+   nxlog_debug_tag(DEBUG_TAG_BIZSVC, 5, _T("Deleting check with prototype ID = %u from business service \"%s\" [%u]"), prototypeCheckId, m_name, m_id);
+
+   checksLock();
+   SharedPtrIterator<BusinessServiceCheck> it = m_checks.begin();
+   while(it.hasNext())
+   {
+      const shared_ptr<BusinessServiceCheck>& c = it.next();
+      if (c->getPrototypeCheckId() == prototypeCheckId)
+      {
+         c->deleteFromDatabase();
+         it.remove();
+         break;
+      }
+   }
+   checksUnlock();
+}
+
+/**
  * Load Business service from database
  */
 bool BusinessService::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
@@ -411,7 +521,7 @@ void BusinessService::validateAutomaticObjectChecks()
       unique_ptr<SharedObjectArray<BusinessServiceCheck>> checks = getChecks();
       for (shared_ptr<BusinessServiceCheck> check : *checks)
       {
-         if ((check->getType() == BusinessServiceCheckType::OBJECT) && (check->getRelatedObject() == object->getId()))
+         if ((check->getPrototypeServiceId() == m_id) && (check->getType() == BusinessServiceCheckType::OBJECT) && (check->getRelatedObject() == object->getId()))
          {
             selectedCheck = check;
             break;
@@ -474,7 +584,7 @@ void BusinessService::validateAutomaticDCIChecks()
          unique_ptr<SharedObjectArray<BusinessServiceCheck>> checks = getChecks();
          for (shared_ptr<BusinessServiceCheck> check : *checks)
          {
-            if ((check->getType() == BusinessServiceCheckType::DCI) && (check->getRelatedObject() == object->getId()) && (check->getRelatedDCI() == dci->getId()))
+            if ((check->getPrototypeServiceId() == m_id) && (check->getType() == BusinessServiceCheckType::DCI) && (check->getRelatedObject() == object->getId()) && (check->getRelatedDCI() == dci->getId()))
             {
                selectedCheck = check;
                break;

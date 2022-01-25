@@ -1397,6 +1397,22 @@ template <typename R1, typename R2, typename R3> inline void ThreadPoolExecute(T
 }
 
 /**
+ * Execute serialized task as soon as possible (use function with three arguments)
+ */
+template <typename R1, typename R2, typename R3> inline void ThreadPoolExecuteSerialized(ThreadPool *p, const TCHAR *key, void (*f)(R1, R2, R3), R1 arg1, R2 arg2, R3 arg3)
+{
+   ThreadPoolExecuteSerialized(p, key, __ThreadPoolExecute_Wrapper_3F<R1, R2, R3>, new __ThreadPoolExecute_WrapperData_3F<R1, R2, R3>(f, arg1, arg2, arg3));
+}
+
+/**
+ * Execute task with delay (use function with three arguments)
+ */
+template <typename R1, typename R2, typename R3> inline void ThreadPoolScheduleRelative(ThreadPool *p, uint32_t delay, void (*f)(R1, R2, R3), R1 arg1, R2 arg2, R3 arg3)
+{
+   ThreadPoolScheduleRelative(p, delay, __ThreadPoolExecute_Wrapper_3F<R1, R2, R3>, new __ThreadPoolExecute_WrapperData_3F<R1, R2, R3>(f, arg1, arg2, arg3));
+}
+
+/**
  * Set default thread stack size
  */
 void LIBNETXMS_EXPORTABLE ThreadSetDefaultStackSize(int size);

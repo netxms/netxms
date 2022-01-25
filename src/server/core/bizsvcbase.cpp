@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Raden Solutions
+** Copyright (C) 2003-2022 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -58,11 +58,7 @@ BaseBusinessService::BaseBusinessService(const BaseBusinessService& prototype, c
 
    unique_ptr<SharedObjectArray<BusinessServiceCheck>> checks = prototype.getChecks();
    for (const shared_ptr<BusinessServiceCheck>& check : *checks)
-   {
-      BusinessServiceCheck *ch = new BusinessServiceCheck(m_id, *check.get());
-      m_checks.add(ch);
-      ch->saveToDatabase();
-   }
+      m_checks.add(make_shared<BusinessServiceCheck>(m_id, *check.get()));
 }
 
 /**
@@ -90,7 +86,7 @@ bool BaseBusinessService::loadChecksFromDatabase(DB_HANDLE hdb)
 {
    nxlog_debug_tag(DEBUG_TAG_BIZSVC, 4, _T("Loading service checks for business service %u"), m_id);
 
-   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT id,service_id,type,description,related_object,related_dci,status_threshold,content,current_ticket FROM business_service_checks WHERE service_id=?"));
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT id,service_id,prototype_service_id,prototype_check_id,type,description,related_object,related_dci,status_threshold,content,current_ticket FROM business_service_checks WHERE service_id=?"));
    if (hStmt == nullptr)
       return false;
 
@@ -105,7 +101,7 @@ bool BaseBusinessService::loadChecksFromDatabase(DB_HANDLE hdb)
    int rows = DBGetNumRows(hResult);
    for (int i = 0; i < rows; i++)
    {
-      m_checks.add(new BusinessServiceCheck(hResult, i));
+      m_checks.add(make_shared<BusinessServiceCheck>(hResult, i));
    }
 
    DBFreeResult(hResult);
@@ -138,6 +134,10 @@ uint32_t BaseBusinessService::deleteCheck(uint32_t checkId)
       }
    }
    checksUnlock();
+
+   if (rcc == RCC_SUCCESS)
+      onCheckDelete(checkId);
+
    return rcc;
 }
 
@@ -204,7 +204,10 @@ uint32_t BaseBusinessService::modifyCheckFromMessage(const NXCPMessage& request)
    checksUnlock();
 
    if (rcc == RCC_SUCCESS)
+   {
       NotifyClientsOnBusinessServiceCheckUpdate(*this, check);
+      onCheckModify(check);
+   }
 
    return rcc;
 }
@@ -264,11 +267,27 @@ bool BaseBusinessService::saveToDatabase(DB_HANDLE hdb)
    if (success)
       success = AutoBindTarget::saveToDatabase(hdb);
 
-   if (success)
+   if (success && (m_modified & MODIFY_BIZSVC_CHECKS))
    {
+      checksLock();
       for (int i = 0; (i < m_checks.size()) && success; i++)
          success = m_checks.get(i)->saveToDatabase();
+      checksUnlock();
    }
 
    return success;
+}
+
+/**
+ * Callback for check modification
+ */
+void BaseBusinessService::onCheckModify(const shared_ptr<BusinessServiceCheck>& check)
+{
+}
+
+/**
+ * Callback for check delete
+ */
+void BaseBusinessService::onCheckDelete(uint32_t checkId)
+{
 }

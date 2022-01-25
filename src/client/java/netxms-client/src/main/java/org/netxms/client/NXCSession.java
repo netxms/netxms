@@ -12872,7 +12872,7 @@ public class NXCSession
       {
          BusinessServiceCheck check = new BusinessServiceCheck(response, fieldId);
          checks.put(check.getId(), check);
-         fieldId += 10;
+         fieldId += 100;
       }
       return checks;
    }

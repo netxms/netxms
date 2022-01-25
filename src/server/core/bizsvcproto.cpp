@@ -170,6 +170,54 @@ uint32_t BusinessServicePrototype::modifyFromMessageInternal(const NXCPMessage& 
 }
 
 /**
+ * Modify business service prototype from NXCP message - stage 2
+ */
+uint32_t BusinessServicePrototype::modifyFromMessageInternalStage2(const NXCPMessage& msg)
+{
+   // Update all services created from this prototype
+   processRelatedServices([](BusinessServicePrototype *prototype, BusinessService *service) -> void { service->updateFromPrototype(*prototype); });
+   return RCC_SUCCESS;
+}
+
+/**
+ * Callback for check modification
+ */
+void BusinessServicePrototype::onCheckModify(const shared_ptr<BusinessServiceCheck>& check)
+{
+   // Update matching check on all services created from this prototype
+   processRelatedServices([check](BusinessServicePrototype *prototype, BusinessService *service) -> void { service->updateCheckFromPrototype(*check); });
+}
+
+/**
+ * Callback for check delete
+ */
+void BusinessServicePrototype::onCheckDelete(uint32_t checkId)
+{
+   // Delete matching check from all services created from this prototype
+   processRelatedServices([checkId](BusinessServicePrototype *prototype, BusinessService *service) -> void { service->deleteCheckFromPrototype(checkId); });
+}
+
+/**
+ * Thread function for BusinessServicePrototype::processRelatedServices
+ */
+static void ProcessRelatedServices(shared_ptr<BusinessServicePrototype> prototype, shared_ptr<SharedObjectArray<BusinessService>> services, std::function<void (BusinessServicePrototype*, BusinessService*)> callback)
+{
+   for(const shared_ptr<BusinessService>& s : *services)
+      callback(prototype.get(), s.get());
+}
+
+/**
+ * Process related business services in separate thread, executing provided callback for each service
+ */
+void BusinessServicePrototype::processRelatedServices(std::function<void (BusinessServicePrototype*, BusinessService*)> callback)
+{
+   TCHAR key[32];
+   _sntprintf(key, 32, _T("BSUPDATE_%u"), m_id);
+   unique_ptr<SharedObjectArray<BusinessService>> services = getServices();
+   ThreadPoolExecuteSerialized(g_mainThreadPool, key, ProcessRelatedServices, self(), shared_ptr<SharedObjectArray<BusinessService>>(services.release()), callback);
+}
+
+/**
  * Compile instance discovery filter script if there is one
  */
 void BusinessServicePrototype::compileInstanceDiscoveryFilterScript()
