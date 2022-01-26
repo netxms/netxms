@@ -62,6 +62,7 @@ public class ObjectContextMenuManager extends MenuManager
    private Action actionManage;
    private Action actionUnmanage;
    private Action actionDeployPackage;
+   private Action actionDelete;
    private Action actionEnterMaintenance;
    private Action actionLeaveMaintenance;
    private Action actionScheduleMaintenance;
@@ -113,6 +114,14 @@ public class ObjectContextMenuManager extends MenuManager
          public void run()
          {
             deployPackage();
+         }
+      };
+      
+      actionDelete = new Action(i18n.tr("&Delete")) {
+         @Override
+         public void run()
+         {
+            deleteObject();
          }
       };
 
@@ -169,6 +178,7 @@ public class ObjectContextMenuManager extends MenuManager
       MenuManager managementMenu = new MenuManager(i18n.tr("&Manage"));
       managementMenu.add(actionManage);
       managementMenu.add(actionUnmanage);
+      managementMenu.add(actionDelete);    
       managementMenu.add(new Separator());
       managementMenu.add(actionDeployPackage);      
       add(managementMenu);
@@ -344,6 +354,9 @@ public class ObjectContextMenuManager extends MenuManager
       }.start();
    }
    
+   /**
+    * Deploy package on node
+    */
    private void deployPackage()
    {
       final SelectDeployPackage dialog = new SelectDeployPackage(view.getWindow().getShell());
@@ -437,5 +450,45 @@ public class ObjectContextMenuManager extends MenuManager
       };
       job.setUser(false);
       job.start();
+   }
+   
+   /**
+    * Delete selected objects
+    */
+   private void deleteObject()
+   {
+      final Object[] objects = ((IStructuredSelection)selectionProvider.getSelection()).toArray();  
+      String question = null;
+      if (objects.length == 1)
+      {
+         question = String.format(i18n.tr("Are you sure you want to delete \"%s\"?"), ((AbstractObject)objects[0]).getObjectName());
+      }
+      else
+      {
+         question = String.format(i18n.tr("Are you sure you want to delete %d objects?"), objects.length);
+         
+      }
+      boolean confirmed = MessageDialogHelper.openConfirm(view.getWindow().getShell(), i18n.tr("Confirm Delete"), question);
+      
+      if (confirmed)
+      {
+         final NXCSession session =  Registry.getSession();
+         new Job(i18n.tr("Delete objects"), null) {
+            @Override
+            protected void run(IProgressMonitor monitor) throws Exception
+            {
+               for (int i = 0; i < objects.length; i++)
+               {
+                  session.deleteObject(((AbstractObject)objects[i]).getObjectId());
+               }
+            }
+            
+            @Override
+            protected String getErrorMessage()
+            {
+               return i18n.tr("Cannot delete object");
+            }
+         }.start();
+      }
    }
 }
