@@ -552,7 +552,7 @@ void BusinessService::validateAutomaticObjectChecks()
          checksLock();
          m_checks.add(check);
          checksUnlock();
-         check->saveToDatabase();
+         setModified(MODIFY_BIZSVC_CHECKS, false);
          nxlog_debug_tag(DEBUG_TAG_BIZSVC, 6, _T("BusinessService::validateAutomaticObjectChecks(%s): object check %s [%u] created"), m_name, checkName, check->getId());
          sendPollerMsg(_T("   Object based check \"%s\" created\r\n"), checkName);
          NotifyClientsOnBusinessServiceCheckUpdate(*this, check);
@@ -615,7 +615,7 @@ void BusinessService::validateAutomaticDCIChecks()
             checksLock();
             m_checks.add(check);
             checksUnlock();
-            check->saveToDatabase();
+            setModified(MODIFY_BIZSVC_CHECKS, false);
             nxlog_debug_tag(DEBUG_TAG_BIZSVC, 6, _T("BusinessService::validateAutomaticObjectChecks(%s): DCI check %s [%u] created"), m_name, checkDescription, check->getId());
             sendPollerMsg(_T("   DCI based check \"%s\" created\r\n"), checkDescription);
             NotifyClientsOnBusinessServiceCheckUpdate(*this, check);
