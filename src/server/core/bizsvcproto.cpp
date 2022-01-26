@@ -472,7 +472,6 @@ void BusinessServicePrototype::instanceDiscoveryPoll(PollerInfo *poller, ClientS
                   service->getName(), service->getId(), m_name, m_id);
          sendPollerMsg(_T("   Business service \"%s\" removed\r\n"), service->getName());
          service->deleteObject();
-         it.remove();
       }
 
       for (auto instance : *instances)

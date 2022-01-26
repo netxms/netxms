@@ -84,8 +84,6 @@ unique_ptr<SharedObjectArray<BusinessServiceCheck>> BaseBusinessService::getChec
  */
 bool BaseBusinessService::loadChecksFromDatabase(DB_HANDLE hdb)
 {
-   nxlog_debug_tag(DEBUG_TAG_BIZSVC, 4, _T("Loading service checks for business service %u"), m_id);
-
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT id,service_id,prototype_service_id,prototype_check_id,type,description,related_object,related_dci,status_threshold,content,current_ticket FROM business_service_checks WHERE service_id=?"));
    if (hStmt == nullptr)
       return false;
