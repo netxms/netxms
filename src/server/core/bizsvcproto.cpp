@@ -314,7 +314,10 @@ unique_ptr<StringMap> BusinessServicePrototype::getInstancesFromScript()
 {
    NXSL_VM *vm = CreateServerScriptVM(m_instanceDiscoveryData, self());
    if (vm == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG_BIZSVC, 5, _T("Cannot create NXSL VM for instance discovery script for business service prototype %s [%u]"), m_name, m_id);
       return unique_ptr<StringMap>();
+   }
 
    StringMap *instances = nullptr;
    if (vm->run())
@@ -400,16 +403,19 @@ unique_ptr<StringMap> BusinessServicePrototype::getInstances()
                   {
                      resultMap->set(value->getValueAsArray()->get(0)->getValueAsCString(), value->getValueAsArray()->get(0)->getValueAsCString());
                   }
-                  if (value->getValueAsArray()->size() > 1)
+                  else if (value->getValueAsArray()->size() > 1)
                   {
                      resultMap->set(value->getValueAsArray()->get(0)->getValueAsCString(), value->getValueAsArray()->get(1)->getValueAsCString());
                   }
                }
-               if (value->isTrue())
+               else if (value->isTrue())
                {
                   resultMap->set(instance->key, instance->value);
                }
-
+               else
+               {
+                  nxlog_debug_tag(DEBUG_TAG_BIZSVC, 6, _T("BusinessServicePrototype::getInstances(%s [%u]): instance \"%s\" blocked by filtering script"), m_name, m_id, instance->key);
+               }
             }
             else
             {
