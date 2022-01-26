@@ -461,7 +461,7 @@ void NXSL_Value::updateNumber()
          m_value.int32 = (INT32)nVal;
       }
    }
-   else
+   else if (*eptr == '.')
    {
       double dVal = _tcstod(s, &eptr);
       if ((*eptr == 0) && ((uint32_t)(eptr - s) == m_length))
