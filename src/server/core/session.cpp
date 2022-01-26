@@ -11092,8 +11092,9 @@ void ClientSession::executeScript(NXCPMessage *request)
          TCHAR buffer[1024];
          const TCHAR *value = vm->getResult()->getValueAsCString();
          _sntprintf(buffer, 1024, _T("\n\n*** FINISHED ***\n\nResult: %s\n\n"), CHECK_NULL(value));
+         buffer[1023] = 0;
          msg.setField(VID_MESSAGE, buffer);
-			msg.setField(VID_RCC, RCC_SUCCESS);
+         msg.setField(VID_RCC, RCC_SUCCESS);
          msg.setEndOfSequence();
          sendMessage(&msg);
       }
