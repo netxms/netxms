@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -52,7 +52,7 @@ public:
 ComponentTree::ComponentTree(Component *root)
 {
 	m_root = root;
-	m_timestamp = time(NULL);
+	m_timestamp = time(nullptr);
 }
 
 /**
@@ -68,7 +68,7 @@ ComponentTree::~ComponentTree()
  */
 void ComponentTree::fillMessage(NXCPMessage *msg, UINT32 baseId) const
 {
-	if (m_root != NULL)
+	if (m_root != nullptr)
 		m_root->fillMessage(msg, baseId);
 }
 
@@ -77,9 +77,9 @@ void ComponentTree::fillMessage(NXCPMessage *msg, UINT32 baseId) const
  */
 bool ComponentTree::equals(const ComponentTree *t) const
 {
-   if (m_root == NULL)
-      return t->m_root == NULL;
-   if (t->m_root == NULL)
+   if (m_root == nullptr)
+      return t->m_root == nullptr;
+   if (t->m_root == nullptr)
       return false;
    return m_root->equals(t->m_root);
 }
@@ -101,14 +101,14 @@ Component::Component(UINT32 index, const TCHAR *name)
 	m_class = 2; // unknown
 	m_ifIndex = 0;
 	m_name = MemCopyString(name);
-	m_description = NULL;
-	m_model = NULL;
-	m_serial = NULL;
-	m_vendor = NULL;
-	m_firmware = NULL;
+	m_description = nullptr;
+	m_model = nullptr;
+	m_serial = nullptr;
+	m_vendor = nullptr;
+	m_firmware = nullptr;
 	m_parentIndex = 0;
 	m_position = -1;
-	m_parent = NULL;
+	m_parent = nullptr;
    m_children = new ObjectArray<Component>(0, 16, Ownership::True);
 }
 
@@ -130,7 +130,7 @@ Component::Component(UINT32 index, UINT32 pclass, UINT32 parentIndex, UINT32 pos
    m_firmware = MemCopyString(firmware);
    m_parentIndex = parentIndex;
    m_position = position;
-   m_parent = NULL;
+   m_parent = nullptr;
    m_children = new ObjectArray<Component>(0, 16, Ownership::True);
 }
 
@@ -153,22 +153,22 @@ Component::~Component()
  */
 UINT32 Component::updateFromSnmp(SNMP_Transport *snmp)
 {
-	UINT32 oid[16] = { 1, 3, 6, 1, 2, 1, 47, 1, 1, 1, 1, 0, 0 };
-	UINT32 rc;
+	uint32_t oid[16] = { 1, 3, 6, 1, 2, 1, 47, 1, 1, 1, 1, 0, 0 };
+	uint32_t rc;
 	TCHAR buffer[256];
 
 	oid[12] = m_index;
 
 	oid[11] = 5;	// entPhysicalClass
-	if ((rc = SnmpGet(snmp->getSnmpVersion(), snmp, NULL, oid, 13, &m_class, sizeof(UINT32), 0)) != SNMP_ERR_SUCCESS)
+	if ((rc = SnmpGet(snmp->getSnmpVersion(), snmp, NULL, oid, 13, &m_class, sizeof(uint32_t), 0)) != SNMP_ERR_SUCCESS)
 		return rc;
 
 	oid[11] = 4;	// entPhysicalContainedIn
-	if ((rc = SnmpGet(snmp->getSnmpVersion(), snmp, NULL, oid, 13, &m_parentIndex, sizeof(UINT32), 0)) != SNMP_ERR_SUCCESS)
+	if ((rc = SnmpGet(snmp->getSnmpVersion(), snmp, NULL, oid, 13, &m_parentIndex, sizeof(uint32_t), 0)) != SNMP_ERR_SUCCESS)
 		return rc;
 
    oid[11] = 6;   // entPhysicalParentRelPos
-   if ((rc = SnmpGet(snmp->getSnmpVersion(), snmp, NULL, oid, 13, &m_position, sizeof(INT32), 0)) != SNMP_ERR_SUCCESS)
+   if ((rc = SnmpGet(snmp->getSnmpVersion(), snmp, NULL, oid, 13, &m_position, sizeof(uint32_t), 0)) != SNMP_ERR_SUCCESS)
       return rc;
 
 	oid[11] = 2;	// entPhysicalDescr
@@ -264,7 +264,7 @@ void Component::print(ServerConsole *console, int level) const
 /**
  * Fill NXCP message
  */
-UINT32 Component::fillMessage(NXCPMessage *msg, UINT32 baseId) const
+uint32_t Component::fillMessage(NXCPMessage *msg, uint32_t baseId) const
 {
 	msg->setField(baseId, m_index);
 	msg->setField(baseId + 1, m_parentIndex);
@@ -278,12 +278,12 @@ UINT32 Component::fillMessage(NXCPMessage *msg, UINT32 baseId) const
 	msg->setField(baseId + 9, m_vendor);
 	msg->setField(baseId + 10, m_firmware);
 
-	msg->setField(baseId + 19, (UINT32)m_children->size());
-	UINT32 varId = baseId + 20;
+	msg->setField(baseId + 19, static_cast<uint32_t>(m_children->size()));
+	uint32_t fieldId = baseId + 20;
 	for(int i = 0; i < m_children->size(); i++)
-		varId = m_children->get(i)->fillMessage(msg, varId);
+		fieldId = m_children->get(i)->fillMessage(msg, fieldId);
 
-	return varId;
+	return fieldId;
 }
 
 /**
@@ -328,11 +328,11 @@ NXSL_Array *Component::getChildrenForNXSL(NXSL_VM *vm, NXSL_ComponentHandle *han
 /**
  * Physical entity tree walk callback
  */
-static UINT32 EntityWalker(SNMP_Variable *var, SNMP_Transport *transport, void *arg)
+static uint32_t EntityWalker(SNMP_Variable *var, SNMP_Transport *transport, void *arg)
 {
 	TCHAR buffer[256];
 	Component *element = new Component(var->getName().getElement(12), var->getValueAsString(buffer, 256));
-	UINT32 rc = element->updateFromSnmp(transport);
+	uint32_t rc = element->updateFromSnmp(transport);
 	if (rc != SNMP_ERR_SUCCESS)
 	{
 		delete element;
@@ -413,7 +413,7 @@ void NXSL_ComponentClass::onObjectDelete(NXSL_Object *object)
 /**
  * NXSL class ComponentClass: get attribute
  */
-NXSL_Value *NXSL_ComponentClass::getAttr(NXSL_Object *object, const char *attr)
+NXSL_Value *NXSL_ComponentClass::getAttr(NXSL_Object *object, const NXSL_Identifier& attr)
 {
    const uint32_t classCount = 12;
    static const TCHAR *className[classCount] = { _T(""), _T("other"), _T("unknown"), _T("chassis"), _T("backplane"),
@@ -427,42 +427,42 @@ NXSL_Value *NXSL_ComponentClass::getAttr(NXSL_Object *object, const char *attr)
    NXSL_VM *vm = object->vm();
    NXSL_ComponentHandle *handle = static_cast<NXSL_ComponentHandle*>(object->getData());
    Component *component = (handle != nullptr) ? handle->component : nullptr;  // Can be null if called by scanAttributes()
-   if (compareAttributeName(attr, "class"))
+   if (NXSL_COMPARE_ATTRIBUTE_NAME("class"))
    {
       if (component->getClass() >= classCount)
          value = vm->createValue(className[2]); // Unknown class
       else
          value = vm->createValue(className[component->getClass()]);
    }
-   else if (compareAttributeName(attr, "children"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("children"))
    {
       value = vm->createValue(handle->getChildrenForNXSL(vm));
    }
-   else if (compareAttributeName(attr, "description"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("description"))
    {
       value = vm->createValue(component->getDescription());
    }
-   else if (compareAttributeName(attr, "ifIndex"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("ifIndex"))
    {
       value = vm->createValue(component->getIfIndex());
    }
-   else if (compareAttributeName(attr, "firmware"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("firmware"))
    {
       value = vm->createValue(component->getFirmware());
    }
-   else if (compareAttributeName(attr, "model"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("model"))
    {
       value = vm->createValue(component->getModel());
    }
-   else if (compareAttributeName(attr, "name"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("name"))
    {
       value = vm->createValue(component->getName());
    }
-   else if (compareAttributeName(attr, "serial"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("serial"))
    {
       value = vm->createValue(component->getSerial());
    }
-   else if (compareAttributeName(attr, "vendor"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("vendor"))
    {
       value = vm->createValue(component->getVendor());
    }

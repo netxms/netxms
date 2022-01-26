@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -106,9 +106,9 @@ void NXSL_Class::setName(const TCHAR *name)
  * Get attribute
  * Default implementation always returns error
  */
-NXSL_Value *NXSL_Class::getAttr(NXSL_Object *object, const char *attr)
+NXSL_Value *NXSL_Class::getAttr(NXSL_Object *object, const NXSL_Identifier& attr)
 {
-   if (compareAttributeName(attr, "__class"))
+   if (NXSL_COMPARE_ATTRIBUTE_NAME("__class"))
       return object->vm()->createValue(new NXSL_Object(object->vm(), &g_nxslMetaClass, object->getClass()));
    return nullptr;
 }
@@ -117,7 +117,7 @@ NXSL_Value *NXSL_Class::getAttr(NXSL_Object *object, const char *attr)
  * Set attribute
  * Default implementation always returns error
  */
-bool NXSL_Class::setAttr(NXSL_Object *object, const char *attr, NXSL_Value *value)
+bool NXSL_Class::setAttr(NXSL_Object *object, const NXSL_Identifier& attr, NXSL_Value *value)
 {
    return false;
 }
@@ -197,7 +197,7 @@ static EnumerationCallbackResult FillMethodList(const NXSL_Identifier& name, NXS
 /**
  * Class "Class" attribute handler
  */
-NXSL_Value *NXSL_MetaClass::getAttr(NXSL_Object *object, const char *attr)
+NXSL_Value *NXSL_MetaClass::getAttr(NXSL_Object *object, const NXSL_Identifier& attr)
 {
    NXSL_Value *value = NXSL_Class::getAttr(object, attr);
    if (value != nullptr)
@@ -205,22 +205,22 @@ NXSL_Value *NXSL_MetaClass::getAttr(NXSL_Object *object, const char *attr)
 
    NXSL_VM *vm = object->vm();
    NXSL_Class *c = static_cast<NXSL_Class*>(object->getData());
-   if (compareAttributeName(attr, "attributes"))
+   if (NXSL_COMPARE_ATTRIBUTE_NAME("attributes"))
    {
       c->scanAttributes();
       value = vm->createValue(new NXSL_Array(vm, c->getAttributes()));
    }
-   else if (compareAttributeName(attr, "hierarchy"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("hierarchy"))
    {
       value = vm->createValue(new NXSL_Array(vm, c->getClassHierarchy()));
    }
-   else if (compareAttributeName(attr, "methods"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("methods"))
    {
       NXSL_Array *values = new NXSL_Array(vm);
       c->m_methods->forEach(FillMethodList, values);
       value = vm->createValue(values);
    }
-   else if (compareAttributeName(attr, "name"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("name"))
    {
       value = vm->createValue(c->getName());
    }

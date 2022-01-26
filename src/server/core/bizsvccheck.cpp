@@ -217,7 +217,7 @@ bool BusinessServiceCheck::saveToDatabase() const
          _T("related_dci"), _T("status_threshold"), _T("content"), _T("status"), _T("current_ticket"), _T("failure_reason"), nullptr
    };
    DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("business_service_checks"), _T("id"), m_id, columns);
-	bool success = false;
+	bool success;
 	if (hStmt != nullptr)
 	{
 		lock();
@@ -242,8 +242,8 @@ bool BusinessServiceCheck::saveToDatabase() const
 	{
 		success = false;
 	}
-	DBConnectionPoolReleaseConnection(hdb);
 
+	DBConnectionPoolReleaseConnection(hdb);
 	return success;
 }
 

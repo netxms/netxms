@@ -48,8 +48,8 @@ public:
    NXSL_LDAPObjectClass();
    virtual ~NXSL_LDAPObjectClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr) override;
-   virtual bool setAttr(NXSL_Object *object, const char *attr, NXSL_Value *value) override;
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
+   virtual bool setAttr(NXSL_Object *object, const NXSL_Identifier& attr, NXSL_Value *value) override;
 };
 
 /**
@@ -75,7 +75,7 @@ NXSL_LDAPObjectClass::~NXSL_LDAPObjectClass()
 /**
  * Implementation of "LDAPObject" class: get attribute
  */
-NXSL_Value *NXSL_LDAPObjectClass::getAttr(NXSL_Object *object, const char *attr)
+NXSL_Value *NXSL_LDAPObjectClass::getAttr(NXSL_Object *object, const NXSL_Identifier& attr)
 {
    NXSL_Value *value = NXSL_Class::getAttr(object, attr);
    if (value != nullptr)
@@ -83,39 +83,39 @@ NXSL_Value *NXSL_LDAPObjectClass::getAttr(NXSL_Object *object, const char *attr)
 
    auto ldapObject = static_cast<LDAP_Object*>(object->getData());
    NXSL_VM *vm = object->vm();
-   if (compareAttributeName(attr, "description"))
+   if (NXSL_COMPARE_ATTRIBUTE_NAME("description"))
    {
       value = vm->createValue(ldapObject->m_description);
    }
-   else if (compareAttributeName(attr, "email"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("email"))
    {
       value = vm->createValue(ldapObject->m_email);
    }
-   else if (compareAttributeName(attr, "fullName"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("fullName"))
    {
       value = vm->createValue(ldapObject->m_fullName);
    }
-   else if (compareAttributeName(attr, "id"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("id"))
    {
       value = vm->createValue(ldapObject->m_id);
    }
-   else if (compareAttributeName(attr, "isGroup"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("isGroup"))
    {
       value = vm->createValue(ldapObject->m_type == LDAP_ObjectType::GROUP);
    }
-   else if (compareAttributeName(attr, "isUser"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("isUser"))
    {
       value = vm->createValue(ldapObject->m_type == LDAP_ObjectType::USER);
    }
-   else if (compareAttributeName(attr, "loginName"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("loginName"))
    {
       value = vm->createValue(ldapObject->m_loginName);
    }
-   else if (compareAttributeName(attr, "phoneNumber"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("phoneNumber"))
    {
       value = vm->createValue(ldapObject->m_phoneNumber);
    }
-   else if (compareAttributeName(attr, "type"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("type"))
    {
       const TCHAR *type;
       switch(ldapObject->m_type)
@@ -147,26 +147,26 @@ static inline void ChangeAttribute(TCHAR **attr, NXSL_Value *value)
 /**
  * Implementation of "LDAPObject" class: set attribute
  */
-bool NXSL_LDAPObjectClass::setAttr(NXSL_Object *object, const char *attr, NXSL_Value *value)
+bool NXSL_LDAPObjectClass::setAttr(NXSL_Object *object, const NXSL_Identifier& attr, NXSL_Value *value)
 {
    auto ldapObject = static_cast<LDAP_Object*>(object->getData());
-   if (compareAttributeName(attr, "description"))
+   if (NXSL_COMPARE_ATTRIBUTE_NAME("description"))
    {
       ChangeAttribute(&ldapObject->m_description, value);
    }
-   else if (compareAttributeName(attr, "email"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("email"))
    {
       ChangeAttribute(&ldapObject->m_email, value);
    }
-   else if (compareAttributeName(attr, "fullName"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("fullName"))
    {
       ChangeAttribute(&ldapObject->m_fullName, value);
    }
-   else if (compareAttributeName(attr, "loginName"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("loginName"))
    {
       ChangeAttribute(&ldapObject->m_loginName, value);
    }
-   else if (compareAttributeName(attr, "phoneNumber"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("phoneNumber"))
    {
       ChangeAttribute(&ldapObject->m_phoneNumber, value);
    }

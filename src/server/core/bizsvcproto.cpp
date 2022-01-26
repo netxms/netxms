@@ -383,52 +383,52 @@ unique_ptr<StringMap> BusinessServicePrototype::getInstances()
    if (instanceMap == nullptr)
       return unique_ptr<StringMap>();
 
+   if ((m_compiledInstanceDiscoveryFilter == nullptr) || m_compiledInstanceDiscoveryFilter->isEmpty())
+      return instanceMap;
+
    auto resultMap = make_unique<StringMap>();
-   if ((m_compiledInstanceDiscoveryFilter != nullptr) && !m_compiledInstanceDiscoveryFilter->isEmpty())
+   for (auto instance : *instanceMap)
    {
-      for (auto instance : *instanceMap)
+      NXSL_VM *filter = CreateServerScriptVM(m_compiledInstanceDiscoveryFilter, FindObjectById(m_instanceSource));
+      if (filter != nullptr)
       {
-         NXSL_VM *filter = CreateServerScriptVM(m_compiledInstanceDiscoveryFilter, FindObjectById(m_instanceSource));
-         if (filter != nullptr)
+         filter->setGlobalVariable("$1", filter->createValue(instance->key));
+         filter->setGlobalVariable("$2", filter->createValue(instance->value));
+         filter->setGlobalVariable("$prototype", createNXSLObject(filter));
+         if (filter->run())
          {
-            filter->setGlobalVariable("$1", filter->createValue(instance->key));
-            filter->setGlobalVariable("$2", filter->createValue(instance->value));
-            filter->setGlobalVariable("$prototype", createNXSLObject(filter));
-            if (filter->run())
+            NXSL_Value *value = filter->getResult();
+            if (value->isArray())
             {
-               NXSL_Value *value = filter->getResult();
-               if (value->isArray())
+               if (value->getValueAsArray()->size() == 1)
                {
-                  if (value->getValueAsArray()->size() == 1)
-                  {
-                     resultMap->set(value->getValueAsArray()->get(0)->getValueAsCString(), value->getValueAsArray()->get(0)->getValueAsCString());
-                  }
-                  else if (value->getValueAsArray()->size() > 1)
-                  {
-                     resultMap->set(value->getValueAsArray()->get(0)->getValueAsCString(), value->getValueAsArray()->get(1)->getValueAsCString());
-                  }
+                  resultMap->set(value->getValueAsArray()->get(0)->getValueAsCString(), value->getValueAsArray()->get(0)->getValueAsCString());
                }
-               else if (value->isTrue())
+               else if (value->getValueAsArray()->size() > 1)
                {
-                  resultMap->set(instance->key, instance->value);
+                  resultMap->set(value->getValueAsArray()->get(0)->getValueAsCString(), value->getValueAsArray()->get(1)->getValueAsCString());
                }
-               else
-               {
-                  nxlog_debug_tag(DEBUG_TAG_BIZSVC, 6, _T("BusinessServicePrototype::getInstances(%s [%u]): instance \"%s\" blocked by filtering script"), m_name, m_id, instance->key);
-               }
+            }
+            else if (value->isTrue())
+            {
+               resultMap->set(instance->key, instance->value);
             }
             else
             {
-               ReportScriptError(SCRIPT_CONTEXT_BIZSVC, this, 0, filter->getErrorText(), _T("%s::%s::InstanceDiscoveryFilter"), getObjectClassName(), m_name);
-               nxlog_debug_tag(DEBUG_TAG_BIZSVC, 5, _T("Failed to execute instance discovery filter script for business service prototype %s [%u] (%s)"), m_name, m_id, filter->getErrorText());
+               nxlog_debug_tag(DEBUG_TAG_BIZSVC, 6, _T("BusinessServicePrototype::getInstances(%s [%u]): instance \"%s\" blocked by filtering script"), m_name, m_id, instance->key);
             }
-            delete filter;
          }
          else
          {
-            ReportScriptError(SCRIPT_CONTEXT_BIZSVC, this, 0, _T("Script load error"), _T("%s::%s::InstanceDiscoveryFilter"), getObjectClassName(), m_name);
-            nxlog_debug_tag(DEBUG_TAG_BIZSVC, 5, _T("Failed to load instance discovery filter script for business service prototype %s [%u]"), m_name, m_id);
+            ReportScriptError(SCRIPT_CONTEXT_BIZSVC, this, 0, filter->getErrorText(), _T("%s::%s::InstanceDiscoveryFilter"), getObjectClassName(), m_name);
+            nxlog_debug_tag(DEBUG_TAG_BIZSVC, 5, _T("Failed to execute instance discovery filter script for business service prototype %s [%u] (%s)"), m_name, m_id, filter->getErrorText());
          }
+         delete filter;
+      }
+      else
+      {
+         ReportScriptError(SCRIPT_CONTEXT_BIZSVC, this, 0, _T("Script load error"), _T("%s::%s::InstanceDiscoveryFilter"), getObjectClassName(), m_name);
+         nxlog_debug_tag(DEBUG_TAG_BIZSVC, 5, _T("Failed to load instance discovery filter script for business service prototype %s [%u]"), m_name, m_id);
       }
    }
    return resultMap;

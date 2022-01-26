@@ -486,7 +486,7 @@ class NXSL_DiscoveredInterfaceClass : public NXSL_Class
 public:
    NXSL_DiscoveredInterfaceClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *pObject, const char *attr);
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
 };
 
 /**
@@ -500,29 +500,32 @@ NXSL_DiscoveredInterfaceClass::NXSL_DiscoveredInterfaceClass() : NXSL_Class()
 /**
  * Implementation of NXSL class "DiscoveredInterface" - get attribute
  */
-NXSL_Value *NXSL_DiscoveredInterfaceClass::getAttr(NXSL_Object *object, const char *attr)
+NXSL_Value *NXSL_DiscoveredInterfaceClass::getAttr(NXSL_Object *object, const NXSL_Identifier& attr)
 {
+   NXSL_Value *value = NXSL_Class::getAttr(object, attr);
+   if (value != nullptr)
+      return value;
+
    NXSL_VM *vm = object->vm();
    InterfaceInfo *iface = static_cast<InterfaceInfo*>(object->getData());
-   NXSL_Value *value = nullptr;
 
-   if (!strcmp(attr, "alias"))
+   if (NXSL_COMPARE_ATTRIBUTE_NAME("alias"))
    {
       value = vm->createValue(iface->alias);
    }
-   else if (!strcmp(attr, "chassis"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("chassis"))
    {
       value = vm->createValue(iface->location.chassis);
    }
-   else if (!strcmp(attr, "description"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("description"))
    {
       value = vm->createValue(iface->description);
    }
-   else if (!strcmp(attr, "index"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("index"))
    {
       value = vm->createValue(iface->index);
    }
-   else if (!strcmp(attr, "ipAddressList"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("ipAddressList"))
    {
       NXSL_Array *a = new NXSL_Array(vm);
       for(int i = 0; i < iface->ipAddrList.size(); i++)
@@ -531,40 +534,40 @@ NXSL_Value *NXSL_DiscoveredInterfaceClass::getAttr(NXSL_Object *object, const ch
       }
       value = vm->createValue(a);
    }
-   else if (!strcmp(attr, "isPhysicalPort"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("isPhysicalPort"))
    {
       value = vm->createValue(iface->isPhysicalPort);
    }
-   else if (!strcmp(attr, "macAddr"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("macAddr"))
    {
       TCHAR buffer[64];
       value = vm->createValue(MACToStr(iface->macAddr, buffer));
    }
-   else if (!strcmp(attr, "module"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("module"))
    {
       value = vm->createValue(iface->location.module);
    }
-   else if (!strcmp(attr, "mtu"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("mtu"))
    {
       value = vm->createValue(iface->mtu);
    }
-   else if (!strcmp(attr, "name"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("name"))
    {
       value = vm->createValue(iface->name);
    }
-   else if (!strcmp(attr, "pic"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("pic"))
    {
       value = vm->createValue(iface->location.pic);
    }
-   else if (!strcmp(attr, "port"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("port"))
    {
       value = vm->createValue(iface->location.port);
    }
-   else if (!strcmp(attr, "speed"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("speed"))
    {
       value = vm->createValue(iface->speed);
    }
-   else if (!strcmp(attr, "type"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("type"))
    {
       value = vm->createValue(iface->type);
    }
@@ -584,7 +587,7 @@ class NXSL_DiscoveredNodeClass : public NXSL_Class
 public:
    NXSL_DiscoveredNodeClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *pObject, const char *attr);
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
 };
 
 /**
@@ -598,17 +601,20 @@ NXSL_DiscoveredNodeClass::NXSL_DiscoveredNodeClass() : NXSL_Class()
 /**
  * Implementation of NXSL class "DiscoveredNode" - get attribute
  */
-NXSL_Value *NXSL_DiscoveredNodeClass::getAttr(NXSL_Object *object, const char *attr)
+NXSL_Value *NXSL_DiscoveredNodeClass::getAttr(NXSL_Object *object, const NXSL_Identifier& attr)
 {
+   NXSL_Value *value = NXSL_Class::getAttr(object, attr);
+   if (value != nullptr)
+      return value;
+
    NXSL_VM *vm = object->vm();
    DiscoveryFilterData *data = static_cast<DiscoveryFilterData*>(object->getData());
-   NXSL_Value *value = nullptr;
 
-   if (!strcmp(attr, "agentVersion"))
+   if (NXSL_COMPARE_ATTRIBUTE_NAME("agentVersion"))
    {
       value = vm->createValue(data->agentVersion);
    }
-   else if (!strcmp(attr, "dnsName"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("dnsName"))
    {
       if (!data->dnsNameResolved)
       {
@@ -632,7 +638,7 @@ NXSL_Value *NXSL_DiscoveredNodeClass::getAttr(NXSL_Object *object, const char *a
       }
       value = (data->dnsName[0] != 0) ? vm->createValue(data->dnsName) : vm->createValue();
    }
-   else if (!strcmp(attr, "interfaces"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("interfaces"))
    {
       NXSL_Array *array = new NXSL_Array(vm);
       if (data->ifList != nullptr)
@@ -642,70 +648,70 @@ NXSL_Value *NXSL_DiscoveredNodeClass::getAttr(NXSL_Object *object, const char *a
       }
       value = vm->createValue(array);
    }
-   else if (!strcmp(attr, "ipAddr"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("ipAddr"))
    {
       TCHAR buffer[64];
       value = vm->createValue(data->ipAddr.toString(buffer));
    }
-   else if (!strcmp(attr, "isAgent"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("isAgent"))
    {
       value = vm->createValue((LONG)((data->flags & NNF_IS_AGENT) ? 1 : 0));
    }
-   else if (!strcmp(attr, "isBridge"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("isBridge"))
    {
       value = vm->createValue((LONG)((data->flags & NNF_IS_BRIDGE) ? 1 : 0));
    }
-   else if (!strcmp(attr, "isCDP"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("isCDP"))
    {
       value = vm->createValue((LONG)((data->flags & NNF_IS_CDP) ? 1 : 0));
    }
-   else if (!strcmp(attr, "isLLDP"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("isLLDP"))
    {
       value = vm->createValue((LONG)((data->flags & NNF_IS_LLDP) ? 1 : 0));
    }
-   else if (!strcmp(attr, "isPrinter"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("isPrinter"))
    {
       value = vm->createValue((LONG)((data->flags & NNF_IS_PRINTER) ? 1 : 0));
    }
-   else if (!strcmp(attr, "isRouter"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("isRouter"))
    {
       value = vm->createValue((LONG)((data->flags & NNF_IS_ROUTER) ? 1 : 0));
    }
-   else if (!strcmp(attr, "isSNMP"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("isSNMP"))
    {
       value = vm->createValue((LONG)((data->flags & NNF_IS_SNMP) ? 1 : 0));
    }
-   else if (!strcmp(attr, "isSONMP"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("isSONMP"))
    {
       value = vm->createValue((LONG)((data->flags & NNF_IS_SONMP) ? 1 : 0));
    }
-   else if (!strcmp(attr, "netMask"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("netMask"))
    {
       value = vm->createValue(data->ipAddr.getMaskBits());
    }
-   else if (!strcmp(attr, "platformName"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("platformName"))
    {
       value = vm->createValue(data->platform);
    }
-   else if (!strcmp(attr, "snmpOID"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("snmpOID"))
    {
       value = vm->createValue(data->snmpObjectId);
    }
-   else if (!strcmp(attr, "snmpVersion"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("snmpVersion"))
    {
       value = vm->createValue((LONG)data->snmpVersion);
    }
-   else if (!strcmp(attr, "subnet"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("subnet"))
    {
       TCHAR buffer[64];
       value = vm->createValue(data->ipAddr.getSubnetAddress().toString(buffer));
    }
-   else if (!strcmp(attr, "zone"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("zone"))
    {
       shared_ptr<Zone> zone = FindZoneByUIN(data->zoneUIN);
       value = (zone != nullptr) ? zone->createNXSLObject(vm) : vm->createValue();
    }
-   else if (!strcmp(attr, "zoneUIN"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("zoneUIN"))
    {
       value = vm->createValue(data->zoneUIN);
    }

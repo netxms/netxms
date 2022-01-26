@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -54,7 +54,7 @@ void NXSL_InetAddressClass::onObjectDelete(NXSL_Object *object)
 /**
  * Implementation of "InetAddress" class: get attribute
  */
-NXSL_Value *NXSL_InetAddressClass::getAttr(NXSL_Object *object, const char *attr)
+NXSL_Value *NXSL_InetAddressClass::getAttr(NXSL_Object *object, const NXSL_Identifier& attr)
 {
    NXSL_Value *value = NXSL_Class::getAttr(object, attr);
    if (value != nullptr)
@@ -62,44 +62,44 @@ NXSL_Value *NXSL_InetAddressClass::getAttr(NXSL_Object *object, const char *attr
 
    NXSL_VM *vm = object->vm();
    InetAddress *a = (InetAddress *)object->getData();
-   if (compareAttributeName(attr, "address"))
+   if (NXSL_COMPARE_ATTRIBUTE_NAME("address"))
    {
       TCHAR buffer[64];
       value = vm->createValue(a->toString(buffer));
    }
-   else if (compareAttributeName(attr, "family"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("family"))
    {
       value = vm->createValue((a->getFamily() == AF_INET) ? _T("inet") : (a->getFamily() == AF_INET6 ? _T("inet6") : _T("unspec")));
    }
-   else if (compareAttributeName(attr, "isAnyLocal"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("isAnyLocal"))
    {
       value = vm->createValue(a->isAnyLocal());
    }
-   else if (compareAttributeName(attr, "isBroadcast"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("isBroadcast"))
    {
       value = vm->createValue(a->isBroadcast());
    }
-   else if (compareAttributeName(attr, "isLinkLocal"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("isLinkLocal"))
    {
       value = vm->createValue(a->isLinkLocal());
    }
-   else if (compareAttributeName(attr, "isLoopback"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("isLoopback"))
    {
       value = vm->createValue(a->isLoopback());
    }
-   else if (compareAttributeName(attr, "isMulticast"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("isMulticast"))
    {
       value = vm->createValue(a->isMulticast());
    }
-   else if (compareAttributeName(attr, "isValid"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("isValid"))
    {
       value = vm->createValue(a->isValid());
    }
-   else if (compareAttributeName(attr, "isValidUnicast"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("isValidUnicast"))
    {
       value = vm->createValue(a->isValidUnicast());
    }
-   else if (compareAttributeName(attr, "mask"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("mask"))
    {
       value = vm->createValue(a->getMaskBits());
    }

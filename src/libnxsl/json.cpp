@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -227,22 +227,22 @@ void NXSL_JsonObjectClass::onObjectDelete(NXSL_Object *object)
 /**
  * Implementation of "JsonObject" class: get attribute
  */
-NXSL_Value *NXSL_JsonObjectClass::getAttr(NXSL_Object *object, const char *attr)
+NXSL_Value *NXSL_JsonObjectClass::getAttr(NXSL_Object *object, const NXSL_Identifier& attr)
 {
    NXSL_Value *value = NXSL_Class::getAttr(object, attr);
    if (value != nullptr)
       return value;
-   if (*attr == '?') // attribute scan
+   if (attr.value[0] == '?') // attribute scan
       return nullptr;
-   return ValueFromJson(object->vm(), json_object_get(static_cast<json_t*>(object->getData()), attr));
+   return ValueFromJson(object->vm(), json_object_get(static_cast<json_t*>(object->getData()), attr.value));
 }
 
 /**
  * Implementation of "JsonObject" class: set attribute
  */
-bool NXSL_JsonObjectClass::setAttr(NXSL_Object *object, const char *attr, NXSL_Value *value)
+bool NXSL_JsonObjectClass::setAttr(NXSL_Object *object, const NXSL_Identifier& attr, NXSL_Value *value)
 {
-   SetAttribute(static_cast<json_t*>(object->getData()), attr, value);
+   SetAttribute(static_cast<json_t*>(object->getData()), attr.value, value);
    return true;
 }
 
@@ -364,18 +364,18 @@ void NXSL_JsonArrayClass::onObjectDelete(NXSL_Object *object)
 /**
  * Implementation of "JsonObject" class: get attribute
  */
-NXSL_Value *NXSL_JsonArrayClass::getAttr(NXSL_Object *object, const char *attr)
+NXSL_Value *NXSL_JsonArrayClass::getAttr(NXSL_Object *object, const NXSL_Identifier& attr)
 {
    NXSL_Value *value = NXSL_Class::getAttr(object, attr);
    if (value != nullptr)
       return value;
 
    NXSL_VM *vm = object->vm();
-   if (compareAttributeName(attr, "size"))
+   if (NXSL_COMPARE_ATTRIBUTE_NAME("size"))
    {
       value = vm->createValue(static_cast<UINT32>(json_array_size(static_cast<json_t*>(object->getData()))));
    }
-   else if (compareAttributeName(attr, "values"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("values"))
    {
       NXSL_Array *values = new NXSL_Array(vm);
       json_t *jarray = static_cast<json_t*>(object->getData());

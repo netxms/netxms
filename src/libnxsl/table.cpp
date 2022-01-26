@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -244,7 +244,7 @@ void NXSL_TableClass::onObjectDelete(NXSL_Object *object)
 /**
  * Implementation of "Table" class: get attribute
  */
-NXSL_Value *NXSL_TableClass::getAttr(NXSL_Object *object, const char *attr)
+NXSL_Value *NXSL_TableClass::getAttr(NXSL_Object *object, const NXSL_Identifier& attr)
 {
    NXSL_Value *value = NXSL_Class::getAttr(object, attr);
    if (value != nullptr)
@@ -252,11 +252,11 @@ NXSL_Value *NXSL_TableClass::getAttr(NXSL_Object *object, const char *attr)
 
    NXSL_VM *vm = object->vm();
    shared_ptr<Table> table(*static_cast<shared_ptr<Table>*>(object->getData()));
-   if (compareAttributeName(attr, "columnCount"))
+   if (NXSL_COMPARE_ATTRIBUTE_NAME("columnCount"))
    {
       value = vm->createValue((LONG)table->getNumColumns());
    }
-   else if (compareAttributeName(attr, "columns"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("columns"))
    {
       NXSL_Array *columns = new NXSL_Array(vm);
       ObjectArray<TableColumnDefinition> *cd = table->getColumnDefinitions();
@@ -266,7 +266,7 @@ NXSL_Value *NXSL_TableClass::getAttr(NXSL_Object *object, const char *attr)
       }
       value = vm->createValue(columns);
    }
-   else if (compareAttributeName(attr, "instanceColumns"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("instanceColumns"))
    {
       NXSL_Array *columns = new NXSL_Array(vm);
       ObjectArray<TableColumnDefinition> *cd = table->getColumnDefinitions();
@@ -278,7 +278,7 @@ NXSL_Value *NXSL_TableClass::getAttr(NXSL_Object *object, const char *attr)
       }
       value = vm->createValue(columns);
    }
-   else if (compareAttributeName(attr, "instanceColumnIndexes"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("instanceColumnIndexes"))
    {
       NXSL_Array *columns = new NXSL_Array(vm);
       ObjectArray<TableColumnDefinition> *cd = table->getColumnDefinitions();
@@ -290,11 +290,11 @@ NXSL_Value *NXSL_TableClass::getAttr(NXSL_Object *object, const char *attr)
       }
       value = vm->createValue(columns);
    }
-   else if (compareAttributeName(attr, "rowCount"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("rowCount"))
    {
       value = vm->createValue((LONG)table->getNumRows());
    }
-   else if (compareAttributeName(attr, "rows"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("rows"))
    {
       NXSL_Array *rows = new NXSL_Array(vm);
       for(int i = 0; i < table->getNumRows(); i++)
@@ -303,7 +303,7 @@ NXSL_Value *NXSL_TableClass::getAttr(NXSL_Object *object, const char *attr)
       }
       value = vm->createValue(rows);
    }
-   else if (compareAttributeName(attr, "title"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("title"))
    {
       value = vm->createValue(table->getTitle());
    }
@@ -336,7 +336,7 @@ void NXSL_TableColumnClass::onObjectDelete(NXSL_Object *object)
 /**
  * Implementation of "TableColumn" class: get attribute
  */
-NXSL_Value *NXSL_TableColumnClass::getAttr(NXSL_Object *object, const char *attr)
+NXSL_Value *NXSL_TableColumnClass::getAttr(NXSL_Object *object, const NXSL_Identifier& attr)
 {
    NXSL_Value *value = NXSL_Class::getAttr(object, attr);
    if (value != nullptr)
@@ -344,19 +344,19 @@ NXSL_Value *NXSL_TableColumnClass::getAttr(NXSL_Object *object, const char *attr
 
    NXSL_VM *vm = object->vm();
    TableColumnDefinition *tc = static_cast<TableColumnDefinition*>(object->getData());
-   if (compareAttributeName(attr, "dataType"))
+   if (NXSL_COMPARE_ATTRIBUTE_NAME("dataType"))
    {
       value = vm->createValue(tc->getDataType());
    }
-   else if (compareAttributeName(attr, "displayName"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("displayName"))
    {
       value = vm->createValue(tc->getDisplayName());
    }
-   else if (compareAttributeName(attr, "isInstanceColumn"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("isInstanceColumn"))
    {
       value = vm->createValue(tc->isInstanceColumn());
    }
-   else if (compareAttributeName(attr, "name"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("name"))
    {
       value = vm->createValue(tc->getName());
    }
@@ -426,7 +426,7 @@ void NXSL_TableRowClass::onObjectDelete(NXSL_Object *object)
 /**
  * Implementation of "TableRow" class: get attribute
  */
-NXSL_Value *NXSL_TableRowClass::getAttr(NXSL_Object *object, const char *attr)
+NXSL_Value *NXSL_TableRowClass::getAttr(NXSL_Object *object, const NXSL_Identifier& attr)
 {
    NXSL_Value *value = NXSL_Class::getAttr(object, attr);
    if (value != nullptr)
@@ -434,17 +434,17 @@ NXSL_Value *NXSL_TableRowClass::getAttr(NXSL_Object *object, const char *attr)
 
    NXSL_VM *vm = object->vm();
    TableRowReference *row = static_cast<TableRowReference*>(object->getData());
-   if (compareAttributeName(attr, "index"))
+   if (NXSL_COMPARE_ATTRIBUTE_NAME("index"))
    {
       value = vm->createValue(row->getIndex());
    }
-   else if (compareAttributeName(attr, "instance"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("instance"))
    {
       TCHAR instance[1024] = _T("");
       row->getTable()->buildInstanceString(row->getIndex(), instance, 1024);
       value = vm->createValue(instance);
    }
-   else if (compareAttributeName(attr, "values"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("values"))
    {
       NXSL_Array *values = new NXSL_Array(vm);
       for(int i = 0; i < row->getTable()->getNumColumns(); i++)

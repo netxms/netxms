@@ -33,7 +33,7 @@ public:
 
    virtual void onObjectDelete(NXSL_Object *object) override;
 
-   virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr) override;
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
 };
 
 /**
@@ -44,7 +44,7 @@ class NXSL_SubnetClass : public NXSL_NetObjClass
 public:
    NXSL_SubnetClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr) override;
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
 };
 
 /**
@@ -55,7 +55,7 @@ class NXSL_DCTargetClass : public NXSL_NetObjClass
 public:
    NXSL_DCTargetClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr) override;
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
 };
 
 /**
@@ -66,7 +66,7 @@ class NXSL_NodeClass : public NXSL_DCTargetClass
 public:
    NXSL_NodeClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr) override;
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
 };
 
 /**
@@ -77,7 +77,7 @@ class NXSL_InterfaceClass : public NXSL_NetObjClass
 public:
    NXSL_InterfaceClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr) override;
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
 };
 
 /**
@@ -88,7 +88,7 @@ class NXSL_AccessPointClass : public NXSL_DCTargetClass
 public:
    NXSL_AccessPointClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr) override;
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
 };
 
 /**
@@ -99,7 +99,7 @@ class NXSL_MobileDeviceClass : public NXSL_DCTargetClass
 public:
    NXSL_MobileDeviceClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr) override;
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
 };
 
 /**
@@ -110,7 +110,7 @@ class NXSL_ChassisClass : public NXSL_DCTargetClass
 public:
    NXSL_ChassisClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr) override;
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
 };
 
 /**
@@ -121,7 +121,7 @@ class NXSL_ClusterClass : public NXSL_DCTargetClass
 public:
    NXSL_ClusterClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr) override;
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
 };
 
 /**
@@ -132,7 +132,7 @@ class NXSL_ContainerClass : public NXSL_NetObjClass
 public:
    NXSL_ContainerClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr) override;
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
 };
 
 /**
@@ -143,7 +143,7 @@ class NXSL_TemplateClass : public NXSL_NetObjClass
 public:
    NXSL_TemplateClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr) override;
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
 };
 
 /**
@@ -154,7 +154,7 @@ class NXSL_ZoneClass : public NXSL_NetObjClass
 public:
    NXSL_ZoneClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr) override;
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
 };
 
 /**
@@ -165,7 +165,7 @@ class NXSL_SensorClass : public NXSL_DCTargetClass
 public:
    NXSL_SensorClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr) override;
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
 };
 
 /**
@@ -176,7 +176,7 @@ class NXSL_BusinessServiceClass : public NXSL_NetObjClass
 public:
    NXSL_BusinessServiceClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr) override;
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
 };
 
 /**
@@ -187,7 +187,7 @@ class NXSL_BusinessServiceCheckClass : public NXSL_Class
 public:
    NXSL_BusinessServiceCheckClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr) override;
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
    virtual void onObjectDelete(NXSL_Object *object) override;
 };
 
@@ -199,8 +199,8 @@ class NXSL_EventClass : public NXSL_Class
 public:
    NXSL_EventClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr) override;
-   virtual bool setAttr(NXSL_Object *object, const char *attr, NXSL_Value *value) override;
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
+   virtual bool setAttr(NXSL_Object *object, const NXSL_Identifier& attr, NXSL_Value *value) override;
    virtual void onObjectDelete(NXSL_Object *object) override;
 };
 
@@ -212,7 +212,7 @@ class NXSL_AlarmClass : public NXSL_Class
 public:
    NXSL_AlarmClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr) override;
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
    virtual void onObjectDelete(NXSL_Object *object) override;
 };
 
@@ -224,7 +224,7 @@ class NXSL_AlarmCommentClass : public NXSL_Class
 public:
    NXSL_AlarmCommentClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr) override;
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
    virtual void onObjectDelete(NXSL_Object *object) override;
 };
 
@@ -236,7 +236,7 @@ class NXSL_DciClass : public NXSL_Class
 public:
    NXSL_DciClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr) override;
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
    virtual void onObjectDelete(NXSL_Object *object) override;
 };
 
@@ -248,7 +248,7 @@ class NXSL_SNMPTransportClass : public NXSL_Class
 public:
    NXSL_SNMPTransportClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr) override;
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
    virtual void onObjectDelete(NXSL_Object *object) override;
 };
 
@@ -260,7 +260,7 @@ class NXSL_SNMPVarBindClass : public NXSL_Class
 public:
    NXSL_SNMPVarBindClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr) override;
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
    virtual void onObjectDelete(NXSL_Object *object) override;
 };
 
@@ -272,7 +272,7 @@ class NXSL_NodeDependencyClass : public NXSL_Class
 public:
    NXSL_NodeDependencyClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr) override;
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
    virtual void onObjectDelete(NXSL_Object *object) override;
 };
 
@@ -320,7 +320,7 @@ class NXSL_UserDBObjectClass : public NXSL_Class
 public:
    NXSL_UserDBObjectClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr) override;
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
 };
 
 /**
@@ -331,7 +331,7 @@ class NXSL_UserClass : public NXSL_UserDBObjectClass
 public:
    NXSL_UserClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr) override;
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
    virtual void onObjectDelete(NXSL_Object *object) override;
 };
 
@@ -343,7 +343,7 @@ class NXSL_UserGroupClass : public NXSL_UserDBObjectClass
 public:
    NXSL_UserGroupClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr) override;
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
    virtual void onObjectDelete(NXSL_Object *object) override;
 };
 
@@ -355,7 +355,7 @@ class NXSL_VlanClass : public NXSL_Class
 public:
    NXSL_VlanClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr) override;
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
    virtual void onObjectDelete(NXSL_Object *object) override;
 };
 
@@ -367,7 +367,7 @@ class NXSL_WebService : public NXSL_Class
 public:
    NXSL_WebService();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr) override;
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
    virtual void onObjectDelete(NXSL_Object *object) override;
 };
 
@@ -379,7 +379,7 @@ class NXSL_WebServiceCallResult : public NXSL_Class
 public:
    NXSL_WebServiceCallResult();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr) override;
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
    virtual void onObjectDelete(NXSL_Object *object) override;
 };
 
@@ -391,7 +391,7 @@ class NXSL_TunnelClass : public NXSL_Class
 public:
    NXSL_TunnelClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr) override;
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
    virtual void onObjectDelete(NXSL_Object *object) override;
 };
 
@@ -403,7 +403,7 @@ class NXSL_HardwareComponent : public NXSL_Class
 public:
    NXSL_HardwareComponent();
 
-   virtual NXSL_Value* getAttr(NXSL_Object* object, const char* attr) override;
+   virtual NXSL_Value* getAttr(NXSL_Object* object, const NXSL_Identifier& attr) override;
    virtual void onObjectDelete(NXSL_Object* object) override;
 };
 
@@ -415,7 +415,7 @@ class NXSL_SoftwarePackage : public NXSL_Class
 public:
    NXSL_SoftwarePackage();
 
-   virtual NXSL_Value* getAttr(NXSL_Object* object, const char* attr) override;
+   virtual NXSL_Value* getAttr(NXSL_Object* object, const NXSL_Identifier& attr) override;
    virtual void onObjectDelete(NXSL_Object* object) override;
 };
 

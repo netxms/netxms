@@ -555,7 +555,7 @@ NXSL_Variable *NXSL_VM::findVariable(const NXSL_Identifier& name, NXSL_VariableS
    if (m_context != nullptr)
    {
       NXSL_Object *object = m_context->getValueAsObject();
-      NXSL_Value *value = object->getClass()->getAttr(object, name.value);
+      NXSL_Value *value = object->getClass()->getAttr(object, name);
       if (value != nullptr)
       {
          var = m_contextVariables->find(name);
@@ -1628,16 +1628,13 @@ void NXSL_VM::execute()
          {
             if (pValue->getDataType() == NXSL_DT_OBJECT)
             {
-               NXSL_Object *pObj;
-               NXSL_Value *pAttr;
-
-               pObj = pValue->getValueAsObject();
-               if (pObj != nullptr)
+               NXSL_Object *object = pValue->getValueAsObject();
+               if (object != nullptr)
                {
-                  pAttr = pObj->getClass()->getAttr(pObj, cp->m_operand.m_identifier->value);
-                  if (pAttr != nullptr)
+                  NXSL_Value *attr = object->getClass()->getAttr(object, *cp->m_operand.m_identifier);
+                  if (attr != nullptr)
                   {
-                     m_dataStack.push(pAttr);
+                     m_dataStack.push(attr);
                   }
                   else
                   {

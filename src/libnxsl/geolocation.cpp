@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -54,7 +54,7 @@ void NXSL_GeoLocationClass::onObjectDelete(NXSL_Object *object)
 /**
  * Implementation of "GeoLocation" class: get attribute
  */
-NXSL_Value *NXSL_GeoLocationClass::getAttr(NXSL_Object *object, const char *attr)
+NXSL_Value *NXSL_GeoLocationClass::getAttr(NXSL_Object *object, const NXSL_Identifier& attr)
 {
    NXSL_Value *value = NXSL_Class::getAttr(object, attr);
    if (value != nullptr)
@@ -62,31 +62,31 @@ NXSL_Value *NXSL_GeoLocationClass::getAttr(NXSL_Object *object, const char *attr
 
    NXSL_VM *vm = object->vm();
    GeoLocation *gl = static_cast<GeoLocation*>(object->getData());
-   if (compareAttributeName(attr, "isManual"))
+   if (NXSL_COMPARE_ATTRIBUTE_NAME("isManual"))
    {
       value = vm->createValue(gl->isManual());
    }
-   else if (compareAttributeName(attr, "isValid"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("isValid"))
    {
       value = vm->createValue(gl->isValid());
    }
-   else if (compareAttributeName(attr, "latitude"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("latitude"))
    {
       value = vm->createValue(gl->getLatitude());
    }
-   else if (compareAttributeName(attr, "latitudeText"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("latitudeText"))
    {
       value = vm->createValue(gl->getLatitudeAsString());
    }
-   else if (compareAttributeName(attr, "longitude"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("longitude"))
    {
       value = vm->createValue(gl->getLongitude());
    }
-   else if (compareAttributeName(attr, "longitudeText"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("longitudeText"))
    {
       value = vm->createValue(gl->getLongitudeAsString());
    }
-   else if (compareAttributeName(attr, "type"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("type"))
    {
       value = vm->createValue(gl->getType());
    }

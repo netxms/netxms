@@ -117,7 +117,7 @@ struct LIBNXSL_EXPORTABLE NXSL_Identifier
 
    bool equals(const NXSL_Identifier& i) const
    {
-      return (i.length == length) && !strcmp(i.value, value);
+      return (i.length == length) && !memcmp(i.value, value, length);
    }
 };
 
@@ -248,7 +248,7 @@ public:
  */
 struct NXSL_ExtMethod
 {
-   int (* handler)(NXSL_Object *object, int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+   int (*handler)(NXSL_Object *object, int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
    int numArgs;   // Number of arguments or -1 for variable number
 };
 
@@ -261,6 +261,12 @@ struct NXSL_ExtMethod
       m->numArgs = argc; \
       m_methods->set(#name, m); \
    }
+
+/**
+ * Handle class attribute request. It is supposed to be used within getAttr methhod with standard parameter naming.
+ */
+#define NXSL_COMPARE_ATTRIBUTE_NAME(name) \
+   [this, &attr]() -> bool { static NXSL_Identifier __iname(name); return compareAttributeName(attr, __iname); } ()
 
 /**
  * Class representing NXSL class
@@ -282,26 +288,26 @@ protected:
    const StringList& getClassHierarchy() const { return m_classHierarchy; }
    const StringSet& getAttributes() const { return m_attributes; }
 
-   bool compareAttributeName(const char *name, const char *tmpl)
+   bool compareAttributeName(const NXSL_Identifier& name, const NXSL_Identifier& tmpl)
    {
-      if (*name == '?')
+      if (name.value[0] == '?')
       {
 #ifdef UNICODE
-         m_attributes.addPreallocated(WideStringFromUTF8String(tmpl));
+         m_attributes.addPreallocated(WideStringFromUTF8String(tmpl.value));
 #else
-         m_attributes.add(tmpl);
+         m_attributes.add(tmpl.value);
 #endif
          return false;
       }
-      return strcmp(name, tmpl) == 0;
+      return name.equals(tmpl);
    }
 
 public:
    NXSL_Class();
    virtual ~NXSL_Class();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr);
-   virtual bool setAttr(NXSL_Object *object, const char *attr, NXSL_Value *value);
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr);
+   virtual bool setAttr(NXSL_Object *object, const NXSL_Identifier& attr, NXSL_Value *value);
 
    virtual int callMethod(const NXSL_Identifier& name, NXSL_Object *object, int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 
@@ -1312,7 +1318,7 @@ public:
    NXSL_TableRowClass();
    virtual ~NXSL_TableRowClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr) override;
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
    virtual void onObjectDelete(NXSL_Object *object) override;
 };
 
@@ -1325,7 +1331,7 @@ public:
    NXSL_TableColumnClass();
    virtual ~NXSL_TableColumnClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr) override;
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
 	virtual void onObjectDelete(NXSL_Object *object) override;
 };
 
@@ -1338,7 +1344,7 @@ public:
    NXSL_TableClass();
    virtual ~NXSL_TableClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr) override;
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
 	virtual void onObjectDelete(NXSL_Object *object) override;
 };
 
@@ -1363,7 +1369,7 @@ public:
    NXSL_GeoLocationClass();
    virtual ~NXSL_GeoLocationClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr) override;
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
    virtual void onObjectDelete(NXSL_Object *object) override;
 
    static NXSL_Value *createObject(NXSL_VM *vm, const GeoLocation& gl);
@@ -1378,7 +1384,7 @@ public:
    NXSL_InetAddressClass();
    virtual ~NXSL_InetAddressClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr) override;
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
    virtual void onObjectDelete(NXSL_Object *object) override;
 
    static NXSL_Value *createObject(NXSL_VM *vm, const InetAddress& addr);
@@ -1393,8 +1399,8 @@ public:
    NXSL_JsonObjectClass();
    virtual ~NXSL_JsonObjectClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr) override;
-   virtual bool setAttr(NXSL_Object *object, const char *attr, NXSL_Value *value) override;
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
+   virtual bool setAttr(NXSL_Object *object, const NXSL_Identifier& attr, NXSL_Value *value) override;
    virtual void onObjectDelete(NXSL_Object *object) override;
 };
 
@@ -1407,7 +1413,7 @@ public:
    NXSL_JsonArrayClass();
    virtual ~NXSL_JsonArrayClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr) override;
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
    virtual void onObjectDelete(NXSL_Object *object) override;
 };
 
@@ -1420,7 +1426,7 @@ public:
    NXSL_MetaClass();
    virtual ~NXSL_MetaClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr) override;
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
 };
 
 /**

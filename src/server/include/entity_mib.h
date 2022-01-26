@@ -61,13 +61,13 @@ public:
             const TCHAR *vendor, const TCHAR *firmware);
    ~Component();
 
-   UINT32 updateFromSnmp(SNMP_Transport *snmp);
+   uint32_t updateFromSnmp(SNMP_Transport *snmp);
    void buildTree(ObjectArray<Component> *elements);
 
-   UINT32 getIndex() const { return m_index; }
-   UINT32 getParentIndex() const { return m_parentIndex; }
+   uint32_t getIndex() const { return m_index; }
+   uint32_t getParentIndex() const { return m_parentIndex; }
    const Component *getParent() const { return m_parent; }
-   INT32 getPosition() const { return m_position; }
+   int32_t getPosition() const { return m_position; }
    const ObjectArray<Component> *getChildren() const { return m_children; }
 
    template<typename C> void forEach(void (*callback)(const Component*, C*), C *context) const
@@ -76,9 +76,9 @@ public:
          callback(m_children->get(i), context);
    }
 
-   UINT32 getClass() const { return m_class; }
+   uint32_t getClass() const { return m_class; }
    const TCHAR *getDescription() const { return m_description; }
-   UINT32 getIfIndex() const { return m_ifIndex; }
+   uint32_t getIfIndex() const { return m_ifIndex; }
    const TCHAR *getFirmware() const { return m_firmware; }
    const TCHAR *getModel() const { return m_model; }
    const TCHAR *getName() const { return m_name; }
@@ -87,7 +87,7 @@ public:
 
    bool equals(const Component *c) const;
 
-   UINT32 fillMessage(NXCPMessage *msg, UINT32 baseId) const;
+   uint32_t fillMessage(NXCPMessage *msg, uint32_t baseId) const;
 
    void print(ServerConsole *console, int level) const;
 };
@@ -106,7 +106,7 @@ public:
    ~ComponentTree();
 
    void fillMessage(NXCPMessage *msg, UINT32 baseId) const;
-   void print(ServerConsole *console) const { if (m_root != NULL) m_root->print(console, 0); }
+   void print(ServerConsole *console) const { if (m_root != nullptr) m_root->print(console, 0); }
 
    bool isEmpty() const { return m_root == NULL; }
    const Component *getRoot() const { return m_root; }
@@ -129,7 +129,7 @@ class LIBNXSRV_EXPORTABLE NXSL_ComponentClass : public NXSL_Class
 public:
    NXSL_ComponentClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr) override;
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
    virtual void onObjectDelete(NXSL_Object *object) override;
 };
 
