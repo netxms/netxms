@@ -81,10 +81,10 @@ bool BusinessServicePrototype::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
 
    m_instanceDiscoveryMethod = DBGetFieldULong(hResult, 0, 0);
    m_instanceDiscoveryData = DBGetField(hResult, 0, 1, nullptr, 0);
-   m_instanceSource = DBGetFieldULong(hResult, 0, 3);
-   m_instanceDiscoveryFilter = DBGetField(hResult, 0, 4, nullptr, 0);
-   m_objectStatusThreshhold = DBGetFieldULong(hResult, 0, 5);
-   m_dciStatusThreshhold = DBGetFieldULong(hResult, 0, 6);
+   m_instanceSource = DBGetFieldULong(hResult, 0, 2);
+   m_instanceDiscoveryFilter = DBGetField(hResult, 0, 3, nullptr, 0);
+   m_objectStatusThreshhold = DBGetFieldULong(hResult, 0, 4);
+   m_dciStatusThreshhold = DBGetFieldULong(hResult, 0, 5);
 
    DBFreeResult(hResult);
    DBFreeStatement(hStmt);
@@ -233,22 +233,32 @@ void BusinessServicePrototype::processRelatedServices(std::function<void (Busine
  */
 void BusinessServicePrototype::compileInstanceDiscoveryFilterScript()
 {
-   if (m_instanceDiscoveryFilter == nullptr)
+   if ((m_instanceDiscoveryFilter == nullptr) || (*m_instanceDiscoveryFilter == 0))
+   {
+      delete_and_null(m_compiledInstanceDiscoveryFilter);
       return;
-
-   const int errorMsgLen = 512;
-   TCHAR errorMsg[errorMsgLen];
+   }
 
    delete m_compiledInstanceDiscoveryFilter;
    NXSL_ServerEnv env;
-   m_compiledInstanceDiscoveryFilter = NXSLCompile(m_instanceDiscoveryFilter, errorMsg, errorMsgLen, nullptr, &env);
-   if (m_compiledInstanceDiscoveryFilter == nullptr)
+   TCHAR errorMsg[256];
+   m_compiledInstanceDiscoveryFilter = NXSLCompile(m_instanceDiscoveryFilter, errorMsg, sizeof(errorMsg) / sizeof(TCHAR), nullptr, &env);
+   if (m_compiledInstanceDiscoveryFilter != nullptr)
    {
-      nxlog_debug_tag(DEBUG_TAG_BIZSVC, 2, _T("Failed to compile filter script for service instance discovery %s [%u] (%s)"), m_name, m_id, errorMsg);
+      if (!m_compiledInstanceDiscoveryFilter->isEmpty())
+      {
+         nxlog_debug_tag(DEBUG_TAG_BIZSVC, 5, _T("Successfully compiled instance discovery filter script for business service prototype %s [%u]"), m_name, m_id);
+      }
+      else
+      {
+         nxlog_debug_tag(DEBUG_TAG_BIZSVC, 5, _T("Instance discovery filter script for business service prototype %s [%u] is empty"), m_name, m_id);
+         delete_and_null(m_compiledInstanceDiscoveryFilter);
+      }
    }
    else
    {
-      nxlog_debug_tag(DEBUG_TAG_BIZSVC, 4, _T("Compiled filter script for service instance discovery %s [%u] : (%s)"), m_name, m_id, m_instanceDiscoveryFilter);
+      nxlog_debug_tag(DEBUG_TAG_BIZSVC, 3, _T("Compilation error in instance discovery filter script for business service prototype %s [%u] (%s)"), m_name, m_id, errorMsg);
+      ReportScriptError(SCRIPT_CONTEXT_BIZSVC, this, 0, errorMsg, _T("%s::%s::InstanceDiscovery"), getObjectClassName(), m_name);
    }
 }
 
