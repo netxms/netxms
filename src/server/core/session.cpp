@@ -10965,6 +10965,7 @@ void ClientSession::executeScript(const NXCPMessage& request)
          TCHAR buffer[1024];
          const TCHAR *value = vm->getResult()->getValueAsCString();
          _sntprintf(buffer, 1024, _T("\n\n*** FINISHED ***\n\nResult: %s\n\n"), CHECK_NULL(value));
+         buffer[1023] = 0;
          response.setField(VID_MESSAGE, buffer);
 			response.setField(VID_RCC, RCC_SUCCESS);
          response.setEndOfSequence();
