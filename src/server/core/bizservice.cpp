@@ -129,7 +129,7 @@ void BusinessService::updateFromPrototype(const BusinessServicePrototype& protot
       }
       if (!found && (c->getPrototypeServiceId() == prototype.getId()))
       {
-         c->deleteFromDatabase();
+         m_deletedChecks.add(c->getId());
          it.remove();
       }
    }
@@ -153,7 +153,6 @@ void BusinessService::updateCheckFromPrototype(const BusinessServiceCheck& proto
       if (c->getPrototypeCheckId() == prototype.getId())
       {
          c->updateFromPrototype(prototype);
-         c->saveToDatabase();
          found = true;
          break;
       }
@@ -162,9 +161,10 @@ void BusinessService::updateCheckFromPrototype(const BusinessServiceCheck& proto
    {
       auto c = make_shared<BusinessServiceCheck>(m_id, prototype);
       m_checks.add(c);
-      c->saveToDatabase();
    }
    checksUnlock();
+
+   setModified(MODIFY_BIZSVC_CHECKS, false);
 }
 
 /**
@@ -181,8 +181,9 @@ void BusinessService::deleteCheckFromPrototype(uint32_t prototypeCheckId)
       const shared_ptr<BusinessServiceCheck>& c = it.next();
       if (c->getPrototypeCheckId() == prototypeCheckId)
       {
-         c->deleteFromDatabase();
+         m_deletedChecks.add(c->getId());
          it.remove();
+         setModified(MODIFY_BIZSVC_CHECKS, false);
          break;
       }
    }

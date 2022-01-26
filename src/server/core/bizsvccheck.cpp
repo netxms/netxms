@@ -248,17 +248,6 @@ bool BusinessServiceCheck::saveToDatabase() const
 }
 
 /**
- * Delete business service check from database
- */
-bool BusinessServiceCheck::deleteFromDatabase()
-{
-	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-	bool success = ExecuteQueryOnObject(hdb, m_id, _T("DELETE FROM business_service_checks WHERE id=?"));
-	DBConnectionPoolReleaseConnection(hdb);
-	return success;
-}
-
-/**
  * Execute check. It could be object status check, or DCI status check or script
  */
 int BusinessServiceCheck::execute(BusinessServiceTicketData* ticket)

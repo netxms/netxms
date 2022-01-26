@@ -119,15 +119,11 @@ uint32_t BaseBusinessService::deleteCheck(uint32_t checkId)
    {
       if (it.next()->getId() == checkId)
       {
-         if (deleteCheckFromDatabase(checkId))
-         {
-            it.remove();
-            rcc = RCC_SUCCESS;
-         }
-         else
-         {
-            rcc = RCC_DB_FAILURE;
-         }
+         m_deletedChecks.add(checkId);
+         it.remove();
+         setModified(MODIFY_BIZSVC_CHECKS, false);
+         NotifyClientsOnBusinessServiceCheckDelete(*this, checkId);
+         rcc = RCC_SUCCESS;
          break;
       }
    }
@@ -137,25 +133,6 @@ uint32_t BaseBusinessService::deleteCheck(uint32_t checkId)
       onCheckDelete(checkId);
 
    return rcc;
-}
-
-/**
- * Delete business service check from database
- */
-bool BaseBusinessService::deleteCheckFromDatabase(uint32_t checkId)
-{
-   bool success = false;
-   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   DB_STATEMENT hStmt = DBPrepare(hdb, _T("DELETE FROM business_service_checks WHERE id=?"));
-   if (hStmt != nullptr)
-   {
-      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, checkId);
-      success = DBExecute(hStmt);
-      DBFreeStatement(hStmt);
-      NotifyClientsOnBusinessServiceCheckDelete(*this, checkId);
-   }
-   DBConnectionPoolReleaseConnection(hdb);
-   return success;
 }
 
 /**
@@ -187,16 +164,10 @@ uint32_t BaseBusinessService::modifyCheckFromMessage(const NXCPMessage& request)
    if (check != nullptr)
    {
       check->modifyFromMessage(request);
-      if (check->saveToDatabase())
-      {
-         rcc = RCC_SUCCESS;
-         if (checkId == 0) // new check was created
-            m_checks.add(check);
-      }
-      else
-      {
-         rcc = RCC_DB_FAILURE;
-      }
+      if (checkId == 0) // new check was created
+         m_checks.add(check);
+      setModified(MODIFY_BIZSVC_CHECKS, false);
+      rcc = RCC_SUCCESS;
    }
 
    checksUnlock();
@@ -270,6 +241,20 @@ bool BaseBusinessService::saveToDatabase(DB_HANDLE hdb)
       checksLock();
       for (int i = 0; (i < m_checks.size()) && success; i++)
          success = m_checks.get(i)->saveToDatabase();
+      if (success && !m_deletedChecks.isEmpty())
+      {
+         StringBuffer query(_T("DELETE FROM business_service_checks WHERE id IN ("));
+         for(int i = 0; i < m_deletedChecks.size(); i++)
+         {
+            query.append(m_deletedChecks.get(i));
+            query.append(_T(","));
+         }
+         query.shrink(1);
+         query.append(_T(")"));
+         success = DBQuery(hdb, query);
+         if (success)
+            m_deletedChecks.clear();
+      }
       checksUnlock();
    }
 

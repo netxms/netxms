@@ -4332,7 +4332,6 @@ public:
    void modifyFromMessage(const NXCPMessage& request);
    void fillMessage(NXCPMessage *msg, uint32_t baseId) const;
    bool saveToDatabase() const;
-   bool deleteFromDatabase();
 
    void updateFromPrototype(const BusinessServiceCheck& prototype);
 };
@@ -4368,6 +4367,7 @@ class NXCORE_EXPORTABLE BaseBusinessService : public AbstractContainer, public A
 
 protected:
    SharedObjectArray<BusinessServiceCheck> m_checks;
+   IntegerArray<uint32_t> m_deletedChecks;
    bool m_pollingDisabled;
    uint32_t m_objectStatusThreshhold;
    uint32_t m_dciStatusThreshhold;
@@ -4383,7 +4383,6 @@ protected:
    void checksUnlock() const { m_checkMutex.unlock(); }
 
    bool loadChecksFromDatabase(DB_HANDLE hdb);
-   bool deleteCheckFromDatabase(uint32_t checkId);
 
 public:
    BaseBusinessService(const TCHAR* name);
