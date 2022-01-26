@@ -235,9 +235,7 @@ bool BusinessService::saveToDatabase(DB_HANDLE hdb)
    bool success = true;
    if (m_modified & MODIFY_BIZSVC_PROPERTIES)
    {
-      static const TCHAR *columns[] = {
-            _T("prototype_id"), _T("instance"), _T("object_status_threshold"), _T("dci_status_threshold"), nullptr
-      };
+      static const TCHAR *columns[] = { _T("prototype_id"), _T("instance"), _T("object_status_threshold"), _T("dci_status_threshold"), nullptr };
       DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("business_services"), _T("id"), m_id, columns);
       bool success = false;
       if (hStmt != nullptr)
@@ -254,6 +252,17 @@ bool BusinessService::saveToDatabase(DB_HANDLE hdb)
       }
    }
 
+   return success;
+}
+
+/**
+ * Delete object from database
+ */
+bool BusinessService::deleteFromDatabase(DB_HANDLE hdb)
+{
+   bool success = super::deleteFromDatabase(hdb);
+   if (success)
+      success = executeQueryOnObject(hdb, _T("DELETE FROM business_services WHERE id=?"));
    return success;
 }
 

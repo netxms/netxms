@@ -116,7 +116,7 @@ static BOOL FindSubnetForNode(DWORD id, const TCHAR *name)
 /**
  * Check missing object properties
  */
-static void CheckMissingObjectProperties(const TCHAR *table, const TCHAR *className, UINT32 builtinObjectId)
+static void CheckMissingObjectProperties(const TCHAR *table, const TCHAR *className, uint32_t builtinObjectId)
 {
    TCHAR query[1024];
    _sntprintf(query, 1024, _T("SELECT o.id FROM %s o LEFT OUTER JOIN object_properties p ON p.object_id = o.id WHERE p.name IS NULL"), table);
@@ -127,7 +127,7 @@ static void CheckMissingObjectProperties(const TCHAR *table, const TCHAR *classN
    int count = DBGetNumRows(hResult);
    for(int i = 0; i < count; i++)
    {
-      UINT32 id = DBGetFieldULong(hResult, i, 0);
+      uint32_t id = DBGetFieldULong(hResult, i, 0);
       if (id == builtinObjectId)
          continue;
       g_dbCheckErrors++;
@@ -234,19 +234,19 @@ static void CheckComponents(const TCHAR *pszDisplayName, const TCHAR *pszTable)
    TCHAR query[256];
    _sntprintf(query, 1024, _T("SELECT id,node_id FROM %s"), pszTable);
    DB_RESULT hResult = SQLSelect(query);
-   if (hResult != NULL)
+   if (hResult != nullptr)
    {
       int count = DBGetNumRows(hResult);
       SetStageWorkTotal(count);
       for(int i = 0; i < count; i++)
       {
-         UINT32 objectId = DBGetFieldULong(hResult, i, 0);
+         uint32_t objectId = DBGetFieldULong(hResult, i, 0);
 
          // Check if referred node exists
          _sntprintf(query, 256, _T("SELECT name FROM object_properties WHERE object_id=%d AND is_deleted=0"),
                     DBGetFieldULong(hResult, i, 1));
          DB_RESULT hResult2 = SQLSelect(query);
-         if (hResult2 != NULL)
+         if (hResult2 != nullptr)
          {
             if (DBGetNumRows(hResult2) == 0)
             {
@@ -278,13 +278,13 @@ static void CheckObjectProperties()
 {
    StartStage(_T("Object properties"));
    DB_RESULT hResult = SQLSelect(_T("SELECT object_id,name,last_modified FROM object_properties"));
-   if (hResult != NULL)
+   if (hResult != nullptr)
    {
       int count = DBGetNumRows(hResult);
       SetStageWorkTotal(count);
       for(int i = 0; i < count; i++)
       {
-         UINT32 objectId = DBGetFieldULong(hResult, i, 0);
+         uint32_t objectId = DBGetFieldULong(hResult, i, 0);
 
          // Check last change time
          if (DBGetFieldULong(hResult, i, 2) == 0)
@@ -296,7 +296,7 @@ static void CheckObjectProperties()
             {
                TCHAR query[256];
                _sntprintf(query, 256, _T("UPDATE object_properties SET last_modified=") TIME_T_FMT _T(" WHERE object_id=%d"),
-                          TIME_T_FCAST(time(NULL)), (int)objectId);
+                          TIME_T_FCAST(time(nullptr)), (int)objectId);
                if (SQLQuery(query))
                   g_dbCheckFixes++;
             }
@@ -316,7 +316,7 @@ static void CheckContainerMembership()
    StartStage(_T("Container membership"));
    DB_RESULT containerList = SQLSelect(_T("SELECT object_id,container_id FROM container_members"));
    DB_RESULT objectList = SQLSelect(_T("SELECT object_id FROM object_properties"));
-   if (containerList != NULL && objectList != NULL)
+   if (containerList != nullptr && objectList != nullptr)
    {
       int numContainers = DBGetNumRows(containerList);
       int numObjects = DBGetNumRows(objectList);
@@ -366,17 +366,17 @@ static void CheckClusters()
 
    StartStage(_T("Cluster member nodes"));
    DB_RESULT hResult = SQLSelect(_T("SELECT cluster_id,node_id FROM cluster_members"));
-   if (hResult != NULL)
+   if (hResult != nullptr)
    {
       int count = DBGetNumRows(hResult);
       SetStageWorkTotal(count);
       for(int i = 0; i < count; i++)
       {
-         UINT32 nodeId = DBGetFieldULong(hResult, i, 1);
+         uint32_t nodeId = DBGetFieldULong(hResult, i, 1);
 			if (!IsDatabaseRecordExist(g_dbHandle, _T("nodes"), _T("id"), nodeId))
 			{
             g_dbCheckErrors++;
-            UINT32 clusterId = DBGetFieldULong(hResult, i, 0);
+            uint32_t clusterId = DBGetFieldULong(hResult, i, 0);
             TCHAR name[MAX_OBJECT_NAME];
             if (GetYesNoEx(_T("Cluster object %s [%d] refers to non-existing node %d. Dereference?"),
 				               DBMgrGetObjectName(clusterId, name), clusterId, nodeId))
@@ -1257,6 +1257,20 @@ static void CheckMapLinks()
 }
 
 /**
+ * Check business services
+ */
+static void CheckBusinessServices()
+{
+   StartStage(_T("Business services"));
+   CheckMissingObjectProperties(_T("business_services"), _T("business service"), 0);
+   EndStage();
+
+   StartStage(_T("Business service prototypes"));
+   CheckMissingObjectProperties(_T("business_service_prototypes"), _T("business service prototype"), 0);
+   EndStage();
+}
+
+/**
  * Lock database
  */
 static bool LockDatabase()
@@ -1361,6 +1375,7 @@ void CheckDatabase()
          CheckComponents(_T("Network service"), _T("network_services"));
          CheckClusters();
          CheckTemplateNodeMapping();
+         CheckBusinessServices();
          CheckObjectProperties();
          CheckContainerMembership();
          CheckEPP();

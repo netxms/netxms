@@ -4396,6 +4396,7 @@ public:
 
    virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
+   virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
 
    unique_ptr<SharedObjectArray<BusinessServiceCheck>> getChecks() const;
    uint32_t getObjectStatusThreshhold() const { return m_objectStatusThreshhold; }
@@ -4450,6 +4451,7 @@ public:
 
    virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
+   virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
 
    virtual bool lockForInstanceDiscoveryPoll() override;
 };
@@ -4491,6 +4493,7 @@ public:
 
    virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
+   virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
 
    virtual bool lockForStatusPoll() override;
    virtual bool lockForConfigurationPoll() override;

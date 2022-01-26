@@ -94,7 +94,7 @@ bool BusinessServicePrototype::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
 }
 
 /**
- * Save business service to database
+ * Save business service prototype to database
  */
 bool BusinessServicePrototype::saveToDatabase(DB_HANDLE hdb)
 {
@@ -124,6 +124,17 @@ bool BusinessServicePrototype::saveToDatabase(DB_HANDLE hdb)
          DBFreeStatement(hStmt);
       }
    }
+   return success;
+}
+
+/**
+ * Delete object from database
+ */
+bool BusinessServicePrototype::deleteFromDatabase(DB_HANDLE hdb)
+{
+   bool success = super::deleteFromDatabase(hdb);
+   if (success)
+      success = executeQueryOnObject(hdb, _T("DELETE FROM business_service_prototypes WHERE id=?"));
    return success;
 }
 
@@ -449,10 +460,12 @@ void BusinessServicePrototype::instanceDiscoveryPoll(PollerInfo *poller, ClientS
    m_pollRequestId = rqId;
 
    sendPollerMsg(_T("Started instance discovery poll of business service prototype %s\r\n"), m_name);
+   nxlog_debug_tag(DEBUG_TAG_BIZSVC, 5, _T("Started instance discovery poll of business service prototype %s [%u]"), m_name, m_id);
    unique_ptr<StringMap> instances = getInstances();
    if (instances != nullptr)
    {
       unique_ptr<SharedObjectArray<BusinessService>> services = getServices();
+      nxlog_debug_tag(DEBUG_TAG_BIZSVC, 5, _T("BusinessServicePrototype::instanceDiscoveryPoll(%s [%u]): %d instances read, %d existing services"), m_name, m_id, instances->size(), services->size());
 
       SharedPtrIterator<BusinessService> it = services->begin();
       while (it.hasNext())
@@ -468,8 +481,7 @@ void BusinessServicePrototype::instanceDiscoveryPoll(PollerInfo *poller, ClientS
       // At this point services array contains only services to be deleted
       for (const shared_ptr<BusinessService>& service : *services)
       {
-         nxlog_debug_tag(DEBUG_TAG_BIZSVC, 4, _T("Business service \"%s\" [%u] removed by instance discovery from prototype \"%s\" [%u]"),
-                  service->getName(), service->getId(), m_name, m_id);
+         nxlog_debug_tag(DEBUG_TAG_BIZSVC, 4, _T("Business service \"%s\" [%u] removed by instance discovery from prototype \"%s\" [%u]"), service->getName(), service->getId(), m_name, m_id);
          sendPollerMsg(_T("   Business service \"%s\" removed\r\n"), service->getName());
          service->deleteObject();
       }
@@ -483,18 +495,18 @@ void BusinessServicePrototype::instanceDiscoveryPoll(PollerInfo *poller, ClientS
          service->addParent(parent);
          parent->calculateCompoundStatus();
          service->unhide();
-         nxlog_debug_tag(DEBUG_TAG_BIZSVC, 4, _T("Business service \"%s\" [%u] created by instance discovery from prototype \"%s\" [%u]"),
-                  service->getName(), service->getId(), m_name, m_id);
+         nxlog_debug_tag(DEBUG_TAG_BIZSVC, 4, _T("Business service \"%s\" [%u] created by instance discovery from prototype \"%s\" [%u]"), service->getName(), service->getId(), m_name, m_id);
          sendPollerMsg(_T("   Business service \"%s\" created\r\n"), service->getName());
       }
    }
    else
    {
-      nxlog_debug_tag(DEBUG_TAG_BIZSVC, 4, _T("Cannot read instances for business service prototype \"%s\" [%u]"), m_name, m_id);
+      nxlog_debug_tag(DEBUG_TAG_BIZSVC, 4, _T("BusinessServicePrototype::instanceDiscoveryPoll(%s [%u]): cannot read instances"), m_name, m_id);
       sendPollerMsg(POLLER_WARNING _T("   Cannot read list of instances\r\n"));
    }
 
    sendPollerMsg(_T("Finished instance discovery poll of business service prototype %s\r\n"), m_name);
+   nxlog_debug_tag(DEBUG_TAG_BIZSVC, 5, _T("Finished instance discovery poll of business service prototype %s [%u]"), m_name, m_id);
    pollerUnlock();
 }
 

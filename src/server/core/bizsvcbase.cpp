@@ -277,6 +277,19 @@ bool BaseBusinessService::saveToDatabase(DB_HANDLE hdb)
 }
 
 /**
+ * Delete object from database
+ */
+bool BaseBusinessService::deleteFromDatabase(DB_HANDLE hdb)
+{
+   bool success = super::deleteFromDatabase(hdb);
+   if (success)
+      success = AutoBindTarget::deleteFromDatabase(hdb);
+   if (success)
+      success = executeQueryOnObject(hdb, _T("DELETE FROM business_service_checks WHERE service_id=?"));
+   return success;
+}
+
+/**
  * Callback for check modification
  */
 void BaseBusinessService::onCheckModify(const shared_ptr<BusinessServiceCheck>& check)
