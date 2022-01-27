@@ -441,6 +441,7 @@ void BusinessService::addChildTicket(const BusinessServiceTicketData& data)
       DBExecute(hStmt);
       DBFreeStatement(hStmt);
    }
+   DBConnectionPoolReleaseConnection(hdb);
 }
 
 /**

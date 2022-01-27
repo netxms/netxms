@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2019 Raden Solutions
+ * Copyright (C) 2003-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,10 +19,12 @@
 package org.netxms.ui.eclipse.slm.objecttabs;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.eclipse.core.commands.Command;
 import org.eclipse.core.commands.State;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -67,6 +69,7 @@ import org.netxms.ui.eclipse.slm.objecttabs.helpers.BusinessServiceCheckFilter;
 import org.netxms.ui.eclipse.slm.objecttabs.helpers.BusinessServiceCheckLabelProvider;
 import org.netxms.ui.eclipse.slm.objecttabs.helpers.BusinessServiceComparator;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
+import org.netxms.ui.eclipse.tools.RefreshTimer;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.FilterText;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
@@ -97,7 +100,11 @@ public class BusinessServiceChecks extends ObjectTab
    private Action actionEdit;
    private Action actionCreate;
    private Action actionDelete;
+   private long serviceId = 0;
    private Map<Long, BusinessServiceCheck> checks;
+   private Map<Long, BusinessServiceCheck> updatedChecks = new HashMap<>();
+   private Set<Long> deletedChecks = new HashSet<>();
+   private RefreshTimer refreshTimer;
 
    /**
     * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#createTabContent(org.eclipse.swt.widgets.Composite)
@@ -174,39 +181,68 @@ public class BusinessServiceChecks extends ObjectTab
       createActions();
       createPopupMenu();
 
+      refreshTimer = new RefreshTimer(300, viewer.getControl(), new Runnable() {
+         @Override
+         public void run()
+         {
+            synchronized(updatedChecks)
+            {
+               if (!updatedChecks.isEmpty())
+               {
+                  List<BusinessServiceCheck> newChecks = new ArrayList<>();
+
+                  for(BusinessServiceCheck c : updatedChecks.values())
+                  {
+                     newChecks.add(c);
+                     checks.put(c.getId(), c);
+                  }
+
+                  updatedChecks.clear();
+
+                  updateDciLabels(newChecks);
+                  syncMissingObjects(newChecks);
+               }
+            }
+
+            synchronized(deletedChecks)
+            {
+               for(Long id : deletedChecks)
+                  checks.remove(id);
+               deletedChecks.clear();
+            }
+
+            viewer.refresh();
+         }
+      });
+
       sessionListener = new SessionListener() {
          @Override
          public void notificationHandler(SessionNotification n)
          {
-            switch(n.getCode())
+            if (n.getCode() == SessionNotification.BUSINESS_SERVICE_CHECK_MODIFY)
             {
-               case SessionNotification.BUSINESS_SERVICE_CHECK_MODIFY:
-                  viewer.getControl().getDisplay().asyncExec(new Runnable() {
-                     @Override
-                     public void run()
-                     {
-                        if (checks == null)
-                           return;
-                        checks.put(n.getSubCode(), (BusinessServiceCheck)n.getObject());
-                        List<BusinessServiceCheck> newCheckArray = Arrays.asList((BusinessServiceCheck)n.getObject());
-                        updateDciLabels(newCheckArray);
-                        syncMissingObjects(newCheckArray);
-                        viewer.refresh();
-                     }
-                  });
-                  break;
-               case SessionNotification.BUSINESS_SERVICE_CHECK_DELETE:
-                  viewer.getControl().getDisplay().asyncExec(new Runnable() {
-                     @Override
-                     public void run()
-                     {
-                        if (checks == null)
-                           return;
-                        checks.remove(n.getSubCode());
-                        viewer.refresh();
-                     }
-                  });
-                  break;
+               boolean needRefresh = false;
+
+               synchronized(updatedChecks)
+               {
+                  BusinessServiceCheck check = (BusinessServiceCheck)n.getObject();
+                  if (check.getServiceId() == serviceId)
+                  {
+                     updatedChecks.put(n.getSubCode(), check);
+                     needRefresh = true;
+                  }
+               }
+
+               if (needRefresh)
+                  refreshTimer.execute();
+            }
+            else if (n.getCode() == SessionNotification.BUSINESS_SERVICE_CHECK_DELETE)
+            {
+               synchronized(deletedChecks)
+               {
+                  deletedChecks.add(n.getSubCode());
+               }
+               refreshTimer.execute();
             }
          }
       };
@@ -296,6 +332,16 @@ public class BusinessServiceChecks extends ObjectTab
    }
 
    /**
+    * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#dispose()
+    */
+   @Override
+   public void dispose()
+   {
+      session.removeListener(sessionListener);
+      super.dispose();
+   }
+
+   /**
     * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#showForObject(org.netxms.client.objects.AbstractObject)
     */
    @Override
@@ -311,7 +357,12 @@ public class BusinessServiceChecks extends ObjectTab
    public void selected()
    {
       super.selected();
+
+      final AbstractObject object = getObject();
+      serviceId = (object != null) ? object.getObjectId() : 0;
+
       refresh();
+
       ICommandService service = (ICommandService)PlatformUI.getWorkbench().getService(ICommandService.class);
       Command command = service.getCommand("org.netxms.ui.eclipse.slm.commands.show_checks_filter"); //$NON-NLS-1$
       State state = command.getState("org.netxms.ui.eclipse.slm.commands.show_checks_filter.state"); //$NON-NLS-1$
@@ -326,6 +377,7 @@ public class BusinessServiceChecks extends ObjectTab
    public void objectChanged(AbstractObject object)
    {
       viewer.setInput(new Object[0]);
+      serviceId = (object != null) ? object.getObjectId() : 0;
       refresh();
    }
 
@@ -344,6 +396,14 @@ public class BusinessServiceChecks extends ObjectTab
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
             Map<Long, BusinessServiceCheck> checks = session.getBusinessServiceChecks(object.getObjectId());
+            synchronized(updatedChecks)
+            {
+               updatedChecks.clear();
+            }
+            synchronized(deletedChecks)
+            {
+               deletedChecks.clear();
+            }
             runInUIThread(new Runnable() {
                @Override
                public void run()
@@ -382,6 +442,9 @@ public class BusinessServiceChecks extends ObjectTab
                @Override
                public void run()
                {
+                  if (viewer.getControl().isDisposed())
+                     return;
+
                   labelProvider.updateDciNames(names);
                   viewer.refresh(true);
                }
@@ -405,7 +468,7 @@ public class BusinessServiceChecks extends ObjectTab
     */
    public void syncMissingObjects(Collection<BusinessServiceCheck> checks)
    {
-      ConsoleJob job = new ConsoleJob("Sync objects", getViewPart(), Activator.PLUGIN_ID) {
+      ConsoleJob job = new ConsoleJob("Synchronize objects", getViewPart(), Activator.PLUGIN_ID) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {            
@@ -416,12 +479,12 @@ public class BusinessServiceChecks extends ObjectTab
                relatedOpbjects.add(pair.getNodeId());
             }
             session.syncMissingObjects(relatedOpbjects, true, NXCSession.OBJECT_SYNC_WAIT);
-            
+
             runInUIThread(new Runnable() {
                @Override
                public void run()
                {
-                  if (viewer.getControl().isDisposed())
+                  if (!viewer.getControl().isDisposed())
                      viewer.refresh(true);
                }
             });
@@ -430,7 +493,7 @@ public class BusinessServiceChecks extends ObjectTab
          @Override
          protected String getErrorMessage()
          {
-            return "Failed to sync objects";
+            return "Cannot synchronize objects";
          }
       };
       job.setUser(false);
@@ -449,14 +512,18 @@ public class BusinessServiceChecks extends ObjectTab
       if (!MessageDialogHelper.openQuestion(getViewPart().getSite().getShell(), "Confirm Delete", "Do you really want to delete selected check?"))
          return;
 
-      final Object[] objects = selection.toArray();
+      final BusinessServiceCheck[] checks = new BusinessServiceCheck[selection.size()];
+      int i = 0;
+      for(Object o : selection.toList())
+         checks[i++] = (BusinessServiceCheck)o;
+
       new ConsoleJob("Delete business service check", getViewPart(), Activator.PLUGIN_ID) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            for(int i = 0; i < objects.length; i++)
+            for(int i = 0; i < checks.length; i++)
             {
-               session.deleteBusinessServiceCheck(getObject().getObjectId(), ((BusinessServiceCheck)objects[i]).getId());
+               session.deleteBusinessServiceCheck(checks[i].getServiceId(), checks[i].getId());
             }
          }
 

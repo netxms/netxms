@@ -202,16 +202,15 @@ void BusinessServiceCheck::fillMessage(NXCPMessage *msg, uint32_t baseId) const
    msg->setField(baseId + 8, m_state);
    msg->setField(baseId + 9, m_prototypeServiceId);
    msg->setField(baseId + 10, m_prototypeCheckId);
+   msg->setField(baseId + 11, m_serviceId);
 	unlock();
 }
 
 /**
  * Save business service check to database
  */
-bool BusinessServiceCheck::saveToDatabase() const
+bool BusinessServiceCheck::saveToDatabase(DB_HANDLE hdb) const
 {
-   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-
    static const TCHAR *columns[] = {
          _T("service_id"), _T("prototype_service_id"), _T("prototype_check_id"), _T("type"), _T("description"), _T("related_object"),
          _T("related_dci"), _T("status_threshold"), _T("content"), _T("status"), _T("current_ticket"), _T("failure_reason"), nullptr
@@ -243,7 +242,6 @@ bool BusinessServiceCheck::saveToDatabase() const
 		success = false;
 	}
 
-	DBConnectionPoolReleaseConnection(hdb);
 	return success;
 }
 

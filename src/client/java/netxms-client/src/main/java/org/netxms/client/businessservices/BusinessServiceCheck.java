@@ -30,6 +30,7 @@ import org.netxms.client.objects.interfaces.NodeItemPair;
 public class BusinessServiceCheck implements NodeItemPair
 {	
 	private long id;
+   private long serviceId;
    private long prototypeServiceId;
    private long prototypeCheckId;
 	private BusinessServiceCheckType type;
@@ -47,6 +48,7 @@ public class BusinessServiceCheck implements NodeItemPair
    public BusinessServiceCheck()
    {
       id = 0;
+      serviceId = 0;
       prototypeServiceId = 0;
       prototypeCheckId = 0;
       type = BusinessServiceCheckType.NONE;
@@ -66,6 +68,7 @@ public class BusinessServiceCheck implements NodeItemPair
    public BusinessServiceCheck(BusinessServiceCheck src)
    {
       id = src.id;
+      serviceId = src.serviceId;
       prototypeServiceId = src.prototypeServiceId;
       prototypeCheckId = src.prototypeCheckId;
       type = src.type;
@@ -96,6 +99,7 @@ public class BusinessServiceCheck implements NodeItemPair
       state = BusinessServiceState.getByValue(msg.getFieldAsInt32(baseId + 8));
       prototypeServiceId = msg.getFieldAsInt64(baseId + 9);
       prototypeCheckId = msg.getFieldAsInt64(baseId + 10);
+      serviceId = msg.getFieldAsInt64(baseId + 11);
 	}
 
 	/**
@@ -152,6 +156,14 @@ public class BusinessServiceCheck implements NodeItemPair
    public long getId()
    {
       return id;
+   }
+
+   /**
+    * @return the serviceId
+    */
+   public long getServiceId()
+   {
+      return serviceId;
    }
 
    /**

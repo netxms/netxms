@@ -4335,7 +4335,7 @@ public:
 
    void modifyFromMessage(const NXCPMessage& request);
    void fillMessage(NXCPMessage *msg, uint32_t baseId) const;
-   bool saveToDatabase() const;
+   bool saveToDatabase(DB_HANDLE hdb) const;
 
    void updateFromPrototype(const BusinessServiceCheck& prototype);
 };

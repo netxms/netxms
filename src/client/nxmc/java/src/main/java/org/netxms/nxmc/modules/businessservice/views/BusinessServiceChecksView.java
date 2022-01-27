@@ -19,10 +19,12 @@
 package org.netxms.nxmc.modules.businessservice.views;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
@@ -59,6 +61,7 @@ import org.netxms.nxmc.modules.objects.views.ObjectView;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
 import org.netxms.nxmc.tools.MessageDialogHelper;
+import org.netxms.nxmc.tools.RefreshTimer;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
@@ -86,6 +89,9 @@ public class BusinessServiceChecksView extends ObjectView
    private Action actionCreate;
    private Action actionDelete;
    private Map<Long, BusinessServiceCheck> checks;
+   private Map<Long, BusinessServiceCheck> updatedChecks = new HashMap<>();
+   private Set<Long> deletedChecks = new HashSet<>();
+   private RefreshTimer refreshTimer;
 
    /**
     * @param name
@@ -140,51 +146,80 @@ public class BusinessServiceChecksView extends ObjectView
             WidgetHelper.saveColumnSettings(viewer.getTable(), ID);
          }
       });
-      
+
       viewer.addDoubleClickListener(new IDoubleClickListener() {
          @Override
          public void doubleClick(DoubleClickEvent event)
          {
-            actionEdit.run();            
+            actionEdit.run();
          }
       });
-      
+
       createActions();
       createPopupMenu();
+
+      refreshTimer = new RefreshTimer(300, viewer.getControl(), new Runnable() {
+         @Override
+         public void run()
+         {
+            synchronized(updatedChecks)
+            {
+               if (!updatedChecks.isEmpty())
+               {
+                  List<BusinessServiceCheck> newChecks = new ArrayList<>();
+
+                  for(BusinessServiceCheck c : updatedChecks.values())
+                  {
+                     newChecks.add(c);
+                     checks.put(c.getId(), c);
+                  }
+
+                  updatedChecks.clear();
+
+                  updateDciLabels(newChecks);
+                  syncMissingObjects(newChecks);
+               }
+            }
+
+            synchronized(deletedChecks)
+            {
+               for(Long id : deletedChecks)
+                  checks.remove(id);
+               deletedChecks.clear();
+            }
+
+            viewer.refresh();
+         }
+      });
 
       sessionListener = new SessionListener() {
          @Override
          public void notificationHandler(SessionNotification n)
          {
-            switch(n.getCode())
+            if (n.getCode() == SessionNotification.BUSINESS_SERVICE_CHECK_MODIFY)
             {
-               case SessionNotification.BUSINESS_SERVICE_CHECK_MODIFY:
-                  viewer.getControl().getDisplay().asyncExec(new Runnable() {
-                     @Override
-                     public void run()
-                     {
-                        if (checks == null)
-                           return;
-                        checks.put(n.getSubCode(), (BusinessServiceCheck)n.getObject());
-                        List<BusinessServiceCheck> newCheckArray = Arrays.asList((BusinessServiceCheck)n.getObject());
-                        updateDciLabels(newCheckArray);
-                        syncMissingObjects(newCheckArray);
-                        viewer.refresh();
-                     }
-                  });
-                  break;
-               case SessionNotification.BUSINESS_SERVICE_CHECK_DELETE:
-                  viewer.getControl().getDisplay().asyncExec(new Runnable() {
-                     @Override
-                     public void run()
-                     {
-                        if (checks == null)
-                           return;
-                        checks.remove(n.getSubCode());
-                        viewer.refresh();
-                     }
-                  });
-                  break;
+               boolean needRefresh = false;
+
+               synchronized(updatedChecks)
+               {
+                  BusinessServiceCheck check = (BusinessServiceCheck)n.getObject();
+                  if (check.getServiceId() == getObjectId())
+                  {
+                     updatedChecks.put(n.getSubCode(), check);
+                     needRefresh = true;
+                  }
+               }
+
+               if (needRefresh)
+                  refreshTimer.execute();
+            }
+            else if (n.getCode() == SessionNotification.BUSINESS_SERVICE_CHECK_DELETE)
+            {
+               synchronized(deletedChecks)
+               {
+                  deletedChecks.add(n.getSubCode());
+               }
+               refreshTimer.execute();
             }
          }
       };
@@ -197,18 +232,29 @@ public class BusinessServiceChecksView extends ObjectView
    @Override
    public void refresh()
    {
-      if (getObject() == null)
+      final AbstractObject object = getObject();
+      if (object == null)
          return;
 
       new Job(i18n.tr("Get business service checks"), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            Map<Long, BusinessServiceCheck> checks = session.getBusinessServiceChecks(getObject().getObjectId());
+            Map<Long, BusinessServiceCheck> checks = session.getBusinessServiceChecks(object.getObjectId());
+            synchronized(updatedChecks)
+            {
+               updatedChecks.clear();
+            }
+            synchronized(deletedChecks)
+            {
+               deletedChecks.clear();
+            }
             runInUIThread(new Runnable() {               
                @Override
                public void run()
                {
+                  if (viewer.getControl().isDisposed())
+                     return;
                   BusinessServiceChecksView.this.checks = checks;
                   viewer.setInput(checks.values());
                   syncMissingObjects(checks.values());
@@ -220,7 +266,7 @@ public class BusinessServiceChecksView extends ObjectView
          @Override
          protected String getErrorMessage()
          {
-            return i18n.tr("Cannot get checks for business service {0}", getObject().getObjectName());
+            return i18n.tr("Cannot get checks for business service {0}", object.getObjectName());
          }
       }.start();
    }
@@ -303,14 +349,18 @@ public class BusinessServiceChecksView extends ObjectView
             i18n.tr("Do you really want to delete selected check?")))
          return;
 
-      final Object[] objects = selection.toArray();
+      final BusinessServiceCheck[] checks = new BusinessServiceCheck[selection.size()];
+      int i = 0;
+      for(Object o : selection.toList())
+         checks[i++] = (BusinessServiceCheck)o;
+
       new Job(i18n.tr("Delete business service check"), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            for(int i = 0; i < objects.length; i++)
+            for(int i = 0; i < checks.length; i++)
             {
-               session.deleteBusinessServiceCheck(getObject().getObjectId(), ((BusinessServiceCheck)objects[i]).getId());
+               session.deleteBusinessServiceCheck(checks[i].getServiceId(), checks[i].getId());
             }
          }
 
@@ -393,16 +443,18 @@ public class BusinessServiceChecksView extends ObjectView
     */
    public void updateDciLabels(Collection<BusinessServiceCheck> checks)
    {
-      new Job(i18n.tr("Resolve DCI names"), null) {
+      new Job(i18n.tr("Resolve DCI names"), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
-         {            
+         {
             final Map<Long, String> names = session.dciIdsToNames(checks);
-            
             runInUIThread(new Runnable() {
                @Override
                public void run()
                {
+                  if (viewer.getControl().isDisposed())
+                     return;
+
                   labelProvider.updateDciNames(names);
                   viewer.refresh(true);
                }
@@ -424,7 +476,7 @@ public class BusinessServiceChecksView extends ObjectView
     */
    public void syncMissingObjects(Collection<BusinessServiceCheck> checks)
    {
-      new Job(i18n.tr("Sync objects"), null) {
+      new Job(i18n.tr("Synchronize objects"), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {            
@@ -435,7 +487,7 @@ public class BusinessServiceChecksView extends ObjectView
                relatedOpbjects.add(pair.getNodeId());
             }
             session.syncMissingObjects(relatedOpbjects, true, NXCSession.OBJECT_SYNC_WAIT);
-            
+
             runInUIThread(new Runnable() {
                @Override
                public void run()

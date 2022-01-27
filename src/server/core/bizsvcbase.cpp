@@ -240,7 +240,7 @@ bool BaseBusinessService::saveToDatabase(DB_HANDLE hdb)
    {
       checksLock();
       for (int i = 0; (i < m_checks.size()) && success; i++)
-         success = m_checks.get(i)->saveToDatabase();
+         success = m_checks.get(i)->saveToDatabase(hdb);
       if (success && !m_deletedChecks.isEmpty())
       {
          StringBuffer query(_T("DELETE FROM business_service_checks WHERE id IN ("));
