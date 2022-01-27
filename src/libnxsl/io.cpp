@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2005-2018 Raden Solutions
+** Copyright (C) 2005-2022 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -278,7 +278,7 @@ int F_OpenFile(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 	FILE *handle = _tfopen(argv[0]->getValueAsCString(), mode);
 	if (handle != NULL)
 	{
-		*ppResult = vm->createValue(new NXSL_Object(vm, &s_nxslFileClass, new NXSL_FileHandle(argv[0]->getValueAsCString(), handle)));
+		*ppResult = vm->createValue(vm->createObject(&s_nxslFileClass, new NXSL_FileHandle(argv[0]->getValueAsCString(), handle)));
 	}
 	else
 	{

@@ -357,7 +357,7 @@ json_t *Subnet::toJson()
  */
 NXSL_Value *Subnet::createNXSLObject(NXSL_VM *vm)
 {
-   return vm->createValue(new NXSL_Object(vm, &g_nxslSubnetClass, new shared_ptr<Subnet>(self())));
+   return vm->createValue(vm->createObject(&g_nxslSubnetClass, new shared_ptr<Subnet>(self())));
 }
 
 /**

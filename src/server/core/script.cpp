@@ -99,7 +99,7 @@ NXSL_VM NXCORE_EXPORTABLE *SetupServerScriptVM(NXSL_VM *vm, const shared_ptr<Net
    vm->setGlobalVariable("$isCluster", vm->createValue(object->getObjectClass() == OBJECT_CLUSTER));
 
    if (dciInfo != nullptr)
-      vm->setGlobalVariable("$dci", vm->createValue(new NXSL_Object(vm, &g_nxslDciClass, new shared_ptr<DCObjectInfo>(dciInfo))));
+      vm->setGlobalVariable("$dci", vm->createValue(vm->createObject(&g_nxslDciClass, new shared_ptr<DCObjectInfo>(dciInfo))));
 
    return vm;
 }

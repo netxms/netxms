@@ -111,7 +111,7 @@ NXSL_Value *NXSL_InetAddressClass::getAttr(NXSL_Object *object, const NXSL_Ident
  */
 NXSL_Value *NXSL_InetAddressClass::createObject(NXSL_VM *vm, const InetAddress& addr)
 {
-   return vm->createValue(new NXSL_Object(vm, &g_nxslInetAddressClass, new InetAddress(addr)));
+   return vm->createValue(vm->createObject(&g_nxslInetAddressClass, new InetAddress(addr)));
 }
 
 /**

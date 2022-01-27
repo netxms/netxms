@@ -521,7 +521,7 @@ bool EPRule::matchScript(Event *event) const
       return true;
    }
 
-   vm->setGlobalVariable("$event", vm->createValue(new NXSL_Object(vm, &g_nxslEventClass, event, true)));
+   vm->setGlobalVariable("$event", vm->createValue(vm->createObject(&g_nxslEventClass, event, true)));
    vm->setGlobalVariable("CUSTOM_MESSAGE", vm->createValue());
    vm->setGlobalVariable("EVENT_CODE", vm->createValue(event->getCode()));
    vm->setGlobalVariable("SEVERITY", vm->createValue(event->getSeverity()));
@@ -700,7 +700,7 @@ uint32_t EPRule::generateAlarm(Event *event) const
 	      NXSL_VM *vm = CreateServerScriptVM(m_rcaScriptName, object);
 	      if (vm != nullptr)
 	      {
-	         vm->setGlobalVariable("$event", vm->createValue(new NXSL_Object(vm, &g_nxslEventClass, event, true)));
+	         vm->setGlobalVariable("$event", vm->createValue(vm->createObject(&g_nxslEventClass, event, true)));
 	         if (vm->run())
 	         {
 	            NXSL_Value *result = vm->getResult();

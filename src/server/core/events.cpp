@@ -968,7 +968,7 @@ static bool RealPostEvent(ObjectQueue<Event> *queue, uint64_t *eventId, uint32_t
       // Caller of PostEvent should make sure that it does not held object, object index, or DCI locks
       if (vm != nullptr)
       {
-         vm->setGlobalVariable("$event", vm->createValue(new NXSL_Object(vm, &g_nxslEventClass, event, true)));
+         vm->setGlobalVariable("$event", vm->createValue(vm->createObject(&g_nxslEventClass, event, true)));
          if (!vm->run())
          {
             nxlog_debug(6, _T("RealPostEvent: Script execution error (%s)"), vm->getErrorText());

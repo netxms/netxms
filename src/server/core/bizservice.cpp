@@ -662,7 +662,7 @@ bool BusinessService::lockForConfigurationPoll()
  */
 NXSL_Value *BusinessService::createNXSLObject(NXSL_VM *vm)
 {
-   return vm->createValue(new NXSL_Object(vm, &g_nxslBusinessServiceClass, new shared_ptr<BusinessService>(self())));
+   return vm->createValue(vm->createObject(&g_nxslBusinessServiceClass, new shared_ptr<BusinessService>(self())));
 }
 
 /**

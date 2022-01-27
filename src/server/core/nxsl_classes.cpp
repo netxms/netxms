@@ -689,7 +689,7 @@ NXSL_Value *NXSL_NetObjClass::getAttr(NXSL_Object *_object, const NXSL_Identifie
       alarms->setOwner(Ownership::False);
       NXSL_Array *array = new NXSL_Array(vm);
       for(int i = 0; i < alarms->size(); i++)
-         array->append(vm->createValue(new NXSL_Object(vm, &g_nxslAlarmClass, alarms->get(i))));
+         array->append(vm->createValue(vm->createObject(&g_nxslAlarmClass, alarms->get(i))));
       value = vm->createValue(array);
       delete alarms;
    }
@@ -1105,7 +1105,7 @@ NXSL_METHOD_DEFINITION(Node, createSNMPTransport)
    const char *context = ((argc > 1) && argv[1]->isString()) ? argv[1]->getValueAsMBString() : nullptr;
    const char *community = ((argc > 2) && argv[2]->isString()) ? argv[2]->getValueAsMBString() : nullptr;
    SNMP_Transport *t = static_cast<shared_ptr<Node> *>(object->getData())->get()->createSnmpTransport(port, SNMP_VERSION_DEFAULT, context, community);
-   *result = (t != nullptr) ? vm->createValue(new NXSL_Object(vm, &g_nxslSnmpTransportClass, t)) : vm->createValue();
+   *result = (t != nullptr) ? vm->createValue(vm->createObject(&g_nxslSnmpTransportClass, t)) : vm->createValue();
    return 0;
 }
 
@@ -1157,7 +1157,7 @@ static int BaseWebServiceRequestWithData(WEB_SERVICE *websvc, int argc, NXSL_Val
       parameters.add(argv[i]->getValueAsCString());
 
    WebServiceCallResult *response = websvc->first->makeCustomRequest(websvc->second, requestMethod, parameters, data, contentType);
-   *result = vm->createValue(new NXSL_Object(vm, &g_nxslWebServiceCallResult, response));
+   *result = vm->createValue(vm->createObject(&g_nxslWebServiceCallResult, response));
    MemFree(data);
 
    return 0;
@@ -1174,7 +1174,7 @@ static int BaseWebServiceRequestWithoutData(WEB_SERVICE *websvc, int argc, NXSL_
       parameters.add(argv[i]->getValueAsCString());
 
    WebServiceCallResult *response = websvc->first->makeCustomRequest(websvc->second, requestMethod, parameters, nullptr, nullptr);
-   *result = vm->createValue(new NXSL_Object(vm, &g_nxslWebServiceCallResult, response));
+   *result = vm->createValue(vm->createObject(&g_nxslWebServiceCallResult, response));
 
    return 0;
 }
@@ -1200,7 +1200,7 @@ NXSL_METHOD_DEFINITION(Node, callWebService)
    {
       WebServiceCallResult *webSwcResult = new WebServiceCallResult();
       _tcsncpy(webSwcResult->errorMessage, _T("Web service definition not found"), WEBSVC_ERROR_TEXT_MAX_SIZE);
-      *result = vm->createValue(new NXSL_Object(vm, &g_nxslWebServiceCallResult, webSwcResult));
+      *result = vm->createValue(vm->createObject(&g_nxslWebServiceCallResult, webSwcResult));
       return 0;
    }
 
@@ -1229,7 +1229,7 @@ NXSL_METHOD_DEFINITION(Node, callWebService)
 
    WebServiceCallResult *webSwcResult = new WebServiceCallResult();
    _tcslcpy(webSwcResult->errorMessage, _T("Invalid web service request method"), WEBSVC_ERROR_TEXT_MAX_SIZE);
-   *result = vm->createValue(new NXSL_Object(vm, &g_nxslWebServiceCallResult, webSwcResult));
+   *result = vm->createValue(vm->createObject(&g_nxslWebServiceCallResult, webSwcResult));
    return 0;
 }
 
@@ -1440,7 +1440,7 @@ NXSL_METHOD_DEFINITION(Node, getWebService)
    }
    else
    {
-      *result = vm->createValue(new NXSL_Object(vm, &g_nxslWebService, new WEB_SERVICE(d, *node)));
+      *result = vm->createValue(vm->createObject(&g_nxslWebService, new WEB_SERVICE(d, *node)));
    }
    return 0;
 }
@@ -1484,7 +1484,7 @@ NXSL_METHOD_DEFINITION(Node, readAgentTable)
 
    shared_ptr<Table> table;
    uint32_t rcc = static_cast<shared_ptr<Node>*>(object->getData())->get()->getTableFromAgent(argv[0]->getValueAsCString(), &table);
-   *result = (rcc == DCE_SUCCESS) ? vm->createValue(new NXSL_Object(vm, &g_nxslTableClass, new shared_ptr<Table>(table))) : vm->createValue();
+   *result = (rcc == DCE_SUCCESS) ? vm->createValue(vm->createObject(&g_nxslTableClass, new shared_ptr<Table>(table))) : vm->createValue();
    return 0;
 }
 
@@ -1526,7 +1526,7 @@ NXSL_METHOD_DEFINITION(Node, readInternalTable)
 
    shared_ptr<Table> table;
    uint32_t rcc = static_cast<shared_ptr<Node>*>(object->getData())->get()->getInternalTable(argv[0]->getValueAsCString(), &table);
-   *result = (rcc == DCE_SUCCESS) ? vm->createValue(new NXSL_Object(vm, &g_nxslTableClass, new shared_ptr<Table>(table))) : vm->createValue();
+   *result = (rcc == DCE_SUCCESS) ? vm->createValue(vm->createObject(&g_nxslTableClass, new shared_ptr<Table>(table))) : vm->createValue();
    return 0;
 }
 
@@ -1741,7 +1741,7 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const NXSL_Identifier& 
       NXSL_Array *a = new NXSL_Array(vm);
       for(int i = 0; i < dependencies->size(); i++)
       {
-         a->append(vm->createValue(new NXSL_Object(vm, &g_nxslNodeDependencyClass, new DependentNode(*dependencies->get(i)))));
+         a->append(vm->createValue(vm->createObject(&g_nxslNodeDependencyClass, new DependentNode(*dependencies->get(i)))));
       }
       value = vm->createValue(a);
    }
@@ -2081,7 +2081,7 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const NXSL_Identifier& 
    {
       shared_ptr<AgentTunnel> tunnel = GetTunnelForNode(node->getId());
       if (tunnel != nullptr)
-         value = vm->createValue(new NXSL_Object(vm, &g_nxslTunnelClass, new shared_ptr<AgentTunnel>(tunnel)));
+         value = vm->createValue(vm->createObject(&g_nxslTunnelClass, new shared_ptr<AgentTunnel>(tunnel)));
       else
          value = vm->createValue();
    }
@@ -2097,7 +2097,7 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const NXSL_Identifier& 
          NXSL_Array *a = new NXSL_Array(vm);
          for(int i = 0; i < vlans->size(); i++)
          {
-            a->append(vm->createValue(new NXSL_Object(vm, &g_nxslVlanClass, new VlanInfo(vlans->get(i), node->getId()))));
+            a->append(vm->createValue(vm->createObject(&g_nxslVlanClass, new VlanInfo(vlans->get(i), node->getId()))));
          }
          value = vm->createValue(a);
       }
@@ -2926,7 +2926,7 @@ NXSL_Value *NXSL_BusinessServiceClass::getAttr(NXSL_Object *object, const NXSL_I
       unique_ptr<SharedObjectArray<BusinessServiceCheck>> checks = businessService->getChecks();
       NXSL_Array *array = new NXSL_Array(vm);
       for(int i = 0; i < checks->size(); i++)
-         array->append(vm->createValue(new NXSL_Object(vm, &g_nxslBusinessServiceCheckClass, new shared_ptr<BusinessServiceCheck>(checks->getShared(i)))));
+         array->append(vm->createValue(vm->createObject(&g_nxslBusinessServiceCheckClass, new shared_ptr<BusinessServiceCheck>(checks->getShared(i)))));
       value = vm->createValue(array);
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("instance"))
@@ -3724,7 +3724,7 @@ NXSL_METHOD_DEFINITION(Alarm, getComments)
    ObjectArray<AlarmComment> *alarmComments = GetAlarmComments(((Alarm *)object->getData())->getAlarmId());
    for(int i = 0; i < alarmComments->size(); i++)
    {
-      array->append(vm->createValue(new NXSL_Object(vm, &g_nxslAlarmCommentClass, alarmComments->get(i))));
+      array->append(vm->createValue(vm->createObject(&g_nxslAlarmCommentClass, alarmComments->get(i))));
    }
    delete alarmComments;
    *result = vm->createValue(array);
@@ -4140,7 +4140,7 @@ NXSL_METHOD_DEFINITION(SNMPTransport, get)
       if ((response->getNumVariables() > 0) && (response->getErrorCode() == SNMP_PDU_ERR_SUCCESS))
       {
          SNMP_Variable *pVar = response->getVariable(0);
-         *result = vm->createValue(new NXSL_Object(vm, &g_nxslSnmpVarBindClass, pVar));
+         *result = vm->createValue(vm->createObject(&g_nxslSnmpVarBindClass, pVar));
          response->unlinkVariables();
       }
       else
@@ -4261,7 +4261,7 @@ finish:
 static UINT32 WalkCallback(SNMP_Variable *var, SNMP_Transport *transport, void *context)
 {
    NXSL_VM *vm = static_cast<NXSL_VM*>(static_cast<NXSL_Array*>(context)->vm());
-   static_cast<NXSL_Array*>(context)->append(vm->createValue(new NXSL_Object(vm, &g_nxslSnmpVarBindClass, new SNMP_Variable(var))));
+   static_cast<NXSL_Array*>(context)->append(vm->createValue(vm->createObject(&g_nxslSnmpVarBindClass, new SNMP_Variable(var))));
    return SNMP_ERR_SUCCESS;
 }
 
@@ -4604,9 +4604,9 @@ NXSL_Value *NXSL_UserGroupClass::getAttr(NXSL_Object *object, const NXSL_Identif
       for(int i = 0; i < userDB->size(); i++)
       {
          if (userDB->get(i)->isGroup())
-            array->append(vm->createValue(new NXSL_Object(vm, &g_nxslUserGroupClass, userDB->get(i))));
+            array->append(vm->createValue(vm->createObject(&g_nxslUserGroupClass, userDB->get(i))));
          else
-            array->append(vm->createValue(new NXSL_Object(vm, &g_nxslUserClass, userDB->get(i))));
+            array->append(vm->createValue(vm->createObject(&g_nxslUserClass, userDB->get(i))));
       }
       value = vm->createValue(array);
    }

@@ -337,15 +337,18 @@ struct __nxsl_class_data
  */
 class LIBNXSL_EXPORTABLE NXSL_Object : public NXSL_RuntimeObject
 {
+   friend class NXSL_VM;
+   friend class ObjectMemoryPool<NXSL_Object>;
+
 private:
    NXSL_Class *m_class;
    __nxsl_class_data *m_data;
 
-public:
    NXSL_Object(NXSL_Object *object);
    NXSL_Object(NXSL_VM *vm, NXSL_Class *nxslClass, const void *data, bool constant = false);
-   virtual ~NXSL_Object();
+   ~NXSL_Object();
 
+public:
    NXSL_Class *getClass() { return m_class; }
 	void *getData() { return m_data->data; }
 	bool isConstant() { return m_data->constant; }
@@ -485,7 +488,7 @@ private:
 
 public:
 	NXSL_Iterator(NXSL_VM *vm, const NXSL_Identifier& variable, NXSL_Array *array);
-	virtual ~NXSL_Iterator();
+	~NXSL_Iterator();
 
 	const NXSL_Identifier& getVariableName() { return m_variable; }
 
@@ -703,6 +706,7 @@ public:
 #ifdef _WIN32
 template class LIBNXSL_EXPORTABLE ObjectMemoryPool<NXSL_Value>;
 template class LIBNXSL_EXPORTABLE ObjectMemoryPool<NXSL_Identifier>;
+template class LIBNXSL_EXPORTABLE ObjectMemoryPool<NXSL_Object>;
 #endif
 
 /**
@@ -925,7 +929,6 @@ public:
 	bool isConstant() const { return m_constant; }
 };
 
-
 /**
  * Variable hash map element
  */
@@ -1137,8 +1140,8 @@ public:
  */
 struct NXSL_CatchPoint
 {
-   UINT32 addr;
-   UINT32 subLevel;
+   uint32_t addr;
+   uint32_t subLevel;
    int dataStackSize;
 };
 
@@ -1195,6 +1198,9 @@ private:
    static EnumerationCallbackResult createConstantsCallback(const void *key, void *value, void *data);
 
 protected:
+   ObjectMemoryPool<__nxsl_class_data> m_objectClassData;
+   ObjectMemoryPool<NXSL_Object> m_objects;
+
    NXSL_Environment *m_env;
    StringMap m_metadata;
 	void *m_userData;
@@ -1307,6 +1313,13 @@ public:
 
 	void *getUserData() { return m_userData; }
 	void setUserData(void *data) { m_userData = data; }
+
+   NXSL_Object *createObject(NXSL_Object *object) { return new(m_objects.allocate()) NXSL_Object(object); }
+   NXSL_Object *createObject(NXSL_Class *nxslClass, const void *data, bool constant = false) { return new(m_objects.allocate()) NXSL_Object(this, nxslClass, data, constant); }
+   void destroyObject(NXSL_Object *object) { m_objects.destroy(object); }
+
+   __nxsl_class_data *allocateObjectClassData() { return m_objectClassData.allocate(); }
+   void freeObjectClassData(__nxsl_class_data *data) { m_objectClassData.free(data); }
 };
 
 /**

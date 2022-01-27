@@ -320,7 +320,7 @@ void Container::fillMessageInternal(NXCPMessage *msg, UINT32 userId)
  */
 NXSL_Value *Container::createNXSLObject(NXSL_VM *vm)
 {
-   return vm->createValue(new NXSL_Object(vm, &g_nxslContainerClass, new shared_ptr<Container>(self())));
+   return vm->createValue(vm->createObject(&g_nxslContainerClass, new shared_ptr<Container>(self())));
 }
 
 /**

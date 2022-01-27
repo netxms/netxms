@@ -48,7 +48,8 @@ NXSL_Value::NXSL_Value(const NXSL_Value *value)
       m_dataType = value->m_dataType;
       if (m_dataType == NXSL_DT_OBJECT)
       {
-         m_value.object = new NXSL_Object(value->m_value.object);
+         NXSL_VM *vm = value->m_value.object->vm();
+         m_value.object = vm->createObject(value->m_value.object);
       }
       else if (m_dataType == NXSL_DT_ARRAY)
       {
@@ -396,7 +397,7 @@ void NXSL_Value::dispose(bool disposeString)
    switch(m_dataType)
    {
       case NXSL_DT_OBJECT:
-         delete m_value.object;
+         m_value.object->vm()->destroyObject(m_value.object);
          break;
       case NXSL_DT_ARRAY:
          m_value.arrayHandle->decRefCount();

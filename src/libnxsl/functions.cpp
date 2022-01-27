@@ -745,7 +745,7 @@ int F_localtime(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 #else
    struct tm *p = localtime(&t);
 #endif
-   *ppResult = vm->createValue(new NXSL_Object(vm, &s_nxslTimeClass, MemCopyBlock(p, sizeof(struct tm))));
+   *ppResult = vm->createValue(vm->createObject(&s_nxslTimeClass, MemCopyBlock(p, sizeof(struct tm))));
 	return 0;
 }
 
@@ -778,7 +778,7 @@ int F_gmtime(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 #else
    struct tm *p = gmtime(&t);
 #endif
-	*ppResult = vm->createValue(new NXSL_Object(vm, &s_nxslTimeClass, MemCopyBlock(p, sizeof(struct tm))));
+	*ppResult = vm->createValue(vm->createObject(&s_nxslTimeClass, MemCopyBlock(p, sizeof(struct tm))));
 	return 0;
 }
 
@@ -803,7 +803,7 @@ int F_mktime(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
  */
 int F_TIME(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
-   *result = vm->createValue(new NXSL_Object(vm, &s_nxslTimeClass, MemAllocStruct<struct tm>()));
+   *result = vm->createValue(vm->createObject(&s_nxslTimeClass, MemAllocStruct<struct tm>()));
    return 0;
 }
 

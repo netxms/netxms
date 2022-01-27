@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Raden Solutions
+** Copyright (C) 2003-2022 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -781,7 +781,7 @@ void Zone::statusPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId)
  */
 NXSL_Value *Zone::createNXSLObject(NXSL_VM *vm)
 {
-   return vm->createValue(new NXSL_Object(vm, &g_nxslZoneClass, new shared_ptr<Zone>(self())));
+   return vm->createValue(vm->createObject(&g_nxslZoneClass, new shared_ptr<Zone>(self())));
 }
 
 /**

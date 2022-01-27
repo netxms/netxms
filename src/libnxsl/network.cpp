@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2013 Alex Kirhenshtein
+** Copyright (C) 2013-2022 Alex Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -71,7 +71,7 @@ static NXSL_ConnectorClass m_nxslConnectorClass;
  */
 int F_tcpConnector(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
-	*ppResult = vm->createValue(new NXSL_Object(vm, &m_nxslConnectorClass, NULL));
+	*ppResult = vm->createValue(vm->createObject(&m_nxslConnectorClass, nullptr));
    return 0;
 }
 
@@ -80,7 +80,7 @@ int F_tcpConnector(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *
  */
 int F_udpConnector(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
-	*ppResult = vm->createValue(new NXSL_Object(vm, &m_nxslConnectorClass, NULL));
+	*ppResult = vm->createValue(vm->createObject(&m_nxslConnectorClass, nullptr));
    return 0;
 }
 

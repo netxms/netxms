@@ -745,7 +745,7 @@ void LDAPConnection::fillLists(LDAPMessage *searchResult)
       // validate received object and add to synchronization list
       if (vm.isValid())
       {
-         vm->setGlobalVariable("$ldapObject", vm->createValue(new NXSL_Object(vm, &s_nxslLDAPObjectClass, ldapObject)));
+         vm->setGlobalVariable("$ldapObject", vm->createValue(vm->createObject(&s_nxslLDAPObjectClass, ldapObject)));
          if (vm->run())
          {
             NXSL_Value *result = vm->getResult();

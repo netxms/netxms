@@ -442,7 +442,7 @@ bool DCTable::transform(const shared_ptr<Table>& value)
    ScriptVMHandle vm = CreateServerScriptVM(m_transformationScript, m_owner.lock(), createDescriptorInternal());
    if (vm.isValid())
    {
-      NXSL_Value *nxslValue = vm->createValue(new NXSL_Object(vm, &g_nxslTableClass, new shared_ptr<Table>(value)));
+      NXSL_Value *nxslValue = vm->createValue(vm->createObject(&g_nxslTableClass, new shared_ptr<Table>(value)));
 
       // remove lock from DCI for script execution to avoid deadlocks
       unlock();

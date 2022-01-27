@@ -365,7 +365,7 @@ void Chassis::collectProxyInfo(ProxyInfo *info)
  */
 NXSL_Value *Chassis::createNXSLObject(NXSL_VM *vm)
 {
-   return vm->createValue(new NXSL_Object(vm, &g_nxslChassisClass, new shared_ptr<Chassis>(self())));
+   return vm->createValue(vm->createObject(&g_nxslChassisClass, new shared_ptr<Chassis>(self())));
 }
 
 /**

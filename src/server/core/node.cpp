@@ -8674,31 +8674,23 @@ void Node::routingTablePoll(PollerInfo *poller, ClientSession *session, UINT32 r
 /**
  * Call SNMP Enumerate with node's SNMP parameters
  */
-UINT32 Node::callSnmpEnumerate(const TCHAR *pszRootOid,
-                               UINT32 (* pHandler)(SNMP_Variable *, SNMP_Transport *, void *),
-                               void *pArg, const char *context, bool failOnShutdown)
+uint32_t Node::callSnmpEnumerate(const TCHAR *rootOid, uint32_t (*handler)(SNMP_Variable *, SNMP_Transport *, void *), void *callerData, const char *context, bool failOnShutdown)
 {
-   if ((m_capabilities & NC_IS_SNMP) &&
-       (!(m_state & NSF_SNMP_UNREACHABLE)) &&
-       (!(m_state & DCSF_UNREACHABLE)))
+   if (!(m_capabilities & NC_IS_SNMP) || (m_state & NSF_SNMP_UNREACHABLE) || (m_state & DCSF_UNREACHABLE))
+      return SNMP_ERR_COMM;
+
+   uint32_t rc;
+   SNMP_Transport *pTransport = createSnmpTransport(0, SNMP_VERSION_DEFAULT, context);
+   if (pTransport != nullptr)
    {
-      UINT32 dwResult;
-      SNMP_Transport *pTransport = createSnmpTransport(0, SNMP_VERSION_DEFAULT, context);
-      if (pTransport != nullptr)
-      {
-         dwResult = SnmpWalk(pTransport, pszRootOid, pHandler, pArg, false, failOnShutdown);
-         delete pTransport;
-      }
-      else
-      {
-         dwResult = SNMP_ERR_COMM;
-      }
-      return dwResult;
+      rc = SnmpWalk(pTransport, rootOid, handler, callerData, false, failOnShutdown);
+      delete pTransport;
    }
    else
    {
-      return SNMP_ERR_COMM;
+      rc = SNMP_ERR_COMM;
    }
+   return rc;
 }
 
 /**
@@ -10002,7 +9994,7 @@ NXSL_Value *Node::getHardwareComponentsForNXSL(NXSL_VM* vm)
       int hcSize = m_hardwareComponents->size();
       for (int i = 0; i < hcSize; i++)
       {
-         a->append(vm->createValue(new NXSL_Object(vm, &g_nxslHardwareComponent, new HardwareComponent(*m_hardwareComponents->get(i)))));
+         a->append(vm->createValue(vm->createObject(&g_nxslHardwareComponent, new HardwareComponent(*m_hardwareComponents->get(i)))));
       }
    }
    unlockProperties();
@@ -10021,7 +10013,7 @@ NXSL_Value* Node::getSoftwarePackagesForNXSL(NXSL_VM* vm)
       int hcSize = m_softwarePackages->size();
       for (int i = 0; i < hcSize; i++)
       {
-         a->append(vm->createValue(new NXSL_Object(vm, &g_nxslSoftwarePackage, new SoftwarePackage(*m_softwarePackages->get(i)))));
+         a->append(vm->createValue(vm->createObject(&g_nxslSoftwarePackage, new SoftwarePackage(*m_softwarePackages->get(i)))));
       }
    }
    unlockProperties();
@@ -10638,7 +10630,7 @@ void Node::updatePhysicalContainerBinding(uint32_t containerId)
  */
 NXSL_Value *Node::createNXSLObject(NXSL_VM *vm)
 {
-   return vm->createValue(new NXSL_Object(vm, &g_nxslNodeClass, new shared_ptr<Node>(self())));
+   return vm->createValue(vm->createObject(&g_nxslNodeClass, new shared_ptr<Node>(self())));
 }
 
 /**

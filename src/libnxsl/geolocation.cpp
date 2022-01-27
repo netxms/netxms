@@ -98,7 +98,7 @@ NXSL_Value *NXSL_GeoLocationClass::getAttr(NXSL_Object *object, const NXSL_Ident
  */
 NXSL_Value *NXSL_GeoLocationClass::createObject(NXSL_VM *vm, const GeoLocation& gl)
 {
-   return vm->createValue(new NXSL_Object(vm, &g_nxslGeoLocationClass, new GeoLocation(gl)));
+   return vm->createValue(vm->createObject(&g_nxslGeoLocationClass, new GeoLocation(gl)));
 }
 
 /**
@@ -125,6 +125,6 @@ int F_GeoLocation(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
    }
 
    GeoLocation *gl = new GeoLocation(type, argv[0]->getValueAsReal(), argv[1]->getValueAsReal());
-   *result = vm->createValue(new NXSL_Object(vm, &g_nxslGeoLocationClass, gl));
+   *result = vm->createValue(vm->createObject(&g_nxslGeoLocationClass, gl));
    return 0;
 }

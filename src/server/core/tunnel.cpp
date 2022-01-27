@@ -115,7 +115,7 @@ static void ExecuteTunnelHookScript(const shared_ptr<AgentTunnel>& tunnel)
       return;
    }
 
-   vm->setGlobalVariable("$tunnel", vm->createValue(new NXSL_Object(vm, &g_nxslTunnelClass, new shared_ptr<AgentTunnel>(tunnel))));
+   vm->setGlobalVariable("$tunnel", vm->createValue(vm->createObject(&g_nxslTunnelClass, new shared_ptr<AgentTunnel>(tunnel))));
    ThreadPoolExecute(g_mainThreadPool, ExecuteScriptInBackground, vm.vm(), scriptName);
 }
 

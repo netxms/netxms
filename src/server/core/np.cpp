@@ -644,7 +644,7 @@ NXSL_Value *NXSL_DiscoveredNodeClass::getAttr(NXSL_Object *object, const NXSL_Id
       if (data->ifList != nullptr)
       {
          for(int i = 0; i < data->ifList->size(); i++)
-            array->append(vm->createValue(new NXSL_Object(vm, &s_nxslDiscoveredInterfaceClass, data->ifList->get(i))));
+            array->append(vm->createValue(vm->createObject(&s_nxslDiscoveredInterfaceClass, data->ifList->get(i))));
       }
       value = vm->createValue(array);
    }
@@ -989,13 +989,13 @@ static bool AcceptNewNode(NewNodeData *newNodeData, BYTE *macAddr)
 
          if (pTransport != nullptr)
          {
-            vm->setGlobalVariable("$snmp", vm->createValue(new NXSL_Object(vm, &g_nxslSnmpTransportClass, pTransport)));
+            vm->setGlobalVariable("$snmp", vm->createValue(vm->createObject(&g_nxslSnmpTransportClass, pTransport)));
             pTransport = nullptr;   // Transport will be deleted by NXSL object destructor
          }
          // TODO: make agent connection available in script
-         vm->setGlobalVariable("$node", vm->createValue(new NXSL_Object(vm, &s_nxslDiscoveredNodeClass, &data)));
+         vm->setGlobalVariable("$node", vm->createValue(vm->createObject(&s_nxslDiscoveredNodeClass, &data)));
 
-         NXSL_Value *param = vm->createValue(new NXSL_Object(vm, &s_nxslDiscoveredNodeClass, &data));
+         NXSL_Value *param = vm->createValue(vm->createObject(&s_nxslDiscoveredNodeClass, &data));
          if (vm->run(1, &param))
          {
             result = vm->getResult()->getValueAsBoolean();

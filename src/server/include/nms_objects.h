@@ -3490,9 +3490,13 @@ public:
    void setLastEventId(int index, uint64_t eventId) { if ((index >= 0) && (index < MAX_LAST_EVENTS)) m_lastEvents[index] = eventId; }
    void setRoutingLoopEvent(const InetAddress& address, uint32_t nodeId, uint64_t eventId);
 
-   UINT32 callSnmpEnumerate(const TCHAR *pszRootOid,
-      UINT32 (* pHandler)(SNMP_Variable *, SNMP_Transport *, void *), void *pArg,
-      const char *context = nullptr, bool failOnShutdown = false);
+   uint32_t callSnmpEnumerate(const TCHAR *rootOid, uint32_t (*handler)(SNMP_Variable*, SNMP_Transport*, void*), void *callerData,
+         const char *context = nullptr, bool failOnShutdown = false);
+   template<typename T> uint32_t callSnmpEnumerate(const TCHAR *rootOid, uint32_t (*handler)(SNMP_Variable*, SNMP_Transport*, T*),
+         T *callerData, const char *context = nullptr, bool failOnShutdown = false)
+   {
+      return callSnmpEnumerate(rootOid, reinterpret_cast<uint32_t (*)(SNMP_Variable*, SNMP_Transport*, void*)>(handler), callerData, context, failOnShutdown);
+   }
 
    shared_ptr<NetworkMapObjectList> getL2Topology();
    shared_ptr<NetworkMapObjectList> buildL2Topology(uint32_t *status, int radius, bool includeEndNodes, bool useL1Topology);

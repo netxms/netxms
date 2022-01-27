@@ -432,7 +432,7 @@ NXSL_Value *UserDatabaseObject::getCustomAttributeForNXSL(NXSL_VM *vm, const TCH
  */
 NXSL_Value *UserDatabaseObject::createNXSLObject(NXSL_VM *vm)
 {
-   return vm->createValue(new NXSL_Object(vm, &g_nxslUserDBObjectClass, this));
+   return vm->createValue(vm->createObject(&g_nxslUserDBObjectClass, this));
 }
 
 /*****************************************************************************
@@ -977,7 +977,7 @@ json_t *User::toJson() const
  */
 NXSL_Value *User::createNXSLObject(NXSL_VM *vm)
 {
-   return vm->createValue(new NXSL_Object(vm, &g_nxslUserClass, this));
+   return vm->createValue(vm->createObject(&g_nxslUserClass, this));
 }
 
 /**
@@ -1405,5 +1405,5 @@ json_t *Group::toJson() const
  */
 NXSL_Value *Group::createNXSLObject(NXSL_VM *vm)
 {
-   return vm->createValue(new NXSL_Object(vm, &g_nxslUserGroupClass, this));
+   return vm->createValue(vm->createObject(&g_nxslUserGroupClass, this));
 }

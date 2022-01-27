@@ -1990,7 +1990,7 @@ bool DCItem::testTransformation(DataCollectionTarget *object, const shared_ptr<D
       }
       if (dcObjectInfo != nullptr)
       {
-         vm->setGlobalVariable(_T("$dci"), vm->createValue(new NXSL_Object(vm, &g_nxslDciClass, new shared_ptr<DCObjectInfo>(dcObjectInfo))));
+         vm->setGlobalVariable(_T("$dci"), vm->createValue(vm->createObject(&g_nxslDciClass, new shared_ptr<DCObjectInfo>(dcObjectInfo))));
       }
       vm->setGlobalVariable("$isCluster", vm->createValue(object->getObjectClass() == OBJECT_CLUSTER));
 

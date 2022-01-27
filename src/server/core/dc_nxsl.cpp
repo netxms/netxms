@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -79,7 +79,7 @@ static int GetDCIValueImpl(bool rawValue, int argc, NXSL_Value **argv, NXSL_Valu
       else if (dci->getType() == DCO_TYPE_TABLE)
       {
          shared_ptr<Table> t = static_cast<DCTable*>(dci.get())->getLastValue();
-         *ppResult = (t != nullptr) ? vm->createValue(new NXSL_Object(vm, &g_nxslTableClass, new shared_ptr<Table>(t))) : vm->createValue();
+         *ppResult = (t != nullptr) ? vm->createValue(vm->createObject(&g_nxslTableClass, new shared_ptr<Table>(t))) : vm->createValue();
       }
       else
       {
@@ -140,7 +140,7 @@ static int GetDciValueExImpl(bool byName, int argc, NXSL_Value **argv, NXSL_Valu
       else if (dci->getType() == DCO_TYPE_TABLE)
       {
          shared_ptr<Table> t = static_cast<DCTable*>(dci.get())->getLastValue();
-         *ppResult = (t != nullptr) ? vm->createValue(new NXSL_Object(vm, &g_nxslTableClass, new shared_ptr<Table>(t))) : vm->createValue();
+         *ppResult = (t != nullptr) ? vm->createValue(vm->createObject(&g_nxslTableClass, new shared_ptr<Table>(t))) : vm->createValue();
       }
       else
       {
@@ -299,7 +299,7 @@ static int F_Instance(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_V
    list->set(list->size(), vm->createValue(true));
    list->set(list->size(), (name != nullptr) ? vm->createValue(name) : vm->createValue());
    list->set(list->size(), (displayName != nullptr) ? vm->createValue(displayName) : vm->createValue());
-   list->set(list->size(), (object != nullptr) ? vm->createValue(new NXSL_Object(object)) : vm->createValue());
+   list->set(list->size(), (object != nullptr) ? vm->createValue(vm->createObject(object)) : vm->createValue());
    *ppResult = vm->createValue(list);
    return 0;
 }

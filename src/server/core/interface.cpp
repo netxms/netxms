@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -1339,7 +1339,7 @@ void Interface::updateVlans(IntegerArray<uint32_t> *vlans)
  */
 NXSL_Value *Interface::createNXSLObject(NXSL_VM *vm)
 {
-   return vm->createValue(new NXSL_Object(vm, &g_nxslInterfaceClass, new shared_ptr<Interface>(self())));
+   return vm->createValue(vm->createObject(&g_nxslInterfaceClass, new shared_ptr<Interface>(self())));
 }
 
 /**

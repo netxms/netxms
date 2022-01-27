@@ -487,7 +487,7 @@ static void GenerateTrapEvent(const shared_ptr<Node>& node, UINT32 dwIndex, SNMP
          NXSL_Array *varbinds = new NXSL_Array(vm);
          for(int i = (pdu->getVersion() == SNMP_VERSION_1) ? 0 : 2; i < pdu->getNumVariables(); i++)
          {
-            varbinds->append(vm->createValue(new NXSL_Object(vm, &g_nxslSnmpVarBindClass, new SNMP_Variable(pdu->getVariable(i)))));
+            varbinds->append(vm->createValue(vm->createObject(&g_nxslSnmpVarBindClass, new SNMP_Variable(pdu->getVariable(i)))));
          }
          vm->setGlobalVariable("$varbinds", vm->createValue(varbinds));
       }

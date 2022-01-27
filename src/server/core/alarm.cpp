@@ -448,7 +448,7 @@ void Alarm::executeHookScript()
       return;
    }
 
-   vm->setGlobalVariable("$alarm", vm->createValue(new NXSL_Object(vm, &g_nxslAlarmClass, new Alarm(this, false))));
+   vm->setGlobalVariable("$alarm", vm->createValue(vm->createObject(&g_nxslAlarmClass, new Alarm(this, false))));
    ThreadPoolExecute(g_mainThreadPool, ExecuteHookScript, vm.vm());
 }
 
@@ -2212,7 +2212,7 @@ int F_FindAlarmById(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *v
 
    uint32_t alarmId = argv[0]->getValueAsUInt32();
    Alarm *alarm = FindAlarmById(alarmId);
-   *result = (alarm != nullptr) ? vm->createValue(new NXSL_Object(vm, &g_nxslAlarmClass, alarm)) : vm->createValue();
+   *result = (alarm != nullptr) ? vm->createValue(vm->createObject(&g_nxslAlarmClass, alarm)) : vm->createValue();
    return 0;
 }
 
@@ -2232,7 +2232,7 @@ int F_FindAlarmByKey(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *
       alarm = new Alarm(alarm, false);
    s_alarmList.unlock();
 
-   *result = (alarm != nullptr) ? vm->createValue(new NXSL_Object(vm, &g_nxslAlarmClass, alarm)) : vm->createValue();
+   *result = (alarm != nullptr) ? vm->createValue(vm->createObject(&g_nxslAlarmClass, alarm)) : vm->createValue();
    return 0;
 }
 
@@ -2259,7 +2259,7 @@ int F_FindAlarmByKeyRegex(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL
    }
    s_alarmList.unlock();
 
-   *result = (alarm != nullptr) ? vm->createValue(new NXSL_Object(vm, &g_nxslAlarmClass, alarm)) : vm->createValue();
+   *result = (alarm != nullptr) ? vm->createValue(vm->createObject(&g_nxslAlarmClass, alarm)) : vm->createValue();
    return 0;
 }
 
@@ -2357,7 +2357,7 @@ static THREAD_RESULT THREAD_CALL RootCauseUpdateThread(void *arg)
          {
             Event *event = LoadEventFromDatabase(alarm->getSourceEventId());
             if (event != nullptr)
-               vm->setGlobalVariable("$event", vm->createValue(new NXSL_Object(vm, &g_nxslEventClass, event, false)));
+               vm->setGlobalVariable("$event", vm->createValue(vm->createObject(&g_nxslEventClass, event, false)));
             if (vm->run())
             {
                NXSL_Value *result = vm->getResult();

@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -25,12 +25,12 @@
 /**
  * Topology table walker's callback for CDP topology table
  */
-static UINT32 CDPTopoHandler(SNMP_Variable *var, SNMP_Transport *transport, void *arg)
+static uint32_t CDPTopoHandler(SNMP_Variable *var, SNMP_Transport *transport, LinkLayerNeighbors *nbs)
 {
-	Node *node = (Node *)((LinkLayerNeighbors *)arg)->getData();
+	Node *node = static_cast<Node*>(nbs->getData());
 	const SNMP_ObjectId& oid = var->getName();
 
-	UINT32 remoteIp;
+	uint32_t remoteIp;
 	var->getRawValue((BYTE *)&remoteIp, sizeof(UINT32));
 	remoteIp = ntohl(remoteIp);
 	
@@ -76,7 +76,7 @@ static UINT32 CDPTopoHandler(SNMP_Variable *var, SNMP_Transport *transport, void
 				info.protocol = LL_PROTO_CDP;
             info.isCached = false;
 
-				static_cast<LinkLayerNeighbors*>(arg)->addConnection(&info);
+				nbs->addConnection(&info);
 			}
 		}
       delete pRespPDU;

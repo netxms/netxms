@@ -1290,7 +1290,7 @@ const TCHAR *DCObject::getOwnerName() const
  */
 NXSL_Value *DCObject::createNXSLObject(NXSL_VM *vm) const
 {
-   return vm->createValue(new NXSL_Object(vm, &g_nxslDciClass, new shared_ptr<DCObjectInfo>(createDescriptor())));
+   return vm->createValue(vm->createObject(&g_nxslDciClass, new shared_ptr<DCObjectInfo>(createDescriptor())));
 }
 
 /**

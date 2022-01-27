@@ -827,7 +827,7 @@ static int F_LoadEvent(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM
    Event *e = FindEventInLoggerQueue(argv[0]->getValueAsUInt64());
    if (e == nullptr)
       e = LoadEventFromDatabase(argv[0]->getValueAsUInt64());
-   *result = (e != nullptr) ? vm->createValue(new NXSL_Object(vm, &g_nxslEventClass, e, false)) : vm->createValue();
+   *result = (e != nullptr) ? vm->createValue(vm->createObject(&g_nxslEventClass, e, false)) : vm->createValue();
    return 0;
 }
 
@@ -1249,7 +1249,7 @@ static int F_CreateSNMPTransport(int argc, NXSL_Value **argv, NXSL_Value **ppRes
       const char *context = ((argc > 2) && argv[2]->isString()) ? argv[2]->getValueAsMBString() : nullptr;
       const char *community = ((argc > 3) && argv[3]->isString()) ? argv[3]->getValueAsMBString() : nullptr;
       SNMP_Transport *t = node->createSnmpTransport(port, SNMP_VERSION_DEFAULT, context, community);
-      *ppResult = (t != nullptr) ? vm->createValue(new NXSL_Object(vm, &g_nxslSnmpTransportClass, t)) : vm->createValue();
+      *ppResult = (t != nullptr) ? vm->createValue(vm->createObject(&g_nxslSnmpTransportClass, t)) : vm->createValue();
    }
    else
    {
@@ -1301,7 +1301,7 @@ static int F_SNMPGet(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *
       if ((response->getNumVariables() > 0) && (response->getErrorCode() == SNMP_PDU_ERR_SUCCESS))
       {
          SNMP_Variable *pVar = response->getVariable(0);
-		   *result = vm->createValue(new NXSL_Object(vm, &g_nxslSnmpVarBindClass, pVar));
+		   *result = vm->createValue(vm->createObject(&g_nxslSnmpVarBindClass, pVar));
          response->unlinkVariables();
 	   }
       else
@@ -1443,7 +1443,7 @@ finish:
 static UINT32 WalkCallback(SNMP_Variable *var, SNMP_Transport *transport, void *userArg)
 {
    NXSL_VM *vm = static_cast<NXSL_VM*>(static_cast<NXSL_Array*>(userArg)->vm());
-   static_cast<NXSL_Array*>(userArg)->append(vm->createValue(new NXSL_Object(vm, &g_nxslSnmpVarBindClass, new SNMP_Variable(var))));
+   static_cast<NXSL_Array*>(userArg)->append(vm->createValue(vm->createObject(&g_nxslSnmpVarBindClass, new SNMP_Variable(var))));
    return SNMP_ERR_SUCCESS;
 }
 
@@ -1632,7 +1632,7 @@ static int F_AgentReadTable(int argc, NXSL_Value **argv, NXSL_Value **result, NX
 
 	shared_ptr<Table> table;
    uint32_t rcc = static_cast<shared_ptr<Node>*>(object->getData())->get()->getTableFromAgent(argv[1]->getValueAsCString(), &table);
-   *result = (rcc == DCE_SUCCESS) ? vm->createValue(new NXSL_Object(vm, &g_nxslTableClass, new shared_ptr<Table>(table))) : vm->createValue();
+   *result = (rcc == DCE_SUCCESS) ? vm->createValue(vm->createObject(&g_nxslTableClass, new shared_ptr<Table>(table))) : vm->createValue();
 	return 0;
 }
 

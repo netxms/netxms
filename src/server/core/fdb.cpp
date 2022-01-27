@@ -307,27 +307,25 @@ void ForwardingDatabase::sort()
 /**
  * FDB walker's callback
  */
-static UINT32 FDBHandler(SNMP_Variable *pVar, SNMP_Transport *pTransport, void *arg)
+static uint32_t FDBHandler(SNMP_Variable *pVar, SNMP_Transport *pTransport, ForwardingDatabase *fdb)
 {
    SNMP_ObjectId oid(pVar->getName());
 
 	// Get port number and status
-   SNMP_PDU *pRqPDU = new SNMP_PDU(SNMP_GET_REQUEST, SnmpNewRequestId(), pTransport->getSnmpVersion());
+   SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), pTransport->getSnmpVersion());
 
 	oid.changeElement(10, 2);	// .1.3.6.1.2.1.17.4.3.1.2 - port number
-	pRqPDU->bindVariable(new SNMP_Variable(oid));
+	request.bindVariable(new SNMP_Variable(oid));
 
 	oid.changeElement(10, 3);	// .1.3.6.1.2.1.17.4.3.1.3 - status
-	pRqPDU->bindVariable(new SNMP_Variable(oid));
+	request.bindVariable(new SNMP_Variable(oid));
 
-   SNMP_PDU *pRespPDU;
-   uint32_t rcc = pTransport->doRequest(pRqPDU, &pRespPDU, SnmpGetDefaultTimeout(), 3);
-	delete pRqPDU;
-
+   SNMP_PDU *response;
+   uint32_t rcc = pTransport->doRequest(&request, &response, SnmpGetDefaultTimeout(), 3);
 	if (rcc == SNMP_ERR_SUCCESS)
    {
-      SNMP_Variable *varPort = pRespPDU->getVariable(0);
-      SNMP_Variable *varStatus = pRespPDU->getVariable(1);
+      SNMP_Variable *varPort = response->getVariable(0);
+      SNMP_Variable *varStatus = response->getVariable(1);
       if (varPort != nullptr && varStatus != nullptr)
       {
          int port = varPort->getValueAsInt();
@@ -340,12 +338,12 @@ static UINT32 FDBHandler(SNMP_Variable *pVar, SNMP_Transport *pTransport, void *
             pVar->getRawValue(entry.macAddr, MAC_ADDR_LENGTH);
             shared_ptr<Node> node = FindNodeByMAC(entry.macAddr);
             entry.nodeObject = (node != nullptr) ? node->getId() : 0;
-            entry.vlanId = static_cast<ForwardingDatabase*>(arg)->getCurrentVlanId();
+            entry.vlanId = fdb->getCurrentVlanId();
             entry.type = static_cast<uint16_t>(status);
-            static_cast<ForwardingDatabase*>(arg)->addEntry(&entry);
+            fdb->addEntry(&entry);
          }
       }
-      delete pRespPDU;
+      delete response;
 	}
 
 	return rcc;
@@ -354,26 +352,24 @@ static UINT32 FDBHandler(SNMP_Variable *pVar, SNMP_Transport *pTransport, void *
 /**
  * dot1qTpFdbEntry walker's callback
  */
-static UINT32 Dot1qTpFdbHandler(SNMP_Variable *pVar, SNMP_Transport *pTransport, void *arg)
+static uint32_t Dot1qTpFdbHandler(SNMP_Variable *pVar, SNMP_Transport *pTransport, ForwardingDatabase *fdb)
 {
 	int port = pVar->getValueAsInt();
 	if (port == 0)
 		return SNMP_ERR_SUCCESS;
 
 	// Get port number and status
-   SNMP_PDU *pRqPDU = new SNMP_PDU(SNMP_GET_REQUEST, SnmpNewRequestId(), pTransport->getSnmpVersion());
+   SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), pTransport->getSnmpVersion());
 
    SNMP_ObjectId oid(pVar->getName());
    oid.changeElement(12, 3);	// .1.3.6.1.2.1.17.7.1.2.2.1.3 - status
-	pRqPDU->bindVariable(new SNMP_Variable(oid));
+	request.bindVariable(new SNMP_Variable(oid));
 
-   SNMP_PDU *pRespPDU;
-   uint32_t rcc = pTransport->doRequest(pRqPDU, &pRespPDU, SnmpGetDefaultTimeout(), 3);
-	delete pRqPDU;
-
+   SNMP_PDU *response;
+   uint32_t rcc = pTransport->doRequest(&request, &response, SnmpGetDefaultTimeout(), 3);
 	if (rcc == SNMP_ERR_SUCCESS)
    {
-		int status = pRespPDU->getVariable(0)->getValueAsInt();
+		int status = response->getVariable(0)->getValueAsInt();
 		if ((status == 3) || (status == 5)) // status: 3 == learned, 5 == static
 		{
 			FDB_ENTRY entry;
@@ -387,9 +383,9 @@ static UINT32 Dot1qTpFdbHandler(SNMP_Variable *pVar, SNMP_Transport *pTransport,
 			entry.nodeObject = (node != nullptr) ? node->getId() : 0;
          entry.vlanId = static_cast<uint16_t>(oid.getElement(oidLen - MAC_ADDR_LENGTH - 1));
          entry.type = static_cast<uint16_t>(status);
-         static_cast<ForwardingDatabase*>(arg)->addEntry(&entry);
+         fdb->addEntry(&entry);
 		}
-      delete pRespPDU;
+      delete response;
 	}
 
 	return rcc;
@@ -398,13 +394,13 @@ static UINT32 Dot1qTpFdbHandler(SNMP_Variable *pVar, SNMP_Transport *pTransport,
 /**
  * dot1dBasePortTable walker's callback
  */
-static UINT32 Dot1dPortTableHandler(SNMP_Variable *pVar, SNMP_Transport *pTransport, void *arg)
+static uint32_t Dot1dPortTableHandler(SNMP_Variable *pVar, SNMP_Transport *pTransport, ForwardingDatabase *fdb)
 {
    const SNMP_ObjectId& oid = pVar->getName();
 	PORT_MAPPING_ENTRY pm;
 	pm.port = oid.value()[oid.length() - 1];
 	pm.ifIndex = pVar->getValueAsUInt();
-	static_cast<ForwardingDatabase*>(arg)->addPortMapping(&pm);
+	fdb->addPortMapping(&pm);
 	return SNMP_ERR_SUCCESS;
 }
 

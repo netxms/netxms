@@ -109,7 +109,7 @@ void NXSL_Class::setName(const TCHAR *name)
 NXSL_Value *NXSL_Class::getAttr(NXSL_Object *object, const NXSL_Identifier& attr)
 {
    if (NXSL_COMPARE_ATTRIBUTE_NAME("__class"))
-      return object->vm()->createValue(new NXSL_Object(object->vm(), &g_nxslMetaClass, object->getClass()));
+      return object->vm()->createValue(object->vm()->createObject(&g_nxslMetaClass, object->getClass()));
    return nullptr;
 }
 
@@ -131,10 +131,11 @@ void NXSL_Class::scanAttributes()
    if (m_attributes.isEmpty())
    {
       NXSL_VM vm(new NXSL_Environment());
-      NXSL_Object object(&vm, &g_nxslBaseClass, nullptr);
-      NXSL_Value *v = getAttr(&object, "?"); // will populate m_attributes
+      NXSL_Object *object = vm.createObject(&g_nxslBaseClass, nullptr);
+      NXSL_Value *v = getAttr(object, "?"); // will populate m_attributes
       if (v != nullptr)
          vm.destroyValue(v);
+      vm.destroyObject(object);
    }
    m_metadataLock.unlock();
 }
@@ -233,7 +234,7 @@ NXSL_Value *NXSL_MetaClass::getAttr(NXSL_Object *object, const NXSL_Identifier& 
 NXSL_Object::NXSL_Object(NXSL_VM *vm, NXSL_Class *nxslClass, const void *data, bool constant) : NXSL_RuntimeObject(vm)
 {
    m_class = nxslClass;
-   m_data = MemAllocStruct<__nxsl_class_data>();
+   m_data = vm->allocateObjectClassData();
    m_data->refCount = 1;
    m_data->data = (void *)data;
    m_data->constant = constant;
@@ -260,6 +261,6 @@ NXSL_Object::~NXSL_Object()
 	{
 	   if (!m_data->constant)
 	      m_class->onObjectDelete(this);
-		MemFree(m_data);
+	   m_vm->freeObjectClassData(m_data);
 	}
 }

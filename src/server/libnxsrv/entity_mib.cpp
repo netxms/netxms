@@ -89,7 +89,7 @@ bool ComponentTree::equals(const ComponentTree *t) const
  */
 NXSL_Value *ComponentTree::getRootForNXSL(NXSL_VM *vm, shared_ptr<ComponentTree> tree)
 {
-   return vm->createValue(new NXSL_Object(vm, &g_nxslComponentClass, new NXSL_ComponentHandle(tree, tree->m_root)));
+   return vm->createValue(vm->createObject(&g_nxslComponentClass, new NXSL_ComponentHandle(tree, tree->m_root)));
 }
 
 /**
@@ -320,7 +320,7 @@ NXSL_Array *Component::getChildrenForNXSL(NXSL_VM *vm, NXSL_ComponentHandle *han
    NXSL_Array *components = new NXSL_Array(vm);
    for(int i = 0; i < m_children->size(); i++)
    {
-      components->set(i, vm->createValue(new NXSL_Object(vm, &g_nxslComponentClass, new NXSL_ComponentHandle(handle->tree, m_children->get(i)))));
+      components->set(i, vm->createValue(vm->createObject(&g_nxslComponentClass, new NXSL_ComponentHandle(handle->tree, m_children->get(i)))));
    }
    return components;
 }

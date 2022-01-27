@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -272,7 +272,7 @@ static void ProcessEvent(Event *event, int processorId)
    if (vm.isValid())
    {
       nxlog_debug_tag(DEBUG_TAG, 7, _T("Running event processor hook script"));
-      vm->setGlobalVariable("$event", vm->createValue(new NXSL_Object(vm, &g_nxslEventClass, event, true)));
+      vm->setGlobalVariable("$event", vm->createValue(vm->createObject(&g_nxslEventClass, event, true)));
       if (!vm->run())
       {
          if (event->getCode() != EVENT_SCRIPT_ERROR) // To avoid infinite loop

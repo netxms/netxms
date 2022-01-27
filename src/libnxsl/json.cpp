@@ -45,11 +45,11 @@ static NXSL_Value *ValueFromJson(NXSL_VM *vm, json_t *json)
       {
          case JSON_OBJECT:
             json_incref(json);
-            value = vm->createValue(new NXSL_Object(vm, &g_nxslJsonObjectClass, json));
+            value = vm->createValue(vm->createObject(&g_nxslJsonObjectClass, json));
             break;
          case JSON_ARRAY:
             json_incref(json);
-            value = vm->createValue(new NXSL_Object(vm, &g_nxslJsonArrayClass, json));
+            value = vm->createValue(vm->createObject(&g_nxslJsonArrayClass, json));
             break;
          case JSON_STRING:
             value = vm->createValue(json_string_value(json));
@@ -394,7 +394,7 @@ NXSL_Value *NXSL_JsonArrayClass::getAttr(NXSL_Object *object, const NXSL_Identif
  */
 int F_JsonObject(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
-   *result = vm->createValue(new NXSL_Object(vm, &g_nxslJsonObjectClass, json_object()));
+   *result = vm->createValue(vm->createObject(&g_nxslJsonObjectClass, json_object()));
    return 0;
 }
 
@@ -403,7 +403,7 @@ int F_JsonObject(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
  */
 int F_JsonArray(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
-   *result = vm->createValue(new NXSL_Object(vm, &g_nxslJsonArrayClass, json_array()));
+   *result = vm->createValue(vm->createObject(&g_nxslJsonArrayClass, json_array()));
    return 0;
 }
 
@@ -423,6 +423,6 @@ int F_JsonParse(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
    json_error_t error;
    json_t *json = json_loads(utfString, 0, &error);
    MemFree(utfString);
-   *result = (json != nullptr) ? vm->createValue(new NXSL_Object(vm, &g_nxslJsonObjectClass, json)) : vm->createValue();
+   *result = (json != nullptr) ? vm->createValue(vm->createObject(&g_nxslJsonObjectClass, json)) : vm->createValue();
    return 0;
 }

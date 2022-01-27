@@ -8913,24 +8913,24 @@ struct SNMP_WalkerContext
 /**
  * SNMP walker enumeration callback
  */
-static UINT32 WalkerCallback(SNMP_Variable *pVar, SNMP_Transport *pTransport, void *pArg)
+static UINT32 WalkerCallback(SNMP_Variable *pVar, SNMP_Transport *transport, SNMP_WalkerContext *context)
 {
-   NXCPMessage *pMsg = ((SNMP_WalkerContext *)pArg)->pMsg;
-   TCHAR szBuffer[4096];
+   NXCPMessage *msg = context->pMsg;
+   TCHAR buffer[4096];
 	bool convertToHex = true;
 
-   pMsg->setField(((SNMP_WalkerContext *)pArg)->dwId++, pVar->getName().toString(szBuffer, 4096));
-   pVar->getValueAsPrintableString(szBuffer, 4096, &convertToHex);
-   pMsg->setField(((SNMP_WalkerContext *)pArg)->dwId++, convertToHex ? (UINT32)0xFFFF : pVar->getType());
-   pMsg->setField(((SNMP_WalkerContext *)pArg)->dwId++, szBuffer);
-   ((SNMP_WalkerContext *)pArg)->dwNumVars++;
-   if (((SNMP_WalkerContext *)pArg)->dwNumVars == 50)
+   msg->setField(context->dwId++, pVar->getName().toString(buffer, 4096));
+   pVar->getValueAsPrintableString(buffer, 4096, &convertToHex);
+   msg->setField(context->dwId++, convertToHex ? (UINT32)0xFFFF : pVar->getType());
+   msg->setField(context->dwId++, buffer);
+   context->dwNumVars++;
+   if (context->dwNumVars == 50)
    {
-      pMsg->setField(VID_NUM_VARIABLES, ((SNMP_WalkerContext *)pArg)->dwNumVars);
-      ((SNMP_WalkerContext *)pArg)->pSession->sendMessage(pMsg);
-      ((SNMP_WalkerContext *)pArg)->dwNumVars = 0;
-      ((SNMP_WalkerContext *)pArg)->dwId = VID_SNMP_WALKER_DATA_BASE;
-      pMsg->deleteAllFields();
+      msg->setField(VID_NUM_VARIABLES, context->dwNumVars);
+      context->pSession->sendMessage(msg);
+      context->dwNumVars = 0;
+      context->dwId = VID_SNMP_WALKER_DATA_BASE;
+      msg->deleteAllFields();
    }
    return SNMP_ERR_SUCCESS;
 }

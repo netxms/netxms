@@ -178,8 +178,8 @@ bool NXSL_SecurityContext::validateAccess(int accessType, const void *object)
 /**
  * Constructor
  */
-NXSL_VM::NXSL_VM(NXSL_Environment *env, NXSL_Storage *storage) : NXSL_ValueManager(), m_instructionSet(256, 256),
-         m_functions(0, 16), m_modules(0, 16, Ownership::True)
+NXSL_VM::NXSL_VM(NXSL_Environment *env, NXSL_Storage *storage) : NXSL_ValueManager(), m_objects(64), m_objectClassData(64),
+         m_instructionSet(256, 256), m_functions(0, 16), m_modules(0, 16, Ownership::True)
 {
    m_cp = INVALID_ADDRESS;
    m_stopFlag = false;
@@ -2126,11 +2126,9 @@ void NXSL_VM::doBinaryOperation(int nOpCode)
    if ((pVal1 != nullptr) && (pVal2 != nullptr))
    {
       if ((!pVal1->isNull() && !pVal2->isNull()) ||
-          (!pVal2->isNull() && (nOpCode == OPCODE_IN)) ||
-          (nOpCode == OPCODE_EQ) || (nOpCode == OPCODE_NE) || (nOpCode == OPCODE_CASE) ||
-          (nOpCode == OPCODE_CASE_CONST) || (nOpCode == OPCODE_CONCAT) ||
-          (nOpCode == OPCODE_AND) || (nOpCode == OPCODE_OR) ||
-          (nOpCode == OPCODE_CASE_LT) || (nOpCode == OPCODE_CASE_CONST_LT) ||
+          (nOpCode == OPCODE_IN) || (nOpCode == OPCODE_EQ) || (nOpCode == OPCODE_NE) || (nOpCode == OPCODE_CASE) ||
+          (nOpCode == OPCODE_CASE_CONST) || (nOpCode == OPCODE_CONCAT) || (nOpCode == OPCODE_AND) ||
+          (nOpCode == OPCODE_OR) || (nOpCode == OPCODE_CASE_LT) || (nOpCode == OPCODE_CASE_CONST_LT) ||
           (nOpCode == OPCODE_CASE_GT) || (nOpCode == OPCODE_CASE_CONST_GT))
       {
          if (pVal1->isNumeric() && pVal2->isNumeric() &&
@@ -2320,9 +2318,19 @@ void NXSL_VM::doBinaryOperation(int nOpCode)
                   else if (pVal2->isHashMap())
                   {
                      if (pVal1->isString())
+                     {
                         pRes = createValue(pVal2->getValueAsHashMap()->contains(pVal1->getValueAsCString()));
+                     }
+                     else if (pVal1->isNull())
+                     {
+                        pRes = pVal1;
+                        pRes->convert(NXSL_DT_BOOLEAN);
+                        pVal1 = nullptr;
+                     }
                      else
+                     {
                         error(NXSL_ERR_NOT_STRING);
+                     }
                   }
                   else if (pVal2->isString())
                   {
@@ -2333,10 +2341,22 @@ void NXSL_VM::doBinaryOperation(int nOpCode)
                         const TCHAR *s2 = pVal2->getValueAsString(&len2);
                         pRes = createValue((len1 <= len2) && (memmem(s2, len2 * sizeof(TCHAR), s1, len1 * sizeof(TCHAR)) != nullptr));
                      }
+                     else if (pVal1->isNull())
+                     {
+                        pRes = pVal1;
+                        pRes->convert(NXSL_DT_BOOLEAN);
+                        pVal1 = nullptr;
+                     }
                      else
                      {
                         error(NXSL_ERR_NOT_STRING);
                      }
+                  }
+                  else if (pVal2->isNull())
+                  {
+                     pRes = pVal2;
+                     pRes->convert(NXSL_DT_BOOLEAN);
+                     pVal2 = nullptr;
                   }
                   else
                   {
@@ -2894,7 +2914,7 @@ void NXSL_VM::pushProperty(const NXSL_Identifier& name)
       NXSL_Array *a = new NXSL_Array(this);
       for(size_t i = 0; i < g_nxslClassRegistry.size; i++)
       {
-         a->append(createValue(new NXSL_Object(this, &g_nxslMetaClass, g_nxslClassRegistry.classes[i])));
+         a->append(createValue(createObject(&g_nxslMetaClass, g_nxslClassRegistry.classes[i])));
       }
       m_dataStack.push(createValue(a));
    }

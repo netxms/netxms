@@ -2552,7 +2552,7 @@ void NetObj::leaveMaintenanceMode(uint32_t userId)
  */
 NXSL_Value *NetObj::createNXSLObject(NXSL_VM *vm)
 {
-   return vm->createValue(new NXSL_Object(vm, &g_nxslNetObjClass, new shared_ptr<NetObj>(self())));
+   return vm->createValue(vm->createObject(&g_nxslNetObjClass, new shared_ptr<NetObj>(self())));
 }
 
 /**
@@ -2900,10 +2900,10 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
                      if (vm != nullptr)
                      {
                         if (event != nullptr)
-                           vm->setGlobalVariable("$event", vm->createValue(new NXSL_Object(vm, &g_nxslEventClass, event, true)));
+                           vm->setGlobalVariable("$event", vm->createValue(vm->createObject(&g_nxslEventClass, event, true)));
                         if (alarm != nullptr)
                         {
-                           vm->setGlobalVariable("$alarm", vm->createValue(new NXSL_Object(vm, &g_nxslAlarmClass, alarm, true)));
+                           vm->setGlobalVariable("$alarm", vm->createValue(vm->createObject(&g_nxslAlarmClass, alarm, true)));
                            vm->setGlobalVariable("$alarmMessage", vm->createValue(alarm->getMessage()));
                            vm->setGlobalVariable("$alarmKey", vm->createValue(alarm->getKey()));
                         }

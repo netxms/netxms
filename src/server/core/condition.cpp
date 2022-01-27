@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -374,7 +374,7 @@ void ConditionObject::check()
                shared_ptr<Table> t = static_cast<DCTable&>(*pItem).getLastValue();
                if (t != nullptr)
                {
-                  value = vm->createValue(new NXSL_Object(vm, &g_nxslTableClass, new shared_ptr<Table>(t)));
+                  value = vm->createValue(vm->createObject(&g_nxslTableClass, new shared_ptr<Table>(t)));
                }
             }
          }

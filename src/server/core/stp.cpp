@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,17 +22,19 @@
 
 #include "nxcore.h"
 
+#define DEBUG_TAG _T("topology.stp")
+
 /**
  * STP port table walker's callback
  */
-static UINT32 STPPortListHandler(SNMP_Variable *var, SNMP_Transport *transport, void *arg)
+static uint32_t STPPortListHandler(SNMP_Variable *var, SNMP_Transport *transport, LinkLayerNeighbors *neighbors)
 {
 	int state = var->getValueAsInt();
 	if ((state != 2) && (state != 5))
 		return SNMP_ERR_SUCCESS;  // port state not "blocked" or "forwarding"
 
-	Node *node = (Node *)((LinkLayerNeighbors *)arg)->getData();
-	UINT32 oid[64];
+	Node *node = static_cast<Node*>(neighbors->getData());
+	uint32_t oid[64];
    memcpy(oid, var->getName().value(), var->getName().length() * sizeof(UINT32));
 
    // Get designated bridge and designated port for this port
@@ -45,7 +47,7 @@ static UINT32 STPPortListHandler(SNMP_Variable *var, SNMP_Transport *transport, 
    request->bindVariable(new SNMP_Variable(oid, var->getName().length()));
 
 	SNMP_PDU *response = nullptr;
-   UINT32 rcc = transport->doRequest(request, &response, SnmpGetDefaultTimeout(), 3);
+   uint32_t rcc = transport->doRequest(request, &response, SnmpGetDefaultTimeout(), 3);
 	delete request;
 	if (rcc == SNMP_ERR_SUCCESS)
    {
@@ -66,18 +68,16 @@ static UINT32 STPPortListHandler(SNMP_Variable *var, SNMP_Transport *transport, 
                bridge = FindNodeByBridgeId(&designatedBridge[2]);
             if ((bridge != nullptr) && (bridge->getId() != node->getId()))
             {
-               nxlog_debug(6, _T("STP: found designated bridge %s [%d] for node %s [%d] port %d"),
-                  bridge->getName(), bridge->getId(), node->getName(), node->getId(), oid[11]);
+               nxlog_debug_tag(DEBUG_TAG, 6, _T("Found designated STP bridge %s [%u] for node %s [%u] port %u"),
+                     bridge->getName(), bridge->getId(), node->getName(), node->getId(), oid[11]);
                shared_ptr<Interface> ifLocal = node->findBridgePort(oid[11]);
                if (ifLocal != nullptr)
                {
-                  nxlog_debug(6, _T("STP: found local port %s [%d] for node %s [%d]"),
-                     ifLocal->getName(), ifLocal->getId(), node->getName(), node->getId());
-                  shared_ptr<Interface> ifRemote = bridge->findBridgePort((UINT32)designatedPort[1]);
+                  nxlog_debug_tag(DEBUG_TAG, 6, _T("Found local port %s [%u] for node %s [%u]"), ifLocal->getName(), ifLocal->getId(), node->getName(), node->getId());
+                  shared_ptr<Interface> ifRemote = bridge->findBridgePort((uint32_t)designatedPort[1]);
                   if (ifRemote != nullptr)
                   {
-                     nxlog_debug(6, _T("STP: found remote port %s [%d] on node %s [%d]"),
-                        ifRemote->getName(), ifRemote->getId(), bridge->getName(), bridge->getId());
+                     nxlog_debug_tag(DEBUG_TAG, 6, _T("Found remote port %s [%u] on node %s [%u]"), ifRemote->getName(), ifRemote->getId(), bridge->getName(), bridge->getId());
 
                      LL_NEIGHBOR_INFO info;
                      info.ifLocal = ifLocal->getIfIndex();
@@ -86,29 +86,29 @@ static UINT32 STPPortListHandler(SNMP_Variable *var, SNMP_Transport *transport, 
                      info.isPtToPt = true;
                      info.protocol = LL_PROTO_STP;
                      info.isCached = false;
-                     ((LinkLayerNeighbors *)arg)->addConnection(&info);
+                     neighbors->addConnection(&info);
                   }
                   else
                   {
-                     nxlog_debug(6, _T("STP: bridge port number %d is invalid for node %s [%d]"), (UINT32)designatedPort[1], bridge->getName(), bridge->getId());
+                     nxlog_debug_tag(DEBUG_TAG, 6, _T("Bridge port number %u is invalid for node %s [%d]"), (uint32_t)designatedPort[1], bridge->getName(), bridge->getId());
                   }
                }
                else
                {
-                  nxlog_debug(6, _T("STP: bridge port number %d is invalid for node %s [%d]"), oid[11], node->getName(), node->getId());
+                  nxlog_debug_tag(DEBUG_TAG, 6, _T("Bridge port number %u is invalid for node %s [%d]"), oid[11], node->getName(), node->getId());
                }
             }
          }
          else
          {
-            nxlog_debug(6, _T("STP: designated bridge or designated port is invalid for port %d on node %s [%d]"), oid[11], node->getName(), node->getId());
+            nxlog_debug_tag(DEBUG_TAG, 6, _T("Designated bridge or designated port is invalid for port %d on node %s [%d]"), oid[11], node->getName(), node->getId());
          }
       }
 		delete response;
 	}
 	else
 	{
-      nxlog_debug(6, _T("STP: SNMP failure reading additional data for node %s [%d]"), node->getName(), node->getId());
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("SNMP failure reading additional STP data for node %s [%d]"), node->getName(), node->getId());
 	}
 
 	return SNMP_ERR_SUCCESS;
@@ -122,8 +122,8 @@ void AddSTPNeighbors(Node *node, LinkLayerNeighbors *nbs)
 	if (!(node->getCapabilities() & NC_IS_STP))
 		return;
 
-	DbgPrintf(5, _T("STP: collecting topology information for node %s [%d]"), node->getName(), node->getId());
+	nxlog_debug_tag(DEBUG_TAG, 5, _T("Collecting STP topology information for node %s [%u]"), node->getName(), node->getId());
 	nbs->setData(node);
 	node->callSnmpEnumerate(_T(".1.3.6.1.2.1.17.2.15.1.3"), STPPortListHandler, nbs);
-	DbgPrintf(5, _T("STP: finished collecting topology information for node %s [%d]"), node->getName(), node->getId());
+	nxlog_debug_tag(DEBUG_TAG, 5, _T("Finished collecting STP topology information for node %s [%u]"), node->getName(), node->getId());
 }

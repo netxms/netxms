@@ -129,7 +129,7 @@ NXSL_METHOD_DEFINITION(Table, findRowByInstance)
 
    shared_ptr<Table> table(*static_cast<shared_ptr<Table>*>(object->getData()));
    int index = table->findRowByInstance(argv[0]->getValueAsCString());
-   *result = (index != -1) ? vm->createValue(new NXSL_Object(vm, &g_nxslTableRowClass, new TableRowReference(table, index))) : vm->createValue();
+   *result = (index != -1) ? vm->createValue(vm->createObject(&g_nxslTableRowClass, new TableRowReference(table, index))) : vm->createValue();
    return 0;
 }
 
@@ -262,7 +262,7 @@ NXSL_Value *NXSL_TableClass::getAttr(NXSL_Object *object, const NXSL_Identifier&
       ObjectArray<TableColumnDefinition> *cd = table->getColumnDefinitions();
       for(int i = 0; i < cd->size(); i++)
       {
-         columns->set(i, vm->createValue(new NXSL_Object(vm, &g_nxslTableColumnClass, new TableColumnDefinition(cd->get(i)))));
+         columns->set(i, vm->createValue(vm->createObject(&g_nxslTableColumnClass, new TableColumnDefinition(cd->get(i)))));
       }
       value = vm->createValue(columns);
    }
@@ -274,7 +274,7 @@ NXSL_Value *NXSL_TableClass::getAttr(NXSL_Object *object, const NXSL_Identifier&
       {
          auto column = cd->get(i);
          if (column->isInstanceColumn())
-            columns->set(j++, vm->createValue(new NXSL_Object(vm, &g_nxslTableColumnClass, new TableColumnDefinition(column))));
+            columns->set(j++, vm->createValue(vm->createObject(&g_nxslTableColumnClass, new TableColumnDefinition(column))));
       }
       value = vm->createValue(columns);
    }
@@ -299,7 +299,7 @@ NXSL_Value *NXSL_TableClass::getAttr(NXSL_Object *object, const NXSL_Identifier&
       NXSL_Array *rows = new NXSL_Array(vm);
       for(int i = 0; i < table->getNumRows(); i++)
       {
-         rows->set(i, vm->createValue(new NXSL_Object(vm, &g_nxslTableRowClass, new TableRowReference(table, i))));
+         rows->set(i, vm->createValue(vm->createObject(&g_nxslTableRowClass, new TableRowReference(table, i))));
       }
       value = vm->createValue(rows);
    }
@@ -462,6 +462,6 @@ NXSL_Value *NXSL_TableRowClass::getAttr(NXSL_Object *object, const NXSL_Identifi
  */
 int F_Table(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
-   *result = vm->createValue(new NXSL_Object(vm, &g_nxslTableClass, new shared_ptr<Table>(new Table())));
+   *result = vm->createValue(vm->createObject(&g_nxslTableClass, new shared_ptr<Table>(new Table())));
    return 0;
 }

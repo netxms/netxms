@@ -419,7 +419,7 @@ static bool ExecuteActionScript(const TCHAR *script, const Event *event)
 	NXSL_VM *vm = CreateServerScriptVM(name, FindObjectById(event->getSourceId()));
 	if (vm != nullptr)
 	{
-		vm->setGlobalVariable("$event", vm->createValue(new NXSL_Object(vm, &g_nxslEventClass, event, true)));
+		vm->setGlobalVariable("$event", vm->createValue(vm->createObject(&g_nxslEventClass, event, true)));
 
       ObjectRefArray<NXSL_Value> args(16, 16);
       if ((p == nullptr) || ParseValueList(vm, &p, args, true))

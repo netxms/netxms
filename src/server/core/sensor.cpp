@@ -304,7 +304,7 @@ bool Sensor::deleteFromDatabase(DB_HANDLE hdb)
  */
 NXSL_Value *Sensor::createNXSLObject(NXSL_VM *vm)
 {
-   return vm->createValue(new NXSL_Object(vm, &g_nxslSensorClass, new shared_ptr<Sensor>(self())));
+   return vm->createValue(vm->createObject(&g_nxslSensorClass, new shared_ptr<Sensor>(self())));
 }
 
 /**

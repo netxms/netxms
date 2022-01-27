@@ -416,75 +416,65 @@ static void AddSNMPResult(Table *table, int column, SNMP_Variable *pVar, LONG nF
 /**
  * Handler for SNMP table enumeration
  */
-static UINT32 TableHandler(SNMP_Variable *pVar, SNMP_Transport *pTransport, void *pArg)
+static uint32_t TableHandler(SNMP_Variable *pVar, SNMP_Transport *pTransport, SNMP_ENUM_ARGS *args)
 {
    TCHAR szOid[MAX_OID_LEN * 4], szSuffix[MAX_OID_LEN * 4];
-   SNMP_PDU *pRqPDU, *pRespPDU;
-   UINT32 i, dwResult, pdwVarName[MAX_OID_LEN];
+   uint32_t result, varbindName[MAX_OID_LEN];
    size_t nameLen;
 
    // Create index (OID suffix) for columns
-   if (((SNMP_ENUM_ARGS *)pArg)->dwFlags & TF_SNMP_INDEXED_BY_VALUE)
+   if (args->dwFlags & TF_SNMP_INDEXED_BY_VALUE)
    {
       _sntprintf(szSuffix, MAX_OID_LEN * 4, _T(".%u"), pVar->getValueAsUInt());
    }
    else
    {
-      nameLen = SNMPParseOID(((SNMP_ENUM_ARGS *)pArg)->ppszOidList[0], pdwVarName, MAX_OID_LEN);
+      nameLen = SNMPParseOID(args->ppszOidList[0], varbindName, MAX_OID_LEN);
       const SNMP_ObjectId& oid = pVar->getName();
       SNMPConvertOIDToText(oid.length() - nameLen, (UINT32 *)&(oid.value())[nameLen], szSuffix, MAX_OID_LEN * 4);
    }
 
    // Get values for other columns
-   if (((SNMP_ENUM_ARGS *)pArg)->dwNumCols > 1)
+   if (args->dwNumCols > 1)
    {
-      pRqPDU = new SNMP_PDU(SNMP_GET_REQUEST, SnmpNewRequestId(), pTransport->getSnmpVersion());
-      for(i = 1; i < ((SNMP_ENUM_ARGS *)pArg)->dwNumCols; i++)
+      SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), pTransport->getSnmpVersion());
+      for(uint32_t i = 1; i < args->dwNumCols; i++)
       {
-         _tcscpy(szOid, ((SNMP_ENUM_ARGS *)pArg)->ppszOidList[i]);
+         _tcscpy(szOid, args->ppszOidList[i]);
          _tcscat(szOid, szSuffix);
-         nameLen = SNMPParseOID(szOid, pdwVarName, MAX_OID_LEN);
+         nameLen = SNMPParseOID(szOid, varbindName, MAX_OID_LEN);
          if (nameLen != 0)
          {
-            pRqPDU->bindVariable(new SNMP_Variable(pdwVarName, nameLen));
+            request.bindVariable(new SNMP_Variable(varbindName, nameLen));
          }
       }
 
-      dwResult = pTransport->doRequest(pRqPDU, &pRespPDU, SnmpGetDefaultTimeout(), 3);
-      delete pRqPDU;
-      if (dwResult == SNMP_ERR_SUCCESS)
+      SNMP_PDU *response;
+      result = pTransport->doRequest(&request, &response, SnmpGetDefaultTimeout(), 3);
+      if (result == SNMP_ERR_SUCCESS)
       {
-         if ((pRespPDU->getNumVariables() > 0) &&
-             (pRespPDU->getErrorCode() == SNMP_PDU_ERR_SUCCESS))
+         if ((response->getNumVariables() > 0) && (response->getErrorCode() == SNMP_PDU_ERR_SUCCESS))
          {
-            ((SNMP_ENUM_ARGS *)pArg)->table->addRow();
+            args->table->addRow();
 
             // Add first column to results
-            AddSNMPResult(((SNMP_ENUM_ARGS *)pArg)->table, 0, pVar,
-                          ((SNMP_ENUM_ARGS *)pArg)->pnFormatList[0],
-                          *((SNMP_ENUM_ARGS *)pArg)->pNode);
+            AddSNMPResult(args->table, 0, pVar, args->pnFormatList[0], *args->pNode);
 
-            for(i = 1; i < ((SNMP_ENUM_ARGS *)pArg)->dwNumCols; i++)
-               AddSNMPResult(((SNMP_ENUM_ARGS *)pArg)->table, i,
-                             pRespPDU->getVariable(i - 1),
-                             ((SNMP_ENUM_ARGS *)pArg)->pnFormatList[i],
-                             *((SNMP_ENUM_ARGS *)pArg)->pNode);
+            for(uint32_t i = 1; i < args->dwNumCols; i++)
+               AddSNMPResult(args->table, i, response->getVariable(i - 1), args->pnFormatList[i], *args->pNode);
          }
-         delete pRespPDU;
+         delete response;
       }
    }
    else  // single column
    {
-      ((SNMP_ENUM_ARGS *)pArg)->table->addRow();
+      args->table->addRow();
 
       // Add first column to results
-      AddSNMPResult(((SNMP_ENUM_ARGS *)pArg)->table, 0, pVar,
-                    ((SNMP_ENUM_ARGS *)pArg)->pnFormatList[0],
-                    *((SNMP_ENUM_ARGS *)pArg)->pNode);
-
-      dwResult = SNMP_ERR_SUCCESS;
+      AddSNMPResult(args->table, 0, pVar, args->pnFormatList[0], *args->pNode);
+      result = SNMP_ERR_SUCCESS;
    }
-   return dwResult;
+   return result;
 }
 
 /**
