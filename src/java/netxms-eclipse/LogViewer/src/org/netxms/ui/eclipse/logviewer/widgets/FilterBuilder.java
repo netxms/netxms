@@ -121,20 +121,13 @@ public class FilterBuilder extends Composite
 			} 
 		});
 		form.getToolBarManager().update(true);
-      form.getBody().setLayout(new FillLayout());
 
-      // Parameters section
-      Section parameters = toolkit.createSection(form.getBody(), Section.TITLE_BAR | Section.COMPACT | Section.EXPANDED | Section.TWISTIE);
-      parameters.setText("Filter");
-      
-      final Composite parameterArea = toolkit.createComposite(parameters);
-      TableWrapLayout layout = new TableWrapLayout();
-      layout.numColumns = 3;
-      parameterArea.setLayout(layout);   
-      parameters.setClient(parameterArea);   
+		TableWrapLayout layout = new TableWrapLayout();
+		layout.numColumns = 3;
+		form.getBody().setLayout(layout);
 		
-		createConditionSection(parameterArea);
-		createOrderingSection(parameterArea);
+		createConditionSection();
+		createOrderingSection();
 		
 		addDisposeListener(new DisposeListener() {
 			@Override
@@ -160,11 +153,10 @@ public class FilterBuilder extends Composite
 
 	/**
 	 * Create condition section
-	 * @param parameterArea 
 	 */
-	private void createConditionSection(Composite parameterArea)
+	private void createConditionSection()
 	{
-		condition = toolkit.createSection(parameterArea, Section.TITLE_BAR);
+		condition = toolkit.createSection(form.getBody(), Section.TITLE_BAR);
 		condition.setText(Messages.get().FilterBuilder_Condition);
 		TableWrapData twd = new TableWrapData();
 		twd.grabHorizontal = true;
@@ -190,11 +182,10 @@ public class FilterBuilder extends Composite
 	
 	/**
 	 * Create ordering section
-	 * @param parameterArea 
 	 */
-	private void createOrderingSection(Composite parameterArea)
+	private void createOrderingSection()
 	{
-		ordering = toolkit.createSection(parameterArea, Section.TITLE_BAR);
+		ordering = toolkit.createSection(form.getBody(), Section.TITLE_BAR);
 		ordering.setText(Messages.get().FilterBuilder_Ordering);
 		TableWrapData twd = new TableWrapData();
 		twd.grabHorizontal = false;
