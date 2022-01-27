@@ -76,7 +76,7 @@ bool Cluster::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 
    if (Pollable::loadFromDatabase(hdb, m_id))
    {
-      if (static_cast<uint32_t>(time(nullptr) - m_configurationPollState.getLastCompleted()) < g_configurationPollingInterval)
+      if (static_cast<uint32_t>(time(nullptr) - m_configurationPollState.getLastCompleted()) < getCustomAttributeAsUInt32(_T("SysConfig:Objects.ConfigurationPollingInterval"), g_configurationPollingInterval))
          m_runtimeFlags |= ODF_CONFIGURATION_POLL_PASSED;
    }
 
@@ -931,7 +931,7 @@ bool Cluster::lockForAutobindPoll()
    bool success = false;
    lockProperties();
    if (!m_isDeleted && !m_isDeleteInitiated && (m_status != STATUS_UNMANAGED) &&
-       (static_cast<uint32_t>(time(nullptr) - m_autobindPollState.getLastCompleted()) > g_autobindPollingInterval))
+       (static_cast<uint32_t>(time(nullptr) - m_autobindPollState.getLastCompleted()) > getCustomAttributeAsUInt32(_T("SysConfig:Objects.AutobindPollingInterval"), g_autobindPollingInterval)))
    {
       success = m_autobindPollState.schedule();
    }

@@ -533,7 +533,7 @@ bool BusinessServicePrototype::lockForInstanceDiscoveryPoll()
 {
    bool success = false;
    lockProperties();
-   if (static_cast<uint32_t>(time(nullptr) - m_instancePollState.getLastCompleted()) > g_instancePollingInterval)
+   if (static_cast<uint32_t>(time(nullptr) - m_instancePollState.getLastCompleted()) > getCustomAttributeAsUInt32(_T("SysConfig:DataCollection.InstancePollingInterval"), g_instancePollingInterval))
    {
       success = m_instancePollState.schedule();
    }

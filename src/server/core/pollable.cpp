@@ -87,7 +87,7 @@ bool Pollable::lockForStatusPoll()
       else if ((m_this->m_status != STATUS_UNMANAGED) &&
                !(m_this->m_flags & DCF_DISABLE_STATUS_POLL) &&
                !(m_this->m_runtimeFlags & ODF_CONFIGURATION_POLL_PENDING) &&
-               (static_cast<uint32_t>(time(nullptr) - m_statusPollState.getLastCompleted()) > g_statusPollingInterval))
+               (static_cast<uint32_t>(time(nullptr) - m_statusPollState.getLastCompleted()) > m_this->getCustomAttributeAsUInt32(_T("SysConfig:Objects.StatusPollingInterval"), g_statusPollingInterval)))
       {
          success = m_statusPollState.schedule();
       }
@@ -134,7 +134,7 @@ bool Pollable::lockForConfigurationPoll()
       }
       else if ((m_this->m_status != STATUS_UNMANAGED) &&
                (!(m_this->m_flags & DCF_DISABLE_CONF_POLL)) &&
-               (static_cast<uint32_t>(time(nullptr) - m_configurationPollState.getLastCompleted()) > g_configurationPollingInterval))
+               (static_cast<uint32_t>(time(nullptr) - m_configurationPollState.getLastCompleted()) > m_this->getCustomAttributeAsUInt32(_T("SysConfig:Objects.ConfigurationPollingInterval"), g_configurationPollingInterval)))
       {
          success = m_configurationPollState.schedule();
       }

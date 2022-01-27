@@ -1981,7 +1981,7 @@ bool Node::lockForStatusPoll()
                !(m_flags & DCF_DISABLE_STATUS_POLL) &&
                (getMyCluster() == nullptr) &&
                !(m_runtimeFlags & ODF_CONFIGURATION_POLL_PENDING) &&
-               (static_cast<uint32_t>(time(nullptr) - m_statusPollState.getLastCompleted()) > g_statusPollingInterval) &&
+               (static_cast<uint32_t>(time(nullptr) - m_statusPollState.getLastCompleted()) > getCustomAttributeAsUInt32(_T("SysConfig:Objects.StatusPollingInterval"), g_statusPollingInterval)) &&
                !isAgentRestarting() && !isProxyAgentRestarting())
       {
          success = m_statusPollState.schedule();
@@ -2009,7 +2009,7 @@ bool Node::lockForConfigurationPoll()
       }
       else if ((m_status != STATUS_UNMANAGED) &&
                !(m_flags & DCF_DISABLE_CONF_POLL) &&
-               (static_cast<uint32_t>(time(nullptr) - m_configurationPollState.getLastCompleted()) > g_configurationPollingInterval) &&
+               (static_cast<uint32_t>(time(nullptr) - m_configurationPollState.getLastCompleted()) > getCustomAttributeAsUInt32(_T("SysConfig:Objects.ConfigurationPollingInterval"), g_configurationPollingInterval)) &&
                !isAgentRestarting() && !isProxyAgentRestarting())
       {
          success = m_configurationPollState.schedule();
@@ -2031,7 +2031,7 @@ bool Node::lockForDiscoveryPoll()
        (m_status != STATUS_UNMANAGED) &&
        !(m_flags & NF_DISABLE_DISCOVERY_POLL) &&
        (m_runtimeFlags & ODF_CONFIGURATION_POLL_PASSED) &&
-       (static_cast<uint32_t>(time(nullptr) - m_discoveryPollState.getLastCompleted()) > g_discoveryPollingInterval) &&
+       (static_cast<uint32_t>(time(nullptr) - m_discoveryPollState.getLastCompleted()) > getCustomAttributeAsUInt32(_T("SysConfig:NetworkDiscovery.PassiveDiscovery.Interval"), g_discoveryPollingInterval)) &&
        !isAgentRestarting() && !isProxyAgentRestarting())
    {
       success = m_discoveryPollState.schedule();
@@ -2051,7 +2051,7 @@ bool Node::lockForRoutingTablePoll()
        (m_status != STATUS_UNMANAGED) &&
        !(m_flags & NF_DISABLE_ROUTE_POLL) &&
        (m_runtimeFlags & ODF_CONFIGURATION_POLL_PASSED) &&
-       (static_cast<uint32_t>(time(nullptr) - m_routingPollState.getLastCompleted()) > g_routingTableUpdateInterval) &&
+       (static_cast<uint32_t>(time(nullptr) - m_routingPollState.getLastCompleted()) > getCustomAttributeAsUInt32(_T("SysConfig:Topology.RoutingTableUpdateInterval"), g_routingTableUpdateInterval)) &&
        !isAgentRestarting() && !isProxyAgentRestarting())
    {
       success = m_routingPollState.schedule();
@@ -2071,7 +2071,7 @@ bool Node::lockForTopologyPoll()
        (m_status != STATUS_UNMANAGED) &&
        !(m_flags & NF_DISABLE_TOPOLOGY_POLL) &&
        (m_runtimeFlags & ODF_CONFIGURATION_POLL_PASSED) &&
-       (static_cast<uint32_t>(time(nullptr) - m_topologyPollState.getLastCompleted()) > g_topologyPollingInterval) &&
+       (static_cast<uint32_t>(time(nullptr) - m_topologyPollState.getLastCompleted()) > getCustomAttributeAsUInt32(_T("SysConfig:Topology.PollingInterval"), g_topologyPollingInterval)) &&
        !isAgentRestarting() && !isProxyAgentRestarting())
    {
       success = m_topologyPollState.schedule();
@@ -2092,7 +2092,7 @@ bool Node::lockForIcmpPoll()
        (m_status != STATUS_UNMANAGED) &&
        isIcmpStatCollectionEnabled() &&
        !(m_runtimeFlags & ODF_CONFIGURATION_POLL_PENDING) &&
-       (static_cast<uint32_t>(time(nullptr) - m_icmpPollState.getLastCompleted()) > g_icmpPollingInterval) &&
+       (static_cast<uint32_t>(time(nullptr) - m_icmpPollState.getLastCompleted()) > getCustomAttributeAsUInt32(_T("SysConfig:ICMP.PollingInterval"), g_icmpPollingInterval)) &&
        !isProxyAgentRestarting())
    {
       success = m_icmpPollState.schedule();

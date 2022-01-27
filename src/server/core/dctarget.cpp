@@ -1966,7 +1966,7 @@ bool DataCollectionTarget::lockForInstanceDiscoveryPoll()
        (m_status != STATUS_UNMANAGED) &&
        (!(m_flags & DCF_DISABLE_CONF_POLL)) &&
        (m_runtimeFlags & ODF_CONFIGURATION_POLL_PASSED) &&
-       (m_instanceDiscoveryPending || (static_cast<uint32_t>(time(nullptr) - m_instancePollState.getLastCompleted()) > g_instancePollingInterval)))
+       (m_instanceDiscoveryPending || (static_cast<uint32_t>(time(nullptr) - m_instancePollState.getLastCompleted()) > getCustomAttributeAsUInt32(_T("SysConfig:DataCollection.InstancePollingInterval"), g_instancePollingInterval))))
    {
       success = m_instancePollState.schedule();
       m_instanceDiscoveryPending = false;

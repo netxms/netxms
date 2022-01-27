@@ -666,7 +666,7 @@ bool Zone::lockForStatusPoll()
    {
       if ((m_status != STATUS_UNMANAGED) &&
           !m_lockedForHealthCheck &&
-          ((UINT32)(time(nullptr) - m_lastHealthCheck) >= g_statusPollingInterval))
+          (static_cast<uint32_t>(time(nullptr) - m_lastHealthCheck) >= getCustomAttributeAsUInt32(_T("SysConfig:Objects.StatusPollingInterval"), g_statusPollingInterval)))
       {
          m_lockedForHealthCheck = true;
          success = true;

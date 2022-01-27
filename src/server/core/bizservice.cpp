@@ -633,7 +633,7 @@ bool BusinessService::lockForStatusPoll()
    bool success = false;
 
    lockProperties();
-   if (static_cast<uint32_t>(time(nullptr) - m_statusPollState.getLastCompleted()) > g_statusPollingInterval)
+   if (static_cast<uint32_t>(time(nullptr) - m_statusPollState.getLastCompleted()) > getCustomAttributeAsUInt32(_T("SysConfig:Objects.StatusPollingInterval"), g_statusPollingInterval))
    {
       success = m_statusPollState.schedule();
    }
@@ -649,7 +649,7 @@ bool BusinessService::lockForConfigurationPoll()
    bool success = false;
 
    lockProperties();
-   if (static_cast<uint32_t>(time(nullptr) - m_configurationPollState.getLastCompleted()) > g_configurationPollingInterval)
+   if (static_cast<uint32_t>(time(nullptr) - m_configurationPollState.getLastCompleted()) > getCustomAttributeAsUInt32(_T("SysConfig:Objects.ConfigurationPollingInterval"), g_configurationPollingInterval))
    {
       success = m_configurationPollState.schedule();
    }

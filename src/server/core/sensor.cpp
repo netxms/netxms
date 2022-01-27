@@ -198,7 +198,7 @@ bool Sensor::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
 
    if (Pollable::loadFromDatabase(hdb, m_id))
    {
-      if (static_cast<uint32_t>(time(nullptr) - m_configurationPollState.getLastCompleted()) < g_configurationPollingInterval)
+      if (static_cast<uint32_t>(time(nullptr) - m_configurationPollState.getLastCompleted()) < getCustomAttributeAsUInt32(_T("SysConfig:Objects.ConfigurationPollingInterval"), g_configurationPollingInterval))
          m_runtimeFlags |= ODF_CONFIGURATION_POLL_PASSED;
    }
 
