@@ -252,6 +252,15 @@ NXSL_Object::NXSL_Object(NXSL_Object *object) : NXSL_RuntimeObject(object->m_vm)
 }
 
 /**
+ * Default constructor (needed for correct template instantiation but should not be used)
+ */
+NXSL_Object::NXSL_Object() : NXSL_RuntimeObject(nullptr)
+{
+   m_class = nullptr;
+   m_data = nullptr;
+}
+
+/**
  * Object destructor
  */
 NXSL_Object::~NXSL_Object()

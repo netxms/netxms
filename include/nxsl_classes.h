@@ -344,6 +344,7 @@ private:
    NXSL_Class *m_class;
    __nxsl_class_data *m_data;
 
+   NXSL_Object();
    NXSL_Object(NXSL_Object *object);
    NXSL_Object(NXSL_VM *vm, NXSL_Class *nxslClass, const void *data, bool constant = false);
    ~NXSL_Object();
@@ -706,7 +707,6 @@ public:
 #ifdef _WIN32
 template class LIBNXSL_EXPORTABLE ObjectMemoryPool<NXSL_Value>;
 template class LIBNXSL_EXPORTABLE ObjectMemoryPool<NXSL_Identifier>;
-template class LIBNXSL_EXPORTABLE ObjectMemoryPool<NXSL_Object>;
 #endif
 
 /**
@@ -1187,6 +1187,8 @@ public:
 template class LIBNXSL_EXPORTABLE ObjectArray<NXSL_Module>;
 template class LIBNXSL_EXPORTABLE NXSL_ObjectStack<NXSL_Value>;
 template class LIBNXSL_EXPORTABLE NXSL_ObjectStack<NXSL_CatchPoint>;
+template class LIBNXSL_EXPORTABLE ObjectMemoryPool<NXSL_Object>;
+template class LIBNXSL_EXPORTABLE ObjectMemoryPool<__nxsl_class_data>;
 #endif
 
 /**
