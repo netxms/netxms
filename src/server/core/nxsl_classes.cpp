@@ -3786,6 +3786,14 @@ NXSL_Value *NXSL_AlarmClass::getAttr(NXSL_Object *object, const NXSL_Identifier&
    {
       value = vm->createValue(alarm->getSourceEventId());
    }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("eventName"))
+   {
+      shared_ptr<EventTemplate> e = FindEventTemplateByCode(alarm->getSourceEventCode());
+      if (e != nullptr)
+         value = vm->createValue(e->getName());
+      else
+         value = vm->createValue(alarm->getSourceEventCode());
+   }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("eventTagList"))
    {
       value = vm->createValue(alarm->getEventTags());
