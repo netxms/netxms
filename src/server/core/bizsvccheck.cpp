@@ -45,14 +45,14 @@ BusinessServiceCheck::BusinessServiceCheck(uint32_t serviceId) : m_description(_
 }
 
 /**
- * Create new business service check
+ * Create business service check by autobind
  */
 BusinessServiceCheck::BusinessServiceCheck(uint32_t serviceId, BusinessServiceCheckType type, uint32_t relatedObject, uint32_t relatedDCI, const TCHAR* description, int threshhold) :
          m_description((description != nullptr) ? description : _T("Unnamed")), m_mutex(MutexType::FAST)
 {
    m_id = CreateUniqueId(IDG_BUSINESS_SERVICE_CHECK);
    m_serviceId = serviceId;
-   m_prototypeServiceId = 0;
+   m_prototypeServiceId = serviceId;   // Autobind indication
    m_prototypeCheckId = 0;
    m_type = type;
    m_state = STATUS_NORMAL;
