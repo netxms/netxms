@@ -421,7 +421,8 @@ public class BusinessServiceChecks extends ObjectTab
                @Override
                public void run()
                {
-                  viewer.refresh(true);
+                  if (viewer.getControl().isDisposed())
+                     viewer.refresh(true);
                }
             });
          }

@@ -440,7 +440,8 @@ public class BusinessServiceChecksView extends ObjectView
                @Override
                public void run()
                {
-                  viewer.refresh(true);
+                  if (!viewer.getControl().isDisposed())
+                     viewer.refresh(true);
                }
             });
          }
