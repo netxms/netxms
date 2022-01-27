@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -82,7 +82,7 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
 public class LogViewer extends ViewPart
 {
 	public static final String ID = "org.netxms.ui.eclipse.logviewer.view.log_viewer"; //$NON-NLS-1$
-	
+
 	private static final int PAGE_SIZE = 400;
 		
 	protected NXCSession session;
@@ -105,7 +105,7 @@ public class LogViewer extends ViewPart
    private Action actionExportToCsv;
    private Action actionExportAllToCsv;
    private Action actionShowDetails;
-	
+
    /**
     * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
     */
@@ -144,7 +144,7 @@ public class LogViewer extends ViewPart
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		filterBuilder.setLayoutData(gd);
-		
+
 		/* create viewer */
 		viewer = new TableViewer(parent, SWT.MULTI | SWT.FULL_SELECTION);
 		org.eclipse.swt.widgets.Table table = viewer.getTable();
@@ -220,16 +220,6 @@ public class LogViewer extends ViewPart
 		}.start();
 		
 		activateContext();
-		
-		filterBuilder.setExecuteAction(actionExecute);
-		filterBuilder.setCloseAction(new Action() {
-			@Override
-			public void run()
-			{
-				actionShowFilter.setChecked(false);
-				showFilter(false);
-			}
-		});
 	}
 
 	/**
@@ -321,12 +311,12 @@ public class LogViewer extends ViewPart
 	protected void fillLocalPullDown(IMenuManager manager)
 	{
 		manager.add(actionExecute);
+      manager.add(actionGetMoreData);
+      manager.add(new Separator());
+      manager.add(actionExportAllToCsv);
+      manager.add(new Separator());
 		manager.add(actionClearFilter);
 		manager.add(actionShowFilter);
-		manager.add(new Separator());
-		manager.add(actionGetMoreData);
-		manager.add(new Separator());
-		manager.add(actionExportAllToCsv);
 		manager.add(new Separator());
 		manager.add(actionRefresh);
 	}
@@ -339,12 +329,13 @@ public class LogViewer extends ViewPart
 	 */
 	protected void fillLocalToolBar(IToolBarManager manager)
 	{
-		manager.add(actionExecute);
+      manager.add(actionExecute);
+      manager.add(actionGetMoreData);
+      manager.add(new Separator());
+      manager.add(actionExportAllToCsv);
+      manager.add(new Separator());
+      manager.add(actionShowFilter);
 		manager.add(actionClearFilter);
-		manager.add(new Separator());
-		manager.add(actionGetMoreData);
-		manager.add(new Separator());
-		manager.add(actionExportAllToCsv);
 		manager.add(new Separator());
 		manager.add(actionRefresh);
 	}
@@ -443,10 +434,11 @@ public class LogViewer extends ViewPart
 				showFilter(actionShowFilter.isChecked());
 			}
 		};
+      actionShowFilter.setImageDescriptor(SharedIcons.FILTER);
 		actionShowFilter.setChecked(true);
       actionShowFilter.setActionDefinitionId("org.netxms.ui.eclipse.logviewer.commands.show_filter"); //$NON-NLS-1$
 		handlerService.activateHandler(actionShowFilter.getActionDefinitionId(), new ActionHandler(actionShowFilter));
-		
+
 		actionCopyToClipboard = new Action(Messages.get().LogViewer_ActionCopy, SharedIcons.COPY) {
 			@Override
 			public void run()
@@ -486,7 +478,7 @@ public class LogViewer extends ViewPart
 	      delayedQueryFilter = filter;
 	   }
 	}
-	
+
 	/**
 	 * Prepare filter and execute query on server
 	 */

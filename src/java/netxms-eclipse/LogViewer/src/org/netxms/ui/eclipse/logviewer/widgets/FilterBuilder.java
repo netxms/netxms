@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -80,8 +80,6 @@ public class FilterBuilder extends Composite
 	private Section ordering;
    private ImageHyperlink addColumnLink;
 	private TableViewer orderingList;
-	private Action actionExecute;
-	private Action actionClose;
 	private Menu columnSelectionMenu = null;
 
 	/**
@@ -91,44 +89,18 @@ public class FilterBuilder extends Composite
 	public FilterBuilder(Composite parent, int style)
 	{
 		super(parent, style);
-		
+
 		setLayout(new FillLayout());
-		
+
 		toolkit = new FormToolkit(getDisplay());
 		form = toolkit.createScrolledForm(this);
-		form.setText(Messages.get().FilterBuilder_Filter);
-		form.getToolBarManager().add(new Action(Messages.get().FilterBuilder_Execute, SharedIcons.EXECUTE) {
-			@Override
-			public void run()
-			{
-				if (actionExecute != null)
-					actionExecute.run();
-			} 
-		});
-		form.getToolBarManager().add(new Action(Messages.get().FilterBuilder_ClearFilter, SharedIcons.CLEAR_LOG) {
-			@Override
-			public void run()
-			{
-				clearFilter();
-			} 
-		});
-		form.getToolBarManager().add(new Action(Messages.get().FilterBuilder_Close, SharedIcons.CLOSE) {
-			@Override
-			public void run()
-			{
-				if (actionClose != null)
-					actionClose.run();
-			} 
-		});
-		form.getToolBarManager().update(true);
-
 		TableWrapLayout layout = new TableWrapLayout();
-		layout.numColumns = 3;
+      layout.numColumns = 2;
 		form.getBody().setLayout(layout);
-		
+
 		createConditionSection();
 		createOrderingSection();
-		
+
 		addDisposeListener(new DisposeListener() {
 			@Override
 			public void widgetDisposed(DisposeEvent e)
@@ -138,16 +110,16 @@ public class FilterBuilder extends Composite
 			}
 		});
 	}
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.swt.widgets.Composite#computeSize(int, int, boolean)
-	 */
+
+   /**
+    * @see org.eclipse.swt.widgets.Composite#computeSize(int, int, boolean)
+    */
 	@Override
 	public Point computeSize(int wHint, int hHint, boolean changed)
 	{
 		Point size = super.computeSize(wHint, hHint, changed);
-		if (size.y > 400)
-			size.y = 400;
+      if (size.y > 600)
+         size.y = 600;
 		return size;
 	}
 
@@ -156,10 +128,11 @@ public class FilterBuilder extends Composite
 	 */
 	private void createConditionSection()
 	{
-		condition = toolkit.createSection(form.getBody(), Section.TITLE_BAR);
+      condition = toolkit.createSection(form.getBody(), Section.TITLE_BAR | Section.EXPANDED | Section.TWISTIE);
 		condition.setText(Messages.get().FilterBuilder_Condition);
 		TableWrapData twd = new TableWrapData();
 		twd.grabHorizontal = true;
+      twd.grabVertical = true;
 		twd.align = TableWrapData.FILL;
 		condition.setLayoutData(twd);
 
@@ -167,7 +140,7 @@ public class FilterBuilder extends Composite
 		GridLayout layout = new GridLayout();
 		clientArea.setLayout(layout);
 		condition.setClient(clientArea);
-		
+
 		addColumnLink = toolkit.createImageHyperlink(clientArea, SWT.NONE);
 		addColumnLink.setText(Messages.get().FilterBuilder_AddColumn);
 		addColumnLink.setImage(SharedIcons.IMG_ADD_OBJECT);
@@ -179,19 +152,20 @@ public class FilterBuilder extends Composite
 			}
 		});
 	}
-	
+
 	/**
 	 * Create ordering section
 	 */
 	private void createOrderingSection()
 	{
-		ordering = toolkit.createSection(form.getBody(), Section.TITLE_BAR);
+      ordering = toolkit.createSection(form.getBody(), Section.TITLE_BAR | Section.EXPANDED | Section.TWISTIE);
 		ordering.setText(Messages.get().FilterBuilder_Ordering);
 		TableWrapData twd = new TableWrapData();
 		twd.grabHorizontal = false;
+      twd.grabVertical = true;
 		twd.align = TableWrapData.FILL;
 		ordering.setLayoutData(twd);
-		
+
 		final Composite clientArea = toolkit.createComposite(ordering);
 		GridLayout layout = new GridLayout();
 		layout.numColumns = 2;
@@ -200,7 +174,7 @@ public class FilterBuilder extends Composite
 
 		orderingList = new TableViewer(clientArea, SWT.BORDER | SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL | SWT.FULL_SELECTION);
 		toolkit.adapt(orderingList.getTable());
-		
+
 		TableViewerColumn column = new TableViewerColumn(orderingList, SWT.LEFT);
 		column.getColumn().setText(Messages.get().FilterBuilder_Column);
 		column.getColumn().setWidth(200);
@@ -218,11 +192,12 @@ public class FilterBuilder extends Composite
 
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
+      gd.verticalAlignment = SWT.TOP;
 		gd.grabExcessHorizontalSpace = true;
+      gd.grabExcessVerticalSpace = true;
 		gd.verticalSpan = 2;
-		gd.heightHint = 60;
 		orderingList.getControl().setLayoutData(gd);
-		
+
 		final ImageHyperlink linkAdd = toolkit.createImageHyperlink(clientArea, SWT.NONE);
 		linkAdd.setText(Messages.get().FilterBuilder_Add);
 		linkAdd.setImage(SharedIcons.IMG_ADD_OBJECT);
@@ -230,13 +205,13 @@ public class FilterBuilder extends Composite
 			@Override
 			public void linkActivated(HyperlinkEvent e)
 			{
-				addSortingColumn();
+				addOrderingColumn();
 			}
 		});
 		gd = new GridData();
 		gd.verticalAlignment = SWT.TOP;
 		linkAdd.setLayoutData(gd);
-		
+
 		final ImageHyperlink linkRemove = toolkit.createImageHyperlink(clientArea, SWT.NONE);
 		linkRemove.setText(Messages.get().FilterBuilder_Remove);
 		linkRemove.setImage(SharedIcons.IMG_DELETE_OBJECT);
@@ -261,22 +236,6 @@ public class FilterBuilder extends Composite
 		});
 	}
 
-	/**
-	 * @param action
-	 */
-	public void setExecuteAction(Action action)
-	{
-		actionExecute = action;
-	}
-	
-	/**
-	 * @param action
-	 */
-	public void setCloseAction(Action action)
-	{
-		actionClose = action;
-	}
-	
 	/**
 	 * Clear filter
 	 */
@@ -307,10 +266,10 @@ public class FilterBuilder extends Composite
       }
 	}
 	
-	/**
-	 * 
-	 */
-	private void addSortingColumn()
+   /**
+    * Add ordering column
+    */
+	private void addOrderingColumn()
 	{
 		createColumnSelectionMenu(new ColumnSelectionHandler() {
 			@Override
@@ -321,6 +280,7 @@ public class FilterBuilder extends Composite
 				{
 					orderingColumns.add(orderingColumn);
 					orderingList.setInput(orderingColumns.toArray());
+               FilterBuilder.this.updateLayout();
 				}
 				else
 				{
@@ -329,7 +289,7 @@ public class FilterBuilder extends Composite
 			}
 		});
 	}
-	
+
 	/**
 	 * Remove sorting column(s) from list
 	 */
@@ -341,6 +301,7 @@ public class FilterBuilder extends Composite
 			orderingColumns.remove(o);
 		}
 		orderingList.setInput(orderingColumns.toArray());
+      updateLayout();
 	}
 
 	/**
@@ -349,7 +310,7 @@ public class FilterBuilder extends Composite
 	public void setLogHandle(Log logHandle)
 	{
 		this.logHandle = logHandle;
-		form.setText(String.format(Messages.get().FilterBuilder_FormTitle, logHandle.getName()));
+      updateLayout();
 	}
 	
 	/**
@@ -364,7 +325,7 @@ public class FilterBuilder extends Composite
 				// Check if selected column already has filters
 				if (columns.get(column.getName()) != null)
 					return;	// Column already added
-				
+
             createColumnFilterEditor(column, lastControl, null);
 				FilterBuilder.this.updateLayout();
 			}
@@ -408,13 +369,13 @@ public class FilterBuilder extends Composite
 	{
 		if (logHandle == null)
 			return;
-		
+
 		if (columnSelectionMenu != null)
 			columnSelectionMenu.dispose();
-		
+
 		columnSelectionMenu = new Menu(getShell(), SWT.POP_UP);
 		getShell().setMenu(columnSelectionMenu);
-		
+
 		for(final LogColumn lc : logHandle.getColumns())
 		{
 			MenuItem item = new MenuItem(columnSelectionMenu, SWT.PUSH);
@@ -425,7 +386,7 @@ public class FilterBuilder extends Composite
 				{
 					handler.columnSelected(lc);
 				}
-				
+
 				@Override
 				public void widgetDefaultSelected(SelectionEvent e)
 				{
@@ -433,13 +394,13 @@ public class FilterBuilder extends Composite
 				}
 			});
 		}
-		
+
 		columnSelectionMenu.addMenuListener(new MenuListener() {
 			@Override
 			public void menuShown(MenuEvent e)
 			{
 			}
-			
+
 			@Override
 			public void menuHidden(MenuEvent e)
 			{
@@ -466,7 +427,7 @@ public class FilterBuilder extends Composite
 		filter.setOrderingColumns(new ArrayList<OrderingColumn>(orderingColumns));
 		return filter;
 	}
-	
+
 	/**
 	 * Update layout after internal change
 	 */
