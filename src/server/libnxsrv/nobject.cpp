@@ -625,7 +625,7 @@ void NObject::deletePopulatedCustomAttribute(const TCHAR *name)
    bool populate = false;
    if (ca != nullptr)
    {
-      if (!ca->isRedefined())
+      if (!ca->isRedefined() && ca->sourceObject != 0) //source check required if node is multiple times under parent container
       {
          m_customAttributes.remove(name);
          populate = true;
