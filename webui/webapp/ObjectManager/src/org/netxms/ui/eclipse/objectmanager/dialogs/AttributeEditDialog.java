@@ -26,8 +26,10 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
+import org.netxms.client.NXCSession;
 import org.netxms.client.objects.configs.CustomAttribute;
 import org.netxms.ui.eclipse.objectmanager.Messages;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
@@ -43,17 +45,20 @@ public class AttributeEditDialog extends Dialog
 	private String value;
 	private long flags;
 	private boolean inherited;
+	private long source;
 	
 	/**
 	 * @param parentShell
+	 * @param source
 	 */
-	public AttributeEditDialog(Shell parentShell, String name, String value, long flags, boolean inherited)
+	public AttributeEditDialog(Shell parentShell, String name, String value, long flags, long source)
 	{
 		super(parentShell);
 		this.name = name;
 		this.value = value;
 		this.flags = flags;
-		this.inherited = inherited;
+		this.inherited = (source != 0);
+		this.source = source;
 	}
 
 	/* (non-Javadoc)
@@ -95,7 +100,16 @@ public class AttributeEditDialog extends Dialog
       	textValue.setFocus();
       
       checkInherite = new Button(dialogArea, SWT.CHECK);
-      checkInherite.setText("Inheritable");
+      if (inherited)
+      {
+         NXCSession session = ConsoleSharedData.getSession();
+         checkInherite.setText(String.format("Inheritable (Inherited from: %s [%d])", 
+               session.getObjectName(source), source));   
+      }
+      else
+      {
+         checkInherite.setText("Inheritable");
+      }
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
