@@ -45,6 +45,9 @@ TOTPToken::TOTPToken(const TCHAR* methodName, const BYTE* secret, const TCHAR *u
 
       char encodedSecret[TOTP_SECRET_LENGTH * 2];
       base32_encode(reinterpret_cast<const char*>(secret), TOTP_SECRET_LENGTH, encodedSecret, sizeof(encodedSecret));
+      size_t slen = strlen(encodedSecret);
+      if (encodedSecret[slen - 1] == '=')
+         encodedSecret[slen - 1] = 0;  // Remove Base32 padding
 
       char uri[4096] = "otpauth://totp/";
       strcat(uri, urlEncodedIssuer);
@@ -53,7 +56,7 @@ TOTPToken::TOTPToken(const TCHAR* methodName, const BYTE* secret, const TCHAR *u
       tchar_to_utf8(userName, -1, &uri[l], sizeof(uri) - l);
       strlcat(uri, "?issuer=", sizeof(uri));
       strlcat(uri, urlEncodedIssuer, sizeof(uri));
-      strlcat(uri, "&secret=", sizeof(uri));
+      strlcat(uri, "&digits=6&algorithm=SHA1&secret=", sizeof(uri));
       strlcat(uri, encodedSecret, sizeof(uri));
 
       m_uri = WideStringFromUTF8String(uri);
