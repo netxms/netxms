@@ -975,7 +975,7 @@ LONG H_SystemProductInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, Abstr
    LONG rc;
    BYTE buffer[1024];
    DWORD size = sizeof(buffer);
-   if (RegQueryValueEx(hKey, arg, NULL, NULL, buffer, &size) == ERROR_SUCCESS)
+   if (RegQueryValueEx(hKey, arg, nullptr, nullptr, buffer, &size) == ERROR_SUCCESS)
    {
       if (!_tcscmp(arg, _T("DigitalProductId")))
       {
@@ -983,6 +983,26 @@ LONG H_SystemProductInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, Abstr
             DecodeProductKeyWin8(buffer, value);
          else
             DecodeProductKeyWin7(buffer, value);
+      }
+      else if (!_tcscmp(arg, _T("ProductName")))
+      {
+         if (!_tcsncmp(reinterpret_cast<TCHAR*>(buffer), _T("Windows 10 "), 11))
+         {
+            // Check if product is actually Windows 11 (at least first versions report "Windows 10" as product name)
+            OSVERSIONINFOEX osInfo;
+            osInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
+#pragma warning(push)
+#pragma warning(disable : 4996)
+            if (GetVersionEx(reinterpret_cast<OSVERSIONINFO*>(&osInfo)))
+            {
+               if (osInfo.dwBuildNumber >= 22000)
+               {
+                  *(reinterpret_cast<TCHAR*>(buffer) + 9) = _T('1');
+               }
+            }
+#pragma warning(pop)
+         }
+         ret_string(value, reinterpret_cast<TCHAR*>(buffer));
       }
       else
       {
