@@ -1830,7 +1830,7 @@ void LIBNETXMS_EXPORTABLE WindowsProductNameFromVersion(OSVERSIONINFOEX *ver, TC
             case 0:
                if (ver->wProductType == VER_NT_WORKSTATION)
                {
-                  _tcscpy(buffer, _T("10"));
+                  _tcscpy(buffer, (ver->dwBuildNumber < 22000) ? _T("10") : _T("11"));
                }
                else
                {
@@ -1840,6 +1840,8 @@ void LIBNETXMS_EXPORTABLE WindowsProductNameFromVersion(OSVERSIONINFOEX *ver, TC
                      _tcscpy(buffer, _T("Server 2016"));
                   else if (ver->dwBuildNumber <= 17763)
                      _tcscpy(buffer, _T("Server 2019"));
+                  else if (ver->dwBuildNumber <= 20348)
+                     _tcscpy(buffer, _T("Server 2022"));
                   else
                      _sntprintf(buffer, 256, _T("Server %d.%d.%d"), ver->dwMajorVersion, ver->dwMinorVersion, ver->dwBuildNumber);
                }
