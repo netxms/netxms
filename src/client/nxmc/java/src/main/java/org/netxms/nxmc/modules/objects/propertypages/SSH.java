@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,6 +35,7 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.widgets.LabeledText;
+import org.netxms.nxmc.base.widgets.PasswordInputField;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.widgets.ObjectSelector;
 import org.netxms.nxmc.tools.WidgetHelper;
@@ -50,7 +51,7 @@ public class SSH extends ObjectPropertyPage
    private AbstractNode node;
    private ObjectSelector sshProxy;
    private LabeledText sshLogin;
-   private LabeledText sshPassword;
+   private PasswordInputField sshPassword;
    private LabeledText sshPort;
    private Combo sshKey;
    private List<SshKeyPair> keyList;
@@ -115,7 +116,7 @@ public class SSH extends ObjectPropertyPage
       sshLogin.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
       sshLogin.setText(node.getSshLogin());
       
-      sshPassword = new LabeledText(dialogArea, SWT.NONE);
+      sshPassword = new PasswordInputField(dialogArea, SWT.NONE);
       sshPassword.setLabel("Password");
       sshPassword.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
       sshPassword.setText(node.getSshPassword());

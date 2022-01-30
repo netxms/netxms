@@ -38,6 +38,7 @@ public class PasswordInputField extends LabeledControl
    private Composite composite;
    private Text text;
    private Button buttonShow;
+   private boolean enabled = true;
 
    /**
     * Create new password input field.
@@ -134,6 +135,7 @@ public class PasswordInputField extends LabeledControl
       text.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
       text.moveAbove(null);
       text.setText(content);
+      text.setEnabled(enabled);
       composite.layout(true, true);
    }
 
@@ -155,5 +157,17 @@ public class PasswordInputField extends LabeledControl
    public boolean isEditable()
    {
       return text.getEditable();
+   }
+
+   /**
+    * Enable or disable input controls.
+    *
+    * @param enabled true to enable input controls
+    */
+   public void setInputControlsEnabled(boolean enabled)
+   {
+      this.enabled = enabled;
+      text.setEnabled(enabled);
+      buttonShow.setEnabled(enabled);
    }
 }

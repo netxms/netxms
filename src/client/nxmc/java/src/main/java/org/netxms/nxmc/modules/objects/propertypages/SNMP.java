@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,6 +38,7 @@ import org.netxms.client.snmp.SnmpVersion;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.widgets.LabeledText;
+import org.netxms.nxmc.base.widgets.PasswordInputField;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.widgets.ObjectSelector;
 import org.netxms.nxmc.tools.WidgetHelper;
@@ -57,8 +58,8 @@ public class SNMP extends ObjectPropertyPage
    private Combo snmpPriv;
    private ObjectSelector snmpProxy;
    private LabeledText snmpAuthName;
-   private LabeledText snmpAuthPassword;
-   private LabeledText snmpPrivPassword;
+   private PasswordInputField snmpAuthPassword;
+   private PasswordInputField snmpPrivPassword;
    private LabeledText snmpCodepage;
    private Button snmpSettingsLocked;
 
@@ -182,7 +183,7 @@ public class SNMP extends ObjectPropertyPage
       fd.right = new FormAttachment(100, 0);
       snmpAuthName.setLayoutData(fd);
       
-      snmpAuthPassword = new LabeledText(dialogArea, SWT.NONE);
+      snmpAuthPassword = new PasswordInputField(dialogArea, SWT.NONE);
       snmpAuthPassword.setLabel(i18n.tr("Authentication password"));
       snmpAuthPassword.setText(node.getSnmpAuthPassword());
       fd = new FormData();
@@ -190,9 +191,9 @@ public class SNMP extends ObjectPropertyPage
       fd.top = new FormAttachment(snmpAuth.getParent(), 0, SWT.TOP);
       fd.right = new FormAttachment(100, 0);
       snmpAuthPassword.setLayoutData(fd);
-      snmpAuthPassword.getTextControl().setEnabled(node.getSnmpVersion() == SnmpVersion.V3);
+      snmpAuthPassword.setInputControlsEnabled(node.getSnmpVersion() == SnmpVersion.V3);
       
-      snmpPrivPassword = new LabeledText(dialogArea, SWT.NONE);
+      snmpPrivPassword = new PasswordInputField(dialogArea, SWT.NONE);
       snmpPrivPassword.setLabel(i18n.tr("Encryption password"));
       snmpPrivPassword.setText(node.getSnmpPrivPassword());
       fd = new FormData();
@@ -200,7 +201,7 @@ public class SNMP extends ObjectPropertyPage
       fd.top = new FormAttachment(snmpProxy, 0, SWT.TOP);
       fd.right = new FormAttachment(100, 0);
       snmpPrivPassword.setLayoutData(fd);
-      snmpPrivPassword.getTextControl().setEnabled(node.getSnmpVersion() == SnmpVersion.V3);
+      snmpPrivPassword.setInputControlsEnabled(node.getSnmpVersion() == SnmpVersion.V3);
 
       fd = new FormData();
       fd.left = new FormAttachment(snmpVersion.getParent(), 0, SWT.RIGHT);
@@ -268,8 +269,8 @@ public class SNMP extends ObjectPropertyPage
       snmpAuthName.setLabel(isV3 ? i18n.tr("User name") : i18n.tr("Community string"));
       snmpAuth.setEnabled(isV3);
       snmpPriv.setEnabled(isV3);
-      snmpAuthPassword.getTextControl().setEnabled(isV3);
-      snmpPrivPassword.getTextControl().setEnabled(isV3);
+      snmpAuthPassword.setInputControlsEnabled(isV3);
+      snmpPrivPassword.setInputControlsEnabled(isV3);
    }
 
    /**
