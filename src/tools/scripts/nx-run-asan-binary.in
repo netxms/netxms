@@ -6,6 +6,17 @@
 # Usage: nx-run-asan-binary [-ndd] binary [arguments]
 #
 
+get_extension()
+{
+   filename=`basename $1`
+   n="${filename%.*}"
+   if [ "$n" == "$filename" ]; then
+      extension=""
+   else
+      extension="${filename##*.}"
+   fi
+}
+
 if [ "x$NETXMS_HOME" != "x" ]; then
 	BINDIR="$NETXMS_HOME/bin"
 	DATADIR="$NETXMS_HOME/share/netxms"
@@ -66,6 +77,10 @@ if [ -f "$CONFIG" ]; then
 		else
 			FILE="$PKGLIBDIR/dbdrv/$DRIVER"
 		fi
+      get_extension "$FILE"
+      if [ "x$extension" != "xddr" -a "x$extension" != "xso" ]; then
+         FILE="${FILE}.ddr"
+      fi
 		if file -L $FILE | grep ELF; then
 			LD_PRELOAD="$LD_PRELOAD:$FILE"
 		fi
@@ -82,6 +97,10 @@ if [ -f "$CONFIG" ]; then
 			else
 				FILE="$PKGLIBDIR/$SUBAGENT"
 			fi
+         get_extension "$FILE"
+         if [ "x$extension" != "xnsm" -a "x$extension" != "xso" ]; then
+            FILE="${FILE}.nsm"
+         fi
 			if file -L $FILE | grep ELF; then
 				LD_PRELOAD="$LD_PRELOAD:$FILE"
 			fi
@@ -96,6 +115,10 @@ if [ -f "$CONFIG" ]; then
 			else
 				FILE="$PKGLIBDIR/$MODULE"
 			fi
+         get_extension "$FILE"
+         if [ "x$extension" != "xnxm" -a "x$extension" != "xso" ]; then
+            FILE="${FILE}.nxm"
+         fi
 			if file -L $FILE | grep ELF; then
 				LD_PRELOAD="$LD_PRELOAD:$FILE"
 			fi
