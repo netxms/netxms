@@ -203,7 +203,7 @@ public class CustomAttributes extends PropertyPage
     */
    private void addAttribute()
    {
-      final AttributeEditDialog dlg = new AttributeEditDialog(CustomAttributes.this.getShell(), null, null, 0, false);
+      final AttributeEditDialog dlg = new AttributeEditDialog(CustomAttributes.this.getShell(), null, null, 0, 0);
       if (dlg.open() != Window.OK)
          return;
 
@@ -231,7 +231,7 @@ public class CustomAttributes extends PropertyPage
 
       Entry<String, CustomAttribute> element = (Entry<String, CustomAttribute>)selection.getFirstElement();
       CustomAttribute attr = element.getValue();
-      final AttributeEditDialog dlg = new AttributeEditDialog(CustomAttributes.this.getShell(), element.getKey(), attr.getValue(), attr.getFlags(), attr.isInherited());
+      final AttributeEditDialog dlg = new AttributeEditDialog(CustomAttributes.this.getShell(), element.getKey(), attr.getValue(), attr.getFlags(), attr.getSourceObject());
       if (dlg.open() == Window.OK)
       {
          attributes.put(dlg.getName(), new CustomAttribute(dlg.getValue(), dlg.getFlags(), attr.getSourceObject()));

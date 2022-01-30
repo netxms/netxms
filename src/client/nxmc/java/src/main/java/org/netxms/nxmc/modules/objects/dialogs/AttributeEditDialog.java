@@ -26,7 +26,9 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
+import org.netxms.client.NXCSession;
 import org.netxms.client.objects.configs.CustomAttribute;
+import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.widgets.LabeledText;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.tools.WidgetHelper;
@@ -44,19 +46,22 @@ public class AttributeEditDialog extends Dialog
 	private String name;
 	private String value;
 	private long flags;
-	private boolean inherited;
-	
-	/**
-	 * @param parentShell
-	 */
-	public AttributeEditDialog(Shell parentShell, String name, String value, long flags, boolean inherited)
-	{
-		super(parentShell);
-		this.name = name;
-		this.value = value;
-		this.flags = flags;
-		this.inherited = inherited;
-	}
+   private boolean inherited;
+   private long source;
+   
+   /**
+    * @param parentShell
+    * @param source
+    */
+   public AttributeEditDialog(Shell parentShell, String name, String value, long flags, long source)
+   {
+      super(parentShell);
+      this.name = name;
+      this.value = value;
+      this.flags = flags;
+      this.inherited = (source != 0);
+      this.source = source;
+   }
 
    /**
     * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
@@ -97,7 +102,16 @@ public class AttributeEditDialog extends Dialog
       	textValue.setFocus();
       
       checkInherite = new Button(dialogArea, SWT.CHECK);
-      checkInherite.setText("Inheritable");
+      if (inherited)
+      {
+         NXCSession session = Registry.getSession();
+         checkInherite.setText(String.format(i18n.tr("Inheritable (Inherited from: %s [%d])"), 
+               session.getObjectName(source), source));  
+      }
+      else
+      {
+         checkInherite.setText(i18n.tr("Inheritable"));
+      }
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;

@@ -19,10 +19,15 @@
 package org.netxms.nxmc.modules.objects.propertypages.helpers;
 
 import java.util.Map.Entry;
+import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.jface.viewers.IColorProvider;
+import org.eclipse.jface.viewers.ITableFontProvider;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.graphics.Font;
+import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.widgets.Display;
@@ -36,12 +41,23 @@ import org.netxms.nxmc.modules.objects.widgets.helpers.DecoratingObjectLabelProv
 /**
  * Label provider for custom attributes list elements
  */
-public class AttrListLabelProvider extends LabelProvider implements ITableLabelProvider, IColorProvider
+public class AttrListLabelProvider extends LabelProvider implements ITableLabelProvider, IColorProvider, ITableFontProvider
 {
    private static final Color COLOR_INHERITED = new Color(Display.getDefault(), new RGB(220,220,220));
    
    private DecoratingObjectLabelProvider wbLabelProvider = new DecoratingObjectLabelProvider();
    private NXCSession session = Registry.getSession();
+   private Font inheritedObjectFont;
+   
+   /**
+    * Constructore
+    */
+   public AttrListLabelProvider()
+   {
+      FontData fd = JFaceResources.getDefaultFont().getFontData()[0];
+      fd.setStyle(SWT.ITALIC);
+      inheritedObjectFont = new Font(Display.getCurrent(), fd);
+   }
 
 	/**
 	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
@@ -53,6 +69,8 @@ public class AttrListLabelProvider extends LabelProvider implements ITableLabelP
 	   if (columnIndex == CustomAttributes.COLUMN_INHERETED_FROM)
 	   {
          CustomAttribute attr = (CustomAttribute)((Entry)element).getValue();
+         if (attr.getSourceObject() == 0 || attr.isRedefined())
+            return null;
          AbstractObject object = session.findObjectById(attr.getSourceObject());
 	      return (object != null) ? wbLabelProvider.getImage(object) : null;
 	   }
@@ -84,7 +102,7 @@ public class AttrListLabelProvider extends LabelProvider implements ITableLabelP
             return (attr.getFlags() & CustomAttribute.INHERITABLE) > 0 ? "Yes" : "No";
          case CustomAttributes.COLUMN_INHERETED_FROM:
             attr = (CustomAttribute)((Entry)element).getValue();
-            if (attr.getSourceObject() == 0)
+            if (attr.getSourceObject() == 0 || attr.isRedefined())
                return null;
             AbstractObject object = session.findObjectById(attr.getSourceObject());
             return (object != null) ? object.getObjectName() : ("[" + Long.toString(attr.getSourceObject()) + "]");
@@ -121,6 +139,18 @@ public class AttrListLabelProvider extends LabelProvider implements ITableLabelP
    public void dispose()
    {
       wbLabelProvider.dispose();
+      inheritedObjectFont.dispose();
       super.dispose();
+   }
+
+   @Override
+   public Font getFont(Object element, int columnIndex)
+   {
+      CustomAttribute attr = (CustomAttribute)((Entry)element).getValue();
+      if (attr.getSourceObject() != 0 && (attr.getFlags() & CustomAttribute.REDEFINED) == 0)
+      {
+         return inheritedObjectFont;
+      }      
+      return null;
    }
 }
