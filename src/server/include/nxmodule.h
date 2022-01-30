@@ -23,6 +23,24 @@
 #ifndef _nxmodule_h_
 #define _nxmodule_h_
 
+/**
+ * Module metadata
+ */
+struct NXMODULE_METADATA
+{
+   uint32_t size;   // structure size in bytes
+   uint32_t unicode;  // unicode flag
+   char tagBegin[16];
+   char name[MAX_OBJECT_NAME];
+   char vendor[128];
+   char coreVersion[16];
+   char coreBuildTag[32];
+   char moduleVersion[16];
+   char moduleBuildTag[32];
+   char compiler[256];
+   char tagEnd[16];
+};
+
 #ifndef MODULE_NXDBMGR_EXTENSION
 
 #include <nxdbapi.h>
@@ -68,24 +86,6 @@ public:
    virtual bool saveToDatabase(DB_HANDLE hdb, UINT32 objectId);
    virtual bool saveRuntimeData(DB_HANDLE hdb, UINT32 objectId);
    virtual bool deleteFromDatabase(DB_HANDLE hdb, UINT32 objectId);
-};
-
-/**
- * Module metadata
- */
-struct NXMODULE_METADATA
-{
-   uint32_t size;   // structure size in bytes
-   uint32_t unicode;  // unicode flag
-   char tagBegin[16];
-   char name[MAX_OBJECT_NAME];
-   char vendor[128];
-   char coreVersion[16];
-   char coreBuildTag[32];
-   char moduleVersion[16];
-   char moduleBuildTag[32];
-   char compiler[256];
-   char tagEnd[16];
 };
 
 /**

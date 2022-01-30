@@ -1,6 +1,6 @@
 /*
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004-2021 Victor Kirhenshtein
+** Copyright (C) 2004-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,6 +21,9 @@
 **/
 
 #include "nxdbmgr.h"
+
+#define MODULE_NXDBMGR_EXTENSION
+#include <nxmodule.h>
 
 /**
  * Module information structure
@@ -51,14 +54,15 @@ static ObjectArray<Module> s_modules(8, 8, Ownership::True);
 static bool LoadServerModule(const TCHAR *name, bool mandatory)
 {
    bool success = false;
-   TCHAR errorText[256];
+   TCHAR fullName[MAX_PATH], errorText[256];
 
 #ifdef _WIN32
-   HMODULE hModule = DLOpen(name, errorText);
+   size_t len = _tcslen(fullName);
+   if ((len < 4) || (_tcsicmp(&fullName[len - 4], _T(".nxm")) && _tcsicmp(&fullName[len - 4], _T(".dll"))))
+      _tcslcat(fullName, _T(".nxm"), MAX_PATH);
+   HMODULE hModule = DLOpen(fullName, errorText);
 #else
-   TCHAR fullName[MAX_PATH];
-
-   if (_tcschr(name, _T('/')) == NULL)
+   if (_tcschr(name, _T('/')) == nullptr)
    {
       // Assume that module name without path given
       // Try to load it from pkglibdir
@@ -70,6 +74,11 @@ static bool LoadServerModule(const TCHAR *name, bool mandatory)
    {
       _tcslcpy(fullName, name, MAX_PATH);
    }
+
+   size_t len = _tcslen(fullName);
+   if ((len < 4) || (_tcsicmp(&fullName[len - 4], _T(".nxm")) && _tcsicmp(&fullName[len - _tcslen(SHLIB_SUFFIX)], SHLIB_SUFFIX)))
+      _tcslcat(fullName, _T(".nxm"), MAX_PATH);
+
    HMODULE hModule = DLOpen(fullName, errorText);
 #endif
 
@@ -77,19 +86,31 @@ static bool LoadServerModule(const TCHAR *name, bool mandatory)
    {
       Module *m = new Module();
       m->handle = hModule;
-      _tcslcpy(m->name, name, MAX_PATH);
+      auto metadata = static_cast<NXMODULE_METADATA*>(DLGetSymbolAddr(hModule, "NXM_metadata", errorText));
+      if (metadata != nullptr)
+      {
+#ifdef UNICODE
+         mb_to_wchar(metadata->name, -1, m->name, MAX_PATH);
+#else
+         _tcslcpy(m->name, metadata->name, MAX_PATH);
+#endif
+      }
+      else
+      {
+         _tcslcpy(m->name, name, MAX_PATH);
+      }
       m->CheckDB = (bool (*)())DLGetSymbolAddr(hModule, "NXM_CheckDB", errorText);
       m->UpgradeDB = (bool (*)())DLGetSymbolAddr(hModule, "NXM_UpgradeDB", errorText);
       m->GetTables = (const TCHAR* const * (*)())DLGetSymbolAddr(hModule, "NXM_GetTables", errorText);
       m->GetSchemaPrefix = (const TCHAR* (*)())DLGetSymbolAddr(hModule, "NXM_GetSchemaPrefix", errorText);
       if ((m->CheckDB != nullptr) || (m->UpgradeDB != nullptr) || (m->GetTables != nullptr) || (m->GetSchemaPrefix != nullptr))
       {
-         WriteToTerminalEx(_T("\x1b[32;1mINFO:\x1b[0m Server module \x1b[1m%s\x1b[0m loaded\n"), name);
+         WriteToTerminalEx(_T("\x1b[32;1mINFO:\x1b[0m Server module \x1b[1m%s\x1b[0m loaded\n"), m->name);
          s_modules.add(m);
       }
       else
       {
-         WriteToTerminalEx(_T("\x1b[32;1mINFO:\x1b[0m Server module \x1b[1m%s\x1b[0m skipped\n"), name);
+         WriteToTerminalEx(_T("\x1b[32;1mINFO:\x1b[0m Server module \x1b[1m%s\x1b[0m skipped\n"), m->name);
          delete m;
       }
       success = true;

@@ -67,9 +67,9 @@ int main(int argc, char *argv[])
    char *fname = argv[1];
 #endif
 
-#if !defined(_WIN32)
    TCHAR modname[MAX_PATH];
-   if (_tcschr(fname, _T('/')) == NULL)
+#if !defined(_WIN32)
+   if (_tcschr(fname, _T('/')) == nullptr)
    {
       // Assume that module name without path given
       // Try to load it from pkglibdir
@@ -82,8 +82,12 @@ int main(int argc, char *argv[])
       _tcslcpy(modname, fname, MAX_PATH);
    }
 #else
-#define modname fname
+   _tcslcpy(modname, fname, MAX_PATH);
 #endif
+
+   size_t len = _tcslen(modname);
+   if ((len < 4) || (_tcsicmp(&modname[len - 4], _T(".nxm")) && _tcsicmp(&modname[len - _tcslen(SHLIB_SUFFIX)], SHLIB_SUFFIX)))
+      _tcslcat(modname, _T(".nxm"), MAX_PATH);
 
    TCHAR errorText[1024];
    HMODULE handle = DLOpen(modname, errorText);
