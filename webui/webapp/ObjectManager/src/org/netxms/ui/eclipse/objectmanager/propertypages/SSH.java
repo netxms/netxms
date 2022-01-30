@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -39,6 +39,7 @@ import org.netxms.ui.eclipse.objectmanager.Messages;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
+import org.netxms.ui.eclipse.widgets.PasswordInputField;
 
 /**
  * "SSH" property page for node
@@ -48,7 +49,7 @@ public class SSH extends PropertyPage
    private AbstractNode node;
    private ObjectSelector sshProxy;
    private LabeledText sshLogin;
-   private LabeledText sshPassword;
+   private PasswordInputField sshPassword;
    private LabeledText sshPort;
    private Combo sshKey;
    private List<SshKeyPair> keyList;
@@ -70,35 +71,35 @@ public class SSH extends PropertyPage
       dialogLayout.numColumns = 2;
       dialogLayout.makeColumnsEqualWidth = true;
       dialogArea.setLayout(dialogLayout);
-      
+
       sshLogin = new LabeledText(dialogArea, SWT.NONE);
       sshLogin.setLabel("Login");
       sshLogin.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
       sshLogin.setText(node.getSshLogin());
-      
-      sshPassword = new LabeledText(dialogArea, SWT.NONE);
+
+      sshPassword = new PasswordInputField(dialogArea, SWT.NONE);
       sshPassword.setLabel("Password");
       sshPassword.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
       sshPassword.setText(node.getSshPassword());
-      
+
       sshPort = new LabeledText(dialogArea, SWT.NONE);
       sshPort.setLabel("Port");
       sshPort.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
       sshPort.setText(Integer.toString(node.getSshPort()));
-      
+
       sshKey = WidgetHelper.createLabeledCombo(dialogArea, SWT.BORDER | SWT.READ_ONLY, 
             "Key from configuration", new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
-      
+
       sshProxy = new ObjectSelector(dialogArea, SWT.NONE, true);
       sshProxy.setLabel(Messages.get().Communication_Proxy);
       sshProxy.setEmptySelectionName("<default>");
       sshProxy.setObjectId(node.getSshProxyId());
       sshProxy.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
       loadSshKeyList();
-      
+
       return dialogArea;
    }
-   
+
    /**
     * Get user info and refresh view
     */
@@ -127,7 +128,7 @@ public class SSH extends PropertyPage
                }
             });
          }
-         
+
          @Override
          protected String getErrorMessage()
          {

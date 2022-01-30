@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -44,6 +44,7 @@ import org.netxms.ui.eclipse.objectmanager.Messages;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
+import org.netxms.ui.eclipse.widgets.PasswordInputField;
 
 /**
  * "Agent" property page for node
@@ -52,7 +53,7 @@ public class Agent extends PropertyPage
 {
    private AbstractNode node;
    private LabeledText agentPort;
-   private LabeledText agentSharedSecret;
+   private PasswordInputField agentSharedSecret;
    private Button agentForceEncryption;
    private Button agentTunnelOnly;
    private ObjectSelector agentProxy;
@@ -110,7 +111,7 @@ public class Agent extends PropertyPage
       fd.top = new FormAttachment(agentForceEncryption, 0, SWT.BOTTOM);
       agentTunnelOnly.setLayoutData(fd);
       
-      agentSharedSecret = new LabeledText(dialogArea, SWT.NONE);
+      agentSharedSecret = new PasswordInputField(dialogArea, SWT.NONE);
       agentSharedSecret.setLabel(Messages.get().Communication_SharedSecret);
       agentSharedSecret.setText(node.getAgentSharedSecret());
       fd = new FormData();
@@ -282,7 +283,6 @@ public class Agent extends PropertyPage
       agentForceEncryption.setSelection(false);
       agentProxy.setObjectId(0);
       agentSharedSecret.setText(""); //$NON-NLS-1$
-      agentSharedSecret.getTextControl().setEnabled(false);
       certMappingMethod.select(CertificateMappingMethod.COMMON_NAME.getValue());
       certMappingData.setText("");
    }
