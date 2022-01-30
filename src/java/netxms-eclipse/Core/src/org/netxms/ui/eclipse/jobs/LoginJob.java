@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Raden Solutions
+ * Copyright (C) 2003-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -128,6 +128,9 @@ public class LoginJob implements IRunnableWithProgress
             @Override
             public int selectMethod(final List<String> methods)
             {
+               if (methods.size() == 1)
+                  return 0; // Skip selection dialog if only one method is available
+
                final int[] selection = new int[1];
                selection[0] = -1;
                display.syncExec(new Runnable() {

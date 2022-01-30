@@ -125,6 +125,9 @@ public class LoginJob implements IRunnableWithProgress
             @Override
             public int selectMethod(final List<String> methods)
             {
+               if (methods.size() == 1)
+                  return 0; // Skip selection dialog if only one method is available
+
                final int[] selection = new int[1];
                selection[0] = -1;
                display.syncExec(new Runnable() {
