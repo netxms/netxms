@@ -27,6 +27,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.nxmc.base.widgets.LabeledText;
+import org.netxms.nxmc.base.widgets.PasswordInputField;
 import org.netxms.nxmc.base.widgets.QRLabel;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.tools.WidgetHelper;
@@ -93,6 +94,14 @@ public class TwoFactorResponseDialog extends Dialog
          gd.minimumWidth = 300;
          gd.minimumHeight = 300;
          qrLabel.setLayoutData(gd);
+
+         PasswordInputField secretText = new PasswordInputField(dialogArea, SWT.NONE);
+         secretText.setLabel("Secret as text");
+         secretText.setText(qrText);
+         secretText.setEditable(false);
+         gd = new GridData(SWT.FILL, SWT.CENTER, true, false);
+         gd.widthHint = 400;
+         secretText.setLayoutData(gd);
       }
 
       if ((challenge != null) && !challenge.isEmpty())

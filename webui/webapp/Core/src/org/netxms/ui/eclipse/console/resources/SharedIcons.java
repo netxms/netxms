@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -51,6 +51,7 @@ public class SharedIcons
 	public static ImageDescriptor EXPAND_ALL;
    public static ImageDescriptor FILTER;
 	public static ImageDescriptor FIND;
+   public static ImageDescriptor HIDE;
    public static ImageDescriptor INFORMATION;
 	public static ImageDescriptor IP_ADDRESS;
 	public static ImageDescriptor NAV_BACKWARD;
@@ -59,6 +60,7 @@ public class SharedIcons
 	public static ImageDescriptor REFRESH;
    public static ImageDescriptor RENAME;
 	public static ImageDescriptor RESTART;
+   public static ImageDescriptor SHOW;
 	public static ImageDescriptor SAVE;
    public static ImageDescriptor SAVE_AS;
    public static ImageDescriptor SAVE_AS_IMAGE;
@@ -68,7 +70,7 @@ public class SharedIcons
 	public static ImageDescriptor XML;
 	public static ImageDescriptor ZOOM_IN;
 	public static ImageDescriptor ZOOM_OUT;
-	
+
 	public static Image IMG_ADD_OBJECT;
 	public static Image IMG_ALARM;
    public static Image IMG_BROWSER;
@@ -92,6 +94,7 @@ public class SharedIcons
 	public static Image IMG_EXPAND_ALL;
 	public static Image IMG_FILTER;
    public static Image IMG_FIND;
+   public static Image IMG_HIDE;
    public static Image IMG_INFORMATION;
 	public static Image IMG_IP_ADDRESS;
 	public static Image IMG_NAV_BACKWARD;
@@ -100,6 +103,7 @@ public class SharedIcons
 	public static Image IMG_REFRESH;
    public static Image IMG_RENAME;
 	public static Image IMG_RESTART;
+   public static Image IMG_SHOW;
 	public static Image IMG_SAVE;
    public static Image IMG_SAVE_AS;
    public static Image IMG_SAVE_AS_IMAGE;
@@ -138,6 +142,7 @@ public class SharedIcons
 		EXPAND_ALL = Activator.getImageDescriptor("icons/expandall.png"); //$NON-NLS-1$
 		FILTER = Activator.getImageDescriptor("icons/filter.gif"); //$NON-NLS-1$
       FIND = Activator.getImageDescriptor("icons/find.gif"); //$NON-NLS-1$
+      HIDE = Activator.getImageDescriptor("icons/hide.png"); //$NON-NLS-1$
       INFORMATION = Activator.getImageDescriptor("icons/information.png"); //$NON-NLS-1$
 		IP_ADDRESS = Activator.getImageDescriptor("icons/ipaddr.png"); //$NON-NLS-1$
 		NAV_BACKWARD = Activator.getImageDescriptor("icons/nav_backward.gif"); //$NON-NLS-1$
@@ -149,6 +154,7 @@ public class SharedIcons
 		SAVE = Activator.getImageDescriptor("icons/save.gif"); //$NON-NLS-1$
       SAVE_AS = Activator.getImageDescriptor("icons/saveas.gif"); //$NON-NLS-1$
       SAVE_AS_IMAGE = Activator.getImageDescriptor("icons/image_obj.png"); //$NON-NLS-1$
+      SHOW = Activator.getImageDescriptor("icons/show.png"); //$NON-NLS-1$
 		TERMINATE = Activator.getImageDescriptor("icons/terminate.gif"); //$NON-NLS-1$
 		UNKNOWN_OBJECT = Activator.getImageDescriptor("icons/unknown_obj.gif"); //$NON-NLS-1$
 		UP = Activator.getImageDescriptor("icons/up.png"); //$NON-NLS-1$
@@ -179,6 +185,7 @@ public class SharedIcons
 		IMG_EXPAND_ALL = EXPAND_ALL.createImage(display);
 		IMG_FILTER = FILTER.createImage(display);
       IMG_FIND = FIND.createImage(display);
+      IMG_HIDE = HIDE.createImage(display);
       IMG_INFORMATION = INFORMATION.createImage(display);
 		IMG_IP_ADDRESS = IP_ADDRESS.createImage(display);
 		IMG_NAV_BACKWARD = NAV_BACKWARD.createImage(display);
@@ -190,6 +197,7 @@ public class SharedIcons
 		IMG_SAVE = SAVE.createImage(display);
       IMG_SAVE_AS = SAVE_AS.createImage(display);
       IMG_SAVE_AS_IMAGE = SAVE_AS_IMAGE.createImage(display);
+      IMG_SHOW = SHOW.createImage(display);
 		IMG_TERMINATE = TERMINATE.createImage(display);
 		IMG_UNKNOWN_OBJECT = UNKNOWN_OBJECT.createImage(display);
 		IMG_UP = UP.createImage(display);

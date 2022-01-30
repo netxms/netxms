@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -51,6 +51,7 @@ public class SharedIcons
    public static ImageDescriptor FILTER;
 	public static ImageDescriptor FIND;
    public static ImageDescriptor GROUP;
+   public static ImageDescriptor HIDE;
    public static ImageDescriptor INFORMATION;
 	public static ImageDescriptor IP_ADDRESS;
 	public static ImageDescriptor NAV_BACKWARD;
@@ -60,6 +61,7 @@ public class SharedIcons
    public static ImageDescriptor POP_OUT;
 	public static ImageDescriptor REFRESH;
 	public static ImageDescriptor RESTART;
+   public static ImageDescriptor SHOW;
 	public static ImageDescriptor SAVE;
    public static ImageDescriptor SAVE_AS;
    public static ImageDescriptor SAVE_AS_IMAGE;
@@ -96,6 +98,7 @@ public class SharedIcons
 	public static Image IMG_FILTER;
    public static Image IMG_FIND;
    public static Image IMG_GROUP;
+   public static Image IMG_HIDE;
    public static Image IMG_INFORMATION;
 	public static Image IMG_IP_ADDRESS;
 	public static Image IMG_NAV_BACKWARD;
@@ -105,6 +108,7 @@ public class SharedIcons
    public static Image IMG_POP_OUT;
 	public static Image IMG_REFRESH;
 	public static Image IMG_RESTART;
+   public static Image IMG_SHOW;
 	public static Image IMG_SAVE;
    public static Image IMG_SAVE_AS;
    public static Image IMG_SAVE_AS_IMAGE;
@@ -121,50 +125,52 @@ public class SharedIcons
     */
 	public static void init()
 	{
-      ADD_OBJECT = ResourceManager.getImageDescriptor("icons/add_obj.gif"); //$NON-NLS-1$
-      ALARM = ResourceManager.getImageDescriptor("icons/alarm.png"); //$NON-NLS-1$
-      BROWSER = ResourceManager.getImageDescriptor("icons/browser.png"); //$NON-NLS-1$
-      CHECKBOX_OFF = ResourceManager.getImageDescriptor("icons/checkbox_off.png"); //$NON-NLS-1$
-      CHECKBOX_ON = ResourceManager.getImageDescriptor("icons/checkbox_on.png"); //$NON-NLS-1$
-      CLEAR = ResourceManager.getImageDescriptor("icons/clear.gif"); //$NON-NLS-1$
-      CLEAR_LOG = ResourceManager.getImageDescriptor("icons/clear_log.gif"); //$NON-NLS-1$
-      CLOSE = ResourceManager.getImageDescriptor("icons/close.gif"); //$NON-NLS-1$
-      COLLAPSE = ResourceManager.getImageDescriptor("icons/collapse.png"); //$NON-NLS-1$
-      COLLAPSE_ALL = ResourceManager.getImageDescriptor("icons/collapseall.png"); //$NON-NLS-1$
+      ADD_OBJECT = ResourceManager.getImageDescriptor("icons/add_obj.gif");
+      ALARM = ResourceManager.getImageDescriptor("icons/alarm.png");
+      BROWSER = ResourceManager.getImageDescriptor("icons/browser.png");
+      CHECKBOX_OFF = ResourceManager.getImageDescriptor("icons/checkbox_off.png");
+      CHECKBOX_ON = ResourceManager.getImageDescriptor("icons/checkbox_on.png");
+      CLEAR = ResourceManager.getImageDescriptor("icons/clear.gif");
+      CLEAR_LOG = ResourceManager.getImageDescriptor("icons/clear_log.gif");
+      CLOSE = ResourceManager.getImageDescriptor("icons/close.gif");
+      COLLAPSE = ResourceManager.getImageDescriptor("icons/collapse.png");
+      COLLAPSE_ALL = ResourceManager.getImageDescriptor("icons/collapseall.png");
       COMMENTS = ResourceManager.getImageDescriptor("icons/comments.png");
-      CONTAINER = ResourceManager.getImageDescriptor("icons/container.png"); //$NON-NLS-1$
-      COPY = ResourceManager.getImageDescriptor("icons/copy.gif"); //$NON-NLS-1$
-      CSV = ResourceManager.getImageDescriptor("icons/csv.png"); //$NON-NLS-1$
-      CUT = ResourceManager.getImageDescriptor("icons/cut.gif"); //$NON-NLS-1$
-      DELETE_OBJECT = ResourceManager.getImageDescriptor("icons/delete_obj.gif"); //$NON-NLS-1$
-      DOWN = ResourceManager.getImageDescriptor("icons/down.png"); //$NON-NLS-1$
-      EDIT = ResourceManager.getImageDescriptor("icons/edit.png"); //$NON-NLS-1$
-      EMPTY = ResourceManager.getImageDescriptor("icons/empty.png"); //$NON-NLS-1$
-      EXECUTE = ResourceManager.getImageDescriptor("icons/execute.gif"); //$NON-NLS-1$
-      EXPAND = ResourceManager.getImageDescriptor("icons/expand.png"); //$NON-NLS-1$
-      EXPAND_ALL = ResourceManager.getImageDescriptor("icons/expandall.png"); //$NON-NLS-1$
-      FILTER = ResourceManager.getImageDescriptor("icons/filter.gif"); //$NON-NLS-1$
-      FIND = ResourceManager.getImageDescriptor("icons/find.gif"); //$NON-NLS-1$
-      GROUP = ResourceManager.getImageDescriptor("icons/group.png"); //$NON-NLS-1$
-      INFORMATION = ResourceManager.getImageDescriptor("icons/information.png"); //$NON-NLS-1$
-      IP_ADDRESS = ResourceManager.getImageDescriptor("icons/ipaddr.png"); //$NON-NLS-1$
-      NAV_BACKWARD = ResourceManager.getImageDescriptor("icons/nav_backward.gif"); //$NON-NLS-1$
-      NAV_FORWARD = ResourceManager.getImageDescriptor("icons/nav_forward.gif"); //$NON-NLS-1$
-      PASTE = ResourceManager.getImageDescriptor("icons/paste.gif"); //$NON-NLS-1$
-      PIN = ResourceManager.getImageDescriptor("icons/pin.png"); //$NON-NLS-1$
-      POP_OUT = ResourceManager.getImageDescriptor("icons/pop-out.png"); //$NON-NLS-1$
-      REFRESH = ResourceManager.getImageDescriptor("icons/refresh.gif"); //$NON-NLS-1$
-      RESTART = ResourceManager.getImageDescriptor("icons/restart.gif"); //$NON-NLS-1$
-      SAVE = ResourceManager.getImageDescriptor("icons/save.gif"); //$NON-NLS-1$
-      SAVE_AS = ResourceManager.getImageDescriptor("icons/saveas.gif"); //$NON-NLS-1$
-      SAVE_AS_IMAGE = ResourceManager.getImageDescriptor("icons/image_obj.png"); //$NON-NLS-1$
-      TERMINATE = ResourceManager.getImageDescriptor("icons/terminate.gif"); //$NON-NLS-1$
-      UNKNOWN_OBJECT = ResourceManager.getImageDescriptor("icons/unknown_obj.gif"); //$NON-NLS-1$
-      UP = ResourceManager.getImageDescriptor("icons/up.png"); //$NON-NLS-1$
-      USER = ResourceManager.getImageDescriptor("icons/user.png"); //$NON-NLS-1$
-      XML = ResourceManager.getImageDescriptor("icons/xml.gif"); //$NON-NLS-1$
-      ZOOM_IN = ResourceManager.getImageDescriptor("icons/zoom_in.png"); //$NON-NLS-1$
-      ZOOM_OUT = ResourceManager.getImageDescriptor("icons/zoom_out.png"); //$NON-NLS-1$
+      CONTAINER = ResourceManager.getImageDescriptor("icons/container.png");
+      COPY = ResourceManager.getImageDescriptor("icons/copy.gif");
+      CSV = ResourceManager.getImageDescriptor("icons/csv.png");
+      CUT = ResourceManager.getImageDescriptor("icons/cut.gif");
+      DELETE_OBJECT = ResourceManager.getImageDescriptor("icons/delete_obj.gif");
+      DOWN = ResourceManager.getImageDescriptor("icons/down.png");
+      EDIT = ResourceManager.getImageDescriptor("icons/edit.png");
+      EMPTY = ResourceManager.getImageDescriptor("icons/empty.png");
+      EXECUTE = ResourceManager.getImageDescriptor("icons/execute.gif");
+      EXPAND = ResourceManager.getImageDescriptor("icons/expand.png");
+      EXPAND_ALL = ResourceManager.getImageDescriptor("icons/expandall.png");
+      FILTER = ResourceManager.getImageDescriptor("icons/filter.gif");
+      FIND = ResourceManager.getImageDescriptor("icons/find.gif");
+      GROUP = ResourceManager.getImageDescriptor("icons/group.png");
+      HIDE = ResourceManager.getImageDescriptor("icons/hide.png");
+      INFORMATION = ResourceManager.getImageDescriptor("icons/information.png");
+      IP_ADDRESS = ResourceManager.getImageDescriptor("icons/ipaddr.png");
+      NAV_BACKWARD = ResourceManager.getImageDescriptor("icons/nav_backward.gif");
+      NAV_FORWARD = ResourceManager.getImageDescriptor("icons/nav_forward.gif");
+      PASTE = ResourceManager.getImageDescriptor("icons/paste.gif");
+      PIN = ResourceManager.getImageDescriptor("icons/pin.png");
+      POP_OUT = ResourceManager.getImageDescriptor("icons/pop-out.png");
+      REFRESH = ResourceManager.getImageDescriptor("icons/refresh.gif");
+      RESTART = ResourceManager.getImageDescriptor("icons/restart.gif");
+      SAVE = ResourceManager.getImageDescriptor("icons/save.gif");
+      SAVE_AS = ResourceManager.getImageDescriptor("icons/saveas.gif");
+      SAVE_AS_IMAGE = ResourceManager.getImageDescriptor("icons/image_obj.png");
+      SHOW = ResourceManager.getImageDescriptor("icons/show.png");
+      TERMINATE = ResourceManager.getImageDescriptor("icons/terminate.gif");
+      UNKNOWN_OBJECT = ResourceManager.getImageDescriptor("icons/unknown_obj.gif");
+      UP = ResourceManager.getImageDescriptor("icons/up.png");
+      USER = ResourceManager.getImageDescriptor("icons/user.png");
+      XML = ResourceManager.getImageDescriptor("icons/xml.gif");
+      ZOOM_IN = ResourceManager.getImageDescriptor("icons/zoom_in.png");
+      ZOOM_OUT = ResourceManager.getImageDescriptor("icons/zoom_out.png");
 
 		IMG_ADD_OBJECT = ADD_OBJECT.createImage();
 		IMG_ALARM = ALARM.createImage();
@@ -191,6 +197,7 @@ public class SharedIcons
 		IMG_FILTER = FILTER.createImage();
       IMG_FIND = FIND.createImage();
       IMG_GROUP = GROUP.createImage();
+      IMG_HIDE = HIDE.createImage();
       IMG_INFORMATION = INFORMATION.createImage();
 		IMG_IP_ADDRESS = IP_ADDRESS.createImage();
 		IMG_NAV_BACKWARD = NAV_BACKWARD.createImage();
@@ -203,6 +210,7 @@ public class SharedIcons
 		IMG_SAVE = SAVE.createImage();
       IMG_SAVE_AS = SAVE_AS.createImage();
       IMG_SAVE_AS_IMAGE = SAVE_AS_IMAGE.createImage();
+      IMG_SHOW = SHOW.createImage();
 		IMG_TERMINATE = TERMINATE.createImage();
 		IMG_UNKNOWN_OBJECT = UNKNOWN_OBJECT.createImage();
 		IMG_UP = UP.createImage();
