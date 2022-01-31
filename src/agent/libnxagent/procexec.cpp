@@ -128,7 +128,7 @@ void LineOutputProcessExecutor::onOutput(const char *text)
 #ifdef UNICODE
    buffer = WideStringFromMBStringSysLocale(text);
 #else
-   buffer = _tcsdup(text);
+   buffer = MemCopyStringA(text);
 #endif
    TCHAR *newLinePtr = nullptr, *lineStartPtr = buffer;
    do

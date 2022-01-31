@@ -68,7 +68,10 @@ static int GetList(AgentConnection *conn, const TCHAR *listName)
    if (rcc == ERR_SUCCESS)
    {
       for(int i = 0; i < data->size(); i++)
-         WriteToTerminalEx(_T("%s\n"), data->get(i));
+      {
+         _fputts(data->get(i), stdout);
+         _fputtc(_T('\n'), stdout);
+      }
       delete data;
    }
    else

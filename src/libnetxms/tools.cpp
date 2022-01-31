@@ -3079,12 +3079,12 @@ void LIBNETXMS_EXPORTABLE WriteToTerminal(const TCHAR *text)
  */
 void LIBNETXMS_EXPORTABLE WriteToTerminalEx(const TCHAR *format, ...)
 {
-	TCHAR buffer[8192];
 	va_list args;
-
 	va_start(args, format);
+   TCHAR buffer[8192];
 	_vsntprintf(buffer, 8192, format, args);
 	va_end(args);
+	buffer[8191] = 0;
 	WriteToTerminal(buffer);
 }
 
@@ -3096,7 +3096,7 @@ void LIBNETXMS_EXPORTABLE WriteToTerminalEx(const TCHAR *format, ...)
 int LIBNETXMS_EXPORTABLE mkstemp(char *tmpl)
 {
 	char *name = _mktemp(tmpl);
-	if (name == NULL)
+	if (name == nullptr)
 		return -1;
 	return _open(name, O_RDWR | O_BINARY | O_CREAT | O_EXCL| _O_SHORT_LIVED, _S_IREAD | _S_IWRITE);
 }
@@ -3104,7 +3104,7 @@ int LIBNETXMS_EXPORTABLE mkstemp(char *tmpl)
 int LIBNETXMS_EXPORTABLE wmkstemp(WCHAR *tmpl)
 {
 	WCHAR *name = _wmktemp(tmpl);
-	if (name == NULL)
+	if (name == nullptr)
 		return -1;
 	return _wopen(name, O_RDWR | O_BINARY | O_CREAT | O_EXCL| _O_SHORT_LIVED, _S_IREAD | _S_IWRITE);
 }
