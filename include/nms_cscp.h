@@ -673,7 +673,7 @@ typedef struct
 #define CMD_2FA_MODIFY_METHOD             0x01B2
 #define CMD_2FA_DELETE_METHOD             0x01B3
 #define CMD_2FA_GET_USER_BINDINGS         0x01B4
-//#define CMD_2FA_GET_USER_BINDING_DETAILS  0x01B5
+#define CMD_SCRIPT_EXECUTION_RESULT       0x01B5
 #define CMD_2FA_MODIFY_USER_BINDING       0x01B6
 #define CMD_2FA_DELETE_USER_BINDING       0x01B7
 #define CMD_WEB_SERVICE_CUSTOM_REQUEST    0x01B8
@@ -1486,6 +1486,7 @@ typedef struct
 #define VID_REPORT_PROGRESS         ((uint32_t)785)
 #define VID_ACCEPT_KEEPALIVE        ((uint32_t)786)
 #define VID_QR_LABEL                ((uint32_t)787)
+#define VID_RESULT_AS_MAP           ((uint32_t)788)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

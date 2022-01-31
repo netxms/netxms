@@ -7654,13 +7654,16 @@ public class NXCSession
    /**
     * Process server script execution.
     *
-    * @param msg      prepared request message
+    * @param msg prepared request message
     * @param listener script output listener or null if caller not interested in script output
-    * @throws IOException  if socket I/O error occurs
+    * @param resultAsMap if true, expect script execution results to be sent as map
+    * @return execution result as map if <code>resultAsMap</code> is set to <code>true</true>, and <code>null</code> otherwise
+    * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   private void processScriptExecution(NXCPMessage msg, final TextOutputListener listener) throws IOException, NXCException
+   private Map<String, String> processScriptExecution(NXCPMessage msg, final TextOutputListener listener, boolean resultAsMap) throws IOException, NXCException
    {
+      msg.setField(NXCPCodes.VID_RESULT_AS_MAP, resultAsMap);
       MessageHandler handler = null;
       if (listener != null)
       {
@@ -7699,12 +7702,18 @@ public class NXCSession
       }
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
-      if (listener != null)
+      if (handler != null)
       {
          handler.waitForCompletion();
          if (handler.isExpired())
             throw new NXCException(RCC.TIMEOUT);
       }
+
+      if (!resultAsMap)
+         return null;
+
+      NXCPMessage response = waitForMessage(NXCPCodes.CMD_SCRIPT_EXECUTION_RESULT, msg.getMessageId());
+      return response.getStringMapFromFields(NXCPCodes.VID_ELEMENT_LIST_BASE, NXCPCodes.VID_NUM_ELEMENTS);
    }
 
    /**
@@ -7728,19 +7737,18 @@ public class NXCSession
     * Execute library script on object. Script name interpreted as command line with server-side macro substitution. Map inputValues
     * can be used to pass data for %() macros.
     *
-    * @param nodeId      node ID to execute script on
-    * @param alarmId     alarm ID to use for expansion
-    * @param script      script name and parameters
+    * @param objectId ID of the object to execute script on
+    * @param alarmId alarm ID to use for expansion
+    * @param script script name and parameters
     * @param inputFields input values map for %() macro substitution (can be null)
-    * @param listener    script output listener
-    * @throws IOException  if socket I/O error occurs
+    * @param listener script output listener
+    * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void executeLibraryScript(long nodeId, long alarmId, String script, Map<String, String> inputFields,
-         final TextOutputListener listener) throws IOException, NXCException
+   public void executeLibraryScript(long objectId, long alarmId, String script, Map<String, String> inputFields, final TextOutputListener listener) throws IOException, NXCException
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_EXECUTE_LIBRARY_SCRIPT);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)objectId);
       msg.setField(NXCPCodes.VID_SCRIPT, script);
       msg.setFieldInt32(NXCPCodes.VID_ALARM_ID, (int)alarmId);
       msg.setField(NXCPCodes.VID_RECEIVE_OUTPUT, listener != null);
@@ -7754,44 +7762,74 @@ public class NXCSession
             msg.setField(fieldId++, e.getValue());
          }
       }
-      processScriptExecution(msg, listener);
+      processScriptExecution(msg, listener, false);
    }
 
    /**
     * Execute script.
     *
-    * @param nodeId   ID of the node object to test script on
-    * @param script   script source code
+    * @param objectId ID of the object to execute script on
+    * @param script script source code
     * @param listener script output listener
-    * @param parameters script parameter list can be null
-    * @throws IOException  if socket I/O error occurs
+    * @param parameters script parameter list (can be null)
+    * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void executeScript(long nodeId, String script, String parameters, 
-         final TextOutputListener listener) throws IOException, NXCException
+   public void executeScript(long objectId, String script, String parameters, final TextOutputListener listener) throws IOException, NXCException
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_EXECUTE_SCRIPT);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)objectId);
       msg.setField(NXCPCodes.VID_SCRIPT, script);
       if (parameters != null)
       {
          msg.setField(NXCPCodes.VID_PARAMETER, parameters);
       }
-      processScriptExecution(msg, listener);
+      processScriptExecution(msg, listener, false);
    }
 
    /**
     * Execute script.
     *
-    * @param nodeId   ID of the node object to test script on
-    * @param script   script source code
+    * @param objectId ID of the object to execute script on
+    * @param script script source code
     * @param listener script output listener
-    * @param parameterList script parameter list can be null
-    * @throws IOException  if socket I/O error occurs
+    * @param parameterList script parameter list (can be null)
+    * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void executeScript(long nodeId, String script, List<String> parameterList, 
-         final TextOutputListener listener) throws IOException, NXCException
+   public void executeScript(long objectId, String script, List<String> parameterList, final TextOutputListener listener) throws IOException, NXCException
+   {
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_EXECUTE_SCRIPT);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)objectId);
+      msg.setField(NXCPCodes.VID_SCRIPT, script);
+      if (parameterList != null)
+      {
+         msg.setFieldInt16(NXCPCodes.VID_NUM_FIELDS, parameterList.size());
+         long fieldId = NXCPCodes.VID_FIELD_LIST_BASE;
+         for(String param : parameterList)
+         {
+            msg.setField(fieldId++, param);
+         }
+      }
+      processScriptExecution(msg, listener, false);
+   }
+
+   /**
+    * Execute script and get return value as map. Content of returned map depends on actual data type of script return value:
+    * <ul>
+    * <li>For hash map matching map will be returned;
+    * <li>For array all elements will be returned as values and keys will be element positions starting as 1;
+    * <li>For all other types map will consist of single element with key "1" and script return value as value.
+    * </ul>
+    * 
+    * @param nodeId ID of the node object to test script on
+    * @param script script source code
+    * @param listener script output listener
+    * @param parameterList script parameter list can be null
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public Map<String, String> queryScript(long nodeId, String script, List<String> parameterList, final TextOutputListener listener) throws IOException, NXCException
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_EXECUTE_SCRIPT);
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
@@ -7805,17 +7843,17 @@ public class NXCSession
             msg.setField(fieldId++, param);
          }
       }
-      processScriptExecution(msg, listener);
+      return processScriptExecution(msg, listener, true);
    }
 
    /**
-    * Compile NXSL script on server. Field *success* in compilation result object will indicate compilation status.
-    * If compilation fails, field *errorMessage* will contain compilation error message.
+    * Compile NXSL script on server. Field *success* in compilation result object will indicate compilation status. If compilation
+    * fails, field *errorMessage* will contain compilation error message.
     *
-    * @param source    script source
+    * @param source script source
     * @param serialize flag to indicate if compiled script should be serialized and sent back to client
     * @return script compilation result object
-    * @throws IOException  if socket I/O error occurs
+    * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public ScriptCompilationResult compileScript(String source, boolean serialize) throws IOException, NXCException

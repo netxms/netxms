@@ -10970,6 +10970,34 @@ void ClientSession::executeScript(const NXCPMessage& request)
 			response.setField(VID_RCC, RCC_SUCCESS);
          response.setEndOfSequence();
          sendMessage(response);
+
+         if (request.getFieldAsBoolean(VID_RESULT_AS_MAP))
+         {
+            response.setCode(CMD_SCRIPT_EXECUTION_RESULT);
+            NXSL_Value *result = vm->getResult();
+            StringMap map;
+            if (result->isHashMap())
+            {
+               result->getValueAsHashMap()->toStringMap(&map);
+            }
+            else if (result->isArray())
+            {
+               NXSL_Array *a = result->getValueAsArray();
+               for(int i = 0; i < a->size(); i++)
+               {
+                  NXSL_Value *e = a->getByPosition(i);
+                  TCHAR key[16];
+                  _sntprintf(key, 16, _T("%d"), i + 1);
+                  map.set(key, e->getValueAsCString());
+               }
+            }
+            else
+            {
+               map.set(_T("1"), result->getValueAsCString());
+            }
+            map.fillMessage(&response, VID_NUM_ELEMENTS, VID_ELEMENT_LIST_BASE);
+            sendMessage(response);
+         }
       }
       else
       {

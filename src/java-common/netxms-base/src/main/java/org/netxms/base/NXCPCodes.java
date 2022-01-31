@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -451,7 +451,7 @@ public class NXCPCodes
    public static final int CMD_2FA_MODIFY_METHOD = 0x01B2;
    public static final int CMD_2FA_DELETE_METHOD = 0x01B3;
    public static final int CMD_2FA_GET_USER_BINDINGS = 0x01B4;
-   public static final int CMD_2FA_GET_USER_BINDING_INFO = 0x01B5;
+   public static final int CMD_SCRIPT_EXECUTION_RESULT = 0x01B5;
    public static final int CMD_2FA_MODIFY_USER_BINDING = 0x01B6;
    public static final int CMD_2FA_DELETE_USER_BINDING = 0x01B7;
    public static final int CMD_WEB_SERVICE_CUSTOM_REQUEST = 0x01B8;
@@ -1260,6 +1260,7 @@ public class NXCPCodes
    public static final long VID_REPORT_PROGRESS = 785;
    public static final long VID_ACCEPT_KEEPALIVE = 786;
    public static final long VID_QR_LABEL = 787;
+   public static final long VID_RESULT_AS_MAP = 788;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;
