@@ -10996,13 +10996,9 @@ void ClientSession::testDCITransformation(NXCPMessage *pRequest)
  */
 void ClientSession::executeScript(NXCPMessage *request)
 {
-   NXCPMessage msg;
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
    bool success = false;
    NXSL_VM *vm = nullptr;
-
-   // Prepare response message
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request->getId());
 
    // Get node id and check object class and access rights
    shared_ptr<NetObj> object = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID));
@@ -11026,47 +11022,47 @@ void ClientSession::executeScript(NXCPMessage *request)
 				if (script != nullptr)
 				{
                TCHAR errorMessage[256];
-               vm = NXSLCompileAndCreateVM(script, errorMessage, 256, new NXSL_ClientSessionEnv(this, &msg));
+               vm = NXSLCompileAndCreateVM(script, errorMessage, 256, new NXSL_ClientSessionEnv(this, &response));
                if (vm != nullptr)
                {
                   SetupServerScriptVM(vm, object, shared_ptr<DCObjectInfo>());
-                  msg.setField(VID_RCC, RCC_SUCCESS);
-                  sendMessage(&msg);
+                  response.setField(VID_RCC, RCC_SUCCESS);
+                  sendMessage(response);
                   success = true;
                   writeAuditLogWithValues(AUDIT_OBJECTS, true, object->getId(), nullptr, script, 'T', _T("Executed ad-hoc script for object %s [%u]"), object->getName(), object->getId());
                }
                else
                {
-                  msg.setField(VID_RCC, RCC_NXSL_COMPILATION_ERROR);
-                  msg.setField(VID_ERROR_TEXT, errorMessage);
+                  response.setField(VID_RCC, RCC_NXSL_COMPILATION_ERROR);
+                  response.setField(VID_ERROR_TEXT, errorMessage);
                }
 				}
 				else
 				{
-	            msg.setField(VID_RCC, RCC_INVALID_ARGUMENT);
+	            response.setField(VID_RCC, RCC_INVALID_ARGUMENT);
 				}
          }
          else  // User doesn't have READ rights on object
          {
             writeAuditLogWithValues(AUDIT_OBJECTS, false, object->getId(), nullptr, script, 'T', _T("Access denied on ad-hoc script execution for object %s [%u]"), object->getName(), object->getId());
-            msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+            response.setField(VID_RCC, RCC_ACCESS_DENIED);
          }
          MemFree(script);
       }
       else     // Object is not a node
       {
-         msg.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+         response.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
       }
    }
    else  // No object with given ID
    {
-      msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
    }
 
    // start execution
    if (success)
    {
-      msg.setCode(CMD_EXECUTE_SCRIPT_UPDATE);
+      response.setCode(CMD_EXECUTE_SCRIPT_UPDATE);
 
       int count = request->getFieldAsInt16(VID_NUM_FIELDS);
       ObjectRefArray<NXSL_Value> sargs(count, 1);
@@ -11093,24 +11089,51 @@ void ClientSession::executeScript(NXCPMessage *request)
          const TCHAR *value = vm->getResult()->getValueAsCString();
          _sntprintf(buffer, 1024, _T("\n\n*** FINISHED ***\n\nResult: %s\n\n"), CHECK_NULL(value));
          buffer[1023] = 0;
-         msg.setField(VID_MESSAGE, buffer);
-         msg.setField(VID_RCC, RCC_SUCCESS);
-         msg.setEndOfSequence();
-         sendMessage(&msg);
+         response.setField(VID_MESSAGE, buffer);
+         response.setField(VID_RCC, RCC_SUCCESS);
+         response.setEndOfSequence();
+         sendMessage(response);
+
+         if (request->getFieldAsBoolean(VID_RESULT_AS_MAP))
+         {
+            response.setCode(CMD_SCRIPT_EXECUTION_RESULT);
+            NXSL_Value *result = vm->getResult();
+            StringMap map;
+            if (result->isHashMap())
+            {
+               result->getValueAsHashMap()->toStringMap(&map);
+            }
+            else if (result->isArray())
+            {
+               NXSL_Array *a = result->getValueAsArray();
+               for(int i = 0; i < a->size(); i++)
+               {
+                  NXSL_Value *e = a->getByPosition(i);
+                  TCHAR key[16];
+                  _sntprintf(key, 16, _T("%d"), i + 1);
+                  map.set(key, e->getValueAsCString());
+               }
+            }
+            else
+            {
+               map.set(_T("1"), result->getValueAsCString());
+            }
+            map.fillMessage(&response, VID_NUM_ELEMENTS, VID_ELEMENT_LIST_BASE);
+            sendMessage(response);
+         }
       }
       else
       {
-         msg.setField(VID_ERROR_TEXT, vm->getErrorText());
-			msg.setField(VID_RCC, RCC_NXSL_EXECUTION_ERROR);
-         msg.setEndOfSequence();
-         sendMessage(&msg);
+         response.setField(VID_ERROR_TEXT, vm->getErrorText());
+         response.setField(VID_RCC, RCC_NXSL_EXECUTION_ERROR);
+         response.setEndOfSequence();
+         sendMessage(response);
       }
       delete vm;
    }
    else
    {
-      // Send response
-      sendMessage(&msg);
+      sendMessage(response);
    }
 }
 
