@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,6 +36,9 @@ import org.netxms.ui.eclipse.dashboard.widgets.internal.BarChartConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.ComparisonChartConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.LineChartConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.PieChartConfig;
+import org.netxms.ui.eclipse.dashboard.widgets.internal.ScriptedBarChartConfig;
+import org.netxms.ui.eclipse.dashboard.widgets.internal.ScriptedComparisonChartConfig;
+import org.netxms.ui.eclipse.dashboard.widgets.internal.ScriptedPieChartConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.TubeChartConfig;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
@@ -71,9 +74,9 @@ public class AbstractChart extends PropertyPage
    private YAxisRangeEditor yAxisRange;   
    private ObjectSelector drillDownObject;
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createContents(Composite parent)
 	{
@@ -101,7 +104,7 @@ public class AbstractChart extends PropertyPage
 		legendPosition.add(Messages.get().AbstractChart_Top);
 		legendPosition.add(Messages.get().AbstractChart_Bottom);
 		legendPosition.select(positionIndexFromValue(config.getLegendPosition()));
-		
+
 		Group optionsGroup = new Group(dialogArea, SWT.NONE);
 		optionsGroup.setText(Messages.get().AbstractChart_Options);
 		gd = new GridData();
@@ -176,28 +179,29 @@ public class AbstractChart extends PropertyPage
       gd.grabExcessHorizontalSpace = true;
       checkTranslucent.setLayoutData(gd);
 
-		if (config instanceof ComparisonChartConfig)
+      if ((config instanceof ComparisonChartConfig) || (config instanceof ScriptedComparisonChartConfig))
 		{
 			checkShowIn3D = new Button(optionsGroup, SWT.CHECK);
 			checkShowIn3D.setText(Messages.get().AbstractChart_3DView);
-			checkShowIn3D.setSelection(((ComparisonChartConfig)config).isShowIn3D());
+         checkShowIn3D.setSelection((config instanceof ComparisonChartConfig) ? ((ComparisonChartConfig)config).isShowIn3D() : ((ScriptedComparisonChartConfig)config).isShowIn3D());
 			gd = new GridData();
 			gd.horizontalAlignment = SWT.FILL;
 			gd.grabExcessHorizontalSpace = true;
 			checkShowIn3D.setLayoutData(gd);
-			
-			if ((config instanceof BarChartConfig) || (config instanceof TubeChartConfig))
+
+         if ((config instanceof BarChartConfig) || (config instanceof TubeChartConfig) || (config instanceof ScriptedBarChartConfig))
 			{
 				checkTransposed = new Button(optionsGroup, SWT.CHECK);
 				checkTransposed.setText(Messages.get().AbstractChart_Transposed);
-				checkTransposed.setSelection((config instanceof BarChartConfig) ? ((BarChartConfig)config).isTransposed() : ((TubeChartConfig)config).isTransposed());
+            checkTransposed.setSelection((config instanceof BarChartConfig) ? ((BarChartConfig)config).isTransposed() :
+                  ((config instanceof ScriptedBarChartConfig) ? ((ScriptedBarChartConfig)config).isTransposed() : ((TubeChartConfig)config).isTransposed()));
 				gd = new GridData();
 				gd.horizontalAlignment = SWT.FILL;
 				gd.grabExcessHorizontalSpace = true;
 				checkTransposed.setLayoutData(gd);
 			}
 		}
-		
+
 		if (config instanceof LineChartConfig)
 		{
 			checkShowGrid = new Button(optionsGroup, SWT.CHECK);
@@ -236,7 +240,7 @@ public class AbstractChart extends PropertyPage
 			timeUnits.add(Messages.get().AbstractChart_Days);
 			timeUnits.select(((LineChartConfig)config).getTimeUnits());
 		}
-		
+
 		Composite rateAndWidthArea = new Composite(dialogArea, SWT.NONE);
 		layout = new GridLayout();
 		layout.numColumns = (config instanceof LineChartConfig) ? 2 : 1;
@@ -250,7 +254,7 @@ public class AbstractChart extends PropertyPage
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       rateAndWidthArea.setLayoutData(gd);
-		
+
 		refreshRate = new LabeledSpinner(rateAndWidthArea, SWT.NONE);
 		refreshRate.setLabel(Messages.get().AbstractChart_RefreshInterval);
 		refreshRate.setRange(1, 10000);
@@ -260,7 +264,7 @@ public class AbstractChart extends PropertyPage
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		refreshRate.setLayoutData(gd);
-		
+
 		if (config instanceof LineChartConfig)
 		{
          lineWidth = new LabeledSpinner(rateAndWidthArea, SWT.NONE);
@@ -273,8 +277,8 @@ public class AbstractChart extends PropertyPage
          gd.grabExcessHorizontalSpace = true;
          lineWidth.setLayoutData(gd);
 		}
-		
-		if (!(config instanceof PieChartConfig))
+
+      if (!(config instanceof PieChartConfig) && !(config instanceof ScriptedPieChartConfig))
       {
 	      yAxisRange = new YAxisRangeEditor(dialogArea, SWT.NONE);
 	      gd = new GridData();
@@ -285,7 +289,7 @@ public class AbstractChart extends PropertyPage
 	      yAxisRange.setSelection(config.isAutoScale(), config.modifyYBase(),
 	                              config.getMinYScaleValue(), config.getMaxYScaleValue());
       }
-      
+
       if (!(config instanceof LineChartConfig))
       {
          drillDownObject = new ObjectSelector(dialogArea, SWT.NONE, true);
@@ -299,10 +303,10 @@ public class AbstractChart extends PropertyPage
          gd.horizontalSpan = 2;
          drillDownObject.setLayoutData(gd);
       }
-		
+
 		return dialogArea;
 	}
-	
+
 	/**
 	 * @param value
 	 * @return
@@ -335,7 +339,8 @@ public class AbstractChart extends PropertyPage
 		config.setShowLegend(checkShowLegend.getSelection());
 		config.setRefreshRate(refreshRate.getSelection());
       config.setTranslucent(checkTranslucent.getSelection());
-		if(!(config instanceof PieChartConfig))
+
+      if (!(config instanceof PieChartConfig) && !(config instanceof ScriptedPieChartConfig))
       {
 	      if (!yAxisRange.validate(true))
 	         return false;
@@ -345,6 +350,7 @@ public class AbstractChart extends PropertyPage
          config.setMaxYScaleValue(yAxisRange.getMaxY());
          config.setModifyYBase(yAxisRange.modifyYBase());
       }
+
 		if (config instanceof ComparisonChartConfig)
 		{
 			((ComparisonChartConfig)config).setShowIn3D(checkShowIn3D.getSelection());
@@ -357,6 +363,16 @@ public class AbstractChart extends PropertyPage
 				((TubeChartConfig)config).setTransposed(checkTransposed.getSelection());
 			}
 		}
+
+      if (config instanceof ScriptedComparisonChartConfig)
+      {
+         ((ScriptedComparisonChartConfig)config).setShowIn3D(checkShowIn3D.getSelection());
+         if (config instanceof ScriptedBarChartConfig)
+         {
+            ((ScriptedBarChartConfig)config).setTransposed(checkTransposed.getSelection());
+         }
+      }
+
 		if (config instanceof LineChartConfig)
 		{
 			((LineChartConfig)config).setTimeRange(timeRange.getSelection());
@@ -370,8 +386,7 @@ public class AbstractChart extends PropertyPage
          ((LineChartConfig)config).setInteractive(checkInteractive.getSelection());
          ((LineChartConfig)config).setLineWidth(lineWidth.getSelection());
 		}
-
-      if (!(config instanceof LineChartConfig))
+      else
       {
          config.setDrillDownObjectId(drillDownObject.getObjectId());
       }

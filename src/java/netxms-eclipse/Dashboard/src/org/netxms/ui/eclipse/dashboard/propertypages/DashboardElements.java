@@ -317,7 +317,7 @@ public class DashboardElements extends PropertyPage
 	{
 		return applyChanges(false);
 	}
-	
+
 	/**
 	 * Add new dashboard element
 	 */
@@ -352,6 +352,9 @@ public class DashboardElements extends PropertyPage
       addTypeToSelectionMenu(chartsMenu, Messages.get().AddDashboardElementDlg_BarChartForTable, DashboardElement.TABLE_BAR_CHART);
       addTypeToSelectionMenu(chartsMenu, Messages.get().AddDashboardElementDlg_PieChartForTable, DashboardElement.TABLE_PIE_CHART);
       addTypeToSelectionMenu(chartsMenu, Messages.get().AddDashboardElementDlg_TubeChartForTable, DashboardElement.TABLE_TUBE_CHART);
+      new MenuItem(chartsMenu, SWT.SEPARATOR);
+      addTypeToSelectionMenu(chartsMenu, "Scripted bar chart", DashboardElement.SCRIPTED_BAR_CHART);
+      addTypeToSelectionMenu(chartsMenu, "Scripted pie chart", DashboardElement.SCRIPTED_PIE_CHART);
       new MenuItem(chartsMenu, SWT.SEPARATOR);
       addTypeToSelectionMenu(chartsMenu, Messages.get().AddDashboardElementDlg_StatusChart, DashboardElement.STATUS_CHART);
       addTypeToSelectionMenu(chartsMenu, Messages.get().AddDashboardElementDlg_AvailabilityChart, DashboardElement.AVAILABLITY_CHART);
@@ -450,6 +453,8 @@ public class DashboardElements extends PropertyPage
          case DashboardElement.BAR_CHART:
          case DashboardElement.PIE_CHART:
          case DashboardElement.TUBE_CHART:
+         case DashboardElement.SCRIPTED_BAR_CHART:
+         case DashboardElement.SCRIPTED_PIE_CHART:
             return DashboardControl.DEFAULT_CHART_CONFIG;
          case DashboardElement.LINE_CHART:
             return DashboardControl.DEFAULT_LINE_CHART_CONFIG;

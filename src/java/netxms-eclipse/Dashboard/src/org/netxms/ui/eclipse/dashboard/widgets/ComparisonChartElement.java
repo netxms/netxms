@@ -138,19 +138,19 @@ public abstract class ComparisonChartElement extends ElementWidget
 					@Override
 					public void run()
 					{
-                  if (!chart.isDisposed())
+                  updateInProgress = false;
+                  if (chart.isDisposed())
+                     return;
+
+                  for(int i = 0; i < data.length; i++)
 						{
-							for(int i = 0; i < data.length; i++)
-							{
-								DciDataRow lastValue = data[i].getLastValue();
-								chart.updateParameter(i, (lastValue != null) ? lastValue : new DciDataRow(new Date(), 0.0), data[i].getDataType(), false);
-								if (updateThresholds)
-								   chart.updateParameterThresholds(i, thresholds[i]);
-							}
-							chart.refresh();
-							chart.clearErrors();
+                     DciDataRow lastValue = data[i].getLastValue();
+                     chart.updateParameter(i, (lastValue != null) ? lastValue : new DciDataRow(new Date(), 0.0), data[i].getDataType(), false);
+                     if (updateThresholds)
+                        chart.updateParameterThresholds(i, thresholds[i]);
 						}
-						updateInProgress = false;
+                  chart.refresh();
+                  chart.clearErrors();
 					}
 				});
 			}

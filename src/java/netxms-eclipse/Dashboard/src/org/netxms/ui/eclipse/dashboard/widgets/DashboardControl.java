@@ -190,6 +190,12 @@ public class DashboardControl extends Composite
          case DashboardElement.RACK_DIAGRAM:
             w = new RackDiagramElement(this, e, viewPart);
             break;
+         case DashboardElement.SCRIPTED_BAR_CHART:
+            w = new ScriptedBarChartElement(this, e, viewPart);
+            break;
+         case DashboardElement.SCRIPTED_PIE_CHART:
+            w = new ScriptedPieChartElement(this, e, viewPart);
+            break;
          case DashboardElement.SEPARATOR:
             w = new SeparatorElement(this, e, viewPart);
             break;
@@ -236,9 +242,9 @@ public class DashboardControl extends Composite
 		gd.verticalSpan = el.verticalSpan;
 		gd.heightHint = el.heightHint;
 		w.setLayoutData(gd);
-		
+
 		elementWidgets.put(e, w);
-		
+
 		return w;
 	}
 
