@@ -10,7 +10,7 @@ actionName2 = $3;
 
 assert(AgentExecuteAction(preCreatedNode, actionName));
 assert(AgentExecuteAction(preCreatedNode, actionName, "Param1", 2, 3.01));
-//assert(!AgentExecuteAction(preCreatedNode, "nonexisting action")); //TODO: uncomment after fix
+assert(!AgentExecuteAction(preCreatedNode, "nonexisting action")); 
 
 
 result = AgentExecuteActionWithOutput(preCreatedNode, actionName2, "Param1", 2, 3.01);
@@ -42,7 +42,7 @@ for (i = 0; i < table->rowCount; i++)
 {
    for(j = 0; j < table->columnCount; j++)
    {
-      if(table->get(i,j) == "filemgr.nsm")
+      if("filemgr.nsm" in table->get(i,j))
       {
          filemgrFound = true;
          break;
