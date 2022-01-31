@@ -1,16 +1,17 @@
 /**
- * Copyright (C) 2003-2013 Victor Kirhenshtein
- * <p>
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- * <p>
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * <p>
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
@@ -35,7 +36,7 @@ public class DataCollectionConfiguration
 {
    private NXCSession session;
    private long ownerId;
-   private HashMap<Long, DataCollectionObject> items;
+   private HashMap<Long, DataCollectionObject> items = new HashMap<Long, DataCollectionObject>();
    private Object userData = null;
    private SessionListener listener;
    private RemoteChangeListener remoteChangeListener;
@@ -51,7 +52,6 @@ public class DataCollectionConfiguration
    {
       this.session = session;
       this.ownerId = ownerId;
-      items = new HashMap<Long, DataCollectionObject>(0);
    }
 
    /**
@@ -69,28 +69,31 @@ public class DataCollectionConfiguration
       session.waitForRCC(msg.getMessageId());
       this.remoteChangeListener = changeListener;
 
-      while(true)
+      synchronized(items)
       {
-         final NXCPMessage response = session.waitForMessage(NXCPCodes.CMD_NODE_DCI, msg.getMessageId());
-         if (response.isEndOfSequence())
-            break;
-
-         int type = response.getFieldAsInt32(NXCPCodes.VID_DCOBJECT_TYPE);
-         DataCollectionObject dco;
-         switch(type)
+         while(true)
          {
-            case DataCollectionObject.DCO_TYPE_ITEM:
-               dco = new DataCollectionItem(this, response);
+            final NXCPMessage response = session.waitForMessage(NXCPCodes.CMD_NODE_DCI, msg.getMessageId());
+            if (response.isEndOfSequence())
                break;
-            case DataCollectionObject.DCO_TYPE_TABLE:
-               dco = new DataCollectionTable(this, response);
-               break;
-            default:
-               dco = null;
-               break;
+
+            int type = response.getFieldAsInt32(NXCPCodes.VID_DCOBJECT_TYPE);
+            DataCollectionObject dco;
+            switch(type)
+            {
+               case DataCollectionObject.DCO_TYPE_ITEM:
+                  dco = new DataCollectionItem(this, response);
+                  break;
+               case DataCollectionObject.DCO_TYPE_TABLE:
+                  dco = new DataCollectionTable(this, response);
+                  break;
+               default:
+                  dco = null;
+                  break;
+            }
+            if (dco != null)
+               items.put(dco.getId(), dco);
          }
-         if (dco != null)
-            items.put(dco.getId(), dco);
       }
 
       listener = new SessionListener() {
@@ -103,17 +106,23 @@ public class DataCollectionConfiguration
             if (n.getCode() == SessionNotification.DCI_UPDATE)
             {
                final DataCollectionObject dco = (DataCollectionObject)n.getObject();
-               items.put(dco.getId(),
-                     (dco instanceof DataCollectionItem)
-                           ? new DataCollectionItem(DataCollectionConfiguration.this, (DataCollectionItem)dco)
-                           : new DataCollectionTable(DataCollectionConfiguration.this, (DataCollectionTable)dco));
+               synchronized(items)
+               {
+                  items.put(dco.getId(),
+                        (dco instanceof DataCollectionItem)
+                              ? new DataCollectionItem(DataCollectionConfiguration.this, (DataCollectionItem)dco)
+                              : new DataCollectionTable(DataCollectionConfiguration.this, (DataCollectionTable)dco));
+               }
                if (DataCollectionConfiguration.this.remoteChangeListener != null)
                   DataCollectionConfiguration.this.remoteChangeListener.onUpdate(dco);
             }
             else if (n.getCode() == SessionNotification.DCI_DELETE)
             {
                final long id = (Long)n.getObject();
-               items.remove(id);
+               synchronized(items)
+               {
+                  items.remove(id);
+               }
                if (DataCollectionConfiguration.this.remoteChangeListener != null)
                   DataCollectionConfiguration.this.remoteChangeListener.onDelete(id);
             }
@@ -145,31 +154,34 @@ public class DataCollectionConfiguration
       msg.setField(NXCPCodes.VID_IS_REFRESH, true);
       session.sendMessage(msg);
       session.waitForRCC(msg.getMessageId());
-      items.clear();
 
-      while(true)
+      synchronized(items)
       {
-         final NXCPMessage response = session.waitForMessage(NXCPCodes.CMD_NODE_DCI, msg.getMessageId());
-         if (response.isEndOfSequence())
-            break;
-
-         int type = response.getFieldAsInt32(NXCPCodes.VID_DCOBJECT_TYPE);
-         DataCollectionObject dco;
-         switch(type)
+         items.clear();
+         while(true)
          {
-            case DataCollectionObject.DCO_TYPE_ITEM:
-               dco = new DataCollectionItem(this, response);
+            final NXCPMessage response = session.waitForMessage(NXCPCodes.CMD_NODE_DCI, msg.getMessageId());
+            if (response.isEndOfSequence())
                break;
-            case DataCollectionObject.DCO_TYPE_TABLE:
-               dco = new DataCollectionTable(this, response);
-               break;
-            default:
-               dco = null;
-               break;
+
+            int type = response.getFieldAsInt32(NXCPCodes.VID_DCOBJECT_TYPE);
+            DataCollectionObject dco;
+            switch(type)
+            {
+               case DataCollectionObject.DCO_TYPE_ITEM:
+                  dco = new DataCollectionItem(this, response);
+                  break;
+               case DataCollectionObject.DCO_TYPE_TABLE:
+                  dco = new DataCollectionTable(this, response);
+                  break;
+               default:
+                  dco = null;
+                  break;
+            }
+            if (dco != null)
+               items.put(dco.getId(), dco);
          }
-         if (dco != null)
-            items.put(dco.getId(), dco);
-      }      
+      }
    }
 
    /**
@@ -184,7 +196,10 @@ public class DataCollectionConfiguration
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)ownerId);
       session.sendMessage(msg);
       session.waitForRCC(msg.getMessageId());
-      items.clear();
+      synchronized(items)
+      {
+         items.clear();
+      }
       session.removeListener(listener);
       remoteChangeListener = null;
    }
@@ -196,7 +211,10 @@ public class DataCollectionConfiguration
     */
    public DataCollectionObject[] getItems()
    {
-      return items.values().toArray(new DataCollectionObject[items.size()]);
+      synchronized(items)
+      {
+         return items.values().toArray(new DataCollectionObject[items.size()]);
+      }
    }
 
    /**
@@ -207,7 +225,10 @@ public class DataCollectionConfiguration
     */
    public DataCollectionObject findItem(long id)
    {
-      return items.get(id);
+      synchronized(items)
+      {
+         return items.get(id);
+      }
    }
 
    /**
@@ -218,11 +239,14 @@ public class DataCollectionConfiguration
     */
    private void updateItemStatusFromNotification(long[] idList, int status)
    {
-      for(int i = 0; i < idList.length; i++)
+      synchronized(items)
       {
-         DataCollectionObject o = items.get(idList[i]);
-         if (o != null)
-            o.setStatus(status);
+         for(int i = 0; i < idList.length; i++)
+         {
+            DataCollectionObject o = items.get(idList[i]);
+            if (o != null)
+               o.setStatus(status);
+         }
       }
    }
 
@@ -235,10 +259,13 @@ public class DataCollectionConfiguration
     */
    public DataCollectionObject findItem(long id, Class<? extends DataCollectionObject> classFilter)
    {
-      DataCollectionObject o = items.get(id);
-      if (o == null)
-         return null;
-      return classFilter.isInstance(o) ? o : null;
+      synchronized(items)
+      {
+         DataCollectionObject o = items.get(id);
+         if (o == null)
+            return null;
+         return classFilter.isInstance(o) ? o : null;
+      }
    }
 
    /**
@@ -284,10 +311,13 @@ public class DataCollectionConfiguration
     */
    public void modifyObject(long dcObjectId) throws IOException, NXCException
    {
-      DataCollectionObject dco = items.get(dcObjectId);
-      if (dco == null)
-         throw new NXCException(RCC.INVALID_DCI_ID);
-      modifyObject(dco);
+      synchronized(items)
+      {
+         DataCollectionObject dco = items.get(dcObjectId);
+         if (dco == null)
+            throw new NXCException(RCC.INVALID_DCI_ID);
+         modifyObject(dco);
+      }
    }
 
    /**
