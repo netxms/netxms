@@ -752,8 +752,8 @@ public abstract class BaseDataCollectionView extends ObjectView
    @Override
    public void activate()
    {
-      refresh();
       super.activate();
+      refresh();
    }
 
    /**
