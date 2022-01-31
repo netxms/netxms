@@ -233,9 +233,12 @@ public class PackageDeploymentMonitor extends ObjectView
    public boolean isValidForContext(Object context)
    {
       if (context != null && context instanceof AbstractObject)
-      {         
+      {
          for (long objectId : applicableObjects)
-         return ((AbstractObject)context).isChildOf(objectId) || ((AbstractObject)context).getObjectId() == objectId;
+         {
+            if (((AbstractObject)context).isChildOf(objectId) || ((AbstractObject)context).getObjectId() == objectId)
+               return true;
+         }
       }
       return false;
    }
