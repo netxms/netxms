@@ -29,7 +29,7 @@ public class BarChartConfig extends ComparisonChartConfig
 {
 	@Element(required=false)
 	private boolean transposed = false;
-	
+
 	/**
 	 * Create bar chart settings object from XML document
 	 * 

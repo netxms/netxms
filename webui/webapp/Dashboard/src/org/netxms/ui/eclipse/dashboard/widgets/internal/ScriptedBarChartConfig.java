@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,9 +23,9 @@ import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
 
 /**
- * Configuration for bar chart
+ * Configuration for scripted bar chart
  */
-public class BarChartConfig extends ComparisonChartConfig
+public class ScriptedBarChartConfig extends ScriptedComparisonChartConfig
 {
 	@Element(required=false)
 	private boolean transposed = false;
@@ -37,10 +37,10 @@ public class BarChartConfig extends ComparisonChartConfig
 	 * @return deserialized object
 	 * @throws Exception if the object cannot be fully deserialized
 	 */
-	public static BarChartConfig createFromXml(final String xml) throws Exception
+	public static ScriptedBarChartConfig createFromXml(final String xml) throws Exception
 	{
 		Serializer serializer = new Persister();
-		return serializer.read(BarChartConfig.class, xml);
+		return serializer.read(ScriptedBarChartConfig.class, xml);
 	}
 
 	/**

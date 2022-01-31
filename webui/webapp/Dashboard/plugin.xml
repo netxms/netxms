@@ -164,9 +164,16 @@
             id="org.netxms.ui.eclipse.dashboard.propertypages.DataSources#20"
             name="%page.name.DataSources">
          <enabledWhen>
-            <instanceof
-                  value="org.netxms.ui.eclipse.dashboard.widgets.internal.AbstractChartConfig">
-            </instanceof>
+            <and>
+               <instanceof
+                     value="org.netxms.ui.eclipse.dashboard.widgets.internal.AbstractChartConfig">
+               </instanceof>
+               <not>
+                  <instanceof
+                        value="org.netxms.ui.eclipse.dashboard.widgets.internal.ScriptedComparisonChartConfig">
+                  </instanceof>
+               </not>
+            </and>
          </enabledWhen>
       </page>
       <page
@@ -416,6 +423,16 @@
          <enabledWhen>
             <instanceof
                   value="org.netxms.ui.eclipse.dashboard.widgets.internal.PortViewConfig">
+            </instanceof>
+         </enabledWhen>
+      </page>
+      <page
+            class="org.netxms.ui.eclipse.dashboard.propertypages.ScriptedChart"
+            id="org.netxms.ui.eclipse.dashboard.propertypages.ScriptedChart#20"
+            name="Script">
+         <enabledWhen>
+            <instanceof
+                  value="org.netxms.ui.eclipse.dashboard.widgets.internal.ScriptedComparisonChartConfig">
             </instanceof>
          </enabledWhen>
       </page>

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,7 +18,8 @@
  */
 package org.netxms.ui.eclipse.dashboard.widgets;
 
-import java.util.Date;
+import java.util.Map;
+import java.util.Map.Entry;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
@@ -29,12 +30,9 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.ui.IViewPart;
 import org.netxms.client.NXCSession;
-import org.netxms.client.constants.HistoricalDataType;
+import org.netxms.client.constants.DataType;
 import org.netxms.client.dashboards.DashboardElement;
-import org.netxms.client.datacollection.ChartDciConfig;
-import org.netxms.client.datacollection.DciData;
-import org.netxms.client.datacollection.DciDataRow;
-import org.netxms.client.datacollection.Threshold;
+import org.netxms.client.datacollection.GraphItem;
 import org.netxms.ui.eclipse.charts.widgets.Chart;
 import org.netxms.ui.eclipse.dashboard.Activator;
 import org.netxms.ui.eclipse.dashboard.Messages;
@@ -43,15 +41,17 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.ViewRefreshController;
 
 /**
- * Base class for data comparison charts - like bar chart, pie chart, etc.
+ * Base class for data comparison charts - like bar chart, pie chart, etc. with data obtained from server-side script.
  */
-public abstract class ComparisonChartElement extends ElementWidget
+public abstract class ScriptedComparisonChartElement extends ElementWidget
 {
    protected Chart chart;
 	protected NXCSession session;
+   protected String script = null;
+   protected long objectId = 0;
 	protected int refreshInterval = 30;
 	protected boolean updateThresholds = false;
-	
+
 	private ViewRefreshController refreshController;
 	private boolean updateInProgress = false;
 
@@ -59,13 +59,13 @@ public abstract class ComparisonChartElement extends ElementWidget
 	 * @param parent
 	 * @param data
 	 */
-	public ComparisonChartElement(DashboardControl parent, DashboardElement element, IViewPart viewPart)
+	public ScriptedComparisonChartElement(DashboardControl parent, DashboardElement element, IViewPart viewPart)
 	{
 		super(parent, element, viewPart);
       session = ConsoleSharedData.getSession();
 
 		setLayout(new FillLayout());
-		
+
 		addDisposeListener(new DisposeListener() {
          @Override
          public void widgetDisposed(DisposeEvent e)
@@ -85,72 +85,46 @@ public abstract class ComparisonChartElement extends ElementWidget
 			@Override
 			public void run()
 			{
-				if (ComparisonChartElement.this.isDisposed())
+				if (ScriptedComparisonChartElement.this.isDisposed())
 					return;
-				
-				refreshData(getDciList());
+
+            refreshData();
 			}
 		});
-		refreshData(getDciList());
+      refreshData();
 	}
 
 	/**
 	 * Refresh graph's data
 	 */
-	protected void refreshData(final ChartDciConfig[] dciList)
+   protected void refreshData()
 	{
 		if (updateInProgress)
 			return;
-		
+
 		updateInProgress = true;
-		
+
 		ConsoleJob job = new ConsoleJob(Messages.get().ComparisonChartElement_JobTitle, viewPart, Activator.PLUGIN_ID) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				final DciData[] data = new DciData[dciList.length];
-				for(int i = 0; i < dciList.length; i++)
-				{
-					if (dciList[i].type == ChartDciConfig.ITEM)
-						data[i] = session.getCollectedData(dciList[i].nodeId, dciList[i].dciId, null, null, 1, HistoricalDataType.PROCESSED);
-					else
-						data[i] = session.getCollectedTableData(dciList[i].nodeId, dciList[i].dciId, dciList[i].instance, dciList[i].column, null, null, 1);
-				}
-
-            final Threshold[][] thresholds;
-            if (updateThresholds)
-            {
-               thresholds = new Threshold[dciList.length][];
-               for(int i = 0; i < dciList.length; i++)
-               {
-                  if (dciList[i].type == ChartDciConfig.ITEM)
-                     thresholds[i] = session.getThresholds(dciList[i].nodeId, dciList[i].dciId);
-                  else
-                     thresholds[i] = new Threshold[0];
-               }
-            }
-            else
-            {
-               thresholds = null;
-            }
-				
+            final Map<String, String> values = session.queryScript(objectId, script, null, null);
 				runInUIThread(new Runnable() {
 					@Override
 					public void run()
 					{
-                  updateInProgress = false;
                   if (chart.isDisposed())
                      return;
 
-                  for(int i = 0; i < data.length; i++)
+                  chart.removeAllParameters();
+                  for(Entry<String, String> e : values.entrySet())
 						{
-                     DciDataRow lastValue = data[i].getLastValue();
-                     chart.updateParameter(i, (lastValue != null) ? lastValue : new DciDataRow(new Date(), 0.0), data[i].getDataType(), false);
-                     if (updateThresholds)
-                        chart.updateParameterThresholds(i, thresholds[i]);
+                     int index = chart.addParameter(new GraphItem(DataType.FLOAT, e.getKey(), e.getKey(), null));
+                     chart.updateParameter(index, safeParseDouble(e.getValue()), false);
 						}
-                  chart.refresh();
+                  chart.rebuild();
                   chart.clearErrors();
+						updateInProgress = false;
 					}
 				});
 			}
@@ -160,7 +134,7 @@ public abstract class ComparisonChartElement extends ElementWidget
 			{
 				return Messages.get().ComparisonChartElement_JobError;
 			}
-	
+
 			@Override
 			protected void jobFailureHandler()
 			{
@@ -171,6 +145,7 @@ public abstract class ComparisonChartElement extends ElementWidget
 			@Override
 			protected IStatus createFailureStatus(final Exception e)
 			{
+            Activator.logError("Cannot read data for scripted chart", e);
 				runInUIThread(new Runnable() {
 					@Override
 					public void run()
@@ -186,6 +161,24 @@ public abstract class ComparisonChartElement extends ElementWidget
 	}
 
    /**
+    * Parse double value without throwing an exception.
+    *
+    * @param s string to parse
+    * @return parsed double value or 0
+    */
+   private static double safeParseDouble(String s)
+   {
+      try
+      {
+         return Double.parseDouble(s);
+      }
+      catch(NumberFormatException e)
+      {
+         return 0;
+      }
+   }
+
+   /**
     * @see org.eclipse.swt.widgets.Composite#computeSize(int, int, boolean)
     */
 	@Override
@@ -196,6 +189,4 @@ public abstract class ComparisonChartElement extends ElementWidget
 			size.y = 250;
 		return size;
 	}
-
-	protected abstract ChartDciConfig[] getDciList();
 }

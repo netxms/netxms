@@ -29,6 +29,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -1036,7 +1037,7 @@ public class NXCPMessage
    public Map<String, String> getStringMapFromFields(long baseId, long countId)
    {
       int count = getFieldAsInt32(countId);
-      Map<String, String> map = new HashMap<String, String>(count);
+      Map<String, String> map = new LinkedHashMap<String, String>(count);
       long fieldId = baseId;
       for(int i = 0; i < count; i++)
       {

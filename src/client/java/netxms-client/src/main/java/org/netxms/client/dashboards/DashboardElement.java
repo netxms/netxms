@@ -55,18 +55,20 @@ public class DashboardElement
    public static final int OBJECT_TOOLS = 27;
    public static final int OBJECT_QUERY = 28;
    public static final int PORT_VIEW = 29;
-   
+   public static final int SCRIPTED_BAR_CHART = 30;
+   public static final int SCRIPTED_PIE_CHART = 31;
+
 	public static final int FILL = 0;
 	public static final int CENTER = 1;
 	public static final int LEFT = 2;
 	public static final int RIGHT = 3;
 	public static final int TOP = 2;
 	public static final int BOTTOM = 3;
-	
+
 	private int type;
 	private String data;
 	private String layout;
-	
+
 	/**
 	 * Create dashboard element which takes 1 cell with FILL layout in both directions
 	 * 
@@ -79,7 +81,7 @@ public class DashboardElement
 		this.data = data;
 		layout = "<layout><horizontalSpan>1</horizontalSpan><verticalSpan>1</verticalSpan><horizontalAlignment>0</horizontalAlignment><verticalAlignment>0</verticalAlignment></layout>";
 	}
-	
+
 	/**
 	 * Create dashboard element from NXCP message
 	 * 
@@ -92,7 +94,7 @@ public class DashboardElement
 		data = msg.getFieldAsString(baseId + 1);
 		layout = msg.getFieldAsString(baseId + 2);
 	}
-	
+
 	/**
 	 * Copy constructor
 	 * 

@@ -31,18 +31,18 @@ import org.simpleframework.xml.ElementArray;
  */
 public abstract class AbstractChartConfig extends DashboardElementConfig
 {
-	@ElementArray(required = true)
+   @ElementArray(required = false)
 	private ChartDciConfig[] dciList = new ChartDciConfig[0];
-	
+
 	@Element(required = false)
 	private String title = ""; //$NON-NLS-1$
-	
+
 	@Element(required = false)
 	private int legendPosition = ChartConfiguration.POSITION_BOTTOM;
-	
+
 	@Element(required = false)
 	private boolean showLegend = true;
-	
+
 	@Element(required = false)
    private boolean showTitle = true;
 

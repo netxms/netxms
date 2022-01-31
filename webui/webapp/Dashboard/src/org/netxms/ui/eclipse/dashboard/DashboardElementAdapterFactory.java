@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,6 +21,7 @@ package org.netxms.ui.eclipse.dashboard;
 import org.eclipse.core.runtime.IAdapterFactory;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.AlarmViewerConfig;
+import org.netxms.ui.eclipse.dashboard.widgets.internal.AvailabilityChartConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.BarChartConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.CustomWidgetConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig;
@@ -38,6 +39,8 @@ import org.netxms.ui.eclipse.dashboard.widgets.internal.ObjectToolsConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.PieChartConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.PortViewConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.RackDiagramConfig;
+import org.netxms.ui.eclipse.dashboard.widgets.internal.ScriptedBarChartConfig;
+import org.netxms.ui.eclipse.dashboard.widgets.internal.ScriptedPieChartConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.SeparatorConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.ServiceComponentsConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.SnmpTrapMonitorConfig;
@@ -61,18 +64,18 @@ public class DashboardElementAdapterFactory implements IAdapterFactory
 		DashboardElementConfig.class
 	};
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.core.runtime.IAdapterFactory#getAdapterList()
-	 */
+   /**
+    * @see org.eclipse.core.runtime.IAdapterFactory#getAdapterList()
+    */
 	@Override
 	public Class<?>[] getAdapterList()
 	{
 		return supportedClasses;
 	}
 	
-	/* (non-Javadoc)
-	 * @see org.eclipse.core.runtime.IAdapterFactory#getAdapter(java.lang.Object, java.lang.Class)
-	 */
+   /**
+    * @see org.eclipse.core.runtime.IAdapterFactory#getAdapter(java.lang.Object, java.lang.Class)
+    */
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
 	public Object getAdapter(Object adaptableObject, Class adapterType)
@@ -95,6 +98,8 @@ public class DashboardElementAdapterFactory implements IAdapterFactory
 				      return EventMonitorConfig.createFromXml(element.getData());
 					case DashboardElement.ALARM_VIEWER:
 						return AlarmViewerConfig.createFromXml(element.getData());
+					case DashboardElement.AVAILABLITY_CHART:
+						return AvailabilityChartConfig.createFromXml(element.getData());
 					case DashboardElement.BAR_CHART:
 						return BarChartConfig.createFromXml(element.getData());
 					case DashboardElement.CUSTOM:
@@ -123,6 +128,10 @@ public class DashboardElementAdapterFactory implements IAdapterFactory
                   return PortViewConfig.createFromXml(element.getData());
                case DashboardElement.RACK_DIAGRAM:
                   return RackDiagramConfig.createFromXml(element.getData());
+               case DashboardElement.SCRIPTED_BAR_CHART:
+                  return ScriptedBarChartConfig.createFromXml(element.getData());
+               case DashboardElement.SCRIPTED_PIE_CHART:
+                  return ScriptedPieChartConfig.createFromXml(element.getData());
 					case DashboardElement.SEPARATOR:
 						return SeparatorConfig.createFromXml(element.getData());
                case DashboardElement.SERVICE_COMPONENTS:
