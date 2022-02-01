@@ -568,6 +568,7 @@ protected:
 	char *m_mbString;	// value as MB string; NULL until first request
 #endif
 	char *m_name;
+	uint32_t m_refCount;
    BYTE m_dataType;
    BYTE m_stringIsValid;
    union
@@ -602,6 +603,9 @@ protected:
 
    void invalidateString()
    {
+      if (!m_stringIsValid)
+         return;
+
       MemFreeAndNull(m_stringPtr);
 #ifdef UNICODE
       MemFreeAndNull(m_mbString);
@@ -630,6 +634,10 @@ protected:
    ~NXSL_Value();
 
 public:
+   void incRefCount() { m_refCount++; }
+   bool decRefCount() { return --m_refCount == 0; }
+   bool isShared() const { return m_refCount > 1; }
+
    void set(bool value);
    void set(int32_t value);
 
@@ -637,6 +645,7 @@ public:
 	const char *getName() const { return m_name; }
 
    bool convert(int targetDataType);
+   bool isConversionNeeded(int targetDataType) const { return (m_dataType != targetDataType) && !((targetDataType == NXSL_DT_STRING) && isString()); }
    int getDataType() const { return m_dataType; }
 
    bool isNull() const { return (m_dataType == NXSL_DT_NULL); }
@@ -696,6 +705,7 @@ public:
    bool GE(const NXSL_Value *value) const;
 
    void copyOnWrite();
+   bool isValidForVariableStorage() const { return !isShared() || ((m_dataType != NXSL_DT_ARRAY) && (m_dataType != NXSL_DT_HASHMAP)); }
    void onVariableSet();
 
    bool equals(const NXSL_Value *v) const;
@@ -740,7 +750,11 @@ public:
 #ifdef UNICODE
    NXSL_Value *createValue(const char *s) { return new(m_values.allocate()) NXSL_Value(s); }
 #endif
-   void destroyValue(NXSL_Value *v) { m_values.destroy(v); }
+   void destroyValue(NXSL_Value *v)
+   {
+      if ((v != nullptr) && v->decRefCount())
+         m_values.destroy(v);
+   }
 
    NXSL_Identifier *createIdentifier() { return new(m_identifiers.allocate()) NXSL_Identifier(); }
    NXSL_Identifier *createIdentifier(const char *s) { return new(m_identifiers.allocate()) NXSL_Identifier(s); }
@@ -925,8 +939,8 @@ protected:
 public:
    const NXSL_Identifier& getName() const { return m_name; }
    NXSL_Value *getValue() { return m_value; }
-   void setValue(NXSL_Value *value);
 	bool isConstant() const { return m_constant; }
+   void setValue(NXSL_Value *value);
 };
 
 /**
@@ -1243,7 +1257,7 @@ protected:
    bool unwind();
    void callFunction(int nArgCount);
    bool callExternalFunction(const NXSL_ExtFunction *function, int stackItems);
-   UINT32 callSelector(const NXSL_Identifier& name, int numElements);
+   uint32_t callSelector(const NXSL_Identifier& name, int numElements);
    void pushProperty(const NXSL_Identifier& name);
    void doUnaryOperation(int nOpCode);
    void doBinaryOperation(int nOpCode);
@@ -1265,6 +1279,36 @@ protected:
 
    void relocateCode(uint32_t startOffset, uint32_t len, uint32_t shift);
    uint32_t getFunctionAddress(const NXSL_Identifier& name);
+
+   NXSL_Value *createValueRef(NXSL_Value *v)
+   {
+      v->incRefCount();
+      return v;
+   }
+
+   NXSL_Value *getNonSharedValue(NXSL_Value *v)
+   {
+      if (!v->isShared())
+         return v;
+      v->decRefCount();
+      return createValue(v);
+   }
+
+   NXSL_Value *peekValueForUpdate()
+   {
+      NXSL_Value *v = m_dataStack.peek();
+      if (v == nullptr)
+         return nullptr;
+
+      if (v->isShared())
+      {
+         m_dataStack.pop();   // Remove existing value from stack
+         v->decRefCount();
+         v = createValue(v);
+         m_dataStack.push(v);
+      }
+      return v;
+   }
 
 public:
    NXSL_VM(NXSL_Environment *env = nullptr, NXSL_Storage *storage = nullptr);
@@ -1323,6 +1367,24 @@ public:
    __nxsl_class_data *allocateObjectClassData() { return m_objectClassData.allocate(); }
    void freeObjectClassData(__nxsl_class_data *data) { m_objectClassData.free(data); }
 };
+
+/**
+ * Inline implementation of NXSL_Variable::setValue
+ */
+inline void NXSL_Variable::setValue(NXSL_Value *value)
+{
+   m_vm->destroyValue(m_value);
+   if (value->isValidForVariableStorage())
+   {
+      m_value = value;
+   }
+   else
+   {
+      m_value = m_vm->createValue(value);
+      m_vm->destroyValue(value);
+   }
+   m_value->onVariableSet();
+}
 
 /**
  * NXSL "TableRow" class

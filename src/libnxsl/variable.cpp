@@ -46,7 +46,15 @@ NXSL_Variable::NXSL_Variable(NXSL_VM *vm, const NXSL_Identifier& name) : NXSL_Ru
  */
 NXSL_Variable::NXSL_Variable(NXSL_VM *vm, const NXSL_Identifier& name, NXSL_Value *value, bool constant) : NXSL_RuntimeObject(vm), m_name(name)
 {
-   m_value = value;
+   if (value->isValidForVariableStorage())
+   {
+      m_value = value;
+   }
+   else
+   {
+      m_value = vm->createValue(value);
+      vm->destroyValue(value);
+   }
    m_value->onVariableSet();
 	m_constant = constant;
 }
@@ -57,16 +65,6 @@ NXSL_Variable::NXSL_Variable(NXSL_VM *vm, const NXSL_Identifier& name, NXSL_Valu
 NXSL_Variable::~NXSL_Variable()
 {
    m_vm->destroyValue(m_value);
-}
-
-/**
- * Set variable's value
- */
-void NXSL_Variable::setValue(NXSL_Value *value)
-{
-   m_vm->destroyValue(m_value);
-   m_value = value;
-   m_value->onVariableSet();
 }
 
 /**

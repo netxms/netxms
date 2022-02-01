@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -60,7 +60,7 @@ NXSL_LocalStorage::~NXSL_LocalStorage()
  */
 void NXSL_LocalStorage::write(const TCHAR *name, NXSL_Value *value)
 {
-   if ((value == NULL) || value->isNull())
+   if ((value == nullptr) || value->isNull())
       m_values->remove(name);
    else
       m_values->set(name, m_vm->createValue(value));
@@ -72,5 +72,5 @@ void NXSL_LocalStorage::write(const TCHAR *name, NXSL_Value *value)
 NXSL_Value *NXSL_LocalStorage::read(const TCHAR *name, NXSL_ValueManager *vm)
 {
    NXSL_Value *v = m_values->get(name);
-   return (v != NULL) ? vm->createValue(v) : vm->createValue();
+   return (v != nullptr) ? vm->createValue(v) : vm->createValue();
 }

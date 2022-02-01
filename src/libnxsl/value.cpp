@@ -36,6 +36,7 @@ NXSL_Value::NXSL_Value()
 #endif
 	m_name = nullptr;
    m_stringIsValid = FALSE;
+   m_refCount = 1;
 }
 
 /**
@@ -99,6 +100,7 @@ NXSL_Value::NXSL_Value(const NXSL_Value *value)
 #ifdef UNICODE
 	m_mbString = nullptr;
 #endif
+   m_refCount = 1;
 }
 
 /**
@@ -115,6 +117,7 @@ NXSL_Value::NXSL_Value(NXSL_Object *object)
 #endif
    m_stringIsValid = FALSE;
 	m_name = nullptr;
+   m_refCount = 1;
 }
 
 /**
@@ -132,6 +135,7 @@ NXSL_Value::NXSL_Value(NXSL_Array *array)
 #endif
    m_stringIsValid = FALSE;
 	m_name = nullptr;
+   m_refCount = 1;
 }
 
 /**
@@ -149,6 +153,7 @@ NXSL_Value::NXSL_Value(NXSL_HashMap *hashMap)
 #endif
    m_stringIsValid = FALSE;
 	m_name = nullptr;
+   m_refCount = 1;
 }
 
 /**
@@ -166,6 +171,7 @@ NXSL_Value::NXSL_Value(NXSL_Iterator *iterator)
 #endif
    m_stringIsValid = FALSE;
 	m_name = nullptr;
+   m_refCount = 1;
 }
 
 /**
@@ -182,6 +188,7 @@ NXSL_Value::NXSL_Value(int32_t nValue)
    m_stringIsValid = FALSE;
    m_value.int32 = nValue;
 	m_name = nullptr;
+   m_refCount = 1;
 }
 
 /**
@@ -198,6 +205,7 @@ NXSL_Value::NXSL_Value(uint32_t uValue)
    m_stringIsValid = FALSE;
    m_value.uint32 = uValue;
 	m_name = nullptr;
+   m_refCount = 1;
 }
 
 /**
@@ -214,6 +222,7 @@ NXSL_Value::NXSL_Value(int64_t nValue)
    m_stringIsValid = FALSE;
    m_value.int64 = nValue;
 	m_name = nullptr;
+   m_refCount = 1;
 }
 
 /**
@@ -230,6 +239,7 @@ NXSL_Value::NXSL_Value(uint64_t uValue)
    m_stringIsValid = FALSE;
    m_value.uint64 = uValue;
 	m_name = nullptr;
+   m_refCount = 1;
 }
 
 /**
@@ -246,6 +256,7 @@ NXSL_Value::NXSL_Value(double dValue)
    m_stringIsValid = FALSE;
    m_value.real = dValue;
 	m_name = nullptr;
+   m_refCount = 1;
 }
 
 /**
@@ -262,6 +273,7 @@ NXSL_Value::NXSL_Value(bool bValue)
    m_stringIsValid = FALSE;
    m_value.int32 = bValue ? 1 : 0;
    m_name = nullptr;
+   m_refCount = 1;
 }
 
 /**
@@ -295,6 +307,7 @@ NXSL_Value::NXSL_Value(const TCHAR *value)
    m_stringIsValid = TRUE;
    updateNumber();
    m_name = nullptr;
+   m_refCount = 1;
 }
 
 #ifdef UNICODE
@@ -326,6 +339,7 @@ NXSL_Value::NXSL_Value(const char *value)
    m_stringIsValid = TRUE;
    updateNumber();
    m_name = nullptr;
+   m_refCount = 1;
 }
 
 #endif
@@ -369,6 +383,7 @@ NXSL_Value::NXSL_Value(const TCHAR *value, size_t len)
    m_stringIsValid = TRUE;
    updateNumber();
    m_name = nullptr;
+   m_refCount = 1;
 }
 
 /**
@@ -385,7 +400,7 @@ NXSL_Value::~NXSL_Value()
  */
 void NXSL_Value::dispose(bool disposeString)
 {
-   if (disposeString)
+   if (disposeString && m_stringIsValid)
    {
       MemFree(m_stringPtr);
 #ifdef UNICODE

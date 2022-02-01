@@ -656,7 +656,7 @@ void NXSL_VM::execute()
    switch(cp->m_opCode)
    {
       case OPCODE_PUSH_CONSTANT:
-         m_dataStack.push(createValue(cp->m_operand.m_constant));
+         m_dataStack.push(createValueRef(cp->m_operand.m_constant));
          break;
       case OPCODE_PUSH_NULL:
          m_dataStack.push(createValue());
@@ -688,7 +688,7 @@ void NXSL_VM::execute()
          else
          {
             pVar = findOrCreateVariable(*cp->m_operand.m_identifier, &vs);
-            m_dataStack.push(createValue(pVar->getValue()));
+            m_dataStack.push(createValueRef(pVar->getValue()));
             // convert to direct variable access without name lookup
             if (vs->createVariableReferenceRestorePoint(m_cp, cp->m_operand.m_identifier))
             {
@@ -698,7 +698,7 @@ void NXSL_VM::execute()
          }
          break;
       case OPCODE_PUSH_VARPTR:
-         m_dataStack.push(createValue(cp->m_operand.m_variable->getValue()));
+         m_dataStack.push(createValueRef(cp->m_operand.m_variable->getValue()));
          break;
       case OPCODE_PUSH_EXPRVAR:
          if (m_expressionVariables == nullptr)
@@ -707,7 +707,7 @@ void NXSL_VM::execute()
          pVar = m_expressionVariables->find(*cp->m_operand.m_identifier);
          if (pVar != nullptr)
          {
-            m_dataStack.push(createValue(pVar->getValue()));
+            m_dataStack.push(createValueRef(pVar->getValue()));
             // convert to direct variable access without name lookup
             if (m_expressionVariables->createVariableReferenceRestorePoint(m_cp, cp->m_operand.m_identifier))
             {
@@ -826,7 +826,7 @@ void NXSL_VM::execute()
 	         pValue = (cp->m_stackItems == 0) ? m_dataStack.peek() : m_dataStack.pop();
 				if (pValue != nullptr)
 				{
-					pVar->setValue((cp->m_stackItems == 0) ? createValue(pValue) : pValue);
+					pVar->setValue((cp->m_stackItems == 0) ? createValueRef(pValue) : pValue);
                // convert to direct variable access without name lookup
 		         if (vs->createVariableReferenceRestorePoint(m_cp, cp->m_operand.m_identifier))
 		         {
@@ -848,7 +848,7 @@ void NXSL_VM::execute()
          pValue = (cp->m_stackItems == 0) ? m_dataStack.peek() : m_dataStack.pop();
          if (pValue != nullptr)
          {
-            cp->m_operand.m_variable->setValue((cp->m_stackItems == 0) ? createValue(pValue) : pValue);
+            cp->m_operand.m_variable->setValue((cp->m_stackItems == 0) ? createValueRef(pValue) : pValue);
          }
          else
          {
@@ -865,12 +865,11 @@ void NXSL_VM::execute()
             pVar = m_expressionVariables->find(*cp->m_operand.m_identifier);
             if (pVar != nullptr)
             {
-               pVar->setValue((cp->m_stackItems == 0) ? createValue(pValue) : pValue);
+               pVar->setValue((cp->m_stackItems == 0) ? createValueRef(pValue) : pValue);
             }
             else
             {
-               m_expressionVariables->create(*cp->m_operand.m_identifier,
-                     (cp->m_stackItems == 0) ? createValue(pValue) : pValue);
+               m_expressionVariables->create(*cp->m_operand.m_identifier, (cp->m_stackItems == 0) ? createValueRef(pValue) : pValue);
             }
          }
          else
@@ -1222,9 +1221,14 @@ void NXSL_VM::execute()
          pValue = m_dataStack.peek();
          if (pValue != nullptr)
          {
-            if (!pValue->convert(cp->m_stackItems))
+            int targetDataType = cp->m_stackItems;
+            if (pValue->isConversionNeeded(targetDataType))
             {
-               error(NXSL_ERR_TYPE_CAST);
+               pValue = peekValueForUpdate();
+               if (!pValue->convert(targetDataType))
+               {
+                  error(NXSL_ERR_TYPE_CAST);
+               }
             }
          }
          else
@@ -1233,7 +1237,7 @@ void NXSL_VM::execute()
          }
          break;
 		case OPCODE_NAME:
-         pValue = m_dataStack.peek();
+         pValue = peekValueForUpdate();
          if (pValue != nullptr)
          {
 				pValue->setName(cp->m_operand.m_identifier->value);
@@ -1449,7 +1453,7 @@ void NXSL_VM::execute()
       case OPCODE_BIND:
          PositionToVarName(m_nBindPos++, varName);
          pVar = m_localVariables->find(varName);
-         pValue = (pVar != nullptr) ? createValue(pVar->getValue()) : createValue();
+         pValue = (pVar != nullptr) ? createValueRef(pVar->getValue()) : createValue();
          pVar = m_localVariables->find(*cp->m_operand.m_identifier);
          if (pVar == nullptr)
             m_localVariables->create(*cp->m_operand.m_identifier, pValue);
@@ -1586,7 +1590,7 @@ void NXSL_VM::execute()
                   pValue->increment();
                else
                   pValue->decrement();
-               m_dataStack.push(createValue(pValue));
+               m_dataStack.push(createValueRef(pValue));
 
                // Convert to direct variable access
                if (vs->createVariableReferenceRestorePoint(m_cp, cp->m_operand.m_identifier))
@@ -1614,7 +1618,7 @@ void NXSL_VM::execute()
                pValue->increment();
             else
                pValue->decrement();
-            m_dataStack.push(createValue(pValue));
+            m_dataStack.push(createValueRef(pValue));
          }
          else
          {
@@ -1735,11 +1739,11 @@ void NXSL_VM::execute()
 				{
 					NXSL_Iterator *it = pValue->getValueAsIterator();
 					NXSL_Value *next = it->next();
-					m_dataStack.push(createValue((LONG)((next != nullptr) ? 1 : 0)));
+					m_dataStack.push(createValue(next != nullptr));
 					NXSL_Variable *var = findOrCreateVariable(it->getVariableName());
 					if (!var->isConstant())
 					{
-						var->setValue((next != nullptr) ? createValue(next) : createValue());
+						var->setValue((next != nullptr) ? createValueRef(next) : createValue());
 					}
 					else
 					{
@@ -1777,7 +1781,7 @@ void NXSL_VM::execute()
             {
                if (name->isString())
                {
-                  m_storage->write(name->getValueAsCString(), createValue(pValue));
+                  m_storage->write(name->getValueAsCString(), pValue);
                   m_dataStack.push(pValue);
                   pValue = nullptr;    // Prevent deletion
                }
@@ -1838,8 +1842,8 @@ void NXSL_VM::execute()
                else
                {
                   error(NXSL_ERR_NOT_NUMBER);
-                  destroyValue(sval);
                }
+               destroyValue(sval);
             }
             else
             {
@@ -1866,7 +1870,7 @@ void NXSL_VM::execute()
                      sval->increment();
                   else
                      sval->decrement();
-                  m_dataStack.push(createValue(sval));
+                  m_dataStack.push(sval);
                   m_storage->write(pValue->getValueAsCString(), sval);
                }
                else
@@ -1887,7 +1891,7 @@ void NXSL_VM::execute()
          }
          break;
       case OPCODE_PUSHCP:
-         m_dataStack.push(createValue((INT32)m_cp + cp->m_stackItems));
+         m_dataStack.push(createValue(static_cast<int32_t>(m_cp) + cp->m_stackItems));
          break;
       case OPCODE_SELECT:
          dwNext = callSelector(*cp->m_operand.m_identifier, cp->m_stackItems);
@@ -1910,7 +1914,7 @@ bool NXSL_VM::setArrayElement(NXSL_Value *array, NXSL_Value *index, NXSL_Value *
 	{
       // copy on write
       array->copyOnWrite();
-		array->getValueAsArray()->set(index->getValueAsInt32(), createValue(value));
+		array->getValueAsArray()->set(index->getValueAsInt32(), createValueRef(value));
       success = true;
 	}
    else
@@ -1995,7 +1999,7 @@ bool NXSL_VM::setHashMapElement(NXSL_Value *hashMap, NXSL_Value *key, NXSL_Value
 	if (key->isString())
 	{
       hashMap->copyOnWrite();
-		hashMap->getValueAsHashMap()->set(key->getValueAsCString(), createValue(value));
+		hashMap->getValueAsHashMap()->set(key->getValueAsCString(), createValueRef(value));
       success = true;
 	}
    else
@@ -2084,7 +2088,7 @@ void NXSL_VM::doBinaryOperation(int nOpCode)
    NXSL_Value *pVal1, *pVal2, *pRes = nullptr;
    NXSL_Variable *var;
    const TCHAR *pszText1, *pszText2;
-   UINT32 dwLen1, dwLen2;
+   uint32_t dwLen1, dwLen2;
    int nType;
    bool bResult;
    bool dynamicValues = false;
@@ -2139,33 +2143,45 @@ void NXSL_VM::doBinaryOperation(int nOpCode)
             nType = SelectResultType(pVal1->getDataType(), pVal2->getDataType(), nOpCode);
             if (nType != NXSL_DT_NULL)
             {
-               if ((pVal1->convert(nType)) && (pVal2->convert(nType)))
+               bool success = true;
+               if (pVal1->isConversionNeeded(nType))
+               {
+                  pVal1 = getNonSharedValue(pVal1);
+                  success = pVal1->convert(nType);
+               }
+               if (success && pVal2->isConversionNeeded(nType))
+               {
+                  pVal2 = getNonSharedValue(pVal2);
+                  success = pVal2->convert(nType);
+               }
+
+               if (success)
                {
                   switch(nOpCode)
                   {
                      case OPCODE_ADD:
-                        pRes = pVal1;
+                        pRes = getNonSharedValue(pVal1);
                         pRes->add(pVal2);
                         pVal1 = nullptr;
                         break;
                      case OPCODE_SUB:
-                        pRes = pVal1;
+                        pRes = getNonSharedValue(pVal1);
                         pRes->sub(pVal2);
                         pVal1 = nullptr;
                         break;
                      case OPCODE_MUL:
-                        pRes = pVal1;
+                        pRes = getNonSharedValue(pVal1);
                         pRes->mul(pVal2);
                         pVal1 = nullptr;
                         break;
                      case OPCODE_DIV:
                      case OPCODE_IDIV:
-                        pRes = pVal1;
+                        pRes = getNonSharedValue(pVal1);
                         pRes->div(pVal2);
                         pVal1 = nullptr;
                         break;
                      case OPCODE_REM:
-                        pRes = pVal1;
+                        pRes = getNonSharedValue(pVal1);
                         pRes->rem(pVal2);
                         pVal1 = nullptr;
                         break;
@@ -2186,27 +2202,27 @@ void NXSL_VM::doBinaryOperation(int nOpCode)
                         pRes = createValue(pVal1->GE(pVal2));
                         break;
                      case OPCODE_LSHIFT:
-                        pRes = pVal1;
+                        pRes = getNonSharedValue(pVal1);
                         pRes->lshift(pVal2->getValueAsInt32());
                         pVal1 = nullptr;
                         break;
                      case OPCODE_RSHIFT:
-                        pRes = pVal1;
+                        pRes = getNonSharedValue(pVal1);
                         pRes->rshift(pVal2->getValueAsInt32());
                         pVal1 = nullptr;
                         break;
                      case OPCODE_BIT_AND:
-                        pRes = pVal1;
+                        pRes = getNonSharedValue(pVal1);
                         pRes->bitAnd(pVal2);
                         pVal1 = nullptr;
                         break;
                      case OPCODE_BIT_OR:
-                        pRes = pVal1;
+                        pRes = getNonSharedValue(pVal1);
                         pRes->bitOr(pVal2);
                         pVal1 = nullptr;
                         break;
                      case OPCODE_BIT_XOR:
-                        pRes = pVal1;
+                        pRes = getNonSharedValue(pVal1);
                         pRes->bitXor(pVal2);
                         pVal1 = nullptr;
                         break;
@@ -2218,15 +2234,15 @@ void NXSL_VM::doBinaryOperation(int nOpCode)
                         break;
                      case OPCODE_CASE:
                      case OPCODE_CASE_CONST:
-                        pRes = createValue((LONG)pVal1->EQ(pVal2));
+                        pRes = createValue(pVal1->EQ(pVal2));
                         break;
                      case OPCODE_CASE_LT:    // val2 is switch value, val1 is check value
                      case OPCODE_CASE_CONST_LT:
-                        pRes = createValue((LONG)pVal2->LT(pVal1));
+                        pRes = createValue(pVal2->LT(pVal1));
                         break;
                      case OPCODE_CASE_GT:    // val2 is switch value, val1 is check value
                      case OPCODE_CASE_CONST_GT:
-                        pRes = createValue((LONG)pVal2->GT(pVal1));
+                        pRes = createValue(pVal2->GT(pVal1));
                         break;
                      default:
                         error(NXSL_ERR_INTERNAL);
@@ -2276,7 +2292,7 @@ void NXSL_VM::doBinaryOperation(int nOpCode)
                   pRes = createValue((nOpCode == OPCODE_NE) ? !bResult : bResult);
                   break;
                case OPCODE_CONCAT:
-                  pRes = pVal1;
+                  pRes = getNonSharedValue(pVal1);
                   pVal1 = nullptr;
                   if (pRes->convert(NXSL_DT_STRING))
                   {
@@ -2323,7 +2339,7 @@ void NXSL_VM::doBinaryOperation(int nOpCode)
                      }
                      else if (pVal1->isNull())
                      {
-                        pRes = pVal1;
+                        pRes = getNonSharedValue(pVal1);
                         pRes->convert(NXSL_DT_BOOLEAN);
                         pVal1 = nullptr;
                      }
@@ -2343,7 +2359,7 @@ void NXSL_VM::doBinaryOperation(int nOpCode)
                      }
                      else if (pVal1->isNull())
                      {
-                        pRes = pVal1;
+                        pRes = getNonSharedValue(pVal1);
                         pRes->convert(NXSL_DT_BOOLEAN);
                         pVal1 = nullptr;
                      }
@@ -2354,7 +2370,7 @@ void NXSL_VM::doBinaryOperation(int nOpCode)
                   }
                   else if (pVal2->isNull())
                   {
-                     pRes = pVal2;
+                     pRes = getNonSharedValue(pVal2);
                      pRes->convert(NXSL_DT_BOOLEAN);
                      pVal2 = nullptr;
                   }
@@ -2417,7 +2433,7 @@ void NXSL_VM::doBinaryOperation(int nOpCode)
  */
 void NXSL_VM::doUnaryOperation(int nOpCode)
 {
-   NXSL_Value *value = m_dataStack.peek();
+   NXSL_Value *value = peekValueForUpdate();
    if (value != nullptr)
    {
       if (nOpCode == OPCODE_NOT)
@@ -2554,8 +2570,7 @@ bool NXSL_VM::callExternalFunction(const NXSL_ExtFunction *function, int stackIt
       if (m_dataStack.getPosition() >= stackItems)
       {
          NXSL_Value *result = nullptr;
-         int ret = function->m_pfHandler(stackItems,
-                  (NXSL_Value **)m_dataStack.peekList(stackItems), &result, this);
+         int ret = function->m_pfHandler(stackItems, (NXSL_Value **)m_dataStack.peekList(stackItems), &result, this);
          if (ret == 0)
          {
             for(int i = 0; i < stackItems; i++)
@@ -2618,7 +2633,7 @@ void NXSL_VM::callFunction(int nArgCount)
 				{
 					// Named parameter
 				   strlcpy(&varName[1], pValue->getName(), MAX_IDENTIFIER_LENGTH - 1);
-	            m_localVariables->create(varName, createValue(pValue));
+	            m_localVariables->create(varName, createValueRef(pValue));
 				}
          }
          else
@@ -2651,7 +2666,7 @@ uint32_t NXSL_VM::getFunctionAddress(const NXSL_Identifier& name)
 /**
  * Call selector
  */
-UINT32 NXSL_VM::callSelector(const NXSL_Identifier& name, int numElements)
+uint32_t NXSL_VM::callSelector(const NXSL_Identifier& name, int numElements)
 {
    const NXSL_ExtSelector *selector = m_env->findSelector(name);
    if (selector == nullptr)
@@ -2747,7 +2762,7 @@ NXSL_Value *NXSL_VM::matchRegexp(NXSL_Value *value, NXSL_Value *regexp, bool ign
    if (preg != nullptr)
    {
       int pmatch[MAX_REGEXP_CGROUPS * 3];
-      UINT32 valueLen;
+      uint32_t valueLen;
 		const TCHAR *v = value->getValueAsString(&valueLen);
 		int cgcount = _pcre_exec_t(preg, nullptr, reinterpret_cast<const PCRE_TCHAR*>(v), valueLen, 0, 0, pmatch, MAX_REGEXP_CGROUPS * 3);
       if (cgcount >= 0)
