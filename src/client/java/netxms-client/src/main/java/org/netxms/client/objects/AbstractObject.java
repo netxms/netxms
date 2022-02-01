@@ -613,7 +613,7 @@ public abstract class AbstractObject
    }
 
 	/**
-    * Get list of all parent objects as array.
+    * Get list of all direct parent objects as array.
     *
     * @return Array of parent objects
     */
@@ -632,10 +632,10 @@ public abstract class AbstractObject
 	}
 
 	/**
-	 * Get all child objects as array.
-	 * 
-	 * @return Array of child objects
-	 */
+    * Get all direct child objects as array.
+    * 
+    * @return Array of child objects
+    */
 	public AbstractObject[] getChildrenAsArray()
 	{
       final List<AbstractObject> list = new ArrayList<AbstractObject>(children.size());

@@ -5928,17 +5928,17 @@ public class NXCSession
       {
          if (data.isInheritAccessRights() == null)
             throw new NXCException(RCC.VARIABLE_NOT_FOUND);
-         
-         final AccessListElement[] acl = data.getACL();
-         msg.setFieldInt32(NXCPCodes.VID_ACL_SIZE, acl.length);
+
+         final Collection<AccessListElement> acl = data.getACL();
+         msg.setFieldInt32(NXCPCodes.VID_ACL_SIZE, acl.size());
          msg.setFieldInt16(NXCPCodes.VID_INHERIT_RIGHTS, data.isInheritAccessRights() ? 1 : 0);
 
          long id1 = NXCPCodes.VID_ACL_USER_BASE;
          long id2 = NXCPCodes.VID_ACL_RIGHTS_BASE;
-         for(int i = 0; i < acl.length; i++)
+         for(AccessListElement e : acl)
          {
-            msg.setFieldInt32(id1++, (int)acl[i].getUserId());
-            msg.setFieldInt32(id2++, acl[i].getAccessRights());
+            msg.setFieldInt32(id1++, (int)e.getUserId());
+            msg.setFieldInt32(id2++, e.getAccessRights());
          }
       }
 
@@ -6618,8 +6618,7 @@ public class NXCSession
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void setObjectACL(final long objectId, final AccessListElement[] acl, final boolean inheritAccessRights)
-         throws IOException, NXCException
+   public void setObjectACL(long objectId, Collection<AccessListElement> acl, boolean inheritAccessRights) throws IOException, NXCException
    {
       NXCObjectModificationData data = new NXCObjectModificationData(objectId);
       data.setACL(acl);
