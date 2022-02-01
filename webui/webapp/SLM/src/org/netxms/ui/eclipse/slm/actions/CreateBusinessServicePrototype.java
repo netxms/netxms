@@ -71,7 +71,7 @@ public class CreateBusinessServicePrototype implements IObjectActionDelegate
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-            NXCObjectCreationData cd = new NXCObjectCreationData(AbstractObject.OBJECT_BUSINESSSERVICE_PROTOTYPE, dlg.getName(), parentId);
+            NXCObjectCreationData cd = new NXCObjectCreationData(AbstractObject.OBJECT_BUSINESSSERVICEPROTOTYPE, dlg.getName(), parentId);
             cd.setInstanceDiscoveryMethod(dlg.getInstanceDiscoveyMethod());
             session.createObject(cd);
 			}

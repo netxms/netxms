@@ -183,11 +183,14 @@ public class ObjectContextMenuManager extends MenuManager
       managementMenu.add(actionDeployPackage);      
       add(managementMenu);
 
-      MenuManager maintenanceMenu = new MenuManager(i18n.tr("&Maintenance"));
-      maintenanceMenu.add(actionEnterMaintenance);
-      maintenanceMenu.add(actionLeaveMaintenance);
-      maintenanceMenu.add(actionScheduleMaintenance);
-      add(maintenanceMenu);
+      if (isMaintenanceMenuAllowed((IStructuredSelection)selectionProvider.getSelection()))
+      {
+         MenuManager maintenanceMenu = new MenuManager(i18n.tr("&Maintenance"));
+         maintenanceMenu.add(actionEnterMaintenance);
+         maintenanceMenu.add(actionLeaveMaintenance);
+         maintenanceMenu.add(actionScheduleMaintenance);
+         add(maintenanceMenu);
+      }
 
       final Menu toolsMenu = ObjectMenuFactory.createToolsMenu((IStructuredSelection)selectionProvider.getSelection(), getMenu(), null, new ViewPlacement(view));
       if (toolsMenu != null)
@@ -208,6 +211,28 @@ public class ObjectContextMenuManager extends MenuManager
          add(new Separator());
          add(actionProperties);
       }
+   }
+
+   /**
+    * Check if maintenance menu is allowed.
+    *
+    * @param selection current object selection
+    * @return true if maintenance menu is allowed
+    */
+   private boolean isMaintenanceMenuAllowed(IStructuredSelection selection)
+   {
+      for(Object o : selection.toList())
+      {
+         if (!(o instanceof AbstractObject))
+            return false;
+         int objectClass = ((AbstractObject)o).getObjectClass();
+         if ((objectClass == AbstractObject.OBJECT_BUSINESSSERVICE) || (objectClass == AbstractObject.OBJECT_BUSINESSSERVICEPROTOTYPE) || (objectClass == AbstractObject.OBJECT_BUSINESSSERVICEROOT) ||
+             (objectClass == AbstractObject.OBJECT_DASHBOARD) || (objectClass == AbstractObject.OBJECT_DASHBOARDGROUP) || (objectClass == AbstractObject.OBJECT_DASHBOARDROOT) ||
+             (objectClass == AbstractObject.OBJECT_NETWORKMAP) || (objectClass == AbstractObject.OBJECT_NETWORKMAPGROUP) || (objectClass == AbstractObject.OBJECT_NETWORKMAPROOT) ||
+             (objectClass == AbstractObject.OBJECT_TEMPLATE) || (objectClass == AbstractObject.OBJECT_TEMPLATEGROUP) || (objectClass == AbstractObject.OBJECT_TEMPLATEROOT))
+            return false;
+      }
+      return true;
    }
 
    /**

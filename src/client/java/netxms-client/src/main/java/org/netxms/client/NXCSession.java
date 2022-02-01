@@ -1452,7 +1452,7 @@ public class NXCSession
          case AbstractObject.OBJECT_BUSINESSSERVICE:
             object = new BusinessService(msg, this);
             break;
-         case AbstractObject.OBJECT_BUSINESSSERVICE_PROTOTYPE:
+         case AbstractObject.OBJECT_BUSINESSSERVICEPROTOTYPE:
             object = new BusinessServicePrototype(msg, this);
             break;
          case AbstractObject.OBJECT_BUSINESSSERVICEROOT:
@@ -5771,7 +5771,7 @@ public class NXCSession
          case AbstractObject.OBJECT_SUBNET:
             msg.setField(NXCPCodes.VID_IP_ADDRESS, data.getIpAddress());
             break;
-         case AbstractObject.OBJECT_BUSINESSSERVICE_PROTOTYPE:
+         case AbstractObject.OBJECT_BUSINESSSERVICEPROTOTYPE:
             msg.setFieldInt16(NXCPCodes.VID_INSTD_METHOD, data.getInstanceDiscoveryMethod());
             break;
       }

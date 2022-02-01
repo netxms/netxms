@@ -135,7 +135,7 @@ public class ObjectBrowser extends NavigationView
             break;
          case BUSINESS_SERVICES:
             classFilter.add(AbstractObject.OBJECT_BUSINESSSERVICE);
-            classFilter.add(AbstractObject.OBJECT_BUSINESSSERVICE_PROTOTYPE);
+            classFilter.add(AbstractObject.OBJECT_BUSINESSSERVICEPROTOTYPE);
             classFilter.add(AbstractObject.OBJECT_BUSINESSSERVICEROOT);
             break;
       }

@@ -39,7 +39,7 @@ public class BaseObjectLabelProvider extends LabelProvider
       images = new HashMap<Integer, Image>();
       images.put(AbstractObject.OBJECT_ACCESSPOINT, ResourceManager.getImageDescriptor("icons/objects/access_point.png").createImage());
       images.put(AbstractObject.OBJECT_BUSINESSSERVICE, ResourceManager.getImageDescriptor("icons/objects/business_service.png").createImage());
-      images.put(AbstractObject.OBJECT_BUSINESSSERVICE_PROTOTYPE, ResourceManager.getImageDescriptor("icons/objects/business_service.png").createImage());
+      images.put(AbstractObject.OBJECT_BUSINESSSERVICEPROTOTYPE, ResourceManager.getImageDescriptor("icons/objects/business_service.png").createImage());
       images.put(AbstractObject.OBJECT_BUSINESSSERVICEROOT, ResourceManager.getImageDescriptor("icons/objects/business_service.png").createImage());
       images.put(AbstractObject.OBJECT_CHASSIS, ResourceManager.getImageDescriptor("icons/objects/chassis.png").createImage());
       images.put(AbstractObject.OBJECT_CLUSTER, ResourceManager.getImageDescriptor("icons/objects/cluster.png").createImage());

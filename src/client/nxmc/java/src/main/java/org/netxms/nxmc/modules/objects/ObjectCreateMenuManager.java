@@ -271,7 +271,7 @@ public class ObjectCreateMenuManager extends MenuManager
                @Override
                protected void run(IProgressMonitor monitor) throws Exception
                {
-                  NXCObjectCreationData cd = new NXCObjectCreationData(AbstractObject.OBJECT_BUSINESSSERVICE_PROTOTYPE, dlg.getName(), parentId);
+                  NXCObjectCreationData cd = new NXCObjectCreationData(AbstractObject.OBJECT_BUSINESSSERVICEPROTOTYPE, dlg.getName(), parentId);
                   cd.setInstanceDiscoveryMethod(dlg.getInstanceDiscoveyMethod());
                   session.createObject(cd);
                }
