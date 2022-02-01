@@ -51,7 +51,7 @@ static ObjectArray<Module> s_modules(8, 8, Ownership::True);
 /**
  * Load module
  */
-static bool LoadServerModule(const TCHAR *name, bool mandatory)
+static bool LoadServerModule(const TCHAR *name, bool mandatory, bool quiet)
 {
    bool success = false;
    TCHAR fullName[MAX_PATH], errorText[256];
@@ -105,20 +105,25 @@ static bool LoadServerModule(const TCHAR *name, bool mandatory)
       m->GetSchemaPrefix = (const TCHAR* (*)())DLGetSymbolAddr(hModule, "NXM_GetSchemaPrefix", errorText);
       if ((m->CheckDB != nullptr) || (m->UpgradeDB != nullptr) || (m->GetTables != nullptr) || (m->GetSchemaPrefix != nullptr))
       {
-         WriteToTerminalEx(_T("\x1b[32;1mINFO:\x1b[0m Server module \x1b[1m%s\x1b[0m loaded\n"), m->name);
+         if (!quiet)
+            WriteToTerminalEx(_T("\x1b[32;1mINFO:\x1b[0m Server module \x1b[1m%s\x1b[0m loaded\n"), m->name);
          s_modules.add(m);
       }
       else
       {
-         WriteToTerminalEx(_T("\x1b[32;1mINFO:\x1b[0m Server module \x1b[1m%s\x1b[0m skipped\n"), m->name);
+         if (!quiet)
+            WriteToTerminalEx(_T("\x1b[32;1mINFO:\x1b[0m Server module \x1b[1m%s\x1b[0m skipped\n"), m->name);
          delete m;
       }
       success = true;
    }
    else
    {
-      WriteToTerminalEx(_T("\x1b[%s:\x1b[0m Cannot load server module \x1b[1m%s\x1b[0m (%s)\n"),
-               mandatory ? _T("31;1mERROR") : _T("33;1mWARNING"), name, errorText);
+      if (mandatory || !quiet)
+      {
+         WriteToTerminalEx(_T("\x1b[%s:\x1b[0m Cannot load server module \x1b[1m%s\x1b[0m (%s)\n"),
+                  mandatory ? _T("31;1mERROR") : _T("33;1mWARNING"), name, errorText);
+      }
    }
    return success;
 }
@@ -126,7 +131,7 @@ static bool LoadServerModule(const TCHAR *name, bool mandatory)
 /**
  * Load all registered modules
  */
-bool LoadServerModules(TCHAR *moduleLoadList)
+bool LoadServerModules(TCHAR *moduleLoadList, bool quiet)
 {
    TCHAR *curr, *next, *ptr;
    bool success = true;
@@ -156,7 +161,7 @@ bool LoadServerModules(TCHAR *moduleLoadList)
          mandatory = (*ptr == _T('1')) || (*ptr == _T('Y')) || (*ptr == _T('y'));
       }
 
-      if (!LoadServerModule(curr, mandatory))
+      if (!LoadServerModule(curr, mandatory, quiet))
       {
          if (mandatory)
          {

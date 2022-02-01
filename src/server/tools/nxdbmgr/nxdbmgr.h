@@ -78,7 +78,7 @@ BOOL CreateTDataTable_preV281(DWORD nodeId);
 
 void ResetSystemAccount();
 
-bool LoadServerModules(TCHAR *moduleLoadList);
+bool LoadServerModules(TCHAR *moduleLoadList, bool quiet);
 bool EnumerateModuleTables(bool (*handler)(const TCHAR *, void *), void *userData);
 bool EnumerateModuleSchemas(bool (*handler)(const TCHAR *, void *), void *userData);
 bool UpgradeModuleSchemas();
@@ -100,6 +100,7 @@ extern bool g_checkDataTablesOnly;
 extern bool g_dataOnlyMigration;
 extern bool g_skipDataMigration;
 extern bool g_skipDataSchemaMigration;
+extern bool g_machineReadableOutput;
 extern int g_migrationTxnSize;
 
 #endif
