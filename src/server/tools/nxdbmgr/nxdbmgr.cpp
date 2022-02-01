@@ -1,6 +1,6 @@
 /*
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004-2021 Victor Kirhenshtein
+** Copyright (C) 2004-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -39,6 +39,7 @@ bool g_checkDataTablesOnly = false;
 bool g_dataOnlyMigration = false;
 bool g_skipDataMigration = false;
 bool g_skipDataSchemaMigration = false;
+bool g_machineReadableOutput = false;
 int g_migrationTxnSize = 4096;
 
 /**
@@ -255,19 +256,33 @@ static void PrintConfig(const TCHAR *pattern)
       return;
    }
 
-   int flen = 0;
-   auto it = variables->iterator();
-   while(it->hasNext())
-      flen = std::max(flen, static_cast<int>(_tcslen(it->next()->first)));
-   delete it;
-
-   it = variables->iterator();
-   while(it->hasNext())
+   if (g_machineReadableOutput)
    {
-      auto v = it->next();
-      _tprintf(_T("%*s = %s\n"), -flen, v->first, v->second);
+      auto it = variables->iterator();
+      while(it->hasNext())
+      {
+         auto v = it->next();
+         _tprintf(_T("%s=%s\n"), v->first, v->second);
+      }
+      delete it;
    }
-   delete it;
+   else
+   {
+      int flen = 0;
+      auto it = variables->iterator();
+      while(it->hasNext())
+         flen = std::max(flen, static_cast<int>(_tcslen(it->next()->first)));
+      delete it;
+
+      it = variables->iterator();
+      while(it->hasNext())
+      {
+         auto v = it->next();
+         _tprintf(_T("%*s = %s\n"), -flen, v->first, v->second);
+      }
+      delete it;
+   }
+
    delete variables;
 }
 
@@ -352,7 +367,7 @@ stop_search:
 
    // Parse command line
    opterr = 1;
-   while((ch = getopt(argc, argv, "c:C:dDe:fF:GhIL:MNoPqsStT:vXY:Z:")) != -1)
+   while((ch = getopt(argc, argv, "c:C:dDe:fF:GhIL:mMNoPqsStT:vXY:Z:")) != -1)
    {
       switch(ch)
       {
@@ -387,6 +402,7 @@ stop_search:
                      _T("   -h          : Display help and exit.\n")
                      _T("   -I          : MySQL only - specify TYPE=InnoDB for new tables.\n")
                      _T("   -L <log>    : Migrate only specific log.\n")
+                     _T("   -m          : Improved machine readability of output.\n")
                      _T("   -M          : MySQL only - specify TYPE=MyISAM for new tables.\n")
                      _T("   -N          : Do not replace existing configuration value (\"set\" command only).\n")
                      _T("   -o          : Show output from SELECT statements in a batch.\n")
@@ -489,6 +505,9 @@ stop_search:
             {
                includedTables.add(_T("win_event_log"));
             }
+            break;
+         case 'm':
+            g_machineReadableOutput = true;
             break;
          case 'M':
             SetTableSuffix(_T(" TYPE=MyISAM"));
@@ -676,7 +695,7 @@ stop_search:
       return 4;
    }
 
-   if (!LoadServerModules(s_moduleLoadList))
+   if (!LoadServerModules(s_moduleLoadList, bQuiet))
    {
       DBDisconnect(g_dbHandle);
       DBUnloadDriver(s_driver);
