@@ -46,6 +46,30 @@ static VolatileCounter64 s_trapId = 0; // Last used trap ID
 static uint16_t s_trapListenerPort = 162;
 
 /**
+ * Collects information about all SNMPTraps that are using specified event
+ */
+void GetSNMPTrapsEventReferences(uint32_t eventCode, ObjectArray<EventReference>* erl)
+{
+   s_trapCfgLock.lock();
+   for (int i = 0; i < m_trapCfgList.size(); i++)
+   {
+      if (m_trapCfgList.get(i)->getEventCode() == eventCode)
+      {
+         EventReference er(
+            EventReferenceType::SNMP_TRAP,
+            m_trapCfgList.get(i)->getId(),
+            m_trapCfgList.get(i)->getGuid(),
+            0,
+            uuid(),
+            m_trapCfgList.get(i)->getOid().toString().cstr(),
+            m_trapCfgList.get(i)->getDescription());
+         erl->add(&er);
+      }
+   }
+   s_trapCfgLock.unlock();
+}
+
+/**
  * Create new SNMP trap configuration object
  */
 SNMPTrapConfiguration::SNMPTrapConfiguration() : m_objectId(), m_mappings(8, 8, Ownership::True)

@@ -40,6 +40,7 @@ class DataCollectionTarget;
 class Cluster;
 class ComponentTree;
 class Pollable;
+class EventReference;
 
 /**
  * Global variables used by inline methods
@@ -1709,6 +1710,8 @@ public:
 
    bool enumDCObjects(bool (*callback)(const shared_ptr<DCObject>&, uint32_t, void *), void *context) const;
    void associateItems();
+
+   virtual void getEventReferences(uint32_t eventCode, ObjectArray<EventReference>* erl) const;
 };
 
 #define EXPAND_MACRO 1
@@ -1797,6 +1800,7 @@ public:
    virtual void updateFromImport(const ConfigEntry *config);
    virtual void createExportRecord(StringBuffer &xml, uint32_t recordId);
    virtual void getEventList(HashSet<uint32_t> *eventList) const {}
+   virtual bool isUsingEvent(uint32_t eventCode) const { return false; }
 
    virtual json_t *toJson();
 
@@ -1836,6 +1840,7 @@ public:
    virtual ~LogParserPolicy() { }
 
    virtual void getEventList(HashSet<uint32_t> *eventList) const override;
+   virtual bool isUsingEvent(uint32_t eventCode) const override;
 };
 
 /**
@@ -1898,6 +1903,7 @@ public:
    void checkPolicyDeployment(const shared_ptr<Node>& node, AgentPolicyInfo *ap);
    void initiatePolicyValidation();
    void removeAllPolicies(Node *node);
+   virtual void getEventReferences(uint32_t eventCode, ObjectArray<EventReference>* erl) const override;
 };
 
 /**
@@ -4034,6 +4040,8 @@ public:
    virtual bool lockForStatusPoll() override;
 
    int getCacheSizeForDCI(UINT32 itemId, bool noLock);
+
+   bool isUsingEvent(uint32_t eventCode) const { return (eventCode == m_activationEventCode || eventCode == m_deactivationEventCode); }
 };
 
 /**

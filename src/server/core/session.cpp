@@ -105,6 +105,8 @@ void GetObjectPhysicalLinks(const NetObj *object, uint32_t userId, uint32_t patc
 uint32_t AddPhysicalLink(const NXCPMessage& msg, uint32_t userId);
 bool DeletePhysicalLink(uint32_t id, uint32_t userId);
 
+unique_ptr<ObjectArray<EventReference>> GetAllEventReferences(uint32_t eventCode);
+
 /**
  * Client session console constructor
  */
@@ -1854,6 +1856,9 @@ void ClientSession::processRequest(NXCPMessage *request)
          break;
       case CMD_FIND_DCI:
          findDci(*request);
+         break;
+      case CMD_GET_EVENT_REFERENCES:
+         getEventRefences(*request);
          break;
       default:
          if ((code >> 8) == 0x11)
@@ -16166,6 +16171,36 @@ void ClientSession::findDci(const NXCPMessage &request)
    else  // No object with given ID
    {
       response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+
+   sendMessage(response);
+}
+
+/**
+ * Collect information about objects that are using the event and send it back to client.
+ */
+void ClientSession::getEventRefences(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   if (checkSysAccessRights(SYSTEM_ACCESS_VIEW_EVENT_DB) ||
+       checkSysAccessRights(SYSTEM_ACCESS_EDIT_EVENT_DB) ||
+       checkSysAccessRights(SYSTEM_ACCESS_EPP))
+   {
+      uint32_t eventCode = request.getFieldAsInt32(VID_EVENT_CODE);
+      unique_ptr<ObjectArray<EventReference>> erl = GetAllEventReferences(eventCode);
+
+      response.setField(VID_NUM_ELEMENTS, erl->size());
+      uint32_t base = VID_ELEMENT_LIST_BASE;
+      for (int i = 0; i < erl->size(); i++, base += 10)
+         erl->get(i)->fillMessage(base, &response);
+
+      response.setField(VID_RCC, RCC_SUCCESS);
+   }
+   else
+   {
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
+      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied getting event references"));
    }
 
    sendMessage(response);

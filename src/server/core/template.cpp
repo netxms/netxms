@@ -539,6 +539,34 @@ void Template::removeAllPolicies(Node *node)
 }
 
 /**
+ * Collects information about all agent policies that are using specified event
+ */
+void Template::getEventReferences(uint32_t eventCode, ObjectArray<EventReference>* erl) const
+{
+   // DCI
+   DataCollectionOwner::getEventReferences(eventCode, erl);
+
+   // Agent Policies
+   lockProperties();
+   for (int i = 0; i < m_policyList->size(); i++)
+   {
+      if (m_policyList->get(i)->isUsingEvent(eventCode))
+      {
+         EventReference er(
+            EventReferenceType::AGENT_POLICY,
+            0,
+            m_policyList->get(i)->getGuid(),
+            m_id,
+            m_guid,
+            m_policyList->get(i)->getType(),
+            m_policyList->get(i)->getName());
+         erl->add(&er);
+      }
+   }
+   unlockProperties();
+}
+
+/**
  * Check policy exist
  */
 bool Template::hasPolicy(const uuid& guid) const

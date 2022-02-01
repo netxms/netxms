@@ -893,6 +893,29 @@ void LogParserPolicy::getEventList(HashSet<uint32_t> *eventList) const
 }
 
 /**
+ * Checks if any of this policy's LogParsers is using specified event
+ */
+bool LogParserPolicy::isUsingEvent(uint32_t eventCode) const
+{
+   TCHAR error[1024];
+   ObjectArray<LogParser>* parsers = LogParser::createFromXml((const char*)m_content, strlen(m_content), error, 1024, EventNameResolver);
+   if (parsers != nullptr)
+   {
+      if (parsers->get(0)->isUsingEvent(eventCode))
+      {
+         delete parsers;
+         return true;
+      }
+      delete parsers;
+   }
+   else
+   {
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("LogParserPolicy::isUsingEvent: Cannot create parser from %s configuration"), m_name);
+   }
+   return false;
+}
+
+/**
  * Remove policy from agent. Will destroy provided removal data.
  */
 void RemoveAgentPolicy(const shared_ptr<AgentPolicyRemovalData>& data)

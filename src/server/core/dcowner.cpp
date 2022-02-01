@@ -1156,3 +1156,27 @@ unique_ptr<SharedObjectArray<DCObject>> DataCollectionOwner::getAllDCObjects() c
    unlockDciAccess();
    return result;
 }
+
+/**
+ * Collects information about all DCI that are using specified event
+ */
+void DataCollectionOwner::getEventReferences(uint32_t eventCode, ObjectArray<EventReference>* erl) const
+{
+   readLockDciAccess();
+   for (int i = 0; i < m_dcObjects.size(); i++)
+   {
+      if (m_dcObjects.get(i)->isUsingEvent(eventCode))
+      {
+         EventReference er(
+            EventReferenceType::DCI,
+            m_dcObjects.get(i)->getId(),
+            m_dcObjects.get(i)->getGuid(),
+            m_id,
+            m_guid,
+            m_dcObjects.get(i)->getName(),
+            m_dcObjects.get(i)->getDescription());
+         erl->add(&er);
+      }
+   }
+   unlockDciAccess();
+}

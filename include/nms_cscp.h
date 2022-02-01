@@ -687,6 +687,7 @@ typedef struct
 #define CMD_SSH_COMMAND                   0x01C0
 #define CMD_FIND_DCI                      0x01C1
 #define CMD_UPDATE_PACKAGE_METADATA       0x01C2
+#define CMD_GET_EVENT_REFERENCES          0x01C3
 
 #define CMD_RS_LIST_REPORTS               0x1100
 #define CMD_RS_GET_REPORT_DEFINITION      0x1101

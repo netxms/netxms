@@ -957,3 +957,20 @@ void StopSyslogServer()
    delete s_parser;
    CleanupLogParserLibrary();
 }
+
+/**
+ * Collects information about all syslogs that are using specified event
+ */
+void GetSyslogEventReferences(uint32_t eventCode, ObjectArray<EventReference>* erl)
+{
+   s_parserLock.lock();
+   if (s_parser != nullptr && s_parser->isUsingEvent(eventCode))
+   {
+      EventReference er(
+         EventReferenceType::SYSLOG,
+         0, uuid(), 0, uuid(),
+         _T("Server-side syslog parser"));
+      erl->add(&er);
+   }
+   s_parserLock.unlock();
+}

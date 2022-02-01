@@ -336,6 +336,77 @@ public:
 
    bool isActionInUse(uint32_t actionId) const;
    bool isCategoryInUse(uint32_t categoryId) const { return m_alarmCategoryList.contains(categoryId); }
+
+   bool isUsingEvent(uint32_t eventCode) const { return m_events.contains(eventCode); }
+   const TCHAR* getComments() { return m_comments; }
+};
+
+#define EVENT_REF_MAX_DESC_LENGTH 256
+
+/**
+ * Event reference type enum for EventReference
+ */
+enum class EventReferenceType
+{
+   AGENT_POLICY = 0,
+   DCI = 1,
+   EP_RULE = 2,
+   SNMP_TRAP = 3,
+   CONDITION = 4,
+   SYSLOG = 5,
+   WIN_EVENT_LOG = 6
+};
+
+/**
+ * Information about an object that is using the event
+ */
+class EventReference
+{
+private:
+   EventReferenceType m_type;
+   uint32_t m_id;
+   uuid m_guid;
+   uint32_t m_ownerId;
+   uuid m_ownerGuid;
+   TCHAR m_description[EVENT_REF_MAX_DESC_LENGTH];
+
+public:
+   /**
+    * Create new event reference.
+    * @param type Object type
+    * @param id Object id within it's type
+    * @param guid Object guid
+    * @param ownerId Object owner id within it's type, if one exists (0 if not)
+    * @param ownerGuid Object owner guid, if one exists (0 if not)
+    * @param descPart1 Object description first part (object name is recommended)
+    * @param descPart2 Object description second part, if avaliable (object description or comments are recommended)
+    */
+   EventReference(EventReferenceType type, uint32_t id, const uuid& guid, uint32_t ownerId, const uuid& ownerGuid, const TCHAR* descPart1, const TCHAR* descPart2 = nullptr)
+      : m_guid(guid), m_ownerGuid(ownerGuid)
+   {
+      m_type = type;
+      m_id = id;
+      m_ownerId = ownerId;
+      if (descPart2 != nullptr && descPart2[0] != 0)
+         _sntprintf(m_description, EVENT_REF_MAX_DESC_LENGTH, _T("%s: %s"), descPart1, descPart2);
+      else
+         _tcslcpy(m_description, descPart1, EVENT_REF_MAX_DESC_LENGTH);
+   }
+
+   /**
+    * Fill NXCPMessage. Space for at least 6 VID_ELEMENTS required.
+    * @param base VID_ELEMENT_LIST_BASE element
+    * @param msg message to fill
+    */
+   void fillMessage(uint32_t base, NXCPMessage* msg) const
+   {
+      msg->setField(base, static_cast<uint32_t>(m_type));
+      msg->setField(base + 1, m_id);
+      msg->setField(base + 2, m_guid);
+      msg->setField(base + 3, m_ownerId);
+      msg->setField(base + 4, m_ownerGuid);
+      msg->setField(base + 5, m_description);
+   }
 };
 
 /**
@@ -368,6 +439,8 @@ public:
 
    bool isActionInUse(uint32_t actionId) const;
    bool isCategoryInUse(uint32_t categoryId) const;
+
+   void getEventReferences(uint32_t eventCode, ObjectArray<EventReference>* erl) const;
 };
 
 /**

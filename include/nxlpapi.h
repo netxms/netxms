@@ -329,6 +329,7 @@ public:
    bool isFilePreallocated() const { return m_preallocatedFile; }
    bool isDetectBrokenPrealloc() const { return m_detectBrokenPrealloc; }
    void getEventList(HashSet<uint32_t> *eventList) const;
+   bool isUsingEvent(uint32_t eventCode) const;
    int getCharSize() const;
 
 	void setName(const TCHAR *name);

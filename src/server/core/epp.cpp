@@ -1402,3 +1402,26 @@ json_t *EventPolicy::toJson() const
    json_object_set_new(root, "rules", rules);
    return root;
 }
+
+/**
+ * Collects information about all EPRules that are using specified event
+ */
+void EventPolicy::getEventReferences(uint32_t eventCode, ObjectArray<EventReference>* erl) const
+{
+   readLock();
+   for (int i = 0; i < m_rules.size(); i++)
+   {
+      if (m_rules.get(i)->isUsingEvent(eventCode))
+      {
+         EventReference er(
+            EventReferenceType::EP_RULE,
+            m_rules.get(i)->getId(),
+            m_rules.get(i)->getGuid(),
+            0,
+            uuid(),
+            m_rules.get(i)->getComments());
+         erl->add(&er);
+      }
+   }
+   unlock();
+}

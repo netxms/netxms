@@ -220,6 +220,75 @@ bool EventTemplate::saveToDatabase() const
    return success;
 }
 
+void GetSNMPTrapsEventReferences(uint32_t eventCode, ObjectArray<EventReference>* erl);
+void GetWinEventEventReferences(uint32_t eventCode, ObjectArray<EventReference>* erl);
+void GetSyslogEventReferences(uint32_t eventCode, ObjectArray<EventReference>* erl);
+
+/**
+ * Get information about all objects that are using the specified event.
+ */
+unique_ptr<ObjectArray<EventReference>> GetAllEventReferences(uint32_t eventCode)
+{
+   ObjectArray<EventReference>* erl = new ObjectArray<EventReference>();
+
+   // EPRules
+   g_pEventPolicy->getEventReferences(eventCode, erl);
+
+   // Agent Policies + DCI from Templates
+   unique_ptr<SharedObjectArray<NetObj>> templates = g_idxObjectById.getObjects(
+      [](NetObj* object, void* context) -> bool
+      { return object->getObjectClass() == OBJECT_TEMPLATE; },
+      nullptr);
+
+   for (int i = 0; i < templates->size(); i++)
+   {
+      Template* t = static_cast<Template*>(templates->get(i));
+      t->getEventReferences(eventCode, erl);
+   }
+
+   // Conditions
+   unique_ptr<SharedObjectArray<NetObj>> conditions = g_idxConditionById.getObjects();
+   for (int i = 0; i < conditions->size(); i++)
+   {
+      ConditionObject* c = static_cast<ConditionObject*>(conditions->get(i));
+      if (c->isUsingEvent(eventCode))
+      {
+         EventReference er(
+            EventReferenceType::CONDITION,
+            c->getId(),
+            c->getGuid(),
+            0,
+            uuid(),
+            c->getName(),
+            c->getComments());
+         erl->add(&er);
+      }
+   }
+
+   // SNMPTraps
+   GetSNMPTrapsEventReferences(eventCode, erl);
+
+   // DCI from DCTarget
+   unique_ptr<SharedObjectArray<NetObj>> dct = g_idxObjectById.getObjects(
+      [](NetObj* object, void* context) -> bool
+      { return object->isDataCollectionTarget(); },
+      nullptr);
+
+   for (int i = 0; i < dct->size(); i++)
+   {
+      DataCollectionTarget* target = static_cast<DataCollectionTarget*>(dct->get(i));
+      target->getEventReferences(eventCode, erl);
+   }
+
+   // SysLog
+   GetSyslogEventReferences(eventCode, erl);
+
+   // WinEvent
+   GetWinEventEventReferences(eventCode, erl);
+
+   return unique_ptr<ObjectArray<EventReference>>(erl);
+}
+
 /**
  * Default constructor for event
  */

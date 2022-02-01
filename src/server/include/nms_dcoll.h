@@ -213,6 +213,8 @@ public:
 	void setDataType(BYTE type) { m_dataType = type; }
 
 	void reconcile(const Threshold *src);
+
+   bool isUsingEvent(uint32_t eventCode) const { return (eventCode == m_eventCode || eventCode == m_rearmEventCode); }
 };
 
 class DataCollectionOwner;
@@ -454,6 +456,8 @@ public:
 
    virtual SharedString getText() const override;
    virtual SharedString getAttribute(const TCHAR *attribute) const override;
+
+   virtual bool isUsingEvent(uint32_t eventCode) const { return false; };
 };
 
 /**
@@ -569,6 +573,16 @@ public:
 
    static bool testTransformation(DataCollectionTarget *object, const shared_ptr<DCObjectInfo>& dcObjectInfo,
             const TCHAR *script, const TCHAR *value, TCHAR *buffer, size_t bufSize);
+
+   virtual bool isUsingEvent(uint32_t eventCode) const override
+   {
+      if (m_thresholds == nullptr)
+         return false;
+      for (int i = 0; i < m_thresholds->size(); i++)
+         if (m_thresholds->get(i)->isUsingEvent(eventCode))
+            return true;
+      return false;
+   }
 };
 
 struct TableThresholdCbData;
@@ -753,6 +767,8 @@ public:
    {
       return m_instances.findElement([] (const TCHAR *key, const void *value, void *context) { return static_cast<const DCTableThresholdInstance*>(value)->isActive(); }, nullptr);
    }
+
+   bool isUsingEvent(uint32_t eventCode) const { return (eventCode == m_activationEvent || eventCode == m_deactivationEvent); }
 };
 
 /**
@@ -826,6 +842,14 @@ public:
    void updateResultColumns(const shared_ptr<Table>& t);
 
 	static INT32 columnIdFromName(const TCHAR *name);
+
+   virtual bool isUsingEvent(uint32_t eventCode) const override
+   {
+      for (int i = 0; i < m_thresholds->size(); i++)
+         if (m_thresholds->get(i)->isUsingEvent(eventCode))
+            return true;
+      return false;
+   }
 };
 
 /**

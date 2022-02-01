@@ -114,6 +114,7 @@ import org.netxms.client.events.Event;
 import org.netxms.client.events.EventInfo;
 import org.netxms.client.events.EventProcessingPolicy;
 import org.netxms.client.events.EventProcessingPolicyRule;
+import org.netxms.client.events.EventReference;
 import org.netxms.client.events.EventTemplate;
 import org.netxms.client.events.SyslogRecord;
 import org.netxms.client.log.Log;
@@ -13024,5 +13025,30 @@ public class NXCSession
       }
 
       return list;
+   }
+
+   /**
+    * Get list of objects that are using specified event
+    * @param eventCode code of the event
+    * @return list of event references
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public List<EventReference> getEventReferences(int eventCode) throws IOException, NXCException 
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_EVENT_REFERENCES);
+      msg.setFieldInt32(NXCPCodes.VID_EVENT_CODE, eventCode);
+      sendMessage(msg);
+      
+      NXCPMessage response = waitForRCC(msg.getMessageId());
+      int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_ELEMENTS);
+      List<EventReference> erl = new ArrayList<EventReference>(count);
+      long fieldId = NXCPCodes.VID_ELEMENT_LIST_BASE;
+      for(int i = 0; i < count; i++)
+      {
+         erl.add(new EventReference(response, fieldId));
+         fieldId += 10;
+      }
+      return erl;
    }
 }

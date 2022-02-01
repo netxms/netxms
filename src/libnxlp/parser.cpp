@@ -1080,3 +1080,15 @@ void LogParser::getEventList(HashSet<uint32_t> *eventList) const
       eventList->put(m_rules.get(i)->getEventCode());
    }
 }
+
+/**
+ * Searches this log parser for the specified event.
+ * @return True if the event was found, false otherwise.
+ */
+bool LogParser::isUsingEvent(uint32_t eventCode) const
+{
+   for (int i = 0; i < m_rules.size(); i++)
+      if (m_rules.get(i)->getEventCode() == eventCode)
+         return true;
+   return false;
+}

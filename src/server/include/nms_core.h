@@ -908,6 +908,7 @@ private:
    void getBusinessServiceTickets(const NXCPMessage& request);
    void executeSshCommand(const NXCPMessage& request);
    void findDci(const NXCPMessage& request);
+   void getEventRefences(const NXCPMessage& request);
 
    void alarmUpdateWorker(Alarm *alarm);
    void sendActionDBUpdateMessage(NXCP_MESSAGE *msg);
@@ -1354,7 +1355,7 @@ uint32_t UpdateTrapFromMsg(const NXCPMessage& msg);
 UINT32 DeleteTrap(UINT32 dwId);
 void CreateTrapExportRecord(StringBuffer &xml, UINT32 id);
 UINT32 ResolveTrapGuid(const uuid& guid);
-void AddTrapCfgToList(SNMPTrapConfiguration *trapCfg);
+void AddTrapCfgToList(SNMPTrapConfiguration* trapCfg);
 
 BOOL IsTableTool(UINT32 dwToolId);
 BOOL CheckObjectToolAccess(UINT32 dwToolId, UINT32 dwUserId);
