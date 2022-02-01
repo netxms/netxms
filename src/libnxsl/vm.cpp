@@ -1814,7 +1814,7 @@ void NXSL_VM::execute()
             {
                if (name->isString())
                {
-                  m_storage->write(name->getValueAsCString(), createValue(pValue));
+                  m_storage->write(name->getValueAsCString(), pValue);
                   m_dataStack->push(pValue);
                   pValue = nullptr;    // Prevent deletion
                }
@@ -1875,8 +1875,8 @@ void NXSL_VM::execute()
                else
                {
                   error(NXSL_ERR_NOT_NUMBER);
-                  destroyValue(sval);
                }
+               destroyValue(sval);
             }
             else
             {
@@ -1903,7 +1903,7 @@ void NXSL_VM::execute()
                      sval->increment();
                   else
                      sval->decrement();
-                  m_dataStack->push(createValue(sval));
+                  m_dataStack->push(sval);
                   m_storage->write(pValue->getValueAsCString(), sval);
                }
                else
@@ -1924,7 +1924,7 @@ void NXSL_VM::execute()
          }
          break;
       case OPCODE_PUSHCP:
-         m_dataStack->push(createValue((INT32)m_cp + cp->m_stackItems));
+         m_dataStack->push(createValue(static_cast<int32_t>(m_cp) + cp->m_stackItems));
          break;
       case OPCODE_SELECT:
          dwNext = callSelector(*cp->m_operand.m_identifier, cp->m_stackItems);
