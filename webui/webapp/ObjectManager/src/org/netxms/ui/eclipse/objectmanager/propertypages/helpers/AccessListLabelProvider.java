@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,20 +18,25 @@
  */
 package org.netxms.ui.eclipse.objectmanager.propertypages.helpers;
 
+import org.eclipse.jface.viewers.ITableColorProvider;
 import org.eclipse.jface.viewers.ITableLabelProvider;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.client.AccessListElement;
 
 /**
  * Label provider for NetXMS objects access lists
- *
  */
-public class AccessListLabelProvider extends WorkbenchLabelProvider implements ITableLabelProvider
+public class AccessListLabelProvider extends WorkbenchLabelProvider implements ITableLabelProvider, ITableColorProvider
 {
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
-	 */
+   private final Color inheritedElementColor = Display.getCurrent().getSystemColor(SWT.COLOR_WIDGET_DISABLED_FOREGROUND);
+
+   /**
+    * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
+    */
 	@Override
 	public Image getColumnImage(Object element, int columnIndex)
 	{
@@ -40,9 +45,9 @@ public class AccessListLabelProvider extends WorkbenchLabelProvider implements I
 		return null;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
+    */
 	@Override
 	public String getColumnText(Object element, int columnIndex)
 	{
@@ -68,4 +73,22 @@ public class AccessListLabelProvider extends WorkbenchLabelProvider implements I
 		}
 		return null;
 	}
+
+   /**
+    * @see org.eclipse.jface.viewers.ITableColorProvider#getForeground(java.lang.Object, int)
+    */
+   @Override
+   public Color getForeground(Object element, int columnIndex)
+   {
+      return ((AccessListElement)element).isInherited() ? inheritedElementColor : null;
+   }
+
+   /**
+    * @see org.eclipse.jface.viewers.ITableColorProvider#getBackground(java.lang.Object, int)
+    */
+   @Override
+   public Color getBackground(Object element, int columnIndex)
+   {
+      return null;
+   }
 }

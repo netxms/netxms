@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,9 +18,13 @@
  */
 package org.netxms.nxmc.modules.objects.propertypages.helpers;
 
+import org.eclipse.jface.viewers.ITableColorProvider;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.widgets.Display;
 import org.netxms.client.AccessListElement;
 import org.netxms.client.NXCSession;
 import org.netxms.client.users.AbstractUserObject;
@@ -31,9 +35,10 @@ import org.netxms.nxmc.resources.SharedIcons;
 /**
  * Label provider for NetXMS objects access lists
  */
-public class AccessListLabelProvider extends LabelProvider implements ITableLabelProvider
+public class AccessListLabelProvider extends LabelProvider implements ITableLabelProvider, ITableColorProvider
 {
-   private NXCSession session = Registry.getSession();
+   private final NXCSession session = Registry.getSession();
+   private final Color inheritedElementColor = Display.getCurrent().getSystemColor(SWT.COLOR_WIDGET_DISABLED_FOREGROUND);
 
    /**
     * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
@@ -82,5 +87,23 @@ public class AccessListLabelProvider extends LabelProvider implements ITableLabe
 				return sb.toString();
 		}
 		return null;
+	}
+
+   /**
+    * @see org.eclipse.jface.viewers.ITableColorProvider#getForeground(java.lang.Object, int)
+    */
+   @Override
+   public Color getForeground(Object element, int columnIndex)
+   {
+      return ((AccessListElement)element).isInherited() ? inheritedElementColor : null;
+   }
+
+   /**
+    * @see org.eclipse.jface.viewers.ITableColorProvider#getBackground(java.lang.Object, int)
+    */
+   @Override
+   public Color getBackground(Object element, int columnIndex)
+   {
+      return null;
    }
 }

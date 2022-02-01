@@ -62,7 +62,7 @@ public class NXCObjectModificationData
    private String primaryName;
    private String alias;
    private String nameOnMap;
-   private AccessListElement[] acl;
+   private Collection<AccessListElement> acl;
    private Boolean inheritAccessRights;
    private Map<String, CustomAttribute> customAttributes;
    private String autoBindFilter;
@@ -267,7 +267,7 @@ public class NXCObjectModificationData
    /**
     * @return the acl
     */
-   public AccessListElement[] getACL()
+   public Collection<AccessListElement> getACL()
    {
       return acl;
    }
@@ -275,9 +275,9 @@ public class NXCObjectModificationData
    /**
     * @param acl the acl to set
     */
-   public void setACL(AccessListElement[] acl)
+   public void setACL(Collection<AccessListElement> acl)
    {
-      this.acl = (acl == null) ? new AccessListElement[0] : acl;
+      this.acl = (acl == null) ? new ArrayList<AccessListElement>(0) : acl;
    }
 
    /**

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,10 +23,11 @@ import org.netxms.client.users.AbstractAccessListElement;
 
 /**
  * Access list element for NetXMS objects
- *
  */
 public class AccessListElement extends AbstractAccessListElement
-{ 
+{
+   private boolean inherited;
+
 	/**
 	 * Create new ACL element with given user ID and rights
 	 * 
@@ -36,8 +37,9 @@ public class AccessListElement extends AbstractAccessListElement
 	public AccessListElement(long userId, int accessRights)
 	{
 		super(userId, accessRights);
+      inherited = false;
 	}
-	
+
 	/**
 	 * Copy constructor
 	 * 
@@ -46,11 +48,34 @@ public class AccessListElement extends AbstractAccessListElement
 	public AccessListElement(AccessListElement src)
 	{
 		super(src);
+      inherited = src.inherited;
 	}
 
+   /**
+    * Create copy of existing ACL entry with possibly changed inheritance flag.
+    * 
+    * @param src Source ACL element
+    * @param inherited inheritance flag
+    */
+   public AccessListElement(AccessListElement src, boolean inherited)
+   {
+      super(src);
+      this.inherited = inherited;
+   }
+
 	/**
-	 * @return true if READ access granted
-	 */
+    * Check if this access list element was inherited.
+    *
+    * @return true if this access list element was inherited
+    */
+   public boolean isInherited()
+   {
+      return inherited;
+   }
+
+   /**
+    * @return true if READ access granted
+    */
 	public boolean hasRead()
 	{
 		return (accessRights & UserAccessRights.OBJECT_ACCESS_READ) != 0;

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,7 +29,6 @@ import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.client.NXCSession;
@@ -43,14 +42,13 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 public class AttrListLabelProvider extends LabelProvider implements ITableLabelProvider, IColorProvider, ITableFontProvider
 {
-   private static final Color COLOR_INHERITED = new Color(Display.getDefault(), new RGB(220,220,220));
    private WorkbenchLabelProvider wbLabelProvider = new WorkbenchLabelProvider();
-   
    private NXCSession session;
    private Font inheritedObjectFont;
-   
+   private Color inheritedElementColor = Display.getCurrent().getSystemColor(SWT.COLOR_WIDGET_DISABLED_FOREGROUND);
+
    /**
-    * Constructore
+    * Constructor
     */
    public AttrListLabelProvider()
    {
@@ -59,10 +57,10 @@ public class AttrListLabelProvider extends LabelProvider implements ITableLabelP
       fd.setStyle(SWT.ITALIC);
       inheritedObjectFont = new Font(Display.getCurrent(), fd);
    }
-   
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
-	 */
+
+   /**
+    * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
+    */
    @SuppressWarnings("rawtypes")
 	@Override
 	public Image getColumnImage(Object element, int columnIndex)
@@ -75,13 +73,12 @@ public class AttrListLabelProvider extends LabelProvider implements ITableLabelP
          AbstractObject object = session.findObjectById(attr.getSourceObject());
 	      return (object != null) ? wbLabelProvider.getImage(object) : null;
 	   }
-	   
 		return null;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
+    */
 	@SuppressWarnings("rawtypes")
 	@Override
 	public String getColumnText(Object element, int columnIndex)
@@ -89,13 +86,13 @@ public class AttrListLabelProvider extends LabelProvider implements ITableLabelP
 		if (!(element instanceof Entry))
 			return null;
 
-		Object obj;
+		Object key;
 		CustomAttribute attr;
 		switch(columnIndex)
 		{
 			case CustomAttributes.COLUMN_NAME:
-				obj = ((Entry)element).getKey();
-				return (obj instanceof String) ? (String)obj : null;
+				key = ((Entry)element).getKey();
+				return (key instanceof String) ? (String)key : null;
 			case CustomAttributes.COLUMN_VALUE:
 			   attr = (CustomAttribute)((Entry)element).getValue();
 				return attr.getValue();
@@ -112,23 +109,29 @@ public class AttrListLabelProvider extends LabelProvider implements ITableLabelP
 		return null;
 	}
 
+   /**
+    * @see org.eclipse.jface.viewers.IColorProvider#getForeground(java.lang.Object)
+    */
    @Override
    public Color getForeground(Object element)
    {
       return null;
    }
 
+   /**
+    * @see org.eclipse.jface.viewers.IColorProvider#getBackground(java.lang.Object)
+    */
    @SuppressWarnings("rawtypes")
    @Override
    public Color getBackground(Object element)
    {
       CustomAttribute attr = (CustomAttribute)((Entry)element).getValue();
       if (attr.getSourceObject() != 0 && (attr.getFlags() & CustomAttribute.REDEFINED) == 0)
-         return COLOR_INHERITED;
+         return inheritedElementColor;
       return null;
    }
-   
-   /* (non-Javadoc)
+
+   /**
     * @see org.eclipse.jface.viewers.BaseLabelProvider#dispose()
     */
    @Override
@@ -139,6 +142,10 @@ public class AttrListLabelProvider extends LabelProvider implements ITableLabelP
       super.dispose();
    }
 
+   /**
+    * @see org.eclipse.jface.viewers.ITableFontProvider#getFont(java.lang.Object, int)
+    */
+   @SuppressWarnings("rawtypes")
    @Override
    public Font getFont(Object element, int columnIndex)
    {

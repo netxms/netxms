@@ -74,7 +74,7 @@ public abstract class AbstractAccessListElement
 		return accessRights;
 	}
 	
-	/* (non-Javadoc)
+   /**
     * @see java.lang.Object#toString()
     */
    @Override
@@ -83,9 +83,9 @@ public abstract class AbstractAccessListElement
       return "AbstractAccessListElement [userId=" + userId + ", accessRights=" + accessRights + "]";
    }
 
-   /* (non-Javadoc)
-	 * @see java.lang.Object#equals(java.lang.Object)
-	 */
+   /**
+    * @see java.lang.Object#equals(java.lang.Object)
+    */
 	@Override
 	public boolean equals(Object aThat)
 	{
@@ -99,9 +99,9 @@ public abstract class AbstractAccessListElement
 		       (this.accessRights == ((AbstractAccessListElement)aThat).accessRights);
 	}
 
-	/* (non-Javadoc)
-	 * @see java.lang.Object#hashCode()
-	 */
+   /**
+    * @see java.lang.Object#hashCode()
+    */
 	@Override
 	public int hashCode()
 	{

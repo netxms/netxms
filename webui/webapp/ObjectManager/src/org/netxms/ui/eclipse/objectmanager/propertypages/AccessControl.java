@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,18 +18,21 @@
  */
 package org.netxms.ui.eclipse.objectmanager.propertypages;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.stream.Collectors;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
+import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -66,7 +69,7 @@ public class AccessControl extends PropertyPage
 	private HashMap<Long, AccessListElement> acl;
 	private Button checkInherit;
 	private NXCSession session;
-	
+
    /**
     * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
     */
@@ -75,23 +78,24 @@ public class AccessControl extends PropertyPage
 	{
 		object = (AbstractObject)getElement().getAdapter(AbstractObject.class);
       session = ConsoleSharedData.getSession();
-		
+
 		AccessListElement[] origAcl = object.getAccessList();
 		acl = new HashMap<Long, AccessListElement>(origAcl.length);
 		for(int i = 0; i < origAcl.length; i++)
 			acl.put(origAcl[i].getUserId(), new AccessListElement(origAcl[i]));
-		
+      collectInheritedAccessRights(object);
+
 		// Initiate loading of user manager plugin if it was not loaded before
 		Platform.getAdapterManager().loadAdapter(new AccessListElement(0, 0), "org.eclipse.ui.model.IWorkbenchAdapter"); //$NON-NLS-1$
-		
+
 		Composite dialogArea = new Composite(parent, SWT.NONE);
-		
+
 		GridLayout layout = new GridLayout();
 		layout.marginHeight = 0;
 		layout.marginWidth = 0;
 		layout.numColumns = 2;
 		dialogArea.setLayout(layout);
-		
+
 		Group users = new Group(dialogArea, SWT.NONE);
 		users.setText(Messages.get().AccessControl_UsersGroups);
       GridData gd = new GridData();
@@ -103,7 +107,7 @@ public class AccessControl extends PropertyPage
 
 		layout = new GridLayout();
 		users.setLayout(layout);
-      
+
       final String[] columnNames = { Messages.get().AccessControl_ColLogin, Messages.get().AccessControl_ColRights };
       final int[] columnWidths = { 150, 100 };
       userList = new SortableTableViewer(users, columnNames, columnWidths, 0, SWT.UP,
@@ -127,16 +131,10 @@ public class AccessControl extends PropertyPage
       gd.horizontalAlignment = SWT.RIGHT;
       gd.widthHint = 184;
       buttons.setLayoutData(gd);
-      
+
       final Button addButton = new Button(buttons, SWT.PUSH);
       addButton.setText(Messages.get().AccessControl_Add);
-      addButton.addSelectionListener(new SelectionListener() {
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e)
-			{
-				widgetSelected(e);
-			}
-
+      addButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
@@ -145,8 +143,13 @@ public class AccessControl extends PropertyPage
 				{
 					AbstractUserObject[] selection = dlg.getSelection();
 					for(AbstractUserObject user : selection)
-						acl.put(user.getId(), new AccessListElement(user.getId(), 0));
+               {
+                  AccessListElement curr = acl.get(user.getId());
+                  if ((curr == null) || curr.isInherited())
+                     acl.put(user.getId(), new AccessListElement(user.getId(), 0));
+               }
 					userList.setInput(acl.values().toArray());
+               userList.setSelection(new StructuredSelection(acl.get(selection[0].getId())));
 				}
 			}
       });
@@ -154,28 +157,24 @@ public class AccessControl extends PropertyPage
       final Button deleteButton = new Button(buttons, SWT.PUSH);
       deleteButton.setText(Messages.get().AccessControl_Delete);
       deleteButton.setEnabled(false);
-      deleteButton.addSelectionListener(new SelectionListener() {
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e)
-			{
-				widgetSelected(e);
-			}
-
-			@SuppressWarnings("unchecked")
-			@Override
+      deleteButton.addSelectionListener(new SelectionAdapter() {
+         @SuppressWarnings("unchecked")
+         @Override
 			public void widgetSelected(SelectionEvent e)
 			{
-				IStructuredSelection sel = (IStructuredSelection)userList.getSelection();
-				Iterator<AccessListElement> it = sel.iterator();
+            IStructuredSelection selection = userList.getStructuredSelection();
+				Iterator<AccessListElement> it = selection.iterator();
 				while(it.hasNext())
 				{
 					AccessListElement element = it.next();
-					acl.remove(element.getUserId());
+               if (!element.isInherited())
+                  acl.remove(element.getUserId());
 				}
+            collectInheritedAccessRights(object);
 				userList.setInput(acl.values().toArray());
 			}
       });
-      
+
       Group rights = new Group(dialogArea, SWT.NONE);
       rights.setText(Messages.get().AccessControl_AccessRights);
       rights.setLayout(new RowLayout(SWT.VERTICAL));
@@ -184,7 +183,7 @@ public class AccessControl extends PropertyPage
       gd.horizontalAlignment = SWT.FILL;
       gd.verticalAlignment = SWT.FILL;
       rights.setLayoutData(gd);
-      
+
       createAccessCheck(rights, Messages.get().AccessControl_AccessRead, UserAccessRights.OBJECT_ACCESS_READ);
       createAccessCheck(rights, "Read agent data", UserAccessRights.OBJECT_ACCESS_READ_AGENT);
       createAccessCheck(rights, "Read SNMP data", UserAccessRights.OBJECT_ACCESS_READ_SNMP);
@@ -204,35 +203,51 @@ public class AccessControl extends PropertyPage
       createAccessCheck(rights, Messages.get().AccessControl_ManageFiles, UserAccessRights.OBJECT_ACCESS_MANAGE_FILES);
       createAccessCheck(rights, "Control maintenance mode", UserAccessRights.OBJECT_ACCESS_MAINTENANCE);
       createAccessCheck(rights, "Take screenshot", UserAccessRights.OBJECT_ACCESS_SCREENSHOT);
-      
+
       userList.addSelectionChangedListener(new ISelectionChangedListener() {
 			@Override
 			public void selectionChanged(SelectionChangedEvent event)
 			{
-				IStructuredSelection sel = (IStructuredSelection)event.getSelection();
-				if (sel.size() == 1)
+				IStructuredSelection selection = (IStructuredSelection)event.getSelection();
+				if (selection.size() == 1)
 				{
-					enableAllChecks(true);
-					AccessListElement element = (AccessListElement)sel.getFirstElement();
-					int rights = element.getAccessRights();
+               AccessListElement element = (AccessListElement)selection.getFirstElement();
 
-					for(int i = 0, mask = 1; i < accessChecks.size(); i++, mask <<= 1)
-					{
-						Button check = accessChecks.get(mask);
-						if (check != null)
-						{
-							check.setSelection((rights & mask) == mask);
-						}
-					}
+               int rights = element.getAccessRights();
+               for(int i = 0, mask = 1; i < accessChecks.size(); i++, mask <<= 1)
+               {
+                  Button check = accessChecks.get(mask);
+                  if (check != null)
+                  {
+                     check.setSelection((rights & mask) == mask);
+                  }
+               }
+
+               enableAllChecks(!element.isInherited());
 				}
 				else
 				{
 					enableAllChecks(false);
 				}
-				deleteButton.setEnabled(sel.size() > 0);
+
+            if (selection.size() > 0)
+            {
+               boolean allowDelete = true;
+               for(Object o : selection.toList())
+                  if (((AccessListElement)o).isInherited())
+                  {
+                     allowDelete = false;
+                     break;
+                  }
+               deleteButton.setEnabled(allowDelete);
+            }
+            else
+            {
+               deleteButton.setEnabled(false);
+            }
 			}
       });
-      
+
       checkInherit = new Button(dialogArea, SWT.CHECK);
       checkInherit.setText(Messages.get().AccessControl_InheritRights);
       if (object.getParentCount() > 0)
@@ -245,21 +260,63 @@ public class AccessControl extends PropertyPage
          checkInherit.setSelection(false);
          checkInherit.setEnabled(false);
       }
-      
+      checkInherit.addSelectionListener(new SelectionAdapter() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            int oldAclSize = acl.size();
+
+            if (checkInherit.getSelection())
+            {
+               collectInheritedAccessRights(object);
+            }
+            else
+            {
+               ArrayList<Long> deleteList = new ArrayList<Long>();
+               for(AccessListElement element : acl.values())
+                  if (element.isInherited())
+                     deleteList.add(element.getUserId());
+               for(Long id : deleteList)
+                  acl.remove(id);
+            }
+
+            if (acl.size() != oldAclSize)
+               userList.setInput(acl.values().toArray());
+         }
+      });
+
       syncUsersAndRefresh();
-      
+
 		return dialogArea;
 	}
-   
+
+   /**
+    * Collect inherited access rights
+    */
+   private void collectInheritedAccessRights(AbstractObject currentObject)
+   {
+      if (!currentObject.isInheritAccessRights())
+         return;
+
+      for(AbstractObject o : currentObject.getParentsAsArray())
+      {
+         for(AccessListElement e : o.getAccessList())
+         {
+            if (acl.containsKey(e.getUserId()))
+               continue;
+            acl.put(e.getUserId(), new AccessListElement(e, true));
+         }
+         collectInheritedAccessRights(o);
+      }
+   }
+
    /**
     * Get user info and refresh view
     */
    private void syncUsersAndRefresh()
    {
       if (session.isUserDatabaseSynchronized())
-      {
          return;
-      }
 
       ConsoleJob job = new ConsoleJob("Synchronize users", null, Activator.PLUGIN_ID, null) {
          @Override
@@ -299,13 +356,7 @@ public class AccessControl extends PropertyPage
       final Button check = new Button(parent, SWT.CHECK);
       check.setText(name);
       check.setEnabled(false);
-      check.addSelectionListener(new SelectionListener() {
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e)
-			{
-				widgetSelected(e);
-			}
-
+      check.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
@@ -335,7 +386,7 @@ public class AccessControl extends PropertyPage
 			b.setEnabled(enabled);
 		}
 	}
-	
+
 	/**
 	 * Apply changes
 	 * 
@@ -346,10 +397,9 @@ public class AccessControl extends PropertyPage
 		if (isApply)
 			setValid(false);
 		
-		final boolean inheritAccessRights = checkInherit.getSelection();
 		final NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
-		md.setACL(acl.values().toArray(new AccessListElement[acl.size()]));
-		md.setInheritAccessRights(inheritAccessRights);
+      md.setACL(acl.values().stream().filter(e -> !e.isInherited()).collect(Collectors.toList()));
+      md.setInheritAccessRights(checkInherit.getSelection());
 
 		new ConsoleJob(String.format(Messages.get().AccessControl_JobName, object.getObjectName()), null, Activator.PLUGIN_ID, null) {
 			@Override
