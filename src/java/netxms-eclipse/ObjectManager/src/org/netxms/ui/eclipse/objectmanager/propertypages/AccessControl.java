@@ -402,7 +402,7 @@ public class AccessControl extends PropertyPage
       if (!inheritAccessRights && accessRights.isEmpty())
       {
          if (!MessageDialogHelper.openQuestion(getShell(), "Access Control Warning",
-               "Access rights inheritance is off and there are no direct rights assignment. This will effectively block access to this object for everyone except system user. Are you sure?"))
+               "There are no direct or inherited access control rules for this object. If you continue with this change, object will be accessible only by the user \"system\". Do you want to proceed?"))
          {
             checkInherit.setSelection(true);
             collectInheritedAccessRights(object);
