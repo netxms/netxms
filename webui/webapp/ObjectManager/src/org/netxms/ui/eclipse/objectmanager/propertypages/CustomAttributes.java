@@ -259,14 +259,29 @@ public class CustomAttributes extends PropertyPage
             boolean parentAttributeFound = false;
             for(AbstractObject obj : object.getParentsAsArray())
             {
-               CustomAttribute ca = obj.getCustomAttribute(element.getKey());
-               if (ca != null)
+               if (element.getValue().getSourceObject() == obj.getObjectId())
                {
-                  attributes.put(element.getKey(), new CustomAttribute(ca.getValue(), CustomAttribute.INHERITABLE, ca.isInherited() && !ca.isRedefined() ? ca.getSourceObject() : obj.getObjectId()));
-                  parentAttributeFound = true;
+                  CustomAttribute ca = obj.getCustomAttribute(element.getKey());
+                  if (ca != null && ca.isInheritable())
+                  {
+                     attributes.put(element.getKey(), new CustomAttribute(ca.getValue(), CustomAttribute.INHERITABLE, ca.isInherited() && !ca.isRedefined() ? ca.getSourceObject() : obj.getObjectId()));
+                     parentAttributeFound = true;
+                  }
                   break;
                }
             }
+            if (!parentAttributeFound) //Search any parent with attribute
+               for(AbstractObject obj : object.getParentsAsArray())
+               {
+                  CustomAttribute ca = obj.getCustomAttribute(element.getKey());
+                  if (ca != null && ca.isInheritable())
+                  {
+                     attributes.put(element.getKey(), new CustomAttribute(ca.getValue(), CustomAttribute.INHERITABLE, ca.isInherited() && !ca.isRedefined() ? ca.getSourceObject() : obj.getObjectId()));
+                     parentAttributeFound = true;
+                     break;
+                  }
+               }
+               
             if (!parentAttributeFound) // Parent attribute not found, do real delete
                attributes.remove(element.getKey());
             modified = true;
