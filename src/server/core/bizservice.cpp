@@ -330,19 +330,17 @@ void BusinessService::statusPoll(PollerInfo *poller, ClientSession *session, UIN
    unique_ptr<SharedObjectArray<BusinessServiceCheck>> checks = getChecks();
    for (const shared_ptr<BusinessServiceCheck>& check : *checks)
    {
-      BusinessServiceTicketData data = {};
+      shared_ptr<BusinessServiceTicketData> data = make_shared<BusinessServiceTicketData>();
       SharedString checkDescription = check->getDescription();
 
       nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("BusinessService::statusPoll(%s [%u]): executing check %s [%u]"), m_name, m_id, checkDescription.cstr(), check->getId());
       sendPollerMsg(_T("   Executing business service check \"%s\"\r\n"), checkDescription.cstr());
       int oldCheckState = check->getState();
-      int newCheckState = check->execute(&data);
+      int newCheckState = check->execute(data);
 
-      if (data.ticketId != 0)
+      if (data->ticketId != 0)
       {
-         unique_ptr<SharedObjectArray<NetObj>> parents = getParents(OBJECT_BUSINESS_SERVICE);
-         for (const shared_ptr<NetObj>& parent : *parents)
-            static_cast<BusinessService&>(*parent).addChildTicket(data);
+         ThreadPoolExecuteSerialized(g_mainThreadPool, _T("BizSvcTicketUpdate"), this, &BusinessService::addTicketToParents, data);
       }
       if (oldCheckState != newCheckState)
       {
@@ -416,32 +414,48 @@ void BusinessService::statusPoll(PollerInfo *poller, ClientSession *session, UIN
 }
 
 /**
- * Add ticket from child business service to parent business service.
- * Used to ensure, that we have all info about downtimes in parent business service.
- * Parent tickets closed simultaneously with original ticket
+ * Add ticket to parent objects
  */
-void BusinessService::addChildTicket(const BusinessServiceTicketData& data)
+void BusinessService::addTicketToParents(shared_ptr<BusinessServiceTicketData> data)
 {
-   unique_ptr<SharedObjectArray<NetObj>> parents = getParents(OBJECT_BUSINESS_SERVICE);
-   for (const shared_ptr<NetObj>& parent : *parents)
-      static_cast<BusinessService&>(*parent).addChildTicket(data);
-
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO business_service_tickets (ticket_id,original_ticket_id,original_service_id,check_id,check_description,service_id,create_timestamp,close_timestamp,reason) VALUES (?,?,?,?,?,?,?,0,?)"));
    if (hStmt != nullptr)
    {
-      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, CreateUniqueId(IDG_BUSINESS_SERVICE_TICKET));
-      DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, data.ticketId);
-      DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, data.serviceId);
-      DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, data.checkId);
-      DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, data.description, DB_BIND_STATIC);
-      DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, m_id);
-      DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(data.timestamp));
-      DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, data.reason, DB_BIND_STATIC);
-      DBExecute(hStmt);
+      if (DBBegin(hdb))
+      {
+         unique_ptr<SharedObjectArray<NetObj>> parents = getParents(OBJECT_BUSINESS_SERVICE);
+         for (const shared_ptr<NetObj>& parent : *parents)
+            static_cast<BusinessService&>(*parent).addChildTicket(hStmt, data);
+         DBCommit(hdb);
+      }
       DBFreeStatement(hStmt);
    }
    DBConnectionPoolReleaseConnection(hdb);
+}
+
+/**
+ * Add ticket from child business service to parent business service.
+ * Used to ensure, that we have all info about downtimes in parent business service.
+ * Parent tickets closed simultaneously with original ticket.
+ * Caller of this method provides prepared statement that expects fields in the following order:
+ *    ticket_id,original_ticket_id,original_service_id,check_id,check_description,service_id,create_timestamp,close_timestamp,reason
+ */
+void BusinessService::addChildTicket(DB_STATEMENT hStmt, const shared_ptr<BusinessServiceTicketData>& data)
+{
+   unique_ptr<SharedObjectArray<NetObj>> parents = getParents(OBJECT_BUSINESS_SERVICE);
+   for (const shared_ptr<NetObj>& parent : *parents)
+      static_cast<BusinessService&>(*parent).addChildTicket(hStmt, data);
+
+   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, CreateUniqueId(IDG_BUSINESS_SERVICE_TICKET));
+   DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, data->ticketId);
+   DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, data->serviceId);
+   DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, data->checkId);
+   DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, data->description, DB_BIND_STATIC);
+   DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, m_id);
+   DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(data->timestamp));
+   DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, data->reason, DB_BIND_STATIC);
+   DBExecute(hStmt);
 }
 
 /**

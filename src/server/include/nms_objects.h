@@ -4314,7 +4314,7 @@ protected:
    uint32_t m_currentTicket;
    Mutex m_mutex;
 
-   bool insertTicket(BusinessServiceTicketData* ticket);
+   void insertTicket(const shared_ptr<BusinessServiceTicketData>& ticket);
    void closeTicket();
    void compileScript();
 
@@ -4339,7 +4339,7 @@ public:
    uint32_t getRelatedDCI() const { return m_relatedDCI; }
    SharedString getDescription() const { return GetStringAttributeWithLock(m_description, m_mutex); }
 
-   int execute(BusinessServiceTicketData* ticket);
+   int execute(const shared_ptr<BusinessServiceTicketData>& ticket);
 
    void modifyFromMessage(const NXCPMessage& request);
    void fillMessage(NXCPMessage *msg, uint32_t baseId) const;
@@ -4491,6 +4491,9 @@ protected:
    void validateAutomaticObjectChecks();
    void validateAutomaticDCIChecks();
 
+   void addTicketToParents(shared_ptr<BusinessServiceTicketData> data);
+   void addChildTicket(DB_STATEMENT hStmt, const shared_ptr<BusinessServiceTicketData>& data);
+
 public:
    BusinessService();
    BusinessService(const TCHAR *name);
@@ -4518,8 +4521,6 @@ public:
    void updateFromPrototype(const BusinessServicePrototype& prototype);
    void updateCheckFromPrototype(const BusinessServiceCheck& prototype);
    void deleteCheckFromPrototype(uint32_t prototypeCheckId);
-
-   void addChildTicket(const BusinessServiceTicketData& data);
 };
 
 /**

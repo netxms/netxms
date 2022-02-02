@@ -248,7 +248,7 @@ bool BusinessServiceCheck::saveToDatabase(DB_HANDLE hdb) const
 /**
  * Execute check. It could be object status check, or DCI status check or script
  */
-int BusinessServiceCheck::execute(BusinessServiceTicketData* ticket)
+int BusinessServiceCheck::execute(const shared_ptr<BusinessServiceTicketData>& ticket)
 {
 	lock();
 	int oldState = m_state;
@@ -386,52 +386,77 @@ int BusinessServiceCheck::execute(BusinessServiceTicketData* ticket)
 }
 
 /**
+ * Insert ticket into database
+ */
+static void InsertTicketIntoDB(const shared_ptr<BusinessServiceTicketData>& ticket)
+{
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   if (DBBegin(hdb))
+   {
+      DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO business_service_tickets (ticket_id,original_ticket_id,original_service_id,check_id,check_description,service_id,create_timestamp,close_timestamp,reason) VALUES (?,0,0,?,?,?,?,0,?)"));
+      if (hStmt != nullptr)
+      {
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, ticket->ticketId);
+         DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, ticket->checkId);
+         DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, ticket->description, DB_BIND_STATIC);
+         DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, ticket->serviceId);
+         DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(ticket->timestamp));
+         DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, ticket->reason, DB_BIND_STATIC);
+         DBExecute(hStmt);
+         DBFreeStatement(hStmt);
+      }
+
+      hStmt = DBPrepare(hdb, _T("UPDATE business_service_checks SET current_ticket=? WHERE id=?"));
+      if (hStmt != nullptr)
+      {
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, ticket->ticketId);
+         DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, ticket->checkId);
+         DBExecute(hStmt);
+         DBFreeStatement(hStmt);
+      }
+
+      DBCommit(hdb);
+   }
+   DBConnectionPoolReleaseConnection(hdb);
+}
+
+/**
  * Insert ticket for this check into business_service_tickets. Expected to be called while lock on check is held.
  */
-bool BusinessServiceCheck::insertTicket(BusinessServiceTicketData* ticket)
+void BusinessServiceCheck::insertTicket(const shared_ptr<BusinessServiceTicketData>& ticket)
 {
 	if (m_state == STATUS_NORMAL)
-		return false;
+		return;
 
+   time_t currentTime = time(nullptr);
 	m_currentTicket = CreateUniqueId(IDG_BUSINESS_SERVICE_TICKET);
+   ticket->ticketId = m_currentTicket;
+   ticket->checkId = m_id;
+   _tcslcpy(ticket->description, m_description, 1024);
+   ticket->serviceId = m_serviceId;
+   ticket->timestamp = currentTime;
+   _tcslcpy(ticket->reason, m_reason, 256);
 
-	bool success = false;
-	time_t currentTime = time(nullptr);
-	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-	DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO business_service_tickets (ticket_id,original_ticket_id,original_service_id,check_id,check_description,service_id,create_timestamp,close_timestamp,reason) VALUES (?,0,0,?,?,?,?,0,?)"));
-	if (hStmt != nullptr)
-	{
-		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_currentTicket);
-		DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_id);
-		DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_description, DB_BIND_STATIC);
-		DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, m_serviceId);
-		DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(currentTime));
-		DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, m_reason, DB_BIND_STATIC);
-		success = DBExecute(hStmt);
-		DBFreeStatement(hStmt);
-	}
+   ThreadPoolExecuteSerialized(g_mainThreadPool, _T("BizSvcTicketUpdate"), InsertTicketIntoDB, ticket);
+}
 
-	if (success)
-	{
-		ticket->ticketId = m_currentTicket;
-		ticket->checkId = m_id;
-		_tcslcpy(ticket->description, m_description, 1024);
-		ticket->serviceId = m_serviceId;
-		ticket->timestamp = currentTime;
-		_tcslcpy(ticket->reason, m_reason, 256);
+/**
+ * Close ticket in database
+ */
+static void CloseTicketInDB(uint32_t ticketId, time_t timestamp)
+{
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("UPDATE business_service_tickets SET close_timestamp=? WHERE ticket_id=? OR original_ticket_id=?"));
+   if (hStmt != nullptr)
+   {
+      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(timestamp));
+      DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, ticketId);
+      DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, ticketId);
+      DBExecute(hStmt);
+      DBFreeStatement(hStmt);
+   }
 
-		hStmt = DBPrepare(hdb, _T("UPDATE business_service_checks SET current_ticket=? WHERE id=?"));
-		if (hStmt != nullptr)
-		{
-			DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_currentTicket);
-			DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_id);
-			success = DBExecute(hStmt);
-			DBFreeStatement(hStmt);
-		}
-	}
-
-	DBConnectionPoolReleaseConnection(hdb);
-	return success;
+   DBConnectionPoolReleaseConnection(hdb);
 }
 
 /**
@@ -439,20 +464,7 @@ bool BusinessServiceCheck::insertTicket(BusinessServiceTicketData* ticket)
  */
 void BusinessServiceCheck::closeTicket()
 {
-	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-
-	DB_STATEMENT hStmt = DBPrepare(hdb, _T("UPDATE business_service_tickets SET close_timestamp=? WHERE ticket_id=? OR original_ticket_id=?"));
-	if (hStmt != nullptr)
-	{
-		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(time(nullptr)));
-		DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_currentTicket);
-		DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_currentTicket);
-		DBExecute(hStmt);
-		DBFreeStatement(hStmt);
-	}
-
-	DBConnectionPoolReleaseConnection(hdb);
-
+   ThreadPoolExecuteSerialized(g_mainThreadPool, _T("BizSvcTicketUpdate"), CloseTicketInDB, m_currentTicket, time(nullptr));
 	m_currentTicket = 0;
 	m_reason[0] = 0;
 }
