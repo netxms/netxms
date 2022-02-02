@@ -2748,12 +2748,12 @@ public:
    void write(const void *data, size_t size);
    void write(char c) { write(&c, 1); }
    void write(BYTE b) { write(&b, 1); }
-   void write(INT16 n) { UINT16 x = htons((UINT16)n); write(&x, 2); }
-   void write(UINT16 n) { UINT16 x = htons(n); write(&x, 2); }
-   void write(INT32 n) { UINT32 x = htonl((UINT32)n); write(&x, 4); }
-   void write(UINT32 n) { UINT32 x = htonl(n); write(&x, 4); }
-   void write(INT64 n) { UINT64 x = htonq((UINT64)n); write(&x, 8); }
-   void write(UINT64 n) { UINT64 x = htonq(n); write(&x, 8); }
+   void write(int16_t n) { uint16_t x = htons((uint16_t)n); write(&x, 2); }
+   void write(uint16_t n) { uint16_t x = htons(n); write(&x, 2); }
+   void write(int32_t n) { uint32_t x = htonl((uint32_t)n); write(&x, 4); }
+   void write(uint32_t n) { uint32_t x = htonl(n); write(&x, 4); }
+   void write(int64_t n) { uint64_t x = htonq((uint64_t)n); write(&x, 8); }
+   void write(uint64_t n) { uint64_t x = htonq(n); write(&x, 8); }
    void write(double n) { double x = htond(n); write(&x, 8); }
    void writeString(const TCHAR *s);
    void writeStringUtf8(const char *s);

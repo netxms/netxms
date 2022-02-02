@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -27,19 +27,18 @@
 /**
  * Constructor for our lexer class
  */
-NXSL_Lexer::NXSL_Lexer(NXSL_Compiler *pCompiler, const TCHAR *pszCode)
+NXSL_Lexer::NXSL_Lexer(NXSL_Compiler *compiler, const TCHAR *sourceCode)
 {
 #ifdef UNICODE
-	m_pszSourceCode = UTF8StringFromWideString(pszCode);
+	m_sourceCode = UTF8StringFromWideString(sourceCode);
 #else
-   m_pszSourceCode = MemCopyStringA(pszCode);
+	m_sourceCode = UTF8StringFromMBString(sourceCode);
 #endif
-   m_nSourceSize = (int)strlen(m_pszSourceCode);
-   m_nCurrLine = 1;
-   m_nSourcePos = 0;
-   m_pCompiler = pCompiler;
-   m_nStrSize = 0;
-   m_nCommentLevel = 0;
+   m_sourceSize = strlen(m_sourceCode);
+   m_currLine = 1;
+   m_sourcePos = 0;
+   m_compiler = compiler;
+   m_commentLevel = 0;
 }
 
 /**
@@ -47,33 +46,32 @@ NXSL_Lexer::NXSL_Lexer(NXSL_Compiler *pCompiler, const TCHAR *pszCode)
  */
 NXSL_Lexer::~NXSL_Lexer()
 {
-   MemFree(m_pszSourceCode);
+   MemFree(m_sourceCode);
 }
 
 /**
  * Alternative input method
  */
-int NXSL_Lexer::lexerInput(char *pBuffer, int nMaxSize)
+size_t NXSL_Lexer::lexerInput(char *buffer, size_t maxSize)
 {
-   int nBytes;
-
-   if (m_nSourcePos < m_nSourceSize)
+   size_t bytes;
+   if (m_sourcePos < m_sourceSize)
    {
-      nBytes = std::min(nMaxSize, m_nSourceSize - m_nSourcePos);
-      memcpy(pBuffer, &m_pszSourceCode[m_nSourcePos], nBytes);
-      m_nSourcePos += nBytes;
+      bytes = std::min(maxSize, m_sourceSize - m_sourcePos);
+      memcpy(buffer, &m_sourceCode[m_sourcePos], bytes);
+      m_sourcePos += bytes;
    }
    else
    {
-      nBytes = 0;   // EOF
+      bytes = 0;   // EOF
    }
-   return nBytes;
+   return bytes;
 }
 
 /**
  * Report error
  */
-void NXSL_Lexer::error(const char *pszText)
+void NXSL_Lexer::error(const char *message)
 {
-	m_pCompiler->error(pszText);
+	m_compiler->error(message);
 }
