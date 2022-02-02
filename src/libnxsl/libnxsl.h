@@ -304,24 +304,25 @@ class NXSL_Lexer
 	friend int yylex(YYSTYPE *, yyscan_t);
 
 protected:
-   int m_nSourceSize;
-   int m_nSourcePos;
-   char *m_pszSourceCode;
-   NXSL_Compiler *m_pCompiler;
+   size_t m_sourceSize;
+   size_t m_sourcePos;
+   char *m_sourceCode;
+   NXSL_Compiler *m_compiler;
 
-   int m_nCurrLine;
-   int m_nCommentLevel;
-   int m_nStrSize;
-   char m_szStr[MAX_STRING_SIZE];
+   int m_currLine;
+   int m_commentLevel;
+   size_t m_stringSize;
+   char m_string[MAX_STRING_SIZE];
+   ByteStream m_text;
 
 public:
-	NXSL_Lexer(NXSL_Compiler *pCompiler, const TCHAR *pszCode);
-	virtual ~NXSL_Lexer();
+	NXSL_Lexer(NXSL_Compiler *compiler, const TCHAR *sourceCode);
+	~NXSL_Lexer();
 
-	int lexerInput(char *pBuffer, int nMaxSize);
+	size_t lexerInput(char *buffer, size_t maxSize);
 
-	int getCurrLine() { return m_nCurrLine; }
-	void error(const char *pszText);
+	int getCurrLine() { return m_currLine; }
+	void error(const char *message);
 };
 
 /**

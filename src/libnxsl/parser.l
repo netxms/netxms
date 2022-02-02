@@ -6,6 +6,7 @@
 %x COMMENT
 %x STR
 %x STR2
+%x TEXT
 
 whitespace	[[:blank:]\t\r]+
 identifier	[A-Za-z_\$][A-Za-z_\$0-9]*
@@ -167,13 +168,14 @@ static void LexerError(const char *pszMsg, yyscan_t scanner);
 <INITIAL>"#"	return '#';
 <INITIAL>"\\"	return T_IDIV;
 
-<INITIAL>"/*"	{ yyextra->m_nCommentLevel = 1; BEGIN COMMENT; }
-<INITIAL>\"	{ yyextra->m_nStrSize = 0; BEGIN STR; }
-<INITIAL>\'	{ yyextra->m_nStrSize = 0; BEGIN STR2; }
+<INITIAL>"/*"     { yyextra->m_commentLevel = 1; BEGIN COMMENT; }
+<INITIAL>"\"\"\"" { yyextra->m_text.clear(); BEGIN TEXT; }
+<INITIAL>\"       { yyextra->m_stringSize = 0; BEGIN STR; }
+<INITIAL>\'       { yyextra->m_stringSize = 0; BEGIN STR2; }
 
 <INITIAL>"//".*	;
 
-<INITIAL>\n	yyextra->m_nCurrLine++;
+<INITIAL>\n	yyextra->m_currLine++;
 <INITIAL>{whitespace}	;
 <INITIAL>.	{
 			char szBuffer[128];
@@ -187,30 +189,30 @@ static void LexerError(const char *pszMsg, yyscan_t scanner);
 		}
 
 <STR>{escape}	{
-			if (yyextra->m_nStrSize < MAX_STRING_SIZE)
+			if (yyextra->m_stringSize < MAX_STRING_SIZE)
 			{
 				switch(yytext[1])
 				{
 					case '"':
-						yyextra->m_szStr[yyextra->m_nStrSize++] = '"';
+						yyextra->m_string[yyextra->m_stringSize++] = '"';
 						break;
 					case 'n':
-						yyextra->m_szStr[yyextra->m_nStrSize++] = '\n';
+						yyextra->m_string[yyextra->m_stringSize++] = '\n';
 						break;
 					case 'r':
-						yyextra->m_szStr[yyextra->m_nStrSize++] = '\r';
+						yyextra->m_string[yyextra->m_stringSize++] = '\r';
 						break;
 					case 'b':
-						yyextra->m_szStr[yyextra->m_nStrSize++] = '\b';
+						yyextra->m_string[yyextra->m_stringSize++] = '\b';
 						break;
 					case 't':
-						yyextra->m_szStr[yyextra->m_nStrSize++] = '\t';
+						yyextra->m_string[yyextra->m_stringSize++] = '\t';
 						break;
 					case '0':
-						yyextra->m_szStr[yyextra->m_nStrSize++] = 0;
+						yyextra->m_string[yyextra->m_stringSize++] = 0;
 						break;
 					default:
-						yyextra->m_szStr[yyextra->m_nStrSize++] = yytext[1];
+						yyextra->m_string[yyextra->m_stringSize++] = yytext[1];
 						break;
 				}
 			}
@@ -229,7 +231,7 @@ static void LexerError(const char *pszMsg, yyscan_t scanner);
 			{
 				if ((nVal >= 0) && (nVal <= 255))
 				{
-					yyextra->m_szStr[yyextra->m_nStrSize++] = nVal;
+					yyextra->m_string[yyextra->m_stringSize++] = nVal;
 				}
 				else
 				{
@@ -245,8 +247,8 @@ static void LexerError(const char *pszMsg, yyscan_t scanner);
 		}
 <STR>\"		{
 			BEGIN INITIAL;
-			yyextra->m_szStr[yyextra->m_nStrSize] = 0;
-			yylval->valStr = MemCopyStringA(yyextra->m_szStr);
+			yyextra->m_string[yyextra->m_stringSize] = 0;
+			yylval->valStr = MemCopyStringA(yyextra->m_string);
 			return T_STRING;
 		}
 <STR>\r		;
@@ -255,9 +257,9 @@ static void LexerError(const char *pszMsg, yyscan_t scanner);
 			return LEXER_ERROR;
 		}
 <STR>.		{
-			if (yyextra->m_nStrSize < MAX_STRING_SIZE)
+			if (yyextra->m_stringSize < MAX_STRING_SIZE)
 			{
-				yyextra->m_szStr[yyextra->m_nStrSize++] = *yytext;
+				yyextra->m_string[yyextra->m_stringSize++] = *yytext;
 			}
 			else
 			{
@@ -268,8 +270,8 @@ static void LexerError(const char *pszMsg, yyscan_t scanner);
 
 <STR2>\'		{
 			BEGIN INITIAL;
-			yyextra->m_szStr[yyextra->m_nStrSize] = 0;
-			yylval->valStr = MemCopyStringA(yyextra->m_szStr);
+			yyextra->m_string[yyextra->m_stringSize] = 0;
+			yylval->valStr = MemCopyStringA(yyextra->m_string);
 			return T_STRING;
 		}
 <STR2>\r		;
@@ -278,9 +280,9 @@ static void LexerError(const char *pszMsg, yyscan_t scanner);
 			return LEXER_ERROR;
 		}
 <STR2>.		{
-			if (yyextra->m_nStrSize < MAX_STRING_SIZE)
+			if (yyextra->m_stringSize < MAX_STRING_SIZE)
 			{
-				yyextra->m_szStr[yyextra->m_nStrSize++] = *yytext;
+				yyextra->m_string[yyextra->m_stringSize++] = *yytext;
 			}
 			else
 			{
@@ -289,14 +291,24 @@ static void LexerError(const char *pszMsg, yyscan_t scanner);
 			}
 		}
 
-<COMMENT>"/*"	yyextra->m_nCommentLevel++;
-<COMMENT>"*/"	{ yyextra->m_nCommentLevel--; if (yyextra->m_nCommentLevel == 0) BEGIN INITIAL; }
-<COMMENT>\n	yyextra->m_nCurrLine++;
+<TEXT>"\"\"\""		{
+			BEGIN INITIAL;
+			yyextra->m_text.write(0);
+			yylval->valStr = MemCopyStringA(reinterpret_cast<const char*>(yyextra->m_text.buffer()));
+			return T_STRING;
+		}
+<TEXT>\r		;
+<TEXT>\n		{ yyextra->m_text.write('\n'); yyextra->m_currLine++; }
+<TEXT>.		{ yyextra->m_text.write(*yytext); }
+
+<COMMENT>"/*"	yyextra->m_commentLevel++;
+<COMMENT>"*/"	{ yyextra->m_commentLevel--; if (yyextra->m_commentLevel == 0) BEGIN INITIAL; }
+<COMMENT>\n	yyextra->m_currLine++;
 <COMMENT>.	;
 
 %%
 
-static void LexerError(const char *pszMsg, yyscan_t scanner)
+static void LexerError(const char *message, yyscan_t scanner)
 {
-   yyget_extra(scanner)->error(pszMsg);
+   yyget_extra(scanner)->error(message);
 }
