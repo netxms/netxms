@@ -21,6 +21,7 @@ package org.netxms.nxmc.modules.objects.propertypages;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.stream.Collectors;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.viewers.ArrayContentProvider;
@@ -53,6 +54,7 @@ import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.propertypages.helpers.AccessListComparator;
 import org.netxms.nxmc.modules.objects.propertypages.helpers.AccessListLabelProvider;
 import org.netxms.nxmc.modules.users.dialogs.SelectUserDialog;
+import org.netxms.nxmc.tools.MessageDialogHelper;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
@@ -414,13 +416,28 @@ public class AccessControl extends ObjectPropertyPage
     */
    @Override
    protected boolean applyChanges(final boolean isApply)
-	{
-		if (isApply)
-			setValid(false);
-		
-		final NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
-      md.setACL(acl.values().stream().filter(e -> !e.isInherited()).collect(Collectors.toList()));
-      md.setInheritAccessRights(checkInherit.getSelection());
+   {
+      boolean inheritAccessRights = checkInherit.getSelection();
+      List<AccessListElement> accessRights = acl.values().stream().filter(e -> !e.isInherited()).collect(Collectors.toList());
+
+      if (!inheritAccessRights && accessRights.isEmpty())
+      {
+         if (!MessageDialogHelper.openQuestion(getShell(), i18n.tr("Access Control Warning"),
+               i18n.tr("Access rights inheritance is off and there are no direct rights assignment. This will effectively block access to this object for everyone except system user. Are you sure?")))
+         {
+            checkInherit.setSelection(true);
+            collectInheritedAccessRights(object);
+            userList.setInput(acl.values().toArray());
+            return false;
+         }
+      }
+
+      if (isApply)
+         setValid(false);
+
+      final NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
+      md.setACL(accessRights);
+      md.setInheritAccessRights(inheritAccessRights);
 
       new Job(String.format(i18n.tr("Update access control list for object %s"), object.getObjectName()), null, null) {
 			@Override

@@ -21,6 +21,7 @@ package org.netxms.ui.eclipse.objectmanager.propertypages;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.stream.Collectors;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Platform;
@@ -54,6 +55,7 @@ import org.netxms.ui.eclipse.objectmanager.Messages;
 import org.netxms.ui.eclipse.objectmanager.propertypages.helpers.AccessListComparator;
 import org.netxms.ui.eclipse.objectmanager.propertypages.helpers.AccessListLabelProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.usermanager.dialogs.SelectUserDialog;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
@@ -388,21 +390,36 @@ public class AccessControl extends PropertyPage
 	}
 
 	/**
-	 * Apply changes
-	 * 
-	 * @param isApply true if update operation caused by "Apply" button
-	 */
-	protected void applyChanges(final boolean isApply)
-	{
-		if (isApply)
-			setValid(false);
-		
-		final NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
-      md.setACL(acl.values().stream().filter(e -> !e.isInherited()).collect(Collectors.toList()));
-      md.setInheritAccessRights(checkInherit.getSelection());
+    * Apply changes.
+    *
+    * @param isApply true if update operation caused by "Apply" button
+    */
+   private boolean applyChanges(final boolean isApply)
+   {
+      boolean inheritAccessRights = checkInherit.getSelection();
+      List<AccessListElement> accessRights = acl.values().stream().filter(e -> !e.isInherited()).collect(Collectors.toList());
 
-		new ConsoleJob(String.format(Messages.get().AccessControl_JobName, object.getObjectName()), null, Activator.PLUGIN_ID, null) {
-			@Override
+      if (!inheritAccessRights && accessRights.isEmpty())
+      {
+         if (!MessageDialogHelper.openQuestion(getShell(), "Access Control Warning",
+               "Access rights inheritance is off and there are no direct rights assignment. This will effectively block access to this object for everyone except system user. Are you sure?"))
+         {
+            checkInherit.setSelection(true);
+            collectInheritedAccessRights(object);
+            userList.setInput(acl.values().toArray());
+            return false;
+         }
+      }
+
+      if (isApply)
+         setValid(false);
+
+      final NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
+      md.setACL(accessRights);
+      md.setInheritAccessRights(inheritAccessRights);
+
+      new ConsoleJob(String.format(Messages.get().AccessControl_JobName, object.getObjectName()), null, Activator.PLUGIN_ID, null) {
+         @Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 				session.modifyObject(md);
@@ -429,26 +446,26 @@ public class AccessControl extends PropertyPage
 				return Messages.get().AccessControl_JobError;
 			}
 		}.start();
+      return true;
 	}
 
    /**
     * @see org.eclipse.jface.preference.PreferencePage#performOk()
     */
-	@Override
-	public boolean performOk()
-	{
-		applyChanges(false);
-		return true;
-	}
+   @Override
+   public boolean performOk()
+   {
+      return applyChanges(false);
+   }
 
    /**
     * @see org.eclipse.jface.preference.PreferencePage#performApply()
     */
-	@Override
-	protected void performApply()
-	{
-		applyChanges(true);
-	}
+   @Override
+   protected void performApply()
+   {
+      applyChanges(true);
+   }
 
    /**
     * @see org.eclipse.jface.preference.PreferencePage#performDefaults()
