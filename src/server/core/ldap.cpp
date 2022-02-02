@@ -1048,10 +1048,16 @@ uint32_t LDAPConnection::ldapUserLogin(const TCHAR *name, const TCHAR *password)
    // Prevent empty password, bind against AD will succeed with
    // empty password by default.
    if (ldap_strlen(m_userPassword) == 0)
+   {
+      PostSystemEvent(EVENT_LDAP_SYNC_ERROR ,g_dwMgmtNode, "issss", 0, _T(""), m_userDN, _T(""), _T("User password should not be empty"));
       return RCC_ACCESS_DENIED;
+   }
 
    if (m_ldapConn == nullptr)
+   {
+      PostSystemEvent(EVENT_LDAP_SYNC_ERROR ,g_dwMgmtNode, "issss", 0, _T(""), m_userDN, _T(""), _T("No LDAP connection"));
       return RCC_NO_LDAP_CONNECTION;
+   }
 
 #ifdef _WIN32
    int rc = ldap_simple_bind_s(m_ldapConn, m_userDN, m_userPassword);
@@ -1064,7 +1070,12 @@ uint32_t LDAPConnection::ldapUserLogin(const TCHAR *name, const TCHAR *password)
    if (rc == LDAP_SUCCESS)
       return RCC_SUCCESS;
 
-   nxlog_debug_tag(LDAP_DEBUG_TAG, 4, _T("LDAPConnection::loginLDAP(): cannot login to LDAP server (%s)"), getErrorString(rc).cstr());
+   String errorString = getErrorString(rc);
+   nxlog_debug_tag(LDAP_DEBUG_TAG, 4, _T("LDAPConnection::loginLDAP(): cannot login to LDAP server (%s)"), errorString.cstr());
+
+   TCHAR description[MAX_USER_DESCR];
+   _sntprintf(description, MAX_USER_DESCR, _T("Cannot login to LDAP server (%s)"), errorString.cstr());
+   PostSystemEvent(EVENT_LDAP_SYNC_ERROR ,g_dwMgmtNode, "issss", 0, _T(""), m_userDN, _T(""), description);
    return RCC_ACCESS_DENIED;
 }
 
