@@ -103,7 +103,7 @@ public class AttributeEditDialog extends Dialog
       if (inherited)
       {
          NXCSession session = ConsoleSharedData.getSession();
-         checkInherite.setText(String.format("Inheritable (Inherited from: %s [%d])", 
+         checkInherite.setText(String.format("Inheritable (enforced by %s [%d])", 
                session.getObjectName(source), source));   
       }
       else

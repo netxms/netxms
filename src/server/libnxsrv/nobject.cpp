@@ -237,20 +237,43 @@ bool NObject::isDirectParent(uint32_t id) const
 }
 
 /**
- * Get custom attribute value from parent by name
+ * Get inheritable custom attribute value from parent by name
  */
-SharedString NObject::getCustomAttributeFromParent(const TCHAR *name)
+SharedString NObject::getCustomAttributeFromParent(const TCHAR *name, uint32_t id)
 {
    SharedString value;
    readLockParentList();
    for(int i = 0; i < m_parentList.size(); i++)
    {
-      value = m_parentList.get(i)->getCustomAttribute(name);
-      if (!value.isNull())
+      if (m_parentList.get(i)->getId() == id)
+      {
+         value = m_parentList.get(i)->getInheritableCustomAttribute(name);
          break;
+      }
    }
    unlockParentList();
    return value;
+}
+
+/**
+ * Get inheritable custom attribute value from parent by name
+ */
+std::pair<uint32_t, SharedString> NObject::getCustomAttributeFromParent(const TCHAR *name)
+{
+   SharedString value;
+   uint32_t sourceId = 0;
+   readLockParentList();
+   for(int i = 0; i < m_parentList.size(); i++)
+   {
+      value = m_parentList.get(i)->getInheritableCustomAttribute(name);
+      if (!value.isNull())
+      {
+         sourceId = m_parentList.get(i)->getId();
+         break;
+      }
+   }
+   unlockParentList();
+   return std::pair<uint32_t, SharedString>(sourceId, value);
 }
 
 /**
@@ -541,13 +564,23 @@ void NObject::setCustomAttributesFromMessage(const NXCPMessage& msg)
 
    for(int i = 0; i < updateList.size(); i++)
    {
-      SharedString value = getCustomAttributeFromParent(updateList.get(i)->first);
+      SharedString value = getCustomAttributeFromParent(updateList.get(i)->first, updateList.get(i)->second);
       if (!value.isNull())
+      {
          setCustomAttribute(updateList.get(i)->first, value, updateList.get(i)->second);
+      }
       else
-         populateRemove(updateList.get(i)->first); // Attribute no longer exist at parent, delete it from this object
+      {
+         std::pair<uint32_t, SharedString> value = getCustomAttributeFromParent(updateList.get(i)->first);
+         if (!value.second.isNull())
+            setCustomAttribute(updateList.get(i)->first, value.second, value.first);
+         else
+            populateRemove(updateList.get(i)->first); // Attribute no longer exist at parent, delete it from this object
+      }
    }
 }
+
+
 
 /**
  * Delete custom attribute
@@ -568,7 +601,7 @@ void NObject::deleteCustomAttribute(const TCHAR *name)
       if (ca->isRedefined())
       {
          ca->flags &= ~CAF_REDEFINED;
-         ca->value = getCustomAttributeFromParent(name);
+         ca->value = getCustomAttributeFromParent(name, ca->sourceObject);
       }
       else
       {
@@ -582,7 +615,21 @@ void NObject::deleteCustomAttribute(const TCHAR *name)
    if (populate)
       populateRemove(name);
    else if (redefined)
-      setCustomAttribute(name, getCustomAttributeFromParent(name), parent);
+   {
+      SharedString value = getCustomAttributeFromParent(name, parent);
+      if (!value.isNull())
+      {
+         setCustomAttribute(name, value, parent);
+      }
+      else
+      {
+         std::pair<uint32_t, SharedString> value = getCustomAttributeFromParent(name);
+         if (!value.second.isNull())
+            setCustomAttribute(name, value.second, value.first);
+         else
+            populateRemove(name); // Attribute no longer exist at parent, delete it from this object
+      }
+   }
 }
 
 /**
@@ -632,8 +679,16 @@ void NObject::deletePopulatedCustomAttribute(const TCHAR *name)
       }
       else
       {
-         ca->sourceObject = 0;
-         ca->flags &= ~CAF_REDEFINED;
+         std::pair<uint32_t, SharedString> value = getCustomAttributeFromParent(name);
+         if (!value.second.isNull()) //Redefine may come from different node
+         {
+            ca->sourceObject = value.first;
+         }
+         else
+         {
+            ca->sourceObject = 0;
+            ca->flags &= ~CAF_REDEFINED;
+         }
       }
 
       onCustomAttributeChange();
@@ -709,6 +764,22 @@ SharedString NObject::getCustomAttribute(const TCHAR *name) const
       return result;
    }
 
+   return SharedString();
+}
+
+/**
+ * Get custom attribute into buffer
+ */
+SharedString NObject::getInheritableCustomAttribute(const TCHAR *name) const
+{
+   lockCustomAttributes();
+   const CustomAttribute *attr = m_customAttributes.get(name);
+   if (attr != nullptr && attr->isInheritable())
+   {
+      unlockCustomAttributes();
+      return SharedString(attr->value);
+   }
+   unlockCustomAttributes();
    return SharedString();
 }
 
@@ -950,7 +1021,7 @@ void NObject::pruneCustomAttributes()
       KeyValuePair<CustomAttribute> *p = attributes->get(i);
       if (p->value->isRedefined())
       {
-         SharedString parentValue = getCustomAttributeFromParent(p->key);
+         SharedString parentValue = getCustomAttributeFromParent(p->key, p->value->sourceObject);
          if (parentValue.isNull())
          {
             CustomAttribute *ca = m_customAttributes.get(p->key);

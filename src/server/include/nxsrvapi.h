@@ -533,7 +533,8 @@ private:
    StringObjectMap<CustomAttribute> m_customAttributes;
    Mutex m_customAttributeLock;
 
-   SharedString getCustomAttributeFromParent(const TCHAR *name);
+   SharedString getCustomAttributeFromParent(const TCHAR *name, uint32_t id);
+   std::pair<uint32_t, SharedString> getCustomAttributeFromParent(const TCHAR *name);
    bool setCustomAttributeFromMessage(const NXCPMessage& msg, uint32_t base);
    void setCustomAttribute(const TCHAR *name, SharedString value, uint32_t parent);
    void deletePopulatedCustomAttribute(const TCHAR *name);
@@ -609,6 +610,7 @@ public:
    int getParentCount() const { return m_parentList.size(); }
 
    TCHAR *getCustomAttribute(const TCHAR *name, TCHAR *buffer, size_t size) const;
+   SharedString getInheritableCustomAttribute(const TCHAR *name) const;
    SharedString getCustomAttribute(const TCHAR *name) const;
    TCHAR *getCustomAttributeCopy(const TCHAR *name) const;
    int32_t getCustomAttributeAsInt32(const TCHAR *key, int32_t defaultValue) const;
