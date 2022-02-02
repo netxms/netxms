@@ -587,9 +587,9 @@ class NXSL_TimeClass : public NXSL_Class
 public:
    NXSL_TimeClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr);
-   virtual bool setAttr(NXSL_Object *object, const char *attr, NXSL_Value *value);
-	virtual void onObjectDelete(NXSL_Object *object);
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
+   virtual bool setAttr(NXSL_Object *object, const NXSL_Identifier& attr, NXSL_Value *value) override;
+	virtual void onObjectDelete(NXSL_Object *object) override;
 };
 
 /**
@@ -603,7 +603,7 @@ NXSL_TimeClass::NXSL_TimeClass() : NXSL_Class()
 /**
  * Get TIME class attribute
  */
-NXSL_Value *NXSL_TimeClass::getAttr(NXSL_Object *object, const char *attr)
+NXSL_Value *NXSL_TimeClass::getAttr(NXSL_Object *object, const NXSL_Identifier& attr)
 {
    NXSL_Value *value = NXSL_Class::getAttr(object, attr);
    if (value != nullptr)
@@ -653,46 +653,46 @@ NXSL_Value *NXSL_TimeClass::getAttr(NXSL_Object *object, const char *attr)
 /**
  * Set "TIME" class attribute
  */
-bool NXSL_TimeClass::setAttr(NXSL_Object *object, const char *attr, NXSL_Value *value)
+bool NXSL_TimeClass::setAttr(NXSL_Object *object, const NXSL_Identifier& attr, NXSL_Value *value)
 {
    if (!value->isInteger())
       return false;
 
    bool success = true;
    struct tm *st = (struct tm *)object->getData();
-   if (!strcmp(attr, "sec") || !strcmp(attr, "tm_sec"))
+   if (compareAttributeName(attr, "sec") || compareAttributeName(attr, "tm_sec"))
    {
       st->tm_sec = value->getValueAsInt32();
    }
-   else if (!strcmp(attr, "min") || !strcmp(attr, "tm_min"))
+   else if (compareAttributeName(attr, "min") || compareAttributeName(attr, "tm_min"))
    {
       st->tm_min = value->getValueAsInt32();
    }
-   else if (!strcmp(attr, "hour") || !strcmp(attr, "tm_hour"))
+   else if (compareAttributeName(attr, "hour") || compareAttributeName(attr, "tm_hour"))
    {
       st->tm_hour = value->getValueAsInt32();
    }
-   else if (!strcmp(attr, "mday") || !strcmp(attr, "tm_mday"))
+   else if (compareAttributeName(attr, "mday") || compareAttributeName(attr, "tm_mday"))
    {
       st->tm_mday = value->getValueAsInt32();
    }
-   else if (!strcmp(attr, "mon") || !strcmp(attr, "tm_mon"))
+   else if (compareAttributeName(attr, "mon") || compareAttributeName(attr, "tm_mon"))
    {
       st->tm_mon = value->getValueAsInt32();
    }
-   else if (!strcmp(attr, "year") || !strcmp(attr, "tm_year"))
+   else if (compareAttributeName(attr, "year") || compareAttributeName(attr, "tm_year"))
    {
       st->tm_year = value->getValueAsInt32() - 1900;
    }
-   else if (!strcmp(attr, "yday") || !strcmp(attr, "tm_yday"))
+   else if (compareAttributeName(attr, "yday") || compareAttributeName(attr, "tm_yday"))
    {
       st->tm_yday = value->getValueAsInt32();
    }
-   else if (!strcmp(attr, "wday") || !strcmp(attr, "tm_wday"))
+   else if (compareAttributeName(attr, "wday") || compareAttributeName(attr, "tm_wday"))
    {
       st->tm_wday = value->getValueAsInt32();
    }
-   else if (!strcmp(attr, "isdst") || !strcmp(attr, "tm_isdst"))
+   else if (compareAttributeName(attr, "isdst") || compareAttributeName(attr, "tm_isdst"))
    {
       st->tm_isdst = value->getValueAsInt32();
    }
