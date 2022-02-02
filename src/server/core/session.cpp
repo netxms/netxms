@@ -2271,6 +2271,15 @@ void ClientSession::login(const NXCPMessage& request)
             methods->fillMessage(&response, VID_2FA_METHOD_LIST_BASE, VID_2FA_METHOD_COUNT);
          }
       }
+      else
+      {
+         writeAuditLog(AUDIT_SECURITY, false, 0, _T("User \"%s\" login failed with error code %d (client info: %s)"), m_loginInfo->loginName, rcc, m_clientInfo);
+         if (m_loginInfo->intruderLockout)
+         {
+            writeAuditLog(AUDIT_SECURITY, false, 0, _T("User account \"%s\" temporary disabled due to excess count of failed authentication attempts"), m_loginInfo->loginName);
+         }
+         m_dwUserId = INVALID_INDEX;   // reset user ID to avoid incorrect count of logged in sessions for that user
+      }
       response.setField(VID_RCC, rcc);
    }
    else
