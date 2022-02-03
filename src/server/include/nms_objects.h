@@ -4693,7 +4693,7 @@ shared_ptr<Subnet> NXCORE_EXPORTABLE FindSubnetForNode(int32_t zoneUIN, const In
 bool AdjustSubnetBaseAddress(InetAddress& baseAddr, int32_t zoneUIN);
 shared_ptr<MobileDevice> NXCORE_EXPORTABLE FindMobileDeviceByDeviceID(const TCHAR *deviceId);
 shared_ptr<AccessPoint> NXCORE_EXPORTABLE FindAccessPointByMAC(const MacAddress& macAddr);
-UINT32 NXCORE_EXPORTABLE FindLocalMgmtNode();
+uint32_t NXCORE_EXPORTABLE FindLocalMgmtNode();
 shared_ptr<Zone> NXCORE_EXPORTABLE FindZoneByUIN(int32_t zoneUIN);
 shared_ptr<Zone> NXCORE_EXPORTABLE FindZoneByProxyId(uint32_t proxyId);
 int32_t FindUnusedZoneUIN();

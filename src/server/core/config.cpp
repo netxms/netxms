@@ -1094,33 +1094,24 @@ bool NXCORE_EXPORTABLE ConfigDelete(const TCHAR *variable)
 TCHAR NXCORE_EXPORTABLE *ConfigReadCLOB(const TCHAR *variable, const TCHAR *defaultValue)
 {
    TCHAR *result = nullptr;
-
-   if (_tcslen(variable) <= 63)
-	{
-      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-      DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT var_value FROM config_clob WHERE var_name=?"));
-      if (hStmt != nullptr)
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT var_value FROM config_clob WHERE var_name=?"));
+   if (hStmt != nullptr)
+   {
+      DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, variable, DB_BIND_STATIC);
+      DB_RESULT hResult = DBSelectPrepared(hStmt);
+      if (hResult != nullptr)
       {
-         DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, variable, DB_BIND_STATIC);
-         DB_RESULT hResult = DBSelectPrepared(hStmt);
-		   if (hResult != nullptr)
-		   {
-			   if (DBGetNumRows(hResult) > 0)
-			   {
-				   result = DBGetField(hResult, 0, 0, nullptr, 0);
-			   }
-			   DBFreeResult(hResult);
-		   }
-         DBFreeStatement(hStmt);
+         if (DBGetNumRows(hResult) > 0)
+         {
+            result = DBGetField(hResult, 0, 0, nullptr, 0);
+         }
+         DBFreeResult(hResult);
       }
-      DBConnectionPoolReleaseConnection(hdb);
-	}
-
-	// Return default value in case of error
-	if ((result == nullptr) && (defaultValue != nullptr))
-		result = _tcsdup(defaultValue);
-
-	return result;
+      DBFreeStatement(hStmt);
+   }
+   DBConnectionPoolReleaseConnection(hdb);
+	return (result != nullptr) ? result : MemCopyString(defaultValue);
 }
 
 /**

@@ -45,9 +45,9 @@ public class CreateZone implements IObjectActionDelegate
 	private IWorkbenchPart part;
 	private long parentId = -1;
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.IObjectActionDelegate#setActivePart(org.eclipse.jface.action.IAction, org.eclipse.ui.IWorkbenchPart)
-	 */
+   /**
+    * @see org.eclipse.ui.IObjectActionDelegate#setActivePart(org.eclipse.jface.action.IAction, org.eclipse.ui.IWorkbenchPart)
+    */
 	@Override
 	public void setActivePart(IAction action, IWorkbenchPart targetPart)
 	{
@@ -55,9 +55,9 @@ public class CreateZone implements IObjectActionDelegate
 		window = targetPart.getSite().getWorkbenchWindow();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.IActionDelegate#run(org.eclipse.jface.action.IAction)
-	 */
+   /**
+    * @see org.eclipse.ui.IActionDelegate#run(org.eclipse.jface.action.IAction)
+    */
 	@Override
 	public void run(IAction action)
 	{
@@ -65,7 +65,7 @@ public class CreateZone implements IObjectActionDelegate
 		if (dlg.open() != Window.OK)
 			return;
 		
-		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+      final NXCSession session = ConsoleSharedData.getSession();
 		new ConsoleJob(Messages.get().CreateZone_JobTitle, part, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
@@ -83,9 +83,9 @@ public class CreateZone implements IObjectActionDelegate
 		}.start();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.IActionDelegate#selectionChanged(org.eclipse.jface.action.IAction, org.eclipse.jface.viewers.ISelection)
-	 */
+   /**
+    * @see org.eclipse.ui.IActionDelegate#selectionChanged(org.eclipse.jface.action.IAction, org.eclipse.jface.viewers.ISelection)
+    */
 	@Override
 	public void selectionChanged(IAction action, ISelection selection)
 	{

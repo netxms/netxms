@@ -71,6 +71,51 @@ static THREAD s_mapUpdateThread = INVALID_THREAD_HANDLE;
 static THREAD s_applyTemplateThread = INVALID_THREAD_HANDLE;
 
 /**
+ * Zone ID selector data
+ */
+static Mutex s_zoneUinSelectorLock;
+static HashSet<int32_t> s_zoneUinSelectorHistory;
+
+/**
+ * Save zone selector history (all zone UINs ever used for selection)
+ */
+static void SaveZoneSelectorHistory()
+{
+   StringBuffer sb;
+   s_zoneUinSelectorLock.lock();
+   for(const int32_t *uin : s_zoneUinSelectorHistory)
+   {
+      sb.append(*uin);
+      sb.append(_T(','));
+   }
+   s_zoneUinSelectorLock.unlock();
+   sb.shrink(1);
+   ConfigWriteCLOB(_T("Objects.Zones.UINHistory"), sb, true);
+}
+
+/**
+ * Find unused zone UIN
+ */
+int32_t FindUnusedZoneUIN()
+{
+   int32_t uin = 0;
+   s_zoneUinSelectorLock.lock();
+   for(int32_t i = 1; i < 0x7FFFFFFF; i++)
+   {
+      if (g_idxZoneByUIN.get(i) != nullptr)
+         continue;
+      if (s_zoneUinSelectorHistory.contains(i))
+         continue;
+      s_zoneUinSelectorHistory.put(i);
+      uin = i;
+      break;
+   }
+   s_zoneUinSelectorLock.unlock();
+   ThreadPoolExecute(g_mainThreadPool, SaveZoneSelectorHistory);
+   return uin;
+}
+
+/**
  * Thread which apply template updates
  */
 static void ApplyTemplateThread()
@@ -567,6 +612,10 @@ void NetObjDeleteFromIndexes(const NetObj& object)
          MacDbRemoveInterface(static_cast<const Interface&>(object));
          break;
       case OBJECT_ZONE:
+         s_zoneUinSelectorLock.lock();
+         s_zoneUinSelectorHistory.put(static_cast<const Zone&>(object).getUIN());
+         s_zoneUinSelectorLock.unlock();
+         ThreadPoolExecute(g_mainThreadPool, SaveZoneSelectorHistory);
 			g_idxZoneByUIN.remove(static_cast<const Zone&>(object).getUIN());
          break;
       case OBJECT_CONDITION:
@@ -1316,46 +1365,11 @@ shared_ptr<Zone> NXCORE_EXPORTABLE FindZoneByProxyId(uint32_t proxyId)
 }
 
 /**
- * Zone ID selector data
- */
-static Mutex s_zoneUinSelectorLock;
-static IntegerArray<int32_t> s_zoneUinSelectorHistory;
-
-/**
- * Find unused zone UIN
- */
-int32_t FindUnusedZoneUIN()
-{
-   int32_t uin = 0;
-   s_zoneUinSelectorLock.lock();
-   for(UINT32 i = 1; i < 0x7FFFFFFF; i++)
-   {
-      if (g_idxZoneByUIN.get(i) != nullptr)
-         continue;
-      if (s_zoneUinSelectorHistory.contains(i))
-         continue;
-      s_zoneUinSelectorHistory.add(i);
-      uin = i;
-      break;
-   }
-   s_zoneUinSelectorLock.unlock();
-   return uin;
-}
-
-/**
- * Object comparator for FindLocalMgmtNode()
- */
-static bool LocalMgmtNodeComparator(NetObj *object, void *data)
-{
-	return (((Node *)object)->getCapabilities() & NC_IS_LOCAL_MGMT) ? true : false;
-}
-
-/**
  * Find local management node ID
  */
-UINT32 FindLocalMgmtNode()
+uint32_t FindLocalMgmtNode()
 {
-	shared_ptr<NetObj> object = g_idxNodeById.find(LocalMgmtNodeComparator, nullptr);
+	shared_ptr<NetObj> object = g_idxNodeById.find([](NetObj *object, void *context) -> bool { return (static_cast<Node*>(object)->getCapabilities() & NC_IS_LOCAL_MGMT) ? true : false; }, nullptr);
 	return (object != nullptr) ? object->getId() : 0;
 }
 
@@ -1424,6 +1438,19 @@ bool LoadObjects()
 {
    // Prevent objects to change it's modification flag
    g_modificationsLocked = true;
+
+   // Load zone selector history
+   TCHAR *uinHistory = ConfigReadCLOB(_T("Objects.Zones.UINHistory"), _T(""));
+   StringList *uinList = String::split(uinHistory, _tcslen(uinHistory), _T(","));
+   for(int i = 0; i < uinList->size(); i++)
+   {
+      TCHAR *eptr;
+      int32_t uin = _tcstol(uinList->get(i), &eptr, 10);
+      if ((uin != 0) && (*eptr == 0))
+         s_zoneUinSelectorHistory.put(uin);
+   }
+   delete uinList;
+   MemFree(uinHistory);
 
    DB_HANDLE mainDB = DBConnectionPoolAcquireConnection();
    DB_HANDLE hdb = mainDB;

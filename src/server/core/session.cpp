@@ -5694,7 +5694,7 @@ void ClientSession::createObject(const NXCPMessage& request)
 					request.getFieldAsString(VID_OBJECT_NAME, objectName, MAX_OBJECT_NAME);
 
 					// Do additional validation by modules
-               UINT32 moduleRCC = RCC_SUCCESS;
+               uint32_t moduleRCC = RCC_SUCCESS;
                ENUMERATE_MODULES(pfValidateObjectCreation)
                {
                   moduleRCC = CURRENT_MODULE.pfValidateObjectCreation(objectClass, objectName, ipAddr, zoneUIN, request);
