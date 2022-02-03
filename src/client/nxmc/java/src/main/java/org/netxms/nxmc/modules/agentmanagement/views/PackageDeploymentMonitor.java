@@ -19,9 +19,7 @@
 package org.netxms.nxmc.modules.agentmanagement.views;
 
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -33,19 +31,20 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.client.packages.PackageDeploymentListener;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.View;
+import org.netxms.nxmc.base.widgets.MessageArea;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.agentmanagement.PackageDeployment;
 import org.netxms.nxmc.modules.agentmanagement.views.helpers.DeploymentStatus;
 import org.netxms.nxmc.modules.agentmanagement.views.helpers.DeploymentStatusComparator;
 import org.netxms.nxmc.modules.agentmanagement.views.helpers.DeploymentStatusLabelProvider;
 import org.netxms.nxmc.modules.objects.views.ObjectView;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
-import org.netxms.nxmc.tools.MessageDialogHelper;
+import org.netxms.nxmc.tools.RefreshTimer;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -63,9 +62,13 @@ public class PackageDeploymentMonitor extends ObjectView
 	private SortableTableViewer viewer;
 	private long packageId;
 	private Set<Long> applicableObjects;
-	private Map<Long, DeploymentStatus> statusList = new HashMap<Long, DeploymentStatus>();
-	private Action actionRedeploy;	
+	private Action actionRedeploy;
+	private PackageDeployment listener;
+   private RefreshTimer refreshTimer;
 
+	/**
+	 * Default constructor
+	 */
    public PackageDeploymentMonitor()
    {
       super(i18n.tr("Package Deployment Monitor"), ResourceManager.getImageDescriptor("icons/object-views/package_deploy.gif"), ID + UUID.randomUUID().toString(), false);
@@ -80,11 +83,9 @@ public class PackageDeploymentMonitor extends ObjectView
       PackageDeploymentMonitor view = (PackageDeploymentMonitor)super.cloneView();
       view.packageId = packageId;
       view.applicableObjects = applicableObjects;
-      //TODO: implement correct copy action
+      view.listener = listener;
       return view;
-   }
-   
-   
+   }   
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
@@ -98,6 +99,22 @@ public class PackageDeploymentMonitor extends ObjectView
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.setLabelProvider(new DeploymentStatusLabelProvider());
 		viewer.setComparator(new DeploymentStatusComparator());
+      
+      refreshTimer = new RefreshTimer(100, viewer.getControl(), new Runnable() {
+          @Override
+          public void run()
+          {
+             getWindow().getShell().getDisplay().asyncExec(new Runnable() {
+                @Override
+                public void run()
+                {
+                   viewer.setInput(listener.getDeployments().toArray());
+                }
+             });
+          }
+       });
+      
+      listener.addMonitor(this);
 		
 	   createActions();
 	}
@@ -112,33 +129,18 @@ public class PackageDeploymentMonitor extends ObjectView
 	}
 
 	/**
-	 * @param nodeId
-	 * @param status
-	 * @param message
+	 * Update deployment status
+	 * 
+	 * @param statusArray 
 	 */
-	public void viewStatusUpdate(final long nodeId, final int status, final String message)
+	public void viewStatusUpdate()
 	{
-		getWindow().getShell().getDisplay().asyncExec(new Runnable() {
-			@Override
-			public void run()
-			{
-				DeploymentStatus s = statusList.get(nodeId);
-				if (s == null)
-				{
-					s = new DeploymentStatus(nodeId, status, message);
-					statusList.put(nodeId, s);
-					viewer.setInput(statusList.values().toArray());
-				}
-				else
-				{
-					s.setStatus(status);
-					s.setMessage(message);
-					viewer.update(s, null);
-				}
-			}
-		});
+	   refreshTimer.execute();
 	}
-	
+   
+	/**
+	 * Create actions
+	 */
 	private void createActions()
 	{
 	   actionRedeploy = new Action(i18n.tr("Restart failed installation"), SharedIcons.RESTART) { 
@@ -150,10 +152,13 @@ public class PackageDeploymentMonitor extends ObjectView
       };
 	}
 	
+	/**
+	 * Start package redeployment
+	 */
 	private void redeployPackages()
 	{
 	   final Set<Long> objects = new HashSet<Long>();
-	   Collection<DeploymentStatus> array =  statusList.values();
+	   Collection<DeploymentStatus> array =  listener.getDeployments();
 	   for(DeploymentStatus obj : array)
 	   {
 	      if(obj.getStatus() == 4) //status failed
@@ -162,46 +167,21 @@ public class PackageDeploymentMonitor extends ObjectView
 	      }
 	   }
 	   
-	      final NXCSession session = (NXCSession)Registry.getSession();
-	      Job job = new Job(i18n.tr("Deploy agent package"), this) {
-	         protected void run(IProgressMonitor monitor) throws Exception
-	         {
-	            session.deployPackage(packageId, objects.toArray(new Long[objects.size()]), new PackageDeploymentListener() {
-	               
-	               @Override
-	               public void statusUpdate(long nodeId, int status, String message)
-	               {
-                     viewStatusUpdate(nodeId, status, message);
-	               }
-	               
-	               @Override
-	               public void deploymentStarted()
-	               {
-	                 
-	               }
-	               
-	               @Override
-	               public void deploymentComplete()
-	               {
-	                  runInUIThread(new Runnable() {
-	                     @Override
-	                     public void run()
-	                     {
-	                        MessageDialogHelper.openInformation(getWindow().getShell(), i18n.tr("Information"), i18n.tr("Package deployment completed"));
-	                     }
-	                  });
-	               }
-	            });
-	         }
-	         
-	         @Override
-	         protected String getErrorMessage()
-	         {
-	            return i18n.tr("Cannot start package deployment");
-	         }
-	      };
-	      job.setUser(false);
-	      job.start();
+      final NXCSession session = (NXCSession)Registry.getSession();
+      Job job = new Job(i18n.tr("Deploy agent package"), this) {
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            session.deployPackage(packageId, objects.toArray(new Long[objects.size()]), listener);
+         }
+         
+         @Override
+         protected String getErrorMessage()
+         {
+            return i18n.tr("Cannot start package deployment");
+         }
+      };
+      job.setUser(false);
+      job.start();
 	   
 	}
    
@@ -228,6 +208,16 @@ public class PackageDeploymentMonitor extends ObjectView
    {
       this.applicableObjects = objects;
    }
+   
+   /**
+    * Set update listener
+    * 
+    * @param listener
+    */
+   public void setPackageDeploymentListener(PackageDeployment listener)
+   {
+      this.listener = listener;
+   }
 
    @Override
    public boolean isValidForContext(Object context)
@@ -247,5 +237,23 @@ public class PackageDeploymentMonitor extends ObjectView
    public boolean isCloseable()
    {
       return true;
-   }  
+   }
+
+   @Override
+   public void dispose()
+   {
+      listener.removeMonitor(this);
+      super.dispose();
+   }
+
+   public void deploymentComplete()
+   {
+      getWindow().getShell().getDisplay().asyncExec(new Runnable() {
+         @Override
+         public void run()
+         {   
+            addMessage(MessageArea.INFORMATION, i18n.tr("Package deployment completed"));
+         }
+      });
+   }   
 }

@@ -35,7 +35,6 @@ import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.NXCSession;
 import org.netxms.client.ScheduledTask;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.client.packages.PackageDeploymentListener;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.Perspective;
@@ -44,6 +43,7 @@ import org.netxms.nxmc.base.views.ViewPlacement;
 import org.netxms.nxmc.base.widgets.helpers.MenuContributionItem;
 import org.netxms.nxmc.base.windows.PopOutViewWindow;
 import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.agentmanagement.PackageDeployment;
 import org.netxms.nxmc.modules.agentmanagement.dialogs.SelectDeployPackage;
 import org.netxms.nxmc.modules.agentmanagement.views.PackageDeploymentMonitor;
 import org.netxms.nxmc.modules.objects.dialogs.MaintanenceScheduleDialog;
@@ -397,74 +397,28 @@ public class ObjectContextMenuManager extends MenuManager
             objects.add(((AbstractObject)o).getObjectId());
          }
       }
+
+      PackageDeploymentMonitor monitor = new PackageDeploymentMonitor();  
+      monitor.setPackageId(dialog.getSelectedPackageId());
+      monitor.setApplicableObjects(objects);       
+      PackageDeployment deployment = new PackageDeployment(monitor);
+      monitor.setPackageDeploymentListener(deployment);
+      Perspective p = view.getPerspective();   
+      if (p != null)
+      {
+         p.addMainView(monitor, true, false);
+      }
+      else
+      {
+         PopOutViewWindow window = new PopOutViewWindow(monitor);
+         window.open();
+      }
       final NXCSession session = Registry.getSession();
-      Job job = new Job(i18n.tr("Deploy agent package"), view) {
+      Job job = new Job(i18n.tr("Deploy agent package"), monitor) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            session.deployPackage(dialog.getSelectedPackageId(), objects.toArray(new Long[objects.size()]), new PackageDeploymentListener() {
-               private PackageDeploymentMonitor monitor = null;
-               
-               @Override
-               public void statusUpdate(long nodeId, int status, String message)
-               {
-                  if (monitor != null)
-                     monitor.viewStatusUpdate(nodeId, status, message);
-               }
-               
-               @Override
-               public void deploymentStarted()
-               {
-                  final Object sync = new Object();
-                  synchronized(sync)
-                  {
-                     runInUIThread(new Runnable() {
-                        @Override
-                        public void run()
-                        {
-                           monitor = new PackageDeploymentMonitor();  
-                           monitor.setPackageId(dialog.getSelectedPackageId());
-                           monitor.setApplicableObjects(objects);                         
-                           Perspective p = view.getPerspective();   
-                           if (p != null)
-                           {
-                              p.addMainView(monitor, true, false);
-                           }
-                           else
-                           {
-                              PopOutViewWindow window = new PopOutViewWindow(monitor);
-                              window.open();
-                           }
-                           
-                           synchronized(sync)
-                           {
-                              sync.notify();
-                           }
-                        }
-                     });
-
-                     try
-                     {
-                        sync.wait();
-                     }
-                     catch(InterruptedException e)
-                     {
-                     }
-                  }
-               }
-
-               @Override
-               public void deploymentComplete()
-               {
-                  runInUIThread(new Runnable() {
-                     @Override
-                     public void run()
-                     {
-                        MessageDialogHelper.openInformation(view.getWindow().getShell(), i18n.tr("Information"), i18n.tr("Package deployment completed"));
-                     }
-                  });
-               }
-            });
+            session.deployPackage(dialog.getSelectedPackageId(), objects.toArray(new Long[objects.size()]), deployment);
          }
          
          @Override
