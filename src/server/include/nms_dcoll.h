@@ -417,8 +417,9 @@ public:
 	virtual bool deleteAllData();
 	virtual bool deleteEntry(time_t timestamp);
 
-   virtual void getEventList(HashSet<uint32_t> *eventList) = 0;
-   virtual void createExportRecord(StringBuffer &xml) = 0;
+   virtual void getEventList(HashSet<uint32_t> *eventList) const = 0;
+   virtual bool isUsingEvent(uint32_t eventCode) const = 0;
+   virtual void createExportRecord(StringBuffer &xml) const = 0;
    virtual void getScriptDependencies(StringSet *dependencies) const;
    virtual json_t *toJson();
 
@@ -456,8 +457,6 @@ public:
 
    virtual SharedString getText() const override;
    virtual SharedString getAttribute(const TCHAR *attribute) const override;
-
-   virtual bool isUsingEvent(uint32_t eventCode) const { return false; };
 };
 
 /**
@@ -555,8 +554,9 @@ public:
 	virtual bool deleteAllData() override;
    virtual bool deleteEntry(time_t timestamp) override;
 
-   virtual void getEventList(HashSet<uint32_t> *eventList) override;
-   virtual void createExportRecord(StringBuffer &str) override;
+   virtual void getEventList(HashSet<uint32_t> *eventList) const override;
+   virtual bool isUsingEvent(uint32_t eventCode) const override;
+   virtual void createExportRecord(StringBuffer &str) const override;
    virtual json_t *toJson() override;
 
 	int getThresholdCount() const { return (m_thresholds != nullptr) ? m_thresholds->size() : 0; }
@@ -573,16 +573,6 @@ public:
 
    static bool testTransformation(DataCollectionTarget *object, const shared_ptr<DCObjectInfo>& dcObjectInfo,
             const TCHAR *script, const TCHAR *value, TCHAR *buffer, size_t bufSize);
-
-   virtual bool isUsingEvent(uint32_t eventCode) const override
-   {
-      if (m_thresholds == nullptr)
-         return false;
-      for (int i = 0; i < m_thresholds->size(); i++)
-         if (m_thresholds->get(i)->isUsingEvent(eventCode))
-            return true;
-      return false;
-   }
 };
 
 struct TableThresholdCbData;
@@ -823,8 +813,9 @@ public:
 	virtual bool deleteAllData() override;
    virtual bool deleteEntry(time_t timestamp) override;
 
-   virtual void getEventList(HashSet<uint32_t> *eventList) override;
-   virtual void createExportRecord(StringBuffer &xml) override;
+   virtual void getEventList(HashSet<uint32_t> *eventList) const override;
+   virtual bool isUsingEvent(uint32_t eventCode) const override;
+   virtual void createExportRecord(StringBuffer &xml) const override;
    virtual json_t *toJson() override;
 
    bool processNewValue(time_t nTimeStamp, const shared_ptr<Table>& value, bool *updateStatus);
@@ -842,14 +833,6 @@ public:
    void updateResultColumns(const shared_ptr<Table>& t);
 
 	static INT32 columnIdFromName(const TCHAR *name);
-
-   virtual bool isUsingEvent(uint32_t eventCode) const override
-   {
-      for (int i = 0; i < m_thresholds->size(); i++)
-         if (m_thresholds->get(i)->isUsingEvent(eventCode))
-            return true;
-      return false;
-   }
 };
 
 /**

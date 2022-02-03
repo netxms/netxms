@@ -20,19 +20,18 @@ package org.netxms.ui.eclipse.objectmanager.propertypages.helpers;
 
 import org.eclipse.jface.viewers.ITableColorProvider;
 import org.eclipse.jface.viewers.ITableLabelProvider;
-import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.client.AccessListElement;
+import org.netxms.ui.eclipse.console.resources.ThemeEngine;
 
 /**
  * Label provider for NetXMS objects access lists
  */
 public class AccessListLabelProvider extends WorkbenchLabelProvider implements ITableLabelProvider, ITableColorProvider
 {
-   private final Color inheritedElementColor = Display.getCurrent().getSystemColor(SWT.COLOR_WIDGET_DISABLED_FOREGROUND);
+   private final Color inheritedElementColor = ThemeEngine.getForegroundColor("List.DisabledItem");
 
    /**
     * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)

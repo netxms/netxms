@@ -13034,21 +13034,21 @@ public class NXCSession
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public List<EventReference> getEventReferences(int eventCode) throws IOException, NXCException 
+   public List<EventReference> getEventReferences(long eventCode) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_EVENT_REFERENCES);
-      msg.setFieldInt32(NXCPCodes.VID_EVENT_CODE, eventCode);
+      msg.setFieldInt32(NXCPCodes.VID_EVENT_CODE, (int)eventCode);
       sendMessage(msg);
-      
+
       NXCPMessage response = waitForRCC(msg.getMessageId());
       int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_ELEMENTS);
-      List<EventReference> erl = new ArrayList<EventReference>(count);
+      List<EventReference> eventReferences = new ArrayList<EventReference>(count);
       long fieldId = NXCPCodes.VID_ELEMENT_LIST_BASE;
       for(int i = 0; i < count; i++)
       {
-         erl.add(new EventReference(response, fieldId));
-         fieldId += 10;
+         eventReferences.add(new EventReference(response, fieldId));
+         fieldId += 100;
       }
-      return erl;
+      return eventReferences;
    }
 }

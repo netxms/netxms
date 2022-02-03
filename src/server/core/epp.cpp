@@ -1406,21 +1406,15 @@ json_t *EventPolicy::toJson() const
 /**
  * Collects information about all EPRules that are using specified event
  */
-void EventPolicy::getEventReferences(uint32_t eventCode, ObjectArray<EventReference>* erl) const
+void EventPolicy::getEventReferences(uint32_t eventCode, ObjectArray<EventReference>* eventReferences) const
 {
    readLock();
    for (int i = 0; i < m_rules.size(); i++)
    {
-      if (m_rules.get(i)->isUsingEvent(eventCode))
+      EPRule *rule = m_rules.get(i);
+      if (rule->isUsingEvent(eventCode))
       {
-         EventReference er(
-            EventReferenceType::EP_RULE,
-            m_rules.get(i)->getId(),
-            m_rules.get(i)->getGuid(),
-            0,
-            uuid(),
-            m_rules.get(i)->getComments());
-         erl->add(&er);
+         eventReferences->add(new EventReference(EventReferenceType::EP_RULE, i + 1, rule->getGuid(), rule->getComments()));
       }
    }
    unlock();

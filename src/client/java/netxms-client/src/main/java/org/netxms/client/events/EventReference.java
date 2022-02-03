@@ -31,14 +31,18 @@ public class EventReference
    /** Object type */
    private final EventReferenceType type;
    /** Object id within it's type */
-   private final int id;
+   private final long id;
    /** Object guid */
    private final UUID guid;
+   /** Object name */
+   private final String name;
    /** Object owner id within it's type, if one exists (for example node id for DCI) */
-   private final int ownerId;
+   private final long ownerId;
    /** Object owner guid, if one exists (for example node guid for DCI) */
    private final UUID ownerGuid;
-   /** Object description in "name" or "name: description" format (format may vary depending on available information) */
+   /** Object owner's name */
+   private final String ownerName;
+   /** Additional description */
    private final String description;
 
    /**
@@ -49,11 +53,13 @@ public class EventReference
    public EventReference(NXCPMessage msg, long fieldId)
    {
       type = EventReferenceType.getByValue(msg.getFieldAsInt32(fieldId));
-      id = msg.getFieldAsInt32(fieldId + 1);
+      id = msg.getFieldAsInt64(fieldId + 1);
       guid = msg.getFieldAsUUID(fieldId + 2);
-      ownerId = msg.getFieldAsInt32(fieldId + 3);
-      ownerGuid = msg.getFieldAsUUID(fieldId + 4);
-      description = msg.getFieldAsString(fieldId + 5);
+      name = msg.getFieldAsString(fieldId + 3);
+      ownerId = msg.getFieldAsInt64(fieldId + 4);
+      ownerGuid = msg.getFieldAsUUID(fieldId + 5);
+      ownerName = msg.getFieldAsString(fieldId + 6);
+      description = msg.getFieldAsString(fieldId + 7);
    }
 
    /**
@@ -67,7 +73,7 @@ public class EventReference
    /**
     * @return the id
     */
-   public int getId()
+   public long getId()
    {
       return id;
    }
@@ -81,9 +87,17 @@ public class EventReference
    }
 
    /**
+    * @return the name
+    */
+   public String getName()
+   {
+      return name;
+   }
+
+   /**
     * @return the ownerId
     */
-   public int getOwnerId()
+   public long getOwnerId()
    {
       return ownerId;
    }
@@ -94,6 +108,14 @@ public class EventReference
    public UUID getOwnerGuid()
    {
       return ownerGuid;
+   }
+
+   /**
+    * @return the ownerName
+    */
+   public String getOwnerName()
+   {
+      return ownerName;
    }
 
    /**

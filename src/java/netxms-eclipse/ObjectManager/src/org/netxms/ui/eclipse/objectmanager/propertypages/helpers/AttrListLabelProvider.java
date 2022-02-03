@@ -34,6 +34,7 @@ import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.configs.CustomAttribute;
+import org.netxms.ui.eclipse.console.resources.ThemeEngine;
 import org.netxms.ui.eclipse.objectmanager.propertypages.CustomAttributes;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
@@ -45,7 +46,7 @@ public class AttrListLabelProvider extends LabelProvider implements ITableLabelP
    private WorkbenchLabelProvider wbLabelProvider = new WorkbenchLabelProvider();
    private NXCSession session;
    private Font inheritedObjectFont;
-   private Color inheritedElementColor = Display.getCurrent().getSystemColor(SWT.COLOR_WIDGET_DISABLED_FOREGROUND);
+   private Color inheritedElementColor = ThemeEngine.getForegroundColor("List.DisabledItem");
 
    /**
     * Constructor

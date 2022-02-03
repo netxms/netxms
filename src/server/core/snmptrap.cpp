@@ -48,22 +48,15 @@ static uint16_t s_trapListenerPort = 162;
 /**
  * Collects information about all SNMPTraps that are using specified event
  */
-void GetSNMPTrapsEventReferences(uint32_t eventCode, ObjectArray<EventReference>* erl)
+void GetSNMPTrapsEventReferences(uint32_t eventCode, ObjectArray<EventReference>* eventReferences)
 {
    s_trapCfgLock.lock();
    for (int i = 0; i < m_trapCfgList.size(); i++)
    {
-      if (m_trapCfgList.get(i)->getEventCode() == eventCode)
+      SNMPTrapConfiguration *tc = m_trapCfgList.get(i);
+      if (tc->getEventCode() == eventCode)
       {
-         EventReference er(
-            EventReferenceType::SNMP_TRAP,
-            m_trapCfgList.get(i)->getId(),
-            m_trapCfgList.get(i)->getGuid(),
-            0,
-            uuid(),
-            m_trapCfgList.get(i)->getOid().toString().cstr(),
-            m_trapCfgList.get(i)->getDescription());
-         erl->add(&er);
+         eventReferences->add(new EventReference(EventReferenceType::SNMP_TRAP, tc->getId(), tc->getGuid(), tc->getOid().toString(), tc->getDescription()));
       }
    }
    s_trapCfgLock.unlock();

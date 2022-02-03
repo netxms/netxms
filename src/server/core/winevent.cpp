@@ -390,18 +390,14 @@ static void WindowsEventProcessingThread()
 }
 
 /**
- * Collects information about all windows events that are using specified event
+ * Collects information about events used by Windows event log parser
  */
-void GetWinEventEventReferences(uint32_t eventCode, ObjectArray<EventReference>* erl)
+void GetWindowsEventLogEventReferences(uint32_t eventCode, ObjectArray<EventReference>* eventReferences)
 {
    s_parserLock.lock();
    if (s_parser != nullptr && s_parser->isUsingEvent(eventCode))
    {
-      EventReference er(
-         EventReferenceType::WIN_EVENT_LOG,
-         0, uuid(), 0, uuid(),
-         _T("Server-side Windows event parser"));
-      erl->add(&er);
+      eventReferences->add(new EventReference(EventReferenceType::WIN_EVENT_LOG));
    }
    s_parserLock.unlock();
 }

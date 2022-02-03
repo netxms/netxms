@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Raden Solutions
+ * Copyright (C) 2003-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,6 +25,8 @@ import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
+import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -43,6 +45,7 @@ import org.eclipse.swt.widgets.Menu;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
+import org.netxms.client.events.EventReference;
 import org.netxms.client.events.EventTemplate;
 import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.Registry;
@@ -53,6 +56,7 @@ import org.netxms.nxmc.base.widgets.FilterText;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.events.dialogs.EditEventTemplateDialog;
+import org.netxms.nxmc.modules.events.dialogs.EventReferenceViewDialog;
 import org.netxms.nxmc.modules.events.widgets.helpers.EventTemplateComparator;
 import org.netxms.nxmc.modules.events.widgets.helpers.EventTemplateFilter;
 import org.netxms.nxmc.modules.events.widgets.helpers.EventTemplateLabelProvider;
@@ -75,7 +79,7 @@ public class EventTemplateList extends Composite implements SessionListener
    public static final int COLUMN_FLAGS = 3;
    public static final int COLUMN_MESSAGE = 4;
    public static final int COLUMN_TAGS = 5;
-   
+
    private HashMap<Long, EventTemplate> eventTemplates;
    private SortableTableViewer viewer;
    private FilterText filterControl;
@@ -83,6 +87,7 @@ public class EventTemplateList extends Composite implements SessionListener
    private Action actionEdit;
    private Action actionDelete;
    private Action actionDuplicate;
+   private Action actionFindReferences;
    private Action actionShowFilter;
    private Action actionRefresh;
    private NXCSession session;
@@ -159,11 +164,12 @@ public class EventTemplateList extends Composite implements SessionListener
          @Override
          public void selectionChanged(SelectionChangedEvent event)
          {
-            IStructuredSelection selection = (IStructuredSelection)event.getSelection();
+            IStructuredSelection selection = event.getStructuredSelection();
             if (selection != null)
             {
                actionEdit.setEnabled(selection.size() == 1);
                actionDelete.setEnabled(selection.size() > 0);
+               actionFindReferences.setEnabled(selection.size() == 1);
             }
          }
       });
@@ -177,7 +183,7 @@ public class EventTemplateList extends Composite implements SessionListener
             settings.set(configPrefix + ".filterEnabled", filterEnabled);
          }
       });
-      
+
       // Setup layout
       FormData fd = new FormData();
       fd.left = new FormAttachment(0, 0);
@@ -277,7 +283,7 @@ public class EventTemplateList extends Composite implements SessionListener
             break;
       }
    }
-   
+
    /**
     * Create actions
     */
@@ -314,6 +320,14 @@ public class EventTemplateList extends Composite implements SessionListener
          public void run()
          {
             duplicateEventTemplate();
+         }
+      };
+
+      actionFindReferences = new Action(i18n.tr("Find &references...")) {
+         @Override
+         public void run()
+         {
+            findReferences();
          }
       };
 
@@ -380,6 +394,8 @@ public class EventTemplateList extends Composite implements SessionListener
       mgr.add(actionDuplicate);
       mgr.add(actionEdit);
       mgr.add(actionDelete);
+      mgr.add(new Separator());
+      mgr.add(actionFindReferences);
    }
 
    /**
@@ -400,7 +416,7 @@ public class EventTemplateList extends Composite implements SessionListener
     */
    protected void duplicateEventTemplate()
    {
-      final IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      final IStructuredSelection selection = viewer.getStructuredSelection();
       if (selection.size() != 1)
          return;
 
@@ -441,7 +457,7 @@ public class EventTemplateList extends Composite implements SessionListener
     */
    protected void editEventTemplate()
    {
-      final IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      IStructuredSelection selection = viewer.getStructuredSelection();
       if (selection.size() != 1)
          return;
       
@@ -458,23 +474,48 @@ public class EventTemplateList extends Composite implements SessionListener
     */
    protected void deleteEventTemplate()
    {
-      IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      IStructuredSelection selection = viewer.getStructuredSelection();
 
       final String message = (selection.size() > 1) ? i18n.tr("Do you really wish to delete selected event templates?") : i18n.tr("Do you really wish to delete selected event template?");
       if (!MessageDialogHelper.openQuestion(getShell(), i18n.tr("Confirm event template deletion"), message))
          return;
 
-      final long[] deleteList = new long[selection.size()];
+      final EventTemplate[] deleteList = new EventTemplate[selection.size()];
       int i = 0;
       for(Object o : selection.toList())
-         deleteList[i++] = ((EventTemplate)o).getCode();
-      
+         deleteList[i++] = (EventTemplate)o;
+
       new Job(i18n.tr("Deleting event template"), view) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            for(long code : deleteList)
-               session.deleteEventTemplate(code);
+            boolean skipReferencesCheck = false;
+            for(EventTemplate e : deleteList)
+            {
+               if (!skipReferencesCheck)
+               {
+                  final List<EventReference> eventReferences = session.getEventReferences(e.getCode());
+                  if (!eventReferences.isEmpty())
+                  {
+                     final int[] result = new int[1];
+                     getDisplay().syncExec(new Runnable() {
+                        @Override
+                        public void run()
+                        {
+                           EventReferenceViewDialog dlg = new EventReferenceViewDialog(getShell(), e.getName(), eventReferences, true, deleteList.length > 1);
+                           result[0] = dlg.open();
+                        }
+                     });
+                     if (result[0] == IDialogConstants.NO_ID)
+                        continue;
+                     if (result[0] == IDialogConstants.NO_TO_ALL_ID)
+                        return;
+                     if (result[0] == IDialogConstants.YES_TO_ALL_ID)
+                        skipReferencesCheck = true;
+                  }
+               }
+               session.deleteEventTemplate(e.getCode());
+            }
          }
 
          @Override
@@ -484,7 +525,48 @@ public class EventTemplateList extends Composite implements SessionListener
          }
       }.start();
    }
-   
+
+   /**
+    * Find references to selected event template
+    */
+   private void findReferences()
+   {
+      IStructuredSelection selection = viewer.getStructuredSelection();
+      if (selection.size() != 1)
+         return;
+
+      final long eventCode = ((EventTemplate)selection.getFirstElement()).getCode();
+      final String eventName = ((EventTemplate)selection.getFirstElement()).getName();
+      new Job(i18n.tr("Get event template references"), view) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            final List<EventReference> eventReferences = session.getEventReferences(eventCode);
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
+                  if (!eventReferences.isEmpty())
+                  {
+                     EventReferenceViewDialog dlg = new EventReferenceViewDialog(getShell(), eventName, eventReferences, false, false);
+                     dlg.open();
+                  }
+                  else
+                  {
+                     MessageDialogHelper.openInformation(getShell(), i18n.tr("Event References"), i18n.tr("No references found."));
+                  }
+               }
+            });
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return i18n.tr("Cannot get event template references");
+         }
+      }.start();
+   }
+
    /**
     * Enable or disable filter
     * 

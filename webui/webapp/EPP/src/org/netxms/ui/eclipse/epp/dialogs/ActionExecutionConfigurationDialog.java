@@ -27,7 +27,6 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.events.ActionExecutionConfiguration;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
-import org.netxms.ui.eclipse.widgets.LabeledSpinner;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
 /**

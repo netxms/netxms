@@ -27,7 +27,6 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.events.ActionExecutionConfiguration;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
-import org.netxms.ui.eclipse.widgets.LabeledSpinner;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
 /**
@@ -50,7 +49,7 @@ public class ActionExecutionConfigurationDialog extends Dialog
       this.configuration = configuration;
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
     */
    @Override
@@ -60,7 +59,7 @@ public class ActionExecutionConfigurationDialog extends Dialog
       newShell.setText("Action Execution Configuration");
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
     */
    @Override

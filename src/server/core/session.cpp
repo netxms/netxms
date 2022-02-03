@@ -16197,12 +16197,12 @@ void ClientSession::getEventRefences(const NXCPMessage& request)
        checkSysAccessRights(SYSTEM_ACCESS_EPP))
    {
       uint32_t eventCode = request.getFieldAsInt32(VID_EVENT_CODE);
-      unique_ptr<ObjectArray<EventReference>> erl = GetAllEventReferences(eventCode);
+      unique_ptr<ObjectArray<EventReference>> eventReferences = GetAllEventReferences(eventCode);
 
-      response.setField(VID_NUM_ELEMENTS, erl->size());
-      uint32_t base = VID_ELEMENT_LIST_BASE;
-      for (int i = 0; i < erl->size(); i++, base += 10)
-         erl->get(i)->fillMessage(base, &response);
+      response.setField(VID_NUM_ELEMENTS, eventReferences->size());
+      uint32_t fieldId = VID_ELEMENT_LIST_BASE;
+      for (int i = 0; i < eventReferences->size(); i++, fieldId += 100)
+         eventReferences->get(i)->fillMessage(&response, fieldId);
 
       response.setField(VID_RCC, RCC_SUCCESS);
    }

@@ -21,16 +21,15 @@ package org.netxms.nxmc.modules.objects.propertypages.helpers;
 import org.eclipse.jface.viewers.ITableColorProvider;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
-import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.widgets.Display;
 import org.netxms.client.AccessListElement;
 import org.netxms.client.NXCSession;
 import org.netxms.client.users.AbstractUserObject;
 import org.netxms.client.users.User;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.resources.SharedIcons;
+import org.netxms.nxmc.resources.ThemeEngine;
 
 /**
  * Label provider for NetXMS objects access lists
@@ -38,7 +37,7 @@ import org.netxms.nxmc.resources.SharedIcons;
 public class AccessListLabelProvider extends LabelProvider implements ITableLabelProvider, ITableColorProvider
 {
    private final NXCSession session = Registry.getSession();
-   private final Color inheritedElementColor = Display.getCurrent().getSystemColor(SWT.COLOR_WIDGET_DISABLED_FOREGROUND);
+   private final Color inheritedElementColor = ThemeEngine.getForegroundColor("List.DisabledItem");
 
    /**
     * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)

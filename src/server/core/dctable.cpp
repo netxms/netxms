@@ -1117,7 +1117,7 @@ void DCTable::updateFromTemplate(DCObject *src)
 /**
  * Create management pack record
  */
-void DCTable::createExportRecord(StringBuffer &xml)
+void DCTable::createExportRecord(StringBuffer &xml) const
 {
    lock();
 
@@ -1258,7 +1258,7 @@ void DCTable::updateFromImport(ConfigEntry *config)
 /**
  * Get list of used events
  */
-void DCTable::getEventList(HashSet<uint32_t> *eventList)
+void DCTable::getEventList(HashSet<uint32_t> *eventList) const
 {
    lock();
    if (m_thresholds != nullptr)
@@ -1270,6 +1270,17 @@ void DCTable::getEventList(HashSet<uint32_t> *eventList)
       }
    }
    unlock();
+}
+
+/**
+ * Check if given event is used
+ */
+bool DCTable::isUsingEvent(uint32_t eventCode) const
+{
+   for (int i = 0; i < m_thresholds->size(); i++)
+      if (m_thresholds->get(i)->isUsingEvent(eventCode))
+         return true;
+   return false;
 }
 
 /*

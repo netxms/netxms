@@ -218,6 +218,7 @@ public class ThemeEngine
          elements.put("Card.Title", new ThemeElement(new RGB(53, 80, 9), new RGB(240, 240, 240)));
          elements.put("Dashboard", new ThemeElement(new RGB(53, 53, 53), null));
          elements.put("GeoMap.Title", new ThemeElement(null, new RGB(0, 0, 0)));
+         elements.put("List.DisabledItem", new ThemeElement(null, new RGB(96, 96, 96)));
          elements.put("List.Error", new ThemeElement(null, new RGB(220, 35, 61)));
          elements.put("Map.GroupBox", new ThemeElement(null, new RGB(255, 255, 255)));
          elements.put("Map.LastValues", new ThemeElement(null, new RGB(0, 64, 0)));
@@ -258,6 +259,7 @@ public class ThemeEngine
          elements.put("Dashboard", new ThemeElement(new RGB(240, 240, 240), null));
          elements.put("GeoMap.Title", new ThemeElement(null, new RGB(0, 0, 0)));
          elements.put("List.Error", new ThemeElement(null, new RGB(255, 0, 0)));
+         elements.put("List.DisabledItem", new ThemeElement(null, new RGB(172, 172, 172)));
          elements.put("Map.GroupBox", new ThemeElement(null, new RGB(255, 255, 255)));
          elements.put("Map.LastValues", new ThemeElement(null, new RGB(0, 64, 0)));
          elements.put("MessageArea", new ThemeElement(new RGB(255, 255, 255), new RGB(51, 51, 51)));

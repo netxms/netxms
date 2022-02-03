@@ -1680,6 +1680,8 @@ public:
 
    virtual void updateFromImport(ConfigEntry *config);
 
+   virtual void getEventReferences(uint32_t eventCode, ObjectArray<EventReference>* eventReferences) const;
+
    virtual json_t *toJson() override;
 
    int getItemCount() const { return m_dcObjects.size(); }
@@ -1710,8 +1712,6 @@ public:
 
    bool enumDCObjects(bool (*callback)(const shared_ptr<DCObject>&, uint32_t, void *), void *context) const;
    void associateItems();
-
-   virtual void getEventReferences(uint32_t eventCode, ObjectArray<EventReference>* erl) const;
 };
 
 #define EXPAND_MACRO 1
@@ -1883,6 +1883,8 @@ public:
 
    virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE) override;
 
+   virtual void getEventReferences(uint32_t eventCode, ObjectArray<EventReference>* eventReferences) const override;
+
    virtual void updateFromImport(ConfigEntry *config) override;
    virtual json_t *toJson() override;
 
@@ -1903,7 +1905,6 @@ public:
    void checkPolicyDeployment(const shared_ptr<Node>& node, AgentPolicyInfo *ap);
    void initiatePolicyValidation();
    void removeAllPolicies(Node *node);
-   virtual void getEventReferences(uint32_t eventCode, ObjectArray<EventReference>* erl) const override;
 };
 
 /**

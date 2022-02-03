@@ -959,18 +959,14 @@ void StopSyslogServer()
 }
 
 /**
- * Collects information about all syslogs that are using specified event
+ * Collects information about all syslog parser rules that are using specified event
  */
-void GetSyslogEventReferences(uint32_t eventCode, ObjectArray<EventReference>* erl)
+void GetSyslogEventReferences(uint32_t eventCode, ObjectArray<EventReference>* eventReferences)
 {
    s_parserLock.lock();
-   if (s_parser != nullptr && s_parser->isUsingEvent(eventCode))
+   if ((s_parser != nullptr) && s_parser->isUsingEvent(eventCode))
    {
-      EventReference er(
-         EventReferenceType::SYSLOG,
-         0, uuid(), 0, uuid(),
-         _T("Server-side syslog parser"));
-      erl->add(&er);
+      eventReferences->add(new EventReference(EventReferenceType::SYSLOG));
    }
    s_parserLock.unlock();
 }

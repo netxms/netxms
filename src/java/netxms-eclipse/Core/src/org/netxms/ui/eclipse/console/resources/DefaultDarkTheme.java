@@ -37,6 +37,7 @@ public class DefaultDarkTheme extends Theme
       elements.put("DeviceView.Port", new ThemeElement(new RGB(64, 64, 64), null));
       elements.put("DeviceView.PortHighlight", new ThemeElement(new RGB(39, 96, 138), null));
       elements.put("GeoMap.Title", new ThemeElement(null, new RGB(0, 0, 0)));
+      elements.put("List.DisabledItem", new ThemeElement(null, new RGB(96, 96, 96)));
       elements.put("List.Error", new ThemeElement(null, new RGB(220, 35, 61)));
       elements.put("Map.GroupBox", new ThemeElement(null, new RGB(255, 255, 255)));
       elements.put("Map.LastValues", new ThemeElement(null, new RGB(0, 64, 0)));

@@ -36,6 +36,7 @@ import org.netxms.client.objects.configs.CustomAttribute;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.modules.objects.propertypages.CustomAttributes;
 import org.netxms.nxmc.modules.objects.widgets.helpers.DecoratingObjectLabelProvider;
+import org.netxms.nxmc.resources.ThemeEngine;
 
 /**
  * Label provider for custom attributes list elements
@@ -45,7 +46,7 @@ public class AttrListLabelProvider extends LabelProvider implements ITableLabelP
    private DecoratingObjectLabelProvider wbLabelProvider = new DecoratingObjectLabelProvider();
    private NXCSession session = Registry.getSession();
    private Font inheritedObjectFont;
-   private Color inheritedElementColor = Display.getCurrent().getSystemColor(SWT.COLOR_WIDGET_DISABLED_FOREGROUND);
+   private Color inheritedElementColor = ThemeEngine.getForegroundColor("List.DisabledItem");
 
    /**
     * Constructor

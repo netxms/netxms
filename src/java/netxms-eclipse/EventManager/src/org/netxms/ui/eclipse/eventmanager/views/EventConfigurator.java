@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2019 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -46,14 +46,14 @@ public class EventConfigurator extends ViewPart
 
 	private EventTemplateList dataView;
 
-   /* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	public void createPartControl(Composite parent)
 	{		
       parent.setLayout(new FormLayout());
-      
+
       dataView = new EventTemplateList(this, parent, SWT.NONE, TABLE_CONFIG_PREFIX);
       FormData fd = new FormData();
       fd.left = new FormAttachment(0, 0);
@@ -61,7 +61,7 @@ public class EventConfigurator extends ViewPart
       fd.right = new FormAttachment(100, 0);
       fd.bottom = new FormAttachment(100, 0);
       dataView.setLayoutData(fd);
-      
+
 		dataView.getViewer().addDoubleClickListener(new IDoubleClickListener() {
 			@Override
 			public void doubleClick(DoubleClickEvent event)
@@ -69,7 +69,7 @@ public class EventConfigurator extends ViewPart
 			   dataView.getActionEdit().run();
 			}
 		});
-		
+
 		contributeToActionBars();
 	}
 
@@ -126,9 +126,9 @@ public class EventConfigurator extends ViewPart
 		mgr.add(dataView.getActionEdit());
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
-	 */
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
+    */
 	@Override
 	public void setFocus()
 	{

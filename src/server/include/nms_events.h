@@ -341,8 +341,6 @@ public:
    const TCHAR* getComments() { return m_comments; }
 };
 
-#define EVENT_REF_MAX_DESC_LENGTH 256
-
 /**
  * Event reference type enum for EventReference
  */
@@ -366,46 +364,73 @@ private:
    EventReferenceType m_type;
    uint32_t m_id;
    uuid m_guid;
+   String m_name;
    uint32_t m_ownerId;
    uuid m_ownerGuid;
-   TCHAR m_description[EVENT_REF_MAX_DESC_LENGTH];
+   String m_ownerName;
+   String m_description;
 
 public:
    /**
     * Create new event reference.
-    * @param type Object type
+    * @param type Reference type
     * @param id Object id within it's type
     * @param guid Object guid
     * @param ownerId Object owner id within it's type, if one exists (0 if not)
     * @param ownerGuid Object owner guid, if one exists (0 if not)
-    * @param descPart1 Object description first part (object name is recommended)
-    * @param descPart2 Object description second part, if avaliable (object description or comments are recommended)
+    * @param ownerName Object owner name
+    * @param description Description
     */
-   EventReference(EventReferenceType type, uint32_t id, const uuid& guid, uint32_t ownerId, const uuid& ownerGuid, const TCHAR* descPart1, const TCHAR* descPart2 = nullptr)
-      : m_guid(guid), m_ownerGuid(ownerGuid)
+   EventReference(EventReferenceType type, uint32_t id, const uuid& guid, const TCHAR *name, uint32_t ownerId, const uuid& ownerGuid, const TCHAR *ownerName, const TCHAR *description = nullptr)
+      : m_guid(guid), m_name(name), m_ownerGuid(ownerGuid), m_ownerName(ownerName), m_description(description)
    {
       m_type = type;
       m_id = id;
       m_ownerId = ownerId;
-      if (descPart2 != nullptr && descPart2[0] != 0)
-         _sntprintf(m_description, EVENT_REF_MAX_DESC_LENGTH, _T("%s: %s"), descPart1, descPart2);
-      else
-         _tcslcpy(m_description, descPart1, EVENT_REF_MAX_DESC_LENGTH);
    }
 
    /**
-    * Fill NXCPMessage. Space for at least 6 VID_ELEMENTS required.
-    * @param base VID_ELEMENT_LIST_BASE element
-    * @param msg message to fill
+    * Create new event reference.
+    * @param type Reference type
+    * @param id Object id within it's type
+    * @param guid Object guid
+    * @param description Description
     */
-   void fillMessage(uint32_t base, NXCPMessage* msg) const
+   EventReference(EventReferenceType type, uint32_t id, const uuid& guid, const TCHAR *name, const TCHAR *description = nullptr)
+      : m_guid(guid), m_name(name), m_description(description)
    {
-      msg->setField(base, static_cast<uint32_t>(m_type));
-      msg->setField(base + 1, m_id);
-      msg->setField(base + 2, m_guid);
-      msg->setField(base + 3, m_ownerId);
-      msg->setField(base + 4, m_ownerGuid);
-      msg->setField(base + 5, m_description);
+      m_type = type;
+      m_id = id;
+      m_ownerId = 0;
+   }
+
+   /**
+    * Create new event reference.
+    * @param type Reference type
+    * @param description Description
+    */
+   EventReference(EventReferenceType type, const TCHAR *description = nullptr) : m_description(description)
+   {
+      m_type = type;
+      m_id = 0;
+      m_ownerId = 0;
+   }
+
+   /**
+    * Fill NXCPMessage.
+    * @param msg message to fill
+    * @param baseId base field ID
+    */
+   void fillMessage(NXCPMessage* msg, uint32_t baseId) const
+   {
+      msg->setField(baseId, static_cast<int16_t>(m_type));
+      msg->setField(baseId + 1, m_id);
+      msg->setField(baseId + 2, m_guid);
+      msg->setField(baseId + 3, m_name);
+      msg->setField(baseId + 4, m_ownerId);
+      msg->setField(baseId + 5, m_ownerGuid);
+      msg->setField(baseId + 6, m_ownerName);
+      msg->setField(baseId + 7, m_description);
    }
 };
 
@@ -440,7 +465,7 @@ public:
    bool isActionInUse(uint32_t actionId) const;
    bool isCategoryInUse(uint32_t categoryId) const;
 
-   void getEventReferences(uint32_t eventCode, ObjectArray<EventReference>* erl) const;
+   void getEventReferences(uint32_t eventCode, ObjectArray<EventReference>* eventReferences) const;
 };
 
 /**

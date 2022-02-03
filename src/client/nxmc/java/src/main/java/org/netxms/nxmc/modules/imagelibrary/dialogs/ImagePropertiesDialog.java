@@ -33,7 +33,6 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
-import org.eclipse.swt.widgets.Widget;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.tools.WidgetFactory;
 import org.netxms.nxmc.tools.WidgetHelper;

@@ -29,7 +29,14 @@ import org.slf4j.LoggerFactory;
  */
 public enum EventReferenceType
 {
-   AGENT_POLICY(0), DCI(1), EP_RULE(2), SNMP_TRAP(3), CONDITION(4), SYSLOG(5), WIN_EVENT_LOG(6);
+   ERROR(-1),
+   AGENT_POLICY(0),
+   DCI(1),
+   EP_RULE(2),
+   SNMP_TRAP(3),
+   CONDITION(4),
+   SYSLOG(5),
+   WINDOWS_EVENT_LOG(6);
 
    private static Logger logger = LoggerFactory.getLogger(EventReferenceType.class);
    private static Map<Integer, EventReferenceType> lookupTable = new HashMap<Integer, EventReferenceType>();
@@ -75,7 +82,7 @@ public enum EventReferenceType
       if (element == null)
       {
          logger.warn("Unknown element " + value);
-         return AGENT_POLICY; // fall-back
+         return ERROR; // fallback
       }
       return element;
    }
