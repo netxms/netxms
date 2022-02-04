@@ -303,10 +303,10 @@ LONG DatabaseInstance::getParam(bson_t *bsonDoc, const char *paramName, TCHAR *v
    if ((json = bson_as_json(bsonDoc, NULL))) {
 #ifdef UNICODE
       TCHAR *_json = WideStringFromUTF8String(json);
-      AgentWriteDebugLog(NXLOG_DEBUG, _T("MONGODB: trying to get param from %s \n<<<<<<<"), _json);
+      nxlog_debug(7, _T("MONGODB: trying to get param from %s"), _json);
       MemFree(_json);
 #else
-      AgentWriteDebugLog(NXLOG_INFO, _T("MONGODB: trying to get param from %s \n<<<<<<<"), json);
+      nxlog_debug(7, _T("MONGODB: trying to get param from %s"), json);
 #endif // UNICODE
       bson_free (json);
    }
