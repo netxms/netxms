@@ -214,7 +214,11 @@ void DatabaseInstance::getDatabases()
       m_databaseList = NULL;
    }
    m_connLock.lock();
+#if HAVE_MONGOC_CLIENT_GET_DATABASE_NAMES_WITH_OPTS
+   if (!(m_databaseList = mongoc_client_get_database_names_with_opts(m_dbConn, nullptr, &error)))
+#else
    if (!(m_databaseList = mongoc_client_get_database_names(m_dbConn, &error)))
+#endif
    {
 #ifdef UNICODE
       TCHAR *_error = WideStringFromUTF8String(error.message);
@@ -224,18 +228,10 @@ void DatabaseInstance::getDatabases()
       AgentWriteDebugLog(NXLOG_INFO, _T("MONGODB: Failed to run command: %s\n"), error.message);
 #endif
       bson_strfreev (m_databaseList);
-      m_databaseList = NULL;
+      m_databaseList = nullptr;
    }
    m_connLock.unlock();
    m_databaseListLock.unlock();
-}
-
-/**
- * Check that the connection is established
- */
-bool DatabaseInstance::connectionEstablished()
-{
-   return (m_dbConn != NULL);
 }
 
 /**
@@ -244,16 +240,24 @@ bool DatabaseInstance::connectionEstablished()
 bool DatabaseInstance::getServerStatus()
 {
    m_serverStatusLock.lock();
+
    bson_error_t error;
    bool sucess = true;
-   if (m_serverStatus != NULL)
+   if (m_serverStatus != nullptr)
    {
       bson_destroy(m_serverStatus);
-      delete m_serverStatus;
    }
-   m_serverStatus = new bson_t;
+   else
+   {
+      m_serverStatus = new bson_t;
+   }
+
+   bson_t cmd = BSON_INITIALIZER;
+   BSON_APPEND_INT32(&cmd, "serverStatus", 1);
+
    m_connLock.lock();
-   if (!mongoc_client_get_server_status(m_dbConn, NULL, m_serverStatus, &error)) {
+   if (!mongoc_client_command_simple(m_dbConn, "admin", &cmd, nullptr, m_serverStatus, &error))
+   {
 #ifdef UNICODE
       TCHAR *_error = WideStringFromUTF8String(error.message);
       AgentWriteDebugLog(NXLOG_INFO, _T("MONGODB: Failed to run command: %s\n"), _error);
@@ -263,9 +267,10 @@ bool DatabaseInstance::getServerStatus()
 #endif
       sucess = false;
       bson_destroy(m_serverStatus);
-      delete m_serverStatus;
-      m_serverStatus = NULL;
+      delete_and_null(m_serverStatus);
    }
+   bson_destroy(&cmd);
+
    m_connLock.unlock();
    m_serverStatusLock.unlock();
    return sucess;
