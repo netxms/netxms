@@ -545,7 +545,7 @@ public class EventTemplateList extends Composite implements SessionListener
                            result[0] = dlg.open();
                         }
                      });
-                     if (result[0] == IDialogConstants.NO_ID)
+                     if ((result[0] == IDialogConstants.NO_ID) || (result[0] == IDialogConstants.CANCEL_ID))
                         continue;
                      if (result[0] == IDialogConstants.NO_TO_ALL_ID)
                         return;
