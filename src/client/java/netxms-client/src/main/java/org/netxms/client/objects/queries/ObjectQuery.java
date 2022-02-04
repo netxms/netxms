@@ -176,6 +176,14 @@ public class ObjectQuery
    }
 
    /**
+    * @param id the id to set
+    */
+   public void setId(int id)
+   {
+      this.id = id;
+   }
+
+   /**
     * Get query GUID.
     *
     * @return query GUID

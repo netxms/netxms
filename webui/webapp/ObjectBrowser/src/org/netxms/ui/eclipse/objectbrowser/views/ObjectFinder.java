@@ -54,6 +54,8 @@ import org.eclipse.swt.custom.CTabFolder;
 import org.eclipse.swt.custom.CTabItem;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
@@ -295,6 +297,7 @@ public class ObjectFinder extends ViewPart
    private Text ipRangeEnd;
    private CompositeWithMessageBar queryEditorMessage;
    private ScriptEditor queryEditor;
+   private boolean queryModified = false;
    private TableViewer queryList;
    private Action actionStartSearch;
    private Action actionShowObjectDetails;
@@ -533,9 +536,15 @@ public class ObjectFinder extends ViewPart
 
       queryEditor = new ScriptEditor(queryEditorMessage, SWT.NONE, SWT.MULTI, true);
       queryEditorMessage.setContent(queryEditor);
-
       queryEditor.addVariables(Arrays.asList(OBJECT_ATTRIBUTES));
       queryEditor.addConstants(Arrays.asList(OBJECT_CONSTANTS));
+      queryEditor.getTextWidget().addModifyListener(new ModifyListener() {
+         @Override
+         public void modifyText(ModifyEvent e)
+         {
+            queryModified = true;
+         }
+      });
 
       queryList = new TableViewer(queryArea, SWT.BORDER | SWT.FULL_SELECTION);
       queryList.setContentProvider(new ArrayContentProvider());
@@ -561,7 +570,16 @@ public class ObjectFinder extends ViewPart
             IStructuredSelection selection = queryList.getStructuredSelection();
             if (selection.isEmpty())
                return;
+
+            if (queryModified)
+            {
+               if (!MessageDialogHelper.openQuestion(getSite().getShell(), "Warning", "You are about to replace current query source which is not saved. All changes will be lost. Are you sure?"))
+                  return;
+            }
+
             queryEditor.setText(((ObjectQuery)selection.getFirstElement()).getSource());
+            queryEditorMessage.hideMessage();
+            queryModified = false;
          }
       });
       loadQueries();
@@ -1132,18 +1150,41 @@ public class ObjectFinder extends ViewPart
       });
       if (dlg.open() != Window.OK)
          return;
-      
+
       final ObjectQuery query = new ObjectQuery(dlg.getValue(), "", queryEditor.getText());
       new ConsoleJob("Save object query", this, Activator.PLUGIN_ID) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
+            boolean found = false;
+            for(ObjectQuery q : session.getObjectQueries())
+               if (q.getName().equalsIgnoreCase(query.getName()))
+               {
+                  query.setId(q.getId());
+                  found = true;
+                  break;
+               }
+            if (found)
+            {
+               final boolean[] overwrite = new boolean[1];
+               getDisplay().syncExec(new Runnable() {
+                  @Override
+                  public void run()
+                  {
+                     overwrite[0] = MessageDialogHelper.openQuestion(getSite().getShell(), "Confirm Overwrite",
+                           String.format("Object query named \"%s\" already exists. Do you want to overwrite it?", query.getName()));
+                  }
+               });
+               if (!overwrite[0])
+                  return;
+            }
             session.modifyObjectQuery(query);
             runInUIThread(new Runnable() {
                @Override
                public void run()
                {
                   loadQueries();
+                  queryModified = false;
                }
             });
          }
