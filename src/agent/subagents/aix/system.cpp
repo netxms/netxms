@@ -393,3 +393,54 @@ LONG H_HardwareMachineId(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abs
    ret_mbstring(value, un.machine);
    return SYSINFO_RC_SUCCESS;
 }
+
+/**
+ * Handler for System.OS.* parameters
+ */
+LONG H_OSInfo(const TCHAR* cmd, const TCHAR* arg, TCHAR* value, AbstractCommSession* session)
+{
+   struct utsname un;
+   if (uname(&un) != 0)
+   {
+      nxlog_debug_tag(AIX_DEBUG_TAG, 4, _T("Failed to load info from uname"));
+      return SYSINFO_RC_ERROR;
+   }
+
+   switch (*arg)
+   {
+      case 'N': // ProductName
+         ret_mbstring(value, un.sysname);
+         break;
+      case 'V': // Version
+         char version[8];
+         snprintf(version, 8, "%s.%s", un.version, un.release);
+         ret_mbstring(value, version);
+         break;
+      default:
+         return SYSINFO_RC_ERROR;
+   }
+
+   return SYSINFO_RC_SUCCESS;
+}
+
+/**
+ * Handler for System.OS.ServicePack parameter
+ */
+LONG H_OSServicePack(const TCHAR* cmd, const TCHAR* arg, TCHAR* value, AbstractCommSession* session)
+{
+
+   LineOutputProcessExecutor pe(_T("oslevel -s"));
+   if (!pe.execute())
+   {
+      nxlog_debug_tag(AIX_DEBUG_TAG, 4, _T("Failed to execute oslevel command"));
+      return SYSINFO_RC_ERROR;
+   }
+   if (!pe.waitForCompletion(10000))
+   {
+      nxlog_debug_tag(AIX_DEBUG_TAG, 4, _T("Failed to execute oslevel: command timed out"));
+      return SYSINFO_RC_ERROR;
+   }
+   ret_string(value, pe.getData().get(0));
+
+   return SYSINFO_RC_SUCCESS;
+}

@@ -221,6 +221,7 @@ LONG H_StorageDeviceTable(const TCHAR* cmd, const TCHAR* arg, Table* value, Abst
 LONG H_SystemProcessCount(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 LONG H_ThreadCount(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 LONG H_MemoryInfo(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
+LONG H_OSInfo(const TCHAR*, const TCHAR*, TCHAR*, AbstractCommSession*);
 LONG H_SourcePkgSupport(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 LONG H_ConnectedUsers(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 LONG H_ActiveUserSessions(const TCHAR *, const TCHAR *, StringList *, AbstractCommSession *);
