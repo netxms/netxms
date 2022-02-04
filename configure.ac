@@ -4323,17 +4323,32 @@ if test $? = 0; then
 		CPPFLAGS="$CPPFLAGS $MONGODB_CPPFLAGS"
 		LDFLAGS="$LDFLAGS $MONGODB_LDFLAGS"
 	else
-        MONGODB_CPPFLAGS="-I/usr/local/include/libmongoc-1.0/ -I/usr/local/include/libbson-1.0/"
-		MONGODB_LDFLAGS="-L/usr/local/lib"
+		if test -d /usr/include/libmongoc-1.0; then
+			MONGODB_CPPFLAGS="-I/usr/include/libmongoc-1.0"
+		else
+			if test -d /usr/local/include/libmongoc-1.0; then
+				MONGODB_CPPFLAGS="-I/usr/local/include/libmongoc-1.0"
+				MONGODB_LDFLAGS="-L/usr/local/lib"
+			fi
+		fi
+		if test -d /usr/include/libbson-1.0; then
+			MONGODB_CPPFLAGS="$MONGODB_CPPFLAGS -I/usr/include/libbson-1.0"
+		else
+			if test -d /usr/local/include/libbson-1.0; then
+				MONGODB_CPPFLAGS="$MONGODB_CPPFLAGS -I/usr/local/include/libbson-1.0"
+				MONGODB_LDFLAGS="-L/usr/local/lib"
+			fi
+		fi
 		CPPFLAGS="$CPPFLAGS $MONGODB_CPPFLAGS"
 		LDFLAGS="$LDFLAGS $MONGODB_LDFLAGS"
     	fi
-	
+
 	AC_CHECK_HEADER(mongoc.h,,AC_MSG_ERROR([*** Cannot find mongoc.h - check your MongoDB installation ***]))
 	AC_CHECK_LIB(mongoc-1.0, mongoc_client_get_database, [ MONGODB_LIBS="$MONGODB_LIBS -lmongoc-1.0" ])
 	AC_CHECK_LIB(bson-1.0, nanosleep, [ MONGODB_LIBS="$MONGODB_LIBS -lbson-1.0" ])
-
 	LIBS="$LIBS $MONGODB_LIBS"
+
+	AC_CHECK_FUNCS([mongoc_client_get_database_names_with_opts])
 
 	CPPFLAGS="$OLD_CPPFLAGS"
 	LDFLAGS="$OLD_LDFLAGS"

@@ -28,7 +28,6 @@
 //mongodb
 #include <mongoc.h>
 #include <bson.h>
-#include <bcon.h>
 
 /**
  * Misc defines
@@ -64,11 +63,11 @@ class DatabaseInstance
 {
 private:
    mongoc_client_t *m_dbConn;
-	THREAD m_pollerThread;
+   THREAD m_pollerThread;
    DatabaseInfo m_info;
    CONDITION m_stopCondition;
    //server status
-	MUTEX m_serverStatusLock;
+   MUTEX m_serverStatusLock;
    bson_t *m_serverStatus;
    //Database list
    MUTEX m_databaseListLock;
@@ -90,13 +89,14 @@ public:
 
    void run();
    void stop();
-   NETXMS_SUBAGENT_PARAM *getParameters(int *paramCount);
-   bool connectionEstablished();
+   void getDatabases();
+   bool connectionEstablished() { return m_dbConn != nullptr; }
    const TCHAR *getConnectionName() { return m_info.id; }
+
+   NETXMS_SUBAGENT_PARAM *getParameters(int *paramCount);
    LONG getStatusParam(const char *paramName, TCHAR *value);
    LONG getParam(bson_t *result, const char *paramName, TCHAR *value);
    LONG setDbNames(StringList *value);
-   void getDatabases();
    LONG getOtherParam(const TCHAR *param, const TCHAR *arg, const TCHAR *command, TCHAR *value);
 };
 
