@@ -169,6 +169,7 @@ uint32_t WebServiceDefinition::query(DataCollectionTarget *object, WebServiceReq
       const StringList& args, AgentConnection *conn, void *result) const
 {
    StringBuffer url = object->expandText(m_url, nullptr, nullptr, shared_ptr<DCObjectInfo>(), nullptr, nullptr, nullptr, nullptr, &args);
+   StringBuffer requestData = object->expandText(m_requestData, nullptr, nullptr, shared_ptr<DCObjectInfo>(), nullptr, nullptr, nullptr, nullptr, &args);
 
    StringMap headers;
    ExpandHeadersContext context;
@@ -181,7 +182,7 @@ uint32_t WebServiceDefinition::query(DataCollectionTarget *object, WebServiceReq
    pathList.add(path);
 
    StringMap resultSet;
-   uint32_t rcc = conn->queryWebService(requestType, url, m_httpRequestMethod, m_requestData, m_requestTimeout, m_cacheRetentionTime,
+   uint32_t rcc = conn->queryWebService(requestType, url, m_httpRequestMethod, requestData, m_requestTimeout, m_cacheRetentionTime,
          m_login, m_password, m_authType, headers, pathList, isVerifyCertificate(), isVerifyHost(), isForcePlainTextParser(),
          (requestType == WebServiceRequestType::PARAMETER) ? &resultSet : result);
    if ((rcc == ERR_SUCCESS) && (requestType == WebServiceRequestType::PARAMETER))
@@ -220,9 +221,7 @@ WebServiceCallResult *WebServiceDefinition::makeCustomRequest(shared_ptr<Node> n
    if (contentType != nullptr)
       headers.set(_T("Content-Type"), contentType);
 
-   //Make class that will contain result
-   return conn->webServiceCustomRequest(requestType, url, m_requestTimeout, m_login, m_password, m_authType, headers, isVerifyCertificate(),
-         isVerifyHost(), data);
+   return conn->webServiceCustomRequest(requestType, url, m_requestTimeout, m_login, m_password, m_authType, headers, isVerifyCertificate(), isVerifyHost(), data);
 }
 
 /**
