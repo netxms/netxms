@@ -947,7 +947,7 @@ AC_ARG_WITH(dist,
 	MODULES="appagent jansson java-common libexpat libstrophe zlib libnetxms libnxjava install sqlite snmp ethernetip libnxsl libnxmb libnxlp libnxpython libnxcc db client server ncdrivers agent nxscript nxcproxy"
 	TOOLS="nxlptest"
 	SUBAGENT_DIRS="linux ds18x20 freebsd openbsd minix mqtt mysql pgsql netbsd sunos aix hpux odbcquery informix oracle lmsensors darwin rpi java jmx bind9 ubntlw netsvc db2 tuxedo mongodb ssh vmgr xen lorawan asterisk python"
-	AGENT_DIRS="libnxtux"
+	AGENT_DIRS="libnxappc libnxtux"
 	NCDRV_MODULES="anysms googlechat kannel msteams mymobile nexmo nxagent slack smseagle telegram text2reach websms"
    HDLINK_DIRS="jira redmine"
    PDSDRV_DIRS="influxdb rrdtool"
@@ -1318,6 +1318,7 @@ if test $? = 0; then
 		MODULES="$MODULES appagent client libnxsl libnxlp libnxcc db nxscript ncdrivers snmp"
 		TOOLS="$TOOLS nxlptest"
 	fi
+	AGENT_DIRS="$AGENT_DIRS libnxappc"
 fi
 
 MODULES="$MODULES tools"
