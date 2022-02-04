@@ -32,6 +32,8 @@
 
 #define AGENT_NAME _T("SunOS")
 
+#define DEBUG_TAG _T("sunos")
+
 //
 // Subagent flags
 //

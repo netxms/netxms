@@ -57,6 +57,8 @@ LONG H_NetInterfaceStatus(const TCHAR *param, const TCHAR *arg, TCHAR *value, Ab
 LONG H_NetInterfaceInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_NetInterfaceList(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue, AbstractCommSession *session);
 LONG H_NetInterfaceNames(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue, AbstractCommSession *session);
+LONG H_OSInfo(const TCHAR* param, const TCHAR* arg, TCHAR* value, AbstractCommSession* session);
+LONG H_OSServicePack(const TCHAR* param, const TCHAR* arg, TCHAR* value, AbstractCommSession* session);
 LONG H_ProcessCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
 LONG H_ProcessInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
 LONG H_ProcessList(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue, AbstractCommSession *session);
@@ -305,6 +307,10 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("System.MsgQueue.Messages(*)"), H_SysMsgQueue, _T("m"), DCI_DT_UINT, DCIDESC_SYSTEM_MSGQUEUE_MESSAGES },
    { _T("System.MsgQueue.RecvTime(*)"), H_SysMsgQueue, _T("r"), DCI_DT_UINT64, DCIDESC_SYSTEM_MSGQUEUE_RECV_TIME },
    { _T("System.MsgQueue.SendTime(*)"), H_SysMsgQueue, _T("s"), DCI_DT_UINT64, DCIDESC_SYSTEM_MSGQUEUE_SEND_TIME },
+
+   { _T("System.OS.ProductName"), H_OSInfo, _T("N"), DCI_DT_STRING, DCIDESC_SYSTEM_OS_PRODUCT_NAME },
+   { _T("System.OS.ServicePack"), H_OSServicePack, nullptr, DCI_DT_STRING, DCIDESC_SYSTEM_OS_SERVICE_PACK },
+   { _T("System.OS.Version"), H_OSInfo, _T("V"), DCI_DT_STRING, DCIDESC_SYSTEM_OS_VERSION },
 
    { _T("System.ProcessCount"), H_SysProcessCount, NULL, DCI_DT_INT, DCIDESC_SYSTEM_PROCESSCOUNT },
    { _T("System.ThreadCount"), H_SysThreadCount, NULL, DCI_DT_INT, DCIDESC_SYSTEM_THREADCOUNT },

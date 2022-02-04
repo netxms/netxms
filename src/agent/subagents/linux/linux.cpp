@@ -408,6 +408,11 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("System.MsgQueue.RecvTime(*)"), H_SysMsgQueue, _T("r"), DCI_DT_UINT64, DCIDESC_SYSTEM_MSGQUEUE_RECV_TIME },
    { _T("System.MsgQueue.SendTime(*)"), H_SysMsgQueue, _T("s"), DCI_DT_UINT64, DCIDESC_SYSTEM_MSGQUEUE_SEND_TIME },
 
+   { _T("System.OS.Build"), H_OSInfo, _T("B"), DCI_DT_STRING, DCIDESC_SYSTEM_OS_BUILD },
+   { _T("System.OS.ProductName"), H_OSInfo, _T("N"), DCI_DT_STRING, DCIDESC_SYSTEM_OS_PRODUCT_NAME },
+   { _T("System.OS.ProductType"), H_OSInfo, _T("T"), DCI_DT_STRING, DCIDESC_SYSTEM_OS_PRODUCT_TYPE },
+   { _T("System.OS.Version"), H_OSInfo, _T("V"), DCI_DT_STRING, DCIDESC_SYSTEM_OS_VERSION },
+
    { _T("System.ProcessCount"), H_ProcessCount, _T("T"), DCI_DT_UINT, DCIDESC_SYSTEM_PROCESSCOUNT },
    { _T("System.ThreadCount"), H_ThreadCount, nullptr, DCI_DT_UINT, DCIDESC_SYSTEM_THREADCOUNT },
 

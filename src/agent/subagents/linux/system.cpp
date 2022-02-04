@@ -457,3 +457,51 @@ LONG H_SysMsgQueue(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractC
    }
    return SYSINFO_RC_SUCCESS;
 }
+
+/**
+ * Handler for System.OS.* parameters
+ */
+LONG H_OSInfo(const TCHAR* cmd, const TCHAR* arg, TCHAR* value, AbstractCommSession* session)
+{
+   Config parser;
+   if (!parser.loadIniConfig(_T("/etc/os-release"), _T("os")))
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Failed to parse /etc/os-release file"));
+      return SYSINFO_RC_ERROR;
+   }
+
+   const TCHAR* data = nullptr;
+   switch (*arg)
+   {
+      case 'B': // Build
+         data = parser.getValue(_T("/os/BUILD_ID"));
+         break;
+
+      case 'N': // ProductName
+         data = parser.getValue(_T("/os/PRETTY_NAME"));
+         if (data == nullptr)
+         {
+            data = parser.getValue(_T("/os/NAME"));
+            if (data == nullptr)
+               data = parser.getValue(_T("/os/ID"));
+         }
+         break;
+
+      case 'T': // ProductType
+         data = parser.getValue(_T("/os/VARIANT"));
+         break;
+
+      case 'V': // Version
+         data = parser.getValue(_T("/os/VERSION"));
+         if (data == nullptr)
+            data = parser.getValue(_T("/os/VERSION_ID"));
+         break;
+   }
+
+   if (data == nullptr)
+      return SYSINFO_RC_UNSUPPORTED;
+
+   ret_string(value, data);
+
+   return SYSINFO_RC_SUCCESS;
+}

@@ -287,6 +287,12 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 	{ _T("System.Memory.Virtual.Used"),   H_MemoryInfo,      (const TCHAR *)VIRTUAL_USED,	DCI_DT_UINT64,	DCIDESC_SYSTEM_MEMORY_VIRTUAL_USED },
 	{ _T("System.Memory.Virtual.UsedPerc"), H_MemoryInfo,    (const TCHAR *)VIRTUAL_USED_PCT,	DCI_DT_FLOAT,	DCIDESC_SYSTEM_MEMORY_VIRTUAL_USED_PCT },
 #endif
+
+   { _T("System.OS.Build"), H_OSInfo, _T("B"), DCI_DT_STRING, DCIDESC_SYSTEM_OS_BUILD },
+   { _T("System.OS.ProductName"), H_OSInfo, _T("N"), DCI_DT_STRING, DCIDESC_SYSTEM_OS_PRODUCT_NAME },
+   { _T("System.OS.ProductType"), H_OSInfo, _T("T"), DCI_DT_STRING, DCIDESC_SYSTEM_OS_PRODUCT_TYPE },
+   { _T("System.OS.Version"), H_OSInfo, _T("V"), DCI_DT_STRING, DCIDESC_SYSTEM_OS_VERSION },
+
 	{ _T("System.ProcessCount"),          H_ProcessCount,    _T("S"),			DCI_DT_UINT,	DCIDESC_SYSTEM_PROCESSCOUNT },
 	{ _T("System.ThreadCount"),           H_ProcessCount,    _T("T"),			DCI_DT_UINT,	DCIDESC_SYSTEM_THREADCOUNT },
 	{ _T("System.Uname"),                 H_Uname,           NULL,				DCI_DT_STRING,	DCIDESC_SYSTEM_UNAME },

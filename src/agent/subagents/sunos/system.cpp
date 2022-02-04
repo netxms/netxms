@@ -542,3 +542,66 @@ LONG H_SystemHardwareInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, Ab
 }
 
 #endif
+
+bool GetPrettyOSName(char* buff, size_t buflen)
+{
+   int fd = open("/etc/release", O_RDONLY);
+   if (fd == -1)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 7, _T("Failed to open /etc/release file"));
+      return false;
+   }
+
+   if (read(fd, buff, buflen) < 1)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 7, _T("Failed to read from /etc/release file"));
+      return false;
+   }
+
+   close(fd);
+
+   char* eol = strchr(buff, '\n');
+   if (eol == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 7, _T("Failed to read OS name from /etc/release file - buffer too short"));
+      return false;
+   }
+
+   *eol = 0;
+
+   TrimA(buff);
+
+   return true;
+}
+
+/**
+ * Handler for System.OS.* parameters
+ */
+LONG H_OSInfo(const TCHAR* cmd, const TCHAR* arg, TCHAR* value, AbstractCommSession* session)
+{
+   char buff[64];
+   switch (*arg)
+   {
+      case 'N': // ProductName
+         if (!GetPrettyOSName(buff, 64) && sysinfo(SI_SYSNAME, buff, 64) == -1)
+         {
+            nxlog_debug_tag(DEBUG_TAG, 4, _T("Failed to get sysname from sysinfo"));
+            return SYSINFO_RC_ERROR;
+         }
+         ret_mbstring(value, buff);
+         break;
+
+      case 'V': // Version
+         if (sysinfo(SI_VERSION, buff, 64) == -1)
+         {
+            nxlog_debug_tag(DEBUG_TAG, 4, _T("Failed to get version from sysinfo"));
+            return SYSINFO_RC_ERROR;
+         }
+         ret_mbstring(value, buff);
+         break;
+
+      default:
+         return SYSINFO_RC_ERROR;
+   }
+   return SYSINFO_RC_SUCCESS;
+}
