@@ -552,13 +552,17 @@ bool GetPrettyOSName(char* buff, size_t buflen)
       return false;
    }
 
-   if (read(fd, buff, buflen) < 1)
+   ssize_t bytes = read(fd, buff, buflen - 1);
+   if (bytes < 1)
    {
       nxlog_debug_tag(DEBUG_TAG, 7, _T("Failed to read from /etc/release file"));
+      close(fd);
       return false;
    }
 
    close(fd);
+
+   buff[bytes] = 0;
 
    char* eol = strchr(buff, '\n');
    if (eol == nullptr)
@@ -579,11 +583,11 @@ bool GetPrettyOSName(char* buff, size_t buflen)
  */
 LONG H_OSInfo(const TCHAR* cmd, const TCHAR* arg, TCHAR* value, AbstractCommSession* session)
 {
-   char buff[64];
+   char buff[128];
    switch (*arg)
    {
       case 'N': // ProductName
-         if (!GetPrettyOSName(buff, 64) && sysinfo(SI_SYSNAME, buff, 64) == -1)
+         if (!GetPrettyOSName(buff, 128) && sysinfo(SI_SYSNAME, buff, 128) == -1)
          {
             nxlog_debug_tag(DEBUG_TAG, 4, _T("Failed to get sysname from sysinfo"));
             return SYSINFO_RC_ERROR;
@@ -592,7 +596,7 @@ LONG H_OSInfo(const TCHAR* cmd, const TCHAR* arg, TCHAR* value, AbstractCommSess
          break;
 
       case 'V': // Version
-         if (sysinfo(SI_VERSION, buff, 64) == -1)
+         if (sysinfo(SI_VERSION, buff, 128) == -1)
          {
             nxlog_debug_tag(DEBUG_TAG, 4, _T("Failed to get version from sysinfo"));
             return SYSINFO_RC_ERROR;
