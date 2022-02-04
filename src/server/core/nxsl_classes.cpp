@@ -4125,30 +4125,68 @@ NXSL_Value *NXSL_SensorClass::getAttr(NXSL_Object *object, const NXSL_Identifier
  */
 NXSL_METHOD_DEFINITION(SNMPTransport, get)
 {
-   if (!argv[0]->isString())
+   if (!argv[0]->isString() && !argv[0]->isArray())
       return NXSL_ERR_NOT_STRING;
 
-   uint32_t oid[MAX_OID_LEN];
-   size_t olen = SNMPParseOID(argv[0]->getValueAsCString(), oid, MAX_OID_LEN);
-   if (olen == 0)
+   SNMP_ObjectId oids[64];
+   int varbindCount = 0;
+   if (argv[0]->isString())
+   {
+      oids[0] = SNMP_ObjectId::parse(argv[0]->getValueAsCString());
+      if (!oids[0].isValid())
+      {
+         *result = vm->createValue();
+         return NXSL_ERR_SUCCESS;
+      }
+      varbindCount++;
+   }
+   else
+   {
+      NXSL_Array *a = argv[0]->getValueAsArray();
+      for(int i = 0; (i < a->size()) && (i < 64); i++)
+      {
+         oids[i] = SNMP_ObjectId::parse(a->getByPosition(i)->getValueAsCString());
+         if (!oids[i].isValid())
+         {
+            *result = vm->createValue();
+            return 0;
+         }
+         varbindCount++;
+      }
+   }
+   if (varbindCount == 0)
    {
       *result = vm->createValue();
-      return 0;
+      return NXSL_ERR_SUCCESS;
    }
 
    SNMP_Transport *transport = static_cast<SNMP_Transport*>(object->getData());
 
    SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), transport->getSnmpVersion());
-   request.bindVariable(new SNMP_Variable(oid, olen));
+   for(int i = 0; i < varbindCount; i++)
+      request.bindVariable(new SNMP_Variable(oids[i]));
 
    SNMP_PDU *response;
    uint32_t rc = transport->doRequest(&request, &response, SnmpGetDefaultTimeout(), 3);
    if (rc == SNMP_ERR_SUCCESS)
    {
-      if ((response->getNumVariables() > 0) && (response->getErrorCode() == SNMP_PDU_ERR_SUCCESS))
+      if ((response->getNumVariables() >= varbindCount) && (response->getErrorCode() == SNMP_PDU_ERR_SUCCESS))
       {
-         SNMP_Variable *pVar = response->getVariable(0);
-         *result = vm->createValue(vm->createObject(&g_nxslSnmpVarBindClass, pVar));
+         if (argv[0]->isString())
+         {
+            SNMP_Variable *v = response->getVariable(0);
+            *result = vm->createValue(vm->createObject(&g_nxslSnmpVarBindClass, v));
+         }
+         else
+         {
+            NXSL_Array *a = new NXSL_Array(vm);
+            for(int i = 0; i < varbindCount; i++)
+            {
+               SNMP_Variable *v = response->getVariable(i);
+               a->append(vm->createValue(vm->createObject(&g_nxslSnmpVarBindClass, v)));
+            }
+            *result = vm->createValue(a);
+         }
          response->unlinkVariables();
       }
       else
@@ -4161,7 +4199,7 @@ NXSL_METHOD_DEFINITION(SNMPTransport, get)
    {
       *result = vm->createValue();
    }
-   return 0;
+   return NXSL_ERR_SUCCESS;
 }
 
 /**
@@ -4175,14 +4213,22 @@ NXSL_METHOD_DEFINITION(SNMPTransport, getValue)
    if (!argv[0]->isString())
       return NXSL_ERR_NOT_STRING;
 
-   if ((argc > 1) && !argv[1]->isString() && !argv[1]->isNull())
-      return NXSL_ERR_NOT_STRING;
+   const char *codepage;
+   if (argc > 1)
+   {
+      if (!argv[1]->isString() && !argv[1]->isNull())
+         return NXSL_ERR_NOT_STRING;
+      codepage = argv[1]->isString() ? argv[1]->getValueAsMBString() : nullptr;
+   }
+   else
+   {
+      codepage = nullptr;
+   }
 
    SNMP_Transport *transport = static_cast<SNMP_Transport*>(object->getData());
 
    TCHAR buffer[4096];
-   if (SnmpGetEx(transport, argv[0]->getValueAsCString(), nullptr, 0, buffer, sizeof(buffer), SG_STRING_RESULT, nullptr,
-          ((argc > 1) && argv[1]->isString()) ? argv[1]->getValueAsMBString() : nullptr) == SNMP_ERR_SUCCESS)
+   if (SnmpGetEx(transport, argv[0]->getValueAsCString(), nullptr, 0, buffer, sizeof(buffer), SG_STRING_RESULT, nullptr, codepage) == SNMP_ERR_SUCCESS)
    {
       *result = vm->createValue(buffer);
    }
@@ -4191,7 +4237,87 @@ NXSL_METHOD_DEFINITION(SNMPTransport, getValue)
       *result = vm->createValue();
    }
 
-   return 0;
+   return NXSL_ERR_SUCCESS;
+}
+
+/**
+ * SNMPTransport::getValues() method
+ */
+NXSL_METHOD_DEFINITION(SNMPTransport, getValues)
+{
+   if ((argc < 1) || (argc > 2))
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
+   if (!argv[0]->isArray())
+      return NXSL_ERR_NOT_ARRAY;
+
+   if ((argc > 1) && !argv[1]->isString() && !argv[1]->isNull())
+      return NXSL_ERR_NOT_STRING;
+
+   const char *codepage;
+   if (argc > 1)
+   {
+      if (!argv[1]->isString() && !argv[1]->isNull())
+         return NXSL_ERR_NOT_STRING;
+      codepage = argv[1]->isString() ? argv[1]->getValueAsMBString() : nullptr;
+   }
+   else
+   {
+      codepage = nullptr;
+   }
+
+   SNMP_ObjectId oids[64];
+   int varbindCount = 0;
+   NXSL_Array *a = argv[0]->getValueAsArray();
+   if (a->size() == 0)
+   {
+      *result = vm->createValue();
+      return NXSL_ERR_SUCCESS;
+   }
+   for(int i = 0; (i < a->size()) && (i < 64); i++)
+   {
+      oids[i] = SNMP_ObjectId::parse(a->getByPosition(i)->getValueAsCString());
+      if (!oids[i].isValid())
+      {
+         *result = vm->createValue();
+         return 0;
+      }
+      varbindCount++;
+   }
+
+   SNMP_Transport *transport = static_cast<SNMP_Transport*>(object->getData());
+
+   SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), transport->getSnmpVersion());
+   for(int i = 0; i < varbindCount; i++)
+      request.bindVariable(new SNMP_Variable(oids[i]));
+
+   SNMP_PDU *response;
+   uint32_t rc = transport->doRequest(&request, &response, SnmpGetDefaultTimeout(), 3);
+   if (rc == SNMP_ERR_SUCCESS)
+   {
+      if ((response->getNumVariables() >= varbindCount) && (response->getErrorCode() == SNMP_PDU_ERR_SUCCESS))
+      {
+         TCHAR buffer[4096];
+         NXSL_Array *a = new NXSL_Array(vm);
+         for(int i = 0; i < varbindCount; i++)
+         {
+            SNMP_Variable *v = response->getVariable(i);
+            a->append(vm->createValue(v->getValueAsString(buffer, 4096, codepage)));
+         }
+         *result = vm->createValue(a);
+      }
+      else
+      {
+         *result = vm->createValue();
+      }
+      delete response;
+   }
+   else
+   {
+      *result = vm->createValue();
+   }
+
+   return NXSL_ERR_SUCCESS;
 }
 
 /**
@@ -4266,7 +4392,7 @@ finish:
 /**
  * SNMP walk callback
  */
-static UINT32 WalkCallback(SNMP_Variable *var, SNMP_Transport *transport, void *context)
+static uint32_t WalkCallback(SNMP_Variable *var, SNMP_Transport *transport, void *context)
 {
    NXSL_VM *vm = static_cast<NXSL_VM*>(static_cast<NXSL_Array*>(context)->vm());
    static_cast<NXSL_Array*>(context)->append(vm->createValue(vm->createObject(&g_nxslSnmpVarBindClass, new SNMP_Variable(var))));
@@ -4305,6 +4431,7 @@ NXSL_SNMPTransportClass::NXSL_SNMPTransportClass() : NXSL_Class()
 
    NXSL_REGISTER_METHOD(SNMPTransport, get, 1);
    NXSL_REGISTER_METHOD(SNMPTransport, getValue, -1);
+   NXSL_REGISTER_METHOD(SNMPTransport, getValues, -1);
    NXSL_REGISTER_METHOD(SNMPTransport, set, -1);
    NXSL_REGISTER_METHOD(SNMPTransport, walk, 1);
 }
