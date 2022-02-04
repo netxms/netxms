@@ -43,7 +43,9 @@ import org.netxms.client.events.EventReference;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
+import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.tools.WidgetHelper;
+import org.xnap.commons.i18n.I18n;
 
 /**
  * Dialog to show event references
@@ -57,6 +59,7 @@ public class EventReferenceViewDialog extends Dialog
    private static final int COLUMN_OWNER_ID = 4;
    private static final int COLUMN_OWNER_NAME = 5;
 
+   private I18n i18n = LocalizationHelper.getI18n(EventReferenceViewDialog.class);
    private NXCSession session = Registry.getSession();
    private List<EventReference> references;
    private SortableTableViewer viewer;
@@ -96,20 +99,20 @@ public class EventReferenceViewDialog extends Dialog
       {
          if (multiChoice)
          {
-            createButton(parent, IDialogConstants.YES_ID, IDialogConstants.YES_LABEL, true);
-            createButton(parent, IDialogConstants.YES_TO_ALL_ID, IDialogConstants.YES_TO_ALL_LABEL, false);
-            createButton(parent, IDialogConstants.NO_ID, IDialogConstants.NO_LABEL, false);
-            createButton(parent, IDialogConstants.NO_TO_ALL_ID, IDialogConstants.NO_TO_ALL_LABEL, false);
+            createButton(parent, IDialogConstants.YES_ID, i18n.tr("&Yes"), true);
+            createButton(parent, IDialogConstants.YES_TO_ALL_ID, i18n.tr("Yes To &All"), false);
+            createButton(parent, IDialogConstants.NO_ID, i18n.tr("&No"), false);
+            createButton(parent, IDialogConstants.NO_TO_ALL_ID, i18n.tr("N&o To All"), false);
          }
          else
          {
-            createButton(parent, IDialogConstants.YES_ID, IDialogConstants.YES_LABEL, true);
-            createButton(parent, IDialogConstants.NO_ID, IDialogConstants.NO_LABEL, false);
+            createButton(parent, IDialogConstants.YES_ID, i18n.tr("&Yes"), true);
+            createButton(parent, IDialogConstants.NO_ID, i18n.tr("&No"), false);
          }
       }
       else
       {
-         createButton(parent, IDialogConstants.CANCEL_ID, IDialogConstants.CLOSE_LABEL, false);
+         createButton(parent, IDialogConstants.CANCEL_ID, i18n.tr("Close"), false);
       }
    }
 
