@@ -1219,8 +1219,8 @@ if test $? = 0; then
 	fi
 
 	BUILD_SERVER="yes"
-	MODULES="$MODULES libnxsl libnxcc server ncdrivers nxscript"
-	TEST_MODULES="$TEST_MODULES test-libnxcc test-libnxsl"
+	MODULES="$MODULES libnxsl server ncdrivers nxscript"
+	TEST_MODULES="$TEST_MODULES test-libnxsl"
 	TOP_LEVEL_MODULES="$TOP_LEVEL_MODULES sql images"
 	CONTRIB_MODULES="$CONTRIB_MODULES mibs backgrounds music templates"
 	NCDRV_MODULES="$NCDRV_MODULES nxagent"
