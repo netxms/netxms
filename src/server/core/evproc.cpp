@@ -295,19 +295,16 @@ static void ProcessEvent(Event *event, int processorId)
    // Write event information to debug
    if (nxlog_get_debug_level_tag(DEBUG_TAG) >= 5)
    {
-      nxlog_debug_tag(DEBUG_TAG, 5, _T("EVENT %s [%d] at {%d} (ID:") UINT64_FMT _T(" F:0x%04X S:%d TAGS:\"%s\"%s) FROM %s: %s"),
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("EVENT %s [%u] at {%d} (ID:") UINT64_FMT _T(" F:0x%04X S:%d TAGS:\"%s\"%s) FROM %s: %s"),
                       event->getName(), event->getCode(), processorId, event->getId(), event->getFlags(), event->getSeverity(),
                       (const TCHAR *)event->getTagsAsList(),
                       (event->getRootId() == 0) ? _T("") : _T(" CORRELATED"),
                       sourceObject->getName(), event->getMessage());
    }
 
-   // Pass event through event processing policy if it is not correlated
-   if (event->getRootId() == 0)
-   {
-      g_pEventPolicy->processEvent(event);
-      nxlog_debug_tag(DEBUG_TAG, 7, _T("Event ") UINT64_FMT _T(" with code %d passed event processing policy"), event->getId(), event->getCode());
-   }
+   // Pass event through event processing policy
+   g_pEventPolicy->processEvent(event);
+   nxlog_debug_tag(DEBUG_TAG, 7, _T("Event ") UINT64_FMT _T(" with code %u passed event processing policy"), event->getId(), event->getCode());
 
    // Write event to log if required, otherwise destroy it
    // Logger will destroy event object after logging

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  * <p>
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -48,6 +48,7 @@ public class EventProcessingPolicyRule
    public static final int SEVERITY_MAJOR      = 0x0800;
    public static final int SEVERITY_CRITICAL   = 0x1000;
    public static final int CREATE_TICKET       = 0x2000;
+   public static final int ACCEPT_CORRELATED   = 0x4000;
 
    public static final int SEVERITY_ANY = SEVERITY_NORMAL | SEVERITY_WARNING | SEVERITY_MINOR | SEVERITY_MAJOR | SEVERITY_CRITICAL;
 

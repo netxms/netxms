@@ -583,6 +583,9 @@ bool EPRule::processEvent(Event *event) const
    if (m_flags & RF_DISABLED)
       return false;
 
+   if ((event->getRootId() != 0) && !(m_flags & RF_ACCEPT_CORRELATED))
+      return false;
+
    // Check if event match
    if (!matchSource(event->getSourceId()) || !matchEvent(event->getCode()) ||
        !matchSeverity(event->getSeverity()) || !matchScript(event))

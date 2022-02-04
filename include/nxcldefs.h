@@ -1102,6 +1102,7 @@ enum AggregationFunction
 #define RF_SEVERITY_MAJOR        0x0800
 #define RF_SEVERITY_CRITICAL     0x1000
 #define RF_CREATE_TICKET         0x2000
+#define RF_ACCEPT_CORRELATED     0x4000
 
 /**
  * Network map types
