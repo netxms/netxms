@@ -705,6 +705,10 @@ uint32_t ServiceEntry::query(const TCHAR *url, uint16_t requestMethod, const cha
 #endif
       if (curl_easy_setopt(curl, CURLOPT_URL, urlUtf8) == CURLE_OK)
       {
+         nxlog_debug_tag(DEBUG_TAG, 7, _T("ServiceEntry::query(): requesting URL %hs"), urlUtf8);
+         if (requestData != nullptr)
+            nxlog_debug_tag(DEBUG_TAG, 7, _T("ServiceEntry::query(): request data: %hs"), requestData);
+
          if (curl_easy_perform(curl) == CURLE_OK)
          {
             deleteContent();
@@ -721,6 +725,7 @@ uint32_t ServiceEntry::query(const TCHAR *url, uint16_t requestMethod, const cha
                   text++;
                   size--;
                }
+               nxlog_debug_tag(DEBUG_TAG, 7, _T("ServiceEntry::query(): response data: %hs"), text);
 
                if (!forcePlainTextParser && (*text == '<'))
                {
@@ -858,6 +863,7 @@ void QueryWebService(NXCPMessage* request, AbstractCommSession *session)
          header[len++] = ' ';
          request->getFieldAsUtf8String(fieldId++, &header[len], sizeof(header) - len); // value
          headers = curl_slist_append(headers, header);
+         nxlog_debug_tag(DEBUG_TAG, 7, _T("QueryWebService(): request header: %hs"), header);
       }
 
       result = cachedEntry->query(url, requestMethodCode, requestData, login, password, authType, headers,
@@ -919,7 +925,7 @@ void WebServiceCustomRequest(NXCPMessage* request, AbstractCommSession *session)
    TCHAR *url = request->getFieldAsString(VID_URL);
    char *login = request->getFieldAsUtf8String(VID_LOGIN_NAME);
    char *password = request->getFieldAsUtf8String(VID_PASSWORD);
-   char *data = request->getFieldAsUtf8String(VID_REQUEST_DATA);
+   char *requestData = request->getFieldAsUtf8String(VID_REQUEST_DATA);
    bool hostVerify = request->getFieldAsBoolean(VID_VERIFY_HOST);
    bool peerVerify = request->getFieldAsBoolean(VID_VERIFY_CERT);
    WebServiceAuthType authType = WebServiceAuthTypeFromInt(request->getFieldAsInt16(VID_AUTH_TYPE));
@@ -938,6 +944,7 @@ void WebServiceCustomRequest(NXCPMessage* request, AbstractCommSession *session)
       header[len++] = ' ';
       request->getFieldAsUtf8String(fieldId++, &header[len], sizeof(header) - len); // value
       headers = curl_slist_append(headers, header);
+      nxlog_debug_tag(DEBUG_TAG, 7, _T("WebServiceCustomRequest(): request header: %hs"), header);
    }
 
    NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
@@ -958,10 +965,10 @@ void WebServiceCustomRequest(NXCPMessage* request, AbstractCommSession *session)
       curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, peerVerify ? 1 : 0);
       curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, hostVerify ? 2 : 0);
       curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, requestMethod);
-      if (data != nullptr)
+      if (requestData != nullptr)
       {
-         curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, strlen(data));
-         curl_easy_setopt(curl, CURLOPT_POSTFIELDS, data);
+         curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, strlen(requestData));
+         curl_easy_setopt(curl, CURLOPT_POSTFIELDS, requestData);
       }
       else if (requestMethodCode == static_cast<uint16_t>(HttpRequestMethod::_POST))
       {
@@ -1004,6 +1011,10 @@ void WebServiceCustomRequest(NXCPMessage* request, AbstractCommSession *session)
 #endif
         if (curl_easy_setopt(curl, CURLOPT_URL, urlUtf8) == CURLE_OK)
         {
+           nxlog_debug_tag(DEBUG_TAG, 7, _T("WebServiceCustomRequest(): requesting URL %hs"), urlUtf8);
+           if (requestData != nullptr)
+              nxlog_debug_tag(DEBUG_TAG, 7, _T("WebServiceCustomRequest(): request data: %hs"), requestData);
+
            if (curl_easy_perform(curl) == CURLE_OK)
            {
               long response_code;
@@ -1057,7 +1068,7 @@ void WebServiceCustomRequest(NXCPMessage* request, AbstractCommSession *session)
    curl_slist_free_all(headers);
    MemFree(login);
    MemFree(password);
-   MemFree(data);
+   MemFree(requestData);
    MemFree(url);
    session->sendMessage(&response);
    delete request;
