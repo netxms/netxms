@@ -955,7 +955,7 @@ AC_ARG_WITH(dist,
 	TEST_MODULES="test-libnxcc test-libnxsl test-libnxsnmp"
 	TOOLS="nxlptest"
 	SUBAGENT_DIRS="linux ds18x20 freebsd openbsd minix mqtt mysql pgsql netbsd sunos aix hpux informix oracle lmsensors darwin rpi java jmx opcua ubntlw bind9 netsvc db2 tuxedo mongodb ssh vmgr xen lorawan asterisk python"
-	AGENT_DIRS="libnxtux"
+	AGENT_DIRS="libnxappc libnxtux"
 	NCDRV_MODULES="anysms googlechat kannel msteams mymobile nexmo nxagent slack smseagle telegram text2reach websms"
    HDLINK_DIRS="jira redmine"
    PDSDRV_DIRS="influxdb rrdtool"
@@ -1334,6 +1334,7 @@ if test $? = 0; then
 		TEST_MODULES="$TEST_MODULES test-libnxcc test-libnxsl test-libnxsnmp"
 		TOOLS="$TOOLS nxlptest"
 	fi
+	AGENT_DIRS="$AGENT_DIRS libnxappc"
 fi
 
 MODULES="$MODULES tools"
