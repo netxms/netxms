@@ -57,10 +57,8 @@ Copyright (c) 2003-2021 Raden Solutions
       <plugin id="com.ibm.icu"/>
       <plugin id="com.sun.jna"/>
       <plugin id="com.sun.jna.platform"/>
-      <plugin id="jakarta.servlet-api"/>
       <plugin id="javax.annotation"/>
       <plugin id="javax.inject"/>
-      <plugin id="javax.servlet"/>
       <plugin id="javax.xml"/>
       <plugin id="org.apache.batik.constants"/>
       <plugin id="org.apache.batik.css"/>
@@ -592,7 +590,25 @@ Copyright (c) 2003-2021 Raden Solutions
       <plugin id="org.eclipse.equinox.common.nl_pt_BR" fragment="true"/>
       <plugin id="org.eclipse.equinox.common.nl_ru" fragment="true"/>
       <plugin id="org.eclipse.equinox.event"/>
+      <plugin id="org.eclipse.equinox.event.nl_ar" fragment="true"/>
+      <plugin id="org.eclipse.equinox.event.nl_cs" fragment="true"/>
+      <plugin id="org.eclipse.equinox.event.nl_de" fragment="true"/>
+      <plugin id="org.eclipse.equinox.event.nl_es" fragment="true"/>
+      <plugin id="org.eclipse.equinox.event.nl_fr" fragment="true"/>
+      <plugin id="org.eclipse.equinox.event.nl_iw" fragment="true"/>
+      <plugin id="org.eclipse.equinox.event.nl_pt" fragment="true"/>
+      <plugin id="org.eclipse.equinox.event.nl_pt_BR" fragment="true"/>
+      <plugin id="org.eclipse.equinox.event.nl_ru" fragment="true"/>
       <plugin id="org.eclipse.equinox.p2.artifact.repository"/>
+      <plugin id="org.eclipse.equinox.p2.artifact.repository.nl_ar" fragment="true"/>
+      <plugin id="org.eclipse.equinox.p2.artifact.repository.nl_cs" fragment="true"/>
+      <plugin id="org.eclipse.equinox.p2.artifact.repository.nl_de" fragment="true"/>
+      <plugin id="org.eclipse.equinox.p2.artifact.repository.nl_es" fragment="true"/>
+      <plugin id="org.eclipse.equinox.p2.artifact.repository.nl_fr" fragment="true"/>
+      <plugin id="org.eclipse.equinox.p2.artifact.repository.nl_iw" fragment="true"/>
+      <plugin id="org.eclipse.equinox.p2.artifact.repository.nl_pt" fragment="true"/>
+      <plugin id="org.eclipse.equinox.p2.artifact.repository.nl_pt_BR" fragment="true"/>
+      <plugin id="org.eclipse.equinox.p2.artifact.repository.nl_ru" fragment="true"/>
       <plugin id="org.eclipse.equinox.p2.core"/>
       <plugin id="org.eclipse.equinox.p2.core.nl_ar" fragment="true"/>
       <plugin id="org.eclipse.equinox.p2.core.nl_cs" fragment="true"/>
@@ -614,6 +630,15 @@ Copyright (c) 2003-2021 Raden Solutions
       <plugin id="org.eclipse.equinox.p2.engine.nl_pt_BR" fragment="true"/>
       <plugin id="org.eclipse.equinox.p2.engine.nl_ru" fragment="true"/>
       <plugin id="org.eclipse.equinox.p2.jarprocessor"/>
+      <plugin id="org.eclipse.equinox.p2.jarprocessor.nl_ar" fragment="true"/>
+      <plugin id="org.eclipse.equinox.p2.jarprocessor.nl_cs" fragment="true"/>
+      <plugin id="org.eclipse.equinox.p2.jarprocessor.nl_de" fragment="true"/>
+      <plugin id="org.eclipse.equinox.p2.jarprocessor.nl_es" fragment="true"/>
+      <plugin id="org.eclipse.equinox.p2.jarprocessor.nl_fr" fragment="true"/>
+      <plugin id="org.eclipse.equinox.p2.jarprocessor.nl_iw" fragment="true"/>
+      <plugin id="org.eclipse.equinox.p2.jarprocessor.nl_pt" fragment="true"/>
+      <plugin id="org.eclipse.equinox.p2.jarprocessor.nl_pt_BR" fragment="true"/>
+      <plugin id="org.eclipse.equinox.p2.jarprocessor.nl_ru" fragment="true"/>
       <plugin id="org.eclipse.equinox.p2.metadata"/>
       <plugin id="org.eclipse.equinox.p2.metadata.nl_ar" fragment="true"/>
       <plugin id="org.eclipse.equinox.p2.metadata.nl_cs" fragment="true"/>
@@ -655,15 +680,6 @@ Copyright (c) 2003-2021 Raden Solutions
       <plugin id="org.eclipse.equinox.preferences.nl_pt_BR" fragment="true"/>
       <plugin id="org.eclipse.equinox.preferences.nl_ru" fragment="true"/>
       <plugin id="org.eclipse.equinox.region" fragment="true"/>
-      <plugin id="org.eclipse.equinox.region.nl_ar" fragment="true"/>
-      <plugin id="org.eclipse.equinox.region.nl_cs" fragment="true"/>
-      <plugin id="org.eclipse.equinox.region.nl_de" fragment="true"/>
-      <plugin id="org.eclipse.equinox.region.nl_es" fragment="true"/>
-      <plugin id="org.eclipse.equinox.region.nl_fr" fragment="true"/>
-      <plugin id="org.eclipse.equinox.region.nl_iw" fragment="true"/>
-      <plugin id="org.eclipse.equinox.region.nl_pt" fragment="true"/>
-      <plugin id="org.eclipse.equinox.region.nl_pt_BR" fragment="true"/>
-      <plugin id="org.eclipse.equinox.region.nl_ru" fragment="true"/>
       <plugin id="org.eclipse.equinox.registry"/>
       <plugin id="org.eclipse.equinox.registry.nl_ar" fragment="true"/>
       <plugin id="org.eclipse.equinox.registry.nl_cs" fragment="true"/>
@@ -725,15 +741,6 @@ Copyright (c) 2003-2021 Raden Solutions
       <plugin id="org.eclipse.equinox.security.win32.x86_64.nl_pt_BR" fragment="true"/>
       <plugin id="org.eclipse.equinox.security.win32.x86_64.nl_ru" fragment="true"/>
       <plugin id="org.eclipse.equinox.transforms.hook" fragment="true"/>
-      <plugin id="org.eclipse.equinox.transforms.hook.nl_ar" fragment="true"/>
-      <plugin id="org.eclipse.equinox.transforms.hook.nl_cs" fragment="true"/>
-      <plugin id="org.eclipse.equinox.transforms.hook.nl_de" fragment="true"/>
-      <plugin id="org.eclipse.equinox.transforms.hook.nl_es" fragment="true"/>
-      <plugin id="org.eclipse.equinox.transforms.hook.nl_fr" fragment="true"/>
-      <plugin id="org.eclipse.equinox.transforms.hook.nl_iw" fragment="true"/>
-      <plugin id="org.eclipse.equinox.transforms.hook.nl_pt" fragment="true"/>
-      <plugin id="org.eclipse.equinox.transforms.hook.nl_pt_BR" fragment="true"/>
-      <plugin id="org.eclipse.equinox.transforms.hook.nl_ru" fragment="true"/>
       <plugin id="org.eclipse.equinox.weaving.hook" fragment="true"/>
       <plugin id="org.eclipse.help"/>
       <plugin id="org.eclipse.help.nl_ar" fragment="true"/>
@@ -756,6 +763,7 @@ Copyright (c) 2003-2021 Raden Solutions
       <plugin id="org.eclipse.jdt.annotation.nl_pt_BR" fragment="true"/>
       <plugin id="org.eclipse.jdt.annotation.nl_ru" fragment="true"/>
       <plugin id="org.eclipse.jem.util"/>
+      <plugin id="org.eclipse.jetty.servlet-api"/>
       <plugin id="org.eclipse.jface"/>
       <plugin id="org.eclipse.jface.databinding"/>
       <plugin id="org.eclipse.jface.databinding.nl_ar" fragment="true"/>
@@ -817,15 +825,6 @@ Copyright (c) 2003-2021 Raden Solutions
       <plugin id="org.eclipse.m2e.workspace.cli"/>
       <plugin id="org.eclipse.osgi"/>
       <plugin id="org.eclipse.osgi.compatibility.state" fragment="true"/>
-      <plugin id="org.eclipse.osgi.compatibility.state.nl_ar" fragment="true"/>
-      <plugin id="org.eclipse.osgi.compatibility.state.nl_cs" fragment="true"/>
-      <plugin id="org.eclipse.osgi.compatibility.state.nl_de" fragment="true"/>
-      <plugin id="org.eclipse.osgi.compatibility.state.nl_es" fragment="true"/>
-      <plugin id="org.eclipse.osgi.compatibility.state.nl_fr" fragment="true"/>
-      <plugin id="org.eclipse.osgi.compatibility.state.nl_iw" fragment="true"/>
-      <plugin id="org.eclipse.osgi.compatibility.state.nl_pt" fragment="true"/>
-      <plugin id="org.eclipse.osgi.compatibility.state.nl_pt_BR" fragment="true"/>
-      <plugin id="org.eclipse.osgi.compatibility.state.nl_ru" fragment="true"/>
       <plugin id="org.eclipse.osgi.nl_ar" fragment="true"/>
       <plugin id="org.eclipse.osgi.nl_cs" fragment="true"/>
       <plugin id="org.eclipse.osgi.nl_de" fragment="true"/>
@@ -1056,12 +1055,6 @@ Copyright (c) 2003-2021 Raden Solutions
       <plugin id="org.w3c.dom.svg"/>
    </plugins>
 
-   <configurations>
-      <plugin id="org.apache.felix.scr" autoStart="true" startLevel="2" />
-      <plugin id="org.eclipse.core.runtime" autoStart="true" startLevel="0" />
-      <plugin id="org.eclipse.equinox.common" autoStart="true" startLevel="2" />
-      <plugin id="org.eclipse.equinox.event" autoStart="true" startLevel="2" />
-   </configurations>
 
    <preferencesInfo>
       <targetfile overwrite="false"/>
