@@ -73,11 +73,6 @@
             <layout>p2</layout>
         </repository> 
         <repository>
-            <id>BIRT 4.9</id>
-            <url>https://download.eclipse.org/birt/update-site/4.9/</url>
-            <layout>p2</layout>
-        </repository>
-        <repository>
             <id>zest</id>
             <url>http://www.netxms.org/eclipse/zest-rap</url>
             <layout>p2</layout>

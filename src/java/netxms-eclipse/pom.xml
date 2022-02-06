@@ -75,11 +75,6 @@
             <layout>p2</layout>
         </repository>
         <repository>
-            <id>BIRT 4.9</id>
-            <url>https://download.eclipse.org/birt/update-site/4.9/</url>
-            <layout>p2</layout>
-        </repository>
-        <repository>
             <id>tm-terminal</id>
             <url>http://download.eclipse.org/tm/terminal/updates/4.4milestones/20180611</url>
             <layout>p2</layout>

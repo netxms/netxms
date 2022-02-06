@@ -138,18 +138,4 @@ public class TextGauge extends GenericGauge
          gc.drawText(dci.getDescription(), rect.x + ((rect.width - ext.x) / 2), rect.y + rect.height + 4, true);
 		}
 	}
-
-   @Override
-   public void setThresholds(Threshold[][] thresholds)
-   {
-      // TODO Auto-generated method stub
-      
-   }
-
-   @Override
-   public Threshold[] getThreshold(int i)
-   {
-      // TODO Auto-generated method stub
-      return null;
-   }
 }

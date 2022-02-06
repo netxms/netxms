@@ -278,6 +278,7 @@ public class BarGauge extends GenericGauge
    {
       Color scaleColor = getColorFromPreferences("Chart.Colors.DialScale"); //$NON-NLS-1$
       Color scaleTextColor = getColorFromPreferences("Chart.Colors.DialScaleText"); //$NON-NLS-1$
+      
       final Font markFont = WidgetHelper.getBestFittingFont(gc, scaleFonts, "900MM", SCALE_TEXT_WIDTH, SCALE_TEXT_HEIGHT); //$NON-NLS-1$
       gc.setFont(markFont);
 
@@ -324,19 +325,5 @@ public class BarGauge extends GenericGauge
             break;
       }
       return d;
-   }
-
-   @Override
-   public void setThresholds(Threshold[][] thresholds)
-   {
-      // TODO Auto-generated method stub
-      
-   }
-
-   @Override
-   public Threshold[] getThreshold(int i)
-   {
-      // TODO Auto-generated method stub
-      return null;
    }
 }
