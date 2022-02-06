@@ -178,6 +178,9 @@ static NETXMS_SUBAGENT_LIST m_lists[] =
    { _T("SSH.Command(*)"), H_SSHCommandList, nullptr, _T("Result of command execution") },
 };
 
+/**
+ * Supported actions
+ */
 static NETXMS_SUBAGENT_ACTION m_actions[] =
 {
 	{ _T("SSH.Command"), H_SSHCommandAction, nullptr, _T("Result of command execution") },

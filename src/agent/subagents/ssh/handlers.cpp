@@ -28,12 +28,17 @@
  */
 LONG H_SSHCommand(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
-   TCHAR hostName[256], login[64], password[64], command[256];
+   size_t commandBufferLen = _tcslen(param);
+   TCHAR *command = MemAllocString(commandBufferLen);
+   TCHAR hostName[256], login[64], password[64];
    if (!AgentGetParameterArg(param, 1, hostName, 256) ||
        !AgentGetParameterArg(param, 2, login, 64) ||
        !AgentGetParameterArg(param, 3, password, 64) ||
-       !AgentGetParameterArg(param, 4, command, 256))
+       !AgentGetParameterArg(param, 4, command, commandBufferLen))
+   {
+      MemFree(command);
       return SYSINFO_RC_UNSUPPORTED;
+   }
 
    uint16_t port = 22;
    TCHAR *p = _tcschr(hostName, _T(':'));
@@ -46,7 +51,10 @@ LONG H_SSHCommand(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCo
 
    InetAddress addr = InetAddress::resolveHostName(hostName);
    if (!addr.isValidUnicast())
+   {
+      MemFree(command);
       return SYSINFO_RC_UNSUPPORTED;
+   }
 
    shared_ptr<KeyPair> keys;
    TCHAR keyId[16] = _T("");
@@ -125,6 +133,7 @@ LONG H_SSHCommand(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCo
    {
       nxlog_debug_tag(DEBUG_TAG, 6, _T("Failed to create SSH connection to %s:%u"), hostName, port);
    }
+   MemFree(command);
    return rc;
 }
 
@@ -133,12 +142,17 @@ LONG H_SSHCommand(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCo
  */
 LONG H_SSHCommandList(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session)
 {
-   TCHAR hostName[256], login[64], password[64], command[256];
+   size_t commandBufferLen = _tcslen(param);
+   TCHAR *command = MemAllocString(commandBufferLen);
+   TCHAR hostName[256], login[64], password[64];
    if (!AgentGetParameterArg(param, 1, hostName, 256) ||
        !AgentGetParameterArg(param, 2, login, 64) ||
        !AgentGetParameterArg(param, 3, password, 64) ||
-       !AgentGetParameterArg(param, 4, command, 256))
+       !AgentGetParameterArg(param, 4, command, commandBufferLen))
+   {
+      MemFree(command);
       return SYSINFO_RC_UNSUPPORTED;
+   }
 
    uint16_t port = 22;
    TCHAR *p = _tcschr(hostName, _T(':'));
@@ -151,7 +165,10 @@ LONG H_SSHCommandList(const TCHAR *param, const TCHAR *arg, StringList *value, A
 
    InetAddress addr = InetAddress::resolveHostName(hostName);
    if (!addr.isValidUnicast())
+   {
+      MemFree(command);
       return SYSINFO_RC_UNSUPPORTED;
+   }
 
    shared_ptr<KeyPair> key;
    TCHAR keyId[16] = _T("");
@@ -176,6 +193,7 @@ LONG H_SSHCommandList(const TCHAR *param, const TCHAR *arg, StringList *value, A
       }
       ReleaseSession(ssh);
    }
+   MemFree(command);
    return rc;
 }
 

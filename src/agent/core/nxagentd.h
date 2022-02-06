@@ -337,9 +337,9 @@ private:
    void authenticate(NXCPMessage *pRequest, NXCPMessage *pMsg);
    void getConfig(NXCPMessage *pMsg);
    void updateConfig(NXCPMessage *pRequest, NXCPMessage *pMsg);
-   void getParameter(NXCPMessage *pRequest, NXCPMessage *pMsg);
-   void getList(NXCPMessage *pRequest, NXCPMessage *pMsg);
-   void getTable(NXCPMessage *pRequest, NXCPMessage *pMsg);
+   void getParameter(NXCPMessage *request, NXCPMessage *response);
+   void getList(NXCPMessage *request, NXCPMessage *response);
+   void getTable(NXCPMessage *request, NXCPMessage *response);
    void action(NXCPMessage *pRequest, NXCPMessage *pMsg);
    void recvFile(NXCPMessage *pRequest, NXCPMessage *pMsg);
    void mergeFiles(NXCPMessage *pRequest, NXCPMessage *pMsg);
