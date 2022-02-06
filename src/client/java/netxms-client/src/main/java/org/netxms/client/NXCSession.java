@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  * <p>
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -209,7 +209,7 @@ public class NXCSession
 {
    // DCI resolve flags
    public static final int DCI_RES_SEARCH_NAME = 0x01;
-   
+
    // Various public constants
    public static final int DEFAULT_CONN_PORT = 4701;
 
@@ -2326,6 +2326,7 @@ public class NXCSession
          logger.warn("Login failed, RCC=" + rcc);
          throw new NXCException(rcc);
       }
+
       userId = response.getFieldAsInt32(NXCPCodes.VID_USER_ID);
       sessionId = response.getFieldAsInt32(NXCPCodes.VID_SESSION_ID);
       userSystemRights = response.getFieldAsInt64(NXCPCodes.VID_USER_SYS_RIGHTS);
@@ -2377,7 +2378,7 @@ public class NXCSession
       }
 
       messageOfTheDay = response.getFieldAsString(NXCPCodes.VID_MESSAGE_OF_THE_DAY);
-      
+
       count = response.getFieldAsInt32(NXCPCodes.VID_LICENSE_PROBLEM_COUNT);
       if (count > 0)
       {
@@ -5068,8 +5069,8 @@ public class NXCSession
     *
     * @param dciConfig Dci config
     * @return list of active thresholds
-    * @throws IOException TODO
-    * @throws NXCException TODO
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public List<Threshold> getActiveThresholds(List<SingleDciConfig> dciConfig) throws IOException, NXCException
    {
@@ -7696,8 +7697,9 @@ public class NXCSession
     * 
     * @param nodeId ID of the node object to test script on
     * @param script script source code
-    * @param listener script output listener
     * @param parameterList script parameter list can be null
+    * @param listener script output listener
+    * @return script return value as a map
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
@@ -8034,10 +8036,8 @@ public class NXCSession
    }
 
    /**
-    * Find multiple event templates by event codes in event template database
-    * internally maintained by session object. You must call
-    * NXCSession.syncEventObjects() first to make local copy of event template
-    * database.
+    * Find multiple event templates by event codes in event template database internally maintained by session object. You must call
+    * <code>NXCSession.syncEventObjects()</code> first to make local copy of event template database.
     *
     * @param codes List of event codes
     * @return List of found event templates

@@ -420,21 +420,25 @@ public class ChartConfiguration
 		this.logScale = logScale;
 	}
 
-	/**
-	 * @return the showGrid
-	 */
-	public boolean isGridVisible()
-	{
-		return showGrid;
-	}
+   /**
+    * Check if grid is visible.
+    *
+    * @return true if grid is visible
+    */
+   public boolean isGridVisible()
+   {
+      return showGrid;
+   }
 
-	/**
-	 * @param showGrid the showGrid to set
-	 */
+   /**
+    * Set grid visibility flag.
+    *
+    * @param visible true if grid should be visible
+    */
    public void setGridVisible(boolean visible)
-	{
+   {
       this.showGrid = visible;
-	}
+   }
 
    /**
     * @return the stacked
