@@ -917,52 +917,49 @@ void CommSession::authenticate(NXCPMessage *pRequest, NXCPMessage *pMsg)
 /**
  * Get parameter's value
  */
-void CommSession::getParameter(NXCPMessage *pRequest, NXCPMessage *pMsg)
+void CommSession::getParameter(NXCPMessage *request, NXCPMessage *response)
 {
    TCHAR parameter[MAX_RUNTIME_PARAM_NAME];
-   pRequest->getFieldAsString(VID_PARAMETER, parameter, MAX_RUNTIME_PARAM_NAME);
+   request->getFieldAsString(VID_PARAMETER, parameter, MAX_RUNTIME_PARAM_NAME);
 
    TCHAR value[MAX_RESULT_LENGTH];
-   UINT32 errorCode = GetParameterValue(parameter, value, this);
+   uint32_t errorCode = GetParameterValue(parameter, value, this);
 
-   pMsg->setField(VID_RCC, errorCode);
+   response->setField(VID_RCC, errorCode);
    if (errorCode == ERR_SUCCESS)
-      pMsg->setField(VID_VALUE, value);
+      response->setField(VID_VALUE, value);
 }
 
 /**
  * Get list of values
  */
-void CommSession::getList(NXCPMessage *pRequest, NXCPMessage *pMsg)
+void CommSession::getList(NXCPMessage *request, NXCPMessage *response)
 {
-   TCHAR szParameter[MAX_RUNTIME_PARAM_NAME];
-   pRequest->getFieldAsString(VID_PARAMETER, szParameter, MAX_RUNTIME_PARAM_NAME);
-
+   TCHAR *name = request->getFieldAsString(VID_PARAMETER);
    StringList value;
-   UINT32 dwErrorCode = GetListValue(szParameter, &value, this);
-   pMsg->setField(VID_RCC, dwErrorCode);
-   if (dwErrorCode == ERR_SUCCESS)
+   uint32_t rcc = GetListValue(name, &value, this);
+   response->setField(VID_RCC, rcc);
+   if (rcc == ERR_SUCCESS)
    {
-      value.fillMessage(pMsg, VID_ENUM_VALUE_BASE, VID_NUM_STRINGS);
+      value.fillMessage(response, VID_ENUM_VALUE_BASE, VID_NUM_STRINGS);
    }
+   MemFree(name);
 }
 
 /**
  * Get table
  */
-void CommSession::getTable(NXCPMessage *pRequest, NXCPMessage *pMsg)
+void CommSession::getTable(NXCPMessage *request, NXCPMessage *response)
 {
-   TCHAR szParameter[MAX_RUNTIME_PARAM_NAME];
-
-   pRequest->getFieldAsString(VID_PARAMETER, szParameter, MAX_RUNTIME_PARAM_NAME);
-
+   TCHAR *name = request->getFieldAsString(VID_PARAMETER);
    Table value;
-   uint32_t rcc = GetTableValue(szParameter, &value, this);
-   pMsg->setField(VID_RCC, rcc);
+   uint32_t rcc = GetTableValue(name, &value, this);
+   response->setField(VID_RCC, rcc);
    if (rcc == ERR_SUCCESS)
    {
-		value.fillMessage(*pMsg, 0, -1);	// no row limit
+		value.fillMessage(*response, 0, -1);	// no row limit
    }
+   MemFree(name);
 }
 
 /**
