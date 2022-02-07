@@ -296,3 +296,57 @@ LONG H_StorageDeviceTable(const TCHAR* cmd, const TCHAR* arg, Table* value, Abst
    json_decref(root);
    return SYSINFO_RC_SUCCESS;
 }
+
+/**
+ * Read content of file /sys/class/dmi/id/[fileName] into [value]
+ *
+ * @return SYSINFO_RC_XXX value
+ */
+static LONG GetHardwareInfoFromFile(const char* fileName, TCHAR* value)
+{
+   char path[MAX_PATH];
+   snprintf(path, MAX_PATH, "/sys/class/dmi/id/%s", fileName);
+   FILE* f = fopen(path, "r");
+   if (f != nullptr)
+   {
+      char buffer[1024] = "";
+      fgets(buffer, 1024, f);
+      fclose(f);
+      if ((buffer[0] != 0) && (buffer[0] != '\n'))
+      {
+         char* newLine = strchr(buffer, '\n');
+         if (newLine != nullptr)
+            *newLine = 0;
+         ret_mbstring(value, buffer);
+         return SYSINFO_RC_SUCCESS;
+      }
+   }
+   return SYSINFO_RC_UNSUPPORTED;
+}
+
+/**
+ * Handler for Hardware.System.* parameters
+ */
+LONG H_HardwareSystemInfo(const TCHAR* param, const TCHAR* arg, TCHAR* value, AbstractCommSession* session)
+{
+   if (SMBIOS_ParameterHandler(param, arg, value, session) == SYSINFO_RC_SUCCESS)
+      return SYSINFO_RC_SUCCESS;
+
+   switch (arg[1])
+   {
+      case 'C':
+         return GetHardwareInfoFromFile("product_sku", value);
+      case 'M':
+         return GetHardwareInfoFromFile("sys_vendor", value);
+      case 'P':
+         return GetHardwareInfoFromFile("product_name", value);
+      case 'S':
+         return GetHardwareInfoFromFile("product_serial", value);
+      case 'U':
+         return GetHardwareInfoFromFile("product_uuid", value);
+      case 'V':
+         return GetHardwareInfoFromFile("product_version", value);
+      default:
+         return SYSINFO_RC_UNSUPPORTED;
+   }
+}
