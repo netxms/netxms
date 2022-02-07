@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,6 +18,7 @@
  */
 package org.netxms.ui.eclipse.widgets;
 
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Spinner;
@@ -66,9 +67,9 @@ public class LabeledSpinner extends LabeledControl
 	 */
 	public LabeledSpinner(Composite parent, int style, int spinnerStyle, FormToolkit toolkit)
 	{
-		super(parent, style, spinnerStyle, toolkit);
+      super(parent, style, spinnerStyle, SWT.DEFAULT, toolkit, null);
 	}
-	
+
    /**
     * @param parent
     * @param style
@@ -78,14 +79,14 @@ public class LabeledSpinner extends LabeledControl
     */
    public LabeledSpinner(Composite parent, int style, int spinnerStyle, int widthHint, FormToolkit toolkit)
    {
-      super(parent, style, spinnerStyle, widthHint, toolkit);
+      super(parent, style, spinnerStyle, widthHint, toolkit, null);
    }
 
    /**
-    * @see org.netxms.ui.eclipse.widgets.LabeledControl#createControl(int)
+    * @see org.netxms.ui.eclipse.widgets.LabeledControl#createControl(int, java.lang.Object)
     */
    @Override
-   protected Control createControl(int controlStyle)
+   protected Control createControl(int controlStyle, Object parameters)
    {
       return new Spinner(this, controlStyle);
    }

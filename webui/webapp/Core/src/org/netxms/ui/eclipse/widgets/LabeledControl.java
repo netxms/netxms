@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -39,17 +39,17 @@ public abstract class LabeledControl extends Composite
 	protected Control control;
    protected int controlWidthHint;
 	protected FormToolkit toolkit;
-	
+
 	/**
 	 * @param parent
 	 * @param style
 	 */
 	public LabeledControl(Composite parent, int style)
 	{
-		super(parent, style);
+      super(parent, style);
       controlWidthHint = SWT.DEFAULT;
 		toolkit = null;
-		createContent(getDefaultControlStyle());
+		createContent(getDefaultControlStyle(), null);
 	}
 
 	/**
@@ -59,62 +59,55 @@ public abstract class LabeledControl extends Composite
 	 */
 	public LabeledControl(Composite parent, int style, int controlStyle)
 	{
-		super(parent, style);
-      controlWidthHint = SWT.DEFAULT;
-		toolkit = null;
-		createContent(controlStyle);
+      this(parent, style, controlStyle, SWT.DEFAULT, null, null);
 	}
 	
    /**
     * @param parent
     * @param style
     * @param controlStyle
+    * @param controlWidthHint width hint for inner control
     */
    public LabeledControl(Composite parent, int style, int controlStyle, int controlWidthHint)
    {
-      super(parent, style);
-      this.controlWidthHint = controlWidthHint;
-      toolkit = null;
-      createContent(controlStyle);
+      this(parent, style, controlStyle, controlWidthHint, null, null);
    }
 
-	/**
-	 * @param parent
-	 * @param style
-	 * @param controlStyle
-	 * @param toolkit
-	 */
-	public LabeledControl(Composite parent, int style, int controlStyle, FormToolkit toolkit)
-	{
-		super(parent, style);
-      controlWidthHint = SWT.DEFAULT;
-		this.toolkit = toolkit;
-		createContent(controlStyle);
-      toolkit.adapt(this);
-	}
-	
+   /**
+    * @param parent
+    * @param style
+    * @param controlStyle
+    * @param controlWidthHint width hint for inner control
+    */
+   public LabeledControl(Composite parent, int style, int controlStyle, int controlWidthHint, Object parameters)
+   {
+      this(parent, style, controlStyle, controlWidthHint, null, parameters);
+   }
+
    /**
     * @param parent
     * @param style
     * @param controlStyle
     * @param toolkit
     */
-   public LabeledControl(Composite parent, int style, int controlStyle, int controlWidthHint, FormToolkit toolkit)
+   public LabeledControl(Composite parent, int style, int controlStyle, int controlWidthHint, FormToolkit toolkit, Object parameters)
    {
       super(parent, style);
       this.controlWidthHint = controlWidthHint;
       this.toolkit = toolkit;
-      createContent(controlStyle);
-      toolkit.adapt(this);
+      createContent(controlStyle, parameters);
+      if (toolkit != null)
+         toolkit.adapt(this);
    }
 
    /**
     * Create enclosed control
     * 
-    * @param controlStyle
-    * @return
+    * @param controlStyle style for the control
+    * @param parameters optional creation parameters (can be null)
+    * @return created control
     */
-   protected abstract Control createControl(int controlStyle);
+   protected abstract Control createControl(int controlStyle, Object parameters);
    
    /**
     * Get default style for control
@@ -138,11 +131,12 @@ public abstract class LabeledControl extends Composite
    }
 
 	/**
-	 * Do widget creation.
-	 * 
-	 * @param textStyle
-	 */
-   private void createContent(int controlStyle)
+    * Do widget creation.
+    * 
+    * @param controlStyle style for the control
+    * @param parameters optional creation parameters (can be null)
+    */
+   private void createContent(int controlStyle, Object parameters)
 	{
 		GridLayout layout = new GridLayout();
 		layout.verticalSpacing = WidgetHelper.INNER_SPACING;
@@ -157,7 +151,7 @@ public abstract class LabeledControl extends Composite
 		gd.horizontalAlignment = SWT.FILL;
 		label.setLayoutData(gd);
 		
-		control = createControl(controlStyle);
+      control = createControl(controlStyle, parameters);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
