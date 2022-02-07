@@ -271,7 +271,7 @@ size_t LIBNETXMS_EXPORTABLE wchar_to_mb(const WCHAR *src, ssize_t srcLen, char *
       return ucs2_to_ISO8859_1(src, srcLen, dst, dstLen);
    if (g_defaultCodePageType == CodePageType::ASCII)
       return ucs2_to_ASCII(src, srcLen, dst, dstLen);
-   if (g_defaultCodePageType == CodePageType::UT8)
+   if (g_defaultCodePageType == CodePageType::UTF8)
       return ucs2_to_utf8(src, srcLen, dst, dstLen);
 #endif
 
@@ -285,13 +285,13 @@ size_t LIBNETXMS_EXPORTABLE wchar_to_mb(const WCHAR *src, ssize_t srcLen, char *
 #if UNICODE_UCS4
    if (g_defaultCodePageType == CodePageType::ISO8859_1)
       return ucs4_to_ISO8859_1(src, srcLen, dst, dstLen);
-   if (g_defaultCodePageType == CodePageType::UT8)
+   if (g_defaultCodePageType == CodePageType::UTF8)
       return ucs4_to_utf8(src, srcLen, dst, dstLen);
    return ucs4_to_ASCII(src, srcLen, dst, dstLen);
 #else
    if (g_defaultCodePageType == CodePageType::ISO8859_1)
       return ucs2_to_ISO8859_1(src, srcLen, dst, dstLen);
-   if (g_defaultCodePageType == CodePageType::UT8)
+   if (g_defaultCodePageType == CodePageType::UTF8)
       return ucs2_to_utf8(src, srcLen, dst, dstLen);
    return ucs2_to_ASCII(src, srcLen, dst, dstLen);
 #endif
