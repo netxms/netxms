@@ -1,49 +1,73 @@
 #! /bin/sh
 
-if [ -z "$1" ] \
-   || [ "$1" = "-h" ] \
-   || [ "$1" = "--h" ] \
-   || [ "$1" = "-help" ] \
-   || [ "$1" = "--help" ];
-then
-   echo 'Usage: nx-build-tunnel-config <hostname> [<port>] [<certificate>] [<password>]'
-   echo 'Note: Server must be running on the specified host when using this script.'
+set -e
+
+if [ -z "$1" ] || [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
+   cat 1>&2 <<__END
+This helper script generates tunnel configuration section for the agent.
+It attempts to connect to the netxms instance and get fingerprint of the server certificate.
+If successfull - this certificate will be pinned to prevent MITM attacks.
+
+Generated configuration is printed on the stdout and everything else on stderr, so it's
+safe to redirect and append output directly to the agent's config file.
+
+Usage: 
+   nxagentd-generate-tunnel-config nx1.example.org # connect to nx1.example.org:4703
+
+   nxagentd-generate-tunnel-config nx1.example.org 5814 # connect to nx1.example.org:5814
+
+   nxagentd-generate-tunnel-config nx1.example.org >> /etc/nxagentd.conf # connect and append to config
+__END
    exit 1
 fi
 
-HOSTNAME=$1
-
-PORT=4703
+_HOST=$1
+_PORT=4703
 if ! [ -z "$2" ]
 then
-   PORT=$2
+   _PORT=$2
 fi
 
-FINGERPRINT=$(echo | openssl s_client -showcerts -connect 10.2.1.146:4703 2>/dev/null | openssl x509 -noout -fingerprint -sha256 | grep Fingerprint | cut -d = -f 2)
+echo "Trying to connect to $_HOST:$_PORT..." 1>&2
 
-if [ -z "$FINGERPRINT" ]
+_FINGERPRINT=`echo | openssl s_client -showcerts -connect $_HOST:$_PORT 2>/dev/null | openssl x509 -noout -fingerprint -sha256 2>/dev/null | grep Fingerprint= | cut -d= -f2`
+
+if [ -z "$_FINGERPRINT" ]
 then
-  exit 2
+   cat 1>&2 <<__END
+
+Cannot get certificate fingerprint from $_HOST:$_PORT.
+Make sure that NetXMS is running, configured correctly, and accept connections.
+
+Certificate pinning is disabled.
+__END
+   _FINGERPRINT_PREFIX='# '
+   _FINGERPRINT=' # disabled!'
+else
+   cat 1>&2 <<__END
+
+Got server's certificate fingerprint.
+__END
+   _FINGERPRINT_PREFIX=''
 fi
 
-echo '[ServerConnection/'$HOSTNAME']'
-echo 'Hostname='$HOSTNAME
-echo 'Port='$PORT
-echo 'ServerCertificateFingerprint='$FINGERPRINT
-   
-if ! [ -z "$3" ]
-then
-   echo 'Certificate='$3
-
-   if ! [ -z "$4" ]
-   then
-      echo 'Password='$4
-   fi
-fi
-
-exit 0
+cat 1>&2 <<__END
 
 
+Add following section (or update existing) to agent's config (usually /etc/nxagentd.conf) and restart to apply:
 
 
+__END
 
+cat <<__END
+
+[ServerConnection/$_HOST]
+Hostname=$_HOST
+Port=$_PORT
+${_FINGERPRINT_PREFIX}ServerCertificateFingerprint=$_FINGERPRINT
+
+## If agent's certificate is externally provisioned, set certifiate location
+## Both certificate and private key should be in the same file, in PEM format (certificate first)
+# Certificate=/path/to/agent.pem # path to certificate + key
+# Password= # If private key is encrypted, optional
+__END
