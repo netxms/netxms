@@ -1593,21 +1593,37 @@ Tunnel *Tunnel::createFromConfig(const ConfigEntry& ce)
 
    uint16_t port = ce.getSubEntryValueAsUInt(_T("Port"), 0, AGENT_TUNNEL_PORT);
 
-   const TCHAR *certificate = ce.getSubEntryValue(_T("Certificate"), 0, nullptr);
+   TCHAR certificate[MAX_PATH];
+   const TCHAR *certificateId = ce.getSubEntryValue(_T("CertificateId"), 0, nullptr);
+   if (certificateId != nullptr)
+   {
+      certificate[0] = '@';
+      _tcslcpy(&certificate[1], certificateId, MAX_PATH - 1);
+   }
+   else
+   {
+      const TCHAR *certificateFile = ce.getSubEntryValue(_T("CertificateFile"), 0, nullptr);
+      if (certificateFile != nullptr)
+      {
+         _tcslcpy(certificate, certificateFile, MAX_PATH);
+      }
+      else
+      {
+         certificate[0] = 0;
+      }
+   }
    const TCHAR *password = nullptr;
-   if (certificate != nullptr)
+   if (certificate[0] != 0)
       password = ce.getSubEntryValue(_T("Password"), 0, nullptr);
 
    StringBuffer fingerprintString = ce.getSubEntryValue(_T("ServerCertificateFingerprint"), 0, nullptr);
-   if (!fingerprintString.isEmpty())
-   {
-      fingerprintString.replace(_T(":"), _T(""));
-      BYTE fingerprint[SHA256_DIGEST_SIZE];
-      StrToBin(fingerprintString, fingerprint, SHA256_DIGEST_SIZE);
-      return new Tunnel(hostname, port, certificate, password, fingerprint);
-   }
+   if (fingerprintString.isEmpty())
+      return new Tunnel(hostname, port, certificate, password);
 
-   return new Tunnel(hostname, port, certificate, password);
+   fingerprintString.replace(_T(":"), _T(""));
+   BYTE fingerprint[SHA256_DIGEST_SIZE];
+   StrToBin(fingerprintString, fingerprint, SHA256_DIGEST_SIZE);
+   return new Tunnel(hostname, port, certificate, password, fingerprint);
 }
 
 /**
