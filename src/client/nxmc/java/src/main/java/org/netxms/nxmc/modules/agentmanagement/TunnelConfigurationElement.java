@@ -39,7 +39,7 @@ public class TunnelConfigurationElement implements ConfigurationPerspectiveEleme
    @Override
    public String getName()
    {
-      return i18n.tr("Agent Tunnels");
+      return i18n.tr("Agent tunnels");
    }
 
    /**

@@ -26,7 +26,7 @@ public interface MessageAreaHolder
    /**
     * Add message to message area.
     *
-    * @param level message level (one of MessageArea.INFO, MessageArea.SUCCESS, MessageArea.WARNING, MessageArea.ERROR)
+    * @param level message level (one of MessageArea.INFORMATION, MessageArea.SUCCESS, MessageArea.WARNING, MessageArea.ERROR)
     * @param text message text
     * @return ID assigned to added message
     */
@@ -35,7 +35,7 @@ public interface MessageAreaHolder
    /**
     * Add message to message area.
     *
-    * @param level message level (one of MessageArea.INFO, MessageArea.SUCCESS, MessageArea.WARNING, MessageArea.ERROR)
+    * @param level message level (one of MessageArea.INFORMATION, MessageArea.SUCCESS, MessageArea.WARNING, MessageArea.ERROR)
     * @param text message text
     * @param sticky true to add sticky message (one that will not be dismissed by timeout)
     * @return ID assigned to added message

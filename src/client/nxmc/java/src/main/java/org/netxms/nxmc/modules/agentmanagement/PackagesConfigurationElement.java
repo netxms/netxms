@@ -29,9 +29,9 @@ import org.xnap.commons.i18n.I18n;
 /**
  * Package manager element 
  */
-public class PackageManagerElement implements ConfigurationPerspectiveElement
+public class PackagesConfigurationElement implements ConfigurationPerspectiveElement
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(PackageManagerElement.class);
+   private static final I18n i18n = LocalizationHelper.getI18n(PackagesConfigurationElement.class);
 
    /**
     * @see org.netxms.nxmc.services.ConfigurationPerspectiveElement#getName()
@@ -39,7 +39,7 @@ public class PackageManagerElement implements ConfigurationPerspectiveElement
    @Override
    public String getName()
    {
-      return i18n.tr("Package Manager");
+      return i18n.tr("Packages");
    }
 
    /**

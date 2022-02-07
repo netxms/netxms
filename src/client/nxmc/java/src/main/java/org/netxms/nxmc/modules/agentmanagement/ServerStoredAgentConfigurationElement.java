@@ -39,7 +39,7 @@ public class ServerStoredAgentConfigurationElement implements ConfigurationPersp
    @Override
    public String getName()
    {
-      return i18n.tr("Agent Configurations");
+      return i18n.tr("Agent configurations");
    }
 
    /**

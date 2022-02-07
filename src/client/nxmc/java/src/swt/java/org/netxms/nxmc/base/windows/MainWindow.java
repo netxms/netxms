@@ -32,19 +32,24 @@ import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Font;
+import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
+import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.ToolBar;
 import org.eclipse.swt.widgets.ToolItem;
 import org.netxms.client.NXCSession;
 import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.base.menus.UserMenuManager;
 import org.netxms.nxmc.base.preferencepages.Appearance;
 import org.netxms.nxmc.base.views.Perspective;
 import org.netxms.nxmc.base.views.View;
@@ -75,6 +80,7 @@ public class MainWindow extends ApplicationWindow implements MessageAreaHolder
    private Perspective currentPerspective;
    private Perspective pinboardPerspective;
    private boolean verticalLayout;
+   private UserMenuManager userMenuManager;
 
    /**
     * @param parentShell
@@ -84,6 +90,7 @@ public class MainWindow extends ApplicationWindow implements MessageAreaHolder
       super(parentShell);
       addStatusLine();
       verticalLayout = PreferenceStore.getInstance().getAsBoolean("Appearance.VerticalLayout", true);
+      userMenuManager = new UserMenuManager();
    }
 
    /**
@@ -150,6 +157,10 @@ public class MainWindow extends ApplicationWindow implements MessageAreaHolder
       }
       menuArea.setLayoutData(gd);
 
+      Label appLogo = new Label(menuArea, SWT.CENTER);
+      appLogo.setImage(ResourceManager.getImage("icons/app_logo.png"));
+      appLogo.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, false, false));
+
       mainMenu = new ToolBar(menuArea, SWT.FLAT | SWT.WRAP | SWT.RIGHT | (verticalLayout ? SWT.VERTICAL : SWT.HORIZONTAL));
       mainMenu.setFont(font);
       gd = new GridData();
@@ -175,6 +186,14 @@ public class MainWindow extends ApplicationWindow implements MessageAreaHolder
          userMenu.setToolTipText(session.getUserName() + "@" + session.getServerName());
       else
          userMenu.setText(session.getUserName() + "@" + session.getServerName());
+      userMenu.addSelectionListener(new SelectionAdapter() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            Rectangle bounds = userMenu.getBounds();
+            showUserMenu(toolsMenu.toDisplay(verticalLayout ? new Point(bounds.x + bounds.width + 2, bounds.y) : new Point(bounds.x, bounds.y + bounds.height + 2)));
+         }
+      });
 
       ToolItem appPreferencesMenu = new ToolItem(toolsMenu, SWT.PUSH);
       appPreferencesMenu.setImage(ResourceManager.getImage("icons/preferences.png"));
@@ -384,6 +403,18 @@ public class MainWindow extends ApplicationWindow implements MessageAreaHolder
       };
       dlg.setBlockOnOpen(true);
       dlg.open();
+   }
+
+   /**
+    * Show user menu at given location.
+    *
+    * @param location location to show menu at
+    */
+   private void showUserMenu(Point location)
+   {
+      Menu menu = userMenuManager.createContextMenu(getShell());
+      menu.setLocation(location);
+      menu.setVisible(true);
    }
 
    /**
