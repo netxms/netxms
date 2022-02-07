@@ -38,7 +38,19 @@ public class PasswordInputField extends LabeledControl
    private Composite composite;
    private Text text;
    private Button buttonShow;
+   private Button buttonCopyToClipboard;
    private boolean enabled = true;
+
+   /**
+    * Create new password input field.
+    *
+    * @param parent parent composite
+    * @param style control style
+    */
+   public PasswordInputField(Composite parent, int style, boolean showCopyOption)
+   {
+      super(parent, style, SWT.BORDER | SWT.SINGLE | SWT.PASSWORD, SWT.DEFAULT, Boolean.valueOf(showCopyOption));
+   }
 
    /**
     * Create new password input field.
@@ -48,18 +60,20 @@ public class PasswordInputField extends LabeledControl
     */
    public PasswordInputField(Composite parent, int style)
    {
-      super(parent, style);
+      super(parent, style, SWT.BORDER | SWT.SINGLE | SWT.PASSWORD);
    }
 
    /**
-    * @see org.netxms.nxmc.base.widgets.LabeledControl#createControl(int)
+    * @see org.netxms.ui.eclipse.widgets.LabeledControl#createControl(int, java.lang.Object)
     */
    @Override
-   protected Control createControl(int controlStyle)
+   protected Control createControl(int controlStyle, Object parameters)
    {
+      boolean showCopyOption = (Boolean)parameters;
+
       composite = new Composite(this, SWT.NONE);
       GridLayout layout = new GridLayout();
-      layout.numColumns = 2;
+      layout.numColumns = showCopyOption ? 3 : 2;
       layout.marginHeight = 0;
       layout.marginWidth = 0;
       layout.horizontalSpacing = WidgetHelper.INNER_SPACING;
@@ -72,7 +86,8 @@ public class PasswordInputField extends LabeledControl
       buttonShow.setImage(SharedIcons.IMG_SHOW);
       buttonShow.setToolTipText("Show");
       GridData gd = new GridData(SWT.CENTER, SWT.CENTER, false, false);
-      gd.heightHint = text.computeSize(SWT.DEFAULT, SWT.DEFAULT).y;
+      int heightHint = text.computeSize(SWT.DEFAULT, SWT.DEFAULT).y;
+      gd.heightHint = heightHint;
       buttonShow.setLayoutData(gd);
       buttonShow.addSelectionListener(new SelectionAdapter() {
          @Override
@@ -81,6 +96,23 @@ public class PasswordInputField extends LabeledControl
             togglePasswordVisibility();
          }
       });
+
+      if (showCopyOption)
+      {
+         buttonCopyToClipboard = new Button(composite, SWT.PUSH);
+         buttonCopyToClipboard.setImage(SharedIcons.IMG_COPY_TO_CLIPBOARD);
+         buttonCopyToClipboard.setToolTipText("Copy to clipboard");
+         gd = new GridData(SWT.CENTER, SWT.CENTER, false, false);
+         gd.heightHint = heightHint;
+         buttonCopyToClipboard.setLayoutData(gd);
+         buttonCopyToClipboard.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e)
+            {
+               WidgetHelper.copyToClipboard(text.getText());
+            }
+         });
+      }
 
       return composite;
    }
@@ -101,15 +133,6 @@ public class PasswordInputField extends LabeledControl
    public String getText()
    {
       return text.getText();
-   }
-
-   /**
-    * @see org.netxms.ui.eclipse.widgets.LabeledControl#getDefaultControlStyle()
-    */
-   @Override
-   protected int getDefaultControlStyle()
-   {
-      return SWT.BORDER | SWT.SINGLE | SWT.PASSWORD;
    }
 
    /**

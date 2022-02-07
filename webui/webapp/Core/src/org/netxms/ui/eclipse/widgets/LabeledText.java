@@ -67,9 +67,9 @@ public class LabeledText extends LabeledControl
 	 */
 	public LabeledText(Composite parent, int style, int textStyle, FormToolkit toolkit)
 	{
-		super(parent, style, textStyle, toolkit);
+      super(parent, style, textStyle, SWT.DEFAULT, toolkit, null);
 	}
-	
+
    /**
     * @param parent
     * @param style
@@ -79,14 +79,14 @@ public class LabeledText extends LabeledControl
     */
    public LabeledText(Composite parent, int style, int textStyle, int widthHint, FormToolkit toolkit)
    {
-      super(parent, style, textStyle, widthHint, toolkit);
+      super(parent, style, textStyle, widthHint, toolkit, null);
    }
 
    /**
-    * @see org.netxms.ui.eclipse.widgets.LabeledControl#createControl(int)
+    * @see org.netxms.ui.eclipse.widgets.LabeledControl#createControl(int, java.lang.Object)
     */
    @Override
-   protected Control createControl(int controlStyle)
+   protected Control createControl(int controlStyle, Object parameters)
    {
       return (toolkit != null) ? toolkit.createText(this, "", controlStyle) : new Text(this, controlStyle); //$NON-NLS-1$;
    }

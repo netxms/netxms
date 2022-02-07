@@ -39,6 +39,7 @@ public class SharedIcons
    public static ImageDescriptor COMMENTS;
    public static ImageDescriptor CONTAINER;
 	public static ImageDescriptor COPY;
+   public static ImageDescriptor COPY_TO_CLIPBOARD;
 	public static ImageDescriptor CSV;
    public static ImageDescriptor CUT;
 	public static ImageDescriptor DELETE_OBJECT;
@@ -86,6 +87,7 @@ public class SharedIcons
    public static Image IMG_COMMENTS;
    public static Image IMG_CONTAINER;
 	public static Image IMG_COPY;
+   public static Image IMG_COPY_TO_CLIPBOARD;
 	public static Image IMG_CSV;
    public static Image IMG_CUT;
 	public static Image IMG_DELETE_OBJECT;
@@ -138,6 +140,7 @@ public class SharedIcons
       COMMENTS = ResourceManager.getImageDescriptor("icons/comments.png");
       CONTAINER = ResourceManager.getImageDescriptor("icons/container.png");
       COPY = ResourceManager.getImageDescriptor("icons/copy.gif");
+      COPY_TO_CLIPBOARD = ResourceManager.getImageDescriptor("icons/copy-to-clipboard.png");
       CSV = ResourceManager.getImageDescriptor("icons/csv.png");
       CUT = ResourceManager.getImageDescriptor("icons/cut.gif");
       DELETE_OBJECT = ResourceManager.getImageDescriptor("icons/delete_obj.gif");
@@ -185,6 +188,7 @@ public class SharedIcons
       IMG_COMMENTS = COMMENTS.createImage();
 		IMG_CONTAINER = CONTAINER.createImage();
 		IMG_COPY = COPY.createImage();
+      IMG_COPY_TO_CLIPBOARD = COPY_TO_CLIPBOARD.createImage();
 		IMG_CSV = CSV.createImage();
       IMG_CUT = CUT.createImage();
 		IMG_DELETE_OBJECT = DELETE_OBJECT.createImage();

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -42,9 +42,9 @@ public abstract class LabeledControl extends Composite
 	 */
 	public LabeledControl(Composite parent, int style)
 	{
-		super(parent, style);
+      super(parent, style);
       controlWidthHint = SWT.DEFAULT;
-		createContent(getDefaultControlStyle());
+      createContent(getDefaultControlStyle(), null);
 	}
 
 	/**
@@ -54,30 +54,42 @@ public abstract class LabeledControl extends Composite
 	 */
 	public LabeledControl(Composite parent, int style, int controlStyle)
 	{
-		super(parent, style);
-      controlWidthHint = SWT.DEFAULT;
-		createContent(controlStyle);
+      this(parent, style, controlStyle, SWT.DEFAULT, null);
 	}
 	
    /**
     * @param parent
     * @param style
     * @param controlStyle
+    * @param controlWidthHint width hint for inner control
     */
    public LabeledControl(Composite parent, int style, int controlStyle, int controlWidthHint)
    {
+      this(parent, style, controlStyle, controlWidthHint, null);
+   }
+
+   /**
+    * @param parent
+    * @param style
+    * @param controlStyle
+    * @param controlWidthHint width hint for inner control
+    * @param parameters optional creation parameters (passed as is to createControl)
+    */
+   public LabeledControl(Composite parent, int style, int controlStyle, int controlWidthHint, Object parameters)
+   {
       super(parent, style);
       this.controlWidthHint = controlWidthHint;
-      createContent(controlStyle);
+      createContent(controlStyle, parameters);
    }
 
    /**
     * Create enclosed control
     * 
-    * @param controlStyle
-    * @return
+    * @param controlStyle style for the control
+    * @param parameters optional creation parameters (can be null)
+    * @return created control
     */
-   protected abstract Control createControl(int controlStyle);
+   protected abstract Control createControl(int controlStyle, Object parameters);
    
    /**
     * Get default style for control
@@ -101,11 +113,12 @@ public abstract class LabeledControl extends Composite
    }
 
 	/**
-	 * Do widget creation.
-	 * 
-	 * @param textStyle
-	 */
-   private void createContent(int controlStyle)
+    * Do widget creation.
+    * 
+    * @param controlStyle style for the control
+    * @param parameters optional creation parameters (can be null)
+    */
+   private void createContent(int controlStyle, Object parameters)
 	{
 		GridLayout layout = new GridLayout();
 		layout.verticalSpacing = WidgetHelper.INNER_SPACING;
@@ -120,7 +133,7 @@ public abstract class LabeledControl extends Composite
 		gd.horizontalAlignment = SWT.FILL;
 		label.setLayoutData(gd);
 		
-		control = createControl(controlStyle);
+      control = createControl(controlStyle, parameters);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;

@@ -58,11 +58,11 @@ public class LabeledText extends LabeledControl
       super(parent, style, textStyle, widthHint);
    }
 
-	/**
-    * @see org.netxms.ui.eclipse.widgets.LabeledControl#createControl(int)
+   /**
+    * @see org.netxms.nxmc.base.widgets.LabeledControl#createControl(int, java.lang.Object)
     */
    @Override
-   protected Control createControl(int controlStyle)
+   protected Control createControl(int controlStyle, Object parameters)
    {
       return new Text(this, controlStyle);
    }
