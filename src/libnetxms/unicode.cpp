@@ -860,10 +860,14 @@ size_t LIBNETXMS_EXPORTABLE wchar_to_mbcp(const WCHAR *src, ssize_t srcLen, char
 #endif
    }
 
-#ifdef _WIN32
+#if defined(_WIN32)
    return (size_t)WideCharToMultiByte(GetCodePageNumber(codepage), WC_COMPOSITECHECK | WC_DEFAULTCHAR, src, (int)srcLen, dst, (int)dstLen, nullptr, nullptr);
-#else
+#elif !defined(__DISABLE_ICONV)
    return WideCharToMultiByteIconv(codepage, src, srcLen, dst, dstLen);
+#elif UNICODE_UCS4
+   return ucs4_to_ISO8859_1(src, srcLen, dst, dstLen);
+#else
+   return ucs2_to_ISO8859_1(src, srcLen, dst, dstLen);
 #endif
 }
 
@@ -902,10 +906,14 @@ size_t LIBNETXMS_EXPORTABLE mbcp_to_wchar(const char *src, ssize_t srcLen, WCHAR
 #endif
    }
 
-#ifdef _WIN32
+#if defined(_WIN32)
    return (size_t)MultiByteToWideChar(GetCodePageNumber(codepage), MB_PRECOMPOSED, src, (int)srcLen, dst, (int)dstLen);
-#else
+#elif !defined(__DISABLE_ICONV)
    return MultiByteToWideCharIconv(codepage, src, srcLen, dst, dstLen);
+#elif UNICODE_UCS4
+   return ISO8859_1_to_ucs4(src, srcLen, dst, dstLen);
+#else
+   return ISO8859_1_to_ucs2(src, srcLen, dst, dstLen);
 #endif
 }
 
