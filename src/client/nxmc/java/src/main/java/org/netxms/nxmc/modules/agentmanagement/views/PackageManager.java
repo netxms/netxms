@@ -222,8 +222,8 @@ public class PackageManager extends ConfigurationView
 	{
 		FileDialog fd = new FileDialog(getWindow().getShell(), SWT.OPEN);
 		fd.setText(i18n.tr("Select Package File"));
-		WidgetHelper.setFileFilterExtensions(fd, new String[] { "*.apkg", "*.exe", "*.msi", "*.msp", "*.msu", "*.npi", "*.tgz;*.tar.gz", "*.*" });
-      WidgetHelper.setFileFilterNames(fd, new String[] { "NetXMS Agent Package", "Executable", "Windows Installer Package", "Windows Installer Patch", "Windows Update Package",
+		WidgetHelper.setFileDialogFilterExtensions(fd, new String[] { "*.apkg", "*.exe", "*.msi", "*.msp", "*.msu", "*.npi", "*.tgz;*.tar.gz", "*.*" });
+      WidgetHelper.setFileDialogFilterNames(fd, new String[] { "NetXMS Agent Package", "Executable", "Windows Installer Package", "Windows Installer Patch", "Windows Update Package",
             i18n.tr("NetXMS Package Info"), "Compressed TAR Archive", i18n.tr("All files") });
 		String packageFileName = fd.open();
       if (packageFileName == null)

@@ -1160,24 +1160,34 @@ public class WidgetHelper
    }
 
    /**
-    * Helper method to set file filter extensions (compatibility layer for RAP).
+    * Helper method to set file dialog filter extensions (compatibility layer for RAP).
     *
     * @param fd file dialog to set extensions for
     * @param extensions file extensions
     */
-   public static void setFileFilterExtensions(FileDialog fd, String[] extensions)
+   public static void setFileDialogFilterExtensions(FileDialog fd, String[] extensions)
    {
       fd.setFilterExtensions(extensions);
    }
 
    /**
-    * Helper method to set file filter extension names (compatibility layer for RAP).
+    * Helper method to set file dialog filter extension names (compatibility layer for RAP).
     *
     * @param fd file dialog to set extensions for
     * @param names extension names
     */
-   public static void setFileFilterNames(FileDialog fd, String[] names)
+   public static void setFileDialogFilterNames(FileDialog fd, String[] names)
    {
       fd.setFilterNames(names);
+   }
+
+   /**
+    * Set custom type for control (compatibility layer for RAP, has no effect in desktop build).
+    *
+    * @param control control to set type for
+    * @param type custom type
+    */
+   public static void setControlCustomType(Control control, String type)
+   {
    }
 }

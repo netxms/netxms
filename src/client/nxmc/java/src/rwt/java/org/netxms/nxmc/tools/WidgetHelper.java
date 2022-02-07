@@ -30,6 +30,7 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.preference.ColorSelector;
 import org.eclipse.jface.preference.PreferencePage;
 import org.eclipse.jface.viewers.ColumnViewer;
+import org.eclipse.rap.rwt.RWT;
 import org.eclipse.rap.rwt.scripting.ClientListener;
 import org.eclipse.rap.rwt.widgets.WidgetUtil;
 import org.eclipse.swt.SWT;
@@ -1232,22 +1233,33 @@ public class WidgetHelper
    }
 
    /**
-    * Helper method to set file filter extensions (compatibility layer for RAP).
+    * Helper method to set file dialog filter extensions (compatibility layer for RAP).
     *
     * @param fd file dialog to set extensions for
     * @param extensions file extensions
     */
-   public static void setFileFilterExtensions(FileDialog fd, String[] extensions)
+   public static void setFileDialogFilterExtensions(FileDialog fd, String[] extensions)
    {
    }
 
    /**
-    * Helper method to set file filter extension names (compatibility layer for RAP).
+    * Helper method to set file dialog filter extension names (compatibility layer for RAP).
     *
     * @param fd file dialog to set extensions for
-    * @param names file extension names
+    * @param names extension names
     */
-   public static void setFileFilterNames(FileDialog fd, String[] names)
+   public static void setFileDialogFilterNames(FileDialog fd, String[] names)
    {
-   }   
+   }
+
+   /**
+    * Set custom type for control (compatibility layer for RAP, has no effect in desktop build).
+    *
+    * @param control control to set type for
+    * @param type custom type
+    */
+   public static void setControlCustomType(Control control, String type)
+   {
+      control.setData(RWT.CUSTOM_VARIANT, type);
+   }
 }
