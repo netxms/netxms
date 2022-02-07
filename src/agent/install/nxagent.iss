@@ -72,6 +72,7 @@ Source: "..\..\java-common\netxms-base\target\netxms-base-{#VersionString}.jar";
 Source: "..\..\libnxjava\java\target\netxms-java-bridge-{#VersionString}.jar"; DestDir: "{app}\lib\java"; Flags: ignoreversion
 Source: "..\subagents\java\java\target\netxms-agent-{#VersionString}.jar"; DestDir: "{app}\lib\java"; Flags: ignoreversion
 Source: "..\subagents\jmx\target\jmx.jar"; DestDir: "{app}\lib\java"; Flags: ignoreversion
+Source: "..\subagents\opcua\target\opcua.jar"; DestDir: "{app}\lib\java"; Flags: ignoreversion
 Source: "..\subagents\ubntlw\target\ubntlw.jar"; DestDir: "{app}\lib\java"; Flags: ignoreversion
 ; Command-line tools
 Source: "..\..\..\Release\nxaevent.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
@@ -86,6 +87,9 @@ Source: "..\..\..\Release\nxsnmpget.exe"; DestDir: "{app}\bin"; Flags: ignorever
 Source: "..\..\..\Release\nxsnmpset.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\Release\nxsnmpwalk.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\Release\libnxclient.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\tools\scripts\nxagentd-generate-tunnel-config.cmd"; DestDir: "{app}\bin"; Flags: ignoreversion
+; User agent
+Source: "..\..\..\Release\nxuseragent.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 
 ;#include "custom.iss"
 
