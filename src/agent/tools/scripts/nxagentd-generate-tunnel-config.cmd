@@ -29,7 +29,7 @@ IF "%_FINGERPRINT%"=="" (
 )
 
 echo.
-echo Add following section (or update existing) to agent's config (usually /etc/nxagentd.conf) and restart to apply:
+echo Add following section (or update existing) to agent's config (usually C:\NetXMS\etc\nxagentd.conf) and restart to apply:
 echo.
 echo [ServerConnection/%_HOST%]
 echo Hostname=%_HOST%
@@ -51,18 +51,12 @@ echo This helper script generates tunnel configuration section for the agent.
 echo It attempts to connect to the netxms instance and get fingerprint of the server certificate.
 echo If successfull - this certificate will be pinned to prevent MITM attacks.
 echo.
-echo Generated configuration is printed on the stdout and everything else on stderr, so it's
-echo safe to redirect and append output directly to the agent's config file.
-echo.
 echo Usage examples: 
 echo    1. Connect to nx1.example.org port 4703:
 echo       nxagentd-generate-tunnel-config.cmd nx1.example.org
 echo.
 echo    2. Connect to nx1.example.org port 5814:
 echo       nxagentd-generate-tunnel-config.cmd nx1.example.org 5814
-echo.
-echo    3. Connect and append to agent configuration file:
-echo       nxagentd-generate-tunnel-config.cmd nx1.example.org ^>^> C:\NetXMS\etc\nxagentd.conf
 
 ::
 :: Cleanup
