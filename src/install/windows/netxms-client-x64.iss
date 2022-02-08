@@ -71,7 +71,7 @@ Type: filesandordirs; Name: "{app}\plugins"
 Type: filesandordirs; Name: "{app}\p2"
 
 [Icons]
-Name: "{group}\NetXMS Management Console"; Filename: "{app}\nxmc.exe"; Components: nxmc
+Name: "{group}\NetXMS Client"; Filename: "{app}\nxmc.exe"; Components: nxmc
 
 [Tasks]
 Name: desktopicon; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked

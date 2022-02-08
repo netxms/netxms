@@ -1,7 +1,7 @@
 @ECHO OFF
 
 SET POM_FILES_INSTALL=src/java-common/netxms-base/pom.xml;src/libnxjava/java/pom.xml;src/client/java/netxms-client/pom.xml;src/agent/subagents/java/java/pom.xml;src/mobile-agent/java;src/server/nxreportd/java/pom.xml
-SET POM_FILES_PACKAGE=src/agent/subagents/jmx/pom.xml;src/agent/subagents/opcua/pom.xml;src/agent/subagents/ubntlw/pom.xml;src/client/nxapisrv/java/pom.xml;src/client/nxmc/java/pom.xml;src/client/nxshell/java/pom.xml;src/client/nxtcpproxy/pom.xml;tests/integration/pom.xml
+SET POM_FILES_PACKAGE=src/agent/subagents/jmx/pom.xml;src/agent/subagents/opcua/pom.xml;src/agent/subagents/ubntlw/pom.xml;src/client/nxapisrv/java/pom.xml;src/client/nxshell/java/pom.xml;src/client/nxtcpproxy/pom.xml;tests/integration/pom.xml
 
 cd build
 perl updatetag.pl
@@ -17,6 +17,7 @@ del plugin.xml
 
 for %%p in (%POM_FILES_INSTALL%) do cmd /C mvn -f %%p -Dmaven.test.skip=true -Drevision=%VERSION% clean install
 for %%p in (%POM_FILES_PACKAGE%) do cmd /C mvn -f %%p -Dmaven.test.skip=true -Drevision=%VERSION% clean package
+cmd /C mvn -f src/client/nxmc/java/pom.xml -Drevision=%VERSION% -Pdesktop clean package
 
 cd sql
 make -f Makefile.w32
