@@ -95,7 +95,7 @@ public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor
          public void windowOpened(IWorkbenchWindow window)
          {
             NXCSession session = ConsoleSharedData.getSession();
-            if (session.getClientConfigurationHintAsBoolean("PerspectiveSwitcher.Enable", false) && session.getClientConfigurationHintAsBoolean("PerspectiveSwitcher.ShowOnStartup", false))
+            if (session.getClientConfigurationHintAsBoolean("PerspectiveSwitcher.Enable", true) && session.getClientConfigurationHintAsBoolean("PerspectiveSwitcher.ShowOnStartup", false))
             {
                new UIJob("Select perspective") {
                   @Override
@@ -135,7 +135,7 @@ public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor
          public void windowActivated(IWorkbenchWindow window)
          {
             NXCSession session = ConsoleSharedData.getSession();
-            if (!windows.contains(window) && session.getClientConfigurationHintAsBoolean("PerspectiveSwitcher.Enable", false))
+            if (!windows.contains(window) && session.getClientConfigurationHintAsBoolean("PerspectiveSwitcher.Enable", true))
             {
                new PerspectiveSwitcher(window);
                windows.add(window);

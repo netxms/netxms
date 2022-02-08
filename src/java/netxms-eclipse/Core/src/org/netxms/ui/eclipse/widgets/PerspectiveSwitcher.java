@@ -32,6 +32,7 @@ import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.ToolBar;
 import org.eclipse.swt.widgets.ToolItem;
@@ -52,11 +53,23 @@ public class PerspectiveSwitcher extends Composite
    private ToolBar toolbar;
 
    /**
+    * Find parent for this switcher
+    *
+    * @param window workbench window
+    * @return parent composite
+    */
+   private static Composite findParent(IWorkbenchWindow window)
+   {
+      Control[] children = window.getShell().getChildren();
+      return (Composite)children[children.length - 1];
+   }
+
+   /**
     * @param window
     */
    public PerspectiveSwitcher(IWorkbenchWindow window)
    {
-      super((Composite)window.getShell().getChildren()[1], SWT.NONE);
+      super(findParent(window), SWT.NONE);
 
       GridLayout layout = new GridLayout();
       layout.numColumns = 2;

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -80,16 +80,16 @@ public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor
 	public void initialize(IWorkbenchConfigurer configurer)
 	{
 		super.initialize(configurer);
-		
+
 		// Early creation of progress service to prevent NPE in Eclipse 4.2
 		PlatformUI.getWorkbench().getProgressService();
-		
+
 		TweakletManager.initTweaklets();
 		BrandingManager.create();
-		
+
 		final IPreferenceStore ps = Activator.getDefault().getPreferenceStore();
 		configurer.setSaveAndRestore(ps.getBoolean("SAVE_AND_RESTORE")); //$NON-NLS-1$
-		
+
 		if (ps.getBoolean("HTTP_PROXY_ENABLED")) //$NON-NLS-1$
 		{
 			System.setProperty("http.proxyHost", ps.getString("HTTP_PROXY_SERVER")); //$NON-NLS-1$ //$NON-NLS-2$
@@ -126,7 +126,12 @@ public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor
          public void windowOpened(IWorkbenchWindow window)
          {
             NXCSession session = ConsoleSharedData.getSession();
-            if (session.getClientConfigurationHintAsBoolean("PerspectiveSwitcher.Enable", false) && session.getClientConfigurationHintAsBoolean("PerspectiveSwitcher.ShowOnStartup", false))
+            if (!windows.contains(window) && session.getClientConfigurationHintAsBoolean("PerspectiveSwitcher.Enable", true))
+            {
+               new PerspectiveSwitcher(window);
+               windows.add(window);
+            }
+            if (session.getClientConfigurationHintAsBoolean("PerspectiveSwitcher.Enable", true) && session.getClientConfigurationHintAsBoolean("PerspectiveSwitcher.ShowOnStartup", false))
             {
                new UIJob("Select perspective") {
                   @Override
@@ -166,7 +171,7 @@ public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor
          public void windowActivated(IWorkbenchWindow window)
          {
             NXCSession session = ConsoleSharedData.getSession();
-            if (!windows.contains(window) && session.getClientConfigurationHintAsBoolean("PerspectiveSwitcher.Enable", false))
+            if (!windows.contains(window) && session.getClientConfigurationHintAsBoolean("PerspectiveSwitcher.Enable", true))
             {
                new PerspectiveSwitcher(window);
                windows.add(window);
