@@ -408,8 +408,11 @@ bool Pollable::loadFromDatabase(DB_HANDLE hdb, uint32_t id)
    if (hResult == nullptr)
       return false;
 
-   m_configurationPollState.setLastCompleted(DBGetFieldLong(hResult, 0, 0));
-   m_instancePollState.setLastCompleted(DBGetFieldLong(hResult, 0, 1));
+   if (DBGetNumRows(hResult) > 0)
+   {
+      m_configurationPollState.setLastCompleted(DBGetFieldLong(hResult, 0, 0));
+      m_instancePollState.setLastCompleted(DBGetFieldLong(hResult, 0, 1));
+   }
 
    DBFreeResult(hResult);
    return true;
