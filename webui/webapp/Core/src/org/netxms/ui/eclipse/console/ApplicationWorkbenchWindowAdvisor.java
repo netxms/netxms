@@ -79,7 +79,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
       RegionalSettings.updateFromPreferences();
       
       IWorkbenchWindowConfigurer configurer = getWindowConfigurer();
-      configurer.setShowPerspectiveBar(!ConsoleSharedData.getSession().getClientConfigurationHintAsBoolean("PerspectiveSwitcher.Enable", false));
+      configurer.setShowPerspectiveBar(!ConsoleSharedData.getSession().getClientConfigurationHintAsBoolean("PerspectiveSwitcher.Enable", true));
       configurer.setShowStatusLine(false);
       configurer.setTitle(Messages.get().ApplicationWorkbenchWindowAdvisor_AppTitle);
       configurer.setShellStyle(SWT.NO_TRIM);

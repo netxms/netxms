@@ -109,7 +109,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor im
       configurer.setShowCoolBar(ps.getBoolean("SHOW_COOLBAR")); //$NON-NLS-1$
       configurer.setShowStatusLine(true);
       configurer.setShowProgressIndicator(true);
-      configurer.setShowPerspectiveBar(!ConsoleSharedData.getSession().getClientConfigurationHintAsBoolean("PerspectiveSwitcher.Enable", false));
+      configurer.setShowPerspectiveBar(!ConsoleSharedData.getSession().getClientConfigurationHintAsBoolean("PerspectiveSwitcher.Enable", true));
 
       TweakletManager.preWindowOpen(configurer);
    }
@@ -136,7 +136,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor im
 
       if (activator.getPreferenceStore().getBoolean("SHOW_TRAY_ICON")) //$NON-NLS-1$
          Activator.showTrayIcon();
-      
+
       session.addListener(new SessionListener() {
          @SuppressWarnings("deprecation")
          @Override
