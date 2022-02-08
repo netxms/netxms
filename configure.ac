@@ -149,6 +149,7 @@ USE_PTH="no"
 BUILD_SERVER="no"
 BUILD_AGENT="no"
 BUILD_CLIENT="no"
+BUILD_GUI_CLIENT="yes"
 BUILD_STATIC_AGENT="no"
 BUILD_SDK="no"
 MODULES="libnetxms install"
@@ -223,7 +224,6 @@ DISABLE_IPV6="no"
 IPV6_SUPPORT="no"
 INSTALL_LIBPATH=""
 WITH_ENCRYPTION="no"
-DISABLE_COMMONCRYPTO="no"
 OPENSSL_LIBSSL="ssl"
 OPENSSL_LIBCRYPTO="crypto"
 SYSTEMD_SUPPORT="yes"
@@ -291,6 +291,14 @@ AC_ARG_WITH(client,
 [AS_HELP_STRING(--with-client,build client library and tools)],
 [
 	COMPONENTS="$COMPONENTS client"
+])
+
+AC_ARG_WITH(gui-client,
+[AS_HELP_STRING(--without-gui-client,disable build of GUI client)],
+[
+	if test "x$withval" = "xno" ; then
+		BUILD_GUI_CLIENT="no"
+	fi
 ])
 
 AC_ARG_WITH(client-proxy,
@@ -743,14 +751,6 @@ AC_ARG_WITH(pcre,
 	fi
 ])
 
-AC_ARG_ENABLE(commoncrypto,
-[AS_HELP_STRING(--disable-commoncrypto,disable CommonCrypto usage on Mac OS X)],
-[
-	if test "x$enableval" = "xno"; then
-		DISABLE_COMMONCRYPTO="yes"
-	fi
-])
-
 AC_ARG_WITH(bundled-openssl,
 [AS_HELP_STRING(--with-bundled-openssl,use bundled OpenSSL libraries with product-specific prefix)],
 [
@@ -1200,7 +1200,7 @@ if test $? = 0; then
 	check_substr "$COMPONENTS" "java"
 	if test $? = 0; then
 		CLIENT_COMPONENTS="$CLIENT_COMPONENTS java nxshell"
-		if test "x$PLATFORM" = "xLinux" -o "x$PLATFORM" = "xDarwin"; then
+		if test \( "x$PLATFORM" = "xLinux" -o "x$PLATFORM" = "xDarwin" \) -a "x$BUILD_GUI_CLIENT" = "xyes"; then
 			CLIENT_COMPONENTS="$CLIENT_COMPONENTS nxmc"
 		fi
 	fi
@@ -2326,23 +2326,12 @@ AC_LANG_POP([C++])
 
 
 #--------------------------------------------------------------------
-# Checks for CommonCrypto
-#--------------------------------------------------------------------
-
-if test "x$PLATFORM" = "xDarwin" -a "x$DIST_BUILD" != "xyes"; then
-	AC_CHECK_FUNC(CC_MD5_Init, [ 
-		AC_DEFINE(WITH_COMMONCRYPTO, 1, Define to 1 if you have CommonCrypto library and headers)
-	])
-fi
-
-
-#--------------------------------------------------------------------
-# Checks for OpenSSL/CommonCrypto
+# Checks for OpenSSL
 #--------------------------------------------------------------------
 
 if test "x$DISABLE_ENCRYPTION" != "xyes" -a "x$DIST_BUILD" != "xyes"; then
 	AC_CHECK_HEADER(openssl/crypto.h,,AC_MSG_ERROR([OpenSSL is required for encryption support]))
-	
+
 	AC_CHECK_LIB($OPENSSL_LIBCRYPTO, RSA_new,
 		[
 			AC_DEFINE(WITH_OPENSSL, 1, Define to 1 if you have OpenSSL library and headers)
