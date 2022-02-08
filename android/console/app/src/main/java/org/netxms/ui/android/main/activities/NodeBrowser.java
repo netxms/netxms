@@ -26,7 +26,7 @@ import android.widget.Toast;
 
 import org.netxms.base.GeoLocation;
 import org.netxms.client.NXCSession;
-import org.netxms.client.constants.NodePollType;
+import org.netxms.client.constants.ObjectPollType;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
 import org.netxms.client.objecttools.ObjectTool;
@@ -252,25 +252,25 @@ public class NodeBrowser extends AbstractClientActivity {
             case R.id.poll_status:
                 Intent psIntent = new Intent(this, NodePollerActivity.class);
                 psIntent.putExtra("nodeId", (int) selectedObject.getObjectId());
-                psIntent.putExtra("pollType", NodePollType.STATUS);
+                psIntent.putExtra("pollType", ObjectPollType.STATUS);
                 startActivity(psIntent);
                 break;
             case R.id.poll_configuration:
                 Intent pcIntent = new Intent(this, NodePollerActivity.class);
                 pcIntent.putExtra("nodeId", (int) selectedObject.getObjectId());
-                pcIntent.putExtra("pollType", NodePollType.CONFIGURATION_NORMAL);
+                pcIntent.putExtra("pollType", ObjectPollType.CONFIGURATION_NORMAL);
                 startActivity(pcIntent);
                 break;
             case R.id.poll_topology:
                 Intent ptIntent = new Intent(this, NodePollerActivity.class);
                 ptIntent.putExtra("nodeId", (int) selectedObject.getObjectId());
-                ptIntent.putExtra("pollType", NodePollType.TOPOLOGY);
+                ptIntent.putExtra("pollType", ObjectPollType.TOPOLOGY);
                 startActivity(ptIntent);
                 break;
             case R.id.poll_interfaces:
                 Intent piIntent = new Intent(this, NodePollerActivity.class);
                 piIntent.putExtra("nodeId", (int) selectedObject.getObjectId());
-                piIntent.putExtra("pollType", NodePollType.INTERFACES);
+                piIntent.putExtra("pollType", ObjectPollType.INTERFACES);
                 startActivity(piIntent);
                 break;
             case R.id.navigate_to:

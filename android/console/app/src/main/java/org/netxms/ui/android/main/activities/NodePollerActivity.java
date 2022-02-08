@@ -17,7 +17,7 @@ import android.util.Log;
 import android.widget.TextView;
 
 import org.netxms.client.TextOutputListener;
-import org.netxms.client.constants.NodePollType;
+import org.netxms.client.constants.ObjectPollType;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.android.R;
 
@@ -29,7 +29,7 @@ public class NodePollerActivity extends AbstractClientActivity {
     private static final String[] POLL_NAME = {"", "Status", "Configuration (full)", "Interface", "Topology", "Configuration", "Instance"};
 
     private long nodeId;
-    private NodePollType pollType;
+    private ObjectPollType pollType;
     private boolean pollInProgress = false;
     private TextView textView;
 
@@ -39,7 +39,7 @@ public class NodePollerActivity extends AbstractClientActivity {
     @Override
     protected void onCreateStep2(Bundle savedInstanceState) {
         nodeId = getIntent().getIntExtra("nodeId", 0);
-        pollType = (NodePollType) getIntent().getSerializableExtra("pollType");
+        pollType = (ObjectPollType) getIntent().getSerializableExtra("pollType");
 
         setContentView(R.layout.node_poller);
 
@@ -74,7 +74,7 @@ public class NodePollerActivity extends AbstractClientActivity {
             @Override
             public void run() {
                 try {
-                    service.getSession().pollNode(nodeId, pollType, new TextOutputListener() {
+                    service.getSession().pollObject(nodeId, pollType, new TextOutputListener() {
                         @Override
                         public void messageReceived(final String text) {
                             runOnUiThread(new Runnable() {

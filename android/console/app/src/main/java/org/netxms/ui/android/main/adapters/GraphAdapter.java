@@ -7,7 +7,7 @@ import android.view.ViewGroup;
 import android.widget.BaseExpandableListAdapter;
 import android.widget.TextView;
 
-import org.netxms.client.datacollection.GraphSettings;
+import org.netxms.client.datacollection.GraphDefinition;
 import org.netxms.ui.android.R;
 
 import java.util.ArrayList;
@@ -23,14 +23,14 @@ import java.util.List;
 public class GraphAdapter extends BaseExpandableListAdapter {
     private final Context context;
     private final ArrayList<String> groups;
-    private final ArrayList<ArrayList<GraphSettings>> children;
+    private final ArrayList<ArrayList<GraphDefinition>> children;
 
     /**
      * @param context
      * @param groups
      * @param children
      */
-    public GraphAdapter(Context context, ArrayList<String> groups, ArrayList<ArrayList<GraphSettings>> children) {
+    public GraphAdapter(Context context, ArrayList<String> groups, ArrayList<ArrayList<GraphDefinition>> children) {
         this.context = context;
         this.groups = groups;
         this.children = children;
@@ -41,10 +41,10 @@ public class GraphAdapter extends BaseExpandableListAdapter {
      *
      * @param graphs
      */
-    public void setGraphs(List<GraphSettings> graphs) {
-        Collections.sort(graphs, new Comparator<GraphSettings>() {
+    public void setGraphs(List<GraphDefinition> graphs) {
+        Collections.sort(graphs, new Comparator<GraphDefinition>() {
             @Override
-            public int compare(GraphSettings object1, GraphSettings object2) {
+            public int compare(GraphDefinition object1, GraphDefinition object2) {
                 return object1.getName().compareTo(object2.getName());
             }
         });
@@ -52,7 +52,7 @@ public class GraphAdapter extends BaseExpandableListAdapter {
         groups.clear();
         children.clear();
         groups.add(context.getString(R.string.graph_uncategorized)); // To have it on top
-        children.add(new ArrayList<GraphSettings>());
+        children.add(new ArrayList<GraphDefinition>());
         for (int i = 0; i < graphs.size(); i++) {
             String title = "";
             String[] splitStr = graphs.get(i).getName().split("->");
@@ -61,7 +61,7 @@ public class GraphAdapter extends BaseExpandableListAdapter {
                 groups.add(title);
             int index = groups.indexOf(title);
             if (children.size() < index + 1)
-                children.add(new ArrayList<GraphSettings>());
+                children.add(new ArrayList<GraphDefinition>());
             children.get(index).add(graphs.get(i));
         }
         if (children.get(0).size() == 0) // If <Uncategorized> is empty, remove it
@@ -86,7 +86,7 @@ public class GraphAdapter extends BaseExpandableListAdapter {
 
     @Override
     public View getChildView(int groupPosition, int childPosition, boolean isLastChild, View convertView, ViewGroup parent) {
-        String name = TrimGroup(((GraphSettings) getChild(groupPosition, childPosition)).getName());
+        String name = TrimGroup(((GraphDefinition) getChild(groupPosition, childPosition)).getName());
         if (convertView == null) {
             LayoutInflater layoutInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             convertView = layoutInflater.inflate(R.layout.graph_view_child_layout, null);

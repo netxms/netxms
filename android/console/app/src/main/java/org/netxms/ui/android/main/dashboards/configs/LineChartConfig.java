@@ -19,7 +19,6 @@
 package org.netxms.ui.android.main.dashboards.configs;
 
 import org.netxms.client.constants.TimeUnit;
-import org.netxms.client.datacollection.GraphSettings;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;

@@ -15,7 +15,7 @@ import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.TimeFrameType;
 import org.netxms.client.datacollection.ChartDciConfig;
-import org.netxms.client.datacollection.GraphSettings;
+import org.netxms.client.datacollection.GraphDefinition;
 import org.netxms.ui.android.R;
 import org.netxms.ui.android.helpers.Colors;
 import org.netxms.ui.android.main.adapters.GraphAdapter;
@@ -50,12 +50,12 @@ public class GraphBrowser extends AbstractClientActivity {
         title.setText(R.string.predefined_graphs_title);
 
         // keeps current list of graphs as datasource for listview
-        adapter = new GraphAdapter(this, new ArrayList<String>(), new ArrayList<ArrayList<GraphSettings>>());
+        adapter = new GraphAdapter(this, new ArrayList<String>(), new ArrayList<ArrayList<GraphDefinition>>());
         ExpandableListView listView = findViewById(R.id.GraphList);
         listView.setOnChildClickListener(new ExpandableListView.OnChildClickListener() {
             @Override
             public boolean onChildClick(ExpandableListView parent, View v, int groupPosition, int childPosition, long id) {
-                GraphSettings gs = (GraphSettings) adapter.getChild(groupPosition, childPosition);
+                GraphDefinition gs = (GraphDefinition) adapter.getChild(groupPosition, childPosition);
                 if (gs != null) {
                     drawGraph(gs);
                     return true;
@@ -95,7 +95,7 @@ public class GraphBrowser extends AbstractClientActivity {
     /**
      * Draw graph based on stored settings
      */
-    public void drawGraph(GraphSettings gs) {
+    public void drawGraph(GraphDefinition gs) {
         if (gs != null) {
             Intent newIntent = new Intent(this, DrawGraph.class);
             ArrayList<Integer> nodeIdList = new ArrayList<Integer>();
@@ -162,7 +162,7 @@ public class GraphBrowser extends AbstractClientActivity {
     /**
      * Internal task for loading predefined graphs data
      */
-    private class LoadDataTask extends AsyncTask<Object, Void, List<GraphSettings>> {
+    private class LoadDataTask extends AsyncTask<Object, Void, List<GraphDefinition>> {
         @Override
         protected void onPreExecute() {
             if (dialog != null) {
@@ -174,8 +174,8 @@ public class GraphBrowser extends AbstractClientActivity {
         }
 
         @Override
-        protected List<GraphSettings> doInBackground(Object... params) {
-            List<GraphSettings> graphs = null;
+        protected List<GraphDefinition> doInBackground(Object... params) {
+            List<GraphDefinition> graphs = null;
             try {
                 NXCSession session = service.getSession();
                 if (session != null)
@@ -191,7 +191,7 @@ public class GraphBrowser extends AbstractClientActivity {
         }
 
         @Override
-        protected void onPostExecute(List<GraphSettings> result) {
+        protected void onPostExecute(List<GraphDefinition> result) {
             if (dialog != null)
                 dialog.cancel();
             if (result != null) {

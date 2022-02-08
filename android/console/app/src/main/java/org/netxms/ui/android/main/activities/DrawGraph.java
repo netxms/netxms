@@ -27,7 +27,6 @@ import org.netxms.client.constants.HistoricalDataType;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.DciDataRow;
 import org.netxms.client.datacollection.GraphItem;
-import org.netxms.client.datacollection.GraphItemStyle;
 import org.netxms.ui.android.R;
 import org.netxms.ui.android.helpers.CustomLabel;
 
@@ -45,7 +44,6 @@ public class DrawGraph extends AbstractClientActivity {
     ProgressDialog dialog;
     private GraphView graphView = null;
     private GraphItem[] items = null;
-    private GraphItemStyle[] itemStyles = null;
     private int numGraphs = 0;
     private long timeFrom = 0;
     private long timeTo = 0;
@@ -64,7 +62,6 @@ public class DrawGraph extends AbstractClientActivity {
         numGraphs = getIntent().getIntExtra("numGraphs", 0);
         if (numGraphs > 0) {
             items = new GraphItem[numGraphs];
-            itemStyles = new GraphItemStyle[numGraphs];
             ArrayList<Integer> nodeIdList = getIntent().getIntegerArrayListExtra("nodeIdList");
             ArrayList<Integer> dciIdList = getIntent().getIntegerArrayListExtra("dciIdList");
             ArrayList<Integer> colorList = getIntent().getIntegerArrayListExtra("colorList");
@@ -75,9 +72,8 @@ public class DrawGraph extends AbstractClientActivity {
                 items[i].setNodeId(nodeIdList.get(i));
                 items[i].setDciId(dciIdList.get(i));
                 items[i].setDescription(nameList.get(i));
-                itemStyles[i] = new GraphItemStyle();
-                itemStyles[i].setColor(colorList.get(i) | 0xFF000000);
-                itemStyles[i].setLineWidth(lineWidthList.get(i));
+		items[i].setColor(colorList.get(i) | 0xFF000000);
+		items[i].setLineWidth(lineWidthList.get(i));
             }
             timeFrom = getIntent().getLongExtra("timeFrom", 0);
             timeTo = getIntent().getLongExtra("timeTo", 0);
@@ -185,7 +181,7 @@ public class DrawGraph extends AbstractClientActivity {
                         // dciData are reversed!
                         for (int j = dciDataRow.length - 1, k = 0; j >= 0; j--, k++)
                             gwData[k] = new GraphViewData(dciDataRow[j].getTimestamp().getTime(), dciDataRow[j].getValueAsDouble());
-                        GraphViewSeries gwSeries = new GraphViewSeries(items[i].getDescription(), new GraphViewSeriesStyle(itemStyles[i].getColor(), itemStyles[i].getLineWidth()), gwData);
+                        GraphViewSeries gwSeries = new GraphViewSeries(items[i].getDescription(), new GraphViewSeriesStyle(items[i].getColor(), items[i].getLineWidth()), gwData);
                         graphView.addSeries(gwSeries);
                         addedSeries++;
                         start = dciDataRow[dciDataRow.length - 1].getTimestamp().getTime();

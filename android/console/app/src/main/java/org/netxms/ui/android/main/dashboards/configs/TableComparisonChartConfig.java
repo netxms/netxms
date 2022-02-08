@@ -18,7 +18,7 @@
  */
 package org.netxms.ui.android.main.dashboards.configs;
 
-import org.netxms.client.datacollection.GraphSettings;
+import org.netxms.client.datacollection.ChartConfiguration;
 import org.simpleframework.xml.Element;
 
 /**
@@ -41,7 +41,7 @@ public abstract class TableComparisonChartConfig extends DashboardElementConfig 
     private String title = "";
 
     @Element(required = false)
-    private int legendPosition = GraphSettings.POSITION_RIGHT;
+    private int legendPosition = ChartConfiguration.POSITION_RIGHT;
 
     @Element(required = false)
     private boolean showLegend = true;

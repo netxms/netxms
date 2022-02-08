@@ -18,7 +18,7 @@
  */
 package org.netxms.ui.android.main.dashboards.configs;
 
-import org.netxms.client.datacollection.GraphSettings;
+import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.ui.android.main.activities.helpers.ChartDciConfig;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementArray;
@@ -37,7 +37,7 @@ public abstract class AbstractChartConfig extends DashboardElementConfig {
     private String title = "";
 
     @Element(required = false)
-    private int legendPosition = GraphSettings.POSITION_RIGHT;
+    private int legendPosition = ChartConfiguration.POSITION_RIGHT;
 
     @Element(required = false)
     private boolean showLegend = true;
