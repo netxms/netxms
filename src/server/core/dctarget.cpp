@@ -190,33 +190,35 @@ bool DataCollectionTarget::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
    if (hResult == nullptr)
       return false;
 
-   m_configurationPollState.setLastCompleted(DBGetFieldLong(hResult, 0, 0));
-   m_instancePollState.setLastCompleted(DBGetFieldLong(hResult, 0, 1));
-   m_geoLocationControlMode = static_cast<GeoLocationControlMode>(DBGetFieldLong(hResult, 0, 2));
-
-   TCHAR areas[2000];
-   DBGetField(hResult, 0, 3, areas, 2000);
-   Trim(areas);
-   if (*areas != 0)
+   if (DBGetNumRows(hResult) > 0)
    {
-      TCHAR *curr = areas;
-      while(true)
+      m_configurationPollState.setLastCompleted(DBGetFieldLong(hResult, 0, 0));
+      m_instancePollState.setLastCompleted(DBGetFieldLong(hResult, 0, 1));
+      m_geoLocationControlMode = static_cast<GeoLocationControlMode>(DBGetFieldLong(hResult, 0, 2));
+
+      TCHAR areas[2000];
+      DBGetField(hResult, 0, 3, areas, 2000);
+      Trim(areas);
+      if (*areas != 0)
       {
-         TCHAR *next = _tcschr(curr, _T(','));
-         if (next != nullptr)
-            *next = 0;
+         TCHAR *curr = areas;
+         while(true)
+         {
+            TCHAR *next = _tcschr(curr, _T(','));
+            if (next != nullptr)
+               *next = 0;
 
-         TCHAR *eptr;
-         uint32_t id = _tcstoul(curr, &eptr, 10);
-         if ((id != 0) && (*eptr == 0))
-            m_geoAreas.add(id);
+            TCHAR *eptr;
+            uint32_t id = _tcstoul(curr, &eptr, 10);
+            if ((id != 0) && (*eptr == 0))
+               m_geoAreas.add(id);
 
-         if (next == nullptr)
-            break;
-         curr = next + 1;
+            if (next == nullptr)
+               break;
+            curr = next + 1;
+         }
       }
    }
-
    DBFreeResult(hResult);
 
    if (static_cast<uint32_t>(time(nullptr) - m_configurationPollState.getLastCompleted()) < g_configurationPollingInterval)
