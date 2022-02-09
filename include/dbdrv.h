@@ -36,6 +36,7 @@
 #define DB_DRIVER_ENTRY_POINT(name, callTable) \
 extern "C" __EXPORT_VAR(int drvAPIVersion); \
 extern "C" __EXPORT_VAR(const char *drvName); \
+extern "C" __EXPORT_VAR(DBDriverCallTable *drvCallTable); \
 __EXPORT_VAR(int drvAPIVersion) = DBDRV_API_VERSION; \
 __EXPORT_VAR(const char *drvName) = name; \
 __EXPORT_VAR(DBDriverCallTable *drvCallTable) = &callTable;

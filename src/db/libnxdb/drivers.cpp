@@ -71,6 +71,7 @@ DB_DRIVER LIBNXDB_EXPORTABLE DBLoadDriver(const TCHAR *module, const TCHAR *init
    // Load driver's module
    TCHAR fullName[MAX_PATH];
 #ifdef _WIN32
+   _tcslcpy(fullName, module, MAX_PATH);
    size_t len = _tcslen(fullName);
    if ((len < 4) || (_tcsicmp(&fullName[len - 4], _T(".ddr")) && _tcsicmp(&fullName[len - 4], _T(".dll"))))
       _tcslcat(fullName, _T(".ddr"), MAX_PATH);
