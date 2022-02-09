@@ -103,6 +103,7 @@ public class ActionLabelProvider extends LabelProvider implements ITableLabelPro
    @Override
    public void dispose()
    {
+      baseActionLabelProvider.dispose();
       super.dispose();
    }
 }

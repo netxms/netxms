@@ -21,11 +21,12 @@ package org.netxms.nxmc.modules.objects.dialogs.helpers;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.nxmc.base.views.AbstractViewerFilter;
 
 /**
  * Filter for Zone Selection Dialog
  */
-public class ZoneSelectionDialogFilter extends ViewerFilter
+public class ZoneSelectionDialogFilter extends ViewerFilter implements AbstractViewerFilter
 {
    private String filterString = null;
 

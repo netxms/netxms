@@ -1,4 +1,5 @@
 org.netxms.nxmc.modules.actions.ActionsConfigurationElement
+org.netxms.nxmc.modules.events.EventConfigurationElement
 org.netxms.nxmc.modules.agentmanagement.PackagesConfigurationElement
 org.netxms.nxmc.modules.agentmanagement.ServerStoredAgentConfigurationElement
 org.netxms.nxmc.modules.agentmanagement.TunnelConfigurationElement

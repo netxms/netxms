@@ -20,7 +20,6 @@ package org.netxms.nxmc.modules.users.dialogs;
 
 import java.util.Iterator;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
@@ -29,7 +28,6 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
-import org.eclipse.jface.viewers.ViewerFilter;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -39,8 +37,10 @@ import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.NXCSession;
 import org.netxms.client.users.AbstractUserObject;
 import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.base.dialogs.DialogWithFilter;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.users.dialogs.helpers.UserListFilter;
 import org.netxms.nxmc.modules.users.views.helpers.BaseUserLabelProvider;
 import org.netxms.nxmc.tools.MessageDialogHelper;
 import org.netxms.nxmc.tools.WidgetHelper;
@@ -49,7 +49,7 @@ import org.xnap.commons.i18n.I18n;
 /**
  * User selection dialog
  */
-public class SelectUserDialog extends Dialog
+public class SelectUserDialog extends DialogWithFilter
 {
    private I18n i18n = LocalizationHelper.getI18n(SelectUserDialog.class);
 	private TableViewer userList;
@@ -101,7 +101,8 @@ public class SelectUserDialog extends Dialog
 		
       userList = new TableViewer(dialogArea, SWT.BORDER | (multiSelection ? SWT.MULTI : 0) | SWT.FULL_SELECTION);
       userList.setContentProvider(new ArrayContentProvider());
-      userList.setLabelProvider(new BaseUserLabelProvider());
+      BaseUserLabelProvider labelProvider = new BaseUserLabelProvider();
+      userList.setLabelProvider(labelProvider);
       userList.setComparator(new ViewerComparator() {
          @Override
          public int compare(Viewer viewer, Object e1, Object e2)
@@ -119,14 +120,11 @@ public class SelectUserDialog extends Dialog
 			      SelectUserDialog.this.okPressed();
 			}
       });
-      userList.addFilter(new ViewerFilter() {
-			@Override
-			public boolean select(Viewer viewer, Object parentElement, Object element)
-			{
-				return classFilter.isInstance(element) || (element instanceof String);
-			}
-      });
+      
+      UserListFilter filter = new UserListFilter(labelProvider);
+      userList.addFilter(filter);
       userList.setInput(session.getUserDatabaseObjects());
+      setFilterClient(userList, filter);
       
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;

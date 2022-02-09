@@ -19,7 +19,6 @@
 package org.netxms.nxmc.modules.events.dialogs;
 
 import java.util.List;
-import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -27,14 +26,13 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.graphics.Point;
-import org.eclipse.swt.layout.FormAttachment;
-import org.eclipse.swt.layout.FormData;
-import org.eclipse.swt.layout.FormLayout;
+import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.events.EventTemplate;
 import org.netxms.nxmc.PreferenceStore;
+import org.netxms.nxmc.base.dialogs.DialogWithFilter;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.events.widgets.EventTemplateList;
 import org.xnap.commons.i18n.I18n;
@@ -42,7 +40,7 @@ import org.xnap.commons.i18n.I18n;
 /**
  * Event selection dialog
  */
-public class EventSelectionDialog extends Dialog
+public class EventSelectionDialog extends DialogWithFilter
 {
    private static final I18n i18n = LocalizationHelper.getI18n(EventSelectionDialog.class);
    private static final String CONFIG_PREFIX = "SelectEvent"; //$NON-NLS-1$
@@ -81,28 +79,22 @@ public class EventSelectionDialog extends Dialog
    /**
     * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
     */
-	@Override
-	protected Control createDialogArea(Composite parent)
-	{
-		Composite dialogArea = (Composite)super.createDialogArea(parent);
-		
-		dialogArea.setLayout(new FormLayout());
-		
-		eventTemplateList = new EventTemplateList(dialogArea, SWT.NONE, CONFIG_PREFIX, true);
-		FormData fd = new FormData();
-      fd.left = new FormAttachment(0, 0);
-      fd.top = new FormAttachment(100, 0);
-      fd.right = new FormAttachment(100, 0);
-      fd.bottom = new FormAttachment(100, 0);
-      eventTemplateList.setLayoutData(fd);
-		
+   @Override
+   protected Control createDialogArea(Composite parent)
+   {     
+      Composite dialogArea = (Composite)super.createDialogArea(parent);
+      dialogArea.setLayout(new FillLayout());
+      
+      eventTemplateList = new EventTemplateList(dialogArea, SWT.NONE, CONFIG_PREFIX, true);
+      setFilterClient(eventTemplateList.getViewer(), eventTemplateList.getFilter());
+      
       eventTemplateList.getViewer().addDoubleClickListener(new IDoubleClickListener() {
-			@Override
-			public void doubleClick(DoubleClickEvent event)
-			{
-				EventSelectionDialog.this.okPressed();
-			}
-		});
+         @Override
+         public void doubleClick(DoubleClickEvent event)
+         {
+            EventSelectionDialog.this.okPressed();
+         }
+      });
       
       eventTemplateList.addDisposeListener(new DisposeListener() {
          
@@ -115,9 +107,9 @@ public class EventSelectionDialog extends Dialog
             settings.set(CONFIG_PREFIX + ".cy", size.y); //$NON-NLS-1$
          }
       });
-
-		return dialogArea;
-	}
+      
+      return dialogArea;
+   }
 	
    /**
     * @see org.eclipse.jface.dialogs.Dialog#okPressed()

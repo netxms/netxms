@@ -35,11 +35,7 @@ import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
-import org.eclipse.swt.layout.FormAttachment;
-import org.eclipse.swt.layout.FormData;
-import org.eclipse.swt.layout.FormLayout;
+import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.netxms.client.NXCSession;
@@ -47,12 +43,11 @@ import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
 import org.netxms.client.events.EventReference;
 import org.netxms.client.events.EventTemplate;
-import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.actions.RefreshAction;
 import org.netxms.nxmc.base.jobs.Job;
+import org.netxms.nxmc.base.views.AbstractViewerFilter;
 import org.netxms.nxmc.base.views.View;
-import org.netxms.nxmc.base.widgets.FilterText;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.events.dialogs.EditEventTemplateDialog;
@@ -82,17 +77,14 @@ public class EventTemplateList extends Composite implements SessionListener
 
    private HashMap<Long, EventTemplate> eventTemplates;
    private SortableTableViewer viewer;
-   private FilterText filterControl;
    private Action actionNew;
    private Action actionEdit;
    private Action actionDelete;
    private Action actionDuplicate;
    private Action actionFindReferences;
-   private Action actionShowFilter;
    private Action actionRefresh;
    private NXCSession session;
    private EventTemplateFilter filter;
-   private boolean filterEnabled;
    private View view;
    
    /**
@@ -120,37 +112,16 @@ public class EventTemplateList extends Composite implements SessionListener
    public EventTemplateList(Composite parent, int style, final String configPrefix, boolean isDialog)
    {
       super(parent, style);
-      
-      session = Registry.getSession();
+      setLayout(new FillLayout());
 
-      final PreferenceStore settings = PreferenceStore.getInstance();
-      filterEnabled = isDialog ? true : settings.getAsBoolean(configPrefix + ".filterEnabled", true);
-      
-      parent.setLayout(new FormLayout());
-
-      // Create filter area
-      filterControl = new FilterText(parent, SWT.NONE, null, !isDialog);
-      filterControl.addModifyListener(new ModifyListener() {
-         @Override
-         public void modifyText(ModifyEvent e)
-         {
-            onFilterModify();
-         }
-      });
-      filterControl.setCloseAction(new Action() {
-         @Override
-         public void run()
-         {
-            enableFilter(false);
-         }
-      });
+      session = Registry.getSession();      
       
       final String[] names = { i18n.tr("Code"), i18n.tr("Name"), i18n.tr("Severity"), i18n.tr("Flags"), i18n.tr("Message"), i18n.tr("Tags") };
       final int[] widths = { 70, 200, 90, 50, 400, 300 };
       final String[] dialogNames = { i18n.tr("Code"), i18n.tr("Name"), i18n.tr("Tags") };
       final int[] dialogWidths = { 70, 200, 300 };
 
-      viewer = new SortableTableViewer(parent, isDialog ? dialogNames : names,
+      viewer = new SortableTableViewer(this, isDialog ? dialogNames : names,
             isDialog ? dialogWidths : widths,
             0, SWT.UP, SWT.BORDER | SWT.FULL_SELECTION | SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
 
@@ -180,35 +151,14 @@ public class EventTemplateList extends Composite implements SessionListener
             session.removeListener(EventTemplateList.this);
 
             WidgetHelper.saveTableViewerSettings(viewer, configPrefix);
-            settings.set(configPrefix + ".filterEnabled", filterEnabled);
          }
-      });
-
-      // Setup layout
-      FormData fd = new FormData();
-      fd.left = new FormAttachment(0, 0);
-      fd.top = new FormAttachment(filterControl);
-      fd.right = new FormAttachment(100, 0);
-      fd.bottom = new FormAttachment(100, 0);
-      viewer.getControl().setLayoutData(fd);
-      
-      fd = new FormData();
-      fd.left = new FormAttachment(0, 0);
-      fd.top = new FormAttachment(0, 0);
-      fd.right = new FormAttachment(100, 0);
-      filterControl.setLayoutData(fd);
+      });      
       
       createActions();
       createPopupMenu();
 
       refreshView();
       session.addListener(this);
-      
-      enableFilter(filterEnabled);
-
-      // Set initial focus to filter input line
-      if (filterEnabled)
-         filterControl.setFocus();
    }
    
    /**
@@ -330,16 +280,6 @@ public class EventTemplateList extends Composite implements SessionListener
             findReferences();
          }
       };
-
-      actionShowFilter = new Action(i18n.tr("Show &filter"), Action.AS_CHECK_BOX) {
-         @Override
-         public void run()
-         {
-            enableFilter(actionShowFilter.isChecked());
-         }
-      };
-      actionShowFilter.setImageDescriptor(SharedIcons.FILTER);
-      actionShowFilter.setChecked(filterEnabled);
 
       if (view != null)
       {
@@ -566,39 +506,6 @@ public class EventTemplateList extends Composite implements SessionListener
          }
       }.start();
    }
-
-   /**
-    * Enable or disable filter
-    * 
-    * @param enable New filter state
-    */
-   private void enableFilter(boolean enable)
-   {
-      filterEnabled = enable;
-      filterControl.setVisible(filterEnabled);
-      FormData fd = (FormData)viewer.getControl().getLayoutData();
-      fd.top = enable ? new FormAttachment(filterControl) : new FormAttachment(0, 0);
-      viewer.getControl().getParent().layout();
-      if (enable)
-      {
-         filterControl.setFocus();
-      }
-      else
-      {
-         filterControl.setText(""); //$NON-NLS-1$
-         onFilterModify();
-      }
-      actionShowFilter.setChecked(enable);
-   }
-   
-   /**
-    * Handler for filter modification
-    */
-   private void onFilterModify()
-   {
-      filter.setFilterText(filterControl.getText());
-      viewer.refresh();
-   }
    
    /**
     * Get underlying tree viewer
@@ -608,7 +515,15 @@ public class EventTemplateList extends Composite implements SessionListener
    {
       return viewer;
    }
-   
+
+   /**
+    * Get viewer filter
+    * @return filter
+    */
+   public AbstractViewerFilter getFilter()
+   {
+      return filter;
+   }
    /**
     * Get create new template action
     * 
@@ -637,16 +552,6 @@ public class EventTemplateList extends Composite implements SessionListener
    public Action getActionDelete()
    {
       return actionDelete;
-   }
-   
-   /**
-    * Get show filter action
-    *  
-    * @return show filter action
-    */
-   public Action getActionShowFilter()
-   {
-      return actionShowFilter;
    }
    
    /**

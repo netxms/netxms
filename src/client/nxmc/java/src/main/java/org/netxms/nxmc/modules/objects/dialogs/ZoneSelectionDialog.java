@@ -18,7 +18,6 @@
  */
 package org.netxms.nxmc.modules.objects.dialogs;
 
-import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
@@ -35,6 +34,7 @@ import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.Zone;
 import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.base.dialogs.DialogWithFilter;
 import org.netxms.nxmc.base.widgets.FilterText;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -48,7 +48,7 @@ import org.xnap.commons.i18n.I18n;
 /**
  * Dialog for selecting zone
  */
-public class ZoneSelectionDialog extends Dialog
+public class ZoneSelectionDialog extends DialogWithFilter
 {
    private I18n i18n = LocalizationHelper.getI18n(ZoneSelectionDialog.class);
    private Zone zone;
@@ -106,6 +106,7 @@ public class ZoneSelectionDialog extends Dialog
       zoneList.setLabelProvider(new DecoratingObjectLabelProvider());
       filter = new ZoneSelectionDialogFilter();
       zoneList.addFilter(filter);
+      setFilterClient(zoneList, filter);
 
       gd = new GridData();
       gd.grabExcessHorizontalSpace = true;

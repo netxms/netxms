@@ -21,11 +21,12 @@ package org.netxms.nxmc.modules.events.widgets.helpers;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.netxms.client.events.EventTemplate;
+import org.netxms.nxmc.base.views.AbstractViewerFilter;
 
 /**
  * Event template filter
  */
-public class EventTemplateFilter extends ViewerFilter
+public class EventTemplateFilter extends ViewerFilter implements AbstractViewerFilter
 {
    private String filterText = null;
 
@@ -51,7 +52,7 @@ public class EventTemplateFilter extends ViewerFilter
     * 
     * @param filterText string to filter
     */
-   public void setFilterText(String filterText)
+   public void setFilterString(String filterText)
    {
       if ((filterText == null) || filterText.trim().isEmpty())
          this.filterText = null;
