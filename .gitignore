@@ -329,3 +329,4 @@ cmake-build-debug/
 src/.vscode
 
 .vscode/
+.tool-versions
