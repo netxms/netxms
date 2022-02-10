@@ -78,6 +78,7 @@ public class PackageManager extends ConfigurationView
    private Action actionUploadToServer;
    private Action actionRemove;
    private Action actionEditMetadata;
+   
 
 	@Override
    protected void createContent(Composite parent)

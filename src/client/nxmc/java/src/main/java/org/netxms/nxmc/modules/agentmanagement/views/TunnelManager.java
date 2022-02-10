@@ -37,7 +37,6 @@ import org.netxms.client.AgentTunnel;
 import org.netxms.client.NXCObjectCreationData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.ConfigurationView;
@@ -48,6 +47,7 @@ import org.netxms.nxmc.modules.agentmanagement.views.helpers.TunnelListLabelProv
 import org.netxms.nxmc.modules.agentmanagement.views.helpers.TunnelManagerFilter;
 import org.netxms.nxmc.modules.objects.dialogs.CreateNodeDialog;
 import org.netxms.nxmc.modules.objects.dialogs.ObjectSelectionDialog;
+import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.tools.MessageDialogHelper;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
@@ -82,13 +82,21 @@ public class TunnelManager extends ConfigurationView
    
    private SortableTableViewer viewer;
    private TunnelManagerFilter filter;
-   private boolean initShowfilter = true;
    private Action actionCreateNode;
    private Action actionBind;
    private Action actionUnbind;
    private Action actionHideNonProxy;
    private Action actionHideNonUA;
+   
 
+   /**
+    * Constructor
+    */
+   public TunnelManager()
+   {
+      super(i18n.tr("Agent tunnels"), ResourceManager.getImageDescriptor("icons/config-views/tunnel_manager.png"), ID, true);
+   }
+   
    /**
     * @see org.netxms.nxmc.base.views.View#createContent(org.eclipse.swt.widgets.Composite)
     */
@@ -108,9 +116,6 @@ public class TunnelManager extends ConfigurationView
       filter = new TunnelManagerFilter();
       viewer.addFilter(filter);
       setFilterClient(viewer, filter);
-
-      PreferenceStore settings = PreferenceStore.getInstance();
-      initShowfilter = settings.getAsBoolean(ID + "initShowFilter", true);
       
       WidgetHelper.restoreTableViewerSettings(viewer, ID);
       viewer.getTable().addDisposeListener(new DisposeListener() {
@@ -118,7 +123,6 @@ public class TunnelManager extends ConfigurationView
          public void widgetDisposed(DisposeEvent e)
          {
             WidgetHelper.saveTableViewerSettings(viewer, ID);
-            settings.set(ID, initShowfilter);
          }
       });
       
