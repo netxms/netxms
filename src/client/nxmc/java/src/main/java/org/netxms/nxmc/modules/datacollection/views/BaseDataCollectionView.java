@@ -350,9 +350,9 @@ public abstract class BaseDataCollectionView extends ObjectView
    }
 
    /**
-    * Show Graph configuration dialog
+    * Show DCI properties dialog
     * 
-    * @param trap Object tool details object
+    * @param object Data collection object
     * @return true if OK was pressed
     */
    protected boolean showDCIPropertyPages(final DataCollectionObject object)

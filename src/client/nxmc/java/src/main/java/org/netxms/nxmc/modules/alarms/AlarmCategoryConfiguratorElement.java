@@ -16,22 +16,22 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.nxmc.modules.agentmanagement;
+package org.netxms.nxmc.modules.alarms;
 
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.netxms.nxmc.base.views.ConfigurationView;
 import org.netxms.nxmc.localization.LocalizationHelper;
-import org.netxms.nxmc.modules.agentmanagement.views.UserAgentNotificationView;
+import org.netxms.nxmc.modules.alarms.views.AlarmCategoryConfigurationView;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.services.ConfigurationPerspectiveElement;
 import org.xnap.commons.i18n.I18n;
 
 /**
- * User agent notification configuration element 
+ * Alarm category configuration element 
  */
-public class UserAgentNotificationElement implements ConfigurationPerspectiveElement
+public class AlarmCategoryConfiguratorElement implements ConfigurationPerspectiveElement
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(UserAgentNotificationElement.class);
+   private static final I18n i18n = LocalizationHelper.getI18n(AlarmCategoryConfiguratorElement.class);
 
    /**
     * @see org.netxms.nxmc.services.ConfigurationPerspectiveElement#getName()
@@ -39,7 +39,7 @@ public class UserAgentNotificationElement implements ConfigurationPerspectiveEle
    @Override
    public String getName()
    {
-      return i18n.tr("User Agent Notifications");
+      return i18n.tr("Alarm Category Configuration");
    }
 
    /**
@@ -48,7 +48,7 @@ public class UserAgentNotificationElement implements ConfigurationPerspectiveEle
    @Override
    public ImageDescriptor getImage()
    {
-      return ResourceManager.getImageDescriptor("icons/config-views/user_agent_messages.png");
+      return ResourceManager.getImageDescriptor("icons/config-views/alarm_category.png");
    }
 
    /**
@@ -57,6 +57,6 @@ public class UserAgentNotificationElement implements ConfigurationPerspectiveEle
    @Override
    public ConfigurationView createView()
    {
-      return new UserAgentNotificationView();
+      return new AlarmCategoryConfigurationView();
    }
 }
