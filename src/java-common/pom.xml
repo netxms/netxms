@@ -22,13 +22,13 @@
      <id>console</id>
      <repositories>
         <repository>
-            <id>eclipse-2021-09-updates</id>
-            <url>http://download.eclipse.org/eclipse/updates/4.21</url>
+            <id>eclipse-2021-12-updates</id>
+            <url>http://download.eclipse.org/eclipse/updates/4.22</url>
             <layout>p2</layout>
         </repository>
         <repository>
-            <id>eclipse-2021-09</id>
-            <url>http://download.eclipse.org/releases/2021-09</url>
+            <id>eclipse-2021-12</id>
+            <url>http://download.eclipse.org/releases/2021-12</url>
             <layout>p2</layout>
         </repository>
      </repositories>
