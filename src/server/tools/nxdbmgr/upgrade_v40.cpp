@@ -1641,13 +1641,13 @@ static bool H_UpgradeFromV55()
 
    if ((g_dbSyntax == DB_SYNTAX_DB2) || (g_dbSyntax == DB_SYNTAX_INFORMIX) || (g_dbSyntax == DB_SYNTAX_ORACLE))
    {
-      CHK_EXEC(SQLQuery(_T("UPDATE users SET system_access=system_access+140737488355328 WHERE (BITAND(system_access, 1) = 1)")));
-      CHK_EXEC(SQLQuery(_T("UPDATE user_groups SET system_access=system_access+140737488355328 WHERE (BITAND(system_access, 1) = 1)")));
+      CHK_EXEC(SQLQuery(_T("UPDATE users SET system_access=system_access+281474976710656 WHERE (BITAND(system_access, 1) = 1)")));
+      CHK_EXEC(SQLQuery(_T("UPDATE user_groups SET system_access=system_access+281474976710656 WHERE (BITAND(system_access, 1) = 1)")));
    }
    else
    {
-      CHK_EXEC(SQLQuery(_T("UPDATE users SET system_access=system_access+140737488355328 WHERE ((system_access & 1) = 1)")));
-      CHK_EXEC(SQLQuery(_T("UPDATE user_groups SET system_access=system_access+140737488355328 WHERE ((system_access & 1) = 1)")));
+      CHK_EXEC(SQLQuery(_T("UPDATE users SET system_access=system_access+281474976710656 WHERE ((system_access & 1) = 1)")));
+      CHK_EXEC(SQLQuery(_T("UPDATE user_groups SET system_access=system_access+281474976710656 WHERE ((system_access & 1) = 1)")));
    }
 
    CHK_EXEC(SetMinorSchemaVersion(56));
