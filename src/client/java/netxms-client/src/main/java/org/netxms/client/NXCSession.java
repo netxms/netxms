@@ -9519,9 +9519,9 @@ public class NXCSession
    }
 
    /**
-    * Find connection point (either directly connected or most close known
+    * Find node and/or connection point (either directly connected or most close known
     * interface on a switch) for given MAC address. Will return null if
-    * connection point information cannot be found.
+    * no information can be found.
     *
     * @param macAddr MAC address
     * @return connection point information or null
@@ -9530,11 +9530,37 @@ public class NXCSession
     */
    public ConnectionPoint findConnectionPoint(MacAddress macAddr) throws IOException, NXCException
    {
+      List<ConnectionPoint> cpl = findConnectionPoints(macAddr.getValue(), 0);
+      return cpl.isEmpty() ? null : cpl.get(0);
+   }
+
+   /**
+    * Find nodes and/or connection points (either directly connected or most close known
+    * interface on a switch) for all MAC addresses that match given MAC address pattern.
+    * Will return empty list if no information can be found.
+    *
+    * @param pattern MAC address pattern (1-6 bytes)
+    * @param searchLimit limits count of elements in output list
+    * @return list of connection point information
+    * @throws IOException  if socket or file I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public List<ConnectionPoint> findConnectionPoints(final byte[] pattern, int searchLimit) throws IOException, NXCException
+   {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_FIND_MAC_LOCATION);
-      msg.setField(NXCPCodes.VID_MAC_ADDR, macAddr.getValue());
+      msg.setField(NXCPCodes.VID_MAC_ADDR, pattern);
+      msg.setFieldInt32(NXCPCodes.VID_MAX_RECORDS, searchLimit);
       sendMessage(msg);
+
       final NXCPMessage response = waitForRCC(msg.getMessageId());
-      return response.isFieldPresent(NXCPCodes.VID_CONNECTION_TYPE) ? new ConnectionPoint(response) : null;
+      List<ConnectionPoint> out = new ArrayList<ConnectionPoint>();
+      int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_ELEMENTS);
+		long base = NXCPCodes.VID_ELEMENT_LIST_BASE;
+      
+      for (int i = 0; i < count; i++, base += 10)
+         out.add(new ConnectionPoint(response, base));
+
+      return out;
    }
 
    /**

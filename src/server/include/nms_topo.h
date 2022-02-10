@@ -150,6 +150,7 @@ public:
    uint16_t getCurrentVlanId() const { return m_currentVlanId; }
 
    uint32_t findMacAddress(const BYTE *macAddr, bool *isStatic);
+   void findMacAddressByPattern(const BYTE* macPattern, int macPatternSize, HashSet<MacAddress>* hs);
    bool isSingleMacOnPort(uint32_t ifIndex, BYTE *macAddr = nullptr);
    int getMacCountOnPort(uint32_t ifIndex);
 
@@ -308,6 +309,28 @@ shared_ptr<NetworkPath> TraceRoute(const shared_ptr<Node>& src, const shared_ptr
 void BuildL2Topology(NetworkMapObjectList &topology, Node *root, int depth, bool includeEndNodes, bool useL1Topology);
 shared_ptr<ForwardingDatabase> GetSwitchForwardingDatabase(Node *node);
 shared_ptr<NetObj> FindInterfaceConnectionPoint(const MacAddress& macAddr, int *type);
+
+class MacAddressInfo
+{
+private:
+   MacAddress m_macAddr;
+   shared_ptr<Interface> m_owner;
+   shared_ptr<NetObj> m_connectionPoint;
+   int m_type;
+
+public:
+   MacAddressInfo(const MacAddress& macAddr, const shared_ptr<Interface>& owner, const shared_ptr<NetObj>& connectionPoint, int type)
+      : m_owner(owner), m_connectionPoint(connectionPoint), m_macAddr(macAddr)
+   {
+      m_type = type;
+   }
+
+   const MacAddress* getMacAddr() const { return &m_macAddr; }
+
+   void fillMessage(NXCPMessage* msg, uint32_t base) const;
+};
+
+void FindMacAddresses(const BYTE* macPattern, size_t macPatternSize, ObjectArray<MacAddressInfo>* out, int searchLimit);
 
 ObjectArray<LLDP_LOCAL_PORT_INFO> *GetLLDPLocalPortInfo(const Node& node, SNMP_Transport *snmp);
 

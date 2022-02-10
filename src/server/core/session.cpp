@@ -11622,88 +11622,32 @@ void ClientSession::findNodeConnection(const NXCPMessage& request)
 }
 
 /**
- * Find connection port for given MAC address
+ * Find nodes and/or connection ports for given MAC address pattern
  */
 void ClientSession::findMacAddress(const NXCPMessage& request)
 {
+   BYTE macPattern[MAC_ADDR_LENGTH];
+   size_t macPatternSize = request.getFieldAsBinary(VID_MAC_ADDR, macPattern, MAC_ADDR_LENGTH);
+   int searchLimit = request.getFieldAsInt32(VID_MAX_RECORDS);
+
+   ObjectArray<MacAddressInfo> icpl(0, 16, Ownership::True);
+   FindMacAddresses(macPattern, macPatternSize, &icpl, searchLimit);
+
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+   response.setField(VID_RCC, RCC_SUCCESS);
 
-	MacAddress macAddr = request.getFieldAsMacAddress(VID_MAC_ADDR);
-	int type;
-	shared_ptr<NetObj> cp = FindInterfaceConnectionPoint(macAddr, &type);
-	response.setField(VID_RCC, RCC_SUCCESS);
-
-	if (cp != nullptr)
-	{
-      debugPrintf(5, _T("findMacAddress: cp=%s [%u] type=%d"), cp->getName(), cp->getId(), type);
-		uint32_t localNodeId, localIfId;
-		shared_ptr<Interface> localIf = FindInterfaceByMAC(macAddr);
-		if (localIf != nullptr)
-		{
-			localIfId = localIf->getId();
-			localNodeId = localIf->getParentNodeId();
-		}
-		else
-		{
-			localIfId = 0;
-			localNodeId = 0;
-		}
-
-      shared_ptr<Node> node = (cp->getObjectClass() == OBJECT_INTERFACE) ? static_cast<Interface&>(*cp).getParentNode() : static_cast<AccessPoint&>(*cp).getParentNode();
-      if (node != nullptr)
-      {
-		   response.setField(VID_OBJECT_ID, node->getId());
-		   response.setField(VID_INTERFACE_ID, cp->getId());
-         response.setField(VID_IF_INDEX, (cp->getObjectClass() == OBJECT_INTERFACE) ? static_cast<Interface&>(*cp).getIfIndex() : (uint32_t)0);
-	      response.setField(VID_LOCAL_NODE_ID, localNodeId);
-		   response.setField(VID_LOCAL_INTERFACE_ID, localIfId);
-		   response.setField(VID_MAC_ADDR, macAddr);
-         response.setField(VID_IP_ADDRESS, (localIf != nullptr) ? localIf->getIpAddressList()->getFirstUnicastAddress() : InetAddress::INVALID);
-		   response.setField(VID_CONNECTION_TYPE, (UINT16)type);
-         if (cp->getObjectClass() == OBJECT_INTERFACE)
-            debugPrintf(5, _T("findMacAddress: nodeId=%d ifId=%d ifName=%s ifIndex=%d"), node->getId(), cp->getId(), cp->getName(), static_cast<Interface&>(*cp).getIfIndex());
-         else
-            debugPrintf(5, _T("findMacAddress: nodeId=%d apId=%d apName=%s"), node->getId(), cp->getId(), cp->getName());
-      }
-      else
-      {
-		   response.setField(VID_RCC, RCC_INTERNAL_ERROR);
-      }
-	}
-	else
-	{
-      debugPrintf(5, _T("findMacAddress: cp=(null)"));
-      shared_ptr<Interface> localIf = FindInterfaceByMAC(macAddr);
-      if (localIf != nullptr)
-      {
-         response.setField(VID_LOCAL_NODE_ID, localIf->getParentNodeId());
-         response.setField(VID_LOCAL_INTERFACE_ID, localIf->getId());
-         response.setField(VID_MAC_ADDR, macAddr);
-         response.setField(VID_IP_ADDRESS, localIf->getIpAddressList()->getFirstUnicastAddress());
-
-         if (localIf->getPeerInterfaceId() != 0)
-         {
-            response.setField(VID_CONNECTION_TYPE, static_cast<uint16_t>(CP_TYPE_DIRECT));
-            response.setField(VID_OBJECT_ID, localIf->getPeerNodeId());
-            shared_ptr<NetObj> remoteIf = FindObjectById(localIf->getPeerInterfaceId(), OBJECT_INTERFACE);
-            if (remoteIf != nullptr)
-            {
-               response.setField(VID_INTERFACE_ID, remoteIf->getId());
-               response.setField(VID_IF_INDEX, static_cast<Interface&>(*remoteIf).getIfIndex());
-            }
-         }
-         else
-         {
-            response.setField(VID_CONNECTION_TYPE, static_cast<uint16_t>(CP_TYPE_UNKNOWN));
-         }
-
-         TCHAR buffer[64];
-         debugPrintf(5, _T("findMacAddress: MAC address %s not found in FDB but interface found (%s on %s [%u])"),
-                     macAddr.toString(buffer), localIf->getName(), localIf->getParentNodeName().cstr(), localIf->getParentNodeId());
-      }
-	}
-
-	sendMessage(&response);
+   if (icpl.isEmpty())
+   {
+      response.setField(VID_NUM_ELEMENTS, 0);
+   }
+   else
+   {
+      response.setField(VID_NUM_ELEMENTS, icpl.size());
+      uint32_t base = VID_ELEMENT_LIST_BASE;
+      for (int i = 0; i < icpl.size(); i++, base += 100)
+         icpl.get(i)->fillMessage(&response, base);
+   }
+   sendMessage(&response);
 }
 
 /**

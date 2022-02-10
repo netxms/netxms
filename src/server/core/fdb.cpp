@@ -129,6 +129,16 @@ uint32_t ForwardingDatabase::findMacAddress(const BYTE *macAddr, bool *isStatic)
 }
 
 /**
+ * Find all MAC addresses that contains given pattern
+ */
+void ForwardingDatabase::findMacAddressByPattern(const BYTE* macPattern, int macPatternSize, HashSet<MacAddress>* hs)
+{
+   for (int i = 0; i < m_fdbSize; i++)
+      if (memmem(m_fdb[i].macAddr, MAC_ADDR_LENGTH, macPattern, macPatternSize))
+         hs->put(MacAddress(m_fdb[i].macAddr, MAC_ADDR_LENGTH));
+}
+
+/**
  * Check if port has only one MAC in FDB
  * If macAddr parameter is not nullptr, MAC address found on port
  * copied into provided buffer

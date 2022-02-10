@@ -58,6 +58,25 @@ public class ConnectionPoint
 	}
 
 	/**
+	 * Create connection point information from NXCP message
+	 * 
+	 * @param msg NXCP message
+	 * @param base NXCP message field base for lists
+	 */
+	public ConnectionPoint(NXCPMessage msg, long base)
+	{
+		localMacAddress = new MacAddress(msg.getFieldAsBinary(base));
+		type = ConnectionPointType.getByValue(msg.getFieldAsInt32(base + 1));
+		nodeId = msg.getFieldAsInt64(base + 2);
+		interfaceId = msg.getFieldAsInt64(base + 3);
+		interfaceIndex = msg.getFieldAsInt32(base + 4);
+		localNodeId = msg.getFieldAsInt64(base + 5);
+		localInterfaceId = msg.getFieldAsInt64(base + 6);
+		localIpAddress = msg.getFieldAsInetAddress(base + 7);
+
+	}
+
+	/**
 	 * Create unconnected connection point information
 	 * 
 	 * @param localNodeId Local node id

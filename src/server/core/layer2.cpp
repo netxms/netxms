@@ -227,3 +227,125 @@ shared_ptr<NetObj> FindInterfaceConnectionPoint(const MacAddress& macAddr, int *
 
 	return cp;
 }
+
+/**
+ * Collects information about provided MAC addresses owner and connection point
+ */
+static MacAddressInfo* CollectMacAddressInfo(const MacAddress& macAddr)
+{
+   int type = CP_TYPE_UNKNOWN;
+   shared_ptr<NetObj> cp;
+   shared_ptr<Interface> localIf = FindInterfaceByMAC(macAddr);
+
+   if (localIf != nullptr && localIf->getPeerInterfaceId() != 0)
+   {
+      type = CP_TYPE_DIRECT;
+      cp = FindObjectById(localIf->getPeerInterfaceId());
+   }
+
+   if (cp == nullptr)
+      cp = FindInterfaceConnectionPoint(macAddr, &type);
+
+   return new MacAddressInfo(macAddr, localIf, cp, type);
+}
+
+/**
+ * Find MAC addresses that contains given pattern but no more than searchLimit
+ */
+static void FindMACsByPattern(const BYTE* macPattern, size_t macPatternSize, HashSet<MacAddress>* matchedMacs, int searchLimit)
+{
+   unique_ptr<SharedObjectArray<NetObj>> nodes = g_idxNodeById.getObjects();
+
+   for (int i = 0; i < nodes->size() && matchedMacs->size() < searchLimit; i++)
+   {
+      Node* node = static_cast<Node*>(nodes->get(i));
+
+      // Check node interfaces
+      InterfaceList* ifList = node->getInterfaceList();
+      for (int i = 0; i < ifList->size(); i++)
+         if (memmem(ifList->get(i)->macAddr, MAC_ADDR_LENGTH, macPattern, macPatternSize))
+            matchedMacs->put(MacAddress(ifList->get(i)->macAddr, MAC_ADDR_LENGTH));
+
+      // Check node forwarding database
+      shared_ptr<ForwardingDatabase> fdb = node->getSwitchForwardingDatabase();
+      if (fdb != nullptr)
+         fdb->findMacAddressByPattern(macPattern, macPatternSize, matchedMacs);
+
+      // Check node wireless connections
+      if (node->isWirelessController())
+      {
+         ObjectArray<WirelessStationInfo>* wsList = node->getWirelessStations();
+         if (wsList != nullptr)
+         {
+            for (int i = 0; i < wsList->size(); i++)
+            {
+               WirelessStationInfo* ws = wsList->get(i);
+               if (memmem(ws->macAddr, MAC_ADDR_LENGTH, macPattern, macPatternSize))
+                  matchedMacs->put(MacAddress(ws->macAddr, MAC_ADDR_LENGTH));
+            }
+            delete wsList;
+         }
+      }
+   }
+}
+
+/**
+ * Find all interface connection points whose MAC address contains given pattern
+ */
+void FindMacAddresses(const BYTE* macPattern, size_t macPatternSize, ObjectArray<MacAddressInfo>* out, int searchLimit)
+{
+   if (macPatternSize >= MAC_ADDR_LENGTH)
+   {
+      MacAddress mac(macPattern, macPatternSize);
+      out->add(CollectMacAddressInfo(mac));
+   }
+   else
+   {
+      HashSet<MacAddress> matchedMacs;
+      FindMACsByPattern(macPattern, macPatternSize, &matchedMacs, searchLimit);
+
+      for (const MacAddress* mac : matchedMacs)
+         out->add(CollectMacAddressInfo(*mac));
+   }
+}
+
+void MacAddressInfo::fillMessage(NXCPMessage* msg, uint32_t base) const
+{
+   // Allways present
+   msg->setField(base, m_macAddr);
+   msg->setField(base + 1, (UINT16)m_type);
+
+   // Where MAC is connected
+   if (m_connectionPoint != nullptr)
+   {
+      const shared_ptr<NetObj>& cp = m_connectionPoint;
+      shared_ptr<Node> node = (cp->getObjectClass() == OBJECT_INTERFACE) ? static_cast<Interface&>(*cp).getParentNode() : static_cast<AccessPoint&>(*cp).getParentNode();
+      if (node != nullptr)
+         msg->setField(base + 2, node->getId());
+      else
+         msg->setField(base + 2, 0);
+
+      msg->setField(base + 3, cp->getId());
+      msg->setField(base + 4, static_cast<Interface&>(*cp).getIfIndex());
+   }
+   else
+   {
+      msg->setField(base + 2, 0);
+      msg->setField(base + 3, 0);
+      msg->setField(base + 4, (uint32_t)0);
+   }
+
+   // MAC owner
+   if (m_owner != nullptr)
+   {
+      msg->setField(base + 5, m_owner->getParentNodeId());
+      msg->setField(base + 6, m_owner->getId());
+      msg->setField(base + 7, m_owner->getIpAddressList()->getFirstUnicastAddress());
+   }
+   else
+   {
+      msg->setField(base + 5, 0);
+      msg->setField(base + 6, 0);
+      msg->setField(base + 7, InetAddress::INVALID);
+   }
+}
