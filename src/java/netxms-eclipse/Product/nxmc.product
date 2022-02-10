@@ -166,15 +166,6 @@ Copyright (c) 2003-2021 Raden Solutions
       <plugin id="org.eclipse.core.filebuffers.nl_pt_BR" fragment="true"/>
       <plugin id="org.eclipse.core.filebuffers.nl_ru" fragment="true"/>
       <plugin id="org.eclipse.core.filesystem"/>
-      <plugin id="org.eclipse.core.filesystem.linux.aarch64.nl_ar" fragment="true"/>
-      <plugin id="org.eclipse.core.filesystem.linux.aarch64.nl_cs" fragment="true"/>
-      <plugin id="org.eclipse.core.filesystem.linux.aarch64.nl_de" fragment="true"/>
-      <plugin id="org.eclipse.core.filesystem.linux.aarch64.nl_es" fragment="true"/>
-      <plugin id="org.eclipse.core.filesystem.linux.aarch64.nl_fr" fragment="true"/>
-      <plugin id="org.eclipse.core.filesystem.linux.aarch64.nl_iw" fragment="true"/>
-      <plugin id="org.eclipse.core.filesystem.linux.aarch64.nl_pt" fragment="true"/>
-      <plugin id="org.eclipse.core.filesystem.linux.aarch64.nl_pt_BR" fragment="true"/>
-      <plugin id="org.eclipse.core.filesystem.linux.aarch64.nl_ru" fragment="true"/>
       <plugin id="org.eclipse.core.filesystem.linux.x86_64" fragment="true"/>
       <plugin id="org.eclipse.core.filesystem.linux.x86_64.nl_ar" fragment="true"/>
       <plugin id="org.eclipse.core.filesystem.linux.x86_64.nl_cs" fragment="true"/>
