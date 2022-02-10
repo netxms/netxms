@@ -1,6 +1,6 @@
 /*
 ** NetXMS Network Service check subagent
-** Copyright (C) 2013 Alex Kirhenshtein
+** Copyright (C) 2013-2022 Alex Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -20,6 +20,8 @@
 
 #ifndef __netsvc__h__
 
+#define DEBUG_TAG _T("netsvc")
+
 enum
 {
 	PC_ERR_NONE,
@@ -31,7 +33,7 @@ enum
 
 #define NETSVC_AF_VERIFYPEER 1
 
-extern UINT32 g_flags;
+extern uint32_t g_netsvcFlags;
 extern char g_certBundle[];
 
 #endif // __netsvc__h__
