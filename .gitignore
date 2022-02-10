@@ -107,6 +107,7 @@ target
 /packages/linux/debian/7/netxms-server-pgsql
 /packages/linux/debian/7/output
 /packages/osx/*.dmg
+/packages/osx/*jre*.zip
 /packages/osx/dist/
 /packages/osx/jre_1.8.0_151.tar.gz
 /packages/osx/out/
