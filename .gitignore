@@ -319,3 +319,6 @@ cmake-build-debug/
 
 # re-enable gradle wrapper
 !gradle-wrapper.jar
+
+.vscode
+.tool-versions
