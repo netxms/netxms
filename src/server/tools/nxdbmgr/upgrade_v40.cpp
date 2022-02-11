@@ -24,6 +24,16 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 40.97 to 40.98
+ */
+static bool H_UpgradeFromV97()
+{
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET var_name='ICMP.PingTimeout' WHERE var_name='ICMP.PingTmeout'")));
+   CHK_EXEC(SetMinorSchemaVersion(98));
+   return true;
+}
+
+/**
  * Upgrade from 40.96 to 40.97
  */
 static bool H_UpgradeFromV96()
@@ -3070,6 +3080,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 97, 40, 98, H_UpgradeFromV97 },
    { 96, 40, 97, H_UpgradeFromV96 },
    { 95, 40, 96, H_UpgradeFromV95 },
    { 94, 40, 95, H_UpgradeFromV94 },
