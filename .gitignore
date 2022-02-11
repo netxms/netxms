@@ -43,6 +43,8 @@ target
 .dirstamp
 .idea
 .vs
+.vscode
+.tool-versions
 
 /build/netxms-build-tag.h
 /build/netxms-build-tag.iss
@@ -319,6 +321,3 @@ cmake-build-debug/
 
 # re-enable gradle wrapper
 !gradle-wrapper.jar
-
-.vscode
-.tool-versions
