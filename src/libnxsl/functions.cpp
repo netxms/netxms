@@ -1745,17 +1745,19 @@ int F_GetThreadPoolNames(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_
 }
 
 /**
- * @param prefixSymbol must be 3 characters long
+ * Convert number to short form using decadic unit prefixes
  */
-static double ConvertNumber(double n, char* prefixSymbol)
+static double ConvertNumberDecadic(double n, char* prefixSymbol)
 {
    if (n == LONG_MIN)
    {
       strcpy(prefixSymbol, "E");
       return -9.223372036854775807;
    }
+
    if (n < 0)
-      return -ConvertNumber(-n, prefixSymbol);
+      return -ConvertNumberDecadic(-n, prefixSymbol);
+
    if (n < 1000)
    {
       prefixSymbol[0] = 0;
@@ -1794,12 +1796,13 @@ static double ConvertNumber(double n, char* prefixSymbol)
 }
 
 /**
- * @param prefixSymbol must be 3 characters long
+ * Convert number to short form using binary unit prefixes
  */
-static double ConvertNumberBinMul(double n, char* prefixSymbol)
+static double ConvertNumberBinary(double n, char* prefixSymbol)
 {
    if (n < 0)
-      return -ConvertNumberBinMul(-n, prefixSymbol);
+      return -ConvertNumberBinary(-n, prefixSymbol);
+
    if (n < 1024)
    {
       prefixSymbol[0] = 0;
@@ -1852,17 +1855,17 @@ int F_FormatMetricPrefix(int argc, NXSL_Value** argv, NXSL_Value** result, NXSL_
       return NXSL_ERR_NOT_INTEGER;
 
    double inVal = argv[0]->getValueAsReal();
-   bool useBinMul = (argc > 1) ? argv[1]->isTrue() : false;
+   bool useBinaryPrefixes = (argc > 1) ? argv[1]->isTrue() : false;
    uint32_t precision = (argc > 2) ? argv[2]->getValueAsUInt32() : 2;
 
    if (precision > 20)
       precision = 20;
 
    char prefixSymbol[3];
-   double outVal = useBinMul ? ConvertNumberBinMul(inVal, prefixSymbol) : ConvertNumber(inVal, prefixSymbol);
+   double outVal = useBinaryPrefixes ? ConvertNumberBinary(inVal, prefixSymbol) : ConvertNumberDecadic(inVal, prefixSymbol);
 
    char outStr[128];
-   snprintf(outStr, 128, "%.*f%s\n", precision, outVal, prefixSymbol);
+   snprintf(outStr, 128, "%.*f%s", precision, outVal, prefixSymbol);
 
    *result = vm->createValue(outStr);
    return NXSL_ERR_SUCCESS;
