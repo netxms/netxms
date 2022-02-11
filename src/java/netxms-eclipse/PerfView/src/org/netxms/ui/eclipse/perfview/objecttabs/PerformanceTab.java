@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -109,10 +109,10 @@ public class PerformanceTab extends ObjectTab
 		for(PerfTabGraph chart : charts.values())
 			chart.dispose();
 		charts.clear();
-		
+
 		if (object == null)
 		   return;
-		
+
 		if (waitingImage != null)
 			waitingImage.dispose();
 		waitingImage = new AnimatedImage(chartArea, SWT.NONE);
@@ -125,7 +125,7 @@ public class PerformanceTab extends ObjectTab
 		{
 		}
 		updateChartAreaLayout();
-		
+
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		Job job = new Job(Messages.get().PerformanceTab_JobName) {
 			@Override

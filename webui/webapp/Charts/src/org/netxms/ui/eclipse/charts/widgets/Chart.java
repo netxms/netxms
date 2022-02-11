@@ -768,7 +768,7 @@ public class Chart extends Composite
    /**
     * Fire registered double click listeners
     */
-   private void fireDoubleClickListeners()
+   protected void fireDoubleClickListeners()
    {
       for(IDoubleClickListener l : doubleClickListeners)
          l.doubleClick(null);
