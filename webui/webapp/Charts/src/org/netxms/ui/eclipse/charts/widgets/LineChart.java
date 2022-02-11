@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,6 +27,8 @@ import org.eclipse.jface.preference.PreferenceConverter;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
+import org.eclipse.swt.events.MouseMoveListener;
+import org.eclipse.swt.events.MouseTrackListener;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.graphics.Color;
@@ -113,7 +115,7 @@ public class LineChart extends org.swtchart.Chart implements PlotArea
 		DateFormat format = new SimpleDateFormat(Messages.get().LineChart_ShortTimeFormat);
 		xTick.setFormat(format);
 		xTick.setFont(Activator.getDefault().getChartFont());
-		
+
 		final IAxis yAxis = axisSet.getYAxis(0);
 		yAxis.getTitle().setVisible(false);
 		yAxis.getTick().setForeground(getColorFromPreferences("Chart.Axis.Y.Color")); //$NON-NLS-1$
@@ -171,6 +173,24 @@ public class LineChart extends org.swtchart.Chart implements PlotArea
 			});
 			*/
 		}
+
+      plotArea.addMouseListener(new MouseListener() {
+         @Override
+         public void mouseUp(MouseEvent e)
+         {
+         }
+
+         @Override
+         public void mouseDown(MouseEvent e)
+         {
+         }
+
+         @Override
+         public void mouseDoubleClick(MouseEvent e)
+         {
+            chart.fireDoubleClickListeners();
+         }
+      });
 
 		zoomMouseListener = new MouseListener() {
 			@Override
@@ -415,40 +435,40 @@ public class LineChart extends org.swtchart.Chart implements PlotArea
 		xTick.setTickLabelAngle(angle);
 	}
 
-	/**
-	 * Paint DCI thresholds
-	 */
-	private void paintThresholds(PaintEvent e, IAxis axis)
-	{
-		GC gc = e.gc;
-		Rectangle clientArea = getPlotArea().getClientArea();
-		NXCSession session = ConsoleSharedData.getSession();
+   /**
+     * Paint DCI thresholds
+    */
+   private void paintThresholds(PaintEvent e, IAxis axis)
+   {
+      GC gc = e.gc;
+      Rectangle clientArea = getPlotArea().getClientArea();
+      NXCSession session = ConsoleSharedData.getSession();
 
-		List<GraphItem> items = chart.getItems();
+      List<GraphItem> items = chart.getItems();
       for(int i = 0; i < items.size(); i++)
-		{
+      {
          Threshold[] tr = chart.getThreshold(i);
          if (items.get(i).isShowThresholds() && !configuration.isStacked() && tr != null)
-			{
+         {
             for (int j = 0; j < tr.length; j++)
             {
                try
                {
-      				int y = axis.getPixelCoordinate(Integer.parseInt(tr[j].getValue()));
+                  int y = axis.getPixelCoordinate(Integer.parseInt(tr[j].getValue()));
                   final EventTemplate event = (EventTemplate)session.findEventTemplateByCode(((Threshold)tr[j]).getFireEvent());
                   gc.setForeground(StatusDisplayInfo.getStatusColor(event.getSeverity()));
-      				//gc.setLineStyle(SWT.LINE_DOT);
-      				gc.setLineWidth(3);
-      				gc.drawLine(0, y, clientArea.width, y);
+                  gc.setLineStyle(SWT.LINE_DOT);
+                  gc.setLineWidth(3);
+                  gc.drawLine(0, y, clientArea.width, y);
                }
                catch (Exception ex)
                {
                   //Do nothing for String thresholds
                }
             }
-			}
-		}
-	}
+         }
+      }
+   }
 
    /**
     * @see org.netxms.ui.eclipse.charts.widgets.PlotArea#refresh()

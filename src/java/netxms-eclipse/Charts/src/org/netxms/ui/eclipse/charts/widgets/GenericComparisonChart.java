@@ -22,6 +22,8 @@ import org.eclipse.jface.preference.PreferenceConverter;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
+import org.eclipse.swt.events.MouseEvent;
+import org.eclipse.swt.events.MouseListener;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.graphics.Color;
@@ -50,6 +52,7 @@ public abstract class GenericComparisonChart extends Canvas implements PlotArea
       super(parent, SWT.DOUBLE_BUFFERED);
 
       chart = parent;
+
       addPaintListener(new PaintListener() {
          @Override
          public void paintControl(PaintEvent e)
@@ -57,11 +60,30 @@ public abstract class GenericComparisonChart extends Canvas implements PlotArea
             prepareGCAndRender(e.gc);
          }
       });
+
       addDisposeListener(new DisposeListener() {
          @Override
          public void widgetDisposed(DisposeEvent e)
          {
             disposeFonts();
+         }
+      });
+
+      addMouseListener(new MouseListener() {
+         @Override
+         public void mouseUp(MouseEvent e)
+         {
+         }
+
+         @Override
+         public void mouseDown(MouseEvent e)
+         {
+         }
+
+         @Override
+         public void mouseDoubleClick(MouseEvent e)
+         {
+            chart.fireDoubleClickListeners();
          }
       });
    }

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -74,7 +74,6 @@ import org.netxms.ui.eclipse.widgets.DashboardComposite;
 
 /**
  * Performance tab graph
- *
  */
 public class PerfTabGraph extends DashboardComposite implements HistoricalChartOwner
 {
@@ -92,7 +91,7 @@ public class PerfTabGraph extends DashboardComposite implements HistoricalChartO
    private Action actionAdjustBoth;
    private Action[] presetActions;
    private PerfTabGraphSettings settings;
-	
+
 	/**
 	 * @param parent
 	 * @param style
@@ -128,7 +127,7 @@ public class PerfTabGraph extends DashboardComposite implements HistoricalChartO
       final Date from = new Date(System.currentTimeMillis() - settings.getTimeRangeMillis());
       final Date to = new Date(System.currentTimeMillis());
       chart.setTimeRange(from, to);
-		
+
       GraphItem item = new GraphItem(nodeId, dci.getId(), DataOrigin.INTERNAL, DataType.INT32, "", settings.getRuntimeName(), "%s", settings.getType(), settings.getColorAsInt());
       item.setInverted(settings.isInvertedValues());
       item.setShowThresholds(settings.isShowThresholds());
@@ -142,7 +141,7 @@ public class PerfTabGraph extends DashboardComposite implements HistoricalChartO
                refreshController.dispose();
          }
       });
-		
+
       chart.addDoubleClickListener(new IDoubleClickListener() {
          @Override
          public void doubleClick(DoubleClickEvent event)
@@ -150,10 +149,10 @@ public class PerfTabGraph extends DashboardComposite implements HistoricalChartO
             openHistoryGraph();
          }
       });
-		
-		createActions();
-		createChartContextMenu();
-	}
+
+      createActions();
+      createChartContextMenu();
+   }
 
    /**
     * Create actions
