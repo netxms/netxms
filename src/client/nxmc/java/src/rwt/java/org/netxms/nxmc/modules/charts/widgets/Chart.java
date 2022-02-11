@@ -498,7 +498,7 @@ public class Chart extends Composite
       for (int i = 0; i < dataSeries.size(); i++)
          dataSeries.set(i, new DataSeries(0));
    }
-   
+
    /**
     * Set threshold configuraiton
     * 
@@ -752,7 +752,7 @@ public class Chart extends Composite
    /**
     * Fire registered double click listeners
     */
-   private void fireDoubleClickListeners()
+   protected void fireDoubleClickListeners()
    {
       for(IDoubleClickListener l : doubleClickListeners)
          l.doubleClick(null);

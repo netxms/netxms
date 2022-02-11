@@ -1,8 +1,25 @@
+/**
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2022 Raden Solutions
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
 package org.netxms.nxmc.base.dialogs;
 
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.viewers.StructuredViewer;
-import org.eclipse.jface.widgets.WidgetFactory;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
@@ -14,6 +31,9 @@ import org.eclipse.swt.widgets.Shell;
 import org.netxms.nxmc.base.views.AbstractViewerFilter;
 import org.netxms.nxmc.base.widgets.FilterText;
 
+/**
+ * Dialog with filter input capability
+ */
 public abstract class DialogWithFilter extends Dialog
 {
    private FilterText filterText;
@@ -25,8 +45,9 @@ public abstract class DialogWithFilter extends Dialog
       super(parentShell);
    }
 
-   
-   
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#createContents(org.eclipse.swt.widgets.Composite)
+    */
    @Override
    protected Control createContents(Composite parent)
    {
@@ -35,8 +56,9 @@ public abstract class DialogWithFilter extends Dialog
       layout.marginHeight = 0;
       layout.marginWidth = 0;
       layout.verticalSpacing = 0;
-      Composite composite = WidgetFactory.composite(0).layout(layout).layoutData(new GridData(GridData.FILL_BOTH))
-            .create(parent);
+      Composite composite = new Composite(parent, SWT.NONE);
+      composite.setLayout(layout);
+      composite.setLayoutData(new GridData(GridData.FILL_BOTH));
       applyDialogFont(composite);
       // initialize the dialog units
       initializeDialogUnits(composite);
@@ -54,10 +76,10 @@ public abstract class DialogWithFilter extends Dialog
             onFilterModify();
          }
       });    
-      
+
       dialogArea = createDialogArea(composite);
       dialogArea.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-      
+
       buttonBar = createButtonBar(composite);
       filterText.setFocus();
 

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -185,6 +185,24 @@ public class LineChart extends org.eclipse.swtchart.Chart implements PlotArea
 				}
 			});
 		}
+
+      plotArea.addMouseListener(new MouseListener() {
+         @Override
+         public void mouseUp(MouseEvent e)
+         {
+         }
+
+         @Override
+         public void mouseDown(MouseEvent e)
+         {
+         }
+
+         @Override
+         public void mouseDoubleClick(MouseEvent e)
+         {
+            chart.fireDoubleClickListeners();
+         }
+      });
 
 		zoomMouseListener = new MouseListener() {
 			@Override
@@ -427,11 +445,11 @@ public class LineChart extends org.eclipse.swtchart.Chart implements PlotArea
 		xTick.setTickLabelAngle(angle);
 	}
 
-	/**
-	 * Paint DCI thresholds
-	 */
-	private void paintThresholds(PaintEvent e, IAxis axis)
-	{      
+   /**
+     * Paint DCI thresholds
+    */
+   private void paintThresholds(PaintEvent e, IAxis axis)
+   {
       GC gc = e.gc;
       Rectangle clientArea = ((Composite)getPlotArea().getControl()).getClientArea();
       NXCSession session = Registry.getSession();
@@ -460,7 +478,7 @@ public class LineChart extends org.eclipse.swtchart.Chart implements PlotArea
             }
          }
       }
-	}
+   }
 
    /**
     * @see org.netxms.ui.eclipse.charts.widgets.PlotArea#refresh()

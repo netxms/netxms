@@ -7,6 +7,8 @@ import java.util.List;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
+import org.eclipse.swt.events.MouseEvent;
+import org.eclipse.swt.events.MouseListener;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.graphics.Color;
@@ -43,6 +45,7 @@ public class ChartLegend extends Composite
    private Label[][] dataLabels = new Label[ChartConfiguration.MAX_GRAPH_ITEM_COUNT][4];
    private Font headerFont = null;
    private boolean vertical;
+   private MouseListener mouseListener;
 
    /**
     * Create chart legend.
@@ -66,6 +69,24 @@ public class ChartLegend extends Composite
                headerFont.dispose();
          }
       });
+
+      mouseListener = new MouseListener() {
+         @Override
+         public void mouseUp(MouseEvent e)
+         {
+         }
+
+         @Override
+         public void mouseDown(MouseEvent e)
+         {
+         }
+
+         @Override
+         public void mouseDoubleClick(MouseEvent e)
+         {
+            chart.fireDoubleClickListeners();
+         }
+      };
 
       rebuild();
    }
@@ -203,6 +224,9 @@ public class ChartLegend extends Composite
             new LegendLabel(this, (color != -1) ? ColorConverter.rgbFromInt(color) : chart.getPaletteEntry(i).getRGBObject(), metrics.get(i).getDescription());
          }
       }
+
+      for(Control c : getChildren())
+         c.addMouseListener(mouseListener);
    }
 
    /**
