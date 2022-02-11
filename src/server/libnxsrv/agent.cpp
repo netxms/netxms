@@ -295,7 +295,7 @@ MessageReceiverResult AgentConnectionReceiver::readMessage(bool allowChannelRead
          debugPrintf(6, _T("Received control message %s from agent at %s"),
             NXCPMessageCodeName(msg->getCode(), buffer), connection->m_addr.toString().cstr());
       }
-      connection->m_pMsgWaitQueue->put(msg);
+      connection->m_messageWaitQueue.put(msg);
    }
    else
    {
@@ -309,7 +309,7 @@ MessageReceiverResult AgentConnectionReceiver::readMessage(bool allowChannelRead
       {
          case CMD_REQUEST_COMPLETED:
          case CMD_SESSION_KEY:
-            connection->m_pMsgWaitQueue->put(msg);
+            connection->m_messageWaitQueue.put(msg);
             break;
          case CMD_TRAP:
             if (g_agentConnectionThreadPool != nullptr)
@@ -432,7 +432,7 @@ MessageReceiverResult AgentConnectionReceiver::readMessage(bool allowChannelRead
             if (connection->processCustomMessage(msg))
                delete msg;
             else
-               connection->m_pMsgWaitQueue->put(msg);
+               connection->m_messageWaitQueue.put(msg);
             break;
       }
    }
@@ -502,7 +502,6 @@ AgentConnection::AgentConnection(const InetAddress& addr, uint16_t port, const T
    }
    m_allowCompression = allowCompression;
    m_tLastCommandTime = 0;
-   m_pMsgWaitQueue = new MsgWaitQueue;
    m_requestId = 0;
 	m_connectionTimeout = 5000;	// 5 seconds
    m_commandTimeout = 5000;   // Default timeout 5 seconds
@@ -530,6 +529,9 @@ AgentConnection::AgentConnection(const InetAddress& addr, uint16_t port, const T
    m_controlServer = false;
    m_masterServer = false;
    m_fileResumingEnabled = false;
+
+   TCHAR buffer[64];
+   debugPrintf(5, _T("New connection created (address=%s port=%u compression=%s)"), m_addr.toString(buffer), m_port, allowCompression ? _T("allowed") : _T("forbidden"));
 }
 
 /**
@@ -542,8 +544,6 @@ AgentConnection::~AgentConnection()
 
    if (m_receiver != nullptr)
       m_receiver->detach();
-
-   delete m_pMsgWaitQueue;
 
    if (m_hCurrFile != -1)
    {
@@ -789,7 +789,7 @@ setup_encryption:
 	   msg.flags = htons(MF_CONTROL | MF_NXCP_VERSION(NXCP_VERSION));
 	   if (m_channel->send(&msg, NXCP_HEADER_SIZE, m_mutexSocketWrite) == NXCP_HEADER_SIZE)
 	   {
-	      NXCPMessage *rsp = m_pMsgWaitQueue->waitForMessage(CMD_NXCP_CAPS, 0, m_commandTimeout);
+	      NXCPMessage *rsp = m_messageWaitQueue.waitForMessage(CMD_NXCP_CAPS, 0, m_commandTimeout);
 	      if (rsp != nullptr)
 	      {
 	         if (rsp->isControl())
@@ -1249,7 +1249,7 @@ uint32_t AgentConnection::setServerCapabilities()
    if (!sendMessage(&msg))
       return ERR_CONNECTION_BROKEN;
 
-   NXCPMessage *response = m_pMsgWaitQueue->waitForMessage(CMD_REQUEST_COMPLETED, requestId, m_commandTimeout);
+   NXCPMessage *response = m_messageWaitQueue.waitForMessage(CMD_REQUEST_COMPLETED, requestId, m_commandTimeout);
    if (response == nullptr)
       return ERR_REQUEST_TIMEOUT;
 
@@ -1298,7 +1298,7 @@ uint32_t AgentConnection::setServerId(uint64_t serverId)
 uint32_t AgentConnection::waitForRCC(uint32_t requestId, uint32_t timeout)
 {
    uint32_t rcc;
-   NXCPMessage *response = m_pMsgWaitQueue->waitForMessage(CMD_REQUEST_COMPLETED, requestId, timeout);
+   NXCPMessage *response = m_messageWaitQueue.waitForMessage(CMD_REQUEST_COMPLETED, requestId, timeout);
    if (response != nullptr)
    {
       rcc = response->getFieldAsUInt32(VID_RCC);
@@ -2251,64 +2251,60 @@ uint32_t AgentConnection::checkNetworkService(uint32_t *status, const InetAddres
 /**
  * Get list of supported parameters from agent
  */
-UINT32 AgentConnection::getSupportedParameters(ObjectArray<AgentParameterDefinition> **paramList, ObjectArray<AgentTableDefinition> **tableList)
+uint32_t AgentConnection::getSupportedParameters(ObjectArray<AgentParameterDefinition> **paramList, ObjectArray<AgentTableDefinition> **tableList)
 {
-   UINT32 dwRqId, dwResult;
-   NXCPMessage msg(m_nProtocolVersion), *pResponse;
-
    *paramList = nullptr;
 	*tableList = nullptr;
 
    if (!m_isConnected)
       return ERR_NOT_CONNECTED;
 
-   dwRqId = generateRequestId();
+   uint32_t requestId = generateRequestId();
+   NXCPMessage msg(CMD_GET_PARAMETER_LIST, requestId, m_nProtocolVersion);
 
-   msg.setCode(CMD_GET_PARAMETER_LIST);
-   msg.setId(dwRqId);
-
+   uint32_t rcc;
    if (sendMessage(&msg))
    {
-      pResponse = waitForMessage(CMD_REQUEST_COMPLETED, dwRqId, m_commandTimeout);
-      if (pResponse != nullptr)
+      NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, requestId, m_commandTimeout);
+      if (response != nullptr)
       {
-         dwResult = pResponse->getFieldAsUInt32(VID_RCC);
-			DbgPrintf(6, _T("AgentConnection::getSupportedParameters(): RCC=%d"), dwResult);
-         if (dwResult == ERR_SUCCESS)
+         rcc = response->getFieldAsUInt32(VID_RCC);
+			debugPrintf(6, _T("AgentConnection::getSupportedParameters(): RCC=%d"), rcc);
+         if (rcc == ERR_SUCCESS)
          {
-            uint32_t count = pResponse->getFieldAsUInt32(VID_NUM_PARAMETERS);
+            uint32_t count = response->getFieldAsUInt32(VID_NUM_PARAMETERS);
             ObjectArray<AgentParameterDefinition> *plist = new ObjectArray<AgentParameterDefinition>(count, 16, Ownership::True);
             for(uint32_t i = 0, id = VID_PARAM_LIST_BASE; i < count; i++)
             {
-               plist->add(new AgentParameterDefinition(pResponse, id));
+               plist->add(new AgentParameterDefinition(response, id));
                id += 3;
             }
 				*paramList = plist;
-				DbgPrintf(6, _T("AgentConnection::getSupportedParameters(): %d parameters received from agent"), count);
+				debugPrintf(6, _T("AgentConnection::getSupportedParameters(): %d parameters received from agent"), count);
 
-            count = pResponse->getFieldAsUInt32(VID_NUM_TABLES);
+            count = response->getFieldAsUInt32(VID_NUM_TABLES);
             ObjectArray<AgentTableDefinition> *tlist = new ObjectArray<AgentTableDefinition>(count, 16, Ownership::True);
             for(uint32_t i = 0, id = VID_TABLE_LIST_BASE; i < count; i++)
             {
-               tlist->add(new AgentTableDefinition(pResponse, id));
+               tlist->add(new AgentTableDefinition(response, id));
                id += 3;
             }
 				*tableList = tlist;
-				DbgPrintf(6, _T("AgentConnection::getSupportedParameters(): %d tables received from agent"), count);
+				debugPrintf(6, _T("AgentConnection::getSupportedParameters(): %d tables received from agent"), count);
 			}
-         delete pResponse;
+         delete response;
       }
       else
       {
-         dwResult = ERR_REQUEST_TIMEOUT;
+         rcc = ERR_REQUEST_TIMEOUT;
       }
    }
    else
    {
-      dwResult = ERR_CONNECTION_BROKEN;
+      rcc = ERR_CONNECTION_BROKEN;
    }
 
-   return dwResult;
+   return rcc;
 }
 
 /**
@@ -2558,6 +2554,9 @@ void AgentConnection::setProxy(const InetAddress& addr, uint16_t port, const TCH
       m_proxySecret[0] = 0;
    }
    m_useProxy = true;
+
+   TCHAR buffer[64];
+   debugPrintf(5, _T("New proxy settings: address=%s port=%u"), addr.toString(buffer), port);
 }
 
 /**
@@ -2581,18 +2580,12 @@ uint32_t AgentConnection::setupProxyConnection()
 /**
  * Enable trap receiving on connection
  */
-UINT32 AgentConnection::enableTraps()
+uint32_t AgentConnection::enableTraps()
 {
-   NXCPMessage msg(m_nProtocolVersion);
-   UINT32 dwRqId;
-
-   dwRqId = generateRequestId();
-   msg.setCode(CMD_ENABLE_AGENT_TRAPS);
-   msg.setId(dwRqId);
-   if (sendMessage(&msg))
-      return waitForRCC(dwRqId, m_commandTimeout);
-   else
+   NXCPMessage request(CMD_ENABLE_AGENT_TRAPS, generateRequestId(), m_nProtocolVersion);
+   if (!sendMessage(&request))
       return ERR_CONNECTION_BROKEN;
+   return waitForRCC(request.getId(), m_commandTimeout);
 }
 
 /**
@@ -2600,16 +2593,11 @@ UINT32 AgentConnection::enableTraps()
  */
 uint32_t AgentConnection::enableFileUpdates()
 {
-   NXCPMessage msg(m_nProtocolVersion);
-   UINT32 dwRqId;
-
-   dwRqId = generateRequestId();
-   msg.setCode(CMD_ENABLE_FILE_UPDATES);
-   msg.setId(dwRqId);
-   if (!sendMessage(&msg))
+   NXCPMessage request(CMD_ENABLE_FILE_UPDATES, generateRequestId(), m_nProtocolVersion);
+   if (!sendMessage(&request))
       return ERR_CONNECTION_BROKEN;
 
-   uint32_t rcc = waitForRCC(dwRqId, m_commandTimeout);
+   uint32_t rcc = waitForRCC(request.getId(), m_commandTimeout);
    if (rcc == ERR_SUCCESS)
       m_fileUpdateConnection = true;
    return rcc;
@@ -2618,21 +2606,16 @@ uint32_t AgentConnection::enableFileUpdates()
 /**
  * Take screenshot from remote system
  */
-UINT32 AgentConnection::takeScreenshot(const TCHAR *sessionName, BYTE **data, size_t *size)
+uint32_t AgentConnection::takeScreenshot(const TCHAR *sessionName, BYTE **data, size_t *size)
 {
-   NXCPMessage msg(m_nProtocolVersion);
-   UINT32 dwRqId;
-
-   dwRqId = generateRequestId();
-   msg.setCode(CMD_TAKE_SCREENSHOT);
-   msg.setId(dwRqId);
-   msg.setField(VID_NAME, sessionName);
-   if (sendMessage(&msg))
+   NXCPMessage request(CMD_TAKE_SCREENSHOT, generateRequestId(), m_nProtocolVersion);
+   request.setField(VID_NAME, sessionName);
+   if (sendMessage(&request))
    {
-      NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, dwRqId, m_commandTimeout);
+      NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, request.getId(), m_commandTimeout);
       if (response != nullptr)
       {
-         UINT32 rcc = response->getFieldAsUInt32(VID_RCC);
+         uint32_t rcc = response->getFieldAsUInt32(VID_RCC);
          if (rcc == ERR_SUCCESS)
          {
             const BYTE *p = response->getBinaryFieldPtr(VID_FILE_DATA, size);
@@ -2920,18 +2903,15 @@ void AgentConnection::onFileDownload(bool success)
 /**
  * Enable trap receiving on connection
  */
-UINT32 AgentConnection::getPolicyInventory(AgentPolicyInfo **info)
+uint32_t AgentConnection::getPolicyInventory(AgentPolicyInfo **info)
 {
-   NXCPMessage msg(m_nProtocolVersion);
+   NXCPMessage request(CMD_GET_POLICY_INVENTORY, generateRequestId(), m_nProtocolVersion);
 
 	*info = nullptr;
-   uint32_t requestId = generateRequestId();
-   msg.setCode(CMD_GET_POLICY_INVENTORY);
-   msg.setId(requestId);
    uint32_t rcc;
-   if (sendMessage(&msg))
+   if (sendMessage(&request))
 	{
-		NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, requestId, m_commandTimeout);
+		NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, request.getId(), m_commandTimeout);
 		if (response != nullptr)
 		{
 			rcc = response->getFieldAsUInt32(VID_RCC);
@@ -2954,24 +2934,13 @@ UINT32 AgentConnection::getPolicyInventory(AgentPolicyInfo **info)
 /**
  * Uninstall policy by GUID
  */
-UINT32 AgentConnection::uninstallPolicy(const uuid& guid)
+uint32_t AgentConnection::uninstallPolicy(const uuid& guid)
 {
-	UINT32 rqId, rcc;
-	NXCPMessage msg(m_nProtocolVersion);
-
-   rqId = generateRequestId();
-   msg.setId(rqId);
-	msg.setCode(CMD_UNINSTALL_AGENT_POLICY);
-	msg.setField(VID_GUID, guid);
-	if (sendMessage(&msg))
-	{
-		rcc = waitForRCC(rqId, m_commandTimeout);
-	}
-	else
-	{
-		rcc = ERR_CONNECTION_BROKEN;
-	}
-   return rcc;
+	NXCPMessage request(CMD_UNINSTALL_AGENT_POLICY, generateRequestId(), m_nProtocolVersion);
+	request.setField(VID_GUID, guid);
+	if (!sendMessage(&request))
+	   return ERR_CONNECTION_BROKEN;
+	return waitForRCC(request.getId(), m_commandTimeout);
 }
 
 /**
@@ -3042,14 +3011,14 @@ void AgentConnection::getSshKeys(NXCPMessage *request, NXCPMessage *response)
 /**
  * Setup TCP proxy
  */
-UINT32 AgentConnection::setupTcpProxy(const InetAddress& ipAddr, UINT16 port, UINT32 *channelId)
+uint32_t AgentConnection::setupTcpProxy(const InetAddress& ipAddr, uint16_t port, uint32_t *channelId)
 {
-   UINT32 requestId = generateRequestId();
+   uint32_t requestId = generateRequestId();
    NXCPMessage msg(CMD_SETUP_TCP_PROXY, requestId, m_nProtocolVersion);
    msg.setField(VID_IP_ADDRESS, ipAddr);
    msg.setField(VID_PORT, port);
 
-   UINT32 rcc;
+   uint32_t rcc;
    if (sendMessage(&msg))
    {
       NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, requestId, m_commandTimeout);
@@ -3077,12 +3046,12 @@ UINT32 AgentConnection::setupTcpProxy(const InetAddress& ipAddr, UINT16 port, UI
 /**
  * Close TCP proxy
  */
-UINT32 AgentConnection::closeTcpProxy(UINT32 channelId)
+uint32_t AgentConnection::closeTcpProxy(uint32_t channelId)
 {
-   UINT32 requestId = generateRequestId();
+   uint32_t requestId = generateRequestId();
    NXCPMessage msg(CMD_CLOSE_TCP_PROXY, requestId, m_nProtocolVersion);
    msg.setField(VID_CHANNEL_ID, channelId);
-   UINT32 rcc;
+   uint32_t rcc;
    if (sendMessage(&msg))
    {
       NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, requestId, m_commandTimeout);
