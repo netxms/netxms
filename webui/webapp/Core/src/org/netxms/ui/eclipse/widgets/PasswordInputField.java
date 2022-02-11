@@ -55,8 +55,8 @@ public class PasswordInputField extends LabeledControl
    /**
     * Create new password input field.
     *
-    * @param parent
-    * @param style
+    * @param parent parent composite
+    * @param style control style
     */
    public PasswordInputField(Composite parent, int style)
    {
@@ -69,7 +69,7 @@ public class PasswordInputField extends LabeledControl
    @Override
    protected Control createControl(int controlStyle, Object parameters)
    {
-      boolean showCopyOption = (Boolean)parameters;
+      boolean showCopyOption = (parameters != null) ? (Boolean)parameters : false;
 
       composite = new Composite(this, SWT.NONE);
       GridLayout layout = new GridLayout();
