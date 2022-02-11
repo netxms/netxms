@@ -4,7 +4,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.netxms.nxmc</groupId>
   <artifactId>org.netxms.ui.base</artifactId>
-  <version>3.9.0</version>
+  <version>3.10.0</version>
   <packaging>eclipse-plugin</packaging>
   <build>
     <plugins>
@@ -22,13 +22,13 @@
      <id>console</id>
      <repositories>
         <repository>
-            <id>eclipse-2021-09-updates</id>
-            <url>http://download.eclipse.org/eclipse/updates/4.21</url>
+            <id>eclipse-2021-12-updates</id>
+            <url>http://download.eclipse.org/eclipse/updates/4.22</url>
             <layout>p2</layout>
         </repository>
         <repository>
-            <id>eclipse-2021-09</id>
-            <url>http://download.eclipse.org/releases/2021-09</url>
+            <id>eclipse-2021-12</id>
+            <url>http://download.eclipse.org/releases/2021-12</url>
             <layout>p2</layout>
         </repository>
      </repositories>
