@@ -437,14 +437,22 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
                   level = 0;
                nxlog_set_debug_level(level);
                ConsolePrintf(pCtx, (level == 0) ? _T("Debug mode turned off\n") : _T("Debug level set to %d\n"), level);
+               nxlog_write_tag(NXLOG_INFO, _T("logger"), _T("Default debug level set to %d"), level);
             }
             else if (list->size() == 2)
             {
-               nxlog_set_debug_level_tag(list->get(0), level);
+               const TCHAR *tag = list->get(0);
+               nxlog_set_debug_level_tag(tag, level);
                if (level == -1)
-                  ConsolePrintf(pCtx,  _T("Debug level for tag \"%s\" set to default\n"), list->get(0));
+               {
+                  ConsolePrintf(pCtx,  _T("Debug level for tag \"%s\" set to default\n"), tag);
+                  nxlog_write_tag(NXLOG_INFO, _T("logger"), _T("Debug level for tag \"%s\" set to default"), tag);
+               }
                else
-                  ConsolePrintf(pCtx,  _T("Debug level for tag \"%s\" set to %d\n"), list->get(0), level);
+               {
+                  ConsolePrintf(pCtx,  _T("Debug level for tag \"%s\" set to %d\n"), tag, level);
+                  nxlog_write_tag(NXLOG_INFO, _T("logger"), _T("Debug level for tag \"%s\" set to %d"), tag, level);
+               }
             }
          }
          else

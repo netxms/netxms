@@ -346,6 +346,7 @@ void NotificationChannel::workerThread()
          bool success = m_driver->send(notification->getRecipient(), notification->getSubject(), notification->getBody());
          if (success)
          {
+            nxlog_debug_tag(DEBUG_TAG, 5, _T("Message to \"%s\" successfully sent via channel %s"), notification->getRecipient(), m_name);
             clearError();
          }
          else
@@ -445,12 +446,12 @@ void NotificationChannel::update(const TCHAR *description, const TCHAR *driverNa
             }
             else
             {
-               nxlog_debug_tag(DEBUG_TAG, 1, _T("Cannot create driver instance for channel %s using configuration %hs"), m_name, config);
+               nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Cannot create driver instance for channel %s using configuration %hs"), m_name, config);
             }
          }
          else
          {
-            nxlog_debug_tag(DEBUG_TAG, 1, _T("Cannot parse driver configuration for channel %s (original configuration: %hs)"), m_name, config);
+            nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Cannot parse driver configuration for channel %s (original configuration: %hs)"), m_name, config);
          }
       }
 
@@ -603,7 +604,7 @@ static shared_ptr<NotificationChannel> CreateNotificationChannel(const TCHAR *na
          {
             errorMessage.append(_T("Unable to create instance of driver "));
             errorMessage.append(driverName);
-            nxlog_debug_tag(DEBUG_TAG, 1, _T("Unable to create instance of driver %s"), driverName);
+            nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Unable to create instance of driver %s"), driverName);
             nxlog_debug_tag(DEBUG_TAG, 1, _T("   Configuration: %hs"), configuration);
          }
       }
@@ -611,7 +612,7 @@ static shared_ptr<NotificationChannel> CreateNotificationChannel(const TCHAR *na
       {
          errorMessage.append(_T("Cannot parse configuration for channel "));
          errorMessage.append(name);
-         nxlog_debug_tag(DEBUG_TAG, 1, _T("Cannot parse configuration for channel %s"), name);
+         nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Cannot parse configuration for channel %s"), name);
          nxlog_debug_tag(DEBUG_TAG, 1, _T("   Configuration: %hs"), configuration);
       }
    }
@@ -619,7 +620,7 @@ static shared_ptr<NotificationChannel> CreateNotificationChannel(const TCHAR *na
    {
       errorMessage.append(_T("Cannot find driver "));
       errorMessage.append(driverName);
-      nxlog_debug_tag(DEBUG_TAG, 1, _T("Cannot find driver %s"), driverName);
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Cannot find notification channel driver %s"), driverName);
    }
 
    return make_shared<NotificationChannel>(driver, storageManager, name, description, driverName, configuration, confTemplate, errorMessage);
@@ -787,6 +788,7 @@ void SendNotification(const TCHAR *name, TCHAR *recipient, const TCHAR *subject,
             if (next != nullptr)
                *next = 0;
             Trim(curr);
+            nxlog_debug_tag(DEBUG_TAG, 5, _T("SendNotification: sending message to \"%s\" via channel \"%s\""), curr, name);
             nc->send(curr, subject, message);
             curr = next + 1;
          } while(next != nullptr);
@@ -798,7 +800,7 @@ void SendNotification(const TCHAR *name, TCHAR *recipient, const TCHAR *subject,
    }
    else
    {
-      nxlog_debug_tag(DEBUG_TAG, 1, _T("Notification channel \"%s\" not found"), name);
+      nxlog_debug_tag(DEBUG_TAG, 1, _T("SendNotification: notification channel \"%s\" not found"), name);
    }
    s_channelListLock.unlock();
 }
@@ -839,20 +841,20 @@ static void LoadDriver(const TCHAR *file)
          }
          else
          {
-            nxlog_debug_tag(DEBUG_TAG, 1, _T("Notification channel driver \"%s\" cannot be loaded because of API version mismatch (driver: %d; server: %d)"),
+            nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Notification channel driver \"%s\" cannot be loaded because of API version mismatch (driver: %d; server: %d)"),
                      file, *apiVersion, NCDRV_API_VERSION);
             DLClose(hModule);
          }
       }
       else
       {
-         nxlog_debug_tag(DEBUG_TAG, 1, _T("Unable to find entry point in notification channel driver \"%s\""), file);
+         nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Unable to find entry point in notification channel driver \"%s\""), file);
          DLClose(hModule);
       }
    }
    else
    {
-      nxlog_debug_tag(DEBUG_TAG, 1, _T("Unable to load module \"%s\" (%s)"), file, errorText);
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Unable to load module \"%s\" (%s)"), file, errorText);
    }
 }
 

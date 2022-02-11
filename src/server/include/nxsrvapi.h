@@ -876,7 +876,7 @@ private:
    uint32_t m_commandTimeout;
    uint32_t m_connectionTimeout;
 	uint32_t m_recvTimeout;
-   MsgWaitQueue *m_pMsgWaitQueue;
+   MsgWaitQueue m_messageWaitQueue;
    bool m_isConnected;
    Mutex m_mutexDataLock;
    Mutex m_mutexSocketWrite;
@@ -972,7 +972,7 @@ public:
    void postMessage(NXCPMessage *msg);
    bool sendRawMessage(NXCP_MESSAGE *msg);
    void postRawMessage(NXCP_MESSAGE *msg);
-   NXCPMessage *waitForMessage(uint16_t code, uint32_t id, uint32_t timeout) { return m_pMsgWaitQueue->waitForMessage(code, id, timeout); }
+   NXCPMessage *waitForMessage(uint16_t code, uint32_t id, uint32_t timeout) { return m_messageWaitQueue.waitForMessage(code, id, timeout); }
    uint32_t waitForRCC(uint32_t requestId, uint32_t timeout);
 
    shared_ptr<ArpCache> getArpCache();
@@ -1009,17 +1009,17 @@ public:
    uint32_t installPackage(const TCHAR *pkgName, const TCHAR *pkgType, const TCHAR *command);
    uint32_t checkNetworkService(uint32_t *status, const InetAddress& addr, int serviceType, uint16_t port = 0, uint16_t proto = 0,
             const TCHAR *serviceRequest = nullptr, const TCHAR *serviceResponse = nullptr, uint32_t *responseTime = nullptr);
-   UINT32 getSupportedParameters(ObjectArray<AgentParameterDefinition> **paramList, ObjectArray<AgentTableDefinition> **tableList);
+   uint32_t getSupportedParameters(ObjectArray<AgentParameterDefinition> **paramList, ObjectArray<AgentTableDefinition> **tableList);
    uint32_t readConfigFile(TCHAR **content, size_t *size);
    uint32_t writeConfigFile(const TCHAR *content);
-   UINT32 enableTraps();
+   uint32_t enableTraps();
    uint32_t enableFileUpdates();
-	UINT32 getPolicyInventory(AgentPolicyInfo **info);
-	UINT32 uninstallPolicy(const uuid& guid);
-   UINT32 takeScreenshot(const TCHAR *sessionName, BYTE **data, size_t *size);
+   uint32_t getPolicyInventory(AgentPolicyInfo **info);
+   uint32_t uninstallPolicy(const uuid& guid);
+   uint32_t takeScreenshot(const TCHAR *sessionName, BYTE **data, size_t *size);
    TCHAR *getHostByAddr(const InetAddress& ipAddr, TCHAR *buffer, size_t bufLen);
-   UINT32 setupTcpProxy(const InetAddress& ipAddr, UINT16 port, UINT32 *channelId);
-   UINT32 closeTcpProxy(UINT32 channelId);
+   uint32_t setupTcpProxy(const InetAddress& ipAddr, uint16_t port, uint32_t *channelId);
+   uint32_t closeTcpProxy(uint32_t channelId);
 
    uint32_t generateRequestId() { return (uint32_t)InterlockedIncrement(&m_requestId); }
 	NXCPMessage *customRequest(NXCPMessage *request, const TCHAR *recvFile = nullptr, bool append = false,
