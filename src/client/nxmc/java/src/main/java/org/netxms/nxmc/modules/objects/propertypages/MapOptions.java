@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -201,7 +201,7 @@ public class MapOptions extends ObjectPropertyPage
 		gd = new GridData();
 		gd.horizontalIndent = 20;
 		linkColor.getButton().setLayoutData(gd);
-		
+
 		/**** topology options ****/
       if (map.getMapType() != NetworkMap.TYPE_CUSTOM)
       {
@@ -215,14 +215,14 @@ public class MapOptions extends ObjectPropertyPage
 	      layout = new GridLayout();
 	      topoGroup.setLayout(layout);
 
-	      checkIncludeEndNodes = new Button(topoGroup, SWT.CHECK);
-	      checkIncludeEndNodes.setText(i18n.tr("Include &end nodes"));
+         checkIncludeEndNodes = new Button(topoGroup, SWT.CHECK);
+         checkIncludeEndNodes.setText(i18n.tr("Include &end nodes"));
          checkIncludeEndNodes.setSelection((map.getFlags() & NetworkMap.MF_SHOW_END_NODES) != 0);
-         
+
          checkUseL1Topology = new Button(topoGroup, SWT.CHECK);
-         checkUseL1Topology.setText(i18n.tr("Use physical links for topology investigation"));
+         checkUseL1Topology.setText(i18n.tr("Use &physical link information"));
          checkUseL1Topology.setSelection((map.getFlags() & NetworkMap.MF_USE_L1_TOPOLOGY) != 0);
-	      
+
 	      checkCustomRadius = new Button(topoGroup, SWT.CHECK);
 	      checkCustomRadius.setText(i18n.tr("Custom discovery &radius"));
          checkCustomRadius.setSelection(map.getDiscoveryRadius() > 0);
@@ -239,7 +239,7 @@ public class MapOptions extends ObjectPropertyPage
 					widgetSelected(e);
 				}
 			});
-	      
+
 	      topologyRadius = WidgetHelper.createLabeledSpinner(topoGroup, SWT.BORDER, i18n.tr("Topology discovery radius"), 1, 255, WidgetHelper.DEFAULT_LAYOUT_DATA);
          topologyRadius.setSelection(map.getDiscoveryRadius());
          topologyRadius.setEnabled(map.getDiscoveryRadius() > 0);

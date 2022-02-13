@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -91,7 +91,7 @@ public class MapOptions extends PropertyPage
       objectDisplayGroup.setLayoutData(gd);
       layout = new GridLayout();
       objectDisplayGroup.setLayout(layout);
-      
+
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
@@ -102,7 +102,7 @@ public class MapOptions extends PropertyPage
       objectDisplayMode.add(Messages.get().MapOptions_StatusIcons);
       objectDisplayMode.add("Floor plan");
       objectDisplayMode.select(object.getObjectDisplayMode().getValue());
-      
+
       checkShowStatusIcon = new Button(objectDisplayGroup, SWT.CHECK);
       checkShowStatusIcon.setText(Messages.get().MapOptions_ShowStatusIcon);
       checkShowStatusIcon.setSelection((object.getFlags() & NetworkMap.MF_SHOW_STATUS_ICON) != 0);
@@ -171,7 +171,7 @@ public class MapOptions extends PropertyPage
 		gd = new GridData();
 		gd.horizontalIndent = 20;
 		linkColor.getButton().setLayoutData(gd);
-		
+
 		/**** topology options ****/
       if (object.getMapType() != NetworkMap.TYPE_CUSTOM)
       {
@@ -185,14 +185,14 @@ public class MapOptions extends PropertyPage
 	      layout = new GridLayout();
 	      topoGroup.setLayout(layout);
 
-	      checkIncludeEndNodes = new Button(topoGroup, SWT.CHECK);
-	      checkIncludeEndNodes.setText(Messages.get().MapOptions_IncludeEndNodes);
-	      checkIncludeEndNodes.setSelection((object.getFlags() & NetworkMap.MF_SHOW_END_NODES) != 0);
-	      
-	      checkUseL1Topology = new Button(topoGroup, SWT.CHECK);
-	      checkUseL1Topology.setText("Use physical links for topology investigation");
-	      checkUseL1Topology.setSelection((object.getFlags() & NetworkMap.MF_USE_L1_TOPOLOGY) != 0);
-	      
+         checkIncludeEndNodes = new Button(topoGroup, SWT.CHECK);
+         checkIncludeEndNodes.setText(Messages.get().MapOptions_IncludeEndNodes);
+         checkIncludeEndNodes.setSelection((object.getFlags() & NetworkMap.MF_SHOW_END_NODES) != 0);
+
+         checkUseL1Topology = new Button(topoGroup, SWT.CHECK);
+         checkUseL1Topology.setText("Use &physical link information");
+         checkUseL1Topology.setSelection((object.getFlags() & NetworkMap.MF_USE_L1_TOPOLOGY) != 0);
+
 	      checkCustomRadius = new Button(topoGroup, SWT.CHECK);
 	      checkCustomRadius.setText(Messages.get().MapOptions_CustomDiscoRadius);
 	      checkCustomRadius.setSelection(object.getDiscoveryRadius() > 0);
@@ -209,7 +209,7 @@ public class MapOptions extends PropertyPage
 					widgetSelected(e);
 				}
 			});
-	      
+
 	      topologyRadius = WidgetHelper.createLabeledSpinner(topoGroup, SWT.BORDER, Messages.get().MapOptions_TopoDiscoRadius, 1, 255, WidgetHelper.DEFAULT_LAYOUT_DATA);
 	      topologyRadius.setSelection(object.getDiscoveryRadius());
 	      topologyRadius.setEnabled(object.getDiscoveryRadius() > 0);
@@ -282,7 +282,7 @@ public class MapOptions extends PropertyPage
 		if (isApply)
 			setValid(false);
 
-		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+		final NXCSession session = ConsoleSharedData.getSession();
 		new ConsoleJob(Messages.get().MapOptions_JobTitle + object.getObjectName(), null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
