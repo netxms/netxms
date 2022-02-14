@@ -37,6 +37,7 @@ import org.netxms.websvc.handlers.NotificationHandler;
 import org.netxms.websvc.handlers.ObjectToolOutputHandler;
 import org.netxms.websvc.handlers.ObjectTools;
 import org.netxms.websvc.handlers.Objects;
+import org.netxms.websvc.handlers.PersistentStorage;
 import org.netxms.websvc.handlers.PredefinedGraphs;
 import org.netxms.websvc.handlers.PushDataHandler;
 import org.netxms.websvc.handlers.RootHandler;
@@ -117,6 +118,8 @@ public class WebSvcApplication extends Application
       router.attach("/users", Users.class);
       router.attach("/users/{id}", Users.class);
       router.attach("/users/{id}/password", UserPassword.class);
+      router.attach("/persistentstorage", PersistentStorage.class);
+      router.attach("/persistentstorage/{id}", PersistentStorage.class);
       return router;
    }
 }
