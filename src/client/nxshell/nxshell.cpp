@@ -138,6 +138,9 @@ static int StartApp(int argc, char *argv[])
       err = StartJavaApplication(env, "org/netxms/Shell", argc, argv);
       if (err != NXJAVA_SUCCESS)
       {
+#ifdef _WIN32
+         _setmode(_fileno(stdout), _O_U16TEXT);
+#endif
          _tprintf(_T("Cannot start Java application (%s)\n"), GetJavaBridgeErrorMessage(err));
          rc = 4;
       }
@@ -223,9 +226,15 @@ static void ShowUsage(bool showVersion)
  */
 static void DebugWriter(const TCHAR *tag, const TCHAR *format, va_list args)
 {
+#ifdef _WIN32
+   int mode = _setmode(_fileno(stdout), _O_U16TEXT);
+#endif
    _tprintf(_T("[%-19s] "), (tag != nullptr) ? tag : _T("nxshell"));
    _vtprintf(format, args);
    _fputtc(_T('\n'), stdout);
+#ifdef _WIN32
+   _setmode(_fileno(stdout), mode);
+#endif
 }
 
 /**

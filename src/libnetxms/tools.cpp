@@ -3460,6 +3460,16 @@ void LIBNETXMS_EXPORTABLE GetNetXMSDirectory(nxDirectoryType type, TCHAR *dir)
       }
    }
 
+   if (!found)
+   {
+      if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T("Software\\NetXMS\\Client"), 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
+      {
+         DWORD size = MAX_PATH * sizeof(TCHAR);
+         found = (RegQueryValueEx(hKey, _T("InstallPath"), NULL, NULL, (BYTE *)installPath, &size) == ERROR_SUCCESS);
+         RegCloseKey(hKey);
+      }
+   }
+
    if (!found && (GetModuleFileName(nullptr, installPath, MAX_PATH) > 0))
    {
       TCHAR *p = _tcsrchr(installPath, _T('\\'));

@@ -33,6 +33,11 @@ Name: "nxshell"; Description: "NetXMS Python Scripting (nxshell)"; Types: full c
 Name: "cmdline"; Description: "Command Line Tools"; Types: full
 Name: "jre"; Description: "Java Runtime Environment"; Types: full
 
+[Registry]
+Root: HKLM; Subkey: "Software\NetXMS"; Flags: uninsdeletekeyifempty
+Root: HKLM; Subkey: "Software\NetXMS\Client"; Flags: uninsdeletekey
+Root: HKLM; Subkey: "Software\NetXMS\Client"; ValueType: string; ValueName: "InstallPath"; ValueData: "{app}"
+
 [Files]
 ; Common files
 Source: "..\..\..\x64\Release\jansson.dll"; DestDir: "{app}"; Flags: ignoreversion signonce
