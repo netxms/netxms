@@ -66,7 +66,7 @@ public class ResponseContainer
       StringBuilder sb = new StringBuilder("{ \"");
       sb.append(name);
       sb.append("\":");
-      sb.append(JsonTools.jsonFromObject(value, fields));
+      sb.append((value != null) ? JsonTools.jsonFromObject(value, fields) : "null");
       sb.append(" }");
       return sb.toString();
    }
