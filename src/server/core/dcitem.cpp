@@ -150,7 +150,7 @@ DCItem::DCItem(DB_HANDLE hdb, DB_RESULT hResult, int row, const shared_ptr<DataC
 		   TCHAR szBuffer[MAX_DB_STRING];
          m_prevRawValue = DBGetField(hTempResult, 0, 0, szBuffer, MAX_DB_STRING);
          m_tPrevValueTimeStamp = DBGetFieldULong(hTempResult, 0, 1);
-         m_lastPoll = m_tPrevValueTimeStamp;
+         m_lastPoll = m_lastValueTimestamp = m_tPrevValueTimeStamp;
       }
       DBFreeResult(hTempResult);
    }
@@ -755,12 +755,13 @@ bool DCItem::processNewValue(time_t tmTimeStamp, const TCHAR *originalValue, boo
       delete m_ppValueCache[m_cacheSize - 1];
       memmove(&m_ppValueCache[1], m_ppValueCache, sizeof(ItemValue *) * (m_cacheSize - 1));
       m_ppValueCache[0] = pValue;
+      m_lastValueTimestamp = tmTimeStamp;
    }
    else if (!m_bCacheLoaded && (m_requiredCacheSize == 1))
    {
       // If required cache size is 1 and we got value before cache loader
       // loads DCI cache then update it directly
-      for(UINT32 i = 0; i < m_cacheSize; i++)
+      for(uint32_t i = 0; i < m_cacheSize; i++)
          delete m_ppValueCache[i];
 
       if (m_cacheSize != m_requiredCacheSize)
@@ -771,6 +772,7 @@ bool DCItem::processNewValue(time_t tmTimeStamp, const TCHAR *originalValue, boo
 
       m_ppValueCache[0] = pValue;
       m_bCacheLoaded = true;
+      m_lastValueTimestamp = tmTimeStamp;
    }
    else
    {
@@ -1091,7 +1093,7 @@ void DCItem::changeBinding(UINT32 newId, shared_ptr<DataCollectionOwner> newOwne
 
 /**
  * Update required cache size depending on thresholds
- * dwCondId is an identifier of calling condition object id. If it is not 0,
+ * conditionId is an identifier of calling condition object id. If it is not 0,
  * GetCacheSizeForDCI should be called with bNoLock == TRUE for appropriate
  * condition object
  */
@@ -1144,7 +1146,7 @@ void DCItem::updateCacheSizeInternal(bool allowLoad, uint32_t conditionId)
       // Destroy unneeded values
       if (m_cacheSize > 0)
 		{
-         for(UINT32 i = m_requiredCacheSize; i < m_cacheSize; i++)
+         for(uint32_t i = m_requiredCacheSize; i < m_cacheSize; i++)
             delete m_ppValueCache[i];
 		}
 
@@ -1177,7 +1179,7 @@ void DCItem::updateCacheSizeInternal(bool allowLoad, uint32_t conditionId)
       {
          // will not read data from database, fill cache with empty values
          m_ppValueCache = MemReallocArray(m_ppValueCache, m_requiredCacheSize);
-         for(UINT32 i = m_cacheSize; i < m_requiredCacheSize; i++)
+         for(uint32_t i = m_cacheSize; i < m_requiredCacheSize; i++)
             m_ppValueCache[i] = new ItemValue(_T(""), 1);
          DbgPrintf(7, _T("Cache load skipped for parameter %s [%u]"), m_name.cstr(), m_id);
          m_cacheSize = m_requiredCacheSize;
@@ -1303,8 +1305,7 @@ void DCItem::reloadCache(bool forceReload)
    lock();
    if (forceReload || !m_bCacheLoaded || (m_cacheSize != m_requiredCacheSize))
    {
-      UINT32 i;
-      for(i = 0; i < m_cacheSize; i++)
+      for(uint32_t i = 0; i < m_cacheSize; i++)
          delete m_ppValueCache[i];
 
       if (m_cacheSize != m_requiredCacheSize)
@@ -1318,6 +1319,7 @@ void DCItem::reloadCache(bool forceReload)
       {
          // Create cache entries
          bool moreData = true;
+         uint32_t i;
          for(i = 0; (i < m_requiredCacheSize) && moreData; i++)
          {
             moreData = DBFetch(hResult);
@@ -1345,7 +1347,7 @@ void DCItem::reloadCache(bool forceReload)
       else
       {
          // Error reading data from database, fill cache with empty values
-         for(i = 0; i < m_requiredCacheSize; i++)
+         for(uint32_t i = 0; i < m_requiredCacheSize; i++)
             m_ppValueCache[i] = new ItemValue(_T(""), 1);
       }
 
@@ -2238,10 +2240,6 @@ Threshold *DCItem::getThresholdById(UINT32 id) const
 shared_ptr<DCObjectInfo> DCItem::createDescriptorInternal() const
 {
    shared_ptr<DCObjectInfo> info = DCObject::createDescriptorInternal();
-
-   info->m_lastCollectionTime = (m_bCacheLoaded  && (m_cacheSize > 0)) ? m_ppValueCache[m_cacheSize - 1]->getTimeStamp() : 0;
-   if (info->m_lastCollectionTime == 1)   // 1 Indicates error
-      info->m_lastCollectionTime = 0;
 
    for(int i = 0; i < getThresholdCount(); i++)
    {

@@ -132,11 +132,6 @@ DCTable::DCTable(const DCTable *src, bool shadowCopy) : DCObject(src, shadowCopy
 	if (shadowCopy && (src->m_lastValue != nullptr))
 	{
 	   m_lastValue = make_shared<Table>(src->m_lastValue.get());
-	   m_lastValueTimestamp = src->m_lastValueTimestamp;
-	}
-	else
-	{
-	   m_lastValueTimestamp = 0;
 	}
 }
 
@@ -149,7 +144,6 @@ DCTable::DCTable(UINT32 id, const TCHAR *name, int source, const TCHAR *pollingI
 {
 	m_columns = new ObjectArray<DCTableColumn>(8, 8, Ownership::True);
    m_thresholds = new ObjectArray<DCTableThreshold>(0, 4, Ownership::True);
-   m_lastValueTimestamp = 0;
 }
 
 /**
@@ -227,7 +221,6 @@ DCTable::DCTable(DB_HANDLE hdb, DB_RESULT hResult, int row, const shared_ptr<Dat
    loadThresholds(hdb);
 
    updateTimeIntervalsInternal();
-   m_lastValueTimestamp = 0;
 }
 
 /**
@@ -264,7 +257,6 @@ DCTable::DCTable(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& own
    {
       m_thresholds = new ObjectArray<DCTableThreshold>(0, 4, Ownership::True);
    }
-   m_lastValueTimestamp = 0;
 }
 
 /**
@@ -1393,14 +1385,4 @@ void DCTable::loadCache()
    }
    unlock();
    MemFree(encodedTable);
-}
-
-/**
- * Create descriptor for this object
- */
-shared_ptr<DCObjectInfo> DCTable::createDescriptorInternal() const
-{
-   shared_ptr<DCObjectInfo> info = DCObject::createDescriptorInternal();
-   info->m_lastCollectionTime = m_lastValueTimestamp;
-   return info;
 }

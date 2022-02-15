@@ -273,6 +273,7 @@ protected:
    SharedString m_description;
    SharedString m_systemTag;
    time_t m_lastPoll;           // Last poll time
+   time_t m_lastValueTimestamp; // Timestamp of last obtained value
    int m_pollingInterval;       // Polling interval in seconds
    int m_retentionTime;         // Retention time in days
    TCHAR *m_pollingIntervalSrc;
@@ -379,6 +380,7 @@ public:
    uint32_t getResourceId() const { return m_dwResourceId; }
    uint32_t getSourceNode() const { return m_sourceNode; }
 	time_t getLastPollTime() const { return m_lastPoll; }
+   time_t getLastValueTimestamp() const { return m_lastValueTimestamp; }
    uint32_t getErrorCount() const { return m_dwErrorCount; }
 	uint16_t getSnmpPort() const { return m_snmpPort; }
    SNMP_Version getSnmpVersion() const { return m_snmpVersion; }
@@ -771,14 +773,11 @@ protected:
 	ObjectArray<DCTableColumn> *m_columns;
    ObjectArray<DCTableThreshold> *m_thresholds;
 	shared_ptr<Table> m_lastValue;
-	time_t m_lastValueTimestamp;
 
 	static TC_ID_MAP_ENTRY *m_cache;
 	static int m_cacheSize;
 	static int m_cacheAllocated;
 	static Mutex m_cacheMutex;
-
-   virtual shared_ptr<DCObjectInfo> createDescriptorInternal() const override;
 
    bool transform(const shared_ptr<Table>& value);
    void checkThresholds(Table *value);

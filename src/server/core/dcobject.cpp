@@ -83,6 +83,7 @@ DCObject::DCObject(const shared_ptr<DataCollectionOwner>& owner) : m_owner(owner
    m_source = DS_INTERNAL;
    m_status = ITEM_STATUS_NOT_SUPPORTED;
    m_lastPoll = 0;
+   m_lastValueTimestamp = 0;
    m_schedules = nullptr;
    m_tLastCheck = 0;
 	m_flags = 0;
@@ -132,6 +133,7 @@ DCObject::DCObject(const DCObject *src, bool shadowCopy) :
    m_source = src->m_source;
    m_status = src->m_status;
    m_lastPoll = shadowCopy ? src->m_lastPoll : 0;
+   m_lastValueTimestamp = shadowCopy ? src->m_lastValueTimestamp : 0;
    m_tLastCheck = shadowCopy ? src->m_tLastCheck : 0;
    m_dwErrorCount = shadowCopy ? src->m_dwErrorCount : 0;
 	m_flags = src->m_flags;
@@ -185,6 +187,7 @@ DCObject::DCObject(UINT32 id, const TCHAR *name, int source, const TCHAR *pollin
    m_busy = 0;
    m_scheduledForDeletion = 0;
    m_lastPoll = 0;
+   m_lastValueTimestamp = 0;
    m_flags = 0;
    m_stateFlags = 0;
    m_schedules = nullptr;
@@ -258,6 +261,7 @@ DCObject::DCObject(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& o
    m_busy = 0;
    m_scheduledForDeletion = 0;
    m_lastPoll = 0;
+   m_lastValueTimestamp = 0;
    m_tLastCheck = 0;
    m_dwErrorCount = 0;
    m_dwResourceId = 0;
@@ -1800,6 +1804,7 @@ DCObjectInfo::DCObjectInfo(const DCObject& object)
    m_errorCount = object.m_dwErrorCount;
    m_pollingInterval = object.getEffectivePollingInterval();
    m_lastPollTime = object.m_lastPoll;
+   m_lastCollectionTime = object.m_lastValueTimestamp;
    m_hasActiveThreshold = false;
    m_thresholdSeverity = SEVERITY_NORMAL;
    m_relatedObject = object.getRelatedObject();
@@ -1827,6 +1832,7 @@ DCObjectInfo::DCObjectInfo(const NXCPMessage& msg, const DCObject *object)
    m_pollingInterval = (object != nullptr) ? object->getEffectivePollingInterval() : 0;
    m_errorCount = (object != nullptr) ? object->getErrorCount() : 0;
    m_lastPollTime = (object != nullptr) ? object->getLastPollTime() : 0;
+   m_lastCollectionTime = (object != nullptr) ? object->getLastValueTimestamp() : 0;
    m_hasActiveThreshold = false;
    m_thresholdSeverity = SEVERITY_NORMAL;
    m_relatedObject = (object != nullptr) ? object->getRelatedObject() : 0;
