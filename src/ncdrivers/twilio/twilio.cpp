@@ -205,6 +205,8 @@ bool TwilioDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCHA
          {
             responseData.write('\0');
             const char* data = reinterpret_cast<const char*>(responseData.buffer());
+            nxlog_debug_tag(DEBUG_TAG, 8, _T("Full API server response: %hs"), data);
+
             json_error_t error;
             json_t *response = json_loads(data, 0, &error);
             if (response != nullptr)
@@ -218,7 +220,7 @@ bool TwilioDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCHA
                   else if (json_is_integer(jstatus))
                      snprintf(status, 64, "%" JSON_INTEGER_FORMAT, json_integer_value(jstatus));
                }
-               if (!strcmp(status, "sent"))
+               if (!strcmp(status, "sent") || !strcmp(status, "queued"))
                {
                   nxlog_debug_tag(DEBUG_TAG, 6, _T("API server responded with success"));
                   success = true;
