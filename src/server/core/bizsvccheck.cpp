@@ -260,13 +260,13 @@ int BusinessServiceCheck::execute(const shared_ptr<BusinessServiceTicketData>& t
 				if (obj != nullptr)
 				{
 					int threshold = (m_statusThreshold != 0) ? m_statusThreshold : ConfigReadInt(_T("BusinessServices.Check.Threshold.Objects"), STATUS_WARNING);
-					if ((obj->getStatus() >= threshold) && (obj->getStatus() != STATUS_UNMANAGED))
+					if ((obj->getStatus() >= threshold) && (obj->getStatus() <= STATUS_CRITICAL))
 					{
 					   m_state = STATUS_CRITICAL;
 					   if (oldState != STATUS_CRITICAL)
 	                  _tcscpy(m_reason, _T("Object status threshold violation"));
 					}
-					else if ((obj->getStatus() > STATUS_NORMAL) && (obj->getStatus() != STATUS_UNMANAGED))
+					else if ((obj->getStatus() > STATUS_NORMAL) && (obj->getStatus() <= STATUS_CRITICAL))
 					{
                   m_state = STATUS_MINOR;
                   if (oldState != STATUS_MINOR)
