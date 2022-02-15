@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Notification channel driver for Microsoft Teams
-** Copyright (C) 2014-2021 Raden Solutions
+** Copyright (C) 2014-2022 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -47,11 +47,11 @@ static const NCConfigurationTemplate s_config(true, true);
 class MicrosoftTeamsDriver : public NCDriver
 {
 private:
-   UINT32 m_flags;
+   uint32_t m_flags;
    StringMap m_channels;
    TCHAR m_themeColor[8];
 
-   MicrosoftTeamsDriver(UINT32 flags, const TCHAR *themeColor) : NCDriver()
+   MicrosoftTeamsDriver(uint32_t flags, const TCHAR *themeColor) : NCDriver()
    {
       m_flags = flags;
       _tcslcpy(m_themeColor, themeColor, 8);
@@ -80,26 +80,26 @@ MicrosoftTeamsDriver *MicrosoftTeamsDriver::createInstance(Config *config)
 {
    nxlog_debug_tag(DEBUG_TAG, 5, _T("Creating new driver instance"));
 
-   UINT32 flags = 0;
+   uint32_t flags = 0;
    TCHAR themeColor[8] = _T("FF6A00");
    NX_CFG_TEMPLATE configTemplate[] = 
 	{
-		{ _T("ThemeColor"), CT_STRING, 0, 0, sizeof(themeColor)/sizeof(TCHAR), 0, themeColor },
+		{ _T("ThemeColor"), CT_STRING, 0, 0, sizeof(themeColor) / sizeof(TCHAR), 0, themeColor },
       { _T("UseMessageCards"), CT_BOOLEAN_FLAG_32, 0, 0, MST_USE_CARDS, 0, &flags },
-		{ _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
+		{ _T(""), CT_END_OF_LIST, 0, 0, 0, 0, nullptr }
 	};
 
 	if (!config->parseTemplate(_T("MicrosoftTeams"), configTemplate))
 	{
 	   nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Error parsing driver configuration"));
-	   return NULL;
+	   return nullptr;
 	}
 
    MicrosoftTeamsDriver *driver = new MicrosoftTeamsDriver(flags, themeColor);
    nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Microsoft Teams driver instantiated"));
 
    unique_ptr<ObjectArray<ConfigEntry>> channels = config->getSubEntries(_T("/Channels"), _T("*"));
-   if (channels != NULL)
+   if (channels != nullptr)
    {
 	   for(int i = 0; i < channels->size(); i++)
 	   {

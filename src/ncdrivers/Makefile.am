@@ -12,7 +12,7 @@ DRIVERS = dbtable dummy gsm portech shell smtp snmptrap textfile @NCDRV_MODULES@
 
 SUBDIRS = $(DRIVERS)
 
-EXTRA_LTLIBRARIES = anysms.la googlechat.la kannel.la msteams.la mymobile.la nexmo.la nxagent.la slack.la smseagle.la telegram.la text2reach.la websms.la
+EXTRA_LTLIBRARIES = anysms.la googlechat.la kannel.la msteams.la mymobile.la nexmo.la nxagent.la slack.la smseagle.la telegram.la text2reach.la twilio.la websms.la
 pkglib_LTLIBRARIES = dbtable.la dummy.la gsm.la portech.la shell.la smtp.la snmptrap.la textfile.la @NCDRV_LTLIBRARIES@
 
 anysms_la_SOURCES = anysms/anysms.cpp
@@ -129,6 +129,16 @@ textfile_la_SOURCES = textfile/textfile.cpp
 textfile_la_CPPFLAGS=-I@top_srcdir@/include  -I@top_srcdir@/build
 textfile_la_LDFLAGS = -module -avoid-version
 textfile_la_LIBADD = ../libnetxms/libnetxms.la
+
+twilio_la_SOURCES = twilio/twilio.cpp
+twilio_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/build
+twilio_la_LDFLAGS = -module -avoid-version -rpath '$(pkglibdir)'
+twilio_la_LIBADD = ../libnetxms/libnetxms.la
+if USE_INTERNAL_JANSSON
+twilio_la_LIBADD += @top_srcdir@/src/jansson/libnxjansson.la
+else
+twilio_la_LIBADD += -ljansson
+endif
 
 websms_la_SOURCES = websms/websms.cpp
 websms_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/build
