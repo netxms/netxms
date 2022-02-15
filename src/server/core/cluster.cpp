@@ -945,7 +945,7 @@ bool Cluster::lockForAutobindPoll()
 void Cluster::autobindPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId)
 {
    poller->setStatus(_T("wait for lock"));
-   pollerLock(configuration);
+   pollerLock(autobind);
 
    if (IsShutdownInProgress())
    {

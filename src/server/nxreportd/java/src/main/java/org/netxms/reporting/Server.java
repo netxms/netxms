@@ -235,7 +235,7 @@ public final class Server implements Daemon
    }
 
    /**
-    * Update server configuration. Provided properties will be merged into exesting configuration.
+    * Update server configuration. Provided properties will be merged into existing configuration.
     *
     * @param update properties for set or update
     */

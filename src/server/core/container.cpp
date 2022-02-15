@@ -368,7 +368,7 @@ static bool AutoBindObjectFilter(NetObj* object, AutoBindClassFilterData* filter
 void Container::autobindPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId)
 {
    poller->setStatus(_T("wait for lock"));
-   pollerLock(configuration);
+   pollerLock(autobind);
 
    if (IsShutdownInProgress())
    {
