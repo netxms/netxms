@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -52,7 +52,7 @@ public abstract class Card extends DashboardComposite
 {
    private static final int HEADER_MARGIN_HEIGHT = 6;
    private static final int HEADER_MARGIN_WIDTH = 8;
-	
+
 	private String text;
 	private Control clientArea;
 	private Font titleFont;
@@ -61,7 +61,7 @@ public abstract class Card extends DashboardComposite
 	private Point headerSize;
 	private Action doubleClickAction = null;
 	private List<DashboardElementButton> buttons = new ArrayList<DashboardElementButton>(0);
-	
+
 	/**
 	 * @param parent
 	 * @param style
@@ -86,7 +86,7 @@ public abstract class Card extends DashboardComposite
             titleFont.dispose();
          }
       });
-		
+
       GridLayout layout = new GridLayout();
       layout.marginWidth = 0;
       layout.marginHeight = 0;
@@ -137,7 +137,7 @@ public abstract class Card extends DashboardComposite
          }
       });
 	}
-	
+
 	/**
 	 * Create client area control and do necessary configuration
 	 * 

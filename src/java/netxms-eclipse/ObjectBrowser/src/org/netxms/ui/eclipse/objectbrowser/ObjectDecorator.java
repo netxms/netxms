@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,6 +27,7 @@ import org.eclipse.swt.widgets.Display;
 import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Interface;
+import org.netxms.ui.eclipse.console.resources.ThemeEngine;
 
 /**
  * Label decorator for NetXMS objects
@@ -53,22 +54,11 @@ public class ObjectDecorator extends BaseLabelProvider implements ILightweightLa
 		statusImages[7] = Activator.getImageDescriptor("icons/status/disabled.gif"); //$NON-NLS-1$
 		statusImages[8] = Activator.getImageDescriptor("icons/status/testing.png"); //$NON-NLS-1$
 		maintModeImage = Activator.getImageDescriptor("icons/maint_mode.png"); //$NON-NLS-1$
-		maintColor = new Color(Display.getDefault(), 96, 96, 144);
 	}
 
-	/* (non-Javadoc)
-    * @see org.eclipse.jface.viewers.BaseLabelProvider#dispose()
+   /**
+    * @see org.eclipse.jface.viewers.ILightweightLabelDecorator#decorate(java.lang.Object, org.eclipse.jface.viewers.IDecoration)
     */
-   @Override
-   public void dispose()
-   {
-      maintColor.dispose();
-      super.dispose();
-   }
-
-   /* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ILightweightLabelDecorator#decorate(java.lang.Object, org.eclipse.jface.viewers.IDecoration)
-	 */
 	@Override
 	public void decorate(Object element, IDecoration decoration)
 	{
@@ -78,6 +68,16 @@ public class ObjectDecorator extends BaseLabelProvider implements ILightweightLa
 		{
 	      decoration.addOverlay(maintModeImage, IDecoration.TOP_RIGHT);
 	      decoration.addSuffix(Messages.get().ObjectDecorator_MaintenanceSuffix);
+         if (maintColor == null)
+         {
+            Display.getDefault().syncExec(new Runnable() {
+               @Override
+               public void run()
+               {
+                  maintColor = ThemeEngine.getForegroundColor("ObjectTree.Maintenance"); //$NON-NLS-1$
+               }
+            });
+         }
 	      decoration.setForegroundColor(maintColor);
 		}
 		if (element instanceof Interface)

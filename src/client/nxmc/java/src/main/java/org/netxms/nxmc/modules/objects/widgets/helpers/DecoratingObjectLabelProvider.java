@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,17 +19,33 @@
 package org.netxms.nxmc.modules.objects.widgets.helpers;
 
 import org.eclipse.jface.viewers.DecoratingLabelProvider;
+import org.eclipse.swt.graphics.Color;
+import org.netxms.client.objects.AbstractObject;
+import org.netxms.nxmc.resources.ThemeEngine;
 
 /**
  * Label provider for objects that decorates object elements according to object status
  */
 public class DecoratingObjectLabelProvider extends DecoratingLabelProvider
 {
+   private Color maintenanceColor = ThemeEngine.getForegroundColor("ObjectTree.Maintenance");
+
    /**
     * Create new decorating label provider
     */
    public DecoratingObjectLabelProvider()
    {
       super(new BaseObjectLabelProvider(), new ObjectLabelDecorator());
+   }
+
+   /**
+    * @see org.eclipse.jface.viewers.DecoratingLabelProvider#getForeground(java.lang.Object)
+    */
+   @Override
+   public Color getForeground(Object element)
+   {
+      if (((AbstractObject)element).isInMaintenanceMode())
+         return maintenanceColor;
+      return null;
    }
 }

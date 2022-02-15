@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,6 +27,7 @@ import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.nxmc.tools.ColorCache;
+import org.netxms.nxmc.tools.ColorConverter;
 
 /**
  * Composite with lightweight border (Windows 7 style)
@@ -39,7 +40,7 @@ public class DashboardComposite extends Canvas implements PaintListener
 	private Color borderInnerColor;
 	private Color backgroundColor;
 	private boolean hasBorder = true;
-	
+
 	/**
 	 * @param parent
 	 * @param style
@@ -47,12 +48,20 @@ public class DashboardComposite extends Canvas implements PaintListener
 	public DashboardComposite(Composite parent, int style)
 	{
 		super(parent, style & ~SWT.BORDER);
-		
-		colors = new ColorCache(this);
-		borderOuterColor = colors.create(171, 173, 179);
-		borderInnerColor = colors.create(255, 255, 255);
-		backgroundColor = colors.create(255, 255, 255);
-		
+
+      colors = new ColorCache(this);
+      if (ColorConverter.isDarkColor(getDisplay().getSystemColor(SWT.COLOR_WIDGET_BACKGROUND).getRGB()))
+      {
+         borderOuterColor = colors.create(110, 111, 115);
+         borderInnerColor = colors.create(53, 53, 53);
+      }
+      else
+      {
+         borderOuterColor = colors.create(171, 173, 179);
+         borderInnerColor = colors.create(255, 255, 255);
+      }
+      backgroundColor = getDisplay().getSystemColor(SWT.COLOR_LIST_BACKGROUND);
+
 		hasBorder = ((style & SWT.BORDER) != 0);
 		addPaintListener(this);
 		setBackground(backgroundColor);

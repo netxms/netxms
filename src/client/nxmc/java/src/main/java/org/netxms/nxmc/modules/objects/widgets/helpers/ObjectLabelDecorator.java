@@ -74,6 +74,8 @@ public class ObjectLabelDecorator implements ILabelDecorator
    @Override
    public String decorateText(String text, Object element)
    {
+      if (((AbstractObject)element).isInMaintenanceMode())
+         return text + " [Maintenance]";
       return null;
    }
 

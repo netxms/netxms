@@ -48,7 +48,7 @@ public class DashboardComposite extends Canvas implements PaintListener
 	public DashboardComposite(Composite parent, int style)
 	{
 		super(parent, style & ~SWT.BORDER);
-		
+
 		colors = new ColorCache(this);
       if (ColorConverter.isDarkColor(getDisplay().getSystemColor(SWT.COLOR_WIDGET_BACKGROUND).getRGB()))
       {
