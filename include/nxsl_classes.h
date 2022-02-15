@@ -461,7 +461,7 @@ public:
 	NXSL_HashMap(const NXSL_HashMap& src);
 	virtual ~NXSL_HashMap();
 
-   void set(const TCHAR *key, NXSL_Value *value) { m_values->set(key, value); }
+   void set(const TCHAR *key, NXSL_Value *value);
    NXSL_Value *get(const TCHAR *key) const { return m_values->get(key); }
    NXSL_Value *getKeys() const;
    NXSL_Value *getValues() const;
@@ -941,6 +941,7 @@ public:
    NXSL_Value *getValue() { return m_value; }
 	bool isConstant() const { return m_constant; }
    void setValue(NXSL_Value *value);
+   NXSL_Value *unshareValue();
 };
 
 /**
@@ -1384,6 +1385,29 @@ inline void NXSL_Variable::setValue(NXSL_Value *value)
       m_vm->destroyValue(value);
    }
    m_value->onVariableSet();
+}
+
+/**
+ * Make sure that variable's value is not shared. Returns (possibly newly created) non-shared value.
+ */
+inline NXSL_Value *NXSL_Variable::unshareValue()
+{
+   if (m_value->isShared())
+   {
+      m_vm->destroyValue(m_value);  // Will decrease reference count but as it is shared it will stay valid
+      m_value = m_vm->createValue(m_value);
+      m_value->onVariableSet();
+   }
+   return m_value;
+}
+
+/**
+ * Inline implementation of NXSL_HashMap::set
+ */
+inline void NXSL_HashMap::set(const TCHAR *key, NXSL_Value *value)
+{
+   m_values->set(key, value);
+   value->onVariableSet();
 }
 
 /**

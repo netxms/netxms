@@ -1539,7 +1539,8 @@ void NXSL_VM::execute()
             pValue = pVar->getValue();
             if (pValue->isNumeric())
             {
-               m_dataStack.push(createValue(pValue));
+               m_dataStack.push(createValueRef(pValue));
+               pValue = pVar->unshareValue();
                if (cp->m_opCode == OPCODE_INC)
                   pValue->increment();
                else
@@ -1564,10 +1565,12 @@ void NXSL_VM::execute()
          break;
       case OPCODE_INC_VARPTR:  // Post increment/decrement
       case OPCODE_DEC_VARPTR:
-         pValue = cp->m_operand.m_variable->getValue();
+         pVar = cp->m_operand.m_variable;
+         pValue = pVar->getValue();
          if (pValue->isNumeric())
          {
-            m_dataStack.push(createValue(pValue));
+            m_dataStack.push(createValueRef(pValue));
+            pValue = pVar->unshareValue();
             if (cp->m_opCode == OPCODE_INC_VARPTR)
                pValue->increment();
             else
@@ -1586,6 +1589,7 @@ void NXSL_VM::execute()
             pValue = pVar->getValue();
             if (pValue->isNumeric())
             {
+               pValue = pVar->unshareValue();
                if (cp->m_opCode == OPCODE_INCP)
                   pValue->increment();
                else
@@ -1611,9 +1615,11 @@ void NXSL_VM::execute()
          break;
       case OPCODE_INCP_VARPTR: // Pre increment/decrement
       case OPCODE_DECP_VARPTR:
-         pValue = cp->m_operand.m_variable->getValue();
+         pVar = cp->m_operand.m_variable;
+         pValue = pVar->getValue();
          if (pValue->isNumeric())
          {
+            pValue = pVar->unshareValue();
             if (cp->m_opCode == OPCODE_INCP_VARPTR)
                pValue->increment();
             else
@@ -1914,7 +1920,7 @@ bool NXSL_VM::setArrayElement(NXSL_Value *array, NXSL_Value *index, NXSL_Value *
 	{
       // copy on write
       array->copyOnWrite();
-		array->getValueAsArray()->set(index->getValueAsInt32(), createValueRef(value));
+		array->getValueAsArray()->set(index->getValueAsInt32(), value->isValidForVariableStorage() ? createValueRef(value) : createValue(value));
       success = true;
 	}
    else
@@ -1940,6 +1946,11 @@ void NXSL_VM::getOrUpdateArrayElement(int opcode, NXSL_Value *array, NXSL_Value 
       {
          if ((element != nullptr) && element->isNumeric())
          {
+            if (element->isShared())
+            {
+               element = createValue(element);
+               array->getValueAsArray()->set(index->getValueAsInt32(), element);
+            }
             element->increment();
          }
          else
@@ -1951,6 +1962,11 @@ void NXSL_VM::getOrUpdateArrayElement(int opcode, NXSL_Value *array, NXSL_Value 
       {
          if ((element != nullptr) && element->isNumeric())
          {
+            if (element->isShared())
+            {
+               element = createValue(element);
+               array->getValueAsArray()->set(index->getValueAsInt32(), element);
+            }
             element->decrement();
          }
          else
@@ -1965,6 +1981,11 @@ void NXSL_VM::getOrUpdateArrayElement(int opcode, NXSL_Value *array, NXSL_Value 
       {
          if ((element != nullptr) && element->isNumeric())
          {
+            if (element->isShared())
+            {
+               element = createValue(element);
+               array->getValueAsArray()->set(index->getValueAsInt32(), element);
+            }
             element->increment();
          }
          else
@@ -1976,6 +1997,11 @@ void NXSL_VM::getOrUpdateArrayElement(int opcode, NXSL_Value *array, NXSL_Value 
       {
          if ((element != nullptr) && element->isNumeric())
          {
+            if (element->isShared())
+            {
+               element = createValue(element);
+               array->getValueAsArray()->set(index->getValueAsInt32(), element);
+            }
             element->decrement();
          }
          else
@@ -1999,7 +2025,7 @@ bool NXSL_VM::setHashMapElement(NXSL_Value *hashMap, NXSL_Value *key, NXSL_Value
 	if (key->isString())
 	{
       hashMap->copyOnWrite();
-		hashMap->getValueAsHashMap()->set(key->getValueAsCString(), createValueRef(value));
+		hashMap->getValueAsHashMap()->set(key->getValueAsCString(), value->isValidForVariableStorage() ? createValueRef(value) : createValue(value));
       success = true;
 	}
    else
@@ -2035,6 +2061,11 @@ void NXSL_VM::getOrUpdateHashMapElement(int opcode, NXSL_Value *hashMap, NXSL_Va
    {
       if (element->isNumeric())
       {
+         if (element->isShared())
+         {
+            element = createValue(element);
+            hashMap->getValueAsHashMap()->set(key->getValueAsCString(), element);
+         }
          element->increment();
       }
       else
@@ -2046,6 +2077,11 @@ void NXSL_VM::getOrUpdateHashMapElement(int opcode, NXSL_Value *hashMap, NXSL_Va
    {
       if (element->isNumeric())
       {
+         if (element->isShared())
+         {
+            element = createValue(element);
+            hashMap->getValueAsHashMap()->set(key->getValueAsCString(), element);
+         }
          element->decrement();
       }
       else
@@ -2060,6 +2096,11 @@ void NXSL_VM::getOrUpdateHashMapElement(int opcode, NXSL_Value *hashMap, NXSL_Va
    {
       if (element->isNumeric())
       {
+         if (element->isShared())
+         {
+            element = createValue(element);
+            hashMap->getValueAsHashMap()->set(key->getValueAsCString(), element);
+         }
          element->increment();
       }
       else
@@ -2071,6 +2112,11 @@ void NXSL_VM::getOrUpdateHashMapElement(int opcode, NXSL_Value *hashMap, NXSL_Va
    {
       if (element->isNumeric())
       {
+         if (element->isShared())
+         {
+            element = createValue(element);
+            hashMap->getValueAsHashMap()->set(key->getValueAsCString(), element);
+         }
          element->decrement();
       }
       else

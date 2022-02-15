@@ -207,6 +207,7 @@ void NXSL_Array::set(int index, NXSL_Value *value)
 		   qsort(m_data, m_size, sizeof(NXSL_ArrayElement), CompareElements);
 		}
 	}
+	value->onVariableSet();
 }
 
 /**
