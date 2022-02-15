@@ -380,6 +380,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "leef", "src\server\leef\lee
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "nxmc", "src\client\nxmc\nxmc.vcxproj", "{0AB16487-2484-46E1-A137-D9EA7AC5A93B}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "twilio", "src\ncdrivers\twilio\twilio.vcxproj", "{1FE11303-3726-204D-A214-DF8CEB0E0A8D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -1476,6 +1478,12 @@ Global
 		{0AB16487-2484-46E1-A137-D9EA7AC5A93B}.Release|Win32.Build.0 = Release|Win32
 		{0AB16487-2484-46E1-A137-D9EA7AC5A93B}.Release|x64.ActiveCfg = Release|x64
 		{0AB16487-2484-46E1-A137-D9EA7AC5A93B}.Release|x64.Build.0 = Release|x64
+		{1FE11303-3726-204D-A214-DF8CEB0E0A8D}.Debug|Win32.ActiveCfg = Debug|Win32
+		{1FE11303-3726-204D-A214-DF8CEB0E0A8D}.Debug|x64.ActiveCfg = Debug|x64
+		{1FE11303-3726-204D-A214-DF8CEB0E0A8D}.Debug|x64.Build.0 = Debug|x64
+		{1FE11303-3726-204D-A214-DF8CEB0E0A8D}.Release|Win32.ActiveCfg = Release|Win32
+		{1FE11303-3726-204D-A214-DF8CEB0E0A8D}.Release|x64.ActiveCfg = Release|x64
+		{1FE11303-3726-204D-A214-DF8CEB0E0A8D}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -1642,6 +1650,7 @@ Global
 		{D1C96D4D-385D-412A-A4C9-A276EFBBDD9F} = {06312B78-7ADC-49FF-9554-0B170825CD49}
 		{45497170-1364-403A-B572-D3E94BDEDF1D} = {06312B78-7ADC-49FF-9554-0B170825CD49}
 		{0AB16487-2484-46E1-A137-D9EA7AC5A93B} = {E431F5D5-AAD8-4315-928A-23F86969DB35}
+		{1FE11303-3726-204D-A214-DF8CEB0E0A8D} = {90D897D2-079F-43BE-BB47-6BBAF2DAAC5D}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E4F6B1F2-1076-4A45-8750-AF6CA13917B3}
