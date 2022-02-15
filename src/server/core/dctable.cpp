@@ -130,7 +130,14 @@ DCTable::DCTable(const DCTable *src, bool shadowCopy) : DCObject(src, shadowCopy
 	for(int i = 0; i < src->m_thresholds->size(); i++)
 		m_thresholds->add(new DCTableThreshold(src->m_thresholds->get(i), shadowCopy));
 	if (shadowCopy && (src->m_lastValue != nullptr))
+	{
 	   m_lastValue = make_shared<Table>(src->m_lastValue.get());
+	   m_lastValueTimestamp = src->m_lastValueTimestamp;
+	}
+	else
+	{
+	   m_lastValueTimestamp = 0;
+	}
 }
 
 /**
@@ -142,6 +149,7 @@ DCTable::DCTable(UINT32 id, const TCHAR *name, int source, const TCHAR *pollingI
 {
 	m_columns = new ObjectArray<DCTableColumn>(8, 8, Ownership::True);
    m_thresholds = new ObjectArray<DCTableThreshold>(0, 4, Ownership::True);
+   m_lastValueTimestamp = 0;
 }
 
 /**
@@ -172,16 +180,14 @@ DCTable::DCTable(DB_HANDLE hdb, DB_RESULT hResult, int row, const shared_ptr<Dat
 	m_dwResourceId = DBGetFieldULong(hResult, row, 12);
 	m_sourceNode = DBGetFieldULong(hResult, row, 13);
 	m_pszPerfTabSettings = DBGetField(hResult, row, 14, nullptr, 0);
-   TCHAR *tmp = DBGetField(hResult, row, 15, nullptr, 0);
-   setTransformationScript(tmp);
-   MemFree(tmp);
+   setTransformationScript(DBGetField(hResult, row, 15, nullptr, 0));
    m_comments = DBGetField(hResult, row, 16, nullptr, 0);
    m_guid = DBGetFieldGUID(hResult, row, 17);
    m_instanceDiscoveryMethod = (WORD)DBGetFieldLong(hResult, row, 18);
    m_instanceDiscoveryData = DBGetFieldAsSharedString(hResult, row, 19);
    m_instanceFilterSource = nullptr;
    m_instanceFilter = nullptr;
-   tmp = DBGetField(hResult, row, 20, nullptr, 0);
+   TCHAR *tmp = DBGetField(hResult, row, 20, nullptr, 0);
    setInstanceFilter(tmp);
    MemFree(tmp);
    m_instanceName = DBGetFieldAsSharedString(hResult, row, 21);
@@ -221,6 +227,7 @@ DCTable::DCTable(DB_HANDLE hdb, DB_RESULT hResult, int row, const shared_ptr<Dat
    loadThresholds(hdb);
 
    updateTimeIntervalsInternal();
+   m_lastValueTimestamp = 0;
 }
 
 /**
@@ -257,6 +264,7 @@ DCTable::DCTable(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& own
    {
       m_thresholds = new ObjectArray<DCTableThreshold>(0, 4, Ownership::True);
    }
+   m_lastValueTimestamp = 0;
 }
 
 /**
@@ -363,6 +371,7 @@ bool DCTable::processNewValue(time_t timestamp, const shared_ptr<Table>& value, 
 	m_lastValue = value;
 	m_lastValue->setTitle(m_description);
    m_lastValue->setSource(m_source);
+   m_lastValueTimestamp = timestamp;
 
 	// Copy required fields into local variables
 	uint32_t tableId = m_id;
@@ -837,7 +846,7 @@ void DCTable::fillLastValueMessage(NXCPMessage *msg)
    lock();
 	if (m_lastValue != nullptr)
 	{
-      msg->setFieldFromTime(VID_TIMESTAMP, m_lastPoll);
+      msg->setFieldFromTime(VID_TIMESTAMP, m_lastValueTimestamp);
       m_lastValue->fillMessage(*msg, 0, -1);
 	}
 	else
@@ -1023,8 +1032,8 @@ void DCTable::mergeValues(Table *dest, Table *src, int count)
             }
             else if ((cd->getDataType() == DCI_DT_UINT) || (cd->getDataType() == DCI_DT_UINT64))
             {
-               UINT64 sval = src->getAsUInt64(sRow, column);
-               UINT64 dval = dest->getAsUInt64(dRow, column);
+               uint64_t sval = src->getAsUInt64(sRow, column);
+               uint64_t dval = dest->getAsUInt64(dRow, column);
 
                RECALCULATE_VALUE(dval, sval, cd->getAggregationFunction(), count);
 
@@ -1032,8 +1041,8 @@ void DCTable::mergeValues(Table *dest, Table *src, int count)
             }
             else
             {
-               INT64 sval = src->getAsInt64(sRow, column);
-               INT64 dval = dest->getAsInt64(dRow, column);
+               int64_t sval = src->getAsInt64(sRow, column);
+               int64_t dval = dest->getAsInt64(dRow, column);
 
                RECALCULATE_VALUE(dval, sval, cd->getAggregationFunction(), count);
 
@@ -1334,22 +1343,22 @@ void DCTable::loadCache()
    switch(g_dbSyntax)
    {
       case DB_SYNTAX_MSSQL:
-         _sntprintf(query, 512, _T("SELECT TOP 1 tdata_value FROM tdata_%u WHERE item_id=%u ORDER BY tdata_timestamp DESC"),
+         _sntprintf(query, 512, _T("SELECT TOP 1 tdata_value,tdata_timestamp FROM tdata_%u WHERE item_id=%u ORDER BY tdata_timestamp DESC"),
                   m_ownerId, m_id);
          break;
       case DB_SYNTAX_ORACLE:
-         _sntprintf(query, 512, _T("SELECT * FROM (SELECT tdata_value FROM tdata_%u WHERE item_id=%u ORDER BY tdata_timestamp DESC) WHERE ROWNUM<=1"),
+         _sntprintf(query, 512, _T("SELECT * FROM (SELECT tdata_value,tdata_timestamp FROM tdata_%u WHERE item_id=%u ORDER BY tdata_timestamp DESC) WHERE ROWNUM<=1"),
                   m_ownerId, m_id);
          break;
       case DB_SYNTAX_MYSQL:
       case DB_SYNTAX_PGSQL:
       case DB_SYNTAX_SQLITE:
       case DB_SYNTAX_TSDB:
-         _sntprintf(query, 512, _T("SELECT tdata_value FROM tdata_%u WHERE item_id=%u ORDER BY tdata_timestamp DESC LIMIT 1"),
+         _sntprintf(query, 512, _T("SELECT tdata_value,tdata_timestamp FROM tdata_%u WHERE item_id=%u ORDER BY tdata_timestamp DESC LIMIT 1"),
                   m_ownerId, m_id);
          break;
       case DB_SYNTAX_DB2:
-         _sntprintf(query, 512, _T("SELECT tdata_value FROM tdata_%u WHERE item_id=%u ORDER BY tdata_timestamp DESC FETCH FIRST 1 ROWS ONLY"),
+         _sntprintf(query, 512, _T("SELECT tdata_value,tdata_timestamp FROM tdata_%u WHERE item_id=%u ORDER BY tdata_timestamp DESC FETCH FIRST 1 ROWS ONLY"),
                   m_ownerId, m_id);
          break;
       default:
@@ -1359,6 +1368,7 @@ void DCTable::loadCache()
    }
 
    char *encodedTable = nullptr;
+   time_t timestamp = 0;
    if (query[0] != 0)
    {
       DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
@@ -1368,6 +1378,7 @@ void DCTable::loadCache()
          if (DBGetNumRows(hResult) > 0)
          {
             encodedTable = DBGetFieldUTF8(hResult, 0, 0, nullptr, 0);
+            timestamp = DBGetFieldULong(hResult, 0, 1);
          }
          DBFreeResult(hResult);
       }
@@ -1378,7 +1389,18 @@ void DCTable::loadCache()
    if (encodedTable != nullptr && m_lastValue == nullptr) //m_lastValue can be changed while query is executed
    {
       m_lastValue = shared_ptr<Table>(Table::createFromPackedXML(encodedTable));
+      m_lastValueTimestamp = timestamp;
    }
    unlock();
    MemFree(encodedTable);
+}
+
+/**
+ * Create descriptor for this object
+ */
+shared_ptr<DCObjectInfo> DCTable::createDescriptorInternal() const
+{
+   shared_ptr<DCObjectInfo> info = DCObject::createDescriptorInternal();
+   info->m_lastCollectionTime = m_lastValueTimestamp;
+   return info;
 }

@@ -85,7 +85,7 @@ public abstract class DialogWithFilter extends Dialog
 
       return composite;
    }
-   
+
    /**
     * Handler for filter modification
     */

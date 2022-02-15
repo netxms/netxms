@@ -325,7 +325,7 @@ protected:
 
 	StringBuffer expandMacros(const TCHAR *src, size_t dstLen);
 
-   void setTransformationScript(const TCHAR *source);
+   void setTransformationScript(TCHAR *source);
 
 	virtual bool isCacheLoaded();
    virtual shared_ptr<DCObjectInfo> createDescriptorInternal() const;
@@ -480,7 +480,7 @@ protected:
 	int m_nBaseUnits;
 	int m_nMultiplier;
 	TCHAR *m_customUnitName;
-	WORD m_snmpRawValueType;		// Actual SNMP raw value type for input transformation
+	uint16_t m_snmpRawValueType;		// Actual SNMP raw value type for input transformation
 	TCHAR m_predictionEngine[MAX_NPE_NAME_LEN];
 
    bool transform(ItemValue &value, time_t nElapsedTime);
@@ -560,7 +560,6 @@ public:
    virtual json_t *toJson() override;
 
 	int getThresholdCount() const { return (m_thresholds != nullptr) ? m_thresholds->size() : 0; }
-	BOOL enumThresholds(BOOL (* pfCallback)(Threshold *, UINT32, void *), void *pArg);
 
 	void setDataType(int dataType) { m_dataType = dataType; }
 	void setDeltaCalculationMethod(int method) { m_deltaCalculation = method; }
@@ -772,11 +771,14 @@ protected:
 	ObjectArray<DCTableColumn> *m_columns;
    ObjectArray<DCTableThreshold> *m_thresholds;
 	shared_ptr<Table> m_lastValue;
+	time_t m_lastValueTimestamp;
 
 	static TC_ID_MAP_ENTRY *m_cache;
 	static int m_cacheSize;
 	static int m_cacheAllocated;
 	static Mutex m_cacheMutex;
+
+   virtual shared_ptr<DCObjectInfo> createDescriptorInternal() const override;
 
    bool transform(const shared_ptr<Table>& value);
    void checkThresholds(Table *value);
@@ -872,6 +874,7 @@ private:
    uint32_t m_errorCount;
    int32_t m_pollingInterval;
    time_t m_lastPollTime;
+   time_t m_lastCollectionTime;
    bool m_hasActiveThreshold;
    int m_thresholdSeverity;
    uint32_t m_relatedObject;
@@ -897,6 +900,7 @@ public:
    uint32_t getErrorCount() const { return m_errorCount; }
    int32_t getPollingInterval() const { return m_pollingInterval; }
    time_t getLastPollTime() const { return m_lastPollTime; }
+   time_t getLastCollectionTime() const { return m_lastCollectionTime; }
    uint32_t getOwnerId() const { return m_ownerId; }
    bool hasActiveThreshold() const { return m_hasActiveThreshold; }
    int getThresholdSeverity() const { return m_thresholdSeverity; }

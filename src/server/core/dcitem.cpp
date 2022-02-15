@@ -94,9 +94,7 @@ DCItem::DCItem(DB_HANDLE hdb, DB_RESULT hResult, int row, const shared_ptr<DataC
    m_retentionTime = DBGetFieldLong(hResult, row, 5);
    m_status = (BYTE)DBGetFieldLong(hResult, row, 6);
    m_deltaCalculation = (BYTE)DBGetFieldLong(hResult, row, 7);
-   TCHAR *pszTmp = DBGetField(hResult, row, 8, nullptr, 0);
-   setTransformationScript(pszTmp);
-   MemFree(pszTmp);
+   setTransformationScript(DBGetField(hResult, row, 8, nullptr, 0));
    m_dwTemplateId = DBGetFieldULong(hResult, row, 9);
    m_description = DBGetFieldAsSharedString(hResult, row, 10);
    m_instanceName = DBGetFieldAsSharedString(hResult, row, 11);
@@ -121,9 +119,9 @@ DCItem::DCItem(DB_HANDLE hdb, DB_RESULT hResult, int row, const shared_ptr<DataC
 	m_instanceDiscoveryData = DBGetFieldAsSharedString(hResult, row, 24);
 	m_instanceFilterSource = nullptr;
    m_instanceFilter = nullptr;
-   pszTmp = DBGetField(hResult, row, 25, nullptr, 0);
-	setInstanceFilter(pszTmp);
-   MemFree(pszTmp);
+   TCHAR *tmp = DBGetField(hResult, row, 25, nullptr, 0);
+	setInstanceFilter(tmp);
+   MemFree(tmp);
 	m_sampleCount = DBGetFieldLong(hResult, row, 26);
    m_comments = DBGetField(hResult, row, 27, nullptr, 0);
    m_guid = DBGetFieldGUID(hResult, row, 28);
@@ -1962,29 +1960,6 @@ void DCItem::addThreshold(Threshold *pThreshold)
 }
 
 /**
- * Enumerate all thresholds
- */
-BOOL DCItem::enumThresholds(BOOL (* pfCallback)(Threshold *, UINT32, void *), void *pArg)
-{
-	BOOL bRet = TRUE;
-
-	lock();
-	if (m_thresholds != nullptr)
-	{
-		for(int i = 0; i < m_thresholds->size(); i++)
-		{
-			if (!pfCallback(m_thresholds->get(i), i, pArg))
-			{
-				bRet = FALSE;
-				break;
-			}
-		}
-	}
-	unlock();
-	return bRet;
-}
-
-/**
  * Test DCI's transformation script
  * If dcObjectInfo is not nullptr it will be destroyed by this method
  */
@@ -2263,6 +2238,10 @@ Threshold *DCItem::getThresholdById(UINT32 id) const
 shared_ptr<DCObjectInfo> DCItem::createDescriptorInternal() const
 {
    shared_ptr<DCObjectInfo> info = DCObject::createDescriptorInternal();
+
+   info->m_lastCollectionTime = (m_bCacheLoaded  && (m_cacheSize > 0)) ? m_ppValueCache[m_cacheSize - 1]->getTimeStamp() : 0;
+   if (info->m_lastCollectionTime == 1)   // 1 Indicates error
+      info->m_lastCollectionTime = 0;
 
    for(int i = 0; i < getThresholdCount(); i++)
    {

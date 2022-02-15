@@ -148,7 +148,7 @@ DCObject::DCObject(const DCObject *src, bool shadowCopy) :
    m_transformationScriptSource = nullptr;
    m_transformationScript = nullptr;
    m_lastScriptErrorReport = 0;
-   setTransformationScript(src->m_transformationScriptSource);
+   setTransformationScript(MemCopyString(src->m_transformationScriptSource));
 
    m_schedules = (src->m_schedules != nullptr) ? new StringList(src->m_schedules) : nullptr;
 
@@ -274,7 +274,7 @@ DCObject::DCObject(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& o
    m_comments = MemCopyString(config->getSubEntryValue(_T("comments")));
    m_doForcePoll = false;
    m_pollingSession = nullptr;
-   setTransformationScript(config->getSubEntryValue(_T("transformation")));
+   setTransformationScript(MemCopyString(config->getSubEntryValue(_T("transformation"))));
 
    // for compatibility with old format
    if (config->getSubEntryValueAsInt(_T("advancedSchedule")))
@@ -872,9 +872,7 @@ void DCObject::updateFromMessage(const NXCPMessage& msg)
       MemFreeAndNull(m_retentionTimeSrc);
    updateTimeIntervalsInternal();
 
-   TCHAR *pszStr = msg.getFieldAsString(VID_TRANSFORMATION_SCRIPT);
-   setTransformationScript(pszStr);
-   MemFree(pszStr);
+   setTransformationScript(msg.getFieldAsString(VID_TRANSFORMATION_SCRIPT));
 
    // Update schedules
    int count = msg.getFieldAsInt32(VID_NUM_SCHEDULES);
@@ -903,7 +901,7 @@ void DCObject::updateFromMessage(const NXCPMessage& msg)
    m_instanceDiscoveryMethod = msg.getFieldAsUInt16(VID_INSTD_METHOD);
    m_instanceDiscoveryData = msg.getFieldAsSharedString(VID_INSTD_DATA, MAX_INSTANCE_LEN);
 
-   pszStr = msg.getFieldAsString(VID_INSTD_FILTER);
+   TCHAR *pszStr = msg.getFieldAsString(VID_INSTD_FILTER);
    setInstanceFilter(pszStr);
    MemFree(pszStr);
 
@@ -1053,7 +1051,7 @@ void DCObject::updateFromTemplate(DCObject *src)
 	MemFree(m_pszPerfTabSettings);
 	m_pszPerfTabSettings = MemCopyString(src->m_pszPerfTabSettings);
 
-   setTransformationScript(src->m_transformationScriptSource);
+   setTransformationScript(MemCopyString(src->m_transformationScriptSource));
 
    m_accessList.clear();
    m_accessList.addAll(src->m_accessList);
@@ -1130,13 +1128,13 @@ bool DCObject::hasValue()
 /**
  * Set new transformation script
  */
-void DCObject::setTransformationScript(const TCHAR *source)
+void DCObject::setTransformationScript(TCHAR *source)
 {
-   free(m_transformationScriptSource);
+   MemFree(m_transformationScriptSource);
    delete m_transformationScript;
    if (source != nullptr)
    {
-      m_transformationScriptSource = Trim(MemCopyString(source));
+      m_transformationScriptSource = Trim(source);
       if (m_transformationScriptSource[0] != 0)
       {
          TCHAR errorText[1024];
@@ -1150,6 +1148,7 @@ void DCObject::setTransformationScript(const TCHAR *source)
       else
       {
          m_transformationScript = nullptr;
+         MemFreeAndNull(m_transformationScriptSource);
       }
    }
    else
@@ -1244,7 +1243,7 @@ void DCObject::updateFromImport(ConfigEntry *config)
 
    updateTimeIntervalsInternal();
 
-   setTransformationScript(config->getSubEntryValue(_T("transformation")));
+   setTransformationScript(MemCopyString(config->getSubEntryValue(_T("transformation"))));
 
    ConfigEntry *schedules = config->findEntry(_T("schedules"));
    if (schedules != nullptr)
@@ -1514,6 +1513,7 @@ void DCObject::setInstanceFilter(const TCHAR *script)
       else
       {
          m_instanceFilter = nullptr;
+         MemFreeAndNull(m_instanceFilterSource);
       }
    }
    else
