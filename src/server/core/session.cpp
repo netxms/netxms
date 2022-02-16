@@ -10981,7 +10981,7 @@ void ClientSession::executeScript(const NXCPMessage& request)
          _sntprintf(buffer, 1024, _T("\n\n*** FINISHED ***\n\nResult: %s\n\n"), CHECK_NULL(value));
          buffer[1023] = 0;
          response.setField(VID_MESSAGE, buffer);
-			response.setField(VID_RCC, RCC_SUCCESS);
+         response.setField(VID_RCC, RCC_SUCCESS);
          response.setEndOfSequence();
          sendMessage(response);
 
@@ -11027,7 +11027,7 @@ void ClientSession::executeScript(const NXCPMessage& request)
       else
       {
          response.setField(VID_ERROR_TEXT, vm->getErrorText());
-			response.setField(VID_RCC, RCC_NXSL_EXECUTION_ERROR);
+         response.setField(VID_RCC, RCC_NXSL_EXECUTION_ERROR);
          response.setEndOfSequence();
          sendMessage(response);
       }
@@ -11035,7 +11035,6 @@ void ClientSession::executeScript(const NXCPMessage& request)
    }
    else
    {
-      // Send response
       sendMessage(response);
    }
 }
