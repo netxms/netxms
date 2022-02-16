@@ -597,7 +597,7 @@ void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, int32_t zoneUIN, int
       time_t timestamp = time(nullptr);
 
       nxlog_debug_tag(DEBUG_TAG, 5, _T("Varbinds for %s %s from %s:"), isInformRq ? _T("INFORM-REQUEST") : _T("TRAP"), &buffer[96], buffer);
-      if (node->getSnmpCodepage()[0] != 0)
+      if ((node != nullptr) && (node->getSnmpCodepage()[0] != 0))
       {
          pdu->setCodepage(node->getSnmpCodepage());
       }
