@@ -324,20 +324,33 @@ static bool CheckFullPath(const TCHAR *path, TCHAR **fullPath, bool withHomeDir,
       return false;
    }
 
+   bool found = false;
+   bool readOnly;
+   int maxPathLen = 0;
    for(int i = 0; i < s_rootDirectories->size(); i++)
    {
+      int folderPathLen = _tcslen(s_rootDirectories->get(i)->getFolder());
 #if defined(_WIN32) || defined(__APPLE__)
-      if (!_tcsnicmp(s_rootDirectories->get(i)->getFolder(), fullPathT, _tcslen(s_rootDirectories->get(i)->getFolder())))
+      if (!_tcsnicmp(s_rootDirectories->get(i)->getFolder(), fullPathT, folderPathLen))
 #else
-      if (!_tcsncmp(s_rootDirectories->get(i)->getFolder(), fullPathT, _tcslen(s_rootDirectories->get(i)->getFolder())))
+      if (!_tcsncmp(s_rootDirectories->get(i)->getFolder(), fullPathT, folderPathLen))
 #endif
       {
-         if (!isModify || !s_rootDirectories->get(i)->isReadOnly())
+         if (maxPathLen < folderPathLen)
          {
-            *fullPath = fullPathT;
-            return true;
+            maxPathLen = folderPathLen;
+            readOnly = s_rootDirectories->get(i)->isReadOnly();
+            found = true;
          }
-         break;
+      }
+   }
+
+   if (found)
+   {
+      if (!isModify || !readOnly)
+      {
+         *fullPath = fullPathT;
+         return true;
       }
    }
 
