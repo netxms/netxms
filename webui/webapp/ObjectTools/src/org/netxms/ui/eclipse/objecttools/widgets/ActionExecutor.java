@@ -27,14 +27,12 @@ import org.netxms.client.TextOutputListener;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.ui.eclipse.objects.ObjectContext;
 import org.netxms.ui.eclipse.objecttools.Messages;
-import org.netxms.ui.eclipse.widgets.TextConsole.IOConsoleOutputStream;
 
 /**
  * Action executor widget to run an action and display it's result 
  */
 public class ActionExecutor extends AbstractObjectToolExecutor implements TextOutputListener
 {
-   private IOConsoleOutputStream out;
    private String executionString;
    private long alarmId;
    private Map<String, String> inputValues;

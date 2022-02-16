@@ -21,7 +21,6 @@ package org.netxms.ui.eclipse.objecttools.widgets;
 import java.io.IOException;
 import java.util.Map;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.ui.console.IOConsoleOutputStream;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.TextOutputListener;
 import org.netxms.client.objecttools.ObjectTool;
@@ -32,7 +31,6 @@ import org.netxms.ui.eclipse.objects.ObjectContext;
  */
 public class ServerScriptExecutor extends AbstractObjectToolExecutor implements TextOutputListener
 {
-   private IOConsoleOutputStream out;
    private String script = null;
    private Map<String, String> inputValues = null;
    private long alarmId;

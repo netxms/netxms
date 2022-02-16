@@ -32,14 +32,12 @@ import org.netxms.ui.eclipse.objects.ObjectContext;
 import org.netxms.ui.eclipse.objecttools.Activator;
 import org.netxms.ui.eclipse.objecttools.Messages;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
-import org.netxms.ui.eclipse.widgets.TextConsole.IOConsoleOutputStream;
 
 /**
  * Server command executor and output provider widget
  */
 public class ServerCommandExecutor extends AbstractObjectToolExecutor implements TextOutputListener
 {
-   private IOConsoleOutputStream out;
    private String lastCommand = null;
    private Map<String, String> lastInputValues = null;
    private long streamId = 0;

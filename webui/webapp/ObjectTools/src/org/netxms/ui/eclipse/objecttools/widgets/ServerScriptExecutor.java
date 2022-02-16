@@ -25,14 +25,12 @@ import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.TextOutputListener;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.ui.eclipse.objects.ObjectContext;
-import org.netxms.ui.eclipse.widgets.TextConsole.IOConsoleOutputStream;
 
 /**
  * Server script executor and output provider widget
  */
 public class ServerScriptExecutor extends AbstractObjectToolExecutor implements TextOutputListener
 {
-   private IOConsoleOutputStream out;
    private String script = null;
    private Map<String, String> inputValues = null;
    private long alarmId;
