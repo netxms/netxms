@@ -1,5 +1,20 @@
 /**
- * 
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 package org.netxms.nxmc.modules.charts.widgets;
 
@@ -27,6 +42,7 @@ import org.eclipse.swt.widgets.Label;
 import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.DataFormatter;
 import org.netxms.client.datacollection.GraphItem;
+import org.netxms.nxmc.modules.charts.api.ChartType;
 import org.netxms.nxmc.modules.charts.api.DataSeries;
 import org.netxms.nxmc.tools.ColorConverter;
 
@@ -157,7 +173,7 @@ public class ChartLegend extends Composite
       if (configuration == null)
          return;
 
-      if (configuration.isExtendedLegend())
+      if (configuration.isExtendedLegend() && (chart.getType() == ChartType.LINE))
       {
          GridLayout layout = new GridLayout();
          layout.numColumns = 5;
@@ -193,7 +209,49 @@ public class ChartLegend extends Composite
          {
             int color = metrics.get(i).getColor();
             new LegendLabel(this, (color != -1) ? ColorConverter.rgbFromInt(color) : chart.getPaletteEntry(i).getRGBObject(), metrics.get(i).getDescription());
-            for(int j = 0; j < headerLabels.length; j++)
+            for(int j = 0; j < 4; j++)
+            {
+               dataLabels[i][j] = new Label(this, SWT.NONE);
+               if (j == 0)
+               {
+                  gd = new GridData();
+                  gd.horizontalIndent = EXTENDED_LEGEND_DATA_SPACING;
+                  dataLabels[i][j].setLayoutData(gd);
+               }
+            }
+         }
+
+         refresh();
+      }
+      else if (configuration.isExtendedLegend() && ((chart.getType() == ChartType.BAR) || (chart.getType() == ChartType.PIE)))
+      {
+         GridLayout layout = new GridLayout();
+         layout.numColumns = 3;
+         layout.marginWidth = 0;
+         layout.marginHeight = 0;
+         layout.verticalSpacing = 1;
+         setLayout(layout);
+
+         // Column headers
+         new Label(this, SWT.NONE); // Empty label
+
+         headerLabels[0] = new Label(this, SWT.NONE);
+         headerLabels[0].setText("Value");
+         headerLabels[0].setFont(headerFont);
+         GridData gd = new GridData();
+         gd.horizontalIndent = EXTENDED_LEGEND_DATA_SPACING;
+         headerLabels[0].setLayoutData(gd);
+
+         headerLabels[1] = new Label(this, SWT.NONE);
+         headerLabels[1].setText("Pct");
+         headerLabels[1].setFont(headerFont);
+
+         List<GraphItem> metrics = chart.getItems();
+         for(int i = 0; i < metrics.size(); i++)
+         {
+            int color = metrics.get(i).getColor();
+            new LegendLabel(this, (color != -1) ? ColorConverter.rgbFromInt(color) : chart.getPaletteEntry(i).getRGBObject(), metrics.get(i).getDescription());
+            for(int j = 0; j < 2; j++)
             {
                dataLabels[i][j] = new Label(this, SWT.NONE);
                if (j == 0)
@@ -235,13 +293,28 @@ public class ChartLegend extends Composite
    public void refresh()
    {
       boolean useMultipliers = chart.getConfiguration().isUseMultipliers();
+
+      double total = 0;
+      if ((chart.getType() == ChartType.BAR) || (chart.getType() == ChartType.PIE))
+      {
+         for(DataSeries s : chart.getDataSeries())
+            total += s.getCurrentValue();
+      }
+
       int row = 0;
       for(DataSeries s : chart.getDataSeries())
       {
          dataLabels[row][0].setText(useMultipliers ? DataFormatter.roundDecimalValue(s.getCurrentValue(), 0.005, 3) : Double.toString(s.getCurrentValue()));
-         dataLabels[row][1].setText(useMultipliers ? DataFormatter.roundDecimalValue(s.getMinValue(), 0.005, 3) : Double.toString(s.getMinValue()));
-         dataLabels[row][2].setText(useMultipliers ? DataFormatter.roundDecimalValue(s.getMaxValue(), 0.005, 3) : Double.toString(s.getMaxValue()));
-         dataLabels[row][3].setText(useMultipliers ? DataFormatter.roundDecimalValue(s.getAverageValue(), 0.005, 3) : Double.toString(s.getAverageValue()));
+         if (chart.getType() == ChartType.LINE)
+         {
+            dataLabels[row][1].setText(useMultipliers ? DataFormatter.roundDecimalValue(s.getMinValue(), 0.005, 3) : Double.toString(s.getMinValue()));
+            dataLabels[row][2].setText(useMultipliers ? DataFormatter.roundDecimalValue(s.getMaxValue(), 0.005, 3) : Double.toString(s.getMaxValue()));
+            dataLabels[row][3].setText(useMultipliers ? DataFormatter.roundDecimalValue(s.getAverageValue(), 0.005, 3) : Double.toString(s.getAverageValue()));
+         }
+         else
+         {
+            dataLabels[row][1].setText(String.format("%.2f%%", (total > 0) ? (s.getCurrentValue() / total * 100) : 0.0));
+         }
          row++;
       }
       chart.layout();

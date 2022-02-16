@@ -34,6 +34,7 @@ import org.netxms.ui.eclipse.dashboard.Messages;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.AbstractChartConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.BarChartConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.ComparisonChartConfig;
+import org.netxms.ui.eclipse.dashboard.widgets.internal.GaugeConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.LineChartConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.PieChartConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.ScriptedBarChartConfig;
@@ -62,7 +63,6 @@ public class AbstractChart extends PropertyPage
 	private Button checkShowLegend;
    private Button checkExtendedLegend;
 	private Button checkShowGrid;
-	private Button checkShowIn3D;
 	private Button checkTranslucent;
 	private Button checkTransposed;
    private Button checkLogScale;
@@ -131,6 +131,17 @@ public class AbstractChart extends PropertyPage
 		gd.grabExcessHorizontalSpace = true;
 		checkShowLegend.setLayoutData(gd);
 
+      if (!(config instanceof GaugeConfig))
+      {
+         checkExtendedLegend = new Button(optionsGroup, SWT.CHECK);
+         checkExtendedLegend.setText(Messages.get().AbstractChart_ExtendedLegend);
+         checkExtendedLegend.setSelection(config.isExtendedLegend());
+         gd = new GridData();
+         gd.horizontalAlignment = SWT.FILL;
+         gd.grabExcessHorizontalSpace = true;
+         checkExtendedLegend.setLayoutData(gd);
+      }
+
       if (config instanceof LineChartConfig)
       {
          checkUseMultipliers = new Button(optionsGroup, SWT.CHECK);
@@ -141,14 +152,6 @@ public class AbstractChart extends PropertyPage
          gd.grabExcessHorizontalSpace = true;
          checkUseMultipliers.setLayoutData(gd);
 
-         checkExtendedLegend = new Button(optionsGroup, SWT.CHECK);
-         checkExtendedLegend.setText(Messages.get().AbstractChart_ExtendedLegend);
-         checkExtendedLegend.setSelection(((LineChartConfig)config).isExtendedLegend());
-         gd = new GridData();
-         gd.horizontalAlignment = SWT.FILL;
-         gd.grabExcessHorizontalSpace = true;
-         checkExtendedLegend.setLayoutData(gd);
-         
          checkLogScale = new Button(optionsGroup, SWT.CHECK);
          checkLogScale.setText(Messages.get().AbstractChart_LogartithmicScale);
          checkLogScale.setSelection(((LineChartConfig)config).isLogScaleEnabled());
@@ -181,14 +184,6 @@ public class AbstractChart extends PropertyPage
 
       if ((config instanceof ComparisonChartConfig) || (config instanceof ScriptedComparisonChartConfig))
 		{
-			checkShowIn3D = new Button(optionsGroup, SWT.CHECK);
-			checkShowIn3D.setText(Messages.get().AbstractChart_3DView);
-         checkShowIn3D.setSelection((config instanceof ComparisonChartConfig) ? ((ComparisonChartConfig)config).isShowIn3D() : ((ScriptedComparisonChartConfig)config).isShowIn3D());
-			gd = new GridData();
-			gd.horizontalAlignment = SWT.FILL;
-			gd.grabExcessHorizontalSpace = true;
-			checkShowIn3D.setLayoutData(gd);
-
          if ((config instanceof BarChartConfig) || (config instanceof TubeChartConfig) || (config instanceof ScriptedBarChartConfig))
 			{
 				checkTransposed = new Button(optionsGroup, SWT.CHECK);
@@ -340,6 +335,11 @@ public class AbstractChart extends PropertyPage
 		config.setRefreshRate(refreshRate.getSelection());
       config.setTranslucent(checkTranslucent.getSelection());
 
+      if (!(config instanceof GaugeConfig))
+      {
+         config.setExtendedLegend(checkExtendedLegend.getSelection());
+      }
+
       if (!(config instanceof PieChartConfig) && !(config instanceof ScriptedPieChartConfig))
       {
 	      if (!yAxisRange.validate(true))
@@ -353,7 +353,6 @@ public class AbstractChart extends PropertyPage
 
 		if (config instanceof ComparisonChartConfig)
 		{
-			((ComparisonChartConfig)config).setShowIn3D(checkShowIn3D.getSelection());
 			if (config instanceof BarChartConfig)
 			{
 				((BarChartConfig)config).setTransposed(checkTransposed.getSelection());
@@ -364,13 +363,9 @@ public class AbstractChart extends PropertyPage
 			}
 		}
 
-      if (config instanceof ScriptedComparisonChartConfig)
+      if (config instanceof ScriptedBarChartConfig)
       {
-         ((ScriptedComparisonChartConfig)config).setShowIn3D(checkShowIn3D.getSelection());
-         if (config instanceof ScriptedBarChartConfig)
-         {
-            ((ScriptedBarChartConfig)config).setTransposed(checkTransposed.getSelection());
-         }
+         ((ScriptedBarChartConfig)config).setTransposed(checkTransposed.getSelection());
       }
 
 		if (config instanceof LineChartConfig)
@@ -378,7 +373,6 @@ public class AbstractChart extends PropertyPage
 			((LineChartConfig)config).setTimeRange(timeRange.getSelection());
 			((LineChartConfig)config).setTimeUnits(timeUnits.getSelectionIndex());
 			((LineChartConfig)config).setShowGrid(checkShowGrid.getSelection());
-         ((LineChartConfig)config).setExtendedLegend(checkExtendedLegend.getSelection());
          ((LineChartConfig)config).setLogScaleEnabled(checkLogScale.getSelection());
          ((LineChartConfig)config).setUseMultipliers(checkUseMultipliers.getSelection());
          ((LineChartConfig)config).setStacked(checkStacked.getSelection());

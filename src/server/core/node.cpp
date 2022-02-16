@@ -11139,7 +11139,7 @@ void Node::icmpPollAddress(AgentConnection *conn, const TCHAR *target, const Ine
          nxlog_debug_tag(DEBUG_TAG_ICMP_POLL, 7, _T("%s: new collector object created"), debugPrefix);
       }
 
-      if (_tcscmp(target, _T("PRI")) == 0)
+      if (!_tcscmp(target, _T("PRI")))
       {
          if ((status != ICMP_SUCCESS) && !(m_state & NSF_ICMP_UNREACHABLE))
          {

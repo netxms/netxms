@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -52,7 +52,7 @@ public class TableComparisonChart extends PropertyPage
 	private Combo legendPosition;
 	private Button checkShowTitle;
 	private Button checkShowLegend;
-	private Button checkShowIn3D;
+   private Button checkExtendedLegend;
 	private Button checkTranslucent;
 	private Button checkTransposed;
    private YAxisRangeEditor yAxisRange;
@@ -115,13 +115,13 @@ public class TableComparisonChart extends PropertyPage
 		gd.grabExcessHorizontalSpace = true;
 		checkShowLegend.setLayoutData(gd);
 		
-		checkShowIn3D = new Button(optionsGroup, SWT.CHECK);
-		checkShowIn3D.setText(Messages.get().TableComparisonChart_3DView);
-		checkShowIn3D.setSelection(config.isShowIn3D());
-		gd = new GridData();
-		gd.horizontalAlignment = SWT.FILL;
-		gd.grabExcessHorizontalSpace = true;
-		checkShowIn3D.setLayoutData(gd);
+      checkExtendedLegend = new Button(optionsGroup, SWT.CHECK);
+      checkExtendedLegend.setText(Messages.get().AbstractChart_ExtendedLegend);
+      checkExtendedLegend.setSelection(config.isExtendedLegend());
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      checkExtendedLegend.setLayoutData(gd);
 		
 		checkTranslucent = new Button(optionsGroup, SWT.CHECK);
 		checkTranslucent.setText(Messages.get().TableComparisonChart_Translucent);
@@ -206,21 +206,21 @@ public class TableComparisonChart extends PropertyPage
 		config.setRefreshRate(refreshRate.getSelection());
 		config.setShowTitle(checkShowTitle.getSelection());
 		config.setShowLegend(checkShowLegend.getSelection());
-		config.setShowIn3D(checkShowIn3D.getSelection());
+      config.setExtendedLegend(checkExtendedLegend.getSelection());
 		config.setTranslucent(checkTranslucent.getSelection());	
       config.setDrillDownObjectId(drillDownObject.getObjectId());
-		
-		if(!(config instanceof TablePieChartConfig))
+
+      if (!(config instanceof TablePieChartConfig))
       {
 	      if (!yAxisRange.validate(true))
 	         return false;
-	      
+
          config.setAutoScale(yAxisRange.isAuto());
          config.setMinYScaleValue(yAxisRange.getMinY());
          config.setMaxYScaleValue(yAxisRange.getMaxY());
          config.setModifyYBase(yAxisRange.modifyYBase());
       }
-		
+
 		if (config instanceof TableBarChartConfig)
 		{
 			((TableBarChartConfig)config).setTransposed(checkTransposed.getSelection());
