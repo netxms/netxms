@@ -61,6 +61,7 @@ public class ScriptedPieChartElement extends ScriptedComparisonChartElement
       chartConfig.setTitle(elementConfig.getTitle());
       chartConfig.setLegendPosition(elementConfig.getLegendPosition());
       chartConfig.setLegendVisible(elementConfig.isShowLegend());
+      chartConfig.setExtendedLegend(elementConfig.isExtendedLegend());
       chartConfig.setShowIn3D(elementConfig.isShowIn3D());
       chartConfig.setTranslucent(elementConfig.isTranslucent());
 

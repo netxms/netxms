@@ -57,6 +57,7 @@ public class TablePieChartElement extends TableComparisonChartElement
       chartConfig.setTitle(config.getTitle());
       chartConfig.setLegendPosition(config.getLegendPosition());
       chartConfig.setLegendVisible(config.isShowLegend());
+      chartConfig.setExtendedLegend(config.isExtendedLegend());
       chartConfig.setShowIn3D(config.isShowIn3D());
       chartConfig.setTranslucent(config.isTranslucent());
 

@@ -43,6 +43,9 @@ public abstract class AbstractChartConfig extends DashboardElementConfig
 	@Element(required = false)
 	private boolean showLegend = true;
 
+   @Element(required = false)
+   private boolean extendedLegend = false;
+
 	@Element(required = false)
    private boolean showTitle = true;
 
@@ -172,6 +175,22 @@ public abstract class AbstractChartConfig extends DashboardElementConfig
 	{
 		this.showLegend = showLegend;
 	}
+
+   /**
+    * @return the extendedLegend
+    */
+   public boolean isExtendedLegend()
+   {
+      return extendedLegend;
+   }
+
+   /**
+    * @param extendedLegend the extendedLegend to set
+    */
+   public void setExtendedLegend(boolean extendedLegend)
+   {
+      this.extendedLegend = extendedLegend;
+   }
 
 	/**
 	 * @return the refreshRate

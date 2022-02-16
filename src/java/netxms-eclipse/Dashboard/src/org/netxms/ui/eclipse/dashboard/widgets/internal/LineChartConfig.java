@@ -38,9 +38,6 @@ public class LineChartConfig extends AbstractChartConfig
 	private boolean showGrid = true;
 
    @Element(required = false)
-   private boolean extendedLegend = false;
-   
-   @Element(required = false)
    private boolean logScaleEnabled = false;
 
    @Element(required = false)
@@ -146,22 +143,6 @@ public class LineChartConfig extends AbstractChartConfig
 	{
 		this.showGrid = showGrid;
 	}
-
-   /**
-    * @return the extendedLegend
-    */
-   public boolean isExtendedLegend()
-   {
-      return extendedLegend;
-   }
-
-   /**
-    * @param extendedLegend the extendedLegend to set
-    */
-   public void setExtendedLegend(boolean extendedLegend)
-   {
-      this.extendedLegend = extendedLegend;
-   }
 
    /**
     * @return the logScaleEnabled
