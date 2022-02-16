@@ -10913,7 +10913,7 @@ void ClientSession::executeScript(const NXCPMessage& request)
    if (object != nullptr)
    {
       TCHAR *script = request.getFieldAsString(VID_SCRIPT);
-      if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
+      if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY) || (!ConfigReadBoolean(_T("Objects.ScriptExecution.RequireWriteAccess"), true) && object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ)))
       {
          if (script != nullptr)
          {
