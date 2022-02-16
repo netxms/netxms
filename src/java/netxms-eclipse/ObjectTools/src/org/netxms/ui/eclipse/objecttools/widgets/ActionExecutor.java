@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.ui.console.IOConsoleOutputStream;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.TextOutputListener;
 import org.netxms.client.objecttools.ObjectTool;
@@ -34,7 +33,6 @@ import org.netxms.ui.eclipse.objecttools.Messages;
  */
 public class ActionExecutor extends AbstractObjectToolExecutor implements TextOutputListener
 {
-   private IOConsoleOutputStream out;
    private String executionString;
    private long alarmId;
    private Map<String, String> inputValues;

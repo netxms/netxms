@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.Map;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.ui.console.IOConsoleOutputStream;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.TextOutputListener;
@@ -39,7 +38,6 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 public class ServerCommandExecutor extends AbstractObjectToolExecutor implements TextOutputListener
 {
-   private IOConsoleOutputStream out;
    private String lastCommand = null;
    private Map<String, String> lastInputValues = null;
    private long streamId = 0;
