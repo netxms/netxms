@@ -38,7 +38,9 @@ import org.netxms.ui.eclipse.dashboard.Activator;
 import org.netxms.ui.eclipse.dashboard.Messages;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.ColorConverter;
 import org.netxms.ui.eclipse.tools.ViewRefreshController;
+import com.google.gson.Gson;
 
 /**
  * Base class for data comparison charts - like bar chart, pie chart, etc. with data obtained from server-side script.
@@ -119,8 +121,24 @@ public abstract class ScriptedComparisonChartElement extends ElementWidget
                   chart.removeAllParameters();
                   for(Entry<String, String> e : values.entrySet())
 						{
-                     int index = chart.addParameter(new GraphItem(DataType.FLOAT, e.getKey(), e.getKey(), null));
-                     chart.updateParameter(index, safeParseDouble(e.getValue()), false);
+                     GraphItem item;
+                     double value;
+                     if (e.getValue().startsWith("{")) // Assume JSON format if value starts with {
+                     {
+                        GraphElement ge = new Gson().fromJson(e.getValue(), GraphElement.class);
+                        String name = (ge.name != null) && !ge.name.isBlank() ? ge.name : e.getKey();
+                        item = new GraphItem(DataType.FLOAT, name, name, null);
+                        if ((ge.color != null) && !ge.color.isBlank())
+                           item.setColor(ColorConverter.rgbToInt(ColorConverter.parseColorDefinition(ge.color)));
+                        value = ge.value;
+                     }
+                     else
+                     {
+                        item = new GraphItem(DataType.FLOAT, e.getKey(), e.getKey(), null);
+                        value = safeParseDouble(e.getValue());
+                     }
+                     int index = chart.addParameter(item);
+                     chart.updateParameter(index, value, false);
 						}
                   chart.rebuild();
                   chart.clearErrors();
@@ -189,4 +207,11 @@ public abstract class ScriptedComparisonChartElement extends ElementWidget
 			size.y = 250;
 		return size;
 	}
+
+   private static class GraphElement
+   {
+      String name = null;
+      String color = null;
+      double value = 0;
+   }
 }

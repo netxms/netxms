@@ -3,6 +3,7 @@
 
 <product name="NXMC" uid="org.netxms.nxmc" version="3.8.0" useFeatures="false" includeLaunchers="false">
    <plugins>
+      <plugin id="com.google.gson"/>
       <plugin id="com.ibm.icu"/>
       <plugin id="javax.servlet"/>
       <plugin id="org.apache.commons.codec"/>
@@ -356,6 +357,7 @@
    </plugins>
 
    <configurations>
+      <plugin id="com.google.gson" autoStart="true" startLevel="0" />
       <plugin id="com.ibm.icu" autoStart="true" startLevel="0" />
       <plugin id="org.apache.commons.codec" autoStart="true" startLevel="0" />
       <plugin id="org.apache.commons.fileupload" autoStart="true" startLevel="0" />
