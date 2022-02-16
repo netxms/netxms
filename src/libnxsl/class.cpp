@@ -172,6 +172,16 @@ void NXSL_Class::onObjectDelete(NXSL_Object *object)
 }
 
 /**
+ * Convert object to string
+ */
+void NXSL_Class::toString(StringBuffer *sb, NXSL_Object *object)
+{
+   TCHAR buffer[128];
+   _sntprintf(buffer, 128, _T("%s@%p"), m_name, object);
+   sb->append(buffer);
+}
+
+/**
  * Class "Class" constructor
  */
 NXSL_MetaClass::NXSL_MetaClass() : NXSL_Class()

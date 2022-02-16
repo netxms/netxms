@@ -498,10 +498,12 @@ void NXSL_Value::updateString()
    MemFreeAndNull(m_mbString);
 #endif
 
-   if ((m_dataType == NXSL_DT_ARRAY) || (m_dataType == NXSL_DT_HASHMAP))
+   if ((m_dataType == NXSL_DT_ARRAY) || (m_dataType == NXSL_DT_HASHMAP) || (m_dataType == NXSL_DT_OBJECT))
    {
       StringBuffer sb;
-      if (m_dataType == NXSL_DT_ARRAY)
+      if (m_dataType == NXSL_DT_OBJECT)
+         m_value.object->getClass()->toString(&sb, m_value.object);
+      else if (m_dataType == NXSL_DT_ARRAY)
          m_value.arrayHandle->getObject()->toString(&sb, _T(", "), true);
       else
          m_value.hashMapHandle->getObject()->toString(&sb, _T(", "), true);
@@ -542,9 +544,6 @@ void NXSL_Value::updateString()
             break;
          case NXSL_DT_NULL:
             _tcscpy(buffer, _T(""));
-            break;
-         case NXSL_DT_OBJECT:
-            _sntprintf(buffer, 64, _T("%s@%p"), m_value.object->getClass()->getName(), m_value.object);
             break;
          case NXSL_DT_HASHMAP:
             _sntprintf(buffer, 64, _T("[M@%p]"), m_value.hashMapHandle->getObject());

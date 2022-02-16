@@ -314,6 +314,8 @@ public:
    virtual void onObjectCreate(NXSL_Object *object);
 	virtual void onObjectDelete(NXSL_Object *object);
 
+	virtual void toString(StringBuffer *sb, NXSL_Object *object);
+
    const TCHAR *getName() const { return m_name; }
    bool instanceOf(const TCHAR *name) const { return !_tcscmp(name, m_name) || m_classHierarchy.contains(name); }
 
@@ -711,6 +713,8 @@ public:
 
    bool equals(const NXSL_Value *v) const;
    void serialize(ByteStream& s) const;
+
+   json_t *toJson();
 
    static NXSL_Value *load(NXSL_ValueManager *vm, ByteStream& s);
 };
