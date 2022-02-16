@@ -18,26 +18,17 @@
  */
 package org.netxms.websvc.handlers;
 
+import java.util.Map;
 import org.json.JSONObject;
-import org.netxms.client.NXCObjectCreationData;
-import org.netxms.client.NXCObjectModificationData;
-import org.netxms.client.NXCSession;
-import org.netxms.client.constants.RCC;
-import org.netxms.client.objects.AbstractObject;
 import org.netxms.websvc.json.JsonTools;
 import org.netxms.websvc.json.ResponseContainer;
-
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 /**
  * Persistent storage request handler
  */
 public class PersistentStorage extends AbstractObjectHandler
 {
-   /*
+   /**
     * @see org.netxms.websvc.handlers.AbstractHandler#getCollection(org.json.JSONObject)
     */
    @Override
@@ -46,7 +37,7 @@ public class PersistentStorage extends AbstractObjectHandler
       return new ResponseContainer("persistentstorage", getSession().getPersistentStorageList());
    }
 
-   /*
+   /**
     * @see org.netxms.websvc.handlers.AbstractHandler#get(java.lang.String)
     */
    @Override
@@ -55,7 +46,7 @@ public class PersistentStorage extends AbstractObjectHandler
       return new ResponseContainer("value", getSession().getPersistentStorageList().get(id));
    }
 
-   /*
+   /**
     * @see org.netxms.websvc.handlers.AbstractHandler#create(org.json.JSONObject)
     */
    @Override
@@ -67,7 +58,7 @@ public class PersistentStorage extends AbstractObjectHandler
       return null;
    }
 
-   /*
+   /**
     * @see org.netxms.websvc.handlers.AbstractHandler#update(java.lang.String, org.json.JSONObject)
     */
    @Override
@@ -78,7 +69,7 @@ public class PersistentStorage extends AbstractObjectHandler
       return null;
    }
 
-   /*
+   /**
     * @see org.netxms.websvc.handlers.AbstractHandler#delete(java.lang.String)
     */
    @Override
