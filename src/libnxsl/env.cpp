@@ -123,8 +123,8 @@ static NXSL_ExtFunction s_builtinFunctions[] =
 {
    { "__new@GeoLocation", F_GeoLocation, -1 },
    { "__new@InetAddress", F_InetAddress, -1 },
-   { "__new@JsonArray", F_JsonArray, 0 },
-   { "__new@JsonObject", F_JsonObject, 0 },
+   { "__new@JsonArray", F_JsonArray, -1 },
+   { "__new@JsonObject", F_JsonObject, -1 },
    { "__new@Table", F_Table, 0 },
    { "__new@TIME", F_TIME, 0 },
 	{ "_exit", F_exit, -1 },

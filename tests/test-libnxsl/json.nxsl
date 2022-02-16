@@ -7,6 +7,7 @@ json->data->reference = "reference string";
 json->data->value = 0.712;
 json->set("rcpt", "mail@domain.com");
 json->series = %(1, 2, 3, 10, 20);
+json->map = %{ "name":"test map", "value":200 };
 
 r = json->data;
 r->extraBytes = "some extra bytes";
@@ -29,7 +30,7 @@ assert(serialized like "*      10,*");
 assert(serialized like "*      20*");
 assert(serialized like "*   ]*");
 
-expectedValues = %( "flags = 42", "name = Test Object", "data = JsonObject@*", "rcpt = mail@domain.com", "series = JsonArray@*" );
+expectedValues = %( "flags = 42", "name = Test Object", "data = JsonObject@*", "rcpt = mail@domain.com", "series = JsonArray@*", "map = JsonObject@*" );
 
 for(k : json->keys())
 {
@@ -56,6 +57,8 @@ assert(json->series->get(1) == 2);
 assert(json->series->get(2) == 3);
 assert(json->series->get(3) == 10);
 assert(json->series->get(4) == 20);
+assert(json->map->name == "test map");
+assert(json->map->value == 200);
 
 
 assert(json->name == "Test Object");
@@ -118,5 +121,12 @@ for(s : json->series->values)
 		break;
 }
 assert(("" . json->series->values[json->series->values->size - 1]) like "JsonArray@*");
+
+json = new JsonObject(%{ "name":"test", "value":100, "data":%{ "id":1, "version":"10X" }});
+assert(json != null);
+assert(json->name == "test");
+assert(json->value == 100);
+assert(json->data->id == 1);
+assert(json->data->version == "10X");
 
 return 0;
