@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Raden Solutions
+** Copyright (C) 2003-2022 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -11004,55 +11004,38 @@ void ClientSession::executeScript(NXCPMessage *request)
    shared_ptr<NetObj> object = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID));
    if (object != nullptr)
    {
-      if ((object->getObjectClass() == OBJECT_NODE) ||
-          (object->getObjectClass() == OBJECT_CLUSTER) ||
-          (object->getObjectClass() == OBJECT_MOBILEDEVICE) ||
-          (object->getObjectClass() == OBJECT_CHASSIS) ||
-          (object->getObjectClass() == OBJECT_RACK) ||
-          (object->getObjectClass() == OBJECT_CONTAINER) ||
-          (object->getObjectClass() == OBJECT_ZONE) ||
-          (object->getObjectClass() == OBJECT_SUBNET) ||
-          (object->getObjectClass() == OBJECT_SENSOR) ||
-          (object->getObjectClass() == OBJECT_NETWORK) ||
-          (object->getObjectClass() == OBJECT_SERVICEROOT))
+      TCHAR *script = request->getFieldAsString(VID_SCRIPT);
+      if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY) || (!ConfigReadBoolean(_T("Objects.ScriptExecution.RequireWriteAccess"), true) && object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ)))
       {
-         TCHAR *script = request->getFieldAsString(VID_SCRIPT);
-         if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
+         if (script != nullptr)
          {
-				if (script != nullptr)
-				{
-               TCHAR errorMessage[256];
-               vm = NXSLCompileAndCreateVM(script, errorMessage, 256, new NXSL_ClientSessionEnv(this, &response));
-               if (vm != nullptr)
-               {
-                  SetupServerScriptVM(vm, object, shared_ptr<DCObjectInfo>());
-                  response.setField(VID_RCC, RCC_SUCCESS);
-                  sendMessage(response);
-                  success = true;
-                  writeAuditLogWithValues(AUDIT_OBJECTS, true, object->getId(), nullptr, script, 'T', _T("Executed ad-hoc script for object %s [%u]"), object->getName(), object->getId());
-               }
-               else
-               {
-                  response.setField(VID_RCC, RCC_NXSL_COMPILATION_ERROR);
-                  response.setField(VID_ERROR_TEXT, errorMessage);
-               }
-				}
-				else
-				{
-	            response.setField(VID_RCC, RCC_INVALID_ARGUMENT);
-				}
+            TCHAR errorMessage[256];
+            vm = NXSLCompileAndCreateVM(script, errorMessage, 256, new NXSL_ClientSessionEnv(this, &response));
+            if (vm != nullptr)
+            {
+               SetupServerScriptVM(vm, object, shared_ptr<DCObjectInfo>());
+               response.setField(VID_RCC, RCC_SUCCESS);
+               sendMessage(response);
+               success = true;
+               writeAuditLogWithValues(AUDIT_OBJECTS, true, object->getId(), nullptr, script, 'T', _T("Executed ad-hoc script for object %s [%u]"), object->getName(), object->getId());
+            }
+            else
+            {
+               response.setField(VID_RCC, RCC_NXSL_COMPILATION_ERROR);
+               response.setField(VID_ERROR_TEXT, errorMessage);
+            }
          }
-         else  // User doesn't have READ rights on object
+         else
          {
-            writeAuditLogWithValues(AUDIT_OBJECTS, false, object->getId(), nullptr, script, 'T', _T("Access denied on ad-hoc script execution for object %s [%u]"), object->getName(), object->getId());
-            response.setField(VID_RCC, RCC_ACCESS_DENIED);
+            response.setField(VID_RCC, RCC_INVALID_ARGUMENT);
          }
-         MemFree(script);
       }
-      else     // Object is not a node
+      else  // User doesn't have READ rights on object
       {
-         response.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+         writeAuditLogWithValues(AUDIT_OBJECTS, false, object->getId(), nullptr, script, 'T', _T("Access denied on ad-hoc script execution for object %s [%u]"), object->getName(), object->getId());
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
       }
+      MemFree(script);
    }
    else  // No object with given ID
    {
@@ -11075,7 +11058,7 @@ void ClientSession::executeScript(NXCPMessage *request)
       }
       else if (count > 0)
       {
-         UINT32 fieldId = VID_FIELD_LIST_BASE;
+         uint32_t fieldId = VID_FIELD_LIST_BASE;
          for(int i = 0; i < count; i++)
          {
             SharedString value = request->getFieldAsSharedString(fieldId++);
@@ -11163,12 +11146,12 @@ public:
       vm = _vm;
       for(int i = 1; i < _args->size(); i++)
          args.add(vm->createValue(_args->get(i)));
-      name = _tcsdup(_args->get(0));
+      name = MemCopyString(_args->get(0));
    }
    ~LibraryScriptExecutionData()
    {
       delete vm;
-      free(name);
+      MemFree(name);
    }
 };
 
