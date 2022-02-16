@@ -11002,7 +11002,18 @@ void ClientSession::executeScript(const NXCPMessage& request)
                   NXSL_Value *e = a->getByPosition(i);
                   TCHAR key[16];
                   _sntprintf(key, 16, _T("%d"), i + 1);
-                  map.set(key, e->getValueAsCString());
+                  if (e->isHashMap())
+                  {
+                     json_t *json = e->toJson();
+                     char *jsonText = json_dumps(json, 0);
+                     map.setPreallocated(MemCopyString(key), TStringFromUTF8String(jsonText));
+                     MemFree(jsonText);
+                     json_decref(json);
+                  }
+                  else
+                  {
+                     map.set(key, e->getValueAsCString());
+                  }
                }
             }
             else
