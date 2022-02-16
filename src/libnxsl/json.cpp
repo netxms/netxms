@@ -89,6 +89,8 @@ static json_t *JsonFromValue(NXSL_Value *value)
       return json_real(value->getValueAsReal());
    if (value->isString())
       return json_string_t(value->getValueAsCString());
+   if (value->getDataType() == NXSL_DT_BOOLEAN)
+      return json_boolean(value->isTrue());
    if (value->isArray())
    {
       json_t *jarray = json_array();
@@ -107,8 +109,31 @@ static json_t *JsonFromValue(NXSL_Value *value)
       }
       return jarray;
    }
-   if (value->getDataType() == NXSL_DT_BOOLEAN)
-      return json_boolean(value->isTrue());
+   if (value->isHashMap())
+   {
+      json_t *jobject = json_object();
+      NXSL_HashMap *m = value->getValueAsHashMap();
+      unique_ptr<StringList> keys(m->getKeysAsList());
+      for(int i = 0; i < keys->size(); i++)
+      {
+         const TCHAR *key = keys->get(i);
+         NXSL_Value *v = m->get(key);
+
+         char jkey[1024];
+         tchar_to_utf8(key, -1, jkey, 1024);
+         jkey[1023] = 0;
+
+         if (v->isObject(_T("JsonObject")) || v->isObject(_T("JsonArray")))
+         {
+            json_object_set(jobject, jkey, static_cast<json_t*>(v->getValueAsObject()->getData()));
+         }
+         else
+         {
+            json_object_set_new(jobject, jkey, JsonFromValue(v));
+         }
+      }
+      return jobject;
+   }
    return json_null();
 }
 
@@ -135,7 +160,7 @@ NXSL_METHOD_DEFINITION(JsonObject, keys)
    NXSL_Array *keys = new NXSL_Array(vm);
    json_t *json = static_cast<json_t*>(object->getData());
    void *it = json_object_iter(json);
-   while(it != NULL)
+   while(it != nullptr)
    {
       keys->append(vm->createValue(json_object_iter_key(it)));
       it = json_object_iter_next(json, it);
@@ -394,7 +419,13 @@ NXSL_Value *NXSL_JsonArrayClass::getAttr(NXSL_Object *object, const NXSL_Identif
  */
 int F_JsonObject(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
-   *result = vm->createValue(vm->createObject(&g_nxslJsonObjectClass, json_object()));
+   if (argc > 1)
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
+   if ((argc == 1) && !argv[0]->isHashMap() && !argv[0]->isNull())
+      return NXSL_ERR_NOT_HASHMAP;
+
+   *result = vm->createValue(vm->createObject(&g_nxslJsonObjectClass, ((argc == 0) || argv[0]->isNull()) ? json_object() : JsonFromValue(argv[0])));
    return 0;
 }
 
@@ -403,7 +434,13 @@ int F_JsonObject(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
  */
 int F_JsonArray(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
-   *result = vm->createValue(vm->createObject(&g_nxslJsonArrayClass, json_array()));
+   if (argc > 1)
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
+   if ((argc == 1) && !argv[0]->isArray() && !argv[0]->isNull())
+      return NXSL_ERR_NOT_ARRAY;
+
+   *result = vm->createValue(vm->createObject(&g_nxslJsonArrayClass, ((argc == 0) || argv[0]->isNull()) ? json_array() : JsonFromValue(argv[0])));
    return 0;
 }
 
