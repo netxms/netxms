@@ -34,6 +34,8 @@ import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Menu;
+import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.ToolBar;
 import org.eclipse.swt.widgets.ToolItem;
 import org.eclipse.ui.IPerspectiveDescriptor;
@@ -72,6 +74,18 @@ public class PerspectiveSwitcher extends Composite
       IPerspectiveDescriptor p = window.getActivePage().getPerspective();
       if (p != null)
          currentPerspective.setText(p.getLabel());
+
+      Menu menu = new Menu(currentPerspective);
+      MenuItem mi = new MenuItem(menu, SWT.PUSH);
+      mi.setText("&Reset perspective");
+      mi.addSelectionListener(new SelectionAdapter() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            window.getActivePage().resetPerspective();
+         }
+      });
+      currentPerspective.setMenu(menu);
 
       toolbar = new ToolBar(this, SWT.FLAT);
 
