@@ -110,7 +110,7 @@ public abstract class ScriptedComparisonChartElement extends ElementWidget
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-            final Map<String, String> values = session.queryScript(objectId, script, null, null);
+            final Map<String, String> values = session.queryScript((objectId != 0) ? objectId : getDashboardObjectId(), script, null, null);
 				runInUIThread(new Runnable() {
 					@Override
 					public void run()

@@ -30,12 +30,18 @@ import org.netxms.ui.eclipse.dashboard.widgets.internal.ScriptedComparisonChartC
 import org.netxms.ui.eclipse.nxsl.widgets.ScriptEditor;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
 
+/**
+ * "Script" property page for scripted charts
+ */
 public class ScriptedChart extends PropertyPage
 {
    private ScriptedComparisonChartConfig config;
    private ObjectSelector objectSelector;
    private ScriptEditor scriptEditor;
 
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
+    */
    @Override
    protected Control createContents(Composite parent)
    {
@@ -50,6 +56,7 @@ public class ScriptedChart extends PropertyPage
       objectSelector.setLabel("Object");
       objectSelector.setObjectClass(AbstractObject.class);
       objectSelector.setObjectId(config.getObjectId());
+      objectSelector.setEmptySelectionName("<dashboard>");
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;

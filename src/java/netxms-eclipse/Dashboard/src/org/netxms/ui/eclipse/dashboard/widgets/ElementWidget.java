@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -130,17 +130,17 @@ public class ElementWidget extends DashboardComposite implements ControlListener
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.swt.events.ControlListener#controlMoved(org.eclipse.swt.events.ControlEvent)
-	 */
+   /**
+    * @see org.eclipse.swt.events.ControlListener#controlMoved(org.eclipse.swt.events.ControlEvent)
+    */
 	@Override
 	public void controlMoved(ControlEvent e)
 	{
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.swt.events.ControlListener#controlResized(org.eclipse.swt.events.ControlEvent)
-	 */
+   /**
+    * @see org.eclipse.swt.events.ControlListener#controlResized(org.eclipse.swt.events.ControlEvent)
+    */
 	@Override
 	public void controlResized(ControlEvent e)
 	{
@@ -179,6 +179,16 @@ public class ElementWidget extends DashboardComposite implements ControlListener
 	{
 	   dbc.layout(true, true);
 	}
+
+   /**
+    * Get ID of owning dashboard object.
+    *
+    * @return ID of owning dashboard object
+    */
+   protected long getDashboardObjectId()
+   {
+      return dbc.getDashboardObject().getObjectId();
+   }
 
    /**
     * Create title lable
