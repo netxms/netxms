@@ -41,7 +41,7 @@ public class ObjectSelector extends AbstractSelector
 	private Set<Class<? extends AbstractObject>> objectClassSet = new HashSet<Class<? extends AbstractObject>>();
 	private Set<Integer> classFilter = null;
    private String emptySelectionName = i18n.tr("None");
-	
+
 	/**
 	 * @param parent
 	 * @param style
@@ -128,7 +128,7 @@ public class ObjectSelector extends AbstractSelector
 		this.objectId = objectId;
 		if (objectId == 0)
 		{
-			setText(emptySelectionName); //$NON-NLS-1$
+         setText(emptySelectionName);
 		}
 		else
 		{
@@ -177,6 +177,8 @@ public class ObjectSelector extends AbstractSelector
 	public void setEmptySelectionName(String emptySelectionName)
 	{
 		this.emptySelectionName = emptySelectionName;
+      if (objectId == 0)
+         setText(emptySelectionName);
 	}
 
 	/**

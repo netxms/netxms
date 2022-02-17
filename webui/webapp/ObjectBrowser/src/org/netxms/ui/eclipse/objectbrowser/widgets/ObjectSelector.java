@@ -126,7 +126,7 @@ public class ObjectSelector extends AbstractSelector
 		this.objectId = objectId;
 		if (objectId == 0)
 		{
-			setText(emptySelectionName); //$NON-NLS-1$
+         setText(emptySelectionName);
 		}
 		else
 		{
@@ -175,6 +175,8 @@ public class ObjectSelector extends AbstractSelector
 	public void setEmptySelectionName(String emptySelectionName)
 	{
 		this.emptySelectionName = emptySelectionName;
+      if (objectId == 0)
+         setText(emptySelectionName);
 	}
 
 	/**
