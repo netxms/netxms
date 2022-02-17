@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -79,33 +79,42 @@ public class BarChart extends GenericComparisonChart
          return;
 
       // Calculate min and max values
-      double minValue = series.get(0).getCurrentValue();
-      double maxValue = minValue;
-      for(DataSeries s : series)
+      double minValue, maxValue;
+      if (chart.getConfiguration().isAutoScale())
       {
-         if (minValue > s.getCurrentValue())
-            minValue = s.getCurrentValue();
-         if (maxValue < s.getCurrentValue())
-            maxValue = s.getCurrentValue();
-      }
-      if (minValue >= 0)
-      {
-         maxValue = adjustRange(maxValue);
-         minValue = 0;
-         if (maxValue == 0) // All data at 0
-            maxValue = 1;
-      }
-      else if (maxValue > 0)
-      {
-         maxValue = adjustRange(maxValue);
-         minValue = -adjustRange(Math.abs(minValue));
+         minValue = series.get(0).getCurrentValue();
+         maxValue = minValue;
+         for(DataSeries s : series)
+         {
+            if (minValue > s.getCurrentValue())
+               minValue = s.getCurrentValue();
+            if (maxValue < s.getCurrentValue())
+               maxValue = s.getCurrentValue();
+         }
+         if (minValue >= 0)
+         {
+            maxValue = adjustRange(maxValue);
+            minValue = 0;
+            if (maxValue == 0) // All data at 0
+               maxValue = 1;
+         }
+         else if (maxValue > 0)
+         {
+            maxValue = adjustRange(maxValue);
+            minValue = -adjustRange(Math.abs(minValue));
+         }
+         else
+         {
+            maxValue = 0;
+            minValue = -adjustRange(Math.abs(minValue));
+         }
       }
       else
       {
-         maxValue = 0;
-         minValue = -adjustRange(Math.abs(minValue));
+         minValue = chart.getConfiguration().getMinYScaleValue();
+         maxValue = chart.getConfiguration().getMaxYScaleValue();
       }
-      
+
       if (chart.getConfiguration().isTransposed())
          renderHorizontal(gc, size, items, series, minValue, maxValue);
       else
