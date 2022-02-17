@@ -202,12 +202,12 @@ public class DashboardLayout extends Layout
                {
                   int r = e.getValue().y + i;
                   if (rowFill[r] == 0)
-                     rowFill[r] = 1; // Tentatively fill
+                     rowFill[r] = 2; // Tentatively fill
                }
             }
             else
             {
-               rowFill[e.getValue().y] = 2; // Definitely fill
+               rowFill[e.getValue().y] = 3; // Definitely fill
             }
          }
          else
@@ -216,8 +216,11 @@ public class DashboardLayout extends Layout
             int rs = (ch - (layoutData.verticalSpan - 1) * verticalSpacing) / layoutData.verticalSpan;
             for(int i = 0; i < layoutData.verticalSpan; i++)
             {
-               if (rowSize[e.getValue().y + i] < rs)
-                  rowSize[e.getValue().y + i] = rs;
+               int r = e.getValue().y + i;
+               if (rowSize[r] < rs)
+                  rowSize[r] = rs;
+               if (rowFill[r] < 3)
+                  rowFill[r] = 1; // Prefer not to fill
             }
          }
       }
@@ -226,16 +229,22 @@ public class DashboardLayout extends Layout
       for(Entry<Control, Point> e : coordinates.entrySet())
       {
          DashboardLayoutData layoutData = getLayoutData(e.getKey());
-         if (layoutData.fill)
+         if (layoutData.fill && (layoutData.verticalSpan > 1))
          {
-            if (layoutData.verticalSpan > 1)
+            boolean ok = false;
+            // First try to choose rows without preference for no-fill
+            for(int i = 0; i < layoutData.verticalSpan; i++)
             {
-               boolean ok = false;
-               for(int i = 0; (i < layoutData.verticalSpan) && !ok; i++)
-                  ok = (rowFill[e.getValue().y + i] == 2);
-               if (!ok)
-                  rowFill[e.getValue().y] = 2;
+               int r = e.getValue().y + i;
+               if (rowFill[r] >= 2)
+               {
+                  rowFill[r] = 3;
+                  ok = true;
+               }
             }
+
+            if (!ok) // If still didn't find at least one row for grow, select first one
+               rowFill[e.getValue().y] = 3;
          }
       }
 
@@ -243,7 +252,7 @@ public class DashboardLayout extends Layout
       int fillRows = 0;
       for(int i = 0; i < rowCount; i++)
       {
-         if (rowFill[i] == 2)
+         if (rowFill[i] == 3)
             fillRows++;
          usedSpace += rowSize[i];
       }
@@ -271,7 +280,7 @@ public class DashboardLayout extends Layout
          float extraHeight = (float)(height - usedSpace - verticalSpacing * (rowCount - 1)) / (float)fillRows;
          for(int i = 0; i < rowCount; i++)
          {
-            if (rowFill[i] == 2)
+            if (rowFill[i] == 3)
                rowSize[i] += extraHeight;
          }
       }
