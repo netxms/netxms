@@ -2048,14 +2048,15 @@ void NXSL_VM::getOrUpdateHashMapElement(int opcode, NXSL_Value *hashMap, NXSL_Va
    }
 
    NXSL_Value *element = hashMap->getValueAsHashMap()->get(key->getValueAsCString());
-   if (element == nullptr)
-   {
-      error(NXSL_ERR_NULL_VALUE);
-      return;
-   }
-
    if ((opcode != OPCODE_GET_ELEMENT) && (opcode != OPCODE_PEEK_ELEMENT))
+   {
+      if (element == nullptr)
+      {
+         error(NXSL_ERR_NULL_VALUE);
+         return;
+      }
       hashMap->copyOnWrite();
+   }
 
    if (opcode == OPCODE_INCP_ELEMENT)
    {

@@ -5,6 +5,7 @@ assert("alpha" in m1);
 assert(not (1 in m1));
 assert(m1["alpha"] == 1);
 assert(m1["beta"] == 2);
+assert(m1["error"] == null);
 assert(m1->contains("alpha"));
 
 m2 = m1;
