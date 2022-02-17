@@ -1,6 +1,6 @@
 /*
 ** NetXMS database manager library
-** Copyright (C) 2004-2019 Victor Kirhenshtein
+** Copyright (C) 2004-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -339,7 +339,7 @@ int LIBNXDBMGR_EXPORTABLE NextFreeEPPruleID()
 /**
  * Add event to EPP rule by rule GUID
  */
-bool LIBNXDBMGR_EXPORTABLE AddEventToEPPRule(const TCHAR *guid, UINT32 eventCode)
+bool LIBNXDBMGR_EXPORTABLE AddEventToEPPRule(const TCHAR *guid, uint32_t eventCode)
 {
    TCHAR query[256];
    _sntprintf(query, 256, _T("SELECT rule_id FROM event_policy WHERE rule_guid='%s'"), guid);
@@ -360,7 +360,7 @@ bool LIBNXDBMGR_EXPORTABLE AddEventToEPPRule(const TCHAR *guid, UINT32 eventCode
 /**
  * Create library script
  */
-bool LIBNXDBMGR_EXPORTABLE CreateLibraryScript(UINT32 id, const TCHAR *guid, const TCHAR *name, const TCHAR *code)
+bool LIBNXDBMGR_EXPORTABLE CreateLibraryScript(uint32_t id, const TCHAR *guid, const TCHAR *name, const TCHAR *code)
 {
    // Check if script exists
    TCHAR query[256];

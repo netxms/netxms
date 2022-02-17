@@ -545,6 +545,8 @@ static bool H_UpgradeFromV78()
       _T("Business service changed state to degraded"),
       _T("Generated when business service state changes to degraded.")));
 
+   AddEventToEPPRule(_T("aa188673-049f-4c4d-8767-c1cf443c9547"), EVENT_BUSINESS_SERVICE_DEGRADED);
+
    CHK_EXEC(SetMinorSchemaVersion(79));
    return true;
 }

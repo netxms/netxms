@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Database manager library
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -91,9 +91,9 @@ bool LIBNXDBMGR_EXPORTABLE ConvertStrings(const TCHAR *table, const TCHAR *idCol
 bool LIBNXDBMGR_EXPORTABLE CreateEventTemplate(int code, const TCHAR *name, int severity, int flags, const TCHAR *guid, const TCHAR *message, const TCHAR *description);
 bool LIBNXDBMGR_EXPORTABLE IsEventPairInUse(UINT32 code1, UINT32 code2);
 int LIBNXDBMGR_EXPORTABLE NextFreeEPPruleID();
-bool LIBNXDBMGR_EXPORTABLE AddEventToEPPRule(const TCHAR *guid, UINT32 eventCode);
+bool LIBNXDBMGR_EXPORTABLE AddEventToEPPRule(const TCHAR *guid, uint32_t eventCode);
 
-bool LIBNXDBMGR_EXPORTABLE CreateLibraryScript(UINT32 id, const TCHAR *guid, const TCHAR *name, const TCHAR *code);
+bool LIBNXDBMGR_EXPORTABLE CreateLibraryScript(uint32_t id, const TCHAR *guid, const TCHAR *name, const TCHAR *code);
 
 void LIBNXDBMGR_EXPORTABLE DecodeSQLString(TCHAR *str);
 
