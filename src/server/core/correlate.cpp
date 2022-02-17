@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -161,6 +161,7 @@ void CorrelateEvent(Event *pEvent)
          // there are intentionally no break
       case EVENT_SERVICE_DOWN:
       case EVENT_SNMP_FAIL:
+      case EVENT_ICMP_UNREACHABLE:
          if (node->getState() & DCSF_UNREACHABLE)
          {
             pEvent->setRootId(node->getLastEventId(LAST_EVENT_NODE_DOWN));
