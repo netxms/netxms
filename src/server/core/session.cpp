@@ -6149,6 +6149,7 @@ void ClientSession::alarmUpdateWorker(Alarm *alarm)
    sendMessage(&msg);
    MutexUnlock(m_mutexSendAlarms);
    delete alarm;
+   decRefCount();
 }
 
 /**
@@ -6163,6 +6164,7 @@ void ClientSession::onAlarmUpdate(UINT32 code, const Alarm *alarm)
           object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ_ALARMS) &&
           alarm->checkCategoryAccess(this))
       {
+         incRefCount();
          TCHAR key[16];
          _sntprintf(key, 16, _T("ALRM-%d"), m_id);
          ThreadPoolExecuteSerialized(g_clientThreadPool, key, this, &ClientSession::alarmUpdateWorker, new Alarm(alarm, false, code));
