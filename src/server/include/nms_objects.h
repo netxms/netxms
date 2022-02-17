@@ -3039,6 +3039,7 @@ protected:
    uint32_t m_pollCountAgent;
    uint32_t m_pollCountSNMP;
    uint32_t m_pollCountEtherNetIP;
+   uint32_t m_pollCountICMP;
    uint32_t m_requiredPollCount;
    uint32_t m_pollsAfterIpUpdate;
    int32_t m_zoneUIN;

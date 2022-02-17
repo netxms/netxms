@@ -149,6 +149,7 @@ Node::Node() : super(Pollable::STATUS | Pollable::CONFIGURATION | Pollable::DISC
    m_pollCountAgent = 0;
    m_pollCountSNMP = 0;
    m_pollCountEtherNetIP = 0;
+   m_pollCountICMP = 0;
    m_requiredPollCount = 0; // Use system default
    m_pollsAfterIpUpdate = 0;
    m_nUseIfXTable = IFXTABLE_DEFAULT;  // Use system default
@@ -267,6 +268,7 @@ Node::Node(const NewNodeData *newNodeData, UINT32 flags) : super(Pollable::STATU
    m_pollCountAgent = 0;
    m_pollCountSNMP = 0;
    m_pollCountEtherNetIP = 0;
+   m_pollCountICMP = 0;
    m_requiredPollCount = 0; // Use system default
    m_pollsAfterIpUpdate = 0;
    m_nUseIfXTable = IFXTABLE_DEFAULT;  // Use system default
@@ -11141,17 +11143,43 @@ void Node::icmpPollAddress(AgentConnection *conn, const TCHAR *target, const Ine
 
       if (!_tcscmp(target, _T("PRI")))
       {
-         if ((status != ICMP_SUCCESS) && !(m_state & NSF_ICMP_UNREACHABLE))
+         uint32_t requiredPolls = (m_requiredPollCount > 0) ? m_requiredPollCount : g_requiredPolls;
+         if (status != ICMP_SUCCESS)
          {
-            m_state |= NSF_ICMP_UNREACHABLE;
-            PostSystemEvent(EVENT_ICMP_UNREACHABLE, m_id, nullptr);
-            setModified(MODIFY_NODE_PROPERTIES);
+            if (!(m_state & NSF_ICMP_UNREACHABLE))
+            {
+               m_pollCountICMP++;
+               if (m_pollCountICMP >= requiredPolls)
+               {
+                  m_state |= NSF_ICMP_UNREACHABLE;
+                  m_pollCountICMP = 0;
+                  PostSystemEvent(EVENT_ICMP_UNREACHABLE, m_id, nullptr);
+                  setModified(MODIFY_NODE_PROPERTIES);
+                  m_pollCountICMP = 0;
+               }
+            }
+            else
+            {
+               m_pollCountICMP = 0;
+            }
          }
-         else if ((status == ICMP_SUCCESS) && (m_state & NSF_ICMP_UNREACHABLE))
+         else
          {
-            m_state &= ~NSF_ICMP_UNREACHABLE;
-            PostSystemEvent(EVENT_ICMP_OK, m_id, nullptr);
-            setModified(MODIFY_NODE_PROPERTIES);
+            if (m_state & NSF_ICMP_UNREACHABLE)
+            {
+               m_pollCountICMP++;
+               if (m_pollCountICMP >= requiredPolls)
+               {
+                  m_state &= ~NSF_ICMP_UNREACHABLE;
+                  m_pollCountICMP = 0;
+                  PostSystemEvent(EVENT_ICMP_OK, m_id, nullptr);
+                  setModified(MODIFY_NODE_PROPERTIES);
+               }
+            }
+            else
+            {
+               m_pollCountICMP = 0;
+            }
          }
       }
 
