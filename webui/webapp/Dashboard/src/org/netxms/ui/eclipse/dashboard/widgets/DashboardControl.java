@@ -75,7 +75,7 @@ public class DashboardControl extends Composite
 	private DashboardModifyListener modifyListener = null;
 	private IViewPart viewPart;
 	private IntermediateSelectionProvider selectionProvider;
-	
+
 	/**
 	 * @param parent
 	 * @param style
@@ -113,7 +113,7 @@ public class DashboardControl extends Composite
 	private void createContent()
 	{
       setBackground(ThemeEngine.getBackgroundColor("Dashboard"));
-		
+
 		DashboardLayout layout = new DashboardLayout();
 		layout.numColumns = dashboard.getNumColumns();
 		layout.marginWidth = embedded ? 0 : 15;
@@ -121,13 +121,13 @@ public class DashboardControl extends Composite
 		layout.horizontalSpacing = 10;
 		layout.verticalSpacing = 10;
 		setLayout(layout);
-		
+
 		for(final DashboardElement e : elements)
 		{
 			createElementWidget(e);
 		}
 	}
-	
+
 	/**
 	 * Factory method for creating dashboard elements
 	 * 

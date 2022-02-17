@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,12 +40,12 @@ public class DashboardLayout extends Layout
    public int verticalSpacing = 5;
 
    private static final int MAX_ROWS = 64;
-   
+
    private int rowCount = 0;
    private Map<Control, Point> coordinates = new HashMap<Control, Point>(0);
    private int[] rowStart = null;
    private Point cachedSize = null;
-   
+
    /**
     * Get number of empty cells in given row
     * 
@@ -139,7 +139,7 @@ public class DashboardLayout extends Layout
    {
       if ((wHint != SWT.DEFAULT) && (hHint != SWT.DEFAULT))
          return new Point(wHint, hHint);
-      
+
       if ((cachedSize != null) && !flushCache)
          return new Point(cachedSize.x, cachedSize.y);
 
@@ -180,7 +180,7 @@ public class DashboardLayout extends Layout
       createGrid(composite);
       if (rowCount == 0)
          return;
-      
+
       Point size = composite.getSize();
       int height = size.y - marginHeight * 2;
       int columnWidth = (size.x - marginWidth * 2 - horizontalSpacing * (numColumns - 1)) / numColumns;
@@ -188,16 +188,27 @@ public class DashboardLayout extends Layout
       // Calculate size for each row
       float[] rowSize = new float[rowCount];
       Arrays.fill(rowSize, 0);
-      boolean[] rowFill = new boolean[rowCount];
-      Arrays.fill(rowFill, false);
+      int[] rowFill = new int[rowCount];
+      Arrays.fill(rowFill, 0);
 
       for(Entry<Control, Point> e : coordinates.entrySet())
       {
          DashboardLayoutData layoutData = getLayoutData(e.getKey());
          if (layoutData.fill)
          {
-            for(int i = 0; i < layoutData.verticalSpan; i++)
-               rowFill[e.getValue().y + i] = true;
+            if (layoutData.verticalSpan > 1)
+            {
+               for(int i = 0; i < layoutData.verticalSpan; i++)
+               {
+                  int r = e.getValue().y + i;
+                  if (rowFill[r] == 0)
+                     rowFill[r] = 1; // Tentatively fill
+               }
+            }
+            else
+            {
+               rowFill[e.getValue().y] = 2; // Definitely fill
+            }
          }
          else
          {
@@ -211,15 +222,32 @@ public class DashboardLayout extends Layout
          }
       }
 
+      // Make sure that each control with fill flag set has at least one row with definite fill
+      for(Entry<Control, Point> e : coordinates.entrySet())
+      {
+         DashboardLayoutData layoutData = getLayoutData(e.getKey());
+         if (layoutData.fill)
+         {
+            if (layoutData.verticalSpan > 1)
+            {
+               boolean ok = false;
+               for(int i = 0; (i < layoutData.verticalSpan) && !ok; i++)
+                  ok = (rowFill[e.getValue().y + i] == 2);
+               if (!ok)
+                  rowFill[e.getValue().y] = 2;
+            }
+         }
+      }
+
       float usedSpace = 0;
       int fillRows = 0;
       for(int i = 0; i < rowCount; i++)
       {
-         if (rowFill[i])
+         if (rowFill[i] == 2)
             fillRows++;
          usedSpace += rowSize[i];
       }
-      
+
       // If children requires too much space, reduce biggest
       if (usedSpace > height - verticalSpacing * (rowCount - 1))
       {
@@ -243,7 +271,7 @@ public class DashboardLayout extends Layout
          float extraHeight = (float)(height - usedSpace - verticalSpacing * (rowCount - 1)) / (float)fillRows;
          for(int i = 0; i < rowCount; i++)
          {
-            if (rowFill[i])
+            if (rowFill[i] == 2)
                rowSize[i] += extraHeight;
          }
       }
