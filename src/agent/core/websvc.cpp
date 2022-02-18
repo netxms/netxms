@@ -441,7 +441,7 @@ void ServiceEntry::getParamsFromText(StringList *params, NXCPMessage *response)
       PCRE *compiledPattern = _pcre_compile_t(reinterpret_cast<const PCRE_TCHAR*>(pattern), PCRE_COMMON_FLAGS, &eptr, &eoffset, nullptr);
       if (compiledPattern == nullptr)
       {
-         nxlog_debug_tag(DEBUG_TAG, 4, _T("ServiceEntry::getListFromText(): \"%s\" pattern compilation failure: %hs at offset %d"), pattern, eptr, eoffset);
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("ServiceEntry::getParamsFromText(): \"%s\" pattern compilation failure: %hs at offset %d"), pattern, eptr, eoffset);
          continue;
       }
 
@@ -737,7 +737,7 @@ uint32_t ServiceEntry::query(const TCHAR *url, uint16_t requestMethod, const cha
                      nxlog_debug_tag(DEBUG_TAG, 1, _T("ServiceEntry::query(): Failed to load XML"));
                   }
                }
-               else if (!forcePlainTextParser && (*text == '{'))
+               else if (!forcePlainTextParser && ((*text == '{') || (*text == '[')))
                {
                   m_type = DocumentType::JSON;
 #ifdef HAVE_LIBJQ
