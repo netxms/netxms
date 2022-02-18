@@ -89,7 +89,7 @@ struct Process
       parent = 0;
       group = 0;
       state = '?';
-      strlcpy(user, _user, MAX_USER_NAME_LEN);
+      strlcpy(user, CHECK_NULL_EX_A(_user), MAX_USER_NAME_LEN);
       threads = 0;
       ktime = 0;
       utime = 0;
