@@ -74,7 +74,7 @@ public class SourceProvider extends AbstractSourceProvider
    public static final String UA_VIEW_SYSLOG           = "org.netxms.access.ViewSyslog"; //$NON-NLS-1$
    public static final String UA_VIEW_TRAP_LOG         = "org.netxms.access.ViewTrapLog"; //$NON-NLS-1$
    public static final String UA_XMPP_COMMANDS         = "org.netxms.access.XMPPCommands"; //$NON-NLS-1$
-	
+
 	private static final String[] PROVIDED_SOURCE_NAMES =
 	   { 
    	   UA_ALL_SCHEDULED_TASKS,
@@ -121,7 +121,8 @@ public class SourceProvider extends AbstractSourceProvider
    	   UA_VIEW_TRAP_LOG,
    	   UA_XMPP_COMMANDS
 	   };
-	private static final Map<String, Object> values = new HashMap<String, Object>(1);
+
+	private final Map<String, Object> values = new HashMap<String, Object>(1);
 
 	/**
 	 * Get source provider instance.
@@ -132,8 +133,8 @@ public class SourceProvider extends AbstractSourceProvider
 	{
 		return (SourceProvider)ConsoleSharedData.getProperty("CoreSourceProvider");
 	}
-	
-	/* (non-Javadoc)
+
+	/**
 	 * @see org.eclipse.ui.AbstractSourceProvider#initialize(org.eclipse.ui.services.IServiceLocator)
 	 */
 	@Override
@@ -143,7 +144,7 @@ public class SourceProvider extends AbstractSourceProvider
 		ConsoleSharedData.setProperty("CoreSourceProvider", this);
 	}
 
-	/* (non-Javadoc)
+	/**
 	 * @see org.eclipse.ui.ISourceProvider#getCurrentState()
 	 */
 	@SuppressWarnings("rawtypes")
@@ -153,7 +154,7 @@ public class SourceProvider extends AbstractSourceProvider
 		return values;
 	}
 
-	/* (non-Javadoc)
+	/**
 	 * @see org.eclipse.ui.ISourceProvider#getProvidedSourceNames()
 	 */
 	@Override
@@ -162,7 +163,7 @@ public class SourceProvider extends AbstractSourceProvider
 		return PROVIDED_SOURCE_NAMES;
 	}
 
-	/* (non-Javadoc)
+	/**
 	 * @see org.eclipse.ui.ISourceProvider#dispose()
 	 */
 	@Override
@@ -221,7 +222,7 @@ public class SourceProvider extends AbstractSourceProvider
 	   setAccessRight(rights, UserAccessRights.SYSTEM_ACCESS_XMPP_COMMANDS, UA_XMPP_COMMANDS);
 		fireSourceChanged(ISources.WORKBENCH, getCurrentState());
 	}
-	
+
 	/**
 	 * @param rights
 	 * @param bit
