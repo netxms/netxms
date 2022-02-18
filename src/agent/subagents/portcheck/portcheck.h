@@ -90,18 +90,18 @@ enum
 #define SCF_NEGATIVE_TIME_ON_ERROR  0x0001
 
 LONG H_CheckPOP3(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
-int CheckPOP3(char *, const InetAddress&, short, char *, char *, UINT32);
+int CheckPOP3(char *, const InetAddress&, uint16_t, char *, char *, UINT32);
 LONG H_CheckSSH(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
-int CheckSSH(char *, const InetAddress&, short, char *, char *, UINT32);
+int CheckSSH(char *, const InetAddress&, uint16_t, char *, char *, UINT32);
 LONG H_CheckSMTP(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
-int CheckSMTP(char *, const InetAddress&, short, char *, UINT32);
+int CheckSMTP(char *, const InetAddress&, uint16_t, char *, UINT32);
 LONG H_CheckHTTP(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
-int CheckHTTP(char *, const InetAddress&, short, char *, char *, char *, UINT32);
-int CheckHTTPS(char *, const InetAddress&, short, char *, char *, char *, UINT32);
+int CheckHTTP(char *, const InetAddress&, uint16_t, char *, char *, char *, UINT32);
+int CheckHTTPS(char *, const InetAddress&, uint16_t, char *, char *, char *, UINT32);
 LONG H_CheckCustom(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 int CheckCustom(char *hostname, const InetAddress& addr, uint16_t port, uint32_t timeout);
 LONG H_CheckTelnet(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
-int CheckTelnet(char *, const InetAddress&, short, char *, char *, UINT32);
+int CheckTelnet(char *, const InetAddress&, uint16_t, char *, char *, UINT32);
 LONG H_CheckTLS(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 int CheckTLS(char *hostname, const InetAddress& addr, uint16_t port, uint32_t timeout);
 LONG H_TLSCertificateInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);

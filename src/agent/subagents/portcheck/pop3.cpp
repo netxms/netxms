@@ -61,7 +61,7 @@ LONG H_CheckPOP3(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCom
 /**
  * Check POP3 service
  */
-int CheckPOP3(char *szAddr, const InetAddress& addr, short nPort, char *szUser, char *szPass, UINT32 dwTimeout)
+int CheckPOP3(char *szAddr, const InetAddress& addr, uint16_t nPort, char *szUser, char *szPass, UINT32 dwTimeout)
 {
 	int status = 0;
 	SOCKET hSocket = NetConnectTCP(szAddr, addr, nPort, dwTimeout);

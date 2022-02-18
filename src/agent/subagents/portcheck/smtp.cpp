@@ -61,7 +61,7 @@ LONG H_CheckSMTP(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCom
 /**
  * Check SMTP service
  */
-int CheckSMTP(char *szAddr, const InetAddress& addr, short nPort, char *szTo, UINT32 dwTimeout)
+int CheckSMTP(char *szAddr, const InetAddress& addr, uint16_t nPort, char *szTo, UINT32 dwTimeout)
 {
 	int nRet = 0;
 	SOCKET nSd;

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Raden Solutions
+** Copyright (C) 2003-2022 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -99,7 +99,7 @@ LONG H_CheckHTTP(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCom
 /**
  * Check HTTP service
  */
-int CheckHTTP(char *szAddr, const InetAddress& addr, short nPort, char *szURI, char *szHost, char *szMatch, UINT32 dwTimeout)
+int CheckHTTP(char *szAddr, const InetAddress& addr, uint16_t nPort, char *szURI, char *szHost, char *szMatch, UINT32 dwTimeout)
 {
 	int nRet = 0;
 	SOCKET nSd;
@@ -198,7 +198,7 @@ int CheckHTTP(char *szAddr, const InetAddress& addr, short nPort, char *szURI, c
 /**
  * Check HTTPS service
  */
-int CheckHTTPS(char *szAddr, const InetAddress& addr, short nPort, char *szURI, char *szHost, char *szMatch, UINT32 dwTimeout)
+int CheckHTTPS(char *szAddr, const InetAddress& addr, uint16_t nPort, char *szURI, char *szHost, char *szMatch, UINT32 dwTimeout)
 {
 #ifdef _WITH_ENCRYPTION
    if (szMatch[0] == 0)
