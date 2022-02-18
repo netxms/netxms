@@ -109,7 +109,7 @@ static bool SetupTLSSession(SOCKET hSocket, uint32_t timeout, const char *host, 
 /**
  * Check TLS service
  */
-int CheckTLS(char *hostname, const InetAddress& addr, uint16_t port, uint32_t timeout)
+int CheckTLS(const char *hostname, const InetAddress& addr, uint16_t port, uint32_t timeout)
 {
    int status;
    char buffer[64];

@@ -28,20 +28,15 @@
  * Save HTTP(s) responce to file for later investigation
  * (Should be enabled by setting "FailedDirectory" in config
  */
-static void SaveResponse(const InetAddress& ip, char* buffer, char* hostname = nullptr)
+static void SaveResponse(const InetAddress& ip, const char* buffer, const char* hostname = nullptr)
 {
    if (g_szFailedDir[0] == 0)
       return;
 
-   time_t now = time(nullptr);
-   char fileName[2048];
-   char tmp[64];
-   snprintf(fileName, 2048, "%s%s%s-%d",
-            g_szFailedDir, FS_PATH_SEPARATOR_A,
-            hostname != nullptr ? hostname : ip.toStringA(tmp),
-            (int)now);
+   char fileName[MAX_PATH], ipAddrText[64];
+   snprintf(fileName, MAX_PATH, "%s%s%s-%u", g_szFailedDir, FS_PATH_SEPARATOR_A, (hostname != nullptr) ? hostname : ip.toStringA(ipAddrText), (uint32_t)time(nullptr));
    FILE* f = fopen(fileName, "wb");
-   if (f != NULL)
+   if (f != nullptr)
    {
       fwrite(buffer, strlen(buffer), 1, f);
       fclose(f);
@@ -53,31 +48,24 @@ static void SaveResponse(const InetAddress& ip, char* buffer, char* hostname = n
  */
 LONG H_CheckHTTP(const TCHAR* param, const TCHAR* arg, TCHAR* value, AbstractCommSession* session)
 {
-   LONG ret = SYSINFO_RC_SUCCESS;
-
-   char host[1024];
-   char portAsChar[1024];
-   char uri[1024];
-   char header[1024];
-   char match[1024];
-   uint16_t port = 0;
-
-   AgentGetParameterArgA(param, 1, host, sizeof(host));
-   AgentGetParameterArgA(param, 2, portAsChar, sizeof(portAsChar) / sizeof(TCHAR));
+   char hostname[1024], portText[32], uri[1024], header[256], match[1024];
+   AgentGetParameterArgA(param, 1, hostname, sizeof(hostname));
+   AgentGetParameterArgA(param, 2, portText, sizeof(portText));
    AgentGetParameterArgA(param, 3, uri, sizeof(uri));
    AgentGetParameterArgA(param, 4, header, sizeof(header));
    AgentGetParameterArgA(param, 5, match, sizeof(match));
 
-   if (host[0] == 0 || uri[0] == 0)
+   if (hostname[0] == 0 || uri[0] == 0)
       return SYSINFO_RC_ERROR;
 
-   if (portAsChar[0] == 0)
+   uint16_t port = 0;
+   if (portText[0] == 0)
    {
       port = (arg[1] == 'S') ? 443 : 80;
    }
    else
    {
-      port = ParsePort(portAsChar);
+      port = ParsePort(portText);
       if (port == 0)
          return SYSINFO_RC_UNSUPPORTED;
    }
@@ -85,7 +73,8 @@ LONG H_CheckHTTP(const TCHAR* param, const TCHAR* arg, TCHAR* value, AbstractCom
    uint32_t timeout = GetTimeoutFromArgs(param, 6);
    int64_t start = GetCurrentTimeMs();
 
-   int result = CheckHTTP(arg[1] == 'S', InetAddress::resolveHostName(host), port, uri, header, match, timeout, host);
+   LONG ret = SYSINFO_RC_SUCCESS;
+   int result = CheckHTTP(hostname, InetAddress::resolveHostName(hostname), port, arg[1] == 'S', uri, header, match, timeout);
    if (*arg == 'R')
    {
       if (result == PC_ERR_NONE)
@@ -105,40 +94,30 @@ LONG H_CheckHTTP(const TCHAR* param, const TCHAR* arg, TCHAR* value, AbstractCom
 /**
  * Check HTTP/HTTPS service
  */
-int CheckHTTP(bool tls, const InetAddress& addr, short port, char* uri, char* header, char* match, uint32_t timeout, char* hostname)
+int CheckHTTP(const char* hostname, const InetAddress& addr, uint16_t port, bool useTLS, const char* uri, const char* header, const char* match, uint32_t timeout)
 {
    int ret = 0;
    TLSConnection tc(SUBAGENT_DEBUG_TAG, false, timeout);
 
    if (match[0] == 0)
-   {
-      strcpy(match, "^HTTP/(1\\.[01]|2) 200 .*");
-   }
+      match = "^HTTP/(1\\.[01]|2) 200 .*";
 
    const char* errptr;
    int erroffset;
-   pcre* preg = pcre_compile(match, PCRE_COMMON_FLAGS_A | PCRE_CASELESS, &errptr, &erroffset, NULL);
+   pcre* preg = pcre_compile(match, PCRE_COMMON_FLAGS_A | PCRE_CASELESS, &errptr, &erroffset, nullptr);
    if (preg == NULL)
    {
       return PC_ERR_BAD_PARAMS;
    }
 
-   if (tc.connect(addr, port, tls, timeout))
+   if (tc.connect(addr, port, useTLS, timeout))
    {
-      char tmp[4096];
-      char hostHeader[4096];
-
       ret = PC_ERR_HANDSHAKE;
 
-      char addrAsChar[1024];
-
-      snprintf(hostHeader, sizeof(hostHeader), "Host: %s:%u\r\n", header[0] != 0 ? header : addr.toStringA(addrAsChar), port);
-
-      snprintf(tmp, sizeof(tmp),
-               "GET %s HTTP/1.1\r\nConnection: close\r\nAccept: */*\r\n%s\r\n",
-               uri, hostHeader);
-
-      if (tc.send(tmp, strlen(tmp)))
+      char request[4096], hostHeader[1024], ipAddrText[64];
+      snprintf(hostHeader, sizeof(hostHeader), "Host: %s:%u\r\n", (header[0] != 0) ? header : addr.toStringA(ipAddrText), port);
+      snprintf(request, sizeof(request), "GET %s HTTP/1.1\r\nConnection: close\r\nAccept: */*\r\n%s\r\n", uri, hostHeader);
+      if (tc.send(request, strlen(request)))
       {
 #define CHUNK_SIZE 10240
          char* buff = (char*)MemAlloc(CHUNK_SIZE);

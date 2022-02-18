@@ -67,10 +67,10 @@ LONG H_CheckSSH(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractComm
 /**
  * Check SSH service
  */
-int CheckSSH(char *szAddr, const InetAddress& addr, short nPort, char *szUser, char *szPass, UINT32 dwTimeout)
+int CheckSSH(char *hostname, const InetAddress& addr, uint16_t port, char *user, char *password, uint32_t timeout)
 {
 	int rc;
-	SOCKET hSocket = NetConnectTCP(szAddr, addr, nPort, dwTimeout);
+	SOCKET hSocket = NetConnectTCP(hostname, addr, port, timeout);
 	if (hSocket != INVALID_SOCKET)
 	{
 		char szBuff[512];

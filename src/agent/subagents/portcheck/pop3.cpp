@@ -29,35 +29,35 @@
 LONG H_CheckPOP3(const TCHAR* param, const TCHAR* arg, TCHAR* value, AbstractCommSession* session)
 {
    LONG ret = SYSINFO_RC_SUCCESS;
-   char host[256];
-   char user[256];
-   char pass[256];
-   char portAsChar[256];
+   char hostname[256];
+   char username[256];
+   char password[256];
+   char portText[256];
    uint16_t port;
 
-   AgentGetParameterArgA(param, 1, host, sizeof(host));
-   AgentGetParameterArgA(param, 2, user, sizeof(user));
-   AgentGetParameterArgA(param, 3, pass, sizeof(pass));
+   AgentGetParameterArgA(param, 1, hostname, sizeof(hostname));
+   AgentGetParameterArgA(param, 2, username, sizeof(username));
+   AgentGetParameterArgA(param, 3, password, sizeof(password));
    uint32_t timeout = GetTimeoutFromArgs(param, 4);
-   AgentGetParameterArgA(param, 5, portAsChar, sizeof(portAsChar));
+   AgentGetParameterArgA(param, 5, portText, sizeof(portText));
 
-   if (host[0] == 0 || user[0] == 0 || pass[0] == 0)
+   if (hostname[0] == 0 || username[0] == 0 || password[0] == 0)
       return SYSINFO_RC_UNSUPPORTED;
 
-   if (portAsChar[0] == 0)
+   if (portText[0] == 0)
    {
       port = (arg[1] == 'S') ? 995 : 110;
    }
    else
    {
-      port = ParsePort(portAsChar);
+      port = ParsePort(portText);
       if (port == 0)
          return SYSINFO_RC_UNSUPPORTED;
    }
 
    int64_t start = GetCurrentTimeMs();
 
-   int result = CheckPOP3(arg[1] == 'S', InetAddress::resolveHostName(host), port, user, pass, timeout);
+   int result = CheckPOP3(InetAddress::resolveHostName(hostname), port, arg[1] == 'S', username, password, timeout);
    if (*arg == 'R')
    {
       if (result == PC_ERR_NONE)
@@ -77,7 +77,7 @@ LONG H_CheckPOP3(const TCHAR* param, const TCHAR* arg, TCHAR* value, AbstractCom
 /**
  * Check POP3/POP3S service
  */
-int CheckPOP3(bool enableTLS, const InetAddress& addr, uint16_t port, const char* user, const char* pass, uint32_t timeout)
+int CheckPOP3(const InetAddress& addr, uint16_t port, bool enableTLS, const char* username, const char* password, uint32_t timeout)
 {
    int status = 0;
    TLSConnection tc(SUBAGENT_DEBUG_TAG, false, timeout);
@@ -92,12 +92,12 @@ int CheckPOP3(bool enableTLS, const InetAddress& addr, uint16_t port, const char
 
       if (CHECK_OK)
       {
-         snprintf(tmp, sizeof(tmp), "USER %s\r\n", user);
+         snprintf(tmp, sizeof(tmp), "USER %s\r\n", username);
          if (tc.send(tmp, strlen(tmp)))
          {
             if (CHECK_OK)
             {
-               snprintf(tmp, sizeof(tmp), "PASS %s\r\n", pass);
+               snprintf(tmp, sizeof(tmp), "PASS %s\r\n", password);
                if (tc.send(tmp, strlen(tmp)))
                {
                   if (CHECK_OK)

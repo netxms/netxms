@@ -103,21 +103,18 @@ bool CommandHandler(UINT32 dwCommand, NXCPMessage* pRequest, NXCPMessage* pRespo
       case NETSRV_POP3:
       case NETSRV_POP3S:
       {
-         char *pUser, *pPass;
          status = PC_ERR_BAD_PARAMS;
-
-         pUser = serviceRequest;
-         pPass = strchr(serviceRequest, ':');
-         if (pPass != NULL)
+         char *username = serviceRequest;
+         char *password = strchr(serviceRequest, ':');
+         if (password != nullptr)
          {
-            *pPass = 0;
-            pPass++;
-            status = CheckPOP3(serviceType == NETSRV_POP3S, addr, port, pUser, pPass, s_defaultTimeout);
+            *password = 0;
+            password++;
+            status = CheckPOP3(addr, port, serviceType == NETSRV_POP3S, username, password, s_defaultTimeout);
          }
 
          pResponse->setField(VID_RCC, ERR_SUCCESS);
          pResponse->setField(VID_SERVICE_STATUS, status);
-
          break;
       }
       case NETSRV_SMTP:
@@ -151,7 +148,7 @@ bool CommandHandler(UINT32 dwCommand, NXCPMessage* pRequest, NXCPMessage* pRespo
          {
             *pURI = 0;
             pURI++;
-            status = CheckHTTP(serviceType == NETSRV_HTTPS, addr, port, pURI, pHost, serviceResponse, s_defaultTimeout);
+            status = CheckHTTP(nullptr, addr, port, serviceType == NETSRV_HTTPS, pURI, pHost, serviceResponse, s_defaultTimeout);
          }
 
          pResponse->setField(VID_RCC, ERR_SUCCESS);

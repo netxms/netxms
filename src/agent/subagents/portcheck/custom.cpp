@@ -64,7 +64,7 @@ LONG H_CheckCustom(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractC
 /**
  * Check custom service
  */
-int CheckCustom(char *hostname, const InetAddress& addr, uint16_t port, uint32_t timeout)
+int CheckCustom(const char *hostname, const InetAddress& addr, uint16_t port, uint32_t timeout)
 {
 	int status;
 	SOCKET hSocket = NetConnectTCP(hostname, addr, port, timeout);

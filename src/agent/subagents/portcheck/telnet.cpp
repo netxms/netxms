@@ -65,10 +65,10 @@ LONG H_CheckTelnet(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractC
 /**
  * Check telnet service
  */
-int CheckTelnet(char *szAddr, const InetAddress& addr, short nPort, char *szUser, char *szPass, UINT32 dwTimeout)
+int CheckTelnet(const char *hostname, const InetAddress& addr, uint16_t port, char *username, char *password, uint32_t timeout)
 {
 	int status = 0;
-	SOCKET nSd = NetConnectTCP(szAddr, addr, nPort, dwTimeout);
+	SOCKET nSd = NetConnectTCP(hostname, addr, port, timeout);
 	if (nSd != INVALID_SOCKET)
 	{
 		unsigned char szBuff[512];

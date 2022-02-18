@@ -105,19 +105,25 @@ enum
 #define SCF_NEGATIVE_TIME_ON_ERROR 0x0001
 
 LONG H_CheckPOP3(const TCHAR* param, const TCHAR* arg, TCHAR* value, AbstractCommSession* session);
-int CheckPOP3(bool, const InetAddress&, uint16_t, const char*, const char*, uint32_t);
+int CheckPOP3(const InetAddress& addr, uint16_t port, bool enableTLS, const char* username, const char* password, uint32_t timeout);
+
 LONG H_CheckSSH(const TCHAR* param, const TCHAR* arg, TCHAR* value, AbstractCommSession* session);
-int CheckSSH(char*, const InetAddress&, short, char*, char*, UINT32);
+int CheckSSH(char *hostname, const InetAddress& addr, uint16_t port, char *user, char *password, uint32_t timeout);
+
 LONG H_CheckSMTP(const TCHAR* param, const TCHAR* arg, TCHAR* value, AbstractCommSession* session);
-int CheckSMTP(bool, const InetAddress&, uint16_t, const char*, uint32_t);
+int CheckSMTP(bool enableTLS, const InetAddress& addr, uint16_t port, const char* to, uint32_t timeout);
+
 LONG H_CheckHTTP(const TCHAR* param, const TCHAR* arg, TCHAR* value, AbstractCommSession* session);
-int CheckHTTP(bool, const InetAddress&, short, char*, char*, char*, uint32_t, char* hostname = nullptr);
+int CheckHTTP(const char* hostname, const InetAddress& addr, uint16_t port, bool useTLS, const char* uri, const char* header, const char* match, uint32_t timeout);
+
 LONG H_CheckCustom(const TCHAR* param, const TCHAR* arg, TCHAR* value, AbstractCommSession* session);
-int CheckCustom(char* hostname, const InetAddress& addr, uint16_t port, uint32_t timeout);
+int CheckCustom(const char *hostname, const InetAddress& addr, uint16_t port, uint32_t timeout);
+
 LONG H_CheckTelnet(const TCHAR* param, const TCHAR* arg, TCHAR* value, AbstractCommSession* session);
-int CheckTelnet(char*, const InetAddress&, short, char*, char*, UINT32);
+int CheckTelnet(const char *hostname, const InetAddress& addr, uint16_t port, char *username, char *password, uint32_t timeout);
+
 LONG H_CheckTLS(const TCHAR* param, const TCHAR* arg, TCHAR* value, AbstractCommSession* session);
-int CheckTLS(char* hostname, const InetAddress& addr, uint16_t port, uint32_t timeout);
+int CheckTLS(const char* hostname, const InetAddress& addr, uint16_t port, uint32_t timeout);
 LONG H_TLSCertificateInfo(const TCHAR* param, const TCHAR* arg, TCHAR* value, AbstractCommSession* session);
 
 extern char g_szDomainName[];
