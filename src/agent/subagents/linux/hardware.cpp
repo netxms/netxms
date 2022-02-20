@@ -121,6 +121,10 @@ LONG H_NetworkAdaptersTable(const TCHAR* cmd, const TCHAR* arg, Table* value, Ab
       if (!json_is_object(data))
          continue;
 
+      const char *logicalName = json_string_value(json_object_get(data, "logicalname"));
+      if ((logicalName != nullptr) && !strncmp(logicalName, "virbr", 5))
+         continue;   // Ignore software bridge interfaces reported by lshw
+
       value->addRow();
 
       value->set(0, i);                                                                            // INDEX
