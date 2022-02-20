@@ -24,51 +24,35 @@
 #include <net/if.h>
 #include <jansson.h>
 
-#define MAX_LSHW_CMD_SIZE 64
-#define LSHW_TIMEOUT 10000
-
 /**
  * Process executor that collect process output into single string
  */
 class LSHWProcessExecutor : public ProcessExecutor
 {
 private:
-   char* m_data;
-   size_t m_writeOffset;
-   size_t m_totalSize;
+   ByteStream m_output;
 
 protected:
    virtual void onOutput(const char* text) override
    {
-      size_t textSize = strlen(text);
-      int delta = static_cast<int>(textSize) - static_cast<int>(m_totalSize - m_writeOffset) + 1;
-      if (delta > 0)
-      {
-         m_totalSize += std::max(delta, 4096);
-         m_data = MemRealloc(m_data, m_totalSize);
-      }
-      memcpy(&m_data[m_writeOffset], text, textSize + 1);
-      m_writeOffset += textSize;
+      m_output.write(text, strlen(text));
+   }
+
+   virtual void endOfOutput() override
+   {
+      m_output.write('\0');
    }
 
 public:
-   LSHWProcessExecutor(const TCHAR* command) : ProcessExecutor(command, true)
+   LSHWProcessExecutor(const TCHAR* command) : ProcessExecutor(command, true), m_output(4096)
    {
       m_sendOutput = true;
-      m_data = nullptr;
-      m_writeOffset = 0;
-      m_totalSize = 0;
-   }
-
-   ~LSHWProcessExecutor()
-   {
-      MemFree(m_data);
    }
 
    /**
     * Get command output data
     */
-   const char* getData() const { return m_data; }
+   const char* getOutput() const { return reinterpret_cast<const char*>(m_output.buffer()); }
 };
 
 /**
@@ -78,8 +62,8 @@ public:
  */
 json_t* RunLSHW(const TCHAR* lshwOptions)
 {
-   TCHAR cmd[MAX_LSHW_CMD_SIZE];
-   _sntprintf(cmd, MAX_LSHW_CMD_SIZE, _T("lshw -json %s 2>/dev/null"), lshwOptions);
+   TCHAR cmd[128];
+   _sntprintf(cmd, 128, _T("lshw -json %s 2>/dev/null"), lshwOptions);
 
    LSHWProcessExecutor pe(cmd);
    if (!pe.execute())
@@ -87,14 +71,14 @@ json_t* RunLSHW(const TCHAR* lshwOptions)
       nxlog_debug_tag(DEBUG_TAG, 4, _T("Failed to execute lshw command"));
       return nullptr;
    }
-   if (!pe.waitForCompletion(LSHW_TIMEOUT))
+   if (!pe.waitForCompletion(10000))
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("Failed to execute lshw command: command timed out"));
       return nullptr;
    }
 
    json_error_t error;
-   json_t* root = json_loads(pe.getData(), 0, &error);
+   json_t* root = json_loads(pe.getOutput(), 0, &error);
    if (root == nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("Failed to parse JSON on line %d: %hs"), error.line, error.text);
@@ -112,7 +96,7 @@ json_t* RunLSHW(const TCHAR* lshwOptions)
 }
 
 /**
- * Handler for Hardware.StorageDevices table
+ * Handler for Hardware.NetworkAdapters table
  */
 LONG H_NetworkAdaptersTable(const TCHAR* cmd, const TCHAR* arg, Table* value, AbstractCommSession* session)
 {
@@ -153,8 +137,10 @@ LONG H_NetworkAdaptersTable(const TCHAR* cmd, const TCHAR* arg, Table* value, Ab
       // AVAILABILITY
       json_t* disabled = json_object_get(data, "disabled");
       json_t* link = json_object_get_by_path_a(data, "configuration/link");
-      if (disabled != nullptr && json_is_true(disabled))
+      if (json_is_true(disabled))
          value->set(8, 8); // Off Line
+      else if (!json_is_string(link))
+         value->set(8, 2); // Unknown
       else if (strcmp(json_string_value(link), "yes") == 0)
          value->set(8, 3); // Running/Full Power
       else
@@ -217,7 +203,6 @@ static TCHAR* GetBusType(json_t* data, TCHAR* busType)
  */
 static void GetDataForStorageDevices(json_t* root, Table* value, int* curDevice)
 {
-
    for (int i = 0; i < json_array_size(root); i++)
    {
       json_t* data = json_array_get(root, i);
@@ -225,9 +210,7 @@ static void GetDataForStorageDevices(json_t* root, Table* value, int* curDevice)
          continue;
 
       value->addRow();
-
       value->set(0, (*curDevice)++); // NUMBER
-
       if (strcmp(json_string_value(json_object_get(data, "class")), "storage") == 0)
       {
          value->set(1, 12);                             // TYPE
