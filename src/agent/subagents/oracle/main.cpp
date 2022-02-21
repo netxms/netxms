@@ -72,6 +72,7 @@ DatabaseQuery g_queries[] =
             _T("(SELECT count(file#) FROM v$datafile_header WHERE recover = 'YES') DFNeedRec,")
             _T("(SELECT count(*) FROM dba_jobs WHERE nvl(failures, 0) <> 0) FailedJobs,")
             _T("(SELECT sum(a.value) FROM v$sesstat a, v$statname b, v$session s WHERE a.statistic# = b.statistic# AND s.sid = a.sid AND b.name = 'opened cursors current') OpenCursors,")
+            _T("(SELECT max(a.value) FROM v$sesstat a, v$statname b, v$session s WHERE a.statistic# = b.statistic# AND s.sid = a.sid AND b.name = 'opened cursors current') MaxOpenCursorsPerSession,")
             _T("(SELECT count(*) FROM dba_objects WHERE status!='VALID') InvalidObjects,")
             _T("(SELECT coalesce(sum(bytes), 0) FROM v$log) RedoTotal,")
             _T("(SELECT coalesce(sum(blocks * block_size), 0) FROM v$archived_log WHERE deleted='NO') ArchivedTotal,")
@@ -442,6 +443,7 @@ static NETXMS_SUBAGENT_PARAM s_parameters[] =
 	{ _T("Oracle.CriticalStats.RBSegsNotOnlineCount(*)"), H_GlobalParameter, _T("GLOBALSTATS/RBSNOTONLINE"), DCI_DT_INT64, _T("Oracle/CriticalStats: Number of rollback segments not online") },
 	{ _T("Oracle.CriticalStats.TSOffCount(*)"), H_GlobalParameter, _T("GLOBALSTATS/TSOFFCOUNT"), DCI_DT_INT, _T("Oracle/CriticalStats: Number of offline tablespaces") },
 	{ _T("Oracle.Cursors.Count(*)"), H_GlobalParameter, _T("GLOBALSTATS/OPENCURSORS"), DCI_DT_INT, _T("Oracle/Cursors: Current number of opened cursors systemwide") },
+   { _T("Oracle.Cursors.MaxPerSession(*)"), H_GlobalParameter, _T("GLOBALSTATS/MAXOPENCURSORSPERSESSION"), DCI_DT_INT, _T("Oracle/Cursors: Current maximum number of opened cursors per session") },
    { _T("Oracle.DataFile.AvgIoTime(*)"), H_InstanceParameter, _T("DATAFILE/AVG_IO_TIME"), DCI_DT_INT, _T("Oracle/Datafile: {instance} average I/O time") },
    { _T("Oracle.DataFile.Blocks(*)"), H_InstanceParameter, _T("DATAFILE/BLOCKS"), DCI_DT_INT64, _T("Oracle/Datafile: {instance} size in blocks") },
    { _T("Oracle.DataFile.BlockSize(*)"), H_InstanceParameter, _T("DATAFILE/BLOCK_SIZE"), DCI_DT_INT, _T("Oracle/Datafile: {instance} block size") },
