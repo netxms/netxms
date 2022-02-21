@@ -692,7 +692,8 @@ void Event::setParameter(int index, const TCHAR *name, const TCHAR *value)
    if (index < m_parameters.size())
    {
 		m_parameters.replace(index, MemCopyString(value));
-		m_parameterNames.replace(index, CHECK_NULL_EX(name));
+		if (name != nullptr)
+		   m_parameterNames.replace(index, name);
    }
    else
    {

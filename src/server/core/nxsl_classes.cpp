@@ -3334,6 +3334,23 @@ NXSL_METHOD_DEFINITION(Event, setNamedParameter)
 }
 
 /**
+ * Event::setParameter() method
+ */
+NXSL_METHOD_DEFINITION(Event, setParameter)
+{
+   if (!argv[0]->isInteger())
+      return NXSL_ERR_NOT_INTEGER;
+
+   if (!argv[1]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   Event *event = static_cast<Event*>(object->getData());
+   event->setParameter(argv[0]->getValueAsInt32() - 1, nullptr, argv[1]->getValueAsCString());
+   *result = vm->createValue();
+   return 0;
+}
+
+/**
  * Event::addTag() method
  */
 NXSL_METHOD_DEFINITION(Event, addTag)
@@ -3430,6 +3447,7 @@ NXSL_EventClass::NXSL_EventClass() : NXSL_Class()
    NXSL_REGISTER_METHOD(Event, removeTag, 1);
    NXSL_REGISTER_METHOD(Event, setMessage, 1);
    NXSL_REGISTER_METHOD(Event, setNamedParameter, 2);
+   NXSL_REGISTER_METHOD(Event, setParameter, 2);
    NXSL_REGISTER_METHOD(Event, setSeverity, 1);
    NXSL_REGISTER_METHOD(Event, toJson, 0);
 }
