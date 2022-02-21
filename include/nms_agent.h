@@ -1112,7 +1112,7 @@ private:
    TCHAR m_separator;
 
 protected:
-   virtual void onOutput(const char *text) override;
+   virtual void onOutput(const char *text, size_t length) override;
    virtual void endOfOutput() override;
 
 public:
@@ -1136,7 +1136,7 @@ private:
    StringBuffer m_buffer;
 
 protected:
-   virtual void onOutput(const char *text) override;
+   virtual void onOutput(const char *text, size_t length) override;
    virtual void endOfOutput() override;
 
 public:

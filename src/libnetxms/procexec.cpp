@@ -425,7 +425,7 @@ do_wait:
       if (rc == WAIT_TIMEOUT)
       {
          // Send empty output on timeout
-         static_cast<ProcessExecutor*>(arg)->onOutput("");
+         static_cast<ProcessExecutor*>(arg)->onOutput("", 0);
          goto do_wait;
       }
       if (rc == WAIT_OBJECT_0 + 1)
@@ -439,7 +439,7 @@ do_wait:
          if (GetOverlappedResult(pipe, &ov, &bytes, TRUE))
          {
             buffer[bytes] = 0;
-            static_cast<ProcessExecutor*>(arg)->onOutput(buffer);
+            static_cast<ProcessExecutor*>(arg)->onOutput(buffer, bytes);
          }
          else
          {
@@ -476,13 +476,13 @@ do_wait:
          if (rc > 0)
          {
             buffer[rc] = 0;
-            static_cast<ProcessExecutor*>(arg)->onOutput(buffer);
+            static_cast<ProcessExecutor*>(arg)->onOutput(buffer, rc);
          }
          else
          {
             if ((rc == -1) && ((errno == EAGAIN) || (errno == EINTR)))
             {
-               static_cast<ProcessExecutor*>(arg)->onOutput("");
+               static_cast<ProcessExecutor*>(arg)->onOutput("", 0);
                continue;
             }
             nxlog_debug_tag(DEBUG_TAG, 6, _T("ProcessExecutor::readOutput(): stopped on read (rc=%d err=%s)"), rc, _tcserror(errno));
@@ -492,7 +492,7 @@ do_wait:
       else if (rc == 0)
       {
          // Send empty output on timeout
-         static_cast<ProcessExecutor*>(arg)->onOutput("");
+         static_cast<ProcessExecutor*>(arg)->onOutput("", 0);
       }
       else
       {
@@ -550,7 +550,7 @@ void ProcessExecutor::stop()
 /**
  * Perform action when output is generated
  */
-void ProcessExecutor::onOutput(const char *text)
+void ProcessExecutor::onOutput(const char *text, size_t length)
 {
 }
 

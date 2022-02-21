@@ -203,7 +203,7 @@ private:
    ActionExecutionContext *m_context;
 
 protected:
-   virtual void onOutput(const char *text) override;
+   virtual void onOutput(const char *text, size_t length) override;
    virtual void endOfOutput() override;
 
 public:
@@ -218,7 +218,7 @@ public:
 /**
  * Handle process output
  */
-void SystemActionProcessExecutor::onOutput(const char *text)
+void SystemActionProcessExecutor::onOutput(const char *text, size_t length)
 {
 #ifdef UNICODE
    TCHAR *buffer = WideStringFromMBStringSysLocale(text);

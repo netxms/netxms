@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -48,12 +48,12 @@ DBConnection::DBConnection()
  */
 DBConnection::~DBConnection()
 {
-   free(m_id);
-   free(m_driver);
-   free(m_server);
-   free(m_dbName);
-   free(m_login);
-   free(m_password);
+   MemFree(m_id);
+   MemFree(m_driver);
+   MemFree(m_server);
+   MemFree(m_dbName);
+   MemFree(m_login);
+   MemFree(m_password);
    if (m_hdb != nullptr)
       DBDisconnect(m_hdb);
    if (m_hDriver != nullptr)
@@ -68,7 +68,7 @@ static TCHAR *ReadAttribute(const TCHAR *config, const TCHAR *attribute)
    TCHAR buffer[256];
    if (!ExtractNamedOptionValue(config, attribute, buffer, 256))
       return nullptr;
-   return _tcsdup(buffer);
+   return MemCopyString(buffer);
 }
 
 /**
@@ -84,7 +84,7 @@ DBConnection *DBConnection::createFromConfig(const TCHAR *config)
    conn->m_login = ReadAttribute(config, _T("login"));
    conn->m_password = ReadAttribute(config, _T("password"));
 
-   if(conn->m_password == nullptr)
+   if (conn->m_password == nullptr)
       conn->m_password = ReadAttribute(config, _T("encryptedPassword"));
 
    if (conn->m_password != nullptr)

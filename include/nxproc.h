@@ -120,7 +120,7 @@ protected:
    static THREAD_RESULT THREAD_CALL waitForProcess(void *arg);
 #endif
 
-   virtual void onOutput(const char *text);
+   virtual void onOutput(const char *text, size_t length);
    virtual void endOfOutput();
 
 public:
@@ -150,6 +150,37 @@ public:
 #endif
 
    static bool execute(const TCHAR *cmdLine, bool shellExec = true);
+};
+
+/**
+ * Process executor that collect process output into single string
+ */
+class LIBNETXMS_EXPORTABLE OutputCapturingProcessExecutor : public ProcessExecutor
+{
+private:
+   ByteStream m_output;
+
+protected:
+   virtual void onOutput(const char* text, size_t length) override
+   {
+      m_output.write(text, length);
+   }
+
+   virtual void endOfOutput() override
+   {
+      m_output.write('\0');
+   }
+
+public:
+   OutputCapturingProcessExecutor(const TCHAR* command, bool shellExec = true) : ProcessExecutor(command, shellExec), m_output(4096)
+   {
+      m_sendOutput = true;
+   }
+
+   /**
+    * Get command output data
+    */
+   const char* getOutput() const { return reinterpret_cast<const char*>(m_output.buffer()); }
 };
 
 /**

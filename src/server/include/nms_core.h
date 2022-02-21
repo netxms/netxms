@@ -1035,7 +1035,7 @@ private:
    ClientSession *m_session;
    StringBuffer m_maskedCommand;
 
-   virtual void onOutput(const char *text) override;
+   virtual void onOutput(const char *text, size_t length) override;
    virtual void endOfOutput() override;
 
 public:

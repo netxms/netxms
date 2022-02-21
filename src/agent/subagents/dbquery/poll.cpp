@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -98,10 +98,10 @@ void Query::setError(const TCHAR *msg)
  */
 void Query::poll()
 {
-   m_lastPoll = time(NULL);
+   m_lastPoll = time(nullptr);
 
    DB_HANDLE hdb = GetConnectionHandle(m_dbid);
-   if (hdb == NULL)
+   if (hdb == nullptr)
    {
       AgentWriteDebugLog(4, _T("DBQUERY: Query::poll(%s): no connection handle for database %s"), m_name, m_dbid);
       setError(_T("DB connection not available"));
@@ -110,7 +110,7 @@ void Query::poll()
 
    TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
    DB_RESULT hResult = DBSelectEx(hdb, m_query, errorText);
-   if (hResult == NULL)
+   if (hResult == nullptr)
    {
       AgentWriteDebugLog(4, _T("DBQUERY: Query::poll(%s): query failed (%s)"), m_name, errorText);
       setError(errorText);
@@ -120,8 +120,7 @@ void Query::poll()
    lock();
    m_status = QUERY_STATUS_OK;
    _tcscpy(m_statusText, _T("OK"));
-   if (m_result != NULL)
-      DBFreeResult(m_result);
+   DBFreeResult(m_result);
    m_result = hResult;
    unlock();
 }
@@ -133,32 +132,32 @@ void Query::poll()
  */
 Query *Query::createFromConfig(const TCHAR *src)
 {
-   TCHAR *config = _tcsdup(src);
+   TCHAR *config = MemCopyString(src);
    TCHAR *curr = config;
    Query *query = new Query;
 
    // Name
    TCHAR *s = _tcschr(config, _T(':'));
-   if (s == NULL)
+   if (s == nullptr)
       goto fail;
    *s = 0;
-   query->m_name = _tcsdup(config);
+   query->m_name = MemCopyString(config);
    curr = s + 1;
 
    // DB ID
    s = _tcschr(curr, _T(':'));
-   if (s == NULL)
+   if (s == nullptr)
       goto fail;
    *s = 0;
-   query->m_dbid = _tcsdup(curr);
+   query->m_dbid = MemCopyString(curr);
    curr = s + 1;
 
    // interval
    s = _tcschr(curr, _T(':'));
-   if (s == NULL)
+   if (s == nullptr)
       goto fail;
    *s = 0;
-   query->m_interval = _tcstol(curr, NULL, 0);
+   query->m_interval = _tcstol(curr, nullptr, 0);
    if ((query->m_interval < 1) || (query->m_interval > 86400))
    {
       AgentWriteDebugLog(1, _T("DBQuery: invalid interval %s for query %s"), curr, query->m_name);
@@ -167,15 +166,15 @@ Query *Query::createFromConfig(const TCHAR *src)
    curr = s + 1;
 
    // Rest is SQL query
-   query->m_query = _tcsdup(curr);
+   query->m_query = MemCopyString(curr);
    query->m_pollRequired = true;
-   free(config);
+   MemFree(config);
    return query;
 
 fail:
-   free(config);
+   MemFree(config);
    delete query;
-   return NULL;
+   return nullptr;
 }
 
 /**
@@ -186,36 +185,36 @@ fail:
  */
 Query *Query::createConfigurableFromConfig(const TCHAR *src)
 {
-   TCHAR *config = _tcsdup(src);
+   TCHAR *config = MemCopyString(src);
    TCHAR *curr = config;
    Query *query = new Query;
 
    // Name
    TCHAR *s = _tcschr(config, _T(':'));
-   if (s == NULL)
+   if (s == nullptr)
       goto fail;
    *s = 0;
-   query->m_name = _tcsdup(config);
+   query->m_name = MemCopyString(config);
    curr = s + 1;
 
    // DB ID
    s = _tcschr(curr, _T(':'));
-   if (s == NULL)
+   if (s == nullptr)
       goto fail;
    *s = 0;
-   query->m_dbid = _tcsdup(curr);
+   query->m_dbid = MemCopyString(curr);
    curr = s + 1;
 
    // description
    s = _tcschr(curr, _T(':'));
-   if (s == NULL)
+   if (s == nullptr)
       goto fail;
    *s = 0;
-   query->m_description = _tcsdup(curr);
+   query->m_description = MemCopyString(curr);
    curr = s + 1;
 
    // Rest is SQL query
-   query->m_query = _tcsdup(curr);
+   query->m_query = MemCopyString(curr);
    MemFree(config);
    query->m_pollRequired = false;
    return query;
@@ -223,7 +222,7 @@ Query *Query::createConfigurableFromConfig(const TCHAR *src)
 fail:
    MemFree(config);
    delete query;
-   return NULL;
+   return nullptr;
 }
 
 /**
@@ -247,30 +246,28 @@ Query *AcquireQueryObject(const TCHAR *name)
          return q;
       }
    }
-   return NULL;
+   return nullptr;
 }
 
 /**
  * Polling thread
  */
-static THREAD_RESULT THREAD_CALL PollerThread(void *arg)
+static void PollerThread(Query *query)
 {
-   Query *query = (Query *)arg;
    AgentWriteDebugLog(3, _T("DBQuery: Polling thread for query %s started"), query->getName());
 
-   int sleepTime = (int)(query->getNextPoll() - time(NULL));
+   int sleepTime = (int)(query->getNextPoll() - time(nullptr));
    if (sleepTime <= 0)
       sleepTime = 1;
    while(!g_condShutdown.wait(sleepTime * 1000))
    {
       query->poll();
-      sleepTime = (int)(query->getNextPoll() - time(NULL));
+      sleepTime = (int)(query->getNextPoll() - time(nullptr));
       if (sleepTime <= 0)
          sleepTime = 1;
    }
 
    AgentWriteDebugLog(3, _T("DBQuery: Polling thread for query %s stopped"), query->getName());
-   return THREAD_OK;
 }
 
 /**
@@ -278,7 +275,7 @@ static THREAD_RESULT THREAD_CALL PollerThread(void *arg)
  */
 void Query::startPollerThread()
 {
-   m_pollerThread = ThreadCreateEx(PollerThread, 0, this);
+   m_pollerThread = ThreadCreateEx(PollerThread, this);
 }
 
 /**
@@ -314,7 +311,7 @@ void StopPollingThreads()
 bool AddQueryFromConfig(const TCHAR *config, Query **createdQuery)
 {
    Query *query = Query::createFromConfig(config);
-   if (query != NULL)
+   if (query != nullptr)
    {
       s_queries.add(query);
       *createdQuery = query;
@@ -332,7 +329,7 @@ bool AddQueryFromConfig(const TCHAR *config, Query **createdQuery)
 bool AddConfigurableQueryFromConfig(const TCHAR *config, Query **createdQuery)
 {
    Query *query = Query::createConfigurableFromConfig(config);
-   if (query != NULL)
+   if (query != nullptr)
    {
       s_queries.add(query);
       *createdQuery = query;

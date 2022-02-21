@@ -1623,7 +1623,7 @@ ServerCommandExecutor::~ServerCommandExecutor()
 /**
  * Send output to console
  */
-void ServerCommandExecutor::onOutput(const char *text)
+void ServerCommandExecutor::onOutput(const char *text, size_t length)
 {
    NXCPMessage msg(CMD_COMMAND_OUTPUT, m_requestId);
 #ifdef UNICODE

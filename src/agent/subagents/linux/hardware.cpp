@@ -25,37 +25,6 @@
 #include <jansson.h>
 
 /**
- * Process executor that collect process output into single string
- */
-class LSHWProcessExecutor : public ProcessExecutor
-{
-private:
-   ByteStream m_output;
-
-protected:
-   virtual void onOutput(const char* text) override
-   {
-      m_output.write(text, strlen(text));
-   }
-
-   virtual void endOfOutput() override
-   {
-      m_output.write('\0');
-   }
-
-public:
-   LSHWProcessExecutor(const TCHAR* command) : ProcessExecutor(command, true), m_output(4096)
-   {
-      m_sendOutput = true;
-   }
-
-   /**
-    * Get command output data
-    */
-   const char* getOutput() const { return reinterpret_cast<const char*>(m_output.buffer()); }
-};
-
-/**
  * Executes lshw command with given options
  *
  * @returns lshw output as json_t array or nullptr on failure
@@ -65,7 +34,7 @@ json_t* RunLSHW(const TCHAR* lshwOptions)
    TCHAR cmd[128];
    _sntprintf(cmd, 128, _T("lshw -json %s 2>/dev/null"), lshwOptions);
 
-   LSHWProcessExecutor pe(cmd);
+   OutputCapturingProcessExecutor pe(cmd);
    if (!pe.execute())
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("Failed to execute lshw command"));

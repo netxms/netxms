@@ -34,7 +34,7 @@ private:
    shared_ptr<AbstractCommSession> m_session;
 
 protected:
-   virtual void onOutput(const char *text) override;
+   virtual void onOutput(const char *text, size_t length) override;
    virtual void endOfOutput() override;
 
 public:
@@ -282,7 +282,7 @@ ExternalActionExecutor::~ExternalActionExecutor()
 /**
  * Send output to console
  */
-void ExternalActionExecutor::onOutput(const char *text)
+void ExternalActionExecutor::onOutput(const char *text, size_t length)
 {
    NXCPMessage msg(m_session->getProtocolVersion());
    msg.setId(m_requestId);

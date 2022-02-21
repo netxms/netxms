@@ -34,13 +34,13 @@ KeyValueOutputProcessExecutor::KeyValueOutputProcessExecutor(const TCHAR *comman
 /**
  * Key-value executor output handler
  */
-void KeyValueOutputProcessExecutor::onOutput(const char *text)
+void KeyValueOutputProcessExecutor::onOutput(const char *text, size_t length)
 {
    TCHAR *buffer;
 #ifdef UNICODE
    buffer = WideStringFromMBStringSysLocale(text);
 #else
-   buffer = _tcsdup(text);
+   buffer = MemCopyStringA(text);
 #endif
    TCHAR *newLinePtr = nullptr, *lineStartPtr = buffer, *eqPtr = nullptr;
    do
@@ -122,7 +122,7 @@ LineOutputProcessExecutor::LineOutputProcessExecutor(const TCHAR *command, bool 
 /**
  * Line output executor output handler
  */
-void LineOutputProcessExecutor::onOutput(const char *text)
+void LineOutputProcessExecutor::onOutput(const char *text, size_t length)
 {
    TCHAR *buffer;
 #ifdef UNICODE

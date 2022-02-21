@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Notification channel driver that writes messages to text file
-** Copyright (C) 2019-2021 Raden Solutions
+** Copyright (C) 2019-2022 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -34,7 +34,7 @@ static const NCConfigurationTemplate s_config(true, true);
 class OutputLoggingExecutor : public ProcessExecutor
 {
 protected:
-   virtual void onOutput(const char *text) override;
+   virtual void onOutput(const char *text, size_t length) override;
 
 public:
    OutputLoggingExecutor(const TCHAR *command) : ProcessExecutor(command, true, false)
@@ -46,13 +46,13 @@ public:
 /**
  * Log output executor output handler
  */
-void OutputLoggingExecutor::onOutput(const char *text)
+void OutputLoggingExecutor::onOutput(const char *text, size_t length)
 {
    TCHAR *buffer;
 #ifdef UNICODE
    buffer = WideStringFromMBStringSysLocale(text);
 #else
-   buffer = MemCopyString(text);
+   buffer = MemCopyStringA(text);
 #endif
    StringList *outputLines = String::split(buffer, _tcslen(buffer), _T("\n"));
    MemFree(buffer);
