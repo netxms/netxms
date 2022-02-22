@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -e
+
 cd build
 ./updatetag.pl
 cd ..
