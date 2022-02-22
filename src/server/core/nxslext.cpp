@@ -1213,7 +1213,7 @@ static int F_SetInterfaceExpectedState(int argc, NXSL_Value **argv, NXSL_Value *
 /**
  * Create new SNMP transport object
  * Syntax:
- *    CreateSNMPTransport(node, [port], [context])
+ *    CreateSNMPTransport(node, [port], [community], [context])
  * where:
  *     node    - node to create SNMP transport for
  *     port    - SNMP port (optional)
@@ -1246,8 +1246,8 @@ static int F_CreateSNMPTransport(int argc, NXSL_Value **argv, NXSL_Value **ppRes
    if (node != nullptr)
    {
       uint16_t port = ((argc > 1) && argv[1]->isInteger()) ? static_cast<uint16_t>(argv[1]->getValueAsInt32()) : 0;
-      const char *context = ((argc > 2) && argv[2]->isString()) ? argv[2]->getValueAsMBString() : nullptr;
-      const char *community = ((argc > 3) && argv[3]->isString()) ? argv[3]->getValueAsMBString() : nullptr;
+      const char *community = ((argc > 2) && argv[2]->isString()) ? argv[2]->getValueAsMBString() : nullptr;
+      const char *context = ((argc > 3) && argv[3]->isString()) ? argv[3]->getValueAsMBString() : nullptr;
       SNMP_Transport *t = node->createSnmpTransport(port, SNMP_VERSION_DEFAULT, context, community);
       *ppResult = (t != nullptr) ? vm->createValue(vm->createObject(&g_nxslSnmpTransportClass, t)) : vm->createValue();
    }

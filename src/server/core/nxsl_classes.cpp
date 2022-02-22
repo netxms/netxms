@@ -1085,7 +1085,7 @@ NXSL_Value *NXSL_ZoneClass::getAttr(NXSL_Object *object, const NXSL_Identifier& 
 }
 
 /**
- * Node::createSNMPTransport(port, context) method
+ * Node::createSNMPTransport(port, community, context) method
  */
 NXSL_METHOD_DEFINITION(Node, createSNMPTransport)
 {
@@ -1102,8 +1102,8 @@ NXSL_METHOD_DEFINITION(Node, createSNMPTransport)
       return NXSL_ERR_NOT_STRING;
 
    uint16_t port = ((argc > 0) && argv[0]->isInteger()) ? static_cast<uint16_t>(argv[0]->getValueAsInt32()) : 0;
-   const char *context = ((argc > 1) && argv[1]->isString()) ? argv[1]->getValueAsMBString() : nullptr;
-   const char *community = ((argc > 2) && argv[2]->isString()) ? argv[2]->getValueAsMBString() : nullptr;
+   const char *community = ((argc > 1) && argv[1]->isString()) ? argv[1]->getValueAsMBString() : nullptr;
+   const char *context = ((argc > 2) && argv[2]->isString()) ? argv[2]->getValueAsMBString() : nullptr;
    SNMP_Transport *t = static_cast<shared_ptr<Node> *>(object->getData())->get()->createSnmpTransport(port, SNMP_VERSION_DEFAULT, context, community);
    *result = (t != nullptr) ? vm->createValue(vm->createObject(&g_nxslSnmpTransportClass, t)) : vm->createValue();
    return 0;

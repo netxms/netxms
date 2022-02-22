@@ -3471,7 +3471,7 @@ public:
    shared_ptr<AgentConnectionEx> createAgentConnection(bool sendServerId = false);
    shared_ptr<AgentConnectionEx> getAgentConnection(bool forcePrimary = false);
    shared_ptr<AgentConnectionEx> acquireProxyConnection(ProxyType type, bool validate = false);
-   SNMP_Transport *createSnmpTransport(UINT16 port = 0, SNMP_Version version = SNMP_VERSION_DEFAULT, const char *context = nullptr, const char *community = nullptr);
+   SNMP_Transport *createSnmpTransport(uint16_t port = 0, SNMP_Version version = SNMP_VERSION_DEFAULT, const char *context = nullptr, const char *community = nullptr);
    SNMP_SecurityContext *getSnmpSecurityContext() const;
 
    uint32_t getEffectiveSnmpProxy(bool backup = false);

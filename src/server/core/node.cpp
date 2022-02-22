@@ -8893,7 +8893,7 @@ uint32_t Node::getEffectiveAgentProxy()
 /**
  * Create SNMP transport
  */
-SNMP_Transport *Node::createSnmpTransport(UINT16 port, SNMP_Version version, const char *context, const char *community)
+SNMP_Transport *Node::createSnmpTransport(uint16_t port, SNMP_Version version, const char *context, const char *community)
 {
    if (community != nullptr)
    {
