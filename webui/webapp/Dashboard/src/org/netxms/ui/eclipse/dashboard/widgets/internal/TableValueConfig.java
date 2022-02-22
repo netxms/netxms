@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,9 +40,6 @@ public class TableValueConfig extends DashboardElementConfig
 	@Element(required=true)
 	private long dciId = 0;
 
-	@Element(required=false)
-	private String title = ""; //$NON-NLS-1$
-	
 	@Element(required = false)
 	private int refreshRate = 30;
 
@@ -59,9 +56,9 @@ public class TableValueConfig extends DashboardElementConfig
 		return serializer.read(TableValueConfig.class, xml);
 	}
 	
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig#createXml()
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig#createXml()
+    */
 	@Override
 	public String createXml() throws Exception
 	{
@@ -71,9 +68,9 @@ public class TableValueConfig extends DashboardElementConfig
 		return writer.toString();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig#getObjects()
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig#getObjects()
+    */
 	@Override
 	public Set<Long> getObjects()
 	{
@@ -82,9 +79,9 @@ public class TableValueConfig extends DashboardElementConfig
 		return objects;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig#remapObjects(java.util.Map)
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig#remapObjects(java.util.Map)
+    */
 	@Override
 	public void remapObjects(Map<Long, ObjectIdMatchingData> remapData)
 	{
@@ -94,7 +91,7 @@ public class TableValueConfig extends DashboardElementConfig
 			objectId = md.dstId;
 	}
 
-	/* (non-Javadoc)
+   /**
     * @see org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig#getDataCollectionItems()
     */
    @Override
@@ -105,7 +102,7 @@ public class TableValueConfig extends DashboardElementConfig
       return dcis;
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig#remapDataCollectionItems(java.util.Map)
     */
    @Override
@@ -119,22 +116,6 @@ public class TableValueConfig extends DashboardElementConfig
          dciId = md.dstDciId;
       }
    }
-
-   /**
-	 * @return the title
-	 */
-	public String getTitle()
-	{
-		return title;
-	}
-
-	/**
-	 * @param title the title to set
-	 */
-	public void setTitle(String title)
-	{
-		this.title = title;
-	}
 
 	/**
 	 * @return the objectId

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2016 RadenSolutions
+ * Copyright (C) 2016-2022 RadenSolutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,9 +32,6 @@ public class SyslogMonitorConfig extends DashboardElementConfig
    @Element(required = true)
    private long objectId = 0;
 
-   @Element(required = false)
-   private String title = ""; //$NON-NLS-1$
-
    /**
     * Create line chart settings object from XML document
     * 
@@ -48,9 +45,7 @@ public class SyslogMonitorConfig extends DashboardElementConfig
       return serializer.read(SyslogMonitorConfig.class, xml);
    }
 
-   /*
-    * (non-Javadoc)
-    * 
+   /**
     * @see org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig#createXml()
     */
    @Override
@@ -62,9 +57,7 @@ public class SyslogMonitorConfig extends DashboardElementConfig
       return writer.toString();
    }
 
-   /*
-    * (non-Javadoc)
-    * 
+   /**
     * @see org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig#getObjects()
     */
    @Override
@@ -75,9 +68,7 @@ public class SyslogMonitorConfig extends DashboardElementConfig
       return objects;
    }
 
-   /*
-    * (non-Javadoc)
-    * 
+   /**
     * @see org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig#remapObjects(java.util.Map)
     */
    @Override
@@ -87,22 +78,6 @@ public class SyslogMonitorConfig extends DashboardElementConfig
       ObjectIdMatchingData md = remapData.get(objectId);
       if (md != null)
          objectId = md.dstId;
-   }
-
-   /**
-    * @return the title
-    */
-   public String getTitle()
-   {
-      return title;
-   }
-
-   /**
-    * @param title the title to set
-    */
-   public void setTitle(String title)
-   {
-      this.title = title;
    }
 
    /**
