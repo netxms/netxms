@@ -113,6 +113,27 @@ public class MacAddress
 		return Arrays.hashCode(value);
 	}
 
+   /**
+    * Parse MAC address string representation. Supported representations are 6 groups of
+    * two hex digits, separated by spaces, minuses, or colons; or 4 groups of three hex digits 
+    * separated by dots; or 12 non-separated digits; or 16 non-separated hex digits. 
+    * Examples of valid MAC address strings:
+    * 00:10:FA:23:11:7A
+    * 01 02 fa c4 10 dc
+    * 00-90-0b-11-01-29
+    * 009.00b.110.129
+    * 0203fcd456c1
+    * 0203FCD465C1DF56
+    * 
+    * @param str MAC address string
+    * @return MAC address object
+    * @throws MacAddressFormatException if MAC address sting is invalid
+    */
+	public static MacAddress parseMacAddress(String str) throws MacAddressFormatException
+   {  
+	   return parseMacAddress(str, true);
+   }
+
 	/**
 	 * Parse MAC address string representation. Supported representations are 6 groups of
 	 * two hex digits, separated by spaces, minuses, or colons; or 4 groups of three hex digits 
@@ -125,13 +146,20 @@ public class MacAddress
 	 * 0203fcd456c1
 	 * 0203FCD465C1DF56
 	 * 
+	 * For partial MAC match at least three pair is required or odd number of triples
+	 * 
 	 * @param str MAC address string
+	 * @param fullMac if should match full mac address
 	 * @return MAC address object
 	 * @throws MacAddressFormatException if MAC address sting is invalid
 	 */
-	public static MacAddress parseMacAddress(String str) throws MacAddressFormatException
+	public static MacAddress parseMacAddress(String str, boolean fullMac) throws MacAddressFormatException
 	{	   
-		Pattern pattern = Pattern.compile("^([0-9a-fA-F]{2})[ :-]?([0-9a-fA-F]{2})[ .:-]?([0-9a-fA-F]{2})[ :-]?([0-9a-fA-F]{2})[ .:-]?([0-9a-fA-F]{2})[ :-]?([0-9a-fA-F]{2})[ .:-]?([0-9a-fA-F]{2})?[ :-]?([0-9a-fA-F]{2})?$");
+		Pattern pattern;
+		if (fullMac)
+		   pattern = Pattern.compile("^([0-9a-fA-F]{2})[ :-]?([0-9a-fA-F]{2})[ .:-]?([0-9a-fA-F]{2})[ :-]?([0-9a-fA-F]{2})[ .:-]?([0-9a-fA-F]{2})[ :-]?([0-9a-fA-F]{2})[ .:-]?([0-9a-fA-F]{2})?[ :-]?([0-9a-fA-F]{2})?$");
+		else
+		   pattern = Pattern.compile("^([0-9a-fA-F]{2})[ :-]?([0-9a-fA-F]{2})[ .:-]?([0-9a-fA-F]{2})[ :-]?([0-9a-fA-F]{2})?[ .:-]?([0-9a-fA-F]{2})?[ :-]?([0-9a-fA-F]{2})?[ .:-]?([0-9a-fA-F]{2})?[ :-]?([0-9a-fA-F]{2})?$");
 		Matcher matcher = pattern.matcher(str.trim());
 		if (matcher.matches())
 		{
@@ -156,30 +184,39 @@ public class MacAddress
             bytes[i] = byteList.get(i).byteValue();
 			return new MacAddress(bytes);
 		}
-		else
+		else 
 		{
 		   // Try xxx.xxx.xxx.xxx format (Brocade/Foundry)
-	      pattern = Pattern.compile("^([0-9a-fA-F]{3})\\.([0-9a-fA-F]{3})\\.([0-9a-fA-F]{3})\\.([0-9a-fA-F]{3})$");
+	      if (fullMac)
+	         pattern = Pattern.compile("^([0-9a-fA-F]{3})\\.([0-9a-fA-F]{3})\\.([0-9a-fA-F]{3})\\.([0-9a-fA-F]{3})$");
+	      else
+	         pattern = Pattern.compile("^([0-9a-fA-F]{3})\\.([0-9a-fA-F]{3})\\.([0-9a-fA-F]{3})\\.([0-9a-fA-F]{3})$|^([0-9a-fA-F]{3})\\.([0-9a-fA-F]{3})$");
 	      matcher = pattern.matcher(str.trim());
 	      if (matcher.matches())
 	      {
-	         byte[] bytes = new byte[6];
+	         int count = matcher.groupCount();
+	         List<Byte> byteList = new ArrayList<Byte>();
 	         try
 	         {
-	            int j = 0;
-	            for(int i = 1; i <= 4; i += 2)
-	            {
-	               int left = Integer.parseInt(matcher.group(i), 16);
+               int j = 0;
+               for(int i = 1; i <= count; i += 2)
+               {
+                  int left = Integer.parseInt(matcher.group(i), 16);
                   int right = Integer.parseInt(matcher.group(i + 1), 16);
-                  bytes[j++] = (byte)(left >> 4);
-                  bytes[j++] = (byte)(((left & 0x00F) << 4) | (right >> 8));
-                  bytes[j++] = (byte)(right & 0x0FF);
-	            }
+                  byteList.set(j++, (byte)(left >> 4));
+                  byteList.set(j++, (byte)(((left & 0x00F) << 4) | (right >> 8)));
+                  byteList.set(j++, (byte)(right & 0x0FF));
+               }
 	         }
 	         catch(NumberFormatException e)
 	         {
 	            throw new MacAddressFormatException();
 	         }
+	         
+
+	         byte[] bytes = new byte[byteList.size()];
+	         for(int i = 0; i < byteList.size(); i++)
+	            bytes[i] = byteList.get(i).byteValue();
 	         return new MacAddress(bytes);
 	      }
 	      else

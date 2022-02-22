@@ -1246,6 +1246,7 @@ shared_ptr<ArpCache> Node::getArpCache(bool forceRead)
 
 /**
  * Get list of interfaces from node
+ * @return Dynamically allocated list of interfaces. Must be freed by the caller.
  */
 InterfaceList *Node::getInterfaceList()
 {

@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.topology.views.helpers;
+package org.netxms.ui.eclipse.topology.widgets.helpers;
 
 import java.net.InetAddress;
 import java.util.HashMap;
@@ -34,7 +34,7 @@ import org.netxms.client.topology.ConnectionPoint;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.ColorConverter;
 import org.netxms.ui.eclipse.topology.Messages;
-import org.netxms.ui.eclipse.topology.views.HostSearchResults;
+import org.netxms.ui.eclipse.topology.widgets.SearchResult;
 
 /**
  * Label provider for connection point objects
@@ -91,18 +91,18 @@ public class ConnectionPointLabelProvider extends LabelProvider implements ITabl
 		ConnectionPoint cp = (ConnectionPoint)element;
 		switch(columnIndex)
 		{
-			case HostSearchResults.COLUMN_SEQUENCE:
+			case SearchResult.COLUMN_SEQUENCE:
 				return Integer.toString((Integer)cp.getData() + 1);
-			case HostSearchResults.COLUMN_NODE:
+			case SearchResult.COLUMN_NODE:
 				return getObjectName(cp.getLocalNodeId());
-			case HostSearchResults.COLUMN_INTERFACE:
+			case SearchResult.COLUMN_INTERFACE:
 				return getObjectName(cp.getLocalInterfaceId());
-			case HostSearchResults.COLUMN_MAC_ADDRESS:
+			case SearchResult.COLUMN_MAC_ADDRESS:
 			   if (cp.getLocalMacAddress() == null)
 			      return "n/a";
 			   else
 			      return cp.getLocalMacAddress().toString();
-			case HostSearchResults.COLUMN_IP_ADDRESS:
+			case SearchResult.COLUMN_IP_ADDRESS:
 				InetAddress addr = cp.getLocalIpAddress();
 				if (addr != null)
 					return addr.getHostAddress();
@@ -111,17 +111,17 @@ public class ConnectionPointLabelProvider extends LabelProvider implements ITabl
 				   return ""; //$NON-NLS-1$
 				InetAddress a = iface.getFirstUnicastAddress();
 				return (a != null) ? a.getHostAddress() : ""; //$NON-NLS-1$
-			case HostSearchResults.COLUMN_SWITCH:
+			case SearchResult.COLUMN_SWITCH:
 			   if ((cp.getNodeId() == 0))
 			      return "n/a";
 			   else
 			      return getObjectName(cp.getNodeId());
-			case HostSearchResults.COLUMN_PORT:
+			case SearchResult.COLUMN_PORT:
 			   if (cp.getInterfaceId() == 0)
 			      return "n/a";
 			   else
 			      return getObjectName(cp.getInterfaceId());
-			case HostSearchResults.COLUMN_TYPE:
+			case SearchResult.COLUMN_TYPE:
 			   if (cp.getType() == null)
                return "n/a";
 			   switch(cp.getType())

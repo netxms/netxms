@@ -156,7 +156,7 @@
          point="org.eclipse.ui.views">
       <view
             allowMultiple="false"
-            class="org.netxms.ui.eclipse.topology.views.HostSearchResults"
+            class="org.netxms.ui.eclipse.topology.views.FindConnectionPointView"
             icon="icons/search_history.png"
             id="org.netxms.ui.eclipse.topology.views.HostSearchResults"
             name="%view.name.ConnSearch"
@@ -205,6 +205,22 @@
             icon="icons/routing_table.gif"
             id="org.netxms.ui.eclipse.topology.views.SwitchForwardingDatabaseView"
             name="%view.name.MACAddressTable"
+            restorable="true">
+      </view>
+      <view
+            allowMultiple="false"
+            class="org.netxms.ui.eclipse.topology.views.FindByIpAddressView"
+            icon="icons/search_history.png"
+            id="org.netxms.ui.eclipse.topology.views.FindByIpAddressView"
+            name="IP Address Searh"
+            restorable="true">
+      </view>
+      <view
+            allowMultiple="false"
+            class="org.netxms.ui.eclipse.topology.views.FindByMacAddressView"
+            icon="icons/search_history.png"
+            id="org.netxms.ui.eclipse.topology.views.FindByMacAddressView"
+            name="MAC Address Searh"
             restorable="true">
       </view>
    </extension>

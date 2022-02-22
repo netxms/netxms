@@ -6252,12 +6252,10 @@ public class NXCSession
       }
 
       if (data.getObjectFlags() != null || data.getObjectFlagsMask() != null)
-      {
-         if (data.getObjectFlags() == null || data.getObjectFlagsMask() == null)
-            throw new NXCException(RCC.VARIABLE_NOT_FOUND);
-            
+      {            
          msg.setFieldInt32(NXCPCodes.VID_FLAGS, data.getObjectFlags());
-         msg.setFieldInt32(NXCPCodes.VID_FLAGS_MASK, data.getObjectFlagsMask());
+         if (data.getObjectFlagsMask() != null)
+            msg.setFieldInt32(NXCPCodes.VID_FLAGS_MASK, data.getObjectFlagsMask());
       }
 
       if (data.getIfXTablePolicy() != null)
@@ -9556,7 +9554,6 @@ public class NXCSession
       List<ConnectionPoint> out = new ArrayList<ConnectionPoint>();
       int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_ELEMENTS);
 		long base = NXCPCodes.VID_ELEMENT_LIST_BASE;
-      
       for (int i = 0; i < count; i++, base += 10)
          out.add(new ConnectionPoint(response, base));
 

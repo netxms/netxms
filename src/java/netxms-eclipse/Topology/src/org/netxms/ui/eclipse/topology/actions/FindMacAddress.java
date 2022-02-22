@@ -18,21 +18,15 @@
  */
 package org.netxms.ui.eclipse.topology.actions;
 
-import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.viewers.ISelection;
-import org.eclipse.jface.window.Window;
+import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.IWorkbenchWindowActionDelegate;
-import org.netxms.base.MacAddress;
-import org.netxms.client.NXCSession;
-import org.netxms.client.topology.ConnectionPoint;
-import org.netxms.ui.eclipse.jobs.ConsoleJob;
-import org.netxms.ui.eclipse.shared.ConsoleSharedData;
-import org.netxms.ui.eclipse.topology.Activator;
+import org.eclipse.ui.PartInitException;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.topology.Messages;
-import org.netxms.ui.eclipse.topology.dialogs.EnterMacAddressDlg;
-import org.netxms.ui.eclipse.topology.views.HostSearchResults;
+import org.netxms.ui.eclipse.topology.views.FindByMacAddressView;
 
 /**
  * Find MAC address in the network
@@ -48,32 +42,14 @@ public class FindMacAddress implements IWorkbenchWindowActionDelegate
 	@Override
 	public void run(IAction action)
 	{
-		EnterMacAddressDlg dlg = new EnterMacAddressDlg(window.getShell());
-		if (dlg.open() != Window.OK)
-			return;
-		
-		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		final MacAddress macAddr = dlg.getMacAddress();
-		new ConsoleJob(String.format(Messages.get().FindMacAddress_JobTitle, macAddr) , null, Activator.PLUGIN_ID, null) {
-			@Override
-			protected void runInternal(IProgressMonitor monitor) throws Exception
-			{
-				final ConnectionPoint cp = session.findConnectionPoint(macAddr);
-				runInUIThread(new Runnable() {
-					@Override
-					public void run()
-					{
-						HostSearchResults.showConnection(cp);
-					}
-				});
-			}
-
-			@Override
-			protected String getErrorMessage()
-			{
-				return String.format(Messages.get().FindMacAddress_JobError, macAddr);
-			}
-		}.start();
+      try
+      {
+         window.getActivePage().showView(FindByMacAddressView.ID, null, IWorkbenchPage.VIEW_ACTIVATE);
+      }
+      catch(PartInitException e)
+      {
+         MessageDialogHelper.openError(window.getShell(), Messages.get().ShowRoutingTable_Error, String.format(Messages.get().ShowRoutingTable_CannotOpenView, e.getLocalizedMessage()));
+      }
 	}
 
 	/* (non-Javadoc)

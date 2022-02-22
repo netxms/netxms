@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.topology.views.helpers;
+package org.netxms.ui.eclipse.topology.widgets.helpers;
 
 import java.net.InetAddress;
 import org.eclipse.jface.viewers.ITableLabelProvider;
@@ -28,7 +28,7 @@ import org.netxms.client.objects.Interface;
 import org.netxms.client.topology.ConnectionPoint;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.ComparatorHelper;
-import org.netxms.ui.eclipse.topology.views.HostSearchResults;
+import org.netxms.ui.eclipse.topology.widgets.SearchResult;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
@@ -59,17 +59,17 @@ public class ConnectionPointComparator extends ViewerComparator
 		int column = (Integer)((SortableTableViewer)viewer).getTable().getSortColumn().getData("ID"); //$NON-NLS-1$
 		switch(column)
 		{
-			case HostSearchResults.COLUMN_SEQUENCE:
+			case SearchResult.COLUMN_SEQUENCE:
 				result = (Integer)((ConnectionPoint)e1).getData() - (Integer)((ConnectionPoint)e2).getData();
 				break;
-			case HostSearchResults.COLUMN_NODE:
-			case HostSearchResults.COLUMN_INTERFACE:
-			case HostSearchResults.COLUMN_MAC_ADDRESS:
-			case HostSearchResults.COLUMN_SWITCH:
-			case HostSearchResults.COLUMN_PORT:
+			case SearchResult.COLUMN_NODE:
+			case SearchResult.COLUMN_INTERFACE:
+			case SearchResult.COLUMN_MAC_ADDRESS:
+			case SearchResult.COLUMN_SWITCH:
+			case SearchResult.COLUMN_PORT:
 				result = labelProvider.getColumnText(e1, column).compareToIgnoreCase(labelProvider.getColumnText(e2, column));
 				break;
-			case HostSearchResults.COLUMN_IP_ADDRESS:
+			case SearchResult.COLUMN_IP_ADDRESS:
 				Interface iface1 = (Interface)session.findObjectById(((ConnectionPoint)e1).getLocalInterfaceId(), Interface.class);
 				Interface iface2 = (Interface)session.findObjectById(((ConnectionPoint)e2).getLocalInterfaceId(), Interface.class);
 				InetAddress a1 = ((ConnectionPoint)e1).getLocalIpAddress();

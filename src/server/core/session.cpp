@@ -11644,7 +11644,7 @@ void ClientSession::findMacAddress(const NXCPMessage& request)
    {
       response.setField(VID_NUM_ELEMENTS, icpl.size());
       uint32_t base = VID_ELEMENT_LIST_BASE;
-      for (int i = 0; i < icpl.size(); i++, base += 100)
+      for (int i = 0; i < icpl.size(); i++, base += 10)
          icpl.get(i)->fillMessage(&response, base);
    }
    sendMessage(&response);

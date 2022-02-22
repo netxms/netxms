@@ -18,20 +18,15 @@
  */
 package org.netxms.ui.eclipse.topology.actions;
 
-import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.viewers.ISelection;
-import org.eclipse.jface.window.Window;
+import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.IWorkbenchWindowActionDelegate;
-import org.netxms.client.NXCSession;
-import org.netxms.client.topology.ConnectionPoint;
-import org.netxms.ui.eclipse.jobs.ConsoleJob;
-import org.netxms.ui.eclipse.shared.ConsoleSharedData;
-import org.netxms.ui.eclipse.topology.Activator;
+import org.eclipse.ui.PartInitException;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.topology.Messages;
-import org.netxms.ui.eclipse.topology.dialogs.EnterIpAddressDlg;
-import org.netxms.ui.eclipse.topology.views.HostSearchResults;
+import org.netxms.ui.eclipse.topology.views.FindByIpAddressView;
 
 /**
  * Find IP address in the network
@@ -47,31 +42,14 @@ public class FindIpAddress implements IWorkbenchWindowActionDelegate
 	@Override
 	public void run(IAction action)
 	{
-		final EnterIpAddressDlg dlg = new EnterIpAddressDlg(window.getShell());
-		if (dlg.open() != Window.OK)
-			return;
-		
-		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob(String.format(Messages.get().FindIpAddress_JobTitle, dlg.getIpAddress().getHostAddress()), null, Activator.PLUGIN_ID, null) {
-			@Override
-			protected void runInternal(IProgressMonitor monitor) throws Exception
-			{
-				final ConnectionPoint cp = session.findConnectionPoint((int)dlg.getZoneId(), dlg.getIpAddress());
-				runInUIThread(new Runnable() {
-					@Override
-					public void run()
-					{
-						HostSearchResults.showConnection(cp);
-					}
-				});
-			}
-
-			@Override
-			protected String getErrorMessage()
-			{
-				return String.format(Messages.get().FindIpAddress_JobError, dlg.getIpAddress().getHostAddress());
-			}
-		}.start();
+      try
+      {
+         window.getActivePage().showView(FindByIpAddressView.ID, null, IWorkbenchPage.VIEW_ACTIVATE);
+      }
+      catch(PartInitException e)
+      {
+         MessageDialogHelper.openError(window.getShell(), Messages.get().ShowRoutingTable_Error, String.format(Messages.get().ShowRoutingTable_CannotOpenView, e.getLocalizedMessage()));
+      }
 	}
 
 	/* (non-Javadoc)

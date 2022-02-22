@@ -259,12 +259,15 @@ static void FindMACsByPattern(const BYTE* macPattern, size_t macPatternSize, Has
    for (int i = 0; i < nodes->size() && matchedMacs->size() < searchLimit; i++)
    {
       Node* node = static_cast<Node*>(nodes->get(i));
-
       // Check node interfaces
-      InterfaceList* ifList = node->getInterfaceList();
+      unique_ptr<SharedObjectArray<NetObj>> ifList = node->getChildren(OBJECT_INTERFACE);
       for (int i = 0; i < ifList->size(); i++)
-         if (memmem(ifList->get(i)->macAddr, MAC_ADDR_LENGTH, macPattern, macPatternSize))
-            matchedMacs->put(MacAddress(ifList->get(i)->macAddr, MAC_ADDR_LENGTH));
+      {
+         if (memmem(static_cast<Interface *>(ifList->get(i))->getMacAddr().value(), MAC_ADDR_LENGTH, macPattern, macPatternSize))
+         {
+            matchedMacs->put(static_cast<Interface *>(ifList->get(i))->getMacAddr());
+         }
+      }
 
       // Check node forwarding database
       shared_ptr<ForwardingDatabase> fdb = node->getSwitchForwardingDatabase();

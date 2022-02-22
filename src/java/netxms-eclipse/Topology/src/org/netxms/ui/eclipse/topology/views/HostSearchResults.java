@@ -54,8 +54,8 @@ import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.topology.Activator;
 import org.netxms.ui.eclipse.topology.Messages;
-import org.netxms.ui.eclipse.topology.views.helpers.ConnectionPointComparator;
-import org.netxms.ui.eclipse.topology.views.helpers.ConnectionPointLabelProvider;
+import org.netxms.ui.eclipse.topology.widgets.helpers.ConnectionPointComparator;
+import org.netxms.ui.eclipse.topology.widgets.helpers.ConnectionPointLabelProvider;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
