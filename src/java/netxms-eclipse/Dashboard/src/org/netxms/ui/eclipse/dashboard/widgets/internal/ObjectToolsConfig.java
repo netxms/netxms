@@ -31,9 +31,6 @@ import org.simpleframework.xml.core.Persister;
  */
 public class ObjectToolsConfig extends DashboardElementConfig
 {
-   @Element(required=false)
-   private String title = null;
-   
    @ElementArray(required=false)
    private Tool[] tools = null;
    
@@ -53,7 +50,7 @@ public class ObjectToolsConfig extends DashboardElementConfig
       return serializer.read(ObjectToolsConfig.class, xml);
    }
    
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig#createXml()
     */
    @Override
@@ -65,22 +62,6 @@ public class ObjectToolsConfig extends DashboardElementConfig
       return writer.toString();
    }
    
-   /**
-    * @return the title
-    */
-   public String getTitle()
-   {
-      return (title != null) ? title : "";
-   }
-
-   /**
-    * @param title the title to set
-    */
-   public void setTitle(String title)
-   {
-      this.title = title;
-   }
-
    /**
     * @return the tools
     */

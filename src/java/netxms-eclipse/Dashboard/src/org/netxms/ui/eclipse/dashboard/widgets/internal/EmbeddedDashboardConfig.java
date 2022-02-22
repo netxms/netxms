@@ -41,9 +41,6 @@ public class EmbeddedDashboardConfig extends DashboardElementConfig
 	@Element(required=false)
 	private int displayInterval = 60;
 
-	@Element(required=false)
-	private String title = ""; //$NON-NLS-1$
-
 	/**
 	 * Create line chart settings object from XML document
 	 * 
@@ -107,22 +104,6 @@ public class EmbeddedDashboardConfig extends DashboardElementConfig
 			if (md != null)
 				dashboardObjects[i] = md.dstId;
 		}
-	}
-
-	/**
-	 * @return the title
-	 */
-	public String getTitle()
-	{
-		return title;
-	}
-
-	/**
-	 * @param title the title to set
-	 */
-	public void setTitle(String title)
-	{
-		this.title = title;
 	}
 
 	/**

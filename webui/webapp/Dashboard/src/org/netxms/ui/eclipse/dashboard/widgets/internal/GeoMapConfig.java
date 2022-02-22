@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,9 +29,6 @@ import org.simpleframework.xml.core.Persister;
  */
 public class GeoMapConfig extends DashboardElementConfig
 {
-	@Element(required=false)
-	private String title = ""; //$NON-NLS-1$
-
 	@Element(required=true)
 	private double latitude = 0.0;
 
@@ -57,9 +54,9 @@ public class GeoMapConfig extends DashboardElementConfig
 		return serializer.read(GeoMapConfig.class, xml);
 	}
 	
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig#createXml()
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig#createXml()
+    */
 	@Override
 	public String createXml() throws Exception
 	{
@@ -67,22 +64,6 @@ public class GeoMapConfig extends DashboardElementConfig
 		Writer writer = new StringWriter();
 		serializer.write(this, writer);
 		return writer.toString();
-	}
-
-	/**
-	 * @return the title
-	 */
-	public String getTitle()
-	{
-		return title;
-	}
-
-	/**
-	 * @param title the title to set
-	 */
-	public void setTitle(String title)
-	{
-		this.title = title;
 	}
 
 	/**

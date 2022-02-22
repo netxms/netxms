@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.Set;
 import org.netxms.ui.eclipse.dashboard.dialogs.helpers.DciIdMatchingData;
 import org.netxms.ui.eclipse.dashboard.dialogs.helpers.ObjectIdMatchingData;
+import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Root;
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
@@ -37,7 +38,13 @@ import org.simpleframework.xml.core.Persister;
 public abstract class DashboardElementConfig
 {
 	private DashboardElementLayout layout;
-	
+
+   @Element(required = false)
+   private String title = ""; //$NON-NLS-1$
+
+   @Element(required = false)
+   private boolean showTitle = true;
+
 	/**
 	 * Create XML from configuration.
 	 * 
@@ -68,6 +75,38 @@ public abstract class DashboardElementConfig
 		this.layout = layout;
 	}
 	
+   /**
+    * @return the title
+    */
+   public String getTitle()
+   {
+      return title;
+   }
+
+   /**
+    * @param title the title to set
+    */
+   public void setTitle(String title)
+   {
+      this.title = title;
+   }
+
+   /**
+    * @return the showTitle
+    */
+   public boolean isShowTitle()
+   {
+      return showTitle;
+   }
+
+   /**
+    * @param showTitle the showTitle to set
+    */
+   public void setShowTitle(boolean showTitle)
+   {
+      this.showTitle = showTitle;
+   }
+
 	/**
 	 * Get list of referenced object IDs
 	 * 
@@ -77,7 +116,7 @@ public abstract class DashboardElementConfig
 	{
 		return new HashSet<Long>(0);
 	}
-	
+
 	/**
 	 * Get list of referenced DCI IDs. Key is DCI iD and value is node ID.
 	 * 
@@ -87,7 +126,7 @@ public abstract class DashboardElementConfig
 	{
 		return new HashMap<Long, Long>(0);
 	}
-	
+
 	/**
 	 * Remap object identifiers. Remap data has source object ID as a key.
 	 * 
@@ -96,7 +135,7 @@ public abstract class DashboardElementConfig
 	public void remapObjects(Map<Long, ObjectIdMatchingData> remapData)
 	{
 	}
-	
+
 	/**
 	 * Remap DCI identifiers. Remap data has source DCI ID as a key.
 	 * 

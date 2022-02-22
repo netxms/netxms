@@ -32,9 +32,6 @@ public class WebPageConfig extends DashboardElementConfig
 	@Element(required=true)
 	private String url = ""; //$NON-NLS-1$
 
-	@Element(required=false)
-	private String title = ""; //$NON-NLS-1$
-
 	/**
 	 * Create line chart settings object from XML document
 	 * 
@@ -47,10 +44,10 @@ public class WebPageConfig extends DashboardElementConfig
 		Serializer serializer = new Persister();
 		return serializer.read(WebPageConfig.class, xml);
 	}
-	
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig#createXml()
-	 */
+
+   /**
+    * @see org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig#createXml()
+    */
 	@Override
 	public String createXml() throws Exception
 	{
@@ -58,22 +55,6 @@ public class WebPageConfig extends DashboardElementConfig
 		Writer writer = new StringWriter();
 		serializer.write(this, writer);
 		return writer.toString();
-	}
-
-	/**
-	 * @return the title
-	 */
-	public String getTitle()
-	{
-		return title;
-	}
-
-	/**
-	 * @param title the title to set
-	 */
-	public void setTitle(String title)
-	{
-		this.title = title;
 	}
 
 	/**

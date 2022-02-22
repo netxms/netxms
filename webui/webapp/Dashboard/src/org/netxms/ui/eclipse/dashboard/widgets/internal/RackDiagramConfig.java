@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2017 Raden Solutions
+ * Copyright (C) 2003-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,17 +32,11 @@ public class RackDiagramConfig extends DashboardElementConfig
 {
    @Element(required=true)
    private long objectId = 0;
-   
-   @Element(required=false)
-   private String title = "";
-   
+
    @Element(required=false)
    private RackView view = RackView.FULL;
-   
-   @Element(required=false)
-   private boolean showTitle = true;
 
-/**
+   /**
     * Create rack diagram settings object from XML document
     * 
     * @param xml XML document
@@ -55,7 +49,7 @@ public class RackDiagramConfig extends DashboardElementConfig
       return serializer.read(RackDiagramConfig.class, xml);
    }
    
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig#createXml()
     */
    @Override
@@ -67,7 +61,7 @@ public class RackDiagramConfig extends DashboardElementConfig
       return writer.toString();
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig#getObjects()
     */
    @Override
@@ -78,7 +72,7 @@ public class RackDiagramConfig extends DashboardElementConfig
       return objects;
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig#remapObjects(java.util.Map)
     */
    @Override
@@ -88,22 +82,6 @@ public class RackDiagramConfig extends DashboardElementConfig
       ObjectIdMatchingData md = remapData.get(objectId);
       if (md != null)
          objectId = md.dstId;
-   }
-
-   /**
-    * @return the title
-    */
-   public String getTitle()
-   {
-      return title;
-   }
-
-   /**
-    * @param title the title to set
-    */
-   public void setTitle(String title)
-   {
-      this.title = title;
    }
 
    /**
@@ -121,7 +99,7 @@ public class RackDiagramConfig extends DashboardElementConfig
    {
       this.objectId = objectId;
    }
-
+   
    /**
     * @return the view
     */
@@ -136,23 +114,5 @@ public class RackDiagramConfig extends DashboardElementConfig
    public void setView(RackView view)
    {
       this.view = view;
-   }
-   
-   /**
-    * @return should the title be shown
-    */
-   public boolean isShowTitle()
-   {
-	  return showTitle;
-   }
-   
-   /**
-    * Set show title
-    * 
-    * @param showTitle
-    */
-   public void setShowTitle(boolean showTitle)
-   {
-	   this.showTitle = showTitle;
    }
 }
