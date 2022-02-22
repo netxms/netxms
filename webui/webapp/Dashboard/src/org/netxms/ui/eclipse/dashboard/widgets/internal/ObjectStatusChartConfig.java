@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -42,9 +42,6 @@ public class ObjectStatusChartConfig extends DashboardElementConfig
 	private int[] classFilter = { AbstractObject.OBJECT_NODE };
 	
 	@Element(required=false)
-	private String title = ""; //$NON-NLS-1$
-
-	@Element(required=false)
 	private int legendPosition = ChartConfiguration.POSITION_RIGHT;
 	
 	@Element(required=false)
@@ -75,9 +72,9 @@ public class ObjectStatusChartConfig extends DashboardElementConfig
 		return serializer.read(ObjectStatusChartConfig.class, xml);
 	}
 	
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig#createXml()
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig#createXml()
+    */
 	@Override
 	public String createXml() throws Exception
 	{
@@ -87,9 +84,9 @@ public class ObjectStatusChartConfig extends DashboardElementConfig
 		return writer.toString();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig#getObjects()
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig#getObjects()
+    */
 	@Override
 	public Set<Long> getObjects()
 	{
@@ -98,9 +95,9 @@ public class ObjectStatusChartConfig extends DashboardElementConfig
 		return objects;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig#remapObjects(java.util.Map)
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig#remapObjects(java.util.Map)
+    */
 	@Override
 	public void remapObjects(Map<Long, ObjectIdMatchingData> remapData)
 	{
@@ -108,22 +105,6 @@ public class ObjectStatusChartConfig extends DashboardElementConfig
 		ObjectIdMatchingData md = remapData.get(rootObject);
 		if (md != null)
 			rootObject = md.dstId;
-	}
-
-	/**
-	 * @return the title
-	 */
-	public String getTitle()
-	{
-		return title;
-	}
-
-	/**
-	 * @param title the title to set
-	 */
-	public void setTitle(String title)
-	{
-		this.title = title;
 	}
 
 	/**

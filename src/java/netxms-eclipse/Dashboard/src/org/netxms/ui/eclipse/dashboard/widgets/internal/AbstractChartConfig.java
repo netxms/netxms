@@ -35,9 +35,6 @@ public abstract class AbstractChartConfig extends DashboardElementConfig
 	private ChartDciConfig[] dciList = new ChartDciConfig[0];
 
 	@Element(required = false)
-	private String title = ""; //$NON-NLS-1$
-
-	@Element(required = false)
 	private int legendPosition = ChartConfiguration.POSITION_BOTTOM;
 
 	@Element(required = false)
@@ -45,9 +42,6 @@ public abstract class AbstractChartConfig extends DashboardElementConfig
 
    @Element(required = false)
    private boolean extendedLegend = false;
-
-	@Element(required = false)
-   private boolean showTitle = true;
 
    @Element(required = false)
    private boolean autoScale = true;
@@ -110,22 +104,6 @@ public abstract class AbstractChartConfig extends DashboardElementConfig
 				dci.nodeId = md.dstNodeId;
 			}
 		}
-	}
-
-	/**
-	 * @return the title
-	 */
-	public String getTitle()
-	{
-		return title;
-	}
-
-	/**
-	 * @param title the title to set
-	 */
-	public void setTitle(String title)
-	{
-		this.title = title;
 	}
 
 	/**
@@ -206,22 +184,6 @@ public abstract class AbstractChartConfig extends DashboardElementConfig
 	public void setRefreshRate(int refreshRate)
 	{
 		this.refreshRate = refreshRate;
-	}
-	
-	/**
-	 * @return the showTitle
-	 */
-	public boolean isShowTitle()
-	{
-      return showTitle;
-	}
-
-	/**
-    * @param showTitle the showTitle to set
-    */
-   public void setShowTitle(boolean showTitle)
-	{
-      this.showTitle = showTitle;
 	}
 	
    /**

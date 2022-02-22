@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,9 +35,6 @@ public class AlarmViewerConfig extends DashboardElementConfig
    @Element(required = true)
 	private long objectId = 0;
 
-   @Element(required = false)
-	private String title = ""; //$NON-NLS-1$
-	
    @Element(required = false)
 	private int severityFilter = 0xFF;
 
@@ -93,22 +90,6 @@ public class AlarmViewerConfig extends DashboardElementConfig
 		ObjectIdMatchingData md = remapData.get(objectId);
 		if (md != null)
 			objectId = md.dstId;
-	}
-
-	/**
-	 * @return the title
-	 */
-	public String getTitle()
-	{
-		return title;
-	}
-
-	/**
-	 * @param title the title to set
-	 */
-	public void setTitle(String title)
-	{
-		this.title = title;
 	}
 
 	/**

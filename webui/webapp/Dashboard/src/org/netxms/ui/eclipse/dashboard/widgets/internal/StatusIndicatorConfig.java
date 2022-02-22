@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,9 +36,6 @@ public class StatusIndicatorConfig extends DashboardElementConfig
 	private long objectId = 0;
 
 	@Element(required = false)
-	private String title = ""; //$NON-NLS-1$
-	
-	@Element(required = false)
 	private boolean fullColorRange = false;
 
 	/**
@@ -56,13 +53,9 @@ public class StatusIndicatorConfig extends DashboardElementConfig
 		return serializer.read(StatusIndicatorConfig.class, xml);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig
-	 * #createXml()
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig#createXml()
+    */
 	@Override
 	public String createXml() throws Exception
 	{
@@ -72,9 +65,9 @@ public class StatusIndicatorConfig extends DashboardElementConfig
 		return writer.toString();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig#getObjects()
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig#getObjects()
+    */
 	@Override
 	public Set<Long> getObjects()
 	{
@@ -83,9 +76,9 @@ public class StatusIndicatorConfig extends DashboardElementConfig
 		return objects;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig#remapObjects(java.util.Map)
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig#remapObjects(java.util.Map)
+    */
 	@Override
 	public void remapObjects(Map<Long, ObjectIdMatchingData> remapData)
 	{
@@ -110,23 +103,6 @@ public class StatusIndicatorConfig extends DashboardElementConfig
 	public void setObjectId(long objectId)
 	{
 		this.objectId = objectId;
-	}
-
-	/**
-	 * @return the title
-	 */
-	public String getTitle()
-	{
-		return title;
-	}
-
-	/**
-	 * @param title
-	 *           the title to set
-	 */
-	public void setTitle(String title)
-	{
-		this.title = title;
 	}
 
    /**

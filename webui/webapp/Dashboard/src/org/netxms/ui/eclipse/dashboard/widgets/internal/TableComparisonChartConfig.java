@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -44,9 +44,6 @@ public abstract class TableComparisonChartConfig extends DashboardElementConfig
 	private String dataColumn = null;
 
 	@Element(required = false)
-	private String title = ""; //$NON-NLS-1$
-	
-	@Element(required = false)
 	private int legendPosition = ChartConfiguration.POSITION_RIGHT;
 	
 	@Element(required = false)
@@ -54,9 +51,6 @@ public abstract class TableComparisonChartConfig extends DashboardElementConfig
 	
    @Element(required = false)
    private boolean extendedLegend = false;
-
-	@Element(required = false)
-	private boolean showTitle = true;
 
 	@Element(required = false)
 	private int refreshRate = 30;
@@ -188,22 +182,6 @@ public abstract class TableComparisonChartConfig extends DashboardElementConfig
 	}
 
 	/**
-	 * @return the title
-	 */
-	public String getTitle()
-	{
-		return title;
-	}
-
-	/**
-	 * @param title the title to set
-	 */
-	public void setTitle(String title)
-	{
-		this.title = title;
-	}
-
-	/**
 	 * @return the legendPosition
 	 */
 	public int getLegendPosition()
@@ -250,22 +228,6 @@ public abstract class TableComparisonChartConfig extends DashboardElementConfig
    {
       this.extendedLegend = extendedLegend;
    }
-
-	/**
-	 * @return the showTitle
-	 */
-	public boolean isShowTitle()
-	{
-		return showTitle;
-	}
-
-	/**
-	 * @param showTitle the showTitle to set
-	 */
-	public void setShowTitle(boolean showTitle)
-	{
-		this.showTitle = showTitle;
-	}
 
 	/**
 	 * @return the refreshRate
