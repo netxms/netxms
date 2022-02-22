@@ -1,8 +1,5 @@
 @ECHO OFF
 
-SET POM_FILES_INSTALL=src/java-common/netxms-base/pom.xml;src/libnxjava/java/pom.xml;src/client/java/netxms-client/pom.xml;src/agent/subagents/java/java/pom.xml;src/mobile-agent/java;src/server/nxreportd/java/pom.xml
-SET POM_FILES_PACKAGE=src/agent/subagents/jmx/pom.xml;src/agent/subagents/opcua/pom.xml;src/agent/subagents/ubntlw/pom.xml;src/client/nxapisrv/java/pom.xml;src/client/nxshell/java/pom.xml;src/client/nxtcpproxy/pom.xml;tests/integration/pom.xml
-
 cd build
 perl updatetag.pl
 cd ..
@@ -15,9 +12,14 @@ type src\java\netxms-eclipse\Core\plugin.xml | sed -r "s,^(.*;Version) [0-9.]+(&
 copy /Y plugin.xml src\java\netxms-eclipse\Core\plugin.xml
 del plugin.xml
 
-for %%p in (%POM_FILES_INSTALL%) do cmd /C mvn -f %%p -Dmaven.test.skip=true -Drevision=%VERSION% clean install
-for %%p in (%POM_FILES_PACKAGE%) do cmd /C mvn -f %%p -Dmaven.test.skip=true -Drevision=%VERSION% clean package
-cmd /C mvn -f src/client/nxmc/java/pom.xml -Drevision=%VERSION% -Pdesktop clean package
+cmd /C mvn -f src/pom.xml versions:set -DnewVersion=%VERSION% -DprocessAllModules=true
+cmd /C mvn -f src/client/nxmc/java/pom.xml versions:set -DnewVersion=%VERSION%
+
+cmd /C mvn -f src/pom.xml clean install -Dmaven.test.skip=true
+cmd /C mvn -f src/client/nxmc/java/pom.xml -Pdesktop clean package
+
+cmd /C mvn -f src/pom.xml versions:revert -DprocessAllModules=true
+cmd /C mvn -f src/client/nxmc/java/pom.xml versions:revert
 
 cd sql
 make -f Makefile.w32

@@ -16,6 +16,7 @@
       <module>agent/subagents/opcua</module>
       <module>agent/subagents/ubntlw</module>
       <module>server/nxreportd/java</module>
+      <module>mobile-agent/java</module>
    </modules>
    <build>
       <plugins>
