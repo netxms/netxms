@@ -293,7 +293,7 @@ static void LexerError(const char *pszMsg, yyscan_t scanner);
 
 <TEXT>"\"\"\""		{
 			BEGIN INITIAL;
-			yyextra->m_text.write(0);
+			yyextra->m_text.write(static_cast<char>(0));
 			yylval->valStr = MemCopyStringA(reinterpret_cast<const char*>(yyextra->m_text.buffer()));
 			return T_STRING;
 		}

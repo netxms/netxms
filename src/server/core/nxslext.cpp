@@ -1372,8 +1372,10 @@ static int F_SNMPSet(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *
       return NXSL_ERR_INVALID_ARGUMENT_COUNT;
    if (!argv[0]->isObject())
       return NXSL_ERR_NOT_OBJECT;
-   if (!argv[1]->isString() || !argv[2]->isString() || ((argc == 4) && !argv[3]->isString()))
+   if (!argv[1]->isString() || (!argv[2]->isString() && !argv[2]->isObject(_T("ByteStream"))) || ((argc == 4) && !argv[3]->isString()))
       return NXSL_ERR_NOT_STRING;
+
+   bool isByteStream = argv[2]->isObject(_T("ByteStream"));
 
    NXSL_Object *object = argv[0]->getValueAsObject();
    if (!object->getClass()->instanceOf(g_nxslSnmpTransportClass.getName()))
@@ -1389,7 +1391,10 @@ static int F_SNMPSet(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *
       SNMP_Variable *var = new SNMP_Variable(argv[1]->getValueAsCString());
       if (argc == 3)
       {
-         var->setValueFromString(ASN_OCTET_STRING, argv[2]->getValueAsCString());
+         if (isByteStream)
+            var->setValueFromByteStream(ASN_OCTET_STRING, *static_cast<ByteStream*>(argv[2]->getValueAsObject()->getData()));
+         else
+            var->setValueFromString(ASN_OCTET_STRING, argv[2]->getValueAsCString());
       }
       else
       {
@@ -1400,7 +1405,10 @@ static int F_SNMPSet(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *
                argv[3]->getValueAsCString());
             dataType = ASN_OCTET_STRING;
          }
-         var->setValueFromString(dataType, argv[2]->getValueAsCString());
+         if (isByteStream)
+            var->setValueFromByteStream(dataType, *static_cast<ByteStream*>(argv[2]->getValueAsObject()->getData()));
+         else
+            var->setValueFromString(dataType, argv[2]->getValueAsCString());
       }
       request->bindVariable(var);
    }

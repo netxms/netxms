@@ -772,3 +772,14 @@ void SNMP_Variable::setValueFromObjectId(uint32_t type, const SNMP_ObjectId& val
          break;
    }
 }
+
+/**
+ * Set variable from byte array
+ */
+void SNMP_Variable::setValueFromByteArray(uint32_t type, const BYTE* data, size_t size)
+{
+   m_type = type;
+   m_valueLength = size;
+   MemFree(m_value);
+   m_value = MemCopyBlock(data, size);
+}

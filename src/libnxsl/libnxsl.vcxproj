@@ -197,6 +197,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="array.cpp" />
+    <ClCompile Include="bytestream.cpp" />
     <ClCompile Include="class.cpp" />
     <ClCompile Include="compiler.cpp" />
     <ClCompile Include="env.cpp" />

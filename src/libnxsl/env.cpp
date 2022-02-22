@@ -94,6 +94,7 @@ int F_AddrInSubnet(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *
 int F_ArrayToString(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_Base64Decode(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_Base64Encode(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_ByteStream(int argc, NXSL_Value** argv, NXSL_Value** result, NXSL_VM* vm);
 int F_FormatMetricPrefix(int argc, NXSL_Value** argv, NXSL_Value** ppResult, NXSL_VM* vm);
 int F_GeoLocation(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_GetCurrentTimeMs(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
@@ -124,6 +125,7 @@ int S_min(const NXSL_Identifier& name, NXSL_Value *options, int argc, NXSL_Value
  */
 static NXSL_ExtFunction s_builtinFunctions[] =
 {
+   { "__new@ByteStream", F_ByteStream, 0 },
    { "__new@GeoLocation", F_GeoLocation, -1 },
    { "__new@InetAddress", F_InetAddress, -1 },
    { "__new@JsonArray", F_JsonArray, -1 },
@@ -194,6 +196,7 @@ static NXSL_ExtFunction s_builtinFunctions[] =
    { "ArrayToString", F_ArrayToString, 2 },
    { "Base64Decode", F_Base64Decode, -1 },
    { "Base64Encode", F_Base64Encode, -1 },
+   { "ByteStream", F_ByteStream, 0 },
    { "FormatMetricPrefix", F_FormatMetricPrefix, -1 },
    { "GetCurrentTimeMs", F_GetCurrentTimeMs, 0 },
    { "GetThreadPoolNames", F_GetThreadPoolNames, 0 },

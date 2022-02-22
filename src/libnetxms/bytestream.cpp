@@ -85,32 +85,97 @@ void ByteStream::write(const void *data, size_t size)
 }
 
 /**
- * Write string in UTF-8 prepended with length
+ * Write string
+ * @param str the input string
+ * @param codepage encoding of the in-stream string
+ * @param length if length > -1 exactly length symbols will be written (not paying attention to null-termination)
+ * @param prependLength prepend string with is't length
+ * @param nullTerminate null-terminate input string in buffer
+ * @return Count of bytes written.
  */
-void ByteStream::writeString(const TCHAR *s)
+size_t ByteStream::writeString(const WCHAR* str, const char* codepage, ssize_t length, bool prependLength, bool nullTerminate)
 {
-#ifdef UNICODE
-   char *utf8str = UTF8StringFromWideString(s);
-#else
-   char *utf8str = UTF8StringFromMBString(s);
-#endif
-   writeStringUtf8(utf8str);
-   MemFree(utf8str);
+   if (length < 0)
+      length = wcslen(str);
+   
+   size_t byteCount = length * 4;
+   size_t writeStartPos = m_pos;
+
+   if (prependLength)
+   {
+      if (byteCount < 0x8000) // if len < 2^15 prepend str with len as 2 bytes (0xxx xxxx)
+         m_pos += 2;
+      else // if len > 2^15 prepend str with len as 4 bytes with higher bit set (1xxx xxxx xxxx xxxx)
+         m_pos += 4;
+   }
+
+   if (m_pos + byteCount > m_allocated)
+   {
+      m_allocated += std::max(byteCount, m_allocationStep);
+      m_data = MemRealloc(m_data, m_allocated);
+   }
+
+   size_t bytesWritten = wchar_to_mbcp(str, length, (char*)&m_data[m_pos], byteCount, codepage);
+   m_pos += bytesWritten;
+
+   if (prependLength)
+   {
+      if (byteCount < 0x8000)
+      {
+         bytesWritten = HostToBigEndian16(bytesWritten);
+         memcpy(&m_data[writeStartPos], &bytesWritten, 2);
+      }
+      else
+      {
+         bytesWritten = HostToBigEndian16((uint32_t)bytesWritten | 0x80000000);
+         memcpy(&m_data[writeStartPos], &bytesWritten, 4);
+      }
+   }
+
+   if (nullTerminate)
+      write((BYTE)0);
+
+   if (m_pos > m_size)
+      m_size = m_pos;
+
+   return m_pos - writeStartPos;
 }
 
 /**
- * Write string in UTF-8 prepended with length
+ * Write string
+ * @param str the input string
+ * @param length if length > -1 exactly length symbols will be written (not paying attention to null-termination)
+ * @param prependLength prepend string with is't length
+ * @param nullTerminate null-terminate input string in buffer
+ * @return Count of bytes written.
  */
-void ByteStream::writeStringUtf8(const char *s)
+size_t ByteStream::writeString(const char* str, ssize_t length, bool prependLength, bool nullTerminate)
 {
-   // write len < 2^15 as 2 bytes and 4 bytes with higher bit set otherwise
-   uint32_t len = (UINT32)strlen(s);
-   if (len < 0x8000)
-      write((UINT16)len);
-   else
-      write(len | 0x80000000);
+   if (length < 0)
+      length = strlen(str);
 
-   write(s, len);
+   size_t writeStartPos = m_pos;
+
+   if (prependLength)
+   {
+      if (length < 0x8000) // if len < 2^15 prepend s with len as 2 bytes (0xxx xxxx)
+      {
+         uint16_t tmp = (uint16_t)length;
+         write(&tmp, 2);
+      }
+      else // if len > 2^15 prepend s with len as 4 bytes with higher bit set (1xxx xxxx xxxx xxxx)
+      {
+         uint32_t tmp = length | 0x80000000;
+         write(&tmp, 4);
+      }
+   }
+
+   write(str, length);
+
+   if (nullTerminate)
+      write((BYTE)0);
+
+   return m_pos - writeStartPos;
 }
 
 /**
@@ -128,192 +193,105 @@ size_t ByteStream::read(void *buffer, size_t count)
 }
 
 /**
- * Read 16 bit integer
+ * Determine string length.
  */
-INT16 ByteStream::readInt16()
+ssize_t ByteStream::getLengthToRead(ssize_t length, bool isLenPrepended, bool isNullTerminated)
 {
-   if (m_size - m_pos < 2)
+   if(eos()) 
+      return  -1;
+
+   if (isLenPrepended)
    {
-      m_pos = m_size;
-      return 0;
+      BYTE b = !eos() ? m_data[m_pos] : 0;
+      if (b & 0x80) // length in 4 bytes
+      {
+         if (m_size - m_pos < 4)
+            return -1;
+         length = (ssize_t)(readUInt32B() & ~0x80000000);
+      }
+      else // length in 2 bytes
+      {
+         if (m_size - m_pos < 2)
+            return -1;
+         length = (ssize_t)(readUInt16B());
+      }
+   }
+   else if (isNullTerminated)
+   {
+      ssize_t eosPos = find(0);
+      if (eosPos < 0)
+         return -1;
+      length = eosPos - m_pos;
    }
 
-   UINT16 n;
-   memcpy(&n, &m_data[m_pos], 2);
-   m_pos += 2;
-   return (INT16)ntohs(n);
+   if (m_size - m_pos < length)
+      return -1;
+
+   return length;
 }
 
 /**
- * Read unsigned 16 bit integer
+ * Read string. Parameters (except codepage) are mutually exclusive.
+ * @param codepage encoding of the in-stream string
+ * @param length if length > -1 - read length bytes
+ * @param isLenPrepended assume that the in-stream string is prepended with it's length
+ * @param isNullTerminated assume that the in-stream string is null-terminated
+ * @return Dynamically allocated wide char string in UCS-4 (UNICODE)
  */
-UINT16 ByteStream::readUInt16()
+WCHAR* ByteStream::readStringWCore(const char* codepage, ssize_t length, bool isLenPrepended, bool isNullTerminated)
 {
-   if (m_size - m_pos < 2)
-   {
-      m_pos = m_size;
-      return 0;
-   }
+   length = getLengthToRead(length, isLenPrepended, isNullTerminated);
+   if(length < 0)
+      return nullptr;
 
-   UINT16 n;
-   memcpy(&n, &m_data[m_pos], 2);
-   m_pos += 2;
-   return ntohs(n);
+   WCHAR* buffer = MemAllocStringW(length + 1);
+   size_t count = mbcp_to_wchar((char*)&m_data[m_pos], length, buffer, length, codepage);
+   
+   m_pos += isNullTerminated ? length + 1: length;
+   buffer[count] = 0;
+   return buffer;
 }
 
 /**
- * Read 32 bit integer
+ * Read string. Parameters (except codepage) are mutually exclusive.
+ * @param codepage encoding of the in-stream string
+ * @param length if length > -1 - read length bytes
+ * @param isLenPrepended assume that the in-stream string is prepended with it's length
+ * @param isNullTerminated assume that the in-stream string is null-terminated
+ * @return Dynamically allocated wide char string in UCS-4 (UNICODE)
  */
-INT32 ByteStream::readInt32()
+char* ByteStream::readStringAsUTF8Core(const char* codepage, ssize_t length, bool isLenPrepended, bool isNullTerminated)
 {
-   if (m_size - m_pos < 4)
-   {
-      m_pos = m_size;
-      return 0;
-   }
+   length = getLengthToRead(length, isLenPrepended, isNullTerminated);
+   if (length < 0)
+      return nullptr;
 
-   UINT32 n;
-   memcpy(&n, &m_data[m_pos], 4);
-   m_pos += 4;
-   return (INT32)ntohl(n);
+   char* buffer = MemAllocStringA(length * 4 + 1);
+   size_t count = mbcp_to_utf8((char*)&m_data[m_pos], length, buffer, length, codepage);
+   
+   m_pos += isNullTerminated ? length + 1: length;
+   buffer[count] = 0;
+   return buffer;
 }
 
 /**
- * Read unsigned 32 bit integer
+ * Read string. Parameters are mutually exclusive.
+ * @param length if length > -1 - read length bytes
+ * @param isLenPrepended assume that the in-stream string is prepended with it's length
+ * @param isNullTerminated assume that the in-stream string is null-terminated
+ * @return Dynamically allocated multibyte string in same encoding as it was in the stream
  */
-UINT32 ByteStream::readUInt32()
+char* ByteStream::readStringCore(ssize_t length, bool isLenPrepended, bool isNullTerminated)
 {
-   if (m_size - m_pos < 4)
-   {
-      m_pos = m_size;
-      return 0;
-   }
+   length = getLengthToRead(length, isLenPrepended, isNullTerminated);
+   if(length < 0)
+      return nullptr;
 
-   UINT32 n;
-   memcpy(&n, &m_data[m_pos], 4);
-   m_pos += 4;
-   return ntohl(n);
-}
-
-/**
- * Read 64 bit integer
- */
-INT64 ByteStream::readInt64()
-{
-   if (m_size - m_pos < 8)
-   {
-      m_pos = m_size;
-      return 0;
-   }
-
-   UINT64 n;
-   memcpy(&n, &m_data[m_pos], 8);
-   m_pos += 8;
-   return (INT64)ntohq(n);
-}
-
-/**
- * Read unsigned 64 bit integer
- */
-UINT64 ByteStream::readUInt64()
-{
-   if (m_size - m_pos < 8)
-   {
-      m_pos = m_size;
-      return 0;
-   }
-
-   UINT64 n;
-   memcpy(&n, &m_data[m_pos], 8);
-   m_pos += 8;
-   return ntohq(n);
-}
-
-/**
- * Read double
- */
-double ByteStream::readDouble()
-{
-   if (m_size - m_pos < 8)
-   {
-      m_pos = m_size;
-      return 0;
-   }
-
-   double n;
-   memcpy(&n, &m_data[m_pos], 8);
-   m_pos += 8;
-   return ntohd(n);
-}
-
-/**
- * Read UTF-8 encoded string. Returned string is dynamically allocated and must be freed by caller.
- */
-TCHAR *ByteStream::readString()
-{
-   if (m_size - m_pos < 2)
-      return NULL;
-
-   BYTE b = readByte();
-   m_pos--;
-   size_t len;
-   if (b & 0x80)
-   {
-      // 4 byte length
-      if (m_size - m_pos < 4)
-         return NULL;
-      len = (size_t)(readUInt32() & ~0x80000000);
-   }
-   else
-   {
-      len = (size_t)readInt16();
-   }
-
-   if (m_size - m_pos < len)
-      return NULL;
-
-   TCHAR *s = MemAllocString(len + 1);
-#ifdef UNICODE
-   utf8_to_wchar(reinterpret_cast<char*>(&m_data[m_pos]), len, s, len + 1);
-#else
-   utf8_to_mb(reinterpret_cast<char*>(&m_data[m_pos]), len, s, len + 1);
-#endif
-   s[len] = 0;
-   m_pos += len;
-   return s;
-}
-
-/**
- * Read UTF-8 encoded string. Returned string is dynamically allocated and must be freed by caller.
- */
-char *ByteStream::readStringUtf8()
-{
-   if (m_size - m_pos < 2)
-      return NULL;
-
-   BYTE b = readByte();
-   m_pos--;
-   size_t len;
-   if (b & 0x80)
-   {
-      // 4 byte length
-      if (m_size - m_pos < 4)
-         return NULL;
-      len = (size_t)(readUInt32() & ~0x80000000);
-   }
-   else
-   {
-      len = (size_t)readInt16();
-   }
-
-   if (m_size - m_pos < len)
-      return NULL;
-
-   char *s = (char *)malloc(len + 1);
-   memcpy(s, &m_data[m_pos], len);
-   s[len] = 0;
-   m_pos += len;
-   return s;
+   char* buffer = MemAllocStringA(length+1);
+   memcpy(buffer, &m_data[m_pos], length);
+   buffer[length] = 0;
+   m_pos += isNullTerminated ? length + 1: length;
+   return buffer;
 }
 
 /**

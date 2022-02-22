@@ -1,6 +1,6 @@
 lib_LTLIBRARIES = libnxsl.la
 libnxsl_la_SOURCES = lex.parser.cpp parser.tab.cpp \
-		     array.cpp class.cpp compiler.cpp env.cpp file.cpp \
+		     array.cpp bytestream.cpp class.cpp compiler.cpp env.cpp file.cpp \
 		     functions.cpp geolocation.cpp hashmap.cpp inetaddr.cpp \
 		     instruction.cpp io.cpp iterator.cpp json.cpp lexer.cpp \
 		     library.cpp main.cpp network.cpp program.cpp \

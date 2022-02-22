@@ -4351,14 +4351,16 @@ NXSL_METHOD_DEFINITION(SNMPTransport, getValues)
 }
 
 /**
- * SNMPTransport::set() method
+ * SNMPTransport::set(oid, value, [dataType]) method
  */
 NXSL_METHOD_DEFINITION(SNMPTransport, set)
 {
    if (argc < 2 || argc > 3)
       return NXSL_ERR_INVALID_ARGUMENT_COUNT;
-   if (!argv[0]->isString() || !argv[1]->isString() || ((argc == 3) && !argv[2]->isString()))
+   if (!argv[0]->isString() || (!argv[1]->isString() && !argv[1]->isObject(_T("ByteStream"))) || ((argc == 3) && !argv[2]->isString()))
       return NXSL_ERR_NOT_STRING;
+
+   bool isByteStream = argv[1]->isObject(_T("ByteStream"));
 
    SNMP_Transport *transport = static_cast<SNMP_Transport*>(object->getData());
 
@@ -4371,7 +4373,10 @@ NXSL_METHOD_DEFINITION(SNMPTransport, set)
       SNMP_Variable *var = new SNMP_Variable(argv[0]->getValueAsCString());
       if (argc == 2)
       {
-         var->setValueFromString(ASN_OCTET_STRING, argv[1]->getValueAsCString());
+         if (isByteStream)
+            var->setValueFromByteStream(ASN_OCTET_STRING, *static_cast<ByteStream*>(argv[1]->getValueAsObject()->getData()));
+         else
+            var->setValueFromString(ASN_OCTET_STRING, argv[1]->getValueAsCString());
       }
       else
       {
@@ -4382,7 +4387,10 @@ NXSL_METHOD_DEFINITION(SNMPTransport, set)
                argv[2]->getValueAsCString());
             dataType = ASN_OCTET_STRING;
          }
-         var->setValueFromString(dataType, argv[1]->getValueAsCString());
+         if (isByteStream)
+            var->setValueFromByteStream(dataType, *static_cast<ByteStream*>(argv[1]->getValueAsObject()->getData()));
+         else
+            var->setValueFromString(dataType, argv[1]->getValueAsCString());
       }
       request->bindVariable(var);
    }
@@ -4527,13 +4535,24 @@ NXSL_METHOD_DEFINITION(SNMPVarBind, getValueAsString)
 }
 
 /**
+ * SNMPVarBind::getValueAsByteStream() method
+ */
+NXSL_METHOD_DEFINITION(SNMPVarBind, getValueAsByteStream)
+{
+   SNMP_Variable* var = static_cast<SNMP_Variable*>(object->getData());
+   *result = vm->createValue(vm->createObject(&g_nxslByteStreamClass, var->getValueAsByteStream()));
+   return 0;
+}
+
+/**
  * NXSL class SNMP_VarBind: constructor
  */
 NXSL_SNMPVarBindClass::NXSL_SNMPVarBindClass() : NXSL_Class()
 {
 	setName(_T("SNMPVarBind"));
 
-	NXSL_REGISTER_METHOD(SNMPVarBind, getValueAsString, 1);
+   NXSL_REGISTER_METHOD(SNMPVarBind, getValueAsByteStream, 0);
+   NXSL_REGISTER_METHOD(SNMPVarBind, getValueAsString, 1);
 }
 
 /**

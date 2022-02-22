@@ -1,0 +1,121 @@
+/* Check byte stream functionality */
+
+bs = new ByteStream();
+
+i8 = 0x11;
+i16 = 0x1122;
+i32 = 0x11223344;
+i64 = 0x1122334455667788;
+u16 = uint32(0xF122);
+u32 = uint32(0xF1223344);
+u64 = uint64(0xF122334455667788);
+d = 0.5;
+
+testStrBasic = "1234 you can do it!";
+testStrLong = "1234 you can do it! русские не сдаются 恐怖はマインドキラーです 🍆 🍑 💦 👅 الذي لا يعمل يأكل";
+
+// Byte
+bs->writeByte(i8);
+
+// Big-endian
+bs->writeInt16B(i16); 
+bs->writeInt32B(i32); 
+bs->writeInt64B(i64); 
+bs->writeFloatB(d);
+
+bs->writeInt16B(-i16); 
+bs->writeInt32B(-i32); 
+bs->writeInt64B(-i64); 
+bs->writeFloatB(-d);
+
+bs->writeInt16B(u16); 
+bs->writeInt32B(u32); 
+bs->writeInt64B(u64);
+
+// Little-endian
+bs->writeInt16L(i16); 
+bs->writeInt32L(i32); 
+bs->writeInt64L(i64); 
+bs->writeFloatL(d);
+
+bs->writeInt16L(-i16); 
+bs->writeInt32L(-i32); 
+bs->writeInt64L(-i64); 
+bs->writeFloatL(-d);
+
+bs->writeInt16L(u16); 
+bs->writeInt32L(u32); 
+bs->writeInt64L(u64);
+
+// Strings
+
+count_s_b = bs->writeString(testStrBasic);
+count_cs_b = bs->writeCString(testStrBasic);
+count_ps_b = bs->writePString(testStrBasic);
+
+bs->writeString(testStrBasic, "ASCII");
+bs->writeCString(testStrBasic, "ASCII");
+bs->writePString(testStrBasic, "ASCII");
+
+count_s_l = bs->writeString(testStrLong, "UTF-8");
+count_cs_l = bs->writeCString(testStrLong, "UTF-8");
+count_ps_l = bs->writePString(testStrLong, "UTF-8");
+
+//assert(bs->size  == 689);
+bs->seek(0);
+
+// Byte
+assert(bs->readByte() == i8);
+
+// Big-endian
+assert(bs->readInt16B() == i16); 
+assert(bs->readInt32B() == i32); 
+assert(bs->readInt64B() == i64); 
+assert(bs->readFloatB() == d);
+
+assert(bs->readInt16B() == -i16); 
+assert(bs->readInt32B() == -i32); 
+assert(bs->readInt64B() == -i64); 
+assert(bs->readFloatB() == -d);
+
+assert(bs->readUInt16B() == u16); 
+assert(bs->readUInt32B() == u32); 
+assert(bs->readUInt64B() == u64);
+
+// Little-endian
+assert(bs->readInt16L() == i16); 
+assert(bs->readInt32L() == i32); 
+assert(bs->readInt64L() == i64); 
+assert(bs->readFloatL() == d);
+
+assert(bs->readInt16L() == -i16); 
+assert(bs->readInt32L() == -i32); 
+assert(bs->readInt64L() == -i64); 
+assert(bs->readFloatL() == -d);
+
+assert(bs->readUInt16L() == u16); 
+assert(bs->readUInt32L() == u32); 
+assert(bs->readUInt64L() == u64);
+
+// Strings
+assert(bs->readString(19) == testStrBasic);
+assert(bs->readCString() == testStrBasic);
+assert(bs->readPString() == testStrBasic);
+
+assert(bs->readString(19, "ASCII") == testStrBasic);
+assert(bs->readCString("ASCII") == testStrBasic);
+assert(bs->readPString("ASCII") == testStrBasic);
+
+assert(bs->readString(143, "UTF-8") == testStrLong);
+assert(bs->readCString("UTF-8") == testStrLong);
+assert(bs->readPString("UTF-8") == testStrLong);
+
+assert(count_s_b == 19);
+assert(count_cs_b == 20);
+assert(count_ps_b == 21);
+
+assert(count_s_l == 143);
+assert(count_cs_l == 144);
+assert(count_ps_l == 145);
+
+return 0;

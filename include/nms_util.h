@@ -368,6 +368,7 @@ size_t LIBNETXMS_EXPORTABLE utf8_ucs4len(const char *src, ssize_t srcLen);
 size_t LIBNETXMS_EXPORTABLE utf8_to_ucs2(const char *src, ssize_t srcLen, UCS2CHAR *dst, size_t dstLen);
 size_t LIBNETXMS_EXPORTABLE utf8_ucs2len(const char *src, ssize_t srcLen);
 size_t LIBNETXMS_EXPORTABLE utf8_to_mb(const char *src, ssize_t srcLen, char *dst, size_t dstLen);
+size_t LIBNETXMS_EXPORTABLE utf8_to_mbcp(const char *src, ssize_t srcLen, char *dst, size_t dstLen, const char* codepage);
 size_t LIBNETXMS_EXPORTABLE utf8_to_ASCII(const char *src, ssize_t srcLen, char *dst, size_t dstLen);
 size_t LIBNETXMS_EXPORTABLE utf8_to_ISO8859_1(const char *src, ssize_t srcLen, char *dst, size_t dstLen);
 
@@ -382,6 +383,7 @@ size_t LIBNETXMS_EXPORTABLE mb_to_ucs4(const char *src, ssize_t srcLen, UCS4CHAR
 size_t LIBNETXMS_EXPORTABLE mb_to_ucs2(const char *src, ssize_t srcLen, UCS2CHAR *dst, size_t dstLen);
 #endif
 size_t LIBNETXMS_EXPORTABLE mb_to_utf8(const char *src, ssize_t srcLen, char *dst, size_t dstLen);
+size_t LIBNETXMS_EXPORTABLE mbcp_to_utf8(const char *src, ssize_t srcLen, char *dst, size_t dstLen, const char* codepage);
 size_t LIBNETXMS_EXPORTABLE ASCII_to_utf8(const char *src, ssize_t srcLen, char *dst, size_t dstLen);
 size_t LIBNETXMS_EXPORTABLE ASCII_to_ucs2(const char *src, ssize_t srcLen, UCS2CHAR *dst, size_t dstLen);
 size_t LIBNETXMS_EXPORTABLE ASCII_to_ucs4(const char *src, ssize_t srcLen, UCS4CHAR *dst, size_t dstLen);
@@ -2870,6 +2872,42 @@ public:
    bool isEmpty() const { return m_size == 0; }
 };
 
+#ifdef WORDS_BIGENDIAN
+#define HostToBigEndian16(n) (n)
+#define HostToBigEndian32(n) (n)
+#define HostToBigEndian64(n) (n)
+#define HostToBigEndianD(n) (n)
+#define HostToLittleEndian16(n) bswap_16(n)
+#define HostToLittleEndian32(n) bswap_32(n)
+#define HostToLittleEndian64(n) bswap_64(n)
+#define HostToLittleEndianD(n) bswap_double(n)
+#define BigEndianToHost16(n) (n)
+#define BigEndianToHost32(n) (n)
+#define BigEndianToHost64(n) (n)
+#define BigEndianToHostD(n) (n)
+#define LittleEndianToHost16(n) bswap_16(n)
+#define LittleEndianToHost32(n) bswap_32(n)
+#define LittleEndianToHost64(n) bswap_64(n)
+#define LittleEndianToHostD(n) bswap_double(n)
+#else
+#define HostToBigEndian16(n) bswap_16(n)
+#define HostToBigEndian32(n) bswap_32(n)
+#define HostToBigEndian64(n) bswap_64(n)
+#define HostToBigEndianD(n) bswap_double(n)
+#define HostToLittleEndian16(n) (n)
+#define HostToLittleEndian32(n) (n)
+#define HostToLittleEndian64(n) (n)
+#define HostToLittleEndianD(n) (n)
+#define BigEndianToHost16(n) bswap_16(n)
+#define BigEndianToHost32(n) bswap_32(n)
+#define BigEndianToHost64(n) bswap_64(n)
+#define BigEndianToHostD(n) bswap_double(n)
+#define LittleEndianToHost16(n) (n)
+#define LittleEndianToHost32(n) (n)
+#define LittleEndianToHost64(n) (n)
+#define LittleEndianToHostD(n) (n)
+#endif
+
 /**
  * Byte stream
  */
@@ -2884,6 +2922,11 @@ private:
    size_t m_pos;
    size_t m_allocationStep;
 
+   ssize_t getLengthToRead(ssize_t length, bool isLenPrepended, bool isNullTerminated);
+   char* readStringCore(ssize_t length, bool isLenPrepended, bool isNullTerminated);
+   WCHAR* readStringWCore(const char *codepage, ssize_t length, bool isLenPrepended, bool isNullTerminated);
+   char* readStringAsUTF8Core(const char *codepage, ssize_t length, bool isLenPrepended, bool isNullTerminated);
+
 public:
    ByteStream(size_t initial = 8192);
    ByteStream(const void *data, size_t size);
@@ -2891,7 +2934,14 @@ public:
 
    static ByteStream *load(const TCHAR *file);
 
+   // Move pointer to certain position in buffer
    void seek(size_t pos) { if (pos <= m_size) m_pos = pos; }
+   // Find first occurrence of a given byte in buffer starting from current position
+   ssize_t find(BYTE b) 
+   { 
+      BYTE* p = (BYTE*)memchr(&m_data[m_pos], b, m_size - m_pos);
+      return p != nullptr ? p - m_data : -1; 
+   }
 
    size_t pos() const { return m_pos; }
    size_t size() const { return m_size; }
@@ -2909,28 +2959,168 @@ public:
    void write(const void *data, size_t size);
    void write(char c) { write(&c, 1); }
    void write(BYTE b) { write(&b, 1); }
-   void write(int16_t n) { uint16_t x = htons((uint16_t)n); write(&x, 2); }
-   void write(uint16_t n) { uint16_t x = htons(n); write(&x, 2); }
-   void write(int32_t n) { uint32_t x = htonl((uint32_t)n); write(&x, 4); }
-   void write(uint32_t n) { uint32_t x = htonl(n); write(&x, 4); }
-   void write(int64_t n) { uint64_t x = htonq((uint64_t)n); write(&x, 8); }
-   void write(uint64_t n) { uint64_t x = htonq(n); write(&x, 8); }
-   void write(double n) { double x = htond(n); write(&x, 8); }
-   void writeString(const TCHAR *s);
-   void writeStringUtf8(const char *s);
+   
+   void writeB(uint16_t n) { n = HostToBigEndian16(n); write(&n, 2); }
+   void writeB(int16_t n) { writeB((uint16_t)n); }
+   void writeB(uint32_t n) { n = HostToBigEndian32(n); write(&n, 4); }
+   void writeB(int32_t n) { writeB((uint32_t)n); }
+   void writeB(uint64_t n) { n = HostToBigEndian64(n); write(&n, 8); }
+   void writeB(int64_t n) { writeB((uint64_t)n); }
+   void writeB(double n) { n = HostToBigEndianD(n); write(&n, 8); }
+
+   void writeL(uint16_t n) { n = HostToLittleEndian16(n); write(&n, 2); }
+   void writeL(int16_t n) { writeL((uint16_t)n); }
+   void writeL(uint32_t n) { n = HostToLittleEndian32(n); write(&n, 4); }
+   void writeL(int32_t n) { writeL((uint32_t)n); }
+   void writeL(uint64_t n) { n = HostToLittleEndian64(n); write(&n, 8); }
+   void writeL(int64_t n) { writeL((uint64_t)n); }
+   void writeL(double n) { n = HostToLittleEndianD(n); write(&n, 8); }
+
+   size_t writeString(const WCHAR *str, const char *codepage, ssize_t length, bool prependLength, bool nullTerminate);
+   size_t writeString(const char *str, ssize_t length, bool prependLength, bool nullTerminate);
+
+   /**
+    * Write string. No length indicators are written.
+    * @param str the input string
+    * @param codepage encoding of the in-stream string
+    * @return Count of bytes written.
+    */
+   size_t writeString(const WCHAR* str, const char* codepage = "UTF-8")
+   {
+      return writeString(str, codepage, -1, false, false);
+   }
 
    size_t read(void *buffer, size_t count);
+   
    char readChar() { return !eos() ? (char)m_data[m_pos++] : 0; }
    BYTE readByte() { return !eos() ? m_data[m_pos++] : 0; }
-   INT16 readInt16();
-   UINT16 readUInt16();
-   INT32 readInt32();
-   UINT32 readUInt32();
-   INT64 readInt64();
-   UINT64 readUInt64();
-   double readDouble();
-   TCHAR *readString();
-   char *readStringUtf8();
+
+   uint16_t readUInt16B()
+   {
+      uint16_t n;
+      read(&n, 2);
+      return BigEndianToHost16(n);
+   }
+   
+   uint32_t readUInt32B()
+   {
+      uint32_t n;
+      read(&n, 4);
+      return BigEndianToHost32(n);
+   }
+
+   uint64_t readUInt64B()
+   {
+      uint64_t n;
+      read(&n, 8);
+      return BigEndianToHost64(n);
+   }
+   
+   double readDoubleB()
+   {
+      double n;
+      read(&n, 8);
+      return BigEndianToHostD(n);
+   }
+
+   int16_t readInt16B() { return (int16_t)readUInt16B(); }
+   int32_t readInt32B() { return (int32_t)readUInt32B(); }
+   int64_t readInt64B() { return (int64_t)readUInt64B(); }
+
+   uint16_t readUInt16L()
+   {
+      uint16_t n;
+      read(&n, 2);
+      return LittleEndianToHost16(n);
+   }
+   
+   uint32_t readUInt32L()
+   {
+      uint32_t n;
+      read(&n, 4);
+      return LittleEndianToHost32(n);
+   }
+
+   uint64_t readUInt64L()
+   {
+      uint64_t n;
+      read(&n, 8);
+      return LittleEndianToHost64(n);
+   }
+   
+   double readDoubleL()
+   {
+      double n;
+      read(&n, 8);
+      return LittleEndianToHostD(n);
+   }
+
+   int16_t readInt16L() { return (int16_t)readUInt16L(); }
+   int32_t readInt32L() { return (int32_t)readUInt32L(); }
+   int64_t readInt64L() { return (int64_t)readUInt64L(); }
+
+   /**
+    * Read string of the known length.
+    * @param codepage encoding of the stored string.
+    * @param length number of bytes to read.
+    * @return Dynamically allocated wide character string. Must be freed by caller.
+    */
+   WCHAR* readStringW(const char* codepage, size_t length) { return readStringWCore(codepage, length, false, false); }
+
+   /**
+    * Read string of the known length.
+    * @param codepage encoding of the stored string.
+    * @param length number of bytes to read.
+    * @return Dynamically allocated multibyte character string in UTF-8 encoding. Must be freed by caller.
+    */
+   char* readStrinAsUtf8(const char* codepage, size_t length) { return readStringAsUTF8Core(codepage, length, false, false); }
+
+   /**
+    * Read string of the known length.
+    * @param length number of bytes to read.
+    * @return Dynamically allocated multibyte character string in the same encoding as the stored string has. Must be freed by caller.
+    */
+   char* readStrinA(size_t length) { return readStringCore(length, false, false); }
+
+   /**
+    * Read string prepended with length (Pascal type).
+    * @param codepage encoding of the stored string.
+    * @return Dynamically allocated wide character string. Must be freed by caller.
+    */
+   WCHAR* readPStringW(const char* codepage) { return readStringWCore(codepage, -1, true, false); }
+
+   /**
+    * Read string prepended with length (Pascal type).
+    * @param codepage encoding of the stored string.
+    * @return Dynamically allocated multibyte character string in UTF-8 encoding. Must be freed by caller.
+    */
+   char* readPStringAsUtf8(const char* codepage) { return readStringAsUTF8Core(codepage, -1, true, false); }
+
+   /**
+    * Read string prepended with length (Pascal type).
+    * @return Dynamically allocated multibyte character string in the same encoding as the stored string has. Must be freed by caller.
+    */
+   char* readPStringA() { return readStringCore(-1, true, false); }
+
+   /**
+    * Read null-terminated string (C type).
+    * @param codepage encoding of the stored string.
+    * @return Dynamically allocated wide character string. Must be freed by caller.
+    */
+   WCHAR* readCStringW(const char* codepage) { return readStringWCore(codepage, -1, false, true); }
+
+    /**
+    * Read null-terminated string (C type).
+    * @param codepage encoding of the stored string.
+    * @return Dynamically allocated multibyte character string in UTF-8 encoding. Must be freed by caller.
+    */
+   char* readCStringAsUtf8(const char* codepage) { return readStringAsUTF8Core(codepage, -1, false, true); }
+
+    /**
+    * Read null-terminated string (C type).
+    * @return Dynamically allocated multibyte character string in the same encoding as the stored string has. Must be freed by caller.
+    */
+   char* readCStringA() { return readStringCore(-1, false, true); }
 
    bool save(int f);
 };

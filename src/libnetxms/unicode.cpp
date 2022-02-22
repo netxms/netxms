@@ -918,6 +918,100 @@ size_t LIBNETXMS_EXPORTABLE mbcp_to_wchar(const char *src, ssize_t srcLen, WCHAR
 }
 
 /**
+ * Convert UTF8 string to multibyte character string using given codepage
+ */
+size_t LIBNETXMS_EXPORTABLE utf8_to_mbcp(const char *src, ssize_t srcLen, char *dst, size_t dstLen, const char *codepage)
+{
+   if (codepage == nullptr)
+      return utf8_to_mb(src, srcLen, dst, dstLen);
+
+   if (!stricmp(codepage, "ASCII"))
+   {
+      return utf8_to_ASCII(src, srcLen, dst, dstLen);
+   }
+   if (!stricmp(codepage, "UTF8") || !stricmp(codepage, "UTF-8"))
+   {
+      if (srcLen == -1)
+         srcLen = strlen(src) + 1;
+      memcpy(dst, src, std::min((size_t)srcLen, dstLen));
+   }
+   if (!stricmp(codepage, "ISO-8859-1") || !stricmp(codepage, "ISO_8859_1") ||
+       !stricmp(codepage, "ISO8859-1") || !stricmp(codepage, "ISO8859_1") ||
+       !stricmp(codepage, "LATIN-1") || !stricmp(codepage, "LATIN1"))
+   {
+      return utf8_to_ISO8859_1(src, srcLen, dst, dstLen);
+   }
+
+   if(srcLen == -1)
+      srcLen = strlen(src) + 1;
+
+#if defined(_WIN32)
+   WCHAR *buffer = (srcLen <= 32768) ? (WCHAR *)alloca(srcLen * sizeof(WCHAR)) : (WCHAR *)MemAlloc(srcLen * sizeof(WCHAR));
+   int ret = MultiByteToWideChar(CP_UTF8, 0, src, (int)srcLen, buffer, (int)srcLen);
+   ret = WideCharToMultiByte(GetCodePageNumber(codepage), WC_DEFAULTCHAR | WC_COMPOSITECHECK, buffer, ret, dst, (int)dstLen, NULL, NULL);
+   if (srcLen > 32768)
+      MemFree(buffer);
+   return ret;
+#elif !defined(__DISABLE_ICONV)
+   iconv_t cd = IconvOpen(codepage, "UTF-8");
+   if(cd == (iconv_t)-1)
+      return utf8_to_ISO8859_1(src, srcLen, dst, dstLen);
+   size_t count = iconv(cd, (ICONV_CONST char**)&src, (size_t*)&srcLen, &dst, &dstLen);
+   IconvClose(cd);
+   return count;
+#else
+   return utf8_to_ISO8859_1(src, srcLen, dst, dstLen);
+#endif
+}
+
+/**
+ * Convert multibyte character string to UTF8 string using given codepage
+ */
+size_t LIBNETXMS_EXPORTABLE mbcp_to_utf8(const char *src, ssize_t srcLen, char *dst, size_t dstLen, const char *codepage)
+{
+   if (codepage == nullptr)
+      return mb_to_utf8(src, srcLen, dst, dstLen);
+
+   if (!stricmp(codepage, "ASCII"))
+   {
+      return ASCII_to_utf8(src, srcLen, dst, dstLen);
+   }
+   if (!stricmp(codepage, "UTF8") || !stricmp(codepage, "UTF-8"))
+   {
+      if (srcLen == -1)
+         srcLen = strlen(src) + 1;
+      memcpy(dst, src, std::min((size_t)srcLen, dstLen));
+   }
+   if (!stricmp(codepage, "ISO-8859-1") || !stricmp(codepage, "ISO_8859_1") ||
+       !stricmp(codepage, "ISO8859-1") || !stricmp(codepage, "ISO8859_1") ||
+       !stricmp(codepage, "LATIN-1") || !stricmp(codepage, "LATIN1"))
+   {
+      return ISO8859_1_to_utf8(src, srcLen, dst, dstLen);
+   }
+
+   if(srcLen == -1)
+      srcLen = strlen(src) + 1;
+
+#if defined(_WIN32)
+   WCHAR *buffer = (srcLen <= 32768) ? (WCHAR *)alloca(srcLen * sizeof(WCHAR)) : (WCHAR *)MemAlloc(srcLen * sizeof(WCHAR));
+   int ret = MultiByteToWideChar(GetCodePageNumber(codepage), 0, src, (int)srcLen, buffer, (int)srcLen);
+   ret = WideCharToMultiByte(CP_UTF8, WC_DEFAULTCHAR | WC_COMPOSITECHECK, buffer, ret, dst, (int)dstLen, NULL, NULL);
+   if (srcLen > 32768)
+      MemFree(buffer);
+   return ret;
+#elif !defined(__DISABLE_ICONV)
+   iconv_t cd = IconvOpen("UTF-8", codepage);
+   if(cd == (iconv_t)-1)
+      return utf8_to_ISO8859_1(src, srcLen, dst, dstLen);
+   size_t count = iconv(cd, (ICONV_CONST char**)&src, (size_t*)&srcLen, &dst, &dstLen);
+   IconvClose(cd);
+   return count;
+#else
+   return ISO8859_1_to_utf8(src, srcLen, dst, dstLen);
+#endif
+}
+
+/**
  * UNIX UNICODE specific wrapper functions
  */
 #if !defined(_WIN32)

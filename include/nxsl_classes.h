@@ -1536,9 +1536,23 @@ public:
 };
 
 /**
+ * NXSL "ByteStream" class
+ */
+class LIBNXSL_EXPORTABLE NXSL_ByteStreamClass : public NXSL_Class
+{
+public:
+   NXSL_ByteStreamClass();
+   virtual ~NXSL_ByteStreamClass();
+
+   virtual NXSL_Value* getAttr(NXSL_Object* object, const NXSL_Identifier& attr) override;
+   virtual void onObjectDelete(NXSL_Object* object) override;
+};
+
+/**
  * Class definition instances
  */
 extern NXSL_Class LIBNXSL_EXPORTABLE g_nxslBaseClass;
+extern NXSL_ByteStreamClass LIBNXSL_EXPORTABLE g_nxslByteStreamClass;
 extern NXSL_MetaClass LIBNXSL_EXPORTABLE g_nxslMetaClass;
 extern NXSL_TableClass LIBNXSL_EXPORTABLE g_nxslTableClass;
 extern NXSL_TableRowClass LIBNXSL_EXPORTABLE g_nxslTableRowClass;

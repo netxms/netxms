@@ -667,7 +667,7 @@ bool NXSL_Value::convert(int targetDataType)
 }
 
 /**
- * Get value as ASCIIZ string
+ * Get value as null-terminated string
  */
 const TCHAR *NXSL_Value::getValueAsCString()
 {
@@ -1470,7 +1470,7 @@ void NXSL_Value::serialize(ByteStream &s) const
    {
       case NXSL_DT_ARRAY:
          {
-            s.write((UINT16)m_value.arrayHandle->getObject()->size());
+            s.writeB((UINT16)m_value.arrayHandle->getObject()->size());
             for(int i = 0; i < m_value.arrayHandle->getObject()->size(); i++)
             {
                m_value.arrayHandle->getObject()->get(i)->serialize(s);
@@ -1478,7 +1478,7 @@ void NXSL_Value::serialize(ByteStream &s) const
          }
          break;
       case NXSL_DT_HASHMAP:
-         s.write((UINT16)m_value.hashMapHandle->getObject()->size());
+         s.writeB((UINT16)m_value.hashMapHandle->getObject()->size());
          if (m_value.hashMapHandle->getObject()->size() > 0)
          {
             // TODO: hashmap serialize
@@ -1486,10 +1486,10 @@ void NXSL_Value::serialize(ByteStream &s) const
          break;
       case NXSL_DT_BOOLEAN:
       case NXSL_DT_INT32:
-         s.write(m_value.int32);
+         s.writeB(m_value.int32);
          break;
       case NXSL_DT_INT64:
-         s.write(m_value.int64);
+         s.writeB(m_value.int64);
          break;
       case NXSL_DT_ITERATOR:
          break;
@@ -1498,16 +1498,16 @@ void NXSL_Value::serialize(ByteStream &s) const
       case NXSL_DT_OBJECT:
          break;
       case NXSL_DT_REAL:
-         s.write(m_value.real);
+         s.writeB(m_value.real);
          break;
       case NXSL_DT_STRING:
-         s.writeString((m_length < NXSL_SHORT_STRING_LENGTH) ? m_stringValue : m_stringPtr);
+         s.writeString((m_length < NXSL_SHORT_STRING_LENGTH) ? m_stringValue : m_stringPtr, "UTF-8", -1, true, false);
          break;
       case NXSL_DT_UINT32:
-         s.write(m_value.uint32);
+         s.writeB(m_value.uint32);
          break;
       case NXSL_DT_UINT64:
-         s.write(m_value.uint64);
+         s.writeB(m_value.uint64);
          break;
    }
 }
@@ -1524,7 +1524,7 @@ NXSL_Value *NXSL_Value::load(NXSL_ValueManager *vm, ByteStream &s)
       case NXSL_DT_ARRAY:
          {
             v->m_value.arrayHandle = new NXSL_Handle<NXSL_Array>(new NXSL_Array(vm));
-            int size = (int)s.readUInt16();
+            int size = (int)s.readUInt16B();
             for(int i = 0; i < size; i++)
             {
                v->m_value.arrayHandle->getObject()->set(i, load(vm, s));
@@ -1534,7 +1534,7 @@ NXSL_Value *NXSL_Value::load(NXSL_ValueManager *vm, ByteStream &s)
       case NXSL_DT_HASHMAP:
          {
             v->m_value.hashMapHandle = new NXSL_Handle<NXSL_HashMap>(new NXSL_HashMap(vm));
-            int size = (int)s.readUInt16();
+            int size = (int)s.readUInt16B();
             for(int i = 0; i < size; i++)
             {
                // TODO: implement hash map load
@@ -1543,10 +1543,10 @@ NXSL_Value *NXSL_Value::load(NXSL_ValueManager *vm, ByteStream &s)
          break;
       case NXSL_DT_BOOLEAN:
       case NXSL_DT_INT32:
-         v->m_value.int32 = s.readInt32();
+         v->m_value.int32 = s.readInt32B();
          break;
       case NXSL_DT_INT64:
-         v->m_value.int64 = s.readInt64();
+         v->m_value.int64 = s.readInt64B();
          break;
       case NXSL_DT_ITERATOR:
          break;
@@ -1555,10 +1555,10 @@ NXSL_Value *NXSL_Value::load(NXSL_ValueManager *vm, ByteStream &s)
       case NXSL_DT_OBJECT:
          break;
       case NXSL_DT_REAL:
-         v->m_value.real = s.readDouble();
+         v->m_value.real = s.readDoubleB();
          break;
       case NXSL_DT_STRING:
-         v->m_stringPtr = s.readString();
+         v->m_stringPtr = s.readPStringW("UTF-8");
          v->m_length = (UINT32)_tcslen(v->m_stringPtr);
          if (v->m_length < NXSL_SHORT_STRING_LENGTH)
          {
@@ -1570,10 +1570,10 @@ NXSL_Value *NXSL_Value::load(NXSL_ValueManager *vm, ByteStream &s)
          v->updateNumber();
          break;
       case NXSL_DT_UINT32:
-         v->m_value.uint32 = s.readUInt32();
+         v->m_value.uint32 = s.readUInt32B();
          break;
       case NXSL_DT_UINT64:
-         v->m_value.uint64 = s.readUInt64();
+         v->m_value.uint64 = s.readUInt64B();
          break;
    }
    return v;

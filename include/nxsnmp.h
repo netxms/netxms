@@ -481,12 +481,15 @@ public:
    SNMP_ObjectId getValueAsObjectId() const;
    MacAddress getValueAsMACAddr() const;
    TCHAR *getValueAsIPAddr(TCHAR *buffer) const;
+   ByteStream* getValueAsByteStream() const { return new ByteStream(m_value, m_valueLength); }
 
    SNMP_Variable *decodeOpaque() const;
 
    void setValueFromString(uint32_t type, const TCHAR *value, const char *codepage = nullptr);
    void setValueFromUInt32(uint32_t type, uint32_t value);
    void setValueFromObjectId(uint32_t type, const SNMP_ObjectId& value);
+   void setValueFromByteArray(uint32_t type, const BYTE* buffer, size_t size);
+   void setValueFromByteStream(uint32_t type, const ByteStream& bs) { setValueFromByteArray(type, bs.buffer(), bs.size()); }
 
    void setCodepage(const char* codepage) { m_codepage = codepage; }
 };
