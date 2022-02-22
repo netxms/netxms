@@ -237,6 +237,7 @@ MARIADB_MYSQL_CONFLICT="no"
 FORCE_INTERNAL_RWLOCK="no"
 LIBNXAGENT_LIBS=""
 JAR_BUILD="yes"
+RELEASE_BUILD="no"
 
 
 #--------------------------------------------------------------------
@@ -993,6 +994,14 @@ AC_ARG_ENABLE(jar-build,
 	      [AS_HELP_STRING(--disable-jar-build,disable build and installation of jar files)],
 [
 	JAR_BUILD="no"
+])
+
+AC_ARG_ENABLE(release-build,
+[AS_HELP_STRING(--enable-release-build,enable release build)],
+[
+	if test "x$enableval" = "xyes"; then
+		RELEASE_BUILD="yes"
+	fi
 ])
 
 
@@ -4633,10 +4642,15 @@ fi
 
 LDFLAGS="$LDFLAGS_PREFIX $LDFLAGS $PTHREAD_LDFLAGS $LDFLAGS_SUFFIX"
 LIBS="$LIBS $PCRE_LIBS"
-if test "x${BUILD_UNICODE}" = "xyes"; then
-	CPPFLAGS="$CPPFLAGS -DNETXMS_PACKAGE_VERSION=L\\\"$PACKAGE_VERSION\\\""
+if test "x${RELEASE_BUILD}" = "xyes"; then
+	NETXMS_JAR_VERSION="$PACKAGE_VERSION"
 else
-	CPPFLAGS="$CPPFLAGS -DNETXMS_PACKAGE_VERSION=\\\"$PACKAGE_VERSION\\\""
+	NETXMS_JAR_VERSION=`echo $PACKAGE_VERSION | cut -d . -f 1,2`-SNAPSHOT
+fi
+if test "x${BUILD_UNICODE}" = "xyes"; then
+	CPPFLAGS="$CPPFLAGS -DNETXMS_JAR_VERSION=L\\\"$NETXMS_JAR_VERSION\\\""
+else
+	CPPFLAGS="$CPPFLAGS -DNETXMS_JAR_VERSION=\\\"$NETXMS_JAR_VERSION\\\""
 fi
 
 if test "x${ENABLE_WERROR}" = "xyes"; then
@@ -4766,6 +4780,7 @@ AC_SUBST(NCDRV_LTLIBRARIES)
 AC_SUBST(NCDRV_MODULES)
 AC_SUBST(NETXMS_BINDIR)
 AC_SUBST(NETXMS_DATADIR)
+AC_SUBST(NETXMS_JAR_VERSION)
 AC_SUBST(NETXMS_LIBDIR)
 AC_SUBST(NETXMS_PKGLIBDIR)
 AC_SUBST(NETXMS_PREFIX)

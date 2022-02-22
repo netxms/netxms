@@ -1,10 +1,13 @@
+JAR_BASE_NAME=nxreportd
+
 EXTRA_DIST = pom.xml src
 
 install-exec-hook:
-	mvn -Drevision=$(PACKAGE_VERSION) -Dmaven.test.skip=true install
+	@top_srcdir@/build/get_jar_file.sh $(JAR_BASE_NAME) @NETXMS_JAR_VERSION@
 	mkdir -p $(DESTDIR)$(pkglibdir)/java
-	cp target/nxreportd-$(PACKAGE_VERSION).jar $(DESTDIR)$(pkglibdir)/java/
-	cp target/lib/*.jar $(DESTDIR)$(pkglibdir)/java/
+	cp $(JAR_BASE_NAME)-@NETXMS_JAR_VERSION@.jar $(DESTDIR)$(pkglibdir)/java/
+	mvn dependency:copy-dependencies -DincludeScope=runtime
+	cp target/dependency/*.jar $(DESTDIR)$(pkglibdir)/java/
 
 clean-local:
-	rm -rf target
+	rm -rf target *.jar

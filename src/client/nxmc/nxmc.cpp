@@ -1,6 +1,6 @@
 /* 
 ** nxmc - launcher for main Java application
-** Copyright (C) 2017-2021 Raden Solutions
+** Copyright (C) 2017-2022 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -157,7 +157,7 @@ static int StartApp(int argc, NXMC_CHAR *argv[])
 #define cp s_optClassPath
 #endif
    JNIEnv *env;
-   JavaBridgeError err = CreateJavaVM(jre, _T("nxmc-") NETXMS_PACKAGE_VERSION _T(".jar"), nullptr, cp, &vmOptions, &env);
+   JavaBridgeError err = CreateJavaVM(jre, _T("nxmc-") NETXMS_JAR_VERSION _T(".jar"), nullptr, cp, &vmOptions, &env);
    if (err == NXJAVA_SUCCESS)
    {
       nxlog_debug(5, _T("JVM created"));

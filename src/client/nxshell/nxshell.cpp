@@ -1,6 +1,6 @@
 /* 
 ** nxshell - launcher for main Java application
-** Copyright (C) 2017-2021 Raden Solutions
+** Copyright (C) 2017-2022 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -127,11 +127,11 @@ static int StartApp(int argc, char *argv[])
    JNIEnv *env;
    static const TCHAR *syslibs[] =
    {
-      _T("netxms-base-") NETXMS_PACKAGE_VERSION _T(".jar"),
-      _T("netxms-client-") NETXMS_PACKAGE_VERSION _T(".jar"),  // should be listed explicitly, otherwise jython cannot do some imports correctly
+      _T("netxms-base-") NETXMS_JAR_VERSION _T(".jar"),
+      _T("netxms-client-") NETXMS_JAR_VERSION _T(".jar"),  // should be listed explicitly, otherwise jython cannot do some imports correctly
       nullptr
    };
-   JavaBridgeError err = CreateJavaVM(jre, _T("nxshell-") NETXMS_PACKAGE_VERSION _T(".jar"), syslibs, cp, &vmOptions, &env);
+   JavaBridgeError err = CreateJavaVM(jre, _T("nxshell-") NETXMS_JAR_VERSION _T(".jar"), syslibs, cp, &vmOptions, &env);
    if (err == NXJAVA_SUCCESS)
    {
       nxlog_debug(5, _T("JVM created"));
