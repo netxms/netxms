@@ -20,6 +20,8 @@ package org.netxms.ui.eclipse.dashboard.widgets;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.FocusEvent;
 import org.eclipse.swt.events.FocusListener;
 import org.eclipse.swt.layout.FillLayout;
@@ -94,13 +96,20 @@ public class EventMonitorElement extends ElementWidget
             setSelectionProviderDelegate(viewer.getSelectionProvider());
          }
       });
+
+      addDisposeListener(new DisposeListener() {
+         @Override
+         public void widgetDisposed(DisposeEvent e)
+         {
+            unsubscribe();
+         }
+      });
    }
 
    /**
-    * @see org.eclipse.swt.widgets.Widget#dispose()
+    * Unsubscribe from notifications
     */
-   @Override
-   public void dispose()
+   private void unsubscribe()
    {
       ConsoleJob job = new ConsoleJob(String.format("Unsuscribing from channel ", NXCSession.CHANNEL_EVENTS), null,
             Activator.PLUGIN_ID, null) {

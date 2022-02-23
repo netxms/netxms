@@ -20,6 +20,8 @@ package org.netxms.ui.eclipse.dashboard.widgets;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.FocusEvent;
 import org.eclipse.swt.events.FocusListener;
 import org.eclipse.swt.layout.FillLayout;
@@ -88,10 +90,19 @@ public class SyslogMonitorElement extends ElementWidget
          }
       });
 
+      addDisposeListener(new DisposeListener() {
+         @Override
+         public void widgetDisposed(DisposeEvent e)
+         {
+            unsubscribe();
+         }
+      });
    }
 
-   @Override
-   public void dispose()
+   /**
+    * Unsubscribe from notifications
+    */
+   private void unsubscribe()
    {
       ConsoleJob job = new ConsoleJob(String.format("Unsuscribing from channel ", NXCSession.CHANNEL_SYSLOG), null,
             Activator.PLUGIN_ID, null) {
