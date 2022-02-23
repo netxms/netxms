@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2016-2021 Raden Solutions
+ * Copyright (C) 2016-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,7 +22,6 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.FocusEvent;
 import org.eclipse.swt.events.FocusListener;
-import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.ui.IViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.dashboards.DashboardElement;
@@ -59,6 +58,8 @@ public class EventMonitorElement extends ElementWidget
          config = new EventMonitorConfig();
       }
 
+      processCommonSettings(config);
+
       session = ConsoleSharedData.getSession();
 
       new ConsoleJob(String.format("Subscribing to channel ", NXCSession.CHANNEL_EVENTS), viewPart, Activator.PLUGIN_ID, null) {
@@ -75,12 +76,7 @@ public class EventMonitorElement extends ElementWidget
          }
       }.start();
 
-      FillLayout layout = new FillLayout();
-      layout.marginHeight = 0;
-      layout.marginWidth = 0;
-      setLayout(layout);
-
-      viewer = new EventTraceWidget(this, SWT.NONE, viewPart);
+      viewer = new EventTraceWidget(getContentArea(), SWT.NONE, viewPart);
       viewer.setRootObject(config.getObjectId());
       viewer.getViewer().getControl().addFocusListener(new FocusListener() {
          @Override

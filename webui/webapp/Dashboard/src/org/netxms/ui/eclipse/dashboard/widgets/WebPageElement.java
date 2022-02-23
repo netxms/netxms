@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,14 +20,12 @@ package org.netxms.ui.eclipse.dashboard.widgets;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.browser.Browser;
-import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.ui.IViewPart;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.WebPageConfig;
 
 /**
  * Embedded web page element for dashboard
- *
  */
 public class WebPageElement extends ElementWidget
 {
@@ -51,13 +49,10 @@ public class WebPageElement extends ElementWidget
 			e.printStackTrace();
 			config = new WebPageConfig();
 		}
-		
-		FillLayout layout = new FillLayout();
-		layout.marginHeight = 0;
-		layout.marginWidth = 0;
-		setLayout(layout);
-		
-		browser = new Browser(this, SWT.NONE);
+
+      processCommonSettings(config);
+
+      browser = new Browser(getContentArea(), SWT.NONE);
 		browser.setUrl(config.getUrl());
 	}
 }

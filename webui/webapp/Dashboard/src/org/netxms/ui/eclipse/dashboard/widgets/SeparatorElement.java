@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -39,7 +39,7 @@ public class SeparatorElement extends ElementWidget implements PaintListener
 	private SeparatorConfig config;
 	private Color bkColor;
 	private Color fgColor;
-	
+
 	/**
 	 * @param parent
 	 * @param data
@@ -47,7 +47,7 @@ public class SeparatorElement extends ElementWidget implements PaintListener
 	public SeparatorElement(DashboardControl parent, DashboardElement element, IViewPart viewPart)
 	{
 		super(parent, SWT.NONE, element, viewPart);
-		
+
 		try
 		{
 			config = SeparatorConfig.createFromXml(element.getData());
@@ -57,10 +57,12 @@ public class SeparatorElement extends ElementWidget implements PaintListener
 			e.printStackTrace();
 			config = new SeparatorConfig();
 		}
-		
+
+      getContentArea().dispose();
+
 		bkColor = new Color(getDisplay(), ColorConverter.rgbFromInt(config.getBackgroundColorAsInt()));
 		fgColor = new Color(getDisplay(), ColorConverter.rgbFromInt(config.getForegroundColorAsInt()));
-		
+
 		setBackground(bkColor);
 		
 		addPaintListener(this);
@@ -93,9 +95,9 @@ public class SeparatorElement extends ElementWidget implements PaintListener
 		}
 	}
 
-	/**
-	 * @see org.eclipse.swt.widgets.Composite#computeSize(int, int, boolean)
-	 */
+   /**
+    * @see org.eclipse.swt.widgets.Composite#computeSize(int, int, boolean)
+    */
 	@Override
 	public Point computeSize(int wHint, int hHint, boolean changed)
 	{

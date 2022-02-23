@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,9 +27,7 @@ import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.graphics.Font;
-import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Point;
-import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.ui.IViewPart;
 import org.netxms.client.NXCSession;
@@ -53,8 +51,6 @@ public class StatusIndicatorElement extends ElementWidget
 	private ViewRefreshController refreshController;
 	private Font font;
 	private ObjectStatus status = ObjectStatus.UNKNOWN;
-	private int xSize;
-	private int ySize;
 
 	private static final int MARGIN_X = 16;
 	private static final int MARGIN_Y = 16;
@@ -78,14 +74,17 @@ public class StatusIndicatorElement extends ElementWidget
 			config = new StatusIndicatorConfig();
 		}
 
-		final FillLayout layout = new FillLayout();
-		setLayout(layout);
+      processCommonSettings(config);
 
-		canvas = new Canvas(this, SWT.DOUBLE_BUFFERED);
+      canvas = new Canvas(getContentArea(), SWT.DOUBLE_BUFFERED) {
+         @Override
+         public Point computeSize(int wHint, int hHint, boolean changed)
+         {
+            return new Point(MARGIN_X * 2 + CIRCLE_SIZE, MARGIN_Y * 2 + CIRCLE_SIZE);
+         }
+      };
 		canvas.setBackground(colors.create(240, 240, 240));
 		font = new Font(getDisplay(), "Verdana", 12, SWT.NONE); //$NON-NLS-1$
-
-		calcSize(parent);
 
 		addDisposeListener(new DisposeListener() {
 			@Override
@@ -103,7 +102,7 @@ public class StatusIndicatorElement extends ElementWidget
 				drawContent(e);
 			}
 		});
-		
+
 		final NXCSession session = ConsoleSharedData.getSession();
 		ConsoleJob job = new ConsoleJob("Sync objects", viewPart, Activator.PLUGIN_ID, null) {
          
@@ -134,19 +133,6 @@ public class StatusIndicatorElement extends ElementWidget
       job.start();
 
 		startRefreshTimer();
-	}
-
-	/**
-	 * @param parent
-	 */
-	private void calcSize(final DashboardControl parent)
-	{
-		final GC gc = new GC(parent);
-		gc.setFont(font);
-		final Point textExtent = gc.textExtent(config.getTitle());
-		gc.dispose();
-		xSize = (MARGIN_X * 3) + CIRCLE_SIZE + textExtent.x;
-		ySize = (MARGIN_Y * 2) + CIRCLE_SIZE;
 	}
 
 	/**
@@ -197,19 +183,5 @@ public class StatusIndicatorElement extends ElementWidget
 		else
          e.gc.setBackground((status == ObjectStatus.NORMAL) ? StatusDisplayInfo.getStatusColor(ObjectStatus.NORMAL) : StatusDisplayInfo.getStatusColor(ObjectStatus.CRITICAL));
       e.gc.fillOval(MARGIN_X, MARGIN_Y, CIRCLE_SIZE, CIRCLE_SIZE);
-
-      e.gc.setBackground(canvas.getBackground());
-      e.gc.setFont(font);
-      final Point textExtent = e.gc.textExtent(config.getTitle());
-      e.gc.drawText(config.getTitle(), (MARGIN_X * 2) + CIRCLE_SIZE, MARGIN_Y + (CIRCLE_SIZE / 2) - (textExtent.y / 2));
-	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.swt.widgets.Composite#computeSize(int, int, boolean)
-	 */
-	@Override
-	public Point computeSize(int wHint, int hHint, boolean changed)
-	{
-		return new Point(xSize, ySize);
 	}
 }

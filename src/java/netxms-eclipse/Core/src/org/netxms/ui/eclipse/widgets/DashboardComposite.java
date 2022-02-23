@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,6 +24,7 @@ import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
+import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.ui.eclipse.tools.ColorCache;
@@ -35,12 +36,12 @@ import org.netxms.ui.eclipse.tools.ColorConverter;
 public class DashboardComposite extends Canvas implements PaintListener
 {
 	protected ColorCache colors;
-	
+
 	private Color borderOuterColor;
 	private Color borderInnerColor;
 	private Color backgroundColor;
 	private boolean hasBorder = true;
-	
+
 	/**
 	 * @param parent
 	 * @param style
@@ -65,6 +66,7 @@ public class DashboardComposite extends Canvas implements PaintListener
 		hasBorder = ((style & SWT.BORDER) != 0);
 		addPaintListener(this);
 		setBackground(backgroundColor);
+      setLayout(new FillLayout());
 	}
 
    /**

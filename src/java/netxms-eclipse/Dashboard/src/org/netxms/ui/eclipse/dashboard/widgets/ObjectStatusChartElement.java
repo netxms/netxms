@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -59,17 +59,18 @@ public class ObjectStatusChartElement extends ComparisonChartElement
 			elementConfig = new ObjectStatusChartConfig();
 		}
 
+      processCommonSettings(elementConfig);
+
 		refreshInterval = elementConfig.getRefreshRate();
 
       ChartConfiguration chartConfig = new ChartConfiguration();
-      chartConfig.setTitleVisible(true);
-      chartConfig.setTitle(elementConfig.getTitle());
+      chartConfig.setTitleVisible(false);
       chartConfig.setLegendPosition(ChartConfiguration.POSITION_RIGHT);
       chartConfig.setLegendVisible(elementConfig.isShowLegend());
       chartConfig.setShowIn3D(elementConfig.isShowIn3D());
       chartConfig.setTransposed(elementConfig.isTransposed());
       chartConfig.setTranslucent(elementConfig.isTranslucent());
-      chart = new Chart(this, SWT.NONE, ChartType.BAR, chartConfig);
+      chart = new Chart(getContentArea(), SWT.NONE, ChartType.BAR, chartConfig);
 
 		for(int i = 0; i <= ObjectStatus.UNKNOWN.getValue(); i++)
 		{

@@ -43,7 +43,6 @@ import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.FocusEvent;
 import org.eclipse.swt.events.FocusListener;
-import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -105,6 +104,8 @@ public class PortViewElement extends ElementWidget
 			config = new PortViewConfig();
 		}
 		
+      processCommonSettings(config);
+
 		selectionProvider = new ISelectionProvider() {
          @Override
          public void setSelection(ISelection selection)
@@ -146,12 +147,7 @@ public class PortViewElement extends ElementWidget
       
       createPopupMenu();
 		
-		FillLayout layout = new FillLayout();
-		layout.marginHeight = 0;
-		layout.marginWidth = 0;
-		setLayout(layout);
-
-		scroller = new ScrolledComposite(this, SWT.H_SCROLL | SWT.V_SCROLL);
+      scroller = new ScrolledComposite(getContentArea(), SWT.H_SCROLL | SWT.V_SCROLL);
       scroller.setBackground(getDisplay().getSystemColor(SWT.COLOR_LIST_BACKGROUND));
 		
 		content = new Composite(scroller, SWT.NONE);
@@ -161,7 +157,7 @@ public class PortViewElement extends ElementWidget
 		content.setLayout(contentLayout);
 
 		syncChildren();
-      
+
       final SessionListener sessionListener = new SessionListener() {
          @Override
          public void notificationHandler(SessionNotification n)
@@ -273,8 +269,7 @@ public class PortViewElement extends ElementWidget
       job.setUser(false);
       job.start();
 	}
-   
-	
+
 	/**
 	 * Build view
 	 */
@@ -328,7 +323,7 @@ public class PortViewElement extends ElementWidget
                return true;
          }
       }
-      
+
       for(Long id : deviceViews.keySet())
       {
          boolean found = false;
@@ -346,7 +341,7 @@ public class PortViewElement extends ElementWidget
       
       return false;
    }
-	
+
    /**
     * Create pop-up menu
     */

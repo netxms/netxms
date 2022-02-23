@@ -18,14 +18,9 @@
  */
 package org.netxms.ui.eclipse.dashboard.widgets;
 
-import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
-import org.eclipse.swt.layout.FillLayout;
-import org.eclipse.swt.layout.GridData;
-import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.IViewPart;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.TableValueConfig;
@@ -39,7 +34,7 @@ public class TableValueElement extends ElementWidget
 {
 	private TableValueConfig config;
 	private TableValueViewer viewer;
-	
+
 	/**
 	 * @param parent
 	 * @param element
@@ -58,28 +53,10 @@ public class TableValueElement extends ElementWidget
 			e.printStackTrace();
 			config = new TableValueConfig();
 		}
-		
-		if (config.getTitle().trim().isEmpty())
-		{
-			setLayout(new FillLayout());
-			viewer = new TableValueViewer(this, SWT.NONE, viewPart, parent.getDashboardObject().getGuid().toString(), true);
-		}
-		else
-		{
-			GridLayout layout = new GridLayout();
-			layout.marginWidth = 0;
-			layout.marginHeight = 0;
-			setLayout(layout);
 
-			Label title = new Label(this, SWT.CENTER);
-			title.setText(config.getTitle().trim());
-			title.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-			title.setFont(JFaceResources.getBannerFont());
-			
-			viewer = new TableValueViewer(this, SWT.NONE, viewPart, parent.getDashboardObject().getGuid().toString(), true);
-			viewer.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-		}
+      processCommonSettings(config);
 
+      viewer = new TableValueViewer(getContentArea(), SWT.NONE, viewPart, parent.getDashboardObject().getGuid().toString(), true);
 		viewer.setObject(config.getObjectId(), config.getDciId());	
 		viewer.refresh(null);
 
@@ -93,7 +70,7 @@ public class TableValueElement extends ElementWidget
 				viewer.refresh(null);
 			}
 		});
-		
+
 		addDisposeListener(new DisposeListener() {
          @Override
          public void widgetDisposed(DisposeEvent e)

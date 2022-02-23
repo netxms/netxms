@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,6 @@
 package org.netxms.ui.eclipse.dashboard.widgets;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.ui.IViewPart;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.GeoMapConfig;
@@ -51,14 +50,10 @@ public class GeoMapElement extends ElementWidget
 			config = new GeoMapConfig();
 		}
 		
-		FillLayout layout = new FillLayout();
-		layout.marginHeight = 0;
-		layout.marginWidth = 0;
-		setLayout(layout);
-		
-		mapWidget = new ObjectGeoLocationViewer(this, SWT.NONE);
+      processCommonSettings(config);
+
+      mapWidget = new ObjectGeoLocationViewer(getContentArea(), SWT.NONE);
 		mapWidget.setViewPart(viewPart);
-		mapWidget.setTitle(config.getTitle());
 		mapWidget.setRootObjectId(config.getRootObjectId());
 		mapWidget.showMap(config.getLatitude(), config.getLongitude(), config.getZoom());
 	}

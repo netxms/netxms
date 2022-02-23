@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,7 +38,7 @@ public class TableBarChartElement extends TableComparisonChartElement
 	public TableBarChartElement(DashboardControl parent, DashboardElement element, IViewPart viewPart)
 	{
 		super(parent, element, viewPart);
-		
+
 		try
 		{
 			config = TableBarChartConfig.createFromXml(element.getData());
@@ -49,9 +49,10 @@ public class TableBarChartElement extends TableComparisonChartElement
 			config = new TableBarChartConfig();
 		}
 
+      processCommonSettings(config);
+
       ChartConfiguration chartConfig = new ChartConfiguration();
-      chartConfig.setTitleVisible(config.isShowTitle());
-      chartConfig.setTitle(config.getTitle());
+      chartConfig.setTitleVisible(false);
       chartConfig.setLegendPosition(config.getLegendPosition());
       chartConfig.setLegendVisible(config.isShowLegend());
       chartConfig.setExtendedLegend(config.isExtendedLegend());
@@ -62,7 +63,7 @@ public class TableBarChartElement extends TableComparisonChartElement
       chartConfig.setMinYScaleValue(config.getMinYScaleValue());
       chartConfig.setMaxYScaleValue(config.getMaxYScaleValue());
 
-      chart = new Chart(this, SWT.NONE, ChartType.BAR, chartConfig);
+      chart = new Chart(getContentArea(), SWT.NONE, ChartType.BAR, chartConfig);
 		
 		startRefreshTimer();
 	}

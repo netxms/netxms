@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,7 +21,6 @@ package org.netxms.ui.eclipse.dashboard.widgets;
 import org.eclipse.core.runtime.IAdapterManager;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.ui.IViewPart;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.ui.eclipse.dashboard.api.DashboardElementCreationData;
@@ -50,11 +49,10 @@ public class CustomWidgetElement extends ElementWidget
 			e.printStackTrace();
 			config = new CustomWidgetConfig();
 		}
-		
-		FillLayout layout = new FillLayout();
-		setLayout(layout);
 
+      processCommonSettings(config);
+		
 		IAdapterManager adapterManager = Platform.getAdapterManager();
-		adapterManager.loadAdapter(new DashboardElementCreationData(this, element.getData()), config.getClassName());
+      adapterManager.loadAdapter(new DashboardElementCreationData(getContentArea(), element.getData()), config.getClassName());
 	}
 }

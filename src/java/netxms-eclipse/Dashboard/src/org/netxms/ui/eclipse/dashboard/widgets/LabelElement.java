@@ -28,6 +28,7 @@ import org.eclipse.ui.IViewPart;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.LabelConfig;
 import org.netxms.ui.eclipse.tools.ColorConverter;
+import org.netxms.ui.eclipse.tools.FontTools;
 
 /**
  * Dashboard label element
@@ -45,7 +46,7 @@ public class LabelElement extends ElementWidget
 	public LabelElement(DashboardControl parent, DashboardElement element, IViewPart viewPart)
 	{
 		super(parent, element, viewPart);
-		
+
 		try
 		{
 			config = LabelConfig.createFromXml(element.getData());
@@ -55,19 +56,19 @@ public class LabelElement extends ElementWidget
 			e.printStackTrace();
 			config = new LabelConfig();
 		}
-		
-		FillLayout layout = new FillLayout();
-		layout.marginHeight = 4;
-		setLayout(layout);
-		label = new Label(this, SWT.CENTER);
+
+      // Skip common settings processing
+
+      FillLayout layout = new FillLayout();
+      layout.marginHeight = 4;
+      getContentArea().setLayout(layout);
+      label = new Label(getContentArea(), SWT.CENTER);
 		label.setText(config.getTitle());
 		label.setBackground(ColorConverter.colorFromInt(config.getBackgroundColorAsInt(), colors));
 		label.setForeground(ColorConverter.colorFromInt(config.getForegroundColorAsInt(), colors));
-		setBackground(ColorConverter.colorFromInt(config.getBackgroundColorAsInt(), colors));
-		
-		font = new Font(getDisplay(), "Verdana", 10, SWT.BOLD); //$NON-NLS-1$
-		label.setFont(font);
-		
+      getContentArea().setBackground(ColorConverter.colorFromInt(config.getBackgroundColorAsInt(), colors));
+      label.setFont(FontTools.getTitleFont());
+
 		addDisposeListener(new DisposeListener() {
 			@Override
 			public void widgetDisposed(DisposeEvent e)

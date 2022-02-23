@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,6 @@
 package org.netxms.ui.eclipse.dashboard.widgets;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.ui.IViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.dashboards.DashboardElement;
@@ -37,7 +36,7 @@ public class NetworkMapElement extends ElementWidget
 	private NetworkMap mapObject;
 	private NetworkMapWidget mapWidget;
 	private NetworkMapConfig config;
-	
+
 	/**
 	 * @param parent
 	 * @param data
@@ -55,18 +54,15 @@ public class NetworkMapElement extends ElementWidget
 			e.printStackTrace();
 			config = new NetworkMapConfig();
 		}
-		
-		NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		mapObject = (NetworkMap)session.findObjectById(config.getObjectId(), NetworkMap.class);
-		
-		FillLayout layout = new FillLayout();
-		layout.marginHeight = 0;
-		layout.marginWidth = 0;
-		setLayout(layout);
-		
+
+      processCommonSettings(config);
+
+      NXCSession session = ConsoleSharedData.getSession();
+      mapObject = session.findObjectById(config.getObjectId(), NetworkMap.class);
+
 		if (mapObject != null)
 		{
-			mapWidget = new NetworkMapWidget(this, viewPart, SWT.NONE);
+         mapWidget = new NetworkMapWidget(getContentArea(), viewPart, SWT.NONE);
 			mapWidget.setContent(mapObject);
 	      mapWidget.zoomTo((double)config.getZoomLevel() / 100.0);
 		}

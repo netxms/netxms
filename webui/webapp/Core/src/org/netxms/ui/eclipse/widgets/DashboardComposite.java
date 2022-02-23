@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,7 +33,7 @@ import org.netxms.ui.eclipse.tools.ColorConverter;
 public class DashboardComposite extends Canvas
 {
 	protected ColorCache colors;
-	
+
 	private Color borderOuterColor;
 	private Color borderInnerColor;
 	
@@ -56,6 +56,8 @@ public class DashboardComposite extends Canvas
          borderOuterColor = colors.create(171, 173, 179);
          borderInnerColor = colors.create(255, 255, 255);
       }
+
+      setLayout(new FillLayout());
 	}
 
    /**

@@ -19,7 +19,6 @@
 package org.netxms.ui.eclipse.dashboard.widgets;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.ui.IViewPart;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.ChartConfiguration;
@@ -52,22 +51,21 @@ public class ScriptedPieChartElement extends ScriptedComparisonChartElement
          elementConfig = new ScriptedPieChartConfig();
 		}
 
+      processCommonSettings(elementConfig);
+
       script = elementConfig.getScript();
       objectId = elementConfig.getObjectId();
       refreshInterval = elementConfig.getRefreshRate();
 
       ChartConfiguration chartConfig = new ChartConfiguration();
-      chartConfig.setTitleVisible(elementConfig.isShowTitle());
-      chartConfig.setTitle(elementConfig.getTitle());
+      chartConfig.setTitleVisible(false);
       chartConfig.setLegendPosition(elementConfig.getLegendPosition());
       chartConfig.setLegendVisible(elementConfig.isShowLegend());
       chartConfig.setExtendedLegend(elementConfig.isExtendedLegend());
       chartConfig.setShowIn3D(elementConfig.isShowIn3D());
       chartConfig.setTranslucent(elementConfig.isTranslucent());
 
-		setLayout(new FillLayout());
-
-      chart = new Chart(this, SWT.NONE, ChartType.PIE, chartConfig);
+      chart = new Chart(getContentArea(), SWT.NONE, ChartType.PIE, chartConfig);
       chart.setDrillDownObjectId(elementConfig.getDrillDownObjectId());
       chart.rebuild();
 

@@ -56,11 +56,12 @@ public class GaugeElement extends ComparisonChartElement
 			elementConfig = new GaugeConfig();
 		}
 
+      processCommonSettings(elementConfig);
+
 		refreshInterval = elementConfig.getRefreshRate();
 		
       ChartConfiguration chartConfig = new ChartConfiguration();
-      chartConfig.setTitle(elementConfig.getTitle());
-      chartConfig.setTitleVisible(elementConfig.isShowTitle());
+      chartConfig.setTitleVisible(false);
       chartConfig.setLegendVisible(false);
       chartConfig.setLegendPosition(elementConfig.getLegendPosition());
       chartConfig.setLabelsVisible(elementConfig.isShowLegend());
@@ -79,15 +80,15 @@ public class GaugeElement extends ComparisonChartElement
 		switch(elementConfig.getGaugeType())
 		{
          case GaugeConfig.BAR:
-            chart = new Chart(this, SWT.NONE, ChartType.GAUGE, chartConfig);
+            chart = new Chart(getContentArea(), SWT.NONE, ChartType.GAUGE, chartConfig);
             updateThresholds = true;
             break;
 			case GaugeConfig.TEXT:
-            chart = new Chart(this, SWT.NONE, ChartType.TEXT, chartConfig);
+            chart = new Chart(getContentArea(), SWT.NONE, ChartType.TEXT, chartConfig);
 		      updateThresholds = true;
 				break;
 			default:
-            chart = new Chart(this, SWT.NONE, ChartType.DIAL, chartConfig);
+            chart = new Chart(getContentArea(), SWT.NONE, ChartType.DIAL, chartConfig);
 				break;
 		}
       chart.setDrillDownObjectId(elementConfig.getDrillDownObjectId());

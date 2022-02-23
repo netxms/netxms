@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,6 @@
 package org.netxms.ui.eclipse.dashboard.widgets;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.ui.IViewPart;
 import org.netxms.client.constants.DataOrigin;
 import org.netxms.client.constants.DataType;
@@ -56,20 +55,19 @@ public class PieChartElement extends ComparisonChartElement
          elementConfig = new PieChartConfig();
 		}
 
+      processCommonSettings(elementConfig);
+
       refreshInterval = elementConfig.getRefreshRate();
 
       ChartConfiguration chartConfig = new ChartConfiguration();
-      chartConfig.setTitleVisible(elementConfig.isShowTitle());
-      chartConfig.setTitle(elementConfig.getTitle());
+      chartConfig.setTitleVisible(false);
       chartConfig.setLegendPosition(elementConfig.getLegendPosition());
       chartConfig.setLegendVisible(elementConfig.isShowLegend());
       chartConfig.setExtendedLegend(elementConfig.isExtendedLegend());
       chartConfig.setShowIn3D(elementConfig.isShowIn3D());
       chartConfig.setTranslucent(elementConfig.isTranslucent());
 
-		setLayout(new FillLayout());
-
-      chart = new Chart(this, SWT.NONE, ChartType.PIE, chartConfig);
+      chart = new Chart(getContentArea(), SWT.NONE, ChartType.PIE, chartConfig);
       chart.setDrillDownObjectId(elementConfig.getDrillDownObjectId());
 
       for(ChartDciConfig dci : elementConfig.getDciList())

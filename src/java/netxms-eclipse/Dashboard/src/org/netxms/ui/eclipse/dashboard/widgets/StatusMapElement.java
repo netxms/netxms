@@ -18,13 +18,7 @@
  */
 package org.netxms.ui.eclipse.dashboard.widgets;
 
-import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.layout.FillLayout;
-import org.eclipse.swt.layout.GridData;
-import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.IViewPart;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.StatusMapConfig;
@@ -57,34 +51,13 @@ public class StatusMapElement extends ElementWidget
 			e.printStackTrace();
 			config = new StatusMapConfig();
 		}
-		
-		if (config.getTitle().trim().isEmpty())
-		{
-			setLayout(new FillLayout());
-         if (config.isShowRadial())
-            map = new ObjectStatusMapRadial(viewPart, this, SWT.NONE, false);			   
-			else
-			   map = new ObjectStatusMap(viewPart, this, SWT.NONE, false);
-		}
+
+		processCommonSettings(config);
+
+      if (config.isShowRadial())
+         map = new ObjectStatusMapRadial(viewPart, getContentArea(), SWT.NONE, false);			   
 		else
-		{
-			GridLayout layout = new GridLayout();
-			layout.marginWidth = 0;
-			layout.marginHeight = 0;
-			setLayout(layout);
-
-			Label title = new Label(this, SWT.CENTER);
-			title.setText(config.getTitle().trim());
-			title.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-			title.setFont(JFaceResources.getBannerFont());
-			title.setBackground(getBackground());			
-
-         if (config.isShowRadial())
-            map = new ObjectStatusMapRadial(viewPart, this, SWT.NONE, false);          
-         else
-            map = new ObjectStatusMap(viewPart, this, SWT.NONE, false);
-			((Composite)map).setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-		}
+		   map = new ObjectStatusMap(viewPart, getContentArea(), SWT.NONE, false);
       map.setFitToScreen(config.isFitToScreen());
       if (!config.isShowRadial())
 		   ((ObjectStatusMap)map).setGroupObjects(config.isGroupObjects());
@@ -92,7 +65,7 @@ public class StatusMapElement extends ElementWidget
 		map.setSeverityFilter(config.getSeverityFilter());
 		map.enableFilter(config.isShowTextFilter());
 		map.setRootObject(config.getObjectId());
-		
+
 		map.addRefreshListener(new Runnable() {
          @Override
          public void run()

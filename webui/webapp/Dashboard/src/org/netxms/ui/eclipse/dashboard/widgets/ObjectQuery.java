@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2018 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,7 +35,6 @@ import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.FocusEvent;
 import org.eclipse.swt.events.FocusListener;
-import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.ui.IViewPart;
@@ -66,7 +65,7 @@ public class ObjectQuery extends ElementWidget
    private SortableTableViewer viewer;
    private ObjectSelectionProvider objectSelectionProvider;
    private ObjectDoubleClickHandlerRegistry doubleClickHandlers;
-   
+
    /**
     * @param parent
     * @param element
@@ -87,10 +86,10 @@ public class ObjectQuery extends ElementWidget
          config = new ObjectDetailsConfig();
       }
       
-      setLayout(new FillLayout());
+      processCommonSettings(config);
       
-      //Do not set sort column to leave element sorting provided form server
-      viewer = new SortableTableViewer(this, SWT.MULTI | SWT.FULL_SELECTION);
+      // Do not set sort column to leave element sorting provided form server
+      viewer = new SortableTableViewer(getContentArea(), SWT.MULTI | SWT.FULL_SELECTION);
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setLabelProvider(new ObjectDetailsLabelProvider(config.getProperties()));
       viewer.setComparator(new ViewerComparator() {
@@ -226,11 +225,11 @@ public class ObjectQuery extends ElementWidget
             ObjectContextMenu.fill(mgr, viewPart.getSite(), objectSelectionProvider);
          }
       });
-      
+
       // Create menu.
       Menu menu = menuManager.createContextMenu(viewer.getControl());
       viewer.getControl().setMenu(menu);
-      
+
       // Register menu for extension.
       viewPart.getSite().registerContextMenu(menuManager.getId(), menuManager, objectSelectionProvider); //$NON-NLS-1$
    }
