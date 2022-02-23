@@ -4360,69 +4360,68 @@ NXSL_METHOD_DEFINITION(SNMPTransport, set)
    if (!argv[0]->isString() || (!argv[1]->isString() && !argv[1]->isObject(_T("ByteStream"))) || ((argc == 3) && !argv[2]->isString()))
       return NXSL_ERR_NOT_STRING;
 
-   bool isByteStream = argv[1]->isObject(_T("ByteStream"));
-
    SNMP_Transport *transport = static_cast<SNMP_Transport*>(object->getData());
 
-   SNMP_PDU *request = new SNMP_PDU(SNMP_SET_REQUEST, SnmpNewRequestId(), transport->getSnmpVersion());
-   SNMP_PDU *response = nullptr;
-   bool success = false;
-
+   SNMP_PDU request(SNMP_SET_REQUEST, SnmpNewRequestId(), transport->getSnmpVersion());
+   bool success;
    if (SNMPIsCorrectOID(argv[0]->getValueAsCString()))
    {
       SNMP_Variable *var = new SNMP_Variable(argv[0]->getValueAsCString());
       if (argc == 2)
       {
-         if (isByteStream)
+         if (argv[1]->isObject())
             var->setValueFromByteStream(ASN_OCTET_STRING, *static_cast<ByteStream*>(argv[1]->getValueAsObject()->getData()));
          else
             var->setValueFromString(ASN_OCTET_STRING, argv[1]->getValueAsCString());
       }
       else
       {
-         UINT32 dataType = SNMPResolveDataType(argv[2]->getValueAsCString());
+         uint32_t dataType = SNMPResolveDataType(argv[2]->getValueAsCString());
          if (dataType == ASN_NULL)
          {
             nxlog_debug_tag(_T("snmp.nxsl"), 6, _T("SNMPTransport::set: failed to resolve data type '%s', assume string"),
                argv[2]->getValueAsCString());
             dataType = ASN_OCTET_STRING;
          }
-         if (isByteStream)
+         if (argv[1]->isObject())
             var->setValueFromByteStream(dataType, *static_cast<ByteStream*>(argv[1]->getValueAsObject()->getData()));
          else
             var->setValueFromString(dataType, argv[1]->getValueAsCString());
       }
-      request->bindVariable(var);
+      request.bindVariable(var);
+      success = true;
    }
    else
    {
       nxlog_debug_tag(_T("snmp.nxsl"), 6, _T("SNMPTransport::set: Invalid OID: %s"), argv[0]->getValueAsCString());
-      goto finish;
+      success = false;
    }
 
    // Send request and process response
-   UINT32 snmpResult;
-   if ((snmpResult = transport->doRequest(request, &response, SnmpGetDefaultTimeout(), 3)) == SNMP_ERR_SUCCESS)
+   if (success)
    {
-      if (response->getErrorCode() != 0)
+      success = false;
+      SNMP_PDU *response = nullptr;
+      uint32_t snmpResult = transport->doRequest(&request, &response, SnmpGetDefaultTimeout(), 3);
+      if (snmpResult == SNMP_ERR_SUCCESS)
       {
-         nxlog_debug_tag(_T("snmp.nxsl"), 6, _T("SNMPTransport::set: operation failed (error code %d)"), response->getErrorCode());
-         goto finish;
+         if (response->getErrorCode() != 0)
+         {
+            nxlog_debug_tag(_T("snmp.nxsl"), 6, _T("SNMPTransport::set: success"));
+            success = true;
+         }
+         else
+         {
+            nxlog_debug_tag(_T("snmp.nxsl"), 6, _T("SNMPTransport::set: operation failed (error code %d)"), response->getErrorCode());
+         }
+         delete response;
       }
       else
       {
-         nxlog_debug_tag(_T("snmp.nxsl"), 6, _T("SNMPTransport::set: success"));
-         success = true;
+         nxlog_debug_tag(_T("snmp.nxsl"), 6, _T("SNMPTransport::set: %s"), SNMPGetErrorText(snmpResult));
       }
-      delete response;
-   }
-   else
-   {
-      nxlog_debug_tag(_T("snmp.nxsl"), 6, _T("SNMPTransport::set: %s"), SNMPGetErrorText(snmpResult));
    }
 
-finish:
-   delete request;
    *result = vm->createValue(success);
    return 0;
 }

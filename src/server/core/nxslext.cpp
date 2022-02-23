@@ -1375,72 +1375,71 @@ static int F_SNMPSet(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *
    if (!argv[1]->isString() || (!argv[2]->isString() && !argv[2]->isObject(_T("ByteStream"))) || ((argc == 4) && !argv[3]->isString()))
       return NXSL_ERR_NOT_STRING;
 
-   bool isByteStream = argv[2]->isObject(_T("ByteStream"));
-
    NXSL_Object *object = argv[0]->getValueAsObject();
    if (!object->getClass()->instanceOf(g_nxslSnmpTransportClass.getName()))
       return NXSL_ERR_BAD_CLASS;
    SNMP_Transport *transport = static_cast<SNMP_Transport*>(object->getData());
 
-   SNMP_PDU *request = new SNMP_PDU(SNMP_SET_REQUEST, SnmpNewRequestId(), transport->getSnmpVersion());
+   SNMP_PDU request(SNMP_SET_REQUEST, SnmpNewRequestId(), transport->getSnmpVersion());
    SNMP_PDU *response = nullptr;
    bool success = false;
-
    if (SNMPIsCorrectOID(argv[1]->getValueAsCString()))
    {
       SNMP_Variable *var = new SNMP_Variable(argv[1]->getValueAsCString());
       if (argc == 3)
       {
-         if (isByteStream)
+         if (argv[2]->isObject())
             var->setValueFromByteStream(ASN_OCTET_STRING, *static_cast<ByteStream*>(argv[2]->getValueAsObject()->getData()));
          else
             var->setValueFromString(ASN_OCTET_STRING, argv[2]->getValueAsCString());
       }
       else
       {
-         UINT32 dataType = SNMPResolveDataType(argv[3]->getValueAsCString());
+         uint32_t dataType = SNMPResolveDataType(argv[3]->getValueAsCString());
          if (dataType == ASN_NULL)
          {
             nxlog_debug_tag(_T("snmp.nxsl"), 6, _T("SNMPSet: failed to resolve data type '%s', assume string"),
                argv[3]->getValueAsCString());
             dataType = ASN_OCTET_STRING;
          }
-         if (isByteStream)
+         if (argv[2]->isObject())
             var->setValueFromByteStream(dataType, *static_cast<ByteStream*>(argv[2]->getValueAsObject()->getData()));
          else
             var->setValueFromString(dataType, argv[2]->getValueAsCString());
       }
-      request->bindVariable(var);
+      request.bindVariable(var);
+      success = true;
    }
    else
    {
       nxlog_debug_tag(_T("snmp.nxsl"), 6, _T("SNMPSet: Invalid OID: %s"), argv[1]->getValueAsCString());
-      goto finish;
+      success = false;
    }
 
    // Send request and process response
-   UINT32 snmpResult;
-   if ((snmpResult = transport->doRequest(request, &response, SnmpGetDefaultTimeout(), 3)) == SNMP_ERR_SUCCESS)
+   if (success)
    {
-      if (response->getErrorCode() != 0)
+      success = false;
+      uint32_t snmpResult = transport->doRequest(&request, &response, SnmpGetDefaultTimeout(), 3);
+      if (snmpResult == SNMP_ERR_SUCCESS)
       {
-         nxlog_debug_tag(_T("snmp.nxsl"), 6, _T("SNMPSet: operation failed (error code %d)"), response->getErrorCode());
-         goto finish;
+         if (response->getErrorCode() != 0)
+         {
+            nxlog_debug_tag(_T("snmp.nxsl"), 6, _T("SNMPSet: success"));
+            success = true;
+         }
+         else
+         {
+            nxlog_debug_tag(_T("snmp.nxsl"), 6, _T("SNMPSet: operation failed (error code %d)"), response->getErrorCode());
+         }
+         delete response;
       }
       else
       {
-         nxlog_debug_tag(_T("snmp.nxsl"), 6, _T("SNMPSet: success"));
-         success = true;
+         nxlog_debug_tag(_T("snmp.nxsl"), 6, _T("SNMPSet: %s"), SNMPGetErrorText(snmpResult));
       }
-      delete response;
-   }
-   else
-   {
-      nxlog_debug_tag(_T("snmp.nxsl"), 6, _T("SNMPSet: %s"), SNMPGetErrorText(snmpResult));
    }
 
-finish:
-   delete request;
    *result = vm->createValue(success);
    return 0;
 }
@@ -1448,10 +1447,10 @@ finish:
 /**
  * SNMP walk callback
  */
-static UINT32 WalkCallback(SNMP_Variable *var, SNMP_Transport *transport, void *userArg)
+static uint32_t WalkCallback(SNMP_Variable *var, SNMP_Transport *transport, void *context)
 {
-   NXSL_VM *vm = static_cast<NXSL_VM*>(static_cast<NXSL_Array*>(userArg)->vm());
-   static_cast<NXSL_Array*>(userArg)->append(vm->createValue(vm->createObject(&g_nxslSnmpVarBindClass, new SNMP_Variable(var))));
+   NXSL_VM *vm = static_cast<NXSL_VM*>(static_cast<NXSL_Array*>(context)->vm());
+   static_cast<NXSL_Array*>(context)->append(vm->createValue(vm->createObject(&g_nxslSnmpVarBindClass, new SNMP_Variable(var))));
    return SNMP_ERR_SUCCESS;
 }
 

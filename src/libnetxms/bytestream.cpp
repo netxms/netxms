@@ -1,7 +1,7 @@
 /*
  ** NetXMS - Network Management System
  ** NetXMS Foundation Library
- ** Copyright (C) 2003-2020 Raden Solutions
+ ** Copyright (C) 2003-2022 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU Lesser General Public License as published
@@ -32,7 +32,7 @@ ByteStream::ByteStream(size_t initial)
    m_size = 0;
    m_pos = 0;
    m_allocationStep = 4096;
-   m_data = (m_allocated > 0) ? static_cast<BYTE*>(MemAlloc(m_allocated)) : nullptr;
+   m_data = (m_allocated > 0) ? MemAllocArrayNoInit<BYTE>(m_allocated) : nullptr;
 }
 
 /**
@@ -115,20 +115,20 @@ size_t ByteStream::writeString(const WCHAR* str, const char* codepage, ssize_t l
       m_data = MemRealloc(m_data, m_allocated);
    }
 
-   size_t bytesWritten = wchar_to_mbcp(str, length, (char*)&m_data[m_pos], byteCount, codepage);
+   size_t bytesWritten = wchar_to_mbcp(str, length, reinterpret_cast<char*>(&m_data[m_pos]), byteCount, codepage);
    m_pos += bytesWritten;
 
    if (prependLength)
    {
       if (byteCount < 0x8000)
       {
-         bytesWritten = HostToBigEndian16(bytesWritten);
-         memcpy(&m_data[writeStartPos], &bytesWritten, 2);
+         uint16_t n = HostToBigEndian16(bytesWritten);
+         memcpy(&m_data[writeStartPos], &n, 2);
       }
       else
       {
-         bytesWritten = HostToBigEndian16((uint32_t)bytesWritten | 0x80000000);
-         memcpy(&m_data[writeStartPos], &bytesWritten, 4);
+         uint32_t n = HostToBigEndian32(static_cast<uint32_t>(bytesWritten) | 0x80000000);
+         memcpy(&m_data[writeStartPos], &n, 4);
       }
    }
 
@@ -160,12 +160,12 @@ size_t ByteStream::writeString(const char* str, ssize_t length, bool prependLeng
    {
       if (length < 0x8000) // if len < 2^15 prepend s with len as 2 bytes (0xxx xxxx)
       {
-         uint16_t tmp = (uint16_t)length;
+         uint16_t tmp = static_cast<uint16_t>(length);
          write(&tmp, 2);
       }
       else // if len > 2^15 prepend s with len as 4 bytes with higher bit set (1xxx xxxx xxxx xxxx)
       {
-         uint32_t tmp = length | 0x80000000;
+         uint32_t tmp = static_cast<uint32_t>(length) | 0x80000000;
          write(&tmp, 4);
       }
    }
@@ -173,7 +173,7 @@ size_t ByteStream::writeString(const char* str, ssize_t length, bool prependLeng
    write(str, length);
 
    if (nullTerminate)
-      write((BYTE)0);
+      write(static_cast<BYTE>(0));
 
    return m_pos - writeStartPos;
 }
@@ -197,23 +197,23 @@ size_t ByteStream::read(void *buffer, size_t count)
  */
 ssize_t ByteStream::getLengthToRead(ssize_t length, bool isLenPrepended, bool isNullTerminated)
 {
-   if(eos()) 
+   if (eos())
       return  -1;
 
    if (isLenPrepended)
    {
-      BYTE b = !eos() ? m_data[m_pos] : 0;
+      BYTE b = m_data[m_pos];
       if (b & 0x80) // length in 4 bytes
       {
          if (m_size - m_pos < 4)
             return -1;
-         length = (ssize_t)(readUInt32B() & ~0x80000000);
+         length = readUInt32B() & ~0x80000000;
       }
       else // length in 2 bytes
       {
          if (m_size - m_pos < 2)
             return -1;
-         length = (ssize_t)(readUInt16B());
+         length = readUInt16B();
       }
    }
    else if (isNullTerminated)
@@ -241,12 +241,12 @@ ssize_t ByteStream::getLengthToRead(ssize_t length, bool isLenPrepended, bool is
 WCHAR* ByteStream::readStringWCore(const char* codepage, ssize_t length, bool isLenPrepended, bool isNullTerminated)
 {
    length = getLengthToRead(length, isLenPrepended, isNullTerminated);
-   if(length < 0)
+   if (length < 0)
       return nullptr;
 
    WCHAR* buffer = MemAllocStringW(length + 1);
-   size_t count = mbcp_to_wchar((char*)&m_data[m_pos], length, buffer, length, codepage);
-   
+   size_t count = mbcp_to_wchar(reinterpret_cast<char*>(&m_data[m_pos]), length, buffer, length, codepage);
+
    m_pos += isNullTerminated ? length + 1: length;
    buffer[count] = 0;
    return buffer;
@@ -267,7 +267,7 @@ char* ByteStream::readStringAsUTF8Core(const char* codepage, ssize_t length, boo
       return nullptr;
 
    char* buffer = MemAllocStringA(length * 4 + 1);
-   size_t count = mbcp_to_utf8((char*)&m_data[m_pos], length, buffer, length, codepage);
+   size_t count = mbcp_to_utf8(reinterpret_cast<char*>(&m_data[m_pos]), length, buffer, length, codepage);
    
    m_pos += isNullTerminated ? length + 1: length;
    buffer[count] = 0;
@@ -284,10 +284,10 @@ char* ByteStream::readStringAsUTF8Core(const char* codepage, ssize_t length, boo
 char* ByteStream::readStringCore(ssize_t length, bool isLenPrepended, bool isNullTerminated)
 {
    length = getLengthToRead(length, isLenPrepended, isNullTerminated);
-   if(length < 0)
+   if (length < 0)
       return nullptr;
 
-   char* buffer = MemAllocStringA(length+1);
+   char* buffer = MemAllocStringA(length + 1);
    memcpy(buffer, &m_data[m_pos], length);
    buffer[length] = 0;
    m_pos += isNullTerminated ? length + 1: length;
@@ -300,9 +300,9 @@ char* ByteStream::readStringCore(ssize_t length, bool isLenPrepended, bool isNul
 bool ByteStream::save(int f)
 {
 #ifdef _WIN32
-   return _write(f, m_data, (unsigned int)m_size) == (unsigned int)m_size;
+   return _write(f, m_data, static_cast<unsigned int>(m_size)) == static_cast<int>(m_size);
 #else
-   return ::write(f, m_data, (int)m_size) == (int)m_size;
+   return ::write(f, m_data, m_size) == m_size;
 #endif
 }
 
@@ -313,8 +313,8 @@ ByteStream *ByteStream::load(const TCHAR *file)
 {
    size_t size;
    BYTE *data = LoadFile(file, &size);
-   if (data == NULL)
-      return NULL;
+   if (data == nullptr)
+      return nullptr;
    ByteStream *s = new ByteStream(0);
    s->m_allocated = size;
    s->m_size = size;
