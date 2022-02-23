@@ -73,7 +73,33 @@ bool LIBNXDBMGR_EXPORTABLE GenerateGUID(const TCHAR *table, const TCHAR *idColum
 bool LIBNXDBMGR_EXPORTABLE CreateTable(const TCHAR *pszQuery)
 {
    StringBuffer query(pszQuery);
+   if (query.startsWith(_T("CREATE TABLE ")))
+   {
+      ssize_t index = query.find(_T(" "), 13);
+      if (index != String::npos)
+      {
+         String tableName = query.substring(13, index - 13);
+         if (DBIsTableExist(g_dbHandle, tableName) == DBIsTableExist_Found)
+         {
+            TCHAR cquery[256];
+            _sntprintf(cquery, 256, _T("SELECT count(*) FROM %s"), tableName.cstr());
+            bool isEmpty = false;
+            DB_RESULT hResult = SQLSelect(cquery);
+            if (hResult != nullptr)
+            {
+               isEmpty = (DBGetFieldLong(hResult, 0, 0) == 0);
+               DBFreeResult(hResult);
+            }
 
+            if (isEmpty)
+            {
+               _sntprintf(cquery, 256, _T("DROP TABLE %s"), tableName.cstr());
+               if (SQLQuery(cquery))
+                  WriteToTerminalEx(_T("\x1b[33;1mWARNING:\x1b[0m Existing empty table \x1b[1m%s\x1b[0m dropped\n"), tableName.cstr());
+            }
+         }
+      }
+   }
    if (g_dbSyntax != DB_SYNTAX_UNKNOWN)
    {
       query.replace(_T("$SQL:BLOB"), g_sqlTypes[g_dbSyntax][SQL_TYPE_BLOB]);
