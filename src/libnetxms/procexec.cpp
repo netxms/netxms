@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Raden Solutions
+** Copyright (C) 2003-2022 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -226,7 +226,7 @@ bool ProcessExecutor::execute()
    cmdLine.append(m_cmd);
    if (CreateProcess(nullptr, cmdLine.getBuffer(), nullptr, nullptr, TRUE, EXTENDED_STARTUPINFO_PRESENT, nullptr, nullptr, &si.StartupInfo, &pi))
    {
-      nxlog_debug_tag(DEBUG_TAG, 5, _T("ProcessExecutor::execute(): process \"%s\" started"), cmdLine.getBuffer());
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("ProcessExecutor::execute(): process \"%s\" started"), cmdLine.cstr());
 
       m_phandle = pi.hProcess;
       CloseHandle(pi.hThread);
@@ -352,6 +352,7 @@ bool ProcessExecutor::execute()
          break;
       default: // parent
          close(m_pipe[1]);
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("ProcessExecutor::execute(): process \"%s\" started"), m_cmd);
          if (m_sendOutput)
          {
             m_outputThread = ThreadCreateEx(readOutput, 0, this);
