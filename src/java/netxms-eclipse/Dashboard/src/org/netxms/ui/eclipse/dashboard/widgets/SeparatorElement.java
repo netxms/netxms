@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,7 +38,7 @@ public class SeparatorElement extends ElementWidget
 	private SeparatorConfig config;
 	private Color bkColor;
 	private Color fgColor;
-	
+
 	/**
 	 * @param parent
 	 * @param data
@@ -46,7 +46,7 @@ public class SeparatorElement extends ElementWidget
 	public SeparatorElement(DashboardControl parent, DashboardElement element, IViewPart viewPart)
 	{
 		super(parent, SWT.NONE, element, viewPart);
-		
+
 		try
 		{
 			config = SeparatorConfig.createFromXml(element.getData());
@@ -56,12 +56,14 @@ public class SeparatorElement extends ElementWidget
 			e.printStackTrace();
 			config = new SeparatorConfig();
 		}
-		
+
+      getContentArea().dispose();
+
 		bkColor = new Color(getDisplay(), ColorConverter.rgbFromInt(config.getBackgroundColorAsInt()));
 		fgColor = new Color(getDisplay(), ColorConverter.rgbFromInt(config.getForegroundColorAsInt()));
-		
+
 		setBackground(bkColor);
-		
+
 		addDisposeListener(new DisposeListener() {
 			@Override
 			public void widgetDisposed(DisposeEvent e)
@@ -79,7 +81,7 @@ public class SeparatorElement extends ElementWidget
 	public void paintControl(PaintEvent e)
 	{
 		super.paintControl(e);
-		
+
 		if (config.getLineWidth() > 0)
 		{
 			e.gc.setForeground(fgColor);

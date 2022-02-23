@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2017 Raden Solutions
+ * Copyright (C) 2003-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,10 +37,7 @@ import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.Point;
-import org.eclipse.swt.layout.GridData;
-import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IViewPart;
 import org.netxms.client.NXCSession;
@@ -66,12 +63,11 @@ public class RackDiagramElement extends ElementWidget implements ISelectionProvi
    private RackDiagramConfig config;
    private Composite rackArea;
    private ScrolledComposite scroller;
-   private Label title;
    private Font font = null;
    private IViewPart viewPart;
    private ISelection selection = new StructuredSelection();
    private Set<ISelectionChangedListener> selectionListeners = new HashSet<ISelectionChangedListener>();
-   
+
    /**
     * Create new rack diagram element
     * 
@@ -94,29 +90,18 @@ public class RackDiagramElement extends ElementWidget implements ISelectionProvi
          e.printStackTrace();
          config = new RackDiagramConfig();
       }
-      
-      GridLayout layout = new GridLayout();
-      layout.marginWidth = 0;
-      layout.marginHeight = 0;
-      setLayout(layout);
-      
-      session = (NXCSession)ConsoleSharedData.getSession();
+
+      processCommonSettings(config);
+
+      session = ConsoleSharedData.getSession();
       Rack rack = session.findObjectById(config.getObjectId(), Rack.class);
-      
+
       if (rack != null)
       {
          Color backgroundColor = ThemeEngine.getBackgroundColor("Rack");
 
-         if (config.isShowTitle())
-         {
-            title = createTitleLabel(this, rack.getObjectName());
-            title.setBackground(backgroundColor);
-            title.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-         }
-                  
-         scroller = new ScrolledComposite(this, SWT.H_SCROLL);
-         scroller.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-         
+         scroller = new ScrolledComposite(getContentArea(), SWT.H_SCROLL);
+
          rackArea = new Composite(scroller, SWT.NONE) {
             @Override
             public Point computeSize(int wHint, int hHint, boolean changed)
@@ -166,7 +151,7 @@ public class RackDiagramElement extends ElementWidget implements ISelectionProvi
                }
             }
          });
-         
+
          if (config.getView() == RackView.FULL || config.getView() == RackView.FRONT)
             setRackFrontWidget(new RackWidget(rackArea, SWT.NONE, rack, RackOrientation.FRONT));
          if (config.getView() == RackView.FULL || config.getView() == RackView.BACK)
@@ -191,7 +176,7 @@ public class RackDiagramElement extends ElementWidget implements ISelectionProvi
                font.dispose();
          }
       });
-      
+
       ElementSelectionListener listener = new ElementSelectionListener() {
          @Override
          public void objectSelected(Object object)
@@ -201,12 +186,12 @@ public class RackDiagramElement extends ElementWidget implements ISelectionProvi
                listener.selectionChanged(new SelectionChangedEvent(RackDiagramElement.this, selection));
          }
       };
-      
+
       if (rackFrontWidget != null)
          rackFrontWidget.addSelectionListener(listener);
       if (rackRearWidget != null)
          rackRearWidget.addSelectionListener(listener);
-      
+
       createPopupMenu();
    }
    

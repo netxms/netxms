@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Raden Solutions
+ * Copyright (C) 2003-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,7 +21,6 @@ package org.netxms.ui.eclipse.dashboard.widgets;
 import java.util.Iterator;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
-import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.ui.IViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.dashboards.DashboardElement;
@@ -71,22 +70,19 @@ public class ServiceComponentsElement extends ElementWidget
          config = new ServiceComponentsConfig();
       }
 
-      session = (NXCSession)ConsoleSharedData.getSession();
+      processCommonSettings(config);
+
+      session = ConsoleSharedData.getSession();
       AbstractObject rootObject = session.findObjectById(config.getObjectId());
       
-      mapPage = new NetworkMapPage(ServiceComponents.ID+rootObject.getObjectId());
+      mapPage = new NetworkMapPage(ServiceComponents.ID + rootObject.getObjectId());
       long elementId = mapPage.createElementId();
       mapPage.addElement(new NetworkMapObject(elementId, rootObject.getObjectId()));
       addServiceComponents(rootObject, elementId);
-      
-      FillLayout layout = new FillLayout();
-      layout.marginHeight = 0;
-      layout.marginWidth = 0;
-      setLayout(layout);
-      
+
       if (mapPage != null)
       {
-         mapWidget = new NetworkMapWidget(this, viewPart, SWT.NONE);
+         mapWidget = new NetworkMapWidget(getContentArea(), viewPart, SWT.NONE);
          mapWidget.setLayoutAlgorithm(config.getDefaultLayoutAlgorithm());
          mapWidget.zoomTo((double)config.getZoomLevel() / 100.0);
          mapWidget.getLabelProvider().setObjectFigureType(config.getObjectDisplayMode());

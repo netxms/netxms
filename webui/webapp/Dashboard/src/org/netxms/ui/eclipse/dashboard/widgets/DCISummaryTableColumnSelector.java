@@ -26,7 +26,7 @@ public class DCISummaryTableColumnSelector extends AbstractSelector
       this.sourceSummaryTable = sourceSummaryTable;
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.ui.eclipse.widgets.AbstractSelector#selectionButtonHandler()
     */
    @Override

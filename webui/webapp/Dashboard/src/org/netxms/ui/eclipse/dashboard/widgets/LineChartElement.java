@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,7 +33,6 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.graphics.Point;
-import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Menu;
@@ -99,12 +98,11 @@ public class LineChartElement extends ElementWidget implements HistoricalChartOw
 			config = new LineChartConfig();
 		}
 
-		setLayout(new FillLayout());
-		
+      processCommonSettings(config);
+
       ChartConfiguration chartConfig = new ChartConfiguration();
       chartConfig.setZoomEnabled(config.isInteractive());
-      chartConfig.setTitleVisible(config.isShowTitle());
-      chartConfig.setTitle(config.getTitle());
+      chartConfig.setTitleVisible(false);
       chartConfig.setLegendVisible(config.isShowLegend());
       chartConfig.setLegendPosition(config.getLegendPosition());
       chartConfig.setExtendedLegend(config.isExtendedLegend());
@@ -120,7 +118,7 @@ public class LineChartElement extends ElementWidget implements HistoricalChartOw
       chartConfig.setMaxYScaleValue(config.getMaxYScaleValue());
       chartConfig.setModifyYBase(config.modifyYBase());
 
-      chart = new Chart(this, SWT.NONE, ChartType.LINE, chartConfig);
+      chart = new Chart(getContentArea(), SWT.NONE, ChartType.LINE, chartConfig);
 		for(ChartDciConfig dci : config.getDciList())
          chart.addParameter(new GraphItem(dci, DataOrigin.INTERNAL, DataType.INT32));
       chart.rebuild();
@@ -136,7 +134,7 @@ public class LineChartElement extends ElementWidget implements HistoricalChartOw
 			}
 		});
 		refreshData();
-		
+
 		addDisposeListener(new DisposeListener() {
          @Override
          public void widgetDisposed(DisposeEvent e)
@@ -201,7 +199,7 @@ public class LineChartElement extends ElementWidget implements HistoricalChartOw
          ch.setMenu(menu);
       }
 	}
-	
+
 	/**
 	 * Fill context menu
 	 * 

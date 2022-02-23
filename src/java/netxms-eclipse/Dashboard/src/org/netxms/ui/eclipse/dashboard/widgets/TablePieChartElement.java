@@ -19,7 +19,6 @@
 package org.netxms.ui.eclipse.dashboard.widgets;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.ui.IViewPart;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.ChartConfiguration;
@@ -49,19 +48,18 @@ public class TablePieChartElement extends TableComparisonChartElement
 			e.printStackTrace();
 			config = new TablePieChartConfig();
 		}
-
-		setLayout(new FillLayout());
 		
+      processCommonSettings(config);
+
       ChartConfiguration chartConfig = new ChartConfiguration();
-      chartConfig.setTitleVisible(config.isShowTitle());
-      chartConfig.setTitle(config.getTitle());
+      chartConfig.setTitleVisible(false);
       chartConfig.setLegendPosition(config.getLegendPosition());
       chartConfig.setLegendVisible(config.isShowLegend());
       chartConfig.setExtendedLegend(config.isExtendedLegend());
       chartConfig.setShowIn3D(config.isShowIn3D());
       chartConfig.setTranslucent(config.isTranslucent());
 
-      chart = new Chart(this, SWT.NONE, ChartType.PIE, chartConfig);
+      chart = new Chart(getContentArea(), SWT.NONE, ChartType.PIE, chartConfig);
 		startRefreshTimer();
 	}
 }

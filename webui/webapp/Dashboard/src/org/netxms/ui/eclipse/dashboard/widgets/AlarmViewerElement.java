@@ -21,7 +21,6 @@ package org.netxms.ui.eclipse.dashboard.widgets;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.FocusEvent;
 import org.eclipse.swt.events.FocusListener;
-import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.ui.IViewPart;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.ui.eclipse.alarmviewer.widgets.AlarmList;
@@ -55,13 +54,10 @@ public class AlarmViewerElement extends ElementWidget
 			e.printStackTrace();
 			config = new AlarmViewerConfig();
 		}
-		
-		FillLayout layout = new FillLayout();
-		layout.marginHeight = 0;
-		layout.marginWidth = 0;
-		setLayout(layout);
 
-      viewer = new AlarmList(viewPart, this, SWT.NONE, "Dashboard.AlarmList", null); //$NON-NLS-1$
+      processCommonSettings(config);
+
+      viewer = new AlarmList(viewPart, getContentArea(), SWT.NONE, "Dashboard.AlarmList", null); //$NON-NLS-1$
 		viewer.setRootObject(config.getObjectId());
 		viewer.setSeverityFilter(config.getSeverityFilter());
       viewer.setStateFilter(config.getStateFilter());

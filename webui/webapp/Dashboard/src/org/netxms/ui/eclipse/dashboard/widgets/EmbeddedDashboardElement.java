@@ -21,7 +21,6 @@ package org.netxms.ui.eclipse.dashboard.widgets;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
-import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.ui.IViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.dashboards.DashboardElement;
@@ -58,21 +57,18 @@ public class EmbeddedDashboardElement extends ElementWidget
 			e.printStackTrace();
 			config = new EmbeddedDashboardConfig();
 		}
-		
-		NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+
+      processCommonSettings(config);
+
+      NXCSession session = ConsoleSharedData.getSession();
 		objects = new Dashboard[config.getDashboardObjects().length];
 		for(int i = 0; i < objects.length; i++)
 			objects[i] = (Dashboard)session.findObjectById(config.getDashboardObjects()[i], Dashboard.class);
-		
-		FillLayout layout = new FillLayout();
-		layout.marginHeight = 0;
-		layout.marginWidth = 0;
-		setLayout(layout);
-		
+
 		if (objects.length > 1)
 		{
 			nextDashboard();
-			
+
 			final ViewRefreshController refreshControler = new ViewRefreshController(viewPart, config.getDisplayInterval(), new Runnable() {
             @Override
             public void run()
@@ -96,7 +92,7 @@ public class EmbeddedDashboardElement extends ElementWidget
 				new DashboardControl(this, SWT.NONE, objects[0], viewPart, getSelectionProvider(), true);
 		}
 	}
-	
+
 	/**
 	 * Show next dashboard in chain
 	 */
@@ -108,7 +104,7 @@ public class EmbeddedDashboardElement extends ElementWidget
 		if (current >= objects.length)
 			current = 0;
 		if (objects[current] != null)
-			control = new DashboardControl(this, SWT.NONE, objects[current], viewPart, getSelectionProvider(), true);	/* TODO: set embedded=false if border=true */
+			control = new DashboardControl(getContentArea(), SWT.NONE, objects[current], viewPart, getSelectionProvider(), true);	/* TODO: set embedded=false if border=true */
 		else
 			control = null;
 		getParent().layout(true, true);

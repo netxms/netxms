@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2016 RadenSolutions
+ * Copyright (C) 2016-2022 RadenSolutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,7 +22,6 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.FocusEvent;
 import org.eclipse.swt.events.FocusListener;
-import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.ui.IViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.dashboards.DashboardElement;
@@ -32,12 +31,22 @@ import org.netxms.ui.eclipse.eventmanager.widgets.SyslogTraceWidget;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
+/**
+ * "Syslog monitor" dashboard element
+ */
 public class SyslogMonitorElement extends ElementWidget
 {
    private SyslogTraceWidget viewer;
    private SyslogMonitorConfig config;
    private final NXCSession session;
 
+   /**
+    * Create syslog monitor element.
+    *
+    * @param parent parent composite
+    * @param element dashboard element
+    * @param viewPart owning view part
+    */
    protected SyslogMonitorElement(DashboardControl parent, DashboardElement element, IViewPart viewPart)
    {
       super(parent, element, viewPart);
@@ -51,6 +60,8 @@ public class SyslogMonitorElement extends ElementWidget
          e.printStackTrace();
          config = new SyslogMonitorConfig();
       }
+
+      processCommonSettings(config);
 
       session = ConsoleSharedData.getSession();
 
@@ -68,12 +79,7 @@ public class SyslogMonitorElement extends ElementWidget
          }
       }.start();
 
-      FillLayout layout = new FillLayout();
-      layout.marginHeight = 0;
-      layout.marginWidth = 0;
-      setLayout(layout);
-
-      viewer = new SyslogTraceWidget(this, SWT.NONE, viewPart);
+      viewer = new SyslogTraceWidget(getContentArea(), SWT.NONE, viewPart);
       viewer.setRootObject(config.getObjectId());
       viewer.getViewer().getControl().addFocusListener(new FocusListener() {
          @Override
@@ -87,14 +93,15 @@ public class SyslogMonitorElement extends ElementWidget
             setSelectionProviderDelegate(viewer.getSelectionProvider());
          }
       });
-
    }
 
+   /**
+    * @see org.eclipse.swt.widgets.Widget#dispose()
+    */
    @Override
    public void dispose()
    {
-      ConsoleJob job = new ConsoleJob(String.format("Unsuscribing from channel ", NXCSession.CHANNEL_SYSLOG), null,
-            Activator.PLUGIN_ID, null) {
+      ConsoleJob job = new ConsoleJob(String.format("Unsuscribing from channel ", NXCSession.CHANNEL_SYSLOG), null, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {

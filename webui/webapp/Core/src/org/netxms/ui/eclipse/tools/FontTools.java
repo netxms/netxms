@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -111,7 +111,7 @@ public class FontTools
       fontCache.put(key, f);
       return f;
    }
-   
+
    /**
     * Get array of font objects with first available font name from given list with increasing height. 
     * Fonts will be created as needed and cached within font tools class.
@@ -145,7 +145,17 @@ public class FontTools
       }
       return fonts;
    }
-   
+
+   /**
+    * Get standard title font (should not be disposed by caller).
+    * 
+    * @return standard title font
+    */
+   public static Font getTitleFont()
+   {
+      return JFaceResources.getBannerFont();
+   }
+
    /**
     * Create first available font from given list with adjusted height
     * 
@@ -173,7 +183,7 @@ public class FontTools
    {
       return createFont(names, 0, style);
    }
-   
+
    /**
     * Create standard title font
     * 
@@ -182,5 +192,18 @@ public class FontTools
    public static Font createTitleFont()
    {
       return createFont(TITLE_FONTS, 2, SWT.BOLD);
+   }
+
+   /**
+    * Create font with same style and typeface as given, but with adjusted height.
+    *
+    * @param font existing font
+    * @param heightAdjustment height adjustment
+    * @return new font
+    */
+   public static Font createAdjustedFont(Font font, int heightAdjustment)
+   {
+      FontData fd = font.getFontData()[0];
+      return new Font(Display.getCurrent(), fd.getName(), fd.getHeight() + heightAdjustment, fd.getStyle());
    }
 }

@@ -51,13 +51,14 @@ public class ScriptedBarChartElement extends ScriptedComparisonChartElement
          elementConfig = new ScriptedBarChartConfig();
 		}
 
+      processCommonSettings(elementConfig);
+
       script = elementConfig.getScript();
       objectId = elementConfig.getObjectId();
 		refreshInterval = elementConfig.getRefreshRate();
 
       ChartConfiguration chartConfig = new ChartConfiguration();
-      chartConfig.setTitleVisible(elementConfig.isShowTitle());
-      chartConfig.setTitle(elementConfig.getTitle());
+      chartConfig.setTitleVisible(false);
       chartConfig.setLegendPosition(elementConfig.getLegendPosition());
       chartConfig.setLegendVisible(elementConfig.isShowLegend());
       chartConfig.setExtendedLegend(elementConfig.isExtendedLegend());
@@ -68,7 +69,7 @@ public class ScriptedBarChartElement extends ScriptedComparisonChartElement
       chartConfig.setMinYScaleValue(elementConfig.getMinYScaleValue());
       chartConfig.setMaxYScaleValue(elementConfig.getMaxYScaleValue());
 
-      chart = new Chart(this, SWT.NONE, ChartType.BAR, chartConfig);
+      chart = new Chart(getContentArea(), SWT.NONE, ChartType.BAR, chartConfig);
       chart.setDrillDownObjectId(elementConfig.getDrillDownObjectId());
       chart.rebuild();
 

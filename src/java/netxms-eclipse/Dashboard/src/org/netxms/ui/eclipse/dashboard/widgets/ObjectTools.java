@@ -1,5 +1,20 @@
 /**
- * 
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 package org.netxms.ui.eclipse.dashboard.widgets;
 
@@ -11,7 +26,6 @@ import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
-import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.IViewPart;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.objects.AbstractNode;
@@ -27,17 +41,14 @@ import org.netxms.ui.eclipse.objects.ObjectContext;
 import org.netxms.ui.eclipse.objecttools.api.ObjectToolExecutor;
 import org.netxms.ui.eclipse.objecttools.api.ObjectToolsCache;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
-import org.netxms.ui.eclipse.tools.ColorCache;
 import org.netxms.ui.eclipse.tools.ColorConverter;
 
 /**
- * @author victor
- *
+ * "Object tools" dashboard element
  */
 public class ObjectTools extends ElementWidget
 {
    private ObjectToolsConfig config;
-   private ColorCache colorCache;
    
    /**
     * @param parent
@@ -47,8 +58,6 @@ public class ObjectTools extends ElementWidget
    public ObjectTools(DashboardControl parent, DashboardElement element, IViewPart viewPart)
    {
       super(parent, element, viewPart);
-      
-      colorCache = new ColorCache(this);
       
       try
       {
@@ -60,20 +69,12 @@ public class ObjectTools extends ElementWidget
          config = new ObjectToolsConfig();
       }
 
+      processCommonSettings(config);
+
       GridLayout layout = new GridLayout();
       layout.numColumns = config.getNumColumns();
-      setLayout(layout);
-      
-      if (!config.getTitle().isEmpty())
-      {
-         Label title = createTitleLabel(this, config.getTitle());
-         GridData gd = new GridData();
-         gd.grabExcessHorizontalSpace = true;
-         gd.horizontalAlignment = SWT.CENTER;
-         gd.horizontalSpan = layout.numColumns;
-         title.setLayoutData(gd);
-      }
-      
+      getContentArea().setLayout(layout);
+
       if (config.getTools() != null)
       {
          for(Tool t : config.getTools())
@@ -90,7 +91,7 @@ public class ObjectTools extends ElementWidget
     */
    private void createToolButton(final Tool t)
    {
-      Button b = new Button(this, SWT.PUSH | SWT.FLAT);
+      Button b = new Button(getContentArea(), SWT.PUSH | SWT.FLAT);
       b.setText(t.name);
       b.addSelectionListener(new SelectionListener() {
          @Override
@@ -108,7 +109,7 @@ public class ObjectTools extends ElementWidget
       b.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
       if (t.color > 0)
       {
-         b.setBackground(colorCache.create(ColorConverter.rgbFromInt(t.color)));
+         b.setBackground(colors.create(ColorConverter.rgbFromInt(t.color)));
       }
    }
 

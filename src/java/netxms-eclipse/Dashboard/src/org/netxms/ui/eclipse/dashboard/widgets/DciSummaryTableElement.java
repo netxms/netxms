@@ -21,7 +21,6 @@ package org.netxms.ui.eclipse.dashboard.widgets;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.FocusEvent;
 import org.eclipse.swt.events.FocusListener;
-import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.ui.IViewPart;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.DciSummaryTableConfig;
@@ -53,12 +52,9 @@ public class DciSummaryTableElement extends ElementWidget
 			config = new DciSummaryTableConfig();
 		}
 		
-		FillLayout layout = new FillLayout();
-		layout.marginHeight = 0;
-		layout.marginWidth = 0;
-		setLayout(layout);
+      processCommonSettings(config);
 
-		viewer = new SummaryTableWidget(this, SWT.NONE, viewPart, config.getTableId(), config.getBaseObjectId());
+      viewer = new SummaryTableWidget(getContentArea(), SWT.NONE, viewPart, config.getTableId(), config.getBaseObjectId());
       viewer.setShowNumLine(config.getNumRowShown());
 		viewer.setSortColumns(config.getSortingColumnList());
       viewer.getViewer().getControl().addFocusListener(new FocusListener() {

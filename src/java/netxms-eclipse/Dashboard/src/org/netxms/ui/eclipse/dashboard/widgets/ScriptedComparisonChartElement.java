@@ -27,7 +27,6 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.graphics.Point;
-import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.ui.IViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.DataType;
@@ -65,8 +64,6 @@ public abstract class ScriptedComparisonChartElement extends ElementWidget
 	{
 		super(parent, element, viewPart);
       session = ConsoleSharedData.getSession();
-
-		setLayout(new FillLayout());
 
 		addDisposeListener(new DisposeListener() {
          @Override
