@@ -43,7 +43,13 @@ public abstract class DashboardElementConfig
    private String title = ""; //$NON-NLS-1$
 
    @Element(required = false)
-   private boolean showTitle = true;
+   private String titleForeground = null;
+
+   @Element(required = false)
+   private String titleBackground = null;
+
+   @Element(required = false)
+   private int titleFontSize = 0; // Adjustment from standard size
 
 	/**
 	 * Create XML from configuration.
@@ -91,27 +97,59 @@ public abstract class DashboardElementConfig
       this.title = title;
    }
 
-   /**
-    * @return the showTitle
-    */
-   public boolean isShowTitle()
-   {
-      return showTitle;
-   }
-
-   /**
-    * @param showTitle the showTitle to set
-    */
-   public void setShowTitle(boolean showTitle)
-   {
-      this.showTitle = showTitle;
-   }
-
 	/**
-	 * Get list of referenced object IDs
-	 * 
-	 * @return
-	 */
+    * @return the titleForeground
+    */
+   public String getTitleForeground()
+   {
+      return titleForeground;
+   }
+
+   /**
+    * @param titleForeground the titleForeground to set
+    */
+   public void setTitleForeground(String titleForeground)
+   {
+      this.titleForeground = titleForeground;
+   }
+
+   /**
+    * @return the titleBackground
+    */
+   public String getTitleBackground()
+   {
+      return titleBackground;
+   }
+
+   /**
+    * @param titleBackground the titleBackground to set
+    */
+   public void setTitleBackground(String titleBackground)
+   {
+      this.titleBackground = titleBackground;
+   }
+
+   /**
+    * @return the titleFontSize
+    */
+   public int getTitleFontSize()
+   {
+      return titleFontSize;
+   }
+
+   /**
+    * @param titleFontSize the titleFontSize to set
+    */
+   public void setTitleFontSize(int titleFontSize)
+   {
+      this.titleFontSize = titleFontSize;
+   }
+
+   /**
+    * Get list of referenced object IDs
+    * 
+    * @return
+    */
 	public Set<Long> getObjects()
 	{
 		return new HashSet<Long>(0);

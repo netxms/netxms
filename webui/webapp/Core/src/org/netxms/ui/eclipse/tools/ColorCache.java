@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -62,7 +62,7 @@ public class ColorCache implements DisposeListener
 	   display = control.getDisplay();
 		control.addDisposeListener(this);
 	}
-	
+
 	/**
 	 * Create color from RGB object. If already presented in cache, return cached color.
 	 * 
@@ -71,6 +71,8 @@ public class ColorCache implements DisposeListener
 	 */
 	public Color create(RGB rgb)
 	{
+      if (rgb == null)
+         return null;
 		Color color = cache.get(rgb);
 		if (color == null)
 		{

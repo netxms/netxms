@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,9 +29,9 @@ import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.dashboard.Messages;
+import org.netxms.ui.eclipse.dashboard.widgets.TitleConfigurator;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.StatusMapConfig;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
-import org.netxms.ui.eclipse.widgets.LabeledText;
 
 /**
  * Status map element properties
@@ -40,17 +40,17 @@ public class StatusMap extends PropertyPage
 {
 	private StatusMapConfig config;
 	private ObjectSelector objectSelector;
-	private LabeledText title;
+   private TitleConfigurator title;
 	private Button[] checkSeverity;
    private Button checkGroupObjects;
    private Button checkHideObjectsInMaintenance;
 	private Button checkShowFilter;
    private Button checkRadial;
    private Button checkFitToScreen;
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
-	 */
+
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createContents(Composite parent)
 	{
@@ -61,22 +61,20 @@ public class StatusMap extends PropertyPage
 		GridLayout layout = new GridLayout();
 		dialogArea.setLayout(layout);
 		
+      title = new TitleConfigurator(dialogArea, config);
+      GridData gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      title.setLayoutData(gd);
+
 		objectSelector = new ObjectSelector(dialogArea, SWT.NONE, true);
 		objectSelector.setLabel(Messages.get().AlarmViewer_RootObject);
 		objectSelector.setObjectClass(AbstractObject.class);
 		objectSelector.setObjectId(config.getObjectId());
-		GridData gd = new GridData();
+      gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		objectSelector.setLayoutData(gd);
-		
-		title = new LabeledText(dialogArea, SWT.NONE);
-		title.setLabel(Messages.get().AlarmViewer_Title);
-		title.setText(config.getTitle());
-		gd = new GridData();
-		gd.horizontalAlignment = SWT.FILL;
-		gd.grabExcessHorizontalSpace = true;
-		title.setLayoutData(gd);
 		
 		Group severityGroup = new Group(dialogArea, SWT.NONE);
 		severityGroup.setText(Messages.get().StatusMap_SeverityFilter);
@@ -139,8 +137,8 @@ public class StatusMap extends PropertyPage
 	@Override
 	public boolean performOk()
 	{
+      title.updateConfiguration(config);
 		config.setObjectId(objectSelector.getObjectId());
-		config.setTitle(title.getText());
 
 		int severityFilter = 0;
 		for(int i = 0; i < checkSeverity.length; i++)

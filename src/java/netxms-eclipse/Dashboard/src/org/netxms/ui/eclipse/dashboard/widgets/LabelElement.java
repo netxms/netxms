@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -64,10 +64,12 @@ public class LabelElement extends ElementWidget
       getContentArea().setLayout(layout);
       label = new Label(getContentArea(), SWT.CENTER);
 		label.setText(config.getTitle());
-		label.setBackground(ColorConverter.colorFromInt(config.getBackgroundColorAsInt(), colors));
-		label.setForeground(ColorConverter.colorFromInt(config.getForegroundColorAsInt(), colors));
-      getContentArea().setBackground(ColorConverter.colorFromInt(config.getBackgroundColorAsInt(), colors));
-      label.setFont(FontTools.getTitleFont());
+      label.setBackground(colors.create(ColorConverter.parseColorDefinition(config.getTitleBackground())));
+      label.setForeground(colors.create(ColorConverter.parseColorDefinition(config.getTitleForeground())));
+      getContentArea().setBackground(label.getBackground());
+
+      font = FontTools.createAdjustedFont(FontTools.getTitleFont(), config.getTitleFontSize());
+      label.setFont(font);
 
 		addDisposeListener(new DisposeListener() {
 			@Override

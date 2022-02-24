@@ -25,6 +25,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.dialogs.PropertyPage;
+import org.netxms.ui.eclipse.dashboard.widgets.TitleConfigurator;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.ObjectDetailsConfig;
 import org.netxms.ui.eclipse.nxsl.widgets.ScriptEditor;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -32,24 +33,25 @@ import org.netxms.ui.eclipse.widgets.LabeledSpinner;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
 /**
- * Properties for "Object details" dashboard element ("Query" page)
+ * Properties for "Object query" dashboard element ("Query" page)
  */
 public class ObjectDetailsQuery extends PropertyPage
 {
    private ObjectDetailsConfig config;
+   private TitleConfigurator title;
    private ScriptEditor query;
    private LabeledText orderingProperties;
    private LabeledSpinner refreshInterval;
    private LabeledSpinner recordLimit;
-   
-   /* (non-Javadoc)
+
+   /**
     * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
     */
    @Override
    protected Control createContents(Composite parent)
    {
       config = (ObjectDetailsConfig)getElement().getAdapter(ObjectDetailsConfig.class);
-      
+
       Composite dialogArea = new Composite(parent, SWT.NONE);
       GridLayout layout = new GridLayout();
       layout.numColumns = 2;
@@ -57,13 +59,20 @@ public class ObjectDetailsQuery extends PropertyPage
       layout.horizontalSpacing = WidgetHelper.DIALOG_SPACING;
       dialogArea.setLayout(layout);
 
+      title = new TitleConfigurator(dialogArea, config);
+      GridData gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalSpan = 2;
+      title.setLayoutData(gd);
+
       Label label = new Label(dialogArea, SWT.NONE);
       label.setText("Query");
 
       query = new ScriptEditor(dialogArea, SWT.BORDER, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL, true);
       query.setText(config.getQuery());
       
-      GridData gd = new GridData();
+      gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
       gd.grabExcessVerticalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
@@ -93,12 +102,13 @@ public class ObjectDetailsQuery extends PropertyPage
       return dialogArea;
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.preference.PreferencePage#performOk()
     */
    @Override
    public boolean performOk()
    {
+      title.updateConfiguration(config);
       config.setQuery(query.getText());
       config.setRefreshRate(refreshInterval.getSelection());
       config.setOrderingProperties(orderingProperties.getText().trim());

@@ -31,9 +31,9 @@ import org.eclipse.swt.widgets.Scale;
 import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.ui.eclipse.dashboard.Messages;
+import org.netxms.ui.eclipse.dashboard.widgets.TitleConfigurator;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.NetworkMapConfig;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
-import org.netxms.ui.eclipse.widgets.LabeledText;
 
 /**
  * network map element properties
@@ -42,14 +42,14 @@ public class NetworkMap extends PropertyPage
 {
 	private NetworkMapConfig config;
 	private ObjectSelector objectSelector;
-	private LabeledText title;
+   private TitleConfigurator title;
 	private Scale zoomLevelScale;
 	private Spinner zoomLevelSpinner;
 	private Button enableObjectDoubleClick;
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
-	 */
+
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createContents(Composite parent)
 	{
@@ -61,24 +61,22 @@ public class NetworkMap extends PropertyPage
 		layout.numColumns = 2;
 		dialogArea.setLayout(layout);
 		
+      title = new TitleConfigurator(dialogArea, config);
+      GridData gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalSpan = 2;
+      title.setLayoutData(gd);
+
 		objectSelector = new ObjectSelector(dialogArea, SWT.NONE, false);
 		objectSelector.setLabel(Messages.get().NetworkMap_NetworkMap);
 		objectSelector.setObjectClass(org.netxms.client.objects.NetworkMap.class);
 		objectSelector.setObjectId(config.getObjectId());
-		GridData gd = new GridData();
+      gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		gd.horizontalSpan = 2;
 		objectSelector.setLayoutData(gd);
-		
-		title = new LabeledText(dialogArea, SWT.NONE);
-		title.setLabel(Messages.get().NetworkMap_Title);
-		title.setText(config.getTitle());
-		gd = new GridData();
-		gd.horizontalAlignment = SWT.FILL;
-		gd.grabExcessHorizontalSpace = true;
-		gd.horizontalSpan = 2;
-		title.setLayoutData(gd);
 		
 		Label label = new Label(dialogArea, SWT.NONE);
 		label.setText(Messages.get().NetworkMap_ZoomLevel);
@@ -133,14 +131,14 @@ public class NetworkMap extends PropertyPage
 		return dialogArea;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performOk()
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performOk()
+    */
 	@Override
 	public boolean performOk()
 	{
+      title.updateConfiguration(config);
 		config.setObjectId(objectSelector.getObjectId());
-		config.setTitle(title.getText());
 		config.setZoomLevel(zoomLevelSpinner.getSelection());
 		config.setObjectDoubleClickEnabled(enableObjectDoubleClick.getSelection());
 		return true;

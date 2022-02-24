@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,10 +29,10 @@ import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.dashboard.Messages;
+import org.netxms.ui.eclipse.dashboard.widgets.TitleConfigurator;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.ObjectStatusChartConfig;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
-import org.netxms.ui.eclipse.widgets.LabeledText;
 
 /**
  * Availability chart element properties
@@ -41,16 +41,16 @@ public class ObjectStatusChart extends PropertyPage
 {
 	private ObjectStatusChartConfig config;
 	private ObjectSelector objectSelector;
-	private LabeledText title;
+   private TitleConfigurator title;
 	private Spinner refreshRate;
 	private Button checkShowLegend;
 	private Button checkShow3D;
 	private Button checkTransposed;
 	private Button checkTranslucent;
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
-	 */
+
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createContents(Composite parent)
 	{
@@ -72,9 +72,7 @@ public class ObjectStatusChart extends PropertyPage
 		gd.horizontalSpan = 2;
 		objectSelector.setLayoutData(gd);
 		
-		title = new LabeledText(dialogArea, SWT.NONE);
-		title.setLabel(Messages.get().ObjectStatusChart_Title);
-		title.setText(config.getTitle());
+      title = new TitleConfigurator(dialogArea, config);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -116,14 +114,14 @@ public class ObjectStatusChart extends PropertyPage
 		return dialogArea;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performOk()
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performOk()
+    */
 	@Override
 	public boolean performOk()
 	{
+      title.updateConfiguration(config);
 		config.setRootObject(objectSelector.getObjectId());
-		config.setTitle(title.getText());
 		config.setShowLegend(checkShowLegend.getSelection());
 		config.setShowIn3D(checkShow3D.getSelection());
 		config.setTransposed(checkTransposed.getSelection());

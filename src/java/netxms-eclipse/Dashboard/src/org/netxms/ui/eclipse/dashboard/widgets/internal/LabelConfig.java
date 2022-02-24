@@ -28,10 +28,10 @@ import org.simpleframework.xml.core.Persister;
 public class LabelConfig extends DashboardElementConfig
 {
 	@Element(required=false)
-	private String foreground = "0x000000"; //$NON-NLS-1$
+   private String foreground = null;
 
 	@Element(required=false)
-	private String background = "0xFFFFFF"; //$NON-NLS-1$
+   private String background = null;
 
 	/**
 	 * Create label configuration object from XML document
@@ -43,58 +43,20 @@ public class LabelConfig extends DashboardElementConfig
 	public static LabelConfig createFromXml(final String xml) throws Exception
 	{
 		Serializer serializer = new Persister();
-		return serializer.read(LabelConfig.class, xml);
-	}
-	
-	/**
-	 * @return the foreground
-	 */
-	public String getForeground()
-	{
-		return foreground;
-	}
+      LabelConfig config = serializer.read(LabelConfig.class, xml);
+      
+      // Update from old versions
+      if ((config.foreground != null) && config.foreground.startsWith("0x"))
+      {
+         config.setTitleForeground("#" + config.foreground.substring(2));
+         config.foreground = null;
+      }
+      if ((config.background != null) && config.background.startsWith("0x"))
+      {
+         config.setTitleBackground("#" + config.background.substring(2));
+         config.background = null;
+      }
 
-	/**
-	 * @return
-	 */
-	public int getForegroundColorAsInt()
-	{
-		if (foreground.startsWith("0x")) //$NON-NLS-1$
-			return Integer.parseInt(foreground.substring(2), 16);
-		return Integer.parseInt(foreground, 10);
-	}
-
-	/**
-	 * @param foreground the foreground to set
-	 */
-	public void setForeground(String foreground)
-	{
-		this.foreground = foreground;
-	}
-
-	/**
-	 * @return the background
-	 */
-	public String getBackground()
-	{
-		return background;
-	}
-	
-	/**
-	 * @return
-	 */
-	public int getBackgroundColorAsInt()
-	{
-		if (background.startsWith("0x")) //$NON-NLS-1$
-			return Integer.parseInt(background.substring(2), 16);
-		return Integer.parseInt(background, 10);
-	}
-
-	/**
-	 * @param background the background to set
-	 */
-	public void setBackground(String background)
-	{
-		this.background = background;
+      return config;
 	}
 }

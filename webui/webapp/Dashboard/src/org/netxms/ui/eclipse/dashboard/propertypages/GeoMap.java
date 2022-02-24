@@ -29,6 +29,7 @@ import org.netxms.base.GeoLocation;
 import org.netxms.base.GeoLocationFormatException;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.dashboard.Messages;
+import org.netxms.ui.eclipse.dashboard.widgets.TitleConfigurator;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.GeoMapConfig;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
@@ -41,15 +42,15 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
 public class GeoMap extends PropertyPage
 {
 	private GeoMapConfig config;
-	private LabeledText title;
+   private TitleConfigurator title;
 	private LabeledText latitude;
 	private LabeledText longitude;
 	private Spinner zoom;
    private ObjectSelector objectSelector;
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createContents(Composite parent)
 	{
@@ -61,15 +62,13 @@ public class GeoMap extends PropertyPage
 		layout.numColumns = 3;
 		dialogArea.setLayout(layout);
 		
-		title = new LabeledText(dialogArea, SWT.NONE, SWT.BORDER | SWT.MULTI);
-		title.setLabel(Messages.get().GeoMap_Title);
-		title.setText(config.getTitle());
-		GridData gd = new GridData();
-		gd.horizontalAlignment = SWT.FILL;
-		gd.grabExcessHorizontalSpace = true;
-		gd.horizontalSpan = 3;
-		title.setLayoutData(gd);
-		
+      title = new TitleConfigurator(dialogArea, config);
+      GridData gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalSpan = 3;
+      title.setLayoutData(gd);
+
 		latitude = new LabeledText(dialogArea, SWT.NONE);
 		latitude.setLabel(Messages.get().GeoMap_Latitude);
 		latitude.setText(GeoLocation.latitudeToString(config.getLatitude()));
@@ -102,12 +101,13 @@ public class GeoMap extends PropertyPage
 		return dialogArea;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performOk()
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performOk()
+    */
 	@Override
 	public boolean performOk()
 	{
+      title.updateConfiguration(config);
 		try
 		{
 			GeoLocation center = GeoLocation.parseGeoLocation(latitude.getText(), longitude.getText());
@@ -118,7 +118,6 @@ public class GeoMap extends PropertyPage
 		{
 			MessageDialogHelper.openError(getShell(), Messages.get().GeoMap_Error, Messages.get().GeoMap_ErrorText);
 		}
-		config.setTitle(title.getText());
 		config.setZoom(zoom.getSelection());
 		config.setRootObjectId(objectSelector.getObjectId());
 		return true;

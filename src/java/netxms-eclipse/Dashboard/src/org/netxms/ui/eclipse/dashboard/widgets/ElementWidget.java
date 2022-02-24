@@ -35,6 +35,7 @@ import org.eclipse.ui.IViewPart;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementLayout;
+import org.netxms.ui.eclipse.tools.ColorConverter;
 import org.netxms.ui.eclipse.tools.FontTools;
 import org.netxms.ui.eclipse.tools.IntermediateSelectionProvider;
 import org.netxms.ui.eclipse.widgets.DashboardComposite;
@@ -135,7 +136,15 @@ public class ElementWidget extends DashboardComposite implements ControlListener
 
       title = new Label(this, SWT.CENTER);
       title.setText(text.replace("&", "&&"));
-      title.setBackground((backgroundColor != null) ? colors.create(backgroundColor) : getBackground());
+      if (backgroundColor != null)
+      {
+         title.setBackground(colors.create(backgroundColor));
+         setBackground(title.getBackground());
+      }
+      else
+      {
+         title.setBackground(getBackground());
+      }
       if (foregroundColor != null)
          title.setForeground(colors.create(foregroundColor));
       if (titleFont != null)
@@ -156,8 +165,8 @@ public class ElementWidget extends DashboardComposite implements ControlListener
     */
    protected void processCommonSettings(DashboardElementConfig config)
    {
-      if (config.isShowTitle())
-         setTitle(config.getTitle(), null, null, 0);
+      if (!config.getTitle().isEmpty())
+         setTitle(config.getTitle(), ColorConverter.parseColorDefinition(config.getTitleBackground()), ColorConverter.parseColorDefinition(config.getTitleForeground()), config.getTitleFontSize());
    }
 
 	/**
@@ -199,19 +208,16 @@ public class ElementWidget extends DashboardComposite implements ControlListener
 	{
 		this.editMode = editMode;
 		if (editMode)
-		{			
+      {
 			editPane = new EditPaneWidget(this, dbc, element);
 			editPane.setLocation(0,  0);
 			editPane.setSize(getSize());
 			editPane.moveAbove(null);
 		}
-		else
+      else if (editPane != null)
 		{
-			if (editPane != null)
-			{
-				editPane.dispose();
-				editPane = null;
-			}
+         editPane.dispose();
+         editPane = null;
 		}
 	}
 

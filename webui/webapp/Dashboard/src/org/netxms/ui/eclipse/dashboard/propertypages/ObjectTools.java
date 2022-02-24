@@ -43,11 +43,11 @@ import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.ui.eclipse.dashboard.Messages;
 import org.netxms.ui.eclipse.dashboard.dialogs.EditToolDialog;
 import org.netxms.ui.eclipse.dashboard.propertypages.helpers.ToolListLabelProvider;
+import org.netxms.ui.eclipse.dashboard.widgets.TitleConfigurator;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.ObjectToolsConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.ObjectToolsConfig.Tool;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledSpinner;
-import org.netxms.ui.eclipse.widgets.LabeledText;
 
 /**
  * Properties for "Object tools" dashboard element
@@ -55,7 +55,7 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
 public class ObjectTools extends PropertyPage
 {
    private ObjectToolsConfig config;
-   private LabeledText title;
+   private TitleConfigurator title;
    private LabeledSpinner columns;
    private List<Tool> tools;
    private TableViewer viewer;
@@ -63,8 +63,8 @@ public class ObjectTools extends PropertyPage
    private Button deleteButton;
    private Button upButton;
    private Button downButton;
-   
-   /* (non-Javadoc)
+
+   /**
     * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
     */
    @Override
@@ -79,19 +79,17 @@ public class ObjectTools extends PropertyPage
       layout.verticalSpacing = WidgetHelper.INNER_SPACING;
       dialogArea.setLayout(layout);
       
-      title = new LabeledText(dialogArea, SWT.NONE);
-      title.setLabel("Title");
-      title.setText(config.getTitle());
+      title = new TitleConfigurator(dialogArea, config);
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       title.setLayoutData(gd);
-      
+
       columns = new LabeledSpinner(dialogArea, SWT.NONE);
       columns.setLabel("Columns");
       columns.setRange(1, 32);
       columns.setSelection(config.getNumColumns());
-      
+
       Label label = new Label(dialogArea, SWT.NONE);
       label.setText("Tools");
       gd = new GridData();
@@ -121,7 +119,7 @@ public class ObjectTools extends PropertyPage
                tools.add(new Tool(t));
       }
       viewer.setInput(tools.toArray());
-      
+
       Composite buttonsArea = new Composite(dialogArea, SWT.NONE);
       layout = new GridLayout();
       layout.numColumns = 2;
@@ -146,7 +144,7 @@ public class ObjectTools extends PropertyPage
       gd.horizontalAlignment = SWT.LEFT;
       gd.grabExcessHorizontalSpace = true;
       leftButtons.setLayoutData(gd);
-      
+
       upButton = new Button(leftButtons, SWT.PUSH);
       upButton.setText(Messages.get().EmbeddedDashboard_Up);
       RowData rd = new RowData();
@@ -166,7 +164,7 @@ public class ObjectTools extends PropertyPage
          }
       });
       upButton.setEnabled(false);
-      
+
       downButton = new Button(leftButtons, SWT.PUSH);
       downButton.setText(Messages.get().EmbeddedDashboard_Down);
       rd = new RowData();
@@ -314,13 +312,13 @@ public class ObjectTools extends PropertyPage
       }
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.preference.PreferencePage#performOk()
     */
    @Override
    public boolean performOk()
    {
-      config.setTitle(title.getText().trim());
+      title.updateConfiguration(config);
       config.setNumColumns(columns.getSelection());
       config.setTools(tools.toArray(new Tool[tools.size()]));
       return true;
