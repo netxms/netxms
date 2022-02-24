@@ -82,11 +82,6 @@
             <url>http://www.netxms.org/eclipse/zest-rap</url>
             <layout>p2</layout>
         </repository> 
-        <repository>
-            <id>warProducts</id>
-            <url>http://download.eclipse.org/libra/releases</url>
-            <layout>p2</layout>
-        </repository> 
     </repositories> 
 
   <build>
