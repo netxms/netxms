@@ -11,11 +11,13 @@ u32 = uint32(0xF1223344);
 u64 = uint64(0xF122334455667788);
 d = 0.5;
 
-testStrBasic = "1234 you can do it!";
-testStrLong = "1234 you can do it! русские не сдаются 恐怖はマインドキラーです 🍆 🍑 💦 👅 الذي لا يعمل يأكل";
+testStrASCII = "My ASCII brings all the boys to the yard and they're like, it's better than yours";
+testStr = "1234 you can do it! шиндовс где мои смайлики?!";
+testStrByteCount = 67;
 
 // Byte
 bs->writeByte(i8);
+
 
 // Big-endian
 bs->writeInt16B(i16); 
@@ -32,6 +34,7 @@ bs->writeInt16B(u16);
 bs->writeInt32B(u32); 
 bs->writeInt64B(u64);
 
+
 // Little-endian
 bs->writeInt16L(i16); 
 bs->writeInt32L(i32); 
@@ -47,25 +50,31 @@ bs->writeInt16L(u16);
 bs->writeInt32L(u32); 
 bs->writeInt64L(u64);
 
+
 // Strings
+bs->writeString(testStrASCII, "ASCII");
+bs->writeCString(testStrASCII, "ASCII");
+bs->writePString(testStrASCII, "ASCII");
 
-count_s_b = bs->writeString(testStrBasic);
-count_cs_b = bs->writeCString(testStrBasic);
-count_ps_b = bs->writePString(testStrBasic);
+count_s = bs->writeString(testStr, "UTF-8");
+count_cs = bs->writeCString(testStr, "UTF-8");
+count_ps = bs->writePString(testStr, "UTF-8");
 
-bs->writeString(testStrBasic, "ASCII");
-bs->writeCString(testStrBasic, "ASCII");
-bs->writePString(testStrBasic, "ASCII");
+assert(count_s == testStrByteCount);
+assert(count_cs == testStrByteCount + 1);
+assert(count_ps == testStrByteCount + 2);
 
-count_s_l = bs->writeString(testStrLong, "UTF-8");
-count_cs_l = bs->writeCString(testStrLong, "UTF-8");
-count_ps_l = bs->writePString(testStrLong, "UTF-8");
 
-//assert(bs->size  == 689);
+// Extra
+bs->writeInt16B(i16);
+
+
 bs->seek(0);
+
 
 // Byte
 assert(bs->readByte() == i8);
+
 
 // Big-endian
 assert(bs->readInt16B() == i16); 
@@ -82,6 +91,7 @@ assert(bs->readUInt16B() == u16);
 assert(bs->readUInt32B() == u32); 
 assert(bs->readUInt64B() == u64);
 
+
 // Little-endian
 assert(bs->readInt16L() == i16); 
 assert(bs->readInt32L() == i32); 
@@ -97,25 +107,26 @@ assert(bs->readUInt16L() == u16);
 assert(bs->readUInt32L() == u32); 
 assert(bs->readUInt64L() == u64);
 
+
 // Strings
-assert(bs->readString(19) == testStrBasic);
-assert(bs->readCString() == testStrBasic);
-assert(bs->readPString() == testStrBasic);
+assert(bs->readString(81, "ASCII") == testStrASCII);
+assert(bs->readCString("ASCII") == testStrASCII);
+assert(bs->readPString("ASCII") == testStrASCII);
 
-assert(bs->readString(19, "ASCII") == testStrBasic);
-assert(bs->readCString("ASCII") == testStrBasic);
-assert(bs->readPString("ASCII") == testStrBasic);
+assert(bs->readString(testStrByteCount, "UTF-8") == testStr);
+assert(bs->readCString("UTF-8") == testStr);
+assert(bs->readPString("UTF-8") == testStr);
 
-assert(bs->readString(143, "UTF-8") == testStrLong);
-assert(bs->readCString("UTF-8") == testStrLong);
-assert(bs->readPString("UTF-8") == testStrLong);
 
-assert(count_s_b == 19);
-assert(count_cs_b == 20);
-assert(count_ps_b == 21);
+// Extra
+assert(bs->readInt16L() == 0x2211); 
 
-assert(count_s_l == 143);
-assert(count_cs_l == 144);
-assert(count_ps_l == 145);
+controlPos = bs->pos;
+bs->seek(-10);
+assert(bs->pos == controlPos);
+bs->seek(10000, SeekOrigin::Current);
+assert(bs->pos == controlPos);
+bs->seek(10, SeekOrigin::End);
+assert(bs->pos == controlPos);
 
 return 0;

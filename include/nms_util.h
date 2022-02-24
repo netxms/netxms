@@ -2935,8 +2935,12 @@ public:
    static ByteStream *load(const TCHAR *file);
 
    // Move pointer to certain position in buffer
-   void seek(size_t pos) { if (pos <= m_size) m_pos = pos; }
-   // Find first occurrence of a given byte in buffer starting from current position
+   off_t seek(off_t pos, int32_t whence = SEEK_SET);
+
+   /**
+    * Find first occurrence of a given byte in buffer starting from current position
+    * @return Position in the stream. Returns -1 on failure.
+    */
    ssize_t find(BYTE b) 
    { 
       BYTE* p = (BYTE*)memchr(&m_data[m_pos], b, m_size - m_pos);

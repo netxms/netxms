@@ -55,8 +55,33 @@ ByteStream::~ByteStream()
    MemFree(m_data);
 }
 
+off_t ByteStream::seek(off_t pos, int32_t whence)
+{
+   switch (whence)
+   {
+      case SEEK_SET:
+         if (pos > m_size || pos < 0)
+            return -1;
+         m_pos = pos;
+         break;
+      case SEEK_CUR:
+         if (pos + m_pos > m_size || pos + m_pos < 0)
+            return -1;
+         m_pos += pos;
+         break;
+      case SEEK_END:
+         if (pos + m_size > m_size || pos + m_size < 0)
+            return -1;
+         m_pos += pos;
+         break;
+      default:
+         return -1;
+   }
+   return m_pos;
+}
+
 /**
- * Take byte stream buffer (byte stream will became empty)
+ * Take byte stream buffer (byte stream will become empty)
  */
 BYTE *ByteStream::takeBuffer()
 {

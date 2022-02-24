@@ -402,6 +402,9 @@ void NXSL_Environment::configureVM(NXSL_VM *vm)
 NXSL_Value *NXSL_Environment::getConstantValue(const NXSL_Identifier& name, NXSL_ValueManager *vm)
 {
    NXSL_ENV_CONSTANT("NXSL::BuildTag", NETXMS_BUILD_TAG);
+   NXSL_ENV_CONSTANT("SeekOrigin::Begin", SEEK_SET);
+   NXSL_ENV_CONSTANT("SeekOrigin::Current", SEEK_CUR);
+   NXSL_ENV_CONSTANT("SeekOrigin::End", SEEK_END);
 #if WORDS_BIGENDIAN
    NXSL_ENV_CONSTANT("NXSL::SystemIsBigEndian", 1);
 #else

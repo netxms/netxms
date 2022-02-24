@@ -29,16 +29,19 @@
 NXSL_ByteStreamClass LIBNXSL_EXPORTABLE g_nxslByteStreamClass;
 
 /**
- * ByteStream::seek(position) method
+ * ByteStream::seek(position, [whence]) method
  */
 NXSL_METHOD_DEFINITION(ByteStream, seek)
 {
-   if (!argv[0]->isInteger())
+   if (argc < 1 || argc > 2)
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+   if (!argv[0]->isInteger() || (argc > 1 && !argv[1]->isInteger()))
       return NXSL_ERR_NOT_INTEGER;
 
    ByteStream* bs = static_cast<ByteStream*>(object->getData());
-   bs->seek(argv[0]->getValueAsInt32());
-   *result = vm->createValue();
+   *result = vm->createValue(bs->seek(
+      argv[0]->getValueAsInt64(),
+      argc > 1 ? argv[1]->getValueAsInt32() : SEEK_SET));
    return 0;
 }
 
@@ -373,7 +376,7 @@ NXSL_METHOD_DEFINITION(ByteStream, writeString)
 {
    if (argc < 1 || argc > 2)
       return NXSL_ERR_INVALID_ARGUMENT_COUNT;
-   if (!argv[0]->isString() || (argc > 2 && !argv[2]->isString() && !argv[2]->isNull()))
+   if (!argv[0]->isString() || (argc > 1 && !argv[1]->isString() && !argv[1]->isNull()))
       return NXSL_ERR_NOT_STRING;
 
    ByteStream* bs = static_cast<ByteStream*>(object->getData());
@@ -381,10 +384,10 @@ NXSL_METHOD_DEFINITION(ByteStream, writeString)
    const WCHAR* str = argv[0]->getValueAsString(&len);
    ssize_t count = bs->writeString(
       str,
-      argc > 2 ? argv[2]->getValueAsMBString() : nullptr,
+      argc > 1 ? argv[1]->getValueAsMBString() : nullptr,
       len, false, false);
 
-   *result = vm->createValue(count);
+   *result = vm->createValue(static_cast<int64_t>(count));
    return 0;
 }
 
@@ -406,7 +409,7 @@ NXSL_METHOD_DEFINITION(ByteStream, writeCString)
       argc > 1 ? argv[1]->getValueAsMBString() : nullptr,
       len, false, true);
 
-   *result = vm->createValue(count);
+   *result = vm->createValue(static_cast<int64_t>(count));
    return 0;
 }
 
@@ -428,7 +431,7 @@ NXSL_METHOD_DEFINITION(ByteStream, writePString)
       argc > 1 ? argv[1]->getValueAsMBString() : nullptr,
       len, true, false);
 
-   *result = vm->createValue(count);
+   *result = vm->createValue(static_cast<int64_t>(count));
    return 0;
 }
 
@@ -440,7 +443,7 @@ NXSL_ByteStreamClass::NXSL_ByteStreamClass()
 {
    setName(_T("ByteStream"));
 
-   NXSL_REGISTER_METHOD(ByteStream, seek, 1);
+   NXSL_REGISTER_METHOD(ByteStream, seek, -1);
 
    // Read
    NXSL_REGISTER_METHOD(ByteStream, readByte, 0);
@@ -491,7 +494,7 @@ NXSL_ByteStreamClass::~NXSL_ByteStreamClass()
 }
 
 /**
- * Implementation of "TableRow" class: get attribute
+ * Implementation of "ByteStreamClass" class: get attribute
  */
 NXSL_Value* NXSL_ByteStreamClass::getAttr(NXSL_Object* object, const NXSL_Identifier& attr)
 {
@@ -503,11 +506,11 @@ NXSL_Value* NXSL_ByteStreamClass::getAttr(NXSL_Object* object, const NXSL_Identi
    ByteStream* bs = static_cast<ByteStream*>(object->getData());
    if (NXSL_COMPARE_ATTRIBUTE_NAME("size"))
    {
-      value = vm->createValue(bs->size());
+      value = vm->createValue(static_cast<int64_t>(bs->size()));
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("pos"))
    {
-      value = vm->createValue(bs->pos());
+      value = vm->createValue(static_cast<int64_t>(bs->pos()));
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("eos"))
    {
