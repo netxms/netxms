@@ -31,6 +31,7 @@ import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.dashboard.Messages;
+import org.netxms.ui.eclipse.dashboard.widgets.TitleConfigurator;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.AbstractChartConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.BarChartConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.ComparisonChartConfig;
@@ -46,7 +47,6 @@ import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
 import org.netxms.ui.eclipse.perfview.widgets.YAxisRangeEditor;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledSpinner;
-import org.netxms.ui.eclipse.widgets.LabeledText;
 
 /**
  * Generic chart properties
@@ -54,12 +54,11 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
 public class AbstractChart extends PropertyPage
 {
 	private AbstractChartConfig config;
-	private LabeledText title;
+   private TitleConfigurator title;
 	private Spinner timeRange;
 	private Combo timeUnits;
 	private LabeledSpinner refreshRate;
 	private Combo legendPosition;
-	private Button checkShowTitle;
 	private Button checkShowLegend;
    private Button checkExtendedLegend;
 	private Button checkShowGrid;
@@ -89,9 +88,7 @@ public class AbstractChart extends PropertyPage
 		layout.makeColumnsEqualWidth = false;
 		dialogArea.setLayout(layout);
 		
-		title = new LabeledText(dialogArea, SWT.NONE);
-		title.setLabel(Messages.get().AbstractChart_Title);
-		title.setText(config.getTitle());
+      title = new TitleConfigurator(dialogArea, config);
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -115,14 +112,6 @@ public class AbstractChart extends PropertyPage
 		GridLayout optionsLayout = new GridLayout();
 		optionsGroup.setLayout(optionsLayout);
 
-		checkShowTitle = new Button(optionsGroup, SWT.CHECK);
-		checkShowTitle.setText(Messages.get().AbstractChart_ShowTitle);
-		checkShowTitle.setSelection(config.isShowTitle());
-		gd = new GridData();
-		gd.horizontalAlignment = SWT.FILL;
-		gd.grabExcessHorizontalSpace = true;
-		checkShowTitle.setLayoutData(gd);
-		
 		checkShowLegend = new Button(optionsGroup, SWT.CHECK);
 		checkShowLegend.setText(Messages.get().AbstractChart_ShowLegend);
 		checkShowLegend.setSelection(config.isShowLegend());
@@ -328,9 +317,8 @@ public class AbstractChart extends PropertyPage
 	@Override
 	public boolean performOk()
 	{
-		config.setTitle(title.getText());
+      title.updateConfiguration(config);
 		config.setLegendPosition(1 << legendPosition.getSelectionIndex());
-		config.setShowTitle(checkShowTitle.getSelection());
 		config.setShowLegend(checkShowLegend.getSelection());
 		config.setRefreshRate(refreshRate.getSelection());
       config.setTranslucent(checkTranslucent.getSelection());

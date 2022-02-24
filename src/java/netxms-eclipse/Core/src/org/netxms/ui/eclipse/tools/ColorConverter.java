@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -438,6 +438,8 @@ public class ColorConverter
 	 */
 	public static String rgbToCss(RGB rgb)
 	{
+      if (rgb == null)
+         return null;
 	   String name = colorValues.get(rgb);
 	   if (name != null)
 	      return name;
@@ -510,11 +512,11 @@ public class ColorConverter
 	}
 	
    /**
-    * Select black or white color depending on given background.
+    * Select text color based on background color.
     *
     * @param color background color
     * @param cache color cache
-    * @return color for text suitable for given background
+    * @return proposed text color
     */
 	public static Color selectTextColorByBackgroundColor(Color color, ColorCache cache)
 	{

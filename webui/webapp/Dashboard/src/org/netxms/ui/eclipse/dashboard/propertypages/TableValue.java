@@ -27,10 +27,10 @@ import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.ui.eclipse.dashboard.Messages;
+import org.netxms.ui.eclipse.dashboard.widgets.TitleConfigurator;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.TableValueConfig;
 import org.netxms.ui.eclipse.datacollection.widgets.DciSelector;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
-import org.netxms.ui.eclipse.widgets.LabeledText;
 
 /**
  * Table last value element properties
@@ -39,12 +39,12 @@ public class TableValue extends PropertyPage
 {
 	private TableValueConfig config;
 	private DciSelector dciSelector;
-	private LabeledText title;
+   private TitleConfigurator title;
 	private Spinner refreshRate;
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
-	 */
+
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createContents(Composite parent)
 	{
@@ -55,22 +55,20 @@ public class TableValue extends PropertyPage
 		GridLayout layout = new GridLayout();
 		dialogArea.setLayout(layout);
 		
+      title = new TitleConfigurator(dialogArea, config);
+      GridData gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      title.setLayoutData(gd);
+
 		dciSelector = new DciSelector(dialogArea, SWT.NONE, true);
 		dciSelector.setLabel(Messages.get().TableValue_Table);
 		dciSelector.setDcObjectType(DataCollectionObject.DCO_TYPE_TABLE);
 		dciSelector.setDciId(config.getObjectId(), config.getDciId());
-		GridData gd = new GridData();
+      gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		dciSelector.setLayoutData(gd);
-		
-		title = new LabeledText(dialogArea, SWT.NONE);
-		title.setLabel(Messages.get().AlarmViewer_Title);
-		title.setText(config.getTitle());
-		gd = new GridData();
-		gd.horizontalAlignment = SWT.FILL;
-		gd.grabExcessHorizontalSpace = true;
-		title.setLayoutData(gd);
 		
 		gd = new GridData();
 		gd.verticalAlignment = SWT.TOP;
@@ -82,15 +80,15 @@ public class TableValue extends PropertyPage
 		return dialogArea;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performOk()
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performOk()
+    */
 	@Override
 	public boolean performOk()
 	{
+      title.updateConfiguration(config);
 		config.setObjectId(dciSelector.getNodeId());
 		config.setDciId(dciSelector.getDciId());
-		config.setTitle(title.getText());
 		config.setRefreshRate(refreshRate.getSelection());
 		return true;
 	}

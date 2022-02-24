@@ -31,6 +31,7 @@ import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.dashboard.Messages;
+import org.netxms.ui.eclipse.dashboard.widgets.TitleConfigurator;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.TableBarChartConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.TableComparisonChartConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.TablePieChartConfig;
@@ -39,7 +40,6 @@ import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
 import org.netxms.ui.eclipse.perfview.widgets.YAxisRangeEditor;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
-import org.netxms.ui.eclipse.widgets.LabeledText;
 
 /**
  * Table comparison chart properties
@@ -47,10 +47,9 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
 public class TableComparisonChart extends PropertyPage
 {
 	private TableComparisonChartConfig config;
-	private LabeledText title;
+   private TitleConfigurator title;
 	private Spinner refreshRate;
 	private Combo legendPosition;
-	private Button checkShowTitle;
 	private Button checkShowLegend;
    private Button checkExtendedLegend;
 	private Button checkTranslucent;
@@ -58,9 +57,9 @@ public class TableComparisonChart extends PropertyPage
    private YAxisRangeEditor yAxisRange;
    private ObjectSelector drillDownObject;
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createContents(Composite parent)
 	{
@@ -73,15 +72,13 @@ public class TableComparisonChart extends PropertyPage
 		layout.makeColumnsEqualWidth = true;
 		dialogArea.setLayout(layout);
 		
-		title = new LabeledText(dialogArea, SWT.NONE);
-		title.setLabel(Messages.get().TableComparisonChart_Title);
-		title.setText(config.getTitle());
-		GridData gd = new GridData();
-		gd.horizontalAlignment = SWT.FILL;
-		gd.grabExcessHorizontalSpace = true;
-		gd.horizontalSpan = 2;
-		title.setLayoutData(gd);
-		
+      title = new TitleConfigurator(dialogArea, config);
+      GridData gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalSpan = 2;
+      title.setLayoutData(gd);
+
 		legendPosition = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, Messages.get().TableComparisonChart_LegendPosition, WidgetHelper.DEFAULT_LAYOUT_DATA);
 		legendPosition.add(Messages.get().TableComparisonChart_Left);
 		legendPosition.add(Messages.get().TableComparisonChart_Right);
@@ -99,14 +96,6 @@ public class TableComparisonChart extends PropertyPage
 		GridLayout optionsLayout = new GridLayout();
 		optionsGroup.setLayout(optionsLayout);
 
-		checkShowTitle = new Button(optionsGroup, SWT.CHECK);
-		checkShowTitle.setText(Messages.get().TableComparisonChart_ShowTitle);
-		checkShowTitle.setSelection(config.isShowTitle());
-		gd = new GridData();
-		gd.horizontalAlignment = SWT.FILL;
-		gd.grabExcessHorizontalSpace = true;
-		checkShowTitle.setLayoutData(gd);
-		
 		checkShowLegend = new Button(optionsGroup, SWT.CHECK);
 		checkShowLegend.setText(Messages.get().TableComparisonChart_ShowLegend);
 		checkShowLegend.setSelection(config.isShowLegend());
@@ -149,7 +138,7 @@ public class TableComparisonChart extends PropertyPage
 		refreshRate = WidgetHelper.createLabeledSpinner(dialogArea, SWT.BORDER, Messages.get().TableComparisonChart_RefreshInterval, 1, 10000, gd);
 		refreshRate.setSelection(config.getRefreshRate());
 		
-		if(!(config instanceof TablePieChartConfig))
+      if (!(config instanceof TablePieChartConfig))
       {
          yAxisRange = new YAxisRangeEditor(dialogArea, SWT.NONE);
          gd = new GridData();
@@ -195,16 +184,15 @@ public class TableComparisonChart extends PropertyPage
 		return 0;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performOk()
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performOk()
+    */
 	@Override
 	public boolean performOk()
 	{
-		config.setTitle(title.getText());
+      title.updateConfiguration(config);
 		config.setLegendPosition(1 << legendPosition.getSelectionIndex());
 		config.setRefreshRate(refreshRate.getSelection());
-		config.setShowTitle(checkShowTitle.getSelection());
 		config.setShowLegend(checkShowLegend.getSelection());
       config.setExtendedLegend(checkExtendedLegend.getSelection());
 		config.setTranslucent(checkTranslucent.getSelection());	

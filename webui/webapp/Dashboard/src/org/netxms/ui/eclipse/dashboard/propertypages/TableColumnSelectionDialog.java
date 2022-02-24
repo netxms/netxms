@@ -15,7 +15,6 @@ import org.eclipse.swt.widgets.Shell;
 
 public class TableColumnSelectionDialog  extends Dialog
 {
-
    private TableViewer columnNames;
    private String valuesArray[];
    private String selectedName;
@@ -25,8 +24,8 @@ public class TableColumnSelectionDialog  extends Dialog
       super(parentShell);
       this.valuesArray = valuesArray;
    }
-   
-   /* (non-Javadoc)
+
+   /**
     * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
     */
    @Override
@@ -50,7 +49,6 @@ public class TableColumnSelectionDialog  extends Dialog
       columnNames.setContentProvider(new ArrayContentProvider());
       columnNames.setInput(valuesArray);
       columnNames.addSelectionChangedListener(new ISelectionChangedListener() {
-         
          @Override
          public void selectionChanged(SelectionChangedEvent event)
          {

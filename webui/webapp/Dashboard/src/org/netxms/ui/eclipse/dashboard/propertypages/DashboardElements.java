@@ -113,17 +113,16 @@ public class DashboardElements extends PropertyPage
       gridData.horizontalAlignment = SWT.LEFT;
       gridData.horizontalSpan = 2;
       columnCount.setLayoutData(gridData);
-      
+
       final String[] columnNames = { Messages.get().DashboardElements_Type, Messages.get().DashboardElements_Span, "Height" };
       final int[] columnWidths = { 150, 60, 90 };
-      viewer = new SortableTableViewer(dialogArea, columnNames, columnWidths, 0, SWT.UP,
-                                       SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
+      viewer = new SortableTableViewer(dialogArea, columnNames, columnWidths, 0, SWT.UP, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setLabelProvider(new DashboardElementsLabelProvider());
-      
+
       elements = copyElements(object.getElements());
       viewer.setInput(elements.toArray());
-      
+
       gridData = new GridData();
       gridData.verticalAlignment = GridData.FILL;
       gridData.grabExcessVerticalSpace = true;

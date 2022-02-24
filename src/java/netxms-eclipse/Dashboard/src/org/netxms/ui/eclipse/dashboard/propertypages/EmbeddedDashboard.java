@@ -47,6 +47,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Dashboard;
 import org.netxms.ui.eclipse.dashboard.Messages;
+import org.netxms.ui.eclipse.dashboard.widgets.TitleConfigurator;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.EmbeddedDashboardConfig;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -59,6 +60,7 @@ public class EmbeddedDashboard extends PropertyPage
 {
 	private EmbeddedDashboardConfig config;
 	private List<AbstractObject> dashboardObjects;
+   private TitleConfigurator title;
 	private TableViewer viewer;
 	private Button addButton;
 	private Button deleteButton;
@@ -67,23 +69,29 @@ public class EmbeddedDashboard extends PropertyPage
 	private Scale refreshIntervalScale;
 	private Spinner refreshIntervalSpinner;
 	
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createContents(Composite parent)
 	{
 		config = (EmbeddedDashboardConfig)getElement().getAdapter(EmbeddedDashboardConfig.class);
 		
 		Composite dialogArea = new Composite(parent, SWT.NONE);
-		
+
 		GridLayout layout = new GridLayout();
 		layout.numColumns = 2;
 		dialogArea.setLayout(layout);
-		
+
+      title = new TitleConfigurator(dialogArea, config);
+      GridData gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      title.setLayoutData(gd);
+
 		Label label = new Label(dialogArea, SWT.NONE);
 		label.setText(Messages.get().EmbeddedDashboard_Dashboards);
-		GridData gd = new GridData();
+      gd = new GridData();
 		gd.horizontalAlignment = SWT.LEFT;
 		gd.grabExcessHorizontalSpace = true;
 		gd.horizontalSpan = 2;
@@ -345,12 +353,13 @@ public class EmbeddedDashboard extends PropertyPage
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performOk()
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performOk()
+    */
 	@Override
 	public boolean performOk()
 	{
+      title.updateConfiguration(config);
 		long[] idList = new long[dashboardObjects.size()];
 		for(int i = 0; i < dashboardObjects.size(); i++)
 			idList[i] = dashboardObjects.get(i).getObjectId();

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,6 +25,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.ui.eclipse.dashboard.Messages;
+import org.netxms.ui.eclipse.dashboard.widgets.TitleConfigurator;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.WebPageConfig;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
@@ -35,11 +36,11 @@ public class WebPage extends PropertyPage
 {
 	private WebPageConfig config;
 	private LabeledText url;
-	private LabeledText title;
+   private TitleConfigurator title;
 	
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createContents(Composite parent)
 	{
@@ -50,33 +51,31 @@ public class WebPage extends PropertyPage
 		GridLayout layout = new GridLayout();
 		dialogArea.setLayout(layout);
 		
+      title = new TitleConfigurator(dialogArea, config);
+      GridData gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      title.setLayoutData(gd);
+
 		url = new LabeledText(dialogArea, SWT.NONE);
 		url.setLabel(Messages.get().WebPage_URL);
 		url.setText(config.getUrl());
-		GridData gd = new GridData();
+      gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		url.setLayoutData(gd);
 
-		title = new LabeledText(dialogArea, SWT.NONE);
-		title.setLabel(Messages.get().WebPage_Title);
-		title.setText(config.getTitle());
-		gd = new GridData();
-		gd.horizontalAlignment = SWT.FILL;
-		gd.grabExcessHorizontalSpace = true;
-		title.setLayoutData(gd);
-
 		return dialogArea;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performOk()
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performOk()
+    */
 	@Override
 	public boolean performOk()
 	{
+      title.updateConfiguration(config);
 		config.setUrl(url.getText());
-		config.setTitle(title.getText());
 		return true;
 	}
 }

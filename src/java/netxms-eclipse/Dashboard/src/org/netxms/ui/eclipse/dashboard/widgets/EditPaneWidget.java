@@ -42,13 +42,13 @@ import org.netxms.ui.eclipse.dashboard.Messages;
 public class EditPaneWidget extends Canvas implements PaintListener
 {
 	private static final Color BACKGROUND_COLOR = new Color(Display.getCurrent(), 0, 0, 127);
-	
+
 	private DashboardControl dbc;
 	private DashboardElement element;
 	private Action actionEdit;
 	private Action actionEditXml;
 	private Action actionDelete;
-	
+
 	/**
 	 * @param parent
 	 */
@@ -62,9 +62,9 @@ public class EditPaneWidget extends Canvas implements PaintListener
 		createPopupMenu();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.swt.events.PaintListener#paintControl(org.eclipse.swt.events.PaintEvent)
-	 */
+   /**
+    * @see org.eclipse.swt.events.PaintListener#paintControl(org.eclipse.swt.events.PaintEvent)
+    */
 	@Override
 	public void paintControl(PaintEvent e)
 	{
@@ -74,7 +74,7 @@ public class EditPaneWidget extends Canvas implements PaintListener
 		gc.setAlpha(20);
 		gc.fillRectangle(0, 0, size.x, size.y);
 	}
-	
+
 	/**
 	 * Create actions
 	 */
@@ -127,7 +127,7 @@ public class EditPaneWidget extends Canvas implements PaintListener
 		Menu menu = menuMgr.createContextMenu(this);
 		setMenu(menu);
 	}
-	
+
 	/**
 	 * Fill context menu
 	 * @param mgr Menu manager

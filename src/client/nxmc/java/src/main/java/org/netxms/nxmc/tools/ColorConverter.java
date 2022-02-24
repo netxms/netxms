@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -438,13 +438,15 @@ public class ColorConverter
 	 */
 	public static String rgbToCss(RGB rgb)
 	{
+      if (rgb == null)
+         return null;
 	   String name = colorValues.get(rgb);
 	   if (name != null)
 	      return name;
 	   int v = rgbToInt(rgb); // value is in BGR format
 	   return String.format("#%02x%02x%02x", v & 0xFF, (v >> 8) & 0xFF, v >> 16);
 	}
-	
+
 	/**
 	 * Parse CSS compatible color definition
 	 * 
@@ -455,7 +457,7 @@ public class ColorConverter
 	{
 	   if ((cdef == null) || cdef.isEmpty())
 	      return null;
-	   
+
 	   if (cdef.startsWith("0x"))
       {
          try
@@ -468,7 +470,7 @@ public class ColorConverter
             return null;
          }
       }
-	   
+
       if (cdef.charAt(0) == '#')
       {
          try

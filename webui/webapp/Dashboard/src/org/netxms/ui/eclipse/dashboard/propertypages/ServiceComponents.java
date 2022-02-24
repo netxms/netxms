@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2017 Raden Solutions
+ * Copyright (C) 2003-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,12 +37,12 @@ import org.netxms.client.maps.MapLayoutAlgorithm;
 import org.netxms.client.maps.MapObjectDisplayMode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.NetworkMap;
+import org.netxms.ui.eclipse.dashboard.widgets.TitleConfigurator;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.ServiceComponentsConfig;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
 import org.netxms.ui.eclipse.tools.ColorConverter;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
-import org.netxms.ui.eclipse.widgets.LabeledText;
 
 /**
  * Service component map properties
@@ -51,7 +51,7 @@ public class ServiceComponents extends PropertyPage
 {
    private ServiceComponentsConfig config;
    private ObjectSelector objectSelector;
-   private LabeledText title;
+   private TitleConfigurator title;
    private Scale zoomLevelScale;
    private Spinner zoomLevelSpinner;
    private Button enableObjectDoubleClick;
@@ -65,36 +65,37 @@ public class ServiceComponents extends PropertyPage
    private Button radioColorCustom;
    private ColorSelector linkColor;
 
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
+    */
    @Override
    protected Control createContents(Composite parent)
    {
       config = (ServiceComponentsConfig)getElement().getAdapter(ServiceComponentsConfig.class);
-      
+
       Composite dialogArea = new Composite(parent, SWT.NONE);
       
       GridLayout layout = new GridLayout();
       layout.numColumns = 2;
       dialogArea.setLayout(layout);
       
+      title = new TitleConfigurator(dialogArea, config);
+      GridData gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalSpan = 2;
+      title.setLayoutData(gd);
+
       objectSelector = new ObjectSelector(dialogArea, SWT.NONE, false);
       objectSelector.setLabel("Container");
       objectSelector.setClassFilter(ObjectSelectionDialog.createContainerSelectionFilter());
       objectSelector.setObjectClass(AbstractObject.class);
       objectSelector.setObjectId(config.getObjectId());
-      GridData gd = new GridData();
-      gd.horizontalAlignment = SWT.FILL;
-      gd.grabExcessHorizontalSpace = true;
-      gd.horizontalSpan = 2;
-      objectSelector.setLayoutData(gd);
-      
-      title = new LabeledText(dialogArea, SWT.NONE);
-      title.setLabel("Title");
-      title.setText(config.getTitle());
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalSpan = 2;
-      title.setLayoutData(gd);
+      objectSelector.setLayoutData(gd);
       
       Label label = new Label(dialogArea, SWT.NONE);
       label.setText("Zoom level (%)");
@@ -251,14 +252,14 @@ public class ServiceComponents extends PropertyPage
       return dialogArea;
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.preference.PreferencePage#performOk()
     */
    @Override
    public boolean performOk()
    {
+      title.updateConfiguration(config);
       config.setObjectId(objectSelector.getObjectId());
-      config.setTitle(title.getText());
       config.setZoomLevel(zoomLevelSpinner.getSelection());
       config.setObjectDoubleClickEnabled(enableObjectDoubleClick.getSelection());
       config.setObjectDisplayMode(MapObjectDisplayMode.getByValue(objectDisplayMode.getSelectionIndex()));
@@ -282,5 +283,4 @@ public class ServiceComponents extends PropertyPage
          config.setDefaultLinkColor(ColorConverter.rgbToInt(linkColor.getColorValue()));
       return true;
    }
-
 }

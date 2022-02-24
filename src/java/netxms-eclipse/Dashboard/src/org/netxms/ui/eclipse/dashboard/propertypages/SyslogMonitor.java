@@ -25,15 +25,15 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.ui.eclipse.dashboard.widgets.TitleConfigurator;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.SyslogMonitorConfig;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
-import org.netxms.ui.eclipse.widgets.LabeledText;
 
 public class SyslogMonitor extends PropertyPage
 {
    private SyslogMonitorConfig config;
    private ObjectSelector objectSelector;
-   private LabeledText title;
+   private TitleConfigurator title;
 
    @Override
    protected Control createContents(Composite parent)
@@ -45,37 +45,32 @@ public class SyslogMonitor extends PropertyPage
       GridLayout layout = new GridLayout();
       dialogArea.setLayout(layout);
 
-      objectSelector = new ObjectSelector(dialogArea, SWT.NONE, true);
-      objectSelector.setLabel("Root object");
-      objectSelector.setObjectClass(AbstractObject.class);
-      objectSelector.setObjectId(config.getObjectId());
+      title = new TitleConfigurator(dialogArea, config);
       GridData gd = new GridData();
-      gd.horizontalAlignment = SWT.FILL;
-      gd.grabExcessHorizontalSpace = true;
-      objectSelector.setLayoutData(gd);
-
-      title = new LabeledText(dialogArea, SWT.NONE);
-      title.setLabel("Title");
-      title.setText(config.getTitle());
-      gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       title.setLayoutData(gd);
 
+      objectSelector = new ObjectSelector(dialogArea, SWT.NONE, true);
+      objectSelector.setLabel("Root object");
+      objectSelector.setObjectClass(AbstractObject.class);
+      objectSelector.setObjectId(config.getObjectId());
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      objectSelector.setLayoutData(gd);
+
       return dialogArea;
    }
 
-   /*
-    * (non-Javadoc)
-    * 
+   /**
     * @see org.eclipse.jface.preference.PreferencePage#performOk()
     */
    @Override
    public boolean performOk()
    {
+      title.updateConfiguration(config);
       config.setObjectId(objectSelector.getObjectId());
-      config.setTitle(title.getText());
-
       return true;
    }
 }

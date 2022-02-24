@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2017 Raden Solutions
+ * Copyright (C) 2003-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,18 +21,17 @@ package org.netxms.ui.eclipse.dashboard.propertypages;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.dashboard.propertypages.helpers.RackView;
+import org.netxms.ui.eclipse.dashboard.widgets.TitleConfigurator;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.RackDiagramConfig;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
-import org.netxms.ui.eclipse.widgets.LabeledText;
 
 /**
  * Rack diagram element properties
@@ -40,27 +39,26 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
 public class RackDiagram extends PropertyPage
 {
    private final static String[] RACK_VIEWS = { "Full", "Front", "Back" };
-   
+
    private RackDiagramConfig config;
    private ObjectSelector objectSelector;
-   private LabeledText title;
-   private Button showTitle;
+   private TitleConfigurator title;
    private Combo view;
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
     */
    @Override
    protected Control createContents(Composite parent)
    {
       config = (RackDiagramConfig)getElement().getAdapter(RackDiagramConfig.class);
-      
+
       Composite dialogArea = new Composite(parent, SWT.NONE);
-      
+
       GridLayout layout = new GridLayout();
       layout.numColumns = 2;
       dialogArea.setLayout(layout);
-      
+
       objectSelector = new ObjectSelector(dialogArea, SWT.NONE, false);
       objectSelector.setLabel("Rack");
       objectSelector.setClassFilter(ObjectSelectionDialog.createRackSelectionFilter());
@@ -71,10 +69,8 @@ public class RackDiagram extends PropertyPage
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalSpan = 2;
       objectSelector.setLayoutData(gd);
-      
-      title = new LabeledText(dialogArea, SWT.NONE);
-      title.setLabel("Title");
-      title.setText(config.getTitle());
+
+      title = new TitleConfigurator(dialogArea, config);
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
@@ -89,25 +85,17 @@ public class RackDiagram extends PropertyPage
       view.setItems(RACK_VIEWS); 
       view.setText(RACK_VIEWS[config.getView().getValue()]);
       
-      showTitle = new Button(dialogArea, SWT.CHECK);
-      showTitle.setText("Show title");
-      showTitle.setSelection(config.isShowTitle());
-      gd = new GridData();
-      gd.horizontalAlignment = SWT.FILL;
-      showTitle.setLayoutData(gd);
-      
       return dialogArea;
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.preference.PreferencePage#performOk()
     */
    @Override
    public boolean performOk()
    {
+      title.updateConfiguration(config);
       config.setObjectId(objectSelector.getObjectId());
-      config.setTitle(title.getText());
-      config.setShowTitle(showTitle.getSelection());
       config.setView(RackView.getByValue(view.getSelectionIndex()));
       return true;
    }

@@ -54,7 +54,7 @@ public class EditToolDialog extends Dialog
       this.tool = tool;
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
     */
    @Override
@@ -63,8 +63,8 @@ public class EditToolDialog extends Dialog
       super.configureShell(newShell);
       newShell.setText("Edit Tool");
    }
-   
-   /* (non-Javadoc)
+
+   /**
     * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
     */
    @Override
@@ -86,7 +86,7 @@ public class EditToolDialog extends Dialog
       gd.grabExcessHorizontalSpace = true;
       gd.widthHint = 350;
       name.setLayoutData(gd);
-      
+
       Composite colorSelectionArea = new Composite(dialogArea, SWT.NONE);
       layout = new GridLayout();
       layout.marginWidth = 0;
@@ -97,10 +97,10 @@ public class EditToolDialog extends Dialog
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = false;
       colorSelectionArea.setLayoutData(gd);
-      
+
       Label label = new Label(colorSelectionArea, SWT.NONE);
       label.setText("Color");
-      
+
       colorSelector = new ColorSelector(colorSelectionArea);
       colorSelector.setColorValue(ColorConverter.rgbFromInt(tool.color));
 

@@ -26,6 +26,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.dashboard.Messages;
+import org.netxms.ui.eclipse.dashboard.widgets.TitleConfigurator;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.PortViewConfig;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
 
@@ -35,26 +36,33 @@ import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
 public class PortView extends PropertyPage
 {
 	private PortViewConfig config;
+   private TitleConfigurator title;
 	private ObjectSelector objectSelector;
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
-	 */
+
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createContents(Composite parent)
 	{
 		config = (PortViewConfig)getElement().getAdapter(PortViewConfig.class);
 		
 		Composite dialogArea = new Composite(parent, SWT.NONE);
-		
+
 		GridLayout layout = new GridLayout();
 		dialogArea.setLayout(layout);
-		
+
+      title = new TitleConfigurator(dialogArea, config);
+      GridData gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      title.setLayoutData(gd);
+
 		objectSelector = new ObjectSelector(dialogArea, SWT.NONE, true);
 		objectSelector.setLabel(Messages.get().AlarmViewer_RootObject);
 		objectSelector.setObjectClass(AbstractObject.class);
 		objectSelector.setObjectId(config.getRootObjectId());
-		GridData gd = new GridData();
+      gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		objectSelector.setLayoutData(gd);
@@ -62,12 +70,13 @@ public class PortView extends PropertyPage
 		return dialogArea;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performOk()
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performOk()
+    */
 	@Override
 	public boolean performOk()
 	{
+      title.updateConfiguration(config);
 		config.setRootObjectId(objectSelector.getObjectId());
 		return true;
 	}

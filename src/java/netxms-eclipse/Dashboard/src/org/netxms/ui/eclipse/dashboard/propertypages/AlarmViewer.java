@@ -29,9 +29,9 @@ import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.dashboard.Messages;
+import org.netxms.ui.eclipse.dashboard.widgets.TitleConfigurator;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.AlarmViewerConfig;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
-import org.netxms.ui.eclipse.widgets.LabeledText;
 
 /**
  * Alarm viewer element properties
@@ -42,7 +42,7 @@ public class AlarmViewer extends PropertyPage
 
 	private AlarmViewerConfig config;
 	private ObjectSelector objectSelector;
-	private LabeledText title;
+   private TitleConfigurator title;
 	private Button[] checkSeverity;
    private Button[] checkState;
    private Button checkEnableLocalSound;
@@ -60,22 +60,20 @@ public class AlarmViewer extends PropertyPage
 		GridLayout layout = new GridLayout();
 		dialogArea.setLayout(layout);
 		
+      title = new TitleConfigurator(dialogArea, config);
+      GridData gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      title.setLayoutData(gd);
+
 		objectSelector = new ObjectSelector(dialogArea, SWT.NONE, true);
 		objectSelector.setLabel(Messages.get().AlarmViewer_RootObject);
 		objectSelector.setObjectClass(AbstractObject.class);
 		objectSelector.setObjectId(config.getObjectId());
-		GridData gd = new GridData();
+      gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		objectSelector.setLayoutData(gd);
-		
-		title = new LabeledText(dialogArea, SWT.NONE);
-		title.setLabel(Messages.get().AlarmViewer_Title);
-		title.setText(config.getTitle());
-		gd = new GridData();
-		gd.horizontalAlignment = SWT.FILL;
-		gd.grabExcessHorizontalSpace = true;
-		title.setLayoutData(gd);
 		
 		Group severityGroup = new Group(dialogArea, SWT.NONE);
 		severityGroup.setText(Messages.get().AlarmViewer_SeverityFilter);
@@ -131,8 +129,8 @@ public class AlarmViewer extends PropertyPage
 	public boolean performOk()
 	{
 		config.setObjectId(objectSelector.getObjectId());
-		config.setTitle(title.getText());
-		
+      title.updateConfiguration(config);
+
 		int severityFilter = 0;
 		for(int i = 0; i < checkSeverity.length; i++)
 			if (checkSeverity[i].getSelection())
