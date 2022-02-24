@@ -38,7 +38,7 @@
    </issueManagement>
    <properties>
       <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-      <build.finalName>${project.artifactId}-${project.version}</build.finalName>
+      <build.finalName>${project.artifactId}-${project.version}${os.version}</build.finalName>
       <lib.scope>compile</lib.scope>
       <rwt.version>3.19.0</rwt.version>
       <swt.version>3.118.0</swt.version>
@@ -47,6 +47,9 @@
    <profiles>
       <profile>
          <id>windows</id>
+         <properties>
+            <os.version>-windows</os.version>
+         </properties>
          <activation>
             <os>
                <family>windows</family>
@@ -73,6 +76,9 @@
       </profile>
       <profile>
          <id>linux-x86_64</id>
+         <properties>
+            <os.version>-linux-x86_64</os.version>
+         </properties>
          <activation>
             <os>
                <name>Linux</name>
@@ -100,6 +106,9 @@
       </profile>
       <profile>
          <id>linux-aarch64</id>
+         <properties>
+            <os.version>-linux-aarch64</os.version>
+         </properties>
          <activation>
             <os>
                <name>Linux</name>
@@ -127,6 +136,9 @@
       </profile>
       <profile>
          <id>macos-x86_64</id>
+         <properties>
+            <os.version>-macos-x86_64</os.version>
+         </properties>
          <activation>
             <os>
                <name>Mac OS X</name>
@@ -154,6 +166,9 @@
       </profile>
       <profile>
          <id>macos-aarch64</id>
+         <properties>
+            <os.version>-macos-aarch64</os.version>
+         </properties>
          <activation>
             <os>
                <name>Mac OS X</name>
@@ -313,6 +328,7 @@
          <id>web</id>
          <properties>
             <packaging.type>war</packaging.type>
+            <os.version></os.version>
          </properties>
          <dependencies>
             <dependency>
