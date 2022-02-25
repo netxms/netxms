@@ -323,7 +323,7 @@ template<typename T> class SharedPointerIndex : public AbstractIndexBase
    DISABLE_COPY_CTOR(SharedPointerIndex)
 
 private:
-   ObjectMemoryPool<shared_ptr<T>> m_pool;
+   SynchronizedObjectMemoryPool<shared_ptr<T>> m_pool;
 
    static void destructor(void *object, AbstractIndexBase *index)
    {
