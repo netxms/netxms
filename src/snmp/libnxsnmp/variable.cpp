@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** SNMP support library
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -49,7 +49,7 @@ SNMP_Variable::SNMP_Variable(const TCHAR *name)
 /**
  * Create variable of ASN_NULL type
  */
-SNMP_Variable::SNMP_Variable(const UINT32 *name, size_t nameLen) : m_name(name, nameLen)
+SNMP_Variable::SNMP_Variable(const uint32_t *name, size_t nameLen) : m_name(name, nameLen)
 {
    m_value = nullptr;
    m_type = ASN_NULL;
@@ -74,7 +74,15 @@ SNMP_Variable::SNMP_Variable(const SNMP_ObjectId &name) : m_name(name)
 SNMP_Variable::SNMP_Variable(const SNMP_Variable *src)
 {
    m_valueLength = src->m_valueLength;
-   m_value = (src->m_value != nullptr) ? MemCopyBlock(src->m_value, src->m_valueLength) : nullptr;
+   if ((m_valueLength <= SNMP_VARBIND_INTERNAL_BUFFER_SIZE) && (src->m_value != nullptr))
+   {
+      m_value = m_valueBuffer;
+      memcpy(m_value, src->m_value, m_valueLength);
+   }
+   else
+   {
+      m_value = (src->m_value != nullptr) ? MemCopyBlock(src->m_value, src->m_valueLength) : nullptr;
+   }
    m_type = src->m_type;
    m_name = src->m_name;
    m_codepage = nullptr;
@@ -85,7 +93,8 @@ SNMP_Variable::SNMP_Variable(const SNMP_Variable *src)
  */
 SNMP_Variable::~SNMP_Variable()
 {
-   MemFree(m_value);
+   if (m_value != m_valueBuffer)
+      MemFree(m_value);
 }
 
 /**
@@ -156,24 +165,32 @@ bool SNMP_Variable::decodeContent(const BYTE *data, size_t dataLength, bool encl
       case ASN_TIMETICKS:
       case ASN_UINTEGER32:
          m_valueLength = sizeof(uint32_t);
-         m_value = (BYTE *)MemAlloc(8);
+         m_value = m_valueBuffer;
          success = BER_DecodeContent(m_type, pbCurrPos, length, m_value);
          break;
       case ASN_COUNTER64:
       case ASN_INTEGER64:
       case ASN_UINTEGER64:
          m_valueLength = sizeof(uint64_t);
-         m_value = (BYTE *)MemAlloc(16);
+         m_value = m_valueBuffer;
          success = BER_DecodeContent(m_type, pbCurrPos, length, m_value);
          break;
       case ASN_FLOAT:
          m_valueLength = sizeof(float);
-         m_value = (BYTE *)MemAlloc(16);
+         m_value = m_valueBuffer;
          success = BER_DecodeContent(m_type, pbCurrPos, length, m_value);
          break;
       default:
          m_valueLength = length;
-         m_value = MemCopyBlock(pbCurrPos, length);
+         if (length <= SNMP_VARBIND_INTERNAL_BUFFER_SIZE)
+         {
+            m_value = m_valueBuffer;
+            memcpy(m_value, pbCurrPos, length);
+         }
+         else
+         {
+            m_value = MemCopyBlock(pbCurrPos, length);
+         }
          success = true;
          break;
    }
@@ -410,7 +427,7 @@ TCHAR *SNMP_Variable::getValueAsString(TCHAR *buffer, size_t bufferSize, const c
             {
                codepage = m_codepage;
             }
-            size_t cch = mbcp_to_wchar((char *)m_value, length, buffer, bufferSize, codepage);
+            size_t cch = mbcp_to_wchar(reinterpret_cast<const char *>(m_value), length, buffer, bufferSize, codepage);
             if (cch > 0)
             {
                length = cch;  // length can be different for multibyte character set
@@ -634,26 +651,22 @@ void SNMP_Variable::setValueFromString(uint32_t type, const TCHAR *value, const 
    switch(m_type)
    {
       case ASN_INTEGER:
-         m_valueLength = sizeof(int32_t);
-         m_value = MemRealloc(m_value, m_valueLength);
+         reallocValueBuffer(sizeof(int32_t));
          *reinterpret_cast<int32_t*>(m_value) = _tcstol(value, nullptr, 0);
          break;
       case ASN_COUNTER32:
       case ASN_GAUGE32:
       case ASN_TIMETICKS:
       case ASN_UINTEGER32:
-         m_valueLength = sizeof(uint32_t);
-         m_value = MemRealloc(m_value, m_valueLength);
+         reallocValueBuffer(sizeof(uint32_t));
          *reinterpret_cast<uint32_t*>(m_value) = _tcstoul(value, nullptr, 0);
          break;
       case ASN_COUNTER64:
-         m_valueLength = sizeof(uint64_t);
-         m_value = MemRealloc(m_value, m_valueLength);
+         reallocValueBuffer(sizeof(uint64_t));
          *reinterpret_cast<uint64_t*>(m_value) = _tcstoull(value, nullptr, 0);
          break;
       case ASN_IP_ADDR:
-         m_valueLength = sizeof(uint32_t);
-         m_value = MemRealloc(m_value, m_valueLength);
+         reallocValueBuffer(sizeof(uint32_t));
          *reinterpret_cast<uint32_t*>(m_value) = htonl(InetAddress::parse(value).getAddressV4());
          break;
       case ASN_OBJECT_ID:
@@ -661,36 +674,36 @@ void SNMP_Variable::setValueFromString(uint32_t type, const TCHAR *value, const 
          length = SNMPParseOID(value, pdwBuffer, 256);
          if (length > 0)
          {
-            m_valueLength = length * sizeof(uint32_t);
-            MemFree(m_value);
-            m_value = reinterpret_cast<BYTE*>(MemCopyBlock(pdwBuffer, m_valueLength));
+            reallocValueBuffer(length * sizeof(uint32_t));
+            memcpy(m_value, pdwBuffer, m_valueLength);
          }
          else
          {
             // OID parse error, set to .ccitt.zeroDotZero (.0.0)
-            m_valueLength = sizeof(uint32_t) * 2;
-            m_value = MemRealloc(m_value, m_valueLength);
+            reallocValueBuffer(sizeof(uint32_t) * 2);
             memset(m_value, 0, m_valueLength);
          }
          break;
       case ASN_OCTET_STRING:
-         MemFree(m_value);
 #ifdef UNICODE
-         length = wcslen(value) + 1;
-         m_value = reinterpret_cast<BYTE*>(MemAllocStringA(length));
-         if (codepage == nullptr && m_codepage != nullptr)
+         length = wcslen(value) * 3;
+         if ((codepage == nullptr) && (m_codepage != nullptr))
          {
             codepage = m_codepage;
          }
-         wchar_to_mbcp(value, -1, reinterpret_cast<char*>(m_value), length, codepage);
+         reallocValueBuffer(length);
+         m_valueLength = wchar_to_mbcp(value, -1, reinterpret_cast<char*>(m_value), length, codepage);
 #else
-         m_value = reinterpret_cast<BYTE*>(MemCopyString(value));
+         length = strlen(value);
+         reallocValueBuffer(length);
+         memcpy(m_value, value, length);
 #endif
-         m_valueLength = strlen(reinterpret_cast<char*>(m_value));
          break;
       default:
          m_type = ASN_NULL;
-         MemFreeAndNull(m_value);
+         if (m_value != m_valueBuffer)
+            MemFree(m_value);
+         m_value = nullptr;
          m_valueLength = 0;
          break;
    }
@@ -701,47 +714,42 @@ void SNMP_Variable::setValueFromString(uint32_t type, const TCHAR *value, const 
  */
 void SNMP_Variable::setValueFromUInt32(uint32_t type, uint32_t value)
 {
-   char text[32];
    m_type = type;
    switch(m_type)
    {
       case ASN_INTEGER:
-         m_valueLength = sizeof(int32_t);
-         m_value = MemRealloc(m_value, m_valueLength);
+         reallocValueBuffer(sizeof(int32_t));
          *reinterpret_cast<int32_t*>(m_value) = value;
          break;
       case ASN_COUNTER32:
       case ASN_GAUGE32:
       case ASN_TIMETICKS:
       case ASN_UINTEGER32:
-         m_valueLength = sizeof(uint32_t);
-         m_value = MemRealloc(m_value, m_valueLength);
+         reallocValueBuffer(sizeof(uint32_t));
          *reinterpret_cast<int32_t*>(m_value) = value;
          break;
       case ASN_COUNTER64:
-         m_valueLength = sizeof(uint64_t);
-         m_value = MemRealloc(m_value, m_valueLength);
+         reallocValueBuffer(sizeof(uint64_t));
          *reinterpret_cast<uint64_t*>(m_value) = value;
          break;
       case ASN_IP_ADDR:
-         m_valueLength = sizeof(uint32_t);
-         m_value = MemRealloc(m_value, m_valueLength);
+         reallocValueBuffer(sizeof(uint32_t));
          *reinterpret_cast<uint32_t*>(m_value) = htonl(value);
          break;
       case ASN_OBJECT_ID:
-         m_valueLength = sizeof(uint32_t);
-         MemFree(m_value);
-         m_value = reinterpret_cast<BYTE*>(MemCopyBlock(&value, m_valueLength));
+         reallocValueBuffer(sizeof(uint32_t));
+         *reinterpret_cast<uint32_t*>(m_value) = htonl(value);
          break;
       case ASN_OCTET_STRING:
-         MemFree(m_value);
-         snprintf(text, 32, "%u", value);
-         m_value = reinterpret_cast<BYTE*>(MemCopyStringA(text));
+         reallocValueBuffer(16);
+         snprintf(reinterpret_cast<char*>(m_value), 16, "%u", value);
          m_valueLength = strlen(reinterpret_cast<char*>(m_value));
          break;
       default:
          m_type = ASN_NULL;
-         MemFreeAndNull(m_value);
+         if (m_value != m_valueBuffer)
+            MemFree(m_value);
+         m_value = nullptr;
          m_valueLength = 0;
          break;
    }
@@ -756,18 +764,20 @@ void SNMP_Variable::setValueFromObjectId(uint32_t type, const SNMP_ObjectId& val
    switch(m_type)
    {
       case ASN_OBJECT_ID:
-         m_valueLength = value.length() * sizeof(uint32_t);
-         MemFree(m_value);
-         m_value = reinterpret_cast<BYTE*>(MemCopyBlock(value.value(), m_valueLength));
+         reallocValueBuffer(value.length() * sizeof(uint32_t));
+         memcpy(m_value, value.value(), m_valueLength);
          break;
       case ASN_OCTET_STRING:
-         MemFree(m_value);
+         if (m_value != m_valueBuffer)
+            MemFree(m_value);
          m_value = reinterpret_cast<BYTE*>(value.toString().getUTF8String());
          m_valueLength = strlen(reinterpret_cast<char*>(m_value));
          break;
       default:
          m_type = ASN_NULL;
-         MemFreeAndNull(m_value);
+         if (m_value != m_valueBuffer)
+            MemFree(m_value);
+         m_value = nullptr;
          m_valueLength = 0;
          break;
    }
@@ -779,7 +789,6 @@ void SNMP_Variable::setValueFromObjectId(uint32_t type, const SNMP_ObjectId& val
 void SNMP_Variable::setValueFromByteArray(uint32_t type, const BYTE* data, size_t size)
 {
    m_type = type;
-   m_valueLength = size;
-   MemFree(m_value);
-   m_value = MemCopyBlock(data, size);
+   reallocValueBuffer(size);
+   memcpy(m_value, data, size);
 }

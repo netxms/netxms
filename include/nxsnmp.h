@@ -438,6 +438,11 @@ public:
 };
 
 /**
+ * Size of internal data buffer for SNMP varbind
+ */
+#define SNMP_VARBIND_INTERNAL_BUFFER_SIZE 32
+
+/**
  * SNMP variable (varbind)
  */
 class LIBNXSNMP_EXPORTABLE SNMP_Variable
@@ -447,14 +452,37 @@ private:
    uint32_t m_type;
    size_t m_valueLength;
    BYTE *m_value;
+   BYTE m_valueBuffer[SNMP_VARBIND_INTERNAL_BUFFER_SIZE];
    const char* m_codepage;
 
    bool decodeContent(const BYTE *data, size_t dataLength, bool enclosedInOpaque);
+   void reallocValueBuffer(size_t length)
+   {
+      if (m_value == nullptr)
+      {
+         if (length <= SNMP_VARBIND_INTERNAL_BUFFER_SIZE)
+            m_value = m_valueBuffer;
+         else
+            m_value = MemAllocArrayNoInit<BYTE>(length);
+      }
+      else if (m_value == m_valueBuffer)
+      {
+         if (length <= SNMP_VARBIND_INTERNAL_BUFFER_SIZE)
+            return;
+         m_value = MemAllocArrayNoInit<BYTE>(length);
+         memcpy(m_value, m_valueBuffer, SNMP_VARBIND_INTERNAL_BUFFER_SIZE);
+      }
+      else if (length > m_valueLength)
+      {
+         m_value = MemRealloc(m_value, length);
+      }
+      m_valueLength = length;
+   }
 
 public:
    SNMP_Variable();
    SNMP_Variable(const TCHAR *name);
-   SNMP_Variable(const UINT32 *name, size_t nameLen);
+   SNMP_Variable(const uint32_t *name, size_t nameLen);
    SNMP_Variable(const SNMP_ObjectId &name);
    SNMP_Variable(const SNMP_Variable *src);
    ~SNMP_Variable();
