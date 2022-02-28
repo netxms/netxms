@@ -31,7 +31,7 @@
    _T("alarm_id,source_object_id,zone_uin,source_event_code,source_event_id,message,original_severity,current_severity,") \
    _T("alarm_key,creation_time,last_change_time,hd_state,hd_ref,ack_by,repeat_count,alarm_state,timeout,timeout_event,") \
    _T("resolved_by,ack_timeout,dci_id,alarm_category_ids,rule_guid,rule_description,parent_alarm_id,event_tags,") \
-   _T("rca_script_name,impact")
+   _T("rca_script_name,impact,last_state_change_time")
 
 /**
  * Alarm comments constructor
@@ -127,6 +127,7 @@ static Condition s_shutdown(true);
 static THREAD s_watchdogThread = INVALID_THREAD_HANDLE;
 static THREAD s_rootCauseUpdateThread = INVALID_THREAD_HANDLE;
 static uint32_t s_resolveExpirationTime = 0;
+static VolatileCounter64 s_stateChangeLogRecordId = 0;
 static bool s_rootCauseUpdateNeeded = false;
 static bool s_rootCauseUpdatePossible = false;
 
@@ -274,6 +275,7 @@ Alarm::Alarm(Event *event, uint32_t parentAlarmId, const TCHAR *rcaScriptName, c
    m_dciId = event->getDciId();
    m_creationTime = time(nullptr);
    m_lastChangeTime = m_creationTime;
+   m_lastStateChangeTime = m_creationTime;
    m_state = ALARM_STATE_OUTSTANDING;
    m_originalSeverity = severity;
    m_currentSeverity = severity;
@@ -341,6 +343,7 @@ Alarm::Alarm(DB_HANDLE hdb, DB_RESULT hResult, int row)
    m_eventTags = DBGetField(hResult, row, 25, nullptr, 0);
    m_rcaScriptName = DBGetField(hResult, row, 26, nullptr, 0);
    m_impact = DBGetField(hResult, row, 27, nullptr, 0);
+   m_lastStateChangeTime = DBGetFieldULong(hResult, row, 28);
    m_notificationCode = 0;
 
    m_commentCount = GetCommentCount(hdb, m_alarmId);
@@ -375,6 +378,7 @@ Alarm::Alarm(const Alarm *src, bool copyEvents, uint32_t notificationCode) : m_a
    m_rcaScriptName = MemCopyString(src->m_rcaScriptName);
    m_creationTime = src->m_creationTime;
    m_lastChangeTime = src->m_lastChangeTime;
+   m_lastStateChangeTime = src->m_lastStateChangeTime;
    m_ruleGuid = src->m_ruleGuid;
    _tcscpy(m_ruleDescription, src->m_ruleDescription);
    m_sourceObject = src->m_sourceObject;
@@ -530,8 +534,8 @@ void Alarm::createInDatabase()
               _T("INSERT INTO alarms (alarm_id,parent_alarm_id,creation_time,last_change_time,source_object_id,zone_uin,")
               _T("source_event_code,message,original_severity,current_severity,alarm_key,alarm_state,ack_by,resolved_by,")
               _T("hd_state,hd_ref,repeat_count,term_by,timeout,timeout_event,source_event_id,ack_timeout,dci_id,")
-              _T("alarm_category_ids,rule_guid,rule_description,event_tags,rca_script_name,impact) ")
-              _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
+              _T("alarm_category_ids,rule_guid,rule_description,event_tags,rca_script_name,impact,last_state_change_time) ")
+              _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
    if (hStmt != nullptr)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_alarmId);
@@ -570,6 +574,7 @@ void Alarm::createInDatabase()
       DBBind(hStmt, 27, DB_SQLTYPE_VARCHAR, m_eventTags, DB_BIND_STATIC, 2000);
       DBBind(hStmt, 28, DB_SQLTYPE_VARCHAR, m_rcaScriptName, DB_BIND_STATIC, MAX_DB_STRING);
       DBBind(hStmt, 29, DB_SQLTYPE_VARCHAR, m_impact, DB_BIND_STATIC, 1000);
+      DBBind(hStmt, 30, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_lastStateChangeTime));
 
       DBExecute(hStmt);
       DBFreeStatement(hStmt);
@@ -589,7 +594,7 @@ void Alarm::updateInDatabase()
             _T("UPDATE alarms SET alarm_state=?,ack_by=?,term_by=?,last_change_time=?,current_severity=?,repeat_count=?,")
             _T("hd_state=?,hd_ref=?,timeout=?,timeout_event=?,message=?,resolved_by=?,ack_timeout=?,source_object_id=?,")
             _T("dci_id=?,alarm_category_ids=?,rule_guid=?,rule_description=?,event_tags=?,parent_alarm_id=?,rca_script_name=?,")
-            _T("impact=? WHERE alarm_id=?"));
+            _T("impact=?,last_state_change_time=? WHERE alarm_id=?"));
    if (hStmt != nullptr)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, static_cast<int32_t>(m_state));
@@ -621,7 +626,8 @@ void Alarm::updateInDatabase()
       DBBind(hStmt, 20, DB_SQLTYPE_INTEGER, m_parentAlarmId);
       DBBind(hStmt, 21, DB_SQLTYPE_VARCHAR, m_rcaScriptName, DB_BIND_STATIC, MAX_DB_STRING);
       DBBind(hStmt, 22, DB_SQLTYPE_VARCHAR, m_impact, DB_BIND_STATIC, 1000);
-      DBBind(hStmt, 23, DB_SQLTYPE_INTEGER, m_alarmId);
+      DBBind(hStmt, 23, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_lastStateChangeTime));
+      DBBind(hStmt, 24, DB_SQLTYPE_INTEGER, m_alarmId);
       DBExecute(hStmt);
       DBFreeStatement(hStmt);
    }
@@ -629,12 +635,32 @@ void Alarm::updateInDatabase()
 	if (m_state == ALARM_STATE_TERMINATED)
 	{
 	   TCHAR query[256];
-		_sntprintf(query, 256, _T("DELETE FROM alarm_events WHERE alarm_id=%d"), m_alarmId);
+		_sntprintf(query, 256, _T("DELETE FROM alarm_events WHERE alarm_id=%u"), m_alarmId);
 		QueueSQLRequest(query);
 
-		DeleteAlarmNotes(hdb, m_alarmId);
+      _sntprintf(query, 256, _T("DELETE FROM alarm_notes WHERE alarm_id=%u"), m_alarmId);
+      QueueSQLRequest(query);
 	}
    DBConnectionPoolReleaseConnection(hdb);
+}
+
+/**
+ * Update alarm state change log
+ */
+void Alarm::updateStateChangeLog(int prevState, uint32_t userId)
+{
+   TCHAR valRecordId[32], valAlarmId[16], valPrevState[16], valNewState[16], valChangeTime[16], valDuration[16], valChangeBy[16];
+   const TCHAR *values[7] = { valRecordId, valAlarmId, valPrevState, valNewState, valChangeTime, valDuration, valChangeBy };
+   _sntprintf(valRecordId, 32, UINT64_FMT, InterlockedIncrement64(&s_stateChangeLogRecordId));
+   _sntprintf(valAlarmId, 16, _T("%u"), m_alarmId);
+   _sntprintf(valPrevState, 16, _T("%d"), prevState);
+   _sntprintf(valNewState, 16, _T("%d"), static_cast<int32_t>(m_state & ALARM_STATE_MASK));
+   _sntprintf(valChangeTime, 16, _T("%u"), static_cast<uint32_t>(m_lastChangeTime));
+   _sntprintf(valDuration, 16, _T("%u"), static_cast<uint32_t>(m_lastChangeTime - m_lastStateChangeTime));
+   _sntprintf(valChangeBy, 16, _T("%u"), userId);
+   static int sqlTypes[7] = { DB_SQLTYPE_BIGINT, DB_SQLTYPE_INTEGER, DB_SQLTYPE_INTEGER, DB_SQLTYPE_INTEGER, DB_SQLTYPE_INTEGER, DB_SQLTYPE_INTEGER, DB_SQLTYPE_INTEGER };
+   QueueSQLRequest(_T("INSERT INTO alarm_state_changes (record_id,alarm_id,prev_state,new_state,change_time,prev_state_duration,change_by) VALUES (?,?,?,?,?,?,?)"), 7, sqlTypes, values);
+   m_lastStateChangeTime = m_lastChangeTime;
 }
 
 /**
@@ -821,6 +847,7 @@ void Alarm::updateFromEvent(Event *event, uint32_t parentAlarmId, const TCHAR *r
    m_sourceObject = event->getSourceId();
    m_dciId = event->getDciId();
    bool stateChanged = false;
+   int prevState = m_state & ALARM_STATE_MASK;
    if (((m_state & ALARM_STATE_STICKY) == 0) && (m_state != state))
    {
       m_state = state;
@@ -838,10 +865,12 @@ void Alarm::updateFromEvent(Event *event, uint32_t parentAlarmId, const TCHAR *r
    m_alarmCategoryList.addAll(alarmCategoryList);
 
    NotifyClients(NX_NOTIFY_ALARM_CHANGED, this);
-   updateInDatabase();
-
    if (stateChanged)
+   {
       executeHookScript();
+      updateStateChangeLog(prevState, 0);
+   }
+   updateInDatabase();
 }
 
 /**
@@ -1002,12 +1031,14 @@ uint32_t Alarm::acknowledge(ClientSession *session, bool sticky, uint32_t acknow
 
    uint32_t endTime = acknowledgmentActionTime != 0 ? (uint32_t)time(nullptr) + acknowledgmentActionTime : 0;
    m_ackTimeout = endTime;
+   int prevState = m_state & ALARM_STATE_MASK;
    m_state = ALARM_STATE_ACKNOWLEDGED;
 	if (sticky)
       m_state |= ALARM_STATE_STICKY;
    m_ackByUser = (session != nullptr) ? session->getUserId() : 0;
    m_lastChangeTime = time(nullptr);
    NotifyClients(NX_NOTIFY_ALARM_CHANGED, this);
+   updateStateChangeLog(prevState, m_ackByUser);
    updateInDatabase();
    executeHookScript();
 
@@ -1083,12 +1114,14 @@ void Alarm::resolve(uint32_t userId, Event *event, bool terminate, bool notify, 
    else
       m_resolvedByUser = userId;
    m_lastChangeTime = time(nullptr);
+   int prevState = m_state & ALARM_STATE_MASK;
    m_state = terminate ? ALARM_STATE_TERMINATED : ALARM_STATE_RESOLVED;
    m_ackTimeout = 0;
    if (m_helpDeskState != ALARM_HELPDESK_IGNORED)
       m_helpDeskState = ALARM_HELPDESK_CLOSED;
    if (notify)
       NotifyClients(terminate ? NX_NOTIFY_ALARM_TERMINATED : NX_NOTIFY_ALARM_CHANGED, this);
+   updateStateChangeLog(prevState, userId);
    updateInDatabase();
    executeHookScript();
 
@@ -1106,8 +1139,7 @@ void Alarm::resolve(uint32_t userId, Event *event, bool terminate, bool notify, 
       _sntprintf(valSource, 16, _T("%d"), event->getSourceId());
       _sntprintf(valTimestamp, 16, _T("%u"), (UINT32)event->getTimestamp());
       static int sqlTypes[8] = { DB_SQLTYPE_INTEGER, DB_SQLTYPE_BIGINT, DB_SQLTYPE_INTEGER, DB_SQLTYPE_VARCHAR, DB_SQLTYPE_INTEGER, DB_SQLTYPE_INTEGER, DB_SQLTYPE_INTEGER, DB_SQLTYPE_VARCHAR };
-      QueueSQLRequest(_T("INSERT INTO alarm_events (alarm_id,event_id,event_code,event_name,severity,source_object_id,event_timestamp,message) VALUES (?,?,?,?,?,?,?,?)"),
-                      8, sqlTypes, values);
+      QueueSQLRequest(_T("INSERT INTO alarm_events (alarm_id,event_id,event_code,event_name,severity,source_object_id,event_timestamp,message) VALUES (?,?,?,?,?,?,?,?)"), 8, sqlTypes, values);
    }
 }
 
@@ -1560,14 +1592,14 @@ void NXCORE_EXPORTABLE DeleteAlarm(uint32_t alarmId, bool objectCleanup)
    {
       TCHAR szQuery[256];
 
-      _sntprintf(szQuery, 256, _T("DELETE FROM alarms WHERE alarm_id=%d"), (int)alarmId);
+      _sntprintf(szQuery, 256, _T("DELETE FROM alarms WHERE alarm_id=%u"), alarmId);
       QueueSQLRequest(szQuery);
-      _sntprintf(szQuery, 256, _T("DELETE FROM alarm_events WHERE alarm_id=%d"), (int)alarmId);
+      _sntprintf(szQuery, 256, _T("DELETE FROM alarm_events WHERE alarm_id=%u"), alarmId);
       QueueSQLRequest(szQuery);
-
-      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-      DeleteAlarmNotes(hdb, alarmId);
-      DBConnectionPoolReleaseConnection(hdb);
+      _sntprintf(szQuery, 256, _T("DELETE FROM alarm_notes WHERE alarm_id=%u"), alarmId);
+      QueueSQLRequest(szQuery);
+      _sntprintf(szQuery, 256, _T("DELETE FROM alarm_state_changes WHERE alarm_id=%u"), alarmId);
+      QueueSQLRequest(szQuery);
 
       UpdateObjectStatus(objectId);
    }
@@ -1577,7 +1609,7 @@ void NXCORE_EXPORTABLE DeleteAlarm(uint32_t alarmId, bool objectCleanup)
  * Delete all alarms of given object. Intended to be called only
  * on final stage of object deletion.
  */
-bool DeleteObjectAlarms(UINT32 objectId, DB_HANDLE hdb)
+bool DeleteObjectAlarms(uint32_t objectId, DB_HANDLE hdb)
 {
 	s_alarmList.lock();
 
@@ -1606,9 +1638,10 @@ bool DeleteObjectAlarms(UINT32 objectId, DB_HANDLE hdb)
 			int count = DBGetNumRows(hResult);
 			for(int i = 0; i < count; i++)
          {
-            UINT32 alarmId = DBGetFieldULong(hResult, i, 0);
-				DeleteAlarmNotes(hdb, alarmId);
-            DeleteAlarmEvents(hdb, alarmId);
+            uint32_t alarmId = DBGetFieldULong(hResult, i, 0);
+            ExecuteQueryOnObject(hdb, alarmId, _T("DELETE FROM alarm_notes WHERE alarm_id=?"));
+            ExecuteQueryOnObject(hdb, alarmId, _T("DELETE FROM alarm_events WHERE alarm_id=?"));
+            ExecuteQueryOnObject(hdb, alarmId, _T("DELETE FROM alarm_state_changes WHERE alarm_id=?"));
          }
 			DBFreeResult(hResult);
 		}
@@ -2423,6 +2456,15 @@ bool InitAlarmManager()
       s_alarmList.add(new Alarm((cachedb != nullptr) ? cachedb : hdb, hResult, i));
 
    DBFreeResult(hResult);
+
+   hResult = DBSelect(hdb, _T("SELECT max(record_id) FROM alarm_state_changes"));
+   if (hResult != nullptr)
+   {
+      if (DBGetNumRows(hResult) > 0)
+         s_stateChangeLogRecordId = DBGetFieldInt64(hResult, 0, 0);
+      DBFreeResult(hResult);
+   }
+
    DBConnectionPoolReleaseConnection(hdb);
 
    if (cachedb != nullptr)

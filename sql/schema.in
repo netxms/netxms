@@ -1423,6 +1423,7 @@ CREATE TABLE alarms
   hd_ref varchar(63) null,  // Help desk reference
   creation_time integer not null,
   last_change_time integer not null,
+  last_state_change_time integer not null,
   rule_guid varchar(36) null,
   rule_description varchar(255) null,
   source_object_id integer not null,
@@ -1514,6 +1515,23 @@ CREATE TABLE alarm_category_map
   category_id integer not null,
   PRIMARY KEY(alarm_id,category_id)
 ) TABLE_TYPE;
+
+/**
+ * Log of alarm state changes
+ */
+CREATE TABLE alarm_state_changes
+(
+   record_id SQL_INT64 not null,
+   alarm_id integer not null,
+   prev_state integer not null,
+   new_state integer not null,
+   change_time integer not null,
+   prev_state_duration integer not null,
+   change_by integer not null,   // ID of user who initiated state change
+   PRIMARY KEY(record_id)
+) TABLE_TYPE;
+
+CREATE INDEX idx_alarm_state_changes_by_id ON alarm_state_changes(alarm_id);
 
 /**
  * SNMP trap configuration

@@ -24,6 +24,34 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 40.98 to 40.99
+ */
+static bool H_UpgradeFromV98()
+{
+   CHK_EXEC(CreateTable(
+         _T("CREATE TABLE alarm_state_changes (")
+         _T("  record_id $SQL:INT64 not null,")
+         _T("  alarm_id integer not null,")
+         _T("  prev_state integer not null,")
+         _T("  new_state integer not null,")
+         _T("  change_time integer not null,")
+         _T("  prev_state_duration integer not null,")
+         _T("  change_by integer not null,")
+         _T("PRIMARY KEY(record_id))")));
+
+   static const TCHAR* batch =
+      _T("CREATE INDEX idx_alarm_state_changes_by_id ON alarm_state_changes(alarm_id)\n")
+      _T("ALTER TABLE alarms ADD last_state_change_time integer\n")
+      _T("UPDATE alarms SET last_state_change_time=last_change_time\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("alarms"), _T("last_state_change_time")));
+
+   CHK_EXEC(SetMinorSchemaVersion(99));
+   return true;
+}
+
+/**
  * Upgrade from 40.97 to 40.98
  */
 static bool H_UpgradeFromV97()
@@ -3082,6 +3110,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 98, 40, 99, H_UpgradeFromV98 },
    { 97, 40, 98, H_UpgradeFromV97 },
    { 96, 40, 97, H_UpgradeFromV96 },
    { 95, 40, 96, H_UpgradeFromV95 },
