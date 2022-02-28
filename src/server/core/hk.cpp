@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -110,34 +110,6 @@ static void DeleteEmptySubnets()
 }
 
 /**
- * Delete notes for alarm
- */
-void DeleteAlarmNotes(DB_HANDLE hdb, UINT32 alarmId)
-{
-	DB_STATEMENT hStmt = DBPrepare(hdb, _T("DELETE FROM alarm_notes WHERE alarm_id=?"));
-	if (hStmt == nullptr)
-		return;
-
-	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, alarmId);
-	DBExecute(hStmt);
-	DBFreeStatement(hStmt);
-}
-
-/**
- * Delete realted events for alarm
- */
-void DeleteAlarmEvents(DB_HANDLE hdb, UINT32 alarmId)
-{
-	DB_STATEMENT hStmt = DBPrepare(hdb, _T("DELETE FROM alarm_events WHERE alarm_id=?"));
-	if (hStmt == nullptr)
-		return;
-
-	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, alarmId);
-	DBExecute(hStmt);
-	DBFreeStatement(hStmt);
-}
-
-/**
  * Remove outdated alarm records
  */
 static void CleanAlarmHistory(DB_HANDLE hdb)
@@ -161,10 +133,13 @@ static void CleanAlarmHistory(DB_HANDLE hdb)
 			for(int i = 0; i < count; i++)
          {
             uint32_t alarmId = DBGetFieldULong(hResult, i, 0);
-				DeleteAlarmNotes(hdb, alarmId);
+            ExecuteQueryOnObject(hdb, alarmId, _T("DELETE FROM alarm_notes WHERE alarm_id=?"));
             if (!ThrottleHousekeeper())
                break;
-            DeleteAlarmEvents(hdb, alarmId);
+            ExecuteQueryOnObject(hdb, alarmId, _T("DELETE FROM alarm_events WHERE alarm_id=?"));
+            if (!ThrottleHousekeeper())
+               break;
+            ExecuteQueryOnObject(hdb, alarmId, _T("DELETE FROM alarm_state_changes WHERE alarm_id=?"));
             if (!ThrottleHousekeeper())
                break;
          }

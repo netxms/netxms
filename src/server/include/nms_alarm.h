@@ -40,6 +40,7 @@ private:
    TCHAR *m_rcaScriptName;   // Name of root cause analysis script
    time_t m_creationTime;    // Alarm creation time in UNIX time format
    time_t m_lastChangeTime;  // Alarm's last change time in UNIX time format
+   time_t m_lastStateChangeTime;
    uuid m_ruleGuid;  // GUID of EPP rule that generates this alarm
    TCHAR m_ruleDescription[MAX_DB_STRING];   // Description of EPP rule that generates this alarm
    uint32_t m_sourceObject;    // Source object ID
@@ -71,6 +72,7 @@ private:
    StringBuffer categoryListToString();
 
    void executeHookScript();
+   void updateStateChangeLog(int prevState, uint32_t userId);
 
 public:
    Alarm(Event *event, uint32_t parentAlarmId, const TCHAR *rcaScriptName, const uuid& ruleGuid, const TCHAR *ruleDescription,
@@ -196,8 +198,6 @@ bool InitAlarmManager();
 void ShutdownAlarmManager();
 
 void SendAlarmsToClient(uint32_t requestId, ClientSession *session);
-void DeleteAlarmNotes(DB_HANDLE hdb, UINT32 alarmId);
-void DeleteAlarmEvents(DB_HANDLE hdb, UINT32 alarmId);
 
 uint32_t NXCORE_EXPORTABLE GetAlarm(uint32_t alarmId, uint32_t userId, NXCPMessage *msg, ClientSession *session);
 ObjectArray<Alarm> NXCORE_EXPORTABLE *GetAlarms(uint32_t objectId = 0, bool recursive = false);
@@ -232,7 +232,7 @@ uint32_t DeleteAlarmCommentByID(uint32_t alarmId, uint32_t noteId);
 uint32_t GetAlarmComments(uint32_t alarmId, NXCPMessage *msg);
 ObjectArray<AlarmComment> *GetAlarmComments(uint32_t alarmId);
 
-bool DeleteObjectAlarms(UINT32 objectId, DB_HANDLE hdb);
+bool DeleteObjectAlarms(uint32_t objectId, DB_HANDLE hdb);
 
 void LoadHelpDeskLink();
 uint32_t CreateHelpdeskIssue(const TCHAR *description, TCHAR *hdref);
