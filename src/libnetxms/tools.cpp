@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -704,21 +704,41 @@ void LIBNETXMS_EXPORTABLE StrStripW(WCHAR *str)
 }
 
 /**
- * Strip whitespaces and tabs off the string.
+ * Strip whitespaces and tabs off the string (multibyte version)
  *
  * @param str string to trim
  * @return str for convenience
  */
-TCHAR LIBNETXMS_EXPORTABLE *Trim(TCHAR *str)
+char LIBNETXMS_EXPORTABLE *TrimA(char *str)
 {
    if (str == nullptr)
       return nullptr;
 
    int i;
-   for(i = 0; (str[i] != 0) && _istspace(str[i]); i++);
+   for(i = 0; (str[i] != 0) && isspace(str[i]); i++);
    if (i > 0)
-      memmove(str, &str[i], (_tcslen(&str[i]) + 1) * sizeof(TCHAR));
-   for(i = (int)_tcslen(str) - 1; (i >= 0) && _istspace(str[i]); i--);
+      memmove(str, &str[i], strlen(&str[i]) + 1);
+   for(i = (int)strlen(str) - 1; (i >= 0) && isspace(str[i]); i--);
+   str[i + 1] = 0;
+   return str;
+}
+
+/**
+ * Strip whitespaces and tabs off the string (wide character version)
+ *
+ * @param str string to trim
+ * @return str for convenience
+ */
+WCHAR LIBNETXMS_EXPORTABLE *TrimW(WCHAR *str)
+{
+   if (str == nullptr)
+      return nullptr;
+
+   int i;
+   for(i = 0; (str[i] != 0) && iswspace(str[i]); i++);
+   if (i > 0)
+      memmove(str, &str[i], (wcslen(&str[i]) + 1) * sizeof(WCHAR));
+   for(i = (int)wcslen(str) - 1; (i >= 0) && iswspace(str[i]); i--);
    str[i + 1] = 0;
    return str;
 }
