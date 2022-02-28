@@ -35,16 +35,18 @@ NXSL_METHOD_DEFINITION(ByteStream, seek)
 {
    if (argc < 1 || argc > 2)
       return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
    if (!argv[0]->isInteger() || (argc > 1 && !argv[1]->isInteger()))
       return NXSL_ERR_NOT_INTEGER;
 
    ByteStream* bs = static_cast<ByteStream*>(object->getData());
-   *result = vm->createValue(bs->seek(
-      argv[0]->getValueAsInt64(),
-      argc > 1 ? argv[1]->getValueAsInt32() : SEEK_SET));
+   *result = vm->createValue(static_cast<int64_t>(bs->seek(argv[0]->getValueAsInt64(), (argc > 1) ? argv[1]->getValueAsInt32() : SEEK_SET)));
    return 0;
 }
 
+/**
+ * Read from byte stream using method passed as argument
+ */
 #define READ_FROM_BYTE_STREAM(x)                                 \
    ByteStream* bs = static_cast<ByteStream*>(object->getData()); \
    *result = vm->createValue(bs->x());                           \
@@ -177,18 +179,17 @@ NXSL_METHOD_DEFINITION(ByteStream, readString)
 {
    if (argc < 1 || argc > 2)
       return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
    if (argc > 0 && !argv[0]->isInteger())
       return NXSL_ERR_NOT_INTEGER;
+
    if (argc > 1 && !argv[1]->isString())
       return NXSL_ERR_NOT_STRING;
 
    ByteStream* bs = static_cast<ByteStream*>(object->getData());
-   const char* codepage = argc > 1 ? argv[1]->getValueAsMBString() : nullptr;
+   const char* codepage = (argc > 1) ? argv[1]->getValueAsMBString() : nullptr;
    WCHAR* buffer = bs->readStringW(codepage, argv[0]->getValueAsInt32());
-
-   if (buffer == nullptr)
-      return NXSL_ERR_INTERNAL;
-   *result = vm->createValue(buffer);
+   *result = (buffer != nullptr) ? vm->createValue(buffer) : vm->createValue();
    MemFree(buffer);
    return 0;
 }
@@ -200,16 +201,14 @@ NXSL_METHOD_DEFINITION(ByteStream, readCString)
 {
    if (argc > 1)
       return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
    if (argc > 0 && !argv[0]->isString())
       return NXSL_ERR_NOT_STRING;
 
    ByteStream* bs = static_cast<ByteStream*>(object->getData());
    const char* codepage = argc > 0 ? argv[0]->getValueAsMBString() : nullptr;
    WCHAR* buffer = bs->readCStringW(codepage);
-
-   if (buffer == nullptr)
-      return NXSL_ERR_INTERNAL;
-   *result = vm->createValue(buffer);
+   *result = (buffer != nullptr) ? vm->createValue(buffer) : vm->createValue();
    MemFree(buffer);
    return 0;
 }
@@ -221,16 +220,14 @@ NXSL_METHOD_DEFINITION(ByteStream, readPString)
 {
    if (argc > 1)
       return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
    if (argc > 0 && !argv[0]->isString())
       return NXSL_ERR_NOT_STRING;
 
    ByteStream* bs = static_cast<ByteStream*>(object->getData());
    const char* codepage = argc > 0 ? argv[0]->getValueAsMBString() : nullptr;
    WCHAR* buffer = bs->readPStringW(codepage);
-
-   if (buffer == nullptr)
-      return NXSL_ERR_INTERNAL;
-   *result = vm->createValue(buffer);
+   *result = (buffer != nullptr) ? vm->createValue(buffer) : nullptr;
    MemFree(buffer);
    return 0;
 }
@@ -404,10 +401,7 @@ NXSL_METHOD_DEFINITION(ByteStream, writeCString)
    ByteStream* bs = static_cast<ByteStream*>(object->getData());
    uint32_t len;
    const WCHAR* str = argv[0]->getValueAsString(&len);
-   ssize_t count = bs->writeString(
-      str,
-      argc > 1 ? argv[1]->getValueAsMBString() : nullptr,
-      len, false, true);
+   ssize_t count = bs->writeString(str, (argc > 1) ? argv[1]->getValueAsMBString() : nullptr, len, false, true);
 
    *result = vm->createValue(static_cast<int64_t>(count));
    return 0;
@@ -420,16 +414,14 @@ NXSL_METHOD_DEFINITION(ByteStream, writePString)
 {
    if (argc < 1 || argc > 2)
       return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
    if (!argv[0]->isString() || (argc > 1 && !argv[1]->isString()))
       return NXSL_ERR_NOT_STRING;
 
    ByteStream* bs = static_cast<ByteStream*>(object->getData());
    uint32_t len;
    const WCHAR* str = argv[0]->getValueAsString(&len);
-   ssize_t count = bs->writeString(
-      str,
-      argc > 1 ? argv[1]->getValueAsMBString() : nullptr,
-      len, true, false);
+   ssize_t count = bs->writeString(str, (argc > 1) ? argv[1]->getValueAsMBString() : nullptr, len, true, false);
 
    *result = vm->createValue(static_cast<int64_t>(count));
    return 0;
@@ -464,9 +456,9 @@ NXSL_ByteStreamClass::NXSL_ByteStreamClass()
    NXSL_REGISTER_METHOD(ByteStream, readUInt64L, 0);
    NXSL_REGISTER_METHOD(ByteStream, readFloatL, 0);
 
-   NXSL_REGISTER_METHOD(ByteStream, readString, -1);
    NXSL_REGISTER_METHOD(ByteStream, readCString, -1);
    NXSL_REGISTER_METHOD(ByteStream, readPString, -1);
+   NXSL_REGISTER_METHOD(ByteStream, readString, -1);
 
    // Write
    NXSL_REGISTER_METHOD(ByteStream, writeByte, 1);
@@ -481,9 +473,9 @@ NXSL_ByteStreamClass::NXSL_ByteStreamClass()
    NXSL_REGISTER_METHOD(ByteStream, writeInt64L, 1);
    NXSL_REGISTER_METHOD(ByteStream, writeFloatL, 1);
 
-   NXSL_REGISTER_METHOD(ByteStream, writeString, -1);
    NXSL_REGISTER_METHOD(ByteStream, writeCString, -1);
    NXSL_REGISTER_METHOD(ByteStream, writePString, -1);
+   NXSL_REGISTER_METHOD(ByteStream, writeString, -1);
 }
 
 /**
