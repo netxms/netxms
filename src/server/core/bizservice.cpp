@@ -344,9 +344,9 @@ void BusinessService::statusPoll(PollerInfo *poller, ClientSession *session, UIN
       }
       if (oldCheckState != newCheckState)
       {
-         nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("BusinessService::statusPoll(%s [%u]): state of check %s [%u] changed to %s"),
-               m_name, m_id, checkDescription.cstr(), check->getId(), GetStatusAsText(newCheckState, true));
-         sendPollerMsg(_T("   State of business service check \"%s\" changed to %s\r\n"), checkDescription.cstr(), GetStatusAsText(newCheckState, true));
+         nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("BusinessService::statusPoll(%s [%u]): state of check %s [%u] changed from %s to %s"),
+               m_name, m_id, checkDescription.cstr(), check->getId(), GetStatusAsText(oldCheckState, true), GetStatusAsText(newCheckState, true));
+         sendPollerMsg(_T("   State of business service check \"%s\" changed from %s to %s\r\n"), checkDescription.cstr(), GetStatusAsText(oldCheckState, true), GetStatusAsText(newCheckState, true));
          NotifyClientsOnBusinessServiceCheckUpdate(*this, check);
       }
       if (newCheckState > mostCriticalCheckState)
@@ -359,8 +359,9 @@ void BusinessService::statusPoll(PollerInfo *poller, ClientSession *session, UIN
 
    if (prevState != m_serviceState)
    {
-      sendPollerMsg(_T("State of business service changed to %s\r\n"), GetStatusAsText(m_serviceState, true));
-      nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("BusinessService::statusPoll(%s [%u]): state of business service changed to %s"), m_name, m_id, GetStatusAsText(m_serviceState, true));
+      sendPollerMsg(_T("State of business service changed from %s to %s\r\n"), GetStatusAsText(prevState, true), GetStatusAsText(m_serviceState, true));
+      nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("BusinessService::statusPoll(%s [%u]): state of business service changed from %s to %s"),
+            m_name, m_id, GetStatusAsText(prevState, true), GetStatusAsText(m_serviceState, true));
       if (m_serviceState > prevState)
       {
          if  (m_serviceState == STATUS_CRITICAL)

@@ -84,7 +84,7 @@ unique_ptr<SharedObjectArray<BusinessServiceCheck>> BaseBusinessService::getChec
  */
 bool BaseBusinessService::loadChecksFromDatabase(DB_HANDLE hdb)
 {
-   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT id,service_id,prototype_service_id,prototype_check_id,type,description,related_object,related_dci,status_threshold,content,current_ticket FROM business_service_checks WHERE service_id=?"));
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT id,service_id,prototype_service_id,prototype_check_id,type,description,related_object,related_dci,status_threshold,content,status,current_ticket,failure_reason FROM business_service_checks WHERE service_id=?"));
    if (hStmt == nullptr)
       return false;
 
