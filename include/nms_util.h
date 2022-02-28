@@ -2922,10 +2922,12 @@ private:
    size_t m_pos;
    size_t m_allocationStep;
 
-   ssize_t getLengthToRead(ssize_t length, bool isLenPrepended, bool isNullTerminated);
-   char* readStringCore(ssize_t length, bool isLenPrepended, bool isNullTerminated);
-   WCHAR* readStringWCore(const char *codepage, ssize_t length, bool isLenPrepended, bool isNullTerminated);
-   char* readStringAsUTF8Core(const char *codepage, ssize_t length, bool isLenPrepended, bool isNullTerminated);
+   ssize_t getEncodedStringLength(ssize_t byteCount, bool isLenPrepended, bool isNullTerminated, size_t charSize);
+   char* readStringCore(ssize_t byteCount, bool isLenPrepended, bool isNullTerminated);
+   WCHAR* readStringWCore(const char* codepage, ssize_t byteCount, bool isLenPrepended, bool isNullTerminated);
+   char* readStringAsUTF8Core(const char* codepage, ssize_t byteCount, bool isLenPrepended, bool isNullTerminated);
+   ssize_t readStringU(WCHAR* buffer, const char* codepage, ssize_t byteCount);
+   ssize_t writeStringU(const WCHAR* str, size_t length, const char* codepage);
 
 public:
    ByteStream(size_t initial = 8192);
@@ -2938,13 +2940,13 @@ public:
    off_t seek(off_t pos, int32_t whence = SEEK_SET);
 
    /**
-    * Find first occurrence of a given byte in buffer starting from current position
+    * Find first occurrence of a given value in buffer starting from current position
     * @return Position in the stream. Returns -1 on failure.
     */
-   ssize_t find(BYTE b) 
+   template<typename T> off_t find(T value)
    { 
-      BYTE* p = (BYTE*)memchr(&m_data[m_pos], b, m_size - m_pos);
-      return p != nullptr ? p - m_data : -1; 
+      auto p = static_cast<BYTE*>(memmem(&m_data[m_pos], m_size - m_pos, &value, sizeof(T)));
+      return p != nullptr ? p - m_data : -1;
    }
 
    size_t pos() const { return m_pos; }
@@ -2963,21 +2965,21 @@ public:
    void write(const void *data, size_t size);
    void write(char c) { write(&c, 1); }
    void write(BYTE b) { write(&b, 1); }
-   
+
    void writeB(uint16_t n) { n = HostToBigEndian16(n); write(&n, 2); }
-   void writeB(int16_t n) { writeB((uint16_t)n); }
+   void writeB(int16_t n) { writeB(static_cast<uint16_t>(n)); }
    void writeB(uint32_t n) { n = HostToBigEndian32(n); write(&n, 4); }
-   void writeB(int32_t n) { writeB((uint32_t)n); }
+   void writeB(int32_t n) { writeB(static_cast<uint32_t>(n)); }
    void writeB(uint64_t n) { n = HostToBigEndian64(n); write(&n, 8); }
-   void writeB(int64_t n) { writeB((uint64_t)n); }
+   void writeB(int64_t n) { writeB(static_cast<uint64_t>(n)); }
    void writeB(double n) { n = HostToBigEndianD(n); write(&n, 8); }
 
    void writeL(uint16_t n) { n = HostToLittleEndian16(n); write(&n, 2); }
-   void writeL(int16_t n) { writeL((uint16_t)n); }
+   void writeL(int16_t n) { writeL(static_cast<uint16_t>(n)); }
    void writeL(uint32_t n) { n = HostToLittleEndian32(n); write(&n, 4); }
-   void writeL(int32_t n) { writeL((uint32_t)n); }
+   void writeL(int32_t n) { writeL(static_cast<uint32_t>(n)); }
    void writeL(uint64_t n) { n = HostToLittleEndian64(n); write(&n, 8); }
-   void writeL(int64_t n) { writeL((uint64_t)n); }
+   void writeL(int64_t n) { writeL(static_cast<uint64_t>(n)); }
    void writeL(double n) { n = HostToLittleEndianD(n); write(&n, 8); }
 
    size_t writeString(const WCHAR *str, const char *codepage, ssize_t length, bool prependLength, bool nullTerminate);
@@ -2995,7 +2997,7 @@ public:
    }
 
    size_t read(void *buffer, size_t count);
-   
+
    char readChar() { return !eos() ? (char)m_data[m_pos++] : 0; }
    BYTE readByte() { return !eos() ? m_data[m_pos++] : 0; }
 

@@ -2,18 +2,18 @@
 
 bs = new ByteStream();
 
-i8 = 0x11;
+i8  = 0x11;
 i16 = 0x1122;
 i32 = 0x11223344;
 i64 = 0x1122334455667788;
 u16 = uint32(0xF122);
 u32 = uint32(0xF1223344);
 u64 = uint64(0xF122334455667788);
-d = 0.5;
+d   = 0.5;
 
 testStrASCII = "My ASCII brings all the boys to the yard and they're like, it's better than yours";
 testStr = "1234 you can do it! шиндовс где мои смайлики?!";
-testStrByteCount = 67;
+testStrUft8ByteCount = 67;
 
 // Byte
 bs->writeByte(i8);
@@ -56,13 +56,17 @@ bs->writeString(testStrASCII, "ASCII");
 bs->writeCString(testStrASCII, "ASCII");
 bs->writePString(testStrASCII, "ASCII");
 
-count_s = bs->writeString(testStr, "UTF-8");
-count_cs = bs->writeCString(testStr, "UTF-8");
-count_ps = bs->writePString(testStr, "UTF-8");
+utf8_count_s = bs->writeString(testStr, "UTF-8");
+utf8_count_cs = bs->writeCString(testStr, "UTF-8");
+utf8_count_ps = bs->writePString(testStr, "UTF-8");
 
-assert(count_s == testStrByteCount);
-assert(count_cs == testStrByteCount + 1);
-assert(count_ps == testStrByteCount + 2);
+ucs4_count_s = bs->writeString(testStr, "UCS-4");
+bs->writeCString(testStr, "UCS-4");
+bs->writePString(testStr, "UCS-4");
+
+assert(utf8_count_s == testStrUft8ByteCount);
+assert(utf8_count_cs == testStrUft8ByteCount + 1);
+assert(utf8_count_ps == testStrUft8ByteCount + 2);
 
 
 // Extra
@@ -70,6 +74,7 @@ bs->writeInt16B(i16);
 
 
 bs->seek(0);
+assert(bs->pos == 0);
 
 
 // Byte
@@ -113,19 +118,31 @@ assert(bs->readString(81, "ASCII") == testStrASCII);
 assert(bs->readCString("ASCII") == testStrASCII);
 assert(bs->readPString("ASCII") == testStrASCII);
 
-assert(bs->readString(testStrByteCount, "UTF-8") == testStr);
+assert(bs->readString(utf8_count_s, "UTF-8") == testStr);
 assert(bs->readCString("UTF-8") == testStr);
 assert(bs->readPString("UTF-8") == testStr);
+
+assert(bs->readString(ucs4_count_s, "UCS-4") == testStr);
+assert(bs->readCString("UCS-4") == testStr);
+assert(bs->readPString("UCS-4") == testStr);
 
 
 // Extra
 assert(bs->readInt16L() == 0x2211); 
 
+bs->seek(bs->size);
+assert(bs->pos == bs->size);
+
+bs->seek(5);
+assert(bs->pos == 5);
+
 controlPos = bs->pos;
 bs->seek(-10);
 assert(bs->pos == controlPos);
+
 bs->seek(10000, SeekOrigin::Current);
 assert(bs->pos == controlPos);
+
 bs->seek(10, SeekOrigin::End);
 assert(bs->pos == controlPos);
 

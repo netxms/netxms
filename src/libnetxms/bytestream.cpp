@@ -110,7 +110,7 @@ void ByteStream::write(const void *data, size_t size)
 }
 
 /**
- * Write string
+ * Write UNICODE string as MB/UNICODE string
  * @param str the input string
  * @param codepage encoding of the in-stream string
  * @param length if length > -1 exactly length symbols will be written (not paying attention to null-termination)
@@ -122,7 +122,7 @@ size_t ByteStream::writeString(const WCHAR* str, const char* codepage, ssize_t l
 {
    if (length < 0)
       length = wcslen(str);
-   
+
    size_t byteCount = length * 4;
    size_t writeStartPos = m_pos;
 
@@ -140,7 +140,15 @@ size_t ByteStream::writeString(const WCHAR* str, const char* codepage, ssize_t l
       m_data = MemRealloc(m_data, m_allocated);
    }
 
-   size_t bytesWritten = wchar_to_mbcp(str, length, reinterpret_cast<char*>(&m_data[m_pos]), byteCount, codepage);
+   ssize_t bytesWritten;
+   if (!strnicmp(CHECK_NULL_A(codepage), "UCS", 3))
+   {
+      bytesWritten = writeStringU(str, length, codepage);
+   }
+   else
+   {
+      bytesWritten = wchar_to_mbcp(str, length, reinterpret_cast<char*>(&m_data[m_pos]), byteCount, codepage);
+   }
    m_pos += bytesWritten;
 
    if (prependLength)
@@ -158,7 +166,14 @@ size_t ByteStream::writeString(const WCHAR* str, const char* codepage, ssize_t l
    }
 
    if (nullTerminate)
-      write((BYTE)0);
+   {
+      if (!strnicmp(CHECK_NULL_A(codepage), "UCS2", 4) || !strnicmp(CHECK_NULL_A(codepage), "UCS-2", 5))
+         writeL((int16_t)0);
+      else if (!strnicmp(CHECK_NULL_A(codepage), "UCS4", 4) || !strnicmp(CHECK_NULL_A(codepage), "UCS-4", 5))
+         writeL((int32_t)0);
+      else
+         write((BYTE)0);
+   }
 
    if (m_pos > m_size)
       m_size = m_pos;
@@ -167,7 +182,7 @@ size_t ByteStream::writeString(const WCHAR* str, const char* codepage, ssize_t l
 }
 
 /**
- * Write string
+ * Write MB string as MB string
  * @param str the input string
  * @param length if length > -1 exactly length symbols will be written (not paying attention to null-termination)
  * @param prependLength prepend string with is't length
@@ -204,9 +219,146 @@ size_t ByteStream::writeString(const char* str, ssize_t length, bool prependLeng
 }
 
 /**
+ * memcpy wrapper for use in WriteUnicodeString
+ */
+template<typename T> static inline size_t DirectCopyWriter(const WCHAR* source, ssize_t length, T* destination, size_t available)
+{
+   memcpy(destination, source, length * sizeof(WCHAR));
+   return length;
+}
+
+/**
+ * Swap bytes in UCS2 character
+ */
+static inline UCS2CHAR SwapUCS2(UCS2CHAR c)
+{
+   return bswap_16(c);
+}
+
+/**
+ * Swap bytes in UCS4 character
+ */
+static inline UCS4CHAR SwapUCS4(UCS4CHAR c)
+{
+   return bswap_32(c);
+}
+
+/**
+ * Write UNICODE string into provided buffer
+ */
+template<typename T, size_t (*Writer)(const WCHAR*, ssize_t, T*, size_t), T (*Swapper)(T)> static inline size_t WriteUnicodeString(const WCHAR* source, size_t length, BYTE *destination)
+{
+   size_t l = Writer(source, length, reinterpret_cast<T*>(destination), length * 2);
+   if (Swapper != nullptr)
+   {
+      for (size_t i = 0; i < l; i++)
+      {
+         *reinterpret_cast<T*>(destination[i]) = Swapper(*reinterpret_cast<T*>(destination[i]));
+         i += sizeof(T);
+      }
+   }
+   return l * sizeof(T);
+}
+
+/**
+ * Write UNICODE string as UNICODE string
+ * @param str the input string
+ * @param length if length > -1 exactly length symbols will be written (not paying attention to null-termination)
+ * @param codepage encoding of the in-stream string
+ * @return Count of bytes written. -1 on codepage recognition error.
+ */
+ssize_t ByteStream::writeStringU(const WCHAR* str, size_t length, const char* codepage)
+{
+#if defined(UNICODE_UCS2)
+   if (!stricmp(codepage, "UCS2") || !stricmp(codepage, "UCS-2"))
+   {
+      return WriteUnicodeString<UCS2CHAR, DirectCopyWriter<UCS2CHAR>, nullptr>(str, length, &m_data[m_pos]);
+   }
+   else if (!stricmp(codepage, "UCS2BE") || !stricmp(codepage, "UCS-2BE"))
+   {
+#ifdef WORDS_BIGENDIAN
+      return WriteUnicodeString<UCS2CHAR, DirectCopyWriter<UCS2CHAR>, nullptr>(str, length, &m_data[m_pos]);
+#else
+      return WriteUnicodeString<UCS2CHAR, DirectCopyWriter<UCS2CHAR>, SwapUCS2>(str, length, &m_data[m_pos]);
+#endif
+   }
+   else if (!stricmp(codepage, "UCS2LE") || !stricmp(codepage, "UCS-2LE"))
+   {
+#ifdef WORDS_BIGENDIAN
+      return WriteUnicodeString<UCS2CHAR, DirectCopyWriter<UCS2CHAR>, SwapUCS2>(str, length, &m_data[m_pos]);
+#else
+      return WriteUnicodeString<UCS2CHAR, DirectCopyWriter<UCS2CHAR>, nullptr>(str, length, &m_data[m_pos]);
+#endif
+   }
+   else if (!stricmp(codepage, "UCS4") || !stricmp(codepage, "UCS-4"))
+   {
+      return WriteUnicodeString<UCS2CHAR, ucs2_to_ucs4, nullptr>(str, length, &m_data[m_pos]);
+   }
+   else if (!stricmp(codepage, "UCS4BE") || !stricmp(codepage, "UCS-4BE"))
+   {
+#ifdef WORDS_BIGENDIAN
+      return WriteUnicodeString<UCS2CHAR, ucs2_to_ucs4, nullptr>(str, length, &m_data[m_pos]);
+#else
+      return WriteUnicodeString<UCS2CHAR, ucs2_to_ucs4, SwapUCS4>(str, length, &m_data[m_pos]);
+#endif
+   }
+   else if (!stricmp(codepage, "UCS4LE") || !stricmp(codepage, "UCS-4LE"))
+   {
+#ifdef WORDS_BIGENDIAN
+      return WriteUnicodeString<UCS2CHAR, ucs2_to_ucs4, SwapUCS4>(str, length, &m_data[m_pos]);
+#else
+      return WriteUnicodeString<UCS2CHAR, ucs2_to_ucs4, nullptr>(str, length, &m_data[m_pos]);
+#endif
+   }
+#else
+   if (!stricmp(codepage, "UCS2") || !stricmp(codepage, "UCS-2"))
+   {
+      return WriteUnicodeString<UCS2CHAR, ucs4_to_ucs2, nullptr>(str, length, &m_data[m_pos]);
+   }
+   else if (!stricmp(codepage, "UCS2BE") || !stricmp(codepage, "UCS-2BE"))
+   {
+#ifdef WORDS_BIGENDIAN
+      return WriteUnicodeString<UCS2CHAR, ucs4_to_ucs2, nullptr>(str, length, &m_data[m_pos]);
+#else
+      return WriteUnicodeString<UCS2CHAR, ucs4_to_ucs2, SwapUCS2>(str, length, &m_data[m_pos]);
+#endif
+   }
+   else if (!stricmp(codepage, "UCS2LE") || !stricmp(codepage, "UCS-2LE"))
+   {
+#ifdef WORDS_BIGENDIAN
+      return WriteUnicodeString<UCS2CHAR, ucs4_to_ucs2, SwapUCS2>(str, length, &m_data[m_pos]);
+#else
+      return WriteUnicodeString<UCS2CHAR, ucs4_to_ucs2, nullptr>(str, length, &m_data[m_pos]);
+#endif
+   }
+   else if (!stricmp(codepage, "UCS4") || !stricmp(codepage, "UCS-4"))
+   {
+      return WriteUnicodeString<UCS4CHAR, DirectCopyWriter<UCS4CHAR>, nullptr>(str, length, &m_data[m_pos]);
+   }
+   else if (!stricmp(codepage, "UCS4BE") || !stricmp(codepage, "UCS-4BE"))
+   {
+#ifdef WORDS_BIGENDIAN
+      return WriteUnicodeString<UCS4CHAR, DirectCopyWriter<UCS4CHAR>, nullptr>(str, length, &m_data[m_pos]);
+#else
+      return WriteUnicodeString<UCS4CHAR, DirectCopyWriter<UCS4CHAR>, SwapUCS4>(str, length, &m_data[m_pos]);
+#endif
+   }
+   else if (!stricmp(codepage, "UCS4LE") || !stricmp(codepage, "UCS-4LE"))
+   {
+#ifdef WORDS_BIGENDIAN
+      return WriteUnicodeString<UCS4CHAR, DirectCopyWriter<UCS4CHAR>, SwapUCS4>(str, length, &m_data[m_pos]);
+#else
+      return WriteUnicodeString<UCS4CHAR, DirectCopyWriter<UCS4CHAR>, nullptr>(str, length, &m_data[m_pos]);
+#endif
+   }
+#endif
+   return -1;
+}
+
+/**
  * Read data
  */
-size_t ByteStream::read(void *buffer, size_t count)
+size_t ByteStream::read(void* buffer, size_t count)
 {
    size_t c = std::min(count, m_size - m_pos);
    if (c > 0)
@@ -218,9 +370,9 @@ size_t ByteStream::read(void *buffer, size_t count)
 }
 
 /**
- * Determine string length.
+ * Determine length of encoded string.
  */
-ssize_t ByteStream::getLengthToRead(ssize_t length, bool isLenPrepended, bool isNullTerminated)
+ssize_t ByteStream::getEncodedStringLength(ssize_t byteCount, bool isLenPrepended, bool isNullTerminated, size_t charSize)
 {
    if (eos())
       return  -1;
@@ -232,90 +384,249 @@ ssize_t ByteStream::getLengthToRead(ssize_t length, bool isLenPrepended, bool is
       {
          if (m_size - m_pos < 4)
             return -1;
-         length = readUInt32B() & ~0x80000000;
+         byteCount = readUInt32B() & ~0x80000000;
       }
       else // length in 2 bytes
       {
          if (m_size - m_pos < 2)
             return -1;
-         length = readUInt16B();
+         byteCount = readUInt16B();
       }
    }
    else if (isNullTerminated)
    {
-      ssize_t eosPos = find(0);
-      if (eosPos < 0)
+      uint32_t n = 0;
+      BYTE* p = nullptr;
+      for (int i = m_pos; i < m_size; i += charSize)
+      {
+         if (memcmp(&m_data[i], &n, charSize) == 0)
+         {
+            p = &m_data[i];
+            break;
+         }
+      }
+      if (p == nullptr)
          return -1;
-      length = eosPos - m_pos;
+      byteCount = p - m_data - m_pos;
    }
 
-   if (m_size - m_pos < length)
-      return -1;
+   return (m_size - m_pos < byteCount) ? -1 : byteCount;
+}
 
+/**
+ * Read MB/UNICODE string as UNICODE string. Parameters (except codepage) are mutually exclusive.
+ * @param codepage encoding of the in-stream string
+ * @param byteCount if byteCount > -1 - read byteCount bytes
+ * @param isLenPrepended assume that the in-stream string is prepended with it's length
+ * @param isNullTerminated assume that the in-stream string is null-terminated
+ * @return Dynamically allocated wide char string in UNICODE
+ */
+WCHAR* ByteStream::readStringWCore(const char* codepage, ssize_t byteCount, bool isLenPrepended, bool isNullTerminated)
+{
+   size_t charSize;
+   if (!strnicmp(CHECK_NULL_A(codepage), "UCS2", 4) || !strnicmp(CHECK_NULL_A(codepage), "UCS-2", 5))
+      charSize = sizeof(UCS2CHAR);
+   else if (!strnicmp(CHECK_NULL_A(codepage), "UCS4", 4) || !strnicmp(CHECK_NULL_A(codepage), "UCS-4", 5))
+      charSize = sizeof(UCS4CHAR);
+   else
+      charSize = sizeof(char);
+
+   byteCount = getEncodedStringLength(byteCount, isLenPrepended, isNullTerminated, charSize);
+   if (byteCount < 0)
+      return nullptr;
+
+   WCHAR* buffer = MemAllocStringW(byteCount + 1);
+   ssize_t count;
+   if (strnicmp(CHECK_NULL_A(codepage), "UCS", 3) == 0)
+      count = readStringU(buffer, codepage, byteCount);
+   else
+      count = mbcp_to_wchar(reinterpret_cast<char*>(&m_data[m_pos]), byteCount, buffer, byteCount, codepage);
+   if (count == -1)
+   {
+      MemFree(buffer);
+      return nullptr;
+   }
+
+   m_pos += byteCount;
+   if (isNullTerminated)
+      m_pos += charSize;
+
+   buffer[count] = 0;
+   return buffer;
+}
+
+/**
+ * memcpy wrapper for use in ReadUnicodeString
+ */
+template<typename T> static inline size_t DirectCopyReader(const T* source, ssize_t length, WCHAR* destination, size_t available)
+{
+   memcpy(destination, source, length * sizeof(T));
    return length;
 }
 
 /**
- * Read string. Parameters (except codepage) are mutually exclusive.
+ * Read UNICODE string into provided buffer wth byte swap
+ */
+template<typename T, size_t (*Reader)(const T*, ssize_t, WCHAR*, size_t), T (*Swapper)(T)> static inline size_t ReadUnicodeString(const BYTE *source, ssize_t byteCount, WCHAR *destination)
+{
+   size_t length = byteCount / sizeof(T);
+
+   T localBuffer[1024];
+   T* conversionBuffer = (length < 1024) ? localBuffer : MemAllocArrayNoInit<T>(length);
+   const T* s = reinterpret_cast<const T*>(source);
+   for (int i = 0; i < length; i++)
+      conversionBuffer[i] = Swapper(*s++);
+
+   size_t count = Reader(conversionBuffer, length, destination, length);
+
+   if (conversionBuffer != localBuffer)
+      MemFree(conversionBuffer);
+   return count;
+}
+
+/**
+ * Read UNICODE string into provided buffer without byte swap
+ */
+template<typename T, size_t (*Reader)(const T*, ssize_t, WCHAR*, size_t)> static inline size_t ReadUnicodeString(const BYTE *source, ssize_t byteCount, WCHAR *destination)
+{
+   size_t length = byteCount / sizeof(T);
+   return Reader(reinterpret_cast<const T*>(source), length, destination, length);
+}
+
+/**
+ * Read UNICODE string as UNICODE string
+ * @param buffer read string will be stored here
  * @param codepage encoding of the in-stream string
- * @param length if length > -1 - read length bytes
+ * @param byteCount if length > -1 - read length bytes
+ * @return Count of bytes read. -1 on codepage recognition error.
+ */
+ssize_t ByteStream::readStringU(WCHAR* buffer, const char* codepage, ssize_t byteCount)
+{
+#if defined(UNICODE_UCS2)
+   if (!stricmp(codepage, "UCS2") || !stricmp(codepage, "UCS-2"))
+   {
+      return ReadUnicodeString<UCS2CHAR, DirectCopyReader<UCS2CHAR>>(&m_data[m_pos], byteCount, buffer);
+   }
+   else if (!stricmp(codepage, "UCS2BE") || !stricmp(codepage, "UCS-2BE"))
+   {
+#ifdef WORDS_BIGENDIAN
+      return ReadUnicodeString<UCS2CHAR, DirectCopyReader<UCS2CHAR>>(&m_data[m_pos], byteCount, buffer);
+#else
+      return ReadUnicodeString<UCS2CHAR, DirectCopyReader<UCS2CHAR>, SwapUCS2>(&m_data[m_pos], byteCount, buffer);
+#endif
+   }
+   else if (!stricmp(codepage, "UCS2LE") || !stricmp(codepage, "UCS-2LE"))
+   {
+#ifdef WORDS_BIGENDIAN
+      return ReadUnicodeString<UCS2CHAR, DirectCopyReader<UCS2CHAR>, SwapUCS2>(&m_data[m_pos], byteCount, buffer);
+#else
+      return ReadUnicodeString<UCS2CHAR, DirectCopyReader<UCS2CHAR>>(&m_data[m_pos], byteCount, buffer);
+#endif
+   }
+   else if (!stricmp(codepage, "UCS4") || !stricmp(codepage, "UCS-4"))
+   {
+      return ReadUnicodeString<UCS4CHAR, ucs4_to_ucs2>(&m_data[m_pos], byteCount, buffer);
+   }
+   else if (!stricmp(codepage, "UCS4BE") || !stricmp(codepage, "UCS-4BE"))
+   {
+#ifdef WORDS_BIGENDIAN
+      return ReadUnicodeString<UCS4CHAR, ucs4_to_ucs2>(&m_data[m_pos], byteCount, buffer);
+#else
+      return ReadUnicodeString<UCS4CHAR, ucs4_to_ucs2, SwapUCS4>(&m_data[m_pos], byteCount, buffer);
+#endif
+   }
+   else if (!stricmp(codepage, "UCS4LE") || !stricmp(codepage, "UCS-4LE"))
+   {
+#ifdef WORDS_BIGENDIAN
+      return ReadUnicodeString<UCS4CHAR, ucs4_to_ucs2, SwapUCS4>(&m_data[m_pos], byteCount, buffer);
+#else
+      return ReadUnicodeString<UCS4CHAR, ucs4_to_ucs2>(&m_data[m_pos], byteCount, buffer);
+#endif
+   }
+#else
+   if (!stricmp(codepage, "UCS2") || !stricmp(codepage, "UCS-2"))
+   {
+      return ReadUnicodeString<UCS2CHAR, ucs2_to_ucs4>(&m_data[m_pos], byteCount, buffer);
+   }
+   else if (!stricmp(codepage, "UCS2BE") || !stricmp(codepage, "UCS-2BE"))
+   {
+#ifdef WORDS_BIGENDIAN
+      return ReadUnicodeString<UCS2CHAR, ucs2_to_ucs4>(&m_data[m_pos], byteCount, buffer);
+#else
+      return ReadUnicodeString<UCS2CHAR, ucs2_to_ucs4, SwapUCS2>(&m_data[m_pos], byteCount, buffer);
+#endif
+   }
+   else if (!stricmp(codepage, "UCS2LE") || !stricmp(codepage, "UCS-2LE"))
+   {
+#ifdef WORDS_BIGENDIAN
+      return ReadUnicodeString<UCS2CHAR, ucs2_to_ucs4, SwapUCS2>(&m_data[m_pos], byteCount, buffer);
+#else
+      return ReadUnicodeString<UCS2CHAR, ucs2_to_ucs4>(&m_data[m_pos], byteCount, buffer);
+#endif
+   }
+   else if (!stricmp(codepage, "UCS4") || !stricmp(codepage, "UCS-4"))
+   {
+      return ReadUnicodeString<UCS4CHAR, DirectCopyReader<UCS4CHAR>>(&m_data[m_pos], byteCount, buffer);
+   }
+   else if (!stricmp(codepage, "UCS4BE") || !stricmp(codepage, "UCS-4BE"))
+   {
+#ifdef WORDS_BIGENDIAN
+      return ReadUnicodeString<UCS4CHAR, DirectCopyReader<UCS4CHAR>>(&m_data[m_pos], byteCount, buffer);
+#else
+      return ReadUnicodeString<UCS4CHAR, DirectCopyReader<UCS4CHAR>, SwapUCS4>(&m_data[m_pos], byteCount, buffer);
+#endif
+   }
+   else if (!stricmp(codepage, "UCS4LE") || !stricmp(codepage, "UCS-4LE"))
+   {
+#ifdef WORDS_BIGENDIAN
+      return ReadUnicodeString<UCS4CHAR, DirectCopyReader<UCS4CHAR>, SwapUCS4>(&m_data[m_pos], byteCount, buffer);
+#else
+      return ReadUnicodeString<UCS4CHAR, DirectCopyReader<UCS4CHAR>>(&m_data[m_pos], byteCount, buffer);
+#endif
+   }
+#endif
+   return -1;
+}
+
+/**
+ * Read MB string as UTF-8 string. Parameters (except codepage) are mutually exclusive.
+ * @param codepage encoding of the in-stream string
+ * @param byteCount if byteCount > -1 - read byteCount bytes
  * @param isLenPrepended assume that the in-stream string is prepended with it's length
  * @param isNullTerminated assume that the in-stream string is null-terminated
  * @return Dynamically allocated wide char string in UCS-4 (UNICODE)
  */
-WCHAR* ByteStream::readStringWCore(const char* codepage, ssize_t length, bool isLenPrepended, bool isNullTerminated)
+char* ByteStream::readStringAsUTF8Core(const char* codepage, ssize_t byteCount, bool isLenPrepended, bool isNullTerminated)
 {
-   length = getLengthToRead(length, isLenPrepended, isNullTerminated);
-   if (length < 0)
+   byteCount = getEncodedStringLength(byteCount, isLenPrepended, isNullTerminated, sizeof(char));
+   if (byteCount < 0)
       return nullptr;
 
-   WCHAR* buffer = MemAllocStringW(length + 1);
-   size_t count = mbcp_to_wchar(reinterpret_cast<char*>(&m_data[m_pos]), length, buffer, length, codepage);
+   char* buffer = MemAllocStringA(byteCount * sizeof(WCHAR) + 1);
+   size_t count = mbcp_to_utf8(reinterpret_cast<char*>(&m_data[m_pos]), byteCount, buffer, byteCount, codepage);
 
-   m_pos += isNullTerminated ? length + 1: length;
+   m_pos += isNullTerminated ? byteCount + 1 : byteCount;
    buffer[count] = 0;
    return buffer;
 }
 
 /**
- * Read string. Parameters (except codepage) are mutually exclusive.
- * @param codepage encoding of the in-stream string
- * @param length if length > -1 - read length bytes
- * @param isLenPrepended assume that the in-stream string is prepended with it's length
- * @param isNullTerminated assume that the in-stream string is null-terminated
- * @return Dynamically allocated wide char string in UCS-4 (UNICODE)
- */
-char* ByteStream::readStringAsUTF8Core(const char* codepage, ssize_t length, bool isLenPrepended, bool isNullTerminated)
-{
-   length = getLengthToRead(length, isLenPrepended, isNullTerminated);
-   if (length < 0)
-      return nullptr;
-
-   char* buffer = MemAllocStringA(length * 4 + 1);
-   size_t count = mbcp_to_utf8(reinterpret_cast<char*>(&m_data[m_pos]), length, buffer, length, codepage);
-   
-   m_pos += isNullTerminated ? length + 1: length;
-   buffer[count] = 0;
-   return buffer;
-}
-
-/**
- * Read string. Parameters are mutually exclusive.
- * @param length if length > -1 - read length bytes
+ * Read MB string as MB string. Parameters are mutually exclusive.
+ * @param byteCount if byteCount > -1 - read byteCount bytes
  * @param isLenPrepended assume that the in-stream string is prepended with it's length
  * @param isNullTerminated assume that the in-stream string is null-terminated
  * @return Dynamically allocated multibyte string in same encoding as it was in the stream
  */
-char* ByteStream::readStringCore(ssize_t length, bool isLenPrepended, bool isNullTerminated)
+char* ByteStream::readStringCore(ssize_t byteCount, bool isLenPrepended, bool isNullTerminated)
 {
-   length = getLengthToRead(length, isLenPrepended, isNullTerminated);
-   if (length < 0)
+   byteCount = getEncodedStringLength(byteCount, isLenPrepended, isNullTerminated, sizeof(char));
+   if (byteCount < 0)
       return nullptr;
 
-   char* buffer = MemAllocStringA(length + 1);
-   memcpy(buffer, &m_data[m_pos], length);
-   buffer[length] = 0;
-   m_pos += isNullTerminated ? length + 1: length;
+   char* buffer = MemAllocStringA(byteCount + 1);
+   memcpy(buffer, &m_data[m_pos], byteCount);
+   buffer[byteCount] = 0;
+   m_pos += isNullTerminated ? byteCount + 1 : byteCount;
    return buffer;
 }
 
