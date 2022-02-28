@@ -6,7 +6,7 @@
 
 m4_ifdef([m4_esyscmd_s],
 	[AC_INIT([NetXMS], m4_esyscmd_s([git describe --always --long | sed 's/^Release-//' | sed 's/-g.*//' | sed 's/-/./;/^[0-9][0-9]*\.[0-9][0-9]*$/ s/$/.0/']), [bugs@netxms.org])],
-	[AC_INIT([NetXMS], [3.9.0], [bugs@netxms.org])])
+	[AC_INIT([NetXMS], [3.10.0], [bugs@netxms.org])])
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_HEADERS(config.h)
 AM_INIT_AUTOMAKE([tar-ustar subdir-objects])
@@ -222,7 +222,6 @@ DISABLE_IPV6="no"
 IPV6_SUPPORT="no"
 INSTALL_LIBPATH=""
 WITH_ENCRYPTION="no"
-DISABLE_COMMONCRYPTO="no"
 OPENSSL_LIBSSL="ssl"
 OPENSSL_LIBCRYPTO="crypto"
 SYSTEMD_SUPPORT="yes"
@@ -733,14 +732,6 @@ AC_ARG_WITH(pcre,
 	if test "x$withval" != "x" && test "x$withval" != "xyes" && test "x$withval" != "xno"; then
 		LDFLAGS="$LDFLAGS -L${withval}/lib"
 		CPPFLAGS="$CPPFLAGS -I${withval}/include"
-	fi
-])
-
-AC_ARG_ENABLE(commoncrypto,
-[AS_HELP_STRING(--disable-commoncrypto,disable CommonCrypto usage on Mac OS X)],
-[
-	if test "x$enableval" = "xno"; then
-		DISABLE_COMMONCRYPTO="yes"
 	fi
 ])
 
@@ -1394,101 +1385,6 @@ AC_PATH_PROG(PERL,perl,/usr/bin/env perl,$perl_possible_path)
 
 
 #--------------------------------------------------------------------
-# C/C++ capabilities
-#--------------------------------------------------------------------
-
-AC_C_CONST
-AC_PROG_GCC_TRADITIONAL
-AC_C_BIGENDIAN
-
-AC_LANG_PUSH([C++])
-
-if test "x$ac_compiler_gnu" = "xyes" ; then
-	AC_MSG_CHECKING(whether C++ compiler accepts -std=c++11)
-	OLD_CXXFLAGS="$CXXFLAGS"
-	CXXFLAGS="$CXXFLAGS -std=c++11"
-	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
-		[ AC_MSG_RESULT(yes) ], 
-		[ 
-			CXXFLAGS="$OLD_CXXFLAGS"
-			AC_MSG_RESULT(no)
-
-			AC_MSG_CHECKING(whether C++ compiler accepts -std=c++0x)
-			OLD_CXXFLAGS="$CXXFLAGS"
-			CXXFLAGS="$CXXFLAGS -std=c++0x"
-			AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
-				[ AC_MSG_RESULT(yes) ], 
-				[ 
-					CXXFLAGS="$OLD_CXXFLAGS"
-					AC_MSG_RESULT(no)
-				])
-		])
-fi
-
-AC_MSG_CHECKING(whether C++ compiler supports deletion of copy constructor)
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-class A {
-public:
-   A(const A &s) = delete;
-};
-]],[[ ]])
-],[
-	AC_MSG_RESULT(yes)
-	AC_DEFINE(CAN_DELETE_COPY_CTOR,1,Define to 1 if C++ compiler supports copy constructor deletion)
-],[
-	AC_MSG_RESULT(no)
-	AC_DEFINE(CAN_DELETE_COPY_CTOR,0,Define to 1 if C++ compiler supports copy constructor deletion)
-])
-
-AC_MSG_CHECKING(whether C++ compiler supports "override" specifier)
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-class A {
-public:
-   virtual void test();
-};
-class B : public A {
-public:
-   virtual void test() override;
-};
-]],[[ ]])
-],[
-	AC_MSG_RESULT(yes)
-	AC_DEFINE(HAVE_OVERRIDE_SPECIFIER,1,Define to 1 if C++ compiler supports "override" specifier)
-],[
-	AC_MSG_RESULT(no)
-	AC_DEFINE(HAVE_OVERRIDE_SPECIFIER,0,Define to 1 if C++ compiler supports "override" specifier)
-])
-
-AC_MSG_CHECKING(whether C++ compiler supports std::atomic)
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-#include <atomic>
-std::atomic<int> a;
-]],[[
-	a.store(1);
-	return 0;
-]])
-],[
-        AC_MSG_RESULT(yes)
-        AC_DEFINE(HAVE_STD_ATOMIC,1,Define to 1 if std::atomic is available)
-],[
-        AC_MSG_RESULT(no)
-        AC_DEFINE(HAVE_STD_ATOMIC,0,Define to 1 if std::atomic is available)
-])
-
-AC_LANG_POP([C++])
-
-AC_MSG_CHECKING(whether C compiler supports "unused" attribute)
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ static int __attribute__ ((unused)) z = 0; ]], [[ ]])],
-	[
-		AC_DEFINE(UNUSED_ATTRIBUTE_SUPPORTED, 1, Define to 1 if compiler supports "unused" attribute)
-		AC_MSG_RESULT(yes)
-	],
-	[
-		AC_MSG_RESULT(no)
-])
-
-
-#--------------------------------------------------------------------
 # Private extensions
 #--------------------------------------------------------------------
 
@@ -1542,6 +1438,7 @@ esac
 
 #--------------------------------------------------------------------
 # C++ compiler tuning:
+#  * Set correct language level
 #  * Disable C++ exceptions and RTTI
 #  * Turn on 64bit mode on HP-UX/Itanium
 #  * Turn on 64bit mode on AIX
@@ -1549,9 +1446,55 @@ esac
 #  * Disable inconsistent C/C++ linkage warnings for Solaris Studio
 #--------------------------------------------------------------------
 
+AC_C_CONST
+AC_PROG_GCC_TRADITIONAL
+AC_C_BIGENDIAN
+
+AC_MSG_CHECKING(whether C compiler supports "unused" attribute)
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ static int __attribute__ ((unused)) z = 0; ]], [[ ]])],
+	[
+		AC_DEFINE(UNUSED_ATTRIBUTE_SUPPORTED, 1, Define to 1 if compiler supports "unused" attribute)
+		AC_MSG_RESULT(yes)
+	],
+	[
+		AC_MSG_RESULT(no)
+])
+
 if test "x$ac_compiler_gnu" = "xyes" ; then
 	SQLFLAGS="-x c -Wundef"
 	CPPFLAGS="$CPPFLAGS -Wformat"
+
+	AC_LANG_PUSH([C++])
+	AC_MSG_CHECKING(whether C++ compiler accepts -std=c++14)
+	OLD_CXXFLAGS="$CXXFLAGS"
+	CXXFLAGS="$CXXFLAGS -std=c++14"
+	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
+		[ AC_MSG_RESULT(yes) ], 
+		[ 
+			CXXFLAGS="$OLD_CXXFLAGS"
+			AC_MSG_RESULT(no)
+
+			AC_MSG_CHECKING(whether C++ compiler accepts -std=c++11)
+			OLD_CXXFLAGS="$CXXFLAGS"
+			CXXFLAGS="$CXXFLAGS -std=c++11"
+			AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
+				[ AC_MSG_RESULT(yes) ], 
+				[ 
+					CXXFLAGS="$OLD_CXXFLAGS"
+					AC_MSG_RESULT(no)
+
+					AC_MSG_CHECKING(whether C++ compiler accepts -std=c++0x)
+					OLD_CXXFLAGS="$CXXFLAGS"
+					CXXFLAGS="$CXXFLAGS -std=c++0x"
+					AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
+						[ AC_MSG_RESULT(yes) ], 
+						[ 
+							CXXFLAGS="$OLD_CXXFLAGS"
+							AC_MSG_RESULT(no)
+						])
+				])
+		])
+	AC_LANG_POP([C++])
 
 	AC_CPP_CHECK_OPTION(-Wno-unused-result)
 	AC_CPP_CHECK_OPTION(-Wno-format-truncation)
@@ -1837,9 +1780,10 @@ if test "x$CXX" = "xxlC_r" ; then
 	AC_CPP_CHECK_OPTION(-qsuppress=1506-356)
 	AC_CPP_CHECK_OPTION(-qsuppress=1540-1401)
 
-	# Check for std::shared_ptr
 	AC_LANG_PUSH([C++])
-	AC_MSG_CHECKING(if std::shared_ptr is supported)
+
+	# Check for std::shared_ptr
+	AC_MSG_CHECKING(whether C++ compiler supports std::shared_ptr)
 	AC_COMPILE_IFELSE([
 		AC_LANG_PROGRAM([
 #include <memory>
@@ -1850,7 +1794,7 @@ if test "x$CXX" = "xxlC_r" ; then
 		],
 		[
 			AC_MSG_RESULT(no)
-			AC_MSG_CHECKING(if std::tr1::shared_ptr is supported)
+			AC_MSG_CHECKING(whether C++ compiler supports std::tr1::shared_ptr)
 			OLD_CXXFLAGS="$CXXFLAGS"
 			CXXFLAGS="$CXXFLAGS -D__IBMCPP_TR1__"
 			AC_COMPILE_IFELSE([
@@ -1868,6 +1812,31 @@ if test "x$CXX" = "xxlC_r" ; then
 			)
 		]
 	)
+
+	# Check for std::nullptr_t
+	AC_MSG_CHECKING(whether C++ compiler supports std::nullptr_t)
+	AC_COMPILE_IFELSE([
+		AC_LANG_PROGRAM([
+#include <memory>
+#include <stddef.h>
+
+int func(std::nullptr_t p)
+{
+	return 0;
+}
+			],
+			[ return 0; ])],
+		[
+			AC_MSG_RESULT(yes)
+			AC_DEFINE(HAVE_STD_NULLPTR_T, 1, Define to 1 if compiler supports std::nullptr_t)
+		],
+		[
+			AC_MSG_RESULT(no)
+			AC_DEFINE(HAVE_STD_NULLPTR_T, 0, Define to 1 if compiler supports std::nullptr_t)
+		]
+	)
+
+	AC_LANG_POP([C++])
 fi
 
 if test "x$CXX" = "xCC" ; then
@@ -1957,6 +1926,113 @@ if test "x$CXX" = "xCC" ; then
 			])
 	fi
 fi
+
+AC_LANG_PUSH([C++])
+
+AC_MSG_CHECKING(whether C++ compiler supports deletion of copy constructor)
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+class A {
+public:
+   A(const A &s) = delete;
+};
+]],[[ ]])
+],[
+	AC_MSG_RESULT(yes)
+	AC_DEFINE(CAN_DELETE_COPY_CTOR,1,Define to 1 if C++ compiler supports copy constructor deletion)
+],[
+	AC_MSG_RESULT(no)
+	AC_DEFINE(CAN_DELETE_COPY_CTOR,0,Define to 1 if C++ compiler supports copy constructor deletion)
+])
+
+AC_MSG_CHECKING(whether C++ compiler supports "override" specifier)
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+class A {
+public:
+   virtual void test();
+};
+class B : public A {
+public:
+   virtual void test() override;
+};
+]],[[ ]])
+],[
+	AC_MSG_RESULT(yes)
+	AC_DEFINE(HAVE_OVERRIDE_SPECIFIER,1,Define to 1 if C++ compiler supports "override" specifier)
+],[
+	AC_MSG_RESULT(no)
+	AC_DEFINE(HAVE_OVERRIDE_SPECIFIER,0,Define to 1 if C++ compiler supports "override" specifier)
+])
+
+AC_MSG_CHECKING(whether C++ compiler supports "final" specifier)
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+class A final {
+public:
+   int x;
+};
+]],[[ ]])
+],[
+	AC_MSG_RESULT(yes)
+	AC_DEFINE(HAVE_FINAL_SPECIFIER,1,Define to 1 if C++ compiler supports "final" specifier)
+],[
+	AC_MSG_RESULT(no)
+	AC_DEFINE(HAVE_FINAL_SPECIFIER,0,Define to 1 if C++ compiler supports "final" specifier)
+])
+
+AC_MSG_CHECKING(whether C++ compiler supports std::make_unique)
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#include <memory>
+]],[[
+	std::unique_ptr<int> p = std::make_unique<int>(42);
+	return 0;
+]])
+],[
+        AC_MSG_RESULT(yes)
+        AC_DEFINE(HAVE_STD_MAKE_UNIQUE,1,Define to 1 if std::make_unique is available)
+],[
+        AC_MSG_RESULT(no)
+        AC_DEFINE(HAVE_STD_MAKE_UNIQUE,0,Define to 1 if std::make_unique is available)
+])
+
+AC_MSG_CHECKING(whether C++ compiler supports std::forward)
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#include <utility>
+struct X
+{
+	int f;
+};
+int F(X arg)
+{
+	return arg.f;
+}
+]],[[
+	X a;
+	return F(std::forward<X>(a));
+]])
+],[
+        AC_MSG_RESULT(yes)
+        AC_DEFINE(HAVE_STD_FORWARD,1,Define to 1 if std::forward is available)
+],[
+        AC_MSG_RESULT(no)
+        AC_DEFINE(HAVE_STD_FORWARD,0,Define to 1 if std::forward is available)
+])
+
+AC_MSG_CHECKING(whether C++ compiler supports std::atomic)
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#include <atomic>
+std::atomic<int> a;
+]],[[
+	a.store(1);
+	return 0;
+]])
+],[
+        AC_MSG_RESULT(yes)
+        AC_DEFINE(HAVE_STD_ATOMIC,1,Define to 1 if std::atomic is available)
+],[
+        AC_MSG_RESULT(no)
+        AC_DEFINE(HAVE_STD_ATOMIC,0,Define to 1 if std::atomic is available)
+])
+
+AC_LANG_POP([C++])
 
 
 #--------------------------------------------------------------------
@@ -2225,23 +2301,12 @@ AC_LANG_POP([C++])
 
 
 #--------------------------------------------------------------------
-# Checks for CommonCrypto
-#--------------------------------------------------------------------
-
-if test "x$PLATFORM" = "xDarwin" -a "x$DIST_BUILD" != "xyes"; then
-	AC_CHECK_FUNC(CC_MD5_Init, [ 
-		AC_DEFINE(WITH_COMMONCRYPTO, 1, Define to 1 if you have CommonCrypto library and headers)
-	])
-fi
-
-
-#--------------------------------------------------------------------
-# Checks for OpenSSL/CommonCrypto
+# Checks for OpenSSL
 #--------------------------------------------------------------------
 
 if test "x$DISABLE_ENCRYPTION" != "xyes" -a "x$DIST_BUILD" != "xyes"; then
 	AC_CHECK_HEADER(openssl/crypto.h,,AC_MSG_ERROR([OpenSSL is required for encryption support]))
-	
+
 	AC_CHECK_LIB($OPENSSL_LIBCRYPTO, RSA_new,
 		[
 			AC_DEFINE(WITH_OPENSSL, 1, Define to 1 if you have OpenSSL library and headers)
@@ -4093,6 +4158,9 @@ if test $? = 0; then
 	if test -d "${JDK_LOCATION}/include/linux"; then
 		CPPFLAGS="$CPPFLAGS -I${JDK_LOCATION}/include/linux"
 	fi
+	if test -d "${JDK_LOCATION}/include/openbsd"; then
+		CPPFLAGS="$CPPFLAGS -I${JDK_LOCATION}/include/openbsd"
+	fi
 	if test -d "${JDK_LOCATION}/include/solaris"; then
 		CPPFLAGS="$CPPFLAGS -I${JDK_LOCATION}/include/solaris"
 	fi
@@ -4199,7 +4267,7 @@ if test "x$DISABLE_ZERMQ" != "xyes"; then
 			ZEROMQ_SUPPORT="no"
 		fi
 	])
-    
+
 	if test "x$ZEROMQ_SUPPORT" = "xyes"; then
 		AC_DEFINE(WITH_ZMQ, 1, Define to 1 if ZeroMQ is supported)
 	   COMPONENTS="$COMPONENTS zeromq"
@@ -5083,14 +5151,15 @@ else
 fi
 if test "x${BUILD_CLIENT}" = "xyes"; then
 	echo "Build Clients           : YES"
+	echo "Client components       :${CLIENT_COMPONENTS}"
 else
 	echo "Build Clients           : NO"
 fi
 if test "x${BUILD_AGENT}" = "xyes"; then
 	echo "Build Agent             : YES"
 	echo "Agent libs              :${AGENT_LIBS}"
-	echo "Agent extra components  :${AGENT_DIRS}"
-	echo "Subagents list          :${SUBAGENT_DIRS}"
+	echo "Agent extra components  : ${AGENT_DIRS}"
+	echo "Subagents list          : ${SUBAGENT_DIRS}"
 	if test "x${SYSTEMD_SUPPORT}" = "xyes"; then
 		echo "Systemd support         : YES"
 		if test "x${HAVE_SDBUS}" = "xyes"; then
@@ -5243,7 +5312,7 @@ if test "x${MONGODB_LDFLAGS}" != "x"; then
 fi
 
 if test "x${ASTERISK_LIBS}" != "x"; then
-	echo "Asterisk LIBS           : ${ASTERISK_LIBS}"
+	echo "Asterisk LIBS           :${ASTERISK_LIBS}"
 fi
 
 if test "x${VMGR_CPPFLAGS}" != "x"; then
