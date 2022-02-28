@@ -4051,7 +4051,14 @@ bool LIBNETXMS_EXPORTABLE MatchStringW(const WCHAR *pattern, const WCHAR *str, b
 #define MatchString MatchStringA
 #endif
 
-TCHAR LIBNETXMS_EXPORTABLE *Trim(TCHAR *str);
+char LIBNETXMS_EXPORTABLE *TrimA(char *str);
+WCHAR LIBNETXMS_EXPORTABLE *TrimW(WCHAR *str);
+#ifdef UNICODE
+#define Trim TrimW
+#else
+#define Trim TrimA
+#endif
+
 TCHAR LIBNETXMS_EXPORTABLE **SplitString(const TCHAR *source, TCHAR sep, int *numStrings);
 int LIBNETXMS_EXPORTABLE GetLastMonthDay(struct tm *currTime);
 bool LIBNETXMS_EXPORTABLE MatchScheduleElement(TCHAR *pszPattern, int nValue, int maxValue, struct tm *localTime, time_t currTime, bool checkSeconds);
