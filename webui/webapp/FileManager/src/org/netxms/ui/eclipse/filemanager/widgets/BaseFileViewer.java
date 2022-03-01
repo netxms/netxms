@@ -623,6 +623,9 @@ public class BaseFileViewer extends Composite
     */
    protected static String removeEscapeSequences(String s)
    {
+      //Convert to right new line symbol
+      s = s.replaceAll("\r(?!\n)", "\n");
+      
       StringBuilder sb = new StringBuilder();
       for(int i = 0; i < s.length(); i++)
       {
