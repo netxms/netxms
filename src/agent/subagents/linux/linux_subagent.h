@@ -196,6 +196,7 @@ LONG H_IoStatsTotalNonCumulativeFloat(const TCHAR *param, const TCHAR *arg, TCHA
 
 LONG H_NetIfInfoFromIOCTL(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 LONG H_NetIfInfoFromProc(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
+LONG H_NetIfInfoSpeed(const TCHAR*, const TCHAR*, TCHAR*, AbstractCommSession*);
 LONG H_NetIpForwarding(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 LONG H_NetArpCache(const TCHAR *, const TCHAR *, StringList *, AbstractCommSession *);
 LONG H_NetRoutingTable(const TCHAR *, const TCHAR *, StringList *, AbstractCommSession *);

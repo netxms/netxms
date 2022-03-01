@@ -898,4 +898,57 @@ LONG H_NetInterface64bitSupport(const TCHAR *param, const TCHAR *arg, TCHAR *val
 	ret_int(value, 0);
 #endif	
 	return SYSINFO_RC_SUCCESS;
-} 
+}
+
+/**
+ * Handler for Net.Interface.Speed(*) parameter
+ */
+LONG H_NetIfInfoSpeed(const TCHAR* param, const TCHAR* arg, TCHAR* value, AbstractCommSession* session)
+{
+   static ifmedia_baudrate baudrateDescriptions[] = IFM_BAUDRATE_DESCRIPTIONS;
+   LONG ret = SYSINFO_RC_ERROR;
+   char buffer[256];
+
+   if (!AgentGetParameterArgA(param, 1, buffer, 256))
+      return SYSINFO_RC_UNSUPPORTED;
+
+   // Check if we have interface name or index
+   char *p, name[IFNAMSIZ];
+   uint index = strtol(buffer, &p, 10);
+   if (*p == 0)
+   {
+      // Index passed as argument, convert to name
+      if (if_indextoname(index, name) == nullptr)
+         return SYSINFO_RC_ERROR;
+   }
+   else
+   {
+      // Name passed as argument
+      strlcpy(name, buffer, IFNAMSIZ);
+   }
+
+   int sock = socket(AF_INET, SOCK_DGRAM, 0);
+   if (sock == -1)
+      return SYSINFO_RC_ERROR;
+
+   struct ifmediareq ifmr;
+   memset(&ifmr, 0, sizeof(ifmr));
+   strlcpy(ifmr.ifm_name, name, sizeof(ifmr.ifm_name));
+   if (ioctl(sock, SIOCGIFMEDIA, (caddr_t)&ifmr) >= 0)
+   {
+      ifmedia_baudrate* bdr = baudrateDescriptions;
+      while (bdr->ifmb_word != 0)
+      {
+         if (bdr->ifmb_word == (IFM_TYPE(ifmr.ifm_active) | IFM_SUBTYPE(ifmr.ifm_active)))
+         {
+            ret_uint64(value, bdr->ifmb_baudrate);
+            ret = SYSINFO_RC_SUCCESS;
+            break;
+         }
+         bdr++;
+      }
+   }
+   close(sock);
+
+   return ret;
+}
