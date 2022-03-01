@@ -25,6 +25,8 @@
 #include <linux/netlink.h>
 #include <linux/rtnetlink.h>
 #include <interface_types.h>
+#include <linux/ethtool.h>
+#include <linux/sockios.h>
 
 /**
  * Handler for Net.IP.Forwarding and Net.IP6.Forwarding parameters
@@ -861,4 +863,48 @@ LONG H_NetIfInfoFromProc(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abs
    }
 
    return nRet;
+}
+
+/**
+ * Handler for Net.Interface.Speed(*) parameter
+ */
+LONG H_NetIfInfoSpeed(const TCHAR* param, const TCHAR* arg, TCHAR* value, AbstractCommSession* session)
+{
+   LONG ret = SYSINFO_RC_UNSUPPORTED;
+   char *p, buffer[256], name[IFNAMSIZ];
+
+   if (!AgentGetParameterArgA(param, 1, buffer, 256))
+      return SYSINFO_RC_UNSUPPORTED;
+
+   // Check if we have interface name or index
+   uint index = strtol(buffer, &p, 10);
+   if (*p == 0)
+   {
+      // Index passed as argument, convert to name
+      if (if_indextoname(index, name) == nullptr)
+         ret = SYSINFO_RC_ERROR;
+   }
+   else
+   {
+      // Name passed as argument
+      strlcpy(name, buffer, IFNAMSIZ);
+   }
+
+   if (ret != SYSINFO_RC_ERROR)
+   {
+      ret = SYSINFO_RC_ERROR;
+      struct ifreq ifr;
+      struct ethtool_cmd edata;
+      int sock = socket(PF_INET, SOCK_DGRAM, IPPROTO_IP);
+
+      strlcpy(ifr.ifr_name, name, sizeof(ifr.ifr_name));
+      ifr.ifr_data = reinterpret_cast<__caddr_t>(&edata);
+      edata.cmd = ETHTOOL_GSET;
+      if (ioctl(sock, SIOCETHTOOL, &ifr) >= 0)
+      {
+         ret = SYSINFO_RC_SUCCESS;
+      }
+      ret_uint64(value, edata.speed * 1000000);
+   }
+   return ret;
 }
