@@ -292,22 +292,22 @@ ssize_t ByteStream::writeStringU(const WCHAR* str, size_t length, const char* co
    }
    else if (!stricmp(codepage, "UCS4") || !stricmp(codepage, "UCS-4"))
    {
-      return WriteUnicodeString<UCS2CHAR, ucs2_to_ucs4, nullptr>(str, length, &m_data[m_pos]);
+      return WriteUnicodeString<UCS4CHAR, ucs2_to_ucs4, nullptr>(str, length, &m_data[m_pos]);
    }
    else if (!stricmp(codepage, "UCS4BE") || !stricmp(codepage, "UCS-4BE"))
    {
 #ifdef WORDS_BIGENDIAN
-      return WriteUnicodeString<UCS2CHAR, ucs2_to_ucs4, nullptr>(str, length, &m_data[m_pos]);
+      return WriteUnicodeString<UCS4CHAR, ucs2_to_ucs4, nullptr>(str, length, &m_data[m_pos]);
 #else
-      return WriteUnicodeString<UCS2CHAR, ucs2_to_ucs4, SwapUCS4>(str, length, &m_data[m_pos]);
+      return WriteUnicodeString<UCS4CHAR, ucs2_to_ucs4, SwapUCS4>(str, length, &m_data[m_pos]);
 #endif
    }
    else if (!stricmp(codepage, "UCS4LE") || !stricmp(codepage, "UCS-4LE"))
    {
 #ifdef WORDS_BIGENDIAN
-      return WriteUnicodeString<UCS2CHAR, ucs2_to_ucs4, SwapUCS4>(str, length, &m_data[m_pos]);
+      return WriteUnicodeString<UCS4CHAR, ucs2_to_ucs4, SwapUCS4>(str, length, &m_data[m_pos]);
 #else
-      return WriteUnicodeString<UCS2CHAR, ucs2_to_ucs4, nullptr>(str, length, &m_data[m_pos]);
+      return WriteUnicodeString<UCS4CHAR, ucs2_to_ucs4, nullptr>(str, length, &m_data[m_pos]);
 #endif
    }
 #else
