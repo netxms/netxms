@@ -54,9 +54,6 @@ public abstract class TableComparisonChartConfig extends DashboardElementConfig
 
 	@Element(required = false)
 	private int refreshRate = 30;
-
-	@Element(required = false)
-	private boolean showIn3D = false;
 	
 	@Element(required = false)
 	private boolean translucent = false;
@@ -84,22 +81,6 @@ public abstract class TableComparisonChartConfig extends DashboardElementConfig
    
    @Element(required=false)
    private long drillDownObjectId = 0;
-	
-	/**
-	 * @return the showIn3D
-	 */
-	public boolean isShowIn3D()
-	{
-		return showIn3D;
-	}
-
-	/**
-	 * @param showIn3D the showIn3D to set
-	 */
-	public void setShowIn3D(boolean showIn3D)
-	{
-		this.showIn3D = showIn3D;
-	}
 
 	/**
 	 * @return the translucent

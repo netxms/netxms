@@ -25,7 +25,7 @@ import org.simpleframework.xml.core.Persister;
 /**
  * Configuration for bar chart
  */
-public class BarChartConfig extends ComparisonChartConfig
+public class BarChartConfig extends AbstractChartConfig
 {
 	@Element(required=false)
 	private boolean transposed = false;

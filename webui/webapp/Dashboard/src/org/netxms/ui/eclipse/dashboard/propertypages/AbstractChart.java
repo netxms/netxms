@@ -34,12 +34,10 @@ import org.netxms.ui.eclipse.dashboard.Messages;
 import org.netxms.ui.eclipse.dashboard.widgets.TitleConfigurator;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.AbstractChartConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.BarChartConfig;
-import org.netxms.ui.eclipse.dashboard.widgets.internal.ComparisonChartConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.GaugeConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.LineChartConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.PieChartConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.ScriptedBarChartConfig;
-import org.netxms.ui.eclipse.dashboard.widgets.internal.ScriptedComparisonChartConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.ScriptedPieChartConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.TubeChartConfig;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
@@ -171,19 +169,16 @@ public class AbstractChart extends PropertyPage
       gd.grabExcessHorizontalSpace = true;
       checkTranslucent.setLayoutData(gd);
 
-      if ((config instanceof ComparisonChartConfig) || (config instanceof ScriptedComparisonChartConfig))
+      if ((config instanceof BarChartConfig) || (config instanceof TubeChartConfig) || (config instanceof ScriptedBarChartConfig))
 		{
-         if ((config instanceof BarChartConfig) || (config instanceof TubeChartConfig) || (config instanceof ScriptedBarChartConfig))
-			{
-				checkTransposed = new Button(optionsGroup, SWT.CHECK);
-				checkTransposed.setText(Messages.get().AbstractChart_Transposed);
-            checkTransposed.setSelection((config instanceof BarChartConfig) ? ((BarChartConfig)config).isTransposed() :
-                  ((config instanceof ScriptedBarChartConfig) ? ((ScriptedBarChartConfig)config).isTransposed() : ((TubeChartConfig)config).isTransposed()));
-				gd = new GridData();
-				gd.horizontalAlignment = SWT.FILL;
-				gd.grabExcessHorizontalSpace = true;
-				checkTransposed.setLayoutData(gd);
-			}
+			checkTransposed = new Button(optionsGroup, SWT.CHECK);
+			checkTransposed.setText(Messages.get().AbstractChart_Transposed);
+         checkTransposed.setSelection((config instanceof BarChartConfig) ? ((BarChartConfig)config).isTransposed() :
+               ((config instanceof ScriptedBarChartConfig) ? ((ScriptedBarChartConfig)config).isTransposed() : ((TubeChartConfig)config).isTransposed()));
+			gd = new GridData();
+			gd.horizontalAlignment = SWT.FILL;
+			gd.grabExcessHorizontalSpace = true;
+			checkTransposed.setLayoutData(gd);
 		}
 
 		if (config instanceof LineChartConfig)
@@ -339,16 +334,13 @@ public class AbstractChart extends PropertyPage
          config.setModifyYBase(yAxisRange.modifyYBase());
       }
 
-		if (config instanceof ComparisonChartConfig)
+		if (config instanceof BarChartConfig)
 		{
-			if (config instanceof BarChartConfig)
-			{
-				((BarChartConfig)config).setTransposed(checkTransposed.getSelection());
-			}
-			else if (config instanceof TubeChartConfig)
-			{
-				((TubeChartConfig)config).setTransposed(checkTransposed.getSelection());
-			}
+			((BarChartConfig)config).setTransposed(checkTransposed.getSelection());
+		}
+		else if (config instanceof TubeChartConfig)
+		{
+			((TubeChartConfig)config).setTransposed(checkTransposed.getSelection());
 		}
 
       if (config instanceof ScriptedBarChartConfig)

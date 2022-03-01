@@ -24,7 +24,7 @@ import org.simpleframework.xml.core.Persister;
 /**
  * Configuration for pie chart
  */
-public class PieChartConfig extends ComparisonChartConfig
+public class PieChartConfig extends AbstractChartConfig
 {
 	/**
 	 * Create line chart settings object from XML document

@@ -90,9 +90,6 @@ public class ChartConfiguration
    protected boolean translucent = true;
 
    @Element(required = false)
-   private boolean showIn3D = false;
-
-   @Element(required = false)
    protected boolean area = false;
 
    @Element(required = false)
@@ -486,22 +483,6 @@ public class ChartConfiguration
    public void setTranslucent(boolean translucent)
    {
       this.translucent = translucent;
-   }
-
-   /**
-    * @return the showIn3D
-    */
-   public boolean isShowIn3D()
-   {
-      return showIn3D;
-   }
-
-   /**
-    * @param showIn3D the showIn3D to set
-    */
-   public void setShowIn3D(boolean showIn3D)
-   {
-      this.showIn3D = showIn3D;
    }
 
    /**

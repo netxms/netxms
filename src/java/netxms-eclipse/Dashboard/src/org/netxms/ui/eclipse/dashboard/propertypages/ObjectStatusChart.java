@@ -44,7 +44,6 @@ public class ObjectStatusChart extends PropertyPage
    private TitleConfigurator title;
 	private Spinner refreshRate;
 	private Button checkShowLegend;
-	private Button checkShow3D;
 	private Button checkTransposed;
 	private Button checkTranslucent;
 
@@ -92,10 +91,6 @@ public class ObjectStatusChart extends PropertyPage
 		checkShowLegend.setText(Messages.get().ObjectStatusChart_ShowLegend);
 		checkShowLegend.setSelection(config.isShowLegend());
 		
-		checkShow3D = new Button(optionsGroup, SWT.CHECK);
-		checkShow3D.setText(Messages.get().ObjectStatusChart_3DView);
-		checkShow3D.setSelection(config.isShowIn3D());
-		
 		checkTransposed = new Button(optionsGroup, SWT.CHECK);
 		checkTransposed.setText(Messages.get().ObjectStatusChart_Transposed);
 		checkTransposed.setSelection(config.isTransposed());
@@ -123,7 +118,6 @@ public class ObjectStatusChart extends PropertyPage
       title.updateConfiguration(config);
 		config.setRootObject(objectSelector.getObjectId());
 		config.setShowLegend(checkShowLegend.getSelection());
-		config.setShowIn3D(checkShow3D.getSelection());
 		config.setTransposed(checkTransposed.getSelection());
 		config.setTranslucent(checkTranslucent.getSelection());
 		config.setRefreshRate(refreshRate.getSelection());

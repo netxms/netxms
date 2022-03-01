@@ -67,7 +67,6 @@ public class ObjectStatusChartElement extends ComparisonChartElement
       chartConfig.setTitleVisible(false);
       chartConfig.setLegendPosition(ChartConfiguration.POSITION_RIGHT);
       chartConfig.setLegendVisible(elementConfig.isShowLegend());
-      chartConfig.setShowIn3D(elementConfig.isShowIn3D());
       chartConfig.setTransposed(elementConfig.isTransposed());
       chartConfig.setTranslucent(elementConfig.isTranslucent());
       chart = new Chart(getContentArea(), SWT.NONE, ChartType.BAR, chartConfig);

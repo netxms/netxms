@@ -72,7 +72,6 @@ public class DataComparisonView extends ObjectView
 	private ViewRefreshController refreshController;
 	private boolean autoRefreshEnabled = true;
 	private boolean useLogScale = false;
-	private boolean showIn3D = true;
 	private int autoRefreshInterval = 30;	// 30 seconds
    private ChartType chartType = ChartType.BAR;
 	private boolean transposed = false;
@@ -85,7 +84,6 @@ public class DataComparisonView extends ObjectView
 	private Action actionAutoRefresh;
 	private Action actionShowBarChart;
 	private Action actionShowPieChart;
-	private Action actionShowIn3D;
 	private Action actionShowTranslucent;
 	private Action actionUseLogScale;
 	private Action actionHorizontal;
@@ -140,7 +138,6 @@ public class DataComparisonView extends ObjectView
       ChartConfiguration chartConfiguration = new ChartConfiguration();
       chartConfiguration.setLegendPosition(legendPosition);
       chartConfiguration.setLegendVisible(showLegend);
-      chartConfiguration.setShowIn3D(showIn3D);
       chartConfiguration.setTransposed(transposed);
       chartConfiguration.setTranslucent(translucent);
 
@@ -221,19 +218,6 @@ public class DataComparisonView extends ObjectView
 			}
 		};
 		actionUseLogScale.setChecked(useLogScale);
-		
-		actionShowIn3D = new Action(i18n.tr("&3D view")) {
-			@Override
-			public void run()
-			{
-				showIn3D = !showIn3D;
-				setChecked(showIn3D);
-            chart.getConfiguration().setShowIn3D(showIn3D);
-            chart.rebuild();
-			}
-		};
-		actionShowIn3D.setChecked(showIn3D);
-		//actionShowIn3D.setImageDescriptor(Activator.getImageDescriptor("icons/view3d.png"));
 		
 		actionShowTranslucent = new Action(i18n.tr("T&ranslucent")) {
 			@Override
@@ -392,7 +376,6 @@ public class DataComparisonView extends ObjectView
 		manager.add(actionVertical);
 		manager.add(actionHorizontal);
 		manager.add(new Separator());
-		manager.add(actionShowIn3D);
 		manager.add(actionShowTranslucent);
 		manager.add(actionUseLogScale);
 		manager.add(actionAutoRefresh);

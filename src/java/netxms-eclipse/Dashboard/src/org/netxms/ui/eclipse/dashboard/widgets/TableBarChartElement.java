@@ -56,7 +56,6 @@ public class TableBarChartElement extends TableComparisonChartElement
       chartConfig.setLegendPosition(config.getLegendPosition());
       chartConfig.setLegendVisible(config.isShowLegend());
       chartConfig.setExtendedLegend(config.isExtendedLegend());
-      chartConfig.setShowIn3D(config.isShowIn3D());
       chartConfig.setTransposed(((TableBarChartConfig)config).isTransposed());
       chartConfig.setTranslucent(config.isTranslucent());
       chartConfig.setAutoScale(config.isAutoScale());

@@ -64,7 +64,6 @@ public class PieChartElement extends ComparisonChartElement
       chartConfig.setLegendPosition(elementConfig.getLegendPosition());
       chartConfig.setLegendVisible(elementConfig.isShowLegend());
       chartConfig.setExtendedLegend(elementConfig.isExtendedLegend());
-      chartConfig.setShowIn3D(elementConfig.isShowIn3D());
       chartConfig.setTranslucent(elementConfig.isTranslucent());
 
       chart = new Chart(getContentArea(), SWT.NONE, ChartType.PIE, chartConfig);

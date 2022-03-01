@@ -48,9 +48,6 @@ public class ObjectStatusChartConfig extends DashboardElementConfig
 	private boolean showLegend = true;
 	
 	@Element(required=false)
-	private boolean showIn3D = true;
-	
-	@Element(required=false)
 	private boolean transposed = true;
 	
 	@Element(required=false)
@@ -105,22 +102,6 @@ public class ObjectStatusChartConfig extends DashboardElementConfig
 		ObjectIdMatchingData md = remapData.get(rootObject);
 		if (md != null)
 			rootObject = md.dstId;
-	}
-
-	/**
-	 * @return the showIn3D
-	 */
-	public boolean isShowIn3D()
-	{
-		return showIn3D;
-	}
-
-	/**
-	 * @param showIn3D the showIn3D to set
-	 */
-	public void setShowIn3D(boolean showIn3D)
-	{
-		this.showIn3D = showIn3D;
 	}
 
 	/**

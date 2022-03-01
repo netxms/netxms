@@ -62,7 +62,6 @@ public class ScriptedBarChartElement extends ScriptedComparisonChartElement
       chartConfig.setLegendPosition(elementConfig.getLegendPosition());
       chartConfig.setLegendVisible(elementConfig.isShowLegend());
       chartConfig.setExtendedLegend(elementConfig.isExtendedLegend());
-      chartConfig.setShowIn3D(elementConfig.isShowIn3D());
       chartConfig.setTransposed(elementConfig.isTransposed());
       chartConfig.setTranslucent(elementConfig.isTranslucent());
       chartConfig.setAutoScale(elementConfig.isAutoScale());

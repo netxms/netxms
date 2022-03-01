@@ -74,7 +74,6 @@ public class DataComparisonView extends ViewPart
 	private static final String KEY_AUTO_REFRESH = "autoRefresh"; //$NON-NLS-1$
 	private static final String KEY_REFRESH_INTERVAL = "autoRefreshInterval"; //$NON-NLS-1$
 	private static final String KEY_LOG_SCALE = "logScale"; //$NON-NLS-1$
-	private static final String KEY_3D_VIEW = "enable3DView"; //$NON-NLS-1$
 	private static final String KEY_TRANSPOSED = "isTransposed"; //$NON-NLS-1$
 	private static final String KEY_TRANSLUCENT = "isTRanslucent"; //$NON-NLS-1$
 	private static final String KEY_SHOW_LEGEND = "showLegend"; //$NON-NLS-1$
@@ -87,7 +86,6 @@ public class DataComparisonView extends ViewPart
 	private ViewRefreshController refreshController;
 	private boolean autoRefreshEnabled = true;
 	private boolean useLogScale = false;
-	private boolean showIn3D = true;
 	private int autoRefreshInterval = 30;	// 30 seconds
    private ChartType chartType = ChartType.BAR;
 	private boolean transposed = false;
@@ -100,7 +98,6 @@ public class DataComparisonView extends ViewPart
 	private Action actionAutoRefresh;
 	private Action actionShowBarChart;
 	private Action actionShowPieChart;
-	private Action actionShowIn3D;
 	private Action actionShowTranslucent;
 	private Action actionUseLogScale;
 	private Action actionHorizontal;
@@ -213,7 +210,6 @@ public class DataComparisonView extends ViewPart
 			showLegend = safeCast(memento.getBoolean(KEY_SHOW_LEGEND), showLegend);
 			legendPosition = safeCast(memento.getInteger(KEY_LEGEND_POSITION), legendPosition);
 			useLogScale = safeCast(memento.getBoolean(KEY_LOG_SCALE), useLogScale);
-			showIn3D = safeCast(memento.getBoolean(KEY_3D_VIEW), showIn3D);
          setTitleImage(getIconByChartType(chartType));
 		}
 	}
@@ -252,7 +248,6 @@ public class DataComparisonView extends ViewPart
 		memento.putBoolean(KEY_SHOW_LEGEND, showLegend);
 		memento.putInteger(KEY_LEGEND_POSITION, legendPosition);
 		memento.putBoolean(KEY_LOG_SCALE, useLogScale);
-		memento.putBoolean(KEY_3D_VIEW, showIn3D);
 	}
 
    /**
@@ -264,7 +259,6 @@ public class DataComparisonView extends ViewPart
       ChartConfiguration chartConfiguration = new ChartConfiguration();
       chartConfiguration.setLegendPosition(legendPosition);
       chartConfiguration.setLegendVisible(showLegend);
-      chartConfiguration.setShowIn3D(showIn3D);
       chartConfiguration.setTransposed(transposed);
       chartConfiguration.setTranslucent(translucent);
 
@@ -355,19 +349,6 @@ public class DataComparisonView extends ViewPart
 			}
 		};
 		actionUseLogScale.setChecked(useLogScale);
-		
-		actionShowIn3D = new Action(Messages.get().DataComparisonView_3DView) {
-			@Override
-			public void run()
-			{
-				showIn3D = !showIn3D;
-				setChecked(showIn3D);
-            chart.getConfiguration().setShowIn3D(showIn3D);
-            chart.rebuild();
-			}
-		};
-		actionShowIn3D.setChecked(showIn3D);
-		//actionShowIn3D.setImageDescriptor(Activator.getImageDescriptor("icons/view3d.png"));
 		
 		actionShowTranslucent = new Action(Messages.get().DataComparisonView_Translucent) {
 			@Override
@@ -514,7 +495,6 @@ public class DataComparisonView extends ViewPart
 		manager.add(actionVertical);
 		manager.add(actionHorizontal);
 		manager.add(new Separator());
-		manager.add(actionShowIn3D);
 		manager.add(actionShowTranslucent);
 		manager.add(actionUseLogScale);
 		manager.add(actionAutoRefresh);
@@ -543,7 +523,6 @@ public class DataComparisonView extends ViewPart
 		manager.add(actionVertical);
 		manager.add(actionHorizontal);
 		manager.add(new Separator());
-		manager.add(actionShowIn3D);
 		manager.add(actionShowTranslucent);
 		manager.add(actionUseLogScale);
 		manager.add(actionAutoRefresh);
@@ -563,8 +542,6 @@ public class DataComparisonView extends ViewPart
 		manager.add(new Separator());
 		manager.add(actionVertical);
 		manager.add(actionHorizontal);
-		//manager.add(new Separator());
-		//manager.add(actionShowIn3D);
 		manager.add(new Separator());
 		manager.add(actionRefresh);
 	}

@@ -31,9 +31,6 @@ public abstract class ScriptedComparisonChartConfig extends AbstractChartConfig
    @Element(required = false)
    private long objectId = 0;
 
-	@Element(required = false)
-	private boolean showIn3D = false;
-
 	/**
     * @return the script
     */
@@ -65,20 +62,4 @@ public abstract class ScriptedComparisonChartConfig extends AbstractChartConfig
    {
       this.objectId = objectId;
    }
-
-   /**
-    * @return the showIn3D
-    */
-	public boolean isShowIn3D()
-	{
-		return showIn3D;
-	}
-
-	/**
-	 * @param showIn3D the showIn3D to set
-	 */
-	public void setShowIn3D(boolean showIn3D)
-	{
-		this.showIn3D = showIn3D;
-	}
 }

@@ -25,7 +25,7 @@ import org.simpleframework.xml.core.Persister;
 /**
  * Configuration for tube chart
  */
-public class TubeChartConfig extends ComparisonChartConfig
+public class TubeChartConfig extends AbstractChartConfig
 {
 	@Element(required=false)
 	private boolean transposed = false;
