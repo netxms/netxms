@@ -203,9 +203,9 @@ public class MacAddress
                {
                   int left = Integer.parseInt(matcher.group(i), 16);
                   int right = Integer.parseInt(matcher.group(i + 1), 16);
-                  byteList.set(j++, (byte)(left >> 4));
-                  byteList.set(j++, (byte)(((left & 0x00F) << 4) | (right >> 8)));
-                  byteList.set(j++, (byte)(right & 0x0FF));
+                  byteList.add(j++, (byte)(left >> 4));
+                  byteList.add(j++, (byte)(((left & 0x00F) << 4) | (right >> 8)));
+                  byteList.add(j++, (byte)(right & 0x0FF));
                }
 	         }
 	         catch(NumberFormatException e)
