@@ -50,7 +50,8 @@ extern UINT32 g_dcReconciliationBlockSize;
 extern UINT32 g_dcReconciliationTimeout;
 extern UINT32 g_dcWriterFlushInterval;
 extern UINT32 g_dcWriterMaxTransactionSize;
-extern UINT32 g_dcMaxCollectorPoolSize;
+extern uint32_t g_dcMinCollectorPoolSize;
+extern uint32_t g_dcMaxCollectorPoolSize;
 extern UINT32 g_dcOfflineExpirationTime;
 
 /**
@@ -1768,7 +1769,7 @@ void StartLocalDataCollector()
 
    LoadState();
 
-   g_dataCollectorPool = ThreadPoolCreate(_T("DATACOLL"), 1, g_dcMaxCollectorPoolSize);
+   g_dataCollectorPool = ThreadPoolCreate(_T("DATACOLL"), g_dcMinCollectorPoolSize, g_dcMaxCollectorPoolSize);
    s_dataCollectionSchedulerThread = ThreadCreateEx(DataCollectionScheduler);
    s_dataSenderThread = ThreadCreateEx(DataSender);
    s_databaseWriterThread = ThreadCreateEx(DatabaseWriter);
