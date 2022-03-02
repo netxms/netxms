@@ -220,7 +220,8 @@ UINT32 g_dcReconciliationBlockSize = 1024;
 UINT32 g_dcReconciliationTimeout = 60000;
 UINT32 g_dcWriterFlushInterval = 5000;
 UINT32 g_dcWriterMaxTransactionSize = 10000;
-UINT32 g_dcMaxCollectorPoolSize = 64;
+uint32_t g_dcMinCollectorPoolSize = 4;
+uint32_t g_dcMaxCollectorPoolSize = 64;
 UINT32 g_dcOfflineExpirationTime = 10; // 10 days
 int32_t g_zoneUIN = 0;
 uint32_t g_tunnelKeepaliveInterval = 30;
@@ -303,7 +304,9 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("CreateCrashDumps"), CT_BOOLEAN_FLAG_32, 0, 0, SF_CATCH_EXCEPTIONS, 0, &s_startupFlags, nullptr },
    { _T("CRL"), CT_STRING_SET, 0, 0, 0, 0, &s_crlList, nullptr },
    { _T("CRLReloadInterval"), CT_LONG, 0, 0, 0, 0, &s_crlReloadInterval, nullptr },
-   { _T("DataCollectionThreadPoolSize"), CT_LONG, 0, 0, 0, 0, &g_dcMaxCollectorPoolSize, nullptr },
+   { _T("DataCollectionMaxThreadPoolSize"), CT_LONG, 0, 0, 0, 0, &g_dcMaxCollectorPoolSize, nullptr },
+   { _T("DataCollectionMinThreadPoolSize"), CT_LONG, 0, 0, 0, 0, &g_dcMinCollectorPoolSize, nullptr },
+   { _T("DataCollectionThreadPoolSize"), CT_LONG, 0, 0, 0, 0, &g_dcMaxCollectorPoolSize, nullptr }, // For compatibility, preferred is DataCollectionMaxThreadPoolSize
    { _T("DataReconciliationBlockSize"), CT_LONG, 0, 0, 0, 0, &g_dcReconciliationBlockSize, nullptr },
    { _T("DataReconciliationTimeout"), CT_LONG, 0, 0, 0, 0, &g_dcReconciliationTimeout, nullptr },
    { _T("DataWriterFlushInterval"), CT_LONG, 0, 0, 0, 0, &g_dcWriterFlushInterval, nullptr },
