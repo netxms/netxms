@@ -55,29 +55,30 @@ ByteStream::~ByteStream()
    MemFree(m_data);
 }
 
-off_t ByteStream::seek(off_t pos, int32_t whence)
+/**
+ * Sets the current position of this stream to the given value.
+ */
+off_t ByteStream::seek(off_t offset, int origin)
 {
-   switch (whence)
+   off_t pos;
+   switch (origin)
    {
       case SEEK_SET:
-         if (pos > m_size || pos < 0)
-            return -1;
-         m_pos = pos;
+         pos = offset;
          break;
       case SEEK_CUR:
-         if (pos + m_pos > m_size || pos + m_pos < 0)
-            return -1;
-         m_pos += pos;
+         pos = static_cast<off_t>(m_pos) + offset;
          break;
       case SEEK_END:
-         if (pos + m_size > m_size || pos + m_size < 0)
-            return -1;
-         m_pos += pos;
+         pos = static_cast<off_t>(m_size) + offset;
          break;
       default:
          return -1;
    }
-   return m_pos;
+   if ((pos < 0) || (pos > m_size))
+      return -1;
+   m_pos = pos;
+   return pos;
 }
 
 /**
@@ -141,7 +142,7 @@ size_t ByteStream::writeString(const WCHAR* str, const char* codepage, ssize_t l
    }
 
    ssize_t bytesWritten;
-   if (!strnicmp(CHECK_NULL_A(codepage), "UCS", 3))
+   if ((codepage != nullptr) && !strnicmp(codepage, "UCS", 3))
    {
       bytesWritten = writeStringU(str, length, codepage);
    }
@@ -155,7 +156,7 @@ size_t ByteStream::writeString(const WCHAR* str, const char* codepage, ssize_t l
    {
       if (byteCount < 0x8000)
       {
-         uint16_t n = HostToBigEndian16(bytesWritten);
+         uint16_t n = HostToBigEndian16(static_cast<uint16_t>(bytesWritten));
          memcpy(&m_data[writeStartPos], &n, 2);
       }
       else
@@ -167,9 +168,9 @@ size_t ByteStream::writeString(const WCHAR* str, const char* codepage, ssize_t l
 
    if (nullTerminate)
    {
-      if (!strnicmp(CHECK_NULL_A(codepage), "UCS2", 4) || !strnicmp(CHECK_NULL_A(codepage), "UCS-2", 5))
+      if ((codepage != nullptr) && (!strnicmp(codepage, "UCS2", 4) || !strnicmp(codepage, "UCS-2", 5)))
          writeL((int16_t)0);
-      else if (!strnicmp(CHECK_NULL_A(codepage), "UCS4", 4) || !strnicmp(CHECK_NULL_A(codepage), "UCS-4", 5))
+      else if ((codepage != nullptr) && (!strnicmp(codepage, "UCS4", 4) || !strnicmp(codepage, "UCS-4", 5)))
          writeL((int32_t)0);
       else
          write((BYTE)0);
@@ -397,7 +398,7 @@ ssize_t ByteStream::getEncodedStringLength(ssize_t byteCount, bool isLenPrepende
    {
       uint32_t n = 0;
       BYTE* p = nullptr;
-      for (int i = m_pos; i < m_size; i += charSize)
+      for (size_t i = m_pos; i < m_size; i += charSize)
       {
          if (memcmp(&m_data[i], &n, charSize) == 0)
          {
@@ -410,7 +411,7 @@ ssize_t ByteStream::getEncodedStringLength(ssize_t byteCount, bool isLenPrepende
       byteCount = p - m_data - m_pos;
    }
 
-   return (m_size - m_pos < byteCount) ? -1 : byteCount;
+   return (static_cast<ssize_t>(m_size - m_pos) < byteCount) ? -1 : byteCount;
 }
 
 /**

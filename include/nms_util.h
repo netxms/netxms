@@ -2919,8 +2919,8 @@ private:
    BYTE *m_data;
    size_t m_size;
    size_t m_allocated;
-   size_t m_pos;
    size_t m_allocationStep;
+   size_t m_pos;
 
    ssize_t getEncodedStringLength(ssize_t byteCount, bool isLenPrepended, bool isNullTerminated, size_t charSize);
    char* readStringCore(ssize_t byteCount, bool isLenPrepended, bool isNullTerminated);
@@ -2936,8 +2936,7 @@ public:
 
    static ByteStream *load(const TCHAR *file);
 
-   // Move pointer to certain position in buffer
-   off_t seek(off_t pos, int32_t whence = SEEK_SET);
+   off_t seek(off_t offset, int origin = SEEK_SET);
 
    /**
     * Find first occurrence of a given value in buffer starting from current position
