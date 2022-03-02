@@ -495,7 +495,7 @@ public:
 };
 
 #ifdef _WIN32
-template class NXCORE_EXPORTABLE ObjectMemoryPool<shared_ptr<NetObj>>;
+template class NXCORE_EXPORTABLE SynchronizedObjectMemoryPool<shared_ptr<NetObj>>;
 #endif
 
 /**
@@ -3874,7 +3874,7 @@ struct ZoneProxy
 };
 
 #ifdef _WIN32
-template class NXCORE_EXPORTABLE ObjectMemoryPool<shared_ptr<ZoneProxy>>;
+template class NXCORE_EXPORTABLE SynchronizedObjectMemoryPool<shared_ptr<ZoneProxy>>;
 template class NXCORE_EXPORTABLE SharedPointerIndex<ZoneProxy>;
 #endif
 
