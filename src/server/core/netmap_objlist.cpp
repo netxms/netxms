@@ -152,45 +152,48 @@ void NetworkMapObjectList::removeObject(uint32_t id)
  */
 void NetworkMapObjectList::linkObjects(uint32_t id1, uint32_t id2, int linkType, const TCHAR *linkName, const TCHAR *port1, const TCHAR *port2)
 {
-   bool linkExists = false;
-   if ((m_objectList.indexOf(id1) != -1) && (m_objectList.indexOf(id2) != -1))  // if both objects exist
+   if ((m_objectList.indexOf(id1) == -1) || (m_objectList.indexOf(id2) == -1))
+      return;  // both objects should exist
+
+   // Check for duplicate links
+   ObjLink *link = nullptr;
+   for(int i = 0; i < m_linkList.size(); i++)
    {
-      // Check for duplicate links
-      for(int i = 0; i < m_linkList.size(); i++)
+      ObjLink *curr = m_linkList.get(i);
+      if (((curr->id1 == id1) && (curr->id2 == id2)) ||
+          ((curr->id2 == id1) && (curr->id1 == id2)))
       {
-         if (((m_linkList.get(i)->id1 == id1) && (m_linkList.get(i)->id2 == id2)) ||
-             ((m_linkList.get(i)->id2 == id1) && (m_linkList.get(i)->id1 == id2)))
+         if (m_allowDuplicateLinks)
          {
-            if (m_allowDuplicateLinks)
+            if (curr->type == linkType)
             {
-               if (m_linkList.get(i)->type == linkType)
-               {
-                  linkExists = true;
-                  break;
-               }
-            }
-            else
-            {
-               linkExists = true;
+               link = curr;
                break;
             }
          }
-      }
-      if (!linkExists)
-      {
-         ObjLink *link = new ObjLink();
-         link->id1 = id1;
-         link->id2 = id2;
-         link->type = linkType;
-         if (linkName != nullptr)
-            link->name = linkName;
-         if(port1 != nullptr)
-            _tcslcpy(link->port1, port1, MAX_CONNECTOR_NAME);
-         if(port2 != nullptr)
-            _tcslcpy(link->port2, port2, MAX_CONNECTOR_NAME);
-         m_linkList.add(link);
+         else
+         {
+            link = curr;
+            break;
+         }
       }
    }
+
+   if (link == nullptr)
+   {
+      link = new ObjLink();
+      link->id1 = id1;
+      link->id2 = id2;
+      link->type = linkType;
+      m_linkList.add(link);
+   }
+
+   if (linkName != nullptr)
+      link->name = linkName;
+   if (port1 != nullptr)
+      _tcslcpy(link->port1, port1, MAX_CONNECTOR_NAME);
+   if (port2 != nullptr)
+      _tcslcpy(link->port2, port2, MAX_CONNECTOR_NAME);
 }
 
 /**
@@ -209,75 +212,76 @@ static void UpdatePortNames(ObjLink *link, const TCHAR *port1, const TCHAR *port
  */
 void NetworkMapObjectList::linkObjectsEx(uint32_t id1, uint32_t id2, const TCHAR *port1, const TCHAR *port2, uint32_t portId1, uint32_t portId2, const TCHAR *name)
 {
+   if ((m_objectList.indexOf(id1) == -1) || (m_objectList.indexOf(id2) == -1))
+      return;  // both objects should exist
+
+   // Check for duplicate links
    bool linkExists = false;
-   if ((m_objectList.indexOf(id1) != -1) && (m_objectList.indexOf(id2) != -1))  // if both objects exist
+   for(int i = 0; i < m_linkList.size(); i++)
    {
-      // Check for duplicate links
-      for(int i = 0; i < m_linkList.size(); i++)
+      if ((m_linkList.get(i)->id1 == id1) && (m_linkList.get(i)->id2 == id2))
       {
-			if ((m_linkList.get(i)->id1 == id1) && (m_linkList.get(i)->id2 == id2))
-			{
-				int j;
-				for(j = 0; j < m_linkList.get(i)->portIdCount; j++)
-				{
-					if ((m_linkList.get(i)->portIdArray1[j] == portId1) && (m_linkList.get(i)->portIdArray2[j] == portId2))
-               {
-					   m_linkList.get(i)->name = name;
-                  linkExists = true;
-                  break;
-               }
-				}
-				if (!linkExists && (m_linkList.get(i)->portIdCount < MAX_PORT_COUNT))
-				{
-					m_linkList.get(i)->portIdArray1[j] = portId1;
-					m_linkList.get(i)->portIdArray2[j] = portId2;
-					m_linkList.get(i)->portIdCount++;
-					UpdatePortNames(m_linkList.get(i), port1, port2);
-					m_linkList.get(i)->type = LINK_TYPE_MULTILINK;
+         int j;
+         for(j = 0; j < m_linkList.get(i)->portIdCount; j++)
+         {
+            if ((m_linkList.get(i)->portIdArray1[j] == portId1) && (m_linkList.get(i)->portIdArray2[j] == portId2))
+            {
                m_linkList.get(i)->name = name;
                linkExists = true;
-				}
-				break;
-			}
-			if ((m_linkList.get(i)->id1 == id2) && (m_linkList.get(i)->id2 == id1))
-			{
-				int j;
-				for(j = 0; j < m_linkList.get(i)->portIdCount; j++)
-				{
-					if ((m_linkList.get(i)->portIdArray1[j] == portId2) && (m_linkList.get(i)->portIdArray2[j] == portId1))
-					{
-                  m_linkList.get(i)->name = name;
-                  linkExists = true;
-                  break;
-               }
-				}
-				if (!linkExists && (m_linkList.get(i)->portIdCount < MAX_PORT_COUNT))
-				{
-					m_linkList.get(i)->portIdArray1[j] = portId2;
-					m_linkList.get(i)->portIdArray2[j] = portId1;
-					m_linkList.get(i)->portIdCount++;
-					UpdatePortNames(m_linkList.get(i), port2, port1);
-					m_linkList.get(i)->type = LINK_TYPE_MULTILINK;
+               break;
+            }
+         }
+         if (!linkExists && (m_linkList.get(i)->portIdCount < MAX_PORT_COUNT))
+         {
+            m_linkList.get(i)->portIdArray1[j] = portId1;
+            m_linkList.get(i)->portIdArray2[j] = portId2;
+            m_linkList.get(i)->portIdCount++;
+            UpdatePortNames(m_linkList.get(i), port1, port2);
+            m_linkList.get(i)->type = LINK_TYPE_MULTILINK;
+            m_linkList.get(i)->name = name;
+            linkExists = true;
+         }
+         break;
+      }
+      if ((m_linkList.get(i)->id1 == id2) && (m_linkList.get(i)->id2 == id1))
+      {
+         int j;
+         for(j = 0; j < m_linkList.get(i)->portIdCount; j++)
+         {
+            if ((m_linkList.get(i)->portIdArray1[j] == portId2) && (m_linkList.get(i)->portIdArray2[j] == portId1))
+            {
                m_linkList.get(i)->name = name;
                linkExists = true;
-				}
-				break;
-			}
+               break;
+            }
+         }
+         if (!linkExists && (m_linkList.get(i)->portIdCount < MAX_PORT_COUNT))
+         {
+            m_linkList.get(i)->portIdArray1[j] = portId2;
+            m_linkList.get(i)->portIdArray2[j] = portId1;
+            m_linkList.get(i)->portIdCount++;
+            UpdatePortNames(m_linkList.get(i), port2, port1);
+            m_linkList.get(i)->type = LINK_TYPE_MULTILINK;
+            m_linkList.get(i)->name = name;
+            linkExists = true;
+         }
+         break;
       }
-      if (!linkExists)
-      {
-         ObjLink* obj = new ObjLink();
-         obj->id1 = id1;
-         obj->id2 = id2;
-         obj->type = LINK_TYPE_NORMAL;
-			obj->portIdCount = 1;
-			obj->portIdArray1[0] = portId1;
-			obj->portIdArray2[0] = portId2;
-         obj->name = name;
-			_tcslcpy(obj->port1, port1, MAX_CONNECTOR_NAME);
-			_tcslcpy(obj->port2, port2, MAX_CONNECTOR_NAME);
-			m_linkList.add(obj);
-      }
+   }
+
+   if (!linkExists)
+   {
+      ObjLink* obj = new ObjLink();
+      obj->id1 = id1;
+      obj->id2 = id2;
+      obj->type = LINK_TYPE_NORMAL;
+      obj->portIdCount = 1;
+      obj->portIdArray1[0] = portId1;
+      obj->portIdArray2[0] = portId2;
+      obj->name = name;
+      _tcslcpy(obj->port1, port1, MAX_CONNECTOR_NAME);
+      _tcslcpy(obj->port2, port2, MAX_CONNECTOR_NAME);
+      m_linkList.add(obj);
    }
 }
 
