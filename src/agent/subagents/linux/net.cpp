@@ -1,6 +1,6 @@
 /* 
  ** NetXMS subagent for GNU/Linux
- ** Copyright (C) 2004-2021 Raden Solutions
+ ** Copyright (C) 2004-2022 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -870,19 +870,18 @@ LONG H_NetIfInfoFromProc(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abs
  */
 LONG H_NetIfInfoSpeed(const TCHAR* param, const TCHAR* arg, TCHAR* value, AbstractCommSession* session)
 {
-   LONG ret = SYSINFO_RC_UNSUPPORTED;
-   char *p, buffer[256], name[IFNAMSIZ];
-
+   char buffer[256];
    if (!AgentGetParameterArgA(param, 1, buffer, 256))
       return SYSINFO_RC_UNSUPPORTED;
 
    // Check if we have interface name or index
-   uint index = strtol(buffer, &p, 10);
-   if (*p == 0)
+   char *eptr, name[IFNAMSIZ];
+   uint32_t index = strtol(buffer, &eptr, 10);
+   if (*eptr == 0)
    {
       // Index passed as argument, convert to name
       if (if_indextoname(index, name) == nullptr)
-         ret = SYSINFO_RC_ERROR;
+         return SYSINFO_RC_ERROR;
    }
    else
    {
@@ -890,21 +889,25 @@ LONG H_NetIfInfoSpeed(const TCHAR* param, const TCHAR* arg, TCHAR* value, Abstra
       strlcpy(name, buffer, IFNAMSIZ);
    }
 
-   if (ret != SYSINFO_RC_ERROR)
-   {
-      ret = SYSINFO_RC_ERROR;
-      struct ifreq ifr;
-      struct ethtool_cmd edata;
-      int sock = socket(PF_INET, SOCK_DGRAM, IPPROTO_IP);
+   struct ifreq ifr;
+   struct ethtool_cmd edata;
+   int sock = socket(PF_INET, SOCK_DGRAM, IPPROTO_IP);
+   if (sock == -1)
+      return SYSINFO_RC_ERROR;
 
-      strlcpy(ifr.ifr_name, name, sizeof(ifr.ifr_name));
-      ifr.ifr_data = reinterpret_cast<__caddr_t>(&edata);
-      edata.cmd = ETHTOOL_GSET;
-      if (ioctl(sock, SIOCETHTOOL, &ifr) >= 0)
-      {
-         ret = SYSINFO_RC_SUCCESS;
-      }
-      ret_uint64(value, edata.speed * 1000000);
+   strlcpy(ifr.ifr_name, name, sizeof(ifr.ifr_name));
+   ifr.ifr_data = reinterpret_cast<caddr_t>(&edata);
+   edata.cmd = ETHTOOL_GSET;
+   LONG rc;
+   if (ioctl(sock, SIOCETHTOOL, &ifr) >= 0)
+   {
+      ret_uint64(value, edata.speed * _ULL(1000000));
+      rc = SYSINFO_RC_SUCCESS;
    }
-   return ret;
+   else
+   {
+      rc = SYSINFO_RC_ERROR;
+   }
+   close(sock);
+   return rc;
 }
