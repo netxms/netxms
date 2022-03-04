@@ -200,26 +200,25 @@ String ConvertRequestToJqFormat(const TCHAR *originalValue)
    if (originalValue[0] == _T('/'))
    {
       result.append(_T(".\""));
-      const TCHAR *wordFistLetter = originalValue+1;
-      const TCHAR *currentPos = _tcschr(wordFistLetter, _T('/'));
-      while (currentPos != nullptr)
+      const TCHAR *element = originalValue+1;
+      const TCHAR *next = _tcschr(element, _T('/'));
+      while (next != nullptr)
       {
-         result.append(wordFistLetter, currentPos - wordFistLetter);
-         if (currentPos[1] != _T('\0'))
+         result.append(element, next - element);
+         if (next[1] != _T('\0'))
          {
             result.append(_T("\".\""));
          }
-         wordFistLetter = currentPos + 1;
-         currentPos = _tcschr(wordFistLetter, _T('/'));
+         element = next + 1;
+         next = _tcschr(element, _T('/'));
       }
-      result.append(wordFistLetter);
+      result.append(element);
       result.append(_T("\""));
    }
    else
    {
       result = StringBuffer(originalValue);
    }
-
    return result;
 }
 
@@ -258,24 +257,23 @@ void ServiceEntry::getParamsFromJSON(StringList *params, NXCPMessage *response)
    for (int i = 0; i < params->size(); i++)
    {
       String param = ConvertRequestToJqFormat(params->get(i));
-      char *programm;
 #ifdef UNICODE
-      programm = MBStringFromWideString(param);
+      char *program = UTF8StringFromWideString(param);
 #else
-      programm = MemCopyString(param);
+      char *program = MemCopyStringA(param);
 #endif
-      if (jv_is_valid(m_content.jvData) && jq_compile(jqState, programm))
+      if (jv_is_valid(m_content.jvData) && jq_compile(jqState, program))
       {
          jq_start(jqState, jv_copy(m_content.jvData), 0);
          jv result = jq_next(jqState);
          if (jv_is_valid(result))
          {
-            if (nxlog_get_debug_level_tag(DEBUG_TAG) >= 8)
+            if (nxlog_get_debug_level_tag(DEBUG_TAG) >= 7)
             {
                jv resultAsText = jv_dump_string(jv_copy(result), 0);
-               nxlog_debug_tag(DEBUG_TAG, 8, _T("ServiceEntry::getParamsFromJSON(): request query: %hs"), programm);
-               nxlog_debug_tag(DEBUG_TAG, 8, _T("ServiceEntry::getParamsFromJSON(): result kind: %d"), jv_get_kind(result));
-               nxlog_debug_tag(DEBUG_TAG, 8, _T("ServiceEntry::getParamsFromJSON(): result: %hs"), jv_string_value(resultAsText));
+               nxlog_debug_tag(DEBUG_TAG, 7, _T("ServiceEntry::getParamsFromJSON(): request query: %hs"), program);
+               nxlog_debug_tag(DEBUG_TAG, 7, _T("ServiceEntry::getParamsFromJSON(): result kind: %d"), jv_get_kind(result));
+               nxlog_debug_tag(DEBUG_TAG, 7, _T("ServiceEntry::getParamsFromJSON(): result: %hs"), jv_string_value(resultAsText));
                jv_free(resultAsText);
             }
 
@@ -292,7 +290,7 @@ void ServiceEntry::getParamsFromJSON(StringList *params, NXCPMessage *response)
          }
          jv_free(result);
       }
-      MemFree(programm);
+      MemFree(program);
    }
    jq_teardown(&jqState);
    response->setField(VID_NUM_PARAMETERS, resultCount);
@@ -347,7 +345,7 @@ void ServiceEntry::getListFromJSON(const TCHAR *path, StringList *resultList)
    {
       jq_start(jqState, jv_copy(m_content.jvData), 0);
       jv result = jq_next(jqState);
-      for (;jv_is_valid(result);result = jq_next(jqState))
+      for (; jv_is_valid(result); result = jq_next(jqState))
       {
          if (nxlog_get_debug_level_tag(DEBUG_TAG) >= 8)
          {
@@ -753,7 +751,7 @@ uint32_t ServiceEntry::query(const TCHAR *url, uint16_t requestMethod, const cha
                   }
 #else
                   rcc = ERR_FUNCTION_NOT_SUPPORTED;
-                  nxlog_debug_tag(DEBUG_TAG, 1, _T("ServiceEntry::query(): libjq missing. Please install libjq to parse json."));
+                  nxlog_debug_tag(DEBUG_TAG, 1, _T("ServiceEntry::query(): libjq missing. Please install libjq to parse JSON."));
 #endif
                }
                else
