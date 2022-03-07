@@ -32,6 +32,7 @@ import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
+import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
@@ -50,6 +51,7 @@ import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
+import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.commands.ICommandService;
 import org.netxms.client.NXCSession;
@@ -62,6 +64,7 @@ import org.netxms.client.objects.interfaces.NodeItemPair;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab;
+import org.netxms.ui.eclipse.objectview.views.TabbedObjectView;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.slm.Activator;
 import org.netxms.ui.eclipse.slm.dialogs.EditBusinessServiceCheckDlg;
@@ -100,6 +103,7 @@ public class BusinessServiceChecks extends ObjectTab
    private Action actionEdit;
    private Action actionCreate;
    private Action actionDelete;
+   private Action actionShowObjectDetails;
    private long serviceId = 0;
    private Map<Long, BusinessServiceCheck> checks;
    private Map<Long, BusinessServiceCheck> updatedChecks = new HashMap<>();
@@ -155,6 +159,7 @@ public class BusinessServiceChecks extends ObjectTab
             IStructuredSelection selection = event.getStructuredSelection();
             actionEdit.setEnabled(selection.size() == 1);
             actionDelete.setEnabled(selection.size() > 0);
+            actionShowObjectDetails.setEnabled(selection.size() == 1);
          }
       });
 
@@ -297,6 +302,15 @@ public class BusinessServiceChecks extends ObjectTab
             deleteCheck();
          }
       };
+      
+      actionShowObjectDetails = new Action("Show object details") {
+         @Override
+         public void run()
+         {
+            showObjectDetails();
+         }
+         
+      };
    }
 
    /**
@@ -329,6 +343,8 @@ public class BusinessServiceChecks extends ObjectTab
       manager.add(actionCreate);
       manager.add(actionEdit);
       manager.add(actionDelete);
+      manager.add(new Separator());
+      manager.add(actionShowObjectDetails);
    }
 
    /**
@@ -619,6 +635,30 @@ public class BusinessServiceChecks extends ObjectTab
       {
          filter.setFilterString(""); //$NON-NLS-1$
          viewer.refresh(false);
+      }
+   }
+   
+   private void showObjectDetails()
+   {
+      IStructuredSelection selection = viewer.getStructuredSelection();
+      if (selection.size() != 1)
+         return;
+
+      final BusinessServiceCheck check = new BusinessServiceCheck((BusinessServiceCheck)selection.getFirstElement());
+      if (check.getObjectId() == 0)
+         return;
+
+      AbstractObject object = session.findObjectById(check.getObjectId());
+      try
+      {
+
+         TabbedObjectView view = (TabbedObjectView)PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().showView(TabbedObjectView.ID);
+         view.setObject(object);
+      }
+      catch(PartInitException e)
+      {
+         MessageDialogHelper.openError(viewer.getControl().getShell(), "Error",
+               String.format("Error opening object details view: %s", e.getLocalizedMessage()));
       }
    }
 }

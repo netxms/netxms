@@ -30,6 +30,7 @@ import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
+import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
@@ -88,6 +89,7 @@ public class BusinessServiceChecksView extends ObjectView
    private Action actionEdit;
    private Action actionCreate;
    private Action actionDelete;
+   private Action actionShowObjectDetails;
    private Map<Long, BusinessServiceCheck> checks;
    private Map<Long, BusinessServiceCheck> updatedChecks = new HashMap<>();
    private Set<Long> deletedChecks = new HashSet<>();
@@ -301,6 +303,8 @@ public class BusinessServiceChecksView extends ObjectView
       manager.add(actionCreate);
       manager.add(actionEdit);
       manager.add(actionDelete);
+      manager.add(new Separator());
+      manager.add(actionShowObjectDetails);
    }
 
    /**
@@ -333,6 +337,15 @@ public class BusinessServiceChecksView extends ObjectView
          {
             deleteCheck();
          }
+      };
+      
+      actionShowObjectDetails = new Action(i18n.tr("Show object details")) {
+         @Override
+         public void run()
+         {
+            showObjectDetails();
+         }
+         
       };
    }
 
@@ -532,5 +545,19 @@ public class BusinessServiceChecksView extends ObjectView
    {
       session.removeListener(sessionListener);
       super.dispose();
+   }
+   
+   private void showObjectDetails()
+   {
+      IStructuredSelection selection = viewer.getStructuredSelection();
+      if (selection.size() != 1)
+         return;
+
+      final BusinessServiceCheck check = new BusinessServiceCheck((BusinessServiceCheck)selection.getFirstElement());
+      if (check.getObjectId() == 0)
+         return;
+
+      AbstractObject object = session.findObjectById(check.getObjectId());
+      //TODO: create redirect to object
    }
 }
