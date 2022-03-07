@@ -39,7 +39,7 @@ public class EventConfigurationElement implements ConfigurationPerspectiveElemen
    @Override
    public String getName()
    {
-      return i18n.tr("Event Configuration");
+      return i18n.tr("Event templates");
    }
 
    /**

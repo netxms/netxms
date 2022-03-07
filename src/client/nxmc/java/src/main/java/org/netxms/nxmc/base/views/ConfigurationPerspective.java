@@ -28,6 +28,8 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
+import org.eclipse.jface.viewers.Viewer;
+import org.eclipse.jface.viewers.ViewerFilter;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Composite;
@@ -117,6 +119,14 @@ public class ConfigurationPerspective extends Perspective
                   return ((ConfigurationPerspectiveElement)element).getName();
                }
             });
+            viewer.addFilter(new ViewerFilter() {
+               @Override
+               public boolean select(Viewer viewer, Object parentElement, Object element)
+               {
+                  String filter = getFilterText();
+                  return (filter == null) || filter.isEmpty() || ((ConfigurationPerspectiveElement)element).getName().toLowerCase().contains(filter.toLowerCase());
+               }
+            });
             viewer.setInput(elements);
          }
 
@@ -143,6 +153,15 @@ public class ConfigurationPerspective extends Perspective
             {
                viewer.setSelection(new StructuredSelection(selection), true);
             }
+         }
+
+         /**
+          * @see org.netxms.nxmc.base.views.View#onFilterModify()
+          */
+         @Override
+         protected void onFilterModify()
+         {
+            viewer.refresh();
          }
       };
       addNavigationView(navigationView);

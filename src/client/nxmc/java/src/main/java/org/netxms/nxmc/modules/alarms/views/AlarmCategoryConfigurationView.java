@@ -31,6 +31,9 @@ import org.netxms.nxmc.modules.alarms.widgets.AlarmCategoryWidget;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.xnap.commons.i18n.I18n;
 
+/**
+ * Configuration view for alarm categories
+ */
 public class AlarmCategoryConfigurationView extends ConfigurationView
 {
    private static I18n i18n = LocalizationHelper.getI18n(AlarmCategoryConfigurationView.class);
@@ -38,13 +41,12 @@ public class AlarmCategoryConfigurationView extends ConfigurationView
 
    private AlarmCategoryWidget dataView;
    
-   
    /**
     * Constructor
     */
    public AlarmCategoryConfigurationView()
    {
-      super(i18n.tr("Alarm Category Configuration"), ResourceManager.getImageDescriptor("icons/config-views/alarm_category.png"), ID, true);
+      super(i18n.tr("Alarm categories"), ResourceManager.getImageDescriptor("icons/config-views/alarm_category.png"), ID, true);
    }
 
    @Override
@@ -54,7 +56,7 @@ public class AlarmCategoryConfigurationView extends ConfigurationView
 
       dataView = new AlarmCategoryWidget(this, parent, SWT.NONE, ID, true);
       setFilterClient(dataView.getViewer(), dataView.getFilter());
-      
+
       dataView.getViewer().addDoubleClickListener(new IDoubleClickListener() {
          @Override
          public void doubleClick(DoubleClickEvent event)
@@ -76,18 +78,27 @@ public class AlarmCategoryConfigurationView extends ConfigurationView
       manager.add(new Separator());
    }
    
+   /**
+    * @see org.netxms.nxmc.base.views.View#refresh()
+    */
    @Override
    public void refresh()
    {
       dataView.refreshView();
    }
 
+   /**
+    * @see org.netxms.nxmc.base.views.ConfigurationView#isModified()
+    */
    @Override
    public boolean isModified()
    {
       return false;
    }
 
+   /**
+    * @see org.netxms.nxmc.base.views.ConfigurationView#save()
+    */
    @Override
    public void save()
    {
