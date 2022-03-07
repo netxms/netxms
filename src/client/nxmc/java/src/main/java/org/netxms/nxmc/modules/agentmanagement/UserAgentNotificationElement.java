@@ -39,7 +39,7 @@ public class UserAgentNotificationElement implements ConfigurationPerspectiveEle
    @Override
    public String getName()
    {
-      return i18n.tr("User Agent Notifications");
+      return i18n.tr("User agent notifications");
    }
 
    /**

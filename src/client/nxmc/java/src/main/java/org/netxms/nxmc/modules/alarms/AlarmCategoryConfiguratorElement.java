@@ -39,7 +39,7 @@ public class AlarmCategoryConfiguratorElement implements ConfigurationPerspectiv
    @Override
    public String getName()
    {
-      return i18n.tr("Alarm Category Configuration");
+      return i18n.tr("Alarm categories");
    }
 
    /**

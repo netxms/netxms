@@ -47,7 +47,7 @@ public class EventConfigurator extends ConfigurationView
     */
    public EventConfigurator()
    {
-      super(i18n.tr("Event Template"), ResourceManager.getImageDescriptor("icons/config-views/event_configurator.png"), ID, true);
+      super(i18n.tr("Event templates"), ResourceManager.getImageDescriptor("icons/config-views/event_configurator.png"), ID, true);
    }
 
    /**

@@ -79,7 +79,7 @@ public class UserAgentNotificationView extends ConfigurationView implements Sess
     */
    public UserAgentNotificationView()
    {
-      super(i18n.tr("User Agent Notifications"), ResourceManager.getImageDescriptor("icons/config-views/user_agent_messages.png"), ID, true);
+      super(i18n.tr("User agent notifications"), ResourceManager.getImageDescriptor("icons/config-views/user_agent_messages.png"), ID, true);
    }
 
    @Override
