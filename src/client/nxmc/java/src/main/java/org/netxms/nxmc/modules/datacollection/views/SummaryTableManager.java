@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -83,16 +83,16 @@ public class SummaryTableManager extends ConfigurationView
    private Action actionCreateTableValue;
 	private Action actionEdit;
 	private Action actionDelete;
-	
+
    /**
     * Constructor
     */
    public SummaryTableManager() 
    {
-      super(i18n.tr("DCI Summery Tables"), ResourceManager.getImageDescriptor("icons/config-views/summary_table.png"), ID, true);
+      super(i18n.tr("DCI Summary Tables"), ResourceManager.getImageDescriptor("icons/config-views/summary_table.png"), ID, true);
       session = Registry.getSession();    
    }
-   
+
    /**
     * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
     */
@@ -130,9 +130,9 @@ public class SummaryTableManager extends ConfigurationView
 
 		createActions();
 		createPopupMenu();
-		
+
 		refresh();
-		
+
 		listener = new SessionListener() {
 			@Override
 			public void notificationHandler(SessionNotification n)

@@ -27,7 +27,7 @@ import org.netxms.nxmc.services.ConfigurationPerspectiveElement;
 import org.xnap.commons.i18n.I18n;
 
 /**
- * Alarm category configuration element 
+ * DCI summary tables configuration element
  */
 public class SummaryTableManagerConfiguratorElement implements ConfigurationPerspectiveElement
 {
@@ -39,7 +39,7 @@ public class SummaryTableManagerConfiguratorElement implements ConfigurationPers
    @Override
    public String getName()
    {
-      return i18n.tr("DCI Summery Tables");
+      return i18n.tr("DCI summary tables");
    }
 
    /**
