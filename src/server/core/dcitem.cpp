@@ -377,7 +377,7 @@ bool DCItem::saveToDatabase(DB_HANDLE hdb)
 
    // Delete non-existing thresholds
 	TCHAR query[256];
-   _sntprintf(query, 256, _T("SELECT threshold_id FROM thresholds WHERE item_id=%d"), m_id);
+   _sntprintf(query, 256, _T("SELECT threshold_id FROM thresholds WHERE item_id=%u"), m_id);
    DB_RESULT hResult = DBSelect(hdb, query);
    if (hResult != nullptr)
    {
@@ -391,8 +391,7 @@ bool DCItem::saveToDatabase(DB_HANDLE hdb)
 					break;
          if (j == getThresholdCount())
          {
-            _sntprintf(query, 256, _T("DELETE FROM thresholds WHERE threshold_id=%d"), dwId);
-            DBQuery(hdb, query);
+            ExecuteQueryOnObject(hdb, dwId, _T("DELETE FROM thresholds WHERE threshold_id=?"));
          }
       }
       DBFreeResult(hResult);
@@ -529,14 +528,13 @@ void DCItem::createMessage(NXCPMessage *pMsg)
  */
 void DCItem::deleteFromDatabase()
 {
-   TCHAR szQuery[256];
-
 	DCObject::deleteFromDatabase();
 
-   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM items WHERE item_id=%d"), m_id);
-   QueueSQLRequest(szQuery);
-   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM thresholds WHERE item_id=%d"), m_id);
-   QueueSQLRequest(szQuery);
+   TCHAR query[256];
+   _sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("DELETE FROM items WHERE item_id=%u"), m_id);
+   QueueSQLRequest(query);
+   _sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("DELETE FROM thresholds WHERE item_id=%u"), m_id);
+   QueueSQLRequest(query);
    QueueRawDciDataDelete(m_id);
 
    auto owner = m_owner.lock();
