@@ -24,6 +24,27 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 41.0 to 41.1
+ */
+static bool H_UpgradeFromV0()
+{
+   CHK_EXEC(CreateConfigParam(_T("AgentTunnels.Certificates.ReissueInterval"),
+         _T("30"),
+         _T("Interval in days between reissuing agent certificates"),
+         _T("days"),
+         'I', true, false, false, false));
+
+   CHK_EXEC(CreateConfigParam(_T("AgentTunnels.Certificates.ValidityPeriod"),
+         _T("90"),
+         _T("Validity period in days for newly issued agent certificates"),
+         _T("days"),
+         'I', true, false, false, false));
+
+   CHK_EXEC(SetMinorSchemaVersion(1));
+   return true;
+}
+
+/**
  * Upgrade map
  */
 static struct
@@ -33,6 +54,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 0,  41, 1,  H_UpgradeFromV0  },
    { 0, 0, 0, nullptr }
 };
 

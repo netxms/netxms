@@ -309,10 +309,10 @@ void ShowAgentTunnels(CONSOLE_CTX console)
  */
 shared_ptr<AgentTunnel> AgentTunnel::create(SSL_CTX *context, SSL *ssl, SOCKET sock, const InetAddress& addr, uint32_t nodeId,
          int32_t zoneUIN, const TCHAR *certificateSubject, const TCHAR *certificateIssuer, time_t certificateExpirationTime,
-         BackgroundSocketPollerHandle *socketPoller)
+         time_t certificateIssueTime, BackgroundSocketPollerHandle *socketPoller)
 {
    shared_ptr<AgentTunnel> tunnel = make_shared<AgentTunnel>(context, ssl, sock, addr, nodeId, zoneUIN, certificateSubject,
-            certificateIssuer, certificateExpirationTime, socketPoller);
+            certificateIssuer, certificateExpirationTime, certificateIssueTime, socketPoller);
    tunnel->m_self = tunnel;
    return tunnel;
 }
@@ -327,7 +327,7 @@ static VolatileCounter s_nextTunnelId = 0;
  */
 AgentTunnel::AgentTunnel(SSL_CTX *context, SSL *ssl, SOCKET sock, const InetAddress& addr,
          uint32_t nodeId, int32_t zoneUIN, const TCHAR *certificateSubject, const TCHAR *certificateIssuer,
-         time_t certificateExpirationTime, BackgroundSocketPollerHandle *socketPoller) : m_channelLock(MutexType::FAST)
+         time_t certificateExpirationTime, time_t certificateIssueTime, BackgroundSocketPollerHandle *socketPoller) : m_channelLock(MutexType::FAST)
 {
    m_id = InterlockedIncrement(&s_nextTunnelId);
    m_address = addr;
@@ -343,6 +343,7 @@ AgentTunnel::AgentTunnel(SSL_CTX *context, SSL *ssl, SOCKET sock, const InetAddr
    m_certificateSubject = MemCopyString(certificateSubject);
    m_certificateIssuer = MemCopyString(certificateIssuer);
    m_certificateExpirationTime = certificateExpirationTime;
+   m_certificateIssueTime = certificateIssueTime;
    m_state = AGENT_TUNNEL_INIT;
    m_systemName = nullptr;
    m_platformName = nullptr;
@@ -680,6 +681,7 @@ void AgentTunnel::setup(const NXCPMessage *request)
       if (m_certificateExpirationTime != 0)
       {
          debugPrintf(4, _T("   Certificate expires at...: %s"), FormatTimestamp(m_certificateExpirationTime).cstr());
+         debugPrintf(4, _T("   Certificate issues at....: %s"), FormatTimestamp(m_certificateIssueTime).cstr());
          debugPrintf(4, _T("   Externally provisioned...: %s"), m_extProvCertificate ? _T("YES") : _T("NO"));
          debugPrintf(4, _T("   Certificate subject......: %s"), CHECK_NULL(m_certificateSubject));
          debugPrintf(4, _T("   Certificate issuer.......: %s"), CHECK_NULL(m_certificateIssuer));
@@ -691,7 +693,10 @@ void AgentTunnel::setup(const NXCPMessage *request)
          PostSystemEventWithNames(EVENT_TUNNEL_OPEN, m_nodeId, "dAsssssG", s_eventParamNames,
                   m_id, &m_address, m_systemName, m_hostname, m_platformName, m_systemInfo,
                   m_agentVersion, &m_agentId);
-         if (!m_extProvCertificate && (m_certificateExpirationTime - time(nullptr) <= 2592000)) // 30 days
+         int32_t reissueInterval = ConfigReadInt(_T("AgentTunnels.Certificates.ReissueInterval"), 30) * 86400;
+         time_t now = time(nullptr);
+         if (!m_extProvCertificate && ((m_certificateExpirationTime - now <= 2592000) || // 30 days
+               (now - m_certificateIssueTime >= reissueInterval)))
          {
             debugPrintf(4, _T("Certificate will expire soon, requesting renewal"));
             ThreadPoolExecute(g_mainThreadPool, BackgroundRenewCertificate, self());
@@ -832,7 +837,8 @@ void AgentTunnel::processCertificateRequest(NXCPMessage *request)
          {
             char *ou = m_bindGuid.toString().getUTF8String();
             char *cn = m_guid.toString().getUTF8String();
-            X509 *cert = IssueCertificate(certRequest, ou, cn, 365);
+            int32_t days = ConfigReadInt(_T("AgentTunnels.Certificates.ValidityPeriod"), 90);
+            X509 *cert = IssueCertificate(certRequest, ou, cn, days);
             MemFree(ou);
             MemFree(cn);
             if (cert != nullptr)
@@ -1397,6 +1403,7 @@ static void SetupTunnel(ConnectionRequest *request)
    int32_t zoneUIN = 0;
    X509 *cert = nullptr;
    time_t certExpTime = 0;
+   time_t certIssueTime = 0;
    StringBuffer certSubject, certIssuer;
    int version;
 
@@ -1515,6 +1522,7 @@ retry:
 #endif
 
       certExpTime = GetCertificateExpirationTime(cert);
+      certIssueTime = GetCertificateIssueTime(cert);
       certSubject = GetCertificateSubjectString(cert);
       certIssuer = GetCertificateIssuerString(cert);
       TCHAR ou[256], cn[256];
@@ -1659,7 +1667,7 @@ retry:
 
    tunnel = AgentTunnel::create(context, ssl, request->sock, request->addr, nodeId, zoneUIN,
          !certSubject.isEmpty() ? certSubject.cstr() : nullptr, !certIssuer.isEmpty() ? certIssuer.cstr() : nullptr,
-         certExpTime, sp);
+         certExpTime, certIssueTime, sp);
    RegisterTunnel(tunnel);
    tunnel->start();
 
@@ -2073,11 +2081,13 @@ void RenewAgentCertificates(const shared_ptr<ScheduledTaskParameters>& parameter
 
    s_tunnelListLock.lock();
    time_t now = time(nullptr);
+   int32_t reissueInterval = ConfigReadInt(_T("AgentTunnels.Certificates.ReissueInterval"), 30) * 86400;
    auto it = s_boundTunnels.begin();
    while(it.hasNext())
    {
       shared_ptr<AgentTunnel> t = it.next();
-      if (!t->isExtProvCertificate() && (t->getCertificateExpirationTime() - now <= 2592000))  // 30 days
+      if (!t->isExtProvCertificate() && ((t->getCertificateExpirationTime() - now <= 2592000) || // 30 days
+            (now - t->getCertificateIssueTime() >= reissueInterval)))
       {
          processingList.add(t);
       }

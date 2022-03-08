@@ -40,6 +40,7 @@ bool MajorSchemaUpgrade_V37();
 bool MajorSchemaUpgrade_V38();
 bool MajorSchemaUpgrade_V39();
 bool MajorSchemaUpgrade_V40();
+bool MajorSchemaUpgrade_V41();
 
 /**
  * Move to next major version of DB schema
@@ -153,6 +154,7 @@ static struct
    { 38, MajorSchemaUpgrade_V38 },
    { 39, MajorSchemaUpgrade_V39 },
    { 40, MajorSchemaUpgrade_V40 },
+   { 41, MajorSchemaUpgrade_V41 },
    { 0, nullptr }
 };
 

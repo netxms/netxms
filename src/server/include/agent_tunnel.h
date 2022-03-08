@@ -113,6 +113,7 @@ protected:
    TCHAR *m_certificateSubject;
    TCHAR *m_certificateIssuer;
    time_t m_certificateExpirationTime;
+   time_t m_certificateIssueTime;
    AgentTunnelState m_state;
    time_t m_startTime;
    NodeHardwareId m_hardwareId;
@@ -155,11 +156,11 @@ protected:
 public:
    static shared_ptr<AgentTunnel> create(SSL_CTX *context, SSL *ssl, SOCKET sock, const InetAddress& addr, uint32_t nodeId,
             int32_t zoneUIN, const TCHAR *certificateSubject, const TCHAR *certificateIssuer, time_t certificateExpirationTime,
-            BackgroundSocketPollerHandle *socketPoller);
+            time_t certificateIssueTime, BackgroundSocketPollerHandle *socketPoller);
 
    AgentTunnel(SSL_CTX *context, SSL *ssl, SOCKET sock, const InetAddress& addr, uint32_t nodeId, int32_t zoneUIN,
             const TCHAR *certificateSubject, const TCHAR *certificateIssuer, time_t certificateExpirationTime,
-            BackgroundSocketPollerHandle *socketPoller);
+            time_t certificateIssueTime, BackgroundSocketPollerHandle *socketPoller);
    ~AgentTunnel();
 
    shared_ptr<AgentTunnel> self() { return m_self.lock(); }
@@ -190,6 +191,7 @@ public:
    bool isBound() const { return m_nodeId != 0; }
    uint32_t getNodeId() const { return m_nodeId; }
    time_t getCertificateExpirationTime() const { return m_certificateExpirationTime; }
+   time_t getCertificateIssueTime() const { return m_certificateIssueTime; }
    AgentTunnelState getState() const { return m_state; }
    time_t getStartTime() const { return m_startTime; }
 
