@@ -484,20 +484,34 @@ void DataCollectionTarget::queuePredictionEngineTraining()
 /**
  * Schedule cleanup of DCI data after DCI deletion
  */
-void DataCollectionTarget::scheduleItemDataCleanup(UINT32 dciId)
+void DataCollectionTarget::scheduleItemDataCleanup(uint32_t dciId)
 {
    lockProperties();
-   m_deletedItems.add(dciId);
+   if (!m_deletedItems.contains(dciId))
+   {
+      m_deletedItems.add(dciId);
+   }
+   else
+   {
+      nxlog_write_tag(NXLOG_WARNING, _T("obj.dc"), _T("Internal structure inconsistency - attempt to add DCI [%u] to delete list for object %s [%u] but it is already added"), dciId, m_name, m_id);
+   }
    unlockProperties();
 }
 
 /**
  * Schedule cleanup of table DCI data after DCI deletion
  */
-void DataCollectionTarget::scheduleTableDataCleanup(UINT32 dciId)
+void DataCollectionTarget::scheduleTableDataCleanup(uint32_t dciId)
 {
    lockProperties();
-   m_deletedTables.add(dciId);
+   if (!m_deletedTables.contains(dciId))
+   {
+      m_deletedTables.add(dciId);
+   }
+   else
+   {
+      nxlog_write_tag(NXLOG_WARNING, _T("obj.dc"), _T("Internal structure inconsistency - attempt to add table DCI [%u] to delete list for object %s [%u] but it is already added"), dciId, m_name, m_id);
+   }
    unlockProperties();
 }
 
@@ -541,13 +555,12 @@ bool DataCollectionTarget::saveDCIListForCleanup(DB_HANDLE hdb)
  */
 void DataCollectionTarget::loadDCIListForCleanup(DB_HANDLE hdb)
 {
-   DB_STATEMENT hStmt = DBPrepare(hdb,
-                 _T("SELECT dci_id FROM dci_delete_list WHERE type='i' AND node_id=?"));
-   if (hStmt != NULL)
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT dci_id FROM dci_delete_list WHERE type='i' AND node_id=?"));
+   if (hStmt != nullptr)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
       DB_RESULT hResult = DBSelectPrepared(hStmt);
-      if (hResult != NULL)
+      if (hResult != nullptr)
       {
          int count = DBGetNumRows(hResult);
          for(int i = 0; i < count; i++)
@@ -559,13 +572,12 @@ void DataCollectionTarget::loadDCIListForCleanup(DB_HANDLE hdb)
       DBFreeStatement(hStmt);
    }
 
-   hStmt = DBPrepare(hdb,
-                 _T("SELECT dci_id FROM dci_delete_list WHERE type='t' AND node_id=?"));
-   if (hStmt != NULL)
+   hStmt = DBPrepare(hdb, _T("SELECT dci_id FROM dci_delete_list WHERE type='t' AND node_id=?"));
+   if (hStmt != nullptr)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
       DB_RESULT hResult = DBSelectPrepared(hStmt);
-      if (hResult != NULL)
+      if (hResult != nullptr)
       {
          int count = DBGetNumRows(hResult);
          for(int i = 0; i < count; i++)
@@ -1768,7 +1780,7 @@ void DataCollectionTarget::leaveMaintenanceMode(uint32_t userId)
 /**
  * Update cache size for given data collection item
  */
-void DataCollectionTarget::updateDCItemCacheSize(UINT32 dciId, UINT32 conditionId)
+void DataCollectionTarget::updateDCItemCacheSize(uint32_t dciId, uint32_t conditionId)
 {
    readLockDciAccess();
    shared_ptr<DCObject> dci = getDCObjectById(dciId, 0, false);
@@ -1782,7 +1794,7 @@ void DataCollectionTarget::updateDCItemCacheSize(UINT32 dciId, UINT32 conditionI
 /**
  * Reload DCI cache
  */
-void DataCollectionTarget::reloadDCItemCache(UINT32 dciId)
+void DataCollectionTarget::reloadDCItemCache(uint32_t dciId)
 {
    readLockDciAccess();
    shared_ptr<DCObject> dci = getDCObjectById(dciId, 0, false);
