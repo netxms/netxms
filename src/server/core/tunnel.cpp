@@ -681,7 +681,7 @@ void AgentTunnel::setup(const NXCPMessage *request)
       if (m_certificateExpirationTime != 0)
       {
          debugPrintf(4, _T("   Certificate expires at...: %s"), FormatTimestamp(m_certificateExpirationTime).cstr());
-         debugPrintf(4, _T("   Certificate issues at....: %s"), FormatTimestamp(m_certificateIssueTime).cstr());
+         debugPrintf(4, _T("   Certificate issued at....: %s"), FormatTimestamp(m_certificateIssueTime).cstr());
          debugPrintf(4, _T("   Externally provisioned...: %s"), m_extProvCertificate ? _T("YES") : _T("NO"));
          debugPrintf(4, _T("   Certificate subject......: %s"), CHECK_NULL(m_certificateSubject));
          debugPrintf(4, _T("   Certificate issuer.......: %s"), CHECK_NULL(m_certificateIssuer));

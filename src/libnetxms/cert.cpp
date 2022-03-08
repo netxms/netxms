@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -36,10 +36,12 @@ static inline const ASN1_TIME *X509_get0_notAfter(const X509 *x)
 {
    return X509_get_notAfter(x);
 }
+
 static inline const ASN1_TIME *X509_get0_notBefore(const X509 *x)
 {
    return X509_get_notBefore(x);
 }
+
 static inline const unsigned char *ASN1_STRING_get0_data(const ASN1_STRING *s)
 {
    return s->data;
@@ -186,23 +188,23 @@ String LIBNETXMS_EXPORTABLE GetCertificateIssuerString(const X509 *cert)
 /**
  * Get certificate expiration time
  */
-static time_t GetCertificateTime(const X509 *cert, const ASN1_TIME * (*func)(const X509 *))
+template<const ASN1_TIME* (*GetTime)(const X509*)> static inline time_t GetCertificateTime(const X509 *cert)
 {
 #if (OPENSSL_VERSION_NUMBER >= 0x10101000L) && !defined(LIBRESSL_VERSION_NUMBER)
    struct tm expTime;
-   ASN1_TIME_to_tm(func(cert), &expTime);
+   ASN1_TIME_to_tm(GetTime(cert), &expTime);
    return timegm(&expTime);
 #elif (OPENSSL_VERSION_NUMBER >= 0x10100000L) && !defined(LIBRESSL_VERSION_NUMBER)
    ASN1_TIME *epoch = ASN1_TIME_set(nullptr, static_cast<time_t>(0));
    int days, seconds;
-   ASN1_TIME_diff(&days, &seconds, epoch, func(cert));
+   ASN1_TIME_diff(&days, &seconds, epoch, GetTime(cert));
    ASN1_TIME_free(epoch);
    return static_cast<time_t>(days) * 86400 + seconds;
 #else
    struct tm expTime;
    memset(&expTime, 0, sizeof(expTime));
 
-   const ASN1_TIME *atime = func(cert);
+   const ASN1_TIME *atime = GetTime(cert);
 
    size_t i = 0;
    const char *s = reinterpret_cast<const char*>(atime->data);
@@ -245,7 +247,7 @@ static time_t GetCertificateTime(const X509 *cert, const ASN1_TIME * (*func)(con
  */
 time_t LIBNETXMS_EXPORTABLE GetCertificateExpirationTime(const X509 *cert)
 {
-   return GetCertificateTime(cert, X509_get0_notAfter);
+   return GetCertificateTime<X509_get0_notAfter>(cert);
 }
 
 /**
@@ -253,7 +255,7 @@ time_t LIBNETXMS_EXPORTABLE GetCertificateExpirationTime(const X509 *cert)
  */
 time_t LIBNETXMS_EXPORTABLE GetCertificateIssueTime(const X509 *cert)
 {
-   return GetCertificateTime(cert, X509_get0_notBefore);
+   return GetCertificateTime<X509_get0_notBefore>(cert);
 }
 
 /**

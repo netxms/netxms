@@ -102,10 +102,13 @@
     <ClCompile Include="upgrade_v38.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="upgrade_v39.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="upgrade_v40.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="upgrade_v39.cpp">
+    <ClCompile Include="upgrade_v41.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
