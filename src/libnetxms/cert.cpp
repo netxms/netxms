@@ -36,6 +36,10 @@ static inline const ASN1_TIME *X509_get0_notAfter(const X509 *x)
 {
    return X509_get_notAfter(x);
 }
+static inline const ASN1_TIME *X509_get0_notBefore(const X509 *x)
+{
+   return X509_get_notBefore(x);
+}
 static inline const unsigned char *ASN1_STRING_get0_data(const ASN1_STRING *s)
 {
    return s->data;
