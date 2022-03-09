@@ -56,7 +56,7 @@ public class TableThreshold
     */
    public TableThreshold(TableThreshold src)
    {
-      id = 0;
+      id = src.id;
       activationEvent = src.activationEvent;
       deactivationEvent = src.deactivationEvent;
       sampleCount = src.sampleCount;
@@ -258,5 +258,18 @@ public class TableThreshold
    public long getId()
    {
       return id;
+   }
+
+   /**
+    * Duplicate threshold for later use 
+    * (do not copy ID for duplicated threshold)
+    * 
+    * @return threshold copy
+    */
+   public TableThreshold duplicate()
+   {
+      TableThreshold tr = new TableThreshold(this);
+      tr.id = 0;
+      return tr;
    }
 }

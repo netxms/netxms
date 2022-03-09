@@ -393,7 +393,7 @@ public class TableThresholds extends AbstractDCIPropertyPage
          List<TableThreshold> list = selection.toList();
          for(TableThreshold t : list)
          {               
-            thresholds.add(thresholds.indexOf(t) + 1, new TableThreshold(t));
+            thresholds.add(thresholds.indexOf(t) + 1, t.duplicate());
             thresholdList.setInput(thresholds.toArray());
          }
       }
