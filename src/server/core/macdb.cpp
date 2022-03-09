@@ -187,7 +187,7 @@ void NXCORE_EXPORTABLE MacDbRemoveObject(const MacAddress& macAddr, const uint32
             break;
          }
       }
-      if(entry->objects.size() == 0)
+      if (entry->objects.isEmpty())
       {
          HASH_DEL(s_data, entry);
          delete entry;
