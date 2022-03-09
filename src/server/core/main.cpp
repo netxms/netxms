@@ -1147,7 +1147,8 @@ retry_db_lock:
       return FALSE;   // Mandatory module not loaded
    RegisterPredictionEngines();
 
-   // Load users from database
+   // Load users and authentication methods
+   LoadTwoFactorAuthenticationMethods();
    InitUsers();
    if (!LoadUsers())
    {
@@ -1168,13 +1169,6 @@ retry_db_lock:
    if (!InitAlarmManager())
       return FALSE;
 
-   // Initialize notification channels
-   LoadNotificationChannelDrivers();
-   LoadNotificationChannels();
-
-   // Initialize 2FA methods
-   LoadTwoFactorAuthenticationMethods();
-
    // Initialize objects infrastructure and load objects from database
    LoadGeoAreas();
    LoadNetworkDeviceDrivers();
@@ -1185,12 +1179,24 @@ retry_db_lock:
       return FALSE;
    nxlog_debug_tag(DEBUG_TAG_STARTUP, 1, _T("Objects loaded and initialized"));
 
+   // Check if management node object presented in database
+   CheckForMgmtNode();
+   if (g_dwMgmtNode == 0)
+   {
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_STARTUP, _T("NetXMS server cannot create node object for itself - probably because platform subagent cannot be loaded (check above error messages, if any)"));
+      return FALSE;
+   }
+
    // Initialize and load event actions
    if (!LoadActions())
    {
       nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_STARTUP, _T("Unable to initialize actions"));
       return FALSE;
    }
+
+   // Initialize notification channels
+   LoadNotificationChannelDrivers();
+   LoadNotificationChannels();
 
    // Initialize helpdesk link
    SetHDLinkEntryPoints(ResolveAlarmByHDRef, TerminateAlarmByHDRef);
@@ -1219,14 +1225,6 @@ retry_db_lock:
       ImportLocalConfiguration(importMode == 2);
 
    InitClientListeners();
-
-   // Check if management node object presented in database
-   CheckForMgmtNode();
-   if (g_dwMgmtNode == 0)
-   {
-      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_STARTUP, _T("NetXMS server cannot create node object for itself - probably because platform subagent cannot be loaded (check above error messages, if any)"));
-      return FALSE;
-   }
 
    // Create syncer thread pool
    maxSize = ConfigReadInt(_T("ThreadPool.Syncer.MaxSize"), 1);
