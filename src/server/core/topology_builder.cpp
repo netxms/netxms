@@ -101,6 +101,12 @@ static void ProcessParentSubnets(NetworkMapObjectList *topology, const shared_pt
                if (includeEndNodes || node->isRouter())
                {
                   BuildIPTopology(topology, node, nDepth - 1, includeEndNodes);
+                  if (nDepth == 1)
+                  {
+                     // Link object to subnet because BuildIPTopology will only add object itself at depth 0
+                     shared_ptr<Interface> iface = node->findInterfaceBySubnet(static_cast<Subnet*>(parentNetObject)->getIpAddress());
+                     topology->linkObjects(node->getId(), parentNetObject->getId(), LINK_TYPE_NORMAL, nullptr, (iface != nullptr) ? iface->getName() : nullptr);
+                  }
                }
             }
          }
