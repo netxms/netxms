@@ -957,7 +957,7 @@ AC_ARG_WITH(dist,
 	TOOLS="nxlptest"
 	SUBAGENT_DIRS="linux ds18x20 freebsd openbsd minix mqtt mysql pgsql netbsd sunos aix hpux informix oracle lmsensors darwin rpi java jmx opcua ubntlw bind9 netsvc db2 tuxedo mongodb ssh vmgr xen lorawan asterisk python"
 	AGENT_DIRS="libnxappc libnxtux"
-	NCDRV_MODULES="anysms googlechat kannel msteams mymobile nexmo nxagent slack smseagle telegram text2reach twilio websms"
+	NCDRV_MODULES="anysms googlechat kannel msteams mymobile nexmo nxagent slack smseagle telegram text2reach twilio websms xmpp"
    HDLINK_DIRS="jira redmine"
    PDSDRV_DIRS="influxdb rrdtool"
 	TOP_LEVEL_MODULES="include sql images tests"
@@ -1234,12 +1234,6 @@ if test $? = 0; then
 	CONTRIB_MODULES="$CONTRIB_MODULES mibs backgrounds music templates"
 	NCDRV_MODULES="$NCDRV_MODULES nxagent"
 	PDSDRV_DIRS="influxdb"
-
-	if test "x$DISABLE_XMPP" != "xyes"; then
-		MODULES="libstrophe $MODULES"
-		AC_DEFINE(XMPP_SUPPORTED, 1, Define to 1 if XMPP is supported)
-      XMPP_SUPPORT="yes"
-	fi
 
 	check_substr "$COMPONENTS" "java"
 	if test $? = 0; then
@@ -2150,10 +2144,6 @@ AC_CHECK_LIB(dl, dlopen)
 AC_CHECK_LIB(kstat, kstat_open)
 
 # sockets/resolver
-if test "$BUILD_SERVER-$XMPP_SUPPORT" = "yes-yes"; then
-	AC_CHECK_HEADERS([arpa/nameser_compat.h])
-	AC_CHECK_FUNC(res_query, , [AC_CHECK_LIB(resolv, res_query, [], [AC_CHECK_LIB(resolv, __res_query)])])
-fi
 AC_CHECK_FUNC(connect, , [AC_CHECK_LIB(socket, connect)])
 AC_CHECK_FUNC(gethostbyname, , [AC_CHECK_LIB(resolv, gethostbyname)])
 AC_CHECK_FUNC(gethostbyname, , [AC_CHECK_LIB(nsl, gethostbyname)])
@@ -2524,6 +2514,19 @@ if test "x$BUILD_SERVER" = "xyes" ; then
 			AC_DEFINE(USE_RADCLI, 1, Define to 1 if radcli is used as RADIUS client)
 		])
 	fi
+fi
+
+
+#--------------------------------------------------------------------
+# XMPP
+#--------------------------------------------------------------------
+
+if test "x$DISABLE_XMPP" != "xyes"; then
+   MODULES="libstrophe $MODULES"
+   NCDRV_MODULES="$NCDRV_MODULES xmpp"
+   XMPP_SUPPORT="yes"
+	AC_CHECK_HEADERS([arpa/nameser_compat.h])
+	AC_CHECK_FUNC(res_query, , [AC_CHECK_LIB(resolv, res_query, [], [AC_CHECK_LIB(resolv, __res_query)])])
 fi
 
 
@@ -4989,6 +4992,7 @@ AC_CONFIG_FILES([
 	src/ncdrivers/textfile/Makefile
 	src/ncdrivers/twilio/Makefile
 	src/ncdrivers/websms/Makefile
+   src/ncdrivers/xmpp/Makefile
 	src/nxcproxy/Makefile
 	src/nxscript/Makefile
 	src/server/Makefile
@@ -5131,13 +5135,14 @@ if test "x${BUILD_SERVER}" = "xyes"; then
 	else
 		echo "LDAP support            : NO"
 	fi
-	if test "x${XMPP_SUPPORT}" = "xyes"; then
-		echo "XMPP support            : YES"
-	else
-		echo "XMPP support            : NO"
-	fi
 else
 	echo "Build Server            : NO"
+fi
+
+if test "x${XMPP_SUPPORT}" = "xyes"; then
+   echo "XMPP support            : YES"
+else
+   echo "XMPP support            : NO"
 fi
 
 if test "x${PYTHON_SUPPORT}" = "xyes"; then

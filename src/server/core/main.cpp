@@ -100,11 +100,6 @@ void ExpandCommentMacrosTask(const shared_ptr<ScheduledTaskParameters> &paramete
 void InitCountryList();
 void InitCurrencyList();
 
-#if XMPP_SUPPORTED
-void StartXMPPConnector();
-void StopXMPPConnector();
-#endif
-
 /**
  * Syslog server control
  */
@@ -1329,13 +1324,6 @@ retry_db_lock:
    // Call startup functions for the modules
    CALL_ALL_MODULES(pfServerStarted, ());
 
-#if XMPP_SUPPORTED
-   if (ConfigReadBoolean(_T("XMPP.Enable"), true))
-   {
-      StartXMPPConnector();
-   }
-#endif
-
    ExecuteStartupScripts();
 
    // Internal stat collector should be started last when all queues
@@ -1401,10 +1389,6 @@ void NXCORE_EXPORTABLE Shutdown()
    nxlog_debug_tag(DEBUG_TAG_SHUTDOWN, 2, _T("Waiting for event processor to stop"));
    g_eventQueue.put(INVALID_POINTER_VALUE);
    ThreadJoin(s_eventProcessorThread);
-
-#if XMPP_SUPPORTED
-   StopXMPPConnector();
-#endif
 
    ThreadSleep(1);     // Give other threads a chance to terminate in a safe way
    nxlog_debug_tag(DEBUG_TAG_SHUTDOWN, 2, _T("All threads were notified, continue with shutdown"));

@@ -233,7 +233,7 @@ bool LoadUsers()
 							 _T("ldap_unique_id,created,password,full_name,grace_logins,auth_method,")
 							 _T("cert_mapping_method,cert_mapping_data,auth_failures,")
 							 _T("last_passwd_change,min_passwd_length,disabled_until,")
-							 _T("last_login,xmpp_id,email,phone_number FROM users"));
+							 _T("last_login,email,phone_number FROM users"));
    if (hResult == nullptr)
    {
       DBConnectionPoolReleaseConnection(hdb);
@@ -1719,107 +1719,4 @@ void NXCORE_EXPORTABLE SetUserDbObjectAttr(uint32_t id, const TCHAR *name, const
       object->setAttribute(name, value);
    }
    s_userDatabaseLock.unlock();
-}
-
-/**
- * Authenticate user for XMPP subscription
- */
-bool AuthenticateUserForXMPPSubscription(const char *xmppId)
-{
-   if (*xmppId == 0)
-      return false;
-
-   bool success = false;
-
-#ifdef UNICODE
-   WCHAR *_xmppId = WideStringFromUTF8String(xmppId);
-#else
-   char *_xmppId = strdup(xmppId);
-#endif
-
-   // Remove possible resource at the end
-   TCHAR *sep = _tcschr(_xmppId, _T('/'));
-   if (sep != NULL)
-      *sep = 0;
-
-   s_userDatabaseLock.readLock();
-   Iterator<UserDatabaseObject> it = s_userDatabase.begin();
-   while(it.hasNext())
-   {
-      UserDatabaseObject *object = it.next();
-		if (!object->isGroup() &&
-          !object->isDisabled() && !object->isDeleted() &&
-			 !_tcsicmp(_xmppId, ((User *)object)->getXmppId()))
-      {
-         nxlog_debug_tag(DEBUG_TAG, 4, _T("User %s authenticated for XMPP subscription"), object->getName());
-
-         TCHAR workstation[256];
-         _tcscpy(workstation, _T("XMPP:"));
-         _tcslcpy(&workstation[5], _xmppId, 251);
-         WriteAuditLog(AUDIT_SECURITY, TRUE, object->getId(), workstation, AUDIT_SYSTEM_SID, 0, _T("User authenticated for XMPP subscription"));
-
-         success = true;
-         break;
-      }
-   }
-   s_userDatabaseLock.unlock();
-
-   MemFree(_xmppId);
-   return success;
-}
-
-/**
- * Authenticate user for XMPP commands
- */
-bool AuthenticateUserForXMPPCommands(const char *xmppId)
-{
-   if (*xmppId == 0)
-      return false;
-
-   bool success = false;
-
-#ifdef UNICODE
-   WCHAR *_xmppId = WideStringFromUTF8String(xmppId);
-#else
-   char *_xmppId = strdup(xmppId);
-#endif
-
-   // Remove possible resource at the end
-   TCHAR *sep = _tcschr(_xmppId, _T('/'));
-   if (sep != NULL)
-      *sep = 0;
-
-   s_userDatabaseLock.readLock();
-   Iterator<UserDatabaseObject> it = s_userDatabase.begin();
-   while(it.hasNext())
-   {
-      UserDatabaseObject *object = it.next();
-      if (!object->isGroup() &&
-          !object->isDisabled() && !object->isDeleted() &&
-          !_tcsicmp(_xmppId, ((User *)object)->getXmppId()))
-      {
-         UINT64 systemRights = GetEffectiveSystemRights((User *)object);
-
-         TCHAR workstation[256];
-         _tcscpy(workstation, _T("XMPP:"));
-         _tcslcpy(&workstation[5], _xmppId, 251);
-
-         if (systemRights & SYSTEM_ACCESS_XMPP_COMMANDS)
-         {
-            nxlog_debug_tag(DEBUG_TAG, 4, _T("User %s authenticated for XMPP commands"), object->getName());
-            WriteAuditLog(AUDIT_SECURITY, TRUE, object->getId(), workstation, AUDIT_SYSTEM_SID, 0, _T("User authenticated for XMPP commands"));
-            success = true;
-         }
-         else
-         {
-            nxlog_debug_tag(DEBUG_TAG, 4, _T("Access to XMPP commands denied for user %s"), object->getName());
-            WriteAuditLog(AUDIT_SECURITY, FALSE, object->getId(), workstation, AUDIT_SYSTEM_SID, 0, _T("Access to XMPP commands denied"));
-         }
-         break;
-      }
-   }
-   s_userDatabaseLock.unlock();
-
-   MemFree(_xmppId);
-   return success;
 }

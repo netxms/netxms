@@ -34,7 +34,7 @@ libnxcore_la_SOURCES = 2fa.cpp abind_target.cpp accesspoint.cpp acl.cpp actions.
 			topology_builder.cpp tracert.cpp tunnel.cpp ua_notification_item.cpp \
 			uniroot.cpp upload_job.cpp userdb.cpp \
 			userdb_objects.cpp vobject.cpp vpnconn.cpp vrrp.cpp watchdog.cpp \
-			websvc.cpp winevent.cpp winperf.cpp xmpp.cpp zone.cpp
+			websvc.cpp winevent.cpp winperf.cpp zone.cpp
 libnxcore_la_CPPFLAGS = -I@top_srcdir@/include -I@top_srcdir@/build -I@top_srcdir@/src/server/include -DNXCORE_EXPORTS \
 	@MQTT_CPPFLAGS@ @PYTHON_CPPFLAGS@
 if USE_INTERNAL_ZLIB
@@ -52,9 +52,6 @@ libnxcore_la_LIBADD = \
 	../../agent/libnxagent/libnxagent.la \
 	../../libnetxms/libnetxms.la \
 	@SERVER_LIBS@
-if XMPP_SUPPORT
-libnxcore_la_LIBADD += @top_srcdir@/src/libstrophe/libstrophe.la
-endif
 if USE_INTERNAL_EXPAT
 libnxcore_la_LIBADD += @top_srcdir@/src/libexpat/libexpat/libnxexpat.la
 endif

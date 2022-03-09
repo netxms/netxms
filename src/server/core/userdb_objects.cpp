@@ -445,7 +445,7 @@ NXSL_Value *UserDatabaseObject::createNXSLObject(NXSL_VM *vm)
  *    id,name,system_access,flags,description,guid,ldap_dn,password,full_name,
  *    grace_logins,auth_method,cert_mapping_method,cert_mapping_data,
  *    auth_failures,last_passwd_change,min_passwd_length,disabled_until,
- *    last_login,xmpp_id,email,phone_number
+ *    last_login,email,phone_number
  */
 User::User(DB_HANDLE hdb, DB_RESULT hResult, int row) : UserDatabaseObject(hdb, hResult, row)
 {
@@ -491,9 +491,8 @@ User::User(DB_HANDLE hdb, DB_RESULT hResult, int row) : UserDatabaseObject(hdb, 
 	m_minPasswordLength = DBGetFieldLong(hResult, row, 17);
 	m_disabledUntil = (time_t)DBGetFieldLong(hResult, row, 18);
 	m_lastLogin = (time_t)DBGetFieldLong(hResult, row, 19);
-	m_xmppId = DBGetField(hResult, row, 20, nullptr, 0);
-   m_email = DBGetField(hResult, row, 21, nullptr, 0);
-   m_phoneNumber = DBGetField(hResult, row, 22, nullptr, 0);
+   m_email = DBGetField(hResult, row, 20, nullptr, 0);
+   m_phoneNumber = DBGetField(hResult, row, 21, nullptr, 0);
 
    m_enableTime = 0;
 
@@ -528,7 +527,6 @@ User::User() : UserDatabaseObject()
 	m_disabledUntil = 0;
 	m_lastLogin = 0;
 	m_enableTime = 0;
-   m_xmppId = nullptr;
    m_email = nullptr;
    m_phoneNumber = nullptr;
 }
@@ -550,7 +548,6 @@ User::User(uint32_t id, const TCHAR *name, UserAuthenticationMethod authMethod) 
 	m_disabledUntil = 0;
 	m_lastLogin = 0;
    m_enableTime = 0;
-   m_xmppId = nullptr;
    m_email = nullptr;
    m_phoneNumber = nullptr;
 }
@@ -584,7 +581,6 @@ User::User(const User *src) : UserDatabaseObject(src)
    m_enableTime = src->m_enableTime;
    m_minPasswordLength = src->m_minPasswordLength;
    m_authFailures = src->m_authFailures;
-   m_xmppId = MemCopyString(src->m_xmppId);
    m_email = MemCopyString(src->m_email);
    m_phoneNumber = MemCopyString(src->m_phoneNumber);
 
@@ -599,7 +595,6 @@ User::~User()
 	MemFree(m_certMappingData);
 	MemFree(m_email);
    MemFree(m_phoneNumber);
-   MemFree(m_xmppId);
 }
 
 /**
@@ -633,7 +628,7 @@ bool User::saveToDatabase(DB_HANDLE hdb)
       hStmt = DBPrepare(hdb,
          _T("UPDATE users SET name=?,password=?,system_access=?,flags=?,full_name=?,description=?,grace_logins=?,guid=?,")
 			_T("  auth_method=?,cert_mapping_method=?,cert_mapping_data=?,auth_failures=?,last_passwd_change=?,")
-         _T("  min_passwd_length=?,disabled_until=?,last_login=?,xmpp_id=?,ldap_dn=?,ldap_unique_id=?,created=?,")
+         _T("  min_passwd_length=?,disabled_until=?,last_login=?,ldap_dn=?,ldap_unique_id=?,created=?,")
          _T("  email=?,phone_number=? WHERE id=?"));
    }
    else
@@ -641,7 +636,7 @@ bool User::saveToDatabase(DB_HANDLE hdb)
       hStmt = DBPrepare(hdb,
          _T("INSERT INTO users (name,password,system_access,flags,full_name,description,grace_logins,guid,auth_method,")
          _T("  cert_mapping_method,cert_mapping_data,password_history,auth_failures,last_passwd_change,min_passwd_length,")
-         _T("  disabled_until,last_login,xmpp_id,ldap_dn,ldap_unique_id,created,email,phone_number,id) ")
+         _T("  disabled_until,last_login,ldap_dn,ldap_unique_id,created,email,phone_number,id) ")
          _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,'',?,?,?,?,?,?,?,?,?,?,?,?)"));
    }
    if (hStmt == nullptr)
@@ -663,13 +658,12 @@ bool User::saveToDatabase(DB_HANDLE hdb)
    DBBind(hStmt, 14, DB_SQLTYPE_INTEGER, m_minPasswordLength);
    DBBind(hStmt, 15, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_disabledUntil));
    DBBind(hStmt, 16, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_lastLogin));
-   DBBind(hStmt, 17, DB_SQLTYPE_VARCHAR, m_xmppId, DB_BIND_STATIC);
-   DBBind(hStmt, 18, DB_SQLTYPE_TEXT, m_ldapDn, DB_BIND_STATIC);
-   DBBind(hStmt, 19, DB_SQLTYPE_VARCHAR, m_ldapId, DB_BIND_STATIC);
-   DBBind(hStmt, 20, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_created));
-   DBBind(hStmt, 21, DB_SQLTYPE_VARCHAR, m_email, DB_BIND_STATIC);
-   DBBind(hStmt, 22, DB_SQLTYPE_VARCHAR, m_phoneNumber, DB_BIND_STATIC);
-   DBBind(hStmt, 23, DB_SQLTYPE_INTEGER, m_id);
+   DBBind(hStmt, 17, DB_SQLTYPE_TEXT, m_ldapDn, DB_BIND_STATIC);
+   DBBind(hStmt, 18, DB_SQLTYPE_VARCHAR, m_ldapId, DB_BIND_STATIC);
+   DBBind(hStmt, 19, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_created));
+   DBBind(hStmt, 20, DB_SQLTYPE_VARCHAR, m_email, DB_BIND_STATIC);
+   DBBind(hStmt, 21, DB_SQLTYPE_VARCHAR, m_phoneNumber, DB_BIND_STATIC);
+   DBBind(hStmt, 22, DB_SQLTYPE_INTEGER, m_id);
 
    bool success = DBBegin(hdb);
 	if (success)
@@ -788,7 +782,6 @@ void User::fillMessage(NXCPMessage *msg)
 	msg->setField(VID_MIN_PASSWORD_LENGTH, static_cast<uint16_t>(m_minPasswordLength));
 	msg->setFieldFromTime(VID_DISABLED_UNTIL, m_disabledUntil);
 	msg->setField(VID_AUTH_FAILURES, m_authFailures);
-   msg->setField(VID_XMPP_ID, CHECK_NULL_EX(m_xmppId));
    msg->setField(VID_EMAIL, CHECK_NULL_EX(m_email));
    msg->setField(VID_PHONE_NUMBER, CHECK_NULL_EX(m_phoneNumber));
 
@@ -829,8 +822,6 @@ void User::modifyFromMessage(const NXCPMessage& msg)
 		MemFree(m_certMappingData);
 		m_certMappingData = msg.getFieldAsString(VID_CERT_MAPPING_DATA);
 	}
-	if (fields & USER_MODIFY_XMPP_ID)
-		msg.getFieldAsString(VID_XMPP_ID, &m_xmppId);
    if (fields & USER_MODIFY_EMAIL)
       msg.getFieldAsString(VID_EMAIL, &m_email);
    if (fields & USER_MODIFY_PHONE_NUMBER)
@@ -968,7 +959,6 @@ json_t *User::toJson() const
    json_object_set_new(root, "lastLogin", json_integer(m_lastLogin));
    json_object_set_new(root, "minPasswordLength", json_integer(m_minPasswordLength));
    json_object_set_new(root, "authFailures", json_integer(m_authFailures));
-   json_object_set_new(root, "xmppId", json_string_t(m_xmppId));
    return root;
 }
 

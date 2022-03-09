@@ -21,7 +21,6 @@ public class BaseActionLabelProvider extends LabelProvider
       images.put(ServerActionType.NOTIFICATION, ResourceManager.getImageDescriptor("icons/actions/email.png").createImage());
       images.put(ServerActionType.FORWARD_EVENT, ResourceManager.getImageDescriptor("icons/actions/fwd_event.png").createImage());
       images.put(ServerActionType.NXSL_SCRIPT, ResourceManager.getImageDescriptor("icons/actions/exec_script.gif").createImage());
-      images.put(ServerActionType.XMPP_MESSAGE, ResourceManager.getImageDescriptor("icons/actions/xmpp.gif").createImage());
    }
 
    public Image getColumnImage(Object element, int columnIndex)

@@ -113,7 +113,6 @@ public class SystemRights extends PropertyPage
       attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_VIEW_SYSLOG, Messages.get().SystemRights_ViewSyslog));
       attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_VIEW_TRAP_LOG, Messages.get().SystemRights_ViewTrapLog));
       attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_WEB_SERVICE_DEFINITIONS, "Manage web service definitions"));
-      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_XMPP_COMMANDS, Messages.get().SystemRights_ExecuteXMPPCommands));
 
       Composite dialogArea = new Composite(parent, SWT.BORDER);
       dialogArea.setBackground(parent.getDisplay().getSystemColor(SWT.COLOR_LIST_BACKGROUND));

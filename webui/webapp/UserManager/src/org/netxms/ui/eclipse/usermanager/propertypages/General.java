@@ -42,13 +42,11 @@ public class General extends PropertyPage
 	private Text textName;
 	private Text textFullName;
 	private Text textDescription;
-	private Text textXmppId;
    private Text textEmail;
    private Text textPhoneNumber;
 	private String initialName;
 	private String initialFullName;
 	private String initialDescription;
-   private String initialXmppId;
    private String initialEmail;
    private String initialPhoneNumber;
 	private AbstractUserObject object;
@@ -98,15 +96,10 @@ public class General extends PropertyPage
          initialPhoneNumber = new String(((User)object).getPhoneNumber());
          textPhoneNumber = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT, "Phone number",
                initialPhoneNumber, WidgetHelper.DEFAULT_LAYOUT_DATA);
-
-         initialXmppId = new String(((User)object).getXmppId());
-         textXmppId = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT, Messages.get().General_XMPPID,
-                                                       initialXmppId, WidgetHelper.DEFAULT_LAYOUT_DATA);
       }
       else
       {
       	initialFullName = ""; //$NON-NLS-1$
-      	initialXmppId = ""; //$NON-NLS-1$
          initialEmail = ""; //$NON-NLS-1$
          initialPhoneNumber = ""; //$NON-NLS-1$
       }
@@ -131,14 +124,12 @@ public class General extends PropertyPage
 		final String newFullName = (object instanceof User) ? textFullName.getText() : ""; //$NON-NLS-1$
       final String newEmail = (object instanceof User) ? textEmail.getText() : ""; //$NON-NLS-1$
       final String newPhoneNumber = (object instanceof User) ? textPhoneNumber.getText() : ""; //$NON-NLS-1$
-      final String newXmppId = (object instanceof User) ? textXmppId.getText() : ""; //$NON-NLS-1$
 		
 		if (newName.equals(initialName) && 
 		    newDescription.equals(initialDescription) &&
 		    newFullName.equals(initialFullName) &&
           newEmail.equals(initialEmail) &&
-          newPhoneNumber.equals(initialPhoneNumber) &&
-		    newXmppId.equals(initialXmppId))
+          newPhoneNumber.equals(initialPhoneNumber))
 			return;		// Nothing to apply
 		
 		if (isApply)
@@ -153,7 +144,6 @@ public class General extends PropertyPage
 				initialDescription = newDescription;
             initialEmail = newEmail;
             initialPhoneNumber = newPhoneNumber;
-            initialXmppId = newXmppId;
 				
 				int fields = AbstractUserObject.MODIFY_LOGIN_NAME | AbstractUserObject.MODIFY_DESCRIPTION;
 				object.setName(newName);
@@ -163,9 +153,8 @@ public class General extends PropertyPage
 					((User)object).setFullName(newFullName);
                ((User)object).setEmail(newEmail);
                ((User)object).setPhoneNumber(newPhoneNumber);
-               ((User)object).setXmppId(newXmppId);
                fields |= AbstractUserObject.MODIFY_FULL_NAME | AbstractUserObject.MODIFY_EMAIL |
-                     AbstractUserObject.MODIFY_PHONE_NUMBER | AbstractUserObject.MODIFY_XMPP_ID;
+                     AbstractUserObject.MODIFY_PHONE_NUMBER;
 				}
 				session.modifyUserDBObject(object, fields);
 			}

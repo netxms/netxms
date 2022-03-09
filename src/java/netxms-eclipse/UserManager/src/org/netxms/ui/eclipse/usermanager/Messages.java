@@ -73,7 +73,6 @@ public class Messages extends NLS
 	public static String General_JobTitle;
 	public static String General_LoginName;
 	public static String General_ObjectID;
-   public static String General_XMPPID;
    public static String GroupMembership_ColName;
 	public static String Members_Add;
 	public static String Members_Delete;
@@ -98,7 +97,6 @@ public class Messages extends NLS
 	public static String SystemRights_DeleteAlarms;
 	public static String SystemRights_EditEPP;
 	public static String SystemRights_EditServerConfig;
-   public static String SystemRights_ExecuteXMPPCommands;
    public static String SystemRights_ManageImageLibrary;
 	public static String SystemRights_JobError;
 	public static String SystemRights_JobTitle;

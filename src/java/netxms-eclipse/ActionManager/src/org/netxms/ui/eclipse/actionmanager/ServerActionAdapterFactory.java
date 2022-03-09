@@ -69,8 +69,6 @@ public class ServerActionAdapterFactory implements IAdapterFactory
 						return Activator.getImageDescriptor("icons/fwd_event.png"); //$NON-NLS-1$
                case NXSL_SCRIPT:
 						return Activator.getImageDescriptor("icons/exec_script.gif"); //$NON-NLS-1$
-               case XMPP_MESSAGE:
-                  return Activator.getImageDescriptor("icons/xmpp.png"); //$NON-NLS-1$
 				}
 				return null;
 			}

@@ -83,7 +83,6 @@ CREATE TABLE users
   disabled_until integer not null,
   last_login integer not null,
   password_history SQL_TEXT null,
-  xmpp_id varchar(127) null,
   email varchar(127) null,
   phone_number varchar(63) null,
   ldap_dn SQL_TEXT null,

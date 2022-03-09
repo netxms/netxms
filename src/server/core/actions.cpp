@@ -542,31 +542,6 @@ bool ExecuteAction(uint32_t actionId, const Event *event, const Alarm *alarm)
                }
                success = true;
                break;
-            case ServerActionType::XMPP_MESSAGE:
-               if (!expandedRcpt.isEmpty())
-               {
-#if XMPP_SUPPORTED
-                  nxlog_debug_tag(DEBUG_TAG, 3, _T("Sending XMPP message to %s: \"%s\""), (const TCHAR *)expandedRcpt, (const TCHAR *)expandedData);
-					   TCHAR *curr = expandedRcpt.getBuffer(), *next;
-					   do
-					   {
-						   next = _tcschr(curr, _T(';'));
-						   if (next != nullptr)
-							   *next = 0;
-						   Trim(curr);
-	                  SendXMPPMessage(curr, expandedData);
-						   curr = next + 1;
-					   } while(next != nullptr);
-#else
-                  nxlog_debug_tag(DEBUG_TAG, 3, _T("cannot send XMPP message to %s (server compiled without XMPP support)"), expandedRcpt.cstr());
-#endif
-               }
-               else
-               {
-                  nxlog_debug_tag(DEBUG_TAG, 3, _T("Empty recipients list - XMPP message will not be sent"));
-               }
-               success = true;
-               break;
             case ServerActionType::AGENT_COMMAND:
                if (!expandedRcpt.isEmpty())
                {

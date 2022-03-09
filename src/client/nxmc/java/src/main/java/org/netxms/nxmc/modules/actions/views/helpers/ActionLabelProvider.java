@@ -39,8 +39,7 @@ public class ActionLabelProvider extends LabelProvider implements ITableLabelPro
    	   i18n.tr("SSH Command"), 
    	   i18n.tr("Notification"), 
    	   i18n.tr("Forward Event"), 
-         i18n.tr("NXSL Script"), 
-   	   i18n.tr("XMPP Message") 
+         i18n.tr("NXSL Script")
 	   };
 
    private final BaseActionLabelProvider baseActionLabelProvider;

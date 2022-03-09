@@ -38,8 +38,7 @@ public class ActionLabelProvider extends DecoratingLabelProvider implements ITab
          Messages.get().ActionLabelProvider_ActionTypeRemoteSSH,
 			Messages.get().ActionLabelProvider_ActionTypeNotification,
 			Messages.get().ActionLabelProvider_ActionTypeForward,
-			Messages.get().ActionLabelProvider_ActionTypeNXSL,
-         Messages.get().ActionLabelProvider_ActionTypeXMPP
+			Messages.get().ActionLabelProvider_ActionTypeNXSL
 	   };
 
 	/**

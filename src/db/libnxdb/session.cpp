@@ -495,7 +495,7 @@ bool LIBNXDB_EXPORTABLE DBGetColumnNameA(DB_UNBUFFERED_RESULT hResult, int colum
 
 /**
  * Get field's value. If buffer is NULL, dynamically allocated string will be returned.
- * Caller is responsible for destroying it by calling free().
+ * Caller is responsible for destroying it by calling MemFree().
  */
 TCHAR LIBNXDB_EXPORTABLE *DBGetField(DB_RESULT hResult, int iRow, int iColumn, TCHAR *pszBuffer, size_t nBufLen)
 {
@@ -582,7 +582,7 @@ char LIBNXDB_EXPORTABLE *DBGetFieldUTF8(DB_RESULT hResult, int iRow, int iColumn
 
 /**
  * Get field's value as multibyte string. If buffer is NULL, dynamically allocated string will be returned.
- * Caller is responsible for destroying it by calling free().
+ * Caller is responsible for destroying it by calling MemFree().
  */
 char LIBNXDB_EXPORTABLE *DBGetFieldA(DB_RESULT hResult, int iRow, int iColumn, char *pszBuffer, size_t nBufLen)
 {

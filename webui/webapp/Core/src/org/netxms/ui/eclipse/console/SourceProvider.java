@@ -73,7 +73,6 @@ public class SourceProvider extends AbstractSourceProvider
    public static final String UA_VIEW_REPOSITORIES     = "org.netxms.access.ViewRepositories"; //$NON-NLS-1$
    public static final String UA_VIEW_SYSLOG           = "org.netxms.access.ViewSyslog"; //$NON-NLS-1$
    public static final String UA_VIEW_TRAP_LOG         = "org.netxms.access.ViewTrapLog"; //$NON-NLS-1$
-   public static final String UA_XMPP_COMMANDS         = "org.netxms.access.XMPPCommands"; //$NON-NLS-1$
 
 	private static final String[] PROVIDED_SOURCE_NAMES =
 	   { 
@@ -118,8 +117,7 @@ public class SourceProvider extends AbstractSourceProvider
    	   UA_VIEW_EVENT_LOG,
    	   UA_VIEW_REPOSITORIES,
    	   UA_VIEW_SYSLOG,
-   	   UA_VIEW_TRAP_LOG,
-   	   UA_XMPP_COMMANDS
+   	   UA_VIEW_TRAP_LOG
 	   };
 
 	private final Map<String, Object> values = new HashMap<String, Object>(1);
@@ -219,7 +217,6 @@ public class SourceProvider extends AbstractSourceProvider
       setAccessRight(rights, UserAccessRights.SYSTEM_ACCESS_VIEW_REPOSITORIES, UA_VIEW_REPOSITORIES);
       setAccessRight(rights, UserAccessRights.SYSTEM_ACCESS_VIEW_SYSLOG, UA_VIEW_SYSLOG);
 	   setAccessRight(rights, UserAccessRights.SYSTEM_ACCESS_VIEW_TRAP_LOG, UA_VIEW_TRAP_LOG);
-	   setAccessRight(rights, UserAccessRights.SYSTEM_ACCESS_XMPP_COMMANDS, UA_XMPP_COMMANDS);
 		fireSourceChanged(ISources.WORKBENCH, getCurrentState());
 	}
 

@@ -386,7 +386,6 @@ protected:
 	time_t m_enableTime;
 	int m_minPasswordLength;
 	int m_authFailures;
-   TCHAR *m_xmppId;
    TCHAR *m_phoneNumber;
    TCHAR *m_email;
    SharedStringObjectMap<Config> m_2FABindings;
@@ -420,7 +419,6 @@ public:
 	bool canChangePassword()const  { return (m_flags & UF_CANNOT_CHANGE_PASSWORD) == 0; }
 	int getMinMasswordLength() const { return m_minPasswordLength; }
 	time_t getReEnableTime() const { return m_disabledUntil; }
-   const TCHAR *getXmppId() const { return CHECK_NULL_EX(m_xmppId); }
    const TCHAR *getPhoneNumber() const { return CHECK_NULL_EX(m_phoneNumber); }
    const TCHAR *getEmail() const { return CHECK_NULL_EX(m_email); }
 
@@ -527,8 +525,6 @@ void SendUserDBUpdate(int code, UINT32 id);
 uint32_t AuthenticateUser(const TCHAR *login, const TCHAR *password, size_t sigLen, void *pCert,
          BYTE *pChallenge, uint32_t *pdwId, uint64_t *pdwSystemRights, bool *pbChangePasswd, bool *pbIntruderLockout,
          bool *closeOtherSessions, bool ssoAuth, uint32_t *graceLogins);
-bool AuthenticateUserForXMPPCommands(const char *xmppId);
-bool AuthenticateUserForXMPPSubscription(const char *xmppId);
 
 uint32_t NXCORE_EXPORTABLE ValidateUserPassword(uint32_t userId, const TCHAR *login, const TCHAR *password, bool *isValid);
 uint32_t NXCORE_EXPORTABLE SetUserPassword(uint32_t id, const TCHAR *newPassword, const TCHAR *oldPassword, bool changeOwnPassword);

@@ -4740,10 +4740,6 @@ NXSL_Value *NXSL_UserClass::getAttr(NXSL_Object *object, const NXSL_Identifier& 
    {
       value = vm->createValue(user->getPhoneNumber());
    }
-   else if (NXSL_COMPARE_ATTRIBUTE_NAME("xmppId"))
-   {
-      value = vm->createValue(user->getXmppId());
-   }
 
    return value;
 }

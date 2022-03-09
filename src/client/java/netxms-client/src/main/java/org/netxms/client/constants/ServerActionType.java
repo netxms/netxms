@@ -33,8 +33,7 @@ public enum ServerActionType
    SSH_COMMAND(2),
    NOTIFICATION(3),
    FORWARD_EVENT(4),
-   NXSL_SCRIPT(5),
-   XMPP_MESSAGE(6);
+   NXSL_SCRIPT(5);
 
    private static Logger logger = LoggerFactory.getLogger(ServerActionType.class);
    private static Map<Integer, ServerActionType> lookupTable = new HashMap<Integer, ServerActionType>();

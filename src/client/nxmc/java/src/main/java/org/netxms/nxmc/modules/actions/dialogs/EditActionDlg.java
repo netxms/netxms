@@ -65,7 +65,6 @@ public class EditActionDlg extends Dialog
 	private Button typeRemoteSshExec;
 	private Button typeExecScript;
 	private Button typeNotification;
-	private Button typeXMPP;
 	private Button typeForward;
 	private Button markDisabled;
 	private List<NotificationChannel> ncList = null;
@@ -156,11 +155,6 @@ public class EditActionDlg extends Dialog
       typeNotification.setText(i18n.tr("Send notification"));
       typeNotification.setSelection(action.getType() == ServerActionType.NOTIFICATION);
 		typeNotification.addSelectionListener(new TypeButtonSelectionListener());
-		
-      typeXMPP = new Button(typeGroup, SWT.RADIO);
-      typeXMPP.setText(i18n.tr("Send XMPP message"));
-      typeXMPP.setSelection(action.getType() == ServerActionType.XMPP_MESSAGE);
-      typeXMPP.addSelectionListener(new TypeButtonSelectionListener());
       
 		typeForward = new Button(typeGroup, SWT.RADIO);
       typeForward.setText(i18n.tr("Forward event to other NetXMS server"));
@@ -270,8 +264,6 @@ public class EditActionDlg extends Dialog
          case AGENT_COMMAND:
          case SSH_COMMAND:
             return i18n.tr("Remote host");
-         case XMPP_MESSAGE:
-            return i18n.tr("Jabber/XMPP ID");
          case FORWARD_EVENT:
             return i18n.tr("Remote NetXMS server");
          case NXSL_SCRIPT:
@@ -317,8 +309,6 @@ public class EditActionDlg extends Dialog
          action.setType(ServerActionType.NXSL_SCRIPT);
 		else if (typeNotification.getSelection())
          action.setType(ServerActionType.NOTIFICATION);
-      else if (typeXMPP.getSelection())
-         action.setType(ServerActionType.XMPP_MESSAGE);
 		else if (typeForward.getSelection())
          action.setType(ServerActionType.FORWARD_EVENT);
 
@@ -379,8 +369,6 @@ public class EditActionDlg extends Dialog
          type = ServerActionType.NXSL_SCRIPT;
 		else if (typeNotification.getSelection())
          type = ServerActionType.NOTIFICATION;
-      else if (typeXMPP.getSelection())
-         type = ServerActionType.XMPP_MESSAGE;
 		else if (typeForward.getSelection())
          type = ServerActionType.FORWARD_EVENT;
 
@@ -397,7 +385,6 @@ public class EditActionDlg extends Dialog
 				break;
          case AGENT_COMMAND:
          case SSH_COMMAND:
-         case XMPP_MESSAGE:
             channelName.setEnabled(false);
 				recipient.setEnabled(true);
 				subject.setEnabled(false);

@@ -62,7 +62,7 @@ public abstract class AbstractUserObject
    public static final int MODIFY_PASSWD_LENGTH     = 0x00000100;
    public static final int MODIFY_TEMP_DISABLE      = 0x00000200;
    public static final int MODIFY_CUSTOM_ATTRIBUTES = 0x00000400;
-   public static final int MODIFY_XMPP_ID           = 0x00000800;
+   //public static final int MODIFY_XMPP_ID         = 0x00000800; reserved for future reuse
    public static final int MODIFY_GROUP_MEMBERSHIP  = 0x00001000;
    public static final int MODIFY_EMAIL             = 0x00002000;
    public static final int MODIFY_PHONE_NUMBER      = 0x00004000;
