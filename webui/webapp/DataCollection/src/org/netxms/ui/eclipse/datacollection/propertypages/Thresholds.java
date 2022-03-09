@@ -371,7 +371,7 @@ public class Thresholds extends AbstractDCIPropertyPage
          List<Threshold> list = selection.toList();
          for(Threshold t : list)
          {               
-            thresholds.add(thresholds.indexOf(t) + 1, new Threshold(t));
+            thresholds.add(thresholds.indexOf(t) + 1, t.duplicate());
             thresholdList.setInput(thresholds.toArray());
          }
       }
