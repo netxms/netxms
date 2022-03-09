@@ -31,42 +31,44 @@ static bool H_UpgradeFromV1()
    CHK_EXEC(DBDropColumn(g_dbHandle, _T("users"), _T("xmpp_id")));
    CHK_EXEC(SQLQuery(_T("DELETE FROM config_values WHERE var_name = 'XMPP.Port'")));
 
-   DB_RESULT result = SQLSelect(
-      _T("SELECT var_name, var_value FROM config ")
-      _T("WHERE var_name = 'XMPP.Login' OR ")
-      _T("var_name = 'XMPP.Password' OR ")
-      _T("var_name = 'XMPP.Port' OR ")
-      _T("var_name = 'XMPP.Server' ")
-      _T("ORDER BY var_name ASC"));
-
-   if (result != nullptr)
+   StringMap *xmppVariables = DBMgrGetConfigurationVariables(_T("XMPP.%"));
+   if (xmppVariables != nullptr)
    {
-      TCHAR* login = DBGetField(result, 0, 1, nullptr, 0);
-      TCHAR* password = DBGetField(result, 1, 1, nullptr, 0);
-      TCHAR* port = DBGetField(result, 2, 1, nullptr, 0);
-      TCHAR* server = DBGetField(result, 3, 1, nullptr, 0);
-      DBFreeResult(result);
+      const TCHAR* login = xmppVariables->get(_T("XMPP.Login"));
+      const TCHAR* password = xmppVariables->get(_T("XMPP.Password"));
+      const TCHAR* server = xmppVariables->get(_T("XMPP.Server"));
+      uint32_t port = xmppVariables->getUInt32(_T("XMPP.Port"), 0);
 
       DB_STATEMENT stmt = DBPrepare(g_dbHandle, _T("INSERT INTO notification_channels (name, driver_name, description, configuration) ")
                                                 _T("VALUES ('XMPP', 'XMPP', 'Automatically generated XMPP notification channel based on old XMPP configuration', ?)"));
+      StringBuffer config;
+      if (server != nullptr)
+      {
+         config.append(_T("Server = "));
+         config.append(server);
+         config.append(_T("\n"));
+      }
+      if (port != 0)
+      {
+         config.append(_T("Port = "));
+         config.append(port);
+         config.append(_T("\n"));
+      }
+      if (login != nullptr)
+      {
+         config.append(_T("Login = "));
+         config.append(login);
+         config.append(_T("\n"));
+      }
+      if (password != nullptr)
+      {
+         config.append(_T("Password = "));
+         config.append(password);
+         config.append(_T("\n"));
+      }
+      delete xmppVariables;
 
-      StringBuffer s;
-      s.append(_T("Server = "));
-      s.append(server != nullptr ? server : _T("localhost"));
-      s.append(_T("\nPort = "));
-      s.append(port != nullptr ? port : _T("5222"));
-      s.append(_T("\nLogin = "));
-      s.append(login != nullptr ? login : _T("netxms@localhost"));
-      s.append(_T("\nPassword = "));
-      s.append(password != nullptr ? password : _T("netxms"));
-
-      DBBind(stmt, 1, DB_SQLTYPE_TEXT, s, DB_BIND_STATIC);
-
-      MemFree(login);
-      MemFree(password);
-      MemFree(port);
-      MemFree(server);
-
+      DBBind(stmt, 1, DB_SQLTYPE_TEXT, config, DB_BIND_STATIC);
       if (!SQLExecute(stmt) && !g_ignoreErrors)
       {
          DBFreeStatement(stmt);
@@ -74,32 +76,23 @@ static bool H_UpgradeFromV1()
       }
       DBFreeStatement(stmt);
 
-      CHK_EXEC(SQLQuery(_T("DELETE FROM config WHERE var_name = 'XMPP.Login' OR ")
-                        _T("var_name = 'XMPP.Password' OR ")
-                        _T("var_name = 'XMPP.Port' OR ")
-                        _T("var_name = 'XMPP.Server' OR ")
-                        _T("var_name = 'XMPP.Enable'")));
-
-      CHK_EXEC(SQLQuery(_T("UPDATE actions ")
-                        _T("SET action_type = 3,  channel_name = 'XMPP' ")
-                        _T("WHERE action_type = 6")));
+      CHK_EXEC(SQLQuery(_T("DELETE FROM config WHERE var_name LIKE 'XMPP.%'")));
+      CHK_EXEC(SQLQuery(_T("UPDATE actions SET action_type = 3,channel_name = 'XMPP' WHERE action_type = 6")));
    }
    else if (!g_ignoreErrors)
    {
       return false;
    }
 
-   result = SQLSelect(_T("SELECT id, system_access FROM users"));
-
+   DB_RESULT result = SQLSelect(_T("SELECT id, system_access FROM users"));
    if (result != nullptr)
    {
       TCHAR query[256];
-      for (int i = 0; i < DBGetNumRows(result); i++)
+      int count = DBGetNumRows(result);
+      for (int i = 0; i < count; i++)
       {
-         _sntprintf(query, 256,
-                    _T("UPDATE users SET system_access = ") UINT64_FMT _T(" WHERE id = ") UINT64_FMT,
-                    DBGetFieldUInt64(result, i, 1) & ~MASK_BIT64(26),
-                    DBGetFieldUInt64(result, i, 0));
+         _sntprintf(query, 256, _T("UPDATE users SET system_access = ") UINT64_FMT _T(" WHERE id = ") UINT64_FMT,
+               DBGetFieldUInt64(result, i, 1) & ~MASK_BIT64(26), DBGetFieldUInt64(result, i, 0));
          CHK_EXEC(SQLQuery(query));
       }
       DBFreeResult(result);
@@ -144,7 +137,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
-   { 0,  41, 2,  H_UpgradeFromV1  },
+   { 1,  41, 2,  H_UpgradeFromV1  },
    { 0,  41, 1,  H_UpgradeFromV0  },
    { 0,  0,  0,  nullptr }
 };
