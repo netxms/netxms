@@ -157,7 +157,7 @@ public class LineChart extends org.eclipse.swtchart.Chart implements PlotArea
 				public void mouseEnter(MouseEvent e)
 				{
 				}
-	
+
 				@Override
 				public void mouseExit(MouseEvent e)
 				{
@@ -167,7 +167,7 @@ public class LineChart extends org.eclipse.swtchart.Chart implements PlotArea
    				   tooltipShown = false;
 				   }
 				}
-	
+
 				@Override
 				public void mouseHover(MouseEvent e)
 				{
@@ -322,11 +322,11 @@ public class LineChart extends org.eclipse.swtchart.Chart implements PlotArea
 			zoomedToSelectionX = true;
 			zoomedToSelectionY = true;
 		}
-      
+
 		selection.dispose();
 		redraw();
 	}
-	
+
    /**
     * Sets the axis range.
     * 
@@ -581,6 +581,11 @@ public class LineChart extends org.eclipse.swtchart.Chart implements PlotArea
 		getAxisSet().getYAxis(0).getGrid().setStyle(ls);
 	}
 
+   /**
+    * Adjust X axis
+    *
+    * @param repaint true to repaint chart
+    */
 	public void adjustXAxis(boolean repaint)
 	{
       zoomedToSelectionX = false;
@@ -599,6 +604,11 @@ public class LineChart extends org.eclipse.swtchart.Chart implements PlotArea
 			redraw();
 	}
 
+   /**
+    * Adjust Y axis
+    *
+    * @param repaint true to repaint chart
+    */
 	public void adjustYAxis(boolean repaint)
 	{
       zoomedToSelectionY = false;

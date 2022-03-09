@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -306,9 +306,7 @@ public class HistoricalGraphView extends ViewPart implements ChartConfigurationC
       }
    }
 
-   /*
-    * (non-Javadoc)
-    * 
+   /**
     * @see org.eclipse.ui.part.ViewPart#saveState(org.eclipse.ui.IMemento)
     */
    @Override
@@ -345,23 +343,8 @@ public class HistoricalGraphView extends ViewPart implements ChartConfigurationC
 
       setPartName(configuration.getTitle());
 
-      ChartConfiguration chartConfiguration = new ChartConfiguration();
-      chartConfiguration.setTitle(configuration.getTitle());
-      chartConfiguration.setLogScale(configuration.isLogScale());
-      chartConfiguration.setGridVisible(configuration.isGridVisible());
-      chartConfiguration.setLegendVisible(configuration.isLegendVisible());
-      chartConfiguration.setLegendPosition(configuration.getLegendPosition());
-      chartConfiguration.setExtendedLegend(configuration.isExtendedLegend());
-      chartConfiguration.setStacked(configuration.isStacked());
-      chartConfiguration.setTranslucent(configuration.isTranslucent());
-      chartConfiguration.setLineWidth(configuration.getLineWidth());
-      chartConfiguration.setArea(configuration.isArea());
-      chartConfiguration.setUseMultipliers(configuration.isUseMultipliers());
-      chartConfiguration.setAutoScale(configuration.isAutoScale());
-      chartConfiguration.setModifyYBase(configuration.isModifyYBase());
-      chartConfiguration.setMinYScaleValue(configuration.getMinYScaleValue());
-      chartConfiguration.setMaxYScaleValue(configuration.getMaxYScaleValue());
-
+      ChartConfiguration chartConfiguration = new ChartConfiguration(configuration);
+      chartConfiguration.setZoomEnabled(true);
       chart = new Chart(chartParent, SWT.NONE, ChartType.LINE, chartConfiguration);
       createPopupMenu();
 
@@ -432,7 +415,7 @@ public class HistoricalGraphView extends ViewPart implements ChartConfigurationC
          updateInProgress = false;
          return;
       }
-      
+
       // Request data from server
       ConsoleJob job = new ConsoleJob(Messages.get().HistoricalGraphView_JobName, this, Activator.PLUGIN_ID) {
          private ChartDciConfig currentItem;
@@ -903,9 +886,7 @@ public class HistoricalGraphView extends ViewPart implements ChartConfigurationC
       getDataFromServer();
    }
 
-   /*
-    * (non-Javadoc)
-    * 
+   /**
     * @see org.eclipse.ui.part.WorkbenchPart#dispose()
     */
    @Override
@@ -915,12 +896,8 @@ public class HistoricalGraphView extends ViewPart implements ChartConfigurationC
       super.dispose();
    }
 
-   /*
-    * (non-Javadoc)
-    * 
-    * @see
-    * org.netxms.client.datacollection.GraphSettingsChangeListener#onGraphSettingsChange(org.netxms.client.datacollection.GraphSettings
-    * )
+   /**
+    * @see org.netxms.client.datacollection.ChartConfigurationChangeListener#onChartConfigurationChange(org.netxms.client.datacollection.ChartConfiguration)
     */
    @Override
    public void onChartConfigurationChange(ChartConfiguration settings)
@@ -939,7 +916,7 @@ public class HistoricalGraphView extends ViewPart implements ChartConfigurationC
          String templateError = "More than one node is used for template creation.\nThis may cause undefined behaviour.";
          errorMessage = errorMessage == null ? templateError : errorMessage+"\n\n" +templateError;
       }
-      
+
       int result = SaveGraphDlg.OK;
       GraphDefinition template = null;
       final long oldGraphId = configuration.getId();
@@ -966,13 +943,15 @@ public class HistoricalGraphView extends ViewPart implements ChartConfigurationC
             if (result == Window.CANCEL)
                return;
             configuration.setName(dlg.getName());
-            if(!canBeOverwritten)
+            if (!canBeOverwritten)
                configuration.setId(0);
          }
          else
+         {
             configuration.setName(graphName);
+         }
       }    
-      
+
       final GraphDefinition gs = asTemplate ? template : configuration;
 
       if (result == SaveGraphDlg.OVERRIDE)
@@ -1003,7 +982,7 @@ public class HistoricalGraphView extends ViewPart implements ChartConfigurationC
                try
                {
                   long id = session.saveGraph(gs, canBeOverwritten);
-                  if(!asTemplate)
+                  if (!asTemplate)
                      configuration.setId(id);
                }
                catch(NXCException e)
@@ -1011,14 +990,12 @@ public class HistoricalGraphView extends ViewPart implements ChartConfigurationC
                   if (e.getErrorCode() == RCC.OBJECT_ALREADY_EXISTS)
                   {
                      runInUIThread(new Runnable() {
-
                         @Override
                         public void run()
                         {
                            configuration.setId(oldGraphId);
                            saveGraph(gs.getName(), Messages.get().HistoricalGraphView_NameAlreadyExist, true, asTemplate, true);
                         }
-
                      });
                   }
                   else
@@ -1026,14 +1003,12 @@ public class HistoricalGraphView extends ViewPart implements ChartConfigurationC
                      if (e.getErrorCode() == RCC.ACCESS_DENIED)
                      {
                         runInUIThread(new Runnable() {
-
                            @Override
                            public void run()
                            {
                               configuration.setId(oldGraphId);
                               saveGraph(gs.getName(), Messages.get().HistoricalGraphView_NameAlreadyExistNoOverwrite, false, asTemplate, true);
                            }
-
                         });
                      }
                      else
@@ -1126,7 +1101,7 @@ public class HistoricalGraphView extends ViewPart implements ChartConfigurationC
       }
       return action;
    }
-   
+
    /**
     * Action types
     */
@@ -1134,7 +1109,7 @@ public class HistoricalGraphView extends ViewPart implements ChartConfigurationC
    {
       ADJUST_X, ADJUST_Y, ADJUST_BOTH
    }
-   
+
    /**
     * Preset handler
     */

@@ -144,7 +144,7 @@ public class LineChart extends org.swtchart.Chart implements PlotArea
 				public void mouseEnter(MouseEvent e)
 				{
 				}
-	
+
 				@Override
 				public void mouseExit(MouseEvent e)
 				{
@@ -154,7 +154,7 @@ public class LineChart extends org.swtchart.Chart implements PlotArea
    				   tooltipShown = false;
 				   }
 				}
-	
+
 				@Override
 				public void mouseHover(MouseEvent e)
 				{
@@ -302,12 +302,12 @@ public class LineChart extends org.swtchart.Chart implements PlotArea
 			zoomedToSelectionX = true;
 			zoomedToSelectionY = true;
 		}
-      
+
 		selection.dispose();
 		redraw();
       */
 	}
-	
+
    /**
     * Sets the axis range.
     * 
@@ -564,6 +564,11 @@ public class LineChart extends org.swtchart.Chart implements PlotArea
 		getAxisSet().getYAxis(0).getGrid().setStyle(ls);
 	}
 
+   /**
+    * Adjust X axis
+    *
+    * @param repaint true to repaint chart
+    */
 	public void adjustXAxis(boolean repaint)
 	{
       zoomedToSelectionX = false;
@@ -582,6 +587,11 @@ public class LineChart extends org.swtchart.Chart implements PlotArea
 			redraw();
 	}
 
+   /**
+    * Adjust Y axis
+    *
+    * @param repaint true to repaint chart
+    */
 	public void adjustYAxis(boolean repaint)
 	{
       zoomedToSelectionY = false;
@@ -652,7 +662,7 @@ public class LineChart extends org.swtchart.Chart implements PlotArea
 
       /* over all series */
       ISeries[] series = getSeriesSet().getSeries();
-      for(ISeries s : series) 
+      for(ISeries s : series)
       {
           double[] xS = s.getXSeries();
           double[] yS = s.getYSeries();
@@ -687,7 +697,7 @@ public class LineChart extends org.swtchart.Chart implements PlotArea
    public ISeries getSeriesAtPoint(int px, int py)
    {
       ISeries[] series = getSeriesSet().getSeries();
-      for(ISeries s : series) 
+      for(ISeries s : series)
       {
          int size = s.getSize();
          for(int i = 1; i < size; i++)

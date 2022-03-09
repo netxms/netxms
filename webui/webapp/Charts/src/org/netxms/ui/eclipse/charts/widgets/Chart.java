@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -630,7 +630,8 @@ public class Chart extends Composite
     */
    public void adjustXAxis(boolean repaint)
    {
-      // FIXME: implement
+      if (plotArea instanceof LineChart)
+         ((LineChart)plotArea).adjustXAxis(repaint);
    }
 
    /**
@@ -640,7 +641,8 @@ public class Chart extends Composite
     */
    public void adjustYAxis(boolean repaint)
    {
-      // FIXME: implement
+      if (plotArea instanceof LineChart)
+         ((LineChart)plotArea).adjustYAxis(repaint);
    }
 
    /**
@@ -648,7 +650,8 @@ public class Chart extends Composite
     */
    public void zoomIn()
    {
-      // FIXME: implement
+      if (plotArea instanceof LineChart)
+         ((LineChart)plotArea).zoomIn();
    }
 
    /**
@@ -656,7 +659,8 @@ public class Chart extends Composite
     */
    public void zoomOut()
    {
-      // FIXME: implement
+      if (plotArea instanceof LineChart)
+         ((LineChart)plotArea).zoomOut();
    }
 
    /**
