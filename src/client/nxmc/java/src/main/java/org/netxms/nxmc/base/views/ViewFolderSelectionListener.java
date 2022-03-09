@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Raden Solutions
+ * Copyright (C) 2003-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,9 +19,9 @@
 package org.netxms.nxmc.base.views;
 
 /**
- * Listener for selection changes in view stack.
+ * Listener for selection changes in view folder.
  */
-public interface ViewStackSelectionListener
+public interface ViewFolderSelectionListener
 {
    /**
     * Called when new view is selected. Parameter can be null if new selection is empty.

@@ -52,12 +52,12 @@ public abstract class Perspective
    private Composite content;
    private SashForm verticalSplitter;
    private SashForm horizontalSpliter;
-   private ViewStack navigationFolder;
-   private ViewStack mainFolder;
-   private ViewStack supplementaryFolder;
+   private ViewFolder navigationFolder;
+   private ViewFolder mainFolder;
+   private ViewFolder supplementaryFolder;
    private Composite headerArea;
-   private ViewContainer navigationArea;
-   private ViewContainer mainArea;
+   private ViewStack navigationArea;
+   private ViewStack mainArea;
    private Composite supplementalArea;
    private ISelectionProvider navigationSelectionProvider;
    private ISelectionChangedListener navigationSelectionListener;
@@ -206,8 +206,8 @@ public abstract class Perspective
          verticalSplitter = new SashForm(content, SWT.HORIZONTAL);
          if (configuration.multiViewNavigationArea)
          {
-            navigationFolder = new ViewStack(window, this, verticalSplitter, false, false, configuration.enableNavigationHistory);
-            navigationFolder.addSelectionListener(new ViewStackSelectionListener() {
+            navigationFolder = new ViewFolder(window, this, verticalSplitter, false, false, configuration.enableNavigationHistory);
+            navigationFolder.addSelectionListener(new ViewFolderSelectionListener() {
                @Override
                public void viewSelected(View view)
                {
@@ -219,7 +219,7 @@ public abstract class Perspective
          }
          else
          {
-            navigationArea = new ViewContainer(window, this, verticalSplitter, false, false, configuration.enableNavigationHistory);
+            navigationArea = new ViewStack(window, this, verticalSplitter, false, false, configuration.enableNavigationHistory);
          }
       }
       if (configuration.hasSupplementalArea)
@@ -252,7 +252,7 @@ public abstract class Perspective
 
       if (configuration.multiViewMainArea)
       {
-         mainFolder = new ViewStack(window, this, mainAreaHolder, configuration.enableViewExtraction, configuration.enableViewPinning, false);
+         mainFolder = new ViewFolder(window, this, mainAreaHolder, configuration.enableViewExtraction, configuration.enableViewPinning, false);
          mainFolder.setAllViewsAsCloseable(configuration.allViewsAreCloseable);
          mainFolder.setUseGlobalViewId(configuration.useGlobalViewId);
          if (configuration.hasHeaderArea)
@@ -260,7 +260,7 @@ public abstract class Perspective
       }
       else
       {
-         mainArea = new ViewContainer(window, this, mainAreaHolder, configuration.enableViewExtraction, configuration.enableViewPinning, false);
+         mainArea = new ViewStack(window, this, mainAreaHolder, configuration.enableViewExtraction, configuration.enableViewPinning, false);
          if (configuration.hasHeaderArea)
             mainArea.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
       }
@@ -269,7 +269,7 @@ public abstract class Perspective
       {
          if (configuration.multiViewSupplementalArea)
          {
-            supplementaryFolder = new ViewStack(window, this, horizontalSpliter, configuration.enableViewExtraction, configuration.enableViewPinning, false);
+            supplementaryFolder = new ViewFolder(window, this, horizontalSpliter, configuration.enableViewExtraction, configuration.enableViewPinning, false);
             supplementaryFolder.setAllViewsAsCloseable(configuration.allViewsAreCloseable);
          }
          else
@@ -421,7 +421,7 @@ public abstract class Perspective
       if (mainFolder != null)
          mainFolder.addView(view);
       else
-         mainArea.setView(view);
+         mainArea.pushView(view);
    }
 
    /**
@@ -436,9 +436,14 @@ public abstract class Perspective
       if (mainFolder != null)
          mainFolder.addView(view, activate, ignoreContext);
       else
-         mainArea.setView(view);
+         mainArea.pushView(view);
    }
    
+   /**
+    * Get view in main area (for single-view perspectives).
+    *
+    * @return vew in main area or null
+    */
    protected View getMainView()
    {
       return mainArea.getView();
@@ -478,7 +483,7 @@ public abstract class Perspective
       }
       else if (navigationArea != null)
       {
-         navigationArea.setView(view);
+         navigationArea.pushView(view);
          setNavigationSelectionProvider(((view != null) && (view instanceof NavigationView)) ? ((NavigationView)view).getSelectionProvider() : null);
       }
    }
@@ -566,19 +571,19 @@ public abstract class Perspective
    public void processKeyStroke(KeyStroke ks)
    {
       // Determine which view stack has focus
-      ViewStack activeViewStack = null;
-      ViewContainer activeViewContainer = null;
+      ViewFolder activeViewStack = null;
+      ViewStack activeViewContainer = null;
       Control c = content.getDisplay().getFocusControl();
       while(c != null)
       {
-         if (c instanceof ViewStack)
+         if (c instanceof ViewFolder)
          {
-            activeViewStack = (ViewStack)c;
+            activeViewStack = (ViewFolder)c;
             break;
          }
-         if (c instanceof ViewContainer)
+         if (c instanceof ViewStack)
          {
-            activeViewContainer = (ViewContainer)c;
+            activeViewContainer = (ViewStack)c;
             break;
          }
          c = c.getParent();

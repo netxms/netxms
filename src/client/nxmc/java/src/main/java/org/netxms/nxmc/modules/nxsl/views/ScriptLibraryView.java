@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Raden Solutions
+ * Copyright (C) 2003-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -120,7 +120,7 @@ public class ScriptLibraryView extends ConfigurationView
          @Override
          public void doubleClick(DoubleClickEvent event)
          {
-            actionEdit.run();
+            editScript();
          }
       });
       viewer.getTable().addDisposeListener(new DisposeListener() {
@@ -173,6 +173,7 @@ public class ScriptLibraryView extends ConfigurationView
             createNewScript();
          }
       };
+      addKeyBinding("M1+N", actionNew);
 
       actionEdit = new Action(i18n.tr("&Edit"), SharedIcons.EDIT) {
          @Override
@@ -307,7 +308,7 @@ public class ScriptLibraryView extends ConfigurationView
                      list.add(script);
                      viewer.setInput(list.toArray());
                      viewer.setSelection(new StructuredSelection(script));
-                     actionEdit.run();
+                     editScript();
                   }
                });
             }
@@ -328,7 +329,7 @@ public class ScriptLibraryView extends ConfigurationView
    {
       IStructuredSelection selection = viewer.getStructuredSelection();
       Script script = (Script)selection.getFirstElement();
-      // TODO: open editor
+      openView(new ScriptEditorView(script.getId(), script.getName()));
    }
 
    /**

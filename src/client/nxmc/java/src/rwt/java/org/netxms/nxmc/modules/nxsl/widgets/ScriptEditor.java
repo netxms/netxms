@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -462,5 +462,51 @@ public class ScriptEditor extends CompositeWithMessageArea
             return i18n.tr("Cannot compile script");
          }
       }.start();
+   }
+
+   /**
+    * Highlight error line.
+    *
+    * @param lineNumber line number to highlight
+    */
+   public void highlightErrorLine(int lineNumber)
+   {
+   }
+
+   /**
+    * Clear line highlighting
+    */
+   public void clearHighlighting()
+   {
+   }
+
+   /**
+    * Get number of lines in editor.
+    *
+    * @return number of lines in editor
+    */
+   public int getLineCount()
+   {
+      return editor.getLineCount();
+   }
+
+   /**
+    * Get current line number.
+    *
+    * @return current line number
+    */
+   public int getCurrentLine()
+   {
+      return editor.getCaretLineNumber();
+   }
+
+   /**
+    * Set caret to line with given number.
+    *
+    * @param lineNumber line number
+    */
+   public void setCaretToLine(int lineNumber)
+   {
+      // TODO: implement if possible
    }
 }

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Raden Solutions
+ * Copyright (C) 2003-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,7 +35,7 @@ import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.base.views.View;
-import org.netxms.nxmc.base.views.ViewContainer;
+import org.netxms.nxmc.base.views.ViewStack;
 import org.netxms.nxmc.base.widgets.MessageArea;
 import org.netxms.nxmc.base.widgets.MessageAreaHolder;
 import org.netxms.nxmc.keyboard.KeyStroke;
@@ -47,7 +47,7 @@ public class PopOutViewWindow extends Window implements MessageAreaHolder
 {
    private Composite windowArea;
    private MessageArea messageArea;
-   private ViewContainer viewContainer;
+   private ViewStack viewContainer;
    private View view;
 
    /**
@@ -97,7 +97,7 @@ public class PopOutViewWindow extends Window implements MessageAreaHolder
       messageArea = new MessageArea(windowArea, SWT.NONE);
       messageArea.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
 
-      viewContainer = new ViewContainer(this, null, windowArea, false, false, false) {
+      viewContainer = new ViewStack(this, null, windowArea, false, false, false) {
          @Override
          public Point computeSize(int wHint, int hHint, boolean changed)
          {
