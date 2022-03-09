@@ -103,13 +103,13 @@ public class Threshold
 	}
 	
 	/**
-	 * Copy constructor (does not copy ID!)
+	 * Copy constructor
 	 * 
 	 * @param src source object
 	 */
 	public Threshold(Threshold src)
 	{
-		id = 0;
+		id = src.id;
 		fireEvent = src.fireEvent;
 		rearmEvent = src.rearmEvent;
 		sampleCount = src.sampleCount;
@@ -326,5 +326,18 @@ public class Threshold
          text.append(value);
       }
       return text.toString();
+   }
+
+   /**
+    * Duplicate threshold for later use 
+    * (do not copy ID for duplicated threshold)
+    * 
+    * @return threshold copy
+    */
+   public Threshold duplicate()
+   {
+      Threshold tr = new Threshold(this);
+      tr.id = 0;
+      return tr;
    }
 }
