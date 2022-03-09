@@ -65,11 +65,15 @@ static StringBuffer CreateAlarmSummary()
    for(int i = 0; i < alarms->size(); i++)
    {
       Alarm *alarm = alarms->get(i);
+      shared_ptr<NetObj> object = FindObjectById(alarm->getSourceObject());
+      if (object == nullptr)
+         continue;
+
       summary.append(_T("<tr>\n"));
       summary.append(s_severities[alarm->getCurrentSeverity()]);
       summary.append(s_states[alarm->getState() & ALARM_STATE_MASK]);
       summary.append(_T("<td>"));
-      summary.append(EscapeStringForXML2(GetObjectName(alarm->getSourceObject(), _T("Unknown node"))));
+      summary.append(EscapeStringForXML2(object->getName()));
       summary.append(_T("</td>\n"));
       summary.append(_T("<td>"));
       summary.append(EscapeStringForXML2(alarm->getMessage()));
