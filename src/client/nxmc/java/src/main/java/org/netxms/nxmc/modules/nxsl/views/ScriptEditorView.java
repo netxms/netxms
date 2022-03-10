@@ -46,6 +46,7 @@ import org.netxms.nxmc.modules.nxsl.widgets.ScriptEditor;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
 import org.netxms.nxmc.tools.MessageDialogHelper;
+import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -229,7 +230,7 @@ public class ScriptEditorView extends ConfigurationView
    private boolean canPaste()
    {
       Clipboard cb = new Clipboard(Display.getCurrent());
-      TransferData[] available = cb.getAvailableTypes();
+      TransferData[] available = WidgetHelper.getAvailableTypes(cb);
       boolean enabled = false;
       for(int i = 0; i < available.length; i++)
       {

@@ -37,6 +37,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.dnd.Clipboard;
 import org.eclipse.swt.dnd.TextTransfer;
 import org.eclipse.swt.dnd.Transfer;
+import org.eclipse.swt.dnd.TransferData;
 import org.eclipse.swt.events.MouseTrackListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
@@ -1261,5 +1262,17 @@ public class WidgetHelper
    public static void setControlCustomType(Control control, String type)
    {
       control.setData(RWT.CUSTOM_VARIANT, type);
+   }
+
+   /**
+    * Set custom type for control (compatibility layer for RAP, has no effect in desktop build).
+    *
+    * @param control control to set type for
+    * @param type custom type
+    */
+   public static TransferData[] getAvailableTypes(Clipboard cb)
+   {
+      //TODO: implement types for web
+      return new TransferData[] {};
    }
 }

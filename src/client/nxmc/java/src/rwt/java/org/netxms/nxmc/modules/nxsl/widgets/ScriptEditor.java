@@ -487,7 +487,10 @@ public class ScriptEditor extends CompositeWithMessageArea
     */
    public int getLineCount()
    {
-      return editor.getLineCount();
+      String text = editor.getText();
+      if (text.isEmpty())
+         return 0;
+      return text.split(editor.getLineDelimiter()).length + 1;
    }
 
    /**
@@ -497,7 +500,11 @@ public class ScriptEditor extends CompositeWithMessageArea
     */
    public int getCurrentLine()
    {
-      return editor.getCaretLineNumber();
+      int i = editor.getCaretPosition();
+      String text = editor.getText().substring(0, i);
+      if (text.isEmpty())
+         return 0;
+      return text.split(editor.getLineDelimiter()).length + 1;
    }
 
    /**
