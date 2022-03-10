@@ -93,6 +93,9 @@ public class ScheduleTableEntryComparator extends ViewerComparator
          case ScheduledTaskView.COMMENTS:
             result = task1.getComments().compareToIgnoreCase(task2.getComments());
             break;
+         case ScheduledTaskView.TIMER_KEY:
+            result = task1.getKey().compareToIgnoreCase(task2.getKey());
+            break;
          default:
             result = 0;
             break;

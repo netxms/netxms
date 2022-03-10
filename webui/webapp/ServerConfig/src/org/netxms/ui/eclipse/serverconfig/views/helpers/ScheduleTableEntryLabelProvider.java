@@ -111,6 +111,8 @@ public class ScheduleTableEntryLabelProvider extends LabelProvider implements IT
             return (user != null) ? user.getName() : ("[" + Long.toString(task.getOwner()) + "]"); //$NON-NLS-1$ //$NON-NLS-2$
          case ScheduledTaskView.COMMENTS:
             return task.getComments();
+         case ScheduledTaskView.TIMER_KEY:
+            return task.getKey();
       }
       return null;
    }
