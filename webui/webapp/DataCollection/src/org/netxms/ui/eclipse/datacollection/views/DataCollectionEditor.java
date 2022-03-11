@@ -323,7 +323,7 @@ public class DataCollectionEditor extends ViewPart
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 				dciConfig = session.openDataCollectionConfiguration(object.getObjectId(), changeListener);
-				dciConfig.setUserData(viewer);
+				dciConfig.setUserData(DataCollectionEditor.this);
 				if (object instanceof Template)
 				{
                dciConfig.setLocalChangeListener(new LocalChangeListener() {
@@ -626,7 +626,7 @@ public class DataCollectionEditor extends ViewPart
 	/**
 	 * Refresh DCI list
 	 */
-	private void refresh()
+	public void refresh()
 	{
       new ConsoleJob("Reftesh data collection configuration for " + object.getObjectName(), this, Activator.PLUGIN_ID, null) {
          @Override
@@ -1173,5 +1173,25 @@ public class DataCollectionEditor extends ViewPart
          viewerContainer.showMessage(CompositeWithMessageBar.INFORMATION,
                "Changes in data collection configuration will be deployed to nodes the moment when the tab is closed");
       }
+   }
+
+   /**
+    * Set new view input
+    * 
+    * @param items
+    */
+   public void setInput(DataCollectionObject[] items)
+   {
+      viewer.setInput(items);
+   }
+
+   /**
+    * Update modified object
+    *  
+    * @param object
+    */
+   public void update(DataCollectionObject object)
+   {
+      viewer.update(object, null);
    }
 }

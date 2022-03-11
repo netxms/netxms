@@ -21,7 +21,6 @@ package org.netxms.nxmc.modules.datacollection;
 import java.util.HashSet;
 import java.util.Set;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.client.constants.DataOrigin;
 import org.netxms.client.constants.DataType;
@@ -32,6 +31,7 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.datacollection.views.DataCollectionView;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -83,13 +83,13 @@ public class DataCollectionObjectEditor
 					public void run()
 					{
 						Object data = object.getOwner().getUserData();
-						if ((data != null) && (data instanceof TableViewer))
+						if ((data != null) && (data instanceof DataCollectionView))
 						{
 	                  if (isNewObj)
 	                  {
-	                     ((TableViewer)data).setInput(object.getOwner().getItems());
+	                     ((DataCollectionView)data).setInput(object.getOwner().getItems());
 	                  }
-							((TableViewer)data).update(object, null);
+							((DataCollectionView)data).update(object);
 						}
 					}
 				});
@@ -98,6 +98,11 @@ public class DataCollectionObjectEditor
 			@Override
 			protected String getErrorMessage()
 			{
+			   Object data = object.getOwner().getUserData();
+            if ((data != null) && (data instanceof DataCollectionView))
+            {
+               ((DataCollectionView)data).refresh();
+            }
             return i18n.tr("Cannot modify data collection object");
 			}
 		}.start();
