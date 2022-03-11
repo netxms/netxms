@@ -21,7 +21,6 @@ package org.netxms.ui.eclipse.datacollection.api;
 import java.util.HashSet;
 import java.util.Set;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.client.constants.DataOrigin;
 import org.netxms.client.constants.DataType;
@@ -31,6 +30,7 @@ import org.netxms.client.datacollection.DataCollectionTable;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.Messages;
+import org.netxms.ui.eclipse.datacollection.views.DataCollectionEditor;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
@@ -81,13 +81,13 @@ public class DataCollectionObjectEditor
 					public void run()
 					{
 						Object data = object.getOwner().getUserData();
-						if ((data != null) && (data instanceof TableViewer))
+						if ((data != null) && (data instanceof DataCollectionEditor))
 						{
 	                  if (isNewObj)
 	                  {
-	                     ((TableViewer)data).setInput(object.getOwner().getItems());
+	                     ((DataCollectionEditor)data).setInput(object.getOwner().getItems());
 	                  }
-							((TableViewer)data).update(object, null);
+							((DataCollectionEditor)data).update(object);
 						}
 					}
 				});
@@ -96,6 +96,12 @@ public class DataCollectionObjectEditor
 			@Override
 			protected String getErrorMessage()
 			{
+            Object data = object.getOwner().getUserData();
+            if ((data != null) && (data instanceof DataCollectionEditor))
+            {
+               ((DataCollectionEditor)data).refresh();
+            }
+            
 				return Messages.get().DataCollectionObjectEditor_JobError;
 			}
 		}.start();

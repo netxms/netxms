@@ -1100,7 +1100,7 @@ public class DataCollectionView extends BaseDataCollectionView
                {
                   if (editMode)
                   {
-                     dciConfig.setUserData(viewer);
+                     dciConfig.setUserData(DataCollectionView.this);
                      dciConfig.setRemoteChangeListener(changeListener);  
                   }
                }
@@ -1152,5 +1152,25 @@ public class DataCollectionView extends BaseDataCollectionView
          }.start();
       }  
       super.dispose();
+   }
+
+   /**
+    * Set new view input
+    * 
+    * @param items
+    */
+   public void setInput(DataCollectionObject[] items)
+   {
+      viewer.setInput(items);
+   }
+
+   /**
+    * Update modified object
+    *  
+    * @param object
+    */
+   public void update(DataCollectionObject object)
+   {
+      viewer.update(object, null);
    }
 }
