@@ -293,7 +293,7 @@ extern "C" DBDRV_CONNECTION __EXPORT DrvConnect(const char *host, const char *lo
    pConn->mutexQueryLock = MutexCreate();
 
    // Switch to UTF-8 encoding
-   mysql_set_character_set(mysql, "utf8");
+   mysql_set_character_set(mysql, "utf8mb4");
 
    return (DBDRV_CONNECTION)pConn;
 }
