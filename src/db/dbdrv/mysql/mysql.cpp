@@ -286,7 +286,7 @@ static DBDRV_CONNECTION Connect(const char *host, const char *login, const char 
 	}
 
    // Switch to UTF-8 encoding
-   mysql_set_character_set(mysql, "utf8");
+   mysql_set_character_set(mysql, "utf8mb4");
 
 	return new MYSQL_CONN(mysql);
 }
