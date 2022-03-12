@@ -24,6 +24,19 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 40.99 to 40.100
+ */
+static bool H_UpgradeFromV99()
+{
+   if (DBIsTableExist(g_dbHandle, _T("zmq_subscription")) == DBIsTableExist_Found)
+   {
+      CHK_EXEC(SQLQuery(_T("DROP TABLE zmq_subscription")));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(100));
+   return true;
+}
+
+/**
  * Upgrade from 40.98 to 40.99
  */
 static bool H_UpgradeFromV98()
@@ -3110,6 +3123,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 99, 40, 100, H_UpgradeFromV99 },
    { 98, 40, 99, H_UpgradeFromV98 },
    { 97, 40, 98, H_UpgradeFromV97 },
    { 96, 40, 97, H_UpgradeFromV96 },
