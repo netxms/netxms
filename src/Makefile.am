@@ -9,3 +9,6 @@
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 SUBDIRS = @MODULES@
+
+EXTRA_DIST = \
+	pom.xml
