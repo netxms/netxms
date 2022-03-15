@@ -952,7 +952,7 @@ AC_ARG_ENABLE(64bit,
 AC_ARG_WITH(dist,
 [AS_HELP_STRING(--with-dist,for maintainers only)],
 	DB_DRIVERS="mysql mariadb pgsql odbc mssql sqlite oracle db2 informix"
-	MODULES="appagent jansson java-common libexpat libstrophe zlib libnetxms libnxjava install sqlite snmp ethernetip flow-collector libnxsl libnxmb libnxlp libnxpython libnxcc db client server ncdrivers agent nxscript nxcproxy"
+	MODULES="appagent jansson java-common libexpat libstrophe zlib libnetxms libnxjava install sqlite snmp ethernetip flow-collector libnxsl libnxmb libnxlp libnxpython libnxcc db client server ncdrivers agent nxscript nxcproxy mobile-agent"
 	TEST_MODULES="test-libnxcc test-libnxsl test-libnxsnmp"
 	TOOLS="nxlptest"
 	SUBAGENT_DIRS="linux ds18x20 freebsd openbsd minix mqtt mysql pgsql netbsd sunos aix hpux informix oracle lmsensors darwin rpi java jmx opcua ubntlw bind9 netsvc db2 tuxedo mongodb ssh vmgr xen lorawan asterisk python"
@@ -4927,6 +4927,8 @@ AC_CONFIG_FILES([
 	src/client/java/netxms-client/Makefile
 	src/client/libnxclient/Makefile
 	src/client/nxalarm/Makefile
+	src/client/nxapisrv/Makefile
+	src/client/nxapisrv/java/Makefile
 	src/client/nxevent/Makefile
 	src/client/nxmc/Makefile
 	src/client/nxmc/java/Makefile
@@ -4967,6 +4969,8 @@ AC_CONFIG_FILES([
 	src/libnxpython/Makefile
 	src/libnxsl/Makefile
 	src/libstrophe/Makefile
+	src/mobile-agent/Makefile
+	src/mobile-agent/java/Makefile
 	src/ncdrivers/Makefile
 	src/ncdrivers/anysms/Makefile
 	src/ncdrivers/dbtable/Makefile
