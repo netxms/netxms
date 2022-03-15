@@ -1,18 +1,26 @@
 #!/bin/sh
+# vim: ts=3 sw=3 expandtab
 # Parameters:
-#   1) package name
-#   2) package version
-#   3) package group with / as separator (optional)
+#   1) artifact id
+#   2) artifact version
+#   3) artifact group (optional, defaults to org.netxms)
 #   4) additional build parameters (optional)
 
-GROUP="$3"
-if [ "x$GROUP" = "x" ]; then
-   GROUP="org/netxms"
+if [ -z $2 ]; then
+   echo Usage: $0 '<artifactId> <version> [groupId] [builf parameters]'
+   exit 1
 fi
+
+ARTIFACT="$1"
 VERSION="$2"
-JAR_FILE="$HOME/.m2/repository/$GROUP/$1/$VERSION/$1-$VERSION.jar"
-SNAPSHOT=`echo $VERSION | grep SNAPSHOT | wc -l`
-if [ ! -f "$JAR_FILE" -a $SNAPSHOT -eq 1 ]; then
-   mvn -Dmaven.test.skip=true install $4
+GROUP="org.netxms"
+if [ ! -z $3 ]; then
+   GROUP="$3"
 fi
-cp "$JAR_FILE" .
+
+mvn dependency:copy -Dartifact=$GROUP:$ARTIFACT:$VERSION -DoutputDirectory=. && exit 0
+
+if echo $VERSION | grep -q SNAPSHOT; then
+   shift; shift
+   mvn -Dmaven.test.skip=true install $@
+fi
