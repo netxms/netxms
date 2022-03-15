@@ -658,6 +658,69 @@
 				</column>
 			</columns>
 		</objectTool>
+		<objectTool id="24">
+			<name>&amp;Connect-&gt;&amp;SSH</name>
+			<guid>07185237-4f49-4d76-a9f4-bb21fbfa6083</guid>
+			<type>5</type>
+			<data>x-terminal-emulator -e sh -c &quot;ssh %(username)@%u || read tmp&quot;</data>
+			<description>Run SSH connection to node in Linux terminal</description>
+			<flags>0</flags>
+			<filter>&lt;objectMenuFilter&gt;&#x0A;   &lt;toolOS&gt;&lt;/toolOS&gt;&#x0A;   &lt;toolWorkstationOS&gt;.*nix.*,.*nux.*,.*aix.*&lt;/toolWorkstationOS&gt;&#x0A;   &lt;toolTemplate&gt;&lt;/toolTemplate&gt;&#x0A;   &lt;toolCustomAttributes&gt;&lt;/toolCustomAttributes&gt;&#x0A;   &lt;snmpOid&gt;&lt;/snmpOid&gt;&#x0A;   &lt;flags&gt;32&lt;/flags&gt;&#x0A;&lt;/objectMenuFilter&gt;</filter>
+			<confirmation></confirmation>
+			<commandName></commandName>
+			<commandShortName></commandShortName>
+			<image></image>
+			<inputFields>
+				<inputField id="1">
+					<name>username</name>
+					<type>0</type>
+					<displayName>Username</displayName>
+					<flags>0</flags>
+				</inputField>
+			</inputFields>
+		</objectTool>
+		<objectTool id="25">
+			<name>&amp;Connect-&gt;&amp;SSH</name>
+			<guid>f0a044f4-c2bd-4936-a821-87739dc1ab5d</guid>
+			<type>5</type>
+			<data>cmd /c &quot;ssh %(username)@%u || pause&quot;</data>
+			<description>Run SSH connection to node in Windows console</description>
+			<flags>0</flags>
+			<filter>&lt;objectMenuFilter&gt;&#x0A;   &lt;toolOS&gt;&lt;/toolOS&gt;&#x0A;   &lt;toolWorkstationOS&gt;Win.*&lt;/toolWorkstationOS&gt;&#x0A;   &lt;toolTemplate&gt;&lt;/toolTemplate&gt;&#x0A;   &lt;toolCustomAttributes&gt;&lt;/toolCustomAttributes&gt;&#x0A;   &lt;snmpOid&gt;&lt;/snmpOid&gt;&#x0A;   &lt;flags&gt;32&lt;/flags&gt;&#x0A;&lt;/objectMenuFilter&gt;</filter>
+			<confirmation></confirmation>
+			<commandName></commandName>
+			<commandShortName></commandShortName>
+			<image></image>
+			<inputFields>
+				<inputField id="1">
+					<name>username</name>
+					<type>0</type>
+					<displayName>Username</displayName>
+					<flags>0</flags>
+				</inputField>
+			</inputFields>
+		</objectTool>
+		<objectTool id="26">
+			<name>&amp;Connect-&gt;&amp;SSH</name>
+			<guid>7004a9c2-902d-4947-ab18-806167190cf5</guid>
+			<type>5</type>
+			<data>/usr/bin/open ssh://%(username)@%u</data>
+			<description>Run SSH connection to node in Mac terminal</description>
+			<flags>0</flags>
+			<filter>&lt;objectMenuFilter&gt;&#x0A;   &lt;toolOS&gt;&lt;/toolOS&gt;&#x0A;   &lt;toolWorkstationOS&gt;.*mac.*&lt;/toolWorkstationOS&gt;&#x0A;   &lt;toolTemplate&gt;&lt;/toolTemplate&gt;&#x0A;   &lt;toolCustomAttributes&gt;&lt;/toolCustomAttributes&gt;&#x0A;   &lt;snmpOid&gt;&lt;/snmpOid&gt;&#x0A;   &lt;flags&gt;32&lt;/flags&gt;&#x0A;&lt;/objectMenuFilter&gt;</filter>
+			<confirmation></confirmation>
+			<commandName></commandName>
+			<commandShortName></commandShortName>
+			<image></image>
+			<inputFields>
+				<inputField id="1">
+					<name>username</name>
+					<type>0</type>
+					<displayName>Username</displayName>
+					<flags>0</flags>
+				</inputField>
+			</inputFields>
+		</objectTool>
 	</objectTools>
 	<dciSummaryTables>
 	</dciSummaryTables>
