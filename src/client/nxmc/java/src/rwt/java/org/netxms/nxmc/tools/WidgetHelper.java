@@ -1265,10 +1265,10 @@ public class WidgetHelper
    }
 
    /**
-    * Set custom type for control (compatibility layer for RAP, has no effect in desktop build).
-    *
-    * @param control control to set type for
-    * @param type custom type
+    * Get clipboard available types (compatibility layer for RAP, has no effect in desktop build)
+    * 
+    * @param cb
+    * @return
     */
    public static TransferData[] getAvailableTypes(Clipboard cb)
    {
