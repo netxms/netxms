@@ -34,6 +34,7 @@ import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.dnd.Clipboard;
 import org.eclipse.swt.dnd.TextTransfer;
 import org.eclipse.swt.dnd.Transfer;
+import org.eclipse.swt.dnd.TransferData;
 import org.eclipse.swt.events.MouseTrackListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
@@ -1189,5 +1190,16 @@ public class WidgetHelper
     */
    public static void setControlCustomType(Control control, String type)
    {
+   }
+
+   /**
+    * Get clipboard available types (compatibility layer for RAP, has no effect in desktop build)
+    * 
+    * @param cb
+    * @return
+    */
+   public static TransferData[] getAvailableTypes(Clipboard cb)
+   {
+      return cb.getAvailableTypes();
    }
 }
