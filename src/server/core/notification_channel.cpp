@@ -515,9 +515,9 @@ void NotificationChannel::writeNotificationLog(const TCHAR *recipient, const TCH
       DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, InterlockedIncrement64(&s_notificationId));
       DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (uint32_t)time(nullptr));
       DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_name, DB_BIND_STATIC);
-      DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, recipient, DB_BIND_STATIC);
-      DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, subject, DB_BIND_STATIC);
-      DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, body, DB_BIND_STATIC);
+      DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, recipient, DB_BIND_STATIC, 2000);
+      DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, subject, DB_BIND_STATIC, 2000);
+      DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, body, DB_BIND_STATIC, 2000);
       DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, success ? 1 : 0);
       DBExecute(hStmt);
       DBFreeStatement(hStmt);
