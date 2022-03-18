@@ -114,7 +114,7 @@ static StringBuffer CreateAlarmSummary()
 void EnableAlarmSummaryEmails()
 {
    TCHAR schedule[MAX_DB_STRING];
-   ConfigReadStr(_T("Alarm.SummaryEmail.Schedule"), schedule, MAX_DB_STRING, _T("0 0 * * *"));
+   ConfigReadStr(_T("Alarms.SummaryEmail.Schedule"), schedule, MAX_DB_STRING, _T("0 0 * * *"));
 
    ScheduledTask *task = FindScheduledTaskByHandlerId(ALARM_SUMMARY_EMAIL_TASK_ID);
    if (task != NULL)
