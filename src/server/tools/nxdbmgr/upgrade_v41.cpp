@@ -24,6 +24,20 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 41.3 to 41.4
+ */
+static bool H_UpgradeFromV3()
+{
+   if (GetSchemaLevelForMajorVersion(40) < 101)
+   {
+      CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET message='Duplicate MAC address found (%1 on %2)' WHERE guid='c19fbb37-98c9-43a5-90f2-7a54ba9116fa' AND message='Duplicate MAC address found (%1on %2)'")));
+      CHK_EXEC(SetSchemaLevelForMajorVersion(40, 101));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(4));
+   return true;
+}
+
+/**
  * Upgrade from 41.2 to 41.3
  */
 static bool H_UpgradeFromV2()
@@ -154,6 +168,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 3,  41, 4,  H_UpgradeFromV3  },
    { 2,  41, 3,  H_UpgradeFromV2  },
    { 1,  41, 2,  H_UpgradeFromV1  },
    { 0,  41, 1,  H_UpgradeFromV0  },

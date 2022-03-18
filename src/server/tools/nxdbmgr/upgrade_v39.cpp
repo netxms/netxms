@@ -302,7 +302,7 @@ static bool H_UpgradeFromV7()
 {
    CHK_EXEC(CreateEventTemplate(EVENT_DUPLICATE_MAC_ADDRESS, _T("SYS_DUPLICATE_MAC_ADDRESS"),
          EVENT_SEVERITY_MAJOR, EF_LOG, _T("c19fbb37-98c9-43a5-90f2-7a54ba9116fa"),
-         _T("Duplicate MAC address found (%1on %2)"),
+         _T("Duplicate MAC address found (%1 on %2)"),
          _T("Generated when duplicate MAC address found.\r\n")
          _T("Parameters:\r\n")
          _T("   1) MAC address\r\n")

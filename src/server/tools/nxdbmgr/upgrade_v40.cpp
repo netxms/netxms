@@ -24,11 +24,21 @@
 #include <nxevent.h>
 
 /**
- * Upgrade from 40.100 to 41.0
+ * Upgrade from 40.101 to 41.0
+ */
+static bool H_UpgradeFromV101()
+{
+   CHK_EXEC(SetMajorSchemaVersion(41, 0));
+   return true;
+}
+
+/**
+ * Upgrade from 40.100 to 40.101
  */
 static bool H_UpgradeFromV100()
 {
-   CHK_EXEC(SetMajorSchemaVersion(41, 0));
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET message='Duplicate MAC address found (%1 on %2)' WHERE guid='c19fbb37-98c9-43a5-90f2-7a54ba9116fa' AND message='Duplicate MAC address found (%1on %2)'")));
+   CHK_EXEC(SetMinorSchemaVersion(101));
    return true;
 }
 
@@ -1488,7 +1498,7 @@ static bool H_UpgradeFromV63()
    {
       CHK_EXEC(CreateEventTemplate(EVENT_DUPLICATE_MAC_ADDRESS, _T("SYS_DUPLICATE_MAC_ADDRESS"),
             EVENT_SEVERITY_MAJOR, EF_LOG, _T("c19fbb37-98c9-43a5-90f2-7a54ba9116fa"),
-            _T("Duplicate MAC address found (%1on %2)"),
+            _T("Duplicate MAC address found (%1 on %2)"),
             _T("Generated when duplicate MAC address found.\r\n")
             _T("Parameters:\r\n")
             _T("   1) MAC address\r\n")
@@ -3132,7 +3142,8 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
-   { 100, 41, 0, H_UpgradeFromV100 },
+   { 100, 41, 0, H_UpgradeFromV101 },
+   { 100, 40, 101, H_UpgradeFromV100 },
    { 99, 40, 100, H_UpgradeFromV99 },
    { 98, 40, 99, H_UpgradeFromV98 },
    { 97, 40, 98, H_UpgradeFromV97 },
