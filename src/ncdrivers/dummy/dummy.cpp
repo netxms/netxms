@@ -25,6 +25,8 @@
 
 #define DEBUG_TAG _T("ncd.dummy")
 
+static const NCConfigurationTemplate s_config(true, true);
+
 /**
  * Dummy driver class
  */
@@ -55,7 +57,7 @@ bool DummyDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCHAR
 /**
  * Driver entry point
  */
-DECLARE_NCD_ENTRY_POINT(Dummy, nullptr)
+DECLARE_NCD_ENTRY_POINT(Dummy, &s_config)
 {
    return new DummyDriver();
 }
