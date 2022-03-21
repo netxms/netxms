@@ -24,6 +24,7 @@ import org.eclipse.swt.SWT;
 import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.modules.datacollection.views.DataCollectionView;
+import org.netxms.ui.eclipse.datacollection.views.DataCollectionEditor;
 
 /**
  * DCI comparator
@@ -75,6 +76,7 @@ public class DciComparator extends ViewerComparator
 			case DataCollectionView.DC_COLUMN_TEMPLATE:
          case DataCollectionView.DC_COLUMN_RELATEDOBJ:
          case DataCollectionView.DC_COLUMN_STATUSCALC:
+         case DataCollectionView.DC_COLUMN_THRESHOLD:
 				final String text1 = labelProvider.getColumnText(e1, column);
 				final String text2 = labelProvider.getColumnText(e2, column);
 				if (text1 != null && text2 != null)
