@@ -1729,6 +1729,7 @@ shared_ptr<Interface> Node::createInterfaceObject(InterfaceInfo *info, bool manu
       }
 
       bool pass = true;
+      vm->setUserData(this);
       NXSL_Value *argv = iface->createNXSLObject(vm);
       if (vm->run(1, &argv))
       {
@@ -5392,8 +5393,8 @@ void Node::executeInterfaceUpdateHook(Interface *iface)
       return;
    }
 
+   vm->setUserData(this);
    vm->setGlobalVariable("$interface", iface->createNXSLObject(vm));
-
    NXSL_Value *argv = iface->createNXSLObject(vm);
    if (!vm->run(1, &argv))
    {
@@ -9603,6 +9604,7 @@ shared_ptr<Subnet> Node::createSubnet(InetAddress& baseAddr, bool syntheticMask)
    if (vm.isValid())
    {
       bool pass = true;
+      vm->setUserData(this);
       NXSL_Value *argv = subnet->createNXSLObject(vm);
       if (vm->run(1, &argv))
       {
