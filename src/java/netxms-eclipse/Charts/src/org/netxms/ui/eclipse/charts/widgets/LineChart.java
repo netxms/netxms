@@ -113,6 +113,8 @@ public class LineChart extends org.swtchart.Chart implements PlotArea
       getTitle().setVisible(false);
       getLegend().setVisible(false);
 
+      setTranslucent(configuration.isTranslucent());
+
 		// Default time range
 		timeTo = System.currentTimeMillis();
 		timeFrom = timeTo - 3600000;
@@ -244,7 +246,7 @@ public class LineChart extends org.swtchart.Chart implements PlotArea
 			}
 		};
 
-      setZoomEnabled(parent.getConfiguration().isZoomEnabled());
+      setZoomEnabled(configuration.isZoomEnabled());
 
 		((IPlotArea)plotArea).addCustomPaintListener(new ICustomPaintListener() {
 			@Override

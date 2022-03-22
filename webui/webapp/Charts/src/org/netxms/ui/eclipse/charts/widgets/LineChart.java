@@ -101,6 +101,8 @@ public class LineChart extends org.swtchart.Chart implements PlotArea
       getTitle().setVisible(false);
       getLegend().setVisible(false);
 
+      setTranslucent(configuration.isTranslucent());
+
 		// Default time range
 		timeTo = System.currentTimeMillis();
 		timeFrom = timeTo - 3600000;

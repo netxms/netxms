@@ -32,7 +32,7 @@ import org.swtchart.internal.series.SeriesSet;
  * A chart which are composed of title, legend, axes and plot area.
  */
 public class Chart extends Composite implements Listener
-{   
+{
 	/** cached tick step on Y axis */
 	protected double cachedTickStep = 0;
 	
@@ -364,7 +364,6 @@ public class Chart extends Composite implements Listener
    {
       this.translucent = translucent;
    }
-   
 
    /**
     * @return are multipliers used

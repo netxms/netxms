@@ -339,7 +339,7 @@ public class Chart extends Canvas implements Listener
    {
       this.translucent = translucent;
    }
-   
+
    /**
     * @return RWT ID
     */
@@ -369,11 +369,17 @@ public class Chart extends Canvas implements Listener
       }
    }
 
+   /**
+    * @return are multipliers used
+    */
    public boolean isUseMultipliers()
    {
       return useMultipliers;
    }
 
+   /**
+    * @param useMultipliers set to use multipliers
+    */
    public void setUseMultipliers(boolean useMultipliers)
    {
       this.useMultipliers = useMultipliers;
