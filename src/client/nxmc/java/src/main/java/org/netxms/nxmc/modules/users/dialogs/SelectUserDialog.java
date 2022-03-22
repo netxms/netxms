@@ -18,6 +18,7 @@
  */
 package org.netxms.nxmc.modules.users.dialogs;
 
+import java.util.Arrays;
 import java.util.Iterator;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.dialogs.IDialogConstants;
@@ -120,12 +121,12 @@ public class SelectUserDialog extends DialogWithFilter
 			      SelectUserDialog.this.okPressed();
 			}
       });
-      
+
       UserListFilter filter = new UserListFilter(labelProvider);
       userList.addFilter(filter);
-      userList.setInput(session.getUserDatabaseObjects());
+      userList.setInput(getFilteredUserDatabaseObjects());
       setFilterClient(userList, filter);
-      
+
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.verticalAlignment = SWT.FILL;
@@ -134,7 +135,7 @@ public class SelectUserDialog extends DialogWithFilter
       gd.heightHint = 300;
       gd.widthHint = 600;
       userList.getControl().setLayoutData(gd);
-      
+
       return dialogArea;
 	}
    
@@ -148,6 +149,16 @@ public class SelectUserDialog extends DialogWithFilter
       // must be called from createContents to make sure that buttons already created
       getUsersAndRefresh();
       return content;
+   }
+
+   /**
+    * Get filtered list of user database objects.
+    *
+    * @return filtered list of user database objects
+    */
+   private Object[] getFilteredUserDatabaseObjects()
+   {
+      return Arrays.asList(session.getUserDatabaseObjects()).stream().filter(o -> (classFilter == null) || classFilter.isInstance(o)).toArray();
    }
 
    /**
@@ -166,11 +177,12 @@ public class SelectUserDialog extends DialogWithFilter
          protected void run(IProgressMonitor monitor) throws Exception
          {
             session.syncUserDatabase();
+            final Object[] filteredList = getFilteredUserDatabaseObjects();
             runInUIThread(new Runnable() {
                @Override
                public void run()
                {                      
-                  userList.setInput(session.getUserDatabaseObjects());
+                  userList.setInput(filteredList);
                   getButton(IDialogConstants.OK_ID).setEnabled(true);
                }
             });
