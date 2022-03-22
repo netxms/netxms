@@ -115,7 +115,7 @@ public abstract class ObjectsPerspective extends Perspective
    @Override
    protected void configureViews()
    {
-      addNavigationView(new ObjectBrowser("Objects", null, subtreeType));
+      addNavigationView(new ObjectBrowser(getName(), null, subtreeType));
       addMainView(new AlarmsView());
       addMainView(new BusinessServiceAvailabilityView());
       addMainView(new BusinessServiceChecksView());
