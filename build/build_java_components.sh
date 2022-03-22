@@ -22,6 +22,7 @@ mvn -f src/client/nxmc/java/pom.xml install -Pdesktop
 
 if [ "$1" = "all" ]; then   
    WORKIND_DIR='src/client/nxmc/java'
+   mvn -f $WORKIND_DIR -Dmaven.test.skip=true -Pdesktop -Pstandalone clean package 
    cp $WORKIND_DIR/target/nxmc-${VERSION}-*.jar $WORKIND_DIR/
    mvn -f $WORKIND_DIR -Dmaven.test.skip=true -Pdesktop -Pstandalone -P\!linux-x86_64 -Pwindows clean package
    cp $WORKIND_DIR/target/nxmc-${VERSION}-*.jar $WORKIND_DIR/
@@ -33,5 +34,7 @@ if [ "$1" = "all" ]; then
    cp $WORKIND_DIR/target/nxmc-${VERSION}-*.jar $WORKIND_DIR/
    mvn -f $WORKIND_DIR -Dmaven.test.skip=true -Dnetxms.build.disablePlatformProfile=true -Pweb clean package
    cp $WORKIND_DIR/target/nxmc-${VERSION}*.war $WORKIND_DIR/
+else
+   mvn -f src/client/nxmc/java/pom.xml install -Pdesktop
 fi
 
