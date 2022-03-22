@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,7 +24,6 @@ import org.eclipse.swt.SWT;
 import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.modules.datacollection.views.DataCollectionView;
-import org.netxms.ui.eclipse.datacollection.views.DataCollectionEditor;
 
 /**
  * DCI comparator
@@ -32,7 +31,7 @@ import org.netxms.ui.eclipse.datacollection.views.DataCollectionEditor;
 public class DciComparator extends ViewerComparator
 {
 	private DciLabelProvider labelProvider;
-	
+
 	/**
 	 * Default constructor
 	 */
@@ -40,10 +39,10 @@ public class DciComparator extends ViewerComparator
 	{
 		this.labelProvider = labelProvider;
 	}
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ViewerComparator#compare(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
-	 */
+
+   /**
+    * @see org.eclipse.jface.viewers.ViewerComparator#compare(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
+    */
 	@Override
 	public int compare(Viewer viewer, Object e1, Object e2)
 	{
