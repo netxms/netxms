@@ -6335,7 +6335,8 @@ DataCollectionError Node::getMetricFromAgent(const TCHAR *name, TCHAR *buffer, s
             rc = DCE_SUCCESS;
             setLastAgentCommTime();
             goto end_loop;
-         case ERR_UNKNOWN_PARAMETER:
+         case ERR_UNKNOWN_METRIC:
+         case ERR_UNSUPPORTED_METRIC:
             rc = DCE_NOT_SUPPORTED;
             setLastAgentCommTime();
             goto end_loop;
@@ -6463,7 +6464,8 @@ DataCollectionError Node::getTableFromAgent(const TCHAR *name, shared_ptr<Table>
             result = DCE_SUCCESS;
             setLastAgentCommTime();
             goto end_loop;
-         case ERR_UNKNOWN_PARAMETER:
+         case ERR_UNKNOWN_METRIC:
+         case ERR_UNSUPPORTED_METRIC:
             result = DCE_NOT_SUPPORTED;
             setLastAgentCommTime();
             goto end_loop;
@@ -6495,9 +6497,9 @@ end_loop:
  */
 DataCollectionError Node::getListFromAgent(const TCHAR *name, StringList **list)
 {
-   UINT32 dwError = ERR_NOT_CONNECTED;
+   uint32_t agentError = ERR_NOT_CONNECTED;
    DataCollectionError rc = DCE_COMM_ERROR;
-   UINT32 dwTries = 3;
+   int retryCount = 3;
 
    *list = nullptr;
 
@@ -6512,16 +6514,17 @@ DataCollectionError Node::getListFromAgent(const TCHAR *name, StringList **list)
       goto end_loop;
 
    // Get parameter from agent
-   while(dwTries-- > 0)
+   while(retryCount-- > 0)
    {
-      dwError = conn->getList(name, list);
-      switch(dwError)
+      agentError = conn->getList(name, list);
+      switch(agentError)
       {
          case ERR_SUCCESS:
             rc = DCE_SUCCESS;
             setLastAgentCommTime();
             goto end_loop;
-         case ERR_UNKNOWN_PARAMETER:
+         case ERR_UNKNOWN_METRIC:
+         case ERR_UNSUPPORTED_METRIC:
             rc = DCE_NOT_SUPPORTED;
             setLastAgentCommTime();
             goto end_loop;
@@ -6544,7 +6547,7 @@ DataCollectionError Node::getListFromAgent(const TCHAR *name, StringList **list)
    }
 
 end_loop:
-   DbgPrintf(7, _T("Node(%s)->getListFromAgent(%s): dwError=%d dwResult=%d"), m_name, name, dwError, rc);
+   DbgPrintf(7, _T("Node(%s)->getListFromAgent(%s): dwError=%d dwResult=%d"), m_name, name, agentError, rc);
    return rc;
 }
 

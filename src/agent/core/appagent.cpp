@@ -84,7 +84,7 @@ void RegisterApplicationAgent(const TCHAR *name)
  */
 UINT32 GetParameterValueFromAppAgent(const TCHAR *name, TCHAR *buffer)
 {
-	UINT32 rc = ERR_UNKNOWN_PARAMETER;
+	uint32_t rc = ERR_UNKNOWN_METRIC;
 	for(int i = 0; i < s_appAgents.size(); i++)
 	{
       ApplicationAgent *agent = s_appAgents.get(i);
@@ -114,7 +114,7 @@ reconnect:
       }
       if (apprc == APPAGENT_RCC_NO_SUCH_INSTANCE)
       {
-         rc = ERR_UNKNOWN_PARAMETER;
+         rc = ERR_NO_SUCH_INSTANCE;
          agent->unlock();
          break;
       }

@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -52,7 +52,7 @@ static void H_GetParameter(NXCPMessage *pRequest, NXCPMessage *pMsg)
 
    TCHAR value[MAX_RESULT_LENGTH];
    VirtualSession session(0);
-   UINT32 rcc = GetParameterValue(name, value, &session);
+   uint32_t rcc = GetMetricValue(name, value, &session);
    pMsg->setField(VID_RCC, rcc);
    if (rcc == ERR_SUCCESS)
       pMsg->setField(VID_VALUE, value);
@@ -68,7 +68,7 @@ static void H_GetTable(NXCPMessage *pRequest, NXCPMessage *pMsg)
 
    Table value;
    VirtualSession session(0);
-   UINT32 rcc = GetTableValue(name, &value, &session);
+   uint32_t rcc = GetTableValue(name, &value, &session);
    pMsg->setField(VID_RCC, rcc);
    if (rcc == ERR_SUCCESS)
 		value.fillMessage(*pMsg, 0, -1);
@@ -84,7 +84,7 @@ static void H_GetList(NXCPMessage *pRequest, NXCPMessage *pMsg)
 
    StringList value;
    VirtualSession session(0);
-   UINT32 rcc = GetListValue(name, &value, &session);
+   uint32_t rcc = GetListValue(name, &value, &session);
    pMsg->setField(VID_RCC, rcc);
    if (rcc == ERR_SUCCESS)
    {

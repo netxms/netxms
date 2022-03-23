@@ -593,7 +593,7 @@ enum SessionState
 #define RCC_INVALID_TOOL_ID               ((uint32_t)48)
 #define RCC_SNMP_ERROR                    ((uint32_t)49)
 #define RCC_BAD_REGEXP                    ((uint32_t)50)
-#define RCC_UNKNOWN_PARAMETER             ((uint32_t)51)
+#define RCC_UNKNOWN_METRIC                ((uint32_t)51)
 #define RCC_FILE_IO_ERROR                 ((uint32_t)52)
 #define RCC_CORRUPTED_MIB_FILE            ((uint32_t)53)
 #define RCC_TRANSFER_IN_PROGRESS          ((uint32_t)54)

@@ -85,7 +85,8 @@
 #define ERR_UNKNOWN_COMMAND            ((uint32_t)400)
 #define ERR_AUTH_REQUIRED              ((uint32_t)401)
 #define ERR_ACCESS_DENIED              ((uint32_t)403)
-#define ERR_UNKNOWN_PARAMETER          ((uint32_t)404)
+#define ERR_UNKNOWN_METRIC             ((uint32_t)404)
+#define ERR_UNSUPPORTED_METRIC         ((uint32_t)406)
 #define ERR_REQUEST_TIMEOUT            ((uint32_t)408)
 #define ERR_AUTH_FAILED                ((uint32_t)440)
 #define ERR_ALREADY_AUTHENTICATED      ((uint32_t)441)
@@ -146,6 +147,7 @@
 #define SYSINFO_RC_UNSUPPORTED         1
 #define SYSINFO_RC_ERROR               2
 #define SYSINFO_RC_NO_SUCH_INSTANCE    3
+#define SYSINFO_RC_UNKNOWN             4
 
 /**
  * WinPerf features

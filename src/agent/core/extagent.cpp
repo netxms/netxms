@@ -882,13 +882,13 @@ void ListActionsFromExtSubagents(StringList *list)
  */
 uint32_t GetParameterValueFromExtSubagent(const TCHAR *name, TCHAR *buffer)
 {
-   uint32_t rc = ERR_UNKNOWN_PARAMETER;
+   uint32_t rc = ERR_UNKNOWN_METRIC;
 	for(int i = 0; i < s_subagents.size(); i++)
 	{
 		if (s_subagents.get(i)->isConnected())
 		{
 			rc = s_subagents.get(i)->getParameter(name, buffer);
-			if (rc != ERR_UNKNOWN_PARAMETER)
+			if (rc != ERR_UNKNOWN_METRIC)
 				break;
 		}
 	}
@@ -902,13 +902,13 @@ uint32_t GetParameterValueFromExtSubagent(const TCHAR *name, TCHAR *buffer)
  */
 uint32_t GetTableValueFromExtSubagent(const TCHAR *name, Table *value)
 {
-   uint32_t rc = ERR_UNKNOWN_PARAMETER;
+   uint32_t rc = ERR_UNKNOWN_METRIC;
 	for(int i = 0; i < s_subagents.size(); i++)
 	{
 		if (s_subagents.get(i)->isConnected())
 		{
 			rc = s_subagents.get(i)->getTable(name, value);
-			if (rc != ERR_UNKNOWN_PARAMETER)
+			if (rc != ERR_UNKNOWN_METRIC)
 				break;
 		}
 	}
@@ -922,13 +922,13 @@ uint32_t GetTableValueFromExtSubagent(const TCHAR *name, Table *value)
  */
 uint32_t GetListValueFromExtSubagent(const TCHAR *name, StringList *value)
 {
-   uint32_t rc = ERR_UNKNOWN_PARAMETER;
+   uint32_t rc = ERR_UNKNOWN_METRIC;
 	for(int i = 0; i < s_subagents.size(); i++)
 	{
 		if (s_subagents.get(i)->isConnected())
 		{
 			rc = s_subagents.get(i)->getList(name, value);
-			if (rc != ERR_UNKNOWN_PARAMETER)
+			if (rc != ERR_UNKNOWN_METRIC)
 				break;
 		}
 	}
@@ -942,13 +942,13 @@ uint32_t GetListValueFromExtSubagent(const TCHAR *name, StringList *value)
  */
 uint32_t ExecuteActionByExtSubagent(const TCHAR *name, const StringList& args, const shared_ptr<AbstractCommSession>& session, uint32_t requestId, bool sendOutput)
 {
-   uint32_t rc = ERR_UNKNOWN_PARAMETER;
+   uint32_t rc = ERR_UNKNOWN_METRIC;
    for(int i = 0; i < s_subagents.size(); i++)
    {
       if (s_subagents.get(i)->isConnected())
       {
          rc = s_subagents.get(i)->executeAction(name, args, session.get(), requestId, sendOutput);
-         if (rc != ERR_UNKNOWN_PARAMETER)
+         if (rc != ERR_UNKNOWN_METRIC)
             break;
       }
    }

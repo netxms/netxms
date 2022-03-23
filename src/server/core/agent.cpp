@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -779,7 +779,8 @@ UINT32 AgentConnectionEx::processCollectedData(NXCPMessage *msg)
             dcObject->setLastPollTime(t);
          break;
       }
-      case ERR_UNKNOWN_PARAMETER:
+      case ERR_UNKNOWN_METRIC:
+      case ERR_UNSUPPORTED_METRIC:
          if (dcObject->getStatus() == ITEM_STATUS_NOT_SUPPORTED)
             dcObject->setStatus(ITEM_STATUS_ACTIVE, true);
          dcObject->processNewError(false, t);
@@ -928,7 +929,8 @@ UINT32 AgentConnectionEx::processBulkCollectedData(NXCPMessage *request, NXCPMes
             if (t > dcObject->getLastPollTime())
                dcObject->setLastPollTime(t);
             break;
-         case ERR_UNKNOWN_PARAMETER:
+         case ERR_UNKNOWN_METRIC:
+         case ERR_UNSUPPORTED_METRIC:
             if (dcObject->getStatus() == ITEM_STATUS_NOT_SUPPORTED)
                dcObject->setStatus(ITEM_STATUS_ACTIVE, true);
             dcObject->processNewError(false, t);

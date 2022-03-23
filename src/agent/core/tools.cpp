@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -108,22 +108,22 @@ bool WaitForProcess(const TCHAR *name)
 	TCHAR param[MAX_PATH], value[MAX_RESULT_LENGTH];
 	bool success = false;
 	VirtualSession session(0);
-	UINT32 rc;
 
 	_sntprintf(param, MAX_PATH, _T("Process.Count(%s)"), name);
 	while(true)
 	{
-		rc = GetParameterValue(param, value, &session);
+		uint32_t rc = GetMetricValue(param, value, &session);
 		switch(rc)
 		{
 			case ERR_SUCCESS:
-				if (_tcstol(value, NULL, 0) > 0)
+				if (_tcstol(value, nullptr, 0) > 0)
 				{
 					success = true;
 					goto done;
 				}
 				break;
-			case ERR_UNKNOWN_PARAMETER:
+			case ERR_UNKNOWN_METRIC:
+         case ERR_UNSUPPORTED_METRIC:
 				goto done;
 			default:
 				break;

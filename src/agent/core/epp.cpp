@@ -56,8 +56,8 @@ public:
    virtual void listTables(NXCPMessage *msg, uint32_t *baseId, uint32_t *count) { }
    virtual void listTables(StringList *list) { }
 
-   virtual LONG getValue(const TCHAR *name, TCHAR *buffer) { return SYSINFO_RC_UNSUPPORTED; }
-   virtual LONG getTableValue(const TCHAR *name, Table *table) { return SYSINFO_RC_UNSUPPORTED; }
+   virtual LONG getValue(const TCHAR *name, TCHAR *buffer) { return SYSINFO_RC_UNKNOWN; }
+   virtual LONG getTableValue(const TCHAR *name, Table *table) { return SYSINFO_RC_UNKNOWN; }
 
    void init();
    void poll();
@@ -194,7 +194,7 @@ void ParameterProvider::processPollResults()
  */
 LONG ParameterProvider::getValue(const TCHAR *name, TCHAR *buffer)
 {
-	LONG rc = SYSINFO_RC_UNSUPPORTED;
+	LONG rc = SYSINFO_RC_UNKNOWN;
 
 	lock();
 
@@ -376,7 +376,7 @@ void TableProvider::listTables(StringList *list)
 LONG TableProvider::getTableValue(const TCHAR *name, Table *table)
 {
    if (_tcsicmp(name, m_name))
-      return SYSINFO_RC_UNSUPPORTED;
+      return SYSINFO_RC_UNKNOWN;
 
    LONG rc;
    lock();
@@ -464,12 +464,12 @@ void AddTableProvider(const TCHAR *name, ExternalTableDefinition *definition, ui
  */
 LONG GetParameterValueFromExtProvider(const TCHAR *name, TCHAR *buffer)
 {
-	LONG rc = SYSINFO_RC_UNSUPPORTED;
+	LONG rc = SYSINFO_RC_UNKNOWN;
 	for(int i = 0; i < s_providers.size(); i++)
 	{
 		ExternalDataProvider *p = s_providers.get(i);
 		rc = p->getValue(name, buffer);
-		if (rc == SYSINFO_RC_SUCCESS)
+		if (rc != SYSINFO_RC_UNKNOWN)
 			break;
 	}
 	return rc;
@@ -482,12 +482,12 @@ LONG GetParameterValueFromExtProvider(const TCHAR *name, TCHAR *buffer)
  */
 LONG GetTableValueFromExtProvider(const TCHAR *name, Table *table)
 {
-   LONG rc = SYSINFO_RC_UNSUPPORTED;
+   LONG rc = SYSINFO_RC_UNKNOWN;
    for(int i = 0; i < s_providers.size(); i++)
    {
       ExternalDataProvider *p = s_providers.get(i);
       rc = p->getTableValue(name, table);
-      if (rc != SYSINFO_RC_UNSUPPORTED)
+      if (rc != SYSINFO_RC_UNKNOWN)
          break;
    }
    return rc;

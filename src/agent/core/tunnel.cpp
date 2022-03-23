@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -1095,9 +1095,9 @@ bool Tunnel::connectToServer()
 
    VirtualSession session(0);
    TCHAR buffer[MAX_RESULT_LENGTH];
-   if (GetParameterValue(_T("System.PlatformName"), buffer, &session) == ERR_SUCCESS)
+   if (GetMetricValue(_T("System.PlatformName"), buffer, &session) == ERR_SUCCESS)
       msg.setField(VID_PLATFORM_NAME, buffer);
-   if (GetParameterValue(_T("System.UName"), buffer, &session) == ERR_SUCCESS)
+   if (GetMetricValue(_T("System.UName"), buffer, &session) == ERR_SUCCESS)
       msg.setField(VID_SYS_DESCRIPTION, buffer);
 
    BYTE hwid[HARDWARE_ID_LENGTH];
@@ -1107,14 +1107,14 @@ bool Tunnel::connectToServer()
    sendMessage(msg);
 
    NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, msg.getId());
-   if (response == NULL)
+   if (response == nullptr)
    {
       debugPrintf(4, _T("Cannot configure tunnel (request timeout)"));
       disconnect();
       return false;
    }
 
-   UINT32 rcc = response->getFieldAsUInt32(VID_RCC);
+   uint32_t rcc = response->getFieldAsUInt32(VID_RCC);
    delete response;
    if (rcc != ERR_SUCCESS)
    {

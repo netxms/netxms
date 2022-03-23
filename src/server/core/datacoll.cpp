@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -80,15 +80,15 @@ static void GetItemData(DataCollectionTarget *dcTarget, DCItem *pItem, TCHAR *bu
             break;
          case DS_DEVICE_DRIVER:
             if (dcTarget->getObjectClass() == OBJECT_NODE)
-               *error = ((Node *)dcTarget)->getMetricFromDeviceDriver(pItem->getName(), buffer, MAX_LINE_SIZE);
+               *error = static_cast<Node*>(dcTarget)->getMetricFromDeviceDriver(pItem->getName(), buffer, MAX_LINE_SIZE);
             else
                *error = DCE_NOT_SUPPORTED;
             break;
          case DS_NATIVE_AGENT:
 			   if (dcTarget->getObjectClass() == OBJECT_NODE)
-	            *error = ((Node *)dcTarget)->getMetricFromAgent(pItem->getName(), buffer, MAX_LINE_SIZE);
+	            *error = static_cast<Node*>(dcTarget)->getMetricFromAgent(pItem->getName(), buffer, MAX_LINE_SIZE);
 			   else if (dcTarget->getObjectClass() == OBJECT_SENSOR)
-               *error = ((Sensor *)dcTarget)->getMetricFromAgent(pItem->getName(), buffer, MAX_LINE_SIZE);
+               *error = static_cast<Sensor*>(dcTarget)->getMetricFromAgent(pItem->getName(), buffer, MAX_LINE_SIZE);
 			   else
 				   *error = DCE_NOT_SUPPORTED;
             break;
@@ -97,7 +97,7 @@ static void GetItemData(DataCollectionTarget *dcTarget, DCItem *pItem, TCHAR *bu
 			   {
 				   TCHAR name[MAX_PARAM_NAME];
 				   _sntprintf(name, MAX_PARAM_NAME, _T("PDH.CounterValue(\"%s\",%d)"), (const TCHAR *)EscapeStringForAgent(pItem->getName()), pItem->getSampleCount());
-	            *error = ((Node *)dcTarget)->getMetricFromAgent(name, buffer, MAX_LINE_SIZE);
+	            *error = static_cast<Node*>(dcTarget)->getMetricFromAgent(name, buffer, MAX_LINE_SIZE);
 			   }
 			   else
 			   {

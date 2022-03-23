@@ -603,7 +603,7 @@ void ClientSession::processFileTransferMessage(NXCPMessage *msg)
 
                NXCPMessage response(CMD_REQUEST_COMPLETED, msg->getId());
                response.setField(VID_RCC, RCC_SUCCESS);
-               sendMessage(&response);
+               sendMessage(response);
 
                dInfo->close(true);
                m_downloadFileMap.remove(msg->getId());
@@ -615,7 +615,7 @@ void ClientSession::processFileTransferMessage(NXCPMessage *msg)
 
             NXCPMessage response(CMD_REQUEST_COMPLETED, msg->getId());
             response.setField(VID_RCC, RCC_IO_ERROR);
-            sendMessage(&response);
+            sendMessage(response);
 
             dInfo->close(false);
             m_downloadFileMap.remove(msg->getId());

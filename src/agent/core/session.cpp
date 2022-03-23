@@ -912,7 +912,7 @@ void CommSession::authenticate(NXCPMessage *pRequest, NXCPMessage *pMsg)
 }
 
 /**
- * Get parameter's value
+ * Get metric's value
  */
 void CommSession::getParameter(NXCPMessage *request, NXCPMessage *response)
 {
@@ -920,7 +920,7 @@ void CommSession::getParameter(NXCPMessage *request, NXCPMessage *response)
    request->getFieldAsString(VID_PARAMETER, parameter, MAX_RUNTIME_PARAM_NAME);
 
    TCHAR value[MAX_RESULT_LENGTH];
-   uint32_t errorCode = GetParameterValue(parameter, value, this);
+   uint32_t errorCode = GetMetricValue(parameter, value, this);
 
    response->setField(VID_RCC, errorCode);
    if (errorCode == ERR_SUCCESS)

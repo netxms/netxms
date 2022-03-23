@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -163,13 +163,13 @@ uint32_t GetSnmpValue(const uuid& target, uint16_t port, SNMP_Version version, c
 
    if (interpretRawValue == SNMP_RAWTYPE_NONE)
    {
-      rcc = SnmpGetEx(snmp, oid, NULL, 0, value, MAX_RESULT_LENGTH * sizeof(TCHAR), SG_PSTRING_RESULT, NULL);
+      rcc = SnmpGetEx(snmp, oid, nullptr, 0, value, MAX_RESULT_LENGTH * sizeof(TCHAR), SG_PSTRING_RESULT, nullptr);
    }
    else
    {
 		BYTE rawValue[1024];
 		memset(rawValue, 0, 1024);
-      rcc = SnmpGetEx(snmp, oid, NULL, 0, rawValue, 1024, SG_RAW_RESULT, NULL);
+      rcc = SnmpGetEx(snmp, oid, nullptr, 0, rawValue, 1024, SG_RAW_RESULT, nullptr);
 		if (rcc == SNMP_ERR_SUCCESS)
 		{
 			switch(interpretRawValue)
@@ -203,7 +203,7 @@ uint32_t GetSnmpValue(const uuid& target, uint16_t port, SNMP_Version version, c
    }
 
    return (rcc == SNMP_ERR_SUCCESS) ? ERR_SUCCESS :
-      ((rcc == SNMP_ERR_NO_OBJECT) ? ERR_UNKNOWN_PARAMETER : ERR_INTERNAL_ERROR);
+      ((rcc == SNMP_ERR_NO_OBJECT) ? ERR_UNKNOWN_METRIC : ERR_INTERNAL_ERROR);
 }
 
 /**
@@ -271,15 +271,6 @@ static uint32_t ReadSNMPTableRow(SNMP_Transport *snmp, const SNMP_ObjectId *rowO
 }
 
 /**
- * Callback for SnmpWalk in Node::getTableFromSNMP
- */
-static UINT32 SNMPGetTableCallback(SNMP_Variable *varbind, SNMP_Transport *snmp, void *arg)
-{
-   ((ObjectArray<SNMP_ObjectId> *)arg)->add(new SNMP_ObjectId(varbind->getName()));
-   return SNMP_ERR_SUCCESS;
-}
-
-/**
  * Get table from SNMP node
  */
 uint32_t GetSnmpTable(const uuid& target, uint16_t port, SNMP_Version version, const TCHAR *oid,
@@ -300,7 +291,11 @@ uint32_t GetSnmpTable(const uuid& target, uint16_t port, SNMP_Version version, c
    SNMP_Transport *snmp = t->getTransport(port);
 
    ObjectArray<SNMP_ObjectId> oidList(64, 64, Ownership::True);
-   uint32_t rcc = SnmpWalk(snmp, oid, SNMPGetTableCallback, &oidList);
+   uint32_t rcc = SnmpWalk(snmp, oid,
+      [] (SNMP_Variable *varbind, SNMP_Transport *snmp, void *arg) -> uint32_t {
+         static_cast<ObjectArray<SNMP_ObjectId>*>(arg)->add(new SNMP_ObjectId(varbind->getName()));
+         return SNMP_ERR_SUCCESS;
+      }, &oidList);
    if (rcc == SNMP_ERR_SUCCESS)
    {
       for(int i = 0; i < columns.size(); i++)
@@ -324,5 +319,5 @@ uint32_t GetSnmpTable(const uuid& target, uint16_t port, SNMP_Version version, c
    }
 
    return (rcc == SNMP_ERR_SUCCESS) ? ERR_SUCCESS :
-      ((rcc == SNMP_ERR_NO_OBJECT) ? ERR_UNKNOWN_PARAMETER : ERR_INTERNAL_ERROR);
+      ((rcc == SNMP_ERR_NO_OBJECT) ? ERR_UNKNOWN_METRIC : ERR_INTERNAL_ERROR);
 }

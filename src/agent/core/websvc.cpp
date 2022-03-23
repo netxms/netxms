@@ -798,7 +798,7 @@ uint32_t ServiceEntry::query(const TCHAR *url, uint16_t requestMethod, const cha
       else
       {
          nxlog_debug_tag(DEBUG_TAG, 1, _T("ServiceEntry::query(): curl_easy_setopt failed for CURLOPT_URL"));
-         rcc = ERR_UNKNOWN_PARAMETER;
+         rcc = ERR_UNSUPPORTED_METRIC;
       }
       MemFree(urlUtf8);
       curl_easy_cleanup(curl);
@@ -1048,7 +1048,7 @@ void WebServiceCustomRequest(NXCPMessage* request, AbstractCommSession *session)
         else
         {
            nxlog_debug_tag(DEBUG_TAG, 1, _T("WebServiceCustomRequest(): curl_easy_setopt failed for CURLOPT_URL"));
-           rcc = ERR_UNKNOWN_PARAMETER;
+           rcc = ERR_UNSUPPORTED_METRIC;
         }
         MemFree(urlUtf8);
      }

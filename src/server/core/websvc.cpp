@@ -191,7 +191,7 @@ uint32_t WebServiceDefinition::query(DataCollectionTarget *object, WebServiceReq
       if (value != nullptr)
          ret_string(static_cast<TCHAR*>(result), value);
       else
-         rcc = ERR_UNKNOWN_PARAMETER;
+         rcc = ERR_UNKNOWN_METRIC;
    }
    return rcc;
 }

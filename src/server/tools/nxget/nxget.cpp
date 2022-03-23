@@ -98,7 +98,7 @@ static int GetTable(AgentConnection *conn, const TCHAR *tableName)
    }
    else
    {
-      if (!s_fixedType && (rcc == ERR_UNKNOWN_PARAMETER))
+      if (!s_fixedType && (rcc == ERR_UNKNOWN_METRIC))
          return GetList(conn, tableName);
       WriteToTerminalEx(_T("%u: %s\n"), rcc, AgentErrorCodeToText(rcc));
    }
@@ -121,7 +121,7 @@ static int Get(AgentConnection *conn, const TCHAR *metric)
    }
    else
    {
-      if (!s_fixedType && (rcc == ERR_UNKNOWN_PARAMETER))
+      if (!s_fixedType && (rcc == ERR_UNKNOWN_METRIC))
          return GetTable(conn, metric);
       WriteToTerminalEx(_T("%d: %s\n"), rcc, AgentErrorCodeToText(rcc));
    }

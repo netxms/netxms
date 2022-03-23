@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Server Library
-** Copyright (C) 2003-2021 Raden Solutions
+** Copyright (C) 2003-2022 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -33,15 +33,16 @@ LIBNXSRV_EXPORTABLE_VAR(UINT64 g_flags) = AF_USE_SYSLOG | AF_CATCH_EXCEPTIONS | 
  */
 static struct
 {
-   int iCode;
-   const TCHAR *pszText;
-} m_agentErrors[] =
+   uint32_t code;
+   const TCHAR *text;
+} s_agentErrors[] =
 {
    { ERR_SUCCESS, _T("Success") },
    { ERR_UNKNOWN_COMMAND, _T("Unknown command") },
    { ERR_AUTH_REQUIRED, _T("Authentication required") },
    { ERR_ACCESS_DENIED, _T("Access denied") },
-   { ERR_UNKNOWN_PARAMETER, _T("Unknown parameter") },
+   { ERR_UNKNOWN_METRIC, _T("Unknown metric") },
+   { ERR_UNSUPPORTED_METRIC, _T("Unsupported metric") },
    { ERR_REQUEST_TIMEOUT, _T("Request timeout") },
    { ERR_AUTH_FAILED, _T("Authentication failed") },
    { ERR_ALREADY_AUTHENTICATED, _T("Already authenticated") },
@@ -82,7 +83,7 @@ static struct
    { ERR_INVALID_HTTP_REQUEST_CODE, _T("Invalid HTTP request code") },
    { ERR_FILE_HASH_MISMATCH, _T("File hash mismatch") },
    { ERR_FUNCTION_NOT_SUPPORTED, _T("Function not supported") },
-   { -1, NULL }
+   { 0xFFFFFFFF, nullptr }
 };
 
 /**
@@ -90,9 +91,9 @@ static struct
  */
 const TCHAR LIBNXSRV_EXPORTABLE *AgentErrorCodeToText(uint32_t err)
 {
-   for(int i = 0; m_agentErrors[i].pszText != NULL; i++)
-      if (err == (UINT32)m_agentErrors[i].iCode)
-         return m_agentErrors[i].pszText;
+   for(int i = 0; s_agentErrors[i].text != nullptr; i++)
+      if (err == s_agentErrors[i].code)
+         return s_agentErrors[i].text;
    return _T("Unknown error code");
 }
 
@@ -125,6 +126,8 @@ uint32_t LIBNXSRV_EXPORTABLE AgentErrorToRCC(uint32_t err)
          return RCC_FILE_ALREADY_EXISTS;
       case ERR_FOLDER_ALREADY_EXISTS:
          return RCC_FOLDER_ALREADY_EXISTS;
+      case ERR_UNKNOWN_METRIC:
+         return RCC_UNKNOWN_METRIC;
    }
    return RCC_AGENT_ERROR;
 }

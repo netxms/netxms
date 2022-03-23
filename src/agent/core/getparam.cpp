@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -811,20 +811,38 @@ bool AddExternalTable(ConfigEntry *config)
 }
 
 /**
- * Get parameter's value
+ * Get symbolic name for error code
  */
-uint32_t GetParameterValue(const TCHAR *param, TCHAR *value, AbstractCommSession *session)
+static const TCHAR *GetErrorCodeSymbolicName(uint32_t e)
 {
-   int i, rc;
-   uint32_t errorCode;
+   switch(e)
+   {
+      case ERR_SUCCESS:
+         return _T("SUCCESS");
+      case ERR_UNKNOWN_METRIC:
+         return _T("UNKNOWN_METRIC");
+      case ERR_UNSUPPORTED_METRIC:
+         return _T("UNSUPPORTED_METRIC");
+      case ERR_NO_SUCH_INSTANCE:
+         return _T("NO_SUCH_INSTANCE");
+   }
+   return _T("INTERNAL_ERROR");
+}
+
+/**
+ * Get metric value
+ */
+uint32_t GetMetricValue(const TCHAR *param, TCHAR *value, AbstractCommSession *session)
+{
+   uint32_t errorCode = ERR_UNKNOWN_METRIC;
 
    session->debugPrintf(5, _T("Requesting metric \"%s\""), param);
-   for(i = 0; i < s_metrics.size(); i++)
+   for(int i = 0; i < s_metrics.size(); i++)
 	{
       NETXMS_SUBAGENT_PARAM *p = s_metrics.get(i);
       if (MatchString(p->name, param, FALSE))
       {
-         rc = p->handler(param, p->arg, value, session);
+         LONG rc = p->handler(param, p->arg, value, session);
          switch(rc)
          {
             case SYSINFO_RC_SUCCESS:
@@ -840,11 +858,14 @@ uint32_t GetParameterValue(const TCHAR *param, TCHAR *value, AbstractCommSession
                InterlockedIncrement(&s_failedRequests);
                break;
             case SYSINFO_RC_UNSUPPORTED:
-               errorCode = ERR_UNKNOWN_PARAMETER;
+               errorCode = ERR_UNSUPPORTED_METRIC;
                InterlockedIncrement(&s_unsupportedRequests);
                break;
+            case SYSINFO_RC_UNKNOWN:
+               errorCode = ERR_UNKNOWN_METRIC;
+               break;
             default:
-               nxlog_write(NXLOG_ERROR, _T("Internal error: unexpected return code %d in GetParameterValue(\"%s\")"), rc, param);
+               nxlog_write(NXLOG_ERROR, _T("Internal error: unexpected return code %d in GetMetricValue(\"%s\")"), rc, param);
                errorCode = ERR_INTERNAL_ERROR;
                InterlockedIncrement(&s_failedRequests);
                break;
@@ -853,41 +874,58 @@ uint32_t GetParameterValue(const TCHAR *param, TCHAR *value, AbstractCommSession
       }
 	}
 
-   if (i == s_metrics.size())
+   if (errorCode == ERR_UNKNOWN_METRIC)
    {
-		rc = GetParameterValueFromExtProvider(param, value);
-		if (rc == SYSINFO_RC_SUCCESS)
-		{
-         errorCode = ERR_SUCCESS;
-         InterlockedIncrement(&s_processedRequests);
-		}
-		else
-		{
-			errorCode = ERR_UNKNOWN_PARAMETER;
-		}
+		LONG rc = GetParameterValueFromExtProvider(param, value);
+      switch(rc)
+      {
+         case SYSINFO_RC_SUCCESS:
+            errorCode = ERR_SUCCESS;
+            InterlockedIncrement(&s_processedRequests);
+            break;
+         case SYSINFO_RC_ERROR:
+            errorCode = ERR_INTERNAL_ERROR;
+            InterlockedIncrement(&s_failedRequests);
+            break;
+         case SYSINFO_RC_NO_SUCH_INSTANCE:
+            errorCode = ERR_NO_SUCH_INSTANCE;
+            InterlockedIncrement(&s_failedRequests);
+            break;
+         case SYSINFO_RC_UNSUPPORTED:
+            errorCode = ERR_UNSUPPORTED_METRIC;
+            InterlockedIncrement(&s_unsupportedRequests);
+            break;
+         case SYSINFO_RC_UNKNOWN:
+            break;
+         default:
+            nxlog_write(NXLOG_ERROR, _T("Internal error: unexpected return code %d in GetParameterValueFromExtProvider(\"%s\")"), rc, param);
+            errorCode = ERR_INTERNAL_ERROR;
+            InterlockedIncrement(&s_failedRequests);
+            break;
+      }
    }
 
-   if ((errorCode == ERR_UNKNOWN_PARAMETER) && (i == s_metrics.size()))
+   if (errorCode == ERR_UNKNOWN_METRIC)
    {
 		errorCode = GetParameterValueFromAppAgent(param, value);
 		if (errorCode == ERR_SUCCESS)
 		{
          InterlockedIncrement(&s_processedRequests);
 		}
-		else if (errorCode != ERR_UNKNOWN_PARAMETER)
+		else if (errorCode != ERR_UNKNOWN_METRIC)
 		{
          InterlockedIncrement(&s_failedRequests);
 		}
    }
 
-   if ((errorCode == ERR_UNKNOWN_PARAMETER) && (i == s_metrics.size()))
+   if (errorCode == ERR_UNKNOWN_METRIC)
    {
 		errorCode = GetParameterValueFromExtSubagent(param, value);
 		if (errorCode == ERR_SUCCESS)
 		{
          InterlockedIncrement(&s_processedRequests);
 		}
-		else if (errorCode == ERR_UNKNOWN_PARAMETER)
+		else if ((errorCode == ERR_UNSUPPORTED_METRIC) || (errorCode == ERR_UNKNOWN_METRIC))
 		{
          InterlockedIncrement(&s_unsupportedRequests);
 		}
@@ -897,9 +935,7 @@ uint32_t GetParameterValue(const TCHAR *param, TCHAR *value, AbstractCommSession
 		}
    }
 
-	session->debugPrintf(7, _T("GetParameterValue(\"%s\"): %d (%s) value = \"%s\""), param, (int)errorCode,
-		   (errorCode == ERR_SUCCESS) ? _T("SUCCESS") : (errorCode == ERR_UNKNOWN_PARAMETER ? _T("UNKNOWN_PARAMETER") : (errorCode == ERR_NO_SUCH_INSTANCE ? _T("NO_SUCH_INSTANCE")  : _T("INTERNAL_ERROR"))),
-         (errorCode == ERR_SUCCESS) ? value : _T(""));
+	session->debugPrintf(7, _T("GetMetricValue(\"%s\"): %u (%s) value = \"%s\""), param, errorCode, GetErrorCodeSymbolicName(errorCode), (errorCode == ERR_SUCCESS) ? value : _T(""));
    return errorCode;
 }
 
@@ -908,37 +944,35 @@ uint32_t GetParameterValue(const TCHAR *param, TCHAR *value, AbstractCommSession
  */
 uint32_t GetListValue(const TCHAR *param, StringList *value, AbstractCommSession *session)
 {
-   int i, rc;
-   uint32_t dwErrorCode;
-
+   uint32_t errorCode = ERR_UNKNOWN_METRIC;
    session->debugPrintf(5, _T("Requesting list \"%s\""), param);
-   for(i = 0; i < s_lists.size(); i++)
+   for(int i = 0; i < s_lists.size(); i++)
 	{
       NETXMS_SUBAGENT_LIST *list = s_lists.get(i);
-      if (MatchString(list->name, param, FALSE))
+      if (MatchString(list->name, param, false))
       {
-         rc = list->handler(param, list->arg, value, session);
+         LONG rc = list->handler(param, list->arg, value, session);
          switch(rc)
          {
             case SYSINFO_RC_SUCCESS:
-               dwErrorCode = ERR_SUCCESS;
+               errorCode = ERR_SUCCESS;
                InterlockedIncrement(&s_processedRequests);
                break;
             case SYSINFO_RC_ERROR:
-               dwErrorCode = ERR_INTERNAL_ERROR;
+               errorCode = ERR_INTERNAL_ERROR;
                InterlockedIncrement(&s_failedRequests);
                break;
             case SYSINFO_RC_NO_SUCH_INSTANCE:
-               dwErrorCode = ERR_NO_SUCH_INSTANCE;
+               errorCode = ERR_NO_SUCH_INSTANCE;
                InterlockedIncrement(&s_failedRequests);
                break;
             case SYSINFO_RC_UNSUPPORTED:
-               dwErrorCode = ERR_UNKNOWN_PARAMETER;
+               errorCode = ERR_UNSUPPORTED_METRIC;
                InterlockedIncrement(&s_unsupportedRequests);
                break;
             default:
                nxlog_write(NXLOG_ERROR, _T("Internal error: unexpected return code %d in GetListValue(\"%s\")"), rc, param);
-               dwErrorCode = ERR_INTERNAL_ERROR;
+               errorCode = ERR_INTERNAL_ERROR;
                InterlockedIncrement(&s_failedRequests);
                break;
          }
@@ -946,14 +980,14 @@ uint32_t GetListValue(const TCHAR *param, StringList *value, AbstractCommSession
       }
 	}
 
-	if (i == s_lists.size())
+	if (errorCode == ERR_UNKNOWN_METRIC)
    {
-		dwErrorCode = GetListValueFromExtSubagent(param, value);
-		if (dwErrorCode == ERR_SUCCESS)
+		errorCode = GetListValueFromExtSubagent(param, value);
+		if (errorCode == ERR_SUCCESS)
 		{
          InterlockedIncrement(&s_processedRequests);
 		}
-		else if (dwErrorCode == ERR_UNKNOWN_PARAMETER)
+		else if ((errorCode == ERR_UNSUPPORTED_METRIC) || (errorCode == ERR_UNKNOWN_METRIC))
 		{
          InterlockedIncrement(&s_unsupportedRequests);
 		}
@@ -963,9 +997,8 @@ uint32_t GetListValue(const TCHAR *param, StringList *value, AbstractCommSession
 		}
    }
 
-	session->debugPrintf(7, _T("GetListValue(): result is %d (%s)"), (int)dwErrorCode,
-		dwErrorCode == ERR_SUCCESS ? _T("SUCCESS") : (dwErrorCode == ERR_UNKNOWN_PARAMETER ? _T("UNKNOWN_PARAMETER") : _T("INTERNAL_ERROR")));
-   return dwErrorCode;
+	session->debugPrintf(7, _T("GetListValue(): result is %u (%s)"), errorCode, GetErrorCodeSymbolicName(errorCode));
+   return errorCode;
 }
 
 /**
@@ -973,11 +1006,9 @@ uint32_t GetListValue(const TCHAR *param, StringList *value, AbstractCommSession
  */
 uint32_t GetTableValue(const TCHAR *param, Table *value, AbstractCommSession *session)
 {
-   int i, rc;
-   uint32_t dwErrorCode;
-
+   uint32_t errorCode = ERR_UNKNOWN_METRIC;
    session->debugPrintf(5, _T("Requesting table \"%s\""), param);
-   for(i = 0; i < s_tables.size(); i++)
+   for(int i = 0; i < s_tables.size(); i++)
 	{
       NETXMS_SUBAGENT_TABLE *t = s_tables.get(i);
       if (MatchString(t->name, param, FALSE))
@@ -992,28 +1023,28 @@ uint32_t GetTableValue(const TCHAR *param, Table *value, AbstractCommSession *se
             }
          }
 
-         rc = t->handler(param, t->arg, value, session);
+         LONG rc = t->handler(param, t->arg, value, session);
          switch(rc)
          {
             case SYSINFO_RC_SUCCESS:
-               dwErrorCode = ERR_SUCCESS;
+               errorCode = ERR_SUCCESS;
                InterlockedIncrement(&s_processedRequests);
                break;
             case SYSINFO_RC_ERROR:
-               dwErrorCode = ERR_INTERNAL_ERROR;
+               errorCode = ERR_INTERNAL_ERROR;
                InterlockedIncrement(&s_failedRequests);
                break;
             case SYSINFO_RC_NO_SUCH_INSTANCE:
-               dwErrorCode = ERR_NO_SUCH_INSTANCE;
+               errorCode = ERR_NO_SUCH_INSTANCE;
                InterlockedIncrement(&s_failedRequests);
                break;
             case SYSINFO_RC_UNSUPPORTED:
-               dwErrorCode = ERR_UNKNOWN_PARAMETER;
+               errorCode = ERR_UNSUPPORTED_METRIC;
                InterlockedIncrement(&s_unsupportedRequests);
                break;
             default:
                nxlog_write(NXLOG_ERROR, _T("Internal error: unexpected return code %d in GetTableValue(\"%s\")"), rc, param);
-               dwErrorCode = ERR_INTERNAL_ERROR;
+               errorCode = ERR_INTERNAL_ERROR;
                InterlockedIncrement(&s_failedRequests);
                break;
          }
@@ -1021,35 +1052,38 @@ uint32_t GetTableValue(const TCHAR *param, Table *value, AbstractCommSession *se
       }
 	}
 
-   if (i == s_tables.size())
+   if (errorCode == ERR_UNKNOWN_METRIC)
    {
       session->debugPrintf(7, _T("GetTableValue(): requesting table from external data providers"));
-      rc = GetTableValueFromExtProvider(param, value);
-      if (rc == SYSINFO_RC_SUCCESS)
+      LONG rc = GetTableValueFromExtProvider(param, value);
+      switch(rc)
       {
-         dwErrorCode = ERR_SUCCESS;
-         InterlockedIncrement(&s_processedRequests);
-      }
-      else if (rc == SYSINFO_RC_ERROR)
-      {
-         dwErrorCode = ERR_INTERNAL_ERROR;
-         InterlockedIncrement(&s_failedRequests);
-      }
-      else
-      {
-         dwErrorCode = ERR_UNKNOWN_PARAMETER;
+         case SYSINFO_RC_SUCCESS:
+            errorCode = ERR_SUCCESS;
+            InterlockedIncrement(&s_processedRequests);
+            break;
+         case SYSINFO_RC_ERROR:
+            errorCode = ERR_INTERNAL_ERROR;
+            InterlockedIncrement(&s_failedRequests);
+            break;
+         case SYSINFO_RC_UNSUPPORTED:
+            errorCode = ERR_UNSUPPORTED_METRIC;
+            InterlockedIncrement(&s_unsupportedRequests);
+            break;
+         case SYSINFO_RC_UNKNOWN:
+            break;
       }
    }
 
-	if ((dwErrorCode == ERR_UNKNOWN_PARAMETER) && (i == s_tables.size()))
+	if (errorCode == ERR_UNKNOWN_METRIC)
    {
       session->debugPrintf(7, _T("GetTableValue(): requesting table from external subagents"));
-		dwErrorCode = GetTableValueFromExtSubagent(param, value);
-		if (dwErrorCode == ERR_SUCCESS)
+		errorCode = GetTableValueFromExtSubagent(param, value);
+		if (errorCode == ERR_SUCCESS)
 		{
          InterlockedIncrement(&s_processedRequests);
 		}
-		else if (dwErrorCode == ERR_UNKNOWN_PARAMETER)
+		else if ((errorCode == ERR_UNKNOWN_METRIC) || (errorCode == ERR_UNSUPPORTED_METRIC))
 		{
          InterlockedIncrement(&s_unsupportedRequests);
 		}
@@ -1059,9 +1093,8 @@ uint32_t GetTableValue(const TCHAR *param, Table *value, AbstractCommSession *se
 		}
    }
 
-	session->debugPrintf(7, _T("GetTableValue(): result is %d (%s)"), (int)dwErrorCode,
-		dwErrorCode == ERR_SUCCESS ? _T("SUCCESS") : (dwErrorCode == ERR_UNKNOWN_PARAMETER ? _T("UNKNOWN_PARAMETER") : _T("INTERNAL_ERROR")));
-   return dwErrorCode;
+	session->debugPrintf(7, _T("GetTableValue(): result is %u (%s)"), errorCode, GetErrorCodeSymbolicName(errorCode));
+   return errorCode;
 }
 
 /**

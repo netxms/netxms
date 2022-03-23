@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2021 Raden Solutions
+** Copyright (C) 2003-2022 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -1239,7 +1239,7 @@ static DataElement *CollectDataFromAgent(const DataCollectionItem& dci)
    if (dci.getType() == DCO_TYPE_ITEM)
    {
       TCHAR value[MAX_RESULT_LENGTH];
-      status = GetParameterValue(dci.getName(), value, &session);
+      status = GetMetricValue(dci.getName(), value, &session);
       e = new DataElement(dci, (status == ERR_SUCCESS) ? value : _T(""), status);
    }
    else if (dci.getType() == DCO_TYPE_TABLE)

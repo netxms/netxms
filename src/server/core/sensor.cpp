@@ -832,15 +832,15 @@ DataCollectionError Sensor::getMetricFromAgent(const TCHAR *name, TCHAR *buffer,
    if (m_state & DCSF_UNREACHABLE)
       return DCE_COMM_ERROR;
 
-   UINT32 dwError = ERR_NOT_CONNECTED;
-   DataCollectionError dwResult = DCE_COMM_ERROR;
+   uint32_t agentError = ERR_NOT_CONNECTED;
+   DataCollectionError result = DCE_COMM_ERROR;
    int retry = 3;
 
    nxlog_debug(7, _T("Sensor(%s)->getItemFromAgent(%s)"), m_name, name);
    // Establish connection if needed
    shared_ptr<AgentConnectionEx> conn = getAgentConnection();
    if (conn == nullptr)
-      return dwResult;
+      return result;
 
    StringBuffer parameter(name);
    switch(m_commProtocol)
@@ -858,17 +858,18 @@ DataCollectionError Sensor::getMetricFromAgent(const TCHAR *name, TCHAR *buffer,
    // Get parameter from agent
    while(retry-- > 0)
    {
-      dwError = conn->getParameter(parameter, buffer, bufferSize);
-      switch(dwError)
+      agentError = conn->getParameter(parameter, buffer, bufferSize);
+      switch(agentError)
       {
          case ERR_SUCCESS:
-            dwResult = DCE_SUCCESS;
+            result = DCE_SUCCESS;
             break;
-         case ERR_UNKNOWN_PARAMETER:
-            dwResult = DCE_NOT_SUPPORTED;
+         case ERR_UNKNOWN_METRIC:
+         case ERR_UNSUPPORTED_METRIC:
+            result = DCE_NOT_SUPPORTED;
             break;
          case ERR_NO_SUCH_INSTANCE:
-            dwResult = DCE_NO_SUCH_INSTANCE;
+            result = DCE_NO_SUCH_INSTANCE;
             break;
          case ERR_NOT_CONNECTED:
          case ERR_CONNECTION_BROKEN:
@@ -881,13 +882,13 @@ DataCollectionError Sensor::getMetricFromAgent(const TCHAR *name, TCHAR *buffer,
             nxlog_debug(7, _T("Sensor(%s)->getItemFromAgent(%s): connection to agent restored successfully"), m_name, name);
             break;
          case ERR_INTERNAL_ERROR:
-            dwResult = DCE_COLLECTION_ERROR;
+            result = DCE_COLLECTION_ERROR;
             break;
       }
    }
 
-   nxlog_debug(7, _T("Sensor(%s)->getItemFromAgent(%s): dwError=%d dwResult=%d"), m_name, name, dwError, dwResult);
-   return dwResult;
+   nxlog_debug(7, _T("Sensor(%s)->getItemFromAgent(%s): dwError=%d dwResult=%d"), m_name, name, agentError, result);
+   return result;
 }
 
 /**
@@ -895,10 +896,6 @@ DataCollectionError Sensor::getMetricFromAgent(const TCHAR *name, TCHAR *buffer,
  */
 DataCollectionError Sensor::getListFromAgent(const TCHAR *name, StringList **list)
 {
-   UINT32 dwError = ERR_NOT_CONNECTED;
-   DataCollectionError dwResult = DCE_COMM_ERROR;
-   UINT32 dwTries = 3;
-
    *list = nullptr;
 
    if (m_state & DCSF_UNREACHABLE) //removed disable agent usage for all polls
@@ -907,7 +904,7 @@ DataCollectionError Sensor::getListFromAgent(const TCHAR *name, StringList **lis
    nxlog_debug(7, _T("Sensor(%s)->getListFromAgent(%s)"), m_name, name);
    shared_ptr<AgentConnectionEx> conn = getAgentConnection();
    if (conn == nullptr)
-      return dwResult;
+      return DCE_COMM_ERROR;
 
    StringBuffer parameter(name);
    switch(m_commProtocol)
@@ -923,19 +920,23 @@ DataCollectionError Sensor::getListFromAgent(const TCHAR *name, StringList **lis
    nxlog_debug(3, _T("Sensor(%s)->getListFromAgent(%s)"), m_name, parameter.getBuffer());
 
    // Get parameter from agent
-   while(dwTries-- > 0)
+   DataCollectionError result = DCE_COMM_ERROR;
+   uint32_t agentError = ERR_NOT_CONNECTED;
+   int retryCount = 3;
+   while(retryCount-- > 0)
    {
-      dwError = conn->getList(parameter, list);
-      switch(dwError)
+      agentError = conn->getList(parameter, list);
+      switch(agentError)
       {
          case ERR_SUCCESS:
-            dwResult = DCE_SUCCESS;
+            result = DCE_SUCCESS;
             break;
-         case ERR_UNKNOWN_PARAMETER:
-            dwResult = DCE_NOT_SUPPORTED;
+         case ERR_UNKNOWN_METRIC:
+         case ERR_UNSUPPORTED_METRIC:
+            result = DCE_NOT_SUPPORTED;
             break;
          case ERR_NO_SUCH_INSTANCE:
-            dwResult = DCE_NO_SUCH_INSTANCE;
+            result = DCE_NO_SUCH_INSTANCE;
             break;
          case ERR_NOT_CONNECTED:
          case ERR_CONNECTION_BROKEN:
@@ -947,13 +948,13 @@ DataCollectionError Sensor::getListFromAgent(const TCHAR *name, StringList **lis
             DbgPrintf(7, _T("Sensor(%s)->getListFromAgent(%s): connection to agent restored successfully"), m_name, name);
             break;
          case ERR_INTERNAL_ERROR:
-            dwResult = DCE_COLLECTION_ERROR;
+            result = DCE_COLLECTION_ERROR;
             break;
       }
    }
 
-   DbgPrintf(7, _T("Sensor(%s)->getListFromAgent(%s): dwError=%d dwResult=%d"), m_name, name, dwError, dwResult);
-   return dwResult;
+   DbgPrintf(7, _T("Sensor(%s)->getListFromAgent(%s): dwError=%d dwResult=%d"), m_name, name, agentError, result);
+   return result;
 }
 
 /**
@@ -962,7 +963,7 @@ DataCollectionError Sensor::getListFromAgent(const TCHAR *name, StringList **lis
 DataCollectionError Sensor::getTableFromAgent(const TCHAR *name, shared_ptr<Table> *table)
 {
    uint32_t error = ERR_NOT_CONNECTED;
-   DataCollectionError dwResult = DCE_COMM_ERROR;
+   DataCollectionError result = DCE_COMM_ERROR;
 
    if (m_state & DCSF_UNREACHABLE) //removed disable agent usage for all polls
       return DCE_COMM_ERROR;
@@ -970,7 +971,7 @@ DataCollectionError Sensor::getTableFromAgent(const TCHAR *name, shared_ptr<Tabl
    nxlog_debug(7, _T("Sensor(%s)->getTableFromAgent(%s)"), m_name, name);
    shared_ptr<AgentConnectionEx> conn = getAgentConnection();
    if (conn == nullptr)
-      return dwResult;
+      return result;
 
    StringBuffer parameter(name);
    switch(m_commProtocol)
@@ -994,14 +995,15 @@ DataCollectionError Sensor::getTableFromAgent(const TCHAR *name, shared_ptr<Tabl
       switch(error)
       {
          case ERR_SUCCESS:
-            dwResult = DCE_SUCCESS;
+            result = DCE_SUCCESS;
             *table = shared_ptr<Table>(tableObject);
             break;
-         case ERR_UNKNOWN_PARAMETER:
-            dwResult = DCE_NOT_SUPPORTED;
+         case ERR_UNKNOWN_METRIC:
+         case ERR_UNSUPPORTED_METRIC:
+            result = DCE_NOT_SUPPORTED;
             break;
          case ERR_NO_SUCH_INSTANCE:
-            dwResult = DCE_NO_SUCH_INSTANCE;
+            result = DCE_NO_SUCH_INSTANCE;
             break;
          case ERR_NOT_CONNECTED:
          case ERR_CONNECTION_BROKEN:
@@ -1013,13 +1015,13 @@ DataCollectionError Sensor::getTableFromAgent(const TCHAR *name, shared_ptr<Tabl
             DbgPrintf(7, _T("Sensor(%s)->getTableFromAgent(%s): connection to agent restored successfully"), m_name, name);
             break;
          case ERR_INTERNAL_ERROR:
-            dwResult = DCE_COLLECTION_ERROR;
+            result = DCE_COLLECTION_ERROR;
             break;
       }
    }
 
-   DbgPrintf(7, _T("Sensor(%s)->getTableFromAgent(%s): dwError=%d dwResult=%d"), m_name, name, error, dwResult);
-   return dwResult;
+   DbgPrintf(7, _T("Sensor(%s)->getTableFromAgent(%s): dwError=%d dwResult=%d"), m_name, name, error, result);
+   return result;
 }
 
 /**
