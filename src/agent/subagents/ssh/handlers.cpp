@@ -53,7 +53,7 @@ LONG H_SSHCommand(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCo
    if (!addr.isValidUnicast())
    {
       MemFree(command);
-      return SYSINFO_RC_UNSUPPORTED;
+      return SYSINFO_RC_NO_SUCH_INSTANCE;
    }
 
    shared_ptr<KeyPair> keys;
@@ -167,7 +167,7 @@ LONG H_SSHCommandList(const TCHAR *param, const TCHAR *arg, StringList *value, A
    if (!addr.isValidUnicast())
    {
       MemFree(command);
-      return SYSINFO_RC_UNSUPPORTED;
+      return SYSINFO_RC_NO_SUCH_INSTANCE;
    }
 
    shared_ptr<KeyPair> key;
