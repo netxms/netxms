@@ -41,6 +41,7 @@ import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.AuthenticationType;
 import org.netxms.client.constants.RCC;
+import org.netxms.client.services.ServiceManager;
 import org.netxms.nxmc.base.dialogs.PasswordExpiredDialog;
 import org.netxms.nxmc.base.dialogs.PasswordRequestDialog;
 import org.netxms.nxmc.base.dialogs.SecurityWarningDialog;
@@ -89,6 +90,7 @@ public class Startup
       SharedIcons.init();
       BrandingManager.create();
       StatusDisplayInfo.init(display);
+      ServiceManager.registerClassLoader(display.getClass().getClassLoader());
 
       Window.setExceptionHandler(new IExceptionHandler() {
          @Override

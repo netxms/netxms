@@ -20,6 +20,8 @@ package org.netxms.websvc;
 
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.ServiceLoader;
+import org.netxms.client.services.ServiceManager;
 import org.netxms.websvc.handlers.AccessIntegrationTools;
 import org.netxms.websvc.handlers.Alarms;
 import org.netxms.websvc.handlers.BindHandler;
@@ -68,12 +70,13 @@ import org.slf4j.LoggerFactory;
 public class WebSvcApplication extends Application
 {
    private Logger log = LoggerFactory.getLogger(WebSvcApplication.class);
-   
+
    /**
     * Default constructor
     */
    public WebSvcApplication()
    {
+      ServiceManager.registerClassLoader(getClass().getClassLoader());
       CorsService corsService = new CorsService();
       corsService.setAllowedOrigins(new HashSet<String>(Arrays.asList("*")));
       corsService.setAllowedCredentials(true);
@@ -133,6 +136,21 @@ public class WebSvcApplication extends Application
       router.attach("/users", Users.class);
       router.attach("/users/{id}", Users.class);
       router.attach("/users/{id}/password", UserPassword.class);
+
+      ServiceLoader<WebSvcExtension> loader = ServiceLoader.load(WebSvcExtension.class);
+      for(WebSvcExtension l : loader)
+      {
+         log.debug("Calling web service extension " + l.toString());
+         try
+         {
+            l.createInboundRoot(router);
+         }
+         catch(Exception e)
+         {
+            log.error("Exception in web service extension", e);
+         }
+      }
+      
       return router;
    }
 }

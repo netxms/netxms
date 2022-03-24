@@ -31,6 +31,7 @@ import org.eclipse.rap.rwt.internal.application.ApplicationImpl;
 import org.eclipse.rap.rwt.internal.resources.ContentBuffer;
 import org.eclipse.rap.rwt.service.ResourceLoader;
 import org.eclipse.swt.SWT;
+import org.netxms.client.services.ServiceManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -76,6 +77,8 @@ public class WebApplicationConfiguration implements ApplicationConfiguration
             logger.error("Unhandled event loop exception", t);
          }
       });
+      
+      ServiceManager.registerClassLoader(display.getClass().getClassLoader());
    }
 
    /**
