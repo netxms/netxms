@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Raden Solutions
+ * Copyright (C) 2003-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -52,7 +52,7 @@ public class Objects extends AbstractObjectHandler
    private Logger log = LoggerFactory.getLogger(AbstractHandler.class);
 
    /**
-    * @see org.netxms.websvc.handlers.AbstractHandler#getCollection(org.json.JSONObject)
+    * @see org.netxms.websvc.handlers.AbstractHandler#getCollection(java.util.Map)
     */
    @Override
    protected Object getCollection(Map<String, String> query) throws Exception
@@ -346,10 +346,8 @@ public class Objects extends AbstractObjectHandler
       return -1;
    }
 
-   /*
-    * (non-Javadoc)
-    * 
-    * @see org.netxms.websvc.handlers.AbstractHandler#get(java.lang.String)
+   /**
+    * @see org.netxms.websvc.handlers.AbstractHandler#get(java.lang.String, java.util.Map)
     */
    @Override
    protected Object get(String id, Map<String, String> query) throws Exception
@@ -357,9 +355,7 @@ public class Objects extends AbstractObjectHandler
       return getObject();
    }
 
-   /*
-    * (non-Javadoc)
-    * 
+   /**
     * @see org.netxms.websvc.handlers.AbstractHandler#getEntityIdFieldName()
     */
    @Override
@@ -427,9 +423,7 @@ public class Objects extends AbstractObjectHandler
       return null;
    }
 
-   /*
-    * (non-Javadoc)
-    * 
+   /**
     * @see org.netxms.websvc.handlers.AbstractHandler#delete(java.lang.String)
     */
    @Override

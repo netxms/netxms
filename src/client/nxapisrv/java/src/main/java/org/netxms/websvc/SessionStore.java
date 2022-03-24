@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Raden Solutions
+ * Copyright (C) 2003-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,12 +40,12 @@ public class SessionStore
    private Map<UUID, SessionToken> sessions = new HashMap<UUID, SessionToken>();
    private Logger log = LoggerFactory.getLogger(SessionStore.class);
    private Thread sessionManager = null;
-   
+
    /**
     * Get session store instance for servlet
     * 
-    * @param context
-    * @return
+    * @param context servlet context
+    * @return session store instance
     */
    public static synchronized SessionStore getInstance(ServletContext context)
    {
@@ -59,8 +59,10 @@ public class SessionStore
    }
    
    /**
-    * @param guid
-    * @return
+    * Get session token with given UUID.
+    *
+    * @param guid token UUID
+    * @return session token or null
     */
    public synchronized SessionToken getSessionToken(UUID guid)
    {
@@ -69,9 +71,12 @@ public class SessionStore
          s.updateActivityTimestamp();
       return s;
    }
-   
+
    /**
-    * @param s
+    * Register session.
+    *
+    * @param session session to register
+    * @return token assigned to provided session
     */
    public synchronized SessionToken registerSession(final NXCSession session)
    {
@@ -87,7 +92,7 @@ public class SessionStore
          sessionManager.setDaemon(true);
          sessionManager.start();
       }
-      
+
       final SessionToken token = new SessionToken(session);
       sessions.put(token.getSessionHandle(), token);
       session.addListener(new SessionListener() {
@@ -107,16 +112,18 @@ public class SessionStore
       log.info("Session " + token.getSessionHandle() + " registered");
       return token;
    }
-   
+
    /**
-    * @param guid
+    * Unregister session.
+    *
+    * @param guid session token UUID
     */
    public synchronized void unregisterSession(UUID guid)
    {
       sessions.remove(guid);
       log.info("Session " + guid + " unregistered");
    }
-   
+
    /**
     * Session manager background thread
     */
@@ -134,7 +141,7 @@ public class SessionStore
          checkSessions();
       }
    }
-   
+
    /**
     * Check active sessions
     */

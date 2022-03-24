@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Raden Solutions
+ * Copyright (C) 2003-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,7 +28,7 @@ import org.netxms.client.datacollection.DciValue;
 public class DataCollectionQueryHandler extends AbstractObjectHandler
 {      
    /**
-    * @see org.netxms.websvc.handlers.AbstractHandler#get(java.lang.String)
+    * @see org.netxms.websvc.handlers.AbstractHandler#getCollection(java.util.Map)
     */
    @Override
    protected Object getCollection(Map<String, String> query) throws Exception

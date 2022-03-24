@@ -1,7 +1,7 @@
 /**
  * Java-Bridge NetXMS subagent
  * Copyright (C) 2013 TEMPEST a.s.
- * Copyright (C) 2014-2021 Raden Solutions
+ * Copyright (C) 2014-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -153,7 +153,6 @@ public class SubAgent
    /**
     * Initialize (to be called from native subagent)
     * 
-    * @param config agent configuration
     * @return true if initialization was successful
     */
    public boolean init()
@@ -433,22 +432,22 @@ public class SubAgent
    }
 
    /**
-    * to be called from native subagent
+    * Table handler, to be called from native subagent.
     * 
-    * @param param
-    * @param id
-    * @return
-    * @throws Throwable
+    * @param name table name
+    * @param id handler ID
+    * @return table value or null if handler with given ID does not exist
+    * @throws Throwable on error
     */
-   public String[][] tableHandler(final String param, final String id) throws Throwable
+   public String[][] tableHandler(final String name, final String id) throws Throwable
    {
       try
       {
          TableParameter tableParameter = tables.get(id);
          if (tableParameter != null)
          {
-            Platform.writeDebugLog(7, "SubAgent.tableParameterHandler(param=" + param + ", id=" + id + ") returning " + tableParameter.getValue(param));
-            return tableParameter.getValue(param);
+            Platform.writeDebugLog(7, "SubAgent.tableParameterHandler(name=" + name + ", id=" + id + ") returning " + tableParameter.getValue(name));
+            return tableParameter.getValue(name);
          }
          return null;
       }
@@ -461,7 +460,7 @@ public class SubAgent
    }
 
    /**
-    * to be called from native subagent
+    * Action handler, to be called from native subagent
     * 
     * @param name action name
     * @param args action arguments
@@ -487,7 +486,9 @@ public class SubAgent
    }
 
    /**
-    * @return
+    * Get list of provided actions.
+    *
+    * @return list of provided actions
     */
    public String[] getActions()
    {

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Raden Solutions
+ * Copyright (C) 2003-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -49,7 +49,7 @@ import com.google.gson.JsonObject;
 public class HistoricalData extends AbstractObjectHandler
 {
    /**
-    * @see org.netxms.websvc.handlers.AbstractHandler#get(java.lang.String)
+    * @see org.netxms.websvc.handlers.AbstractHandler#get(java.lang.String, java.util.Map)
     */
    @Override
    protected Object get(String id, Map<String, String> query) throws Exception
