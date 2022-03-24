@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -75,7 +75,7 @@ public class ExportToCsvAction extends Action
 		// will cause handler conflict
 		if ((viewPart == null) || viewPart.getViewSite().getId().equals("org.netxms.ui.eclipse.objectview.view.tabbed_object_view")) //$NON-NLS-1$
 			return;
-		
+
 		final IHandlerService handlerService = (IHandlerService)viewPart.getSite().getService(IHandlerService.class);
       setActionDefinitionId("org.netxms.ui.eclipse.library.commands.export_to_csv_" + (selectionOnly ? "selection" : "all")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		handlerService.activateHandler(getActionDefinitionId(), new ActionHandler(this));
@@ -112,15 +112,16 @@ public class ExportToCsvAction extends Action
 	public void run()
 	{
 		FileDialog dlg = new FileDialog(viewPart.getSite().getShell(), SWT.SAVE);
+      dlg.setOverwrite(true);
 		dlg.setFilterExtensions(new String[] { "*.csv", "*.*" });
 		dlg.setFilterNames(new String[] { "CSV files", "All files"});
 		final String fileName = dlg.open();
 		if (fileName == null)
 			return;
-		
+
 		if (viewerProvider != null)
 			viewer = viewerProvider.getViewer();
-		
+
 		final List<String[]> data = new ArrayList<String[]>();
 		if (viewer instanceof TableViewer)
 		{

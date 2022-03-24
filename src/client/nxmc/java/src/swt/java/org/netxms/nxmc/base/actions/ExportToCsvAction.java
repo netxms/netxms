@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -62,9 +62,9 @@ public class ExportToCsvAction extends Action
    private ExportToCsvAction(View view, ColumnViewer viewer, ViewerProvider viewerProvider, boolean selectionOnly)
 	{
       super(selectionOnly ? i18n.tr("E&xport to CSV...") : i18n.tr("Export all to CSV..."), SharedIcons.CSV);
-		
-		setId(selectionOnly ? "org.netxms.ui.eclipse.popupActions.ExportToCSV" : "org.netxms.ui.eclipse.actions.ExportToCSV"); //$NON-NLS-1$ //$NON-NLS-2$
-		
+
+      setId(selectionOnly ? "org.netxms.ui.eclipse.popupActions.ExportToCSV" : "org.netxms.ui.eclipse.actions.ExportToCSV");
+
       this.view = view;
 		this.viewer = viewer;
 		this.viewerProvider = viewerProvider;
@@ -102,6 +102,7 @@ public class ExportToCsvAction extends Action
 	public void run()
 	{
       FileDialog dlg = new FileDialog(view.getWindow().getShell(), SWT.SAVE);
+      dlg.setOverwrite(true);
 		dlg.setFilterExtensions(new String[] { "*.csv", "*.*" });
 		dlg.setFilterNames(new String[] { "CSV files", "All files"});
 		final String fileName = dlg.open();
