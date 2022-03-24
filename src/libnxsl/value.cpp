@@ -671,7 +671,7 @@ bool NXSL_Value::convert(int targetDataType)
  */
 const TCHAR *NXSL_Value::getValueAsCString()
 {
-   if (!m_stringIsValid)
+   if (!m_stringIsValid || (m_dataType == NXSL_DT_ARRAY) || (m_dataType == NXSL_DT_HASHMAP) || (m_dataType == NXSL_DT_OBJECT))
       updateString();
    return (m_length < NXSL_SHORT_STRING_LENGTH) ? m_stringValue : m_stringPtr;
 }
@@ -683,12 +683,18 @@ const TCHAR *NXSL_Value::getValueAsCString()
 
 const char *NXSL_Value::getValueAsMBString()
 {
-	if (m_mbString != nullptr)
-		return m_mbString;
-
-   if (!m_stringIsValid)
+   if ((m_dataType == NXSL_DT_ARRAY) || (m_dataType == NXSL_DT_HASHMAP) || (m_dataType == NXSL_DT_OBJECT))
+   {
+      MemFree(m_mbString);
       updateString();
-   m_mbString = MBStringFromWideString((m_length < NXSL_SHORT_STRING_LENGTH) ? m_stringValue : CHECK_NULL_EX(m_stringPtr));
+      m_mbString = MBStringFromWideString((m_length < NXSL_SHORT_STRING_LENGTH) ? m_stringValue : CHECK_NULL_EX(m_stringPtr));
+   }
+   else if (m_mbString == nullptr)
+   {
+      if (!m_stringIsValid)
+         updateString();
+      m_mbString = MBStringFromWideString((m_length < NXSL_SHORT_STRING_LENGTH) ? m_stringValue : CHECK_NULL_EX(m_stringPtr));
+   }
    return m_mbString;
 }
 
@@ -699,7 +705,7 @@ const char *NXSL_Value::getValueAsMBString()
  */
 const TCHAR *NXSL_Value::getValueAsString(UINT32 *pdwLen)
 {
-   if (!m_stringIsValid)
+   if (!m_stringIsValid || (m_dataType == NXSL_DT_ARRAY) || (m_dataType == NXSL_DT_HASHMAP) || (m_dataType == NXSL_DT_OBJECT))
       updateString();
    *pdwLen = m_length;
    return (m_length < NXSL_SHORT_STRING_LENGTH) ? m_stringValue : m_stringPtr;
