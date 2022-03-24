@@ -58,8 +58,8 @@
 
     <repositories>     
         <repository>  
-            <id>rap-3.19</id>
-            <url>http://download.eclipse.org/rt/rap/3.19</url>
+            <id>rap-3.20</id>
+            <url>http://download.eclipse.org/rt/rap/3.20</url>
             <layout>p2</layout>
         </repository>   
         <repository>
