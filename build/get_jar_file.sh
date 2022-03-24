@@ -21,6 +21,7 @@ fi
 mvn dependency:copy -Dartifact=$GROUP:$ARTIFACT:$VERSION -DoutputDirectory=. && exit 0
 
 if echo $VERSION | grep -q SNAPSHOT; then
-   shift; shift
+   shift; shift; shift
    mvn -Dmaven.test.skip=true install $@
+   mvn dependency:copy -Dartifact=$GROUP:$ARTIFACT:$VERSION -DoutputDirectory=.
 fi
