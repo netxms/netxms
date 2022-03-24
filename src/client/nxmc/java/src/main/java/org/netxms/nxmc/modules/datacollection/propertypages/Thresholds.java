@@ -29,7 +29,6 @@ import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
-import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
@@ -47,6 +46,7 @@ import org.eclipse.swt.widgets.TableColumn;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.Threshold;
 import org.netxms.nxmc.base.widgets.LabeledText;
+import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.datacollection.DataCollectionObjectEditor;
 import org.netxms.nxmc.modules.datacollection.dialogs.EditThresholdDialog;
@@ -60,18 +60,16 @@ import org.xnap.commons.i18n.I18n;
 public class Thresholds extends AbstractDCIPropertyPage
 {
    private static final I18n i18n = LocalizationHelper.getI18n(Thresholds.class);
-	public static final int COLUMN_OPERATION = 0;
+
+   public static final int COLUMN_OPERATION = 0;
 	public static final int COLUMN_EVENT = 1;
    public static final int COLUMN_DEACTIVATION_EVENT = 2;
-
-	private static final String COLUMN_SETTINGS_PREFIX = "Thresholds.ThresholdList"; //$NON-NLS-1$
-
 
 	private DataCollectionItem dci;
 	private List<Threshold> thresholds;
 	private LabeledText instance;
 	private Button checkAllThresholds;
-	private TableViewer thresholdList;
+   private SortableTableViewer thresholdList;
 	private Button addButton;
 	private Button modifyButton;
 	private Button deleteButton;
@@ -139,7 +137,7 @@ public class Thresholds extends AbstractDCIPropertyPage
 
       new Label(thresholdArea, SWT.NONE).setText(i18n.tr("Thresholds"));
 
-		thresholdList = new TableViewer(thresholdArea, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION | SWT.H_SCROLL | SWT.V_SCROLL);
+      thresholdList = new SortableTableViewer(thresholdArea, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION | SWT.H_SCROLL | SWT.V_SCROLL);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -149,6 +147,7 @@ public class Thresholds extends AbstractDCIPropertyPage
 		thresholdList.getControl().setLayoutData(gd);
 		setupThresholdList();
 		thresholdList.setInput(thresholds.toArray());
+      thresholdList.packColumns();
 
 		Composite leftButtons = new Composite(thresholdArea, SWT.NONE);
 		gd = new GridData();
@@ -331,6 +330,7 @@ public class Thresholds extends AbstractDCIPropertyPage
 				thresholds.remove(it.next());
 			}
 			thresholdList.setInput(thresholds.toArray());
+         thresholdList.packColumns();
 		}
 	}
 
@@ -347,6 +347,7 @@ public class Thresholds extends AbstractDCIPropertyPage
 			if (dlg.open() == Window.OK)
 			{
 				thresholdList.update(threshold, null);
+            thresholdList.packColumns();
 			}
 		}
 	}
@@ -362,10 +363,11 @@ public class Thresholds extends AbstractDCIPropertyPage
 		{
 			thresholds.add(threshold);
 			thresholdList.setInput(thresholds.toArray());
+         thresholdList.packColumns();
 			thresholdList.setSelection(new StructuredSelection(threshold));
 		}
 	}
-	
+
 	/**
 	 * Duplicate selected threshold
 	 */
@@ -430,25 +432,20 @@ public class Thresholds extends AbstractDCIPropertyPage
 	private void setupThresholdList()
 	{
 		Table table = thresholdList.getTable();
-		table.setLinesVisible(true);
-		table.setHeaderVisible(true);
 
 		TableColumn column = new TableColumn(table, SWT.LEFT);
       column.setText(i18n.tr("Expression"));
-		column.setWidth(200);
 
 		column = new TableColumn(table, SWT.LEFT);
       column.setText(i18n.tr("Activation event"));
-		column.setWidth(150);
       
       column = new TableColumn(table, SWT.LEFT);
       column.setText(i18n.tr("Deactivation event"));
-      column.setWidth(150);
-
-      WidgetHelper.restoreColumnSettings(table, COLUMN_SETTINGS_PREFIX);
 
 		thresholdList.setContentProvider(new ArrayContentProvider());
 		thresholdList.setLabelProvider(new ThresholdLabelProvider());
+
+      thresholdList.disableSorting();
 	}
 
 	/**
@@ -458,32 +455,11 @@ public class Thresholds extends AbstractDCIPropertyPage
 	 */
 	protected boolean applyChanges(final boolean isApply)
 	{
-      saveSettings();
-      
 		dci.setInstanceName(instance.getText());
 		dci.setProcessAllThresholds(checkAllThresholds.getSelection());
 		dci.getThresholds().clear();
 		dci.getThresholds().addAll(thresholds);
 		editor.modify();		
 		return true;
-	}
-
-   /**
-    * @see org.eclipse.jface.preference.PreferencePage#performCancel()
-    */
-	@Override
-	public boolean performCancel()
-	{
-		saveSettings();
-		return true;
-	}
-
-	/**
-	 * Save settings
-	 */
-	private void saveSettings()
-	{
-	   if (thresholdList != null)
-	      WidgetHelper.saveColumnSettings(thresholdList.getTable(), COLUMN_SETTINGS_PREFIX);
 	}
 }
