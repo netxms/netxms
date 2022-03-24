@@ -11,10 +11,6 @@ import org.netxms.websvc.ServerOutputListener;
  */
 public class PollsOutputHandler extends AbstractHandlerWithListenner
 {
-   
-   /**
-    * @see org.netxms.websvc.handlers.AbstractHandler#get(java.lang.String)
-    */
    @Override
    protected Object get(String id, Map<String, String> query) throws Exception
    {

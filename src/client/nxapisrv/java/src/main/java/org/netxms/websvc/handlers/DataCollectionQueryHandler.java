@@ -27,9 +27,6 @@ import org.netxms.client.datacollection.DciValue;
  */
 public class DataCollectionQueryHandler extends AbstractObjectHandler
 {      
-   /**
-    * @see org.netxms.websvc.handlers.AbstractHandler#get(java.lang.String)
-    */
    @Override
    protected Object getCollection(Map<String, String> query) throws Exception
    {

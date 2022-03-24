@@ -71,7 +71,7 @@ public class SessionStore
    }
    
    /**
-    * @param s
+    * @param session
     */
    public synchronized SessionToken registerSession(final NXCSession session)
    {

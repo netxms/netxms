@@ -101,8 +101,6 @@ public class ReportManager
     * Create new report manager.
     * 
     * @param server owning server
-    * @param communicationManager communication manager
-    * @param notificationManager notification manager
     */
    public ReportManager(Server server)
    {
@@ -411,7 +409,6 @@ public class ReportManager
     * @param jobConfiguration reporting job configuration
     * @param idataView name of database view for idata tables access or null if not provided
     * @param locale locale for translation
-    * @return true on success and false otherwise
     */
    public void execute(int userId, String authToken, UUID jobId, ReportingJobConfiguration jobConfiguration, String idataView, Locale locale)
    {

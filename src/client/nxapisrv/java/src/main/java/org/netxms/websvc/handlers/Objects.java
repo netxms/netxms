@@ -51,9 +51,6 @@ public class Objects extends AbstractObjectHandler
 {
    private Logger log = LoggerFactory.getLogger(AbstractHandler.class);
 
-   /**
-    * @see org.netxms.websvc.handlers.AbstractHandler#getCollection(org.json.JSONObject)
-    */
    @Override
    protected Object getCollection(Map<String, String> query) throws Exception
    {

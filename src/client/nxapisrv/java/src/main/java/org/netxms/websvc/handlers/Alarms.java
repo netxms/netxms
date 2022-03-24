@@ -56,9 +56,6 @@ public class Alarms extends AbstractHandler
    private static final int STICKY_ACKNOWLEDGE = 2;
    private static final int RESOLVE = 3;
    
-   /**
-    * @see org.netxms.websvc.handlers.AbstractHandler#getCollection(org.json.JSONObject)
-    */
    @Override
    protected Object getCollection(Map<String, String> query) throws Exception
    {
@@ -312,9 +309,6 @@ public class Alarms extends AbstractHandler
       return null;
    }
 
-   /**
-    * @see org.netxms.websvc.handlers.AbstractHandler#get(java.lang.String)
-    */
    @Override
    protected Object get(String id, Map<String, String> query) throws Exception
    {

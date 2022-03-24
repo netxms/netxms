@@ -153,7 +153,6 @@ public class SubAgent
    /**
     * Initialize (to be called from native subagent)
     * 
-    * @param config agent configuration
     * @return true if initialization was successful
     */
    public boolean init()

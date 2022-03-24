@@ -48,9 +48,6 @@ import com.google.gson.JsonObject;
  */
 public class HistoricalData extends AbstractObjectHandler
 {
-   /**
-    * @see org.netxms.websvc.handlers.AbstractHandler#get(java.lang.String)
-    */
    @Override
    protected Object get(String id, Map<String, String> query) throws Exception
    {

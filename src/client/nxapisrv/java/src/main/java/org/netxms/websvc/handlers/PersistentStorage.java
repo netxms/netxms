@@ -28,18 +28,12 @@ import org.netxms.websvc.json.ResponseContainer;
  */
 public class PersistentStorage extends AbstractObjectHandler
 {
-   /**
-    * @see org.netxms.websvc.handlers.AbstractHandler#getCollection(org.json.JSONObject)
-    */
    @Override
    protected Object getCollection(Map<String, String> query) throws Exception
    {
       return new ResponseContainer("persistentstorage", getSession().getPersistentStorageList());
    }
 
-   /**
-    * @see org.netxms.websvc.handlers.AbstractHandler#get(java.lang.String)
-    */
    @Override
    protected Object get(String id, Map<String, String> query) throws Exception
    {
