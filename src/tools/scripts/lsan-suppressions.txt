@@ -3,5 +3,6 @@ leak:OCIEnvNlsCreate
 
 # Allocations on startup that are not actually leaks
 leak:AddActionFromConfig
+leak:AddExternalMetric
 leak:AddExternalParameter
 leak:AddExternalTable

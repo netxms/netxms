@@ -1,6 +1,6 @@
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -106,14 +106,14 @@ void ExternalDataProvider::poll()
    if (m_executor->execute())
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("ExternalDataProvider::poll(): started command \"%s\""), m_executor->getCommand());
-      if (m_executor->waitForCompletion(g_externalParameterProviderTimeout))
+      if (m_executor->waitForCompletion(g_externalMetricProviderTimeout))
       {
          nxlog_debug_tag(DEBUG_TAG, 4, _T("ExternalDataProvider::poll(): command \"%s\" execution completed"), m_command);
          processPollResults();
       }
       else
       {
-         nxlog_debug_tag(DEBUG_TAG, 4, _T("ExternalDataProvider::poll(): command \"%s\" execution timeout (%u milliseconds)"), m_command, g_externalParameterProviderTimeout);
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("ExternalDataProvider::poll(): command \"%s\" execution timeout (%u milliseconds)"), m_command, g_externalMetricProviderTimeout);
          m_executor->stop();
       }
    }

@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2014-2020 Raden Solutions
+** Copyright (C) 2014-2022 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -77,13 +77,13 @@ void SNMPTrapReceiver()
    struct sockaddr_in sa;
    memset(&sa, 0, sizeof(sa));
    sa.sin_family = AF_INET;
-   if (!_tcscmp(g_szSNMPTrapListenAddress, _T("*")))
+   if (!_tcscmp(g_snmpTrapListenAddress, _T("*")))
    {
       sa.sin_addr.s_addr = htonl(INADDR_ANY);
    }
    else
 	{
-      InetAddress bindAddress = InetAddress::resolveHostName(g_szSNMPTrapListenAddress, AF_INET);
+      InetAddress bindAddress = InetAddress::resolveHostName(g_snmpTrapListenAddress, AF_INET);
       if (bindAddress.isValid() && (bindAddress.getFamily() == AF_INET))
       {
 		   sa.sin_addr.s_addr = htonl(bindAddress.getAddressV4());

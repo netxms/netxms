@@ -43,13 +43,13 @@
     <ClCompile Include="dcsnmp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="epp.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="exec.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="extagent.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="extdp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="filemon.cpp">

@@ -763,7 +763,7 @@ void AddPushParameter(const TCHAR *name, int dataType, const TCHAR *description)
 void AddList(const TCHAR *name, LONG (*handler)(const TCHAR *, const TCHAR *, StringList *, AbstractCommSession *), const TCHAR *arg);
 void AddTable(const TCHAR *name, LONG (*handler)(const TCHAR *, const TCHAR *, Table *, AbstractCommSession *),
          const TCHAR *arg, const TCHAR *instanceColumns, const TCHAR *description, int numColumns, NETXMS_SUBAGENT_TABLE_COLUMN *columns);
-bool AddExternalParameter(TCHAR *config, bool shellExec, bool isList);
+bool AddExternalMetric(TCHAR *config, bool shellExec, bool isList);
 bool AddExternalTable(TCHAR *config);
 bool AddExternalTable(ConfigEntry *config);
 uint32_t GetMetricValue(const TCHAR *param, TCHAR *value, AbstractCommSession *session);
@@ -892,7 +892,7 @@ extern TCHAR g_userAgentPolicyDirectory[];
 extern TCHAR g_certificateDirectory[];
 extern TCHAR g_szDataDirectory[];
 extern TCHAR g_masterAgent[];
-extern TCHAR g_szSNMPTrapListenAddress[];
+extern TCHAR g_snmpTrapListenAddress[];
 extern uint16_t g_wListenPort;
 extern TCHAR g_systemName[];
 extern ObjectArray<ServerInfo> g_serverList;
@@ -902,8 +902,8 @@ extern uint32_t g_startupDelay;
 extern uint32_t g_dwIdleTimeout;
 extern uint32_t g_maxCommSessions;
 extern uint32_t g_externalCommandTimeout;
-extern uint32_t g_externalParameterTimeout;
-extern uint32_t g_externalParameterProviderTimeout;
+extern uint32_t g_externalMetricTimeout;
+extern uint32_t g_externalMetricProviderTimeout;
 extern uint32_t g_snmpTimeout;
 extern uint16_t g_snmpTrapPort;
 extern uint32_t g_longRunningQueryThreshold;

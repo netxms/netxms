@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -31,7 +31,7 @@
 #define EXEC_DEBUG_TAG  _T("exec")
 
 /**
- * Exec function for external (user-defined) parameters and lists. Handler argument contains command line before substitution.
+ * Execution function for external (user-defined) metrics and lists. Handler argument contains command line before substitution.
  */
 static LONG RunExternal(const TCHAR *param, const TCHAR *arg, StringList *value, bool returnProcessExitCode = false)
 {
@@ -75,7 +75,7 @@ static LONG RunExternal(const TCHAR *param, const TCHAR *arg, StringList *value,
       return SYSINFO_RC_ERROR;
    }
 
-   if (!executor.waitForCompletion(g_externalParameterTimeout))
+   if (!executor.waitForCompletion(g_externalMetricTimeout))
    {
       nxlog_debug_tag(EXEC_DEBUG_TAG, 4, _T("RunExternal: external process execution timeout (command line \"%s\")"), cmdLine.cstr());
       return SYSINFO_RC_ERROR;
@@ -89,11 +89,11 @@ static LONG RunExternal(const TCHAR *param, const TCHAR *arg, StringList *value,
 }
 
 /**
- * Handler function for external (user-defined) parameters
+ * Handler function for external (user-defined) metrics
  */
-LONG H_ExternalParameter(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+LONG H_ExternalMetric(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
-   session->debugPrintf(4, _T("H_ExternalParameter called for \"%s\" \"%s\""), cmd, arg);
+   session->debugPrintf(4, _T("H_ExternalMetric called for \"%s\" \"%s\""), cmd, arg);
    StringList values;
    LONG status = RunExternal(cmd, arg, &values);
    if (status == SYSINFO_RC_SUCCESS)
@@ -104,11 +104,11 @@ LONG H_ExternalParameter(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, Abstr
 }
 
 /**
- * Handler function for external parameters return exit code version
+ * Handler function for external metrics return exit code version
  */
-LONG H_ExternalParameterExitCode(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+LONG H_ExternalMetricExitCode(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
-   session->debugPrintf(4, _T("H_ExternalParameterExitCode called for \"%s\" \"%s\""), cmd, arg);
+   session->debugPrintf(4, _T("H_ExternalMetricExitCode called for \"%s\" \"%s\""), cmd, arg);
    StringList values;
    LONG status = RunExternal(cmd, arg, &values, true);
    if (status == SYSINFO_RC_SUCCESS)

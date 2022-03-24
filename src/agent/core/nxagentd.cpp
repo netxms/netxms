@@ -209,13 +209,13 @@ TCHAR g_szLogParserDirectory[MAX_PATH] = _T("");
 TCHAR g_userAgentPolicyDirectory[MAX_PATH] = _T("");
 TCHAR g_certificateDirectory[MAX_PATH] = _T("");
 TCHAR g_masterAgent[MAX_PATH] = _T("not_set");
-TCHAR g_szSNMPTrapListenAddress[MAX_PATH] = _T("*");
+TCHAR g_snmpTrapListenAddress[MAX_PATH] = _T("*");
 uint16_t g_wListenPort = AGENT_LISTEN_PORT;
 TCHAR g_systemName[MAX_OBJECT_NAME] = _T("");
 ObjectArray<ServerInfo> g_serverList(8, 8, Ownership::True);
 uint32_t g_externalCommandTimeout = 0;   // External process execution timeout for external commands (actions) in milliseconds (0 = unset)
-uint32_t g_externalParameterTimeout = 0;  // External process execution timeout for external parameters in milliseconds (0 = unset)
-uint32_t g_externalParameterProviderTimeout = 30000;  // External parameter provider timeout in milliseconds
+uint32_t g_externalMetricTimeout = 0;  // External process execution timeout for external metrics in milliseconds (0 = unset)
+uint32_t g_externalMetricProviderTimeout = 30000;  // External metric provider timeout in milliseconds
 uint32_t g_snmpTimeout = 0;
 uint16_t g_snmpTrapPort = 162;
 time_t g_tmAgentStartTime;
@@ -259,9 +259,9 @@ static TCHAR *m_pszServerList = nullptr;
 static TCHAR *m_pszControlServerList = nullptr;
 static TCHAR *m_pszMasterServerList = nullptr;
 static TCHAR *m_pszSubagentList = nullptr;
-static TCHAR *s_externalParametersConfig = nullptr;
-static TCHAR *s_externalShellExecParametersConfig = nullptr;
-static TCHAR *s_externalParameterProvidersConfig = nullptr;
+static TCHAR *s_externalMetrics = nullptr;
+static TCHAR *s_externalMetricsShellExec = nullptr;
+static TCHAR *s_externalMetricProviders = nullptr;
 static TCHAR *s_externalListsConfig = nullptr;
 static TCHAR *s_externalTablesConfig = nullptr;
 static TCHAR *s_externalSubAgentsList = nullptr;
@@ -345,11 +345,11 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("ExternalCommandTimeout"), CT_LONG, 0, 0, 0, 0, &g_externalCommandTimeout, nullptr },
    { _T("ExternalList"), CT_STRING_CONCAT, '\n', 0, 0, 0, &s_externalListsConfig, nullptr },
    { _T("ExternalMasterAgent"), CT_STRING, 0, 0, MAX_PATH, 0, g_masterAgent, nullptr },
-   { _T("ExternalParameter"), CT_STRING_CONCAT, '\n', 0, 0, 0, &s_externalParametersConfig, nullptr },
-   { _T("ExternalParameterShellExec"), CT_STRING_CONCAT, '\n', 0, 0, 0, &s_externalShellExecParametersConfig, nullptr },
-   { _T("ExternalParameterProvider"), CT_STRING_CONCAT, '\n', 0, 0, 0, &s_externalParameterProvidersConfig, nullptr },
-   { _T("ExternalParameterProviderTimeout"), CT_LONG, 0, 0, 0, 0, &g_externalParameterProviderTimeout, nullptr },
-   { _T("ExternalParameterTimeout"), CT_LONG, 0, 0, 0, 0, &g_externalParameterTimeout, nullptr },
+   { _T("ExternalMetric"), CT_STRING_CONCAT, '\n', 0, 0, 0, &s_externalMetrics, nullptr },
+   { _T("ExternalMetricProvider"), CT_STRING_CONCAT, '\n', 0, 0, 0, &s_externalMetricProviders, nullptr },
+   { _T("ExternalMetricProviderTimeout"), CT_LONG, 0, 0, 0, 0, &g_externalMetricProviderTimeout, nullptr },
+   { _T("ExternalMetricShellExec"), CT_STRING_CONCAT, '\n', 0, 0, 0, &s_externalMetricsShellExec, nullptr },
+   { _T("ExternalMetricTimeout"), CT_LONG, 0, 0, 0, 0, &g_externalMetricTimeout, nullptr },
    { _T("ExternalSubagent"), CT_STRING_CONCAT, '\n', 0, 0, 0, &s_externalSubAgentsList, nullptr },
    { _T("ExternalTable"), CT_STRING_CONCAT, '\n', 0, 0, 0, &s_externalTablesConfig, nullptr },
    { _T("FatalExitOnCRTError"), CT_BOOLEAN_FLAG_32, 0, 0, SF_FATAL_EXIT_ON_CRT_ERROR, 0, &s_startupFlags, nullptr },
@@ -375,7 +375,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("SessionAgentPort"), CT_WORD, 0, 0, 0, 0, &g_sessionAgentPort, nullptr },
    { _T("SharedSecret"), CT_STRING, 0, 0, MAX_SECRET_LENGTH, 0, g_szSharedSecret, nullptr },
 	{ _T("SNMPTimeout"), CT_LONG, 0, 0, 0, 0, &g_snmpTimeout, nullptr },
-	{ _T("SNMPTrapListenAddress"), CT_STRING, 0, 0, MAX_PATH, 0, &g_szSNMPTrapListenAddress, nullptr },
+	{ _T("SNMPTrapListenAddress"), CT_STRING, 0, 0, MAX_PATH, 0, g_snmpTrapListenAddress, nullptr },
    { _T("SNMPTrapPort"), CT_WORD, 0, 0, 0, 0, &g_snmpTrapPort, nullptr },
    { _T("StartupDelay"), CT_LONG, 0, 0, 0, 0, &g_startupDelay, nullptr },
    { _T("SubAgent"), CT_STRING_CONCAT, '\n', 0, 0, 0, &m_pszSubagentList, nullptr },
@@ -391,7 +391,12 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("ZoneUIN"), CT_LONG, 0, 0, 0, 0, &g_zoneUIN, nullptr },
    /* Parameters below are deprecated and left for compatibility with older versions */
    { _T("ExecTimeout"), CT_LONG, 0, 0, 0, 0, &s_defaultExecutionTimeout, nullptr },
-   { _T("ExternalParametersProvider"), CT_STRING_CONCAT, '\n', 0, 0, 0, &s_externalParameterProvidersConfig, nullptr },
+   { _T("ExternalParameter"), CT_STRING_CONCAT, '\n', 0, 0, 0, &s_externalMetrics, nullptr },
+   { _T("ExternalParameterShellExec"), CT_STRING_CONCAT, '\n', 0, 0, 0, &s_externalMetricsShellExec, nullptr },
+   { _T("ExternalParameterProvider"), CT_STRING_CONCAT, '\n', 0, 0, 0, &s_externalMetricProviders, nullptr },
+   { _T("ExternalParameterProviderTimeout"), CT_LONG, 0, 0, 0, 0, &g_externalMetricProviderTimeout, nullptr },
+   { _T("ExternalParameterTimeout"), CT_LONG, 0, 0, 0, 0, &g_externalMetricTimeout, nullptr },
+   { _T("ExternalParametersProvider"), CT_STRING_CONCAT, '\n', 0, 0, 0, &s_externalMetricProviders, nullptr },
    { _T("ZoneId"), CT_LONG, 0, 0, 0, 0, &g_zoneUIN, nullptr },
    { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, nullptr, nullptr }
 };
@@ -899,18 +904,17 @@ static void ConfigureAgentDirectory(TCHAR *generatedPath, const TCHAR *suffix, c
  */
 static void ParseServerList(TCHAR *serverList, bool isControl, bool isMaster)
 {
-	TCHAR *pItem, *pEnd;
-
-	for(pItem = pEnd = serverList; pEnd != NULL && *pItem != 0; pItem = pEnd + 1)
+	TCHAR *curr, *next;
+	for(curr = next = serverList; next != nullptr && *curr != 0; curr = next + 1)
 	{
-		pEnd = _tcschr(pItem, _T(','));
-		if (pEnd != NULL)
-			*pEnd = 0;
-		Trim(pItem);
-		if (*pItem != 0)
+		next = _tcschr(curr, _T(','));
+		if (next != NULL)
+			*next = 0;
+		Trim(curr);
+		if (*curr != 0)
 		{
-         g_serverList.add(new ServerInfo(pItem, isControl, isMaster));
-         nxlog_debug(3, _T("Added server access record %s (control=%s, master=%s)"), pItem,
+         g_serverList.add(new ServerInfo(curr, isControl, isMaster));
+         nxlog_debug(3, _T("Added server access record %s (control=%s, master=%s)"), curr,
                   isControl ? _T("true") : _T("false"), isMaster ? _T("true") : _T("false"));
 		}
 	}
@@ -945,8 +949,6 @@ static void ScheduledCRLReload()
  */
 BOOL Initialize()
 {
-   TCHAR *pItem, *pEnd;
-
    if (s_debugLevel == NXCONFIG_UNINITIALIZED_VALUE)
       s_debugLevel = 0;
 
@@ -1202,13 +1204,14 @@ BOOL Initialize()
 	// Load other subagents
    if (m_pszSubagentList != nullptr)
    {
-      for(pItem = pEnd = m_pszSubagentList; pEnd != NULL && *pItem != 0; pItem = pEnd + 1)
+      TCHAR *curr, *next;
+      for(curr = next = m_pszSubagentList; next != NULL && *curr != 0; curr = next + 1)
       {
-         pEnd = _tcschr(pItem, _T('\n'));
-         if (pEnd != NULL)
-            *pEnd = 0;
-         Trim(pItem);
-         LoadSubAgent(pItem);
+         next = _tcschr(curr, _T('\n'));
+         if (next != NULL)
+            *next = 0;
+         Trim(curr);
+         LoadSubAgent(curr);
       }
       MemFree(m_pszSubagentList);
    }
@@ -1223,53 +1226,56 @@ BOOL Initialize()
    delete s_actionList;
 
    // Parse external parameters list
-   if (s_externalParametersConfig != nullptr)
+   if (s_externalMetrics != nullptr)
    {
-      for(pItem = pEnd = s_externalParametersConfig; pEnd != NULL && *pItem != 0; pItem = pEnd + 1)
+      TCHAR *curr, *next;
+      for(curr = next = s_externalMetrics; next != nullptr && *curr != 0; curr = next + 1)
       {
-         pEnd = _tcschr(pItem, _T('\n'));
-         if (pEnd != nullptr)
-            *pEnd = 0;
-         Trim(pItem);
+         next = _tcschr(curr, _T('\n'));
+         if (next != nullptr)
+            *next = 0;
+         Trim(curr);
 
 	 // Historically on UNIX all external parameters were run as shell command
 	 // Keep this behavior for compatibility
 #ifdef _WIN32
-         if (!AddExternalParameter(pItem, false, false))
+         if (!AddExternalMetric(curr, false, false))
 #else
-         if (!AddExternalParameter(pItem, true, false))
+         if (!AddExternalMetric(curr, true, false))
 #endif
          {
-            nxlog_write(NXLOG_WARNING, _T("Unable to add external parameter \"%s\""), pItem);
+            nxlog_write(NXLOG_WARNING, _T("Unable to add external parameter \"%s\""), curr);
          }
       }
-      MemFree(s_externalParametersConfig);
+      MemFree(s_externalMetrics);
    }
-   if (s_externalShellExecParametersConfig != NULL)
+   if (s_externalMetricsShellExec != nullptr)
    {
-      for(pItem = pEnd = s_externalShellExecParametersConfig; pEnd != NULL && *pItem != 0; pItem = pEnd + 1)
+      TCHAR *curr, *next;
+      for(curr = next = s_externalMetricsShellExec; next != nullptr && *curr != 0; curr = next + 1)
       {
-         pEnd = _tcschr(pItem, _T('\n'));
-         if (pEnd != NULL)
-            *pEnd = 0;
-         Trim(pItem);
-         if (!AddExternalParameter(pItem, true, false))
-            nxlog_write(NXLOG_WARNING, _T("Unable to add external parameter \"%s\""), pItem);
+         next = _tcschr(curr, _T('\n'));
+         if (next != NULL)
+            *next = 0;
+         Trim(curr);
+         if (!AddExternalMetric(curr, true, false))
+            nxlog_write(NXLOG_WARNING, _T("Unable to add external parameter \"%s\""), curr);
       }
-      MemFree(s_externalShellExecParametersConfig);
+      MemFree(s_externalMetricsShellExec);
    }
 
    // Parse external lists
    if (s_externalListsConfig != nullptr)
    {
-      for(pItem = pEnd = s_externalListsConfig; pEnd != nullptr && *pItem != 0; pItem = pEnd + 1)
+      TCHAR *curr, *next;
+      for(curr = next = s_externalListsConfig; next != nullptr && *curr != 0; curr = next + 1)
       {
-         pEnd = _tcschr(pItem, _T('\n'));
-         if (pEnd != nullptr)
-            *pEnd = 0;
-         Trim(pItem);
-         if (!AddExternalParameter(pItem, true, true))
-            nxlog_write(NXLOG_WARNING, _T("Unable to add external list \"%s\""), pItem);
+         next = _tcschr(curr, _T('\n'));
+         if (next != nullptr)
+            *next = 0;
+         Trim(curr);
+         if (!AddExternalMetric(curr, true, true))
+            nxlog_write(NXLOG_WARNING, _T("Unable to add external list \"%s\""), curr);
       }
       MemFree(s_externalListsConfig);
    }
@@ -1277,14 +1283,15 @@ BOOL Initialize()
    // Parse external tables
    if (s_externalTablesConfig != nullptr)
    {
-      for(pItem = pEnd = s_externalTablesConfig; pEnd != nullptr && *pItem != 0; pItem = pEnd + 1)
+      TCHAR *curr, *next;
+      for(curr = next = s_externalTablesConfig; next != nullptr && *curr != 0; curr = next + 1)
       {
-         pEnd = _tcschr(pItem, _T('\n'));
-         if (pEnd != nullptr)
-            *pEnd = 0;
-         Trim(pItem);
-         if (!AddExternalTable(pItem))
-            nxlog_write(NXLOG_WARNING, _T("Unable to add external table \"%s\""), pItem);
+         next = _tcschr(curr, _T('\n'));
+         if (next != nullptr)
+            *next = 0;
+         Trim(curr);
+         if (!AddExternalTable(curr))
+            nxlog_write(NXLOG_WARNING, _T("Unable to add external table \"%s\""), curr);
       }
       MemFree(s_externalTablesConfig);
    }
@@ -1302,33 +1309,35 @@ BOOL Initialize()
    }
 
    // Parse external parameters providers list
-   if (s_externalParameterProvidersConfig != nullptr)
+   if (s_externalMetricProviders != nullptr)
    {
-      for(pItem = pEnd = s_externalParameterProvidersConfig; pEnd != nullptr && *pItem != 0; pItem = pEnd + 1)
+      TCHAR *curr, *next;
+      for(curr = next = s_externalMetricProviders; next != nullptr && *curr != 0; curr = next + 1)
       {
-         pEnd = _tcschr(pItem, _T('\n'));
-         if (pEnd != nullptr)
-            *pEnd = 0;
-         Trim(pItem);
-         if (!AddParametersProvider(pItem))
-            nxlog_write(NXLOG_WARNING, _T("Unable to add external parameters provider \"%s\""), pItem);
+         next = _tcschr(curr, _T('\n'));
+         if (next != nullptr)
+            *next = 0;
+         Trim(curr);
+         if (!AddParametersProvider(curr))
+            nxlog_write(NXLOG_WARNING, _T("Unable to add external parameters provider \"%s\""), curr);
       }
-      MemFree(s_externalParameterProvidersConfig);
+      MemFree(s_externalMetricProviders);
    }
 
    if (!(g_dwFlags & AF_SUBAGENT_LOADER))
    {
       // Parse external subagents list
-	   if (!(g_dwFlags & AF_SUBAGENT_LOADER) && (s_externalSubAgentsList != NULL))
+	   if (!(g_dwFlags & AF_SUBAGENT_LOADER) && (s_externalSubAgentsList != nullptr))
       {
-         for(pItem = pEnd = s_externalSubAgentsList; pEnd != NULL && *pItem != 0; pItem = pEnd + 1)
+	      TCHAR *curr, *next;
+         for(curr = next = s_externalSubAgentsList; next != nullptr && *curr != 0; curr = next + 1)
          {
-            pEnd = _tcschr(pItem, _T('\n'));
-            if (pEnd != NULL)
-               *pEnd = 0;
-            Trim(pItem);
-            if (!AddExternalSubagent(pItem))
-               nxlog_write(NXLOG_WARNING, _T("Unable to add external subagent \"%s\""), pItem);
+            next = _tcschr(curr, _T('\n'));
+            if (next != nullptr)
+               *next = 0;
+            Trim(curr);
+            if (!AddExternalSubagent(curr))
+               nxlog_write(NXLOG_WARNING, _T("Unable to add external subagent \"%s\""), curr);
          }
          MemFree(s_externalSubAgentsList);
       }
@@ -1343,15 +1352,16 @@ BOOL Initialize()
       }
 
       // Parse application agents list
-	   if (!(g_dwFlags & AF_SUBAGENT_LOADER) && (s_appAgentsList != NULL))
+	   if (!(g_dwFlags & AF_SUBAGENT_LOADER) && (s_appAgentsList != nullptr))
       {
-         for(pItem = pEnd = s_appAgentsList; pEnd != NULL && *pItem != 0; pItem = pEnd + 1)
+	      TCHAR *curr, *next;
+         for(curr = next = s_appAgentsList; next != nullptr && *curr != 0; curr = next + 1)
          {
-            pEnd = _tcschr(pItem, _T('\n'));
-            if (pEnd != NULL)
-               *pEnd = 0;
-            Trim(pItem);
-            RegisterApplicationAgent(pItem);
+            next = _tcschr(curr, _T('\n'));
+            if (next != nullptr)
+               *next = 0;
+            Trim(curr);
+            RegisterApplicationAgent(curr);
          }
          MemFree(s_appAgentsList);
       }
@@ -2213,10 +2223,10 @@ int main(int argc, char *argv[])
             s_defaultExecutionTimeout = 5000;   // 5 seconds default
          if (g_externalCommandTimeout == 0)
             g_externalCommandTimeout = s_defaultExecutionTimeout;
-         if (g_externalParameterTimeout == 0)
-            g_externalParameterTimeout = s_defaultExecutionTimeout;
-         if (g_externalParameterProviderTimeout == 0)
-            g_externalParameterProviderTimeout = s_defaultExecutionTimeout;
+         if (g_externalMetricTimeout == 0)
+            g_externalMetricTimeout = s_defaultExecutionTimeout;
+         if (g_externalMetricProviderTimeout == 0)
+            g_externalMetricProviderTimeout = s_defaultExecutionTimeout;
 
          config = g_config;
          // Check if master section starts with EXT:

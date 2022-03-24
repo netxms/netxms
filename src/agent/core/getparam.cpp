@@ -41,9 +41,9 @@ LONG H_CertificateInfo(const TCHAR* param, const TCHAR* arg, TCHAR* value, Abstr
 LONG H_CRC32(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_DataCollectorQueueSize(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_DirInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
-LONG H_ExternalParameter(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
-LONG H_ExternalParameterExitCode(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_ExternalList(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
+LONG H_ExternalMetric(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_ExternalMetricExitCode(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_ExternalTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *session);
 LONG H_FileTime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_HostName(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
@@ -565,7 +565,7 @@ void AddPushParameter(const TCHAR *name, int dataType, const TCHAR *description)
 }
 
 /**
- * Add parameter to list
+ * Add metric to list
  */
 void AddParameter(const TCHAR *name, LONG (* handler)(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *),
          const TCHAR *arg, int dataType, const TCHAR *description)
@@ -680,9 +680,9 @@ void AddTable(const TCHAR *name, LONG (* handler)(const TCHAR *, const TCHAR *, 
 }
 
 /**
- * Add external parameter or list
+ * Add external metric or list
  */
-bool AddExternalParameter(TCHAR *config, bool shellExec, bool isList)
+bool AddExternalMetric(TCHAR *config, bool shellExec, bool isList)
 {
    TCHAR *cmdLine = _tcschr(config, _T(':'));
    if (cmdLine == nullptr)
@@ -704,11 +704,11 @@ bool AddExternalParameter(TCHAR *config, bool shellExec, bool isList)
    }
    else
    {
-      AddParameter(config, H_ExternalParameter, arg, DCI_DT_STRING, _T(""));
+      AddParameter(config, H_ExternalMetric, arg, DCI_DT_STRING, _T(""));
       TCHAR nameExitCode[MAX_PARAM_NAME];
       _tcslcpy(nameExitCode, config, MAX_PARAM_NAME);
       _tcslcat(nameExitCode, _T(".ExitCode"), MAX_PARAM_NAME);
-      AddParameter(nameExitCode, H_ExternalParameterExitCode, arg, DCI_DT_INT, _T(""));
+      AddParameter(nameExitCode, H_ExternalMetricExitCode, arg, DCI_DT_INT, _T(""));
    }
    return true;
 }

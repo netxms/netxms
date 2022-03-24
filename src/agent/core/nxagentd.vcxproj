@@ -206,12 +206,12 @@
     <ClCompile Include="datacoll.cpp" />
     <ClCompile Include="dbupgrade.cpp" />
     <ClCompile Include="dcsnmp.cpp" />
-    <ClCompile Include="epp.cpp" />
     <ClCompile Include="event.cpp" />
     <ClCompile Include="exec.cpp" />
     <ClCompile Include="extagent.cpp" />
-    <ClCompile Include="getparam.cpp" />
+    <ClCompile Include="extdp.cpp" />
     <ClCompile Include="filemon.cpp" />
+    <ClCompile Include="getparam.cpp" />
     <ClCompile Include="hddinfo.cpp" />
     <ClCompile Include="localdb.cpp" />
     <ClCompile Include="master.cpp" />
