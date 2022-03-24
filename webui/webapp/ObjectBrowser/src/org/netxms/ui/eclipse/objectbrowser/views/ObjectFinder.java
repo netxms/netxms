@@ -536,7 +536,7 @@ public class ObjectFinder extends ViewPart
       gd.horizontalSpan = 2;
       queryEditorMessage.setLayoutData(gd);
 
-      queryEditor = new ScriptEditor(queryEditorMessage, SWT.NONE, SWT.MULTI, true);
+      queryEditor = new ScriptEditor(queryEditorMessage, SWT.NONE, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL, true);
       queryEditorMessage.setContent(queryEditor);
       queryEditor.addVariables(Arrays.asList(OBJECT_ATTRIBUTES));
       queryEditor.addConstants(Arrays.asList(OBJECT_CONSTANTS));
