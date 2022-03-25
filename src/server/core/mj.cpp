@@ -134,9 +134,9 @@ uint32_t MaintenanceJournalCreate(const NXCPMessage& request, uint32_t userId)
       DBBind(stmt, 3, DB_SQLTYPE_INTEGER, userId);                                                  // author
       DBBind(stmt, 4, DB_SQLTYPE_INTEGER, userId);                                                  // last edited by
       DBBind(stmt, 5, DB_SQLTYPE_TEXT, request.getFieldAsString(VID_DESCRIPTION), DB_BIND_DYNAMIC); // description
-      time_t creationTime = time(nullptr);
-      DBBind(stmt, 6, DB_SQLTYPE_INTEGER, creationTime);
-      DBBind(stmt, 7, DB_SQLTYPE_INTEGER, creationTime); // modification time
+      uint32_t now = static_cast<uint32_t>(time(nullptr));
+      DBBind(stmt, 6, DB_SQLTYPE_INTEGER, now); // creation time
+      DBBind(stmt, 7, DB_SQLTYPE_INTEGER, now); // modification time
       if (DBExecute(stmt))
       {
          NotifyClientSessions(NX_NOTIFY_MAINTENANCE_JOURNAL_CHANGED, objectId);
