@@ -69,8 +69,8 @@ import org.netxms.base.NXCPMsgWaitQueue;
 import org.netxms.base.VersionInfo;
 import org.netxms.client.agent.config.AgentConfiguration;
 import org.netxms.client.agent.config.AgentConfigurationHandle;
-import org.netxms.client.businessservices.BusinessServiceTicket;
 import org.netxms.client.businessservices.BusinessServiceCheck;
+import org.netxms.client.businessservices.BusinessServiceTicket;
 import org.netxms.client.constants.AggregationFunction;
 import org.netxms.client.constants.AuthenticationType;
 import org.netxms.client.constants.DataOrigin;
@@ -13104,9 +13104,10 @@ public class NXCSession
 
    /**
     * Create new maintenance journal entry for specified object
-    * @param sourceId journal owner object ID
+    * 
+    * @param objectId journal owner object ID
     * @param description journal entry description
-    * @throws IOException  if socket I/O error occurs
+    * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public void createMaintenanceEntry(long objectId, String description) throws IOException, NXCException
@@ -13120,10 +13121,11 @@ public class NXCSession
 
    /**
     * Edit specified maintenance journal entry for specified object
-    * @param sourceId journal owner object ID
+    * 
+    * @param objectId journal owner object ID
     * @param entryId journal entry ID
     * @param description journal entry description
-    * @throws IOException  if socket I/O error occurs
+    * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public void editMaintenanceEntry(long objectId, long entryId, String description) throws IOException, NXCException

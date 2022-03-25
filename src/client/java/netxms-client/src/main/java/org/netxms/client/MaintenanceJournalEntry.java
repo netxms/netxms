@@ -93,7 +93,6 @@ public class MaintenanceJournalEntry
    }
 
    /**
-    * @param n - max length of the output string. Minimum value is 4.
     * @return the description. If the description has multiple lines, returns the first line only. If the first line is longer than
     *         64 characters, returns first 64 characters of description. Returned value ends with "..." if it was contracted.
     */
