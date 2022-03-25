@@ -34,8 +34,6 @@ if [ "$1" = "all" ]; then
    cp $WORKIND_DIR/target/nxmc-${VERSION}-*.jar $WORKIND_DIR/
    mvn -f $WORKIND_DIR -Dmaven.test.skip=true -Dnetxms.build.disablePlatformProfile=true -Pweb clean package
    cp $WORKIND_DIR/target/nxmc-${VERSION}*.war $WORKIND_DIR/
-   #build REST API
-   mvn -f src/client/nxapisrv/java -Dmaven.test.skip=true clean package   
    #build nxshell
    mvn -f src/client/nxshell/java -Dmaven.test.skip=true -Pstandalone clean package 
 else
