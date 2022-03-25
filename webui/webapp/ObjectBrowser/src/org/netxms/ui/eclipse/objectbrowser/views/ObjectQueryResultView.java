@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,17 +23,23 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
+import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.viewers.ArrayContentProvider;
+import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.objects.queries.ObjectQueryResult;
+import org.netxms.ui.eclipse.actions.CopyTableRowsAction;
 import org.netxms.ui.eclipse.actions.ExportToCsvAction;
 import org.netxms.ui.eclipse.console.resources.RegionalSettings;
+import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.objectbrowser.views.helpers.ObjectQueryResultLabelProvider;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
@@ -46,6 +52,8 @@ public class ObjectQueryResultView extends ViewPart
 
    private SortableTableViewer viewer;
    private Action actionExportToCSV;
+   private Action actionCopyToClipboard;
+   private Action actionCopySelectionToClipboard;
 
    /**
     * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
@@ -59,6 +67,7 @@ public class ObjectQueryResultView extends ViewPart
 
       createActions();
       contributeToActionBars();
+      createContextMenu();
    }
 
    /**
@@ -67,6 +76,12 @@ public class ObjectQueryResultView extends ViewPart
    private void createActions()
    {
       actionExportToCSV = new ExportToCsvAction(this, viewer, false);
+
+      actionCopyToClipboard = new CopyTableRowsAction(viewer, false);
+      actionCopyToClipboard.setImageDescriptor(SharedIcons.COPY_TO_CLIPBOARD);
+
+      actionCopySelectionToClipboard = new CopyTableRowsAction(viewer, true);
+      actionCopySelectionToClipboard.setImageDescriptor(SharedIcons.COPY_TO_CLIPBOARD);
    }
 
    /**
@@ -86,6 +101,7 @@ public class ObjectQueryResultView extends ViewPart
     */
    private void fillLocalPullDown(IMenuManager manager)
    {
+      manager.add(actionCopyToClipboard);
       manager.add(actionExportToCSV);
    }
 
@@ -96,7 +112,29 @@ public class ObjectQueryResultView extends ViewPart
     */
    private void fillLocalToolBar(IToolBarManager manager)
    {
+      manager.add(actionCopyToClipboard);
       manager.add(actionExportToCSV);
+   }
+
+   /**
+    * Create context menu
+    */
+   private void createContextMenu()
+   {
+      MenuManager manager = new MenuManager();
+      manager.setRemoveAllWhenShown(true);
+      manager.addMenuListener(new IMenuListener() {
+         public void menuAboutToShow(IMenuManager mgr)
+         {
+            IStructuredSelection selection = viewer.getStructuredSelection();
+            if (!selection.isEmpty())
+               manager.add(actionCopySelectionToClipboard);
+         }
+      });
+
+      // Create menu.
+      Menu menu = manager.createContextMenu(viewer.getTable());
+      viewer.getTable().setMenu(menu);
    }
 
    /**

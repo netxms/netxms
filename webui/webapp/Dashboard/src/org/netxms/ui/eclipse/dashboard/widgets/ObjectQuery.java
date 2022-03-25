@@ -21,9 +21,11 @@ package org.netxms.ui.eclipse.dashboard.widgets;
 import java.util.ArrayList;
 import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
+import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
@@ -42,6 +44,9 @@ import org.eclipse.ui.IViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.objects.queries.ObjectQueryResult;
+import org.netxms.ui.eclipse.actions.CopyTableRowsAction;
+import org.netxms.ui.eclipse.actions.ExportToCsvAction;
+import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.dashboard.Activator;
 import org.netxms.ui.eclipse.dashboard.widgets.helpers.ObjectDetailsLabelProvider;
 import org.netxms.ui.eclipse.dashboard.widgets.helpers.ObjectSelectionProvider;
@@ -66,7 +71,11 @@ public class ObjectQuery extends ElementWidget
    private SortableTableViewer viewer;
    private ObjectSelectionProvider objectSelectionProvider;
    private ObjectDoubleClickHandlerRegistry doubleClickHandlers;
-   
+   private Action actionCopyToClipboard;
+   private Action actionCopyAllToClipboard;
+   private Action actionExportToCSV;
+   private Action actionExportAllToCSV;
+
    /**
     * @param parent
     * @param element
@@ -128,8 +137,15 @@ public class ObjectQuery extends ElementWidget
          c.setData("ObjectProperty", p);
       }
       
+      actionCopyToClipboard = new CopyTableRowsAction(viewer, true);
+      actionCopyToClipboard.setImageDescriptor(SharedIcons.COPY_TO_CLIPBOARD);
+
+      actionCopyAllToClipboard = new CopyTableRowsAction(viewer, false);
+      actionExportToCSV = new ExportToCsvAction(viewPart, viewer, true);
+      actionExportAllToCSV = new ExportToCsvAction(viewPart, viewer, false);
+
       objectSelectionProvider = new ObjectSelectionProvider(viewer);
-      createPopupMenu();
+      createContextMenu();
       
       viewer.getControl().addFocusListener(new FocusListener() {
          @Override
@@ -213,9 +229,9 @@ public class ObjectQuery extends ElementWidget
    }
    
    /**
-    * Create pop-up menu
+    * Create context menu
     */
-   private void createPopupMenu()
+   private void createContextMenu()
    {
       // Create menu manager for underlying node object
       final MenuManager menuManager = new MenuManager(null, viewPart.getViewSite().getId() + "." + this.hashCode());
@@ -224,6 +240,11 @@ public class ObjectQuery extends ElementWidget
          public void menuAboutToShow(IMenuManager mgr)
          {
             ObjectContextMenu.fill(mgr, viewPart.getSite(), objectSelectionProvider);
+            mgr.add(new Separator());
+            mgr.add(actionCopyToClipboard);
+            mgr.add(actionCopyAllToClipboard);
+            mgr.add(actionExportToCSV);
+            mgr.add(actionExportAllToCSV);
          }
       });
       
@@ -234,7 +255,7 @@ public class ObjectQuery extends ElementWidget
       // Register menu for extension.
       viewPart.getSite().registerContextMenu(menuManager.getId(), menuManager, objectSelectionProvider); //$NON-NLS-1$
    }
-   
+
    /**
     * Refresh graph's data
     */

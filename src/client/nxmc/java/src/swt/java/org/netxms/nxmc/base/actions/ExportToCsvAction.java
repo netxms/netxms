@@ -21,18 +21,11 @@ package org.netxms.nxmc.base.actions;
 import java.io.BufferedWriter;
 import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
-import java.util.ArrayList;
 import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.jface.action.Action;
 import org.eclipse.jface.viewers.ColumnViewer;
-import org.eclipse.jface.viewers.TableViewer;
-import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.FileDialog;
-import org.eclipse.swt.widgets.TableColumn;
-import org.eclipse.swt.widgets.TableItem;
-import org.eclipse.swt.widgets.TreeItem;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -42,54 +35,47 @@ import org.xnap.commons.i18n.I18n;
 /**
  * Action for exporting selected table viewer rows to CSV file
  */
-public class ExportToCsvAction extends Action
+public class ExportToCsvAction extends TableRowAction
 {
    private static I18n i18n = LocalizationHelper.getI18n(ExportToCsvAction.class);
 
    private View view;
-	private ColumnViewer viewer;
-	private ViewerProvider viewerProvider;
-	private boolean selectionOnly;
 
 	/**
-	 * Create "Export to CSV" action attached to handler service
-	 * 
-	 * @param viewPart
-	 * @param viewer
-	 * @param viewerProvider
-	 * @param selectionOnly
+    * Create "Export to CSV" action.
+    * 
+    * @param view owning view
+    * @param viewer viewer to copy rows from
+    * @param viewerProvider viewer provider
+    * @param selectionOnly true to copy only selected rows
 	 */
    private ExportToCsvAction(View view, ColumnViewer viewer, ViewerProvider viewerProvider, boolean selectionOnly)
 	{
-      super(selectionOnly ? i18n.tr("E&xport to CSV...") : i18n.tr("Export all to CSV..."), SharedIcons.CSV);
+      super(viewer, viewerProvider, selectionOnly, selectionOnly ? i18n.tr("E&xport to CSV...") : i18n.tr("Export all to CSV..."), SharedIcons.CSV);
+      this.view = view;
 
       setId(selectionOnly ? "org.netxms.ui.eclipse.popupActions.ExportToCSV" : "org.netxms.ui.eclipse.actions.ExportToCSV");
-
-      this.view = view;
-		this.viewer = viewer;
-		this.viewerProvider = viewerProvider;
-		this.selectionOnly = selectionOnly;
 	}
 
 	/**
-	 * Create "Export to CSV" action attached to handler service
+	 * Create "Export to CSV" action.
 	 * 
-	 * @param viewPart
-	 * @param viewer
-	 * @param selectionOnly
-	 */
+    * @param view owning view
+    * @param viewer viewer to copy rows from
+    * @param selectionOnly true to copy only selected rows
+    */
    public ExportToCsvAction(View view, ColumnViewer viewer, boolean selectionOnly)
 	{
       this(view, viewer, null, selectionOnly);
 	}
 
 	/**
-	 * Create "Export to CSV" action attached to handler service
-	 * 
-	 * @param viewPart
-	 * @param viewerProvider
-	 * @param selectionOnly
-	 */
+    * Create "Export to CSV" action.
+    * 
+    * @param view owning view
+    * @param viewerProvider viewer provider
+    * @param selectionOnly true to copy only selected rows
+    */
    public ExportToCsvAction(View view, ViewerProvider viewerProvider, boolean selectionOnly)
 	{
       this(view, null, viewerProvider, selectionOnly);
@@ -109,55 +95,9 @@ public class ExportToCsvAction extends Action
 		if (fileName == null)
 			return;
 
-		if (viewerProvider != null)
-			viewer = viewerProvider.getViewer();
-
-		final List<String[]> data = new ArrayList<String[]>();
-		if (viewer instanceof TableViewer)
-		{
-			int numColumns = ((TableViewer)viewer).getTable().getColumnCount();
-			if (numColumns == 0)
-				numColumns = 1;
-			
-			TableColumn[] columns = ((TableViewer)viewer).getTable().getColumns();
-			String[] headerRow = new String[numColumns];
-			for (int i = 0; i < numColumns; i++)
-			{
-				headerRow[i] = columns[i].getText();
-			}
-			data.add(headerRow);
-			
-			TableItem[] selection = selectionOnly ? ((TableViewer)viewer).getTable().getSelection() : ((TableViewer)viewer).getTable().getItems();
-			for(TableItem item : selection)
-			{
-				String[] row = new String[numColumns];
-				for(int i = 0; i < numColumns; i++)
-					row[i] = item.getText(i);
-				data.add(row);
-			}
-		}
-		else if (viewer instanceof TreeViewer)
-		{
-			int numColumns = ((TreeViewer)viewer).getTree().getColumnCount();
-			if (numColumns == 0)
-				numColumns = 1;
-			
-			TreeItem[] selection = selectionOnly ? ((TreeViewer)viewer).getTree().getSelection() : ((TreeViewer)viewer).getTree().getItems();
-			for(TreeItem item : selection)
-			{
-				String[] row = new String[numColumns];
-				for(int i = 0; i < numColumns; i++)
-					row[i] = item.getText(i);
-				data.add(row);
-				if (!selectionOnly)
-				{
-					addSubItems(item, data, numColumns);
-				}
-			}
-		}
-
+      final List<String[]> data = getRowsFromViewer(true);
       new Job(String.format(i18n.tr("Save data to CSV file %s"), fileName), view) {
-			@Override
+         @Override
          protected void run(IProgressMonitor monitor) throws Exception
 			{
             BufferedWriter out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(fileName), "UTF-8"));
@@ -182,21 +122,5 @@ public class ExportToCsvAction extends Action
             return i18n.tr("Cannot save table data to file");
 			}
 		}.start();
-	}
-
-	/**
-	 * @param item
-	 * @param data
-	 */
-	private void addSubItems(TreeItem root, List<String[]> data, int numColumns)
-	{
-		for(TreeItem item : root.getItems())
-		{
-			String[] row = new String[numColumns];
-			for(int i = 0; i < numColumns; i++)
-				row[i] = item.getText(i);
-			data.add(row);
-			addSubItems(item, data, numColumns);
-		}
 	}
 }
