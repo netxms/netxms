@@ -2275,7 +2275,7 @@ void ClientSession::login(const NXCPMessage& request)
          unique_ptr<StringList> methods = GetUserConfigured2FAMethods(m_dwUserId);
          if (methods->isEmpty())
          {
-            finalizeLogin(request, &response);
+            rcc = finalizeLogin(request, &response);
             delete_and_null(m_loginInfo);
          }
          else
@@ -2338,7 +2338,8 @@ void ClientSession::validate2FAResponse(const NXCPMessage& request)
       request.getFieldAsString(VID_2FA_RESPONSE, userResponse, 1024);
       if (Validate2FAResponse(m_loginInfo->token, userResponse, m_dwUserId))
       {
-         finalizeLogin(request, &response);
+         uint32_t rcc = finalizeLogin(request, &response);
+         response.setField(VID_RCC, rcc);
       }
       else
       {
@@ -2356,7 +2357,7 @@ void ClientSession::validate2FAResponse(const NXCPMessage& request)
 /**
  * Finalize login
  */
-void ClientSession::finalizeLogin(const NXCPMessage& request, NXCPMessage *response)
+uint32_t ClientSession::finalizeLogin(const NXCPMessage& request, NXCPMessage *response)
 {
    uint32_t rcc = RCC_SUCCESS;
 
@@ -2366,9 +2367,36 @@ void ClientSession::finalizeLogin(const NXCPMessage& request, NXCPMessage *respo
       rcc = CURRENT_MODULE.pfAdditionalLoginCheck(m_dwUserId, request);
       if (rcc != RCC_SUCCESS)
       {
-         debugPrintf(4, _T("Login blocked by module %s (rcc=%d)"), CURRENT_MODULE.szName, rcc);
+         debugPrintf(4, _T("Login blocked by module %s (rcc=%u)"), CURRENT_MODULE.szName, rcc);
          break;
       }
+   }
+
+   // Execute login hook script
+   ScriptVMHandle vm = CreateServerScriptVM(_T("Hook::Login"), shared_ptr<NetObj>());
+   if (vm.isValid())
+   {
+      vm->setGlobalVariable("$session", vm->createValue(vm->createObject(&g_nxslClientSessionClass, this)));
+      vm->setGlobalVariable("$user", GetUserDBObjectForNXSL(m_dwUserId, vm));
+      if (vm->run())
+      {
+         NXSL_Value *result = vm->getResult();
+         if (!result->isNull() && result->isFalse())
+         {
+            debugPrintf(4, _T("Login blocked by hook script"));
+            rcc = RCC_ACCESS_DENIED;
+         }
+      }
+      else
+      {
+         debugPrintf(4, _T("Login hook script execution error (%s)"), vm->getErrorText());
+         ReportScriptError(SCRIPT_CONTEXT_LOGIN, nullptr, 0, vm->getErrorText(), _T("Hook::Login"));
+      }
+      vm.destroy();
+   }
+   else
+   {
+      debugPrintf(4, _T("Login hook script %s"), (vm.failureReason() == ScriptVMFailureReason::SCRIPT_IS_EMPTY) ? _T("is empty") : _T("not found"));
    }
 
    if (rcc == RCC_SUCCESS)
@@ -2377,7 +2405,6 @@ void ClientSession::finalizeLogin(const NXCPMessage& request, NXCPMessage *respo
       _tcslcpy(m_loginName, m_loginInfo->loginName, MAX_USER_NAME);
       _sntprintf(m_sessionName, MAX_SESSION_NAME, _T("%s@%s"), m_loginName, m_workstation);
       m_loginTime = time(nullptr);
-      response->setField(VID_RCC, RCC_SUCCESS);
       response->setField(VID_USER_SYS_RIGHTS, m_systemAccessRights);
       response->setField(VID_USER_ID, m_dwUserId);
       response->setField(VID_USER_NAME, m_loginName);
@@ -2430,14 +2457,15 @@ void ClientSession::finalizeLogin(const NXCPMessage& request, NXCPMessage *respo
    }
    else
    {
-      response->setField(VID_RCC, rcc);
-      writeAuditLog(AUDIT_SECURITY, false, 0, _T("User \"%s\" login failed with error code %d (client info: %s)"), m_loginInfo->loginName, rcc, m_clientInfo);
+      writeAuditLog(AUDIT_SECURITY, false, 0, _T("User \"%s\" login failed with error code %u (client info: %s)"), m_loginInfo->loginName, rcc, m_clientInfo);
       if (m_loginInfo->intruderLockout)
       {
          writeAuditLog(AUDIT_SECURITY, false, 0, _T("User account \"%s\" temporary disabled due to excess count of failed authentication attempts"), m_loginInfo->loginName);
       }
       m_dwUserId = INVALID_INDEX;   // reset user ID to avoid incorrect count of logged in sessions for that user
    }
+
+   return rcc;
 }
 
 /**

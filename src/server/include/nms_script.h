@@ -313,6 +313,17 @@ public:
 };
 
 /**
+ * NXSL "ClientSession" class
+ */
+class NXSL_ClientSessionClass : public NXSL_Class
+{
+public:
+   NXSL_ClientSessionClass();
+
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
+};
+
+/**
  * NXSL "UserDBObject" class
  */
 class NXSL_UserDBObjectClass : public NXSL_Class
@@ -501,6 +512,7 @@ extern NXSL_AlarmCommentClass g_nxslAlarmCommentClass;
 extern NXSL_BusinessServiceClass g_nxslBusinessServiceClass;
 extern NXSL_BusinessServiceCheckClass g_nxslBusinessServiceCheckClass;
 extern NXSL_ChassisClass g_nxslChassisClass;
+extern NXSL_ClientSessionClass g_nxslClientSessionClass;
 extern NXSL_ClusterClass g_nxslClusterClass;
 extern NXSL_ContainerClass g_nxslContainerClass;
 extern NXSL_DciClass g_nxslDciClass;

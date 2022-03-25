@@ -598,7 +598,7 @@ private:
 
    void setupEncryption(const NXCPMessage& request);
    void login(const NXCPMessage& request);
-   void finalizeLogin(const NXCPMessage& request, NXCPMessage *response);
+   uint32_t finalizeLogin(const NXCPMessage& request, NXCPMessage *response);
    uint32_t authenticateUserByPassword(const NXCPMessage& request, LoginInfo *loginInfo);
    uint32_t authenticateUserByCertificate(const NXCPMessage& request, LoginInfo *loginInfo);
    uint32_t authenticateUserBySSOTicket(const NXCPMessage& request, LoginInfo *loginInfo);

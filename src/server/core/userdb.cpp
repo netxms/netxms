@@ -1604,6 +1604,30 @@ unique_ptr<ObjectArray<UserDatabaseObject>> FindUserDBObjects(const StructArray<
 }
 
 /**
+ * Get user database object for use in NXSL script
+ */
+NXSL_Value *GetUserDBObjectForNXSL(uint32_t id, NXSL_VM *vm)
+{
+   s_userDatabaseLock.readLock();
+   UserDatabaseObject *object = s_userDatabase.get(id);
+   NXSL_Value *value;
+   if (object != nullptr)
+   {
+      if (object->isGroup())
+         object = new Group(static_cast<Group*>(object));
+      else
+         object = new User(static_cast<User*>(object));
+      value = object->createNXSLObject(vm);  // NXSL object will keep pointer to user DB object and destroy it when destroyed by NXSL VM
+   }
+   else
+   {
+      value = vm->createValue();
+   }
+   s_userDatabaseLock.unlock();
+   return value;
+}
+
+/**
  * Fill NXCP message 2FA method binding info for given user
  */
 void FillUser2FAMethodBindingInfo(uint32_t userId, NXCPMessage *msg)

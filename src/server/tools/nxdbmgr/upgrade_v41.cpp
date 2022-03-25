@@ -24,6 +24,21 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 41.5 to 41.6
+ */
+static bool H_UpgradeFromV5()
+{
+   if (GetSchemaLevelForMajorVersion(40) < 102)
+   {
+      CHK_EXEC(SQLQuery(_T("INSERT INTO script_library (guid,script_id,script_name,script_code) ")
+            _T("VALUES ('f8bfa009-d4e4-4443-8bad-3ded09bdeb92',26,'Hook::Login','/* Available global variables:\r\n *  $user - user object (object of ''User'' class)\r\n *  $session - session object (object of ''ClientSession'' class)\r\n *\r\n * Expected return value:\r\n *  true/false - boolean - whether login for this session should continue\r\n */\r\n')")));
+      CHK_EXEC(SetSchemaLevelForMajorVersion(40, 102));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(6));
+   return true;
+}
+
+/**
  * Upgrade from 41.4 to 41.5
  */
 static bool H_UpgradeFromV4()
@@ -229,6 +244,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 5,  41, 6,  H_UpgradeFromV5  },
    { 4,  41, 5,  H_UpgradeFromV4  },
    { 3,  41, 4,  H_UpgradeFromV3  },
    { 2,  41, 3,  H_UpgradeFromV2  },
