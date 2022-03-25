@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Raden Solutions
+ * Copyright (C) 2003-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -56,6 +56,9 @@ public class Alarms extends AbstractHandler
    private static final int STICKY_ACKNOWLEDGE = 2;
    private static final int RESOLVE = 3;
    
+   /**
+    * @see org.netxms.websvc.handlers.AbstractHandler#getCollection(java.util.Map)
+    */
    @Override
    protected Object getCollection(Map<String, String> query) throws Exception
    {
@@ -309,6 +312,9 @@ public class Alarms extends AbstractHandler
       return null;
    }
 
+   /**
+    * @see org.netxms.websvc.handlers.AbstractHandler#get(java.lang.String, java.util.Map)
+    */
    @Override
    protected Object get(String id, Map<String, String> query) throws Exception
    {
