@@ -420,7 +420,7 @@ bool InitIdTable()
    }
 
     // Get first available object in maintenance journal entries
-   hResult = DBSelect(hdb, _T("SELECT max(id) FROM maintenance_journal"));
+   hResult = DBSelect(hdb, _T("SELECT max(record_id) FROM maintenance_journal"));
    if (hResult != nullptr)
    {
       if (DBGetNumRows(hResult) > 0)

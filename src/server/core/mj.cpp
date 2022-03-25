@@ -27,26 +27,25 @@
  */
 static void buildSelectQueryMiddlePart(StringBuffer* query, SharedObjectArray<NetObj>& sources)
 {
-   query->append(_T(" id, object_id, author, last_edited_by, description, creation_time, modification_time")
-                 _T(" FROM maintenance_journal WHERE object_id IN ("));
+   query->append(_T(" record_id, object_id, author, last_edited_by, description, creation_time, modification_time FROM maintenance_journal WHERE object_id IN ("));
    query->append(sources.get(0)->getId());
 
    if (sources.size() > 1)
    {
       for (shared_ptr<NetObj> childObj : sources)
       {
-         query->append(_T(", "));
+         query->append(_T(","));
          query->append(childObj->getId());
       }
    }
 
-   query->append(_T(") ORDER BY id DESC"));
+   query->append(_T(") ORDER BY record_id DESC"));
 }
 
 /**
  * Get all maintenance journal entries for the given object
  */
-void MaintenanceJournalRead(SharedObjectArray<NetObj>& sources, NXCPMessage* response, uint32_t maxEntries)
+uint32_t MaintenanceJournalRead(SharedObjectArray<NetObj>& sources, NXCPMessage* response, uint32_t maxEntries)
 {
    DB_HANDLE db = DBConnectionPoolAcquireConnection();
 
@@ -87,12 +86,11 @@ void MaintenanceJournalRead(SharedObjectArray<NetObj>& sources, NXCPMessage* res
       }
    }
 
+   uint32_t rcc;
    DB_RESULT result = DBSelect(db, query);
    if (result != nullptr)
    {
       int numRows = DBGetNumRows(result);
-
-      response->setField(VID_RCC, RCC_SUCCESS);
       response->setField(VID_NUM_ELEMENTS, numRows);
 
       uint32_t base = VID_ELEMENT_LIST_BASE;
@@ -107,13 +105,16 @@ void MaintenanceJournalRead(SharedObjectArray<NetObj>& sources, NXCPMessage* res
          response->setField(base + 6, DBGetFieldULong(result, row, 6));          // modification_time
       }
       DBFreeResult(result);
+
+      rcc = RCC_SUCCESS;
    }
    else
    {
-      response->setField(VID_RCC, RCC_DB_FAILURE);
+      rcc = RCC_DB_FAILURE;
    }
 
    DBConnectionPoolReleaseConnection(db);
+   return rcc;
 }
 
 /**
@@ -123,11 +124,9 @@ uint32_t MaintenanceJournalCreate(const NXCPMessage& request, uint32_t userId)
 {
    uint32_t objectId = request.getFieldAsUInt32(VID_OBJECT_ID);
 
-   uint32_t res;
+   uint32_t rcc;
    DB_HANDLE db = DBConnectionPoolAcquireConnection();
-   DB_STATEMENT stmt = DBPrepare(db, _T("INSERT INTO maintenance_journal ")
-                                     _T("(id, object_id, author, last_edited_by, description, creation_time, modification_time) ")
-                                     _T("VALUES (?, ?, ?, ?, ?, ?, ?)"));
+   DB_STATEMENT stmt = DBPrepare(db, _T("INSERT INTO maintenance_journal (record_id, object_id, author, last_edited_by, description, creation_time, modification_time) VALUES (?, ?, ?, ?, ?, ?, ?)"));
    if (stmt != nullptr)
    {
       DBBind(stmt, 1, DB_SQLTYPE_INTEGER, CreateUniqueId(IDG_MAINTENANCE_JOURNAL));                 // id
@@ -141,20 +140,20 @@ uint32_t MaintenanceJournalCreate(const NXCPMessage& request, uint32_t userId)
       if (DBExecute(stmt))
       {
          NotifyClientSessions(NX_NOTIFY_MAINTENANCE_JOURNAL_CHANGED, objectId);
-         res = RCC_SUCCESS;
+         rcc = RCC_SUCCESS;
       }
       else
       {
-         res = RCC_DB_FAILURE;
+         rcc = RCC_DB_FAILURE;
       }
       DBFreeStatement(stmt);
    }
    else
    {
-      res = RCC_DB_FAILURE;
+      rcc = RCC_DB_FAILURE;
    }
    DBConnectionPoolReleaseConnection(db);
-   return res;
+   return rcc;
 }
 
 /**
@@ -163,15 +162,12 @@ uint32_t MaintenanceJournalCreate(const NXCPMessage& request, uint32_t userId)
 uint32_t MaintenanceJournalEdit(const NXCPMessage& request, uint32_t userId)
 {
    uint32_t objectId = request.getFieldAsUInt32(VID_OBJECT_ID);
+   uint32_t modificationTime = static_cast<uint32_t>(time(nullptr));
 
-   uint32_t res;
    DB_HANDLE db = DBConnectionPoolAcquireConnection();
-   uint32_t modificationTime = time(nullptr);
 
-   DB_STATEMENT stmt = DBPrepare(db, _T("UPDATE maintenance_journal ")
-                                     _T("SET last_edited_by = ?, description = ?, modification_time = ? ")
-                                     _T("WHERE id = ?"));
-
+   uint32_t rcc;
+   DB_STATEMENT stmt = DBPrepare(db, _T("UPDATE maintenance_journal SET last_edited_by=?, description=?, modification_time=? WHERE record_id=?"));
    if (stmt != nullptr)
    {
       DBBind(stmt, 1, DB_SQLTYPE_INTEGER, userId); // last edited by
@@ -180,19 +176,20 @@ uint32_t MaintenanceJournalEdit(const NXCPMessage& request, uint32_t userId)
       DBBind(stmt, 4, DB_SQLTYPE_INTEGER, request.getFieldAsUInt32(VID_RECORD_ID));
       if (DBExecute(stmt))
       {
-         res = RCC_SUCCESS;
+         rcc = RCC_SUCCESS;
          NotifyClientSessions(NX_NOTIFY_MAINTENANCE_JOURNAL_CHANGED, objectId);
       }
       else
       {
-         res = RCC_DB_FAILURE;
+         rcc = RCC_DB_FAILURE;
       }
       DBFreeStatement(stmt);
    }
    else
    {
-      res = RCC_DB_FAILURE;
+      rcc = RCC_DB_FAILURE;
    }
+
    DBConnectionPoolReleaseConnection(db);
-   return res;
+   return rcc;
 }

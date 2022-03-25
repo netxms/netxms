@@ -285,6 +285,7 @@
     <ClCompile Include="market.cpp" />
     <ClCompile Include="mdconn.cpp" />
     <ClCompile Include="mdsession.cpp" />
+    <ClCompile Include="mj.cpp" />
     <ClCompile Include="mobile.cpp" />
     <ClCompile Include="modules.cpp" />
     <ClCompile Include="mt.cpp" />

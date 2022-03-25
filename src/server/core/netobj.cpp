@@ -509,9 +509,7 @@ bool NetObj::deleteFromDatabase(DB_HANDLE hdb)
 
    // Delete alarms
    if (success && ConfigReadBoolean(_T("Alarms.DeleteAlarmsOfDeletedObject"), true))
-   {
       success = DeleteObjectAlarms(m_id, hdb);
-   }
 
    if (success && isGeoLocationHistoryTableExists(hdb))
    {
@@ -527,22 +525,14 @@ bool NetObj::deleteFromDatabase(DB_HANDLE hdb)
       success = (m_moduleData->forEach(DeleteModuleDataCallback, &context) == _CONTINUE);
    }
 
-   // Delete responsible users
    if (success)
-   {
       success = executeQueryOnObject(hdb, _T("DELETE FROM responsible_users WHERE object_id=?"));
-   }
 
    if (success && isPollable())
-   {
       success = executeQueryOnObject(hdb, _T("DELETE FROM pollable_objects WHERE id=?"));
-   }
 
-   // Delete associated maintenance journal entries
    if (success)
-   {
-      success = executeQueryOnObject(hdb, _T("DELETE FROM maintenance_journal WHERE object_id = ?"));
-   }
+      success = executeQueryOnObject(hdb, _T("DELETE FROM maintenance_journal WHERE object_id=?"));
 
    return success;
 }

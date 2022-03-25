@@ -29,19 +29,19 @@
 static bool H_UpgradeFromV4()
 {
    CHK_EXEC(SQLQuery(_T("CREATE TABLE maintenance_journal (")
-                     _T(" id integer not null,")
-                     _T(" object_id integer not null,")
-                     _T(" author integer not null,")
-                     _T(" last_edited_by integer not null,")
-                     _T(" description $SQL:TEXT not null,")
-                     _T(" creation_time integer not null,")
-                     _T(" modification_time integer not null,")
-                     _T(" PRIMARY KEY(id))")));
+                     _T("   record_id integer not null,")
+                     _T("   object_id integer not null,")
+                     _T("   author integer not null,")
+                     _T("   last_edited_by integer not null,")
+                     _T("   description $SQL:TEXT not null,")
+                     _T("   creation_time integer not null,")
+                     _T("   modification_time integer not null,")
+                     _T("   PRIMARY KEY(record_id))")));
 
    DB_RESULT result = SQLSelect(_T("SELECT access_rights,object_id FROM acl WHERE user_id=1073741825")); // Get group Admins object acl
    if (result != nullptr)
    {
-      DB_STATEMENT stmt = DBPrepare(g_dbHandle, _T("UPDATE acl SET access_rights=? WHERE user_id=1073741825 AND object_id=? "));
+      DB_STATEMENT stmt = DBPrepare(g_dbHandle, _T("UPDATE acl SET access_rights=? WHERE user_id=1073741825 AND object_id=?"));
       if (stmt != nullptr)
       {
          int rows = DBGetNumRows(result);
@@ -50,18 +50,14 @@ static bool H_UpgradeFromV4()
             uint32_t rights = DBGetFieldULong(result, i, 0);
             if (rights & OBJECT_ACCESS_READ)
             {
-               rights |= OBJECT_ACCESS_EDIT_MNT_JOURNAL;
+               rights |= OBJECT_ACCESS_WRITE_MJOURNAL;
                DBBind(stmt, 1, DB_SQLTYPE_INTEGER, rights);
                DBBind(stmt, 2, DB_SQLTYPE_INTEGER, DBGetFieldULong(result, i, 1));
-
-               if (!SQLExecute(stmt))
+               if (!SQLExecute(stmt) && !g_ignoreErrors)
                {
-                  if (!g_ignoreErrors)
-                  {
-                     DBFreeStatement(stmt);
-                     DBFreeResult(result);
-                     return false;
-                  }
+                  DBFreeStatement(stmt);
+                  DBFreeResult(result);
+                  return false;
                }
             }
          }
@@ -69,11 +65,16 @@ static bool H_UpgradeFromV4()
          DBFreeStatement(stmt);
       }
       else if (!g_ignoreErrors)
+      {
+         DBFreeResult(result);
          return false;
+      }
       DBFreeResult(result);
    }
    else if (!g_ignoreErrors)
+   {
       return false;
+   }
 
    CHK_EXEC(CreateConfigParam(_T("MaintenanceJournal.RetentionTime"), _T("1826"),
                               _T("Retention time in days for maintenance journal entries. All records older than specified will be deleted by housekeeping process."),

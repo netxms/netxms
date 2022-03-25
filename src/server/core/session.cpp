@@ -107,7 +107,7 @@ bool DeletePhysicalLink(uint32_t id, uint32_t userId);
 
 unique_ptr<ObjectArray<EventReference>> GetAllEventReferences(uint32_t eventCode);
 
-void MaintenanceJournalRead(SharedObjectArray<NetObj>& sources, NXCPMessage* response, uint32_t maxEntries);
+uint32_t MaintenanceJournalRead(SharedObjectArray<NetObj>& sources, NXCPMessage* response, uint32_t maxEntries);
 uint32_t MaintenanceJournalCreate(const NXCPMessage& request, uint32_t userId);
 uint32_t MaintenanceJournalEdit(const NXCPMessage& request, uint32_t userId);
 
@@ -16212,36 +16212,41 @@ void ClientSession::readMaintJournal(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
-   shared_ptr<NetObj> obj = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
-   if (obj == nullptr)
+   shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
+   if (object != nullptr)
+   {
+      if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+      {
+         unique_ptr<SharedObjectArray<NetObj>> sources = object->getAllChildren(false);
+         SharedPtrIterator<NetObj> it = sources->begin();
+         while (it.hasNext())
+         {
+            if (!it.next()->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+               it.remove();
+         }
+         sources->add(object);
+
+         uint32_t rcc = MaintenanceJournalRead(*sources, &response, request.getFieldAsUInt32(VID_MAX_RECORDS));
+         if (rcc == RCC_SUCCESS)
+         {
+            writeAuditLog(AUDIT_OBJECTS, true, object->getId(), _T("Maintenance journal read successfully"));
+            debugPrintf(6, _T("Maintenance journal for object %s [%u] read successfully"), object->getName(), object->getId());
+         }
+         response.setField(VID_RCC, rcc);
+      }
+      else
+      {
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
+         writeAuditLog(AUDIT_OBJECTS, false, object->getId(), _T("Maintenance journal read failed: access denied"));
+         debugPrintf(6, _T("Maintenance journal read for object %s [%u] failed: access denied"), object->getName(), object->getId());
+      }
+   }
+   else
    {
       response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
-      debugPrintf(6, _T("Maintenance journal read for object %u failed: invalid object ID"), obj->getId());
-      sendMessage(response);
-      return;
+      debugPrintf(6, _T("Maintenance journal read for object [%u] failed: invalid object ID"), object->getId());
    }
 
-   if (!obj->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
-   {
-      response.setField(VID_RCC, RCC_ACCESS_DENIED);
-      writeAuditLog(AUDIT_OBJECTS, false, obj->getId(), _T("Maintenance journal read failed: access denied"));
-      debugPrintf(6, _T("Maintenance journal read for object %d failed: access denied"), obj->getId());
-      sendMessage(response);
-      return;
-   }
-
-   unique_ptr<SharedObjectArray<NetObj>> sources = obj->getAllChildren(false);
-   SharedPtrIterator<NetObj> it = sources->begin();
-   while (it.hasNext())
-   {
-      if (!it.next()->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
-         it.remove();
-   }
-   sources->add(obj);
-
-   MaintenanceJournalRead(*sources, &response, request.getFieldAsUInt32(VID_MAX_RECORDS));
-   writeAuditLog(AUDIT_OBJECTS, true, obj->getId(), _T("Maintenance journal read succsessfully"));
-   debugPrintf(6, _T("Maintenance journal for object %d read succsessfully"), obj->getId());
    sendMessage(response);
 }
 
@@ -16264,27 +16269,32 @@ void ClientSession::createMaintJournal(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
-   shared_ptr<NetObj> obj = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
-   if (obj == nullptr)
+   shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
+   if (object != nullptr)
+   {
+      if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_WRITE_MJOURNAL))
+      {
+         uint32_t rcc = MaintenanceJournalCreate(request, m_dwUserId);
+         if (rcc == RCC_SUCCESS)
+         {
+            writeAuditLog(AUDIT_OBJECTS, true, object->getId(), _T("New maintenance journal entry created successfully"));
+            debugPrintf(6, _T("New maintenance journal entry for object %d created successfully for object %d"), object->getId());
+         }
+         response.setField(VID_RCC, rcc);
+      }
+      else
+      {
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
+         writeAuditLog(AUDIT_OBJECTS, false, object->getId(), _T("New maintenance journal entry create failed: access denied"));
+         debugPrintf(6, _T("New maintenance journal entry create for object %d failed: access denied"), object->getId());
+      }
+   }
+   else
    {
       response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
-      debugPrintf(6, _T("New maintenance journal entry create for object %d failed: invalid object ID"), obj->getId());
-      sendMessage(response);
-      return;
+      debugPrintf(6, _T("New maintenance journal entry create for object %d failed: invalid object ID"), object->getId());
    }
 
-   if (!obj->checkAccessRights(m_dwUserId, OBJECT_ACCESS_EDIT_MNT_JOURNAL))
-   {
-      response.setField(VID_RCC, RCC_ACCESS_DENIED);
-      writeAuditLog(AUDIT_OBJECTS, false, obj->getId(), _T("New maintenance journal entry create failed: access denied"));
-      debugPrintf(6, _T("New maintenance journal entry create for object %d failed: access denied"), obj->getId());
-      sendMessage(response);
-      return;
-   }
-
-   response.setField(VID_RCC, MaintenanceJournalCreate(request, m_dwUserId));
-   writeAuditLog(AUDIT_OBJECTS, true, obj->getId(), _T("New maintenance journal entry created succsessfully"));
-   debugPrintf(6, _T("New maintenance journal entry for object %d created succsessfully for object %d"), obj->getId());
    sendMessage(response);
 }
 
@@ -16308,28 +16318,32 @@ void ClientSession::editMaintJournal(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
-   shared_ptr<NetObj> obj = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
    uint32_t entryId = request.getFieldAsUInt32(VID_RECORD_ID);
-
-   if (obj == nullptr)
+   shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
+   if (object != nullptr)
+   {
+      if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_WRITE_MJOURNAL))
+      {
+         uint32_t rcc = MaintenanceJournalEdit(request, m_dwUserId);
+         if (rcc == RCC_SUCCESS)
+         {
+            writeAuditLog(AUDIT_OBJECTS, true, object->getId(), _T("Maintenance journal entry %d edited successfully"), entryId);
+            debugPrintf(6, _T("Maintenance journal entry %d edited succsessfully for object %d"), entryId, object->getId());
+         }
+         response.setField(VID_RCC, rcc);
+      }
+      else
+      {
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
+         writeAuditLog(AUDIT_OBJECTS, false, object->getId(), _T("Access denied on update of maintenance journal entry %u"), entryId);
+         debugPrintf(6, _T("Maintenance journal entry %u for object %s [%u] failed: access denied"), entryId, object->getName(), object->getId());
+      }
+   }
+   else
    {
       response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
-      debugPrintf(6, _T("Maintenance journal entry %d edit for object %d failed: invalid object ID"), entryId, obj->getId());
-      sendMessage(response);
-      return;
+      debugPrintf(6, _T("Maintenance journal entry %u edit failed: invalid object ID %u"), entryId, object->getId());
    }
 
-   if (!obj->checkAccessRights(m_dwUserId, OBJECT_ACCESS_EDIT_MNT_JOURNAL))
-   {
-      response.setField(VID_RCC, RCC_ACCESS_DENIED);
-      writeAuditLog(AUDIT_OBJECTS, false, obj->getId(), _T("Maintenance journal entry %d edit failed: access denied"), entryId);
-      debugPrintf(6, _T("Maintenance journal entry %d edit for object %d failed: access denied"), entryId, obj->getId());
-      sendMessage(response);
-      return;
-   }
-
-   response.setField(VID_RCC, MaintenanceJournalEdit(request, m_dwUserId));
-   writeAuditLog(AUDIT_OBJECTS, true, obj->getId(), _T("Maintenance journal entry %d edited succsessfully"), entryId);
-   debugPrintf(6, _T("Maintenance journal entry %d edited succsessfully for object %d"), entryId, obj->getId());
    sendMessage(response);
 }
