@@ -555,6 +555,7 @@ void UpdateGroupMembership(uint32_t userId, size_t numGroups, uint32_t *groups);
 void DumpUsers(CONSOLE_CTX pCtx);
 unique_ptr<ObjectArray<UserDatabaseObject>> FindUserDBObjects(const IntegerArray<uint32_t>& ids);
 unique_ptr<ObjectArray<UserDatabaseObject>> FindUserDBObjects(const StructArray<ResponsibleUser>& ids);
+NXSL_Value *GetUserDBObjectForNXSL(uint32_t id, NXSL_VM *vm);
 
 UserAuthenticationToken IssueAuthenticationToken(uint32_t userId, uint32_t validFor);
 void RevokeAuthenticationToken(const UserAuthenticationToken& token);

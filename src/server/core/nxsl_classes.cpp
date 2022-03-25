@@ -4591,6 +4591,78 @@ void NXSL_SNMPVarBindClass::onObjectDelete(NXSL_Object *object)
 }
 
 /**
+ * NXSL class ClientSession: constructor
+ */
+NXSL_ClientSessionClass::NXSL_ClientSessionClass() : NXSL_Class()
+{
+   setName(_T("ClientSession"));
+}
+
+/**
+ * NXSL class ClientSession: get attribute
+ */
+NXSL_Value *NXSL_ClientSessionClass::getAttr(NXSL_Object *object, const NXSL_Identifier& attr)
+{
+   NXSL_Value *value = NXSL_Class::getAttr(object, attr);
+   if (value != nullptr)
+      return value;
+
+   NXSL_VM *vm = object->vm();
+   ClientSession *session = static_cast<ClientSession*>(object->getData());
+
+   if (NXSL_COMPARE_ATTRIBUTE_NAME("clientInfo"))
+   {
+      value = vm->createValue(session->getClientInfo());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("clientType"))
+   {
+      value = vm->createValue(session->getClientType());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("flags"))
+   {
+      value = vm->createValue(session->getFlags());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("id"))
+   {
+      value = vm->createValue(session->getId());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("loginName"))
+   {
+      value = vm->createValue(session->getLoginName());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("loginTime"))
+   {
+      value = vm->createValue(static_cast<int64_t>(session->getLoginTime()));
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("name"))
+   {
+      value = vm->createValue(session->getSessionName());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("systemAccessRights"))
+   {
+      value = vm->createValue(session->getSystemRights());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("user"))
+   {
+      value = GetUserDBObjectForNXSL(session->getUserId(), vm);
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("userId"))
+   {
+      value = vm->createValue(session->getUserId());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("webServerAddress"))
+   {
+      value = vm->createValue(session->getWebServerAddress());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("workstation"))
+   {
+      value = vm->createValue(session->getWorkstation());
+   }
+
+   return value;
+}
+
+/**
  * NXSL class UserDBObjectClass: constructor
  */
 NXSL_UserDBObjectClass::NXSL_UserDBObjectClass() : NXSL_Class()
@@ -5204,6 +5276,7 @@ NXSL_AlarmCommentClass g_nxslAlarmCommentClass;
 NXSL_BusinessServiceClass g_nxslBusinessServiceClass;
 NXSL_BusinessServiceCheckClass g_nxslBusinessServiceCheckClass;
 NXSL_ChassisClass g_nxslChassisClass;
+NXSL_ClientSessionClass g_nxslClientSessionClass;
 NXSL_ClusterClass g_nxslClusterClass;
 NXSL_ContainerClass g_nxslContainerClass;
 NXSL_DciClass g_nxslDciClass;

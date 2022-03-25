@@ -46,19 +46,20 @@ enum class EventOrigin
 /**
  * Script execution contexts
  */
-#define SCRIPT_CONTEXT_ACTION _T("Action")
-#define SCRIPT_CONTEXT_AGENT_CFG _T("Agent configuration")
-#define SCRIPT_CONTEXT_ALARM _T("Alarm")
-#define SCRIPT_CONTEXT_AUTOBIND _T("Autobind")
-#define SCRIPT_CONTEXT_BIZSVC _T("Business service")
-#define SCRIPT_CONTEXT_DCI _T("DCI")
-#define SCRIPT_CONTEXT_EVENT_PROC _T("Event processing")
-#define SCRIPT_CONTEXT_LDAP _T("LDAP")
-#define SCRIPT_CONTEXT_NETMAP _T("Network map")
-#define SCRIPT_CONTEXT_OBJECT _T("Object")
+#define SCRIPT_CONTEXT_ACTION       _T("Action")
+#define SCRIPT_CONTEXT_AGENT_CFG    _T("Agent configuration")
+#define SCRIPT_CONTEXT_ALARM        _T("Alarm")
+#define SCRIPT_CONTEXT_AUTOBIND     _T("Autobind")
+#define SCRIPT_CONTEXT_BIZSVC       _T("Business service")
+#define SCRIPT_CONTEXT_DCI          _T("DCI")
+#define SCRIPT_CONTEXT_EVENT_PROC   _T("Event processing")
+#define SCRIPT_CONTEXT_LDAP         _T("LDAP")
+#define SCRIPT_CONTEXT_LOGIN        _T("Login")
+#define SCRIPT_CONTEXT_NETMAP       _T("Network map")
+#define SCRIPT_CONTEXT_OBJECT       _T("Object")
 #define SCRIPT_CONTEXT_OBJECT_QUERY _T("Object query")
-#define SCRIPT_CONTEXT_SNMP_TRAP _T("SNMP Trap")
-#define SCRIPT_CONTEXT_TUNNEL _T("Tunnel")
+#define SCRIPT_CONTEXT_SNMP_TRAP    _T("SNMP Trap")
+#define SCRIPT_CONTEXT_TUNNEL       _T("Tunnel")
 
 /**
  * Event template

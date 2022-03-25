@@ -24,6 +24,17 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 40.101 to 40.102
+ */
+static bool H_UpgradeFromV101()
+{
+   CHK_EXEC(SQLQuery(_T("INSERT INTO script_library (guid,script_id,script_name,script_code) ")
+         _T("VALUES ('f8bfa009-d4e4-4443-8bad-3ded09bdeb92',26,'Hook::Login','/* Available global variables:\r\n *  $user - user object (object of ''User'' class)\r\n *  $session - session object (object of ''ClientSession'' class)\r\n *\r\n * Expected return value:\r\n *  true/false - boolean - whether login for this session should continue\r\n */\r\n')")));
+   CHK_EXEC(SetMinorSchemaVersion(102));
+   return true;
+}
+
+/**
  * Upgrade from 40.100 to 40.101
  */
 static bool H_UpgradeFromV100()
@@ -3133,6 +3144,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 101, 40, 102, H_UpgradeFromV101 },
    { 100, 40, 101, H_UpgradeFromV100 },
    { 99, 40, 100, H_UpgradeFromV99 },
    { 98, 40, 99, H_UpgradeFromV98 },
