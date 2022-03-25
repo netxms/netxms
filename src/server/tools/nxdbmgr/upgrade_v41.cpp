@@ -33,7 +33,7 @@ static bool H_UpgradeFromV4()
                      _T(" object_id integer not null,")
                      _T(" author integer not null,")
                      _T(" last_edited_by integer not null,")
-                     _T(" description SQL_TEXT not null,")
+                     _T(" description $SQL:TEXT not null,")
                      _T(" creation_time integer not null,")
                      _T(" modification_time integer not null,")
                      _T(" PRIMARY KEY(id))")));
