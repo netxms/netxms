@@ -107,6 +107,10 @@ bool DeletePhysicalLink(uint32_t id, uint32_t userId);
 
 unique_ptr<ObjectArray<EventReference>> GetAllEventReferences(uint32_t eventCode);
 
+void MaintenanceJournalRead(SharedObjectArray<NetObj>& sources, NXCPMessage* response, uint32_t maxEntries);
+uint32_t MaintenanceJournalCreate(const NXCPMessage& request, uint32_t userId);
+uint32_t MaintenanceJournalEdit(const NXCPMessage& request, uint32_t userId);
+
 /**
  * Client session console constructor
  */
@@ -1859,6 +1863,15 @@ void ClientSession::processRequest(NXCPMessage *request)
          break;
       case CMD_GET_EVENT_REFERENCES:
          getEventRefences(*request);
+         break;
+      case CMD_READ_MAINTENANCE_JOURNAL:
+         readMaintJournal(*request);
+         break;
+      case CMD_CREATE_MAINTENANCE_JOURNAL:
+         createMaintJournal(*request);
+         break;
+      case CMD_EDIT_MAINTENANCE_JOURNAL:
+         editMaintJournal(*request);
          break;
       default:
          if ((code >> 8) == 0x11)
@@ -16168,5 +16181,155 @@ void ClientSession::getEventRefences(const NXCPMessage& request)
       writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied getting event references"));
    }
 
+   sendMessage(response);
+}
+
+/**
+ * Get all maintenance journal entries for the given object
+ *
+ * Called by:
+ * CMD_READ_MAINTENANCE_JOURNAL
+ *
+ * Expected input parameters:
+ * VID_OBJECT_ID               Journal owner (source) ID
+ * VID_MAX_RECORDS             Maximum numer of entries to get
+ *
+ * Return values:
+ * VID_NUM_ELEMENTS            Number of maintenance entries
+ * VID_RCC                     Request completion code
+ * VID_ELEMENT_LIST_BASE - 1   Flag for the case that not all avaliable entries are sent back bun only last 1000
+ * VID_ELEMENT_LIST_BASE       Base for maintenance entry list. Also first maintenance entry ID
+ * VID_ELEMENT_LIST_BASE + 1   Journal ID = journal owner (source) ID
+ * VID_ELEMENT_LIST_BASE + 2   author
+ * VID_ELEMENT_LIST_BASE + 3   lastEditedBy
+ * VID_ELEMENT_LIST_BASE + 4   description
+ * VID_ELEMENT_LIST_BASE + 5   creationTime
+ * VID_ELEMENT_LIST_BASE + 6   modificationTime
+ *
+ * Second maintenance entry starts from VID_ELEMENT_LIST_BASE + 10
+ */
+void ClientSession::readMaintJournal(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   shared_ptr<NetObj> obj = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
+   if (obj == nullptr)
+   {
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+      debugPrintf(6, _T("Maintenance journal read for object %u failed: invalid object ID"), obj->getId());
+      sendMessage(response);
+      return;
+   }
+
+   if (!obj->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+   {
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
+      writeAuditLog(AUDIT_OBJECTS, false, obj->getId(), _T("Maintenance journal read failed: access denied"));
+      debugPrintf(6, _T("Maintenance journal read for object %d failed: access denied"), obj->getId());
+      sendMessage(response);
+      return;
+   }
+
+   unique_ptr<SharedObjectArray<NetObj>> sources = obj->getAllChildren(false);
+   SharedPtrIterator<NetObj> it = sources->begin();
+   while (it.hasNext())
+   {
+      if (!it.next()->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+         it.remove();
+   }
+   sources->add(obj);
+
+   MaintenanceJournalRead(*sources, &response, request.getFieldAsUInt32(VID_MAX_RECORDS));
+   writeAuditLog(AUDIT_OBJECTS, true, obj->getId(), _T("Maintenance journal read succsessfully"));
+   debugPrintf(6, _T("Maintenance journal for object %d read succsessfully"), obj->getId());
+   sendMessage(response);
+}
+
+/**
+ * Create new entry in given the object maintenance journal
+ *
+ * Called by:
+ * CMD_CREATE_MAINTENANCE_JOURNAL
+ *
+ * Expected input parameters:
+ * VID_OBJECT_ID     Journal owner (source) ID
+ * VID_DESCRIPTION   Maintenance entry description
+ *
+ * Return values:
+ * VID_RCC                          Request completion code
+ *
+ * NX_NOTIFY_MAINTENANCE_JOURNAL_CHANGED notification with source object ID is generated
+ */
+void ClientSession::createMaintJournal(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   shared_ptr<NetObj> obj = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
+   if (obj == nullptr)
+   {
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+      debugPrintf(6, _T("New maintenance journal entry create for object %d failed: invalid object ID"), obj->getId());
+      sendMessage(response);
+      return;
+   }
+
+   if (!obj->checkAccessRights(m_dwUserId, OBJECT_ACCESS_EDIT_MNT_JOURNAL))
+   {
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
+      writeAuditLog(AUDIT_OBJECTS, false, obj->getId(), _T("New maintenance journal entry create failed: access denied"));
+      debugPrintf(6, _T("New maintenance journal entry create for object %d failed: access denied"), obj->getId());
+      sendMessage(response);
+      return;
+   }
+
+   response.setField(VID_RCC, MaintenanceJournalCreate(request, m_dwUserId));
+   writeAuditLog(AUDIT_OBJECTS, true, obj->getId(), _T("New maintenance journal entry created succsessfully"));
+   debugPrintf(6, _T("New maintenance journal entry for object %d created succsessfully for object %d"), obj->getId());
+   sendMessage(response);
+}
+
+/**
+ * Edit given maintenance journal entry
+ *
+ * Called by:
+ * CMD_EDIT_MAINTENANCE_JOURNAL
+ *
+ * Expected input parameters:
+ * VID_OBJECT_ID     Journal owner (source) ID
+ * VID_RECORD_ID      Maintenance entry ID
+ * VID_DESCRIPTION   Maintenance entry description
+ *
+ * Return values:
+ * VID_RCC                          Request completion code
+ *
+ * NX_NOTIFY_MAINTENANCE_JOURNAL_CHANGED notification with source object ID is generated
+ */
+void ClientSession::editMaintJournal(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   shared_ptr<NetObj> obj = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
+   uint32_t entryId = request.getFieldAsUInt32(VID_RECORD_ID);
+
+   if (obj == nullptr)
+   {
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+      debugPrintf(6, _T("Maintenance journal entry %d edit for object %d failed: invalid object ID"), entryId, obj->getId());
+      sendMessage(response);
+      return;
+   }
+
+   if (!obj->checkAccessRights(m_dwUserId, OBJECT_ACCESS_EDIT_MNT_JOURNAL))
+   {
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
+      writeAuditLog(AUDIT_OBJECTS, false, obj->getId(), _T("Maintenance journal entry %d edit failed: access denied"), entryId);
+      debugPrintf(6, _T("Maintenance journal entry %d edit for object %d failed: access denied"), entryId, obj->getId());
+      sendMessage(response);
+      return;
+   }
+
+   response.setField(VID_RCC, MaintenanceJournalEdit(request, m_dwUserId));
+   writeAuditLog(AUDIT_OBJECTS, true, obj->getId(), _T("Maintenance journal entry %d edited succsessfully"), entryId);
+   debugPrintf(6, _T("Maintenance journal entry %d edited succsessfully for object %d"), entryId, obj->getId());
    sendMessage(response);
 }

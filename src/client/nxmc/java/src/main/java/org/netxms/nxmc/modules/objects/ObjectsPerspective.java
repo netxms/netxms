@@ -54,6 +54,7 @@ import org.netxms.nxmc.modules.objects.views.ChassisView;
 import org.netxms.nxmc.modules.objects.views.Dot1xStatusView;
 import org.netxms.nxmc.modules.objects.views.EntityMIBView;
 import org.netxms.nxmc.modules.objects.views.InterfacesView;
+import org.netxms.nxmc.modules.objects.views.MaintenanceJournalView;
 import org.netxms.nxmc.modules.objects.views.ObjectBrowser;
 import org.netxms.nxmc.modules.objects.views.ObjectOverviewView;
 import org.netxms.nxmc.modules.objects.views.PhysicalLinkView;
@@ -133,6 +134,7 @@ public abstract class ObjectsPerspective extends Perspective
       addMainView(new PredefinedMap());
       addMainView(new RackView());
       addMainView(new SwitchForwardingDatabaseView());
+      addMainView(new MaintenanceJournalView());
    }
 
    /**

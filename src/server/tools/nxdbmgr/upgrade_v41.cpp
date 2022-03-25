@@ -24,6 +24,66 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 41.4 to 41.5
+ */
+static bool H_UpgradeFromV4()
+{
+   CHK_EXEC(SQLQuery(_T("CREATE TABLE maintenance_journal (")
+                     _T(" id integer not null,")
+                     _T(" object_id integer not null,")
+                     _T(" author integer not null,")
+                     _T(" last_edited_by integer not null,")
+                     _T(" description SQL_TEXT not null,")
+                     _T(" creation_time integer not null,")
+                     _T(" modification_time integer not null,")
+                     _T(" PRIMARY KEY(id))")));
+
+   DB_RESULT result = SQLSelect(_T("SELECT access_rights,object_id FROM acl WHERE user_id=1073741825")); // Get group Admins object acl
+   if (result != nullptr)
+   {
+      DB_STATEMENT stmt = DBPrepare(g_dbHandle, _T("UPDATE acl SET access_rights=? WHERE user_id=1073741825 AND object_id=? "));
+      if (stmt != nullptr)
+      {
+         int rows = DBGetNumRows(result);
+         for (int i = 0; i < rows; i++)
+         {
+            uint32_t rights = DBGetFieldULong(result, i, 0);
+            if (rights & OBJECT_ACCESS_READ)
+            {
+               rights |= OBJECT_ACCESS_EDIT_MNT_JOURNAL;
+               DBBind(stmt, 1, DB_SQLTYPE_INTEGER, rights);
+               DBBind(stmt, 2, DB_SQLTYPE_INTEGER, DBGetFieldULong(result, i, 1));
+
+               if (!SQLExecute(stmt))
+               {
+                  if (!g_ignoreErrors)
+                  {
+                     DBFreeStatement(stmt);
+                     DBFreeResult(result);
+                     return false;
+                  }
+               }
+            }
+         }
+
+         DBFreeStatement(stmt);
+      }
+      else if (!g_ignoreErrors)
+         return false;
+      DBFreeResult(result);
+   }
+   else if (!g_ignoreErrors)
+      return false;
+
+   CHK_EXEC(CreateConfigParam(_T("MaintenanceJournal.RetentionTime"), _T("1826"),
+                              _T("Retention time in days for maintenance journal entries. All records older than specified will be deleted by housekeeping process."),
+                              _T("days"), 'I', true, false, false, false));
+
+   CHK_EXEC(SetMinorSchemaVersion(5));
+   return true;
+}
+
+/**
  * Upgrade from 41.3 to 41.4
  */
 static bool H_UpgradeFromV3()
@@ -168,6 +228,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 4,  41, 5,  H_UpgradeFromV4  },
    { 3,  41, 4,  H_UpgradeFromV3  },
    { 2,  41, 3,  H_UpgradeFromV2  },
    { 1,  41, 2,  H_UpgradeFromV1  },

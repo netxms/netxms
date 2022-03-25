@@ -158,6 +158,7 @@ template class NXCORE_EXPORTABLE SynchronizedHashSet<uint32_t>;
 #define IDG_OBJECT_QUERY      28
 #define IDG_BUSINESS_SERVICE_CHECK 29
 #define IDG_BUSINESS_SERVICE_RECORD 30
+#define IDG_MAINTENANCE_JOURNAL 31
 
 /**
  * Exit codes for console commands
@@ -909,6 +910,9 @@ private:
    void executeSshCommand(const NXCPMessage& request);
    void findDci(const NXCPMessage& request);
    void getEventRefences(const NXCPMessage& request);
+   void readMaintJournal(const NXCPMessage& request);
+   void createMaintJournal(const NXCPMessage& request);
+   void editMaintJournal(const NXCPMessage& request);
 
    void alarmUpdateWorker(Alarm *alarm);
    void sendActionDBUpdateMessage(NXCP_MESSAGE *msg);

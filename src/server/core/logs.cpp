@@ -158,6 +158,18 @@ static NXCORE_LOG s_logs[] =
          { nullptr, nullptr, 0, 0 }
       }
    },
+   { _T("MaintenanceJournal"), _T("maintenance_journal"), _T("id"), _T("object_id"), 0,
+      {
+         { _T("id"), _T("ID"), LC_INTEGER, 0 },
+         { _T("object_id"), _T("Object"), LC_OBJECT_ID, 0 },
+         { _T("author"), _T("Author"), LC_USER_ID, 0 },
+         { _T("last_edited_by"), _T("Last edited dy"), LC_USER_ID, 0 },
+         { _T("description"), _T("Description"), LC_TEXT, 0 },
+         { _T("creation_time"), _T("Creation time"), LC_TIMESTAMP, 0 },
+         { _T("modification_time"), _T("Modification time"), LC_TIMESTAMP, 0 },
+         { nullptr, nullptr, 0, 0 }
+      }
+   },
 	{ nullptr, nullptr, nullptr, nullptr, 0 }
 };
 

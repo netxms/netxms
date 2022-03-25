@@ -2512,3 +2512,18 @@ CREATE TABLE object_queries
    script SQL_TEXT null,
    PRIMARY KEY(id)
 ) TABLE_TYPE;
+
+/**
+ * Maintenance journal entries
+ */
+CREATE TABLE maintenance_journal
+(
+   id integer not null,
+   object_id integer not null,
+   author integer not null,
+   last_edited_by integer not null,
+   description SQL_TEXT not null,
+   creation_time integer not null,
+   modification_time integer not null,
+   PRIMARY KEY(id)
+) TABLE_TYPE;

@@ -538,6 +538,12 @@ bool NetObj::deleteFromDatabase(DB_HANDLE hdb)
       success = executeQueryOnObject(hdb, _T("DELETE FROM pollable_objects WHERE id=?"));
    }
 
+   // Delete associated maintenance journal entries
+   if (success)
+   {
+      success = executeQueryOnObject(hdb, _T("DELETE FROM maintenance_journal WHERE object_id = ?"));
+   }
+
    return success;
 }
 
@@ -929,7 +935,7 @@ void NetObj::deleteObject(NetObj *initiator)
    nxlog_debug_tag(DEBUG_TAG_OBJECT_LIFECYCLE, 5, _T("NetObj::deleteObject(%s [%d]): calling onObjectDelete()"), m_name, m_id);
 	g_idxObjectById.forEach(onObjectDeleteCallback, this);
 
-	nxlog_debug_tag(DEBUG_TAG_OBJECT_LIFECYCLE, 4, _T("Object %d successfully deleted"), m_id);
+	nxlog_debug_tag(DEBUG_TAG_OBJECT_LIFECYCLE, 4, _T("Object %d deleted successfully"), m_id);
 }
 
 /**

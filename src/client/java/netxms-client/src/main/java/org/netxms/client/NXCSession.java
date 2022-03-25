@@ -391,7 +391,6 @@ public class NXCSession
    //Children synchronization
    private Set<Long> synchronizedObjectSet = new HashSet<Long>();
    
-
    /**
     * Message subscription class
     */
@@ -13074,5 +13073,66 @@ public class NXCSession
          fieldId += 100;
       }
       return eventReferences;
+   }
+
+   /**
+    * Get list of maintenance journal entries for specified object and it's child objects
+    * @param objectId journal owner object ID
+    * @param maxEntries upper entries count limit. No limit used if set to 0
+    * @return list of maintenance journal entries
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public List<MaintenanceJournalEntry> getAllMaintenanceEntries(long objectId, int maxEntries) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_READ_MAINTENANCE_JOURNAL);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)objectId);
+      msg.setFieldInt32(NXCPCodes.VID_MAX_RECORDS, maxEntries);
+      sendMessage(msg);
+
+      NXCPMessage response = waitForRCC(msg.getMessageId());
+      int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_ELEMENTS);
+      List<MaintenanceJournalEntry> maintenanceEntries = new ArrayList<MaintenanceJournalEntry>(count);
+      long fieldId = NXCPCodes.VID_ELEMENT_LIST_BASE;
+      for(int i = 0; i < count; i++)
+      {
+         maintenanceEntries.add(new MaintenanceJournalEntry(response, fieldId));
+         fieldId += 10;
+      }
+      return maintenanceEntries;
+   }
+
+   /**
+    * Create new maintenance journal entry for specified object
+    * @param sourceId journal owner object ID
+    * @param description journal entry description
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void createMaintenanceEntry(long objectId, String description) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_CREATE_MAINTENANCE_JOURNAL);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)objectId);
+      msg.setField(NXCPCodes.VID_DESCRIPTION, description);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
+
+   /**
+    * Edit specified maintenance journal entry for specified object
+    * @param sourceId journal owner object ID
+    * @param entryId journal entry ID
+    * @param description journal entry description
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void editMaintenanceEntry(long objectId, long entryId, String description) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_EDIT_MAINTENANCE_JOURNAL);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)objectId);
+      msg.setFieldInt32(NXCPCodes.VID_RECORD_ID, (int)entryId);
+      msg.setField(NXCPCodes.VID_DESCRIPTION, description);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
    }
 }

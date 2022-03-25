@@ -466,6 +466,9 @@ public class NXCPCodes
    public static final int CMD_FIND_DCI = 0x01C1;
    public static final int CMD_UPDATE_PACKAGE_METADATA = 0x01C2;
    public static final int CMD_GET_EVENT_REFERENCES = 0x01C3;
+	public static final int CMD_READ_MAINTENANCE_JOURNAL = 0x01C4;
+	public static final int CMD_CREATE_MAINTENANCE_JOURNAL = 0x01C5;
+	public static final int CMD_EDIT_MAINTENANCE_JOURNAL = 0x01C6;
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;

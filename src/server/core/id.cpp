@@ -37,7 +37,7 @@ void LoadLastEventId(DB_HANDLE hdb);
 /**
  * Constants
  */
-#define NUMBER_OF_GROUPS   31
+#define NUMBER_OF_GROUPS   32
 
 /**
  * Static data
@@ -52,7 +52,7 @@ static uint32_t s_freeIdTable[NUMBER_OF_GROUPS] =
       1, 1, 1, 1,
       1, 1, 1, 1,
       1, 1, 1, 1,
-      1, 1, 1
+      1, 1, 1, 1
    };
 static uint32_t s_idLimits[NUMBER_OF_GROUPS] =
    {
@@ -63,7 +63,7 @@ static uint32_t s_idLimits[NUMBER_OF_GROUPS] =
       0x7FFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE,
       0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE,
       0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE,
-      0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE
+      0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE
    };
 static const TCHAR *s_groupNames[NUMBER_OF_GROUPS] =
 {
@@ -97,7 +97,8 @@ static const TCHAR *s_groupNames[NUMBER_OF_GROUPS] =
    _T("SSH Keys"),
    _T("Object Queries"),
    _T("Business Service Checks"),
-   _T("Business Service Downtime Records")
+   _T("Business Service Downtime Records"),
+   _T("Maintenance journal")
 };
 
 /**
@@ -415,6 +416,15 @@ bool InitIdTable()
    {
       if (DBGetNumRows(hResult) > 0)
          s_freeIdTable[IDG_BUSINESS_SERVICE_RECORD] = std::max(s_freeIdTable[IDG_BUSINESS_SERVICE_RECORD], DBGetFieldULong(hResult, 0, 0) + 1);
+      DBFreeResult(hResult);
+   }
+
+    // Get first available object in maintenance journal entries
+   hResult = DBSelect(hdb, _T("SELECT max(id) FROM maintenance_journal"));
+   if (hResult != nullptr)
+   {
+      if (DBGetNumRows(hResult) > 0)
+         s_freeIdTable[IDG_MAINTENANCE_JOURNAL] = std::max(s_freeIdTable[IDG_MAINTENANCE_JOURNAL], DBGetFieldULong(hResult, 0, 0) + 1);
       DBFreeResult(hResult);
    }
 
