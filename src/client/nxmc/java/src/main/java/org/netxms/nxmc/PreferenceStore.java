@@ -52,7 +52,7 @@ public class PreferenceStore
    protected static void open(String stateDir)
    {
       instance = new PreferenceStore(new File(stateDir + File.separator + "nxmc.preferences"));
-      ServiceLoader<PreferenceInitializer> loader = ServiceLoader.load(PreferenceInitializer.class);
+      ServiceLoader<PreferenceInitializer> loader = ServiceLoader.load(PreferenceInitializer.class, PreferenceStore.class.getClassLoader());
       for(PreferenceInitializer pi : loader)
       {
          logger.debug("Calling preference initializer " + pi.toString());

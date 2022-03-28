@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,6 +27,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
@@ -53,7 +54,7 @@ public class MapLoader
 	public static final int CENTER = GeoLocationCache.CENTER;
 	public static final int TOP_LEFT = GeoLocationCache.TOP_LEFT;
 	public static final int BOTTOM_RIGHT = GeoLocationCache.BOTTOM_RIGHT;
-	
+
 	private static Object CACHE_MUTEX = new Object();
 
 	private Display display;
@@ -62,7 +63,7 @@ public class MapLoader
 	private Image missingTile = null; 
 	private Image loadingTile = null; 
 	private Image borderTile = null;
-	
+
 	/**
 	 * Create map loader
 	 * 
@@ -72,7 +73,17 @@ public class MapLoader
 	{
 		this.display = display;
       session = Registry.getSession();
-		workers = Executors.newFixedThreadPool(16);
+      workers = Executors.newFixedThreadPool(16, new ThreadFactory() {
+         private int threadNumber = 1;
+
+         @Override
+         public Thread newThread(Runnable r)
+         {
+            Thread t = new Thread(r, "MapLoader-" + Integer.toString(threadNumber++));
+            t.setDaemon(true);
+            return t;
+         }
+      });
 	}
 
 	/**
@@ -343,7 +354,7 @@ public class MapLoader
 		
 		return new TileSet(tiles, realTopLeft.x - reqTopLeft.x, realTopLeft.y - reqTopLeft.y, zoom);
 	}
-	
+
 	/**
 	 * Load missing tiles in tile set
 	 * 
@@ -429,7 +440,7 @@ public class MapLoader
 	{
 		return (image == missingTile) || (image == borderTile) || (image == loadingTile);
 	}
-	
+
 	/**
 	 * Dispose map loader
 	 */

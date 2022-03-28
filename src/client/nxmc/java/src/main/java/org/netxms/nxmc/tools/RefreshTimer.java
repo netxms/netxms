@@ -19,6 +19,7 @@
 package org.netxms.nxmc.tools;
 
 import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
@@ -29,7 +30,17 @@ import org.eclipse.swt.widgets.Display;
  */
 public class RefreshTimer
 {
-   private static ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(4);
+   private static ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(4, new ThreadFactory() {
+      private int threadNumber = 1;
+
+      @Override
+      public Thread newThread(Runnable r)
+      {
+         Thread t = new Thread(r, "RefreshTimer-" + Integer.toString(threadNumber++));
+         t.setDaemon(true);
+         return t;
+      }
+   });
    
    private Display display;
    private Control control;

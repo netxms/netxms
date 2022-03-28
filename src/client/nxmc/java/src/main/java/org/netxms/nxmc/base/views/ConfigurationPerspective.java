@@ -60,7 +60,7 @@ public class ConfigurationPerspective extends Perspective
    {
       super("Configuration", i18n.tr("Configuration"), ResourceManager.getImage("icons/perspective-configuration.png"));
 
-      ServiceLoader<ConfigurationPerspectiveElement> loader = ServiceLoader.load(ConfigurationPerspectiveElement.class);
+      ServiceLoader<ConfigurationPerspectiveElement> loader = ServiceLoader.load(ConfigurationPerspectiveElement.class, getClass().getClassLoader());
       for(ConfigurationPerspectiveElement e : loader)
       {
          logger.debug("Adding configuration element " + e.getName());

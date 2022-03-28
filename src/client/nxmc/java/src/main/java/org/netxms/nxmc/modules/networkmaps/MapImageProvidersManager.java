@@ -57,7 +57,7 @@ public class MapImageProvidersManager
 	private MapImageProvidersManager()
 	{
 		// Read all registered extensions and create image providers
-      ServiceLoader<NetworkMapImageProvider> loader = ServiceLoader.load(NetworkMapImageProvider.class);
+      ServiceLoader<NetworkMapImageProvider> loader = ServiceLoader.load(NetworkMapImageProvider.class, getClass().getClassLoader());
       for(NetworkMapImageProvider p : loader)
       {
          logger.debug("Adding network map image provider " + p.getDescription());

@@ -28,7 +28,7 @@ import java.util.ServiceLoader;
 public final class ServiceManager
 {
    private static Map<ClassLoader, ServiceLoader<ServiceHandler>> serviceLoaders = new HashMap<ClassLoader, ServiceLoader<ServiceHandler>>();
-   
+
    /**
     * Reload service providers
     * 
@@ -46,7 +46,7 @@ public final class ServiceManager
          serviceLoaders.put(classLoader, ServiceLoader.load(ServiceHandler.class, classLoader));
       }
    }
-   
+
    /**
     * Get service handler by name and check if handler class is correct.
     * 

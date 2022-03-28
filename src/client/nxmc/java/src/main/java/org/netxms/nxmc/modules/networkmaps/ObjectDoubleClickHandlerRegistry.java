@@ -111,7 +111,7 @@ public class ObjectDoubleClickHandlerRegistry
    private void registerDoubleClickHandlers()
    {
       // Read all registered extensions and create handlers
-      ServiceLoader<ObjectDoubleClickHandler> loader = ServiceLoader.load(ObjectDoubleClickHandler.class);
+      ServiceLoader<ObjectDoubleClickHandler> loader = ServiceLoader.load(ObjectDoubleClickHandler.class, getClass().getClassLoader());
       for(ObjectDoubleClickHandler h : loader)
       {
          logger.debug("Adding object double click handler " + h.getDescription());

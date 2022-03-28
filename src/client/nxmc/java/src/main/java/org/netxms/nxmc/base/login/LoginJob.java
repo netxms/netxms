@@ -196,12 +196,12 @@ public class LoginJob implements IRunnableWithProgress
          monitor.worked(1);
 
          Registry.getInstance().setSession(session);
-         
+
          callLoginListeners(session);
          monitor.worked(1);
-         
+
          setupSessionListener(session, display);
-         
+
          logger.info("Creating keepalive timer");
          new KeepAliveTimer(session).start();
       }
@@ -258,7 +258,7 @@ public class LoginJob implements IRunnableWithProgress
     */
    private void callLoginListeners(NXCSession session)
    {
-      ServiceLoader<LoginListener> loader = ServiceLoader.load(LoginListener.class);
+      ServiceLoader<LoginListener> loader = ServiceLoader.load(LoginListener.class, getClass().getClassLoader());
       for(LoginListener l : loader)
       {
          logger.debug("Calling login listener " + l.toString());
