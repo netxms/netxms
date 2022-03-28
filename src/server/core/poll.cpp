@@ -337,11 +337,10 @@ void CheckPotentialNode(const InetAddress& ipAddr, int32_t zoneUIN, DiscoveredAd
 /**
  * Check potential new node from ARP cache or routing table
  */
-static void CheckPotentialNode(Node *node, const InetAddress& ipAddr, UINT32 ifIndex, const MacAddress& macAddr,
-         DiscoveredAddressSourceType sourceType, UINT32 sourceNodeId)
+static void CheckPotentialNode(Node *node, const InetAddress& ipAddr, uint32_t ifIndex, const MacAddress& macAddr, DiscoveredAddressSourceType sourceType, uint32_t sourceNodeId)
 {
    TCHAR buffer[64];
-   nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Checking potential node %s at %s:%d (source: %s)"),
+   nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Checking potential node %s at %s:%u (source: %s)"),
             ipAddr.toString(buffer), node->getName(), ifIndex, g_discoveredAddrSourceTypeAsText[sourceType]);
    if (!ipAddr.isValidUnicast())
    {
@@ -352,8 +351,7 @@ static void CheckPotentialNode(Node *node, const InetAddress& ipAddr, UINT32 ifI
    shared_ptr<Node> curr = FindNodeByIP(node->getZoneUIN(), ipAddr);
    if (curr != nullptr)
    {
-      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Potential node %s rejected (IP address already known at node %s [%d])"),
-               ipAddr.toString(buffer), curr->getName(), curr->getId());
+      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Potential node %s rejected (IP address already known at node %s [%u])"), ipAddr.toString(buffer), curr->getName(), curr->getId());
 
       // Check for duplicate IP address
       shared_ptr<Interface> iface = curr->findInterfaceByIP(ipAddr);
@@ -380,44 +378,53 @@ static void CheckPotentialNode(Node *node, const InetAddress& ipAddr, UINT32 ifI
       return;
    }
 
-   shared_ptr<Interface> pInterface = node->findInterfaceByIndex(ifIndex);
-   if (pInterface != nullptr)
+   shared_ptr<Interface> iface = node->findInterfaceByIndex(ifIndex);
+   if ((iface != nullptr) && !iface->isExcludedFromTopology())
    {
-      const InetAddress& interfaceAddress = pInterface->getIpAddressList()->findSameSubnetAddress(ipAddr);
-      if (interfaceAddress.isValidUnicast())
+      // Check if given IP address is not configured on source interface itself
+      // Some Juniper devices can report addresses from internal interfaces in ARP cache
+      if (!iface->getIpAddressList()->hasAddress(ipAddr))
       {
-         nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Interface found: %s [%d] addr=%s/%d ifIndex=%d"),
-            pInterface->getName(), pInterface->getId(), interfaceAddress.toString(buffer), interfaceAddress.getMaskBits(), pInterface->getIfIndex());
-         if (!ipAddr.isSubnetBroadcast(interfaceAddress.getMaskBits()))
+         const InetAddress& interfaceAddress = iface->getIpAddressList()->findSameSubnetAddress(ipAddr);
+         if (interfaceAddress.isValidUnicast())
          {
-            DiscoveredAddress *pInfo = MemAllocStruct<DiscoveredAddress>();
-            pInfo->ipAddr = ipAddr;
-            pInfo->ipAddr.setMaskBits(interfaceAddress.getMaskBits());
-            pInfo->zoneUIN = node->getZoneUIN();
-            pInfo->ignoreFilter = FALSE;
-            if (macAddr.isValid() && (macAddr.length() == MAC_ADDR_LENGTH))
-               memcpy(pInfo->bMacAddr, macAddr.value(), MAC_ADDR_LENGTH);
+            nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Interface found: %s [%u] addr=%s/%d ifIndex=%u"),
+                  iface->getName(), iface->getId(), interfaceAddress.toString(buffer), interfaceAddress.getMaskBits(), iface->getIfIndex());
+            if (!ipAddr.isSubnetBroadcast(interfaceAddress.getMaskBits()))
+            {
+               DiscoveredAddress *pInfo = MemAllocStruct<DiscoveredAddress>();
+               pInfo->ipAddr = ipAddr;
+               pInfo->ipAddr.setMaskBits(interfaceAddress.getMaskBits());
+               pInfo->zoneUIN = node->getZoneUIN();
+               pInfo->ignoreFilter = FALSE;
+               if (macAddr.isValid() && (macAddr.length() == MAC_ADDR_LENGTH))
+                  memcpy(pInfo->bMacAddr, macAddr.value(), MAC_ADDR_LENGTH);
+               else
+                  memset(pInfo->bMacAddr, 0, MAC_ADDR_LENGTH);
+               pInfo->sourceType = sourceType;
+               pInfo->sourceNodeId = sourceNodeId;
+               nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 5, _T("New node queued: %s/%d"),
+                         pInfo->ipAddr.toString(buffer), pInfo->ipAddr.getMaskBits());
+               g_nodePollerQueue.put(pInfo);
+            }
             else
-               memset(pInfo->bMacAddr, 0, MAC_ADDR_LENGTH);
-            pInfo->sourceType = sourceType;
-            pInfo->sourceNodeId = sourceNodeId;
-            nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 5, _T("New node queued: %s/%d"),
-                      pInfo->ipAddr.toString(buffer), pInfo->ipAddr.getMaskBits());
-            g_nodePollerQueue.put(pInfo);
+            {
+               nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Potential node %s rejected - broadcast/multicast address"), ipAddr.toString(buffer));
+            }
          }
          else
          {
-            nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Potential node %s rejected - broadcast/multicast address"), ipAddr.toString(buffer));
+            nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Interface object found but IP address not found"));
          }
       }
       else
       {
-         nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Interface object found but IP address not found"));
+         nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("IP address %s found on local interface %s [%u]"), ipAddr.toString(buffer), iface->getName(), iface->getId());
       }
    }
    else
    {
-      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Interface object not found"));
+      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Interface with index %u not found or marked as excluded from network topology"), ifIndex);
    }
 }
 
@@ -446,28 +453,28 @@ static void CheckHostRoute(Node *node, const ROUTE *route)
 void DiscoveryPoller(PollerInfo *poller)
 {
    poller->startExecution();
-   INT64 startTime = GetCurrentTimeMs();
+   int64_t startTime = GetCurrentTimeMs();
 
    Node *node = static_cast<Node*>(poller->getObject());
 	if (node->isDeleteInitiated() || IsShutdownInProgress())
 	{
 	   nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Discovery poll of node %s (%s) in zone %d aborted"),
-	             node->getName(), (const TCHAR *)node->getIpAddress().toString(), (int)node->getZoneUIN());
+	             node->getName(), node->getIpAddress().toString().cstr(), node->getZoneUIN());
       node->completeDiscoveryPoll(GetCurrentTimeMs() - startTime);
       delete poller;
       return;
 	}
 
    nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("Starting discovery poll of node %s (%s) in zone %d"),
-	          node->getName(), (const TCHAR *)node->getIpAddress().toString(), (int)node->getZoneUIN());
+	          node->getName(), node->getIpAddress().toString().cstr(), node->getZoneUIN());
 
    // Retrieve and analyze node's ARP cache
-   shared_ptr<ArpCache> pArpCache = node->getArpCache(true);
-   if (pArpCache != nullptr)
+   shared_ptr<ArpCache> arpCache = node->getArpCache(true);
+   if (arpCache != nullptr)
    {
-      for(int i = 0; i < pArpCache->size(); i++)
+      for(int i = 0; i < arpCache->size(); i++)
       {
-         const ArpEntry *e = pArpCache->get(i);
+         const ArpEntry *e = arpCache->get(i);
 			if (!e->macAddr.isBroadcast())	// Ignore broadcast addresses
 				CheckPotentialNode(node, e->ipAddr, e->ifIndex, e->macAddr, DA_SRC_ARP_CACHE, node->getId());
       }
@@ -483,8 +490,7 @@ void DiscoveryPoller(PollerInfo *poller)
    }
 
 	// Retrieve and analyze node's routing table
-   nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 5, _T("Discovery poll of node %s (%s) - reading routing table"),
-             node->getName(), (const TCHAR *)node->getIpAddress().toString());
+   nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 5, _T("Discovery poll of node %s (%s) - reading routing table"), node->getName(), node->getIpAddress().toString().cstr());
 	RoutingTable *rt = node->getRoutingTable();
 	if (rt != nullptr)
 	{

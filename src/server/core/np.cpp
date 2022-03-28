@@ -898,7 +898,7 @@ static bool AcceptNewNode(NewNodeData *newNodeData, BYTE *macAddr)
 	{
 		nxlog_debug_tag(DEBUG_TAG, 4, _T("AcceptNewNode(%s): no filtering, node accepted"), szIpAddr);
 	   delete pTransport;
-      return TRUE;   // No filtering
+      return true;   // No filtering
 	}
 
    // Check if node is a router

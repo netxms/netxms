@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -762,10 +762,8 @@ bool NetworkDeviceDriver::lldpNameToInterfaceId(SNMP_Transport *snmp, NObject *n
 /**
  * Handler for VLAN enumeration
  */
-static UINT32 HandlerVlanList(SNMP_Variable *var, SNMP_Transport *transport, void *arg)
+static uint32_t HandlerVlanList(SNMP_Variable *var, SNMP_Transport *transport, VlanList *vlanList)
 {
-   VlanList *vlanList = static_cast<VlanList*>(arg);
-
 	VlanInfo *vlan = new VlanInfo(var->getName().getLastElement(), VLAN_PRM_BPORT);
 
 	TCHAR buffer[256];
@@ -814,9 +812,8 @@ static void ParseVlanPorts(VlanList *vlanList, VlanInfo *vlan, BYTE map, int off
 /**
  * Handler for VLAN egress port enumeration
  */
-static UINT32 HandlerVlanEgressPorts(SNMP_Variable *var, SNMP_Transport *transport, void *arg)
+static uint32_t HandlerVlanEgressPorts(SNMP_Variable *var, SNMP_Transport *transport, VlanList *vlanList)
 {
-   VlanList *vlanList = static_cast<VlanList*>(arg);
    uint32_t vlanId = var->getName().getLastElement();
 	VlanInfo *vlan = vlanList->findById(vlanId);
 	if (vlan != nullptr)
@@ -1071,7 +1068,7 @@ DataCollectionError NetworkDeviceDriver::getHostMibMetric(SNMP_Transport *snmp, 
 /**
  * Handler for ARP enumeration
  */
-static UINT32 HandlerArp(SNMP_Variable *var, SNMP_Transport *transport, void *arg)
+static uint32_t HandlerArp(SNMP_Variable *var, SNMP_Transport *transport, ArpCache *arpCache)
 {
    SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), transport->getSnmpVersion());
 
@@ -1083,13 +1080,12 @@ static UINT32 HandlerArp(SNMP_Variable *var, SNMP_Transport *transport, void *ar
    request.bindVariable(new SNMP_Variable(oid));
 
    SNMP_PDU *response;
-   UINT32 rcc = transport->doRequest(&request, &response, SnmpGetDefaultTimeout(), 3);
+   uint32_t rcc = transport->doRequest(&request, &response, SnmpGetDefaultTimeout(), 3);
    if (rcc != SNMP_ERR_SUCCESS)
       return rcc;
 
    if (response->getNumVariables() == request.getNumVariables())
    {
-      ArpCache *arpCache = static_cast<ArpCache*>(arg);
       arpCache->addEntry(ntohl(var->getValueAsUInt()), response->getVariable(1)->getValueAsMACAddr(), response->getVariable(0)->getValueAsUInt());
    }
 
