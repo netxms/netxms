@@ -61,7 +61,7 @@ public abstract class Card extends DashboardComposite
 	private Point headerSize;
 	private Action doubleClickAction = null;
 	private List<DashboardElementButton> buttons = new ArrayList<DashboardElementButton>(0);
-	
+
 	/**
 	 * @param parent
 	 * @param style
@@ -91,7 +91,7 @@ public abstract class Card extends DashboardComposite
       layout.marginWidth = 0;
       layout.marginHeight = 0;
       layout.verticalSpacing = 3;
-      layout.marginTop = headerSize.y + 2;
+      layout.marginTop = headerSize.y;
       layout.marginBottom = 2;
       setLayout(layout);
 
@@ -154,7 +154,7 @@ public abstract class Card extends DashboardComposite
 		ca.setLayoutData(gd);
 		return ca;
 	}
-	
+
 	/**
     * Paint header and footer
     * 
@@ -248,7 +248,7 @@ public abstract class Card extends DashboardComposite
 	{
 		this.titleColor = titleColor;
 	}
-	
+
 	/**
 	 * Add button
 	 * 
@@ -278,11 +278,11 @@ public abstract class Card extends DashboardComposite
 				button.getAction().run();
 			}
 		});
-		
+
 		GridData gd = new GridData();
 		gd.exclude = true;
 		l.setLayoutData(gd);
-		
+
 		button.setControl(l);
 		buttons.add(button);
 		layoutButtons();

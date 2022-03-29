@@ -203,7 +203,7 @@ public abstract class Card extends DashboardComposite
 	public void addButton(final DashboardElementButton button)
 	{
 	   ((GridLayout)header.getLayout()).numColumns++;
-	   
+
 		final Label l = new Label(header, SWT.NONE);
 		l.setBackground(getTitleBackground());
 		l.setImage(button.getImage());
