@@ -559,7 +559,7 @@ void DCObject::setStatus(int status, bool generateEvent, bool userChange)
                _T("iLO"), _T("Script"), _T("SSH"), _T("MQTT"),
                _T("Device Driver")
             };
-            PostSystemEvent(eventCode[status], owner->getId(), "dssds", m_id, m_name.cstr(), m_description.cstr(), m_source, originName[m_source]);
+            PostSystemEvent(eventCode[status], owner->getId(), "issds", m_id, m_name.cstr(), m_description.cstr(), m_source, originName[m_source]);
          }
       }
 
