@@ -38,7 +38,7 @@ private:
 
 public:
    TextFileDriver(const TCHAR *fileName);
-   virtual bool send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body) override;
+   virtual int send(const TCHAR* recipient, const TCHAR* subject, const TCHAR* body) override;
 };
 
 /**
@@ -52,21 +52,21 @@ TextFileDriver::TextFileDriver(const TCHAR *fileName)
 /**
  * Driver send method
  */
-bool TextFileDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body)
+int TextFileDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCHAR* body)
 {
-   bool success = false;
+   int result = -1;
    FILE *f = _tfopen(m_fileName, _T("a"));
    if (f == nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("Cannot open file %s (%s)"), m_fileName, _tcserror(errno));
-      return false;
+      return -1;
    }
 
-   success = (_fputts(body, f) >= 0);
+   result = (_fputts(body, f) >= 0) ? 0 : -1;
    _fputts(_T("\n"), f);
 
    fclose(f);
-   return success;
+   return result;
 }
 
 /**

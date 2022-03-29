@@ -47,7 +47,7 @@ private:
 public:
 	GSMDriver(Config *config);
 
-   virtual bool send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body) override;
+   virtual int send(const TCHAR* recipient, const TCHAR* subject, const TCHAR* body) override;
 };
 
 /**
@@ -257,19 +257,19 @@ cleanup:
 /**
  * Send SMS
  */
-bool GSMDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body)
+int GSMDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCHAR* body)
 {
 	if ((recipient == NULL) || (body == NULL))
-      return false;
+      return -1;
 
    nxlog_debug_tag(DEBUG_TAG, 3, _T("Send to {%s}: {%s}"), recipient, body);
    if (!m_serial.restart())
    {
    	nxlog_debug_tag(DEBUG_TAG, 5, _T("Failed to open port"));
-      return false;
+      return -1;
    }
 
-   bool success = false;
+   int result = -1;
    if (!InitModem(&m_serial))
       goto cleanup;
 	
@@ -370,13 +370,13 @@ bool GSMDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *
       goto cleanup;
 
    nxlog_debug_tag(DEBUG_TAG, 5, _T("AT+CMGS + message body sent, got OK"));
-   success = true;
+   result = 0;
 
 cleanup:
    m_serial.setTimeout(2000);
    m_serial.close();
    nxlog_debug_tag(DEBUG_TAG, 5, _T("Serial port closed"));
-	return success;
+   return result;
 }
 
 /**

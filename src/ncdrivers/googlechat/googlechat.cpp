@@ -46,7 +46,7 @@ private:
    GoogleChatDriver(){};
 
 public:
-   virtual bool send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body) override;
+   virtual int send(const TCHAR* recipient, const TCHAR* subject, const TCHAR* body) override;
 
    static GoogleChatDriver *createInstance(Config *config);
 };
@@ -86,7 +86,7 @@ GoogleChatDriver *GoogleChatDriver::createInstance(Config *config)
 /**
  * Send notification
  */
-bool GoogleChatDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body)
+int GoogleChatDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCHAR* body)
 {
    String jsubject = EscapeStringForJSON(subject);
    String jbody = EscapeStringForJSON(body);
@@ -104,7 +104,7 @@ bool GoogleChatDriver::send(const TCHAR *recipient, const TCHAR *subject, const 
    if (curl == NULL)
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("Call to curl_easy_init() failed"));
-      return false;
+      return -1;
    }
 
 #if HAVE_DECL_CURLOPT_NOSIGNAL
@@ -127,7 +127,7 @@ bool GoogleChatDriver::send(const TCHAR *recipient, const TCHAR *subject, const 
    headers = curl_slist_append(headers, "Content-Type: application/json");
    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
 
-   bool success = false;
+   int result = -1;
 
    // Attempt to lookup URL alias
    const TCHAR *url = m_rooms.get(recipient);
@@ -151,7 +151,7 @@ bool GoogleChatDriver::send(const TCHAR *recipient, const TCHAR *subject, const 
             const char* data = reinterpret_cast<const char*>(responseData.buffer());
             if (!strcmp(data, "1"))
             {
-               success = true;
+               result = 0;
                nxlog_debug_tag(DEBUG_TAG, 6, _T("Webhook responded with success"));
             }
             else
@@ -176,7 +176,7 @@ bool GoogleChatDriver::send(const TCHAR *recipient, const TCHAR *subject, const 
    curl_slist_free_all(headers);
    curl_easy_cleanup(curl);
    MemFree(json);
-   return success;
+   return result;
 }
 
 /**

@@ -58,7 +58,7 @@ private:
    }
 
 public:
-   virtual bool send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body) override;
+   virtual int send(const TCHAR* recipient, const TCHAR* subject, const TCHAR* body) override;
 
    static MicrosoftTeamsDriver *createInstance(Config *config);
 };
@@ -114,7 +114,7 @@ MicrosoftTeamsDriver *MicrosoftTeamsDriver::createInstance(Config *config)
 /**
  * Send notification
  */
-bool MicrosoftTeamsDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body)
+int MicrosoftTeamsDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCHAR* body)
 {
    String jsubject = EscapeStringForJSON(subject);
    String jbody = EscapeStringForJSON(body);
@@ -160,7 +160,7 @@ bool MicrosoftTeamsDriver::send(const TCHAR *recipient, const TCHAR *subject, co
    if (curl == NULL)
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("Call to curl_easy_init() failed"));
-      return false;
+      return -1;
    }
 
 #if HAVE_DECL_CURLOPT_NOSIGNAL
@@ -183,7 +183,10 @@ bool MicrosoftTeamsDriver::send(const TCHAR *recipient, const TCHAR *subject, co
    headers = curl_slist_append(headers, "Content-Type: application/json");
    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
 
-   bool success = false;
+   char errBuff[CURL_ERROR_SIZE];
+   curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, errBuff);
+
+   int result = -1;
 
    char utf8url[256];
 #ifdef UNICODE
@@ -196,38 +199,43 @@ bool MicrosoftTeamsDriver::send(const TCHAR *recipient, const TCHAR *subject, co
       if (curl_easy_perform(curl) == CURLE_OK)
       {
          nxlog_debug_tag(DEBUG_TAG, 7, _T("Got %d bytes"), static_cast<int>(responseData.size()));
+         long httpCode = 0;
+         curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &httpCode);
          if (responseData.size() > 0)
          {
             responseData.write('\0');
             const char* data = reinterpret_cast<const char*>(responseData.buffer());
-            if (!strcmp(data, "1"))
+            if (!strcmp(data, "1") && httpCode == 200)
             {
-               success = true;
+               result = 0;
                nxlog_debug_tag(DEBUG_TAG, 6, _T("Webhook responded with success"));
             }
             else
             {
-               nxlog_debug_tag(DEBUG_TAG, 4, _T("Error response from webhook: %hs"), data);
+               nxlog_debug_tag(DEBUG_TAG, 5, _T("Error response from webhook: %hs"), data);
             }
          }
          else
          {
-            nxlog_debug_tag(DEBUG_TAG, 4, _T("Empty response from webhook"));
+            nxlog_debug_tag(DEBUG_TAG, 5, _T("Empty response from webhook"));
          }
+
+         if (httpCode == 412 || httpCode == 429 || httpCode == 502 || httpCode == 504)
+            result = 10;
       }
       else
       {
-         nxlog_debug_tag(DEBUG_TAG, 4, _T("Call to curl_easy_perform() failed"));
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("Call to curl_easy_perform() failed: %hs"), errBuff);
       }
    }
    else
    {
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("Call to curl_easy_setopt(CURLOPT_URL) failed"));
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("Call to curl_easy_setopt(CURLOPT_URL) failed"));
    }
    curl_slist_free_all(headers);
    curl_easy_cleanup(curl);
    MemFree(json);
-   return success;
+   return result;
 }
 
 /**

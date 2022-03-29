@@ -44,7 +44,7 @@ private:
 
 public:
    SlackDriver(Config *config);
-   virtual bool send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body) override;
+   virtual int send(const TCHAR* recipient, const TCHAR* subject, const TCHAR* body) override;
 };
 
 /**
@@ -93,11 +93,11 @@ static size_t OnCurlDataReceived(char *ptr, size_t size, size_t nmemb, void *con
 /**
  * Send SMS
  */
-bool SlackDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body)
+int SlackDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCHAR* body)
 {
-   bool success = false;
+   int result = -1;
 
-	nxlog_debug_tag(DEBUG_TAG, 4, _T("channel=\"%s\", text=\"%s\""), recipient, body);
+   nxlog_debug_tag(DEBUG_TAG, 4, _T("channel=\"%s\", text=\"%s\""), recipient, body);
 
    CURL *curl = curl_easy_init();
    if (curl != NULL)
@@ -157,7 +157,7 @@ bool SlackDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCHAR
                if (!strcmp(data, "ok"))
                {
                   nxlog_debug_tag(DEBUG_TAG, 4, _T("message successfully sent"));
-                  success = true;
+                  result = 0;
                }
                else
                {
@@ -181,7 +181,7 @@ bool SlackDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCHAR
    	nxlog_debug_tag(DEBUG_TAG, 4, _T("Call to curl_easy_init() failed"));
    }
 
-   return success;
+   return result;
 }
 
 /**

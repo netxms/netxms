@@ -44,7 +44,7 @@ private:
 
 public:
    WebSMSDriver(Config *config);
-   virtual bool send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body) override;
+   virtual int send(const TCHAR* recipient, const TCHAR* subject, const TCHAR* body) override;
 };
 
 /**
@@ -95,11 +95,11 @@ static size_t OnCurlDataReceived(char *ptr, size_t size, size_t nmemb, void *con
 /**
  * Send SMS
  */
-bool WebSMSDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body)
+int WebSMSDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCHAR* body)
 {
-   bool success = false;
+   int result = -1;
 
-	nxlog_debug_tag(DEBUG_TAG, 4, _T("phone=\"%s\", text=\"%s\""), recipient, body);
+   nxlog_debug_tag(DEBUG_TAG, 4, _T("phone=\"%s\", text=\"%s\""), recipient, body);
 
    CURL *curl = curl_easy_init();
    if (curl != NULL)
@@ -156,7 +156,7 @@ bool WebSMSDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCHA
                   if (status == 0)
                   {
                      nxlog_debug_tag(DEBUG_TAG, 4, _T("SMS successfully sent"));
-                     success = TRUE;
+                     result = 0;
                   }
                   else
                   {
@@ -185,7 +185,7 @@ bool WebSMSDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCHA
    	nxlog_debug_tag(DEBUG_TAG, 4, _T("Call to curl_easy_init() failed"));
    }
 
-   return success;
+   return result;
 }
 
 /**

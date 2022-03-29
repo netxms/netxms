@@ -45,7 +45,7 @@ private:
 
 public:
    NexmoDriver(Config *config);
-   virtual bool send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body) override;
+   virtual int send(const TCHAR* recipient, const TCHAR* subject, const TCHAR* body) override;
 };
 
 /**
@@ -163,9 +163,9 @@ static bool ParseResponse(const char *response)
 /**
  * Send SMS
  */
-bool NexmoDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body)
+int NexmoDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCHAR* body)
 {
-   bool success = false;
+   int result = -1;
 
    nxlog_debug_tag(DEBUG_TAG, 4, _T("phone=\"%s\", text=\"%s\""), recipient, body);
 
@@ -221,7 +221,7 @@ bool NexmoDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCHAR
             nxlog_debug_tag(DEBUG_TAG, 4, _T("Response code %03d"), (int)response);
             if (response == 200)
             {
-               success = ParseResponse(reinterpret_cast<const char*>(responseData.buffer()));
+               result = ParseResponse(reinterpret_cast<const char*>(responseData.buffer())) ? 0 : -1;
             }
          }
          else
@@ -240,7 +240,7 @@ bool NexmoDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCHAR
    	nxlog_debug_tag(DEBUG_TAG, 4, _T("Call to curl_easy_init() failed"));
    }
 
-   return success;
+   return result;
 }
 
 /**

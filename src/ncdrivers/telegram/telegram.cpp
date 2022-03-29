@@ -186,7 +186,7 @@ private:
 public:
    virtual ~TelegramDriver();
 
-   virtual bool send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body) override;
+   virtual int send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body) override;
 
    virtual bool checkHealth() override;
 
@@ -690,9 +690,9 @@ void TelegramDriver::processUpdate(json_t *data)
 /**
  * Send notification
  */
-bool TelegramDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body)
+int TelegramDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body)
 {
-   bool success = false;
+   int result = -1;
 
    nxlog_debug_tag(DEBUG_TAG, 4, _T("Sending to %s: \"%s\""), recipient, body);
 
@@ -733,12 +733,25 @@ bool TelegramDriver::send(const TCHAR *recipient, const TCHAR *subject, const TC
          if (json_is_true(json_object_get(response, "ok")))
          {
             nxlog_debug_tag(DEBUG_TAG, 6, _T("Message from bot %s to recipient %s successfully sent"), m_botName, recipient);
-            success = true;
+            result = 0;
          }
          else
          {
             nxlog_debug_tag(DEBUG_TAG, 4, _T("Cannot send message from bot %s to recipient %s: API error (%hs)"),
                      m_botName, recipient, json_object_get_string_utf8(response, "description", "Unknown reason"));
+
+            int errorCode = json_object_get_integer(response, "error_code", 0);
+
+            switch (errorCode)
+            {
+               case 420: // FLOOD
+               case 429: // Too many requests
+                  result = json_object_get_integer(json_object_get(response, "parameters"), "retry_after", 10);
+                  break;
+               default:
+                  result = -1;
+                  break;
+            }
          }
       }
       else
@@ -752,7 +765,7 @@ bool TelegramDriver::send(const TCHAR *recipient, const TCHAR *subject, const TC
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("Cannot find chat ID for recipient %s and bot %s"), recipient, m_botName);
    }
-   return success;
+   return result;
 }
 
 /**

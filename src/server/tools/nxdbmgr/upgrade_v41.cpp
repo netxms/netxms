@@ -24,6 +24,19 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 41.6 to 41.7
+ */
+static bool H_UpgradeFromV6()
+{
+   CHK_EXEC(CreateConfigParam(_T("NotificationChannels.MaxRetryCount"), _T("3"),
+                              _T("Maximum count of retries to send a message for all notification channels."),
+                              _T(""), 'I', true, false, false, false));
+
+   CHK_EXEC(SetMinorSchemaVersion(7));
+   return true;
+}
+
+/**
  * Upgrade from 41.5 to 41.6
  */
 static bool H_UpgradeFromV5()
@@ -244,6 +257,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 6,  41, 7,  H_UpgradeFromV6  },
    { 5,  41, 6,  H_UpgradeFromV5  },
    { 4,  41, 5,  H_UpgradeFromV4  },
    { 3,  41, 4,  H_UpgradeFromV3  },

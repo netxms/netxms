@@ -73,7 +73,7 @@ protected:
 public:
    virtual ~NCDriver() { }
 
-   virtual bool send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body) = 0;
+   virtual int send(const TCHAR* recipient, const TCHAR* subject, const TCHAR* body) = 0;
 
    virtual bool checkHealth() { return true; }
 };

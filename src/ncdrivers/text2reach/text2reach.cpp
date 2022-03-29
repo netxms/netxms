@@ -44,7 +44,7 @@ private:
 
 public:
    Text2ReachDriver(Config *config);
-   virtual bool send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body) override;
+   virtual int send(const TCHAR* recipient, const TCHAR* subject, const TCHAR* body) override;
 };
 
 /**
@@ -102,9 +102,9 @@ static size_t OnCurlDataReceived(char *ptr, size_t size, size_t nmemb, void *con
 /**
  * Send SMS
  */
-bool Text2ReachDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body)
+int Text2ReachDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCHAR* body)
 {
-   bool success = false;
+   int result = -1;
 
    nxlog_debug_tag(DEBUG_TAG, 4, _T("phone=\"%s\", text=\"%s\""), recipient, body);
 	
@@ -159,7 +159,7 @@ bool Text2ReachDriver::send(const TCHAR *recipient, const TCHAR *subject, const 
                   if (messageId > 0)
                   {
                      nxlog_debug_tag(DEBUG_TAG, 4, _T("SMS successfully sent"));
-                     success = true;
+                     result = 0;
                   }
                   else if (messageId == 0)
                   {
@@ -192,7 +192,7 @@ bool Text2ReachDriver::send(const TCHAR *recipient, const TCHAR *subject, const 
    	nxlog_debug_tag(DEBUG_TAG, 4, _T("Call to curl_easy_init() failed"));
    }
 
-   return success;
+   return result;
 }
 
 /**

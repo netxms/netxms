@@ -50,7 +50,7 @@ private:
 
 public:
    SMSEagleDriver(Config *config);
-   virtual bool send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body) override;
+   virtual int send(const TCHAR* recipient, const TCHAR* subject, const TCHAR* body) override;
 };
 
 /**
@@ -106,9 +106,9 @@ static size_t OnCurlDataReceived(char *ptr, size_t size, size_t nmemb, void *con
 /**
  * Send SMS
  */
-bool SMSEagleDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body)
+int SMSEagleDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCHAR* body)
 {
-   bool success = false;
+   int result = -1;
 
    nxlog_debug_tag(DEBUG_TAG, 4, _T("phone/group=\"%s\", body=\"%s\""), recipient, body);
 
@@ -159,7 +159,7 @@ bool SMSEagleDriver::send(const TCHAR *recipient, const TCHAR *subject, const TC
             nxlog_debug_tag(DEBUG_TAG, 4, _T("Response code %03d"), (int)response);
             if (response == 200)
             {
-               success = true;
+               result = 0;
             }
          }
          else
@@ -178,7 +178,7 @@ bool SMSEagleDriver::send(const TCHAR *recipient, const TCHAR *subject, const TC
    	nxlog_debug_tag(DEBUG_TAG, 4, _T("Call to curl_easy_init() failed"));
    }
 
-   return success;
+   return result;
 }
 
 /**

@@ -57,7 +57,7 @@ private:
    SNMPTrapDriver();
 
 public:
-   virtual bool send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body) override;
+   virtual int send(const TCHAR* recipient, const TCHAR* subject, const TCHAR* body) override;
 
    static SNMPTrapDriver *createInstance(Config *config);
 };
@@ -98,7 +98,7 @@ static inline SNMP_Variable *CreateVarbind(const SNMP_ObjectId& name, uint32_t t
  *    severity    - event severity (integer in range 0..4)
  *    timestamp   - original even timestamp as UNIX time
  */
-bool SNMPTrapDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body)
+int SNMPTrapDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCHAR* body)
 {
    nxlog_debug_tag(DEBUG_TAG, 6, _T("recipient=\"%s\", subject=\"%s\", text=\"%s\""), recipient, subject, body);
 
@@ -177,7 +177,7 @@ bool SNMPTrapDriver::send(const TCHAR *recipient, const TCHAR *subject, const TC
    if (rc != SNMP_ERR_SUCCESS)
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("Cannot create SNMP transport for target %s (%s)"), recipient, SNMPGetErrorText(rc));
-      return false;
+      return -1;
    }
 
    if (m_version == SNMP_VERSION_3)
@@ -193,9 +193,9 @@ bool SNMPTrapDriver::send(const TCHAR *recipient, const TCHAR *subject, const TC
    if (rc != SNMP_ERR_SUCCESS)
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("Cannot send SNMP trap to %s (%s)"), recipient, SNMPGetErrorText(rc));
-      return false;
+      return -1;
    }
-   return true;
+   return 0;
 }
 
 /**

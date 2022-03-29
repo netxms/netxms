@@ -50,7 +50,7 @@ private:
 
 public:
    PortechDriver(Config *config);
-   virtual bool send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body) override;
+   virtual int send(const TCHAR* recipient, const TCHAR* subject, const TCHAR* body) override;
 };
 
 
@@ -266,31 +266,32 @@ static bool SendPDU(SocketConnection *conn, const TCHAR *recipient, const TCHAR 
 /**
  * Send SMS
  */
-bool PortechDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body)
+int PortechDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCHAR* body)
 {
 	SocketConnection *conn;
-	bool success = false;
+   int result = -1;
 
-	if ((recipient == NULL) || (body == NULL))
-		return false;
+   if ((recipient == NULL) || (body == NULL))
+      return -1;
 
    bool canRetry = true;
 
 retry:
-	conn = SocketConnection::createTCPConnection(s_hostName, 23, 10000);
-	if (conn != NULL)
-	{
-		conn->write("\xFF\xFE\x01\xFF\xFC\x01", 6);
-		if (DoLogin(conn))
-		{
-			success = (s_mode == OM_PDU) ? SendPDU(conn, recipient, body) : SendText(conn, recipient, body);
-		}
-		DoLogout(conn);
-		conn->disconnect();
-		delete conn;
-	}
+   conn = SocketConnection::createTCPConnection(s_hostName, 23, 10000);
+   if (conn != NULL)
+   {
+      conn->write("\xFF\xFE\x01\xFF\xFC\x01", 6);
+      if (DoLogin(conn))
+      {
+         bool success = (s_mode == OM_PDU) ? SendPDU(conn, recipient, body) : SendText(conn, recipient, body);
+         result = success ? 0 : -1;
+      }
+      DoLogout(conn);
+      conn->disconnect();
+      delete conn;
+   }
 
-   if (!success && canRetry)
+   if (result != 0 && canRetry)
    {
       const TCHAR *newName = (s_hostName == m_primaryHostName) ? m_secondaryHostName : m_primaryHostName;
       if (newName[0] != 0)
@@ -302,7 +303,7 @@ retry:
       }
    }
 
-	return success;
+   return result;
 }
 
 /**

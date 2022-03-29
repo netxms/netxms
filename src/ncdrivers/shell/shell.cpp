@@ -74,7 +74,7 @@ private:
    ShellDriver(const TCHAR *command) : m_command(command) { }
 
 public:
-   virtual bool send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body) override;
+   virtual int send(const TCHAR* recipient, const TCHAR* subject, const TCHAR* body) override;
 
    static ShellDriver *createInstance(Config *config);
 };
@@ -96,7 +96,7 @@ ShellDriver *ShellDriver::createInstance(Config *config)
 /**
  * Driver send method
  */
-bool ShellDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body)
+int ShellDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCHAR* body)
 {
    StringBuffer command(m_command);
    command.replace(_T("${recipient}"), CHECK_NULL_EX(recipient));
@@ -104,7 +104,7 @@ bool ShellDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCHAR
    command.replace(_T("${text}"), CHECK_NULL_EX(body));
    nxlog_debug_tag(DEBUG_TAG, 5, _T("Executing command %s"), command.cstr());
    auto procexec = new OutputLoggingExecutor(command);
-   return procexec->execute();
+   return procexec->execute() ? 0 : -1;
 }
 
 /**

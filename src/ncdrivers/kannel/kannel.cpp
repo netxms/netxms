@@ -40,7 +40,7 @@ private:
 
 public:
    KannelDriver(Config *config);
-   virtual bool send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body) override;
+   virtual int send(const TCHAR* recipient, const TCHAR* subject, const TCHAR* body) override;
 };
 
 /**
@@ -79,9 +79,9 @@ static size_t OnCurlDataReceived(char *ptr, size_t size, size_t nmemb, void *con
 /**
  * Send SMS
  */
-bool KannelDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body)
+int KannelDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCHAR* body)
 {
-   bool success = false;
+   int result = -1;
 
    nxlog_debug_tag(DEBUG_TAG, 4, _T("phone=\"%s\", text=\"%s\""), recipient, body);
 
@@ -132,7 +132,7 @@ bool KannelDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCHA
             nxlog_debug_tag(DEBUG_TAG, 4, _T("Response code %03d"), (int)response);
             if (response == 202)
             {
-               success = true;
+               result = 0;
             }
          }
          else
@@ -152,7 +152,7 @@ bool KannelDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCHA
    	nxlog_debug_tag(DEBUG_TAG, 4, _T("Call to curl_easy_init() failed"));
    }
 
-   return success;
+   return result;
 }
 
 /**

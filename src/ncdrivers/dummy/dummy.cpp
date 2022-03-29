@@ -33,8 +33,8 @@ static const NCConfigurationTemplate s_config(true, true);
 class DummyDriver : public NCDriver
 {
 public:
-   DummyDriver(); 
-   virtual bool send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body) override;
+   DummyDriver();
+   virtual int send(const TCHAR* recipient, const TCHAR* subject, const TCHAR* body) override;
 };
 
 /**
@@ -48,10 +48,10 @@ DummyDriver::DummyDriver()
 /**
  * Send SMS
  */
-bool DummyDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body)
+int DummyDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCHAR* body)
 {
    nxlog_debug_tag(DEBUG_TAG, 6, _T("recipient=\"%s\", subject=\"%s\", text=\"%s\""), recipient, subject, body);
-   return true;
+   return 0;
 }
 
 /**

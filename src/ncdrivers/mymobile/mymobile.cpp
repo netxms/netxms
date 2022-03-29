@@ -44,7 +44,7 @@ private:
 
 public:
    MyMobileDriver(Config *config);
-   virtual bool send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body) override;
+   virtual int send(const TCHAR* recipient, const TCHAR* subject, const TCHAR* body) override;
 };
 
 /**
@@ -121,9 +121,9 @@ static bool ParseResponse(const char *xml)
 /**
  * Send SMS
  */
-bool MyMobileDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body)
+int MyMobileDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCHAR* body)
 {
-   bool success = false;
+   int result = -1;
 
    nxlog_debug_tag(DEBUG_TAG, 4, _T("phone=\"%s\", body=\"%s\""), recipient, body);
 
@@ -175,7 +175,7 @@ bool MyMobileDriver::send(const TCHAR *recipient, const TCHAR *subject, const TC
             nxlog_debug_tag(DEBUG_TAG, 4, _T("Response code %03d"), (int)response);
             if (response == 200)
             {
-               success = ParseResponse(reinterpret_cast<const char*>(responseData.buffer()));
+               result = ParseResponse(reinterpret_cast<const char*>(responseData.buffer())) ? 0 : -1;
             }
          }
          else
@@ -194,7 +194,7 @@ bool MyMobileDriver::send(const TCHAR *recipient, const TCHAR *subject, const TC
    	nxlog_debug_tag(DEBUG_TAG, 4, _T("Call to curl_easy_init() failed"));
    }
 
-   return success;
+   return result;
 }
 
 /**

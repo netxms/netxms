@@ -112,7 +112,7 @@ private:
 public:
    ~XmppDriver();
 
-   virtual bool send(const TCHAR* recipient, const TCHAR* subject, const TCHAR* body) override;
+   virtual int send(const TCHAR* recipient, const TCHAR* subject, const TCHAR* body) override;
 
    static XmppDriver* createInstance(Config* config);
 };
@@ -174,10 +174,10 @@ XmppDriver* XmppDriver::createInstance(Config* config)
 /**
  * Driver send method
  */
-bool XmppDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCHAR* body)
+int XmppDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCHAR* body)
 {
    m_sendQueue.put(new MessageInfo(recipient, body));
-   return true;
+   return 0;
 }
 
 /**

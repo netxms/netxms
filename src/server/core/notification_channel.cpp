@@ -334,29 +334,42 @@ NotificationChannel::~NotificationChannel()
 void NotificationChannel::workerThread()
 {
    nxlog_debug_tag(DEBUG_TAG, 2, _T("Worker thread for channel %s started"), m_name);
-   while(true)
+   while (true)
    {
-      NotificationMessage *notification = m_notificationQueue.getOrBlock();
+      NotificationMessage* notification = m_notificationQueue.getOrBlock();
+
       if (notification == INVALID_POINTER_VALUE)
          break;
 
       m_driverLock.lock();
       if (m_driver != nullptr)
       {
-         bool success = m_driver->send(notification->getRecipient(), notification->getSubject(), notification->getBody());
-         if (success)
+         int result = -1;
+         int retryCount = ConfigReadInt(_T("NotificationChannels.MaxRetryCount"), 3);
+         do
+         {
+            result = m_driver->send(notification->getRecipient(), notification->getSubject(), notification->getBody());
+            if (result <= 0)
+               break;
+
+            nxlog_debug_tag(DEBUG_TAG, 4, _T("Driver error for channel %s, retrying in %d seconds, %d retries left"), m_name, result, retryCount);
+            SleepAndCheckForShutdown(result);
+         }
+         while (--retryCount > 0);
+
+         if (result == 0) // success
          {
             nxlog_debug_tag(DEBUG_TAG, 5, _T("Message to \"%s\" successfully sent via channel %s"), notification->getRecipient(), m_name);
             clearError();
          }
-         else
+         else // failure
          {
             PostSystemEvent(EVENT_NOTIFICATION_FAILURE, g_dwMgmtNode, "ssss", m_name,
-                  notification->getRecipient(), notification->getSubject(), notification->getBody());
+                            notification->getRecipient(), notification->getSubject(), notification->getBody());
             nxlog_debug_tag(DEBUG_TAG, 4, _T("Driver error for channel %s, message dropped"), m_name);
             setError(_T("Driver error"));
          }
-         writeNotificationLog(notification->getRecipient(), notification->getSubject(), notification->getBody(), success);
+         writeNotificationLog(notification->getRecipient(), notification->getSubject(), notification->getBody(), result == 0);
       }
       else
       {

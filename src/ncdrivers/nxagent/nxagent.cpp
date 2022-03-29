@@ -39,7 +39,7 @@ private:
 
 public:
    NXAgentDriver(Config *config);
-   virtual bool send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body) override;
+   virtual int send(const TCHAR* recipient, const TCHAR* subject, const TCHAR* body) override;
 };
 
 /**
@@ -77,9 +77,9 @@ NXAgentDriver::NXAgentDriver(Config *config)
 /**
  * Send SMS
  */
-bool NXAgentDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body)
+int NXAgentDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCHAR* body)
 {
-	bool bSuccess = false;
+   int result = -1;
 
    InetAddress addr = InetAddress::resolveHostName(m_hostName);
    if (addr.isValid())
@@ -118,8 +118,17 @@ bool NXAgentDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCH
             list.add(body);
             rcc = conn->executeCommand(_T("SMS.Send"), list);
             nxlog_debug_tag(DEBUG_TAG, 4, _T("Agent action execution result: %d (%s)"), rcc, AgentErrorCodeToText(rcc));
-            if (rcc == ERR_SUCCESS)
-               bSuccess = true;
+            switch (rcc)
+            {
+               case ERR_SUCCESS:
+                  result = 0;
+                  break;
+               case ERR_REQUEST_TIMEOUT:
+               case ERR_NOT_CONNECTED:
+               case ERR_CONNECTION_BROKEN:
+                  result = 30;
+                  break;
+            }
          }
          else
          {            
@@ -127,7 +136,7 @@ bool NXAgentDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCH
          }
       }
 	}
-	return bSuccess;
+   return result;
 }
 
 /**

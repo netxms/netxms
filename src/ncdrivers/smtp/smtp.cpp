@@ -68,7 +68,6 @@ struct MAIL_ENVELOPE
    char encoding[64];
    bool isHtml;
    bool isUtf8;
-   int retryCount;
 };
 
 /**
@@ -96,7 +95,6 @@ class SmtpDriver : public NCDriver
 {
 private:
    TCHAR m_server[MAX_STRING_VALUE];
-   uint32_t m_retryCount;
    uint16_t m_port;
    char m_localHostName[MAX_STRING_VALUE];
    char m_fromName[MAX_STRING_VALUE];
@@ -110,7 +108,7 @@ private:
    UINT32 sendMail(const char *pszRcpt, const char *pszSubject, const char *pszText, const char *encoding, bool isHtml, bool isUtf8);
 
 public:
-   virtual bool send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body) override;
+   virtual int send(const TCHAR* recipient, const TCHAR* subject, const TCHAR* body) override;
    MAIL_ENVELOPE *prepareMail(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body);
    static SmtpDriver *createInstance(Config *config);
 };
@@ -132,7 +130,6 @@ SmtpDriver *SmtpDriver::createInstance(Config *config)
       { _T("LocalHostName"), CT_MB_STRING, 0, 0, sizeof(driver->m_localHostName) / sizeof(TCHAR), 0, driver->m_localHostName },
       { _T("MailEncoding"), CT_MB_STRING, 0, 0, sizeof(driver->m_encoding) / sizeof(TCHAR), 0, driver->m_encoding }, // utf8
       { _T("Port"), CT_LONG, 0, 0, 0, 0, &(driver->m_port) },                                                        // 25
-      { _T("RetryCount"), CT_LONG, 0, 0, 0, 0, &(driver->m_retryCount) },                                            // 1
       { _T("Server"), CT_STRING, 0, 0, sizeof(driver->m_server) / sizeof(TCHAR), 0, driver->m_server },              // localhost
       { _T("TLSMode"), CT_STRING, 0, 0, 9, 0, tlsModeBuff },                                                         // NONE
       { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, nullptr }
@@ -174,7 +171,6 @@ SmtpDriver *SmtpDriver::createInstance(Config *config)
 SmtpDriver::SmtpDriver()
 {
    _tcscmp(m_server, _T("localhost"));
-   m_retryCount = 1;
    m_port = 0;
    m_localHostName[0] = 0;
    strcpy(m_fromName, "NetXMS Server");
@@ -224,7 +220,6 @@ MAIL_ENVELOPE *SmtpDriver::prepareMail(const TCHAR *recipient, const TCHAR *subj
       envelope->text = strdup(body);
    }
 #endif
-   envelope->retryCount = m_retryCount;
    envelope->isHtml = m_isHtml;
    return envelope;
 }
@@ -569,33 +564,28 @@ UINT32 SmtpDriver::sendMail(const char *pszRcpt, const char *pszSubject, const c
 /**
  * Driver send method
  */
-bool SmtpDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body)
+int SmtpDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCHAR* body)
 {
-   bool success = false;
+   int result = -1;
 
-   MAIL_ENVELOPE *pEnvelope = prepareMail(recipient, subject, body);
+   MAIL_ENVELOPE* pEnvelope = prepareMail(recipient, subject, body);
    nxlog_debug(6, _T("SMTP(%p): new envelope, rcpt=%hs"), pEnvelope, pEnvelope->rcptAddr);
-   while (pEnvelope->retryCount > 0)
-   {
-      uint32_t result = sendMail(pEnvelope->rcptAddr, pEnvelope->subject, pEnvelope->text, pEnvelope->encoding, pEnvelope->isHtml, pEnvelope->isUtf8);
-      if (result != SMTP_ERR_SUCCESS)
-      {
-         pEnvelope->retryCount--;
-         nxlog_debug_tag(DEBUG_TAG, 6, _T("SMTP(%p): Failed to send e-mail with error \"%s\", remaining retries: %d"), pEnvelope, s_szErrorText[result], pEnvelope->retryCount);
-      }
-      else
-      {
-         nxlog_debug_tag(DEBUG_TAG, 6, _T("SMTP(%p): mail sent successfully"), pEnvelope);
-         success = true;
-         break;
-      }
 
-      if (pEnvelope->retryCount > 0)
-         ThreadSleep(1);
+   uint32_t smtpErr = sendMail(pEnvelope->rcptAddr, pEnvelope->subject, pEnvelope->text, pEnvelope->encoding, pEnvelope->isHtml, pEnvelope->isUtf8);
+   if (smtpErr == SMTP_ERR_SUCCESS)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("SMTP(%p): mail sent successfully"), pEnvelope);
+      result = 0;
    }
+   else
+   {
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("SMTP(%p): Failed to send e-mail with error \"%s\""), pEnvelope, s_szErrorText[smtpErr]);
+      result = smtpErr == SMTP_ERR_BAD_SERVER_NAME ? -1 : 3;
+   }
+
    MemFree(pEnvelope->text);
    MemFree(pEnvelope);
-   return success;
+   return result;
 }
 
 /**

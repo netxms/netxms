@@ -58,7 +58,7 @@ private:
    }
 
 public:
-   virtual bool send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body) override;
+   virtual int send(const TCHAR* recipient, const TCHAR* subject, const TCHAR* body) override;
 
    static TwilioDriver *createInstance(Config *config);
 };
@@ -127,13 +127,13 @@ static inline char *URLEncode(CURL *curl, const TCHAR *s)
 /**
  * Send notification
  */
-bool TwilioDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body)
+int TwilioDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCHAR* body)
 {
    CURL *curl = curl_easy_init();
    if (curl == nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("Call to curl_easy_init() failed"));
-      return false;
+      return -1;
    }
 
 #if HAVE_DECL_CURLOPT_NOSIGNAL
@@ -194,7 +194,7 @@ bool TwilioDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCHA
    strcat(url, m_sid);
    strcat(url, m_useTTS ? "/Calls.json" : "/Messages.json");
 
-   bool success = false;
+   int result = -1;
 
    if (curl_easy_setopt(curl, CURLOPT_URL, url) == CURLE_OK)
    {
@@ -223,7 +223,7 @@ bool TwilioDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCHA
                if (!strcmp(status, "sent") || !strcmp(status, "queued"))
                {
                   nxlog_debug_tag(DEBUG_TAG, 6, _T("API server responded with success"));
-                  success = true;
+                  result = 0;
                }
                else
                {
@@ -255,7 +255,7 @@ bool TwilioDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCHA
    }
    curl_easy_cleanup(curl);
    MemFree(request);
-   return success;
+   return result;
 }
 
 /**

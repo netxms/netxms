@@ -48,7 +48,7 @@ private:
 public:
    static DBTableDriver *createFromConfig(Config *config);
    virtual ~DBTableDriver();
-   virtual bool send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body) override;
+   virtual int send(const TCHAR* recipient, const TCHAR* subject, const TCHAR* body) override;
 };
 
 
@@ -125,9 +125,9 @@ finish:
 /**
  * Send message
  */
-bool DBTableDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body)
+int DBTableDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCHAR* body)
 {
-	bool bRet = false;
+   int result = -1;
 
 	if (m_dbh == NULL)
 	{
@@ -144,15 +144,20 @@ bool DBTableDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCH
 		{
 			DBBind(dbs, 1, DB_SQLTYPE_VARCHAR, recipient, DB_BIND_STATIC, m_maxNumberLength);
 			DBBind(dbs, 2, DB_SQLTYPE_VARCHAR, body, DB_BIND_STATIC, m_maxMessageLength);
-			if (!(bRet = DBExecute(dbs)))
-				nxlog_debug_tag(DEBUG_TAG, 1, _T("Cannot execute"));
-			else
-				nxlog_debug_tag(DEBUG_TAG, 8, _T("sent sms '%s' to %s"), body, recipient);
+         if (!DBExecute(dbs))
+         {
+            nxlog_debug_tag(DEBUG_TAG, 1, _T("Cannot execute"));
+         }
+         else
+         {
+            result = 0;
+            nxlog_debug_tag(DEBUG_TAG, 8, _T("sent sms '%s' to %s"), body, recipient);
+         }
 			DBFreeStatement(dbs);
 		}
 	}
 
-	return bRet;
+   return result;
 }
 
 /**
