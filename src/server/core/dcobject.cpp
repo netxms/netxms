@@ -559,7 +559,8 @@ void DCObject::setStatus(int status, bool generateEvent, bool userChange)
                _T("iLO"), _T("Script"), _T("SSH"), _T("MQTT"),
                _T("Device Driver")
             };
-            PostSystemEvent(eventCode[status], owner->getId(), "issds", m_id, m_name.cstr(), m_description.cstr(), m_source, originName[m_source]);
+            static const TCHAR *parameterNames[] = { _T("dciId"), _T("metric"), _T("description"), _T("originCode"), _T("origin") };
+            PostDciEventWithNames(eventCode[status], owner->getId(), m_id, "issds", parameterNames, m_id, m_name.cstr(), m_description.cstr(), m_source, originName[m_source]);
          }
       }
 
