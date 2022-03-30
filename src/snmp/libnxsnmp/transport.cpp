@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** SNMP support library
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -28,9 +28,9 @@
  */
 static struct
 {
-	const UINT32 oid[12];
+	const uint32_t oid[12];
 	size_t oidLen;
-	UINT32 errorCode;
+	uint32_t errorCode;
 } s_oidToErrorMap[] =
 {
 	{ { 1, 3, 6, 1, 6, 3, 11, 2, 1, 3 }, 10, SNMP_ERR_ENGINE_ID },
@@ -393,7 +393,6 @@ uint32_t SNMP_UDPTransport::createUDPTransport(const InetAddress& hostAddr, uint
    if (m_hSocket != INVALID_SOCKET)
    {
       SockAddrBuffer localAddr;
-
 		memset(&localAddr, 0, sizeof(SockAddrBuffer));
       if (hostAddr.getFamily() == AF_INET)
       {

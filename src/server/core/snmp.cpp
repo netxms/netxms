@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -27,19 +27,19 @@
 /**
  * Handler for route enumeration
  */
-static UINT32 HandlerRoute(SNMP_Variable *pVar, SNMP_Transport *pTransport, RoutingTable *routingTable)
+static uint32_t HandlerRoute(SNMP_Variable *varbind, SNMP_Transport *snmpTransport, RoutingTable *routingTable)
 {
-   size_t nameLen = pVar->getName().length();
+   size_t nameLen = varbind->getName().length();
 	if ((nameLen < 5) || (nameLen > MAX_OID_LEN))
 	{
-		nxlog_debug_tag(_T("topo.ipv4"), 4, _T("HandlerRoute(): strange nameLen %d (name=%s)"), nameLen, pVar->getName().toString().cstr());
+		nxlog_debug_tag(_T("topo.ipv4"), 4, _T("HandlerRoute(): strange nameLen %d (name=%s)"), nameLen, varbind->getName().toString().cstr());
 		return SNMP_ERR_SUCCESS;
 	}
 
    uint32_t oidName[MAX_OID_LEN];
-   memcpy(oidName, pVar->getName().value(), nameLen * sizeof(UINT32));
+   memcpy(oidName, varbind->getName().value(), nameLen * sizeof(UINT32));
 
-   SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), pTransport->getSnmpVersion());
+   SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmpTransport->getSnmpVersion());
 
    oidName[nameLen - 5] = 2;  // Interface index
    request.bindVariable(new SNMP_Variable(oidName, nameLen));
@@ -55,7 +55,7 @@ static UINT32 HandlerRoute(SNMP_Variable *pVar, SNMP_Transport *pTransport, Rout
 
    uint32_t dwResult;
    SNMP_PDU *response;
-   if ((dwResult = pTransport->doRequest(&request, &response, SnmpGetDefaultTimeout(), 3)) != SNMP_ERR_SUCCESS)
+   if ((dwResult = snmpTransport->doRequest(&request, &response, SnmpGetDefaultTimeout(), 3)) != SNMP_ERR_SUCCESS)
       return dwResult;
 
    if (response->getNumVariables() != request.getNumVariables())
@@ -65,7 +65,7 @@ static UINT32 HandlerRoute(SNMP_Variable *pVar, SNMP_Transport *pTransport, Rout
    }
 
    ROUTE route;
-   route.dwDestAddr = ntohl(pVar->getValueAsUInt());
+   route.dwDestAddr = ntohl(varbind->getValueAsUInt());
    route.dwIfIndex = response->getVariable(0)->getValueAsUInt();
    route.dwNextHop = ntohl(response->getVariable(1)->getValueAsUInt());
    route.dwRouteType = response->getVariable(2)->getValueAsUInt();
@@ -126,6 +126,63 @@ bool SnmpTestRequest(SNMP_Transport *snmp, const StringList &testOids, bool sepa
       }
    }
    return success;
+}
+
+/**
+ * Get list of known SNMP ports for given zone
+ */
+IntegerArray<uint16_t> SnmpGetKnownPorts(int32_t zoneUIN)
+{
+   IntegerArray<uint16_t> ports;
+
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT port FROM snmp_ports WHERE zone=? OR zone=-1 ORDER BY zone DESC, id ASC"));
+   if (hStmt != nullptr)
+   {
+      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, zoneUIN);
+
+      DB_RESULT hResult = DBSelectPrepared(hStmt);
+      if (hResult != nullptr)
+      {
+         int count = DBGetNumRows(hResult);
+         for(int i = 0; i < count; i++)
+
+            ports.add(DBGetFieldLong(hResult, i, 0));
+         DBFreeResult(hResult);
+      }
+      DBFreeStatement(hStmt);
+   }
+   DBConnectionPoolReleaseConnection(hdb);
+
+   if (ports.size() == 0)
+      ports.add(161);
+   return ports;
+}
+
+/**
+ * Get list of known SNMP communities for given zone
+ */
+unique_ptr<StringList> SnmpGetKnownCommunities(int32_t zoneUIN)
+{
+   auto communities = new StringList();
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT community FROM snmp_communities WHERE zone=? OR zone=-1 ORDER BY zone DESC, id ASC"));
+   if (hStmt != NULL)
+   {
+      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, zoneUIN);
+
+      DB_RESULT hResult = DBSelectPrepared(hStmt);
+      if (hResult != NULL)
+      {
+         int count = DBGetNumRows(hResult);
+         for(int i = 0; i < count; i++)
+            communities->addPreallocated(DBGetField(hResult, i, 0, NULL, 0));
+         DBFreeResult(hResult);
+      }
+      DBFreeStatement(hStmt);
+   }
+   DBConnectionPoolReleaseConnection(hdb);
+   return unique_ptr<StringList>(communities);
 }
 
 /**
@@ -226,33 +283,10 @@ SNMP_Transport *SnmpCheckCommSettings(uint32_t snmpProxy, const InetAddress& ipA
    nxlog_debug_tag(DEBUG_TAG_SNMP_DISCOVERY, 5, _T("SnmpCheckCommSettings(%s): starting check (proxy=%d, originalPort=%d)"), ipAddr.toString(ipAddrText), snmpProxy, (int)originalPort);
 
    SNMP_Transport *pTransport = nullptr;
-   StringList *communities = nullptr;
-   IntegerArray<uint16_t> ports;
+   unique_ptr<StringList> communities;
    bool separateRequests = ConfigReadBoolean(_T("SNMP.Discovery.SeparateProbeRequests"), false);
 
-   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT port FROM snmp_ports WHERE zone=? OR zone=-1 ORDER BY zone DESC, id ASC"));
-   if (hStmt != nullptr)
-   {
-      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, zoneUIN);
-
-      DB_RESULT hResult = DBSelectPrepared(hStmt);
-      if (hResult != nullptr)
-      {
-         int count = DBGetNumRows(hResult);
-         for(int i = 0; i < count; i++)
-
-            ports.add(DBGetFieldLong(hResult, i, 0));
-         DBFreeResult(hResult);
-      }
-      DBFreeStatement(hStmt);
-   }
-   DBConnectionPoolReleaseConnection(hdb);
-
-
-   if (ports.size() == 0)
-      ports.add(161);
-
+   IntegerArray<uint16_t> ports = SnmpGetKnownPorts(zoneUIN);
    for(int j = -1; (j < ports.size()) && !IsShutdownInProgress(); j++)
    {
       uint16_t port;
@@ -309,7 +343,7 @@ SNMP_Transport *SnmpCheckCommSettings(uint32_t snmpProxy, const InetAddress& ipA
       pTransport->setSnmpVersion(SNMP_VERSION_2C);
 restart_check:
       // Check current community first
-      if ((originalContext != NULL) && (originalContext->getSecurityModel() != SNMP_SECURITY_MODEL_USM))
+      if ((originalContext != nullptr) && (originalContext->getSecurityModel() != SNMP_SECURITY_MODEL_USM))
       {
          nxlog_debug_tag(DEBUG_TAG_SNMP_DISCOVERY, 5, _T("SnmpCheckCommSettings(%s): trying version %d community '%hs'"),
                   ipAddrText, pTransport->getSnmpVersion(), originalContext->getCommunity());
@@ -322,27 +356,8 @@ restart_check:
       }
 
       // Check community from list
-      if (communities == NULL)
-      {
-         communities = new StringList();
-         DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-         DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT community FROM snmp_communities WHERE zone=? OR zone=-1 ORDER BY zone DESC, id ASC"));
-         if (hStmt != NULL)
-         {
-            DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, zoneUIN);
-
-            DB_RESULT hResult = DBSelectPrepared(hStmt);
-            if (hResult != NULL)
-            {
-               int count = DBGetNumRows(hResult);
-               for(int i = 0; i < count; i++)
-                  communities->addPreallocated(DBGetField(hResult, i, 0, NULL, 0));
-               DBFreeResult(hResult);
-            }
-            DBFreeStatement(hStmt);
-         }
-         DBConnectionPoolReleaseConnection(hdb);
-      }
+      if (communities == nullptr)
+         communities = SnmpGetKnownCommunities(zoneUIN);
 
       for(int i = 0; (i < communities->size()) && !IsShutdownInProgress(); i++)
       {
@@ -351,7 +366,7 @@ restart_check:
 #else
          const char *community = communities->get(i);
 #endif
-         if ((originalContext == NULL) ||
+         if ((originalContext == nullptr) ||
              (originalContext->getSecurityModel() == SNMP_SECURITY_MODEL_USM) ||
              strcmp(community, originalContext->getCommunity()))
          {
@@ -384,12 +399,10 @@ restart_check:
    }
 
 fail:
-   delete communities;
 	nxlog_debug_tag(DEBUG_TAG_SNMP_DISCOVERY, 5, _T("SnmpCheckCommSettings(%s): failed"), ipAddrText);
 	return nullptr;
 
 success:
-   delete communities;
    nxlog_debug_tag(DEBUG_TAG_SNMP_DISCOVERY, 5, _T("SnmpCheckCommSettings(%s): success (version=%d)"), ipAddrText, pTransport->getSnmpVersion());
 	return pTransport;
 }

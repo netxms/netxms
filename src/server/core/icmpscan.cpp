@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -79,7 +79,7 @@ static int WINAPI EchoCallback(void *context)
 /**
  * Scan range of IPv4 addresses
  */
-void ScanAddressRange(const InetAddress& from, const InetAddress& to, void (*callback)(const InetAddress&, int32_t, const Node *, uint32_t, ServerConsole *, void *), ServerConsole *console, void *context)
+void ScanAddressRangeICMP(const InetAddress& from, const InetAddress& to, void (*callback)(const InetAddress&, int32_t, const Node *, uint32_t, ServerConsole *, void *), ServerConsole *console, void *context)
 {
    static char payload[64] = "NetXMS ICMP probe [range scan]";
 
@@ -144,12 +144,12 @@ struct ScanStatus
 /**
  * Process ICMP response
  */
-static void ProcessResponse(SOCKET sock, UINT32 baseAddr, UINT32 lastAddr, ScanStatus *status)
+static void ProcessResponse(SOCKET sock, uint32_t baseAddr, uint32_t lastAddr, ScanStatus *status)
 {
    ECHOREPLY reply;
    struct sockaddr_in saSrc;
    socklen_t addrLen = sizeof(struct sockaddr_in);
-   if (recvfrom(sock, (char *)&reply, sizeof(ECHOREPLY), 0, (struct sockaddr *)&saSrc, &addrLen) > 0)
+   if (recvfrom(sock, reinterpret_cast<char*>(&reply), sizeof(ECHOREPLY), 0, reinterpret_cast<struct sockaddr*>(&saSrc), &addrLen) > 0)
    {
       uint32_t addr = ntohl(reply.m_ipHdr.m_iaSrc.s_addr);
       if ((addr >= baseAddr) && (addr <= lastAddr) &&
@@ -157,7 +157,7 @@ static void ProcessResponse(SOCKET sock, UINT32 baseAddr, UINT32 lastAddr, ScanS
           !status[addr - baseAddr].success)
       {
          status[addr - baseAddr].success = true;
-         status[addr - baseAddr].rtt = static_cast<UINT32>(GetCurrentTimeMs() - status[addr - baseAddr].startTime);
+         status[addr - baseAddr].rtt = static_cast<uint32_t>(GetCurrentTimeMs() - status[addr - baseAddr].startTime);
       }
    }
 }
@@ -165,7 +165,7 @@ static void ProcessResponse(SOCKET sock, UINT32 baseAddr, UINT32 lastAddr, ScanS
 /**
 * Scan range of IPv4 addresses
 */
-void ScanAddressRange(const InetAddress& from, const InetAddress& to, void (*callback)(const InetAddress&, int32_t, const Node *, uint32_t, ServerConsole *, void *), ServerConsole *console, void *context)
+void ScanAddressRangeICMP(const InetAddress& from, const InetAddress& to, void (*callback)(const InetAddress&, int32_t, const Node*, uint32_t, const TCHAR*, ServerConsole*, void*), ServerConsole *console, void *context)
 {
    SOCKET sock = CreateSocket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
    if (sock == INVALID_SOCKET)
@@ -209,12 +209,12 @@ void ScanAddressRange(const InetAddress& from, const InetAddress& to, void (*cal
    {
       sp.reset();
       sp.add(sock);
-      INT64 startTime = GetCurrentTimeMs();
+      int64_t startTime = GetCurrentTimeMs();
       if (sp.poll(g_icmpPingTimeout - elapsedTime) <= 0)
          break;
 
       ProcessResponse(sock, baseAddr, to.getAddressV4(), status);
-      elapsedTime += static_cast<UINT32>(GetCurrentTimeMs() - startTime);
+      elapsedTime += static_cast<uint32_t>(GetCurrentTimeMs() - startTime);
    }
 
    closesocket(sock);
@@ -222,7 +222,7 @@ void ScanAddressRange(const InetAddress& from, const InetAddress& to, void (*cal
    for(uint32_t a = baseAddr, i = 0; a <= to.getAddressV4(); a++, i++)
    {
       if (status[i].success)
-         callback(a, 0, nullptr, status[i].rtt, console, context);
+         callback(a, 0, nullptr, status[i].rtt, _T("ICMP"), console, context);
    }
    MemFree(status);
 }

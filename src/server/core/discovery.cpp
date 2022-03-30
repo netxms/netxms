@@ -914,18 +914,18 @@ void DiscoveryPoller(PollerInfo *poller)
 /**
  * Callback for address range scan
  */
-void RangeScanCallback(const InetAddress& addr, int32_t zoneUIN, const Node *proxy, uint32_t rtt, ServerConsole *console, void *context)
+void RangeScanCallback(const InetAddress& addr, int32_t zoneUIN, const Node *proxy, uint32_t rtt, const TCHAR *proto, ServerConsole *console, void *context)
 {
    TCHAR ipAddrText[64];
    if (proxy != nullptr)
    {
-      ConsoleDebugPrintf(console, DEBUG_TAG_DISCOVERY, 5, _T("Active discovery - node %s responded to ICMP ping via proxy %s [%u]"),
-            addr.toString(ipAddrText), proxy->getName(), proxy->getId());
+      ConsoleDebugPrintf(console, DEBUG_TAG_DISCOVERY, 5, _T("Active discovery - node %s responded to %s probe via proxy %s [%u]"),
+            addr.toString(ipAddrText), proto, proxy->getName(), proxy->getId());
       CheckPotentialNode(addr, zoneUIN, DA_SRC_ACTIVE_DISCOVERY, proxy->getId());
    }
    else
    {
-      ConsoleDebugPrintf(console, DEBUG_TAG_DISCOVERY, 5, _T("Active discovery - node %s responded to ICMP ping"), addr.toString(ipAddrText));
+      ConsoleDebugPrintf(console, DEBUG_TAG_DISCOVERY, 5, _T("Active discovery - node %s responded to %s probe"), addr.toString(ipAddrText), proto);
       CheckPotentialNode(addr, zoneUIN, DA_SRC_ACTIVE_DISCOVERY, 0);
    }
 }
@@ -933,7 +933,7 @@ void RangeScanCallback(const InetAddress& addr, int32_t zoneUIN, const Node *pro
 /**
  * Check given address range with ICMP ping for new nodes
  */
-void CheckRange(const InetAddressListElement& range, void (*callback)(const InetAddress&, int32_t, const Node *, uint32_t, ServerConsole *, void *), ServerConsole *console, void *context)
+void CheckRange(const InetAddressListElement& range, void (*callback)(const InetAddress&, int32_t, const Node*, uint32_t, const TCHAR*, ServerConsole*, void*), ServerConsole *console, void *context)
 {
    if (range.getBaseAddress().getFamily() != AF_INET)
    {
@@ -961,6 +961,7 @@ void CheckRange(const InetAddressListElement& range, void (*callback)(const Inet
 
    uint32_t blockSize = ConfigReadULong(_T("NetworkDiscovery.ActiveDiscovery.BlockSize"), 1024);
    uint32_t interBlockDelay = ConfigReadULong(_T("NetworkDiscovery.ActiveDiscovery.InterBlockDelay"), 0);
+   bool snmpScanEnabled = ConfigReadBoolean(_T("NetworkDiscovery.ActiveDiscovery.EnableSNMPProbing"), true);
 
    if ((range.getZoneUIN() != 0) || (range.getProxyId() != 0))
    {
@@ -1011,9 +1012,7 @@ void CheckRange(const InetAddressListElement& range, void (*callback)(const Inet
          {
             for(int i = 0; i < list->size(); i++)
             {
-               ConsoleDebugPrintf(console, DEBUG_TAG_DISCOVERY, 5, _T("Active discovery - node %s responded to ICMP ping via proxy %s [%u]"),
-                        list->get(i), proxy->getName(), proxy->getId());
-               callback(InetAddress::parse(list->get(i)), range.getZoneUIN(), proxy.get(), 0, console, nullptr);
+               callback(InetAddress::parse(list->get(i)), range.getZoneUIN(), proxy.get(), 0, _T("ICMP"), console, nullptr);
             }
             delete list;
          }
@@ -1030,7 +1029,32 @@ void CheckRange(const InetAddressListElement& range, void (*callback)(const Inet
       {
          if (interBlockDelay > 0)
             ThreadSleepMs(interBlockDelay);
-         ScanAddressRange(from, std::min(to, from + blockSize - 1), callback, console, nullptr);
+
+         ScanAddressRangeICMP(from, std::min(to, from + blockSize - 1), callback, console, nullptr);
+
+         if (snmpScanEnabled)
+         {
+            ConsoleDebugPrintf(console, DEBUG_TAG_DISCOVERY, 5, _T("Starting SNMP check on range %s - %s"), IpToStr(from, ipAddr1), IpToStr(to, ipAddr2));
+            IntegerArray<uint16_t> ports = SnmpGetKnownPorts(0);
+            unique_ptr<StringList> communities = SnmpGetKnownCommunities(0);
+            for(int i = 0; i < ports.size(); i++)
+            {
+               uint16_t port = ports.get(i);
+               for(int j = 0; j < communities->size(); j++)
+               {
+#ifdef UNICODE
+                  char community[256];
+                  wchar_to_mb(communities->get(j), -1, community, 256);
+#else
+                  const char *community = communities->get(j);
+#endif
+                  ScanAddressRangeSNMP(from, std::min(to, from + blockSize - 1), port, SNMP_VERSION_1, community, callback, console, nullptr);
+                  ScanAddressRangeSNMP(from, std::min(to, from + blockSize - 1), port, SNMP_VERSION_2C, community, callback, console, nullptr);
+               }
+               ScanAddressRangeSNMP(from, std::min(to, from + blockSize - 1), port, SNMP_VERSION_3, nullptr, callback, console, nullptr);
+            }
+         }
+
          from += blockSize;
       }
       ConsoleDebugPrintf(console, DEBUG_TAG_DISCOVERY, 4, _T("Finished active discovery check on range %s - %s"), ipAddr1, ipAddr2);

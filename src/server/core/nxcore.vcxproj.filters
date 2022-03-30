@@ -351,6 +351,9 @@
     <ClCompile Include="snmp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="snmpscan.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="snmptrap.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

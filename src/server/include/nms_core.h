@@ -1239,6 +1239,8 @@ bool SnmpTestRequest(SNMP_Transport *snmp, const StringList &testOids, bool sepa
 SNMP_Transport *SnmpCheckCommSettings(uint32_t snmpProxy, const InetAddress& ipAddr, SNMP_Version *version,
          uint16_t originalPort, SNMP_SecurityContext *originalContext, const StringList &customTestOids,
          int32_t zoneUIN);
+IntegerArray<uint16_t> SnmpGetKnownPorts(int32_t zoneUIN);
+unique_ptr<StringList> SnmpGetKnownCommunities(int32_t zoneUIN);
 
 void InitLocalNetInfo();
 
@@ -1455,9 +1457,11 @@ uint32_t RenameScript(uint32_t scriptId, const TCHAR *newName);
 uint32_t DeleteScript(uint32_t scriptId);
 
 /**
- * ICMP scan
+ * Address range scan functions
  */
-void ScanAddressRange(const InetAddress& from, const InetAddress& to, void(*callback)(const InetAddress&, int32_t, const Node *, uint32_t, ServerConsole *, void *), ServerConsole *console, void *context);
+void ScanAddressRangeICMP(const InetAddress& from, const InetAddress& to, void (*callback)(const InetAddress&, int32_t, const Node*, uint32_t, const TCHAR*, ServerConsole*, void*), ServerConsole *console, void *context);
+void ScanAddressRangeSNMP(const InetAddress& from, const InetAddress& to, uint16_t port, SNMP_Version snmpVersion, const char *community,
+      void (*callback)(const InetAddress&, int32_t, const Node*, uint32_t, const TCHAR*, ServerConsole*, void*), ServerConsole *console, void *context);
 
 /**
  * Prepare MERGE statement if possible, otherwise INSERT or UPDATE depending on record existence

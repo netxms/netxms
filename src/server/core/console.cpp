@@ -41,8 +41,8 @@ uint32_t BindAgentTunnel(uint32_t tunnelId, uint32_t nodeId, uint32_t userId);
 uint32_t UnbindAgentTunnel(uint32_t nodeId, uint32_t userId);
 int64_t GetEventLogWriterQueueSize();
 int64_t GetEventProcessorQueueSize();
-void RangeScanCallback(const InetAddress& addr, int32_t zoneUIN, const Node *proxy, uint32_t rtt, ServerConsole *console, void *context);
-void CheckRange(const InetAddressListElement& range, void(*callback)(const InetAddress&, int32_t, const Node *, uint32_t, ServerConsole *, void *), ServerConsole *console, void *context);
+void RangeScanCallback(const InetAddress& addr, int32_t zoneUIN, const Node *proxy, uint32_t rtt, const TCHAR *proto, ServerConsole *console, void *context);
+void CheckRange(const InetAddressListElement& range, void(*callback)(const InetAddress&, int32_t, const Node*, uint32_t, const TCHAR*, ServerConsole*, void*), ServerConsole *console, void *context);
 void ShowSyncerStats(ServerConsole *console);
 void ShowAuthenticationTokens(ServerConsole *console);
 void RunHouseKeeper(ServerConsole *console);
@@ -161,19 +161,18 @@ static int CompareDebugTags(const DebugTagInfo **t1, const DebugTagInfo **t2)
 /**
  * Callback for address scan
  */
-static void PrintScanCallback(const InetAddress& addr, int32_t zoneUIN, const Node *proxy, UINT32 rtt, ServerConsole *console, void *context)
+static void PrintScanCallback(const InetAddress& addr, int32_t zoneUIN, const Node *proxy, uint32_t rtt, const TCHAR *proto, ServerConsole *console, void *context)
 {
    TCHAR ipAddrText[64];
    if (proxy != nullptr)
    {
-      ConsolePrintf(console, _T("   Reply from %s to ICMP ping via proxy %s [%u]\n"),
-            addr.toString(ipAddrText), proxy->getName(), proxy->getId());
+      ConsolePrintf(console, _T("   Reply from %s to %s probe via proxy %s [%u]\n"),
+            addr.toString(ipAddrText), proto, proxy->getName(), proxy->getId());
    }
    else
    {
-      ConsolePrintf(console, _T("   Reply from %s in %dms\n"), addr.toString(ipAddrText), rtt);
+      ConsolePrintf(console, _T("   Reply from %s to %s probe in %dms\n"), addr.toString(ipAddrText), proto, rtt);
    }
-
 }
 
 /**
@@ -628,7 +627,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
             InetAddress end = InetAddress::parse(addr2);
             pArg = ExtractWord(pArg, szBuffer);
             int32_t zoneUIN = 0;
-            UINT32 proxyId = 0;
+            uint32_t proxyId = 0;
             bool doDiscovery = false;
             bool syntaxError = false;
             if (szBuffer[0] != 0)
