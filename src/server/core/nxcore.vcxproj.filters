@@ -141,6 +141,12 @@
     <ClCompile Include="dfile_info.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="discovery.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="discovery_nxsl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="ef.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

@@ -21,6 +21,7 @@
 **/
 
 #include "nxcore.h"
+#include <nxcore_discovery.h>
 
 #define DEBUG_TAG _T("snmp.trap")
 

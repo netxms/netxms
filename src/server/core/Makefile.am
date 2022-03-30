@@ -7,14 +7,14 @@ lib_LTLIBRARIES = libnxcore.la
 libnxcore_la_SOURCES = 2fa.cpp abind_target.cpp accesspoint.cpp acl.cpp actions.cpp addrlist.cpp \
 			admin.cpp agent.cpp agent_policy.cpp alarm.cpp alarm_category.cpp audit.cpp \
 			authtokens.cpp beacon.cpp bizservice.cpp bizsvcbase.cpp bizsvccheck.cpp \
-			bizsvcproto.cpp bridge.cpp \
-			cas_validator.cpp ccy.cpp cdp.cpp cert.cpp chassis.cpp client.cpp \
-			cluster.cpp columnfilter.cpp condition.cpp config.cpp console.cpp \
-			container.cpp correlate.cpp dashboard.cpp datacoll.cpp dbwrite.cpp \
-			dc_nxsl.cpp dci_recalc.cpp dcitem.cpp dcithreshold.cpp dcivalue.cpp \
-			dcobject.cpp dcowner.cpp dcst.cpp dctable.cpp \
-			dctarget.cpp dctcolumn.cpp dctthreshold.cpp debug.cpp devdb.cpp \
-			dfile_info.cpp download_task.cpp ef.cpp entirenet.cpp epp.cpp events.cpp \
+			bizsvcproto.cpp bridge.cpp cas_validator.cpp ccy.cpp cdp.cpp cert.cpp \
+			chassis.cpp client.cpp cluster.cpp columnfilter.cpp condition.cpp \
+			config.cpp console.cpp container.cpp correlate.cpp dashboard.cpp \
+			datacoll.cpp dbwrite.cpp dc_nxsl.cpp dci_recalc.cpp dcitem.cpp \
+			dcithreshold.cpp dcivalue.cpp dcobject.cpp dcowner.cpp dcst.cpp \
+			dctable.cpp dctarget.cpp dctcolumn.cpp dctthreshold.cpp debug.cpp \
+			devdb.cpp dfile_info.cpp discovery.cpp discovery_nxsl.cpp \
+			download_task.cpp ef.cpp entirenet.cpp epp.cpp events.cpp \
 			evproc.cpp fdb.cpp filemonitoring.cpp geo_areas.cpp graph.cpp \
 			hash_index.cpp hdlink.cpp hk.cpp hwcomponent.cpp icmpscan.cpp \
 			icmpstat.cpp id.cpp import.cpp inaddr_index.cpp index.cpp interface.cpp \

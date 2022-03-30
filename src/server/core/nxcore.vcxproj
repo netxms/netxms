@@ -246,6 +246,8 @@
     <ClCompile Include="debug.cpp" />
     <ClCompile Include="devdb.cpp" />
     <ClCompile Include="dfile_info.cpp" />
+    <ClCompile Include="discovery.cpp" />
+    <ClCompile Include="discovery_nxsl.cpp" />
     <ClCompile Include="download_task.cpp" />
     <ClCompile Include="ef.cpp" />
     <ClCompile Include="entirenet.cpp" />

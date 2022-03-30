@@ -30,6 +30,7 @@
 #include <nxcore_jobs.h>
 #include <nxcore_syslog.h>
 #include <nxcore_ps.h>
+#include <nxcore_discovery.h>
 #include <nms_pkg.h>
 #include <nxcore_2fa.h>
 #include <netxms-version.h>
@@ -80,7 +81,6 @@ struct LoginInfo
 /**
  * Externals
  */
-extern ObjectQueue<DiscoveredAddress> g_nodePollerQueue;
 extern ThreadPool *g_clientThreadPool;
 extern ThreadPool *g_dataCollectorThreadPool;
 
@@ -10669,7 +10669,7 @@ void ClientSession::deletePstorageValue(const NXCPMessage& request)
  */
 void ClientSession::registerAgent(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
 	if (ConfigReadBoolean(_T("Agent.EnableRegistration"), false))
 	{
@@ -10683,22 +10683,18 @@ void ClientSession::registerAgent(const NXCPMessage& request)
       }
       else
       {
-         DiscoveredAddress *info = MemAllocStruct<DiscoveredAddress>();
-         info->ipAddr = m_clientAddr;
-         info->zoneUIN = zoneUIN;
-         info->ignoreFilter = TRUE;		// Ignore discovery filters and add node anyway
-         info->sourceType = DA_SRC_AGENT_REGISTRATION;
-         info->sourceNodeId = 0;
+         DiscoveredAddress *info = new DiscoveredAddress(m_clientAddr, zoneUIN, 0, DA_SRC_AGENT_REGISTRATION);
+         info->ignoreFilter = true;		// Ignore discovery filters and add node anyway
          g_nodePollerQueue.put(info);
       }
-      msg.setField(VID_RCC, RCC_SUCCESS);
+      response.setField(VID_RCC, RCC_SUCCESS);
 	}
 	else
 	{
-      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
 	}
 
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**

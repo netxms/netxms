@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Raden Solutions
+** Copyright (C) 2003-2022 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,11 +22,11 @@
 
 #include "nxcore.h"
 #include <entity_mib.h>
+#include <nxcore_discovery.h>
 
 /**
  * Externals
  */
-extern ObjectQueue<DiscoveredAddress> g_nodePollerQueue;
 extern ObjectQueue<SyslogMessage> g_syslogProcessingQueue;
 extern ObjectQueue<SyslogMessage> g_syslogWriteQueue;
 extern ObjectQueue<WindowsEvent> g_windowsEventProcessingQueue;

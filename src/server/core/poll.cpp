@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,35 +22,20 @@
 
 #include "nxcore.h"
 
-#define DEBUG_TAG_DISCOVERY      _T("poll.discovery")
 #define DEBUG_TAG_POLL_MANAGER   _T("poll.manager")
 
-/**
- * Check if given address is in processing by new node poller
- */
-bool IsNodePollerActiveAddress(const InetAddress& addr);
+void ActiveDiscoveryPoller();
+void WakeupActiveDiscoveryThread();
 
 /**
- * Node poller queue (polls new nodes)
+ * Stop node discovery poller
  */
-ObjectQueue<DiscoveredAddress> g_nodePollerQueue;
+void StopDiscoveryPoller();
 
 /**
  * Thread pool for pollers
  */
 ThreadPool *g_pollerThreadPool = nullptr;
-
-/**
- * Discovery source type names
- */
-const TCHAR *g_discoveredAddrSourceTypeAsText[] = {
-         _T("ARP Cache"),
-         _T("Routing Table"),
-         _T("Agent Registration"),
-         _T("SNMP Trap"),
-         _T("Syslog"),
-         _T("Active Discovery"),
-};
 
 /**
  * Active pollers
@@ -109,15 +94,6 @@ void ShowPollers(ServerConsole *console)
 }
 
 /**
- * Helper for AddThreadPoolMonitoringParameters
- */
-inline TCHAR *BuildParamName(const TCHAR *format, const TCHAR *pool, TCHAR *buffer)
-{
-   _sntprintf(buffer, 256, format, pool);
-   return buffer;
-}
-
-/**
  * Create management node object
  */
 static void CreateManagementNode(const InetAddress& addr)
@@ -155,14 +131,6 @@ static void CheckMgmtFlagCallback(NetObj *object, void *data)
 }
 
 /**
- * Comparator to find management node object in existing nodes
- */
-static bool LocalMgmtNodeComparator(NetObj *object, void *data)
-{
-	return static_cast<Node*>(object)->isLocalManagement();
-}
-
-/**
  * Check if management server node presented in node list
  */
 void CheckForMgmtNode()
@@ -171,7 +139,7 @@ void CheckForMgmtNode()
 
    if (roaming)
    {
-      shared_ptr<NetObj> mgmtNode = g_idxNodeById.find(LocalMgmtNodeComparator, nullptr);
+      shared_ptr<NetObj> mgmtNode = g_idxNodeById.find([](NetObj *object, void *) { return static_cast<Node*>(object)->isLocalManagement(); }, nullptr);
       if (mgmtNode != nullptr)
       {
          g_dwMgmtNode = mgmtNode->getId();
@@ -245,7 +213,7 @@ void CheckForMgmtNode()
 		// it's a Windows machine which is disconnected from the network).
 		// In this case, try to find any node with NC_IS_LOCAL_MGMT flag, or create
 		// new one without interfaces
-		shared_ptr<NetObj> mgmtNode = g_idxNodeById.find(LocalMgmtNodeComparator, nullptr);
+		shared_ptr<NetObj> mgmtNode = g_idxNodeById.find([](NetObj *object, void *) { return static_cast<Node*>(object)->isLocalManagement(); }, nullptr);
 		if (mgmtNode != nullptr)
 		{
 			g_dwMgmtNode = mgmtNode->getId();
@@ -255,472 +223,6 @@ void CheckForMgmtNode()
 			CreateManagementNode(InetAddress());
 		}
 	}
-}
-
-/**
- * Comparator for poller queue elements
- */
-static bool PollerQueueElementComparator(const InetAddress *key, const DiscoveredAddress *element)
-{
-   return key->equals(element->ipAddr);
-}
-
-/**
- * Check potential new node from sysog, SNMP trap, or address range scan
- */
-void CheckPotentialNode(const InetAddress& ipAddr, int32_t zoneUIN, DiscoveredAddressSourceType sourceType, UINT32 sourceNodeId)
-{
-	TCHAR buffer[64];
-	nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Checking address %s in zone %d (source: %s)"),
-	         ipAddr.toString(buffer), zoneUIN, g_discoveredAddrSourceTypeAsText[sourceType]);
-   if (!ipAddr.isValid() || ipAddr.isBroadcast() || ipAddr.isLoopback() || ipAddr.isMulticast())
-   {
-      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Potential node %s rejected (IP address is not a valid unicast address)"), ipAddr.toString(buffer));
-      return;
-   }
-
-   shared_ptr<Node> curr = FindNodeByIP(zoneUIN, ipAddr);
-   if (curr != nullptr)
-   {
-      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Potential node %s rejected (IP address already known at node %s [%d])"),
-               ipAddr.toString(buffer), curr->getName(), curr->getId());
-      return;
-   }
-
-   if (IsClusterIP(zoneUIN, ipAddr))
-   {
-      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Potential node %s rejected (IP address is known as cluster resource address)"), ipAddr.toString(buffer));
-      return;
-   }
-
-   if (IsNodePollerActiveAddress(ipAddr) || (g_nodePollerQueue.find(&ipAddr, PollerQueueElementComparator) != nullptr))
-   {
-      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Potential node %s rejected (IP address already queued for polling)"), ipAddr.toString(buffer));
-      return;
-   }
-
-   shared_ptr<Subnet> subnet = FindSubnetForNode(zoneUIN, ipAddr);
-   if (subnet != nullptr)
-   {
-      if (!subnet->getIpAddress().equals(ipAddr) && !ipAddr.isSubnetBroadcast(subnet->getIpAddress().getMaskBits()))
-      {
-         DiscoveredAddress *nodeInfo = MemAllocStruct<DiscoveredAddress>();
-         nodeInfo->ipAddr = ipAddr;
-         nodeInfo->ipAddr.setMaskBits(subnet->getIpAddress().getMaskBits());
-         nodeInfo->zoneUIN = zoneUIN;
-         nodeInfo->ignoreFilter = FALSE;
-         memset(nodeInfo->bMacAddr, 0, MAC_ADDR_LENGTH);
-         nodeInfo->sourceType = sourceType;
-         nodeInfo->sourceNodeId = sourceNodeId;
-         nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 5, _T("New node queued: %s/%d"), nodeInfo->ipAddr.toString(buffer), nodeInfo->ipAddr.getMaskBits());
-         g_nodePollerQueue.put(nodeInfo);
-      }
-      else
-      {
-         nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Potential node %s rejected (IP address is a base or broadcast address of existing subnet)"), ipAddr.toString(buffer));
-      }
-   }
-   else
-   {
-      DiscoveredAddress *nodeInfo = MemAllocStruct<DiscoveredAddress>();
-      nodeInfo->ipAddr = ipAddr;
-      nodeInfo->zoneUIN = zoneUIN;
-      nodeInfo->ignoreFilter = FALSE;
-      memset(nodeInfo->bMacAddr, 0, MAC_ADDR_LENGTH);
-      nodeInfo->sourceType = sourceType;
-      nodeInfo->sourceNodeId = sourceNodeId;
-      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 5, _T("New node queued: %s/%d"), nodeInfo->ipAddr.toString(buffer), nodeInfo->ipAddr.getMaskBits());
-      g_nodePollerQueue.put(nodeInfo);
-   }
-}
-
-/**
- * Check potential new node from ARP cache or routing table
- */
-static void CheckPotentialNode(Node *node, const InetAddress& ipAddr, uint32_t ifIndex, const MacAddress& macAddr, DiscoveredAddressSourceType sourceType, uint32_t sourceNodeId)
-{
-   TCHAR buffer[64];
-   nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Checking potential node %s at %s:%u (source: %s)"),
-            ipAddr.toString(buffer), node->getName(), ifIndex, g_discoveredAddrSourceTypeAsText[sourceType]);
-   if (!ipAddr.isValidUnicast())
-   {
-      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Potential node %s rejected (IP address is not a valid unicast address)"), ipAddr.toString(buffer));
-      return;
-   }
-
-   shared_ptr<Node> curr = FindNodeByIP(node->getZoneUIN(), ipAddr);
-   if (curr != nullptr)
-   {
-      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Potential node %s rejected (IP address already known at node %s [%u])"), ipAddr.toString(buffer), curr->getName(), curr->getId());
-
-      // Check for duplicate IP address
-      shared_ptr<Interface> iface = curr->findInterfaceByIP(ipAddr);
-      if ((iface != nullptr) && macAddr.isValid() && !iface->getMacAddr().equals(macAddr))
-      {
-         MacAddress knownMAC = iface->getMacAddr();
-         PostSystemEvent(EVENT_DUPLICATE_IP_ADDRESS, g_dwMgmtNode, "AdssHHdss",
-                  &ipAddr, curr->getId(), curr->getName(), iface->getName(),
-                  &knownMAC, &macAddr, node->getId(), node->getName(),
-                  g_discoveredAddrSourceTypeAsText[sourceType]);
-      }
-      return;
-   }
-
-   if (IsClusterIP(node->getZoneUIN(), ipAddr))
-   {
-      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Potential node %s rejected (IP address is known as cluster resource address)"), ipAddr.toString(buffer));
-      return;
-   }
-
-   if (IsNodePollerActiveAddress(ipAddr) || (g_nodePollerQueue.find(&ipAddr, PollerQueueElementComparator) != nullptr))
-   {
-      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Potential node %s rejected (IP address already queued for polling)"), ipAddr.toString(buffer));
-      return;
-   }
-
-   shared_ptr<Interface> iface = node->findInterfaceByIndex(ifIndex);
-   if ((iface != nullptr) && !iface->isExcludedFromTopology())
-   {
-      // Check if given IP address is not configured on source interface itself
-      // Some Juniper devices can report addresses from internal interfaces in ARP cache
-      if (!iface->getIpAddressList()->hasAddress(ipAddr))
-      {
-         const InetAddress& interfaceAddress = iface->getIpAddressList()->findSameSubnetAddress(ipAddr);
-         if (interfaceAddress.isValidUnicast())
-         {
-            nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Interface found: %s [%u] addr=%s/%d ifIndex=%u"),
-                  iface->getName(), iface->getId(), interfaceAddress.toString(buffer), interfaceAddress.getMaskBits(), iface->getIfIndex());
-            if (!ipAddr.isSubnetBroadcast(interfaceAddress.getMaskBits()))
-            {
-               DiscoveredAddress *pInfo = MemAllocStruct<DiscoveredAddress>();
-               pInfo->ipAddr = ipAddr;
-               pInfo->ipAddr.setMaskBits(interfaceAddress.getMaskBits());
-               pInfo->zoneUIN = node->getZoneUIN();
-               pInfo->ignoreFilter = FALSE;
-               if (macAddr.isValid() && (macAddr.length() == MAC_ADDR_LENGTH))
-                  memcpy(pInfo->bMacAddr, macAddr.value(), MAC_ADDR_LENGTH);
-               else
-                  memset(pInfo->bMacAddr, 0, MAC_ADDR_LENGTH);
-               pInfo->sourceType = sourceType;
-               pInfo->sourceNodeId = sourceNodeId;
-               nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 5, _T("New node queued: %s/%d"),
-                         pInfo->ipAddr.toString(buffer), pInfo->ipAddr.getMaskBits());
-               g_nodePollerQueue.put(pInfo);
-            }
-            else
-            {
-               nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Potential node %s rejected - broadcast/multicast address"), ipAddr.toString(buffer));
-            }
-         }
-         else
-         {
-            nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Interface object found but IP address not found"));
-         }
-      }
-      else
-      {
-         nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("IP address %s found on local interface %s [%u]"), ipAddr.toString(buffer), iface->getName(), iface->getId());
-      }
-   }
-   else
-   {
-      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Interface with index %u not found or marked as excluded from network topology"), ifIndex);
-   }
-}
-
-/**
- * Check host route
- * Host will be added if it is directly connected
- */
-static void CheckHostRoute(Node *node, const ROUTE *route)
-{
-	TCHAR buffer[16];
-	nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Checking host route %s at %d"), IpToStr(route->dwDestAddr, buffer), route->dwIfIndex);
-	shared_ptr<Interface> iface = node->findInterfaceByIndex(route->dwIfIndex);
-	if ((iface != nullptr) && iface->getIpAddressList()->findSameSubnetAddress(route->dwDestAddr).isValidUnicast())
-	{
-		CheckPotentialNode(node, route->dwDestAddr, route->dwIfIndex, MacAddress::NONE, DA_SRC_ROUTING_TABLE, node->getId());
-	}
-	else
-	{
-		nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Interface object not found for host route"));
-	}
-}
-
-/**
- * Discovery poller
- */
-void DiscoveryPoller(PollerInfo *poller)
-{
-   poller->startExecution();
-   int64_t startTime = GetCurrentTimeMs();
-
-   Node *node = static_cast<Node*>(poller->getObject());
-	if (node->isDeleteInitiated() || IsShutdownInProgress())
-	{
-	   nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Discovery poll of node %s (%s) in zone %d aborted"),
-	             node->getName(), node->getIpAddress().toString().cstr(), node->getZoneUIN());
-      node->completeDiscoveryPoll(GetCurrentTimeMs() - startTime);
-      delete poller;
-      return;
-	}
-
-   nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("Starting discovery poll of node %s (%s) in zone %d"),
-	          node->getName(), node->getIpAddress().toString().cstr(), node->getZoneUIN());
-
-   // Retrieve and analyze node's ARP cache
-   shared_ptr<ArpCache> arpCache = node->getArpCache(true);
-   if (arpCache != nullptr)
-   {
-      for(int i = 0; i < arpCache->size(); i++)
-      {
-         const ArpEntry *e = arpCache->get(i);
-			if (!e->macAddr.isBroadcast())	// Ignore broadcast addresses
-				CheckPotentialNode(node, e->ipAddr, e->ifIndex, e->macAddr, DA_SRC_ARP_CACHE, node->getId());
-      }
-   }
-
-   if (node->isDeleteInitiated() || IsShutdownInProgress())
-   {
-      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Discovery poll of node %s (%s) in zone %d aborted"),
-                node->getName(), (const TCHAR *)node->getIpAddress().toString(), (int)node->getZoneUIN());
-      node->completeDiscoveryPoll(GetCurrentTimeMs() - startTime);
-      delete poller;
-      return;
-   }
-
-	// Retrieve and analyze node's routing table
-   nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 5, _T("Discovery poll of node %s (%s) - reading routing table"), node->getName(), node->getIpAddress().toString().cstr());
-	RoutingTable *rt = node->getRoutingTable();
-	if (rt != nullptr)
-	{
-		for(int i = 0; i < rt->size(); i++)
-		{
-         ROUTE *route = rt->get(i);
-			CheckPotentialNode(node, route->dwNextHop, route->dwIfIndex, MacAddress::NONE, DA_SRC_ROUTING_TABLE, node->getId());
-			if ((route->dwDestMask == 0xFFFFFFFF) && (route->dwDestAddr != 0))
-				CheckHostRoute(node, route);
-		}
-		delete rt;
-	}
-
-	node->executeHookScript(_T("DiscoveryPoll"));
-
-   nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("Finished discovery poll of node %s (%s)"),
-             node->getName(), (const TCHAR *)node->getIpAddress().toString());
-   node->completeDiscoveryPoll(GetCurrentTimeMs() - startTime);
-   delete poller;
-}
-
-/**
- * Callback for address range scan
- */
-void RangeScanCallback(const InetAddress& addr, int32_t zoneUIN, const Node *proxy, uint32_t rtt, ServerConsole *console, void *context)
-{
-   TCHAR ipAddrText[64];
-   if (proxy != nullptr)
-   {
-      ConsoleDebugPrintf(console, DEBUG_TAG_DISCOVERY, 5, _T("Active discovery - node %s responded to ICMP ping via proxy %s [%u]"),
-            addr.toString(ipAddrText), proxy->getName(), proxy->getId());
-      CheckPotentialNode(addr, zoneUIN, DA_SRC_ACTIVE_DISCOVERY, proxy->getId());
-   }
-   else
-   {
-      ConsoleDebugPrintf(console, DEBUG_TAG_DISCOVERY, 5, _T("Active discovery - node %s responded to ICMP ping"), addr.toString(ipAddrText));
-      CheckPotentialNode(addr, zoneUIN, DA_SRC_ACTIVE_DISCOVERY, 0);
-   }
-}
-
-/**
- * Check given address range with ICMP ping for new nodes
- */
-void CheckRange(const InetAddressListElement& range, void (*callback)(const InetAddress&, int32_t, const Node *, uint32_t, ServerConsole *, void *), ServerConsole *console, void *context)
-{
-   if (range.getBaseAddress().getFamily() != AF_INET)
-   {
-      ConsoleDebugPrintf(console, DEBUG_TAG_DISCOVERY, 4, _T("Active discovery on range %s skipped - only IPv4 ranges supported"), (const TCHAR *)range.toString());
-      return;
-   }
-
-   uint32_t from = range.getBaseAddress().getAddressV4();
-   uint32_t to;
-   if (range.getType() == InetAddressListElement_SUBNET)
-   {
-      from++;
-      to = range.getBaseAddress().getSubnetBroadcast().getAddressV4() - 1;
-   }
-   else
-   {
-      to = range.getEndAddress().getAddressV4();
-   }
-
-   if (from > to)
-   {
-      ConsoleDebugPrintf(console, DEBUG_TAG_DISCOVERY, 4, _T("Invalid address range %s"), range.toString().cstr());
-      return;
-   }
-
-   uint32_t blockSize = ConfigReadULong(_T("NetworkDiscovery.ActiveDiscovery.BlockSize"), 1024);
-   uint32_t interBlockDelay = ConfigReadULong(_T("NetworkDiscovery.ActiveDiscovery.InterBlockDelay"), 0);
-
-   if ((range.getZoneUIN() != 0) || (range.getProxyId() != 0))
-   {
-      uint32_t proxyId;
-      if (range.getProxyId() != 0)
-      {
-         proxyId = range.getProxyId();
-      }
-      else
-      {
-         shared_ptr<Zone> zone = FindZoneByUIN(range.getZoneUIN());
-         if (zone == nullptr)
-         {
-            ConsoleDebugPrintf(console, DEBUG_TAG_DISCOVERY, 4, _T("Invalid zone UIN for address range %s"), range.toString().cstr());
-            return;
-         }
-         proxyId = zone->getProxyNodeId(nullptr);
-      }
-
-      shared_ptr<Node> proxy = static_pointer_cast<Node>(FindObjectById(proxyId, OBJECT_NODE));
-      if (proxy == nullptr)
-      {
-         ConsoleDebugPrintf(console, DEBUG_TAG_DISCOVERY, 4, _T("Cannot find zone proxy node for address range %s"), range.toString().cstr());
-         return;
-      }
-
-      shared_ptr<AgentConnectionEx> conn = proxy->createAgentConnection();
-      if (conn == nullptr)
-      {
-         ConsoleDebugPrintf(console, DEBUG_TAG_DISCOVERY, 4, _T("Cannot connect to proxy agent for address range %s"), (const TCHAR *)range.toString());
-         return;
-      }
-      conn->setCommandTimeout(10000);
-
-      TCHAR ipAddr1[64], ipAddr2[64], rangeText[128];
-      _sntprintf(rangeText, 128, _T("%s - %s"), IpToStr(from, ipAddr1), IpToStr(to, ipAddr2));
-      ConsoleDebugPrintf(console, DEBUG_TAG_DISCOVERY, 4, _T("Starting active discovery check on range %s via proxy %s [%u]"),
-               rangeText, proxy->getName(), proxy->getId());
-      while((from <= to) && !IsShutdownInProgress())
-      {
-         if (interBlockDelay > 0)
-            ThreadSleepMs(interBlockDelay);
-
-         TCHAR request[256];
-         _sntprintf(request, 256, _T("ICMP.ScanRange(%s,%s)"), IpToStr(from, ipAddr1), IpToStr(std::min(to, from + blockSize - 1), ipAddr2));
-         StringList *list;
-         if (conn->getList(request, &list) == ERR_SUCCESS)
-         {
-            for(int i = 0; i < list->size(); i++)
-            {
-               ConsoleDebugPrintf(console, DEBUG_TAG_DISCOVERY, 5, _T("Active discovery - node %s responded to ICMP ping via proxy %s [%u]"),
-                        list->get(i), proxy->getName(), proxy->getId());
-               callback(InetAddress::parse(list->get(i)), range.getZoneUIN(), proxy.get(), 0, console, nullptr);
-            }
-            delete list;
-         }
-         from += blockSize;
-      }
-      ConsoleDebugPrintf(console, DEBUG_TAG_DISCOVERY, 4, _T("Finished active discovery check on range %s via proxy %s [%u]"),
-               rangeText, proxy->getName(), proxy->getId());
-   }
-   else
-   {
-      TCHAR ipAddr1[16], ipAddr2[16];
-      ConsoleDebugPrintf(console, DEBUG_TAG_DISCOVERY, 4, _T("Starting active discovery check on range %s - %s"), IpToStr(from, ipAddr1), IpToStr(to, ipAddr2));
-      while((from <= to) && !IsShutdownInProgress())
-      {
-         if (interBlockDelay > 0)
-            ThreadSleepMs(interBlockDelay);
-         ScanAddressRange(from, std::min(to, from + blockSize - 1), callback, console, nullptr);
-         from += blockSize;
-      }
-      ConsoleDebugPrintf(console, DEBUG_TAG_DISCOVERY, 4, _T("Finished active discovery check on range %s - %s"), ipAddr1, ipAddr2);
-   }
-}
-
-/**
- * Active discovery thread wakeup condition
- */
-static Condition s_activeDiscoveryWakeup(false);
-
-/**
- * Active discovery poller thread
- */
-static void ActiveDiscoveryPoller()
-{
-   ThreadSetName("ActiveDiscovery");
-
-   nxlog_debug_tag(DEBUG_TAG_POLL_MANAGER, 2, _T("Active discovery thread started"));
-
-   time_t lastRun = 0;
-   UINT32 sleepTime = 60000;
-
-   // Main loop
-   while(!IsShutdownInProgress())
-   {
-      s_activeDiscoveryWakeup.wait(sleepTime);
-      if (IsShutdownInProgress())
-         break;
-
-      if (!(g_flags & AF_ACTIVE_NETWORK_DISCOVERY))
-      {
-         sleepTime = INFINITE;
-         continue;
-      }
-
-      time_t now = time(nullptr);
-
-      UINT32 interval = ConfigReadULong(_T("NetworkDiscovery.ActiveDiscovery.Interval"), 7200);
-      if (interval != 0)
-      {
-         if (static_cast<UINT32>(now - lastRun) < interval)
-         {
-            sleepTime = (interval - static_cast<UINT32>(lastRun - now)) * 1000;
-            continue;
-         }
-      }
-      else
-      {
-         TCHAR schedule[256];
-         ConfigReadStr(_T("NetworkDiscovery.ActiveDiscovery.Schedule"), schedule, 256, _T(""));
-         if (schedule[0] != 0)
-         {
-#if HAVE_LOCALTIME_R
-            struct tm tmbuffer;
-            localtime_r(&now, &tmbuffer);
-            struct tm *ltm = &tmbuffer;
-#else
-            struct tm *ltm = localtime(&now);
-#endif
-            if (!MatchSchedule(schedule, NULL, ltm, now))
-            {
-               sleepTime = 60000;
-               continue;
-            }
-         }
-         else
-         {
-            nxlog_debug_tag(DEBUG_TAG_POLL_MANAGER, 4, _T("Empty active discovery schedule"));
-            sleepTime = INFINITE;
-            continue;
-         }
-      }
-
-      ObjectArray<InetAddressListElement> *addressList = LoadServerAddressList(1);
-      if (addressList != nullptr)
-      {
-         for(int i = 0; (i < addressList->size()) && !IsShutdownInProgress(); i++)
-         {
-            CheckRange(*addressList->get(i), RangeScanCallback, nullptr, nullptr);
-         }
-         delete addressList;
-      }
-
-      interval = ConfigReadInt(_T("NetworkDiscovery.ActiveDiscovery.Interval"), 7200);
-      sleepTime = (interval > 0) ? interval * 1000 : 60000;
-   }
-
-   nxlog_debug_tag(DEBUG_TAG_POLL_MANAGER, 2, _T("Active discovery thread terminated"));
 }
 
 /**
@@ -831,89 +333,13 @@ void PollManager(Condition *startCondition)
 	   WatchdogStartSleep(watchdogId);
    }
 
-   s_activeDiscoveryWakeup.set();
+   WakeupActiveDiscoveryThread();
    ThreadJoin(activeDiscoveryPollerThread);
 
-   // Clear node poller queue
-   DiscoveredAddress *nodeInfo;
-   while((nodeInfo = g_nodePollerQueue.get()) != nullptr)
-   {
-      if (nodeInfo != INVALID_POINTER_VALUE)
-         MemFree(nodeInfo);
-   }
-   g_nodePollerQueue.put(INVALID_POINTER_VALUE);
+   StopDiscoveryPoller();
 
    nxlog_debug_tag(DEBUG_TAG_POLL_MANAGER, 2, _T("Waiting for outstanding poll requests"));
    ThreadPoolDestroy(g_pollerThreadPool);
 
    nxlog_debug_tag(DEBUG_TAG_POLL_MANAGER, 1, _T("Poll manager main thread terminated"));
-}
-
-/**
- * Reset discovery poller after configuration change
- */
-void ResetDiscoveryPoller()
-{
-   // Clear node poller queue
-   DiscoveredAddress *nodeInfo;
-   while((nodeInfo = g_nodePollerQueue.get()) != nullptr)
-   {
-      if (nodeInfo != INVALID_POINTER_VALUE)
-         MemFree(nodeInfo);
-   }
-
-   // Reload discovery parameters
-   g_discoveryPollingInterval = ConfigReadInt(_T("NetworkDiscovery.PassiveDiscovery.Interval"), 900);
-
-   switch(ConfigReadInt(_T("NetworkDiscovery.Type"), 0))
-   {
-      case 0:  // Disabled
-         g_flags &= ~(AF_PASSIVE_NETWORK_DISCOVERY | AF_ACTIVE_NETWORK_DISCOVERY);
-         break;
-      case 1:  // Passive only
-         g_flags |= AF_PASSIVE_NETWORK_DISCOVERY;
-         g_flags &= ~AF_ACTIVE_NETWORK_DISCOVERY;
-         break;
-      case 2:  // Active only
-         g_flags &= ~AF_PASSIVE_NETWORK_DISCOVERY;
-         g_flags |= AF_ACTIVE_NETWORK_DISCOVERY;
-         break;
-      case 3:  // Active and passive
-         g_flags |= AF_PASSIVE_NETWORK_DISCOVERY | AF_ACTIVE_NETWORK_DISCOVERY;
-         break;
-      default:
-         break;
-   }
-
-   if (ConfigReadBoolean(_T("NetworkDiscovery.UseSNMPTraps"), false))
-      g_flags |= AF_SNMP_TRAP_DISCOVERY;
-   else
-      g_flags &= ~AF_SNMP_TRAP_DISCOVERY;
-
-   if (ConfigReadBoolean(_T("NetworkDiscovery.UseSyslog"), false))
-      g_flags |= AF_SYSLOG_DISCOVERY;
-   else
-      g_flags &= ~AF_SYSLOG_DISCOVERY;
-
-   s_activeDiscoveryWakeup.set();
-}
-
-/**
- * Wakeup active discovery thread
- */
-void WakeupActiveDiscoveryThread()
-{
-   s_activeDiscoveryWakeup.set();
-}
-
-/**
- * Manual active discovery starter
- */
-void StartManualActiveDiscovery(ObjectArray<InetAddressListElement> *addressList)
-{
-   for(int i = 0; (i < addressList->size()) && !IsShutdownInProgress(); i++)
-   {
-      CheckRange(*addressList->get(i), RangeScanCallback, nullptr, nullptr);
-   }
-   delete addressList;
 }

@@ -248,32 +248,6 @@ enum CertificateOperation
 #include "nms_alarm.h"
 
 /**
- * Source type for discovered address
- */
-enum DiscoveredAddressSourceType
-{
-   DA_SRC_ARP_CACHE = 0,
-   DA_SRC_ROUTING_TABLE = 1,
-   DA_SRC_AGENT_REGISTRATION = 2,
-   DA_SRC_SNMP_TRAP = 3,
-   DA_SRC_SYSLOG = 4,
-   DA_SRC_ACTIVE_DISCOVERY = 5
-};
-
-/**
- * Discovered address information
- */
-struct DiscoveredAddress
-{
-   InetAddress ipAddr;
-   int32_t zoneUIN;
-	bool ignoreFilter;
-	BYTE bMacAddr[MAC_ADDR_LENGTH];
-	DiscoveredAddressSourceType sourceType;
-   UINT32 sourceNodeId;
-};
-
-/**
  * New node flags
  */
 #define NNF_IS_SNMP           0x0001
@@ -1296,9 +1270,7 @@ bool DeleteNotificationChannel(const TCHAR *name);
 bool LookupDevicePortLayout(const SNMP_ObjectId& objectId, NDD_MODULE_LAYOUT *layout);
 
 void CheckForMgmtNode();
-void CheckPotentialNode(const InetAddress& ipAddr, int32_t zoneUIN, DiscoveredAddressSourceType sourceType, UINT32 sourceNodeId);
 shared_ptr<Node> NXCORE_EXPORTABLE PollNewNode(NewNodeData *newNodeData);
-int64_t GetDiscoveryPollerQueueSize();
 
 void NXCORE_EXPORTABLE EnumerateClientSessions(void (*handler)(ClientSession*, void*), void *context);
 template <typename C> void EnumerateClientSessions(void (*handler)(ClientSession *, C *), C *context)
