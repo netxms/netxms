@@ -309,7 +309,7 @@ static bool AcceptNewNode(NewNodeData *newNodeData, const MacAddress& macAddr)
       bool stop = false;
       hook->setGlobalVariable("$ipAddr", hook->createValue(szIpAddr));
       hook->setGlobalVariable("$ipNetMask", hook->createValue(newNodeData->ipAddr.getMaskBits()));
-      hook->setGlobalVariable("$macAddr", hook->createValue(macAddr.toString(szBuffer)));
+      hook->setGlobalVariable("$macAddr", macAddr.isValid() ? hook->createValue(macAddr.toString(szBuffer)) : hook->createValue());
       hook->setGlobalVariable("$zoneUIN", hook->createValue(newNodeData->zoneUIN));
       if (hook->run())
       {
