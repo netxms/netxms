@@ -1265,6 +1265,7 @@ public class NXCPCodes
    public static final long VID_ACCEPT_KEEPALIVE = 786;
    public static final long VID_QR_LABEL = 787;
    public static final long VID_RESULT_AS_MAP = 788;
+   public static final long VID_HAS_DETAIL_FIELDS = 789;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;

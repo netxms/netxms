@@ -1491,6 +1491,7 @@ typedef struct
 #define VID_ACCEPT_KEEPALIVE        ((uint32_t)786)
 #define VID_QR_LABEL                ((uint32_t)787)
 #define VID_RESULT_AS_MAP           ((uint32_t)788)
+#define VID_HAS_DETAIL_FIELDS       ((uint32_t)789)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

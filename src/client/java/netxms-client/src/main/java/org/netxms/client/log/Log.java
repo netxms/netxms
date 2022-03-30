@@ -40,6 +40,7 @@ public class Log
    private String recordIdColumn;
    private String objectIdColumn;
    private long numRecords;   // Number of records ready after successful query()
+   private boolean hasDetails;
 
    /**
     * Create log object from server's reply to CMD_LOG_OPEN.
@@ -55,6 +56,7 @@ public class Log
       handle = msg.getFieldAsInt32(NXCPCodes.VID_LOG_HANDLE);
       recordIdColumn = msg.getFieldAsString(NXCPCodes.VID_RECORD_ID_COLUMN);
       objectIdColumn = msg.getFieldAsString(NXCPCodes.VID_OBJECT_ID_COLUMN);
+      hasDetails = msg.getFieldAsBoolean(NXCPCodes.VID_HAS_DETAIL_FIELDS);
 
       int count = msg.getFieldAsInt32(NXCPCodes.VID_NUM_COLUMNS);
       columns = new LinkedHashMap<String, LogColumn>(count);
@@ -240,6 +242,9 @@ public class Log
     */
    public LogRecordDetails getRecordDetails(long recordId) throws IOException, NXCException
    {
+      if (!hasDetails)
+         return null;
+      
       NXCPMessage msg = session.newMessage(NXCPCodes.CMD_GET_LOG_RECORD_DETAILS);
       msg.setFieldInt32(NXCPCodes.VID_LOG_HANDLE, handle);
       msg.setFieldInt64(NXCPCodes.VID_RECORD_ID, recordId);

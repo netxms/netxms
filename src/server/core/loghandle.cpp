@@ -67,10 +67,14 @@ void LogHandle::getColumnInfo(NXCPMessage *msg)
 {
 	uint32_t count = 0;
 	uint32_t fieldId = VID_COLUMN_INFO_BASE;
+	bool hasDetails = false;
 	for(int i = 0; m_log->columns[i].name != nullptr; i++)
 	{
 	   if (IsIgnoredColumn(m_log->columns[i].type))
+	   {
+	      hasDetails = IsDetailsColumn(m_log->columns[i].type);
 	      continue;   // ignore zone columns if zoning is disabled
+	   }
 		msg->setField(fieldId++, m_log->columns[i].name);
 		msg->setField(fieldId++, static_cast<uint16_t>(m_log->columns[i].type));
 		msg->setField(fieldId++, m_log->columns[i].description);
@@ -80,6 +84,7 @@ void LogHandle::getColumnInfo(NXCPMessage *msg)
 	msg->setField(VID_NUM_COLUMNS, count);
 	msg->setField(VID_RECORD_ID_COLUMN, m_log->idColumn);
    msg->setField(VID_OBJECT_ID_COLUMN, m_log->relatedObjectIdColumn);
+   msg->setField(VID_HAS_DETAIL_FIELDS, hasDetails);
 }
 
 /**
