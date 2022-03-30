@@ -186,7 +186,7 @@ int MicrosoftTeamsDriver::send(const TCHAR* recipient, const TCHAR* subject, con
    char errBuff[CURL_ERROR_SIZE];
    curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, errBuff);
 
-   int result = -1;
+   int result = 0;
 
    char utf8url[256];
 #ifdef UNICODE
@@ -194,44 +194,55 @@ int MicrosoftTeamsDriver::send(const TCHAR* recipient, const TCHAR* subject, con
 #else
    mb_to_utf8(url, -1, utf8url, 256);
 #endif
-   if (curl_easy_setopt(curl, CURLOPT_URL, utf8url) == CURLE_OK)
-   {
-      if (curl_easy_perform(curl) == CURLE_OK)
-      {
-         nxlog_debug_tag(DEBUG_TAG, 7, _T("Got %d bytes"), static_cast<int>(responseData.size()));
-         long httpCode = 0;
-         curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &httpCode);
-         if (responseData.size() > 0)
-         {
-            responseData.write('\0');
-            const char* data = reinterpret_cast<const char*>(responseData.buffer());
-            if (!strcmp(data, "1") && httpCode == 200)
-            {
-               result = 0;
-               nxlog_debug_tag(DEBUG_TAG, 6, _T("Webhook responded with success"));
-            }
-            else
-            {
-               nxlog_debug_tag(DEBUG_TAG, 5, _T("Error response from webhook: %hs"), data);
-            }
-         }
-         else
-         {
-            nxlog_debug_tag(DEBUG_TAG, 5, _T("Empty response from webhook"));
-         }
 
+   if (curl_easy_setopt(curl, CURLOPT_URL, utf8url) != CURLE_OK)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Call to curl_easy_setopt(CURLOPT_URL) failed"));
+      result = -1;
+   }
+
+   if (result == 0 && curl_easy_perform(curl) != CURLE_OK)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("Call to curl_easy_perform() failed: %hs"), errBuff);
+      result = -1;
+   }
+
+   if (result == 0)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 7, _T("Got %d bytes"), static_cast<int>(responseData.size()));
+      long httpCode = 0;
+      curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &httpCode);
+      if (httpCode != 200)
+      {
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("Error response from webhook: HTTP response code is %d"), httpCode);
          if (httpCode == 412 || httpCode == 429 || httpCode == 502 || httpCode == 504)
             result = 10;
+         else
+            result = -1;
+      }
+   }
+
+   if (result == 0 && responseData.size() <= 0)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("Empty response from webhook"));
+      result = -1;
+   }
+
+   if (result == 0)
+   {
+      responseData.write('\0');
+      const char* data = reinterpret_cast<const char*>(responseData.buffer());
+      if (!strcmp(data, "1"))
+      {
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("Message successfully sent"));
       }
       else
       {
-         nxlog_debug_tag(DEBUG_TAG, 5, _T("Call to curl_easy_perform() failed: %hs"), errBuff);
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("Error response from webhook: %hs"), data);
+         result = -1;
       }
    }
-   else
-   {
-      nxlog_debug_tag(DEBUG_TAG, 5, _T("Call to curl_easy_setopt(CURLOPT_URL) failed"));
-   }
+
    curl_slist_free_all(headers);
    curl_easy_cleanup(curl);
    MemFree(json);

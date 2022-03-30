@@ -1,7 +1,7 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** SMS driver for slack.com service
-** Copyright (C) 2014-2019 Raden Solutions
+** Copyright (C) 2014-2022 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -95,7 +95,7 @@ static size_t OnCurlDataReceived(char *ptr, size_t size, size_t nmemb, void *con
  */
 int SlackDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCHAR* body)
 {
-   int result = -1;
+   int result = 0;
 
    nxlog_debug_tag(DEBUG_TAG, 4, _T("channel=\"%s\", text=\"%s\""), recipient, body);
 
@@ -142,43 +142,65 @@ int SlackDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCHAR*
       curl_easy_setopt(curl, CURLOPT_POSTFIELDS, request);
       json_decref(root);
 
+      char errBuff[CURL_ERROR_SIZE];
+      curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, errBuff);
+
       MemFree(_channel);
       MemFree(_text);
 
-      if (curl_easy_setopt(curl, CURLOPT_URL, s_url) == CURLE_OK)
+      if (curl_easy_setopt(curl, CURLOPT_URL, s_url) != CURLE_OK)
       {
-         if (curl_easy_perform(curl) == CURLE_OK)
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("Call to curl_easy_setopt(CURLOPT_URL) failed"));
+         result = -1;
+      }
+
+      if (result == 0 && curl_easy_perform(curl) != CURLE_OK)
+      {
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("Call to curl_easy_perform() failed: %hs"), errBuff);
+         result = -1;
+      }
+
+      if (result == 0)
+      {
+         nxlog_debug_tag(DEBUG_TAG, 7, _T("Got %d bytes"), static_cast<int>(responseData.size()));
+         long httpCode = 0;
+         curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &httpCode);
+         if (httpCode != 200)
          {
-            nxlog_debug_tag(DEBUG_TAG, 4, _T("Got %d bytes"), static_cast<int>(responseData.size()));
-            if (responseData.size() > 0)
-            {
-               responseData.write('\0');
-               const char* data = reinterpret_cast<const char*>(responseData.buffer());
-               if (!strcmp(data, "ok"))
-               {
-                  nxlog_debug_tag(DEBUG_TAG, 4, _T("message successfully sent"));
-                  result = 0;
-               }
-               else
-               {
-                  nxlog_debug_tag(DEBUG_TAG, 4, _T("Got error: %hs"), data);
-               }
-            }
+            nxlog_debug_tag(DEBUG_TAG, 5, _T("Error response from webhook: HTTP response code is %d"), httpCode);
+            if (httpCode == 429 || httpCode == 502 || httpCode == 504)
+               result = 10;
+            else
+               result = -1;
+         }
+      }
+
+      if (result == 0 && responseData.size() <= 0)
+      {
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("Empty response from webhook"));
+         result = -1;
+      }
+
+      if (result == 0)
+      {
+         responseData.write('\0');
+         const char* data = reinterpret_cast<const char*>(responseData.buffer());
+         if (!strcmp(data, "ok"))
+         {
+            nxlog_debug_tag(DEBUG_TAG, 6, _T("Message successfully sent"));
          }
          else
          {
-            nxlog_debug_tag(DEBUG_TAG, 4, _T("Call to curl_easy_perform() failed"));
+            nxlog_debug_tag(DEBUG_TAG, 5, _T("Error response from webhook: %hs"), data);
+            result = -1;
          }
       }
-      else
-      {
-         nxlog_debug_tag(DEBUG_TAG, 4, _T("Call to curl_easy_setopt(CURLOPT_URL) failed"));
-      }
+
       curl_easy_cleanup(curl);
    }
    else
    {
-   	nxlog_debug_tag(DEBUG_TAG, 4, _T("Call to curl_easy_init() failed"));
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Call to curl_easy_init() failed"));
    }
 
    return result;

@@ -1,7 +1,7 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Notification channel driver for Microsoft Teams
-** Copyright (C) 2021 Raden Solutions
+** Copyright (C) 2021-2022 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -50,16 +50,6 @@ public:
 
    static GoogleChatDriver *createInstance(Config *config);
 };
-
-/**
- * Callback for processing data received from cURL
- */
-static size_t OnCurlDataReceived(char *ptr, size_t size, size_t nmemb, void *context)
-{
-   size_t bytes = size * nmemb;
-   static_cast<ByteStream*>(context)->write(ptr, bytes);
-   return bytes;
-}
 
 /**
  * Create driver instance
@@ -113,19 +103,17 @@ int GoogleChatDriver::send(const TCHAR* recipient, const TCHAR* subject, const T
 
    curl_easy_setopt(curl, CURLOPT_HEADER, (long)0); // do not include header in data
    curl_easy_setopt(curl, CURLOPT_TIMEOUT, 10);
-   curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &OnCurlDataReceived);
    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0);
    curl_easy_setopt(curl, CURLOPT_USERAGENT, "NetXMS Google Chat Driver/" NETXMS_VERSION_STRING_A);
-
-   ByteStream responseData(32768);
-   responseData.setAllocationStep(32768);
-   curl_easy_setopt(curl, CURLOPT_WRITEDATA, &responseData);
 
    struct curl_slist *headers = NULL;
    char *json = request.getUTF8String();
    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, json);
    headers = curl_slist_append(headers, "Content-Type: application/json");
    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+
+   char errBuff[CURL_ERROR_SIZE];
+   curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, errBuff);
 
    int result = -1;
 
@@ -144,34 +132,28 @@ int GoogleChatDriver::send(const TCHAR* recipient, const TCHAR* subject, const T
    {
       if (curl_easy_perform(curl) == CURLE_OK)
       {
-         nxlog_debug_tag(DEBUG_TAG, 7, _T("Got %d bytes"), static_cast<int>(responseData.size()));
-         if (responseData.size() > 0)
+         long httpCode = 0;
+         curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &httpCode);
+         if (httpCode == 200)
          {
-            responseData.write('\0');
-            const char* data = reinterpret_cast<const char*>(responseData.buffer());
-            if (!strcmp(data, "1"))
-            {
-               result = 0;
-               nxlog_debug_tag(DEBUG_TAG, 6, _T("Webhook responded with success"));
-            }
-            else
-            {
-               nxlog_debug_tag(DEBUG_TAG, 4, _T("Error response from webhook: %hs"), data);
-            }
+            result = 0;
+            nxlog_debug_tag(DEBUG_TAG, 6, _T("Webhook responded with success"));
          }
          else
          {
-            nxlog_debug_tag(DEBUG_TAG, 4, _T("Empty response from webhook"));
+            nxlog_debug_tag(DEBUG_TAG, 5, _T("Error response from webhook: HTTP response code is %d"), httpCode);
+            if (httpCode == 429 || httpCode == 502 || httpCode == 504)
+               result = 10;
          }
       }
       else
       {
-         nxlog_debug_tag(DEBUG_TAG, 4, _T("Call to curl_easy_perform() failed"));
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("Call to curl_easy_perform() failed: %hs"), errBuff);
       }
    }
    else
    {
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("Call to curl_easy_setopt(CURLOPT_URL) failed"));
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("Call to curl_easy_setopt(CURLOPT_URL) failed"));
    }
    curl_slist_free_all(headers);
    curl_easy_cleanup(curl);
