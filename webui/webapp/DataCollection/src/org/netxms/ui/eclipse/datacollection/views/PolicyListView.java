@@ -396,6 +396,12 @@ public class PolicyListView extends ViewPart implements SessionListener
       if (dlg.open() != Window.OK)
          return;
 
+      if (dlg.getSelectedObjects(Template.class).length <= 0)
+      {
+         MessageDialogHelper.openError(getSite().getShell(), "Error", "Please select at least one destination template.");
+         return;
+      }
+      
       IStructuredSelection selection = (IStructuredSelection)policyList.getSelection();
       Iterator<?> it = selection.iterator();
       final AgentPolicy[] policyList = new AgentPolicy[selection.size()];
@@ -409,8 +415,9 @@ public class PolicyListView extends ViewPart implements SessionListener
             boolean sameObject = false;
             for(AbstractObject o : dlg.getSelectedObjects(Template.class))
             {
-               for(AgentPolicy p : policyList)
-                  session.savePolicy(o.getObjectId(), new AgentPolicy(p), true);
+               if (o.getObjectId() != templateId || !doMove)
+                  for(AgentPolicy p : policyList)
+                     session.savePolicy(o.getObjectId(), new AgentPolicy(p), true);
                if (o.getObjectId() == templateId)
                   sameObject = true;
             }
