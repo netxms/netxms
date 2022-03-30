@@ -1295,7 +1295,7 @@ bool Config::loadIniConfig(const TCHAR *file, const TCHAR *defaultIniSection, bo
    BYTE *content = LoadFile(file, &size);
    if (content != nullptr)
    {
-      success = loadIniConfigFromMemory((char *)content, (int)size, file, defaultIniSection, ignoreErrors);
+      success = loadIniConfigFromMemory(reinterpret_cast<char*>(content), size, file, defaultIniSection, ignoreErrors);
       MemFree(content);
    }
    else
@@ -1326,7 +1326,7 @@ bool Config::loadIniConfigFromMemory(const char *content, size_t length, const T
    while(next != nullptr)
    {
       // Read line from file
-      next = strchr(curr, '\n');
+      next = static_cast<const char*>(memchr(curr, '\n', length - (curr - content)));
       size_t llen = (next != nullptr) ? next - curr : length - (curr - content);
 #ifdef UNICODE
       llen = MultiByteToWideChar(CP_UTF8, 0, curr, (int)llen, buffer, 4095);
@@ -1335,7 +1335,7 @@ bool Config::loadIniConfigFromMemory(const char *content, size_t length, const T
       memcpy(buffer, curr, llen);
 #endif
       buffer[llen] = 0;
-      curr = (next != nullptr) ? next+1 : nullptr;
+      curr = (next != nullptr) ? next + 1 : nullptr;
 
       sourceLine++;
       ptr = _tcschr(buffer, _T('\r'));
