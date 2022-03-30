@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Utility Library
-** Copyright (C) 2003-2020 Raden Solutions
+** Copyright (C) 2003-2022 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -97,8 +97,13 @@ String MacAddress::toString(MacAddressNotation notation) const
  */
 TCHAR *MacAddress::toStringInternal3(TCHAR *buffer, const TCHAR separator) const
 {
-   TCHAR *curr = buffer;
+   if (m_length == 0)
+   {
+      *buffer = 0;
+      return buffer;
+   }
 
+   TCHAR *curr = buffer;
    for(size_t i = 0; i < m_length; i++)
    {
       *curr++ = bin2hex(m_value[i] >> 4);
@@ -117,8 +122,13 @@ TCHAR *MacAddress::toStringInternal3(TCHAR *buffer, const TCHAR separator) const
  */
 TCHAR *MacAddress::toStringInternal(TCHAR *buffer, const TCHAR separator, bool bytePair) const
 {
-   TCHAR *curr = buffer;
+   if (m_length == 0)
+   {
+      *buffer = 0;
+      return buffer;
+   }
 
+   TCHAR *curr = buffer;
    for(size_t i = 0; i < m_length; i++)
    {
       *curr++ = bin2hex(m_value[i] >> 4);
@@ -136,7 +146,6 @@ TCHAR *MacAddress::toStringInternal(TCHAR *buffer, const TCHAR separator, bool b
 TCHAR *MacAddress::toStringInternalDecimal(TCHAR *buffer, const TCHAR separator) const
 {
    TCHAR *curr = buffer;
-
    for(size_t i = 0; i < m_length; i++)
    {
       if (i > 0)
