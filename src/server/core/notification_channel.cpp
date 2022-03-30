@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2019-2021 Raden Solutions
+** Copyright (C) 2019-2022 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -408,6 +408,11 @@ void NotificationChannel::checkHealth()
  */
 void NotificationChannel::send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body)
 {
+   if (m_confTemplate->needRecipient && IsBlankString(recipient))
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Driver for channel %s requires recipient, but message has no recipient (message dropped)"), m_name);
+      return;
+   }
    m_notificationQueue.put(new NotificationMessage(recipient, subject, body));
 }
 

@@ -4934,6 +4934,28 @@ static inline uint32_t CalculateDJB2Hash(const void *data, size_t size)
    return hash;
 }
 
+/**
+ * Check if string is blank (empty or contains only spaces and tabs)
+ */
+static inline bool IsBlankString(const char* s)
+{
+   while(*s++ != 0)
+      if (!isblank(*s))
+         return false;
+   return true;
+}
+
+/**
+ * Check if string is blank (empty or contains only spaces and tabs) - UNICODE version
+ */
+static inline bool IsBlankString(const WCHAR* s)
+{
+   while(*s++ != 0)
+      if (!iswblank(*s))
+         return false;
+   return true;
+}
+
 TCHAR LIBNETXMS_EXPORTABLE *GetHeapInfo();
 INT64 LIBNETXMS_EXPORTABLE GetAllocatedHeapMemory();
 INT64 LIBNETXMS_EXPORTABLE GetActiveHeapMemory();
