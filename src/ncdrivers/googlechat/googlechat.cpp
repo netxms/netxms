@@ -43,7 +43,8 @@ class GoogleChatDriver : public NCDriver
 {
 private:
    StringMap m_rooms;
-   GoogleChatDriver(){};
+   
+   GoogleChatDriver() { }
 
 public:
    virtual bool send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body) override;
@@ -69,7 +70,7 @@ GoogleChatDriver *GoogleChatDriver::createInstance(Config *config)
    GoogleChatDriver *driver = new GoogleChatDriver();
 
    ObjectArray<ConfigEntry> *rooms = config->getSubEntries(_T("/Rooms"), nullptr);
-   if (rooms != NULL)
+   if (rooms != nullptr)
    {
       for (int i = 0; i < rooms->size(); i++)
       {
@@ -188,7 +189,7 @@ DECLARE_NCD_ENTRY_POINT(GoogleChat, &s_config)
    if (!InitializeLibCURL())
    {
       nxlog_debug_tag(DEBUG_TAG, 1, _T("cURL initialization failed"));
-      return NULL;
+      return nullptr;
    }
    return GoogleChatDriver::createInstance(config);
 }

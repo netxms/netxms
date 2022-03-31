@@ -55,29 +55,15 @@ SlackDriver::SlackDriver(Config *config)
    s_username[0] = 0;
    s_url[0] = 0;
 
-   nxlog_debug_tag(DEBUG_TAG, 1, _T("driver loaded"));
-   nxlog_debug_tag(DEBUG_TAG, 3, _T("cURL version: %hs"), curl_version());
-#if defined(_WIN32) || HAVE_DECL_CURL_VERSION_INFO
-   curl_version_info_data *version = curl_version_info(CURLVERSION_NOW);
-   char protocols[1024] = {0};
-   const char * const *p = version->protocols;
-   while (*p != NULL)
-   {
-      strncat(protocols, *p, strlen(protocols) - 1);
-      strncat(protocols, " ", strlen(protocols) - 1);
-      p++;
-   }
-   nxlog_debug_tag(DEBUG_TAG, 3, _T("cURL supported protocols: %hs"), protocols);
-#endif
-
    NX_CFG_TEMPLATE configTemplate[] = 
 	{
 		{ _T("url"), CT_MB_STRING, 0, 0, sizeof(s_url), 0, s_url },	
 		{ _T("username"), CT_MB_STRING, 0, 0, sizeof(s_username), 0, s_username },	
 		{ _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
 	};
-
 	config->parseTemplate(_T("Slack"), configTemplate);
+
+   nxlog_debug_tag(DEBUG_TAG, 1, _T("Slack driver instantiated"));
 }
 
 /**
