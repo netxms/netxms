@@ -814,7 +814,7 @@ uint32_t ServiceEntry::query(const TCHAR *url, uint16_t requestMethod, const cha
 /**
  * Query web service
  */
-void QueryWebService(NXCPMessage* request, AbstractCommSession *session)
+void QueryWebService(NXCPMessage* request, shared_ptr<AbstractCommSession> session)
 {
    uint16_t requestMethodCode = request->getFieldAsInt16(VID_HTTP_REQUEST_METHOD);
    if (requestMethodCode > static_cast<uint16_t>(HttpRequestMethod::_MAX_TYPE))
@@ -908,7 +908,7 @@ void QueryWebService(NXCPMessage* request, AbstractCommSession *session)
 /**
  * Web service custom request command executor
  */
-void WebServiceCustomRequest(NXCPMessage* request, AbstractCommSession *session)
+void WebServiceCustomRequest(NXCPMessage* request, shared_ptr<AbstractCommSession> session)
 {
    uint16_t requestMethodCode = request->getFieldAsInt16(VID_HTTP_REQUEST_METHOD);
    if (requestMethodCode > static_cast<uint16_t>(HttpRequestMethod::_MAX_TYPE))
@@ -1109,7 +1109,7 @@ void StartWebServiceHousekeeper()
 /**
  * Get parameters from web service
  */
-void QueryWebService(NXCPMessage* request, AbstractCommSession *session)
+void QueryWebService(NXCPMessage* request, shared_ptr<AbstractCommSession> session)
 {
    nxlog_debug_tag(DEBUG_TAG, 5, _T("QueryWebService(): agent was compiled without libcurl"));
    NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
@@ -1121,7 +1121,7 @@ void QueryWebService(NXCPMessage* request, AbstractCommSession *session)
 /**
  * Web service cusom request command executer
  */
-void WebServiceCustomRequest(NXCPMessage* request, AbstractCommSession *session)
+void WebServiceCustomRequest(NXCPMessage* request, shared_ptr<AbstractCommSession> session)
 {
    nxlog_debug_tag(DEBUG_TAG, 5, _T("WebServiceCustomRequest(): agent was compiled without libcurl"));
    NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
