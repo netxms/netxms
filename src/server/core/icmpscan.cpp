@@ -35,12 +35,12 @@ struct EchoRequest
    InetAddress addr;
    void *replyBuffer;
    DWORD replyBufferSize;
-   void(*callback)(const InetAddress&, int32_t, const Node *, uint32_t, ServerConsole *, void *);
+   void (*callback)(const InetAddress&, int32_t, const Node*, uint32_t, const TCHAR*, ServerConsole*, void*);
    ServerConsole *console;
    void *context;
    volatile int *pendingRequests;
 
-   EchoRequest(const InetAddress& a, void(*cb)(const InetAddress&, int32_t, const Node *, uint32_t, ServerConsole *, void *), ServerConsole *c, void *ctx, volatile int *prq)
+   EchoRequest(const InetAddress& a, void (*cb)(const InetAddress&, int32_t, const Node*, uint32_t, const TCHAR*, ServerConsole*, void*), ServerConsole *c, void *ctx, volatile int *prq)
    {
       addr = a;
       replyBufferSize = 80 + sizeof(ICMP_ECHO_REPLY);
@@ -68,7 +68,7 @@ static int WINAPI EchoCallback(void *context)
 #endif
       if (er->Status == IP_SUCCESS)
       {
-         request->callback(request->addr, 0, nullptr, er->RoundTripTime, request->console, request->context);
+         request->callback(request->addr, 0, nullptr, er->RoundTripTime, _T("ICMP"), request->console, request->context);
       }
    }
    (*request->pendingRequests)--;
@@ -79,7 +79,7 @@ static int WINAPI EchoCallback(void *context)
 /**
  * Scan range of IPv4 addresses
  */
-void ScanAddressRangeICMP(const InetAddress& from, const InetAddress& to, void (*callback)(const InetAddress&, int32_t, const Node *, uint32_t, ServerConsole *, void *), ServerConsole *console, void *context)
+void ScanAddressRangeICMP(const InetAddress& from, const InetAddress& to, void (*callback)(const InetAddress&, int32_t, const Node*, uint32_t, const TCHAR*, ServerConsole*, void*), ServerConsole *console, void *context)
 {
    static char payload[64] = "NetXMS ICMP probe [range scan]";
 
@@ -91,7 +91,7 @@ void ScanAddressRangeICMP(const InetAddress& from, const InetAddress& to, void (
    for(UINT32 a = from.getAddressV4(); a <= to.getAddressV4(); a++)
    {
       EchoRequest *rq = new EchoRequest(a, callback, console, context, &pendingRequests);
-      DWORD rc = IcmpSendEcho2(hIcmpFile, NULL, (FARPROC)EchoCallback, rq, htonl(a), payload, 64, NULL, rq->replyBuffer, rq->replyBufferSize, g_icmpPingTimeout);
+      DWORD rc = IcmpSendEcho2(hIcmpFile, nullptr, (FARPROC)EchoCallback, rq, htonl(a), payload, 64, nullptr, rq->replyBuffer, rq->replyBufferSize, g_icmpPingTimeout);
       if ((rc == 0) && (GetLastError() == ERROR_IO_PENDING))
       {
          pendingRequests++;
