@@ -40,7 +40,7 @@ public class Log
    private String recordIdColumn;
    private String objectIdColumn;
    private long numRecords;   // Number of records ready after successful query()
-   private boolean hasDetails;
+   private boolean hasDetailFields;
 
    /**
     * Create log object from server's reply to CMD_LOG_OPEN.
@@ -56,7 +56,7 @@ public class Log
       handle = msg.getFieldAsInt32(NXCPCodes.VID_LOG_HANDLE);
       recordIdColumn = msg.getFieldAsString(NXCPCodes.VID_RECORD_ID_COLUMN);
       objectIdColumn = msg.getFieldAsString(NXCPCodes.VID_OBJECT_ID_COLUMN);
-      hasDetails = msg.getFieldAsBoolean(NXCPCodes.VID_HAS_DETAIL_FIELDS);
+      hasDetailFields = msg.getFieldAsBoolean(NXCPCodes.VID_HAS_DETAIL_FIELDS);
 
       int count = msg.getFieldAsInt32(NXCPCodes.VID_NUM_COLUMNS);
       columns = new LinkedHashMap<String, LogColumn>(count);
@@ -76,6 +76,16 @@ public class Log
    public String getName()
    {
       return name;
+   }
+
+   /**
+    * Check if this log has additional fields with detailed information.
+    *
+    * @return true if this log has additional fields with detailed information
+    */
+   public boolean hasDetailFields()
+   {
+      return hasDetailFields;
    }
 
    /**
@@ -236,13 +246,13 @@ public class Log
     * Get details for specific log record. Details object will contain values for all columns marked as "details column".
     * 
     * @param recordId log record ID
-    * @return log record details
+    * @return log record details or null if this log does not have additional fields with detailed information
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public LogRecordDetails getRecordDetails(long recordId) throws IOException, NXCException
    {
-      if (!hasDetails)
+      if (!hasDetailFields)
          return null;
       
       NXCPMessage msg = session.newMessage(NXCPCodes.CMD_GET_LOG_RECORD_DETAILS);
@@ -281,6 +291,7 @@ public class Log
       sb.append(", name='").append(name).append('\'');
       sb.append(", columns=").append(columns);
       sb.append(", numRecords=").append(numRecords);
+      sb.append(", hasDetailFields=").append(hasDetailFields);
       sb.append('}');
       return sb.toString();
    }

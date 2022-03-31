@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,17 +22,13 @@ import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.SWT;
-import org.netxms.ui.eclipse.widgets.StyledText;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
-import org.eclipse.ui.IViewPart;
 import org.netxms.client.TableRow;
 import org.netxms.client.log.Log;
-import org.netxms.client.log.LogRecordDetails;
 import org.netxms.ui.eclipse.logviewer.views.helpers.LogLabelProvider;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
@@ -49,7 +45,7 @@ public class NotificationLogRecordDetailsDialog extends Dialog
    private LabeledText channel;
    private LabeledText recipient;
    private LabeledText subject;   
-   private StyledText message;
+   private LabeledText message;
    private LogLabelProvider labelProvider;
 
    /**
@@ -58,12 +54,12 @@ public class NotificationLogRecordDetailsDialog extends Dialog
     * @param parentShell parent shell
     * @param data audit log record details
     */
-   public NotificationLogRecordDetailsDialog(Shell parentShell, LogRecordDetails data, TableRow record, Log logHandle, IViewPart viewPart)
+   public NotificationLogRecordDetailsDialog(Shell parentShell, TableRow record, Log logHandle)
    {
       super(parentShell);
-      labelProvider = new LogLabelProvider(logHandle, null);
       this.logHandle = logHandle;
       this.record = record;
+      this.labelProvider = new LogLabelProvider(logHandle, null);
    }
 
    /**
@@ -73,7 +69,7 @@ public class NotificationLogRecordDetailsDialog extends Dialog
    protected void configureShell(Shell newShell)
    {
       super.configureShell(newShell);
-      newShell.setText("Notification Message");
+      newShell.setText("Notification");
    }
 
    /**
@@ -106,6 +102,7 @@ public class NotificationLogRecordDetailsDialog extends Dialog
       layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
       layout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
       layout.numColumns = 3;
+      layout.makeColumnsEqualWidth = true;
       dialogArea.setLayout(layout);
       
       timestamp = new LabeledText(dialogArea, SWT.NONE);
@@ -155,36 +152,31 @@ public class NotificationLogRecordDetailsDialog extends Dialog
       gd.horizontalSpan = 3;
       subject.setLayoutData(gd);
 
-      Label label = new Label(dialogArea, SWT.NONE);
-      label.setText("Message:");
-      gd = new GridData();
-      gd.horizontalAlignment = SWT.FILL;
-      gd.grabExcessHorizontalSpace = true;
-      gd.horizontalSpan = 3;
-      label.setLayoutData(gd);      
-      
-      message = new StyledText(dialogArea, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL | SWT.READ_ONLY);
+      message = new LabeledText(dialogArea, SWT.NONE, SWT.BORDER | SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
+      message.setLabel("Message");
       message.setFont(JFaceResources.getTextFont());
       message.setText(labelProvider.getColumnText(record, logHandle.getColumnIndex("message")));
+      message.setEditable(false);
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.verticalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       gd.grabExcessVerticalSpace = true;
-      gd.widthHint = 500;
-      gd.heightHint = 500;
+      gd.widthHint = 600;
+      gd.heightHint = 300;
       gd.horizontalSpan = 3;
       message.setLayoutData(gd);
 
       return dialogArea;
    }
 
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#close()
+    */
    @Override
    public boolean close()
    {
       labelProvider.dispose();
       return super.close();
    }
-   
-   
 }

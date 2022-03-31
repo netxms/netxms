@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2020 Raden Solutions
+ * Copyright (C) 2020-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,7 +37,7 @@ public class NotificationLogRecordDetailsViewer implements LogRecordDetailsViewe
    @Override
    public void showRecordDetails(LogRecordDetails details, TableRow record, Log logHandle, IViewPart viewPart)
    {
-      NotificationLogRecordDetailsDialog dlg = new NotificationLogRecordDetailsDialog(viewPart.getSite().getShell(), details, record, logHandle, viewPart);
+      NotificationLogRecordDetailsDialog dlg = new NotificationLogRecordDetailsDialog(viewPart.getSite().getShell(), record, logHandle);
       dlg.open();
    }
 }

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -39,8 +39,8 @@ public final class LogRecordDetailsViewerRegistry
    {
       registry.put("AuditLog", new AuditLogRecordDetailsViewer());
       registry.put("EventLog", new EventLogRecordDetailsViewer());
-      registry.put("WindowsEventLog", new WindowsEventLogRecordDetailsViewer());
       registry.put("NotificationLog", new NotificationLogRecordDetailsViewer());
+      registry.put("WindowsEventLog", new WindowsEventLogRecordDetailsViewer());
    }
 
    /**
