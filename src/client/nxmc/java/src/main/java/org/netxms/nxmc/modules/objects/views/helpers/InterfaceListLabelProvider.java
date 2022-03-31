@@ -76,7 +76,7 @@ public class InterfaceListLabelProvider extends LabelProvider implements ITableL
          case InterfacesView.COLUMN_ADMIN_STATE:
 				return iface.getAdminStateAsText();
          case InterfacesView.COLUMN_ALIAS:
-            return iface.getAlias();
+            return iface.getIfAlias();
          case InterfacesView.COLUMN_DESCRIPTION:
 				return iface.getDescription();
          case InterfacesView.COLUMN_EXPECTED_STATE:

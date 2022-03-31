@@ -135,6 +135,7 @@ public class GeneralInfo extends TableElement
 				String typeName = iface.getIfTypeName();
 				addPair(Messages.get().GeneralInfo_IfType, (typeName != null) ? String.format("%d (%s)", iface.getIfType(), typeName) : Integer.toString(iface.getIfType())); //$NON-NLS-1$
 				addPair(Messages.get().GeneralInfo_Description, iface.getDescription(), false);
+            addPair("Interface alias", iface.getIfAlias(), false);
             if (iface.getMtu() > 0)
                addPair(Messages.get().GeneralInfo_MTU, Integer.toString(iface.getMtu()));
             if (iface.getSpeed() > 0)

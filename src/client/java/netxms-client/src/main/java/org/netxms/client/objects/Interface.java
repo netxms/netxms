@@ -422,6 +422,7 @@ public class Interface extends GenericObject implements ZoneMember, NodeChild
 	private LinkLayerDiscoveryProtocol peerDiscoveryProtocol;
 	private int zoneId;
 	private String description;
+   protected String ifAlias;
 	private int adminState;
 	private int operState;
 	private int dot1xPaeState;
@@ -462,6 +463,8 @@ public class Interface extends GenericObject implements ZoneMember, NodeChild
 		ifTableSuffix = new SnmpObjectId(msg.getFieldAsUInt32Array(NXCPCodes.VID_IFTABLE_SUFFIX));
 		parentInterfaceId = msg.getFieldAsInt64(NXCPCodes.VID_PARENT_INTERFACE);
 		vlans = msg.getFieldAsUInt32Array(NXCPCodes.VID_VLAN_LIST);
+      ifAlias = msg.getFieldAsString(NXCPCodes.VID_IF_ALIAS);
+
 		if (vlans != null)
 		{
 		   Arrays.sort(vlans);
@@ -643,6 +646,14 @@ public class Interface extends GenericObject implements ZoneMember, NodeChild
 	{
 		return description;
 	}
+
+   /**
+    * @return interface's SNMP alias
+    */
+   public String getIfAlias()
+   {
+      return (ifAlias != null) ? ifAlias : "";
+   }
 
 	/**
 	 * @return the flags

@@ -139,6 +139,7 @@ public class GeneralInfo extends TableElement
                   (typeName != null) ? String.format("%d (%s)", iface.getIfType(), typeName) : Integer.toString(iface.getIfType()));
             addPair(i18n.tr("Description"), iface.getDescription(), false);
             addPair(i18n.tr("Alias"), iface.getAlias(), false);
+            addPair(i18n.tr("Interface alias"), iface.getIfAlias(), false);
             if (iface.getMtu() > 0)
                addPair(i18n.tr("MTU"), Integer.toString(iface.getMtu()));
             if (iface.getSpeed() > 0)

@@ -170,7 +170,7 @@ bool Interface::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 		_T("phy_pic,phy_port,peer_node_id,peer_if_id,description,")
 		_T("dot1x_pae_state,dot1x_backend_state,admin_state,")
       _T("oper_state,peer_proto,mtu,speed,parent_iface,")
-      _T("iftable_suffix,last_known_oper_state,last_known_admin_state FROM interfaces WHERE id=?"));
+      _T("iftable_suffix,last_known_oper_state,last_known_admin_state, if_alias FROM interfaces WHERE id=?"));
 	if (hStmt == nullptr)
 		return false;
 	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -223,6 +223,7 @@ bool Interface::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 
       m_lastKnownOperState = (int16_t)DBGetFieldLong(hResult, 0, 22);
       m_lastKnownAdminState = (int16_t)DBGetFieldLong(hResult, 0, 23);
+      m_ifAlias = DBGetFieldAsSharedString(hResult, 0, 24);
 
       // Link interface to node
       if (!m_isDeleted)
@@ -332,7 +333,7 @@ bool Interface::saveToDatabase(DB_HANDLE hdb)
          _T("phy_chassis"), _T("phy_module"), _T("phy_pic"), _T("phy_port"), _T("peer_node_id"), _T("peer_if_id"),
          _T("description"), _T("admin_state"), _T("oper_state"), _T("dot1x_pae_state"), _T("dot1x_backend_state"),
          _T("peer_proto"), _T("mtu"), _T("speed"), _T("parent_iface"), _T("iftable_suffix"), _T("last_known_oper_state"),
-          _T("last_known_admin_state"),
+         _T("last_known_admin_state"), _T("if_alias"),
          nullptr
       };
 
@@ -373,7 +374,8 @@ bool Interface::saveToDatabase(DB_HANDLE hdb)
          }
          DBBind(hStmt, 23, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_lastKnownOperState));
          DBBind(hStmt, 24, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_lastKnownAdminState));
-         DBBind(hStmt, 25, DB_SQLTYPE_INTEGER, m_id);
+         DBBind(hStmt, 25, DB_SQLTYPE_VARCHAR, m_ifAlias, DB_BIND_STATIC);
+         DBBind(hStmt, 26, DB_SQLTYPE_INTEGER, m_id);
 
          success = DBExecute(hStmt);
          DBFreeStatement(hStmt);
@@ -948,6 +950,7 @@ void Interface::fillMessageInternal(NXCPMessage *msg, UINT32 userId)
    msg->setFieldFromInt32Array(VID_IFTABLE_SUFFIX, m_ifTableSuffixLen, m_ifTableSuffix);
    msg->setField(VID_PARENT_INTERFACE, m_parentInterfaceId);
    msg->setFieldFromInt32Array(VID_VLAN_LIST, m_vlans);
+   msg->setField(VID_IF_ALIAS, m_ifAlias);
 }
 
 /**

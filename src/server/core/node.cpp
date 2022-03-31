@@ -1687,6 +1687,7 @@ shared_ptr<Interface> Node::createInterfaceObject(InterfaceInfo *info, bool manu
       iface = make_shared<Interface>(info->ipAddrList, m_zoneUIN, syntheticMask);
    }
    iface->setAlias(info->alias);
+   iface->setIfAlias(info->alias);
    iface->setMacAddr(MacAddress(info->macAddr, MAC_ADDR_LENGTH), false);
    iface->setBridgePortNumber(info->bridgePort);
    iface->setPhysicalLocation(info->location);
@@ -5552,9 +5553,11 @@ bool Node::updateInterfaceConfiguration(uint32_t requestId, int maskBits)
                      pInterface->setDescription(ifInfo->description);
                      interfaceUpdated = true;
                   }
-                  if (_tcscmp(ifInfo->alias, pInterface->getAlias()))
+                  if (_tcscmp(ifInfo->alias, pInterface->getIfAlias()))
                   {
-                     pInterface->setAlias(ifInfo->alias);
+                     if (pInterface->getAlias().isEmpty() || !_tcscmp(pInterface->getIfAlias(), pInterface->getAlias()))
+                        pInterface->setAlias(ifInfo->alias);
+                     pInterface->setIfAlias(ifInfo->alias);
                      interfaceUpdated = true;
                   }
                   if (ifInfo->bridgePort != pInterface->getBridgePortNumber())
@@ -9921,10 +9924,15 @@ void Node::updateInterfaceNames(ClientSession *pSession, UINT32 rqId)
                      pInterface->setDescription(ifInfo->description);
                      sendPollerMsg(POLLER_WARNING _T("   Description of interface %d changed to %s\r\n"), pInterface->getIfIndex(), ifInfo->description);
                   }
-                  if (_tcscmp(ifInfo->alias, pInterface->getAlias()))
+                  if (_tcscmp(ifInfo->alias, pInterface->getIfAlias()))
                   {
-                     pInterface->setAlias(ifInfo->alias);
-                     sendPollerMsg(POLLER_WARNING _T("   Alias of interface %d changed to %s\r\n"), pInterface->getIfIndex(), ifInfo->alias);
+                     if (pInterface->getAlias().isEmpty() || !_tcscmp(pInterface->getIfAlias(), pInterface->getAlias()))
+                     {
+                        pInterface->setAlias(ifInfo->alias);
+                        sendPollerMsg(POLLER_WARNING _T("   Alias of interface %d changed to %s\r\n"), pInterface->getIfIndex(), ifInfo->alias);
+                     }
+                     pInterface->setIfAlias(ifInfo->alias);
+                     sendPollerMsg(POLLER_WARNING _T("   SNMP alias of interface %d changed to %s\r\n"), pInterface->getIfIndex(), ifInfo->alias);
                   }
                   break;
                }

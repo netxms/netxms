@@ -1921,6 +1921,7 @@ protected:
    MacAddress m_macAddr;
    InetAddressList m_ipAddressList;
    TCHAR m_description[MAX_DB_STRING];   // Interface description - value of ifDescr for SNMP, equals to name for NetXMS agent
+   SharedString m_ifAlias;
    uint32_t m_type;
    uint32_t m_mtu;
    uint64_t m_speed;
@@ -2011,6 +2012,8 @@ public:
    const MacAddress& getMacAddr() const { return m_macAddr; }
    int getIfTableSuffixLen() const { return m_ifTableSuffixLen; }
    const uint32_t *getIfTableSuffix() const { return m_ifTableSuffix; }
+   SharedString getIfAlias() const { return GetAttributeWithLock(m_ifAlias, m_mutexProperties); }
+
    bool isSyntheticMask() const { return (m_flags & IF_SYNTHETIC_MASK) ? true : false; }
    bool isPhysicalPort() const { return (m_flags & IF_PHYSICAL_PORT) ? true : false; }
    bool isLoopback() const { return (m_flags & IF_LOOPBACK) ? true : false; }
@@ -2121,6 +2124,14 @@ public:
    void setExpectedState(int state) { lockProperties(); setExpectedStateInternal(state); unlockProperties(); }
    void setExcludeFromTopology(bool excluded);
    void setIncludeInIcmpPoll(bool included);
+
+   void setIfAlias(const TCHAR* ifAlias)
+   {
+      lockProperties();
+      m_ifAlias = ifAlias;
+      setModified(MODIFY_INTERFACE_PROPERTIES);
+      unlockProperties();
+   }
 
    void expandName(const TCHAR *originalName, TCHAR *expandedName);
 };

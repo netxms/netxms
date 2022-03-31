@@ -584,6 +584,7 @@ CREATE TABLE interfaces
   iftable_suffix varchar(127) null,
   last_known_oper_state integer not null,
   last_known_admin_state integer not null,
+  if_alias varchar(255) null,
   PRIMARY KEY(id)
 ) TABLE_TYPE;
 

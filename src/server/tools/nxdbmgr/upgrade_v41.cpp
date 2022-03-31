@@ -24,6 +24,16 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 41.7 to 41.8
+ */
+static bool H_UpgradeFromV7()
+{
+   CHK_EXEC(SQLQuery(_T("ALTER TABLE interfaces ADD if_alias varchar(255)")));
+   CHK_EXEC(SetMinorSchemaVersion(8));
+   return true;
+}
+
+/**
  * Upgrade from 41.6 to 41.7
  */
 static bool H_UpgradeFromV6()
@@ -257,6 +267,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 7,  41, 8,  H_UpgradeFromV7  },
    { 6,  41, 7,  H_UpgradeFromV6  },
    { 5,  41, 6,  H_UpgradeFromV5  },
    { 4,  41, 5,  H_UpgradeFromV4  },
