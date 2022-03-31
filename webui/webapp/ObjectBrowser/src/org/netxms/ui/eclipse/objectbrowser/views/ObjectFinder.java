@@ -52,6 +52,7 @@ import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
 import org.eclipse.swt.custom.CTabItem;
+import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.ModifyEvent;
@@ -311,13 +312,18 @@ public class ObjectFinder extends ViewPart
    @Override
    public void createPartControl(Composite parent)
    {
+      SashForm splitter = new SashForm(parent, SWT.VERTICAL);
+
+      Composite searchArea = new Composite(splitter, SWT.NONE);
+      searchArea.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+      
       GridLayout layout = new GridLayout();
       layout.marginWidth = 0;
       layout.marginHeight = 0;
-      parent.setLayout(layout);
+      searchArea.setLayout(layout);
 
-      tabFolder = new CTabFolder(parent, SWT.TOP | SWT.FLAT | SWT.MULTI);
-      tabFolder.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
+      tabFolder = new CTabFolder(searchArea, SWT.TOP | SWT.FLAT | SWT.MULTI);
+      tabFolder.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
       CTabItem filterTab = new CTabItem(tabFolder, SWT.NONE);
       filterTab.setText("Filter");
       filterTab.setImage(SharedIcons.IMG_FILTER);
@@ -470,7 +476,7 @@ public class ObjectFinder extends ViewPart
       /*** IP filter ***/
       Group ipFilterGroup = new Group(conditionGroup, SWT.NONE);
       ipFilterGroup.setText("IP Range");
-      ipFilterGroup.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
+      ipFilterGroup.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
       layout = new GridLayout();
       layout.numColumns = 3;
       ipFilterGroup.setLayout(layout);
@@ -602,24 +608,62 @@ public class ObjectFinder extends ViewPart
             widgetSelected(e);
          }
       });
-
+      
+      Label separator = new Label(searchArea, SWT.SEPARATOR | SWT.HORIZONTAL);
+      gd = new GridData();
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalAlignment = SWT.FILL;
+      separator.setLayoutData(gd);
+      
+      
       /*** Result view ***/
+
+      Composite resultArea = new Composite(splitter, SWT.NONE); 
+      layout = new GridLayout();
+      layout.marginWidth = 0;
+      layout.marginHeight = 0;
+      resultArea.setLayout(layout);
+
+      IDialogSettings settings = Activator.getDefault().getDialogSettings();
+      try
+      {
+         int[] weights = new int[2];
+         weights[0] = settings.getInt("ObjectFinder.weight1"); //$NON-NLS-1$
+         weights[1] = settings.getInt("ObjectFinder.weight2"); //$NON-NLS-1$
+         splitter.setWeights(weights);
+      }
+      catch(NumberFormatException e)
+      {
+         splitter.setWeights(new int[] { 25, 70 });
+      }
+      
+      separator = new Label(resultArea, SWT.SEPARATOR | SWT.HORIZONTAL);      
+      gd = new GridData();
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalAlignment = SWT.FILL;
+      separator.setLayoutData(gd);
+      
       final String[] names = { "ID", "Class", "Name", "IP Address", "Parent", "Zone" };
       final int[] widths = { 90, 120, 300, 250, 300, 200 };
-      results = new SortableTableViewer(parent, names, widths, 0, SWT.UP, SWT.MULTI | SWT.FULL_SELECTION);
+      results = new SortableTableViewer(resultArea, names, widths, 0, SWT.UP, SWT.MULTI | SWT.FULL_SELECTION);
       if (!ConsoleSharedData.getSession().isZoningEnabled())
          results.removeColumnById(COL_ZONE);
       results.setContentProvider(new ArrayContentProvider());
       results.setLabelProvider(new ObjectSearchResultLabelProvider(results.getTable()));
       results.setComparator(new ObjectSearchResultComparator());
       results.getTable().setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-      final IDialogSettings settings = Activator.getDefault().getDialogSettings();
       WidgetHelper.restoreTableViewerSettings(results, settings, "ResultTable");
-      results.getTable().addDisposeListener(new DisposeListener() {
+      
+      parent.addDisposeListener(new DisposeListener() {
+         
          @Override
          public void widgetDisposed(DisposeEvent e)
-         {
+         {       
             WidgetHelper.saveTableViewerSettings(results, settings, "ResultTable");
+            
+            int[] weights = splitter.getWeights();
+            settings.put("ObjectFinder.weight1", weights[0]); //$NON-NLS-1$
+            settings.put("ObjectFinder.weight2", weights[1]); //$NON-NLS-1$
          }
       });
 
