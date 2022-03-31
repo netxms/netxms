@@ -83,12 +83,13 @@ retry:
 
 #if defined(_WIN32) || HAVE_DECL_CURL_VERSION_INFO
    curl_version_info_data *version = curl_version_info(CURLVERSION_NOW);
-   char protocols[1024] = {0};
+   char protocols[1024] = "";
    const char * const *p = version->protocols;
-   while (*p != NULL)
+   while (*p != nullptr)
    {
-      strncat(protocols, *p, strlen(protocols) - 1);
-      strncat(protocols, " ", strlen(protocols) - 1);
+      if (protocols[0] != 0)
+         strlcat(protocols, " ", sizeof(protocols));
+      strlcat(protocols, *p, sizeof(protocols));
       p++;
    }
    nxlog_debug_tag(_T("init.curl"), 3, _T("cURL supported protocols: %hs"), protocols);
