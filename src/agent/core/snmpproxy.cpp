@@ -67,6 +67,54 @@ LONG H_SNMPProxyStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, Abstract
 }
 
 /**
+ * Callback for address range scan
+ */
+static void RangeScanCallback(const InetAddress& addr, uint32_t rtt, void *context)
+{
+   TCHAR buffer[64];
+   static_cast<StringList*>(context)->add(addr.toString(buffer));
+}
+
+/**
+ * Handler for list SNMP.ScanAddressRange
+ */
+LONG H_SNMPAddressRangeScan(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session)
+{
+   if (!session->isMasterServer() || !(g_dwFlags & AF_ENABLE_SNMP_PROXY))
+   {
+      session->debugPrintf(5, _T("Request for address range scan via SNMP rejected"));
+      return SYSINFO_RC_UNSUPPORTED;
+   }
+
+   char startAddr[128], endAddr[128], community[256];
+   TCHAR portText[64], versionText[64];
+   if (!AgentGetParameterArgA(cmd, 1, startAddr, 128) ||
+       !AgentGetParameterArgA(cmd, 2, endAddr, 128) ||
+       !AgentGetParameterArg(cmd, 3, portText, 64) ||
+       !AgentGetParameterArg(cmd, 4, versionText, 64) ||
+       !AgentGetParameterArgA(cmd, 5, community, 256))
+   {
+      return SYSINFO_RC_UNSUPPORTED;
+   }
+
+   InetAddress start = InetAddress::parse(startAddr);
+   InetAddress end = InetAddress::parse(endAddr);
+   uint16_t port = (portText[0] != 0) ? static_cast<uint16_t>(_tcstoul(portText, nullptr, 0)) : 161;
+   SNMP_Version snmpVersion = (versionText[0] != 0) ? SNMP_VersionFromInt(_tcstol(versionText, nullptr, 10)) : SNMP_VERSION_2C;
+   if (!start.isValid() || !end.isValid() || (port == 0) || (snmpVersion == SNMP_VERSION_DEFAULT))
+   {
+      return SYSINFO_RC_UNSUPPORTED;
+   }
+
+   if (community[0] == 0)
+      strcpy(community, "public");
+
+   uint32_t rc = SnmpScanAddressRange(start, end, port, snmpVersion, community, RangeScanCallback, value);
+   session->debugPrintf(5, _T("Address range %s - %s scan via SNMP %s"), start.toString().cstr(), end.toString().cstr(), (rc == SNMP_ERR_SUCCESS) ? _T("completed successfully") : _T("failed"));
+   return (rc == SNMP_ERR_SUCCESS) ? SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR;
+}
+
+/**
  * Read PDU from network
  */
 static bool ReadPDU(SOCKET hSocket, BYTE *pdu, uint32_t *size)

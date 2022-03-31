@@ -177,6 +177,7 @@
     <ClCompile Include="mib.cpp" />
     <ClCompile Include="oid.cpp" />
     <ClCompile Include="pdu.cpp" />
+    <ClCompile Include="scan.cpp" />
     <ClCompile Include="security.cpp" />
     <ClCompile Include="snapshot.cpp" />
     <ClCompile Include="transport.cpp" />

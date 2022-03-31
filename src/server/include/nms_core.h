@@ -1460,8 +1460,6 @@ uint32_t DeleteScript(uint32_t scriptId);
  * Address range scan functions
  */
 void ScanAddressRangeICMP(const InetAddress& from, const InetAddress& to, void (*callback)(const InetAddress&, int32_t, const Node*, uint32_t, const TCHAR*, ServerConsole*, void*), ServerConsole *console, void *context);
-void ScanAddressRangeSNMP(const InetAddress& from, const InetAddress& to, uint16_t port, SNMP_Version snmpVersion, const char *community,
-      void (*callback)(const InetAddress&, int32_t, const Node*, uint32_t, const TCHAR*, ServerConsole*, void*), ServerConsole *console, void *context);
 
 /**
  * Prepare MERGE statement if possible, otherwise INSERT or UPDATE depending on record existence

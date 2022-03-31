@@ -849,10 +849,10 @@ private:
    ObjectArray<SNMP_Variable> *m_values;
    SNMP_SnapshotIndexEntry *m_index;
 
-   static UINT32 callback(SNMP_Variable *var, SNMP_Transport *transport, void *arg);
+   static uint32_t callback(SNMP_Variable *var, SNMP_Transport *transport, void *context);
 
    void buildIndex();
-   SNMP_SnapshotIndexEntry *find(const UINT32 *oid, size_t oidLen) const;
+   SNMP_SnapshotIndexEntry *find(const uint32_t *oid, size_t oidLen) const;
    SNMP_SnapshotIndexEntry *find(const TCHAR *oid) const;
    SNMP_SnapshotIndexEntry *find(const SNMP_ObjectId& oid) const;
 
@@ -869,22 +869,22 @@ public:
 
    const SNMP_Variable *get(const TCHAR *oid) const;
    const SNMP_Variable *get(const SNMP_ObjectId& oid) const;
-   const SNMP_Variable *get(const UINT32 *oid, size_t oidLen) const;
+   const SNMP_Variable *get(const uint32_t *oid, size_t oidLen) const;
    const SNMP_Variable *getNext(const TCHAR *oid) const;
    const SNMP_Variable *getNext(const SNMP_ObjectId& oid) const;
-   const SNMP_Variable *getNext(const UINT32 *oid, size_t oidLen) const;
+   const SNMP_Variable *getNext(const uint32_t *oid, size_t oidLen) const;
    const SNMP_Variable *first() const { return m_values->get(0); }
    const SNMP_Variable *last() const { return m_values->get(m_values->size() - 1); }
 
-   UINT32 getAsInt32(const TCHAR *oid) const { const SNMP_Variable *v = get(oid); return (v != NULL) ? v->getValueAsInt() : 0; }
-   UINT32 getAsInt32(const SNMP_ObjectId& oid) const { const SNMP_Variable *v = get(oid); return (v != NULL) ? v->getValueAsInt() : 0; }
-   UINT32 getAsInt32(const UINT32 *oid, size_t oidLen) const { const SNMP_Variable *v = get(oid, oidLen); return (v != NULL) ? v->getValueAsInt() : 0; }
-   UINT32 getAsUInt32(const TCHAR *oid) const { const SNMP_Variable *v = get(oid); return (v != NULL) ? v->getValueAsUInt() : 0; }
-   UINT32 getAsUInt32(const SNMP_ObjectId& oid) const { const SNMP_Variable *v = get(oid); return (v != NULL) ? v->getValueAsUInt() : 0; }
-   UINT32 getAsUInt32(const UINT32 *oid, size_t oidLen) const { const SNMP_Variable *v = get(oid, oidLen); return (v != NULL) ? v->getValueAsUInt() : 0; }
-   TCHAR *getAsString(const TCHAR *oid, TCHAR *buffer, size_t bufferSize) const { const SNMP_Variable *v = get(oid); if (v != NULL) { v->getValueAsString(buffer, bufferSize); return buffer; } return NULL; }
-   TCHAR *getAsString(const SNMP_ObjectId& oid, TCHAR *buffer, size_t bufferSize) const { const SNMP_Variable *v = get(oid); if (v != NULL) { v->getValueAsString(buffer, bufferSize); return buffer; } return NULL; }
-   TCHAR *getAsString(const UINT32 *oid, size_t oidLen, TCHAR *buffer, size_t bufferSize) const { const SNMP_Variable *v = get(oid, oidLen); if (v != NULL) { v->getValueAsString(buffer, bufferSize); return buffer; } return NULL; }
+   int32_t getAsInt32(const TCHAR *oid) const { const SNMP_Variable *v = get(oid); return (v != nullptr) ? v->getValueAsInt() : 0; }
+   int32_t getAsInt32(const SNMP_ObjectId& oid) const { const SNMP_Variable *v = get(oid); return (v != nullptr) ? v->getValueAsInt() : 0; }
+   int32_t getAsInt32(const uint32_t *oid, size_t oidLen) const { const SNMP_Variable *v = get(oid, oidLen); return (v != nullptr) ? v->getValueAsInt() : 0; }
+   uint32_t getAsUInt32(const TCHAR *oid) const { const SNMP_Variable *v = get(oid); return (v != nullptr) ? v->getValueAsUInt() : 0; }
+   uint32_t getAsUInt32(const SNMP_ObjectId& oid) const { const SNMP_Variable *v = get(oid); return (v != nullptr) ? v->getValueAsUInt() : 0; }
+   uint32_t getAsUInt32(const uint32_t *oid, size_t oidLen) const { const SNMP_Variable *v = get(oid, oidLen); return (v != nullptr) ? v->getValueAsUInt() : 0; }
+   TCHAR *getAsString(const TCHAR *oid, TCHAR *buffer, size_t bufferSize) const { const SNMP_Variable *v = get(oid); if (v != nullptr) { v->getValueAsString(buffer, bufferSize); return buffer; } return nullptr; }
+   TCHAR *getAsString(const SNMP_ObjectId& oid, TCHAR *buffer, size_t bufferSize) const { const SNMP_Variable *v = get(oid); if (v != NULL) { v->getValueAsString(buffer, bufferSize); return buffer; } return nullptr; }
+   TCHAR *getAsString(const uint32_t *oid, size_t oidLen, TCHAR *buffer, size_t bufferSize) const { const SNMP_Variable *v = get(oid, oidLen); if (v != nullptr) { v->getValueAsString(buffer, bufferSize); return buffer; } return nullptr; }
 
    int size() const { return m_values->size(); }
    bool isEmpty() const { return m_values->size() == 0; }
@@ -920,6 +920,9 @@ uint32_t LIBNXSNMP_EXPORTABLE SnmpWalk(SNMP_Transport *transport, const uint32_t
       uint32_t (* handler)(SNMP_Variable*, SNMP_Transport*, void*), void *context, bool logErrors = false, bool failOnShutdown = false);
 int LIBNXSNMP_EXPORTABLE SnmpWalkCount(SNMP_Transport *transport, const uint32_t *rootOid, size_t rootOidLen);
 int LIBNXSNMP_EXPORTABLE SnmpWalkCount(SNMP_Transport *transport, const TCHAR *rootOid);
+
+uint32_t LIBNXSNMP_EXPORTABLE SnmpScanAddressRange(const InetAddress& from, const InetAddress& to, uint16_t port, SNMP_Version snmpVersion,
+      const char *community, void (*callback)(const InetAddress&, uint32_t, void*), void *context);
 
 /**
  * Wrapper function for calling SnmpWalk with specific context type

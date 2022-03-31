@@ -60,6 +60,7 @@ LONG H_ResolverNameByAddr(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, Abst
 LONG H_SessionAgentCount(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_SessionAgents(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *session);
 LONG H_SHA1Hash(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_SNMPAddressRangeScan(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
 LONG H_SNMPProxyStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_SubAgentList(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
 LONG H_SubAgentTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *session);
@@ -464,6 +465,7 @@ static NETXMS_SUBAGENT_LIST s_standardLists[] =
    { _T("Agent.SupportedTables"), H_TableList, nullptr },
    { _T("Agent.ThreadPools"), H_ThreadPoolList, nullptr },
    { _T("Net.Resolver.AddressByName(*)"), H_ResolverAddrByNameList, nullptr },
+   { _T("SNMP.ScanAddressRange(*)"), H_SNMPAddressRangeScan, nullptr }
 };
 
 /**

@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** SNMP support library
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -40,7 +40,7 @@ struct SNMP_SnapshotIndexEntry
 SNMP_Snapshot::SNMP_Snapshot()
 {
    m_values = new ObjectArray<SNMP_Variable>(64, 64, Ownership::True);
-   m_index = NULL;
+   m_index = nullptr;
 }
 
 /**
@@ -69,17 +69,17 @@ void SNMP_Snapshot::buildIndex()
       SNMP_SnapshotIndexEntry *entry = MemAllocStruct<SNMP_SnapshotIndexEntry>();
       entry->var = v;
       entry->pos = i;
-      HASH_ADD_KEYPTR(hh, m_index, entry->var->getName().value(), (unsigned int)(entry->var->getName().length() * sizeof(UINT32)), entry);
+      HASH_ADD_KEYPTR(hh, m_index, entry->var->getName().value(), (unsigned int)(entry->var->getName().length() * sizeof(uint32_t)), entry);
    }
 }
 
 /**
  * Find OID index entry by OID
  */
-SNMP_SnapshotIndexEntry *SNMP_Snapshot::find(const UINT32 *oid, size_t oidLen) const
+SNMP_SnapshotIndexEntry *SNMP_Snapshot::find(const uint32_t *oid, size_t oidLen) const
 {
    SNMP_SnapshotIndexEntry *entry;
-   HASH_FIND(hh, m_index, oid, (unsigned int)(oidLen * sizeof(UINT32)), entry);
+   HASH_FIND(hh, m_index, oid, (unsigned int)(oidLen * sizeof(uint32_t)), entry);
    return entry;
 }
 
@@ -89,7 +89,7 @@ SNMP_SnapshotIndexEntry *SNMP_Snapshot::find(const UINT32 *oid, size_t oidLen) c
 SNMP_SnapshotIndexEntry *SNMP_Snapshot::find(const SNMP_ObjectId& oid) const
 {
    SNMP_SnapshotIndexEntry *entry;
-   HASH_FIND(hh, m_index, oid.value(), (unsigned int)(oid.length() * sizeof(UINT32)), entry);
+   HASH_FIND(hh, m_index, oid.value(), (unsigned int)(oid.length() * sizeof(uint32_t)), entry);
    return entry;
 }
 
@@ -98,19 +98,19 @@ SNMP_SnapshotIndexEntry *SNMP_Snapshot::find(const SNMP_ObjectId& oid) const
  */
 SNMP_SnapshotIndexEntry *SNMP_Snapshot::find(const TCHAR *oid) const
 {
-   UINT32 binOid[MAX_OID_LEN];
+   uint32_t binOid[MAX_OID_LEN];
    size_t oidLen = SNMPParseOID(oid, binOid, MAX_OID_LEN);
    if (oidLen == 0)
-      return NULL;
+      return nullptr;
    return find(binOid, oidLen);
 }
 
 /**
  * Snapshot creation callback
  */
-UINT32 SNMP_Snapshot::callback(SNMP_Variable *var, SNMP_Transport *transport, void *arg)
+uint32_t SNMP_Snapshot::callback(SNMP_Variable *var, SNMP_Transport *transport, void *context)
 {
-   ((SNMP_Snapshot *)arg)->m_values->add(new SNMP_Variable(var));
+   static_cast<SNMP_Snapshot*>(context)->m_values->add(new SNMP_Variable(var));
    return SNMP_ERR_SUCCESS;
 }
 
@@ -146,7 +146,7 @@ SNMP_Snapshot *SNMP_Snapshot::create(SNMP_Transport *transport, const UINT32 *ba
 const SNMP_Variable *SNMP_Snapshot::get(const TCHAR *oid) const
 {
    SNMP_SnapshotIndexEntry *entry = find(oid);
-   return (entry != NULL) ? entry->var : NULL;
+   return (entry != nullptr) ? entry->var : nullptr;
 }
 
 /**
@@ -155,16 +155,16 @@ const SNMP_Variable *SNMP_Snapshot::get(const TCHAR *oid) const
 const SNMP_Variable *SNMP_Snapshot::get(const SNMP_ObjectId& oid) const
 {
    SNMP_SnapshotIndexEntry *entry = find(oid);
-   return (entry != NULL) ? entry->var : NULL;
+   return (entry != nullptr) ? entry->var : nullptr;
 }
 
 /**
  * Get variable
  */
-const SNMP_Variable *SNMP_Snapshot::get(const UINT32 *oid, size_t oidLen) const
+const SNMP_Variable *SNMP_Snapshot::get(const uint32_t *oid, size_t oidLen) const
 {
    SNMP_SnapshotIndexEntry *entry = find(oid, oidLen);
-   return (entry != NULL) ? entry->var : NULL;
+   return (entry != nullptr) ? entry->var : nullptr;
 }
 
 /**
@@ -172,10 +172,10 @@ const SNMP_Variable *SNMP_Snapshot::get(const UINT32 *oid, size_t oidLen) const
  */
 const SNMP_Variable *SNMP_Snapshot::getNext(const TCHAR *oid) const
 {
-   UINT32 binOid[MAX_OID_LEN];
+   uint32_t binOid[MAX_OID_LEN];
    size_t oidLen = SNMPParseOID(oid, binOid, MAX_OID_LEN);
    if (oidLen == 0)
-      return NULL;
+      return nullptr;
    return getNext(binOid, oidLen);
 }
 
@@ -190,10 +190,10 @@ const SNMP_Variable *SNMP_Snapshot::getNext(const SNMP_ObjectId& oid) const
 /**
  * Get next variable for given OID
  */
-const SNMP_Variable *SNMP_Snapshot::getNext(const UINT32 *oid, size_t oidLen) const
+const SNMP_Variable *SNMP_Snapshot::getNext(const uint32_t *oid, size_t oidLen) const
 {
    SNMP_SnapshotIndexEntry *entry = find(oid, oidLen);
-   if (entry != NULL)
+   if (entry != nullptr)
       return m_values->get(entry->pos + 1);
 
    for(int i = 0; i < m_values->size(); i++)
@@ -203,7 +203,7 @@ const SNMP_Variable *SNMP_Snapshot::getNext(const UINT32 *oid, size_t oidLen) co
       if ((c == OID_FOLLOWING) || (c == OID_LONGER))
          return v;
    }
-   return NULL;
+   return nullptr;
 }
 
 /**
@@ -211,7 +211,7 @@ const SNMP_Variable *SNMP_Snapshot::getNext(const UINT32 *oid, size_t oidLen) co
  */
 EnumerationCallbackResult SNMP_Snapshot::walk(const TCHAR *baseOid, EnumerationCallbackResult (*handler)(const SNMP_Variable *, const SNMP_Snapshot *, void *), void *userArg) const
 {
-   UINT32 binOid[MAX_OID_LEN];
+   uint32_t binOid[MAX_OID_LEN];
    size_t oidLen = SNMPParseOID(baseOid, binOid, MAX_OID_LEN);
    if (oidLen == 0)
       return _CONTINUE;

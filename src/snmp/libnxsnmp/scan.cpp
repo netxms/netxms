@@ -1,5 +1,6 @@
 /*
 ** NetXMS - Network Management System
+** SNMP support library
 ** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
@@ -20,7 +21,7 @@
 **
 **/
 
-#include "nxcore.h"
+#include "libnxsnmp.h"
 
 /**
  * Scan status for each address
@@ -54,12 +55,11 @@ static void ProcessResponse(SOCKET sock, uint32_t baseAddr, uint32_t lastAddr, S
 /**
 * Scan range of IPv4 addresses using SNMP requests
 */
-void ScanAddressRangeSNMP(const InetAddress& from, const InetAddress& to, uint16_t port, SNMP_Version snmpVersion, const char *community,
-      void (*callback)(const InetAddress&, int32_t, const Node*, uint32_t, const TCHAR*, ServerConsole*, void*), ServerConsole *console, void *context)
+uint32_t LIBNXSNMP_EXPORTABLE SnmpScanAddressRange(const InetAddress& from, const InetAddress& to, uint16_t port, SNMP_Version snmpVersion, const char *community, void (*callback)(const InetAddress&, uint32_t, void*), void *context)
 {
    SOCKET sock = CreateSocket(AF_INET, SOCK_DGRAM, 0);
    if (sock == INVALID_SOCKET)
-      return;
+      return SNMP_ERR_SOCKET;
 
    struct sockaddr_in localAddr;
    memset(&localAddr, 0, sizeof(localAddr));
@@ -68,7 +68,7 @@ void ScanAddressRangeSNMP(const InetAddress& from, const InetAddress& to, uint16
    if (bind(sock, (struct sockaddr *)&localAddr, sizeof(localAddr)) != 0)
    {
       closesocket(sock);
-      return;
+      return SNMP_ERR_SOCKET;
    }
    SetSocketNonBlocking(sock);
 
@@ -111,12 +111,13 @@ void ScanAddressRangeSNMP(const InetAddress& from, const InetAddress& to, uint16
    }
 
    uint32_t elapsedTime = 0;
-   while(elapsedTime < SnmpGetDefaultTimeout())
+   uint32_t timeout = SnmpGetDefaultTimeout();
+   while(elapsedTime < timeout)
    {
       sp.reset();
       sp.add(sock);
       int64_t startTime = GetCurrentTimeMs();
-      if (sp.poll(g_icmpPingTimeout - elapsedTime) <= 0)
+      if (sp.poll(timeout - elapsedTime) <= 0)
          break;
 
       ProcessResponse(sock, baseAddr, to.getAddressV4(), status);
@@ -129,7 +130,9 @@ void ScanAddressRangeSNMP(const InetAddress& from, const InetAddress& to, uint16
    for(uint32_t a = baseAddr, i = 0; a <= to.getAddressV4(); a++, i++)
    {
       if (status[i].success)
-         callback(a, 0, nullptr, status[i].rtt, _T("SNMP"), console, context);
+         callback(a, status[i].rtt, context);
    }
    MemFree(status);
+
+   return SNMP_ERR_SUCCESS;
 }

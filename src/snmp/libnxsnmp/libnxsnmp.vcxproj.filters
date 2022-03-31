@@ -33,6 +33,9 @@
     <ClCompile Include="pdu.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="scan.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="security.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
