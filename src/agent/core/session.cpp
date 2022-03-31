@@ -965,7 +965,7 @@ void CommSession::getTable(NXCPMessage *request, NXCPMessage *response)
 void CommSession::queryWebService(NXCPMessage *request)
 {
    TCHAR *url = request->getFieldAsString(VID_URL);
-   ThreadPoolExecuteSerialized(g_webSvcThreadPool, url, QueryWebService, request, static_cast<AbstractCommSession*>(this));
+   ThreadPoolExecuteSerialized(g_webSvcThreadPool, url, QueryWebService, request, static_pointer_cast<AbstractCommSession>(self()));
    MemFree(url);
 }
 
@@ -975,10 +975,9 @@ void CommSession::queryWebService(NXCPMessage *request)
 void CommSession::webServiceCustomRequest(NXCPMessage *request)
 {
    TCHAR *url = request->getFieldAsString(VID_URL);
-   ThreadPoolExecuteSerialized(g_webSvcThreadPool, url, WebServiceCustomRequest, request, static_cast<AbstractCommSession*>(this));
+   ThreadPoolExecuteSerialized(g_webSvcThreadPool, url, WebServiceCustomRequest, request, static_pointer_cast<AbstractCommSession>(self()));
    MemFree(url);
 }
-
 
 /**
  * Perform action on request
