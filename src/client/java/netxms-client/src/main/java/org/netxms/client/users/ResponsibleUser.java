@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,18 +26,18 @@ import org.netxms.base.NXCPMessage;
 public class ResponsibleUser
 {
    public long userId;
-   public int escalationLevel;
+   public String tag;
 
    /**
     * Create new responsible user object.
     *
     * @param userId user ID
-    * @param escalationLevel escalation level
+    * @param tag user tag
     */
-   public ResponsibleUser(long userId, int escalationLevel)
+   public ResponsibleUser(long userId, String tag)
    {
       this.userId = userId;
-      this.escalationLevel = (escalationLevel > 0) ? escalationLevel : 0;
+      this.tag = tag;
    }
 
    /**
@@ -49,7 +49,7 @@ public class ResponsibleUser
    public ResponsibleUser(NXCPMessage msg, long baseId)
    {
       userId = msg.getFieldAsInt64(baseId);
-      escalationLevel = msg.getFieldAsInt32(baseId + 1);
+      tag = msg.getFieldAsString(baseId + 1);
    }
 
    /**
@@ -61,6 +61,6 @@ public class ResponsibleUser
    public void fillMessage(NXCPMessage msg, long baseId)
    {
       msg.setFieldInt32(baseId, (int)userId);
-      msg.setFieldInt32(baseId + 1, escalationLevel);
+      msg.setField(baseId + 1, tag);
    }
 }

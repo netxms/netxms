@@ -24,6 +24,59 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 40.102 to 40.103
+ */
+static bool H_UpgradeFromV102()
+{
+   if (GetSchemaLevelForMajorVersion(39) < 16)
+   {
+      CHK_EXEC(SQLQuery(_T("ALTER TABLE responsible_users ADD tag varchar(31)")));
+      if (g_dbSyntax == DB_SYNTAX_SQLITE)
+         CHK_EXEC(SQLQuery(_T("UPDATE responsible_users SET tag='level'||escalation_level")));
+      else
+         CHK_EXEC(SQLQuery(_T("UPDATE responsible_users SET tag=CONCAT('level',escalation_level)")));
+      CHK_EXEC(DBDropColumn(g_dbHandle, _T("responsible_users"), _T("escalation_level")));
+
+      StringBuffer tags;
+      DB_RESULT hResult = SQLSelect(_T("SELECT DISTINCT(tag) FROM responsible_users"));
+      if (hResult != nullptr)
+      {
+         int count = DBGetNumRows(hResult);
+         for(int i = 0; i < count; i++)
+         {
+            TCHAR tag[32];
+            DBGetField(hResult, i, 0, tag, 32);
+            if (!tags.isEmpty())
+               tags.append(_T(","));
+            tags.append(tag);
+         }
+         DBFreeResult(hResult);
+      }
+      else if (!g_ignoreErrors)
+      {
+         return false;
+      }
+
+      CHK_EXEC(CreateConfigParam(_T("Objects.ResponsibleUsers.AllowedTags"),
+            _T(""),
+            _T("Allowed tags for responsible users (comma separated list)."),
+            nullptr, 'S', true, false, false, false));
+
+      if (!tags.isEmpty())
+      {
+         TCHAR query[4096];
+         _sntprintf(query, 4096, _T("UPDATE config SET var_value='%s' WHERE var_name='Objects.ResponsibleUsers.AllowedTags'"), tags.cstr());
+         CHK_EXEC(SQLQuery(query));
+      }
+
+      CHK_EXEC(SetSchemaLevelForMajorVersion(39, 16));
+   }
+
+   CHK_EXEC(SetMinorSchemaVersion(103));
+   return true;
+}
+
+/**
  * Upgrade from 40.101 to 40.102
  */
 static bool H_UpgradeFromV101()
@@ -781,27 +834,27 @@ static bool H_UpgradeFromV70()
 static bool BSCommonDeleteObject(uint32_t id)
 {
    TCHAR query[1024];
-   _sntprintf(query, 1024, _T("DELETE FROM acl WHERE object_id=%d"), id);
+   _sntprintf(query, 1024, _T("DELETE FROM acl WHERE object_id=%u"), id);
    if (!SQLQuery(query) && !g_ignoreErrors)
       return false;
 
-   _sntprintf(query, 1024,  _T("DELETE FROM object_properties WHERE object_id=%d"), id);
+   _sntprintf(query, 1024,  _T("DELETE FROM object_properties WHERE object_id=%u"), id);
    if (!SQLQuery(query) && !g_ignoreErrors)
       return false;
 
-   _sntprintf(query, 1024,  _T("DELETE FROM object_custom_attributes WHERE object_id=%d"), id);
+   _sntprintf(query, 1024,  _T("DELETE FROM object_custom_attributes WHERE object_id=%u"), id);
    if (!SQLQuery(query) && !g_ignoreErrors)
       return false;
 
-   _sntprintf(query, 1024,  _T("DELETE FROM object_urls WHERE object_id=%d"), id);
+   _sntprintf(query, 1024,  _T("DELETE FROM object_urls WHERE object_id=%u"), id);
    if (!SQLQuery(query) && !g_ignoreErrors)
       return false;
 
-   _sntprintf(query, 1024,  _T("DELETE FROM responsible_users WHERE object_id=%d"), id);
+   _sntprintf(query, 1024,  _T("DELETE FROM responsible_users WHERE object_id=%u"), id);
    if (!SQLQuery(query) && !g_ignoreErrors)
       return false;
 
-   _sntprintf(query, 1024,  _T("DELETE FROM slm_service_history WHERE service_id=%d"), id);
+   _sntprintf(query, 1024,  _T("DELETE FROM slm_service_history WHERE service_id=%u"), id);
    if (!SQLQuery(query) && !g_ignoreErrors)
       return false;
 
@@ -3144,6 +3197,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 102, 40, 103, H_UpgradeFromV102 },
    { 101, 40, 102, H_UpgradeFromV101 },
    { 100, 40, 101, H_UpgradeFromV100 },
    { 99, 40, 100, H_UpgradeFromV99 },

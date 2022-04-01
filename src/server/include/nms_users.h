@@ -189,12 +189,17 @@ public:
 #define MAX_XMPP_ID_LEN          128
 
 /**
+ * Maximum length of responsible user tag
+ */
+#define MAX_RESPONSIBLE_USER_TAG_LEN   32
+
+/**
  * Responsible user information
  */
 struct ResponsibleUser
 {
    uint32_t userId;
-   uint32_t escalationLevel;
+   TCHAR tag[MAX_RESPONSIBLE_USER_TAG_LEN];
 };
 
 /**

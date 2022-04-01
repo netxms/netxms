@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Raden Solutions
+ * Copyright (C) 2003-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -119,19 +119,19 @@ public class ResponsibleUsers extends ObjectPropertyPage
       viewer.getTable().setHeaderVisible(true);
 
       TableColumn column = new TableColumn(viewer.getTable(), SWT.NONE);
-      column.setText("User");
+      column.setText(i18n.tr("User"));
       column.setWidth(300);
       column = new TableColumn(viewer.getTable(), SWT.NONE);
-      column.setText("Level");
+      column.setText(i18n.tr("Tag"));
       column.setWidth(80);
 
-      viewer.setColumnProperties(new String[] { "name", "level" }); //$NON-NLS-1$
+      viewer.setColumnProperties(new String[] { "name", "tag" });
       viewer.setCellEditors(new CellEditor[] { null, new TextCellEditor(viewer.getTable()) {
          @Override
          protected Control createControl(Composite parent)
          {
             Control c = super.createControl(parent);
-            ((Text)c).setTextLimit(5);
+            ((Text)c).setTextLimit(31);
             return c;
          }
       } });
@@ -141,23 +141,17 @@ public class ResponsibleUsers extends ObjectPropertyPage
          {
             if (element instanceof Item)
                element = ((Item)element).getData();
-            if (property.equals("level"))
+            if (property.equals("tag"))
             {
-               try
-               {
-                  ((ResponsibleUserInfo)element).escalationLevel = Integer.parseInt((String)value);
-                  viewer.update(element, new String[] { property });
-               }
-               catch(NumberFormatException e)
-               {
-               }
+               ((ResponsibleUserInfo)element).tag = (String)value;
+               viewer.update(element, new String[] { property });
             }
          }
 
          @Override
          public Object getValue(Object element, String property)
          {
-            return Integer.toString(((ResponsibleUserInfo)element).escalationLevel);
+            return ((ResponsibleUserInfo)element).tag;
          }
 
          @Override
@@ -186,7 +180,7 @@ public class ResponsibleUsers extends ObjectPropertyPage
       buttons.setLayoutData(gd);
       
       final Button addButton = new Button(buttons, SWT.PUSH);
-      addButton.setText("Add...");
+      addButton.setText(i18n.tr("&Add..."));
       addButton.addSelectionListener(new SelectionListener() {
          @Override
          public void widgetDefaultSelected(SelectionEvent e)
@@ -209,7 +203,7 @@ public class ResponsibleUsers extends ObjectPropertyPage
       });
 
       final Button deleteButton = new Button(buttons, SWT.PUSH);
-      deleteButton.setText("Delete");
+      deleteButton.setText(i18n.tr("&Delete"));
       deleteButton.setEnabled(false);
       deleteButton.addSelectionListener(new SelectionListener() {
          @Override
@@ -294,7 +288,7 @@ public class ResponsibleUsers extends ObjectPropertyPage
       final NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
       List<ResponsibleUser> list = new ArrayList<ResponsibleUser>(users.size());
       for(ResponsibleUserInfo ri : users.values())
-         list.add(new ResponsibleUser(ri.userId, ri.escalationLevel));
+         list.add(new ResponsibleUser(ri.userId, ri.tag));
       md.setResponsibleUsers(list);
 
       new Job(String.format(i18n.tr("Update list of responsible users for object %s"), object.getObjectName()), null) {
@@ -346,20 +340,20 @@ public class ResponsibleUsers extends ObjectPropertyPage
    {
       long userId;
       AbstractUserObject user;
-      int escalationLevel;
+      String tag;
 
       ResponsibleUserInfo(ResponsibleUser r)
       {
          userId = r.userId;
          user = session.findUserDBObjectById(userId, null);
-         escalationLevel = r.escalationLevel;
+         tag = r.tag;
       }
 
       public ResponsibleUserInfo(AbstractUserObject user)
       {
          userId = user.getId();
          this.user = user;
-         escalationLevel = 0;
+         tag = "";
       }
 
       public String getName()
@@ -398,7 +392,7 @@ public class ResponsibleUsers extends ObjectPropertyPage
       public String getColumnText(Object element, int columnIndex)
       {
          ResponsibleUserInfo r = (ResponsibleUserInfo)element;
-         return (columnIndex == 0) ? r.getLabel() : Integer.toString(r.escalationLevel);
+         return (columnIndex == 0) ? r.getLabel() : r.tag;
       }
    }
 }

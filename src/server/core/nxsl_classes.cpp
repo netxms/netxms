@@ -232,15 +232,15 @@ NXSL_METHOD_DEFINITION(NetObj, getCustomAttribute)
 }
 
 /**
- * NetObj::getResponsibleUsers(escalationLevel)
+ * NetObj::getResponsibleUsers(tag)
  */
 NXSL_METHOD_DEFINITION(NetObj, getResponsibleUsers)
 {
-   if (!argv[0]->isInteger())
-      return NXSL_ERR_NOT_INTEGER;
+   if (!argv[0]->isString() && !argv[0]->isNull())
+      return NXSL_ERR_NOT_STRING;
 
    NXSL_Array *array = new NXSL_Array(vm);
-   unique_ptr<StructArray<ResponsibleUser>> responsibleUsers = static_cast<shared_ptr<NetObj>*>(object->getData())->get()->getAllResponsibleUsers(argv[0]->getValueAsUInt32());
+   unique_ptr<StructArray<ResponsibleUser>> responsibleUsers = static_cast<shared_ptr<NetObj>*>(object->getData())->get()->getAllResponsibleUsers(argv[0]->isNull() ? nullptr : argv[0]->getValueAsCString());
    unique_ptr<ObjectArray<UserDatabaseObject>> userDB = FindUserDBObjects(*responsibleUsers);
    userDB->setOwner(Ownership::False);
    for(int i = 0; i < userDB->size(); i++)
