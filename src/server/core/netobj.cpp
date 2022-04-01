@@ -355,7 +355,7 @@ bool NetObj::saveToDatabase(DB_HANDLE hdb)
       lockResponsibleUsersList();
       if (success && (m_responsibleUsers != nullptr) && !m_responsibleUsers->isEmpty())
       {
-         hStmt = DBPrepare(hdb, _T("INSERT INTO responsible_users (object_id,user_id,escalation_level) VALUES (?,?,?)"), m_responsibleUsers->size() > 1);
+         hStmt = DBPrepare(hdb, _T("INSERT INTO responsible_users (object_id,user_id,tag) VALUES (?,?,?)"), m_responsibleUsers->size() > 1);
          if (hStmt != nullptr)
          {
             DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -363,7 +363,7 @@ bool NetObj::saveToDatabase(DB_HANDLE hdb)
             {
                ResponsibleUser *r = m_responsibleUsers->get(i);
                DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, r->userId);
-               DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, r->escalationLevel);
+               DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, r->tag, DB_BIND_STATIC);
                success = DBExecute(hStmt);
             }
             DBFreeStatement(hStmt);
@@ -701,7 +701,7 @@ bool NetObj::loadCommonProperties(DB_HANDLE hdb)
                {
                   ResponsibleUser *r = m_responsibleUsers->addPlaceholder();
                   r->userId = DBGetFieldULong(hResult, i, 0);
-                  r->escalationLevel = DBGetFieldULong(hResult, i, 1);
+                  DBGetField(hResult, i, 1, r->tag, MAX_RESPONSIBLE_USER_TAG_LEN);
                }
 	         }
 	         DBFreeResult(hResult);
@@ -1306,7 +1306,7 @@ void NetObj::fillMessage(NXCPMessage *msg, UINT32 userId)
       {
          ResponsibleUser *r = m_responsibleUsers->get(i);
          msg->setField(fieldId++, r->userId);
-         msg->setField(fieldId++, r->escalationLevel);
+         msg->setField(fieldId++, r->tag);
          fieldId += 8;
       }
    }
@@ -1547,7 +1547,7 @@ UINT32 NetObj::modifyFromMessageInternalStage2(NXCPMessage *request)
       {
          ResponsibleUser *r = m_responsibleUsers->addPlaceholder();
          r->userId = request->getFieldAsUInt32(fieldId++);
-         r->escalationLevel = request->getFieldAsUInt32(fieldId++);
+         request->getFieldAsString(fieldId++, r->tag, MAX_RESPONSIBLE_USER_TAG_LEN);
          fieldId += 8;
       }
    }
@@ -2599,7 +2599,7 @@ json_t *NetObj::toJson()
          ResponsibleUser *r = m_responsibleUsers->get(i);
          json_t *jr = json_object();
          json_object_set_new(jr, "id", json_integer(r->userId));
-         json_object_set_new(jr, "escalationLevel", json_integer(r->escalationLevel));
+         json_object_set_new(jr, "tag", json_string_t(r->tag));
          json_array_append_new(responsibleUsers, jr);
       }
    }
@@ -3002,7 +3002,7 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
 /**
  * Internal function to get inherited list of responsible users for object
  */
-void NetObj::getAllResponsibleUsersInternal(StructArray<ResponsibleUser> *list, uint32_t escalationLevel) const
+void NetObj::getAllResponsibleUsersInternal(StructArray<ResponsibleUser> *list, const TCHAR *tag) const
 {
    readLockParentList();
    for(int i = 0; i < getParentList().size(); i++)
@@ -3014,7 +3014,7 @@ void NetObj::getAllResponsibleUsersInternal(StructArray<ResponsibleUser> *list, 
          for(int n = 0; n < obj->m_responsibleUsers->size(); n++)
          {
             ResponsibleUser *r = obj->m_responsibleUsers->get(n);
-            if ((escalationLevel != 0xFFFFFFFF) && (r->escalationLevel != escalationLevel))
+            if ((tag != nullptr) && _tcscmp(r->tag, tag))
                continue;
 
             bool found = false;
@@ -3031,7 +3031,7 @@ void NetObj::getAllResponsibleUsersInternal(StructArray<ResponsibleUser> *list, 
          }
       }
       obj->unlockResponsibleUsersList();
-      getParentList().get(i)->getAllResponsibleUsersInternal(list, escalationLevel);
+      getParentList().get(i)->getAllResponsibleUsersInternal(list, tag);
    }
    unlockParentList();
 }
@@ -3039,23 +3039,23 @@ void NetObj::getAllResponsibleUsersInternal(StructArray<ResponsibleUser> *list, 
 /**
  * Get all responsible users for object
  */
-StructArray<ResponsibleUser> *NetObj::getAllResponsibleUsers(uint32_t escalationLevel) const
+StructArray<ResponsibleUser> *NetObj::getAllResponsibleUsers(const TCHAR *tag) const
 {
    lockResponsibleUsersList();
    auto responsibleUsers = (m_responsibleUsers != nullptr) ?
-            ((escalationLevel == 0xFFFFFFFF) ? new StructArray<ResponsibleUser>(m_responsibleUsers) : new StructArray<ResponsibleUser>(m_responsibleUsers->size(), 16)) : new StructArray<ResponsibleUser>(0, 16);
-   if ((escalationLevel != 0xFFFFFFFF) && (m_responsibleUsers != nullptr))
+            ((tag == nullptr) ? new StructArray<ResponsibleUser>(m_responsibleUsers) : new StructArray<ResponsibleUser>(m_responsibleUsers->size(), 16)) : new StructArray<ResponsibleUser>(0, 16);
+   if ((tag != nullptr) && (m_responsibleUsers != nullptr))
    {
       for(int i = 0; i < m_responsibleUsers->size(); i++)
       {
          ResponsibleUser *r = m_responsibleUsers->get(i);
-         if (r->escalationLevel == escalationLevel)
+         if (!_tcscmp(r->tag, tag))
             responsibleUsers->add(r);
       }
    }
    unlockResponsibleUsersList();
 
-   getAllResponsibleUsersInternal(responsibleUsers, escalationLevel);
+   getAllResponsibleUsersInternal(responsibleUsers, tag);
    return responsibleUsers;
 }
 

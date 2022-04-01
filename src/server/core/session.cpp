@@ -2201,6 +2201,10 @@ void ClientSession::login(const NXCPMessage& request)
          msg.setField(VID_SERVER_COMMAND_TIMEOUT, ConfigReadULong(_T("ServerCommandOutputTimeout"), 60));
          msg.setField(VID_GRACE_LOGINS, graceLogins);
 
+         TCHAR tags[1024];
+         ConfigReadStr(_T("Objects.ResponsibleUsers.AllowedTags"), tags, 1024, _T(""));
+         msg.setField(VID_RESPONSIBLE_USER_TAGS, tags);
+
          GetClientConfigurationHints(&msg);
          FillLicenseProblemsMessage(&msg);
 

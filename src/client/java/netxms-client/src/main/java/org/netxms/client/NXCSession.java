@@ -355,6 +355,7 @@ public class NXCSession
    private Map<Integer, Zone> zoneList = new HashMap<Integer, Zone>();
    private Map<Integer, ObjectCategory> objectCategories = new HashMap<Integer, ObjectCategory>();
    private boolean objectsSynchronized = false;
+   private Set<String> responsibleUserTags = new HashSet<String>();
 
    // Users
    private Map<Long, AbstractUserObject> userDatabase = new HashMap<Long, AbstractUserObject>();
@@ -2379,6 +2380,16 @@ public class NXCSession
 
       messageOfTheDay = response.getFieldAsString(NXCPCodes.VID_MESSAGE_OF_THE_DAY);
 
+      String tags = response.getFieldAsString(NXCPCodes.VID_RESPONSIBLE_USER_TAGS);
+      if (tags != null)
+      {
+         String[] elements = tags.split(",");
+         for(String e : elements)
+         {
+            responsibleUserTags.add(e.trim());
+         }
+      }
+
       count = response.getFieldAsInt32(NXCPCodes.VID_LICENSE_PROBLEM_COUNT);
       if (count > 0)
       {
@@ -2948,6 +2959,16 @@ public class NXCSession
    }
 
    /**
+    * Get allowed tags for responsible users.
+    *
+    * @return allowed tags for responsible users
+    */
+   public Set<String> getResponsibleUserTags()
+   {
+      return new HashSet<String>(responsibleUserTags);
+   }
+
+   /**
     * Synchronize object categories
     *
     * @throws IOException if socket I/O error occurs
@@ -3268,8 +3289,6 @@ public class NXCSession
          return objectList.get(id);
       }
    }
-   
-   
 
    /**
     * Find NetXMS object by it's identifier or return wait an object to wait on
