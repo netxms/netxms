@@ -170,7 +170,7 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
                   type = NetworkConfig.USM;
                   break;
                case SessionNotification.PORTS_CONFIG_CHANGED:
-                  type = NetworkConfig.PORTS;
+                  type = NetworkConfig.SNMP_PORTS;
                   break;
                case SessionNotification.SECRET_CONFIG_CHANGED:
                   type = NetworkConfig.AGENT_SECRETS;
@@ -997,7 +997,7 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
          String value = dlg.getValue();
          config.addPort(Integer.parseInt(value), zoneUIN);
          snmpPortList.setInput(config.getPorts(zoneUIN));
-         setModified(NetworkConfig.PORTS);
+         setModified(NetworkConfig.SNMP_PORTS);
       }
    }
    
@@ -1015,7 +1015,7 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
             list.remove((Integer)o);
          }
          snmpPortList.setInput(list.toArray());
-         setModified(NetworkConfig.PORTS);
+         setModified(NetworkConfig.SNMP_PORTS);
       }
    }
 
@@ -1049,7 +1049,7 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
             }
          }
          snmpPortList.setInput(list);
-         setModified(NetworkConfig.PORTS);
+         setModified(NetworkConfig.SNMP_PORTS);
       }
    }
 

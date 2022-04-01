@@ -1074,7 +1074,7 @@ void CheckRange(const InetAddressListElement& range, void (*callback)(const Inet
          {
             ConsoleDebugPrintf(console, DEBUG_TAG_DISCOVERY, 5, _T("Starting SNMP check on range %s - %s via proxy %s [%u]"),
                   IpToStr(from, ipAddr1), IpToStr(to, ipAddr2), proxy->getName(), proxy->getId());
-            IntegerArray<uint16_t> ports = SnmpGetKnownPorts(0);
+            IntegerArray<uint16_t> ports = GetWellKnownPorts(_T("snmp"), 0);
             unique_ptr<StringList> communities = SnmpGetKnownCommunities(0);
             for(int i = 0; i < ports.size(); i++)
             {
@@ -1109,7 +1109,7 @@ void CheckRange(const InetAddressListElement& range, void (*callback)(const Inet
          if (snmpScanEnabled)
          {
             ConsoleDebugPrintf(console, DEBUG_TAG_DISCOVERY, 5, _T("Starting SNMP check on range %s - %s"), IpToStr(from, ipAddr1), IpToStr(blockEndAddr, ipAddr2));
-            IntegerArray<uint16_t> ports = SnmpGetKnownPorts(0);
+            IntegerArray<uint16_t> ports = GetWellKnownPorts(_T("snmp"), 0);
             unique_ptr<StringList> communities = SnmpGetKnownCommunities(0);
             for(int i = 0; i < ports.size(); i++)
             {

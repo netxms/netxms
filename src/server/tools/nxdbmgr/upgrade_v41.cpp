@@ -24,6 +24,29 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 41.9 to 41.10
+ */
+static bool H_UpgradeFromV9()
+{
+   CHK_EXEC(DBRenameTable(g_dbHandle, _T("snmp_ports"), _T("well_known_ports")));
+   CHK_EXEC(SQLQuery(_T("ALTER TABLE well_known_ports ADD tag varchar(15)")));
+   CHK_EXEC(SQLQuery(_T("UPDATE well_known_ports SET tag='snmp'")));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("well_known_ports"), _T("tag")));
+
+   CHK_EXEC(CreateConfigParam(_T("NetworkDiscovery.ActiveDiscovery.EnableSNMPProbing"),
+         _T("1"),
+         _T("Enable/disable SNMP probing during active network discovery. If enabled, server will send SNMP requests to detect devices that repond to SNMP but not to ICMP pings."),
+         nullptr, 'B', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(_T("NetworkDiscovery.ActiveDiscovery.EnableTCPProbing"),
+         _T("1"),
+         _T("Enable/disable TCP probing during active network discovery. If enabled, server will try to establish TCP connection to list of well-known port to detect devices that are not responding to ICMP pings."),
+         nullptr, 'B', true, false, false, false));
+
+   CHK_EXEC(SetMinorSchemaVersion(10));
+   return true;
+}
+
+/**
  * Upgrade from 41.8 to 41.9
  */
 static bool H_UpgradeFromV8()
@@ -319,6 +342,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 9,  41, 10, H_UpgradeFromV9  },
    { 8,  41, 9,  H_UpgradeFromV8  },
    { 7,  41, 8,  H_UpgradeFromV7  },
    { 6,  41, 7,  H_UpgradeFromV6  },

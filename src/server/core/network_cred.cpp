@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2020 Raden Solutions
+** Copyright (C) 2020-2022 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -166,24 +166,66 @@ void GetFullUsmCredentialList(NXCPMessage *msg)
 }
 
 /**
- * Get list of configured SNMP ports for all zones into NXCP message
+ * Get list of well-known ports for given zone and tag
  */
-void GetFullSnmpPortList(NXCPMessage *msg)
+IntegerArray<uint16_t> GetWellKnownPorts(const TCHAR *tag, int32_t zoneUIN)
+{
+   IntegerArray<uint16_t> ports;
+
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT port FROM well_known_ports WHERE tag=? AND (zone=? OR zone=-1) ORDER BY zone DESC, id ASC"));
+   if (hStmt != nullptr)
+   {
+      DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, tag, DB_BIND_STATIC);
+      DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, zoneUIN);
+
+      DB_RESULT hResult = DBSelectPrepared(hStmt);
+      if (hResult != nullptr)
+      {
+         int count = DBGetNumRows(hResult);
+         for(int i = 0; i < count; i++)
+
+            ports.add(DBGetFieldLong(hResult, i, 0));
+         DBFreeResult(hResult);
+      }
+      DBFreeStatement(hStmt);
+   }
+   DBConnectionPoolReleaseConnection(hdb);
+
+   if (ports.size() == 0)
+      ports.add(161);
+   return ports;
+}
+
+/**
+ * Get list of configured ports for all zones into NXCP message
+ */
+void FullWellKnownPortListToMessage(const TCHAR *tag, NXCPMessage *msg)
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   DB_RESULT hResult = DBSelect(hdb, _T("SELECT port,zone FROM snmp_ports ORDER BY zone DESC, id ASC"));
-   if (hResult != nullptr)
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT port,zone FROM well_known_ports WHERE tag=? ORDER BY zone DESC, id ASC"));
+   if (hStmt != nullptr)
    {
-      int count = DBGetNumRows(hResult);
-      UINT32 baseId = VID_ZONE_SNMP_PORT_LIST_BASE;
-      msg->setField(VID_ZONE_SNMP_PORT_COUNT, (UINT32)count);
-      for(int i = 0; i < count; i++, baseId +=8)
+      DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, tag, DB_BIND_STATIC);
+      DB_RESULT hResult = DBSelectPrepared(hStmt);
+      if (hResult != nullptr)
       {
-         msg->setField(baseId++, (uint16_t)DBGetFieldLong(hResult, i, 0));
-         msg->setField(baseId++, DBGetFieldULong(hResult, i, 1));
+         int count = DBGetNumRows(hResult);
+         uint32_t fieldId = VID_ZONE_PORT_LIST_BASE;
+         for(int i = 0; i < count; i++, fieldId +=8)
+         {
+            msg->setField(fieldId++, static_cast<uint16_t>(DBGetFieldLong(hResult, i, 0)));
+            msg->setField(fieldId++, DBGetFieldULong(hResult, i, 1));
+         }
+         msg->setField(VID_ZONE_PORT_COUNT, static_cast<uint32_t>(count));
+         msg->setField(VID_RCC, RCC_SUCCESS);
+         DBFreeResult(hResult);
       }
-      DBFreeResult(hResult);
-      msg->setField(VID_RCC, RCC_SUCCESS);
+      else
+      {
+         msg->setField(VID_RCC, RCC_DB_FAILURE);
+      }
+      DBFreeStatement(hStmt);
    }
    else
    {
@@ -193,32 +235,114 @@ void GetFullSnmpPortList(NXCPMessage *msg)
 }
 
 /**
- * Get list of configured SNMP ports for given zone into NXCP message
+ * Get list of configured ports for given zone into NXCP message
  */
-void GetZoneSnmpPortList(NXCPMessage *msg, int32_t zoneUIN)
+void ZoneWellKnownPortListToMessage(const TCHAR *tag, int32_t zoneUIN, NXCPMessage *msg)
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   TCHAR query[256];
-   _sntprintf(query, 255, _T("SELECT port FROM snmp_ports WHERE zone=%d ORDER BY id ASC"), zoneUIN);
-   DB_RESULT hResult = DBSelect(hdb, query);
-   if (hResult != nullptr)
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT port FROM well_known_ports WHERE tag=? AND zone=? ORDER BY id ASC"));
+   if (hStmt != nullptr)
    {
-      int count = DBGetNumRows(hResult);
-      UINT32 baseId = VID_ZONE_SNMP_PORT_LIST_BASE;
-      msg->setField(VID_ZONE_SNMP_PORT_COUNT, (UINT32)count);
-      for(int i = 0; i < count; i++)
+      DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, tag, DB_BIND_STATIC);
+      DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, zoneUIN);
+      DB_RESULT hResult = DBSelectPrepared(hStmt);
+      if (hResult != nullptr)
       {
-         msg->setField(baseId++, (uint16_t)DBGetFieldLong(hResult, i, 0));
+         int count = DBGetNumRows(hResult);
+         uint32_t fieldId = VID_ZONE_PORT_LIST_BASE;
+         for(int i = 0; i < count; i++)
+         {
+            msg->setField(fieldId++, static_cast<uint16_t>(DBGetFieldLong(hResult, i, 0)));
+         }
+         msg->setField(VID_ZONE_PORT_COUNT, (UINT32)count);
+         msg->setField(VID_RCC, RCC_SUCCESS);
+         DBFreeResult(hResult);
       }
-      DBFreeResult(hResult);
-      msg->setField(VID_RCC, RCC_SUCCESS);
+      else
+      {
+         msg->setField(VID_RCC, RCC_DB_FAILURE);
+      }
+      DBFreeStatement(hStmt);
    }
    else
    {
       msg->setField(VID_RCC, RCC_DB_FAILURE);
    }
    DBConnectionPoolReleaseConnection(hdb);
+}
 
+/**
+ * Update list of well-known ports from NXCP message
+ */
+uint32_t UpdateWellKnownPortList(const NXCPMessage& request, const TCHAR *tag, int32_t zoneUIN)
+{
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   if (!DBBegin(hdb))
+   {
+      DBConnectionPoolReleaseConnection(hdb);
+      return RCC_DB_FAILURE;
+   }
+
+   uint32_t rcc;
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("DELETE FROM well_known_ports WHERE tag=? AND zone=?"));
+   if (hStmt != nullptr)
+   {
+      DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, tag, DB_BIND_STATIC);
+      DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, zoneUIN);
+      if (DBExecute(hStmt))
+      {
+         rcc = RCC_SUCCESS;
+         int count = request.getFieldAsInt32(VID_ZONE_PORT_COUNT);
+         if (count > 0)
+         {
+            DB_STATEMENT hStmt2 = DBPrepare(hdb, _T("INSERT INTO well_known_ports (id,port,zone,tag) VALUES(?,?,?,?)"), count > 1);
+            if (hStmt2 != nullptr)
+            {
+               DBBind(hStmt2, 3, DB_SQLTYPE_INTEGER, zoneUIN);
+               DBBind(hStmt2, 4, DB_SQLTYPE_VARCHAR, tag, DB_BIND_STATIC);
+
+               uint32_t fieldId = VID_ZONE_PORT_LIST_BASE;
+               for(int i = 0; i < count; i++)
+               {
+                  DBBind(hStmt2, 1, DB_SQLTYPE_INTEGER, i + 1);
+                  DBBind(hStmt2, 2, DB_SQLTYPE_INTEGER, request.getFieldAsUInt16(fieldId++));
+                  if (!DBExecute(hStmt2))
+                  {
+                     rcc = RCC_DB_FAILURE;
+                     break;
+                  }
+               }
+               DBFreeStatement(hStmt2);
+            }
+            else
+            {
+               rcc = RCC_DB_FAILURE;
+            }
+         }
+         else
+         {
+            rcc = RCC_SUCCESS;
+         }
+      }
+      DBFreeStatement(hStmt);
+   }
+   else
+   {
+      rcc = RCC_DB_FAILURE;
+   }
+
+   if (rcc == RCC_SUCCESS)
+   {
+      DBCommit(hdb);
+      NotifyClientSessions(NX_NOTIFY_PORTS_CONFIG_CHANGED, zoneUIN);
+   }
+   else
+   {
+      DBRollback(hdb);
+   }
+
+   DBConnectionPoolReleaseConnection(hdb);
+   return rcc;
 }
 
 /**

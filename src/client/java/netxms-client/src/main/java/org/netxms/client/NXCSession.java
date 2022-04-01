@@ -6523,15 +6523,6 @@ public class NXCSession
          msg.setField(NXCPCodes.VID_XML_CONFIG, data.getXmlConfig());
       }
 
-      if (data.getSnmpPorts() != null)
-      {
-         msg.setFieldInt32(NXCPCodes.VID_ZONE_SNMP_PORT_COUNT, data.getSnmpPorts().size());
-         for(int i = 0; i < data.getSnmpPorts().size(); i++)
-         {
-            msg.setField(NXCPCodes.VID_ZONE_SNMP_PORT_LIST_BASE + i, data.getSnmpPorts().get(i));
-         }
-      }
-
       if (data.getPassiveElements() != null)
       {
          List<PassiveRackElement> elements = data.getPassiveElements();
@@ -12603,33 +12594,35 @@ public class NXCSession
    }
 
    /**
-    * Get list of configured SNMP ports (global and all zones).
-    * 
-    * @return list of configured SNMP ports
+    * Get list of well-known ports (global and all zones).
+    *
+    * @param tag port list tag
+    * @return list of well-known ports
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public Map<Integer, List<Integer>> getSNMPPorts() throws IOException, NXCException
+   public Map<Integer, List<Integer>> getWellKnownPorts(String tag) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_SNMP_PORT_LIST);
+      msg.setField(NXCPCodes.VID_TAG, tag);
       sendMessage(msg);
       final NXCPMessage response = waitForRCC(msg.getMessageId());
 
-      int count = response.getFieldAsInt32(NXCPCodes.VID_ZONE_SNMP_PORT_COUNT);
+      int count = response.getFieldAsInt32(NXCPCodes.VID_ZONE_PORT_COUNT);
       Map<Integer, List<Integer>> map = new HashMap<Integer, List<Integer>>(count);
       List<Integer> stringList = new ArrayList<Integer>();
       int currentZoneUIN = 0;
-      long baseId = NXCPCodes.VID_ZONE_SNMP_PORT_LIST_BASE;
-      for(int i = 0; i < count; i++, baseId += 10)
+      long fieldId = NXCPCodes.VID_ZONE_PORT_LIST_BASE;
+      for(int i = 0; i < count; i++, fieldId += 10)
       {
-         int zoneUIN = response.getFieldAsInt32(baseId + 1);
+         int zoneUIN = response.getFieldAsInt32(fieldId + 1);
          if ((i != 0) && (currentZoneUIN != zoneUIN))
          {
             map.put(currentZoneUIN, stringList);
             stringList = new ArrayList<Integer>();
             currentZoneUIN = zoneUIN;
          }
-         stringList.add(response.getFieldAsInt32(baseId));
+         stringList.add(response.getFieldAsInt32(fieldId));
       }
       if (count > 0)
          map.put(currentZoneUIN, stringList);
@@ -12637,48 +12630,52 @@ public class NXCSession
    }
 
    /**
-    * Get list of configured SNMP ports for given zone.
+    * Get list of well-known ports for given zone.
     *
     * @param zoneUIN zone UIN (-1 for global port list)
-    * @return list of configured SNMP ports
+    * @param tag port list tag
+    * @return list of well-known ports
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public List<Integer> getSNMPPorts(int zoneUIN) throws IOException, NXCException
+   public List<Integer> getWellKnownPorts(int zoneUIN, String tag) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_SNMP_PORT_LIST);
       msg.setFieldInt32(NXCPCodes.VID_ZONE_UIN, zoneUIN);
+      msg.setField(NXCPCodes.VID_TAG, tag);
       sendMessage(msg);
       final NXCPMessage response = waitForRCC(msg.getMessageId());
 
-      int count = response.getFieldAsInt32(NXCPCodes.VID_ZONE_SNMP_PORT_COUNT);
-      long baseId = NXCPCodes.VID_ZONE_SNMP_PORT_LIST_BASE;
-      List<Integer> portList = new ArrayList<Integer>();
+      int count = response.getFieldAsInt32(NXCPCodes.VID_ZONE_PORT_COUNT);
+      List<Integer> portList = new ArrayList<Integer>(count);
+      long fieldId = NXCPCodes.VID_ZONE_PORT_LIST_BASE;
       for(int i = 0; i < count; i++)
       {
-         portList.add(response.getFieldAsInt32(baseId++));
+         portList.add(response.getFieldAsInt32(fieldId++));
       }
       return portList;
    }
 
    /**
-    * Update SNMP port list.
+    * Update list of well-known ports.
     *
     * @param zoneUIN zone UIN for which port list should be updated (-1 for global port list)
-    * @param ports new SNMP port list
+    * @param tag port list tag
+    * @param ports new port list
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void updateSNMPPorts(int zoneUIN, List<Integer> ports) throws IOException, NXCException
+   public void updateWellKnownPorts(int zoneUIN, String tag, List<Integer> ports) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_UPDATE_SNMP_PORT_LIST);
       msg.setFieldInt32(NXCPCodes.VID_ZONE_UIN, zoneUIN);
-      long baseId = NXCPCodes.VID_ZONE_SNMP_PORT_LIST_BASE;
+      msg.setField(NXCPCodes.VID_TAG, tag);
+      long fieldId = NXCPCodes.VID_ZONE_PORT_LIST_BASE;
       for(Integer port : ports)
       {
-         msg.setFieldInt16(baseId++, port);
+         msg.setFieldInt16(fieldId++, port);
       }
-      msg.setFieldInt32(NXCPCodes.VID_ZONE_SNMP_PORT_COUNT, ports.size());
+      msg.setFieldInt32(NXCPCodes.VID_ZONE_PORT_COUNT, ports.size());
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }

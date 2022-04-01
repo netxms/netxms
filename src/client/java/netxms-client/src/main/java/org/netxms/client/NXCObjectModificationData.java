@@ -162,7 +162,6 @@ public class NXCObjectModificationData
    private String metaType;
    private Long sensorProxy;
    private String xmlConfig;
-   private List<String> snmpPorts;
    private List<PassiveRackElement> passiveElements;
    private List<ResponsibleUser> responsibleUsers;
    private IcmpStatCollectionMode icmpStatCollectionMode;
@@ -1857,26 +1856,6 @@ public class NXCObjectModificationData
    public void setXmlConfig(String xmlConfig)
    {
       this.xmlConfig = xmlConfig;
-   }
-
-   /**
-    * Update zone snmp port list
-    *
-    * @param snmpPorts to set
-    */
-   public void setSnmpPorts(List<String> snmpPorts)
-   {
-      this.snmpPorts = snmpPorts;
-   }
-
-   /**
-    * Get the snmp port list
-    *
-    * @return snmp port list
-    */
-   public List<String> getSnmpPorts()
-   {
-      return snmpPorts;
    }
 
    /**

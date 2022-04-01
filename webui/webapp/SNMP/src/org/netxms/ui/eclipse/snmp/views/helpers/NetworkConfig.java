@@ -16,16 +16,16 @@ public class NetworkConfig
    public static int NETWORK_CONFIG_GLOBAL = -1;
    public static int ALL_ZONES = -2;
 
-   //Configuration type flags
+   // Configuration type flags
    public static int COMMUNITIES    = 0x01;
    public static int USM            = 0x02;
-   public static int PORTS          = 0x04;
+   public static int SNMP_PORTS     = 0x04;
    public static int AGENT_SECRETS  = 0x08;
    public static int ALL_CONFIGS    = 0x0F; 
-   
+
    private Map<Integer, List<String>> communities = new HashMap<Integer, List<String>>();
    private Map<Integer, List<SnmpUsmCredential>> usmCredentials = new HashMap<Integer, List<SnmpUsmCredential>>();
-   private Map<Integer, List<Integer>> ports = new HashMap<Integer, List<Integer>>();
+   private Map<Integer, List<Integer>> snmpPorts = new HashMap<Integer, List<Integer>>();
    private Map<Integer, List<String>> sharedSecrets = new HashMap<Integer, List<String>>();
    private NXCSession session;
    private Map<Integer, Integer> changedConfig = new HashMap<Integer, Integer>();
@@ -37,7 +37,7 @@ public class NetworkConfig
    {
       this.session = session;
    }
-   
+
    /**
     * Load exact configuration part 
     * 
@@ -56,7 +56,7 @@ public class NetworkConfig
             communities.put(zoneUIN, session.getSnmpCommunities(zoneUIN));              
          }    
       }
-      
+
       if ((configId & USM) > 0)
       {
          if (ALL_ZONES == zoneUIN)
@@ -68,19 +68,19 @@ public class NetworkConfig
             usmCredentials.put(zoneUIN, session.getSnmpUsmCredentials(zoneUIN));              
          } 
       }
-      
-      if ((configId & PORTS) > 0)
+
+      if ((configId & SNMP_PORTS) > 0)
       {
          if (ALL_ZONES == zoneUIN)
          {
-            ports = session.getSNMPPorts();
+            snmpPorts = session.getWellKnownPorts("snmp");
          }
          else
          {
-            ports.put(zoneUIN, session.getSNMPPorts(zoneUIN));            
+            snmpPorts.put(zoneUIN, session.getWellKnownPorts(zoneUIN, "snmp"));
          }
       }
-      
+
       if ((configId & AGENT_SECRETS) > 0)
       {
          if (ALL_ZONES == zoneUIN)
@@ -93,12 +93,12 @@ public class NetworkConfig
          }  
       }
    }
-   
+
    public boolean isChanged(int configId, int zoneUIN)
    {
       return (changedConfig.getOrDefault(zoneUIN, 0) & configId) > 0;
    }
-   
+
    /**
     * Save SNMP configuration on server. This method calls communication
     * API directly, so it should not be called from UI thread.
@@ -122,9 +122,9 @@ public class NetworkConfig
          }
       
       for (Entry<Integer, Integer> value : changedConfig.entrySet())
-         if ((value.getValue() & PORTS) > 0)
+         if ((value.getValue() & SNMP_PORTS) > 0)
          {
-            session.updateSNMPPorts(value.getKey(), ports.get(value.getKey()));
+            session.updateWellKnownPorts(value.getKey(), "snmp", snmpPorts.get(value.getKey()));
          }
       
       for (Entry<Integer, Integer> value : changedConfig.entrySet())
@@ -177,8 +177,8 @@ public class NetworkConfig
     */
    public List<Integer> getPorts(long zoneUIN)
    {
-      if (ports.containsKey((int)zoneUIN))
-         return ports.get((int)zoneUIN);
+      if (snmpPorts.containsKey((int)zoneUIN))
+         return snmpPorts.get((int)zoneUIN);
       else
          return new ArrayList<Integer>();
    }
@@ -188,15 +188,15 @@ public class NetworkConfig
     */
    public void addPort(Integer port, long zoneUIN)
    {
-      if (this.ports.containsKey((int)zoneUIN))
+      if (this.snmpPorts.containsKey((int)zoneUIN))
       {
-         this.ports.get((int)zoneUIN).add(port);
+         this.snmpPorts.get((int)zoneUIN).add(port);
       }
       else
       {
          List<Integer> list = new ArrayList<Integer>();
          list.add(port);
-         this.ports.put((int)zoneUIN, list);
+         this.snmpPorts.put((int)zoneUIN, list);
       }
    }
 

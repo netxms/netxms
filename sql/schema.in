@@ -1857,11 +1857,12 @@ CREATE TABLE usm_credentials
 ) TABLE_TYPE;
 
 /*
-** Default SNMP ports
+** Well-known TCP or UDP ports
 */
-CREATE TABLE snmp_ports 
+CREATE TABLE well_known_ports 
 (
    id integer not null,
+   tag varchar(15) not null,
    port integer not null,
    zone integer not null,
    PRIMARY KEY(id,zone)

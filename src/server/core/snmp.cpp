@@ -129,37 +129,6 @@ bool SnmpTestRequest(SNMP_Transport *snmp, const StringList &testOids, bool sepa
 }
 
 /**
- * Get list of known SNMP ports for given zone
- */
-IntegerArray<uint16_t> SnmpGetKnownPorts(int32_t zoneUIN)
-{
-   IntegerArray<uint16_t> ports;
-
-   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT port FROM snmp_ports WHERE zone=? OR zone=-1 ORDER BY zone DESC, id ASC"));
-   if (hStmt != nullptr)
-   {
-      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, zoneUIN);
-
-      DB_RESULT hResult = DBSelectPrepared(hStmt);
-      if (hResult != nullptr)
-      {
-         int count = DBGetNumRows(hResult);
-         for(int i = 0; i < count; i++)
-
-            ports.add(DBGetFieldLong(hResult, i, 0));
-         DBFreeResult(hResult);
-      }
-      DBFreeStatement(hStmt);
-   }
-   DBConnectionPoolReleaseConnection(hdb);
-
-   if (ports.size() == 0)
-      ports.add(161);
-   return ports;
-}
-
-/**
  * Get list of known SNMP communities for given zone
  */
 unique_ptr<StringList> SnmpGetKnownCommunities(int32_t zoneUIN)
@@ -286,7 +255,7 @@ SNMP_Transport *SnmpCheckCommSettings(uint32_t snmpProxy, const InetAddress& ipA
    unique_ptr<StringList> communities;
    bool separateRequests = ConfigReadBoolean(_T("SNMP.Discovery.SeparateProbeRequests"), false);
 
-   IntegerArray<uint16_t> ports = SnmpGetKnownPorts(zoneUIN);
+   IntegerArray<uint16_t> ports = GetWellKnownPorts(_T("snmp"), zoneUIN);
    for(int j = -1; (j < ports.size()) && !IsShutdownInProgress(); j++)
    {
       uint16_t port;

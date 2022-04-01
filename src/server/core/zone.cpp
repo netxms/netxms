@@ -220,7 +220,7 @@ bool Zone::deleteFromDatabase(DB_HANDLE hdb)
    if (success)
       success = executeQueryOnObject(hdb, _T("DELETE FROM usm_credentials WHERE zone=?"));
    if (success)
-      success = executeQueryOnObject(hdb, _T("DELETE FROM snmp_ports WHERE zone=?"));
+      success = executeQueryOnObject(hdb, _T("DELETE FROM well_known_ports WHERE zone=?"));
    return success;
 }
 

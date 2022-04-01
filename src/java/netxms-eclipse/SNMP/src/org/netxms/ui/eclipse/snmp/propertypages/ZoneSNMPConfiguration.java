@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Raden Solutions
+ * Copyright (C) 2003-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -98,11 +98,11 @@ public class ZoneSNMPConfiguration extends PropertyPage
       layout.numColumns = 2;	
       layout.makeColumnsEqualWidth = true;
 		dialogArea.setLayout(layout);
-      
+
       createSnmpCommunitySection(dialogArea);
       createSnmpPortList(dialogArea);
       createSnmpUsmCredSection(dialogArea);
-      
+
       loadConfig();
 		return dialogArea;
 	}
@@ -121,7 +121,7 @@ public class ZoneSNMPConfiguration extends PropertyPage
       layout.marginHeight = 0;
       layout.numColumns = 2;
       clientArea.setLayout(layout);
-      
+
       communityList = new TableViewer(clientArea, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
       GridData gridData = new GridData();
       gridData.verticalAlignment = GridData.FILL;
@@ -143,7 +143,7 @@ public class ZoneSNMPConfiguration extends PropertyPage
       gridData = new GridData();
       gridData.horizontalAlignment = SWT.LEFT;
       buttonsLeft.setLayoutData(gridData);
-      
+
       commMoveUpButton = new Button(buttonsLeft, SWT.PUSH);
       commMoveUpButton.setText("&Up");
       RowData rd = new RowData();
@@ -181,7 +181,7 @@ public class ZoneSNMPConfiguration extends PropertyPage
             moveCommunity(false);
          }
       });
-      
+
       Composite buttonsRight = new Composite(clientArea, SWT.NONE);
       buttonLayout = new RowLayout();
       buttonLayout.type = SWT.HORIZONTAL;
@@ -230,7 +230,7 @@ public class ZoneSNMPConfiguration extends PropertyPage
             removeCommunity();
          }
       });
-      
+
       communityList.addSelectionChangedListener(new ISelectionChangedListener() {
          @Override
          public void selectionChanged(SelectionChangedEvent event)
@@ -248,16 +248,14 @@ public class ZoneSNMPConfiguration extends PropertyPage
     */
 	private void loadConfig()
 	{
-      final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-      
+      final NXCSession session = ConsoleSharedData.getSession();
 	   ConsoleJob job = new ConsoleJob(Messages.get().NetworkCredentials_LoadingConfig, null, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
             communities = session.getSnmpCommunities(zone.getUIN());
             usmCredentials = session.getSnmpUsmCredentials(zone.getUIN());
-            ports = session.getSNMPPorts(zone.getUIN());
-            
+            ports = session.getWellKnownPorts(zone.getUIN(), "snmp");
             runInUIThread(new Runnable() {
                @Override
                public void run()
@@ -276,7 +274,7 @@ public class ZoneSNMPConfiguration extends PropertyPage
       job.setUser(false);
       job.start();
 	}
-	
+
 	/**
 	 * Update fileds
 	 */
@@ -285,10 +283,9 @@ public class ZoneSNMPConfiguration extends PropertyPage
       communityList.setInput(communities);
       usmCredentialList.setInput(usmCredentials);
       portList.setInput(ports);
-      //sharedSecretList.setInput(sharedSecrets);
-	   
+      // sharedSecretList.setInput(sharedSecrets);
 	}
-   
+
 	/**
 	 * Set modified 
 	 * 
@@ -298,7 +295,7 @@ public class ZoneSNMPConfiguration extends PropertyPage
    {
       modified |= configId;
    }
-   
+
    /**
     * Add SNMP community to the list
     */
@@ -320,7 +317,7 @@ public class ZoneSNMPConfiguration extends PropertyPage
     */
    private void removeCommunity()
    {
-      IStructuredSelection selection = (IStructuredSelection)communityList.getSelection();
+      IStructuredSelection selection = communityList.getStructuredSelection();
       if (selection.size() > 0)
       {
          for(Object o : selection.toList())
@@ -339,7 +336,7 @@ public class ZoneSNMPConfiguration extends PropertyPage
     */
    protected void moveCommunity(boolean up)
    {
-      IStructuredSelection selection = (IStructuredSelection)communityList.getSelection();
+      IStructuredSelection selection = communityList.getStructuredSelection();
       if (selection.size() > 0)
       {
          for(Object o : selection.toList())
@@ -381,8 +378,7 @@ public class ZoneSNMPConfiguration extends PropertyPage
       gridData.verticalAlignment = GridData.FILL;
       gridData.grabExcessHorizontalSpace = true;
       clientArea.setLayoutData(gridData);
-      
-      
+
       final String[] names = { "User name", "Auth type", "Priv type", "Auth secret", "Priv secret", "Comments" };
       final int[] widths = { 100, 100, 100, 100, 100, 100 };
       usmCredentialList = new SortableTableViewer(clientArea, names, widths, 0, SWT.DOWN, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
@@ -397,7 +393,6 @@ public class ZoneSNMPConfiguration extends PropertyPage
       usmCredentialList.setContentProvider(new ArrayContentProvider());
       usmCredentialList.setLabelProvider(new SnmpUsmLabelProvider());
       usmCredentialList.addDoubleClickListener(new IDoubleClickListener() {
-         
          @Override
          public void doubleClick(DoubleClickEvent event)
          {
@@ -521,7 +516,7 @@ public class ZoneSNMPConfiguration extends PropertyPage
             removeUsmCredentials();
          }
       });
-      
+
       usmCredentialList.addSelectionChangedListener(new ISelectionChangedListener() {
          @Override
          public void selectionChanged(SelectionChangedEvent event)
@@ -550,7 +545,7 @@ public class ZoneSNMPConfiguration extends PropertyPage
          setModified(NetworkConfig.USM);
       }
    }
-   
+
    /**
     * Edit SNMP USM credential
     */
@@ -763,7 +758,7 @@ public class ZoneSNMPConfiguration extends PropertyPage
         String value = dlg.getValue();
         ports.add(Integer.parseInt(value));
         portList.setInput(ports.toArray());
-        setModified(NetworkConfig.PORTS);
+        setModified(NetworkConfig.SNMP_PORTS);
      }
   }
   
@@ -780,7 +775,7 @@ public class ZoneSNMPConfiguration extends PropertyPage
            ports.remove((Integer)o);
         }
         portList.setInput(ports.toArray());
-        setModified(NetworkConfig.PORTS);
+        setModified(NetworkConfig.SNMP_PORTS);
      }
   }
 
@@ -809,7 +804,7 @@ public class ZoneSNMPConfiguration extends PropertyPage
            }
         }
         portList.setInput(ports);
-        setModified(NetworkConfig.PORTS);
+        setModified(NetworkConfig.SNMP_PORTS);
      }
   }  
 	
@@ -826,7 +821,7 @@ public class ZoneSNMPConfiguration extends PropertyPage
 		if (isApply)
 			setValid(false);
 
-		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+      final NXCSession session = ConsoleSharedData.getSession();
 		new ConsoleJob(String.format(Messages.get().NetworkCredentials_SaveConfig, zone.getObjectName()), null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
@@ -841,9 +836,9 @@ public class ZoneSNMPConfiguration extends PropertyPage
 	            session.updateSnmpUsmCredentials(zone.getUIN(), usmCredentials);    
 	         }
 
-            if ((modified & NetworkConfig.PORTS) != 0)
+            if ((modified & NetworkConfig.SNMP_PORTS) != 0)
 	         {
-	            session.updateSNMPPorts(zone.getUIN(), ports);
+               session.updateWellKnownPorts(zone.getUIN(), "snmp", ports);
 	         }
 			}
 
@@ -855,7 +850,7 @@ public class ZoneSNMPConfiguration extends PropertyPage
 		}.start();
 		return true;
 	}
-	
+
    /**
     * @see org.eclipse.jface.preference.PreferencePage#performOk()
     */

@@ -453,8 +453,8 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(uint16_t code, TCHAR *buffer)
       _T("CMD_UPDATE_ENVIRONMENT"),
       _T("CMD_GET_SHARED_SECRET_LIST"),
       _T("CMD_UPDATE_SHARED_SECRET_LIST"),
-      _T("CMD_GET_SNMP_PORT_LIST"),
-      _T("CMD_UPDATE_SNMP_PORT_LIST"),
+      _T("CMD_GET_WELL_KNOWN_PORT_LIST"),
+      _T("CMD_UPDATE_WELL_KNOWN_PORT_LIST"),
       _T("CMD_GET_LOG_RECORD_DETAILS"),
       _T("CMD_GET_DCI_LAST_VALUE"),
       _T("CMD_OBJECT_CATEGORY_UPDATE"),
@@ -493,7 +493,11 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(uint16_t code, TCHAR *buffer)
       _T("CMD_GET_BUSINESS_SERVICE_TICKETS"),
       _T("CMD_SSH_COMMAND"),
       _T("CMD_FIND_DCI"),
-      _T("CMD_UPDATE_PACKAGE_METADATA")
+      _T("CMD_UPDATE_PACKAGE_METADATA"),
+      _T("CMD_GET_EVENT_REFERENCES"),
+      _T("CMD_READ_MAINTENANCE_JOURNAL"),
+      _T("CMD_CREATE_MAINTENANCE_JOURNAL"),
+      _T("CMD_EDIT_MAINTENANCE_JOURNAL")
    };
    static const TCHAR *reportingMessageNames[] =
    {
@@ -506,7 +510,7 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(uint16_t code, TCHAR *buffer)
       _T("CMD_RS_NOTIFY")
    };
 
-   if ((code >= CMD_LOGIN) && (code <= CMD_UPDATE_PACKAGE_METADATA))
+   if ((code >= CMD_LOGIN) && (code <= CMD_EDIT_MAINTENANCE_JOURNAL))
    {
       _tcscpy(buffer, messageNames[code - CMD_LOGIN]);
    }

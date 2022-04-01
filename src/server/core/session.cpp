@@ -1427,7 +1427,7 @@ void ClientSession::processRequest(NXCPMessage *request)
          break;
       case CMD_GET_COMMUNITY_LIST:
       case CMD_GET_USM_CREDENTIALS:
-      case CMD_GET_SNMP_PORT_LIST:
+      case CMD_GET_WELL_KNOWN_PORT_LIST:
       case CMD_GET_SHARED_SECRET_LIST:
          sendNetworkCredList(*request);
          break;
@@ -1437,8 +1437,8 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_UPDATE_SHARED_SECRET_LIST:
          updateSharedSecretList(*request);
          break;
-      case CMD_UPDATE_SNMP_PORT_LIST:
-         updateSNMPPortList(*request);
+      case CMD_UPDATE_WELL_KNOWN_PORT_LIST:
+         updateWellKnownPortList(*request);
          break;
       case CMD_UPDATE_USM_CREDENTIALS:
          updateUsmCredentials(*request);
@@ -10465,65 +10465,73 @@ void ClientSession::sendNotification(const NXCPMessage& request)
  */
 void ClientSession::sendNetworkCredList(const NXCPMessage& request)
 {
-   NXCPMessage msg;
-	msg.setId(request.getId());
-	msg.setCode(CMD_REQUEST_COMPLETED);
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
-	if (m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONFIG)
-	{
-	   bool allZones = !request.isFieldExist(VID_ZONE_UIN);
-	   if (allZones)
-	   {
-	      switch (request.getCode())
-	      {
-	         case CMD_GET_COMMUNITY_LIST:
-	            GetFullCommunityList(&msg);
-	            break;
-	         case CMD_GET_USM_CREDENTIALS:
-	            GetFullUsmCredentialList(&msg);
-               break;
-	         case CMD_GET_SNMP_PORT_LIST:
-	            GetFullSnmpPortList(&msg);
-	            break;
-	         case CMD_GET_SHARED_SECRET_LIST:
-	            GetFullAgentSecretList(&msg);
-	            break;
-	      }
-	   }
-	   else
-	   {
-	      int32_t zoneUIN = request.getFieldAsInt32(VID_ZONE_UIN);
-	      shared_ptr<Zone> zone = FindZoneByUIN(zoneUIN);
-	      if (zone == nullptr && zoneUIN != SNMP_CONFIG_GLOBAL)
-	      {
-	         msg.setField(VID_RCC, RCC_INVALID_ZONE_ID);
-	      }
-	      else
-	      {
-	         switch(request.getCode())
-	         {
+   int32_t zoneUIN = request.isFieldExist(VID_ZONE_UIN) ? request.getFieldAsInt32(VID_ZONE_UIN) : -1;
+   if (zoneUIN != -1) // specific zone
+   {
+      shared_ptr<Zone> zone = FindZoneByUIN(zoneUIN);
+      if (zone != nullptr)
+      {
+         if (zone->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+         {
+            TCHAR tag[16];
+            switch(request.getCode())
+            {
                case CMD_GET_COMMUNITY_LIST:
-                  GetZoneCommunityList(&msg, zoneUIN);
+                  GetZoneCommunityList(&response, zoneUIN);
                   break;
                case CMD_GET_USM_CREDENTIALS:
-                  GetZoneUsmCredentialList(&msg, zoneUIN);
+                  GetZoneUsmCredentialList(&response, zoneUIN);
                   break;
-               case CMD_GET_SNMP_PORT_LIST:
-                  GetZoneSnmpPortList(&msg, zoneUIN);
+               case CMD_GET_WELL_KNOWN_PORT_LIST:
+                  request.getFieldAsString(VID_TAG, tag, 16);
+                  ZoneWellKnownPortListToMessage(tag, zoneUIN, &response);
                   break;
                case CMD_GET_SHARED_SECRET_LIST:
-                  GetZoneAgentSecretList(&msg, zoneUIN);
+                  GetZoneAgentSecretList(&response, zoneUIN);
                   break;
-	         }
-	      }
-	   }
-	}
-	else
-	{
-		msg.setField(VID_RCC, RCC_ACCESS_DENIED);
-	}
+            }
+         }
+         else
+         {
+            response.setField(VID_RCC, RCC_ACCESS_DENIED);
+         }
+      }
+      else
+      {
+         response.setField(VID_RCC, RCC_INVALID_ZONE_ID);
+      }
+   }
+   else  // All zones
+   {
+      if (m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONFIG)
+      {
+         TCHAR tag[16];
+         switch (request.getCode())
+         {
+            case CMD_GET_COMMUNITY_LIST:
+               GetFullCommunityList(&response);
+               break;
+            case CMD_GET_USM_CREDENTIALS:
+               GetFullUsmCredentialList(&response);
+               break;
+            case CMD_GET_WELL_KNOWN_PORT_LIST:
+               request.getFieldAsString(VID_TAG, tag, 16);
+               FullWellKnownPortListToMessage(tag, &response);
+               break;
+            case CMD_GET_SHARED_SECRET_LIST:
+               GetFullAgentSecretList(&response);
+               break;
+         }
+      }
+      else
+      {
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
+      }
+   }
 
-	sendMessage(&msg);
+	sendMessage(response);
 }
 
 /**
@@ -10533,35 +10541,48 @@ void ClientSession::updateCommunityList(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
-   uint32_t rcc = RCC_SUCCESS;
+   int32_t zoneUIN = request.isFieldExist(VID_ZONE_UIN) ? request.getFieldAsInt32(VID_ZONE_UIN) : -1;
+   shared_ptr<Zone> zone;
+   if (zoneUIN != -1)
+      zone = FindZoneByUIN(zoneUIN);
 
-	if (m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONFIG)
-	{
-      int32_t zoneUIN = request.getFieldAsInt32(VID_ZONE_UIN);
-      shared_ptr<Zone> zone = FindZoneByUIN(zoneUIN);
-      if (zoneUIN == -1 || zone != nullptr)
+   uint32_t rcc;
+   if ((zoneUIN == -1) || (zone != nullptr))
+   {
+      if (((zoneUIN == -1) && (m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONFIG)) ||
+          ((zone != nullptr) && zone->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY)))
       {
          DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
          if (DBBegin(hdb))
          {
-            ExecuteQueryOnObject(hdb, zoneUIN, _T("DELETE FROM snmp_communities WHERE zone=?"));
-            UINT32 stringBase = VID_COMMUNITY_STRING_LIST_BASE;
-            DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO snmp_communities (id,community,zone) VALUES(?,?,?)"), true);
-            if (hStmt != nullptr)
+            if (ExecuteQueryOnObject(hdb, zoneUIN, _T("DELETE FROM snmp_communities WHERE zone=?")))
             {
+               rcc = RCC_SUCCESS;
                int count = request.getFieldAsUInt32(VID_NUM_STRINGS);
-               DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, zoneUIN);
-               for(int i = 0; i < count; i++)
+               if (count > 0)
                {
-                  DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, i + 1);
-                  DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, request.getFieldAsString(stringBase++), DB_BIND_DYNAMIC);
-                  if (!DBExecute(hStmt))
+                  DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO snmp_communities (id,community,zone) VALUES(?,?,?)"), count > 1);
+                  if (hStmt != nullptr)
+                  {
+                     DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, zoneUIN);
+                     uint32_t fieldId = VID_COMMUNITY_STRING_LIST_BASE;
+                     for(int i = 0; i < count; i++)
+                     {
+                        DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, i + 1);
+                        DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, request.getFieldAsString(fieldId++), DB_BIND_DYNAMIC);
+                        if (!DBExecute(hStmt))
+                        {
+                           rcc = RCC_DB_FAILURE;
+                           break;
+                        }
+                     }
+                     DBFreeStatement(hStmt);
+                  }
+                  else
                   {
                      rcc = RCC_DB_FAILURE;
-                     break;
                   }
                }
-               DBFreeStatement(hStmt);
             }
             else
             {
@@ -10586,20 +10607,20 @@ void ClientSession::updateCommunityList(const NXCPMessage& request)
       }
       else
       {
-         rcc = RCC_INVALID_ZONE_ID;
+         rcc = RCC_ACCESS_DENIED;
       }
-	}
-	else
-	{
-		rcc = RCC_ACCESS_DENIED;
-	}
+   }
+   else
+   {
+      rcc = RCC_INVALID_ZONE_ID;
+   }
 
 	response.setField(VID_RCC, rcc);
-	sendMessage(&response);
+	sendMessage(response);
 }
 
 /**
- * Send Persistant Storage list to client
+ * Send persistent storage entries to client
  */
 void ClientSession::getPersistantStorage(const NXCPMessage& request)
 {
@@ -15428,71 +15449,39 @@ void ClientSession::updateSharedSecretList(const NXCPMessage& request)
 /**
  * Update SNMP port list
  */
-void ClientSession::updateSNMPPortList(const NXCPMessage& request)
+void ClientSession::updateWellKnownPortList(const NXCPMessage& request)
 {
-   uint32_t rcc = RCC_SUCCESS;
-   if (m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONFIG)
-   {
-      int32_t zoneUIN = request.getFieldAsInt32(VID_ZONE_UIN);
-      shared_ptr<Zone> zone = FindZoneByUIN(zoneUIN);
-      if (zoneUIN == -1 || zone != nullptr)
-      {
-         DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-         if (DBBegin(hdb))
-         {
-            ExecuteQueryOnObject(hdb, zoneUIN, _T("DELETE FROM snmp_ports WHERE zone=?"));
-            UINT32 baseId = VID_ZONE_SNMP_PORT_LIST_BASE;
-            DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO snmp_ports (id,port,zone) VALUES(?,?,?)"), true);
-            if (hStmt != nullptr)
-            {
-               int count = request.getFieldAsUInt32(VID_ZONE_SNMP_PORT_COUNT);
-               DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, zoneUIN);
-               for(int i = 0; i < count; i++)
-               {
-                  DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, i + 1);
-                  DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, request.getFieldAsUInt16(baseId++));
-                  if (!DBExecute(hStmt))
-                  {
-                     rcc = RCC_DB_FAILURE;
-                     break;
-                  }
-               }
-               DBFreeStatement(hStmt);
-            }
-            else
-            {
-               rcc = RCC_DB_FAILURE;
-            }
+   int32_t zoneUIN = request.getFieldAsInt32(VID_ZONE_UIN);
+   shared_ptr<Zone> zone;
+   if (zoneUIN != -1)
+      zone = FindZoneByUIN(zoneUIN);
 
-            if (rcc == RCC_SUCCESS)
-            {
-               DBCommit(hdb);
-               NotifyClientSessions(NX_NOTIFY_PORTS_CONFIG_CHANGED, zoneUIN);
-            }
-            else
-            {
-               DBRollback(hdb);
-            }
-         }
-         else
-         {
-            rcc = RCC_DB_FAILURE;
-         }
-         DBConnectionPoolReleaseConnection(hdb);
+   uint32_t rcc;
+   if ((zoneUIN == -1) || (zone != nullptr))
+   {
+      if (((zoneUIN == -1) && (m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONFIG)) ||
+          ((zone != nullptr) && zone->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY)))
+      {
+         TCHAR tag[16];
+         request.getFieldAsString(VID_TAG, tag, 16);
+         rcc = UpdateWellKnownPortList(request, tag, zoneUIN);
+         if (rcc == RCC_SUCCESS)
+            writeAuditLog(AUDIT_SYSCFG, true, (zone != nullptr) ? zone->getId() : 0, _T("Updated list of well-known ports"));
       }
       else
       {
-         rcc = RCC_INVALID_ZONE_ID;
+         writeAuditLog(AUDIT_SYSCFG, false, (zone != nullptr) ? zone->getId() : 0, _T("Access denied on updating list of well-known ports"));
+         rcc = RCC_ACCESS_DENIED;
       }
    }
    else
    {
-      rcc = RCC_ACCESS_DENIED;
+      rcc = RCC_INVALID_ZONE_ID;
    }
 
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
-   msg.setField(VID_RCC, rcc);
-   sendMessage(&msg);
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+   response.setField(VID_RCC, rcc);
+   sendMessage(response);
 }
 
 /**

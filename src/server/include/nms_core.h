@@ -861,7 +861,7 @@ private:
    void modifyGeoArea(const NXCPMessage& request);
    void deleteGeoArea(const NXCPMessage& request);
    void updateSharedSecretList(const NXCPMessage& request);
-   void updateSNMPPortList(const NXCPMessage& request);
+   void updateWellKnownPortList(const NXCPMessage& request);
    void findProxyForNode(const NXCPMessage& request);
    void getSshKeys(const NXCPMessage& request);
    void deleteSshKey(const NXCPMessage& request);
@@ -1239,7 +1239,6 @@ bool SnmpTestRequest(SNMP_Transport *snmp, const StringList &testOids, bool sepa
 SNMP_Transport *SnmpCheckCommSettings(uint32_t snmpProxy, const InetAddress& ipAddr, SNMP_Version *version,
          uint16_t originalPort, SNMP_SecurityContext *originalContext, const StringList &customTestOids,
          int32_t zoneUIN);
-IntegerArray<uint16_t> SnmpGetKnownPorts(int32_t zoneUIN);
 unique_ptr<StringList> SnmpGetKnownCommunities(int32_t zoneUIN);
 
 void InitLocalNetInfo();
@@ -1356,10 +1355,12 @@ void GetFullCommunityList(NXCPMessage *msg);
 void GetZoneCommunityList(NXCPMessage *msg, int32_t zoneUIN);
 void GetFullUsmCredentialList(NXCPMessage *msg);
 void GetZoneUsmCredentialList(NXCPMessage *msg, int32_t zoneUIN);
-void GetFullSnmpPortList(NXCPMessage *msg);
-void GetZoneSnmpPortList(NXCPMessage *msg, int32_t zoneUIN);
 void GetFullAgentSecretList(NXCPMessage *msg);
 void GetZoneAgentSecretList(NXCPMessage *msg, int32_t zoneUIN);
+void FullWellKnownPortListToMessage(const TCHAR *tag, NXCPMessage *msg);
+void ZoneWellKnownPortListToMessage(const TCHAR *tag, int32_t zoneUIN, NXCPMessage *msg);
+uint32_t UpdateWellKnownPortList(const NXCPMessage& request, const TCHAR *tag, int32_t zoneUIN);
+IntegerArray<uint16_t> GetWellKnownPorts(const TCHAR *tag, int32_t zoneUIN);
 
 void ReinitializeSyslogParser();
 void OnSyslogConfigurationChange(const TCHAR *name, const TCHAR *value);
