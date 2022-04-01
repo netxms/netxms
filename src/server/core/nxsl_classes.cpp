@@ -2332,6 +2332,10 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *object, const NXSL_Identif
    {
       value = GetObjectIcmpStatistic(iface, IcmpStatFunction::LOSS, vm);
    }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("ifAlias"))
+   {
+      value = vm->createValue(iface->getIfAlias());
+   }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("ifIndex"))
    {
 		value = vm->createValue(iface->getIfIndex());

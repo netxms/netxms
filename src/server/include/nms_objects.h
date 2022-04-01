@@ -1920,7 +1920,7 @@ protected:
    uint32_t m_index;
    MacAddress m_macAddr;
    InetAddressList m_ipAddressList;
-   TCHAR m_description[MAX_DB_STRING];   // Interface description - value of ifDescr for SNMP, equals to name for NetXMS agent
+   SharedString m_description;   // Interface description - value of ifDescr for SNMP, equals to name for NetXMS agent
    SharedString m_ifAlias;
    uint32_t m_type;
    uint32_t m_mtu;
@@ -1963,7 +1963,7 @@ protected:
 public:
    Interface();
    Interface(const InetAddressList& addrList, int32_t zoneUIN, bool bSyntheticMask);
-   Interface(const TCHAR *name, const TCHAR *descr, UINT32 index, const InetAddressList& addrList, UINT32 ifType, int32_t zoneUIN);
+   Interface(const TCHAR *name, const TCHAR *description, uint32_t index, const InetAddressList& addrList, uint32_t ifType, int32_t zoneUIN);
    virtual ~Interface();
 
    shared_ptr<Interface> self() { return static_pointer_cast<Interface>(NObject::self()); }
@@ -2008,12 +2008,11 @@ public:
    int getConfirmedOperState() const { return (int)m_confirmedOperState; }
    int getDot1xPaeAuthState() const { return (int)m_dot1xPaeAuthState; }
    int getDot1xBackendAuthState() const { return (int)m_dot1xBackendAuthState; }
-   const TCHAR *getDescription() const { return m_description; }
+   SharedString getDescription() const { return GetAttributeWithLock(m_description, m_mutexProperties); }
+   SharedString getIfAlias() const { return GetAttributeWithLock(m_ifAlias, m_mutexProperties); }
    const MacAddress& getMacAddr() const { return m_macAddr; }
    int getIfTableSuffixLen() const { return m_ifTableSuffixLen; }
    const uint32_t *getIfTableSuffix() const { return m_ifTableSuffix; }
-   SharedString getIfAlias() const { return GetAttributeWithLock(m_ifAlias, m_mutexProperties); }
-
    bool isSyntheticMask() const { return (m_flags & IF_SYNTHETIC_MASK) ? true : false; }
    bool isPhysicalPort() const { return (m_flags & IF_PHYSICAL_PORT) ? true : false; }
    bool isLoopback() const { return (m_flags & IF_LOOPBACK) ? true : false; }
@@ -2077,7 +2076,14 @@ public:
    void setDescription(const TCHAR *description)
    {
       lockProperties();
-      _tcslcpy(m_description, description, MAX_DB_STRING);
+      m_description = description;
+      setModified(MODIFY_INTERFACE_PROPERTIES);
+      unlockProperties();
+   }
+   void setIfAlias(const TCHAR* ifAlias)
+   {
+      lockProperties();
+      m_ifAlias = ifAlias;
       setModified(MODIFY_INTERFACE_PROPERTIES);
       unlockProperties();
    }
@@ -2124,14 +2130,6 @@ public:
    void setExpectedState(int state) { lockProperties(); setExpectedStateInternal(state); unlockProperties(); }
    void setExcludeFromTopology(bool excluded);
    void setIncludeInIcmpPoll(bool included);
-
-   void setIfAlias(const TCHAR* ifAlias)
-   {
-      lockProperties();
-      m_ifAlias = ifAlias;
-      setModified(MODIFY_INTERFACE_PROPERTIES);
-      unlockProperties();
-   }
 
    void expandName(const TCHAR *originalName, TCHAR *expandedName);
 };
