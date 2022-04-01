@@ -2422,6 +2422,10 @@ uint32_t ClientSession::finalizeLogin(const NXCPMessage& request, NXCPMessage *r
       response->setField(VID_SERVER_COMMAND_TIMEOUT, ConfigReadULong(_T("Server.CommandOutputTimeout"), 60));
       response->setField(VID_GRACE_LOGINS, m_loginInfo->graceLogins);
 
+      TCHAR tags[1024];
+      ConfigReadStr(_T("Objects.ResponsibleUsers.AllowedTags"), tags, 1024, _T(""));
+      response->setField(VID_RESPONSIBLE_USER_TAGS, tags);
+
       GetClientConfigurationHints(response);
       FillLicenseProblemsMessage(response);
 

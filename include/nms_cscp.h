@@ -1492,7 +1492,8 @@ typedef struct
 #define VID_QR_LABEL                ((uint32_t)787)
 #define VID_RESULT_AS_MAP           ((uint32_t)788)
 #define VID_HAS_DETAIL_FIELDS       ((uint32_t)789)
-#define VID_IF_ALIAS              ((uint32_t)790)
+#define VID_IF_ALIAS                ((uint32_t)790)
+#define VID_RESPONSIBLE_USER_TAGS   ((uint32_t)791)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

@@ -24,6 +24,58 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 41.8 to 41.9
+ */
+static bool H_UpgradeFromV8()
+{
+   if (GetSchemaLevelForMajorVersion(40) < 103)
+   {
+      CHK_EXEC(SQLQuery(_T("ALTER TABLE responsible_users ADD tag varchar(31)")));
+      if (g_dbSyntax == DB_SYNTAX_SQLITE)
+         CHK_EXEC(SQLQuery(_T("UPDATE responsible_users SET tag='level'||escalation_level")));
+      else
+         CHK_EXEC(SQLQuery(_T("UPDATE responsible_users SET tag=CONCAT('level',escalation_level)")));
+      CHK_EXEC(DBDropColumn(g_dbHandle, _T("responsible_users"), _T("escalation_level")));
+
+      StringBuffer tags;
+      DB_RESULT hResult = SQLSelect(_T("SELECT DISTINCT(tag) FROM responsible_users"));
+      if (hResult != nullptr)
+      {
+         int count = DBGetNumRows(hResult);
+         for(int i = 0; i < count; i++)
+         {
+            TCHAR tag[32];
+            DBGetField(hResult, i, 0, tag, 32);
+            if (!tags.isEmpty())
+               tags.append(_T(","));
+            tags.append(tag);
+         }
+         DBFreeResult(hResult);
+      }
+      else if (!g_ignoreErrors)
+      {
+         return false;
+      }
+
+      CHK_EXEC(CreateConfigParam(_T("Objects.ResponsibleUsers.AllowedTags"),
+            _T(""),
+            _T("Allowed tags for responsible users (comma separated list)."),
+            nullptr, 'S', true, false, false, false));
+
+      if (!tags.isEmpty())
+      {
+         TCHAR query[4096];
+         _sntprintf(query, 4096, _T("UPDATE config SET var_value='%s' WHERE var_name='Objects.ResponsibleUsers.AllowedTags'"), tags.cstr());
+         CHK_EXEC(SQLQuery(query));
+      }
+
+      CHK_EXEC(SetSchemaLevelForMajorVersion(40, 103));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(9));
+   return true;
+}
+
+/**
  * Upgrade from 41.7 to 41.8
  */
 static bool H_UpgradeFromV7()
@@ -267,6 +319,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 8,  41, 9,  H_UpgradeFromV8  },
    { 7,  41, 8,  H_UpgradeFromV7  },
    { 6,  41, 7,  H_UpgradeFromV6  },
    { 5,  41, 6,  H_UpgradeFromV5  },

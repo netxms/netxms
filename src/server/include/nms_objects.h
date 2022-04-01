@@ -1172,7 +1172,7 @@ protected:
    bool isGeoLocationHistoryTableExists(DB_HANDLE hdb) const;
    bool createGeoLocationHistoryTable(DB_HANDLE hdb);
 
-   void getAllResponsibleUsersInternal(StructArray<ResponsibleUser> *list, uint32_t escalationLevel) const;
+   void getAllResponsibleUsersInternal(StructArray<ResponsibleUser> *list, const TCHAR *tag) const;
 
 public:
    NetObj();
@@ -1332,7 +1332,7 @@ public:
 
    void updateGeoLocationHistory(GeoLocation location);
 
-   unique_ptr<StructArray<ResponsibleUser>> getAllResponsibleUsers(uint32_t escalationLevel = 0xFFFFFFFF) const;
+   unique_ptr<StructArray<ResponsibleUser>> getAllResponsibleUsers(const TCHAR *tag = nullptr) const;
 
    virtual json_t *toJson();
 

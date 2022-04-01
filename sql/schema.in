@@ -2278,7 +2278,7 @@ CREATE TABLE responsible_users
 (
    object_id integer not null,
    user_id integer not null,
-   escalation_level integer not null,
+   tag varchar(31) null,
    PRIMARY KEY(object_id,user_id)
 ) TABLE_TYPE;
 

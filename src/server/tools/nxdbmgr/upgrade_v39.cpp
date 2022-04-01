@@ -24,11 +24,59 @@
 #include <nxevent.h>
 
 /**
- * Upgrade from 39.15 to 40.0
+ * Upgrade from 39.16 to 40.0
+ */
+static bool H_UpgradeFromV16()
+{
+   CHK_EXEC(SetMajorSchemaVersion(40, 0));
+   return true;
+}
+
+/**
+ * Upgrade from 39.15 to 39.16
  */
 static bool H_UpgradeFromV15()
 {
-   CHK_EXEC(SetMajorSchemaVersion(40, 0));
+   CHK_EXEC(SQLQuery(_T("ALTER TABLE responsible_users ADD tag varchar(31)")));
+   if (g_dbSyntax == DB_SYNTAX_SQLITE)
+      CHK_EXEC(SQLQuery(_T("UPDATE responsible_users SET tag='level'||escalation_level")));
+   else
+      CHK_EXEC(SQLQuery(_T("UPDATE responsible_users SET tag=CONCAT('level',escalation_level)")));
+   CHK_EXEC(DBDropColumn(g_dbHandle, _T("responsible_users"), _T("escalation_level")));
+
+   StringBuffer tags;
+   DB_RESULT hResult = SQLSelect(_T("SELECT DISTINCT(tag) FROM responsible_users"));
+   if (hResult != nullptr)
+   {
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
+      {
+         TCHAR tag[32];
+         DBGetField(hResult, i, 0, tag, 32);
+         if (!tags.isEmpty())
+            tags.append(_T(","));
+         tags.append(tag);
+      }
+      DBFreeResult(hResult);
+   }
+   else if (!g_ignoreErrors)
+   {
+      return false;
+   }
+
+   CHK_EXEC(CreateConfigParam(_T("Objects.ResponsibleUsers.AllowedTags"),
+         _T(""),
+         _T("Allowed tags for responsible users (comma separated list)."),
+         nullptr, 'S', true, false, false, false));
+
+   if (!tags.isEmpty())
+   {
+      TCHAR query[4096];
+      _sntprintf(query, 4096, _T("UPDATE config SET var_value='%s' WHERE var_name='Objects.ResponsibleUsers.AllowedTags'"), tags.cstr());
+      CHK_EXEC(SQLQuery(query));
+   }
+
+   CHK_EXEC(SetMinorSchemaVersion(16));
    return true;
 }
 
@@ -478,7 +526,8 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
-   { 15, 40, 0,  H_UpgradeFromV15 },
+   { 16, 40, 0,  H_UpgradeFromV16 },
+   { 15, 39, 16, H_UpgradeFromV15 },
    { 14, 39, 15, H_UpgradeFromV14 },
    { 13, 39, 14, H_UpgradeFromV13 },
    { 12, 39, 13, H_UpgradeFromV12 },
