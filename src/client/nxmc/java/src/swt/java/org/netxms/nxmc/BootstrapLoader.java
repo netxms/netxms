@@ -27,6 +27,7 @@ import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
@@ -44,10 +45,26 @@ public class BootstrapLoader
       {
          List<URL> classPath = new ArrayList<URL>();
 
+         // FInd correct manifest
+         Manifest manifest = null;
+         Enumeration<URL> manifests = bootClassLoader.getResources("META-INF/MANIFEST.MF");
+         while(manifests.hasMoreElements())
+         {
+            manifest = new Manifest(manifests.nextElement().openStream());
+            String mainClass = manifest.getMainAttributes().getValue("Main-Class");
+            if (BootstrapLoader.class.getCanonicalName().equals(mainClass))
+               break;
+            manifest = null;
+         }
+         if (manifest == null)
+         {
+            System.err.println("Cannot find correct MANIFEST.MF");
+            return;
+         }
+
          // Read dependencies listed in manifest
-         Manifest manifest = new Manifest(bootClassLoader.getResourceAsStream("META-INF/MANIFEST.MF"));
-         Attributes a = manifest.getMainAttributes();
-         String dependencies = a.getValue("Class-Path");
+         Attributes manifestAttributes = manifest.getMainAttributes();
+         String dependencies = manifestAttributes.getValue("Class-Path");
          if (dependencies != null)
          {
             for(String jarName : dependencies.split(" "))
@@ -62,8 +79,8 @@ public class BootstrapLoader
          }
 
          // Add core module
-         String version = a.getValue("Package-Version");
-         if (a != null)
+         String version = manifestAttributes.getValue("Package-Version");
+         if (manifestAttributes != null)
          {
             InputStream in = bootClassLoader.getResourceAsStream("BOOT-INF/core/nxmc-" + version + ".jar");
             if (in != null)
@@ -101,7 +118,7 @@ public class BootstrapLoader
             return;
          }
 
-         String swtVersion = a.getValue("SWT-Version");
+         String swtVersion = manifestAttributes.getValue("SWT-Version");
          InputStream in = BootstrapLoader.class.getClassLoader().getResourceAsStream("BOOT-INF/swt/org.eclipse.swt." + swtVariant + "-" + swtVersion + ".jar");
          if (in == null)
          {
