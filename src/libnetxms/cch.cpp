@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -133,13 +133,13 @@ int SocketCommChannel::shutdown()
  */
 void SocketCommChannel::close()
 {
-   if (m_socket != INVALID_SOCKET)
-   {
-      if (m_socketPoller != nullptr)
-         m_socketPoller->poller.cancel(m_socket);
-      closesocket(m_socket);
-      m_socket = INVALID_SOCKET;
-   }
+   if (m_socket == INVALID_SOCKET)
+      return;
+
+   if (m_socketPoller != nullptr)
+      m_socketPoller->poller.cancel(m_socket);
+   closesocket(m_socket);
+   m_socket = INVALID_SOCKET;
 }
 
 /**
