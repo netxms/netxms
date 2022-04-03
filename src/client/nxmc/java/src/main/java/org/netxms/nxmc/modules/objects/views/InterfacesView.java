@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -57,16 +57,17 @@ public class InterfacesView extends NodeSubObjectTableView
    public static final int COLUMN_MAC_ADDRESS = 9;
    public static final int COLUMN_IP_ADDRESS = 10;
    public static final int COLUMN_VLAN = 11;
-   public static final int COLUMN_PEER_NAME = 12;
-   public static final int COLUMN_PEER_MAC_ADDRESS = 13;
-   public static final int COLUMN_PEER_IP_ADDRESS = 14;
-   public static final int COLUMN_PEER_PROTOCOL = 15;
-   public static final int COLUMN_ADMIN_STATE = 16;
-   public static final int COLUMN_OPER_STATE = 17;
-   public static final int COLUMN_EXPECTED_STATE = 18;
-   public static final int COLUMN_STATUS = 19;
-   public static final int COLUMN_8021X_PAE_STATE = 20;
-   public static final int COLUMN_8021X_BACKEND_STATE = 21;
+   public static final int COLUMN_PEER_NODE = 12;
+   public static final int COLUMN_PEER_INTERFACE = 13;
+   public static final int COLUMN_PEER_MAC_ADDRESS = 14;
+   public static final int COLUMN_PEER_IP_ADDRESS = 15;
+   public static final int COLUMN_PEER_PROTOCOL = 16;
+   public static final int COLUMN_ADMIN_STATE = 17;
+   public static final int COLUMN_OPER_STATE = 18;
+   public static final int COLUMN_EXPECTED_STATE = 19;
+   public static final int COLUMN_STATUS = 20;
+   public static final int COLUMN_8021X_PAE_STATE = 21;
+   public static final int COLUMN_8021X_BACKEND_STATE = 22;
 
    private InterfaceListLabelProvider labelProvider;
    private Action actionCopyMacAddressToClipboard;
@@ -117,6 +118,7 @@ public class InterfacesView extends NodeSubObjectTableView
          i18n.tr("IP addresses"),
          i18n.tr("VLAN"),
          i18n.tr("Peer node"),
+         i18n.tr("Peer interface"),
          i18n.tr("Peer MAC"),
          i18n.tr("Peer IP"),
          i18n.tr("Peer discovery protocol"),
@@ -127,8 +129,7 @@ public class InterfacesView extends NodeSubObjectTableView
          i18n.tr("802.1x PAE"),
          i18n.tr("802.1x Backend")
       };
-
-      final int[] widths = { 60, 150, 150, 150, 70, 100, 70, 90, 150, 100, 90, 80, 150, 100, 90, 80, 80, 80, 80, 80, 80, 80 };
+      final int[] widths = { 60, 150, 150, 150, 70, 100, 70, 90, 150, 100, 90, 80, 150, 150, 100, 90, 80, 80, 80, 80, 80, 80, 80 };
       viewer = new SortableTableViewer(mainArea, names, widths, COLUMN_NAME, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
       labelProvider = new InterfaceListLabelProvider();
       viewer.setLabelProvider(labelProvider);
@@ -173,11 +174,11 @@ public class InterfacesView extends NodeSubObjectTableView
          }
       };
 
-      actionCopyPeerNameToClipboard = new Action(i18n.tr("Copy peer name to clipboard")) {
+      actionCopyPeerNameToClipboard = new Action(i18n.tr("Copy peer node name to clipboard")) {
          @Override
          public void run()
          {
-            copyToClipboard(COLUMN_PEER_NAME);
+            copyToClipboard(COLUMN_PEER_NODE);
          }
       };
 

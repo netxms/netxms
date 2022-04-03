@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,10 +18,15 @@
  */
 package org.netxms.nxmc.modules.objects.views.helpers;
 
+import java.net.InetAddress;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
+import org.netxms.base.MacAddress;
+import org.netxms.client.NXCSession;
+import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.Interface;
+import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.modules.objects.views.InterfacesView;
 import org.netxms.nxmc.tools.ComparatorHelper;
@@ -31,6 +36,10 @@ import org.netxms.nxmc.tools.ComparatorHelper;
  */
 public class InterfaceListComparator extends ViewerComparator
 {
+   private static final MacAddress ZERO_MAC_ADDRESS = new MacAddress();
+
+   private NXCSession session = Registry.getSession();
+
    /**
     * @see org.eclipse.jface.viewers.ViewerComparator#compare(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
     */
@@ -40,7 +49,7 @@ public class InterfaceListComparator extends ViewerComparator
 		final Interface iface1 = (Interface)e1;
 		final Interface iface2 = (Interface)e2;
       final int column = (Integer)((SortableTableViewer)viewer).getTable().getSortColumn().getData("ID");
-		
+
 		int result;
 		switch(column)
 		{
@@ -68,6 +77,12 @@ public class InterfaceListComparator extends ViewerComparator
          case InterfacesView.COLUMN_INDEX:
 				result = iface1.getIfIndex() - iface2.getIfIndex();
 				break;
+         case InterfacesView.COLUMN_IP_ADDRESS:
+            result = ComparatorHelper.compareInetAddresses(iface1.getFirstUnicastAddress(), iface2.getFirstUnicastAddress());
+            break;
+         case InterfacesView.COLUMN_MAC_ADDRESS:
+            result = iface1.getMacAddress().compareTo(iface2.getMacAddress());
+            break;
          case InterfacesView.COLUMN_MTU:
             result = iface1.getMtu() - iface2.getMtu();
             break;
@@ -77,7 +92,22 @@ public class InterfaceListComparator extends ViewerComparator
          case InterfacesView.COLUMN_OPER_STATE:
 				result = iface1.getOperState() - iface2.getOperState();
 				break;
-         case InterfacesView.COLUMN_PHYSICAL_LOCATION:
+         case InterfacesView.COLUMN_PEER_INTERFACE:
+            result = ComparatorHelper.compareStringsNatural(getPeerInterfaceName(iface1), getPeerInterfaceName(iface2));
+            break;
+         case InterfacesView.COLUMN_PEER_IP_ADDRESS:
+            result = ComparatorHelper.compareInetAddresses(getPeerIpAddress(iface1), getPeerIpAddress(iface2));
+            break;
+         case InterfacesView.COLUMN_PEER_MAC_ADDRESS:
+            result = getPeerMacAddress(iface1).compareTo(getPeerMacAddress(iface2));
+            break;
+         case InterfacesView.COLUMN_PEER_NODE:
+            result = ComparatorHelper.compareStringsNatural(getPeerNodeName(iface1), getPeerNodeName(iface2));
+            break;
+         case InterfacesView.COLUMN_PEER_PROTOCOL:
+            result = getPeerProtocol(iface1).compareTo(getPeerProtocol(iface2));
+            break;
+			case InterfacesView.COLUMN_PHYSICAL_LOCATION:
 			   if (iface1.isPhysicalPort() && iface2.isPhysicalPort())
 			   {
 	            result = iface1.getChassis() - iface2.getChassis();
@@ -110,17 +140,65 @@ public class InterfaceListComparator extends ViewerComparator
          case InterfacesView.COLUMN_TYPE:
 				result = iface1.getIfType() - iface2.getIfType();
 				break;
-         case InterfacesView.COLUMN_MAC_ADDRESS:
-				result = iface1.getMacAddress().compareTo(iface2.getMacAddress());
-				break;
-         case InterfacesView.COLUMN_IP_ADDRESS:
-				result = ComparatorHelper.compareInetAddresses(iface1.getFirstUnicastAddress(), iface2.getFirstUnicastAddress());
-				break;
 			default:
 				result = 0;
 				break;
 		}
-		
+
 		return (((SortableTableViewer)viewer).getTable().getSortDirection() == SWT.UP) ? result : -result;
 	}
+
+   /**
+    * @param iface
+    * @return
+    */
+   private InetAddress getPeerIpAddress(Interface iface)
+   {
+      AbstractNode peer = (AbstractNode)session.findObjectById(iface.getPeerNodeId(), AbstractNode.class);
+      if (peer == null)
+         return null;
+      if (!peer.getPrimaryIP().isValidUnicastAddress())
+         return null;
+      return peer.getPrimaryIP().getAddress();
+   }
+
+   /**
+    * @param iface
+    * @return
+    */
+   private MacAddress getPeerMacAddress(Interface iface)
+   {
+      Interface peer = (Interface)session.findObjectById(iface.getPeerInterfaceId(), Interface.class);
+      return (peer != null) ? peer.getMacAddress() : ZERO_MAC_ADDRESS;
+   }
+
+   /**
+    * @param iface
+    * @return
+    */
+   private String getPeerProtocol(Interface iface)
+   {
+      Interface peer = (Interface)session.findObjectById(iface.getPeerInterfaceId(), Interface.class);
+      return (peer != null) ? iface.getPeerDiscoveryProtocol().toString() : "";
+   }
+
+   /**
+    * @param iface
+    * @return
+    */
+   private String getPeerNodeName(Interface iface)
+   {
+      AbstractNode peer = (AbstractNode)session.findObjectById(iface.getPeerNodeId(), AbstractNode.class);
+      return (peer != null) ? peer.getObjectName() : "";
+   }
+
+   /**
+    * @param iface
+    * @return
+    */
+   private String getPeerInterfaceName(Interface iface)
+   {
+      Interface peer = (Interface)session.findObjectById(iface.getPeerInterfaceId(), Interface.class);
+      return (peer != null) ? peer.getObjectName() : "";
+   }
 }

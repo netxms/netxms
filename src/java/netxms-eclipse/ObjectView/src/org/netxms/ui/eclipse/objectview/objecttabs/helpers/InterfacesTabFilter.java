@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2016-2017 RadenSolutions
+ * Copyright (C) 2016-2022 RadenSolutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,7 +31,7 @@ public class InterfacesTabFilter extends NodeComponentTabFilter
    private NXCSession session = ConsoleSharedData.getSession();
    private boolean hideSubInterfaces = false;
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.viewers.ViewerFilter#select(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
     */
    @Override
@@ -57,6 +57,7 @@ public class InterfacesTabFilter extends NodeComponentTabFilter
             matchDescription(iface) ||
             matchMac(iface) ||
             matchIp(iface) ||
+            matchPeerInterface(iface) ||
             matchPeerNode(iface) ||
             matchPeerMac(iface) ||
             matchPeerIp(iface) ||
@@ -114,12 +115,12 @@ public class InterfacesTabFilter extends NodeComponentTabFilter
    }
 
    /**
-    * @param interf
+    * @param iface
     * @return
     */
-   private boolean matchIfTypeName(Interface interf)
+   private boolean matchIfTypeName(Interface iface)
    {
-      if (interf.getIfTypeName().toLowerCase().contains(filterString))
+      if (iface.getIfTypeName().toLowerCase().contains(filterString))
          return true;
       return false;
    }
@@ -213,23 +214,34 @@ public class InterfacesTabFilter extends NodeComponentTabFilter
    }
 
    /**
-    * @param interf
+    * @param iface
     * @return
     */
-   private boolean matchPeerNode(Interface interf)
+   private boolean matchPeerNode(Interface iface)
    {
-      if (Long.toString(interf.getPeerNodeId()).toLowerCase().contains(filterString))
+      if (Long.toString(iface.getPeerNodeId()).toLowerCase().contains(filterString))
          return true;
       return false;
    }
 
    /**
-    * @param interf
+    * @param iface
     * @return
     */
-   private boolean matchPeerMac(Interface interf)
+   private boolean matchPeerInterface(Interface iface)
    {
-      Interface peer = (Interface)session.findObjectById(interf.getPeerInterfaceId(), Interface.class);
+      if (Long.toString(iface.getPeerInterfaceId()).toLowerCase().contains(filterString))
+         return true;
+      return false;
+   }
+
+   /**
+    * @param iface
+    * @return
+    */
+   private boolean matchPeerMac(Interface iface)
+   {
+      Interface peer = (Interface)session.findObjectById(iface.getPeerInterfaceId(), Interface.class);
       if (peer == null)
          return false;
       if (peer.getMacAddress().toString().toLowerCase().contains(filterString))

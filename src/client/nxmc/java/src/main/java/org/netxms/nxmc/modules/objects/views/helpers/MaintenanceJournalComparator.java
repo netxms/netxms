@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,7 +22,6 @@ import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
 import org.netxms.client.MaintenanceJournalEntry;
-import org.netxms.client.NXCSession;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.modules.objects.views.MaintenanceJournalView;
 
@@ -32,7 +31,6 @@ import org.netxms.nxmc.modules.objects.views.MaintenanceJournalView;
 public class MaintenanceJournalComparator extends ViewerComparator
 {
    private MaintenanceJournalLabelProvider labelProvider;
-   private NXCSession session;
 
    /**
     * Create physical link comparator.
