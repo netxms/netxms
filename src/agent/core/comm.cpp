@@ -64,7 +64,7 @@ void InitSessionList()
    {
       g_maxCommSessions = MIN(MAX(g_maxCommSessions, 2), 4096);
    }
-   nxlog_debug(2, _T("Maximum number of sessions set to %d"), g_maxCommSessions);
+   nxlog_debug_tag(DEBUG_TAG, 2, _T("Maximum number of sessions set to %d"), g_maxCommSessions);
 }
 
 /**
@@ -101,7 +101,7 @@ bool RegisterSession(const shared_ptr<CommSession>& session)
    }
 
    g_sessionLock.unlock();
-   nxlog_write(NXLOG_WARNING, _T("Too many communication sessions open - unable to accept new connection"));
+   nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Too many communication sessions open - unable to accept new connection"));
    return false;
 }
 
@@ -234,7 +234,7 @@ void ListenerThread()
       )
    {
       TCHAR buffer[1024];
-      nxlog_write(NXLOG_ERROR, _T("Unable to create socket (%s)"), GetLastSocketErrorText(buffer, 1024));
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Unable to create socket (%s)"), GetLastSocketErrorText(buffer, 1024));
       exit(1);
    }
 
@@ -314,11 +314,11 @@ void ListenerThread()
    int bindFailures = 0;
    if (!(g_dwFlags & AF_DISABLE_IPV4))
    {
-	   DebugPrintf(1, _T("Trying to bind on %s:%d"), SockaddrToStr((struct sockaddr *)&servAddr, buffer), ntohs(servAddr.sin_port));
+	   nxlog_debug_tag(DEBUG_TAG, 1, _T("Trying to bind on %s:%d"), SockaddrToStr((struct sockaddr *)&servAddr, buffer), ntohs(servAddr.sin_port));
       if (bind(hSocket, (struct sockaddr *)&servAddr, sizeof(struct sockaddr_in)) != 0)
       {
          TCHAR buffer[1024];
-         nxlog_write(NXLOG_ERROR, _T("Unable to bind IPv4 socket (%s)"), GetLastSocketErrorText(buffer, 1024));
+         nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Unable to bind IPv4 socket (%s)"), GetLastSocketErrorText(buffer, 1024));
          bindFailures++;
       }
    }
@@ -334,7 +334,7 @@ void ListenerThread()
       if (bind(hSocket6, (struct sockaddr *)&servAddr6, sizeof(struct sockaddr_in6)) != 0)
       {
          TCHAR buffer[1024];
-         nxlog_write(NXLOG_ERROR, _T("Unable to bind IPv6 socket (%s)"), GetLastSocketErrorText(buffer, 1024));
+         nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Unable to bind IPv6 socket (%s)"), GetLastSocketErrorText(buffer, 1024));
          bindFailures++;
       }
    }
@@ -349,7 +349,7 @@ void ListenerThread()
    // Abort if cannot bind to socket
    if (bindFailures == 2)
    {
-      nxlog_write(NXLOG_ERROR, _T("Cannot bind at least one socket, terminating agent process"));
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Cannot bind at least one socket, terminating agent process"));
 #ifdef _WIN32
       ExitProcess(99);
 #else
@@ -363,7 +363,7 @@ void ListenerThread()
       if (listen(hSocket, SOMAXCONN) == 0)
 		{
          TCHAR ipAddrText[64];
-         nxlog_write(NXLOG_INFO, _T("Listening on socket %s:%u"), InetAddress(ntohl(servAddr.sin_addr.s_addr)).toString(ipAddrText), g_wListenPort);
+         nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Listening on socket %s:%u"), InetAddress(ntohl(servAddr.sin_addr.s_addr)).toString(ipAddrText), g_wListenPort);
 		}
 		else
 		{
@@ -377,7 +377,7 @@ void ListenerThread()
       if (listen(hSocket6, SOMAXCONN) == 0)
 		{
          TCHAR ipAddrText[64];
-         nxlog_write(NXLOG_INFO, _T("Listening on socket %s:%u"), InetAddress(servAddr6.sin6_addr.s6_addr).toString(ipAddrText), g_wListenPort);
+         nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Listening on socket %s:%u"), InetAddress(servAddr6.sin6_addr.s6_addr).toString(ipAddrText), g_wListenPort);
 		}
 		else
 		{
@@ -417,13 +417,13 @@ void ListenerThread()
             if (error != WSAEINTR)
             {
                TCHAR buffer[1024];
-               nxlog_write(NXLOG_ERROR, _T("Unable to accept incoming connection (%s)"), GetLastSocketErrorText(buffer, 1024));
+               nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Unable to accept incoming connection (%s)"), GetLastSocketErrorText(buffer, 1024));
             }
             errorCount++;
             g_acceptErrors++;
             if (errorCount > 1000)
             {
-               nxlog_write(NXLOG_WARNING, _T("Too many consecutive errors on accept() call"));
+               nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Too many consecutive errors on accept() call"));
                errorCount = 0;
             }
             ThreadSleepMs(500);
@@ -437,13 +437,13 @@ void ListenerThread()
 
          errorCount = 0;     // Reset consecutive errors counter
          InetAddress addr = InetAddress::createFromSockaddr((struct sockaddr *)clientAddr);
-         DebugPrintf(5, _T("Incoming connection from %s"), addr.toString(buffer));
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("Incoming connection from %s"), addr.toString(buffer));
 
          bool masterServer, controlServer;
          if (IsValidServerAddress(addr, &masterServer, &controlServer, false))
          {
             g_acceptedConnections++;
-            nxlog_debug(5, _T("Connection from %s accepted"), buffer);
+            nxlog_debug_tag(DEBUG_TAG, 5, _T("Connection from %s accepted"), buffer);
 
             // Create new session structure and threads
             shared_ptr<SocketCommChannel> channel = make_shared<SocketCommChannel>(hClientSocket, nullptr, Ownership::True);
@@ -451,7 +451,7 @@ void ListenerThread()
 
             if (RegisterSession(session))
             {
-               nxlog_debug(9, _T("Session registered for %s"), buffer);
+               nxlog_debug_tag(DEBUG_TAG, 9, _T("Session registered for %s"), buffer);
                session->run();
             }
          }
@@ -460,7 +460,7 @@ void ListenerThread()
             g_rejectedConnections++;
             shutdown(hClientSocket, SHUT_RDWR);
             closesocket(hClientSocket);
-            nxlog_debug(5, _T("Connection from %s rejected"), buffer);
+            nxlog_debug_tag(DEBUG_TAG, 5, _T("Connection from %s rejected"), buffer);
          }
       }
       else if (nRet == -1)
@@ -475,7 +475,7 @@ void ListenerThread()
 #endif
          {
             TCHAR buffer[1024];
-            nxlog_write(NXLOG_ERROR, _T("Call to select() failed (%s)"), GetLastSocketErrorText(buffer, 1024));
+            nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Call to select() failed (%s)"), GetLastSocketErrorText(buffer, 1024));
             ThreadSleepMs(100);
          }
       }
@@ -489,7 +489,7 @@ void ListenerThread()
 #ifdef WITH_IPV6
    closesocket(hSocket6);
 #endif
-   nxlog_debug(1, _T("Listener thread terminated"));
+   nxlog_debug_tag(DEBUG_TAG, 1, _T("Listener thread terminated"));
 }
 
 /**
@@ -525,7 +525,7 @@ void SessionWatchdog()
 
    ThreadSleep(1);
    s_mutexWatchdogActive.unlock();
-   DebugPrintf(1, _T("Session Watchdog thread terminated"));
+   nxlog_debug_tag(DEBUG_TAG, 1, _T("Session Watchdog thread terminated"));
 }
 
 /**
