@@ -1560,8 +1560,8 @@ TunnelCommChannel::TunnelCommChannel(Tunnel *tunnel) : AbstractCommChannel(), m_
    InitializeCriticalSectionAndSpinCount(&m_bufferLock, 4000);
    InitializeConditionVariable(&m_dataCondition);
 #else
-   pthread_mutex_init(&m_bufferLock, NULL);
-   pthread_cond_init(&m_dataCondition, NULL);
+   pthread_mutex_init(&m_bufferLock, nullptr);
+   pthread_cond_init(&m_dataCondition, nullptr);
 #endif
 }
 
