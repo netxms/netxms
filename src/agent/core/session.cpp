@@ -452,6 +452,7 @@ void CommSession::readThread()
    debugPrintf(4, _T("Session with %s closed"), m_serverAddr.toString().cstr());
 
    UnregisterSession(m_id);
+   m_channel->close();
    debugPrintf(6, _T("Receiver thread stopped"));
 }
 
