@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Raden Solutions
+ * Copyright (C) 2003-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -51,12 +51,13 @@ public abstract class NodeSubObjectView extends ObjectView
    protected Composite mainArea;
    protected NXCSession session;
    protected SessionListener sessionListener = null;
-   protected boolean objectsFullySync;
+   protected boolean fullObjectSync;
 
    /**
     * @param name
     * @param image
     * @param id
+    * @param hasFilter
     */
    public NodeSubObjectView(String name, ImageDescriptor image, String id, boolean hasFilter)
    {
@@ -72,7 +73,7 @@ public abstract class NodeSubObjectView extends ObjectView
       session = Registry.getSession();
 
       PreferenceStore coreStore = PreferenceStore.getInstance();
-      objectsFullySync = coreStore.getAsBoolean("ObjectBrowser.FullSync", false);
+      fullObjectSync = coreStore.getAsBoolean("ObjectBrowser.FullSync", false);
 
       // Create tab main area
       mainArea = new Composite(parent, SWT.NONE);
@@ -147,10 +148,7 @@ public abstract class NodeSubObjectView extends ObjectView
     */
    private void checkAndSyncChildren(AbstractObject object)
    {
-      if (!isVisible())
-         return;
-
-      if (objectsFullySync)
+      if (fullObjectSync)
       {
          refresh();
          return;

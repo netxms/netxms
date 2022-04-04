@@ -461,7 +461,6 @@ public class ViewFolder extends Composite
                   view.create(window, perspective, tabFolder, onFilterCloseCallback);
                createViewTab(view, false);
             }
-            ((ViewWithContext)view).setContext(context);
          }
          else
          {
@@ -480,6 +479,10 @@ public class ViewFolder extends Composite
       // Select first view if none were selected
       if (tabFolder.getSelectionIndex() == -1)
          tabFolder.setSelection(0);
+
+      View activeView = getActiveView();
+      if (activeView instanceof ViewWithContext)
+         ((ViewWithContext)activeView).setContext(context);
    }
 
    /**
