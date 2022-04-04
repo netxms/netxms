@@ -1317,9 +1317,19 @@ int F_format(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 		}
 	}
 
-	TCHAR format[32], buffer[64];
+	if (width < -127)
+	   width = -127;
+	else if (width > 127)
+	   width = 127;
+
+	if (precision < 0)
+	   precision = 0;
+	else if (precision > 120)
+	   precision = 120;
+
+	TCHAR format[32], buffer[128];
 	_sntprintf(format, 32, _T("%%%d.%df"), width, precision);
-	_sntprintf(buffer, 64, format, argv[0]->getValueAsReal());
+	_sntprintf(buffer, 128, format, argv[0]->getValueAsReal());
 	*ppResult = vm->createValue(buffer);
 	return 0;
 }
