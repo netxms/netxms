@@ -18,6 +18,7 @@
  */
 package org.netxms.nxmc.modules.objects.views;
 
+import java.util.Set;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.viewers.ArrayContentProvider;
@@ -244,7 +245,7 @@ public class InterfacesView extends NodeSubObjectTableView
    @Override
    public boolean needRefreshOnObjectChange(AbstractObject object)
    {
-      return object instanceof Interface;
+      return (object instanceof Interface) && object.isChildOf(getObjectId());
    }
 
    /**
@@ -255,6 +256,22 @@ public class InterfacesView extends NodeSubObjectTableView
    {
       labelProvider.setNode((AbstractNode)object);
       super.onObjectChange(object);
+   }
+
+   /**
+    * @see org.netxms.nxmc.modules.objects.views.NodeSubObjectView#collectObjectsForChildrenSync(org.netxms.client.objects.AbstractObject, java.util.Set)
+    */
+   @Override
+   protected void collectObjectsForChildrenSync(AbstractObject object, Set<AbstractObject> objectsForSync)
+   {
+      super.collectObjectsForChildrenSync(object, objectsForSync);
+
+      for(AbstractObject o : object.getAllChildren(AbstractObject.OBJECT_INTERFACE))
+      {
+         AbstractObject peerNode = session.findObjectById(((Interface)o).getPeerNodeId());
+         if ((peerNode != null) && !peerNode.areChildrenSynchronized())
+            objectsForSync.add(peerNode);
+      }
    }
 
    /**

@@ -20,6 +20,7 @@ package org.netxms.nxmc.modules.objects.views;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
@@ -79,7 +80,6 @@ public class PhysicalLinkView extends ObjectView
 
    private NXCSession session;
    private SessionListener sessionListener;
-   private List<PhysicalLink> linkList;
    private SortableTableViewer viewer;
    private PhysicalLinkFilter filter;
    private long patchPanelId = 0;
@@ -259,10 +259,9 @@ public class PhysicalLinkView extends ObjectView
       {
          refresh();
       }
-      else if ((linkList != null) && !linkList.isEmpty())
+      else
       {
-         linkList.clear();
-         viewer.setInput(linkList);
+         viewer.setInput(new Object[0]);
       }
    }
 
@@ -280,13 +279,13 @@ public class PhysicalLinkView extends ObjectView
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            linkList = session.getPhysicalLinks(objectId, patchPanelId);
-            syncAdditionalObjects();
+            final List<PhysicalLink> links = session.getPhysicalLinks(objectId, patchPanelId);
+            syncAdditionalObjects(links);
             runInUIThread(new Runnable() {
                @Override
                public void run()
                {
-                  viewer.setInput(linkList);
+                  viewer.setInput(links);
                }
             });
          }
@@ -305,10 +304,10 @@ public class PhysicalLinkView extends ObjectView
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   private void syncAdditionalObjects() throws IOException, NXCException
+   private void syncAdditionalObjects(Collection<PhysicalLink> links) throws IOException, NXCException
    {
       List<Long> additionalSyncInterfaces = new ArrayList<Long>();
-      for(PhysicalLink link : linkList)
+      for(PhysicalLink link : links)
       {
          long id = link.getLeftObjectId();
          if (id != 0)

@@ -18,6 +18,8 @@
  */
 package org.netxms.nxmc.modules.objects.views;
 
+import java.util.HashSet;
+import java.util.Set;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.SWT;
@@ -33,7 +35,6 @@ import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.client.objects.Node;
 import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
@@ -118,7 +119,6 @@ public abstract class NodeSubObjectView extends ObjectView
    {
       checkAndSyncChildren(getObject());
       super.activate();
-      refresh();
    }
 
    /**
@@ -138,7 +138,6 @@ public abstract class NodeSubObjectView extends ObjectView
    protected void onObjectChange(AbstractObject object)
    {
       checkAndSyncChildren(object);
-      refresh();
    }
 
    /**
@@ -148,13 +147,46 @@ public abstract class NodeSubObjectView extends ObjectView
     */
    private void checkAndSyncChildren(AbstractObject object)
    {
-      if (!objectsFullySync && isVisible())
+      if (!isVisible())
+         return;
+
+      if (objectsFullySync)
       {
-         if ((object instanceof Node) && object.hasChildren() && !session.areChildrenSynchronized(object.getObjectId()))
-         {
-            syncChildren(object);
-         }
+         refresh();
+         return;
       }
+
+      // Check if currently selected object requires synchronization of it's children.
+      // If not, check if any referenced object needs children synchronization.
+      // Do not collect information about referenced objects if main object synchronization
+      // is not completed because information about referenced objects could be within
+      // child objects of main object.
+      AbstractObject thisObject = (object.hasChildren() && !object.areChildrenSynchronized()) ? object : null;
+      Set<AbstractObject> otherObjects;
+      if (thisObject == null)
+      {
+         otherObjects = new HashSet<AbstractObject>();
+         collectObjectsForChildrenSync(object, otherObjects);
+      }
+      else
+      {
+         otherObjects = null;
+      }
+
+      if ((thisObject != null) || (otherObjects != null))
+         syncChildren(thisObject, otherObjects);
+      else
+         refresh();
+   }
+
+   /**
+    * Collect additional objects whose children should be synchronized. This method could be called on background thread.
+    *
+    * @param object current object
+    * @param objectsForSync set of objects for children synchronization
+    */
+   protected void collectObjectsForChildrenSync(AbstractObject object, Set<AbstractObject> objectsForSync)
+   {
    }
 
    /**
@@ -162,7 +194,7 @@ public abstract class NodeSubObjectView extends ObjectView
     * 
     * @param object current object
     */
-   private void syncChildren(AbstractObject object)
+   private void syncChildren(final AbstractObject thisObject, final Set<AbstractObject> otherObjects)
    {
       final Composite label = new Composite(mainArea, SWT.NONE);
       label.setLayout(new GridLayout());
@@ -186,7 +218,20 @@ public abstract class NodeSubObjectView extends ObjectView
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            session.syncChildren(object);
+            if (thisObject != null)
+            {
+               session.syncChildren(thisObject);
+               Set<AbstractObject> objects = new HashSet<AbstractObject>();
+               collectObjectsForChildrenSync(thisObject, objects);
+               for(AbstractObject object : objects)
+                  session.syncChildren(object);
+            }
+            else if (otherObjects != null)
+            {
+               for(AbstractObject object : otherObjects)
+                  session.syncChildren(object);
+            }
+
             runInUIThread(new Runnable() {
                @Override
                public void run()
