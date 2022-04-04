@@ -359,10 +359,10 @@ void ConditionObject::check()
    {
       INPUT_DCI *dci = dciList.get(i);
       NXSL_Value *value = nullptr;
-      shared_ptr<NetObj> pObject = FindObjectById(dci->nodeId);
-      if ((pObject != nullptr) && pObject->isDataCollectionTarget())
+      shared_ptr<NetObj> object = FindObjectById(dci->nodeId);
+      if ((object != nullptr) && object->isDataCollectionTarget())
       {
-         shared_ptr<DCObject> pItem = static_cast<DataCollectionTarget&>(*pObject).getDCObjectById(dci->id, 0);
+         shared_ptr<DCObject> pItem = static_cast<DataCollectionTarget&>(*object).getDCObjectById(dci->id, 0);
          if (pItem != nullptr)
          {
             if (pItem->getType() == DCO_TYPE_ITEM)
