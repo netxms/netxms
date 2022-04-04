@@ -709,7 +709,7 @@ bool NetObj::loadCommonProperties(DB_HANDLE hdb)
 	if (success)
 	{
       success = false;
-	   hStmt = DBPrepare(hdb, _T("SELECT user_id,escalation_level FROM responsible_users WHERE object_id=?"));
+	   hStmt = DBPrepare(hdb, _T("SELECT user_id,tag FROM responsible_users WHERE object_id=?"));
 	   if (hStmt != nullptr)
 	   {
 	      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
