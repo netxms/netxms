@@ -1298,6 +1298,14 @@ NXSL_METHOD_DEFINITION(Node, enableSnmp)
 }
 
 /**
+ * enableSsh(enabled) method
+ */
+NXSL_METHOD_DEFINITION(Node, enableSsh) // TODO DIMA add to docks
+{
+   return ChangeFlagMethod(object, argv[0], result, NF_DISABLE_SSH, true);
+}
+
+/**
  * enableTopologyPolling(enabled) method
  */
 NXSL_METHOD_DEFINITION(Node, enableTopologyPolling)
@@ -1601,6 +1609,7 @@ NXSL_NodeClass::NXSL_NodeClass() : NXSL_DCTargetClass()
    NXSL_REGISTER_METHOD(Node, enablePrimaryIPPing, 1);
    NXSL_REGISTER_METHOD(Node, enableRoutingTablePolling, 1);
    NXSL_REGISTER_METHOD(Node, enableSnmp, 1);
+   NXSL_REGISTER_METHOD(Node, enableSsh, 1);
    NXSL_REGISTER_METHOD(Node, enableTopologyPolling, 1);
    NXSL_REGISTER_METHOD(Node, executeSSHCommand, 1);
    NXSL_REGISTER_METHOD(Node, getInterface, 1);
@@ -1941,6 +1950,10 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const NXSL_Identifier& 
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("isSNMP"))
    {
       value = vm->createValue(node->isSNMPSupported());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("isSSH"))
+   {
+      value = vm->createValue(node->isSSHSupported());
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("isSONMP") || NXSL_COMPARE_ATTRIBUTE_NAME("isNDP"))
    {

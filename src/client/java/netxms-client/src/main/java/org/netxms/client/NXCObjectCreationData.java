@@ -43,6 +43,7 @@ public class NXCObjectCreationData
    public static int CF_DISABLE_ETHERNET_IP  = 0x0040;
    public static int CF_SNMP_SETTINGS_LOCKED = 0x0080;
    public static int CF_EXTERNAL_GATEWAY     = 0x0100;
+   public static int CF_DISABLE_SSH          = 0x0200;
 
 	private int objectClass;
 	private String name;

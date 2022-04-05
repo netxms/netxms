@@ -425,7 +425,7 @@ public class NXCPCodes
    public static final int CMD_GET_SHARED_SECRET_LIST = 0x0198;
    public static final int CMD_UPDATE_SHARED_SECRET_LIST = 0x0199;
    public static final int CMD_GET_SNMP_PORT_LIST = 0x019A;
-   public static final int CMD_UPDATE_SNMP_PORT_LIST = 0x019B;
+   public static final int CMD_UPDATE_WELL_KNOWN_PORT_LIST = 0x019B;
    public static final int CMD_GET_LOG_RECORD_DETAILS = 0x019C;
    public static final int CMD_GET_DCI_LAST_VALUE = 0x019D;
    public static final int CMD_OBJECT_CATEGORY_UPDATE = 0x019E;
@@ -469,6 +469,8 @@ public class NXCPCodes
 	public static final int CMD_READ_MAINTENANCE_JOURNAL = 0x01C4;
 	public static final int CMD_CREATE_MAINTENANCE_JOURNAL = 0x01C5;
 	public static final int CMD_EDIT_MAINTENANCE_JOURNAL = 0x01C6;
+   public static final int CMD_GET_SSH_CREDENTIALS = 0x01C7;
+   public static final int CMD_UPDATE_SSH_CREDENTIALS = 0x01C8;
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;

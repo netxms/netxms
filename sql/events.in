@@ -1558,6 +1558,25 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
       'Generated when there are too many script errors within short time period.'
    );
 
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+	(
+		EVENT_SSH_OK, 'SYS_SSH_OK', '7f6fb204-9334-4e67-9db6-1459af704bd2',
+		EVENT_SEVERITY_NORMAL, 1,
+		'Node responds to SSH',
+      'Generated when node becomes reachable by SSH.' CONCAT CRLF CONCAT
+      'Parameters:' CONCAT CRLF CONCAT
+      '   No message-specific parameters'
+	);
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+	(
+		EVENT_SSH_UNREACHABLE, 'SYS_SSH_UNREACHABLE', '55a6a26e-e1f0-4196-b325-833d8a1311fe',
+		EVENT_SEVERITY_MAJOR, 1,
+		'Node does not respond to SSH',
+      'Generated when node becomes unreachable by SSH.' CONCAT CRLF CONCAT
+      'Parameters:' CONCAT CRLF CONCAT
+      '   No message-specific parameters'
+	);
+
 /*
 ** SNMP traps
 */

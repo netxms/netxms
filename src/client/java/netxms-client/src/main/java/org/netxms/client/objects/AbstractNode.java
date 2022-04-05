@@ -62,6 +62,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
 	public static final int NC_IS_LOCAL_MGMT          = 0x00000010;
 	public static final int NC_IS_PRINTER             = 0x00000020;
 	public static final int NC_IS_OSPF                = 0x00000040;
+   public static final int NC_IS_SSH                 = 0x00000080;
 	public static final int NC_IS_CDP                 = 0x00000100;
 	public static final int NC_IS_NDP                 = 0x00000200;
 	public static final int NC_IS_LLDP                = 0x00000400;
@@ -96,6 +97,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
    public static final int NF_DISABLE_ETHERNET_IP       = 0x08000000;
    public static final int NF_DISABLE_PERF_COUNT        = 0x10000000;
    public static final int NF_DISABLE_8021X_STATUS_POLL = 0x20000000;
+   public static final int NF_DISABLE_SSH               = 0x40000000;
 
 	// Node state flags
 	public static final int NSF_AGENT_UNREACHABLE  = 0x00010000;

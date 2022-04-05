@@ -138,6 +138,7 @@ Node::Node() : super(Pollable::STATUS | Pollable::CONFIGURATION | Pollable::DISC
    m_routingTable = nullptr;
    m_failTimeAgent = TIMESTAMP_NEVER;
    m_failTimeSNMP = TIMESTAMP_NEVER;
+   m_failTimeSSH = TIMESTAMP_NEVER;
    m_failTimeEtherNetIP = TIMESTAMP_NEVER;
    m_recoveryTime = TIMESTAMP_NEVER;
    m_lastAgentCommTime = TIMESTAMP_NEVER;
@@ -148,6 +149,7 @@ Node::Node() : super(Pollable::STATUS | Pollable::CONFIGURATION | Pollable::DISC
    m_pendingState = -1;
    m_pollCountAgent = 0;
    m_pollCountSNMP = 0;
+   m_pollCountSSH = 0;
    m_pollCountEtherNetIP = 0;
    m_pollCountICMP = 0;
    m_requiredPollCount = 0; // Use system default
@@ -257,6 +259,7 @@ Node::Node(const NewNodeData *newNodeData, UINT32 flags) : super(Pollable::STATU
    m_routingTable = nullptr;
    m_failTimeAgent = TIMESTAMP_NEVER;
    m_failTimeSNMP = TIMESTAMP_NEVER;
+   m_failTimeSSH = TIMESTAMP_NEVER;
    m_failTimeEtherNetIP = TIMESTAMP_NEVER;
    m_recoveryTime = TIMESTAMP_NEVER;
    m_lastAgentCommTime = TIMESTAMP_NEVER;
@@ -267,6 +270,7 @@ Node::Node(const NewNodeData *newNodeData, UINT32 flags) : super(Pollable::STATU
    m_pendingState = -1;
    m_pollCountAgent = 0;
    m_pollCountSNMP = 0;
+   m_pollCountSSH = 0;
    m_pollCountEtherNetIP = 0;
    m_pollCountICMP = 0;
    m_requiredPollCount = 0; // Use system default
@@ -374,7 +378,7 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
       _T("down_since,boot_time,driver_name,icmp_proxy,agent_cache_mode,snmp_sys_contact,snmp_sys_location,")
       _T("physical_container_id,rack_image_front,rack_position,rack_height,last_agent_comm_time,syslog_msg_count,")
       _T("snmp_trap_count,node_type,node_subtype,ssh_login,ssh_password,ssh_proxy,port_rows,port_numbering_scheme,")
-      _T("agent_comp_mode,tunnel_id,lldp_id,capabilities,fail_time_snmp,fail_time_agent,rack_orientation,")
+      _T("agent_comp_mode,tunnel_id,lldp_id,capabilities,fail_time_snmp,fail_time_agent,fail_time_ssh,rack_orientation,")
       _T("rack_image_rear,agent_id,agent_cert_subject,hypervisor_type,hypervisor_info,icmp_poll_mode,")
       _T("chassis_placement_config,vendor,product_code,product_name,product_version,serial_number,cip_device_type,")
       _T("cip_status,cip_state,eip_proxy,eip_port,hardware_id,cip_vendor_code,agent_cert_mapping_method,")
@@ -423,7 +427,7 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    DBGetFieldA(hResult, 0, 17, snmpAuthPassword, 256);
    DBGetFieldA(hResult, 0, 18, snmpPrivPassword, 256);
    int snmpMethods = DBGetFieldLong(hResult, 0, 19);
-   DBGetFieldA(hResult, 0, 71, snmpEngineId, 256);
+   DBGetFieldA(hResult, 0, 72, snmpEngineId, 256);
    delete m_snmpSecurity;
    if (m_snmpVersion == SNMP_VERSION_3)
    {
@@ -486,8 +490,6 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    DBGetField(hResult, 0, 37, m_subType, MAX_NODE_SUBTYPE_LENGTH);
    DBGetField(hResult, 0, 38, m_sshLogin, MAX_SSH_LOGIN_LEN);
    DBGetField(hResult, 0, 39, m_sshPassword, MAX_SSH_PASSWORD_LEN);
-   m_sshKeyId = DBGetFieldLong(hResult, 0, 73);
-   m_sshPort = static_cast<uint16_t>(DBGetFieldLong(hResult, 0, 72));
    m_sshProxy = DBGetFieldULong(hResult, 0, 40);
    m_portRowCount = DBGetFieldULong(hResult, 0, 41);
    m_portNumberingScheme = DBGetFieldULong(hResult, 0, 42);
@@ -499,16 +501,17 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    m_capabilities = DBGetFieldULong(hResult, 0, 46);
    m_failTimeSNMP = DBGetFieldLong(hResult, 0, 47);
    m_failTimeAgent = DBGetFieldLong(hResult, 0, 48);
-   m_rackOrientation = static_cast<RackOrientation>(DBGetFieldLong(hResult, 0, 49));
-   m_rackImageRear = DBGetFieldGUID(hResult, 0, 50);
-   m_agentId = DBGetFieldGUID(hResult, 0, 51);
-   m_agentCertSubject = DBGetField(hResult, 0, 52, nullptr, 0);
+   m_failTimeSSH = DBGetFieldLong(hResult, 0, 49);
+   m_rackOrientation = static_cast<RackOrientation>(DBGetFieldLong(hResult, 0, 50));
+   m_rackImageRear = DBGetFieldGUID(hResult, 0, 51);
+   m_agentId = DBGetFieldGUID(hResult, 0, 52);
+   m_agentCertSubject = DBGetField(hResult, 0, 53, nullptr, 0);
    if ((m_agentCertSubject != nullptr) && (m_agentCertSubject[0] == 0))
       MemFreeAndNull(m_agentCertSubject);
-   DBGetField(hResult, 0, 53, m_hypervisorType, MAX_HYPERVISOR_TYPE_LENGTH);
-   m_hypervisorInfo = DBGetFieldAsSharedString(hResult, 0, 54);
+   DBGetField(hResult, 0, 54, m_hypervisorType, MAX_HYPERVISOR_TYPE_LENGTH);
+   m_hypervisorInfo = DBGetFieldAsSharedString(hResult, 0, 55);
 
-   switch(DBGetFieldLong(hResult, 0, 55))
+   switch(DBGetFieldLong(hResult, 0, 56))
    {
       case 1:
          m_icmpStatCollectionMode = IcmpStatCollectionMode::ON;
@@ -520,29 +523,32 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
          m_icmpStatCollectionMode = IcmpStatCollectionMode::DEFAULT;
          break;
    }
-   m_chassisPlacementConf = DBGetField(hResult, 0, 56, nullptr, 0);
+   m_chassisPlacementConf = DBGetField(hResult, 0, 57, nullptr, 0);
 
-   m_vendor = DBGetFieldAsSharedString(hResult, 0, 57);
-   m_productCode = DBGetFieldAsSharedString(hResult, 0, 58);
-   m_productName = DBGetFieldAsSharedString(hResult, 0, 59);
-   m_productVersion = DBGetFieldAsSharedString(hResult, 0, 60);
-   m_serialNumber = DBGetFieldAsSharedString(hResult, 0, 61);
-   m_cipDeviceType = static_cast<uint16_t>(DBGetFieldULong(hResult, 0, 62));
-   m_cipStatus = static_cast<uint16_t>(DBGetFieldULong(hResult, 0, 63));
-   m_cipState = static_cast<uint8_t>(DBGetFieldULong(hResult, 0, 64));
-   m_eipProxy = DBGetFieldULong(hResult, 0, 65);
-   m_eipPort = static_cast<uint16_t>(DBGetFieldULong(hResult, 0, 66));
+   m_vendor = DBGetFieldAsSharedString(hResult, 0, 58);
+   m_productCode = DBGetFieldAsSharedString(hResult, 0, 59);
+   m_productName = DBGetFieldAsSharedString(hResult, 0, 60);
+   m_productVersion = DBGetFieldAsSharedString(hResult, 0, 61);
+   m_serialNumber = DBGetFieldAsSharedString(hResult, 0, 62);
+   m_cipDeviceType = static_cast<uint16_t>(DBGetFieldULong(hResult, 0, 63));
+   m_cipStatus = static_cast<uint16_t>(DBGetFieldULong(hResult, 0, 64));
+   m_cipState = static_cast<uint8_t>(DBGetFieldULong(hResult, 0, 65));
+   m_eipProxy = DBGetFieldULong(hResult, 0, 66);
+   m_eipPort = static_cast<uint16_t>(DBGetFieldULong(hResult, 0, 67));
    BYTE hardwareId[HARDWARE_ID_LENGTH];
-   DBGetFieldByteArray2(hResult, 0, 67, hardwareId, HARDWARE_ID_LENGTH, 0);
+   DBGetFieldByteArray2(hResult, 0, 68, hardwareId, HARDWARE_ID_LENGTH, 0);
    m_hardwareId = NodeHardwareId(hardwareId);
-   m_cipVendorCode = static_cast<uint16_t>(DBGetFieldULong(hResult, 0, 68));
-   m_agentCertMappingMethod = static_cast<CertificateMappingMethod>(DBGetFieldLong(hResult, 0, 69));
-   m_agentCertMappingData = DBGetField(hResult, 0, 70, nullptr, 0);
+   m_cipVendorCode = static_cast<uint16_t>(DBGetFieldULong(hResult, 0, 69));
+   m_agentCertMappingMethod = static_cast<CertificateMappingMethod>(DBGetFieldLong(hResult, 0, 70));
+   m_agentCertMappingData = DBGetField(hResult, 0, 71, nullptr, 0);
    if ((m_agentCertMappingData != nullptr) && (m_agentCertMappingData[0] == 0))
       MemFreeAndNull(m_agentCertMappingData);
 
-   DBGetFieldUTF8(hResult, 0, 74, m_syslogCodepage, 16);
-   DBGetFieldUTF8(hResult, 0, 75, m_snmpCodepage, 16);
+   m_sshPort = static_cast<uint16_t>(DBGetFieldLong(hResult, 0, 73));
+   m_sshKeyId = DBGetFieldLong(hResult, 0, 74);
+
+   DBGetFieldUTF8(hResult, 0, 75, m_syslogCodepage, 16);
+   DBGetFieldUTF8(hResult, 0, 76, m_snmpCodepage, 16);
 
    DBFreeResult(hResult);
    DBFreeStatement(hStmt);
@@ -866,7 +872,7 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
          _T("snmp_sys_contact"), _T("snmp_sys_location"), _T("last_agent_comm_time"), _T("syslog_msg_count"),
          _T("snmp_trap_count"), _T("node_type"), _T("node_subtype"), _T("ssh_login"), _T("ssh_password"), _T("ssh_key_id"), _T("ssh_port"),
          _T("ssh_proxy"), _T("port_rows"), _T("port_numbering_scheme"), _T("agent_comp_mode"), _T("tunnel_id"), _T("lldp_id"),
-         _T("fail_time_snmp"), _T("fail_time_agent"), _T("rack_orientation"), _T("rack_image_rear"), _T("agent_id"),
+         _T("fail_time_snmp"), _T("fail_time_agent"), _T("fail_time_ssh"), _T("rack_orientation"), _T("rack_image_rear"), _T("agent_id"),
          _T("agent_cert_subject"), _T("hypervisor_type"), _T("hypervisor_info"), _T("icmp_poll_mode"), _T("chassis_placement_config"),
          _T("vendor"), _T("product_code"), _T("product_name"), _T("product_version"), _T("serial_number"), _T("cip_device_type"),
          _T("cip_status"), _T("cip_state"), _T("eip_proxy"), _T("eip_port"), _T("hardware_id"), _T("cip_vendor_code"),
@@ -970,39 +976,40 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
          DBBind(hStmt, 49, DB_SQLTYPE_VARCHAR, m_lldpNodeId, DB_BIND_STATIC);
          DBBind(hStmt, 50, DB_SQLTYPE_INTEGER, (LONG)m_failTimeSNMP);
          DBBind(hStmt, 51, DB_SQLTYPE_INTEGER, (LONG)m_failTimeAgent);
-         DBBind(hStmt, 52, DB_SQLTYPE_INTEGER, m_rackOrientation);
-         DBBind(hStmt, 53, DB_SQLTYPE_VARCHAR, m_rackImageRear);
-         DBBind(hStmt, 54, DB_SQLTYPE_VARCHAR, m_agentId);
-         DBBind(hStmt, 55, DB_SQLTYPE_VARCHAR, m_agentCertSubject, DB_BIND_STATIC);
-         DBBind(hStmt, 56, DB_SQLTYPE_VARCHAR, m_hypervisorType, DB_BIND_STATIC);
-         DBBind(hStmt, 57, DB_SQLTYPE_VARCHAR, m_hypervisorInfo, DB_BIND_STATIC);
-         DBBind(hStmt, 58, DB_SQLTYPE_VARCHAR, icmpPollMode, DB_BIND_STATIC);
-         DBBind(hStmt, 59, DB_SQLTYPE_VARCHAR, m_chassisPlacementConf, DB_BIND_STATIC);
-         DBBind(hStmt, 60, DB_SQLTYPE_VARCHAR, m_vendor, DB_BIND_STATIC, 127);
-         DBBind(hStmt, 61, DB_SQLTYPE_VARCHAR, m_productCode, DB_BIND_STATIC, 31);
-         DBBind(hStmt, 62, DB_SQLTYPE_VARCHAR, m_productName, DB_BIND_STATIC, 127);
-         DBBind(hStmt, 63, DB_SQLTYPE_VARCHAR, m_productVersion, DB_BIND_STATIC, 15);
-         DBBind(hStmt, 64, DB_SQLTYPE_VARCHAR, m_serialNumber, DB_BIND_STATIC, 31);
-         DBBind(hStmt, 65, DB_SQLTYPE_INTEGER, m_cipDeviceType);
-         DBBind(hStmt, 66, DB_SQLTYPE_INTEGER, m_cipStatus);
-         DBBind(hStmt, 67, DB_SQLTYPE_INTEGER, m_cipState);
-         DBBind(hStmt, 68, DB_SQLTYPE_INTEGER, m_eipProxy);
-         DBBind(hStmt, 69, DB_SQLTYPE_INTEGER, m_eipPort);
-         DBBind(hStmt, 70, DB_SQLTYPE_VARCHAR, BinToStr(m_hardwareId.value(), HARDWARE_ID_LENGTH, hardwareId), DB_BIND_STATIC);
-         DBBind(hStmt, 71, DB_SQLTYPE_INTEGER, m_cipVendorCode);
-         DBBind(hStmt, 72, DB_SQLTYPE_VARCHAR, agentCertMappingMethod, DB_BIND_STATIC);
-         DBBind(hStmt, 73, DB_SQLTYPE_VARCHAR, m_agentCertMappingData, DB_BIND_STATIC);
+         DBBind(hStmt, 52, DB_SQLTYPE_INTEGER, (LONG)m_failTimeSSH);
+         DBBind(hStmt, 53, DB_SQLTYPE_INTEGER, m_rackOrientation);
+         DBBind(hStmt, 54, DB_SQLTYPE_VARCHAR, m_rackImageRear);
+         DBBind(hStmt, 55, DB_SQLTYPE_VARCHAR, m_agentId);
+         DBBind(hStmt, 56, DB_SQLTYPE_VARCHAR, m_agentCertSubject, DB_BIND_STATIC);
+         DBBind(hStmt, 57, DB_SQLTYPE_VARCHAR, m_hypervisorType, DB_BIND_STATIC);
+         DBBind(hStmt, 58, DB_SQLTYPE_VARCHAR, m_hypervisorInfo, DB_BIND_STATIC);
+         DBBind(hStmt, 59, DB_SQLTYPE_VARCHAR, icmpPollMode, DB_BIND_STATIC);
+         DBBind(hStmt, 60, DB_SQLTYPE_VARCHAR, m_chassisPlacementConf, DB_BIND_STATIC);
+         DBBind(hStmt, 61, DB_SQLTYPE_VARCHAR, m_vendor, DB_BIND_STATIC, 127);
+         DBBind(hStmt, 62, DB_SQLTYPE_VARCHAR, m_productCode, DB_BIND_STATIC, 31);
+         DBBind(hStmt, 63, DB_SQLTYPE_VARCHAR, m_productName, DB_BIND_STATIC, 127);
+         DBBind(hStmt, 64, DB_SQLTYPE_VARCHAR, m_productVersion, DB_BIND_STATIC, 15);
+         DBBind(hStmt, 65, DB_SQLTYPE_VARCHAR, m_serialNumber, DB_BIND_STATIC, 31);
+         DBBind(hStmt, 66, DB_SQLTYPE_INTEGER, m_cipDeviceType);
+         DBBind(hStmt, 67, DB_SQLTYPE_INTEGER, m_cipStatus);
+         DBBind(hStmt, 68, DB_SQLTYPE_INTEGER, m_cipState);
+         DBBind(hStmt, 69, DB_SQLTYPE_INTEGER, m_eipProxy);
+         DBBind(hStmt, 70, DB_SQLTYPE_INTEGER, m_eipPort);
+         DBBind(hStmt, 71, DB_SQLTYPE_VARCHAR, BinToStr(m_hardwareId.value(), HARDWARE_ID_LENGTH, hardwareId), DB_BIND_STATIC);
+         DBBind(hStmt, 72, DB_SQLTYPE_INTEGER, m_cipVendorCode);
+         DBBind(hStmt, 73, DB_SQLTYPE_VARCHAR, agentCertMappingMethod, DB_BIND_STATIC);
+         DBBind(hStmt, 74, DB_SQLTYPE_VARCHAR, m_agentCertMappingData, DB_BIND_STATIC);
          if (m_snmpSecurity != nullptr)
          {
-            DBBind(hStmt, 74, DB_SQLTYPE_VARCHAR, m_snmpSecurity->getAuthoritativeEngine().toString(), DB_BIND_TRANSIENT);
+            DBBind(hStmt, 75, DB_SQLTYPE_VARCHAR, m_snmpSecurity->getAuthoritativeEngine().toString(), DB_BIND_TRANSIENT);
          }
          else
          {
-            DBBind(hStmt, 74, DB_SQLTYPE_VARCHAR, _T(""), DB_BIND_STATIC);
+            DBBind(hStmt, 75, DB_SQLTYPE_VARCHAR, _T(""), DB_BIND_STATIC);
          }
-         DBBind(hStmt, 75, DB_SQLTYPE_TEXT, DB_CTYPE_UTF8_STRING, m_syslogCodepage, DB_BIND_STATIC);
-         DBBind(hStmt, 76, DB_SQLTYPE_TEXT, DB_CTYPE_UTF8_STRING, m_snmpCodepage, DB_BIND_STATIC);
-         DBBind(hStmt, 77, DB_SQLTYPE_INTEGER, m_id);
+         DBBind(hStmt, 76, DB_SQLTYPE_TEXT, DB_CTYPE_UTF8_STRING, m_syslogCodepage, DB_BIND_STATIC);
+         DBBind(hStmt, 77, DB_SQLTYPE_TEXT, DB_CTYPE_UTF8_STRING, m_snmpCodepage, DB_BIND_STATIC);
+         DBBind(hStmt, 78, DB_SQLTYPE_INTEGER, m_id);
 
          success = DBExecute(hStmt);
          DBFreeStatement(hStmt);
@@ -2313,6 +2320,54 @@ restart_status_poll:
 
    POLL_CANCELLATION_CHECKPOINT_EX(delete eventQueue);
 
+   // Check SSH connectivity
+   if ((m_capabilities & NC_IS_SSH) && (!(m_flags & NF_DISABLE_SSH)) && m_ipAddress.isValidUnicast())
+   {
+      sendPollerMsg(_T("Checking SSH connectivity...\r\n"));
+      if (checkSshConnection())
+      {
+         sendPollerMsg(_T("SSH connection avaliable\r\n"));
+         nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 7, _T("StatusPoll(%s): SSH connected"), m_name);
+         if (m_state & NSF_SSH_UNREACHABLE)
+         {
+            m_pollCountSSH++;
+            if (m_pollCountSSH >= requiredPolls)
+            {
+               m_state &= ~NSF_SSH_UNREACHABLE;
+               PostSystemEventEx(eventQueue, EVENT_SSH_OK, m_id, nullptr);
+               m_pollCountSSH = 0;
+            }
+         }
+      }
+      else
+      {
+         sendPollerMsg(_T("Cannot connect to SSH\r\n"));
+         nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): SSH unreachable"), m_name);
+         if (m_state & NSF_SSH_UNREACHABLE)
+         {
+            if ((now > m_failTimeSSH + capabilityExpirationTime) && !(m_state & DCSF_UNREACHABLE) && (now > m_recoveryTime + capabilityExpirationGracePeriod))
+            {
+               m_capabilities &= ~NC_IS_SSH;
+               m_state &= ~NSF_AGENT_UNREACHABLE;
+               sendPollerMsg(POLLER_WARNING _T("Attribute isSSH set to FALSE\r\n"));
+            }
+         }
+         else
+         {
+            m_pollCountSSH++;
+            if (m_pollCountSSH >= requiredPolls)
+            {
+               m_state |= NSF_SSH_UNREACHABLE;
+               PostSystemEventEx(eventQueue, EVENT_SSH_UNREACHABLE, m_id, nullptr);
+               m_failTimeSSH = now;
+               m_pollCountSSH = 0;
+            }
+         }
+      }
+   }
+
+   POLL_CANCELLATION_CHECKPOINT_EX(delete eventQueue);
+
    // Check native agent connectivity
    if ((m_capabilities & NC_IS_NATIVE_AGENT) && (!(m_flags & NF_DISABLE_NXCP)))
    {
@@ -2613,6 +2668,11 @@ restart_status_poll:
       }
       if (allDown && (m_capabilities & NC_IS_SNMP) &&
           !(m_flags & NF_DISABLE_SNMP) && !(m_state & NSF_SNMP_UNREACHABLE))
+      {
+         allDown = false;
+      }
+      if (allDown && (m_capabilities & NC_IS_SSH) &&
+          !(m_flags & NF_DISABLE_SSH) && !(m_state & NSF_SSH_UNREACHABLE))
       {
          allDown = false;
       }
@@ -3926,6 +3986,23 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
          sendPollerMsg(POLLER_INFO _T("Connectivity with SNMP agent restored\r\n"));
          nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("ConfPoll(%s): Connectivity with SNMP agent restored"), m_name);
          m_pollCountSNMP = 0;
+      }
+
+      POLL_CANCELLATION_CHECKPOINT();
+
+      if (confPollSsh(rqId))
+         modified |= MODIFY_NODE_PROPERTIES;
+
+      ExitFromUnreachableState();
+
+      // Check if SSH was marked as unreachable before full poll
+      if ((m_capabilities & NC_IS_SSH) && (m_state & NSF_SSH_UNREACHABLE) && (m_runtimeFlags & NDF_RECHECK_CAPABILITIES))
+      {
+         m_state &= ~NSF_SSH_UNREACHABLE;
+         PostSystemEvent(EVENT_SSH_OK, m_id, nullptr);
+         sendPollerMsg(POLLER_INFO _T("SSH connectivity restored\r\n"));
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("ConfPoll(%s): SSH connectivity restored"), m_name);
+         m_pollCountSSH = 0;
       }
 
       POLL_CANCELLATION_CHECKPOINT();
@@ -5291,6 +5368,97 @@ bool Node::confPollSnmp(uint32_t rqId)
    }
    delete pTransport;
    return hasChanges;
+}
+
+/**
+ * Check if this node is reachable via SSH with default credentials
+ */
+bool Node::checkSshConnection()
+{
+   return checkSshConnection(m_sshLogin, m_sshPassword, m_sshKeyId, m_sshPort);
+}
+
+/**
+ * Check if this node is reachable via SSH
+ */
+bool Node::checkSshConnection(const TCHAR* login, const TCHAR* password, uint32_t keyId, uint16_t port)
+{
+   StringBuffer request(_T("SSH.CheckConnection("));
+   TCHAR ipAddr[64];
+   request.append(getIpAddress().toString(ipAddr));
+   request.append(_T(':'));
+   request.append(port);
+   request.append(_T(",\""));
+   request.append(EscapeStringForAgent(login).cstr());
+   request.append(_T("\",\""));
+   request.append(EscapeStringForAgent(password).cstr());
+   request.append(_T("\","));
+   request.append(keyId);
+   request.append(_T(')'));
+
+   TCHAR response[2];
+   shared_ptr<Node> proxyNode = static_pointer_cast<Node>(FindObjectById(getEffectiveSshProxy()));
+   
+   return proxyNode != nullptr && proxyNode->getMetricFromAgent(request, response, 2) == DCE_SUCCESS && response[0] == _T('1');
+}
+
+/**
+ * Configuration poll: check for SSH
+ */
+bool Node::confPollSsh(uint32_t rqId)
+{
+   if ((m_flags & NF_DISABLE_SSH) || !m_ipAddress.isValidUnicast())
+      return false;
+
+   sendPollerMsg(_T("Checking SSH connectivity...\r\n"));
+
+   bool result = checkSshConnection();
+   bool changed = false;
+   if (!result)
+   {
+      IntegerArray<uint16_t> ports = GetWellKnownPorts(_T("ssh"), getZoneUIN());
+      StructArray<SshCredentials> credentials = GetSshCredentials(getZoneUIN());
+      bool breakFlag = false;
+      for (int i = 0; i < ports.size() && !breakFlag; i++)
+      {
+         for (int j = 0; j < credentials.size(); j++)
+         {
+            SshCredentials* crd = credentials.get(j);
+            result = checkSshConnection(crd->login, crd->password,
+                                        crd->keyId, ports.get(i));
+            if (result)
+            {
+               breakFlag = true;
+               changed = true;
+               lockProperties();
+               m_sshPort = ports.get(i);
+               _tcslcpy(m_sshLogin, crd->login, MAX_SSH_LOGIN_LEN);
+               _tcslcpy(m_sshPassword, crd->password, MAX_SSH_PASSWORD_LEN);
+               m_sshKeyId = crd->keyId;
+               unlockProperties();
+               break;
+            }
+         }
+      }
+   }
+
+   // Process result
+   if (result)
+   {
+      sendPollerMsg(_T("SSH connection avaliable\r\n"));
+      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 7, _T("ConfPoll(%s): SSH connected"), m_name);
+      if (!(m_capabilities & NC_IS_SSH))
+      {
+         m_capabilities |= NC_IS_SSH;
+         changed = true;
+      }
+   }
+   else
+   {
+      sendPollerMsg(_T("Cannot connect to SSH\r\n"));
+      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("ConfPoll(%s): SSH unreachable"), m_name);
+   }
+   return changed;
 }
 
 /**
@@ -10951,6 +11119,7 @@ json_t *Node::toJson()
    json_object_set_new(root, "subType", json_string_t(m_subType));
    json_object_set_new(root, "pendingState", json_integer(m_pendingState));
    json_object_set_new(root, "pollCountSNMP", json_integer(m_pollCountSNMP));
+   json_object_set_new(root, "agentCacheMode", json_integer(m_agentCacheMode));
    json_object_set_new(root, "pollCountAgent", json_integer(m_pollCountAgent));
    json_object_set_new(root, "requiredPollCount", json_integer(m_requiredPollCount));
    json_object_set_new(root, "zoneUIN", json_integer(m_zoneUIN));

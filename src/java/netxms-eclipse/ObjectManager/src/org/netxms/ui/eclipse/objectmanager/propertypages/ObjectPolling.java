@@ -133,6 +133,7 @@ public class ObjectPolling extends PropertyPage
 		{
    		addFlag(optionsGroup, AbstractNode.NF_DISABLE_SNMP, Messages.get().NodePolling_OptDisableSNMP);
    		addFlag(optionsGroup, AbstractNode.NF_DISABLE_ICMP, Messages.get().NodePolling_OptDisableICMP);
+         addFlag(optionsGroup, AbstractNode.NF_DISABLE_SSH, "Disable SSH state checking for all polls");
 		}
       if (object.canUseEtherNetIP())
          addFlag(optionsGroup, AbstractNode.NF_DISABLE_ETHERNET_IP, Messages.get().NodePolling_OptDisableEtherNetIP);

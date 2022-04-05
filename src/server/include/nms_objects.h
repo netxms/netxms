@@ -3047,6 +3047,7 @@ protected:
    int m_pendingState;
    uint32_t m_pollCountAgent;
    uint32_t m_pollCountSNMP;
+   uint32_t m_pollCountSSH;
    uint32_t m_pollCountEtherNetIP;
    uint32_t m_pollCountICMP;
    uint32_t m_requiredPollCount;
@@ -3079,6 +3080,7 @@ protected:
    ObjectArray<AgentParameterDefinition> *m_driverParameters; // List of metrics supported by driver
    time_t m_failTimeAgent;
    time_t m_failTimeSNMP;
+   time_t m_failTimeSSH;
    time_t m_failTimeEtherNetIP;
    time_t m_recoveryTime;
    time_t m_downSince;
@@ -3200,6 +3202,7 @@ protected:
    void updatePrimaryIpAddr();
    bool confPollAgent(uint32_t requestId);
    bool confPollSnmp(uint32_t requestId);
+   bool confPollSsh(uint32_t requestId);
    bool confPollEthernetIP(uint32_t requestId);
    NodeType detectNodeType(TCHAR *hypervisorType, TCHAR *hypervisorInfo);
    bool updateSystemHardwareInformation(PollerInfo *poller, uint32_t requestId);
@@ -3235,6 +3238,9 @@ protected:
    virtual void topologyPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) override;
    virtual void routingTablePoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) override;
    virtual void icmpPoll(PollerInfo *poller) override;
+
+   bool checkSshConnection();
+   bool checkSshConnection(const TCHAR* login, const TCHAR* password, uint32_t keyId, uint16_t port = 22);
 
 public:
    Node();
@@ -3305,6 +3311,7 @@ public:
    }
 
    bool isSNMPSupported() const { return m_capabilities & NC_IS_SNMP ? true : false; }
+   bool isSSHSupported() const { return m_capabilities & NC_IS_SSH ? true : false; }
    bool isNativeAgent() const { return m_capabilities & NC_IS_NATIVE_AGENT ? true : false; }
    bool isEthernetIPSupported() const { return m_capabilities & NC_IS_ETHERNET_IP ? true : false; }
    bool isModbusTCPSupported() const { return m_capabilities & NC_IS_MODBUS_TCP ? true : false; }

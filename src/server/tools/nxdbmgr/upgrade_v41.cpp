@@ -24,6 +24,41 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 41.11 to 41.12
+ */
+static bool H_UpgradeFromV11()
+{
+   CHK_EXEC(CreateEventTemplate(EVENT_SSH_OK, _T("SYS_SSH_OK"),
+                                EVENT_SEVERITY_NORMAL, EF_LOG, _T("7f6fb204-9334-4e67-9db6-1459af704bd2"),
+                                _T("Node responds to SSH"),
+                                _T("Generated when node becomes reachable by SSH.")));
+
+   CHK_EXEC(CreateEventTemplate(EVENT_SSH_UNREACHABLE, _T("SYS_SSH_UNREACHABLE"),
+                                EVENT_SEVERITY_MAJOR, EF_LOG, _T("55a6a26e-e1f0-4196-b325-833d8a1311fe"),
+                                _T("Node does not respond to SSH"),
+                                _T("Generated when node becomes unreachable by SSH.")));
+
+   CHK_EXEC(SQLQuery(
+      _T("CREATE TABLE ssh_credentials (")
+      _T("   zone_uin integer not null,")
+      _T("   id integer not null,")
+      _T("   login varchar(63) null,")
+      _T("   password varchar(63) null,")
+      _T("   key_id integer not null,")
+      _T("   PRIMARY KEY(zone_uin,id))")));
+
+   CHK_EXEC(SQLQuery(_T("ALTER TABLE nodes ADD fail_time_ssh integer")));
+   CHK_EXEC(SQLQuery(_T("UPDATE nodes SET fail_time_ssh=0")));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("nodes"), _T("fail_time_ssh")));
+
+   CHK_EXEC(DBDropPrimaryKey(g_dbHandle, _T("well_known_ports")));
+   CHK_EXEC(DBAddPrimaryKey(g_dbHandle, _T("well_known_ports"), _T("tag,zone,id")));
+
+   CHK_EXEC(SetMinorSchemaVersion(12));
+   return true;
+}
+
+/**
  * Upgrade from 41.10 to 41.11
  */
 static bool H_UpgradeFromV10()
@@ -385,6 +420,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 11, 41, 12, H_UpgradeFromV11 },
    { 10, 41, 11, H_UpgradeFromV10 },
    { 9,  41, 10, H_UpgradeFromV9  },
    { 8,  41, 9,  H_UpgradeFromV8  },

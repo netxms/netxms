@@ -24,6 +24,61 @@
 #include <netxms-regex.h>
 
 /**
+ * SSH connectivity check handler
+ */
+LONG H_SSHConnection(const TCHAR* param, const TCHAR* arg, TCHAR* value, AbstractCommSession* session)
+{
+   TCHAR hostName[256], login[64], password[64];
+   if (!AgentGetParameterArg(param, 1, hostName, 256) ||
+       !AgentGetParameterArg(param, 2, login, 64) ||
+       !AgentGetParameterArg(param, 3, password, 64))
+   {
+      return SYSINFO_RC_UNSUPPORTED;
+   }
+
+   uint16_t port = 22;
+   TCHAR* p = _tcschr(hostName, _T(':'));
+   if (p != nullptr)
+   {
+      *p = 0;
+      p++;
+      port = static_cast<uint16_t>(_tcstoul(p, nullptr, 10));
+   }
+
+   InetAddress addr = InetAddress::resolveHostName(hostName);
+   if (!addr.isValidUnicast())
+   {
+      ret_boolean(value, false);
+      return SYSINFO_RC_SUCCESS;
+   }
+
+   shared_ptr<KeyPair> keys;
+   TCHAR keyId[16] = _T("");
+   AgentGetParameterArg(param, 4, keyId, 16);
+   if (keyId[0] != 0)
+   {
+      TCHAR* end;
+      uint32_t id = _tcstoul(keyId, &end, 0);
+      if (id != 0)
+         keys = GetSshKey(session, id);
+   }
+
+   SSHSession* ssh = AcquireSession(addr, port, login, password, keys);
+   if (ssh != nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 8, _T("SSH connection to %s:%u created successfully"), hostName, port);
+      ret_boolean(value, true);
+      ReleaseSession(ssh);
+   }
+   else
+   {
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("Failed to create SSH connection to %s:%u"), hostName, port);
+      ret_boolean(value, false);
+   }
+   return SYSINFO_RC_SUCCESS;
+}
+
+/**
  * Generic handler to execute command on any host
  */
 LONG H_SSHCommand(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)

@@ -497,7 +497,8 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(uint16_t code, TCHAR *buffer)
       _T("CMD_GET_EVENT_REFERENCES"),
       _T("CMD_READ_MAINTENANCE_JOURNAL"),
       _T("CMD_CREATE_MAINTENANCE_JOURNAL"),
-      _T("CMD_EDIT_MAINTENANCE_JOURNAL")
+      _T("CMD_EDIT_MAINTENANCE_JOURNAL"),
+      _T("CMD_UPDATE_SSH_CREDENTIALS")
    };
    static const TCHAR *reportingMessageNames[] =
    {

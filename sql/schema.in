@@ -413,6 +413,7 @@ CREATE TABLE nodes
   capabilities integer null,
   fail_time_snmp integer not null,
   fail_time_agent integer not null,
+  fail_time_ssh integer not null,
   icmp_poll_mode char(1) not null,
   chassis_placement_config varchar(2000) null,
   vendor varchar(127) null,
@@ -1861,11 +1862,11 @@ CREATE TABLE usm_credentials
 */
 CREATE TABLE well_known_ports 
 (
-   id integer not null,
    tag varchar(15) not null,
-   port integer not null,
    zone integer not null,
-   PRIMARY KEY(id,zone)
+   id integer not null,
+   port integer not null,
+   PRIMARY KEY(tag,zone,id)
 ) TABLE_TYPE;
 
 /*
@@ -2500,6 +2501,19 @@ CREATE TABLE ssh_keys
    public_key varchar(700) null,
    private_key varchar(1710) null,
    PRIMARY KEY(id)
+) TABLE_TYPE;
+
+/**
+ * SSH credentials
+ */
+CREATE TABLE ssh_credentials
+(
+   zone_uin integer not null,
+   id integer not null,
+   login varchar(63) null,
+   password varchar(63) null,
+   key_id integer not null,
+   PRIMARY KEY(zone_uin,id)
 ) TABLE_TYPE;
 
 /**

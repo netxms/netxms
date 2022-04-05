@@ -167,6 +167,7 @@ void GetFullUsmCredentialList(NXCPMessage *msg)
 
 /**
  * Get list of well-known ports for given zone and tag
+ * @param tag if no ports found, tag based default values are returned: "snmp" - 161, "ssh" - 22
  */
 IntegerArray<uint16_t> GetWellKnownPorts(const TCHAR *tag, int32_t zoneUIN)
 {
@@ -193,7 +194,11 @@ IntegerArray<uint16_t> GetWellKnownPorts(const TCHAR *tag, int32_t zoneUIN)
    DBConnectionPoolReleaseConnection(hdb);
 
    if (ports.size() == 0)
-      ports.add(161);
+      if(!_tcscmp(tag, _T("snmp")))
+         ports.add(161);
+      else if(!_tcscmp(tag, _T("ssh")))
+         ports.add(22);
+
    return ports;
 }
 
@@ -394,6 +399,87 @@ void GetZoneAgentSecretList(NXCPMessage *msg, int32_t zoneUIN)
       }
       DBFreeResult(hResult);
       msg->setField(VID_RCC, RCC_SUCCESS);
+   }
+   else
+   {
+      msg->setField(VID_RCC, RCC_DB_FAILURE);
+   }
+   DBConnectionPoolReleaseConnection(hdb);
+}
+
+/**
+ * Get list of SSH credentials for given zone + all zones credentials (zone = -1)
+ */
+StructArray<SshCredentials> GetSshCredentials(int32_t zoneUIN)
+{
+   StructArray<SshCredentials> credentials;
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT login,password,key_id FROM ssh_credentials WHERE (zone_uin=? OR zone=-1) ORDER BY zone DESC, id ASC"));
+   if (hStmt != nullptr)
+   {
+      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, zoneUIN);
+      DB_RESULT hResult = DBSelectPrepared(hStmt);
+      if (hResult != nullptr)
+      {
+         int count = DBGetNumRows(hResult);
+         for (int i = 0; i < count; i++)
+         {
+            SshCredentials crd;
+            DBGetField(hResult, i, 0, crd.login, MAX_SSH_LOGIN_LEN);
+            DBGetField(hResult, i, 1, crd.password, MAX_SSH_PASSWORD_LEN);
+            crd.keyId = DBGetFieldLong(hResult, i, 2);
+            credentials.add(crd);
+         }
+         DBFreeResult(hResult);
+      }
+   }
+   DBConnectionPoolReleaseConnection(hdb);
+   return credentials;
+}
+
+/**
+ * Get list of SSH credentials into NXCP message
+ * @param zoneUIN 0 or more - zone number, -1 - default credentials, -2 - all zones
+ */
+void GetSshCredentialsMessage(NXCPMessage* msg, int32_t zoneUIN)
+{
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   DB_STATEMENT hStmt;
+   if (zoneUIN != -2)
+      hStmt = DBPrepare(hdb, _T("SELECT login,password,key_id FROM ssh_credentials WHERE zone_uin=? ORDER BY zone DESC, id ASC"));
+   else
+      hStmt = DBPrepare(hdb, _T("SELECT login,password,key_id,zone_uin FROM ssh_credentials ORDER BY zone DESC, id ASC"));
+
+   if (hStmt != nullptr)
+   {
+      if (zoneUIN != -2)
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, zoneUIN);
+
+      DB_RESULT hResult = DBSelectPrepared(hStmt);
+      if (hResult != nullptr)
+      {
+         TCHAR loginBuff[MAX_SSH_LOGIN_LEN];
+         TCHAR passwordBuff[MAX_SSH_PASSWORD_LEN];
+
+         int base = VID_ELEMENT_LIST_BASE;
+         int count = DBGetNumRows(hResult);
+         msg->setField(VID_NUM_ELEMENTS, count);
+         for (int i = 0; i < count; i++, base += 10)
+         {
+            msg->setField(base, DBGetField(hResult, i, 0, loginBuff, MAX_SSH_LOGIN_LEN));           // login
+            msg->setField(base + 1, DBGetField(hResult, i, 1, passwordBuff, MAX_SSH_PASSWORD_LEN)); // password
+            msg->setField(base + 2, DBGetFieldLong(hResult, i, 2));                                 // key id
+            if (zoneUIN == -2)
+               msg->setField(base + 3, DBGetFieldLong(hResult, i, 3)); // zone
+         }
+         DBFreeResult(hResult);
+         msg->setField(VID_RCC, RCC_SUCCESS);
+      }
+      else
+      {
+         msg->setField(VID_RCC, RCC_DB_FAILURE);
+      }
+      DBFreeStatement(hStmt);
    }
    else
    {

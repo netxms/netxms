@@ -182,6 +182,8 @@
 #define EVENT_AGENT_FILE_ADDED                      128
 #define EVENT_AGENT_FILE_DELETED                    129
 #define EVENT_TOO_MANY_SCRIPT_ERRORS                130
+#define EVENT_SSH_OK                                131
+#define EVENT_SSH_UNREACHABLE                       132
 
 #define EVENT_SNMP_UNMATCHED_TRAP                   500
 #define EVENT_SNMP_COLD_START                       501

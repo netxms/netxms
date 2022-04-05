@@ -196,6 +196,7 @@
 #define NC_IS_LOCAL_MGMT          0x00000010
 #define NC_IS_PRINTER             0x00000020
 #define NC_IS_OSPF                0x00000040
+#define NC_IS_SSH                 0x00000080
 #define NC_IS_CDP                 0x00000100
 #define NC_IS_NDP                 0x00000200  /* Supports Nortel (Synoptics/Bay Networks) topology discovery */ /* SONMP is an old name for NDP */
 #define NC_IS_LLDP                0x00000400  /* Supports Link Layer Discovery Protocol */
@@ -238,6 +239,7 @@
 #define NF_DISABLE_ETHERNET_IP         0x08000000
 #define NF_DISABLE_PERF_COUNT          0x10000000
 #define NF_DISABLE_8021X_STATUS_POLL   0x20000000
+#define NF_DISABLE_SSH                 0x40000000
 
 /**
  * Subnet flags
@@ -289,6 +291,7 @@
 #define NSF_CACHE_MODE_NOT_SUPPORTED   0x00080000
 #define NSF_SNMP_TRAP_FLOOD            0x00100000
 #define NSF_ICMP_UNREACHABLE           0x00200000
+#define NSF_SSH_UNREACHABLE            0x00400000
 
 /**
  * Sensor state flags
@@ -1177,6 +1180,7 @@ enum AggregationFunction
 #define NXC_NCF_DISABLE_ETHERNET_IP  0x0040
 #define NXC_NCF_SNMP_SETTINGS_LOCKED 0x0080
 #define NXC_NCF_EXTERNAL_GATEWAY     0x0100
+#define NXC_NCF_DISABLE_SSH          0x0200
 
 /**
  * Agent data cache modes

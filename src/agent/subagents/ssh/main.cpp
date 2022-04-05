@@ -167,6 +167,7 @@ static void SubagentShutdown()
  */
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
+   { _T("SSH.CheckConnection(*)"), H_SSHConnection, nullptr, DCI_DT_STRING, _T("Result of connectivity check") }, // TODO DIMA add to docks
 	{ _T("SSH.Command(*)"), H_SSHCommand, nullptr, DCI_DT_STRING, _T("Result of command execution") },
 };
 
