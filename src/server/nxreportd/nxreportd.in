@@ -16,9 +16,9 @@ else
 fi
 
 ###############################################################################
-NXREPORTD_JAR_FILE=~PKGLIBDIR~/java/nxreportd-~PACKAGE_VERSION~.jar
+NXREPORTD_JAR_FILE=~PKGLIBDIR~/java/nxreportd-~NETXMS_JAR_VERSION~.jar
 if [ ! -r $NXREPORTD_JAR_FILE ]; then
-	NXREPORTD_JAR_FILE=$NETXMS_HOME/lib/netxms/java/nxreportd-~PACKAGE_VERSION~.jar
+	NXREPORTD_JAR_FILE=$NETXMS_HOME/lib/netxms/java/nxreportd-~NETXMS_JAR_VERSION~.jar
 fi
 
 show_usage_and_exit() {
