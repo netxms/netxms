@@ -68,6 +68,7 @@ LONG H_SyslogStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCom
 LONG H_SystemDate(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_SystemTime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_SystemTimeZone(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_TCPAddressRangeScan(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
 LONG H_ThreadPoolInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_ThreadPoolList(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session);
 LONG H_LineCount(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
@@ -465,7 +466,8 @@ static NETXMS_SUBAGENT_LIST s_standardLists[] =
    { _T("Agent.SupportedTables"), H_TableList, nullptr },
    { _T("Agent.ThreadPools"), H_ThreadPoolList, nullptr },
    { _T("Net.Resolver.AddressByName(*)"), H_ResolverAddrByNameList, nullptr },
-   { _T("SNMP.ScanAddressRange(*)"), H_SNMPAddressRangeScan, nullptr }
+   { _T("SNMP.ScanAddressRange(*)"), H_SNMPAddressRangeScan, nullptr },
+   { _T("TCP.ScanAddressRange(*)"), H_TCPAddressRangeScan, nullptr }
 };
 
 /**

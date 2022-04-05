@@ -1352,6 +1352,8 @@ void LIBNXAGENT_EXPORTABLE AddRemoteCRL(const char *url, bool allowDownload);
 bool LIBNXAGENT_EXPORTABLE CheckCertificateRevocation(X509 *cert, const X509 *issuer);
 void LIBNXAGENT_EXPORTABLE ReloadAllCRLs();
 
+void LIBNXAGENT_EXPORTABLE TCPScanAddressRange(const InetAddress& from, const InetAddress& to, uint16_t port, void (*callback)(const InetAddress&, uint32_t, void*), void *context);
+
 /**
  * Wrapper for SleepAndCheckForShutdownEx (for backward compatibility)
  * @return True if shutdown was initiated.

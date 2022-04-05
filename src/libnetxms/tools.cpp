@@ -1703,11 +1703,11 @@ int LIBNETXMS_EXPORTABLE ConnectEx(SOCKET s, struct sockaddr *addr, int len, uin
 			{
 				tv.tv_sec = timeout / 1000;
 				tv.tv_usec = (timeout % 1000) * 1000;
-				INT64 startTime = GetCurrentTimeMs();
+				int64_t startTime = GetCurrentTimeMs();
 				rc = select(SELECT_NFDS(s + 1), NULL, &wrfs, &exfs, &tv);
 				if ((rc != -1) || (errno != EINTR))
 					break;
-				UINT32 elapsed = (UINT32)(GetCurrentTimeMs() - startTime);
+				uint32_t elapsed = static_cast<uint32_t>(GetCurrentTimeMs() - startTime);
 				timeout -= min(timeout, elapsed);
 			} while(timeout > 0);
 #endif
@@ -1733,7 +1733,7 @@ int LIBNETXMS_EXPORTABLE ConnectEx(SOCKET s, struct sockaddr *addr, int len, uin
 #ifdef _WIN32
 				WSASetLastError(WSAETIMEDOUT);
 #endif
-            if (isTimeout != NULL)
+            if (isTimeout != nullptr)
                *isTimeout = true;
 			}
 #endif

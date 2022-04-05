@@ -32,7 +32,8 @@ SocketPoller::SocketPoller(bool write)
    m_count = 0;
 #if !HAVE_POLL
    m_invalidDescriptor = false;
-   FD_ZERO(&m_sockets);
+   FD_ZERO(&m_rwDescriptors);
+   FD_ZERO(&m_exDescriptors);
 #ifndef _WIN32
    m_maxfd = 0;
 #endif
@@ -62,7 +63,8 @@ bool SocketPoller::add(SOCKET s)
    if (s >= FD_SETSIZE)
       return false;
 #endif
-   FD_SET(s, &m_sockets);
+   FD_SET(s, &m_rwDescriptors);
+   FD_SET(s, &m_exDescriptors);
 #ifndef _WIN32
    if (s > m_maxfd)
       m_maxfd = s;
@@ -104,10 +106,10 @@ int SocketPoller::poll(uint32_t timeout)
    if (timeout == INFINITE)
    {
 #ifdef _WIN32
-      int rc = select(0, m_write ? nullptr : &m_sockets, m_write ? &m_sockets : nullptr, nullptr, nullptr);
+      int rc = select(0, m_write ? nullptr : &m_rwDescriptors, m_write ? &m_rwDescriptors : nullptr, nullptr, nullptr);
       m_invalidDescriptor = ((rc == -1) && (WSAGetLastError() == WSAENOTSOCK));
 #else
-      int rc = select(SELECT_NFDS(m_maxfd + 1), m_write ? nullptr : &m_sockets, m_write ? &m_sockets : nullptr, nullptr, nullptr);
+      int rc = select(SELECT_NFDS(m_maxfd + 1), m_write ? nullptr : &m_rwDescriptors, m_write ? &m_rwDescriptors : nullptr, nullptr, nullptr);
       m_invalidDescriptor = ((rc == -1) && (errno == EBADF));
 #endif
       return rc;
@@ -118,7 +120,7 @@ int SocketPoller::poll(uint32_t timeout)
 #ifdef _WIN32
       tv.tv_sec = timeout / 1000;
       tv.tv_usec = (timeout % 1000) * 1000;
-      int rc = select(0, m_write ? nullptr : &m_sockets, m_write ? &m_sockets : nullptr, nullptr, (timeout != INFINITE) ? &tv : nullptr);
+      int rc = select(0, m_write ? nullptr : &m_rwDescriptors, m_write ? &m_rwDescriptors : nullptr, nullptr, &tv);
       m_invalidDescriptor = ((rc == -1) && (WSAGetLastError() == WSAENOTSOCK));
       return rc;
 #else
@@ -128,7 +130,7 @@ int SocketPoller::poll(uint32_t timeout)
          tv.tv_sec = timeout / 1000;
          tv.tv_usec = (timeout % 1000) * 1000;
          int64_t startTime = GetCurrentTimeMs();
-         rc = select(m_maxfd + 1, m_write ? nullptr : &m_sockets, m_write ? &m_sockets : nullptr, nullptr, &tv);
+         rc = select(m_maxfd + 1, m_write ? nullptr : &m_rwDescriptors, m_write ? &m_rwDescriptors : nullptr, nullptr, &tv);
          if ((rc != -1) || (errno != EINTR))
             break;
          uint32_t elapsed = static_cast<uint32_t>(GetCurrentTimeMs() - startTime);
@@ -154,7 +156,41 @@ bool SocketPoller::isSet(SOCKET s)
    }
    return false;
 #else
-   return FD_ISSET(s, &m_sockets) ? true : false;
+   return FD_ISSET(s, &m_rwDescriptors) || FD_ISSET(s, &m_exDescriptors) ? true : false;
+#endif
+}
+
+/**
+ * Check if socket is ready
+ */
+bool SocketPoller::isReady(SOCKET s)
+{
+#if HAVE_POLL
+   for(int i = 0; i < m_count; i++)
+   {
+      if (s == m_sockets[i].fd)
+         return ((m_sockets[i].revents & (m_write ? POLLOUT : POLLIN)) != 0) && ((m_sockets[i].revents & (POLLERR | POLLHUP)) == 0);
+   }
+   return false;
+#else
+   return FD_ISSET(s, &m_rwDescriptors) && !FD_ISSET(s, &m_exDescriptors);
+#endif
+}
+
+/**
+ * Check if socket is in error state
+ */
+bool SocketPoller::isError(SOCKET s)
+{
+#if HAVE_POLL
+   for(int i = 0; i < m_count; i++)
+   {
+      if (s == m_sockets[i].fd)
+         return ((m_sockets[i].revents & POLLERR) != 0) || ((m_sockets[i].revents & POLLHUP) != 0);
+   }
+   return false;
+#else
+   return FD_ISSET(s, &m_exDescriptors) ? true : false;
 #endif
 }
 
@@ -165,7 +201,8 @@ void SocketPoller::reset()
 {
    m_count = 0;
 #if !HAVE_POLL
-   FD_ZERO(&m_sockets);
+   FD_ZERO(&m_rwDescriptors);
+   FD_ZERO(&m_exDescriptors);
 #ifndef _WIN32
    m_maxfd = 0;
 #endif

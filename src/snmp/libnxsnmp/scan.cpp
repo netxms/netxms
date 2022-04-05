@@ -53,8 +53,8 @@ static void ProcessResponse(SOCKET sock, uint32_t baseAddr, uint32_t lastAddr, S
 }
 
 /**
-* Scan range of IPv4 addresses using SNMP requests
-*/
+ * Scan range of IPv4 addresses using SNMP requests
+ */
 uint32_t LIBNXSNMP_EXPORTABLE SnmpScanAddressRange(const InetAddress& from, const InetAddress& to, uint16_t port, SNMP_Version snmpVersion, const char *community, void (*callback)(const InetAddress&, uint32_t, void*), void *context)
 {
    SOCKET sock = CreateSocket(AF_INET, SOCK_DGRAM, 0);

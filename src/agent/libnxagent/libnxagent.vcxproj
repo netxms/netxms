@@ -180,6 +180,7 @@
     <ClCompile Include="procexec.cpp" />
     <ClCompile Include="registry.cpp" />
     <ClCompile Include="smbios.cpp" />
+    <ClCompile Include="tcpscan.cpp" />
     <ClCompile Include="tools.cpp" />
     <ClCompile Include="ua_notification.cpp" />
     <ClCompile Include="wtsproc.cpp" />

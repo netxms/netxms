@@ -3855,7 +3855,8 @@ private:
    struct pollfd m_sockets[SOCKET_POLLER_MAX_SOCKETS];
 #else
    bool m_invalidDescriptor;
-   fd_set m_sockets;
+   fd_set m_rwDescriptors;
+   fd_set m_exDescriptors;
 #ifndef _WIN32
    SOCKET m_maxfd;
 #endif
@@ -3868,6 +3869,8 @@ public:
    bool add(SOCKET s);
    int poll(uint32_t timeout);
    bool isSet(SOCKET s);
+   bool isReady(SOCKET s);
+   bool isError(SOCKET s);
    void reset();
 
    bool hasInvalidDescriptor() const
