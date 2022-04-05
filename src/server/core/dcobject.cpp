@@ -1041,6 +1041,9 @@ void DCObject::updateFromTemplate(DCObject *src)
 	m_snmpPort = src->m_snmpPort;
    m_snmpVersion = src->m_snmpVersion;
 
+   MemFree(m_comments);
+   m_comments = MemCopyString(src->m_comments);
+
 	MemFree(m_pszPerfTabSettings);
 	m_pszPerfTabSettings = MemCopyString(src->m_pszPerfTabSettings);
 
