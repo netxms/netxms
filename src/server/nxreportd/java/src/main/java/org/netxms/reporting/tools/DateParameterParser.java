@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Raden Solutions
+ * Copyright (C) 2003-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,147 +20,112 @@ package org.netxms.reporting.tools;
 
 import java.util.Calendar;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Map.Entry;
 
 /**
  * Parser for report parameter of type "date"
  */
 public class DateParameterParser
 {
-   static private final int TYPE_YEAR = 0;
-   static private final int TYPE_MONTH = 1;
-   static private final int TYPE_DAY = 2;
-   static private final int TYPE_HOUR = 3;
-   static private final int TYPE_MINUTE = 4;
+   private static final int[] ELEMENT_TYPES = { Calendar.YEAR, Calendar.MONTH, Calendar.DAY_OF_MONTH };
 
-   private static Map<String, Integer> stringValues = new HashMap<String, Integer>(0);
-
-   static
-   {
-      stringValues.put("current", 0); //$NON-NLS-1$
-      stringValues.put("previous", -1); //$NON-NLS-1$
-      stringValues.put("next", 1); //$NON-NLS-1$
-   }
-
+   /**
+    * Get date and time from given text value.
+    *
+    * @param textValue parameter's text value
+    * @param endOfDay end of day indicator - if true, time part will be set to 23:59:59, otherwise to 00:00:00
+    * @return date object
+    */
    public static Date getDateTime(String textValue, boolean endOfDay)
    {
-      if (!textValue.isEmpty() && textValue.contains(";"))
+      if (textValue.isEmpty())
+         return null;
+
+      String[] elements = textValue.split(";");
+      if (elements.length != 3) // format - year;month;day
+         return null;
+
+      Calendar calendar = Calendar.getInstance();
+      for(int i = 0; i < elements.length; i++)
       {
-         String[] textValues = textValue.split(";");
-         if (textValues.length > 2) // format - year;month;day
-         {
-            Calendar calendar = Calendar.getInstance();
-            for(int i = 0; i < textValues.length; i++)
-            {
-               parseDateString(calendar, textValues[i], i);
-            }
-
-            if (endOfDay)
-            {
-               calendar.set(Calendar.HOUR_OF_DAY, 23);
-               calendar.set(Calendar.MINUTE, 59);
-               calendar.set(Calendar.SECOND, 59);
-            }
-            else
-            {
-               calendar.set(Calendar.HOUR_OF_DAY, 0);
-               calendar.set(Calendar.MINUTE, 0);
-               calendar.set(Calendar.SECOND, 0);
-            }
-
-            return calendar.getTime();
-         }
+         parseElement(calendar, elements[i], ELEMENT_TYPES[i]);
       }
-      return null;
+
+      if (endOfDay)
+      {
+         calendar.set(Calendar.HOUR_OF_DAY, 23);
+         calendar.set(Calendar.MINUTE, 59);
+         calendar.set(Calendar.SECOND, 59);
+      }
+      else
+      {
+         calendar.set(Calendar.HOUR_OF_DAY, 0);
+         calendar.set(Calendar.MINUTE, 0);
+         calendar.set(Calendar.SECOND, 0);
+      }
+
+      return calendar.getTime();
    }
 
-   private static void parseDateString(Calendar calendar, String strValue, int type)
+   /**
+    * Parse date element and adjust calendar accordingly
+    *
+    * @param calendar calendar to update
+    * @param value element value
+    * @param type element type (year, month, or day)
+    */
+   private static void parseElement(Calendar calendar, String value, int type)
    {
-      boolean stringValue = false;
-      int value = 0;
-      int offset = 0;
-
+      // Try to interpret value as integer
       try
       {
-         value = Integer.valueOf(strValue.trim());
+         int numericValue = Integer.valueOf(value.trim());
+         calendar.set(type, (type == Calendar.MONTH ? numericValue - 1 : numericValue));
+         return;
       }
-      catch(Exception ex)
+      catch(NumberFormatException e)
       {
-         stringValue = true;
       }
 
-      if (stringValue)
+      // Check if there is offset from special value (like "last-1")
+      int offset = 0;
+      int index = value.indexOf('+');
+      if (index == -1)
+         index = value.indexOf('-');
+      if (index != -1)
       {
          try
          {
-            for(Entry<String, Integer> str : stringValues.entrySet())
-            {
-               if (strValue.contains(str.getKey()))
-               {
-                  int strVal = str.getValue();
-                  strValue = strValue.replaceAll(str.getKey(), ""); //$NON-NLS-1$
-                  if (strValue.trim().isEmpty())
-                  {
-                     offset = strVal;
-                     break;
-                  }
-                  else
-                  {
-                     int secondVal = Integer.valueOf(strValue.trim().substring(1).trim());
-                     switch(strValue.trim().charAt(0))
-                     {
-                        case '+':
-                           offset = strVal + secondVal;
-                           break;
-                        case '-':
-                           offset = strVal - secondVal;
-                           break;
-                        case '*':
-                           offset = strVal * secondVal;
-                           break;
-                        case '/':
-                           offset = strVal / secondVal;
-                           break;
-                        default:
-                           break;
-                     }
-                  }
-               }
-            }
+            offset = Integer.parseInt(value.substring(index + 1));
+            if (value.charAt(index) == '-')
+               offset = -offset;
          }
-         catch(Exception e)
+         catch(NumberFormatException e)
          {
-            e.printStackTrace();
          }
+         value = value.substring(0, index).trim();
       }
-
-      int calendarIndication = -1;
-      switch(type)
-      {
-         case TYPE_YEAR:
-            calendarIndication = Calendar.YEAR;
-            break;
-         case TYPE_MONTH:
-            calendarIndication = Calendar.MONTH;
-            break;
-         case TYPE_DAY:
-            calendarIndication = Calendar.DAY_OF_MONTH;
-            break;
-         case TYPE_HOUR:
-            calendarIndication = Calendar.HOUR_OF_DAY;
-            break;
-         case TYPE_MINUTE:
-            calendarIndication = Calendar.MINUTE;
-            break;
-         default:
-            break;
-      }
-
-      if (stringValue)
-         calendar.add(calendarIndication, offset);
       else
-         calendar.set(calendarIndication, (type == TYPE_MONTH ? value - 1 : value));
+      {
+         value = value.trim();
+      }
+
+      if (value.equalsIgnoreCase("first"))
+      {
+         calendar.set(type, calendar.getActualMinimum(type));
+      }
+      else if (value.equalsIgnoreCase("last"))
+      {
+         calendar.set(type, calendar.getActualMaximum(type));
+      }
+      else if (value.equalsIgnoreCase("previous"))
+      {
+         calendar.add(type, -1);
+      }
+      else if (value.equalsIgnoreCase("next"))
+      {
+         calendar.add(type, 1);
+      }
+
+      calendar.add(type, offset);
    }
 }
