@@ -22,7 +22,7 @@ import org.netxms.ui.eclipse.actions.OpenView;
 import org.netxms.ui.eclipse.agentmanager.views.UserAgentNotificationView;
 
 /**
- * Open user agent notification view
+ * Open user support application notification view
  */
 public class OpenUserAgentNotificationView extends OpenView
 {

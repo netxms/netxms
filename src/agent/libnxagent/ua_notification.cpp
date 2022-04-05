@@ -23,7 +23,7 @@
 #include "libnxagent.h"
 
 /**
- * User agent notification constructor
+ * User support application notification constructor
  */
 UserAgentNotification::UserAgentNotification(uint64_t serverId, const NXCPMessage *msg, uint32_t baseId)
       : m_id(serverId, msg->getFieldAsUInt32(baseId))
@@ -36,7 +36,7 @@ UserAgentNotification::UserAgentNotification(uint64_t serverId, const NXCPMessag
 }
 
 /**
- * User agent notification constructor
+ * User support application notification constructor
  */
 UserAgentNotification::UserAgentNotification(const NXCPMessage *msg, uint32_t baseId)
       : m_id(msg->getFieldAsUInt64(baseId + 9), msg->getFieldAsUInt32(baseId))
@@ -49,7 +49,7 @@ UserAgentNotification::UserAgentNotification(const NXCPMessage *msg, uint32_t ba
 }
 
 /**
- * User agent notification constructor
+ * User support application notification constructor
  */
 UserAgentNotification::UserAgentNotification(uint64_t serverId, uint32_t notificationId, TCHAR *message, time_t start, time_t end, bool startup)
       : m_id(serverId, notificationId)
@@ -74,7 +74,7 @@ UserAgentNotification::UserAgentNotification(const UserAgentNotification *src) :
 }
 
 /**
- * User agent notification destructor
+ * User support application notification destructor
  */
 UserAgentNotification::~UserAgentNotification()
 {
@@ -82,7 +82,7 @@ UserAgentNotification::~UserAgentNotification()
 }
 
 /**
- * Prepare NXCP message with user agent notification info
+ * Prepare NXCP message with user support application notification info
  */
 void UserAgentNotification::fillMessage(NXCPMessage *msg, uint32_t baseId)
 {

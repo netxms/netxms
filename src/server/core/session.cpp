@@ -14700,7 +14700,7 @@ void ClientSession::getUserAgentNotification(const NXCPMessage& request)
    else
    {
       response.setField(VID_RCC, RCC_ACCESS_DENIED);
-      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied getting user agent notifications"));
+      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied getting user support application notifications"));
    }
 
    sendMessage(&response);
@@ -14731,7 +14731,7 @@ void ClientSession::addUserAgentNotification(const NXCPMessage& request)
          if (!object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
          {
             rcc = RCC_ACCESS_DENIED;
-            writeAuditLog(AUDIT_SYSCFG, false, objectList.get(i), _T("Access denied on user agent notification creation"));
+            writeAuditLog(AUDIT_SYSCFG, false, objectList.get(i), _T("Access denied on user support application notification creation"));
             break;
          }
       }
@@ -14743,7 +14743,7 @@ void ClientSession::addUserAgentNotification(const NXCPMessage& request)
                request.getFieldAsBoolean(VID_UA_NOTIFICATION_BASE + 4), m_dwUserId);
          json_t *objData = uan->toJson();
          WriteAuditLogWithJsonValues(AUDIT_OBJECTS, true, m_dwUserId, m_workstation, m_id, uan->getId(), nullptr, objData,
-               _T("User agent notification %d created"), uan->getId());
+               _T("User support application notification %d created"), uan->getId());
          json_decref(objData);
          uan->decRefCount();
       }
@@ -14752,7 +14752,7 @@ void ClientSession::addUserAgentNotification(const NXCPMessage& request)
    else
    {
       msg.setField(VID_RCC, RCC_ACCESS_DENIED);
-      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on user agent notification creation"));
+      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on user support application notification creation"));
    }
 
    sendMessage(&msg);
@@ -14791,7 +14791,7 @@ void ClientSession::recallUserAgentNotification(const NXCPMessage& request)
       {
          json_t *objData = uan->toJson();
          WriteAuditLogWithJsonValues(AUDIT_OBJECTS, true, m_dwUserId, m_workstation, m_id, uan->getId(), nullptr, objData,
-            _T("User agent notification %d recalled"), uan->getId());
+            _T("User support application notification %d recalled"), uan->getId());
          json_decref(objData);
          ThreadPoolExecute(g_clientThreadPool, uan, &UserAgentNotificationItem::processUpdate);
          NotifyClientSessions(NX_NOTIFY_USER_AGENT_MESSAGE_CHANGED, (UINT32)uan->getId());
@@ -14805,7 +14805,7 @@ void ClientSession::recallUserAgentNotification(const NXCPMessage& request)
    else
    {
       response.setField(VID_RCC, RCC_ACCESS_DENIED);
-      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on user agent notification recall"));
+      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on user support application notification recall"));
    }
 
    sendMessage(response);

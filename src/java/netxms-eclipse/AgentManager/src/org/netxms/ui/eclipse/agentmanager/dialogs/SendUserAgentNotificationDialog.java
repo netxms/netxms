@@ -40,7 +40,7 @@ import org.netxms.ui.eclipse.widgets.DateTimeSelector;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
 /**
- * Dialog for user agent notification sending
+ * Dialog for user support application notification sending
  */
 public class SendUserAgentNotificationDialog extends Dialog
 {
@@ -159,7 +159,7 @@ public class SendUserAgentNotificationDialog extends Dialog
       endDateSelector.setEnabled(false);
 
       final NXCSession session = ConsoleSharedData.getSession();
-      new ConsoleJob("Get default user agent notification retention time", null, Activator.PLUGIN_ID, null) {
+      new ConsoleJob("Get default user support application notification retention time", null, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {     
@@ -177,7 +177,7 @@ public class SendUserAgentNotificationDialog extends Dialog
          @Override
          protected String getErrorMessage()
          {
-            return "Cannot get default user agent notification retention time";
+            return "Cannot get default user support application notification retention time";
          }
       }.start();
       
@@ -209,7 +209,7 @@ public class SendUserAgentNotificationDialog extends Dialog
 	/**
 	 * Get message 
 	 * 
-	 * @return user agent notification
+	 * @return user support application notification
 	 */
    public String getMessage()
    {
@@ -219,7 +219,7 @@ public class SendUserAgentNotificationDialog extends Dialog
    /**
     * Start time
     * 
-    * @return user agent notification start time
+    * @return user support application notification start time
     */
    public Date getStartTime()
    {
@@ -229,7 +229,7 @@ public class SendUserAgentNotificationDialog extends Dialog
    /**
     * End time
     * 
-    * @return user agent notification end time
+    * @return user support application notification end time
     */
    public Date getEndTime()
    {

@@ -29,7 +29,7 @@ import org.netxms.client.constants.RCC;
 import org.netxms.websvc.json.ResponseContainer;
 
 /**
- * Handler for user agent notifications
+ * Handler for user support application notifications
  */
 public class UserAgentNotifications extends AbstractHandler
 {

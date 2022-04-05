@@ -42,7 +42,7 @@ import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
- * Send action for user agent notification
+ * Send action for user support application notification
  */
 public class SendUserAgentNotification implements IObjectActionDelegate
 {
@@ -60,11 +60,11 @@ public class SendUserAgentNotification implements IObjectActionDelegate
       final SendUserAgentNotificationDialog dlg = new SendUserAgentNotificationDialog(shell);
       if (dlg.open() == Window.OK)
       {
-         new ConsoleJob("Create user agent notification job", viewPart, Activator.PLUGIN_ID, null) {
+         new ConsoleJob("Create user support application notification job", viewPart, Activator.PLUGIN_ID, null) {
             @Override
             protected String getErrorMessage()
             {
-               return "Failed to create user agent notification";
+               return "Failed to create user support application notification";
             }
 
             @Override

@@ -26,7 +26,7 @@ import org.netxms.ui.eclipse.agentmanager.views.UserAgentNotificationView;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
- * User agent notification comparator
+ * User support application notification comparator
  */
 public class UserAgentNotificationComparator extends ViewerComparator
 {

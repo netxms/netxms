@@ -49,7 +49,7 @@ void InitUserAgentNotifications()
 }
 
 /**
- * Delete expired user agent notifications
+ * Delete expired user support application notifications
  */
 void DeleteExpiredUserAgentNotifications(DB_HANDLE hdb, UINT32 retentionTime)
 {
@@ -98,7 +98,7 @@ void FillUserAgentNotificationsAll(NXCPMessage *msg, Node *node)
 }
 
 /**
- * Create new user agent notification
+ * Create new user support application notification
  */
 UserAgentNotificationItem *CreateNewUserAgentNotification(const TCHAR *message, const IntegerArray<uint32_t>& objects, time_t startTime, time_t endTime, bool onStartup, uint32_t userId)
 {
@@ -109,7 +109,7 @@ UserAgentNotificationItem *CreateNewUserAgentNotification(const TCHAR *message, 
    uan->incRefCount();
    g_userAgentNotificationListMutex.unlock();
 
-   nxlog_debug_tag(DEBUG_TAG, 4, _T("New user agent notification created (id=%u msg=%s)"), uan->getId(), uan->getMessage());
+   nxlog_debug_tag(DEBUG_TAG, 4, _T("New user support application notification created (id=%u msg=%s)"), uan->getId(), uan->getMessage());
 
    ThreadPoolExecute(g_clientThreadPool, uan, &UserAgentNotificationItem::processUpdate);
    NotifyClientSessions(NX_NOTIFY_USER_AGENT_MESSAGE_CHANGED, uan->getId());

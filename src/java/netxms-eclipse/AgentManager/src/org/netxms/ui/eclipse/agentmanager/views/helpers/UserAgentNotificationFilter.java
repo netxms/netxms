@@ -25,7 +25,7 @@ import org.netxms.client.UserAgentNotification;
 import org.netxms.ui.eclipse.console.resources.RegionalSettings;
 
 /**
- * User agent notification filter
+ * User support application notification filter
  */
 public class UserAgentNotificationFilter extends ViewerFilter
 {

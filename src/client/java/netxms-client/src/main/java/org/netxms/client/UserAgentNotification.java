@@ -23,7 +23,7 @@ import java.util.Date;
 import org.netxms.base.NXCPMessage;
 
 /**
- * User agent notification
+ * User support application notification
  */
 public class UserAgentNotification
 {

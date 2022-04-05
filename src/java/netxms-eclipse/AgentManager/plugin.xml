@@ -58,7 +58,7 @@
             class="org.netxms.ui.eclipse.agentmanager.views.UserAgentNotificationView"
             icon="icons/user_agent_messages.png"
             id="org.netxms.ui.eclipse.agentmanager.views.UserAgentNotificationView"
-            name="User Agent Notifications"
+            name="User Support Application Notifications"
             restorable="true">
       </view>
    </extension>
@@ -195,10 +195,10 @@
                definitionId="org.netxms.ui.eclipse.agentmanager.commands.open_user_agent_messages"
                icon="icons/user_agent_messages.png"
                id="org.netxms.ui.eclipse.agentmanager.actions.open_user_agent_messages"
-               label="User Agent Notifications"
+               label="User Support Application Notifications"
                menubarPath="config/additions"
                style="push"
-               tooltip="Open User Agent Notifications">
+               tooltip="Open User Support Application Notifications">
          </action>
       </actionSet>
    </extension>
@@ -237,9 +237,9 @@
       </command>
       <command
             categoryId="org.netxms.ui.eclipse.console.category.views"
-            description="Open User Agent Notifications"
+            description="Open User Support Application Notifications"
             id="org.netxms.ui.eclipse.agentmanager.commands.open_user_agent_messages"
-            name="User Agent Notifications">
+            name="User Support Application Notifications">
       </command>
       <command
             description="Toggle user session filter"
@@ -277,7 +277,7 @@
       </context>
       <context
             id="org.netxms.ui.eclipse.agentmanager.context.UserAgentNotificationView"
-            name="User Agent Notifications"
+            name="User Support Application Notifications"
             parentId="org.eclipse.ui.contexts.window">
       </context>
    </extension>
@@ -312,7 +312,7 @@
          point="org.eclipse.ui.activities">
       <activity
             id="org.netxms.ui.eclipse.agentmanager.activities.SendUserAgentNotification"
-            name="User Agent Notification">
+            name="User Support Application Notification">
          <enabledWhen>
             <with
                   variable="org.netxms.access.UserAgentNotifications">

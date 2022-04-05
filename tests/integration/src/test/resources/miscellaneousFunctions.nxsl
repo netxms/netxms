@@ -42,8 +42,8 @@ assert(count == 0);
 count = CountScheduledTasksByKey(scheduledKey); //Create scheduled task
 assert(count == 1);
 
-//User agent notification
-notificationId = CreateUserAgentNotification(node, "Interval user agent notification text", time(), time()+86400); //Create notification and then externally check it
+//User support application notification
+notificationId = CreateUserAgentNotification(node, "Interval user support application notification text", time(), time()+86400); //Create notification and then externally check it
 assert(notificationId == (latestUaNotificationId + 1));
 
 //Currency

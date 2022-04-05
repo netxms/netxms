@@ -31,7 +31,7 @@ static int s_sessionAgentCount = 0;
 static int s_userAgentCount = 0;
 
 /**
- * List of active user agent notifications
+ * List of active user support application notifications
  */
 static HashMap<ServerObjectKey, UserAgentNotification> s_userAgentNotifications(Ownership::True);
 static Mutex s_userAgentNotificationsLock;
@@ -377,7 +377,7 @@ void SessionAgentConnector::updateUserAgentEnvironment()
 }
 
 /**
- * Send all user agent notifications (assumes that lock on notification list already acquired)
+ * Send all user support application notifications (assumes that lock on notification list already acquired)
  */
 void SessionAgentConnector::updateUserAgentNotifications()
 {
@@ -748,7 +748,7 @@ uint32_t AddUserAgentNotification(uint64_t serverId, NXCPMessage *request)
 }
 
 /**
- * Remove user agent notification
+ * Remove user support application notification
  */
 uint32_t RemoveUserAgentNotification(uint64_t serverId, NXCPMessage *request)
 {
@@ -776,7 +776,7 @@ uint32_t RemoveUserAgentNotification(uint64_t serverId, NXCPMessage *request)
 }
 
 /**
- * Update complete list of user agent notifications
+ * Update complete list of user support application notifications
  */
 uint32_t UpdateUserAgentNotifications(uint64_t serverId, NXCPMessage *request)
 {
@@ -815,14 +815,14 @@ uint32_t UpdateUserAgentNotifications(uint64_t serverId, NXCPMessage *request)
 }
 
 /**
- * Load user agent notifications from local database
+ * Load user support application notifications from local database
  */
 void LoadUserAgentNotifications()
 {
    DB_HANDLE db = GetLocalDatabaseHandle();
    if (db == nullptr)
    {
-      nxlog_write(NXLOG_WARNING, _T("Cannot load user agent notifications (local database is unavailable)"));
+      nxlog_write(NXLOG_WARNING, _T("Cannot load user support application notifications (local database is unavailable)"));
       return;
    }
 

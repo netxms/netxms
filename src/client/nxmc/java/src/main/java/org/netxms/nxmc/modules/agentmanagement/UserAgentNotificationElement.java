@@ -27,7 +27,7 @@ import org.netxms.nxmc.services.ConfigurationPerspectiveElement;
 import org.xnap.commons.i18n.I18n;
 
 /**
- * User agent notification configuration element 
+ * User support application notification configuration element 
  */
 public class UserAgentNotificationElement implements ConfigurationPerspectiveElement
 {
@@ -39,7 +39,7 @@ public class UserAgentNotificationElement implements ConfigurationPerspectiveEle
    @Override
    public String getName()
    {
-      return i18n.tr("User agent notifications");
+      return i18n.tr("User support application notifications");
    }
 
    /**

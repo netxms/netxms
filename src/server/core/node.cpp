@@ -4665,7 +4665,7 @@ bool Node::confPollAgent(UINT32 rqId)
       {
          checkAgentPolicyBinding(pAgentConn);
 
-         // Update user agent notification list
+         // Update user support application notification list
          if (m_capabilities & NC_HAS_USER_AGENT)
          {
             NXCPMessage msg(pAgentConn->getProtocolVersion());
@@ -4682,9 +4682,9 @@ bool Node::confPollAgent(UINT32 rqId)
                rcc = ERR_REQUEST_TIMEOUT;
             }
             if (rcc == ERR_SUCCESS)
-               nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): user agent notifications synchronized"), m_name);
+               nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): user support application notifications synchronized"), m_name);
             else
-               nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): cannot synchronize user agent notifications (%s)"), m_name, AgentErrorCodeToText(rcc));
+               nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): cannot synchronize user support application notifications (%s)"), m_name, AgentErrorCodeToText(rcc));
          }
       }
       else

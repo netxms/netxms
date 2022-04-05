@@ -33,7 +33,7 @@ import org.netxms.nxmc.tools.ViewerElementUpdater;
 import org.xnap.commons.i18n.I18n;
 
 /**
- * Label provider for user agent notification
+ * Label provider for user support application notification
  */
 public class UserAgentNotificationLabelProvider extends LabelProvider implements ITableLabelProvider
 {   

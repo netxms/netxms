@@ -12203,9 +12203,9 @@ public class NXCSession
    }
 
    /**
-    * Get user agent notifications list
+    * Get user support application notifications list
     * 
-    * @return list of user agent notifications
+    * @return list of user support application notifications
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
@@ -12224,7 +12224,7 @@ public class NXCSession
    }
 
    /**
-    * Recall user agent notification
+    * Recall user support application notification
     * 
     * @param id recall id
     * @throws IOException  if socket I/O error occurs
@@ -12239,7 +12239,7 @@ public class NXCSession
    }
    
    /**
-    * Create new user agent notifications
+    * Create new user support application notifications
     * 
     * @param message notification message
     * @param objects objects to show notifications on
@@ -12262,7 +12262,7 @@ public class NXCSession
    }
 
    /**
-    * Create new user agent notifications
+    * Create new user support application notifications
     * 
     * @param message notification message
     * @param objects objects to show notifications on

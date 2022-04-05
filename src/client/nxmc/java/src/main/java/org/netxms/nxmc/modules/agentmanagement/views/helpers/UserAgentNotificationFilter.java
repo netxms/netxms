@@ -28,7 +28,7 @@ import org.netxms.nxmc.localization.LocalizationHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
- * User agent notification filter
+ * User support application notification filter
  */
 public class UserAgentNotificationFilter extends ViewerFilter implements AbstractViewerFilter
 {

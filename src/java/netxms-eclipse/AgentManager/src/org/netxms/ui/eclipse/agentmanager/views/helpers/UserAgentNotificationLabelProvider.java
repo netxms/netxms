@@ -31,7 +31,7 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
- * Label provider for user agent notification
+ * Label provider for user support application notification
  */
 public class UserAgentNotificationLabelProvider extends LabelProvider implements ITableLabelProvider
 {   

@@ -247,7 +247,7 @@ public class UserAgentNotificationView extends ViewPart implements SessionListen
          for(Object o : selection.toList())
          {            
             final UserAgentNotification msg = (UserAgentNotification)o;
-            new ConsoleJob("Recall user agent notification", this, Activator.PLUGIN_ID, null) {
+            new ConsoleJob("Recall user support application notification", this, Activator.PLUGIN_ID, null) {
                @Override
                protected void runInternal(IProgressMonitor monitor) throws Exception
                {
@@ -257,7 +257,7 @@ public class UserAgentNotificationView extends ViewPart implements SessionListen
                @Override
                protected String getErrorMessage()
                {
-                  return "Cannot recall user agent notification";
+                  return "Cannot recall user support application notification";
                }
             }.start();
          }
@@ -352,7 +352,7 @@ public class UserAgentNotificationView extends ViewPart implements SessionListen
    {
       //TODO: sync missing users
       final NXCSession session = ConsoleSharedData.getSession();
-      new ConsoleJob("Get list of user agent notifications", this, Activator.PLUGIN_ID, null) {
+      new ConsoleJob("Get list of user support application notifications", this, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
@@ -369,7 +369,7 @@ public class UserAgentNotificationView extends ViewPart implements SessionListen
          @Override
          protected String getErrorMessage()
          {
-            return "Cannot get list of user agent notifications";
+            return "Cannot get list of user support application notifications";
          }
       }.start();
    }

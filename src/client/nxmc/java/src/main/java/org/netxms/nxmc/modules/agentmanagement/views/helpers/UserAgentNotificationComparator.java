@@ -26,7 +26,7 @@ import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.modules.agentmanagement.views.UserAgentNotificationView;
 
 /**
- * User agent notification comparator
+ * User support application notification comparator
  */
 public class UserAgentNotificationComparator extends ViewerComparator
 {

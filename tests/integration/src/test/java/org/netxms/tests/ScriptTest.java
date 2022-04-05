@@ -326,7 +326,7 @@ public class ScriptTest extends AbstractSessionTest implements TextOutputListene
       task.setKey(scheduledTaskKey);
       session.addScheduledTask(task);
 
-      //Create user agent notification
+      //Create user support application notification
       session.createUserAgentNotification("Message", objectSet, new Date(), new Date(), true);      
       List<UserAgentNotification> notificaitons = session.getUserAgentNotifications();
       notificaitons.sort(new Comparator<UserAgentNotification>() {

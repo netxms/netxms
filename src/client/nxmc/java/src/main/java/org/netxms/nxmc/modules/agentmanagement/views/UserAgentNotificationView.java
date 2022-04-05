@@ -79,7 +79,7 @@ public class UserAgentNotificationView extends ConfigurationView implements Sess
     */
    public UserAgentNotificationView()
    {
-      super(i18n.tr("User agent notifications"), ResourceManager.getImageDescriptor("icons/config-views/user_agent_messages.png"), ID, true);
+      super(i18n.tr("User support application notifications"), ResourceManager.getImageDescriptor("icons/config-views/user_agent_messages.png"), ID, true);
    }
 
    @Override
@@ -177,7 +177,7 @@ public class UserAgentNotificationView extends ConfigurationView implements Sess
          for(Object o : selection.toList())
          {            
             final UserAgentNotification msg = (UserAgentNotification)o;
-            new Job(i18n.tr("Recall user agent notification"), this) {
+            new Job(i18n.tr("Recall user support application notification"), this) {
                @Override
                protected void run(IProgressMonitor monitor) throws Exception
                {
@@ -187,7 +187,7 @@ public class UserAgentNotificationView extends ConfigurationView implements Sess
                @Override
                protected String getErrorMessage()
                {
-                  return i18n.tr("Cannot recall user agent notification");
+                  return i18n.tr("Cannot recall user support application notification");
                }
             }.start();
          }
@@ -248,7 +248,7 @@ public class UserAgentNotificationView extends ConfigurationView implements Sess
    public void refresh()
    {
       final NXCSession session = Registry.getSession();
-      new Job(i18n.tr("Get list of user agent notifications"), this) {
+      new Job(i18n.tr("Get list of user support application notifications"), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
@@ -265,7 +265,7 @@ public class UserAgentNotificationView extends ConfigurationView implements Sess
          @Override
          protected String getErrorMessage()
          {
-            return i18n.tr("Cannot get list of user agent notifications");
+            return i18n.tr("Cannot get list of user support application notifications");
          }
       }.start();
    }
