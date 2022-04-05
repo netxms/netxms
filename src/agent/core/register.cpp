@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -36,19 +36,16 @@ LONG H_PlatformName(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCo
 /**
  * Register agent on management server
  */
-BOOL RegisterOnServer(const TCHAR *pszServer, int32_t zoneUIN)
+bool RegisterOnServer(const TCHAR *server, int32_t zoneUIN)
 {
-   BOOL bRet = FALSE;
-   TCHAR szBuffer[MAX_RESULT_LENGTH];
-   ssize_t nLen;
-
-   InetAddress addr = InetAddress::resolveHostName(pszServer);
+   InetAddress addr = InetAddress::resolveHostName(server);
    if (!addr.isValidUnicast())
    {
 		nxlog_write(NXLOG_WARNING, _T("Registration on management server failed (unable to resolve name of management server)"));
-      return FALSE;
+      return false;
    }
 
+   bool success = false;
    SOCKET hSocket = CreateSocket(addr.getFamily(), SOCK_STREAM, 0);
    if (hSocket != INVALID_SOCKET)
    {
@@ -57,19 +54,21 @@ BOOL RegisterOnServer(const TCHAR *pszServer, int32_t zoneUIN)
       if (connect(hSocket, (struct sockaddr *)&sa, SA_LEN((struct sockaddr *)&sa)) != -1)
       {
          // Prepare request
-         NXCPMessage msg(CMD_REGISTER_AGENT, 2, 2); // User version 2
-         if (H_PlatformName(NULL, NULL, szBuffer, NULL) != SYSINFO_RC_SUCCESS)
-            _tcscpy(szBuffer, _T("error"));
-         msg.setField(VID_PLATFORM_NAME, szBuffer);
-         msg.setField(VID_VERSION_MAJOR, (WORD)NETXMS_VERSION_MAJOR);
-         msg.setField(VID_VERSION_MINOR, (WORD)NETXMS_VERSION_MINOR);
-         msg.setField(VID_VERSION_RELEASE, (WORD)NETXMS_VERSION_BUILD);
+         NXCPMessage msg(CMD_REGISTER_AGENT, 2, 4); // Use version 4
+
+         TCHAR buffer[MAX_RESULT_LENGTH];
+         if (H_PlatformName(nullptr, nullptr, buffer, nullptr) != SYSINFO_RC_SUCCESS)
+            _tcscpy(buffer, _T("error"));
+         msg.setField(VID_PLATFORM_NAME, buffer);
+         msg.setField(VID_VERSION_MAJOR, static_cast<uint16_t>(NETXMS_VERSION_MAJOR));
+         msg.setField(VID_VERSION_MINOR, static_cast<uint16_t>(NETXMS_VERSION_MINOR));
+         msg.setField(VID_VERSION_RELEASE, static_cast<uint16_t>(NETXMS_VERSION_BUILD));
          msg.setField(VID_ZONE_UIN, zoneUIN);
 
          // Send request
-         NXCP_MESSAGE *pRawMsg = msg.serialize();
-         nLen = ntohl(pRawMsg->size);
-         if (SendEx(hSocket, pRawMsg, nLen, 0, NULL) == nLen)
+         NXCP_MESSAGE *rawMsg = msg.serialize();
+         size_t msgLen = ntohl(rawMsg->size);
+         if (SendEx(hSocket, rawMsg, msgLen, 0, nullptr) == msgLen)
          {
             SocketMessageReceiver receiver(hSocket, 4096, MAX_MSG_SIZE);
             MessageReceiverResult result;
@@ -80,16 +79,16 @@ BOOL RegisterOnServer(const TCHAR *pszServer, int32_t zoneUIN)
                    (response->getId() == 2) &&
                    (response->getFieldAsUInt32(VID_RCC) == 0))
                {
-                  bRet = TRUE;
+                  success = true;
                }
                delete response;
             }
          }
-         MemFree(pRawMsg);
+         MemFree(rawMsg);
 
-			if (bRet)
+			if (success)
 			{
-				nxlog_write(NXLOG_INFO, _T("Successfully registered on management server %s"), pszServer);
+				nxlog_write(NXLOG_INFO, _T("Successfully registered on management server %s"), server);
 			}
 			else
 			{
@@ -103,5 +102,5 @@ BOOL RegisterOnServer(const TCHAR *pszServer, int32_t zoneUIN)
       closesocket(hSocket);
    }
 
-   return bRet;
+   return success;
 }

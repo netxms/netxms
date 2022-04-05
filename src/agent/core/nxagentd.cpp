@@ -107,7 +107,7 @@ int WatchdogMain(DWORD pid, const TCHAR *configSection);
 
 void InitSessionList();
 
-BOOL RegisterOnServer(const TCHAR *pszServer, int32_t zoneUIN);
+bool RegisterOnServer(const TCHAR *server, int32_t zoneUIN);
 
 void UpdatePolicyInventory();
 
@@ -201,7 +201,7 @@ TCHAR g_szDataDirectory[MAX_PATH] = AGENT_DEFAULT_DATA_DIR;
 TCHAR g_dataDirRecoveryPath[MAX_PATH] = _T("");
 TCHAR g_szPlatformSuffix[MAX_PSUFFIX_LENGTH] = _T("");
 TCHAR g_szConfigServer[MAX_DB_STRING] = _T("not_set");
-TCHAR g_szRegistrar[MAX_DB_STRING] = _T("not_set");
+TCHAR g_registrar[MAX_DB_STRING] = _T("not_set");
 TCHAR g_szListenAddress[MAX_PATH] = _T("*");
 TCHAR g_szConfigIncludeDir[MAX_PATH] = AGENT_DEFAULT_CONFIG_D;
 TCHAR g_szConfigPolicyDir[MAX_PATH] = AGENT_DEFAULT_CONFIG_D;
@@ -1459,7 +1459,7 @@ BOOL Initialize()
 
    	if (s_startupFlags & SF_REGISTER)
       {
-         RegisterOnServer(g_szRegistrar, g_zoneUIN);
+         RegisterOnServer(g_registrar, g_zoneUIN);
       }
 
       s_tunnelManagerThread = ThreadCreateEx(TunnelManager);
@@ -2051,10 +2051,10 @@ int main(int argc, char *argv[])
          case 'r':
             s_startupFlags |= SF_REGISTER;
 #ifdef UNICODE
-            MultiByteToWideCharSysLocale(optarg, g_szRegistrar, MAX_DB_STRING);
-				g_szRegistrar[MAX_DB_STRING - 1] = 0;
+            MultiByteToWideCharSysLocale(optarg, g_registrar, MAX_DB_STRING);
+				g_registrar[MAX_DB_STRING - 1] = 0;
 #else
-            strlcpy(g_szRegistrar, optarg, MAX_DB_STRING);
+            strlcpy(g_registrar, optarg, MAX_DB_STRING);
 #endif
             break;
          case 'P':   // Platform suffix

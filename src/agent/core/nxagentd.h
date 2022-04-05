@@ -883,7 +883,7 @@ extern TCHAR g_szSharedSecret[];
 extern TCHAR g_szConfigFile[];
 extern TCHAR g_szFileStore[];
 extern TCHAR g_szConfigServer[];
-extern TCHAR g_szRegistrar[];
+extern TCHAR g_registrar[];
 extern TCHAR g_szListenAddress[];
 extern TCHAR g_szConfigIncludeDir[];
 extern TCHAR g_szConfigPolicyDir[];
