@@ -138,9 +138,11 @@ DCTable::DCTable(const DCTable *src, bool shadowCopy) : DCObject(src, shadowCopy
 /**
  * Constructor for creating new DCTable from scratch
  */
-DCTable::DCTable(UINT32 id, const TCHAR *name, int source, const TCHAR *pollingInterval, const TCHAR *retentionTime,
-         const shared_ptr<DataCollectionOwner>& owner, const TCHAR *description, const TCHAR *systemTag)
-        : DCObject(id, name, source, pollingInterval, retentionTime, owner, description, systemTag)
+DCTable::DCTable(UINT32 id, const TCHAR *name, int source, BYTE scheduleType, const TCHAR *pollingInterval,
+      BYTE retentionType, const TCHAR *retentionTime, const shared_ptr<DataCollectionOwner>& owner,
+      const TCHAR *description, const TCHAR *systemTag)
+        : DCObject(id, name, source, scheduleType, pollingInterval, retentionType, retentionTime,
+              owner, description, systemTag)
 {
 	m_columns = new ObjectArray<DCTableColumn>(8, 8, Ownership::True);
    m_thresholds = new ObjectArray<DCTableThreshold>(0, 4, Ownership::True);

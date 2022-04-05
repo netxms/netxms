@@ -520,11 +520,27 @@ static int F_CreateDCI(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_
          }
 	}
 
+	StringBuffer type = argv[5]->isString() ? argv[5]->getValueAsCString() : _T("");
+	type.trim();
+	BYTE scheduleType = (type.isEmpty() || type.equals(_T("0"))) ? DC_POLLING_SCHEDULE_DEFAULT : DC_POLLING_SCHEDULE_CUSTOM;
+
+   type = argv[6]->isString() ? argv[6]->getValueAsCString() : _T("");
+   type.trim();
+   BYTE retentionType = DC_RETENTION_CUSTOM;
+   if (type.isEmpty())
+   {
+      retentionType = DC_RETENTION_DEFAULT;
+   }
+   else if (type.equals(_T("0")))
+   {
+      retentionType = DC_RETENTION_NONE;
+   }
+
 	if ((origin != -1) && (dataType != -1))
 	{
 		DCItem *dci = new DCItem(CreateUniqueId(IDG_ITEM), argv[2]->getValueAsCString(),
-		         origin, dataType, argv[5]->isString() ? argv[5]->getValueAsCString() : nullptr,
-			      argv[6]->isString() ? argv[6]->getValueAsCString() : nullptr, node, argv[3]->getValueAsCString());
+		         origin, dataType, scheduleType, argv[5]->isString() ? argv[5]->getValueAsCString() : nullptr,
+		         retentionType, argv[6]->isString() ? argv[6]->getValueAsCString() : nullptr, node, argv[3]->getValueAsCString());
 		node->addDCObject(dci);
 		*ppResult = dci->createNXSLObject(vm);
 	}

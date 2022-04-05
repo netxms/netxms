@@ -164,10 +164,11 @@ DCItem::DCItem(DB_HANDLE hdb, DB_RESULT hResult, int row, const shared_ptr<DataC
 /**
  * Constructor for creating new DCItem from scratch
  */
-DCItem::DCItem(UINT32 id, const TCHAR *name, int source, int dataType, const TCHAR *pollingInterval,
-         const TCHAR *retentionTime, const shared_ptr<DataCollectionOwner>& owner,
-         const TCHAR *description, const TCHAR *systemTag)
-	: DCObject(id, name, source, pollingInterval, retentionTime, owner, description, systemTag)
+DCItem::DCItem(UINT32 id, const TCHAR *name, int source, int dataType, BYTE scheduleType,
+      const TCHAR *pollingInterval, BYTE retentionType, const TCHAR *retentionTime,
+      const shared_ptr<DataCollectionOwner>& owner, const TCHAR *description, const TCHAR *systemTag)
+	: DCObject(id, name, source, scheduleType, pollingInterval, retentionType, retentionTime, owner,
+	      description, systemTag)
 {
    m_dataType = dataType;
    m_deltaCalculation = DCM_ORIGINAL_VALUE;

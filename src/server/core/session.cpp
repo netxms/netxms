@@ -4023,11 +4023,13 @@ void ClientSession::modifyNodeDCI(const NXCPMessage& request)
                      {
                         case DCO_TYPE_ITEM:
                            dcObject = new DCItem(CreateUniqueId(IDG_ITEM), _T("no name"), DS_INTERNAL, DCI_DT_INT,
-                                    nullptr, nullptr, static_pointer_cast<DataCollectionOwner>(object));
+                                 DC_POLLING_SCHEDULE_DEFAULT, nullptr, DC_RETENTION_DEFAULT, nullptr,
+                                 static_pointer_cast<DataCollectionOwner>(object));
                            break;
                         case DCO_TYPE_TABLE:
                            dcObject = new DCTable(CreateUniqueId(IDG_ITEM), _T("no name"), DS_INTERNAL,
-                                    nullptr, nullptr, static_pointer_cast<DataCollectionOwner>(object));
+                                 DC_POLLING_SCHEDULE_DEFAULT, nullptr, DC_RETENTION_DEFAULT, nullptr,
+                                 static_pointer_cast<DataCollectionOwner>(object));
                            break;
                         default:
                            dcObject = nullptr;
@@ -5933,7 +5935,8 @@ void ClientSession::createObject(const NXCPMessage& request)
                            _sntprintf(dciName, MAX_DB_STRING, _T("ChildStatus(%d)"), object->getId());
                            _sntprintf(dciDescription, MAX_DB_STRING, _T("Status of network service %s"), object->getName());
                            static_cast<Node&>(*parent).addDCObject(new DCItem(CreateUniqueId(IDG_ITEM), dciName, DS_INTERNAL, DCI_DT_INT,
-                                    nullptr, nullptr, static_pointer_cast<Node>(parent), dciDescription));
+                                 DC_POLLING_SCHEDULE_DEFAULT ,nullptr, DC_RETENTION_DEFAULT, nullptr, static_pointer_cast<Node>(parent),
+                                 dciDescription));
                         }
                      }
 

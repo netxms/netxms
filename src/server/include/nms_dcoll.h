@@ -333,8 +333,9 @@ protected:
 
 	// --- constructors ---
    DCObject(const shared_ptr<DataCollectionOwner>& owner);
-   DCObject(UINT32 id, const TCHAR *name, int source, const TCHAR *pollingInterval, const TCHAR *retentionTime,
-            const shared_ptr<DataCollectionOwner>& owner, const TCHAR *description = nullptr, const TCHAR *systemTag = nullptr);
+   DCObject(UINT32 id, const TCHAR *name, int source, BYTE scheduleType, const TCHAR *pollingInterval,
+         BYTE retentionType, const TCHAR *retentionTime, const shared_ptr<DataCollectionOwner>& owner,
+         const TCHAR *description = nullptr, const TCHAR *systemTag = nullptr);
 	DCObject(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& owner);
    DCObject(const DCObject *src, bool shadowCopy);
 
@@ -501,8 +502,9 @@ protected:
 public:
    DCItem(const DCItem *src, bool shadowCopy);
    DCItem(DB_HANDLE hdb, DB_RESULT hResult, int row, const shared_ptr<DataCollectionOwner>& owner, bool useStartupDelay);
-   DCItem(UINT32 id, const TCHAR *name, int source, int dataType, const TCHAR *pollingInterval, const TCHAR *retentionTime,
-            const shared_ptr<DataCollectionOwner>& owner, const TCHAR *description = nullptr, const TCHAR *systemTag = nullptr);
+   DCItem(UINT32 id, const TCHAR *name, int source, int dataType, BYTE scheduleType, const TCHAR *pollingInterval,
+         BYTE retentionType, const TCHAR *retentionTime, const shared_ptr<DataCollectionOwner>& owner,
+         const TCHAR *description = nullptr, const TCHAR *systemTag = nullptr);
 	DCItem(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& owner);
    virtual ~DCItem();
 
@@ -787,8 +789,9 @@ protected:
 
 public:
    DCTable(const DCTable *src, bool shadowCopy);
-   DCTable(UINT32 id, const TCHAR *name, int source, const TCHAR *pollingInterval, const TCHAR *retentionTime,
-            const shared_ptr<DataCollectionOwner>& owner, const TCHAR *description = nullptr, const TCHAR *systemTag = nullptr);
+   DCTable(UINT32 id, const TCHAR *name, int source, BYTE scheduleType, const TCHAR *pollingInterval,
+         BYTE retentionType, const TCHAR *retentionTime, const shared_ptr<DataCollectionOwner>& owner,
+         const TCHAR *description = nullptr, const TCHAR *systemTag = nullptr);
    DCTable(DB_HANDLE hdb, DB_RESULT hResult, int row, const shared_ptr<DataCollectionOwner>& owner, bool useStartupDelay);
    DCTable(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& owner);
 	virtual ~DCTable();

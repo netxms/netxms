@@ -167,8 +167,9 @@ DCObject::DCObject(const DCObject *src, bool shadowCopy) :
 /**
  * Constructor for creating new DCObject from scratch
  */
-DCObject::DCObject(UINT32 id, const TCHAR *name, int source, const TCHAR *pollingInterval, const TCHAR *retentionTime,
-         const shared_ptr<DataCollectionOwner>& owner, const TCHAR *description, const TCHAR *systemTag) :
+DCObject::DCObject(UINT32 id, const TCHAR *name, int source, BYTE scheduleType, const TCHAR *pollingInterval,
+         BYTE retentionType, const TCHAR *retentionTime, const shared_ptr<DataCollectionOwner>& owner,
+         const TCHAR *description, const TCHAR *systemTag) :
          m_owner(owner), m_name(name), m_description(description), m_systemTag(systemTag),
          m_instanceDiscoveryData(_T("")), m_instanceName(_T("")), m_mutex(MutexType::RECURSIVE),
          m_accessList(0, 16)
@@ -179,9 +180,9 @@ DCObject::DCObject(UINT32 id, const TCHAR *name, int source, const TCHAR *pollin
    m_dwTemplateId = 0;
    m_dwTemplateItemId = 0;
    m_source = source;
-   m_pollingScheduleType = (pollingInterval != nullptr) ? DC_POLLING_SCHEDULE_CUSTOM : DC_POLLING_SCHEDULE_DEFAULT;
+   m_pollingScheduleType = scheduleType;
    m_pollingIntervalSrc = MemCopyString(pollingInterval);
-   m_retentionTime = (retentionTime != nullptr) ? DC_RETENTION_CUSTOM : DC_RETENTION_DEFAULT;
+   m_retentionType = retentionType;
    m_retentionTimeSrc = MemCopyString(retentionTime);
    m_status = ITEM_STATUS_ACTIVE;
    m_busy = 0;
