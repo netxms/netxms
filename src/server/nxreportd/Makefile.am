@@ -18,7 +18,7 @@ SUBDIRS =
 endif
 
 nxreportd: nxreportd.in
-	sed -e "s,~PACKAGE_VERSION~,$(PACKAGE_VERSION),g" -e "s,~BINDIR~,@NETXMS_BINDIR@,g" -e "s,~DATADIR~,@NETXMS_DATADIR@,g" -e "s,~PKGLIBDIR~,@NETXMS_PKGLIBDIR@,g" -e "s,~STATEDIR~,@NETXMS_STATEDIR@,g" -e "s,~SYSCONFDIR~,@NETXMS_SYSCONFDIR@,g" -e "s,~PREFIX~,@NETXMS_PREFIX@,g" < $@.in > $@
+	sed -e "s,~NETXMS_JAR_VERSION~,@NETXMS_JAR_VERSION@,g" -e "s,~BINDIR~,@NETXMS_BINDIR@,g" -e "s,~DATADIR~,@NETXMS_DATADIR@,g" -e "s,~PKGLIBDIR~,@NETXMS_PKGLIBDIR@,g" -e "s,~STATEDIR~,@NETXMS_STATEDIR@,g" -e "s,~SYSCONFDIR~,@NETXMS_SYSCONFDIR@,g" -e "s,~PREFIX~,@NETXMS_PREFIX@,g" < $@.in > $@
 
 clean-local:
 	rm -f nxreportd
