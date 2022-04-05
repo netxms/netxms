@@ -19,6 +19,7 @@
 package org.netxms.ui.eclipse.objectmanager.propertypages;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -27,6 +28,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.CellEditor;
+import org.eclipse.jface.viewers.ComboBoxCellEditor;
 import org.eclipse.jface.viewers.ICellModifier;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -34,7 +36,6 @@ import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.TableViewer;
-import org.eclipse.jface.viewers.TextCellEditor;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.jface.window.Window;
@@ -50,7 +51,6 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Item;
 import org.eclipse.swt.widgets.TableColumn;
-import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.AccessListElement;
 import org.netxms.client.NXCObjectModificationData;
@@ -110,18 +110,20 @@ public class ResponsibleUsers extends PropertyPage
       column.setWidth(300);
       column = new TableColumn(viewer.getTable(), SWT.NONE);
       column.setText("Tag");
-      column.setWidth(80);
+      column.setWidth(120);
+
+      final List<String> tags = new ArrayList<String>(session.getResponsibleUserTags());
+      tags.add("");
+      tags.sort(new Comparator<String>() {
+         @Override
+         public int compare(String s1, String s2)
+         {
+            return s1.compareToIgnoreCase(s2);
+         }
+      });
 
       viewer.setColumnProperties(new String[] { "name", "tag" }); //$NON-NLS-1$ //$NON-NLS-2$
-      viewer.setCellEditors(new CellEditor[] { null, new TextCellEditor(viewer.getTable()) {
-         @Override
-         protected Control createControl(Composite parent)
-         {
-            Control c = super.createControl(parent);
-            ((Text)c).setTextLimit(31);
-            return c;
-         }
-      } });
+      viewer.setCellEditors(new CellEditor[] { null, new ComboBoxCellEditor(viewer.getTable(), tags.toArray(new String[tags.size()]), SWT.READ_ONLY | SWT.DROP_DOWN) });
       viewer.setCellModifier(new ICellModifier() {
          @Override
          public void modify(Object element, String property, Object value)
@@ -130,7 +132,7 @@ public class ResponsibleUsers extends PropertyPage
                element = ((Item)element).getData();
             if (property.equals("tag"))
             {
-               ((ResponsibleUserInfo)element).tag = (String)value;
+               ((ResponsibleUserInfo)element).tag = tags.get((Integer)value);
                viewer.update(element, new String[] { property });
             }
          }
@@ -138,13 +140,13 @@ public class ResponsibleUsers extends PropertyPage
          @Override
          public Object getValue(Object element, String property)
          {
-            return ((ResponsibleUserInfo)element).tag;
+            return tags.indexOf(((ResponsibleUserInfo)element).tag);
          }
 
          @Override
          public boolean canModify(Object element, String property)
          {
-            return property.equals("level");
+            return property.equals("tag");
          }
       });
 
@@ -156,7 +158,7 @@ public class ResponsibleUsers extends PropertyPage
       gd.horizontalAlignment = SWT.FILL;
       gd.verticalAlignment = SWT.FILL;
       viewer.getControl().setLayoutData(gd);
-      
+
       Composite buttons = new Composite(dialogArea, SWT.NONE);
       FillLayout buttonsLayout = new FillLayout();
       buttonsLayout.spacing = WidgetHelper.INNER_SPACING;
@@ -165,7 +167,7 @@ public class ResponsibleUsers extends PropertyPage
       gd.horizontalAlignment = SWT.RIGHT;
       gd.widthHint = 184;
       buttons.setLayoutData(gd);
-      
+
       final Button addButton = new Button(buttons, SWT.PUSH);
       addButton.setText("Add...");
       addButton.addSelectionListener(new SelectionListener() {
