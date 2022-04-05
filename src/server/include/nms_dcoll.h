@@ -291,10 +291,10 @@ protected:
    Mutex m_mutex;
    StringList *m_schedules;
    time_t m_tLastCheck;          // Last schedule checking time
-   uint32_t m_dwErrorCount;        // Consequtive collection error count
-   uint32_t m_dwResourceId;	   	// Associated cluster resource ID
-   uint32_t m_sourceNode;          // Source node ID or 0 to disable
-	uint16_t m_snmpPort;            // Custom SNMP port or 0 for node default
+   uint32_t m_errorCount;        // Consequtive collection error count
+   uint32_t m_resourceId;	   	// Associated cluster resource ID
+   uint32_t m_sourceNode;        // Source node ID or 0 to disable
+	uint16_t m_snmpPort;          // Custom SNMP port or 0 for node default
 	SNMP_Version m_snmpVersion;   // Custom SNMP version or SNMP_VERSION_DEFAULT for node default
 	TCHAR *m_pszPerfTabSettings;
    TCHAR *m_transformationScriptSource;   // Transformation script (source code)
@@ -378,11 +378,11 @@ public:
    const TCHAR *getOwnerName() const;
    uint32_t getTemplateId() const { return m_dwTemplateId; }
    uint32_t getTemplateItemId() const { return m_dwTemplateItemId; }
-   uint32_t getResourceId() const { return m_dwResourceId; }
+   uint32_t getResourceId() const { return m_resourceId; }
    uint32_t getSourceNode() const { return m_sourceNode; }
 	time_t getLastPollTime() const { return m_lastPoll; }
    time_t getLastValueTimestamp() const { return m_lastValueTimestamp; }
-   uint32_t getErrorCount() const { return m_dwErrorCount; }
+   uint32_t getErrorCount() const { return m_errorCount; }
 	uint16_t getSnmpPort() const { return m_snmpPort; }
    SNMP_Version getSnmpVersion() const { return m_snmpVersion; }
    bool isShowOnObjectTooltip() const { return (m_flags & DCF_SHOW_ON_OBJECT_TOOLTIP) ? true : false; }
@@ -395,7 +395,7 @@ public:
    DCObjectStorageClass getStorageClass() const { return (m_retentionType == DC_RETENTION_CUSTOM) ? storageClassFromRetentionTime(m_retentionTime) : DCObjectStorageClass::DEFAULT; }
    int getEffectiveRetentionTime() const { return (m_retentionType == DC_RETENTION_CUSTOM) ? std::max(m_retentionTime, 1) : m_defaultRetentionTime; }
    bool isDataStorageEnabled() const { return m_retentionType != DC_RETENTION_NONE; }
-   INT16 getAgentCacheMode();
+   int16_t getAgentCacheMode();
    bool hasValue();
    bool hasAccess(uint32_t userId);
    uint32_t getRelatedObject() const { return m_relatedObject; }

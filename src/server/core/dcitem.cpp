@@ -106,7 +106,7 @@ DCItem::DCItem(DB_HANDLE hdb, DB_RESULT hResult, int row, const shared_ptr<DataC
    m_tPrevValueTimeStamp = 0;
    m_bCacheLoaded = false;
    m_flags = DBGetFieldLong(hResult, row, 13);
-	m_dwResourceId = DBGetFieldULong(hResult, row, 14);
+	m_resourceId = DBGetFieldULong(hResult, row, 14);
 	m_sourceNode = DBGetFieldULong(hResult, row, 15);
 	m_nBaseUnits = DBGetFieldLong(hResult, row, 16);
 	m_nMultiplier = DBGetFieldLong(hResult, row, 17);
@@ -334,7 +334,7 @@ bool DCItem::saveToDatabase(DB_HANDLE hdb)
 	DBBind(hStmt, 12, DB_SQLTYPE_VARCHAR, m_instanceName, DB_BIND_STATIC, MAX_INSTANCE_LEN - 1);
 	DBBind(hStmt, 13, DB_SQLTYPE_INTEGER, m_dwTemplateItemId);
 	DBBind(hStmt, 14, DB_SQLTYPE_INTEGER, m_flags);
-	DBBind(hStmt, 15, DB_SQLTYPE_INTEGER, m_dwResourceId);
+	DBBind(hStmt, 15, DB_SQLTYPE_INTEGER, m_resourceId);
 	DBBind(hStmt, 16, DB_SQLTYPE_INTEGER, m_sourceNode);
 	DBBind(hStmt, 17, DB_SQLTYPE_INTEGER, (INT32)m_nBaseUnits);
 	DBBind(hStmt, 18, DB_SQLTYPE_INTEGER, (INT32)m_nMultiplier);
@@ -687,7 +687,7 @@ bool DCItem::processNewValue(time_t tmTimeStamp, const TCHAR *originalValue, boo
       }
    }
 
-   m_dwErrorCount = 0;
+   m_errorCount = 0;
 
    if (isStatusDCO() && (tmTimeStamp > m_tPrevValueTimeStamp) && ((m_cacheSize == 0) || !m_bCacheLoaded || (pValue->getUInt32() != m_ppValueCache[0]->getUInt32())))
    {
@@ -790,12 +790,12 @@ void DCItem::processNewError(bool noInstance, time_t now)
 {
    lock();
 
-   m_dwErrorCount++;
+   m_errorCount++;
 
 	for(int i = 0; i < getThresholdCount(); i++)
    {
 		Threshold *t = m_thresholds->get(i);
-      ThresholdCheckResult result = t->checkError(m_dwErrorCount);
+      ThresholdCheckResult result = t->checkError(m_errorCount);
       switch(result)
       {
          case ThresholdCheckResult::ACTIVATED:
@@ -1423,7 +1423,7 @@ void DCItem::fillLastValueSummaryMessage(NXCPMessage *msg, uint32_t baseId, cons
    }
    msg->setField(baseId++, (WORD)(matchClusterResource() ? m_status : ITEM_STATUS_DISABLED)); // show resource-bound DCIs as inactive if cluster resource is not on this node
 	msg->setField(baseId++, (WORD)getType());
-	msg->setField(baseId++, m_dwErrorCount);
+	msg->setField(baseId++, m_errorCount);
 	msg->setField(baseId++, m_dwTemplateItemId);
 
 	if (m_thresholds != nullptr)
@@ -1533,7 +1533,7 @@ NXSL_Value *DCItem::getValueForNXSL(NXSL_VM *vm, int function, int sampleCount)
          }
          break;
       case F_ERROR:
-         pValue = vm->createValue(static_cast<int32_t>((m_dwErrorCount >= static_cast<uint32_t>(sampleCount)) ? 1 : 0));
+         pValue = vm->createValue(static_cast<int32_t>((m_errorCount >= static_cast<uint32_t>(sampleCount)) ? 1 : 0));
          break;
       default:
          pValue = vm->createValue();

@@ -88,8 +88,8 @@ DCObject::DCObject(const shared_ptr<DataCollectionOwner>& owner) : m_owner(owner
    m_tLastCheck = 0;
 	m_flags = 0;
    m_stateFlags = 0;
-   m_dwErrorCount = 0;
-	m_dwResourceId = 0;
+   m_errorCount = 0;
+	m_resourceId = 0;
 	m_sourceNode = 0;
 	m_pszPerfTabSettings = nullptr;
 	m_snmpPort = 0;	// use default
@@ -135,10 +135,10 @@ DCObject::DCObject(const DCObject *src, bool shadowCopy) :
    m_lastPoll = shadowCopy ? src->m_lastPoll : 0;
    m_lastValueTimestamp = shadowCopy ? src->m_lastValueTimestamp : 0;
    m_tLastCheck = shadowCopy ? src->m_tLastCheck : 0;
-   m_dwErrorCount = shadowCopy ? src->m_dwErrorCount : 0;
+   m_errorCount = shadowCopy ? src->m_errorCount : 0;
 	m_flags = src->m_flags;
    m_stateFlags = src->m_stateFlags;
-	m_dwResourceId = src->m_dwResourceId;
+	m_resourceId = src->m_resourceId;
 	m_sourceNode = src->m_sourceNode;
 	m_pszPerfTabSettings = MemCopyString(src->m_pszPerfTabSettings);
 	m_snmpPort = src->m_snmpPort;
@@ -193,8 +193,8 @@ DCObject::DCObject(UINT32 id, const TCHAR *name, int source, BYTE scheduleType, 
    m_stateFlags = 0;
    m_schedules = nullptr;
    m_tLastCheck = 0;
-   m_dwErrorCount = 0;
-   m_dwResourceId = 0;
+   m_errorCount = 0;
+   m_resourceId = 0;
    m_sourceNode = 0;
    m_pszPerfTabSettings = nullptr;
    m_snmpPort = 0;	// use default
@@ -264,8 +264,8 @@ DCObject::DCObject(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& o
    m_lastPoll = 0;
    m_lastValueTimestamp = 0;
    m_tLastCheck = 0;
-   m_dwErrorCount = 0;
-   m_dwResourceId = 0;
+   m_errorCount = 0;
+   m_resourceId = 0;
    m_sourceNode = 0;
    const TCHAR *perfTabSettings = config->getSubEntryValue(_T("perfTabSettings"));
    m_pszPerfTabSettings = MemCopyString(perfTabSettings);
@@ -393,14 +393,14 @@ bool DCObject::loadCustomSchedules(DB_HANDLE hdb)
 bool DCObject::matchClusterResource()
 {
    auto owner = m_owner.lock();
-   if ((m_dwResourceId == 0) || (owner->getObjectClass() != OBJECT_NODE))
+   if ((m_resourceId == 0) || (owner->getObjectClass() != OBJECT_NODE))
 		return true;
 
 	shared_ptr<Cluster> cluster = static_cast<Node*>(owner.get())->getMyCluster();
 	if (cluster == nullptr)
 		return false;	// Has association, but cluster object cannot be found
 
-	return cluster->isResourceOnNode(m_dwResourceId, m_ownerId);
+	return cluster->isResourceOnNode(m_resourceId, m_ownerId);
 }
 
 /**
@@ -819,7 +819,7 @@ void DCObject::createMessage(NXCPMessage *pMsg)
    pMsg->setField(VID_RETENTION_TIME, m_retentionTimeSrc);
    pMsg->setField(VID_DCI_SOURCE_TYPE, (WORD)m_source);
    pMsg->setField(VID_DCI_STATUS, (WORD)m_status);
-	pMsg->setField(VID_RESOURCE_ID, m_dwResourceId);
+	pMsg->setField(VID_RESOURCE_ID, m_resourceId);
 	pMsg->setField(VID_AGENT_PROXY, m_sourceNode);
 	pMsg->setField(VID_SNMP_PORT, m_snmpPort);
    pMsg->setField(VID_SNMP_VERSION, static_cast<INT16>(m_snmpVersion));
@@ -859,7 +859,7 @@ void DCObject::updateFromMessage(const NXCPMessage& msg)
 	m_flags = msg.getFieldAsUInt32(VID_FLAGS);
    m_source = (BYTE)msg.getFieldAsUInt16(VID_DCI_SOURCE_TYPE);
    setStatus(msg.getFieldAsUInt16(VID_DCI_STATUS), true, true);
-	m_dwResourceId = msg.getFieldAsUInt32(VID_RESOURCE_ID);
+	m_resourceId = msg.getFieldAsUInt32(VID_RESOURCE_ID);
 	m_sourceNode = msg.getFieldAsUInt32(VID_AGENT_PROXY);
    m_snmpPort = msg.getFieldAsUInt16(VID_SNMP_PORT);
    m_snmpVersion = msg.isFieldExist(VID_SNMP_VERSION) ? static_cast<SNMP_Version>(msg.getFieldAsInt16(VID_SNMP_VERSION)) : SNMP_VERSION_DEFAULT;
@@ -1050,9 +1050,12 @@ void DCObject::updateFromTemplate(DCObject *src)
    m_source = src->m_source;
 	m_flags = src->m_flags;
 	m_sourceNode = src->m_sourceNode;
-	m_dwResourceId = src->m_dwResourceId;
+	m_resourceId = src->m_resourceId;
 	m_snmpPort = src->m_snmpPort;
    m_snmpVersion = src->m_snmpVersion;
+
+   MemFree(m_comments);
+   m_comments = MemCopyString(src->m_comments);
 
 	MemFree(m_pszPerfTabSettings);
 	m_pszPerfTabSettings = MemCopyString(src->m_pszPerfTabSettings);
@@ -1168,7 +1171,7 @@ void DCObject::setTransformationScript(TCHAR *source)
 /**
  * Get actual agent cache mode
  */
-INT16 DCObject::getAgentCacheMode()
+int16_t DCObject::getAgentCacheMode()
 {
    if ((m_source != DS_NATIVE_AGENT) && (m_source != DS_SNMP_AGENT))
       return AGENT_CACHE_OFF;
@@ -1598,8 +1601,8 @@ json_t *DCObject::toJson()
    json_object_set_new(root, "dwTemplateItemId", json_integer(m_dwTemplateItemId));
    json_object_set_new(root, "schedules", (m_schedules != nullptr) ? m_schedules->toJson() : json_array());
    json_object_set_new(root, "lastCheck", json_integer(m_tLastCheck));
-   json_object_set_new(root, "errorCount", json_integer(m_dwErrorCount));
-   json_object_set_new(root, "resourceId", json_integer(m_dwResourceId));
+   json_object_set_new(root, "errorCount", json_integer(m_errorCount));
+   json_object_set_new(root, "resourceId", json_integer(m_resourceId));
    json_object_set_new(root, "sourceNode", json_integer(m_sourceNode));
    json_object_set_new(root, "snmpPort", json_integer(m_snmpPort));
    json_object_set_new(root, "snmpVersion", json_integer(m_snmpVersion));
@@ -1803,7 +1806,7 @@ DCObjectInfo::DCObjectInfo(const DCObject& object)
    m_dataType = (m_type == DCO_TYPE_ITEM) ? static_cast<const DCItem&>(object).m_dataType : -1;
    m_origin = object.m_source;
    m_status = object.m_status;
-   m_errorCount = object.m_dwErrorCount;
+   m_errorCount = object.m_errorCount;
    m_pollingInterval = object.getEffectivePollingInterval();
    m_lastPollTime = object.m_lastPoll;
    m_lastCollectionTime = object.m_lastValueTimestamp;

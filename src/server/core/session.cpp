@@ -5935,7 +5935,7 @@ void ClientSession::createObject(const NXCPMessage& request)
                            _sntprintf(dciName, MAX_DB_STRING, _T("ChildStatus(%d)"), object->getId());
                            _sntprintf(dciDescription, MAX_DB_STRING, _T("Status of network service %s"), object->getName());
                            static_cast<Node&>(*parent).addDCObject(new DCItem(CreateUniqueId(IDG_ITEM), dciName, DS_INTERNAL, DCI_DT_INT,
-                                 DC_POLLING_SCHEDULE_DEFAULT ,nullptr, DC_RETENTION_DEFAULT, nullptr, static_pointer_cast<Node>(parent),
+                                 DC_POLLING_SCHEDULE_DEFAULT, nullptr, DC_RETENTION_DEFAULT, nullptr, static_pointer_cast<Node>(parent),
                                  dciDescription));
                         }
                      }

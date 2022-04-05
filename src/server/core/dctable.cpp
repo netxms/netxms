@@ -173,7 +173,7 @@ DCTable::DCTable(DB_HANDLE hdb, DB_RESULT hResult, int row, const shared_ptr<Dat
    m_retentionTime = DBGetFieldLong(hResult, row, 9);
    m_status = (BYTE)DBGetFieldLong(hResult, row, 10);
 	m_systemTag = DBGetFieldAsSharedString(hResult, row, 11);
-	m_dwResourceId = DBGetFieldULong(hResult, row, 12);
+	m_resourceId = DBGetFieldULong(hResult, row, 12);
 	m_sourceNode = DBGetFieldULong(hResult, row, 13);
 	m_pszPerfTabSettings = DBGetField(hResult, row, 14, nullptr, 0);
    setTransformationScript(DBGetField(hResult, row, 15, nullptr, 0));
@@ -361,7 +361,7 @@ bool DCTable::processNewValue(time_t timestamp, const shared_ptr<Table>& value, 
       }
    }
 
-   m_dwErrorCount = 0;
+   m_errorCount = 0;
 	m_lastValue = value;
 	m_lastValue->setTitle(m_description);
    m_lastValue->setSource(m_source);
@@ -530,7 +530,7 @@ void DCTable::checkThresholds(Table *value)
  */
 void DCTable::processNewError(bool noInstance, time_t now)
 {
-	m_dwErrorCount++;
+	m_errorCount++;
 }
 
 /**
@@ -595,7 +595,7 @@ bool DCTable::saveToDatabase(DB_HANDLE hdb)
 	DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, (INT32)m_retentionTime);
 	DBBind(hStmt, 11, DB_SQLTYPE_INTEGER, (INT32)m_status);
 	DBBind(hStmt, 12, DB_SQLTYPE_VARCHAR, m_systemTag, DB_BIND_STATIC, MAX_DB_STRING);
-	DBBind(hStmt, 13, DB_SQLTYPE_INTEGER, m_dwResourceId);
+	DBBind(hStmt, 13, DB_SQLTYPE_INTEGER, m_resourceId);
 	DBBind(hStmt, 14, DB_SQLTYPE_INTEGER, m_sourceNode);
 	DBBind(hStmt, 15, DB_SQLTYPE_TEXT, m_pszPerfTabSettings, DB_BIND_STATIC);
    DBBind(hStmt, 16, DB_SQLTYPE_TEXT, m_transformationScriptSource, DB_BIND_STATIC);
@@ -878,7 +878,7 @@ void DCTable::fillLastValueSummaryMessage(NXCPMessage *msg, uint32_t fieldId, co
    msg->setFieldFromTime(fieldId++, m_lastPoll);
    msg->setField(fieldId++, static_cast<uint16_t>(matchClusterResource() ? m_status : ITEM_STATUS_DISABLED)); // show resource-bound DCIs as inactive if cluster resource is not on this node
    msg->setField(fieldId++, static_cast<uint16_t>(getType()));
-   msg->setField(fieldId++, m_dwErrorCount);
+   msg->setField(fieldId++, m_errorCount);
    msg->setField(fieldId++, m_dwTemplateItemId);
 
    if (m_thresholds != nullptr)
