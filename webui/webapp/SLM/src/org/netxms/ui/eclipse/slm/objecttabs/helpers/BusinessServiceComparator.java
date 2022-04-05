@@ -69,6 +69,9 @@ public class BusinessServiceComparator extends ViewerComparator
          case BusinessServiceChecks.COLUMN_FAIL_REASON:
             result = c1.getFailureReason().compareTo(c2.getFailureReason());
             break;
+         case BusinessServiceChecks.COLUMN_ORIGIN:
+            result = labelProvider.getOriginName(c1).compareTo(labelProvider.getOriginName(c2));  
+            break;
 		}
 		return (((SortableTableViewer)viewer).getTable().getSortDirection() == SWT.UP) ? result : -result;
 	}

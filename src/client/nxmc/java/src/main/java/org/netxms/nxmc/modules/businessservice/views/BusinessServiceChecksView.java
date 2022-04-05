@@ -81,6 +81,7 @@ public class BusinessServiceChecksView extends ObjectView
    public static final int COLUMN_DCI = 4;
    public static final int COLUMN_STATUS = 5;
    public static final int COLUMN_FAIL_REASON = 6;
+   public static final int COLUMN_ORIGIN = 7;
 
    private NXCSession session;
    private SessionListener sessionListener;
@@ -120,9 +121,10 @@ public class BusinessServiceChecksView extends ObjectView
             i18n.tr("Object"),
             i18n.tr("DCI"),
             i18n.tr("Status"),
-            i18n.tr("Reason")
+            i18n.tr("Reason"),
+            i18n.tr("Origin")
          };
-      final int[] widths = { 70, 200, 100, 200, 200, 70, 300 };
+      final int[] widths = { 70, 200, 100, 200, 200, 70, 300, 300 };
       viewer = new SortableTableViewer(parent, names, widths, 0, SWT.DOWN, SortableTableViewer.DEFAULT_STYLE);
       labelProvider = new BusinessServiceCheckLabelProvider();
       BusinessServiceCheckFilter filter = new BusinessServiceCheckFilter(labelProvider);

@@ -87,6 +87,8 @@ public class BusinessServiceCheckLabelProvider extends LabelProvider implements 
             return getCheckStateText(check);
          case BusinessServiceChecksView.COLUMN_FAIL_REASON:    
             return check.getFailureReason();
+         case BusinessServiceChecksView.COLUMN_ORIGIN:
+            return getOriginName(check);
 		}
 		return null;
 	}
@@ -143,6 +145,30 @@ public class BusinessServiceCheckLabelProvider extends LabelProvider implements 
 	   
 	   return name.toString();
 	}
+
+   /**
+    * Get name of source object (if any).
+    *
+    * @param check service check to get object name from
+    * @return name of source object or empty string
+    */
+   public String getOriginName(BusinessServiceCheck check)
+   {
+      StringBuilder name = new StringBuilder();
+      AbstractObject object = session.findObjectById(check.getPrototypeServiceId());
+      if (object != null)
+      {
+         name.append(object.getObjectName());
+      }
+      else
+      {
+         name.append("[");
+         name.append(Long.toString(check.getObjectId()));
+         name.append("]");
+      }
+      
+      return name.toString();
+   }
 
    /**
     * Get name of related DCI (if any).

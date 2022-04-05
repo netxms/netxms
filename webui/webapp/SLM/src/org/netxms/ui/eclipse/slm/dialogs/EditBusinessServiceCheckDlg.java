@@ -124,7 +124,7 @@ public class EditBusinessServiceCheckDlg extends Dialog
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
-      thresholdCombo = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, "Status Threshold", gd);
+      thresholdCombo = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, "Status threshold", gd);
       thresholdCombo.add("Default");
       for (int i = 1; i <= 4; i++)
          thresholdCombo.add(StatusDisplayInfo.getStatusText(i));   

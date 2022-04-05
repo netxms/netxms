@@ -89,6 +89,7 @@ public class BusinessServiceChecks extends ObjectTab
    public static final int COLUMN_DCI = 4;
    public static final int COLUMN_STATUS = 5;
    public static final int COLUMN_FAIL_REASON = 6;
+   public static final int COLUMN_ORIGIN = 7;
 
    private static final String CONFIG_PREFIX = "BusinessServiceChecks";
 
@@ -143,8 +144,8 @@ public class BusinessServiceChecks extends ObjectTab
       });
 
       // Setup table columns
-      final String[] names = { "ID", "Description", "Type", "Object", "DCI", "Status", "Reason" };
-      final int[] widths = { 70, 200, 100, 200, 200, 70, 300 };
+      final String[] names = { "ID", "Description", "Type", "Object", "DCI", "Status", "Reason", "Origin" };
+      final int[] widths = { 70, 200, 100, 200, 200, 70, 300, 300 };
       viewer = new SortableTableViewer(content, names, widths, 0, SWT.DOWN, SortableTableViewer.DEFAULT_STYLE);
       labelProvider = new BusinessServiceCheckLabelProvider();
       viewer.setLabelProvider(labelProvider);

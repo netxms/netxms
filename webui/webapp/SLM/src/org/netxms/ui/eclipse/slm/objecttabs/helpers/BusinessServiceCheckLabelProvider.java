@@ -85,6 +85,8 @@ public class BusinessServiceCheckLabelProvider extends LabelProvider implements 
             return getCheckStateText(check);
          case BusinessServiceChecks.COLUMN_FAIL_REASON:
             return check.getFailureReason();
+         case BusinessServiceChecks.COLUMN_ORIGIN:
+            return getOriginName(check);
 		}
 		return null;
 	}
