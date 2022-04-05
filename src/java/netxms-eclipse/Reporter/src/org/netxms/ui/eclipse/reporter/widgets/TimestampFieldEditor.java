@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,14 +34,8 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class TimestampFieldEditor extends FieldEditor
 {
-	public enum Type
-	{
-		START_DATE, END_DATE, TIMESTAMP;
-	};
-
 	private DateTime datePicker;
 	private DateTime timePicker;
-	private Type type;
 
 	/**
 	 * @param parameter
@@ -53,14 +47,12 @@ public class TimestampFieldEditor extends FieldEditor
 		super(parameter, toolkit, parent);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.reporter.widgets.FieldEditor#createContent(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.reporter.widgets.FieldEditor#createContent(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createContent(Composite parent)
 	{
-		parseType();
-
 		final Composite area = new Composite(parent, SWT.NONE);
 		GridLayout layout = new GridLayout();
 		layout.numColumns = 2;
@@ -86,55 +78,22 @@ public class TimestampFieldEditor extends FieldEditor
 		toolkit.adapt(datePicker);
 		datePicker.setDate(c.get(Calendar.YEAR), c.get(Calendar.MONTH), c.get(Calendar.DAY_OF_MONTH));
 
-		if (type == Type.TIMESTAMP)
-		{
-			timePicker = new DateTime(area, SWT.TIME | SWT.BORDER);
-			toolkit.adapt(timePicker);
-			timePicker.setTime(c.get(Calendar.HOUR_OF_DAY), c.get(Calendar.MINUTE), c.get(Calendar.SECOND));
-		}
+      timePicker = new DateTime(area, SWT.TIME | SWT.BORDER);
+      toolkit.adapt(timePicker);
+      timePicker.setTime(c.get(Calendar.HOUR_OF_DAY), c.get(Calendar.MINUTE), c.get(Calendar.SECOND));
 		
 		return area;
 	}
 
-	/**
-	 * 
-	 */
-	private void parseType()
-	{
-		final String parameterType = parameter.getType();
-		if (parameterType.equals("START_DATE")) //$NON-NLS-1$
-		{
-			type = Type.START_DATE;
-		}
-		else if (parameterType.equals("END_DATE")) //$NON-NLS-1$
-		{
-			type = Type.END_DATE;
-		}
-		else
-		{
-			type = Type.TIMESTAMP;
-		}
-	}
-
+   /**
+    * @see org.netxms.ui.eclipse.reporter.widgets.FieldEditor#getValue()
+    */
 	@Override
 	public String getValue()
 	{
 		final Calendar calendar = Calendar.getInstance();
 		calendar.clear();
-		switch(type)
-		{
-			case START_DATE:
-				calendar.set(datePicker.getYear(), datePicker.getMonth(), datePicker.getDay(), 0, 0, 0);
-				break;
-			case END_DATE:
-				calendar.set(datePicker.getYear(), datePicker.getMonth(), datePicker.getDay(), 23, 59, 59);
-				break;
-			case TIMESTAMP:
-				calendar.set(datePicker.getYear(), datePicker.getMonth(), datePicker.getDay(), timePicker.getHours(),
-						timePicker.getMinutes(), timePicker.getSeconds());
-				break;
-		}
-
+      calendar.set(datePicker.getYear(), datePicker.getMonth(), datePicker.getDay(), timePicker.getHours(), timePicker.getMinutes(), timePicker.getSeconds());
 		return Long.toString(calendar.getTimeInMillis() / 1000);
 	}
 }

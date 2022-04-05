@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -52,9 +52,9 @@ public class DateFieldEditor extends FieldEditor
 	private final static int FIELD_YEAR = 0;
 	private final static int FIELD_MONTH = 1;
 	private final static int FIELD_DAY = 2;
-	
+
 	private Combo[] dateElements;
-	
+
 	/** 
 	 * Constructor
 	 * 
@@ -67,9 +67,9 @@ public class DateFieldEditor extends FieldEditor
 		super(parameter, toolkit, parent);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.reporter.widgets.FieldEditor#createContent(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.reporter.widgets.FieldEditor#createContent(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createContent(Composite parent)
 	{
@@ -83,7 +83,7 @@ public class DateFieldEditor extends FieldEditor
 		layout.horizontalSpacing = WidgetHelper.INNER_SPACING;
 		layout.makeColumnsEqualWidth = true;
 		content.setLayout(layout);
-		
+
 		Calendar dateTime = Calendar.getInstance();
 		try 
 		{
@@ -93,7 +93,7 @@ public class DateFieldEditor extends FieldEditor
 		{
 			dateTime.setTime(new Date());
 		}
-		
+
       final String[] dateElementNames = { Messages.get().DateFieldEditor_Year, Messages.get().DateFieldEditor_Month, Messages.get().DateFieldEditor_Day };
 		dateElements = new Combo[dateElementNames.length];
 		for(int idx = 0; idx <  dateElementNames.length; idx++)
@@ -101,11 +101,13 @@ public class DateFieldEditor extends FieldEditor
 			Combo cb = WidgetHelper.createLabeledCombo(content, SWT.BORDER, dateElementNames[idx], WidgetHelper.DEFAULT_LAYOUT_DATA);
 			cb.setText(getDateTimeText(idx, dateTime));
 			cb.add("current"); //$NON-NLS-1$
+         cb.add("first"); //$NON-NLS-1$
+         cb.add("last"); //$NON-NLS-1$
+         cb.add("next"); //$NON-NLS-1$
 			cb.add("previous"); //$NON-NLS-1$
-			cb.add("next"); //$NON-NLS-1$
 			dateElements[idx] = cb;
 		}
-		
+
 		final ImageHyperlink link = toolkit.createImageHyperlink(content, SWT.NONE);
 		link.setImage(imageCache.add(Activator.getImageDescriptor("icons/calendar.png"))); //$NON-NLS-1$
 		link.setToolTipText(Messages.get().DateFieldEditor_Calendar);
@@ -120,13 +122,13 @@ public class DateFieldEditor extends FieldEditor
       gd.verticalAlignment = SWT.BOTTOM;
       gd.horizontalAlignment = SWT.LEFT;
       link.setLayoutData(gd);
-      
+
       return content;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.reporter.widgets.FieldEditor#getValue()
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.reporter.widgets.FieldEditor#getValue()
+    */
 	@Override
 	public String getValue()
 	{
@@ -142,23 +144,24 @@ public class DateFieldEditor extends FieldEditor
 	}
 
 	/**
-	 * Get dateTime text for Combo
-	 * @param comboName
-	 * @param dateTime
-	 */
-	private String getDateTimeText(int fieldIdx, Calendar dateTime)
+    * Get dateTime text for Combo
+    *
+    * @param fieldIndex field index
+    * @param calendar calendar
+    */
+	private String getDateTimeText(int fieldIndex, Calendar calendar)
 	{
 		int value;
-		switch (fieldIdx)
+		switch (fieldIndex)
 		{
 			case FIELD_YEAR:
-				value = dateTime.get(Calendar.YEAR);
+				value = calendar.get(Calendar.YEAR);
 				break;
 			case FIELD_MONTH:
-				value = dateTime.get(Calendar.MONTH) + 1;
+				value = calendar.get(Calendar.MONTH) + 1;
 				break;
 			case FIELD_DAY:
-				value = dateTime.get(Calendar.DAY_OF_MONTH);
+				value = calendar.get(Calendar.DAY_OF_MONTH);
 				break;
 			default:
 				value = 0;
@@ -166,7 +169,7 @@ public class DateFieldEditor extends FieldEditor
 		}
 		return String.valueOf(value);
 	}
-	
+
 	/**
 	 * Create popup calendar widget
 	 */
@@ -201,14 +204,14 @@ public class DateFieldEditor extends FieldEditor
             for (int idx = 0; idx <  dateElements.length; idx++)
                dateElements[idx].setText(getDateTimeText(idx, date));
          }
-         
+
          @Override
          public void widgetDefaultSelected(SelectionEvent e)
          {
             popup.close();
          }
       });
-	   
+
 	   Rectangle rect = getDisplay().map(anchor.getParent(), null, anchor.getBounds());
 	   popup.setLocation(rect.x, rect.y + rect.height);
 	   popup.open();
