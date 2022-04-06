@@ -10465,19 +10465,21 @@ void ClientSession::sendNotification(const NXCPMessage& request)
 
 /**
  * Send SNMP community list
- * DEFAULT_CREDENTIALS (-1) is zone ID reserved for default credentials
  */
 void ClientSession::sendNetworkCredList(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
-   int32_t zoneUIN = request.isFieldExist(VID_ZONE_UIN) ? request.getFieldAsInt32(VID_ZONE_UIN) : ALL_ZONES;
-   if (zoneUIN != ALL_ZONES) // specific zone
+   if (request.isFieldExist(VID_ZONE_UIN)) // specific zone
    {
-      shared_ptr<Zone> zone = FindZoneByUIN(zoneUIN);
-      if (zone != nullptr)
+      int32_t zoneUIN = request.getFieldAsInt32(VID_ZONE_UIN);
+      shared_ptr<Zone> zone;
+      if (zoneUIN != ALL_ZONES)
+         zone = FindZoneByUIN(zoneUIN);
+      if ((zoneUIN == ALL_ZONES) || (zone != nullptr))
       {
-         if (zone->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+         if (((zoneUIN == ALL_ZONES) && (m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONFIG)) ||
+             ((zone != nullptr) && zone->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ)))
          {
             TCHAR tag[16];
             switch(request.getCode())
@@ -10545,15 +10547,15 @@ void ClientSession::updateCommunityList(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
-   int32_t zoneUIN = request.isFieldExist(VID_ZONE_UIN) ? request.getFieldAsInt32(VID_ZONE_UIN) : -1;
+   int32_t zoneUIN = request.isFieldExist(VID_ZONE_UIN) ? request.getFieldAsInt32(VID_ZONE_UIN) : ALL_ZONES;
    shared_ptr<Zone> zone;
-   if (zoneUIN != -1)
+   if (zoneUIN != ALL_ZONES)
       zone = FindZoneByUIN(zoneUIN);
 
    uint32_t rcc;
-   if ((zoneUIN == -1) || (zone != nullptr))
+   if ((zoneUIN == ALL_ZONES) || (zone != nullptr))
    {
-      if (((zoneUIN == -1) && (m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONFIG)) ||
+      if (((zoneUIN == ALL_ZONES) && (m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONFIG)) ||
           ((zone != nullptr) && zone->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY)))
       {
          DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
@@ -15457,13 +15459,13 @@ void ClientSession::updateWellKnownPortList(const NXCPMessage& request)
 {
    int32_t zoneUIN = request.getFieldAsInt32(VID_ZONE_UIN);
    shared_ptr<Zone> zone;
-   if (zoneUIN != -1)
+   if (zoneUIN != ALL_ZONES)
       zone = FindZoneByUIN(zoneUIN);
 
    uint32_t rcc;
-   if ((zoneUIN == -1) || (zone != nullptr))
+   if ((zoneUIN == ALL_ZONES) || (zone != nullptr))
    {
-      if (((zoneUIN == -1) && (m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONFIG)) ||
+      if (((zoneUIN == ALL_ZONES) && (m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONFIG)) ||
           ((zone != nullptr) && zone->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY)))
       {
          TCHAR tag[16];

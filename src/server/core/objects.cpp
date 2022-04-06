@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Raden Solutions
+** Copyright (C) 2003-2022 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -282,45 +282,44 @@ void NetObjInsert(const shared_ptr<NetObj>& object, bool newObject, bool importe
       // Create tables for storing data collection values
       if (object->isDataCollectionTarget() && !(g_flags & AF_SINGLE_TABLE_PERF_DATA))
       {
-         TCHAR szQuery[256], szQueryTemplate[256];
-         UINT32 i;
+         TCHAR query[256], queryTemplate[256];
 
          DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
-         MetaDataReadStr(_T("IDataTableCreationCommand"), szQueryTemplate, 255, _T(""));
-         _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), szQueryTemplate, object->getId());
-         DBQuery(hdb, szQuery);
+         MetaDataReadStr(_T("IDataTableCreationCommand"), queryTemplate, 255, _T(""));
+         _sntprintf(query, sizeof(query) / sizeof(TCHAR), queryTemplate, object->getId());
+         DBQuery(hdb, query);
 
-         for(i = 0; i < 10; i++)
+         for(int i = 0; i < 10; i++)
          {
-            _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("IDataIndexCreationCommand_%d"), i);
-            MetaDataReadStr(szQuery, szQueryTemplate, 255, _T(""));
-            if (szQueryTemplate[0] != 0)
+            _sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("IDataIndexCreationCommand_%d"), i);
+            MetaDataReadStr(query, queryTemplate, 255, _T(""));
+            if (queryTemplate[0] != 0)
             {
-               _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), szQueryTemplate, object->getId(), object->getId());
-               DBQuery(hdb, szQuery);
+               _sntprintf(query, sizeof(query) / sizeof(TCHAR), queryTemplate, object->getId(), object->getId());
+               DBQuery(hdb, query);
             }
          }
 
-         for(i = 0; i < 10; i++)
+         for(int i = 0; i < 10; i++)
          {
-            _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("TDataTableCreationCommand_%d"), i);
-            MetaDataReadStr(szQuery, szQueryTemplate, 255, _T(""));
-            if (szQueryTemplate[0] != 0)
+            _sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("TDataTableCreationCommand_%d"), i);
+            MetaDataReadStr(query, queryTemplate, 255, _T(""));
+            if (queryTemplate[0] != 0)
             {
-               _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), szQueryTemplate, object->getId(), object->getId());
-               DBQuery(hdb, szQuery);
+               _sntprintf(query, sizeof(query) / sizeof(TCHAR), queryTemplate, object->getId(), object->getId());
+               DBQuery(hdb, query);
             }
          }
 
-         for(i = 0; i < 10; i++)
+         for(int i = 0; i < 10; i++)
          {
-            _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("TDataIndexCreationCommand_%d"), i);
-            MetaDataReadStr(szQuery, szQueryTemplate, 255, _T(""));
-            if (szQueryTemplate[0] != 0)
+            _sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("TDataIndexCreationCommand_%d"), i);
+            MetaDataReadStr(query, queryTemplate, 255, _T(""));
+            if (queryTemplate[0] != 0)
             {
-               _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), szQueryTemplate, object->getId(), object->getId());
-               DBQuery(hdb, szQuery);
+               _sntprintf(query, sizeof(query) / sizeof(TCHAR), queryTemplate, object->getId(), object->getId());
+               DBQuery(hdb, query);
             }
          }
 
