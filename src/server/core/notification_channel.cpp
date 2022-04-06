@@ -408,7 +408,7 @@ void NotificationChannel::checkHealth()
  */
 void NotificationChannel::send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body)
 {
-   if (m_confTemplate->needRecipient && IsBlankString(recipient))
+   if (((m_confTemplate == nullptr) || m_confTemplate->needRecipient) && IsBlankString(recipient))
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("Driver for channel %s requires recipient, but message has no recipient (message dropped)"), m_name);
       return;
