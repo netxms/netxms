@@ -10465,13 +10465,14 @@ void ClientSession::sendNotification(const NXCPMessage& request)
 
 /**
  * Send SNMP community list
+ * DEFAULT_CREDENTIALS (-1) is zone ID reserved for default credentials
  */
 void ClientSession::sendNetworkCredList(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
-   int32_t zoneUIN = request.isFieldExist(VID_ZONE_UIN) ? request.getFieldAsInt32(VID_ZONE_UIN) : -1;
-   if (zoneUIN != -1) // specific zone
+   int32_t zoneUIN = request.isFieldExist(VID_ZONE_UIN) ? request.getFieldAsInt32(VID_ZONE_UIN) : ALL_ZONES;
+   if (zoneUIN != ALL_ZONES) // specific zone
    {
       shared_ptr<Zone> zone = FindZoneByUIN(zoneUIN);
       if (zone != nullptr)

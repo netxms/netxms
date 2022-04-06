@@ -106,6 +106,9 @@ template class NXCORE_EXPORTABLE SynchronizedHashSet<uint32_t>;
 #define CHECKPOINT_SNMP_PORT     260
 #define DEFAULT_AFFINITY_MASK    0xFFFFFFFF
 
+#define DEFAULT_CREDENTIALS -1
+#define ALL_ZONES           -2
+
 #define MAX_DEVICE_SESSIONS   256
 
 #define PING_TIME_TIMEOUT     10000
