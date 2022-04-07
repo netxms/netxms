@@ -2023,6 +2023,24 @@ Button.loginSelector[PUSH]:pressed:default {
    background-image: none;
 }
 
+Button.HeaderButton[PUSH] {
+   border: none;
+   border-radius: 4px;
+   background-color: rgb(17,60,81);
+   padding: 4px 4px;
+   background-image: none;
+   animation: hoverOut 500ms ease-out;
+   cursor: pointer;
+}
+
+Button.HeaderButton[PUSH]:hover {
+   background-color: rgb(71,113,134);
+}
+
+Button.HeaderButton[PUSH]:pressed {
+   background-color: rgb(71,113,134);
+}
+
 Link.login {
   font: 16px "Segoe UI", "Liberation Sans", Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
 }
@@ -2068,6 +2086,11 @@ Composite.CardHeader {
 Label.CardHeader {
    background-color: #ffffff;
    font: bold 16px "Metropolis Semibold", "Segoe UI", "Liberation Sans", Verdana, Helvetica, sans-serif;
+}
+
+Label.ServerName {
+   border-radius: 4px;
+   padding: 4px 4px;
 }
 
 /* FileUpload */

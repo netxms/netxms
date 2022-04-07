@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Raden Solutions
+ * Copyright (C) 2003-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,14 +28,24 @@ import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.ControlListener;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
-import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.MouseAdapter;
+import org.eclipse.swt.events.MouseEvent;
+import org.eclipse.swt.events.MouseMoveListener;
+import org.eclipse.swt.events.MouseTrackListener;
+import org.eclipse.swt.events.PaintEvent;
+import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.graphics.Rectangle;
+import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
@@ -49,16 +59,21 @@ import org.eclipse.swt.widgets.ToolItem;
 import org.netxms.client.NXCSession;
 import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.base.dialogs.AboutDialog;
 import org.netxms.nxmc.base.menus.UserMenuManager;
 import org.netxms.nxmc.base.preferencepages.Appearance;
 import org.netxms.nxmc.base.views.Perspective;
 import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.widgets.MessageArea;
 import org.netxms.nxmc.base.widgets.MessageAreaHolder;
+import org.netxms.nxmc.base.widgets.ServerClock;
 import org.netxms.nxmc.keyboard.KeyStroke;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.ThemeEngine;
+import org.netxms.nxmc.tools.ColorConverter;
+import org.netxms.nxmc.tools.ExternalWebBrowser;
+import org.netxms.nxmc.tools.FontTools;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
@@ -73,14 +88,19 @@ public class MainWindow extends ApplicationWindow implements MessageAreaHolder
 
    private Composite windowContent;
    private ToolBar mainMenu;
-   private ToolBar toolsMenu;
+   private Composite headerArea;
    private MessageArea messageArea;
    private Composite perspectiveArea;
    private List<Perspective> perspectives;
    private Perspective currentPerspective;
    private Perspective pinboardPerspective;
    private boolean verticalLayout;
+   private boolean showServerClock;
+   private Composite serverClockArea;
+   private ServerClock serverClock;
+   private HeaderButton userMenuButton;
    private UserMenuManager userMenuManager;
+   private Font headerFontBold;
 
    /**
     * @param parentShell
@@ -88,8 +108,9 @@ public class MainWindow extends ApplicationWindow implements MessageAreaHolder
    public MainWindow(Shell parentShell)
    {
       super(parentShell);
-      addStatusLine();
-      verticalLayout = PreferenceStore.getInstance().getAsBoolean("Appearance.VerticalLayout", true);
+      PreferenceStore ps = PreferenceStore.getInstance();
+      verticalLayout = ps.getAsBoolean("Appearance.VerticalLayout", true);
+      showServerClock = ps.getAsBoolean("Appearance.ShowServerClock", false);
       userMenuManager = new UserMenuManager();
    }
 
@@ -100,7 +121,9 @@ public class MainWindow extends ApplicationWindow implements MessageAreaHolder
    protected void configureShell(Shell shell)
    {
       super.configureShell(shell);
-      shell.setText("NetXMS Management Console");
+
+      NXCSession session = Registry.getSession();
+      shell.setText(String.format(i18n.tr("NetXMS Management Client - %s"), session.getUserName() + "@" + session.getServerAddress()));
 
       PreferenceStore ps = PreferenceStore.getInstance();
       shell.setSize(ps.getAsPoint("MainWindow.Size", 600, 400));
@@ -126,7 +149,11 @@ public class MainWindow extends ApplicationWindow implements MessageAreaHolder
    @Override
    protected Control createContents(Composite parent)
    {
-      Font font = ThemeEngine.getFont("TopMenu");
+      NXCSession session = Registry.getSession();
+
+      Font perspectiveSwitcherFont = ThemeEngine.getFont("Window.PerspectiveSwitcher");
+      Font headerFont = ThemeEngine.getFont("Window.Header");
+      headerFontBold = FontTools.createAdjustedFont(headerFont, 2, SWT.BOLD);
 
       windowContent = new Composite(parent, SWT.NONE);
 
@@ -137,13 +164,141 @@ public class MainWindow extends ApplicationWindow implements MessageAreaHolder
       layout.numColumns = verticalLayout ? 2 : 1;
       windowContent.setLayout(layout);
 
+      // Header
+      Color headerBackgroundColor = ThemeEngine.getBackgroundColor("Window.Header");
+      Color headerForegroundColor = ThemeEngine.getForegroundColor("Window.Header");
+
+      headerArea = new Composite(windowContent, SWT.NONE);
+      headerArea.setBackground(headerBackgroundColor);
+      GridData gd = new GridData();
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalAlignment = SWT.FILL;
+      gd.horizontalSpan = verticalLayout ? 2 : 1;
+      headerArea.setLayoutData(gd);
+      layout = new GridLayout();
+      layout.marginWidth = 5;
+      layout.marginHeight = 5;
+      layout.numColumns = 14;
+      headerArea.setLayout(layout);
+
+      Label appLogo = new Label(headerArea, SWT.CENTER);
+      appLogo.setBackground(headerBackgroundColor);
+      appLogo.setImage(ResourceManager.getImage("icons/app_logo.png"));
+      gd = new GridData(SWT.LEFT, SWT.CENTER, false, false);
+      gd.horizontalIndent = 8;
+      appLogo.setLayoutData(gd);
+
+      Label title = new Label(headerArea, SWT.LEFT);
+      title.setBackground(headerBackgroundColor);
+      title.setForeground(headerForegroundColor);
+      title.setFont(headerFontBold);
+      title.setText("NetXMS");
+
+      Label filler = new Label(headerArea, SWT.CENTER);
+      filler.setBackground(headerBackgroundColor);
+      filler.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
+
+      serverClockArea = new Composite(headerArea, SWT.NONE);
+      serverClockArea.setBackground(headerBackgroundColor);
+      serverClockArea.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, false, true));
+      serverClockArea.setLayout(new FillLayout());
+
+      if (showServerClock)
+      {
+         createServerClockWidget();
+      }
+
+      new Spacer(headerArea, 32);
+
+      Composite serverNameHolder = new Canvas(headerArea, SWT.NONE);
+      FillLayout serverNameLayout = new FillLayout();
+      serverNameLayout.marginHeight = 4;
+      serverNameLayout.marginWidth = 4;
+      serverNameHolder.setLayout(serverNameLayout);
+      serverNameHolder.setBackground(headerBackgroundColor);
+
+      Label serverName = new Label(serverNameHolder, SWT.CENTER);
+      serverName.setBackground(headerBackgroundColor);
+      serverName.setForeground(headerForegroundColor);
+      serverName.setFont(headerFont);
+      serverName.setText(session.getServerName());
+      serverName.setToolTipText(i18n.tr("Server name"));
+      RGB serverColor = ColorConverter.parseColorDefinition(session.getServerColor());
+      if (serverColor != null)
+      {
+         final Color color = new Color(serverColor);
+         serverName.setBackground(color);
+
+         if (!ColorConverter.isDarkColor(serverColor))
+         {
+            serverName.setForeground(serverName.getDisplay().getSystemColor(SWT.COLOR_BLACK));
+         }
+
+         serverNameHolder.addPaintListener(new PaintListener() {
+            @Override
+            public void paintControl(PaintEvent e)
+            {
+               e.gc.setBackground(color);
+               Rectangle r = serverNameHolder.getClientArea();
+               e.gc.fillRoundRectangle(0, 0, r.width, r.height, 8, 8);
+            }
+         });
+      }
+
+      new Spacer(headerArea, 32);
+
+      userMenuButton = new HeaderButton(headerArea, "icons/main-window/user.png", i18n.tr("User properties"), new Runnable() {
+         @Override
+         public void run()
+         {
+            Rectangle bounds = userMenuButton.getBounds();
+            showUserMenu(headerArea.toDisplay(new Point(bounds.x, bounds.y + bounds.height + 2)));
+         }
+      });
+
+      Label userInfo = new Label(headerArea, SWT.LEFT);
+      userInfo.setBackground(headerBackgroundColor);
+      userInfo.setForeground(headerForegroundColor);
+      userInfo.setFont(headerFont);
+      userInfo.setText(session.getUserName() + "@" + session.getServerAddress());
+      userInfo.setToolTipText(i18n.tr("Login name and server address"));
+
+      new Spacer(headerArea, 32);
+
+      new HeaderButton(headerArea, "icons/main-window/preferences.png", i18n.tr("Client preferences"), new Runnable() {
+         @Override
+         public void run()
+         {
+            showPreferences();
+         }
+      });
+
+      new HeaderButton(headerArea, "icons/main-window/help.png", i18n.tr("Open user manual"), new Runnable() {
+         @Override
+         public void run()
+         {
+            ExternalWebBrowser.open("https://netxms.org/documentation/adminguide/");
+         }
+      });
+
+      new HeaderButton(headerArea, "icons/main-window/about.png", i18n.tr("About NetXMS Management Client"), new Runnable() {
+         @Override
+         public void run()
+         {
+            new AboutDialog(getShell()).open();
+         }
+      });
+
+      new Spacer(headerArea, 8);
+
+      // Perspective switcher
       Composite menuArea = new Composite(windowContent, SWT.NONE);
       layout = new GridLayout();
       layout.marginWidth = 0;
       layout.marginHeight = 0;
       layout.numColumns = verticalLayout ? 1 : 2;
       menuArea.setLayout(layout);
-      GridData gd = new GridData();
+      gd = new GridData();
       if (verticalLayout)
       {
          gd.grabExcessVerticalSpace = true;
@@ -157,12 +312,8 @@ public class MainWindow extends ApplicationWindow implements MessageAreaHolder
       }
       menuArea.setLayoutData(gd);
 
-      Label appLogo = new Label(menuArea, SWT.CENTER);
-      appLogo.setImage(ResourceManager.getImage("icons/app_logo.png"));
-      appLogo.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, false, false));
-
       mainMenu = new ToolBar(menuArea, SWT.FLAT | SWT.WRAP | SWT.RIGHT | (verticalLayout ? SWT.VERTICAL : SWT.HORIZONTAL));
-      mainMenu.setFont(font);
+      mainMenu.setFont(perspectiveSwitcherFont);
       gd = new GridData();
       if (verticalLayout)
       {
@@ -175,36 +326,6 @@ public class MainWindow extends ApplicationWindow implements MessageAreaHolder
          gd.horizontalAlignment = SWT.FILL;
       }
       mainMenu.setLayoutData(gd);
-
-      toolsMenu = new ToolBar(menuArea, SWT.FLAT | SWT.WRAP | SWT.RIGHT | (verticalLayout ? SWT.VERTICAL : SWT.HORIZONTAL));
-      toolsMenu.setFont(font);
-
-      ToolItem userMenu = new ToolItem(toolsMenu, SWT.PUSH);
-      userMenu.setImage(ResourceManager.getImage("icons/user-menu.png"));
-      NXCSession session = Registry.getSession();
-      if (verticalLayout)
-         userMenu.setToolTipText(session.getUserName() + "@" + session.getServerName());
-      else
-         userMenu.setText(session.getUserName() + "@" + session.getServerName());
-      userMenu.addSelectionListener(new SelectionAdapter() {
-         @Override
-         public void widgetSelected(SelectionEvent e)
-         {
-            Rectangle bounds = userMenu.getBounds();
-            showUserMenu(toolsMenu.toDisplay(verticalLayout ? new Point(bounds.x + bounds.width + 2, bounds.y) : new Point(bounds.x, bounds.y + bounds.height + 2)));
-         }
-      });
-
-      ToolItem appPreferencesMenu = new ToolItem(toolsMenu, SWT.PUSH);
-      appPreferencesMenu.setImage(ResourceManager.getImage("icons/preferences.png"));
-      appPreferencesMenu.setToolTipText("Console preferences");
-      appPreferencesMenu.addSelectionListener(new SelectionAdapter() {
-         @Override
-         public void widgetSelected(SelectionEvent e)
-         {
-            showPreferences();
-         }
-      });
 
       messageArea = new MessageArea(windowContent, SWT.NONE);
       gd = new GridData();
@@ -251,6 +372,14 @@ public class MainWindow extends ApplicationWindow implements MessageAreaHolder
       String motd = session.getMessageOfTheDay();
       if ((motd != null) && !motd.isEmpty())
          addMessage(MessageArea.INFORMATION, session.getMessageOfTheDay());
+
+      getShell().addDisposeListener(new DisposeListener() {
+         @Override
+         public void widgetDisposed(DisposeEvent e)
+         {
+            headerFontBold.dispose();
+         }
+      });
 
       return windowContent;
    }
@@ -403,6 +532,37 @@ public class MainWindow extends ApplicationWindow implements MessageAreaHolder
       };
       dlg.setBlockOnOpen(true);
       dlg.open();
+
+      showServerClock = PreferenceStore.getInstance().getAsBoolean("Appearance.ShowServerClock", false);
+      if (showServerClock && (serverClock == null))
+      {
+         createServerClockWidget();
+         headerArea.layout(true);
+      }
+      else if (!showServerClock && (serverClock != null))
+      {
+         serverClock.dispose();
+         serverClock = null;
+         headerArea.layout(true);
+      }
+   }
+
+   /**
+    * Create server clock widget
+    */
+   private void createServerClockWidget()
+   {
+      serverClock = new ServerClock(serverClockArea, SWT.NONE);
+      serverClock.setBackground(serverClockArea.getBackground());
+      serverClock.setForeground(ThemeEngine.getForegroundColor("Window.Header"));
+      serverClock.setFont(headerFontBold);
+      serverClock.setDisplayFormatChangeListener(new Runnable() {
+         @Override
+         public void run()
+         {
+            headerArea.layout();
+         }
+      });
    }
 
    /**
@@ -451,5 +611,161 @@ public class MainWindow extends ApplicationWindow implements MessageAreaHolder
    public void clearMessages()
    {
       messageArea.clearMessages();
+   }
+
+   /**
+    * Spacer composite
+    */
+   private static class Spacer extends Composite
+   {
+      private int width;
+
+      public Spacer(Composite parent, int width)
+      {
+         super(parent, SWT.NONE);
+         this.width = width;
+         setBackground(ThemeEngine.getBackgroundColor("Window.Header"));
+         setLayoutData(new GridData(SWT.CENTER, SWT.FILL, false, true));
+      }
+
+      /**
+       * @see org.eclipse.swt.widgets.Control#computeSize(int, int, boolean)
+       */
+      @Override
+      public Point computeSize(int wHint, int hHint, boolean changed)
+      {
+         return new Point(width, (hHint == SWT.DEFAULT) ? 20 : hHint);
+      }
+   }
+
+   /**
+    * Header button
+    */
+   private static class HeaderButton extends Canvas
+   {
+      private Image image;
+      private boolean highlight = false;
+      private boolean mouseDown = false;
+
+      /**
+       * Create header button.
+       *
+       * @param parent parent composite
+       * @param imagePath path to image
+       * @param handler selection handler
+       */
+      HeaderButton(Composite parent, String imagePath, String tooltip, Runnable handler)
+      {
+         super(parent, SWT.NONE);
+
+         setToolTipText(tooltip);
+         setBackground(ThemeEngine.getBackgroundColor("Window.Header"));
+         final Color highlightColor = ThemeEngine.getBackgroundColor("Window.Header.Highlight");
+
+         image = ResourceManager.getImage(imagePath);
+
+         addDisposeListener(new DisposeListener() {
+            @Override
+            public void widgetDisposed(DisposeEvent e)
+            {
+               image.dispose();
+            }
+         });
+
+         addPaintListener(new PaintListener() {
+            @Override
+            public void paintControl(PaintEvent e)
+            {
+               if (highlight)
+               {
+                  Rectangle rect = getClientArea();
+                  e.gc.setBackground(highlightColor);
+                  e.gc.fillRoundRectangle(0, 0, rect.width, rect.height, 8, 8);
+               }
+               e.gc.drawImage(image, 2, 2);
+            }
+         });
+
+         addMouseTrackListener(new MouseTrackListener() {
+            @Override
+            public void mouseEnter(MouseEvent e)
+            {
+               if (!highlight)
+               {
+                  highlight = true;
+                  redraw();
+               }
+            }
+
+            @Override
+            public void mouseExit(MouseEvent e)
+            {
+               if (highlight)
+               {
+                  highlight = false;
+                  redraw();
+               }
+               mouseDown = false;
+            }
+
+            @Override
+            public void mouseHover(MouseEvent e)
+            {
+               if (!highlight)
+               {
+                  highlight = true;
+                  redraw();
+               }
+            }
+         });
+
+         addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseUp(MouseEvent e)
+            {
+               if (mouseDown)
+               {
+                  mouseDown = false;
+                  handler.run();
+               }
+            }
+
+            @Override
+            public void mouseDown(MouseEvent e)
+            {
+               mouseDown = true;
+            }
+         });
+
+         addMouseMoveListener(new MouseMoveListener() {
+            @Override
+            public void mouseMove(MouseEvent e)
+            {
+               if (!mouseDown && !highlight)
+                  return;
+
+               Rectangle bounds = getBounds();
+               if ((e.x < 0) || (e.y < 0) || (e.x > bounds.width) || (e.y > bounds.height))
+               {
+                  mouseDown = false;
+                  if (highlight)
+                  {
+                     highlight = false;
+                     redraw();
+                  }
+               }
+            }
+         });
+      }
+
+      /**
+       * @see org.eclipse.swt.widgets.Control#computeSize(int, int, boolean)
+       */
+      @Override
+      public Point computeSize(int wHint, int hHint, boolean changed)
+      {
+         Rectangle r = image.getBounds();
+         return new Point((wHint == SWT.DEFAULT) ? r.width + 4 : wHint, (hHint == SWT.DEFAULT) ? r.height + 4 : hHint);
+      }
    }
 }

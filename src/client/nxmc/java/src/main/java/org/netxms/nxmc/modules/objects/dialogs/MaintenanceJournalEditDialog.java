@@ -1,44 +1,43 @@
+/**
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2022 Raden Solutions
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
 package org.netxms.nxmc.modules.objects.dialogs;
 
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Set;
 import org.eclipse.jface.dialogs.Dialog;
-import org.eclipse.jface.window.IShellProvider;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
-import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Group;
-import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
-import org.eclipse.swt.widgets.Text;
-import org.netxms.client.MaintenanceJournalEntry;
-import org.netxms.client.NXCSession;
-import org.netxms.client.objects.AbstractObject;
-import org.netxms.client.objects.Interface;
-import org.netxms.client.objects.Rack;
-import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.widgets.LabeledText;
-import org.netxms.nxmc.modules.objects.widgets.ObjectSelector;
-import org.netxms.nxmc.modules.objects.widgets.PatchPanelSelector;
-import org.netxms.nxmc.tools.MessageDialogHelper;
+import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.tools.WidgetHelper;
+import org.xnap.commons.i18n.I18n;
 
 /**
  * Dialog to create/edit maintenance journal entry
  */
 public class MaintenanceJournalEditDialog extends Dialog
 {
-   private NXCSession session;
-   private String title;
+   private I18n i18n = LocalizationHelper.getI18n(MaintenanceJournalEditDialog.class);
    private String objectName;
-   private String entryDesc;
-
+   private String description;
    private LabeledText descriptionText;
 
    /**
@@ -50,12 +49,8 @@ public class MaintenanceJournalEditDialog extends Dialog
    public MaintenanceJournalEditDialog(Shell parentShell, String objectName, String description)
    {
       super(parentShell);
-
       this.objectName = objectName;
-      entryDesc = description != null ? description : "";
-
-      title = entryDesc != "" ? "Edit Maintenance Journal Entry" : "Create Maintenance Journal Entry";
-      session = Registry.getSession();
+      this.description = (description != null) ? description : "";
    }
 
    /**
@@ -65,7 +60,7 @@ public class MaintenanceJournalEditDialog extends Dialog
    protected void configureShell(Shell newShell)
    {
       super.configureShell(newShell);
-      newShell.setText(title);
+      newShell.setText(description.isEmpty() ? i18n.tr("Create Maintenance Journal Entry") : i18n.tr("Edit Maintenance Journal Entry"));
    }
 
    /**
@@ -88,7 +83,7 @@ public class MaintenanceJournalEditDialog extends Dialog
       gd.verticalAlignment = SWT.FILL;
 
       LabeledText objectText = new LabeledText(dialogArea, SWT.NONE);
-      objectText.setLabel("Object");
+      objectText.setLabel(i18n.tr("Object"));
       objectText.setText(objectName);
       objectText.setLayoutData(gd);
       objectText.getTextControl().setEditable(false);
@@ -101,8 +96,8 @@ public class MaintenanceJournalEditDialog extends Dialog
       gd.verticalAlignment = SWT.FILL;
 
       descriptionText = new LabeledText(dialogArea, SWT.NONE, SWT.MULTI | SWT.BORDER | SWT.WRAP | SWT.V_SCROLL);
-      descriptionText.setLabel("Description");
-      descriptionText.setText(entryDesc);
+      descriptionText.setLabel(i18n.tr("Description"));
+      descriptionText.setText(description);
       descriptionText.setLayoutData(gd);
 
       return dialogArea;
@@ -114,13 +109,13 @@ public class MaintenanceJournalEditDialog extends Dialog
    @Override
    protected void okPressed()
    {
-      if (entryDesc.equals(descriptionText.getText()))
+      if (description.equals(descriptionText.getText()))
       {
          super.cancelPressed();
       }
       else
       {
-         entryDesc = descriptionText.getText();
+         description = descriptionText.getText();
          super.okPressed();
       }
    }
@@ -132,7 +127,6 @@ public class MaintenanceJournalEditDialog extends Dialog
     */
    public String getDescription()
    {
-      return entryDesc;
+      return description;
    }
-
 }

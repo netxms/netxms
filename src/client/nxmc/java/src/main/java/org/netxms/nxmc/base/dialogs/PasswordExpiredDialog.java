@@ -21,8 +21,11 @@ package org.netxms.nxmc.base.dialogs;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -72,10 +75,18 @@ public class PasswordExpiredDialog extends Dialog
 		dialogArea.setLayout(layout);
 
 		Label pic = new Label(dialogArea, SWT.NONE);
-      pic.setImage(ResourceManager.getImageDescriptor("icons/password.png").createImage()); //$NON-NLS-1$
+      final Image image = ResourceManager.getImage("icons/password.png");
+      pic.setImage(image);
 		GridData gd = new GridData();
 		gd.verticalAlignment = SWT.TOP;
 		pic.setLayoutData(gd);
+      pic.addDisposeListener(new DisposeListener() {
+         @Override
+         public void widgetDisposed(DisposeEvent e)
+         {
+            image.dispose();
+         }
+      });
 
 		Composite editArea = new Composite(dialogArea, SWT.NONE);
 		GridLayout editAreaLayout = new GridLayout();

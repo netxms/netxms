@@ -20,6 +20,7 @@ package org.netxms.nxmc.resources;
 
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.ImageData;
 
 /**
  * Resource manager
@@ -54,5 +55,17 @@ public final class ResourceManager
    {
       ImageDescriptor d = getImageDescriptor(path);
       return (d != null) ? d.createImage() : null;
+   }
+
+   /**
+    * Get image data from resources.
+    * 
+    * @param path image path
+    * @return image data
+    */
+   public static ImageData getImageData(String path)
+   {
+      ImageDescriptor d = getImageDescriptor(path);
+      return (d != null) ? d.getImageData(100) : null;
    }
 }

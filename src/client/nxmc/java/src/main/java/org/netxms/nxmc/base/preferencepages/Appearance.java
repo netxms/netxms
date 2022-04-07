@@ -36,6 +36,7 @@ public class Appearance extends PreferencePage
    private static final I18n i18n = LocalizationHelper.getI18n(Appearance.class);
 
    private Button checkVerticalLayout;
+   private Button checkShowServerClock;
 
    public Appearance()
    {
@@ -58,8 +59,12 @@ public class Appearance extends PreferencePage
       dialogArea.setLayout(layout);
 
       checkVerticalLayout = new Button(dialogArea, SWT.CHECK);
-      checkVerticalLayout.setText("Vertical layout of perspective switcher");
+      checkVerticalLayout.setText("&Vertical layout of perspective switcher");
       checkVerticalLayout.setSelection(settings.getAsBoolean("Appearance.VerticalLayout", true));
+
+      checkShowServerClock = new Button(dialogArea, SWT.CHECK);
+      checkShowServerClock.setText("Show server &clock");
+      checkShowServerClock.setSelection(settings.getAsBoolean("Appearance.ShowServerClock", false));
 
       return dialogArea;
    }
@@ -71,6 +76,7 @@ public class Appearance extends PreferencePage
    {
       PreferenceStore settings = PreferenceStore.getInstance();
       settings.set("Appearance.VerticalLayout", checkVerticalLayout.getSelection());
+      settings.set("Appearance.ShowServerClock", checkShowServerClock.getSelection());
    }
 
    /**
