@@ -132,8 +132,12 @@ public class ResponsibleUsers extends PropertyPage
                element = ((Item)element).getData();
             if (property.equals("tag"))
             {
-               ((ResponsibleUserInfo)element).tag = tags.get((Integer)value);
-               viewer.update(element, new String[] { property });
+               int index = (Integer)value;
+               if (index >= 0)
+               {
+                  ((ResponsibleUserInfo)element).tag = tags.get(index);
+                  viewer.update(element, new String[] { property });
+               }
             }
          }
 
