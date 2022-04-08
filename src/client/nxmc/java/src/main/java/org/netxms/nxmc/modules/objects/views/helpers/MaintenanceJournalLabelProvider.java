@@ -40,10 +40,10 @@ public class MaintenanceJournalLabelProvider extends LabelProvider implements IT
    /**
     * Physical link label provider constructor
     */
-   public MaintenanceJournalLabelProvider(ColumnViewer _viewer)
+   public MaintenanceJournalLabelProvider(ColumnViewer viewer)
    {
       session = Registry.getSession();
-      viewer = _viewer;
+      this.viewer = viewer;
    }
 
    /**

@@ -53,12 +53,14 @@ import org.netxms.nxmc.modules.networkmaps.views.PredefinedMap;
 import org.netxms.nxmc.modules.objects.views.ChassisView;
 import org.netxms.nxmc.modules.objects.views.Dot1xStatusView;
 import org.netxms.nxmc.modules.objects.views.EntityMIBView;
+import org.netxms.nxmc.modules.objects.views.HardwareInventoryView;
 import org.netxms.nxmc.modules.objects.views.InterfacesView;
 import org.netxms.nxmc.modules.objects.views.MaintenanceJournalView;
 import org.netxms.nxmc.modules.objects.views.ObjectBrowser;
 import org.netxms.nxmc.modules.objects.views.ObjectOverviewView;
 import org.netxms.nxmc.modules.objects.views.PhysicalLinkView;
 import org.netxms.nxmc.modules.objects.views.RackView;
+import org.netxms.nxmc.modules.objects.views.SoftwareInventoryView;
 import org.netxms.nxmc.modules.objects.views.SwitchForwardingDatabaseView;
 import org.netxms.nxmc.modules.snmp.views.MibExplorer;
 import org.netxms.nxmc.modules.worldmap.views.ObjectGeoLocationView;
@@ -122,10 +124,11 @@ public abstract class ObjectsPerspective extends Perspective
       addMainView(new BusinessServiceChecksView());
       addMainView(new ChassisView());
       addMainView(new DataCollectionView());
-      addMainView(new SummaryDataCollectionView());
       addMainView(new Dot1xStatusView());
       addMainView(new EntityMIBView());
+      addMainView(new HardwareInventoryView());
       addMainView(new InterfacesView());
+      addMainView(new MaintenanceJournalView());
       addMainView(new MibExplorer());
       addMainView(new ObjectGeoLocationView());
       addMainView(new ObjectOverviewView());
@@ -133,8 +136,9 @@ public abstract class ObjectsPerspective extends Perspective
       addMainView(new PhysicalLinkView());
       addMainView(new PredefinedMap());
       addMainView(new RackView());
+      addMainView(new SoftwareInventoryView());
+      addMainView(new SummaryDataCollectionView());
       addMainView(new SwitchForwardingDatabaseView());
-      addMainView(new MaintenanceJournalView());
    }
 
    /**
