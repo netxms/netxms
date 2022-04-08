@@ -154,6 +154,9 @@ public class BusinessServiceCheckLabelProvider extends LabelProvider implements 
     */
    public String getOriginName(BusinessServiceCheck check)
    {
+      if (check.getPrototypeServiceId() == 0)
+         return "";
+      
       StringBuilder name = new StringBuilder();
       AbstractObject object = session.findObjectById(check.getPrototypeServiceId());
       if (object != null)
