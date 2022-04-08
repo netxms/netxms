@@ -35,21 +35,20 @@ public class DiscoveryConfig
    public final static int DISCOVERY_TYPE_PASSIVE = 1;
    public final static int DISCOVERY_TYPE_ACTIVE = 2;
    public final static int DISCOVERY_TYPE_ACTIVE_PASSIVE = 3;
-   
+
    public final static int DEFAULT_ACTIVE_INTERVAL = 7200;
-   
-   
+
 	private int discoveryType;
 	private boolean useSnmpTraps;
 	private boolean useSyslog;
 	private int filterFlags;
-	private String filter;
+	private String filterScript;
    private int passiveDiscoveryPollInterval;
    private int activeDiscoveryPollInterval;
    private String activeDiscoveryPollSchedule;
 	private List<InetAddressListElement> targets;
 	private List<InetAddressListElement> addressFilter;
-	
+
 	/**
 	 * Create empty object
 	 */
@@ -69,24 +68,24 @@ public class DiscoveryConfig
 	public static DiscoveryConfig load(NXCSession session) throws NXCException, IOException
 	{
 		DiscoveryConfig config = new DiscoveryConfig();
-		
+
 		Map<String, ServerVariable> variables = session.getServerVariables();
-		
+
 		config.discoveryType = getInteger(variables, "NetworkDiscovery.Type", 0);
-		config.useSnmpTraps = getBoolean(variables, "UseSNMPTrapsForDiscovery", false); //$NON-NLS-1$
-      config.useSyslog = getBoolean(variables, "UseSyslogForDiscovery", false); //$NON-NLS-1$
-		config.filterFlags = getInteger(variables, "DiscoveryFilterFlags", 0); //$NON-NLS-1$
-		config.filter = getString(variables, "DiscoveryFilter", "none"); //$NON-NLS-1$ //$NON-NLS-2$
+      config.useSnmpTraps = getBoolean(variables, "NetworkDiscovery.UseSNMPTraps", false); //$NON-NLS-1$
+      config.useSyslog = getBoolean(variables, "NetworkDiscovery.UseSyslog", false); //$NON-NLS-1$
+      config.filterFlags = getInteger(variables, "NetworkDiscovery.Filter.Flags", 0); //$NON-NLS-1$
+      config.filterScript = getString(variables, "NetworkDiscovery.Filter.Script", "none"); //$NON-NLS-1$ //$NON-NLS-2$
       config.passiveDiscoveryPollInterval = getInteger(variables, "NetworkDiscovery.PassiveDiscovery.Interval", 900); //$NON-NLS-1$ //$NON-NLS-2$
       config.activeDiscoveryPollInterval = getInteger(variables, "NetworkDiscovery.ActiveDiscovery.Interval", DEFAULT_ACTIVE_INTERVAL); //$NON-NLS-1$ //$NON-NLS-2$
 	   config.activeDiscoveryPollSchedule = getString(variables, "NetworkDiscovery.ActiveDiscovery.Schedule", ""); //$NON-NLS-1$ //$NON-NLS-2$
-		
+
 		config.addressFilter = session.getAddressList(NXCSession.ADDRESS_LIST_DISCOVERY_FILTER);
 		config.targets = session.getAddressList(NXCSession.ADDRESS_LIST_DISCOVERY_TARGETS);
-		
+
 		return config;
 	}
-	
+
 	/**
 	 * Get boolean value from server variables
 	 * 
@@ -159,17 +158,17 @@ public class DiscoveryConfig
 	public void save(NXCSession session) throws NXCException, IOException
 	{
 		session.setServerVariable("NetworkDiscovery.Type", Integer.toString(discoveryType)); //$NON-NLS-1$ 	
-      session.setServerVariable("UseSNMPTrapsForDiscovery", useSnmpTraps ? "1" : "0"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-      session.setServerVariable("UseSyslogForDiscovery", useSyslog ? "1" : "0"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-		session.setServerVariable("DiscoveryFilterFlags", Integer.toString(filterFlags)); //$NON-NLS-1$
-		session.setServerVariable("DiscoveryFilter", filter); //$NON-NLS-1$
+      session.setServerVariable("NetworkDiscovery.UseSNMPTraps", useSnmpTraps ? "1" : "0"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+      session.setServerVariable("NetworkDiscovery.UseSyslog", useSyslog ? "1" : "0"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+      session.setServerVariable("NetworkDiscovery.Filter.Flags", Integer.toString(filterFlags)); //$NON-NLS-1$
+      session.setServerVariable("NetworkDiscovery.Filter.Script", filterScript); //$NON-NLS-1$
       session.setServerVariable("NetworkDiscovery.PassiveDiscovery.Interval", Integer.toString(passiveDiscoveryPollInterval)); //$NON-NLS-1$
       session.setServerVariable("NetworkDiscovery.ActiveDiscovery.Interval", Integer.toString(activeDiscoveryPollInterval)); //$NON-NLS-1$
       session.setServerVariable("NetworkDiscovery.ActiveDiscovery.Schedule", activeDiscoveryPollSchedule); //$NON-NLS-1$
-		
+
 		session.setAddressList(NXCSession.ADDRESS_LIST_DISCOVERY_FILTER, addressFilter);
 		session.setAddressList(NXCSession.ADDRESS_LIST_DISCOVERY_TARGETS, targets);
-		
+
 		session.resetServerComponent(NXCSession.SERVER_COMPONENT_DISCOVERY_MANAGER);
 	}
 
@@ -190,19 +189,23 @@ public class DiscoveryConfig
 	}
 
 	/**
-	 * @return the filter
-	 */
-	public String getFilter()
+    * Get filter script name.
+    *
+    * @return filter script name
+    */
+	public String getFilterScript()
 	{
-		return filter;
+		return filterScript;
 	}
 
 	/**
-	 * @param filter the filter to set
-	 */
-	public void setFilter(String filter)
+    * Set filter script name.
+    *
+    * @param filterScript new filter script name
+    */
+	public void setFilterScript(String filterScript)
 	{
-		this.filter = filter;
+		this.filterScript = filterScript;
 	}
 
 	/**

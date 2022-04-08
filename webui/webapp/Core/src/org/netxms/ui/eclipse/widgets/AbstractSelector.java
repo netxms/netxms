@@ -69,7 +69,7 @@ public class AbstractSelector extends Composite
 	private ImageHyperlink clearingLink;
 	private Image scaledImage = null;
 	private Set<ModifyListener> modifyListeners = new HashSet<ModifyListener>(0);
-	
+
 	/**
 	 * Create abstract selector.
 	 * 
@@ -80,7 +80,7 @@ public class AbstractSelector extends Composite
 	public AbstractSelector(Composite parent, int style, int options)
 	{
 		super(parent, style);
-		
+
 		GridLayout layout = new GridLayout();
 		layout.verticalSpacing = WidgetHelper.INNER_SPACING;
 		layout.horizontalSpacing = WidgetHelper.INNER_SPACING;
@@ -212,7 +212,7 @@ public class AbstractSelector extends Composite
 			}
 		});
 	}
-	
+
 	/**
 	 * Create actions
 	 */
@@ -387,6 +387,17 @@ public class AbstractSelector extends Composite
 	}
 
    /**
+    * @see org.eclipse.swt.widgets.Control#setBackground(org.eclipse.swt.graphics.Color)
+    */
+   @Override
+   public void setBackground(Color color)
+   {
+      super.setBackground(color);
+      for(Control c : getChildren())
+         c.setBackground(color);
+   }
+
+   /**
     * @see org.eclipse.swt.widgets.Control#setEnabled(boolean)
     */
 	@Override
@@ -403,7 +414,7 @@ public class AbstractSelector extends Composite
 			clearingLink.setEnabled(enabled);
 		super.setEnabled(enabled);
 	}
-	
+
 	/**
 	 * Get text control
 	 * @return text control
@@ -412,7 +423,7 @@ public class AbstractSelector extends Composite
 	{
 		return text;
 	}
-	
+
 	/**
 	 * @param listener
 	 */
@@ -428,7 +439,7 @@ public class AbstractSelector extends Composite
 	{
 		modifyListeners.remove(listener);
 	}
-	
+
 	/**
 	 * Call all registered modify listeners
 	 */

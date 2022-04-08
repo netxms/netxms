@@ -286,9 +286,8 @@ static bool HostIsReachable(const InetAddress& ipAddr, int32_t zoneUIN, bool ful
  */
 static bool AcceptNewNode(NewNodeData *newNodeData, const MacAddress& macAddr)
 {
-   TCHAR szFilter[MAX_CONFIG_VALUE], szBuffer[256], szIpAddr[64];
+   TCHAR szBuffer[256], szIpAddr[64];
    UINT32 dwTemp;
-   SNMP_Transport *pTransport;
 
    newNodeData->ipAddr.toString(szIpAddr);
    if ((FindNodeByIP(newNodeData->zoneUIN, newNodeData->ipAddr) != nullptr) ||
@@ -374,59 +373,53 @@ static bool AcceptNewNode(NewNodeData *newNodeData, const MacAddress& macAddr)
          return false;  // filtered out by module
    }
 
-   // Read configuration
-   ConfigReadStr(_T("NetworkDiscovery.Filter"), szFilter, MAX_CONFIG_VALUE, _T(""));
-   Trim(szFilter);
+   // Read filter configuration
+   uint32_t filterFlags = ConfigReadULong(_T("NetworkDiscovery.Filter.Flags"), 0);
+   nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNode(%s): filter flags=%04X"), szIpAddr, filterFlags);
 
    // Initialize discovered node data
    DiscoveryFilterData data(newNodeData->ipAddr, newNodeData->zoneUIN);
 
-   // Check for address range if we use simple filter instead of script
-   uint32_t autoFilterFlags = 0;
-   if (!_tcsicmp(szFilter, _T("auto")))
+   // Check for address range
+   if (filterFlags & DFF_CHECK_ADDRESS_RANGE)
    {
-      autoFilterFlags = ConfigReadULong(_T("NetworkDiscovery.FilterFlags"), DFF_ALLOW_AGENT | DFF_ALLOW_SNMP);
-      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNode(%s): auto filter, flags=%04X"), szIpAddr, autoFilterFlags);
-
-      if (autoFilterFlags & DFF_ONLY_RANGE)
+      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNode(%s): filter - checking address range"), szIpAddr);
+      ObjectArray<InetAddressListElement> *list = LoadServerAddressList(2);
+      bool result = false;
+      if (list != nullptr)
       {
-         nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNode(%s): auto filter - checking range"), szIpAddr);
-         ObjectArray<InetAddressListElement> *list = LoadServerAddressList(2);
-         bool result = false;
-         if (list != nullptr)
+         for(int i = 0; (i < list->size()) && !result; i++)
          {
-            for(int i = 0; (i < list->size()) && !result; i++)
-            {
-               result = list->get(i)->contains(data.ipAddr);
-            }
-            delete list;
+            result = list->get(i)->contains(data.ipAddr);
          }
-         nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNode(%s): auto filter - range check result is %d"), szIpAddr, result);
-         if (!result)
-            return false;
+         delete list;
       }
+      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNode(%s): filter - range check result is %s"), szIpAddr, result ? _T("true") : _T("false"));
+      if (!result)
+         return false;
    }
 
    // Check if host is reachable
+   SNMP_Transport *snmpTransport = nullptr;
    shared_ptr<AgentConnection> agentConnection;
-   if (!HostIsReachable(newNodeData->ipAddr, newNodeData->zoneUIN, true, &pTransport, &agentConnection))
+   if (!HostIsReachable(newNodeData->ipAddr, newNodeData->zoneUIN, true, &snmpTransport, &agentConnection))
    {
       nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNode(%s): host is not reachable"), szIpAddr);
       return false;
    }
 
    // Basic communication settings
-   if (pTransport != nullptr)
+   if (snmpTransport != nullptr)
    {
       data.flags |= NNF_IS_SNMP;
-      data.snmpVersion = pTransport->getSnmpVersion();
-      newNodeData->snmpSecurity = new SNMP_SecurityContext(pTransport->getSecurityContext());
+      data.snmpVersion = snmpTransport->getSnmpVersion();
+      newNodeData->snmpSecurity = new SNMP_SecurityContext(snmpTransport->getSecurityContext());
 
       // Get SNMP OID
-      SnmpGet(data.snmpVersion, pTransport,
+      SnmpGet(data.snmpVersion, snmpTransport,
               _T(".1.3.6.1.2.1.1.2.0"), nullptr, 0, data.snmpObjectId, MAX_OID_LEN * 4, 0);
 
-      data.driver = FindDriverForNode(szIpAddr, data.snmpObjectId, nullptr, pTransport);
+      data.driver = FindDriverForNode(szIpAddr, data.snmpObjectId, nullptr, snmpTransport);
       nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNode(%s): selected device driver %s"), szIpAddr, data.driver->getName());
    }
    if (agentConnection != nullptr)
@@ -443,25 +436,25 @@ static bool AcceptNewNode(NewNodeData *newNodeData, const MacAddress& macAddr)
    }
    if ((data.ifList == nullptr) && (data.flags & NNF_IS_SNMP))
    {
-      data.driver->analyzeDevice(pTransport, data.snmpObjectId, &data, &data.driverData);
-      data.ifList = data.driver->getInterfaces(pTransport, &data, data.driverData,
+      data.driver->analyzeDevice(snmpTransport, data.snmpObjectId, &data, &data.driverData);
+      data.ifList = data.driver->getInterfaces(snmpTransport, &data, data.driverData,
                ConfigReadInt(_T("Objects.Interfaces.UseAliases"), 0), ConfigReadBoolean(_T("Objects.Interfaces.UseIfXTable"), true));
    }
 
    // TODO: check all interfaces for matching existing nodes
 
    // Check for filter script
-   if ((szFilter[0] == 0) || (!_tcsicmp(szFilter, _T("none"))))
+   if ((filterFlags & (DFF_CHECK_PROTOCOLS | DFF_CHECK_ADDRESS_RANGE | DFF_EXECUTE_SCRIPT)) == 0)
    {
       nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNode(%s): no filtering, node accepted"), szIpAddr);
-      delete pTransport;
+      delete snmpTransport;
       return true;   // No filtering
    }
 
    // Check if node is a router
    if (data.flags & NNF_IS_SNMP)
    {
-      if (SnmpGet(data.snmpVersion, pTransport,
+      if (SnmpGet(data.snmpVersion, snmpTransport,
                   _T(".1.3.6.1.2.1.4.1.0"), nullptr, 0, &dwTemp, sizeof(UINT32), 0) == SNMP_ERR_SUCCESS)
       {
          if (dwTemp == 1)
@@ -482,14 +475,14 @@ static bool AcceptNewNode(NewNodeData *newNodeData, const MacAddress& macAddr)
    if (data.flags & NNF_IS_SNMP)
    {
       // Check if node is a bridge
-      if (SnmpGet(data.snmpVersion, pTransport,
+      if (SnmpGet(data.snmpVersion, snmpTransport,
                   _T(".1.3.6.1.2.1.17.1.1.0"), nullptr, 0, szBuffer, sizeof(szBuffer), 0) == SNMP_ERR_SUCCESS)
       {
          data.flags |= NNF_IS_BRIDGE;
       }
 
       // Check for CDP (Cisco Discovery Protocol) support
-      if (SnmpGet(data.snmpVersion, pTransport,
+      if (SnmpGet(data.snmpVersion, snmpTransport,
                   _T(".1.3.6.1.4.1.9.9.23.1.3.1.0"), nullptr, 0, &dwTemp, sizeof(UINT32), 0) == SNMP_ERR_SUCCESS)
       {
          if (dwTemp == 1)
@@ -497,7 +490,7 @@ static bool AcceptNewNode(NewNodeData *newNodeData, const MacAddress& macAddr)
       }
 
       // Check for SONMP (Nortel topology discovery protocol) support
-      if (SnmpGet(data.snmpVersion, pTransport,
+      if (SnmpGet(data.snmpVersion, snmpTransport,
                   _T(".1.3.6.1.4.1.45.1.6.13.1.2.0"), nullptr, 0, &dwTemp, sizeof(UINT32), 0) == SNMP_ERR_SUCCESS)
       {
          if (dwTemp == 1)
@@ -505,49 +498,45 @@ static bool AcceptNewNode(NewNodeData *newNodeData, const MacAddress& macAddr)
       }
 
       // Check for LLDP (Link Layer Discovery Protocol) support
-      if (SnmpGet(data.snmpVersion, pTransport,
+      if (SnmpGet(data.snmpVersion, snmpTransport,
                   _T(".1.0.8802.1.1.2.1.3.2.0"), nullptr, 0, szBuffer, sizeof(szBuffer), 0) == SNMP_ERR_SUCCESS)
       {
          data.flags |= NNF_IS_LLDP;
       }
    }
 
-   bool result = false;
+   bool result = true;
 
-   // Check if we use simple filter instead of script
-   if (!_tcsicmp(szFilter, _T("auto")))
+   // Check supported communication protocols
+   if (filterFlags & DFF_CHECK_PROTOCOLS)
    {
-      if ((autoFilterFlags & (DFF_ALLOW_AGENT | DFF_ALLOW_SNMP)) == 0)
-      {
+      bool result = false;
+
+      if ((filterFlags & DFF_PROTOCOL_AGENT) && (data.flags & NNF_IS_AGENT))
          result = true;
-      }
-      else
-      {
-         if (autoFilterFlags & DFF_ALLOW_AGENT)
-         {
-            if (data.flags & NNF_IS_AGENT)
-               result = true;
-         }
 
-         if (autoFilterFlags & DFF_ALLOW_SNMP)
-         {
-            if (data.flags & NNF_IS_SNMP)
-               result = true;
-         }
-      }
-      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNode(%s): auto filter - bResult=%d"), szIpAddr, result);
+      if ((filterFlags & DFF_PROTOCOL_SNMP) && (data.flags & NNF_IS_SNMP))
+         result = true;
+
+      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNode(%s): protocol check result is %s"), szIpAddr, result ? _T("true") : _T("false"));
    }
-   else
+
+   // Execute filter script
+   if (filterFlags & DFF_EXECUTE_SCRIPT)
    {
-      NXSL_VM *vm = CreateServerScriptVM(szFilter, shared_ptr<NetObj>());
+      TCHAR filterScript[MAX_CONFIG_VALUE];
+      ConfigReadStr(_T("NetworkDiscovery.Filter.Script"), filterScript, MAX_CONFIG_VALUE, _T(""));
+      Trim(filterScript);
+
+      NXSL_VM *vm = CreateServerScriptVM(filterScript, shared_ptr<NetObj>());
       if (vm != nullptr)
       {
-         nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNode(%s): Running filter script %s"), szIpAddr, szFilter);
+         nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNode(%s): Running filter script %s"), szIpAddr, filterScript);
 
-         if (pTransport != nullptr)
+         if (snmpTransport != nullptr)
          {
-            vm->setGlobalVariable("$snmp", vm->createValue(vm->createObject(&g_nxslSnmpTransportClass, pTransport)));
-            pTransport = nullptr;   // Transport will be deleted by NXSL object destructor
+            vm->setGlobalVariable("$snmp", vm->createValue(vm->createObject(&g_nxslSnmpTransportClass, snmpTransport)));
+            snmpTransport = nullptr;   // Transport will be deleted by NXSL object destructor
          }
          // TODO: make agent connection available in script
          vm->setGlobalVariable("$node", vm->createValue(vm->createObject(&g_nxslDiscoveredNodeClass, &data)));
@@ -556,23 +545,23 @@ static bool AcceptNewNode(NewNodeData *newNodeData, const MacAddress& macAddr)
          if (vm->run(1, &param))
          {
             result = vm->getResult()->getValueAsBoolean();
-            nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNode(%s): Filter script result: %d"), szIpAddr, result);
+            nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNode(%s): Filter script result is %s"), szIpAddr, result ? _T("true") : _T("false"));
          }
          else
          {
             nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNode(%s): Filter script execution error: %s"), szIpAddr, vm->getErrorText());
-            ReportScriptError(SCRIPT_CONTEXT_OBJECT, nullptr, 0, vm->getErrorText(), szFilter);
+            ReportScriptError(SCRIPT_CONTEXT_OBJECT, nullptr, 0, vm->getErrorText(), filterScript);
          }
          delete vm;
       }
       else
       {
-         nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNode(%s): Cannot find filter script %s"), szIpAddr, szFilter);
+         nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNode(%s): Cannot find filter script %s"), szIpAddr, filterScript);
       }
    }
 
    // Cleanup
-   delete pTransport;
+   delete snmpTransport;
 
    return result;
 }

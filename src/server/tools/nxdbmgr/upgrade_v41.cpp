@@ -24,6 +24,49 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 41.10 to 41.11
+ */
+static bool H_UpgradeFromV10()
+{
+   static const TCHAR *batch =
+      _T("UPDATE config SET var_name='NetworkDiscovery.Filter.Script' WHERE var_name='NetworkDiscovery.Filter'\n")
+      _T("UPDATE config SET var_name='NetworkDiscovery.Filter.Flags' WHERE var_name='NetworkDiscovery.FilterFlags'\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+
+   TCHAR scriptName[MAX_CONFIG_VALUE];
+   DBMgrConfigReadStr(_T("NetworkDiscovery.Filter.Script"), scriptName, MAX_CONFIG_VALUE, _T("none"));
+   if (!_tcsicmp(scriptName, _T("auto")))
+   {
+      uint32_t newFilterFlags = 0;
+      uint32_t oldFilterFlags = DBMgrConfigReadUInt32(_T("NetworkDiscovery.Filter.Flags"), 0);
+      if (oldFilterFlags & 0x0003)  // combination of old "allow agent" and "allow SNMP" flags
+      {
+         newFilterFlags |= 0x0001;  // Set "check protocols" bit
+         if (oldFilterFlags & 0x0001)  // "allow agent"
+            newFilterFlags |= 0x0100;
+         if (oldFilterFlags & 0x0002)  // "allow SNMP"
+            newFilterFlags |= 0x0200;
+      }
+      if (oldFilterFlags & 0x0004)  // old "check range" flag
+         newFilterFlags |= 0x0002;  // new "check range" flag
+
+      TCHAR query[256];
+      _sntprintf(query, 256, _T("UPDATE config SET var_value='%u' WHERE var_name='NetworkDiscovery.Filter.Flags'"), newFilterFlags);
+      CHK_EXEC(SQLQuery(query));
+      CHK_EXEC(SQLQuery(_T("UPDATE config SET var_value='none' WHERE var_name='NetworkDiscovery.Filter.Script'")));
+   }
+   else if (_tcsicmp(scriptName, _T("none")))
+   {
+      // Set DFF_EXECUTE_SCRIPT bit in filter flags
+      CHK_EXEC(SQLQuery(_T("UPDATE config SET var_value='4' WHERE var_name='NetworkDiscovery.Filter.Flags'")));
+   }
+
+   CHK_EXEC(SetMinorSchemaVersion(11));
+   return true;
+}
+
+/**
  * Upgrade from 41.9 to 41.10
  */
 static bool H_UpgradeFromV9()
@@ -342,6 +385,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 10, 41, 11, H_UpgradeFromV10 },
    { 9,  41, 10, H_UpgradeFromV9  },
    { 8,  41, 9,  H_UpgradeFromV8  },
    { 7,  41, 8,  H_UpgradeFromV7  },

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,14 +19,13 @@
 package org.netxms.client.constants;
 
 /**
- * This class holds constants related to network discovery
+ * Network discovery filter flags
  */
-public final class NetworkDiscovery
+public final class NetworkDiscoveryFilterFlags
 {
-	public static final String FILTER_NONE = "none";
-	public static final String FILTER_AUTO = "auto";
-	
-	public static final int FILTER_ALLOW_AGENT = 0x0001;
-	public static final int FILTER_ALLOW_SNMP = 0x0002;
-	public static final int FILTER_LIMIT_BY_RANGE = 0x0004;
+   public static final int CHECK_PROTOCOLS     = 0x0001;
+   public static final int CHECK_ADDRESS_RANGE = 0x0002;
+   public static final int EXECUTE_SCRIPT      = 0x0004;
+   public static final int PROTOCOL_AGENT      = 0x0100;
+   public static final int PROTOCOL_SNMP       = 0x0200;
 }
