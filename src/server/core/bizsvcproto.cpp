@@ -506,6 +506,7 @@ void BusinessServicePrototype::instanceDiscoveryPoll(PollerInfo *poller, ClientS
       {
          auto service = make_shared<BusinessService>(*this, instance->value, instance->key);
          NetObjInsert(service, true, false); // Insert into indexes
+         service->updateFromPrototype(*this);
          shared_ptr<NetObj> parent = getParents()->getShared(0);
          parent->addChild(service);
          service->addParent(parent);

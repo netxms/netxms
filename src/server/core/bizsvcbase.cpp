@@ -55,10 +55,6 @@ BaseBusinessService::BaseBusinessService(const BaseBusinessService& prototype, c
    for(int i = 0; i < MAX_AUTOBIND_TARGET_FILTERS; i++)
       setAutoBindFilter(i, prototype.m_autoBindFilterSources[i]);
    m_autoBindFlags = prototype.m_autoBindFlags;
-
-   unique_ptr<SharedObjectArray<BusinessServiceCheck>> checks = prototype.getChecks();
-   for (const shared_ptr<BusinessServiceCheck>& check : *checks)
-      m_checks.add(make_shared<BusinessServiceCheck>(m_id, *check.get()));
 }
 
 /**

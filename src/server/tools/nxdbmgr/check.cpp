@@ -23,6 +23,127 @@
 #include "nxdbmgr.h"
 
 /**
+ * Check business service checks
+ */
+static void CheckBusinessServiceCheck()
+{
+   StartStage(_T("Business service checks"));
+   DB_RESULT unattachedChecks = SQLSelect(_T("SELECT c.id, c.service_id FROM business_service_checks c ")
+                           _T("LEFT OUTER JOIN business_services s ON s.id = c.service_id ")
+                           _T("LEFT OUTER JOIN business_service_prototypes p ON p.id = c.service_id ")
+                           _T("WHERE s.id IS NULL AND p.id IS NULL"));
+   if (unattachedChecks != nullptr)
+   {
+      int numChecks = DBGetNumRows(unattachedChecks);
+      TCHAR query[1024];
+
+      SetStageWorkTotal(numChecks);
+      for(int i = 0; i < numChecks; i++)
+      {
+         g_dbCheckErrors++;
+         if (GetYesNoEx(_T("Business service check %u refers to non-existing business service %u. Fix it?"),
+                        DBGetFieldULong(unattachedChecks, i, 0), DBGetFieldULong(unattachedChecks, i, 1)))
+         {
+            _sntprintf(query, 1024, _T("DELETE FROM business_service_checks WHERE id=%u"),
+                        DBGetFieldULong(unattachedChecks, i, 0));
+            if (SQLQuery(query))
+               g_dbCheckFixes++;
+         }
+         UpdateStageProgress(1);
+      }
+      DBFreeResult(unattachedChecks);
+   }
+   EndStage();
+}
+
+/**
+ * Check business service tickets
+ */
+static void CheckBusinessServiceTickets()
+{
+   StartStage(_T("Business service tickets"));
+   DB_RESULT businessServices = SQLSelect(_T("SELECT id FROM business_services"));
+   DB_RESULT tickets = SQLSelect(_T("SELECT ticket_id,service_id FROM business_service_tickets"));
+   if (businessServices != nullptr && tickets != nullptr)
+   {
+      int numServices = DBGetNumRows(businessServices);
+      int numTickets = DBGetNumRows(tickets);
+      bool match = false;
+      TCHAR query[1024];
+
+      SetStageWorkTotal(numTickets);
+      for(int i = 0; i < numTickets; i++)
+      {
+         for(int n = 0; n < numServices; n++)
+         {
+            if (DBGetFieldULong(tickets, i, 1) == DBGetFieldULong(businessServices, n, 0))
+            {
+               match = true;
+               break;
+            }
+         }
+         if (!match)
+         {
+            g_dbCheckErrors++;
+            if (GetYesNoEx(_T("Business service ticket %u refers to non-existing business service %u. Fix it?"),
+                           DBGetFieldULong(tickets, i, 0), DBGetFieldULong(tickets, i, 1)))
+            {
+               _sntprintf(query, 1024, _T("DELETE FROM business_service_tickets WHERE ticket_id=%u"),
+                           DBGetFieldULong(tickets, i, 0));
+               if (SQLQuery(query))
+                  g_dbCheckFixes++;
+            }
+         }
+         match = false;
+         UpdateStageProgress(1);
+      }
+      DBFreeResult(businessServices);
+      DBFreeResult(tickets);
+   }
+   EndStage();
+}
+
+/**
+ * Check business service downtime
+ */
+static void CheckBusinessServiceDowntime()
+{
+   StartStage(_T("Business service downtime"));
+   DB_RESULT businessServices = SQLSelect(_T("SELECT id FROM business_services s INNER JOIN business_service_downtime d ON s.id=d.service_id WHERE to_timestamp=0"));
+   if (businessServices != nullptr)
+   {
+      int numServices = DBGetNumRows(businessServices);
+
+      TCHAR query[1024];
+      SetStageWorkTotal(numServices);
+      for(int i = 0; i < numServices; i++)
+      {
+         uint32_t serviceId = DBGetFieldULong(businessServices, i, 0);
+         _sntprintf(query, 1024, _T("SELECT count(*) FROM business_service_tickets WHERE service_id=%u AND close_timestamp=0"), serviceId);
+         DB_RESULT result = SQLSelect(query);
+         if (result != NULL)
+         {
+            if (DBGetFieldLong(result, 0, 0) == 0)
+            {
+               g_dbCheckErrors++;
+               if (GetYesNoEx(_T("Business service %u has no opened tickets and active downtime. Fix it?"), serviceId))
+               {
+                  _sntprintf(query, 1024, _T("UPDATE business_service_downtime SET to_timestamp=%u WHERE service_id=%u AND to_timestamp=0"),
+                              static_cast<uint32_t>(time(nullptr)), serviceId);
+                  if (SQLQuery(query))
+                     g_dbCheckFixes++;
+               }
+            }
+            DBFreeResult(result);
+         }
+         UpdateStageProgress(1);
+      }
+      DBFreeResult(businessServices);
+   }
+   EndStage();
+}
+
+/**
  * Check that given node is inside at least one container or cluster
  */
 static bool NodeInContainer(uint32_t id)
@@ -1385,6 +1506,9 @@ void CheckDatabase()
          CheckRawDciValues();
          CheckThresholds();
          CheckTableThresholds();
+         CheckBusinessServiceCheck();
+         CheckBusinessServiceTickets();
+         CheckBusinessServiceDowntime();
          if (g_checkData)
          {
             if (DBMgrMetaDataReadInt32(_T("SingeTablePerfData"), 0))

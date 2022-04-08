@@ -78,7 +78,7 @@ void LIBNXDBMGR_EXPORTABLE UpdateStageProgress(int installment)
 {
    if (g_dbCheckErrors - s_stageErrorsUpdate > 0)
    {
-      StartStage(NULL); // redisplay stage message
+      StartStage(nullptr); // redisplay stage message
       s_stageErrorsUpdate = g_dbCheckErrors;
    }
 
