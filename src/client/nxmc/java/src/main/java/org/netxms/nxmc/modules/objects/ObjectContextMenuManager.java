@@ -109,7 +109,7 @@ public class ObjectContextMenuManager extends MenuManager
          }
       };
       
-      actionDeployPackage = new Action(i18n.tr("&Deplay Package")) {
+      actionDeployPackage = new Action(i18n.tr("D&eploy package...")) {
          @Override
          public void run()
          {
@@ -175,14 +175,6 @@ public class ObjectContextMenuManager extends MenuManager
          }
       }
 
-      MenuManager managementMenu = new MenuManager(i18n.tr("&Manage"));
-      managementMenu.add(actionManage);
-      managementMenu.add(actionUnmanage);
-      managementMenu.add(actionDelete);    
-      managementMenu.add(new Separator());
-      managementMenu.add(actionDeployPackage);      
-      add(managementMenu);
-
       if (isMaintenanceMenuAllowed((IStructuredSelection)selectionProvider.getSelection()))
       {
          MenuManager maintenanceMenu = new MenuManager(i18n.tr("&Maintenance"));
@@ -191,6 +183,12 @@ public class ObjectContextMenuManager extends MenuManager
          maintenanceMenu.add(actionScheduleMaintenance);
          add(maintenanceMenu);
       }
+      add(actionManage);
+      add(actionUnmanage);
+      add(actionDelete);
+      add(new Separator());
+
+      add(actionDeployPackage);
 
       final Menu toolsMenu = ObjectMenuFactory.createToolsMenu((IStructuredSelection)selectionProvider.getSelection(), getMenu(), null, new ViewPlacement(view));
       if (toolsMenu != null)

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,6 +34,8 @@ import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.Container;
 import org.netxms.client.objects.Node;
 import org.netxms.client.objects.ServiceRoot;
+import org.netxms.client.objects.TemplateGroup;
+import org.netxms.client.objects.TemplateRoot;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.View;
@@ -57,7 +59,9 @@ public class ObjectCreateMenuManager extends MenuManager
    private View view;
    private AbstractObject parent;
    private long parentId;
-   
+
+   private Action actionCreateBusinessService;
+   private Action actionCreateBusinessServicePrototype;
    private Action actionCreateChassis;
    private Action actionCreateCluster;
    private Action actionCreateCondition;
@@ -66,10 +70,17 @@ public class ObjectCreateMenuManager extends MenuManager
    private Action actionCreateMobileDevice;
    private Action actionCreateNode;
    private Action actionCreateRack;
+   private Action actionCreateTemplate;
+   private Action actionCreateTemplateGroup;
    private Action actionCreateVpnConnector;
-   private Action actionCreateBusinessService;
-   private Action actionCreateBusinessServicePrototype;
 
+   /**
+    * Create new menu manager for object's "Create" menu.
+    *
+    * @param shell parent shell
+    * @param view parent view
+    * @param parent object to create menu for
+    */
    public ObjectCreateMenuManager(Shell shell, View view, AbstractObject parent)
    {
       this.shell = shell;
@@ -80,6 +91,8 @@ public class ObjectCreateMenuManager extends MenuManager
 
       createActions();
       
+      addAction(this, actionCreateBusinessService, (AbstractObject o) -> (o instanceof BusinessService) || (o instanceof BusinessServiceRoot) && !(o instanceof BusinessServicePrototype));
+      addAction(this, actionCreateBusinessServicePrototype, (AbstractObject o) -> (o instanceof BusinessService) || (o instanceof BusinessServiceRoot));
       addAction(this, actionCreateChassis, (AbstractObject o) -> (o instanceof Container) || (o instanceof ServiceRoot));
       addAction(this, actionCreateCluster, (AbstractObject o) -> (o instanceof Container) || (o instanceof ServiceRoot));
       addAction(this, actionCreateCondition, (AbstractObject o) -> (o instanceof Container) || (o instanceof ServiceRoot));
@@ -88,9 +101,9 @@ public class ObjectCreateMenuManager extends MenuManager
       addAction(this, actionCreateMobileDevice, (AbstractObject o) -> (o instanceof Container) || (o instanceof ServiceRoot));
       addAction(this, actionCreateNode, (AbstractObject o) -> (o instanceof Cluster) || (o instanceof Container) || (o instanceof ServiceRoot));
       addAction(this, actionCreateRack, (AbstractObject o) -> (o instanceof Container) || (o instanceof ServiceRoot));
+      addAction(this, actionCreateTemplate, (AbstractObject o) -> (o instanceof TemplateGroup) || (o instanceof TemplateRoot));
+      addAction(this, actionCreateTemplateGroup, (AbstractObject o) -> (o instanceof TemplateGroup) || (o instanceof TemplateRoot));
       addAction(this, actionCreateVpnConnector, (AbstractObject o) -> o instanceof Node);
-      addAction(this, actionCreateBusinessService, (AbstractObject o) -> (o instanceof BusinessService) || (o instanceof BusinessServiceRoot) && !(o instanceof BusinessServicePrototype));
-      addAction(this, actionCreateBusinessServicePrototype, (AbstractObject o) -> (o instanceof BusinessService) || (o instanceof BusinessServiceRoot));     
    }
 
    /**
@@ -98,6 +111,38 @@ public class ObjectCreateMenuManager extends MenuManager
     */
    protected void createActions()
    {
+      actionCreateBusinessService = new GenericObjectCreationAction(i18n.tr("&Business service..."), AbstractObject.OBJECT_BUSINESSSERVICE, i18n.tr("Business Service"));
+
+      actionCreateBusinessServicePrototype = new Action(i18n.tr("Business service &prototype...")) {
+         @Override
+         public void run()
+         {
+            if (parentId == 0)
+               return;
+
+            final CreateBusinessServicePrototype dlg = new CreateBusinessServicePrototype(shell);
+            if (dlg.open() != Window.OK)
+               return;
+
+            final NXCSession session = Registry.getSession();
+            new Job(i18n.tr("Creating business service prototype"), view, null) {
+               @Override
+               protected void run(IProgressMonitor monitor) throws Exception
+               {
+                  NXCObjectCreationData cd = new NXCObjectCreationData(AbstractObject.OBJECT_BUSINESSSERVICEPROTOTYPE, dlg.getName(), parentId);
+                  cd.setInstanceDiscoveryMethod(dlg.getInstanceDiscoveyMethod());
+                  session.createObject(cd);
+               }
+
+               @Override
+               protected String getErrorMessage()
+               {
+                  return String.format(i18n.tr("Cannot create business service prototype object %s"), dlg.getName());
+               }
+            }.start();
+         }
+      };
+
       actionCreateChassis = new Action(i18n.tr("C&hassis...")) {
          @Override
          public void run()
@@ -251,39 +296,9 @@ public class ObjectCreateMenuManager extends MenuManager
       };
 
       actionCreateRack = new GenericObjectCreationAction(i18n.tr("&Rack..."), AbstractObject.OBJECT_RACK, i18n.tr("Rack"));
+      actionCreateTemplate = new GenericObjectCreationAction(i18n.tr("&Template..."), AbstractObject.OBJECT_TEMPLATE, i18n.tr("Template"));
+      actionCreateTemplateGroup = new GenericObjectCreationAction(i18n.tr("Template &group..."), AbstractObject.OBJECT_TEMPLATEGROUP, i18n.tr("Template Group"));
       actionCreateVpnConnector = new GenericObjectCreationAction(i18n.tr("&VPN connector..."), AbstractObject.OBJECT_VPNCONNECTOR, i18n.tr("VPN Connector"));
-      
-      actionCreateBusinessService = new GenericObjectCreationAction(i18n.tr("&Business service..."), AbstractObject.OBJECT_BUSINESSSERVICE, i18n.tr("Business Service"));
-
-      actionCreateBusinessServicePrototype = new Action(i18n.tr("Business service &prototype...")) {
-         @Override
-         public void run()
-         {
-            if (parentId == 0)
-               return;
-
-            final CreateBusinessServicePrototype dlg = new CreateBusinessServicePrototype(shell);
-            if (dlg.open() != Window.OK)
-               return;
-
-            final NXCSession session = Registry.getSession();
-            new Job(i18n.tr("Creating business service prototype"), view, null) {
-               @Override
-               protected void run(IProgressMonitor monitor) throws Exception
-               {
-                  NXCObjectCreationData cd = new NXCObjectCreationData(AbstractObject.OBJECT_BUSINESSSERVICEPROTOTYPE, dlg.getName(), parentId);
-                  cd.setInstanceDiscoveryMethod(dlg.getInstanceDiscoveyMethod());
-                  session.createObject(cd);
-               }
-
-               @Override
-               protected String getErrorMessage()
-               {
-                  return String.format(i18n.tr("Cannot create business service prototype object %s"), dlg.getName());
-               }
-            }.start();
-         }
-      };
    }
 
    /**
