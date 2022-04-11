@@ -400,7 +400,7 @@ NXCP_MESSAGE_FIELD *NXCPMessage::find(uint32_t fieldId) const
 {
    MessageField *entry;
    HASH_FIND_INT(m_fields, &fieldId, entry);
-   return (entry != NULL) ? &entry->data : NULL;
+   return (entry != nullptr) ? &entry->data : nullptr;
 }
 
 /**
@@ -419,19 +419,19 @@ void *NXCPMessage::set(uint32_t fieldId, BYTE type, const void *value, bool isSi
    {
       case NXCP_DT_INT32:
          entry = CreateMessageField(m_pool, 12);
-         entry->data.df_int32 = *((const UINT32 *)value);
+         entry->data.df_int32 = *static_cast<const uint32_t*>(value);
          break;
       case NXCP_DT_INT16:
          entry = CreateMessageField(m_pool, 8);
-         entry->data.df_int16 = *((const WORD *)value);
+         entry->data.df_int16 = *static_cast<const uint16_t*>(value);
          break;
       case NXCP_DT_INT64:
          entry = CreateMessageField(m_pool, 16);
-         entry->data.df_int64 = *((const UINT64 *)value);
+         entry->data.df_int64 = *static_cast<const uint64_t*>(value);
          break;
       case NXCP_DT_FLOAT:
          entry = CreateMessageField(m_pool, 16);
-         entry->data.df_real = *((const double *)value);
+         entry->data.df_real = *static_cast<const double*>(value);
          break;
       case NXCP_DT_STRING:
          if (isUtf8)
@@ -511,8 +511,8 @@ void *NXCPMessage::set(uint32_t fieldId, BYTE type, const void *value, bool isSi
          break;
       case NXCP_DT_BINARY:
          entry = CreateMessageField(m_pool, 12 + size);
-         entry->data.df_binary.length = (UINT32)size;
-         if ((entry->data.df_binary.length > 0) && (value != NULL))
+         entry->data.df_binary.length = static_cast<uint32_t>(size);
+         if ((entry->data.df_binary.length > 0) && (value != nullptr))
             memcpy(entry->data.df_binary.value, value, entry->data.df_binary.length);
          break;
       case NXCP_DT_INETADDR:
@@ -531,7 +531,7 @@ void *NXCPMessage::set(uint32_t fieldId, BYTE type, const void *value, bool isSi
          }
          break;
       default:
-         return NULL;  // Invalid data type, unable to handle
+         return nullptr;  // Invalid data type, unable to handle
    }
    entry->id = fieldId;
    entry->data.fieldId = fieldId;
@@ -542,7 +542,7 @@ void *NXCPMessage::set(uint32_t fieldId, BYTE type, const void *value, bool isSi
    // add or replace field
    MessageField *curr;
    HASH_FIND_INT(m_fields, &fieldId, curr);
-   if (curr != NULL)
+   if (curr != nullptr)
    {
       HASH_DEL(m_fields, curr);
    }
@@ -557,8 +557,8 @@ void *NXCPMessage::set(uint32_t fieldId, BYTE type, const void *value, bool isSi
 void *NXCPMessage::get(uint32_t fieldId, BYTE requiredType, BYTE *fieldType) const
 {
    NXCP_MESSAGE_FIELD *field = find(fieldId);
-   if (field == NULL)
-      return NULL;      // No such field
+   if (field == nullptr)
+      return nullptr;      // No such field
 
    // Data type check exception - return IPv4 address as INT32 if requested
    if ((requiredType == NXCP_DT_INT32) && (field->type == NXCP_DT_INETADDR) && (field->df_inetaddr.family == NXCP_AF_INET))
@@ -566,9 +566,9 @@ void *NXCPMessage::get(uint32_t fieldId, BYTE requiredType, BYTE *fieldType) con
 
    // Check data type
    if ((requiredType != 0xFF) && (field->type != requiredType))
-      return NULL;
+      return nullptr;
 
-   if (fieldType != NULL)
+   if (fieldType != nullptr)
       *fieldType = field->type;
    return (field->type == NXCP_DT_INT16) ?
            ((void *)((BYTE *)field + 6)) : 
@@ -582,7 +582,7 @@ bool NXCPMessage::getFieldAsBoolean(uint32_t fieldId) const
 {
    BYTE type;
    void *value = (void *)get(fieldId, 0xFF, &type);
-   if (value == NULL)
+   if (value == nullptr)
       return false;
 
    switch(type)

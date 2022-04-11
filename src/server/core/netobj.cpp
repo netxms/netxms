@@ -1648,7 +1648,7 @@ uint32_t NetObj::getUserRights(uint32_t userId) const
  */
 bool NetObj::checkAccessRights(uint32_t userId, uint32_t requiredRights) const
 {
-   UINT32 effectiveRights = getUserRights(userId);
+   uint32_t effectiveRights = getUserRights(userId);
    return (effectiveRights & requiredRights) == requiredRights;
 }
 

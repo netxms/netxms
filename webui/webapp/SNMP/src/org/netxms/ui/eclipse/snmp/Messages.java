@@ -86,13 +86,13 @@ public class Messages extends NLS
    public String SnmpConfigurator_SectionCommunitiesDescr;
    public String SnmpConfigurator_SectionUSM;
    public String SnmpConfigurator_SectionUSMDescr;
-	public String NetworkCredentials_AddPort;
+	public String NetworkCredentials_AddSnmpPort;
    public String NetworkCredentials_CannotSaveConfig;
    public String NetworkCredentials_ErrorLoadingConfig;
    public String NetworkCredentials_ErrorSavingConfig;
    public String NetworkCredentials_FormTitle;
    public String NetworkCredentials_LoadingConfig;
-   public String NetworkCredentials_PleaseEnterPort;
+   public String NetworkCredentials_PleaseEnterSnmpPort;
    public String NetworkCredentials_Ports;
    public String NetworkCredentials_PortsDescription;
    public String NetworkCredentials_SaveConfig;

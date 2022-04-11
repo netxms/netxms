@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -54,7 +54,7 @@ import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
-import org.netxms.client.SshCredential;
+import org.netxms.client.SSHCredentials;
 import org.netxms.client.SshKeyPair;
 import org.netxms.client.snmp.SnmpUsmCredential;
 import org.netxms.ui.eclipse.actions.RefreshAction;
@@ -64,11 +64,11 @@ import org.netxms.ui.eclipse.objectbrowser.widgets.ZoneSelector;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.snmp.Activator;
 import org.netxms.ui.eclipse.snmp.Messages;
-import org.netxms.ui.eclipse.snmp.dialogs.AddSshCredDialog;
+import org.netxms.ui.eclipse.snmp.dialogs.EditSSHCredentialsDialog;
 import org.netxms.ui.eclipse.snmp.dialogs.AddUsmCredDialog;
 import org.netxms.ui.eclipse.snmp.views.helpers.NetworkConfig;
 import org.netxms.ui.eclipse.snmp.views.helpers.SnmpUsmLabelProvider;
-import org.netxms.ui.eclipse.snmp.views.helpers.SshCredLabelProvider;
+import org.netxms.ui.eclipse.snmp.views.helpers.SshCredentialsLabelProvider;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.widgets.CompositeWithMessageBar;
 import org.netxms.ui.eclipse.widgets.MessageBar;
@@ -100,23 +100,22 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
 	private FormToolkit toolkit;
 	private ScrolledForm form;
 	private TableViewer snmpCommunityList;
-	private SortableTableViewer snmpUsmCredList;
+	private SortableTableViewer snmpUsmCredentialsList;
    private TableViewer snmpPortList;
    private TableViewer sharedSecretList;
    private TableViewer agentPortList;
-   private TableViewer sshCredList;
+   private TableViewer sshCredentialsList;
    private TableViewer sshPortList;
 	private Action actionSave;
    private RefreshAction actionRefresh;
 	private NetworkConfig config;
 	private ZoneSelector zoneSelector;
    private Display display;
-	private long zoneUIN = NetworkConfig.NETWORK_CONFIG_GLOBAL;
-   private List<SshKeyPair> keyList;
-   private SshCredLabelProvider sshLabelProvider;
+   private int zoneUIN = NetworkConfig.NETWORK_CONFIG_GLOBAL;
+   private List<SshKeyPair> sshKeys;
+   private SshCredentialsLabelProvider sshLabelProvider;
 
-
-	/* (non-Javadoc)
+   /**
     * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
     */
    @Override
@@ -127,53 +126,9 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
       config = new NetworkConfig(session);
    }
 
-   private void setPortList(int type, TableViewer tw)
-   {
-      switch(type)
-      {
-         case NetworkConfig.SNMP_PORTS:
-            snmpPortList = tw;
-            break;
-         case NetworkConfig.AGENT_PORTS:
-            agentPortList = tw;
-            break;
-         case NetworkConfig.SSH_PORTS:
-            sshPortList = tw;
-            break;
-      }
-   }
-
-   private TableViewer getPortList(int type)
-   {
-      switch(type)
-      {
-         case NetworkConfig.SNMP_PORTS:
-            return snmpPortList;
-         case NetworkConfig.AGENT_PORTS:
-            return agentPortList;
-         case NetworkConfig.SSH_PORTS:
-            return sshPortList;
-      }
-      return null;
-   }
-
-   private String getPortTypeAsString(int type)
-   {
-      switch(type)
-      {
-         case NetworkConfig.SNMP_PORTS:
-            return "SNMP";
-         case NetworkConfig.AGENT_PORTS:
-            return "agent";
-         case NetworkConfig.SSH_PORTS:
-            return "SSH";
-      }
-      return null;
-   }
-
-   /* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	public void createPartControl(Composite parent)
 	{
@@ -202,7 +157,6 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
          zoneSelector.setLayoutData(gd);
          form.setHeadClient(headArea);
          zoneSelector.addModifyListener(new ModifyListener() {
-            
             @Override
             public void modifyText(ModifyEvent e)
             {
@@ -211,9 +165,8 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
             }
          });
 		}
-		
+
 		session.addListener(new SessionListener() {
-         
          @Override
          public void notificationHandler(SessionNotification n)
          {
@@ -233,8 +186,8 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
                   type = NetworkConfig.AGENT_SECRETS;
                   break;
                   
-            }     
-            if(type != 0)
+            }
+            if (type != 0)
             {
                final int configType = type;
                display.asyncExec(new Runnable() {
@@ -243,7 +196,7 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
                   {
                      if (!config.isChanged(configType, (int)n.getSubCode()))
                      {
-                        loadSnmpConfig(configType, (int)n.getSubCode());
+                        loadConfiguration(configType, (int)n.getSubCode());
                      }
                      else if (!saveInProgress)
                      {
@@ -256,41 +209,42 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
             }
          }
       });
-      
+
 		createSnmpCommunitySection();
-      createPortList(NetworkConfig.SNMP_PORTS, "SNMP ports", "description"); // TODO Filipp had an idea what to write in descriptions
+      snmpPortList = createPortList(NetworkConfig.SNMP_PORTS, "SNMP");
       createSnmpUsmCredSection();
       createSharedSecretList();
-      createPortList(NetworkConfig.AGENT_PORTS, "Agent ports", "description");
+      agentPortList = createPortList(NetworkConfig.AGENT_PORTS, "Agent");
       createSshCredentialsList();
-      createPortList(NetworkConfig.SSH_PORTS, "SSH ports", "description");
-		
+      sshPortList = createPortList(NetworkConfig.SSH_PORTS, "SSH");
+
 		createActions();
 		contributeToActionBars();
 
       // Load config
-      loadSnmpConfig(NetworkConfig.ALL_CONFIGS, NetworkConfig.ALL_ZONES);
+      loadConfiguration(NetworkConfig.ALL_CONFIGS, NetworkConfig.ALL_ZONES);
 	}
-	
+
 	/**
-    * Load SNMP configuration
+    * Load configuration from server
     * 
     * @param configId ID of SNMP configuration
     * @param zoneUIN of configuration
     */
-	private void loadSnmpConfig(final int configId, final int zoneUIN)
+	private void loadConfiguration(final int configId, final int zoneUIN)
 	{
 	   new ConsoleJob(Messages.get().NetworkCredentials_LoadingConfig, this, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            keyList = session.getSshKeys(false);
-            sshLabelProvider.setKeyList(keyList);
+            final List<SshKeyPair> sshKeys = session.getSshKeys(false);
             config.load(configId, zoneUIN);
             runInUIThread(new Runnable() {
                @Override
                public void run()
                {
+                  NetworkCredentials.this.sshKeys = sshKeys;
+                  sshLabelProvider.setKeyList(sshKeys);
                   setConfig(config);
                }
             });
@@ -303,7 +257,7 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
          }
       }.start();
 	}
-	
+
 	/**
 	 * Create actions
 	 */
@@ -316,7 +270,6 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
 				save();
 			}
 		};
-		
 
       actionRefresh = new RefreshAction() {
          @Override
@@ -326,7 +279,7 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
          }
       };
 	}
-	
+
 	/**
 	 * Refresh view from button 
 	 */
@@ -338,13 +291,13 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
                "This will discard all unsaved changes. Do you really want to continue?"))
             return;          
       }
-      loadSnmpConfig(NetworkConfig.ALL_CONFIGS, NetworkConfig.ALL_ZONES);  
-      
+      loadConfiguration(NetworkConfig.ALL_CONFIGS, NetworkConfig.ALL_ZONES);  
+
       modified = false;
       bothModified = false;
       firePropertyChange(PROP_DIRTY);
 	}
-	
+
 	/**
 	 * Contribute actions to action bar
 	 */
@@ -377,7 +330,7 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
 		manager.add(actionSave);
       manager.add(actionRefresh);
 	}
-	
+
 	/**
 	 * Create "SNMP Communities" section
 	 */
@@ -390,13 +343,13 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
 		td.align = TableWrapData.FILL;
 		td.grabHorizontal = true;
 		section.setLayoutData(td);
-		
+
 		Composite clientArea = toolkit.createComposite(section);
 		GridLayout layout = new GridLayout();
 		layout.numColumns = 2;
 		clientArea.setLayout(layout);
 		section.setClient(clientArea);
-		
+
 		snmpCommunityList = new TableViewer(clientArea, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
 		toolkit.adapt(snmpCommunityList.getTable());
 		GridData gd = new GridData();
@@ -408,7 +361,7 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
 		gd.heightHint = 150;
 		snmpCommunityList.getTable().setLayoutData(gd);
 		snmpCommunityList.setContentProvider(new ArrayContentProvider());
-		
+
 		final ImageHyperlink linkAdd = toolkit.createImageHyperlink(clientArea, SWT.NONE);
 		linkAdd.setText(Messages.get().SnmpConfigurator_Add);
 		linkAdd.setImage(SharedIcons.IMG_ADD_OBJECT);
@@ -488,8 +441,8 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
 		
 		final String[] names = { "User name", "Auth type", "Priv type", "Auth secret", "Priv secret", "Comments" };
 		final int[] widths = { 100, 100, 100, 100, 100, 100 };
-		snmpUsmCredList = new SortableTableViewer(clientArea, names, widths, 0, SWT.DOWN, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
-		toolkit.adapt(snmpUsmCredList.getTable());
+		snmpUsmCredentialsList = new SortableTableViewer(clientArea, names, widths, 0, SWT.DOWN, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
+		toolkit.adapt(snmpUsmCredentialsList.getTable());
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -497,10 +450,10 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
 		gd.grabExcessVerticalSpace = true;
 		gd.verticalSpan = 5;
 		gd.heightHint = 150;
-		snmpUsmCredList.getTable().setLayoutData(gd);
-		snmpUsmCredList.setContentProvider(new ArrayContentProvider());
-		snmpUsmCredList.setLabelProvider(new SnmpUsmLabelProvider());
-		snmpUsmCredList.addDoubleClickListener(new IDoubleClickListener() {
+		snmpUsmCredentialsList.getTable().setLayoutData(gd);
+		snmpUsmCredentialsList.setContentProvider(new ArrayContentProvider());
+		snmpUsmCredentialsList.setLabelProvider(new SnmpUsmLabelProvider());
+		snmpUsmCredentialsList.addDoubleClickListener(new IDoubleClickListener() {
          @Override
          public void doubleClick(DoubleClickEvent event)
          {
@@ -597,7 +550,7 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
       layout.numColumns = 2;
       clientArea.setLayout(layout);
       section.setClient(clientArea);
-      
+
       sharedSecretList = new TableViewer(clientArea, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
       toolkit.adapt(sharedSecretList.getTable());
       GridData gd = new GridData();
@@ -689,8 +642,8 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
 
       final String[] names = { "Login", "Password", "Key" };
       final int[] widths = { 150, 150, 150 };
-      sshCredList = new SortableTableViewer(clientArea, names, widths, 0, SWT.DOWN, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
-      toolkit.adapt(sshCredList.getTable());
+      sshCredentialsList = new SortableTableViewer(clientArea, names, widths, 0, SWT.DOWN, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
+      toolkit.adapt(sshCredentialsList.getTable());
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
@@ -698,15 +651,15 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
       gd.grabExcessVerticalSpace = true;
       gd.verticalSpan = 5;
       gd.heightHint = 150;
-      sshCredList.getTable().setLayoutData(gd);
-      sshCredList.setContentProvider(new ArrayContentProvider());
-      sshLabelProvider = new SshCredLabelProvider();
-      sshCredList.setLabelProvider(sshLabelProvider);
-      sshCredList.addDoubleClickListener(new IDoubleClickListener() {
+      sshCredentialsList.getTable().setLayoutData(gd);
+      sshCredentialsList.setContentProvider(new ArrayContentProvider());
+      sshLabelProvider = new SshCredentialsLabelProvider();
+      sshCredentialsList.setLabelProvider(sshLabelProvider);
+      sshCredentialsList.addDoubleClickListener(new IDoubleClickListener() {
          @Override
          public void doubleClick(DoubleClickEvent event)
          {
-            editUsmCredentials();
+            editSshCredentials();
          }
       });
 
@@ -784,11 +737,10 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
    /**
     * Create "XXX ports" section
     */
-   private void createPortList(int type, String title, String description)
+   private TableViewer createPortList(int portType, String typeName)
    {
       Section section = toolkit.createSection(form.getBody(), Section.DESCRIPTION | Section.TITLE_BAR);
-      section.setText(title);
-      section.setDescription(description);
+      section.setText(typeName);
       TableWrapData td = new TableWrapData();
       td.align = TableWrapData.FILL;
       td.grabHorizontal = true;
@@ -800,8 +752,8 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
       clientArea.setLayout(layout);
       section.setClient(clientArea);
 
-      setPortList(type, new TableViewer(clientArea, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION));
-      toolkit.adapt(getPortList(type).getTable());
+      final TableViewer viewer = new TableViewer(clientArea, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
+      toolkit.adapt(viewer.getTable());
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
@@ -809,8 +761,9 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
       gd.grabExcessVerticalSpace = true;
       gd.verticalSpan = 4;
       gd.heightHint = 150;
-      getPortList(type).getTable().setLayoutData(gd);
-      getPortList(type).setContentProvider(new ArrayContentProvider());
+      viewer.getTable().setLayoutData(gd);
+      viewer.setContentProvider(new ArrayContentProvider());
+      viewer.setData("PortType", Integer.valueOf(portType));
 
       final ImageHyperlink linkAdd = toolkit.createImageHyperlink(clientArea, SWT.NONE);
       linkAdd.setText(Messages.get().SnmpConfigurator_Add);
@@ -822,7 +775,7 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
          @Override
          public void linkActivated(HyperlinkEvent e)
          {
-            addPort(type);
+            addPort(viewer, typeName);
          }
       });
 
@@ -836,7 +789,7 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
          @Override
          public void linkActivated(HyperlinkEvent e)
          {
-            removePort(type);
+            removePort(viewer);
          }
       });
 
@@ -850,7 +803,7 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
          @Override
          public void linkActivated(HyperlinkEvent e)
          {
-            movePort(type, true);
+            movePort(viewer, true);
          }
       });
 
@@ -864,14 +817,16 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
          @Override
          public void linkActivated(HyperlinkEvent e)
          {
-            movePort(type, false);
+            movePort(viewer, false);
          }
       });
+
+      return viewer;
    }
 
-   /* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
-	 */
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
+    */
 	@Override
 	public void setFocus()
 	{
@@ -893,14 +848,14 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
 	private void updateFieldContent()
 	{
       snmpCommunityList.setInput(config.getCommunities(zoneUIN));
-      snmpUsmCredList.setInput(config.getUsmCredentials(zoneUIN));
-      getPortList(NetworkConfig.SNMP_PORTS).setInput(config.getPorts(NetworkConfig.SNMP_PORTS, zoneUIN));
+      snmpUsmCredentialsList.setInput(config.getUsmCredentials(zoneUIN));
+      snmpPortList.setInput(config.getPorts(NetworkConfig.SNMP_PORTS, zoneUIN));
       sharedSecretList.setInput(config.getSharedSecrets(zoneUIN));
-      getPortList(NetworkConfig.AGENT_PORTS).setInput(config.getPorts(NetworkConfig.AGENT_PORTS, zoneUIN));
-      sshCredList.setInput(config.getSshCredentials(zoneUIN));
-      getPortList(NetworkConfig.SSH_PORTS).setInput(config.getPorts(NetworkConfig.SSH_PORTS, zoneUIN));
+      agentPortList.setInput(config.getPorts(NetworkConfig.AGENT_PORTS, zoneUIN));
+      sshCredentialsList.setInput(config.getSshCredentials(zoneUIN));
+      sshPortList.setInput(config.getPorts(NetworkConfig.SSH_PORTS, zoneUIN));
 	}
-	
+
 	/**
 	 * Mark view as modified
 	 */
@@ -914,9 +869,9 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.ISaveablePart#doSave(org.eclipse.core.runtime.IProgressMonitor)
-	 */
+   /**
+    * @see org.eclipse.ui.ISaveablePart#doSave(org.eclipse.core.runtime.IProgressMonitor)
+    */
 	@Override
 	public void doSave(IProgressMonitor monitor)
 	{
@@ -931,35 +886,35 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.ISaveablePart#doSaveAs()
-	 */
+   /**
+    * @see org.eclipse.ui.ISaveablePart#doSaveAs()
+    */
 	@Override
 	public void doSaveAs()
 	{
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.ISaveablePart#isDirty()
-	 */
+   /**
+    * @see org.eclipse.ui.ISaveablePart#isDirty()
+    */
 	@Override
 	public boolean isDirty()
 	{
 		return modified;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.ISaveablePart#isSaveAsAllowed()
-	 */
+   /**
+    * @see org.eclipse.ui.ISaveablePart#isSaveAsAllowed()
+    */
 	@Override
 	public boolean isSaveAsAllowed()
 	{
 		return false;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.ISaveablePart#isSaveOnCloseNeeded()
-	 */
+   /**
+    * @see org.eclipse.ui.ISaveablePart#isSaveOnCloseNeeded()
+    */
 	@Override
 	public boolean isSaveOnCloseNeeded()
 	{
@@ -996,7 +951,7 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
 					}
 				});
 			}
-			
+
 			@Override
 			protected String getErrorMessage()
 			{
@@ -1087,10 +1042,10 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
 		AddUsmCredDialog dlg = new AddUsmCredDialog(getSite().getShell(), null);
 		if (dlg.open() == Window.OK)
 		{
-			SnmpUsmCredential cred = dlg.getValue();
+			SnmpUsmCredential cred = dlg.getCredentials();
 			cred.setZoneId((int)zoneUIN);
          config.addUsmCredentials(cred, zoneUIN);
-         snmpUsmCredList.setInput(config.getUsmCredentials(zoneUIN));
+         snmpUsmCredentialsList.setInput(config.getUsmCredentials(zoneUIN));
          setModified(NetworkConfig.USM);
 		}
 	}
@@ -1100,7 +1055,7 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
     */
    private void editUsmCredentials()
    {
-      IStructuredSelection selection = (IStructuredSelection)snmpUsmCredList.getSelection();
+      IStructuredSelection selection = (IStructuredSelection)snmpUsmCredentialsList.getSelection();
       if (selection.size() != 1)
          return;
       SnmpUsmCredential cred = (SnmpUsmCredential)selection.getFirstElement();
@@ -1108,7 +1063,7 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
       if (dlg.open() == Window.OK)
       {
          final List<SnmpUsmCredential> list = config.getUsmCredentials(zoneUIN);
-         snmpUsmCredList.setInput(list.toArray());
+         snmpUsmCredentialsList.setInput(list.toArray());
          setModified(NetworkConfig.USM);
       }
    }
@@ -1119,14 +1074,14 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
 	private void removeUsmCredentials()
 	{
 		final List<SnmpUsmCredential> list = config.getUsmCredentials(zoneUIN);
-		IStructuredSelection selection = (IStructuredSelection)snmpUsmCredList.getSelection();
+		IStructuredSelection selection = (IStructuredSelection)snmpUsmCredentialsList.getSelection();
 		if (selection.size() > 0)
 		{
 			for(Object o : selection.toList())
 			{
 				list.remove(o);
 			}
-			snmpUsmCredList.setInput(list.toArray());
+			snmpUsmCredentialsList.setInput(list.toArray());
 			setModified(NetworkConfig.USM);
 		}
 	}
@@ -1139,7 +1094,7 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
    protected void moveUsmCredentials(boolean up)
    {
       final List<SnmpUsmCredential> list = config.getUsmCredentials(zoneUIN);
-      IStructuredSelection selection = (IStructuredSelection)snmpUsmCredList.getSelection();
+      IStructuredSelection selection = (IStructuredSelection)snmpUsmCredentialsList.getSelection();
       if (selection.size() > 0)
       {
          for(Object o : selection.toList())
@@ -1160,7 +1115,7 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
                Collections.swap(list, index + 1, index);
             }
          }
-         snmpUsmCredList.setInput(list);
+         snmpUsmCredentialsList.setInput(list);
          setModified(NetworkConfig.USM);
       }
    }
@@ -1238,12 +1193,12 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
     */
    private void addSshCredentials()
    {
-      AddSshCredDialog dlg = new AddSshCredDialog(getSite().getShell(), null, keyList);
+      EditSSHCredentialsDialog dlg = new EditSSHCredentialsDialog(getSite().getShell(), null, sshKeys);
       if (dlg.open() == Window.OK)
       {
-         SshCredential cred = dlg.getValue();
+         SSHCredentials cred = dlg.getCredentials();
          config.addSshCredentials(cred, zoneUIN);
-         sshCredList.setInput(config.getSshCredentials(zoneUIN));
+         sshCredentialsList.setInput(config.getSshCredentials(zoneUIN));
          setModified(NetworkConfig.SSH_CREDENTIALS);
       }
    }
@@ -1253,15 +1208,15 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
     */
    private void editSshCredentials()
    {
-      IStructuredSelection selection = (IStructuredSelection)sshCredList.getSelection();
+      IStructuredSelection selection = (IStructuredSelection)sshCredentialsList.getSelection();
       if (selection.size() != 1)
          return;
-      SshCredential cred = (SshCredential)selection.getFirstElement();
-      AddSshCredDialog dlg = new AddSshCredDialog(getSite().getShell(), cred, keyList);
+      SSHCredentials cred = (SSHCredentials)selection.getFirstElement();
+      EditSSHCredentialsDialog dlg = new EditSSHCredentialsDialog(getSite().getShell(), cred, sshKeys);
       if (dlg.open() == Window.OK)
       {
-         final List<SshCredential> list = config.getSshCredentials(zoneUIN);
-         sshCredList.setInput(list.toArray());
+         final List<SSHCredentials> list = config.getSshCredentials(zoneUIN);
+         sshCredentialsList.setInput(list.toArray());
          setModified(NetworkConfig.SSH_CREDENTIALS);
       }
    }
@@ -1271,15 +1226,15 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
     */
    private void removeSshCredentials()
    {
-      final List<SshCredential> list = config.getSshCredentials(zoneUIN);
-      IStructuredSelection selection = (IStructuredSelection)sshCredList.getSelection();
+      final List<SSHCredentials> list = config.getSshCredentials(zoneUIN);
+      IStructuredSelection selection = (IStructuredSelection)sshCredentialsList.getSelection();
       if (selection.size() > 0)
       {
          for(Object o : selection.toList())
          {
             list.remove(o);
          }
-         sshCredList.setInput(list.toArray());
+         sshCredentialsList.setInput(list.toArray());
          setModified(NetworkConfig.SSH_CREDENTIALS);
       }
    }
@@ -1291,8 +1246,8 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
     */
    protected void moveSshCredentials(boolean up)
    {
-      final List<SshCredential> list = config.getSshCredentials(zoneUIN);
-      IStructuredSelection selection = (IStructuredSelection)sshCredList.getSelection();
+      final List<SSHCredentials> list = config.getSshCredentials(zoneUIN);
+      IStructuredSelection selection = (IStructuredSelection)sshCredentialsList.getSelection();
       if (selection.size() > 0)
       {
          for(Object o : selection.toList())
@@ -1313,7 +1268,7 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
                Collections.swap(list, index + 1, index);
             }
          }
-         sshCredList.setInput(list);
+         sshCredentialsList.setInput(list);
          setModified(NetworkConfig.SSH_CREDENTIALS);
       }
    }
@@ -1323,16 +1278,17 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
     * 
     * @param type port type
     */
-   private void addPort(int type)
+   private void addPort(TableViewer viewer, String typeName)
    {
-      InputDialog dlg = new InputDialog(getSite().getShell(), "Add " + getPortTypeAsString(type) + " port", 
-            "Please enter " + getPortTypeAsString(type) + " port", "", null); //$NON-NLS-3$
+      int portType = (Integer)viewer.getData("PortType");
+      InputDialog dlg = new InputDialog(getSite().getShell(), String.format("Add %s port", typeName), 
+            String.format("Please enter %s port", typeName), "", null); // $NON-NLS-2$
       if (dlg.open() == Window.OK)
       {
          String value = dlg.getValue();
-         config.addPort(type, Integer.parseInt(value), zoneUIN);
-         getPortList(type).setInput(config.getPorts(type, zoneUIN));
-         setModified(type);
+         config.addPort(portType, Integer.parseInt(value), zoneUIN);
+         viewer.setInput(config.getPorts(portType, zoneUIN));
+         setModified(portType);
       }
    }
 
@@ -1341,18 +1297,19 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
     * 
     * @param type port type
     */
-   private void removePort(int type)
+   private void removePort(TableViewer viewer)
    {
-      final List<Integer> list = config.getPorts(type, zoneUIN);
-      IStructuredSelection selection = (IStructuredSelection)getPortList(type).getSelection();
+      int portType = (Integer)viewer.getData("PortType");
+      final List<Integer> list = config.getPorts(portType, zoneUIN);
+      IStructuredSelection selection = viewer.getStructuredSelection();
       if (selection.size() > 0)
       {
          for(Object o : selection.toList())
          {
             list.remove((Integer)o);
          }
-         getPortList(type).setInput(list.toArray());
-         setModified(type);
+         viewer.setInput(list.toArray());
+         setModified(portType);
       }
    }
 
@@ -1362,10 +1319,11 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
     * @param type port type
     * @param up true if up, false if down
     */
-   protected void movePort(int type, boolean up)
+   protected void movePort(TableViewer viewer, boolean up)
    {
-      final List<Integer> list = config.getPorts(type, zoneUIN);
-      IStructuredSelection selection = (IStructuredSelection)getPortList(type).getSelection();
+      int portType = (Integer)viewer.getData("PortType");
+      final List<Integer> list = config.getPorts(portType, zoneUIN);
+      IStructuredSelection selection = viewer.getStructuredSelection();
       if (selection.size() > 0)
       {
          for(Object o : selection.toList())
@@ -1386,8 +1344,8 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
                Collections.swap(list, index + 1, index);
             }
          }
-         getPortList(type).setInput(list);
-         setModified(type);
+         viewer.setInput(list);
+         setModified(portType);
       }
    }
 }

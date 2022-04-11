@@ -688,11 +688,11 @@ public class NXCSession
                      sendNotification(new SessionNotification(SessionNotification.SYSTEM_ACCESS_CHANGED, userSystemRights));
                      break;
                   case NXCPCodes.CMD_UPDATE_BIZSVC_CHECK:
-                     sendNotification(new SessionNotification(SessionNotification.BUSINESS_SERVICE_CHECK_MODIFY,
+                     sendNotification(new SessionNotification(SessionNotification.BIZSVC_CHECK_MODIFIED,
                            msg.getFieldAsInt64(NXCPCodes.VID_CHECK_LIST_BASE), new BusinessServiceCheck(msg, NXCPCodes.VID_CHECK_LIST_BASE)));
                      break;
                   case NXCPCodes.CMD_DELETE_BIZSVC_CHECK:
-                     sendNotification(new SessionNotification(SessionNotification.BUSINESS_SERVICE_CHECK_DELETE,
+                     sendNotification(new SessionNotification(SessionNotification.BIZSVC_CHECK_DELETED,
                            msg.getFieldAsInt64(NXCPCodes.VID_CHECK_ID)));
                      break;
                   default:
@@ -8359,22 +8359,24 @@ public class NXCSession
       final NXCPMessage response = waitForRCC(msg.getMessageId());
 
       int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_STRINGS);
-      long stringBase = NXCPCodes.VID_COMMUNITY_STRING_LIST_BASE, zoneBase = NXCPCodes.VID_COMMUNITY_STRING_ZONE_LIST_BASE;
+      long stringBase = NXCPCodes.VID_COMMUNITY_STRING_LIST_BASE;
+      long zoneBase = NXCPCodes.VID_COMMUNITY_STRING_ZONE_LIST_BASE;
       Map<Integer, List<String>> map = new HashMap<Integer, List<String>>(count);
-      List<String> stringList = new ArrayList<String>();
-      int zoneId = 0;
+      List<String> communities = new ArrayList<String>();
+      int currentZoneUIN = response.getFieldAsInt32(zoneBase);
       for(int i = 0; i < count; i++)
       {
-         if (i != 0 && zoneId != response.getFieldAsInt32(zoneBase))
+         int zoneUIN = response.getFieldAsInt32(zoneBase++);
+         if (currentZoneUIN != zoneUIN)
          {
-            map.put(zoneId, stringList);
-            stringList = new ArrayList<String>();
+            map.put(currentZoneUIN, communities);
+            communities = new ArrayList<String>();
+            currentZoneUIN = zoneUIN;
          }
-         stringList.add(response.getFieldAsString(stringBase++));
-         zoneId = response.getFieldAsInt32(zoneBase++);
+         communities.add(response.getFieldAsString(stringBase++));
       }
       if (count > 0)
-         map.put(zoneId, stringList);
+         map.put(currentZoneUIN, communities);
       return map;
    }
 
@@ -8441,13 +8443,12 @@ public class NXCSession
       int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_RECORDS);
       Map<Integer, List<SnmpUsmCredential>> map = new HashMap<Integer, List<SnmpUsmCredential>>(count);
       List<SnmpUsmCredential> credentials = new ArrayList<SnmpUsmCredential>();
-      long varId = NXCPCodes.VID_USM_CRED_LIST_BASE;
-      SnmpUsmCredential cred;
+      long fieldId = NXCPCodes.VID_USM_CRED_LIST_BASE;
       int zoneId = 0;
-      for(int i = 0; i < count; i++, varId += 10)
+      for(int i = 0; i < count; i++, fieldId += 10)
       {
-         cred = new SnmpUsmCredential(response, varId);
-         if (i != 0 && zoneId != cred.getZoneId())
+         SnmpUsmCredential cred = new SnmpUsmCredential(response, fieldId);
+         if ((i != 0) && (zoneId != cred.getZoneId()))
          {
             map.put(zoneId, credentials);
             credentials = new ArrayList<SnmpUsmCredential>();
@@ -8512,11 +8513,101 @@ public class NXCSession
    }
 
    /**
+    * Get SSH credentials for all zones and global ones
+    * 
+    * @param objectId journal owner object ID
+    * @param entryId journal entry ID
+    * @param description journal entry description
+    * @return list of SSH credentials
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public Map<Integer, List<SSHCredentials>> getSshCredentials() throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_SSH_CREDENTIALS);
+      sendMessage(msg);
+
+      NXCPMessage response = waitForRCC(msg.getMessageId());
+
+      int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_ELEMENTS);
+      Map<Integer, List<SSHCredentials>> credentials = new HashMap<Integer, List<SSHCredentials>>(count);
+      if (count > 0)
+      {
+         List<SSHCredentials> zoneCredentials = new ArrayList<SSHCredentials>();
+         long fieldId = NXCPCodes.VID_ELEMENT_LIST_BASE;
+         int currentZoneUIN = response.getFieldAsInt32(fieldId);
+         for(int i = 0; i < count; i++, fieldId += 10)
+         {
+            int zoneUIN = response.getFieldAsInt32(fieldId);
+            if (zoneUIN != currentZoneUIN)
+            {
+               credentials.put(currentZoneUIN, zoneCredentials);
+               zoneCredentials = new ArrayList<SSHCredentials>();
+            }
+            zoneCredentials.add(new SSHCredentials(response, fieldId + 1));
+         }
+         credentials.put(currentZoneUIN, zoneCredentials);
+      }
+      return credentials;
+   }
+
+   /**
+    * Get SSH credentials for specified zone
+    * 
+    * @param objectId journal owner object ID
+    * @param entryId journal entry ID
+    * @param description journal entry description
+    * @return list of SSH credentials
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public List<SSHCredentials> getSshCredentials(int zoneUIN) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_SSH_CREDENTIALS);
+      msg.setFieldInt32(NXCPCodes.VID_ZONE_UIN, zoneUIN);
+      sendMessage(msg);
+
+      NXCPMessage response = waitForRCC(msg.getMessageId());
+
+      int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_ELEMENTS);
+      List<SSHCredentials> credentials = new ArrayList<SSHCredentials>(count);
+      long fieldId = NXCPCodes.VID_ELEMENT_LIST_BASE;
+
+      for(int i = 0; i < count; i++, fieldId += 10)
+         credentials.add(new SSHCredentials(response, fieldId));
+
+      return credentials;
+   }
+
+   /**
+    * Update list of well-known SSH credentials on the server. Existing list will be replaced by the provided one.
+    *
+    * @param zoneUIN Zone UIN (unique identification number)
+    * @param sshCredentials List of SSH credentials
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void updateSshCredentials(int zoneUIN, List<SSHCredentials> sshCredentials) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_UPDATE_SSH_CREDENTIALS);
+      msg.setFieldInt32(NXCPCodes.VID_ZONE_UIN, zoneUIN);
+      long fieldId = NXCPCodes.VID_ELEMENT_LIST_BASE;
+      for(SSHCredentials element : sshCredentials)
+      {
+         element.fillMessage(msg, fieldId);
+         fieldId += 10;
+      }
+      msg.setFieldInt32(NXCPCodes.VID_NUM_ELEMENTS, sshCredentials.size());
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
+
+   /**
     * Get agent's master configuration file.
     *
     * @param nodeId Node ID
     * @return Master configuration file of agent running on given node
-    * @throws IOException  if socket I/O error occurs
+    * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public String readAgentConfigurationFile(long nodeId) throws IOException, NXCException
@@ -12528,18 +12619,18 @@ public class NXCSession
       int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_ELEMENTS);
       Map<Integer, List<String>> map = new HashMap<Integer, List<String>>(count);
       List<String> stringList = new ArrayList<String>();
-      int currentZoneUIN = 0;
-      long baseId = NXCPCodes.VID_SHARED_SECRET_LIST_BASE;
-      for(int i = 0; i < count; i++, baseId += 10)
+      long fieldId = NXCPCodes.VID_SHARED_SECRET_LIST_BASE;
+      int currentZoneUIN = response.getFieldAsInt32(fieldId + 1);
+      for(int i = 0; i < count; i++, fieldId += 10)
       {
-         int zoneUIN = response.getFieldAsInt32(baseId + 1);
-         if ((i != 0) && (currentZoneUIN != zoneUIN))
+         int zoneUIN = response.getFieldAsInt32(fieldId + 1);
+         if (currentZoneUIN != zoneUIN)
          {
             map.put(currentZoneUIN, stringList);
             stringList = new ArrayList<String>();
             currentZoneUIN = zoneUIN;
          }
-         stringList.add(response.getFieldAsString(baseId++));
+         stringList.add(response.getFieldAsString(fieldId++));
       }
       if (count > 0)
          map.put(currentZoneUIN, stringList);
@@ -12562,11 +12653,11 @@ public class NXCSession
       final NXCPMessage response = waitForRCC(msg.getMessageId());
 
       int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_ELEMENTS);
-      long baseId = NXCPCodes.VID_SHARED_SECRET_LIST_BASE;
+      long fieldId = NXCPCodes.VID_SHARED_SECRET_LIST_BASE;
       List<String> stringList = new ArrayList<String>();
       for(int i = 0; i < count; i++)
       {
-         stringList.add(response.getFieldAsString(baseId++));
+         stringList.add(response.getFieldAsString(fieldId++));
       }
       return stringList;
    }
@@ -12610,22 +12701,22 @@ public class NXCSession
 
       int count = response.getFieldAsInt32(NXCPCodes.VID_ZONE_PORT_COUNT);
       Map<Integer, List<Integer>> map = new HashMap<Integer, List<Integer>>(count);
-      List<Integer> stringList = new ArrayList<Integer>();
-      int currentZoneUIN = 0;
+      List<Integer> portList = new ArrayList<Integer>();
       long fieldId = NXCPCodes.VID_ZONE_PORT_LIST_BASE;
+      int currentZoneUIN = response.getFieldAsInt32(fieldId + 1);
       for(int i = 0; i < count; i++, fieldId += 10)
       {
          int zoneUIN = response.getFieldAsInt32(fieldId + 1);
-         if ((i != 0) && (currentZoneUIN != zoneUIN))
+         if (currentZoneUIN != zoneUIN)
          {
-            map.put(currentZoneUIN, stringList);
-            stringList = new ArrayList<Integer>();
+            map.put(currentZoneUIN, portList);
+            portList = new ArrayList<Integer>();
             currentZoneUIN = zoneUIN;
          }
-         stringList.add(response.getFieldAsInt32(fieldId));
+         portList.add(response.getFieldAsInt32(fieldId));
       }
       if (count > 0)
-         map.put(currentZoneUIN, stringList);
+         map.put(currentZoneUIN, portList);
       return map;
    }
 
@@ -13150,99 +13241,6 @@ public class NXCSession
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)objectId);
       msg.setFieldInt32(NXCPCodes.VID_RECORD_ID, (int)entryId);
       msg.setField(NXCPCodes.VID_DESCRIPTION, description);
-      sendMessage(msg);
-      waitForRCC(msg.getMessageId());
-   }
-
-   /**
-    * Get SSH credentials for all zones and global ones
-    * 
-    * @param objectId journal owner object ID
-    * @param entryId journal entry ID
-    * @param description journal entry description
-    * @return list of SSH credentials
-    * @throws IOException if socket I/O error occurs
-    * @throws NXCException if NetXMS server returns an error or operation was timed out
-    */
-   public Map<Integer, List<SshCredential>> getSshCredentials() throws IOException, NXCException
-   {
-      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_SSH_CREDENTIALS);
-      msg.setFieldInt32(NXCPCodes.VID_ZONE_UIN, -2);
-      sendMessage(msg);
-
-      NXCPMessage response = waitForRCC(msg.getMessageId());
-
-      int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_ELEMENTS);
-      Map<Integer, List<SshCredential>> credentials = new HashMap<Integer, List<SshCredential>>(count);
-      long base = NXCPCodes.VID_ELEMENT_LIST_BASE;
-
-      for(int i = 0; i < count; i++, base += 10)
-      {
-         int zoneUIN = msg.getFieldAsInt32(base + 3);
-         if(credentials.containsKey(zoneUIN))
-         {
-            credentials.get(zoneUIN).add(new SshCredential(response, base));
-         }
-         else
-         {
-            List<SshCredential> crdList = new ArrayList<SshCredential>();
-            crdList.add(new SshCredential(response, base));
-            credentials.put(zoneUIN, crdList);
-         }
-      }
-         
-
-      return credentials;
-   }
-
-   /**
-    * Get SSH credentials for specified zone
-    * 
-    * @param objectId journal owner object ID
-    * @param entryId journal entry ID
-    * @param description journal entry description
-    * @return list of SSH credentials
-    * @throws IOException if socket I/O error occurs
-    * @throws NXCException if NetXMS server returns an error or operation was timed out
-    */
-   public List<SshCredential> getSshCredentials(int zoneUIN) throws IOException, NXCException
-   {
-      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_SSH_CREDENTIALS);
-      msg.setFieldInt32(NXCPCodes.VID_ZONE_UIN, (int)zoneUIN);
-      sendMessage(msg);
-
-      NXCPMessage response = waitForRCC(msg.getMessageId());
-
-      int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_ELEMENTS);
-      List<SshCredential> credentials = new ArrayList<SshCredential>(count);
-      long base = NXCPCodes.VID_ELEMENT_LIST_BASE;
-
-      for(int i = 0; i < count; i++, base += 10)
-         credentials.add(new SshCredential(response, base));
-
-      return credentials;
-   }
-
-   /**
-    * Update list of well-known SSH credentials on the server. Existing list will be replaced by the provided one.
-    *
-    * @param zoneUIN Zone UIN (unique identification number)
-    * @param sshCredentials List of SSH credentials
-    * @throws IOException if socket I/O error occurs
-    * @throws NXCException if NetXMS server returns an error or operation was timed out
-    */
-   public void updateSshCredentials(int zoneUIN, List<SshCredential> sshCredentials) throws IOException, NXCException
-   {
-      final NXCPMessage msg = newMessage(NXCPCodes.CMD_UPDATE_SSH_CREDENTIALS);
-      msg.setFieldInt32(NXCPCodes.VID_ZONE_UIN, zoneUIN);
-      long base = NXCPCodes.VID_ELEMENT_LIST_BASE;
-      for(SshCredential element : sshCredentials)
-      {
-         element.fillMessage(msg, base);
-         base += 10;
-      }
-
-      msg.setFieldInt32(NXCPCodes.VID_NUM_RECORDS, sshCredentials.size());
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }

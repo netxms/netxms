@@ -4913,7 +4913,7 @@ static UINT32 IndicatorSnmpWalkerCallback(SNMP_Variable *var, SNMP_Transport *tr
 /**
  * Configuration poll: check for SNMP
  */
-bool Node::confPollSnmp(uint32_t rqId)
+bool Node::confPollSnmp(uint32_t requestId)
 {
    if (((m_capabilities & NC_IS_SNMP) && (m_state & NSF_SNMP_UNREACHABLE)) ||
        !m_ipAddress.isValidUnicast() || (m_flags & NF_DISABLE_SNMP))
@@ -5371,18 +5371,14 @@ bool Node::confPollSnmp(uint32_t rqId)
 }
 
 /**
- * Check if this node is reachable via SSH with default credentials
- */
-bool Node::checkSshConnection()
-{
-   return checkSshConnection(m_sshLogin, m_sshPassword, m_sshKeyId, m_sshPort);
-}
-
-/**
  * Check if this node is reachable via SSH
  */
-bool Node::checkSshConnection(const TCHAR* login, const TCHAR* password, uint32_t keyId, uint16_t port)
+bool Node::checkSshConnection(const TCHAR *login, const TCHAR *password, uint32_t keyId, uint16_t port)
 {
+   shared_ptr<Node> proxyNode = static_pointer_cast<Node>(FindObjectById(getEffectiveSshProxy()));
+   if (proxyNode == nullptr)
+      return false;
+
    StringBuffer request(_T("SSH.CheckConnection("));
    TCHAR ipAddr[64];
    request.append(getIpAddress().toString(ipAddr));
@@ -5397,41 +5393,37 @@ bool Node::checkSshConnection(const TCHAR* login, const TCHAR* password, uint32_
    request.append(_T(')'));
 
    TCHAR response[2];
-   shared_ptr<Node> proxyNode = static_pointer_cast<Node>(FindObjectById(getEffectiveSshProxy()));
-   
-   return proxyNode != nullptr && proxyNode->getMetricFromAgent(request, response, 2) == DCE_SUCCESS && response[0] == _T('1');
+   return proxyNode->getMetricFromAgent(request, response, 2) == DCE_SUCCESS && response[0] == _T('1');
 }
 
 /**
  * Configuration poll: check for SSH
  */
-bool Node::confPollSsh(uint32_t rqId)
+bool Node::confPollSsh(uint32_t requestId)
 {
    if ((m_flags & NF_DISABLE_SSH) || !m_ipAddress.isValidUnicast())
       return false;
 
    sendPollerMsg(_T("Checking SSH connectivity...\r\n"));
 
-   bool result = checkSshConnection();
-   bool changed = false;
-   if (!result)
+   bool success = checkSshConnection();
+   bool modified = false;
+   if (!success)
    {
-      IntegerArray<uint16_t> ports = GetWellKnownPorts(_T("ssh"), getZoneUIN());
-      StructArray<SshCredentials> credentials = GetSshCredentials(getZoneUIN());
-      bool breakFlag = false;
-      for (int i = 0; i < ports.size() && !breakFlag; i++)
+      IntegerArray<uint16_t> ports = GetWellKnownPorts(_T("ssh"), m_zoneUIN);
+      StructArray<SSHCredentials> credentials = GetSSHCredentials(m_zoneUIN);
+      for (int i = 0; (i < ports.size()) && !success; i++)
       {
+         uint16_t port = ports.get(i);
          for (int j = 0; j < credentials.size(); j++)
          {
-            SshCredentials* crd = credentials.get(j);
-            result = checkSshConnection(crd->login, crd->password,
-                                        crd->keyId, ports.get(i));
-            if (result)
+            SSHCredentials *crd = credentials.get(j);
+            success = checkSshConnection(crd->login, crd->password, crd->keyId, port);
+            if (success)
             {
-               breakFlag = true;
-               changed = true;
+               modified = true;
                lockProperties();
-               m_sshPort = ports.get(i);
+               m_sshPort = port;
                _tcslcpy(m_sshLogin, crd->login, MAX_SSH_LOGIN_LEN);
                _tcslcpy(m_sshPassword, crd->password, MAX_SSH_PASSWORD_LEN);
                m_sshKeyId = crd->keyId;
@@ -5443,22 +5435,22 @@ bool Node::confPollSsh(uint32_t rqId)
    }
 
    // Process result
-   if (result)
+   if (success)
    {
-      sendPollerMsg(_T("SSH connection avaliable\r\n"));
+      sendPollerMsg(POLLER_INFO _T("SSH connection is available\r\n"));
       nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 7, _T("ConfPoll(%s): SSH connected"), m_name);
       if (!(m_capabilities & NC_IS_SSH))
       {
          m_capabilities |= NC_IS_SSH;
-         changed = true;
+         modified = true;
       }
    }
    else
    {
-      sendPollerMsg(_T("Cannot connect to SSH\r\n"));
+      sendPollerMsg(POLLER_ERROR _T("Cannot connect to SSH\r\n"));
       nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("ConfPoll(%s): SSH unreachable"), m_name);
    }
-   return changed;
+   return modified;
 }
 
 /**

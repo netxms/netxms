@@ -24,7 +24,7 @@ import org.netxms.base.NXCPMessage;
 /**
  * SSH credentials object
  */
-public class SshCredential
+public class SSHCredentials
 {
    private String login;
    private String password;
@@ -37,7 +37,7 @@ public class SshCredential
     * @param password
     * @param keyId
     */
-   public SshCredential(String login, String password, int keyId)
+   public SSHCredentials(String login, String password, int keyId)
    {
       this.login = login;
       this.password = password;
@@ -45,16 +45,29 @@ public class SshCredential
    }
 
    /**
-    * Create new SSH credentials object from NXCPMessage
+    * Create new SSH credentials object from NXCP message
     * 
-    * @param msg message
-    * @param base base field ID
+    * @param msg NXCP message
+    * @param baseId base field ID
     */
-   public SshCredential(NXCPMessage msg, long base)
+   public SSHCredentials(NXCPMessage msg, long baseId)
    {
-      login = msg.getFieldAsString(base);
-      password = msg.getFieldAsString(base + 1);
-      keyId = msg.getFieldAsInt32(base + 2);
+      login = msg.getFieldAsString(baseId);
+      password = msg.getFieldAsString(baseId + 1);
+      keyId = msg.getFieldAsInt32(baseId + 2);
+   }
+
+   /**
+    * Fill NXCP message with object data
+    * 
+    * @param msg NXCP message
+    * @param baseId base field ID
+    */
+   public void fillMessage(NXCPMessage msg, long baseId)
+   {
+      msg.setField(baseId, login);
+      msg.setField(baseId + 1, password);
+      msg.setFieldInt32(baseId + 2, keyId);
    }
 
    /**
@@ -106,15 +119,11 @@ public class SshCredential
    }
 
    /**
-    * Fill NXCPMessage with object data
-    * 
-    * @param msg message
-    * @param base base field ID
+    * @see java.lang.Object#toString()
     */
-   public void fillMessage(NXCPMessage msg, long base)
+   @Override
+   public String toString()
    {
-      msg.setField(base, login);
-      msg.setField(base + 1, password);
-      msg.setFieldInt32(base + 2, keyId);
+      return "SSHCredentials [login=" + login + ", password=" + password + ", keyId=" + keyId + "]";
    }
 }

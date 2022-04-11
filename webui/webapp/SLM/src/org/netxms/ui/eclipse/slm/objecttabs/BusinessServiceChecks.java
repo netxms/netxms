@@ -225,7 +225,7 @@ public class BusinessServiceChecks extends ObjectTab
          @Override
          public void notificationHandler(SessionNotification n)
          {
-            if (n.getCode() == SessionNotification.BUSINESS_SERVICE_CHECK_MODIFY)
+            if (n.getCode() == SessionNotification.BIZSVC_CHECK_MODIFIED)
             {
                boolean needRefresh = false;
 
@@ -242,7 +242,7 @@ public class BusinessServiceChecks extends ObjectTab
                if (needRefresh)
                   refreshTimer.execute();
             }
-            else if (n.getCode() == SessionNotification.BUSINESS_SERVICE_CHECK_DELETE)
+            else if (n.getCode() == SessionNotification.BIZSVC_CHECK_DELETED)
             {
                synchronized(deletedChecks)
                {

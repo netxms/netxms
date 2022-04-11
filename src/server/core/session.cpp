@@ -10502,7 +10502,7 @@ void ClientSession::sendNetworkCredList(const NXCPMessage& request)
                   GetZoneAgentSecretList(&response, zoneUIN);
                   break;
                case CMD_GET_SSH_CREDENTIALS:
-                  GetSshCredentialsMessage(&response, zoneUIN);
+                  ZoneSSHCredentialsToMessage(zoneUIN, &response);
                   break;
             }
          }
@@ -10537,7 +10537,7 @@ void ClientSession::sendNetworkCredList(const NXCPMessage& request)
                GetFullAgentSecretList(&response);
                break;
             case CMD_GET_SSH_CREDENTIALS:
-               GetSshCredentialsMessage(&response, -2);
+               FullSSHCredentialsToMessage(&response);
                break;
          }
       }
@@ -15467,6 +15467,53 @@ void ClientSession::updateSharedSecretList(const NXCPMessage& request)
 }
 
 /**
+ * Update list of well-known SSH credentials. Existing list will be replaced by provided one.
+ *
+ * Called by:
+ * CMD_UPDATE_SSH_CREDENTIALS
+ *
+ * Expected input parameters:
+ * VID_ZONE_UIN            Zone UIN (unique identification number)
+ * VID_NUM_RECORDS         Number of SSH credentials
+ * VID_ELEMENT_LIST_BASE   Base element of SSH credentials list
+ *
+ * Return values:
+ * VID_RCC                          Request completion code
+ */
+void ClientSession::updateSshCredentials(const NXCPMessage& request)
+{
+   int32_t zoneUIN = request.getFieldAsInt32(VID_ZONE_UIN);
+   shared_ptr<Zone> zone;
+   if (zoneUIN != ALL_ZONES)
+      zone = FindZoneByUIN(zoneUIN);
+
+   uint32_t rcc;
+   if ((zoneUIN == ALL_ZONES) || (zone != nullptr))
+   {
+      if (((zoneUIN == ALL_ZONES) && (m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONFIG)) ||
+          ((zone != nullptr) && zone->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY)))
+      {
+         rcc = UpdateSSHCredentials(request, zoneUIN);
+         if (rcc == RCC_SUCCESS)
+            writeAuditLog(AUDIT_SYSCFG, true, (zone != nullptr) ? zone->getId() : 0, _T("Updated list of well-known SSH credentials"));
+      }
+      else
+      {
+         writeAuditLog(AUDIT_SYSCFG, false, (zone != nullptr) ? zone->getId() : 0, _T("Access denied on updating list of well-known SSH credentials"));
+         rcc = RCC_ACCESS_DENIED;
+      }
+   }
+   else
+   {
+      rcc = RCC_INVALID_ZONE_ID;
+   }
+
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+   response.setField(VID_RCC, rcc);
+   sendMessage(response);
+}
+
+/**
  * Update SNMP port list
  */
 void ClientSession::updateWellKnownPortList(const NXCPMessage& request)
@@ -16382,94 +16429,5 @@ void ClientSession::editMaintJournal(const NXCPMessage& request)
       debugPrintf(6, _T("Maintenance journal entry %u edit failed: invalid object ID %u"), entryId, object->getId());
    }
 
-   sendMessage(response);
-}
-
-/**
- * Update list of well-known SSH credentials. Existing list will be replaced by provided one.
- *
- * Called by:
- * CMD_UPDATE_SSH_CREDENTIALS
- *
- * Expected input parameters:
- * VID_ZONE_UIN            Zone UIN (unique identification number)
- * VID_NUM_RECORDS         Number of SSH credentials
- * VID_ELEMENT_LIST_BASE   Base element of SSH credentials list
- *
- * Return values:
- * VID_RCC                          Request completion code
- */
-void ClientSession::updateSshCredentials(const NXCPMessage& request)
-{
-   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
-
-   uint32_t rcc = RCC_SUCCESS;
-   if (m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONFIG)
-   {
-      int32_t zoneUIN = request.getFieldAsInt32(VID_ZONE_UIN);
-      shared_ptr<Zone> zone = FindZoneByUIN(zoneUIN);
-      if (zoneUIN == -1 || zone != nullptr)
-      {
-         DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-         if (DBBegin(hdb))
-         {
-            if (ExecuteQueryOnObject(hdb, zoneUIN, _T("DELETE FROM ssh_credentials WHERE zone_uin=?")))
-            {
-
-               DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO ssh_credentials (zone_uin,id,login,password,key_id) VALUES(?,?,?,?,?)"), true);
-               if (hStmt != nullptr)
-               {
-                  int count = (int)request.getFieldAsUInt32(VID_NUM_RECORDS);
-                  DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, zoneUIN);
-                  long base = VID_ELEMENT_LIST_BASE;
-                  for (int i = 0; i < count; i++, base += 10)
-                  {
-                     DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, i + 1);                                               // id
-                     DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, request.getFieldAsString(base), DB_BIND_DYNAMIC);     // login
-                     DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, request.getFieldAsString(base + 1), DB_BIND_DYNAMIC); // password
-                     DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, request.getFieldAsInt32(base + 2));                   // key_id
-                     if (!DBExecute(hStmt))
-                     {
-                        rcc = RCC_DB_FAILURE;
-                        break;
-                     }
-                  }
-                  DBFreeStatement(hStmt);
-               }
-               else
-               {
-                  rcc = RCC_DB_FAILURE;
-               }
-            }
-            else
-            {
-               rcc = RCC_DB_FAILURE;
-            }
-
-            if (rcc == RCC_SUCCESS)
-            {
-               DBCommit(hdb);
-               NotifyClientSessions(NX_NOTIFY_USM_CONFIG_CHANGED, zoneUIN);
-            }
-            else
-               DBRollback(hdb);
-         }
-         else
-         {
-            rcc = RCC_DB_FAILURE;
-         }
-         DBConnectionPoolReleaseConnection(hdb);
-      }
-      else
-      {
-         rcc = RCC_INVALID_ZONE_ID;
-      }
-   }
-   else
-   {
-      rcc = RCC_ACCESS_DENIED;
-   }
-
-   response.setField(VID_RCC, rcc);
    sendMessage(response);
 }

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,52 +27,48 @@ import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
-import org.netxms.client.SshCredential;
+import org.netxms.client.SSHCredentials;
 import org.netxms.client.SshKeyPair;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
 /**
- * Add USM credentials dialog
+ * Add/edit SSH credentials dialog
  */
-public class AddSshCredDialog extends Dialog
+public class EditSSHCredentialsDialog extends Dialog
 {
    private LabeledText login;
    private LabeledText password;
    private Combo key;
+   private SSHCredentials credentials;
+   private List<SshKeyPair> sshKeys;
 
-   private SshCredential cred;
-   private List<SshKeyPair> keyList;
-			
 	/**
     * @param parentShell parent shell
-    * @param cred currently chosen credential
-    * @param keyList list of available SSH keys
+    * @param credentials currently chosen credential
+    * @param sshKeys list of available SSH keys
     */
-   public AddSshCredDialog(Shell parentShell, SshCredential cred, List<SshKeyPair> keyList)
+   public EditSSHCredentialsDialog(Shell parentShell, SSHCredentials credentials, List<SshKeyPair> sshKeys)
 	{
 		super(parentShell);
-		this.cred = cred;
-      this.keyList = keyList;
+		this.credentials = credentials;
+      this.sshKeys = sshKeys;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
-	 */
+   /**
+    * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
+    */
 	@Override
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-      if (cred == null)
-         newShell.setText("Add SSH credential");
-      else
-         newShell.setText("Edit SSH credential");
+      newShell.setText((credentials == null) ? "Add SSH Credentials" : "Edit SSH Credentials");
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createDialogArea(Composite parent)
 	{
@@ -101,65 +97,64 @@ public class AddSshCredDialog extends Dialog
 
       key = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, "SSH Key", WidgetHelper.DEFAULT_LAYOUT_DATA);
 
-      int initialKeyIndex = 0;
-      key.add(" ");
-      for(int i = 0; i < keyList.size(); i++)
+      key.add("");
+      for(int i = 0; i < sshKeys.size(); i++)
       {
-         key.add(keyList.get(i).getName());
-         if (cred != null && keyList.get(i).getId() == cred.getKeyId())
-            initialKeyIndex = i + 1;
+         SshKeyPair kp = sshKeys.get(i);
+         key.add(kp.getName());
+         if ((credentials != null) && (kp.getId() == credentials.getKeyId()))
+            key.select(key.getItemCount() - 1);
       }
 
-      if (cred != null)
+      if (credentials != null)
       {
-         login.setText(cred.getLogin());
-         password.setText(cred.getPassword());
+         login.setText(credentials.getLogin());
+         password.setText(credentials.getPassword());
       }
-
-      key.select(initialKeyIndex);
 
 		return dialogArea;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#okPressed()
-	 */
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#okPressed()
+    */
 	@Override
 	protected void okPressed()
 	{
       int index = key.getSelectionIndex();
-      int keyId = (index > 0) ? keyList.get(index - 1).getId() : 0;
+      int keyId = (index > 0) ? sshKeys.get(index - 1).getId() : 0;
 
       if (login.getText().trim().equals(""))
       {
-         MessageDialogHelper.openError(getShell(), "Error", "Please enter login.");
+         MessageDialogHelper.openError(getShell(), "Error", "Login should not be empty.");
          return;
       }
 
-      if (password.getText().trim().equals("") && index == 0)
+      if (password.getText().equals("") && (keyId == 0))
       {
-         MessageDialogHelper.openError(getShell(), "Error", "Please enter password and/or key.");
+         MessageDialogHelper.openError(getShell(), "Error", "Either password or key should be provided.");
          return;
       }
 
-      if (cred == null)
+      if (credentials == null)
       {
-         cred = new SshCredential(login.getText().trim(), password.getText().trim(), keyId);
+         credentials = new SSHCredentials(login.getText().trim(), password.getText(), keyId);
       }
       else
       {
-         cred.setLogin(login.getText().trim());
-         cred.setPassword(password.getText().trim());
-         cred.setKeyId(keyId);
+         credentials.setLogin(login.getText().trim());
+         credentials.setPassword(password.getText().trim());
+         credentials.setKeyId(keyId);
       }
+
       super.okPressed();
    }
 
 	/**
 	 * @return the value
 	 */
-   public SshCredential getValue()
+   public SSHCredentials getCredentials()
 	{
-		return cred;
+		return credentials;
 	}
 }

@@ -563,7 +563,7 @@ public class NXCPMessage
       final NXCPMessageField var = findField(fieldId);
       return (var != null) ? var.getAsInteger().shortValue() : 0;
    }
-   
+
 	/**
 	 * Get field as 32 bit integer
 	 * 
@@ -575,7 +575,7 @@ public class NXCPMessage
 		final NXCPMessageField var = findField(fieldId);
 		return (var != null) ? var.getAsInteger().intValue() : 0;
 	}
-	
+
 	/**
 	 * Get field as 64 bit integer
 	 * 

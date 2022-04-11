@@ -139,7 +139,7 @@ uint32_t MaintenanceJournalCreate(const NXCPMessage& request, uint32_t userId)
       DBBind(stmt, 7, DB_SQLTYPE_INTEGER, now); // modification time
       if (DBExecute(stmt))
       {
-         NotifyClientSessions(NX_NOTIFY_MAINTENANCE_JOURNAL_CHANGED, objectId);
+         NotifyClientSessions(NX_NOTIFY_MAINTENANCE_JOURNAL_UPDATED, objectId);
          rcc = RCC_SUCCESS;
       }
       else
@@ -177,7 +177,7 @@ uint32_t MaintenanceJournalEdit(const NXCPMessage& request, uint32_t userId)
       if (DBExecute(stmt))
       {
          rcc = RCC_SUCCESS;
-         NotifyClientSessions(NX_NOTIFY_MAINTENANCE_JOURNAL_CHANGED, objectId);
+         NotifyClientSessions(NX_NOTIFY_MAINTENANCE_JOURNAL_UPDATED, objectId);
       }
       else
       {

@@ -538,7 +538,7 @@ public class ZoneSNMPConfiguration extends PropertyPage
       AddUsmCredDialog dlg = new AddUsmCredDialog(getShell(), null);
       if (dlg.open() == Window.OK)
       {
-         SnmpUsmCredential cred = dlg.getValue();
+         SnmpUsmCredential cred = dlg.getCredentials();
          cred.setZoneId(zone.getUIN());
          usmCredentials.add(cred);
          usmCredentialList.setInput(usmCredentials.toArray());
@@ -751,8 +751,8 @@ public class ZoneSNMPConfiguration extends PropertyPage
    */
   private void addSnmpPort()
   {
-     InputDialog dlg = new InputDialog(getShell(), Messages.get().NetworkCredentials_AddPort, 
-           Messages.get().NetworkCredentials_PleaseEnterPort, "", null); //$NON-NLS-1$
+     InputDialog dlg = new InputDialog(getShell(), Messages.get().NetworkCredentials_AddSnmpPort, 
+           Messages.get().NetworkCredentials_PleaseEnterSnmpPort, "", null); //$NON-NLS-1$
      if (dlg.open() == Window.OK)
      {
         String value = dlg.getValue();

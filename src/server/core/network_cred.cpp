@@ -208,7 +208,7 @@ IntegerArray<uint16_t> GetWellKnownPorts(const TCHAR *tag, int32_t zoneUIN)
 void FullWellKnownPortListToMessage(const TCHAR *tag, NXCPMessage *msg)
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT port,zone FROM well_known_ports WHERE tag=? ORDER BY zone DESC, id ASC"));
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT port,zone FROM well_known_ports WHERE tag=? ORDER BY zone,id"));
    if (hStmt != nullptr)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, tag, DB_BIND_STATIC);
@@ -217,10 +217,10 @@ void FullWellKnownPortListToMessage(const TCHAR *tag, NXCPMessage *msg)
       {
          int count = DBGetNumRows(hResult);
          uint32_t fieldId = VID_ZONE_PORT_LIST_BASE;
-         for(int i = 0; i < count; i++, fieldId +=8)
+         for(int i = 0; i < count; i++, fieldId += 8)
          {
             msg->setField(fieldId++, static_cast<uint16_t>(DBGetFieldLong(hResult, i, 0)));
-            msg->setField(fieldId++, DBGetFieldULong(hResult, i, 1));
+            msg->setField(fieldId++, DBGetFieldLong(hResult, i, 1));
          }
          msg->setField(VID_ZONE_PORT_COUNT, static_cast<uint32_t>(count));
          msg->setField(VID_RCC, RCC_SUCCESS);
@@ -360,7 +360,7 @@ void GetFullAgentSecretList(NXCPMessage *msg)
    if (hResult != nullptr)
    {
       int count = DBGetNumRows(hResult);
-      UINT32 baseId = VID_SHARED_SECRET_LIST_BASE;
+      uint32_t baseId = VID_SHARED_SECRET_LIST_BASE;
       msg->setField(VID_NUM_ELEMENTS, (UINT32)count);
       for(int i = 0; i < count; i++, baseId +=8)
       {
@@ -410,11 +410,11 @@ void GetZoneAgentSecretList(NXCPMessage *msg, int32_t zoneUIN)
 /**
  * Get list of SSH credentials for given zone + all zones credentials (zone = -1)
  */
-StructArray<SshCredentials> GetSshCredentials(int32_t zoneUIN)
+StructArray<SSHCredentials> GetSSHCredentials(int32_t zoneUIN)
 {
-   StructArray<SshCredentials> credentials;
+   StructArray<SSHCredentials> credentials;
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT login,password,key_id FROM ssh_credentials WHERE (zone_uin=? OR zone=-1) ORDER BY zone DESC, id ASC"));
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT login,password,key_id FROM ssh_credentials WHERE (zone_uin=? OR zone_uin=-1) ORDER BY zone_uin DESC, id ASC"));
    if (hStmt != nullptr)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, zoneUIN);
@@ -424,14 +424,14 @@ StructArray<SshCredentials> GetSshCredentials(int32_t zoneUIN)
          int count = DBGetNumRows(hResult);
          for (int i = 0; i < count; i++)
          {
-            SshCredentials crd;
-            DBGetField(hResult, i, 0, crd.login, MAX_SSH_LOGIN_LEN);
-            DBGetField(hResult, i, 1, crd.password, MAX_SSH_PASSWORD_LEN);
-            crd.keyId = DBGetFieldLong(hResult, i, 2);
-            credentials.add(crd);
+            SSHCredentials *c = credentials.addPlaceholder();
+            DBGetField(hResult, i, 0, c->login, MAX_SSH_LOGIN_LEN);
+            DBGetField(hResult, i, 1, c->password, MAX_SSH_PASSWORD_LEN);
+            c->keyId = DBGetFieldULong(hResult, i, 2);
          }
          DBFreeResult(hResult);
       }
+      DBFreeStatement(hStmt);
    }
    DBConnectionPoolReleaseConnection(hdb);
    return credentials;
@@ -439,21 +439,15 @@ StructArray<SshCredentials> GetSshCredentials(int32_t zoneUIN)
 
 /**
  * Get list of SSH credentials into NXCP message
- * @param zoneUIN 0 or more - zone number, -1 - default credentials, -2 - all zones
+ * @param zoneUIN zone UIN or -1 for "all zones" credentials
  */
-void GetSshCredentialsMessage(NXCPMessage* msg, int32_t zoneUIN)
+void ZoneSSHCredentialsToMessage(int32_t zoneUIN, NXCPMessage *msg)
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   DB_STATEMENT hStmt;
-   if (zoneUIN != -2)
-      hStmt = DBPrepare(hdb, _T("SELECT login,password,key_id FROM ssh_credentials WHERE zone_uin=? ORDER BY zone DESC, id ASC"));
-   else
-      hStmt = DBPrepare(hdb, _T("SELECT login,password,key_id,zone_uin FROM ssh_credentials ORDER BY zone DESC, id ASC"));
-
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT login,password,key_id FROM ssh_credentials WHERE zone_uin=? ORDER BY zone_uin DESC, id ASC"));
    if (hStmt != nullptr)
    {
-      if (zoneUIN != -2)
-         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, zoneUIN);
+      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, zoneUIN);
 
       DB_RESULT hResult = DBSelectPrepared(hStmt);
       if (hResult != nullptr)
@@ -461,17 +455,17 @@ void GetSshCredentialsMessage(NXCPMessage* msg, int32_t zoneUIN)
          TCHAR loginBuff[MAX_SSH_LOGIN_LEN];
          TCHAR passwordBuff[MAX_SSH_PASSWORD_LEN];
 
-         int base = VID_ELEMENT_LIST_BASE;
          int count = DBGetNumRows(hResult);
          msg->setField(VID_NUM_ELEMENTS, count);
-         for (int i = 0; i < count; i++, base += 10)
+
+         uint32_t fieldId = VID_ELEMENT_LIST_BASE;
+         for (int i = 0; i < count; i++, fieldId += 7)
          {
-            msg->setField(base, DBGetField(hResult, i, 0, loginBuff, MAX_SSH_LOGIN_LEN));           // login
-            msg->setField(base + 1, DBGetField(hResult, i, 1, passwordBuff, MAX_SSH_PASSWORD_LEN)); // password
-            msg->setField(base + 2, DBGetFieldLong(hResult, i, 2));                                 // key id
-            if (zoneUIN == -2)
-               msg->setField(base + 3, DBGetFieldLong(hResult, i, 3)); // zone
+            msg->setField(fieldId++, DBGetField(hResult, i, 0, loginBuff, MAX_SSH_LOGIN_LEN));
+            msg->setField(fieldId++, DBGetField(hResult, i, 1, passwordBuff, MAX_SSH_PASSWORD_LEN));
+            msg->setField(fieldId++, DBGetFieldLong(hResult, i, 2));
          }
+
          DBFreeResult(hResult);
          msg->setField(VID_RCC, RCC_SUCCESS);
       }
@@ -486,4 +480,102 @@ void GetSshCredentialsMessage(NXCPMessage* msg, int32_t zoneUIN)
       msg->setField(VID_RCC, RCC_DB_FAILURE);
    }
    DBConnectionPoolReleaseConnection(hdb);
+}
+
+/**
+ * Get list of SSH credentials into NXCP message
+ */
+void FullSSHCredentialsToMessage(NXCPMessage *msg)
+{
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   DB_RESULT hResult = DBSelect(hdb, _T("SELECT zone_uin,login,password,key_id FROM ssh_credentials ORDER BY zone_uin,id"));
+   if (hResult != nullptr)
+   {
+      TCHAR loginBuff[MAX_SSH_LOGIN_LEN];
+      TCHAR passwordBuff[MAX_SSH_PASSWORD_LEN];
+
+      int count = DBGetNumRows(hResult);
+      msg->setField(VID_NUM_ELEMENTS, count);
+
+      uint32_t fieldId = VID_ELEMENT_LIST_BASE;
+      for (int i = 0; i < count; i++, fieldId += 6)
+      {
+         msg->setField(fieldId++, DBGetFieldLong(hResult, i, 0));
+nxlog_debug(1, _T("**** zone=%d"), msg->getFieldAsInt32(fieldId - 1));
+         msg->setField(fieldId++, DBGetField(hResult, i, 1, loginBuff, MAX_SSH_LOGIN_LEN));
+         msg->setField(fieldId++, DBGetField(hResult, i, 2, passwordBuff, MAX_SSH_PASSWORD_LEN));
+         msg->setField(fieldId++, DBGetFieldLong(hResult, i, 3));
+      }
+
+      DBFreeResult(hResult);
+      msg->setField(VID_RCC, RCC_SUCCESS);
+   }
+   else
+   {
+      msg->setField(VID_RCC, RCC_DB_FAILURE);
+   }
+   DBConnectionPoolReleaseConnection(hdb);
+}
+
+/**
+ * Update list of well-known ports from NXCP message
+ */
+uint32_t UpdateSSHCredentials(const NXCPMessage& request, int32_t zoneUIN)
+{
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   if (!DBBegin(hdb))
+   {
+      DBConnectionPoolReleaseConnection(hdb);
+      return RCC_DB_FAILURE;
+   }
+
+   uint32_t rcc;
+   if (ExecuteQueryOnObject(hdb, zoneUIN, _T("DELETE FROM ssh_credentials WHERE zone_uin=?")))
+   {
+      rcc = RCC_SUCCESS;
+      int count = request.getFieldAsInt32(VID_NUM_ELEMENTS);
+      if (count > 0)
+      {
+         DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO ssh_credentials (zone_uin,id,login,password,key_id) VALUES(?,?,?,?,?)"), count > 1);
+         if (hStmt != nullptr)
+         {
+            DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, zoneUIN);
+            uint32_t fieldId = VID_ELEMENT_LIST_BASE;
+            for (int i = 0; i < count; i++, fieldId += 10)
+            {
+               DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, i + 1);
+               DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, request.getFieldAsString(fieldId), DB_BIND_DYNAMIC);
+               DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, request.getFieldAsString(fieldId + 1), DB_BIND_DYNAMIC);
+               DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, request.getFieldAsInt32(fieldId + 2));
+               if (!DBExecute(hStmt))
+               {
+                  rcc = RCC_DB_FAILURE;
+                  break;
+               }
+            }
+            DBFreeStatement(hStmt);
+         }
+         else
+         {
+            rcc = RCC_DB_FAILURE;
+         }
+      }
+   }
+   else
+   {
+      rcc = RCC_DB_FAILURE;
+   }
+
+   if (rcc == RCC_SUCCESS)
+   {
+      DBCommit(hdb);
+      NotifyClientSessions(NX_NOTIFY_SSH_CREDENTIALS_CHANGED, zoneUIN);
+   }
+   else
+   {
+      DBRollback(hdb);
+   }
+
+   DBConnectionPoolReleaseConnection(hdb);
+   return rcc;
 }

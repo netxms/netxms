@@ -1169,11 +1169,11 @@ enum class ShutdownReason
 /**
  * Structure for SSH credentials
  */
-struct SshCredentials
+struct SSHCredentials
 {
    TCHAR login[MAX_SSH_LOGIN_LEN];
    TCHAR password[MAX_SSH_PASSWORD_LEN];
-   int keyId;
+   uint32_t keyId;
 };
 
 /**
@@ -1366,10 +1366,15 @@ void GetFullCommunityList(NXCPMessage *msg);
 void GetZoneCommunityList(NXCPMessage *msg, int32_t zoneUIN);
 void GetFullUsmCredentialList(NXCPMessage *msg);
 void GetZoneUsmCredentialList(NXCPMessage *msg, int32_t zoneUIN);
+
 void GetFullAgentSecretList(NXCPMessage *msg);
 void GetZoneAgentSecretList(NXCPMessage *msg, int32_t zoneUIN);
-StructArray<SshCredentials> GetSshCredentials(int32_t zoneUIN);
-void GetSshCredentialsMessage(NXCPMessage* msg, int32_t zoneUIN);
+
+void FullSSHCredentialsToMessage(NXCPMessage *msg);
+void ZoneSSHCredentialsToMessage(int32_t zoneUIN, NXCPMessage *msg);
+uint32_t UpdateSSHCredentials(const NXCPMessage& request, int32_t zoneUIN);
+StructArray<SSHCredentials> GetSSHCredentials(int32_t zoneUIN);
+
 void FullWellKnownPortListToMessage(const TCHAR *tag, NXCPMessage *msg);
 void ZoneWellKnownPortListToMessage(const TCHAR *tag, int32_t zoneUIN, NXCPMessage *msg);
 uint32_t UpdateWellKnownPortList(const NXCPMessage& request, const TCHAR *tag, int32_t zoneUIN);

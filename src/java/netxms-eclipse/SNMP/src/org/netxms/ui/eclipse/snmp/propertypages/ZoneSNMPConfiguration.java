@@ -538,7 +538,7 @@ public class ZoneSNMPConfiguration extends PropertyPage
       AddUsmCredDialog dlg = new AddUsmCredDialog(getShell(), null);
       if (dlg.open() == Window.OK)
       {
-         SnmpUsmCredential cred = dlg.getValue();
+         SnmpUsmCredential cred = dlg.getCredentials();
          cred.setZoneId(zone.getUIN());
          usmCredentials.add(cred);
          usmCredentialList.setInput(usmCredentials.toArray());

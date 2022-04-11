@@ -70,6 +70,7 @@ public class Capabilities extends TableElement
 		addFlag(Messages.get().Capabilities_FlagIsRouter, (node.getCapabilities() & AbstractNode.NC_IS_ROUTER) != 0);
 		addFlag(Messages.get().Capabilities_FlagIsSMCLP, (node.getCapabilities() & AbstractNode.NC_IS_SMCLP) != 0);
 		addFlag(Messages.get().Capabilities_FlagIsSNMP, (node.getCapabilities() & AbstractNode.NC_IS_SNMP) != 0);
+      addFlag("isSSH", (node.getCapabilities() & AbstractNode.NC_IS_SSH) != 0);
 		addFlag(Messages.get().Capabilities_FlagIsSTP, (node.getCapabilities() & AbstractNode.NC_IS_STP) != 0);
       addFlag("isUserAgent", (node.getCapabilities() & AbstractNode.NC_HAS_USER_AGENT) != 0);
 		addFlag(Messages.get().Capabilities_FlagIsVRRP, (node.getCapabilities() & AbstractNode.NC_IS_VRRP) != 0);

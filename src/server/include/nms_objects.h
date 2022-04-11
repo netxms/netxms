@@ -3217,6 +3217,9 @@ protected:
    NetworkPathCheckResult checkNetworkPathElement(uint32_t nodeId, const TCHAR *nodeType, bool isProxy, bool isSwitch, uint32_t requestId, bool secondPass);
    void icmpPollAddress(AgentConnection *conn, const TCHAR *target, const InetAddress& addr);
 
+   bool checkSshConnection(const TCHAR *login, const TCHAR *password, uint32_t keyId, uint16_t port = 22);
+   bool checkSshConnection() { return checkSshConnection(m_sshLogin, m_sshPassword, m_sshKeyId, m_sshPort); }
+
    void syncDataCollectionWithAgent(AgentConnectionEx *conn);
 
    bool updateInterfaceConfiguration(uint32_t requestId, int maskBits);
@@ -3238,9 +3241,6 @@ protected:
    virtual void topologyPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) override;
    virtual void routingTablePoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) override;
    virtual void icmpPoll(PollerInfo *poller) override;
-
-   bool checkSshConnection();
-   bool checkSshConnection(const TCHAR* login, const TCHAR* password, uint32_t keyId, uint16_t port = 22);
 
 public:
    Node();
@@ -3385,13 +3385,16 @@ public:
    void setNewTunnelBindFlag() { lockProperties(); m_runtimeFlags |= NDF_NEW_TUNNEL_BIND; unlockProperties(); }
    void clearNewTunnelBindFlag() { lockProperties(); m_runtimeFlags &= ~NDF_NEW_TUNNEL_BIND; unlockProperties(); }
 
+   void setAgentRestartTime() { m_agentRestartTime = time(nullptr); }
+   time_t getAgentRestartTime() { return m_agentRestartTime; }
+
    void addInterface(const shared_ptr<Interface>& iface) { addChild(iface); iface->addParent(self()); }
    shared_ptr<Interface> createNewInterface(InterfaceInfo *ifInfo, bool manuallyCreated, bool fakeInterface);
    shared_ptr<Interface> createNewInterface(const InetAddress& ipAddr, const MacAddress& macAddr, bool fakeInterface);
 
    void setPrimaryHostName(const TCHAR *name) { lockProperties(); m_primaryHostName = name; unlockProperties(); }
-   void setAgentPort(UINT16 port) { m_agentPort = port; }
-   void setSnmpPort(UINT16 port) { m_snmpPort = port; }
+   void setAgentPort(uint16_t port) { m_agentPort = port; }
+   void setSnmpPort(uint16_t port) { m_snmpPort = port; }
    void setSshCredentials(const TCHAR *login, const TCHAR *password);
    void changeIPAddress(const InetAddress& ipAddr);
    void changeZone(UINT32 newZone);
@@ -3545,9 +3548,6 @@ public:
    bool checkTrapShouldBeProcessed();
 
    static const TCHAR *typeName(NodeType type);
-
-   void setAgentRestartTime() { m_agentRestartTime = time(nullptr); }
-   time_t getAgentRestartTime() { return m_agentRestartTime; }
 };
 
 /**

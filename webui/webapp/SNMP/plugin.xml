@@ -32,6 +32,7 @@
             allowMultiple="false"
             category="org.netxms.ui.eclipse.viewcategory.config"
             class="org.netxms.ui.eclipse.snmp.views.NetworkCredentials"
+            icon="icons/network_credentials.png"
             id="org.netxms.ui.eclipse.snmp.views.NetworkCredentials"
             name="%view.name.NetworkCredentials"
             restorable="true">
@@ -113,6 +114,7 @@
          <action
                class="org.netxms.ui.eclipse.snmp.actions.OpenNetworkCredentialsEditor"
                definitionId="org.netxms.ui.eclipse.snmp.commands.open_snmp_configuration"
+               icon="icons/network_credentials.png"
                id="org.netxms.ui.eclipse.snmp.actions.open_snmp_configuration"
                label="%view.name.NetworkCredentials"
                menubarPath="config/additions"

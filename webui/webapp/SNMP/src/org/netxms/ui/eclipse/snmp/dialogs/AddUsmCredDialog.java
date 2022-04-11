@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -42,36 +42,36 @@ public class AddUsmCredDialog extends Dialog
    private LabeledText comment;
 	private Combo authMethod;
 	private Combo privMethod;
-	private SnmpUsmCredential cred;
-			
+	private SnmpUsmCredential credentials;
+
 	/**
 	 * @param parentShell
-	 * @param cred 
+	 * @param credentials 
 	 */
-	public AddUsmCredDialog(Shell parentShell, SnmpUsmCredential cred)
+	public AddUsmCredDialog(Shell parentShell, SnmpUsmCredential credentials)
 	{
 		super(parentShell);
-		this.cred = cred;
+		this.credentials = credentials;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
-	 */
+   /**
+    * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
+    */
 	@Override
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText(Messages.get().AddUsmCredDialog_Title);
+      newShell.setText((credentials == null) ? Messages.get().AddUsmCredDialog_Title : "Edit SNMP USM Credentials");
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createDialogArea(Composite parent)
 	{
 		Composite dialogArea = (Composite)super.createDialogArea(parent);
-		
+
 		GridLayout layout = new GridLayout();
 		layout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
 		layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
@@ -80,7 +80,7 @@ public class AddUsmCredDialog extends Dialog
 		layout.numColumns = 2;
 		layout.makeColumnsEqualWidth = true;
 		dialogArea.setLayout(layout);
-		
+
 		name = new LabeledText(dialogArea, SWT.NONE);
 		name.setLabel(Messages.get().AddUsmCredDialog_UserName);
 		GridData gd = new GridData();
@@ -88,7 +88,7 @@ public class AddUsmCredDialog extends Dialog
 		gd.grabExcessHorizontalSpace = true;
 		gd.horizontalSpan = 2;
 		name.setLayoutData(gd);
-		
+
 		authMethod = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, Messages.get().AddUsmCredDialog_Auth, WidgetHelper.DEFAULT_LAYOUT_DATA);
 		authMethod.add(Messages.get().AddUsmCredDialog_AuthTypeNone);
 		authMethod.add(Messages.get().AddUsmCredDialog_AuthTypeMD5);
@@ -127,42 +127,42 @@ public class AddUsmCredDialog extends Dialog
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalSpan = 2;
       comment.setLayoutData(gd);
-		
-		if(cred != null)
+
+      if (credentials != null)
 		{
-		   name.setText(cred.getName());
-		   authMethod.select(cred.getAuthMethod());
-		   privMethod.select(cred.getPrivMethod());
-		   authPasswd.setText(cred.getAuthPassword());
-		   privPasswd.setText(cred.getPrivPassword());
-		   comment.setText(cred.getComment());
+		   name.setText(credentials.getName());
+		   authMethod.select(credentials.getAuthMethod());
+		   privMethod.select(credentials.getPrivMethod());
+		   authPasswd.setText(credentials.getAuthPassword());
+		   privPasswd.setText(credentials.getPrivPassword());
+		   comment.setText(credentials.getComment());
 		}
 		
 		return dialogArea;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#okPressed()
-	 */
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#okPressed()
+    */
 	@Override
 	protected void okPressed()
 	{
-	   if(cred == null)
-	      cred = new SnmpUsmCredential();
-	   cred.setName(name.getText().trim());
-	   cred.setAuthMethod(authMethod.getSelectionIndex());
-	   cred.setPrivMethod(privMethod.getSelectionIndex());
-	   cred.setAuthPassword(authPasswd.getText());
-		cred.setPrivPassword(privPasswd.getText());
-		cred.setComment(comment.getText());
+      if (credentials == null)
+	      credentials = new SnmpUsmCredential();
+	   credentials.setName(name.getText().trim());
+	   credentials.setAuthMethod(authMethod.getSelectionIndex());
+	   credentials.setPrivMethod(privMethod.getSelectionIndex());
+	   credentials.setAuthPassword(authPasswd.getText());
+		credentials.setPrivPassword(privPasswd.getText());
+		credentials.setComment(comment.getText());
 		super.okPressed();
 	}
 
 	/**
 	 * @return the value
 	 */
-	public SnmpUsmCredential getValue()
+	public SnmpUsmCredential getCredentials()
 	{
-		return cred;
+		return credentials;
 	}
 }
