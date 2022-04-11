@@ -501,7 +501,6 @@ void FullSSHCredentialsToMessage(NXCPMessage *msg)
       for (int i = 0; i < count; i++, fieldId += 6)
       {
          msg->setField(fieldId++, DBGetFieldLong(hResult, i, 0));
-nxlog_debug(1, _T("**** zone=%d"), msg->getFieldAsInt32(fieldId - 1));
          msg->setField(fieldId++, DBGetField(hResult, i, 1, loginBuff, MAX_SSH_LOGIN_LEN));
          msg->setField(fieldId++, DBGetField(hResult, i, 2, passwordBuff, MAX_SSH_PASSWORD_LEN));
          msg->setField(fieldId++, DBGetFieldLong(hResult, i, 3));
