@@ -449,6 +449,7 @@ enum
 #define DFF_EXECUTE_SCRIPT             0x0004
 #define DFF_PROTOCOL_AGENT             0x0100
 #define DFF_PROTOCOL_SNMP              0x0200
+#define DFF_PROTOCOL_SSH               0x0400
 
 /**
  * Connection point types

@@ -27,7 +27,9 @@ import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
+import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.ScrolledComposite;
@@ -101,7 +103,8 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
    private Button checkFilterRange;
    private Button checkFilterProtocols;
    private Button checkAllowAgent;
-   private Button checkAllowSnmp;
+   private Button checkAllowSNMP;
+   private Button checkAllowSSH;
    private Button checkFilterScript;
    private ScriptSelector filterScript;
    private SortableTableViewer filterAddressList;
@@ -484,8 +487,10 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
                flags |= NetworkDiscoveryFilterFlags.CHECK_PROTOCOLS;
             if (checkAllowAgent.getSelection())
                flags |= NetworkDiscoveryFilterFlags.PROTOCOL_AGENT;
-            if (checkAllowSnmp.getSelection())
+            if (checkAllowSNMP.getSelection())
                flags |= NetworkDiscoveryFilterFlags.PROTOCOL_SNMP;
+            if (checkAllowSSH.getSelection())
+               flags |= NetworkDiscoveryFilterFlags.PROTOCOL_SSH;
             config.setFilterFlags(flags);
          }
       };
@@ -547,6 +552,7 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
       linkEdit.setText("Edit...");
       linkEdit.setImage(SharedIcons.IMG_EDIT);
       linkEdit.setBackground(section.getBackground());
+      linkEdit.setEnabled(false);
       gd = new GridData();
       gd.verticalAlignment = SWT.TOP;
       linkEdit.setLayoutData(gd);
@@ -562,6 +568,7 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
       linkRemove.setText(Messages.get().NetworkDiscoveryConfigurator_Remove);
       linkRemove.setImage(SharedIcons.IMG_DELETE_OBJECT);
       linkRemove.setBackground(section.getBackground());
+      linkRemove.setEnabled(false);
       gd = new GridData();
       gd.verticalAlignment = SWT.TOP;
       linkRemove.setLayoutData(gd);
@@ -570,6 +577,16 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
          public void linkActivated(HyperlinkEvent e)
          {
             removeAddressFilterElements();
+         }
+      });
+
+      filterAddressList.addSelectionChangedListener(new ISelectionChangedListener() {
+         @Override
+         public void selectionChanged(SelectionChangedEvent event)
+         {
+            IStructuredSelection selection = filterAddressList.getStructuredSelection();
+            linkEdit.setEnabled(selection.size() == 1);
+            linkRemove.setEnabled(!selection.isEmpty());
          }
       });
 
@@ -584,12 +601,19 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
       gd.horizontalIndent = 20;
       checkAllowAgent.setLayoutData(gd);
 
-      checkAllowSnmp = new Button(section, SWT.CHECK);
-      checkAllowSnmp.setText(Messages.get().NetworkDiscoveryConfigurator_AcceptSNMP);
-      checkAllowSnmp.addSelectionListener(checkBoxListener);
+      checkAllowSNMP = new Button(section, SWT.CHECK);
+      checkAllowSNMP.setText(Messages.get().NetworkDiscoveryConfigurator_AcceptSNMP);
+      checkAllowSNMP.addSelectionListener(checkBoxListener);
       gd = new GridData();
       gd.horizontalIndent = 20;
-      checkAllowSnmp.setLayoutData(gd);
+      checkAllowSNMP.setLayoutData(gd);
+
+      checkAllowSSH = new Button(section, SWT.CHECK);
+      checkAllowSSH.setText("Accept node if it is accessible via SS&H");
+      checkAllowSSH.addSelectionListener(checkBoxListener);
+      gd = new GridData();
+      gd.horizontalIndent = 20;
+      checkAllowSSH.setLayoutData(gd);
 
       checkFilterScript = new Button(section, SWT.CHECK);
       checkFilterScript.setText("With custom script");
@@ -672,6 +696,7 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
       linkEdit.setText("Edit...");
       linkEdit.setImage(SharedIcons.IMG_EDIT);
       linkEdit.setBackground(section.getBackground());
+      linkEdit.setEnabled(false);
       gd = new GridData();
       gd.verticalAlignment = SWT.TOP;
       linkEdit.setLayoutData(gd);
@@ -687,6 +712,7 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
       linkRemove.setText(Messages.get().NetworkDiscoveryConfigurator_Remove);
       linkRemove.setImage(SharedIcons.IMG_DELETE_OBJECT);
       linkRemove.setBackground(section.getBackground());
+      linkRemove.setEnabled(false);
       gd = new GridData();
       gd.verticalAlignment = SWT.TOP;
       linkRemove.setLayoutData(gd);
@@ -703,6 +729,7 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
       runActiveDiscovery.setToolTipText("Runs active discovery on selected ranges");
       runActiveDiscovery.setImage(SharedIcons.IMG_EXECUTE);
       runActiveDiscovery.setBackground(section.getBackground());
+      runActiveDiscovery.setEnabled(false);
       gd = new GridData();
       gd.verticalAlignment = SWT.TOP;
       runActiveDiscovery.setLayoutData(gd);
@@ -711,6 +738,17 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
          public void linkActivated(HyperlinkEvent e)
          {
             runManualActiveDiscovery();
+         }
+      });
+
+      activeDiscoveryAddressList.addSelectionChangedListener(new ISelectionChangedListener() {
+         @Override
+         public void selectionChanged(SelectionChangedEvent event)
+         {
+            IStructuredSelection selection = activeDiscoveryAddressList.getStructuredSelection();
+            linkEdit.setEnabled(selection.size() == 1);
+            linkRemove.setEnabled(!selection.isEmpty());
+            runActiveDiscovery.setEnabled(!selection.isEmpty());
          }
       });
    }
@@ -756,7 +794,8 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
       checkFilterScript.setSelection((config.getFilterFlags() & NetworkDiscoveryFilterFlags.EXECUTE_SCRIPT) != 0);
       checkFilterProtocols.setSelection((config.getFilterFlags() & NetworkDiscoveryFilterFlags.CHECK_PROTOCOLS) != 0);
       checkAllowAgent.setSelection((config.getFilterFlags() & NetworkDiscoveryFilterFlags.PROTOCOL_AGENT) != 0);
-      checkAllowSnmp.setSelection((config.getFilterFlags() & NetworkDiscoveryFilterFlags.PROTOCOL_SNMP) != 0);
+      checkAllowSNMP.setSelection((config.getFilterFlags() & NetworkDiscoveryFilterFlags.PROTOCOL_SNMP) != 0);
+      checkAllowSSH.setSelection((config.getFilterFlags() & NetworkDiscoveryFilterFlags.PROTOCOL_SSH) != 0);
 
       activeDiscoveryAddressList.setInput(config.getTargets().toArray());
       filterAddressList.setInput(config.getAddressFilter().toArray());
@@ -914,11 +953,11 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
    
    private void runManualActiveDiscovery()
    {
-      if(!MessageDialogHelper.openConfirm(getSite().getShell(), "Active discovery", "Are you sure you want to start manual scan for selected ranges?"))
-         return;
-      
       final IStructuredSelection selection = (IStructuredSelection)activeDiscoveryAddressList.getSelection();
-      if (selection.size() == 0)
+      if (selection.isEmpty())
+         return;
+
+      if (!MessageDialogHelper.openConfirm(getSite().getShell(), "Active discovery", "Are you sure you want to start manual scan for selected ranges?"))
          return;
 
       final List<InetAddressListElement> list = new ArrayList<InetAddressListElement>();
@@ -926,7 +965,7 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
       {
          list.add((InetAddressListElement)o);
       }
-      
+
       final NXCSession session = ConsoleSharedData.getSession();
       new ConsoleJob("Run active discovery poll", this, Activator.PLUGIN_ID, null) {
          @Override

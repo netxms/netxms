@@ -287,7 +287,6 @@ static bool HostIsReachable(const InetAddress& ipAddr, int32_t zoneUIN, bool ful
 static bool AcceptNewNode(NewNodeData *newNodeData, const MacAddress& macAddr)
 {
    TCHAR szBuffer[256], szIpAddr[64];
-   UINT32 dwTemp;
 
    newNodeData->ipAddr.toString(szIpAddr);
    if ((FindNodeByIP(newNodeData->zoneUIN, newNodeData->ipAddr) != nullptr) ||
@@ -454,10 +453,10 @@ static bool AcceptNewNode(NewNodeData *newNodeData, const MacAddress& macAddr)
    // Check if node is a router
    if (data.flags & NNF_IS_SNMP)
    {
-      if (SnmpGet(data.snmpVersion, snmpTransport,
-                  _T(".1.3.6.1.2.1.4.1.0"), nullptr, 0, &dwTemp, sizeof(UINT32), 0) == SNMP_ERR_SUCCESS)
+      uint32_t value;
+      if (SnmpGet(data.snmpVersion, snmpTransport, _T(".1.3.6.1.2.1.4.1.0"), nullptr, 0, &value, sizeof(UINT32), 0) == SNMP_ERR_SUCCESS)
       {
-         if (dwTemp == 1)
+         if (value == 1)
             data.flags |= NNF_IS_ROUTER;
       }
    }
@@ -475,31 +474,28 @@ static bool AcceptNewNode(NewNodeData *newNodeData, const MacAddress& macAddr)
    if (data.flags & NNF_IS_SNMP)
    {
       // Check if node is a bridge
-      if (SnmpGet(data.snmpVersion, snmpTransport,
-                  _T(".1.3.6.1.2.1.17.1.1.0"), nullptr, 0, szBuffer, sizeof(szBuffer), 0) == SNMP_ERR_SUCCESS)
+      if (SnmpGet(data.snmpVersion, snmpTransport, _T(".1.3.6.1.2.1.17.1.1.0"), nullptr, 0, szBuffer, sizeof(szBuffer), 0) == SNMP_ERR_SUCCESS)
       {
          data.flags |= NNF_IS_BRIDGE;
       }
 
       // Check for CDP (Cisco Discovery Protocol) support
-      if (SnmpGet(data.snmpVersion, snmpTransport,
-                  _T(".1.3.6.1.4.1.9.9.23.1.3.1.0"), nullptr, 0, &dwTemp, sizeof(UINT32), 0) == SNMP_ERR_SUCCESS)
+      uint32_t value;
+      if (SnmpGet(data.snmpVersion, snmpTransport, _T(".1.3.6.1.4.1.9.9.23.1.3.1.0"), nullptr, 0, &value, sizeof(UINT32), 0) == SNMP_ERR_SUCCESS)
       {
-         if (dwTemp == 1)
+         if (value == 1)
             data.flags |= NNF_IS_CDP;
       }
 
       // Check for SONMP (Nortel topology discovery protocol) support
-      if (SnmpGet(data.snmpVersion, snmpTransport,
-                  _T(".1.3.6.1.4.1.45.1.6.13.1.2.0"), nullptr, 0, &dwTemp, sizeof(UINT32), 0) == SNMP_ERR_SUCCESS)
+      if (SnmpGet(data.snmpVersion, snmpTransport, _T(".1.3.6.1.4.1.45.1.6.13.1.2.0"), nullptr, 0, &value, sizeof(UINT32), 0) == SNMP_ERR_SUCCESS)
       {
-         if (dwTemp == 1)
+         if (value == 1)
             data.flags |= NNF_IS_SONMP;
       }
 
       // Check for LLDP (Link Layer Discovery Protocol) support
-      if (SnmpGet(data.snmpVersion, snmpTransport,
-                  _T(".1.0.8802.1.1.2.1.3.2.0"), nullptr, 0, szBuffer, sizeof(szBuffer), 0) == SNMP_ERR_SUCCESS)
+      if (SnmpGet(data.snmpVersion, snmpTransport, _T(".1.0.8802.1.1.2.1.3.2.0"), nullptr, 0, szBuffer, sizeof(szBuffer), 0) == SNMP_ERR_SUCCESS)
       {
          data.flags |= NNF_IS_LLDP;
       }
