@@ -733,11 +733,26 @@ bool LIBNXDB_EXPORTABLE DBDropPrimaryKey(DB_HANDLE hdb, const TCHAR *table)
          break;
       case DB_SYNTAX_PGSQL:
       case DB_SYNTAX_TSDB:
-         _sntprintf(query, 1024, _T("ALTER TABLE %s DROP CONSTRAINT %s_pkey"), table, table);
-         success = ExecuteQuery(hdb, query);
+         _sntprintf(query, 1024, _T("SELECT constraint_name FROM information_schema.table_constraints WHERE table_schema='public' AND constraint_type='PRIMARY KEY' AND table_name='%s'"), table);
+         hResult = DBSelect(hdb, query);
+         if (hResult != nullptr)
+         {
+            if (DBGetNumRows(hResult) > 0)
+            {
+               TCHAR objName[512];
+               DBGetField(hResult, 0, 0, objName, 512);
+               _sntprintf(query, 1024, _T("ALTER TABLE %s DROP CONSTRAINT %s"), table, objName);
+               success = ExecuteQuery(hdb, query);
+            }
+            else
+            {
+               success = true; // No PK to drop
+            }
+            DBFreeResult(hResult);
+         }
          break;
       case DB_SYNTAX_MSSQL:
-         success = FALSE;
+         success = false;
          _sntprintf(query, 1024, _T("SELECT name FROM sysobjects WHERE xtype='PK' AND parent_obj=OBJECT_ID('%s')"), table);
          hResult = DBSelect(hdb, query);
          if (hResult != nullptr)
@@ -745,7 +760,6 @@ bool LIBNXDB_EXPORTABLE DBDropPrimaryKey(DB_HANDLE hdb, const TCHAR *table)
             if (DBGetNumRows(hResult) > 0)
             {
                TCHAR objName[512];
-
                DBGetField(hResult, 0, 0, objName, 512);
                _sntprintf(query, 1024, _T("ALTER TABLE %s DROP CONSTRAINT %s"), table, objName);
                success = ExecuteQuery(hdb, query);
