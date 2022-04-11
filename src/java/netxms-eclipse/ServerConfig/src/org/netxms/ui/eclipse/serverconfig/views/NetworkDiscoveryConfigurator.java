@@ -639,7 +639,7 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
       gd.verticalAlignment = SWT.FILL;
       gd.grabExcessVerticalSpace = true;
       gd.verticalSpan = 4;
-      gd.heightHint = 100;
+      gd.heightHint = 200;
       activeDiscoveryAddressList.getTable().setLayoutData(gd);
       activeDiscoveryAddressList.getTable().setSortDirection(SWT.UP);
       activeDiscoveryAddressList.setContentProvider(new ArrayContentProvider());
