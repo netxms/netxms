@@ -110,6 +110,8 @@ public class TimestampConditionEditor extends ConditionEditor
 		if (selectionIndex == 0)	// between
 		{
 			andLabel.setVisible(true);
+         datePicker1.setVisible(true);
+         timePicker1.setVisible(true);
 			datePicker2.setVisible(true);
 			timePicker2.setVisible(true);
 		}
@@ -124,6 +126,8 @@ public class TimestampConditionEditor extends ConditionEditor
 		else
 		{
 			andLabel.setVisible(false);
+         datePicker1.setVisible(true);
+         timePicker1.setVisible(true);
 			datePicker2.setVisible(false);
 			timePicker2.setVisible(false);
 		}
