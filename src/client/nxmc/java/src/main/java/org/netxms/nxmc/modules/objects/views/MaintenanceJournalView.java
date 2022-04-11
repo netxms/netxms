@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -82,11 +82,17 @@ public class MaintenanceJournalView extends ObjectView
    private Action actionEdit;
    private int warningMessageId = 0;
 
+   /**
+    * Create maintenance journal view
+    */
    public MaintenanceJournalView()
    {
       super(i18n.tr("Maintenance journal"), ResourceManager.getImageDescriptor("icons/object-views/maintenance_journal.png"), "MaintenanceJournal", true);
    }
 
+   /**
+    * @see org.netxms.nxmc.base.views.View#createContent(org.eclipse.swt.widgets.Composite)
+    */
    @Override
    protected void createContent(Composite parent)
    {
@@ -141,7 +147,7 @@ public class MaintenanceJournalView extends ObjectView
          @Override
          public void notificationHandler(SessionNotification n)
          {
-            if (n.getCode() == SessionNotification.MAINTENANCE_JOURNAL_CHANGED && (n.getSubCode() == getObjectId() || getObject().isParentOf(n.getSubCode())))
+            if ((n.getCode() == SessionNotification.MAINTENANCE_JOURNAL_UPDATED) && (n.getSubCode() == getObjectId() || getObject().isParentOf(n.getSubCode())))
             {
                getDisplay().asyncExec(new Runnable() {
                   @Override

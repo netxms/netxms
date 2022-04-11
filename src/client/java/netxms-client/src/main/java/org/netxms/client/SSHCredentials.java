@@ -31,11 +31,11 @@ public class SSHCredentials
    private int keyId;
 
    /**
-    * Create new SSH credentials object
+    * Create new SSH credentials object.
     * 
-    * @param login
-    * @param password
-    * @param keyId
+    * @param login login name
+    * @param password password
+    * @param keyId SSH key ID (0 if not assigned)
     */
    public SSHCredentials(String login, String password, int keyId)
    {

@@ -200,7 +200,7 @@ public class BusinessServiceChecksView extends ObjectView
          @Override
          public void notificationHandler(SessionNotification n)
          {
-            if (n.getCode() == SessionNotification.BUSINESS_SERVICE_CHECK_MODIFY)
+            if (n.getCode() == SessionNotification.BIZSVC_CHECK_MODIFIED)
             {
                boolean needRefresh = false;
 
@@ -217,7 +217,7 @@ public class BusinessServiceChecksView extends ObjectView
                if (needRefresh)
                   refreshTimer.execute();
             }
-            else if (n.getCode() == SessionNotification.BUSINESS_SERVICE_CHECK_DELETE)
+            else if (n.getCode() == SessionNotification.BIZSVC_CHECK_DELETED)
             {
                synchronized(deletedChecks)
                {

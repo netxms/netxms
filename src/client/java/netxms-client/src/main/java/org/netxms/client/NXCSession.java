@@ -8513,12 +8513,9 @@ public class NXCSession
    }
 
    /**
-    * Get SSH credentials for all zones and global ones
+    * Get SSH credentials for all zones.
     * 
-    * @param objectId journal owner object ID
-    * @param entryId journal entry ID
-    * @param description journal entry description
-    * @return list of SSH credentials
+    * @return list of SSH credentials for all zones
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
@@ -8552,12 +8549,10 @@ public class NXCSession
    }
 
    /**
-    * Get SSH credentials for specified zone
+    * Get SSH credentials for specific zone.
     * 
-    * @param objectId journal owner object ID
-    * @param entryId journal entry ID
-    * @param description journal entry description
-    * @return list of SSH credentials
+    * @param zoneUIN zone UIN
+    * @return list of SSH credentials for specific zone
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
