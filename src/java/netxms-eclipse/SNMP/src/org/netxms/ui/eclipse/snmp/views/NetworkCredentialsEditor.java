@@ -143,7 +143,7 @@ public class NetworkCredentialsEditor extends ViewPart implements ISaveablePart
          public void controlResized(ControlEvent e)
          {
             content.layout(true, true);
-            scroller.setMinSize(contentWrapper.computeSize(scroller.getSize().x, SWT.DEFAULT));
+            scroller.setMinSize(content.computeSize(scroller.getSize().x, SWT.DEFAULT));
          }
       });
 
@@ -152,7 +152,7 @@ public class NetworkCredentialsEditor extends ViewPart implements ISaveablePart
       layout.numColumns = 3;
       layout.makeColumnsEqualWidth = true;
       content.setLayout(layout);
-      content.setBackground(contentWrapper.getDisplay().getSystemColor(SWT.COLOR_LIST_BACKGROUND));
+      content.setBackground(content.getDisplay().getSystemColor(SWT.COLOR_LIST_BACKGROUND));
 
       scroller.setContent(content);
 
