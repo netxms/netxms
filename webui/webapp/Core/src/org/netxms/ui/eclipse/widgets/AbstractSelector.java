@@ -20,6 +20,7 @@ package org.netxms.ui.eclipse.widgets;
 
 import java.util.HashSet;
 import java.util.Set;
+import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
@@ -67,6 +68,7 @@ public class AbstractSelector extends Composite
 	private Button clearingButton;
 	private ImageHyperlink selectionLink;
 	private ImageHyperlink clearingLink;
+	private Action actionCopy;
 	private Image scaledImage = null;
 	private Set<ModifyListener> modifyListeners = new HashSet<ModifyListener>(0);
 
@@ -218,6 +220,14 @@ public class AbstractSelector extends Composite
 	 */
 	private void createActions()
 	{
+		actionCopy = new Action() {
+			@Override
+			public void run()
+			{
+            WidgetHelper.copyToClipboard(AbstractSelector.this.getText());
+			}
+		};
+		actionCopy.setText(Messages.get().AbstractSelector_CopyToClipboard);
 	}
 
 	/**
@@ -248,6 +258,7 @@ public class AbstractSelector extends Composite
 	 */
 	protected void fillContextMenu(IMenuManager mgr)
 	{
+		mgr.add(actionCopy);
 	}
 
 	/**

@@ -26,9 +26,6 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CLabel;
-import org.eclipse.swt.dnd.Clipboard;
-import org.eclipse.swt.dnd.TextTransfer;
-import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.ModifyEvent;
@@ -216,8 +213,7 @@ public class AbstractSelector extends Composite
 			@Override
 			public void run()
 			{
-				final Clipboard cb = new Clipboard(getDisplay());
-				cb.setContents(new Object[] { AbstractSelector.this.getText() }, new Transfer[] { TextTransfer.getInstance() });
+            WidgetHelper.copyToClipboard(AbstractSelector.this.getText());
 			}
 		};
 	}

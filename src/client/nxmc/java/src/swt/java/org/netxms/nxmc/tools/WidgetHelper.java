@@ -606,7 +606,7 @@ public class WidgetHelper
          restoreTreeViewerSettings((SortableTreeViewer)viewer, prefix);
 		}
 	}
-	
+
 	/**
 	 * Copy given text to clipboard
 	 * 
@@ -616,10 +616,10 @@ public class WidgetHelper
 	{
 		final Clipboard cb = new Clipboard(Display.getCurrent());
       Transfer transfer = TextTransfer.getInstance();
-      cb.setContents(new Object[] { (text != null) ? text : "" }, new Transfer[] { transfer }); //$NON-NLS-1$
+      cb.setContents(new Object[] { (text != null) ? text : "" }, new Transfer[] { transfer });
       cb.dispose();
    }
-	
+
 	/**
 	 * @param manager
 	 * @param control
