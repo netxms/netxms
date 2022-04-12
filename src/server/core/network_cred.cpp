@@ -23,27 +23,46 @@
 #include "nxcore.h"
 
 /**
+ * Check zone access for user
+ */
+static inline bool CheckZoneAccess(int32_t zoneUIN, uint32_t userId)
+{
+   if ((zoneUIN == ALL_ZONES) || (userId == 0))
+      return true;
+   shared_ptr<Zone> zone = FindZoneByUIN(zoneUIN);
+   return (zone != nullptr) ? zone->checkAccessRights(userId, OBJECT_ACCESS_READ) : false;
+}
+
+/**
  * Get list of configured SNMP communities for given zone into NXCP message
  */
-void GetZoneCommunityList(NXCPMessage *msg, int32_t zoneUIN)
+void ZoneCommunityListToMessage(int32_t zoneUIN, NXCPMessage *msg)
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   TCHAR query[256];
-   _sntprintf(query, 255, _T("SELECT community FROM snmp_communities WHERE zone=%d ORDER BY id ASC"), zoneUIN);
-   DB_RESULT hResult = DBSelect(hdb, query);
-   if (hResult != nullptr)
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT community FROM snmp_communities WHERE zone=? ORDER BY id ASC"));
+   if (hStmt != nullptr)
    {
-      int count = DBGetNumRows(hResult);
-      UINT32 stringBase = VID_COMMUNITY_STRING_LIST_BASE;
-      msg->setField(VID_NUM_STRINGS, (UINT32)count);
-      TCHAR buffer[256];
-      for(int i = 0; i < count; i++)
+      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, zoneUIN);
+      DB_RESULT hResult = DBSelectPrepared(hStmt);
+      if (hResult != nullptr)
       {
-         DBGetField(hResult, i, 0, buffer, 256);
-         msg->setField(stringBase++, buffer);
+         int count = DBGetNumRows(hResult);
+         uint32_t fieldId = VID_COMMUNITY_STRING_LIST_BASE;
+         msg->setField(VID_NUM_STRINGS, (UINT32)count);
+         TCHAR buffer[256];
+         for(int i = 0; i < count; i++)
+         {
+            DBGetField(hResult, i, 0, buffer, 256);
+            msg->setField(fieldId++, buffer);
+         }
+         DBFreeResult(hResult);
+         msg->setField(VID_RCC, RCC_SUCCESS);
       }
-      DBFreeResult(hResult);
-      msg->setField(VID_RCC, RCC_SUCCESS);
+      else
+      {
+         msg->setField(VID_RCC, RCC_DB_FAILURE);
+      }
+      DBFreeStatement(hStmt);
    }
    else
    {
@@ -55,23 +74,29 @@ void GetZoneCommunityList(NXCPMessage *msg, int32_t zoneUIN)
 /**
  * Get list of configured SNMP communities for all zones into NXCP message
  */
-void GetFullCommunityList(NXCPMessage *msg)
+void FullCommunityListToMessage(uint32_t userId, NXCPMessage *msg)
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   DB_RESULT hResult = DBSelect(hdb, _T("SELECT community,zone FROM snmp_communities ORDER BY zone DESC, id ASC"));
+   DB_RESULT hResult = DBSelect(hdb, _T("SELECT zone,community FROM snmp_communities ORDER BY zone DESC, id ASC"));
    if (hResult != nullptr)
    {
-      int count = DBGetNumRows(hResult);
-      UINT32 stringBase = VID_COMMUNITY_STRING_LIST_BASE, zoneBase = VID_COMMUNITY_STRING_ZONE_LIST_BASE;
-      msg->setField(VID_NUM_STRINGS, (UINT32)count);
-      TCHAR buffer[256];
-      for(int i = 0; i < count; i++)
+      int dbRecordCount = DBGetNumRows(hResult);
+      uint32_t elementCount = 0;
+      uint32_t communityFieldId = VID_COMMUNITY_STRING_LIST_BASE;
+      uint32_t zoneFieldId = VID_COMMUNITY_STRING_ZONE_LIST_BASE;
+      for(int i = 0; i < dbRecordCount; i++)
       {
-         DBGetField(hResult, i, 0, buffer, 256);
-         msg->setField(stringBase++, buffer);
-         msg->setField(zoneBase++, DBGetFieldULong(hResult, i, 1));
+         int32_t zoneUIN = DBGetFieldULong(hResult, i, 0);
+         if (CheckZoneAccess(zoneUIN, userId))
+         {
+            TCHAR buffer[256];
+            msg->setField(communityFieldId++, DBGetField(hResult, i, 1, buffer, 256));
+            msg->setField(zoneFieldId++, zoneUIN);
+            elementCount++;
+         }
       }
       DBFreeResult(hResult);
+      msg->setField(VID_NUM_STRINGS, elementCount);
       msg->setField(VID_RCC, RCC_SUCCESS);
    }
    else
@@ -82,9 +107,70 @@ void GetFullCommunityList(NXCPMessage *msg)
 }
 
 /**
+ * Update list of well-known SNMP community strings from NXCP message
+ */
+uint32_t UpdateCommunityList(const NXCPMessage& request, int32_t zoneUIN)
+{
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   if (!DBBegin(hdb))
+   {
+      DBConnectionPoolReleaseConnection(hdb);
+      return RCC_DB_FAILURE;
+   }
+
+   uint32_t rcc;
+   if (ExecuteQueryOnObject(hdb, zoneUIN, _T("DELETE FROM snmp_communities WHERE zone=?")))
+   {
+      rcc = RCC_SUCCESS;
+      int count = request.getFieldAsInt32(VID_NUM_STRINGS);
+      if (count > 0)
+      {
+         DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO snmp_communities (zone,id,community) VALUES(?,?,?)"), count > 1);
+         if (hStmt != nullptr)
+         {
+            DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, zoneUIN);
+            uint32_t fieldId = VID_COMMUNITY_STRING_LIST_BASE;
+            for (int i = 0; i < count; i++)
+            {
+               DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, i + 1);
+               DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, request.getFieldAsString(fieldId++), DB_BIND_DYNAMIC);
+               if (!DBExecute(hStmt))
+               {
+                  rcc = RCC_DB_FAILURE;
+                  break;
+               }
+            }
+            DBFreeStatement(hStmt);
+         }
+         else
+         {
+            rcc = RCC_DB_FAILURE;
+         }
+      }
+   }
+   else
+   {
+      rcc = RCC_DB_FAILURE;
+   }
+
+   if (rcc == RCC_SUCCESS)
+   {
+      DBCommit(hdb);
+      NotifyClientSessions(NX_NOTIFY_COMMUNITIES_CONFIG_CHANGED, zoneUIN);
+   }
+   else
+   {
+      DBRollback(hdb);
+   }
+
+   DBConnectionPoolReleaseConnection(hdb);
+   return rcc;
+}
+
+/**
  * Get list of configured SNMP USM credentials for given zone into NXCP message
  */
-void GetZoneUsmCredentialList(NXCPMessage *msg, int32_t zoneUIN)
+void ZoneUsmCredentialsListToMessage(int32_t zoneUIN, NXCPMessage *msg)
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    TCHAR query[256];
@@ -94,25 +180,26 @@ void GetZoneUsmCredentialList(NXCPMessage *msg, int32_t zoneUIN)
    {
       TCHAR buffer[MAX_DB_STRING];
       int count = DBGetNumRows(hResult);
-      msg->setField(VID_NUM_RECORDS, (UINT32)count);
-      for(int i = 0, id = VID_USM_CRED_LIST_BASE; i < count; i++, id += 3)
+      msg->setField(VID_NUM_RECORDS, static_cast<uint32_t>(count));
+      uint32_t fieldId = VID_USM_CRED_LIST_BASE;
+      for(int i = 0; i < count; i++, fieldId += 3)
       {
          DBGetField(hResult, i, 0, buffer, MAX_DB_STRING);  // security name
-         msg->setField(id++, buffer);
+         msg->setField(fieldId++, buffer);
 
-         msg->setField(id++, (WORD)DBGetFieldLong(hResult, i, 1)); // auth method
-         msg->setField(id++, (WORD)DBGetFieldLong(hResult, i, 2)); // priv method
+         msg->setField(fieldId++, static_cast<uint16_t>(DBGetFieldLong(hResult, i, 1))); // auth method
+         msg->setField(fieldId++, static_cast<uint16_t>(DBGetFieldLong(hResult, i, 2))); // priv method
 
          DBGetField(hResult, i, 3, buffer, MAX_DB_STRING);  // auth password
-         msg->setField(id++, buffer);
+         msg->setField(fieldId++, buffer);
 
          DBGetField(hResult, i, 4, buffer, MAX_DB_STRING);  // priv password
-         msg->setField(id++, buffer);
+         msg->setField(fieldId++, buffer);
 
-         msg->setField(id++, zoneUIN); // zone ID
+         msg->setField(fieldId++, zoneUIN); // zone ID
 
          TCHAR comments[256];
-         msg->setField(id++, DBGetField(hResult, i, 5, comments, 256)); //comment
+         msg->setField(fieldId++, DBGetField(hResult, i, 5, comments, 256)); //comment
       }
       DBFreeResult(hResult);
       msg->setField(VID_RCC, RCC_SUCCESS);
@@ -127,35 +214,45 @@ void GetZoneUsmCredentialList(NXCPMessage *msg, int32_t zoneUIN)
 /**
  * Get list of configured SNMP USM credentials for all zones into NXCP message
  */
-void GetFullUsmCredentialList(NXCPMessage *msg)
+void FullUsmCredentialsListToMessage(uint32_t userId, NXCPMessage *msg)
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    DB_RESULT hResult = DBSelect(hdb, _T("SELECT user_name,auth_method,priv_method,auth_password,priv_password,zone,comments FROM usm_credentials ORDER BY zone DESC, id ASC"));
    if (hResult != nullptr)
    {
       TCHAR buffer[MAX_DB_STRING];
-      int count = DBGetNumRows(hResult);
-      msg->setField(VID_NUM_RECORDS, (UINT32)count);
-      for(int i = 0, id = VID_USM_CRED_LIST_BASE; i < count; i++, id += 3)
+      int dbRecordCount = DBGetNumRows(hResult);
+      uint32_t elementCount = 0;
+      uint32_t fieldId = VID_USM_CRED_LIST_BASE;
+      for(int i = 0; i < dbRecordCount; i++)
       {
-         DBGetField(hResult, i, 0, buffer, MAX_DB_STRING);  // security name
-         msg->setField(id++, buffer);
+         int32_t zoneUIN = DBGetFieldULong(hResult, i, 5);
+         if (CheckZoneAccess(zoneUIN, userId))
+         {
+            DBGetField(hResult, i, 0, buffer, MAX_DB_STRING);  // security name
+            msg->setField(fieldId++, buffer);
 
-         msg->setField(id++, (WORD)DBGetFieldLong(hResult, i, 1)); // auth method
-         msg->setField(id++, (WORD)DBGetFieldLong(hResult, i, 2)); // priv method
+            msg->setField(fieldId++, (WORD)DBGetFieldLong(hResult, i, 1)); // auth method
+            msg->setField(fieldId++, (WORD)DBGetFieldLong(hResult, i, 2)); // priv method
 
-         DBGetField(hResult, i, 3, buffer, MAX_DB_STRING);  // auth password
-         msg->setField(id++, buffer);
+            DBGetField(hResult, i, 3, buffer, MAX_DB_STRING);  // auth password
+            msg->setField(fieldId++, buffer);
 
-         DBGetField(hResult, i, 4, buffer, MAX_DB_STRING);  // priv password
-         msg->setField(id++, buffer);
+            DBGetField(hResult, i, 4, buffer, MAX_DB_STRING);  // priv password
+            msg->setField(fieldId++, buffer);
 
-         msg->setField(id++, DBGetFieldULong(hResult, i, 5)); // zone ID
+            msg->setField(fieldId++, zoneUIN); // zone ID
 
-         TCHAR comments[256];
-         msg->setField(id++, DBGetField(hResult, i, 6, comments, 256)); //comment
+            TCHAR comments[256];
+            msg->setField(fieldId++, DBGetField(hResult, i, 6, comments, 256)); //comment
+
+            elementCount++;
+            fieldId += 3;
+         }
       }
       DBFreeResult(hResult);
+
+      msg->setField(VID_NUM_RECORDS, elementCount);
       msg->setField(VID_RCC, RCC_SUCCESS);
    }
    else
@@ -163,6 +260,72 @@ void GetFullUsmCredentialList(NXCPMessage *msg)
       msg->setField(VID_RCC, RCC_DB_FAILURE);
    }
    DBConnectionPoolReleaseConnection(hdb);
+}
+
+/**
+ * Update list of well-known SNMPv3 USM credentials from NXCP message
+ */
+uint32_t UpdateUsmCredentialsList(const NXCPMessage& request, int32_t zoneUIN)
+{
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   if (!DBBegin(hdb))
+   {
+      DBConnectionPoolReleaseConnection(hdb);
+      return RCC_DB_FAILURE;
+   }
+
+   uint32_t rcc;
+   if (ExecuteQueryOnObject(hdb, zoneUIN, _T("DELETE FROM usm_credentials WHERE zone=?")))
+   {
+      rcc = RCC_SUCCESS;
+      int count = request.getFieldAsInt32(VID_NUM_RECORDS);
+      if (count > 0)
+      {
+         DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO usm_credentials (zone,id,user_name,auth_method,priv_method,auth_password,priv_password,comments) VALUES(?,?,?,?,?,?,?,?)"), count > 1);
+         if (hStmt != nullptr)
+         {
+            DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, zoneUIN);
+            uint32_t fieldId = VID_USM_CRED_LIST_BASE;
+            for (int i = 0; i < count; i++, fieldId += 4)
+            {
+               DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, i + 1);
+               DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, request.getFieldAsString(fieldId++), DB_BIND_DYNAMIC);
+               DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (int)request.getFieldAsUInt16(fieldId++)); // Auth method
+               DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, (int)request.getFieldAsUInt16(fieldId++)); // Priv method
+               DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, request.getFieldAsString(fieldId++), DB_BIND_DYNAMIC);
+               DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, request.getFieldAsString(fieldId++), DB_BIND_DYNAMIC);
+               DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, request.getFieldAsString(fieldId++), DB_BIND_DYNAMIC);
+               if (!DBExecute(hStmt))
+               {
+                  rcc = RCC_DB_FAILURE;
+                  break;
+               }
+            }
+            DBFreeStatement(hStmt);
+         }
+         else
+         {
+            rcc = RCC_DB_FAILURE;
+         }
+      }
+   }
+   else
+   {
+      rcc = RCC_DB_FAILURE;
+   }
+
+   if (rcc == RCC_SUCCESS)
+   {
+      DBCommit(hdb);
+      NotifyClientSessions(NX_NOTIFY_USM_CONFIG_CHANGED, zoneUIN);
+   }
+   else
+   {
+      DBRollback(hdb);
+   }
+
+   DBConnectionPoolReleaseConnection(hdb);
+   return rcc;
 }
 
 /**
@@ -205,24 +368,31 @@ IntegerArray<uint16_t> GetWellKnownPorts(const TCHAR *tag, int32_t zoneUIN)
 /**
  * Get list of configured ports for all zones into NXCP message
  */
-void FullWellKnownPortListToMessage(const TCHAR *tag, NXCPMessage *msg)
+void FullWellKnownPortListToMessage(const TCHAR *tag, uint32_t userId, NXCPMessage *msg)
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT port,zone FROM well_known_ports WHERE tag=? ORDER BY zone,id"));
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT zone,port FROM well_known_ports WHERE tag=? ORDER BY zone,id"));
    if (hStmt != nullptr)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, tag, DB_BIND_STATIC);
       DB_RESULT hResult = DBSelectPrepared(hStmt);
       if (hResult != nullptr)
       {
-         int count = DBGetNumRows(hResult);
+         int dbRecordCount = DBGetNumRows(hResult);
+         uint32_t elementCount = 0;
          uint32_t fieldId = VID_ZONE_PORT_LIST_BASE;
-         for(int i = 0; i < count; i++, fieldId += 8)
+         for(int i = 0; i < dbRecordCount; i++)
          {
-            msg->setField(fieldId++, static_cast<uint16_t>(DBGetFieldLong(hResult, i, 0)));
-            msg->setField(fieldId++, DBGetFieldLong(hResult, i, 1));
+            int32_t zoneUIN = DBGetFieldLong(hResult, i, 0);
+            if (CheckZoneAccess(zoneUIN, userId))
+            {
+               msg->setField(fieldId++, static_cast<uint16_t>(DBGetFieldLong(hResult, i, 1)));
+               msg->setField(fieldId++, zoneUIN);
+               fieldId += 8;
+               elementCount++;
+            }
          }
-         msg->setField(VID_ZONE_PORT_COUNT, static_cast<uint32_t>(count));
+         msg->setField(VID_ZONE_PORT_COUNT, elementCount);
          msg->setField(VID_RCC, RCC_SUCCESS);
          DBFreeResult(hResult);
       }
@@ -353,22 +523,29 @@ uint32_t UpdateWellKnownPortList(const NXCPMessage& request, const TCHAR *tag, i
 /**
  * Get list of configured agent secrets for all zones into NXCP message
  */
-void GetFullAgentSecretList(NXCPMessage *msg)
+void FullAgentSecretListToMessage(uint32_t userId, NXCPMessage *msg)
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   DB_RESULT hResult = DBSelect(hdb, _T("SELECT secret,zone FROM shared_secrets ORDER BY zone DESC, id ASC"));
+   DB_RESULT hResult = DBSelect(hdb, _T("SELECT zone,secret FROM shared_secrets ORDER BY zone DESC, id ASC"));
    if (hResult != nullptr)
    {
-      int count = DBGetNumRows(hResult);
-      uint32_t baseId = VID_SHARED_SECRET_LIST_BASE;
-      msg->setField(VID_NUM_ELEMENTS, (UINT32)count);
-      for(int i = 0; i < count; i++, baseId +=8)
+      int dbRecordCount = DBGetNumRows(hResult);
+      uint32_t elementCount = 0;
+      uint32_t fieldId = VID_SHARED_SECRET_LIST_BASE;
+      for(int i = 0; i < dbRecordCount; i++)
       {
-         TCHAR buffer[MAX_SECRET_LENGTH];
-         msg->setField(baseId++, DBGetField(hResult, i, 0, buffer, MAX_SECRET_LENGTH));
-         msg->setField(baseId++, DBGetFieldULong(hResult, i, 1));
+         int32_t zoneUIN = DBGetFieldULong(hResult, i, 0);
+         if (CheckZoneAccess(zoneUIN, userId))
+         {
+            TCHAR buffer[MAX_SECRET_LENGTH];
+            msg->setField(fieldId++, DBGetField(hResult, i, 1, buffer, MAX_SECRET_LENGTH));
+            msg->setField(fieldId++, zoneUIN);
+            fieldId += 8;
+            elementCount++;
+         }
       }
       DBFreeResult(hResult);
+      msg->setField(VID_NUM_ELEMENTS, elementCount);
       msg->setField(VID_RCC, RCC_SUCCESS);
    }
    else
@@ -381,30 +558,99 @@ void GetFullAgentSecretList(NXCPMessage *msg)
 /**
  * Get list of configured agent secrets for all zones into NXCP message
  */
-void GetZoneAgentSecretList(NXCPMessage *msg, int32_t zoneUIN)
+void ZoneAgentSecretListToMessage(int32_t zoneUIN, NXCPMessage *msg)
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   TCHAR query[256];
-   _sntprintf(query, 255, _T("SELECT secret FROM shared_secrets WHERE zone=%d ORDER BY id ASC"), zoneUIN);
-   DB_RESULT hResult = DBSelect(hdb, query);
-   if (hResult != nullptr)
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT secret FROM shared_secrets WHERE zone=? ORDER BY id ASC"));
+   if (hStmt != nullptr)
    {
-      int count = DBGetNumRows(hResult);
-      UINT32 baseId = VID_SHARED_SECRET_LIST_BASE;
-      msg->setField(VID_NUM_ELEMENTS, (UINT32)count);
-      for(int i = 0; i < count; i++)
+      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, zoneUIN);
+      DB_RESULT hResult = DBSelectPrepared(hStmt);
+      if (hResult != nullptr)
       {
-         TCHAR buffer[MAX_SECRET_LENGTH];
-         msg->setField(baseId++, DBGetField(hResult, i, 0, buffer, MAX_SECRET_LENGTH));
+         int count = DBGetNumRows(hResult);
+         uint32_t fieldId = VID_SHARED_SECRET_LIST_BASE;
+         msg->setField(VID_NUM_ELEMENTS, (UINT32)count);
+         for(int i = 0; i < count; i++)
+         {
+            TCHAR buffer[MAX_SECRET_LENGTH];
+            msg->setField(fieldId++, DBGetField(hResult, i, 0, buffer, MAX_SECRET_LENGTH));
+         }
+         DBFreeResult(hResult);
+         msg->setField(VID_RCC, RCC_SUCCESS);
       }
-      DBFreeResult(hResult);
-      msg->setField(VID_RCC, RCC_SUCCESS);
+      else
+      {
+         msg->setField(VID_RCC, RCC_DB_FAILURE);
+      }
+      DBFreeStatement(hStmt);
    }
    else
    {
       msg->setField(VID_RCC, RCC_DB_FAILURE);
    }
    DBConnectionPoolReleaseConnection(hdb);
+}
+
+/**
+ * Update list of well-known agent secrets from NXCP message
+ */
+uint32_t UpdateAgentSecretList(const NXCPMessage& request, int32_t zoneUIN)
+{
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   if (!DBBegin(hdb))
+   {
+      DBConnectionPoolReleaseConnection(hdb);
+      return RCC_DB_FAILURE;
+   }
+
+   uint32_t rcc;
+   if (ExecuteQueryOnObject(hdb, zoneUIN, _T("DELETE FROM shared_secrets WHERE zone=?")))
+   {
+      rcc = RCC_SUCCESS;
+      int count = request.getFieldAsInt32(VID_NUM_ELEMENTS);
+      if (count > 0)
+      {
+         DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO shared_secrets (zone,id,secret) VALUES(?,?,?)"), count > 1);
+         if (hStmt != nullptr)
+         {
+            DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, zoneUIN);
+            uint32_t fieldId = VID_SHARED_SECRET_LIST_BASE;
+            for (int i = 0; i < count; i++)
+            {
+               DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, i + 1);
+               DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, request.getFieldAsString(fieldId++), DB_BIND_DYNAMIC);
+               if (!DBExecute(hStmt))
+               {
+                  rcc = RCC_DB_FAILURE;
+                  break;
+               }
+            }
+            DBFreeStatement(hStmt);
+         }
+         else
+         {
+            rcc = RCC_DB_FAILURE;
+         }
+      }
+   }
+   else
+   {
+      rcc = RCC_DB_FAILURE;
+   }
+
+   if (rcc == RCC_SUCCESS)
+   {
+      DBCommit(hdb);
+      NotifyClientSessions(NX_NOTIFY_SECRET_CONFIG_CHANGED, zoneUIN);
+   }
+   else
+   {
+      DBRollback(hdb);
+   }
+
+   DBConnectionPoolReleaseConnection(hdb);
+   return rcc;
 }
 
 /**
@@ -441,7 +687,7 @@ StructArray<SSHCredentials> GetSSHCredentials(int32_t zoneUIN)
  * Get list of SSH credentials into NXCP message
  * @param zoneUIN zone UIN or -1 for "all zones" credentials
  */
-void ZoneSSHCredentialsToMessage(int32_t zoneUIN, NXCPMessage *msg)
+void ZoneSSHCredentialsListToMessage(int32_t zoneUIN, NXCPMessage *msg)
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT login,password,key_id FROM ssh_credentials WHERE zone_uin=? ORDER BY zone_uin DESC, id ASC"));
@@ -485,7 +731,7 @@ void ZoneSSHCredentialsToMessage(int32_t zoneUIN, NXCPMessage *msg)
 /**
  * Get list of SSH credentials into NXCP message
  */
-void FullSSHCredentialsToMessage(NXCPMessage *msg)
+void FullSSHCredentialsListToMessage(uint32_t userId, NXCPMessage *msg)
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    DB_RESULT hResult = DBSelect(hdb, _T("SELECT zone_uin,login,password,key_id FROM ssh_credentials ORDER BY zone_uin,id"));
@@ -494,19 +740,26 @@ void FullSSHCredentialsToMessage(NXCPMessage *msg)
       TCHAR loginBuff[MAX_SSH_LOGIN_LEN];
       TCHAR passwordBuff[MAX_SSH_PASSWORD_LEN];
 
-      int count = DBGetNumRows(hResult);
-      msg->setField(VID_NUM_ELEMENTS, count);
-
+      int dbRecordCount = DBGetNumRows(hResult);
+      uint32_t elementCount = 0;
       uint32_t fieldId = VID_ELEMENT_LIST_BASE;
-      for (int i = 0; i < count; i++, fieldId += 6)
+      for (int i = 0; i < dbRecordCount; i++)
       {
-         msg->setField(fieldId++, DBGetFieldLong(hResult, i, 0));
-         msg->setField(fieldId++, DBGetField(hResult, i, 1, loginBuff, MAX_SSH_LOGIN_LEN));
-         msg->setField(fieldId++, DBGetField(hResult, i, 2, passwordBuff, MAX_SSH_PASSWORD_LEN));
-         msg->setField(fieldId++, DBGetFieldLong(hResult, i, 3));
+         int32_t zoneUIN = DBGetFieldLong(hResult, i, 0);
+         if (CheckZoneAccess(zoneUIN, userId))
+         {
+            msg->setField(fieldId++, zoneUIN);
+            msg->setField(fieldId++, DBGetField(hResult, i, 1, loginBuff, MAX_SSH_LOGIN_LEN));
+            msg->setField(fieldId++, DBGetField(hResult, i, 2, passwordBuff, MAX_SSH_PASSWORD_LEN));
+            msg->setField(fieldId++, DBGetFieldLong(hResult, i, 3));
+            fieldId += 6;
+            elementCount++;
+         }
       }
 
       DBFreeResult(hResult);
+
+      msg->setField(VID_NUM_ELEMENTS, elementCount);
       msg->setField(VID_RCC, RCC_SUCCESS);
    }
    else
@@ -517,7 +770,7 @@ void FullSSHCredentialsToMessage(NXCPMessage *msg)
 }
 
 /**
- * Update list of well-known ports from NXCP message
+ * Update list of well-known SSH credentials from NXCP message
  */
 uint32_t UpdateSSHCredentials(const NXCPMessage& request, int32_t zoneUIN)
 {

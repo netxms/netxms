@@ -743,8 +743,6 @@ private:
    void queryInternalCommunicationTopology(const NXCPMessage& request);
    void getDependentNodes(const NXCPMessage& request);
 	void sendNotification(const NXCPMessage& request);
-	void sendNetworkCredList(const NXCPMessage& request);
-	void updateCommunityList(const NXCPMessage& request);
 	void getPersistantStorage(const NXCPMessage& request);
 	void setPstorageValue(const NXCPMessage& request);
 	void deletePstorageValue(const NXCPMessage& request);
@@ -765,7 +763,6 @@ private:
 	void queryServerLog(const NXCPMessage& request);
 	void getServerLogQueryData(const NXCPMessage& request);
    void getServerLogRecordDetails(const NXCPMessage& request);
-	void updateUsmCredentials(const NXCPMessage& request);
 	void sendDCIThresholds(const NXCPMessage& request);
 	void addClusterNode(const NXCPMessage& request);
 	void findNodeConnection(const NXCPMessage& request);
@@ -860,7 +857,11 @@ private:
    void getGeoAreas(const NXCPMessage& request);
    void modifyGeoArea(const NXCPMessage& request);
    void deleteGeoArea(const NXCPMessage& request);
+   void getNetworkCredentials(const NXCPMessage& request);
    void updateSharedSecretList(const NXCPMessage& request);
+   void updateCommunityList(const NXCPMessage& request);
+   void updateUsmCredentials(const NXCPMessage& request);
+   void updateSshCredentials(const NXCPMessage& request);
    void updateWellKnownPortList(const NXCPMessage& request);
    void findProxyForNode(const NXCPMessage& request);
    void getSshKeys(const NXCPMessage& request);
@@ -887,7 +888,6 @@ private:
    void readMaintJournal(const NXCPMessage& request);
    void createMaintJournal(const NXCPMessage& request);
    void editMaintJournal(const NXCPMessage& request);
-   void updateSshCredentials(const NXCPMessage& request);
 
    void alarmUpdateWorker(Alarm *alarm);
    void sendActionDBUpdateMessage(NXCP_MESSAGE *msg);
@@ -1362,20 +1362,24 @@ Table *QuerySummaryTable(uint32_t tableId, SummaryTable *adHocDefinition, uint32
 bool CreateSummaryTableExportRecord(uint32_t id, StringBuffer &xml);
 bool ImportSummaryTable(ConfigEntry *config, bool overwrite);
 
-void GetFullCommunityList(NXCPMessage *msg);
-void GetZoneCommunityList(NXCPMessage *msg, int32_t zoneUIN);
-void GetFullUsmCredentialList(NXCPMessage *msg);
-void GetZoneUsmCredentialList(NXCPMessage *msg, int32_t zoneUIN);
+void FullCommunityListToMessage(uint32_t userId, NXCPMessage *msg);
+void ZoneCommunityListToMessage(int32_t zoneUIN, NXCPMessage *msg);
+uint32_t UpdateCommunityList(const NXCPMessage& request, int32_t zoneUIN);
 
-void GetFullAgentSecretList(NXCPMessage *msg);
-void GetZoneAgentSecretList(NXCPMessage *msg, int32_t zoneUIN);
+void FullUsmCredentialsListToMessage(uint32_t userId, NXCPMessage *msg);
+void ZoneUsmCredentialsListToMessage(int32_t zoneUIN, NXCPMessage *msg);
+uint32_t UpdateUsmCredentialsList(const NXCPMessage& request, int32_t zoneUIN);
 
-void FullSSHCredentialsToMessage(NXCPMessage *msg);
-void ZoneSSHCredentialsToMessage(int32_t zoneUIN, NXCPMessage *msg);
+void FullAgentSecretListToMessage(uint32_t userId, NXCPMessage *msg);
+void ZoneAgentSecretListToMessage(int32_t zoneUIN, NXCPMessage *msg);
+uint32_t UpdateAgentSecretList(const NXCPMessage& request, int32_t zoneUIN);
+
+void FullSSHCredentialsListToMessage(uint32_t userId, NXCPMessage *msg);
+void ZoneSSHCredentialsListToMessage(int32_t zoneUIN, NXCPMessage *msg);
 uint32_t UpdateSSHCredentials(const NXCPMessage& request, int32_t zoneUIN);
 StructArray<SSHCredentials> GetSSHCredentials(int32_t zoneUIN);
 
-void FullWellKnownPortListToMessage(const TCHAR *tag, NXCPMessage *msg);
+void FullWellKnownPortListToMessage(const TCHAR *tag, uint32_t userId, NXCPMessage *msg);
 void ZoneWellKnownPortListToMessage(const TCHAR *tag, int32_t zoneUIN, NXCPMessage *msg);
 uint32_t UpdateWellKnownPortList(const NXCPMessage& request, const TCHAR *tag, int32_t zoneUIN);
 IntegerArray<uint16_t> GetWellKnownPorts(const TCHAR *tag, int32_t zoneUIN);
