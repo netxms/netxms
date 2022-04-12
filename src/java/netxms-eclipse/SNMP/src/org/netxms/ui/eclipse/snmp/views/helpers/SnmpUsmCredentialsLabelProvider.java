@@ -1,5 +1,20 @@
 /**
- * 
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2022 Raden Solutions
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 package org.netxms.ui.eclipse.snmp.views.helpers;
 
@@ -8,12 +23,12 @@ import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
 import org.netxms.client.snmp.SnmpUsmCredential;
 import org.netxms.ui.eclipse.snmp.Messages;
-import org.netxms.ui.eclipse.snmp.views.NetworkCredentials;
+import org.netxms.ui.eclipse.snmp.views.NetworkCredentialsEditor;
 
 /**
  * Label provider for SnmpUsmCredentials class
  */
-public class SnmpUsmLabelProvider extends LabelProvider implements ITableLabelProvider
+public class SnmpUsmCredentialsLabelProvider extends LabelProvider implements ITableLabelProvider
 {
 	private static final String[] authMethodName = { Messages.get().SnmpUsmLabelProvider_AuthNone, Messages.get().SnmpUsmLabelProvider_AuthMD5, Messages.get().SnmpUsmLabelProvider_AuthSHA1, "SHA224", "SHA256", "SHA384", "SHA512" };
 	private static final String[] privMethodName = { Messages.get().SnmpUsmLabelProvider_EncNone, Messages.get().SnmpUsmLabelProvider_EncDES, Messages.get().SnmpUsmLabelProvider_EncAES };
@@ -36,17 +51,17 @@ public class SnmpUsmLabelProvider extends LabelProvider implements ITableLabelPr
 		SnmpUsmCredential c = (SnmpUsmCredential)element;		
 		switch(columnIndex)
       {
-		   case NetworkCredentials.USM_CRED_USER_NAME:
+		   case NetworkCredentialsEditor.COLUMN_SNMP_USERNAME:
 		      return c.getName();
-		   case NetworkCredentials.USM_CRED_AUTHENTICATION:
+		   case NetworkCredentialsEditor.COLUMN_SNMP_AUTHENTICATION:
 		      return authMethodName[c.getAuthMethod()];
-		   case NetworkCredentials.USM_CRED_ENCRYPTION:
+		   case NetworkCredentialsEditor.COLUMN_SNMP_ENCRYPTION:
 		      return privMethodName[c.getPrivMethod()];
-		   case NetworkCredentials.USM_CRED_AUTH_PASSWORD:
+		   case NetworkCredentialsEditor.COLUMN_SNMP_AUTH_PASSWORD:
 		      return c.getAuthPassword();
-		   case NetworkCredentials.USM_CRED_ENC_PASSWORD:
+		   case NetworkCredentialsEditor.COLUMN_SNMP_ENCRYPTION_PASSWORD:
 		      return c.getPrivPassword();
-		   case NetworkCredentials.USM_CRED_COMMENTS:
+		   case NetworkCredentialsEditor.COLUMN_SNMP_COMMENTS:
 		      return c.getComment();
       }
 		return null;

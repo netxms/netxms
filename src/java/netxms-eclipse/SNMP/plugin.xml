@@ -31,7 +31,7 @@
       <view
             allowMultiple="false"
             category="org.netxms.ui.eclipse.viewcategory.config"
-            class="org.netxms.ui.eclipse.snmp.views.NetworkCredentials"
+            class="org.netxms.ui.eclipse.snmp.views.NetworkCredentialsEditor"
             icon="icons/network_credentials.png"
             id="org.netxms.ui.eclipse.snmp.views.NetworkCredentials"
             name="%view.name.NetworkCredentials"

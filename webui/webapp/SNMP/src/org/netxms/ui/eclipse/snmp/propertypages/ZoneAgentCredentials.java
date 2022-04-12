@@ -46,7 +46,7 @@ import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.snmp.Activator;
 import org.netxms.ui.eclipse.snmp.Messages;
-import org.netxms.ui.eclipse.snmp.views.helpers.NetworkConfig;
+import org.netxms.ui.eclipse.snmp.views.helpers.NetworkCredentials;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
@@ -278,7 +278,7 @@ public class ZoneAgentCredentials extends PropertyPage
          String value = dlg.getValue();
          sharedSecrets.add(value);
          secretList.refresh();
-         setModified(NetworkConfig.AGENT_SECRETS);
+         setModified(NetworkCredentials.AGENT_SECRETS);
       }
    }
 
@@ -295,7 +295,7 @@ public class ZoneAgentCredentials extends PropertyPage
             sharedSecrets.remove(o);
          }
          secretList.refresh();
-         setModified(NetworkConfig.AGENT_SECRETS);
+         setModified(NetworkCredentials.AGENT_SECRETS);
       }
    }
 
@@ -324,7 +324,7 @@ public class ZoneAgentCredentials extends PropertyPage
             }
          }
          secretList.refresh();
-         setModified(NetworkConfig.AGENT_SECRETS);
+         setModified(NetworkCredentials.AGENT_SECRETS);
       }
    }
 
@@ -470,7 +470,7 @@ public class ZoneAgentCredentials extends PropertyPage
          String value = dlg.getValue();
          ports.add(Integer.parseInt(value));
          portList.refresh();
-         setModified(NetworkConfig.AGENT_PORTS);
+         setModified(NetworkCredentials.AGENT_PORTS);
       }
    }
 
@@ -487,7 +487,7 @@ public class ZoneAgentCredentials extends PropertyPage
             ports.remove((Integer)o);
          }
          portList.refresh();
-         setModified(NetworkConfig.AGENT_PORTS);
+         setModified(NetworkCredentials.AGENT_PORTS);
       }
    }
 
@@ -516,7 +516,7 @@ public class ZoneAgentCredentials extends PropertyPage
             }
          }
          portList.refresh();
-         setModified(NetworkConfig.AGENT_PORTS);
+         setModified(NetworkCredentials.AGENT_PORTS);
       }
    }
 
@@ -548,12 +548,12 @@ public class ZoneAgentCredentials extends PropertyPage
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-            if ((modified & NetworkConfig.AGENT_SECRETS) != 0)
+            if ((modified & NetworkCredentials.AGENT_SECRETS) != 0)
             {
                session.updateAgentSharedSecrets(zone.getUIN(), sharedSecrets);
             }
 
-            if ((modified & NetworkConfig.AGENT_PORTS) != 0)
+            if ((modified & NetworkCredentials.AGENT_PORTS) != 0)
             {
                session.updateWellKnownPorts(zone.getUIN(), "agent", ports);
             }

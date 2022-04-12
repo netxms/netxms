@@ -49,7 +49,7 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.snmp.Activator;
 import org.netxms.ui.eclipse.snmp.Messages;
 import org.netxms.ui.eclipse.snmp.dialogs.EditSSHCredentialsDialog;
-import org.netxms.ui.eclipse.snmp.views.helpers.NetworkConfig;
+import org.netxms.ui.eclipse.snmp.views.helpers.NetworkCredentials;
 import org.netxms.ui.eclipse.snmp.views.helpers.SshCredentialsLabelProvider;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
@@ -290,7 +290,7 @@ public class ZoneSSHCredentials extends PropertyPage
          SSHCredentials cred = dlg.getCredentials();
          credentials.add(cred);
          credentialsList.refresh();
-         setModified(NetworkConfig.SSH_CREDENTIALS);
+         setModified(NetworkCredentials.SSH_CREDENTIALS);
       }
    }
 
@@ -307,7 +307,7 @@ public class ZoneSSHCredentials extends PropertyPage
             credentials.remove(o);
          }
          credentialsList.refresh();
-         setModified(NetworkConfig.SSH_CREDENTIALS);
+         setModified(NetworkCredentials.SSH_CREDENTIALS);
       }
    }
 
@@ -336,7 +336,7 @@ public class ZoneSSHCredentials extends PropertyPage
             }
          }
          credentialsList.refresh();
-         setModified(NetworkConfig.SSH_CREDENTIALS);
+         setModified(NetworkCredentials.SSH_CREDENTIALS);
       }
    }
 
@@ -482,7 +482,7 @@ public class ZoneSSHCredentials extends PropertyPage
          String value = dlg.getValue();
          ports.add(Integer.parseInt(value));
          portList.refresh();
-         setModified(NetworkConfig.SSH_PORTS);
+         setModified(NetworkCredentials.SSH_PORTS);
       }
    }
 
@@ -499,7 +499,7 @@ public class ZoneSSHCredentials extends PropertyPage
             ports.remove((Integer)o);
          }
          portList.refresh();
-         setModified(NetworkConfig.SSH_PORTS);
+         setModified(NetworkCredentials.SSH_PORTS);
       }
    }
 
@@ -528,7 +528,7 @@ public class ZoneSSHCredentials extends PropertyPage
             }
          }
          portList.refresh();
-         setModified(NetworkConfig.SSH_PORTS);
+         setModified(NetworkCredentials.SSH_PORTS);
       }
    }
 
@@ -560,12 +560,12 @@ public class ZoneSSHCredentials extends PropertyPage
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-            if ((modified & NetworkConfig.SSH_CREDENTIALS) != 0)
+            if ((modified & NetworkCredentials.SSH_CREDENTIALS) != 0)
             {
                session.updateSshCredentials(zone.getUIN(), credentials);
             }
 
-            if ((modified & NetworkConfig.SSH_PORTS) != 0)
+            if ((modified & NetworkCredentials.SSH_PORTS) != 0)
             {
                session.updateWellKnownPorts(zone.getUIN(), "ssh", ports);
             }

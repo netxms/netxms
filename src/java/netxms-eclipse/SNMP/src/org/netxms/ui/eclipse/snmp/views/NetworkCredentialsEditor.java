@@ -32,29 +32,29 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.ScrolledComposite;
+import org.eclipse.swt.events.ControlAdapter;
+import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Group;
+import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.ISaveablePart;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.forms.events.HyperlinkAdapter;
 import org.eclipse.ui.forms.events.HyperlinkEvent;
-import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.forms.widgets.ImageHyperlink;
-import org.eclipse.ui.forms.widgets.ScrolledForm;
-import org.eclipse.ui.forms.widgets.Section;
-import org.eclipse.ui.forms.widgets.TableWrapData;
-import org.eclipse.ui.forms.widgets.TableWrapLayout;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
+import org.netxms.client.SSHCredentials;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
-import org.netxms.client.SSHCredentials;
 import org.netxms.client.SshKeyPair;
 import org.netxms.client.snmp.SnmpUsmCredential;
 import org.netxms.ui.eclipse.actions.RefreshAction;
@@ -65,9 +65,9 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.snmp.Activator;
 import org.netxms.ui.eclipse.snmp.Messages;
 import org.netxms.ui.eclipse.snmp.dialogs.EditSSHCredentialsDialog;
-import org.netxms.ui.eclipse.snmp.dialogs.AddUsmCredDialog;
-import org.netxms.ui.eclipse.snmp.views.helpers.NetworkConfig;
-import org.netxms.ui.eclipse.snmp.views.helpers.SnmpUsmLabelProvider;
+import org.netxms.ui.eclipse.snmp.dialogs.EditSnmpUsmCredentialsDialog;
+import org.netxms.ui.eclipse.snmp.views.helpers.NetworkCredentials;
+import org.netxms.ui.eclipse.snmp.views.helpers.SnmpUsmCredentialsLabelProvider;
 import org.netxms.ui.eclipse.snmp.views.helpers.SshCredentialsLabelProvider;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.widgets.CompositeWithMessageBar;
@@ -77,28 +77,27 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 /**
  * Configurator for network discovery
  */
-public class NetworkCredentials extends ViewPart implements ISaveablePart
+public class NetworkCredentialsEditor extends ViewPart implements ISaveablePart
 {
 	public static final String ID = "org.netxms.ui.eclipse.snmp.views.NetworkCredentials"; //$NON-NLS-1$
 
-	public static final int USM_CRED_USER_NAME = 0;
-   public static final int USM_CRED_AUTHENTICATION = 1;
-   public static final int USM_CRED_ENCRYPTION = 2;
-   public static final int USM_CRED_AUTH_PASSWORD = 3;
-   public static final int USM_CRED_ENC_PASSWORD = 4;
-   public static final int USM_CRED_COMMENTS = 5;
-	
-   public static final int SSH_CRED_LOGIN = 0;
-   public static final int SSH_CRED_PASSWORD = 1;
-   public static final int SSH_CRED_KEY = 2;
+	public static final int COLUMN_SNMP_USERNAME = 0;
+   public static final int COLUMN_SNMP_AUTHENTICATION = 1;
+   public static final int COLUMN_SNMP_ENCRYPTION = 2;
+   public static final int COLUMN_SNMP_AUTH_PASSWORD = 3;
+   public static final int COLUMN_SNMP_ENCRYPTION_PASSWORD = 4;
+   public static final int COLUMN_SNMP_COMMENTS = 5;
+
+   public static final int COLUMN_SSH_LOGIN = 0;
+   public static final int COLUMN_SSH_PASSWORD = 1;
+   public static final int COLUMN_SSH_KEY = 2;
 
 	private NXCSession session;
 	private boolean modified = false;
 	private boolean bothModified = false;
    private boolean saveInProgress = false;
-   private CompositeWithMessageBar content;
-	private FormToolkit toolkit;
-	private ScrolledForm form;
+   private CompositeWithMessageBar contentWrapper;
+   private Composite content;
 	private TableViewer snmpCommunityList;
 	private SortableTableViewer snmpUsmCredentialsList;
    private TableViewer snmpPortList;
@@ -108,10 +107,10 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
    private TableViewer sshPortList;
 	private Action actionSave;
    private RefreshAction actionRefresh;
-	private NetworkConfig config;
+	private NetworkCredentials config;
 	private ZoneSelector zoneSelector;
    private Display display;
-   private int zoneUIN = NetworkConfig.NETWORK_CONFIG_GLOBAL;
+   private int zoneUIN = NetworkCredentials.NETWORK_CONFIG_GLOBAL;
    private List<SshKeyPair> sshKeys;
    private SshCredentialsLabelProvider sshLabelProvider;
 
@@ -123,7 +122,7 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
    {
       super.init(site);
       session = ConsoleSharedData.getSession();
-      config = new NetworkConfig(session);
+      config = new NetworkCredentials(session);
    }
 
    /**
@@ -134,28 +133,45 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
 	{
       display = parent.getDisplay();
 	   
-      content = new CompositeWithMessageBar(parent, SWT.NONE);
-		toolkit = new FormToolkit(getSite().getShell().getDisplay());
-		form = toolkit.createScrolledForm(content.getContent());
-      form.setText(Messages.get().NetworkCredentials_FormTitle);
-	
-		TableWrapLayout layout = new TableWrapLayout();
-		layout.numColumns = 2;
-		form.getBody().setLayout(layout);
+      contentWrapper = new CompositeWithMessageBar(parent, SWT.NONE);
+
+      ScrolledComposite scroller = new ScrolledComposite(contentWrapper.getContent(), SWT.V_SCROLL);
+      scroller.setExpandHorizontal(true);
+      scroller.setExpandVertical(true);
+      scroller.getVerticalBar().setIncrement(20);
+      scroller.addControlListener(new ControlAdapter() {
+         public void controlResized(ControlEvent e)
+         {
+            content.layout(true, true);
+            scroller.setMinSize(contentWrapper.computeSize(scroller.getSize().x, SWT.DEFAULT));
+         }
+      });
+
+      content = new Composite(scroller, SWT.NONE);
+      GridLayout layout = new GridLayout();
+      layout.numColumns = 3;
+      layout.makeColumnsEqualWidth = true;
+      content.setLayout(layout);
+      content.setBackground(contentWrapper.getDisplay().getSystemColor(SWT.COLOR_LIST_BACKGROUND));
+
+      scroller.setContent(content);
 
 		if (session.isZoningEnabled())
 		{
-         toolkit.decorateFormHeading(form.getForm());
-   		Composite headArea = toolkit.createComposite(form.getForm().getHead());
+         Composite headArea = new Composite(content, SWT.NONE);
+         headArea.setBackground(content.getBackground());
    		headArea.setLayout(new GridLayout());
+         GridData gd = new GridData();
+         gd.horizontalAlignment = SWT.FILL;
+         gd.grabExcessHorizontalSpace = true;
+         gd.horizontalSpan = layout.numColumns;
+         headArea.setLayoutData(gd);
+
          zoneSelector = new ZoneSelector(headArea, SWT.NONE, true);
          zoneSelector.setEmptySelectionText("Global");
          zoneSelector.setLabel("Select zone");
-   
-         GridData gd = new GridData();
-         gd.widthHint = 300;
-         zoneSelector.setLayoutData(gd);
-         form.setHeadClient(headArea);
+         zoneSelector.setBackground(headArea.getBackground());
+
          zoneSelector.addModifyListener(new ModifyListener() {
             @Override
             public void modifyText(ModifyEvent e)
@@ -164,6 +180,13 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
                updateFieldContent();
             }
          });
+
+         gd = new GridData();
+         gd.widthHint = 300;
+         zoneSelector.setLayoutData(gd);
+
+         Label separator = new Label(headArea, SWT.SEPARATOR | SWT.HORIZONTAL);
+         separator.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		}
 
 		session.addListener(new SessionListener() {
@@ -174,16 +197,16 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
             switch(n.getCode())
             {
                case SessionNotification.COMMUNITIES_CONFIG_CHANGED:
-                  type = NetworkConfig.COMMUNITIES;
+                  type = NetworkCredentials.SNMP_COMMUNITIES;
                   break;
                case SessionNotification.USM_CONFIG_CHANGED:
-                  type = NetworkConfig.USM;
+                  type = NetworkCredentials.SNMP_USM_CREDENTIALS;
                   break;
                case SessionNotification.PORTS_CONFIG_CHANGED:
-                  type = NetworkConfig.SNMP_PORTS;
+                  type = NetworkCredentials.SNMP_PORTS;
                   break;
                case SessionNotification.SECRET_CONFIG_CHANGED:
-                  type = NetworkConfig.AGENT_SECRETS;
+                  type = NetworkCredentials.AGENT_SECRETS;
                   break;
                   
             }
@@ -200,7 +223,7 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
                      }
                      else if (!saveInProgress)
                      {
-                        content.showMessage(MessageBar.WARNING,
+                        contentWrapper.showMessage(MessageBar.WARNING,
                               "Network credentials are modified by other users. \"Refresh\" will discard local changes. \"Save\" will overwrite other users changes with local changes.");
                         bothModified = true;
                      }
@@ -211,18 +234,18 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
       });
 
 		createSnmpCommunitySection();
-      snmpPortList = createPortList(NetworkConfig.SNMP_PORTS, "SNMP");
+      snmpPortList = createPortList(NetworkCredentials.SNMP_PORTS, "SNMP");
       createSnmpUsmCredSection();
       createSharedSecretList();
-      agentPortList = createPortList(NetworkConfig.AGENT_PORTS, "Agent");
+      agentPortList = createPortList(NetworkCredentials.AGENT_PORTS, "Agent");
       createSshCredentialsList();
-      sshPortList = createPortList(NetworkConfig.SSH_PORTS, "SSH");
+      sshPortList = createPortList(NetworkCredentials.SSH_PORTS, "SSH");
 
 		createActions();
 		contributeToActionBars();
 
       // Load config
-      loadConfiguration(NetworkConfig.ALL_CONFIGS, NetworkConfig.ALL_ZONES);
+      loadConfiguration(NetworkCredentials.EVERYTHING, NetworkCredentials.ALL_ZONES);
 	}
 
 	/**
@@ -243,7 +266,7 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
                @Override
                public void run()
                {
-                  NetworkCredentials.this.sshKeys = sshKeys;
+                  NetworkCredentialsEditor.this.sshKeys = sshKeys;
                   sshLabelProvider.setKeyList(sshKeys);
                   setConfig(config);
                }
@@ -291,7 +314,7 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
                "This will discard all unsaved changes. Do you really want to continue?"))
             return;          
       }
-      loadConfiguration(NetworkConfig.ALL_CONFIGS, NetworkConfig.ALL_ZONES);  
+      loadConfiguration(NetworkCredentials.EVERYTHING, NetworkCredentials.ALL_ZONES);  
 
       modified = false;
       bothModified = false;
@@ -336,22 +359,15 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
 	 */
 	private void createSnmpCommunitySection()
 	{
-		Section section = toolkit.createSection(form.getBody(), Section.DESCRIPTION | Section.TITLE_BAR);
-		section.setText(Messages.get().SnmpConfigurator_SectionCommunities);
-		section.setDescription(Messages.get().SnmpConfigurator_SectionCommunitiesDescr);
-		TableWrapData td = new TableWrapData();
-		td.align = TableWrapData.FILL;
-		td.grabHorizontal = true;
-		section.setLayoutData(td);
-
-		Composite clientArea = toolkit.createComposite(section);
+      Group clientArea = new Group(content, SWT.NONE);
+      clientArea.setText(Messages.get().SnmpConfigurator_SectionCommunities);
+      clientArea.setBackground(content.getBackground());
+      clientArea.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 2, 1));
 		GridLayout layout = new GridLayout();
 		layout.numColumns = 2;
 		clientArea.setLayout(layout);
-		section.setClient(clientArea);
 
 		snmpCommunityList = new TableViewer(clientArea, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
-		toolkit.adapt(snmpCommunityList.getTable());
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -362,9 +378,10 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
 		snmpCommunityList.getTable().setLayoutData(gd);
 		snmpCommunityList.setContentProvider(new ArrayContentProvider());
 
-		final ImageHyperlink linkAdd = toolkit.createImageHyperlink(clientArea, SWT.NONE);
+      final ImageHyperlink linkAdd = new ImageHyperlink(clientArea, SWT.NONE);
 		linkAdd.setText(Messages.get().SnmpConfigurator_Add);
 		linkAdd.setImage(SharedIcons.IMG_ADD_OBJECT);
+      linkAdd.setBackground(clientArea.getBackground());
 		gd = new GridData();
 		gd.verticalAlignment = SWT.TOP;
 		linkAdd.setLayoutData(gd);
@@ -375,10 +392,11 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
 				addCommunity();
 			}
 		});
-		
-		final ImageHyperlink linkRemove = toolkit.createImageHyperlink(clientArea, SWT.NONE);
+
+      final ImageHyperlink linkRemove = new ImageHyperlink(clientArea, SWT.NONE);
 		linkRemove.setText(Messages.get().SnmpConfigurator_Remove);
 		linkRemove.setImage(SharedIcons.IMG_DELETE_OBJECT);
+      linkRemove.setBackground(clientArea.getBackground());
 		gd = new GridData();
 		gd.verticalAlignment = SWT.TOP;
 		linkRemove.setLayoutData(gd);
@@ -389,10 +407,11 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
 				removeCommunity();
 			}
 		});
-      
-      final ImageHyperlink linkUp = toolkit.createImageHyperlink(clientArea, SWT.NONE);
+
+      final ImageHyperlink linkUp = new ImageHyperlink(clientArea, SWT.NONE);
       linkUp.setText("Up");
       linkUp.setImage(SharedIcons.IMG_UP);
+      linkUp.setBackground(clientArea.getBackground());
       gd = new GridData();
       gd.verticalAlignment = SWT.TOP;
       linkUp.setLayoutData(gd);
@@ -403,10 +422,11 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
             moveCommunity(true);
          }
       });
-      
-      final ImageHyperlink linkDown = toolkit.createImageHyperlink(clientArea, SWT.NONE);
+
+      final ImageHyperlink linkDown = new ImageHyperlink(clientArea, SWT.NONE);
       linkDown.setText("Down");
       linkDown.setImage(SharedIcons.IMG_DOWN);
+      linkDown.setBackground(clientArea.getBackground());
       gd = new GridData();
       gd.verticalAlignment = SWT.TOP;
       linkDown.setLayoutData(gd);
@@ -424,25 +444,17 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
 	 */
 	private void createSnmpUsmCredSection()
 	{
-		Section section = toolkit.createSection(form.getBody(), Section.DESCRIPTION | Section.TITLE_BAR);
-		section.setText(Messages.get().SnmpConfigurator_SectionUSM);
-		section.setDescription(Messages.get().SnmpConfigurator_SectionUSMDescr);
-		TableWrapData td = new TableWrapData();
-		td.align = TableWrapData.FILL;
-		td.grabHorizontal = true;
-		td.colspan = 2;
-		section.setLayoutData(td);
-		
-		Composite clientArea = toolkit.createComposite(section);
-		GridLayout layout = new GridLayout();
-		layout.numColumns = 2;
-		clientArea.setLayout(layout);
-		section.setClient(clientArea);
+      Group clientArea = new Group(content, SWT.NONE);
+      clientArea.setText(Messages.get().SnmpConfigurator_SectionUSM);
+      clientArea.setBackground(content.getBackground());
+      clientArea.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 3, 1));
+      GridLayout layout = new GridLayout();
+      layout.numColumns = 2;
+      clientArea.setLayout(layout);
 		
 		final String[] names = { "User name", "Auth type", "Priv type", "Auth secret", "Priv secret", "Comments" };
 		final int[] widths = { 100, 100, 100, 100, 100, 100 };
 		snmpUsmCredentialsList = new SortableTableViewer(clientArea, names, widths, 0, SWT.DOWN, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
-		toolkit.adapt(snmpUsmCredentialsList.getTable());
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -452,7 +464,7 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
 		gd.heightHint = 150;
 		snmpUsmCredentialsList.getTable().setLayoutData(gd);
 		snmpUsmCredentialsList.setContentProvider(new ArrayContentProvider());
-		snmpUsmCredentialsList.setLabelProvider(new SnmpUsmLabelProvider());
+		snmpUsmCredentialsList.setLabelProvider(new SnmpUsmCredentialsLabelProvider());
 		snmpUsmCredentialsList.addDoubleClickListener(new IDoubleClickListener() {
          @Override
          public void doubleClick(DoubleClickEvent event)
@@ -461,9 +473,10 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
          }
       });
 
-		final ImageHyperlink linkAdd = toolkit.createImageHyperlink(clientArea, SWT.NONE);
+      final ImageHyperlink linkAdd = new ImageHyperlink(clientArea, SWT.NONE);
 		linkAdd.setText(Messages.get().SnmpConfigurator_Add);
 		linkAdd.setImage(SharedIcons.IMG_ADD_OBJECT);
+      linkAdd.setBackground(clientArea.getBackground());
 		gd = new GridData();
 		gd.verticalAlignment = SWT.TOP;
 		linkAdd.setLayoutData(gd);
@@ -475,9 +488,10 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
 			}
 		});
 
-      final ImageHyperlink linkEdit = toolkit.createImageHyperlink(clientArea, SWT.NONE);
+      final ImageHyperlink linkEdit = new ImageHyperlink(clientArea, SWT.NONE);
       linkEdit.setText("Edit...");
       linkEdit.setImage(SharedIcons.IMG_EDIT);
+      linkEdit.setBackground(clientArea.getBackground());
       gd = new GridData();
       gd.verticalAlignment = SWT.TOP;
       linkEdit.setLayoutData(gd);
@@ -489,9 +503,10 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
          }
       });
 
-		final ImageHyperlink linkRemove = toolkit.createImageHyperlink(clientArea, SWT.NONE);
+      final ImageHyperlink linkRemove = new ImageHyperlink(clientArea, SWT.NONE);
 		linkRemove.setText(Messages.get().SnmpConfigurator_Remove);
 		linkRemove.setImage(SharedIcons.IMG_DELETE_OBJECT);
+      linkRemove.setBackground(clientArea.getBackground());
 		gd = new GridData();
 		gd.verticalAlignment = SWT.TOP;
 		linkRemove.setLayoutData(gd);
@@ -503,9 +518,10 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
 			}
 		});
 
-      final ImageHyperlink linkUp = toolkit.createImageHyperlink(clientArea, SWT.NONE);
+      final ImageHyperlink linkUp = new ImageHyperlink(clientArea, SWT.NONE);
       linkUp.setText("Up");
       linkUp.setImage(SharedIcons.IMG_UP);
+      linkUp.setBackground(clientArea.getBackground());
       gd = new GridData();
       gd.verticalAlignment = SWT.TOP;
       linkUp.setLayoutData(gd);
@@ -516,10 +532,11 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
            moveUsmCredentials(true);
          }
       });
-      
-      final ImageHyperlink linkDown = toolkit.createImageHyperlink(clientArea, SWT.NONE);
+
+      final ImageHyperlink linkDown = new ImageHyperlink(clientArea, SWT.NONE);
       linkDown.setText("Down");
       linkDown.setImage(SharedIcons.IMG_DOWN);
+      linkDown.setBackground(clientArea.getBackground());
       gd = new GridData();
       gd.verticalAlignment = SWT.TOP;
       linkDown.setLayoutData(gd);
@@ -537,22 +554,15 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
     */
    private void createSharedSecretList()
    {
-      Section section = toolkit.createSection(form.getBody(), Section.DESCRIPTION | Section.TITLE_BAR);
-      section.setText("Agent shared secrets");
-      section.setDescription("Agent shared secrets used in the network");
-      TableWrapData td = new TableWrapData();
-      td.align = TableWrapData.FILL;
-      td.grabHorizontal = true;
-      section.setLayoutData(td);
-      
-      Composite clientArea = toolkit.createComposite(section);
+      Group clientArea = new Group(content, SWT.NONE);
+      clientArea.setText("Agent shared secrets");
+      clientArea.setBackground(content.getBackground());
+      clientArea.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 2, 1));
       GridLayout layout = new GridLayout();
       layout.numColumns = 2;
       clientArea.setLayout(layout);
-      section.setClient(clientArea);
 
       sharedSecretList = new TableViewer(clientArea, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
-      toolkit.adapt(sharedSecretList.getTable());
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
@@ -563,9 +573,10 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
       sharedSecretList.getTable().setLayoutData(gd);
       sharedSecretList.setContentProvider(new ArrayContentProvider());
 
-      final ImageHyperlink linkAdd = toolkit.createImageHyperlink(clientArea, SWT.NONE);
+      final ImageHyperlink linkAdd = new ImageHyperlink(clientArea, SWT.NONE);
       linkAdd.setText(Messages.get().SnmpConfigurator_Add);
       linkAdd.setImage(SharedIcons.IMG_ADD_OBJECT);
+      linkAdd.setBackground(clientArea.getBackground());
       gd = new GridData();
       gd.verticalAlignment = SWT.TOP;
       linkAdd.setLayoutData(gd);
@@ -577,9 +588,10 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
          }
       });
       
-      final ImageHyperlink linkRemove = toolkit.createImageHyperlink(clientArea, SWT.NONE);
+      final ImageHyperlink linkRemove = new ImageHyperlink(clientArea, SWT.NONE);
       linkRemove.setText(Messages.get().SnmpConfigurator_Remove);
       linkRemove.setImage(SharedIcons.IMG_DELETE_OBJECT);
+      linkRemove.setBackground(clientArea.getBackground());
       gd = new GridData();
       gd.verticalAlignment = SWT.TOP;
       linkRemove.setLayoutData(gd);
@@ -590,10 +602,11 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
             removeSharedSecret();
          }
       });
-      
-      final ImageHyperlink linkUp = toolkit.createImageHyperlink(clientArea, SWT.NONE);
+
+      final ImageHyperlink linkUp = new ImageHyperlink(clientArea, SWT.NONE);
       linkUp.setText("Up");
       linkUp.setImage(SharedIcons.IMG_UP);
+      linkUp.setBackground(clientArea.getBackground());
       gd = new GridData();
       gd.verticalAlignment = SWT.TOP;
       linkUp.setLayoutData(gd);
@@ -604,10 +617,11 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
             moveSharedSecret(true);
          }
       });
-      
-      final ImageHyperlink linkDown = toolkit.createImageHyperlink(clientArea, SWT.NONE);
+
+      final ImageHyperlink linkDown = new ImageHyperlink(clientArea, SWT.NONE);
       linkDown.setText("Down");
       linkDown.setImage(SharedIcons.IMG_DOWN);
+      linkDown.setBackground(clientArea.getBackground());
       gd = new GridData();
       gd.verticalAlignment = SWT.TOP;
       linkDown.setLayoutData(gd);
@@ -625,25 +639,17 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
     */
    private void createSshCredentialsList()
    {
-      Section section = toolkit.createSection(form.getBody(), Section.DESCRIPTION | Section.TITLE_BAR);
-      section.setText("SSH credentials");
-      section.setDescription("SSH credentials used in the network");
-      TableWrapData td = new TableWrapData();
-      td.align = TableWrapData.FILL;
-      td.grabHorizontal = true;
-      // td.colspan = 2;
-      section.setLayoutData(td);
-
-      Composite clientArea = toolkit.createComposite(section);
+      Group clientArea = new Group(content, SWT.NONE);
+      clientArea.setText("SSH credentials");
+      clientArea.setBackground(content.getBackground());
+      clientArea.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 2, 1));
       GridLayout layout = new GridLayout();
       layout.numColumns = 2;
       clientArea.setLayout(layout);
-      section.setClient(clientArea);
 
       final String[] names = { "Login", "Password", "Key" };
       final int[] widths = { 150, 150, 150 };
       sshCredentialsList = new SortableTableViewer(clientArea, names, widths, 0, SWT.DOWN, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
-      toolkit.adapt(sshCredentialsList.getTable());
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
@@ -663,9 +669,10 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
          }
       });
 
-      final ImageHyperlink linkAdd = toolkit.createImageHyperlink(clientArea, SWT.NONE);
+      final ImageHyperlink linkAdd = new ImageHyperlink(clientArea, SWT.NONE);
       linkAdd.setText(Messages.get().SnmpConfigurator_Add);
       linkAdd.setImage(SharedIcons.IMG_ADD_OBJECT);
+      linkAdd.setBackground(clientArea.getBackground());
       gd = new GridData();
       gd.verticalAlignment = SWT.TOP;
       linkAdd.setLayoutData(gd);
@@ -677,9 +684,10 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
          }
       });
 
-      final ImageHyperlink linkEdit = toolkit.createImageHyperlink(clientArea, SWT.NONE);
+      final ImageHyperlink linkEdit = new ImageHyperlink(clientArea, SWT.NONE);
       linkEdit.setText("Edit...");
       linkEdit.setImage(SharedIcons.IMG_EDIT);
+      linkEdit.setBackground(clientArea.getBackground());
       gd = new GridData();
       gd.verticalAlignment = SWT.TOP;
       linkEdit.setLayoutData(gd);
@@ -691,9 +699,10 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
          }
       });
 
-      final ImageHyperlink linkRemove = toolkit.createImageHyperlink(clientArea, SWT.NONE);
+      final ImageHyperlink linkRemove = new ImageHyperlink(clientArea, SWT.NONE);
       linkRemove.setText(Messages.get().SnmpConfigurator_Remove);
       linkRemove.setImage(SharedIcons.IMG_DELETE_OBJECT);
+      linkRemove.setBackground(clientArea.getBackground());
       gd = new GridData();
       gd.verticalAlignment = SWT.TOP;
       linkRemove.setLayoutData(gd);
@@ -705,9 +714,10 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
          }
       });
 
-      final ImageHyperlink linkUp = toolkit.createImageHyperlink(clientArea, SWT.NONE);
+      final ImageHyperlink linkUp = new ImageHyperlink(clientArea, SWT.NONE);
       linkUp.setText("Up");
       linkUp.setImage(SharedIcons.IMG_UP);
+      linkUp.setBackground(clientArea.getBackground());
       gd = new GridData();
       gd.verticalAlignment = SWT.TOP;
       linkUp.setLayoutData(gd);
@@ -719,9 +729,10 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
          }
       });
 
-      final ImageHyperlink linkDown = toolkit.createImageHyperlink(clientArea, SWT.NONE);
+      final ImageHyperlink linkDown = new ImageHyperlink(clientArea, SWT.NONE);
       linkDown.setText("Down");
       linkDown.setImage(SharedIcons.IMG_DOWN);
+      linkDown.setBackground(clientArea.getBackground());
       gd = new GridData();
       gd.verticalAlignment = SWT.TOP;
       linkDown.setLayoutData(gd);
@@ -739,21 +750,15 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
     */
    private TableViewer createPortList(int portType, String typeName)
    {
-      Section section = toolkit.createSection(form.getBody(), Section.DESCRIPTION | Section.TITLE_BAR);
-      section.setText(String.format("%s ports", typeName));
-      TableWrapData td = new TableWrapData();
-      td.align = TableWrapData.FILL;
-      td.grabHorizontal = true;
-      section.setLayoutData(td);
-
-      Composite clientArea = toolkit.createComposite(section);
+      Group clientArea = new Group(content, SWT.NONE);
+      clientArea.setText(String.format("%s ports", typeName));
+      clientArea.setBackground(content.getBackground());
+      clientArea.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
       GridLayout layout = new GridLayout();
       layout.numColumns = 2;
       clientArea.setLayout(layout);
-      section.setClient(clientArea);
 
       final TableViewer viewer = new TableViewer(clientArea, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
-      toolkit.adapt(viewer.getTable());
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
@@ -765,9 +770,10 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setData("PortType", Integer.valueOf(portType));
 
-      final ImageHyperlink linkAdd = toolkit.createImageHyperlink(clientArea, SWT.NONE);
+      final ImageHyperlink linkAdd = new ImageHyperlink(clientArea, SWT.NONE);
       linkAdd.setText(Messages.get().SnmpConfigurator_Add);
       linkAdd.setImage(SharedIcons.IMG_ADD_OBJECT);
+      linkAdd.setBackground(clientArea.getBackground());
       gd = new GridData();
       gd.verticalAlignment = SWT.TOP;
       linkAdd.setLayoutData(gd);
@@ -779,9 +785,10 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
          }
       });
 
-      final ImageHyperlink linkRemove = toolkit.createImageHyperlink(clientArea, SWT.NONE);
+      final ImageHyperlink linkRemove = new ImageHyperlink(clientArea, SWT.NONE);
       linkRemove.setText(Messages.get().SnmpConfigurator_Remove);
       linkRemove.setImage(SharedIcons.IMG_DELETE_OBJECT);
+      linkRemove.setBackground(clientArea.getBackground());
       gd = new GridData();
       gd.verticalAlignment = SWT.TOP;
       linkRemove.setLayoutData(gd);
@@ -793,9 +800,10 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
          }
       });
 
-      final ImageHyperlink linkUp = toolkit.createImageHyperlink(clientArea, SWT.NONE);
+      final ImageHyperlink linkUp = new ImageHyperlink(clientArea, SWT.NONE);
       linkUp.setText("Up");
       linkUp.setImage(SharedIcons.IMG_UP);
+      linkUp.setBackground(clientArea.getBackground());
       gd = new GridData();
       gd.verticalAlignment = SWT.TOP;
       linkUp.setLayoutData(gd);
@@ -807,9 +815,10 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
          }
       });
 
-      final ImageHyperlink linkDown = toolkit.createImageHyperlink(clientArea, SWT.NONE);
+      final ImageHyperlink linkDown = new ImageHyperlink(clientArea, SWT.NONE);
       linkDown.setText("Down");
       linkDown.setImage(SharedIcons.IMG_DOWN);
+      linkDown.setBackground(clientArea.getBackground());
       gd = new GridData();
       gd.verticalAlignment = SWT.TOP;
       linkDown.setLayoutData(gd);
@@ -830,18 +839,18 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
 	@Override
 	public void setFocus()
 	{
-		form.setFocus();
+      content.setFocus();
 	}
-	
+
 	/**
 	 * @param config
 	 */
-	private void setConfig(NetworkConfig config)
+	private void setConfig(NetworkCredentials config)
 	{
 		this.config = config;
 		updateFieldContent();
 	}
-	
+
 	/**
 	 * Update filed content
 	 */
@@ -849,11 +858,11 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
 	{
       snmpCommunityList.setInput(config.getCommunities(zoneUIN));
       snmpUsmCredentialsList.setInput(config.getUsmCredentials(zoneUIN));
-      snmpPortList.setInput(config.getPorts(NetworkConfig.SNMP_PORTS, zoneUIN));
+      snmpPortList.setInput(config.getPorts(NetworkCredentials.SNMP_PORTS, zoneUIN));
       sharedSecretList.setInput(config.getSharedSecrets(zoneUIN));
-      agentPortList.setInput(config.getPorts(NetworkConfig.AGENT_PORTS, zoneUIN));
+      agentPortList.setInput(config.getPorts(NetworkCredentials.AGENT_PORTS, zoneUIN));
       sshCredentialsList.setInput(config.getSshCredentials(zoneUIN));
-      sshPortList.setInput(config.getPorts(NetworkConfig.SSH_PORTS, zoneUIN));
+      sshPortList.setInput(config.getPorts(NetworkCredentials.SSH_PORTS, zoneUIN));
 	}
 
 	/**
@@ -877,7 +886,7 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
 	{
 		try
 		{
-			config.save(session);
+         config.save();
 		}
 		catch(Exception e)
 		{
@@ -931,7 +940,7 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
          if (!MessageDialogHelper.openQuestion(getSite().getShell(), "Save network credential",
                "Network credentials already are modified by other users. Do you really want to continue and overwrite other users changes?\n"))
             return;
-         content.hideMessage();   
+         contentWrapper.hideMessage();   
       }	  
 
       saveInProgress = true;
@@ -939,7 +948,7 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				config.save(session);
+            config.save();
 				runInUIThread(new Runnable() {
 					@Override
 					public void run()
@@ -978,7 +987,7 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
 			String s = dlg.getValue();
 			config.addCommunityString(s, zoneUIN);
          snmpCommunityList.setInput(config.getCommunities(zoneUIN));
-         setModified(NetworkConfig.COMMUNITIES);
+         setModified(NetworkCredentials.SNMP_COMMUNITIES);
 		}
 	}
 	
@@ -996,7 +1005,7 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
 				list.remove(o);
 			}
 			snmpCommunityList.setInput(list);
-			setModified(NetworkConfig.COMMUNITIES);
+			setModified(NetworkCredentials.SNMP_COMMUNITIES);
 		}
 	}
    
@@ -1030,7 +1039,7 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
             }
          }
          snmpCommunityList.setInput(list);
-         setModified(NetworkConfig.COMMUNITIES);
+         setModified(NetworkCredentials.SNMP_COMMUNITIES);
       }
    }
 
@@ -1039,14 +1048,14 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
 	 */
 	private void addUsmCredentials()
 	{
-		AddUsmCredDialog dlg = new AddUsmCredDialog(getSite().getShell(), null);
+		EditSnmpUsmCredentialsDialog dlg = new EditSnmpUsmCredentialsDialog(getSite().getShell(), null);
 		if (dlg.open() == Window.OK)
 		{
 			SnmpUsmCredential cred = dlg.getCredentials();
 			cred.setZoneId((int)zoneUIN);
          config.addUsmCredentials(cred, zoneUIN);
          snmpUsmCredentialsList.setInput(config.getUsmCredentials(zoneUIN));
-         setModified(NetworkConfig.USM);
+         setModified(NetworkCredentials.SNMP_USM_CREDENTIALS);
 		}
 	}
    
@@ -1059,12 +1068,12 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
       if (selection.size() != 1)
          return;
       SnmpUsmCredential cred = (SnmpUsmCredential)selection.getFirstElement();
-      AddUsmCredDialog dlg = new AddUsmCredDialog(getSite().getShell(), cred);
+      EditSnmpUsmCredentialsDialog dlg = new EditSnmpUsmCredentialsDialog(getSite().getShell(), cred);
       if (dlg.open() == Window.OK)
       {
          final List<SnmpUsmCredential> list = config.getUsmCredentials(zoneUIN);
          snmpUsmCredentialsList.setInput(list.toArray());
-         setModified(NetworkConfig.USM);
+         setModified(NetworkCredentials.SNMP_USM_CREDENTIALS);
       }
    }
 	
@@ -1082,7 +1091,7 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
 				list.remove(o);
 			}
 			snmpUsmCredentialsList.setInput(list.toArray());
-			setModified(NetworkConfig.USM);
+			setModified(NetworkCredentials.SNMP_USM_CREDENTIALS);
 		}
 	}
 
@@ -1116,7 +1125,7 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
             }
          }
          snmpUsmCredentialsList.setInput(list);
-         setModified(NetworkConfig.USM);
+         setModified(NetworkCredentials.SNMP_USM_CREDENTIALS);
       }
    }
 	
@@ -1132,7 +1141,7 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
          String value = dlg.getValue();
          config.addSharedSecret(value, zoneUIN);
          sharedSecretList.setInput(config.getSharedSecrets(zoneUIN));
-         setModified(NetworkConfig.AGENT_SECRETS);
+         setModified(NetworkCredentials.AGENT_SECRETS);
       }
    }
 
@@ -1150,7 +1159,7 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
             list.remove(o);
          }
          sharedSecretList.setInput(list.toArray());
-         setModified(NetworkConfig.AGENT_SECRETS);
+         setModified(NetworkCredentials.AGENT_SECRETS);
       }
    }
 
@@ -1184,7 +1193,7 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
             }
          }
          sharedSecretList.setInput(list);
-         setModified(NetworkConfig.AGENT_SECRETS);
+         setModified(NetworkCredentials.AGENT_SECRETS);
       }
    }
 
@@ -1199,7 +1208,7 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
          SSHCredentials cred = dlg.getCredentials();
          config.addSshCredentials(cred, zoneUIN);
          sshCredentialsList.setInput(config.getSshCredentials(zoneUIN));
-         setModified(NetworkConfig.SSH_CREDENTIALS);
+         setModified(NetworkCredentials.SSH_CREDENTIALS);
       }
    }
 
@@ -1217,7 +1226,7 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
       {
          final List<SSHCredentials> list = config.getSshCredentials(zoneUIN);
          sshCredentialsList.setInput(list.toArray());
-         setModified(NetworkConfig.SSH_CREDENTIALS);
+         setModified(NetworkCredentials.SSH_CREDENTIALS);
       }
    }
 
@@ -1235,7 +1244,7 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
             list.remove(o);
          }
          sshCredentialsList.setInput(list.toArray());
-         setModified(NetworkConfig.SSH_CREDENTIALS);
+         setModified(NetworkCredentials.SSH_CREDENTIALS);
       }
    }
 
@@ -1269,7 +1278,7 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
             }
          }
          sshCredentialsList.setInput(list);
-         setModified(NetworkConfig.SSH_CREDENTIALS);
+         setModified(NetworkCredentials.SSH_CREDENTIALS);
       }
    }
 

@@ -24,7 +24,7 @@ import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.IWorkbenchWindowActionDelegate;
 import org.eclipse.ui.PartInitException;
 import org.netxms.ui.eclipse.snmp.Messages;
-import org.netxms.ui.eclipse.snmp.views.NetworkCredentials;
+import org.netxms.ui.eclipse.snmp.views.NetworkCredentialsEditor;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /** 
@@ -62,7 +62,7 @@ public class OpenNetworkCredentialsEditor implements IWorkbenchWindowActionDeleg
 		{	
 			try 
 			{
-				window.getActivePage().showView(NetworkCredentials.ID);
+				window.getActivePage().showView(NetworkCredentialsEditor.ID);
 			} 
 			catch (PartInitException e) 
 			{

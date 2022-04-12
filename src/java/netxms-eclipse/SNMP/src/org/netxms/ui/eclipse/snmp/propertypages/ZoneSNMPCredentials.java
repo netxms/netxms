@@ -49,9 +49,9 @@ import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.snmp.Activator;
 import org.netxms.ui.eclipse.snmp.Messages;
-import org.netxms.ui.eclipse.snmp.dialogs.AddUsmCredDialog;
-import org.netxms.ui.eclipse.snmp.views.helpers.NetworkConfig;
-import org.netxms.ui.eclipse.snmp.views.helpers.SnmpUsmLabelProvider;
+import org.netxms.ui.eclipse.snmp.dialogs.EditSnmpUsmCredentialsDialog;
+import org.netxms.ui.eclipse.snmp.views.helpers.NetworkCredentials;
+import org.netxms.ui.eclipse.snmp.views.helpers.SnmpUsmCredentialsLabelProvider;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
@@ -296,7 +296,7 @@ public class ZoneSNMPCredentials extends PropertyPage
          String s = dlg.getValue();
          communities.add(s);
          communityList.setInput(communities);
-         setModified(NetworkConfig.COMMUNITIES);
+         setModified(NetworkCredentials.SNMP_COMMUNITIES);
       }
    }
 
@@ -313,7 +313,7 @@ public class ZoneSNMPCredentials extends PropertyPage
             communities.remove(o);
          }
          communityList.setInput(communities);
-         setModified(NetworkConfig.COMMUNITIES);
+         setModified(NetworkCredentials.SNMP_COMMUNITIES);
       }
    }
    
@@ -346,7 +346,7 @@ public class ZoneSNMPCredentials extends PropertyPage
             }
          }
          communityList.setInput(communities);
-         setModified(NetworkConfig.COMMUNITIES);
+         setModified(NetworkCredentials.SNMP_COMMUNITIES);
       }
    }
 
@@ -374,7 +374,7 @@ public class ZoneSNMPCredentials extends PropertyPage
       gd.heightHint = 150;
       usmCredentialList.getTable().setLayoutData(gd);
       usmCredentialList.setContentProvider(new ArrayContentProvider());
-      usmCredentialList.setLabelProvider(new SnmpUsmLabelProvider());
+      usmCredentialList.setLabelProvider(new SnmpUsmCredentialsLabelProvider());
       usmCredentialList.addDoubleClickListener(new IDoubleClickListener() {
          @Override
          public void doubleClick(DoubleClickEvent event)
@@ -518,14 +518,14 @@ public class ZoneSNMPCredentials extends PropertyPage
     */
    private void addUsmCredentials()
    {
-      AddUsmCredDialog dlg = new AddUsmCredDialog(getShell(), null);
+      EditSnmpUsmCredentialsDialog dlg = new EditSnmpUsmCredentialsDialog(getShell(), null);
       if (dlg.open() == Window.OK)
       {
          SnmpUsmCredential cred = dlg.getCredentials();
          cred.setZoneId(zone.getUIN());
          usmCredentials.add(cred);
          usmCredentialList.setInput(usmCredentials.toArray());
-         setModified(NetworkConfig.USM);
+         setModified(NetworkCredentials.SNMP_USM_CREDENTIALS);
       }
    }
 
@@ -538,11 +538,11 @@ public class ZoneSNMPCredentials extends PropertyPage
       if (selection.size() != 1)
          return;
       SnmpUsmCredential cred = (SnmpUsmCredential)selection.getFirstElement();
-      AddUsmCredDialog dlg = new AddUsmCredDialog(getShell(), cred);
+      EditSnmpUsmCredentialsDialog dlg = new EditSnmpUsmCredentialsDialog(getShell(), cred);
       if (dlg.open() == Window.OK)
       {
          usmCredentialList.setInput(usmCredentials.toArray());
-         setModified(NetworkConfig.USM);
+         setModified(NetworkCredentials.SNMP_USM_CREDENTIALS);
       }
    }
    
@@ -559,7 +559,7 @@ public class ZoneSNMPCredentials extends PropertyPage
             usmCredentials.remove(o);
          }
          usmCredentialList.setInput(usmCredentials.toArray());
-         setModified(NetworkConfig.USM);
+         setModified(NetworkCredentials.SNMP_USM_CREDENTIALS);
       }
    }
 
@@ -592,7 +592,7 @@ public class ZoneSNMPCredentials extends PropertyPage
             }
          }
          usmCredentialList.setInput(usmCredentials.toArray());
-         setModified(NetworkConfig.USM);
+         setModified(NetworkCredentials.SNMP_USM_CREDENTIALS);
       }
    }
 
@@ -739,7 +739,7 @@ public class ZoneSNMPCredentials extends PropertyPage
         String value = dlg.getValue();
         ports.add(Integer.parseInt(value));
         portList.setInput(ports.toArray());
-        setModified(NetworkConfig.SNMP_PORTS);
+        setModified(NetworkCredentials.SNMP_PORTS);
      }
   }
   
@@ -756,7 +756,7 @@ public class ZoneSNMPCredentials extends PropertyPage
            ports.remove((Integer)o);
         }
         portList.setInput(ports.toArray());
-        setModified(NetworkConfig.SNMP_PORTS);
+        setModified(NetworkCredentials.SNMP_PORTS);
      }
   }
 
@@ -785,7 +785,7 @@ public class ZoneSNMPCredentials extends PropertyPage
            }
         }
         portList.setInput(ports);
-        setModified(NetworkConfig.SNMP_PORTS);
+        setModified(NetworkCredentials.SNMP_PORTS);
      }
   }  
 
@@ -807,17 +807,17 @@ public class ZoneSNMPCredentials extends PropertyPage
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-            if ((modified & NetworkConfig.COMMUNITIES) != 0)
+            if ((modified & NetworkCredentials.SNMP_COMMUNITIES) != 0)
 	         {
 	            session.updateSnmpCommunities(zone.getUIN(), communities);   
 	         }
 
-            if ((modified & NetworkConfig.USM) != 0)
+            if ((modified & NetworkCredentials.SNMP_USM_CREDENTIALS) != 0)
 	         {
 	            session.updateSnmpUsmCredentials(zone.getUIN(), usmCredentials);    
 	         }
 
-            if ((modified & NetworkConfig.SNMP_PORTS) != 0)
+            if ((modified & NetworkCredentials.SNMP_PORTS) != 0)
 	         {
                session.updateWellKnownPorts(zone.getUIN(), "snmp", ports);
 	         }

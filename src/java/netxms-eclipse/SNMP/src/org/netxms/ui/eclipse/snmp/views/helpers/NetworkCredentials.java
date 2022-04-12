@@ -1,3 +1,21 @@
+/**
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2022 Raden Solutions
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
 package org.netxms.ui.eclipse.snmp.views.helpers;
 
 import java.io.IOException;
@@ -14,21 +32,21 @@ import org.netxms.client.snmp.SnmpUsmCredential;
 /**
  * Class that contains all parts of network connectivity configuration used mainly for network discovery (port numbers, logins, etc.) 
  */
-public class NetworkConfig
+public class NetworkCredentials
 {
    // Global SNMP config flag
    public static int NETWORK_CONFIG_GLOBAL = -1;
    public static int ALL_ZONES = -2;
 
    // Configuration type flags
-   public static final int COMMUNITIES     = 0x01;
-   public static final int USM             = 0x02;
-   public static final int SNMP_PORTS      = 0x04;
-   public static final int AGENT_SECRETS   = 0x08;
-   public static final int AGENT_PORTS     = 0x10;
-   public static final int SSH_CREDENTIALS = 0x20;
-   public static final int SSH_PORTS       = 0x40;
-   public static final int ALL_CONFIGS     = 0x7F; 
+   public static final int SNMP_COMMUNITIES     = 0x01;
+   public static final int SNMP_USM_CREDENTIALS = 0x02;
+   public static final int SNMP_PORTS           = 0x04;
+   public static final int AGENT_SECRETS        = 0x08;
+   public static final int AGENT_PORTS          = 0x10;
+   public static final int SSH_CREDENTIALS      = 0x20;
+   public static final int SSH_PORTS            = 0x40;
+   public static final int EVERYTHING           = 0x7F; 
 
    private Map<Integer, List<String>> communities = new HashMap<Integer, List<String>>();
    private Map<Integer, List<SnmpUsmCredential>> usmCredentials = new HashMap<Integer, List<SnmpUsmCredential>>();
@@ -45,7 +63,7 @@ public class NetworkConfig
    /**
     * Create object
     */
-   public NetworkConfig(NXCSession session)
+   public NetworkCredentials(NXCSession session)
    {
       this.session = session;
    }
@@ -57,7 +75,7 @@ public class NetworkConfig
     */
    public void load(int configId, int zoneUIN) throws NXCException, IOException
    {
-      if ((configId & COMMUNITIES) != 0)
+      if ((configId & SNMP_COMMUNITIES) != 0)
       {
          if (ALL_ZONES == zoneUIN)
          {
@@ -69,7 +87,7 @@ public class NetworkConfig
          }    
       }
 
-      if ((configId & USM) != 0)
+      if ((configId & SNMP_USM_CREDENTIALS) != 0)
       {
          if (ALL_ZONES == zoneUIN)
          {
@@ -157,20 +175,19 @@ public class NetworkConfig
    /**
     * Save SNMP configuration on server. This method calls communication API directly, so it should not be called from UI thread.
     * 
-    * @param session communication session to use
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void save(NXCSession session) throws NXCException, IOException
+   public void save() throws NXCException, IOException
    {
       for (Entry<Integer, Integer> value : changedConfig.entrySet())
-         if ((value.getValue() & COMMUNITIES) > 0)
+         if ((value.getValue() & SNMP_COMMUNITIES) > 0)
          {
             session.updateSnmpCommunities(value.getKey(), communities.get(value.getKey()));
          }
 
       for (Entry<Integer, Integer> value : changedConfig.entrySet())
-         if ((value.getValue() & USM) > 0)
+         if ((value.getValue() & SNMP_USM_CREDENTIALS) > 0)
          {
             session.updateSnmpUsmCredentials(value.getKey(), usmCredentials.get(value.getKey()));
          }

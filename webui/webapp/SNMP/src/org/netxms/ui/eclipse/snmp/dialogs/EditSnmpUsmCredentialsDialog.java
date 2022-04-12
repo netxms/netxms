@@ -34,7 +34,7 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
 /**
  * Add USM credentials dialog
  */
-public class AddUsmCredDialog extends Dialog
+public class EditSnmpUsmCredentialsDialog extends Dialog
 {
 	private LabeledText name;
 	private LabeledText authPasswd;
@@ -48,7 +48,7 @@ public class AddUsmCredDialog extends Dialog
 	 * @param parentShell
 	 * @param credentials 
 	 */
-	public AddUsmCredDialog(Shell parentShell, SnmpUsmCredential credentials)
+	public EditSnmpUsmCredentialsDialog(Shell parentShell, SnmpUsmCredential credentials)
 	{
 		super(parentShell);
 		this.credentials = credentials;
