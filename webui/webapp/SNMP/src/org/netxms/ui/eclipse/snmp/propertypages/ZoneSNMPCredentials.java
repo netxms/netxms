@@ -100,9 +100,9 @@ public class ZoneSNMPCredentials extends PropertyPage
       layout.makeColumnsEqualWidth = true;
 		dialogArea.setLayout(layout);
 
-      createSnmpCommunitySection(dialogArea);
-      createSnmpPortList(dialogArea);
-      createSnmpUsmCredSection(dialogArea);
+      createCommunitySection(dialogArea);
+      createPortSection(dialogArea);
+      createUSMCredentialsSection(dialogArea);
 
       loadConfig();
 		return dialogArea;
@@ -113,7 +113,7 @@ public class ZoneSNMPCredentials extends PropertyPage
 	 * 
 	 * @param dialogArea
 	 */
-   private void createSnmpCommunitySection(Composite dialogArea)
+   private void createCommunitySection(Composite dialogArea)
 	{      
       Group clientArea = new Group(dialogArea, SWT.NONE);
       clientArea.setText("Community strings");
@@ -257,7 +257,9 @@ public class ZoneSNMPCredentials extends PropertyPage
                @Override
                public void run()
                {
-                  updateFields();
+                  communityList.setInput(communities);
+                  usmCredentialList.setInput(usmCredentials);
+                  portList.setInput(ports);
                }
             });
          }
@@ -270,17 +272,6 @@ public class ZoneSNMPCredentials extends PropertyPage
       };
       job.setUser(false);
       job.start();
-	}
-
-	/**
-	 * Update fileds
-	 */
-	private void updateFields()
-	{
-      communityList.setInput(communities);
-      usmCredentialList.setInput(usmCredentials);
-      portList.setInput(ports);
-      // sharedSecretList.setInput(sharedSecrets);
 	}
 
 	/**
@@ -364,7 +355,7 @@ public class ZoneSNMPCredentials extends PropertyPage
     * 
     * @param dialogArea
     */
-   private void createSnmpUsmCredSection(Composite dialogArea)
+   private void createUSMCredentialsSection(Composite dialogArea)
    {      
       Group clientArea = new Group(dialogArea, SWT.NONE);
       clientArea.setText("USM credentials");
@@ -606,11 +597,11 @@ public class ZoneSNMPCredentials extends PropertyPage
    }
 
    /**
-    * Create SNMP port section 
+    * Create port section
     * 
     * @param dialogArea
     */
-   private void createSnmpPortList(Composite dialogArea)
+   private void createPortSection(Composite dialogArea)
    {     
       Group clientArea = new Group(dialogArea, SWT.NONE);
       clientArea.setText("Ports");
@@ -652,7 +643,7 @@ public class ZoneSNMPCredentials extends PropertyPage
          @Override
          public void widgetSelected(SelectionEvent e)
          {
-            moveSnmpPort(true);
+            movePort(true);
          }
       });
       
@@ -671,7 +662,7 @@ public class ZoneSNMPCredentials extends PropertyPage
          @Override
          public void widgetSelected(SelectionEvent e)
          {
-            moveSnmpPort(false);
+            movePort(false);
          }
       });
       
@@ -701,7 +692,7 @@ public class ZoneSNMPCredentials extends PropertyPage
          @Override
          public void widgetSelected(SelectionEvent e)
          {
-            addSnmpPort();
+            addPort();
          }
       });
       
@@ -720,7 +711,7 @@ public class ZoneSNMPCredentials extends PropertyPage
          @Override
          public void widgetSelected(SelectionEvent e)
          {
-            removeSnmpPort();
+            removePort();
          }
       });
 
@@ -737,9 +728,9 @@ public class ZoneSNMPCredentials extends PropertyPage
    }
    
    /**
-   * Add SNMP port to the list
-   */
-  private void addSnmpPort()
+    * Add port to the list
+    */
+   private void addPort()
   {
      InputDialog dlg = new InputDialog(getShell(), Messages.get().NetworkCredentials_AddSnmpPort, 
            Messages.get().NetworkCredentials_PleaseEnterSnmpPort, "", null); //$NON-NLS-1$
@@ -753,9 +744,9 @@ public class ZoneSNMPCredentials extends PropertyPage
   }
   
   /**
-   * Remove selected SNMP port
+   * Remove selected port
    */
-  private void removeSnmpPort()
+  private void removePort()
   {
      IStructuredSelection selection = (IStructuredSelection)portList.getSelection();
      if (selection.size() > 0)
@@ -770,11 +761,11 @@ public class ZoneSNMPCredentials extends PropertyPage
   }
 
   /**
-   * Move SNMP port
+   * Move port
    * 
    * @param up true if up, false if down
    */
-  private void moveSnmpPort(boolean up)
+  private void movePort(boolean up)
   {
      IStructuredSelection selection = (IStructuredSelection)portList.getSelection();
      if (selection.size() > 0)
@@ -797,7 +788,7 @@ public class ZoneSNMPCredentials extends PropertyPage
         setModified(NetworkConfig.SNMP_PORTS);
      }
   }  
-	
+
 	/**
 	 * Apply changes
 	 * 

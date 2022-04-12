@@ -176,9 +176,20 @@
       </page>
       <page
             category="org.netxms.ui.eclipse.objectmanager.propertypages.ZoneCommunications#10"
-            class="org.netxms.ui.eclipse.snmp.propertypages.ZoneAgentSecretConfiguration"
+            class="org.netxms.ui.eclipse.snmp.propertypages.ZoneAgentCredentials"
             id="org.netxms.ui.eclipse.snmp.propertypages.ZoneAgentSecretConziguration"
             name="Agent Credentials">
+         <enabledWhen>
+            <instanceof
+                  value="org.netxms.client.objects.Zone">
+            </instanceof>
+         </enabledWhen>
+      </page>
+      <page
+            category="org.netxms.ui.eclipse.objectmanager.propertypages.ZoneCommunications#10"
+            class="org.netxms.ui.eclipse.snmp.propertypages.ZoneSSHCredentials"
+            id="org.netxms.ui.eclipse.snmp.propertypages.ZoneSSHCredentials"
+            name="SSH Credentials">
          <enabledWhen>
             <instanceof
                   value="org.netxms.client.objects.Zone">

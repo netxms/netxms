@@ -12625,7 +12625,7 @@ public class NXCSession
             stringList = new ArrayList<String>();
             currentZoneUIN = zoneUIN;
          }
-         stringList.add(response.getFieldAsString(fieldId++));
+         stringList.add(response.getFieldAsString(fieldId));
       }
       if (count > 0)
          map.put(currentZoneUIN, stringList);
