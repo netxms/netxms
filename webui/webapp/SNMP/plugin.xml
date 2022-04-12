@@ -164,9 +164,10 @@
    <extension
          point="org.eclipse.ui.propertyPages">
       <page
-            class="org.netxms.ui.eclipse.snmp.propertypages.ZoneSNMPConfiguration"
+            category="org.netxms.ui.eclipse.objectmanager.propertypages.ZoneCommunications#10"
+            class="org.netxms.ui.eclipse.snmp.propertypages.ZoneSNMPCredentials"
             id="org.netxms.ui.eclipse.snmp.propertypages.ZoneSNMPConziguration"
-            name="SNMP Configuration">
+            name="SNMP Credentials">
          <enabledWhen>
             <instanceof
                   value="org.netxms.client.objects.Zone">
@@ -174,9 +175,10 @@
          </enabledWhen>
       </page>
       <page
+            category="org.netxms.ui.eclipse.objectmanager.propertypages.ZoneCommunications#10"
             class="org.netxms.ui.eclipse.snmp.propertypages.ZoneAgentSecretConfiguration"
             id="org.netxms.ui.eclipse.snmp.propertypages.ZoneAgentSecretConziguration"
-            name="Agent Shared Secrets">
+            name="Agent Credentials">
          <enabledWhen>
             <instanceof
                   value="org.netxms.client.objects.Zone">

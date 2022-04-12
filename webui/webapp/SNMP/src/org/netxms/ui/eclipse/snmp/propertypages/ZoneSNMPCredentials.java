@@ -40,6 +40,7 @@ import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Group;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.Zone;
@@ -55,9 +56,9 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
- * "SNMP Configuration" property page for zone objects
+ * "SNMP Credentials" property page for zone objects
  */
-public class ZoneSNMPConfiguration extends PropertyPage
+public class ZoneSNMPCredentials extends PropertyPage
 {
    private Zone zone;
    private List<String> communities;
@@ -114,35 +115,31 @@ public class ZoneSNMPConfiguration extends PropertyPage
 	 */
    private void createSnmpCommunitySection(Composite dialogArea)
 	{      
-      Composite clientArea = new Composite(dialogArea, SWT.NONE);
+      Group clientArea = new Group(dialogArea, SWT.NONE);
+      clientArea.setText("Community strings");
+      clientArea.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
       GridLayout layout = new GridLayout();
       layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
-      layout.marginWidth = 0;
-      layout.marginHeight = 0;
       layout.numColumns = 2;
       clientArea.setLayout(layout);
 
       communityList = new TableViewer(clientArea, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
-      GridData gridData = new GridData();
-      gridData.verticalAlignment = GridData.FILL;
-      gridData.grabExcessVerticalSpace = true;
-      gridData.horizontalAlignment = GridData.FILL;
-      gridData.grabExcessHorizontalSpace = true;
-      gridData.horizontalSpan = 2;
-      gridData.heightHint = 150;
-      communityList.getTable().setLayoutData(gridData);
+      GridData gd = new GridData(SWT.FILL, SWT.FILL, true, true);
+      gd.horizontalSpan = 2;
+      gd.heightHint = 150;
+      communityList.getTable().setLayoutData(gd);
       communityList.setContentProvider(new ArrayContentProvider());
       
       Composite buttonsLeft = new Composite(clientArea, SWT.NONE);
       RowLayout buttonLayout = new RowLayout();
       buttonLayout.type = SWT.HORIZONTAL;
       buttonLayout.pack = false;
-      buttonLayout.marginWidth = 0;
+      buttonLayout.marginLeft = 0;
       buttonLayout.marginRight = 0;
       buttonsLeft.setLayout(buttonLayout);
-      gridData = new GridData();
-      gridData.horizontalAlignment = SWT.LEFT;
-      buttonsLeft.setLayoutData(gridData);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.LEFT;
+      buttonsLeft.setLayoutData(gd);
 
       commMoveUpButton = new Button(buttonsLeft, SWT.PUSH);
       commMoveUpButton.setText("&Up");
@@ -162,7 +159,7 @@ public class ZoneSNMPConfiguration extends PropertyPage
             moveCommunity(true);
          }
       });
-      
+
       commMoveDownButton = new Button(buttonsLeft, SWT.PUSH);
       commMoveDownButton.setText("&Down");
       rd = new RowData();
@@ -186,12 +183,12 @@ public class ZoneSNMPConfiguration extends PropertyPage
       buttonLayout = new RowLayout();
       buttonLayout.type = SWT.HORIZONTAL;
       buttonLayout.pack = false;
-      buttonLayout.marginWidth = 0;
+      buttonLayout.marginLeft = 0;
       buttonLayout.marginRight = 0;
       buttonsRight.setLayout(buttonLayout);
-      gridData = new GridData();
-      gridData.horizontalAlignment = SWT.RIGHT;
-      buttonsRight.setLayoutData(gridData);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.RIGHT;
+      buttonsRight.setLayoutData(gd);
 
       commAddButton = new Button(buttonsRight, SWT.PUSH);
       commAddButton.setText("Add");
@@ -369,34 +366,29 @@ public class ZoneSNMPConfiguration extends PropertyPage
     */
    private void createSnmpUsmCredSection(Composite dialogArea)
    {      
-      Composite clientArea = new Composite(dialogArea, SWT.NONE);
+      Group clientArea = new Group(dialogArea, SWT.NONE);
+      clientArea.setText("USM credentials");
       GridLayout layout = new GridLayout();
       layout.numColumns = 2;
       clientArea.setLayout(layout);
-      GridData gridData = new GridData();
-      gridData.horizontalSpan = 2;
-      gridData.verticalAlignment = GridData.FILL;
-      gridData.grabExcessHorizontalSpace = true;
-      clientArea.setLayoutData(gridData);
+      GridData gd = new GridData(SWT.FILL, SWT.FILL, true, true);
+      gd.horizontalSpan = 2;
+      clientArea.setLayoutData(gd);
 
       final String[] names = { "User name", "Auth type", "Priv type", "Auth secret", "Priv secret", "Comments" };
       final int[] widths = { 100, 100, 100, 100, 100, 100 };
       usmCredentialList = new SortableTableViewer(clientArea, names, widths, 0, SWT.DOWN, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
-      gridData = new GridData();
-      gridData.verticalAlignment = GridData.FILL;
-      gridData.grabExcessVerticalSpace = true;
-      gridData.horizontalAlignment = GridData.FILL;
-      gridData.grabExcessHorizontalSpace = true;
-      gridData.horizontalSpan = 2;
-      gridData.heightHint = 150;
-      usmCredentialList.getTable().setLayoutData(gridData);
+      gd = new GridData(SWT.FILL, SWT.FILL, true, true);
+      gd.horizontalSpan = 2;
+      gd.heightHint = 150;
+      usmCredentialList.getTable().setLayoutData(gd);
       usmCredentialList.setContentProvider(new ArrayContentProvider());
       usmCredentialList.setLabelProvider(new SnmpUsmLabelProvider());
       usmCredentialList.addDoubleClickListener(new IDoubleClickListener() {
          @Override
          public void doubleClick(DoubleClickEvent event)
          {
-            editUsmCredzantial();
+            editUsmCredentials();
          }
       }); 
       
@@ -404,12 +396,12 @@ public class ZoneSNMPConfiguration extends PropertyPage
       RowLayout buttonLayout = new RowLayout();
       buttonLayout.type = SWT.HORIZONTAL;
       buttonLayout.pack = false;
-      buttonLayout.marginWidth = 0;
+      buttonLayout.marginLeft = 0;
       buttonLayout.marginRight = 0;
       buttonsLeft.setLayout(buttonLayout);
-      gridData = new GridData();
-      gridData.horizontalAlignment = SWT.LEFT;
-      buttonsLeft.setLayoutData(gridData);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.LEFT;
+      buttonsLeft.setLayoutData(gd);
       
       usmMoveUpButton = new Button(buttonsLeft, SWT.PUSH);
       usmMoveUpButton.setText("&Up");
@@ -453,12 +445,12 @@ public class ZoneSNMPConfiguration extends PropertyPage
       buttonLayout = new RowLayout();
       buttonLayout.type = SWT.HORIZONTAL;
       buttonLayout.pack = false;
-      buttonLayout.marginWidth = 0;
+      buttonLayout.marginLeft = 0;
       buttonLayout.marginRight = 0;
       buttonsRight.setLayout(buttonLayout);
-      gridData = new GridData();
-      gridData.horizontalAlignment = SWT.RIGHT;
-      buttonsRight.setLayoutData(gridData);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.RIGHT;
+      buttonsRight.setLayoutData(gd);
 
       usmAddButton = new Button(buttonsRight, SWT.PUSH);
       usmAddButton.setText("Add");
@@ -494,7 +486,7 @@ public class ZoneSNMPConfiguration extends PropertyPage
          @Override
          public void widgetSelected(SelectionEvent e)
          {
-            editUsmCredzantial();
+            editUsmCredentials();
          }
       });
       
@@ -549,7 +541,7 @@ public class ZoneSNMPConfiguration extends PropertyPage
    /**
     * Edit SNMP USM credential
     */
-   private void editUsmCredzantial()
+   private void editUsmCredentials()
    {
       IStructuredSelection selection = (IStructuredSelection)usmCredentialList.getSelection();
       if (selection.size() != 1)
@@ -620,32 +612,30 @@ public class ZoneSNMPConfiguration extends PropertyPage
     */
    private void createSnmpPortList(Composite dialogArea)
    {     
-      Composite clientArea = new Composite(dialogArea, SWT.NONE);
+      Group clientArea = new Group(dialogArea, SWT.NONE);
+      clientArea.setText("Ports");
+      clientArea.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
       GridLayout layout = new GridLayout();
       layout.numColumns = 2;
       clientArea.setLayout(layout);
-      
+
       portList = new TableViewer(clientArea, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
-      GridData gridData = new GridData();
-      gridData.horizontalAlignment = SWT.FILL;
-      gridData.grabExcessHorizontalSpace = true;
-      gridData.verticalAlignment = SWT.FILL;
-      gridData.grabExcessVerticalSpace = true;
-      gridData.horizontalSpan = 2;
-      gridData.heightHint = 150;
-      portList.getTable().setLayoutData(gridData);
+      GridData gd = new GridData(SWT.FILL, SWT.FILL, true, true);
+      gd.horizontalSpan = 2;
+      gd.heightHint = 150;
+      portList.getTable().setLayoutData(gd);
       portList.setContentProvider(new ArrayContentProvider());      
-      
+
       Composite buttonsLeft = new Composite(clientArea, SWT.NONE);
       RowLayout buttonLayout = new RowLayout();
       buttonLayout.type = SWT.HORIZONTAL;
       buttonLayout.pack = false;
-      buttonLayout.marginWidth = 0;
+      buttonLayout.marginLeft = 0;
       buttonLayout.marginRight = 0;
       buttonsLeft.setLayout(buttonLayout);
-      gridData = new GridData();
-      gridData.horizontalAlignment = SWT.LEFT;
-      buttonsLeft.setLayoutData(gridData);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.LEFT;
+      buttonsLeft.setLayoutData(gd);
       
       portMoveUpButton = new Button(buttonsLeft, SWT.PUSH);
       portMoveUpButton.setText("&Up");
@@ -689,12 +679,12 @@ public class ZoneSNMPConfiguration extends PropertyPage
       buttonLayout = new RowLayout();
       buttonLayout.type = SWT.HORIZONTAL;
       buttonLayout.pack = false;
-      buttonLayout.marginWidth = 0;
+      buttonLayout.marginLeft = 0;
       buttonLayout.marginRight = 0;
       buttonsRight.setLayout(buttonLayout);
-      gridData = new GridData();
-      gridData.horizontalAlignment = SWT.RIGHT;
-      buttonsRight.setLayoutData(gridData);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.RIGHT;
+      buttonsRight.setLayoutData(gd);
 
       portAddButton = new Button(buttonsRight, SWT.PUSH);
       portAddButton.setText("Add");
@@ -733,7 +723,7 @@ public class ZoneSNMPConfiguration extends PropertyPage
             removeSnmpPort();
          }
       });
-      
+
       portList.addSelectionChangedListener(new ISelectionChangedListener() {
          @Override
          public void selectionChanged(SelectionChangedEvent event)

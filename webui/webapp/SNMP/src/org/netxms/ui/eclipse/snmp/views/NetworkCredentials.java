@@ -740,7 +740,7 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
    private TableViewer createPortList(int portType, String typeName)
    {
       Section section = toolkit.createSection(form.getBody(), Section.DESCRIPTION | Section.TITLE_BAR);
-      section.setText(typeName);
+      section.setText(String.format("%s ports", typeName));
       TableWrapData td = new TableWrapData();
       td.align = TableWrapData.FILL;
       td.grabHorizontal = true;
