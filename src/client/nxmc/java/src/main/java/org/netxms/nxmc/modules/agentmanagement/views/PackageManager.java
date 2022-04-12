@@ -51,6 +51,7 @@ import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.agentmanagement.dialogs.EditPackageMetadataDialog;
 import org.netxms.nxmc.modules.agentmanagement.views.helpers.PackageComparator;
 import org.netxms.nxmc.modules.agentmanagement.views.helpers.PackageLabelProvider;
+import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
 import org.netxms.nxmc.tools.MessageDialogHelper;
 import org.netxms.nxmc.tools.WidgetHelper;
@@ -62,8 +63,7 @@ import org.xnap.commons.i18n.I18n;
 public class PackageManager extends ConfigurationView
 {
    private static I18n i18n = LocalizationHelper.getI18n(PackageManager.class);
-	public static final String ID = "PackageManager"; //$NON-NLS-1$
-	
+
    public static final int COLUMN_ID = 0;
    public static final int COLUMN_NAME = 1;
    public static final int COLUMN_TYPE = 2;
@@ -79,13 +79,23 @@ public class PackageManager extends ConfigurationView
    private Action actionRemove;
    private Action actionEditMetadata;
    
+   /**
+    * Constructor
+    */
+   public PackageManager()
+   {
+      super(i18n.tr("Packages"), ResourceManager.getImageDescriptor("icons/config-views/package.gif"), "PackageManager", true);
+   }
 
+   /**
+    * @see org.netxms.nxmc.base.views.View#createContent(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
    protected void createContent(Composite parent)
 	{
 		final String[] names = { i18n.tr("ID"), i18n.tr("Name"), i18n.tr("Type"),
 		      i18n.tr("Version"), i18n.tr("Platform"),
-		      i18n.tr("File"), "Command", i18n.tr("Description") };
+            i18n.tr("File"), i18n.tr("Command"), i18n.tr("Description") };
       final int[] widths = { 70, 120, 100, 90, 120, 300, 300, 400 };
 		viewer = new SortableTableViewer(parent, names, widths, COLUMN_ID, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
 		viewer.setContentProvider(new ArrayContentProvider());
@@ -187,8 +197,8 @@ public class PackageManager extends ConfigurationView
 	}
 
 	/**
-	 * Refresh package list
-	 */
+    * @see org.netxms.nxmc.base.views.View#refresh()
+    */
 	@Override
 	public void refresh()
 	{
@@ -215,7 +225,7 @@ public class PackageManager extends ConfigurationView
 			}
 		}.start();
 	}
-	
+
 	/**
 	 * Install new package
 	 */
@@ -473,12 +483,18 @@ public class PackageManager extends ConfigurationView
       }.start();
    }
 
+   /**
+    * @see org.netxms.nxmc.base.views.ConfigurationView#isModified()
+    */
    @Override
    public boolean isModified()
    {
       return false;
    }
 
+   /**
+    * @see org.netxms.nxmc.base.views.ConfigurationView#save()
+    */
    @Override
    public void save()
    {

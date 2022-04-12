@@ -46,7 +46,7 @@ public class AlarmCategoryConfigurationView extends ConfigurationView
     */
    public AlarmCategoryConfigurationView()
    {
-      super(i18n.tr("Alarm categories"), ResourceManager.getImageDescriptor("icons/config-views/alarm_category.png"), ID, true);
+      super(i18n.tr("Alarm Categories"), ResourceManager.getImageDescriptor("icons/config-views/alarm_category.png"), ID, true);
    }
 
    @Override

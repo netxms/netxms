@@ -54,8 +54,8 @@ import org.xnap.commons.i18n.I18n;
 public class UserAgentNotificationView extends ConfigurationView implements SessionListener
 {
    private static final I18n i18n = LocalizationHelper.getI18n(UserAgentNotificationView.class);
-   public static final String ID = "UserAgentNotification";
-   
+   private static final String ID = "UserAgentNotifications";
+
    public static final int COL_ID = 0;
    public static final int COL_OBJECTS = 1;
    public static final int COL_MESSAGE = 2;
@@ -73,15 +73,17 @@ public class UserAgentNotificationView extends ConfigurationView implements Sess
    private Action actionRecall;
    private NXCSession session;
 
-   
    /**
     * Constructor
     */
    public UserAgentNotificationView()
    {
-      super(i18n.tr("User support application notifications"), ResourceManager.getImageDescriptor("icons/config-views/user_agent_messages.png"), ID, true);
+      super(i18n.tr("User Support Application Notifications"), ResourceManager.getImageDescriptor("icons/config-views/user_agent_messages.png"), ID, true);
    }
 
+   /**
+    * @see org.netxms.nxmc.base.views.View#createContent(org.eclipse.swt.widgets.Composite)
+    */
    @Override
    protected void createContent(Composite parent)
    {

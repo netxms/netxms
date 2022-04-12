@@ -88,7 +88,8 @@ public class SnmpTrapEditor extends ConfigurationView
     */
    public SnmpTrapEditor()
    {
-      super(i18n.tr("Actions"), ResourceManager.getImageDescriptor("icons/config-views/trapeditor.png"), "SNMPTrapEditor", true);
+      super(i18n.tr("SNMP Traps"), ResourceManager.getImageDescriptor("icons/config-views/trapeditor.png"), "SNMPTrapEditor", true);
+
       session = Registry.getSession();
       sessionListener = new SessionListener() {
          @Override

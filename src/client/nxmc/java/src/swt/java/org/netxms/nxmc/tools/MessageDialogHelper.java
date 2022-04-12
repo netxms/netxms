@@ -56,7 +56,7 @@ public class MessageDialogHelper
 	{
 		return MessageDialog.open(kind, parent, title, message, SWT.SHEET);
 	}
-	
+
 	/**
 	 * Convenience method to open a simple confirm (OK/Cancel) dialog.
 	 * 
@@ -82,9 +82,7 @@ public class MessageDialogHelper
     */
    public static DialogData openConfirmWithCheckbox(Shell parent, String title, String label, String message)
    {
-      MessageDialogWithCheckbox msg = new MessageDialogWithCheckbox(
-                                                MessageDialog.CONFIRM, new String[] { IDialogConstants.OK_LABEL,
-                                                IDialogConstants.CANCEL_LABEL }, parent, title, label, message);
+      MessageDialogWithCheckbox msg = new MessageDialogWithCheckbox(MessageDialog.CONFIRM, new String[] { IDialogConstants.OK_LABEL, IDialogConstants.CANCEL_LABEL }, parent, title, label, message);
       return msg.openMsg();
    }
 
@@ -125,6 +123,21 @@ public class MessageDialogHelper
 		return open(MessageDialog.QUESTION, parent, title, message);
 	}
 
+   /**
+    * Convenience method to open a simple Yes/No/Cancel question dialog.
+    * 
+    * @param parent the parent shell of the dialog, or <code>null</code> if none
+    * @param title the dialog's title, or <code>null</code> if none
+    * @param message the message
+    * @return 0 if the user presses the Yes button, 1 if the user presses the No button, and 2 otherwise
+    */
+   public static int openQuestionWithCancel(Shell parent, String title, String message)
+   {
+      int selection = MessageDialog.open(MessageDialog.QUESTION_WITH_CANCEL, parent, title, message, SWT.SHEET,
+            new String[] { IDialogConstants.YES_LABEL, IDialogConstants.NO_LABEL, IDialogConstants.CANCEL_LABEL });
+      return (selection == SWT.DEFAULT) ? 2 : selection;
+   }
+
 	/**
 	 * Convenience method to open a standard warning dialog.
 	 * 
@@ -154,7 +167,7 @@ public class MessageDialogHelper
                                                 IDialogConstants.CANCEL_LABEL }, parent, title, label, message);
       return msg.openMsg();
    }
-   
+
    /**
     * Convenience method to open a standard one button (OK) warning dialog with a check box
     * to remember selection. 
@@ -219,7 +232,7 @@ public class MessageDialogHelper
 	      
          return container;	      
 	   }
-	   
+
 	   /**
 	    * @return MessageReturn object with dialog exit states
 	    */

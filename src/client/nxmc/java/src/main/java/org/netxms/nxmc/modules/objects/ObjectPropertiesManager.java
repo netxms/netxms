@@ -68,7 +68,10 @@ import org.netxms.nxmc.modules.objects.propertypages.Syslog;
 import org.netxms.nxmc.modules.objects.propertypages.TrustedNodes;
 import org.netxms.nxmc.modules.objects.propertypages.VPNSubnets;
 import org.netxms.nxmc.modules.objects.propertypages.WebServices;
+import org.netxms.nxmc.modules.objects.propertypages.ZoneAgentCredentials;
 import org.netxms.nxmc.modules.objects.propertypages.ZoneCommunications;
+import org.netxms.nxmc.modules.objects.propertypages.ZoneSNMPCredentials;
+import org.netxms.nxmc.modules.objects.propertypages.ZoneSSHCredentials;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
@@ -121,7 +124,10 @@ public class ObjectPropertiesManager
       pageClasses.add(TrustedNodes.class);
       pageClasses.add(VPNSubnets.class);
       pageClasses.add(WebServices.class);
+      pageClasses.add(ZoneAgentCredentials.class);
       pageClasses.add(ZoneCommunications.class);
+      pageClasses.add(ZoneSNMPCredentials.class);
+      pageClasses.add(ZoneSSHCredentials.class);
    }
 
    public static boolean openObjectPropertiesDialog(AbstractObject object, Shell shell)

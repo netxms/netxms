@@ -88,13 +88,12 @@ public class TunnelManager extends ConfigurationView
    private Action actionHideNonProxy;
    private Action actionHideNonUA;
    
-
    /**
     * Constructor
     */
    public TunnelManager()
    {
-      super(i18n.tr("Agent tunnels"), ResourceManager.getImageDescriptor("icons/config-views/tunnel_manager.png"), ID, true);
+      super(i18n.tr("Agent Tunnels"), ResourceManager.getImageDescriptor("icons/config-views/tunnel_manager.png"), ID, true);
    }
    
    /**

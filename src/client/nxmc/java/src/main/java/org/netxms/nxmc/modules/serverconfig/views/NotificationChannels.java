@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2021 Raden Solutions
+ * Copyright (C) 2021-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -80,17 +80,19 @@ public class NotificationChannels extends ConfigurationView
    private Action actionEditChannel;
    private Action actionDeleteChannel;
    private NotificationChannel selectedChannel;  
-   
 
    /**
     * Create notification channels view
     */
    public NotificationChannels()
    {
-      super(i18n.tr("Notification channels"), ResourceManager.getImageDescriptor("icons/config-views/nchannels.png"), ID, true);
+      super(i18n.tr("Notification Channels"), ResourceManager.getImageDescriptor("icons/config-views/nchannels.png"), ID, true);
       session = Registry.getSession();
    }
 
+   /**
+    * @see org.netxms.nxmc.base.views.View#createContent(org.eclipse.swt.widgets.Composite)
+    */
    @Override
    protected void createContent(Composite parent)
    {      
@@ -170,7 +172,7 @@ public class NotificationChannels extends ConfigurationView
    {
       refresh();
    }
-   
+
    /**
     * Create actions
     */
@@ -202,7 +204,7 @@ public class NotificationChannels extends ConfigurationView
       };
       actionDeleteChannel.setEnabled(false);
    }
-   
+
    /**
     * Create pop-up menu for variable list
     */
@@ -233,10 +235,11 @@ public class NotificationChannels extends ConfigurationView
       mgr.add(actionEditChannel);
       mgr.add(actionDeleteChannel);
    }
-   
+
    /**
     * Refresh
     */
+   @Override
    public void refresh()
    {
       new Job(i18n.tr("Get notification channels"), this) {
@@ -260,7 +263,7 @@ public class NotificationChannels extends ConfigurationView
          }
       }.start();
    }
-   
+
    /**
     * Create new channel
     */
@@ -286,7 +289,7 @@ public class NotificationChannels extends ConfigurationView
          }
       }.start();
    }
-   
+
    /**
     * Edit selected notification channel
     */
@@ -319,7 +322,7 @@ public class NotificationChannels extends ConfigurationView
          }
       }.start();
    }
-   
+
    /**
     * Delete selected notification channel
     */

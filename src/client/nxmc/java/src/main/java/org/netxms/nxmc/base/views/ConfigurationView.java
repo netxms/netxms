@@ -76,7 +76,6 @@ public abstract class ConfigurationView extends View
     * Save content. After successful save() call isModified() should return false.
     */
    public abstract void save();
-   
 
    /** 
     * Open save dialog on close and return if save is required

@@ -97,7 +97,7 @@ public class UserManagementView extends ConfigurationView
     */
    public UserManagementView()
    {
-      super(i18n.tr("Users and groups"), ResourceManager.getImageDescriptor("icons/config-views/user_manager.png"), ID, true);
+      super(i18n.tr("Users and Groups"), ResourceManager.getImageDescriptor("icons/config-views/user_manager.png"), ID, true);
       session = Registry.getSession();
    }
 

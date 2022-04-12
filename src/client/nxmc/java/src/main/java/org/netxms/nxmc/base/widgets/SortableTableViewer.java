@@ -214,9 +214,9 @@ public class SortableTableViewer extends TableViewer
       return null;
    }
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.TableViewer#getViewerRowFromItem(org.eclipse.swt.widgets.Widget)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.TableViewer#getViewerRowFromItem(org.eclipse.swt.widgets.Widget)
+    */
 	@Override
 	public ViewerRow getViewerRowFromItem(Widget item)
 	{

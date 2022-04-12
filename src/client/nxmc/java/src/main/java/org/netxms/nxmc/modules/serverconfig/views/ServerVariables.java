@@ -88,7 +88,7 @@ public class ServerVariables extends ConfigurationView
     */
    public ServerVariables()
    {
-      super(i18n.tr("Server configuration"), ResourceManager.getImageDescriptor("icons/config-views/server_config.png"), ID, true);
+      super(i18n.tr("Server Configuration"), ResourceManager.getImageDescriptor("icons/config-views/server_config.png"), ID, true);
       session = Registry.getSession();
    }
 

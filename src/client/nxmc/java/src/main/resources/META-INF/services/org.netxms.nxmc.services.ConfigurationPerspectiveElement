@@ -7,6 +7,7 @@ org.netxms.nxmc.modules.agentmanagement.UserAgentNotificationElement
 org.netxms.nxmc.modules.alarms.AlarmCategoryConfiguratorElement
 org.netxms.nxmc.modules.imagelibrary.ImageLibraryConfigurationElement
 org.netxms.nxmc.modules.nxsl.ScriptLibraryConfigurationElement
+org.netxms.nxmc.modules.serverconfig.NetworkCredentialsElement
 org.netxms.nxmc.modules.serverconfig.NotificationChannelsElement
 org.netxms.nxmc.modules.serverconfig.ServerVariableElement
 org.netxms.nxmc.modules.snmp.SNMPTrapConfigurationElement
