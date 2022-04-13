@@ -422,6 +422,7 @@ unique_ptr<StringMap> BusinessServicePrototype::getInstances()
          {
             ReportScriptError(SCRIPT_CONTEXT_BIZSVC, this, 0, filter->getErrorText(), _T("%s::%s::InstanceDiscoveryFilter"), getObjectClassName(), m_name);
             nxlog_debug_tag(DEBUG_TAG_BIZSVC, 5, _T("Failed to execute instance discovery filter script for business service prototype %s [%u] (%s)"), m_name, m_id, filter->getErrorText());
+            resultMap.reset();
          }
          delete filter;
       }
@@ -429,6 +430,7 @@ unique_ptr<StringMap> BusinessServicePrototype::getInstances()
       {
          ReportScriptError(SCRIPT_CONTEXT_BIZSVC, this, 0, _T("Script load error"), _T("%s::%s::InstanceDiscoveryFilter"), getObjectClassName(), m_name);
          nxlog_debug_tag(DEBUG_TAG_BIZSVC, 5, _T("Failed to load instance discovery filter script for business service prototype %s [%u]"), m_name, m_id);
+         resultMap.reset();
       }
    }
    return resultMap;

@@ -1364,92 +1364,95 @@ static EnumerationCallbackResult FilterCallback(const TCHAR *key, const TCHAR *v
    argv[0] = instanceFilter->createValue(key);
    argv[1] = instanceFilter->createValue(value);
 
-   if (instanceFilter->run(2, argv))
+   if (!instanceFilter->run(2, argv))
    {
-      bool accepted;
-      const TCHAR *instance = key;
-      const TCHAR *name = value;
-      uint32_t relatedObject = 0;
-      NXSL_Value *result = instanceFilter->getResult();
-      if (result != nullptr)
+      ReportScriptError(SCRIPT_CONTEXT_DCI, dco->getOwner().get(), dco->getId(), instanceFilter->getErrorText(), _T("DCI::%s::%d::InstanceFilter"), dco->getOwnerName(), dco->getId());
+      nxlog_debug_tag(DEBUG_TAG_DC_CONFIG, 5, _T("DCObject::filterInstanceList(%s [%u]): filtering script runtime error while processing instance \"%s\" (%s)"),
+               dcObjectName.cstr(), dco->getId(), key, instanceFilter->getErrorText());
+      dco->getOwner()->sendPollerMsg(POLLER_ERROR _T("      Filtering script runtime error while processing instance \"%s\" (%s)\r\n"), key, instanceFilter->getErrorText());
+      return _STOP;
+   }
+
+   bool accepted;
+   const TCHAR *instance = key;
+   const TCHAR *name = value;
+   uint32_t relatedObject = 0;
+   NXSL_Value *result = instanceFilter->getResult();
+   if (result != nullptr)
+   {
+      if (result->isArray())
       {
-         if (result->isArray())
+         NXSL_Array *array = result->getValueAsArray();
+         if (array->size() > 0)
          {
-            NXSL_Array *array = result->getValueAsArray();
-            if (array->size() > 0)
+            int index = 0;
+
+            // If first array element is not boolean value or null, assume implicit accept and expect transformed instance as first element
+            if ((array->get(0)->getDataType() == NXSL_DT_BOOLEAN) || array->get(0)->isNull())
             {
-               int index = 0;
-
-               // If first array element is not boolean value or null, assume implicit accept and expect transformed instance as first element
-               if ((array->get(0)->getDataType() == NXSL_DT_BOOLEAN) || array->get(0)->isNull())
-               {
-                  accepted = array->get(0)->getValueAsBoolean();
-                  index++;
-               }
-               else
-               {
-                  accepted = true;
-               }
-
-               if (accepted)
-               {
-                  if (array->size() > index)
-                  {
-                     // transformed value
-                     const TCHAR *newValue = array->get(index++)->getValueAsCString();
-                     if ((newValue != nullptr) && (*newValue != 0))
-                     {
-                        nxlog_debug_tag(DEBUG_TAG_DC_CONFIG, 5, _T("DCObject::filterInstanceList(%s [%d]): instance \"%s\" replaced by \"%s\""),
-                                 dcObjectName.cstr(), dco->getId(), instance, newValue);
-                        instance = newValue;
-                     }
-                  }
-                  if (array->size() > index)
-                  {
-                     // instance name
-                     const TCHAR *newName = array->get(index++)->getValueAsCString();
-                     if ((newName != nullptr) && (*newName != 0))
-                     {
-                        nxlog_debug_tag(DEBUG_TAG_DC_CONFIG, 5, _T("DCObject::filterInstanceList(%s [%d]): instance \"%s\" name set to \"%s\""),
-                                 dcObjectName.cstr(), dco->getId(), instance, newName);
-                        name = newName;
-                     }
-                  }
-                  if ((array->size() > index) && array->get(index)->isObject(g_nxslNetObjClass.getName()))
-                  {
-                     relatedObject = (*static_cast<shared_ptr<NetObj>*>(array->get(index)->getValueAsObject()->getData()))->getId();
-                  }
-               }
+               accepted = array->get(0)->getValueAsBoolean();
+               index++;
             }
             else
             {
                accepted = true;
             }
+
+            if (accepted)
+            {
+               if (array->size() > index)
+               {
+                  // transformed value
+                  const TCHAR *newValue = array->get(index++)->getValueAsCString();
+                  if ((newValue != nullptr) && (*newValue != 0))
+                  {
+                     nxlog_debug_tag(DEBUG_TAG_DC_CONFIG, 5, _T("DCObject::filterInstanceList(%s [%u]): instance \"%s\" replaced by \"%s\""),
+                              dcObjectName.cstr(), dco->getId(), instance, newValue);
+                     instance = newValue;
+                  }
+               }
+               if (array->size() > index)
+               {
+                  // instance name
+                  const TCHAR *newName = array->get(index++)->getValueAsCString();
+                  if ((newName != nullptr) && (*newName != 0))
+                  {
+                     nxlog_debug_tag(DEBUG_TAG_DC_CONFIG, 5, _T("DCObject::filterInstanceList(%s [%u]): instance \"%s\" name set to \"%s\""),
+                              dcObjectName.cstr(), dco->getId(), instance, newName);
+                     name = newName;
+                  }
+               }
+               if ((array->size() > index) && array->get(index)->isObject(g_nxslNetObjClass.getName()))
+               {
+                  relatedObject = (*static_cast<shared_ptr<NetObj>*>(array->get(index)->getValueAsObject()->getData()))->getId();
+               }
+            }
          }
          else
          {
-            accepted = result->getValueAsBoolean();
+            accepted = true;
          }
       }
       else
       {
-         accepted = true;
-      }
-      if (accepted)
-      {
-         data->filteredInstances->set(instance, new InstanceDiscoveryData(name, relatedObject));
-      }
-      else
-      {
-         nxlog_debug_tag(DEBUG_TAG_DC_CONFIG, 5, _T("DCObject::filterInstanceList(%s [%d]): instance \"%s\" removed by filtering script"),
-                  dcObjectName.cstr(), dco->getId(), key);
+         accepted = result->getValueAsBoolean();
       }
    }
    else
    {
-      ReportScriptError(SCRIPT_CONTEXT_DCI, dco->getOwner().get(), dco->getId(), instanceFilter->getErrorText(), _T("DCI::%s::%d::InstanceFilter"), dco->getOwnerName(), dco->getId());
-      data->filteredInstances->set(key, new InstanceDiscoveryData((const TCHAR *)value, 0));
+      accepted = true;
    }
+
+   if (accepted)
+   {
+      data->filteredInstances->set(instance, new InstanceDiscoveryData(name, relatedObject));
+   }
+   else
+   {
+      nxlog_debug_tag(DEBUG_TAG_DC_CONFIG, 5, _T("DCObject::filterInstanceList(%s [%u]): instance \"%s\" removed by filtering script"),
+               dcObjectName.cstr(), dco->getId(), key);
+   }
+
    return _CONTINUE;
 }
 
@@ -1463,7 +1466,7 @@ static EnumerationCallbackResult CopyElements(const TCHAR *key, const TCHAR *val
 }
 
 /**
- * Filter instance list
+ * Filter instance list. Returns nullptr on filtering error.
  */
 StringObjectMap<InstanceDiscoveryData> *DCObject::filterInstanceList(StringMap *instances)
 {
@@ -1483,12 +1486,21 @@ StringObjectMap<InstanceDiscoveryData> *DCObject::filterInstanceList(StringMap *
    if (!data.instanceFilter->load(m_instanceFilter))
    {
       ReportScriptError(SCRIPT_CONTEXT_DCI, getOwner().get(), m_id, data.instanceFilter->getErrorText(), _T("DCI::%s::%d::InstanceFilter"), getOwnerName(), m_id);
+      unlock();
+      delete data.instanceFilter;
+      delete filteredInstances;
+      nxlog_debug_tag(DEBUG_TAG_DC_CONFIG, 5, _T("DCObject::filterInstanceList(%s [%u]): all instances removed because filtering script cannot be loaded"), m_name.cstr(), m_id);
+      getOwner()->sendPollerMsg(POLLER_ERROR _T("      Cannot load instance filtering script\r\n"));
+      return nullptr;
    }
    unlock();
 
    data.filteredInstances = filteredInstances;
    data.dco = this;
-   instances->forEach(FilterCallback, &data);
+   if (instances->forEach(FilterCallback, &data) == _STOP)
+   {
+      delete_and_null(filteredInstances);
+   }
    delete data.instanceFilter;
    return filteredInstances;
 }

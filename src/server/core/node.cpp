@@ -1737,7 +1737,7 @@ shared_ptr<Interface> Node::createInterfaceObject(InterfaceInfo *info, bool manu
          return iface;
       }
 
-      bool pass = true;
+      bool pass;
       vm->setUserData(this);
       NXSL_Value *argv = iface->createNXSLObject(vm);
       if (vm->run(1, &argv))
@@ -1746,8 +1746,10 @@ shared_ptr<Interface> Node::createInterfaceObject(InterfaceInfo *info, bool manu
       }
       else
       {
-         nxlog_debug_tag(DEBUG_TAG_NODE_INTERFACES, 4, _T("Node::createInterfaceObject(%s [%u]): hook script execution error: %s"), m_name, m_id, vm->getErrorText());
+         pass = false;  // Consider hook runtime error as blocking
          ReportScriptError(SCRIPT_CONTEXT_OBJECT, this, 0, vm->getErrorText(), _T("Hook::CreateInterface"));
+         nxlog_debug_tag(DEBUG_TAG_NODE_INTERFACES, 4, _T("Node::createInterfaceObject(%s [%u]): hook script execution error: %s"), m_name, m_id, vm->getErrorText());
+         sendPollerMsg(POLLER_ERROR _T("   Runtime error in interface creation hook script for interface \"%s\" (%s)\r\n"), iface->getName(), vm->getErrorText());
       }
       vm.destroy();
       nxlog_debug_tag(DEBUG_TAG_NODE_INTERFACES, 6, _T("Node::createInterfaceObject(%s [%u]): interface \"%s\" (ifIndex=%d) %s by filter"),
@@ -3958,7 +3960,7 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
          {
             m_state &= ~NSF_AGENT_UNREACHABLE;
             PostSystemEvent(EVENT_AGENT_OK, m_id, nullptr);
-            sendPollerMsg(POLLER_INFO _T("Connectivity with NetXMS agent restored\r\n"));
+            sendPollerMsg(POLLER_INFO _T("   Connectivity with NetXMS agent restored\r\n"));
             m_pollCountAgent = 0;
 
             // Reset connection time of all proxy connections so they can be re-established immediately
@@ -3983,7 +3985,7 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
       {
          m_state &= ~NSF_SNMP_UNREACHABLE;
          PostSystemEvent(EVENT_SNMP_OK, m_id, nullptr);
-         sendPollerMsg(POLLER_INFO _T("Connectivity with SNMP agent restored\r\n"));
+         sendPollerMsg(POLLER_INFO _T("   Connectivity with SNMP agent restored\r\n"));
          nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("ConfPoll(%s): Connectivity with SNMP agent restored"), m_name);
          m_pollCountSNMP = 0;
       }
@@ -4000,7 +4002,7 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
       {
          m_state &= ~NSF_SSH_UNREACHABLE;
          PostSystemEvent(EVENT_SSH_OK, m_id, nullptr);
-         sendPollerMsg(POLLER_INFO _T("SSH connectivity restored\r\n"));
+         sendPollerMsg(POLLER_INFO _T("   SSH connectivity restored\r\n"));
          nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("ConfPoll(%s): SSH connectivity restored"), m_name);
          m_pollCountSSH = 0;
       }
@@ -4017,7 +4019,7 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
       {
          m_state &= ~NSF_ETHERNET_IP_UNREACHABLE;
          PostSystemEvent(EVENT_ETHERNET_IP_OK, m_id, nullptr);
-         sendPollerMsg(POLLER_INFO _T("EtherNet/IP connectivity restored\r\n"));
+         sendPollerMsg(POLLER_INFO _T("   EtherNet/IP connectivity restored\r\n"));
          m_pollCountEtherNetIP = 0;
       }
 
@@ -5404,7 +5406,7 @@ bool Node::confPollSsh(uint32_t requestId)
    if ((m_flags & NF_DISABLE_SSH) || !m_ipAddress.isValidUnicast())
       return false;
 
-   sendPollerMsg(_T("Checking SSH connectivity...\r\n"));
+   sendPollerMsg(_T("   Checking SSH connectivity...\r\n"));
 
    bool success = checkSshConnection();
    bool modified = false;
@@ -5437,7 +5439,7 @@ bool Node::confPollSsh(uint32_t requestId)
    // Process result
    if (success)
    {
-      sendPollerMsg(POLLER_INFO _T("SSH connection is available\r\n"));
+      sendPollerMsg(POLLER_INFO _T("   SSH connection is available\r\n"));
       nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 7, _T("ConfPoll(%s): SSH connected"), m_name);
       if (!(m_capabilities & NC_IS_SSH))
       {
@@ -5447,7 +5449,7 @@ bool Node::confPollSsh(uint32_t requestId)
    }
    else
    {
-      sendPollerMsg(POLLER_ERROR _T("Cannot connect to SSH\r\n"));
+      sendPollerMsg(_T("   Cannot connect to SSH\r\n"));
       nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("ConfPoll(%s): SSH unreachable"), m_name);
    }
    return modified;
@@ -9770,7 +9772,7 @@ shared_ptr<Subnet> Node::createSubnet(InetAddress& baseAddr, bool syntheticMask)
    ScriptVMHandle vm = CreateServerScriptVM(_T("Hook::CreateSubnet"), self());
    if (vm.isValid())
    {
-      bool pass = true;
+      bool pass;
       vm->setUserData(this);
       NXSL_Value *argv = subnet->createNXSLObject(vm);
       if (vm->run(1, &argv))
@@ -9779,11 +9781,12 @@ shared_ptr<Subnet> Node::createSubnet(InetAddress& baseAddr, bool syntheticMask)
       }
       else
       {
+         pass = false;  // Consider script runtime error as blocking
          nxlog_debug(4, _T("Node::createSubnet(%s [%u]): hook script execution error: %s"), m_name, m_id, vm->getErrorText());
          ReportScriptError(SCRIPT_CONTEXT_OBJECT, this, 0, vm->getErrorText(), _T("Hook::CreateSubnet"));
       }
       vm.destroy();
-      DbgPrintf(6, _T("Node::createSubnet(%s [%u]): subnet \"%s\" %s by filter"),
+      nxlog_debug(6, _T("Node::createSubnet(%s [%u]): subnet \"%s\" %s by filter"),
                 m_name, m_id, subnet->getName(), pass ? _T("accepted") : _T("rejected"));
       if (!pass)
       {
@@ -9815,7 +9818,7 @@ shared_ptr<Subnet> Node::createSubnet(InetAddress& baseAddr, bool syntheticMask)
             }
             else
             {
-               DbgPrintf(1, _T("Node::createSubnet(): Inconsistent configuration - zone %d does not exist"), (int)m_zoneUIN);
+               nxlog_debug(1, _T("Node::createSubnet(): Inconsistent configuration - zone %d does not exist"), (int)m_zoneUIN);
             }
          }
          else

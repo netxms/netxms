@@ -865,17 +865,22 @@ uint32_t DataCollectionTarget::getThresholdSummary(NXCPMessage *msg, uint32_t ba
 /**
  * Process new DCI value
  */
-bool DataCollectionTarget::processNewDCValue(const shared_ptr<DCObject>& dco, time_t currTime, const TCHAR *itemValue, const shared_ptr<Table>& tableValue)
+bool DataCollectionTarget::processNewDCValue(const shared_ptr<DCObject>& dcObject, time_t currTime, const TCHAR *itemValue, const shared_ptr<Table>& tableValue)
 {
    bool updateStatus;
-	bool result = (dco->getType() == DCO_TYPE_ITEM) ?
-	         static_cast<DCItem&>(*dco).processNewValue(currTime, itemValue, &updateStatus) :
-	         static_cast<DCTable&>(*dco).processNewValue(currTime, tableValue, &updateStatus);
+	bool success = (dcObject->getType() == DCO_TYPE_ITEM) ?
+	         static_cast<DCItem&>(*dcObject).processNewValue(currTime, itemValue, &updateStatus) :
+	         static_cast<DCTable&>(*dcObject).processNewValue(currTime, tableValue, &updateStatus);
+	if (!success)
+	{
+      // value processing failed, convert to data collection error
+      dcObject->processNewError(false);
+	}
 	if (updateStatus)
 	{
-      calculateCompoundStatus(FALSE);
+      calculateCompoundStatus(false);
    }
-   return result;
+   return success;
 }
 
 /**
@@ -2109,10 +2114,17 @@ void DataCollectionTarget::doInstanceDiscovery(UINT32 requestId)
       {
          DbgPrintf(5, _T("DataCollectionTarget::doInstanceDiscovery(%s [%u]): read %d values"), m_name, m_id, instances->size());
          StringObjectMap<InstanceDiscoveryData> *filteredInstances = object->filterInstanceList(instances);
-         INSTANCE_DISCOVERY_CANCELLATION_CHECKPOINT;
-         if (updateInstances(object, filteredInstances, requestId))
-            changed = true;
-         delete filteredInstances;
+         if (filteredInstances != nullptr)
+         {
+            INSTANCE_DISCOVERY_CANCELLATION_CHECKPOINT;
+            if (updateInstances(object, filteredInstances, requestId))
+               changed = true;
+            delete filteredInstances;
+         }
+         else
+         {
+            sendPollerMsg(POLLER_ERROR _T("      Error while filtering instance list\r\n"));
+         }
          delete instances;
       }
       else

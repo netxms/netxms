@@ -296,11 +296,7 @@ void DataCollector(const shared_ptr<DCObject>& dcObject)
             case DCE_SUCCESS:
                if (dcObject->getStatus() == ITEM_STATUS_NOT_SUPPORTED)
                   dcObject->setStatus(ITEM_STATUS_ACTIVE, true);
-               if (!static_cast<DataCollectionTarget*>(dcObject->getOwner().get())->processNewDCValue(dcObject, currTime, buffer, table))
-               {
-                  // value processing failed, convert to data collection error
-                  dcObject->processNewError(false);
-               }
+               static_cast<DataCollectionTarget*>(dcObject->getOwner().get())->processNewDCValue(dcObject, currTime, buffer, table);
                break;
             case DCE_COLLECTION_ERROR:
                if (dcObject->getStatus() == ITEM_STATUS_NOT_SUPPORTED)

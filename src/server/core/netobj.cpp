@@ -2578,6 +2578,7 @@ void NetObj::executeHookScript(const TCHAR *hookName, uint32_t pollRequestId)
       nxlog_debug_tag(DEBUG_TAG_OBJECT_LIFECYCLE, 4, _T("NetObj::executeHookScript(%s [%u]): hook script \"%s\" execution error: %s"),
                 m_name, m_id, scriptName, vm->getErrorText());
       ReportScriptError(SCRIPT_CONTEXT_OBJECT, this, 0, vm->getErrorText(), scriptName);
+      sendPollerMsg(POLLER_ERROR _T("Runtime error in hook script %s (%s)\r\n"), scriptName, vm->getErrorText());
    }
    vm.destroy();
 }

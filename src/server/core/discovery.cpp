@@ -321,7 +321,8 @@ static bool AcceptNewNode(NewNodeData *newNodeData, const MacAddress& macAddr)
       }
       else
       {
-         nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNode(%s): hook script execution error: %s"), szIpAddr, hook->getErrorText());
+         stop = true;
+         nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNode(%s): rejected because of hook script execution error (%s)"), szIpAddr, hook->getErrorText());
       }
       delete hook;
       if (stop)
@@ -518,7 +519,7 @@ static bool AcceptNewNode(NewNodeData *newNodeData, const MacAddress& macAddr)
    }
 
    // Execute filter script
-   if (filterFlags & DFF_EXECUTE_SCRIPT)
+   if (result && (filterFlags & DFF_EXECUTE_SCRIPT))
    {
       TCHAR filterScript[MAX_CONFIG_VALUE];
       ConfigReadStr(_T("NetworkDiscovery.Filter.Script"), filterScript, MAX_CONFIG_VALUE, _T(""));
@@ -545,6 +546,7 @@ static bool AcceptNewNode(NewNodeData *newNodeData, const MacAddress& macAddr)
          }
          else
          {
+            result = false;   // Consider script runtime error to be a negative result
             nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNode(%s): Filter script execution error: %s"), szIpAddr, vm->getErrorText());
             ReportScriptError(SCRIPT_CONTEXT_OBJECT, nullptr, 0, vm->getErrorText(), filterScript);
          }
