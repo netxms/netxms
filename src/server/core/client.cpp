@@ -247,23 +247,18 @@ void ClientListenerThread()
  */
 void DumpClientSessions(ServerConsole *pCtx)
 {
-   static const TCHAR *pszCipherName[] = { _T("NONE"), _T("AES-256"), _T("BF-256"), _T("IDEA"), _T("3DES"), _T("AES-128"), _T("BF-128") };
-	static const TCHAR *pszClientType[] = { _T("DESKTOP"), _T("WEB"), _T("MOBILE"), _T("TABLET"), _T("APP") };
+   static const TCHAR *cipherName[] = { _T("NONE"), _T("AES-256"), _T("BF-256"), _T("IDEA"), _T("3DES"), _T("AES-128"), _T("BF-128") };
+	static const TCHAR *clientType[] = { _T("DESKTOP"), _T("WEB"), _T("MOBILE"), _T("TABLET"), _T("APP") };
 
-   ConsolePrintf(pCtx, _T("ID  CIPHER   CLTYPE  USER [CLIENT]\n"));
+   ConsolePrintf(pCtx, _T(" ID  | ADDRESS                        | WEB SERVER           | TYPE    | CIPHER   | USER                 | CLIENT\n"));
+   ConsolePrintf(pCtx, _T("-----+--------------------------------+----------------------+---------+----------+----------------------+----------------------------\n"));
    s_sessionListLock.readLock();
    auto it = s_sessions.begin();
    while(it.hasNext())
    {
       ClientSession *session = it.next();
-      TCHAR webServer[256] = _T("");
-      if (session->getClientType() == CLIENT_TYPE_WEB)
-      {
-         _sntprintf(webServer, 256, _T(" (%s)"), session->getWebServerAddress());
-      }
-      ConsolePrintf(pCtx, _T("%-3d %-8s %-7s %s%s [%s]\n"), session->getId(),
-            pszCipherName[session->getCipher() + 1], pszClientType[session->getClientType()],
-                    session->getSessionName(), webServer, session->getClientInfo());
+      ConsolePrintf(pCtx, _T(" %-3d | %-30s | %-20s | %-7s | %-8s | %-20s | %s\n"), session->getId(), session->getWorkstation(), session->getWebServerAddress(),
+         clientType[session->getClientType()], cipherName[session->getCipher() + 1], session->getLoginName(), session->getClientInfo());
    }
    int count = s_sessions.size();
    s_sessionListLock.unlock();

@@ -136,16 +136,17 @@ void MobileDeviceListenerThread()
 void DumpMobileDeviceSessions(CONSOLE_CTX pCtx)
 {
    int i, iCount;
-   static const TCHAR *pszStateName[] = { _T("init"), _T("idle"), _T("processing") };
-   static const TCHAR *pszCipherName[] = { _T("NONE"), _T("AES-256"), _T("BLOWFISH"), _T("IDEA"), _T("3DES"), _T("AES-128") };
+   static const TCHAR *stateName[] = { _T("init"), _T("idle"), _T("processing") };
+   static const TCHAR *cipherName[] = { _T("NONE"), _T("AES-256"), _T("BLOWFISH"), _T("IDEA"), _T("3DES"), _T("AES-128") };
 
-   ConsolePrintf(pCtx, _T("ID  CIPHER   USER [CLIENT]\n"));
+   ConsolePrintf(pCtx, _T(" ID  | CIPHER   | USER                 | CLIENT\n"));
+   ConsolePrintf(pCtx, _T("-----+----------+----------------------+----------------------------\n"));
    s_sessionListLock.readLock();
    for(i = 0, iCount = 0; i < MAX_DEVICE_SESSIONS; i++)
       if (s_sessionList[i] != NULL)
       {
-         ConsolePrintf(pCtx, _T("%-3d %-8s %s [%s]\n"), i,
-					        pszCipherName[s_sessionList[i]->getCipher() + 1],
+         ConsolePrintf(pCtx, _T(" %-3d | %-8s | %-20s | %s\n"), i,
+					        cipherName[s_sessionList[i]->getCipher() + 1],
                        s_sessionList[i]->getUserName(),
                        s_sessionList[i]->getClientInfo());
          iCount++;
