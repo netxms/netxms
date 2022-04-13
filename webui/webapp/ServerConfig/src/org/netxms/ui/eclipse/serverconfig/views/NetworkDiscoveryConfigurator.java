@@ -800,6 +800,8 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
       activeDiscoveryAddressList.setInput(config.getTargets().toArray());
       filterAddressList.setInput(config.getAddressFilter().toArray());
 
+      filterScript.setScriptName(config.getFilterScript());
+
       modified = false;
       firePropertyChange(PROP_DIRTY);
    }
