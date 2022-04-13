@@ -1243,9 +1243,9 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
       }
       else if (IsCommand(_T("SESSIONS"), szBuffer, 2))
       {
-         ConsoleWrite(pCtx, _T("\x1b[1mCLIENT SESSIONS\x1b[0m\n============================================================\n"));
+         ConsoleWrite(pCtx, _T("\n\x1b[1mCLIENT SESSIONS\x1b[0m\n"));
          DumpClientSessions(pCtx);
-         ConsoleWrite(pCtx, _T("\n\x1b[1mMOBILE DEVICE SESSIONS\x1b[0m\n============================================================\n"));
+         ConsoleWrite(pCtx, _T("\n\x1b[1mMOBILE DEVICE SESSIONS\x1b[0m\n"));
          DumpMobileDeviceSessions(pCtx);
       }
       else if (IsCommand(_T("SIZEOF"), szBuffer, 4))
