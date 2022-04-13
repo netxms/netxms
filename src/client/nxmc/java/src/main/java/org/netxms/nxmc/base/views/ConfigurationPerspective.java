@@ -37,6 +37,7 @@ import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.services.ConfigurationPerspectiveElement;
 import org.netxms.nxmc.tools.ImageCache;
+import org.netxms.nxmc.tools.MessageDialogHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
@@ -179,15 +180,15 @@ public class ConfigurationPerspective extends Perspective
          return; //do nothing for reselection
 
       ConfigurationView currentView = (ConfigurationView)getMainView();
-      if (currentView != null && currentView.isModified())
+      if ((currentView != null) && currentView.isModified())
       {
-         int result = currentView.promptToSaveOnClose();
-         if (result == ConfigurationView.CANCEL)
+         int choice = MessageDialogHelper.openQuestionWithCancel(getWindow().getShell(), i18n.tr("Unsaved Changes"), currentView.getSaveOnExitPrompt());
+         if (choice == MessageDialogHelper.CANCEL)
          {
             navigationView.setSelection(previousSelectedElement);
-            return; //Do not change view
+            return; // Do not change view
          }
-         else if (result == ConfigurationView.YES)
+         if (choice == MessageDialogHelper.YES)
          {
             currentView.save();
          }

@@ -26,7 +26,6 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.action.ToolBarManager;
-import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -52,7 +51,6 @@ import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.ConfigurationView;
 import org.netxms.nxmc.base.widgets.LabeledText;
 import org.netxms.nxmc.localization.LocalizationHelper;
-import org.netxms.nxmc.modules.agentmanagement.dialogs.SaveStoredConfigDialog;
 import org.netxms.nxmc.modules.agentmanagement.widgets.AgentConfigEditor;
 import org.netxms.nxmc.modules.nxsl.widgets.ScriptEditor;
 import org.netxms.nxmc.resources.ResourceManager;
@@ -247,16 +245,15 @@ public class ServerStoredAgentConfigEditorView extends ConfigurationView
 
       if (modified)
       {
-         SaveStoredConfigDialog dlg = new SaveStoredConfigDialog(getWindow().getShell());
-         int rc = dlg.open();
-         if (rc == SaveStoredConfigDialog.SAVE_ID)
+         int choice = MessageDialogHelper.openQuestionWithCancel(getWindow().getShell(), i18n.tr("Unsaved Changes"), getSaveOnExitPrompt());
+         if (choice == MessageDialogHelper.YES)
          {
             intermediateSave();
             modified = false;
             actionSave.setEnabled(false);
             return;
          }
-         if (rc == SaveStoredConfigDialog.CANCEL)
+         if (choice == MessageDialogHelper.CANCEL)
          {
             reselection = true;
             configList.setSelection(previousSelection);
@@ -586,16 +583,13 @@ public class ServerStoredAgentConfigEditorView extends ConfigurationView
       }.start();
    }
 
-   /** 
-    * Open save dialog on close
+   /**
+    * @see org.netxms.nxmc.base.views.ConfigurationView#getSaveOnExitPrompt()
     */
    @Override
-   protected int promptToSaveOnClose()
+   public String getSaveOnExitPrompt()
    {
-      SaveStoredConfigDialog dlg = new SaveStoredConfigDialog(getWindow().getShell());
-      int rc = dlg.open();
-      modified = (rc != SaveStoredConfigDialog.SAVE_ID);
-      return (rc == IDialogConstants.CANCEL_ID) ? CANCEL : ((rc == SaveStoredConfigDialog.DISCARD_ID) ? NO : YES);
+      return i18n.tr("There are unsaved changes to configuration file. Do you want to save them?");
    }
 
    /**

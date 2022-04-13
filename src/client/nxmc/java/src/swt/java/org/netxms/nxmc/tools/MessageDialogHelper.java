@@ -35,6 +35,22 @@ import org.eclipse.swt.widgets.Shell;
  */
 public class MessageDialogHelper
 {
+   /**
+    * Status code returned by <code>openQuestionWithCancel</code> if the user pressed the <b>Yes</b> button.
+    */
+   public static final int YES = 0;
+
+   /**
+    * Status code returned by <code>openQuestionWithCancel</code> if the user pressed the <b>No</b> button.
+    */
+   public static final int NO = 1;
+
+   /**
+    * Status code returned by <code>openQuestionWithCancel</code> if the user pressed the <b>Cancel</b> button or closed dialog by
+    * any other means.
+    */
+   public static final int CANCEL = 2;
+
 	/**
 	 * Convenience method to open a simple dialog as specified by the
 	 * <code>kind</code> flag.
@@ -129,13 +145,14 @@ public class MessageDialogHelper
     * @param parent the parent shell of the dialog, or <code>null</code> if none
     * @param title the dialog's title, or <code>null</code> if none
     * @param message the message
-    * @return 0 if the user presses the Yes button, 1 if the user presses the No button, and 2 otherwise
+    * @return <code>MessageDialogHelper.YES</code> if the user presses the <b>Yes</b> button, <code>MessageDialogHelper.NO</code> if
+    *         the user presses the <b>No</b> button, and <code>MessageDialogHelper.CANCEL</code> otherwise
     */
    public static int openQuestionWithCancel(Shell parent, String title, String message)
    {
       int selection = MessageDialog.open(MessageDialog.QUESTION_WITH_CANCEL, parent, title, message, SWT.SHEET,
             new String[] { IDialogConstants.YES_LABEL, IDialogConstants.NO_LABEL, IDialogConstants.CANCEL_LABEL });
-      return (selection == SWT.DEFAULT) ? 2 : selection;
+      return (selection == SWT.DEFAULT) ? CANCEL : selection;
    }
 
 	/**

@@ -43,6 +43,7 @@ import org.netxms.nxmc.keyboard.KeyBindingManager;
 import org.netxms.nxmc.keyboard.KeyStroke;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.resources.SharedIcons;
+import org.netxms.nxmc.tools.MessageDialogHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
@@ -362,14 +363,30 @@ public class ViewStack extends Composite
    }
 
    /**
-    * Pop view (will dispose current view and switch to next in stack).
+    * Pop view (will dispose current view and switch to next in stack). Thes method may return failure if view is modified and user
+    * selected "cancel" as an option.
+    * 
+    * @return true if view at the top successfully removed
     */
-   public void popView()
+   public boolean popView()
    {
       if (views.empty())
-         return;
+         return true;
 
       View view = views.pop();
+      if ((view instanceof ConfigurationView) && ((ConfigurationView)view).isModified())
+      {
+         int choice = MessageDialogHelper.openQuestionWithCancel(view.getWindow().getShell(), i18n.tr("Unsaved Changes"), ((ConfigurationView)view).getSaveOnExitPrompt());
+         if (choice == MessageDialogHelper.CANCEL)
+         {
+            views.push(view);
+            return false; // Do not change view
+         }
+         if (choice == MessageDialogHelper.YES)
+         {
+            ((ConfigurationView)view).save();
+         }
+      }
       view.dispose();
       int count = viewList.getItemCount();
       viewList.getItem(--count).dispose();
@@ -378,7 +395,7 @@ public class ViewStack extends Composite
 
       view = getView(); // New current view
       if (view == null)
-         return;
+         return true;
 
       viewToolBarManager.removeAll();
       view.fillLocalToolbar(viewToolBarManager);
@@ -395,6 +412,7 @@ public class ViewStack extends Composite
 
       view.getViewArea().setSize(viewArea.getSize());
       view.activate();
+      return true;
    }
 
    /**
@@ -408,7 +426,8 @@ public class ViewStack extends Composite
          return;
 
       while(getView() != view)
-         popView();
+         if (!popView())
+            break;
    }
 
    /**

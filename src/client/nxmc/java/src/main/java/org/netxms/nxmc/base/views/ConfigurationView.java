@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Raden Solutions
+ * Copyright (C) 2003-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,30 +19,16 @@
 package org.netxms.nxmc.base.views;
 
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.netxms.nxmc.localization.LocalizationHelper;
+import org.xnap.commons.i18n.I18n;
 
 /**
  * Configuration view
  */
 public abstract class ConfigurationView extends View
-{   
-   /**
-    * Standard return code constant (value 0) indicating that the view needs to be
-    * saved.
-    */
-   public static int YES = 0;
+{
+   private I18n i18n = LocalizationHelper.getI18n(ConfigurationView.class);
 
-   /**
-    * Standard return code constant (value 1) indicating that the view does not
-    * need to be saved and the part should be closed.
-    */
-   public static int NO = 1;
-
-   /**
-    * Standard return code constant (value 2) indicating that the view does not
-    * need to be saved and the view should not be closed.
-    */
-   public static int CANCEL = 2;
-   
    /**
     * Default constructor.
     */
@@ -77,12 +63,14 @@ public abstract class ConfigurationView extends View
     */
    public abstract void save();
 
-   /** 
-    * Open save dialog on close and return if save is required
-    * Default implementation returns that save is not required
+   /**
+    * Get text prompt to be displayed if view has unsaved changes and user attempts to close it. Default implementation returns
+    * generic "unsaved changes" text.
+    * 
+    * @return text prompt to be displayed if view has unsaved changes and user attempts to close it
     */
-   protected int promptToSaveOnClose()
+   public String getSaveOnExitPrompt()
    {
-      return NO;
+      return i18n.tr("There are unsaved changes in current view. Do you want to save them?");
    }
 }

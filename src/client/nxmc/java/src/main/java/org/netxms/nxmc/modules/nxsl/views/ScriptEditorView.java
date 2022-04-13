@@ -367,7 +367,22 @@ public class ScriptEditorView extends ConfigurationView
    @Override
    public void save()
    {
-      saveScript();
+      // This method normally called only whan save is requested on view closure,
+      // so we should skip compilation phase and only save script as is
+      final String source = editor.getText();
+      new Job(i18n.tr("Save script"), null) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            session.modifyScript(scriptId, scriptName, source);
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return i18n.tr("Cannot save script");
+         }
+      }.start();
    }
 
    /**

@@ -860,18 +860,14 @@ public class NetworkCredentialsEditor extends ConfigurationView
    }
 
    /**
-    * @see org.netxms.nxmc.base.views.ConfigurationView#promptToSaveOnClose()
+    * @see org.netxms.nxmc.base.views.ConfigurationView#getSaveOnExitPrompt()
     */
    @Override
-   protected int promptToSaveOnClose()
+   public String getSaveOnExitPrompt()
    {
-      if (!modified)
-         return NO;
-
-      // Message dialog will return button index, and they are matched to YES/NO/CANCEL constants in ConfigurationView class
-      return MessageDialogHelper.openQuestionWithCancel(getWindow().getShell(), i18n.tr("Save Network Credentials"),
-            bothModified ? i18n.tr("Network credentials are modified by you and other users. Do you want to save your changes and overwrite other users' changes?") :
-                  i18n.tr("Network credentials are modified. Do you want to save your changes?"));
+      return bothModified ?
+            i18n.tr("Network credentials are modified by you and other users. Do you want to save your changes and overwrite other users' changes?") :
+            i18n.tr("Network credentials are modified. Do you want to save your changes?");
    }
 
    /**
