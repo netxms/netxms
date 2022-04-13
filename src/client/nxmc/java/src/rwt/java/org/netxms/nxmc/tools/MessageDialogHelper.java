@@ -36,6 +36,22 @@ import org.eclipse.swt.widgets.Shell;
  */
 public class MessageDialogHelper
 {
+   /**
+    * Status code returned by <code>openQuestionWithCancel</code> if the user pressed the <b>Yes</b> button.
+    */
+   public static final int YES = 0;
+
+   /**
+    * Status code returned by <code>openQuestionWithCancel</code> if the user pressed the <b>No</b> button.
+    */
+   public static final int NO = 1;
+
+   /**
+    * Status code returned by <code>openQuestionWithCancel</code> if the user pressed the <b>Cancel</b> button or closed dialog by
+    * any other means.
+    */
+   public static final int CANCEL = 2;
+
 	/**
 	 * Convenience method to open a simple dialog as specified by the
 	 * <code>kind</code> flag.
@@ -57,7 +73,7 @@ public class MessageDialogHelper
 	{
 		return MessageDialog.open(kind, parent, title, message, SWT.SHEET);
 	}
-	
+
 	/**
 	 * Convenience method to open a simple confirm (OK/Cancel) dialog.
 	 * 
@@ -126,6 +142,23 @@ public class MessageDialogHelper
 		return open(MessageDialog.QUESTION, parent, title, message);
 	}
 
+   /**
+    * Convenience method to open a simple Yes/No/Cancel question dialog.
+    * 
+    * @param parent the parent shell of the dialog, or <code>null</code> if none
+    * @param title the dialog's title, or <code>null</code> if none
+    * @param message the message
+    * @return <code>MessageDialogHelper.YES</code> if the user presses the <b>Yes</b> button, <code>MessageDialogHelper.NO</code> if
+    *         the user presses the <b>No</b> button, and <code>MessageDialogHelper.CANCEL</code> otherwise
+    */
+   public static int openQuestionWithCancel(Shell parent, String title, String message)
+   {
+      MessageDialog dialog = new MessageDialog(parent, title, null, message, MessageDialog.QUESTION, new String[] { JFaceResources.getString(IDialogLabelKeys.YES_LABEL_KEY),
+            JFaceResources.getString(IDialogLabelKeys.NO_LABEL_KEY), JFaceResources.getString(IDialogLabelKeys.CANCEL_LABEL_KEY) }, 0);
+      int selection = dialog.open();
+      return (selection == SWT.DEFAULT) ? CANCEL : selection;
+   }
+
 	/**
 	 * Convenience method to open a standard warning dialog.
 	 * 
@@ -155,7 +188,7 @@ public class MessageDialogHelper
             message);
       return msg.openMsg();
    }
-   
+
    /**
     * Convenience method to open a standard one button (OK) warning dialog with a check box
     * to remember selection. 
@@ -219,7 +252,7 @@ public class MessageDialogHelper
 	      
          return container;	      
 	   }
-	   
+
 	   /**
 	    * @return MessageReturn object with dialog exit states
 	    */

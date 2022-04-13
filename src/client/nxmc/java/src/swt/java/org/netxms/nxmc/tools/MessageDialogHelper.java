@@ -179,9 +179,7 @@ public class MessageDialogHelper
     */
    public static DialogData openWarningWithCheckbox(Shell parent, String title, String label, String message)
    {
-      MessageDialogWithCheckbox msg = new MessageDialogWithCheckbox(
-                                                MessageDialog.WARNING, new String[] { IDialogConstants.OK_LABEL,
-                                                IDialogConstants.CANCEL_LABEL }, parent, title, label, message);
+      MessageDialogWithCheckbox msg = new MessageDialogWithCheckbox(MessageDialog.WARNING, new String[] { IDialogConstants.OK_LABEL, IDialogConstants.CANCEL_LABEL }, parent, title, label, message);
       return msg.openMsg();
    }
 
@@ -197,20 +195,18 @@ public class MessageDialogHelper
     */
    public static DialogData openOneButtonWarningWithCheckbox(Shell parent, String title, String label, String message)
    {
-      MessageDialogWithCheckbox msg = new MessageDialogWithCheckbox(
-                                                MessageDialog.WARNING, new String[] { IDialogConstants.OK_LABEL}, 
-                                                parent, title, label, message);
+      MessageDialogWithCheckbox msg = new MessageDialogWithCheckbox(MessageDialog.WARNING, new String[] { IDialogConstants.OK_LABEL }, parent, title, label, message);
       return msg.openMsg();
    }
 
-	/**
-	 * Helper class to show message dialog with check box (for example to add "do not show again" option)
-	 */
-	private static class MessageDialogWithCheckbox extends MessageDialog
-	{
+   /**
+    * Helper class to show message dialog with check box (for example to add "do not show again" option)
+    */
+   private static class MessageDialogWithCheckbox extends MessageDialog
+   {
 	   private String label;
 	   private boolean saveSelection = false;
-	   
+
 	   public MessageDialogWithCheckbox(int kind, String[] buttonLabels, Shell parent, String title, String label, String message)
 	   {
 	      super(parent, title, null, message, kind, buttonLabels, 0);
