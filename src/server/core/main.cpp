@@ -121,7 +121,7 @@ void PollManager(Condition *startCondition);
 void ClientListenerThread();
 void MobileDeviceListenerThread();
 void ISCListener();
-void LocalAdminListener();
+void LocalAdminListenerThread();
 void SNMPTrapReceiver();
 void BeaconPoller();
 void JobManagerThread();
@@ -891,7 +891,7 @@ BOOL NXCORE_EXPORTABLE Initialize()
 
    // Start local administrative interface listener if required
    if (g_flags & AF_ENABLE_LOCAL_CONSOLE)
-      ThreadCreate(LocalAdminListener);
+      ThreadCreate(LocalAdminListenerThread);
 
 	// Wait for database password if needed
 	GetDatabasePassword();

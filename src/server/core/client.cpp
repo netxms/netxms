@@ -178,7 +178,7 @@ protected:
    virtual bool isStopConditionReached();
 
 public:
-   ClientListener(UINT16 port) : StreamSocketListener(port) { setName(_T("Clients")); }
+   ClientListener(uint16_t port) : StreamSocketListener(port) { setName(_T("Clients")); }
 };
 
 /**

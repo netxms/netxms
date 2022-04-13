@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,7 +21,10 @@
 **/
 
 #include "nxcore.h"
+#include <socket_listener.h>
 #include <local_admin.h>
+
+#define DEBUG_TAG _T("localadmin")
 
 /**
  * Max message size
@@ -36,9 +39,9 @@ extern Condition g_dbPasswordReady;
 /**
  * Request processing thread
  */
-static THREAD_RESULT THREAD_CALL ProcessingThread(void *pArg)
+static THREAD_RESULT THREAD_CALL ProcessingThread(void *arg)
 {
-   SOCKET sock = CAST_FROM_POINTER(pArg, SOCKET);
+   SOCKET sock = CAST_FROM_POINTER(arg, SOCKET);
 
    SocketConsole console(sock);
    SocketMessageReceiver receiver(sock, 4096, MAX_MSG_SIZE);
@@ -48,12 +51,12 @@ static THREAD_RESULT THREAD_CALL ProcessingThread(void *pArg)
       NXCPMessage *request = receiver.readMessage(INFINITE, &result);
 
       // Receive error
-      if (request == NULL)
+      if (request == nullptr)
       {
          if (result == MSGRECV_CLOSED)
-            nxlog_debug(5, _T("LocalServerConsole: connection closed"));
+            nxlog_debug_tag(DEBUG_TAG, 5, _T("Local administration interface connection closed"));
          else
-            nxlog_debug(5, _T("LocalServerConsole: message receiving error (%s)"), AbstractMessageReceiver::resultToText(result));
+            nxlog_debug_tag(DEBUG_TAG, 5, _T("Local administration interface message receiving error (%s)"), AbstractMessageReceiver::resultToText(result));
          break;
       }
 
@@ -96,107 +99,57 @@ static THREAD_RESULT THREAD_CALL ProcessingThread(void *pArg)
    }
 
 close_session:
-   shutdown(sock, 2);
+   shutdown(sock, SHUT_RDWR);
    closesocket(sock);
    return THREAD_OK;
 }
 
 /**
+ * Client listener class
+ */
+class LocalAdminListener : public StreamSocketListener
+{
+protected:
+   virtual ConnectionProcessingResult processConnection(SOCKET s, const InetAddress& peer);
+   virtual bool isStopConditionReached();
+
+public:
+   LocalAdminListener() : StreamSocketListener(LOCAL_ADMIN_PORT) { setName(_T("LocalAdmin")); }
+};
+
+/**
+ * Listener stop condition
+ */
+bool LocalAdminListener::isStopConditionReached()
+{
+   return IsShutdownInProgress();
+}
+
+/**
+ * Process incoming connection
+ */
+ConnectionProcessingResult LocalAdminListener::processConnection(SOCKET s, const InetAddress& peer)
+{
+   ThreadCreate(ProcessingThread, 0, CAST_TO_POINTER(s, void *));
+   return CPR_BACKGROUND;
+}
+
+/**
  * Local administrative interface listener thread
  */
-void LocalAdminListener()
+void LocalAdminListenerThread()
 {
-   ThreadSetName("DebugConsole");
+   ThreadSetName("LocalAdminLsnr");
 
-   // Create socket
-   SOCKET sock;
-   if ((sock = CreateSocket(AF_INET, SOCK_STREAM, 0)) == INVALID_SOCKET)
-   {
-      TCHAR buffer[1024];
-      nxlog_write(NXLOG_ERROR, _T("Unable to create socket for local admin interface (%s)"), GetLastSocketErrorText(buffer, 1024));
+   LocalAdminListener listener;
+   listener.setListenAddress(_T("127.0.0.1"));
+   if (!listener.initialize())
       return;
-   }
 
-	SetSocketExclusiveAddrUse(sock);
-	SetSocketReuseFlag(sock);
-#ifndef _WIN32
-   fcntl(sock, F_SETFD, fcntl(sock, F_GETFD) | FD_CLOEXEC);
-#endif
+   nxlog_debug_tag(DEBUG_TAG, 1, _T("Local administration interface listener initialized"));
 
-   // Fill in local address structure
-   struct sockaddr_in servAddr;
-   memset(&servAddr, 0, sizeof(struct sockaddr_in));
-   servAddr.sin_family = AF_INET;
-   servAddr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
-   servAddr.sin_port = htons(LOCAL_ADMIN_PORT);
+   listener.mainLoop();
+   listener.shutdown();
 
-   // Bind socket
-   if (bind(sock, (struct sockaddr *)&servAddr, sizeof(struct sockaddr_in)) != 0)
-   {
-      TCHAR buffer[1024];
-      nxlog_write(NXLOG_ERROR, _T("Unable to bind socket for local admin interface (%s)"), GetLastSocketErrorText(buffer, 1024));
-      closesocket(sock);
-      return;
-   }
-
-   // Set up queue
-   listen(sock, SOMAXCONN);
-
-   nxlog_debug(1, _T("Local administration interface listener started"));
-
-   // Wait for connection requests
-   int errorCount = 0;
-   while(!IsShutdownInProgress())
-   {
-      SocketPoller sp;
-      sp.add(sock);
-      int pollError = sp.poll(2000);
-      if (pollError <= 0)
-      {
-         if (pollError < 0)
-         {
-            if (SleepAndCheckForShutdown(30))
-               break;
-         }
-         continue;
-      }
-
-      SOCKET sockClient;
-      socklen_t iSize = sizeof(struct sockaddr_in);
-      if ((sockClient = accept(sock, (struct sockaddr *)&servAddr, &iSize)) == -1)
-      {
-         if (IsShutdownInProgress())
-         {
-            closesocket(sockClient);
-            break;
-         }
-#ifdef _WIN32
-         int error = WSAGetLastError();
-         if (error != WSAEINTR)
-#else
-         int error = errno;
-         if (error != EINTR)
-#endif
-         {
-            TCHAR buffer[1024];
-            nxlog_write(NXLOG_ERROR, _T("Unable to accept incoming connection (%s)"), GetLastSocketErrorText(buffer, 1024));
-         }
-         errorCount++;
-         if (errorCount > 1000)
-         {
-            nxlog_write(NXLOG_WARNING, _T("Too many consecutive errors on accept() call"));
-            errorCount = 0;
-         }
-         ThreadSleepMs(500);
-         continue;
-      }
-
-      errorCount = 0;     // Reset consecutive errors counter
-
-      // Create new session structure and threads
-      ThreadCreate(ProcessingThread, 0, CAST_TO_POINTER(sockClient, void *));
-   }
-
-   closesocket(sock);
-   nxlog_debug(1, _T("Local administration interface listener stopped"));
+   nxlog_debug_tag(DEBUG_TAG, 1, _T("Local administration interface listener stopped"));
 }

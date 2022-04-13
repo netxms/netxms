@@ -53,6 +53,8 @@ job.manager	Job manager
 
 housekeeper	Housekeeper messages
 
+localadmin	Local administration interface
+
 logs		Server log access
 
 logwatch.*	Messages from log monitoring library
