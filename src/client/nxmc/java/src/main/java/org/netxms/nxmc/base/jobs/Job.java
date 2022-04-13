@@ -336,6 +336,31 @@ public abstract class Job
    }
 
    /**
+    * A hook method indicating that this job is running and {@link #cancel()}
+    * is being called for the first time.
+    * <p>
+    * Subclasses may override this method to perform additional work when
+    * a cancelation request is made.  This default implementation does nothing.
+    */
+   public void cancel() 
+   {
+      canceling();
+      monitor.setCanceled(true);
+   }
+
+   /**
+    * A hook method indicating that this job is running and {@link #cancel()}
+    * is being called for the first time.
+    * <p>
+    * Subclasses may override this method to perform additional work when
+    * a cancelation request is made.  This default implementation does nothing.
+    */
+   protected void canceling() 
+   {
+      //default implementation does nothing
+   }
+
+   /**
     * Internal progress monitor
     */
    private class JobProgressMonitor implements IProgressMonitor

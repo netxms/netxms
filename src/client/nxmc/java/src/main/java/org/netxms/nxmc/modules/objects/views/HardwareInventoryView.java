@@ -123,6 +123,15 @@ public class HardwareInventoryView extends ObjectView
       manager.add(actionExportToCsv);
       manager.add(new Separator());
    }
+   
+   /**
+    * Refresh
+    */
+   @Override
+   public void refresh()
+   {
+      inventoryWidget.refresh();      
+   }
 
    /**
     * @see org.netxms.nxmc.modules.objects.views.ObjectView#onObjectChange(org.netxms.client.objects.AbstractObject)

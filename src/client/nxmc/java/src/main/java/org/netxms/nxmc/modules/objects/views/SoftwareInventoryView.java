@@ -123,6 +123,15 @@ public class SoftwareInventoryView extends ObjectView
    {
       manager.add(actionExportAllToCsv);
       manager.add(new Separator());
+   }   
+   
+   /**
+    * Refresh
+    */
+   @Override
+   public void refresh()
+   {
+      inventoryWidget.refresh();      
    }
 
    /**

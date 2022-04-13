@@ -753,7 +753,8 @@ public abstract class BaseDataCollectionView extends ObjectView
    public void activate()
    {
       super.activate();
-      refresh();
+      if (getObject() == null && getObject() instanceof DataCollectionTarget)
+         refresh();
    }
 
    /**

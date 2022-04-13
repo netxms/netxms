@@ -48,6 +48,7 @@ import org.netxms.nxmc.modules.businessservice.views.BusinessServiceAvailability
 import org.netxms.nxmc.modules.businessservice.views.BusinessServiceChecksView;
 import org.netxms.nxmc.modules.datacollection.views.DataCollectionView;
 import org.netxms.nxmc.modules.datacollection.views.SummaryDataCollectionView;
+import org.netxms.nxmc.modules.filemanager.views.AgentFileManager;
 import org.netxms.nxmc.modules.datacollection.views.PerformanceView;
 import org.netxms.nxmc.modules.networkmaps.views.PredefinedMap;
 import org.netxms.nxmc.modules.objects.views.ChassisView;
@@ -126,6 +127,7 @@ public abstract class ObjectsPerspective extends Perspective
       addMainView(new DataCollectionView());
       addMainView(new Dot1xStatusView());
       addMainView(new EntityMIBView());
+      addMainView(new AgentFileManager());
       addMainView(new HardwareInventoryView());
       addMainView(new InterfacesView());
       addMainView(new MaintenanceJournalView());
