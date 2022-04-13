@@ -1594,7 +1594,7 @@ stop_handler:
  */
 THREAD_RESULT NXCORE_EXPORTABLE THREAD_CALL Main(void *pArg)
 {
-	nxlog_write(NXLOG_INFO, _T("NetXMS Server started"));
+	nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_STARTUP, _T("NetXMS Server started"));
 
 	if (IsStandalone())
    {
