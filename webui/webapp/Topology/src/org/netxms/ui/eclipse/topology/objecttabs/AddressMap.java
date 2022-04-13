@@ -27,6 +27,7 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Subnet;
 import org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab;
 import org.netxms.ui.eclipse.tools.VisibilityValidator;
+import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.topology.widgets.SubnetAddressMap;
 
 /**
@@ -55,6 +56,8 @@ public class AddressMap extends ObjectTab
 		scroller.setContent(addressMap);
 		scroller.setExpandVertical(true);
 		scroller.setExpandHorizontal(true);
+      WidgetHelper.setScrollBarIncrement(scroller, SWT.VERTICAL, 20);
+      WidgetHelper.setScrollBarIncrement(scroller, SWT.HORIZONTAL, 20);
 		scroller.addControlListener(new ControlAdapter() {
 			public void controlResized(ControlEvent e)
 			{

@@ -72,6 +72,7 @@ import org.netxms.ui.eclipse.epp.widgets.helpers.ImageFactory;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
+import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.FilterText;
 
 /**
@@ -194,7 +195,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
       scroller.setContent(dataArea);
       scroller.setExpandVertical(true);
       scroller.setExpandHorizontal(true);
-      scroller.getVerticalBar().setIncrement(20);
+      WidgetHelper.setScrollBarIncrement(scroller, SWT.VERTICAL, 20);
       scroller.addControlListener(new ControlAdapter() {
          public void controlResized(ControlEvent e)
          {

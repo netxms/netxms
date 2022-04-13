@@ -290,9 +290,9 @@ public class AlarmDetails extends ViewPart
 			}
 		};
 		textContainer.setExpandHorizontal(true);
-		textContainer.getHorizontalBar().setIncrement(20);
+      WidgetHelper.setScrollBarIncrement(textContainer, SWT.HORIZONTAL, 20);
 		textContainer.setExpandVertical(true);
-		textContainer.getVerticalBar().setIncrement(20);
+      WidgetHelper.setScrollBarIncrement(textContainer, SWT.VERTICAL, 20);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;

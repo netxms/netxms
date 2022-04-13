@@ -130,6 +130,7 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
       ScrolledComposite scroller = new ScrolledComposite(parent, SWT.V_SCROLL);
       scroller.setExpandHorizontal(true);
       scroller.setExpandVertical(true);
+      WidgetHelper.setScrollBarIncrement(scroller, SWT.VERTICAL, 20);
       scroller.addControlListener(new ControlAdapter() {
          public void controlResized(ControlEvent e)
          {

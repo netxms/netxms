@@ -46,6 +46,7 @@ import org.netxms.ui.eclipse.objectview.objecttabs.elements.OverviewPageElement;
 import org.netxms.ui.eclipse.objectview.views.TabbedObjectView;
 import org.netxms.ui.eclipse.tools.ViewRefreshController;
 import org.netxms.ui.eclipse.tools.VisibilityValidator;
+import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
  * Object overview tab
@@ -68,7 +69,7 @@ public class ObjectOverview extends ObjectTab
 		scroller = new ScrolledComposite(parent, SWT.V_SCROLL);
 		scroller.setExpandVertical(true);
 		scroller.setExpandHorizontal(true);
-		scroller.getVerticalBar().setIncrement(20);
+      WidgetHelper.setScrollBarIncrement(scroller, SWT.VERTICAL, 20);
 		scroller.addControlListener(new ControlAdapter() {
 			public void controlResized(ControlEvent e)
 			{

@@ -70,6 +70,7 @@ import org.netxms.ui.eclipse.snmp.views.helpers.NetworkCredentials;
 import org.netxms.ui.eclipse.snmp.views.helpers.SnmpUsmCredentialsLabelProvider;
 import org.netxms.ui.eclipse.snmp.views.helpers.SshCredentialsLabelProvider;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
+import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.CompositeWithMessageBar;
 import org.netxms.ui.eclipse.widgets.MessageBar;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
@@ -138,6 +139,7 @@ public class NetworkCredentialsEditor extends ViewPart implements ISaveablePart
       ScrolledComposite scroller = new ScrolledComposite(contentWrapper.getContent(), SWT.V_SCROLL);
       scroller.setExpandHorizontal(true);
       scroller.setExpandVertical(true);
+      WidgetHelper.setScrollBarIncrement(scroller, SWT.VERTICAL, 20);
       scroller.addControlListener(new ControlAdapter() {
          public void controlResized(ControlEvent e)
          {

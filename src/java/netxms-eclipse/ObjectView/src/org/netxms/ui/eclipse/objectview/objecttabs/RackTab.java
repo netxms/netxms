@@ -43,6 +43,7 @@ import org.netxms.ui.eclipse.console.resources.ThemeEngine;
 import org.netxms.ui.eclipse.objectbrowser.api.ObjectContextMenu;
 import org.netxms.ui.eclipse.objectview.widgets.RackWidget;
 import org.netxms.ui.eclipse.objectview.widgets.helpers.ElementSelectionListener;
+import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
  * "Rack" tab
@@ -89,7 +90,7 @@ public class RackTab extends ObjectTab implements ISelectionProvider
 	   scroller.setContent(content);
       scroller.setExpandHorizontal(true);
       scroller.setExpandVertical(true);
-      scroller.getHorizontalBar().setIncrement(20);
+      WidgetHelper.setScrollBarIncrement(scroller, SWT.HORIZONTAL, 20);
       scroller.addControlListener(new ControlAdapter() {
          public void controlResized(ControlEvent e)
          {

@@ -66,6 +66,7 @@ import org.netxms.nxmc.modules.serverconfig.views.helpers.SshCredentialsLabelPro
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
 import org.netxms.nxmc.tools.MessageDialogHelper;
+import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -128,7 +129,7 @@ public class NetworkCredentialsEditor extends ConfigurationView
       ScrolledComposite scroller = new ScrolledComposite(parent, SWT.V_SCROLL);
       scroller.setExpandHorizontal(true);
       scroller.setExpandVertical(true);
-      scroller.getVerticalBar().setIncrement(20);
+      WidgetHelper.setScrollBarIncrement(scroller, SWT.VERTICAL, 20);
       scroller.addControlListener(new ControlAdapter() {
          public void controlResized(ControlEvent e)
          {

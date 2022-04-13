@@ -55,6 +55,7 @@ import org.netxms.ui.eclipse.perfview.PerfTabGraphSettings;
 import org.netxms.ui.eclipse.perfview.objecttabs.internal.PerfTabGraph;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.VisibilityValidator;
+import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.AnimatedImage;
 
 /**
@@ -90,7 +91,7 @@ public class PerformanceTab extends ObjectTab
 		scroller.setContent(chartArea);
 		scroller.setExpandVertical(true);
 		scroller.setExpandHorizontal(true);
-		//scroller.getVerticalBar().setIncrement(20);
+      WidgetHelper.setScrollBarIncrement(scroller, SWT.VERTICAL, 20);
 		scroller.addControlListener(new ControlAdapter() {
 			public void controlResized(ControlEvent e)
 			{

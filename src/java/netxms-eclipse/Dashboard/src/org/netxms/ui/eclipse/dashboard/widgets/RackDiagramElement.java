@@ -51,6 +51,7 @@ import org.netxms.ui.eclipse.objectbrowser.api.ObjectContextMenu;
 import org.netxms.ui.eclipse.objectview.widgets.RackWidget;
 import org.netxms.ui.eclipse.objectview.widgets.helpers.ElementSelectionListener;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
  *Rack diagram element for dashboard
@@ -160,7 +161,7 @@ public class RackDiagramElement extends ElementWidget implements ISelectionProvi
          scroller.setContent(rackArea);
          scroller.setExpandHorizontal(true);
          scroller.setExpandVertical(true);
-         scroller.getHorizontalBar().setIncrement(20);
+         WidgetHelper.setScrollBarIncrement(scroller, SWT.HORIZONTAL, 20);
          scroller.addControlListener(new ControlAdapter() {
             public void controlResized(ControlEvent e)
             {

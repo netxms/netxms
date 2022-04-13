@@ -46,6 +46,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.ScrollBar;
+import org.eclipse.swt.widgets.Scrollable;
 import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
@@ -1061,5 +1062,19 @@ public class WidgetHelper
    public static void attachMouseTrackListener(Composite control, MouseTrackListener listener)
    {
       control.addMouseTrackListener(listener);
+   }
+
+   /**
+    * Helper method to set scroll bar increment (compatibility layer for RAP).
+    *
+    * @param scrollable scrollable to configure scrollbar for
+    * @param direction scrollbar direction (<code>SWT.HORIZONTAL</code> or <code>SWT.VERTICAL</code>)
+    * @param increment increment value
+    */
+   public static void setScrollBarIncrement(Scrollable scrollable, int direction, int increment)
+   {
+      ScrollBar bar = (direction == SWT.HORIZONTAL) ? scrollable.getHorizontalBar() : scrollable.getVerticalBar();
+      if (bar != null)
+         bar.setIncrement(increment);
    }
 }

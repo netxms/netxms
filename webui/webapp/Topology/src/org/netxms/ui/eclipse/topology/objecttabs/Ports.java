@@ -41,6 +41,7 @@ import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.objectbrowser.api.ObjectContextMenu;
 import org.netxms.ui.eclipse.objectview.objecttabs.NodeComponentTab;
+import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.topology.widgets.DeviceView;
 import org.netxms.ui.eclipse.topology.widgets.helpers.PortInfo;
 import org.netxms.ui.eclipse.topology.widgets.helpers.PortSelectionListener;
@@ -95,8 +96,8 @@ public class Ports extends NodeComponentTab implements ISelectionProvider
 		scroller.setContent(deviceView);
 		scroller.setExpandVertical(true);
 		scroller.setExpandHorizontal(true);
-		//scroller.getVerticalBar().setIncrement(20);
-		//scroller.getHorizontalBar().setIncrement(20);
+      WidgetHelper.setScrollBarIncrement(scroller, SWT.VERTICAL, 20);
+      WidgetHelper.setScrollBarIncrement(scroller, SWT.HORIZONTAL, 20);
 		scroller.addControlListener(new ControlAdapter() {
 			public void controlResized(ControlEvent e)
 			{

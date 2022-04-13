@@ -139,6 +139,8 @@ public class ScreenshotView extends ViewPart implements IPartListener
       scroller.setContent(canvas);
       scroller.setExpandVertical(true);
       scroller.setExpandHorizontal(true);
+      WidgetHelper.setScrollBarIncrement(scroller, SWT.VERTICAL, 20);
+      WidgetHelper.setScrollBarIncrement(scroller, SWT.HORIZONTAL, 20);
       scroller.addControlListener(new ControlAdapter() {
          public void controlResized(ControlEvent e)
          {

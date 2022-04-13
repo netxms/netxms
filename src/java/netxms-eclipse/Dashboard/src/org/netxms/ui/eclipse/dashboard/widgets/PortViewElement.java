@@ -250,8 +250,8 @@ public class PortViewElement extends ElementWidget
                   scroller.setContent(content);
                   scroller.setExpandVertical(true);
                   scroller.setExpandHorizontal(true);
-                  scroller.getVerticalBar().setIncrement(20);
-                  scroller.getHorizontalBar().setIncrement(20);
+                  WidgetHelper.setScrollBarIncrement(scroller, SWT.HORIZONTAL, 20);
+                  WidgetHelper.setScrollBarIncrement(scroller, SWT.VERTICAL, 20);
                   scroller.addControlListener(new ControlAdapter() {
                      public void controlResized(ControlEvent e)
                      {

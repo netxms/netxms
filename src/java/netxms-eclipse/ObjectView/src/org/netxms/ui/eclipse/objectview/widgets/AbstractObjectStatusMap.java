@@ -67,6 +67,7 @@ import org.netxms.ui.eclipse.objectbrowser.api.ObjectContextMenu;
 import org.netxms.ui.eclipse.objectview.api.ObjectDetailsProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.RefreshTimer;
+import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.FilterText;
 
 /**
@@ -156,7 +157,7 @@ public abstract class AbstractObjectStatusMap extends Composite implements ISele
             updateScrollBars();
          }
       });
-      scroller.getVerticalBar().setIncrement(30);
+      WidgetHelper.setScrollBarIncrement(scroller, SWT.VERTICAL, 30);
       
       menuManager = new MenuManager();
       menuManager.setRemoveAllWhenShown(true);
