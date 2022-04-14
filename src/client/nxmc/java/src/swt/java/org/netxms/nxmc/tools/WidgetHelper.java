@@ -1200,7 +1200,6 @@ public class WidgetHelper
          {
             fileList.add(new File(fd.getFilterPath(), files[i]));
          }
-         updateFileList();
       }
    }
 
