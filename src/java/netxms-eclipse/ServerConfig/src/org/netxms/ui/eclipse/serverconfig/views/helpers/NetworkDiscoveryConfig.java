@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2019 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,7 +29,7 @@ import org.netxms.client.server.ServerVariable;
 /**
  * Class which holds all elements of network discovery configuration
  */
-public class DiscoveryConfig
+public class NetworkDiscoveryConfig
 {
    public final static int DISCOVERY_TYPE_NONE = 0;
    public final static int DISCOVERY_TYPE_PASSIVE = 1;
@@ -38,6 +38,7 @@ public class DiscoveryConfig
 
    public final static int DEFAULT_ACTIVE_INTERVAL = 7200;
 
+   private NXCSession session;
 	private int discoveryType;
 	private boolean useSnmpTraps;
 	private boolean useSyslog;
@@ -52,22 +53,23 @@ public class DiscoveryConfig
 	/**
 	 * Create empty object
 	 */
-	private DiscoveryConfig()
+   private NetworkDiscoveryConfig(NXCSession session)
 	{
+      this.session = session;
 	}
 	
 	/**
-	 * Load discovery configuration from server. This method directly calls
-	 * communication API, so it should not be called from UI thread.
-	 * @param session 
-	 * 
-	 * @return network discovery configuration
-	 * @throws IOException if socket I/O error occurs
-	 * @throws NXCException if NetXMS server returns an error or operation was timed out
-	 */
-	public static DiscoveryConfig load(NXCSession session) throws NXCException, IOException
+    * Load discovery configuration from server. This method directly calls communication API, so it should not be called from UI
+    * thread.
+    * 
+    * @param session session to use
+    * @return network discovery configuration
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public static NetworkDiscoveryConfig load(NXCSession session) throws NXCException, IOException
 	{
-		DiscoveryConfig config = new DiscoveryConfig();
+      NetworkDiscoveryConfig config = new NetworkDiscoveryConfig(session);
 
 		Map<String, ServerVariable> variables = session.getServerVariables();
 
@@ -99,6 +101,7 @@ public class DiscoveryConfig
 		ServerVariable v = variables.get(name);
 		if (v == null)
 			return defVal;
+
 		try
 		{
 			return Integer.parseInt(v.getValue()) != 0;
@@ -122,6 +125,7 @@ public class DiscoveryConfig
 		ServerVariable v = variables.get(name);
 		if (v == null)
 			return defVal;
+
 		try
 		{
 			return Integer.parseInt(v.getValue());
@@ -143,11 +147,9 @@ public class DiscoveryConfig
 	private static String getString(Map<String, ServerVariable> variables, String name, String defVal)
 	{
 		ServerVariable v = variables.get(name);
-		if (v == null)
-			return defVal;
-		return v.getValue();
+      return (v != null) ? v.getValue() : defVal;
 	}
-	
+
 	/**
 	 * Save discovery configuration on server. This method calls communication
 	 * API directly, so it should not be called from UI thread.
@@ -155,7 +157,7 @@ public class DiscoveryConfig
 	 * @throws IOException if socket I/O error occurs
 	 * @throws NXCException if NetXMS server returns an error or operation was timed out
 	 */
-	public void save(NXCSession session) throws NXCException, IOException
+	public void save() throws NXCException, IOException
 	{
 		session.setServerVariable("NetworkDiscovery.Type", Integer.toString(discoveryType)); //$NON-NLS-1$ 	
       session.setServerVariable("NetworkDiscovery.UseSNMPTraps", useSnmpTraps ? "1" : "0"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$

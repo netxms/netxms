@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,11 +24,13 @@ import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.IWorkbenchWindowActionDelegate;
 import org.eclipse.ui.PartInitException;
+import org.netxms.client.NXCSession;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.serverconfig.Activator;
 import org.netxms.ui.eclipse.serverconfig.Messages;
 import org.netxms.ui.eclipse.serverconfig.views.NetworkDiscoveryConfigurator;
-import org.netxms.ui.eclipse.serverconfig.views.helpers.DiscoveryConfig;
+import org.netxms.ui.eclipse.serverconfig.views.helpers.NetworkDiscoveryConfig;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
@@ -37,38 +39,39 @@ import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 public class OpenNetworkDiscoveryConfig implements IWorkbenchWindowActionDelegate
 {
 	private IWorkbenchWindow window;
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.IWorkbenchWindowActionDelegate#dispose()
-	 */
+
+   /**
+    * @see org.eclipse.ui.IWorkbenchWindowActionDelegate#dispose()
+    */
 	@Override
 	public void dispose()
 	{
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.IWorkbenchWindowActionDelegate#init(org.eclipse.ui.IWorkbenchWindow)
-	 */
+   /**
+    * @see org.eclipse.ui.IWorkbenchWindowActionDelegate#init(org.eclipse.ui.IWorkbenchWindow)
+    */
 	@Override
 	public void init(IWorkbenchWindow window)
 	{
 		this.window = window;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.IActionDelegate#run(org.eclipse.jface.action.IAction)
-	 */
+   /**
+    * @see org.eclipse.ui.IActionDelegate#run(org.eclipse.jface.action.IAction)
+    */
 	@Override
 	public void run(IAction action)
 	{
-		if(window == null)
+      if (window == null)
 			return;
-		
+
+      final NXCSession session = ConsoleSharedData.getSession();
 		new ConsoleJob(Messages.get().OpenNetworkDiscoveryConfig_JobName, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				final DiscoveryConfig config = DiscoveryConfig.load();
+            final NetworkDiscoveryConfig config = NetworkDiscoveryConfig.load(session);
 				runInUIThread(new Runnable() {
 					@Override
 					public void run()
@@ -94,9 +97,9 @@ public class OpenNetworkDiscoveryConfig implements IWorkbenchWindowActionDelegat
 		}.start();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.IActionDelegate#selectionChanged(org.eclipse.jface.action.IAction, org.eclipse.jface.viewers.ISelection)
-	 */
+   /**
+    * @see org.eclipse.ui.IActionDelegate#selectionChanged(org.eclipse.jface.action.IAction, org.eclipse.jface.viewers.ISelection)
+    */
 	@Override
 	public void selectionChanged(IAction action, ISelection selection)
 	{

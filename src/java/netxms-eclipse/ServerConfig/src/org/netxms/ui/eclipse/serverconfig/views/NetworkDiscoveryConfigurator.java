@@ -67,7 +67,7 @@ import org.netxms.ui.eclipse.serverconfig.Messages;
 import org.netxms.ui.eclipse.serverconfig.dialogs.AddAddressListElementDialog;
 import org.netxms.ui.eclipse.serverconfig.views.helpers.AddressListElementComparator;
 import org.netxms.ui.eclipse.serverconfig.views.helpers.AddressListLabelProvider;
-import org.netxms.ui.eclipse.serverconfig.views.helpers.DiscoveryConfig;
+import org.netxms.ui.eclipse.serverconfig.views.helpers.NetworkDiscoveryConfig;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -85,7 +85,7 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
    public static final int PROXY = 1;
    public static final int COMMENTS = 2;
 
-   private DiscoveryConfig config;
+   private NetworkDiscoveryConfig config;
    private boolean modified = false;
    private Composite content;
    private Button radioDiscoveryOff;
@@ -156,11 +156,12 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
       contributeToActionBars();
 
       // Restoring, load config
+      final NXCSession session = ConsoleSharedData.getSession();
       new ConsoleJob(Messages.get().NetworkDiscoveryConfigurator_LoadJobName, this, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            final DiscoveryConfig loadedConfig = DiscoveryConfig.load();
+            final NetworkDiscoveryConfig loadedConfig = NetworkDiscoveryConfig.load(session);
             runInUIThread(new Runnable() {
                @Override
                public void run()
@@ -245,25 +246,25 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
             setModified();
             if (radioDiscoveryOff.getSelection())
             {
-               config.setDiscoveryType(DiscoveryConfig.DISCOVERY_TYPE_NONE);
+               config.setDiscoveryType(NetworkDiscoveryConfig.DISCOVERY_TYPE_NONE);
                enableActiveDiscovery(false);
                enablePassiveDiscovery(false);
             }
             else if (radioDiscoveryPassive.getSelection())
             {
-               config.setDiscoveryType(DiscoveryConfig.DISCOVERY_TYPE_PASSIVE);
+               config.setDiscoveryType(NetworkDiscoveryConfig.DISCOVERY_TYPE_PASSIVE);
                enableActiveDiscovery(false);
                enablePassiveDiscovery(true);
             }
             else if (radioDiscoveryActive.getSelection())
             {
-               config.setDiscoveryType(DiscoveryConfig.DISCOVERY_TYPE_ACTIVE);
+               config.setDiscoveryType(NetworkDiscoveryConfig.DISCOVERY_TYPE_ACTIVE);
                enableActiveDiscovery(true);
                enablePassiveDiscovery(false);
             }
             else if (radioDiscoveryActiveAndPassive.getSelection())
             {
-               config.setDiscoveryType(DiscoveryConfig.DISCOVERY_TYPE_ACTIVE_PASSIVE);
+               config.setDiscoveryType(NetworkDiscoveryConfig.DISCOVERY_TYPE_ACTIVE_PASSIVE);
                enableActiveDiscovery(true);
                enablePassiveDiscovery(true);
             }
@@ -390,7 +391,7 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
             if (radioActiveDiscoveryInterval.getSelection())
             {
                config.setActiveDiscoveryPollInterval(Integer.parseInt(activeDiscoveryInterval.getText()));  
-               activeDiscoveryInterval.setSelection(config.getActiveDiscoveryPollInterval() == 0 ? DiscoveryConfig.DEFAULT_ACTIVE_INTERVAL : config.getActiveDiscoveryPollInterval());
+               activeDiscoveryInterval.setSelection(config.getActiveDiscoveryPollInterval() == 0 ? NetworkDiscoveryConfig.DEFAULT_ACTIVE_INTERVAL : config.getActiveDiscoveryPollInterval());
                activeDiscoverySchedule.setEnabled(false);
                activeDiscoveryInterval.setEnabled(true);         
             }
@@ -765,14 +766,14 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
    /**
     * @param config
     */
-   public void setConfig(DiscoveryConfig config)
+   public void setConfig(NetworkDiscoveryConfig config)
    {
       this.config = config;
 
-      radioDiscoveryOff.setSelection(config.getDiscoveryType() == DiscoveryConfig.DISCOVERY_TYPE_NONE);
-      radioDiscoveryPassive.setSelection(config.getDiscoveryType() == DiscoveryConfig.DISCOVERY_TYPE_PASSIVE);
-      radioDiscoveryActive.setSelection(config.getDiscoveryType() == DiscoveryConfig.DISCOVERY_TYPE_ACTIVE);
-      radioDiscoveryActiveAndPassive.setSelection(config.getDiscoveryType() == DiscoveryConfig.DISCOVERY_TYPE_ACTIVE_PASSIVE);
+      radioDiscoveryOff.setSelection(config.getDiscoveryType() == NetworkDiscoveryConfig.DISCOVERY_TYPE_NONE);
+      radioDiscoveryPassive.setSelection(config.getDiscoveryType() == NetworkDiscoveryConfig.DISCOVERY_TYPE_PASSIVE);
+      radioDiscoveryActive.setSelection(config.getDiscoveryType() == NetworkDiscoveryConfig.DISCOVERY_TYPE_ACTIVE);
+      radioDiscoveryActiveAndPassive.setSelection(config.getDiscoveryType() == NetworkDiscoveryConfig.DISCOVERY_TYPE_ACTIVE_PASSIVE);
       checkUseSnmpTraps.setSelection(config.isUseSnmpTraps());
       checkUseSyslog.setSelection(config.isUseSyslog());
       
@@ -787,8 +788,8 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
       }
       activeDiscoveryInterval.setSelection(config.getActiveDiscoveryPollInterval());
       activeDiscoverySchedule.setText(config.getActiveDiscoveryPollSchedule());
-      enableActiveDiscovery(config.getDiscoveryType() == DiscoveryConfig.DISCOVERY_TYPE_ACTIVE || config.getDiscoveryType() == DiscoveryConfig.DISCOVERY_TYPE_ACTIVE_PASSIVE);
-      enablePassiveDiscovery(config.getDiscoveryType() == DiscoveryConfig.DISCOVERY_TYPE_PASSIVE || config.getDiscoveryType() == DiscoveryConfig.DISCOVERY_TYPE_ACTIVE_PASSIVE);
+      enableActiveDiscovery(config.getDiscoveryType() == NetworkDiscoveryConfig.DISCOVERY_TYPE_ACTIVE || config.getDiscoveryType() == NetworkDiscoveryConfig.DISCOVERY_TYPE_ACTIVE_PASSIVE);
+      enablePassiveDiscovery(config.getDiscoveryType() == NetworkDiscoveryConfig.DISCOVERY_TYPE_PASSIVE || config.getDiscoveryType() == NetworkDiscoveryConfig.DISCOVERY_TYPE_ACTIVE_PASSIVE);
 
       checkFilterRange.setSelection((config.getFilterFlags() & NetworkDiscoveryFilterFlags.CHECK_ADDRESS_RANGE) != 0);
       checkFilterScript.setSelection((config.getFilterFlags() & NetworkDiscoveryFilterFlags.EXECUTE_SCRIPT) != 0);
