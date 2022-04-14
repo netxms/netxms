@@ -89,8 +89,9 @@
       <view
             allowMultiple="false"
             class="org.netxms.ui.eclipse.serverconfig.views.SshKeyConfigurator"
+            icon="icons/ssh-keys.png"
             id="org.netxms.ui.eclipse.serverconfig.views.SshKeyConfigurator"
-            name="SSH Key Configuration"
+            name="SSH Keys"
             restorable="true">
       </view>
    </extension>
@@ -296,8 +297,9 @@
      <action
            class="org.netxms.ui.eclipse.serverconfig.actions.OpenSshKeyConfiguration"
            definitionId="org.netxms.ui.eclipse.serverconfig.commands.open_ssh_configuration"
+           icon="icons/ssh-keys.png"
            id="org.netxms.ui.eclipse.serverconfig.actions.open_ssh_key_configuration"
-           label="SSH Key Configuration"
+           label="SSH keys"
            menubarPath="config/additions"
            style="push"
            tooltip="SSH Key Configuration">
