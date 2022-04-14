@@ -19,10 +19,12 @@
 package org.netxms.nxmc.tools;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.text.BreakIterator;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.apache.commons.lang3.SystemUtils;
@@ -1251,6 +1253,24 @@ public class WidgetHelper
     */
    public static void setFileDialogFilterNames(FileDialog fd, String[] names)
    {
+   }
+
+   /**
+    * Helper method to get file list from file dialog (compatibility layer for RAP).
+    *
+    * @param fd file dialog to set extensions for
+    * @param names extension names
+    */
+   public static void getFileDialogFfileList(FileDialog fd, List<File> fileList)
+   {
+      String files[] = fd.getFileNames();
+      if(files.length > 0)
+      {
+         for(int i = 0; i < files.length; i++)
+         {
+            fileList.add(new File(files[i]));
+         }
+      }
    }
 
    /**

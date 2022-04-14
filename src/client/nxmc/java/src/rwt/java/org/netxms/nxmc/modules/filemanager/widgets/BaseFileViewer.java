@@ -26,10 +26,6 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CLabel;
-import org.eclipse.swt.custom.LineStyleEvent;
-import org.eclipse.swt.custom.LineStyleListener;
-import org.eclipse.swt.custom.StyleRange;
-import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.MouseEvent;
@@ -37,7 +33,6 @@ import org.eclipse.swt.events.MouseListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
-import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
@@ -45,7 +40,6 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.ToolBar;
@@ -53,6 +47,10 @@ import org.eclipse.swt.widgets.ToolItem;
 import org.netxms.client.constants.Severity;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.View;
+import org.netxms.nxmc.base.widgets.StyledText;
+import org.netxms.nxmc.base.widgets.helpers.LineStyleEvent;
+import org.netxms.nxmc.base.widgets.helpers.LineStyleListener;
+import org.netxms.nxmc.base.widgets.helpers.StyleRange;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.resources.SharedIcons;
 import org.netxms.nxmc.resources.StatusDisplayInfo;
@@ -165,7 +163,6 @@ public class BaseFileViewer extends Composite
 
       /*** Text area ***/
       text = new StyledText(this, SWT.H_SCROLL | SWT.V_SCROLL);
-      text.setEditable(false);
       text.setFont(JFaceResources.getTextFont());
       fd = new FormData();
       fd.top = new FormAttachment(0, 0);
@@ -178,6 +175,7 @@ public class BaseFileViewer extends Composite
          @Override
          public void lineGetStyle(LineStyleEvent event)
          {
+            /* TODO:
             try
             {
                event.styles = styleLine(event.lineText);
@@ -191,6 +189,7 @@ public class BaseFileViewer extends Composite
             {
                // TODO: log
             }
+            */
          }
       });
       
@@ -349,9 +348,12 @@ public class BaseFileViewer extends Composite
                @Override
                public void run()
                {
-                  setContent(content);
+                  boolean scrollOnAppend = text.isScrollOnAppend();
                   if (scrollToEnd)
-                     text.setTopIndex(text.getLineCount() - 1);
+                     text.setScrollOnAppend(true);
+                  setContent(content);
+                  if (scrollToEnd && !scrollOnAppend)
+                     text.setScrollOnAppend(false);
                }
             });
          }
@@ -438,8 +440,6 @@ public class BaseFileViewer extends Composite
     */
    public void selectAll()
    {
-      text.selectAll();
-      text.notifyListeners(SWT.Selection, new Event());
    }
    
    /**
@@ -447,7 +447,6 @@ public class BaseFileViewer extends Composite
     */
    public void copy()
    {
-      text.copy();
    }
    
    /**
@@ -457,7 +456,7 @@ public class BaseFileViewer extends Composite
     */
    public boolean canCopy()
    {
-      return text.getSelectionCount() > 0;
+      return false;
    }
 
    /**
@@ -474,6 +473,7 @@ public class BaseFileViewer extends Composite
    public void setScrollLock(boolean scrollLock)
    {
       this.scrollLock = scrollLock;
+      text.setScrollOnAppend(!scrollLock);
    }
    
    /**
@@ -491,7 +491,6 @@ public class BaseFileViewer extends Composite
     */
    public void addSelectionListener(SelectionListener listener)
    {
-      text.addSelectionListener(listener);
    }
    
    /**
@@ -501,7 +500,6 @@ public class BaseFileViewer extends Composite
     */
    public void removeSelectionListener(SelectionListener listener)
    {
-      text.removeSelectionListener(listener);
    }
    
    /**
@@ -523,8 +521,6 @@ public class BaseFileViewer extends Composite
       String ps = removeEscapeSequences(s);
       content.append(ps.toLowerCase());
       text.append(ps);
-      if (!scrollLock)
-         text.setTopIndex(text.getLineCount() - 1);
    }
    
    /**
@@ -559,30 +555,6 @@ public class BaseFileViewer extends Composite
     */
    private void doSearch(boolean typing)
    {
-      String searchString = searchBarText.getText().toLowerCase();
-      if (searchString.length() == 0)
-         return;
-      
-      int searchPosition = text.getCaretOffset();
-      if (typing && (text.getSelectionCount() > 0))
-      {
-         Point p = text.getSelectionRange();
-         searchPosition = p.x;
-      }
-      
-      if (content.length() - searchPosition < searchString.length())
-         return;
-      
-      int index = content.indexOf(searchString, searchPosition);
-      if (index > -1)
-      {
-         text.setSelection(index, index + searchString.length());
-         searchBarText.setBackground(null);
-      }
-      else
-      {
-         searchBarText.setBackground(ThemeEngine.getBackgroundColor("TextInput.Error"));
-      }
    }
    
    /**
@@ -590,30 +562,6 @@ public class BaseFileViewer extends Composite
     */
    private void doReverseSearch()
    {
-      String searchString = searchBarText.getText().toLowerCase();
-      if (searchString.length() == 0)
-         return;
-      
-      int searchPosition = text.getCaretOffset();
-      if ((text.getSelectionCount() > 0) && text.getSelectionText().toLowerCase().equals(searchString))
-      {
-         Point p = text.getSelectionRange();
-         searchPosition = p.x - 1;
-      }
-
-      if (searchPosition < searchString.length())
-         return;
-      
-      int index = content.lastIndexOf(searchString, searchPosition);
-      if (index > -1)
-      {
-         text.setSelection(index, index + searchString.length());
-         searchBarText.setBackground(null);
-      }
-      else
-      {
-         searchBarText.setBackground(ThemeEngine.getBackgroundColor("TextInput.Error"));
-      }
    }
    
    /**
@@ -624,6 +572,9 @@ public class BaseFileViewer extends Composite
     */
    protected static String removeEscapeSequences(String s)
    {
+      //Convert to right new line symbol
+      s = s.replaceAll("\r(?!\n)", "\n");
+      
       StringBuilder sb = new StringBuilder();
       for(int i = 0; i < s.length(); i++)
       {
@@ -711,5 +662,20 @@ public class BaseFileViewer extends Composite
    public interface LineStyler
    {
       public StyleRange[] styleLine(String line);
+   }
+   
+   /**
+    * Set test top index (compatibility layer for RAP)
+    */
+   protected void setTextTopIndex()
+   {      
+   }   
+
+   /**
+    * Set scroll behavior on append (compatibility layer for RAP)
+    */
+   protected void setScrollOnAppend(boolean scrollLock)
+   {
+      text.setScrollOnAppend(!scrollLock);
    }
 }

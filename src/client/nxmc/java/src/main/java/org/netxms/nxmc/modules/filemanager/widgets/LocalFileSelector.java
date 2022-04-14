@@ -25,6 +25,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.FileDialog;
 import org.netxms.nxmc.base.widgets.AbstractSelector;
 import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -61,24 +62,12 @@ public class LocalFileSelector extends AbstractSelector
 	{
 		FileDialog fd = new FileDialog(getShell(), selectorType);
 		fd.setText(i18n.tr("Select File"));
-		fd.setFilterExtensions(filterExtensions);
-		fd.setFilterNames(filterNames);
+		WidgetHelper.setFileDialogFilterExtensions(fd, filterExtensions);		
+      WidgetHelper.setFileDialogFilterNames(fd, filterNames);
 		fd.open();
-	   String files[] = fd.getFileNames();
-	   if(files.length > 0)
-	   {
-	      fileList.clear();
-	      for(int i = 0; i < files.length; i++)
-	      {
-	         fileList.add(new File(fd.getFilterPath(), files[i]));
-	      }
-	      updateFileList();
-	   }
-	   else
-	   {
-	      fileList.clear();
-         updateFileList();
-	   }
+      fileList.clear();
+      WidgetHelper.getFileDialogFfileList(fd, fileList);
+      updateFileList();
 	}
 
 	/* (non-Javadoc)

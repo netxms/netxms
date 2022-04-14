@@ -60,8 +60,6 @@ public class DynamicFileViewer extends BaseFileViewer
    {
       super(parent, style, view);
 
-      setScrollOnAppend(!scrollLock);
-      
       final SessionListener sessionListener = new SessionListener() {
          @Override
          public void notificationHandler(SessionNotification n)
@@ -109,7 +107,7 @@ public class DynamicFileViewer extends BaseFileViewer
       this.nodeId = nodeId;
       this.remoteFileName = remoteFileName;
 
-      setTextTopIndex();
+      text.setTopIndex(text.getLineCount() - 1);
       monitoringJob = new Job(i18n.tr("Track file changes"), viewPart) {
          private boolean tracking = true;
 
