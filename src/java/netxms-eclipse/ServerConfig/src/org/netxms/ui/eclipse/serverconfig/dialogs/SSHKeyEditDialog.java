@@ -36,7 +36,7 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
 /**
  * Import or edit key dialog
  */
-public class EditSshKeysDialog extends Dialog
+public class SSHKeyEditDialog extends Dialog
 {
    private LabeledText textName;
    private LabeledText publicKey;
@@ -51,7 +51,7 @@ public class EditSshKeysDialog extends Dialog
     * @param shell shell
     * @param key key data or null if new key
     */
-   public EditSshKeysDialog(Shell shell, SshKeyPair key)
+   public SSHKeyEditDialog(Shell shell, SshKeyPair key)
    {
       super(shell);
       if (key == null)

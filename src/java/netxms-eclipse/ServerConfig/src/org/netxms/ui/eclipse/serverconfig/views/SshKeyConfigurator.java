@@ -29,6 +29,8 @@ import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.commands.ActionHandler;
+import org.eclipse.jface.dialogs.IInputValidator;
+import org.eclipse.jface.dialogs.InputDialog;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
@@ -58,12 +60,11 @@ import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.serverconfig.Activator;
-import org.netxms.ui.eclipse.serverconfig.dialogs.CerateKeyNameDialog;
-import org.netxms.ui.eclipse.serverconfig.dialogs.EditSshKeysDialog;
+import org.netxms.ui.eclipse.serverconfig.dialogs.SSHKeyEditDialog;
 import org.netxms.ui.eclipse.serverconfig.views.helpers.SSHKeyLabelProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
-import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.ElementLabelComparator;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
@@ -335,7 +336,7 @@ public class SshKeyConfigurator extends ViewPart
     */
    protected void copyToClipboard()
    {
-      final IStructuredSelection selection = viewer.getStructuredSelection();
+      IStructuredSelection selection = viewer.getStructuredSelection();
       if (selection.size() != 1)
          return;
       
@@ -348,14 +349,13 @@ public class SshKeyConfigurator extends ViewPart
     */
    protected void deleteKey()
    {
-      final IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-      
-      if ((selection == null) || (selection.size() == 0))
+      IStructuredSelection selection = viewer.getStructuredSelection();
+      if (selection.isEmpty())
          return;
 
-      if (!MessageDialogHelper.openQuestion(getSite().getShell(), "Delete Confirmation", "Are you sure you want to delete selected SSH keys?"))
+      if (!MessageDialogHelper.openQuestion(getSite().getShell(), "Delete Key", "Are you sure you want to delete selected SSH keys?"))
          return;
-      
+
       final List<SshKeyPair> list = new ArrayList<SshKeyPair>(selection.size());
       Iterator<?> it = selection.iterator();
       while(it.hasNext())
@@ -384,15 +384,15 @@ public class SshKeyConfigurator extends ViewPart
                      public void run()
                      {
                         List<AbstractObject> nodes = session.findMultipleObjects(e.getRelatedObjects(), false);
-                        StringBuilder sb = new StringBuilder();
-                        for (int i = 0; i < nodes.size(); i++)
+                        StringBuilder nodeNames = new StringBuilder();
+                        for(AbstractObject n : nodes)
                         {
-                           sb.append(nodes.get(i).getObjectName());
-                           if ((i + 1) != nodes.size())
-                           sb.append(", ");
+                           if (nodeNames.length() > 0)
+                              nodeNames.append(", ");
+                           nodeNames.append(n.getObjectName());
                         }
-                        retry[0] = MessageDialogHelper.openQuestion(getSite().getShell(), "Confirm Delete",
-                              String.format("SSH key \"%s\" is in use by %s node(s). Are you sure you want to delete it?", key.getName(), sb.toString()));
+                        retry[0] = MessageDialogHelper.openQuestion(getSite().getShell(), "Delete Key",
+                              String.format("SSH key \"%s\" is in use by the following nodes: %s.\nAre you sure you want to delete it?", key.getName(), nodeNames.toString()));
                      }
                   });
                   if (retry[0])
@@ -416,12 +416,12 @@ public class SshKeyConfigurator extends ViewPart
     */
    protected void editKey()
    {
-      IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      IStructuredSelection selection = viewer.getStructuredSelection();
       if (selection.size() != 1)
          return;
       
       final SshKeyPair key = (SshKeyPair)selection.getFirstElement();
-      final EditSshKeysDialog dlg = new EditSshKeysDialog(getSite().getShell(), new SshKeyPair(key));
+      final SSHKeyEditDialog dlg = new SSHKeyEditDialog(getSite().getShell(), new SshKeyPair(key));
       if (dlg.open() != Window.OK)
          return;
       
@@ -445,7 +445,7 @@ public class SshKeyConfigurator extends ViewPart
     */
    protected void importKeys()
    {
-      final EditSshKeysDialog dlg = new EditSshKeysDialog(getSite().getShell(), null);
+      final SSHKeyEditDialog dlg = new SSHKeyEditDialog(getSite().getShell(), null);
       if (dlg.open() != Window.OK)
          return;
       
@@ -469,17 +469,23 @@ public class SshKeyConfigurator extends ViewPart
     */
    private void generateKeys()
    {
-      final CerateKeyNameDialog dlg = new CerateKeyNameDialog(getSite().getShell());
+      final InputDialog dlg = new InputDialog(getSite().getShell(), "Generate SSH Key", "Key name", "", new IInputValidator() {
+         @Override
+         public String isValid(String newText)
+         {
+            return newText.isBlank() ? "Key name should not be empty" : null;
+         }
+      });
       if (dlg.open() != Window.OK)
          return;
-      
+
       new ConsoleJob("Generate SSH keys", this, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            session.generateSshKeys(dlg.getName());            
+            session.generateSshKeys(dlg.getValue().trim());
          }
-         
+
          @Override
          protected String getErrorMessage()
          {
@@ -488,6 +494,9 @@ public class SshKeyConfigurator extends ViewPart
       }.start(); 
    }
 
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
+    */
    @Override
    public void setFocus()
    {
@@ -505,5 +514,4 @@ public class SshKeyConfigurator extends ViewPart
          contextService.activateContext("org.netxms.ui.eclipse.serverconfig.context.SshKeyConfigurator"); //$NON-NLS-1$
       }
    }
-
 }
