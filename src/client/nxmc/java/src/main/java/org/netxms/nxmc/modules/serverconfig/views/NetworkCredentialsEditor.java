@@ -109,11 +109,11 @@ public class NetworkCredentialsEditor extends ConfigurationView
    private SshCredentialsLabelProvider sshLabelProvider;
 
    /**
-    * Create notification channels view
+    * Create network credentials view
     */
    public NetworkCredentialsEditor()
    {
-      super(i18n.tr("Network Credentials"), ResourceManager.getImageDescriptor("icons/config-views/network_credentials.png"), "NetworkCredentials", false);
+      super(i18n.tr("Network Credentials"), ResourceManager.getImageDescriptor("icons/config-views/network-discovery.gif"), "NetworkDiscovery", false);
       session = Registry.getSession();
       config = new NetworkCredentials(session);
    }

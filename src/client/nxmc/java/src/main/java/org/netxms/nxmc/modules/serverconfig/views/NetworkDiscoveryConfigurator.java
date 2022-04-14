@@ -1,0 +1,994 @@
+/**
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+package org.netxms.nxmc.modules.serverconfig.views;
+
+import java.util.ArrayList;
+import java.util.List;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.MenuManager;
+import org.eclipse.jface.action.ToolBarManager;
+import org.eclipse.jface.viewers.ArrayContentProvider;
+import org.eclipse.jface.viewers.DoubleClickEvent;
+import org.eclipse.jface.viewers.IDoubleClickListener;
+import org.eclipse.jface.viewers.ISelectionChangedListener;
+import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.SelectionChangedEvent;
+import org.eclipse.jface.window.Window;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.ScrolledComposite;
+import org.eclipse.swt.events.ControlAdapter;
+import org.eclipse.swt.events.ControlEvent;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Group;
+import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Spinner;
+import org.netxms.client.InetAddressListElement;
+import org.netxms.client.NXCSession;
+import org.netxms.client.constants.NetworkDiscoveryFilterFlags;
+import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.base.jobs.Job;
+import org.netxms.nxmc.base.views.ConfigurationView;
+import org.netxms.nxmc.base.widgets.ImageHyperlink;
+import org.netxms.nxmc.base.widgets.LabeledText;
+import org.netxms.nxmc.base.widgets.MessageArea;
+import org.netxms.nxmc.base.widgets.SortableTableViewer;
+import org.netxms.nxmc.base.widgets.events.HyperlinkAdapter;
+import org.netxms.nxmc.base.widgets.events.HyperlinkEvent;
+import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.nxsl.widgets.ScriptSelector;
+import org.netxms.nxmc.modules.serverconfig.dialogs.AddressListElementEditDialog;
+import org.netxms.nxmc.modules.serverconfig.views.helpers.AddressListElementComparator;
+import org.netxms.nxmc.modules.serverconfig.views.helpers.AddressListLabelProvider;
+import org.netxms.nxmc.modules.serverconfig.views.helpers.NetworkDiscoveryConfig;
+import org.netxms.nxmc.resources.ResourceManager;
+import org.netxms.nxmc.resources.SharedIcons;
+import org.netxms.nxmc.tools.MessageDialogHelper;
+import org.netxms.nxmc.tools.WidgetHelper;
+import org.xnap.commons.i18n.I18n;
+
+/**
+ * Configurator for network discovery
+ */
+public class NetworkDiscoveryConfigurator extends ConfigurationView
+{
+   public static final int RANGE = 0;
+   public static final int PROXY = 1;
+   public static final int COMMENTS = 2;
+
+   private static I18n i18n = LocalizationHelper.getI18n(NetworkDiscoveryConfigurator.class);
+
+   private NetworkDiscoveryConfig config;
+   private boolean modified = false;
+   private Composite content;
+   private Button radioDiscoveryOff;
+   private Button radioDiscoveryPassive;
+   private Button radioDiscoveryActive;
+   private Button radioDiscoveryActiveAndPassive;
+   private Button checkUseSnmpTraps;
+   private Button checkUseSyslog;
+   private Spinner passiveDiscoveryInterval;
+   private Label activeDiscoveryScheduleLabel;
+   private Button radioActiveDiscoveryInterval;
+   private Button radioActiveDiscoverySchedule;
+   private Spinner activeDiscoveryInterval;
+   private LabeledText activeDiscoverySchedule;
+   private Button checkFilterRange;
+   private Button checkFilterProtocols;
+   private Button checkAllowAgent;
+   private Button checkAllowSNMP;
+   private Button checkAllowSSH;
+   private Button checkFilterScript;
+   private ScriptSelector filterScript;
+   private SortableTableViewer filterAddressList;
+   private SortableTableViewer activeDiscoveryAddressList;
+   private Action actionSave;
+
+   /**
+    * Create network discovery configuration view
+    */
+   public NetworkDiscoveryConfigurator()
+   {
+      super(i18n.tr("Network Discovery"), ResourceManager.getImageDescriptor("icons/config-views/network_credentials.png"), "NetworkCredentials", false);
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#createContent(org.eclipse.swt.widgets.Composite)
+    */
+   @Override
+   public void createContent(Composite parent)
+   {
+      ScrolledComposite scroller = new ScrolledComposite(parent, SWT.V_SCROLL);
+      scroller.setExpandHorizontal(true);
+      scroller.setExpandVertical(true);
+      WidgetHelper.setScrollBarIncrement(scroller, SWT.VERTICAL, 20);
+      scroller.addControlListener(new ControlAdapter() {
+         public void controlResized(ControlEvent e)
+         {
+            content.layout(true, true);
+            scroller.setMinSize(content.computeSize(scroller.getSize().x, SWT.DEFAULT));
+         }
+      });
+
+      content = new Composite(scroller, SWT.NONE);
+      GridLayout layout = new GridLayout();
+      layout.numColumns = 2;
+      layout.makeColumnsEqualWidth = true;
+      content.setLayout(layout);
+      content.setBackground(content.getDisplay().getSystemColor(SWT.COLOR_LIST_BACKGROUND));
+
+      scroller.setContent(content);
+
+      createGeneralSection();
+      createFilterSection();
+      createScheduleSection();
+      createActiveDiscoverySection();
+
+      createActions();
+
+      // Restoring, load config
+      final NXCSession session = Registry.getSession();
+      new Job(i18n.tr("Loading network discovery configuration"), this) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            final NetworkDiscoveryConfig loadedConfig = NetworkDiscoveryConfig.load(session);
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
+                  setConfig(loadedConfig);
+               }
+            });
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return i18n.tr("Cannot load network discovery configuration");
+         }
+      }.start();
+   }
+
+   /**
+    * Create actions
+    */
+   private void createActions()
+   {
+      actionSave = new Action(i18n.tr("&Save"), SharedIcons.SAVE) {
+         @Override
+         public void run()
+         {
+            save();
+         }
+      };
+      addKeyBinding("M1+S", actionSave);
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#fillLocalMenu(org.eclipse.jface.action.MenuManager)
+    */
+   @Override
+   protected void fillLocalMenu(MenuManager manager)
+   {
+      manager.add(actionSave);
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#fillLocalToolbar(org.eclipse.jface.action.ToolBarManager)
+    */
+   @Override
+   protected void fillLocalToolbar(ToolBarManager manager)
+   {
+      manager.add(actionSave);
+   }
+
+   /**
+    * Create "General" section
+    */
+   private void createGeneralSection()
+   {
+      Group section = new Group(content, SWT.NONE);
+      section.setBackground(content.getBackground());
+      section.setText(i18n.tr("General"));
+      GridData gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      section.setLayoutData(gd);
+
+      GridLayout layout = new GridLayout();
+      section.setLayout(layout);
+
+      final SelectionListener listener = new SelectionAdapter() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            setModified();
+            if (radioDiscoveryOff.getSelection())
+            {
+               config.setDiscoveryType(NetworkDiscoveryConfig.DISCOVERY_TYPE_NONE);
+               enableActiveDiscovery(false);
+               enablePassiveDiscovery(false);
+            }
+            else if (radioDiscoveryPassive.getSelection())
+            {
+               config.setDiscoveryType(NetworkDiscoveryConfig.DISCOVERY_TYPE_PASSIVE);
+               enableActiveDiscovery(false);
+               enablePassiveDiscovery(true);
+            }
+            else if (radioDiscoveryActive.getSelection())
+            {
+               config.setDiscoveryType(NetworkDiscoveryConfig.DISCOVERY_TYPE_ACTIVE);
+               enableActiveDiscovery(true);
+               enablePassiveDiscovery(false);
+            }
+            else if (radioDiscoveryActiveAndPassive.getSelection())
+            {
+               config.setDiscoveryType(NetworkDiscoveryConfig.DISCOVERY_TYPE_ACTIVE_PASSIVE);
+               enableActiveDiscovery(true);
+               enablePassiveDiscovery(true);
+            }
+         }
+      };
+
+      radioDiscoveryOff = new Button(section, SWT.RADIO);
+      radioDiscoveryOff.setText(i18n.tr("Disabled"));
+      radioDiscoveryOff.addSelectionListener(listener);
+      radioDiscoveryPassive = new Button(section, SWT.RADIO);
+      radioDiscoveryPassive.setText(i18n.tr("Passive only"));
+      radioDiscoveryPassive.addSelectionListener(listener);
+      radioDiscoveryActive = new Button(section, SWT.RADIO);
+      radioDiscoveryActive.setText(i18n.tr("Active only"));
+      radioDiscoveryActive.addSelectionListener(listener);
+      radioDiscoveryActiveAndPassive = new Button(section, SWT.RADIO);
+      radioDiscoveryActiveAndPassive.setText(i18n.tr("Active and passive"));
+      radioDiscoveryActiveAndPassive.addSelectionListener(listener);      
+
+      checkUseSnmpTraps = new Button(section, SWT.CHECK);
+      checkUseSnmpTraps.setText(i18n.tr("Use SNMP trap source addresses for discovery"));
+      checkUseSnmpTraps.addSelectionListener(new SelectionAdapter() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            config.setUseSnmpTraps(checkUseSnmpTraps.getSelection());
+            setModified();
+         }
+      });
+      gd = new GridData();
+      gd.verticalIndent = 10;
+      checkUseSnmpTraps.setLayoutData(gd);
+
+      checkUseSyslog = new Button(section, SWT.CHECK);
+      checkUseSyslog.setText(i18n.tr("Use syslog source addresses for discovery"));
+      checkUseSyslog.addSelectionListener(new SelectionAdapter() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            config.setUseSyslog(checkUseSyslog.getSelection());
+            setModified();
+         }
+      });
+   }
+
+   /**
+    * Enable/disable passive discovery
+    *
+    * @param enabled enable flag
+    */
+   private void enablePassiveDiscovery(boolean enabled)
+   {
+      passiveDiscoveryInterval.setEnabled(enabled);
+   }
+
+   /**
+    * Enable/disable active discovery
+    *
+    * @param enabled enable flag
+    */
+   private void enableActiveDiscovery(boolean enabled)
+   {
+      if (radioActiveDiscoveryInterval.getSelection())
+      {
+         activeDiscoverySchedule.setEnabled(false);
+      }
+      else
+      {
+         activeDiscoveryInterval.setEnabled(false);
+      }
+      radioActiveDiscoveryInterval.setEnabled(enabled);
+      radioActiveDiscoverySchedule.setEnabled(enabled);
+   }
+
+   /**
+    * Create "Schedule" section
+    */
+   private void createScheduleSection()
+   {
+      Group section = new Group(content, SWT.NONE);
+      section.setBackground(content.getBackground());
+      section.setText(i18n.tr("Schedule"));
+      GridData gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      section.setLayoutData(gd);
+
+      GridLayout layout = new GridLayout();
+      layout.numColumns = 2;
+      section.setLayout(layout);
+
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      passiveDiscoveryInterval = WidgetHelper.createLabeledSpinner(section, SWT.BORDER, i18n.tr("Passive discovery interval"), 0, 0xffffff, gd);
+      passiveDiscoveryInterval.setBackground(section.getBackground());
+      passiveDiscoveryInterval.getParent().setBackground(section.getBackground());
+      passiveDiscoveryInterval.addModifyListener(new ModifyListener() {
+         @Override
+         public void modifyText(ModifyEvent e)
+         {
+            try
+            {
+               config.setPassiveDiscoveryPollInterval(Integer.parseInt(passiveDiscoveryInterval.getText()));
+               setModified();
+            }
+            catch(NumberFormatException ex)
+            {
+            }
+         }
+      });
+      
+      activeDiscoveryScheduleLabel = new Label(section, SWT.LEFT);
+      activeDiscoveryScheduleLabel.setText(i18n.tr("Active discovery schedule configuration"));
+      activeDiscoveryScheduleLabel.setBackground(section.getBackground());
+      gd = new GridData();
+      gd.horizontalSpan = 2;
+      activeDiscoveryScheduleLabel.setLayoutData(gd);
+
+      final SelectionListener listener = new SelectionListener() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            setModified();
+            if (radioActiveDiscoveryInterval.getSelection())
+            {
+               config.setActiveDiscoveryPollInterval(Integer.parseInt(activeDiscoveryInterval.getText()));  
+               activeDiscoveryInterval.setSelection(config.getActiveDiscoveryPollInterval() == 0 ? NetworkDiscoveryConfig.DEFAULT_ACTIVE_INTERVAL : config.getActiveDiscoveryPollInterval());
+               activeDiscoverySchedule.setEnabled(false);
+               activeDiscoveryInterval.setEnabled(true);         
+            }
+            else
+            {
+               config.setActiveDiscoveryPollInterval(0);
+               activeDiscoverySchedule.setText(config.getActiveDiscoveryPollSchedule());
+               activeDiscoverySchedule.setEnabled(true);
+               activeDiscoveryInterval.setEnabled(false); 
+            }
+         }
+
+         @Override
+         public void widgetDefaultSelected(SelectionEvent e)
+         {
+            widgetSelected(e);
+         }
+      };      
+
+      radioActiveDiscoveryInterval = new Button(section, SWT.RADIO);
+      radioActiveDiscoveryInterval.setText(i18n.tr("Interval"));
+      radioActiveDiscoveryInterval.addSelectionListener(listener);
+      gd = new GridData();
+      radioActiveDiscoveryInterval.setLayoutData(gd);
+      
+      radioActiveDiscoverySchedule = new Button(section, SWT.RADIO);
+      radioActiveDiscoverySchedule.setText(i18n.tr("Schedule"));
+      radioActiveDiscoverySchedule.addSelectionListener(listener);
+      gd = new GridData();
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalAlignment = SWT.LEFT;
+      radioActiveDiscoverySchedule.setLayoutData(gd);
+
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      activeDiscoveryInterval = WidgetHelper.createLabeledSpinner(section, SWT.BORDER, i18n.tr("Active discovery interval"), 0, 0xffffff, gd);
+      activeDiscoveryInterval.setBackground(section.getBackground());
+      activeDiscoveryInterval.getParent().setBackground(section.getBackground());
+      activeDiscoveryInterval.addModifyListener(new ModifyListener() {
+         @Override
+         public void modifyText(ModifyEvent e)
+         {
+            config.setActiveDiscoveryPollInterval(Integer.parseInt(activeDiscoveryInterval.getText()));
+            setModified();
+         }
+      });
+      
+      activeDiscoverySchedule = new LabeledText(section, SWT.NONE, SWT.SINGLE | SWT.BORDER);
+      activeDiscoverySchedule.setLabel(i18n.tr("Active discovery schedule"));
+      activeDiscoverySchedule.setBackground(section.getBackground());
+      activeDiscoverySchedule.getTextControl().addModifyListener(new ModifyListener() {
+         @Override
+         public void modifyText(ModifyEvent e)
+         {
+            config.setActiveDiscoveryPollSchedule(activeDiscoverySchedule.getText());
+            setModified();
+         }
+      });  
+      gd = new GridData();
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalAlignment = SWT.LEFT;
+      activeDiscoverySchedule.setLayoutData(gd);  
+   }
+
+   /**
+    * Create "Filter" section
+    */
+   private void createFilterSection()
+   {
+      Group section = new Group(content, SWT.NONE);
+      section.setBackground(content.getBackground());
+      section.setText(i18n.tr("Filter"));
+      GridData gd = new GridData();
+      gd.verticalAlignment = SWT.TOP;
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.verticalSpan = 3;
+      section.setLayoutData(gd);
+
+      GridLayout layout = new GridLayout();
+      section.setLayout(layout);
+
+      final SelectionListener checkBoxListener = new SelectionAdapter() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            setModified();
+            int flags = 0;
+            if (checkFilterRange.getSelection())
+               flags |= NetworkDiscoveryFilterFlags.CHECK_ADDRESS_RANGE;
+            if (checkFilterScript.getSelection())
+               flags |= NetworkDiscoveryFilterFlags.EXECUTE_SCRIPT;
+            if (checkFilterProtocols.getSelection())
+               flags |= NetworkDiscoveryFilterFlags.CHECK_PROTOCOLS;
+            if (checkAllowAgent.getSelection())
+               flags |= NetworkDiscoveryFilterFlags.PROTOCOL_AGENT;
+            if (checkAllowSNMP.getSelection())
+               flags |= NetworkDiscoveryFilterFlags.PROTOCOL_SNMP;
+            if (checkAllowSSH.getSelection())
+               flags |= NetworkDiscoveryFilterFlags.PROTOCOL_SSH;
+            config.setFilterFlags(flags);
+         }
+      };
+
+      checkFilterRange = new Button(section, SWT.CHECK);
+      checkFilterRange.setText(i18n.tr("By address range"));
+      checkFilterRange.addSelectionListener(checkBoxListener);
+
+      Composite addressRangeEditor = new Composite(section, SWT.NONE);
+      addressRangeEditor.setBackground(section.getBackground());
+      gd = new GridData();
+      gd.horizontalIndent = 20;
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalAlignment = SWT.FILL;
+      addressRangeEditor.setLayoutData(gd);
+      GridLayout addressRangeLayout = new GridLayout();
+      addressRangeLayout.numColumns = 2;
+      addressRangeEditor.setLayout(addressRangeLayout);
+
+      final String[] names = { i18n.tr("Range"), i18n.tr("Comment") };
+      final int[] widths = { 150, 150 };
+      filterAddressList = new SortableTableViewer(addressRangeEditor, names, widths, 0, SWT.DOWN, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.verticalAlignment = SWT.FILL;
+      gd.grabExcessVerticalSpace = true;
+      gd.verticalSpan = 3;
+      gd.heightHint = 200;
+      filterAddressList.getTable().setLayoutData(gd);
+      filterAddressList.getTable().setSortDirection(SWT.UP);
+      filterAddressList.setContentProvider(new ArrayContentProvider());
+      filterAddressList.setLabelProvider(new AddressListLabelProvider(false));
+      filterAddressList.setComparator(new AddressListElementComparator(false));
+      filterAddressList.addDoubleClickListener(new IDoubleClickListener() {
+         @Override
+         public void doubleClick(DoubleClickEvent event)
+         {
+            editAddressFilterElement();
+         }
+      });
+
+      final ImageHyperlink linkAdd = new ImageHyperlink(addressRangeEditor, SWT.NONE);
+      linkAdd.setText(i18n.tr("Add"));
+      linkAdd.setImage(SharedIcons.IMG_ADD_OBJECT);
+      linkAdd.setBackground(section.getBackground());
+      gd = new GridData();
+      gd.verticalAlignment = SWT.TOP;
+      linkAdd.setLayoutData(gd);
+      linkAdd.addHyperlinkListener(new HyperlinkAdapter() {
+         @Override
+         public void linkActivated(HyperlinkEvent e)
+         {
+            addAddressFilterElement();
+         }
+      });
+
+      final ImageHyperlink linkEdit = new ImageHyperlink(addressRangeEditor, SWT.NONE);
+      linkEdit.setText(i18n.tr("Edit"));
+      linkEdit.setImage(SharedIcons.IMG_EDIT);
+      linkEdit.setBackground(section.getBackground());
+      linkEdit.setEnabled(false);
+      gd = new GridData();
+      gd.verticalAlignment = SWT.TOP;
+      linkEdit.setLayoutData(gd);
+      linkEdit.addHyperlinkListener(new HyperlinkAdapter() {
+         @Override
+         public void linkActivated(HyperlinkEvent e)
+         {
+            editAddressFilterElement();
+         }
+      });
+
+      final ImageHyperlink linkRemove = new ImageHyperlink(addressRangeEditor, SWT.NONE);
+      linkRemove.setText(i18n.tr("Remove"));
+      linkRemove.setImage(SharedIcons.IMG_DELETE_OBJECT);
+      linkRemove.setBackground(section.getBackground());
+      linkRemove.setEnabled(false);
+      gd = new GridData();
+      gd.verticalAlignment = SWT.TOP;
+      linkRemove.setLayoutData(gd);
+      linkRemove.addHyperlinkListener(new HyperlinkAdapter() {
+         @Override
+         public void linkActivated(HyperlinkEvent e)
+         {
+            removeAddressFilterElements();
+         }
+      });
+
+      filterAddressList.addSelectionChangedListener(new ISelectionChangedListener() {
+         @Override
+         public void selectionChanged(SelectionChangedEvent event)
+         {
+            IStructuredSelection selection = filterAddressList.getStructuredSelection();
+            linkEdit.setEnabled(selection.size() == 1);
+            linkRemove.setEnabled(!selection.isEmpty());
+         }
+      });
+
+      checkFilterProtocols = new Button(section, SWT.CHECK);
+      checkFilterProtocols.setText(i18n.tr("By communication protocols"));
+      checkFilterProtocols.addSelectionListener(checkBoxListener);
+
+      checkAllowAgent = new Button(section, SWT.CHECK);
+      checkAllowAgent.setText(i18n.tr("Accept node if it has &NetXMS agent"));
+      checkAllowAgent.addSelectionListener(checkBoxListener);
+      gd = new GridData();
+      gd.horizontalIndent = 20;
+      checkAllowAgent.setLayoutData(gd);
+
+      checkAllowSNMP = new Button(section, SWT.CHECK);
+      checkAllowSNMP.setText(i18n.tr("Accept node if it has &SNMP agent"));
+      checkAllowSNMP.addSelectionListener(checkBoxListener);
+      gd = new GridData();
+      gd.horizontalIndent = 20;
+      checkAllowSNMP.setLayoutData(gd);
+
+      checkAllowSSH = new Button(section, SWT.CHECK);
+      checkAllowSSH.setText(i18n.tr("Accept node if it is accessible via SS&H"));
+      checkAllowSSH.addSelectionListener(checkBoxListener);
+      gd = new GridData();
+      gd.horizontalIndent = 20;
+      checkAllowSSH.setLayoutData(gd);
+
+      checkFilterScript = new Button(section, SWT.CHECK);
+      checkFilterScript.setText(i18n.tr("With custom script"));
+      checkFilterScript.addSelectionListener(checkBoxListener);
+
+      filterScript = new ScriptSelector(section, SWT.NONE, true, false);
+      filterScript.setBackground(section.getBackground());
+      filterScript.getTextControl().setBackground(section.getBackground());
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalIndent = 20;
+      filterScript.setLayoutData(gd);
+      filterScript.addModifyListener(new ModifyListener() {
+         @Override
+         public void modifyText(ModifyEvent e)
+         {
+            config.setFilterScript(filterScript.getScriptName());
+            setModified();
+         }
+      });
+   }
+
+   /**
+    * Create "Active Discovery Targets" section
+    */
+   private void createActiveDiscoverySection()
+   {
+      Group section = new Group(content, SWT.NONE);
+      section.setBackground(content.getBackground());
+      section.setText(i18n.tr("Active discovery targets"));
+      GridData gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      section.setLayoutData(gd);
+
+      GridLayout layout = new GridLayout();
+      layout.numColumns = 2;
+      section.setLayout(layout);
+
+      final String[] names = { i18n.tr("Range"), i18n.tr("Proxy"), i18n.tr("Comments") };
+      final int[] widths = { 150, 150, 150 };
+      activeDiscoveryAddressList = new SortableTableViewer(section, names, widths, 0, SWT.DOWN, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.verticalAlignment = SWT.FILL;
+      gd.grabExcessVerticalSpace = true;
+      gd.verticalSpan = 4;
+      gd.heightHint = 200;
+      activeDiscoveryAddressList.getTable().setLayoutData(gd);
+      activeDiscoveryAddressList.getTable().setSortDirection(SWT.UP);
+      activeDiscoveryAddressList.setContentProvider(new ArrayContentProvider());
+      activeDiscoveryAddressList.setLabelProvider(new AddressListLabelProvider(true));
+      activeDiscoveryAddressList.setComparator(new AddressListElementComparator(true));
+      activeDiscoveryAddressList.addDoubleClickListener(new IDoubleClickListener() {
+         @Override
+         public void doubleClick(DoubleClickEvent event)
+         {
+            editTargetAddressListElement();
+         }
+      });
+
+      final ImageHyperlink linkAdd = new ImageHyperlink(section, SWT.NONE);
+      linkAdd.setText(i18n.tr("Add"));
+      linkAdd.setImage(SharedIcons.IMG_ADD_OBJECT);
+      linkAdd.setBackground(section.getBackground());
+      gd = new GridData();
+      gd.verticalAlignment = SWT.TOP;
+      linkAdd.setLayoutData(gd);
+      linkAdd.addHyperlinkListener(new HyperlinkAdapter() {
+         @Override
+         public void linkActivated(HyperlinkEvent e)
+         {
+            addTargetAddressListElement();
+         }
+      });      
+
+      final ImageHyperlink linkEdit = new ImageHyperlink(section, SWT.NONE);
+      linkEdit.setText(i18n.tr("Edit"));
+      linkEdit.setImage(SharedIcons.IMG_EDIT);
+      linkEdit.setBackground(section.getBackground());
+      linkEdit.setEnabled(false);
+      gd = new GridData();
+      gd.verticalAlignment = SWT.TOP;
+      linkEdit.setLayoutData(gd);
+      linkEdit.addHyperlinkListener(new HyperlinkAdapter() {
+         @Override
+         public void linkActivated(HyperlinkEvent e)
+         {
+            editTargetAddressListElement();
+         }
+      });
+
+      final ImageHyperlink linkRemove = new ImageHyperlink(section, SWT.NONE);
+      linkRemove.setText(i18n.tr("Remove"));
+      linkRemove.setImage(SharedIcons.IMG_DELETE_OBJECT);
+      linkRemove.setBackground(section.getBackground());
+      linkRemove.setEnabled(false);
+      gd = new GridData();
+      gd.verticalAlignment = SWT.TOP;
+      linkRemove.setLayoutData(gd);
+      linkRemove.addHyperlinkListener(new HyperlinkAdapter() {
+         @Override
+         public void linkActivated(HyperlinkEvent e)
+         {
+            removeTargetAddressListElements();
+         }
+      });
+
+      final ImageHyperlink runActiveDiscovery = new ImageHyperlink(section, SWT.NONE);
+      runActiveDiscovery.setText(i18n.tr("Scan"));
+      runActiveDiscovery.setToolTipText(i18n.tr("Runs active discovery on selected ranges"));
+      runActiveDiscovery.setImage(SharedIcons.IMG_EXECUTE);
+      runActiveDiscovery.setBackground(section.getBackground());
+      runActiveDiscovery.setEnabled(false);
+      gd = new GridData();
+      gd.verticalAlignment = SWT.TOP;
+      runActiveDiscovery.setLayoutData(gd);
+      runActiveDiscovery.addHyperlinkListener(new HyperlinkAdapter() {
+         @Override
+         public void linkActivated(HyperlinkEvent e)
+         {
+            scanAddressRange();
+         }
+      });
+
+      activeDiscoveryAddressList.addSelectionChangedListener(new ISelectionChangedListener() {
+         @Override
+         public void selectionChanged(SelectionChangedEvent event)
+         {
+            IStructuredSelection selection = activeDiscoveryAddressList.getStructuredSelection();
+            linkEdit.setEnabled(selection.size() == 1);
+            linkRemove.setEnabled(!selection.isEmpty());
+            runActiveDiscovery.setEnabled(!selection.isEmpty());
+         }
+      });
+   }
+
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
+    */
+   @Override
+   public void setFocus()
+   {
+      content.setFocus();
+   }
+
+   /**
+    * @param config
+    */
+   public void setConfig(NetworkDiscoveryConfig config)
+   {
+      this.config = config;
+
+      radioDiscoveryOff.setSelection(config.getDiscoveryType() == NetworkDiscoveryConfig.DISCOVERY_TYPE_NONE);
+      radioDiscoveryPassive.setSelection(config.getDiscoveryType() == NetworkDiscoveryConfig.DISCOVERY_TYPE_PASSIVE);
+      radioDiscoveryActive.setSelection(config.getDiscoveryType() == NetworkDiscoveryConfig.DISCOVERY_TYPE_ACTIVE);
+      radioDiscoveryActiveAndPassive.setSelection(config.getDiscoveryType() == NetworkDiscoveryConfig.DISCOVERY_TYPE_ACTIVE_PASSIVE);
+      checkUseSnmpTraps.setSelection(config.isUseSnmpTraps());
+      checkUseSyslog.setSelection(config.isUseSyslog());
+      
+      passiveDiscoveryInterval.setSelection(config.getPassiveDiscoveryPollInterval());
+      if(config.getActiveDiscoveryPollInterval() != 0)
+      {
+         radioActiveDiscoveryInterval.setSelection(true);
+      }
+      else
+      {
+         radioActiveDiscoverySchedule.setSelection(true);
+      }
+      activeDiscoveryInterval.setSelection(config.getActiveDiscoveryPollInterval());
+      activeDiscoverySchedule.setText(config.getActiveDiscoveryPollSchedule());
+      enableActiveDiscovery(config.getDiscoveryType() == NetworkDiscoveryConfig.DISCOVERY_TYPE_ACTIVE || config.getDiscoveryType() == NetworkDiscoveryConfig.DISCOVERY_TYPE_ACTIVE_PASSIVE);
+      enablePassiveDiscovery(config.getDiscoveryType() == NetworkDiscoveryConfig.DISCOVERY_TYPE_PASSIVE || config.getDiscoveryType() == NetworkDiscoveryConfig.DISCOVERY_TYPE_ACTIVE_PASSIVE);
+
+      checkFilterRange.setSelection((config.getFilterFlags() & NetworkDiscoveryFilterFlags.CHECK_ADDRESS_RANGE) != 0);
+      checkFilterScript.setSelection((config.getFilterFlags() & NetworkDiscoveryFilterFlags.EXECUTE_SCRIPT) != 0);
+      checkFilterProtocols.setSelection((config.getFilterFlags() & NetworkDiscoveryFilterFlags.CHECK_PROTOCOLS) != 0);
+      checkAllowAgent.setSelection((config.getFilterFlags() & NetworkDiscoveryFilterFlags.PROTOCOL_AGENT) != 0);
+      checkAllowSNMP.setSelection((config.getFilterFlags() & NetworkDiscoveryFilterFlags.PROTOCOL_SNMP) != 0);
+      checkAllowSSH.setSelection((config.getFilterFlags() & NetworkDiscoveryFilterFlags.PROTOCOL_SSH) != 0);
+
+      activeDiscoveryAddressList.setInput(config.getTargets().toArray());
+      filterAddressList.setInput(config.getAddressFilter().toArray());
+
+      filterScript.setScriptName(config.getFilterScript());
+
+      modified = false;
+   }
+
+   /**
+    * Mark view as modified
+    */
+   private void setModified()
+   {
+      modified = true;
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.ConfigurationView#save()
+    */
+   @Override
+   public void save()
+   {
+      new Job(i18n.tr("Saving network discovery configuration"), this) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            config.save();
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
+                  modified = false;
+               }
+            });
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return i18n.tr("Cannot save network discovery configuration");
+         }
+      }.start();
+   }
+
+   /**
+    * Add element to active discovery range list
+    */
+   private void addTargetAddressListElement()
+   {
+      AddressListElementEditDialog dlg = new AddressListElementEditDialog(getWindow().getShell(), true, null);
+      if (dlg.open() == Window.OK)
+      {
+         final List<InetAddressListElement> list = config.getTargets();
+         InetAddressListElement element = dlg.getElement();
+         if (!list.contains(element))
+         {
+            list.add(element);
+            activeDiscoveryAddressList.setInput(list.toArray());
+            setModified();
+         }
+      }
+   }
+   
+   /**
+    * Edit active discovery range element
+    */
+   private void editTargetAddressListElement()
+   {
+      IStructuredSelection selection = activeDiscoveryAddressList.getStructuredSelection();
+      if (selection.size() != 1)
+         return;
+
+      AddressListElementEditDialog dlg = new AddressListElementEditDialog(getWindow().getShell(), true, (InetAddressListElement)selection.getFirstElement());
+      if (dlg.open() == Window.OK)
+      {
+         final List<InetAddressListElement> list = config.getTargets();
+         activeDiscoveryAddressList.setInput(list.toArray());
+         setModified();
+      }
+   }
+
+   /**
+    * Remove element(s) from active discovery range list
+    */
+   private void removeTargetAddressListElements()
+   {
+      final List<InetAddressListElement> list = config.getTargets();
+      IStructuredSelection selection = (IStructuredSelection)activeDiscoveryAddressList.getSelection();
+      if (selection.size() > 0)
+      {
+         for(Object o : selection.toList())
+         {
+            list.remove(o);
+         }
+         activeDiscoveryAddressList.setInput(list.toArray());
+         setModified();
+      }
+   }
+   
+   /**
+    * Scan select address range(s)
+    */
+   private void scanAddressRange()
+   {
+      IStructuredSelection selection = activeDiscoveryAddressList.getStructuredSelection();
+      if (selection.isEmpty())
+         return;
+
+      if (!MessageDialogHelper.openConfirm(getWindow().getShell(), i18n.tr("Active Discovery"), i18n.tr("Are you sure you want to start manual scan for selected ranges?")))
+         return;
+
+      final List<InetAddressListElement> list = new ArrayList<InetAddressListElement>();
+      for(Object o : selection.toList())
+      {
+         list.add((InetAddressListElement)o);
+      }
+
+      final NXCSession session = Registry.getSession();
+      new Job(i18n.tr("Running address range scan"), this) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            session.startManualActiveDiscovery(list);
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
+                  StringBuilder sb = new StringBuilder("Scan started for the following address ranges:");
+                  for(InetAddressListElement e : list)
+                  {
+                     sb.append("\n");
+                     sb.append((e.getType() == InetAddressListElement.SUBNET) ? e.getBaseAddress().getHostAddress() + "/" + e.getMaskBits() : e.getBaseAddress().getHostAddress() + " - " + e.getEndAddress().getHostAddress());
+                  }
+                  addMessage(MessageArea.INFORMATION, sb.toString());
+               }
+            });
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return i18n.tr("Cannot start address range scan");
+         }
+      }.start();
+   }
+
+   /**
+    * Add element to address filter
+    */
+   private void addAddressFilterElement()
+   {
+      AddressListElementEditDialog dlg = new AddressListElementEditDialog(getWindow().getShell(), false, null);
+      if (dlg.open() == Window.OK)
+      {
+         final List<InetAddressListElement> list = config.getAddressFilter();
+         InetAddressListElement element = dlg.getElement();
+         if (!list.contains(element))
+         {
+            list.add(element);
+            filterAddressList.setInput(list.toArray());
+            setModified();
+         }
+      }
+   }
+
+   /**
+    * Edit address filter element
+    */
+   private void editAddressFilterElement()
+   {
+      IStructuredSelection selection = filterAddressList.getStructuredSelection();
+      if (selection.size() != 1)
+         return;
+
+      AddressListElementEditDialog dlg = new AddressListElementEditDialog(getWindow().getShell(), false, (InetAddressListElement)selection.getFirstElement());
+      if (dlg.open() == Window.OK)
+      {
+         final List<InetAddressListElement> list = config.getAddressFilter();
+         filterAddressList.setInput(list.toArray());
+         setModified();
+      }
+   }
+
+   /**
+    * Remove element(s) from address filter
+    */
+   private void removeAddressFilterElements()
+   {
+      final List<InetAddressListElement> list = config.getAddressFilter();
+      IStructuredSelection selection = (IStructuredSelection)filterAddressList.getSelection();
+      if (selection.size() > 0)
+      {
+         for(Object o : selection.toList())
+         {
+            list.remove(o);
+         }
+         filterAddressList.setInput(list.toArray());
+         setModified();
+      }
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.ConfigurationView#isModified()
+    */
+   @Override
+   public boolean isModified()
+   {
+      return modified;
+   }
+}
