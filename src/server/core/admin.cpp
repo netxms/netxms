@@ -43,6 +43,8 @@ static THREAD_RESULT THREAD_CALL ProcessingThread(void *arg)
 {
    SOCKET sock = CAST_FROM_POINTER(arg, SOCKET);
 
+   bool isAuthenticated = false;
+   bool requireAuthentication = ConfigReadBoolean(_T("Server.Security.RestrictLocalConsoleAccess"), true);
    SocketConsole console(sock);
    SocketMessageReceiver receiver(sock, 4096, MAX_MSG_SIZE);
    while(true)
@@ -66,22 +68,49 @@ static THREAD_RESULT THREAD_CALL ProcessingThread(void *arg)
          break;
       }
 
+      uint32_t rcc;
       if (request->getCode() == CMD_ADM_REQUEST)
       {
-         TCHAR command[256];
-         request->getFieldAsString(VID_COMMAND, command, 256);
-
-         int exitCode = ProcessConsoleCommand(command, &console);
-         switch(exitCode)
+         if (isAuthenticated || !requireAuthentication)
          {
-            case CMD_EXIT_SHUTDOWN:
-               InitiateShutdown(ShutdownReason::FROM_REMOTE_CONSOLE);
-               break;
-            case CMD_EXIT_CLOSE_SESSION:
-               delete request;
-               goto close_session;
-            default:
-               break;
+            TCHAR command[256];
+            request->getFieldAsString(VID_COMMAND, command, 256);
+
+            int exitCode = ProcessConsoleCommand(command, &console);
+            switch(exitCode)
+            {
+               case CMD_EXIT_SHUTDOWN:
+                  InitiateShutdown(ShutdownReason::FROM_REMOTE_CONSOLE);
+                  break;
+               case CMD_EXIT_CLOSE_SESSION:
+                  delete request;
+                  goto close_session;
+               default:
+                  break;
+            }
+            rcc = RCC_SUCCESS;
+         }
+         else
+         {
+            rcc = RCC_ACCESS_DENIED;
+         }
+      }
+      else if (request->getCode() == CMD_LOGIN)
+      {
+         TCHAR loginName[MAX_USER_NAME], password[MAX_PASSWORD];
+         request->getFieldAsString(VID_LOGIN_NAME, loginName, MAX_USER_NAME);
+         request->getFieldAsString(VID_PASSWORD, password, MAX_PASSWORD);
+
+         uint32_t userId, graceLogins;
+         uint64_t systemRights;
+         bool changePassword, intruderLockout, closeOtherSessions;
+         rcc = AuthenticateUser(loginName, password, 0, nullptr, nullptr, &userId, &systemRights, &changePassword, &intruderLockout, &closeOtherSessions, false, &graceLogins);
+         if (rcc == RCC_SUCCESS)
+         {
+            if (systemRights & SYSTEM_ACCESS_SERVER_CONSOLE)
+               isAuthenticated = true;
+            else
+               rcc = RCC_ACCESS_DENIED;
          }
       }
       else if (request->getCode() == CMD_SET_DB_PASSWORD)
@@ -89,9 +118,15 @@ static THREAD_RESULT THREAD_CALL ProcessingThread(void *arg)
          request->getFieldAsString(VID_PASSWORD, g_szDbPassword, MAX_PASSWORD);
          DecryptPassword(g_szDbLogin, g_szDbPassword, g_szDbPassword, MAX_PASSWORD);
          g_dbPasswordReady.set();
+         rcc = RCC_SUCCESS;
+      }
+      else
+      {
+         rcc = RCC_NOT_IMPLEMENTED;
       }
 
       NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
+      response.setField(VID_RCC, rcc);
       NXCP_MESSAGE *rawMsgOut = response.serialize();
 		SendEx(sock, rawMsgOut, ntohl(rawMsgOut->size), 0, console.getMutex());
       MemFree(rawMsgOut);

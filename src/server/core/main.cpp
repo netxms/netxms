@@ -889,9 +889,8 @@ BOOL NXCORE_EXPORTABLE Initialize()
 	if (g_dbDriver == nullptr)
 		return FALSE;
 
-   // Start local administrative interface listener if required
-   if (g_flags & AF_ENABLE_LOCAL_CONSOLE)
-      ThreadCreate(LocalAdminListenerThread);
+   // Start local administrative interface listener
+   ThreadCreate(LocalAdminListenerThread);
 
 	// Wait for database password if needed
 	GetDatabasePassword();

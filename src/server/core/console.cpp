@@ -929,7 +929,6 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_CASE_INSENSITIVE_LOGINS));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_TRAP_SOURCES_IN_ALL_ZONES));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_SYSLOG_DISCOVERY));
-         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_ENABLE_LOCAL_CONSOLE));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_CACHE_DB_ON_STARTUP));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_ENABLE_NXSL_FILE_IO_FUNCTIONS));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_ENABLE_EMBEDDED_PYTHON));

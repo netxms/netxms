@@ -31,27 +31,27 @@
 /**
  * Global data
  */
-SOCKET g_hSocket = -1;
-DWORD g_dwRqId = 1;
+SOCKET g_socket = INVALID_SOCKET;
+uint32_t g_requestId = 1;
 
 /**
  * Message receiver
  */
-static SocketMessageReceiver *s_receiver = NULL;
+static SocketMessageReceiver *s_receiver = nullptr;
 
 /**
  * Connect to server
  */
-BOOL Connect()
+bool Connect()
 {
    struct sockaddr_in sa;
 
    // Create socket
-   g_hSocket = CreateSocket(AF_INET, SOCK_STREAM, 0);
-   if (g_hSocket == INVALID_SOCKET)
+   g_socket = CreateSocket(AF_INET, SOCK_STREAM, 0);
+   if (g_socket == INVALID_SOCKET)
    {
       printf("Error creating socket\n");
-      return FALSE;
+      return false;
    }
 
    // Fill in address structure
@@ -61,17 +61,17 @@ BOOL Connect()
    sa.sin_port = htons(LOCAL_ADMIN_PORT);
 
    // Connect to server
-   if (connect(g_hSocket, (struct sockaddr *)&sa, sizeof(sa)) == -1)
+   if (connect(g_socket, (struct sockaddr *)&sa, sizeof(sa)) == -1)
    {
       printf("Cannot establish connection with server\n");
-      closesocket(g_hSocket);
-      g_hSocket = -1;
-      return FALSE;
+      closesocket(g_socket);
+      g_socket = -1;
+      return false;
    }
 
    // Initialize receiver
-   s_receiver = new SocketMessageReceiver(g_hSocket, 4096, MAX_MSG_SIZE);
-   return TRUE;
+   s_receiver = new SocketMessageReceiver(g_socket, 4096, MAX_MSG_SIZE);
+   return true;
 }
 
 /**
@@ -80,24 +80,22 @@ BOOL Connect()
 void Disconnect()
 {
    delete_and_null(s_receiver);
-   if (g_hSocket != -1)
+   if (g_socket != -1)
    {
-      shutdown(g_hSocket, 2);
-      closesocket(g_hSocket);
-      g_hSocket = -1;
+      shutdown(g_socket, 2);
+      closesocket(g_socket);
+      g_socket = -1;
    }
 }
 
 /**
  * Send message to server
  */
-void SendMsg(NXCPMessage *pMsg)
+void SendMsg(const NXCPMessage& msg)
 {
-   NXCP_MESSAGE *pRawMsg;
-
-   pRawMsg = pMsg->serialize();
-   SendEx(g_hSocket, pRawMsg, ntohl(pRawMsg->size), 0, NULL);
-   free(pRawMsg);
+   NXCP_MESSAGE *rawMsg = msg.serialize();
+   SendEx(g_socket, rawMsg, ntohl(rawMsg->size), 0, nullptr);
+   MemFree(rawMsg);
 }
 
 /**

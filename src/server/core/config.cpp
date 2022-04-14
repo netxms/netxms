@@ -98,7 +98,6 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("DebugTags"), CT_STRING_CONCAT, ',', 0, 0, 0, &s_debugTags, nullptr },
    { _T("DefaultThreadStackSize"), CT_SIZE_BYTES, 0, 0, 0, 0, &s_defaultThreadStackSize, nullptr },
    { _T("DumpDirectory"), CT_STRING, 0, 0, MAX_PATH, 0, g_szDumpDir, nullptr },
-   { _T("EnableServerConsole"), CT_BOOLEAN_FLAG_64, 0, 0, AF_ENABLE_LOCAL_CONSOLE, 0, &g_flags, nullptr },
    { _T("FullCrashDumps"), CT_BOOLEAN_FLAG_64, 0, 0, AF_WRITE_FULL_DUMP, 0, &g_flags, nullptr },
    { _T("LibraryDirectory"), CT_STRING, 0, 0, MAX_PATH, 0, g_netxmsdLibDir, nullptr },
    { _T("ListenAddress"), CT_STRING, 0, 0, MAX_PATH, 0, g_szListenAddress, nullptr },

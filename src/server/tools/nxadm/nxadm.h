@@ -30,22 +30,12 @@
 #include <nxcpapi.h>
 #include <local_admin.h>
 
-
-//
-// Functions
-//
-
-BOOL Connect(void);
-void Disconnect(void);
-void SendMsg(NXCPMessage *pMsg);
+bool Connect();
+void Disconnect();
+void SendMsg(const NXCPMessage& msg);
 NXCPMessage *RecvMsg(void);
 
-
-//
-// Global variables
-//
-
-extern SOCKET g_hSocket;
-extern DWORD g_dwRqId;
+extern SOCKET g_socket;
+extern uint32_t g_requestId;
 
 #endif

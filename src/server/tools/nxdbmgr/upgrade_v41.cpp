@@ -24,6 +24,21 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 41.12 to 41.13
+ */
+static bool H_UpgradeFromV12()
+{
+   CHK_EXEC(CreateConfigParam(_T("Server.Security.RestrictLocalConsoleAccess"),
+         _T("1"),
+         _T("If enabled, restrict access to local server console only to authenticated users with server console access rights."),
+         _T("days"),
+         'B', true, false, false, false));
+
+   CHK_EXEC(SetMinorSchemaVersion(13));
+   return true;
+}
+
+/**
  * Upgrade from 41.11 to 41.12
  */
 static bool H_UpgradeFromV11()
@@ -396,13 +411,13 @@ static bool H_UpgradeFromV0()
 {
    CHK_EXEC(CreateConfigParam(_T("AgentTunnels.Certificates.ReissueInterval"),
          _T("30"),
-         _T("Interval in days between reissuing agent certificates"),
+         _T("Interval in days between reissuing agent certificates."),
          _T("days"),
          'I', true, false, false, false));
 
    CHK_EXEC(CreateConfigParam(_T("AgentTunnels.Certificates.ValidityPeriod"),
          _T("90"),
-         _T("Validity period in days for newly issued agent certificates"),
+         _T("Validity period in days for newly issued agent certificates."),
          _T("days"),
          'I', true, false, false, false));
 
@@ -420,6 +435,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 12, 41, 13, H_UpgradeFromV12 },
    { 11, 41, 12, H_UpgradeFromV11 },
    { 10, 41, 11, H_UpgradeFromV10 },
    { 9,  41, 10, H_UpgradeFromV9  },

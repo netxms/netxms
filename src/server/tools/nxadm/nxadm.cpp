@@ -22,6 +22,7 @@
 **/
 
 #include "nxadm.h"
+#include <nxcldefs.h>
 #include <netxms_getopt.h>
 #include <netxms-version.h>
 
@@ -40,15 +41,20 @@ static void Help()
 {
    _tprintf(_T("NetXMS Server Administration Tool  Version ") NETXMS_VERSION_STRING _T("\n")
             _T("Copyright (c) 2004-2022 Raden Solutions\n\n")
-            _T("Usage: nxadm -c <command>\n")
-            _T("       nxadm -i\n")
+            _T("Usage: nxadm [-u <login>] [-P|-p <password>] -c <command>\n")
+            _T("       nxadm [-u <login>] [-P|-p <password>] -i\n")
+            _T("       nxadm -P\n")
+            _T("       nxadm -p <db password>\n")
             _T("       nxadm -h\n\n")
             _T("Options:\n")
             _T("   -c <command>   Execute given command at server debug console and disconnect\n")
             _T("   -i             Connect to server debug console in interactive mode\n")
             _T("   -h             Display help and exit\n")
-            _T("   -p <password>  Provide database password for server startup\n")
-            _T("   -P             Provide database password for server startup (password read from terminal)\n\n"));
+            _T("   -p <password>  Provide database password for server startup or\n")
+            _T("                  user's password for console access\n")
+            _T("   -P             Provide database password for server startup or\n")
+            _T("                  user's password for console access (password read from terminal)\n")
+            _T("   -u name        User name for authentication\n\n"));
 }
 
 /**
@@ -56,19 +62,17 @@ static void Help()
  */
 static bool SendPassword(const TCHAR *password)
 {
-   NXCPMessage msg;
-   msg.setCode(CMD_SET_DB_PASSWORD);
-   msg.setId(g_dwRqId++);
+   NXCPMessage msg(CMD_SET_DB_PASSWORD, g_requestId++);
    msg.setField(VID_PASSWORD, password);
-   SendMsg(&msg);
+   SendMsg(msg);
 
    bool success = false;
    NXCPMessage *response = RecvMsg();
-   if (response != NULL)
+   if (response != nullptr)
    {
-      UINT32 rcc = response->getFieldAsUInt32(VID_RCC);
+      uint32_t rcc = response->getFieldAsUInt32(VID_RCC);
       if (rcc != 0)
-         _tprintf(_T("ERROR: server error %d\n"), rcc);
+         _tprintf(_T("ERROR: server error %u\n"), rcc);
       delete response;
       success = (rcc == 0);
    }
@@ -81,41 +85,78 @@ static bool SendPassword(const TCHAR *password)
 }
 
 /**
+ * Login to the server
+ */
+static bool Login(const TCHAR *login, const TCHAR *password)
+{
+   NXCPMessage msg(CMD_LOGIN, g_requestId++);
+   msg.setField(VID_LOGIN_NAME, login);
+   msg.setField(VID_PASSWORD, CHECK_NULL_EX(password));
+   SendMsg(msg);
+
+   NXCPMessage *response = RecvMsg();
+   if (response == nullptr)
+   {
+      _tprintf(_T("Authentication failed (no response from server)\n"));
+      return false;
+   }
+
+   uint32_t rcc = response->getFieldAsUInt32(VID_RCC);
+   delete response;
+   if (rcc != RCC_SUCCESS)
+   {
+      _tprintf(_T("Authentication failed (server error %u)\n"), rcc);
+      return false;
+   }
+   return true;
+}
+
+/**
  * Execute command
  */
-static bool ExecCommand(const TCHAR *command)
+static bool ExecCommand(const TCHAR *command, const TCHAR *login, const TCHAR *password)
 {
    bool connClosed = false;
 
-   NXCPMessage msg;
-   msg.setCode(CMD_ADM_REQUEST);
-   msg.setId(g_dwRqId++);
+   if (login != nullptr)
+   {
+      if (!Login(login, password))
+         return false;
+   }
+
+   NXCPMessage msg(CMD_ADM_REQUEST, g_requestId++);
    msg.setField(VID_COMMAND, command);
-   SendMsg(&msg);
+   SendMsg(msg);
 
    while(true)
    {
       NXCPMessage *response = RecvMsg();
-      if (response == NULL)
+      if (response == nullptr)
       {
          _tprintf(_T("Connection closed\n"));
          connClosed = true;
          break;
       }
 
-      UINT16 code = response->getCode();
+      uint16_t code = response->getCode();
       if (code == CMD_ADM_MESSAGE)
       {
          TCHAR *text = response->getFieldAsString(VID_MESSAGE);
-         if (text != NULL)
+         if (text != nullptr)
          {
             WriteToTerminal(text);
-            free(text);
+            MemFree(text);
          }
       }
-      delete response;
-      if (code == CMD_REQUEST_COMPLETED)
+      else if (code == CMD_REQUEST_COMPLETED)
+      {
+         uint32_t rcc = response->getFieldAsUInt32(VID_RCC);
+         if (rcc != RCC_SUCCESS)
+            _tprintf(_T("Server error %u\n"), rcc);
+         delete response;
          break;
+      }
+      delete response;
    }
 
    return connClosed;
@@ -124,8 +165,14 @@ static bool ExecCommand(const TCHAR *command)
 /**
  * Interactive mode loop
  */
-static void Shell()
+static void Shell(const TCHAR *login, const TCHAR *password)
 {
+   if (login != nullptr)
+   {
+      if (!Login(login, password))
+         return;
+   }
+
    char *ptr;
 
    _tprintf(_T("\nNetXMS Server Remote Console V") NETXMS_VERSION_STRING _T(" Ready\n")
@@ -144,10 +191,10 @@ static void Shell()
       WriteToTerminal(_T("\x1b[33mnetxmsd:\x1b[0m "));
       fflush(stdout);
       char szCommand[256];
-      if (fgets(szCommand, 255, stdin) == NULL)
+      if (fgets(szCommand, 255, stdin) == nullptr)
          break;   // Error reading stdin
       ptr = strchr(szCommand, '\n');
-      if (ptr != NULL)
+      if (ptr != nullptr)
          *ptr = 0;
       ptr = szCommand;
 #endif
@@ -161,12 +208,12 @@ static void Shell()
          TrimW(wcCommand);
          if (wcCommand[0] != 0)
          {
-            if (ExecCommand(wcCommand))
+            if (ExecCommand(wcCommand, nullptr, nullptr))
 #else
          TrimA(ptr);
          if (*ptr != 0)
          {
-            if (ExecCommand(ptr))
+            if (ExecCommand(ptr, nullptr, nullptr))
 #endif
                break;
 #if USE_READLINE
@@ -188,14 +235,23 @@ static void Shell()
 #endif
 }
 
+enum WorkMode
+{
+   UNDEFINED,
+   SHELL,
+   COMMAND,
+   DB_PASSWORD
+};
+
 /**
  * Entry point
  */
 int main(int argc, char *argv[])
 {
    int iError, ch;
-   BOOL bStart = TRUE, bCmdLineOK = FALSE;
-   TCHAR *command = NULL, *password = NULL;
+   BOOL bStart = TRUE;
+   WorkMode workMode = UNDEFINED;
+   TCHAR *command = nullptr, *password = nullptr, *loginName = nullptr;
    TCHAR passwordBuffer[MAX_PASSWORD];
 
    InitNetXMSProcess(true);
@@ -209,7 +265,7 @@ int main(int argc, char *argv[])
    {
       // Parse command line
       opterr = 1;
-      while((ch = getopt(argc, argv, "c:ihp:P")) != -1)
+      while((ch = getopt(argc, argv, "c:ihp:Pu:")) != -1)
       {
          switch(ch)
          {
@@ -224,11 +280,11 @@ int main(int argc, char *argv[])
 #else
                command = optarg;
 #endif
-               bCmdLineOK = TRUE;
+               workMode = COMMAND;
                break;
             case 'i':
                command = NULL;
-               bCmdLineOK = TRUE;
+               workMode = SHELL;
                break;
             case 'p':
 #ifdef UNICODE
@@ -236,11 +292,16 @@ int main(int argc, char *argv[])
 #else
                password = optarg;
 #endif
-               bCmdLineOK = TRUE;
                break;
             case 'P':
                password = passwordBuffer;
-               bCmdLineOK = TRUE;
+               break;
+            case 'u':
+#ifdef UNICODE
+               loginName = WideStringFromMBStringSysLocale(optarg);
+#else
+               loginName = optarg;
+#endif
                break;
             case '?':
                bStart = FALSE;
@@ -251,31 +312,35 @@ int main(int argc, char *argv[])
          }
       }
 
-      if (bStart && bCmdLineOK)
+      if ((workMode == UNDEFINED) && (password != nullptr))
+         workMode = DB_PASSWORD;
+
+      if (bStart && (workMode != UNDEFINED))
       {
          if (Connect())
          {
-            if ((command == NULL) && (password == NULL))
+            if (password == passwordBuffer)
             {
-               Shell();
+               if (!ReadPassword((workMode == DB_PASSWORD) ? _T("Database password: ") : _T("Password: "), passwordBuffer, MAX_PASSWORD))
+               {
+                  _tprintf(_T("Cannot read password from terminal\n"));
+                  iError = 4;
+                  goto stop;
+               }
+            }
+
+            if (workMode == SHELL)
+            {
+               Shell(loginName, password);
                iError = 0;
             }
-            else if (command != NULL)
+            else if (workMode == COMMAND)
             {
-               ExecCommand(command);
+               ExecCommand(command, loginName, password);
                iError = 0;
             }
             else
             {
-               if (password == passwordBuffer)
-               {
-                  if (!ReadPassword(_T("Database password: "), passwordBuffer, MAX_PASSWORD))
-                  {
-                     _tprintf(_T("Cannot read password from terminal\n"));
-                     iError = 4;
-                     goto stop;
-                  }
-               }
                iError = SendPassword(password) ? 0 : 3;
             }
             Disconnect();
@@ -285,7 +350,7 @@ int main(int argc, char *argv[])
             iError = 2;
          }
       }
-      else if (bStart && !bCmdLineOK)
+      else if (bStart && (workMode == UNDEFINED))
       {
          Help();
          iError = 1;
@@ -299,9 +364,10 @@ int main(int argc, char *argv[])
 
 stop:
 #ifdef UNICODE
-   free(command);
+   MemFree(command);
+   MemFree(loginName);
    if (password != passwordBuffer)
-      free(password);
+      MemFree(password);
 #endif
    return iError;
 }
