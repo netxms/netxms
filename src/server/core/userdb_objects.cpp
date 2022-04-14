@@ -637,7 +637,7 @@ bool User::saveToDatabase(DB_HANDLE hdb)
          _T("INSERT INTO users (name,password,system_access,flags,full_name,description,grace_logins,guid,auth_method,")
          _T("  cert_mapping_method,cert_mapping_data,password_history,auth_failures,last_passwd_change,min_passwd_length,")
          _T("  disabled_until,last_login,ldap_dn,ldap_unique_id,created,email,phone_number,id) ")
-         _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,'',?,?,?,?,?,?,?,?,?,?,?,?)"));
+         _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,'',?,?,?,?,?,?,?,?,?,?,?)"));
    }
    if (hStmt == nullptr)
       return false;
