@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,29 +16,19 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.filemanager.dialogs.helpers;
+package org.netxms.nxmc.modules.filemanager.views.helpers;
 
 import org.eclipse.jface.viewers.ITableLabelProvider;
-import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
-import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.client.server.ServerFile;
-import org.netxms.ui.eclipse.console.resources.RegionalSettings;
-import org.netxms.ui.eclipse.filemanager.dialogs.SelectServerFileDialog;
+import org.netxms.nxmc.localization.DateFormatFactory;
+import org.netxms.nxmc.modules.filemanager.views.ServerFileManager;
 
 /**
  * Label provider for ServerFile objects
- *
  */
-public class ServerFileLabelProvider extends LabelProvider implements ITableLabelProvider
+public class ServerFileLabelProvider extends BaseFileLabelProvider implements ITableLabelProvider
 {
-	private WorkbenchLabelProvider wbLabelProvider;
-	
-	public ServerFileLabelProvider()
-	{
-		wbLabelProvider = new WorkbenchLabelProvider();
-	}
-	
    /**
     * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
     */
@@ -58,41 +48,15 @@ public class ServerFileLabelProvider extends LabelProvider implements ITableLabe
 	{
 		switch(columnIndex)
 		{
-			case SelectServerFileDialog.COLUMN_NAME:
+			case ServerFileManager.COLUMN_NAME:
 				return getText(element);
-			case SelectServerFileDialog.COLUMN_SIZE:
-				return Long.toString(((ServerFile)element).getSize());
-			case SelectServerFileDialog.COLUMN_MODTIME:
-            return RegionalSettings.getDateTimeFormat().format(((ServerFile)element).getModificationTime());
+			case ServerFileManager.COLUMN_TYPE:
+				return ((ServerFile)element).getExtension();
+			case ServerFileManager.COLUMN_SIZE:
+            return getSizeString(((ServerFile)element).getSize());
+			case ServerFileManager.COLUMN_MODIFYED:
+            return ((ServerFile)element).getModificationTime().getTime() == 0 ? "" : DateFormatFactory.getDateTimeFormat().format(((ServerFile)element).getModificationTime());
 		}
 		return null;
-	}
-
-   /**
-    * @see org.eclipse.jface.viewers.LabelProvider#getImage(java.lang.Object)
-    */
-	@Override
-	public Image getImage(Object element)
-	{
-		return wbLabelProvider.getImage(element);
-	}
-
-   /**
-    * @see org.eclipse.jface.viewers.LabelProvider#getText(java.lang.Object)
-    */
-	@Override
-	public String getText(Object element)
-	{
-		return wbLabelProvider.getText(element);
-	}
-
-   /**
-    * @see org.eclipse.jface.viewers.BaseLabelProvider#dispose()
-    */
-	@Override
-	public void dispose()
-	{
-		wbLabelProvider.dispose();
-		super.dispose();
 	}
 }

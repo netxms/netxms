@@ -245,7 +245,6 @@ public class ObjectBrowser extends ViewPart
 		
 		TextCellEditor editor =  new TextCellEditor(tree.getTree(), SWT.BORDER);		
 		editor.addListener(new ICellEditorListener() {
-         
          @Override
          public void editorValueChanged(boolean oldValidState, boolean newValidState)
          {
@@ -539,13 +538,12 @@ public class ObjectBrowser extends ViewPart
 		final ActionHandler showStatusIndicatorHandler = new ActionHandler(actionShowStatusIndicator);
 		handlerService.activateHandler(actionShowStatusIndicator.getActionDefinitionId(), showStatusIndicatorHandler);
 		
-		actionRenameObject = new Action(Messages.get().ObjectBrowser_Rename)
-		{
+      actionRenameObject = new Action(Messages.get().ObjectBrowser_Rename) {
 		   @Override
 		   public void run()
 		   {
 		      TreeItem[] selection = objectTree.getTreeControl().getSelection();
-		      if(selection.length != 1)
+            if (selection.length != 1)
 		         return;
 		      objectTree.getTreeViewer().editElement(selection[0].getData(), 0);
 		   }

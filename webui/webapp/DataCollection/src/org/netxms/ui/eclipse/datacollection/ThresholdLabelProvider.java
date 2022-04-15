@@ -34,7 +34,7 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 public class ThresholdLabelProvider extends LabelProvider implements ITableLabelProvider
 {
-	private NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+   private NXCSession session = ConsoleSharedData.getSession();
 	private Image thresholdIcon = Activator.getImageDescriptor("icons/threshold.png").createImage(); //$NON-NLS-1$
 
    /**

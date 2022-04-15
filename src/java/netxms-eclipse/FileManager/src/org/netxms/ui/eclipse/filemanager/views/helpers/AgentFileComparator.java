@@ -17,9 +17,9 @@ import org.netxms.ui.eclipse.widgets.SortableTreeViewer;
  */
 public class AgentFileComparator extends ViewerComparator
 {
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ViewerComparator#compare(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.ViewerComparator#compare(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
+    */
 	@Override
 	public int compare(Viewer viewer, Object e1, Object e2)
 	{
@@ -63,7 +63,7 @@ public class AgentFileComparator extends ViewerComparator
          case AgentFileManager.COLUMN_MODIFYED:
             if((((AgentFile)e1).isDirectory() == ((AgentFile)e2).isDirectory()))
             {
-               rc = ((AgentFile)e1).getModifyicationTime().compareTo(((AgentFile)e2).getModifyicationTime());
+               rc = ((AgentFile)e1).getModificationTime().compareTo(((AgentFile)e2).getModificationTime());
             }
             else
             {

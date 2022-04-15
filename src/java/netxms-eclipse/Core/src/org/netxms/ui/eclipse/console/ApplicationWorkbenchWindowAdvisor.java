@@ -226,11 +226,11 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor im
       }
    }
 
-	/**
-	 * Take snapshot of network map
-	 * 
-	 * @param param
-	 */
+   /**
+    * Take snapshot of network map
+    * 
+    * @param param
+    */
 	private void takeMapSnapshot(String param)
 	{
 	   final String[] parts = param.split(",");
@@ -575,7 +575,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor im
       return dialog.open();
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.certificate.request.KeyStorePasswordRequestListener#keyStorePasswordRequested()
     */
    @Override
@@ -585,7 +585,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor im
             Messages.get().ApplicationWorkbenchWindowAdvisor_CertStorePasswordMsg);
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.certificate.request.KeyStoreEntryPasswordRequestListener#keyStoreEntryPasswordRequested()
     */
    @Override

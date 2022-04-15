@@ -42,7 +42,7 @@ public class AgentFileLabelProvider extends LabelProvider implements ITableLabel
       wbLabelProvider = new WorkbenchLabelProvider();
    }
    
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
     */
    @Override
@@ -53,9 +53,9 @@ public class AgentFileLabelProvider extends LabelProvider implements ITableLabel
       return null;
    }
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
+    */
 	@Override
 	public String getColumnText(Object element, int columnIndex)
 	{
@@ -75,7 +75,8 @@ public class AgentFileLabelProvider extends LabelProvider implements ITableLabel
 			   }			      
 				return (((AgentFile)element).isPlaceholder()) ? "" : getValue(((AgentFile)element).getSize()); //$NON-NLS-1$
 			case AgentFileManager.COLUMN_MODIFYED:
-				return (((AgentFile)element).isPlaceholder() || ((AgentFile)element).getModifyicationTime().getTime() == 0) ? "" : RegionalSettings.getDateTimeFormat().format(((AgentFile)element).getModifyicationTime()); //$NON-NLS-1$
+            return (((AgentFile)element).isPlaceholder() || ((AgentFile)element).getModificationTime().getTime() == 0) ? "" : //$NON-NLS-1$
+                  RegionalSettings.getDateTimeFormat().format(((AgentFile)element).getModificationTime());
 			case AgentFileManager.COLUMN_OWNER:
 			   return ((AgentFile)element).getOwner();
 			case AgentFileManager.COLUMN_GROUP:
@@ -86,7 +87,7 @@ public class AgentFileLabelProvider extends LabelProvider implements ITableLabel
 		return null;
 	}
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.viewers.LabelProvider#getImage(java.lang.Object)
     */
    @Override

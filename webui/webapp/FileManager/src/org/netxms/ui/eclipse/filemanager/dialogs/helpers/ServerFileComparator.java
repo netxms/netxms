@@ -17,9 +17,9 @@ import org.netxms.ui.eclipse.filemanager.dialogs.SelectServerFileDialog;
  */
 public class ServerFileComparator extends ViewerComparator
 {
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ViewerComparator#compare(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.ViewerComparator#compare(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
+    */
 	@Override
 	public int compare(Viewer viewer, Object e1, Object e2)
 	{
@@ -37,7 +37,7 @@ public class ServerFileComparator extends ViewerComparator
 				rc = Long.signum(((ServerFile)e1).getSize() - ((ServerFile)e2).getSize());
 				break;
 			case SelectServerFileDialog.COLUMN_MODTIME:
-				rc = ((ServerFile)e1).getModifyicationTime().compareTo(((ServerFile)e2).getModifyicationTime());
+            rc = ((ServerFile)e1).getModificationTime().compareTo(((ServerFile)e2).getModificationTime());
 				break;
 			default:
 				rc = 0;

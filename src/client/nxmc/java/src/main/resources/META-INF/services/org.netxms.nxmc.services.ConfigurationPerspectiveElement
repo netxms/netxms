@@ -5,6 +5,7 @@ org.netxms.nxmc.modules.agentmanagement.ServerStoredAgentConfigurationElement
 org.netxms.nxmc.modules.agentmanagement.TunnelConfigurationElement
 org.netxms.nxmc.modules.agentmanagement.UserAgentNotificationElement
 org.netxms.nxmc.modules.alarms.AlarmCategoryConfiguratorElement
+org.netxms.nxmc.modules.filemanager.ServerFilesElement
 org.netxms.nxmc.modules.imagelibrary.ImageLibraryConfigurationElement
 org.netxms.nxmc.modules.nxsl.ScriptLibraryConfigurationElement
 org.netxms.nxmc.modules.serverconfig.NetworkCredentialsElement

@@ -28,6 +28,8 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridLayout;
@@ -102,6 +104,13 @@ public class PerspectiveSwitcher extends Composite
 
       ToolItem selectorButton = new ToolItem(toolbar, SWT.PUSH);
       selectorButton.setImage(Activator.getImageDescriptor("icons/perspectives-menu.png").createImage());
+      selectorButton.addDisposeListener(new DisposeListener() {
+         @Override
+         public void widgetDisposed(DisposeEvent e)
+         {
+            selectorButton.getImage().dispose();
+         }
+      });
       final MenuManager manager = new MenuManager();
       manager.setRemoveAllWhenShown(true);
       manager.addMenuListener(new IMenuListener() {

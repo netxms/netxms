@@ -69,6 +69,7 @@ public class SharedIcons
 	public static ImageDescriptor TERMINATE;
 	public static ImageDescriptor UNKNOWN_OBJECT;
 	public static ImageDescriptor UP;
+   public static ImageDescriptor UPLOAD;
    public static ImageDescriptor USER;
 	public static ImageDescriptor XML;
 	public static ImageDescriptor ZOOM_IN;
@@ -117,6 +118,7 @@ public class SharedIcons
 	public static Image IMG_TERMINATE;
 	public static Image IMG_UNKNOWN_OBJECT;
 	public static Image IMG_UP;
+   public static Image IMG_UPLOAD;
    public static Image IMG_USER;
 	public static Image IMG_XML;
 	public static Image IMG_ZOOM_IN;
@@ -170,6 +172,7 @@ public class SharedIcons
       TERMINATE = ResourceManager.getImageDescriptor("icons/terminate.gif");
       UNKNOWN_OBJECT = ResourceManager.getImageDescriptor("icons/unknown_obj.gif");
       UP = ResourceManager.getImageDescriptor("icons/up.png");
+      UPLOAD = ResourceManager.getImageDescriptor("icons/upload.png");
       USER = ResourceManager.getImageDescriptor("icons/user.png");
       XML = ResourceManager.getImageDescriptor("icons/xml.gif");
       ZOOM_IN = ResourceManager.getImageDescriptor("icons/zoom_in.png");
@@ -218,6 +221,7 @@ public class SharedIcons
 		IMG_TERMINATE = TERMINATE.createImage();
 		IMG_UNKNOWN_OBJECT = UNKNOWN_OBJECT.createImage();
 		IMG_UP = UP.createImage();
+      IMG_UPLOAD = UPLOAD.createImage();
       IMG_USER = USER.createImage();
 		IMG_XML = XML.createImage();
 		IMG_ZOOM_IN = ZOOM_IN.createImage();

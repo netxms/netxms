@@ -1552,6 +1552,9 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_UPLOAD_FILE:
          receiveFile(*request);
          break;
+      case CMD_RENAME_FILE:
+         renameFile(*request);
+         break;
       case CMD_DELETE_FILE:
          deleteFile(*request);
          break;
@@ -12341,7 +12344,7 @@ void ClientSession::getVlans(const NXCPMessage& request)
  */
 void ClientSession::receiveFile(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
 	if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_SERVER_FILES)
    {
@@ -12360,24 +12363,64 @@ void ClientSession::receiveFile(const NXCPMessage& request)
       if (fInfo->open())
       {
          m_downloadFileMap.set(request.getId(), fInfo);
-         msg.setField(VID_RCC, RCC_SUCCESS);
+         response.setField(VID_RCC, RCC_SUCCESS);
          writeAuditLog(AUDIT_SYSCFG, true, 0, _T("Started upload of file \"%s\" to server"), fileName);
          NotifyClientSessions(NX_NOTIFY_FILE_LIST_CHANGED, 0);
       }
       else
       {
          delete fInfo;
-         msg.setField(VID_RCC, RCC_IO_ERROR);
+         response.setField(VID_RCC, RCC_IO_ERROR);
       }
    }
    else
    {
       writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on upload file to server"));
-      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
 
-   // Send response
-   sendMessage(&msg);
+   sendMessage(response);
+}
+
+/**
+ * Rename file in store
+ */
+void ClientSession::renameFile(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+	if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_SERVER_FILES)
+   {
+		TCHAR oldFileName[MAX_PATH];
+      request.getFieldAsString(VID_FILE_NAME, oldFileName, MAX_PATH);
+
+      TCHAR newFileName[MAX_PATH];
+      request.getFieldAsString(VID_NEW_FILE_NAME, newFileName, MAX_PATH);
+
+      TCHAR fullPathOld[MAX_PATH], fullPathNew[MAX_PATH];
+      _tcslcpy(fullPathOld, g_netxmsdDataDir, MAX_PATH);
+      _tcslcat(fullPathOld, DDIR_FILES, MAX_PATH);
+      _tcslcat(fullPathOld, FS_PATH_SEPARATOR, MAX_PATH);
+      _tcscpy(fullPathNew, fullPathOld);
+      _tcslcat(fullPathOld, GetCleanFileName(oldFileName), MAX_PATH);
+      _tcslcat(fullPathNew, GetCleanFileName(newFileName), MAX_PATH);
+
+      if (_trename(fullPathOld, fullPathNew) == 0)
+      {
+         NotifyClientSessions(NX_NOTIFY_FILE_LIST_CHANGED, 0);
+         response.setField(VID_RCC, RCC_SUCCESS);
+      }
+      else
+      {
+         response.setField(VID_RCC, RCC_IO_ERROR);
+      }
+   }
+   else
+   {
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
+   }
+
+   sendMessage(response);
 }
 
 /**
@@ -12385,42 +12428,35 @@ void ClientSession::receiveFile(const NXCPMessage& request)
  */
 void ClientSession::deleteFile(const NXCPMessage& request)
 {
-   NXCPMessage msg;
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
-   // Prepare response message
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request.getId());
-
-	if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_SERVER_FILES)
+   if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_SERVER_FILES)
    {
-		TCHAR fileName[MAX_PATH];
-		TCHAR fullPath[MAX_PATH];
-
+      TCHAR fileName[MAX_PATH];
       request.getFieldAsString(VID_FILE_NAME, fileName, MAX_PATH);
-      const TCHAR *cleanFileName = GetCleanFileName(fileName);
 
+      TCHAR fullPath[MAX_PATH];
       _tcslcpy(fullPath, g_netxmsdDataDir, MAX_PATH);
       _tcslcat(fullPath, DDIR_FILES, MAX_PATH);
       _tcslcat(fullPath, FS_PATH_SEPARATOR, MAX_PATH);
-      _tcslcat(fullPath, cleanFileName, MAX_PATH);
+      _tcslcat(fullPath, GetCleanFileName(fileName), MAX_PATH);
 
       if (_tunlink(fullPath) == 0)
       {
          NotifyClientSessions(NX_NOTIFY_FILE_LIST_CHANGED, 0);
-         msg.setField(VID_RCC, RCC_SUCCESS);
+         response.setField(VID_RCC, RCC_SUCCESS);
       }
       else
       {
-         msg.setField(VID_RCC, RCC_IO_ERROR);
+         response.setField(VID_RCC, RCC_IO_ERROR);
       }
    }
    else
    {
-      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
 
-   // Send response
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
@@ -12428,10 +12464,7 @@ void ClientSession::deleteFile(const NXCPMessage& request)
  */
 void ClientSession::getNetworkPath(const NXCPMessage& request)
 {
-	NXCPMessage msg;
-
-	msg.setCode(CMD_REQUEST_COMPLETED);
-	msg.setId(request.getId());
+	NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
 	shared_ptr<NetObj> node1 = FindObjectById(request.getFieldAsUInt32(VID_SOURCE_OBJECT_ID));
 	shared_ptr<NetObj> node2 = FindObjectById(request.getFieldAsUInt32(VID_DESTINATION_OBJECT_ID));
@@ -12446,30 +12479,30 @@ void ClientSession::getNetworkPath(const NXCPMessage& request)
 				shared_ptr<NetworkPath> path = TraceRoute(static_pointer_cast<Node>(node1), static_pointer_cast<Node>(node2));
 				if (path != nullptr)
 				{
-					msg.setField(VID_RCC, RCC_SUCCESS);
-					path->fillMessage(&msg);
+					response.setField(VID_RCC, RCC_SUCCESS);
+					path->fillMessage(&response);
 				}
 				else
 				{
-					msg.setField(VID_RCC, RCC_INTERNAL_ERROR);
+					response.setField(VID_RCC, RCC_INTERNAL_ERROR);
 				}
 			}
 			else
 			{
-				msg.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+				response.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
 			}
 		}
 		else
 		{
-			msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+			response.setField(VID_RCC, RCC_ACCESS_DENIED);
 		}
 	}
 	else
 	{
-		msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+		response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
 	}
 
-	sendMessage(&msg);
+	sendMessage(response);
 }
 
 /**
@@ -12477,11 +12510,7 @@ void ClientSession::getNetworkPath(const NXCPMessage& request)
  */
 void ClientSession::getNodeComponents(const NXCPMessage& request)
 {
-   NXCPMessage msg;
-
-   // Prepare response message
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    // Get node id and check object class and access rights
    shared_ptr<NetObj> node = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID), OBJECT_NODE);
@@ -12492,26 +12521,25 @@ void ClientSession::getNodeComponents(const NXCPMessage& request)
 			shared_ptr<ComponentTree> components = static_cast<Node&>(*node).getComponents();
 			if (components != nullptr)
 			{
-				msg.setField(VID_RCC, RCC_SUCCESS);
-				components->fillMessage(&msg, VID_COMPONENT_LIST_BASE);
+				response.setField(VID_RCC, RCC_SUCCESS);
+				components->fillMessage(&response, VID_COMPONENT_LIST_BASE);
 			}
 			else
 			{
-				msg.setField(VID_RCC, RCC_NO_COMPONENT_DATA);
+				response.setField(VID_RCC, RCC_NO_COMPONENT_DATA);
 			}
       }
       else
       {
-         msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
       }
    }
    else  // No object with given ID
    {
-      msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
    }
 
-   // Send response
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
@@ -12519,11 +12547,7 @@ void ClientSession::getNodeComponents(const NXCPMessage& request)
  */
 void ClientSession::getNodeSoftware(const NXCPMessage& request)
 {
-   NXCPMessage msg;
-
-   // Prepare response message
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    // Get node id and check object class and access rights
    shared_ptr<NetObj> node = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID), OBJECT_NODE);
@@ -12531,20 +12555,19 @@ void ClientSession::getNodeSoftware(const NXCPMessage& request)
    {
       if (node->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
       {
-         static_cast<Node&>(*node).writePackageListToMessage(&msg);
+         static_cast<Node&>(*node).writePackageListToMessage(&response);
       }
       else
       {
-         msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
       }
    }
    else  // No object with given ID
    {
-      msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
    }
 
-   // Send response
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
@@ -12552,23 +12575,22 @@ void ClientSession::getNodeSoftware(const NXCPMessage& request)
  */
 void ClientSession::getNodeHardware(const NXCPMessage& request)
 {
-   NXCPMessage msg;
-
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    shared_ptr<NetObj> node = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID), OBJECT_NODE);
    if (node != nullptr)
    {
       if (node->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
-         static_cast<Node&>(*node).writeHardwareListToMessage(&msg);
+         static_cast<Node&>(*node).writeHardwareListToMessage(&response);
       else
-         msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
    else
-      msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+   {
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
 
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
@@ -12576,11 +12598,7 @@ void ClientSession::getNodeHardware(const NXCPMessage& request)
  */
 void ClientSession::getWinPerfObjects(const NXCPMessage& request)
 {
-   NXCPMessage msg;
-
-   // Prepare response message
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    // Get node id and check object class and access rights
    shared_ptr<NetObj> node = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID), OBJECT_NODE);
@@ -12588,20 +12606,19 @@ void ClientSession::getWinPerfObjects(const NXCPMessage& request)
    {
       if (node->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
       {
-			static_cast<Node&>(*node).writeWinPerfObjectsToMessage(&msg);
+			static_cast<Node&>(*node).writeWinPerfObjectsToMessage(&response);
       }
       else
       {
-         msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
       }
    }
    else  // No object with given ID
    {
-      msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
    }
 
-   // Send response
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
@@ -12609,11 +12626,7 @@ void ClientSession::getWinPerfObjects(const NXCPMessage& request)
  */
 void ClientSession::getThresholdSummary(const NXCPMessage& request)
 {
-   NXCPMessage msg;
-
-   // Prepare response message
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    // Get object id and check object class and access rights
    shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
@@ -12629,27 +12642,27 @@ void ClientSession::getThresholdSummary(const NXCPMessage& request)
 				for(int i = 0; i < targets->size(); i++)
 				{
 					if (targets->get(i)->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
-						varId = targets->get(i)->getThresholdSummary(&msg, varId, m_dwUserId);
+						varId = targets->get(i)->getThresholdSummary(&response, varId, m_dwUserId);
 				}
 				delete targets;
 			}
 			else
 			{
-	         msg.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+	         response.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
 			}
       }
       else
       {
-         msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
       }
    }
    else  // No object with given ID
    {
-      msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
    }
 
    // Send response
-   sendMessage(&msg);
+   sendMessage(&response);
 }
 
 /**

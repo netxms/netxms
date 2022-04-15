@@ -39,9 +39,9 @@ public class ServerFileLabelProvider extends LabelProvider implements ITableLabe
 		wbLabelProvider = new WorkbenchLabelProvider();
 	}
 	
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
+    */
 	@Override
 	public Image getColumnImage(Object element, int columnIndex)
 	{
@@ -50,9 +50,9 @@ public class ServerFileLabelProvider extends LabelProvider implements ITableLabe
 		return null;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
+    */
 	@Override
 	public String getColumnText(Object element, int columnIndex)
 	{
@@ -63,32 +63,32 @@ public class ServerFileLabelProvider extends LabelProvider implements ITableLabe
 			case SelectServerFileDialog.COLUMN_SIZE:
 				return Long.toString(((ServerFile)element).getSize());
 			case SelectServerFileDialog.COLUMN_MODTIME:
-				return RegionalSettings.getDateTimeFormat().format(((ServerFile)element).getModifyicationTime());
+            return RegionalSettings.getDateTimeFormat().format(((ServerFile)element).getModificationTime());
 		}
 		return null;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.LabelProvider#getImage(java.lang.Object)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.LabelProvider#getImage(java.lang.Object)
+    */
 	@Override
 	public Image getImage(Object element)
 	{
 		return wbLabelProvider.getImage(element);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.LabelProvider#getText(java.lang.Object)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.LabelProvider#getText(java.lang.Object)
+    */
 	@Override
 	public String getText(Object element)
 	{
 		return wbLabelProvider.getText(element);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.BaseLabelProvider#dispose()
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.BaseLabelProvider#dispose()
+    */
 	@Override
 	public void dispose()
 	{

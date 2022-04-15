@@ -67,6 +67,7 @@ public class SharedIcons
 	public static ImageDescriptor TERMINATE;
 	public static ImageDescriptor UNKNOWN_OBJECT;
 	public static ImageDescriptor UP;
+   public static ImageDescriptor UPLOAD;
 	public static ImageDescriptor XML;
 	public static ImageDescriptor ZOOM_IN;
 	public static ImageDescriptor ZOOM_OUT;
@@ -111,6 +112,7 @@ public class SharedIcons
 	public static Image IMG_TERMINATE;
 	public static Image IMG_UNKNOWN_OBJECT;
 	public static Image IMG_UP;
+   public static Image IMG_UPLOAD;
 	public static Image IMG_XML;
 	public static Image IMG_ZOOM_IN;
 	public static Image IMG_ZOOM_OUT;
@@ -160,6 +162,7 @@ public class SharedIcons
 		TERMINATE = Activator.getImageDescriptor("icons/terminate.gif"); //$NON-NLS-1$
 		UNKNOWN_OBJECT = Activator.getImageDescriptor("icons/unknown_obj.gif"); //$NON-NLS-1$
 		UP = Activator.getImageDescriptor("icons/up.png"); //$NON-NLS-1$
+      UPLOAD = Activator.getImageDescriptor("icons/upload.png"); //$NON-NLS-1$
 		XML = Activator.getImageDescriptor("icons/xml.gif"); //$NON-NLS-1$
 		ZOOM_IN = Activator.getImageDescriptor("icons/zoom_in.png"); //$NON-NLS-1$
 		ZOOM_OUT = Activator.getImageDescriptor("icons/zoom_out.png"); //$NON-NLS-1$
@@ -204,6 +207,7 @@ public class SharedIcons
 		IMG_TERMINATE = TERMINATE.createImage();
 		IMG_UNKNOWN_OBJECT = UNKNOWN_OBJECT.createImage();
 		IMG_UP = UP.createImage();
+      IMG_UPLOAD = UPLOAD.createImage();
 		IMG_XML = XML.createImage();
 		IMG_ZOOM_IN = ZOOM_IN.createImage();
 		IMG_ZOOM_OUT = ZOOM_OUT.createImage();

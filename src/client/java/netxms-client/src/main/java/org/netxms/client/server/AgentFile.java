@@ -1,5 +1,20 @@
 /**
- * 
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2022 Raden Solutions
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 package org.netxms.client.server;
 
@@ -9,10 +24,9 @@ import org.netxms.base.NXCPMessage;
 import org.netxms.client.AgentFileInfo;
 
 /**
- * Represents information about file in server's file store
- *
+ * Represents information about file on remote system accessible via agent
  */
-public class AgentFile
+public class AgentFile implements RemoteFile
 {
    public static final int FILE = 1; 
    public static final int DIRECTORY = 2; 
@@ -31,7 +45,7 @@ public class AgentFile
    private AgentFile parent;
    private long nodeId;
    private AgentFileInfo info;
-   
+
    /**
     * Create server file object from NXCP message.
     * 
@@ -113,19 +127,28 @@ public class AgentFile
       }
    }
    
+   /**
+    * @see org.netxms.client.server.RemoteFile#isDirectory()
+    */
+   @Override
    public boolean isDirectory()
    {
       return (type & DIRECTORY) > 0 ? true : false;
    }
 
+   /**
+    * @see org.netxms.client.server.RemoteFile#isPlaceholder()
+    */
+   @Override
    public boolean isPlaceholder()
    {
       return (type & PLACEHOLDER) > 0 ? true : false;
    }
 
-	/**
-	 * @return the name
-	 */
+   /**
+    * @see org.netxms.client.server.RemoteFile#getName()
+    */
+   @Override
 	public String getName()
 	{
 		return name;
@@ -141,24 +164,27 @@ public class AgentFile
    }
 
    /**
-	 * @return the size
-	 */
+    * @see org.netxms.client.server.RemoteFile#getSize()
+    */
+   @Override
 	public long getSize()
 	{
 		return size;
 	}
 
-	/**
-	 * @return the modifyicationTime
-	 */
-	public Date getModifyicationTime()
+   /**
+    * @see org.netxms.client.server.RemoteFile#getModificationTime()
+    */
+   @Override
+	public Date getModificationTime()
 	{
 		return modificationTime;
 	}
-	
+
    /**
-    * @return the type
+    * @see org.netxms.client.server.RemoteFile#getExtension()
     */
+   @Override
    public String getExtension()
    {
       return extension;
@@ -181,15 +207,15 @@ public class AgentFile
    }
    
    /**
-    * @param chield to be removed
+    * @param child to be removed
     */
-   public void removeChield(AgentFile chield)
+   public void removeChild(AgentFile child)
    {
       if(children == null)
          return;
       for(int i=0; i<children.size(); i++)
       {
-         if(children.get(i).getName().equalsIgnoreCase(chield.getName()))
+         if(children.get(i).getName().equalsIgnoreCase(child.getName()))
          {
             children.remove(i);
          }
@@ -197,26 +223,26 @@ public class AgentFile
    }
    
    /**
-    * @param chield to be added
+    * @param child to be added
     */
-   public void addChield(AgentFile chield)
+   public void addChild(AgentFile child)
    {
       if(children == null)
          return;
       boolean childReplaced = false;
       for(int i=0; i<children.size(); i++)
       {
-         if(children.get(i).getName().equalsIgnoreCase(chield.getName()))
+         if(children.get(i).getName().equalsIgnoreCase(child.getName()))
          {
-            if(chield.getType() != DIRECTORY)
-               children.set(i, chield);
+            if(child.getType() != DIRECTORY)
+               children.set(i, child);
             childReplaced = true;
             break;
          }
       }
       if(!childReplaced)
       {
-         children.add(chield);
+         children.add(child);
       }
    }
 

@@ -1078,7 +1078,7 @@ public class AgentFileManager extends ViewPart
                   @Override
                   public void run()
                   {
-                     sf.getParent().removeChield(sf);
+                     sf.getParent().removeChild(sf);
                      viewer.refresh(sf.getParent());
                   }
                });
@@ -1326,7 +1326,7 @@ public class AgentFileManager extends ViewPart
             downloadFile(f, localFileName + "/" + f.getName(), monitor, true, job); //$NON-NLS-1$
          }
       }
-      dir.setLastModified(sf.getModifyicationTime().getTime());
+      dir.setLastModified(sf.getModificationTime().getTime());
    }
    
    /**
@@ -1366,7 +1366,7 @@ public class AgentFileManager extends ViewPart
          }
          in.close();
          out.close();
-         outputFile.setLastModified(sf.getModifyicationTime().getTime());
+         outputFile.setLastModified(sf.getModificationTime().getTime());
       }
    }
 

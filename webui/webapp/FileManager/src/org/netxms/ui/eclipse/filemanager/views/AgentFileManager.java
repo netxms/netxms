@@ -893,7 +893,7 @@ public class AgentFileManager extends ViewPart
                   @Override
                   public void run()
                   {
-                     sf.getParent().removeChield(sf);
+                     sf.getParent().removeChild(sf);
                      viewer.refresh(sf.getParent());
                   }
                });

@@ -40,11 +40,11 @@ public class ThresholdTreeLabelProvider extends LabelProvider implements ITableL
 {
 	private WorkbenchLabelProvider wbLabelProvider = new WorkbenchLabelProvider();
 	private ThresholdLabelProvider thresholdLabelProvider = new ThresholdLabelProvider();
-	private NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
-	 */
+   private NXCSession session = ConsoleSharedData.getSession();
+
+   /**
+    * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
+    */
 	@Override
 	public Image getColumnImage(Object element, int columnIndex)
 	{
@@ -64,9 +64,9 @@ public class ThresholdTreeLabelProvider extends LabelProvider implements ITableL
 		return null;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
+    */
 	@Override
 	public String getColumnText(Object element, int columnIndex)
 	{
@@ -104,13 +104,14 @@ public class ThresholdTreeLabelProvider extends LabelProvider implements ITableL
 		return null;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.BaseLabelProvider#dispose()
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.BaseLabelProvider#dispose()
+    */
 	@Override
 	public void dispose()
 	{
 		wbLabelProvider.dispose();
+      thresholdLabelProvider.dispose();
 		super.dispose();
 	}
 }

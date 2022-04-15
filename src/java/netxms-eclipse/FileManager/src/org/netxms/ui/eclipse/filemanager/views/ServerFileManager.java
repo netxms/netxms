@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Raden Solutions
+ * Copyright (C) 2003-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,10 +19,10 @@
 package org.netxms.ui.eclipse.filemanager.views;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
-import org.eclipse.jface.action.GroupMarker;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
@@ -31,10 +31,16 @@ import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.commands.ActionHandler;
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.viewers.ArrayContentProvider;
+import org.eclipse.jface.viewers.CellEditor;
+import org.eclipse.jface.viewers.ColumnViewerEditor;
+import org.eclipse.jface.viewers.ColumnViewerEditorActivationEvent;
+import org.eclipse.jface.viewers.ColumnViewerEditorActivationStrategy;
+import org.eclipse.jface.viewers.ICellModifier;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
-import org.eclipse.jface.window.Window;
+import org.eclipse.jface.viewers.TableViewerEditor;
+import org.eclipse.jface.viewers.TextCellEditor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
@@ -44,10 +50,11 @@ import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.FileDialog;
+import org.eclipse.swt.widgets.Item;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IViewSite;
-import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.contexts.IContextService;
 import org.eclipse.ui.handlers.IHandlerService;
@@ -61,7 +68,6 @@ import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.filemanager.Activator;
 import org.netxms.ui.eclipse.filemanager.Messages;
-import org.netxms.ui.eclipse.filemanager.dialogs.StartClientToServerFileUploadDialog;
 import org.netxms.ui.eclipse.filemanager.views.helpers.ServerFileComparator;
 import org.netxms.ui.eclipse.filemanager.views.helpers.ServerFileFilter;
 import org.netxms.ui.eclipse.filemanager.views.helpers.ServerFileLabelProvider;
@@ -95,10 +101,14 @@ public class ServerFileManager extends ViewPart implements SessionListener
    private SortableTableViewer viewer;
    private NXCSession session;
    private Action actionRefresh;
-   private Action actionNew;
+   private Action actionUpload;
+   private Action actionRename;
    private Action actionDelete;
    private Action actionShowFilter;
 
+   /**
+    * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
+    */
    @Override
    public void init(IViewSite site) throws PartInitException
    {
@@ -106,7 +116,7 @@ public class ServerFileManager extends ViewPart implements SessionListener
       IDialogSettings settings = Activator.getDefault().getDialogSettings(); 
       initShowFilter = safeCast(settings.get("ServerFileManager.showFilter"), settings.getBoolean("ServerFileManager.showFilter"), initShowFilter);
    }
-   
+
    /**
     * @param b
     * @param defval
@@ -116,16 +126,14 @@ public class ServerFileManager extends ViewPart implements SessionListener
    {
       return (s != null) ? b : defval;
    }
-   
-   /*
-    * (non-Javadoc)
-    * 
+
+   /**
     * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
     */
    @Override
    public void createPartControl(Composite parent)
    {
-      session = (NXCSession)ConsoleSharedData.getSession();
+      session = ConsoleSharedData.getSession();
 
       content = new Composite(parent, SWT.NONE);
       content.setLayout(new FormLayout());
@@ -139,7 +147,7 @@ public class ServerFileManager extends ViewPart implements SessionListener
             onFilterModify();
          }
       });
-     
+
       final String[] columnNames = { Messages.get().ViewServerFile_FileName, Messages.get().ViewServerFile_FileType,
             Messages.get().ViewServerFile_FileSize, Messages.get().ViewServerFile_ModificationDate };
       final int[] columnWidths = { 300, 150, 300, 300 };
@@ -166,6 +174,54 @@ public class ServerFileManager extends ViewPart implements SessionListener
          public void widgetDisposed(DisposeEvent e)
          {
             WidgetHelper.saveTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), TABLE_CONFIG_PREFIX);
+         }
+      });
+      TableViewerEditor.create(viewer, new ColumnViewerEditorActivationStrategy(viewer) {
+         @Override
+         protected boolean isEditorActivationEvent(ColumnViewerEditorActivationEvent event)
+         {
+            return event.eventType == ColumnViewerEditorActivationEvent.PROGRAMMATIC;
+         }
+      }, ColumnViewerEditor.DEFAULT);
+      TextCellEditor editor = new TextCellEditor(viewer.getTable(), SWT.BORDER);
+      viewer.setCellEditors(new CellEditor[] { editor });
+      viewer.setColumnProperties(new String[] { "name" }); //$NON-NLS-1$
+      viewer.setCellModifier(new ICellModifier() {
+         @Override
+         public void modify(Object element, String property, Object value)
+         {
+            final Object data = (element instanceof Item) ? ((Item)element).getData() : element;
+            if (property.equals("name") && (data instanceof ServerFile)) //$NON-NLS-1$
+            {
+               final String newName = value.toString();
+               new ConsoleJob("Rename server file", ServerFileManager.this, Activator.PLUGIN_ID) {
+                  @Override
+                  protected void runInternal(IProgressMonitor monitor) throws Exception
+                  {
+                     session.renameServerFile(((ServerFile)data).getName(), newName);
+                  }
+
+                  @Override
+                  protected String getErrorMessage()
+                  {
+                     return String.format("Cannot rename server file \"%s\"", ((ServerFile)data).getName());
+                  }
+               }.start();
+            }
+         }
+
+         @Override
+         public Object getValue(Object element, String property)
+         {
+            if (property.equals("name") && (element instanceof ServerFile)) //$NON-NLS-1$
+               return ((ServerFile)element).getName();
+            return null;
+         }
+
+         @Override
+         public boolean canModify(Object element, String property)
+         {
+            return property.equals("name"); //$NON-NLS-1$
          }
       });
 
@@ -199,7 +255,7 @@ public class ServerFileManager extends ViewPart implements SessionListener
 
       refreshFileList();
    }
-   
+
    /**
     * Activate context
     */
@@ -227,23 +283,32 @@ public class ServerFileManager extends ViewPart implements SessionListener
          }
       };
 
-      actionNew = new Action(Messages.get().ViewServerFile_UploadFileOnServerAction) {
+      actionUpload = new Action("&Upload...", SharedIcons.UPLOAD) {
          @Override
          public void run()
          {
-            createFile();
+            uploadFile();
          }
       };
-      actionNew.setImageDescriptor(SharedIcons.ADD_OBJECT);
 
-      actionDelete = new Action(Messages.get().ViewServerFile_DeleteFileOnServerAction) {
+      actionRename = new Action("&Rename") {
+         @Override
+         public void run()
+         {
+            IStructuredSelection selection = viewer.getStructuredSelection();
+            if (selection.size() == 1)
+               viewer.editElement(selection.getFirstElement(), 0);
+         }
+      };
+
+      actionDelete = new Action("&Delete", SharedIcons.DELETE_OBJECT) {
          @Override
          public void run()
          {
             deleteFile();
          }
       };
-      actionDelete.setImageDescriptor(SharedIcons.DELETE_OBJECT);
+
       actionShowFilter = new Action(Messages.get().ViewServerFile_ShowFilterAction, Action.AS_CHECK_BOX) {
          @Override
          public void run()
@@ -277,8 +342,7 @@ public class ServerFileManager extends ViewPart implements SessionListener
    {
       manager.add(actionShowFilter);
       manager.add(new Separator());
-      manager.add(actionNew);
-      manager.add(actionDelete);
+      manager.add(actionUpload);
       manager.add(new Separator());
       manager.add(actionRefresh);
    }
@@ -292,8 +356,7 @@ public class ServerFileManager extends ViewPart implements SessionListener
    {
       manager.add(actionShowFilter);
       manager.add(new Separator());
-      manager.add(actionNew);
-      manager.add(actionDelete);
+      manager.add(actionUpload);
       manager.add(new Separator());
       manager.add(actionRefresh);
    }
@@ -316,10 +379,6 @@ public class ServerFileManager extends ViewPart implements SessionListener
       // Create menu
       Menu menu = menuMgr.createContextMenu(viewer.getControl());
       viewer.getControl().setMenu(menu);
-
-      // Register menu for extension.
-      getSite().setSelectionProvider(viewer);
-      getSite().registerContextMenu(menuMgr, viewer);
    }
 
    /**
@@ -329,13 +388,10 @@ public class ServerFileManager extends ViewPart implements SessionListener
     */
    protected void fillContextMenu(final IMenuManager mgr)
    {
-      mgr.add(actionShowFilter);
-      mgr.add(new Separator());
-      mgr.add(actionNew);
+      mgr.add(actionRename);
       mgr.add(actionDelete);
       mgr.add(new Separator());
-      mgr.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
-      mgr.add(new Separator());
+      mgr.add(actionUpload);
    }
 
    /**
@@ -343,7 +399,7 @@ public class ServerFileManager extends ViewPart implements SessionListener
     */
    private void refreshFileList()
    {
-      new ConsoleJob(Messages.get().SelectServerFileDialog_JobTitle, null, Activator.PLUGIN_ID, null) {
+      new ConsoleJob(Messages.get().SelectServerFileDialog_JobTitle, this, Activator.PLUGIN_ID) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
@@ -366,54 +422,54 @@ public class ServerFileManager extends ViewPart implements SessionListener
    }
 
    /**
-    * Create new file
+    * Upload file
     */
-   private void createFile()
+   private void uploadFile()
    {
-      final StartClientToServerFileUploadDialog dlg = new StartClientToServerFileUploadDialog(getSite().getShell());
-      if (dlg.open() == Window.OK)
-      {
-         final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-         new ConsoleJob(Messages.get().UploadFileToServer_JobTitle, null, Activator.PLUGIN_ID, null) {
-            @Override
-            protected void runInternal(final IProgressMonitor monitor) throws Exception
-            {
-               List<File> fileList = dlg.getLocalFiles();
-               for(int i = 0; i < fileList.size(); i++)
-               {
-                  final File localFile = fileList.get(i);
-                  String remoteFile = fileList.get(i).getName();
-                  if(fileList.size() == 1)
-                     remoteFile = dlg.getRemoteFileName();
-                  
-                  session.uploadFileToServer(localFile, remoteFile, new ProgressListener() {
-                     private long prevWorkDone = 0;
-   
-                     @Override
-                     public void setTotalWorkAmount(long workTotal)
-                     {
-                        monitor.beginTask(Messages.get().UploadFileToServer_TaskNamePrefix + localFile.getAbsolutePath(),
-                              (int)workTotal);
-                     }
-   
-                     @Override
-                     public void markProgress(long workDone)
-                     {
-                        monitor.worked((int)(workDone - prevWorkDone));
-                        prevWorkDone = workDone;
-                     }
-                  });
-                  monitor.done();
-               }
-            }
+      FileDialog fd = new FileDialog(getSite().getShell(), SWT.OPEN | SWT.MULTI);
+      fd.setText("Select Files");
+      String selection = fd.open();
+      if (selection == null)
+         return;
 
-            @Override
-            protected String getErrorMessage()
-            {
-               return Messages.get().UploadFileToServer_JobError;
-            }
-         }.start();
+      final List<File> files = new ArrayList<File>();
+      for(String fname : fd.getFileNames())
+      {
+         files.add((fname.charAt(0) == File.separatorChar) ? new File(fname) : new File(new File(selection).getParentFile(), fname));
       }
+      new ConsoleJob(Messages.get().UploadFileToServer_JobTitle, this, Activator.PLUGIN_ID) {
+         @Override
+         protected void runInternal(final IProgressMonitor monitor) throws Exception
+         {
+            for(final File localFile : files)
+            {
+               final String remoteFile = localFile.getName();
+               session.uploadFileToServer(localFile, remoteFile, new ProgressListener() {
+                  private long prevWorkDone = 0;
+
+                  @Override
+                  public void setTotalWorkAmount(long workTotal)
+                  {
+                     monitor.beginTask(Messages.get().UploadFileToServer_TaskNamePrefix + localFile.getAbsolutePath(), (int)workTotal);
+                  }
+
+                  @Override
+                  public void markProgress(long workDone)
+                  {
+                     monitor.worked((int)(workDone - prevWorkDone));
+                     prevWorkDone = workDone;
+                  }
+               });
+               monitor.done();
+            }
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return Messages.get().UploadFileToServer_JobError;
+         }
+      }.start();
    }
 
    /**
@@ -421,7 +477,7 @@ public class ServerFileManager extends ViewPart implements SessionListener
     */
    private void deleteFile()
    {
-      IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      IStructuredSelection selection = viewer.getStructuredSelection();
       if (selection.isEmpty())
          return;
 
@@ -448,9 +504,7 @@ public class ServerFileManager extends ViewPart implements SessionListener
       }.start();
    }
 
-   /*
-    * (non-Javadoc)
-    * 
+   /**
     * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
     */
    @Override
@@ -459,10 +513,8 @@ public class ServerFileManager extends ViewPart implements SessionListener
       viewer.getControl().setFocus();
    }
 
-   /*
-    * (non-Javadoc)
-    * 
-    * @see org.netxms.api.client.SessionListener#notificationHandler(org.netxms.api.client.SessionNotification)
+   /**
+    * @see org.netxms.client.SessionListener#notificationHandler(org.netxms.client.SessionNotification)
     */
    @Override
    public void notificationHandler(final SessionNotification n)
@@ -473,9 +525,7 @@ public class ServerFileManager extends ViewPart implements SessionListener
       }
    }
 
-   /*
-    * (non-Javadoc)
-    * 
+   /**
     * @see org.eclipse.ui.part.WorkbenchPart#dispose()
     */
    @Override

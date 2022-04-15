@@ -30,20 +30,14 @@ import org.netxms.ui.eclipse.filemanager.views.ServerFileManager;
 
 /**
  * Label provider for ServerFile objects
- *
  */
 public class ServerFileLabelProvider extends LabelProvider implements ITableLabelProvider, IColorProvider
 {
-	private WorkbenchLabelProvider wbLabelProvider;
+   private WorkbenchLabelProvider wbLabelProvider = new WorkbenchLabelProvider();
 	
-	public ServerFileLabelProvider()
-	{
-		wbLabelProvider = new WorkbenchLabelProvider();
-	}
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
+    */
 	@Override
 	public Image getColumnImage(Object element, int columnIndex)
 	{
@@ -52,9 +46,9 @@ public class ServerFileLabelProvider extends LabelProvider implements ITableLabe
 		return null;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
+    */
 	@Override
 	public String getColumnText(Object element, int columnIndex)
 	{
@@ -67,7 +61,7 @@ public class ServerFileLabelProvider extends LabelProvider implements ITableLabe
 			case ServerFileManager.COLUMN_SIZE:
 				return Long.toString(((ServerFile)element).getSize()); //$NON-NLS-1$
 			case ServerFileManager.COLUMN_MODIFYED:
-				return ((ServerFile)element).getModifyicationTime().getTime() == 0 ? "" : RegionalSettings.getDateTimeFormat().format(((ServerFile)element).getModifyicationTime()); //$NON-NLS-1$
+            return ((ServerFile)element).getModificationTime().getTime() == 0 ? "" : RegionalSettings.getDateTimeFormat().format(((ServerFile)element).getModificationTime()); //$NON-NLS-1$
 		}
 		return null;
 	}

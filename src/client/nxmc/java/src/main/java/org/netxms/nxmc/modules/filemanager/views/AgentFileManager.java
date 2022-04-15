@@ -897,7 +897,7 @@ public class AgentFileManager extends ObjectView
                   @Override
                   public void run()
                   {
-                     sf.getParent().removeChield(sf);
+                     sf.getParent().removeChild(sf);
                      viewer.refresh(sf.getParent());
                   }
                });
@@ -1134,7 +1134,7 @@ public class AgentFileManager extends ObjectView
             downloadFile(f, localFileName + "/" + f.getName(), monitor, true, job); 
          }
       }
-      dir.setLastModified(sf.getModifyicationTime().getTime());
+      dir.setLastModified(sf.getModificationTime().getTime());
    }
    
    /**
@@ -1174,7 +1174,7 @@ public class AgentFileManager extends ObjectView
          }
          in.close();
          out.close();
-         outputFile.setLastModified(sf.getModifyicationTime().getTime());
+         outputFile.setLastModified(sf.getModificationTime().getTime());
       }
    }
 

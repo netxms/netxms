@@ -20,29 +20,20 @@ package org.netxms.nxmc.modules.filemanager.views.helpers;
 
 import org.eclipse.jface.viewers.IColorProvider;
 import org.eclipse.jface.viewers.ITableLabelProvider;
-import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
 import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.server.AgentFile;
 import org.netxms.nxmc.localization.DateFormatFactory;
 import org.netxms.nxmc.modules.filemanager.views.AgentFileManager;
-import org.netxms.nxmc.modules.filemanager.widgets.BabseFileLableProvider;
 import org.netxms.nxmc.resources.StatusDisplayInfo;
 
 /**
  * Label provider for AgentFile objects
  */
-public class AgentFileLabelProvider extends LabelProvider implements ITableLabelProvider, IColorProvider
+public class AgentFileLabelProvider extends BaseFileLabelProvider implements ITableLabelProvider, IColorProvider
 {
-   private BabseFileLableProvider fileLableProvider;
-   
-   public AgentFileLabelProvider()
-   {
-      fileLableProvider = new BabseFileLableProvider();
-   }
-   
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
     */
    @Override
@@ -53,9 +44,9 @@ public class AgentFileLabelProvider extends LabelProvider implements ITableLabel
       return null;
    }
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
+    */
 	@Override
 	public String getColumnText(Object element, int columnIndex)
 	{
@@ -69,13 +60,14 @@ public class AgentFileLabelProvider extends LabelProvider implements ITableLabel
 			   if (((AgentFile)element).isDirectory())
 			   {
 			      if (((AgentFile)element).getFileInfo() != null)
-			         return getValue(((AgentFile)element).getFileInfo().getSize()) + " (" + ((AgentFile)element).getFileInfo().getItemCount() + " files)";
+			         return getSizeString(((AgentFile)element).getFileInfo().getSize()) + " (" + ((AgentFile)element).getFileInfo().getItemCount() + " files)";
 			      else
 			         return "";
 			   }			      
-				return (((AgentFile)element).isPlaceholder()) ? "" : getValue(((AgentFile)element).getSize()); //$NON-NLS-1$
+            return (((AgentFile)element).isPlaceholder()) ? "" : getSizeString(((AgentFile)element).getSize());
 			case AgentFileManager.COLUMN_MODIFYED:
-				return (((AgentFile)element).isPlaceholder() || ((AgentFile)element).getModifyicationTime().getTime() == 0) ? "" : DateFormatFactory.getDateTimeFormat().format(((AgentFile)element).getModifyicationTime()); //$NON-NLS-1$
+            return (((AgentFile)element).isPlaceholder() || ((AgentFile)element).getModificationTime().getTime() == 0) ? "" :
+                  DateFormatFactory.getDateTimeFormat().format(((AgentFile)element).getModificationTime());
 			case AgentFileManager.COLUMN_OWNER:
 			   return ((AgentFile)element).getOwner();
 			case AgentFileManager.COLUMN_GROUP:
@@ -86,35 +78,7 @@ public class AgentFileLabelProvider extends LabelProvider implements ITableLabel
 		return null;
 	}
 
-   /* (non-Javadoc)
-    * @see org.eclipse.jface.viewers.LabelProvider#getImage(java.lang.Object)
-    */
-   @Override
-   public Image getImage(Object element)
-   {
-      return fileLableProvider.getImage(element);
-   }
-
-   /* (non-Javadoc)
-    * @see org.eclipse.jface.viewers.LabelProvider#getText(java.lang.Object)
-    */
-   @Override
-   public String getText(Object element)
-   {
-      return fileLableProvider.getText(element);
-   }
-
-   /* (non-Javadoc)
-    * @see org.eclipse.jface.viewers.BaseLabelProvider#dispose()
-    */
-   @Override
-   public void dispose()
-   {
-      fileLableProvider.dispose();
-      super.dispose();
-   }
-
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.viewers.IColorProvider#getForeground(java.lang.Object)
     */
    @Override
@@ -125,37 +89,12 @@ public class AgentFileLabelProvider extends LabelProvider implements ITableLabel
       return null;
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.viewers.IColorProvider#getBackground(java.lang.Object)
     */
    @Override
    public Color getBackground(Object element)
    {
       return null;
-   }
-   
-   /**
-    * @param element
-    * @return
-    */
-   private String getValue(long size)
-   {
-      if (size >= 10995116277760L)
-      {
-         return String.format("%.1f TB", (size / 1099511627776.0));
-      }
-      if (size >= 10737418240L)
-      {
-         return String.format("%.1f GB", (size / 1073741824.0));
-      }
-      if (size >= 10485760)
-      {
-         return String.format("%.1f MB", (size / 1048576.0));
-      }
-      if (size >= 10240)
-      {
-         return String.format("%.1f KB", (size / 1024.0));
-      }
-      return Long.toString(size);
    }
 }

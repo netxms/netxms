@@ -10373,10 +10373,27 @@ public class NXCSession
    }
 
    /**
+    * Rename file in server's file store
+    *
+    * @param oldFileName name of existing server file
+    * @param newFileName new name for selected file
+    * @throws IOException if socket or file I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void renameServerFile(String oldFileName, String newFileName) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_RENAME_FILE);
+      msg.setField(NXCPCodes.VID_FILE_NAME, oldFileName);
+      msg.setField(NXCPCodes.VID_NEW_FILE_NAME, newFileName);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
+
+   /**
     * Delete file from server's file store
     *
     * @param serverFileName name of server file
-    * @throws IOException  if socket or file I/O error occurs
+    * @throws IOException if socket or file I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public void deleteServerFile(String serverFileName) throws IOException, NXCException

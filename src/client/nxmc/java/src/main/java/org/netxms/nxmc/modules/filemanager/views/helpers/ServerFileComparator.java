@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.filemanager.views.helpers;
+package org.netxms.nxmc.modules.filemanager.views.helpers;
 
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.Viewer;
@@ -24,7 +24,7 @@ import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.TableColumn;
 import org.netxms.client.server.ServerFile;
-import org.netxms.ui.eclipse.filemanager.views.ServerFileManager;
+import org.netxms.nxmc.modules.filemanager.views.ServerFileManager;
 
 /**
  * Comparator for ServerFile objects
@@ -40,7 +40,7 @@ public class ServerFileComparator extends ViewerComparator
 		TableColumn sortColumn = ((TableViewer)viewer).getTable().getSortColumn();
 		if (sortColumn == null)
 			return 0;
-		
+
 		int rc;
 		switch((Integer)sortColumn.getData("ID")) //$NON-NLS-1$
 		{

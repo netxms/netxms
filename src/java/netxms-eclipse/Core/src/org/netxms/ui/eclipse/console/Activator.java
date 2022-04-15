@@ -22,6 +22,8 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.action.IStatusLineManager;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.widgets.Display;
@@ -133,6 +135,13 @@ public class Activator extends AbstractUIPlugin
 					shell.setMinimized(false);
 				}
 			});
+         item.addDisposeListener(new DisposeListener() {
+            @Override
+            public void widgetDisposed(DisposeEvent e)
+            {
+               item.getImage().dispose();
+            }
+         });
 			ConsoleSharedData.setTrayIcon(item);
 		}
 	}

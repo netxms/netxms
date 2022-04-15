@@ -1,5 +1,20 @@
 /**
- * 
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2022 Raden Solutions
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 package org.netxms.client.server;
 
@@ -9,14 +24,13 @@ import org.netxms.base.NXCPMessage;
 /**
  * Represents information about file in server's file store
  */
-public class ServerFile
+public class ServerFile implements RemoteFile
 {
-   
 	private String name;
 	private long size;
 	private Date modificationTime;
    private String extension;
-	
+
 	/**
 	 * Create server file object from NXCP message.
 	 * 
@@ -53,9 +67,10 @@ public class ServerFile
       }
    }
 
-	/**
-	 * @return the name
-	 */
+   /**
+    * @see org.netxms.client.server.RemoteFile#getName()
+    */
+   @Override
 	public String getName()
 	{
 		return name;
@@ -71,26 +86,47 @@ public class ServerFile
    }
 
    /**
-	 * @return the size
-	 */
+    * @see org.netxms.client.server.RemoteFile#getSize()
+    */
+   @Override
 	public long getSize()
 	{
 		return size;
 	}
 
-	/**
-	 * @return the modifyicationTime
-	 */
-	public Date getModifyicationTime()
+   /**
+    * @see org.netxms.client.server.RemoteFile#getModificationTime()
+    */
+   @Override
+   public Date getModificationTime()
 	{
 		return modificationTime;
 	}
-	
+
    /**
-    * @return the type
+    * @see org.netxms.client.server.RemoteFile#getExtension()
     */
+   @Override
    public String getExtension()
    {
       return extension;
+   }
+
+   /**
+    * @see org.netxms.client.server.RemoteFile#isDirectory()
+    */
+   @Override
+   public boolean isDirectory()
+   {
+      return false;
+   }
+
+   /**
+    * @see org.netxms.client.server.RemoteFile#isPlaceholder()
+    */
+   @Override
+   public boolean isPlaceholder()
+   {
+      return false;
    }
 }
