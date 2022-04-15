@@ -299,7 +299,7 @@ public class ViewStack extends Composite
    {
       for(View v : views)
       {
-         logger.debug("Existing view " + v.getGlobalId() + " replaced by view " + view.getGlobalId());
+         logger.debug("Existing view " + v.getGlobalId() + " replaced by view " + ((view != null) ? view.getGlobalId() : "(null)"));
          v.dispose();
       }
       views.clear();
@@ -529,7 +529,7 @@ public class ViewStack extends Composite
    public boolean setFocus()
    {
       View view = getView();
-      if (view != null)
+      if ((view != null) && !view.isClientAreaDisposed())
          view.setFocus();
       else
          viewArea.setFocus();
