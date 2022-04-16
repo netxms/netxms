@@ -26,6 +26,7 @@ import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
+import org.eclipse.jface.action.ToolBarManager;
 import org.eclipse.jface.preference.PreferenceManager;
 import org.eclipse.jface.preference.PreferenceNode;
 import org.eclipse.jface.viewers.ArrayContentProvider;
@@ -218,14 +219,32 @@ public class SnmpTrapEditor extends ConfigurationView
 	/**
 	 * Fill context menu
 	 * 
-	 * @param mgr Menu manager
+	 * @param manager Menu manager
 	 */
-	protected void fillContextMenu(final IMenuManager mgr)
+	protected void fillContextMenu(final IMenuManager manager)
 	{
-		mgr.add(actionNew);
-      mgr.add(actionEdit);
-		mgr.add(actionDelete);
+		manager.add(actionNew);
+      manager.add(actionEdit);
+		manager.add(actionDelete);
 	}
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#fillLocalToolbar(org.eclipse.jface.action.ToolBarManager)
+    */
+   @Override
+   protected void fillLocalToolbar(ToolBarManager manager)
+   {
+      manager.add(actionNew);
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#fillLocalMenu(org.eclipse.jface.action.MenuManager)
+    */
+   @Override
+   protected void fillLocalMenu(MenuManager manager)
+   {
+      manager.add(actionNew);
+   }
 
    /**
     * @see org.netxms.nxmc.base.views.View#setFocus()

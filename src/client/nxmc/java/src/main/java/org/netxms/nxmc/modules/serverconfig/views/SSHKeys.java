@@ -210,7 +210,7 @@ public class SSHKeys extends ConfigurationView
     */
    private void fillContextMenu(IMenuManager mgr)
    {
-      IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      IStructuredSelection selection = viewer.getStructuredSelection();
       if (selection.size() == 1) 
       {         
          mgr.add(actionCopyToClipboard);
@@ -243,6 +243,7 @@ public class SSHKeys extends ConfigurationView
    protected void fillLocalToolbar(ToolBarManager manager)
    {
       manager.add(actionImport);
+      manager.add(actionGenerateNew);
    }
 
    /**
@@ -250,22 +251,24 @@ public class SSHKeys extends ConfigurationView
     */
    private void createActions()
    {
-      actionImport = new Action(i18n.tr("&Import..."), SharedIcons.ADD_OBJECT) {
+      actionImport = new Action(i18n.tr("&Import..."), SharedIcons.IMPORT) {
          @Override
          public void run()
          {
             importKeys();
          }
       };
+      addKeyBinding("M1+I", actionImport);
 
-      actionGenerateNew = new Action(i18n.tr("&Generate new"), SharedIcons.ADD_OBJECT) {
+      actionGenerateNew = new Action(i18n.tr("&Generate..."), ResourceManager.getImageDescriptor("icons/generate-key.gif")) {
          @Override
          public void run()
          {
             generateKeys();
          }
       };
-      
+      addKeyBinding("M1+G", actionGenerateNew);
+
       actionEdit = new Action(i18n.tr("&Edit..."), SharedIcons.EDIT) {
          @Override
          public void run()
@@ -307,6 +310,8 @@ public class SSHKeys extends ConfigurationView
                @Override
                public void run()
                {
+                  if (viewer.getControl().isDisposed())
+                     return;
                   keyList = list;
                   viewer.setInput(keyList.toArray());
                }
@@ -490,7 +495,8 @@ public class SSHKeys extends ConfigurationView
    @Override
    public void setFocus()
    {
-      viewer.getTable().setFocus();
+      if (!viewer.getTable().isDisposed())
+         viewer.getTable().setFocus();
    }
 
    /**

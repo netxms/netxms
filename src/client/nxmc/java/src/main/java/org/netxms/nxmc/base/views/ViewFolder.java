@@ -23,6 +23,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.ToolBarManager;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
@@ -33,10 +34,13 @@ import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.ToolBar;
 import org.eclipse.swt.widgets.ToolItem;
 import org.netxms.nxmc.Registry;
@@ -62,9 +66,11 @@ public class ViewFolder extends Composite
    private Perspective perspective;
    private CTabFolder tabFolder;
    private Composite topRightControl;
+   private MenuManager viewMenuManager;
    private ToolBarManager viewToolBarManager;
    private ToolBar viewToolBar;
    private ToolBar viewControlBar;
+   private ToolItem viewMenu = null;
    private ToolItem enableFilter = null;
    private ToolItem navigationBack = null;
    private ToolItem navigationForward = null;
@@ -122,6 +128,8 @@ public class ViewFolder extends Composite
       layout.marginWidth = 0;
       topRightControl.setLayout(layout);
       tabFolder.setTopRight(topRightControl);
+
+      viewMenuManager = new MenuManager();
 
       viewToolBarManager = new ToolBarManager(SWT.FLAT | SWT.WRAP | SWT.RIGHT);
       viewToolBar = viewToolBarManager.createControl(topRightControl);
@@ -202,6 +210,7 @@ public class ViewFolder extends Composite
       {
          ToolItem pinView = new ToolItem(viewControlBar, SWT.PUSH);
          pinView.setImage(SharedIcons.IMG_PIN);
+         pinView.setToolTipText(i18n.tr("Add view to pinboard"));
          pinView.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e)
@@ -222,6 +231,7 @@ public class ViewFolder extends Composite
       {
          ToolItem popOutView = new ToolItem(viewControlBar, SWT.PUSH);
          popOutView.setImage(SharedIcons.IMG_POP_OUT);
+         popOutView.setToolTipText(i18n.tr("Pop out view"));
          popOutView.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e)
@@ -251,6 +261,15 @@ public class ViewFolder extends Composite
                view.enableFilter(!view.isFilterEnabled());
                enableFilter.setSelection(view.isFilterEnabled());
             }
+         }
+      });
+
+      // Keyboard binding for view menu
+      keyBindingManager.addBinding(SWT.NONE, SWT.F10, new Action() {
+         @Override
+         public void run()
+         {
+            showViewMenu();
          }
       });
    }
@@ -334,9 +353,34 @@ public class ViewFolder extends Composite
          if (((ViewWithContext)view).getContext() != context)
             ((ViewWithContext)view).setContext(context);
       }
+
       viewToolBarManager.removeAll();
       view.fillLocalToolbar(viewToolBarManager);      
       viewToolBarManager.update(true);      
+
+      viewMenuManager.removeAll();
+      view.fillLocalMenu(viewMenuManager);
+      if (!viewMenuManager.isEmpty())
+      {
+         if (viewMenu == null)
+         {
+            viewMenu = new ToolItem(viewControlBar, SWT.PUSH, viewControlBar.getItemCount());
+            viewMenu.setImage(SharedIcons.IMG_VIEW_MENU);
+            viewMenu.setToolTipText(i18n.tr("View menu (F10)"));
+            viewMenu.addSelectionListener(new SelectionAdapter() {
+               @Override
+               public void widgetSelected(SelectionEvent e)
+               {
+                  showViewMenu();
+               }
+            });
+         }
+      }
+      else if (viewMenu != null)
+      {
+         viewMenu.dispose();
+         viewMenu = null;
+      }
 
       if (view.hasFilter())
       {
@@ -373,6 +417,20 @@ public class ViewFolder extends Composite
       }
 
       view.activate();
+   }
+
+   /**
+    * Show view menu
+    */
+   private void showViewMenu()
+   {
+      if (viewMenuManager.isEmpty())
+         return;
+
+      Menu menu = viewMenuManager.createContextMenu(getShell());
+      Rectangle bounds = viewMenu.getBounds();
+      menu.setLocation(viewControlBar.toDisplay(new Point(bounds.x, bounds.y + bounds.height + 2)));
+      menu.setVisible(true);
    }
 
    /**

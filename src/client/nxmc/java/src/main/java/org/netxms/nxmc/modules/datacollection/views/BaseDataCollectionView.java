@@ -26,6 +26,7 @@ import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.action.ToolBarManager;
 import org.eclipse.jface.preference.PreferenceDialog;
 import org.eclipse.jface.preference.PreferenceManager;
 import org.eclipse.jface.preference.PreferenceNode;
@@ -152,15 +153,13 @@ public abstract class BaseDataCollectionView extends ObjectView
     */
    protected void createLastValuesViewer(Composite parent, VisibilityValidator validator)
    {
-      String configPrefix = "LastValues";
-      
       parent.setLayout(new FillLayout());
-      
+
       // Setup table columns
       final String[] names = { i18n.tr("Owner"),  i18n.tr("ID"), i18n.tr("Description"), i18n.tr("Value"), i18n.tr("Timestamp"), i18n.tr("Threshold") };
       final int[] widths = { 250, 70, 250, 150, 120, 150 };
       viewer = new SortableTableViewer(parent, names, widths, 0, SWT.DOWN, SortableTableViewer.DEFAULT_STYLE);
-   
+
       labelProvider = new LastValuesLabelProvider(viewer);
       comparator = new LastValuesComparator();
       lvFilter = new LastValuesFilter();
@@ -171,10 +170,10 @@ public abstract class BaseDataCollectionView extends ObjectView
       setFilterClient(viewer, lvFilter); 
       if (isHideOwner())
          viewer.removeColumnById(LV_COLUMN_OWNER);
-      
-      postLastValueViewCreation(configPrefix, validator);
+
+      postLastValueViewCreation("LastValues", validator);
    }
-   
+
    /**
     * If owner column should be hidden
     * 
@@ -219,6 +218,29 @@ public abstract class BaseDataCollectionView extends ObjectView
       manager.add(actionCopyToClipboard);
       manager.add(actionCopyDciName);
       manager.add(actionExportToCsv);
+      manager.add(actionExportAllToCsv);
+      manager.add(new Separator());
+      manager.add(actionUseMultipliers);
+      manager.add(actionShowErrors);
+      manager.add(actionShowDisabled);
+      manager.add(actionShowUnsupported);
+      manager.add(actionShowHidden);
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#fillLocalToolbar(org.eclipse.jface.action.ToolBarManager)
+    */
+   @Override
+   protected void fillLocalToolbar(ToolBarManager manager)
+   {
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#fillLocalMenu(org.eclipse.jface.action.MenuManager)
+    */
+   @Override
+   protected void fillLocalMenu(MenuManager manager)
+   {
       manager.add(actionExportAllToCsv);
       manager.add(new Separator());
       manager.add(actionUseMultipliers);

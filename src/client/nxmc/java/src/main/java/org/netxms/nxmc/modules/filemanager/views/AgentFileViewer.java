@@ -137,7 +137,7 @@ public class AgentFileViewer extends AdHocObjectView
             viewer.setScrollLock(actionScrollLock.isChecked());
          }
       };
-      actionScrollLock.setImageDescriptor(ResourceManager.getImageDescriptor("icons/scroll_lock.gif"));
+      actionScrollLock.setImageDescriptor(ResourceManager.getImageDescriptor("icons/scroll-lock.png"));
       actionScrollLock.setChecked(false);
 
       actionCopy = new Action(i18n.tr("&Copy")) {
