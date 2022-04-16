@@ -43,7 +43,7 @@ public class EventConfigurator extends ConfigurationView
 	private EventTemplateList dataView;
 
    /**
-    * Create action manager view
+    * Create event template manager view
     */
    public EventConfigurator()
    {
