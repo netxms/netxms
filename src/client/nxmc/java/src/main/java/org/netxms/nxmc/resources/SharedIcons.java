@@ -129,12 +129,12 @@ public class SharedIcons
     */
 	public static void init()
 	{
-      ADD_OBJECT = ResourceManager.getImageDescriptor("icons/add_obj.gif");
+      ADD_OBJECT = ResourceManager.getImageDescriptor("icons/add_obj.png");
       ALARM = ResourceManager.getImageDescriptor("icons/alarm.png");
       BROWSER = ResourceManager.getImageDescriptor("icons/browser.png");
       CHECKBOX_OFF = ResourceManager.getImageDescriptor("icons/checkbox_off.png");
       CHECKBOX_ON = ResourceManager.getImageDescriptor("icons/checkbox_on.png");
-      CLEAR = ResourceManager.getImageDescriptor("icons/clear.gif");
+      CLEAR = ResourceManager.getImageDescriptor("icons/clear.png");
       CLEAR_LOG = ResourceManager.getImageDescriptor("icons/clear_log.gif");
       CLOSE = ResourceManager.getImageDescriptor("icons/close.gif");
       COLLAPSE = ResourceManager.getImageDescriptor("icons/collapse.png");
@@ -145,7 +145,7 @@ public class SharedIcons
       COPY_TO_CLIPBOARD = ResourceManager.getImageDescriptor("icons/copy-to-clipboard.png");
       CSV = ResourceManager.getImageDescriptor("icons/csv.png");
       CUT = ResourceManager.getImageDescriptor("icons/cut.gif");
-      DELETE_OBJECT = ResourceManager.getImageDescriptor("icons/delete_obj.gif");
+      DELETE_OBJECT = ResourceManager.getImageDescriptor("icons/delete_obj.png");
       DOWN = ResourceManager.getImageDescriptor("icons/down.png");
       EDIT = ResourceManager.getImageDescriptor("icons/edit.png");
       EMPTY = ResourceManager.getImageDescriptor("icons/empty.png");
@@ -158,8 +158,8 @@ public class SharedIcons
       HIDE = ResourceManager.getImageDescriptor("icons/hide.png");
       INFORMATION = ResourceManager.getImageDescriptor("icons/information.png");
       IP_ADDRESS = ResourceManager.getImageDescriptor("icons/ipaddr.png");
-      NAV_BACKWARD = ResourceManager.getImageDescriptor("icons/nav_backward.gif");
-      NAV_FORWARD = ResourceManager.getImageDescriptor("icons/nav_forward.gif");
+      NAV_BACKWARD = ResourceManager.getImageDescriptor("icons/backward_nav.png");
+      NAV_FORWARD = ResourceManager.getImageDescriptor("icons/forward_nav.png");
       PASTE = ResourceManager.getImageDescriptor("icons/paste.gif");
       PIN = ResourceManager.getImageDescriptor("icons/pin.png");
       POP_OUT = ResourceManager.getImageDescriptor("icons/pop-out.png");
