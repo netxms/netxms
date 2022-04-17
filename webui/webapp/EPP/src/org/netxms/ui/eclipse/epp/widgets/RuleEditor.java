@@ -61,7 +61,6 @@ import org.eclipse.ui.internal.WorkbenchMessages;
 import org.eclipse.ui.internal.dialogs.PropertyDialog;
 import org.eclipse.ui.internal.dialogs.PropertyPageContributorManager;
 import org.eclipse.ui.internal.dialogs.PropertyPageManager;
-import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.client.NXCSession;
 import org.netxms.client.ServerAction;
 import org.netxms.client.constants.Severity;
@@ -93,7 +92,6 @@ public class RuleEditor extends Composite
    private int ruleNumber;
    private EventProcessingPolicyEditor editor;
    private NXCSession session;
-   private WorkbenchLabelProvider labelProvider;
    private boolean collapsed = true;
    private boolean verticalLayout = false;
    private Composite leftPanel;
@@ -122,7 +120,6 @@ public class RuleEditor extends Composite
       this.editor = editor;
 
       session = ConsoleSharedData.getSession();
-      labelProvider = new WorkbenchLabelProvider();
 
       setBackground(ThemeEngine.getBackgroundColor("RuleEditor.Border.Rule"));
 
@@ -510,7 +507,7 @@ public class RuleEditor extends Composite
             if (object != null)
             {
                clabel.setText(object.getObjectName());
-               clabel.setImage(labelProvider.getImage(object));
+               clabel.setImage(editor.getWorkbenchLabelProvider().getImage(object));
             }
             else
             {
@@ -789,7 +786,7 @@ public class RuleEditor extends Composite
             if (action != null)
             {
                clabel.setText(action.getName());
-               clabel.setImage(labelProvider.getImage(action));
+               clabel.setImage(editor.getWorkbenchLabelProvider().getImage(action));
             }
             else
             {
@@ -859,18 +856,6 @@ public class RuleEditor extends Composite
       label.setImage(image);
       label.setText(title);
       label.addMouseListener(mouseListener);
-   }
-
-   /*
-    * (non-Javadoc)
-    * 
-    * @see org.eclipse.swt.widgets.Widget#dispose()
-    */
-   @Override
-   public void dispose()
-   {
-      labelProvider.dispose();
-      super.dispose();
    }
 
    /**

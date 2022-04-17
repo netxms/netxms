@@ -54,6 +54,7 @@ import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.ISaveablePart;
 import org.eclipse.ui.contexts.IContextService;
 import org.eclipse.ui.handlers.IHandlerService;
+import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.ServerAction;
@@ -99,6 +100,8 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
    private Set<RuleEditor> selection;
    private int lastSelectedRule = -1;
    private RuleClipboard clipboard = new RuleClipboard();
+
+   private WorkbenchLabelProvider workbenchLabelProvider;
 
    private Font normalFont;
    private Font boldFont;
@@ -152,6 +155,8 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
       catch(Exception e)
       {
       }
+
+      workbenchLabelProvider = new WorkbenchLabelProvider();
 
       imageStop = Activator.getImageDescriptor("icons/stop.png").createImage(); //$NON-NLS-1$
       imageAlarm = Activator.getImageDescriptor("icons/alarm.png").createImage(); //$NON-NLS-1$
@@ -218,16 +223,8 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
       fd.right = new FormAttachment(100, 0);
       filterControl.setLayoutData(fd);
 
-      if (Platform.getOS().equals(Platform.OS_WIN32))
-      {
-         normalFont = new Font(parent.getDisplay(), "Verdana", 8, SWT.NORMAL); //$NON-NLS-1$
-         boldFont = new Font(parent.getDisplay(), "Verdana", 8, SWT.BOLD); //$NON-NLS-1$
-      }
-      else
-      {
-         normalFont = JFaceResources.getDefaultFont();
-         boldFont = JFaceResources.getFontRegistry().getBold(JFaceResources.DEFAULT_FONT);
-      }
+      normalFont = JFaceResources.getDefaultFont();
+      boldFont = JFaceResources.getFontRegistry().getBold(JFaceResources.DEFAULT_FONT);
 
       sessionListener = new SessionListener() {
          @Override
@@ -606,9 +603,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
       updateEditorAreaLayout();
    }
 
-   /*
-    * (non-Javadoc)
-    * 
+   /**
     * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
     */
    @Override
@@ -687,12 +682,6 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
          }.start();
       }
 
-      if (Platform.getOS().equals(Platform.OS_WIN32))
-      {
-         normalFont.dispose();
-         boldFont.dispose();
-      }
-
       imageStop.dispose();
       imageAlarm.dispose();
       imageExecute.dispose();
@@ -701,6 +690,8 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
       imageCollapse.dispose();
       imageExpand.dispose();
       imageEdit.dispose();
+
+      workbenchLabelProvider.dispose();
 
       modified = false;
       firePropertyChange(PROP_DIRTY);
@@ -772,6 +763,14 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
    public Font getBoldFont()
    {
       return boldFont;
+   }
+
+   /**
+    * @return the workbenchLabelProvider
+    */
+   public WorkbenchLabelProvider getWorkbenchLabelProvider()
+   {
+      return workbenchLabelProvider;
    }
 
    /**

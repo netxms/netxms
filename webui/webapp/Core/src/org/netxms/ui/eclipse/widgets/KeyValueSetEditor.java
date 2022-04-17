@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2016 Raden Solutions
+ * Copyright (C) 2016-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,14 +23,16 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import org.eclipse.jface.viewers.ArrayContentProvider;
+import org.eclipse.jface.viewers.DoubleClickEvent;
+import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ILabelProvider;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.layout.RowData;
@@ -42,15 +44,24 @@ import org.netxms.ui.eclipse.tools.ElementLabelComparator;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.helpers.AttributeLabelProvider;
 
-public class SetEditor extends Composite
+/**
+ * Editor for generic set of key/value pairs
+ */
+public class KeyValueSetEditor extends Composite
 {
-   private SortableTableViewer viewerSetValue;
-   private Button addSetValueButton;
-   private Button editSetValueButton;
-   private Button removeSetValueButton;
-   private Map<String, String> pStorageSet = new HashMap<String, String>();
+   private SortableTableViewer viewer;
+   private Button buttonAdd;
+   private Button buttonEdit;
+   private Button buttonRemove;
+   private Map<String, String> content = new HashMap<String, String>();
 
-   public SetEditor(Composite parent, int style)
+   /**
+    * Create new editor.
+    *
+    * @param parent parent composite
+    * @param style widget style
+    */
+   public KeyValueSetEditor(Composite parent, int style)
    {
       super(parent, style);
 
@@ -61,19 +72,26 @@ public class SetEditor extends Composite
       this.setLayout(layout);
       
       final String[] setColumnNames = { "Key", "Value" };
-      final int[] setColumnWidths = { 150, 200 };
-      viewerSetValue = new SortableTableViewer(this, setColumnNames, setColumnWidths, 0, SWT.UP, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
-      viewerSetValue.setContentProvider(new ArrayContentProvider());
-      viewerSetValue.setLabelProvider(new AttributeLabelProvider());
-      viewerSetValue.setComparator(new ElementLabelComparator((ILabelProvider)viewerSetValue.getLabelProvider()));
-      viewerSetValue.setInput(pStorageSet.entrySet().toArray());
-      viewerSetValue.addSelectionChangedListener(new ISelectionChangedListener() {
+      final int[] setColumnWidths = { 150, 300 };
+      viewer = new SortableTableViewer(this, setColumnNames, setColumnWidths, 0, SWT.UP, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
+      viewer.setContentProvider(new ArrayContentProvider());
+      viewer.setLabelProvider(new AttributeLabelProvider());
+      viewer.setComparator(new ElementLabelComparator((ILabelProvider)viewer.getLabelProvider()));
+      viewer.setInput(content.entrySet().toArray());
+      viewer.addSelectionChangedListener(new ISelectionChangedListener() {
          @Override
          public void selectionChanged(SelectionChangedEvent event)
          {
-            int size = ((IStructuredSelection)viewerSetValue.getSelection()).size();
-            editSetValueButton.setEnabled(size == 1);
-            removeSetValueButton.setEnabled(size > 0);
+            int size = viewer.getStructuredSelection().size();
+            buttonEdit.setEnabled(size == 1);
+            buttonRemove.setEnabled(size > 0);
+         }
+      });
+      viewer.addDoubleClickListener(new IDoubleClickListener() {
+         @Override
+         public void doubleClick(DoubleClickEvent event)
+         {
+            editEntry();
          }
       });
 
@@ -82,8 +100,8 @@ public class SetEditor extends Composite
       gd.grabExcessVerticalSpace = true;
       gd.horizontalAlignment = GridData.FILL;
       gd.grabExcessHorizontalSpace = true;
-      viewerSetValue.getControl().setLayoutData(gd);
-      
+      viewer.getControl().setLayoutData(gd);
+
       Composite buttons = new Composite(this, SWT.NONE);
       RowLayout buttonLayout = new RowLayout();
       buttonLayout.type = SWT.HORIZONTAL;
@@ -95,111 +113,93 @@ public class SetEditor extends Composite
       gd.horizontalAlignment = SWT.RIGHT;
       buttons.setLayoutData(gd);
 
-      addSetValueButton = new Button(buttons, SWT.PUSH);
-      addSetValueButton.setText("Add");
-      addSetValueButton.addSelectionListener(new SelectionListener() {
-         @Override
-         public void widgetDefaultSelected(SelectionEvent e)
-         {
-            widgetSelected(e);
-         }
-
+      buttonAdd = new Button(buttons, SWT.PUSH);
+      buttonAdd.setText("&Add...");
+      buttonAdd.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
          {
-            addPStorageSetAction();
+            addEntry();
          }
       });
       RowData rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
-      addSetValueButton.setLayoutData(rd);
+      buttonAdd.setLayoutData(rd);
 
-      editSetValueButton = new Button(buttons, SWT.PUSH);
-      editSetValueButton.setText("Edit");
-      editSetValueButton.addSelectionListener(new SelectionListener() {
-        @Override
-        public void widgetDefaultSelected(SelectionEvent e)
-        {
-           widgetSelected(e);
-        }
-
+      buttonEdit = new Button(buttons, SWT.PUSH);
+      buttonEdit.setText("&Edit...");
+      buttonEdit.addSelectionListener(new SelectionAdapter() {
         @Override
         public void widgetSelected(SelectionEvent e)
         {
-           editPStorageSetAction();
+           editEntry();
         }
       });
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
-      editSetValueButton.setLayoutData(rd);
-      editSetValueButton.setEnabled(false);
-      
-      removeSetValueButton = new Button(buttons, SWT.PUSH);
-      removeSetValueButton.setText("Delete");
-      removeSetValueButton.addSelectionListener(new SelectionListener() {
-         @Override
-         public void widgetDefaultSelected(SelectionEvent e)
-         {
-            widgetSelected(e);
-         }
+      buttonEdit.setLayoutData(rd);
+      buttonEdit.setEnabled(false);
 
+      buttonRemove = new Button(buttons, SWT.PUSH);
+      buttonRemove.setText("&Delete");
+      buttonRemove.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
          {
-            deletePStorageSetAction();
+            deleteEntry();
          }
       });
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
-      removeSetValueButton.setLayoutData(rd);
-      removeSetValueButton.setEnabled(false);
-      
+      buttonRemove.setLayoutData(rd);
+      buttonRemove.setEnabled(false);
+
       gd = new GridData();
       gd.verticalAlignment = GridData.FILL;
       gd.grabExcessVerticalSpace = true;
       gd.horizontalAlignment = GridData.FILL;
       gd.grabExcessHorizontalSpace = true;
-      viewerSetValue.getControl().setLayoutData(gd);
+      viewer.getControl().setLayoutData(gd);
    }
-   
+
    /**
-    * Add new attribute
+    * Add new entry
     */
-   private void addPStorageSetAction()
+   private void addEntry()
    {
       KeyValuePairEditDialog dlg = new KeyValuePairEditDialog(getShell(), null, null, true, true);
       if (dlg.open() == Window.OK)
       {
-         pStorageSet.put(dlg.getAtributeName(), dlg.getAttributeValue());
-         viewerSetValue.setInput(pStorageSet.entrySet().toArray());
+         content.put(dlg.getAtributeName(), dlg.getAttributeValue());
+         viewer.setInput(content.entrySet().toArray());
       }
    }
    
    /**
-    * Edit set value
+    * Edit selected entry
     */
    @SuppressWarnings("unchecked")
-   private void editPStorageSetAction()
+   private void editEntry()
    {
-      IStructuredSelection selection = (IStructuredSelection)viewerSetValue.getSelection();
+      IStructuredSelection selection = viewer.getStructuredSelection();
       if (selection.size() != 1)
          return;
-      
+
       Entry<String, String> attr = (Entry<String, String>)selection.getFirstElement();
       KeyValuePairEditDialog dlg = new KeyValuePairEditDialog(getShell(), attr.getKey(), attr.getValue(), true, false);
       if (dlg.open() == Window.OK)
       {
-         pStorageSet.put(dlg.getAtributeName(), dlg.getAttributeValue());
-         viewerSetValue.setInput(pStorageSet.entrySet().toArray());
+         content.put(dlg.getAtributeName(), dlg.getAttributeValue());
+         viewer.setInput(content.entrySet().toArray());
       }
    }
-   
+
    /**
-    * Delete attribute(s) from list
+    * Delete selected entries
     */
-   private void deletePStorageSetAction()
+   private void deleteEntry()
    {
-      IStructuredSelection selection = (IStructuredSelection)viewerSetValue.getSelection();
+      IStructuredSelection selection = viewer.getStructuredSelection();
       Iterator<?> it = selection.iterator();
       if (it.hasNext())
       {
@@ -207,38 +207,39 @@ public class SetEditor extends Composite
          {
             @SuppressWarnings("unchecked")
             Entry<String, String> e = (Entry<String, String>) it.next();
-            pStorageSet.remove(e.getKey());
+            content.remove(e.getKey());
          }
-         viewerSetValue.setInput(pStorageSet.entrySet().toArray());
+         viewer.setInput(content.entrySet().toArray());
       }
    }
 
    /**
-    * Put all new storage values
+    * Add all provided key/value pairs to editor's content (existing keys will be replaced).
     * 
-    * @param pStorageSet
+    * @param entries set of key/value pairs to add
     */
-   public void putAll(Map<String, String> pStorageSet)
+   public void addAll(Map<String, String> entries)
    {
-      this.pStorageSet.putAll(pStorageSet);
-      viewerSetValue.setInput(pStorageSet.entrySet().toArray());
+      content.putAll(entries);
+      viewer.setInput(entries.entrySet().toArray());
    }
 
    /**
-    * Put all new storage values
+    * Replace current content with provided one. Editor will use provided map as new content, any changes to it will be reflected in
+    * the editor.
     * 
-    * @param pStorageSet
+    * @param entries new set of entries
     */
-   public void setMap(Map<String, String> pStorageSet)
+   public void setContent(Map<String, String> entries)
    {
-      this.pStorageSet = pStorageSet;
+      this.content = entries;
    }
 
    /**
-    * Get set
+    * Get editor content. Changes to returned map will change content of the editor.
     */
-   public Map<String, String> getSet()
+   public Map<String, String> getContent()
    {
-      return pStorageSet;
+      return content;
    }
 }

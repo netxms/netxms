@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -43,35 +43,34 @@ import org.netxms.client.events.EventProcessingPolicyRule;
 import org.netxms.ui.eclipse.epp.widgets.RuleEditor;
 import org.netxms.ui.eclipse.tools.ElementLabelComparator;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
-import org.netxms.ui.eclipse.widgets.SetEditor;
+import org.netxms.ui.eclipse.widgets.KeyValueSetEditor;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 import org.netxms.ui.eclipse.console.dialogs.KeyValuePairEditDialog;
 
 /**
  * "Events" property page for EPP rule
- *
  */
 public class RulePStorage extends PropertyPage
 {
 	private RuleEditor editor;
 	private EventProcessingPolicyRule rule;
-	private SetEditor sEditor;
-   private SortableTableViewer viewerDeleteValue;
-   private Button addDeleteValueButton;
-   private Button editDeleteValueButton;
-   private Button removeDeleteValueButton;
-	private List<String> pStorageDelete = new ArrayList<String>();
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
-	 */
+	private KeyValueSetEditor keysToSetEditor;
+   private SortableTableViewer keysToDeleteViewer;
+   private Button addToDeleteListButton;
+   private Button editDeleteListButton;
+   private Button removeFromDeleteListButton;
+   private List<String> keysToDelete = new ArrayList<String>(0);
+
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createContents(Composite parent)
 	{
 		editor = (RuleEditor)getElement().getAdapter(RuleEditor.class);
 		rule = editor.getRule();
-		pStorageDelete.addAll(rule.getPStorageDelete());
-		
+		keysToDelete.addAll(rule.getPStorageDelete());
+
 		Composite dialogArea = new Composite(parent, SWT.NONE);
 		GridLayout layout = new GridLayout();
 		layout.verticalSpacing = WidgetHelper.INNER_SPACING;
@@ -86,35 +85,35 @@ public class RulePStorage extends PropertyPage
       gd.verticalIndent = vInd;
       label.setLayoutData(gd);
       
-      sEditor = new SetEditor(dialogArea, SWT.NONE);
-      sEditor.putAll(rule.getPStorageSet());
+      keysToSetEditor = new KeyValueSetEditor(dialogArea, SWT.NONE);
+      keysToSetEditor.addAll(rule.getPStorageSet());
       gd = new GridData();
       gd.verticalIndent = vInd;
       gd.verticalAlignment = GridData.FILL;
       gd.grabExcessVerticalSpace = true;
       gd.horizontalAlignment = GridData.FILL;
       gd.grabExcessHorizontalSpace = true;
-      sEditor.setLayoutData(gd);
-      
+      keysToSetEditor.setLayoutData(gd);
+
       label = new Label(dialogArea, SWT.NONE);
       label.setText("Delete persistent storage entries");
       gd = new GridData();
       gd.verticalIndent = vInd;
       label.setLayoutData(gd);
-      
+
       final String[] deleteColumnNames = { "Key" };
       final int[] deleteColumnWidths = { 150 };
-      viewerDeleteValue = new SortableTableViewer(dialogArea, deleteColumnNames, deleteColumnWidths, 0, SWT.UP, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
-      viewerDeleteValue.setContentProvider(new ArrayContentProvider());
-      viewerDeleteValue.setComparator(new ElementLabelComparator((ILabelProvider)viewerDeleteValue.getLabelProvider()));
-      viewerDeleteValue.setInput(pStorageDelete.toArray());
-      viewerDeleteValue.addSelectionChangedListener(new ISelectionChangedListener() {
+      keysToDeleteViewer = new SortableTableViewer(dialogArea, deleteColumnNames, deleteColumnWidths, 0, SWT.UP, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
+      keysToDeleteViewer.setContentProvider(new ArrayContentProvider());
+      keysToDeleteViewer.setComparator(new ElementLabelComparator((ILabelProvider)keysToDeleteViewer.getLabelProvider()));
+      keysToDeleteViewer.setInput(keysToDelete.toArray());
+      keysToDeleteViewer.addSelectionChangedListener(new ISelectionChangedListener() {
          @Override
          public void selectionChanged(SelectionChangedEvent event)
          {
-            int size = ((IStructuredSelection)viewerDeleteValue.getSelection()).size();
-            editDeleteValueButton.setEnabled(size == 1);
-            removeDeleteValueButton.setEnabled(size > 0);
+            int size = ((IStructuredSelection)keysToDeleteViewer.getSelection()).size();
+            editDeleteListButton.setEnabled(size == 1);
+            removeFromDeleteListButton.setEnabled(size > 0);
          }
       });
 
@@ -123,7 +122,7 @@ public class RulePStorage extends PropertyPage
       gd.grabExcessVerticalSpace = true;
       gd.horizontalAlignment = GridData.FILL;
       gd.grabExcessHorizontalSpace = true;
-      viewerDeleteValue.getControl().setLayoutData(gd);
+      keysToDeleteViewer.getControl().setLayoutData(gd);
       
       Composite buttonsDeleteValue = new Composite(dialogArea, SWT.NONE);
       RowLayout buttonLayout = new RowLayout();
@@ -136,9 +135,9 @@ public class RulePStorage extends PropertyPage
       gd.horizontalAlignment = SWT.RIGHT;
       buttonsDeleteValue.setLayoutData(gd);
 
-      addDeleteValueButton = new Button(buttonsDeleteValue, SWT.PUSH);
-      addDeleteValueButton.setText("Add");
-      addDeleteValueButton.addSelectionListener(new SelectionListener() {
+      addToDeleteListButton = new Button(buttonsDeleteValue, SWT.PUSH);
+      addToDeleteListButton.setText("Add");
+      addToDeleteListButton.addSelectionListener(new SelectionListener() {
          @Override
          public void widgetDefaultSelected(SelectionEvent e)
          {
@@ -153,11 +152,11 @@ public class RulePStorage extends PropertyPage
       });
       RowData rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
-      addDeleteValueButton.setLayoutData(rd);
+      addToDeleteListButton.setLayoutData(rd);
 
-      editDeleteValueButton = new Button(buttonsDeleteValue, SWT.PUSH);
-      editDeleteValueButton.setText("Edit");
-      editDeleteValueButton.addSelectionListener(new SelectionListener() {
+      editDeleteListButton = new Button(buttonsDeleteValue, SWT.PUSH);
+      editDeleteListButton.setText("Edit");
+      editDeleteListButton.addSelectionListener(new SelectionListener() {
         @Override
         public void widgetDefaultSelected(SelectionEvent e)
         {
@@ -172,12 +171,12 @@ public class RulePStorage extends PropertyPage
       });
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
-      editDeleteValueButton.setLayoutData(rd);
-      editDeleteValueButton.setEnabled(false);
+      editDeleteListButton.setLayoutData(rd);
+      editDeleteListButton.setEnabled(false);
       
-      removeDeleteValueButton = new Button(buttonsDeleteValue, SWT.PUSH);
-      removeDeleteValueButton.setText("Delete");
-      removeDeleteValueButton.addSelectionListener(new SelectionListener() {
+      removeFromDeleteListButton = new Button(buttonsDeleteValue, SWT.PUSH);
+      removeFromDeleteListButton.setText("Delete");
+      removeFromDeleteListButton.addSelectionListener(new SelectionListener() {
          @Override
          public void widgetDefaultSelected(SelectionEvent e)
          {
@@ -192,8 +191,8 @@ public class RulePStorage extends PropertyPage
       });
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
-      removeDeleteValueButton.setLayoutData(rd);
-      removeDeleteValueButton.setEnabled(false);
+      removeFromDeleteListButton.setLayoutData(rd);
+      removeFromDeleteListButton.setEnabled(false);
 		
 		return dialogArea;
 	}
@@ -206,8 +205,8 @@ public class RulePStorage extends PropertyPage
 	   KeyValuePairEditDialog dlg = new KeyValuePairEditDialog(getShell(), null, null, false, false);
 		if (dlg.open() == Window.OK)
 		{
-		   pStorageDelete.add(dlg.getAtributeName());
-		   viewerDeleteValue.setInput(pStorageDelete.toArray());
+		   keysToDelete.add(dlg.getAtributeName());
+		   keysToDeleteViewer.setInput(keysToDelete.toArray());
 		}
 	}
    
@@ -216,7 +215,7 @@ public class RulePStorage extends PropertyPage
     */
    private void editPStorageDeleteAction()
    {
-      IStructuredSelection selection = (IStructuredSelection)viewerDeleteValue.getSelection();
+      IStructuredSelection selection = (IStructuredSelection)keysToDeleteViewer.getSelection();
       if (selection.size() != 1)
          return;
       
@@ -224,8 +223,8 @@ public class RulePStorage extends PropertyPage
       KeyValuePairEditDialog dlg = new KeyValuePairEditDialog(getShell(), attr, null, false, false);
       if (dlg.open() == Window.OK)
       {         
-         pStorageDelete.set(pStorageDelete.indexOf(attr), dlg.getAtributeName());
-         viewerDeleteValue.setInput(pStorageDelete.toArray());    
+         keysToDelete.set(keysToDelete.indexOf(attr), dlg.getAtributeName());
+         keysToDeleteViewer.setInput(keysToDelete.toArray());    
       }
    }
    
@@ -234,16 +233,16 @@ public class RulePStorage extends PropertyPage
     */
    private void deletePStorageDeleteAction()
    {
-      IStructuredSelection selection = (IStructuredSelection)viewerDeleteValue.getSelection();
+      IStructuredSelection selection = (IStructuredSelection)keysToDeleteViewer.getSelection();
       Iterator<?> it = selection.iterator();
       if (it.hasNext())
       {
          while(it.hasNext())
          {
             String e = (String)it.next();
-            pStorageDelete.remove(e);
+            keysToDelete.remove(e);
          }
-         viewerDeleteValue.setInput(pStorageDelete.toArray());
+         keysToDeleteViewer.setInput(keysToDelete.toArray());
       }
    }
 	
@@ -252,8 +251,8 @@ public class RulePStorage extends PropertyPage
 	 */
 	private void doApply()
 	{
-		rule.setPStorageSet(sEditor.getSet());
-      rule.setPStorageDelete(pStorageDelete);
+		rule.setPStorageSet(keysToSetEditor.getContent());
+      rule.setPStorageDelete(keysToDelete);
 		editor.setModified(true);
 	}
 
