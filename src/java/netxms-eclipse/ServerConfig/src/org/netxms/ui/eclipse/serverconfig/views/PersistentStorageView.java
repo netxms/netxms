@@ -55,7 +55,7 @@ import org.netxms.ui.eclipse.serverconfig.Activator;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.ElementLabelComparator;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
-import org.netxms.ui.eclipse.widgets.helpers.AttributeLabelProvider;
+import org.netxms.ui.eclipse.widgets.helpers.KeyValuePairLabelProvider;
 
 /**
  * Persistent storage view
@@ -92,7 +92,7 @@ public class PersistentStorageView extends ViewPart
       final int[] setColumnWidths = { 200, 400 };
       viewer = new SortableTableViewer(parent, setColumnNames, setColumnWidths, 0, SWT.UP, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
       viewer.setContentProvider(new ArrayContentProvider());
-      viewer.setLabelProvider(new AttributeLabelProvider());
+      viewer.setLabelProvider(new KeyValuePairLabelProvider());
       viewer.setComparator(new ElementLabelComparator((ILabelProvider)viewer.getLabelProvider()));
       viewer.addSelectionChangedListener(new ISelectionChangedListener() {
          @Override

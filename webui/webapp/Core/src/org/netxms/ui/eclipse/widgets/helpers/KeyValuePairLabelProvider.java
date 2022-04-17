@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,40 +25,39 @@ import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
 
 /**
- * Label provider for attribute name/value pairs
+ * Label provider for key/value pairs
  */
-public class AttributeLabelProvider extends LabelProvider implements ITableLabelProvider
+public class KeyValuePairLabelProvider extends LabelProvider implements ITableLabelProvider
 {
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
+    */
 	@Override
 	public Image getColumnImage(Object element, int columnIndex)
 	{
 		return null;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
-	 */
-	@SuppressWarnings("unchecked")
+   /**
+    * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
+    */
 	@Override
 	public String getColumnText(Object element, int columnIndex)
 	{
 		switch(columnIndex)
 		{
 			case 0:
-				return ((Entry<String, String>)element).getKey();
+            return ((Entry<?, ?>)element).getKey().toString();
 			case 1:
-				return ((Entry<String, String>)element).getValue();
+            return ((Entry<?, ?>)element).getValue().toString();
 			default:
 				return null;
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.LabelProvider#getText(java.lang.Object)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.LabelProvider#getText(java.lang.Object)
+    */
 	@Override
 	public String getText(Object element)
 	{

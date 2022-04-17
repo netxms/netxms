@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,8 +28,8 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.layout.RowData;
@@ -40,21 +40,21 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.events.EventProcessingPolicyRule;
+import org.netxms.ui.eclipse.console.dialogs.KeyValuePairEditDialog;
 import org.netxms.ui.eclipse.epp.widgets.RuleEditor;
 import org.netxms.ui.eclipse.tools.ElementLabelComparator;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.KeyValueSetEditor;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
-import org.netxms.ui.eclipse.console.dialogs.KeyValuePairEditDialog;
 
 /**
- * "Events" property page for EPP rule
+ * "Persistent storage" property page for EPP rule
  */
 public class RulePStorage extends PropertyPage
 {
-	private RuleEditor editor;
-	private EventProcessingPolicyRule rule;
-	private KeyValueSetEditor keysToSetEditor;
+   private RuleEditor editor;
+   private EventProcessingPolicyRule rule;
+   private KeyValueSetEditor keysToSetEditor;
    private SortableTableViewer keysToDeleteViewer;
    private Button addToDeleteListButton;
    private Button editDeleteListButton;
@@ -64,12 +64,12 @@ public class RulePStorage extends PropertyPage
    /**
     * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
     */
-	@Override
-	protected Control createContents(Composite parent)
-	{
-		editor = (RuleEditor)getElement().getAdapter(RuleEditor.class);
-		rule = editor.getRule();
-		keysToDelete.addAll(rule.getPStorageDelete());
+   @Override
+   protected Control createContents(Composite parent)
+   {
+      editor = (RuleEditor)getElement().getAdapter(RuleEditor.class);
+      rule = editor.getRule();
+      keysToDelete.addAll(rule.getPStorageDelete());
 
 		Composite dialogArea = new Composite(parent, SWT.NONE);
 		GridLayout layout = new GridLayout();
@@ -78,7 +78,7 @@ public class RulePStorage extends PropertyPage
 		layout.marginHeight = 0;
       dialogArea.setLayout(layout);
       final int vInd = WidgetHelper.OUTER_SPACING - WidgetHelper.INNER_SPACING;
-      
+
       Label label = new Label(dialogArea, SWT.NONE);
       label.setText("Set persistent storage values");
       GridData gd = new GridData();
@@ -123,7 +123,7 @@ public class RulePStorage extends PropertyPage
       gd.horizontalAlignment = GridData.FILL;
       gd.grabExcessHorizontalSpace = true;
       keysToDeleteViewer.getControl().setLayoutData(gd);
-      
+
       Composite buttonsDeleteValue = new Composite(dialogArea, SWT.NONE);
       RowLayout buttonLayout = new RowLayout();
       buttonLayout.type = SWT.HORIZONTAL;
@@ -137,13 +137,7 @@ public class RulePStorage extends PropertyPage
 
       addToDeleteListButton = new Button(buttonsDeleteValue, SWT.PUSH);
       addToDeleteListButton.setText("Add");
-      addToDeleteListButton.addSelectionListener(new SelectionListener() {
-         @Override
-         public void widgetDefaultSelected(SelectionEvent e)
-         {
-            widgetSelected(e);
-         }
-
+      addToDeleteListButton.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
          {
@@ -156,13 +150,7 @@ public class RulePStorage extends PropertyPage
 
       editDeleteListButton = new Button(buttonsDeleteValue, SWT.PUSH);
       editDeleteListButton.setText("Edit");
-      editDeleteListButton.addSelectionListener(new SelectionListener() {
-        @Override
-        public void widgetDefaultSelected(SelectionEvent e)
-        {
-           widgetSelected(e);
-        }
-
+      editDeleteListButton.addSelectionListener(new SelectionAdapter() {
         @Override
         public void widgetSelected(SelectionEvent e)
         {
@@ -176,13 +164,7 @@ public class RulePStorage extends PropertyPage
       
       removeFromDeleteListButton = new Button(buttonsDeleteValue, SWT.PUSH);
       removeFromDeleteListButton.setText("Delete");
-      removeFromDeleteListButton.addSelectionListener(new SelectionListener() {
-         @Override
-         public void widgetDefaultSelected(SelectionEvent e)
-         {
-            widgetSelected(e);
-         }
-
+      removeFromDeleteListButton.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
          {
@@ -193,9 +175,9 @@ public class RulePStorage extends PropertyPage
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       removeFromDeleteListButton.setLayoutData(rd);
       removeFromDeleteListButton.setEnabled(false);
-		
-		return dialogArea;
-	}
+
+      return dialogArea;
+   }
 
 	/**
 	 * Add new attribute
@@ -209,16 +191,16 @@ public class RulePStorage extends PropertyPage
 		   keysToDeleteViewer.setInput(keysToDelete.toArray());
 		}
 	}
-   
+
    /**
     * Edit delete value
     */
    private void editPStorageDeleteAction()
    {
-      IStructuredSelection selection = (IStructuredSelection)keysToDeleteViewer.getSelection();
+      IStructuredSelection selection = keysToDeleteViewer.getStructuredSelection();
       if (selection.size() != 1)
          return;
-      
+
       String attr = (String)selection.getFirstElement();
       KeyValuePairEditDialog dlg = new KeyValuePairEditDialog(getShell(), attr, null, false, false);
       if (dlg.open() == Window.OK)
@@ -227,13 +209,13 @@ public class RulePStorage extends PropertyPage
          keysToDeleteViewer.setInput(keysToDelete.toArray());    
       }
    }
-   
+
    /**
     * Delete attribute(s) from list
     */
    private void deletePStorageDeleteAction()
    {
-      IStructuredSelection selection = (IStructuredSelection)keysToDeleteViewer.getSelection();
+      IStructuredSelection selection = keysToDeleteViewer.getStructuredSelection();
       Iterator<?> it = selection.iterator();
       if (it.hasNext())
       {

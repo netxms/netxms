@@ -42,7 +42,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.netxms.ui.eclipse.console.dialogs.KeyValuePairEditDialog;
 import org.netxms.ui.eclipse.tools.ElementLabelComparator;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
-import org.netxms.ui.eclipse.widgets.helpers.AttributeLabelProvider;
+import org.netxms.ui.eclipse.widgets.helpers.KeyValuePairLabelProvider;
 
 /**
  * Editor for generic set of key/value pairs
@@ -75,7 +75,7 @@ public class KeyValueSetEditor extends Composite
       final int[] setColumnWidths = { 150, 300 };
       viewer = new SortableTableViewer(this, setColumnNames, setColumnWidths, 0, SWT.UP, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
       viewer.setContentProvider(new ArrayContentProvider());
-      viewer.setLabelProvider(new AttributeLabelProvider());
+      viewer.setLabelProvider(new KeyValuePairLabelProvider());
       viewer.setComparator(new ElementLabelComparator((ILabelProvider)viewer.getLabelProvider()));
       viewer.setInput(content.entrySet().toArray());
       viewer.addSelectionChangedListener(new ISelectionChangedListener() {
