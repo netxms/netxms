@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,6 @@
 package org.netxms.nxmc.modules.events.widgets.helpers;
 
 import org.eclipse.jface.viewers.ITableLabelProvider;
-import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
 import org.netxms.client.events.EventTemplate;
 import org.netxms.nxmc.modules.events.widgets.EventTemplateList;
@@ -28,7 +27,7 @@ import org.netxms.nxmc.resources.StatusDisplayInfo;
 /**
  * Label provider for event template objects
  */
-public class EventTemplateLabelProvider extends LabelProvider implements ITableLabelProvider
+public class EventTemplateLabelProvider extends BaseEventTemplateLabelProvider implements ITableLabelProvider
 {
    boolean isDialog;
 
@@ -48,9 +47,7 @@ public class EventTemplateLabelProvider extends LabelProvider implements ITableL
 	@Override
 	public Image getColumnImage(Object element, int columnIndex)
 	{
-	   if ((columnIndex != 0))
-	      return null;
-		return getImage(element);
+      return (columnIndex == 0) ? getImage(element) : null;
 	}
 
 	/**

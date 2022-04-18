@@ -86,7 +86,7 @@ public class EventTemplateList extends Composite implements SessionListener
    private NXCSession session;
    private EventTemplateFilter filter;
    private View view;
-   
+
    /**
     * Constructor for event template list.
     * 
@@ -115,7 +115,7 @@ public class EventTemplateList extends Composite implements SessionListener
       setLayout(new FillLayout());
 
       session = Registry.getSession();      
-      
+
       final String[] names = { i18n.tr("Code"), i18n.tr("Name"), i18n.tr("Severity"), i18n.tr("Flags"), i18n.tr("Message"), i18n.tr("Tags") };
       final int[] widths = { 70, 200, 90, 50, 400, 300 };
       final String[] dialogNames = { i18n.tr("Code"), i18n.tr("Name"), i18n.tr("Tags") };

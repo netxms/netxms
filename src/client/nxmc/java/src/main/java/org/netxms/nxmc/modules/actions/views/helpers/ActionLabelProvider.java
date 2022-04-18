@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,6 @@
 package org.netxms.nxmc.modules.actions.views.helpers;
 
 import org.eclipse.jface.viewers.ITableLabelProvider;
-import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
 import org.netxms.client.ServerAction;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -29,7 +28,7 @@ import org.xnap.commons.i18n.I18n;
 /**
  * Label provider for action list 
  */
-public class ActionLabelProvider extends LabelProvider implements ITableLabelProvider
+public class ActionLabelProvider extends BaseActionLabelProvider implements ITableLabelProvider
 {
    private static final I18n i18n = LocalizationHelper.getI18n(ActionLabelProvider.class);
 
@@ -42,26 +41,13 @@ public class ActionLabelProvider extends LabelProvider implements ITableLabelPro
          i18n.tr("NXSL Script")
 	   };
 
-   private final BaseActionLabelProvider baseActionLabelProvider;
-	
-   /**
-    * Create label provider.
-    */
-   public ActionLabelProvider()
-   {
-      baseActionLabelProvider = new BaseActionLabelProvider();
-   }
-
    /**
     * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
     */
 	@Override
 	public Image getColumnImage(Object element, int columnIndex)
 	{
-      if (columnIndex != 0)
-         return null;
-
-      return baseActionLabelProvider.getColumnImage(element, columnIndex);
+      return (columnIndex == 0) ? getImage(element) : null;
 	}
 
    /**
@@ -95,14 +81,4 @@ public class ActionLabelProvider extends LabelProvider implements ITableLabelPro
 		}
 		return null;
 	}
-
-   /**
-    * @see org.eclipse.jface.viewers.BaseLabelProvider#dispose()
-    */
-   @Override
-   public void dispose()
-   {
-      baseActionLabelProvider.dispose();
-      super.dispose();
-   }
 }

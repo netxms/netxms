@@ -93,12 +93,18 @@ public class EventConfigurator extends ConfigurationView
 		mgr.add(dataView.getActionEdit());
 	}
 
+   /**
+    * @see org.netxms.nxmc.base.views.ConfigurationView#isModified()
+    */
    @Override
    public boolean isModified()
    {
       return false;
    }
 
+   /**
+    * @see org.netxms.nxmc.base.views.ConfigurationView#save()
+    */
    @Override
    public void save()
    {

@@ -66,10 +66,10 @@ import org.xnap.commons.i18n.I18n;
 /**
  * Alarm category list
  */
-public class AlarmCategoryWidget extends Composite implements SessionListener
+public class AlarmCategoryList extends Composite implements SessionListener
 {
-   private static I18n i18n = LocalizationHelper.getI18n(AlarmCategoryWidget.class);
-   
+   private static I18n i18n = LocalizationHelper.getI18n(AlarmCategoryList.class);
+
    // Columns
    public static final int COLUMN_ID = 0;
    public static final int COLUMN_NAME = 1;
@@ -92,7 +92,7 @@ public class AlarmCategoryWidget extends Composite implements SessionListener
     * @param configPrefix
     * @param showFilter
     */
-   public AlarmCategoryWidget(View viewPart, Composite parent, int style, final String configPrefix, boolean showFilter)
+   public AlarmCategoryList(View viewPart, Composite parent, int style, final String configPrefix, boolean showFilter)
    {
       this(parent, style, configPrefix, showFilter);
       this.viewPart = viewPart;
@@ -106,7 +106,7 @@ public class AlarmCategoryWidget extends Composite implements SessionListener
     * @param style style
     * @param configPrefix configuration prefix for saving/restoring viewer settings
     */
-   public AlarmCategoryWidget(Composite parent, int style, final String configPrefix, boolean showCloseButton)
+   public AlarmCategoryList(Composite parent, int style, final String configPrefix, boolean showCloseButton)
    {
       super(parent, style);
 
@@ -130,7 +130,7 @@ public class AlarmCategoryWidget extends Composite implements SessionListener
          @Override
          public void handleEvent(Event e)
          {
-            viewer.getControl().setBounds(AlarmCategoryWidget.this.getClientArea());
+            viewer.getControl().setBounds(AlarmCategoryList.this.getClientArea());
          }
       });
 

@@ -27,7 +27,7 @@ import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.nxmc.base.views.ConfigurationView;
 import org.netxms.nxmc.localization.LocalizationHelper;
-import org.netxms.nxmc.modules.alarms.widgets.AlarmCategoryWidget;
+import org.netxms.nxmc.modules.alarms.widgets.AlarmCategoryList;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.xnap.commons.i18n.I18n;
 
@@ -39,7 +39,7 @@ public class AlarmCategoryConfigurationView extends ConfigurationView
    private static I18n i18n = LocalizationHelper.getI18n(AlarmCategoryConfigurationView.class);
    private static final String ID = "AlarmCategoryConfigurator"; //$NON-NLS-1$
 
-   private AlarmCategoryWidget dataView;
+   private AlarmCategoryList dataView;
    
    /**
     * Constructor
@@ -54,7 +54,7 @@ public class AlarmCategoryConfigurationView extends ConfigurationView
    {
       parent.setLayout(new FillLayout());
 
-      dataView = new AlarmCategoryWidget(this, parent, SWT.NONE, ID, true);
+      dataView = new AlarmCategoryList(this, parent, SWT.NONE, ID, true);
       setFilterClient(dataView.getViewer(), dataView.getFilter());
 
       dataView.getViewer().addDoubleClickListener(new IDoubleClickListener() {

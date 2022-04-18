@@ -22,7 +22,7 @@ import org.eclipse.jface.viewers.ILabelProviderListener;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.swt.graphics.Image;
 import org.netxms.client.events.AlarmCategory;
-import org.netxms.nxmc.modules.alarms.widgets.AlarmCategoryWidget;
+import org.netxms.nxmc.modules.alarms.widgets.AlarmCategoryList;
 
 /**
  * Label provider for alarm categoryies
@@ -52,11 +52,11 @@ public class AlarmCategoryLabelProvider implements ITableLabelProvider
    {
       switch(columnIndex)
       {
-         case AlarmCategoryWidget.COLUMN_ID:
+         case AlarmCategoryList.COLUMN_ID:
             return Long.toString(((AlarmCategory)element).getId());
-         case AlarmCategoryWidget.COLUMN_NAME:
+         case AlarmCategoryList.COLUMN_NAME:
             return ((AlarmCategory)element).getName();
-         case AlarmCategoryWidget.COLUMN_DESCRIPTION:
+         case AlarmCategoryList.COLUMN_DESCRIPTION:
             return ((AlarmCategory)element).getDescription();
       }
       return null;

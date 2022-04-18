@@ -24,7 +24,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.jface.viewers.TableViewer;
 import org.netxms.client.events.AlarmCategory;
-import org.netxms.nxmc.modules.alarms.widgets.AlarmCategoryWidget;
+import org.netxms.nxmc.modules.alarms.widgets.AlarmCategoryList;
 
 /**
  * Comparator for Alarm Category List
@@ -46,13 +46,13 @@ public class AlarmCategoryListComparator extends ViewerComparator
       int rc;
       switch((Integer)sortColumn.getData("ID"))
       {
-         case AlarmCategoryWidget.COLUMN_ID:
+         case AlarmCategoryList.COLUMN_ID:
             rc = Long.signum(((AlarmCategory)e1).getId() - ((AlarmCategory)e2).getId());
             break;
-         case AlarmCategoryWidget.COLUMN_NAME:
+         case AlarmCategoryList.COLUMN_NAME:
             rc = (((AlarmCategory)e1).getName().compareToIgnoreCase(((AlarmCategory)e2).getName()));
             break;
-         case AlarmCategoryWidget.COLUMN_DESCRIPTION:
+         case AlarmCategoryList.COLUMN_DESCRIPTION:
             rc = (((AlarmCategory)e1).getDescription().compareToIgnoreCase(((AlarmCategory)e2).getDescription()));
             break;
          default:

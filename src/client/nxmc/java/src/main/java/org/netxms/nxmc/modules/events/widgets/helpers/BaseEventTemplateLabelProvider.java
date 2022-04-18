@@ -16,30 +16,33 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.nxmc.base.helpers;
+package org.netxms.nxmc.modules.events.widgets.helpers;
 
-import org.eclipse.jface.viewers.TableViewer;
-import org.eclipse.jface.viewers.Viewer;
-import org.eclipse.jface.viewers.ViewerComparator;
-import org.eclipse.swt.SWT;
+import org.eclipse.jface.viewers.LabelProvider;
+import org.eclipse.swt.graphics.Image;
+import org.netxms.client.events.EventTemplate;
+import org.netxms.nxmc.resources.StatusDisplayInfo;
 
 /**
- * Viewer comparator for case when model elements are just strings.
+ * Base label provider for event templates
  */
-public class StringComparator extends ViewerComparator
+public class BaseEventTemplateLabelProvider extends LabelProvider
 {
    /**
-    * @see org.eclipse.jface.viewers.ViewerComparator#compare(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
+    * @see org.eclipse.jface.viewers.LabelProvider#getImage(java.lang.Object)
     */
-	@Override
-	public int compare(Viewer viewer, Object e1, Object e2)
-	{
-		int rc = ((String)e1).compareToIgnoreCase((String)e2);
-		if (viewer instanceof TableViewer)
-		{
-			int dir = ((TableViewer)viewer).getTable().getSortDirection();
-			return (dir == SWT.UP) ? rc : -rc;
-		}
-		return rc;
-	}
+   @Override
+   public Image getImage(Object element)
+   {
+      return StatusDisplayInfo.getStatusImage(((EventTemplate)element).getSeverity());
+   }
+
+   /**
+    * @see org.eclipse.jface.viewers.LabelProvider#getText(java.lang.Object)
+    */
+   @Override
+   public String getText(Object element)
+   {
+      return ((EventTemplate)element).getName();
+   }
 }

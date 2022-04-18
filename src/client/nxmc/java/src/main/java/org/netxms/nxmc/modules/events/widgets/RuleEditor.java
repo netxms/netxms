@@ -27,9 +27,12 @@ import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
+import org.eclipse.jface.preference.PreferenceManager;
+import org.eclipse.jface.preference.PreferenceNode;
 import org.eclipse.jface.util.LocalSelectionTransfer;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.StructuredSelection;
+import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CLabel;
 import org.eclipse.swt.dnd.DND;
@@ -50,7 +53,6 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Menu;
-import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.NXCSession;
 import org.netxms.client.ServerAction;
 import org.netxms.client.constants.Severity;
@@ -64,6 +66,17 @@ import org.netxms.nxmc.base.propertypages.PropertyDialog;
 import org.netxms.nxmc.base.widgets.Card;
 import org.netxms.nxmc.base.widgets.helpers.DashboardElementButton;
 import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.events.propertypages.RuleAction;
+import org.netxms.nxmc.modules.events.propertypages.RuleAlarm;
+import org.netxms.nxmc.modules.events.propertypages.RuleComments;
+import org.netxms.nxmc.modules.events.propertypages.RuleCondition;
+import org.netxms.nxmc.modules.events.propertypages.RuleEvents;
+import org.netxms.nxmc.modules.events.propertypages.RuleFilteringScript;
+import org.netxms.nxmc.modules.events.propertypages.RulePersistentStorage;
+import org.netxms.nxmc.modules.events.propertypages.RuleServerActions;
+import org.netxms.nxmc.modules.events.propertypages.RuleSeverityFilter;
+import org.netxms.nxmc.modules.events.propertypages.RuleSourceObjects;
+import org.netxms.nxmc.modules.events.propertypages.RuleTimerCancellations;
 import org.netxms.nxmc.modules.events.views.EventProcessingPolicyEditor;
 import org.netxms.nxmc.modules.nxsl.widgets.ScriptEditor;
 import org.netxms.nxmc.resources.SharedIcons;
@@ -391,7 +404,7 @@ public class RuleEditor extends Composite
          public void mouseUp(MouseEvent e)
          {
             if ((e.button == 1) && doAction)
-               editRule("org.netxms.ui.eclipse.epp.propertypages.RuleComments#2"); //$NON-NLS-1$
+               editRule("Comments");
          }
       });
 
@@ -493,7 +506,7 @@ public class RuleEditor extends Composite
       /* source */
       if (rule.getSources().size() > 0)
       {
-         final MouseListener listener = createMouseListener("org.netxms.ui.eclipse.epp.propertypages.RuleSourceObjects#0"); //$NON-NLS-1$
+         final MouseListener listener = createMouseListener("SourceObjects");
          addConditionGroupLabel(clientArea, i18n.tr("source object is one of the following:"), needAnd, rule.isSourceInverted(), listener);
 
          for(Long id : rule.getSources())
@@ -519,7 +532,7 @@ public class RuleEditor extends Composite
       /* events */
       if (rule.getEvents().size() > 0)
       {
-         final MouseListener listener = createMouseListener("org.netxms.ui.eclipse.epp.propertypages.RuleEvents#10");
+         final MouseListener listener = createMouseListener("Events");
          addConditionGroupLabel(clientArea, i18n.tr("event code is one of the following:"), needAnd, rule.isEventsInverted(), listener);
 
          List<EventTemplate> sortedEvents = new ArrayList<EventTemplate>(rule.getEvents().size());
@@ -555,7 +568,7 @@ public class RuleEditor extends Composite
       /* severity */
       if ((rule.getFlags() & EventProcessingPolicyRule.SEVERITY_ANY) != EventProcessingPolicyRule.SEVERITY_ANY)
       {
-         final MouseListener listener = createMouseListener("org.netxms.ui.eclipse.epp.propertypages.RuleSeverityFilter#20");
+         final MouseListener listener = createMouseListener("SeverityFilter");
          addConditionGroupLabel(clientArea, i18n.tr("event severity is one of the following:"), needAnd, false, listener);
 
          if ((rule.getFlags() & EventProcessingPolicyRule.SEVERITY_NORMAL) != 0)
@@ -579,7 +592,7 @@ public class RuleEditor extends Composite
       /* script */
       if ((rule.getScript() != null) && !rule.getScript().isEmpty())
       {
-         final MouseListener listener = createMouseListener("org.netxms.ui.eclipse.epp.propertypages.RuleFilterScript#30"); //$NON-NLS-1$
+         final MouseListener listener = createMouseListener("FilteringScript");
          addConditionGroupLabel(clientArea, i18n.tr("the following script returns true:"), needAnd, false, listener);
 
          ScriptEditor scriptEditor = new ScriptEditor(clientArea, SWT.BORDER, SWT.NONE, true, false);
@@ -692,7 +705,7 @@ public class RuleEditor extends Composite
       /* alarm */
       if ((rule.getFlags() & EventProcessingPolicyRule.GENERATE_ALARM) != 0)
       {
-         final MouseListener listener = createMouseListener("org.netxms.ui.eclipse.epp.propertypages.RuleAlarm#10"); //$NON-NLS-1$
+         final MouseListener listener = createMouseListener("Alarm");
          if (rule.getAlarmSeverity().compareTo(Severity.TERMINATE) < 0)
          {
             addActionGroupLabel(clientArea, i18n.tr("Generate alarm"), editor.getImageAlarm(), listener);
@@ -704,11 +717,11 @@ public class RuleEditor extends Composite
 
             if ((rule.getAlarmKey() != null) && !rule.getAlarmKey().isEmpty())
             {
-               createLabel(clientArea, 1, false, String.format(i18n.tr("with key \"%s\""), rule.getAlarmKey()), null);
+               createLabel(clientArea, 1, false, String.format(i18n.tr("with key \"%s\""), rule.getAlarmKey()), listener);
             }
             if ((rule.getRcaScriptName() != null) && !rule.getRcaScriptName().isEmpty())
             {
-               createLabel(clientArea, 1, false, String.format(i18n.tr("using root cause analysis script \"%s\""), rule.getRcaScriptName()), null);
+               createLabel(clientArea, 1, false, String.format(i18n.tr("using root cause analysis script \"%s\""), rule.getRcaScriptName()), listener);
             }
          }
          else if (rule.getAlarmSeverity() == Severity.TERMINATE)
@@ -728,27 +741,27 @@ public class RuleEditor extends Composite
          
          if (rule.getAlarmCategories().size() > 0)
          {
-            createLabel(clientArea, 1, false, rule.getAlarmCategories().size() == 1 ? i18n.tr("with category: ") : i18n.tr("with categories: "), null);
+            createLabel(clientArea, 1, false, rule.getAlarmCategories().size() == 1 ? i18n.tr("with category: ") : i18n.tr("with categories: "), listener);
             for(Long id :rule.getAlarmCategories())
             {
                AlarmCategory category = session.findAlarmCategoryById(id);
                if (category != null)
                {
-                  createLabel(clientArea, 2, false, category.getName(), null);
+                  createLabel(clientArea, 2, false, category.getName(), listener);
                }
             }
          }
          
          if ((rule.getFlags() & EventProcessingPolicyRule.CREATE_TICKET) != 0)
          {
-            createLabel(clientArea, 1, false, i18n.tr("and create helpdesk ticket"), null);
+            createLabel(clientArea, 1, false, i18n.tr("and create helpdesk ticket"), listener);
          }
       }
 
       /* persistent storage */
       if (!rule.getPStorageSet().isEmpty() || !rule.getPStorageDelete().isEmpty())
       {
-         final MouseListener listener = createMouseListener("org.netxms.ui.eclipse.epp.propertypages.RulePStorage#20");
+         final MouseListener listener = createMouseListener("PersistentStorage");
          addActionGroupLabel(clientArea, i18n.tr("Update persistent storage entries"), editor.getImagePersistentStorage(), listener);
 
          if (!rule.getPStorageSet().isEmpty())
@@ -775,7 +788,7 @@ public class RuleEditor extends Composite
       /* actions */
       if (!rule.getActions().isEmpty())
       {
-         final MouseListener listener = createMouseListener("org.netxms.ui.eclipse.epp.propertypages.RuleServerActions#30");
+         final MouseListener listener = createMouseListener("ServerActions");
          addActionGroupLabel(clientArea, i18n.tr("Execute the following predefined actions:"), editor.getImageExecute(), listener);
          for(ActionExecutionConfiguration c : rule.getActions())
          {
@@ -822,7 +835,7 @@ public class RuleEditor extends Composite
       /* timer cancellations */
       if (!rule.getTimerCancellations().isEmpty())
       {
-         final MouseListener listener = createMouseListener("org.netxms.ui.eclipse.epp.propertypages.RuleTimerCancellations#40"); //$NON-NLS-1$
+         final MouseListener listener = createMouseListener("TimerCancellations");
          addActionGroupLabel(clientArea, i18n.tr("Cancel the following timers:"), editor.getImageCancelTimer(), listener);
          for(String tc : rule.getTimerCancellations())
          {
@@ -835,7 +848,7 @@ public class RuleEditor extends Composite
       /* flags */
       if ((rule.getFlags() & EventProcessingPolicyRule.STOP_PROCESSING) != 0)
       {
-         final MouseListener listener = createMouseListener("org.netxms.ui.eclipse.epp.propertypages.RuleAction#1"); //$NON-NLS-1$
+         final MouseListener listener = createMouseListener("Action");
          addActionGroupLabel(clientArea, i18n.tr("Stop event processing"), editor.getImageStop(), listener);
       }
       
@@ -919,36 +932,26 @@ public class RuleEditor extends Composite
    }
 
    /**
-    * Create a new property dialog.
-    * 
-    * @param shell the parent shell
-    * @param propertyPageId the property page id
-    * @param element the adaptable element
-    * @return the property dialog
+    * Edit rule
     */
-   @SuppressWarnings("rawtypes")
-   private static PropertyDialog createDialogOn(Shell shell, final String propertyPageId, Object element, String name)
+   private void editRule(String pageId)
    {
-      // if (element == null)
-         return null;
+      modified = false;
 
-      /*
-      PropertyPageManager pageManager = new PropertyPageManager();
-      String title = "";//$NON-NLS-1$
+      PreferenceManager pm = new PreferenceManager();
+      pm.addToRoot(new PreferenceNode("Condition", new RuleCondition(this)));
+      pm.addTo("Condition", new PreferenceNode("Events", new RuleEvents(this)));
+      pm.addTo("Condition", new PreferenceNode("SourceObjects", new RuleSourceObjects(this)));
+      pm.addTo("Condition", new PreferenceNode("SeverityFilter", new RuleSeverityFilter(this)));
+      pm.addTo("Condition", new PreferenceNode("FilteringScript", new RuleFilteringScript(this)));
+      pm.addToRoot(new PreferenceNode("Action", new RuleAction(this)));
+      pm.addTo("Action", new PreferenceNode("Alarm", new RuleAlarm(this)));
+      pm.addTo("Action", new PreferenceNode("PersistentStorage", new RulePersistentStorage(this)));
+      pm.addTo("Action", new PreferenceNode("ServerActions", new RuleServerActions(this)));
+      pm.addTo("Action", new PreferenceNode("TimerCancellations", new RuleTimerCancellations(this)));
+      pm.addToRoot(new PreferenceNode("Comments", new RuleComments(this)));
 
-      // load pages for the selection
-      // fill the manager with contributions from the matching contributors
-      PropertyPageContributorManager.getManager().contribute(pageManager, element);
-      // testing if there are pages in the manager
-      Iterator pages = pageManager.getElements(PreferenceManager.PRE_ORDER).iterator();
-      if (!pages.hasNext())
-      {
-         MessageDialogHelper.openInformation(shell, WorkbenchMessages.PropertyDialog_messageTitle,
-               NLS.bind(WorkbenchMessages.PropertyDialog_noPropertyMessage, name));
-         return null;
-      }
-      title = NLS.bind(WorkbenchMessages.PropertyDialog_propertyMessage, name);
-      PropertyDialog propertyDialog = new PropertyDialog(shell, pageManager, new StructuredSelection(element)) {
+      PropertyDialog dlg = new PropertyDialog(editor.getWindow().getShell(), pm, String.format(i18n.tr("Edit Rule %d"), ruleNumber)) {
          @Override
          protected TreeViewer createTreeViewer(Composite parent)
          {
@@ -958,47 +961,22 @@ public class RuleEditor extends Composite
             return viewer;
          }
       };
-
-      if (propertyPageId != null)
+      dlg.setSelectedNode(pageId);
+      dlg.open();
+      if (modified)
       {
-         propertyDialog.setSelectedNode(propertyPageId);
+         if (rule.isDisabled())
+            headerLabel.setText(rule.getComments() + i18n.tr(" (disabled)"));
+         else
+            headerLabel.setText(rule.getComments());
+
+         updateBackground();
+
+         condition.replaceClientArea();
+         action.replaceClientArea();
+         editor.updateEditorAreaLayout();
+         editor.setModified(true);
       }
-      propertyDialog.create();
-
-      propertyDialog.getShell().setText(title);
-      PlatformUI.getWorkbench().getHelpSystem().setHelp(propertyDialog.getShell(), IWorkbenchHelpContextIds.PROPERTY_DIALOG);
-
-      return propertyDialog;
-      */
-   }
-
-   /**
-    * Edit rule
-    */
-   private void editRule(String pageId)
-   {
-      /*
-      PropertyDialog dlg = createDialogOn(editor.getSite().getShell(), pageId, this, Messages.get().RuleEditor_Rule + ruleNumber);
-      if (dlg != null)
-      {
-         modified = false;
-         dlg.open();
-         if (modified)
-         {
-            if (rule.isDisabled())
-               headerLabel.setText(rule.getComments() + Messages.get().RuleEditor_DisabledSuffix);
-            else
-               headerLabel.setText(rule.getComments());
-
-            updateBackground();
-
-            condition.replaceClientArea();
-            action.replaceClientArea();
-            editor.updateEditorAreaLayout();
-            editor.setModified(true);
-         }
-      }
-      */
    }
 
    /**
