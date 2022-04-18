@@ -110,7 +110,6 @@ public class RuleEditor extends Composite
    private Label editButton;
    private boolean modified = false;
    private boolean selected = false;
-   private boolean isDragged = false;
    private MouseListener ruleMouseListener;
 
    /**
@@ -147,16 +146,8 @@ public class RuleEditor extends Composite
          {
             if (e.button == 1)
             {
-               if (dragDetect(e)) 
-               {
-                  setDragged(true);
-                  RuleEditor.this.editor.onDragDetect(RuleEditor.this);
-               }
-               else
-               {
-                  processRuleMouseEvent(e);
-               }
-            }            
+               processRuleMouseEvent(e);
+            }
             else if (e.button == 3 && !selected)
             {
                RuleEditor.this.editor.setSelection(RuleEditor.this);
@@ -166,6 +157,9 @@ public class RuleEditor extends Composite
          @Override
          public void mouseUp(MouseEvent e)
          {
+            // Update selection only on button up event if mouse was pressed on already selected rule
+            if ((e.button == 1) && ((e.stateMask & (SWT.MOD1 | SWT.SHIFT)) == 0) && selected)
+               RuleEditor.this.editor.setSelection(RuleEditor.this);
          }
       };
 
@@ -986,22 +980,6 @@ public class RuleEditor extends Composite
    {
       return rule;
    }
-   
-   /**
-    * @return isDragged flag
-    */
-   public boolean isDragged()
-   {
-      return isDragged;
-   }
-   
-   /**
-    * set Dragged flag
-    */
-   public void setDragged(boolean isDragged)
-   {
-      this.isDragged = isDragged;
-   }
 
    /**
     * @return the modified
@@ -1048,7 +1026,7 @@ public class RuleEditor extends Composite
       {
          editor.addToSelection(this, true);
       }
-      else
+      else if (!selected)
       {
          editor.setSelection(this);
       }

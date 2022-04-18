@@ -403,7 +403,6 @@ public class EventProcessingPolicyEditor extends ConfigurationView
          if (isRuleVisible(rule))
          {
             RuleEditor editor = new RuleEditor(dataArea, rule, this);
-            editor.setDragDetect(true);
             ruleEditors.add(editor);
             GridData gd = new GridData();
             gd.horizontalAlignment = SWT.FILL;
@@ -947,11 +946,7 @@ public class EventProcessingPolicyEditor extends ConfigurationView
    public void moveSelection(RuleEditor anchor)
    {
       if (selection.contains(anchor))
-      {
-         for(RuleEditor s : selection)
-            s.setDragged(false);
          return;
-      }
       
       List<RuleEditor> movedRuleEditors = new ArrayList<RuleEditor>();
       for(RuleEditor e : ruleEditors)
@@ -967,7 +962,6 @@ public class EventProcessingPolicyEditor extends ConfigurationView
                   movedRuleEditors.add(s);
                   s.moveBelow(curr);
                   curr = s;
-                  s.setDragged(false);
                }
             }
          }
@@ -982,7 +976,6 @@ public class EventProcessingPolicyEditor extends ConfigurationView
       }
 
       ruleEditors = movedRuleEditors;
-      anchor.setDragged(false);
 
       updateEditorAreaLayout();
       setModified(true);
