@@ -1140,12 +1140,8 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
    public void moveSelection(RuleEditor anchor)
    {
       if (selection.contains(anchor))
-      {
-         for(RuleEditor s : selection)
-            s.setDragged(false);
          return;
-      }
-      
+
       List<RuleEditor> movedRuleEditors = new ArrayList<RuleEditor>();
       for(RuleEditor e : ruleEditors)
       {
@@ -1160,7 +1156,6 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
                   movedRuleEditors.add(s);
                   s.moveBelow(curr);
                   curr = s;
-                  s.setDragged(false);
                }
             }
          }
@@ -1175,7 +1170,6 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
       }
 
       ruleEditors = movedRuleEditors;
-      anchor.setDragged(false);
 
       updateEditorAreaLayout();
       setModified(true);
@@ -1311,16 +1305,5 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
       }
 
       return false;
-   }
-   
-   /**
-    * Check if selection contains a rule
-    * 
-    * @param e rule to check
-    * @return true if contains
-    */
-   public boolean selectionContainsRule(RuleEditor e)
-   {
-      return selection.contains(e);
    }
 }
