@@ -46,6 +46,8 @@ import org.netxms.nxmc.modules.worldmap.WorldMapPerspective;
  */
 public final class Registry
 {
+   public static final boolean IS_WEB_CLIENT = true;
+   
    /**
     * Get registry instance.
     *

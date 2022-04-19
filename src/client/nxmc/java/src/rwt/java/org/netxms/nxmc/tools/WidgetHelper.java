@@ -1261,7 +1261,7 @@ public class WidgetHelper
     * @param fd file dialog to set extensions for
     * @param names extension names
     */
-   public static void getFileDialogFfileList(FileDialog fd, List<File> fileList)
+   public static void getFileDialogFileList(FileDialog fd, List<File> fileList)
    {
       String files[] = fd.getFileNames();
       if(files.length > 0)

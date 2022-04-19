@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -66,7 +66,7 @@ public class LocalFileSelector extends AbstractSelector
       WidgetHelper.setFileDialogFilterNames(fd, filterNames);
 		fd.open();
       fileList.clear();
-      WidgetHelper.getFileDialogFfileList(fd, fileList);
+      WidgetHelper.getFileDialogFileList(fd, fileList);
       updateFileList();
 	}
 
