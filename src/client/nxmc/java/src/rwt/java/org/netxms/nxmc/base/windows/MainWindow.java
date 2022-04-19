@@ -22,7 +22,7 @@ import java.util.List;
 import org.eclipse.jface.preference.PreferenceDialog;
 import org.eclipse.jface.preference.PreferenceManager;
 import org.eclipse.jface.preference.PreferenceNode;
-import org.eclipse.jface.window.ApplicationWindow;
+import org.eclipse.jface.window.Window;
 import org.eclipse.rap.rwt.RWT;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ControlEvent;
@@ -47,6 +47,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Layout;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Shell;
@@ -77,7 +78,7 @@ import org.xnap.commons.i18n.I18n;
 /**
  * Main window
  */
-public class MainWindow extends ApplicationWindow implements MessageAreaHolder
+public class MainWindow extends Window implements MessageAreaHolder
 {
    private static Logger logger = LoggerFactory.getLogger(MainWindow.class);
    private static I18n i18n = LocalizationHelper.getI18n(MainWindow.class);
@@ -132,6 +133,15 @@ public class MainWindow extends ApplicationWindow implements MessageAreaHolder
             ps.set("MainWindow.CurrentPerspective", (currentPerspective != null) ? currentPerspective.getId() : "(none)");
          }
       });
+   }
+
+   /**
+    * @see org.eclipse.jface.window.Window#getLayout()
+    */
+   @Override
+   protected Layout getLayout()
+   {
+      return new FillLayout();
    }
 
    /**
