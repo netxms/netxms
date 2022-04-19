@@ -10,7 +10,7 @@ dciName = $2;
 dciDescription = "NXSL integration Tests DCIs " . time();
 
 //Create push DCI
-pushDci = CreateDCI(preCreatedNode, "push", dciName, dciDescription, "int32", 0, 0);
+pushDci = CreateDCI(preCreatedNode, "push", dciName, dciDescription, "int32", null, null);
 
 //Find DCIs, list DCIs
 list = FindAllDCIs(preCreatedNode, "Server*", "*MAIN*");
