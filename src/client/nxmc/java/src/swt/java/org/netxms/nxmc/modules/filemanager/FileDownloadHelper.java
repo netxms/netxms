@@ -201,7 +201,7 @@ public class FileDownloadHelper
          }
          in.close();
          out.close();
-         outputFile.setLastModified(sf.getModifyicationTime().getTime());
+         outputFile.setLastModified(sf.getModificationTime().getTime());
       }
    }
    
@@ -236,9 +236,9 @@ public class FileDownloadHelper
             downloadFile(session, objectId, f, localFileName + "/" + f.getName(), monitor, true, job); 
          }
       }
-      dir.setLastModified(sf.getModifyicationTime().getTime());
+      dir.setLastModified(sf.getModificationTime().getTime());
    }
-   
+
    /**
     * Upload local folder to agent
     */
