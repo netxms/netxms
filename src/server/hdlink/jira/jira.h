@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Helpdesk link module for Jira
-** Copyright (C) 2014 Raden Solutions
+** Copyright (C) 2014-2022 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -33,16 +33,6 @@
 #define JIRA_MAX_PROJECT_CODE_LEN   32
 #define JIRA_MAX_ISSUE_TYPE_LEN     32
 #define JIRA_MAX_COMPONENT_NAME_LEN 128
-
-/**
- * Request data for cURL call
- */
-struct RequestData
-{
-   size_t size;
-   size_t allocated;
-   char *data;
-};
 
 /**
  * Jira project's component
