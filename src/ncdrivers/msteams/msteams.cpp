@@ -153,11 +153,11 @@ bool MicrosoftTeamsDriver::send(const TCHAR *recipient, const TCHAR *subject, co
 
    // Attempt to lookup URL alias
    const TCHAR *url = m_channels.get(recipient);
-   if (url == NULL)
+   if (url == nullptr)
       url = recipient;
 
    CURL *curl = curl_easy_init();
-   if (curl == NULL)
+   if (curl == nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("Call to curl_easy_init() failed"));
       return false;
@@ -177,7 +177,7 @@ bool MicrosoftTeamsDriver::send(const TCHAR *recipient, const TCHAR *subject, co
    responseData.setAllocationStep(32768);
    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &responseData);
 
-   struct curl_slist *headers = NULL;
+   struct curl_slist *headers = nullptr;
    char *json = request.getUTF8String();
    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, json);
    headers = curl_slist_append(headers, "Content-Type: application/json");
