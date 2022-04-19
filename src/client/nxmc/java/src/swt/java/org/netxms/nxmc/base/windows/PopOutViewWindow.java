@@ -34,6 +34,7 @@ import org.eclipse.swt.widgets.Layout;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.nxmc.PreferenceStore;
+import org.netxms.nxmc.Startup;
 import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.views.ViewStack;
 import org.netxms.nxmc.base.widgets.MessageArea;
@@ -63,13 +64,14 @@ public class PopOutViewWindow extends Window implements MessageAreaHolder
     * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
     */
    @Override
-   protected void configureShell(Shell newShell)
+   protected void configureShell(Shell shell)
    {
-      super.configureShell(newShell);
-      newShell.setText(view.getFullName());
+      super.configureShell(shell);
+      shell.setText(view.getFullName());
       Point shellSize = PreferenceStore.getInstance().getAsPoint("PopupWindowSize." + view.getBaseId(), null);
       if (shellSize != null)
-         newShell.setSize(shellSize);
+         shell.setSize(shellSize);
+      shell.setImages(Startup.windowIcons);
    }
 
    /**

@@ -28,6 +28,7 @@ import org.eclipse.jface.dialogs.ProgressMonitorDialog;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.window.Window;
 import org.eclipse.jface.window.Window.IExceptionHandler;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.internal.DPIUtil;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.FileDialog;
@@ -52,6 +53,7 @@ import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.datacollection.widgets.helpers.DataCollectionDisplayInfo;
 import org.netxms.nxmc.modules.objects.ObjectToolsCache;
 import org.netxms.nxmc.modules.snmp.shared.MibCache;
+import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
 import org.netxms.nxmc.resources.StatusDisplayInfo;
 import org.netxms.nxmc.tools.MessageDialogHelper;
@@ -64,6 +66,8 @@ import org.xnap.commons.i18n.I18n;
  */
 public class Startup
 {
+   public static Image[] windowIcons = new Image[5];
+
    private static I18n i18n = LocalizationHelper.getI18n(Startup.class);
    private static Logger logger = LoggerFactory.getLogger(Startup.class);
 
@@ -85,6 +89,13 @@ public class Startup
       logger.info("NetXMS Management Console version " + VersionInfo.version() + " starting");
       logger.info("State directory: " + stateDir.getAbsolutePath());
       logger.info("Device DPI = " + display.getDPI() + "; zoom = " + DPIUtil.getDeviceZoom());
+
+      // Icons for application window(s)
+      windowIcons[0] = ResourceManager.getImage("icons/window/128x128.png");
+      windowIcons[1] = ResourceManager.getImage("icons/window/64x64.png");
+      windowIcons[2] = ResourceManager.getImage("icons/window/48x48.png");
+      windowIcons[3] = ResourceManager.getImage("icons/window/32x32.png");
+      windowIcons[4] = ResourceManager.getImage("icons/window/16x16.png");
 
       PreferenceStore.open(stateDir.getAbsolutePath());
       SharedIcons.init();
@@ -111,6 +122,12 @@ public class Startup
          Registry.getInstance().setMainWindow(w);
          w.setBlockOnOpen(true);
          w.open();
+      }
+
+      for(Image i : windowIcons)
+      {
+         if (i != null)
+            i.dispose();
       }
 
       display.dispose();
@@ -223,7 +240,14 @@ public class Startup
                break;
          }
 
-         ProgressMonitorDialog monitorDialog = new ProgressMonitorDialog(null);
+         ProgressMonitorDialog monitorDialog = new ProgressMonitorDialog(null) {
+            @Override
+            protected void configureShell(Shell shell)
+            {
+               super.configureShell(shell);
+               shell.setImages(windowIcons);
+            }
+         };
          try
          {
             monitorDialog.run(true, false, job);

@@ -60,6 +60,7 @@ import org.eclipse.swt.widgets.ToolItem;
 import org.netxms.client.NXCSession;
 import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.Startup;
 import org.netxms.nxmc.base.dialogs.AboutDialog;
 import org.netxms.nxmc.base.menus.UserMenuManager;
 import org.netxms.nxmc.base.preferencepages.Appearance;
@@ -142,6 +143,8 @@ public class MainWindow extends Window implements MessageAreaHolder
             ps.set("MainWindow.CurrentPerspective", (currentPerspective != null) ? currentPerspective.getId() : "(none)");
          }
       });
+
+      shell.setImages(Startup.windowIcons);
    }
 
    /**
