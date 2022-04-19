@@ -25,7 +25,6 @@ import java.util.Arrays;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.custom.CLabel;
 import org.eclipse.swt.custom.LineStyleEvent;
 import org.eclipse.swt.custom.LineStyleListener;
 import org.eclipse.swt.custom.StyleRange;
@@ -50,12 +49,10 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.ToolBar;
 import org.eclipse.swt.widgets.ToolItem;
-import org.netxms.client.constants.Severity;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.resources.SharedIcons;
-import org.netxms.nxmc.resources.StatusDisplayInfo;
 import org.netxms.nxmc.resources.ThemeEngine;
 import org.xnap.commons.i18n.I18n;
 
@@ -74,9 +71,6 @@ public class BaseFileViewer extends Composite
    
    protected View viewPart;
    protected StyledText text;
-   protected Composite messageBar;
-   protected CLabel messageBarLabel;
-   protected Label messageCloseButton;
    protected Composite searchBar;
    protected Text searchBarText;
    protected Label searchCloseButton;
@@ -96,78 +90,12 @@ public class BaseFileViewer extends Composite
       this.viewPart = viewPart;
       
       setLayout(new FormLayout());
-      
-      /*** Message bar ***/
-      messageBar = new Composite(this, SWT.NONE);
-      messageBar.setBackground(ThemeEngine.getBackgroundColor("MessageBar"));
-      messageBar.setForeground(ThemeEngine.getForegroundColor("MessageBar"));
-      GridLayout layout = new GridLayout();
-      layout.marginHeight = 0;
-      layout.marginWidth = 0;
-      layout.verticalSpacing = 0;
-      layout.numColumns = 2;
-      messageBar.setLayout(layout);
-      messageBar.setVisible(false);
-      
-      messageBarLabel = new CLabel(messageBar, SWT.NONE);
-      messageBarLabel.setBackground(messageBar.getBackground());
-      messageBarLabel.setForeground(messageBar.getForeground());
-      GridData gd = new GridData();
-      gd.horizontalAlignment = SWT.FILL;
-      gd.grabExcessHorizontalSpace = true;
-      messageBarLabel.setLayoutData(gd);
-      
-      messageCloseButton = new Label(messageBar, SWT.NONE);
-      messageCloseButton.setBackground(messageBar.getBackground());
-      messageCloseButton.setCursor(getDisplay().getSystemCursor(SWT.CURSOR_HAND));
-      messageCloseButton.setImage(SharedIcons.IMG_CLOSE);
-      messageCloseButton.setToolTipText(i18n.tr("Hide message"));
-      gd = new GridData();
-      gd.verticalAlignment = SWT.CENTER;
-      messageCloseButton.setLayoutData(gd);
-      messageCloseButton.addMouseListener(new MouseListener() {
-         private boolean doAction = false;
-         
-         @Override
-         public void mouseDoubleClick(MouseEvent e)
-         {
-            if (e.button == 1)
-               doAction = false;
-         }
-
-         @Override
-         public void mouseDown(MouseEvent e)
-         {
-            if (e.button == 1)
-               doAction = true;
-         }
-
-         @Override
-         public void mouseUp(MouseEvent e)
-         {
-            if ((e.button == 1) && doAction)
-               hideMessage();
-         }
-      });
-      
-      Label separator = new Label(messageBar, SWT.SEPARATOR | SWT.HORIZONTAL);
-      gd = new GridData();
-      gd.grabExcessHorizontalSpace = true;
-      gd.horizontalAlignment = SWT.FILL;
-      gd.horizontalSpan = 2;
-      separator.setLayoutData(gd);
-      
-      FormData fd = new FormData();
-      fd.top = new FormAttachment(0, 0);
-      fd.left = new FormAttachment(0, 0);
-      fd.right = new FormAttachment(100, 0);
-      messageBar.setLayoutData(fd);
 
       /*** Text area ***/
       text = new StyledText(this, SWT.H_SCROLL | SWT.V_SCROLL);
       text.setEditable(false);
       text.setFont(JFaceResources.getTextFont());
-      fd = new FormData();
+      FormData fd = new FormData();
       fd.top = new FormAttachment(0, 0);
       fd.left = new FormAttachment(0, 0);
       fd.right = new FormAttachment(100, 0);
@@ -196,7 +124,7 @@ public class BaseFileViewer extends Composite
       
       /*** Search bar ***/
       searchBar = new Composite(this, SWT.NONE);
-      layout = new GridLayout();
+      GridLayout layout = new GridLayout();
       layout.marginHeight = 0;
       layout.marginWidth = 0;
       layout.verticalSpacing = 3;
@@ -205,8 +133,8 @@ public class BaseFileViewer extends Composite
       searchBar.setLayout(layout);
       searchBar.setVisible(false);
       
-      separator = new Label(searchBar, SWT.SEPARATOR | SWT.HORIZONTAL);
-      gd = new GridData();
+      Label separator = new Label(searchBar, SWT.SEPARATOR | SWT.HORIZONTAL);
+      GridData gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
       gd.horizontalSpan = 3;
@@ -364,42 +292,6 @@ public class BaseFileViewer extends Composite
       };
       job.setUser(false);
       job.start();
-   }
-
-   /**
-    * Show message in message bar
-    * 
-    * @param severity
-    * @param text
-    */
-   public void showMessage(int severity, String messageText)
-   {
-      switch(severity)
-      {
-         case WARNING:
-            messageBarLabel.setImage(StatusDisplayInfo.getStatusImage(Severity.WARNING));
-            break;
-         case ERROR:
-            messageBarLabel.setImage(StatusDisplayInfo.getStatusImage(Severity.CRITICAL));
-            break;
-         default:
-            messageBarLabel.setImage(SharedIcons.IMG_INFORMATION);
-            break;
-      }
-      messageBarLabel.setText(messageText);
-      messageBar.setVisible(true);
-      ((FormData)text.getLayoutData()).top = new FormAttachment(messageBar, 0, SWT.BOTTOM);
-      layout(true, true);
-   }
-   
-   /**
-    * Hide message bar
-    */
-   public void hideMessage()
-   {
-      messageBar.setVisible(false);
-      ((FormData)text.getLayoutData()).top = new FormAttachment(0, 0);
-      layout(true, true);
    }
 
    /**

@@ -31,6 +31,7 @@ import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.jobs.JobCallingServerJob;
 import org.netxms.nxmc.base.views.View;
+import org.netxms.nxmc.base.widgets.MessageArea;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,6 +51,7 @@ public class DynamicFileViewer extends BaseFileViewer
    protected long nodeId = 0;
    protected String remoteFileName;
    protected NXCSession session = Registry.getSession();
+   protected View view;
    
    /**
     * @param parent
@@ -87,6 +89,7 @@ public class DynamicFileViewer extends BaseFileViewer
             stopTracking();
          }
       });
+      this.view = view;
    }
 
    /**
@@ -103,7 +106,7 @@ public class DynamicFileViewer extends BaseFileViewer
       if (monitoringJob != null)
          monitoringJob.cancel();
 
-      hideMessage();
+      view.clearMessages();
 
       this.fileId = fileId;
       this.nodeId = nodeId;
@@ -202,7 +205,8 @@ public class DynamicFileViewer extends BaseFileViewer
                   "----------------------------------------------------------------------\n" + //$NON-NLS-1$
                   i18n.tr("Connection with the agent has been lost. Attempting to reconnect...") +
                   "\n----------------------------------------------------------------------\n"); //$NON-NLS-1$
-      showMessage(ERROR, i18n.tr("Connection with the agent has been lost. Attempting to reconnect..."));
+      view.addMessage(MessageArea.ERROR, i18n.tr("Connection with the agent has been lost. Attempting to reconnect..."));
+      
       
       restartJob = new JobCallingServerJob(i18n.tr("Restart file tracking"), viewPart) {
          private boolean running = true;
@@ -246,7 +250,7 @@ public class DynamicFileViewer extends BaseFileViewer
                            return;
                         }
                         
-                        hideMessage();
+                        view.clearMessages();
                         text.append("-------------------------------------------------------------------------------\n" + //$NON-NLS-1$
                                     i18n.tr("Connection with the agent restored.") +
                                     "\n-------------------------------------------------------------------------------\n\n"); //$NON-NLS-1$

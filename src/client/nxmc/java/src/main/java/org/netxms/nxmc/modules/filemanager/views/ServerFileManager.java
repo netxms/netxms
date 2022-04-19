@@ -94,7 +94,6 @@ public class ServerFileManager extends ConfigurationView implements SessionListe
    public ServerFileManager()
    {
       super(i18n.tr("Server Files"), ResourceManager.getImageDescriptor("icons/config-views/server-files.png"), "ServerFileManager", true);
-      session = Registry.getSession();
    }
 
    /**

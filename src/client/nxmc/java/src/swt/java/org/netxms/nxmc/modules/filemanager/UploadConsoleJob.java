@@ -58,6 +58,7 @@ class UploadConsoleJob extends Job
       this.remoteFileName = remoteFileName;
       session = Registry.getSession();
       this.viewer = viewer;
+      this.objectId = objectId;
    }
 
    @Override

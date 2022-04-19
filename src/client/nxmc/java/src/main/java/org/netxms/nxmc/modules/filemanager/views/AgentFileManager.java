@@ -1063,17 +1063,6 @@ public class AgentFileManager extends ObjectView
 
       WidgetHelper.copyToClipboard(((AgentFile)selection.getFirstElement()).getFilePath());
    }
-
-   /*
-    * (non-Javadoc)
-    * 
-    * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
-    */
-   @Override
-   public void setFocus()
-   {
-      viewer.getControl().setFocus();
-   }
    
    /**
     * Custom implementation of ViewerDropAdapter for Agent File Manager
