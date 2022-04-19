@@ -210,20 +210,19 @@ public class ViewFolder extends Composite
       {
          ToolItem pinView = new ToolItem(viewControlBar, SWT.PUSH);
          pinView.setImage(SharedIcons.IMG_PIN);
-         pinView.setToolTipText(i18n.tr("Add view to pinboard"));
+         pinView.setToolTipText(i18n.tr("Add view to pinboard (F7)"));
          pinView.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e)
             {
-               View view = getActiveView();
-               if (view != null)
-               {
-                  View clone = view.cloneView();
-                  if (clone != null)
-                  {
-                     Registry.getMainWindow().pinView(clone);
-                  }
-               }
+               pinActiveView();
+            }
+         });
+         keyBindingManager.addBinding(SWT.NONE, SWT.F7, new Action() {
+            @Override
+            public void run()
+            {
+               pinActiveView();
             }
          });
       }
@@ -231,21 +230,19 @@ public class ViewFolder extends Composite
       {
          ToolItem popOutView = new ToolItem(viewControlBar, SWT.PUSH);
          popOutView.setImage(SharedIcons.IMG_POP_OUT);
-         popOutView.setToolTipText(i18n.tr("Pop out view"));
+         popOutView.setToolTipText(i18n.tr("Pop out view (F8)"));
          popOutView.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e)
             {
-               View view = getActiveView();
-               if (view != null)
-               {
-                  View clone = view.cloneView();
-                  if (clone != null)
-                  {
-                     PopOutViewWindow window = new PopOutViewWindow(clone);
-                     window.open();
-                  }
-               }
+               extractActiveView();
+            }
+         });
+         keyBindingManager.addBinding(SWT.NONE, SWT.F8, new Action() {
+            @Override
+            public void run()
+            {
+               extractActiveView();
             }
          });
       }
@@ -264,6 +261,21 @@ public class ViewFolder extends Composite
          }
       });
 
+      // Keyboard binding for filter activation
+      keyBindingManager.addBinding("M1+F", new Action() {
+         @Override
+         public void run()
+         {
+            View view = getActiveView();
+            if ((view != null) && view.hasFilter())
+            {
+               view.enableFilter(true);
+               enableFilter.setSelection(true);
+               view.getFilterTextControl().setFocus();
+            }
+         }
+      });
+
       // Keyboard binding for view menu
       keyBindingManager.addBinding(SWT.NONE, SWT.F10, new Action() {
          @Override
@@ -272,6 +284,39 @@ public class ViewFolder extends Composite
             showViewMenu();
          }
       });
+   }
+
+   /**
+    * Pin view that is currently active
+    */
+   private void pinActiveView()
+   {
+      View view = getActiveView();
+      if (view != null)
+      {
+         View clone = view.cloneView();
+         if (clone != null)
+         {
+            Registry.getMainWindow().pinView(clone);
+         }
+      }
+   }
+
+   /**
+    * Extract view that is currently active
+    */
+   private void extractActiveView()
+   {
+      View view = getActiveView();
+      if (view != null)
+      {
+         View clone = view.cloneView();
+         if (clone != null)
+         {
+            PopOutViewWindow window = new PopOutViewWindow(clone);
+            window.open();
+         }
+      }
    }
 
    /**
