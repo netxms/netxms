@@ -54,6 +54,7 @@ static bool SetupTLSSession(SOCKET hSocket, uint32_t timeout, const char *host, 
       return false;
    }
 
+   SSL_set_tlsext_host_name(ssl, host);
    SSL_set_connect_state(ssl);
    SSL_set_fd(ssl, (int)hSocket);
 
@@ -191,10 +192,11 @@ static inline int GetCertificateDaysUntilExpiration(X509 *cert)
  */
 LONG H_TLSCertificateInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
-   char host[1024];
+   char host[1024], sniServerName[1024];
    TCHAR portText[32];
    AgentGetParameterArgA(param, 1, host, sizeof(host));
    AgentGetParameterArg(param, 2, portText, sizeof(portText) / sizeof(TCHAR));
+   AgentGetParameterArgA(param, 3, sniServerName, sizeof(sniServerName));
 
    if (host[0] == 0 || portText[0] == 0)
       return SYSINFO_RC_ERROR;
@@ -209,7 +211,7 @@ LONG H_TLSCertificateInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, Ab
    if (hSocket == INVALID_SOCKET)
       return SYSINFO_RC_ERROR;
 
-   bool success = SetupTLSSession(hSocket, timeout, host, port,
+   bool success = SetupTLSSession(hSocket, timeout, (sniServerName[0] != 0) ? sniServerName : host, port,
       [host, port, arg, value] (SSL_CTX *context, SSL *ssl) -> bool
       {
          X509 *cert = SSL_get_peer_certificate(ssl);

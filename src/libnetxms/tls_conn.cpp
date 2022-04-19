@@ -29,14 +29,14 @@
  * It is possible to connect TLS later by startTLS method.
  * @return TRUE if connection was successfull.
  */
-bool TLSConnection::connect(const InetAddress& addr, uint16_t port, bool tls, const uint32_t timeout)
+bool TLSConnection::connect(const InetAddress& addr, uint16_t port, bool tls, const uint32_t timeout, const char *sniServerName)
 {
    m_socket = ConnectToHost(addr, port, timeout);
 
    bool result = m_socket != INVALID_SOCKET;
 
    if (result && tls)
-      result = startTLS();
+      result = startTLS(0, sniServerName);
 
    return result;
 }
@@ -156,7 +156,7 @@ static void SSLInfoCallback(const SSL* ssl, int where, int ret)
  * Opens a TLS connection.
  * @return TRUE if connection was successfull.
  */
-bool TLSConnection::startTLS(uint32_t timeout)
+bool TLSConnection::startTLS(uint32_t timeout, const char *sniServerName)
 {
    if (m_socket == INVALID_SOCKET)
    {
@@ -206,6 +206,12 @@ bool TLSConnection::startTLS(uint32_t timeout)
       goto failure;
    }
 
+   if (sniServerName != nullptr)
+   {
+      nxlog_debug_tag(m_debugTag, 7, _T("Using SNI server name \"%hs\""), sniServerName);
+      SSL_set_tlsext_host_name(m_ssl, sniServerName);
+   }
+
    SSL_set_connect_state(m_ssl);
    SSL_set_fd(m_ssl, static_cast<int>(m_socket));
 
@@ -244,6 +250,7 @@ bool TLSConnection::startTLS(uint32_t timeout)
       break;
    }
 
+   nxlog_debug_tag(m_debugTag, 7, _T("TLS handshake completed"));
    return true;
 
 failure:

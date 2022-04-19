@@ -76,8 +76,8 @@ public:
       closesocket(m_socket);
    }
 
-   bool connect(const InetAddress& addr, uint16_t port, bool tls, uint32_t timeout = TLS_CONN_DEFAULT_TIMEOUT);
-   bool startTLS(uint32_t timeout = 0);
+   bool connect(const InetAddress& addr, uint16_t port, bool tls, uint32_t timeout = TLS_CONN_DEFAULT_TIMEOUT, const char *sniServerName = nullptr);
+   bool startTLS(uint32_t timeout = 0, const char *sniServerName = nullptr);
 
    /**
     * Recieves data from socket considering if TLS is on or off.

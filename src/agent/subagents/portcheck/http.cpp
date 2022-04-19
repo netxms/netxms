@@ -28,7 +28,7 @@
  * Save HTTP(s) responce to file for later investigation
  * (Should be enabled by setting "FailedDirectory" in config
  */
-static void SaveResponse(const InetAddress& ip, const char* buffer, const char* hostname = nullptr)
+static void SaveResponse(const InetAddress& ip, const char *buffer, const char *hostname = nullptr)
 {
    if (g_szFailedDir[0] == 0)
       return;
@@ -94,7 +94,7 @@ LONG H_CheckHTTP(const TCHAR* param, const TCHAR* arg, TCHAR* value, AbstractCom
 /**
  * Check HTTP/HTTPS service
  */
-int CheckHTTP(const char* hostname, const InetAddress& addr, uint16_t port, bool useTLS, const char* uri, const char* header, const char* match, uint32_t timeout)
+int CheckHTTP(const char *hostname, const InetAddress& addr, uint16_t port, bool useTLS, const char* uri, const char* header, const char* match, uint32_t timeout)
 {
    int ret = 0;
    TLSConnection tc(SUBAGENT_DEBUG_TAG, false, timeout);
@@ -105,12 +105,12 @@ int CheckHTTP(const char* hostname, const InetAddress& addr, uint16_t port, bool
    const char* errptr;
    int erroffset;
    pcre* preg = pcre_compile(match, PCRE_COMMON_FLAGS_A | PCRE_CASELESS, &errptr, &erroffset, nullptr);
-   if (preg == NULL)
+   if (preg == nullptr)
    {
       return PC_ERR_BAD_PARAMS;
    }
 
-   if (tc.connect(addr, port, useTLS, timeout))
+   if (tc.connect(addr, port, useTLS, timeout, hostname))
    {
       ret = PC_ERR_HANDSHAKE;
 
