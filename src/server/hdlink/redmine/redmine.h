@@ -50,22 +50,22 @@ struct RequestData
 class ProjectComponent
 {
  public:
-   INT64 m_id;
+   int64_t m_id;
    TCHAR *m_name;
 
-   ProjectComponent(INT64 id, const char *name)
+   ProjectComponent(int64_t id, const char *name)
    {
       m_id = id;
 #ifdef UNICODE
       m_name = WideStringFromUTF8String(CHECK_NULL_EX_A(name));
 #else
-      m_name = strdup(CHECK_NULL_EX(name));
+      m_name = MemCopyStringA(CHECK_NULL_EX(name));
 #endif
    }
 
    ~ProjectComponent()
    {
-      free(m_name);
+      MemFree(m_name);
    }
 };
 
@@ -84,7 +84,7 @@ class RedmineLink : public HelpDeskLink
 
    void lock() { MutexLock(m_mutex); }
    void unlock() { MutexUnlock(m_mutex); }
-   UINT32 connect();
+   uint32_t connect();
    void disconnect();
 
  public:
@@ -96,8 +96,8 @@ class RedmineLink : public HelpDeskLink
 
    virtual bool init();
    virtual bool checkConnection();
-   virtual UINT32 openIssue(const TCHAR *description, TCHAR *hdref);
-   virtual UINT32 addComment(const TCHAR *hdref, const TCHAR *comment);
+   virtual uint32_t openIssue(const TCHAR *description, TCHAR *hdref);
+   virtual uint32_t addComment(const TCHAR *hdref, const TCHAR *comment);
    virtual bool getIssueUrl(const TCHAR *hdref, TCHAR *url, size_t size);
 };
 

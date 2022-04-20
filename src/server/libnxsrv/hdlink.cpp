@@ -99,7 +99,7 @@ bool HelpDeskLink::checkConnection()
  * @param hdref reference assigned to issue by helpdesk system
  * @return RCC ready to be sent to client
  */
-UINT32 HelpDeskLink::openIssue(const TCHAR *description, TCHAR *hdref)
+uint32_t HelpDeskLink::openIssue(const TCHAR *description, TCHAR *hdref)
 {
    return RCC_NOT_IMPLEMENTED;
 }
@@ -111,7 +111,7 @@ UINT32 HelpDeskLink::openIssue(const TCHAR *description, TCHAR *hdref)
  * @param comment comment text
  * @return RCC ready to be sent to client
  */
-UINT32 HelpDeskLink::addComment(const TCHAR *hdref, const TCHAR *comment)
+uint32_t HelpDeskLink::addComment(const TCHAR *hdref, const TCHAR *comment)
 {
    return RCC_NOT_IMPLEMENTED;
 }

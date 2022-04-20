@@ -70,6 +70,7 @@ JiraLink::JiraLink() : HelpDeskLink()
    strcpy(m_login, "netxms");
    m_password[0] = 0;
    m_curl = nullptr;
+   m_headers = nullptr;
 }
 
 /**
@@ -113,7 +114,7 @@ bool JiraLink::init()
       nxlog_debug_tag(DEBUG_TAG, 1, _T("cURL initialization failed"));
       return false;
    }
-   ConfigReadStrUTF8(_T("JiraServerURL"), m_serverUrl, MAX_OBJECT_NAME, "http://localhost");
+   ConfigReadStrUTF8(_T("JiraServerURL"), m_serverUrl, MAX_OBJECT_NAME, "https://jira.atlassian.com");
    ConfigReadStrUTF8(_T("JiraLogin"), m_login, JIRA_MAX_LOGIN_LEN, "netxms");
    char tmpPwd[MAX_PASSWORD];
    ConfigReadStrUTF8(_T("JiraPassword"), tmpPwd, MAX_PASSWORD, "");
@@ -146,8 +147,6 @@ UINT32 JiraLink::connect()
       return RCC_HDLINK_INTERNAL_ERROR;
    }
 
-   curl_easy_setopt(m_curl, CURLOPT_VERBOSE, (long)1);
-
 #if HAVE_DECL_CURLOPT_NOSIGNAL
    curl_easy_setopt(m_curl, CURLOPT_NOSIGNAL, (long)1);
 #endif
@@ -156,37 +155,29 @@ UINT32 JiraLink::connect()
    curl_easy_setopt(m_curl, CURLOPT_COOKIEFILE, "");  // enable cookies in memory
    curl_easy_setopt(m_curl, CURLOPT_SSL_VERIFYPEER, (long)0);
 
+   curl_easy_setopt(m_curl, CURLOPT_USERNAME, m_login);
+   curl_easy_setopt(m_curl, CURLOPT_PASSWORD, m_password);
+
    curl_easy_setopt(m_curl, CURLOPT_WRITEFUNCTION, &OnCurlDataReceived);
 
    ByteStream responseData(32768);
    responseData.setAllocationStep(32768);
    curl_easy_setopt(m_curl, CURLOPT_WRITEDATA, &responseData);
 
-   curl_easy_setopt(m_curl, CURLOPT_POST, (long)1);
-
-   // Build request
-   json_t *root = json_object();
-   json_object_set_new(root, "username", json_string(m_login));
-   json_object_set_new(root, "password", json_string(m_password));
-   char *request = json_dumps(root, 0);
-   curl_easy_setopt(m_curl, CURLOPT_POSTFIELDS, request);
-   json_decref(root);
-
    char url[MAX_PATH];
    strcpy(url, m_serverUrl);
-   strcat(url, "/rest/auth/1/session");
+   strcat(url, "/rest/api/2/myself");
    curl_easy_setopt(m_curl, CURLOPT_URL, url);
 
-   struct curl_slist *headers = nullptr;
-   headers = curl_slist_append(headers, "Accept: application/json");
-   headers = curl_slist_append(headers, "Content-Type: application/json;charset=UTF-8");
-   curl_easy_setopt(m_curl, CURLOPT_HTTPHEADER, headers);
+   m_headers = curl_slist_append(m_headers, "Content-Type: application/json;codepage=utf8");
+   m_headers = curl_slist_append(m_headers, "Accept: application/json");
+   curl_easy_setopt(m_curl, CURLOPT_HTTPHEADER, m_headers);
 
    UINT32 rcc = RCC_HDLINK_COMM_FAILURE;
    if (curl_easy_perform(m_curl) == CURLE_OK)
    {
       responseData.write(static_cast<char>(0));
-      nxlog_debug_tag(DEBUG_TAG, 7, _T("POST request completed, data: %hs"), responseData.buffer());
+      nxlog_debug_tag(DEBUG_TAG, 7, _T("GET request completed, data: %hs"), responseData.buffer());
       long response = 500;
       curl_easy_getinfo(m_curl, CURLINFO_RESPONSE_CODE, &response);
       if (response == 200)
@@ -204,7 +195,6 @@ UINT32 JiraLink::connect()
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("Call to curl_easy_perform() failed: %hs"), m_errorBuffer);
    }
-   MemFree(request);
 
    return rcc;
 }
@@ -219,6 +209,9 @@ void JiraLink::disconnect()
 
    curl_easy_cleanup(m_curl);
    m_curl = nullptr;
+
+   curl_slist_free_all(m_headers);
+   m_headers = nullptr;
 }
 
 /**
@@ -281,7 +274,7 @@ bool JiraLink::checkConnection()
  * @param hdref reference assigned to issue by helpdesk system
  * @return RCC ready to be sent to client
  */
-UINT32 JiraLink::openIssue(const TCHAR *description, TCHAR *hdref)
+uint32_t JiraLink::openIssue(const TCHAR *description, TCHAR *hdref)
 {
    if (!checkConnection())
       return RCC_HDLINK_COMM_FAILURE;
@@ -300,8 +293,8 @@ UINT32 JiraLink::openIssue(const TCHAR *description, TCHAR *hdref)
 
    TCHAR projectComponent[JIRA_MAX_COMPONENT_NAME_LEN];
    ConfigReadStr(_T("JiraProjectComponent"), projectComponent, JIRA_MAX_COMPONENT_NAME_LEN, _T(""));
-   ObjectArray<ProjectComponent> *projectComponents = getProjectComponents(projectCode);
-   if ((projectComponent[0] != 0) && (projectComponents != NULL))
+   unique_ptr<ObjectArray<ProjectComponent>> projectComponents = getProjectComponents(projectCode);
+   if ((projectComponent[0] != 0) && (projectComponents != nullptr))
    {
       for(int i = 0; i < projectComponents->size(); i++)
       {
@@ -355,6 +348,7 @@ UINT32 JiraLink::openIssue(const TCHAR *description, TCHAR *hdref)
    strcat(url, "/rest/api/2/issue");
    curl_easy_setopt(m_curl, CURLOPT_URL, url);
 
+   nxlog_debug_tag(DEBUG_TAG, 7, _T("Issue creation request: %hs"), request);
    if (curl_easy_perform(m_curl) == CURLE_OK)
    {
       responseData.write(static_cast<char>(0));
@@ -403,7 +397,6 @@ UINT32 JiraLink::openIssue(const TCHAR *description, TCHAR *hdref)
       nxlog_debug_tag(DEBUG_TAG, 4, _T("Call to curl_easy_perform() failed (%hs)"), m_errorBuffer);
    }
    MemFree(request);
-   delete projectComponents;
 
    unlock();
    return rcc;
@@ -416,7 +409,7 @@ UINT32 JiraLink::openIssue(const TCHAR *description, TCHAR *hdref)
  * @param comment comment text
  * @return RCC ready to be sent to client
  */
-UINT32 JiraLink::addComment(const TCHAR *hdref, const TCHAR *comment)
+uint32_t JiraLink::addComment(const TCHAR *hdref, const TCHAR *comment)
 {
    if (!checkConnection())
       return RCC_HDLINK_COMM_FAILURE;
@@ -493,9 +486,9 @@ bool JiraLink::getIssueUrl(const TCHAR *hdref, TCHAR *url, size_t size)
 /**
  * Get list of project's components
  */
-ObjectArray<ProjectComponent> *JiraLink::getProjectComponents(const char *project)
+unique_ptr<ObjectArray<ProjectComponent>> JiraLink::getProjectComponents(const char *project)
 {
-   ObjectArray<ProjectComponent> *components = nullptr;
+   unique_ptr<ObjectArray<ProjectComponent>> components;
 
    ByteStream responseData(32768);
    responseData.setAllocationStep(32768);
@@ -523,7 +516,7 @@ ObjectArray<ProjectComponent> *JiraLink::getProjectComponents(const char *projec
             {
                nxlog_debug_tag(DEBUG_TAG, 4, _T("Got components list for Jira project %hs"), project);
                int size = (int)json_array_size(root);
-               components = new ObjectArray<ProjectComponent>(size, 8, Ownership::True);
+               components = make_unique<ObjectArray<ProjectComponent>>(size, 8, Ownership::True);
                for(int i = 0; i < size; i++)
                {
                   json_t *e = json_array_get(root, i);

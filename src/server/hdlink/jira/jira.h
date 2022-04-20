@@ -28,8 +28,8 @@
 #include <hdlink.h>
 #include <curl/curl.h>
 
-#define JIRA_MAX_LOGIN_LEN          64
-#define JIRA_MAX_PASSWORD_LEN       64
+#define JIRA_MAX_LOGIN_LEN          128
+#define JIRA_MAX_PASSWORD_LEN       128
 #define JIRA_MAX_PROJECT_CODE_LEN   32
 #define JIRA_MAX_ISSUE_TYPE_LEN     32
 #define JIRA_MAX_COMPONENT_NAME_LEN 128
@@ -70,13 +70,14 @@ private:
    char m_login[JIRA_MAX_LOGIN_LEN];
    char m_password[JIRA_MAX_PASSWORD_LEN];
    CURL *m_curl;
+   curl_slist *m_headers;
    char m_errorBuffer[CURL_ERROR_SIZE];
 
    void lock() { MutexLock(m_mutex); }
    void unlock() { MutexUnlock(m_mutex); }
    UINT32 connect();
    void disconnect();
-   ObjectArray<ProjectComponent> *getProjectComponents(const char *project);
+   unique_ptr<ObjectArray<ProjectComponent>> getProjectComponents(const char *project);
 
 public:
    JiraLink();

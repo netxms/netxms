@@ -23,10 +23,12 @@
 #include "nxcore.h"
 #include <hdlink.h>
 
+#define DEBUG_TAG _T("hdlink")
+
 /**
  * Help desk link object
  */
-static HelpDeskLink *s_link = NULL;
+static HelpDeskLink *s_link = nullptr;
 
 /**
  * Load helpdesk link module
@@ -38,14 +40,14 @@ void LoadHelpDeskLink()
    ConfigReadStr(_T("HelpDeskLink"), name, MAX_PATH, _T("none"));
    if ((name[0] == 0) || !_tcsicmp(name, _T("none")))
    {
-      DbgPrintf(2, _T("Helpdesk link disabled"));
+      nxlog_debug_tag(DEBUG_TAG, 2, _T("Helpdesk link disabled"));
       return;
    }
 
 #ifndef _WIN32
    TCHAR fullName[MAX_PATH];
 
-   if (_tcschr(name, _T('/')) == NULL)
+   if (_tcschr(name, _T('/')) == nullptr)
    {
       // Assume that module name without path given
       // Try to load it from pkglibdir
@@ -62,52 +64,51 @@ void LoadHelpDeskLink()
    HMODULE hModule = DLOpen(name, errorText);
 #endif
 
-   if (hModule != NULL)
+   if (hModule != nullptr)
    {
-      int *apiVersion = (int *)DLGetSymbolAddr(hModule, "hdlinkAPIVersion", errorText);
-      HelpDeskLink *(* CreateInstance)() = (HelpDeskLink *(*)())DLGetSymbolAddr(hModule, "hdlinkCreateInstance", errorText);
-
-      if ((apiVersion != NULL) && (CreateInstance != NULL))
+      auto apiVersion = static_cast<int*>(DLGetSymbolAddr(hModule, "hdlinkAPIVersion", errorText));
+      auto CreateInstance = reinterpret_cast<HelpDeskLink *(*)()>(DLGetSymbolAddr(hModule, "hdlinkCreateInstance", errorText));
+      if ((apiVersion != nullptr) && (CreateInstance != nullptr))
       {
          if (*apiVersion == HDLINK_API_VERSION)
          {
             s_link = CreateInstance();
-				if (s_link != NULL)
+				if (s_link != nullptr)
 				{
                if (s_link->init())
                {
-					   nxlog_write(NXLOG_INFO, _T("Helpdesk link module %s (version %s) loaded successfully"), s_link->getName(), s_link->getVersion());
+					   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Helpdesk link module %s (version %s) loaded successfully"), s_link->getName(), s_link->getVersion());
                   g_flags |= AF_HELPDESK_LINK_ACTIVE;
                }
 				   else
 				   {
-					   nxlog_write(NXLOG_ERROR, _T("Initialization of helpdesk link module %s failed"), s_link->getName());
+					   nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Initialization of helpdesk link module %s failed"), s_link->getName());
                   delete_and_null(s_link);
 					   DLClose(hModule);
 				   }
 				}
 				else
 				{
-               nxlog_write(NXLOG_ERROR, _T("Initialization of helpdesk link module \"%s\" failed"), name);
+               nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Initialization of helpdesk link module \"%s\" failed"), name);
 					DLClose(hModule);
 				}
          }
          else
          {
-            nxlog_write(NXLOG_ERROR, _T("Helpdesk link module \"%s\" cannot be loaded because of API version mismatch (module: %d; server: %d)"),
+            nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Helpdesk link module \"%s\" cannot be loaded because of API version mismatch (module: %d; server: %d)"),
                      name, *apiVersion, NDDRV_API_VERSION);
             DLClose(hModule);
          }
       }
       else
       {
-         nxlog_write(NXLOG_ERROR, _T("Unable to find entry point in helpdesk link module \"%s\""), name);
+         nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Unable to find entry point in helpdesk link module \"%s\""), name);
          DLClose(hModule);
       }
    }
    else
    {
-      nxlog_write(NXLOG_ERROR, _T("Unable to load module \"%s\" (%s)"), name, errorText);
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Unable to load module \"%s\" (%s)"), name, errorText);
    }
 }
 
