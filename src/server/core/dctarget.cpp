@@ -1062,7 +1062,7 @@ DataCollectionError DataCollectionTarget::getInternalMetric(const TCHAR *name, T
 /**
  * Run data collection script. Returns pointer to NXSL VM after successful run and nullptr on failure.
  */
-NXSL_VM *DataCollectionTarget::runDataCollectionScript(const TCHAR *param, DataCollectionTarget *targetObject)
+NXSL_VM *DataCollectionTarget::runDataCollectionScript(const TCHAR *param, DataCollectionTarget *targetObject, const shared_ptr<DCObjectInfo>& dciInfo)
 {
    TCHAR name[256];
    _tcslcpy(name, param, 256);
@@ -1079,7 +1079,7 @@ NXSL_VM *DataCollectionTarget::runDataCollectionScript(const TCHAR *param, DataC
       *p = 0;
    }
 
-   NXSL_VM *vm = CreateServerScriptVM(name, self());
+   NXSL_VM *vm = CreateServerScriptVM(name, self(), dciInfo);
    if (vm != nullptr)
    {
       ObjectRefArray<NXSL_Value> args(16, 16);
@@ -1400,10 +1400,10 @@ DataCollectionError DataCollectionTarget::getListFromWebService(const TCHAR *par
 /**
  * Get parameter value from NXSL script
  */
-DataCollectionError DataCollectionTarget::getMetricFromScript(const TCHAR *param, TCHAR *buffer, size_t bufSize, DataCollectionTarget *targetObject)
+DataCollectionError DataCollectionTarget::getMetricFromScript(const TCHAR *param, TCHAR *buffer, size_t bufSize, DataCollectionTarget *targetObject, const shared_ptr<DCObjectInfo>& dciInfo)
 {
    DataCollectionError rc = DCE_NOT_SUPPORTED;
-   NXSL_VM *vm = runDataCollectionScript(param, targetObject);
+   NXSL_VM *vm = runDataCollectionScript(param, targetObject, dciInfo);
    if (vm != nullptr)
    {
       NXSL_Value *value = vm->getResult();
@@ -1427,10 +1427,10 @@ DataCollectionError DataCollectionTarget::getMetricFromScript(const TCHAR *param
 /**
  * Get list from library script
  */
-DataCollectionError DataCollectionTarget::getListFromScript(const TCHAR *param, StringList **list, DataCollectionTarget *targetObject)
+DataCollectionError DataCollectionTarget::getListFromScript(const TCHAR *param, StringList **list, DataCollectionTarget *targetObject, const shared_ptr<DCObjectInfo>& dciInfo)
 {
    DataCollectionError rc = DCE_NOT_SUPPORTED;
-   NXSL_VM *vm = runDataCollectionScript(param, targetObject);
+   NXSL_VM *vm = runDataCollectionScript(param, targetObject, dciInfo);
    if (vm != nullptr)
    {
       rc = DCE_SUCCESS;
@@ -1461,10 +1461,10 @@ DataCollectionError DataCollectionTarget::getListFromScript(const TCHAR *param, 
 /**
  * Get table from NXSL script
  */
-DataCollectionError DataCollectionTarget::getTableFromScript(const TCHAR *param, shared_ptr<Table> *result, DataCollectionTarget *targetObject)
+DataCollectionError DataCollectionTarget::getTableFromScript(const TCHAR *param, shared_ptr<Table> *result, DataCollectionTarget *targetObject, const shared_ptr<DCObjectInfo>& dciInfo)
 {
    DataCollectionError rc = DCE_NOT_SUPPORTED;
-   NXSL_VM *vm = runDataCollectionScript(param, targetObject);
+   NXSL_VM *vm = runDataCollectionScript(param, targetObject, dciInfo);
    if (vm != nullptr)
    {
       NXSL_Value *value = vm->getResult();
@@ -1489,7 +1489,7 @@ DataCollectionError DataCollectionTarget::getTableFromScript(const TCHAR *param,
 DataCollectionError DataCollectionTarget::getStringMapFromScript(const TCHAR *param, StringMap **map, DataCollectionTarget *targetObject)
 {
    DataCollectionError rc = DCE_NOT_SUPPORTED;
-   NXSL_VM *vm = runDataCollectionScript(param, targetObject);
+   NXSL_VM *vm = runDataCollectionScript(param, targetObject, nullptr);
    if (vm != nullptr)
    {
       rc = DCE_SUCCESS;

@@ -141,7 +141,7 @@ static void GetItemData(DataCollectionTarget *dcTarget, DCItem *pItem, TCHAR *bu
             }
             break;
          case DS_SCRIPT:
-            *error = dcTarget->getMetricFromScript(pItem->getName(), buffer, MAX_LINE_SIZE, static_cast<DataCollectionTarget*>(pItem->getOwner().get()));
+            *error = dcTarget->getMetricFromScript(pItem->getName(), buffer, MAX_LINE_SIZE, static_cast<DataCollectionTarget*>(pItem->getOwner().get()), pItem->createDescriptor());
             break;
          case DS_WEB_SERVICE:
             *error = dcTarget->getMetricFromWebService(pItem->getName(), buffer, MAX_LINE_SIZE);
@@ -198,7 +198,7 @@ static shared_ptr<Table> GetTableData(DataCollectionTarget *dcTarget, DCTable *t
             }
             break;
          case DS_SCRIPT:
-            *error = dcTarget->getTableFromScript(table->getName(), &result, static_cast<DataCollectionTarget*>(table->getOwner().get()));
+            *error = dcTarget->getTableFromScript(table->getName(), &result, static_cast<DataCollectionTarget*>(table->getOwner().get()), table->createDescriptor());
             break;
 		   default:
 			   *error = DCE_NOT_SUPPORTED;

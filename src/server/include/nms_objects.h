@@ -2309,7 +2309,7 @@ protected:
 
    shared_ptr<NetObj> objectFromParameter(const TCHAR *param) const;
 
-   NXSL_VM *runDataCollectionScript(const TCHAR *param, DataCollectionTarget *targetObject);
+   NXSL_VM *runDataCollectionScript(const TCHAR *param, DataCollectionTarget *targetObject, const shared_ptr<DCObjectInfo>& dciInfo);
 
    DataCollectionError queryWebService(const TCHAR *param, WebServiceRequestType queryType, TCHAR *buffer, size_t bufSize, StringList *list);
 
@@ -2348,9 +2348,9 @@ public:
    virtual DataCollectionError getInternalMetric(const TCHAR *name, TCHAR *buffer, size_t size);
    virtual DataCollectionError getInternalTable(const TCHAR *name, shared_ptr<Table> *result);
 
-   DataCollectionError getMetricFromScript(const TCHAR *param, TCHAR *buffer, size_t bufSize, DataCollectionTarget *targetObject);
-   DataCollectionError getTableFromScript(const TCHAR *param, shared_ptr<Table> *result, DataCollectionTarget *targetObject);
-   DataCollectionError getListFromScript(const TCHAR *param, StringList **list, DataCollectionTarget *targetObject);
+   DataCollectionError getMetricFromScript(const TCHAR *param, TCHAR *buffer, size_t bufSize, DataCollectionTarget *targetObject, const shared_ptr<DCObjectInfo>& dciInfo);
+   DataCollectionError getTableFromScript(const TCHAR *param, shared_ptr<Table> *result, DataCollectionTarget *targetObject, const shared_ptr<DCObjectInfo>& dciInfo);
+   DataCollectionError getListFromScript(const TCHAR *param, StringList **list, DataCollectionTarget *targetObject, const shared_ptr<DCObjectInfo>& dciInfo);
    DataCollectionError getStringMapFromScript(const TCHAR *param, StringMap **map, DataCollectionTarget *targetObject);
 
    DataCollectionError getMetricFromWebService(const TCHAR *param, TCHAR *buffer, size_t bufSize);
