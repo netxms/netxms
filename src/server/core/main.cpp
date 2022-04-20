@@ -1193,7 +1193,7 @@ retry_db_lock:
    LoadNotificationChannels();
 
    // Initialize helpdesk link
-   SetHDLinkEntryPoints(ResolveAlarmByHDRef, TerminateAlarmByHDRef);
+   SetHDLinkEntryPoints(ResolveAlarmByHDRef, TerminateAlarmByHDRef, AddAlarmSystemComment);
    LoadHelpDeskLink();
 
    FileUploadJob::init();

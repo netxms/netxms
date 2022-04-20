@@ -24,8 +24,6 @@
 #include <jansson.h>
 #include <netxms-version.h>
 
-#define DEBUG_TAG _T("hdlink.jira")
-
 // workaround for older cURL versions
 #ifndef CURL_MAX_HTTP_HEADER
 #define CURL_MAX_HTTP_HEADER CURL_MAX_WRITE_SIZE
@@ -71,6 +69,7 @@ JiraLink::JiraLink() : HelpDeskLink()
    m_password[0] = 0;
    m_curl = nullptr;
    m_headers = nullptr;
+   m_webhookHandle = nullptr;
 }
 
 /**
@@ -79,6 +78,8 @@ JiraLink::JiraLink() : HelpDeskLink()
 JiraLink::~JiraLink()
 {
    disconnect();
+   if (m_webhookHandle != nullptr)
+      DestroyWebhook(m_webhookHandle);
 }
 
 /**
@@ -110,7 +111,7 @@ bool JiraLink::init()
 {
    if (!InitializeLibCURL())
    {
-      nxlog_debug_tag(DEBUG_TAG, 1, _T("cURL initialization failed"));
+      nxlog_debug_tag(JIRA_DEBUG_TAG, 1, _T("cURL initialization failed"));
       return false;
    }
    ConfigReadStrUTF8(_T("JiraServerURL"), m_serverUrl, MAX_OBJECT_NAME, "https://jira.atlassian.com");
@@ -118,7 +119,18 @@ bool JiraLink::init()
    char tmpPwd[MAX_PASSWORD];
    ConfigReadStrUTF8(_T("JiraPassword"), tmpPwd, MAX_PASSWORD, "");
    DecryptPasswordA(m_login, tmpPwd, m_password, JIRA_MAX_PASSWORD_LEN);
-   nxlog_debug_tag(DEBUG_TAG, 5, _T("Jira server URL set to %hs"), m_serverUrl);
+   nxlog_debug_tag(JIRA_DEBUG_TAG, 5, _T("Jira server URL set to %hs"), m_serverUrl);
+
+   uint16_t webhookPort = static_cast<uint16_t>(ConfigReadInt(_T("JiraWebhookPort"), 8080));
+   if (webhookPort != 0)
+   {
+      ConfigReadStrUTF8(_T("JiraWebhookURL"), m_webhookUrl, 1024, "/jira-webhook");
+      m_webhookHandle = CreateWebhook(this, webhookPort);
+   }
+   else
+   {
+      nxlog_debug_tag(JIRA_DEBUG_TAG, 1, _T("Jira webhook is disabled"));
+   }
    return true;
 }
 
@@ -142,7 +154,7 @@ uint32_t JiraLink::connect()
    m_curl = curl_easy_init();
    if (m_curl == nullptr)
    {
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("Call to curl_easy_init() failed"));
+      nxlog_debug_tag(JIRA_DEBUG_TAG, 4, _T("Call to curl_easy_init() failed"));
       return RCC_HDLINK_INTERNAL_ERROR;
    }
 
@@ -176,23 +188,23 @@ uint32_t JiraLink::connect()
    if (curl_easy_perform(m_curl) == CURLE_OK)
    {
       responseData.write(static_cast<char>(0));
-      nxlog_debug_tag(DEBUG_TAG, 7, _T("GET request completed, data: %hs"), responseData.buffer());
+      nxlog_debug_tag(JIRA_DEBUG_TAG, 7, _T("GET request completed, data: %hs"), responseData.buffer());
       long response = 500;
       curl_easy_getinfo(m_curl, CURLINFO_RESPONSE_CODE, &response);
       if (response == 200)
       {
-         nxlog_debug_tag(DEBUG_TAG, 4, _T("Jira login successful"));
+         nxlog_debug_tag(JIRA_DEBUG_TAG, 4, _T("Jira login successful"));
          rcc = RCC_SUCCESS;
       }
       else
       {
-         nxlog_debug_tag(DEBUG_TAG, 4, _T("Jira login failed, HTTP response code %03d"), response);
+         nxlog_debug_tag(JIRA_DEBUG_TAG, 4, _T("Jira login failed, HTTP response code %03d"), response);
          rcc = (response == 403) ? RCC_HDLINK_ACCESS_DENIED : RCC_HDLINK_INTERNAL_ERROR;
       }
    }
    else
    {
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("Call to curl_easy_perform() failed: %hs"), m_errorBuffer);
+      nxlog_debug_tag(JIRA_DEBUG_TAG, 4, _T("Call to curl_easy_perform() failed: %hs"), m_errorBuffer);
    }
 
    return rcc;
@@ -239,7 +251,7 @@ bool JiraLink::checkConnection()
       if (curl_easy_perform(m_curl) == CURLE_OK)
       {
          responseData.write(static_cast<char>(0));
-         nxlog_debug_tag(DEBUG_TAG, 7, _T("GET request completed, data: %hs"), responseData.buffer());
+         nxlog_debug_tag(JIRA_DEBUG_TAG, 7, _T("GET request completed, data: %hs"), responseData.buffer());
          long response = 500;
          curl_easy_getinfo(m_curl, CURLINFO_RESPONSE_CODE, &response);
          if (response == 200)
@@ -248,12 +260,12 @@ bool JiraLink::checkConnection()
          }
          else
          {
-            nxlog_debug_tag(DEBUG_TAG, 4, _T("Jira connection check: HTTP response code is %03d"), response);
+            nxlog_debug_tag(JIRA_DEBUG_TAG, 4, _T("Jira connection check: HTTP response code is %03d"), response);
          }
       }
       else
       {
-         nxlog_debug_tag(DEBUG_TAG, 4, _T("Call to curl_easy_perform() failed (%hs)"), m_errorBuffer);
+         nxlog_debug_tag(JIRA_DEBUG_TAG, 4, _T("Call to curl_easy_perform() failed (%hs)"), m_errorBuffer);
       }
    }
 
@@ -280,7 +292,7 @@ uint32_t JiraLink::openIssue(const TCHAR *description, TCHAR *hdref)
 
    uint32_t rcc = RCC_HDLINK_COMM_FAILURE;
    lock();
-   nxlog_debug_tag(DEBUG_TAG, 4, _T("Creating new issue in Jira with description \"%s\""), description);
+   nxlog_debug_tag(JIRA_DEBUG_TAG, 4, _T("Creating new issue in Jira with description \"%s\""), description);
 
    // Build request
    json_t *root = json_object();
@@ -347,11 +359,11 @@ uint32_t JiraLink::openIssue(const TCHAR *description, TCHAR *hdref)
    strcat(url, "/rest/api/2/issue");
    curl_easy_setopt(m_curl, CURLOPT_URL, url);
 
-   nxlog_debug_tag(DEBUG_TAG, 7, _T("Issue creation request: %hs"), request);
+   nxlog_debug_tag(JIRA_DEBUG_TAG, 7, _T("Issue creation request: %hs"), request);
    if (curl_easy_perform(m_curl) == CURLE_OK)
    {
       responseData.write(static_cast<char>(0));
-      nxlog_debug_tag(DEBUG_TAG, 7, _T("POST request completed, data: %hs"), responseData.buffer());
+      nxlog_debug_tag(JIRA_DEBUG_TAG, 7, _T("POST request completed, data: %hs"), responseData.buffer());
       long response = 500;
       curl_easy_getinfo(m_curl, CURLINFO_RESPONSE_CODE, &response);
       if (response == 201)
@@ -372,28 +384,28 @@ uint32_t JiraLink::openIssue(const TCHAR *description, TCHAR *hdref)
                strlcpy(hdref, json_string_value(key), MAX_HELPDESK_REF_LEN);
 #endif
                rcc = RCC_SUCCESS;
-               nxlog_debug_tag(DEBUG_TAG, 4, _T("Created new issue in Jira with reference \"%s\""), hdref);
+               nxlog_debug_tag(JIRA_DEBUG_TAG, 4, _T("Created new issue in Jira with reference \"%s\""), hdref);
             }
             else
             {
-               nxlog_debug_tag(DEBUG_TAG, 4, _T("Cannot create issue in Jira (cannot extract issue key)"));
+               nxlog_debug_tag(JIRA_DEBUG_TAG, 4, _T("Cannot create issue in Jira (cannot extract issue key)"));
             }
             json_decref(root);
          }
          else
          {
-            nxlog_debug_tag(DEBUG_TAG, 4, _T("Cannot create issue in Jira (error parsing server response)"));
+            nxlog_debug_tag(JIRA_DEBUG_TAG, 4, _T("Cannot create issue in Jira (error parsing server response)"));
          }
       }
       else
       {
-         nxlog_debug_tag(DEBUG_TAG, 4, _T("Cannot create issue in Jira (HTTP response code %03d)"), response);
+         nxlog_debug_tag(JIRA_DEBUG_TAG, 4, _T("Cannot create issue in Jira (HTTP response code %03d)"), response);
          rcc = (response == 403) ? RCC_HDLINK_ACCESS_DENIED : RCC_HDLINK_INTERNAL_ERROR;
       }
    }
    else
    {
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("Call to curl_easy_perform() failed (%hs)"), m_errorBuffer);
+      nxlog_debug_tag(JIRA_DEBUG_TAG, 4, _T("Call to curl_easy_perform() failed (%hs)"), m_errorBuffer);
    }
    MemFree(request);
 
@@ -416,7 +428,7 @@ uint32_t JiraLink::addComment(const TCHAR *hdref, const TCHAR *comment)
    uint32_t rcc = RCC_HDLINK_COMM_FAILURE;
 
    lock();
-   nxlog_debug_tag(DEBUG_TAG, 4, _T("Adding comment to Jira issue \"%s\" (comment text \"%s\")"), hdref, comment);
+   nxlog_debug_tag(JIRA_DEBUG_TAG, 4, _T("Adding comment to Jira issue \"%s\" (comment text \"%s\")"), hdref, comment);
 
    ByteStream responseData(32768);
    responseData.setAllocationStep(32768);
@@ -443,23 +455,23 @@ uint32_t JiraLink::addComment(const TCHAR *hdref, const TCHAR *comment)
    if (curl_easy_perform(m_curl) == CURLE_OK)
    {
       responseData.write(static_cast<char>(0));
-      nxlog_debug_tag(DEBUG_TAG, 7, _T("POST request completed, data: %hs"), responseData.buffer());
+      nxlog_debug_tag(JIRA_DEBUG_TAG, 7, _T("POST request completed, data: %hs"), responseData.buffer());
       long response = 500;
       curl_easy_getinfo(m_curl, CURLINFO_RESPONSE_CODE, &response);
       if (response == 201)
       {
          rcc = RCC_SUCCESS;
-         nxlog_debug_tag(DEBUG_TAG, 4, _T("Added comment to Jira issue \"%s\""), hdref);
+         nxlog_debug_tag(JIRA_DEBUG_TAG, 4, _T("Added comment to Jira issue \"%s\""), hdref);
       }
       else
       {
-         nxlog_debug_tag(DEBUG_TAG, 4, _T("Cannot add comment to Jira issue \"%s\" (HTTP response code %03d)"), hdref, response);
+         nxlog_debug_tag(JIRA_DEBUG_TAG, 4, _T("Cannot add comment to Jira issue \"%s\" (HTTP response code %03d)"), hdref, response);
          rcc = (response == 403) ? RCC_HDLINK_ACCESS_DENIED : RCC_HDLINK_INTERNAL_ERROR;
       }
    }
    else
    {
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("Call to curl_easy_perform() failed: %hs"), m_errorBuffer);
+      nxlog_debug_tag(JIRA_DEBUG_TAG, 4, _T("Call to curl_easy_perform() failed: %hs"), m_errorBuffer);
    }
    MemFree(request);
 
@@ -502,7 +514,7 @@ unique_ptr<ObjectArray<ProjectComponent>> JiraLink::getProjectComponents(const c
    if (curl_easy_perform(m_curl) == CURLE_OK)
    {
       responseData.write(static_cast<char>(0));
-      nxlog_debug_tag(DEBUG_TAG, 7, _T("POST request completed, data: %hs"), responseData.buffer());
+      nxlog_debug_tag(JIRA_DEBUG_TAG, 7, _T("POST request completed, data: %hs"), responseData.buffer());
       long response = 500;
       curl_easy_getinfo(m_curl, CURLINFO_RESPONSE_CODE, &response);
       if (response == 200)
@@ -513,7 +525,7 @@ unique_ptr<ObjectArray<ProjectComponent>> JiraLink::getProjectComponents(const c
          {
             if (json_is_array(root))
             {
-               nxlog_debug_tag(DEBUG_TAG, 4, _T("Got components list for Jira project %hs"), project);
+               nxlog_debug_tag(JIRA_DEBUG_TAG, 4, _T("Got components list for Jira project %hs"), project);
                int size = (int)json_array_size(root);
                components = make_unique<ObjectArray<ProjectComponent>>(size, 8, Ownership::True);
                for(int i = 0; i < size; i++)
@@ -532,23 +544,23 @@ unique_ptr<ObjectArray<ProjectComponent>> JiraLink::getProjectComponents(const c
             }
             else
             {
-               nxlog_debug_tag(DEBUG_TAG, 4, _T("Cannot get components for Jira project %hs (JSON root element is not an array)"), project);
+               nxlog_debug_tag(JIRA_DEBUG_TAG, 4, _T("Cannot get components for Jira project %hs (JSON root element is not an array)"), project);
             }
             json_decref(root);
          }
          else
          {
-            nxlog_debug_tag(DEBUG_TAG, 4, _T("Cannot get components for Jira project %hs (JSON parse error: %hs)"), project, err.text);
+            nxlog_debug_tag(JIRA_DEBUG_TAG, 4, _T("Cannot get components for Jira project %hs (JSON parse error: %hs)"), project, err.text);
          }
       }
       else
       {
-         nxlog_debug_tag(DEBUG_TAG, 4, _T("Cannot get components for Jira project %hs (HTTP response code %03d)"), project, response);
+         nxlog_debug_tag(JIRA_DEBUG_TAG, 4, _T("Cannot get components for Jira project %hs (HTTP response code %03d)"), project, response);
       }
    }
    else
    {
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("Call to curl_easy_perform() failed (%hs)"), m_errorBuffer);
+      nxlog_debug_tag(JIRA_DEBUG_TAG, 4, _T("Call to curl_easy_perform() failed (%hs)"), m_errorBuffer);
    }
 
    return components;
