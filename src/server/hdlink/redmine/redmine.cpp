@@ -142,7 +142,7 @@ static size_t OnCurlDataReceived(char *ptr, size_t size, size_t nmemb, void *use
 /**
  * Connect to RedMine server
  */
-UINT32 RedmineLink::connect()
+uint32_t RedmineLink::connect()
 {
    disconnect();
 
@@ -252,7 +252,7 @@ bool RedmineLink::checkConnection()
  * @param hdref reference assigned to issue by helpdesk system
  * @return RCC ready to be sent to client
  */
-UINT32 RedmineLink::openIssue(const TCHAR *description, TCHAR *hdref)
+uint32_t RedmineLink::openIssue(const TCHAR *description, TCHAR *hdref)
 {
    if (!checkConnection())
    {
@@ -371,7 +371,7 @@ UINT32 RedmineLink::openIssue(const TCHAR *description, TCHAR *hdref)
  * @param comment comment text
  * @return RCC ready to be sent to client
  */
-UINT32 RedmineLink::addComment(const TCHAR *hdref, const TCHAR *comment)
+uint32_t RedmineLink::addComment(const TCHAR *hdref, const TCHAR *comment)
 {
    return RCC_HDLINK_COMM_FAILURE;
 }
