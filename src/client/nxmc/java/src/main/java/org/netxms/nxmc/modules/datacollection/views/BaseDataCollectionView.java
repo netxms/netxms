@@ -118,6 +118,7 @@ public abstract class BaseDataCollectionView extends ObjectView
    protected Action actionCopyToClipboard;
    protected Action actionCopyDciName;
    protected Action actionShowHistoryData;
+   protected Action actionShowTableData;
 
    /**
     * @param name
@@ -211,10 +212,19 @@ public abstract class BaseDataCollectionView extends ObjectView
     */
    protected void fillContextMenu(final IMenuManager manager)
    {
-      manager.add(actionLineChart);
-      manager.add(actionRawLineChart);
-      manager.add(actionShowHistoryData); 
-      manager.add(new Separator());
+      int selectionType = getDciSelectionType();
+      if (selectionType == DataCollectionObject.DCO_TYPE_ITEM)
+      {
+         manager.add(actionLineChart);
+         manager.add(actionRawLineChart);
+         manager.add(actionShowHistoryData); 
+         manager.add(new Separator());
+      }
+      if (selectionType == DataCollectionObject.DCO_TYPE_TABLE)
+      {
+         manager.add(actionShowTableData); 
+         manager.add(new Separator());         
+      }
       manager.add(actionCopyToClipboard);
       manager.add(actionCopyDciName);
       manager.add(actionExportToCsv);
@@ -337,7 +347,15 @@ public abstract class BaseDataCollectionView extends ObjectView
          }
       };
       
-      actionShowHistoryData = new Action(i18n.tr("History data"), SharedIcons.EDIT) {
+      actionShowHistoryData = new Action(i18n.tr("History"), ResourceManager.getImageDescriptor("icons/data_history.gif")) {
+         @Override
+         public void run()
+         {
+            showHistoryData();
+         }
+      };
+      
+      actionShowTableData = new Action(i18n.tr("Table Last Value"), ResourceManager.getImageDescriptor("icons/table.gif")) {
          @Override
          public void run()
          {
@@ -801,5 +819,31 @@ public abstract class BaseDataCollectionView extends ObjectView
    public int getPriority()
    {
       return 30;
+   }
+   
+   /**
+    * Check if selection is DCI, tbale or mixed
+    */
+   public int getDciSelectionType()
+   {
+      IStructuredSelection selection = viewer.getStructuredSelection();
+      if (selection.isEmpty())
+         return DataCollectionObject.DCO_TYPE_GENERIC;
+      
+      boolean isDci = false;
+      boolean isTable = false;
+      for(Object dcObject : selection.toList())
+      {
+         if ((dcObject instanceof DataCollectionTable) || ((dcObject instanceof DciValue) &&
+            ((DciValue)dcObject).getDcObjectType() == DataCollectionObject.DCO_TYPE_TABLE))
+         {
+            isTable = true;
+         }
+         else 
+         {
+            isDci = true;
+         }
+      }
+      return (isTable & isDci) ? DataCollectionObject.DCO_TYPE_GENERIC : isTable ? DataCollectionObject.DCO_TYPE_TABLE : DataCollectionObject.DCO_TYPE_ITEM;
    }
 }

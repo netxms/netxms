@@ -349,15 +349,24 @@ public class DataCollectionView extends BaseDataCollectionView
    protected void fillContextMenu(final IMenuManager manager)
    {
       boolean isTemplate = object instanceof Template;
+      int selectionType = getDciSelectionType();
 
       if (!editMode)
       {
          if (!isTemplate)
          {
-            manager.add(actionLineChart);
-            manager.add(actionRawLineChart);
-            manager.add(actionShowHistoryData); 
-            manager.add(new Separator());
+            if (selectionType == DataCollectionObject.DCO_TYPE_ITEM)
+            {
+               manager.add(actionLineChart);
+               manager.add(actionRawLineChart);
+               manager.add(actionShowHistoryData); 
+               manager.add(new Separator());
+            }
+            if (selectionType == DataCollectionObject.DCO_TYPE_TABLE)
+            {
+               manager.add(actionShowTableData);     
+               manager.add(new Separator());     
+            }
          }
          manager.add(actionCopyToClipboard);
          manager.add(actionCopyDciName);
@@ -388,10 +397,18 @@ public class DataCollectionView extends BaseDataCollectionView
       {
          if (!isTemplate)
          {
-            manager.add(new Separator());
-            manager.add(actionLineChart);
-            manager.add(actionRawLineChart);
-            manager.add(actionShowHistoryData);  
+            if (selectionType == DataCollectionObject.DCO_TYPE_ITEM)
+            {
+               manager.add(new Separator());
+               manager.add(actionLineChart);
+               manager.add(actionRawLineChart);
+               manager.add(actionShowHistoryData); 
+            }
+            if (selectionType == DataCollectionObject.DCO_TYPE_TABLE)
+            {
+               manager.add(new Separator());
+               manager.add(actionShowTableData);          
+            }
          }
          manager.add(new Separator());
          manager.add(actionExportToCsv);
