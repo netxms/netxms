@@ -87,6 +87,7 @@ import org.netxms.nxmc.modules.alarms.widgets.helpers.AlarmTreeContentProvider;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
 import org.netxms.nxmc.tools.ExternalWebBrowser;
+import org.netxms.nxmc.tools.MessageDialogHelper;
 import org.netxms.nxmc.tools.RefreshTimer;
 import org.netxms.nxmc.tools.VisibilityValidator;
 import org.netxms.nxmc.tools.WidgetHelper;
@@ -178,7 +179,7 @@ public class AlarmList extends CompositeWithMessageArea
 		this.visibilityValidator = visibilityValidator;
 
       getContent().setLayout(new FillLayout());
-		
+
 		// Setup table columns
 		final String[] names = { 
 		      i18n.tr("Severity"), 
@@ -530,7 +531,7 @@ public class AlarmList extends CompositeWithMessageArea
       actionTerminate.setId("AlarmList.Terminate"); //$NON-NLS-1$
 		
       actionCreateIssue = new Action(i18n.tr("Create ticket in &helpdesk system"),
-            ResourceManager.getImageDescriptor("icons/helpdesk_ticket.png")) {
+            ResourceManager.getImageDescriptor("icons/alarms/create-issue.png")) {
          @Override
          public void run()
          {
@@ -1144,15 +1145,26 @@ public class AlarmList extends CompositeWithMessageArea
       IStructuredSelection selection = alarmSelectionProvider.getStructuredSelection();
       if (selection.size() != 1)
          return;
-      
+
       final long id = ((Alarm)selection.getFirstElement()).getId();
       new Job(i18n.tr("Create helpdesk ticket"), view) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            session.openHelpdeskIssue(id);
+            final String issueId = session.openHelpdeskIssue(id);
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
+                  String message = String.format(i18n.tr("Helpdesk issue created successfully (assigned ID is %s)"), issueId);
+                  if (view != null)
+                     view.addMessage(MessageArea.SUCCESS, message);
+                  else
+                     MessageDialogHelper.openInformation(getShell(), i18n.tr("Create Helpdesk Issue"), message);
+               }
+            });
          }
-         
+
          @Override
          protected String getErrorMessage()
          {
@@ -1169,7 +1181,7 @@ public class AlarmList extends CompositeWithMessageArea
       IStructuredSelection selection = alarmSelectionProvider.getStructuredSelection();
       if (selection.size() != 1)
          return;
-      
+
       final long id = ((Alarm)selection.getFirstElement()).getId();
       new Job(i18n.tr("Show helpdesk ticket"), view) {
          @Override
