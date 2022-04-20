@@ -2003,7 +2003,7 @@ uint32_t AddAlarmComment(const TCHAR *hdref, const TCHAR *text, uint32_t userId)
       Alarm *alarm = s_alarmList.get(i);
       if (!_tcscmp(alarm->getHelpDeskRef(), hdref))
       {
-         UINT32 id = 0;
+         uint32_t id = 0;
          rcc = alarm->updateAlarmComment(&id, text, userId, false);
          break;
       }
@@ -2011,6 +2011,14 @@ uint32_t AddAlarmComment(const TCHAR *hdref, const TCHAR *text, uint32_t userId)
    s_alarmList.unlock();
 
    return rcc;
+}
+
+/**
+ * Add alarm's comment by helpdesk reference from system user
+ */
+uint32_t AddAlarmSystemComment(const TCHAR *hdref, const TCHAR *text)
+{
+   return AddAlarmComment(hdref, text, 0);
 }
 
 /**

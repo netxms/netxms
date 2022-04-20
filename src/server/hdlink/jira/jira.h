@@ -28,11 +28,14 @@
 #include <hdlink.h>
 #include <curl/curl.h>
 
+#define JIRA_DEBUG_TAG _T("hdlink.jira")
+
 #define JIRA_MAX_LOGIN_LEN          128
 #define JIRA_MAX_PASSWORD_LEN       128
 #define JIRA_MAX_PROJECT_CODE_LEN   32
 #define JIRA_MAX_ISSUE_TYPE_LEN     32
 #define JIRA_MAX_COMPONENT_NAME_LEN 128
+#define JIRA_MAX_STATUS_LEN         32
 
 /**
  * Jira project's component
@@ -72,6 +75,8 @@ private:
    CURL *m_curl;
    curl_slist *m_headers;
    char m_errorBuffer[CURL_ERROR_SIZE];
+   void *m_webhookHandle;
+   char m_webhookUrl[MAX_PATH];
 
    void lock() { MutexLock(m_mutex); }
    void unlock() { MutexUnlock(m_mutex); }
@@ -88,9 +93,20 @@ public:
 
    virtual bool init();
    virtual bool checkConnection();
-   virtual UINT32 openIssue(const TCHAR *description, TCHAR *hdref);
-   virtual UINT32 addComment(const TCHAR *hdref, const TCHAR *comment);
+   virtual uint32_t openIssue(const TCHAR *description, TCHAR *hdref);
+   virtual uint32_t addComment(const TCHAR *hdref, const TCHAR *comment);
    virtual bool getIssueUrl(const TCHAR *hdref, TCHAR *url, size_t size);
+
+   const char *getWebhookURL() const { return m_webhookUrl; }
+
+   void onWebhookCommentUpdate(const TCHAR *hdref, const TCHAR *text) { onNewComment(hdref, text); }
+   void onWebhookIssueClose(const TCHAR *hdref) { onResolveIssue(hdref); }
 };
+
+/**
+ * Webhook management
+ */
+void *CreateWebhook(JiraLink *link, uint16_t port);
+void DestroyWebhook(void *handle);
 
 #endif

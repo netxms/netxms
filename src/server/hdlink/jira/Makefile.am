@@ -1,10 +1,10 @@
 HDLINK = jira
 
 pkglib_LTLIBRARIES = jira.la
-jira_la_SOURCES = jira.cpp
-jira_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include -I@top_srcdir@/build
-jira_la_LDFLAGS = -module -avoid-version
-jira_la_LIBADD = ../../../libnetxms/libnetxms.la ../../libnxsrv/libnxsrv.la ../../core/libnxcore.la
+jira_la_SOURCES = jira.cpp webhook.cpp
+jira_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include -I@top_srcdir@/build @MICROHTTPD_CPPFLAGS@
+jira_la_LDFLAGS = -module -avoid-version @MICROHTTPD_LDFLAGS@
+jira_la_LIBADD = ../../../libnetxms/libnetxms.la ../../libnxsrv/libnxsrv.la ../../core/libnxcore.la @MICROHTTPD_LIBS@
 if USE_INTERNAL_JANSSON
 jira_la_LIBADD += @top_srcdir@/src/jansson/libnxjansson.la
 else

@@ -1189,7 +1189,7 @@ retry_db_lock:
    }
 
    // Initialize helpdesk link
-   SetHDLinkEntryPoints(ResolveAlarmByHDRef, TerminateAlarmByHDRef);
+   SetHDLinkEntryPoints(ResolveAlarmByHDRef, TerminateAlarmByHDRef, AddAlarmSystemComment);
    LoadHelpDeskLink();
 
    InitLogAccess();

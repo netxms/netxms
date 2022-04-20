@@ -47,8 +47,9 @@ extern "C" HelpDeskLink __EXPORT *hdlinkCreateInstance() { return new implClass;
 class LIBNXSRV_EXPORTABLE HelpDeskLink
 {
 protected:
-   virtual void onResolveIssue(const TCHAR *hdref);
-   virtual void onCloseIssue(const TCHAR *hdref);
+   void onResolveIssue(const TCHAR *hdref);
+   void onCloseIssue(const TCHAR *hdref);
+   void onNewComment(const TCHAR *hdref, const TCHAR *comment);
 
 public:
    HelpDeskLink();
@@ -67,6 +68,6 @@ public:
 /**
  * Init call for server
  */
-void LIBNXSRV_EXPORTABLE SetHDLinkEntryPoints(uint32_t (*__resolve)(const TCHAR *), uint32_t (*__close)(const TCHAR *));
+void LIBNXSRV_EXPORTABLE SetHDLinkEntryPoints(uint32_t (*__resolve)(const TCHAR*), uint32_t (*__close)(const TCHAR*), uint32_t (*__newComment)(const TCHAR*, const TCHAR*));
 
 #endif   /* _nddrv_h_ */

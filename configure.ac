@@ -759,8 +759,8 @@ AC_ARG_WITH(libssh,
 [
 	if test "x$withval" != "x" && test "x$withval" != "xyes" && test "x$withval" != "xno" ; then
 		LD_RUN_PATH="${withval}/lib${LD_RUN_PATH:+:}${LD_RUN_PATH}"
-		LIBSSH_LDFLAGS="$LDFLAGS -L${withval}/lib"
-		LIBSSH_CPPFLAGS="$CPPFLAGS -I${withval}/include"
+		LIBSSH_LDFLAGS="-L${withval}/lib"
+		LIBSSH_CPPFLAGS="-I${withval}/include"
 	fi
 ])
 
@@ -781,8 +781,18 @@ AC_ARG_WITH(libjq,
 [
 	if test "x$withval" != "x" && test "x$withval" != "xyes" && test "x$withval" != "xno" ; then
 		LD_RUN_PATH="${withval}/lib${LD_RUN_PATH:+:}${LD_RUN_PATH}"
-		LIBJQ_LDFLAGS="$LDFLAGS -L${withval}/lib"
-		LIBJQ_CPPFLAGS="$CPPFLAGS -I${withval}/include"
+		LIBJQ_LDFLAGS="-L${withval}/lib"
+		LIBJQ_CPPFLAGS="-I${withval}/include"
+	fi
+])
+
+AC_ARG_WITH(microhttpd,
+[AS_HELP_STRING(--with-microhttpd,specify libmicrohttpd location)],
+[
+	if test "x$withval" != "x" && test "x$withval" != "xyes" && test "x$withval" != "xno" ; then
+		LD_RUN_PATH="${withval}/lib${LD_RUN_PATH:+:}${LD_RUN_PATH}"
+		MICROHTTPD_LDFLAGS="$LDFLAGS -L${withval}/lib"
+		MICROHTTPD_CPPFLAGS="$CPPFLAGS -I${withval}/include"
 	fi
 ])
 
@@ -4169,6 +4179,46 @@ fi
 
 
 #--------------------------------------------------------------------
+# microhttpd
+#--------------------------------------------------------------------
+
+check_substr "$COMPONENTS" "server"
+if test $? = 0; then
+	OLD_CPPFLAGS="$CPPFLAGS"
+	OLD_LDFLAGS="$LDFLAGS"
+	OLD_LIBS="$LIBS"
+
+   CPPFLAGS="$CPPFLAGS $MICROHTTPD_CPPFLAGS"
+   LDFLAGS="$LDFLAGS $MICROHTTPD_LDFLAGS"
+
+   MICROHTTPD_SUPPORT="yes"
+	AC_CHECK_HEADER(microhttpd.h, [], [
+		if test "x$REQUIRE_MICROHTTPD" = "xyes"; then
+			AC_MSG_ERROR([*** Cannot find microhttpd.h - check your libmicrohttpd installation ***])
+		else
+			MICROHTTPD_SUPPORT="no"
+		fi
+	])
+	AC_CHECK_LIB(microhttpd, MHD_start_daemon, [ MICROHTTPD_LIBS="-lmicrohttpd" ], [
+		if test "x$REQUIRE_MICROHTTPD" = "xyes"; then
+			AC_MSG_ERROR([*** libmicrohttpd is missing or too old - check your libmicrohttpd installation ***])
+		else
+			MICROHTTPD_SUPPORT="no"
+		fi
+	])
+
+	if test "x$MICROHTTPD_SUPPORT" = "xyes"; then
+		AC_DEFINE(WITH_MICROHTTPD, 1, Define to 1 if microhttpd is supported)
+	   COMPONENTS="$COMPONENTS microhttpd"
+	fi
+
+	CPPFLAGS="$OLD_CPPFLAGS"
+	LDFLAGS="$OLD_LDFLAGS"
+	LIBS="$OLD_LIBS"
+fi
+
+
+#--------------------------------------------------------------------
 # Tuxedo
 #--------------------------------------------------------------------
 
@@ -4728,6 +4778,9 @@ AC_SUBST(LIBJQ_LDFLAGS)
 AC_SUBST(MARIADB_CPPFLAGS)
 AC_SUBST(MARIADB_LDFLAGS)
 AC_SUBST(MARIADB_LIBS)
+AC_SUBST(MICROHTTPD_CPPFLAGS)
+AC_SUBST(MICROHTTPD_LDFLAGS)
+AC_SUBST(MICROHTTPD_LIBS)
 AC_SUBST(MODULES)
 AC_SUBST(MONGODB_CPPFLAGS)
 AC_SUBST(MONGODB_LDFLAGS)
@@ -5092,6 +5145,10 @@ if test "x${BUILD_SERVER}" = "xyes"; then
 		echo "ZeroMQ support          : YES"
 	else
 		echo "ZeroMQ support          : NO"
+	if test "x${MICROHTTPD_SUPPORT}" = "xyes"; then
+		echo "MicroHTTPD support      : YES"
+	else
+		echo "MicroHTTPD support      : NO"
 	fi
 else
 	echo "Build Server            : NO"

@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2014 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -26,16 +26,18 @@
 /**
  * Server entry points for alarm resolve and close
  */
-static UINT32 (*__resolveAlarmByHdRef)(const TCHAR *hdref);
-static UINT32 (*__closeAlarmByHdRef)(const TCHAR *hdref);
+static uint32_t (*__resolveAlarmByHdRef)(const TCHAR *hdref);
+static uint32_t (*__closeAlarmByHdRef)(const TCHAR *hdref);
+static uint32_t (*__addAlarmCommentByHdRef)(const TCHAR *hdref, const TCHAR *comment);
 
 /**
  * Initialize server entry points
  */
-void LIBNXSRV_EXPORTABLE SetHDLinkEntryPoints(UINT32 (*__resolve)(const TCHAR *), UINT32 (*__close)(const TCHAR *))
+void LIBNXSRV_EXPORTABLE SetHDLinkEntryPoints(uint32_t (*__resolve)(const TCHAR*), uint32_t (*__close)(const TCHAR*), uint32_t (*__newComment)(const TCHAR*, const TCHAR*))
 {
    __resolveAlarmByHdRef = __resolve;
    __closeAlarmByHdRef = __close;
+   __addAlarmCommentByHdRef = __newComment;
 }
 
 /**
@@ -117,6 +119,14 @@ uint32_t HelpDeskLink::addComment(const TCHAR *hdref, const TCHAR *comment)
 }
 
 /**
+ * Get URL to view issue in helpdesk system
+ */
+bool HelpDeskLink::getIssueUrl(const TCHAR *hdref, TCHAR *url, size_t size)
+{
+   return false;
+}
+
+/**
  * Must be called by actual link implementation when issue 
  * is resolved in helpdesk system.
  *
@@ -139,9 +149,12 @@ void HelpDeskLink::onCloseIssue(const TCHAR *hdref)
 }
 
 /**
- * Get URL to view issue in helpdesk system
+ * Must be called by actual link implementation when new comment is added to issue.
+ *
+ * @param hdref helpdesk issue reference
+ * @param comment text of new comment
  */
-bool HelpDeskLink::getIssueUrl(const TCHAR *hdref, TCHAR *url, size_t size)
+void HelpDeskLink::onNewComment(const TCHAR *hdref, const TCHAR *comment)
 {
-   return false;
+   __addAlarmCommentByHdRef(hdref, comment);
 }
