@@ -24,6 +24,38 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 41.13 to 41.14
+ */
+static bool H_UpgradeFromV13()
+{
+   CHK_EXEC(CreateConfigParam(_T("Jira.Webhook.Path"),
+         _T("/jira-webhook"),
+         _T("Path part of Jira webhook URL (must start with /)."),
+         nullptr, 'S', true, true, false, false));
+   CHK_EXEC(CreateConfigParam(_T("Jira.Webhook.Port"),
+         _T("8008"),
+         _T("Jira webhook listener port (0 to disable webhook)."),
+         nullptr, 'I', true, true, false, false));
+   CHK_EXEC(CreateConfigParam(_T("Jira.ResolvedStatus"),
+         _T("Done"),
+         _T("Comma separated list of issue status codes indicating that issue is resolved."),
+         nullptr, 'S', true, false, false, false));
+
+   static const TCHAR batch[] =
+      _T("UPDATE config SET var_name='Jira.Login',need_server_restart='0' WHERE var_name='JiraLogin'\n")
+      _T("UPDATE config SET var_name='Jira.Password',need_server_restart='0' WHERE var_name='JiraPassword'\n")
+      _T("UPDATE config SET var_name='Jira.ServerURL',need_server_restart='0',default_value='https://jira.atlassian.com' WHERE var_name='JiraServerURL'\n")
+      _T("UPDATE config SET var_name='Jira.IssueType' WHERE var_name='JiraIssueType'\n")
+      _T("UPDATE config SET var_name='Jira.ProjectCode' WHERE var_name='JiraProjectCode'\n")
+      _T("UPDATE config SET var_name='Jira.ProjectComponent' WHERE var_name='JiraProjectComponent'\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+
+   CHK_EXEC(SetMinorSchemaVersion(14));
+   return true;
+}
+
+/**
  * Upgrade from 41.12 to 41.13
  */
 static bool H_UpgradeFromV12()
@@ -435,6 +467,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 13, 41, 14, H_UpgradeFromV13 },
    { 12, 41, 13, H_UpgradeFromV12 },
    { 11, 41, 12, H_UpgradeFromV11 },
    { 10, 41, 11, H_UpgradeFromV10 },

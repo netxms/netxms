@@ -75,14 +75,29 @@ static int ProcessWebhookCall(const char *data, JiraLink *link)
                   const char *fieldId = json_object_get_string_utf8(change, "fieldId", nullptr);
                   if ((fieldId != nullptr) && !strcmp(fieldId, "status"))
                   {
-                     char resolvedStatus[JIRA_MAX_STATUS_LEN];
-                     ConfigReadStrUTF8(_T("JiraResolvedStatus"), resolvedStatus, JIRA_MAX_STATUS_LEN, "Done");
                      const char *status = json_object_get_string_utf8(change, "toString", nullptr);
                      nxlog_debug_tag(JIRA_DEBUG_TAG, 6, _T("Status change for issue %s (new status %hs)"), hdref, CHECK_NULL_A(status));
-                     if ((status != nullptr) && !stricmp(status, resolvedStatus))
+                     if (status != nullptr)
                      {
-                        nxlog_debug_tag(JIRA_DEBUG_TAG, 5, _T("Mark issue %s as resolved"), hdref);
-                        link->onWebhookIssueClose(hdref);
+                        char resolvedStatus[1024];
+                        ConfigReadStrUTF8(_T("Jira.ResolvedStatus"), resolvedStatus, 1024, "Done");
+                        char *curr = resolvedStatus;
+                        char *next;
+                        do
+                        {
+                           next = strchr(curr, ',');
+                           if (next != nullptr)
+                              *next = 0;
+                           TrimA(curr);
+                           if (!stricmp(curr, status))
+                           {
+                              nxlog_debug_tag(JIRA_DEBUG_TAG, 5, _T("Mark issue %s as resolved"), hdref);
+                              link->onWebhookIssueClose(hdref);
+                              break;
+                           }
+                           curr = next + 1;
+                        }
+                        while(next != nullptr);
                      }
                   }
                }

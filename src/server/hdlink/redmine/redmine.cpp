@@ -296,7 +296,6 @@ uint32_t RedmineLink::openIssue(const TCHAR *description, TCHAR *hdref)
 #endif
 
    char *request = json_dumps(requestRoot, 0);
-   printf(">>> %s\n", request); fflush(stdout);
    curl_easy_setopt(m_curl, CURLOPT_POSTFIELDS, request);
    json_decref(requestRoot);
 

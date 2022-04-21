@@ -35,7 +35,6 @@
 #define JIRA_MAX_PROJECT_CODE_LEN   32
 #define JIRA_MAX_ISSUE_TYPE_LEN     32
 #define JIRA_MAX_COMPONENT_NAME_LEN 128
-#define JIRA_MAX_STATUS_LEN         32
 
 /**
  * Jira project's component
@@ -63,25 +62,45 @@ public:
 };
 
 /**
+ * Comment sent to Jira
+ */
+struct Comment
+{
+   time_t timestamp;
+   String issue;
+   String text;
+
+   Comment(const TCHAR *_issue, const TCHAR *_text) : issue(_issue), text(_text)
+   {
+      timestamp = time(nullptr);
+   }
+};
+
+/**
  * Module class
  */
 class JiraLink : public HelpDeskLink
 {
 private:
    Mutex m_mutex;
-   char m_serverUrl[MAX_PATH];
-   char m_login[JIRA_MAX_LOGIN_LEN];
-   char m_password[JIRA_MAX_PASSWORD_LEN];
    CURL *m_curl;
    curl_slist *m_headers;
    char m_errorBuffer[CURL_ERROR_SIZE];
    void *m_webhookHandle;
    char m_webhookUrl[MAX_PATH];
+   char m_login[JIRA_MAX_LOGIN_LEN];
+   char m_password[JIRA_MAX_PASSWORD_LEN];
+   ObjectArray<Comment> m_recentComments;
 
    void lock() { m_mutex.lock(); }
    void unlock() { m_mutex.unlock(); }
+
    uint32_t connect();
    void disconnect();
+   void setCredentials();
+
+   void removeExpiredComments();
+
    unique_ptr<ObjectArray<ProjectComponent>> getProjectComponents(const char *project);
 
 public:
@@ -99,7 +118,7 @@ public:
 
    const char *getWebhookURL() const { return m_webhookUrl; }
 
-   void onWebhookCommentUpdate(const TCHAR *hdref, const TCHAR *text) { onNewComment(hdref, text); }
+   void onWebhookCommentUpdate(const TCHAR *hdref, const TCHAR *text);
    void onWebhookIssueClose(const TCHAR *hdref) { onResolveIssue(hdref); }
 };
 
