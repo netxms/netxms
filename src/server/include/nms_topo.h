@@ -150,7 +150,7 @@ public:
    uint16_t getCurrentVlanId() const { return m_currentVlanId; }
 
    uint32_t findMacAddress(const BYTE *macAddr, bool *isStatic);
-   void findMacAddressByPattern(const BYTE* macPattern, int macPatternSize, HashSet<MacAddress>* hs);
+   void findMacAddressByPattern(const BYTE* macPattern, size_t macPatternSize, HashSet<MacAddress>* hs);
    bool isSingleMacOnPort(uint32_t ifIndex, BYTE *macAddr = nullptr);
    int getMacCountOnPort(uint32_t ifIndex);
 

@@ -131,7 +131,7 @@ uint32_t ForwardingDatabase::findMacAddress(const BYTE *macAddr, bool *isStatic)
 /**
  * Find all MAC addresses that contains given pattern
  */
-void ForwardingDatabase::findMacAddressByPattern(const BYTE* macPattern, int macPatternSize, HashSet<MacAddress>* hs)
+void ForwardingDatabase::findMacAddressByPattern(const BYTE* macPattern, size_t macPatternSize, HashSet<MacAddress>* hs)
 {
    for (int i = 0; i < m_fdbSize; i++)
       if (memmem(m_fdb[i].macAddr, MAC_ADDR_LENGTH, macPattern, macPatternSize))

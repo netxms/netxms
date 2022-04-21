@@ -740,13 +740,12 @@ int TelegramDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCH
             nxlog_debug_tag(DEBUG_TAG, 4, _T("Cannot send message from bot %s to recipient %s: API error (%hs)"),
                      m_botName, recipient, json_object_get_string_utf8(response, "description", "Unknown reason"));
 
-            int errorCode = json_object_get_integer(response, "error_code", 0);
-
+            int errorCode = static_cast<int>(json_object_get_integer(response, "error_code", 0));
             switch (errorCode)
             {
                case 420: // FLOOD
                case 429: // Too many requests
-                  result = json_object_get_integer(json_object_get(response, "parameters"), "retry_after", 10);
+                  result = static_cast<int>(json_object_get_integer(json_object_get(response, "parameters"), "retry_after", 10));
                   break;
                default:
                   result = -1;
@@ -758,8 +757,7 @@ int TelegramDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCH
       {
          nxlog_debug_tag(DEBUG_TAG, 4, _T("Cannot send message from bot %s to recipient %s: invalid API response"), m_botName, recipient);
       }
-      if (response != nullptr)
-         json_decref(response);
+      json_decref(response);
    }
    else
    {

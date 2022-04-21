@@ -114,7 +114,11 @@ static int ProcessWebhookCall(const char *data, JiraLink *link)
 /**
  * Dump HTTP request headers
  */
+#if MHD_VERSION >= 0x00097002
+static MHD_Result DumpHeaders(void *context, MHD_ValueKind kind, const char *key, const char *value)
+#else
 static int DumpHeaders(void *context, MHD_ValueKind kind, const char *key, const char *value)
+#endif
 {
    nxlog_debug_tag(JIRA_DEBUG_TAG, 7, _T("   %hs: %hs"), key, value);
    return MHD_YES;
@@ -123,7 +127,11 @@ static int DumpHeaders(void *context, MHD_ValueKind kind, const char *key, const
 /**
  * Connection handler
  */
+#if MHD_VERSION >= 0x00097002
+static MHD_Result ConnectionHandler(void *context, MHD_Connection *connection, const char *url, const char *method, const char *version, const char *uploadData, size_t *uploadDataSize, void **connectionContext)
+#else
 static int ConnectionHandler(void *context, MHD_Connection *connection, const char *url, const char *method,  const char *version, const char *uploadData, size_t *uploadDataSize, void **connectionContext)
+#endif
 {
    if (*connectionContext == nullptr)
    {
@@ -176,7 +184,7 @@ static int ConnectionHandler(void *context, MHD_Connection *connection, const ch
       responseCode = 404;  // Not Found
    }
    MHD_Response *response = MHD_create_response_from_buffer(0, nullptr, MHD_RESPMEM_PERSISTENT);
-   int rc = MHD_queue_response(connection, responseCode, response);
+   MHD_Result rc = MHD_queue_response(connection, responseCode, response);
    MHD_destroy_response(response);
    nxlog_debug_tag(JIRA_DEBUG_TAG, 6, _T("Response code %d to webhook call"), responseCode);
    return rc;

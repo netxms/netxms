@@ -90,7 +90,7 @@ static void ScanBlock(uint32_t startAddr, uint32_t endAddr, uint16_t port, void 
          {
             targets[i].completed = true;
             targets[i].success = sp.isReady(targets[i].handle);
-            targets[i].rtt = GetCurrentTimeMs() - targets[i].startTime;
+            targets[i].rtt = static_cast<uint32_t>(GetCurrentTimeMs() - targets[i].startTime);
             waitCount--;
          }
    }

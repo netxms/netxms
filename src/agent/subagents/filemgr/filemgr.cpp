@@ -326,10 +326,10 @@ static bool CheckFullPath(const TCHAR *path, TCHAR **fullPath, bool withHomeDir,
 
    bool found = false;
    bool readOnly;
-   int maxPathLen = 0;
+   size_t maxPathLen = 0;
    for(int i = 0; i < s_rootDirectories->size(); i++)
    {
-      int folderPathLen = _tcslen(s_rootDirectories->get(i)->getFolder());
+      size_t folderPathLen = _tcslen(s_rootDirectories->get(i)->getFolder());
 #if defined(_WIN32) || defined(__APPLE__)
       if (!_tcsnicmp(s_rootDirectories->get(i)->getFolder(), fullPathT, folderPathLen))
 #else
