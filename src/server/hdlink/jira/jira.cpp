@@ -62,11 +62,9 @@ static INT64 JsonIntegerValue(json_t *v)
 /**
  * Constructor
  */
-JiraLink::JiraLink() : HelpDeskLink()
+JiraLink::JiraLink() : HelpDeskLink(), m_recentComments(0, 16, Ownership::True)
 {
    m_mutex = MutexCreate();
-   strcpy(m_login, "netxms");
-   m_password[0] = 0;
    m_curl = nullptr;
    m_headers = nullptr;
    m_webhookHandle = nullptr;
@@ -115,17 +113,11 @@ bool JiraLink::init()
       nxlog_debug_tag(JIRA_DEBUG_TAG, 1, _T("cURL initialization failed"));
       return false;
    }
-   ConfigReadStrUTF8(_T("JiraServerURL"), m_serverUrl, MAX_OBJECT_NAME, "https://jira.atlassian.com");
-   ConfigReadStrUTF8(_T("JiraLogin"), m_login, JIRA_MAX_LOGIN_LEN, "netxms");
-   char tmpPwd[MAX_PASSWORD];
-   ConfigReadStrUTF8(_T("JiraPassword"), tmpPwd, MAX_PASSWORD, "");
-   DecryptPasswordA(m_login, tmpPwd, m_password, JIRA_MAX_PASSWORD_LEN);
-   nxlog_debug_tag(JIRA_DEBUG_TAG, 5, _T("Jira server URL set to %hs"), m_serverUrl);
 
-   uint16_t webhookPort = static_cast<uint16_t>(ConfigReadInt(_T("JiraWebhookPort"), 8080));
+   uint16_t webhookPort = static_cast<uint16_t>(ConfigReadInt(_T("Jira.Webhook.Port"), 8080));
    if (webhookPort != 0)
    {
-      ConfigReadStrUTF8(_T("JiraWebhookURL"), m_webhookUrl, 1024, "/jira-webhook");
+      ConfigReadStrUTF8(_T("Jira.Webhook.Path"), m_webhookUrl, 1024, "/jira-webhook");
       m_webhookHandle = CreateWebhook(this, webhookPort);
    }
    else
@@ -143,6 +135,18 @@ static size_t OnCurlDataReceived(char *ptr, size_t size, size_t nmemb, void *con
    size_t bytes = size * nmemb;
    static_cast<ByteStream*>(context)->write(ptr, bytes);
    return bytes;
+}
+
+/**
+ * Set credentials for connection
+ */
+void JiraLink::setCredentials()
+{
+   ConfigReadStrUTF8(_T("Jira.Login"), m_login, JIRA_MAX_LOGIN_LEN, "netxms");
+   ConfigReadStrUTF8(_T("Jira.Password"), m_password, JIRA_MAX_PASSWORD_LEN, "");
+   DecryptPasswordA(m_login, m_password, m_password, JIRA_MAX_PASSWORD_LEN);
+   curl_easy_setopt(m_curl, CURLOPT_USERNAME, m_login);
+   curl_easy_setopt(m_curl, CURLOPT_PASSWORD, m_password);
 }
 
 /**
@@ -167,17 +171,15 @@ UINT32 JiraLink::connect()
    curl_easy_setopt(m_curl, CURLOPT_COOKIEFILE, "");  // enable cookies in memory
    curl_easy_setopt(m_curl, CURLOPT_SSL_VERIFYPEER, (long)0);
 
-   curl_easy_setopt(m_curl, CURLOPT_USERNAME, m_login);
-   curl_easy_setopt(m_curl, CURLOPT_PASSWORD, m_password);
-
-   curl_easy_setopt(m_curl, CURLOPT_WRITEFUNCTION, &OnCurlDataReceived);
+   setCredentials();
 
    ByteStream responseData(32768);
    responseData.setAllocationStep(32768);
+   curl_easy_setopt(m_curl, CURLOPT_WRITEFUNCTION, &OnCurlDataReceived);
    curl_easy_setopt(m_curl, CURLOPT_WRITEDATA, &responseData);
 
    char url[MAX_PATH];
-   strcpy(url, m_serverUrl);
+   ConfigReadStrUTF8(_T("Jira.ServerURL"), url, MAX_PATH, "https://jira.atlassian.com");
    strcat(url, "/rest/api/2/myself");
    curl_easy_setopt(m_curl, CURLOPT_URL, url);
 
@@ -243,10 +245,12 @@ bool JiraLink::checkConnection()
       responseData.setAllocationStep(32768);
       curl_easy_setopt(m_curl, CURLOPT_WRITEDATA, &responseData);
 
+      setCredentials();
+
       curl_easy_setopt(m_curl, CURLOPT_POST, (long)0);
 
       char url[MAX_PATH];
-      strcpy(url, m_serverUrl);
+      ConfigReadStrUTF8(_T("Jira.ServerURL"), url, MAX_PATH, "https://jira.atlassian.com");
       strcat(url, "/rest/auth/1/session");
       curl_easy_setopt(m_curl, CURLOPT_URL, url);
       if (curl_easy_perform(m_curl) == CURLE_OK)
@@ -301,10 +305,10 @@ uint32_t JiraLink::openIssue(const TCHAR *description, TCHAR *hdref)
    json_t *project = json_object();
 
    char projectCode[JIRA_MAX_PROJECT_CODE_LEN];
-   ConfigReadStrUTF8(_T("JiraProjectCode"), projectCode, JIRA_MAX_PROJECT_CODE_LEN, "NETXMS");
+   ConfigReadStrUTF8(_T("Jira.ProjectCode"), projectCode, JIRA_MAX_PROJECT_CODE_LEN, "NETXMS");
 
    TCHAR projectComponent[JIRA_MAX_COMPONENT_NAME_LEN];
-   ConfigReadStr(_T("JiraProjectComponent"), projectComponent, JIRA_MAX_COMPONENT_NAME_LEN, _T(""));
+   ConfigReadStr(_T("Jira.ProjectComponent"), projectComponent, JIRA_MAX_COMPONENT_NAME_LEN, _T(""));
    unique_ptr<ObjectArray<ProjectComponent>> projectComponents = getProjectComponents(projectCode);
    if ((projectComponent[0] != 0) && (projectComponents != nullptr))
    {
@@ -346,7 +350,7 @@ uint32_t JiraLink::openIssue(const TCHAR *description, TCHAR *hdref)
    json_t *issuetype = json_object();
 
    char issueType[JIRA_MAX_ISSUE_TYPE_LEN];
-   ConfigReadStrUTF8(_T("JiraIssueType"), issueType, JIRA_MAX_ISSUE_TYPE_LEN, "Task");
+   ConfigReadStrUTF8(_T("Jira.IssueType"), issueType, JIRA_MAX_ISSUE_TYPE_LEN, "Task");
    json_object_set_new(issuetype, "name", json_string(issueType));
    json_object_set_new(fields, "issuetype", issuetype);
 
@@ -356,8 +360,8 @@ uint32_t JiraLink::openIssue(const TCHAR *description, TCHAR *hdref)
    json_decref(root);
 
    char url[MAX_PATH];
-   strcpy(url, m_serverUrl);
-   strcat(url, "/rest/api/2/issue");
+   ConfigReadStrUTF8(_T("Jira.ServerURL"), url, MAX_PATH, "https://jira.atlassian.com");
+   strlcat(url, "/rest/api/2/issue", MAX_PATH);
    curl_easy_setopt(m_curl, CURLOPT_URL, url);
 
    nxlog_debug_tag(JIRA_DEBUG_TAG, 7, _T("Issue creation request: %hs"), request);
@@ -444,13 +448,15 @@ uint32_t JiraLink::addComment(const TCHAR *hdref, const TCHAR *comment)
    json_decref(root);
 
    char url[MAX_PATH];
+   ConfigReadStrUTF8(_T("Jira.ServerURL"), url, MAX_PATH, "https://jira.atlassian.com");
+   strlcat(url, "/rest/api/2/issue/", MAX_PATH);
 #ifdef UNICODE
-   char *mbref = UTF8StringFromWideString(hdref);
-   snprintf(url, MAX_PATH, "%s/rest/api/2/issue/%s/comment", m_serverUrl, mbref);
-   MemFree(mbref);
+   size_t l = strlen(url);
+   wchar_to_utf8(hdref, -1, &url[l], MAX_PATH - l);
 #else
-   snprintf(url, MAX_PATH, "%s/rest/api/2/issue/%s/comment", m_serverUrl, hdref);
+   strlcat(url, hdref, MAX_PATH);
 #endif
+   strlcat(url, "/comment", MAX_PATH);
    curl_easy_setopt(m_curl, CURLOPT_URL, url);
 
    if (curl_easy_perform(m_curl) == CURLE_OK)
@@ -463,6 +469,8 @@ uint32_t JiraLink::addComment(const TCHAR *hdref, const TCHAR *comment)
       {
          rcc = RCC_SUCCESS;
          nxlog_debug_tag(JIRA_DEBUG_TAG, 4, _T("Added comment to Jira issue \"%s\""), hdref);
+         removeExpiredComments();
+         m_recentComments.add(new Comment(hdref, comment));
       }
       else
       {
@@ -485,13 +493,9 @@ uint32_t JiraLink::addComment(const TCHAR *hdref, const TCHAR *comment)
  */
 bool JiraLink::getIssueUrl(const TCHAR *hdref, TCHAR *url, size_t size)
 {
-#ifdef UNICODE
-   WCHAR serverUrl[MAX_PATH];
-   MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, m_serverUrl, -1, serverUrl, MAX_PATH);
-   _sntprintf(url, size, _T("%s/browse/%s"), serverUrl, hdref);
-#else
-   _sntprintf(url, size, _T("%s/browse/%s"), m_serverUrl, hdref);
-#endif
+   ConfigReadStr(_T("Jira.ServerURL"), url, size, _T("https://jira.atlassian.com"));
+   _tcslcat(url, _T("/browse/"), size);
+   _tcslcat(url, hdref, size);
    return true;
 }
 
@@ -509,7 +513,10 @@ unique_ptr<ObjectArray<ProjectComponent>> JiraLink::getProjectComponents(const c
    curl_easy_setopt(m_curl, CURLOPT_POST, (long)0);
 
    char url[MAX_PATH];
-   snprintf(url, MAX_PATH, "%s/rest/api/2/project/%s/components", m_serverUrl, project);
+   ConfigReadStrUTF8(_T("Jira.ServerURL"), url, MAX_PATH, "https://jira.atlassian.com");
+   strlcat(url, "/rest/api/2/project/", MAX_PATH);
+   strlcat(url, project, MAX_PATH);
+   strlcat(url, "/components", MAX_PATH);
    curl_easy_setopt(m_curl, CURLOPT_URL, url);
 
    if (curl_easy_perform(m_curl) == CURLE_OK)
@@ -565,6 +572,44 @@ unique_ptr<ObjectArray<ProjectComponent>> JiraLink::getProjectComponents(const c
    }
 
    return components;
+}
+
+/**
+ * Process comment update from Jira webhook
+ */
+void JiraLink::onWebhookCommentUpdate(const TCHAR *hdref, const TCHAR *text)
+{
+   bool found = false;
+   lock();
+   removeExpiredComments();
+   for(int i = 0; i < m_recentComments.size(); i++)
+   {
+      Comment *c = m_recentComments.get(i);
+      if (!_tcscmp(c->issue, hdref) && !_tcscmp(c->text, text))
+      {
+         found = true;
+         break;
+      }
+   }
+   unlock();
+   if (!found)
+      onNewComment(hdref, text);
+}
+
+/**
+ * Remove expired comments from list
+ */
+void JiraLink::removeExpiredComments()
+{
+   time_t threshold = time(nullptr) - 3600;
+   for(int i = 0; i < m_recentComments.size(); i++)
+   {
+      if (m_recentComments.get(i)->timestamp < threshold)
+      {
+         m_recentComments.remove(i);
+         i--;
+      }
+   }
 }
 
 /**
