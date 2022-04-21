@@ -18,6 +18,9 @@
     <ClCompile Include="jira.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="webhook.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="jira.h">

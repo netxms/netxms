@@ -760,8 +760,7 @@ bool TelegramDriver::send(const TCHAR *recipient, const TCHAR *subject, const TC
       {
          nxlog_debug_tag(DEBUG_TAG, 4, _T("Cannot send message from bot %s to recipient %s: invalid API response"), m_botName, recipient);
       }
-      if (response != NULL)
-         json_decref(response);
+      json_decref(response);
    }
    else
    {
