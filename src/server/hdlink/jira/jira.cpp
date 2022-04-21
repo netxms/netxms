@@ -307,22 +307,25 @@ uint32_t JiraLink::openIssue(const TCHAR *description, TCHAR *hdref)
 
    TCHAR projectComponent[JIRA_MAX_COMPONENT_NAME_LEN];
    ConfigReadStr(_T("Jira.ProjectComponent"), projectComponent, JIRA_MAX_COMPONENT_NAME_LEN, _T(""));
-   unique_ptr<ObjectArray<ProjectComponent>> projectComponents = getProjectComponents(projectCode);
-   if ((projectComponent[0] != 0) && (projectComponents != nullptr))
+   if (projectComponent[0] != 0)
    {
-      for(int i = 0; i < projectComponents->size(); i++)
+      unique_ptr<ObjectArray<ProjectComponent>> projectComponents = getProjectComponents(projectCode);
+      if (projectComponents != nullptr)
       {
-         ProjectComponent *c = projectComponents->get(i);
-         if (!_tcsicmp(c->m_name, projectComponent))
+         for (int i = 0; i < projectComponents->size(); i++)
          {
-            json_t *components = json_array();
-            json_t *component = json_object();
-            char buffer[32];
-            snprintf(buffer, 32, INT64_FMTA, c->m_id);
-            json_object_set_new(component, "id", json_string(buffer));
-            json_array_append_new(components, component);
-            json_object_set_new(fields, "components", components);
-            break;
+            ProjectComponent *c = projectComponents->get(i);
+            if (!_tcsicmp(c->m_name, projectComponent))
+            {
+               json_t *components = json_array();
+               json_t *component = json_object();
+               char buffer[32];
+               snprintf(buffer, 32, INT64_FMTA, c->m_id);
+               json_object_set_new(component, "id", json_string(buffer));
+               json_array_append_new(components, component);
+               json_object_set_new(fields, "components", components);
+               break;
+            }
          }
       }
    }
