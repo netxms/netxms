@@ -182,7 +182,7 @@ InterfaceList *CiscoNexusDriver::getInterfaces(SNMP_Transport *snmp, NObject *no
 /**
  * Handler for VLAN enumeration
  */
-static UINT32 HandlerVlanList(SNMP_Variable *var, SNMP_Transport *transport, void *arg)
+static uint32_t HandlerVlanList(SNMP_Variable *var, SNMP_Transport *transport, void *arg)
 {
    VlanList *vlanList = static_cast<VlanList*>(arg);
 
@@ -232,7 +232,7 @@ static void AddPortToVLANs(SNMP_Variable *v, int baseId, VlanList *vlanList)
 /**
  * Handler for VLAN ports enumeration
  */
-static UINT32 HandlerVlanPorts(SNMP_Variable *var, SNMP_Transport *transport, void *arg)
+static uint32_t HandlerVlanPorts(SNMP_Variable *var, SNMP_Transport *transport, void *arg)
 {
    VlanList *vlanList = static_cast<VlanList*>(arg);
 
@@ -283,7 +283,7 @@ static UINT32 HandlerVlanPorts(SNMP_Variable *var, SNMP_Transport *transport, vo
 /**
  * Handler for VLAN ports enumeration
  */
-static UINT32 HandlerVlanTrunkPorts(SNMP_Variable *var, SNMP_Transport *transport, void *arg)
+static uint32_t HandlerVlanTrunkPorts(SNMP_Variable *var, SNMP_Transport *transport, void *arg)
 {
    auto context = static_cast<std::pair<VlanList*, int>*>(arg);
    AddPortToVLANs(var, context->second, context->first);

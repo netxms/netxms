@@ -15,6 +15,12 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="airmax.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="edgeswitch.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="ubnt.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

@@ -1,3 +1,3 @@
 EXTRA_DIST = \
 	ubnt.vcxproj ubnt.vcxproj.filters \
-	ubnt.cpp ubnt.h
+	airmax.cpp edgeswitch.cpp ubnt.cpp ubnt.h

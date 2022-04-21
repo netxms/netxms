@@ -171,6 +171,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="airmax.cpp" />
+    <ClCompile Include="edgeswitch.cpp" />
     <ClCompile Include="ubnt.cpp" />
   </ItemGroup>
   <ItemGroup>

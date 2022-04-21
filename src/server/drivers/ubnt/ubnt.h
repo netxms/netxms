@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
-** Driver for Ubiquity Networks access points
-** Copyright (C) 2003-2014 Victor Kirhenshtein
+** Drivers for Ubiquiti Networks devices
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -26,21 +26,37 @@
 
 #include <nddrv.h>
 
+#define DEBUG_TAG_UBNT  _T("ndd.ubnt")
 
 /**
- * Driver's class
+ * Driver for AirMAX devices
  */
-class UbiquityNetworksDriver : public NetworkDeviceDriver
+class UbiquitiAirMaxDriver : public NetworkDeviceDriver
 {
 public:
-	virtual const TCHAR *getName();
-	virtual const TCHAR *getVersion();
+	virtual const TCHAR *getName() override;
+	virtual const TCHAR *getVersion() override;
 
-	virtual int isPotentialDevice(const TCHAR *oid);
-	virtual bool isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid);
-   virtual bool isWirelessController(SNMP_Transport *snmp, NObject *node, DriverData *driverData);
-   virtual ObjectArray<AccessPointInfo> *getAccessPoints(SNMP_Transport *snmp, NObject *node, DriverData *driverData);
-   virtual ObjectArray<WirelessStationInfo> *getWirelessStations(SNMP_Transport *snmp, NObject *node, DriverData *driverData);
+	virtual int isPotentialDevice(const TCHAR *oid) override;
+	virtual bool isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid) override;
+   virtual bool isWirelessController(SNMP_Transport *snmp, NObject *node, DriverData *driverData) override;
+   virtual ObjectArray<AccessPointInfo> *getAccessPoints(SNMP_Transport *snmp, NObject *node, DriverData *driverData) override;
+   virtual ObjectArray<WirelessStationInfo> *getWirelessStations(SNMP_Transport *snmp, NObject *node, DriverData *driverData) override;
+};
+
+/**
+ * Driver for EdgeSwitch devices
+ */
+class UbiquitiEdgeSwitchDriver : public NetworkDeviceDriver
+{
+public:
+   virtual const TCHAR *getName() override;
+   virtual const TCHAR *getVersion() override;
+
+   virtual int isPotentialDevice(const TCHAR *oid) override;
+   virtual bool isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid) override;
+   virtual bool getHardwareInformation(SNMP_Transport *snmp, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo) override;
+   virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, int useAliases, bool useIfXTable) override;
 };
 
 #endif

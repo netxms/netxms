@@ -318,35 +318,35 @@ private:
    }
 
 public:
-   UINT32 index;
+   uint32_t index;
    TCHAR name[MAX_DB_STRING];			// Interface display name
 	TCHAR description[MAX_DB_STRING];	// Value of ifDescr MIB variable for SNMP agents
 	TCHAR alias[MAX_DB_STRING];	// Value of ifDescr MIB variable for SNMP agents
-   UINT32 type;
-   UINT32 mtu;
-   UINT64 speed;  // interface speed in bits/sec
-	UINT32 bridgePort;
+	uint32_t type;
+	uint32_t mtu;
+   uint64_t speed;  // interface speed in bits/sec
+   uint32_t bridgePort;
 	InterfacePhysicalLocation location;
    InetAddressList ipAddrList;
    BYTE macAddr[MAC_ADDR_LENGTH];
 	bool isPhysicalPort;
    bool isSystem;
-   UINT32 ifTableSuffix[16];   // actual ifTable suffix
+   uint32_t ifTableSuffix[16];   // actual ifTable suffix
    int ifTableSuffixLength;
-   UINT32 parentIndex;
+   uint32_t parentIndex;
 
-   InterfaceInfo(UINT32 ifIndex)
+   InterfaceInfo(uint32_t ifIndex)
    {
       index = ifIndex;
       ifTableSuffixLength = 0;
       init();
    }
 
-   InterfaceInfo(UINT32 ifIndex, int suffixLen, const UINT32 *suffix)
+   InterfaceInfo(uint32_t ifIndex, int suffixLen, const uint32_t *suffix)
    {
       index = ifIndex;
       ifTableSuffixLength = ((suffixLen >= 0) && (suffixLen < 16)) ? suffixLen : 0;
-      memcpy(ifTableSuffix, suffix, ifTableSuffixLength * sizeof(UINT32));
+      memcpy(ifTableSuffix, suffix, ifTableSuffixLength * sizeof(uint32_t));
       init();
    }
 
@@ -392,9 +392,9 @@ public:
  */
 struct VlanPortInfo
 {
-   UINT32 portId;    // device or driver specific port ID
-   UINT32 objectId;
-   UINT32 ifIndex;
+   uint32_t portId;    // device or driver specific port ID
+   uint32_t objectId;
+   uint32_t ifIndex;
    InterfacePhysicalLocation location;
 };
 
