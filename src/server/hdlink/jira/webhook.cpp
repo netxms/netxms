@@ -26,6 +26,10 @@
 
 #include <microhttpd.h>
 
+#if MHD_VERSION < 0x00097002
+#define MHD_Result int
+#endif
+
 /**
  * Process webhook call
  */
@@ -114,11 +118,7 @@ static int ProcessWebhookCall(const char *data, JiraLink *link)
 /**
  * Dump HTTP request headers
  */
-#if MHD_VERSION >= 0x00097002
 static MHD_Result DumpHeaders(void *context, MHD_ValueKind kind, const char *key, const char *value)
-#else
-static int DumpHeaders(void *context, MHD_ValueKind kind, const char *key, const char *value)
-#endif
 {
    nxlog_debug_tag(JIRA_DEBUG_TAG, 7, _T("   %hs: %hs"), key, value);
    return MHD_YES;
@@ -127,11 +127,7 @@ static int DumpHeaders(void *context, MHD_ValueKind kind, const char *key, const
 /**
  * Connection handler
  */
-#if MHD_VERSION >= 0x00097002
 static MHD_Result ConnectionHandler(void *context, MHD_Connection *connection, const char *url, const char *method, const char *version, const char *uploadData, size_t *uploadDataSize, void **connectionContext)
-#else
-static int ConnectionHandler(void *context, MHD_Connection *connection, const char *url, const char *method,  const char *version, const char *uploadData, size_t *uploadDataSize, void **connectionContext)
-#endif
 {
    if (*connectionContext == nullptr)
    {
