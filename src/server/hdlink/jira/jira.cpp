@@ -309,24 +309,28 @@ uint32_t JiraLink::openIssue(const TCHAR *description, TCHAR *hdref)
 
    TCHAR projectComponent[JIRA_MAX_COMPONENT_NAME_LEN];
    ConfigReadStr(_T("Jira.ProjectComponent"), projectComponent, JIRA_MAX_COMPONENT_NAME_LEN, _T(""));
-   unique_ptr<ObjectArray<ProjectComponent>> projectComponents = getProjectComponents(projectCode);
-   if ((projectComponent[0] != 0) && (projectComponents != nullptr))
+   if (projectComponent[0] != 0)
    {
-      for(int i = 0; i < projectComponents->size(); i++)
+      ObjectArray<ProjectComponent> *projectComponents = getProjectComponents(projectCode);
+      if (projectComponents != nullptr)
       {
-         ProjectComponent *c = projectComponents->get(i);
-         if (!_tcsicmp(c->m_name, projectComponent))
+         for (int i = 0; i < projectComponents->size(); i++)
          {
-            json_t *components = json_array();
-            json_t *component = json_object();
-            char buffer[32];
-            snprintf(buffer, 32, INT64_FMTA, c->m_id);
-            json_object_set_new(component, "id", json_string(buffer));
-            json_array_append_new(components, component);
-            json_object_set_new(fields, "components", components);
-            break;
+            ProjectComponent *c = projectComponents->get(i);
+            if (!_tcsicmp(c->m_name, projectComponent))
+            {
+               json_t *components = json_array();
+               json_t *component = json_object();
+               char buffer[32];
+               snprintf(buffer, 32, INT64_FMTA, c->m_id);
+               json_object_set_new(component, "id", json_string(buffer));
+               json_array_append_new(components, component);
+               json_object_set_new(fields, "components", components);
+               break;
+            }
          }
       }
+      delete projectComponents;
    }
 
    ByteStream responseData(32768);
@@ -502,9 +506,9 @@ bool JiraLink::getIssueUrl(const TCHAR *hdref, TCHAR *url, size_t size)
 /**
  * Get list of project's components
  */
-unique_ptr<ObjectArray<ProjectComponent>> JiraLink::getProjectComponents(const char *project)
+ObjectArray<ProjectComponent> *JiraLink::getProjectComponents(const char *project)
 {
-   unique_ptr<ObjectArray<ProjectComponent>> components;
+   ObjectArray<ProjectComponent> *components = nullptr;
 
    ByteStream responseData(32768);
    responseData.setAllocationStep(32768);
@@ -535,7 +539,7 @@ unique_ptr<ObjectArray<ProjectComponent>> JiraLink::getProjectComponents(const c
             {
                nxlog_debug_tag(JIRA_DEBUG_TAG, 4, _T("Got components list for Jira project %hs"), project);
                int size = (int)json_array_size(root);
-               components = make_unique<ObjectArray<ProjectComponent>>(size, 8, Ownership::True);
+               components = new ObjectArray<ProjectComponent>(size, 8, Ownership::True);
                for(int i = 0; i < size; i++)
                {
                   json_t *e = json_array_get(root, i);

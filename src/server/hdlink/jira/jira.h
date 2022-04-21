@@ -101,7 +101,7 @@ private:
 
    void removeExpiredComments();
 
-   unique_ptr<ObjectArray<ProjectComponent>> getProjectComponents(const char *project);
+   ObjectArray<ProjectComponent> *getProjectComponents(const char *project);
 
 public:
    JiraLink();
