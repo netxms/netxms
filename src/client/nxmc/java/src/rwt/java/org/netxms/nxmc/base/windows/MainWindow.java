@@ -122,8 +122,8 @@ public class MainWindow extends Window implements MessageAreaHolder
       NXCSession session = Registry.getSession();
       shell.setText(String.format(i18n.tr("NetXMS Management Client - %s"), session.getUserName() + "@" + session.getServerAddress()));
 
-      shell.setFullScreen(true);
       shell.setMaximized(true);
+      shell.setFullScreen(true);
 
       shell.addDisposeListener(new DisposeListener() {
          @Override

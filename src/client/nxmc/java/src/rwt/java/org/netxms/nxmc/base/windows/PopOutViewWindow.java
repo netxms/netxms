@@ -63,13 +63,13 @@ public class PopOutViewWindow extends Window implements MessageAreaHolder
     * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
     */
    @Override
-   protected void configureShell(Shell newShell)
+   protected void configureShell(Shell shell)
    {
-      super.configureShell(newShell);
-      newShell.setText(view.getFullName());
-      Point shellSize = PreferenceStore.getInstance().getAsPoint("PopupWindowSize." + view.getBaseId(), null);
-      if (shellSize != null)
-         newShell.setSize(shellSize);
+      super.configureShell(shell);
+      shell.setText(view.getFullName());
+
+      shell.setMaximized(true);
+      shell.setFullScreen(true);
    }
 
    /**

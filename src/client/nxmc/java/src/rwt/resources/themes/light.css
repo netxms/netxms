@@ -577,7 +577,7 @@ Shell.PopupWindow {
 Shell[TITLE], Shell[BORDER] {
   box-shadow: 5px 5px 3px rgba( 0, 0, 0, 0.5 );
   border: 1px solid #B3B3B3;
-  padding: 5px;
+  padding: 0px;
 }
 
 Shell[BORDER]:inactive, Shell[TITLE]:inactive {
