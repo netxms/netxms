@@ -81,6 +81,9 @@ public class Startup implements EntryPoint, StartupParameters
    {
       display = new Display();
 
+      display.setData(RWT.CANCEL_KEYS, new String[] { "CTRL+F", "F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10" });
+      display.setData(RWT.ACTIVE_KEYS, new String[] { "CTRL+F", "CTRL+F2", "F5", "F7", "F8", "F10" });
+
       File tempDir = (File)RWT.getUISession().getHttpSession().getServletContext().getAttribute("javax.servlet.context.tempdir");
       File stateDir = new File(tempDir + File.separator + "state");
       if (!stateDir.isDirectory())
