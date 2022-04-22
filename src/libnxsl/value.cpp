@@ -462,8 +462,9 @@ void NXSL_Value::updateNumber()
    if (s[0] == 0)
       return;
 
+   int radix = (((s[0] == '-') && (s[1] == '0') && (s[2] == 'x')) || ((s[0] == '0') && (s[1] == 'x'))) ? 16 : 10;
    TCHAR *eptr;
-   int64_t nVal = _tcstoll(s, &eptr, 0);
+   int64_t nVal = _tcstoll(s, &eptr, radix);
    if ((*eptr == 0) && ((uint32_t)(eptr - s) == m_length))
    {
       if ((nVal > _LL(2147483647)) || (nVal < _LL(-2147483648)))

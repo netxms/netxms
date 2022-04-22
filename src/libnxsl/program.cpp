@@ -427,6 +427,16 @@ uint32_t NXSL_ProgramBuilder::getFinalJumpDestination(uint32_t addr, int srcJump
 }
 
 /**
+ * Check if constant represented as NXSL_Value object can be converted to numeric representation
+ */
+template<typename T> static inline bool ValidateConstantConversion(T intValue, const TCHAR *format, const TCHAR *strValue)
+{
+   TCHAR buffer[32];
+   _sntprintf(buffer, 32, format, intValue);
+   return !_tcscmp(buffer, strValue);
+}
+
+/**
  * Optimize compiled program
  */
 void NXSL_ProgramBuilder::optimize()
@@ -460,32 +470,36 @@ void NXSL_ProgramBuilder::optimize()
             destroyValue(instr->m_operand.m_constant);
             break;
          case NXSL_DT_INT32:
-            instr->m_opCode = OPCODE_PUSH_INT32;
+            if (ValidateConstantConversion(instr->m_operand.m_constant->getValueAsInt32(), _T("%d"), instr->m_operand.m_constant->getValueAsCString()))
             {
+               instr->m_opCode = OPCODE_PUSH_INT32;
                int32_t i32 = instr->m_operand.m_constant->getValueAsInt32();
                destroyValue(instr->m_operand.m_constant);
                instr->m_operand.m_valueInt32 = i32;
             }
             break;
          case NXSL_DT_INT64:
-            instr->m_opCode = OPCODE_PUSH_INT64;
+            if (ValidateConstantConversion(instr->m_operand.m_constant->getValueAsInt64(), INT64_FMT, instr->m_operand.m_constant->getValueAsCString()))
             {
+               instr->m_opCode = OPCODE_PUSH_INT64;
                int64_t i64 = instr->m_operand.m_constant->getValueAsInt64();
                destroyValue(instr->m_operand.m_constant);
                instr->m_operand.m_valueInt64 = i64;
             }
             break;
          case NXSL_DT_UINT32:
-            instr->m_opCode = OPCODE_PUSH_UINT32;
+            if (ValidateConstantConversion(instr->m_operand.m_constant->getValueAsUInt32(), _T("%u"), instr->m_operand.m_constant->getValueAsCString()))
             {
+               instr->m_opCode = OPCODE_PUSH_UINT32;
                uint32_t u32 = instr->m_operand.m_constant->getValueAsUInt32();
                destroyValue(instr->m_operand.m_constant);
                instr->m_operand.m_valueInt32 = u32;
             }
             break;
          case NXSL_DT_UINT64:
-            instr->m_opCode = OPCODE_PUSH_UINT64;
+            if (ValidateConstantConversion(instr->m_operand.m_constant->getValueAsUInt64(), UINT64_FMT, instr->m_operand.m_constant->getValueAsCString()))
             {
+               instr->m_opCode = OPCODE_PUSH_UINT64;
                uint64_t u64 = instr->m_operand.m_constant->getValueAsUInt64();
                destroyValue(instr->m_operand.m_constant);
                instr->m_operand.m_valueUInt64 = u64;
