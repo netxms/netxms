@@ -176,3 +176,19 @@ bool LIBNXAGENT_EXPORTABLE AgentGetParameterArgW(const TCHAR *param, int index, 
 	return success;
 #endif
 }
+
+/**
+ * Convert test to integer type representation
+ */
+int TextToDataType(const TCHAR *name)
+{
+   int dataType = -1;
+   static const TCHAR *dtNames[] = { _T("int32"), _T("uint32"), _T("int64"), _T("uint64"), _T("string"), _T("float"), _T("null"), _T("counter32"), _T("counter64"), nullptr };
+   for(int i = 0; dtNames[i] != nullptr; i++)
+      if (!_tcsicmp(dtNames[i], name))
+      {
+         dataType = i;
+         break;
+      }
+   return dataType;
+}

@@ -510,14 +510,7 @@ static int F_CreateDCI(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_
 	}
 	else
 	{
-	   static const TCHAR *dtNames[] = { _T("int32"), _T("uint32"), _T("int64"), _T("uint64"), _T("string"), _T("float"), _T("null"), _T("counter32"), _T("counter64"), nullptr };
-      const TCHAR *name = argv[4]->getValueAsCString();
-      for(int i = 0; dtNames[i] != nullptr; i++)
-         if (!_tcsicmp(dtNames[i], name))
-         {
-            dataType = i;
-            break;
-         }
+      dataType = TextToDataType(argv[4]->getValueAsCString());
 	}
 
 	StringBuffer type = argv[5]->isString() ? argv[5]->getValueAsCString() : _T("");

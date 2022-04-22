@@ -794,7 +794,30 @@ bool AddExternalTable(TCHAR *config)
 bool AddExternalTable(ConfigEntry *config)
 {
    ExternalTableDefinition *td = new ExternalTableDefinition();
-   td->separator = config->getSubEntryValue(_T("Separator"), 0, _T(","))[0];
+   TCHAR *separator = MemCopyString(config->getSubEntryValue(_T("Separator"), 0, _T(",")));
+   if (separator[0] == _T('\\'))
+   {
+      switch(separator[1])
+      {
+         case 'n':
+            separator[0] = _T('\n');
+            break;
+         case 'r':
+            separator[0] = _T('\r');
+            break;
+         case 's':
+            separator[0] = _T(' ');
+            break;
+         case 't':
+            separator[0] = _T('\t');
+            break;
+         case 'u':
+            separator[0] = (TCHAR)_tcstoul(&separator[2], nullptr, 10);
+            break;
+      }
+   }
+   td->separator = separator[0];
+   MemFree(separator);
 
    TCHAR fullCmd[MAX_CMD_LEN + 1];
    fullCmd[0] = config->getSubEntryValueAsBoolean(_T("ShellExec"), 0, false) ? _T('E') : _T('S');
@@ -802,6 +825,29 @@ bool AddExternalTable(ConfigEntry *config)
    td->cmdLine = MemCopyString(fullCmd);
 
    td->instanceColumns = SplitString(config->getSubEntryValue(_T("InstanceColumns"), 0, _T("")), _T(','), &td->instanceColumnCount);
+   unique_ptr<ObjectArray<ConfigEntry>> columnTypes = config->getSubEntries(_T("ColumnType"));
+   if (columnTypes != NULL && columnTypes->size() > 0)
+   {
+      ConfigEntry *configEntry = columnTypes->get(0);
+      for (int i = 0; i < configEntry->getValueCount(); i++)
+      {
+         TCHAR *line = MemCopyString(configEntry->getValue(i));
+         TCHAR *textDataType = _tcschr(line, _T(':'));
+         if (textDataType != nullptr)
+         {
+            *textDataType = 0;
+            textDataType++;
+            Trim(line);
+            Trim(textDataType);
+            if ((*line != 0) && (*textDataType != 0))
+            {
+               int dataType = TextToDataType(textDataType);
+               td->columnDataTypes.set(line, dataType == -1 ? DCI_DT_INT : dataType);
+            }
+         }
+         MemFree(line);
+      }
+   }
    if (config->getSubEntryValueAsInt(_T("PollingInterval"), 0, -1) >= 0)
    {
       AddTableProvider(config->getName(), td, config->getSubEntryValueAsUInt(_T("PollingInterval"), 0, 60), config->getSubEntryValue(_T("Description")));

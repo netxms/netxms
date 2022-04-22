@@ -149,7 +149,8 @@ void ParseExternalTableData(const ExternalTableDefinition& td, const StringList&
             instanceColumn = true;
             break;
          }
-      table->addColumn(columns[n], DCI_DT_INT, columns[n], instanceColumn);
+      int dataType = td.columnDataTypes.getInt32(columns[n], DCI_DT_INT);
+      table->addColumn(columns[n], dataType, columns[n], instanceColumn);
       MemFree(columns[n]);
    }
    MemFree(columns);

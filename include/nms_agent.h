@@ -1354,6 +1354,8 @@ void LIBNXAGENT_EXPORTABLE ReloadAllCRLs();
 
 void LIBNXAGENT_EXPORTABLE TCPScanAddressRange(const InetAddress& from, const InetAddress& to, uint16_t port, void (*callback)(const InetAddress&, uint32_t, void*), void *context);
 
+int LIBNXAGENT_EXPORTABLE TextToDataType(const TCHAR *name);
+
 /**
  * Wrapper for SleepAndCheckForShutdownEx (for backward compatibility)
  * @return True if shutdown was initiated.

@@ -146,6 +146,7 @@ struct ExternalTableDefinition
    TCHAR separator;
    int instanceColumnCount;
    TCHAR **instanceColumns;
+   StringMap columnDataTypes;
 
    ExternalTableDefinition()
    {
