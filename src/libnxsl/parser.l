@@ -45,6 +45,23 @@ static void LexerError(const char *pszMsg, yyscan_t scanner);
 
 #define LEXER_ERROR	255
 
+static inline int64_t StringToInt64(const char *s)
+{
+	if (s[0] == '-')
+		return ((s[1] == '0') && (s[2] == 'x')) ? -strtoll(&s[3], nullptr, 16) : strtoll(s, nullptr, 10);
+   return ((s[0] == '0') && (s[1] == 'x')) ? strtoll(&s[2], nullptr, 16) : strtoll(s, nullptr, 10);
+}
+
+static inline uint64_t StringToUInt64(const char *s)
+{
+   return ((s[0] == '0') && (s[1] == 'x')) ? strtoull(&s[2], nullptr, 16) : strtoull(s, nullptr, 10);
+}
+
+static inline uint32_t StringToUInt32(const char *s)
+{
+   return ((s[0] == '0') && (s[1] == 'x')) ? strtoul(&s[2], nullptr, 16) : strtoul(s, nullptr, 10);
+}
+
 %}
 
 %%
@@ -101,7 +118,7 @@ static void LexerError(const char *pszMsg, yyscan_t scanner);
 <INITIAL>{identifier}	{ strlcpy(yylval->valIdentifier.v, yytext, MAX_IDENTIFIER_LENGTH); return T_IDENTIFIER; }
 <INITIAL>{compound_ident} { strlcpy(yylval->valIdentifier.v, yytext, MAX_IDENTIFIER_LENGTH); return T_COMPOUND_IDENTIFIER; }
 <INITIAL>{integer}	{
-				int64_t nVal = strtoll(yytext, nullptr, 0);
+				int64_t nVal = StringToInt64(yytext);
 				if ((nVal < -2147483647) || (nVal > 2147483647))
 				{
 					yylval->valInt64 = nVal;
@@ -113,9 +130,9 @@ static void LexerError(const char *pszMsg, yyscan_t scanner);
 					return T_INT32;
 				}
 			}
-<INITIAL>{uint32} { yylval->valUInt32 = strtoul(yytext, nullptr, 0); return T_UINT32; }
-<INITIAL>{int64}  { yylval->valInt64 = strtoll(yytext, nullptr, 0); return T_INT64; }
-<INITIAL>{uint64} { yylval->valUInt64 = strtoull(yytext, nullptr, 0); return T_UINT64; }
+<INITIAL>{uint32} { yylval->valUInt32 = StringToUInt32(yytext); return T_UINT32; }
+<INITIAL>{int64}  { yylval->valInt64 = StringToInt64(yytext); return T_INT64; }
+<INITIAL>{uint64} { yylval->valUInt64 = StringToUInt64(yytext); return T_UINT64; }
 <INITIAL>{real}   { yylval->valReal = strtod(yytext, nullptr); return T_REAL; }
 
 <INITIAL>"=="	return T_EQ;
