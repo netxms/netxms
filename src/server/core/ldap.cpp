@@ -386,7 +386,7 @@ void LDAPConnection::open()
 void LDAPConnection::syncUsers()
 {
    open();
-   uint32_t rcc = login();
+   uint32_t rcc = login(true);
    if (rcc != RCC_SUCCESS)
    {
       nxlog_debug_tag(LDAP_DEBUG_TAG, 6, _T("LDAPConnection::syncUsers(): login failed (error %u)"), rcc);
@@ -1035,7 +1035,7 @@ uint32_t LDAPConnection::ldapUserLogin(const TCHAR *name, const TCHAR *password)
    strlcpy(m_userDN, name, MAX_CONFIG_VALUE);
    strlcpy(m_userPassword, password, MAX_PASSWORD);
 #endif // UNICODE
-   result = login();
+   result = login(false);
    close();
    return result;
 }
@@ -1043,19 +1043,21 @@ uint32_t LDAPConnection::ldapUserLogin(const TCHAR *name, const TCHAR *password)
 /**
  * Autentificate LDAP user
  */
- uint32_t LDAPConnection::login()
+ uint32_t LDAPConnection::login(bool isSync)
  {
    // Prevent empty password, bind against AD will succeed with
    // empty password by default.
    if (ldap_strlen(m_userPassword) == 0)
    {
-      PostSystemEvent(EVENT_LDAP_SYNC_ERROR ,g_dwMgmtNode, "issss", 0, _T(""), m_userDN, _T(""), _T("User password should not be empty"));
+      if (isSync)
+         PostSystemEvent(EVENT_LDAP_SYNC_ERROR ,g_dwMgmtNode, "issss", 0, _T(""), m_userDN, _T(""), _T("User password should not be empty"));
       return RCC_ACCESS_DENIED;
    }
 
    if (m_ldapConn == nullptr)
    {
-      PostSystemEvent(EVENT_LDAP_SYNC_ERROR ,g_dwMgmtNode, "issss", 0, _T(""), m_userDN, _T(""), _T("No LDAP connection"));
+      if (isSync)
+         PostSystemEvent(EVENT_LDAP_SYNC_ERROR ,g_dwMgmtNode, "issss", 0, _T(""), m_userDN, _T(""), _T("No LDAP connection"));
       return RCC_NO_LDAP_CONNECTION;
    }
 
@@ -1075,7 +1077,8 @@ uint32_t LDAPConnection::ldapUserLogin(const TCHAR *name, const TCHAR *password)
 
    TCHAR description[MAX_USER_DESCR];
    _sntprintf(description, MAX_USER_DESCR, _T("Cannot login to LDAP server (%s)"), errorString.cstr());
-   PostSystemEvent(EVENT_LDAP_SYNC_ERROR ,g_dwMgmtNode, "issss", 0, _T(""), m_userDN, _T(""), description);
+   if (isSync)
+      PostSystemEvent(EVENT_LDAP_SYNC_ERROR ,g_dwMgmtNode, "issss", 0, _T(""), m_userDN, _T(""), description);
    return RCC_ACCESS_DENIED;
 }
 

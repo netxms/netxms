@@ -151,7 +151,7 @@ private:
 
    void open();
    void close();
-   uint32_t login();
+   uint32_t login(bool isSync);
    void compareGroupList();
    void compareUserLists();
    TCHAR *getAttrValue(LDAPMessage *entry, const char *attr, int index = 0);
