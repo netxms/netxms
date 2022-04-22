@@ -106,10 +106,10 @@ int SocketPoller::poll(uint32_t timeout)
    if (timeout == INFINITE)
    {
 #ifdef _WIN32
-      int rc = select(0, m_write ? nullptr : &m_rwDescriptors, m_write ? &m_rwDescriptors : nullptr, nullptr, nullptr);
+      int rc = select(0, m_write ? nullptr : &m_rwDescriptors, m_write ? &m_rwDescriptors : nullptr, &m_exDescriptors, nullptr);
       m_invalidDescriptor = ((rc == -1) && (WSAGetLastError() == WSAENOTSOCK));
 #else
-      int rc = select(SELECT_NFDS(m_maxfd + 1), m_write ? nullptr : &m_rwDescriptors, m_write ? &m_rwDescriptors : nullptr, nullptr, nullptr);
+      int rc = select(SELECT_NFDS(m_maxfd + 1), m_write ? nullptr : &m_rwDescriptors, m_write ? &m_rwDescriptors : nullptr, &m_exDescriptors, nullptr);
       m_invalidDescriptor = ((rc == -1) && (errno == EBADF));
 #endif
       return rc;
@@ -120,7 +120,7 @@ int SocketPoller::poll(uint32_t timeout)
 #ifdef _WIN32
       tv.tv_sec = timeout / 1000;
       tv.tv_usec = (timeout % 1000) * 1000;
-      int rc = select(0, m_write ? nullptr : &m_rwDescriptors, m_write ? &m_rwDescriptors : nullptr, nullptr, &tv);
+      int rc = select(0, m_write ? nullptr : &m_rwDescriptors, m_write ? &m_rwDescriptors : nullptr, &m_exDescriptors, &tv);
       m_invalidDescriptor = ((rc == -1) && (WSAGetLastError() == WSAENOTSOCK));
       return rc;
 #else
@@ -130,7 +130,7 @@ int SocketPoller::poll(uint32_t timeout)
          tv.tv_sec = timeout / 1000;
          tv.tv_usec = (timeout % 1000) * 1000;
          int64_t startTime = GetCurrentTimeMs();
-         rc = select(m_maxfd + 1, m_write ? nullptr : &m_rwDescriptors, m_write ? &m_rwDescriptors : nullptr, nullptr, &tv);
+         rc = select(m_maxfd + 1, m_write ? nullptr : &m_rwDescriptors, m_write ? &m_rwDescriptors : nullptr, &m_exDescriptors, &tv);
          if ((rc != -1) || (errno != EINTR))
             break;
          uint32_t elapsed = static_cast<uint32_t>(GetCurrentTimeMs() - startTime);
@@ -156,7 +156,7 @@ bool SocketPoller::isSet(SOCKET s)
    }
    return false;
 #else
-   return FD_ISSET(s, &m_rwDescriptors) || FD_ISSET(s, &m_exDescriptors) ? true : false;
+   return (FD_ISSET(s, &m_rwDescriptors) || FD_ISSET(s, &m_exDescriptors)) ? true : false;
 #endif
 }
 
