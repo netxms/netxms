@@ -40,6 +40,8 @@ import org.eclipse.rap.rwt.service.ServiceHandler;
  */
 public class DownloadServiceHandler implements ServiceHandler
 {
+   public static final String ID = "downloadServiceHandler";
+
 	private static Map<String, DownloadInfo> downloads = new HashMap<String, DownloadInfo>();
 	private static Deque<String> iframeIds = new ArrayDeque<String>(16);
 
@@ -108,7 +110,7 @@ public class DownloadServiceHandler implements ServiceHandler
 	 */
 	public static String createDownloadUrl(String id)
 	{
-		StringBuilder url = new StringBuilder(RWT.getServiceManager().getServiceHandlerUrl("downloadServiceHandler"));
+      StringBuilder url = new StringBuilder(RWT.getServiceManager().getServiceHandlerUrl(ID));
 		url.append("&id=");
 		url.append(id);
 		return RWT.getResponse().encodeURL(url.toString());
