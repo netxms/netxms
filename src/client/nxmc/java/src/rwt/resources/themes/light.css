@@ -1930,21 +1930,26 @@ Label.standaloneView {
 
 /* Custom Variants */
 
+Composite.LoginForm {
+   border: solid 2px #666666;
+   border-radius: 6px;
+   box-shadow: none;
+   opacity: 0.9;
+}
+
 Label.login {
    color: #00364D;
-   background-color: #D8E3E9;
    font: 16px "Metropolis Regular", "Segoe UI", "Liberation Sans", Verdana, Helvetica, sans-serif;
 }
 
 Text.login {
   font: 18px "Metropolis Regular", "Segoe UI", "Liberation Sans", Verdana, Helvetica, sans-serif;
-  background-color: #D8E3E9;
   color: #00364D;
 }
 
 Text.login[BORDER] {
-   border: none;
-   border-bottom: 2px solid #00364D;
+   border-radius: 4px;
+   border: solid 2px #666666;
 }
 
 Button.login[PUSH] {
@@ -2056,13 +2061,6 @@ ProgressBar-Indicator.login {
    background-image: none;
    border: none;
    opacity: 1;
-}
-
-Composite.LoginForm {
-  background-color: #D8E3E9;
-  border: none;
-  border-radius: 8px;
-  box-shadow: 4px 4px 3px 0px #808080; 
 }
 
 ToolBar.menuBar {

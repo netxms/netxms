@@ -21,11 +21,10 @@ package org.netxms.nxmc;
 import static org.eclipse.rap.rwt.RWT.getClient;
 import java.io.File;
 import java.lang.reflect.InvocationTargetException;
-import java.security.Signature;
-import java.security.cert.Certificate;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import javax.servlet.http.HttpServletRequest;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.dialogs.ProgressMonitorDialog;
@@ -37,17 +36,12 @@ import org.eclipse.rap.rwt.client.service.StartupParameters;
 import org.eclipse.rap.rwt.internal.application.ApplicationContextImpl;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.base.VersionInfo;
-import org.netxms.certificate.loader.KeyStoreRequestListener;
-import org.netxms.certificate.manager.CertificateManager;
 import org.netxms.certificate.manager.CertificateManagerProvider;
-import org.netxms.certificate.request.KeyStoreEntryPasswordRequestListener;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.AuthenticationType;
 import org.netxms.nxmc.base.dialogs.PasswordExpiredDialog;
-import org.netxms.nxmc.base.dialogs.PasswordRequestDialog;
 import org.netxms.nxmc.base.login.LoginDialog;
 import org.netxms.nxmc.base.login.LoginJob;
 import org.netxms.nxmc.base.windows.MainWindow;
@@ -113,7 +107,7 @@ public class Startup implements EntryPoint, StartupParameters
       shell.setMaximized(true);
       shell.open();
 
-      if (!doLogin(new String[0])) // FIXME: parse arguments
+      if (!doLogin())
       {
          logger.info("Application instance exit");
          display.dispose();
@@ -139,70 +133,37 @@ public class Startup implements EntryPoint, StartupParameters
    /**
     * Show login dialog and perform login
     */
-   private boolean doLogin(String[] args)
+   private boolean doLogin()
    {
       PreferenceStore settings = PreferenceStore.getInstance();
       boolean success = false;
       boolean autoConnect = false;
       boolean ignoreProtocolVersion = false;
-      String password = ""; //$NON-NLS-1$
+      String password = "";
 
-      CertificateManager certMgr = CertificateManagerProvider.provideCertificateManager();
-      certMgr.setKeyStoreRequestListener(new KeyStoreRequestListener() {
-         @Override
-         public String keyStorePasswordRequested()
-         {
-            return showPasswordRequestDialog(i18n.tr("Certificate store password"),
-                  i18n.tr("The selected store is password-protected, please provide the password."));
-         }
-
-         @Override
-         public String keyStoreLocationRequested()
-         {
-            FileDialog dialog = new FileDialog(shell);
-            dialog.setText(i18n.tr("Path to the certificate store"));
-            dialog.setFilterExtensions(new String[] { "*.p12; *.pfx" }); //$NON-NLS-1$
-
-            return dialog.open();
-         }
-      });
-      certMgr.setPasswordRequestListener(new KeyStoreEntryPasswordRequestListener() {
-         @Override
-         public String keyStoreEntryPasswordRequested()
-         {
-            return showPasswordRequestDialog(
-                  i18n.tr("Certificate Password"),
-                  i18n.tr("The selected certificate is password-protected, please provide the password."));
-         }
-      });
-
-      for(String s : args)
+      HttpServletRequest request = RWT.getRequest();
+      String s = request.getParameter("login");
+      if (s != null)
       {
-         if (s.startsWith("-server=")) //$NON-NLS-1$
-         {
-            settings.set("Connect.Server", s.substring(8)); //$NON-NLS-1$
-         }
-         else if (s.startsWith("-login=")) //$NON-NLS-1$
-         {
-            settings.set("Connect.Login", s.substring(7)); //$NON-NLS-1$
-         }
-         else if (s.startsWith("-password=")) //$NON-NLS-1$
-         {
-            password = s.substring(10);
-            settings.set("Connect.AuthMethod", AuthenticationType.PASSWORD.getValue()); //$NON-NLS-1$
-         }
-         else if (s.equals("-auto")) //$NON-NLS-1$
-         {
-            autoConnect = true;
-         }
-         else if (s.equals("-ignore-protocol-version")) //$NON-NLS-1$
-         {
-            ignoreProtocolVersion = true;
-         }
+         settings.set("Connect.Login", s);
       }
 
-      LoginDialog loginDialog = new LoginDialog(shell, certMgr);
+      s = request.getParameter("password");
+      if (s != null)
+      {
+         password = s;
+         settings.set("Connect.AuthMethod", AuthenticationType.PASSWORD.getValue());
+      }
 
+      s = request.getParameter("auto");
+      if (s != null)
+      {
+         autoConnect = true;
+      }
+
+      settings.set("Connect.Server", "127.0.0.1"); // FIXME: read from properties
+
+      LoginDialog loginDialog = new LoginDialog(shell);
       while(!success)
       {
          if (!autoConnect)
@@ -220,19 +181,7 @@ public class Startup implements EntryPoint, StartupParameters
          }
 
          LoginJob job = new LoginJob(Display.getCurrent(), ignoreProtocolVersion);
-
-         AuthenticationType authMethod = AuthenticationType.getByValue(settings.getAsInteger("Connect.AuthMethod", AuthenticationType.PASSWORD.getValue()));
-         switch(authMethod)
-         {
-            case PASSWORD:
-               job.setPassword(password);
-               break;
-            case CERTIFICATE:
-               job.setCertificate(loginDialog.getCertificate(), getSignature(certMgr, loginDialog.getCertificate()));
-               break;
-            default:
-               break;
-         }
+         job.setPassword(password);
 
          ProgressMonitorDialog monitorDialog = new ProgressMonitorDialog(null);
          try
@@ -262,28 +211,6 @@ public class Startup implements EntryPoint, StartupParameters
       }
 
       return true;
-   }
-
-   /**
-    * @param certMgr
-    * @param cert
-    * @return
-    */
-   private static Signature getSignature(CertificateManager certMgr, Certificate cert)
-   {
-      Signature sign;
-
-      try
-      {
-         sign = certMgr.extractSignature(cert);
-      }
-      catch(Exception e)
-      {
-         logger.error("Exception in getSignature", e); //$NON-NLS-1$
-         return null;
-      }
-
-      return sign;
    }
 
    /**
@@ -338,25 +265,6 @@ public class Startup implements EntryPoint, StartupParameters
             MessageDialog.openError(null, i18n.tr("Internal error"), e.toString());
          }
       }
-   }
-
-   /**
-    * @param title
-    * @param message
-    * @return
-    */
-   private String showPasswordRequestDialog(String title, String message)
-   {
-      Shell shell = Display.getCurrent().getActiveShell();
-
-      PasswordRequestDialog dialog = new PasswordRequestDialog(shell);
-      dialog.setTitle(title);
-      dialog.setMessage(message);
-
-      if (dialog.open() == Window.OK)
-         return dialog.getPassword();
-
-      return null;
    }
 
    /**

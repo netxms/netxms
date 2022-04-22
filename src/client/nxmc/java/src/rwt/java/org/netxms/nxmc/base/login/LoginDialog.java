@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,39 +18,26 @@
  */
 package org.netxms.nxmc.base.login;
 
-import java.security.cert.Certificate;
-import java.security.cert.X509Certificate;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.HashSet;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.rap.rwt.RWT;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.custom.StackLayout;
+import org.eclipse.swt.events.ControlAdapter;
+import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.widgets.Monitor;
 import org.eclipse.swt.widgets.Shell;
-import org.netxms.certificate.loader.exception.KeyStoreLoaderException;
-import org.netxms.certificate.manager.CertificateManager;
-import org.netxms.certificate.subject.Subject;
-import org.netxms.certificate.subject.SubjectParser;
+import org.eclipse.swt.widgets.Text;
 import org.netxms.client.constants.AuthenticationType;
 import org.netxms.nxmc.BrandingManager;
 import org.netxms.nxmc.PreferenceStore;
-import org.netxms.nxmc.base.widgets.LabeledText;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.resources.ResourceManager;
-import org.netxms.nxmc.tools.MessageDialogHelper;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
@@ -61,50 +48,79 @@ public class LoginDialog extends Dialog
 {
    private I18n i18n = LocalizationHelper.getI18n(LoginDialog.class);
    private ImageDescriptor loginImage;
-   private Combo comboServer;
-   private LabeledText textLogin;
-   private LabeledText textPassword;
-   private Composite authEntryFields;
-   private Combo comboAuth;
-   private Combo comboCert;
+   private Text textLogin;
+   private Text textPassword;
    private String password;
-   private Certificate certificate;
-   private final CertificateManager certMgr;
-   private AuthenticationType authMethod = AuthenticationType.PASSWORD; 
+   private AuthenticationType authMethod = AuthenticationType.PASSWORD;
 
    /**
     * @param parentShell
     */
-   public LoginDialog(Shell parentShell, CertificateManager certMgr)
+   public LoginDialog(Shell parentShell)
    {
       super(parentShell);
 
       loginImage = BrandingManager.getInstance().getLoginTitleImage();
       if (loginImage == null)
          loginImage = ResourceManager.getImageDescriptor("icons/login.png"); //$NON-NLS-1$
-
-      this.certMgr = certMgr;
    }
 
    /**
     * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
     */
    @Override
-   protected void configureShell(Shell newShell)
+   protected void configureShell(Shell shell)
    {
-      super.configureShell(newShell);
+      super.configureShell(shell);
       String customTitle = BrandingManager.getInstance().getLoginTitle();
-      newShell.setText((customTitle != null) ? customTitle : i18n.tr("NetXMS - Connect to Server")); //$NON-NLS-1$
+      shell.setText((customTitle != null) ? customTitle : i18n.tr("NetXMS - Connect to Server")); //$NON-NLS-1$
 
-      // Center dialog on screen
-      // We don't have main window at this moment, so use
-      // monitor data to determine right position
-      Monitor[] ma = newShell.getDisplay().getMonitors();
-      if (ma != null)
-      {
-         newShell.setLocation((ma[0].getClientArea().width - newShell.getSize().x) / 2,
-               (ma[0].getClientArea().height - newShell.getSize().y) / 2);
-      }
+      shell.setMaximized(true);
+      shell.setFullScreen(true);
+   }
+
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#createContents(org.eclipse.swt.widgets.Composite)
+    */
+   @Override
+   protected Control createContents(Composite parent)
+   {
+      Composite outerArea = new Composite(parent, SWT.NONE);
+      outerArea.setLayout(new GridLayout());
+      outerArea.setLayoutData(new GridData(GridData.FILL_BOTH));
+
+      Label background = new Label(outerArea, SWT.NONE);
+      GridData gd = new GridData();
+      gd.exclude = true;
+      background.setLayoutData(gd);
+      background.setData(RWT.MARKUP_ENABLED, Boolean.TRUE);
+      background.setText("<span style='width: 100px; height: 100px; display: flex; width: 100vw; height: 100vh;" + "background-image: url(" +
+            RWT.getResourceManager().getLocation("login-background") + "); background-size: cover; background-position: center; filter: blur(8px); -webkit-filter: blur(8px);'></span>");
+      outerArea.addControlListener(new ControlAdapter() {
+         @Override
+         public void controlResized(ControlEvent e)
+         {
+            background.setSize(outerArea.getSize());
+            background.moveBelow(null);
+         }
+      });
+
+      initializeDialogUnits(outerArea);
+
+      Composite innerArea = new Composite(outerArea, SWT.NONE);
+      GridLayout layout = new GridLayout();
+      layout.marginHeight = 0;
+      layout.marginWidth = 0;
+      layout.verticalSpacing = 0;
+      innerArea.setLayout(layout);
+      innerArea.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, true, true));
+      innerArea.setData(RWT.CUSTOM_VARIANT, "LoginForm");
+
+      dialogArea = createDialogArea(innerArea);
+      buttonBar = createButtonBar(innerArea);
+
+      applyDialogFont(outerArea);
+      return outerArea;
    }
 
    /**
@@ -116,18 +132,18 @@ public class LoginDialog extends Dialog
       PreferenceStore settings = PreferenceStore.getInstance();
 
       Composite dialogArea = new Composite(parent, SWT.NONE);
-      dialogArea.setLayoutData(new GridData(GridData.FILL_BOTH));
+      dialogArea.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, false, false));
       applyDialogFont(dialogArea);
 
       GridLayout dialogLayout = new GridLayout();
-      dialogLayout.numColumns = 2;
-      dialogLayout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
-      dialogLayout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
-      dialogLayout.horizontalSpacing = WidgetHelper.DIALOG_SPACING * 2;
+      dialogLayout.numColumns = 1;
+      dialogLayout.marginWidth = 20;
+      dialogLayout.marginHeight = 20;
+      dialogLayout.verticalSpacing = 50;
       dialogArea.setLayout(dialogLayout);
 
       // Login image
-      Label label = new Label(dialogArea, SWT.NONE);
+      Label label = new Label(dialogArea, SWT.CENTER);
       label.setImage(loginImage.createImage());
       label.addDisposeListener(new DisposeListener() {
          @Override
@@ -138,13 +154,13 @@ public class LoginDialog extends Dialog
       });
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.CENTER;
-      gd.verticalAlignment = SWT.TOP;
-      gd.grabExcessVerticalSpace = true;
+      gd.verticalAlignment = SWT.CENTER;
+      gd.grabExcessHorizontalSpace = true;
       label.setLayoutData(gd);
 
       final Composite fields = new Composite(dialogArea, SWT.NONE);
       GridLayout fieldsLayout = new GridLayout();
-      fieldsLayout.verticalSpacing = WidgetHelper.DIALOG_SPACING;
+      fieldsLayout.verticalSpacing = 20;
       fieldsLayout.marginHeight = 0;
       fieldsLayout.marginWidth = 0;
       fields.setLayout(fieldsLayout);
@@ -155,109 +171,38 @@ public class LoginDialog extends Dialog
       gd.grabExcessVerticalSpace = true;
       fields.setLayoutData(gd);
 
+      textLogin = new Text(fields, SWT.SINGLE | SWT.BORDER);
+      textLogin.setMessage(i18n.tr("Login"));
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
-      comboServer = WidgetHelper.createLabeledCombo(fields, SWT.DROP_DOWN, i18n.tr("Server"), gd);
-
-      textLogin = new LabeledText(fields, SWT.NONE, SWT.SINGLE | SWT.BORDER);
-      textLogin.setLabel(i18n.tr("Login"));
-      gd = new GridData();
-      gd.horizontalAlignment = SWT.FILL;
-      gd.grabExcessHorizontalSpace = true;
-      gd.widthHint = WidgetHelper.getTextWidth(textLogin, "M") * 24; //$NON-NLS-1$
+      gd.widthHint = WidgetHelper.getTextWidth(textLogin, "M") * 48;
       textLogin.setLayoutData(gd);
+      textLogin.setData(RWT.CUSTOM_VARIANT, "login");
 
+      textPassword = new Text(fields, SWT.SINGLE | SWT.BORDER | SWT.PASSWORD);
+      textPassword.setMessage(i18n.tr("Password"));
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
-      comboAuth = WidgetHelper.createLabeledCombo(fields, SWT.DROP_DOWN | SWT.READ_ONLY, i18n.tr("Authentication"), gd);
-      comboAuth.add(i18n.tr("Password"));
-      comboAuth.add(i18n.tr("Certificate"));
-      comboAuth.select(authMethod.getValue());
-      comboAuth.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e)
-			{
-				selectAuthenticationField(true);
-			}
-		});
+      textPassword.setLayoutData(gd);
+      textPassword.setData(RWT.CUSTOM_VARIANT, "login");
 
-      authEntryFields = new Composite(fields, SWT.NONE);
-      authEntryFields.setLayout(new StackLayout());
-      authEntryFields.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-
-      textPassword = new LabeledText(authEntryFields, SWT.NONE, SWT.SINGLE | SWT.BORDER | SWT.PASSWORD);
-      textPassword.setLabel(i18n.tr("Password"));
-      
-      comboCert = WidgetHelper.createLabeledCombo(authEntryFields, SWT.DROP_DOWN | SWT.READ_ONLY, i18n.tr("Certificate"), null);
-      comboCert.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e)
-			{
-			   selectCertificate();
-			}
-		});
-      
-      // Read field data
-      comboServer.setItems(settings.getAsStringArray("Connect.ServerHistory"));
-      String text = settings.getAsString("Connect.Server"); //$NON-NLS-1$
-      if (text != null)
-         comboServer.setText(text);
-
-      text = settings.getAsString("Connect.Login"); //$NON-NLS-1$
+      String text = settings.getAsString("Connect.Login"); //$NON-NLS-1$
       if (text != null)
          textLogin.setText(text);
 
-      authMethod = AuthenticationType.getByValue(settings.getAsInteger("Connect.AuthMethod", AuthenticationType.PASSWORD.getValue()));
-      comboAuth.select(authMethod.getValue());
-      selectAuthenticationField(false);
-            
       // Set initial focus
-      if (comboServer.getText().isEmpty())
-      {
-         comboServer.setFocus();
-      }
-      else if (textLogin.getText().isEmpty())
+      if (textLogin.getText().isEmpty())
       {
          textLogin.setFocus();
       }
       else
       {
-      	if (authMethod == AuthenticationType.PASSWORD)
-      		textPassword.setFocus();
-      	else if (authMethod == AuthenticationType.CERTIFICATE)
-      		comboCert.setFocus();
+         textPassword.setFocus();
       }
 
       return dialogArea;
-   }
-   
-   /**
-    * Select authentication information entry filed depending on selected authentication method.
-    * 
-    * @param doLayout
-    */
-   private void selectAuthenticationField(boolean doLayout)
-   {
-   	authMethod = AuthenticationType.getByValue(comboAuth.getSelectionIndex());
-   	switch(authMethod)
-   	{
-   		case PASSWORD:
-   	      ((StackLayout)authEntryFields.getLayout()).topControl = textPassword;
-   	      break;
-   		case CERTIFICATE:
-   			fillCertCombo();
-   	      ((StackLayout)authEntryFields.getLayout()).topControl = comboCert.getParent();
-   	      break;
-   	   default:
-   	      ((StackLayout)authEntryFields.getLayout()).topControl = null;	// hide entry control
-   	      break;
-   	}
-      if (doLayout)
-      {
-      	authEntryFields.layout();
-      }
    }
 
    /**
@@ -266,25 +211,10 @@ public class LoginDialog extends Dialog
    @Override
    protected void okPressed()
    {
-   	if ((authMethod == AuthenticationType.CERTIFICATE) && (comboCert.getSelectionIndex() == -1))
-   	{
-         MessageDialogHelper.openWarning(getShell(), i18n.tr("Warning"),
-               i18n.tr("No certificate selected. Please select certificate from the list or choose different authentication method."));
-   		return;
-   	}
-
       PreferenceStore settings = PreferenceStore.getInstance();
 
-      HashSet<String> items = new HashSet<String>();
-      items.addAll(Arrays.asList(comboServer.getItems()));
-      items.add(comboServer.getText());
-
-      settings.set("Connect.Server", comboServer.getText()); //$NON-NLS-1$
-      settings.set("Connect.ServerHistory", items); //$NON-NLS-1$
-      settings.set("Connect.Login", textLogin.getText()); //$NON-NLS-1$
-      settings.set("Connect.AuthMethod", authMethod.getValue()); //$NON-NLS-1$
-      if (certificate != null)
-         settings.set("Connect.Certificate", ((X509Certificate)certificate).getSubjectDN().toString()); //$NON-NLS-1$
+      settings.set("Connect.Login", textLogin.getText());
+      settings.set("Connect.AuthMethod", authMethod.getValue());
 
       password = textPassword.getText();
       super.okPressed();
@@ -296,96 +226,5 @@ public class LoginDialog extends Dialog
    public String getPassword()
    {
       return password;
-   }
-
-   /**
-    * Select certificate
-    */
-   private void selectCertificate()
-   {
-      int index = comboCert.getSelectionIndex();
-      if (index >= 0)
-      {
-         certificate = certMgr.getCerts()[index];
-      }
-   }
-
-   /**
-    * @param c
-    * @return
-    */
-   private static String getCertificateDisplayName(Certificate c)
-   {
-      String subjString = ((X509Certificate)c).getSubjectDN().toString();
-      Subject subj = SubjectParser.parseSubject(subjString);
-      return String.format("%s (%s, %s, %s)", subj.getCommonName(), subj.getOrganization(), subj.getState(), subj.getCountry()); //$NON-NLS-1$
-   }
-
-   /**
-    * Fill certificate list
-    * 
-    * @return
-    */
-   private boolean fillCertCombo()
-   {
-      if (comboCert.getItemCount() != 0)
-         return true;
-
-      try
-      {
-         if (certMgr.hasNoCertificates())
-         {
-            certMgr.load();
-         }
-      }
-      catch(KeyStoreLoaderException ksle)
-      {
-         Shell shell = Display.getCurrent().getActiveShell();
-         MessageDialogHelper.openError(shell, i18n.tr("Error"), i18n.tr("The key store password you provided appears to be wrong."));
-         return false;
-      }
-
-      Certificate[] certs = certMgr.getCerts();
-      Arrays.sort(certs, new Comparator<Certificate>() {
-         @Override
-         public int compare(Certificate o1, Certificate o2)
-         {
-            return getCertificateDisplayName(o1).compareToIgnoreCase(getCertificateDisplayName(o2));
-         }
-      });
-      
-      String[] subjectStrings = new String[certs.length];
-      
-      PreferenceStore settings = PreferenceStore.getInstance();
-      String lastSelected = settings.getAsString("Connect.Certificate"); //$NON-NLS-1$
-      int selectionIndex = 0;
-
-      for(int i = 0; i < certs.length; i++)
-      {
-         String subject = ((X509Certificate)certs[i]).getSubjectDN().toString();
-         if (subject.equals(lastSelected))
-            selectionIndex = i;
-         subjectStrings[i] = getCertificateDisplayName(certs[i]);
-      }
-
-      if (subjectStrings.length != 0)
-      {
-         comboCert.setItems(subjectStrings);
-         comboCert.select(selectionIndex);
-         selectCertificate();
-         return true;
-      }
-
-      return false;
-   }
-
-   /**
-    * Get selected certificate
-    * 
-    * @return
-    */
-   public Certificate getCertificate()
-   {
-      return certificate;
    }
 }
