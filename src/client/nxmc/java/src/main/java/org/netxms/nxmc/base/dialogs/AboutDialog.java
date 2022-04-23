@@ -91,7 +91,7 @@ public class AboutDialog extends Dialog
 
       Label logo = new Label(dialogArea, SWT.NONE);
       logo.setBackground(ThemeEngine.getBackgroundColor("Window.Header"));
-      final Image image = ResourceManager.getImage("icons/login.png");
+      final Image image = ResourceManager.getImage("icons/about.png");
       logo.setImage(image);
       gd = new GridData();
       gd.verticalAlignment = SWT.TOP;

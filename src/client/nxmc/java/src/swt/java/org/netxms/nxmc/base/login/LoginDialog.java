@@ -82,7 +82,7 @@ public class LoginDialog extends Dialog
 
       loginImage = BrandingManager.getInstance().getLoginTitleImage();
       if (loginImage == null)
-         loginImage = ResourceManager.getImageDescriptor("icons/login.png"); //$NON-NLS-1$
+         loginImage = ResourceManager.getImageDescriptor("icons/login.png");
 
       this.certMgr = certMgr;
    }
