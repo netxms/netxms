@@ -191,7 +191,7 @@ public class LoginDialog extends Dialog
 
       textPassword = new LabeledText(authEntryFields, SWT.NONE, SWT.SINGLE | SWT.BORDER | SWT.PASSWORD);
       textPassword.setLabel(i18n.tr("Password"));
-      
+
       comboCert = WidgetHelper.createLabeledCombo(authEntryFields, SWT.DROP_DOWN | SWT.READ_ONLY, i18n.tr("Certificate"), null);
       comboCert.addSelectionListener(new SelectionAdapter() {
 			@Override

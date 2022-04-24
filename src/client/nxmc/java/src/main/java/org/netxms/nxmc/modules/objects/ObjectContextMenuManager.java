@@ -47,6 +47,7 @@ import org.netxms.nxmc.modules.agentmanagement.PackageDeployment;
 import org.netxms.nxmc.modules.agentmanagement.dialogs.SelectDeployPackage;
 import org.netxms.nxmc.modules.agentmanagement.views.PackageDeploymentMonitor;
 import org.netxms.nxmc.modules.objects.dialogs.MaintanenceScheduleDialog;
+import org.netxms.nxmc.resources.SharedIcons;
 import org.netxms.nxmc.tools.MessageDialogHelper;
 import org.xnap.commons.i18n.I18n;
 
@@ -117,7 +118,7 @@ public class ObjectContextMenuManager extends MenuManager
          }
       };
       
-      actionDelete = new Action(i18n.tr("&Delete")) {
+      actionDelete = new Action(i18n.tr("&Delete"), SharedIcons.DELETE_OBJECT) {
          @Override
          public void run()
          {
@@ -149,7 +150,7 @@ public class ObjectContextMenuManager extends MenuManager
          }
       };
 
-      actionProperties = new Action(i18n.tr("&Properties...")) {
+      actionProperties = new Action(i18n.tr("&Properties..."), SharedIcons.PROPERTIES) {
          @Override
          public void run()
          {

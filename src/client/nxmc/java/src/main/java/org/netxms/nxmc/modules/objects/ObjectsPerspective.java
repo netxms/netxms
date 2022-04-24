@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -203,7 +203,7 @@ public abstract class ObjectsPerspective extends Perspective
       for(ToolItem item : objectToolBar.getItems())
          item.dispose();
 
-      addObjectToolBarItem(i18n.tr("Properties"), SharedIcons.IMG_EDIT, new Runnable() {
+      addObjectToolBarItem(i18n.tr("Properties"), SharedIcons.IMG_PROPERTIES, new Runnable() {
          @Override
          public void run()
          {
@@ -299,6 +299,13 @@ public abstract class ObjectsPerspective extends Perspective
          createMenuToolItem(name, menuManager, null);
    }
 
+   /**
+    * Create toolbar item that will show drop down menu.
+    *
+    * @param name item name
+    * @param menuManager menu manager that will provide menu or null if menu provided directly
+    * @param menu menu to show or null if menu provided by manager
+    */
    private void createMenuToolItem(String name, final MenuManager menuManager, final Menu menu)
    {
       ToolItem item = new ToolItem(objectMenuBar, SWT.PUSH);

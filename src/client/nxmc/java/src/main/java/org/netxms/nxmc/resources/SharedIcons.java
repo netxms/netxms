@@ -62,6 +62,7 @@ public class SharedIcons
 	public static ImageDescriptor PASTE;
    public static ImageDescriptor PIN;
    public static ImageDescriptor POP_OUT;
+   public static ImageDescriptor PROPERTIES;
 	public static ImageDescriptor REFRESH;
 	public static ImageDescriptor RESTART;
    public static ImageDescriptor SHOW;
@@ -114,6 +115,7 @@ public class SharedIcons
 	public static Image IMG_PASTE;
    public static Image IMG_PIN;
    public static Image IMG_POP_OUT;
+   public static Image IMG_PROPERTIES;
 	public static Image IMG_REFRESH;
 	public static Image IMG_RESTART;
    public static Image IMG_SHOW;
@@ -171,6 +173,7 @@ public class SharedIcons
       PASTE = ResourceManager.getImageDescriptor("icons/paste.gif");
       PIN = ResourceManager.getImageDescriptor("icons/pin.png");
       POP_OUT = ResourceManager.getImageDescriptor("icons/pop-out.png");
+      PROPERTIES = ResourceManager.getImageDescriptor("icons/properties.png");
       REFRESH = ResourceManager.getImageDescriptor("icons/refresh.png");
       RESTART = ResourceManager.getImageDescriptor("icons/restart.gif");
       SAVE = ResourceManager.getImageDescriptor("icons/save.png");
@@ -223,6 +226,7 @@ public class SharedIcons
 		IMG_PASTE = PASTE.createImage();
       IMG_PIN = PIN.createImage();
       IMG_POP_OUT = POP_OUT.createImage();
+      IMG_PROPERTIES = PROPERTIES.createImage();
 		IMG_REFRESH = REFRESH.createImage();
 		IMG_RESTART = RESTART.createImage();
 		IMG_SAVE = SAVE.createImage();
