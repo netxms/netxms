@@ -1,2 +1,2 @@
 EXTRA_DIST = \
-	xmpp.cpp
+	xmpp.cpp xmpp.vcxproj xmpp.vcxproj.filters

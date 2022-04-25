@@ -146,6 +146,8 @@ Source: "..\..\..\x64\Release\twilio.ncd"; DestDir: "{app}\lib\ncdrv"; Flags: ig
 Source: "..\..\..\x64\Release\twilio.pdb"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion; Components: server and pdb
 Source: "..\..\..\x64\Release\websms.ncd"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\x64\Release\websms.pdb"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion; Components: server and pdb
+Source: "..\..\..\x64\Release\xmpp.ncd"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\x64\Release\xmpp.pdb"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion; Components: server and pdb
 ; Reporting server
 Source: "..\..\server\nxreportd\java\target\nxreportd-{#VersionString}.jar"; DestDir: "{app}\lib\java"; Flags: ignoreversion; Components: server\reporting
 Source: "..\..\server\nxreportd\java\target\lib\*.jar"; DestDir: "{app}\lib\java"; Flags: ignoreversion; Components: server\reporting
