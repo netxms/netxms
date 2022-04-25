@@ -74,6 +74,7 @@ public class CreateNodeDialog extends Dialog
    private ObjectSelector etherNetIpProxySelector;
    private ObjectSelector icmpProxySelector;
    private ObjectSelector sshProxySelector;
+   private ObjectSelector webServiceProxySelector;
 	private ZoneSelector zoneSelector;
 	
 	private String objectName = "";
@@ -84,6 +85,7 @@ public class CreateNodeDialog extends Dialog
    private long etherNetIpProxy = 0;
    private long icmpProxy = 0;
    private long sshProxy = 0;
+   private long webServiceProxy = 0;
 	private int zoneUIN = 0;
 	private int agentPort = 4700;
 	private int snmpPort = 161;
@@ -108,6 +110,7 @@ public class CreateNodeDialog extends Dialog
          snmpProxy = prev.snmpProxy;
          icmpProxy = prev.snmpProxy;
          sshProxy = prev.snmpProxy;
+         webServiceProxy = prev.webServiceProxy;
 		   zoneUIN = prev.zoneUIN;
 		   agentPort = prev.agentPort;
 		   snmpPort = prev.snmpPort;
@@ -317,6 +320,16 @@ public class CreateNodeDialog extends Dialog
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       sshProxySelector.setLayoutData(gd);
+
+      webServiceProxySelector = new ObjectSelector(dialogArea, SWT.NONE, true);
+      webServiceProxySelector.setLabel("Proxy for web services");
+      webServiceProxySelector.setEmptySelectionName("<default>");
+      webServiceProxySelector.setObjectClass(Node.class);
+      webServiceProxySelector.setObjectId(webServiceProxy);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      webServiceProxySelector.setLayoutData(gd);
       
 		if (session.isZoningEnabled())
 		{
@@ -401,6 +414,7 @@ public class CreateNodeDialog extends Dialog
       etherNetIpProxy = etherNetIpProxySelector.getObjectId();
       icmpProxy = icmpProxySelector.getObjectId();
       sshProxy = sshProxySelector.getObjectId();
+      webServiceProxy = webServiceProxySelector.getObjectId();
 
       if (session.isZoningEnabled())
 		{
@@ -489,6 +503,14 @@ public class CreateNodeDialog extends Dialog
    public long getSshProxy()
    {
       return sshProxy;
+   }
+
+   /**
+    * @return the webServiceProxy
+    */
+   public long getWebServiceProxy()
+   {
+      return webServiceProxy;
    }
 
    /**

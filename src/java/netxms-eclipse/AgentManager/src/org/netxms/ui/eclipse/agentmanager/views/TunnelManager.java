@@ -410,6 +410,7 @@ public class TunnelManager extends ViewPart
       cd.setSnmpPort(dlg.getSnmpPort());
       cd.setAgentProxyId(dlg.getAgentProxy());
       cd.setSnmpProxyId(dlg.getSnmpProxy());
+      cd.setWebServiceProxyId(dlg.getWebServiceProxy());
       cd.setIcmpProxyId(dlg.getIcmpProxy());
       cd.setSshProxyId(dlg.getSshProxy());
       cd.setZoneUIN(dlg.getZoneUIN());

@@ -292,6 +292,7 @@ public class TunnelManager extends ConfigurationView
       cd.setSnmpProxyId(dlg.getSnmpProxy());
       cd.setIcmpProxyId(dlg.getIcmpProxy());
       cd.setSshProxyId(dlg.getSshProxy());
+      cd.setWebServiceProxyId(dlg.getWebServiceProxy());
       cd.setZoneUIN(dlg.getZoneUIN());
       cd.setSshLogin(dlg.getSshLogin());
       cd.setSshPassword(dlg.getSshPassword());

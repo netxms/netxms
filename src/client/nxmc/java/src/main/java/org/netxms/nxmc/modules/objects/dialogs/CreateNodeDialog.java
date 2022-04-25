@@ -64,6 +64,7 @@ public class CreateNodeDialog extends Dialog
    private Button checkAsZoneProxy;
 	private Button checkDisableAgent;
 	private Button checkDisableSNMP;
+   private Button checkDisableSSH;
    private Button checkDisableEtherNetIP;
 	private Button checkDisablePing;
 	private Button checkCreateAnother;
@@ -258,6 +259,10 @@ public class CreateNodeDialog extends Dialog
 		checkDisableSNMP = new Button(optionsGroup, SWT.CHECK);
 		checkDisableSNMP.setText(i18n.tr("Disable usage of &SNMP for all polls"));
 		checkDisableSNMP.setSelection((creationFlags & NXCObjectCreationData.CF_DISABLE_SNMP) != 0);
+
+      checkDisableSSH = new Button(optionsGroup, SWT.CHECK);
+      checkDisableSSH.setText("Disable usage of SSH for all polls");
+      checkDisableSSH.setSelection((creationFlags & NXCObjectCreationData.CF_DISABLE_SSH) != 0);
 		
       checkDisablePing = new Button(optionsGroup, SWT.CHECK);
       checkDisablePing.setText(i18n.tr("Disable usage of &ICMP ping for all polls"));
@@ -388,6 +393,8 @@ public class CreateNodeDialog extends Dialog
 			creationFlags |= NXCObjectCreationData.CF_DISABLE_ICMP;
 		if (checkDisableSNMP.getSelection())
 			creationFlags |= NXCObjectCreationData.CF_DISABLE_SNMP;
+      if (checkDisableSSH.getSelection())
+         creationFlags |= NXCObjectCreationData.CF_DISABLE_SSH;
       if (checkDisableEtherNetIP.getSelection())
          creationFlags |= NXCObjectCreationData.CF_DISABLE_ETHERNET_IP;
       if (checkDisableAutomaticSNMPConfig.getSelection())
