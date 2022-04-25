@@ -2238,6 +2238,14 @@ NXSL_Value *NXSL_ServerEnv::getConstantValue(const NXSL_Identifier& name, NXSL_V
       NXSL_ENV_CONSTANT("HardwareComponentCategory::STORAGE", static_cast<int32_t>(HardwareComponentCategory::HWC_STORAGE));
    }
 
+   if (name.value[0] == 'I')
+   {
+      // Interface expected states
+      NXSL_ENV_CONSTANT("InterfaceExpectedState::DOWN", IF_EXPECTED_STATE_DOWN);
+      NXSL_ENV_CONSTANT("InterfaceExpectedState::IGNORE", IF_EXPECTED_STATE_IGNORE);
+      NXSL_ENV_CONSTANT("InterfaceExpectedState::UP", IF_EXPECTED_STATE_UP);
+   }
+
    if (name.value[0] == 'N')
    {
       // Node state flags
