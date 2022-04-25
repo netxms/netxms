@@ -83,6 +83,7 @@ bool EnumerateModuleTables(bool (*handler)(const TCHAR *, void *), void *userDat
 bool EnumerateModuleSchemas(bool (*handler)(const TCHAR *, void *), void *userData);
 bool UpgradeModuleSchemas();
 bool CheckModuleSchemas();
+bool CheckModuleSchemaVersions();
 
 bool IsColumnIntegerFixNeeded(const TCHAR *table, const char *name);
 bool IsTimestampColumn(const TCHAR *table, const char *name);
