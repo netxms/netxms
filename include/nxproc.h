@@ -103,6 +103,11 @@ private:
    uint32_t m_id;
    uint32_t m_exitCode;
 
+#ifdef _WIN32
+   bool executeWithOutput();
+   bool executeWithoutOutput();
+#endif
+
 protected:
    TCHAR *m_cmd;
    bool m_shellExec;
