@@ -258,20 +258,20 @@ static TableDescriptor s_tqPrepared[] =
 /**
  * Database instances
  */
-static ObjectArray<DatabaseInstance> *s_instances = NULL;
+static ObjectArray<DatabaseInstance> s_instances(8, 8, Ownership::True);
 
 /**
  * Find instance by ID
  */
 static DatabaseInstance *FindInstance(const TCHAR *id)
 {
-	for(int i = 0; i < s_instances->size(); i++)
+	for(int i = 0; i < s_instances.size(); i++)
 	{
-		DatabaseInstance *db = s_instances->get(i);
+		DatabaseInstance *db = s_instances.get(i);
 		if (!_tcsicmp(db->getId(), id))
 			return db;
 	}
-	return NULL;
+	return nullptr;
 }
 
 /**
@@ -287,13 +287,18 @@ static LONG H_GlobalParameter(const TCHAR *param, const TCHAR *arg, TCHAR *value
 	if (db == nullptr)
 		return SYSINFO_RC_NO_SUCH_INSTANCE;
 
-	if (arg[0] == _T('?'))  // count missing data as 0
+	if (arg[0] == _T('?'))  // interpret missing data as 0
 	{
 		if (db->getData(&arg[1], value))
 			return SYSINFO_RC_SUCCESS;
+
+		if (!db->isConnected())
+		   return SYSINFO_RC_ERROR;   // Ignore "interpret missing as 0" option if DB is not connected
+
 		ret_int(value, 0);
 		return SYSINFO_RC_SUCCESS;
 	}
+
 	return db->getData(arg, value) ? SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR;
 }
 
@@ -323,6 +328,7 @@ static LONG H_InstanceParameter(const TCHAR *param, const TCHAR *arg, TCHAR *val
    {
       if (!AgentGetParameterArg(param, 2, instance, MAX_DB_STRING))
          return SYSINFO_RC_UNSUPPORTED;
+
       if (instance[0] == 0)
          _tcscpy(instance, db->getName()); // use connection's maintenance database
    }
@@ -331,7 +337,7 @@ static LONG H_InstanceParameter(const TCHAR *param, const TCHAR *arg, TCHAR *val
 
 	TCHAR tag[MAX_DB_STRING];
 	bool missingAsZero;
-	if (arg[0] == _T('?'))  // count missing instance as 0
+	if (arg[0] == _T('?'))  // interpret missing instance as 0
 	{
 		_sntprintf(tag, MAX_DB_STRING, _T("%s@%s"), &arg[1], instance);
 		missingAsZero = true;
@@ -341,13 +347,19 @@ static LONG H_InstanceParameter(const TCHAR *param, const TCHAR *arg, TCHAR *val
 		_sntprintf(tag, MAX_DB_STRING, _T("%s@%s"), arg, instance);
 		missingAsZero = false;
 	}
+
 	if (db->getData(tag, value))
 		return SYSINFO_RC_SUCCESS;
+
 	if (missingAsZero)
 	{
+      if (!db->isConnected())
+         return SYSINFO_RC_ERROR;   // Ignore "interpret missing as 0" option if DB is not connected
+
 		ret_int(value, 0);
 		return SYSINFO_RC_SUCCESS;
 	}
+
 	return SYSINFO_RC_NO_SUCH_INSTANCE;
 }
 
@@ -361,7 +373,7 @@ static LONG H_DatabaseServerConnectionStatus(const TCHAR *param, const TCHAR *ar
 		return SYSINFO_RC_UNSUPPORTED;
 
 	DatabaseInstance *db = FindInstance(id);
-	if (db == NULL)
+	if (db == nullptr)
 		return SYSINFO_RC_NO_SUCH_INSTANCE;
 
 	ret_string(value, db->isConnected() ? _T("YES") : _T("NO"));
@@ -378,10 +390,13 @@ static LONG H_DatabaseVersion(const TCHAR *param, const TCHAR *arg, TCHAR *value
 		return SYSINFO_RC_UNSUPPORTED;
 
 	DatabaseInstance *db = FindInstance(id);
-	if (db == NULL)
+	if (db == nullptr)
 		return SYSINFO_RC_NO_SUCH_INSTANCE;
 
-	int version = db->getVersion();
+   int version = db->getVersion();
+   if ((version == 0) && !db->isConnected())
+      return SYSINFO_RC_ERROR;   // Return error if version is not known and DB is not connected
+
 	if ((version & 0xFF) == 0)
 		_sntprintf(value, MAX_RESULT_LENGTH, _T("%d.%d"), version >> 16, (version >> 8) & 0xFF);
 	else
@@ -394,8 +409,8 @@ static LONG H_DatabaseVersion(const TCHAR *param, const TCHAR *arg, TCHAR *value
  */
 static LONG H_DBServersList(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session)
 {
-	for(int i = 0; i < s_instances->size(); i++)
-		value->add(s_instances->get(i)->getId());
+	for(int i = 0; i < s_instances.size(); i++)
+		value->add(s_instances.get(i)->getId());
 	return SYSINFO_RC_SUCCESS;
 }
 
@@ -404,9 +419,9 @@ static LONG H_DBServersList(const TCHAR *param, const TCHAR *arg, StringList *va
  */
 static LONG H_AllDatabasesList(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session)
 {
-	for(int i = 0; i < s_instances->size(); i++)
+	for(int i = 0; i < s_instances.size(); i++)
    {
-		DatabaseInstance *db = s_instances->get(i);
+		DatabaseInstance *db = s_instances.get(i);
 
 		StringList list;
 		if (!db->getTagList(arg, &list))
@@ -486,8 +501,6 @@ static bool SubAgentInit(Config *config)
 		return false;
 	}
 
-	s_instances = new ObjectArray<DatabaseInstance>(8, 8, Ownership::True);
-
 	// Load configuration from "pgsql" section to allow simple configuration
 	// of one connection without XML includes
 	memset(&s_dbInfo, 0, sizeof(s_dbInfo));
@@ -508,7 +521,7 @@ static bool SubAgentInit(Config *config)
 					_tcscpy(s_dbInfo.id, s_dbInfo.name);
 
 				DecryptPassword(s_dbInfo.login, s_dbInfo.password, s_dbInfo.password, MAX_DB_PASSWORD);
-				s_instances->add(new DatabaseInstance(&s_dbInfo));
+				s_instances.add(new DatabaseInstance(&s_dbInfo));
 			}
 		}
 	}
@@ -540,21 +553,20 @@ static bool SubAgentInit(Config *config)
 
 			DecryptPassword(s_dbInfo.login, s_dbInfo.password, s_dbInfo.password, MAX_DB_PASSWORD);
 
-			s_instances->add(new DatabaseInstance(&s_dbInfo));
+			s_instances.add(new DatabaseInstance(&s_dbInfo));
       }
    }
 
 	// Exit if no usable configuration found
-	if (s_instances->size() == 0)
+	if (s_instances.isEmpty())
 	{
 	   nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("No databases to monitor, exiting"));
-		delete s_instances;
 		return false;
 	}
 
 	// Run query thread for each configured database
-	for(int i = 0; i < s_instances->size(); i++)
-		s_instances->get(i)->run();
+	for(int i = 0; i < s_instances.size(); i++)
+		s_instances.get(i)->run();
 
 	return true;
 }
@@ -565,9 +577,8 @@ static bool SubAgentInit(Config *config)
 static void SubAgentShutdown()
 {
 	nxlog_debug_tag(DEBUG_TAG, 1, _T("Stopping PostgreSQL database pollers"));
-	for(int i = 0; i < s_instances->size(); i++)
-		s_instances->get(i)->stop();
-	delete s_instances;
+	for(int i = 0; i < s_instances.size(); i++)
+		s_instances.get(i)->stop();
 	nxlog_debug_tag(DEBUG_TAG, 1, _T("PostgreSQL subagent stopped"));
 }
 
@@ -576,8 +587,8 @@ static void SubAgentShutdown()
  */
 static NETXMS_SUBAGENT_PARAM s_parameters[] =
 {
-	{ _T("PostgreSQL.IsReachable(*)"), H_DatabaseServerConnectionStatus, NULL, DCI_DT_STRING, _T("PostgreSQL: database server instance reachable") },
-	{ _T("PostgreSQL.Version(*)"), H_DatabaseVersion, NULL, DCI_DT_STRING, _T("PostgreSQL: database server version") },
+	{ _T("PostgreSQL.IsReachable(*)"), H_DatabaseServerConnectionStatus, nullptr, DCI_DT_STRING, _T("PostgreSQL: database server instance reachable") },
+	{ _T("PostgreSQL.Version(*)"), H_DatabaseVersion, nullptr, DCI_DT_STRING, _T("PostgreSQL: database server version") },
 	{ _T("PostgreSQL.Archiver.ArchivedCount(*)"), H_GlobalParameter, _T("ARCHIVER/archived_count"), DCI_DT_INT64, _T("PostgreSQL/Archiver: archived") },
 	{ _T("PostgreSQL.Archiver.FailedCount(*)"), H_GlobalParameter, _T("ARCHIVER/failed_count"), DCI_DT_INT64, _T("PostgreSQL/Archiver: failed") },
 	{ _T("PostgreSQL.Archiver.IsArchiving(*)"), H_GlobalParameter, _T("ARCHIVER/is_archiving"), DCI_DT_STRING, _T("PostgreSQL/Archiver: is running") },
