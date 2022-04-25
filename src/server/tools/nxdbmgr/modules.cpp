@@ -33,6 +33,7 @@ struct Module
    HMODULE handle;
    TCHAR name[MAX_PATH];
    bool (*CheckDB)();
+   bool (*CheckDBVersion)();
    bool (*UpgradeDB)();
    const TCHAR* const * (*GetTables)();
    const TCHAR* (*GetSchemaPrefix)();
@@ -100,6 +101,7 @@ static bool LoadServerModule(const TCHAR *name, bool mandatory, bool quiet)
          _tcslcpy(m->name, name, MAX_PATH);
       }
       m->CheckDB = (bool (*)())DLGetSymbolAddr(hModule, "NXM_CheckDB", errorText);
+      m->CheckDBVersion = (bool (*)())DLGetSymbolAddr(hModule, "NXM_CheckDBVersion", errorText);
       m->UpgradeDB = (bool (*)())DLGetSymbolAddr(hModule, "NXM_UpgradeDB", errorText);
       m->GetTables = (const TCHAR* const * (*)())DLGetSymbolAddr(hModule, "NXM_GetTables", errorText);
       m->GetSchemaPrefix = (const TCHAR* (*)())DLGetSymbolAddr(hModule, "NXM_GetSchemaPrefix", errorText);
@@ -241,6 +243,22 @@ bool CheckModuleSchemas()
       if (m->CheckDB == nullptr)
          continue;
       if (!m->CheckDB())
+         return false;
+   }
+   return true;
+}
+
+/**
+ * Check versions of all module schemas
+ */
+bool CheckModuleSchemaVersions()
+{
+   for(int i = 0; i < s_modules.size(); i++)
+   {
+      Module *m = s_modules.get(i);
+      if (m->CheckDBVersion == nullptr)
+         continue;
+      if (!m->CheckDBVersion())
          return false;
    }
    return true;

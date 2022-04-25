@@ -1453,7 +1453,7 @@ void CheckDatabase()
 	   _tprintf(_T("Checking database (%s collected data):\n"), g_checkData ? _T("including") : _T("excluding"));
 
    // Get database format version
-   INT32 major, minor;
+   int32_t major, minor;
    if (!DBGetSchemaVersion(g_dbHandle, &major, &minor))
    {
       _tprintf(_T("Unable to determine database schema version\n"));
@@ -1475,8 +1475,14 @@ void CheckDatabase()
       _tprintf(_T("Database check aborted\n"));
       return;
    }
+   if (!CheckModuleSchemaVersions())
+   {
+      _tprintf(_T("Database schema extensions version check failed\n"));
+      _tprintf(_T("Database check aborted\n"));
+      return;
+   }
 
-   BOOL bCompleted = FALSE;
+   bool completed = false;
 
    // Check if database is locked
    if (LockDatabase())
@@ -1565,7 +1571,7 @@ void CheckDatabase()
             DBRollback(g_dbHandle);
          }
       }
-      bCompleted = TRUE;
+      completed = true;
 
       UnlockDB();
 
@@ -1573,5 +1579,5 @@ void CheckDatabase()
       MemFree(s_tableDciCache);
    }
 
-   _tprintf(_T("Database check %s\n"), bCompleted ? _T("completed") : _T("aborted"));
+   _tprintf(_T("Database check %s\n"), completed ? _T("completed") : _T("aborted"));
 }

@@ -1,6 +1,6 @@
 /*
 ** nxminfo - NetXMS module info tool
-** Copyright (C) 2016-2021 Raden Solutions
+** Copyright (C) 2016-2022 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -91,14 +91,14 @@ int main(int argc, char *argv[])
 
    TCHAR errorText[1024];
    HMODULE handle = DLOpen(modname, errorText);
-   if (handle == NULL)
+   if (handle == nullptr)
    {
       _tprintf(_T("Cannot load module (%s)\n"), errorText);
       return 2;
    }
 
-   NXMODULE_METADATA *metadata = (NXMODULE_METADATA *)DLGetSymbolAddr(handle, "NXM_metadata", errorText);
-   if (metadata == NULL)
+   auto metadata = static_cast<NXMODULE_METADATA*>(DLGetSymbolAddr(handle, "NXM_metadata", errorText));
+   if (metadata == nullptr)
    {
       _tprintf(_T("Cannot locate module metadata (%s)\n"), errorText);
       return 3;
@@ -131,13 +131,14 @@ int main(int argc, char *argv[])
    _tprintf(_T("\nEntry points:\n"));
    CHECK_ENTRY_POINT("NXM_Register");
    CHECK_ENTRY_POINT("NXM_CheckDB");
+   CHECK_ENTRY_POINT("NXM_CheckDBVersion");
    CHECK_ENTRY_POINT("NXM_UpgradeDB");
    CHECK_ENTRY_POINT("NXM_GetTables");
    CHECK_ENTRY_POINT("NXM_GetSchemaPrefix");
 
    DLClose(handle);
 #ifdef UNICODE
-   free(fname);
+   MemFree(fname);
 #endif
    return 0;
 }
