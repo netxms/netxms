@@ -126,7 +126,8 @@ static shared_ptr<Interface> FindExistingNodeByMAC(const InetAddress& ipAddr, in
 /**
  * Check if host at given IP address is reachable by NetXMS server
  */
-static bool HostIsReachable(const InetAddress& ipAddr, int32_t zoneUIN, bool fullCheck, SNMP_Transport **transport, shared_ptr<AgentConnection> *preparedAgentConnection)
+static bool HostIsReachable(const InetAddress& ipAddr, int32_t zoneUIN, bool fullCheck, SNMP_Transport **transport,
+      shared_ptr<AgentConnection> *preparedAgentConnection, SSHCredentials *sshCredentials, uint16_t *sshPort)
 {
    bool reachable = false;
 
@@ -134,6 +135,10 @@ static bool HostIsReachable(const InetAddress& ipAddr, int32_t zoneUIN, bool ful
       *transport = nullptr;
    if (preparedAgentConnection != nullptr)
       preparedAgentConnection->reset();
+   if (sshCredentials != nullptr)
+      memset(sshCredentials, 0, sizeof(SSHCredentials));
+   if (sshPort != nullptr)
+      *sshPort = 0;
 
    uint32_t zoneProxy = 0;
    if (IsZoningEnabled() && (zoneUIN != 0))
@@ -278,6 +283,15 @@ static bool HostIsReachable(const InetAddress& ipAddr, int32_t zoneUIN, bool ful
       delete pTransport;
    }
 
+   if (reachable && !fullCheck)
+      return true;
+
+   // *** SSH ***
+   if (SSHCheckCommSettings((zoneProxy != 0) ? zoneProxy : g_dwMgmtNode, ipAddr, zoneUIN, sshCredentials, sshPort))
+   {
+      reachable = true;
+   }
+
    return reachable;
 }
 
@@ -336,7 +350,7 @@ static bool AcceptNewNode(NewNodeData *newNodeData, const MacAddress& macAddr)
       if (iface == nullptr)
          break;
 
-      if (!HostIsReachable(newNodeData->ipAddr, newNodeData->zoneUIN, false, nullptr, nullptr))
+      if (!HostIsReachable(newNodeData->ipAddr, newNodeData->zoneUIN, false, nullptr, nullptr, nullptr, nullptr))
       {
          nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNode(%s): found existing interface with same MAC address, but new IP is not reachable"), szIpAddr);
          return false;
@@ -402,7 +416,9 @@ static bool AcceptNewNode(NewNodeData *newNodeData, const MacAddress& macAddr)
    // Check if host is reachable
    SNMP_Transport *snmpTransport = nullptr;
    shared_ptr<AgentConnection> agentConnection;
-   if (!HostIsReachable(newNodeData->ipAddr, newNodeData->zoneUIN, true, &snmpTransport, &agentConnection))
+   SSHCredentials sshCredentials;
+   uint16_t sshPort;
+   if (!HostIsReachable(newNodeData->ipAddr, newNodeData->zoneUIN, true, &snmpTransport, &agentConnection, &sshCredentials, &sshPort))
    {
       nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNode(%s): host is not reachable"), szIpAddr);
       return false;
@@ -427,6 +443,10 @@ static bool AcceptNewNode(NewNodeData *newNodeData, const MacAddress& macAddr)
       data.flags |= NNF_IS_AGENT;
       agentConnection->getParameter(_T("Agent.Version"), data.agentVersion, MAX_AGENT_VERSION_LEN);
       agentConnection->getParameter(_T("System.PlatformName"), data.platform, MAX_PLATFORM_NAME_LEN);
+   }
+   if (sshPort != 0)
+   {
+      data.flags |= NNF_IS_SSH;
    }
 
    // Read interface list if possible
@@ -507,12 +527,15 @@ static bool AcceptNewNode(NewNodeData *newNodeData, const MacAddress& macAddr)
    // Check supported communication protocols
    if (filterFlags & DFF_CHECK_PROTOCOLS)
    {
-      bool result = false;
+      result = false;
 
       if ((filterFlags & DFF_PROTOCOL_AGENT) && (data.flags & NNF_IS_AGENT))
          result = true;
 
       if ((filterFlags & DFF_PROTOCOL_SNMP) && (data.flags & NNF_IS_SNMP))
+         result = true;
+
+      if ((filterFlags & DFF_PROTOCOL_SSH) && (data.flags & NNF_IS_SSH))
          result = true;
 
       nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNode(%s): protocol check result is %s"), szIpAddr, result ? _T("true") : _T("false"));
@@ -535,7 +558,7 @@ static bool AcceptNewNode(NewNodeData *newNodeData, const MacAddress& macAddr)
             vm->setGlobalVariable("$snmp", vm->createValue(vm->createObject(&g_nxslSnmpTransportClass, snmpTransport)));
             snmpTransport = nullptr;   // Transport will be deleted by NXSL object destructor
          }
-         // TODO: make agent connection available in script
+         // TODO: make agent and SSH connection available in script
          vm->setGlobalVariable("$node", vm->createValue(vm->createObject(&g_nxslDiscoveredNodeClass, &data)));
 
          NXSL_Value *param = vm->createValue(vm->createObject(&g_nxslDiscoveredNodeClass, &data));
@@ -1118,7 +1141,10 @@ void CheckRange(const InetAddressListElement& range, void (*callback)(const Inet
          {
             ConsoleDebugPrintf(console, DEBUG_TAG_DISCOVERY, 5, _T("Starting TCP check on range %s - %s via proxy %s [%u]"),
                   IpToStr(from, ipAddr1), IpToStr(to, ipAddr2), proxy->getName(), proxy->getId());
-            ScanAddressRangeTCPProxy(conn.get(), from, blockEndAddr, AGENT_LISTEN_PORT, callback, range.getZoneUIN(), proxy.get(), console);
+            IntegerArray<uint16_t> ports = GetWellKnownPorts(_T("agent"), 0);
+            ports.addAll(GetWellKnownPorts(_T("ssh"), 0));
+            for(int i = 0; i < ports.size(); i++)
+               ScanAddressRangeTCPProxy(conn.get(), from, blockEndAddr, ports.get(i), callback, range.getZoneUIN(), proxy.get(), console);
             ScanAddressRangeTCPProxy(conn.get(), from, blockEndAddr, ETHERNET_IP_DEFAULT_PORT, callback, range.getZoneUIN(), proxy.get(), console);
          }
 
@@ -1166,7 +1192,10 @@ void CheckRange(const InetAddressListElement& range, void (*callback)(const Inet
          if (tcpScanEnabled)
          {
             ConsoleDebugPrintf(console, DEBUG_TAG_DISCOVERY, 5, _T("Starting TCP check on range %s - %s"), IpToStr(from, ipAddr1), IpToStr(blockEndAddr, ipAddr2));
-            ScanAddressRangeTCP(from, blockEndAddr, AGENT_LISTEN_PORT, callback, console, nullptr);
+            IntegerArray<uint16_t> ports = GetWellKnownPorts(_T("agent"), 0);
+            ports.addAll(GetWellKnownPorts(_T("ssh"), 0));
+            for(int i = 0; i < ports.size(); i++)
+               ScanAddressRangeTCP(from, blockEndAddr, ports.get(i), callback, console, nullptr);
             ScanAddressRangeTCP(from, blockEndAddr, ETHERNET_IP_DEFAULT_PORT, callback, console, nullptr);
          }
 

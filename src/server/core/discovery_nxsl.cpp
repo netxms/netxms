@@ -208,6 +208,10 @@ NXSL_Value *NXSL_DiscoveredNodeClass::getAttr(NXSL_Object *object, const NXSL_Id
    {
       value = vm->createValue((LONG)((data->flags & NNF_IS_SONMP) ? 1 : 0));
    }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("isSSH"))
+   {
+      value = vm->createValue((LONG)((data->flags & NNF_IS_SSH) ? 1 : 0));
+   }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("netMask"))
    {
       value = vm->createValue(data->ipAddr.getMaskBits());

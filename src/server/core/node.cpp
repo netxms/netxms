@@ -5375,27 +5375,9 @@ bool Node::confPollSnmp(uint32_t requestId)
 /**
  * Check if this node is reachable via SSH
  */
-bool Node::checkSshConnection(const TCHAR *login, const TCHAR *password, uint32_t keyId, uint16_t port)
+bool Node::checkSshConnection()
 {
-   shared_ptr<Node> proxyNode = static_pointer_cast<Node>(FindObjectById(getEffectiveSshProxy()));
-   if (proxyNode == nullptr)
-      return false;
-
-   StringBuffer request(_T("SSH.CheckConnection("));
-   TCHAR ipAddr[64];
-   request.append(getIpAddress().toString(ipAddr));
-   request.append(_T(':'));
-   request.append(port);
-   request.append(_T(",\""));
-   request.append(EscapeStringForAgent(login).cstr());
-   request.append(_T("\",\""));
-   request.append(EscapeStringForAgent(password).cstr());
-   request.append(_T("\","));
-   request.append(keyId);
-   request.append(_T(')'));
-
-   TCHAR response[2];
-   return proxyNode->getMetricFromAgent(request, response, 2) == DCE_SUCCESS && response[0] == _T('1');
+   return SSHCheckConnection(getEffectiveSshProxy(), m_ipAddress, m_sshPort, m_sshLogin, m_sshPassword, m_sshKeyId);
 }
 
 /**
@@ -5408,31 +5390,21 @@ bool Node::confPollSsh(uint32_t requestId)
 
    sendPollerMsg(_T("   Checking SSH connectivity...\r\n"));
 
-   bool success = checkSshConnection();
    bool modified = false;
+   bool success = checkSshConnection();
    if (!success)
    {
-      IntegerArray<uint16_t> ports = GetWellKnownPorts(_T("ssh"), m_zoneUIN);
-      StructArray<SSHCredentials> credentials = GetSSHCredentials(m_zoneUIN);
-      for (int i = 0; (i < ports.size()) && !success; i++)
+      SSHCredentials credentials;
+      uint16_t port;
+      if (SSHCheckCommSettings(getEffectiveSshProxy(), m_ipAddress, m_zoneUIN, &credentials, &port))
       {
-         uint16_t port = ports.get(i);
-         for (int j = 0; j < credentials.size(); j++)
-         {
-            SSHCredentials *crd = credentials.get(j);
-            success = checkSshConnection(crd->login, crd->password, crd->keyId, port);
-            if (success)
-            {
-               modified = true;
-               lockProperties();
-               m_sshPort = port;
-               _tcslcpy(m_sshLogin, crd->login, MAX_SSH_LOGIN_LEN);
-               _tcslcpy(m_sshPassword, crd->password, MAX_SSH_PASSWORD_LEN);
-               m_sshKeyId = crd->keyId;
-               unlockProperties();
-               break;
-            }
-         }
+         lockProperties();
+         m_sshPort = port;
+         _tcslcpy(m_sshLogin, credentials.login, MAX_SSH_LOGIN_LEN);
+         _tcslcpy(m_sshPassword, credentials.password, MAX_SSH_PASSWORD_LEN);
+         m_sshKeyId = credentials.keyId;
+         unlockProperties();
+         modified = true;
       }
    }
 
@@ -5452,6 +5424,7 @@ bool Node::confPollSsh(uint32_t requestId)
       sendPollerMsg(_T("   Cannot connect to SSH\r\n"));
       nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("ConfPoll(%s): SSH unreachable"), m_name);
    }
+
    return modified;
 }
 

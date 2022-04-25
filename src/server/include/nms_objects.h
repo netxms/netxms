@@ -3217,8 +3217,7 @@ protected:
    NetworkPathCheckResult checkNetworkPathElement(uint32_t nodeId, const TCHAR *nodeType, bool isProxy, bool isSwitch, uint32_t requestId, bool secondPass);
    void icmpPollAddress(AgentConnection *conn, const TCHAR *target, const InetAddress& addr);
 
-   bool checkSshConnection(const TCHAR *login, const TCHAR *password, uint32_t keyId, uint16_t port = 22);
-   bool checkSshConnection() { return checkSshConnection(m_sshLogin, m_sshPassword, m_sshKeyId, m_sshPort); }
+   bool checkSshConnection();
 
    void syncDataCollectionWithAgent(AgentConnectionEx *conn);
 

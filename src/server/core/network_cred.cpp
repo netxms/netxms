@@ -357,10 +357,14 @@ IntegerArray<uint16_t> GetWellKnownPorts(const TCHAR *tag, int32_t zoneUIN)
    DBConnectionPoolReleaseConnection(hdb);
 
    if (ports.size() == 0)
-      if(!_tcscmp(tag, _T("snmp")))
+   {
+      if (!_tcscmp(tag, _T("agent")))
+         ports.add(AGENT_LISTEN_PORT);
+      else if (!_tcscmp(tag, _T("snmp")))
          ports.add(161);
       else if(!_tcscmp(tag, _T("ssh")))
          ports.add(22);
+   }
 
    return ports;
 }

@@ -258,6 +258,7 @@ enum CertificateOperation
 #define NNF_IS_CDP            0x0020
 #define NNF_IS_SONMP          0x0040
 #define NNF_IS_LLDP           0x0080
+#define NNF_IS_SSH            0x0100
 
 /**
  * Address list element types
@@ -1252,6 +1253,10 @@ SNMP_Transport *SnmpCheckCommSettings(uint32_t snmpProxy, const InetAddress& ipA
          uint16_t originalPort, SNMP_SecurityContext *originalContext, const StringList &customTestOids,
          int32_t zoneUIN);
 unique_ptr<StringList> SnmpGetKnownCommunities(int32_t zoneUIN);
+
+bool SSHCheckConnection(const shared_ptr<Node>& proxyNode, const InetAddress& addr, uint16_t port, const TCHAR *login, const TCHAR *password, uint32_t keyId);
+bool SSHCheckConnection(uint32_t proxyNodeId, const InetAddress& addr, uint16_t port, const TCHAR *login, const TCHAR *password, uint32_t keyId);
+bool SSHCheckCommSettings(uint32_t proxyNodeId, const InetAddress& addr, int32_t zoneUIN, SSHCredentials *selectedCredentials, uint16_t *selectedPort);
 
 void InitLocalNetInfo();
 
