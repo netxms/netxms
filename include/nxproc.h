@@ -102,6 +102,11 @@ private:
    bool m_running;
    uint32_t m_id;
 
+#ifdef _WIN32
+   bool executeWithOutput();
+   bool executeWithoutOutput();
+#endif
+
 protected:
    TCHAR *m_cmd;
    bool m_shellExec;
