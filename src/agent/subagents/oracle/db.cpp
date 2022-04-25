@@ -251,10 +251,10 @@ bool DatabaseInstance::getData(const TCHAR *tag, TCHAR *value)
 {
    bool success = false;
    MutexLock(m_dataLock);
-   if (m_data != NULL)
+   if (m_data != nullptr)
    {
       const TCHAR *v = m_data->get(tag);
-      if (v != NULL)
+      if (v != nullptr)
       {
          ret_string(value, v);
          success = true;

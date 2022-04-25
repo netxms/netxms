@@ -165,7 +165,7 @@ reconnect:
 		MutexLock(m_sessionLock);
 		m_connected = false;
 		DBDisconnect(m_session);
-		m_session = NULL;
+		m_session = nullptr;
 		MutexUnlock(m_sessionLock);
 	}
 	while(!ConditionWait(m_stopCondition, 60000));	// reconnect every 60 seconds
@@ -266,10 +266,10 @@ bool DatabaseInstance::getData(const TCHAR *tag, TCHAR *value)
 {
 	bool success = false;
 	MutexLock(m_dataLock);
-	if (m_data != NULL)
+	if (m_data != nullptr)
 	{
 		const TCHAR *v = m_data->get(tag);
-		if (v != NULL)
+		if (v != nullptr)
 		{
 			ret_string(value, v);
 			success = true;
@@ -294,7 +294,7 @@ struct TagListCallbackData
 static EnumerationCallbackResult TagListCallback(const TCHAR *key, const TCHAR *value, TagListCallbackData *data)
 {
 	int pmatch[9];
-	if (_pcre_exec_t(data->preg, NULL, reinterpret_cast<const PCRE_TCHAR*>(key), static_cast<int>(_tcslen(key)), 0, 0, pmatch, 9) >= 2) // MATCH
+	if (_pcre_exec_t(data->preg, nullptr, reinterpret_cast<const PCRE_TCHAR*>(key), static_cast<int>(_tcslen(key)), 0, 0, pmatch, 9) >= 2) // MATCH
 	{
 		size_t slen = pmatch[3] - pmatch[2];
 		TCHAR *s = MemAllocString(slen + 1);
