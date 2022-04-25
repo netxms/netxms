@@ -26,6 +26,8 @@ import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.preference.PreferenceManager;
+import org.eclipse.jface.preference.PreferenceNode;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
@@ -43,13 +45,20 @@ import org.netxms.client.SessionNotification;
 import org.netxms.client.constants.UserAuthenticationMethod;
 import org.netxms.client.users.AbstractUserObject;
 import org.netxms.client.users.User;
+import org.netxms.client.users.UserGroup;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
+import org.netxms.nxmc.base.propertypages.PropertyDialog;
 import org.netxms.nxmc.base.views.ConfigurationView;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.users.dialogs.ChangePasswordDialog;
 import org.netxms.nxmc.modules.users.dialogs.CreateUserOrGroupDialog;
+import org.netxms.nxmc.modules.users.propertypages.Authentication;
+import org.netxms.nxmc.modules.users.propertypages.General;
+import org.netxms.nxmc.modules.users.propertypages.GroupMembership;
+import org.netxms.nxmc.modules.users.propertypages.Members;
+import org.netxms.nxmc.modules.users.propertypages.SystemRights;
 import org.netxms.nxmc.modules.users.views.helpers.DecoratingUserLabelProvider;
 import org.netxms.nxmc.modules.users.views.helpers.UserComparator;
 import org.netxms.nxmc.modules.users.views.helpers.UserFilter;
@@ -233,14 +242,32 @@ public class UserManagementView extends ConfigurationView
 			}
 		};
 
-		/*
-		actionEditUser = new PropertyDialogAction(getSite(), viewer);
-		*/
       actionEditUser = new Action(i18n.tr("&Properties..."), SharedIcons.EDIT) {
          @Override
          public void run()
          {
-            // FIXME: implement properties
+            final IStructuredSelection selection = viewer.getStructuredSelection();
+            if (selection.isEmpty())
+               return;
+            
+            AbstractUserObject uo = (AbstractUserObject)selection.getFirstElement();
+            
+            PreferenceManager pm = new PreferenceManager();
+            pm.addToRoot(new PreferenceNode("General", new General(uo)));
+            if (uo instanceof User)
+            {
+               pm.addToRoot(new PreferenceNode("Authentication", new Authentication((User)uo)));
+               pm.addToRoot(new PreferenceNode("Group Membership", new GroupMembership((User)uo)));
+            }
+            else if (uo instanceof UserGroup)
+            {
+               pm.addToRoot(new PreferenceNode("Members", new Members((UserGroup)uo)));        
+            }
+            pm.addToRoot(new PreferenceNode("System Rights", new SystemRights(uo)));
+            
+            PropertyDialog dlg = new PropertyDialog(getWindow().getShell(), pm, String.format(i18n.tr("Properties for %s"), uo.getLabel()));
+            dlg.open();
+            
          }
       };
       actionEditUser.setEnabled(false);
