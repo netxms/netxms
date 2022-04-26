@@ -5145,6 +5145,7 @@ if test "x${BUILD_SERVER}" = "xyes"; then
 		echo "ZeroMQ support          : YES"
 	else
 		echo "ZeroMQ support          : NO"
+	fi
 	if test "x${MICROHTTPD_SUPPORT}" = "xyes"; then
 		echo "MicroHTTPD support      : YES"
 	else
