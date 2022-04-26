@@ -28,22 +28,22 @@
 /**
  * Column types
  */
-#define LC_TEXT            0
-#define LC_SEVERITY        1
-#define LC_OBJECT_ID       2
-#define LC_USER_ID         3
-#define LC_EVENT_CODE      4
-#define LC_TIMESTAMP       5
-#define LC_INTEGER         6
-#define LC_ALARM_STATE     7
-#define LC_ALARM_HD_STATE  8
-#define LC_ZONE_UIN        9
-#define LC_EVENT_ORIGIN    10
-#define LC_TEXT_DETAILS    11
-#define LC_JSON_DETAILS    12
-#define LC_STATUS          13
-#define LC_ACTION_CODE     14
-#define LC_ATM_TXN_CODE    15
+#define LC_TEXT               0
+#define LC_SEVERITY           1
+#define LC_OBJECT_ID          2
+#define LC_USER_ID            3
+#define LC_EVENT_CODE         4
+#define LC_TIMESTAMP          5
+#define LC_INTEGER            6
+#define LC_ALARM_STATE        7
+#define LC_ALARM_HD_STATE     8
+#define LC_ZONE_UIN           9
+#define LC_EVENT_ORIGIN       10
+#define LC_TEXT_DETAILS       11
+#define LC_JSON_DETAILS       12
+#define LC_COMPLETION_STATUS  13
+#define LC_ACTION_CODE        14
+#define LC_ATM_TXN_CODE       15
 
 /**
  * Column filter types
@@ -66,6 +66,7 @@
  * Log column flags
  */
 #define LCF_TSDB_TIMESTAMPTZ  0x0001   /* Column is of timestamptz data type in TimescaleDB */
+#define LCF_CHAR_COLUMN       0x0002   /* Column is of char type */
 
 /**
  * Log column definition structure

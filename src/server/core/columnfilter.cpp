@@ -115,6 +115,12 @@ StringBuffer ColumnFilter::generateSql()
             sql.append(m_value.numericValue);
             sql.append(_T(")"));
 			}
+         else if (m_columnFlags & LCF_CHAR_COLUMN)
+         {
+            sql.append(_T('\''));
+            sql.append(m_value.numericValue);
+            sql.append(_T('\''));
+         }
 			else
 			{
 			   sql.append(m_value.numericValue);

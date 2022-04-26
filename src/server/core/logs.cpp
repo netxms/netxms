@@ -110,7 +110,7 @@ static NXCORE_LOG s_logs[] =
          { _T("recipient"), _T("Recipient"), LC_TEXT, 0 },
          { _T("subject"), _T("Subject"), LC_TEXT, 0 },
          { _T("message"), _T("Message"), LC_TEXT, 0 },
-         { _T("success"), _T("Status"), LC_STATUS, 0 },
+         { _T("success"), _T("Status"), LC_COMPLETION_STATUS, LCF_CHAR_COLUMN },
          { nullptr, nullptr, 0, 0 }
       }
    },
@@ -126,7 +126,7 @@ static NXCORE_LOG s_logs[] =
          { _T("action_data"), _T("Action data"), LC_TEXT, 0 },
          { _T("event_id"), _T("Event ID"), LC_INTEGER, 0 },
          { _T("event_code"), _T("Event"), LC_EVENT_CODE, 0 },
-         { _T("success"), _T("Status"), LC_STATUS, 0 },
+         { _T("success"), _T("Status"), LC_COMPLETION_STATUS, LCF_CHAR_COLUMN },
          { nullptr, nullptr, 0, 0 }
       }
    },

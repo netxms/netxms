@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2021 Raden Solutions
+ * Copyright (C) 2021-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,21 +29,21 @@ import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.widgets.ImageCombo;
 
 /**
- * Condition editor for notification status columns
+ * Condition editor for operation completion status columns
  */
-public class StatusConditionEditor extends ConditionEditor
+public class CompletionStatusConditionEditor extends ConditionEditor
 {
    private static final String[] OPERATIONS = { "IS", "IS NOT" };
-   
+
    private ImageCombo state;
-   
+
    /**
     * @param parent
     * @param toolkit
     * @param column
     * @param parentElement
     */
-   public StatusConditionEditor(Composite parent, FormToolkit toolkit)
+   public CompletionStatusConditionEditor(Composite parent, FormToolkit toolkit)
    {
       super(parent, toolkit);
    }

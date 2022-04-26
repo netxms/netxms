@@ -358,7 +358,7 @@ public class FilterBuilder extends Composite
       
       columns.put(column.getName(), editor);
    }
-	
+
 	/**
 	 * Create menu for selecting log column
 	 * 

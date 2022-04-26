@@ -116,7 +116,7 @@ public class LogLabelProvider implements ITableLabelProvider
 				{
 					return null;
 				}
-			case LogColumn.LC_STATUS:
+			case LogColumn.LC_COMPLETION_STATUS:
 				try
 				{
 				   int status = Integer.parseInt(value);
@@ -215,7 +215,7 @@ public class LogLabelProvider implements ITableLabelProvider
 				{
 					return Messages.get().LogLabelProvider_Error;
 				}
-         case LogColumn.LC_STATUS:
+         case LogColumn.LC_COMPLETION_STATUS:
             try
             {
                int status = Integer.parseInt(value);

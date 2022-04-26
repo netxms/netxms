@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,25 +26,27 @@ import org.netxms.base.NXCPMessage;
 public class LogColumn
 {
 	// Column types
-	public static final int LC_TEXT           = 0;
-	public static final int LC_SEVERITY       = 1;
-	public static final int LC_OBJECT_ID      = 2;
-	public static final int LC_USER_ID        = 3;
-	public static final int LC_EVENT_CODE     = 4;
-	public static final int LC_TIMESTAMP      = 5;
-	public static final int LC_INTEGER        = 6;
-	public static final int LC_ALARM_STATE    = 7;
-	public static final int LC_ALARM_HD_STATE = 8;
-   public static final int LC_ZONE_UIN       = 9;
-   public static final int LC_EVENT_ORIGIN   = 10;
-   public static final int LC_TEXT_DETAILS   = 11;
-   public static final int LC_JSON_DETAILS   = 12;
-   public static final int LC_STATUS         = 13;
+	public static final int LC_TEXT              = 0;
+	public static final int LC_SEVERITY          = 1;
+	public static final int LC_OBJECT_ID         = 2;
+	public static final int LC_USER_ID           = 3;
+	public static final int LC_EVENT_CODE        = 4;
+	public static final int LC_TIMESTAMP         = 5;
+	public static final int LC_INTEGER           = 6;
+	public static final int LC_ALARM_STATE       = 7;
+	public static final int LC_ALARM_HD_STATE    = 8;
+   public static final int LC_ZONE_UIN          = 9;
+   public static final int LC_EVENT_ORIGIN      = 10;
+   public static final int LC_TEXT_DETAILS      = 11;
+   public static final int LC_JSON_DETAILS      = 12;
+   public static final int LC_COMPLETION_STATUS = 13;
+   public static final int LC_ACTION_CODE       = 14;
+   public static final int LC_ATM_TXN_CODE      = 15;
 
 	private String name;
 	private String description;
 	private int type;
-	
+
 	/**
 	 * Create log column object from NXCP message
 	 * 

@@ -468,12 +468,12 @@ static void WriteServerActionExecutionLog(uint64_t eventId, uint32_t eventCode, 
    {
       DBBind(hStmt, 1, DB_SQLTYPE_BIGINT, InterlockedIncrement64(&s_logRecordId));
       DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(time(nullptr)));
-      DBBind(hStmt, 3, DB_SQLTYPE_BIGINT, actionId);
-      DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, actionName, DB_BIND_STATIC);
-      DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, channelName, DB_BIND_STATIC);
-      DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, recipient, DB_BIND_STATIC);
-      DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, subject, DB_BIND_STATIC);
-      DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, body, DB_BIND_STATIC);
+      DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, actionId);
+      DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, actionName, DB_BIND_STATIC, 63);
+      DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, channelName, DB_BIND_STATIC, 63);
+      DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, recipient, DB_BIND_STATIC, 2000);
+      DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, subject, DB_BIND_STATIC, 2000);
+      DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, body, DB_BIND_STATIC, 2000);
       DBBind(hStmt, 9, DB_SQLTYPE_BIGINT, eventId);
       DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, eventCode);
       DBBind(hStmt, 11, DB_SQLTYPE_VARCHAR, success ? _T("1") : _T("0"), DB_BIND_STATIC);

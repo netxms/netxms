@@ -247,7 +247,7 @@ public class LogViewer extends ViewPart
 				return 120;
 			case LogColumn.LC_SEVERITY:
 				return 100;
-			case LogColumn.LC_STATUS:
+			case LogColumn.LC_COMPLETION_STATUS:
 				return 100;
 			case LogColumn.LC_OBJECT_ID:
 				return 150;

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,8 +21,8 @@ package org.netxms.ui.eclipse.logviewer.widgets;
 import java.util.ArrayList;
 import java.util.List;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -49,7 +49,7 @@ public class ColumnFilterEditor extends DashboardComposite
 	private FilterBuilder filterBuilder;
 	private List<ConditionEditor> conditions = new ArrayList<ConditionEditor>();
 	private ColumnFilterSetOperation booleanOperation = ColumnFilterSetOperation.OR;
-	
+
 	/**
 	 * @param parent
 	 * @param style
@@ -59,13 +59,13 @@ public class ColumnFilterEditor extends DashboardComposite
 	public ColumnFilterEditor(Composite parent, FormToolkit toolkit, LogColumn column, ColumnFilterSetOperation operation, final Runnable deleteHandler)
 	{
 		super(parent, SWT.BORDER);
-		
+
 		this.toolkit = toolkit;
 		this.column = column;
 		this.booleanOperation = operation;
-		
+
 		toolkit.adapt(this);
-		
+
 		GridLayout layout = new GridLayout();
 		setLayout(layout);
 		
@@ -79,13 +79,13 @@ public class ColumnFilterEditor extends DashboardComposite
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		header.setLayoutData(gd);
-		
+
 		final Label title = toolkit.createLabel(header, column.getDescription());
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = false;
 		title.setLayoutData(gd);
-		
+
 		final Composite buttons = toolkit.createComposite(header); 
 		layout = new GridLayout();
 		layout.marginWidth = 0;
@@ -99,33 +99,21 @@ public class ColumnFilterEditor extends DashboardComposite
 
 		final Button radioAnd = toolkit.createButton(buttons, Messages.get().ColumnFilterEditor_AndCondition, SWT.RADIO);
 		radioAnd.setSelection(booleanOperation == ColumnFilterSetOperation.AND);
-		radioAnd.addSelectionListener(new SelectionListener() {
+      radioAnd.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
 				setBooleanOperation(ColumnFilterSetOperation.AND);
 			}
-			
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e)
-			{
-				widgetSelected(e);
-			}
 		});
 		
 		final Button radioOr = toolkit.createButton(buttons, Messages.get().ColumnFilterEditor_OrCondition, SWT.RADIO);
 		radioOr.setSelection(booleanOperation == ColumnFilterSetOperation.OR);
-		radioOr.addSelectionListener(new SelectionListener() {
+      radioOr.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
 				setBooleanOperation(ColumnFilterSetOperation.OR);
-			}
-			
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e)
-			{
-				widgetSelected(e);
 			}
 		});
 		
@@ -150,7 +138,7 @@ public class ColumnFilterEditor extends DashboardComposite
 			}
 		});
 	}
-	
+
 	/**
 	 * @param op
 	 */
@@ -207,6 +195,9 @@ public class ColumnFilterEditor extends DashboardComposite
 			case LogColumn.LC_ALARM_STATE:
 			   editor = new AlarmStateConditionEditor(this, toolkit);
             break;
+         case LogColumn.LC_COMPLETION_STATUS:
+            editor = new CompletionStatusConditionEditor(this, toolkit);
+            break;
 			case LogColumn.LC_EVENT_CODE:
 			   editor = new EventConditionEditor(this, toolkit);
             break;
@@ -230,9 +221,6 @@ public class ColumnFilterEditor extends DashboardComposite
             break;
          case LogColumn.LC_ZONE_UIN:
             editor = new ZoneConditionEditor(this, toolkit);
-            break;
-         case LogColumn.LC_STATUS:
-            editor = new StatusConditionEditor(this, toolkit);
             break;
 			default:
 			   editor = new TextConditionEditor(this, toolkit);
