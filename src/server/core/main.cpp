@@ -68,6 +68,7 @@ void InitClientListeners();
 void InitMobileDeviceListeners();
 void InitCertificates();
 bool LoadServerCertificate(RSA **serverKey);
+bool LoadInternalCACertificate();
 void InitUsers();
 void CleanupUsers();
 void CleanupObjects();
@@ -556,6 +557,7 @@ static bool InitCryptography()
    {
       nxlog_debug_tag(_T("crypto"), 1, _T("Server certificate loaded"));
    }
+   LoadInternalCACertificate();
    if (g_pServerKey != nullptr)
    {
       nxlog_debug_tag(_T("crypto"), 1, _T("Using server certificate key"));

@@ -70,12 +70,21 @@ StringSet g_crlList;
 TCHAR g_serverCertificatePath[MAX_PATH] = _T("");
 TCHAR g_serverCertificateKeyPath[MAX_PATH] = _T("");
 char g_serverCertificatePassword[MAX_PASSWORD] = "";
+TCHAR g_internalCACertificatePath[MAX_PATH] = _T("");
+TCHAR g_internalCACertificateKeyPath[MAX_PATH] = _T("");
+char g_internalCACertificatePassword[MAX_PASSWORD] = "";
 
 /**
  * Server certificate
  */
 static X509 *s_serverCertificate = nullptr;
 static EVP_PKEY *s_serverCertificateKey = nullptr;
+
+/**
+ * Server internal certificate
+ */
+static X509 *s_internalCACertificate = nullptr;
+static EVP_PKEY *s_internalCACertificateKey = nullptr;
 
 /**
  * Trusted CA certificate store
@@ -95,6 +104,13 @@ X509 *IssueCertificate(X509_REQ *request, const char *ou, const char *cn, int da
 {
    nxlog_debug_tag(DEBUG_TAG, 4, _T("IssueCertificate: new certificate request (CN override: %hs, OU override: %hs)"),
             (cn != nullptr) ? cn : "<not set>", (ou != nullptr) ? ou : "<not set>");
+
+
+   if (s_internalCACertificate == nullptr || s_internalCACertificateKey == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("IssueCertificate: CA certificate not set"));
+      return nullptr;
+   }
 
    X509_NAME *requestSubject = X509_REQ_get_subject_name(request);
    if (requestSubject == nullptr)
@@ -185,7 +201,7 @@ X509 *IssueCertificate(X509_REQ *request, const char *ou, const char *cn, int da
       return nullptr;
    }
 
-   X509_NAME *issuerName = X509_get_subject_name(s_serverCertificate);
+   X509_NAME *issuerName = X509_get_subject_name(s_internalCACertificate);
    if (issuerName == nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("IssueCertificate: cannot get CA subject name"));
@@ -239,7 +255,7 @@ X509 *IssueCertificate(X509_REQ *request, const char *ou, const char *cn, int da
       return nullptr;
    }
 
-   if (X509_sign(cert, s_serverCertificateKey, EVP_sha256()) == 0)
+   if (X509_sign(cert, s_internalCACertificateKey, EVP_sha256()) == 0)
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("IssueCertificate: call to X509_sign() failed"));
       X509_free(cert);
@@ -459,9 +475,9 @@ void ReloadCertificates()
 	s_trustedCertificateStore = CreateTrustedCertificatesStore(g_trustedCertificates, true);
 	if (s_trustedCertificateStore != nullptr)
 	{
-	   // Add server's certificate as trusted
-	   if (s_serverCertificate != nullptr)
-	      X509_STORE_add_cert(s_trustedCertificateStore, s_serverCertificate);
+	   // Add internal CA certificate as trusted
+	   if (s_internalCACertificate != nullptr)
+         X509_STORE_add_cert(s_trustedCertificateStore, s_internalCACertificate);
 	}
 	else
 	{
@@ -491,66 +507,85 @@ void InitCertificates()
 }
 
 /**
- * Load server certificate
+ * Load certificate
  */
-bool LoadServerCertificate(RSA **serverKey)
+static bool LoadCertificate(RSA **serverKey, const TCHAR *certificatePath, const TCHAR *certificateKeyPath, char *certificatePassword, X509 **certificate, EVP_PKEY **certificateKey, const TCHAR *certType)
 {
-   if (g_serverCertificatePath[0] == 0)
+   if (certificatePath[0] == 0)
    {
-      nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Server certificate not set"));
+      nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("%s certificate not set"), certType);
       return false;
    }
 
    // Load server certificate and private key
-   FILE *f = _tfopen(g_serverCertificatePath, _T("r"));
+   FILE *f = _tfopen(certificatePath, _T("r"));
    if (f == nullptr)
    {
-      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Cannot load server certificate from %s (%s)"), g_serverCertificatePath, _tcserror(errno));
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Cannot load %s certificate from %s (%s)"), certType, certificatePath, _tcserror(errno));
       return false;
    }
 
-   DecryptPasswordA("system", g_serverCertificatePassword, g_serverCertificatePassword, MAX_PASSWORD);
-   s_serverCertificate = PEM_read_X509(f, nullptr, nullptr, g_serverCertificatePassword);
-   if (g_serverCertificateKeyPath[0] != 0)
+   DecryptPasswordA("system", certificatePassword, certificatePassword, MAX_PASSWORD);
+   *certificate = PEM_read_X509(f, nullptr, nullptr, certificatePassword);
+   if (certificateKeyPath[0] != 0)
    {
       // Server key is in separate file
       fclose(f);
-      f = _tfopen(g_serverCertificateKeyPath, _T("r"));
+      f = _tfopen(certificateKeyPath, _T("r"));
       if (f == nullptr)
       {
-         nxlog_write(NXLOG_ERROR, _T("Cannot load server certificate key from %s (%s)"), g_serverCertificateKeyPath, _tcserror(errno));
+         nxlog_write(NXLOG_ERROR, _T("Cannot load %s certificate key from %s (%s)"), certType, certificateKeyPath, _tcserror(errno));
          return false;
       }
    }
-   s_serverCertificateKey = PEM_read_PrivateKey(f, nullptr, nullptr, g_serverCertificatePassword);
+   *certificateKey = PEM_read_PrivateKey(f, nullptr, nullptr, certificatePassword);
    fclose(f);
 
-   if ((s_serverCertificate == nullptr) || (s_serverCertificateKey == nullptr))
+   if ((*certificate == nullptr) || (*certificateKey == nullptr))
    {
       TCHAR buffer[1024];
-      nxlog_write(NXLOG_ERROR, _T("Cannot load server certificate from %s (%s)"), g_serverCertificatePath, _ERR_error_tstring(ERR_get_error(), buffer));
+      nxlog_write(NXLOG_ERROR, _T("Cannot load %s certificate from %s (%s)"), certType, certificatePath, _ERR_error_tstring(ERR_get_error(), buffer));
       return false;
    }
-   nxlog_debug_tag(DEBUG_TAG, 3, _T("Server certificate: %s"), static_cast<const TCHAR*>(GetCertificateSubjectString(s_serverCertificate)));
+   nxlog_debug_tag(DEBUG_TAG, 3, _T("%s certificate: %s"), certType, static_cast<const TCHAR*>(GetCertificateSubjectString(*certificate)));
 
-   RSA *privKey = EVP_PKEY_get1_RSA(s_serverCertificateKey);
-   RSA *pubKey = EVP_PKEY_get1_RSA(X509_get_pubkey(s_serverCertificate));
-   if ((privKey != nullptr) && (pubKey != nullptr))
+   if (serverKey != nullptr)
    {
-      // Combine into one key
-      int len = i2d_RSAPublicKey(pubKey, nullptr);
-      len += i2d_RSAPrivateKey(privKey, nullptr);
-      BYTE *buffer = MemAllocArray<BYTE>(len);
+      RSA *privKey = EVP_PKEY_get1_RSA(*certificateKey);
+      RSA *pubKey = EVP_PKEY_get1_RSA(X509_get_pubkey(*certificate));
+      if ((privKey != nullptr) && (pubKey != nullptr))
+      {
+         // Combine into one key
+         int len = i2d_RSAPublicKey(pubKey, nullptr);
+         len += i2d_RSAPrivateKey(privKey, nullptr);
+         BYTE *buffer = MemAllocArray<BYTE>(len);
 
-      BYTE *pos = buffer;
-      i2d_RSAPublicKey(pubKey, &pos);
-      i2d_RSAPrivateKey(privKey, &pos);
+         BYTE *pos = buffer;
+         i2d_RSAPublicKey(pubKey, &pos);
+         i2d_RSAPrivateKey(privKey, &pos);
 
-      *serverKey = RSAKeyFromData(buffer, len, true);
-      MemFree(buffer);
+         *serverKey = RSAKeyFromData(buffer, len, true);
+         MemFree(buffer);
+      }
    }
 
    return true;
+}
+
+/**
+ * Load server certificate
+ */
+bool LoadServerCertificate(RSA **serverKey)
+{
+   return LoadCertificate(serverKey, g_serverCertificatePath, g_serverCertificateKeyPath, g_serverCertificatePassword, &s_serverCertificate, &s_serverCertificateKey, _T("Server"));
+}
+
+/**
+ * Load CA certificate
+ */
+bool LoadInternalCACertificate()
+{
+   return LoadCertificate(nullptr, g_internalCACertificatePath, g_internalCACertificateKeyPath, g_internalCACertificatePassword, &s_internalCACertificate, &s_internalCACertificateKey, _T("Internal CA"));
 }
 
 #if HAVE_X509_STORE_SET_VERIFY_CB
@@ -592,7 +627,9 @@ bool SetupServerTlsContext(SSL_CTX *context)
 #if HAVE_X509_STORE_SET_VERIFY_CB
    X509_STORE_set_verify_cb(store, CertVerifyCallback);
 #endif
-   X509_STORE_add_cert(store, s_serverCertificate);
+   if (s_internalCACertificate != nullptr)
+      X509_STORE_add_cert(store, s_internalCACertificate);
+
    SSL_CTX_set_cert_store(context, store);
    SSL_CTX_use_certificate(context, s_serverCertificate);
    SSL_CTX_use_PrivateKey(context, s_serverCertificateKey);

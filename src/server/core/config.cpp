@@ -35,8 +35,21 @@ extern StringSet g_crlList;
 extern TCHAR g_serverCertificatePath[];
 extern TCHAR g_serverCertificateKeyPath[];
 extern char g_serverCertificatePassword[];
+extern TCHAR g_internalCACertificatePath[];
+extern TCHAR g_internalCACertificateKeyPath[];
+extern char g_internalCACertificatePassword[];
 extern char g_auditLogKey[];
 extern int32_t g_maxClientSessions;
+
+TCHAR s_serverCertificatePath[MAX_PATH] = _T("");
+TCHAR s_serverCertificateKeyPath[MAX_PATH] = _T("");
+char s_serverCertificatePassword[MAX_PASSWORD] = "";
+TCHAR s_tunnelCertificatePath[MAX_PATH] = _T("");
+TCHAR s_tunnelCertificateKeyPath[MAX_PATH] = _T("");
+char s_tunnelCertificatePassword[MAX_PASSWORD] = "";
+TCHAR s_internalCACertificatePath[MAX_PATH] = _T("");
+TCHAR s_internalCACertificateKeyPath[MAX_PATH] = _T("");
+char s_internalCACertificatePassword[MAX_PASSWORD] = "";
 
 void UpdateAlarmExpirationTimes();
 void WakeupActiveDiscoveryThread();
@@ -99,6 +112,9 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("DefaultThreadStackSize"), CT_SIZE_BYTES, 0, 0, 0, 0, &s_defaultThreadStackSize, nullptr },
    { _T("DumpDirectory"), CT_STRING, 0, 0, MAX_PATH, 0, g_szDumpDir, nullptr },
    { _T("FullCrashDumps"), CT_BOOLEAN_FLAG_64, 0, 0, AF_WRITE_FULL_DUMP, 0, &g_flags, nullptr },
+   { _T("InternalCACertificate"), CT_STRING, 0, 0, MAX_PATH, 0, s_internalCACertificatePath, nullptr },
+   { _T("InternalCACertificateKey"), CT_STRING, 0, 0, MAX_PATH, 0, s_internalCACertificateKeyPath, nullptr },
+   { _T("InternalCACertificatePassword"), CT_MB_STRING, 0, 0, MAX_PASSWORD, 0, s_internalCACertificatePassword, nullptr },
    { _T("LibraryDirectory"), CT_STRING, 0, 0, MAX_PATH, 0, g_netxmsdLibDir, nullptr },
    { _T("ListenAddress"), CT_STRING, 0, 0, MAX_PATH, 0, g_szListenAddress, nullptr },
    { _T("LogFile"), CT_STRING, 0, 0, MAX_PATH, 0, g_szLogFile, nullptr },
@@ -111,11 +127,14 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("PerfDataStorageDriver"), CT_STRING_CONCAT, '\n', 0, 0, 0, &g_pdsLoadList, nullptr },
    { _T("ProcessAffinityMask"), CT_LONG, 0, 0, 0, 0, &g_processAffinityMask, nullptr },
    { _T("ServerCACertificate"), CT_STRING_SET, 0, 0, 0, 0, &g_trustedCertificates, nullptr }, //Do not document is depricated
-   { _T("ServerCertificate"), CT_STRING, 0, 0, MAX_PATH, 0, g_serverCertificatePath, nullptr },
-   { _T("ServerCertificateKey"), CT_STRING, 0, 0, MAX_PATH, 0, g_serverCertificateKeyPath, nullptr },
-   { _T("ServerCertificatePassword"), CT_MB_STRING, 0, 0, MAX_PASSWORD, 0, g_serverCertificatePassword, nullptr },
+   { _T("ServerCertificate"), CT_STRING, 0, 0, MAX_PATH, 0, s_serverCertificatePath, nullptr },
+   { _T("ServerCertificateKey"), CT_STRING, 0, 0, MAX_PATH, 0, s_serverCertificateKeyPath, nullptr },
+   { _T("ServerCertificatePassword"), CT_MB_STRING, 0, 0, MAX_PASSWORD, 0, s_serverCertificatePassword, nullptr },
    { _T("StartupSQLScript"), CT_STRING, 0, 0, MAX_PATH, 0, g_startupSqlScriptPath, nullptr },
    { _T("TrustedCertificate"), CT_STRING_SET, 0, 0, 0, 0, &g_trustedCertificates, nullptr },
+   { _T("TunnelCertificate"), CT_STRING, 0, 0, MAX_PATH, 0, s_tunnelCertificatePath, nullptr },
+   { _T("TunnelCertificateKey"), CT_STRING, 0, 0, MAX_PATH, 0, s_tunnelCertificateKeyPath, nullptr },
+   { _T("TunnelCertificatePassword"), CT_MB_STRING, 0, 0, MAX_PASSWORD, 0, s_tunnelCertificatePassword, nullptr },
    { _T("WriteLogAsJson"), CT_BOOLEAN_FLAG_64, 0, 0, AF_LOG_IN_JSON_FORMAT, 0, &g_flags, nullptr },
    { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, nullptr, nullptr }
 };
@@ -204,6 +223,33 @@ bool NXCORE_EXPORTABLE LoadConfig(int *debugLevel)
       {
          g_flags &= ~(AF_USE_SYSLOG | AF_USE_SYSTEMD_JOURNAL | AF_LOG_TO_STDOUT);
       }
+
+      if(s_internalCACertificatePath[0] != 0)
+      {
+         _tcsncpy(g_internalCACertificatePath, s_internalCACertificatePath, MAX_PATH);
+         _tcsncpy(g_internalCACertificateKeyPath, s_internalCACertificateKeyPath, MAX_PATH);
+         strncpy(g_internalCACertificatePassword, s_internalCACertificatePassword, MAX_PASSWORD);
+      }
+      else if (s_serverCertificatePath[0] != 0)
+      {
+         _tcsncpy(g_internalCACertificatePath, s_serverCertificatePath, MAX_PATH);
+         _tcsncpy(g_internalCACertificateKeyPath, s_serverCertificateKeyPath, MAX_PATH);
+         strncpy(g_internalCACertificatePassword, s_serverCertificatePassword, MAX_PASSWORD);
+      }
+
+      if(s_tunnelCertificatePath[0] != 0)
+      {
+         _tcsncpy(g_serverCertificatePath, s_tunnelCertificatePath, MAX_PATH);
+         _tcsncpy(g_serverCertificateKeyPath, s_tunnelCertificateKeyPath, MAX_PATH);
+         strncpy(g_serverCertificatePassword, s_tunnelCertificatePassword, MAX_PASSWORD);
+      }
+      else if (s_serverCertificatePath[0] != 0)
+      {
+         _tcsncpy(g_serverCertificatePath, s_serverCertificatePath, MAX_PATH);
+         _tcsncpy(g_serverCertificateKeyPath, s_serverCertificateKeyPath, MAX_PATH);
+         strncpy(g_serverCertificatePassword, s_serverCertificatePassword, MAX_PASSWORD);
+      }
+
       bSuccess = true;
    }
 
