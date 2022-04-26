@@ -64,118 +64,140 @@ static size_t OnCurlDataReceived(char *ptr, size_t size, size_t nmemb, void *use
  */
 static LONG H_CheckService(const TCHAR *parameters, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
-   int ret = SYSINFO_RC_ERROR;
+   char url[2048] = "";
+   AgentGetParameterArgA(parameters, 1, url, 2048);
+   TrimA(url);
+   if (url[0] == 0)
+      return SYSINFO_RC_UNSUPPORTED;
+
+   TCHAR pattern[256] = _T("");
+   AgentGetParameterArg(parameters, 2, pattern, 256);
+   Trim(pattern);
+   if (pattern[0] == 0)
+   {
+      _tcscpy(pattern, _T("^HTTP/(1\\.[01]|2) 200 .*"));
+   }
+
+   const char *eptr;
+   int eoffset;
+   PCRE *compiledPattern = _pcre_compile_t(reinterpret_cast<const PCRE_TCHAR*>(pattern), PCRE_COMMON_FLAGS | PCRE_CASELESS, &eptr, &eoffset, nullptr);
+   if (compiledPattern == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 3, _T("H_CheckService(%hs): Cannot compile pattern \"%s\""), url, pattern);
+      return SYSINFO_RC_UNSUPPORTED;
+   }
+
+   TCHAR optionsText[256] = _T("");
+   AgentGetParameterArg(parameters, 3, optionsText, 256);
+   Trim(optionsText);
+   _tcslwr(optionsText);
+   StringList *options = String(optionsText).split(_T(","));
+
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("H_CheckService(%hs): pattern=\"%s\", options=\"%s\""), url, pattern, optionsText);
+
    int retCode = PC_ERR_BAD_PARAMS;
 
-   char url[2048] = "";
-   TCHAR pattern[4096] = _T("");
-
-   AgentGetParameterArgA(parameters, 1, url, 2048);
-   AgentGetParameterArg(parameters, 2, pattern, 256);
-   TrimA(url);
-   Trim(pattern);
-   if (url[0] != 0)
+   CURL *curl = curl_easy_init();
+   if (curl != nullptr)
    {
-      if (pattern[0] == 0)
-      {
-         _tcscpy(pattern, _T("^HTTP/(1\\.[01]|2) 200 .*"));
-      }
-
-      nxlog_debug_tag(DEBUG_TAG, 5, _T("H_CheckService(%hs): pattern=%s"), url, pattern);
-
-      const char *eptr;
-      int eoffset;
-      PCRE *compiledPattern = _pcre_compile_t(reinterpret_cast<const PCRE_TCHAR*>(pattern), PCRE_COMMON_FLAGS | PCRE_CASELESS, &eptr, &eoffset, nullptr);
-      if (compiledPattern != nullptr)
-      {
-         CURL *curl = curl_easy_init();
-         if (curl != NULL)
-         {
-            ret = SYSINFO_RC_SUCCESS;
-
 #if HAVE_DECL_CURLOPT_NOSIGNAL
-            curl_easy_setopt(curl, CURLOPT_NOSIGNAL, (long)1);
+      curl_easy_setopt(curl, CURLOPT_NOSIGNAL, static_cast<long>(1)); // do not install signal handlers or send signals
 #endif
+      curl_easy_setopt(curl, CURLOPT_HEADER, static_cast<long>(1)); // include header in data
+      curl_easy_setopt(curl, CURLOPT_TIMEOUT, g_netsvcTimeout);
+      curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, OnCurlDataReceived);
+      curl_easy_setopt(curl, CURLOPT_USERAGENT, "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36");
 
-            curl_easy_setopt(curl, CURLOPT_NOSIGNAL, (long)1); // do not install signal handlers or send signals
-            curl_easy_setopt(curl, CURLOPT_HEADER, (long)1); // include header in data
-            curl_easy_setopt(curl, CURLOPT_TIMEOUT, g_netsvcTimeout);
-            curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, OnCurlDataReceived);
-            curl_easy_setopt(curl, CURLOPT_USERAGENT, "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36");
+      // SSL-related stuff
+      bool verifyPeer = (((g_netsvcFlags & NETSVC_AF_VERIFYPEER) != 0) || options->contains(_T("verify-peer"))) && !options->contains(_T("no-verify-peer"));
+      curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, static_cast<long>(verifyPeer ? 1 : 0));
+      if (g_certBundle[0] != 0)
+      {
+         curl_easy_setopt(curl, CURLOPT_CAINFO, g_certBundle);
+      }
+      if (options->contains(_T("no-verify-host")))
+         curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, static_cast<long>(0));
+      else if (options->contains(_T("verify-host")))
+         curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, static_cast<long>(2));
 
-            // SSL-related stuff
-            curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, g_netsvcFlags & NETSVC_AF_VERIFYPEER);
-            if (g_certBundle[0] != 0)
+      // Receiving buffer
+      ByteStream data(32768);
+      data.setAllocationStep(32768);
+      curl_easy_setopt(curl, CURLOPT_WRITEDATA, &data);
+
+      char *requestURL = url;
+
+retry:
+      if (curl_easy_setopt(curl, CURLOPT_URL, requestURL) == CURLE_OK)
+      {
+         if (curl_easy_perform(curl) == 0)
+         {
+            long responseCode = 0;
+            curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &responseCode);
+            nxlog_debug_tag(DEBUG_TAG, 6, _T("H_CheckService(%hs): got reply (%u bytes, response code %03ld)"), url, static_cast<uint32_t>(data.size()), responseCode);
+
+            if ((responseCode >= 300) && (responseCode <= 399) && options->contains(_T("follow-location")))
             {
-               curl_easy_setopt(curl, CURLOPT_CAINFO, g_certBundle);
+               char *redirectURL = nullptr;
+               curl_easy_getinfo(curl, CURLINFO_REDIRECT_URL, &redirectURL);
+               if (redirectURL != nullptr)
+               {
+                  requestURL = redirectURL;
+                  nxlog_debug_tag(DEBUG_TAG, 6, _T("H_CheckService(%hs): follow redirect to %hs"), url, redirectURL);
+                  data.clear();
+                  goto retry;
+               }
             }
 
-            // Receiving buffer
-            ByteStream data(32768);
-            data.setAllocationStep(32768);
-            curl_easy_setopt(curl, CURLOPT_WRITEDATA, &data);
-
-            if (curl_easy_setopt(curl, CURLOPT_URL, url) == CURLE_OK)
+            if (data.size() > 0)
             {
-               if (curl_easy_perform(curl) == 0)
-               {
-                  nxlog_debug_tag(DEBUG_TAG, 6, _T("H_CheckService(%hs): got reply: %lu bytes"), url, (unsigned long)data.size());
-                  if (data.size() > 0)
-                  {
-                     data.write('\0');
-                     size_t size;
-                     int pmatch[30];
+               data.write('\0');
+               size_t size;
+               int pmatch[30];
 #ifdef UNICODE
-                     WCHAR *wtext = WideStringFromUTF8String((char *)data.buffer(&size));
-                     if (_pcre_exec_t(compiledPattern, NULL, reinterpret_cast<const PCRE_TCHAR*>(wtext), static_cast<int>(wcslen(wtext)), 0, 0, pmatch, 30) >= 0)
+               WCHAR *wtext = WideStringFromUTF8String((char *)data.buffer(&size));
+               if (_pcre_exec_t(compiledPattern, NULL, reinterpret_cast<const PCRE_TCHAR*>(wtext), static_cast<int>(wcslen(wtext)), 0, 0, pmatch, 30) >= 0)
 #else
-                     char *text = (char *)data.buffer(&size);
-                     if (pcre_exec(compiledPattern, NULL, text, static_cast<int>(size), 0, 0, pmatch, 30) >= 0)
+               char *text = (char *)data.buffer(&size);
+               if (pcre_exec(compiledPattern, NULL, text, static_cast<int>(size), 0, 0, pmatch, 30) >= 0)
 #endif
-                     {
-                        nxlog_debug_tag(DEBUG_TAG, 5, _T("H_CheckService(%hs): matched"), url);
-                        retCode = PC_ERR_NONE;
-                     }
-                     else
-                     {
-                        nxlog_debug_tag(DEBUG_TAG, 5, _T("H_CheckService(%hs): not matched"), url);
-                        retCode = PC_ERR_NOMATCH;
-                     }
-#ifdef UNICODE
-                     MemFree(wtext);
-#endif
-                  }
-                  else
-                  {
-                     // zero size reply
-                     retCode = PC_ERR_NOMATCH;
-                  }
+               {
+                  nxlog_debug_tag(DEBUG_TAG, 5, _T("H_CheckService(%hs): matched"), url);
+                  retCode = PC_ERR_NONE;
                }
                else
                {
-                  retCode = PC_ERR_CONNECT;
+                  nxlog_debug_tag(DEBUG_TAG, 5, _T("H_CheckService(%hs): not matched"), url);
+                  retCode = PC_ERR_NOMATCH;
                }
+#ifdef UNICODE
+               MemFree(wtext);
+#endif
             }
-            curl_easy_cleanup(curl);
+            else
+            {
+               // zero size reply
+               retCode = PC_ERR_NOMATCH;
+            }
          }
          else
          {
-            nxlog_debug_tag(DEBUG_TAG, 3, _T("H_CheckService(%hs): curl_init failed"), url);
+            nxlog_debug_tag(DEBUG_TAG, 6, _T("H_CheckService(%hs): call to curl_easy_perform failed"), url);
+            retCode = PC_ERR_CONNECT;
          }
-         _pcre_free_t(compiledPattern);
       }
-      else
-      {
-         nxlog_debug_tag(DEBUG_TAG, 3, _T("H_CheckService(%hs): Cannot compile pattern \"%s\""), url, pattern);
-      }
+      curl_easy_cleanup(curl);
    }
-
-   if (ret == SYSINFO_RC_SUCCESS)
+   else
    {
-      ret_int(value, retCode);
+      nxlog_debug_tag(DEBUG_TAG, 3, _T("H_CheckService(%hs): curl_init failed"), url);
    }
 
-   return ret;
+   _pcre_free_t(compiledPattern);
+   delete options;
+
+   ret_int(value, retCode);
+   return SYSINFO_RC_SUCCESS;
 }
 
 /**
@@ -184,26 +206,10 @@ static LONG H_CheckService(const TCHAR *parameters, const TCHAR *arg, TCHAR *val
 static bool SubagentInit(Config *config)
 {
    bool success = config->parseTemplate(_T("netsvc"), m_cfgTemplate);
+
    if (success)
-   {
       success = InitializeLibCURL();
-   }
-   if (success)
-   {
-      nxlog_debug_tag(DEBUG_TAG, 3, _T("Using cURL version: %hs"), GetLibCURLVersion());
-#if defined(_WIN32) || HAVE_DECL_CURL_VERSION_INFO
-      curl_version_info_data *version = curl_version_info(CURLVERSION_NOW);
-      char protocols[1024] = {0};
-      const char * const *p = version->protocols;
-      while (*p != NULL)
-      {
-         strncat(protocols, *p, strlen(protocols) - 1);
-         strncat(protocols, " ", strlen(protocols) - 1);
-         p++;
-      }
-      nxlog_debug_tag(DEBUG_TAG, 3, _T("Supported protocols: %hs"), protocols);
-#endif
-   }
+
    return success;
 }
 
@@ -219,7 +225,8 @@ static void SubagentShutdown()
  */
 static NETXMS_SUBAGENT_PARAM m_parameters[] = 
 {
-   { _T("Service.Check(*)"), H_CheckService, nullptr, DCI_DT_INT, _T("Service {instance} status") },
+   { _T("NetworkService.Check(*)"), H_CheckService, nullptr, DCI_DT_INT, _T("Service {instance} status") },
+   { _T("Service.Check(*)"), H_CheckService, nullptr, DCI_DT_DEPRECATED, _T("Service {instance} status") }
 };
 
 /**
