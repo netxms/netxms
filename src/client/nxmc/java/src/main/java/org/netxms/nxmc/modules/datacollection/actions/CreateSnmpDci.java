@@ -68,7 +68,6 @@ public class CreateSnmpDci extends Action
 	@Override
 	public void run()
 	{
-      System.out.println("Size: " + objects.size());
 		if (objects.size() == 0)
 			return;
 		
@@ -186,7 +185,6 @@ public class CreateSnmpDci extends Action
 	 */
 	public void selectionChanged(ISelection selection)
 	{
-      System.out.println("Selected");
 		objects.clear();
 		if ((selection instanceof IStructuredSelection) &&
 			 (((IStructuredSelection)selection).size() > 0))
@@ -195,7 +193,6 @@ public class CreateSnmpDci extends Action
 			{
 				if (o instanceof SnmpValue)
 					objects.add((SnmpValue)o);
-		      System.out.println("Selected: " + o);
 			}
 			
 			this.setEnabled(objects.size() > 0);

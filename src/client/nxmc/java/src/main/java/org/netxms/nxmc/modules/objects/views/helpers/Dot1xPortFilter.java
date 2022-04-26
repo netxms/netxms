@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2016-2020 RadenSolutions
+ * Copyright (C) 2016-2022 RadenSolutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,7 +25,6 @@ import org.eclipse.jface.viewers.Viewer;
  */
 public class Dot1xPortFilter extends NodeSubObjectFilter
 {
-
    /**
     * @see org.eclipse.jface.viewers.ViewerFilter#select(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
     */
@@ -37,10 +36,6 @@ public class Dot1xPortFilter extends NodeSubObjectFilter
       if ((filterString == null) || (filterString.isEmpty()))
          return true;
       
-      System.out.println(p1.getPaeStateAsText());
-      System.out.println(filterString);
-      System.out.println(p1.getPaeStateAsText().contains(filterString));
-
       return p1.getNodeName().contains(filterString) || 
          Integer.toString(p1.getPort()).contains(filterString) ||
          p1.getInterfaceName().contains(filterString) ||

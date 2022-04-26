@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -209,7 +209,6 @@ public class SoftwareInventory extends Composite
 	{
 		this.rootObjectId = rootObjectId;
 		AbstractObject object = Registry.getSession().findObjectById(rootObjectId);
-      System.out.println(viewer);
 		if (object instanceof Node)
 		{
 			if (!(viewer instanceof SortableTableViewer))
