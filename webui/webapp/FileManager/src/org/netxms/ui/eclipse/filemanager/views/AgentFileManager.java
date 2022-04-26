@@ -502,7 +502,7 @@ public class AgentFileManager extends ViewPart
          @Override
          public void run()
          {
-            tailFile(true, 8192);
+            showFile(true, 8192);
          }
       };
       
@@ -510,7 +510,7 @@ public class AgentFileManager extends ViewPart
          @Override
          public void run()
          {
-            tailFile(false, 0);
+            showFile(false, 0);
          }
       };
 
@@ -519,7 +519,7 @@ public class AgentFileManager extends ViewPart
          @Override
          public void run()
          {
-            fingerprintFile();
+            getFileFingerprint();
          }
       };
       actionFingerprintFile.setActionDefinitionId("org.netxms.ui.eclipse.filemanager.commands.fingerprint");
@@ -865,7 +865,7 @@ public class AgentFileManager extends ViewPart
     */
    private void deleteFile()
    {
-      IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      IStructuredSelection selection = viewer.getStructuredSelection();
       if (selection.isEmpty())
          return;
 
@@ -903,35 +903,33 @@ public class AgentFileManager extends ViewPart
    }
 
    /**
-    * Starts file tail
+    * Show file and optionally follow changes
     */
-   private void tailFile(final boolean followChanges, final int offset)
+   private void showFile(final boolean followChanges, final int offset)
    {
-      IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-      if (selection.isEmpty())
+      IStructuredSelection selection = viewer.getStructuredSelection();
+      if (selection.size() != 1)
          return;
 
-      final Object[] objects = selection.toArray();
-
-      if (((AgentFile)objects[0]).isDirectory())
+      final AgentFile agentFile = (AgentFile)selection.getFirstElement();
+      if (agentFile.isDirectory())
          return;
 
-      final AgentFile sf = ((AgentFile)objects[0]);
-      ConsoleJobCallingServerJob job = new ConsoleJobCallingServerJob(Messages.get().AgentFileManager_DownloadJobTitle, null, Activator.PLUGIN_ID, null) {
+      new ConsoleJobCallingServerJob(followChanges ? Messages.get().AgentFileManager_DownloadJobTitle : "Download file from agent", this, Activator.PLUGIN_ID) {
          @Override
          protected String getErrorMessage()
          {
-            return String.format(Messages.get().AgentFileManager_DownloadJobError, sf.getFullName(), objectId);
+            return String.format(Messages.get().AgentFileManager_DownloadJobError, agentFile.getFullName(), objectId);
          }
 
          @Override
          protected void runInternal(final IProgressMonitor monitor) throws Exception
          {
-            final AgentFileData file = session.downloadFileFromAgent(objectId, sf.getFullName(), Math.min(offset, sf.getSize()), followChanges, new ProgressListener() {
+            final AgentFileData file = session.downloadFileFromAgent(objectId, agentFile.getFullName(), Math.min(offset, agentFile.getSize()), followChanges, new ProgressListener() {
                @Override
                public void setTotalWorkAmount(long workTotal)
                {
-                  monitor.beginTask("Download file " + sf.getFullName(), (int)workTotal);
+                  monitor.beginTask(String.format("Download file %s", agentFile.getFullName()), (int)workTotal);
                }
 
                @Override
@@ -946,7 +944,7 @@ public class AgentFileManager extends ViewPart
                {                  
                   try
                   {
-                     String secondaryId = Long.toString(objectId) + "&" + URLEncoder.encode(sf.getName(), "UTF-8"); //$NON-NLS-1$ //$NON-NLS-2$
+                     String secondaryId = Long.toString(objectId) + "&" + URLEncoder.encode(agentFile.getName(), "UTF-8"); //$NON-NLS-1$ //$NON-NLS-2$
                      AgentFileViewer.createView(secondaryId, objectId, file, followChanges);
                   }
                   catch(Exception e)
@@ -959,14 +957,13 @@ public class AgentFileManager extends ViewPart
                }
             });
          }
-      };
-      job.start();
+      }.start();
    }
 
    /**
     * Acquire file fingerprint with its size, hash and hex dump
     */
-   private void fingerprintFile()
+   private void getFileFingerprint()
    {
       IStructuredSelection selection = viewer.getStructuredSelection();
       if (selection.size() != 1)
