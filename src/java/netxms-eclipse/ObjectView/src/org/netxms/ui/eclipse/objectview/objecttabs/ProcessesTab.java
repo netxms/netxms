@@ -69,14 +69,15 @@ public class ProcessesTab extends ObjectTab
 {
    public static final int COLUMN_PID = 0;
    public static final int COLUMN_NAME = 1;
-   public static final int COLUMN_THREADS = 2;
-   public static final int COLUMN_HANDLES = 3;
-   public static final int COLUMN_VMSIZE = 4;
-   public static final int COLUMN_RSS = 5;
-   public static final int COLUMN_PAGE_FAULTS = 6;
-   public static final int COLUMN_KTIME = 7;
-   public static final int COLUMN_UTIME = 8;
-   public static final int COLUMN_CMDLINE = 9;
+   public static final int COLUMN_USER = 2;
+   public static final int COLUMN_THREADS = 3;
+   public static final int COLUMN_HANDLES = 4;
+   public static final int COLUMN_VMSIZE = 5;
+   public static final int COLUMN_RSS = 6;
+   public static final int COLUMN_PAGE_FAULTS = 7;
+   public static final int COLUMN_KTIME = 8;
+   public static final int COLUMN_UTIME = 9;
+   public static final int COLUMN_CMDLINE = 10;
 
    private CompositeWithMessageBar viewerContainer;
    private FilterText filterText;
@@ -135,19 +136,19 @@ public class ProcessesTab extends ObjectTab
          }
       });
 
-      final String[] names = { "PID", "Name", "Threads", "Handles", "VM Size", "RSS", "Page faults", "System time", "User time", "Command line" };
-      final int[] widths = { 90, 200, 90, 90, 90, 90, 90, 90, 90, 500 };
+      final String[] names = { "PID", "Name", "User", "Threads", "Handles", "VM Size", "RSS", "Page faults", "System time", "User time", "Command line" };
+      final int[] widths = { 90, 200, 140, 90, 90, 90, 90, 90, 90, 90, 500 };
       viewer = new SortableTableViewer(viewerContainer.getContent(), names, widths, COLUMN_NAME, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setLabelProvider(new ProcessLabelProvider());
       viewer.setComparator(new ProcessComparator());
       viewer.addFilter(new ProcessFilter());
-      WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), "ProcessTable"); //$NON-NLS-1$
+      WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), "ProcessTable.V2"); //$NON-NLS-1$
       viewer.getTable().addDisposeListener(new DisposeListener() {
          @Override
          public void widgetDisposed(DisposeEvent e)
          {
-            WidgetHelper.saveColumnSettings(viewer.getTable(), Activator.getDefault().getDialogSettings(), "ProcessTable"); //$NON-NLS-1$
+            WidgetHelper.saveColumnSettings(viewer.getTable(), Activator.getDefault().getDialogSettings(), "ProcessTable.V2"); //$NON-NLS-1$
          }
       });
 
@@ -272,9 +273,10 @@ public class ProcessesTab extends ObjectTab
          {
             final Table processTable = session.queryAgentTable(nodeId, "System.Processes");
 
-            int[] indexes = new int[10];
+            int[] indexes = new int[11];
             indexes[COLUMN_PID] = processTable.getColumnIndex("PID");
             indexes[COLUMN_NAME] = processTable.getColumnIndex("NAME");
+            indexes[COLUMN_USER] = processTable.getColumnIndex("USER");
             indexes[COLUMN_THREADS] = processTable.getColumnIndex("THREADS");
             indexes[COLUMN_HANDLES] = processTable.getColumnIndex("HANDLES");
             indexes[COLUMN_VMSIZE] = processTable.getColumnIndex("VMSIZE");
@@ -292,6 +294,7 @@ public class ProcessesTab extends ObjectTab
                for(int j = 0; j < indexes.length; j++)
                   process.data[j] = r.getValueAsLong(indexes[j]);
                process.name = r.getValue(indexes[COLUMN_NAME]);
+               process.user = r.getValue(indexes[COLUMN_USER]);
                process.commandLine = r.getValue(indexes[COLUMN_CMDLINE]);
                processes[i] = process;
             }
@@ -426,9 +429,10 @@ public class ProcessesTab extends ObjectTab
     */
    private static class Process
    {
-      long[] data = new long[10];
+      long[] data = new long[11];
       String name;
       String commandLine;
+      String user;
    }
 
    /**
@@ -457,6 +461,8 @@ public class ProcessesTab extends ObjectTab
                return ((Process)element).commandLine;
             case COLUMN_NAME:
                return ((Process)element).name;
+            case COLUMN_USER:
+               return ((Process)element).user;
             default:
                return Long.toString(((Process)element).data[columnIndex]);
          }
@@ -484,6 +490,9 @@ public class ProcessesTab extends ObjectTab
             case COLUMN_NAME:
                result = ((Process)e1).name.compareToIgnoreCase(((Process)e2).name);
                break;
+            case COLUMN_USER:
+               result = ((Process)e1).user.compareToIgnoreCase(((Process)e2).user);
+               break;
             default:
                result = Long.signum(((Process)e1).data[column] - ((Process)e2).data[column]);
                break;
@@ -504,7 +513,7 @@ public class ProcessesTab extends ObjectTab
             return true;
 
          Process process = (Process)element;
-         return process.name.toLowerCase().contains(filterString) || process.commandLine.toLowerCase().contains(filterString);
+         return process.name.toLowerCase().contains(filterString) || process.commandLine.toLowerCase().contains(filterString) || process.user.toLowerCase().contains(filterString);
       }
    }
 }
