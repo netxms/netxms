@@ -366,7 +366,7 @@ public class AgentFileManager extends ObjectView
          @Override
          public void run()
          {
-            tailFile(true, 8192);
+            showFile(true, 8192);
          }
       };
       
@@ -374,7 +374,7 @@ public class AgentFileManager extends ObjectView
          @Override
          public void run()
          {
-            tailFile(false, 0);
+            showFile(false, 0);
          }
       };
 
@@ -383,7 +383,7 @@ public class AgentFileManager extends ObjectView
          @Override
          public void run()
          {
-            fingerprintFile();
+            getFileFingerprint();
          }
       };
       addKeyBinding("Ctrl+P", actionFingerprintFile);
@@ -701,7 +701,7 @@ public class AgentFileManager extends ObjectView
     */
    private void deleteFile()
    {
-      IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      IStructuredSelection selection = viewer.getStructuredSelection();
       if (selection.isEmpty())
          return;
 
@@ -739,35 +739,27 @@ public class AgentFileManager extends ObjectView
    }
 
    /**
-    * Starts file tail
+    * Show file and optionally follow changes
     */
-   private void tailFile(final boolean followChanges, final int offset)
+   private void showFile(final boolean followChanges, final int offset)
    {
-      IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-      if (selection.isEmpty())
+      IStructuredSelection selection = viewer.getStructuredSelection();
+      if (selection.size() != 1)
          return;
 
-      final Object[] objects = selection.toArray();
-
-      if (((AgentFile)objects[0]).isDirectory())
+      final AgentFile agentFile = (AgentFile)selection.getFirstElement();
+      if (agentFile.isDirectory())
          return;
 
-      final AgentFile sf = ((AgentFile)objects[0]);
-      JobCallingServerJob job = new JobCallingServerJob(i18n.tr("Download file from agent and start tail"), this) {
-         @Override
-         protected String getErrorMessage()
-         {
-            return String.format(i18n.tr("Error downloading file %s from node %d"), sf.getFullName(), getObjectId());
-         }
-
+      new JobCallingServerJob(followChanges ? i18n.tr("Download file from agent and start following changes") : i18n.tr("Download file from agent"), this) {
          @Override
          protected void run(final IProgressMonitor monitor) throws Exception
          {
-            final AgentFileData file = session.downloadFileFromAgent(getObjectId(), sf.getFullName(), Math.min(offset, sf.getSize()), followChanges, new ProgressListener() {
+            final AgentFileData file = session.downloadFileFromAgent(getObjectId(), agentFile.getFullName(), Math.min(offset, agentFile.getSize()), followChanges, new ProgressListener() {
                @Override
                public void setTotalWorkAmount(long workTotal)
                {
-                  monitor.beginTask("Download file " + sf.getFullName(), (int)workTotal);
+                  monitor.beginTask(String.format(i18n.tr("Download file %s"), agentFile.getFullName()), (int)workTotal);
                }
 
                @Override
@@ -776,6 +768,7 @@ public class AgentFileManager extends ObjectView
                   monitor.worked((int)workDone);
                }
             }, this);
+
             runInUIThread(new Runnable() {
                @Override
                public void run()
@@ -784,14 +777,19 @@ public class AgentFileManager extends ObjectView
                }
             });
          }
-      };
-      job.start();
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return String.format(i18n.tr("Error downloading file %s from node %s"), agentFile.getFullName(), getObjectName());
+         }
+      }.start();
    }
 
    /**
     * Acquire file fingerprint with its size, hash and hex dump
     */
-   private void fingerprintFile()
+   private void getFileFingerprint()
    {
       IStructuredSelection selection = viewer.getStructuredSelection();
       if (selection.size() != 1)
