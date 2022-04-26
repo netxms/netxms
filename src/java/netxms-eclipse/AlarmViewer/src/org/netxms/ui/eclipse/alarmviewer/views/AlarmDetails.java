@@ -643,6 +643,7 @@ public class AlarmDetails extends ViewPart
 
          chart = new Chart(dataArea, SWT.BORDER, ChartType.LINE, chartConfiguration);
          chart.addParameter(new GraphItem(dci, DataOrigin.INTERNAL, "%s", ChartDciConfig.AREA, ColorConverter.rgbToInt(new RGB(127, 154, 72))));
+         chart.rebuild();
 
          dataViewControl = chart;
       }
