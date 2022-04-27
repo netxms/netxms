@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -39,10 +39,11 @@ import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
+import org.eclipse.swt.graphics.Font;
+import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.RGB;
-import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -53,14 +54,9 @@ import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
-import org.eclipse.ui.forms.events.ExpansionEvent;
 import org.eclipse.ui.forms.events.HyperlinkAdapter;
 import org.eclipse.ui.forms.events.HyperlinkEvent;
-import org.eclipse.ui.forms.events.IExpansionListener;
-import org.eclipse.ui.forms.widgets.Form;
-import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.forms.widgets.ImageHyperlink;
-import org.eclipse.ui.forms.widgets.Section;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCException;
@@ -102,7 +98,10 @@ import org.netxms.ui.eclipse.tools.ImageCache;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.ViewRefreshController;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.ui.eclipse.widgets.Section;
 import org.netxms.ui.eclipse.widgets.SortableTreeViewer;
+import org.netxms.ui.eclipse.widgets.helpers.ExpansionEvent;
+import org.netxms.ui.eclipse.widgets.helpers.ExpansionListener;
 
 /**
  * Alarm comments
@@ -116,25 +115,23 @@ public class AlarmDetails extends ViewPart
 	public static final int EV_COLUMN_NAME = 2;
 	public static final int EV_COLUMN_MESSAGE = 3;
 	public static final int EV_COLUMN_TIMESTAMP = 4;
-	
-   private static final String[] dciStatusImage = { "icons/active.gif", "icons/disabled.gif", "icons/unsupported.gif" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-   
+
 	private static final String[] stateImage = { "icons/outstanding.png", "icons/acknowledged.png", "icons/resolved.png", "icons/terminated.png", "icons/acknowledged_sticky.png" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
 	private final String[] stateText = { Messages.get().AlarmListLabelProvider_AlarmState_Outstanding, Messages.get().AlarmListLabelProvider_AlarmState_Acknowledged, Messages.get().AlarmListLabelProvider_AlarmState_Resolved, Messages.get().AlarmListLabelProvider_AlarmState_Terminated };
-	
+
 	private NXCSession session;
 	private long alarmId;
 	private ImageCache imageCache;
 	private WorkbenchLabelProvider wbLabelProvider;
-	private FormToolkit toolkit;
-	private Form form;
+   private Composite content;
 	private CLabel alarmSeverity;
 	private CLabel alarmState;
 	private CLabel alarmSource;
-   private CLabel alarmDCI;
+   private Label alarmDCI;
    private CLabel alarmKey;
    private CLabel alarmRule;
 	private Text alarmText;
+   private ScrolledComposite editorsScroller;
 	private Composite editorsArea;
 	private ImageHyperlink linkAddComment;
 	private Map<Long, AlarmCommentsEditor> editors = new HashMap<Long, AlarmCommentsEditor>();
@@ -143,6 +140,7 @@ public class AlarmDetails extends ViewPart
 	private Action actionRefresh;
 	private CLabel labelAccessDenied = null;
 	private boolean dataSectionCreated = false;
+   private boolean dataSectionPopulated = false;
 	private Section dataSection;
    private Chart chart;
 	private TableViewer dataViewer;
@@ -181,20 +179,18 @@ public class AlarmDetails extends ViewPart
 	public void createPartControl(Composite parent)
 	{
 		imageCache = new ImageCache();
-		
-		toolkit = new FormToolkit(parent.getDisplay());
-		form = toolkit.createForm(parent);
+      content = parent;
 
 		DashboardLayout layout = new DashboardLayout();
 		layout.marginWidth = WidgetHelper.OUTER_SPACING;
       layout.marginHeight = WidgetHelper.OUTER_SPACING;
-		form.getBody().setLayout(layout);
-		
-		createAlarmDetailsSection();
-		createEventsSection();
-		createCommentsSection();
-		createDataSection();
-		
+      parent.setLayout(layout);
+
+      createAlarmDetailsSection(parent);
+      createEventsSection(parent);
+      createCommentsSection(parent);
+      createDataSection(parent);
+
 		createActions();
 		contributeToActionBars();
 
@@ -250,22 +246,19 @@ public class AlarmDetails extends ViewPart
 	/**
 	 * Create alarm details section
 	 */
-	private void createAlarmDetailsSection()
+   private void createAlarmDetailsSection(Composite parent)
 	{
-		final Section section = toolkit.createSection(form.getBody(), Section.TITLE_BAR | Section.EXPANDED | Section.TWISTIE | Section.COMPACT);
-		section.setText(Messages.get().AlarmDetails_Overview);
+      final Section section = new Section(parent, Messages.get().AlarmDetails_Overview, true);
 		DashboardLayoutData dd = new DashboardLayoutData();
 		dd.fill = false;
 		section.setLayoutData(dd);
 
-		final Composite clientArea = toolkit.createComposite(section);
+      final Composite clientArea = section.getClient();
 		GridLayout layout = new GridLayout();
 		layout.numColumns = 3;
 		clientArea.setLayout(layout);
-		section.setClient(clientArea);
 
 		alarmSeverity = new CLabel(clientArea, SWT.NONE);
-		toolkit.adapt(alarmSeverity);
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.verticalAlignment = SWT.TOP;
@@ -307,29 +300,23 @@ public class AlarmDetails extends ViewPart
 			}
 		});
 
-		int bs = toolkit.getBorderStyle();
-		toolkit.setBorderStyle(SWT.NONE);
-		alarmText = toolkit.createText(textContainer, "", SWT.MULTI); //$NON-NLS-1$
-		toolkit.setBorderStyle(bs);
+      alarmText = new Text(textContainer, SWT.MULTI);
 		alarmText.setEditable(false);
 		textContainer.setContent(alarmText);
 
 		alarmState = new CLabel(clientArea, SWT.NONE);
-		toolkit.adapt(alarmState);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.verticalAlignment = SWT.TOP;
 		alarmState.setLayoutData(gd);
 
 		alarmSource = new CLabel(clientArea, SWT.NONE);
-		toolkit.adapt(alarmSource);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.verticalAlignment = SWT.TOP;
 		alarmSource.setLayoutData(gd);
 
       alarmKey = new CLabel(clientArea, SWT.NONE);
-      toolkit.adapt(alarmKey);
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.verticalAlignment = SWT.TOP;
@@ -346,7 +333,6 @@ public class AlarmDetails extends ViewPart
       });
 
       alarmRule = new CLabel(clientArea, SWT.NONE);
-      toolkit.adapt(alarmRule);
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.verticalAlignment = SWT.BOTTOM;
@@ -367,34 +353,44 @@ public class AlarmDetails extends ViewPart
 	/**
 	 * Create comment section
 	 */
-	private void createCommentsSection()
+   private void createCommentsSection(Composite parent)
 	{
-		final Section section = toolkit.createSection(form.getBody(), Section.TITLE_BAR | Section.EXPANDED | Section.TWISTIE | Section.COMPACT);
-		section.setText(Messages.get().AlarmComments_Comments);
+      final Section section = new Section(parent, Messages.get().AlarmComments_Comments, true);
       final DashboardLayoutData dd = new DashboardLayoutData();
       dd.fill = true;
       section.setLayoutData(dd);
-      section.addExpansionListener(new IExpansionListener() {
-         @Override
-         public void expansionStateChanging(ExpansionEvent e)
-         {
-            dd.fill = e.getState();
-         }
-         
+      section.addExpansionListener(new ExpansionListener() {
          @Override
          public void expansionStateChanged(ExpansionEvent e)
          {
+            dd.fill = e.getState();
          }
       });
 
-		editorsArea = toolkit.createComposite(section);
+      editorsScroller = new ScrolledComposite(section.getClient(), SWT.V_SCROLL);
+      editorsScroller.setBackground(section.getClient().getBackground());
+      editorsScroller.setExpandHorizontal(true);
+      editorsScroller.setExpandVertical(true);
+      WidgetHelper.setScrollBarIncrement(editorsScroller, SWT.VERTICAL, 20);
+      editorsScroller.addControlListener(new ControlAdapter() {
+         public void controlResized(ControlEvent e)
+         {
+            editorsArea.layout(true, true);
+            editorsScroller.setMinSize(editorsArea.computeSize(editorsScroller.getClientArea().width, SWT.DEFAULT));
+         }
+      });
+
+      editorsArea = new Composite(editorsScroller, SWT.NONE);
+      editorsArea.setBackground(section.getClient().getBackground());
 		GridLayout layout = new GridLayout();
 		editorsArea.setLayout(layout);
-		section.setClient(editorsArea);
-		
-		linkAddComment = toolkit.createImageHyperlink(editorsArea, SWT.NONE);
+
+      editorsScroller.setContent(editorsArea);
+
+      linkAddComment = new ImageHyperlink(editorsArea, SWT.NONE);
 		linkAddComment.setImage(imageCache.add(Activator.getImageDescriptor("icons/new_comment.png"))); //$NON-NLS-1$
 		linkAddComment.setText(Messages.get().AlarmComments_AddCommentLink);
+      linkAddComment.setBackground(editorsArea.getBackground());
 		linkAddComment.addHyperlinkListener(new HyperlinkAdapter() {
 			@Override
 			public void linkActivated(HyperlinkEvent e)
@@ -407,41 +403,26 @@ public class AlarmDetails extends ViewPart
 	/**
 	 * Create events section
 	 */
-	private void createEventsSection()
+   private void createEventsSection(Composite parent)
 	{
-		final Section section = toolkit.createSection(form.getBody(), Section.TITLE_BAR | Section.EXPANDED | Section.TWISTIE | Section.COMPACT);
-		section.setText(Messages.get().AlarmDetails_RelatedEvents);
-		
+      final Section section = new Section(parent, Messages.get().AlarmDetails_RelatedEvents, true);
 		final DashboardLayoutData dd = new DashboardLayoutData();
 		dd.fill = true;
 		section.setLayoutData(dd);
-		section.addExpansionListener(new IExpansionListener() {
-			@Override
-			public void expansionStateChanging(ExpansionEvent e)
-			{
-				dd.fill = e.getState();
-			}
-			
-			@Override
-			public void expansionStateChanged(ExpansionEvent e)
-			{
-			}
-		});
-
-      final Composite content = toolkit.createComposite(section);
-      GridLayout layout = new GridLayout();
-      layout.marginWidth = 0;
-      layout.marginHeight = 0;
-      content.setLayout(layout);
-      section.setClient(content);
+      section.addExpansionListener(new ExpansionListener() {
+         @Override
+         public void expansionStateChanged(ExpansionEvent e)
+         {
+            dd.fill = e.getState();
+         }
+      });
 
 		final String[] names = { Messages.get().AlarmDetails_Column_Severity, Messages.get().AlarmDetails_Column_Source, Messages.get().AlarmDetails_Column_Name, Messages.get().AlarmDetails_Column_Message, Messages.get().AlarmDetails_Column_Timestamp };
 		final int[] widths = { 130, 160, 160, 400, 150 };
-		eventViewer = new SortableTreeViewer(content, names, widths, EV_COLUMN_TIMESTAMP, SWT.DOWN, SWT.BORDER | SWT.FULL_SELECTION);
+      eventViewer = new SortableTreeViewer(section.getClient(), names, widths, EV_COLUMN_TIMESTAMP, SWT.DOWN, SWT.FULL_SELECTION);
 		eventViewer.setContentProvider(new EventTreeContentProvider());
 		eventViewer.setLabelProvider(new EventTreeLabelProvider());
 		eventViewer.setComparator(new EventTreeComparator());
-		eventViewer.getControl().setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 
 		final IDialogSettings settings = Activator.getDefault().getDialogSettings();
 		WidgetHelper.restoreTreeViewerSettings(eventViewer, settings, "AlarmDetails.Events"); //$NON-NLS-1$
@@ -457,37 +438,22 @@ public class AlarmDetails extends ViewPart
 	/**
 	 * Create data section
 	 */
-	private void createDataSection()
+   private void createDataSection(Composite parent)
 	{
-		dataSection = toolkit.createSection(form.getBody(), Section.TITLE_BAR | Section.EXPANDED | Section.TWISTIE | Section.COMPACT);
-		dataSection.setText(Messages.get().AlarmDetails_LastValues);
+      dataSection = new Section(parent, Messages.get().AlarmDetails_LastValues, true);
       final DashboardLayoutData dd = new DashboardLayoutData();
       dd.fill = true;
       dataSection.setLayoutData(dd);
-      dataSection.addExpansionListener(new IExpansionListener() {
-			@Override
-			public void expansionStateChanging(ExpansionEvent e)
-			{
-				dd.fill = e.getState();
-			}
-			
-			@Override
-			public void expansionStateChanged(ExpansionEvent e)
-			{
-			}
-		});
-		
-		dataArea = toolkit.createComposite(dataSection);
-		dataSection.setClient(dataArea);
-		dataArea.setLayout(new FillLayout());
+      dataSection.addExpansionListener(new ExpansionListener() {
+         @Override
+         public void expansionStateChanged(ExpansionEvent e)
+         {
+            dd.fill = e.getState() && dataSectionPopulated;
+         }
+      });
 
-      final Composite clientArea = toolkit.createComposite(dataSection);
-      alarmDCI = new CLabel(clientArea, SWT.NONE);
-      toolkit.adapt(alarmDCI);
-      GridData gd = new GridData();
-      gd.horizontalAlignment = SWT.FILL;
-      gd.verticalAlignment = SWT.TOP;
-      alarmDCI.setLayoutData(gd);
+      dataArea = new Composite(dataSection.getClient(), SWT.NONE);
+      dataArea.setLayout(new GridLayout());
 	}
 
    /**
@@ -496,9 +462,8 @@ public class AlarmDetails extends ViewPart
 	@Override
 	public void setFocus()
 	{
-		form.setFocus();
 	}
-	
+
 	/**
 	 * Refresh view
 	 */
@@ -510,9 +475,18 @@ public class AlarmDetails extends ViewPart
 			{
 				final Alarm alarm = session.getAlarm(alarmId);
 				final List<AlarmComment> comments = session.getAlarmComments(alarmId);
-				
-				final DciValue[] lastValues = session.getLastValues(alarm.getSourceObjectId());
-				
+
+				AbstractObject sourceObject = session.findObjectById(alarm.getSourceObjectId());
+				final DciValue[] lastValues; 
+				if (sourceObject instanceof DataCollectionTarget)
+				{
+				   lastValues = session.getLastValues(alarm.getSourceObjectId());
+				}
+				else
+				{
+				   lastValues = new DciValue[] {};
+				}
+
             List<EventInfo> _events = null;
             try
             {
@@ -532,10 +506,10 @@ public class AlarmDetails extends ViewPart
 						
 						for(AlarmCommentsEditor e : editors.values())
 							e.dispose();
-						
+
 						for(AlarmComment n : comments)
 							editors.put(n.getId(), createEditor(n));
-						
+
 						if (events != null)
 						{
    						eventViewer.setInput(events);
@@ -549,7 +523,6 @@ public class AlarmDetails extends ViewPart
 						else if (labelAccessDenied == null)
                   {
                      labelAccessDenied = new CLabel(eventViewer.getControl().getParent(), SWT.NONE);
-                     toolkit.adapt(labelAccessDenied);
                      labelAccessDenied.setImage(StatusDisplayInfo.getStatusImage(Severity.CRITICAL));
                      labelAccessDenied.setText(Messages.get().AlarmDetails_RelatedEvents_AccessDenied);
                      labelAccessDenied.moveAbove(null);
@@ -571,19 +544,15 @@ public class AlarmDetails extends ViewPart
    						   }
    						   if (dci != null)
    						   {
-                           Threshold t = dci.getActiveThreshold();
-   						      alarmDCI.setText(dci.getDescription() + ((t != null) ? (" (" + t.getTextualRepresentation() + ")") : " (OK)"));
-   						      alarmDCI.setImage(imageCache.add(Activator.getImageDescriptor(dciStatusImage[dci.getStatus()])));
-
    						      createDataAreaElements(alarm, dci);
       				         refreshData();
+                           dataSectionPopulated = true;
    						   }
    						   else
    						   {
    	                     Label label = new Label(dataArea, SWT.NONE);
    	                     label.setText(String.format("DCI with ID %d is not accessible", alarm.getDciId()));
-                           alarmDCI.setText("[" + alarm.getDciId() + "]");
-   	                     dataSection.setExpanded(false);
+                           dataSection.setExpanded(false);
    	                     DashboardLayoutData dd = (DashboardLayoutData)dataSection.getLayoutData();
    	                     dd.fill = false;
    						   }
@@ -592,10 +561,9 @@ public class AlarmDetails extends ViewPart
    						{
    						   Label label = new Label(dataArea, SWT.NONE);
    						   label.setText("No DCI associated with this alarm");
-   						   dataSection.setExpanded(false);
+                        dataSection.setExpanded(false);
    						   DashboardLayoutData dd = (DashboardLayoutData)dataSection.getLayoutData();
    						   dd.fill = false;
-   						   alarmDCI.dispose();
    						}
    						dataSectionCreated = true;
 						}						
@@ -626,20 +594,42 @@ public class AlarmDetails extends ViewPart
 	{
       nodeId = alarm.getSourceObjectId();
       dciId = alarm.getDciId();
-      
+
+      alarmDCI = new Label(dataArea, SWT.NONE);
+      GridData gd = new GridData();
+      gd.horizontalAlignment = SWT.CENTER;
+      gd.grabExcessHorizontalSpace = true;
+      gd.verticalAlignment = SWT.CENTER;
+      alarmDCI.setLayoutData(gd);
+
+      FontData fd = alarmDCI.getFont().getFontData()[0];
+      fd.setStyle(SWT.BOLD);
+      final Font font = new Font(alarmDCI.getDisplay(), fd);
+      alarmDCI.setFont(font);
+      alarmDCI.addDisposeListener(new DisposeListener() {
+         @Override
+         public void widgetDisposed(DisposeEvent e)
+         {
+            font.dispose();
+         }
+      });
+
+      Threshold t = dci.getActiveThreshold();
+      alarmDCI.setText(dci.getDescription() + ((t != null) ? (" (" + t.getTextualRepresentation() + ")") : " (OK)"));
+
       if (dci.getDataType() != DataType.STRING)
       {
          ChartConfiguration chartConfiguration = new ChartConfiguration();
          chartConfiguration.setZoomEnabled(true);
-         chartConfiguration.setTitleVisible(true);
+         chartConfiguration.setTitleVisible(false);
          chartConfiguration.setTitle(dci.getDescription());
-         chartConfiguration.setLegendVisible(true);
+         chartConfiguration.setLegendVisible(false);
          chartConfiguration.setLegendPosition(ChartConfiguration.POSITION_BOTTOM);
          chartConfiguration.setExtendedLegend(true);
          chartConfiguration.setGridVisible(true);
          chartConfiguration.setTranslucent(true);
 
-         chart = new Chart(dataArea, SWT.BORDER, ChartType.LINE, chartConfiguration);
+         chart = new Chart(dataArea, SWT.NONE, ChartType.LINE, chartConfiguration);
          chart.addParameter(new GraphItem(dci, DataOrigin.INTERNAL, "%s", ChartDciConfig.AREA, ColorConverter.rgbToInt(new RGB(127, 154, 72))));
          chart.rebuild();
 
@@ -647,9 +637,19 @@ public class AlarmDetails extends ViewPart
       }
       else
       {
-         dataViewer = new TableViewer(dataArea, SWT.BORDER | SWT.FULL_SELECTION);
+         ((GridLayout)dataArea.getLayout()).marginWidth = 0;
+         ((GridLayout)dataArea.getLayout()).marginTop = ((GridLayout)dataArea.getLayout()).marginHeight;
+         ((GridLayout)dataArea.getLayout()).marginHeight = 0;
+         ((GridLayout)dataArea.getLayout()).verticalSpacing = 0;
+
+         Label separator = new Label(dataArea, SWT.SEPARATOR | SWT.HORIZONTAL);
+         gd = new GridData(SWT.FILL, SWT.CENTER, true, false);
+         gd.verticalIndent = 5;
+         separator.setLayoutData(gd);
+
+         dataViewer = new TableViewer(dataArea, SWT.FULL_SELECTION);
          dataViewer.getTable().setHeaderVisible(true);
-         
+
          TableColumn tc = new TableColumn(dataViewer.getTable(), SWT.LEFT);
          tc.setText("Timestamp");
          tc = new TableColumn(dataViewer.getTable(), SWT.LEFT);
@@ -660,7 +660,9 @@ public class AlarmDetails extends ViewPart
 
          dataViewControl = dataViewer.getControl();
       }
-      
+
+      dataViewControl.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+
       refreshController = new ViewRefreshController(AlarmDetails.this, 30, new Runnable() {
          @Override
          public void run()
@@ -672,15 +674,17 @@ public class AlarmDetails extends ViewPart
          }
       });
 	}
-	
+
 	/**
 	 * Update layout after internal change
 	 */
 	private void updateLayout()
 	{
-		form.layout(true, true);
+      content.layout(true, true);
+      editorsArea.layout(true, true);
+      editorsScroller.setMinSize(editorsArea.computeSize(editorsScroller.getClientArea().width, SWT.DEFAULT));
 	}
-	
+
 	/**
 	 * Create comment editor widget
 	 * 
@@ -689,24 +693,21 @@ public class AlarmDetails extends ViewPart
 	 */
 	private AlarmCommentsEditor createEditor(final AlarmComment note)
 	{
-	   HyperlinkAdapter editAction = new HyperlinkAdapter()
-      {
+      HyperlinkAdapter editAction = new HyperlinkAdapter() {
          @Override
          public void linkActivated(HyperlinkEvent e)
          {
             editComment(note.getId(), note.getText());
          }
       };
-      HyperlinkAdapter deleteAction = new HyperlinkAdapter()
-      {
+      HyperlinkAdapter deleteAction = new HyperlinkAdapter() {
          @Override
          public void linkActivated(HyperlinkEvent e)
          {
             deleteComment(note.getId());
          }
       };
-      final AlarmCommentsEditor e = new AlarmCommentsEditor(editorsArea, toolkit, imageCache, note, editAction, deleteAction);
-		toolkit.adapt(e);
+      final AlarmCommentsEditor e = new AlarmCommentsEditor(editorsArea, imageCache, note, editAction, deleteAction);
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -714,7 +715,7 @@ public class AlarmDetails extends ViewPart
 		e.moveBelow(linkAddComment);
 		return e;
 	}
-	
+
 	/**
     * Add new comment
     */
@@ -731,7 +732,7 @@ public class AlarmDetails extends ViewPart
       final EditCommentDialog dlg = new EditCommentDialog(getSite().getShell(), noteId , noteText);
       if (dlg.open() != Window.OK)
          return;
-      
+
       new ConsoleJob(Messages.get().AlarmComments_AddCommentJob, this, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception

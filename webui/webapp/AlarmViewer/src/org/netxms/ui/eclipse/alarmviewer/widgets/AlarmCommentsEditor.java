@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,7 +26,6 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.forms.events.HyperlinkAdapter;
-import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.forms.widgets.ImageHyperlink;
 import org.netxms.client.NXCSession;
 import org.netxms.client.events.AlarmComment;
@@ -43,6 +42,7 @@ import org.netxms.ui.eclipse.tools.ImageCache;
  */
 public class AlarmCommentsEditor extends Composite
 {
+   private NXCSession session = ConsoleSharedData.getSession();
 	private Text text;
 	
 	/**
@@ -50,33 +50,37 @@ public class AlarmCommentsEditor extends Composite
 	 * @param style
 	 * @param comment
 	 */
-	public AlarmCommentsEditor(Composite parent, FormToolkit toolkit, ImageCache imageCache, AlarmComment comment, HyperlinkAdapter editAction, HyperlinkAdapter deleteAction)
+   public AlarmCommentsEditor(Composite parent, ImageCache imageCache, AlarmComment comment, HyperlinkAdapter editAction, HyperlinkAdapter deleteAction)
 	{
 		super(parent, SWT.BORDER);
 		
+      setBackground(parent.getBackground());
+
 		GridLayout layout = new GridLayout();
 		layout.numColumns = 3;
 		setLayout(layout);
-		
-		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+
 		final AbstractUserObject userObject = session.findUserDBObjectById(comment.getUserId(), null);
 		
 		final CLabel user = new CLabel(this, SWT.NONE);
-		toolkit.adapt(user);
 		user.setImage(imageCache.add(Activator.getImageDescriptor("icons/user.png"))); //$NON-NLS-1$
 		user.setText((userObject != null) ? userObject.getName() : Messages.get().AlarmCommentsEditor_Unknown);
+      user.setBackground(parent.getBackground());
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = false;
 		user.setLayoutData(gd);
-		
-		final Label time = toolkit.createLabel(this, RegionalSettings.getDateTimeFormat().format(comment.getLastChangeTime()));
+
+      final Label time = new Label(this, SWT.NONE);
+      time.setText(RegionalSettings.getDateTimeFormat().format(comment.getLastChangeTime()));
+      time.setBackground(parent.getBackground());
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		time.setLayoutData(gd);
-		
-		final Composite controlArea = toolkit.createComposite(this);
+
+      final Composite controlArea = new Composite(this, SWT.NONE);
+      controlArea.setBackground(parent.getBackground());
 		layout = new GridLayout();
 		layout.marginWidth = 0;
 		layout.marginHeight = 0;
@@ -86,25 +90,28 @@ public class AlarmCommentsEditor extends Composite
       gd.verticalAlignment = SWT.TOP;
       gd.verticalSpan = 2;
       controlArea.setLayoutData(gd);
-		
-		final ImageHyperlink linkEdit = toolkit.createImageHyperlink(controlArea, SWT.NONE);
+
+      final ImageHyperlink linkEdit = new ImageHyperlink(controlArea, SWT.NONE);
 		linkEdit.setText(Messages.get().AlarmCommentsEditor_Edit);
 		linkEdit.setImage(SharedIcons.IMG_EDIT);
+      linkEdit.setBackground(parent.getBackground());
 		linkEdit.addHyperlinkListener(editAction);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.LEFT;
 		linkEdit.setLayoutData(gd);
-		
-		final ImageHyperlink linkDelete = toolkit.createImageHyperlink(controlArea, SWT.NONE);
+
+      final ImageHyperlink linkDelete = new ImageHyperlink(controlArea, SWT.NONE);
 		linkDelete.setText(Messages.get().AlarmCommentsEditor_DeleteLabel);
 		linkDelete.setImage(SharedIcons.IMG_DELETE_OBJECT);
+      linkDelete.setBackground(parent.getBackground());
 		linkDelete.addHyperlinkListener(deleteAction);
       gd = new GridData();
       gd.horizontalAlignment = SWT.LEFT;
       linkDelete.setLayoutData(gd);
-		
+
 		text = new Text(this, SWT.MULTI | SWT.WRAP | SWT.READ_ONLY);
 		text.setText(comment.getText());
+      text.setBackground(parent.getBackground());
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
