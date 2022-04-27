@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,6 +28,9 @@ import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CLabel;
+import org.eclipse.swt.custom.ScrolledComposite;
+import org.eclipse.swt.events.ControlAdapter;
+import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -37,12 +40,7 @@ import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.forms.events.HyperlinkAdapter;
 import org.eclipse.ui.forms.events.HyperlinkEvent;
-import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.forms.widgets.ImageHyperlink;
-import org.eclipse.ui.forms.widgets.ScrolledForm;
-import org.eclipse.ui.forms.widgets.Section;
-import org.eclipse.ui.forms.widgets.TableWrapData;
-import org.eclipse.ui.forms.widgets.TableWrapLayout;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
@@ -60,6 +58,8 @@ import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.ImageCache;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
+import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.ui.eclipse.widgets.Section;
 
 /**
  * Alarm comments
@@ -67,33 +67,32 @@ import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 public class AlarmComments extends ViewPart
 {
 	public static final String ID = "org.netxms.ui.eclipse.alarmviewer.views.AlarmComments"; //$NON-NLS-1$
-	
+
 	private static final String[] stateImage = { "icons/outstanding.png", "icons/acknowledged.png", "icons/terminated.png" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	private static final String[] stateText = { Messages.get().AlarmListLabelProvider_AlarmState_Outstanding, Messages.get().AlarmListLabelProvider_AlarmState_Acknowledged, Messages.get().AlarmListLabelProvider_AlarmState_Terminated };	
-	
-	private NXCSession session;
+
+   private NXCSession session = ConsoleSharedData.getSession();
 	private long alarmId;
 	private ImageCache imageCache;
 	private WorkbenchLabelProvider wbLabelProvider;
-	private FormToolkit toolkit;
-	private ScrolledForm form;
+   private Composite content;
 	private CLabel alarmSeverity;
 	private CLabel alarmState;
 	private CLabel alarmSource;
 	private Label alarmText;
+   private ScrolledComposite editorsScroller;
 	private Composite editorsArea;
 	private ImageHyperlink linkAddComment;
 	private Map<Long, AlarmCommentsEditor> editors = new HashMap<Long, AlarmCommentsEditor>();
 	private Action actionRefresh;
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
-	 */
+
+   /**
+    * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
+    */
 	@Override
 	public void init(IViewSite site) throws PartInitException
 	{
 		super.init(site);
-		session = (NXCSession)ConsoleSharedData.getSession();
 		wbLabelProvider = new WorkbenchLabelProvider();
 		
 		try
@@ -108,21 +107,17 @@ public class AlarmComments extends ViewPart
 		setPartName(getPartName() + " [" + Long.toString(alarmId) + "]"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	public void createPartControl(Composite parent)
 	{
 		imageCache = new ImageCache();
-		
-		toolkit = new FormToolkit(parent.getDisplay());
-		form = toolkit.createScrolledForm(parent);
 
-		TableWrapLayout layout = new TableWrapLayout();
-		layout.numColumns = 1;
-		form.getBody().setLayout(layout);
-		
+      content = parent;
+      content.setLayout(new GridLayout());
+
 		createAlarmDetailsSection();
 		createEditorsSection();
 		
@@ -131,7 +126,6 @@ public class AlarmComments extends ViewPart
 
 		refresh();
 	}
-	
 
 	/**
 	 * Create actions
@@ -146,7 +140,7 @@ public class AlarmComments extends ViewPart
 			}
 		};
 	}
-	
+
 	/**
 	 * Contribute actions to action bar
 	 */
@@ -184,70 +178,74 @@ public class AlarmComments extends ViewPart
 	 */
 	private void createAlarmDetailsSection()
 	{
-		final Section details = toolkit.createSection(form.getBody(), Section.TITLE_BAR);
-		details.setText(Messages.get().AlarmComments_Details);
-		TableWrapData twd = new TableWrapData();
-		twd.grabHorizontal = true;
-		twd.align = TableWrapData.FILL;
-		details.setLayoutData(twd);
+      final Section section = new Section(content, Messages.get().AlarmComments_Details, true);
+      section.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
 
-		final Composite clientArea = toolkit.createComposite(details);
+      final Composite clientArea = section.getClient();
 		GridLayout layout = new GridLayout();
 		layout.numColumns = 2;
 		layout.makeColumnsEqualWidth = true;
 		clientArea.setLayout(layout);
-		details.setClient(clientArea);
 
 		alarmSeverity = new CLabel(clientArea, SWT.NONE);
-		toolkit.adapt(alarmSeverity);
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		alarmSeverity.setLayoutData(gd);
 
 		alarmState = new CLabel(clientArea, SWT.NONE);
-		toolkit.adapt(alarmState);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		alarmState.setLayoutData(gd);
 		
 		alarmSource = new CLabel(clientArea, SWT.NONE);
-		toolkit.adapt(alarmSource);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		gd.horizontalSpan = 2;
 		alarmSource.setLayoutData(gd);
 
-		alarmText = toolkit.createLabel(clientArea, "", SWT.WRAP); //$NON-NLS-1$
+      alarmText = new Label(clientArea, SWT.WRAP);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		gd.horizontalSpan = 2;
 		alarmText.setLayoutData(gd);
 	}
-	
+
 	/**
 	 * Create comment list
 	 */
 	private void createEditorsSection()
 	{
-		final Section details = toolkit.createSection(form.getBody(), Section.TITLE_BAR);
-		details.setText(Messages.get().AlarmComments_Comments);
-		TableWrapData twd = new TableWrapData();
-		twd.grabHorizontal = true;
-		twd.align = TableWrapData.FILL;
-		details.setLayoutData(twd);
+      final Section section = new Section(content, Messages.get().AlarmComments_Comments, false);
+      section.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 
-		editorsArea = toolkit.createComposite(details);
+      editorsScroller = new ScrolledComposite(section.getClient(), SWT.V_SCROLL);
+      editorsScroller.setBackground(section.getClient().getBackground());
+      editorsScroller.setExpandHorizontal(true);
+      editorsScroller.setExpandVertical(true);
+      WidgetHelper.setScrollBarIncrement(editorsScroller, SWT.VERTICAL, 20);
+      editorsScroller.addControlListener(new ControlAdapter() {
+         public void controlResized(ControlEvent e)
+         {
+            editorsArea.layout(true, true);
+            editorsScroller.setMinSize(editorsArea.computeSize(editorsScroller.getClientArea().width, SWT.DEFAULT));
+         }
+      });
+
+      editorsArea = new Composite(editorsScroller, SWT.NONE);
+      editorsArea.setBackground(section.getClient().getBackground());
 		GridLayout layout = new GridLayout();
 		editorsArea.setLayout(layout);
-		details.setClient(editorsArea);
+
+      editorsScroller.setContent(editorsArea);
 		
-		linkAddComment = toolkit.createImageHyperlink(editorsArea, SWT.NONE);
+      linkAddComment = new ImageHyperlink(editorsArea, SWT.NONE);
 		linkAddComment.setImage(imageCache.add(Activator.getImageDescriptor("icons/new_comment.png"))); //$NON-NLS-1$
 		linkAddComment.setText(Messages.get().AlarmComments_AddCommentLink);
+      linkAddComment.setBackground(editorsArea.getBackground());
 		linkAddComment.addHyperlinkListener(new HyperlinkAdapter() {
 			@Override
 			public void linkActivated(HyperlinkEvent e)
@@ -257,15 +255,15 @@ public class AlarmComments extends ViewPart
 		});
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
-	 */
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
+    */
 	@Override
 	public void setFocus()
 	{
-		form.setFocus();
+      editorsArea.setFocus();
 	}
-	
+
 	/**
 	 * Refresh view
 	 */
@@ -282,18 +280,18 @@ public class AlarmComments extends ViewPart
 					public void run()
 					{
 						updateAlarmDetails(alarm);
-						
+
 						for(AlarmCommentsEditor e : editors.values())
 							e.dispose();
-						
+
 						for(AlarmComment c : comments)
 							editors.put(c.getId(), createEditor(c));
-						
+
 						updateLayout();
 					}
 				});
 			}
-			
+
 			@Override
 			protected String getErrorMessage()
 			{
@@ -301,16 +299,17 @@ public class AlarmComments extends ViewPart
 			}
 		}.start();
 	}
-	
+
 	/**
 	 * Update layout after internal change
 	 */
 	private void updateLayout()
 	{
-		form.reflow(true);
-		form.getParent().layout(true, true);
+      content.layout(true, true);
+      editorsArea.layout(true, true);
+      editorsScroller.setMinSize(editorsArea.computeSize(editorsScroller.getClientArea().width, SWT.DEFAULT));
 	}
-	
+
 	/**
 	 * Create comment editor widget
 	 * 
@@ -319,24 +318,22 @@ public class AlarmComments extends ViewPart
 	 */
 	private AlarmCommentsEditor createEditor(final AlarmComment note)
 	{
-	   HyperlinkAdapter editAction = new HyperlinkAdapter()
-      {
+      HyperlinkAdapter editAction = new HyperlinkAdapter() {
 	      @Override
          public void linkActivated(HyperlinkEvent e)
          {
 	         editComment(note.getId(), note.getText());
          }
       };
-      HyperlinkAdapter deleteAction = new HyperlinkAdapter()
-      {
+      HyperlinkAdapter deleteAction = new HyperlinkAdapter() {
          @Override
          public void linkActivated(HyperlinkEvent e)
          {
             deleteComment(note.getId());
          }
       };
-		final AlarmCommentsEditor e = new AlarmCommentsEditor(editorsArea, toolkit, imageCache, note, editAction, deleteAction);
-		toolkit.adapt(e);
+
+      final AlarmCommentsEditor e = new AlarmCommentsEditor(editorsArea, imageCache, note, editAction, deleteAction);
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -344,16 +341,15 @@ public class AlarmComments extends ViewPart
 		e.moveBelow(linkAddComment);
 		return e;
 	}
-	
+
 	/**
 	 * Add new comment
 	 */
 	private void addComment()
 	{
-
 	   editComment(0, ""); //$NON-NLS-1$
 	}
-	
+
 	/**
     * Edit comment
     */
@@ -362,7 +358,7 @@ public class AlarmComments extends ViewPart
       final EditCommentDialog dlg = new EditCommentDialog(getSite().getShell(), noteId , noteText);
       if (dlg.open() != Window.OK)
          return;
-      
+
       new ConsoleJob(Messages.get().AlarmComments_AddCommentJob, this, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
@@ -392,7 +388,7 @@ public class AlarmComments extends ViewPart
    {
       if (!MessageDialogHelper.openConfirm(getSite().getShell(), Messages.get().AlarmComments_Confirmation, Messages.get().AlarmComments_AckToDeleteComment))
          return;
-      
+
       new ConsoleJob(Messages.get().AlarmComments_DeleteCommentJob, this, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
@@ -406,7 +402,7 @@ public class AlarmComments extends ViewPart
                }
             });
          }
-         
+
          @Override
          protected String getErrorMessage()
          {
@@ -414,7 +410,7 @@ public class AlarmComments extends ViewPart
          }
       }.start();
    }
-	
+
 	/**
 	 * Update alarm details
 	 * 
@@ -435,9 +431,9 @@ public class AlarmComments extends ViewPart
 		alarmText.setText(alarm.getMessage());
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#dispose()
-	 */
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#dispose()
+    */
 	@Override
 	public void dispose()
 	{

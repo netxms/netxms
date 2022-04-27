@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,7 +40,7 @@ public abstract class Card extends DashboardComposite
 {
    private static final int HEADER_MARGIN_HEIGHT = 6;
    private static final int HEADER_MARGIN_WIDTH = 8;
-	
+
    private Composite header;
 	private Label headerText;
 	private Control clientArea;
@@ -85,7 +85,7 @@ public abstract class Card extends DashboardComposite
       headerText.setLayoutData(gd);
 
       clientArea = createClientAreaInternal();
-		
+
 		addMouseListener(new MouseListener() {
 			@Override
 			public void mouseUp(MouseEvent e)
@@ -105,7 +105,17 @@ public abstract class Card extends DashboardComposite
 			}
 		});
 	}
-	
+
+   /**
+    * Show/hide client area
+    */
+   protected void showClientArea(boolean show)
+   {
+      clientArea.setVisible(show);
+      ((GridData)clientArea.getLayoutData()).exclude = !show;
+      layout(true, true);
+   }
+
 	/**
 	 * Create client area control and do necessary configuration
 	 * 
@@ -236,6 +246,19 @@ public abstract class Card extends DashboardComposite
 		buttons.add(button);
 		layout(true, true);
 	}
+
+   /**
+    * Update buttons representation after changes in button objects
+    */
+   public void updateButtons()
+   {
+      for(DashboardElementButton b : buttons)
+      {
+         Label l = (Label)b.getControl();
+         l.setImage(b.getImage());
+         l.setToolTipText(b.getName());
+      }
+   }
 
 	/**
 	 * @return the doubleClickAction

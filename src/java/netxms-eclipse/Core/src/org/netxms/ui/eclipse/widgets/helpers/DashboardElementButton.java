@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,7 +24,6 @@ import org.eclipse.swt.widgets.Control;
 
 /**
  * Dashboard element's button
- *
  */
 public class DashboardElementButton
 {
@@ -54,6 +53,14 @@ public class DashboardElementButton
 		return name;
 	}
 
+   /**
+    * @param name the name to set
+    */
+   public void setName(String name)
+   {
+      this.name = name;
+   }
+
 	/**
 	 * @return the image
 	 */
@@ -62,9 +69,17 @@ public class DashboardElementButton
 		return image;
 	}
 
-	/**
-	 * @return the action
-	 */
+   /**
+    * @param image the image to set
+    */
+   public void setImage(Image image)
+   {
+      this.image = image;
+   }
+
+   /**
+    * @return the action
+    */
 	public Action getAction()
 	{
 		return action;
