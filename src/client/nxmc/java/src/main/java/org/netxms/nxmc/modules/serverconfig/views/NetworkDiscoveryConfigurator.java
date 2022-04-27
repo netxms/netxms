@@ -44,7 +44,6 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Spinner;
 import org.netxms.client.InetAddressListElement;
@@ -56,6 +55,7 @@ import org.netxms.nxmc.base.views.ConfigurationView;
 import org.netxms.nxmc.base.widgets.ImageHyperlink;
 import org.netxms.nxmc.base.widgets.LabeledText;
 import org.netxms.nxmc.base.widgets.MessageArea;
+import org.netxms.nxmc.base.widgets.Section;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.base.widgets.events.HyperlinkAdapter;
 import org.netxms.nxmc.base.widgets.events.HyperlinkEvent;
@@ -212,16 +212,17 @@ public class NetworkDiscoveryConfigurator extends ConfigurationView
     */
    private void createGeneralSection()
    {
-      Group section = new Group(content, SWT.NONE);
-      section.setBackground(content.getBackground());
-      section.setText(i18n.tr("General"));
+      Section section = new Section(content, i18n.tr("General"), false);
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       section.setLayoutData(gd);
 
+      Composite clientArea = section.getClient();
+      clientArea.setBackground(content.getBackground());
+
       GridLayout layout = new GridLayout();
-      section.setLayout(layout);
+      clientArea.setLayout(layout);
 
       final SelectionListener listener = new SelectionAdapter() {
          @Override
@@ -255,20 +256,20 @@ public class NetworkDiscoveryConfigurator extends ConfigurationView
          }
       };
 
-      radioDiscoveryOff = new Button(section, SWT.RADIO);
+      radioDiscoveryOff = new Button(clientArea, SWT.RADIO);
       radioDiscoveryOff.setText(i18n.tr("Disabled"));
       radioDiscoveryOff.addSelectionListener(listener);
-      radioDiscoveryPassive = new Button(section, SWT.RADIO);
+      radioDiscoveryPassive = new Button(clientArea, SWT.RADIO);
       radioDiscoveryPassive.setText(i18n.tr("Passive only"));
       radioDiscoveryPassive.addSelectionListener(listener);
-      radioDiscoveryActive = new Button(section, SWT.RADIO);
+      radioDiscoveryActive = new Button(clientArea, SWT.RADIO);
       radioDiscoveryActive.setText(i18n.tr("Active only"));
       radioDiscoveryActive.addSelectionListener(listener);
-      radioDiscoveryActiveAndPassive = new Button(section, SWT.RADIO);
+      radioDiscoveryActiveAndPassive = new Button(clientArea, SWT.RADIO);
       radioDiscoveryActiveAndPassive.setText(i18n.tr("Active and passive"));
       radioDiscoveryActiveAndPassive.addSelectionListener(listener);      
 
-      checkUseSnmpTraps = new Button(section, SWT.CHECK);
+      checkUseSnmpTraps = new Button(clientArea, SWT.CHECK);
       checkUseSnmpTraps.setText(i18n.tr("Use SNMP trap source addresses for discovery"));
       checkUseSnmpTraps.addSelectionListener(new SelectionAdapter() {
          @Override
@@ -282,7 +283,7 @@ public class NetworkDiscoveryConfigurator extends ConfigurationView
       gd.verticalIndent = 10;
       checkUseSnmpTraps.setLayoutData(gd);
 
-      checkUseSyslog = new Button(section, SWT.CHECK);
+      checkUseSyslog = new Button(clientArea, SWT.CHECK);
       checkUseSyslog.setText(i18n.tr("Use syslog source addresses for discovery"));
       checkUseSyslog.addSelectionListener(new SelectionAdapter() {
          @Override
@@ -328,23 +329,23 @@ public class NetworkDiscoveryConfigurator extends ConfigurationView
     */
    private void createScheduleSection()
    {
-      Group section = new Group(content, SWT.NONE);
-      section.setBackground(content.getBackground());
-      section.setText(i18n.tr("Schedule"));
+      Section section = new Section(content, i18n.tr("Schedule"), false);
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       section.setLayoutData(gd);
 
+      Composite clientArea = section.getClient();
+      clientArea.setBackground(content.getBackground());
       GridLayout layout = new GridLayout();
       layout.numColumns = 2;
-      section.setLayout(layout);
+      clientArea.setLayout(layout);
 
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
-      passiveDiscoveryInterval = WidgetHelper.createLabeledSpinner(section, SWT.BORDER, i18n.tr("Passive discovery interval"), 0, 0xffffff, gd);
-      passiveDiscoveryInterval.setBackground(section.getBackground());
-      passiveDiscoveryInterval.getParent().setBackground(section.getBackground());
+      passiveDiscoveryInterval = WidgetHelper.createLabeledSpinner(clientArea, SWT.BORDER, i18n.tr("Passive discovery interval"), 0, 0xffffff, gd);
+      passiveDiscoveryInterval.setBackground(clientArea.getBackground());
+      passiveDiscoveryInterval.getParent().setBackground(clientArea.getBackground());
       passiveDiscoveryInterval.addModifyListener(new ModifyListener() {
          @Override
          public void modifyText(ModifyEvent e)
@@ -360,9 +361,9 @@ public class NetworkDiscoveryConfigurator extends ConfigurationView
          }
       });
       
-      activeDiscoveryScheduleLabel = new Label(section, SWT.LEFT);
+      activeDiscoveryScheduleLabel = new Label(clientArea, SWT.LEFT);
       activeDiscoveryScheduleLabel.setText(i18n.tr("Active discovery schedule configuration"));
-      activeDiscoveryScheduleLabel.setBackground(section.getBackground());
+      activeDiscoveryScheduleLabel.setBackground(clientArea.getBackground());
       gd = new GridData();
       gd.horizontalSpan = 2;
       activeDiscoveryScheduleLabel.setLayoutData(gd);
@@ -395,13 +396,13 @@ public class NetworkDiscoveryConfigurator extends ConfigurationView
          }
       };      
 
-      radioActiveDiscoveryInterval = new Button(section, SWT.RADIO);
+      radioActiveDiscoveryInterval = new Button(clientArea, SWT.RADIO);
       radioActiveDiscoveryInterval.setText(i18n.tr("Interval"));
       radioActiveDiscoveryInterval.addSelectionListener(listener);
       gd = new GridData();
       radioActiveDiscoveryInterval.setLayoutData(gd);
       
-      radioActiveDiscoverySchedule = new Button(section, SWT.RADIO);
+      radioActiveDiscoverySchedule = new Button(clientArea, SWT.RADIO);
       radioActiveDiscoverySchedule.setText(i18n.tr("Schedule"));
       radioActiveDiscoverySchedule.addSelectionListener(listener);
       gd = new GridData();
@@ -411,9 +412,9 @@ public class NetworkDiscoveryConfigurator extends ConfigurationView
 
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
-      activeDiscoveryInterval = WidgetHelper.createLabeledSpinner(section, SWT.BORDER, i18n.tr("Active discovery interval"), 0, 0xffffff, gd);
-      activeDiscoveryInterval.setBackground(section.getBackground());
-      activeDiscoveryInterval.getParent().setBackground(section.getBackground());
+      activeDiscoveryInterval = WidgetHelper.createLabeledSpinner(clientArea, SWT.BORDER, i18n.tr("Active discovery interval"), 0, 0xffffff, gd);
+      activeDiscoveryInterval.setBackground(clientArea.getBackground());
+      activeDiscoveryInterval.getParent().setBackground(clientArea.getBackground());
       activeDiscoveryInterval.addModifyListener(new ModifyListener() {
          @Override
          public void modifyText(ModifyEvent e)
@@ -423,9 +424,9 @@ public class NetworkDiscoveryConfigurator extends ConfigurationView
          }
       });
       
-      activeDiscoverySchedule = new LabeledText(section, SWT.NONE, SWT.SINGLE | SWT.BORDER);
+      activeDiscoverySchedule = new LabeledText(clientArea, SWT.NONE, SWT.SINGLE | SWT.BORDER);
       activeDiscoverySchedule.setLabel(i18n.tr("Active discovery schedule"));
-      activeDiscoverySchedule.setBackground(section.getBackground());
+      activeDiscoverySchedule.setBackground(clientArea.getBackground());
       activeDiscoverySchedule.getTextControl().addModifyListener(new ModifyListener() {
          @Override
          public void modifyText(ModifyEvent e)
@@ -445,9 +446,7 @@ public class NetworkDiscoveryConfigurator extends ConfigurationView
     */
    private void createFilterSection()
    {
-      Group section = new Group(content, SWT.NONE);
-      section.setBackground(content.getBackground());
-      section.setText(i18n.tr("Filter"));
+      Section section = new Section(content, i18n.tr("Filter"), false);
       GridData gd = new GridData();
       gd.verticalAlignment = SWT.TOP;
       gd.horizontalAlignment = SWT.FILL;
@@ -455,8 +454,11 @@ public class NetworkDiscoveryConfigurator extends ConfigurationView
       gd.verticalSpan = 3;
       section.setLayoutData(gd);
 
+      Composite clientArea = section.getClient();
+      clientArea.setBackground(content.getBackground());
+
       GridLayout layout = new GridLayout();
-      section.setLayout(layout);
+      clientArea.setLayout(layout);
 
       final SelectionListener checkBoxListener = new SelectionAdapter() {
          @Override
@@ -480,12 +482,12 @@ public class NetworkDiscoveryConfigurator extends ConfigurationView
          }
       };
 
-      checkFilterRange = new Button(section, SWT.CHECK);
+      checkFilterRange = new Button(clientArea, SWT.CHECK);
       checkFilterRange.setText(i18n.tr("By address range"));
       checkFilterRange.addSelectionListener(checkBoxListener);
 
-      Composite addressRangeEditor = new Composite(section, SWT.NONE);
-      addressRangeEditor.setBackground(section.getBackground());
+      Composite addressRangeEditor = new Composite(clientArea, SWT.NONE);
+      addressRangeEditor.setBackground(clientArea.getBackground());
       gd = new GridData();
       gd.horizontalIndent = 20;
       gd.grabExcessHorizontalSpace = true;
@@ -519,9 +521,9 @@ public class NetworkDiscoveryConfigurator extends ConfigurationView
       });
 
       final ImageHyperlink linkAdd = new ImageHyperlink(addressRangeEditor, SWT.NONE);
-      linkAdd.setText(i18n.tr("Add"));
+      linkAdd.setText(i18n.tr("Add..."));
       linkAdd.setImage(SharedIcons.IMG_ADD_OBJECT);
-      linkAdd.setBackground(section.getBackground());
+      linkAdd.setBackground(clientArea.getBackground());
       gd = new GridData();
       gd.verticalAlignment = SWT.TOP;
       linkAdd.setLayoutData(gd);
@@ -534,9 +536,9 @@ public class NetworkDiscoveryConfigurator extends ConfigurationView
       });
 
       final ImageHyperlink linkEdit = new ImageHyperlink(addressRangeEditor, SWT.NONE);
-      linkEdit.setText(i18n.tr("Edit"));
+      linkEdit.setText(i18n.tr("Edit..."));
       linkEdit.setImage(SharedIcons.IMG_EDIT);
-      linkEdit.setBackground(section.getBackground());
+      linkEdit.setBackground(clientArea.getBackground());
       linkEdit.setEnabled(false);
       gd = new GridData();
       gd.verticalAlignment = SWT.TOP;
@@ -552,7 +554,7 @@ public class NetworkDiscoveryConfigurator extends ConfigurationView
       final ImageHyperlink linkRemove = new ImageHyperlink(addressRangeEditor, SWT.NONE);
       linkRemove.setText(i18n.tr("Remove"));
       linkRemove.setImage(SharedIcons.IMG_DELETE_OBJECT);
-      linkRemove.setBackground(section.getBackground());
+      linkRemove.setBackground(clientArea.getBackground());
       linkRemove.setEnabled(false);
       gd = new GridData();
       gd.verticalAlignment = SWT.TOP;
@@ -575,38 +577,38 @@ public class NetworkDiscoveryConfigurator extends ConfigurationView
          }
       });
 
-      checkFilterProtocols = new Button(section, SWT.CHECK);
+      checkFilterProtocols = new Button(clientArea, SWT.CHECK);
       checkFilterProtocols.setText(i18n.tr("By communication protocols"));
       checkFilterProtocols.addSelectionListener(checkBoxListener);
 
-      checkAllowAgent = new Button(section, SWT.CHECK);
+      checkAllowAgent = new Button(clientArea, SWT.CHECK);
       checkAllowAgent.setText(i18n.tr("Accept node if it has &NetXMS agent"));
       checkAllowAgent.addSelectionListener(checkBoxListener);
       gd = new GridData();
       gd.horizontalIndent = 20;
       checkAllowAgent.setLayoutData(gd);
 
-      checkAllowSNMP = new Button(section, SWT.CHECK);
+      checkAllowSNMP = new Button(clientArea, SWT.CHECK);
       checkAllowSNMP.setText(i18n.tr("Accept node if it has &SNMP agent"));
       checkAllowSNMP.addSelectionListener(checkBoxListener);
       gd = new GridData();
       gd.horizontalIndent = 20;
       checkAllowSNMP.setLayoutData(gd);
 
-      checkAllowSSH = new Button(section, SWT.CHECK);
+      checkAllowSSH = new Button(clientArea, SWT.CHECK);
       checkAllowSSH.setText(i18n.tr("Accept node if it is accessible via SS&H"));
       checkAllowSSH.addSelectionListener(checkBoxListener);
       gd = new GridData();
       gd.horizontalIndent = 20;
       checkAllowSSH.setLayoutData(gd);
 
-      checkFilterScript = new Button(section, SWT.CHECK);
+      checkFilterScript = new Button(clientArea, SWT.CHECK);
       checkFilterScript.setText(i18n.tr("With custom script"));
       checkFilterScript.addSelectionListener(checkBoxListener);
 
-      filterScript = new ScriptSelector(section, SWT.NONE, true, false);
-      filterScript.setBackground(section.getBackground());
-      filterScript.getTextControl().setBackground(section.getBackground());
+      filterScript = new ScriptSelector(clientArea, SWT.NONE, true, false);
+      filterScript.setBackground(clientArea.getBackground());
+      filterScript.getTextControl().setBackground(clientArea.getBackground());
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
@@ -627,27 +629,29 @@ public class NetworkDiscoveryConfigurator extends ConfigurationView
     */
    private void createActiveDiscoverySection()
    {
-      Group section = new Group(content, SWT.NONE);
-      section.setBackground(content.getBackground());
-      section.setText(i18n.tr("Active discovery targets"));
+      Section section = new Section(content, i18n.tr("Active discovery targets"), false);
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       section.setLayoutData(gd);
 
+      Composite clientArea = section.getClient();
+      clientArea.setBackground(content.getBackground());
       GridLayout layout = new GridLayout();
-      layout.numColumns = 2;
-      section.setLayout(layout);
+      layout.numColumns = 3;
+      layout.marginHeight = 0;
+      layout.marginWidth = 0;
+      layout.horizontalSpacing = 0;
+      clientArea.setLayout(layout);
 
       final String[] names = { i18n.tr("Range"), i18n.tr("Proxy"), i18n.tr("Comments") };
       final int[] widths = { 150, 150, 150 };
-      activeDiscoveryAddressList = new SortableTableViewer(section, names, widths, 0, SWT.DOWN, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
+      activeDiscoveryAddressList = new SortableTableViewer(clientArea, names, widths, 0, SWT.DOWN, SWT.MULTI | SWT.FULL_SELECTION);
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       gd.verticalAlignment = SWT.FILL;
       gd.grabExcessVerticalSpace = true;
-      gd.verticalSpan = 4;
       gd.heightHint = 200;
       activeDiscoveryAddressList.getTable().setLayoutData(gd);
       activeDiscoveryAddressList.getTable().setSortDirection(SWT.UP);
@@ -662,10 +666,21 @@ public class NetworkDiscoveryConfigurator extends ConfigurationView
          }
       });
 
-      final ImageHyperlink linkAdd = new ImageHyperlink(section, SWT.NONE);
-      linkAdd.setText(i18n.tr("Add"));
+      Label separator = new Label(clientArea, SWT.SEPARATOR | SWT.VERTICAL);
+      gd = new GridData();
+      gd.verticalAlignment = SWT.FILL;
+      gd.grabExcessVerticalSpace = true;
+      separator.setLayoutData(gd);
+
+      Composite controlArea = new Composite(clientArea, SWT.NONE);
+      controlArea.setBackground(clientArea.getBackground());
+      controlArea.setLayout(new GridLayout());
+      controlArea.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, true));
+
+      final ImageHyperlink linkAdd = new ImageHyperlink(controlArea, SWT.NONE);
+      linkAdd.setText(i18n.tr("Add..."));
       linkAdd.setImage(SharedIcons.IMG_ADD_OBJECT);
-      linkAdd.setBackground(section.getBackground());
+      linkAdd.setBackground(clientArea.getBackground());
       gd = new GridData();
       gd.verticalAlignment = SWT.TOP;
       linkAdd.setLayoutData(gd);
@@ -677,10 +692,10 @@ public class NetworkDiscoveryConfigurator extends ConfigurationView
          }
       });      
 
-      final ImageHyperlink linkEdit = new ImageHyperlink(section, SWT.NONE);
-      linkEdit.setText(i18n.tr("Edit"));
+      final ImageHyperlink linkEdit = new ImageHyperlink(controlArea, SWT.NONE);
+      linkEdit.setText(i18n.tr("Edit..."));
       linkEdit.setImage(SharedIcons.IMG_EDIT);
-      linkEdit.setBackground(section.getBackground());
+      linkEdit.setBackground(clientArea.getBackground());
       linkEdit.setEnabled(false);
       gd = new GridData();
       gd.verticalAlignment = SWT.TOP;
@@ -693,10 +708,10 @@ public class NetworkDiscoveryConfigurator extends ConfigurationView
          }
       });
 
-      final ImageHyperlink linkRemove = new ImageHyperlink(section, SWT.NONE);
+      final ImageHyperlink linkRemove = new ImageHyperlink(controlArea, SWT.NONE);
       linkRemove.setText(i18n.tr("Remove"));
       linkRemove.setImage(SharedIcons.IMG_DELETE_OBJECT);
-      linkRemove.setBackground(section.getBackground());
+      linkRemove.setBackground(clientArea.getBackground());
       linkRemove.setEnabled(false);
       gd = new GridData();
       gd.verticalAlignment = SWT.TOP;
@@ -709,11 +724,11 @@ public class NetworkDiscoveryConfigurator extends ConfigurationView
          }
       });
 
-      final ImageHyperlink runActiveDiscovery = new ImageHyperlink(section, SWT.NONE);
+      final ImageHyperlink runActiveDiscovery = new ImageHyperlink(controlArea, SWT.NONE);
       runActiveDiscovery.setText(i18n.tr("Scan"));
       runActiveDiscovery.setToolTipText(i18n.tr("Runs active discovery on selected ranges"));
       runActiveDiscovery.setImage(SharedIcons.IMG_EXECUTE);
-      runActiveDiscovery.setBackground(section.getBackground());
+      runActiveDiscovery.setBackground(clientArea.getBackground());
       runActiveDiscovery.setEnabled(false);
       gd = new GridData();
       gd.verticalAlignment = SWT.TOP;

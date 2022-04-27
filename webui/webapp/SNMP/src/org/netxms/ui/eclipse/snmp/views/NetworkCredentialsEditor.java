@@ -93,7 +93,7 @@ public class NetworkCredentialsEditor extends ViewPart implements ISaveablePart
    public static final int COLUMN_SSH_PASSWORD = 1;
    public static final int COLUMN_SSH_KEY = 2;
 
-	private NXCSession session;
+   private NXCSession session;
 	private boolean modified = false;
 	private boolean bothModified = false;
    private boolean saveInProgress = false;
@@ -349,15 +349,15 @@ public class NetworkCredentialsEditor extends ViewPart implements ISaveablePart
     * 
     * @param manager Menu manager for local toolbar
     */
-	private void fillLocalToolBar(IToolBarManager manager)
-	{
-		manager.add(actionSave);
+   private void fillLocalToolBar(IToolBarManager manager)
+   {
+      manager.add(actionSave);
       manager.add(actionRefresh);
-	}
+   }
 
-	/**
-	 * Create "SNMP Communities" section
-	 */
+   /**
+    * Create "SNMP Communities" section
+    */
 	private void createSnmpCommunitySection()
 	{
       Section section = new Section(content, Messages.get().SnmpConfigurator_SectionCommunities, false);
@@ -409,7 +409,7 @@ public class NetworkCredentialsEditor extends ViewPart implements ISaveablePart
 		});
 
       final ImageHyperlink linkRemove = new ImageHyperlink(controlArea, SWT.NONE);
-		linkRemove.setText(Messages.get().SnmpConfigurator_Remove);
+      linkRemove.setText(Messages.get().SnmpConfigurator_Remove);
 		linkRemove.setImage(SharedIcons.IMG_DELETE_OBJECT);
       linkRemove.setBackground(clientArea.getBackground());
 		gd = new GridData();
@@ -471,7 +471,7 @@ public class NetworkCredentialsEditor extends ViewPart implements ISaveablePart
       layout.horizontalSpacing = 0;
       clientArea.setLayout(layout);
 		
-		final String[] names = { "User name", "Auth type", "Priv type", "Auth secret", "Priv secret", "Comments" };
+      final String[] names = { "User name", "Auth type", "Priv type", "Auth password", "Priv password", "Comments" };
 		final int[] widths = { 100, 100, 100, 100, 100, 100 };
       snmpUsmCredentialsList = new SortableTableViewer(clientArea, names, widths, 0, SWT.DOWN, SWT.MULTI | SWT.FULL_SELECTION);
 		GridData gd = new GridData();
@@ -533,8 +533,8 @@ public class NetworkCredentialsEditor extends ViewPart implements ISaveablePart
       });
 
       final ImageHyperlink linkRemove = new ImageHyperlink(controlArea, SWT.NONE);
-		linkRemove.setText(Messages.get().SnmpConfigurator_Remove);
-		linkRemove.setImage(SharedIcons.IMG_DELETE_OBJECT);
+      linkRemove.setText(Messages.get().SnmpConfigurator_Remove);
+      linkRemove.setImage(SharedIcons.IMG_DELETE_OBJECT);
       linkRemove.setBackground(clientArea.getBackground());
 		gd = new GridData();
 		gd.verticalAlignment = SWT.TOP;
@@ -1045,7 +1045,7 @@ public class NetworkCredentialsEditor extends ViewPart implements ISaveablePart
          }
 		}.start();
 	}
-	
+
 	/**
 	 * Add SNMP community to the list
 	 */
@@ -1061,14 +1061,14 @@ public class NetworkCredentialsEditor extends ViewPart implements ISaveablePart
          setModified(NetworkCredentials.SNMP_COMMUNITIES);
 		}
 	}
-	
+
 	/**
 	 * Remove selected SNMP communities
 	 */
 	private void removeCommunity()
 	{
 		final List<String> list = config.getCommunities(zoneUIN);
-		IStructuredSelection selection = (IStructuredSelection)snmpCommunityList.getSelection();
+      IStructuredSelection selection = snmpCommunityList.getStructuredSelection();
 		if (selection.size() > 0)
 		{
 			for(Object o : selection.toList())
@@ -1088,7 +1088,7 @@ public class NetworkCredentialsEditor extends ViewPart implements ISaveablePart
    protected void moveCommunity(boolean up)
    {
       final List<String> list = config.getCommunities(zoneUIN);
-      IStructuredSelection selection = (IStructuredSelection)snmpCommunityList.getSelection();
+      IStructuredSelection selection = snmpCommunityList.getStructuredSelection();
       if (selection.size() > 0)
       {
          for(Object o : selection.toList())
@@ -1135,7 +1135,7 @@ public class NetworkCredentialsEditor extends ViewPart implements ISaveablePart
     */
    private void editUsmCredentials()
    {
-      IStructuredSelection selection = (IStructuredSelection)snmpUsmCredentialsList.getSelection();
+      IStructuredSelection selection = snmpUsmCredentialsList.getStructuredSelection();
       if (selection.size() != 1)
          return;
       SnmpUsmCredential cred = (SnmpUsmCredential)selection.getFirstElement();
@@ -1154,7 +1154,7 @@ public class NetworkCredentialsEditor extends ViewPart implements ISaveablePart
 	private void removeUsmCredentials()
 	{
 		final List<SnmpUsmCredential> list = config.getUsmCredentials(zoneUIN);
-		IStructuredSelection selection = (IStructuredSelection)snmpUsmCredentialsList.getSelection();
+      IStructuredSelection selection = snmpUsmCredentialsList.getStructuredSelection();
 		if (selection.size() > 0)
 		{
 			for(Object o : selection.toList())
@@ -1174,7 +1174,7 @@ public class NetworkCredentialsEditor extends ViewPart implements ISaveablePart
    protected void moveUsmCredentials(boolean up)
    {
       final List<SnmpUsmCredential> list = config.getUsmCredentials(zoneUIN);
-      IStructuredSelection selection = (IStructuredSelection)snmpUsmCredentialsList.getSelection();
+      IStructuredSelection selection = snmpUsmCredentialsList.getStructuredSelection();
       if (selection.size() > 0)
       {
          for(Object o : selection.toList())
@@ -1222,7 +1222,7 @@ public class NetworkCredentialsEditor extends ViewPart implements ISaveablePart
    protected void removeSharedSecret()
    {
       final List<String> list = config.getSharedSecrets(zoneUIN);
-      IStructuredSelection selection = (IStructuredSelection)sharedSecretList.getSelection();
+      IStructuredSelection selection = sharedSecretList.getStructuredSelection();
       if (selection.size() > 0)
       {
          for(Object o : selection.toList())
@@ -1242,7 +1242,7 @@ public class NetworkCredentialsEditor extends ViewPart implements ISaveablePart
    protected void moveSharedSecret(boolean up)
    {
       final List<String> list = config.getSharedSecrets(zoneUIN);
-      IStructuredSelection selection = (IStructuredSelection)sharedSecretList.getSelection();
+      IStructuredSelection selection = sharedSecretList.getStructuredSelection();
       if (selection.size() > 0)
       {
          for(Object o : selection.toList())
@@ -1288,7 +1288,7 @@ public class NetworkCredentialsEditor extends ViewPart implements ISaveablePart
     */
    private void editSshCredentials()
    {
-      IStructuredSelection selection = (IStructuredSelection)sshCredentialsList.getSelection();
+      IStructuredSelection selection = sshCredentialsList.getStructuredSelection();
       if (selection.size() != 1)
          return;
       SSHCredentials cred = (SSHCredentials)selection.getFirstElement();
@@ -1307,7 +1307,7 @@ public class NetworkCredentialsEditor extends ViewPart implements ISaveablePart
    private void removeSshCredentials()
    {
       final List<SSHCredentials> list = config.getSshCredentials(zoneUIN);
-      IStructuredSelection selection = (IStructuredSelection)sshCredentialsList.getSelection();
+      IStructuredSelection selection = sshCredentialsList.getStructuredSelection();
       if (selection.size() > 0)
       {
          for(Object o : selection.toList())
@@ -1327,7 +1327,7 @@ public class NetworkCredentialsEditor extends ViewPart implements ISaveablePart
    protected void moveSshCredentials(boolean up)
    {
       final List<SSHCredentials> list = config.getSshCredentials(zoneUIN);
-      IStructuredSelection selection = (IStructuredSelection)sshCredentialsList.getSelection();
+      IStructuredSelection selection = sshCredentialsList.getStructuredSelection();
       if (selection.size() > 0)
       {
          for(Object o : selection.toList())

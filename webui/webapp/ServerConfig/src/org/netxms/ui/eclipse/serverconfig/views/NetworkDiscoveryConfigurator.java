@@ -753,7 +753,7 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
          @Override
          public void linkActivated(HyperlinkEvent e)
          {
-            runManualActiveDiscovery();
+            scanAddressRange();
          }
       });
 
@@ -969,9 +969,12 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
       }
    }
    
-   private void runManualActiveDiscovery()
+   /**
+    * Scan select address range(s)
+    */
+   private void scanAddressRange()
    {
-      final IStructuredSelection selection = (IStructuredSelection)activeDiscoveryAddressList.getSelection();
+      IStructuredSelection selection = activeDiscoveryAddressList.getStructuredSelection();
       if (selection.isEmpty())
          return;
 
@@ -1034,16 +1037,16 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
          }
       }
    }
-   
+
    /**
     * Edit address filter element
     */
    private void editAddressFilterElement()
    {
-      IStructuredSelection selection = (IStructuredSelection)filterAddressList.getSelection();
+      IStructuredSelection selection = filterAddressList.getStructuredSelection();
       if (selection.size() != 1)
          return;
-      
+
       AddAddressListElementDialog dlg = new AddAddressListElementDialog(getSite().getShell(), false, (InetAddressListElement)selection.getFirstElement());
       if (dlg.open() == Window.OK)
       {

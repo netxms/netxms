@@ -40,7 +40,6 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SSHCredentials;
@@ -53,6 +52,7 @@ import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.ConfigurationView;
 import org.netxms.nxmc.base.widgets.ImageHyperlink;
 import org.netxms.nxmc.base.widgets.MessageArea;
+import org.netxms.nxmc.base.widgets.Section;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.base.widgets.events.HyperlinkAdapter;
 import org.netxms.nxmc.base.widgets.events.HyperlinkEvent;
@@ -333,27 +333,41 @@ public class NetworkCredentialsEditor extends ConfigurationView
     */
 	private void createSnmpCommunitySection()
 	{
-      Group clientArea = new Group(content, SWT.NONE);
-      clientArea.setText(i18n.tr("SNMP community strings"));
+      Section section = new Section(content, i18n.tr("SNMP community strings"), false);
+      section.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 2, 1));
+
+      Composite clientArea = section.getClient();
       clientArea.setBackground(content.getBackground());
-      clientArea.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 2, 1));
 		GridLayout layout = new GridLayout();
-		layout.numColumns = 2;
+      layout.numColumns = 3;
+      layout.marginHeight = 0;
+      layout.marginWidth = 0;
+      layout.horizontalSpacing = 0;
 		clientArea.setLayout(layout);
 
-		snmpCommunityList = new TableViewer(clientArea, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
+      snmpCommunityList = new TableViewer(clientArea, SWT.MULTI | SWT.FULL_SELECTION);
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		gd.verticalAlignment = SWT.FILL;
 		gd.grabExcessVerticalSpace = true;
-		gd.verticalSpan = 4;
 		gd.heightHint = 150;
 		snmpCommunityList.getTable().setLayoutData(gd);
 		snmpCommunityList.setContentProvider(new ArrayContentProvider());
 
-      final ImageHyperlink linkAdd = new ImageHyperlink(clientArea, SWT.NONE);
-      linkAdd.setText(i18n.tr("Add"));
+      Label separator = new Label(clientArea, SWT.SEPARATOR | SWT.VERTICAL);
+      gd = new GridData();
+      gd.verticalAlignment = SWT.FILL;
+      gd.grabExcessVerticalSpace = true;
+      separator.setLayoutData(gd);
+
+      Composite controlArea = new Composite(clientArea, SWT.NONE);
+      controlArea.setBackground(clientArea.getBackground());
+      controlArea.setLayout(new GridLayout());
+      controlArea.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, true));
+
+      final ImageHyperlink linkAdd = new ImageHyperlink(controlArea, SWT.NONE);
+		linkAdd.setText(i18n.tr("Add..."));
 		linkAdd.setImage(SharedIcons.IMG_ADD_OBJECT);
       linkAdd.setBackground(clientArea.getBackground());
 		gd = new GridData();
@@ -367,7 +381,7 @@ public class NetworkCredentialsEditor extends ConfigurationView
 			}
 		});
 
-      final ImageHyperlink linkRemove = new ImageHyperlink(clientArea, SWT.NONE);
+      final ImageHyperlink linkRemove = new ImageHyperlink(controlArea, SWT.NONE);
       linkRemove.setText(i18n.tr("Remove"));
 		linkRemove.setImage(SharedIcons.IMG_DELETE_OBJECT);
       linkRemove.setBackground(clientArea.getBackground());
@@ -382,7 +396,7 @@ public class NetworkCredentialsEditor extends ConfigurationView
 			}
 		});
 
-      final ImageHyperlink linkUp = new ImageHyperlink(clientArea, SWT.NONE);
+      final ImageHyperlink linkUp = new ImageHyperlink(controlArea, SWT.NONE);
       linkUp.setText("Up");
       linkUp.setImage(SharedIcons.IMG_UP);
       linkUp.setBackground(clientArea.getBackground());
@@ -397,7 +411,7 @@ public class NetworkCredentialsEditor extends ConfigurationView
          }
       });
 
-      final ImageHyperlink linkDown = new ImageHyperlink(clientArea, SWT.NONE);
+      final ImageHyperlink linkDown = new ImageHyperlink(controlArea, SWT.NONE);
       linkDown.setText("Down");
       linkDown.setImage(SharedIcons.IMG_DOWN);
       linkDown.setBackground(clientArea.getBackground());
@@ -418,23 +432,26 @@ public class NetworkCredentialsEditor extends ConfigurationView
 	 */
 	private void createSnmpUsmCredSection()
 	{
-      Group clientArea = new Group(content, SWT.NONE);
-      clientArea.setText(i18n.tr("SNMPv3 USM credentials"));
+      Section section = new Section(content, i18n.tr("SNMPv3 USM credentials"), false);
+      section.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 3, 1));
+
+      Composite clientArea = section.getClient();
       clientArea.setBackground(content.getBackground());
-      clientArea.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 3, 1));
       GridLayout layout = new GridLayout();
-      layout.numColumns = 2;
+      layout.numColumns = 3;
+      layout.marginHeight = 0;
+      layout.marginWidth = 0;
+      layout.horizontalSpacing = 0;
       clientArea.setLayout(layout);
 		
       final String[] names = { "User name", "Auth type", "Priv type", "Auth password", "Priv password", "Comments" };
 		final int[] widths = { 100, 100, 100, 100, 100, 100 };
-		snmpUsmCredentialsList = new SortableTableViewer(clientArea, names, widths, 0, SWT.DOWN, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
+      snmpUsmCredentialsList = new SortableTableViewer(clientArea, names, widths, 0, SWT.DOWN, SWT.MULTI | SWT.FULL_SELECTION);
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		gd.verticalAlignment = SWT.FILL;
 		gd.grabExcessVerticalSpace = true;
-		gd.verticalSpan = 5;
 		gd.heightHint = 150;
 		snmpUsmCredentialsList.getTable().setLayoutData(gd);
 		snmpUsmCredentialsList.setContentProvider(new ArrayContentProvider());
@@ -447,8 +464,19 @@ public class NetworkCredentialsEditor extends ConfigurationView
          }
       });
 
-      final ImageHyperlink linkAdd = new ImageHyperlink(clientArea, SWT.NONE);
-      linkAdd.setText(i18n.tr("Add"));
+      Label separator = new Label(clientArea, SWT.SEPARATOR | SWT.VERTICAL);
+      gd = new GridData();
+      gd.verticalAlignment = SWT.FILL;
+      gd.grabExcessVerticalSpace = true;
+      separator.setLayoutData(gd);
+
+      Composite controlArea = new Composite(clientArea, SWT.NONE);
+      controlArea.setBackground(clientArea.getBackground());
+      controlArea.setLayout(new GridLayout());
+      controlArea.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, true));
+
+      final ImageHyperlink linkAdd = new ImageHyperlink(controlArea, SWT.NONE);
+		linkAdd.setText(i18n.tr("Add..."));
 		linkAdd.setImage(SharedIcons.IMG_ADD_OBJECT);
       linkAdd.setBackground(clientArea.getBackground());
 		gd = new GridData();
@@ -462,7 +490,7 @@ public class NetworkCredentialsEditor extends ConfigurationView
 			}
 		});
 
-      final ImageHyperlink linkEdit = new ImageHyperlink(clientArea, SWT.NONE);
+      final ImageHyperlink linkEdit = new ImageHyperlink(controlArea, SWT.NONE);
       linkEdit.setText("Edit...");
       linkEdit.setImage(SharedIcons.IMG_EDIT);
       linkEdit.setBackground(clientArea.getBackground());
@@ -477,9 +505,9 @@ public class NetworkCredentialsEditor extends ConfigurationView
          }
       });
 
-      final ImageHyperlink linkRemove = new ImageHyperlink(clientArea, SWT.NONE);
+      final ImageHyperlink linkRemove = new ImageHyperlink(controlArea, SWT.NONE);
       linkRemove.setText(i18n.tr("Remove"));
-		linkRemove.setImage(SharedIcons.IMG_DELETE_OBJECT);
+      linkRemove.setImage(SharedIcons.IMG_DELETE_OBJECT);
       linkRemove.setBackground(clientArea.getBackground());
 		gd = new GridData();
 		gd.verticalAlignment = SWT.TOP;
@@ -492,7 +520,7 @@ public class NetworkCredentialsEditor extends ConfigurationView
 			}
 		});
 
-      final ImageHyperlink linkUp = new ImageHyperlink(clientArea, SWT.NONE);
+      final ImageHyperlink linkUp = new ImageHyperlink(controlArea, SWT.NONE);
       linkUp.setText("Up");
       linkUp.setImage(SharedIcons.IMG_UP);
       linkUp.setBackground(clientArea.getBackground());
@@ -507,7 +535,7 @@ public class NetworkCredentialsEditor extends ConfigurationView
          }
       });
 
-      final ImageHyperlink linkDown = new ImageHyperlink(clientArea, SWT.NONE);
+      final ImageHyperlink linkDown = new ImageHyperlink(controlArea, SWT.NONE);
       linkDown.setText("Down");
       linkDown.setImage(SharedIcons.IMG_DOWN);
       linkDown.setBackground(clientArea.getBackground());
@@ -528,27 +556,41 @@ public class NetworkCredentialsEditor extends ConfigurationView
     */
    private void createSharedSecretList()
    {
-      Group clientArea = new Group(content, SWT.NONE);
-      clientArea.setText("Agent shared secrets");
+      Section section = new Section(content, i18n.tr("Agent shared secrets"), false);
+      section.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 2, 1));
+
+      Composite clientArea = section.getClient();
       clientArea.setBackground(content.getBackground());
-      clientArea.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 2, 1));
       GridLayout layout = new GridLayout();
-      layout.numColumns = 2;
+      layout.numColumns = 3;
+      layout.marginHeight = 0;
+      layout.marginWidth = 0;
+      layout.horizontalSpacing = 0;
       clientArea.setLayout(layout);
 
-      sharedSecretList = new TableViewer(clientArea, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
+      sharedSecretList = new TableViewer(clientArea, SWT.MULTI | SWT.FULL_SELECTION);
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       gd.verticalAlignment = SWT.FILL;
       gd.grabExcessVerticalSpace = true;
-      gd.verticalSpan = 4;
       gd.heightHint = 150;
       sharedSecretList.getTable().setLayoutData(gd);
       sharedSecretList.setContentProvider(new ArrayContentProvider());
 
-      final ImageHyperlink linkAdd = new ImageHyperlink(clientArea, SWT.NONE);
-      linkAdd.setText(i18n.tr("Add"));
+      Label separator = new Label(clientArea, SWT.SEPARATOR | SWT.VERTICAL);
+      gd = new GridData();
+      gd.verticalAlignment = SWT.FILL;
+      gd.grabExcessVerticalSpace = true;
+      separator.setLayoutData(gd);
+
+      Composite controlArea = new Composite(clientArea, SWT.NONE);
+      controlArea.setBackground(clientArea.getBackground());
+      controlArea.setLayout(new GridLayout());
+      controlArea.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, true));
+
+      final ImageHyperlink linkAdd = new ImageHyperlink(controlArea, SWT.NONE);
+      linkAdd.setText(i18n.tr("Add..."));
       linkAdd.setImage(SharedIcons.IMG_ADD_OBJECT);
       linkAdd.setBackground(clientArea.getBackground());
       gd = new GridData();
@@ -562,7 +604,7 @@ public class NetworkCredentialsEditor extends ConfigurationView
          }
       });
       
-      final ImageHyperlink linkRemove = new ImageHyperlink(clientArea, SWT.NONE);
+      final ImageHyperlink linkRemove = new ImageHyperlink(controlArea, SWT.NONE);
       linkRemove.setText(i18n.tr("Remove"));
       linkRemove.setImage(SharedIcons.IMG_DELETE_OBJECT);
       linkRemove.setBackground(clientArea.getBackground());
@@ -577,7 +619,7 @@ public class NetworkCredentialsEditor extends ConfigurationView
          }
       });
 
-      final ImageHyperlink linkUp = new ImageHyperlink(clientArea, SWT.NONE);
+      final ImageHyperlink linkUp = new ImageHyperlink(controlArea, SWT.NONE);
       linkUp.setText("Up");
       linkUp.setImage(SharedIcons.IMG_UP);
       linkUp.setBackground(clientArea.getBackground());
@@ -592,7 +634,7 @@ public class NetworkCredentialsEditor extends ConfigurationView
          }
       });
 
-      final ImageHyperlink linkDown = new ImageHyperlink(clientArea, SWT.NONE);
+      final ImageHyperlink linkDown = new ImageHyperlink(controlArea, SWT.NONE);
       linkDown.setText("Down");
       linkDown.setImage(SharedIcons.IMG_DOWN);
       linkDown.setBackground(clientArea.getBackground());
@@ -613,23 +655,26 @@ public class NetworkCredentialsEditor extends ConfigurationView
     */
    private void createSshCredentialsList()
    {
-      Group clientArea = new Group(content, SWT.NONE);
-      clientArea.setText("SSH credentials");
+      Section section = new Section(content, i18n.tr("SSH credentials"), false);
+      section.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 2, 1));
+
+      Composite clientArea = section.getClient();
       clientArea.setBackground(content.getBackground());
-      clientArea.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 2, 1));
       GridLayout layout = new GridLayout();
-      layout.numColumns = 2;
+      layout.numColumns = 3;
+      layout.marginHeight = 0;
+      layout.marginWidth = 0;
+      layout.horizontalSpacing = 0;
       clientArea.setLayout(layout);
 
       final String[] names = { "Login", "Password", "Key" };
       final int[] widths = { 150, 150, 150 };
-      sshCredentialsList = new SortableTableViewer(clientArea, names, widths, 0, SWT.DOWN, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
+      sshCredentialsList = new SortableTableViewer(clientArea, names, widths, 0, SWT.DOWN, SWT.MULTI | SWT.FULL_SELECTION);
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       gd.verticalAlignment = SWT.FILL;
       gd.grabExcessVerticalSpace = true;
-      gd.verticalSpan = 5;
       gd.heightHint = 150;
       sshCredentialsList.getTable().setLayoutData(gd);
       sshCredentialsList.setContentProvider(new ArrayContentProvider());
@@ -643,8 +688,19 @@ public class NetworkCredentialsEditor extends ConfigurationView
          }
       });
 
-      final ImageHyperlink linkAdd = new ImageHyperlink(clientArea, SWT.NONE);
-      linkAdd.setText(i18n.tr("Add"));
+      Label separator = new Label(clientArea, SWT.SEPARATOR | SWT.VERTICAL);
+      gd = new GridData();
+      gd.verticalAlignment = SWT.FILL;
+      gd.grabExcessVerticalSpace = true;
+      separator.setLayoutData(gd);
+
+      Composite controlArea = new Composite(clientArea, SWT.NONE);
+      controlArea.setBackground(clientArea.getBackground());
+      controlArea.setLayout(new GridLayout());
+      controlArea.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, true));
+
+      final ImageHyperlink linkAdd = new ImageHyperlink(controlArea, SWT.NONE);
+      linkAdd.setText(i18n.tr("Add..."));
       linkAdd.setImage(SharedIcons.IMG_ADD_OBJECT);
       linkAdd.setBackground(clientArea.getBackground());
       gd = new GridData();
@@ -658,7 +714,7 @@ public class NetworkCredentialsEditor extends ConfigurationView
          }
       });
 
-      final ImageHyperlink linkEdit = new ImageHyperlink(clientArea, SWT.NONE);
+      final ImageHyperlink linkEdit = new ImageHyperlink(controlArea, SWT.NONE);
       linkEdit.setText("Edit...");
       linkEdit.setImage(SharedIcons.IMG_EDIT);
       linkEdit.setBackground(clientArea.getBackground());
@@ -673,7 +729,7 @@ public class NetworkCredentialsEditor extends ConfigurationView
          }
       });
 
-      final ImageHyperlink linkRemove = new ImageHyperlink(clientArea, SWT.NONE);
+      final ImageHyperlink linkRemove = new ImageHyperlink(controlArea, SWT.NONE);
       linkRemove.setText(i18n.tr("Remove"));
       linkRemove.setImage(SharedIcons.IMG_DELETE_OBJECT);
       linkRemove.setBackground(clientArea.getBackground());
@@ -688,7 +744,7 @@ public class NetworkCredentialsEditor extends ConfigurationView
          }
       });
 
-      final ImageHyperlink linkUp = new ImageHyperlink(clientArea, SWT.NONE);
+      final ImageHyperlink linkUp = new ImageHyperlink(controlArea, SWT.NONE);
       linkUp.setText("Up");
       linkUp.setImage(SharedIcons.IMG_UP);
       linkUp.setBackground(clientArea.getBackground());
@@ -703,7 +759,7 @@ public class NetworkCredentialsEditor extends ConfigurationView
          }
       });
 
-      final ImageHyperlink linkDown = new ImageHyperlink(clientArea, SWT.NONE);
+      final ImageHyperlink linkDown = new ImageHyperlink(controlArea, SWT.NONE);
       linkDown.setText("Down");
       linkDown.setImage(SharedIcons.IMG_DOWN);
       linkDown.setBackground(clientArea.getBackground());
@@ -724,28 +780,42 @@ public class NetworkCredentialsEditor extends ConfigurationView
     */
    private TableViewer createPortList(int portType, String typeName)
    {
-      Group clientArea = new Group(content, SWT.NONE);
-      clientArea.setText(String.format("%s ports", typeName));
+      Section section = new Section(content, String.format("%s ports", typeName), false);
+      section.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
+
+      Composite clientArea = section.getClient();
       clientArea.setBackground(content.getBackground());
-      clientArea.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
       GridLayout layout = new GridLayout();
-      layout.numColumns = 2;
+      layout.numColumns = 3;
+      layout.marginHeight = 0;
+      layout.marginWidth = 0;
+      layout.horizontalSpacing = 0;
       clientArea.setLayout(layout);
 
-      final TableViewer viewer = new TableViewer(clientArea, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
+      final TableViewer viewer = new TableViewer(clientArea, SWT.MULTI | SWT.FULL_SELECTION);
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       gd.verticalAlignment = SWT.FILL;
       gd.grabExcessVerticalSpace = true;
-      gd.verticalSpan = 4;
       gd.heightHint = 150;
       viewer.getTable().setLayoutData(gd);
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setData("PortType", Integer.valueOf(portType));
 
-      final ImageHyperlink linkAdd = new ImageHyperlink(clientArea, SWT.NONE);
-      linkAdd.setText(i18n.tr("Add"));
+      Label separator = new Label(clientArea, SWT.SEPARATOR | SWT.VERTICAL);
+      gd = new GridData();
+      gd.verticalAlignment = SWT.FILL;
+      gd.grabExcessVerticalSpace = true;
+      separator.setLayoutData(gd);
+
+      Composite controlArea = new Composite(clientArea, SWT.NONE);
+      controlArea.setBackground(clientArea.getBackground());
+      controlArea.setLayout(new GridLayout());
+      controlArea.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, true));
+
+      final ImageHyperlink linkAdd = new ImageHyperlink(controlArea, SWT.NONE);
+      linkAdd.setText(i18n.tr("Add..."));
       linkAdd.setImage(SharedIcons.IMG_ADD_OBJECT);
       linkAdd.setBackground(clientArea.getBackground());
       gd = new GridData();
@@ -759,7 +829,7 @@ public class NetworkCredentialsEditor extends ConfigurationView
          }
       });
 
-      final ImageHyperlink linkRemove = new ImageHyperlink(clientArea, SWT.NONE);
+      final ImageHyperlink linkRemove = new ImageHyperlink(controlArea, SWT.NONE);
       linkRemove.setText(i18n.tr("Remove"));
       linkRemove.setImage(SharedIcons.IMG_DELETE_OBJECT);
       linkRemove.setBackground(clientArea.getBackground());
@@ -774,7 +844,7 @@ public class NetworkCredentialsEditor extends ConfigurationView
          }
       });
 
-      final ImageHyperlink linkUp = new ImageHyperlink(clientArea, SWT.NONE);
+      final ImageHyperlink linkUp = new ImageHyperlink(controlArea, SWT.NONE);
       linkUp.setText("Up");
       linkUp.setImage(SharedIcons.IMG_UP);
       linkUp.setBackground(clientArea.getBackground());
@@ -789,7 +859,7 @@ public class NetworkCredentialsEditor extends ConfigurationView
          }
       });
 
-      final ImageHyperlink linkDown = new ImageHyperlink(clientArea, SWT.NONE);
+      final ImageHyperlink linkDown = new ImageHyperlink(controlArea, SWT.NONE);
       linkDown.setText("Down");
       linkDown.setImage(SharedIcons.IMG_DOWN);
       linkDown.setBackground(clientArea.getBackground());
