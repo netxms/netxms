@@ -52,6 +52,7 @@ public abstract class Card extends DashboardComposite
 {
    private static final int HEADER_MARGIN_HEIGHT = 6;
    private static final int HEADER_MARGIN_WIDTH = 8;
+   private static final int BOTTOM_MARGIN = 2;
 
 	private String text;
 	private Control clientArea;
@@ -86,13 +87,13 @@ public abstract class Card extends DashboardComposite
             titleFont.dispose();
          }
       });
-
+		
       GridLayout layout = new GridLayout();
       layout.marginWidth = 0;
       layout.marginHeight = 0;
       layout.verticalSpacing = 3;
       layout.marginTop = headerSize.y;
-      layout.marginBottom = 2;
+      layout.marginBottom = BOTTOM_MARGIN;
       setLayout(layout);
 
       clientArea = createClientAreaInternal();
@@ -155,7 +156,28 @@ public abstract class Card extends DashboardComposite
 		return ca;
 	}
 
-	/**
+   /**
+    * Show/hide client area
+    */
+   protected void showClientArea(boolean show)
+   {
+      clientArea.setVisible(show);
+      ((GridData)clientArea.getLayoutData()).exclude = !show;
+      layout(true, true);
+   }
+
+   /**
+    * @see org.eclipse.swt.widgets.Control#computeSize(int, int, boolean)
+    */
+   @Override
+   public Point computeSize(int wHint, int hHint, boolean changed)
+   {
+      if (!clientArea.isVisible())
+         return new Point(wHint == SWT.DEFAULT ? headerSize.x + 1 : wHint, hHint == SWT.DEFAULT ? headerSize.y + 1 : hHint);
+      return super.computeSize(wHint, hHint, changed);
+   }
+
+   /**
     * Paint header and footer
     * 
     * @param gc graphics context
@@ -164,8 +186,12 @@ public abstract class Card extends DashboardComposite
 	{
       Rectangle rect = getFullClientArea();
 	   gc.setAntialias(SWT.ON);
-      gc.setForeground(getBorderOuterColor());
-      gc.drawLine(rect.x, headerSize.y, rect.x + rect.width, headerSize.y);
+
+      if (clientArea.isVisible())
+      {
+         gc.setForeground(getBorderOuterColor());
+         gc.drawLine(rect.x, headerSize.y, rect.x + rect.width, headerSize.y);
+      }
 
       if (titleBackground != null)
       {
@@ -287,6 +313,19 @@ public abstract class Card extends DashboardComposite
 		buttons.add(button);
 		layoutButtons();
 	}
+
+   /**
+    * Update buttons representation after changes in button objects
+    */
+   public void updateButtons()
+   {
+      for(DashboardElementButton b : buttons)
+      {
+         Label l = (Label)b.getControl();
+         l.setImage(b.getImage());
+         l.setToolTipText(b.getName());
+      }
+   }
 
 	/**
 	 * @return the doubleClickAction

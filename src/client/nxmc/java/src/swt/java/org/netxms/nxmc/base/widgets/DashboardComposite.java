@@ -35,7 +35,7 @@ import org.netxms.nxmc.tools.ColorConverter;
 public class DashboardComposite extends Canvas implements PaintListener
 {
 	protected ColorCache colors;
-	
+
 	private Color borderOuterColor;
 	private Color borderInnerColor;
 	private Color backgroundColor;
