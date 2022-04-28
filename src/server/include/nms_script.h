@@ -430,6 +430,19 @@ public:
    virtual void onObjectDelete(NXSL_Object* object) override;
 };
 
+/**
+ * Maintenance journal record
+ */
+class NXSL_MaintenanceJournalRecordClass : public NXSL_Class
+{
+public:
+   NXSL_MaintenanceJournalRecordClass();
+
+   virtual NXSL_Value* getAttr(NXSL_Object* object, const NXSL_Identifier& attr) override;
+   virtual void onObjectDelete(NXSL_Object* object) override;
+   virtual void toString(StringBuffer *sb, NXSL_Object *object) override;
+};
+
 class ScheduleParameters;
 
 /**
@@ -519,6 +532,7 @@ extern NXSL_DciClass g_nxslDciClass;
 extern NXSL_EventClass g_nxslEventClass;
 extern NXSL_HardwareComponent g_nxslHardwareComponent;
 extern NXSL_InterfaceClass g_nxslInterfaceClass;
+extern NXSL_MaintenanceJournalRecordClass g_nxslMaintenanceJournalRecordClass;
 extern NXSL_MobileDeviceClass g_nxslMobileDeviceClass;
 extern NXSL_NetObjClass g_nxslNetObjClass;
 extern NXSL_NodeClass g_nxslNodeClass;

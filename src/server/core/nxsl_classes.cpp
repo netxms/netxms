@@ -26,7 +26,11 @@
 #include <agent_tunnel.h>
 #include <nxcore_websvc.h>
 
-#define WEB_SERVICE std::pair<shared_ptr<WebServiceDefinition>, shared_ptr<Node>>
+/**
+ * Maintenance journal access
+ */
+bool AddMaintenanceJournalRecord(uint32_t objectId, uint32_t userId, const TCHAR *description);
+NXSL_Value *ReadMaintenanceJournal(const shared_ptr<NetObj>& object, NXSL_VM *vm, time_t startTime, time_t endTime);
 
 /**
  * Get ICMP statistic for node sub-object
@@ -308,7 +312,7 @@ NXSL_METHOD_DEFINITION(NetObj, leaveMaintenance)
 {
    static_cast<shared_ptr<NetObj>*>(object->getData())->get()->leaveMaintenanceMode(0);
    *result = vm->createValue();
-   return 0;
+   return NXSL_ERR_SUCCESS;
 }
 
 /**
@@ -318,7 +322,25 @@ NXSL_METHOD_DEFINITION(NetObj, manage)
 {
    static_cast<shared_ptr<NetObj>*>(object->getData())->get()->setMgmtStatus(true);
    *result = vm->createValue();
-   return 0;
+   return NXSL_ERR_SUCCESS;
+}
+
+/**
+ * NetObj::readMaintenanceJournal(startTime, endTime)
+ */
+NXSL_METHOD_DEFINITION(NetObj, readMaintenanceJournal)
+{
+   if (argc > 2)
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
+   if (((argc > 0) && !argv[0]->isInteger()) || ((argc > 1) && !argv[1]->isInteger()))
+      return NXSL_ERR_NOT_INTEGER;
+
+   time_t startTime = (argc > 0) ? static_cast<time_t>(argv[0]->getValueAsInt64()) : 0;
+   time_t endTime = (argc > 1) ? static_cast<time_t>(argv[1]->getValueAsInt64()) : 0;
+
+   *result = ReadMaintenanceJournal(*static_cast<shared_ptr<NetObj>*>(object->getData()), vm, startTime, endTime);
+   return NXSL_ERR_SUCCESS;
 }
 
 /**
@@ -331,7 +353,7 @@ NXSL_METHOD_DEFINITION(NetObj, rename)
 
    static_cast<shared_ptr<NetObj>*>(object->getData())->get()->setName(argv[0]->getValueAsCString());
    *result = vm->createValue();
-   return 0;
+   return NXSL_ERR_SUCCESS;
 }
 
 /**
@@ -344,7 +366,7 @@ NXSL_METHOD_DEFINITION(NetObj, setAlias)
 
    static_cast<shared_ptr<NetObj>*>(object->getData())->get()->setAlias(argv[0]->getValueAsCString());
    *result = vm->createValue();
-   return 0;
+   return NXSL_ERR_SUCCESS;
 }
 
 /**
@@ -368,7 +390,7 @@ NXSL_METHOD_DEFINITION(NetObj, setCategory)
    {
       *result = vm->createValue(false);
    }
-   return 0;
+   return NXSL_ERR_SUCCESS;
 }
 
 /**
@@ -381,7 +403,7 @@ NXSL_METHOD_DEFINITION(NetObj, setComments)
 
    static_cast<shared_ptr<NetObj>*>(object->getData())->get()->setComments(argv[0]->getValueAsCString());
    *result = vm->createValue();
-   return 0;
+   return NXSL_ERR_SUCCESS;
 }
 
 /**
@@ -419,7 +441,7 @@ NXSL_METHOD_DEFINITION(NetObj, setGeoLocation)
    GeoLocation *gl = (GeoLocation *)o->getData();
    static_cast<shared_ptr<NetObj>*>(object->getData())->get()->setGeoLocation(*gl);
    *result = vm->createValue();
-   return 0;
+   return NXSL_ERR_SUCCESS;
 }
 
 /**
@@ -461,7 +483,7 @@ NXSL_METHOD_DEFINITION(NetObj, setMapImage)
    }
 
    *result = vm->createValue(success);
-   return 0;
+   return NXSL_ERR_SUCCESS;
 }
 
 /**
@@ -474,7 +496,7 @@ NXSL_METHOD_DEFINITION(NetObj, setNameOnMap)
 
    static_cast<shared_ptr<NetObj>*>(object->getData())->get()->setNameOnMap(argv[0]->getValueAsCString());
    *result = vm->createValue();
-   return 0;
+   return NXSL_ERR_SUCCESS;
 }
 
 /**
@@ -614,7 +636,7 @@ NXSL_METHOD_DEFINITION(NetObj, unbindFrom)
    thisObject->deleteParent(*parent);
 
    *result = vm->createValue();
-   return 0;
+   return NXSL_ERR_SUCCESS;
 }
 
 /**
@@ -624,7 +646,20 @@ NXSL_METHOD_DEFINITION(NetObj, unmanage)
 {
    static_cast<shared_ptr<NetObj>*>(object->getData())->get()->setMgmtStatus(false);
    *result = vm->createValue();
-   return 0;
+   return NXSL_ERR_SUCCESS;
+}
+
+/**
+ * NetObj::writeMaintenanceJournal(description)
+ */
+NXSL_METHOD_DEFINITION(NetObj, writeMaintenanceJournal)
+{
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   NetObj *thisObject = static_cast<shared_ptr<NetObj>*>(object->getData())->get();
+   *result = vm->createValue(AddMaintenanceJournalRecord(thisObject->getId(), 0, argv[0]->getValueAsCString()));
+   return NXSL_ERR_SUCCESS;
 }
 
 /**
@@ -649,6 +684,7 @@ NXSL_NetObjClass::NXSL_NetObjClass() : NXSL_Class()
    NXSL_REGISTER_METHOD(NetObj, isParent, 1);
    NXSL_REGISTER_METHOD(NetObj, leaveMaintenance, 0);
    NXSL_REGISTER_METHOD(NetObj, manage, 0);
+   NXSL_REGISTER_METHOD(NetObj, readMaintenanceJournal, -1);
    NXSL_REGISTER_METHOD(NetObj, rename, 1);
    NXSL_REGISTER_METHOD(NetObj, setAlias, 1);
    NXSL_REGISTER_METHOD(NetObj, setCategory, 1);
@@ -662,6 +698,7 @@ NXSL_NetObjClass::NXSL_NetObjClass() : NXSL_Class()
    NXSL_REGISTER_METHOD(NetObj, unbind, 1);
    NXSL_REGISTER_METHOD(NetObj, unbindFrom, 1);
    NXSL_REGISTER_METHOD(NetObj, unmanage, 0);
+   NXSL_REGISTER_METHOD(NetObj, writeMaintenanceJournal, 1);
 }
 
 /**
@@ -1110,9 +1147,14 @@ NXSL_METHOD_DEFINITION(Node, createSNMPTransport)
 }
 
 /**
+ * Web service handle (combination of web service definition and node used for executing request)
+ */
+typedef std::pair<shared_ptr<WebServiceDefinition>, shared_ptr<Node>> WebServiceHandle;
+
+/**
  * Web service custom request with data
  */
-static int BaseWebServiceRequestWithData(WEB_SERVICE *websvc, int argc, NXSL_Value **argv,
+static int BaseWebServiceRequestWithData(WebServiceHandle *websvc, int argc, NXSL_Value **argv,
       NXSL_Value **result, NXSL_VM *vm, const HttpRequestMethod requestMethod)
 {
    if (argc < 1)
@@ -1166,7 +1208,7 @@ static int BaseWebServiceRequestWithData(WEB_SERVICE *websvc, int argc, NXSL_Val
 /**
  * Web service custom request with data
  */
-static int BaseWebServiceRequestWithoutData(WEB_SERVICE *websvc, int argc, NXSL_Value **argv,
+static int BaseWebServiceRequestWithoutData(WebServiceHandle *websvc, int argc, NXSL_Value **argv,
       NXSL_Value **result, NXSL_VM *vm, const HttpRequestMethod requestMethod)
 {
    StringList parameters;
@@ -1204,7 +1246,7 @@ NXSL_METHOD_DEFINITION(Node, callWebService)
       return 0;
    }
 
-   WEB_SERVICE websvc = WEB_SERVICE(d, *node);
+   WebServiceHandle websvc = WebServiceHandle(d, *node);
    const TCHAR *requestMethod = argv[1]->getValueAsCString();
    if (!_tcsicmp(_T("GET"), requestMethod))
    {
@@ -1456,7 +1498,7 @@ NXSL_METHOD_DEFINITION(Node, getWebService)
    }
    else
    {
-      *result = vm->createValue(vm->createObject(&g_nxslWebService, new WEB_SERVICE(d, *node)));
+      *result = vm->createValue(vm->createObject(&g_nxslWebService, new WebServiceHandle(d, *node)));
    }
    return 0;
 }
@@ -5156,45 +5198,45 @@ void NXSL_VlanClass::onObjectDelete(NXSL_Object *object)
 /**
  * WEB_SERVICE::get() method
  */
-NXSL_METHOD_DEFINITION(WEB_SERVICE, get)
+NXSL_METHOD_DEFINITION(WebService, get)
 {
-   WEB_SERVICE *websvc = static_cast<WEB_SERVICE*>(object->getData());
+   WebServiceHandle *websvc = static_cast<WebServiceHandle*>(object->getData());
    return BaseWebServiceRequestWithoutData(websvc, argc, argv, result, vm, HttpRequestMethod::_GET);
 }
 
 /**
  * WEB_SERVICE::post() method
  */
-NXSL_METHOD_DEFINITION(WEB_SERVICE, post)
+NXSL_METHOD_DEFINITION(WebService, post)
 {
-   WEB_SERVICE *websvc = static_cast<WEB_SERVICE*>(object->getData());
+   WebServiceHandle *websvc = static_cast<WebServiceHandle*>(object->getData());
    return BaseWebServiceRequestWithData(websvc, argc, argv, result, vm, HttpRequestMethod::_POST);
 }
 
 /**
  * WEB_SERVICE::put() method
  */
-NXSL_METHOD_DEFINITION(WEB_SERVICE, put)
+NXSL_METHOD_DEFINITION(WebService, put)
 {
-   WEB_SERVICE *websvc = static_cast<WEB_SERVICE*>(object->getData());
+   WebServiceHandle *websvc = static_cast<WebServiceHandle*>(object->getData());
    return BaseWebServiceRequestWithData(websvc, argc, argv, result, vm, HttpRequestMethod::_PUT);
 }
 
 /**
  * WEB_SERVICE::delete() method
  */
-NXSL_METHOD_DEFINITION(WEB_SERVICE, delete)
+NXSL_METHOD_DEFINITION(WebService, delete)
 {
-   WEB_SERVICE *websvc = static_cast<WEB_SERVICE*>(object->getData());
+   WebServiceHandle *websvc = static_cast<WebServiceHandle*>(object->getData());
    return BaseWebServiceRequestWithoutData(websvc, argc, argv, result, vm, HttpRequestMethod::_DELETE);
 }
 
 /**
  * WEB_SERVICE::patch() method
  */
-NXSL_METHOD_DEFINITION(WEB_SERVICE, patch)
+NXSL_METHOD_DEFINITION(WebService, patch)
 {
-   WEB_SERVICE *websvc = static_cast<WEB_SERVICE*>(object->getData());
+   WebServiceHandle *websvc = static_cast<WebServiceHandle*>(object->getData());
    return BaseWebServiceRequestWithData(websvc, argc, argv, result, vm, HttpRequestMethod::_PATCH);
 }
 
@@ -5205,11 +5247,11 @@ NXSL_WebService::NXSL_WebService()
 {
    setName(_T("WebService"));
 
-   NXSL_REGISTER_METHOD(WEB_SERVICE, get, -1);
-   NXSL_REGISTER_METHOD(WEB_SERVICE, post, -1);
-   NXSL_REGISTER_METHOD(WEB_SERVICE, put, -1);
-   NXSL_REGISTER_METHOD(WEB_SERVICE, delete, -1);
-   NXSL_REGISTER_METHOD(WEB_SERVICE, patch, -1);
+   NXSL_REGISTER_METHOD(WebService, get, -1);
+   NXSL_REGISTER_METHOD(WebService, post, -1);
+   NXSL_REGISTER_METHOD(WebService, put, -1);
+   NXSL_REGISTER_METHOD(WebService, delete, -1);
+   NXSL_REGISTER_METHOD(WebService, patch, -1);
 }
 
 /**
@@ -5222,7 +5264,7 @@ NXSL_Value *NXSL_WebService::getAttr(NXSL_Object *object, const NXSL_Identifier&
       return value;
 
    NXSL_VM *vm = object->vm();
-   WEB_SERVICE *websvc = static_cast<WEB_SERVICE*>(object->getData());
+   WebServiceHandle *websvc = static_cast<WebServiceHandle*>(object->getData());
 
    if (NXSL_COMPARE_ATTRIBUTE_NAME("id"))
    {
@@ -5244,7 +5286,7 @@ NXSL_Value *NXSL_WebService::getAttr(NXSL_Object *object, const NXSL_Identifier&
  */
 void NXSL_WebService::onObjectDelete(NXSL_Object *object)
 {
-   delete static_cast<WEB_SERVICE*>(object->getData());
+   delete static_cast<WebServiceHandle*>(object->getData());
 }
 
 /**
@@ -5314,6 +5356,7 @@ NXSL_DciClass g_nxslDciClass;
 NXSL_EventClass g_nxslEventClass;
 NXSL_HardwareComponent g_nxslHardwareComponent;
 NXSL_InterfaceClass g_nxslInterfaceClass;
+NXSL_MaintenanceJournalRecordClass g_nxslMaintenanceJournalRecordClass;
 NXSL_MobileDeviceClass g_nxslMobileDeviceClass;
 NXSL_NetObjClass g_nxslNetObjClass;
 NXSL_NodeClass g_nxslNodeClass;

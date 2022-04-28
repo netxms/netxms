@@ -1766,9 +1766,19 @@ public:
       return SharedPtrIterator<T>(new ArrayIterator(&m_data));
    }
 
+   SharedPtrIterator<T> begin() const
+   {
+      return SharedPtrIterator<T>(new ArrayIterator(const_cast<Array*>(&m_data)));
+   }
+
    SharedPtrIterator<T> end()
    {
       return SharedPtrIterator<T>(new ArrayIterator(&m_data, m_data.size() - 1));
+   }
+
+   SharedPtrIterator<T> end() const
+   {
+      return SharedPtrIterator<T>(new ArrayIterator(const_cast<Array*>(&m_data), m_data.size() - 1));
    }
 };
 

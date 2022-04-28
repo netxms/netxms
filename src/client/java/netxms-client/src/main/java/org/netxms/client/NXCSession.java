@@ -13231,7 +13231,7 @@ public class NXCSession
     */
    public void createMaintenanceEntry(long objectId, String description) throws IOException, NXCException
    {
-      final NXCPMessage msg = newMessage(NXCPCodes.CMD_CREATE_MAINTENANCE_JOURNAL);
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_WRITE_MAINTENANCE_JOURNAL);
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)objectId);
       msg.setField(NXCPCodes.VID_DESCRIPTION, description);
       sendMessage(msg);
@@ -13249,7 +13249,7 @@ public class NXCSession
     */
    public void editMaintenanceEntry(long objectId, long entryId, String description) throws IOException, NXCException
    {
-      final NXCPMessage msg = newMessage(NXCPCodes.CMD_EDIT_MAINTENANCE_JOURNAL);
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_UPDATE_MAINTENANCE_JOURNAL);
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)objectId);
       msg.setFieldInt32(NXCPCodes.VID_RECORD_ID, (int)entryId);
       msg.setField(NXCPCodes.VID_DESCRIPTION, description);

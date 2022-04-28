@@ -468,8 +468,8 @@ public class NXCPCodes
    public static final int CMD_UPDATE_PACKAGE_METADATA = 0x01C2;
    public static final int CMD_GET_EVENT_REFERENCES = 0x01C3;
 	public static final int CMD_READ_MAINTENANCE_JOURNAL = 0x01C4;
-	public static final int CMD_CREATE_MAINTENANCE_JOURNAL = 0x01C5;
-	public static final int CMD_EDIT_MAINTENANCE_JOURNAL = 0x01C6;
+	public static final int CMD_WRITE_MAINTENANCE_JOURNAL = 0x01C5;
+	public static final int CMD_UPDATE_MAINTENANCE_JOURNAL = 0x01C6;
    public static final int CMD_GET_SSH_CREDENTIALS = 0x01C7;
    public static final int CMD_UPDATE_SSH_CREDENTIALS = 0x01C8;
 

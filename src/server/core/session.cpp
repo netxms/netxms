@@ -107,9 +107,9 @@ bool DeletePhysicalLink(uint32_t id, uint32_t userId);
 
 unique_ptr<ObjectArray<EventReference>> GetAllEventReferences(uint32_t eventCode);
 
-uint32_t MaintenanceJournalRead(SharedObjectArray<NetObj>& sources, NXCPMessage* response, uint32_t maxEntries);
-uint32_t MaintenanceJournalCreate(const NXCPMessage& request, uint32_t userId);
-uint32_t MaintenanceJournalEdit(const NXCPMessage& request, uint32_t userId);
+uint32_t ReadMaintenanceJournal(SharedObjectArray<NetObj>& sources, NXCPMessage* response, uint32_t maxEntries);
+uint32_t AddMaintenanceJournalRecord(const NXCPMessage& request, uint32_t userId);
+uint32_t UpdateMaintenanceJournalRecord(const NXCPMessage& request, uint32_t userId);
 
 /**
  * Client session console constructor
@@ -1872,13 +1872,13 @@ void ClientSession::processRequest(NXCPMessage *request)
          getEventRefences(*request);
          break;
       case CMD_READ_MAINTENANCE_JOURNAL:
-         readMaintJournal(*request);
+         readMaintenanceJournal(*request);
          break;
-      case CMD_CREATE_MAINTENANCE_JOURNAL:
-         createMaintJournal(*request);
+      case CMD_WRITE_MAINTENANCE_JOURNAL:
+         writeMaintenanceJournal(*request);
          break;
-      case CMD_EDIT_MAINTENANCE_JOURNAL:
-         editMaintJournal(*request);
+      case CMD_UPDATE_MAINTENANCE_JOURNAL:
+         updateMaintenanceJournal(*request);
          break;
       default:
          if ((code >> 8) == 0x11)
@@ -16166,7 +16166,7 @@ void ClientSession::getEventRefences(const NXCPMessage& request)
  * Return values:
  * VID_NUM_ELEMENTS            Number of maintenance entries
  * VID_RCC                     Request completion code
- * VID_ELEMENT_LIST_BASE - 1   Flag for the case that not all avaliable entries are sent back bun only last 1000
+ * VID_ELEMENT_LIST_BASE - 1   Flag for the case that not all available entries are sent back bun only last 1000
  * VID_ELEMENT_LIST_BASE       Base for maintenance entry list. Also first maintenance entry ID
  * VID_ELEMENT_LIST_BASE + 1   Journal ID = journal owner (source) ID
  * VID_ELEMENT_LIST_BASE + 2   author
@@ -16177,7 +16177,7 @@ void ClientSession::getEventRefences(const NXCPMessage& request)
  *
  * Second maintenance entry starts from VID_ELEMENT_LIST_BASE + 10
  */
-void ClientSession::readMaintJournal(const NXCPMessage& request)
+void ClientSession::readMaintenanceJournal(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
@@ -16195,7 +16195,7 @@ void ClientSession::readMaintJournal(const NXCPMessage& request)
          }
          sources->add(object);
 
-         uint32_t rcc = MaintenanceJournalRead(*sources, &response, request.getFieldAsUInt32(VID_MAX_RECORDS));
+         uint32_t rcc = ReadMaintenanceJournal(*sources, &response, request.getFieldAsUInt32(VID_MAX_RECORDS));
          if (rcc == RCC_SUCCESS)
          {
             writeAuditLog(AUDIT_OBJECTS, true, object->getId(), _T("Maintenance journal read successfully"));
@@ -16220,10 +16220,10 @@ void ClientSession::readMaintJournal(const NXCPMessage& request)
 }
 
 /**
- * Create new entry in given the object maintenance journal
+ * Create new entry in the maintenance journal
  *
  * Called by:
- * CMD_CREATE_MAINTENANCE_JOURNAL
+ * CMD_WRITE_MAINTENANCE_JOURNAL
  *
  * Expected input parameters:
  * VID_OBJECT_ID     Journal owner (source) ID
@@ -16234,7 +16234,7 @@ void ClientSession::readMaintJournal(const NXCPMessage& request)
  *
  * NX_NOTIFY_MAINTENANCE_JOURNAL_CHANGED notification with source object ID is generated
  */
-void ClientSession::createMaintJournal(const NXCPMessage& request)
+void ClientSession::writeMaintenanceJournal(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
@@ -16243,7 +16243,7 @@ void ClientSession::createMaintJournal(const NXCPMessage& request)
    {
       if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_WRITE_MJOURNAL))
       {
-         uint32_t rcc = MaintenanceJournalCreate(request, m_dwUserId);
+         uint32_t rcc = AddMaintenanceJournalRecord(request, m_dwUserId);
          if (rcc == RCC_SUCCESS)
          {
             writeAuditLog(AUDIT_OBJECTS, true, object->getId(), _T("New maintenance journal entry created successfully"));
@@ -16268,10 +16268,10 @@ void ClientSession::createMaintJournal(const NXCPMessage& request)
 }
 
 /**
- * Edit given maintenance journal entry
+ * Update given maintenance journal entry
  *
  * Called by:
- * CMD_EDIT_MAINTENANCE_JOURNAL
+ * CMD_UPDATE_MAINTENANCE_JOURNAL
  *
  * Expected input parameters:
  * VID_OBJECT_ID     Journal owner (source) ID
@@ -16283,7 +16283,7 @@ void ClientSession::createMaintJournal(const NXCPMessage& request)
  *
  * NX_NOTIFY_MAINTENANCE_JOURNAL_CHANGED notification with source object ID is generated
  */
-void ClientSession::editMaintJournal(const NXCPMessage& request)
+void ClientSession::updateMaintenanceJournal(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
@@ -16293,7 +16293,7 @@ void ClientSession::editMaintJournal(const NXCPMessage& request)
    {
       if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_WRITE_MJOURNAL))
       {
-         uint32_t rcc = MaintenanceJournalEdit(request, m_dwUserId);
+         uint32_t rcc = UpdateMaintenanceJournalRecord(request, m_dwUserId);
          if (rcc == RCC_SUCCESS)
          {
             writeAuditLog(AUDIT_OBJECTS, true, object->getId(), _T("Maintenance journal entry %d edited successfully"), entryId);
