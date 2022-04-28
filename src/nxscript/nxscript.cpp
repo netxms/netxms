@@ -32,13 +32,19 @@ NETXMS_EXECUTABLE_HEADER(nxscript)
 class NXSL_TestEnv : public NXSL_Environment
 {
 public:
-   virtual void configureVM(NXSL_VM *vm);
+   virtual void configureVM(NXSL_VM *vm) override;
+   virtual void trace(int level, const TCHAR *text) override;
 };
 
 void NXSL_TestEnv::configureVM(NXSL_VM *vm)
 {
    NXSL_Environment::configureVM(vm);
    vm->setGlobalVariable("$nxscript", vm->createValue(NETXMS_VERSION_STRING));
+}
+
+void NXSL_TestEnv::trace(int level, const TCHAR *text)
+{
+   _tprintf(_T("[%d] %s\n"), level, CHECK_NULL(text));
 }
 
 /**
