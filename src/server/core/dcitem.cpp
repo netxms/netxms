@@ -1259,7 +1259,7 @@ void DCItem::reloadCache(bool forceReload)
          if (g_flags & AF_SINGLE_TABLE_PERF_DATA)
          {
             _sntprintf(szBuffer, MAX_DB_STRING, _T("SELECT idata_value,date_part('epoch',idata_timestamp)::int FROM idata_sc_%s ")
-                              _T("WHERE item_id=%u AND idata_timestamp >= (SELECT to_timestamp(last_poll_time) FROM raw_dci_values WHERE item_id=%u) ORDER BY idata_timestamp DESC LIMIT %u"),
+                              _T("WHERE item_id=%u AND idata_timestamp >= (SELECT to_timestamp(cache_timestamp) FROM raw_dci_values WHERE item_id=%u) ORDER BY idata_timestamp DESC LIMIT %u"),
                     getStorageClassName(getStorageClass()), m_id, m_id, m_requiredCacheSize);
          }
          else
