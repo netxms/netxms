@@ -183,6 +183,7 @@ NXSL_VM::NXSL_VM(NXSL_Environment *env, NXSL_Storage *storage) : NXSL_ValueManag
 {
    m_cp = INVALID_ADDRESS;
    m_stopFlag = false;
+   m_instructionTraceFile = nullptr;
    m_errorCode = 0;
    m_errorLine = 0;
    m_errorText = nullptr;
@@ -642,17 +643,18 @@ bool NXSL_VM::isDefinedConstant(const NXSL_Identifier& name)
  */
 void NXSL_VM::execute()
 {
-   NXSL_Instruction *cp;
    NXSL_Value *pValue;
    NXSL_Variable *pVar;
    const NXSL_ExtFunction *pFunc;
-   uint32_t dwNext = m_cp + 1;
    char varName[MAX_IDENTIFIER_LENGTH];
    int i, nRet;
    bool constructor;
    NXSL_VariableSystem *vs;
 
-   cp = m_instructionSet.get(m_cp);
+   uint32_t dwNext = m_cp + 1;
+   NXSL_Instruction *cp = m_instructionSet.get(m_cp);
+   if (m_instructionTraceFile != nullptr)
+      NXSL_ProgramBuilder::dump(m_instructionTraceFile, m_cp, *cp);
    switch(cp->m_opCode)
    {
       case OPCODE_PUSH_CONSTANT:
@@ -2193,12 +2195,12 @@ void NXSL_VM::doBinaryOperation(int nOpCode)
                bool success = true;
                if (pVal1->isConversionNeeded(nType))
                {
-                  pVal1 = getNonSharedValue(pVal1);
+                  pVal1 = dynamicValues ? getNonSharedValue(pVal1) : createValue(pVal1);
                   success = pVal1->convert(nType);
                }
                if (success && pVal2->isConversionNeeded(nType))
                {
-                  pVal2 = getNonSharedValue(pVal2);
+                  pVal2 = dynamicValues ? getNonSharedValue(pVal2) : createValue(pVal2);
                   success = pVal2->convert(nType);
                }
 

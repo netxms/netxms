@@ -1230,6 +1230,7 @@ protected:
    StructArray<NXSL_Instruction> m_instructionSet;
    uint32_t m_cp;
    bool m_stopFlag;
+   FILE *m_instructionTraceFile;
 
    uint32_t m_subLevel;
    NXSL_Stack m_codeStack;
@@ -1344,6 +1345,7 @@ public:
             NXSL_VariableSystem *pConstants = nullptr, const char *entryPoint = nullptr);
    bool run() { ObjectRefArray<NXSL_Value> args(1, 1); return run(args); }
    void stop() { m_stopFlag = true; }
+   void setInstructionTraceFile(FILE *fp) { m_instructionTraceFile = fp; }
 
    uint32_t getCodeSize() const { return m_instructionSet.size(); }
 

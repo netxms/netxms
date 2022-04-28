@@ -294,6 +294,7 @@ public:
 
    void dump(FILE *fp) const { dump(fp, m_instructionSet); }
    static void dump(FILE *fp, const StructArray<NXSL_Instruction>& instructionSet);
+   static void dump(FILE *fp, uint32_t addr, const NXSL_Instruction& instruction);
 };
 
 /**

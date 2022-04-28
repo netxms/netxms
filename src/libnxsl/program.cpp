@@ -296,123 +296,128 @@ void NXSL_ProgramBuilder::resolveFunctions()
 }
 
 /**
+ * Dump single instruction to file (as text)
+ */
+void NXSL_ProgramBuilder::dump(FILE *fp, uint32_t addr, const NXSL_Instruction& instruction)
+{
+   _ftprintf(fp, _T("%04X  %04X  %-6hs  "), addr, instruction.m_opCode, s_nxslCommandMnemonic[instruction.m_opCode]);
+   switch(instruction.m_opCode)
+   {
+      case OPCODE_CALL_EXTERNAL:
+      case OPCODE_GLOBAL:
+      case OPCODE_SELECT:
+         _ftprintf(fp, _T("%hs, %d\n"), instruction.m_operand.m_identifier->value, instruction.m_stackItems);
+         break;
+      case OPCODE_CALL:
+         _ftprintf(fp, _T("%04X, %d\n"), instruction.m_operand.m_addr, instruction.m_stackItems);
+         break;
+      case OPCODE_CALL_METHOD:
+         _ftprintf(fp, _T("@%hs, %d\n"), instruction.m_operand.m_identifier->value, instruction.m_stackItems);
+         break;
+      case OPCODE_CALL_EXTPTR:
+         _ftprintf(fp, _T("%hs, %d\n"), instruction.m_operand.m_function->m_name, instruction.m_stackItems);
+         break;
+      case OPCODE_CATCH:
+      case OPCODE_JMP:
+      case OPCODE_JZ:
+      case OPCODE_JNZ:
+      case OPCODE_JZ_PEEK:
+      case OPCODE_JNZ_PEEK:
+         _ftprintf(fp, _T("%04X\n"), instruction.m_operand.m_addr);
+         break;
+      case OPCODE_PUSH_CONSTREF:
+      case OPCODE_PUSH_VARIABLE:
+      case OPCODE_PUSH_PROPERTY:
+      case OPCODE_BIND:
+      case OPCODE_ARRAY:
+      case OPCODE_GLOBAL_ARRAY:
+      case OPCODE_INC:
+      case OPCODE_DEC:
+      case OPCODE_INCP:
+      case OPCODE_DECP:
+      case OPCODE_SAFE_GET_ATTR:
+      case OPCODE_GET_ATTRIBUTE:
+      case OPCODE_SET_ATTRIBUTE:
+      case OPCODE_NAME:
+      case OPCODE_CASE_CONST:
+      case OPCODE_CASE_CONST_LT:
+      case OPCODE_CASE_CONST_GT:
+         _ftprintf(fp, _T("%hs\n"), instruction.m_operand.m_identifier->value);
+         break;
+      case OPCODE_SET:
+         _ftprintf(fp, _T("%hs, %d\n"), instruction.m_operand.m_identifier->value, instruction.m_stackItems);
+         break;
+      case OPCODE_SET_EXPRVAR:
+         _ftprintf(fp, _T("(%hs), %d\n"), instruction.m_operand.m_identifier->value, instruction.m_stackItems);
+         break;
+      case OPCODE_PUSH_EXPRVAR:
+         _ftprintf(fp, _T("(%hs), %04X\n"), instruction.m_operand.m_identifier->value, instruction.m_addr2);
+         break;
+      case OPCODE_UPDATE_EXPRVAR:
+         _ftprintf(fp, _T("(%hs)\n"), instruction.m_operand.m_identifier->value);
+         break;
+      case OPCODE_PUSH_VARPTR:
+         _ftprintf(fp, _T("%hs\n"), instruction.m_operand.m_variable->getName().value);
+         break;
+      case OPCODE_SET_VARPTR:
+         _ftprintf(fp, _T("%hs, %d\n"), instruction.m_operand.m_variable->getName().value, instruction.m_stackItems);
+         break;
+      case OPCODE_PUSH_CONSTANT:
+      case OPCODE_CASE:
+      case OPCODE_CASE_LT:
+      case OPCODE_CASE_GT:
+         if (instruction.m_operand.m_constant->isNull())
+            _ftprintf(fp, _T("<null>\n"));
+         else if (instruction.m_operand.m_constant->isArray())
+            _ftprintf(fp, _T("<array>\n"));
+         else if (instruction.m_operand.m_constant->isHashMap())
+            _ftprintf(fp, _T("<hash map>\n"));
+         else
+            _ftprintf(fp, _T("\"%s\"\n"), instruction.m_operand.m_constant->getValueAsCString());
+         break;
+      case OPCODE_POP:
+      case OPCODE_PUSHCP:
+      case OPCODE_STORAGE_READ:
+      case OPCODE_SET_ELEMENT:
+         _ftprintf(fp, _T("%d\n"), instruction.m_stackItems);
+         break;
+      case OPCODE_CAST:
+         _ftprintf(fp, _T("[%s]\n"), g_szTypeNames[instruction.m_stackItems]);
+         break;
+      case OPCODE_PUSH_NULL:
+         _ftprintf(fp, _T("null\n"));
+         break;
+      case OPCODE_PUSH_TRUE:
+         _ftprintf(fp, _T("true\n"));
+         break;
+      case OPCODE_PUSH_FALSE:
+         _ftprintf(fp, _T("false\n"));
+         break;
+      case OPCODE_PUSH_INT32:
+         _ftprintf(fp, _T("%d\n"), instruction.m_operand.m_valueInt32);
+         break;
+      case OPCODE_PUSH_INT64:
+         _ftprintf(fp, INT64_FMT _T("L\n"), instruction.m_operand.m_valueInt64);
+         break;
+      case OPCODE_PUSH_UINT32:
+         _ftprintf(fp, _T("%uU\n"), instruction.m_operand.m_valueUInt32);
+         break;
+      case OPCODE_PUSH_UINT64:
+         _ftprintf(fp, UINT64_FMT _T("UL\n"), instruction.m_operand.m_valueUInt64);
+         break;
+      default:
+         _ftprintf(fp, _T("\n"));
+         break;
+   }
+}
+
+/**
  * Dump program to file (as text)
  */
 void NXSL_ProgramBuilder::dump(FILE *fp, const StructArray<NXSL_Instruction>& instructionSet)
 {
    for(int i = 0; i < instructionSet.size(); i++)
-   {
-      const NXSL_Instruction *instr = instructionSet.get(i);
-      _ftprintf(fp, _T("%04X  %04X  %-6hs  "), i, instr->m_opCode, s_nxslCommandMnemonic[instr->m_opCode]);
-      switch(instr->m_opCode)
-      {
-         case OPCODE_CALL_EXTERNAL:
-         case OPCODE_GLOBAL:
-         case OPCODE_SELECT:
-            _ftprintf(fp, _T("%hs, %d\n"), instr->m_operand.m_identifier->value, instr->m_stackItems);
-            break;
-         case OPCODE_CALL:
-            _ftprintf(fp, _T("%04X, %d\n"), instr->m_operand.m_addr, instr->m_stackItems);
-            break;
-         case OPCODE_CALL_METHOD:
-            _ftprintf(fp, _T("@%hs, %d\n"), instr->m_operand.m_identifier->value, instr->m_stackItems);
-            break;
-         case OPCODE_CALL_EXTPTR:
-            _ftprintf(fp, _T("%hs, %d\n"), instr->m_operand.m_function->m_name, instr->m_stackItems);
-            break;
-         case OPCODE_CATCH:
-         case OPCODE_JMP:
-         case OPCODE_JZ:
-         case OPCODE_JNZ:
-         case OPCODE_JZ_PEEK:
-         case OPCODE_JNZ_PEEK:
-            _ftprintf(fp, _T("%04X\n"), instr->m_operand.m_addr);
-            break;
-         case OPCODE_PUSH_CONSTREF:
-         case OPCODE_PUSH_VARIABLE:
-         case OPCODE_PUSH_PROPERTY:
-         case OPCODE_BIND:
-         case OPCODE_ARRAY:
-         case OPCODE_GLOBAL_ARRAY:
-         case OPCODE_INC:
-         case OPCODE_DEC:
-         case OPCODE_INCP:
-         case OPCODE_DECP:
-			case OPCODE_SAFE_GET_ATTR:
-         case OPCODE_GET_ATTRIBUTE:
-         case OPCODE_SET_ATTRIBUTE:
-			case OPCODE_NAME:
-         case OPCODE_CASE_CONST:
-         case OPCODE_CASE_CONST_LT:
-         case OPCODE_CASE_CONST_GT:
-            _ftprintf(fp, _T("%hs\n"), instr->m_operand.m_identifier->value);
-            break;
-         case OPCODE_SET:
-            _ftprintf(fp, _T("%hs, %d\n"), instr->m_operand.m_identifier->value, instr->m_stackItems);
-            break;
-         case OPCODE_SET_EXPRVAR:
-            _ftprintf(fp, _T("(%hs), %d\n"), instr->m_operand.m_identifier->value, instr->m_stackItems);
-            break;
-         case OPCODE_PUSH_EXPRVAR:
-            _ftprintf(fp, _T("(%hs), %04X\n"), instr->m_operand.m_identifier->value, instr->m_addr2);
-            break;
-         case OPCODE_UPDATE_EXPRVAR:
-            _ftprintf(fp, _T("(%hs)\n"), instr->m_operand.m_identifier->value);
-            break;
-         case OPCODE_PUSH_VARPTR:
-            _ftprintf(fp, _T("%hs\n"), instr->m_operand.m_variable->getName().value);
-            break;
-         case OPCODE_SET_VARPTR:
-            _ftprintf(fp, _T("%hs, %d\n"), instr->m_operand.m_variable->getName().value, instr->m_stackItems);
-            break;
-         case OPCODE_PUSH_CONSTANT:
-			case OPCODE_CASE:
-         case OPCODE_CASE_LT:
-         case OPCODE_CASE_GT:
-            if (instr->m_operand.m_constant->isNull())
-               _ftprintf(fp, _T("<null>\n"));
-            else if (instr->m_operand.m_constant->isArray())
-               _ftprintf(fp, _T("<array>\n"));
-            else if (instr->m_operand.m_constant->isHashMap())
-               _ftprintf(fp, _T("<hash map>\n"));
-            else
-               _ftprintf(fp, _T("\"%s\"\n"), instr->m_operand.m_constant->getValueAsCString());
-            break;
-         case OPCODE_POP:
-         case OPCODE_PUSHCP:
-         case OPCODE_STORAGE_READ:
-         case OPCODE_SET_ELEMENT:
-            _ftprintf(fp, _T("%d\n"), instr->m_stackItems);
-            break;
-         case OPCODE_CAST:
-            _ftprintf(fp, _T("[%s]\n"), g_szTypeNames[instr->m_stackItems]);
-            break;
-         case OPCODE_PUSH_NULL:
-            _ftprintf(fp, _T("null\n"));
-            break;
-         case OPCODE_PUSH_TRUE:
-            _ftprintf(fp, _T("true\n"));
-            break;
-         case OPCODE_PUSH_FALSE:
-            _ftprintf(fp, _T("false\n"));
-            break;
-         case OPCODE_PUSH_INT32:
-            _ftprintf(fp, _T("%d\n"), instr->m_operand.m_valueInt32);
-            break;
-         case OPCODE_PUSH_INT64:
-            _ftprintf(fp, INT64_FMT _T("L\n"), instr->m_operand.m_valueInt64);
-            break;
-         case OPCODE_PUSH_UINT32:
-            _ftprintf(fp, _T("%uU\n"), instr->m_operand.m_valueUInt32);
-            break;
-         case OPCODE_PUSH_UINT64:
-            _ftprintf(fp, UINT64_FMT _T("UL\n"), instr->m_operand.m_valueUInt64);
-            break;
-         default:
-            _ftprintf(fp, _T("\n"));
-            break;
-      }
-   }
+      dump(fp, i, *instructionSet.get(i));
 }
 
 /**

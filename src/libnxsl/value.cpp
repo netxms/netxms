@@ -292,7 +292,7 @@ NXSL_Value::NXSL_Value(const TCHAR *value)
 		}
 		else
 		{
-		   m_stringPtr = _tcsdup(value);
+		   m_stringPtr = MemCopyString(value);
 		}
 	}
 	else

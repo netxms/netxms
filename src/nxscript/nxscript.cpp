@@ -68,17 +68,17 @@ int main(int argc, char *argv[])
    NXSL_Environment *pEnv;
    NXSL_Value **ppArgs;
    int i, ch;
-   bool dump = false, printResult = false, compileOnly = false, binary = false, showExprVars = false, showMemoryUsage = false, showMetadata = false;
+   bool dump = false, printResult = false, compileOnly = false, binary = false, showExprVars = false, showMemoryUsage = false, showMetadata = false, instructionTrace = false;
    int runCount = 1, rc = 0;
 
    InitNetXMSProcess(true);
 
    WriteToTerminal(_T("NetXMS Scripting Host  Version \x1b[1m") NETXMS_VERSION_STRING _T("\x1b[0m\n")
-                   _T("Copyright (c) 2005-2021 Victor Kirhenshtein\n\n"));
+                   _T("Copyright (c) 2005-2022 Victor Kirhenshtein\n\n"));
 
    // Parse command line
    opterr = 1;
-   while((ch = getopt(argc, argv, "bcC:de:EmMo:r")) != -1)
+   while((ch = getopt(argc, argv, "bcC:de:EmMo:rt")) != -1)
    {
       switch(ch)
       {
@@ -113,6 +113,9 @@ int main(int argc, char *argv[])
 			case 'r':
 				printResult = true;
 				break;
+         case 't':
+            instructionTrace = true;
+            break;
          case '?':
             return 127;
          default:
@@ -134,6 +137,7 @@ int main(int argc, char *argv[])
                _T("   -M         Show program metadata\n")
                _T("   -o <file>  Write compiled script\n")
                _T("   -r         Print script return value\n")
+               _T("   -t         Enable instruction trace\n")
                _T("\n"));
       return 127;
    }
@@ -222,6 +226,9 @@ int main(int argc, char *argv[])
             if (dump)
                vm->dump(stdout);
 
+            if (instructionTrace)
+               vm->setInstructionTraceFile(stdout);
+
             while(runCount-- > 0)
             {
 		         // Prepare arguments
@@ -233,16 +240,16 @@ int main(int argc, char *argv[])
 		         }
 		         else
 		         {
-			         ppArgs = NULL;
+			         ppArgs = nullptr;
 		         }
 
-		         NXSL_VariableSystem *globalVariables = NULL;
-               NXSL_VariableSystem *expressionVariables = NULL;
-               if (vm->run(argc - optind - 1, ppArgs, &globalVariables, showExprVars ? &expressionVariables : NULL, NULL, entryPoint))
+		         NXSL_VariableSystem *globalVariables = nullptr;
+               NXSL_VariableSystem *expressionVariables = nullptr;
+               if (vm->run(argc - optind - 1, ppArgs, &globalVariables, showExprVars ? &expressionVariables : nullptr, nullptr, entryPoint))
 		         {
 			         NXSL_Value *result = vm->getResult();
 			         if (printResult)
-                     WriteToTerminalEx(_T("Result = %s\n"), (result != NULL) ? result->getValueAsCString() : _T("(null)"));
+                     WriteToTerminalEx(_T("Result = %s\n"), (result != nullptr) ? result->getValueAsCString() : _T("(null)"));
 			         if (showExprVars)
 			         {
 			            WriteToTerminal(_T("Expression variables:\n"));
