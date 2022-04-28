@@ -1,7 +1,10 @@
-action.*	Server actions
+2fa		two factor authentication
 
-agent.conn	Agent connections
-agent.policy	Agent policies
+action.*	Server actions
+actions		Agent actions
+
+agent.conn	Agent connections (server side)
+agent.policy	Agent policies (server side)
 agent.tunnel	Agent tunnels
 
 aix		AIX platform subagent messages
@@ -9,27 +12,46 @@ aix		AIX platform subagent messages
 alarm.*		Alarm management
 
 asterisk	Asterisk subagent messages
+auth		Authentication
+
+beacon		Beacon poller
 bind9		Bind9 subagent messages
+bizsvc		Business services
+bizsvc.check	Business service check
 
 client.session	Client sessions
 
+cas		CAS
 comm.*		Communications (in agent log)
+comm.listener	All listeners
 
 crypto.*	Encryption functions
+crypto.cng	CNG engine
 crypto.cert	Certificate related messages
+crypto.crl	CRL
 
-dc.*		Data collection
-dc.agent.cache	Agent side cache
+darwin		MacOS platform subagent messages
 
 db.*		Database related
-db.drv.*	Database drivers related
-db.drv.mariadb	MariaDB driver
-db.drv.oracle	Oracle driver
+db.agent	Agent database
 db.cache	Caching of DB tables on start-up
 db.conn		DB connections
 db.cpool	DB connection pool
+db.drv.*        Database drivers related
+db.drv.mariadb  MariaDB driver
+db.drv.mysql	MySQL driver
+db.drv.oracle   Oracle driver
+db.drv.pgsql	Postgresql driver
+db.drv.sqlite	SQLite driver
 db.query	SQL query trace
+
 db.writer	DB background writers
+
+dc.*            Data collection
+dc.agent.cache  Agent side cache
+dc.config	Data collection configuration
+dc.scheduler	Data collection scheduler
+dc.snmp		Agent SNMP data collection
 
 dload		Debug output of dynamic library loading functions
 
@@ -37,8 +59,18 @@ event.*		Event related messages
 event.corr	Event correlation
 event.policy	Event processing policy
 event.proc	Event processor
+ext.provider	Agent external provider
 
+filemgr		File manager subagent
+filemon		File monitoring
+file.download	Server-side file download
+file.upload	Server-side file upload
 freebsd		FreeBSD platform subagent messages
+
+geolocation	Geolocation (server side)
+gps		GPS subagent
+
+housekeeper	Housekeeper
 
 import.*	Server configuration import
 
@@ -53,12 +85,16 @@ job.manager	Job manager
 
 housekeeper	Housekeeper messages
 
+leef
+
+linux		Linux platform subagent messages
+
 localadmin	Local administration interface
-
 logs		Server log access
-
 logwatch.*	Messages from log monitoring library
 
+mobile		Mobile devices
+modules		Server modules
 mysql		MySQL monitoring subagent messages
 
 nc.*		Notification channels
@@ -66,19 +102,43 @@ nc.*		Notification channels
 ncd.*		Notification channel drivers
 
 ndd.*           Network device drivers
+ndd.cambium	Cambium network device driver
+ndd.common	Network device drivers common
+ndd.hostmib	Hostmib related functionality
+ndd.cisco	Cisco network device driver
+ndd.cisco.sb	Cisco-SB network device driver
+ndd.cisco.wlc	Cisco-WLC network device driver
+ndd.h3c		H3C network device driver
+ndd.huawei.optix	Huawei OptiX network device driver
+ndd.mikrotik    Mikrotik network device driver
+ndd.moxa.edr    MOXA-EDR network device driver
+ndd.net-snmp	net-snmp network device driver
+ndd.saf		SAF network device driver
+ndd.westerstrand        Westerstrand network device driver
+
+netsvc		Netsvc subagent
 
 node.agent	Node agent (connections, etc.)
 node.iface      Node interfaces (creation, deletion, etc.)
 node.poller	Node poller
+notification	Server notifications
 
 npe.*		Prediction engines
 npe.tsre	Time series regression engine
 
+ntcb		NTCB module
+ntcb.session	NTCB module sessions
+
+nxcp.streamcomp	NXCP stream compression
+
 obj.*		Object related
 obj.dc.*	Data collection related
+obj.lifecycle	Object lifecycle related
 obj.locks.*	Locks
+obj.maint	Object maintenance related
 obj.netmap	Network maps
 obj.poll.node	New node poll
+obj.relations	Object relation related
 obj.sync	Object synchronization
 
 pdsdrv.*	Performance data storage drivers
@@ -86,57 +146,89 @@ pdsdrv.influxdb	InfluxDB performance data storage driver
 
 ping		Ping subagent
 
+policy		Agent policy (agent side)
+
 poll.*		Polling
+poll.autobind	Autobind poll
 poll.conf	Configuration poll
 poll.discovery	Network discovery
 poll.icmp	ICMP poll
 poll.manager	Polling manager
 poll.node	New node poll
-poll.route	Routing table poll
+poll.routes	Routing table poll
 poll.status	Status poll
-poll.topo	Topology poll
+poll.topology	Topology poll
 
 portcheck	Portcheck subagent messages
 
 proc.*		Process related trace
 proc.spexec	Sub-process executor
+procexec	Process executor
 
 proxy		Proxy related (in agent log)
 
 python		Python subagent messages
 
+radius		Radius authentication
+reporting	Reporting
+
+sa.asterisk	Asterisk subagent
+sa.pgsql	Postgres subagent
+sa.wineventsync	Wineventsync subagent
+
+scheduler	Scheduler
 scripts.*	Script library related messages
 scripts.scheduled	Scheduled script execution
+
+shutdown	Server shutdown
 
 smbios		SMBIOS related messages
 
 snmp.*		SNMP related messages
-snmp.discovery	
+snmp.discovery	SNMP discovery related
 snmp.entity	Entity MIB processing
 snmp.lib	SNMP library low-level diagnostic
+snmp.proxy	SNMP proxy related
 snmp.trap	SNMP trap processing
+snmp.trap.flood	SNMP trap flood detection
+ssh		SSH subagent
 
+
+startup		Server startup
 statcoll	Internal server statistic collector
 
 subagents	Sub-agent manager
+sunos		SunOS subagent
 
 sync		Syncer messages
 
 syslog		Syslog server related messages
 
 threads.*	Thread related
+threads.pool	Thread pool related
 
-topo.*		Topology related
-topo.arp	ARP topology
-topo.ipv4	IPv4 topology
-topo.layer2     Layer 2 topology builder
-topo.lldp	LLDP related messages
+topology.*	Topology related
+topology.arp	ARP topology
+topology.cdp	CDP topology
+topology.fdb	Forwarding database topology
+topology.ipv4	IPv4 topology
+topology.layer2 Layer 2 topology builder
+topology.lldp	LLDP topology
+topology.ndp	NDP topology
+topology.stp	STP topology
 
 tunnel		Tunnel (in agent log)
 
 tuxedo		Tuxedo subagent messages
+
 ups		UPS subagent messages
-winnt		WINNT subagent messages
+useragent	User support application (server side)
+userdb		User database (server side)
+
+watchdog	Server watchdog
+websvc		Web services
+winevt		Windows event collection (server side)
+winnt		WINNT platform subagent messages
 
 xmpp		XMPP notifications
 
