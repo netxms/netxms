@@ -193,7 +193,7 @@ void Syncer()
    ThreadSetName("Syncer");
 
    int syncInterval = ConfigReadInt(_T("Objects.SyncInterval"), 60);
-   UINT32 watchdogId = WatchdogAddThread(_T("Syncer Thread"), 30);
+   uint32_t watchdogId = WatchdogAddThread(_T("Syncer Thread"), 30);
 
    nxlog_debug_tag(DEBUG_TAG_SYNC, 1, _T("Syncer thread started, sync_interval = %d"), syncInterval);
 
@@ -203,7 +203,9 @@ void Syncer()
    {
       WatchdogNotify(watchdogId);
       nxlog_debug_tag(DEBUG_TAG_SYNC, 7, _T("Syncer wakeup"));
-      if (!(g_flags & AF_DB_CONNECTION_LOST))    // Don't try to save if DB connection is lost
+
+      // Don't try to save if DB connection is lost or server not fully initialized yet
+      if ((g_flags & (AF_DB_CONNECTION_LOST | AF_SERVER_INITIALIZED)) == AF_SERVER_INITIALIZED)
       {
          int64_t startTime = GetCurrentTimeMs();
          DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
