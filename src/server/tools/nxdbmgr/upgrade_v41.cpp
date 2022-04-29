@@ -359,60 +359,62 @@ static bool H_UpgradeFromV2()
 static bool H_UpgradeFromV1()
 {
    CHK_EXEC(DBDropColumn(g_dbHandle, _T("users"), _T("xmpp_id")));
-   CHK_EXEC(SQLQuery(_T("DELETE FROM config_values WHERE var_name = 'XMPP.Port'")));
 
-   StringMap *xmppVariables = DBMgrGetConfigurationVariables(_T("XMPP.%"));
-   if (xmppVariables != nullptr)
+   if (DBMgrConfigReadInt32(_T("XMPP.Enable"), 0))
    {
-      const TCHAR* login = xmppVariables->get(_T("XMPP.Login"));
-      const TCHAR* password = xmppVariables->get(_T("XMPP.Password"));
-      const TCHAR* server = xmppVariables->get(_T("XMPP.Server"));
-      uint32_t port = xmppVariables->getUInt32(_T("XMPP.Port"), 0);
+      StringMap *xmppVariables = DBMgrGetConfigurationVariables(_T("XMPP.%"));
+      if (xmppVariables != nullptr)
+      {
+         const TCHAR *server = xmppVariables->get(_T("XMPP.Server"));
+         uint32_t port = xmppVariables->getUInt32(_T("XMPP.Port"), 0);
+         const TCHAR *login = xmppVariables->get(_T("XMPP.Login"));
+         const TCHAR *password = xmppVariables->get(_T("XMPP.Password"));
 
-      DB_STATEMENT stmt = DBPrepare(g_dbHandle, _T("INSERT INTO notification_channels (name, driver_name, description, configuration) ")
-                                                _T("VALUES ('XMPP', 'XMPP', 'Automatically generated XMPP notification channel based on old XMPP configuration', ?)"));
-      StringBuffer config;
-      if (server != nullptr)
-      {
-         config.append(_T("Server = "));
-         config.append(server);
-         config.append(_T("\n"));
-      }
-      if (port != 0)
-      {
-         config.append(_T("Port = "));
-         config.append(port);
-         config.append(_T("\n"));
-      }
-      if (login != nullptr)
-      {
-         config.append(_T("Login = "));
-         config.append(login);
-         config.append(_T("\n"));
-      }
-      if (password != nullptr)
-      {
-         config.append(_T("Password = "));
-         config.append(password);
-         config.append(_T("\n"));
-      }
-      delete xmppVariables;
+         DB_STATEMENT hStmt = DBPrepare(g_dbHandle, _T("INSERT INTO notification_channels (name, driver_name, description, configuration) ")
+                                                    _T("VALUES ('XMPP', 'XMPP', 'Automatically generated XMPP notification channel based on old XMPP configuration', ?)"));
+         StringBuffer config;
+         if (server != nullptr)
+         {
+            config.append(_T("Server = "));
+            config.append(server);
+            config.append(_T("\n"));
+         }
+         if (port != 0)
+         {
+            config.append(_T("Port = "));
+            config.append(port);
+            config.append(_T("\n"));
+         }
+         if (login != nullptr)
+         {
+            config.append(_T("Login = "));
+            config.append(login);
+            config.append(_T("\n"));
+         }
+         if (password != nullptr)
+         {
+            config.append(_T("Password = "));
+            config.append(password);
+            config.append(_T("\n"));
+         }
+         delete xmppVariables;
 
-      DBBind(stmt, 1, DB_SQLTYPE_TEXT, config, DB_BIND_STATIC);
-      if (!SQLExecute(stmt) && !g_ignoreErrors)
+         DBBind(hStmt, 1, DB_SQLTYPE_TEXT, config, DB_BIND_STATIC);
+         if (!SQLExecute(hStmt) && !g_ignoreErrors)
+         {
+            DBFreeStatement(hStmt);
+            return false;
+         }
+         DBFreeStatement(hStmt);
+      }
+      else if (!g_ignoreErrors)
       {
-         DBFreeStatement(stmt);
          return false;
       }
-      DBFreeStatement(stmt);
+   }
 
-      CHK_EXEC(SQLQuery(_T("DELETE FROM config WHERE var_name LIKE 'XMPP.%'")));
-      CHK_EXEC(SQLQuery(_T("UPDATE actions SET action_type = 3,channel_name = 'XMPP' WHERE action_type = 6")));
-   }
-   else if (!g_ignoreErrors)
-   {
-      return false;
-   }
+   CHK_EXEC(SQLQuery(_T("DELETE FROM config WHERE var_name LIKE 'XMPP.%'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE actions SET action_type = 3,channel_name = 'XMPP' WHERE action_type = 6")));
 
    DB_RESULT result = SQLSelect(_T("SELECT id, system_access FROM users"));
    if (result != nullptr)
