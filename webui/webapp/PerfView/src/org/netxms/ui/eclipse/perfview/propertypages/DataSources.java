@@ -310,7 +310,7 @@ public class DataSources extends PreferencePage
 		ChartDciConfig dci = (ChartDciConfig)selection.getFirstElement();
 		if (dci == null)
 			return;
-		
+
 		DataSourceEditDlg dlg = new DataSourceEditDlg(getShell(), dci, graphIsTemplate);
 		if (dlg.open() == Window.OK)
 		{

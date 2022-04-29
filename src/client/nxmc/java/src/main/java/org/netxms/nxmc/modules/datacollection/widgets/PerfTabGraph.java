@@ -67,7 +67,6 @@ import org.xnap.commons.i18n.I18n;
 
 /**
  * Performance tab graph
- *
  */
 public class PerfTabGraph extends DashboardComposite implements HistoricalChartOwner
 {
@@ -101,7 +100,7 @@ public class PerfTabGraph extends DashboardComposite implements HistoricalChartO
 		this.settings = settings;
 		items.add(dci);
       session = Registry.getSession();
-		
+
 		setLayout(new FillLayout());
 
       ChartConfiguration chartConfiguration = new ChartConfiguration();
@@ -123,9 +122,11 @@ public class PerfTabGraph extends DashboardComposite implements HistoricalChartO
       final Date from = new Date(System.currentTimeMillis() - settings.getTimeRangeMillis());
       final Date to = new Date(System.currentTimeMillis());
       chart.setTimeRange(from, to);
-		
-      GraphItem item = new GraphItem(nodeId, dci.getId(), DataOrigin.INTERNAL, DataType.INT32, "", settings.getRuntimeName(), "%s", settings.getType(), settings.getColorAsInt());
+
+      GraphItem item = new GraphItem(nodeId, dci.getId(), DataOrigin.INTERNAL, DataType.INT32, "", settings.getRuntimeName(), "%s", settings.getType(),
+            settings.isAutomaticColor() ? -1 : settings.getColorAsInt());
       item.setInverted(settings.isInvertedValues());
+      item.setShowThresholds(settings.isShowThresholds());
       chart.addParameter(item);
 
 		addDisposeListener(new DisposeListener() {
@@ -136,7 +137,7 @@ public class PerfTabGraph extends DashboardComposite implements HistoricalChartO
                refreshController.dispose();
          }
       });
-		
+
       chart.addDoubleClickListener(new IDoubleClickListener() {
          @Override
          public void doubleClick(DoubleClickEvent event)
@@ -145,9 +146,9 @@ public class PerfTabGraph extends DashboardComposite implements HistoricalChartO
          }
       });
 
-		createActions();
-		createChartContextMenu();
-	}
+      createActions();
+      createChartContextMenu();
+   }
 
    /**
     * Create actions
@@ -203,7 +204,7 @@ public class PerfTabGraph extends DashboardComposite implements HistoricalChartO
       MenuManager presets = new MenuManager("&Presets");
       for(int i = 0; i < presetActions.length; i++)
          presets.add(presetActions[i]);
-      
+
       manager.add(presets);
       manager.add(new Separator());
       manager.add(actionAdjustBoth);
@@ -227,8 +228,10 @@ public class PerfTabGraph extends DashboardComposite implements HistoricalChartO
 		synchronized(items)
 		{
 			items.add(dci);
-         GraphItem item = new GraphItem(nodeId, dci.getId(), DataOrigin.INTERNAL, DataType.INT32, "", settings.getRuntimeName(), "%s", settings.getType(), settings.getColorAsInt());
+         GraphItem item = new GraphItem(nodeId, dci.getId(), DataOrigin.INTERNAL, DataType.INT32, "", settings.getRuntimeName(), "%s", settings.getType(),
+               settings.isAutomaticColor() ? -1 : settings.getColorAsInt());
          item.setInverted(settings.isInvertedValues());
+         item.setShowThresholds(settings.isShowThresholds());
          chart.addParameter(item);
 		}
 	}

@@ -138,11 +138,11 @@ public class General extends PreferencePage
       checkStacked = new Button(optionsGroup, SWT.CHECK);
       checkStacked.setText(Messages.get().General_Stacked);
       checkStacked.setSelection(config.isStacked());
-      
+
       checkTranslucent= new Button(optionsGroup, SWT.CHECK);
       checkTranslucent.setText(Messages.get().General_Translucent);
       checkTranslucent.setSelection(config.isTranslucent());
-      
+
       checkShowLegend = new Button(optionsGroup, SWT.CHECK);
       checkShowLegend.setText(Messages.get().General_ShowLegend);
       checkShowLegend.setSelection(config.isLegendVisible());
@@ -161,7 +161,7 @@ public class General extends PreferencePage
             widgetSelected(e);
          }
       });
-      
+
       checkShowHostNames = new Button(optionsGroup, SWT.CHECK);
       checkShowHostNames.setText(Messages.get().General_ShowHostNames);
       checkShowHostNames.setSelection(config.isShowHostNames());

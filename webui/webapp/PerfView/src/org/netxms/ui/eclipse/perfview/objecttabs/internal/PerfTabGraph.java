@@ -102,7 +102,7 @@ public class PerfTabGraph extends DashboardComposite implements HistoricalChartO
 		this.validator = validator;
 		this.settings = settings;
 		items.add(dci);
-		session = (NXCSession)ConsoleSharedData.getSession();
+      session = ConsoleSharedData.getSession();
 
 		setLayout(new FillLayout());
 
@@ -126,7 +126,8 @@ public class PerfTabGraph extends DashboardComposite implements HistoricalChartO
       final Date to = new Date(System.currentTimeMillis());
       chart.setTimeRange(from, to);
 
-      GraphItem item = new GraphItem(nodeId, dci.getId(), DataOrigin.INTERNAL, DataType.INT32, "", settings.getRuntimeName(), "%s", settings.getType(), settings.getColorAsInt());
+      GraphItem item = new GraphItem(nodeId, dci.getId(), DataOrigin.INTERNAL, DataType.INT32, "", settings.getRuntimeName(), "%s", settings.getType(),
+            settings.isAutomaticColor() ? -1 : settings.getColorAsInt());
       item.setInverted(settings.isInvertedValues());
       item.setShowThresholds(settings.isShowThresholds());
       chart.addParameter(item);
@@ -230,7 +231,8 @@ public class PerfTabGraph extends DashboardComposite implements HistoricalChartO
 		synchronized(items)
 		{
 			items.add(dci);
-         GraphItem item = new GraphItem(nodeId, dci.getId(), DataOrigin.INTERNAL, DataType.INT32, "", settings.getRuntimeName(), "%s", settings.getType(), settings.getColorAsInt());
+         GraphItem item = new GraphItem(nodeId, dci.getId(), DataOrigin.INTERNAL, DataType.INT32, "", settings.getRuntimeName(), "%s", settings.getType(),
+               settings.isAutomaticColor() ? -1 : settings.getColorAsInt());
          item.setInverted(settings.isInvertedValues());
          item.setShowThresholds(settings.isShowThresholds());
          chart.addParameter(item);
