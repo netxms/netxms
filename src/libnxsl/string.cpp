@@ -89,6 +89,21 @@ static int SM_endsWith(NXSL_Value* thisString, int argc, NXSL_Value** argv, NXSL
 }
 
 /**
+ * Check if two strings are equal
+ */
+static int SM_equals(NXSL_Value* thisString, int argc, NXSL_Value** argv, NXSL_Value** result, NXSL_VM *vm)
+{
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   uint32_t l1, l2;
+   const TCHAR *s1 = thisString->getValueAsString(&l1);
+   const TCHAR *s2 = argv[0]->getValueAsString(&l2);
+   *result = vm->createValue((l1 == l2) && (memcmp(s1, s2, l1 * sizeof(TCHAR)) == 0));
+   return NXSL_ERR_SUCCESS;
+}
+
+/**
  * Check if two strings are equal in case-insensitive mode
  */
 static int SM_equalsIgnoreCase(NXSL_Value* thisString, int argc, NXSL_Value** argv, NXSL_Value** result, NXSL_VM *vm)
@@ -468,6 +483,7 @@ static struct
    { NXSL_Identifier("compareToIgnoreCase"), SM_compareToIgnoreCase, 1 },
    { NXSL_Identifier("contains"), SM_contains, 1 },
    { NXSL_Identifier("endsWith"), SM_endsWith, 1 },
+   { NXSL_Identifier("equals"), SM_equals, 1 },
    { NXSL_Identifier("equalsIgnoreCase"), SM_equalsIgnoreCase, 1 },
    { NXSL_Identifier("indexOf"), SM_indexOf, -1 },
    { NXSL_Identifier("lastIndexOf"), SM_lastIndexOf, -1 },
