@@ -2538,7 +2538,7 @@ CREATE TABLE maintenance_journal
    object_id integer not null,
    author integer not null,
    last_edited_by integer not null,
-   description SQL_TEXT not null,
+   description SQL_TEXT null,
    creation_time integer not null,
    modification_time integer not null,
    PRIMARY KEY(record_id)

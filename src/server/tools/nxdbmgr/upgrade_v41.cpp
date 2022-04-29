@@ -24,6 +24,16 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 41.14 to 41.15
+ */
+static bool H_UpgradeFromV14()
+{
+   CHK_EXEC(DBRemoveNotNullConstraint(g_dbHandle, _T("maintenance_journal"), _T("description")));
+   CHK_EXEC(SetMinorSchemaVersion(15));
+   return true;
+}
+
+/**
  * Upgrade from 41.13 to 41.14
  */
 static bool H_UpgradeFromV13()
@@ -469,6 +479,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 14, 41, 15, H_UpgradeFromV14 },
    { 13, 41, 14, H_UpgradeFromV13 },
    { 12, 41, 13, H_UpgradeFromV12 },
    { 11, 41, 12, H_UpgradeFromV11 },
