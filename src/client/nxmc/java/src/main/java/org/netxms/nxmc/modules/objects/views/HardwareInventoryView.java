@@ -22,7 +22,6 @@ import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
-import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.action.ToolBarManager;
 import org.eclipse.jface.viewers.ColumnViewer;
 import org.eclipse.swt.SWT;
@@ -94,7 +93,15 @@ public class HardwareInventoryView extends ObjectView
    protected void fillLocalToolbar(ToolBarManager manager)
    {
       manager.add(actionExportAllToCsv);
-      manager.add(new Separator());
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#fillLocalMenu(org.eclipse.jface.action.MenuManager)
+    */
+   @Override
+   protected void fillLocalMenu(MenuManager manager)
+   {
+      manager.add(actionExportAllToCsv);
    }
 
    /**
@@ -121,7 +128,7 @@ public class HardwareInventoryView extends ObjectView
    protected void fillContextMenu(IMenuManager manager)
    {
       manager.add(actionExportToCsv);
-      manager.add(new Separator());
+      manager.add(actionExportAllToCsv);
    }
    
    /**
@@ -139,6 +146,7 @@ public class HardwareInventoryView extends ObjectView
    @Override
    protected void onObjectChange(AbstractObject object)
    {
+      clearMessages();
       inventoryWidget.clear();
       if (object == null)
          return;
@@ -153,11 +161,7 @@ public class HardwareInventoryView extends ObjectView
    @Override
    public boolean isValidForContext(Object context)
    {
-      if ((context != null) && (context instanceof Node))
-      {
-         return (((Node)context).getCapabilities() & Node.NC_IS_NATIVE_AGENT) != 0;
-      }
-      return false;
+      return (context != null) && (context instanceof Node) && ((Node)context).hasAgent();
    }
 
    /**

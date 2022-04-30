@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2019 Raden Solutions
+ * Copyright (C) 2003-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -58,22 +58,26 @@ public class HardwareInventory extends Composite
    private static final String[] names = { "Category", "Index", "Type", "Vendor", "Model", "Capacity", "Part number", "Serial number", "Location", "Description" };
    private static final int[] widths = { 100, 70, 100, 200, 200, 90, 130, 130, 200, 300 };
    
-   private View viewPart;
+   private View view;
    private long rootObjectId;
    private ColumnViewer viewer;
    private String configPrefix;
    private MenuManager menuManager = null;
    
    /**
-    * @param parent
-    * @param style
+    * Create new hardware inventory widget.
+    *
+    * @param parent parent composite
+    * @param style widget style
+    * @param view owning view
+    * @param configPrefix configuration prefix
     */
-   public HardwareInventory(Composite parent, int style, View viewPart, String configPrefix)
+   public HardwareInventory(Composite parent, int style, View view, String configPrefix)
    {
       super(parent, style);
-      this.viewPart = viewPart;
+      this.view = view;
       this.configPrefix = configPrefix;
-      
+
       setLayout(new FillLayout());
       createTableViewer();
    }
@@ -102,14 +106,14 @@ public class HardwareInventory extends Composite
          viewer.getControl().setMenu(menu);
       }
    }
-   
+
    /**
     * Refresh list
     */
    public void refresh()
    {
       final NXCSession session = Registry.getSession();
-      new Job("Loading hardware inventory", viewPart) {
+      new Job("Loading hardware inventory", view) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {

@@ -60,7 +60,9 @@ import org.netxms.nxmc.modules.objects.views.MaintenanceJournalView;
 import org.netxms.nxmc.modules.objects.views.ObjectBrowser;
 import org.netxms.nxmc.modules.objects.views.ObjectOverviewView;
 import org.netxms.nxmc.modules.objects.views.PhysicalLinkView;
+import org.netxms.nxmc.modules.objects.views.ProcessesView;
 import org.netxms.nxmc.modules.objects.views.RackView;
+import org.netxms.nxmc.modules.objects.views.ServicesView;
 import org.netxms.nxmc.modules.objects.views.SoftwareInventoryView;
 import org.netxms.nxmc.modules.objects.views.SwitchForwardingDatabaseView;
 import org.netxms.nxmc.modules.snmp.views.MibExplorer;
@@ -120,6 +122,7 @@ public abstract class ObjectsPerspective extends Perspective
    protected void configureViews()
    {
       addNavigationView(new ObjectBrowser(getName(), null, subtreeType));
+      addMainView(new AgentFileManager());
       addMainView(new AlarmsView());
       addMainView(new BusinessServiceAvailabilityView());
       addMainView(new BusinessServiceChecksView());
@@ -127,7 +130,6 @@ public abstract class ObjectsPerspective extends Perspective
       addMainView(new DataCollectionView());
       addMainView(new Dot1xStatusView());
       addMainView(new EntityMIBView());
-      addMainView(new AgentFileManager());
       addMainView(new HardwareInventoryView());
       addMainView(new InterfacesView());
       addMainView(new MaintenanceJournalView());
@@ -137,7 +139,9 @@ public abstract class ObjectsPerspective extends Perspective
       addMainView(new PerformanceView());
       addMainView(new PhysicalLinkView());
       addMainView(new PredefinedMap());
+      addMainView(new ProcessesView());
       addMainView(new RackView());
+      addMainView(new ServicesView());
       addMainView(new SoftwareInventoryView());
       addMainView(new SummaryDataCollectionView());
       addMainView(new SwitchForwardingDatabaseView());

@@ -51,7 +51,7 @@ public class ExportToCsvAction extends TableRowAction
 	 */
    private ExportToCsvAction(View view, ColumnViewer viewer, ViewerProvider viewerProvider, boolean selectionOnly)
 	{
-      super(viewer, viewerProvider, selectionOnly, selectionOnly ? i18n.tr("E&xport to CSV...") : i18n.tr("Export all to CSV..."), SharedIcons.CSV);
+      super(viewer, viewerProvider, selectionOnly, selectionOnly ? i18n.tr("E&xport selection to CSV...") : i18n.tr("Export all to CSV..."), SharedIcons.CSV);
       this.view = view;
 
       setId(selectionOnly ? "org.netxms.ui.eclipse.popupActions.ExportToCSV" : "org.netxms.ui.eclipse.actions.ExportToCSV");
