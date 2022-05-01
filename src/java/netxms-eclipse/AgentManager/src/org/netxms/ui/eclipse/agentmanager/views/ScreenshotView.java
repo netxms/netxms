@@ -26,6 +26,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import javax.imageio.ImageIO;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
@@ -66,6 +67,7 @@ import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
+import org.netxms.ui.eclipse.tools.PngTransfer;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
@@ -100,7 +102,7 @@ public class ScreenshotView extends ViewPart implements IPartListener
    {
       super.init(site);
 
-      session = (NXCSession)ConsoleSharedData.getSession();
+      session = ConsoleSharedData.getSession();
       String[] params = site.getSecondaryId().split("&");
       nodeId = Long.parseLong(params[0]);
       if(params.length > 1)
@@ -203,7 +205,6 @@ public class ScreenshotView extends ViewPart implements IPartListener
     */
    public void refresh()
    {
-      final NXCSession session = ConsoleSharedData.getSession();
       ConsoleJob job = new ConsoleJob(Messages.get().ScreenshotView_JobTitle, this, Activator.PLUGIN_ID) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
@@ -244,6 +245,9 @@ public class ScreenshotView extends ViewPart implements IPartListener
                      @Override
                      public void run()
                      {
+                        if (canvas.isDisposed())
+                           return;
+
                         if (image != null)
                            image.dispose();
                         
@@ -267,6 +271,9 @@ public class ScreenshotView extends ViewPart implements IPartListener
                   @Override
                   public void run()
                   {
+                     if (canvas.isDisposed())
+                        return;
+
                      if (image != null)
                         image.dispose();
                      
@@ -277,7 +284,7 @@ public class ScreenshotView extends ViewPart implements IPartListener
 
                      actionCopyToClipboard.setEnabled(true);
                      actionSave.setEnabled(true);
-                     
+
                      updateScrollerSize();
                   }
                });
@@ -290,16 +297,19 @@ public class ScreenshotView extends ViewPart implements IPartListener
                   @Override
                   public void run()
                   {
+                     if (canvas.isDisposed())
+                        return;
+
                      if (image != null)
                         image.dispose();
                      
                      image = null;
                      errorMessage = (emsg != null) ? String.format(Messages.get().ScreenshotView_ErrorWithMsg, emsg) : Messages.get().ScreenshotView_ErrorWithoutMsg;
                      canvas.redraw();
-                     
+
                      actionCopyToClipboard.setEnabled(false);
                      actionSave.setEnabled(false);
-                     
+
                      updateScrollerSize();
                   }
                });
@@ -366,7 +376,7 @@ public class ScreenshotView extends ViewPart implements IPartListener
          {
             if (image == null)
                return;
-            ImageTransfer imageTransfer = ImageTransfer.getInstance();
+            Transfer imageTransfer = Platform.getOS().equals(Platform.OS_LINUX) ? PngTransfer.getInstance() : ImageTransfer.getInstance();
             final Clipboard clipboard = new Clipboard(canvas.getDisplay());
             clipboard.setContents(new Object[] { image.getImageData() }, new Transfer[] { imageTransfer });
          }
@@ -374,7 +384,7 @@ public class ScreenshotView extends ViewPart implements IPartListener
       actionCopyToClipboard.setActionDefinitionId("org.netxms.ui.eclipse.agentmanager.commands.copy_screenshot"); //$NON-NLS-1$
       handlerService.activateHandler(actionCopyToClipboard.getActionDefinitionId(), new ActionHandler(actionCopyToClipboard));
       actionCopyToClipboard.setEnabled(false);
-      
+
       actionSave = new Action(Messages.get().ScreenshotView_Save, SharedIcons.SAVE) {
          @Override
          public void run()
