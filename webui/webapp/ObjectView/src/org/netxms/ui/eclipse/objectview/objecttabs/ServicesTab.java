@@ -332,7 +332,11 @@ public class ServicesTab extends ObjectTab
                TableRow r = serviceTable.getRow(i);
                Service service = new Service();
                for(int j = 0; j < indexes.length; j++)
+               {
                   service.data[j] = r.getValue(indexes[j]);
+                  if (service.data[j] == null)
+                     service.data[j] = "";
+               }
                services[i] = service;
             }
 
