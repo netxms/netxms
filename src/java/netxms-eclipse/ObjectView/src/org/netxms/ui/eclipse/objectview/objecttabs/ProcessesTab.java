@@ -293,9 +293,9 @@ public class ProcessesTab extends ObjectTab
                Process process = new Process();
                for(int j = 0; j < indexes.length; j++)
                   process.data[j] = r.getValueAsLong(indexes[j]);
-               process.name = r.getValue(indexes[COLUMN_NAME]);
-               process.user = r.getValue(indexes[COLUMN_USER]);
-               process.commandLine = r.getValue(indexes[COLUMN_CMDLINE]);
+               process.name = (indexes[COLUMN_NAME] != -1) ? r.getValue(indexes[COLUMN_NAME]) : "";
+               process.user = (indexes[COLUMN_USER] != -1) ? r.getValue(indexes[COLUMN_USER]) : "";
+               process.commandLine = (indexes[COLUMN_CMDLINE] != -1) ? r.getValue(indexes[COLUMN_CMDLINE]) : "";
                processes[i] = process;
             }
 
