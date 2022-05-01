@@ -40,7 +40,7 @@
             allowMultiple="true"
             category="org.netxms.ui.eclipse.viewcategory.config"
             class="org.netxms.ui.eclipse.agentmanager.views.ScreenshotView"
-            icon="icons/image_obj.gif"
+            icon="icons/screenshot.png"
             id="org.netxms.ui.eclipse.agentmanager.views.ScreenshotView"
             name="%view.Screenshot"
             restorable="false">
@@ -80,7 +80,7 @@
          <action
                class="org.netxms.ui.eclipse.agentmanager.actions.TakeScreenshot"
                enablesFor="+"
-               icon="icons/image_obj.gif"
+               icon="icons/screenshot.png"
                id="org.netxms.ui.eclipse.agentmanager.popupActions.TakeScreenshot_Node"
                label="%menu.TakeScreenshot"
                menubarPath="objectcontrol"

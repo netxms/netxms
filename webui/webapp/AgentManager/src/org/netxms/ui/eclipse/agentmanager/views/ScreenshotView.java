@@ -93,7 +93,7 @@ public class ScreenshotView extends ViewPart implements IPartListener
    {
       super.init(site);
 
-      session = (NXCSession)ConsoleSharedData.getSession();
+      session = ConsoleSharedData.getSession();
       String[] params = site.getSecondaryId().split("&");
       nodeId = Long.parseLong(params[0]);
       if(params.length > 1)
@@ -196,7 +196,6 @@ public class ScreenshotView extends ViewPart implements IPartListener
     */
    public void refresh()
    {
-      final NXCSession session = ConsoleSharedData.getSession();
       ConsoleJob job = new ConsoleJob(Messages.get().ScreenshotView_JobTitle, this, Activator.PLUGIN_ID) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
@@ -237,6 +236,9 @@ public class ScreenshotView extends ViewPart implements IPartListener
                      @Override
                      public void run()
                      {
+                        if (canvas.isDisposed())
+                           return;
+
                         if (image != null)
                            image.dispose();
                         
@@ -259,6 +261,9 @@ public class ScreenshotView extends ViewPart implements IPartListener
                   @Override
                   public void run()
                   {
+                     if (canvas.isDisposed())
+                        return;
+
                      if (image != null)
                         image.dispose();
                      
@@ -268,7 +273,7 @@ public class ScreenshotView extends ViewPart implements IPartListener
                      canvas.redraw();
 
                      actionSave.setEnabled(true);
-                     
+
                      updateScrollerSize();
                   }
                });
@@ -281,15 +286,18 @@ public class ScreenshotView extends ViewPart implements IPartListener
                   @Override
                   public void run()
                   {
+                     if (canvas.isDisposed())
+                        return;
+
                      if (image != null)
                         image.dispose();
                      
                      image = null;
                      errorMessage = (emsg != null) ? String.format(Messages.get().ScreenshotView_ErrorWithMsg, emsg) : Messages.get().ScreenshotView_ErrorWithoutMsg;
                      canvas.redraw();
-                     
+
                      actionSave.setEnabled(false);
-                     
+
                      updateScrollerSize();
                   }
                });
@@ -349,7 +357,7 @@ public class ScreenshotView extends ViewPart implements IPartListener
          }
       };
       actionAutoRefresh.setChecked(autoRefresh);
-      
+
       actionSave = new Action(Messages.get().ScreenshotView_Save, SharedIcons.SAVE) {
          @Override
          public void run()
