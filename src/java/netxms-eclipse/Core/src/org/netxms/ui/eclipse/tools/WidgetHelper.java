@@ -646,7 +646,7 @@ public class WidgetHelper
 			restoreTreeViewerSettings((SortableTreeViewer)viewer, settings, prefix);
 		}
 	}
-	
+
 	/**
 	 * Copy given text to clipboard
 	 * 
@@ -659,7 +659,7 @@ public class WidgetHelper
       cb.setContents(new Object[] { (text != null) ? text : "" }, new Transfer[] { transfer }); //$NON-NLS-1$
       cb.dispose();
    }
-	
+
 	/**
 	 * @param manager
 	 * @param control
