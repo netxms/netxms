@@ -22,6 +22,8 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import javax.imageio.ImageIO;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
@@ -161,7 +163,7 @@ public class ScreenshotView extends ViewPart implements IPartListener
       contributeToActionBars();
       refresh();
    }
-   
+
    /**
     * Update scroller size 
     */
@@ -201,8 +203,8 @@ public class ScreenshotView extends ViewPart implements IPartListener
     */
    public void refresh()
    {
-      final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-      ConsoleJob job = new ConsoleJob(Messages.get().ScreenshotView_JobTitle, this, Activator.PLUGIN_ID, null) {
+      final NXCSession session = ConsoleSharedData.getSession();
+      ConsoleJob job = new ConsoleJob(Messages.get().ScreenshotView_JobTitle, this, Activator.PLUGIN_ID) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
@@ -302,17 +304,16 @@ public class ScreenshotView extends ViewPart implements IPartListener
                   }
                });
             }
-            if(autoRefresh)
+            if (autoRefresh)
             {
                long diff = System.currentTimeMillis() - lastRequestTime;
-               if(diff < 250)
+               if (diff < 250)
                   Thread.sleep(250 - diff);               
                runInUIThread(new Runnable() {
-                  
                   @Override
                   public void run()
                   {                     
-                     if(autoRefresh && !canvas.isDisposed() && getSite().getPage().isPartVisible(ScreenshotView.this))
+                     if (autoRefresh && !canvas.isDisposed() && getSite().getPage().isPartVisible(ScreenshotView.this))
                      {
                         refresh();
                      }
@@ -351,14 +352,14 @@ public class ScreenshotView extends ViewPart implements IPartListener
          public void run()
          {
             autoRefresh = actionAutoRefresh.isChecked();
-            if(autoRefresh)
+            if (autoRefresh)
             {
                refresh();
             }
          }
       };
       actionAutoRefresh.setChecked(autoRefresh);
-      
+
       actionCopyToClipboard = new Action(Messages.get().ScreenshotView_CopyToClipboard, SharedIcons.COPY) {
          @Override
          public void run()
@@ -398,11 +399,11 @@ public class ScreenshotView extends ViewPart implements IPartListener
       fd.setText(Messages.get().ScreenshotView_SaveScreenshot);
       fd.setFilterExtensions(new String[] { "*.png", "*.*" }); //$NON-NLS-1$ //$NON-NLS-2$
       fd.setFilterNames(new String[] { Messages.get().ScreenshotView_PngFiles, Messages.get().ScreenshotView_AllFiles });
-      fd.setFileName(session.getObjectName(nodeId) + "-screenshot.png"); //$NON-NLS-1$
+      fd.setFileName(session.getObjectName(nodeId) + "-screenshot-" + new SimpleDateFormat("yyyyMMdd-HHmmss").format(new Date()) + ".png"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
       String name = fd.open();
       if (name == null)
          return;
-      
+
       File outputFile = new File(name);
       try
       {

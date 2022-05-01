@@ -19,6 +19,8 @@
 package org.netxms.ui.eclipse.agentmanager.views;
 
 import java.io.ByteArrayInputStream;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
@@ -152,7 +154,7 @@ public class ScreenshotView extends ViewPart implements IPartListener
       contributeToActionBars();
       refresh();
    }
-   
+
    /**
     * Update scroller size 
     */
@@ -192,8 +194,8 @@ public class ScreenshotView extends ViewPart implements IPartListener
     */
    public void refresh()
    {
-      final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-      ConsoleJob job = new ConsoleJob(Messages.get().ScreenshotView_JobTitle, this, Activator.PLUGIN_ID, null) {
+      final NXCSession session = ConsoleSharedData.getSession();
+      ConsoleJob job = new ConsoleJob(Messages.get().ScreenshotView_JobTitle, this, Activator.PLUGIN_ID) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
@@ -290,17 +292,16 @@ public class ScreenshotView extends ViewPart implements IPartListener
                   }
                });
             }
-            if(autoRefresh)
+            if (autoRefresh)
             {
                long diff = System.currentTimeMillis() - lastRequestTime;
-               if(diff < 250)
+               if (diff < 250)
                   Thread.sleep(250 - diff);               
                runInUIThread(new Runnable() {
-                  
                   @Override
                   public void run()
                   {                     
-                     if(autoRefresh && !canvas.isDisposed() && getSite().getPage().isPartVisible(ScreenshotView.this))
+                     if (autoRefresh && !canvas.isDisposed() && getSite().getPage().isPartVisible(ScreenshotView.this))
                      {
                         refresh();
                      }
@@ -339,7 +340,7 @@ public class ScreenshotView extends ViewPart implements IPartListener
          public void run()
          {
             autoRefresh = actionAutoRefresh.isChecked();
-            if(autoRefresh)
+            if (autoRefresh)
             {
                refresh();
             }
@@ -365,7 +366,7 @@ public class ScreenshotView extends ViewPart implements IPartListener
    private void saveImage()
    {
       String id = Long.toString(System.currentTimeMillis());
-      DownloadServiceHandler.addDownload(id, session.getObjectName(nodeId) + "-screenshot.png", byteImage, "application/octet-stream"); //$NON-NLS-1$ //$NON-NLS-2$
+      DownloadServiceHandler.addDownload(id, session.getObjectName(nodeId) + "-screenshot-" + new SimpleDateFormat("yyyyMMdd-HHmmss").format(new Date()) + ".png", byteImage, "application/octet-stream"); //$NON-NLS-1$ //$NON-NLS-2$
       JavaScriptExecutor executor = RWT.getClient().getService(JavaScriptExecutor.class);
       if( executor != null ) 
       {
