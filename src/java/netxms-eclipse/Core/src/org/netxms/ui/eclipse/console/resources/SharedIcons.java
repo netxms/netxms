@@ -127,7 +127,7 @@ public class SharedIcons
 		CHECKBOX_ON = Activator.getImageDescriptor("icons/checkbox_on.png"); //$NON-NLS-1$
 		CLEAR = Activator.getImageDescriptor("icons/clear.gif"); //$NON-NLS-1$
 		CLEAR_LOG = Activator.getImageDescriptor("icons/clear_log.gif"); //$NON-NLS-1$
-		CLOSE = Activator.getImageDescriptor("icons/close.gif"); //$NON-NLS-1$
+		CLOSE = Activator.getImageDescriptor("icons/close.png"); //$NON-NLS-1$
 		COLLAPSE = Activator.getImageDescriptor("icons/collapse.png"); //$NON-NLS-1$
 		COLLAPSE_ALL = Activator.getImageDescriptor("icons/collapseall.png"); //$NON-NLS-1$
       CONTAINER = Activator.getImageDescriptor("icons/container.png"); //$NON-NLS-1$
@@ -135,7 +135,7 @@ public class SharedIcons
       COPY_TO_CLIPBOARD = Activator.getImageDescriptor("icons/copy-to-clipboard.png"); //$NON-NLS-1$
 		CSV = Activator.getImageDescriptor("icons/csv.png"); //$NON-NLS-1$
       CUT = Activator.getImageDescriptor("icons/cut.gif"); //$NON-NLS-1$
-		DELETE_OBJECT = Activator.getImageDescriptor("icons/delete_obj.gif"); //$NON-NLS-1$
+		DELETE_OBJECT = Activator.getImageDescriptor("icons/delete_obj.png"); //$NON-NLS-1$
 		DOWN = Activator.getImageDescriptor("icons/down.png"); //$NON-NLS-1$
 		EDIT = Activator.getImageDescriptor("icons/edit.png"); //$NON-NLS-1$
 		EMPTY = Activator.getImageDescriptor("icons/empty.png"); //$NON-NLS-1$
