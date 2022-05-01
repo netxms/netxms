@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2016 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,17 +16,16 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.agentmanager.views;
+package org.netxms.nxmc.modules.objects.views;
 
 import java.io.ByteArrayInputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
-import org.eclipse.jface.action.IMenuManager;
-import org.eclipse.jface.action.IToolBarManager;
+import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
-import org.eclipse.jface.commands.ActionHandler;
+import org.eclipse.jface.action.ToolBarManager;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.rap.rwt.RWT;
 import org.eclipse.rap.rwt.client.service.JavaScriptExecutor;
@@ -43,34 +42,26 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.ui.IActionBars;
-import org.eclipse.ui.IPartListener;
-import org.eclipse.ui.IViewSite;
-import org.eclipse.ui.IWorkbenchPart;
-import org.eclipse.ui.PartInitException;
-import org.eclipse.ui.contexts.IContextService;
-import org.eclipse.ui.handlers.IHandlerService;
-import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.Table;
-import org.netxms.ui.eclipse.actions.RefreshAction;
-import org.netxms.ui.eclipse.agentmanager.Activator;
-import org.netxms.ui.eclipse.agentmanager.Messages;
-import org.netxms.ui.eclipse.console.DownloadServiceHandler;
-import org.netxms.ui.eclipse.console.resources.SharedIcons;
-import org.netxms.ui.eclipse.jobs.ConsoleJob;
-import org.netxms.ui.eclipse.shared.ConsoleSharedData;
-import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.client.objects.AbstractNode;
+import org.netxms.nxmc.DownloadServiceHandler;
+import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.base.jobs.Job;
+import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.resources.ResourceManager;
+import org.netxms.nxmc.resources.SharedIcons;
+import org.netxms.nxmc.tools.WidgetHelper;
+import org.xnap.commons.i18n.I18n;
 
 /**
  * Screenshot view
  */
-public class ScreenshotView extends ViewPart implements IPartListener
+public class ScreenshotView extends AdHocObjectView
 {
-   public static final String ID = "org.netxms.ui.eclipse.agentmanager.views.ScreenshotView"; //$NON-NLS-1$
+   private static final I18n i18n = LocalizationHelper.getI18n(ScreenshotView.class);
 
    private NXCSession session;
-   private long nodeId;
    private String userSession;
    private String userName;
    private Image image;
@@ -79,41 +70,31 @@ public class ScreenshotView extends ViewPart implements IPartListener
    private ScrolledComposite scroller;
    private Canvas canvas;
    private byte[] byteImage;
-   private Action actionRefresh;
    private Action actionAutoRefresh;
    private Action actionSave;
-   private boolean autoRefresh;
+   private boolean autoRefresh = false;
    private long lastRequestTime;
 
    /**
-    * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
+    * Create screenshot view.
+    *
+    * @param node node to get screenshot from
+    * @param userSession name of user session to get screenshot from or null to select first available
+    * @param userName user name to display (can be null)
     */
-   @Override
-   public void init(IViewSite site) throws PartInitException
+   public ScreenshotView(AbstractNode node, String userSession, String userName)
    {
-      super.init(site);
-
-      session = ConsoleSharedData.getSession();
-      String[] params = site.getSecondaryId().split("&");
-      nodeId = Long.parseLong(params[0]);
-      if(params.length > 1)
-      {
-         userSession = params[1];
-         if(params.length > 2)
-            userName = params[2];
-         else
-            userName = params[1];     
-      }
-
-      setPartName(String.format(Messages.get().ScreenshotView_PartTitle, session.getObjectName(nodeId)));
-      autoRefresh = false;
+      super("Screenshot", ResourceManager.getImageDescriptor("icons/screenshot.png"), "Screenshot", node.getObjectId(), false);
+      this.userSession = userSession;
+      this.userName = userName;
+      session = Registry.getSession();
    }
 
    /**
-    * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
+    * @see org.netxms.nxmc.base.views.View#createContent(org.eclipse.swt.widgets.Composite)
     */
    @Override
-   public void createPartControl(Composite parent)
+   public void createContent(Composite parent)
    {
       parent.setLayout(new FillLayout());
       
@@ -149,16 +130,22 @@ public class ScreenshotView extends ViewPart implements IPartListener
             updateScrollerSize();
          }
       });
-      getSite().getPage().addPartListener(this);
       
-      activateContext();
       createActions();
-      contributeToActionBars();
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#activate()
+    */
+   @Override
+   public void activate()
+   {
+      super.activate();
       refresh();
    }
 
    /**
-    * Update scroller size 
+    * Update scroller size
     */
    private void updateScrollerSize()
    {
@@ -178,48 +165,38 @@ public class ScreenshotView extends ViewPart implements IPartListener
          scroller.setMinSize(new Point(0, 0));
       }
    }
-   
+
    /**
-    * Activate context
+    * @see org.netxms.nxmc.base.views.View#refresh()
     */
-   private void activateContext()
-   {
-      IContextService contextService = (IContextService)getSite().getService(IContextService.class);
-      if (contextService != null)
-      {
-         contextService.activateContext("org.netxms.ui.eclipse.agentmanager.context.ScreenshotView"); //$NON-NLS-1$
-      }
-   }
-   
-   /**
-    * Get new screenshot and refresh image
-    */
+   @Override
    public void refresh()
    {
-      ConsoleJob job = new ConsoleJob(Messages.get().ScreenshotView_JobTitle, this, Activator.PLUGIN_ID) {
+      final long nodeId = getObjectId();
+      Job job = new Job(i18n.tr("Taking screenshot"), this) {
          @Override
-         protected void runInternal(IProgressMonitor monitor) throws Exception
+         protected void run(IProgressMonitor monitor) throws Exception
          {
             try
             {
                if (userSession == null)
                {
-                  Table sessions = session.queryAgentTable(nodeId, "Agent.SessionAgents"); //$NON-NLS-1$
+                  Table sessions = session.queryAgentTable(nodeId, "Agent.SessionAgents");
                   if ((sessions != null) && (sessions.getRowCount() > 0))
                   {
-                     int colIndexName = sessions.getColumnIndex("SESSION_NAME"); //$NON-NLS-1$
-                     int colIndexUser = sessions.getColumnIndex("USER_NAME"); //$NON-NLS-1$
+                     int colIndexName = sessions.getColumnIndex("SESSION_NAME");
+                     int colIndexUser = sessions.getColumnIndex("USER_NAME");
                      for(int i = 0; i < sessions.getRowCount(); i++)
                      {
                         String n = sessions.getCellValue(i, colIndexName);
-                        if ("Console".equalsIgnoreCase(n)) //$NON-NLS-1$
+                        if ("Console".equalsIgnoreCase(n))
                         {
                            userSession = n;
                            userName = sessions.getCellValue(i, colIndexUser);
                            break;
                         }
                      }
-                     
+
                      if (userSession == null)
                      {
                         // Console session not found, use first available
@@ -243,7 +220,7 @@ public class ScreenshotView extends ViewPart implements IPartListener
                            image.dispose();
                         
                         image = null;
-                        errorMessage = Messages.get().ScreenshotView_ErrorNoActiveSessions;
+                        errorMessage = i18n.tr("ERROR (No active sessions or session agent is not running)");
                         canvas.redraw();
                         
                         actionSave.setEnabled(false);
@@ -253,7 +230,7 @@ public class ScreenshotView extends ViewPart implements IPartListener
                   });
                   return;
                }
-               
+
                lastRequestTime = System.currentTimeMillis();
                byteImage = session.takeScreenshot(nodeId, userSession);
                final ImageData data = new ImageData(new ByteArrayInputStream(byteImage));
@@ -268,7 +245,7 @@ public class ScreenshotView extends ViewPart implements IPartListener
                         image.dispose();
                      
                      image = new Image(getDisplay(), data);
-                     imageInfo = userName + "@" + userSession; //$NON-NLS-1$
+                     imageInfo = userName + "@" + userSession;
                      errorMessage = null;
                      canvas.redraw();
 
@@ -293,7 +270,7 @@ public class ScreenshotView extends ViewPart implements IPartListener
                         image.dispose();
                      
                      image = null;
-                     errorMessage = (emsg != null) ? String.format(Messages.get().ScreenshotView_ErrorWithMsg, emsg) : Messages.get().ScreenshotView_ErrorWithoutMsg;
+                     errorMessage = (emsg != null) ? String.format(i18n.tr("ERROR (%s)"), emsg) : i18n.tr("ERROR");
                      canvas.redraw();
 
                      actionSave.setEnabled(false);
@@ -311,7 +288,7 @@ public class ScreenshotView extends ViewPart implements IPartListener
                   @Override
                   public void run()
                   {                     
-                     if (autoRefresh && !canvas.isDisposed() && getSite().getPage().isPartVisible(ScreenshotView.this))
+                     if (autoRefresh && !canvas.isDisposed() && isActive())
                      {
                         refresh();
                      }
@@ -323,7 +300,7 @@ public class ScreenshotView extends ViewPart implements IPartListener
          @Override
          protected String getErrorMessage()
          {
-            return Messages.get().ScreenshotView_JobError;
+            return i18n.tr("Cannot take screenshot");
          }
       };
       job.setUser(false);
@@ -335,16 +312,6 @@ public class ScreenshotView extends ViewPart implements IPartListener
     */
    private void createActions()
    {      
-      final IHandlerService handlerService = (IHandlerService)getSite().getService(IHandlerService.class);
-      
-      actionRefresh = new RefreshAction(this) { 
-         @Override
-         public void run()
-         {
-            refresh();
-         }
-      };
-      
       actionAutoRefresh = new Action("Auto refresh", Action.AS_CHECK_BOX) {
          @Override
          public void run()
@@ -358,16 +325,15 @@ public class ScreenshotView extends ViewPart implements IPartListener
       };
       actionAutoRefresh.setChecked(autoRefresh);
 
-      actionSave = new Action(Messages.get().ScreenshotView_Save, SharedIcons.SAVE) {
+      actionSave = new Action(i18n.tr("&Save..."), SharedIcons.SAVE) {
          @Override
          public void run()
          {
             saveImage();
          }
       };
-      actionSave.setActionDefinitionId("org.netxms.ui.eclipse.agentmanager.commands.save_screenshot"); //$NON-NLS-1$
-      handlerService.activateHandler(actionSave.getActionDefinitionId(), new ActionHandler(actionSave));
       actionSave.setEnabled(false);
+      addKeyBinding("M1+S", actionSave);
    }
 
    /**
@@ -376,20 +342,20 @@ public class ScreenshotView extends ViewPart implements IPartListener
    private void saveImage()
    {
       String id = Long.toString(System.currentTimeMillis());
-      DownloadServiceHandler.addDownload(id, session.getObjectName(nodeId) + "-screenshot-" + new SimpleDateFormat("yyyyMMdd-HHmmss").format(new Date()) + ".png", byteImage, "application/octet-stream"); //$NON-NLS-1$ //$NON-NLS-2$
+      DownloadServiceHandler.addDownload(id, getObjectName() + "-screenshot-" + new SimpleDateFormat("yyyyMMdd-HHmmss").format(new Date()) + ".png", byteImage, "application/octet-stream");
       JavaScriptExecutor executor = RWT.getClient().getService(JavaScriptExecutor.class);
       if (executor != null) 
       {
          StringBuilder js = new StringBuilder();
-         js.append("var hiddenIFrameID = 'hiddenDownloader',"); //$NON-NLS-1$
-         js.append("   iframe = document.getElementById(hiddenIFrameID);"); //$NON-NLS-1$
-         js.append("if (iframe === null) {"); //$NON-NLS-1$
-         js.append("   iframe = document.createElement('iframe');"); //$NON-NLS-1$
-         js.append("   iframe.id = hiddenIFrameID;"); //$NON-NLS-1$
-         js.append("   iframe.style.display = 'none';"); //$NON-NLS-1$
-         js.append("   document.body.appendChild(iframe);"); //$NON-NLS-1$
-         js.append("}"); //$NON-NLS-1$
-         js.append("iframe.src = '"); //$NON-NLS-1$
+         js.append("var hiddenIFrameID = 'hiddenDownloader',");
+         js.append("   iframe = document.getElementById(hiddenIFrameID);");
+         js.append("if (iframe === null) {");
+         js.append("   iframe = document.createElement('iframe');");
+         js.append("   iframe.id = hiddenIFrameID;");
+         js.append("   iframe.style.display = 'none';");
+         js.append("   document.body.appendChild(iframe);");
+         js.append("}");
+         js.append("iframe.src = '");
          js.append(DownloadServiceHandler.createDownloadUrl(id));
          js.append("';"); //$NON-NLS-1$
          executor.execute(js.toString());
@@ -404,101 +370,35 @@ public class ScreenshotView extends ViewPart implements IPartListener
    {
       canvas.setFocus();
    }
-   
-   /**
-    * Contribute actions to action bar
-    */
-   private void contributeToActionBars()
-   {
-      IActionBars bars = getViewSite().getActionBars();
-      fillLocalPullDown(bars.getMenuManager());
-      fillLocalToolBar(bars.getToolBarManager());
-   }
 
    /**
-    * Fill local pull-down menu
-    * 
-    * @param manager
-    *           Menu manager for pull-down menu
+    * @see org.netxms.nxmc.base.views.View#fillLocalMenu(org.eclipse.jface.action.MenuManager)
     */
-   private void fillLocalPullDown(IMenuManager manager)
+   @Override
+   protected void fillLocalMenu(MenuManager manager)
    {
       manager.add(actionSave);
       manager.add(new Separator());
-      manager.add(actionRefresh);
       manager.add(actionAutoRefresh);
    }
 
    /**
-    * Fill local tool bar
-    * 
-    * @param manager
-    *           Menu manager for local toolbar
+    * @see org.netxms.nxmc.base.views.View#fillLocalToolbar(org.eclipse.jface.action.ToolBarManager)
     */
-   private void fillLocalToolBar(IToolBarManager manager)
+   @Override
+   protected void fillLocalToolbar(ToolBarManager manager)
    {
       manager.add(actionSave);
-      manager.add(new Separator());
-      manager.add(actionRefresh);
    }
 
    /**
-    * @see org.eclipse.ui.part.WorkbenchPart#dispose()
+    * @see org.netxms.nxmc.base.views.View#dispose()
     */
    @Override
    public void dispose()
    {
-      getSite().getPage().removePartListener(this);
       if (image != null)
          image.dispose();
       super.dispose();
-   }
-
-   /**
-    * @see org.eclipse.ui.IPartListener#partActivated(org.eclipse.ui.IWorkbenchPart)
-    */
-   @Override
-   public void partActivated(IWorkbenchPart part)
-   {
-      if (autoRefresh && getSite().getPage().isPartVisible(ScreenshotView.this))
-      {
-         refresh();
-      }
-   }
-
-   /**
-    * @see org.eclipse.ui.IPartListener#partBroughtToTop(org.eclipse.ui.IWorkbenchPart)
-    */
-   @Override
-   public void partBroughtToTop(IWorkbenchPart part)
-   {
-      if (autoRefresh && getSite().getPage().isPartVisible(ScreenshotView.this))
-      {
-         refresh();
-      }
-   }
-
-   /**
-    * @see org.eclipse.ui.IPartListener#partClosed(org.eclipse.ui.IWorkbenchPart)
-    */
-   @Override
-   public void partClosed(IWorkbenchPart part)
-   {
-   }
-
-   /**
-    * @see org.eclipse.ui.IPartListener#partDeactivated(org.eclipse.ui.IWorkbenchPart)
-    */
-   @Override
-   public void partDeactivated(IWorkbenchPart part)
-   {      
-   }
-
-   /**
-    * @see org.eclipse.ui.IPartListener#partOpened(org.eclipse.ui.IWorkbenchPart)
-    */
-   @Override
-   public void partOpened(IWorkbenchPart part)
-   {
    }
 }

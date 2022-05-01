@@ -35,6 +35,7 @@ import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.NXCSession;
 import org.netxms.client.ScheduledTask;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.Node;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.Perspective;
@@ -47,6 +48,8 @@ import org.netxms.nxmc.modules.agentmanagement.PackageDeployment;
 import org.netxms.nxmc.modules.agentmanagement.dialogs.SelectDeployPackage;
 import org.netxms.nxmc.modules.agentmanagement.views.PackageDeploymentMonitor;
 import org.netxms.nxmc.modules.objects.dialogs.MaintanenceScheduleDialog;
+import org.netxms.nxmc.modules.objects.views.ScreenshotView;
+import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
 import org.netxms.nxmc.tools.MessageDialogHelper;
 import org.xnap.commons.i18n.I18n;
@@ -68,6 +71,7 @@ public class ObjectContextMenuManager extends MenuManager
    private Action actionLeaveMaintenance;
    private Action actionScheduleMaintenance;
    private Action actionProperties;
+   private Action actionTakeScreenshot;
 
    /**
     * Create new obejct context menu manager.
@@ -157,6 +161,14 @@ public class ObjectContextMenuManager extends MenuManager
             ObjectPropertiesManager.openObjectPropertiesDialog(getObjectFromSelection(), getShell());
          }
       };
+
+      actionTakeScreenshot = new Action(i18n.tr("&Take screenshot"), ResourceManager.getImageDescriptor("icons/screenshot.png")) {
+         @Override
+         public void run()
+         {
+            openScreenshotView();
+         }
+      };
    }
 
    /**
@@ -189,7 +201,19 @@ public class ObjectContextMenuManager extends MenuManager
       add(actionDelete);
       add(new Separator());
 
+      // TODO: do not show package deployment menu if not applicable to any selected object
       add(actionDeployPackage);
+
+      // Screenshots, etc. for single node
+      if (singleObject)
+      {
+         AbstractObject object = getObjectFromSelection();
+         if ((object instanceof Node) && ((Node)object).hasAgent() && ((Node)object).getPlatformName().startsWith("windows-"))
+         {
+            add(new Separator());
+            add(actionTakeScreenshot);
+         }
+      }
 
       final Menu toolsMenu = ObjectMenuFactory.createToolsMenu((IStructuredSelection)selectionProvider.getSelection(), getMenu(), null, new ViewPlacement(view));
       if (toolsMenu != null)
@@ -467,6 +491,27 @@ public class ObjectContextMenuManager extends MenuManager
                return i18n.tr("Cannot delete object");
             }
          }.start();
+      }
+   }
+
+   /**
+    * Open screenshot view
+    */
+   private void openScreenshotView()
+   {
+      AbstractObject object = getObjectFromSelection();
+      if (!(object instanceof Node))
+         return;
+
+      ScreenshotView screenshotView = new ScreenshotView((Node)object, null, null);
+      if (view.getPerspective() != null)
+      {
+         view.getPerspective().addMainView(screenshotView, true, false);
+      }
+      else
+      {
+         PopOutViewWindow window = new PopOutViewWindow(screenshotView);
+         window.open();
       }
    }
 }

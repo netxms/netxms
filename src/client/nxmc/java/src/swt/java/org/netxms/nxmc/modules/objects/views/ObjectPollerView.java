@@ -49,8 +49,6 @@ public class ObjectPollerView extends AdHocObjectView
 {
    private static final I18n i18n = LocalizationHelper.getI18n(ObjectPollerView.class);
 
-   public static final String ID = "ObjectPollerView";
-
    private static final String[] POLL_NAME = {
          "",
          i18n.tr("Status Poll"), 
