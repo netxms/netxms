@@ -49,7 +49,7 @@ public class DeploymentStatusLabelProvider extends LabelProvider implements ITab
 	{
 		workbenchLabelProvider = new WorkbenchLabelProvider();
 		imageActive = Activator.getImageDescriptor("icons/active.gif").createImage(); //$NON-NLS-1$
-		imagePending = Activator.getImageDescriptor("icons/pending.gif").createImage(); //$NON-NLS-1$
+		imagePending = Activator.getImageDescriptor("icons/pending.png").createImage(); //$NON-NLS-1$
 		imageCompleted = Activator.getImageDescriptor("icons/complete.png").createImage(); //$NON-NLS-1$
 		imageFailed = Activator.getImageDescriptor("icons/failed.png").createImage(); //$NON-NLS-1$
 	}
