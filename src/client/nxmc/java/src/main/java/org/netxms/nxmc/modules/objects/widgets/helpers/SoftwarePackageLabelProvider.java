@@ -43,7 +43,7 @@ public class SoftwarePackageLabelProvider extends LabelProvider implements ITabl
 		super();
 		this.treeMode = treeMode;
 	   objectLabelProvider = new DecoratingObjectLabelProvider();
-	   imgPackage = ResourceManager.getImageDescriptor("icons/package.gif").createImage();
+	   imgPackage = ResourceManager.getImageDescriptor("icons/package.png").createImage();
 	}
 
 	/* (non-Javadoc)

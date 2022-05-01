@@ -48,7 +48,7 @@ public class PackagesConfigurationElement implements ConfigurationPerspectiveEle
    @Override
    public ImageDescriptor getImage()
    {
-      return ResourceManager.getImageDescriptor("icons/config-views/package.gif");
+      return ResourceManager.getImageDescriptor("icons/config-views/package-manager.png");
    }
 
    /**
