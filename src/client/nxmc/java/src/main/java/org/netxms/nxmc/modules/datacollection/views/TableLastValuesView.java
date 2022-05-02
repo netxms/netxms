@@ -69,7 +69,7 @@ public class TableLastValuesView extends ObjectView
 
    public TableLastValuesView(AbstractObject contextObject, long ownerId, long dciId)
    {
-      super(i18n.tr("Table Last Value"), ResourceManager.getImageDescriptor("icons/object-views/table.gif"), 
+      super(i18n.tr("Table Last Value"), ResourceManager.getImageDescriptor("icons/object-views/table-value.png"), 
             buildId(contextObject, dciId), true);
       
       contextId = contextObject.getObjectId();
@@ -100,7 +100,7 @@ public class TableLastValuesView extends ObjectView
     */
    public TableLastValuesView()
    {
-      super(i18n.tr("Table Last Value"), ResourceManager.getImageDescriptor("icons/object-views/table.gif"), UUID.randomUUID().toString(), true); 
+      super(i18n.tr("Table Last Value"), ResourceManager.getImageDescriptor("icons/object-views/table-value.png"), UUID.randomUUID().toString(), true); 
    }
 
    /**

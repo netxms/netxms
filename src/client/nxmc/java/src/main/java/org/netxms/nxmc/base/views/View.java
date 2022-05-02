@@ -331,6 +331,17 @@ public abstract class View implements MessageAreaHolder
    }
 
    /**
+    * Called by framework when view in folder or standalone window is about to be closed. View can cancel close operation by
+    * returning false.
+    *
+    * @return true to allow close operation to continue
+    */
+   public boolean beforeClose()
+   {
+      return true;
+   }
+
+   /**
     * Dispose view 
     */
    public void dispose()

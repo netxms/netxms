@@ -46,6 +46,7 @@ import org.netxms.nxmc.base.windows.PopOutViewWindow;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.agentmanagement.PackageDeployment;
 import org.netxms.nxmc.modules.agentmanagement.dialogs.SelectDeployPackage;
+import org.netxms.nxmc.modules.agentmanagement.views.AgentConfigEditorView;
 import org.netxms.nxmc.modules.agentmanagement.views.PackageDeploymentMonitor;
 import org.netxms.nxmc.modules.objects.dialogs.MaintanenceScheduleDialog;
 import org.netxms.nxmc.modules.objects.views.ScreenshotView;
@@ -72,6 +73,7 @@ public class ObjectContextMenuManager extends MenuManager
    private Action actionScheduleMaintenance;
    private Action actionProperties;
    private Action actionTakeScreenshot;
+   private Action actionEditAgentConfig;
 
    /**
     * Create new obejct context menu manager.
@@ -169,6 +171,14 @@ public class ObjectContextMenuManager extends MenuManager
             openScreenshotView();
          }
       };
+
+      actionEditAgentConfig = new Action(i18n.tr("Edit agent configuration"), ResourceManager.getImageDescriptor("icons/object-views/agent-config.png")) {
+         @Override
+         public void run()
+         {
+            openAgentConfigEditor();
+         }
+      };
    }
 
    /**
@@ -201,6 +211,13 @@ public class ObjectContextMenuManager extends MenuManager
       add(actionDelete);
       add(new Separator());
 
+      if (singleObject)
+      {
+         AbstractObject object = getObjectFromSelection();
+         if ((object instanceof Node) && ((Node)object).hasAgent())
+            add(actionEditAgentConfig);
+
+      }
       // TODO: do not show package deployment menu if not applicable to any selected object
       add(actionDeployPackage);
 
@@ -511,6 +528,27 @@ public class ObjectContextMenuManager extends MenuManager
       else
       {
          PopOutViewWindow window = new PopOutViewWindow(screenshotView);
+         window.open();
+      }
+   }
+
+   /**
+    * Open agent configuration editor
+    */
+   private void openAgentConfigEditor()
+   {
+      AbstractObject object = getObjectFromSelection();
+      if (!(object instanceof Node))
+         return;
+
+      AgentConfigEditorView editor = new AgentConfigEditorView((Node)object);
+      if (view.getPerspective() != null)
+      {
+         view.getPerspective().addMainView(editor, true, false);
+      }
+      else
+      {
+         PopOutViewWindow window = new PopOutViewWindow(editor);
          window.open();
       }
    }

@@ -93,7 +93,7 @@ public class ScreenshotView extends AdHocObjectView
     */
    public ScreenshotView(AbstractNode node, String userSession, String userName)
    {
-      super("Screenshot", ResourceManager.getImageDescriptor("icons/screenshot.png"), "Screenshot", node.getObjectId(), false);
+      super(i18n.tr("Screenshot"), ResourceManager.getImageDescriptor("icons/screenshot.png"), "Screenshot", node.getObjectId(), false);
       this.userSession = userSession;
       this.userName = userName;
       session = Registry.getSession();

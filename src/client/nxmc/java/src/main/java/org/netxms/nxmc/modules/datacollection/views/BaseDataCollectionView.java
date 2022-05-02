@@ -339,7 +339,7 @@ public abstract class BaseDataCollectionView extends ObjectView
          }
       };
 
-      actionRawLineChart = new Action(i18n.tr("&Raw Data Line chart"), ResourceManager.getImageDescriptor("icons/chart_line.png")) {
+      actionRawLineChart = new Action(i18n.tr("&Raw data line chart"), ResourceManager.getImageDescriptor("icons/chart_line.png")) {
          @Override
          public void run()
          {
@@ -355,7 +355,7 @@ public abstract class BaseDataCollectionView extends ObjectView
          }
       };
       
-      actionShowTableData = new Action(i18n.tr("Table Last Value"), ResourceManager.getImageDescriptor("icons/table.gif")) {
+      actionShowTableData = new Action(i18n.tr("Table last value"), ResourceManager.getImageDescriptor("icons/object-views/table-value.png")) {
          @Override
          public void run()
          {

@@ -50,7 +50,7 @@ public abstract class ConfigurationView extends View
    {
       super(name, image, id, hasFilter);
    }
-   
+
    /**
     * Check if view content is modified and requires saving.
     *

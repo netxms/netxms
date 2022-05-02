@@ -37,12 +37,14 @@ import org.eclipse.swt.widgets.ToolBar;
 import org.eclipse.swt.widgets.ToolItem;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.Node;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.Perspective;
 import org.netxms.nxmc.base.views.PerspectiveConfiguration;
 import org.netxms.nxmc.base.views.ViewPlacement;
 import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.agentmanagement.views.AgentConfigEditorView;
 import org.netxms.nxmc.modules.alarms.views.AlarmsView;
 import org.netxms.nxmc.modules.businessservice.views.BusinessServiceAvailabilityView;
 import org.netxms.nxmc.modules.businessservice.views.BusinessServiceChecksView;
@@ -67,6 +69,7 @@ import org.netxms.nxmc.modules.objects.views.SoftwareInventoryView;
 import org.netxms.nxmc.modules.objects.views.SwitchForwardingDatabaseView;
 import org.netxms.nxmc.modules.snmp.views.MibExplorer;
 import org.netxms.nxmc.modules.worldmap.views.ObjectGeoLocationView;
+import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
 import org.netxms.nxmc.tools.FontTools;
 import org.netxms.nxmc.tools.MessageDialogHelper;
@@ -84,6 +87,7 @@ public abstract class ObjectsPerspective extends Perspective
    private Label objectName;
    private ToolBar objectToolBar;
    private ToolBar objectMenuBar;
+   private Image imageEditConfig;
 
    /**
     * Create new object perspective
@@ -97,6 +101,7 @@ public abstract class ObjectsPerspective extends Perspective
    {
       super(id, name, image);
       this.subtreeType = subtreeType;
+      imageEditConfig = ResourceManager.getImage("icons/object-views/agent-config.png");
    }
 
    /**
@@ -214,6 +219,17 @@ public abstract class ObjectsPerspective extends Perspective
             ObjectPropertiesManager.openObjectPropertiesDialog(object, getWindow().getShell());
          }
       });
+
+      if ((object instanceof Node) && ((Node)object).hasAgent())
+      {
+         addObjectToolBarItem(i18n.tr("Edit agent configuration"), imageEditConfig, new Runnable() {
+            @Override
+            public void run()
+            {
+               addMainView(new AgentConfigEditorView((Node)object), true, false);
+            }
+         });
+      }
 
       addObjectToolBarItem(i18n.tr("Delete"), SharedIcons.IMG_DELETE_OBJECT, new Runnable() {
          @Override

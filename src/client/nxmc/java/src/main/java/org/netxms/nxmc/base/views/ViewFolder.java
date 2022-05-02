@@ -28,12 +28,13 @@ import org.eclipse.jface.action.ToolBarManager;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
+import org.eclipse.swt.custom.CTabFolder2Adapter;
+import org.eclipse.swt.custom.CTabFolderEvent;
 import org.eclipse.swt.custom.CTabItem;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.FillLayout;
@@ -100,7 +101,8 @@ public class ViewFolder extends Composite
       this.perspective = perspective;
       setLayout(new FillLayout());
       tabFolder = new CTabFolder(this, SWT.TOP | SWT.BORDER);
-      tabFolder.addSelectionListener(new SelectionListener() {
+      tabFolder.setUnselectedCloseVisible(true);
+      tabFolder.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
          {
@@ -112,14 +114,19 @@ public class ViewFolder extends Composite
             }
             fireSelectionListeners(view);
          }
-
+      });
+      tabFolder.addCTabFolder2Listener(new CTabFolder2Adapter() {
          @Override
-         public void widgetDefaultSelected(SelectionEvent e)
+         public void close(CTabFolderEvent event)
          {
-            widgetSelected(e);
+            CTabItem tabItem = tabFolder.getSelection();
+            View view = (tabItem != null) ? (View)tabItem.getData("view") : null;
+            if (view != null)
+            {
+               event.doit = view.beforeClose();
+            }
          }
       });
-      tabFolder.setUnselectedCloseVisible(true);
 
       topRightControl = new Composite(tabFolder, SWT.NONE);
       GridLayout layout = new GridLayout();
