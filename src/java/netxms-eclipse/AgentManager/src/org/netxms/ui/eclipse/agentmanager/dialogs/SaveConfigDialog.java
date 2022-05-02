@@ -22,6 +22,8 @@ import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CLabel;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -60,9 +62,9 @@ public class SaveConfigDialog extends Dialog
 		newShell.setText(Messages.get().SaveConfigDialog_UnsavedChanges);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#createButtonsForButtonBar(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#createButtonsForButtonBar(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected void createButtonsForButtonBar(Composite parent)
 	{
@@ -72,9 +74,9 @@ public class SaveConfigDialog extends Dialog
 		createButton(parent, IDialogConstants.CANCEL_ID, Messages.get().SaveConfigDialog_Cancel, false);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createDialogArea(Composite parent)
 	{
@@ -89,7 +91,14 @@ public class SaveConfigDialog extends Dialog
 		
 		final Label image = new Label(dialogArea, SWT.NONE);
 		image.setImage(Activator.getImageDescriptor("icons/unsaved_config.png").createImage()); //$NON-NLS-1$
-		
+      image.addDisposeListener(new DisposeListener() {
+         @Override
+         public void widgetDisposed(DisposeEvent e)
+         {
+            image.getImage().dispose();
+         }
+      });
+
 		final CLabel text = new CLabel(dialogArea, SWT.LEFT);
 		text.setText(Messages.get().SaveConfigDialog_ModifiedMessage);
 		GridData gd = new GridData();
