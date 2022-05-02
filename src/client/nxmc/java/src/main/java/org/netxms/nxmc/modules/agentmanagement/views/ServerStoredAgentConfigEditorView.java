@@ -328,10 +328,8 @@ public class ServerStoredAgentConfigEditorView extends ConfigurationView
       configList.getControl().setMenu(menu);
    }
 
-   /*
-    * (non-Javadoc)
-    * 
-    * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
+   /**
+    * @see org.netxms.nxmc.base.views.View#setFocus()
     */
    @Override
    public void setFocus()

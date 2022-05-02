@@ -1253,7 +1253,7 @@ bool Config::setValue(const TCHAR *path, const uuid& value)
 
 /**
  * Find comment start in INI style config line
- * Comment starts with # character, characters within double quotes ignored
+ * Comment starts with # character, characters within single or double quotes ignored
  */
 static TCHAR *FindComment(TCHAR *str)
 {
@@ -1268,14 +1268,20 @@ static TCHAR *FindComment(TCHAR *str)
          return nullptr;
    }
 
-   bool quotes = false;
+   bool squotes = false, dquotes = false;
    for(; *curr != 0; curr++)
    {
       if (*curr == _T('"'))
       {
-         quotes = !quotes;
+         if (!squotes)
+            dquotes = !dquotes;
       }
-      else if ((*curr == _T('#')) && !quotes)
+      else if (*curr == _T('\''))
+      {
+         if (!dquotes)
+            squotes = !squotes;
+      }
+      else if ((*curr == _T('#')) && !squotes && !dquotes)
       {
          return curr;
       }
