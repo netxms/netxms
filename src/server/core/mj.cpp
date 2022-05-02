@@ -288,11 +288,11 @@ void NXSL_MaintenanceJournalRecordClass::toString(StringBuffer *sb, NXSL_Object 
    sb->append(_T("MaintenanceJournalRecord { authorId="));
    sb->append(record->authorId);
    sb->append(_T(", creationTime="));
-   sb->append(record->creationTime);
+   sb->append(static_cast<int64_t>(record->creationTime));
    sb->append(_T(", editorId="));
    sb->append(record->editorId);
    sb->append(_T(", modificationTime="));
-   sb->append(record->modificationTime);
+   sb->append(static_cast<int64_t>(record->modificationTime));
    sb->append(_T(", objectId="));
    sb->append(record->objectId);
    sb->append(_T(", description=\""));
