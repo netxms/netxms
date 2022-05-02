@@ -76,6 +76,7 @@ import org.netxms.client.events.Alarm;
 import org.netxms.client.events.AlarmComment;
 import org.netxms.client.events.EventInfo;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.DataCollectionTarget;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.alarmviewer.Activator;
 import org.netxms.ui.eclipse.alarmviewer.Messages;
