@@ -152,7 +152,7 @@ int main(int argc, char *argv[])
    bool start = true, encrypt = true, repeat = false;
    UINT32 repeatInterval = 100, repeatCount = 10000;
 
-   InitNetXMSProcess(true);
+   InitNetXMSProcess(true, true);
 
    // Parse command line
    opterr = 1;

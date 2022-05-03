@@ -174,7 +174,7 @@ static BOOL AddValue(char *pair)
  */
 static void DebugCallback(const TCHAR *pMsg)
 {
-	_tprintf(_T("NXCL: %s\n"), pMsg);
+   _tprintf(_T("NXCL: %s\n"), pMsg);
 }
 
 /**
@@ -449,16 +449,16 @@ static void usage(char *argv0)
  */
 int main(int argc, char *argv[])
 {
-	int ret = 0;
-	int c;
+   int ret = 0;
 
-	InitNetXMSProcess(true);
+   InitNetXMSProcess(true, true);
 
-	opterr = 0;
+   opterr = 0;
+   int c;
 #if HAVE_DECL_GETOPT_LONG
-	while ((c = getopt_long(argc, argv, SHORT_OPTIONS, longOptions, NULL)) != -1)
+   while ((c = getopt_long(argc, argv, SHORT_OPTIONS, longOptions, NULL)) != -1)
 #else
-	while ((c = getopt(argc, argv, SHORT_OPTIONS)) != -1)
+   while ((c = getopt(argc, argv, SHORT_OPTIONS)) != -1)
 #endif
 	{
 		switch(c)
@@ -607,8 +607,8 @@ int main(int argc, char *argv[])
 			_tprintf(_T("No valid pairs found; nothing to send\n"));
 			ret = 2;
 		}
-	}
-	Teardown();
+   }
+   Teardown();
 
-	return ret;
+   return ret;
 }

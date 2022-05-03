@@ -267,14 +267,14 @@ static void DebugWriter(const TCHAR *tag, const TCHAR *format, va_list args)
 #ifdef _WIN32
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine, int nCmdShow)
 {
-   InitNetXMSProcess(true);
+   InitNetXMSProcess(true, true);
 
    int argc;
    WCHAR **argv = CommandLineToArgvW(GetCommandLineW(), &argc);
 #else
 int main(int argc, char *argv[])
 {
-   InitNetXMSProcess(true);
+   InitNetXMSProcess(true, true);
 #endif
 
    opterr = 0;

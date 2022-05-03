@@ -242,7 +242,7 @@ static void DebugWriter(const TCHAR *tag, const TCHAR *format, va_list args)
  */
 int main(int argc, char *argv[])
 {
-   InitNetXMSProcess(true);
+   InitNetXMSProcess(true, true);
 
    opterr = 0;
    int c, debug = 0;

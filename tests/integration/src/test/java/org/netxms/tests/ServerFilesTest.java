@@ -35,7 +35,7 @@ public class ServerFilesTest extends AbstractSessionTest
 
       ServerFile[] files = session.listServerFiles();
       for(ServerFile f : files)
-         System.out.println(f.getName() + " size=" + f.getSize() + " modified: " + f.getModificationTime().toString());
+         System.out.println(f.getName() + " size=" + f.getSize() + " modified: " + f.getModificationTime());
 
       session.disconnect();
    }

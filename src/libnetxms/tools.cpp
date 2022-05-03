@@ -80,6 +80,11 @@ static Condition s_shutdownCondition(true);
 static bool s_shutdownFlag = false;
 
 /**
+ * Client application indicator
+ */
+static bool s_isClientApp = false;
+
+/**
  * Original console codepage
  */
 #ifdef _WIN32
@@ -146,9 +151,10 @@ static void InvalidParameterHandler(const wchar_t *expression, const wchar_t *fu
  *
  * @param commandLineTool set to true for command line tool initialization
  */
-void LIBNETXMS_EXPORTABLE InitNetXMSProcess(bool commandLineTool)
+void LIBNETXMS_EXPORTABLE InitNetXMSProcess(bool commandLineTool, bool isClientApp)
 {
    InitThreadLibrary();
+   s_isClientApp = isClientApp;
 
    // Set locale to C. It shouldn't be needed, according to
    // documentation, but I've seen the cases when agent formats
@@ -3375,6 +3381,29 @@ void LIBNETXMS_EXPORTABLE SetNetXMSDataDirectory(const TCHAR *dir)
    s_dataDirectory = MemCopyString(dir);
 }
 
+#ifdef _WIN32
+
+/**
+ * Get installation path from registry
+ */
+static inline bool GetInstallationPath(const TCHAR *prefix, TCHAR *installPath)
+{
+   TCHAR keyName[128] = _T("Software\\NetXMS\\");
+   _tcscat(keyName, prefix);
+
+   HKEY hKey;
+   bool found = false;
+   if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, keyName, 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
+   {
+      DWORD size = MAX_PATH * sizeof(TCHAR);
+      found = (RegQueryValueEx(hKey, _T("InstallPath"), nullptr, nullptr, (BYTE *)installPath, &size) == ERROR_SUCCESS);
+      RegCloseKey(hKey);
+   }
+   return found;
+}
+
+#endif
+
 /**
  * Get NetXMS directory
  */
@@ -3441,34 +3470,11 @@ void LIBNETXMS_EXPORTABLE GetNetXMSDirectory(nxDirectoryType type, TCHAR *dir)
 
 #ifdef _WIN32
    TCHAR installPath[MAX_PATH] = _T("");
-   HKEY hKey;
-   bool found = false;
-   if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T("Software\\NetXMS\\Server"), 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
-   {
-      DWORD size = MAX_PATH * sizeof(TCHAR);
-      found = (RegQueryValueEx(hKey, _T("InstallPath"), NULL, NULL, (BYTE *)installPath, &size) == ERROR_SUCCESS);
-      RegCloseKey(hKey);
-   }
-
+   bool found = GetInstallationPath(s_isClientApp ? _T("Client") : _T("Server"), installPath);
    if (!found)
-   {
-      if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T("Software\\NetXMS\\Agent"), 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
-      {
-         DWORD size = MAX_PATH * sizeof(TCHAR);
-         found = (RegQueryValueEx(hKey, _T("InstallPath"), NULL, NULL, (BYTE *)installPath, &size) == ERROR_SUCCESS);
-         RegCloseKey(hKey);
-      }
-   }
-
-   if (!found)
-   {
-      if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T("Software\\NetXMS\\Client"), 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
-      {
-         DWORD size = MAX_PATH * sizeof(TCHAR);
-         found = (RegQueryValueEx(hKey, _T("InstallPath"), NULL, NULL, (BYTE *)installPath, &size) == ERROR_SUCCESS);
-         RegCloseKey(hKey);
-      }
-   }
+      found = GetInstallationPath(_T("Agent"), installPath);
+   if (!found && s_isClientApp)
+      found = GetInstallationPath(_T("Server"), installPath);
 
    if (!found && (GetModuleFileName(nullptr, installPath, MAX_PATH) > 0))
    {

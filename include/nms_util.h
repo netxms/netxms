@@ -4249,7 +4249,7 @@ char LIBNETXMS_EXPORTABLE *Ip6ToStrA(const BYTE *addr, char *buffer);
 #endif
 TCHAR LIBNETXMS_EXPORTABLE *SockaddrToStr(struct sockaddr *addr, TCHAR *buffer);
 
-void LIBNETXMS_EXPORTABLE InitNetXMSProcess(bool commandLineTool);
+void LIBNETXMS_EXPORTABLE InitNetXMSProcess(bool commandLineTool, bool isClientApp = false);
 void LIBNETXMS_EXPORTABLE InitiateProcessShutdown();
 bool LIBNETXMS_EXPORTABLE SleepAndCheckForShutdown(uint32_t seconds);
 bool LIBNETXMS_EXPORTABLE SleepAndCheckForShutdownEx(uint32_t milliseconds);

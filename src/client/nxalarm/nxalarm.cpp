@@ -90,7 +90,7 @@ int main(int argc, char *argv[])
    int timeout = 3, ackTimeout = 0;
 	int ch;
 
-   InitNetXMSProcess(true);
+   InitNetXMSProcess(true, true);
 
    // Parse command line
    opterr = 1;

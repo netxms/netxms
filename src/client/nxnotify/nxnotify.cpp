@@ -51,7 +51,7 @@ int main(int argc, char *argv[])
    DWORD rcc, timeout = 3;
    int ch;
 
-   InitNetXMSProcess(true);
+   InitNetXMSProcess(true, true);
 
    // Parse command line
    opterr = 1;
