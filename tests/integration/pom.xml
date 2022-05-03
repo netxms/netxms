@@ -5,13 +5,12 @@
   <groupId>org.netxms</groupId>
   <artifactId>netxms-integration-tests</artifactId>
   <packaging>jar</packaging>
-  <version>${revision}</version>
+  <version>4.1-SNAPSHOT</version>
   <name>netxms-integration-test</name>
   <description>NetXMS client api integration tests</description>
   <url>http://www.netxms.org</url>
 
   <properties>
-    <revision>4.0-SNAPSHOT</revision>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <build.finalName>${project.artifactId}-${project.version}</build.finalName>
   </properties>
