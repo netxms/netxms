@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,6 +30,7 @@ import org.netxms.ui.eclipse.serverconfig.views.NotificationChannels;
  */
 public class NotificationChannelLabelProvider extends LabelProvider implements ITableLabelProvider
 {
+   private final String[] sendStatusText = { "Unknown", "Success", "Failure" };
    private Image imageInactive;
    private Image imageActive;
 
@@ -38,7 +39,7 @@ public class NotificationChannelLabelProvider extends LabelProvider implements I
       imageInactive = Activator.getImageDescriptor("icons/inactive.gif").createImage(); //$NON-NLS-1$
       imageActive = Activator.getImageDescriptor("icons/active.gif").createImage(); //$NON-NLS-1$
    }
-   
+
    /**
     * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
     */
@@ -58,16 +59,20 @@ public class NotificationChannelLabelProvider extends LabelProvider implements I
 	{
 		switch(columnIndex)
 		{
-			case NotificationChannels.COLUMN_NAME:
-				return ((NotificationChannel)element).getName();
 			case NotificationChannels.COLUMN_DESCRIPTION:
 				return ((NotificationChannel)element).getDescription();
-			case NotificationChannels.COLUMN_DRIVER:
-				return ((NotificationChannel)element).getDriverName();
-         case NotificationChannels.COLUMN_LAST_STATUS:
-            return ((NotificationChannel)element).getLastStatusAsString();
+         case NotificationChannels.COLUMN_DRIVER:
+            return ((NotificationChannel)element).getDriverName();
          case NotificationChannels.COLUMN_ERROR_MESSAGE:
             return ((NotificationChannel)element).getErrorMessage();
+         case NotificationChannels.COLUMN_FAILED_MESSAGES:
+            return Integer.toString(((NotificationChannel)element).getFailureCount());
+         case NotificationChannels.COLUMN_LAST_STATUS:
+            return sendStatusText[((NotificationChannel)element).getSendStatus()];
+         case NotificationChannels.COLUMN_NAME:
+            return ((NotificationChannel)element).getName();
+         case NotificationChannels.COLUMN_TOTAL_MESSAGES:
+            return Integer.toString(((NotificationChannel)element).getMessageCount());
 		}
 		return null;
 	}

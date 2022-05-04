@@ -25,6 +25,7 @@ import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
+import org.eclipse.jface.action.ToolBarManager;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
@@ -58,35 +59,33 @@ import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
- * SNotification channels view
+ * Notification channels view
  */
 public class NotificationChannels extends ConfigurationView
 {
    private static final I18n i18n = LocalizationHelper.getI18n(NotificationChannels.class);
-   private static final String ID = "NotificationChannels";
 
-   // Columns
    public static final int COLUMN_NAME = 0;
    public static final int COLUMN_DESCRIPTION = 1;
    public static final int COLUMN_DRIVER = 2;
-   public static final int COLUMN_LAST_STATUS = 3;
-   public static final int COLUMN_ERROR_MESSAGE = 4;
-   
+   public static final int COLUMN_TOTAL_MESSAGES = 3;
+   public static final int COLUMN_FAILED_MESSAGES = 4;
+   public static final int COLUMN_LAST_STATUS = 5;
+   public static final int COLUMN_ERROR_MESSAGE = 6;
+
    private NXCSession session;
    private SessionListener listener;
-   private List<NotificationChannel> notificationChannelList;
    private SortableTableViewer viewer;
    private Action actionNewChannel;
    private Action actionEditChannel;
    private Action actionDeleteChannel;
-   private NotificationChannel selectedChannel;  
 
    /**
     * Create notification channels view
     */
    public NotificationChannels()
    {
-      super(i18n.tr("Notification Channels"), ResourceManager.getImageDescriptor("icons/config-views/nchannels.png"), ID, true);
+      super(i18n.tr("Notification Channels"), ResourceManager.getImageDescriptor("icons/config-views/nchannels.png"), "NotificationChannels", true);
       session = Registry.getSession();
    }
 
@@ -95,11 +94,11 @@ public class NotificationChannels extends ConfigurationView
     */
    @Override
    protected void createContent(Composite parent)
-   {      
-      final int[] widths = { 80, 200, 80, 80, 400 };
-      final String[] names = { i18n.tr("Name"), i18n.tr("Description"), i18n.tr("Driver"), i18n.tr("Status"), i18n.tr("Error message") };
+   {
+      final int[] widths = { 160, 250, 100, 100, 100, 80, 400 };
+      final String[] names = { i18n.tr("Name"), i18n.tr("Description"), i18n.tr("Driver"), i18n.tr("Messages"), i18n.tr("Failures"), i18n.tr("Status"), i18n.tr("Error message") };
       viewer = new SortableTableViewer(parent, names, widths, COLUMN_NAME, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
-      WidgetHelper.restoreTableViewerSettings(viewer, ID);
+      WidgetHelper.restoreTableViewerSettings(viewer, "NotificationChannelList");
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setLabelProvider(new NotificationChannelLabelProvider());
       viewer.setComparator(new NotificationChannelListComparator());
@@ -117,22 +116,22 @@ public class NotificationChannels extends ConfigurationView
          @Override
          public void selectionChanged(SelectionChangedEvent event)
          {
-            IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+            IStructuredSelection selection = viewer.getStructuredSelection();
             actionEditChannel.setEnabled(selection.size() == 1);
             actionDeleteChannel.setEnabled(selection.size() > 0);
          }
       });
-      
+
       viewer.getTable().addDisposeListener(new DisposeListener() {
          @Override
          public void widgetDisposed(DisposeEvent e)
          {
-            WidgetHelper.saveTableViewerSettings(viewer, ID);
+            WidgetHelper.saveTableViewerSettings(viewer, "NotificationChannelList");
          }
       });
-      
+
       createActions();
-      createPopupMenu();
+      createContextMenu();
 
       final Display display = viewer.getControl().getDisplay();
       listener = new SessionListener() {
@@ -178,7 +177,7 @@ public class NotificationChannels extends ConfigurationView
     */
    private void createActions()
    {      
-      actionNewChannel = new Action(i18n.tr("Create new channel"), SharedIcons.ADD_OBJECT) {
+      actionNewChannel = new Action(i18n.tr("&New..."), SharedIcons.ADD_OBJECT) {
          @Override
          public void run()
          {
@@ -186,7 +185,7 @@ public class NotificationChannels extends ConfigurationView
          }
       };
       
-      actionEditChannel = new Action(i18n.tr("Edit"), SharedIcons.EDIT) {
+      actionEditChannel = new Action(i18n.tr("&Edit..."), SharedIcons.EDIT) {
          @Override
          public void run()
          {
@@ -195,11 +194,11 @@ public class NotificationChannels extends ConfigurationView
       };
       actionEditChannel.setEnabled(false);
       
-      actionDeleteChannel = new Action(i18n.tr("Delete"), SharedIcons.DELETE_OBJECT) {
+      actionDeleteChannel = new Action(i18n.tr("&Delete"), SharedIcons.DELETE_OBJECT) {
          @Override
          public void run()
          {
-            deleteChannel();
+            deleteChannels();
          }
       };
       actionDeleteChannel.setEnabled(false);
@@ -208,7 +207,7 @@ public class NotificationChannels extends ConfigurationView
    /**
     * Create pop-up menu for variable list
     */
-   private void createPopupMenu()
+   private void createContextMenu()
    {
       // Create menu manager.
       MenuManager menuMgr = new MenuManager();
@@ -229,11 +228,29 @@ public class NotificationChannels extends ConfigurationView
     * Fill context menu
     * @param mgr Menu manager
     */
-   protected void fillContextMenu(IMenuManager mgr)
+   private void fillContextMenu(IMenuManager mgr)
    {
       mgr.add(actionNewChannel);
       mgr.add(actionEditChannel);
       mgr.add(actionDeleteChannel);
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#fillLocalToolbar(org.eclipse.jface.action.ToolBarManager)
+    */
+   @Override
+   protected void fillLocalToolbar(ToolBarManager manager)
+   {
+      manager.add(actionNewChannel);
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#fillLocalMenu(org.eclipse.jface.action.MenuManager)
+    */
+   @Override
+   protected void fillLocalMenu(MenuManager manager)
+   {
+      manager.add(actionNewChannel);
    }
 
    /**
@@ -242,24 +259,24 @@ public class NotificationChannels extends ConfigurationView
    @Override
    public void refresh()
    {
-      new Job(i18n.tr("Get notification channels"), this) {
+      new Job(i18n.tr("Reading list of notification channels"), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            notificationChannelList = session.getNotificationChannels();
+            final List<NotificationChannel> channels = session.getNotificationChannels();
             runInUIThread(new Runnable() {
                @Override
                public void run()
                {
-                  viewer.setInput(notificationChannelList);
+                  viewer.setInput(channels);
                }
             });
          }
-         
+
          @Override
          protected String getErrorMessage()
          {
-            return i18n.tr("Error while getting notificaiton channels");
+            return i18n.tr("Cannot get list of notification channels");
          }
       }.start();
    }
@@ -272,20 +289,20 @@ public class NotificationChannels extends ConfigurationView
       final NotificationChannelPropertiesDialog dlg = new NotificationChannelPropertiesDialog(getWindow().getShell(), null);
       if (dlg.open() != Window.OK)
          return;
-      
-      selectedChannel = dlg.getNotificaiotnChannel();
-      
+
+      final NotificationChannel channel = dlg.getNotificaiotnChannel();
+
       new Job(i18n.tr("Create notification channel"), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            session.createNotificationChannel(selectedChannel);
+            session.createNotificationChannel(channel);
          }
-         
+
          @Override
          protected String getErrorMessage()
          {
-            return i18n.tr("Error creating notifiction channel");
+            return i18n.tr("Cannot create notification channel");
          }
       }.start();
    }
@@ -295,65 +312,65 @@ public class NotificationChannels extends ConfigurationView
     */
    private void editChannel()
    {
-      IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-      if ((selection == null) || (selection.size() != 1))
+      IStructuredSelection selection = viewer.getStructuredSelection();
+      if (selection.size() != 1)
          return;
-      
-      selectedChannel = (NotificationChannel)selection.getFirstElement();
-      final NotificationChannelPropertiesDialog dlg = new NotificationChannelPropertiesDialog(getWindow().getShell(), selectedChannel);
+
+      final NotificationChannel channel = (NotificationChannel)selection.getFirstElement();
+      final NotificationChannelPropertiesDialog dlg = new NotificationChannelPropertiesDialog(getWindow().getShell(), channel);
       if (dlg.open() != Window.OK)
          return;
-      
-      new Job(i18n.tr("Update notification channel"), this) {
+
+      new Job(i18n.tr("Updating notification channel"), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            session.updateNotificationChannel(selectedChannel);
-            if(dlg.isNameChanged())
+            session.updateNotificationChannel(channel);
+            if (dlg.isNameChanged())
             {
-               session.renameNotificationChannel(selectedChannel.getName(), dlg.getNewName());
+               session.renameNotificationChannel(channel.getName(), dlg.getNewName());
             }
          }
-         
+
          @Override
          protected String getErrorMessage()
          {
-            return i18n.tr("Error updating notification channel");
+            return i18n.tr("Cannot update notification channel");
          }
       }.start();
    }
 
    /**
-    * Delete selected notification channel
+    * Delete selected channels
     */
-   private void deleteChannel()
+   private void deleteChannels()
    {
-      IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-      if ((selection == null) || (selection.size() == 0))
+      IStructuredSelection selection = viewer.getStructuredSelection();
+      if (selection.isEmpty())
          return;
 
-      if (!MessageDialogHelper.openQuestion(getWindow().getShell(), i18n.tr("Delete notification channels"), i18n.tr("Are you sure you want to delete notification channels?")))
+      if (!MessageDialogHelper.openQuestion(getWindow().getShell(), i18n.tr("Delete Channels"), i18n.tr("Are you sure you want to delete selected notification channels?")))
          return;
-      
+
       final List<String> channels = new ArrayList<String>(selection.size());
       for(Object o : selection.toList())
       {
          if (o instanceof NotificationChannel)
             channels.add(((NotificationChannel)o).getName());
       }
-      
-      new Job(i18n.tr("Delete notification channel"), this) {
+
+      new Job(i18n.tr("Deleting notification channel"), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
             for(String name : channels)
                session.deleteNotificationChannel(name);
          }
-         
+
          @Override
          protected String getErrorMessage()
          {
-            return i18n.tr("Error deleting notifiction channel");
+            return i18n.tr("Cannot delete notification channel");
          }
       }.start();
    }

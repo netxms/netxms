@@ -24,6 +24,7 @@
 #include <agent_tunnel.h>
 #include <entity_mib.h>
 #include <ethernet_ip.h>
+#include <ncdrv.h>
 
 #define DEBUG_TAG_DC_AGENT_CACHE    _T("dc.agent.cache")
 #define DEBUG_TAG_ICMP_POLL         _T("poll.icmp")
@@ -71,6 +72,11 @@ int64_t GetSyncerRunTime(StatisticType statType);
  * Get internal metric from performance data storage driver
  */
 DataCollectionError GetPerfDataStorageDriverMetric(const TCHAR *driver, const TCHAR *metric, TCHAR *value);
+
+/**
+ * Get status of notification channel
+ */
+bool GetNotificationChannelStatus(const TCHAR *name, NotificationChannelStatus *status);
 
 /**
  * Poll cancellation checkpoint
@@ -6960,6 +6966,22 @@ static DataCollectionError GetEventProcessorStatistic(const TCHAR *param, int ty
 }
 
 /**
+ * Get notification channel status and execute provided callback
+ */
+static DataCollectionError GetNotificationChannelStatus(const TCHAR *metric, std::function<void (const NotificationChannelStatus&)> callback)
+{
+   TCHAR channel[64];
+   AgentGetParameterArg(metric, 1, channel, 64);
+
+   NotificationChannelStatus status;
+   if (!GetNotificationChannelStatus(channel, &status))
+      return DCE_NO_SUCH_INSTANCE;
+
+   callback(status);
+   return DCE_SUCCESS;
+}
+
+/**
  * Get value for server's internal parameter
  */
 DataCollectionError Node::getInternalMetric(const TCHAR *name, TCHAR *buffer, size_t size)
@@ -7328,6 +7350,30 @@ DataCollectionError Node::getInternalMetric(const TCHAR *name, TCHAR *buffer, si
       else if (!_tcsicmp(name, _T("Server.MemoryUsage.RawDataWriter")))
       {
          ret_uint64(buffer, GetRawDataWriterMemoryUsage());
+      }
+      else if (MatchString(_T("Server.NotificationChannel.HealthCheckStatus(*)"), name, false))
+      {
+         rc = GetNotificationChannelStatus(name, [buffer](const NotificationChannelStatus& status) { ret_boolean(buffer, status.healthCheckStatus); });
+      }
+      else if (MatchString(_T("Server.NotificationChannel.LastMessageTimestamp(*)"), name, false))
+      {
+         rc = GetNotificationChannelStatus(name, [buffer](const NotificationChannelStatus& status) { ret_uint64(buffer, status.lastMessageTime); });
+      }
+      else if (MatchString(_T("Server.NotificationChannel.MessageCount(*)"), name, false))
+      {
+         rc = GetNotificationChannelStatus(name, [buffer](const NotificationChannelStatus& status) { ret_uint(buffer, status.messageCount); });
+      }
+      else if (MatchString(_T("Server.NotificationChannel.QueueSize(*)"), name, false))
+      {
+         rc = GetNotificationChannelStatus(name, [buffer](const NotificationChannelStatus& status) { ret_uint(buffer, status.queueSize); });
+      }
+      else if (MatchString(_T("Server.NotificationChannel.SendFailureCount(*)"), name, false))
+      {
+         rc = GetNotificationChannelStatus(name, [buffer](const NotificationChannelStatus& status) { ret_uint(buffer, status.failedSendCount); });
+      }
+      else if (MatchString(_T("Server.NotificationChannel.SendStatus(*)"), name, false))
+      {
+         rc = GetNotificationChannelStatus(name, [buffer](const NotificationChannelStatus& status) { ret_boolean(buffer, status.sendStatus); });
       }
       else if (!_tcsicmp(name, _T("Server.ObjectCount.Clusters")))
       {

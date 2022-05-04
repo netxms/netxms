@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Raden Solutions
+ * Copyright (C) 2021-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -60,62 +60,64 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
- * List of notification channels
+ * Notification channels view
  */
 public class NotificationChannels extends ViewPart
 {
    public static final String ID = "org.netxms.ui.eclipse.serverconfig.views.NotificationChannels"; //$NON-NLS-1$
 
-	public static final int COLUMN_NAME = 0;
-	public static final int COLUMN_DESCRIPTION = 1;
-	public static final int COLUMN_DRIVER = 2;
-	public static final int COLUMN_LAST_STATUS = 3;
-	public static final int COLUMN_ERROR_MESSAGE = 4;
-	
+   public static final int COLUMN_NAME = 0;
+   public static final int COLUMN_DESCRIPTION = 1;
+   public static final int COLUMN_DRIVER = 2;
+   public static final int COLUMN_TOTAL_MESSAGES = 3;
+   public static final int COLUMN_FAILED_MESSAGES = 4;
+   public static final int COLUMN_LAST_STATUS = 5;
+   public static final int COLUMN_ERROR_MESSAGE = 6;
+
    private NXCSession session = ConsoleSharedData.getSession();
-	private SessionListener listener;
-	private SortableTableViewer viewer;
-	private Action actionRefresh;
-	private Action actionNewChannel;
-	private Action actionEditChannel;
-	private Action actionDeleteChannel;
+   private SessionListener listener;
+   private SortableTableViewer viewer;
+   private Action actionRefresh;
+   private Action actionNewChannel;
+   private Action actionEditChannel;
+   private Action actionDeleteChannel;
 
    /**
     * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
     */
-	@Override
-	public void createPartControl(Composite parent)
-	{
-		final int[] widths = { 80, 200, 80, 80, 400 };
-		final String[] names = { "Name", "Description", "Driver", "Status", "Error message" };
-		viewer = new SortableTableViewer(parent, names, widths, COLUMN_NAME, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
-		viewer.setContentProvider(new ArrayContentProvider());
-		viewer.setLabelProvider(new NotificationChannelLabelProvider());
-		viewer.setComparator(new NotificationChannelListComparator());
-		viewer.addDoubleClickListener(new IDoubleClickListener() {
-			@Override
-			public void doubleClick(DoubleClickEvent event)
-			{
-				editChannel();
-			}
-		});
-		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
-			@Override
-			public void selectionChanged(SelectionChangedEvent event)
-			{
-				IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-				actionEditChannel.setEnabled(selection.size() == 1);
-				actionDeleteChannel.setEnabled(selection.size() > 0);
-			}
-		});
-		
+   @Override
+   public void createPartControl(Composite parent)
+   {
+      final int[] widths = { 160, 250, 100, 100, 100, 80, 400 };
+      final String[] names = { "Name", "Description", "Driver", "Messages", "Failures", "Status", "Error message" };
+      viewer = new SortableTableViewer(parent, names, widths, COLUMN_NAME, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
+      viewer.setContentProvider(new ArrayContentProvider());
+      viewer.setLabelProvider(new NotificationChannelLabelProvider());
+      viewer.setComparator(new NotificationChannelListComparator());
+      viewer.addDoubleClickListener(new IDoubleClickListener() {
+         @Override
+         public void doubleClick(DoubleClickEvent event)
+         {
+            editChannel();
+         }
+      });
+      viewer.addSelectionChangedListener(new ISelectionChangedListener() {
+         @Override
+         public void selectionChanged(SelectionChangedEvent event)
+         {
+            IStructuredSelection selection = viewer.getStructuredSelection();
+            actionEditChannel.setEnabled(selection.size() == 1);
+            actionDeleteChannel.setEnabled(selection.size() > 0);
+         }
+      });
+
 		final IDialogSettings settings = Activator.getDefault().getDialogSettings();
-		WidgetHelper.restoreTableViewerSettings(viewer, settings, "NotificationChannelList"); //$NON-NLS-1$
-		viewer.getTable().addDisposeListener(new DisposeListener() {
+      WidgetHelper.restoreTableViewerSettings(viewer, settings, "NotificationChannelList.V2"); //$NON-NLS-1$
+      viewer.getTable().addDisposeListener(new DisposeListener() {
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{
-				WidgetHelper.saveTableViewerSettings(viewer, settings, "NotificationChannelList"); //$NON-NLS-1$
+            WidgetHelper.saveTableViewerSettings(viewer, settings, "NotificationChannelList.V2"); //$NON-NLS-1$
 			}
 		});
 
@@ -142,8 +144,8 @@ public class NotificationChannels extends ViewPart
 				}
 			}
 		};
-		session.addListener(listener);
-	}
+      session.addListener(listener);
+   }
 
    /**
     * @see org.eclipse.ui.part.WorkbenchPart#dispose()
@@ -177,7 +179,7 @@ public class NotificationChannels extends ViewPart
 				refresh();
 			}
 		};
-		
+
       actionNewChannel = new Action("&New...", SharedIcons.ADD_OBJECT) {
 			@Override
 			public void run()
@@ -234,7 +236,7 @@ public class NotificationChannels extends ViewPart
 		manager.add(new Separator());
 		manager.add(actionRefresh);
 	}
-	
+
 	/**
 	 * Create pop-up menu for variable list
 	 */
@@ -253,10 +255,6 @@ public class NotificationChannels extends ViewPart
 		// Create menu.
 		Menu menu = menuMgr.createContextMenu(viewer.getControl());
 		viewer.getControl().setMenu(menu);
-
-		// Register menu for extension.
-      getSite().setSelectionProvider(viewer);
-		getSite().registerContextMenu(menuMgr, viewer);
 	}
 
 	/**
@@ -275,7 +273,7 @@ public class NotificationChannels extends ViewPart
     */
    private void refresh()
    {
-      new ConsoleJob("Get notification channels", this, Activator.PLUGIN_ID, null) {
+      new ConsoleJob("Reading list of notification channels", this, Activator.PLUGIN_ID) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
@@ -297,33 +295,33 @@ public class NotificationChannels extends ViewPart
       }.start();
    }
 
-	/**
-	 * Create new table
-	 */
-	private void createNewChannel()
-	{
-	   final NotificationChannelEditDialog dlg = new NotificationChannelEditDialog(getSite().getShell(), null);
+   /**
+    * Create new channel
+    */
+   private void createNewChannel()
+   {
+      final NotificationChannelEditDialog dlg = new NotificationChannelEditDialog(getSite().getShell(), null);
       if (dlg.open() != Window.OK)
          return;
-		
-      final NotificationChannel channel = dlg.getChannel();
-		new ConsoleJob("Create notification channel", this, Activator.PLUGIN_ID, null) {
-			@Override
-			protected void runInternal(IProgressMonitor monitor) throws Exception
-			{
-				session.createNotificationChannel(channel);
-			}
 
-			@Override
-			protected String getErrorMessage()
-			{
+      final NotificationChannel channel = dlg.getChannel();
+      new ConsoleJob("Create notification channel", this, Activator.PLUGIN_ID, null) {
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            session.createNotificationChannel(channel);
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
             return "Cannot create notification channel";
-			}
-		}.start();
-	}
+         }
+      }.start();
+   }
 
    /**
-    * Edit selected table
+    * Edit selected notification channel
     */
    private void editChannel()
    {
@@ -336,7 +334,7 @@ public class NotificationChannels extends ViewPart
       if (dlg.open() != Window.OK)
          return;
 
-      new ConsoleJob("Update notification channel", this, Activator.PLUGIN_ID, null) {
+      new ConsoleJob("Updating notification channel", this, Activator.PLUGIN_ID) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
@@ -374,7 +372,7 @@ public class NotificationChannels extends ViewPart
             channels.add(((NotificationChannel)o).getName());
       }
 
-      new ConsoleJob("Delete notification channel", this, Activator.PLUGIN_ID, null) {
+      new ConsoleJob("Deleting notification channel", this, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {

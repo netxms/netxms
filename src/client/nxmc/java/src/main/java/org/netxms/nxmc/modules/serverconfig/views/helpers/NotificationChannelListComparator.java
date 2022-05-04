@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,32 +30,38 @@ import org.netxms.nxmc.modules.serverconfig.views.NotificationChannels;
  */
 public class NotificationChannelListComparator extends ViewerComparator
 {
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ViewerComparator#compare(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.ViewerComparator#compare(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
+    */
 	@Override
 	public int compare(Viewer viewer, Object e1, Object e2)
 	{
 		int result;
-		
+
 		NotificationChannel nc1 = (NotificationChannel)e1;
 		NotificationChannel nc2 = (NotificationChannel)e2;
 		switch((Integer)((SortableTableViewer)viewer).getTable().getSortColumn().getData("ID")) //$NON-NLS-1$
 		{
-			case NotificationChannels.COLUMN_NAME:
-				result = nc1.getName().compareToIgnoreCase(nc2.getName());
-				break;
          case NotificationChannels.COLUMN_DRIVER:
             result = nc1.getDriverName().compareToIgnoreCase(nc2.getDriverName());
             break;
 			case NotificationChannels.COLUMN_DESCRIPTION:
 				result = nc1.getDescription().compareToIgnoreCase(nc2.getDescription());
 				break;
-         case NotificationChannels.COLUMN_LAST_STATUS:
-            result = nc1.getLastStatusAsString().compareToIgnoreCase(nc2.getLastStatusAsString());
-            break;
          case NotificationChannels.COLUMN_ERROR_MESSAGE:
             result = nc1.getErrorMessage().compareToIgnoreCase(nc2.getErrorMessage());
+            break;
+         case NotificationChannels.COLUMN_FAILED_MESSAGES:
+            result = Integer.compare(nc1.getFailureCount(), nc2.getFailureCount());
+            break;
+         case NotificationChannels.COLUMN_LAST_STATUS:
+            result = nc1.getSendStatus() - nc2.getSendStatus();
+            break;
+         case NotificationChannels.COLUMN_NAME:
+            result = nc1.getName().compareToIgnoreCase(nc2.getName());
+            break;
+         case NotificationChannels.COLUMN_TOTAL_MESSAGES:
+            result = Integer.compare(nc1.getMessageCount(), nc2.getMessageCount());
             break;
 			default:
 				result = 0;

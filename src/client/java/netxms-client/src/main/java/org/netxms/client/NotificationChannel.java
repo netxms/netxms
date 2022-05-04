@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,15 +18,19 @@
  */
 package org.netxms.client;
 
+import java.util.Date;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 
 /**
- * Represents NetXMS server's action
- *
+ * Represents NetXMS server's notification channel
  */
 public class NotificationChannel
 {
+   public static final int SEND_STATUS_UNKNOWN = 0;
+   public static final int SEND_STATUS_SUCCESS = 1;
+   public static final int SEND_STATUS_FAILURE = 2;
+
 	private String name;
 	private String description;
 	private String driverName;
@@ -34,8 +38,12 @@ public class NotificationChannel
 	private boolean isActive;
 	private NCConfigurationTemplate configurationTemplate;
 	private String errorMessage;
-	private int lastStatus;
-	
+	private int sendStatus;
+   private boolean healthCheckStatus;
+   private Date lastMessageTimestamp;
+   private int messageCount;
+   private int failureCount;
+
 	/**
 	 * Create notification channel object from NXCP message
 	 * 
@@ -51,9 +59,13 @@ public class NotificationChannel
       isActive = msg.getFieldAsBoolean(baseId + 4);
       configurationTemplate = new NCConfigurationTemplate(msg, baseId + 5);
       errorMessage = msg.getFieldAsString(baseId + 7);
-      lastStatus = msg.getFieldAsInt32(baseId + 8);
+      sendStatus = msg.getFieldAsInt32(baseId + 8);
+      healthCheckStatus = msg.getFieldAsBoolean(baseId + 9);
+      lastMessageTimestamp = msg.getFieldAsDate(baseId + 10);
+      messageCount = msg.getFieldAsInt32(baseId + 11);
+      failureCount = msg.getFieldAsInt32(baseId + 12);
 	}
-	
+
 	/**
 	 * Create empty notification channel object.
 	 */
@@ -173,16 +185,40 @@ public class NotificationChannel
    /**
     * @return the lastStatus
     */
-   public int getLastStatus()
+   public int getSendStatus()
    {
-      return lastStatus;
+      return sendStatus;
    }
 
    /**
-    * @return the lastStatus
+    * @return the healthCheckStatus
     */
-   public String getLastStatusAsString()
+   public boolean getHealthCheckStatus()
    {
-      return lastStatus == 0 ? "Unknown" : lastStatus == 1 ? "Success" : "Error";
+      return healthCheckStatus;
+   }
+
+   /**
+    * @return the lastMessageTimestamp
+    */
+   public Date getLastMessageTimestamp()
+   {
+      return lastMessageTimestamp;
+   }
+
+   /**
+    * @return the messageCount
+    */
+   public int getMessageCount()
+   {
+      return messageCount;
+   }
+
+   /**
+    * @return the failureCount
+    */
+   public int getFailureCount()
+   {
+      return failureCount;
    }
 }

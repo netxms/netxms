@@ -32,6 +32,19 @@
 #define NCDRV_API_VERSION           3
 
 /**
+ * Notification channel status
+ */
+struct NotificationChannelStatus
+{
+   bool sendStatus;           // Status of last send
+   bool healthCheckStatus;    // Status of driver health check
+   uint32_t queueSize;        // Current queue size
+   uint32_t messageCount;     // Total number of sent messages
+   uint32_t failedSendCount;  // Number of failed send operations
+   time_t lastMessageTime;    // Timestamp of last message send attempt
+};
+
+/**
  * Notification channel configuration template
  */
 struct NCConfigurationTemplate

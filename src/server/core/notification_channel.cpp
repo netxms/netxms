@@ -204,14 +204,17 @@ private:
    const NCConfigurationTemplate *m_confTemplate;
    TCHAR m_errorMessage[MAX_NC_ERROR_MESSAGE];
    NCDriverServerStorageManager *m_storageManager;
-   NCSendStatus m_lastStatus;
-   bool m_lastHealthCheckStatus;
+   NCSendStatus m_sendStatus;
+   bool m_healthCheckStatus;
+   time_t m_lastMessageTime;
+   uint32_t m_messageCount;
+   uint32_t m_failureCount;
 
    void setError(const TCHAR *message)
    {
-      if (m_lastStatus != NCSendStatus::FAILED || _tcscmp(m_errorMessage, message) != 0)
+      if (m_sendStatus != NCSendStatus::FAILED || _tcscmp(m_errorMessage, message) != 0)
       {
-         m_lastStatus = NCSendStatus::FAILED;
+         m_sendStatus = NCSendStatus::FAILED;
          _tcslcpy(m_errorMessage, message, MAX_NC_ERROR_MESSAGE);
          NotifyClientSessions(NX_NOTIFY_NC_CHANNEL_CHANGED, 0);
       }
@@ -219,9 +222,9 @@ private:
 
    void clearError()
    {
-      if (m_lastStatus != NCSendStatus::SUCCESS)
+      if (m_sendStatus != NCSendStatus::SUCCESS)
       {
-         m_lastStatus = NCSendStatus::SUCCESS;
+         m_sendStatus = NCSendStatus::SUCCESS;
          m_errorMessage[0] = 0;
          NotifyClientSessions(NX_NOTIFY_NC_CHANNEL_CHANGED, 0);
       }
@@ -239,6 +242,7 @@ public:
    void fillMessage(NXCPMessage *msg, uint32_t base);
    const TCHAR *getName() const { return m_name; }
    const char *getConfiguration() const { return m_configuration; }
+   void getStatus(NotificationChannelStatus *status);
 
    void update(const TCHAR *description, const TCHAR *driverName, const char *config);
    void updateName(const TCHAR *newName) { _tcslcpy(m_name, newName, MAX_OBJECT_NAME); }
@@ -311,9 +315,12 @@ NotificationChannel::NotificationChannel(NCDriver *driver, NCDriverServerStorage
    _tcslcpy(m_driverName, driverName, MAX_OBJECT_NAME);
    m_configuration = config;
    _tcslcpy(m_errorMessage, errorMessage, MAX_NC_ERROR_MESSAGE);
-   m_lastStatus = NCSendStatus::UNKNOWN;
+   m_sendStatus = NCSendStatus::UNKNOWN;
+   m_healthCheckStatus = false;
+   m_lastMessageTime = 0;
+   m_messageCount = 0;
+   m_failureCount = 0;
    m_workerThread = ThreadCreateEx(this, &NotificationChannel::workerThread);
-   m_lastHealthCheckStatus = false;
 }
 
 /**
@@ -336,11 +343,12 @@ void NotificationChannel::workerThread()
    nxlog_debug_tag(DEBUG_TAG, 2, _T("Worker thread for channel %s started"), m_name);
    while (true)
    {
-      NotificationMessage* notification = m_notificationQueue.getOrBlock();
-
+      NotificationMessage *notification = m_notificationQueue.getOrBlock();
       if (notification == INVALID_POINTER_VALUE)
          break;
 
+      m_messageCount++;
+      m_lastMessageTime = time(nullptr);
       m_driverLock.lock();
       if (m_driver != nullptr)
       {
@@ -364,10 +372,10 @@ void NotificationChannel::workerThread()
          }
          else // failure
          {
-            PostSystemEvent(EVENT_NOTIFICATION_FAILURE, g_dwMgmtNode, "ssss", m_name,
-                            notification->getRecipient(), notification->getSubject(), notification->getBody());
+            PostSystemEvent(EVENT_NOTIFICATION_FAILURE, g_dwMgmtNode, "ssss", m_name, notification->getRecipient(), notification->getSubject(), notification->getBody());
             nxlog_debug_tag(DEBUG_TAG, 4, _T("Driver error for channel %s, message dropped"), m_name);
             setError(_T("Driver error"));
+            m_failureCount++;
          }
          writeNotificationLog(notification->getRecipient(), notification->getSubject(), notification->getBody(), result == 0);
       }
@@ -375,6 +383,7 @@ void NotificationChannel::workerThread()
       {
          nxlog_debug_tag(DEBUG_TAG, 4, _T("No driver for channel %s, message dropped"), m_name);
          setError(_T("Driver not initialized"));
+         m_failureCount++;
       }
       m_driverLock.unlock();
       delete notification;
@@ -396,10 +405,10 @@ void NotificationChannel::checkHealth()
    }
    m_driverLock.unlock();
 
-   if (status != m_lastHealthCheckStatus)
+   if (status != m_healthCheckStatus)
    {
       PostSystemEvent(status ? EVENT_NOTIFICATION_CHANNEL_UP : EVENT_NOTIFICATION_CHANNEL_DOWN, g_dwMgmtNode, "ss", m_name, m_driverName);
-      m_lastHealthCheckStatus = status;
+      m_healthCheckStatus = status;
    }
 }
 
@@ -437,7 +446,11 @@ void NotificationChannel::fillMessage(NXCPMessage *msg, UINT32 base)
       msg->setField(base + 6, true);
    }
    msg->setField(base + 7, m_errorMessage);
-   msg->setField(base + 8, static_cast<int16_t>(m_lastStatus));
+   msg->setField(base + 8, static_cast<int16_t>(m_sendStatus));
+   msg->setField(base + 9, m_healthCheckStatus);
+   msg->setFieldFromTime(base + 10, m_lastMessageTime);
+   msg->setField(base + 11, m_messageCount);
+   msg->setField(base + 12, m_failureCount);
 }
 
 /**
@@ -542,6 +555,19 @@ void NotificationChannel::writeNotificationLog(const TCHAR *recipient, const TCH
    }
 
    DBConnectionPoolReleaseConnection(hdb);
+}
+
+/**
+ * Get channel status
+ */
+void NotificationChannel::getStatus(NotificationChannelStatus *status)
+{
+   status->failedSendCount = m_failureCount;
+   status->healthCheckStatus = m_healthCheckStatus;
+   status->lastMessageTime = m_lastMessageTime;
+   status->messageCount = m_messageCount;
+   status->queueSize = static_cast<uint32_t>(m_notificationQueue.size());
+   status->sendStatus = (m_sendStatus == NCSendStatus::SUCCESS);
 }
 
 /**
@@ -664,7 +690,7 @@ void UpdateNotificationChannel(const TCHAR *name, const TCHAR *description, cons
    s_channelListLock.lock();
    shared_ptr<NotificationChannel> nc = s_channelList.getShared(name);
    s_channelListLock.unlock();
-   if(nc != nullptr)
+   if (nc != nullptr)
       nc->update(description, driverName, configuration);
 }
 
@@ -673,7 +699,7 @@ void UpdateNotificationChannel(const TCHAR *name, const TCHAR *description, cons
  * first - old name
  * second - new name
  */
-static void RenameNotificationChannelInDB(std::pair<TCHAR *, TCHAR *> *names)
+static void RenameNotificationChannelInDB(std::pair<TCHAR*, TCHAR*> *names)
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    bool success = false;
@@ -730,7 +756,7 @@ void RenameNotificationChannel(TCHAR *name, TCHAR *newName)
    {
       nc->updateName(newName);
       s_channelList.set(newName, nc);
-      auto pair = new std::pair<TCHAR *, TCHAR *>(name, newName);
+      auto pair = new std::pair<TCHAR*, TCHAR*>(name, newName);
       UpdateChannelNameInActions(pair);
       ThreadPoolExecuteSerialized(g_mainThreadPool, NC_THREAD_KEY, RenameNotificationChannelInDB, pair);
    }
@@ -748,16 +774,37 @@ void RenameNotificationChannel(TCHAR *name, TCHAR *newName)
 void GetNotificationChannels(NXCPMessage *msg)
 {
    s_channelListLock.lock();
-   uint32_t base = VID_ELEMENT_LIST_BASE;
+   uint32_t fieldId = VID_ELEMENT_LIST_BASE;
    msg->setField(VID_CHANNEL_COUNT, s_channelList.size());
    auto it = s_channelList.begin();
    while(it.hasNext())
    {
       shared_ptr<NotificationChannel> nc = *it.next()->value;
-      nc->fillMessage(msg, base);
-      base += 20;
+      nc->fillMessage(msg, fieldId);
+      fieldId += 20;
    }
    s_channelListLock.unlock();
+}
+
+/**
+ * Get notification channel status
+ */
+bool GetNotificationChannelStatus(const TCHAR *name, NotificationChannelStatus *status)
+{
+   bool success;
+   s_channelListLock.lock();
+   NotificationChannel *nc = s_channelList.get(name);
+   if (nc != nullptr)
+   {
+      nc->getStatus(status);
+      success = true;
+   }
+   else
+   {
+      success = false;
+   }
+   s_channelListLock.unlock();
+   return success;
 }
 
 /**
