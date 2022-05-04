@@ -169,6 +169,12 @@ public class SelectInternalParamDlg extends AbstractSelectParamDlg
          list.add(new AgentParameter("Server.MemoryUsage.Alarms", "Server memory usage: alarms", DataType.UINT64)); //$NON-NLS-1$
          list.add(new AgentParameter("Server.MemoryUsage.DataCollectionCache", "Server memory usage: data collection cache", DataType.UINT64)); //$NON-NLS-1$
          list.add(new AgentParameter("Server.MemoryUsage.RawDataWriter", "Server memory usage: raw data writer", DataType.UINT64)); //$NON-NLS-1$
+         list.add(new AgentParameter("Server.NotificationChannel.HealthCheckStatus(*)", "Notification channel {instance}: health check status", DataType.INT32)); //$NON-NLS-1$
+         list.add(new AgentParameter("Server.NotificationChannel.LastMessageTimestamp(*)", "Notification channel {instance}: timestamp of last message", DataType.UINT64)); //$NON-NLS-1$
+         list.add(new AgentParameter("Server.NotificationChannel.MessageCount(*)", "Notification channel {instance}: total number of messages", DataType.COUNTER32)); //$NON-NLS-1$
+         list.add(new AgentParameter("Server.NotificationChannel.QueueSize(*)", "Notification channel {instance}: queue size", DataType.UINT32)); //$NON-NLS-1$
+         list.add(new AgentParameter("Server.NotificationChannel.SendFailureCount(*)", "Notification channel {instance}: number of send failures", DataType.COUNTER32)); //$NON-NLS-1$
+         list.add(new AgentParameter("Server.NotificationChannel.SendStatus(*)", "Notification channel {instance}: status of last send attempt", DataType.INT32)); //$NON-NLS-1$
          list.add(new AgentParameter("Server.ObjectCount.Clusters", "Objects: clusters", DataType.UINT32)); //$NON-NLS-1$
          list.add(new AgentParameter("Server.ObjectCount.Nodes", "Objects: nodes", DataType.UINT32)); //$NON-NLS-1$
          list.add(new AgentParameter("Server.ObjectCount.Sensors", "Objects: sensors", DataType.UINT32)); //$NON-NLS-1$
