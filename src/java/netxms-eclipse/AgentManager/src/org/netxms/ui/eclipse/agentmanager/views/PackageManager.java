@@ -72,8 +72,8 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
  */
 public class PackageManager extends ViewPart
 {
-	public static final String ID = "org.netxms.ui.eclipse.agentmanager.views.PackageManager"; //$NON-NLS-1$
-	
+   public static final String ID = "org.netxms.ui.eclipse.agentmanager.views.PackageManager"; //$NON-NLS-1$
+
    public static final int COLUMN_ID = 0;
    public static final int COLUMN_NAME = 1;
    public static final int COLUMN_TYPE = 2;
@@ -161,7 +161,7 @@ public class PackageManager extends ViewPart
 				installPackage();
 			}
 		};
-		
+
 		actionRemove = new Action(Messages.get().PackageManager_RemoveAction, SharedIcons.DELETE_OBJECT) {
 			@Override
 			public void run()
@@ -240,10 +240,6 @@ public class PackageManager extends ViewPart
 		// Create menu.
 		Menu menu = menuMgr.createContextMenu(viewer.getControl());
 		viewer.getControl().setMenu(menu);
-
-		// Register menu for extension.
-      getSite().setSelectionProvider(viewer);
-		getSite().registerContextMenu(menuMgr, viewer);
 	}
 
 	/**
@@ -287,7 +283,7 @@ public class PackageManager extends ViewPart
 			}
 		}.start();
 	}
-	
+
 	/**
 	 * Install new package
 	 */
@@ -295,9 +291,9 @@ public class PackageManager extends ViewPart
 	{
 		FileDialog fd = new FileDialog(getSite().getShell(), SWT.OPEN);
 		fd.setText(Messages.get().PackageManager_SelectFile);
-      fd.setFilterExtensions(new String[] { "*.apkg", "*.exe", "*.msi", "*.msp", "*.msu", "*.npi", "*.tgz;*.tar.gz", "*.*" });
+      fd.setFilterExtensions(new String[] { "*.apkg", "*.exe", "*.msi", "*.msp", "*.msu", "*.npi", "*.tgz;*.tar.gz", "*.zip", "*.*" });
       fd.setFilterNames(new String[] { "NetXMS Agent Package", "Executable", "Windows Installer Package", "Windows Installer Patch", "Windows Update Package",
-            Messages.get().PackageManager_FileTypePackage, "Compressed TAR Archive", Messages.get().PackageManager_FileTypeAll });
+            Messages.get().PackageManager_FileTypePackage, "Compressed TAR Archive", "ZIP Archive", Messages.get().PackageManager_FileTypeAll });
 		String packageFileName = fd.open();
       if (packageFileName == null)
          return;
@@ -373,6 +369,10 @@ public class PackageManager extends ViewPart
                   packageInfo = new PackageInfo(name, "", name, "executable", "*", "", "");
                }
             }
+            else if (packageFileName.endsWith(".deb"))
+            {
+               packageInfo = new PackageInfo(name.substring(0, name.length() - 4), "", name, "deb", "Linux-*", "", "");
+            }
             else if (packageFileName.endsWith(".exe"))
             {
                Pattern pattern = Pattern.compile("^nxagent-([0-9]+\\.[0-9]+\\.[0-9]+)(-x64)?\\.exe$", Pattern.CASE_INSENSITIVE);
@@ -401,10 +401,18 @@ public class PackageManager extends ViewPart
             {
                packageInfo = new PackageInfo(name.substring(0, name.lastIndexOf('.')), "", name, name.substring(name.lastIndexOf('.') + 1), "windows-x64", "", "");
             }
+            else if (packageFileName.endsWith(".rpm"))
+            {
+               packageInfo = new PackageInfo(name.substring(0, name.length() - 4), "", name, "rpm", "*", "", "");
+            }
             else if (packageFileName.endsWith(".tar.gz") || packageFileName.endsWith(".tgz"))
             {
                int suffixLen = packageFileName.endsWith(".tar.gz") ? 7 : 4;
                packageInfo = new PackageInfo(name.substring(0, name.length() - suffixLen), "", name, "tgz", "*", "", "");
+            }
+            else if (packageFileName.endsWith(".zip"))
+            {
+               packageInfo = new PackageInfo(name.substring(0, name.length() - 4), "", name, "zip", "*", "", "");
             }
             else
             {

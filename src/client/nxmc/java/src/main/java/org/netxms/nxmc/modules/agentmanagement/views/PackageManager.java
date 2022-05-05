@@ -29,6 +29,7 @@ import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
+import org.eclipse.jface.action.ToolBarManager;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
@@ -140,14 +141,14 @@ public class PackageManager extends ConfigurationView
 	 */
 	private void createActions()
 	{		
-		actionUploadToServer = new Action(i18n.tr("&Upload to server"), SharedIcons.ADD_OBJECT) {
+      actionUploadToServer = new Action(i18n.tr("&Upload to server..."), SharedIcons.ADD_OBJECT) {
 			@Override
 			public void run()
 			{
 				installPackage();
 			}
 		};
-		
+
 		actionRemove = new Action(i18n.tr("&Remove"), SharedIcons.DELETE_OBJECT) {
 			@Override
 			public void run()
@@ -197,6 +198,24 @@ public class PackageManager extends ConfigurationView
 	}
 
 	/**
+    * @see org.netxms.nxmc.base.views.View#fillLocalToolbar(org.eclipse.jface.action.ToolBarManager)
+    */
+   @Override
+   protected void fillLocalToolbar(ToolBarManager manager)
+   {
+      manager.add(actionUploadToServer);
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#fillLocalMenu(org.eclipse.jface.action.MenuManager)
+    */
+   @Override
+   protected void fillLocalMenu(MenuManager manager)
+   {
+      manager.add(actionUploadToServer);
+   }
+
+   /**
     * @see org.netxms.nxmc.base.views.View#refresh()
     */
 	@Override
@@ -233,9 +252,13 @@ public class PackageManager extends ConfigurationView
 	{
 		FileDialog fd = new FileDialog(getWindow().getShell(), SWT.OPEN);
 		fd.setText(i18n.tr("Select Package File"));
-		WidgetHelper.setFileDialogFilterExtensions(fd, new String[] { "*.apkg", "*.exe", "*.msi", "*.msp", "*.msu", "*.npi", "*.tgz;*.tar.gz", "*.*" });
-      WidgetHelper.setFileDialogFilterNames(fd, new String[] { "NetXMS Agent Package", "Executable", "Windows Installer Package", "Windows Installer Patch", "Windows Update Package",
-            i18n.tr("NetXMS Package Info"), "Compressed TAR Archive", i18n.tr("All files") });
+      WidgetHelper.setFileDialogFilterExtensions(fd, new String[] { "*.apkg", "*.exe", "*.msi", "*.msp", "*.msu", "*.npi", "*.tgz;*.tar.gz", "*.zip", "*.*" });
+      WidgetHelper.setFileDialogFilterNames(fd,
+            new String[] {
+                  i18n.tr("NetXMS Agent Package"), i18n.tr("Executable"), i18n.tr("Windows Installer Package"), i18n.tr("Windows Installer Patch"),
+                  i18n.tr("Windows Update Package"), i18n.tr("NetXMS Package Info"), i18n.tr("Compressed TAR Archive"), i18n.tr("ZIP Archive"), 
+                  i18n.tr("All Files")
+            });
 		String packageFileName = fd.open();
       if (packageFileName == null)
          return;
@@ -311,6 +334,10 @@ public class PackageManager extends ConfigurationView
                   packageInfo = new PackageInfo(name, "", name, "executable", "*", "", "");
                }
             }
+            else if (packageFileName.endsWith(".deb"))
+            {
+               packageInfo = new PackageInfo(name.substring(0, name.length() - 4), "", name, "deb", "Linux-*", "", "");
+            }
             else if (packageFileName.endsWith(".exe"))
             {
                Pattern pattern = Pattern.compile("^nxagent-([0-9]+\\.[0-9]+\\.[0-9]+)(-x64)?\\.exe$", Pattern.CASE_INSENSITIVE);
@@ -339,10 +366,18 @@ public class PackageManager extends ConfigurationView
             {
                packageInfo = new PackageInfo(name.substring(0, name.lastIndexOf('.')), "", name, name.substring(name.lastIndexOf('.') + 1), "windows-x64", "", "");
             }
+            else if (packageFileName.endsWith(".rpm"))
+            {
+               packageInfo = new PackageInfo(name.substring(0, name.length() - 4), "", name, "rpm", "*", "", "");
+            }
             else if (packageFileName.endsWith(".tar.gz") || packageFileName.endsWith(".tgz"))
             {
                int suffixLen = packageFileName.endsWith(".tar.gz") ? 7 : 4;
                packageInfo = new PackageInfo(name.substring(0, name.length() - suffixLen), "", name, "tgz", "*", "", "");
+            }
+            else if (packageFileName.endsWith(".zip"))
+            {
+               packageInfo = new PackageInfo(name.substring(0, name.length() - 4), "", name, "zip", "*", "", "");
             }
             else
             {

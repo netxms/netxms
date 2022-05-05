@@ -1291,9 +1291,9 @@ uint32_t CommSession::installPackage(NXCPMessage *request)
          commandLine.append(fullPath);
          commandLine.append(_T("'"));
       }
-      else if (!stricmp(packageType, "/usr/bin/rpm"))
+      else if (!stricmp(packageType, "rpm"))
       {
-         commandLine.append(_T("rpm -i"));
+         commandLine.append(_T("/usr/bin/rpm -i"));
          if (command[0] != 0)
          {
             commandLine.append(_T(" "));
@@ -1317,6 +1317,19 @@ uint32_t CommSession::installPackage(NXCPMessage *request)
          commandLine.append(_T("'"));
       }
 #endif
+      else if (!stricmp(packageType, "zip"))
+      {
+         commandLine.append(_T("unzip"));
+         commandLine.append(_T(" '"));
+         commandLine.append(fullPath);
+         commandLine.append(_T("'"));
+         if (command[0] != 0)
+         {
+            commandLine.append(_T(" -d '"));
+            commandLine.append(command);
+            commandLine.append(_T("'"));
+         }
+      }
 
       writeLog(NXLOG_INFO, _T("Starting package installation using command line %s"), commandLine.cstr());
       PackageInstallerProcessExecutor executor(commandLine, this);

@@ -106,10 +106,14 @@ public class EditPackageMetadataDialog extends Dialog
 
       type = WidgetHelper.createLabeledCombo(dialogArea, SWT.NONE, i18n.tr("Type"), new GridData(SWT.FILL, SWT.BOTTOM, true, false));
       type.add("agent-installer");
+      type.add("deb");
       type.add("executable");
       type.add("msi");
       type.add("msp");
+      type.add("msu");
+      type.add("rpm");
       type.add("tgz");
+      type.add("zip");
       type.setText(packageInfo.getType());
       type.setTextLimit(15);
 

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -102,10 +102,14 @@ public class EditPackageMetadataDialog extends Dialog
 
       type = WidgetHelper.createLabeledCombo(dialogArea, SWT.NONE, "Type", new GridData(SWT.FILL, SWT.BOTTOM, true, false));
       type.add("agent-installer");
+      type.add("deb");
       type.add("executable");
       type.add("msi");
       type.add("msp");
+      type.add("msu");
+      type.add("rpm");
       type.add("tgz");
+      type.add("zip");
       type.setText(packageInfo.getType());
       type.setTextLimit(15);
 
