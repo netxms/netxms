@@ -30,6 +30,7 @@ serverinclude_HEADERS = \
 	nms_users.h \
 	npe.h \
 	nxcore_2fa.h \
+	nxcore_discovery.h \
 	nxcore_jobs.h \
 	nxcore_logs.h \
 	nxcore_schedule.h \
