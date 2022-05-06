@@ -10111,10 +10111,10 @@ void Node::updateInterfaceNames(ClientSession *pSession, UINT32 rqId)
                      if (pInterface->getAlias().isEmpty() || !_tcscmp(pInterface->getIfAlias(), pInterface->getAlias()))
                      {
                         pInterface->setAlias(ifInfo->alias);
-                        sendPollerMsg(POLLER_WARNING _T("   Alias of interface %d changed to %s\r\n"), pInterface->getIfIndex(), ifInfo->alias);
+                        sendPollerMsg(POLLER_WARNING _T("   Alias of interface %u changed to %s\r\n"), pInterface->getIfIndex(), ifInfo->alias);
                      }
                      pInterface->setIfAlias(ifInfo->alias);
-                     sendPollerMsg(POLLER_WARNING _T("   SNMP alias of interface %d changed to %s\r\n"), pInterface->getIfIndex(), ifInfo->alias);
+                     sendPollerMsg(POLLER_WARNING _T("   SNMP alias of interface %u changed to %s\r\n"), pInterface->getIfIndex(), ifInfo->alias);
                   }
                   break;
                }

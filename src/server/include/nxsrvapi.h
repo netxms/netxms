@@ -321,7 +321,7 @@ public:
    uint32_t index;
    TCHAR name[MAX_DB_STRING];			// Interface display name
 	TCHAR description[MAX_DB_STRING];	// Value of ifDescr MIB variable for SNMP agents
-	TCHAR alias[MAX_DB_STRING];	// Value of ifDescr MIB variable for SNMP agents
+	TCHAR alias[MAX_DB_STRING];	// Value of ifAlias MIB variable for SNMP agents
 	uint32_t type;
 	uint32_t mtu;
    uint64_t speed;  // interface speed in bits/sec
