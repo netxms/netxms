@@ -656,26 +656,24 @@ void TelegramDriver::processUpdate(json_t *data)
       if (username == nullptr)
          continue;
 
-      int64_t newId = json_object_get_integer(message, "migrate_to_chat_id", 0);
       m_chatsLock.lock();
       Chat *chatObject = m_chats.get(username);
-      if (newId != 0) // Check group migration to supergroup
+      if (chatObject != nullptr)
       {
-         if (chatObject != nullptr)
+         int64_t id = json_object_get_integer(chat, "id", -1);
+         int64_t newId = json_object_get_integer(message, "migrate_to_chat_id", 0);
+         if ((newId != 0) || (chatObject->id != id)) // newId != 0 means group migration to supergroup
          {
             chatObject->remove(m_storageManager);
-            chatObject->id = newId;
+            chatObject->id = (newId != 0) ? newId : id;
             chatObject->save(m_storageManager);
          }
       }
-      else // Check and create chat object
+      else // Create chat object
       {
-         if (chatObject == nullptr)
-         {
-            chatObject = new Chat(chat);
-            m_chats.set(username, chatObject);
-            chatObject->save(m_storageManager);
-         }
+         chatObject = new Chat(chat);
+         m_chats.set(username, chatObject);
+         chatObject->save(m_storageManager);
       }
       m_chatsLock.unlock();
 
