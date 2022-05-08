@@ -33,9 +33,6 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.graphics.Point;
-import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Widget;
 import org.eclipse.ui.IViewPart;
 import org.netxms.client.NXCSession;
@@ -142,7 +139,7 @@ public class LineChartElement extends ElementWidget implements HistoricalChartOw
             refreshController.dispose();
          }
       });
-		
+
 		if (config.isInteractive())
 		{
 		   createActions();
@@ -191,13 +188,7 @@ public class LineChartElement extends ElementWidget implements HistoricalChartOw
             fillContextMenu(manager);
          }
       });
-	   
-      Menu menu = manager.createContextMenu((Control)chart);
-      ((Control)chart).setMenu(menu);
-      for(Control ch : ((Composite)chart).getChildren())
-      {
-         ch.setMenu(menu);
-      }
+      chart.setMenuManager(manager);
 	}
 
 	/**
@@ -210,7 +201,7 @@ public class LineChartElement extends ElementWidget implements HistoricalChartOw
       MenuManager presets = new MenuManager("&Presets");
       for(int i = 0; i < presetActions.length; i++)
          presets.add(presetActions[i]);
-      
+
       manager.add(presets);
       manager.add(new Separator());
       manager.add(actionAdjustBoth);
