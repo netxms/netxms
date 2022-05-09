@@ -18,6 +18,8 @@
  */
 package org.netxms.ui.eclipse.dashboard.widgets.internal;
 
+import org.netxms.ui.eclipse.dashboard.Activator;
+import org.netxms.ui.eclipse.tools.ColorConverter;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
@@ -44,16 +46,30 @@ public class LabelConfig extends DashboardElementConfig
 	{
 		Serializer serializer = new Persister();
       LabelConfig config = serializer.read(LabelConfig.class, xml);
-      
+
       // Update from old versions
       if ((config.foreground != null) && config.foreground.startsWith("0x"))
       {
-         config.setTitleForeground("#" + config.foreground.substring(2));
+         try
+         {
+            config.setTitleForeground(ColorConverter.rgbToCss(ColorConverter.rgbFromInt(Integer.parseInt(config.foreground.substring(2), 16))));
+         }
+         catch(NumberFormatException e)
+         {
+            Activator.logError("Cannot convert label foreground color \"" + config.foreground + "\"", e);
+         }
          config.foreground = null;
       }
       if ((config.background != null) && config.background.startsWith("0x"))
       {
-         config.setTitleBackground("#" + config.background.substring(2));
+         try
+         {
+            config.setTitleBackground(ColorConverter.rgbToCss(ColorConverter.rgbFromInt(Integer.parseInt(config.background.substring(2), 16))));
+         }
+         catch(NumberFormatException e)
+         {
+            Activator.logError("Cannot convert label background color \"" + config.background + "\"", e);
+         }
          config.background = null;
       }
 
