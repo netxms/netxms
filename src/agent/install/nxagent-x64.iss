@@ -72,6 +72,7 @@ Source: "..\..\install\files\windows\x64\openssl.exe"; DestDir: "{app}\bin"; Fla
 Source: "..\..\install\files\windows\x64\pcre.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\install\files\windows\x64\pcre16.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\install\files\windows\x64\CRT\*"; DestDir: "{app}\bin"; Flags: ignoreversion
+Source: "..\..\install\files\windows\x64\unzip.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\java-common\netxms-base\target\netxms-base-{#VersionString}.jar"; DestDir: "{app}\lib\java"; Flags: ignoreversion
 Source: "..\..\libnxjava\java\target\netxms-java-bridge-{#VersionString}.jar"; DestDir: "{app}\lib\java"; Flags: ignoreversion
 Source: "..\subagents\java\java\target\netxms-agent-{#VersionString}.jar"; DestDir: "{app}\lib\java"; Flags: ignoreversion
