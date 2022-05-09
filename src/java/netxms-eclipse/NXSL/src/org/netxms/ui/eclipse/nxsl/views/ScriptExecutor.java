@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,6 +29,7 @@ import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.commands.ActionHandler;
 import org.eclipse.jface.dialogs.IDialogConstants;
+import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.SashForm;
@@ -41,6 +42,7 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.ISaveablePart2;
@@ -48,9 +50,6 @@ import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.console.IOConsoleOutputStream;
 import org.eclipse.ui.contexts.IContextService;
-import org.eclipse.ui.forms.widgets.Form;
-import org.eclipse.ui.forms.widgets.FormToolkit;
-import org.eclipse.ui.forms.widgets.Section;
 import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
@@ -82,7 +81,7 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
    private boolean doSaveAs = false;
    private long objectId;
 
-   private Form form;
+   private Label scriptName;
    private Combo scriptCombo;
    private ScriptEditor scriptEditor;
    private Text parametersField;
@@ -119,21 +118,18 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
    {
       parent.setLayout(new FillLayout());
 
-      /**** Script executor form ****/
-      FormToolkit toolkit = new FormToolkit(getSite().getShell().getDisplay());
-
       Composite formContainer = new Composite(parent, SWT.NONE);
-      formContainer.setLayout(new FillLayout());      
-      
-      form = toolkit.createForm(formContainer);
-      form.setText(Messages.get().ScriptExecutor_Noname);
-      
       GridLayout layout = new GridLayout();
       layout.verticalSpacing = 8;
-      form.getBody().setLayout(layout);
+      formContainer.setLayout(layout);
+
+      scriptName = new Label(formContainer, SWT.LEFT);
+      scriptName.setFont(JFaceResources.getBannerFont());
+      scriptName.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+      scriptName.setText(Messages.get().ScriptExecutor_Noname);
 
       /**** Script list dropdown ****/
-      scriptCombo = WidgetHelper.createLabeledCombo(form.getBody(), SWT.READ_ONLY, Messages.get().ScriptExecutor_LibScript, WidgetHelper.DEFAULT_LAYOUT_DATA, toolkit);
+      scriptCombo = WidgetHelper.createLabeledCombo(formContainer, SWT.READ_ONLY, Messages.get().ScriptExecutor_LibScript, WidgetHelper.DEFAULT_LAYOUT_DATA);
       updateScriptList(null); 
       scriptCombo.addSelectionListener( new SelectionListener() {
          @Override
@@ -154,8 +150,8 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
             widgetSelected(e);
          }
       });
-      
-      SashForm splitter = new SashForm(form.getBody(), SWT.VERTICAL);
+
+      SashForm splitter = new SashForm(formContainer, SWT.VERTICAL);
       splitter.setSashWidth(3); 
       GridData gridData = new GridData();
       gridData.horizontalAlignment = GridData.FILL;
@@ -163,37 +159,29 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
       gridData.verticalAlignment = SWT.FILL;
       gridData.grabExcessVerticalSpace = true;
       splitter.setLayoutData(gridData);
-      
+
       /**** Script parameters  ****/      
-      Composite container = toolkit.createComposite(splitter);
+      Composite container = new Composite(splitter, SWT.NONE);
       layout = new GridLayout();
       layout.marginHeight = 0;
       layout.marginWidth = 0;
       layout.marginBottom = 4;
       container.setLayout(layout);
-      
-      Section section = toolkit.createSection(container, Section.TITLE_BAR);
-      section.setText("Parameters");
+
+      Label label = new Label(container, SWT.LEFT);
+      label.setText("Parameters (comma-separated list)");
+
+      parametersField = new Text(container, SWT.SINGLE | SWT.BORDER);
       gridData = new GridData();
       gridData.horizontalAlignment = GridData.FILL;
       gridData.grabExcessHorizontalSpace = true;
-      section.setLayoutData(gridData);
-      
-      parametersField = new Text(section, SWT.SINGLE | SWT.BORDER);
-      section.setClient(parametersField);
+      parametersField.setLayoutData(gridData);
 
       /**** Script editor  ****/
-      section = toolkit.createSection(container, Section.TITLE_BAR);
-      section.setText(Messages.get().ScriptExecutor_Source);
-      gridData = new GridData();
-      gridData.horizontalAlignment = GridData.FILL;
-      gridData.grabExcessHorizontalSpace = true;
-      gridData.verticalAlignment = SWT.FILL;
-      gridData.grabExcessVerticalSpace = true;
-      section.setLayoutData(gridData);
-            
-      scriptEditor = new ScriptEditor(section, SWT.BORDER, SWT.H_SCROLL | SWT.V_SCROLL, true);
-      section.setClient(scriptEditor);
+      label = new Label(container, SWT.LEFT);
+      label.setText(Messages.get().ScriptExecutor_Source);
+
+      scriptEditor = new ScriptEditor(container, SWT.BORDER, SWT.H_SCROLL | SWT.V_SCROLL, true);
       scriptEditor.setText(""); //$NON-NLS-1$
       scriptEditor.getTextWidget().addModifyListener(new ModifyListener() {
          @Override
@@ -202,37 +190,36 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
             onTextModify();
          }
       });
-      
-      /**** Execution result ****/
-      container = toolkit.createComposite(splitter);
-      layout = new GridLayout();
-      layout.marginHeight = 0;
-      layout.marginWidth = 0;
-      layout.marginTop = 4;
-      container.setLayout(layout);
-      section = toolkit.createSection(container, Section.TITLE_BAR);
-      section.setText(Messages.get().ScriptExecutor_Output);
       gridData = new GridData();
       gridData.horizontalAlignment = GridData.FILL;
       gridData.grabExcessHorizontalSpace = true;
       gridData.verticalAlignment = SWT.FILL;
       gridData.grabExcessVerticalSpace = true;
-      section.setLayoutData(gridData);
-      
-      output = new TextConsole(section, SWT.BORDER);
-      section.setClient(output);
-      /*executionResult.addSelectionListener(new SelectionAdapter() {
-         @Override
-         public void widgetSelected(SelectionEvent e)
-         {
-            actionCopy.setEnabled(executionResult.getSelectionCount() > 0);
-         }
-      });*/ // TODO: Think how to split copy action between 2 editors
-      
+      scriptEditor.setLayoutData(gridData);
+
+      /**** Execution result ****/
+      container = new Composite(splitter, SWT.NONE);
+      layout = new GridLayout();
+      layout.marginHeight = 0;
+      layout.marginWidth = 0;
+      layout.marginTop = 4;
+      container.setLayout(layout);
+
+      label = new Label(container, SWT.LEFT);
+      label.setText(Messages.get().ScriptExecutor_Output);
+
+      output = new TextConsole(container, SWT.BORDER);
+      gridData = new GridData();
+      gridData.horizontalAlignment = GridData.FILL;
+      gridData.grabExcessHorizontalSpace = true;
+      gridData.verticalAlignment = SWT.FILL;
+      gridData.grabExcessVerticalSpace = true;
+      output.setLayoutData(gridData);
+
       activateContext();
       createActions();
       contributeToActionBars();
-      
+
       actionSave.setEnabled(false);
    }
 
@@ -297,7 +284,7 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
       };
       actionSaveAs.setActionDefinitionId("org.netxms.ui.eclipse.nxsl.commands.save_as"); //$NON-NLS-1$
       handlerService.activateHandler(actionSaveAs.getActionDefinitionId(), new ActionHandler(actionSaveAs));
-      
+
       actionClear = new Action(Messages.get().ScriptExecutor_Clear, SharedIcons.CLEAR) {
          @Override
          public void run()
@@ -311,7 +298,7 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
             scriptCombo.clearSelection();
             scriptEditor.setText(""); //$NON-NLS-1$
             output.clear();
-            form.setText(Messages.get().ScriptExecutor_Noname);
+            scriptName.setText(Messages.get().ScriptExecutor_Noname);
          }
       };
 
@@ -444,7 +431,7 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
                {
                   scriptEditor.setText(script.getSource());
                   clearDirtyFlags();
-                  form.setText(script.getName());
+                  scriptName.setText(script.getName());
                }
             });
          }
@@ -456,7 +443,7 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
          }
       }.start();
    }
-   
+
    /**
     * Execute script
     */

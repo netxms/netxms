@@ -6,7 +6,6 @@ Bundle-Version: 4.1.0
 Bundle-Activator: org.netxms.ui.eclipse.nxsl.Activator
 Bundle-Vendor: netxms.org
 Require-Bundle: org.eclipse.rap.ui;bundle-version="2.3.2",
- org.eclipse.rap.ui.forms;bundle-version="2.3.2",
  org.netxms.ui.eclipse.clientlibrary;bundle-version="4.1.0",
  org.netxms.webui.core;bundle-version="4.1.0"
 Bundle-RequiredExecutionEnvironment: JavaSE-11
