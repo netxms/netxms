@@ -29,6 +29,7 @@ ArchitecturesAllowed=x64
 
 [Files]
 Source: ..\files\windows\x64\prunsrv.exe; DestDir: "{app}\bin"; BeforeInstall: StopAllServices; Flags: ignoreversion; Components: webui
+Source: ..\files\windows\x64\prunmgr.exe; DestDir: "{app}\bin"; Flags: ignoreversion; Components: webui
 Source: ..\files\java\jetty\jetty-runner.jar; DestDir: "{app}\bin"; Flags: ignoreversion; Components: webui
 Source: ..\files\java\jetty\start.jar; DestDir: "{app}\bin"; Flags: ignoreversion; Components: webui
 Source: web\server.xml; DestDir: "{app}\config"; Flags: ignoreversion; Components: webui
