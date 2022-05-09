@@ -91,7 +91,7 @@ public class SavePolicyDialog extends Dialog
       dialogArea.setLayout(layout);
 
       final Label image = new Label(dialogArea, SWT.NONE);
-      image.setImage(Activator.getImageDescriptor("icons/unsaved_config.png").createImage()); //$NON-NLS-1$
+      image.setImage(Activator.getImageDescriptor("icons/unsaved-document.png").createImage()); //$NON-NLS-1$
 
       final CLabel text = new CLabel(dialogArea, SWT.LEFT);
       text.setText("Policy is not Saved.\n Save it, discard changes or return to the editor.");
