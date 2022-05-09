@@ -20,7 +20,7 @@
          <action
                class="org.netxms.ui.eclipse.dashboard.actions.ImportDashboard"
                enablesFor="1"
-               icon="icons/import.gif"
+               icon="icons/import.png"
                id="org.netxms.ui.eclipse.dashboard.actions.ImportDashboard#DashboardRoot"
                label="%action.label.ImportDashboard"
                menubarPath="objectcreation">
@@ -66,7 +66,7 @@
          </action>
          <action
                class="org.netxms.ui.eclipse.dashboard.actions.ExportDashboard"
-               icon="icons/export.gif"
+               icon="icons/export.png"
                id="org.netxms.ui.eclipse.dashboard.actions.ExportDashboard"
                label="%action.label.Export"
                menubarPath="additions">
@@ -79,7 +79,7 @@
          <action
                class="org.netxms.ui.eclipse.dashboard.actions.ImportDashboard"
                enablesFor="1"
-               icon="icons/import.gif"
+               icon="icons/import.png"
                id="org.netxms.ui.eclipse.dashboard.actions.ImportDashboard#DashboardGroup"
                label="%action.label.ImportDashboard"
                menubarPath="objectcreation">
