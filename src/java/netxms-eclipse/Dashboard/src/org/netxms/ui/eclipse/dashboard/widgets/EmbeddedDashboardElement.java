@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,7 +31,6 @@ import org.netxms.ui.eclipse.tools.ViewRefreshController;
 
 /**
  * Embedded dashboard element
- *
  */
 public class EmbeddedDashboardElement extends ElementWidget
 {
@@ -39,7 +38,7 @@ public class EmbeddedDashboardElement extends ElementWidget
 	private EmbeddedDashboardConfig config;
 	private DashboardControl control = null;
 	private int current = -1;
-	
+
 	/**
 	 * @param parent
 	 * @param data
@@ -89,7 +88,7 @@ public class EmbeddedDashboardElement extends ElementWidget
 		else
 		{
 			if ((objects != null) && (objects.length > 0) && (objects[0] != null))
-				new DashboardControl(this, SWT.NONE, objects[0], viewPart, getSelectionProvider(), true);
+            new DashboardControl(getContentArea(), SWT.NONE, objects[0], viewPart, getSelectionProvider(), true);
 		}
 	}
 
