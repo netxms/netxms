@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2016 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -73,7 +73,8 @@ public class GeneralInfo extends TableElement
 		if (object.getGuid() != null)
          addPair(i18n.tr("GUID"), object.getGuid().toString());
       addPair(i18n.tr("Class"), object.getObjectClassName());
-		if (object.isInMaintenanceMode())
+      addPair(i18n.tr("Alias"), object.getAlias(), false);
+      if (object.isInMaintenanceMode())
       {
          addPair(i18n.tr("Status"), StatusDisplayInfo.getStatusText(object.getStatus()) + i18n.tr(" (maintenance)"));
          AbstractUserObject user = session.findUserDBObjectById(object.getMaintenanceInitiatorId(), new Runnable() {
@@ -89,8 +90,7 @@ public class GeneralInfo extends TableElement
                });
             }
          });
-         addPair(i18n.tr("Maintenance initiator"),
-               (user != null) ? user.getName() : "[" + object.getMaintenanceInitiatorId() + "]");
+         addPair(i18n.tr("Maintenance initiator"), (user != null) ? user.getName() : "[" + object.getMaintenanceInitiatorId() + "]");
       }
 		else
       {
@@ -128,17 +128,16 @@ public class GeneralInfo extends TableElement
                }
             }
             break;
-			case AbstractObject.OBJECT_INTERFACE:
-				Interface iface = (Interface)object;
-				Interface parentIface = iface.getParentInterface();
-				if (parentIface != null)
+         case AbstractObject.OBJECT_INTERFACE:
+            Interface iface = (Interface)object;
+            Interface parentIface = iface.getParentInterface();
+            if (parentIface != null)
                addPair(i18n.tr("Parent interface"), parentIface.getObjectName());
             addPair(i18n.tr("Interface index"), Integer.toString(iface.getIfIndex()));
 				String typeName = iface.getIfTypeName();
             addPair(i18n.tr("Interface type"),
                   (typeName != null) ? String.format("%d (%s)", iface.getIfType(), typeName) : Integer.toString(iface.getIfType()));
             addPair(i18n.tr("Description"), iface.getDescription(), false);
-            addPair(i18n.tr("Alias"), iface.getAlias(), false);
             addPair(i18n.tr("Interface alias"), iface.getIfAlias(), false);
             if (iface.getMtu() > 0)
                addPair(i18n.tr("MTU"), Integer.toString(iface.getMtu()));
@@ -155,6 +154,7 @@ public class GeneralInfo extends TableElement
                   addPair(i18n.tr("802.1x backend state"), iface.getDot1xBackendStateAsText());
 					}
 				}
+            addPair("VLAN", InterfaceListLabelProvider.getVlanList(iface), false);
 				if (iface.getIpAddressList().size() > 0)
 				{
 					if (session.isZoningEnabled())
@@ -285,8 +285,19 @@ public class GeneralInfo extends TableElement
 				break;
 		}
 		if (object.getGeolocation().getType() != GeoLocation.UNSET)
+      {
          addPair(i18n.tr("Location"), object.getGeolocation().toString());
-		if (!object.getPostalAddress().isEmpty())
+         if (object instanceof MobileDevice)
+         {
+            MobileDevice md = (MobileDevice)object;
+            if (md.getSpeed() >= 0)
+               addPair(Messages.get().GeneralInfo_Speed, Double.toString(md.getSpeed()) + " km/h");
+            if (md.getDirection() >= 0)
+               addPair("Direction", Integer.toString(md.getDirection()) + "\u00b0");
+            addPair("Altitude", Integer.toString(md.getAltitude()) + " m");
+         }
+      }
+      if (!object.getPostalAddress().isEmpty())
          addPair(i18n.tr("Postal Address"), object.getPostalAddress().getAddressLine());
 	}
 

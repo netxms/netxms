@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2016 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -71,7 +71,8 @@ public class GeneralInfo extends TableElement
 		if (object.getGuid() != null)
 			addPair(Messages.get().GeneralInfo_GUID, object.getGuid().toString());
 		addPair(Messages.get().GeneralInfo_Class, object.getObjectClassName());
-		if (object.isInMaintenanceMode())
+      addPair(Messages.get().GeneralInfo_Alias, object.getAlias(), false);
+      if (object.isInMaintenanceMode())
       {
          addPair(Messages.get().GeneralInfo_Status, StatusDisplayInfo.getStatusText(object.getStatus()) + Messages.get().GeneralInfo_Maintenance);
          AbstractUserObject user = session.findUserDBObjectById(object.getMaintenanceInitiatorId(), new Runnable() {
@@ -91,7 +92,7 @@ public class GeneralInfo extends TableElement
       }
 		else
       {
-		   addPair(Messages.get().GeneralInfo_Status, StatusDisplayInfo.getStatusText(object.getStatus()));
+         addPair(Messages.get().GeneralInfo_Status, StatusDisplayInfo.getStatusText(object.getStatus()));
       }
       if ((object instanceof AbstractNode) && ((((AbstractNode)object).getCapabilities() & AbstractNode.NC_IS_ETHERNET_IP) != 0))
       {
@@ -100,7 +101,6 @@ public class GeneralInfo extends TableElement
          if (((((AbstractNode)object).getCipStatus() >> 4) & 0x0F) != 0)
             addPair("Extended device status", ((AbstractNode)object).getCipExtendedStatusText(), false);
       }
-      addPair(Messages.get().GeneralInfo_Alias, object.getAlias(), false);
       if (object.getCreationTime() != null && object.getCreationTime().getTime() != 0)
          addPair("Creation time", RegionalSettings.getDateTimeFormat().format(object.getCreationTime()), false);
 		switch(object.getObjectClass())
@@ -126,12 +126,12 @@ public class GeneralInfo extends TableElement
                }
             }
             break;
-			case AbstractObject.OBJECT_INTERFACE:
-				Interface iface = (Interface)object;
-				Interface parentIface = iface.getParentInterface();
-				if (parentIface != null)
-	            addPair("Parent interface", parentIface.getObjectName());
-				addPair(Messages.get().GeneralInfo_IfIndex, Integer.toString(iface.getIfIndex()));
+         case AbstractObject.OBJECT_INTERFACE:
+            Interface iface = (Interface)object;
+            Interface parentIface = iface.getParentInterface();
+            if (parentIface != null)
+               addPair("Parent interface", parentIface.getObjectName());
+            addPair(Messages.get().GeneralInfo_IfIndex, Integer.toString(iface.getIfIndex()));
 				String typeName = iface.getIfTypeName();
 				addPair(Messages.get().GeneralInfo_IfType, (typeName != null) ? String.format("%d (%s)", iface.getIfType(), typeName) : Integer.toString(iface.getIfType())); //$NON-NLS-1$
 				addPair(Messages.get().GeneralInfo_Description, iface.getDescription(), false);
@@ -151,6 +151,7 @@ public class GeneralInfo extends TableElement
 						addPair(Messages.get().GeneralInfo_8021xBackend, iface.getDot1xBackendStateAsText());
 					}
 				}
+            addPair("VLAN", InterfaceListLabelProvider.getVlanList(iface), false);
 				if (iface.getIpAddressList().size() > 0)
 				{
 					if (session.isZoningEnabled())
@@ -291,7 +292,7 @@ public class GeneralInfo extends TableElement
 		}
 		if (object.getGeolocation().getType() != GeoLocation.UNSET)
       {
-			addPair(Messages.get().GeneralInfo_Location, object.getGeolocation().toString());
+         addPair(Messages.get().GeneralInfo_Location, object.getGeolocation().toString());
          if (object instanceof MobileDevice)
          {
             MobileDevice md = (MobileDevice)object;
@@ -302,7 +303,7 @@ public class GeneralInfo extends TableElement
             addPair("Altitude", Integer.toString(md.getAltitude()) + " m");
          }
       }
-		if (!object.getPostalAddress().isEmpty())
+      if (!object.getPostalAddress().isEmpty())
          addPair(Messages.get().GeneralInfo_PostalAddress, object.getPostalAddress().getAddressLine());
 	}
 

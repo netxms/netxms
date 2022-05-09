@@ -284,7 +284,7 @@ public class InterfaceListLabelProvider extends LabelProvider implements ITableL
     * @param iface interface object
     * @return VLAN list as string
     */
-   private static String getVlanList(Interface iface)
+   public static String getVlanList(Interface iface)
    {
       long[] vlans = iface.getVlans();
       if (vlans.length == 0)
