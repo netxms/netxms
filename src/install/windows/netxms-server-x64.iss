@@ -349,6 +349,7 @@ Source: "..\files\windows\x64\openssl.exe"; DestDir: "{app}\bin"; Flags: ignorev
 Source: "..\files\windows\x64\pcre.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: base
 Source: "..\files\windows\x64\pcre16.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: base
 Source: "..\files\windows\x64\prunsrv.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server\reporting
+Source: "..\files\windows\x64\unzip.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: base
 ; Install-time files
 Source: "..\files\windows\x64\vcredist_x64.exe"; DestDir: "{app}\var"; DestName: "vcredist.exe"; Flags: ignoreversion deleteafterinstall; Components: base
 Source: "..\files\windows\x64\vcredist-2013-x64.exe"; DestDir: "{app}\var"; Flags: ignoreversion deleteafterinstall; Components: server\pgsql
