@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.nxmc.modules.agentmanagement.dialogs;
+package org.netxms.nxmc.modules.nxsl.dialogs;
 
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
@@ -37,62 +37,67 @@ import org.xnap.commons.i18n.I18n;
 
 /**
  * Shows prompt for saving agent's config
- *
  */
-public class SaveConfigDialog extends Dialog
+public class SaveScriptDialog extends Dialog
 {
-   private final I18n i18n = LocalizationHelper.getI18n(SaveConfigDialog.class);
+   private static final I18n i18n = LocalizationHelper.getI18n(SaveScriptDialog.class);
 
-	public static final int SAVE_ID = 100;
-	public static final int SAVE_AND_APPLY_ID = 101;
-	public static final int DISCARD_ID = 102;
+   public static final int SAVE_ID = 100;
+   public static final int SAVE_AS_ID = 101;
+   public static final int DISCARD_ID = 102;
 
-	/**
-	 * @param parentShell
-	 */
-	public SaveConfigDialog(Shell parentShell)
-	{
-		super(parentShell);
-	}
+   private boolean showSave;
+
+   /**
+    * @param parentShell
+    */
+   public SaveScriptDialog(Shell parentShell, boolean showSave)
+   {
+      super(parentShell);
+      this.showSave = showSave;
+   }
 
    /**
     * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
     */
-	@Override
-	protected void configureShell(Shell newShell)
-	{
-		super.configureShell(newShell);
+   @Override
+   protected void configureShell(Shell newShell)
+   {
+      super.configureShell(newShell);
       newShell.setText(i18n.tr("Unsaved Changes"));
-	}
+   }
 
    /**
     * @see org.eclipse.jface.dialogs.Dialog#createButtonsForButtonBar(org.eclipse.swt.widgets.Composite)
     */
-	@Override
-	protected void createButtonsForButtonBar(Composite parent)
-	{
+   @Override
+   protected void createButtonsForButtonBar(Composite parent)
+   {
       createButton(parent, SAVE_ID, i18n.tr("&Save"), false);
-      createButton(parent, SAVE_AND_APPLY_ID, i18n.tr("Save && &Apply"), false);
+      createButton(parent, SAVE_AS_ID, i18n.tr("Save &as..."), false);
       createButton(parent, DISCARD_ID, i18n.tr("&Discard"), false);
       createButton(parent, IDialogConstants.CANCEL_ID, i18n.tr("Cancel"), false);
-	}
+
+      if (!showSave)
+         getButton(SAVE_ID).setEnabled(false);
+   }
 
    /**
     * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
     */
-	@Override
-	protected Control createDialogArea(Composite parent)
-	{
-		Composite dialogArea = (Composite)super.createDialogArea(parent);
+   @Override
+   protected Control createDialogArea(Composite parent)
+   {
+      Composite dialogArea = (Composite)super.createDialogArea(parent);
 
-		GridLayout layout = new GridLayout();
-		layout.horizontalSpacing = WidgetHelper.DIALOG_SPACING;
-		layout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
-		layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
-		layout.numColumns = 2;
-		dialogArea.setLayout(layout);
+      GridLayout layout = new GridLayout();
+      layout.horizontalSpacing = WidgetHelper.DIALOG_SPACING;
+      layout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
+      layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
+      layout.numColumns = 2;
+      dialogArea.setLayout(layout);
 
-		final Label image = new Label(dialogArea, SWT.NONE);
+      final Label image = new Label(dialogArea, SWT.NONE);
       image.setImage(ResourceManager.getImage("icons/unsaved-document.png"));
       image.addDisposeListener(new DisposeListener() {
          @Override
@@ -102,27 +107,28 @@ public class SaveConfigDialog extends Dialog
          }
       });
 
-		final CLabel text = new CLabel(dialogArea, SWT.LEFT);
-		text.setText(i18n.tr("Agent's configuration has been modified. Please select one of the following actions:\n\t\"Save\"\t\tSave new configuration\n\t\"Save && Apply\"\tSave new configuration and apply it\n\t\"Discard\"\tDiscard changes\n\t\"Cancel\"\t\tReturn to editing configuration"));
-		GridData gd = new GridData();
-		gd.grabExcessHorizontalSpace = true;
-		gd.horizontalAlignment = SWT.FILL;
-		text.setLayoutData(gd);
+      final CLabel text = new CLabel(dialogArea, SWT.LEFT);
+      text.setText(i18n.tr(
+            "Script source has been modified. Please select one of the following actions:\n\t\"Save\"\t\tSave into currently selected library script\n\t\"Save as...\"\tSave as new library script\n\t\"Discard\"\tDiscard changes\n\t\"Cancel\"\t\tCancel requested operation and return to editing script"));
+      GridData gd = new GridData();
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalAlignment = SWT.FILL;
+      text.setLayoutData(gd);
 
-		return dialogArea;
-	}
+      return dialogArea;
+   }
 
    /**
     * @see org.eclipse.jface.dialogs.Dialog#buttonPressed(int)
     */
-	@Override
-	protected void buttonPressed(int buttonId)
-	{
-		if (buttonId >= 100)
-		{
-			setReturnCode(buttonId);
-			close();
-		}
-		super.buttonPressed(buttonId);
-	}
+   @Override
+   protected void buttonPressed(int buttonId)
+   {
+      if (buttonId >= 100)
+      {
+         setReturnCode(buttonId);
+         close();
+      }
+      super.buttonPressed(buttonId);
+   }
 }
