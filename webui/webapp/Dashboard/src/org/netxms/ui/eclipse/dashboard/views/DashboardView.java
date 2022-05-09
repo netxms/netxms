@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -75,7 +75,7 @@ import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 public class DashboardView extends ViewPart implements ISaveablePart
 {
 	public static final String ID = "org.netxms.ui.eclipse.dashboard.views.DashboardView"; //$NON-NLS-1$
-	
+
 	private NXCSession session;
 	private SessionListener clientListener;
 	private Dashboard dashboard;
@@ -244,7 +244,7 @@ public class DashboardView extends ViewPart implements ISaveablePart
 	private void createActions()
 	{
       final IHandlerService handlerService = (IHandlerService)getSite().getService(IHandlerService.class);
-      
+
 		actionRefresh = new RefreshAction(this) {
 			@Override
 			public void run()
@@ -258,7 +258,7 @@ public class DashboardView extends ViewPart implements ISaveablePart
 				rebuildDashboard(true);
 			}
 		};
-		
+
 		actionSave = new Action(Messages.get().DashboardView_Save, SharedIcons.SAVE) {
 			@Override
 			public void run()
@@ -267,8 +267,8 @@ public class DashboardView extends ViewPart implements ISaveablePart
 			}
 		};
 		actionSave.setEnabled(false);
-		
-		actionExportValues = new Action(Messages.get().DashboardView_ExportLineChartValues, SharedIcons.CSV) {
+
+      actionExportValues = new Action(Messages.get().DashboardView_ExportLineChartValues, Activator.getImageDescriptor("icons/export-data.png")) {
          @Override
          public void run()
          {
@@ -290,7 +290,7 @@ public class DashboardView extends ViewPart implements ISaveablePart
 		};
 		actionEditMode.setImageDescriptor(SharedIcons.EDIT);
 		actionEditMode.setChecked(dbc.isEditMode());
-		
+
 		actionAddSyslogMonitor = new Action("Add s&yslog monitor") {
 		   @Override
 		   public void run()
