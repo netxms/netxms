@@ -291,10 +291,10 @@ public class GeneralInfo extends TableElement
          {
             MobileDevice md = (MobileDevice)object;
             if (md.getSpeed() >= 0)
-               addPair(Messages.get().GeneralInfo_Speed, Double.toString(md.getSpeed()) + " km/h");
+               addPair(i18n.tr("Speed"), Double.toString(md.getSpeed()) + " km/h");
             if (md.getDirection() >= 0)
-               addPair("Direction", Integer.toString(md.getDirection()) + "\u00b0");
-            addPair("Altitude", Integer.toString(md.getAltitude()) + " m");
+               addPair(i18n.tr("Direction"), Integer.toString(md.getDirection()) + "\u00b0");
+            addPair(i18n.tr("Altitude"), Integer.toString(md.getAltitude()) + " m");
          }
       }
       if (!object.getPostalAddress().isEmpty())
