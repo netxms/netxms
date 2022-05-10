@@ -292,6 +292,7 @@ public class PackageManager extends ViewPart
 		FileDialog fd = new FileDialog(getSite().getShell(), SWT.OPEN);
 		fd.setText(Messages.get().PackageManager_SelectFile);
       fd.setFilterExtensions(new String[] { "*.apkg", "*.exe", "*.msi", "*.msp", "*.msu", "*.npi", "*.tgz;*.tar.gz", "*.zip", "*.*" });
+      String packageFileName = fd.open();
       if (packageFileName == null)
          return;
 
