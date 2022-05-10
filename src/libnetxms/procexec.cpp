@@ -109,6 +109,7 @@ ProcessExecutor::ProcessExecutor(const TCHAR *cmd, bool shellExec, bool selfDest
    m_cmd = MemCopyString(cmd);
    m_shellExec = shellExec;
    m_sendOutput = false;
+   m_replaceNullCharacters = false;
    m_selfDestruct = selfDestruct;
    m_outputThread = INVALID_THREAD_HANDLE;
    m_started = false;
@@ -211,7 +212,7 @@ bool ProcessExecutor::executeWithOutput()
       CloseHandle(pi.hThread);
       CloseHandle(stdoutWrite);
       m_pipe = stdoutRead;
-      m_outputThread = ThreadCreateEx(readOutput, 0, this);
+      m_outputThread = ThreadCreateEx(readOutput, this);
       success = true;
    }
    else
@@ -386,12 +387,12 @@ bool ProcessExecutor::execute()
          nxlog_debug_tag(DEBUG_TAG, 5, _T("ProcessExecutor::execute(): process \"%s\" started"), m_cmd);
          if (m_sendOutput)
          {
-            m_outputThread = ThreadCreateEx(readOutput, 0, this);
+            m_outputThread = ThreadCreateEx(readOutput, this);
          }
          else
          {
             close(m_pipe[0]);
-            m_outputThread = ThreadCreateEx(waitForProcess, 0, this);
+            m_outputThread = ThreadCreateEx(waitForProcess, this);
          }
          success = true;
          break;
@@ -409,14 +410,13 @@ bool ProcessExecutor::execute()
 /**
  * Process waiting thread
  */
-THREAD_RESULT THREAD_CALL ProcessExecutor::waitForProcess(void *arg)
+void ProcessExecutor::waitForProcess(ProcessExecutor *executor)
 {
-   waitpid(static_cast<ProcessExecutor*>(arg)->m_pid, nullptr, 0);
-   static_cast<ProcessExecutor*>(arg)->m_running = false;
-   static_cast<ProcessExecutor*>(arg)->m_completed.set();
-   if (static_cast<ProcessExecutor*>(arg)->m_selfDestruct)
-      delete static_cast<ProcessExecutor*>(arg);
-   return THREAD_OK;
+   waitpid(executor->m_pid, nullptr, 0);
+   executor->m_running = false;
+   executor->m_completed.set();
+   if (executor->m_selfDestruct)
+      delete executor;
 }
 
 #endif
@@ -424,7 +424,7 @@ THREAD_RESULT THREAD_CALL ProcessExecutor::waitForProcess(void *arg)
 /**
  * Output reading thread
  */
-THREAD_RESULT THREAD_CALL ProcessExecutor::readOutput(void *arg)
+void ProcessExecutor::readOutput(ProcessExecutor *executor)
 {
    char buffer[4096];
 
@@ -432,12 +432,12 @@ THREAD_RESULT THREAD_CALL ProcessExecutor::readOutput(void *arg)
 
    OVERLAPPED ov;
 	memset(&ov, 0, sizeof(OVERLAPPED));
-   ov.hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
+   ov.hEvent = CreateEvent(nullptr, TRUE, FALSE, nullptr);
 
-   HANDLE pipe = static_cast<ProcessExecutor*>(arg)->getOutputPipe();
+   HANDLE pipe = executor->getOutputPipe();
    while(true)
    {
-      if (!ReadFile(pipe, buffer, sizeof(buffer) - 1, NULL, &ov))
+      if (!ReadFile(pipe, buffer, sizeof(buffer) - 1, nullptr, &ov))
       {
          if (GetLastError() != ERROR_IO_PENDING)
          {
@@ -449,7 +449,7 @@ THREAD_RESULT THREAD_CALL ProcessExecutor::readOutput(void *arg)
 
       HANDLE handles[2];
       handles[0] = ov.hEvent;
-      handles[1] = static_cast<ProcessExecutor*>(arg)->m_phandle;
+      handles[1] = executor->m_phandle;
       DWORD rc;
 
 do_wait:
@@ -457,7 +457,7 @@ do_wait:
       if (rc == WAIT_TIMEOUT)
       {
          // Send empty output on timeout
-         static_cast<ProcessExecutor*>(arg)->onOutput("", 0);
+         executor->onOutput("", 0);
          goto do_wait;
       }
       if (rc == WAIT_OBJECT_0 + 1)
@@ -470,8 +470,14 @@ do_wait:
          DWORD bytes;
          if (GetOverlappedResult(pipe, &ov, &bytes, TRUE))
          {
+            if (executor->m_replaceNullCharacters)
+            {
+               for (DWORD i = 0; i < bytes; i++)
+                  if (buffer[i] == 0)
+                     buffer[i] = ' ';
+            }
             buffer[bytes] = 0;
-            static_cast<ProcessExecutor*>(arg)->onOutput(buffer, bytes);
+            executor->onOutput(buffer, bytes);
          }
          else
          {
@@ -483,17 +489,17 @@ do_wait:
    }
 
    DWORD exitCode;
-   if (GetExitCodeProcess(static_cast<ProcessExecutor*>(arg)->m_phandle, &exitCode))
-      static_cast<ProcessExecutor*>(arg)->m_exitCode = exitCode;
+   if (GetExitCodeProcess(executor->m_phandle, &exitCode))
+      executor->m_exitCode = exitCode;
    else
-      static_cast<ProcessExecutor*>(arg)->m_exitCode = -1;
+      executor->m_exitCode = -1;
 
    CloseHandle(ov.hEvent);
    CloseHandle(pipe);
 
 #else /* UNIX implementation */
 
-   int pipe = static_cast<ProcessExecutor*>(arg)->getOutputPipe();
+   int pipe = executor->getOutputPipe();
    fcntl(pipe, F_SETFD, fcntl(pipe, F_GETFD) | O_NONBLOCK);
 
    SocketPoller sp;
@@ -507,14 +513,20 @@ do_wait:
          rc = read(pipe, buffer, sizeof(buffer) - 1);
          if (rc > 0)
          {
+            if (executor->m_replaceNullCharacters)
+            {
+               for (int i = 0; i < rc; i++)
+                  if (buffer[i] == 0)
+                     buffer[i] = ' ';
+            }
             buffer[rc] = 0;
-            static_cast<ProcessExecutor*>(arg)->onOutput(buffer, rc);
+            executor->onOutput(buffer, rc);
          }
          else
          {
             if ((rc == -1) && ((errno == EAGAIN) || (errno == EINTR)))
             {
-               static_cast<ProcessExecutor*>(arg)->onOutput("", 0);
+               executor->onOutput("", 0);
                continue;
             }
             nxlog_debug_tag(DEBUG_TAG, 6, _T("ProcessExecutor::readOutput(): stopped on read (rc=%d err=%s)"), rc, _tcserror(errno));
@@ -524,7 +536,7 @@ do_wait:
       else if (rc == 0)
       {
          // Send empty output on timeout
-         static_cast<ProcessExecutor*>(arg)->onOutput("", 0);
+         executor->onOutput("", 0);
       }
       else
       {
@@ -536,7 +548,7 @@ do_wait:
 
 #endif
 
-   static_cast<ProcessExecutor*>(arg)->endOfOutput();
+   executor->endOfOutput();
 #ifndef _WIN32
    int status;
    waitpid(static_cast<ProcessExecutor *>(arg)->m_pid, &status, 0);
@@ -546,11 +558,10 @@ do_wait:
       static_cast<ProcessExecutor *>(arg)->m_exitCode = -1;
 
 #endif
-   static_cast<ProcessExecutor*>(arg)->m_running = false;
-   static_cast<ProcessExecutor*>(arg)->m_completed.set();
-   if (static_cast<ProcessExecutor*>(arg)->m_selfDestruct)
-      delete static_cast<ProcessExecutor*>(arg);
-   return THREAD_OK;
+   executor->m_running = false;
+   executor->m_completed.set();
+   if (executor->m_selfDestruct)
+      delete executor;
 }
 
 /**

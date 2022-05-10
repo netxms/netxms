@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Raden Solutions
+** Copyright (C) 2003-2022 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -28,6 +28,7 @@
 KeyValueOutputProcessExecutor::KeyValueOutputProcessExecutor(const TCHAR *command, bool shellExec) : ProcessExecutor(command, shellExec)
 {
    m_sendOutput = true;
+   m_replaceNullCharacters = true;
    m_separator = _T('=');
 }
 
@@ -117,6 +118,7 @@ void KeyValueOutputProcessExecutor::endOfOutput()
 LineOutputProcessExecutor::LineOutputProcessExecutor(const TCHAR *command, bool shellExec) : ProcessExecutor(command, shellExec)
 {
    m_sendOutput = true;
+   m_replaceNullCharacters = true;
 }
 
 /**

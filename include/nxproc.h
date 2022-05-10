@@ -112,6 +112,7 @@ protected:
    TCHAR *m_cmd;
    bool m_shellExec;
    bool m_sendOutput;
+   bool m_replaceNullCharacters;
    bool m_selfDestruct;
 
 #ifdef _WIN32
@@ -120,9 +121,9 @@ protected:
    int getOutputPipe() { return m_pipe[0]; }
 #endif
 
-   static THREAD_RESULT THREAD_CALL readOutput(void *arg);
+   static void readOutput(ProcessExecutor *executor);
 #ifndef _WIN32
-   static THREAD_RESULT THREAD_CALL waitForProcess(void *arg);
+   static void waitForProcess(ProcessExecutor *executor);
 #endif
 
    virtual void onOutput(const char *text, size_t length);
@@ -180,6 +181,7 @@ public:
    OutputCapturingProcessExecutor(const TCHAR* command, bool shellExec = true) : ProcessExecutor(command, shellExec), m_output(4096)
    {
       m_sendOutput = true;
+      m_replaceNullCharacters = true;
    }
 
    /**

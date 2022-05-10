@@ -212,6 +212,7 @@ public:
    {
       m_context = context;
       m_sendOutput = true;
+      m_replaceNullCharacters = true;
    }
    virtual ~SystemActionProcessExecutor() = default;
 };
