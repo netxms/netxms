@@ -228,14 +228,14 @@ bool HardwareComponent::saveToDatabase(DB_STATEMENT hStmt) const
 {
    DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_category);
    DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_index);
-   DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, m_type, DB_BIND_STATIC);
-   DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, m_vendor, DB_BIND_STATIC);
-   DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, m_model, DB_BIND_STATIC);
-   DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, m_location, DB_BIND_STATIC);
+   DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, m_type, DB_BIND_STATIC, 47);
+   DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, m_vendor, DB_BIND_STATIC, 127);
+   DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, m_model, DB_BIND_STATIC, 127);
+   DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, m_location, DB_BIND_STATIC, 63);
    DBBind(hStmt, 8, DB_SQLTYPE_BIGINT, m_capacity);
-   DBBind(hStmt, 9, DB_SQLTYPE_VARCHAR, m_partNumber, DB_BIND_STATIC);
-   DBBind(hStmt, 10, DB_SQLTYPE_VARCHAR, m_serialNumber, DB_BIND_STATIC);
-   DBBind(hStmt, 11, DB_SQLTYPE_VARCHAR, m_description, DB_BIND_STATIC);
+   DBBind(hStmt, 9, DB_SQLTYPE_VARCHAR, m_partNumber, DB_BIND_STATIC, 63);
+   DBBind(hStmt, 10, DB_SQLTYPE_VARCHAR, m_serialNumber, DB_BIND_STATIC, 63);
+   DBBind(hStmt, 11, DB_SQLTYPE_VARCHAR, m_description, DB_BIND_STATIC, 255);
    return DBExecute(hStmt);
 }
 
