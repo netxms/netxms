@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -49,14 +49,13 @@ import org.netxms.ui.eclipse.topology.widgets.SearchResult;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
 /**
- * Search results for host connection searches
- *
+ * Search results for MAC address search
  */
 public class FindByMacAddressView extends ViewPart
 {
 	public static final String ID = "org.netxms.ui.eclipse.topology.views.FindByMacAddressView"; //$NON-NLS-1$
 	private static final String TABLE_CONFIG_PREFIX = "FindByMacAddressView"; //$NON-NLS-1$
-	
+
 	private SearchResult serachResultWidget;
    private Button startButton;
    private LabeledText queryEditor; 
@@ -68,18 +67,18 @@ public class FindByMacAddressView extends ViewPart
 	public void createPartControl(Composite parent)
 	{      
       parent.setLayout(new FormLayout());
-      
+
       final Composite searchBar = new Composite(parent, SWT.NONE);
       GridLayout gridLayout = new GridLayout();
       gridLayout.numColumns = 2;
       searchBar.setLayout(gridLayout);
-      
+
       FormData fd = new FormData();
       fd.left = new FormAttachment(0, 0);
       fd.top = new FormAttachment(0, 0);
       fd.right = new FormAttachment(100, 0);
       searchBar.setLayoutData(fd);
-      
+
       queryEditor = new LabeledText(searchBar, SWT.NONE);
       queryEditor.setLabel("Search string");
       queryEditor.getTextControl().addKeyListener(new KeyListener() {
@@ -111,7 +110,7 @@ public class FindByMacAddressView extends ViewPart
          }
       });
       startButton.setLayoutData(new GridData(SWT.FILL, SWT.BOTTOM, false, false));
-      
+
       final Composite mainContent = new Composite(parent, SWT.NONE);
       mainContent.setLayout(new FillLayout());
       fd = new FormData();
@@ -120,7 +119,7 @@ public class FindByMacAddressView extends ViewPart
       fd.right = new FormAttachment(100, 0);
       fd.bottom = new FormAttachment(100, 0);
       mainContent.setLayoutData(fd);
-      
+
       serachResultWidget = new SearchResult(this, mainContent, SWT.NONE, TABLE_CONFIG_PREFIX);
       
       contributeToActionBars();
@@ -154,6 +153,9 @@ public class FindByMacAddressView extends ViewPart
 		super.dispose();
 	}
    
+   /**
+    * Search for MAC address
+    */
    void search()
    {
       final MacAddress macAddress;
@@ -167,9 +169,9 @@ public class FindByMacAddressView extends ViewPart
          MessageDialogHelper.openError(serachResultWidget.getShell(), Messages.get().EnterMacAddressDlg_Error, Messages.get().EnterMacAddressDlg_IncorrectMacAddress);
          return;
       }
-      
+
       startButton.setEnabled(false);
-      final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+      final NXCSession session = ConsoleSharedData.getSession();
       new ConsoleJob(String.format(Messages.get().FindMacAddress_JobTitle, macAddr), null, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
