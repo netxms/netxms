@@ -10402,7 +10402,7 @@ void ClientSession::getDependentNodes(const NXCPMessage& request)
       {
          if (object->getObjectClass() == OBJECT_NODE)
          {
-            StructArray<DependentNode> *dependencies = GetNodeDependencies(object->getId());
+            unique_ptr<StructArray<DependentNode>> dependencies = GetNodeDependencies(object->getId());
             msg.setField(VID_NUM_ELEMENTS, dependencies->size());
             UINT32 fieldId = VID_ELEMENT_LIST_BASE;
             for(int i = 0; i < dependencies->size(); i++)
@@ -10412,7 +10412,6 @@ void ClientSession::getDependentNodes(const NXCPMessage& request)
                fieldId += 8;
             }
             msg.setField(VID_RCC, RCC_SUCCESS);
-            delete dependencies;
          }
          else
          {

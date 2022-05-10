@@ -1796,7 +1796,7 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const NXSL_Identifier& 
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("dependentNodes"))
    {
-      StructArray<DependentNode> *dependencies = GetNodeDependencies(node->getId());
+      unique_ptr<StructArray<DependentNode>> dependencies = GetNodeDependencies(node->getId());
       NXSL_Array *a = new NXSL_Array(vm);
       for(int i = 0; i < dependencies->size(); i++)
       {

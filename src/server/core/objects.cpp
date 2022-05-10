@@ -2289,13 +2289,13 @@ static void NodeDependencyCheckCallback(NetObj *object, void *context)
 /**
  * Get dependent nodes
  */
-StructArray<DependentNode> *GetNodeDependencies(uint32_t nodeId)
+unique_ptr<StructArray<DependentNode>> GetNodeDependencies(uint32_t nodeId)
 {
    NodeDependencyCheckData data;
    data.nodeId = nodeId;
    data.dependencies = new StructArray<DependentNode>();
    g_idxNodeById.forEach(NodeDependencyCheckCallback, &data);
-   return data.dependencies;
+   return unique_ptr<StructArray<DependentNode>>(data.dependencies);
 }
 
 /**
