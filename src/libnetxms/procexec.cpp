@@ -551,11 +551,11 @@ do_wait:
    executor->endOfOutput();
 #ifndef _WIN32
    int status;
-   waitpid(static_cast<ProcessExecutor *>(arg)->m_pid, &status, 0);
+   waitpid(executor->m_pid, &status, 0);
    if (WIFEXITED(status))
-      static_cast<ProcessExecutor *>(arg)->m_exitCode = WEXITSTATUS(status);
+      executor->m_exitCode = WEXITSTATUS(status);
    else
-      static_cast<ProcessExecutor *>(arg)->m_exitCode = -1;
+      executor->m_exitCode = -1;
 
 #endif
    executor->m_running = false;
