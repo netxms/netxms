@@ -53,6 +53,7 @@ import org.netxms.nxmc.modules.datacollection.views.SummaryDataCollectionView;
 import org.netxms.nxmc.modules.filemanager.views.AgentFileManager;
 import org.netxms.nxmc.modules.datacollection.views.PerformanceView;
 import org.netxms.nxmc.modules.networkmaps.views.PredefinedMap;
+import org.netxms.nxmc.modules.nxsl.views.ScriptExecutorView;
 import org.netxms.nxmc.modules.objects.views.ChassisView;
 import org.netxms.nxmc.modules.objects.views.Dot1xStatusView;
 import org.netxms.nxmc.modules.objects.views.EntityMIBView;
@@ -88,6 +89,7 @@ public abstract class ObjectsPerspective extends Perspective
    private ToolBar objectToolBar;
    private ToolBar objectMenuBar;
    private Image imageEditConfig;
+   private Image imageExecuteScript;
 
    /**
     * Create new object perspective
@@ -102,6 +104,7 @@ public abstract class ObjectsPerspective extends Perspective
       super(id, name, image);
       this.subtreeType = subtreeType;
       imageEditConfig = ResourceManager.getImage("icons/object-views/agent-config.png");
+      imageExecuteScript = ResourceManager.getImage("icons/object-views/script-executor.png");
    }
 
    /**
@@ -217,6 +220,14 @@ public abstract class ObjectsPerspective extends Perspective
          public void run()
          {
             ObjectPropertiesManager.openObjectPropertiesDialog(object, getWindow().getShell());
+         }
+      });
+
+      addObjectToolBarItem(i18n.tr("Execute script"), imageExecuteScript, new Runnable() {
+         @Override
+         public void run()
+         {
+            addMainView(new ScriptExecutorView(object.getObjectId()), true, false);
          }
       });
 

@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.widgets;
+package org.netxms.nxmc.base.widgets;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -32,12 +32,12 @@ import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.netxms.ui.eclipse.widgets.ansi.AnsiCommands;
-import org.netxms.ui.eclipse.widgets.ansi.AnsiConsoleAttributes;
-import org.netxms.ui.eclipse.widgets.ansi.AnsiConsoleColorPalette;
-import org.netxms.ui.eclipse.widgets.helpers.LineStyleEvent;
-import org.netxms.ui.eclipse.widgets.helpers.LineStyleListener;
-import org.netxms.ui.eclipse.widgets.helpers.StyleRange;
+import org.netxms.nxmc.base.widgets.ansi.AnsiCommands;
+import org.netxms.nxmc.base.widgets.ansi.AnsiConsoleAttributes;
+import org.netxms.nxmc.base.widgets.ansi.AnsiConsoleColorPalette;
+import org.netxms.nxmc.base.widgets.helpers.LineStyleEvent;
+import org.netxms.nxmc.base.widgets.helpers.LineStyleListener;
+import org.netxms.nxmc.base.widgets.helpers.StyleRange;
 
 /**
  * Generic text console widget
@@ -128,7 +128,7 @@ public class TextConsole extends Composite implements LineStyleListener
    }
 
    /**
-    * @see org.netxms.ui.eclipse.widgets.helpers.LineStyleListener#lineGetStyle(org.netxms.ui.eclipse.widgets.helpers.LineStyleEvent)
+    * @see org.eclipse.swt.custom.LineStyleListener#lineGetStyle(org.eclipse.swt.custom.LineStyleEvent)
     */
    @Override
    public void lineGetStyle(LineStyleEvent event)
@@ -145,8 +145,7 @@ public class TextConsole extends Composite implements LineStyleListener
       }
       else
       {
-         defStyle = new StyleRange(1, lastRangeEnd, new Color(null, AnsiConsoleColorPalette.getColor(0)), new Color(null,
-               AnsiConsoleColorPalette.getColor(15)), SWT.NORMAL);
+         defStyle = new StyleRange(1, lastRangeEnd, new Color(null, AnsiConsoleColorPalette.getColor(0)), new Color(null, AnsiConsoleColorPalette.getColor(15)), SWT.NORMAL);
       }
 
       lastRangeEnd = 0;
@@ -320,7 +319,7 @@ public class TextConsole extends Composite implements LineStyleListener
       ranges.add(range);
       lastRangeEnd = lastRangeEnd + range.length;
    }
-   
+
    /**
     * Get control for this console
     * 
@@ -330,7 +329,7 @@ public class TextConsole extends Composite implements LineStyleListener
    {
       return console.getControl();
    }
-   
+
    /**
     * @param text
     * @return

@@ -27,7 +27,7 @@ import org.netxms.ui.eclipse.tools.ColorCache;
 public class AnsiConsoleAttributes implements Cloneable
 {
    public final static int UNDERLINE_NONE = -1; // nothing in SWT, a bit of an abuse
-   
+
    private static ColorCache colorCache = new ColorCache();
 
    public Integer currentBgColor;
@@ -39,7 +39,7 @@ public class AnsiConsoleAttributes implements Cloneable
    public boolean conceal;
    public boolean strike;
    public boolean framed;
-   
+
    /**
     * @return
     */
@@ -69,7 +69,7 @@ public class AnsiConsoleAttributes implements Cloneable
       framed = false;
    }
 
-   /* (non-Javadoc)
+   /**
     * @see java.lang.Object#clone()
     */
    @Override
@@ -197,7 +197,9 @@ public class AnsiConsoleAttributes implements Cloneable
          range.underlineStyle = tempAttrib.underline;
       }
       else
+      {
          range.underline = false;
+      }
 
       range.strikeout = tempAttrib.strike;
       range.strikeoutColor = range.foreground;
@@ -208,6 +210,8 @@ public class AnsiConsoleAttributes implements Cloneable
          range.borderColor = range.foreground;
       }
       else
+      {
          range.borderStyle = SWT.NONE;
+      }
    }
 }

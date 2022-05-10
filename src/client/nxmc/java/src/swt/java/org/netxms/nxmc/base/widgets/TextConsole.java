@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.widgets;
+package org.netxms.nxmc.base.widgets;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -28,16 +28,19 @@ import java.util.regex.Pattern;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.LineStyleEvent;
+import org.eclipse.swt.custom.LineStyleListener;
+import org.eclipse.swt.custom.StyleRange;
+import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.graphics.GlyphMetrics;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.netxms.ui.eclipse.widgets.ansi.AnsiCommands;
-import org.netxms.ui.eclipse.widgets.ansi.AnsiConsoleAttributes;
-import org.netxms.ui.eclipse.widgets.ansi.AnsiConsoleColorPalette;
-import org.netxms.ui.eclipse.widgets.helpers.LineStyleEvent;
-import org.netxms.ui.eclipse.widgets.helpers.LineStyleListener;
-import org.netxms.ui.eclipse.widgets.helpers.StyleRange;
+import org.netxms.nxmc.base.widgets.ansi.AnsiCommands;
+import org.netxms.nxmc.base.widgets.ansi.AnsiConsoleAttributes;
+import org.netxms.nxmc.base.widgets.ansi.AnsiConsoleColorPalette;
+import org.netxms.nxmc.tools.WidgetHelper;
 
 /**
  * Generic text console widget
@@ -63,7 +66,6 @@ public class TextConsole extends Composite implements LineStyleListener
       setLayout(new FillLayout());
       console = new StyledText(this, SWT.H_SCROLL | SWT.V_SCROLL);
       console.setFont(JFaceResources.getTextFont());
-      console.setScrollOnAppend(autoScroll);
       console.addLineStyleListener(this);
    }
 
@@ -83,7 +85,7 @@ public class TextConsole extends Composite implements LineStyleListener
     */
    public boolean canCopy()
    {
-      return false;
+      return console.getSelectionCount() > 0;
    }
 
    /**
@@ -91,6 +93,7 @@ public class TextConsole extends Composite implements LineStyleListener
     */
    public void copy()
    {
+      WidgetHelper.copyToClipboard(console.getSelectionText());
    }
 
    /**
@@ -106,6 +109,7 @@ public class TextConsole extends Composite implements LineStyleListener
     */
    public void selectAll()
    {
+      console.selectAll();
    }
 
    /**
@@ -114,7 +118,6 @@ public class TextConsole extends Composite implements LineStyleListener
    public void setAutoScroll(boolean autoScroll)
    {
       this.autoScroll = autoScroll;
-      console.setScrollOnAppend(autoScroll);
    }
 
    /**
@@ -128,7 +131,7 @@ public class TextConsole extends Composite implements LineStyleListener
    }
 
    /**
-    * @see org.netxms.ui.eclipse.widgets.helpers.LineStyleListener#lineGetStyle(org.netxms.ui.eclipse.widgets.helpers.LineStyleEvent)
+    * @see org.eclipse.swt.custom.LineStyleListener#lineGetStyle(org.eclipse.swt.custom.LineStyleEvent)
     */
    @Override
    public void lineGetStyle(LineStyleEvent event)
@@ -145,8 +148,7 @@ public class TextConsole extends Composite implements LineStyleListener
       }
       else
       {
-         defStyle = new StyleRange(1, lastRangeEnd, new Color(null, AnsiConsoleColorPalette.getColor(0)), new Color(null,
-               AnsiConsoleColorPalette.getColor(15)), SWT.NORMAL);
+         defStyle = new StyleRange(1, lastRangeEnd, new Color(null, AnsiConsoleColorPalette.getColor(0)), new Color(null, AnsiConsoleColorPalette.getColor(15)), SWT.NORMAL);
       }
 
       lastRangeEnd = 0;
@@ -207,7 +209,7 @@ public class TextConsole extends Composite implements LineStyleListener
             case AnsiCommands.COMMAND_ATTR_RESET:
                currentAttributes.reset();
                break;
-               
+
             case AnsiCommands.COMMAND_ATTR_INTENSITY_BRIGHT:
                currentAttributes.bold = true;
                break;
@@ -315,12 +317,12 @@ public class TextConsole extends Composite implements LineStyleListener
       AnsiConsoleAttributes.updateRangeStyle(range, lastAttributes);
       if (isCode)
       {
-         range.hidden = true;
+         range.metrics = new GlyphMetrics(0, 0, 0);
       }
       ranges.add(range);
       lastRangeEnd = lastRangeEnd + range.length;
    }
-   
+
    /**
     * Get control for this console
     * 
@@ -328,9 +330,9 @@ public class TextConsole extends Composite implements LineStyleListener
     */
    public Control getConsoleControl()
    {
-      return console.getControl();
+      return console;
    }
-   
+
    /**
     * @param text
     * @return
@@ -395,6 +397,11 @@ public class TextConsole extends Composite implements LineStyleListener
             public void run()
             {
                console.append(s);
+               if (autoScroll)
+               {
+                  console.setCaretOffset(console.getCharCount());
+                  console.setTopIndex(console.getLineCount() - 1);
+               }
             }
          });
       }

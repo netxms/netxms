@@ -48,6 +48,7 @@ import org.netxms.nxmc.modules.agentmanagement.PackageDeployment;
 import org.netxms.nxmc.modules.agentmanagement.dialogs.SelectDeployPackage;
 import org.netxms.nxmc.modules.agentmanagement.views.AgentConfigEditorView;
 import org.netxms.nxmc.modules.agentmanagement.views.PackageDeploymentMonitor;
+import org.netxms.nxmc.modules.nxsl.views.ScriptExecutorView;
 import org.netxms.nxmc.modules.objects.dialogs.MaintanenceScheduleDialog;
 import org.netxms.nxmc.modules.objects.views.ScreenshotView;
 import org.netxms.nxmc.resources.ResourceManager;
@@ -74,6 +75,7 @@ public class ObjectContextMenuManager extends MenuManager
    private Action actionProperties;
    private Action actionTakeScreenshot;
    private Action actionEditAgentConfig;
+   private Action actionExecuteScript;
 
    /**
     * Create new obejct context menu manager.
@@ -179,6 +181,14 @@ public class ObjectContextMenuManager extends MenuManager
             openAgentConfigEditor();
          }
       };
+
+      actionExecuteScript = new Action(i18n.tr("E&xecute script"), ResourceManager.getImageDescriptor("icons/object-views/script-executor.png")) {
+         @Override
+         public void run()
+         {
+            executeScript();
+         }
+      };
    }
 
    /**
@@ -211,12 +221,12 @@ public class ObjectContextMenuManager extends MenuManager
       add(actionDelete);
       add(new Separator());
 
+      // Agent/package management
       if (singleObject)
       {
          AbstractObject object = getObjectFromSelection();
          if ((object instanceof Node) && ((Node)object).hasAgent())
             add(actionEditAgentConfig);
-
       }
       // TODO: do not show package deployment menu if not applicable to any selected object
       add(actionDeployPackage);
@@ -230,6 +240,7 @@ public class ObjectContextMenuManager extends MenuManager
             add(new Separator());
             add(actionTakeScreenshot);
          }
+         add(actionExecuteScript);
       }
 
       final Menu toolsMenu = ObjectMenuFactory.createToolsMenu((IStructuredSelection)selectionProvider.getSelection(), getMenu(), null, new ViewPlacement(view));
@@ -549,6 +560,24 @@ public class ObjectContextMenuManager extends MenuManager
       else
       {
          PopOutViewWindow window = new PopOutViewWindow(editor);
+         window.open();
+      }
+   }
+
+   /**
+    * Execute script on object
+    */
+   private void executeScript()
+   {
+      AbstractObject object = getObjectFromSelection();
+      ScriptExecutorView executor = new ScriptExecutorView(object.getObjectId());
+      if (view.getPerspective() != null)
+      {
+         view.getPerspective().addMainView(executor, true, false);
+      }
+      else
+      {
+         PopOutViewWindow window = new PopOutViewWindow(executor);
          window.open();
       }
    }

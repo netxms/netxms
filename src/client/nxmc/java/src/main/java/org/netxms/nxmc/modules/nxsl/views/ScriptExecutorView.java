@@ -1,0 +1,645 @@
+/**
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+package org.netxms.nxmc.modules.nxsl.views;
+
+import java.io.IOException;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.MenuManager;
+import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.action.ToolBarManager;
+import org.eclipse.jface.dialogs.IDialogConstants;
+import org.eclipse.jface.resource.JFaceResources;
+import org.eclipse.jface.window.Window;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.SashForm;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Combo;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Text;
+import org.netxms.client.NXCSession;
+import org.netxms.client.Script;
+import org.netxms.client.TextOutputListener;
+import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.base.jobs.Job;
+import org.netxms.nxmc.base.widgets.TextConsole;
+import org.netxms.nxmc.base.widgets.TextConsole.IOConsoleOutputStream;
+import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.nxsl.dialogs.CreateScriptDialog;
+import org.netxms.nxmc.modules.nxsl.dialogs.SaveScriptDialog;
+import org.netxms.nxmc.modules.nxsl.widgets.ScriptEditor;
+import org.netxms.nxmc.modules.objects.views.AdHocObjectView;
+import org.netxms.nxmc.resources.ResourceManager;
+import org.netxms.nxmc.resources.SharedIcons;
+import org.netxms.nxmc.tools.WidgetHelper;
+import org.xnap.commons.i18n.I18n;
+
+/**
+ * Sored on server agent's configuration editor
+ */
+public class ScriptExecutorView extends AdHocObjectView implements TextOutputListener
+{
+   private static final I18n i18n = LocalizationHelper.getI18n(ScriptExecutorView.class);
+
+   private NXCSession session;
+   private boolean modified = false;
+   private long objectId;
+
+   private Label scriptName;
+   private Combo scriptCombo;
+   private ScriptEditor scriptEditor;
+   private Text parametersField;
+   private TextConsole output;
+   private IOConsoleOutputStream consoleOutputStream;
+   private Action actionSave;
+   private Action actionSaveAs;
+   private Action actionClear;
+   private Action actionClearOutput;
+   private Action actionExecute;
+   private List<Script> library;
+   private int previousSelection = -1;
+
+   /**
+    * Create agent configuration editor for given node.
+    *
+    * @param node node object
+    */
+   public ScriptExecutorView(long objectId)
+   {
+      super(i18n.tr("Execute Script"), ResourceManager.getImageDescriptor("icons/object-views/script-executor.png"), "ScriptExecutor", objectId, false);
+      this.objectId = objectId;
+      session = Registry.getSession();
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#createContent(org.eclipse.swt.widgets.Composite)
+    */
+   @Override
+   public void createContent(Composite parent)
+   {
+      Composite formContainer = new Composite(parent, SWT.NONE);
+      GridLayout layout = new GridLayout();
+      layout.verticalSpacing = 8;
+      formContainer.setLayout(layout);
+
+      scriptName = new Label(formContainer, SWT.LEFT);
+      scriptName.setFont(JFaceResources.getBannerFont());
+      scriptName.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+      scriptName.setText(i18n.tr("Noname"));
+
+      /**** Script list dropdown ****/
+      scriptCombo = WidgetHelper.createLabeledCombo(formContainer, SWT.READ_ONLY, i18n.tr("Script from library"), WidgetHelper.DEFAULT_LAYOUT_DATA);
+      updateScriptList(null); 
+      scriptCombo.addSelectionListener( new SelectionListener() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            if (modified)
+            {
+               if (saveIfRequired(true))
+                  return;
+            }           
+            getScriptContent();        
+            previousSelection = scriptCombo.getSelectionIndex();
+         }
+         
+         @Override
+         public void widgetDefaultSelected(SelectionEvent e)
+         {
+            widgetSelected(e);
+         }
+      });
+
+      SashForm splitter = new SashForm(formContainer, SWT.VERTICAL);
+      splitter.setSashWidth(3); 
+      GridData gridData = new GridData();
+      gridData.horizontalAlignment = GridData.FILL;
+      gridData.grabExcessHorizontalSpace = true;
+      gridData.verticalAlignment = SWT.FILL;
+      gridData.grabExcessVerticalSpace = true;
+      splitter.setLayoutData(gridData);
+
+      /**** Script parameters  ****/      
+      Composite container = new Composite(splitter, SWT.NONE);
+      layout = new GridLayout();
+      layout.marginHeight = 0;
+      layout.marginWidth = 0;
+      layout.marginBottom = 4;
+      container.setLayout(layout);
+
+      Label label = new Label(container, SWT.LEFT);
+      label.setText(i18n.tr("Parameters (comma-separated list)"));
+
+      parametersField = new Text(container, SWT.SINGLE | SWT.BORDER);
+      gridData = new GridData();
+      gridData.horizontalAlignment = GridData.FILL;
+      gridData.grabExcessHorizontalSpace = true;
+      parametersField.setLayoutData(gridData);
+
+      /**** Script editor  ****/
+      label = new Label(container, SWT.LEFT);
+      label.setText(i18n.tr("Source"));
+
+      scriptEditor = new ScriptEditor(container, SWT.BORDER, SWT.H_SCROLL | SWT.V_SCROLL, true);
+      scriptEditor.setText("");
+      scriptEditor.getTextWidget().addModifyListener(new ModifyListener() {
+         @Override
+         public void modifyText(ModifyEvent e)
+         {
+            onTextModify();
+         }
+      });
+      gridData = new GridData();
+      gridData.horizontalAlignment = GridData.FILL;
+      gridData.grabExcessHorizontalSpace = true;
+      gridData.verticalAlignment = SWT.FILL;
+      gridData.grabExcessVerticalSpace = true;
+      scriptEditor.setLayoutData(gridData);
+
+      /**** Execution result ****/
+      container = new Composite(splitter, SWT.NONE);
+      layout = new GridLayout();
+      layout.marginHeight = 0;
+      layout.marginWidth = 0;
+      layout.marginTop = 4;
+      container.setLayout(layout);
+
+      label = new Label(container, SWT.LEFT);
+      label.setText(i18n.tr("Output"));
+
+      output = new TextConsole(container, SWT.BORDER);
+      gridData = new GridData();
+      gridData.horizontalAlignment = GridData.FILL;
+      gridData.grabExcessHorizontalSpace = true;
+      gridData.verticalAlignment = SWT.FILL;
+      gridData.grabExcessVerticalSpace = true;
+      output.setLayoutData(gridData);
+
+      createActions();
+
+      actionSave.setEnabled(false);
+   }
+
+   /**
+    * On text modify
+    */
+   private void onTextModify()
+   {
+      if (!modified)
+      {
+         modified = true;
+         if (scriptCombo.getSelectionIndex() != -1)
+            actionSave.setEnabled(true);
+      }
+   }
+
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
+    */
+   @Override
+   public void setFocus()
+   {
+      scriptEditor.setFocus();
+   }
+
+   /**
+    * Create actions
+    */
+   private void createActions()
+   {
+      actionSave = new Action(i18n.tr("&Save"), SharedIcons.SAVE) {
+         @Override
+         public void run()
+         {
+            saveScript(false, false);
+         }
+      };
+      addKeyBinding("M1+S", actionSave);
+
+      actionSaveAs = new Action(i18n.tr("Save &as..."), SharedIcons.SAVE_AS) {
+         @Override
+         public void run()
+         {
+            createNewScript(false, false);
+         }
+      };
+      addKeyBinding("M1+M2+S", actionSaveAs);
+
+      actionClear = new Action(i18n.tr("&Clear source"), SharedIcons.CLEAR) {
+         @Override
+         public void run()
+         {
+            if(modified)
+            {
+               if(saveIfRequired(false))
+                  return;
+            }
+            scriptCombo.deselectAll();
+            scriptCombo.clearSelection();
+            scriptEditor.setText("");
+            output.clear();
+            scriptName.setText(i18n.tr("Noname"));
+         }
+      };
+
+      actionClearOutput = new Action(i18n.tr("Clear &output"), SharedIcons.CLEAR_LOG) {
+         @Override
+         public void run()
+         {
+            output.clear();
+         }
+      };
+      addKeyBinding("M1+L", actionClearOutput);
+
+      actionExecute = new Action(i18n.tr("E&xecute"), SharedIcons.EXECUTE) {
+         @Override
+         public void run()
+         {
+            executeScript();
+         }
+      };
+      addKeyBinding("F9", actionExecute);
+   }  
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#refresh()
+    */
+   @Override
+   public void refresh()
+   {
+      if (modified)
+      {
+         if (saveIfRequired(false))
+            return;
+      }
+      updateScriptList(null);
+      getScriptContent();
+      output.clear();
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#beforeClose()
+    */
+   @Override
+   public boolean beforeClose()
+   {
+      if (!modified)
+         return true;
+
+      SaveScriptDialog dlg = new SaveScriptDialog(getWindow().getShell(), actionSave.isEnabled());
+      int rc = dlg.open();
+      switch(rc)
+      {
+         case SaveScriptDialog.SAVE_ID:
+            saveScript(false, true);
+            break;
+         case SaveScriptDialog.SAVE_AS_ID:
+            createNewScript(false, true);
+            break;
+         case SaveScriptDialog.DISCARD_ID:
+            getScriptContent();
+            clearModificationFlag();
+            break;
+         default:
+            scriptCombo.select(previousSelection);
+            break;
+      }
+      return (rc != IDialogConstants.CANCEL_ID);
+   }
+
+   /**
+    * Ask if save, save as, cancel or discard action should be done
+    * 
+    * @param onSelectionChange set to true if save happens because of library script selection change
+    */
+   private boolean saveIfRequired(boolean onSelectionChange)
+   {
+      SaveScriptDialog dlg = new SaveScriptDialog(getWindow().getShell(), actionSave.isEnabled());
+      int rc = dlg.open();
+      switch(rc)
+      {
+         case SaveScriptDialog.SAVE_ID:
+            saveScript(onSelectionChange, false);
+            break;
+         case SaveScriptDialog.SAVE_AS_ID:
+            createNewScript(onSelectionChange, false);
+            break;
+         case SaveScriptDialog.DISCARD_ID:
+            getScriptContent(); 
+            clearModificationFlag();
+            break;
+         default:
+            scriptCombo.select(previousSelection);
+            break;
+      }
+      return (rc == IDialogConstants.CANCEL_ID);
+   }
+
+   /**
+    * Create new script
+    * 
+    * @param saveOnSelectionChange true if called because of library script selection change
+    * @param saveOnClose true if called on closing view
+    */
+   private boolean createNewScript(final boolean saveOnSelectionChange, final boolean saveOnClose)
+   {
+      final CreateScriptDialog dlg = new CreateScriptDialog(getWindow().getShell(), null);
+      if (dlg.open() != Window.OK)
+         return false;
+
+      final String scriptSource = scriptEditor.getText();
+      new Job(i18n.tr("Creating library script"), this) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            session.modifyScript(0, dlg.getName(), scriptSource);
+            if (!saveOnClose)
+            {
+               runInUIThread(new Runnable() {
+                  @Override
+                  public void run()
+                  {
+                     Runnable run = new Runnable() {
+                        @Override
+                        public void run()
+                        {
+                           scriptCombo.select(scriptCombo.indexOf(dlg.getName()));
+                        }
+                     };
+                     updateScriptList(saveOnSelectionChange ? null : run);
+                     clearModificationFlag();
+                  }
+               });
+            }
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return i18n.tr("Cannot create library script");
+         }
+      }.start();
+      return true;
+   }
+
+   /**
+    * Updates content of script editor to selected by user script
+    */
+   protected void getScriptContent()
+   {
+      final int index = scriptCombo.getSelectionIndex();
+      if (index == -1)
+         return;
+
+      new Job(i18n.tr("Loading library script"), this) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {            
+            final Script script = session.getScript(library.get(index).getId());
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
+                  scriptEditor.setText(script.getSource());
+                  clearModificationFlag();
+                  scriptName.setText(script.getName());
+               }
+            });
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return i18n.tr("Cannot load library script");
+         }
+      }.start();
+   }
+
+   /**
+    * Execute script
+    */
+   protected void executeScript()
+   {
+      final String script = scriptEditor.getText();
+      final String parameters = parametersField.getText();
+      consoleOutputStream = output.newOutputStream();
+      actionExecute.setEnabled(false);
+      Job job = new Job(i18n.tr("Executing script"), this) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            session.executeScript(objectId, script, parameters, ScriptExecutorView.this);
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return i18n.tr("Cannot execute script");
+         } 
+
+         @Override
+         protected void jobFinalize()
+         {
+            try
+            {
+               consoleOutputStream.close();
+               consoleOutputStream = null;
+            }
+            catch(IOException e)
+            {
+            }
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
+                  actionExecute.setEnabled(true);
+               }
+            });
+         } 
+      };
+      job.setUser(false);
+      job.start();
+   }
+
+   /**
+    * Populates list of scripts with scripts
+    */
+   private void updateScriptList(final Runnable postProcessor)
+   {
+      final String selection = (scriptCombo.getSelectionIndex() != -1) ? scriptCombo.getItem(scriptCombo.getSelectionIndex()) : null;
+
+      new Job(i18n.tr("Reading list of library scripts"), this) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            library = session.getScriptLibrary();
+            Collections.sort(library, new Comparator<Script>() {
+               @Override
+               public int compare(Script lhs, Script rhs) {
+                   return lhs.getName().compareTo(rhs.getName());
+               }
+            });
+
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
+                  scriptCombo.removeAll();
+                  for(Script s : library)
+                  {
+                     scriptCombo.add(s.getName());
+                  }
+                  if (postProcessor != null)
+                  {
+                     postProcessor.run();
+                  }
+                  else
+                  {
+                     if (selection != null)
+                     {
+                        scriptCombo.select(scriptCombo.indexOf(selection));
+                     }  
+                  }
+               }
+            });
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return i18n.tr("Cannot read list of library scripts");
+         }
+      }.start();
+   }
+
+   /**
+    * Save script
+    *
+    * @param saveOnSelectionChange true if called because of library script selection change
+    * @param saveOnClose true if called on closing view
+    */
+   public void saveScript(boolean saveOnSelectionChange, final boolean saveOnClose)
+   {
+      final Script s = library.get(saveOnSelectionChange ? previousSelection : scriptCombo.getSelectionIndex());
+      final String scriptSource = scriptEditor.getText();
+      new Job(i18n.tr("Updating library script"), this) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            session.modifyScript(s.getId(), s.getName(), scriptSource);
+            if (!saveOnClose)
+            {
+               runInUIThread(new Runnable() {
+                  @Override
+                  public void run()
+                  {
+                     clearModificationFlag();
+                  }
+               });
+            }
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return i18n.tr("Cannot update library script");
+         }
+      }.start();
+   }
+
+   /**
+    * Update editor content
+    */
+   private void clearModificationFlag()
+   {
+      modified = false;
+      actionSave.setEnabled(false);
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#fillLocalMenu(org.eclipse.jface.action.MenuManager)
+    */
+   @Override
+   protected void fillLocalMenu(MenuManager manager)
+   {
+      manager.add(actionExecute);
+      manager.add(actionClearOutput);
+      manager.add(new Separator());
+      manager.add(actionSave);
+      manager.add(actionSaveAs);
+      manager.add(actionClear);
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#fillLocalToolbar(org.eclipse.jface.action.ToolBarManager)
+    */
+   @Override
+   protected void fillLocalToolbar(ToolBarManager manager)
+   {
+      manager.add(actionExecute);
+      manager.add(actionClearOutput);
+      manager.add(new Separator());
+      manager.add(actionSave);
+      manager.add(actionSaveAs);
+      manager.add(actionClear);
+   }
+
+   /**
+    * @see org.netxms.client.ActionExecutionListener#messageReceived(java.lang.String)
+    */
+   @Override
+   public void messageReceived(final String text)
+   {
+      if (consoleOutputStream != null)
+      {
+         try
+         {
+            consoleOutputStream.write(text);
+         }
+         catch(IOException e)
+         {
+         }
+      }
+   }
+
+   /**
+    * @see org.netxms.client.TextOutputListener#setStreamId(long)
+    */
+   @Override
+   public void setStreamId(long streamId)
+   {
+   }
+
+   /**
+    * @see org.netxms.client.TextOutputListener#onError()
+    */
+   @Override
+   public void onError()
+   {
+   }
+}

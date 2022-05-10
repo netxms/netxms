@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.netxms.ui.eclipse.widgets.ansi;
+package org.netxms.nxmc.base.widgets.ansi;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.RGB;
-import org.netxms.ui.eclipse.tools.ColorCache;
-import org.netxms.ui.eclipse.widgets.helpers.StyleRange;
+import org.netxms.nxmc.base.widgets.helpers.StyleRange;
+import org.netxms.nxmc.tools.ColorCache;
 
 /**
  * ANSI console attributes
@@ -27,7 +27,7 @@ import org.netxms.ui.eclipse.widgets.helpers.StyleRange;
 public class AnsiConsoleAttributes implements Cloneable
 {
    public final static int UNDERLINE_NONE = -1; // nothing in SWT, a bit of an abuse
-
+   
    private static ColorCache colorCache = new ColorCache();
 
    public Integer currentBgColor;
@@ -134,7 +134,7 @@ public class AnsiConsoleAttributes implements Cloneable
          tempAttrib.italic = false;
          tempAttrib.invert = true;
       }
-     
+
       // Prepare the foreground color
       if (hilite)
       {
