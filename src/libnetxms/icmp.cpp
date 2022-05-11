@@ -1,6 +1,6 @@
 /* 
 ** libnetxms - Common NetXMS utility library
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -36,7 +36,7 @@
  *             iNumRetries - number of retries
  *             dwTimeout - Timeout waiting for response in milliseconds
  */
-UINT32 LIBNETXMS_EXPORTABLE IcmpPing(const InetAddress &addr, int numRetries, UINT32 timeout, UINT32 *prtt, UINT32 packetSize, bool dontFragment)
+uint32_t LIBNETXMS_EXPORTABLE IcmpPing(const InetAddress &addr, int numRetries, uint32_t timeout, uint32_t *prtt, uint32_t packetSize, bool dontFragment)
 {
    static char payload[MAX_PING_SIZE] = "NetXMS ICMP probe [01234567890]";
 
@@ -44,10 +44,15 @@ UINT32 LIBNETXMS_EXPORTABLE IcmpPing(const InetAddress &addr, int numRetries, UI
    if (hIcmpFile == INVALID_HANDLE_VALUE)
       return ICMP_API_ERROR;
 
+   if (packetSize < 46)
+      packetSize = 46;
+   else if (packetSize > MAX_PING_SIZE)
+      packetSize = MAX_PING_SIZE;
+
    DWORD replySize = packetSize + 16 + ((addr.getFamily() == AF_INET) ? sizeof(ICMP_ECHO_REPLY) : sizeof(ICMPV6_ECHO_REPLY));
 	char *reply = (char *)alloca(replySize);
 	int retries = numRetries;
-	UINT32 rc = ICMP_API_ERROR;
+	uint32_t rc = ICMP_API_ERROR;
 	do
 	{
 		if (addr.getFamily() == AF_INET)
@@ -792,6 +797,11 @@ static inline uint32_t PingLoop(PingRequestProcessor *p, const InetAddress &addr
  */
 uint32_t LIBNETXMS_EXPORTABLE IcmpPing(const InetAddress &addr, int numRetries, uint32_t timeout, uint32_t *rtt, uint32_t packetSize, bool dontFragment)
 {
+   if (packetSize < 46)
+      packetSize = 46;
+   else if (packetSize > MAX_PING_SIZE)
+      packetSize = MAX_PING_SIZE;
+
    if (addr.getFamily() == AF_INET)
       return PingLoop(&s_processorV4, addr, numRetries, timeout, rtt, packetSize, dontFragment);
 #ifdef WITH_IPV6

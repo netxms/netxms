@@ -32,6 +32,7 @@
 #include <nxcore_jobs.h>
 #include <nxcore_ps.h>
 #include <nxcore_websvc.h>
+#include <nxnet.h>
 
 #if !defined(_WIN32) && HAVE_READLINE_READLINE_H && HAVE_READLINE && !defined(UNICODE)
 #include <readline/readline.h>
@@ -507,8 +508,13 @@ static void LoadGlobalConfig()
       SetNetXMSDataDirectory(g_netxmsdDataDir);
    }
 
-   g_icmpPingTimeout = ConfigReadInt(_T("ICMP.PingTimeout"), 1500);
    g_icmpPingSize = ConfigReadInt(_T("ICMP.PingSize"), 46);
+   if (g_icmpPingSize < 46)
+      g_icmpPingSize = 46;
+   else if (g_icmpPingSize > MAX_PING_SIZE)
+      g_icmpPingSize = MAX_PING_SIZE;
+
+   g_icmpPingTimeout = ConfigReadInt(_T("ICMP.PingTimeout"), 1500);
    g_agentCommandTimeout = ConfigReadInt(_T("Agent.CommandTimeout"), 4000);
    g_agentRestartWaitTime = ConfigReadInt(_T("Agent.RestartWaitTime"), 0);
    g_thresholdRepeatInterval = ConfigReadInt(_T("DataCollection.ThresholdRepeatInterval"), 0);
