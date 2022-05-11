@@ -22,6 +22,7 @@
 
 #include "nxcore.h"
 #include <nxconfig.h>
+#include <nxnet.h>
 
 /**
  * Externals
@@ -613,6 +614,20 @@ static void OnConfigVariableChange(bool isCLOB, const TCHAR *name, const TCHAR *
          InterlockedOr64(reinterpret_cast<VolatileCounter64*>(&g_flags), AF_COLLECT_ICMP_STATISTICS);
       else
          InterlockedAnd64(reinterpret_cast<VolatileCounter64*>(&g_flags), ~AF_COLLECT_ICMP_STATISTICS);
+   }
+   else if (!_tcscmp(name, _T("ICMP.PingSize")))
+   {
+      uint32_t size = ConvertToUint32(value, 46);
+      if (size < MIN_PING_SIZE)
+         g_icmpPingSize = MIN_PING_SIZE;
+      else if (size > MAX_PING_SIZE)
+         g_icmpPingSize = MAX_PING_SIZE;
+      else
+         g_icmpPingSize = size;
+   }
+   else if (!_tcscmp(name, _T("ICMP.PingTimeout")))
+   {
+      g_icmpPingTimeout = ConvertToUint32(value, 1500);
    }
    else if (!_tcscmp(name, _T("ICMP.PollingInterval")))
    {

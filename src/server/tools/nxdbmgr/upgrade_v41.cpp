@@ -24,6 +24,20 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 41.15 to 41.16
+ */
+static bool H_UpgradeFromV15()
+{
+   static const TCHAR *batch =
+      _T("UPDATE config SET units='bytes',description='Size of ICMP packets (in bytes, including IP header size) used for polls.',need_server_restart=0 WHERE var_name='ICMP.PingSize'\n")
+      _T("UPDATE config SET need_server_restart=0 WHERE var_name='ICMP.PingTimeout'\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(SetMinorSchemaVersion(16));
+   return true;
+}
+
+/**
  * Upgrade from 41.14 to 41.15
  */
 static bool H_UpgradeFromV14()
@@ -479,6 +493,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 15, 41, 16, H_UpgradeFromV15 },
    { 14, 41, 15, H_UpgradeFromV14 },
    { 13, 41, 14, H_UpgradeFromV13 },
    { 12, 41, 13, H_UpgradeFromV12 },
