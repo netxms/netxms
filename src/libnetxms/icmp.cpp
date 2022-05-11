@@ -27,14 +27,18 @@
 #include <iphlpapi.h>
 #include <icmpapi.h>
 
+#define MIN_PING_SIZE      28
 #define MAX_PING_SIZE      8192
 
 /**
  * Do an ICMP ping to specific address
- * Return value: TRUE if host is alive and FALSE otherwise
+ * Return value: ICMP error code
  * Parameters: addr - IP address
- *             iNumRetries - number of retries
- *             dwTimeout - Timeout waiting for response in milliseconds
+ *             numRetries - number of retries
+ *             timeout - Timeout waiting for response in milliseconds
+ *             rtt - pointer to save round trip time
+ *             packetSize - ping packet size in bytes
+ *             dontFragment - if true "don't fragment" flag will be set on outgoing packet
  */
 uint32_t LIBNETXMS_EXPORTABLE IcmpPing(const InetAddress &addr, int numRetries, uint32_t timeout, uint32_t *prtt, uint32_t packetSize, bool dontFragment)
 {
@@ -44,10 +48,13 @@ uint32_t LIBNETXMS_EXPORTABLE IcmpPing(const InetAddress &addr, int numRetries, 
    if (hIcmpFile == INVALID_HANDLE_VALUE)
       return ICMP_API_ERROR;
 
-   if (packetSize < 46)
-      packetSize = 46;
+   // Check packet size and adjust to indicate payload size
+   if (packetSize < MIN_PING_SIZE)
+      packetSize = 0;
    else if (packetSize > MAX_PING_SIZE)
-      packetSize = MAX_PING_SIZE;
+      packetSize = MAX_PING_SIZE - MIN_PING_SIZE;
+   else
+      packetSize -= MIN_PING_SIZE;
 
    DWORD replySize = packetSize + 16 + ((addr.getFamily() == AF_INET) ? sizeof(ICMP_ECHO_REPLY) : sizeof(ICMPV6_ECHO_REPLY));
 	char *reply = (char *)alloca(replySize);
@@ -81,7 +88,7 @@ uint32_t LIBNETXMS_EXPORTABLE IcmpPing(const InetAddress &addr, int numRetries, 
          opt.Ttl = 127;
          if (dontFragment)
             opt.Flags = IP_FLAG_DF;
-         rc = Icmp6SendEcho2(hIcmpFile, NULL, NULL, NULL, &sa, &da, payload, (WORD)packetSize, &opt, reply, replySize, timeout);
+         rc = Icmp6SendEcho2(hIcmpFile, nullptr, nullptr, nullptr, &sa, &da, payload, (WORD)packetSize, &opt, reply, replySize, timeout);
       }
 		if (rc != 0)
 		{
@@ -108,7 +115,7 @@ uint32_t LIBNETXMS_EXPORTABLE IcmpPing(const InetAddress &addr, int numRetries, 
 			{
 				case IP_SUCCESS:
 					rc = ICMP_SUCCESS;
-					if (prtt != NULL)
+					if (prtt != nullptr)
 						*prtt = rtt;
 					break;
 				case IP_REQ_TIMED_OUT:
@@ -787,7 +794,7 @@ static inline uint32_t PingLoop(PingRequestProcessor *p, const InetAddress &addr
 
 /**
  * Do an ICMP ping to specific IP address
- * Return value: TRUE if host is alive and FALSE otherwise
+ * Return value: ICMP error code
  * Parameters: addr - IP address
  *             numRetries - number of retries
  *             timeout - Timeout waiting for response in milliseconds
@@ -797,8 +804,8 @@ static inline uint32_t PingLoop(PingRequestProcessor *p, const InetAddress &addr
  */
 uint32_t LIBNETXMS_EXPORTABLE IcmpPing(const InetAddress &addr, int numRetries, uint32_t timeout, uint32_t *rtt, uint32_t packetSize, bool dontFragment)
 {
-   if (packetSize < 46)
-      packetSize = 46;
+   if (packetSize < MIN_PING_SIZE)
+      packetSize = MIN_PING_SIZE;
    else if (packetSize > MAX_PING_SIZE)
       packetSize = MAX_PING_SIZE;
 

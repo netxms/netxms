@@ -509,8 +509,8 @@ static void LoadGlobalConfig()
    }
 
    g_icmpPingSize = ConfigReadInt(_T("ICMP.PingSize"), 46);
-   if (g_icmpPingSize < 46)
-      g_icmpPingSize = 46;
+   if (g_icmpPingSize < MIN_PING_SIZE)
+      g_icmpPingSize = MIN_PING_SIZE;
    else if (g_icmpPingSize > MAX_PING_SIZE)
       g_icmpPingSize = MAX_PING_SIZE;
 

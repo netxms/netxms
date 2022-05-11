@@ -576,8 +576,8 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
          InetAddress addr = InetAddress::parse(szBuffer);
          if (addr.isValid())
          {
-            UINT32 rtt;
-            UINT32 rc = IcmpPing(addr, 1, 2000, &rtt, 128, false);
+            uint32_t rtt;
+            uint32_t rc = IcmpPing(addr, 1, 2000, &rtt, g_icmpPingSize, false);
             switch(rc)
             {
                case ICMP_SUCCESS:

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -57,6 +57,11 @@ struct ICMPHDR
    uint16_t m_wId;          // Identification
    uint16_t m_wSeq;         // Sequence
 };
+
+/**
+ * Min ping size
+ */
+#define MIN_PING_SIZE   (sizeof(IPHDR) + sizeof(ICMPHDR))
 
 /**
  * Max ping size
