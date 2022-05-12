@@ -156,7 +156,7 @@
          point="org.eclipse.ui.views">
       <view
             allowMultiple="false"
-            class="org.netxms.ui.eclipse.topology.views.FindConnectionPointView"
+            class="org.netxms.ui.eclipse.topology.views.HostSearchResults"
             icon="icons/search_history.png"
             id="org.netxms.ui.eclipse.topology.views.HostSearchResults"
             name="%view.name.ConnSearch"
