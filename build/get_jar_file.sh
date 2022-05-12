@@ -7,7 +7,7 @@
 #   4) additional build parameters (optional)
 
 if [ -z $2 ]; then
-   echo Usage: $0 '<artifactId> <version> [groupId] [builf parameters]'
+   echo Usage: $0 '<artifactId> <version> [groupId] [build parameters]'
    exit 1
 fi
 
@@ -18,10 +18,21 @@ if [ ! -z $3 ]; then
    GROUP="$3"
 fi
 
-mvn dependency:copy -Dartifact=$GROUP:$ARTIFACT:$VERSION -DoutputDirectory=. && exit 0
+FGROUP=`echo $GROUP | sed -e 's^\.^/^g'`
+JAR_FILE="$HOME/.m2/repository/$FGROUP/$ARTIFACT/$VERSION/$ARTIFACT-$VERSION.jar"
 
 if echo $VERSION | grep -q SNAPSHOT; then
-   shift; shift; shift
-   mvn -Dmaven.test.skip=true install $@
-   mvn dependency:copy -Dartifact=$GROUP:$ARTIFACT:$VERSION -DoutputDirectory=.
+   if [ -f "$JAR_FILE" ]; then
+      cp "$JAR_FILE" . || exit 1
+   else
+      shift; shift; shift
+      mvn -Dmaven.test.skip=true install $@
+      mvn dependency:copy -Dartifact=$GROUP:$ARTIFACT:$VERSION -DoutputDirectory=. || exit 1
+   fi
+else
+   if [ -f "$JAR_FILE" ]; then
+      cp "$JAR_FILE" . || exit 1
+   else
+      mvn dependency:copy -Dartifact=$GROUP:$ARTIFACT:$VERSION -DoutputDirectory=. || exit 1
+   fi
 fi
