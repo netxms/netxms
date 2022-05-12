@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,22 +29,21 @@ import org.netxms.ui.eclipse.snmp.views.MibExplorer;
 
 /**
  * Label provider for SNMP values
- *
  */
 public class SnmpValueLabelProvider extends LabelProvider implements ITableLabelProvider
 {
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
+    */
 	@Override
 	public Image getColumnImage(Object element, int columnIndex)
 	{
 		return null;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
+    */
 	@Override
 	public String getColumnText(Object element, int columnIndex)
 	{
@@ -57,8 +56,7 @@ public class SnmpValueLabelProvider extends LabelProvider implements ITableLabel
 			   MibObject object = MibCache.findObject(value.getName(), false);
 			   if (object == null)
 			      return "";
-			   else			      
-			      return object.getFullName();
+            return object.getFullName();
 			case MibExplorer.COLUMN_TYPE:
 				if (value.getType() == 0xFFFF)
 					return "Hex-STRING"; //$NON-NLS-1$

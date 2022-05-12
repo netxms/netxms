@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -92,12 +92,12 @@ import org.netxms.ui.eclipse.widgets.FilterText;
 public class MibExplorer extends ViewPart implements SnmpWalkListener
 {
 	public static final String ID = "org.netxms.ui.eclipse.snmp.views.MibExplorer"; //$NON-NLS-1$
-	
+
 	public static final int COLUMN_NAME = 0;
 	public static final int COLUMN_TEXT = 1;
 	public static final int COLUMN_TYPE = 2;
 	public static final int COLUMN_VALUE = 3;
-	
+
 	private CLabel header;
 	private Font headerFont;
 	private MibBrowser mibBrowser;
@@ -194,10 +194,10 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 		SashForm splitter = new SashForm(parent, SWT.VERTICAL);
 		splitter.setLayout(new FillLayout());
 		splitter.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-		
+
 		SashForm mibViewSplitter = new SashForm(splitter, SWT.HORIZONTAL);
 		mibViewSplitter.setLayout(new FillLayout());
-		
+
 		mibBrowser = new MibBrowser(mibViewSplitter, SWT.BORDER);
 		mibBrowser.addSelectionChangedListener(new ISelectionChangedListener() {
 			@Override
@@ -231,14 +231,14 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
             actionShowFilter.setChecked(initShowFilter);
          }
       });
-		
+
 		// Setup layout
       FormData fd = new FormData();
       fd.left = new FormAttachment(0, 0);;
       fd.top = new FormAttachment(0, 0);
       fd.right = new FormAttachment(100, 0);
       filterText.setLayoutData(fd);
-      
+
       // walk results
 		viewer = new TableViewer(resultArea, SWT.FULL_SELECTION | SWT.MULTI | SWT.BORDER);
 		viewer.getTable().setLinesVisible(true);
@@ -270,7 +270,7 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 				selectInTree();
 			}
 		});
-		
+
 		// Setup layout
       fd = new FormData();
       fd.left = new FormAttachment(0, 0);;
@@ -278,9 +278,9 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
       fd.bottom = new FormAttachment(100, 0);
       fd.right = new FormAttachment(100, 0);
       viewer.getControl().setLayoutData(fd);
-		
+
 		splitter.setWeights(new int[] { 70, 30 });
-		
+
 		createActions();
 		contributeToActionBars();
 		createTreePopupMenu();

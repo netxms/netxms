@@ -389,13 +389,13 @@ public:
    int getStatus() { return m_iStatus; }
    int getAccess() { return m_iAccess; }
 
-   SNMP_MIBObject *findChildByID(UINT32 dwOID);
+   SNMP_MIBObject *findChildByID(uint32_t oid);
 
    void print(int nIndent);
 
    // File I/O, supposed to be callsed only from libnxsnmp functions
-   void writeToFile(ZFile *pFile, UINT32 dwFlags);
-   BOOL readFromFile(ZFile *pFile);
+   void writeToFile(ZFile *file, uint32_t flags);
+   bool readFromFile(ZFile *file);
 };
 
 /**

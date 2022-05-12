@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -186,7 +186,7 @@ public final class MibCache implements ConsoleLoginListener
    		return (mibTree != null) ? mibTree : new MibTree();
       }
 	}
-	
+
 	/**
 	 * Find matching object in tree. If exactMatch set to true, method will search for object with
 	 * ID equal to given. If exactMatch set to false, and object with given id cannot be found, closest upper level

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -55,12 +55,6 @@ public final class MibCache
 	 */
 	public static void init(final NXCSession session, Display display)
 	{
-	   /*
-	   Boolean slowLink = (Boolean)ConsoleSharedData.getProperty("SlowLink"); //$NON-NLS-1$
-	   if ((slowLink != null) && slowLink.booleanValue())
-	      return;
-	   */
-	   
 		Job job = new Job(i18n.tr("Load MIB file on startup"), null) {
 			@Override
 			protected void run(IProgressMonitor monitor) throws Exception
@@ -107,6 +101,15 @@ public final class MibCache
 				      
 				      file.delete();
 					}
+
+               final MibTree newMibTree = new MibTree(mibFile);
+               runInUIThread(new Runnable() {
+                  @Override
+                  public void run()
+                  {
+                     mibTree = newMibTree; // Replace MIB tree
+                  }
+               });
 				}
 			}
 
@@ -127,6 +130,7 @@ public final class MibCache
 	{
 	   if (mibTree != null)
 	      return mibTree;
+
       File targetDir = new File(Registry.getStateDir(), "mibFile");
       File mibFile = new File(targetDir, "netxms.mib"); //$NON-NLS-1$
       if (mibFile.exists())
@@ -142,7 +146,7 @@ public final class MibCache
       }
 		return (mibTree != null) ? mibTree : new MibTree();
 	}
-	
+
 	/**
 	 * Find matching object in tree. If exactMatch set to true, method will search for object with
 	 * ID equal to given. If exactMatch set to false, and object with given id cannot be found, closest upper level
@@ -157,7 +161,7 @@ public final class MibCache
 	{
 	   if (mibTree == null)
 	      return null;
-	   
+
 		SnmpObjectId id;
 		try
 		{

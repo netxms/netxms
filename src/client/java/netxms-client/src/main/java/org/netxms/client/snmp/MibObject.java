@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,7 +28,6 @@ import org.netxms.client.constants.RCC;
 
 /**
  * This class represents single MIB tree object.
- *
  */
 public class MibObject
 {
@@ -37,7 +36,7 @@ public class MibObject
 	public static final int STATUS_OBSOLETE               = 3;
 	public static final int STATUS_DEPRECATED             = 4;
 	public static final int STATUS_CURRENT                = 5;
-	
+
 	public static final int ACCESS_READONLY               = 1;
 	public static final int ACCESS_READWRITE              = 2;
 	public static final int ACCESS_WRITEONLY              = 3;
@@ -103,7 +102,7 @@ public class MibObject
 	private Map<Long, MibObject> childObjects = new HashMap<Long, MibObject>();
 	private MibObject parent;
 	private SnmpObjectId objectId;
-	
+
 	/**
 	 * Default constructor - create empty "[root]" object.
 	 */
@@ -119,7 +118,7 @@ public class MibObject
 		parent = null;
 		objectId = null;
 	}
-	
+
 	/**
 	 * Read MIB object from compiled MIB file.
 	 *
@@ -133,7 +132,7 @@ public class MibObject
 		this.parent = parent;
 		name = null;
 		description = "";
-		
+
 		boolean stop = false;
 		while(!stop)
 		{
@@ -177,7 +176,7 @@ public class MibObject
 	         default:
 	         	throw new NXCException(RCC.BAD_MIB_FILE_DATA);
 			}
-			
+
 			// Check closing tag for all tags except OBJECT tags (both opening and closing)
 			if ((tag & ~MIB_END_OF_TAG) != MIB_TAG_OBJECT)
 			{
@@ -186,11 +185,11 @@ public class MibObject
 	         	throw new NXCException(RCC.BAD_MIB_FILE_DATA);
 			}
 		}
-		
+
 		if (parent == null)
 		{
 			name = "[root]";
-			
+
 			// Set correct full OIDs for all objects in the tree 
 			for(MibObject o : childObjects.values())
 				o.setObjectIdFromParent(null);
@@ -212,12 +211,12 @@ public class MibObject
 		int len = in.readUnsignedShort();
 		if (len == 0)
 			return "";
-		
+
 		byte[] buffer = new byte[len];
 		in.read(buffer);
 		return new String(buffer);
 	}
-	
+
 	/**
 	 * Set OID based on parent's OID
 	 * @param oid Parent's OID
@@ -244,7 +243,7 @@ public class MibObject
 	{
 		return name;
 	}
-	
+
 	/**
 	 * Get object's full name (including all parents)
 	 * 

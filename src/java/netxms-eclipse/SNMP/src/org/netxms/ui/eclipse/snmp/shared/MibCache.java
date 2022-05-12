@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -77,7 +77,7 @@ public final class MibCache implements ConsoleLoginListener
 						targetDir = new File(loc.getURL().getPath());
 					}
 					File mibFile = new File(targetDir, "netxms.mib"); //$NON-NLS-1$
-					
+
 					Date serverMibTimestamp = session.getMibFileTimestamp();
 					if (!mibFile.exists() || (serverMibTimestamp.getTime() > mibFile.lastModified()))
 					{
@@ -86,7 +86,7 @@ public final class MibCache implements ConsoleLoginListener
 
 						if (mibFile.exists())
 							mibFile.delete();
-						
+
 						if (!file.renameTo(mibFile))
 						{
 							// Rename failed, try to copy file
@@ -115,6 +115,15 @@ public final class MibCache implements ConsoleLoginListener
 					      
 					      file.delete();
 						}
+
+                  final MibTree newMibTree = new MibTree(mibFile);
+                  runInUIThread(new Runnable() {
+                     @Override
+                     public void run()
+                     {
+                        mibTree = newMibTree; // Replace MIB tree
+                     }
+                  });
 					}
 				}
 			}
@@ -129,6 +138,9 @@ public final class MibCache implements ConsoleLoginListener
             return Status.OK_STATUS;
          }
 
+         /**
+          * @see org.netxms.ui.eclipse.jobs.ConsoleJob#getErrorMessage()
+          */
          @Override
 			protected String getErrorMessage()
 			{
@@ -174,7 +186,7 @@ public final class MibCache implements ConsoleLoginListener
       }
 		return (mibTree != null) ? mibTree : new MibTree();
 	}
-	
+
 	/**
 	 * Find matching object in tree. If exactMatch set to true, method will search for object with
 	 * ID equal to given. If exactMatch set to false, and object with given id cannot be found, closest upper level

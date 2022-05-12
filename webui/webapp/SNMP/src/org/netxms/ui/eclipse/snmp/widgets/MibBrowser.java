@@ -34,7 +34,6 @@ import org.netxms.ui.eclipse.snmp.widgets.helpers.MibTreeLabelProvider;
 
 /**
  * MIB browser widget
- *
  */
 public class MibBrowser extends Composite
 {
