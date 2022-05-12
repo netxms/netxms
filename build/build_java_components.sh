@@ -9,10 +9,12 @@ cp build/netxms-build-tag.properties src/java-common/netxms-base/src/main/resour
 
 VERSION=`cat build/netxms-build-tag.properties | grep NETXMS_VERSION | cut -d = -f 2`
 
-trap '
-   mvn -f src/pom.xml versions:revert -DprocessAllModules=true
-   mvn -f src/client/nxmc/java/pom.xml versions:revert
-' EXIT
+if [ "x$1" != "x-no-revert-version" ]; then
+   trap '
+      mvn -f src/pom.xml versions:revert -DprocessAllModules=true
+      mvn -f src/client/nxmc/java/pom.xml versions:revert
+   ' EXIT
+fi
 
 mvn -f src/pom.xml versions:set -DnewVersion=$VERSION -DprocessAllModules=true
 mvn -f src/client/nxmc/java/pom.xml versions:set -DnewVersion=$VERSION
@@ -30,4 +32,3 @@ if [ "$1" = "all" ]; then
 else
    mvn -f src/client/nxmc/java/pom.xml install -Pdesktop
 fi
-
