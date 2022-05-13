@@ -102,6 +102,7 @@ public class Messages extends NLS
    public static String Communication_ICMP;
    public static String Communication_JobError;
    public static String Communication_JobName;
+   public static String Communication_PingPrimaryIP;
    public static String Communication_PrimaryHostName;
    public static String Communication_Proxy;
    public static String Communication_RemoteAgent;
@@ -150,6 +151,8 @@ public class Messages extends NLS
    public static String ConditionScript_JobError;
    public static String ConditionScript_JobName;
    public static String ConditionScript_Script;
+   public static String CreateChassis_JobError;
+   public static String CreateChassis_JobName;
    public static String CreateCluster_Cluster;
    public static String CreateCluster_JobError;
    public static String CreateCluster_JobTitle;
@@ -221,6 +224,8 @@ public class Messages extends NLS
    public static String CreateRack_JobError;
    public static String CreateRack_JobTitle;
    public static String CreateRack_Rack;
+   public static String CreateSensor_JobError;
+   public static String CreateSensor_JobName;
    public static String CreateVpnConnector_JobError;
    public static String CreateVpnConnector_JobName;
    public static String CreateVpnConnector_ObjectType;
@@ -258,11 +263,17 @@ public class Messages extends NLS
    public static String EditClusterResourceDialog_WarningEmptyName;
    public static String EditClusterResourceDialog_WarningInvalidIP;
    public static String FullConfigurationPoll_FullConfigPollConfirmation;
+   public static String General_Alias;
+   public static String General_Category;
    public static String General_JobError;
    public static String General_JobName;
    public static String General_ObjectClass;
    public static String General_ObjectID;
    public static String General_ObjectName;
+   public static String InterfacePolling_CollectIcmpStats;
+   public static String InterfacePolling_DisableAgent;
+   public static String InterfacePolling_DisableIcmp;
+   public static String InterfacePolling_DisableSnmp;
    public static String InterfacePolling_ExcludeFromTopology;
    public static String InterfacePolling_ExpectedState;
    public static String InterfacePolling_JobError;

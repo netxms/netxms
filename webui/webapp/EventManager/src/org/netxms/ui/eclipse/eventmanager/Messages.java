@@ -21,7 +21,7 @@ public class Messages extends NLS
 	public String EventConfigurator_ColMessage;
 	public String EventConfigurator_ColName;
 	public String EventConfigurator_ColSeverity;
-	public String EventConfigurator_ColTags;
+   public String EventConfigurator_ColTags;
 	public String EventConfigurator_CreateJob_Error;
 	public String EventConfigurator_CreateJob_Title;
 	public String EventConfigurator_Delete;

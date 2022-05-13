@@ -10,7 +10,7 @@ public class Messages extends NLS
 	private static final String BUNDLE_NAME = "org.netxms.ui.eclipse.actionmanager.messages"; //$NON-NLS-1$
 	public String ActionLabelProvider_ActionTypeExecute;
 	public String ActionLabelProvider_ActionTypeForward;
-   public String ActionLabelProvider_ActionTypeNXSL;
+	public String ActionLabelProvider_ActionTypeNXSL;
 	public String ActionLabelProvider_ActionTypeRemoteExec;
 	public String ActionLabelProvider_ActionTypeNotification;
 	public String ActionLabelProvider_ActionTypeRemoteSSH;

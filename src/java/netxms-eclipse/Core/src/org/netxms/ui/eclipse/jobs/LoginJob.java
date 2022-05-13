@@ -91,7 +91,7 @@ public class LoginJob implements IRunnableWithProgress
    @Override
    public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException
    {
-      monitor.beginTask(Messages.LoginJob_connecting, 100);
+      monitor.beginTask(Messages.get().LoginJob_connecting, 100);
       try
       {
          final String hostName;
@@ -163,7 +163,7 @@ public class LoginJob implements IRunnableWithProgress
          });
          monitor.worked(40);
 
-         monitor.setTaskName(Messages.LoginJob_sync_objects);
+         monitor.setTaskName(Messages.get().LoginJob_sync_objects);
          final boolean[] objectsFullSync = new boolean[1];
          display.syncExec(new Runnable() {
             @Override

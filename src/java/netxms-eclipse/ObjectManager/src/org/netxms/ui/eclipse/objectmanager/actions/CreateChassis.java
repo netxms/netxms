@@ -33,6 +33,7 @@ import org.netxms.client.objects.Container;
 import org.netxms.client.objects.ServiceRoot;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectmanager.Activator;
+import org.netxms.ui.eclipse.objectmanager.Messages;
 import org.netxms.ui.eclipse.objectmanager.dialogs.CreateChassisDialog;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
@@ -72,7 +73,7 @@ public class CreateChassis implements IObjectActionDelegate
          cd.setControllerId(dlg.getControllerId());
    		
    		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-   		new ConsoleJob("Creating chassis", part, Activator.PLUGIN_ID, null) {
+   		new ConsoleJob(Messages.get().CreateChassis_JobName, part, Activator.PLUGIN_ID, null) {
    			@Override
    			protected void runInternal(IProgressMonitor monitor) throws Exception
    			{
@@ -82,7 +83,7 @@ public class CreateChassis implements IObjectActionDelegate
    			@Override
    			protected String getErrorMessage()
    			{
-   				return String.format("Cannot create chassis object %s", cd.getName());
+   				return String.format(Messages.get().CreateChassis_JobError, cd.getName());
    			}
    		}.start();
 	   } while(dlg.isShowAgain());

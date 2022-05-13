@@ -105,6 +105,7 @@ public class Messages extends NLS
    public String Communication_ICMP;
    public String Communication_JobError;
    public String Communication_JobName;
+   public String Communication_PingPrimaryIP;
    public String Communication_PrimaryHostName;
    public String Communication_Proxy;
    public String Communication_RemoteAgent;
@@ -153,6 +154,8 @@ public class Messages extends NLS
    public String ConditionScript_JobError;
    public String ConditionScript_JobName;
    public String ConditionScript_Script;
+   public String CreateChassis_JobError;
+   public String CreateChassis_JobName;
    public String CreateCluster_Cluster;
    public String CreateCluster_JobError;
    public String CreateCluster_JobTitle;
@@ -224,6 +227,8 @@ public class Messages extends NLS
    public String CreateRack_JobError;
    public String CreateRack_JobTitle;
    public String CreateRack_Rack;
+   public String CreateSensor_JobError;
+   public String CreateSensor_JobName;
    public String CreateVpnConnector_JobError;
    public String CreateVpnConnector_JobName;
    public String CreateVpnConnector_ObjectType;
@@ -261,11 +266,17 @@ public class Messages extends NLS
    public String EditClusterResourceDialog_WarningEmptyName;
    public String EditClusterResourceDialog_WarningInvalidIP;
    public String FullConfigurationPoll_FullConfigPollConfirmation;
+   public String General_Alias;
+   public String General_Category;
    public String General_JobError;
    public String General_JobName;
    public String General_ObjectClass;
    public String General_ObjectID;
    public String General_ObjectName;
+   public String InterfacePolling_CollectIcmpStats;
+   public String InterfacePolling_DisableAgent;
+   public String InterfacePolling_DisableIcmp;
+   public String InterfacePolling_DisableSnmp;
    public String InterfacePolling_ExcludeFromTopology;
    public String InterfacePolling_ExpectedState;
    public String InterfacePolling_JobError;

@@ -33,6 +33,7 @@ import org.netxms.client.objects.Container;
 import org.netxms.client.objects.ServiceRoot;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectmanager.Activator;
+import org.netxms.ui.eclipse.objectmanager.Messages;
 import org.netxms.ui.eclipse.objectmanager.wizards.CreateSensorWizard;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
@@ -68,7 +69,7 @@ public class CreateSensor implements IObjectActionDelegate
          return;
 		
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob("Create Sensor", part, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().CreateSensor_JobName, part, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -78,7 +79,7 @@ public class CreateSensor implements IObjectActionDelegate
 			@Override
 			protected String getErrorMessage()
 			{
-				return String.format("Create sensor %s", creationWizard.getCreationData().getName());
+				return String.format(Messages.get().CreateSensor_JobError, creationWizard.getCreationData().getName());
 			}
 		}.start();
 	}

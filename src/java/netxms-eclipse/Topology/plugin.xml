@@ -212,7 +212,7 @@
             class="org.netxms.ui.eclipse.topology.views.FindByIpAddressView"
             icon="icons/search_history.png"
             id="org.netxms.ui.eclipse.topology.views.FindByIpAddressView"
-            name="IP Address Searh"
+            name="IP Address Search"
             restorable="true">
       </view>
       <view
@@ -220,7 +220,7 @@
             class="org.netxms.ui.eclipse.topology.views.FindByMacAddressView"
             icon="icons/search_history.png"
             id="org.netxms.ui.eclipse.topology.views.FindByMacAddressView"
-            name="MAC Address Searh"
+            name="MAC Address Search"
             restorable="true">
       </view>
    </extension>

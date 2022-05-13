@@ -32,6 +32,7 @@ public class Messages extends NLS
    public String AbstractNetworkMapView_RouterManhattan;
    public String AbstractNetworkMapView_Routing;
    public String AbstractNetworkMapView_SaveLayout;
+   public String AbstractNetworkMapView_SaveToFile;
    public String AbstractNetworkMapView_SelectAllObjects;
    public String AbstractNetworkMapView_ShowGrid;
    public String AbstractNetworkMapView_ShowObjDetails;

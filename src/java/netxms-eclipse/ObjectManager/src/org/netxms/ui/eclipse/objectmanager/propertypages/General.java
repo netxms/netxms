@@ -81,12 +81,12 @@ public class General extends PropertyPage
       
       // Object alias
       initialAlias = object.getAlias();
-      alias = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT, "Alias", initialAlias, WidgetHelper.DEFAULT_LAYOUT_DATA);
+      alias = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT, Messages.get().General_Alias, initialAlias, WidgetHelper.DEFAULT_LAYOUT_DATA);
 
       // Category selector
       initialCategory = object.getCategoryId();
       categorySelector = new ObjectCategorySelector(dialogArea, SWT.NONE, AbstractSelector.SHOW_CLEAR_BUTTON);
-      categorySelector.setLabel("Category");
+      categorySelector.setLabel(Messages.get().General_Category);
       categorySelector.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
       categorySelector.setCategoryId(initialCategory);
 

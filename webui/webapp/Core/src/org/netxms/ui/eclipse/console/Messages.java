@@ -21,6 +21,11 @@ public class Messages extends NLS
    public String AbstractTraceView_Subscribing;
    public String AbstractTraceView_Unsubscribing;
 	public String BrandingManager_ProductName;
+   public String BrowserView_Back;
+   public String BrowserView_Forward;
+   public String BrowserView_PartName_Changed;
+   public String BrowserView_PartName_Changing;
+   public String BrowserView_Stop;
 	public String CompositeWithMessageBar_HideMessage;
    public String ConsoleJob_ErrorDialogTitle;
 	public String ExportToCsvAction_ExportToCsv;
@@ -41,8 +46,8 @@ public class Messages extends NLS
 	public String WidgetHelper_Action_SelectAll;
 	public String WidgetHelper_InputValidationError;
 	public String Activator_TrayTooltip;
-	public String DataCollectionDisplayInfo_Counter32;
-	public String DataCollectionDisplayInfo_Counter64;
+   public String DataCollectionDisplayInfo_Counter32;
+   public String DataCollectionDisplayInfo_Counter64;
 	public String DataCollectionDisplayInfo_Float;
 	public String DataCollectionDisplayInfo_Integer;
 	public String DataCollectionDisplayInfo_Integer64;
@@ -127,8 +132,8 @@ public class Messages extends NLS
 	public String ApplicationWorkbenchWindowAdvisor_PasswordChanged;
    public String ApplicationWorkbenchWindowAdvisor_PkcsFiles;
    public String ApplicationWorkbenchWindowAdvisor_Error;
-   public String ObjectContext_MultipleNodes;
 	public String ApplicationWorkbenchWindowAdvisor_Information;
+   public String ObjectContext_MultipleNodes;
 	public String ObjectNameValidator_ErrorMessage1;
    public String ObjectNameValidator_ErrorMessage2;
    public String OpenView_Error;
@@ -230,7 +235,7 @@ private Messages()
 	public static Messages get(Display display)
 	{
 		CallHelper r = new CallHelper();
-		RWT.getUISession(display).exec(r);
+		display.syncExec(r);
 		return r.messages;
 	}
 

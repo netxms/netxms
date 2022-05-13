@@ -87,7 +87,7 @@ public class Communication extends PropertyPage
       externalGateway.setLayoutData(gd);
       		
       enablePingOnPrimaryIP = new Button(dialogArea, SWT.CHECK);
-      enablePingOnPrimaryIP.setText("Use ICMP ping on primary IP address to determine node status");
+      enablePingOnPrimaryIP.setText(Messages.get().Communication_PingPrimaryIP);
       enablePingOnPrimaryIP.setSelection(node.isPingOnPrimaryIPEnabled());
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;

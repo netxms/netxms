@@ -26,9 +26,9 @@ public class Messages extends NLS
    public String AgentFileManager_DownloadJobTitle;
    public String AgentFileManager_Error;
    public String AgentFileManager_FileDownloadError;
-   public String AgentFileManager_Fingerprint;
    public String AgentFileManager_FolderCreationError;
    public String AgentFileManager_FollowChanges;
+   public String AgentFileManager_Fingerprint;
    public String AgentFileManager_MoveError;
    public String AgentFileManager_MoveFile;
    public String AgentFileManager_OpenViewError;
@@ -108,8 +108,6 @@ public class Messages extends NLS
 	public String UploadFileToServer_JobError;
 	public String UploadFileToServer_JobTitle;
 	public String UploadFileToServer_TaskNamePrefix;
-   public String ViewAgentFileFingerprint_JobError;
-	public String ViewAgentFileFingerprint_JobTitle;
 	public String ViewAgentFilesProvider_JobError;
    public String ViewAgentFilesProvider_JobTitle;
    public String ViewAgentFilesProvider_Loading;
@@ -124,6 +122,8 @@ public class Messages extends NLS
    public String ViewServerFile_ModificationDate;
    public String ViewServerFile_ShowFilterAction;
    public String ViewServerFile_UploadFileOnServerAction;
+   public String ViewAgentFileFingerprint_JobTitle;
+   public String ViewAgentFileFingerprint_JobError;
    static
 	{
 		// initialize resource bundle

@@ -8,7 +8,6 @@ import org.eclipse.swt.widgets.Display;
 public class Messages extends NLS
 {
 	private static final String BUNDLE_NAME = "org.netxms.ui.eclipse.datacollection.messages"; //$NON-NLS-1$
-
    public String AbstractSelectParamDlg_AvailableParameters;
    public String AbstractSelectParamDlg_AvailTables;
    public String AbstractSelectParamDlg_Description;

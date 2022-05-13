@@ -82,10 +82,10 @@ public class InterfacePolling extends PropertyPage
       expectedState.select(object.getExpectedState());
 
       addFlag(dialogArea, Interface.IF_EXCLUDE_FROM_TOPOLOGY, Messages.get().InterfacePolling_ExcludeFromTopology);
-      addFlag(dialogArea, Interface.IF_INCLUDE_IN_ICMP_POLL, "&Collect ICMP response statistic for this interface");
-      addFlag(dialogArea, Interface.IF_DISABLE_AGENT_STATUS_POLL, "Disable status polling with NetXMS &agent");
-      addFlag(dialogArea, Interface.IF_DISABLE_SNMP_STATUS_POLL, "Disable status polling with &SNMP");
-      addFlag(dialogArea, Interface.IF_DISABLE_ICMP_STATUS_POLL, "Disable status polling with &ICMP");
+      addFlag(dialogArea, Interface.IF_INCLUDE_IN_ICMP_POLL, Messages.get().InterfacePolling_CollectIcmpStats);
+      addFlag(dialogArea, Interface.IF_DISABLE_AGENT_STATUS_POLL, Messages.get().InterfacePolling_DisableAgent);
+      addFlag(dialogArea, Interface.IF_DISABLE_SNMP_STATUS_POLL, Messages.get().InterfacePolling_DisableSnmp);
+      addFlag(dialogArea, Interface.IF_DISABLE_ICMP_STATUS_POLL, Messages.get().InterfacePolling_DisableIcmp);
       
       currentPollCount = object.getRequiredPollCount();
       currentExpectedState = object.getExpectedState();
