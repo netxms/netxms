@@ -135,7 +135,7 @@ public class CreateNetworkMapDialog extends Dialog
 		}
 		
 		type = mapType.getSelectionIndex();
-		if (type > 0 && type != NetworkMap.TYPE_ENTIRE_NETWORK)
+		if (type > 0 && type != NetworkMap.TYPE_INTERNAL_TOPOLOGY)
 		{
 			seedObject = seedObjectSelector.getObjectId();
 			if (seedObject == 0)
