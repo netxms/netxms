@@ -442,11 +442,11 @@ public abstract class Perspective
    /**
     * Get view in main area (for single-view perspectives).
     *
-    * @return vew in main area or null
+    * @return view in main area or null
     */
    protected View getMainView()
    {
-      return mainArea.getView();
+      return mainArea.getActiveView();
    }
 
    /**

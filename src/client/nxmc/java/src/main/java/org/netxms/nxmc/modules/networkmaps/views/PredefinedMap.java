@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -157,6 +157,8 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
                      readOnlyFlagsCache.put(object.getObjectId(), readOnly);
                      PredefinedMap.this.readOnly = readOnly;
                      reconfigureViewer();
+                     updateToolBar();
+                     updateMenu();
                      refresh();
                   }
                });
@@ -351,7 +353,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 	{
 		super.createActions();
 
-      actionAddObject = new Action(i18n.tr("&Add object...")) {
+      actionAddObject = new Action(i18n.tr("&Add object..."), SharedIcons.ADD_OBJECT) {
 			@Override
 			public void run()
 			{
@@ -392,7 +394,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
             editGroupBox();
          }
       };
-      
+
       actionAddImage = new Action(i18n.tr("&Image...")) {
 			@Override
 			public void run()
@@ -408,7 +410,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
             editImageDecoration();
          }
       };
-		
+
       actionLinkObjects = new Action(i18n.tr("&Link selected objects"), ResourceManager.getImageDescriptor("icons/netmap/add_link.png")) {
 			@Override
 			public void run()
@@ -582,10 +584,10 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 	}
 
    /**
-    * @see org.netxms.nxmc.modules.networkmaps.views.AbstractNetworkMapView#fillLocalPullDown(org.eclipse.jface.action.IMenuManager)
+    * @see org.netxms.nxmc.modules.networkmaps.views.AbstractNetworkMapView#fillLocalMenu(org.eclipse.jface.action.MenuManager)
     */
 	@Override
-	protected void fillLocalPullDown(IMenuManager manager)
+   protected void fillLocalMenu(MenuManager manager)
 	{
 	   if (!readOnly)
 	   {
@@ -594,7 +596,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
    		manager.add(createDecorationAdditionSubmenu());
    		manager.add(new Separator());
 	   }
-		super.fillLocalPullDown(manager);
+      super.fillLocalMenu(manager);
 		manager.add(new Separator());
 		manager.add(actionMapProperties);
 	}
@@ -607,6 +609,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 	{
 	   if (!readOnly)
 	   {
+         manager.add(actionAddObject);
    		manager.add(actionLinkObjects);
    		manager.add(new Separator());
 	   }

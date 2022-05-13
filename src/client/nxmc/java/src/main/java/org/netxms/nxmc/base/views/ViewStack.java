@@ -20,7 +20,6 @@ package org.netxms.nxmc.base.views;
 
 import java.util.Stack;
 import org.eclipse.jface.action.Action;
-import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.ToolBarManager;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.jface.window.Window;
@@ -31,19 +30,12 @@ import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.graphics.Point;
-import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.ToolBar;
 import org.eclipse.swt.widgets.ToolItem;
-import org.netxms.nxmc.Registry;
-import org.netxms.nxmc.base.views.helpers.NavigationHistory;
-import org.netxms.nxmc.base.windows.PopOutViewWindow;
-import org.netxms.nxmc.keyboard.KeyBindingManager;
 import org.netxms.nxmc.keyboard.KeyStroke;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.resources.SharedIcons;
@@ -55,29 +47,16 @@ import org.xnap.commons.i18n.I18n;
 /**
  * View stack (single view or multiple views on top of each other)
  */
-public class ViewStack extends Composite
+public class ViewStack extends ViewContainer
 {
    private static final Logger logger = LoggerFactory.getLogger(ViewStack.class);
 
-   private I18n i18n = LocalizationHelper.getI18n(ViewStack.class);
-   private Window window;
-   private Perspective perspective;
+   private final I18n i18n = LocalizationHelper.getI18n(ViewStack.class);
+
    private Stack<View> views = new Stack<View>();
    private boolean contextAware = true;
-   private Object context;
    private ToolBar viewList;
-   private MenuManager viewMenuManager;
-   private ToolBarManager viewToolBarManager;
-   private ToolBar viewToolBar;
-   private ToolBar viewControlBar;
    private Composite viewArea;
-   private Runnable onFilterCloseCallback = null;
-   private ToolItem viewMenu = null;
-   private ToolItem enableFilter = null;
-   private ToolItem navigationBack = null;
-   private ToolItem navigationForward = null;
-   private NavigationHistory navigationHistory = null;
-   private KeyBindingManager keyBindingManager = new KeyBindingManager();
 
    /**
     * Create new view stack.
@@ -91,9 +70,7 @@ public class ViewStack extends Composite
     */
    public ViewStack(Window window, Perspective perspective, Composite parent, boolean enableViewExtraction, boolean enableViewPinning, boolean enableNavigationHistory)
    {
-      super(parent, SWT.BORDER);
-      this.window = window;
-      this.perspective = perspective;
+      super(window, perspective, parent, SWT.BORDER);
 
       GridLayout layout = new GridLayout();
       layout.verticalSpacing = 0;
@@ -108,8 +85,6 @@ public class ViewStack extends Composite
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       viewList.setLayoutData(gd);
-
-      viewMenuManager = new MenuManager();
 
       viewToolBarManager = new ToolBarManager(SWT.FLAT | SWT.WRAP | SWT.RIGHT);
       viewToolBar = viewToolBarManager.createControl(this);
@@ -165,57 +140,6 @@ public class ViewStack extends Composite
          });
       }
 
-      onFilterCloseCallback = new Runnable() {
-         @Override
-         public void run()
-         {
-            View view = getView();
-            if (view != null)
-            {
-               enableFilter.setSelection(false);
-               view.enableFilter(enableFilter.getSelection());
-            }
-         }
-      };
-
-      // Keyboard binding for filter toggle
-      keyBindingManager.addBinding(SWT.CTRL, SWT.F2, new Action() {
-         @Override
-         public void run()
-         {
-            View view = getView();
-            if ((view != null) && view.hasFilter())
-            {
-               view.enableFilter(!view.isFilterEnabled());
-               enableFilter.setSelection(view.isFilterEnabled());
-            }
-         }
-      });
-
-      // Keyboard binding for filter activation
-      keyBindingManager.addBinding("M1+F", new Action() {
-         @Override
-         public void run()
-         {
-            View view = getView();
-            if ((view != null) && view.hasFilter())
-            {
-               view.enableFilter(true);
-               enableFilter.setSelection(true);
-               view.getFilterTextControl().setFocus();
-            }
-         }
-      });
-
-      // Keyboard binding for view menu
-      keyBindingManager.addBinding(SWT.NONE, SWT.F10, new Action() {
-         @Override
-         public void run()
-         {
-            showViewMenu();
-         }
-      });
-
       ToolItem refreshView = new ToolItem(viewControlBar, SWT.PUSH);
       refreshView.setImage(SharedIcons.IMG_REFRESH);
       refreshView.setToolTipText(i18n.tr("Refresh (F5)"));
@@ -223,7 +147,7 @@ public class ViewStack extends Composite
          @Override
          public void widgetSelected(SelectionEvent e)
          {
-            View view = getView();
+            View view = getActiveView();
             if (view != null)
             {
                view.refresh();
@@ -291,7 +215,7 @@ public class ViewStack extends Composite
          @Override
          public void controlResized(ControlEvent e)
          {
-            View view = getView();
+            View view = getActiveView();
             if (view != null)
                view.getViewArea().setSize(viewArea.getSize());
          }
@@ -304,46 +228,13 @@ public class ViewStack extends Composite
 
       addDisposeListener(new DisposeListener() {
          @Override
-         public void widgetDisposed(DisposeEvent arg0)
+         public void widgetDisposed(DisposeEvent e)
          {
             for(View view : views)
                view.dispose();
             views.clear();
          }
       });
-   }
-
-   /**
-    * Pin view that is currently active
-    */
-   private void pinActiveView()
-   {
-      View view = getView();
-      if (view != null)
-      {
-         View clone = view.cloneView();
-         if (clone != null)
-         {
-            Registry.getMainWindow().pinView(clone);
-         }
-      }
-   }
-
-   /**
-    * Extract view that is currently active
-    */
-   private void extractActiveView()
-   {
-      View view = getView();
-      if (view != null)
-      {
-         View clone = view.cloneView();
-         if (clone != null)
-         {
-            PopOutViewWindow window = new PopOutViewWindow(clone);
-            window.open();
-         }
-      }
    }
 
    /**
@@ -397,7 +288,7 @@ public class ViewStack extends Composite
    private void pushViewInternal(View view)
    {
       views.push(view);
-      view.create(window, perspective, viewArea, onFilterCloseCallback);
+      view.create(this, viewArea, onFilterCloseCallback);
       if (contextAware && (view instanceof ViewWithContext))
          ((ViewWithContext)view).setContext(context);
       activateView(view);
@@ -434,7 +325,7 @@ public class ViewStack extends Composite
       if (count > 0)
          viewList.getItem(--count).dispose(); // Dispose ">" separator between view names
 
-      view = getView(); // New current view
+      view = getActiveView(); // New current view
       if (view == null)
          return true;
 
@@ -449,37 +340,9 @@ public class ViewStack extends Composite
     */
    private void activateView(View view)
    {
-      viewToolBarManager.removeAll();
-      view.fillLocalToolbar(viewToolBarManager);
-      viewToolBarManager.update(true);
+      updateViewToolBar(view);
 
-      boolean controlBarChanged = false;
-
-      viewMenuManager.removeAll();
-      view.fillLocalMenu(viewMenuManager);
-      if (!viewMenuManager.isEmpty())
-      {
-         if (viewMenu == null)
-         {
-            viewMenu = new ToolItem(viewControlBar, SWT.PUSH, viewControlBar.getItemCount());
-            viewMenu.setImage(SharedIcons.IMG_VIEW_MENU);
-            viewMenu.setToolTipText(i18n.tr("View menu (F10)"));
-            viewMenu.addSelectionListener(new SelectionAdapter() {
-               @Override
-               public void widgetSelected(SelectionEvent e)
-               {
-                  showViewMenu();
-               }
-            });
-            controlBarChanged = true;
-         }
-      }
-      else if (viewMenu != null)
-      {
-         viewMenu.dispose();
-         viewMenu = null;
-         controlBarChanged = true;
-      }
+      boolean controlBarChanged = updateViewMenu(view);
 
       if (view.hasFilter())
       {
@@ -492,7 +355,7 @@ public class ViewStack extends Composite
                @Override
                public void widgetSelected(SelectionEvent e)
                {
-                  View view = getView();
+                  View view = getActiveView();
                   if (view != null)
                      view.enableFilter(enableFilter.getSelection());
                }
@@ -531,82 +394,18 @@ public class ViewStack extends Composite
       if (!views.contains(view))
          return;
 
-      while(getView() != view)
+      while(getActiveView() != view)
          if (!popView())
             break;
    }
 
    /**
-    * Get current view.
-    *
-    * @return current view or null
+    * @see org.netxms.nxmc.base.views.ViewContainer#getActiveView()
     */
-   public View getView()
+   @Override
+   protected View getActiveView()
    {
       return views.empty() ? null : views.peek();
-   }
-
-   /**
-    * Show view menu
-    */
-   private void showViewMenu()
-   {
-      if (viewMenuManager.isEmpty())
-         return;
-
-      Menu menu = viewMenuManager.createContextMenu(getShell());
-      Rectangle bounds = viewMenu.getBounds();
-      menu.setLocation(viewControlBar.toDisplay(new Point(bounds.x, bounds.y + bounds.height + 2)));
-      menu.setVisible(true);
-   }
-
-   /**
-    * Navigate back
-    */
-   private void navigateBack()
-   {
-      if ((navigationHistory == null) || !navigationHistory.canGoBackward())
-         return;
-      navigationHistory.lock();
-      ((NavigationView)getView()).setSelection(navigationHistory.back());
-      navigationHistory.unlock();
-      navigationBack.setEnabled(navigationHistory.canGoBackward());
-      navigationForward.setEnabled(navigationHistory.canGoForward());
-   }
-
-   /**
-    * Navigate forward
-    */
-   private void navigateForward()
-   {
-      if ((navigationHistory == null) || !navigationHistory.canGoForward())
-         return;
-      navigationHistory.lock();
-      ((NavigationView)getView()).setSelection(navigationHistory.forward());
-      navigationHistory.unlock();
-      navigationBack.setEnabled(navigationHistory.canGoBackward());
-      navigationForward.setEnabled(navigationHistory.canGoForward());
-   }
-
-   /**
-    * Get current navigation history object.
-    *
-    * @return current navigation history object or null
-    */
-   public NavigationHistory getNavigationHistory()
-   {
-      return navigationHistory;
-   }
-
-   /**
-    * Update navigation controls according to current navigation history status
-    */
-   protected void updateNavigationControls()
-   {
-      if (navigationForward != null)
-         navigationForward.setEnabled((navigationHistory != null) && navigationHistory.canGoForward());
-      if (navigationBack != null)
-         navigationBack.setEnabled((navigationHistory != null) && navigationHistory.canGoBackward());
    }
 
    /**
@@ -617,7 +416,7 @@ public class ViewStack extends Composite
    public void setContext(Object context)
    {
       this.context = context;
-      View view = getView();
+      View view = getActiveView();
       if (contextAware && (view != null) && (view instanceof ViewWithContext))
          ((ViewWithContext)view).setContext(context);
    }
@@ -648,27 +447,12 @@ public class ViewStack extends Composite
    @Override
    public boolean setFocus()
    {
-      View view = getView();
+      View view = getActiveView();
       if ((view != null) && !view.isClientAreaDisposed())
          view.setFocus();
       else
          viewArea.setFocus();
       return true;
-   }
-
-   /**
-    * Process keystroke
-    *
-    * @param ks keystroke to process
-    */
-   public void processKeyStroke(KeyStroke ks)
-   {
-      if (keyBindingManager.processKeyStroke(ks))
-         return;
-
-      View view = getView();
-      if (view != null)
-         view.processKeyStroke(ks);
    }
 
    /**

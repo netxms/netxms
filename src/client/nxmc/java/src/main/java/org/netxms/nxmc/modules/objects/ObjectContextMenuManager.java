@@ -226,10 +226,41 @@ public class ObjectContextMenuManager extends MenuManager
       {
          AbstractObject object = getObjectFromSelection();
          if ((object instanceof Node) && ((Node)object).hasAgent())
+         {
             add(actionEditAgentConfig);
+            add(actionDeployPackage);
+         }
       }
-      // TODO: do not show package deployment menu if not applicable to any selected object
-      add(actionDeployPackage);
+      else
+      {
+         boolean nodesWithAgent = false;
+         for(Object o : ((IStructuredSelection)selectionProvider.getSelection()).toList())
+         {
+            if (o instanceof Node)
+            {
+               if (((Node)o).hasAgent())
+               {
+                  nodesWithAgent = true;
+                  break;
+               }
+            }
+            else
+            {
+               for(AbstractObject n : ((AbstractObject)o).getAllChildren(AbstractObject.OBJECT_NODE))
+               {
+                  if (((Node)n).hasAgent())
+                  {
+                     nodesWithAgent = true;
+                     break;
+                  }
+               }
+               if (nodesWithAgent)
+                  break;
+            }
+         }
+         if (nodesWithAgent)
+            add(actionDeployPackage);
+      }
 
       // Screenshots, etc. for single node
       if (singleObject)

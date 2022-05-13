@@ -59,8 +59,7 @@ public abstract class View implements MessageAreaHolder
    private String name;
    private ImageDescriptor imageDescriptor;
    private Image image;
-   private Window window;
-   private Perspective perspective;
+   private ViewContainer viewContainer;
    private Composite viewArea;
    private MessageArea messageArea;
    private FilterText filterText;
@@ -167,10 +166,9 @@ public abstract class View implements MessageAreaHolder
     * @param parent parent composite
     * @param onFilterCloseCallback 
     */
-   public void create(Window window, Perspective perspective, Composite parent, Runnable onFilterCloseCallback)
+   protected final void create(ViewContainer viewContainer, Composite parent, Runnable onFilterCloseCallback)
    {
-      this.window = window;
-      this.perspective = perspective;
+      this.viewContainer = viewContainer;
       if (imageDescriptor != null)
          image = imageDescriptor.createImage();
 
@@ -401,10 +399,10 @@ public abstract class View implements MessageAreaHolder
    public void setName(String name)
    {
       this.name = name;
-      if (perspective != null)
-         perspective.updateViewTrim(this);
-      else if (window != null)
-         window.getShell().setText(getFullName()); // Standalone view, update window title
+      if (viewContainer.getPerspective() != null)
+         viewContainer.getPerspective().updateViewTrim(this);
+      else if (viewContainer.getWindow() != null)
+         viewContainer.getWindow().getShell().setText(getFullName()); // Standalone view, update window title
    }
 
    /**
@@ -435,7 +433,7 @@ public abstract class View implements MessageAreaHolder
     */
    public Window getWindow()
    {
-      return window;
+      return viewContainer.getWindow();
    }
 
    /**
@@ -445,7 +443,7 @@ public abstract class View implements MessageAreaHolder
     */
    public Perspective getPerspective()
    {
-      return perspective;
+      return viewContainer.getPerspective();
    }
 
    /**
@@ -780,15 +778,31 @@ public abstract class View implements MessageAreaHolder
    }
 
    /**
+    * Request framework to update view toolbar.
+    */
+   protected void updateToolBar()
+   {
+      viewContainer.updateViewToolBar(this);
+   }
+
+   /**
+    * Request framework to update view menu.
+    */
+   protected void updateMenu()
+   {
+      viewContainer.updateViewMenu(this);
+   }
+
+   /**
     * Open new view in same perspective or in pop out window if this view is not in perspective.
     *
     * @param view view to open
     */
    public void openView(View view)
    {
-      if (perspective != null)
+      if (viewContainer.getPerspective() != null)
       {
-         perspective.addMainView(view, true, false);
+         viewContainer.getPerspective().addMainView(view, true, false);
       }
       else
       {

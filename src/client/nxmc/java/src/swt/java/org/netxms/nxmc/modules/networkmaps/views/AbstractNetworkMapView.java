@@ -145,7 +145,6 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 	protected boolean automaticLayoutEnabled = true; // Current layout mode - automatic or manual
 	protected boolean alwaysFitLayout = false;
 
-	protected Action actionRefresh;
 	protected Action actionShowStatusIcon;
 	protected Action actionShowStatusBackground;
 	protected Action actionShowStatusFrame;
@@ -317,7 +316,7 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 		session.addListener(sessionListener);
 
 		createActions();
-		createPopupMenu();
+		createContextMenu();
 
 		if (automaticLayoutEnabled)
 		{
@@ -834,12 +833,11 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 		return submenu;
 	}
 
-	/**
-	 * Fill local pull-down menu
-	 * 
-	 * @param manager
-	 */
-	protected void fillLocalPullDown(IMenuManager manager)
+   /**
+    * @see org.netxms.nxmc.base.views.View#fillLocalMenu(org.eclipse.jface.action.MenuManager)
+    */
+   @Override
+   protected void fillLocalMenu(MenuManager manager)
 	{
       MenuManager zoom = new MenuManager(i18n.tr("&Zoom"));
 		for(int i = 0; i < actionZoomTo.length; i++)
@@ -906,7 +904,7 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 	/**
 	 * Create popup menu for map
 	 */
-	private void createPopupMenu()
+	private void createContextMenu()
 	{
 		// Create menu manager.
       MenuManager menuMgr = new ObjectContextMenuManager(this, this) {
@@ -1009,8 +1007,6 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
       manager.add(actionHideLinks);
 		manager.add(new Separator());
       manager.add(actionSelectAllObjects);
-		manager.add(new Separator());
-		manager.add(actionRefresh);
 	}
 
 	/**

@@ -23,7 +23,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import org.eclipse.jface.action.Action;
-import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.ToolBarManager;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
@@ -35,19 +34,12 @@ import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.graphics.Point;
-import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.ToolBar;
 import org.eclipse.swt.widgets.ToolItem;
-import org.netxms.nxmc.Registry;
-import org.netxms.nxmc.base.views.helpers.NavigationHistory;
-import org.netxms.nxmc.base.windows.PopOutViewWindow;
-import org.netxms.nxmc.keyboard.KeyBindingManager;
 import org.netxms.nxmc.keyboard.KeyStroke;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.resources.SharedIcons;
@@ -58,32 +50,19 @@ import org.xnap.commons.i18n.I18n;
 /**
  * View folder (multiple views represented as tabs)
  */
-public class ViewFolder extends Composite
+public class ViewFolder extends ViewContainer
 {
    private static final Logger logger = LoggerFactory.getLogger(ViewFolder.class);
 
-   private I18n i18n = LocalizationHelper.getI18n(ViewFolder.class);
-   private Window window;
-   private Perspective perspective;
+   private final I18n i18n = LocalizationHelper.getI18n(ViewFolder.class);
+
    private CTabFolder tabFolder;
    private Composite topRightControl;
-   private MenuManager viewMenuManager;
-   private ToolBarManager viewToolBarManager;
-   private ToolBar viewToolBar;
-   private ToolBar viewControlBar;
-   private ToolItem viewMenu = null;
-   private ToolItem enableFilter = null;
-   private ToolItem navigationBack = null;
-   private ToolItem navigationForward = null;
-   private Object context;
-   private NavigationHistory navigationHistory = null;
    private boolean allViewsAreCloseable = false;
    private boolean useGlobalViewId = false;
    private Map<String, View> views = new HashMap<String, View>();
    private Map<String, CTabItem> tabs = new HashMap<String, CTabItem>();
    private Set<ViewFolderSelectionListener> selectionListeners = new HashSet<ViewFolderSelectionListener>();
-   private Runnable onFilterCloseCallback = null;
-   private KeyBindingManager keyBindingManager = new KeyBindingManager();
 
    /**
     * Create new view folder.
@@ -96,9 +75,8 @@ public class ViewFolder extends Composite
     */
    public ViewFolder(Window window, Perspective perspective, Composite parent, boolean enableViewExtraction, boolean enableViewPinning, boolean enableNavigationHistory)
    {
-      super(parent, SWT.NONE);
-      this.window = window;
-      this.perspective = perspective;
+      super(window, perspective, parent, SWT.NONE);
+
       setLayout(new FillLayout());
       tabFolder = new CTabFolder(this, SWT.TOP | SWT.BORDER);
       tabFolder.setUnselectedCloseVisible(true);
@@ -135,8 +113,6 @@ public class ViewFolder extends Composite
       layout.marginWidth = 0;
       topRightControl.setLayout(layout);
       tabFolder.setTopRight(topRightControl);
-
-      viewMenuManager = new MenuManager();
 
       viewToolBarManager = new ToolBarManager(SWT.FLAT | SWT.WRAP | SWT.RIGHT);
       viewToolBar = viewToolBarManager.createControl(topRightControl);
@@ -200,19 +176,6 @@ public class ViewFolder extends Composite
          }
       });
 
-      onFilterCloseCallback = new Runnable() {
-         @Override
-         public void run()
-         {
-            View view = getActiveView();
-            if (view != null)
-            {
-               enableFilter.setSelection(false);
-               view.enableFilter(enableFilter.getSelection());
-            }            
-         }
-      };
-
       if (enableViewPinning)
       {
          ToolItem pinView = new ToolItem(viewControlBar, SWT.PUSH);
@@ -252,77 +215,6 @@ public class ViewFolder extends Composite
                extractActiveView();
             }
          });
-      }
-
-      // Keyboard binding for filter toggle
-      keyBindingManager.addBinding(SWT.CTRL, SWT.F2, new Action() {
-         @Override
-         public void run()
-         {
-            View view = getActiveView();
-            if ((view != null) && view.hasFilter())
-            {
-               view.enableFilter(!view.isFilterEnabled());
-               enableFilter.setSelection(view.isFilterEnabled());
-            }
-         }
-      });
-
-      // Keyboard binding for filter activation
-      keyBindingManager.addBinding("M1+F", new Action() {
-         @Override
-         public void run()
-         {
-            View view = getActiveView();
-            if ((view != null) && view.hasFilter())
-            {
-               view.enableFilter(true);
-               enableFilter.setSelection(true);
-               view.getFilterTextControl().setFocus();
-            }
-         }
-      });
-
-      // Keyboard binding for view menu
-      keyBindingManager.addBinding(SWT.NONE, SWT.F10, new Action() {
-         @Override
-         public void run()
-         {
-            showViewMenu();
-         }
-      });
-   }
-
-   /**
-    * Pin view that is currently active
-    */
-   private void pinActiveView()
-   {
-      View view = getActiveView();
-      if (view != null)
-      {
-         View clone = view.cloneView();
-         if (clone != null)
-         {
-            Registry.getMainWindow().pinView(clone);
-         }
-      }
-   }
-
-   /**
-    * Extract view that is currently active
-    */
-   private void extractActiveView()
-   {
-      View view = getActiveView();
-      if (view != null)
-      {
-         View clone = view.cloneView();
-         if (clone != null)
-         {
-            PopOutViewWindow window = new PopOutViewWindow(clone);
-            window.open();
-         }
       }
    }
 
@@ -365,7 +257,7 @@ public class ViewFolder extends Composite
 
       if (ignoreContext || !(view instanceof ViewWithContext) || ((ViewWithContext)view).isValidForContext(context))
       {
-         view.create(window, perspective, tabFolder, onFilterCloseCallback);
+         view.create(this, tabFolder, onFilterCloseCallback);
          CTabItem tabItem = createViewTab(view, ignoreContext);
          if (activate)
          {
@@ -406,33 +298,8 @@ public class ViewFolder extends Composite
             ((ViewWithContext)view).setContext(context);
       }
 
-      viewToolBarManager.removeAll();
-      view.fillLocalToolbar(viewToolBarManager);      
-      viewToolBarManager.update(true);      
-
-      viewMenuManager.removeAll();
-      view.fillLocalMenu(viewMenuManager);
-      if (!viewMenuManager.isEmpty())
-      {
-         if (viewMenu == null)
-         {
-            viewMenu = new ToolItem(viewControlBar, SWT.PUSH, viewControlBar.getItemCount());
-            viewMenu.setImage(SharedIcons.IMG_VIEW_MENU);
-            viewMenu.setToolTipText(i18n.tr("View menu (F10)"));
-            viewMenu.addSelectionListener(new SelectionAdapter() {
-               @Override
-               public void widgetSelected(SelectionEvent e)
-               {
-                  showViewMenu();
-               }
-            });
-         }
-      }
-      else if (viewMenu != null)
-      {
-         viewMenu.dispose();
-         viewMenu = null;
-      }
+      updateViewToolBar(view);
+      updateViewMenu(view);
 
       if (view.hasFilter())
       {
@@ -469,20 +336,6 @@ public class ViewFolder extends Composite
       }
 
       view.activate();
-   }
-
-   /**
-    * Show view menu
-    */
-   private void showViewMenu()
-   {
-      if (viewMenuManager.isEmpty())
-         return;
-
-      Menu menu = viewMenuManager.createContextMenu(getShell());
-      Rectangle bounds = viewMenu.getBounds();
-      menu.setLocation(viewControlBar.toDisplay(new Point(bounds.x, bounds.y + bounds.height + 2)));
-      menu.setVisible(true);
    }
 
    /**
@@ -568,7 +421,7 @@ public class ViewFolder extends Composite
                if (view.isCreated())
                   view.setVisible(true);
                else
-                  view.create(window, perspective, tabFolder, onFilterCloseCallback);
+                  view.create(this, tabFolder, onFilterCloseCallback);
                createViewTab(view, false);
             }
          }
@@ -596,65 +449,15 @@ public class ViewFolder extends Composite
    }
 
    /**
-    * Get currently selected view.
-    *
-    * @return currently selected view or null
+    * @see org.netxms.nxmc.base.views.ViewContainer#getActiveView()
     */
-   public View getActiveView()
+   @Override
+   protected View getActiveView()
    {
       if (tabFolder.isDisposed())
          return null;
       CTabItem selection = tabFolder.getSelection();
       return ((selection != null) && !selection.isDisposed()) ? (View)selection.getData("view") : null;
-   }
-
-   /**
-    * Navigate back
-    */
-   private void navigateBack()
-   {
-      if ((navigationHistory == null) || !navigationHistory.canGoBackward())
-         return;
-      navigationHistory.lock();
-      ((NavigationView)getActiveView()).setSelection(navigationHistory.back());
-      navigationHistory.unlock();
-      navigationBack.setEnabled(navigationHistory.canGoBackward());
-      navigationForward.setEnabled(navigationHistory.canGoForward());
-   }
-
-   /**
-    * Navigate forward
-    */
-   private void navigateForward()
-   {
-      if ((navigationHistory == null) || !navigationHistory.canGoForward())
-         return;
-      navigationHistory.lock();
-      ((NavigationView)getActiveView()).setSelection(navigationHistory.forward());
-      navigationHistory.unlock();
-      navigationBack.setEnabled(navigationHistory.canGoBackward());
-      navigationForward.setEnabled(navigationHistory.canGoForward());
-   }
-
-   /**
-    * Get current navigation history object.
-    *
-    * @return current navigation history object or null
-    */
-   public NavigationHistory getNavigationHistory()
-   {
-      return navigationHistory;
-   }
-
-   /**
-    * Update navigation controls according to current navigation history status
-    */
-   protected void updateNavigationControls()
-   {
-      if (navigationForward != null)
-         navigationForward.setEnabled((navigationHistory != null) && navigationHistory.canGoForward());
-      if (navigationBack != null)
-         navigationBack.setEnabled((navigationHistory != null) && navigationHistory.canGoBackward());
    }
 
    /**
@@ -764,20 +567,5 @@ public class ViewFolder extends Composite
       else
          super.setFocus();
       return true;
-   }
-
-   /**
-    * Process keystroke
-    *
-    * @param ks keystroke to process
-    */
-   public void processKeyStroke(KeyStroke ks)
-   {
-      if (!keyBindingManager.processKeyStroke(ks))
-      {
-         View view = getActiveView();
-         if (view != null)
-            view.processKeyStroke(ks);
-      }
    }
 }

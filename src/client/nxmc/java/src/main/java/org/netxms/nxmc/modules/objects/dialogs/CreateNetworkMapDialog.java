@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,12 +16,12 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.networkmaps.dialogs;
+package org.netxms.nxmc.modules.objects.dialogs;
 
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Combo;
@@ -31,17 +31,19 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 import org.netxms.client.objects.NetworkMap;
 import org.netxms.client.objects.Node;
-import org.netxms.ui.eclipse.networkmaps.Messages;
-import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
-import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
-import org.netxms.ui.eclipse.tools.MessageDialogHelper;
-import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.objects.widgets.ObjectSelector;
+import org.netxms.nxmc.tools.MessageDialogHelper;
+import org.netxms.nxmc.tools.WidgetHelper;
+import org.xnap.commons.i18n.I18n;
 
 /**
  * Dialog for creating new network map object
  */
 public class CreateNetworkMapDialog extends Dialog
 {
+   private final I18n i18n = LocalizationHelper.getI18n(CreateNetworkMapDialog.class);
+
 	private Text textName;
 	private Combo mapType;
 	private ObjectSelector seedObjectSelector;
@@ -57,19 +59,19 @@ public class CreateNetworkMapDialog extends Dialog
 		super(parentShell);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
-	 */
+   /**
+    * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
+    */
 	@Override
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText(Messages.get().CreateNetworkMapDialog_Title);
+      newShell.setText(i18n.tr("Create Network Map"));
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createDialogArea(Composite parent)
 	{
@@ -80,36 +82,29 @@ public class CreateNetworkMapDialog extends Dialog
       layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
       dialogArea.setLayout(layout);
 		
-      textName = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT, Messages.get().CreateNetworkMapDialog_Name, "", //$NON-NLS-1$
-                                                WidgetHelper.DEFAULT_LAYOUT_DATA);
+      textName = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT, i18n.tr("Name"), "", WidgetHelper.DEFAULT_LAYOUT_DATA);
       textName.getShell().setMinimumSize(300, 0);
-      
-      mapType = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, Messages.get().CreateNetworkMapDialog_MapType, WidgetHelper.DEFAULT_LAYOUT_DATA);
-      mapType.add(Messages.get().CreateNetworkMapDialog_Custom);
-      mapType.add(Messages.get().CreateNetworkMapDialog_L2Topology);
-      mapType.add(Messages.get().CreateNetworkMapDialog_IpTopology);
-      mapType.add("Internal Communication Topology");
+
+      mapType = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, i18n.tr("Map type"), WidgetHelper.DEFAULT_LAYOUT_DATA);
+      mapType.add(i18n.tr("Custom"));
+      mapType.add(i18n.tr("Layer 2 topology"));
+      mapType.add(i18n.tr("IP topology"));
+      mapType.add(i18n.tr("Internal communication topology"));
       mapType.select(0);
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       mapType.getParent().setLayoutData(gd);
-      mapType.addSelectionListener(new SelectionListener() {
+      mapType.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
 		      seedObjectSelector.setEnabled(mapType.getSelectionIndex() > 0 && mapType.getSelectionIndex() != 3);
 			}
-
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e)
-			{
-				widgetSelected(e);
-			}
       });
       
       seedObjectSelector = new ObjectSelector(dialogArea, SWT.NONE, true);
-      seedObjectSelector.setLabel(Messages.get().CreateNetworkMapDialog_SeedNode);
+      seedObjectSelector.setLabel(i18n.tr("Seed node"));
       seedObjectSelector.setObjectClass(Node.class);
       seedObjectSelector.setClassFilter(ObjectSelectionDialog.createNodeSelectionFilter(false));
       seedObjectSelector.setEnabled(false);
@@ -117,30 +112,30 @@ public class CreateNetworkMapDialog extends Dialog
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       seedObjectSelector.setLayoutData(gd);
-      
+
 		return dialogArea;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#okPressed()
-	 */
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#okPressed()
+    */
 	@Override
 	protected void okPressed()
 	{
 		name = textName.getText().trim();
 		if (name.isEmpty())
 		{
-			MessageDialogHelper.openWarning(getShell(), Messages.get().CreateNetworkMapDialog_Warning, Messages.get().CreateNetworkMapDialog_PleaseEnterName);
+         MessageDialogHelper.openWarning(getShell(), i18n.tr("Warning"), i18n.tr("Object name cannot be empty"));
 			return;
 		}
-		
+
 		type = mapType.getSelectionIndex();
-		if (type > 0 && type != NetworkMap.TYPE_INTERNAL_TOPOLOGY)
+      if ((type == NetworkMap.TYPE_IP_TOPOLOGY) || (type == NetworkMap.TYPE_LAYER2_TOPOLOGY))
 		{
 			seedObject = seedObjectSelector.getObjectId();
 			if (seedObject == 0)
 			{
-				MessageDialogHelper.openWarning(getShell(), Messages.get().CreateNetworkMapDialog_Warning, Messages.get().CreateNetworkMapDialog_PleaseSelectSeed);
+            MessageDialogHelper.openWarning(getShell(), i18n.tr("Warning"), i18n.tr("Seed node is required for selected map type"));
 				return;
 			}
 		}

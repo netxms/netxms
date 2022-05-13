@@ -32,6 +32,8 @@ import org.netxms.client.objects.BusinessServicePrototype;
 import org.netxms.client.objects.BusinessServiceRoot;
 import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.Container;
+import org.netxms.client.objects.NetworkMapGroup;
+import org.netxms.client.objects.NetworkMapRoot;
 import org.netxms.client.objects.Node;
 import org.netxms.client.objects.ServiceRoot;
 import org.netxms.client.objects.TemplateGroup;
@@ -44,6 +46,7 @@ import org.netxms.nxmc.modules.businessservice.dialogs.CreateBusinessServiceProt
 import org.netxms.nxmc.modules.objects.dialogs.CreateChassisDialog;
 import org.netxms.nxmc.modules.objects.dialogs.CreateInterfaceDialog;
 import org.netxms.nxmc.modules.objects.dialogs.CreateMobileDeviceDialog;
+import org.netxms.nxmc.modules.objects.dialogs.CreateNetworkMapDialog;
 import org.netxms.nxmc.modules.objects.dialogs.CreateNodeDialog;
 import org.netxms.nxmc.modules.objects.dialogs.CreateObjectDialog;
 import org.xnap.commons.i18n.I18n;
@@ -68,6 +71,8 @@ public class ObjectCreateMenuManager extends MenuManager
    private Action actionCreateContainer;
    private Action actionCreateInterface;
    private Action actionCreateMobileDevice;
+   private Action actionCreateNetworkMap;
+   private Action actionCreateNetworkMapGroup;
    private Action actionCreateNode;
    private Action actionCreateRack;
    private Action actionCreateTemplate;
@@ -99,6 +104,8 @@ public class ObjectCreateMenuManager extends MenuManager
       addAction(this, actionCreateContainer, (AbstractObject o) -> (o instanceof Container) || (o instanceof ServiceRoot));
       addAction(this, actionCreateInterface, (AbstractObject o) -> o instanceof Node);
       addAction(this, actionCreateMobileDevice, (AbstractObject o) -> (o instanceof Container) || (o instanceof ServiceRoot));
+      addAction(this, actionCreateNetworkMap, (AbstractObject o) -> (o instanceof NetworkMapGroup) || (o instanceof NetworkMapRoot));
+      addAction(this, actionCreateNetworkMapGroup, (AbstractObject o) -> (o instanceof NetworkMapGroup) || (o instanceof NetworkMapRoot));
       addAction(this, actionCreateNode, (AbstractObject o) -> (o instanceof Cluster) || (o instanceof Container) || (o instanceof ServiceRoot));
       addAction(this, actionCreateRack, (AbstractObject o) -> (o instanceof Container) || (o instanceof ServiceRoot));
       addAction(this, actionCreateTemplate, (AbstractObject o) -> (o instanceof TemplateGroup) || (o instanceof TemplateRoot));
@@ -228,7 +235,7 @@ public class ObjectCreateMenuManager extends MenuManager
                return;
 
             final NXCSession session = Registry.getSession();
-            new Job(i18n.tr("Create mobile device"), view, null) {
+            new Job(i18n.tr("Creating mobile device"), view, null) {
                @Override
                protected void run(IProgressMonitor monitor) throws Exception
                {
@@ -245,6 +252,39 @@ public class ObjectCreateMenuManager extends MenuManager
             }.start();
          }
       };
+
+      actionCreateNetworkMap = new Action(i18n.tr("Network &map...")) {
+         @Override
+         public void run()
+         {
+            if (parentId == 0)
+               return;
+
+            final CreateNetworkMapDialog dlg = new CreateNetworkMapDialog(shell);
+            if (dlg.open() != Window.OK)
+               return;
+
+            final NXCSession session = Registry.getSession();
+            new Job(i18n.tr("Creating network map"), view, null) {
+               @Override
+               protected void run(IProgressMonitor monitor) throws Exception
+               {
+                  NXCObjectCreationData cd = new NXCObjectCreationData(AbstractObject.OBJECT_NETWORKMAP, dlg.getName(), parentId);
+                  cd.setMapType(dlg.getType());
+                  cd.setSeedObjectId(dlg.getSeedObject());
+                  session.createObject(cd);
+               }
+
+               @Override
+               protected String getErrorMessage()
+               {
+                  return String.format(i18n.tr("Cannot create network map object %s"), dlg.getName());
+               }
+            }.start();
+         }
+      };
+
+      actionCreateNetworkMapGroup = new GenericObjectCreationAction(i18n.tr("Network map &group..."), AbstractObject.OBJECT_NETWORKMAPGROUP, i18n.tr("Network Map Group"));
 
       actionCreateNode = new Action(i18n.tr("&Node...")) {
          @Override
@@ -278,7 +318,7 @@ public class ObjectCreateMenuManager extends MenuManager
                cd.setSshPassword(dlg.getSshPassword());
 
                final NXCSession session = Registry.getSession();
-               new Job(i18n.tr("Create node"), view, null) {
+               new Job(i18n.tr("Creating node"), view, null) {
                   @Override
                   protected void run(IProgressMonitor monitor) throws Exception
                   {
