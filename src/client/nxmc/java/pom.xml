@@ -470,6 +470,25 @@
                   </executions>
                </plugin>
                <plugin>
+                  <groupId>org.netxms</groupId>
+                  <artifactId>unsigner-maven-plugin</artifactId>
+                  <version>1.0</version>
+                  <executions>
+                     <execution>
+                        <id>unsign-jar</id>
+                        <goals>
+                           <goal>unsign</goal>
+                        </goals>
+                        <configuration>
+                           <processDependencies>true</processDependencies>
+                           <includes>
+                              <include>org.eclipse.rap:*</include>
+                           </includes>
+                        </configuration>
+                     </execution>
+                  </executions>
+               </plugin>
+               <plugin>
                   <groupId>org.apache.maven.plugins</groupId>
                   <artifactId>maven-war-plugin</artifactId>
                   <version>3.3.2</version>
