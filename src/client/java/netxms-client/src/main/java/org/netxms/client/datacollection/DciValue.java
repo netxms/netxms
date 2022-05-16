@@ -32,7 +32,7 @@ public abstract class DciValue
    final public static int MULTIPLIERS_DEFAULT = 0;
    final public static int MULTIPLIERS_YES = 1;
    final public static int MULTIPLIERS_NO = 2;
-   
+
 	protected long id;					// DCI id
 	protected long nodeId;				// related node object id
 	private long templateDciId;	// related template DCI ID
@@ -47,7 +47,7 @@ public abstract class DciValue
 	private Date timestamp;
 	private Threshold activeThreshold;
 	private int flags;
-	
+
 	/**
 	 * Factory method to create correct DciValue subclass from NXCP message.
 	 * 

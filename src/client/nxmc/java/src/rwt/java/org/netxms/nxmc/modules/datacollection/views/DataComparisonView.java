@@ -179,14 +179,14 @@ public class DataComparisonView extends ObjectView
 	 */
 	private void createActions()
 	{
-		actionRefresh = new RefreshAction(this) {
+      actionRefresh = new RefreshAction() {
 			@Override
 			public void run()
 			{
 				updateChart();
 			}
 		};
-		
+
 		actionAutoRefresh = new Action(i18n.tr("Refresh &automatically")) {
 			@Override
 			public void run()

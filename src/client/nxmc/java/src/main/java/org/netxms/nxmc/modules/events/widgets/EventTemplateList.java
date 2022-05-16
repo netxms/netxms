@@ -281,26 +281,13 @@ public class EventTemplateList extends Composite implements SessionListener
          }
       };
 
-      if (view != null)
-      {
-         actionRefresh = new RefreshAction(view) {
-            @Override
-            public void run()
-            {
-               refreshView();
-            }
-         };
-      }
-      else
-      {
-         actionRefresh = new RefreshAction() {
-            @Override
-            public void run()
-            {
-               refreshView();
-            }
-         };
-      }
+      actionRefresh = new RefreshAction() {
+         @Override
+         public void run()
+         {
+            refreshView();
+         }
+      };
    }
 
    /**

@@ -23,9 +23,13 @@ import java.lang.reflect.InvocationTargetException;
 import java.security.Signature;
 import java.security.cert.Certificate;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.ISafeRunnable;
+import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.dialogs.ProgressMonitorDialog;
 import org.eclipse.jface.operation.IRunnableWithProgress;
+import org.eclipse.jface.util.ISafeRunnableRunner;
+import org.eclipse.jface.util.SafeRunnable;
 import org.eclipse.jface.window.Window;
 import org.eclipse.jface.window.Window.IExceptionHandler;
 import org.eclipse.swt.graphics.Image;
@@ -112,6 +116,23 @@ public class Startup
             logger.error("Unhandled event loop exception", t);
          }
       });
+      SafeRunnable.setRunner(new ISafeRunnableRunner() {
+         @Override
+         public void run(ISafeRunnable code)
+         {
+            try
+            {
+               code.run();
+            }
+            catch(Throwable t)
+            {
+               if (!(t instanceof OperationCanceledException))
+                  logger.error("Unhandled event loop exception", t);
+               code.handleException(t);
+            }
+         }
+      });
+      SafeRunnable.setIgnoreErrors(true); // Prevent display of JFace error dialog
 
       if (doLogin(display, args))
       {

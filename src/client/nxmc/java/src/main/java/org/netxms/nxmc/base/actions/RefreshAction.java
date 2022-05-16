@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,9 +19,8 @@
 package org.netxms.nxmc.base.actions;
 
 import org.eclipse.jface.action.Action;
-import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.localization.LocalizationHelper;
-import org.netxms.nxmc.resources.ResourceManager;
+import org.netxms.nxmc.resources.SharedIcons;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -38,19 +37,7 @@ public class RefreshAction extends Action
 	 */
 	public RefreshAction()
 	{
-      super(i18n.tr("&Refresh"), ResourceManager.getImageDescriptor("icons/refresh.gif")); //$NON-NLS-1$
+      super(i18n.tr("&Refresh"), SharedIcons.REFRESH);
       setId(ID);
-	}
-
-	/**
-	 * Create refresh action attached to handler service
-	 * 
-	 * @param viewPart owning view part
-	 */
-   public RefreshAction(View view)
-	{
-      super(i18n.tr("&Refresh"), ResourceManager.getImageDescriptor("icons/refresh.gif")); //$NON-NLS-1$
-		setId(ID);
-      // TODO: enable keyboard shortcut in view context
 	}
 }

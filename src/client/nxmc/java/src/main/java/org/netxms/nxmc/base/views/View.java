@@ -399,10 +399,13 @@ public abstract class View implements MessageAreaHolder
    public void setName(String name)
    {
       this.name = name;
-      if (viewContainer.getPerspective() != null)
-         viewContainer.getPerspective().updateViewTrim(this);
-      else if (viewContainer.getWindow() != null)
-         viewContainer.getWindow().getShell().setText(getFullName()); // Standalone view, update window title
+      if (viewContainer != null)
+      {
+         if (viewContainer.getPerspective() != null)
+            viewContainer.getPerspective().updateViewTrim(this);
+         else if (viewContainer.getWindow() != null)
+            viewContainer.getWindow().getShell().setText(getFullName()); // Standalone view, update window title
+      }
    }
 
    /**
@@ -433,7 +436,7 @@ public abstract class View implements MessageAreaHolder
     */
    public Window getWindow()
    {
-      return viewContainer.getWindow();
+      return (viewContainer != null) ? viewContainer.getWindow() : null;
    }
 
    /**
@@ -443,7 +446,7 @@ public abstract class View implements MessageAreaHolder
     */
    public Perspective getPerspective()
    {
-      return viewContainer.getPerspective();
+      return (viewContainer != null) ? viewContainer.getPerspective() : null;
    }
 
    /**
@@ -782,7 +785,8 @@ public abstract class View implements MessageAreaHolder
     */
    protected void updateToolBar()
    {
-      viewContainer.updateViewToolBar(this);
+      if (viewContainer != null)
+         viewContainer.updateViewToolBar(this);
    }
 
    /**
@@ -790,7 +794,8 @@ public abstract class View implements MessageAreaHolder
     */
    protected void updateMenu()
    {
-      viewContainer.updateViewMenu(this);
+      if (viewContainer != null)
+         viewContainer.updateViewMenu(this);
    }
 
    /**
@@ -800,6 +805,9 @@ public abstract class View implements MessageAreaHolder
     */
    public void openView(View view)
    {
+      if (viewContainer == null)
+         return; // This view is not attached to any container yet
+
       if (viewContainer.getPerspective() != null)
       {
          viewContainer.getPerspective().addMainView(view, true, false);
