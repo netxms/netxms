@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2014 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -32,13 +32,6 @@ ServiceRoot::ServiceRoot() : super()
 }
 
 /**
- * Service root class destructor
- */
-ServiceRoot::~ServiceRoot()
-{
-}
-
-/**
  * Called by client session handler to check if threshold summary should be shown for this object.
  */
 bool ServiceRoot::showThresholdSummary() const
@@ -57,16 +50,9 @@ TemplateRoot::TemplateRoot() : super()
 }
 
 /**
- * Template root class destructor
- */
-TemplateRoot::~TemplateRoot()
-{
-}
-
-/**
  * Redefined status calculation for template root
  */
-void TemplateRoot::calculateCompoundStatus(BOOL bForcedRecalc)
+void TemplateRoot::calculateCompoundStatus(bool forcedRecalc)
 {
    m_status = STATUS_NORMAL;
 }
@@ -82,18 +68,11 @@ NetworkMapRoot::NetworkMapRoot() : super()
 }
 
 /**
- * Network maps root class destructor
- */
-NetworkMapRoot::~NetworkMapRoot()
-{
-}
-
-/**
  * Redefined status calculation for network maps root
  */
-void NetworkMapRoot::calculateCompoundStatus(BOOL bForcedRecalc)
+void NetworkMapRoot::calculateCompoundStatus(bool forcedRecalc)
 {
-   super::calculateCompoundStatus(bForcedRecalc);
+   super::calculateCompoundStatus(forcedRecalc);
    if (m_status == STATUS_UNKNOWN)
       m_status = STATUS_NORMAL;
 }
@@ -109,16 +88,9 @@ DashboardRoot::DashboardRoot() : super()
 }
 
 /**
- * Dashboard tree root class destructor
- */
-DashboardRoot::~DashboardRoot()
-{
-}
-
-/**
  * Redefined status calculation for dashboard tree root
  */
-void DashboardRoot::calculateCompoundStatus(BOOL bForcedRecalc)
+void DashboardRoot::calculateCompoundStatus(bool forcedRecalc)
 {
    m_status = STATUS_NORMAL;
 }
@@ -134,16 +106,9 @@ BusinessServiceRoot::BusinessServiceRoot() : super()
 }
 
 /**
- * Dashboard tree root class destructor
- */
-BusinessServiceRoot::~BusinessServiceRoot()
-{
-}
-
-/**
  * Redefined status calculation for dashboard tree root
  */
-void BusinessServiceRoot::calculateCompoundStatus(BOOL bForcedRecalc)
+void BusinessServiceRoot::calculateCompoundStatus(bool forcedRecalc)
 {
    m_status = STATUS_NORMAL;
 }

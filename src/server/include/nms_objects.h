@@ -1285,7 +1285,7 @@ public:
    void commentsToMessage(NXCPMessage *pMsg);
 
    virtual bool setMgmtStatus(bool bIsManaged);
-   virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
+   virtual void calculateCompoundStatus(bool forcedRecalc = false);
 
    uint32_t getUserRights(uint32_t userId) const;
    bool checkAccessRights(uint32_t userId, uint32_t requiredRights) const;
@@ -1881,7 +1881,7 @@ public:
    virtual void applyDCIChanges(bool forcedChange) override;
    virtual bool applyToTarget(const shared_ptr<DataCollectionTarget>& target) override;
 
-   virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE) override;
+   virtual void calculateCompoundStatus(bool forcedRecalc = false) override;
 
    virtual void getEventReferences(uint32_t eventCode, ObjectArray<EventReference>* eventReferences) const override;
 
@@ -2475,7 +2475,7 @@ public:
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
 
-   virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE) override;
+   virtual void calculateCompoundStatus(bool forcedRecalc = false) override;
 
    virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;
 
@@ -2776,7 +2776,7 @@ public:
 
    virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;
 
-   virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE) override;
+   virtual void calculateCompoundStatus(bool forcedRecalc = false) override;
 
    const TCHAR *getXmlConfig() const { return m_xmlConfig; }
    const TCHAR *getXmlRegConfig() const { return m_xmlRegConfig; }
@@ -3443,7 +3443,7 @@ public:
    virtual void startForcedConfigurationPoll() override;
 
    virtual bool setMgmtStatus(bool isManaged) override;
-   virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE) override;
+   virtual void calculateCompoundStatus(bool forcedRecalc = false) override;
 
    bool checkAgentTrapId(UINT64 id);
    bool checkSNMPTrapId(UINT32 id);
@@ -3587,7 +3587,7 @@ public:
 
    virtual json_t *toJson() override;
 
-   void addNode(const shared_ptr<Node>& node) { addChild(node); node->addParent(self()); calculateCompoundStatus(TRUE); }
+   void addNode(const shared_ptr<Node>& node) { addChild(node); node->addParent(self()); calculateCompoundStatus(true); }
 
    virtual bool showThresholdSummary() const override;
 
@@ -3633,7 +3633,6 @@ private:
 
 public:
    ServiceRoot();
-   virtual ~ServiceRoot();
 
    virtual int getObjectClass() const override { return OBJECT_SERVICEROOT; }
 
@@ -3650,10 +3649,9 @@ private:
 
 public:
    TemplateRoot();
-   virtual ~TemplateRoot();
 
    virtual int getObjectClass() const override { return OBJECT_TEMPLATEROOT; }
-   virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE) override;
+   virtual void calculateCompoundStatus(bool forcedRecalc = false) override;
 };
 
 /**
@@ -3681,7 +3679,7 @@ public:
    virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
    virtual void linkObjects() override;
 
-   virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE) override;
+   virtual void calculateCompoundStatus(bool forcedRecalc = false) override;
 
    virtual json_t *toJson() override;
 
@@ -3730,11 +3728,11 @@ protected:
 
 public:
    TemplateGroup() : AbstractContainer() { }
-   TemplateGroup(const TCHAR *pszName) : super(pszName, 0) { m_status = STATUS_NORMAL; }
+   TemplateGroup(const TCHAR *name) : super(name, 0) { m_status = STATUS_NORMAL; }
    virtual ~TemplateGroup() { }
 
    virtual int getObjectClass() const override { return OBJECT_TEMPLATEGROUP; }
-   virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE) override;
+   virtual void calculateCompoundStatus(bool forcedRecalc = false) override;
 
    virtual bool showThresholdSummary() const override;
 };
@@ -4071,10 +4069,9 @@ protected:
 
 public:
    NetworkMapRoot();
-   virtual ~NetworkMapRoot();
 
    virtual int getObjectClass() const override { return OBJECT_NETWORKMAPROOT; }
-   virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE) override;
+   virtual void calculateCompoundStatus(bool forcedRecalc = false) override;
 };
 
 /**
@@ -4091,7 +4088,7 @@ public:
    virtual ~NetworkMapGroup() { }
 
    virtual int getObjectClass() const override { return OBJECT_NETWORKMAPGROUP; }
-   virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE) override;
+   virtual void calculateCompoundStatus(bool forcedRecalc = false) override;
 
    virtual bool showThresholdSummary() const override;
 };
@@ -4160,7 +4157,7 @@ public:
    virtual ~NetworkMap();
 
    virtual int getObjectClass() const override { return OBJECT_NETWORKMAP; }
-   virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE) override;
+   virtual void calculateCompoundStatus(bool forcedRecalc = false) override;
 
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
@@ -4186,10 +4183,9 @@ protected:
 
 public:
    DashboardRoot();
-   virtual ~DashboardRoot();
 
    virtual int getObjectClass() const override { return OBJECT_DASHBOARDROOT; }
-   virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE) override;
+   virtual void calculateCompoundStatus(bool forcedRecalc = false) override;
 };
 
 /**
@@ -4202,8 +4198,16 @@ public:
    TCHAR *m_data;
    TCHAR *m_layout;
 
-   DashboardElement() { m_data = nullptr; m_layout = nullptr; }
-   ~DashboardElement() { MemFree(m_data); MemFree(m_layout); }
+   DashboardElement()
+   {
+      m_data = nullptr;
+      m_layout = nullptr;
+   }
+   ~DashboardElement()
+   {
+      MemFree(m_data);
+      MemFree(m_layout);
+   }
 
    json_t *toJson()
    {
@@ -4214,6 +4218,10 @@ public:
       return root;
    }
 };
+
+#ifdef _WIN32
+template class NXCORE_EXPORTABLE ObjectArray<DashboardElement>;
+#endif
 
 /**
  * Dashboard object
@@ -4226,7 +4234,7 @@ protected:
 protected:
    int m_numColumns;
    uint32_t m_options;
-   ObjectArray<DashboardElement> *m_elements;
+   ObjectArray<DashboardElement> m_elements;
 
    virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId) override;
    virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg) override;
@@ -4234,10 +4242,9 @@ protected:
 public:
    Dashboard();
    Dashboard(const TCHAR *name);
-   virtual ~Dashboard();
 
    virtual int getObjectClass() const override { return OBJECT_DASHBOARD; }
-   virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE) override;
+   virtual void calculateCompoundStatus(bool forcedRecalc = false) override;
 
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
@@ -4259,10 +4266,9 @@ protected:
 public:
    DashboardGroup() : super() { }
    DashboardGroup(const TCHAR *pszName) : super(pszName, 0) { }
-   virtual ~DashboardGroup() { }
 
    virtual int getObjectClass() const override { return OBJECT_DASHBOARDGROUP; }
-   virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE) override;
+   virtual void calculateCompoundStatus(bool forcedRecalc = false) override;
 
    virtual bool showThresholdSummary() const override;
 };
@@ -4375,10 +4381,9 @@ protected:
 
 public:
    BusinessServiceRoot();
-   virtual ~BusinessServiceRoot();
 
    virtual int getObjectClass() const override { return OBJECT_BUSINESS_SERVICE_ROOT; }
-   virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE) override;
+   virtual void calculateCompoundStatus(bool forcedRecalc = false) override;
 };
 
 #ifdef _WIN32

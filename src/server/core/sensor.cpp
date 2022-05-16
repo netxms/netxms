@@ -405,14 +405,12 @@ uint32_t Sensor::modifyFromMessageInternal(const NXCPMessage& msg)
 /**
  * Calculate sensor status
  */
-void Sensor::calculateCompoundStatus(BOOL bForcedRecalc)
+void Sensor::calculateCompoundStatus(bool forcedRecalc)
 {
    int oldStatus = m_status;
-   calculateStatus(bForcedRecalc);
-   lockProperties();
+   calculateStatus(forcedRecalc);
    if (oldStatus != m_status)
       setModified(MODIFY_RUNTIME);
-   unlockProperties();
 }
 
 /**

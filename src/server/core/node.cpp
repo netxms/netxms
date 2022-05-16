@@ -1961,14 +1961,14 @@ bool Node::setMgmtStatus(bool isManaged)
 /**
  * Calculate node status based on child objects status
  */
-void Node::calculateCompoundStatus(BOOL bForcedRecalc)
+void Node::calculateCompoundStatus(bool forcedRecalc)
 {
-   int oldStatus = m_status;
    static uint32_t eventCodes[] = { EVENT_NODE_NORMAL, EVENT_NODE_WARNING,
       EVENT_NODE_MINOR, EVENT_NODE_MAJOR, EVENT_NODE_CRITICAL,
       EVENT_NODE_UNKNOWN, EVENT_NODE_UNMANAGED };
 
-   super::calculateCompoundStatus(bForcedRecalc);
+   int oldStatus = m_status;
+   super::calculateCompoundStatus(forcedRecalc);
    if (m_status != oldStatus)
       PostSystemEvent(eventCodes[m_status], m_id, "d", oldStatus);
 }

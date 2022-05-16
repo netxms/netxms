@@ -28,9 +28,9 @@
 /**
  * Redefined status calculation for network maps group
  */
-void NetworkMapGroup::calculateCompoundStatus(BOOL bForcedRecalc)
+void NetworkMapGroup::calculateCompoundStatus(bool forcedRecalc)
 {
-   super::calculateCompoundStatus(bForcedRecalc);
+   super::calculateCompoundStatus(forcedRecalc);
    if (m_status == STATUS_UNKNOWN)
       m_status = STATUS_NORMAL;
 }
@@ -107,7 +107,7 @@ NetworkMap::~NetworkMap()
 /**
  * Redefined status calculation for network maps
  */
-void NetworkMap::calculateCompoundStatus(BOOL bForcedRecalc)
+void NetworkMap::calculateCompoundStatus(bool forcedRecalc)
 {
    if (m_flags & MF_CALCULATE_STATUS)
    {
@@ -146,13 +146,12 @@ void NetworkMap::calculateCompoundStatus(BOOL bForcedRecalc)
                   if (e->getType() != MAP_ELEMENT_OBJECT)
                      continue;
 
-                  shared_ptr<NetObj> object = FindObjectById(((NetworkMapObject *)e)->getObjectId());
+                  shared_ptr<NetObj> object = FindObjectById(static_cast<NetworkMapObject*>(e)->getObjectId());
                   if (object == nullptr)
                      continue;
 
                   iChildStatus = object->getPropagatedStatus();
-                  if ((iChildStatus < STATUS_UNKNOWN) &&
-                      (iChildStatus > iMostCriticalStatus))
+                  if ((iChildStatus < STATUS_UNKNOWN) && (iChildStatus > iMostCriticalStatus))
                   {
                      iMostCriticalStatus = iChildStatus;
                      iCount++;
@@ -171,7 +170,7 @@ void NetworkMap::calculateCompoundStatus(BOOL bForcedRecalc)
                   if (e->getType() != MAP_ELEMENT_OBJECT)
                      continue;
 
-                  shared_ptr<NetObj> object = FindObjectById(((NetworkMapObject *)e)->getObjectId());
+                  shared_ptr<NetObj> object = FindObjectById(static_cast<NetworkMapObject*>(e)->getObjectId());
                   if (object == nullptr)
                      continue;
 
@@ -205,31 +204,24 @@ void NetworkMap::calculateCompoundStatus(BOOL bForcedRecalc)
          unlockProperties();
 
          // Cause parent object(s) to recalculate it's status
-         if ((iOldStatus != m_status) || bForcedRecalc)
+         if ((iOldStatus != m_status) || forcedRecalc)
          {
             readLockParentList();
             for(int i = 0; i < getParentList().size(); i++)
                getParentList().get(i)->calculateCompoundStatus();
             unlockParentList();
-            lockProperties();
             setModified(MODIFY_RUNTIME);
-            unlockProperties();
          }
       }
    }
-   else
+   else if ((m_status != STATUS_NORMAL) && (m_status != STATUS_UNMANAGED))
    {
-      if (m_status != STATUS_NORMAL && m_status != STATUS_UNMANAGED)
-      {
-         m_status = STATUS_NORMAL;
-         readLockParentList();
-         for(int i = 0; i < getParentList().size(); i++)
-            getParentList().get(i)->calculateCompoundStatus();
-         unlockParentList();
-         lockProperties();
-         setModified(MODIFY_RUNTIME);
-         unlockProperties();
-      }
+      m_status = STATUS_NORMAL;
+      readLockParentList();
+      for(int i = 0; i < getParentList().size(); i++)
+         getParentList().get(i)->calculateCompoundStatus();
+      unlockParentList();
+      setModified(MODIFY_RUNTIME);
    }
 }
 

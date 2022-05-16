@@ -30,7 +30,7 @@ extern ThreadPool *g_pollerThreadPool;
 /**
  * Redefined status calculation for template group
  */
-void TemplateGroup::calculateCompoundStatus(BOOL bForcedRecalc)
+void TemplateGroup::calculateCompoundStatus(bool forcedRecalc)
 {
    m_status = STATUS_NORMAL;
 }
@@ -97,7 +97,7 @@ Template::~Template()
 /**
  * Redefined status calculation for template
  */
-void Template::calculateCompoundStatus(BOOL bForcedRecalc)
+void Template::calculateCompoundStatus(bool forcedRecalc)
 {
    m_status = STATUS_NORMAL;
 }

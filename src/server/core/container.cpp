@@ -80,17 +80,17 @@ void AbstractContainer::linkObjects()
 /**
  * Calculate status for compound object based on childs' status
  */
-void AbstractContainer::calculateCompoundStatus(BOOL bForcedRecalc)
+void AbstractContainer::calculateCompoundStatus(bool forcedRecalc)
 {
-	super::calculateCompoundStatus(bForcedRecalc);
+	super::calculateCompoundStatus(forcedRecalc);
 
+   lockProperties();
 	if ((m_status == STATUS_UNKNOWN) && (m_dwChildIdListSize == 0))
    {
-		lockProperties();
 		m_status = STATUS_NORMAL;
 		setModified(MODIFY_RUNTIME);
-		unlockProperties();
 	}
+   unlockProperties();
 }
 
 /**

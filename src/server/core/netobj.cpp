@@ -982,14 +982,12 @@ int NetObj::getAdditionalMostCriticalStatus()
 /**
  * Calculate status for compound object based on children status
  */
-void NetObj::calculateCompoundStatus(BOOL bForcedRecalc)
+void NetObj::calculateCompoundStatus(bool forcedRecalc)
 {
    if (m_status == STATUS_UNMANAGED)
       return;
 
    int mostCriticalAlarm = GetMostCriticalStatusForObject(m_id);
-
-   int oldStatus = m_status;
    int mostCriticalStatus, i, count, iStatusAlg;
    int nSingleThreshold, *pnThresholds;
    int nRating[5], iChildStatus, nThresholds[4];
@@ -1011,7 +1009,9 @@ void NetObj::calculateCompoundStatus(BOOL bForcedRecalc)
          nThresholds[i] = nSingleThreshold;
       pnThresholds = nThresholds;
    }
+   unlockProperties();
 
+   int newStatus;
    switch(iStatusAlg)
    {
       case SA_CALCULATE_MOST_CRITICAL:
@@ -1026,7 +1026,7 @@ void NetObj::calculateCompoundStatus(BOOL bForcedRecalc)
                count++;
             }
          }
-         m_status = (count > 0) ? mostCriticalStatus : STATUS_UNKNOWN;
+         newStatus = (count > 0) ? mostCriticalStatus : STATUS_UNKNOWN;
          unlockChildList();
          break;
       case SA_CALCULATE_SINGLE_THRESHOLD:
@@ -1052,28 +1052,28 @@ void NetObj::calculateCompoundStatus(BOOL bForcedRecalc)
             for(i = 4; i > 0; i--)
                if (nRating[i] * 100 / count >= pnThresholds[i - 1])
                   break;
-            m_status = i;
+            newStatus = i;
          }
          else
          {
-            m_status = STATUS_UNKNOWN;
+            newStatus = STATUS_UNKNOWN;
          }
          break;
       default:
-         m_status = STATUS_UNKNOWN;
+         newStatus = STATUS_UNKNOWN;
          break;
    }
 
    // If alarms exist for object, apply alarm severity to object's status
    if (mostCriticalAlarm != STATUS_UNKNOWN)
    {
-      if (m_status == STATUS_UNKNOWN)
+      if (newStatus == STATUS_UNKNOWN)
       {
-         m_status = mostCriticalAlarm;
+         newStatus = mostCriticalAlarm;
       }
       else
       {
-         m_status = std::max(m_status, mostCriticalAlarm);
+         newStatus = std::max(newStatus, mostCriticalAlarm);
       }
    }
 
@@ -1081,13 +1081,13 @@ void NetObj::calculateCompoundStatus(BOOL bForcedRecalc)
    int mostCriticalAdditional = getAdditionalMostCriticalStatus();
    if (mostCriticalAdditional != STATUS_UNKNOWN)
    {
-      if (m_status == STATUS_UNKNOWN)
+      if (newStatus == STATUS_UNKNOWN)
       {
-         m_status = mostCriticalAdditional;
+         newStatus = mostCriticalAdditional;
       }
       else
       {
-         m_status = std::max(m_status, mostCriticalAdditional);
+         newStatus = std::max(newStatus, mostCriticalAdditional);
       }
    }
 
@@ -1097,29 +1097,34 @@ void NetObj::calculateCompoundStatus(BOOL bForcedRecalc)
       int moduleStatus = CURRENT_MODULE.pfCalculateObjectStatus(this);
       if (moduleStatus != STATUS_UNKNOWN)
       {
-         if (m_status == STATUS_UNKNOWN)
+         if (newStatus == STATUS_UNKNOWN)
          {
-            m_status = moduleStatus;
+            newStatus = moduleStatus;
          }
          else
          {
-            m_status = std::max(m_status, moduleStatus);
+            newStatus = std::max(m_status, moduleStatus);
          }
       }
    }
 
+   bool updateParents = forcedRecalc;
+   lockProperties();
+   if (newStatus != m_status)
+   {
+      m_status = newStatus;
+      setModified(MODIFY_RUNTIME);  // only notify clients
+      updateParents = true;
+   }
    unlockProperties();
 
    // Cause parent object(s) to recalculate it's status
-   if ((oldStatus != m_status) || bForcedRecalc)
+   if (updateParents)
    {
       readLockParentList();
       for(i = 0; i < getParentList().size(); i++)
          getParentList().get(i)->calculateCompoundStatus();
       unlockParentList();
-      lockProperties();
-      setModified(MODIFY_RUNTIME);  // only notify clients
-      unlockProperties();
    }
 }
 

@@ -327,18 +327,18 @@ DataCollectionError MobileDevice::getInternalMetric(const TCHAR *name, TCHAR *bu
 /**
  * Calculate compound status
  */
-void MobileDevice::calculateCompoundStatus(BOOL bForcedRecalc)
+void MobileDevice::calculateCompoundStatus(bool forcedRecalc)
 {
-   NetObj::calculateCompoundStatus(bForcedRecalc);
+   NetObj::calculateCompoundStatus(forcedRecalc);
 
    // Assume normal status by default for mobile device
+   lockProperties();
    if (m_status == STATUS_UNKNOWN)
    {
-      lockProperties();
       m_status = STATUS_NORMAL;
       setModified(MODIFY_RUNTIME);
-      unlockProperties();
    }
+   unlockProperties();
 }
 
 /**

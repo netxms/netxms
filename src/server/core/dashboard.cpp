@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -25,9 +25,8 @@
 /**
  * Default constructor
  */
-Dashboard::Dashboard() : super()
+Dashboard::Dashboard() : super(), m_elements(0, 16, Ownership::True)
 {
-	m_elements = new ObjectArray<DashboardElement>(0, 16, Ownership::True);
 	m_numColumns = 1;
 	m_options = 0;
 	m_status = STATUS_NORMAL;
@@ -36,26 +35,17 @@ Dashboard::Dashboard() : super()
 /**
  * Constructor for creating new dashboard object
  */
-Dashboard::Dashboard(const TCHAR *name) : super(name, 0)
+Dashboard::Dashboard(const TCHAR *name) : super(name, 0), m_elements(0, 16, Ownership::True)
 {
-   m_elements = new ObjectArray<DashboardElement>(0, 16, Ownership::True);
 	m_numColumns = 1;
 	m_options = 0;
 	m_status = STATUS_NORMAL;
 }
 
 /**
- * Destructor
- */
-Dashboard::~Dashboard()
-{
-	delete m_elements;
-}
-
-/**
  * Redefined status calculation
  */
-void Dashboard::calculateCompoundStatus(BOOL bForcedRecalc)
+void Dashboard::calculateCompoundStatus(bool forcedRecalc)
 {
    m_status = STATUS_NORMAL;
 }
@@ -95,7 +85,7 @@ bool Dashboard::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 		e->m_type = (int)DBGetFieldLong(hResult, i, 0);
 		e->m_data = DBGetField(hResult, i, 1, NULL, 0);
 		e->m_layout = DBGetField(hResult, i, 2, NULL, 0);
-		m_elements->add(e);
+		m_elements.add(e);
 	}
 
 	DBFreeResult(hResult);
@@ -134,15 +124,15 @@ bool Dashboard::saveToDatabase(DB_HANDLE hdb)
       {
          success = executeQueryOnObject(hdb, _T("DELETE FROM dashboard_elements WHERE dashboard_id=?"));
          lockProperties();
-         if (success && !m_elements->isEmpty())
+         if (success && !m_elements.isEmpty())
          {
             hStmt = DBPrepare(hdb, _T("INSERT INTO dashboard_elements (dashboard_id,element_id,element_type,element_data,layout_data) VALUES (?,?,?,?,?)"));
             if (hStmt != nullptr)
             {
                DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
-               for(int i = 0; success && (i < m_elements->size()); i++)
+               for(int i = 0; success && (i < m_elements.size()); i++)
                {
-                  DashboardElement *element = m_elements->get(i);
+                  DashboardElement *element = m_elements.get(i);
                   DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, i);
                   DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, element->m_type);
                   DBBind(hStmt, 4, DB_SQLTYPE_TEXT, element->m_data, DB_BIND_STATIC);
@@ -183,12 +173,12 @@ void Dashboard::fillMessageInternal(NXCPMessage *msg, UINT32 userId)
    super::fillMessageInternal(msg, userId);
 
 	msg->setField(VID_NUM_COLUMNS, (WORD)m_numColumns);
-	msg->setField(VID_NUM_ELEMENTS, (UINT32)m_elements->size());
+	msg->setField(VID_NUM_ELEMENTS, (UINT32)m_elements.size());
 
 	UINT32 varId = VID_ELEMENT_LIST_BASE;
-	for(int i = 0; i < m_elements->size(); i++)
+	for(int i = 0; i < m_elements.size(); i++)
 	{
-		DashboardElement *element = m_elements->get(i);
+		DashboardElement *element = m_elements.get(i);
 		msg->setField(varId++, (WORD)element->m_type);
 		msg->setField(varId++, CHECK_NULL_EX(element->m_data));
 		msg->setField(varId++, CHECK_NULL_EX(element->m_layout));
@@ -209,7 +199,7 @@ uint32_t Dashboard::modifyFromMessageInternal(const NXCPMessage& msg)
 
 	if (msg.isFieldExist(VID_NUM_ELEMENTS))
 	{
-		m_elements->clear();
+		m_elements.clear();
 
 		int count = (int)msg.getFieldAsUInt32(VID_NUM_ELEMENTS);
 		UINT32 varId = VID_ELEMENT_LIST_BASE;
@@ -220,7 +210,7 @@ uint32_t Dashboard::modifyFromMessageInternal(const NXCPMessage& msg)
 			e->m_data = msg.getFieldAsString(varId++);
 			e->m_layout = msg.getFieldAsString(varId++);
 			varId += 7;
-			m_elements->add(e);
+			m_elements.add(e);
 		}
 	}
 
@@ -254,7 +244,7 @@ json_t *Dashboard::toJson()
 /**
  * Redefined status calculation for dashboard group
  */
-void DashboardGroup::calculateCompoundStatus(BOOL bForcedRecalc)
+void DashboardGroup::calculateCompoundStatus(bool forcedRecalc)
 {
    m_status = STATUS_NORMAL;
 }
