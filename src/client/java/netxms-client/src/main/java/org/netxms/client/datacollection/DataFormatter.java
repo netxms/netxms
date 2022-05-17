@@ -120,7 +120,7 @@ public class DataFormatter
    }
 
    private static final long[] DECIMAL_MULTIPLIERS = { 1L, 1000L, 1000000L, 1000000000L, 1000000000000L, 1000000000000000L };
-   private static final long[] BINARY_MULTIPLIERS = { 1L, 0x400L, 0x100000L, 0x40000000L, 0x10000000000L, 0x1000000000000000L };
+   private static final long[] BINARY_MULTIPLIERS = { 1L, 0x400L, 0x100000L, 0x40000000L, 0x10000000000L, 0x4000000000000L };
    private static final String[] SUFFIX = { "", " k", " M", " G", " T", " P" };
    private static final String[] BINARY_SUFFIX = { "", " Ki", " Mi", " Gi", " Ti", " Pi" };
 

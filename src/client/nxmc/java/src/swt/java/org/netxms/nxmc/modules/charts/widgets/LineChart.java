@@ -116,6 +116,7 @@ public class LineChart extends org.eclipse.swtchart.Chart implements PlotArea
       getLegend().setVisible(false);
 
       setTranslucent(configuration.isTranslucent());
+      setUseMultipliers(configuration.isUseMultipliers());
 
 		// Default time range
 		timeTo = System.currentTimeMillis();
@@ -131,7 +132,7 @@ public class LineChart extends org.eclipse.swtchart.Chart implements PlotArea
       DateFormat format = DateFormatFactory.getShortTimeFormat();
 		xTick.setFormat(format);
       // FIXME: xTick.setFont(Activator.getDefault().getChartFont());
-		
+
 		final IAxis yAxis = axisSet.getYAxis(0);
 		yAxis.getTitle().setVisible(false);
       yAxis.getTick().setForeground(getColorFromPreferences("Chart.Axis.Y.Color"));
@@ -272,11 +273,11 @@ public class LineChart extends org.eclipse.swtchart.Chart implements PlotArea
 	{
 		if (zoomLevel >= MAX_ZOOM_LEVEL)
 			return;
-		
+
 		selectionActive = true;
 		selection.setStartPoint(e.x, e.y);
 		selection.setEndPoint(e.x, e.y);
-		
+
       final IPlotArea plotArea = getPlotArea();
 		moveListener = new MouseMoveListener() {
 			@Override
