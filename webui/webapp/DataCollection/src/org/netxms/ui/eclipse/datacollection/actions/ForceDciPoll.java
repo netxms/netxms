@@ -42,25 +42,25 @@ public class ForceDciPoll implements IObjectActionDelegate
 	private IWorkbenchPart part;
 	private Set<DCI> objects = null;
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.IObjectActionDelegate#setActivePart(org.eclipse.jface.action.IAction, org.eclipse.ui.IWorkbenchPart)
-	 */
+   /**
+    * @see org.eclipse.ui.IObjectActionDelegate#setActivePart(org.eclipse.jface.action.IAction, org.eclipse.ui.IWorkbenchPart)
+    */
 	@Override
 	public void setActivePart(IAction action, IWorkbenchPart targetPart)
 	{
 		part = targetPart;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.IActionDelegate#run(org.eclipse.jface.action.IAction)
-	 */
+   /**
+    * @see org.eclipse.ui.IActionDelegate#run(org.eclipse.jface.action.IAction)
+    */
 	@Override
 	public void run(IAction action)
 	{
 		if (objects == null)
 			return;
-		
-		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+
+      final NXCSession session = ConsoleSharedData.getSession();
 		final Set<DCI> dciToPoll = objects;
 		new ConsoleJob(Messages.get().ForceDciPoll_TaskName, part, Activator.PLUGIN_ID, null) {
 			@Override
@@ -83,9 +83,9 @@ public class ForceDciPoll implements IObjectActionDelegate
 		}.start();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.IActionDelegate#selectionChanged(org.eclipse.jface.action.IAction, org.eclipse.jface.viewers.ISelection)
-	 */
+   /**
+    * @see org.eclipse.ui.IActionDelegate#selectionChanged(org.eclipse.jface.action.IAction, org.eclipse.jface.viewers.ISelection)
+    */
 	@Override
 	public void selectionChanged(IAction action, ISelection selection)
 	{
@@ -108,7 +108,6 @@ public class ForceDciPoll implements IObjectActionDelegate
 					dciList = null;
 					break;
 				}
-				
 			}
 		}
 		
@@ -134,9 +133,9 @@ public class ForceDciPoll implements IObjectActionDelegate
 			this.dciId = dciId;
 		}
 
-		/* (non-Javadoc)
-		 * @see java.lang.Object#hashCode()
-		 */
+      /**
+       * @see java.lang.Object#hashCode()
+       */
 		@Override
 		public int hashCode()
 		{
@@ -146,10 +145,10 @@ public class ForceDciPoll implements IObjectActionDelegate
 			result = prime * result + (int)(nodeId ^ (nodeId >>> 32));
 			return result;
 		}
-		
-		/* (non-Javadoc)
-		 * @see java.lang.Object#equals(java.lang.Object)
-		 */
+
+      /**
+       * @see java.lang.Object#equals(java.lang.Object)
+       */
 		@Override
 		public boolean equals(Object obj)
 		{

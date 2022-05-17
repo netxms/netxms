@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -42,6 +42,7 @@ import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Shell;
+import org.netxms.base.Pair;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.DataCollectionItem;
@@ -76,6 +77,7 @@ import org.netxms.nxmc.modules.datacollection.views.helpers.LastValuesLabelProvi
 import org.netxms.nxmc.modules.objects.views.ObjectView;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
+import org.netxms.nxmc.tools.MessageDialogHelper;
 import org.netxms.nxmc.tools.ViewRefreshController;
 import org.netxms.nxmc.tools.VisibilityValidator;
 import org.netxms.nxmc.tools.WidgetHelper;
@@ -95,7 +97,7 @@ public abstract class BaseDataCollectionView extends ObjectView
    public static final int LV_COLUMN_VALUE = 3;
    public static final int LV_COLUMN_TIMESTAMP = 4;
    public static final int LV_COLUMN_THRESHOLD = 5;
-   
+
    protected NXCSession session;
    protected SortableTableViewer viewer;
 
@@ -105,7 +107,7 @@ public abstract class BaseDataCollectionView extends ObjectView
    private boolean autoRefreshEnabled = false;
    private int autoRefreshInterval = 30;  // in seconds
    private ViewRefreshController refreshController;
-   
+
    protected Action actionLineChart;
    protected Action actionRawLineChart;
    protected Action actionUseMultipliers;
@@ -117,6 +119,9 @@ public abstract class BaseDataCollectionView extends ObjectView
    protected Action actionExportAllToCsv;
    protected Action actionCopyToClipboard;
    protected Action actionCopyDciName;
+   protected Action actionForcePoll;
+   protected Action actionRecalculateData;
+   protected Action actionClearData;
    protected Action actionShowHistoryData;
    protected Action actionShowTableData;
 
@@ -148,7 +153,7 @@ public abstract class BaseDataCollectionView extends ObjectView
       createLastValuesViewer(parent, validator);
       createActions();
    }
-   
+
    /**
     * Create last values view
     */
@@ -188,7 +193,7 @@ public abstract class BaseDataCollectionView extends ObjectView
    /**
     * Create pop-up menu
     */
-   protected void createPopupMenu()
+   protected void createContextMenu()
    {
       // Create menu manager.
       MenuManager menuMgr = new MenuManager();
@@ -230,6 +235,10 @@ public abstract class BaseDataCollectionView extends ObjectView
       manager.add(actionExportToCsv);
       manager.add(actionExportAllToCsv);
       manager.add(new Separator());
+      manager.add(actionForcePoll);
+      manager.add(actionRecalculateData);
+      manager.add(actionClearData);
+      manager.add(new Separator());
       manager.add(actionUseMultipliers);
       manager.add(actionShowErrors);
       manager.add(actionShowDisabled);
@@ -267,9 +276,7 @@ public abstract class BaseDataCollectionView extends ObjectView
    {
       actionExportToCsv = new ExportToCsvAction(this, viewer, true); 
       actionExportAllToCsv = new ExportToCsvAction(this, viewer, false);
-      
-      /*last values */
-      
+
       actionUseMultipliers = new Action(i18n.tr("Use &multipliers"), Action.AS_CHECK_BOX) {
          @Override
          public void run()
@@ -346,7 +353,7 @@ public abstract class BaseDataCollectionView extends ObjectView
             showLineChart(true);
          }
       };
-      
+
       actionShowHistoryData = new Action(i18n.tr("History"), ResourceManager.getImageDescriptor("icons/data_history.gif")) {
          @Override
          public void run()
@@ -354,12 +361,36 @@ public abstract class BaseDataCollectionView extends ObjectView
             showHistoryData();
          }
       };
-      
+
       actionShowTableData = new Action(i18n.tr("Table last value"), ResourceManager.getImageDescriptor("icons/object-views/table-value.png")) {
          @Override
          public void run()
          {
             showHistoryData();
+         }
+      };
+
+      actionForcePoll = new Action(i18n.tr("&Force poll")) {
+         @Override
+         public void run()
+         {
+            forcePoll();
+         }
+      };
+
+      actionRecalculateData = new Action(i18n.tr("Start data &recalculation")) {
+         @Override
+         public void run()
+         {
+            startDataRecalculation();
+         }
+      };
+
+      actionClearData = new Action(i18n.tr("Clear collected data")) {
+         @Override
+         public void run()
+         {
+            clearCollectedData();
          }
       };
    }
@@ -505,7 +536,7 @@ public abstract class BaseDataCollectionView extends ObjectView
       lvFilter.setShowUnsupported(ds.getAsBoolean(configPrefix + ".showUnsupported", false));
       lvFilter.setShowHidden(ds.getAsBoolean(configPrefix + ".showHidden", false));
       
-      createPopupMenu();
+      createContextMenu();
 
       if ((validator == null) || validator.isVisible())
          getDataFromServer();
@@ -828,5 +859,115 @@ public abstract class BaseDataCollectionView extends ObjectView
          }
       }
       return (isTable & isDci) ? DataCollectionObject.DCO_TYPE_GENERIC : isTable ? DataCollectionObject.DCO_TYPE_TABLE : DataCollectionObject.DCO_TYPE_ITEM;
+   }
+
+   /**
+    * Force DCI poll
+    */
+   private void forcePoll()
+   {
+      IStructuredSelection selection = viewer.getStructuredSelection();
+      if (selection.isEmpty())
+         return;
+
+      final List<Pair<Long, Long>> dciList = new ArrayList<>();
+      for(Object dci : selection.toList())
+         dciList.add(new Pair<Long, Long>(getObjectId(dci), getDciId(dci)));
+
+      new Job(i18n.tr("Initiating DCI polling"), this) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            monitor.beginTask(i18n.tr("Initiating DCI polling"), dciList.size());
+            for(Pair<Long, Long> d : dciList)
+            {
+               session.forceDCIPoll(d.getFirst(), d.getSecond());
+               monitor.worked(1);
+            }
+            monitor.done();
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return i18n.tr("Cannot start forced DCI poll");
+         }
+      }.start();
+   }
+
+   /**
+    * Start data recalculation
+    */
+   private void startDataRecalculation()
+   {
+      IStructuredSelection selection = viewer.getStructuredSelection();
+      if (selection.isEmpty())
+         return;
+
+      if (!MessageDialogHelper.openQuestion(getWindow().getShell(), "Start Data Recalculation",
+            "Collected values will be re-calculated using stored raw values and current transformation settings. Continue?"))
+         return;
+
+      final List<Pair<Long, Long>> dciList = new ArrayList<>();
+      for(Object dci : selection.toList())
+         dciList.add(new Pair<Long, Long>(getObjectId(dci), getDciId(dci)));
+
+      new Job(i18n.tr("Initiating DCI data recalculation"), this) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            monitor.beginTask(i18n.tr("Initiating DCI data recalculation"), dciList.size());
+            for(Pair<Long, Long> d : dciList)
+            {
+               session.recalculateDCIValues(d.getFirst(), d.getSecond());
+               monitor.worked(1);
+            }
+            monitor.done();
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return i18n.tr("Cannot start DCI data recalculation");
+         }
+      }.start();
+   }
+
+   /**
+    * Clear collected data
+    */
+   private void clearCollectedData()
+   {
+      IStructuredSelection selection = viewer.getStructuredSelection();
+      if (selection.isEmpty())
+         return;
+
+      if (!MessageDialogHelper.openQuestion(getWindow().getShell(), "Clear Collected Data",
+            "All collected data for selected data collection items will be deleted. Proceed?"))
+         return;
+
+      final List<Pair<Long, Long>> dciList = new ArrayList<>();
+      for(Object dci : selection.toList())
+         dciList.add(new Pair<Long, Long>(getObjectId(dci), getDciId(dci)));
+
+      new Job(i18n.tr("Clearing collected DCI data"), this) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            monitor.beginTask(i18n.tr("Clearing collected DCI data"), dciList.size());
+            for(Pair<Long, Long> d : dciList)
+            {
+               session.clearCollectedData(d.getFirst(), d.getSecond());
+               monitor.worked(1);
+            }
+            monitor.done();
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return i18n.tr("Cannot clear collected DCI data");
+         }
+      }.start();
    }
 }

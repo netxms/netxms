@@ -227,7 +227,7 @@ public class DataCollectionView extends BaseDataCollectionView
          }
       });
       
-      createPopupMenu();
+      createContextMenu();
 
       hideModificationWarnings = ds.getAsBoolean(configPrefix + ".hideModificationWarnings", false); 
       
@@ -296,7 +296,7 @@ public class DataCollectionView extends BaseDataCollectionView
                actionConvert.setEnabled(selection.size() > 0);
                actionDuplicate.setEnabled(selection.size() > 0);
                actionBulkUpdate.setEnabled(selection.size() > 0);
-               
+
                Iterator<?> it = selection.iterator();
                boolean canActivate = false;
                boolean canDisable = false;
@@ -373,6 +373,10 @@ public class DataCollectionView extends BaseDataCollectionView
          manager.add(actionExportToCsv);
          manager.add(actionExportAllToCsv);
          manager.add(new Separator());
+         manager.add(actionForcePoll);
+         manager.add(actionRecalculateData);
+         manager.add(actionClearData);
+         manager.add(new Separator());
          manager.add(actionUseMultipliers);
          manager.add(actionShowErrors);
          manager.add(actionShowDisabled);
@@ -413,6 +417,10 @@ public class DataCollectionView extends BaseDataCollectionView
          manager.add(new Separator());
          manager.add(actionExportToCsv);
          manager.add(actionExportAllToCsv);
+         manager.add(new Separator());
+         manager.add(actionForcePoll);
+         manager.add(actionRecalculateData);
+         manager.add(actionClearData);
       }
    }
 
