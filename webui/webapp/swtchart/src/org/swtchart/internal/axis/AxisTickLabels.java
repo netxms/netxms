@@ -361,7 +361,7 @@ public class AxisTickLabels implements PaintListener
          tickLabelValues.add(0.0);
          tickLabelPositions.add(0);
       }
-		
+
 		int digitMin = (int)Math.ceil(Math.log10(min));
 		int digitMax = (int)Math.ceil(Math.log10(max));
 
@@ -468,7 +468,9 @@ public class AxisTickLabels implements PaintListener
 				tickLabels.add(format(date, 0));
 			}
 			else
+         {
 				tickLabels.add(format(b.doubleValue(), tickStep.doubleValue()));
+         }
 			tickLabelValues.add(b.doubleValue());
 
 			int tickLabelPosition = (int)((b.doubleValue() - min) / (max - min) * length);

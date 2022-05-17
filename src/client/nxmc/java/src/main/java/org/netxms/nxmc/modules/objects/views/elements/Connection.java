@@ -141,7 +141,7 @@ public class Connection extends OverviewPageElement
 		{
 			AbstractObject peerIface = session.findObjectById(peerInterfaceId);
 			interfaceLabel.setText((peerIface != null) ? peerIface.getObjectName() : "<" + peerInterfaceId + ">"); //$NON-NLS-1$ //$NON-NLS-2$
-			interfaceLabel.setImage(labelProvider.getImage(peerIface));
+         interfaceLabel.setImage((peerIface != null) ? labelProvider.getImage(peerIface) : null);
 			protocolLabel.setText(iface.getPeerDiscoveryProtocol().toString());
 		}
 		else

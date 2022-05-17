@@ -787,29 +787,12 @@ public abstract class BaseDataCollectionView extends ObjectView
    }
 
    /**
-    * @see org.netxms.nxmc.base.views.View#activate()
-    */
-   @Override
-   public void activate()
-   {
-      super.activate();
-      if (getObject() == null && getObject() instanceof DataCollectionTarget)
-         refresh();
-   }
-
-   /**
     * @see org.netxms.nxmc.modules.objects.views.ObjectView#isValidForContext(java.lang.Object)
     */
    @Override
    public boolean isValidForContext(Object context)
    {
-      if (context == null)
-         return false;
-      
-      if (context instanceof DataCollectionTarget)
-         return true;
-      
-      return false;
+      return (context != null) && (context instanceof DataCollectionTarget);
    }
 
    /**
@@ -829,7 +812,7 @@ public abstract class BaseDataCollectionView extends ObjectView
       IStructuredSelection selection = viewer.getStructuredSelection();
       if (selection.isEmpty())
          return DataCollectionObject.DCO_TYPE_GENERIC;
-      
+
       boolean isDci = false;
       boolean isTable = false;
       for(Object dcObject : selection.toList())

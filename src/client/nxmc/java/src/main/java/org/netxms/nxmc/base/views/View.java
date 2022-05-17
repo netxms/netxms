@@ -315,6 +315,18 @@ public abstract class View implements MessageAreaHolder
       catch(RuntimeException e)
       {
       }
+
+      for(ViewStateListener listener : stateListeners)
+         listener.viewActivated(this);
+   }
+
+   /**
+    * Deactivate view. Called by framework when view is deactivated.
+    */
+   public void deactivate()
+   {
+      for(ViewStateListener listener : stateListeners)
+         listener.viewDeactivated(this);
    }
 
    /**
@@ -467,15 +479,7 @@ public abstract class View implements MessageAreaHolder
    public void setVisible(boolean visible)
    {
       if ((viewArea != null) && !viewArea.isDisposed())
-      {
          viewArea.setVisible(visible);
-         if (visible)
-            for(ViewStateListener listener : stateListeners)
-               listener.viewActivated(this);
-         else
-            for(ViewStateListener listener : stateListeners)
-               listener.viewDeactivated(this);
-      }
    }
 
    /**

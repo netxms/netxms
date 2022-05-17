@@ -60,9 +60,13 @@ public class ViewFolder extends ViewContainer
    private Composite topRightControl;
    private boolean allViewsAreCloseable = false;
    private boolean useGlobalViewId = false;
-   private Map<String, View> views = new HashMap<String, View>();
-   private Map<String, CTabItem> tabs = new HashMap<String, CTabItem>();
-   private Set<ViewFolderSelectionListener> selectionListeners = new HashSet<ViewFolderSelectionListener>();
+   private String preferredViewId = null;
+   private String lastViewId = null;
+   private View activeView = null;
+   private boolean contextChange = false;
+   private Map<String, View> views = new HashMap<>();
+   private Map<String, CTabItem> tabs = new HashMap<>();
+   private Set<ViewFolderSelectionListener> selectionListeners = new HashSet<>();
 
    /**
     * Create new view folder.
@@ -84,12 +88,13 @@ public class ViewFolder extends ViewContainer
          @Override
          public void widgetSelected(SelectionEvent e)
          {
+            if (contextChange)
+               return; // Do not handle selection change durint context change
+
             CTabItem tabItem = tabFolder.getSelection();
             View view = (tabItem != null) ? (View)tabItem.getData("view") : null;
             if (view != null)
-            {
                activateView(view, tabItem);
-            }
             fireSelectionListeners(view);
          }
       });
@@ -102,6 +107,18 @@ public class ViewFolder extends ViewContainer
             if (view != null)
             {
                event.doit = view.beforeClose();
+            }
+            if (event.doit)
+            {
+               if (activeView != null)
+               {
+                  activeView.deactivate();
+                  activeView = null;
+               }
+               if (lastViewId != null)
+               {
+                  showView(lastViewId);
+               }
             }
          }
       });
@@ -285,6 +302,27 @@ public class ViewFolder extends ViewContainer
    }
 
    /**
+    * Show view with given ID.
+    *
+    * @param viewId view ID
+    * @return true if view was shown
+    */
+   public boolean showView(String viewId)
+   {
+      View view = views.get(viewId);
+      if (view == null)
+         return false;
+
+      CTabItem tabItem = tabs.get(viewId);
+      if (tabItem == null)
+         return false;
+
+      tabFolder.setSelection(tabItem);
+      activateView(view, tabItem);
+      return true;
+   }
+
+   /**
     * Activate view internal handling of view activation.
     *
     * @param view view to activate
@@ -334,6 +372,14 @@ public class ViewFolder extends ViewContainer
          navigationForward.setEnabled((navigationHistory != null) && navigationHistory.canGoForward());
          navigationBack.setEnabled((navigationHistory != null) && navigationHistory.canGoBackward());
       }
+
+      if (activeView != null)
+         activeView.deactivate();
+      if (!contextChange)
+         lastViewId = (activeView != null) ? getViewId(activeView) : null;
+      activeView = view;
+      if (!contextChange)
+         preferredViewId = getViewId(activeView);
 
       view.activate();
    }
@@ -407,7 +453,16 @@ public class ViewFolder extends ViewContainer
     */
    public void setContext(Object context)
    {
+      if (context == this.context)
+         return;
+
+      if (activeView != null)
+         activeView.deactivate();
+
       this.context = context;
+      contextChange = true;
+
+      boolean invalidActiveView = false;
       for(View view : views.values())
       {
          if (!(view instanceof ViewWithContext))
@@ -435,17 +490,36 @@ public class ViewFolder extends ViewContainer
                tabItem.setData("keepView", Boolean.TRUE); // Prevent view dispose by tab's dispose listener
                tabItem.dispose();
                view.setVisible(false);
+               if (view == activeView)
+                  invalidActiveView = true;
             }
          }
       }
 
-      // Select first view if none were selected
-      if (tabFolder.getSelectionIndex() == -1)
-         tabFolder.setSelection(0);
+      CTabItem tabItem = tabFolder.getSelection();
+      activeView = (tabItem != null) ? (View)tabItem.getData("view") : null;
+      if (((preferredViewId != null) || (lastViewId != null)) && ((activeView == null) || !preferredViewId.equals(getViewId(activeView))))
+      {
+         if (showView(preferredViewId) || showView(lastViewId))
+            invalidActiveView = false;
+      }
 
-      View activeView = getActiveView();
-      if (activeView instanceof ViewWithContext)
-         ((ViewWithContext)activeView).setContext(context);
+      // Select first view if none were selected
+      if (invalidActiveView || (tabFolder.getSelectionIndex() == -1))
+      {
+         tabFolder.setSelection(0);
+         tabItem = tabFolder.getSelection();
+         activeView = (tabItem != null) ? (View)tabItem.getData("view") : null;
+      }
+
+      contextChange = false;
+
+      if (activeView != null)
+      {
+         if (activeView instanceof ViewWithContext)
+            ((ViewWithContext)activeView).setContext(context);
+         activeView.activate();
+      }
    }
 
    /**
@@ -454,10 +528,7 @@ public class ViewFolder extends ViewContainer
    @Override
    protected View getActiveView()
    {
-      if (tabFolder.isDisposed())
-         return null;
-      CTabItem selection = tabFolder.getSelection();
-      return ((selection != null) && !selection.isDisposed()) ? (View)selection.getData("view") : null;
+      return tabFolder.isDisposed() ? null : activeView;
    }
 
    /**

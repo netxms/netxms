@@ -415,6 +415,9 @@ public class ViewStack extends ViewContainer
     */
    public void setContext(Object context)
    {
+      if (context == this.context)
+         return;
+
       this.context = context;
       View view = getActiveView();
       if (contextAware && (view != null) && (view instanceof ViewWithContext))
