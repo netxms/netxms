@@ -56,12 +56,12 @@ inline void FreeConvertedString(UCS2CHAR *str, UCS2CHAR *localBuffer)
 static void GetErrorFromHandle(OCIError *handle, sb4 *errorCode, WCHAR *errorText)
 {
 #if UNICODE_UCS2
-   OCIErrorGet(handle, 1, NULL, errorCode, (text *)errorText, DBDRV_MAX_ERROR_TEXT, OCI_HTYPE_ERROR);
+   OCIErrorGet(handle, 1, nullptr, errorCode, (text *)errorText, DBDRV_MAX_ERROR_TEXT, OCI_HTYPE_ERROR);
    errorText[DBDRV_MAX_ERROR_TEXT - 1] = 0;
 #else
    UCS2CHAR buffer[DBDRV_MAX_ERROR_TEXT];
 
-   OCIErrorGet(handle, 1, NULL, errorCode, (text *)buffer, DBDRV_MAX_ERROR_TEXT, OCI_HTYPE_ERROR);
+   OCIErrorGet(handle, 1, nullptr, errorCode, (text *)buffer, DBDRV_MAX_ERROR_TEXT, OCI_HTYPE_ERROR);
    buffer[DBDRV_MAX_ERROR_TEXT - 1] = 0;
    ucs2_to_ucs4(buffer, ucs2_strlen(buffer) + 1, errorText, DBDRV_MAX_ERROR_TEXT);
    errorText[DBDRV_MAX_ERROR_TEXT - 1] = 0;
@@ -74,6 +74,8 @@ static void GetErrorFromHandle(OCIError *handle, sb4 *errorCode, WCHAR *errorTex
  */
 static void SetLastError(ORACLE_CONN *pConn)
 {
+   pConn->lastErrorCode = 0;
+   pConn->lastErrorText[0] = 0;
    GetErrorFromHandle(pConn->handleError, &pConn->lastErrorCode, pConn->lastErrorText);
 }
 
@@ -82,6 +84,10 @@ static void SetLastError(ORACLE_CONN *pConn)
  */
 static inline uint32_t IsConnectionError(ORACLE_CONN *conn)
 {
+   sb4 errorCode = conn->lastErrorCode;
+   if ((errorCode == 1012) || (errorCode == 2396)) // ORA-01012 "not logged on" and ORA-02396 "exceeded maximum idle time"
+      return DBERR_CONNECTION_LOST;
+
    ub4 nStatus = 0;
    OCIAttrGet(conn->handleServer, OCI_HTYPE_SERVER, &nStatus, nullptr, OCI_ATTR_SERVER_STATUS, conn->handleError);
    return (nStatus == OCI_SERVER_NOT_CONNECTED) ? DBERR_CONNECTION_LOST : DBERR_OTHER_ERROR;
