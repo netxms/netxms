@@ -22,6 +22,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
+import org.eclipse.core.internal.runtime.RuntimeLog;
+import org.eclipse.core.runtime.ILogListener;
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.rap.rwt.application.Application;
 import org.eclipse.rap.rwt.application.Application.OperationMode;
 import org.eclipse.rap.rwt.application.ApplicationConfiguration;
@@ -85,6 +88,24 @@ public class WebApplicationConfiguration implements ApplicationConfiguration
          public void handleException(Throwable t)
          {
             logger.error("Unhandled event loop exception", t);
+         }
+      });
+      RuntimeLog.addLogListener(new ILogListener() {
+         @Override
+         public void logging(IStatus status, String plugin)
+         {
+            switch(status.getSeverity())
+            {
+               case IStatus.ERROR:
+                  logger.error(status.getMessage(), status.getException());
+                  break;
+               case IStatus.WARNING:
+                  logger.warn(status.getMessage(), status.getException());
+                  break;
+               case IStatus.INFO:
+                  logger.info(status.getMessage(), status.getException());
+                  break;
+            }
          }
       });
 
