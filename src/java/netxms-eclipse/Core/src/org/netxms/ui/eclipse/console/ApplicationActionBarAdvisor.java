@@ -120,7 +120,7 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor
 
 		actionAbout = ActionFactory.ABOUT.create(window);
 		register(actionAbout);
-		
+
 		actionAboutCustom = new Action(Messages.get().ApplicationActionBarAdvisor_About) {
 			@Override
 			public void run()
@@ -138,7 +138,7 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor
 				}
 			}
 		};
-		
+
       actionOpenManual = new Action("Open Administrator &Guide") {
          @Override
          public void run()
