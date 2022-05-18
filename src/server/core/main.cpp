@@ -1237,7 +1237,10 @@ retry_db_lock:
    maxSize = ConfigReadInt(_T("ThreadPool.Syncer.MaxSize"), 1);
    if (maxSize > 1)
    {
-      g_syncerThreadPool = ThreadPoolCreate(_T("SYNCER"), ConfigReadInt(_T("ThreadPool.Syncer.BaseSize"), 1), maxSize);
+      if (g_dbSyntax != DB_SYNTAX_MYSQL)
+         g_syncerThreadPool = ThreadPoolCreate(_T("SYNCER"), ConfigReadInt(_T("ThreadPool.Syncer.BaseSize"), 1), maxSize);
+      else
+         nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_STARTUP, _T("Parallel syncer is not supported on MySQL/MariaDB"));
    }
 
    // Create network discovery thread pool
