@@ -39,7 +39,6 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.netxms.nxmc.base.widgets.ansi.AnsiCommands;
 import org.netxms.nxmc.base.widgets.ansi.AnsiConsoleAttributes;
-import org.netxms.nxmc.base.widgets.ansi.AnsiConsoleColorPalette;
 import org.netxms.nxmc.tools.WidgetHelper;
 
 /**
@@ -52,8 +51,8 @@ public class TextConsole extends Composite implements LineStyleListener
 
    private StyledText console;
    private boolean autoScroll = true;
-   private AnsiConsoleAttributes lastAttributes = new AnsiConsoleAttributes();
-   private AnsiConsoleAttributes currentAttributes = new AnsiConsoleAttributes();
+   private AnsiConsoleAttributes lastAttributes = new AnsiConsoleAttributes(this);
+   private AnsiConsoleAttributes currentAttributes = new AnsiConsoleAttributes(this);
    private int lastRangeEnd = 0;
 
    /**
@@ -67,6 +66,7 @@ public class TextConsole extends Composite implements LineStyleListener
       console = new StyledText(this, SWT.H_SCROLL | SWT.V_SCROLL);
       console.setFont(JFaceResources.getTextFont());
       console.addLineStyleListener(this);
+      console.setEditable(false);
    }
 
    /**
@@ -144,11 +144,11 @@ public class TextConsole extends Composite implements LineStyleListener
       {
          defStyle = new StyleRange(event.styles[0]);
          if (defStyle.background == null)
-            defStyle.background = AnsiConsoleAttributes.getDefaultBackgroundColor();
+            defStyle.background = console.getBackground();
       }
       else
       {
-         defStyle = new StyleRange(1, lastRangeEnd, new Color(null, AnsiConsoleColorPalette.getColor(0)), new Color(null, AnsiConsoleColorPalette.getColor(15)), SWT.NORMAL);
+         defStyle = new StyleRange(1, lastRangeEnd, console.getForeground(), console.getBackground(), SWT.NORMAL);
       }
 
       lastRangeEnd = 0;
@@ -314,7 +314,7 @@ public class TextConsole extends Composite implements LineStyleListener
    private void addRange(List<StyleRange> ranges, int start, int length, Color foreground, boolean isCode)
    {
       StyleRange range = new StyleRange(start, length, foreground, null);
-      AnsiConsoleAttributes.updateRangeStyle(range, lastAttributes);
+      lastAttributes.updateRangeStyle(range);
       if (isCode)
       {
          range.metrics = new GlyphMetrics(0, 0, 0);
@@ -396,6 +396,9 @@ public class TextConsole extends Composite implements LineStyleListener
             @Override
             public void run()
             {
+               if (console.isDisposed())
+                  return;
+
                console.append(s);
                if (autoScroll)
                {
@@ -404,6 +407,22 @@ public class TextConsole extends Composite implements LineStyleListener
                }
             }
          });
+      }
+
+      /**
+       * Write string to console without throwing exception. Silenly ignores writing errors.
+       *
+       * @param s string to write
+       */
+      public void safeWrite(String s)
+      {
+         try
+         {
+            write(s);
+         }
+         catch(IOException e)
+         {
+         }
       }
    }
 }

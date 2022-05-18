@@ -27,6 +27,7 @@ import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.action.ToolBarManager;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
@@ -136,8 +137,8 @@ public class ServerVariables extends ConfigurationView
       });
 
       createActions();
-      createPopupMenu();
-   }  
+      createContextMenu();
+   }
 
    /**
     * @see org.netxms.nxmc.base.views.View#postContentCreate()
@@ -147,7 +148,7 @@ public class ServerVariables extends ConfigurationView
    {
       refresh();
    }
-   
+
    /**
     * Create actions
     */
@@ -161,7 +162,7 @@ public class ServerVariables extends ConfigurationView
          }
       };
       actionAdd.setActionDefinitionId("org.netxms.ui.eclipse.serverconfig.commands.add_config_variable"); 
-      
+
       actionEdit = new Action(i18n.tr("Edit..."), SharedIcons.EDIT) {
          @Override
          public void run()
@@ -170,7 +171,7 @@ public class ServerVariables extends ConfigurationView
          }
       };
       actionEdit.setEnabled(false);
-      
+
       actionDelete = new Action(i18n.tr("Delete"), SharedIcons.DELETE_OBJECT) {
       @Override
          public void run()
@@ -179,7 +180,7 @@ public class ServerVariables extends ConfigurationView
          }
       };
       actionDelete.setEnabled(false);
-      
+
       actionDefaultValue = new Action("Set default value") {
          @Override
          public void run()
@@ -187,7 +188,7 @@ public class ServerVariables extends ConfigurationView
             setDefaultValue();
          }
       };
-      
+
       actionExportToCsv = new ExportToCsvAction(this, viewer, true);
       actionExportAllToCsv = new ExportToCsvAction(this, viewer, false);
    }
@@ -195,7 +196,7 @@ public class ServerVariables extends ConfigurationView
    /**
     * Create pop-up menu for variable list
     */
-   private void createPopupMenu()
+   private void createContextMenu()
    {
       // Create menu manager.
       MenuManager menuMgr = new MenuManager();
@@ -226,7 +227,27 @@ public class ServerVariables extends ConfigurationView
       mgr.add(actionExportToCsv);
       mgr.add(actionExportAllToCsv);
    }
-   
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#fillLocalToolbar(org.eclipse.jface.action.ToolBarManager)
+    */
+   @Override
+   protected void fillLocalToolbar(ToolBarManager manager)
+   {
+      manager.add(actionAdd);
+      manager.add(actionExportAllToCsv);
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#fillLocalMenu(org.eclipse.jface.action.MenuManager)
+    */
+   @Override
+   protected void fillLocalMenu(MenuManager manager)
+   {
+      manager.add(actionAdd);
+      manager.add(actionExportAllToCsv);
+   }
+
    /**
     * @see org.netxms.nxmc.base.views.View#refresh()
     */

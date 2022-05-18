@@ -116,6 +116,9 @@ public class MessageArea extends Canvas implements MessageAreaHolder
    @Override
    public int addMessage(int level, String text, boolean sticky)
    {
+      if (isDisposed())
+         return -1;
+
       Message m = new Message(nextMessageId++, level, text, sticky);
 
       if (messages.size() >= MAX_ROWS)
