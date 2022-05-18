@@ -641,23 +641,33 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, NObject 
 			}
       }
 
-      // Interface IP addresses and netmasks
-		uint32_t error = SnmpWalk(snmp, _T(".1.3.6.1.2.1.4.20.1.1"), HandlerIpAddr, ifList);
-      if (error == SNMP_ERR_SUCCESS)
-      {
-         success = true;
-      }
+      // Interface IP addresses and netmasks from ipAddrTable
+		if (!node->getCustomAttributeAsBoolean(_T("snmp.ignore.ipAddrTable"), false))
+		{
+         uint32_t error = SnmpWalk(snmp, _T(".1.3.6.1.2.1.4.20.1.1"), HandlerIpAddr, ifList);
+         if (error == SNMP_ERR_SUCCESS)
+         {
+            success = true;
+         }
+         else
+         {
+            nxlog_debug_tag(DEBUG_TAG, 6, _T("NetworkDeviceDriver::getInterfaces(%p): SNMP WALK .1.3.6.1.2.1.4.20.1.1 failed (%s)"), snmp, SNMPGetErrorText(error));
+         }
+		}
 		else
 		{
-		   nxlog_debug_tag(DEBUG_TAG, 6, _T("NetworkDeviceDriver::getInterfaces(%p): SNMP WALK .1.3.6.1.2.1.4.20.1.1 failed (%s)"), snmp, SNMPGetErrorText(error));
+         success = true;
 		}
 
       // Get IP addresses from ipAddressTable if available
-		SnmpWalk(snmp, _T(".1.3.6.1.2.1.4.34.1.3"), HandlerIpAddressTable, ifList);
-      if (ifList->isPrefixWalkNeeded())
+      if (!node->getCustomAttributeAsBoolean(_T("snmp.ignore.ipAddressTable"), false))
       {
-   		SnmpWalk(snmp, _T(".1.3.6.1.2.1.4.32.1.5"), HandlerIpAddressPrefixTable, ifList);
-         SnmpWalk(snmp, _T(".1.3.6.1.2.1.4.24.7.1.8"), HandlerInetCidrRouteTable, ifList);
+         SnmpWalk(snmp, _T(".1.3.6.1.2.1.4.34.1.3"), HandlerIpAddressTable, ifList);
+         if (ifList->isPrefixWalkNeeded())
+         {
+            SnmpWalk(snmp, _T(".1.3.6.1.2.1.4.32.1.5"), HandlerIpAddressPrefixTable, ifList);
+            SnmpWalk(snmp, _T(".1.3.6.1.2.1.4.24.7.1.8"), HandlerInetCidrRouteTable, ifList);
+         }
       }
    }
 	else
