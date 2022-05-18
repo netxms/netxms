@@ -252,6 +252,7 @@ public abstract class BaseDataCollectionView extends ObjectView
    @Override
    protected void fillLocalToolbar(ToolBarManager manager)
    {
+      manager.add(actionExportAllToCsv);
    }
 
    /**
@@ -285,6 +286,7 @@ public abstract class BaseDataCollectionView extends ObjectView
          }
       };
       actionUseMultipliers.setChecked(areMultipliersUsed());
+      addKeyBinding("M1+M3+M", actionUseMultipliers);
 
       actionShowErrors = new Action(i18n.tr("Show collection &errors"), Action.AS_CHECK_BOX) {
          @Override
@@ -294,6 +296,7 @@ public abstract class BaseDataCollectionView extends ObjectView
          }
       };
       actionShowErrors.setChecked(isShowErrors());
+      addKeyBinding("M1+M3+E", actionShowErrors);
 
       actionShowUnsupported = new Action(i18n.tr("Show &unsupported"), Action.AS_CHECK_BOX) {
          @Override
@@ -303,7 +306,8 @@ public abstract class BaseDataCollectionView extends ObjectView
          }
       };
       actionShowUnsupported.setChecked(isShowUnsupported());
-      
+      addKeyBinding("M1+M3+U", actionShowUnsupported);
+
       actionShowHidden = new Action(i18n.tr("Show &hidden"), Action.AS_CHECK_BOX) {
          @Override
          public void run()
@@ -312,7 +316,8 @@ public abstract class BaseDataCollectionView extends ObjectView
          }
       };
       actionShowHidden.setChecked(isShowHidden());
-      
+      addKeyBinding("M1+M3+H", actionShowHidden);
+
       actionShowDisabled = new Action(i18n.tr("Show disabled"), Action.AS_CHECK_BOX) {
          @Override
          public void run()
@@ -321,7 +326,8 @@ public abstract class BaseDataCollectionView extends ObjectView
          }
       };
       actionShowDisabled.setChecked(isShowDisabled());      
-      
+      addKeyBinding("M1+M3+D", actionShowDisabled);
+
       actionCopyToClipboard = new Action(i18n.tr("&Copy to clipboard"), SharedIcons.COPY) {
          @Override
          public void run()
@@ -329,7 +335,8 @@ public abstract class BaseDataCollectionView extends ObjectView
             copySelection();
          }
       };
-      
+      addKeyBinding("M1+C", actionCopyToClipboard);
+
       actionCopyDciName = new Action(i18n.tr("Copy DCI name"), SharedIcons.COPY) {
          @Override
          public void run()
@@ -337,6 +344,7 @@ public abstract class BaseDataCollectionView extends ObjectView
             copySelectionDciName();
          }
       };
+      addKeyBinding("M1+M2+C", actionCopyDciName);
 
       actionLineChart = new Action(i18n.tr("&Line chart"), ResourceManager.getImageDescriptor("icons/chart_line.png")) {
          @Override
@@ -345,6 +353,7 @@ public abstract class BaseDataCollectionView extends ObjectView
             showLineChart(false);
          }
       };
+      addKeyBinding("M1+L", actionLineChart);
 
       actionRawLineChart = new Action(i18n.tr("&Raw data line chart"), ResourceManager.getImageDescriptor("icons/chart_line.png")) {
          @Override
@@ -353,6 +362,7 @@ public abstract class BaseDataCollectionView extends ObjectView
             showLineChart(true);
          }
       };
+      addKeyBinding("M1+M2+L", actionRawLineChart);
 
       actionShowHistoryData = new Action(i18n.tr("History"), ResourceManager.getImageDescriptor("icons/data_history.gif")) {
          @Override
@@ -361,6 +371,7 @@ public abstract class BaseDataCollectionView extends ObjectView
             showHistoryData();
          }
       };
+      addKeyBinding("M1+H", actionShowHistoryData);
 
       actionShowTableData = new Action(i18n.tr("Table last value"), ResourceManager.getImageDescriptor("icons/object-views/table-value.png")) {
          @Override

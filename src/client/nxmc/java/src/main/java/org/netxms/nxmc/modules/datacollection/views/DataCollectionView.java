@@ -26,6 +26,7 @@ import java.util.Set;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
+import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.action.ToolBarManager;
 import org.eclipse.jface.viewers.ArrayContentProvider;
@@ -124,7 +125,6 @@ public class DataCollectionView extends BaseDataCollectionView
    private Action actionDisable;
    private Action actionBulkUpdate;
 
-   
    /**
     * Constructor
     */
@@ -441,13 +441,14 @@ public class DataCollectionView extends BaseDataCollectionView
       };
       actionEdit.setEnabled(false);
       
-      actionBulkUpdate = new Action("Bulk update...") {
+      actionBulkUpdate = new Action("&Bulk update...") {
          @Override
          public void run()
          {
             openBulkUpdateDialog();
          }
       };
+      addKeyBinding("M1+B", actionBulkUpdate);
 
       actionDelete = new Action(i18n.tr("&Delete"), SharedIcons.DELETE_OBJECT) {
          @Override
@@ -457,6 +458,7 @@ public class DataCollectionView extends BaseDataCollectionView
          }
       };
       actionDelete.setEnabled(false);
+      addKeyBinding("M1+D", actionDelete);
 
       actionCopy = new Action(i18n.tr("&Copy to other node(s)...")) {
          @Override
@@ -523,6 +525,7 @@ public class DataCollectionView extends BaseDataCollectionView
             createItem();
          }
       };
+      addKeyBinding("M1+N", actionCreateItem);
 
       actionCreateTable = new Action(i18n.tr("Ne&w table...")) {
          @Override
@@ -531,7 +534,8 @@ public class DataCollectionView extends BaseDataCollectionView
             createTable();
          }
       };
-      
+      addKeyBinding("M1+M2+N", actionCreateTable);
+
       actionToggleEditMode = new Action(i18n.tr("&Edit mode"), SharedIcons.EDIT) {
          @Override
          public void run()
@@ -542,7 +546,6 @@ public class DataCollectionView extends BaseDataCollectionView
       }; 
       actionToggleEditMode.setChecked(editMode);
       addKeyBinding("Ctrl+E", actionToggleEditMode);
-      
    }
 
    /**
@@ -1144,15 +1147,29 @@ public class DataCollectionView extends BaseDataCollectionView
    }
 
    /**
-    * @see org.netxms.nxmc.base.views.View#fillLocalToolbar(org.eclipse.jface.action.ToolBarManager)
+    * @see org.netxms.nxmc.modules.datacollection.views.BaseDataCollectionView#fillLocalToolbar(org.eclipse.jface.action.ToolBarManager)
     */
    @Override
    protected void fillLocalToolbar(ToolBarManager manager)
    {
+      manager.add(actionCreateItem);
       super.fillLocalToolbar(manager);
       manager.add(actionToggleEditMode);
    }
-   
+
+   /**
+    * @see org.netxms.nxmc.modules.datacollection.views.BaseDataCollectionView#fillLocalMenu(org.eclipse.jface.action.MenuManager)
+    */
+   @Override
+   protected void fillLocalMenu(MenuManager manager)
+   {
+      manager.add(actionCreateItem);
+      manager.add(new Separator());
+      super.fillLocalMenu(manager);
+      manager.add(new Separator());
+      manager.add(actionToggleEditMode);
+   }
+
    /**
     * @see org.netxms.nxmc.base.views.View#dispose()
     */
