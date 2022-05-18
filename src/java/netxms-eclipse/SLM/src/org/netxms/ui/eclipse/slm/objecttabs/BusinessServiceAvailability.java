@@ -120,7 +120,7 @@ public class BusinessServiceAvailability extends ObjectTab
       startDateSelector = new DateTimeSelector(timeSelectorGroup, SWT.NONE);
 
       Label label = new Label(timeSelectorGroup, SWT.CENTER);
-      label.setText("—");
+      label.setText("\u2015");
       gd = new GridData();
       gd.horizontalAlignment = SWT.CENTER;
       gd.verticalAlignment = SWT.CENTER;

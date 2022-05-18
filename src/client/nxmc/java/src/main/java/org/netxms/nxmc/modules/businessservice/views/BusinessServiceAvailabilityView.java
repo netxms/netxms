@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Reden Solutions
+ * Copyright (C) 2003-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -131,7 +131,7 @@ public class BusinessServiceAvailabilityView extends ObjectView
       startDateSelector = new DateTimeSelector(timeSelectorGroup, SWT.NONE);
 
       Label label = new Label(timeSelectorGroup, SWT.CENTER);
-      label.setText("—");
+      label.setText("\u2015");
       gd = new GridData();
       gd.horizontalAlignment = SWT.CENTER;
       gd.verticalAlignment = SWT.CENTER;
@@ -271,7 +271,7 @@ public class BusinessServiceAvailabilityView extends ObjectView
    {
       ticketViewer.setInput(new Object[0]);
       chart.clearParameters();
-      chart.refresh();      
+      chart.refresh();
    }
 
    /**
@@ -286,8 +286,8 @@ public class BusinessServiceAvailabilityView extends ObjectView
          protected void run(IProgressMonitor monitor) throws Exception
          {
             double availability = session.getBusinessServiceAvailablity(getObject().getObjectId(), timePeriod);
-            
-            runInUIThread(new Runnable() {               
+
+            runInUIThread(new Runnable() {
                @Override
                public void run()
                {
@@ -312,8 +312,8 @@ public class BusinessServiceAvailabilityView extends ObjectView
          protected void run(IProgressMonitor monitor) throws Exception
          {
             List<BusinessServiceTicket> tickets = session.getBusinessServiceTickets(getObject().getObjectId(), timePeriod);
-            
-            runInUIThread(new Runnable() {               
+
+            runInUIThread(new Runnable() {
                @Override
                public void run()
                {
