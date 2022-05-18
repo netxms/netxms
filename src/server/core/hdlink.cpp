@@ -85,7 +85,7 @@ void LoadHelpDeskLink()
                if (s_link->init())
                {
 					   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Helpdesk link module %s (version %s) loaded successfully"), s_link->getName(), s_link->getVersion());
-                  g_flags |= AF_HELPDESK_LINK_ACTIVE;
+					   InterlockedOr64(&g_flags, AF_HELPDESK_LINK_ACTIVE);
                }
 				   else
 				   {

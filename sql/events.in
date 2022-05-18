@@ -621,8 +621,10 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Database query failed (Query: %1; Error: %2)',
 		'Generated when SQL query to backend database failed.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Query' CONCAT CRLF CONCAT
-		'   2) Error message'
+		'   1) Query (query)' CONCAT CRLF CONCAT
+		'   2) Error message (message)' CONCAT CRLF CONCAT
+                '   3) Connection loss indicator (connectionLost)' CONCAT CRLF CONCAT
+                '   4) Query hash (hash)'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(

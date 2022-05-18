@@ -701,23 +701,28 @@ static bool PeerNodeIsRunning(const InetAddress& addr)
  */
 static void DBEventHandler(uint32_t event, const WCHAR *arg1, const WCHAR *arg2, bool connLost, void *context)
 {
+   static const TCHAR *names[] = { _T("query"), _T("message"), _T("connectionLost"), _T("hash") };
+
 	if (!(g_flags & AF_SERVER_INITIALIZED))
 		return;     // Don't try to do anything if server is not ready yet
 
+	BYTE queryHash[MD5_DIGEST_SIZE];
+	TCHAR queryHashText[MD5_DIGEST_SIZE * 2 + 1];
 	switch(event)
 	{
 		case DBEVENT_CONNECTION_LOST:
-			PostSystemEvent(EVENT_DB_CONNECTION_LOST, g_dwMgmtNode, NULL);
-			g_flags |= AF_DB_CONNECTION_LOST;
+			PostSystemEvent(EVENT_DB_CONNECTION_LOST, g_dwMgmtNode, nullptr);
+			InterlockedOr64(&g_flags, AF_DB_CONNECTION_LOST);
 			NotifyClientSessions(NX_NOTIFY_DBCONN_STATUS, FALSE);
 			break;
 		case DBEVENT_CONNECTION_RESTORED:
-			PostSystemEvent(EVENT_DB_CONNECTION_RESTORED, g_dwMgmtNode, NULL);
-			g_flags &= ~AF_DB_CONNECTION_LOST;
+			PostSystemEvent(EVENT_DB_CONNECTION_RESTORED, g_dwMgmtNode, nullptr);
+			InterlockedAnd64(&g_flags, ~AF_DB_CONNECTION_LOST);
 			NotifyClientSessions(NX_NOTIFY_DBCONN_STATUS, TRUE);
 			break;
 		case DBEVENT_QUERY_FAILED:
-			PostSystemEvent(EVENT_DB_QUERY_FAILED, g_dwMgmtNode, "uud", arg1, arg2, connLost ? 1 : 0);
+		   CalculateMD5Hash(arg1, wcslen(arg1) * sizeof(WCHAR), queryHash);
+			PostSystemEventWithNames(EVENT_DB_QUERY_FAILED, g_dwMgmtNode, "uuds", names, arg1, arg2, connLost ? 1 : 0, BinToStr(queryHash, MD5_DIGEST_SIZE, queryHashText));
 			break;
 		default:
 			break;
@@ -1355,7 +1360,7 @@ void NXCORE_EXPORTABLE Shutdown()
    NotifyClientSessions(NX_NOTIFY_SHUTDOWN, 0);
 
    nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_SHUTDOWN, _T("NetXMS Server stopped %s"), s_shutdownReasonText[static_cast<int>(s_shutdownReason)]);
-   g_flags |= AF_SHUTDOWN;     // Set shutdown flag
+   InterlockedOr64(&g_flags, AF_SHUTDOWN);     // Set shutdown flag
    InitiateProcessShutdown();
 
    // Call shutdown functions for the modules
@@ -1468,7 +1473,7 @@ void NXCORE_EXPORTABLE FastShutdown(ShutdownReason reason)
 {
    nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_SHUTDOWN, _T("NetXMS Server stopped %s using fast shutdown procedure"), s_shutdownReasonText[static_cast<int>(s_shutdownReason)]);
 
-	g_flags |= AF_SHUTDOWN;     // Set shutdown flag
+   InterlockedOr64(&g_flags, AF_SHUTDOWN);     // Set shutdown flag
 	InitiateProcessShutdown();
 
 	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();

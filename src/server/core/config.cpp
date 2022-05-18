@@ -92,13 +92,13 @@ static uint64_t s_defaultThreadStackSize = 1024 * 1024;  // 1MB by default
 static NX_CFG_TEMPLATE m_cfgTemplate[] =
 {
    { _T("AuditLogKey"), CT_MB_STRING, 0, 0, 128, 0, g_auditLogKey, nullptr },
-   { _T("BackgroundLogWriter"), CT_BOOLEAN_FLAG_64, 0, 0, AF_BACKGROUND_LOG_WRITER, 0, &g_flags, nullptr },
+   { _T("BackgroundLogWriter"), CT_BOOLEAN_FLAG_64, 0, 0, AF_BACKGROUND_LOG_WRITER, 0, (void*)&g_flags, nullptr },
    { _T("CodePage"), CT_MB_STRING, 0, 0, 256, 0, g_codePage, nullptr },
-   { _T("CreateCrashDumps"), CT_BOOLEAN_FLAG_64, 0, 0, AF_CATCH_EXCEPTIONS, 0, &g_flags, nullptr },
+   { _T("CreateCrashDumps"), CT_BOOLEAN_FLAG_64, 0, 0, AF_CATCH_EXCEPTIONS, 0, (void*)&g_flags, nullptr },
    { _T("CRL"), CT_STRING_SET, 0, 0, 0, 0, &g_crlList, nullptr },
    { _T("DailyLogFileSuffix"), CT_STRING, 0, 0, 64, 0, g_szDailyLogFileSuffix, nullptr },
    { _T("DataDirectory"), CT_STRING, 0, 0, MAX_PATH, 0, g_netxmsdDataDir, nullptr },
-   { _T("DBCacheConfigurationTables"), CT_BOOLEAN_FLAG_64, 0, 0, AF_CACHE_DB_ON_STARTUP, 0, &g_flags, nullptr },
+   { _T("DBCacheConfigurationTables"), CT_BOOLEAN_FLAG_64, 0, 0, AF_CACHE_DB_ON_STARTUP, 0, (void*)&g_flags, nullptr },
    { _T("DBDriver"), CT_STRING, 0, 0, MAX_PATH, 0, g_szDbDriver, nullptr },
    { _T("DBDrvParams"), CT_STRING, 0, 0, MAX_PATH, 0, g_szDbDrvParams, nullptr },
    { _T("DBLogin"), CT_STRING, 0, 0, MAX_DB_LOGIN, 0, g_szDbLogin, nullptr },
@@ -112,7 +112,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("DebugTags"), CT_STRING_CONCAT, ',', 0, 0, 0, &s_debugTags, nullptr },
    { _T("DefaultThreadStackSize"), CT_SIZE_BYTES, 0, 0, 0, 0, &s_defaultThreadStackSize, nullptr },
    { _T("DumpDirectory"), CT_STRING, 0, 0, MAX_PATH, 0, g_szDumpDir, nullptr },
-   { _T("FullCrashDumps"), CT_BOOLEAN_FLAG_64, 0, 0, AF_WRITE_FULL_DUMP, 0, &g_flags, nullptr },
+   { _T("FullCrashDumps"), CT_BOOLEAN_FLAG_64, 0, 0, AF_WRITE_FULL_DUMP, 0, (void*)&g_flags, nullptr },
    { _T("InternalCACertificate"), CT_STRING, 0, 0, MAX_PATH, 0, s_internalCACertificatePath, nullptr },
    { _T("InternalCACertificateKey"), CT_STRING, 0, 0, MAX_PATH, 0, s_internalCACertificateKeyPath, nullptr },
    { _T("InternalCACertificatePassword"), CT_MB_STRING, 0, 0, MAX_PASSWORD, 0, s_internalCACertificatePassword, nullptr },
@@ -136,7 +136,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("TunnelCertificate"), CT_STRING, 0, 0, MAX_PATH, 0, s_tunnelCertificatePath, nullptr },
    { _T("TunnelCertificateKey"), CT_STRING, 0, 0, MAX_PATH, 0, s_tunnelCertificateKeyPath, nullptr },
    { _T("TunnelCertificatePassword"), CT_MB_STRING, 0, 0, MAX_PASSWORD, 0, s_tunnelCertificatePassword, nullptr },
-   { _T("WriteLogAsJson"), CT_BOOLEAN_FLAG_64, 0, 0, AF_LOG_IN_JSON_FORMAT, 0, &g_flags, nullptr },
+   { _T("WriteLogAsJson"), CT_BOOLEAN_FLAG_64, 0, 0, AF_LOG_IN_JSON_FORMAT, 0, (void*)&g_flags, nullptr },
    { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, nullptr, nullptr }
 };
 
@@ -567,9 +567,9 @@ static void OnConfigVariableChange(bool isCLOB, const TCHAR *name, const TCHAR *
    else if (!_tcscmp(name, _T("Objects.Security.CheckTrustedNodes")))
    {
       if (_tcstol(value, nullptr, 0))
-         InterlockedOr64(reinterpret_cast<VolatileCounter64*>(&g_flags), AF_CHECK_TRUSTED_NODES);
+         InterlockedOr64(&g_flags, AF_CHECK_TRUSTED_NODES);
       else
-         InterlockedAnd64(reinterpret_cast<VolatileCounter64*>(&g_flags), ~AF_CHECK_TRUSTED_NODES);
+         InterlockedAnd64(&g_flags, ~AF_CHECK_TRUSTED_NODES);
    }
    else if (!_tcscmp(name, _T("DataCollection.InstanceRetentionTime")))
    {
@@ -581,15 +581,15 @@ static void OnConfigVariableChange(bool isCLOB, const TCHAR *name, const TCHAR *
       {
          case 0:  // Auto
             if (g_dbSyntax == DB_SYNTAX_MSSQL)
-               InterlockedOr64(reinterpret_cast<VolatileCounter64*>(&g_flags), AF_DBWRITER_HK_INTERLOCK);
+               InterlockedOr64(&g_flags, AF_DBWRITER_HK_INTERLOCK);
             else
-               InterlockedAnd64(reinterpret_cast<VolatileCounter64*>(&g_flags), ~AF_DBWRITER_HK_INTERLOCK);
+               InterlockedAnd64(&g_flags, ~AF_DBWRITER_HK_INTERLOCK);
             break;
          case 1:  // Off
-            InterlockedAnd64(reinterpret_cast<VolatileCounter64*>(&g_flags), ~AF_DBWRITER_HK_INTERLOCK);
+            InterlockedAnd64(&g_flags, ~AF_DBWRITER_HK_INTERLOCK);
             break;
          case 2:  // On
-            InterlockedOr64(reinterpret_cast<VolatileCounter64*>(&g_flags), AF_DBWRITER_HK_INTERLOCK);
+            InterlockedOr64(&g_flags, AF_DBWRITER_HK_INTERLOCK);
             break;
          default:
             break;
@@ -611,9 +611,9 @@ static void OnConfigVariableChange(bool isCLOB, const TCHAR *name, const TCHAR *
    else if (!_tcscmp(name, _T("ICMP.CollectPollStatistics")))
    {
       if (_tcstol(value, nullptr, 0))
-         InterlockedOr64(reinterpret_cast<VolatileCounter64*>(&g_flags), AF_COLLECT_ICMP_STATISTICS);
+         InterlockedOr64(&g_flags, AF_COLLECT_ICMP_STATISTICS);
       else
-         InterlockedAnd64(reinterpret_cast<VolatileCounter64*>(&g_flags), ~AF_COLLECT_ICMP_STATISTICS);
+         InterlockedAnd64(&g_flags, ~AF_COLLECT_ICMP_STATISTICS);
    }
    else if (!_tcscmp(name, _T("ICMP.PingSize")))
    {
@@ -647,16 +647,16 @@ static void OnConfigVariableChange(bool isCLOB, const TCHAR *name, const TCHAR *
    else if (!_tcscmp(name, _T("NetworkDiscovery.EnableParallelProcessing")))
    {
       if (_tcstol(value, nullptr, 0))
-         InterlockedOr64(reinterpret_cast<VolatileCounter64*>(&g_flags), AF_PARALLEL_NETWORK_DISCOVERY);
+         InterlockedOr64(&g_flags, AF_PARALLEL_NETWORK_DISCOVERY);
       else
-         InterlockedAnd64(reinterpret_cast<VolatileCounter64*>(&g_flags), ~AF_PARALLEL_NETWORK_DISCOVERY);
+         InterlockedAnd64(&g_flags, ~AF_PARALLEL_NETWORK_DISCOVERY);
    }
    else if (!_tcscmp(name, _T("NetworkDiscovery.MergeDuplicateNodes")))
    {
       if (_tcstol(value, nullptr, 0))
-         InterlockedOr64(reinterpret_cast<VolatileCounter64*>(&g_flags), AF_MERGE_DUPLICATE_NODES);
+         InterlockedOr64(&g_flags, AF_MERGE_DUPLICATE_NODES);
       else
-         InterlockedAnd64(reinterpret_cast<VolatileCounter64*>(&g_flags), ~AF_MERGE_DUPLICATE_NODES);
+         InterlockedAnd64(&g_flags, ~AF_MERGE_DUPLICATE_NODES);
    }
    else if (!_tcscmp(name, _T("NetworkDiscovery.PassiveDiscovery.Interval")))
    {
@@ -665,9 +665,9 @@ static void OnConfigVariableChange(bool isCLOB, const TCHAR *name, const TCHAR *
    else if (!_tcscmp(name, _T("NXSL.EnableContainerFunctions")))
    {
       if (_tcstol(value, nullptr, 0))
-         InterlockedOr64(reinterpret_cast<VolatileCounter64*>(&g_flags), AF_ENABLE_NXSL_CONTAINER_FUNCTIONS);
+         InterlockedOr64(&g_flags, AF_ENABLE_NXSL_CONTAINER_FUNCTIONS);
       else
-         InterlockedAnd64(reinterpret_cast<VolatileCounter64*>(&g_flags), ~AF_ENABLE_NXSL_CONTAINER_FUNCTIONS);
+         InterlockedAnd64(&g_flags, ~AF_ENABLE_NXSL_CONTAINER_FUNCTIONS);
    }
    else if (!_tcscmp(name, _T("Objects.AutobindPollingInterval")))
    {
@@ -680,9 +680,9 @@ static void OnConfigVariableChange(bool isCLOB, const TCHAR *name, const TCHAR *
    else if (!_tcscmp(name, _T("Objects.Interfaces.Enable8021xStatusPoll")))
    {
       if (_tcstol(value, nullptr, 0))
-         InterlockedOr64(reinterpret_cast<VolatileCounter64*>(&g_flags), AF_ENABLE_8021X_STATUS_POLL);
+         InterlockedOr64(&g_flags, AF_ENABLE_8021X_STATUS_POLL);
       else
-         InterlockedAnd64(reinterpret_cast<VolatileCounter64*>(&g_flags), ~AF_ENABLE_8021X_STATUS_POLL);
+         InterlockedAnd64(&g_flags, ~AF_ENABLE_8021X_STATUS_POLL);
    }
    else if (!_tcscmp(name, _T("Objects.Nodes.ResolveDNSToIPOnStatusPoll")))
    {
@@ -706,9 +706,9 @@ static void OnConfigVariableChange(bool isCLOB, const TCHAR *name, const TCHAR *
    else if (!_tcscmp(name, _T("Objects.Nodes.ResolveNames")))
    {
       if (_tcstol(value, nullptr, 0))
-         InterlockedOr64(reinterpret_cast<VolatileCounter64*>(&g_flags), AF_RESOLVE_NODE_NAMES);
+         InterlockedOr64(&g_flags, AF_RESOLVE_NODE_NAMES);
       else
-         InterlockedAnd64(reinterpret_cast<VolatileCounter64*>(&g_flags), ~AF_RESOLVE_NODE_NAMES);
+         InterlockedAnd64(&g_flags, ~AF_RESOLVE_NODE_NAMES);
    }
    else if (!_tcscmp(name, _T("Objects.StatusPollingInterval")))
    {
@@ -721,23 +721,23 @@ static void OnConfigVariableChange(bool isCLOB, const TCHAR *name, const TCHAR *
    else if (!_tcscmp(name, _T("SNMP.Traps.AllowVarbindsConversion")))
    {
       if (_tcstol(value, nullptr, 0))
-         InterlockedOr64(reinterpret_cast<VolatileCounter64*>(&g_flags), AF_ALLOW_TRAP_VARBIND_CONVERSION);
+         InterlockedOr64(&g_flags, AF_ALLOW_TRAP_VARBIND_CONVERSION);
       else
-         InterlockedAnd64(reinterpret_cast<VolatileCounter64*>(&g_flags), ~AF_ALLOW_TRAP_VARBIND_CONVERSION);
+         InterlockedAnd64(&g_flags, ~AF_ALLOW_TRAP_VARBIND_CONVERSION);
    }
    else if (!_tcscmp(name, _T("SNMP.Traps.LogAll")))
    {
       if (_tcstol(value, nullptr, 0))
-         InterlockedOr64(reinterpret_cast<VolatileCounter64*>(&g_flags), AF_LOG_ALL_SNMP_TRAPS);
+         InterlockedOr64(&g_flags, AF_LOG_ALL_SNMP_TRAPS);
       else
-         InterlockedAnd64(reinterpret_cast<VolatileCounter64*>(&g_flags), ~AF_LOG_ALL_SNMP_TRAPS);
+         InterlockedAnd64(&g_flags, ~AF_LOG_ALL_SNMP_TRAPS);
    }
    else if (!_tcscmp(name, _T("SNMP.Traps.ProcessUnmanagedNodes")))
    {
       if (_tcstol(value, nullptr, 0))
-         InterlockedOr64(reinterpret_cast<VolatileCounter64*>(&g_flags), AF_TRAPS_FROM_UNMANAGED_NODES);
+         InterlockedOr64(&g_flags, AF_TRAPS_FROM_UNMANAGED_NODES);
       else
-         InterlockedAnd64(reinterpret_cast<VolatileCounter64*>(&g_flags), ~AF_TRAPS_FROM_UNMANAGED_NODES);
+         InterlockedAnd64(&g_flags, ~AF_TRAPS_FROM_UNMANAGED_NODES);
    }
    else if (!_tcscmp(name, _T("SNMP.Traps.RateLimit.Threshold")))
    {

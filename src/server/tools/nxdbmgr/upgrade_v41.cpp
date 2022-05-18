@@ -24,6 +24,16 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 41.16 to 41.17
+ */
+static bool H_UpgradeFromV16()
+{
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET description='Generated when SQL query to backend database failed.\r\nParameters:\r\n   1) Query (query)\r\n   2) Error message (message)\r\n   3) Connection loss indicator (connectionLost)\r\n   4) Query hash (hash)' WHERE event_code=52")));
+   CHK_EXEC(SetMinorSchemaVersion(17));
+   return true;
+}
+
+/**
  * Upgrade from 41.15 to 41.16
  */
 static bool H_UpgradeFromV15()
@@ -493,6 +503,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 16, 41, 17, H_UpgradeFromV16 },
    { 15, 41, 16, H_UpgradeFromV15 },
    { 14, 41, 15, H_UpgradeFromV14 },
    { 13, 41, 14, H_UpgradeFromV13 },

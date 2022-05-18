@@ -73,7 +73,7 @@ static void EventStormDetector()
 			actualDuration++;
 			if (actualDuration >= duration)
 			{
-				g_flags |= AF_EVENT_STORM_DETECTED;
+			   InterlockedOr64(&g_flags, AF_EVENT_STORM_DETECTED);
 				nxlog_debug_tag(DEBUG_TAG, 2, _T("Event storm detected: threshold=") INT64_FMT _T(" eventsPerSecond=") INT64_FMT, eventsPerSecond, numEvents);
 				PostSystemEvent(EVENT_EVENT_STORM_DETECTED, g_dwMgmtNode, "DdD", numEvents, duration, eventsPerSecond);
 			}
@@ -81,7 +81,7 @@ static void EventStormDetector()
 		else if ((numEvents < eventsPerSecond) && (g_flags & AF_EVENT_STORM_DETECTED))
 		{
 			actualDuration = 0;
-			g_flags &= ~AF_EVENT_STORM_DETECTED;
+			InterlockedAnd64(&g_flags, ~AF_EVENT_STORM_DETECTED);
 		   nxlog_debug_tag(DEBUG_TAG, 2, _T("Event storm condition cleared"));
 		   PostSystemEvent(EVENT_EVENT_STORM_ENDED, g_dwMgmtNode, "DdD", numEvents, duration, eventsPerSecond);
 		}

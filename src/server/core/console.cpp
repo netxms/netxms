@@ -899,7 +899,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
       }
       else if (IsCommand(_T("FLAGS"), szBuffer, 1))
       {
-         ConsolePrintf(pCtx, _T("Flags: 0x") UINT64X_FMT(_T("016")) _T("\n"), g_flags);
+         ConsolePrintf(pCtx, _T("Flags: 0x") UINT64X_FMT(_T("016")) _T("\n"), static_cast<uint64_t>(g_flags));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_DAEMON));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_USE_SYSLOG));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_PASSIVE_NETWORK_DISCOVERY));

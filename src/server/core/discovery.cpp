@@ -1316,32 +1316,32 @@ void ResetDiscoveryPoller()
    switch(ConfigReadInt(_T("NetworkDiscovery.Type"), 0))
    {
       case 0:  // Disabled
-         g_flags &= ~(AF_PASSIVE_NETWORK_DISCOVERY | AF_ACTIVE_NETWORK_DISCOVERY);
+         InterlockedAnd64(&g_flags, ~(AF_PASSIVE_NETWORK_DISCOVERY | AF_ACTIVE_NETWORK_DISCOVERY));
          break;
       case 1:  // Passive only
-         g_flags |= AF_PASSIVE_NETWORK_DISCOVERY;
-         g_flags &= ~AF_ACTIVE_NETWORK_DISCOVERY;
+         InterlockedOr64(&g_flags, AF_PASSIVE_NETWORK_DISCOVERY);
+         InterlockedAnd64(&g_flags, ~AF_ACTIVE_NETWORK_DISCOVERY);
          break;
       case 2:  // Active only
-         g_flags &= ~AF_PASSIVE_NETWORK_DISCOVERY;
-         g_flags |= AF_ACTIVE_NETWORK_DISCOVERY;
+         InterlockedAnd64(&g_flags, ~AF_PASSIVE_NETWORK_DISCOVERY);
+         InterlockedOr64(&g_flags, AF_ACTIVE_NETWORK_DISCOVERY);
          break;
       case 3:  // Active and passive
-         g_flags |= AF_PASSIVE_NETWORK_DISCOVERY | AF_ACTIVE_NETWORK_DISCOVERY;
+         InterlockedOr64(&g_flags, AF_PASSIVE_NETWORK_DISCOVERY | AF_ACTIVE_NETWORK_DISCOVERY);
          break;
       default:
          break;
    }
 
    if (ConfigReadBoolean(_T("NetworkDiscovery.UseSNMPTraps"), false))
-      g_flags |= AF_SNMP_TRAP_DISCOVERY;
+      InterlockedOr64(&g_flags, AF_SNMP_TRAP_DISCOVERY);
    else
-      g_flags &= ~AF_SNMP_TRAP_DISCOVERY;
+      InterlockedAnd64(&g_flags, ~AF_SNMP_TRAP_DISCOVERY);
 
    if (ConfigReadBoolean(_T("NetworkDiscovery.UseSyslog"), false))
-      g_flags |= AF_SYSLOG_DISCOVERY;
+      InterlockedOr64(&g_flags, AF_SYSLOG_DISCOVERY);
    else
-      g_flags &= ~AF_SYSLOG_DISCOVERY;
+      InterlockedAnd64(&g_flags, ~AF_SYSLOG_DISCOVERY);
 
    s_activeDiscoveryWakeup.set();
 }
