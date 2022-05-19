@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
+import org.apache.commons.lang3.SystemUtils;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
@@ -75,6 +76,7 @@ import org.netxms.nxmc.modules.datacollection.propertypages.Graph;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
 import org.netxms.nxmc.tools.MessageDialogHelper;
+import org.netxms.nxmc.tools.PngTransfer;
 import org.netxms.nxmc.tools.ViewRefreshController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -166,9 +168,9 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
     */
    public HistoricalGraphView(AbstractObject contextObject, List<ChartDciConfig> items)
    {
-      super(i18n.tr("Graph"), ResourceManager.getImageDescriptor("icons/object-views/performance.png"), buildId(contextObject, items), false);
-      fullName = i18n.tr("Graph");
+      super(i18n.tr("Line Chart"), ResourceManager.getImageDescriptor("icons/object-views/performance.png"), buildId(contextObject, items), false);
       objectId = contextObject.getObjectId();
+      fullName = "Line Chart";
 
       refreshController = new ViewRefreshController(this, -1, new Runnable() {
          @Override
@@ -185,16 +187,21 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
       if (items.size() == 1)
       {
          ChartDciConfig item = items.get(0);
+         if (item.useRawValues)
+            setName(item.name + " " + i18n.tr("(raw)"));
+         else
+            setName(item.name);
          AbstractObject object = session.findObjectById(item.nodeId);
          if (object != null)
          {
-            fullName = object.getObjectName() + ": " + item.name;
-            if (item.useRawValues)
-               fullName += " (raw)";
-            setName(item.name);
+            fullName = object.getObjectName() + ": " + getName();
+         }
+         else
+         {
+            fullName = getName();
          }
       }
-      else if (items.size() > 1)
+      else
       {
          long nodeId = items.get(0).nodeId;
          for(ChartDciConfig item : items)
@@ -209,12 +216,10 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
             AbstractObject object = session.findObjectById(nodeId);
             if (object != null)
             {
-               fullName = String.format(i18n.tr("%s: historical data"), object.getObjectName());
-               setName("Historical data");
+               fullName = String.format(i18n.tr("%s: Line Chart"), object.getObjectName());
             }
          }
       }
-      configuration.setTitle(getFullName());
       configuration.setDciList(items.toArray(new ChartDciConfig[items.size()]));
    }
 
@@ -313,9 +318,11 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
       if (chart != null)
          chart.dispose();
 
-      // General settings
-      fullName = configuration.getTitle();
-      setName(configuration.getTitle());
+      if (!configuration.getTitle().isBlank())
+      {
+         fullName = configuration.getTitle();
+         setName(configuration.getTitle());
+      }
 
       ChartConfiguration chartConfiguration = new ChartConfiguration();
       chartConfiguration.setTitle(configuration.getTitle());
@@ -489,6 +496,7 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
             configureGraphFromSettings(); // Always refresh graph (last action was cancel, but before could have been apply actions)
          }
       };
+      addKeyBinding("M3+ENTER", actionProperties);
 
       actionAutoRefresh = new Action(i18n.tr("Refresh &automatically")) {
          @Override
@@ -530,6 +538,7 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
          }
       };
       actionZoomIn.setImageDescriptor(SharedIcons.ZOOM_IN);
+      addKeyBinding("M1+=", actionZoomIn);
 
       actionZoomOut = new Action(i18n.tr("Zoom &out")) {
          @Override
@@ -539,6 +548,7 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
          }
       };
       actionZoomOut.setImageDescriptor(SharedIcons.ZOOM_OUT);
+      addKeyBinding("M1+-", actionZoomOut);
 
       final HistoricalChartOwner chartOwner = new HistoricalChartOwner() {
          @Override
@@ -550,6 +560,9 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
       actionAdjustX = createAction(ChartActionType.ADJUST_X, chartOwner);
       actionAdjustY = createAction(ChartActionType.ADJUST_Y, chartOwner);
       actionAdjustBoth = createAction(ChartActionType.ADJUST_BOTH, chartOwner);
+      addKeyBinding("M1+X", actionAdjustX);
+      addKeyBinding("M1+Y", actionAdjustY);
+      addKeyBinding("M1+0", actionAdjustBoth);
 
       actionShowLegend = new Action(i18n.tr("&Show legend")) {
          @Override
@@ -561,6 +574,7 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
          }
       };
       actionShowLegend.setChecked(configuration.isLegendVisible());
+      addKeyBinding("M1+M3+L", actionShowLegend);
 
       actionExtendedLegend = new Action(i18n.tr("&Extended legend")) {
          @Override
@@ -572,7 +586,8 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
          }
       };
       actionExtendedLegend.setChecked(configuration.isExtendedLegend());
-      
+      addKeyBinding("M1+M3+E", actionExtendedLegend);
+
       actionLegendLeft = new Action(i18n.tr("Place on the &left"), Action.AS_RADIO_BUTTON) {
          @Override
          public void run()
@@ -617,7 +632,7 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
       };
       actionLegendBottom.setChecked(configuration.getLegendPosition() == ChartConfiguration.POSITION_BOTTOM);
 
-      actionSave = new Action(i18n.tr("Save"), SharedIcons.SAVE) {
+      actionSave = new Action(i18n.tr("&Save"), SharedIcons.SAVE) {
          @Override
          public void run()
          {
@@ -631,9 +646,10 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
                saveGraph(configuration.getName(), null, false, false, false);
             }
          }
-      };     
+      };
+      addKeyBinding("M1+S", actionSave);
 
-      actionSaveAs = new Action(i18n.tr("Save as..."), SharedIcons.SAVE_AS) {
+      actionSaveAs = new Action(i18n.tr("Save &as..."), SharedIcons.SAVE_AS) {
          @Override
          public void run()
          {
@@ -641,8 +657,9 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
             saveGraph(initalName, null, false, false, true);
          }
       };  
+      addKeyBinding("M1+M2+S", actionSaveAs);
 
-      actionSaveAsTemplate = new Action(i18n.tr("Save as template...")) {
+      actionSaveAsTemplate = new Action(i18n.tr("Save as &template...")) {
          @Override
          public void run()
          {
@@ -650,6 +667,7 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
             saveGraph(initalName, null, false, true, true);
          }
       };
+      addKeyBinding("M1+T", actionSaveAsTemplate);
 
       actionStacked = new Action(i18n.tr("Sta&cked"), Action.AS_CHECK_BOX) {
          @Override
@@ -660,6 +678,7 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
          }
       };
       actionStacked.setChecked(configuration.isStacked());
+      addKeyBinding("M1+M3+S", actionStacked);
 
       actionTranslucent = new Action(i18n.tr("&Translucent"), Action.AS_CHECK_BOX) {
          @Override
@@ -670,7 +689,8 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
          }
       };
       actionTranslucent.setChecked(configuration.isTranslucent());
-      
+      addKeyBinding("M1+M3+T", actionTranslucent);
+
       actionAreaChart = new Action(i18n.tr("Area chart"), Action.AS_CHECK_BOX) {
          @Override
          public void run()
@@ -680,6 +700,7 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
          }
       };
       actionAreaChart.setChecked(configuration.isArea());
+      addKeyBinding("M1+M3+A", actionAreaChart);
 
       presetActions = createPresetActions(new PresetHandler() {
          @Override
@@ -690,25 +711,27 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
             updateChart();
          }
       });
-      
-      actionCopyImage = new Action(i18n.tr("Copy to clipboard"), SharedIcons.COPY) {
+
+      actionCopyImage = new Action(i18n.tr("&Copy to clipboard"), SharedIcons.COPY) {
          @Override
          public void run()
          {
             Image image = chart.takeSnapshot();
-            ImageTransfer imageTransfer = ImageTransfer.getInstance();
+            Transfer imageTransfer = SystemUtils.IS_OS_LINUX ? PngTransfer.getInstance() : ImageTransfer.getInstance();
             final Clipboard clipboard = new Clipboard(getWindow().getShell().getDisplay());
             clipboard.setContents(new Object[] { image.getImageData() }, new Transfer[] { imageTransfer });
          }
       };
+      addKeyBinding("M1+C", actionCopyImage);
 
-      actionSaveAsImage = new Action(i18n.tr("Save as image..."), SharedIcons.SAVE_AS_IMAGE) {
+      actionSaveAsImage = new Action(i18n.tr("Save as &image..."), SharedIcons.SAVE_AS_IMAGE) {
           @Override
           public void run()
           {
              saveAsImage();
           }
        };
+      addKeyBinding("M1+I", actionSaveAsImage);
    }
 
    /**
@@ -777,12 +800,59 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
    @Override
    protected void fillLocalToolbar(ToolBarManager manager)
    {
-      super.fillLocalToolbar(manager);
+      manager.add(actionZoomIn);
+      manager.add(actionZoomOut);
+      manager.add(new Separator());
+      manager.add(actionSave);
+      manager.add(actionSaveAs);
+      manager.add(actionSaveAsImage);
+      manager.add(actionCopyImage);
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#fillLocalMenu(org.eclipse.jface.action.MenuManager)
+    */
+   @Override
+   protected void fillLocalMenu(MenuManager manager)
+   {
+      MenuManager presets = new MenuManager(i18n.tr("&Presets"));
+      for(int i = 0; i < presetActions.length; i++)
+         presets.add(presetActions[i]);
+
+      MenuManager legend = new MenuManager(i18n.tr("&Legend"));
+      legend.add(actionShowLegend);
+      legend.add(actionExtendedLegend);
+      legend.add(new Separator());
+      legend.add(actionLegendLeft);
+      legend.add(actionLegendRight);
+      legend.add(actionLegendTop);
+      legend.add(actionLegendBottom);
+
+      manager.add(presets);
+      manager.add(new Separator());
+      manager.add(actionAdjustBoth);
+      manager.add(actionAdjustX);
+      manager.add(actionAdjustY);
+      manager.add(new Separator());
+      manager.add(actionZoomIn);
+      manager.add(actionZoomOut);
+      manager.add(new Separator());
+      manager.add(actionAreaChart);
+      manager.add(actionStacked);
+      manager.add(actionLogScale);
+      manager.add(actionTranslucent);
+      manager.add(actionAutoRefresh);
+      manager.add(legend);
+      manager.add(new Separator());
       manager.add(actionSave);
       manager.add(actionSaveAs);
       manager.add(actionSaveAsTemplate);
       manager.add(actionSaveAsImage);
       manager.add(actionCopyImage);
+      manager.add(new Separator());
+      manager.add(actionRefresh);
+      manager.add(new Separator());
+      manager.add(actionProperties);
    }
 
    /**
@@ -841,7 +911,7 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
       final String selected = fd.open();
       if (selected == null)
          return;
-      
+
       ImageLoader saver = new ImageLoader();
       saver.data = new ImageData[] { image.getImageData() };
       saver.save(selected, SWT.IMAGE_PNG);

@@ -104,7 +104,6 @@ public class DataCollectionView extends BaseDataCollectionView
 
    private boolean editMode;
    private Composite parent;
-   private AbstractObject object;
    private SessionListener clientListener = null;
    private DataCollectionConfiguration dciConfig = null;
 
@@ -132,7 +131,7 @@ public class DataCollectionView extends BaseDataCollectionView
    {
       super("DataCollection", true);
    }
-   
+
    /**
     * @see org.netxms.nxmc.base.views.View#createContent(org.eclipse.swt.widgets.Composite)
     */
@@ -141,7 +140,7 @@ public class DataCollectionView extends BaseDataCollectionView
    {
       this.parent = parent;
       session = Registry.getSession();
-      
+
       VisibilityValidator validator = new VisibilityValidator() { 
          @Override
          public boolean isVisible()
@@ -154,7 +153,7 @@ public class DataCollectionView extends BaseDataCollectionView
          createDataCollectionViewer(parent);  
       else 
          createLastValuesViewer(parent, validator);
-      
+
       createActions();
    }
 
@@ -164,7 +163,6 @@ public class DataCollectionView extends BaseDataCollectionView
    private void createDataCollectionViewer(Composite parent)
    {
       String configPrefix = "DataCollectionConfiguration";
-      object = ((getObject() instanceof DataCollectionTarget) || (getObject() instanceof Template)) ? getObject() : null;
 
       final PreferenceStore ds = PreferenceStore.getInstance();
 
@@ -319,12 +317,13 @@ public class DataCollectionView extends BaseDataCollectionView
          @Override
          public void notificationHandler(SessionNotification n)
          {
+            AbstractObject object = getObject();
             if (((n.getCode() == SessionNotification.FORCE_DCI_POLL) ||
-                  (n.getCode() == SessionNotification.DCI_UPDATE) ||
-                  (n.getCode() == SessionNotification.DCI_DELETE) ||
-                  (n.getCode() == SessionNotification.DCI_STATE_CHANGE) ) &&
-                (DataCollectionView.this.object != null) &&
-                (n.getSubCode() == DataCollectionView.this.object.getObjectId()))
+                 (n.getCode() == SessionNotification.DCI_UPDATE) ||
+                 (n.getCode() == SessionNotification.DCI_DELETE) ||
+                 (n.getCode() == SessionNotification.DCI_STATE_CHANGE)) &&
+                (object != null) &&
+                (n.getSubCode() == object.getObjectId()))
             {
                display.asyncExec(new Runnable() {
                   @Override
@@ -336,7 +335,7 @@ public class DataCollectionView extends BaseDataCollectionView
             }
          }        
       };
-      
+
       session.addListener(clientListener);
    }
 
@@ -348,7 +347,7 @@ public class DataCollectionView extends BaseDataCollectionView
    @Override
    protected void fillContextMenu(final IMenuManager manager)
    {
-      boolean isTemplate = object instanceof Template;
+      boolean isTemplate = getObject() instanceof Template;
       int selectionType = getDciSelectionType();
 
       if (!editMode)
@@ -542,6 +541,7 @@ public class DataCollectionView extends BaseDataCollectionView
          {
             editMode = actionToggleEditMode.isChecked();
             switchMode();
+            refresh();
          }
       }; 
       actionToggleEditMode.setChecked(editMode);
@@ -556,33 +556,36 @@ public class DataCollectionView extends BaseDataCollectionView
    {
       if (editMode)
       {
-         new Job(String.format(i18n.tr("Reftesh data collection configuration for %s"), object.getObjectName()), this) {
-            @Override
-            protected void run(IProgressMonitor monitor) throws Exception
-            {
-               dciConfig.refreshDataCollectionList();
-               runInUIThread(new Runnable() {
-                  @Override
-                  public void run()
-                  {
-                     viewer.setInput(dciConfig.getItems());
-                  }
-               });
-            }
-   
-            @Override
-            protected String getErrorMessage()
-            {
-               return String.format(i18n.tr("Cannot refresh data collection configuration for %s"), object.getObjectName());
-            }
-         }.start();  
+         if (dciConfig != null)
+         {
+            new Job(String.format(i18n.tr("Reload data collection configuration for %s"), getObjectName()), this) {
+               @Override
+               protected void run(IProgressMonitor monitor) throws Exception
+               {
+                  dciConfig.refreshDataCollectionList();
+                  runInUIThread(new Runnable() {
+                     @Override
+                     public void run()
+                     {
+                        viewer.setInput(dciConfig.getItems());
+                     }
+                  });
+               }
+
+               @Override
+               protected String getErrorMessage()
+               {
+                  return String.format(i18n.tr("Cannot refresh data collection configuration for %s"), getObjectName());
+               }
+            }.start();
+         }
       }
       else
       {
          getDataFromServer();
       }
    }
-   
+
    /**
     * Get DCI id
     */
@@ -591,7 +594,7 @@ public class DataCollectionView extends BaseDataCollectionView
    {
       return editMode ? ((DataCollectionObject)dci).getId() : ((DciValue)dci).getId();
    }
-   
+
    /**
     * Get object id
     */
@@ -628,6 +631,7 @@ public class DataCollectionView extends BaseDataCollectionView
    private void createItem()
    {
       DataCollectionItem dci = new DataCollectionItem(dciConfig, 0);
+      AbstractObject object = getObject();
       if ((object instanceof AbstractNode) && !((AbstractNode)object).hasAgent())
       {
          if (((AbstractNode)object).hasSnmpAgent())
@@ -648,7 +652,8 @@ public class DataCollectionView extends BaseDataCollectionView
    private void createTable()
    {     
       DataCollectionTable dci = new DataCollectionTable(dciConfig, 0);
-      if((object instanceof AbstractNode) && !((AbstractNode)object).hasAgent())
+      AbstractObject object = getObject();
+      if ((object instanceof AbstractNode) && !((AbstractNode)object).hasAgent())
       {
          if(((AbstractNode)object).hasSnmpAgent())
          {
@@ -673,7 +678,7 @@ public class DataCollectionView extends BaseDataCollectionView
       if (selection.isEmpty())
          return;
       
-      new Job(String.format(i18n.tr("Change status of data collection items for %s"), object.getObjectName()), this) {
+      new Job(String.format(i18n.tr("Change status of data collection items for %s"), getObjectName()), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
@@ -701,7 +706,7 @@ public class DataCollectionView extends BaseDataCollectionView
          @Override
          protected String getErrorMessage()
          {
-            return String.format(i18n.tr("Cannot change status of data collection items for %s"), object.getObjectName());
+            return String.format(i18n.tr("Cannot change status of data collection items for %s"), getObjectName());
          }
       }.start();
    }
@@ -718,7 +723,7 @@ public class DataCollectionView extends BaseDataCollectionView
       if (!MessageDialogHelper.openConfirm(getWindow().getShell(), i18n.tr("Delete Data Collection Items"), i18n.tr("Do you really want to delete selected data collection items?")))
          return;
 
-      new Job(String.format(i18n.tr("Delete data collection items for %s"), object.getObjectName()), this) {
+      new Job(String.format(i18n.tr("Delete data collection items for %s"), getObjectName()), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
@@ -731,7 +736,7 @@ public class DataCollectionView extends BaseDataCollectionView
          @Override
          protected String getErrorMessage()
          {
-            return String.format(i18n.tr("Cannot delete data collection items for %s"), object.getObjectName());
+            return String.format(i18n.tr("Cannot delete data collection items for %s"), getObjectName());
          }
       }.start();
    }
@@ -775,7 +780,7 @@ public class DataCollectionView extends BaseDataCollectionView
       for(int i = 0; (i < dciList.length) && it.hasNext(); i++)
          dciList[i] = getDciId(it.next());
       
-      new Job(String.format(i18n.tr("Duplicate data collection items for %s"), object.getObjectName()), this) {
+      new Job(String.format(i18n.tr("Duplicate data collection items for %s"), getObjectName()), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
@@ -787,7 +792,7 @@ public class DataCollectionView extends BaseDataCollectionView
          @Override
          protected String getErrorMessage()
          {
-            return String.format(i18n.tr("Cannot duplicate data collection item for %s"), object.getObjectName());
+            return String.format(i18n.tr("Cannot duplicate data collection item for %s"), getObjectName());
          }
       }.start();
    }
@@ -818,7 +823,7 @@ public class DataCollectionView extends BaseDataCollectionView
       for(int i = 0; (i < dciList.length) && it.hasNext(); i++)
          dciList[i] = getDciId(it.next());
 
-      new Job(String.format(i18n.tr("Copy data collection items from %s"), object.getObjectName()), this) {
+      new Job(String.format(i18n.tr("Copy data collection items from %s"), getObjectName()), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
@@ -834,7 +839,7 @@ public class DataCollectionView extends BaseDataCollectionView
          @Override
          protected String getErrorMessage()
          {
-            return String.format(i18n.tr("Cannot copy data collection item from %s"), object.getObjectName());
+            return String.format(i18n.tr("Cannot copy data collection item from %s"), getObjectName());
          }
       }.start();
    }
@@ -912,7 +917,7 @@ public class DataCollectionView extends BaseDataCollectionView
       for(int i = 0; (i < dciList.length) && it.hasNext(); i++)
          dciList[i] = getDciId(it.next());
 
-      new Job(String.format(i18n.tr("Convert data collection items for %s to template items"), object.getObjectName()), this) {
+      new Job(String.format(i18n.tr("Convert data collection items for %s to template items"), getObjectName()), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
@@ -989,7 +994,7 @@ public class DataCollectionView extends BaseDataCollectionView
          @Override
          protected String getErrorMessage()
          {
-            return String.format(i18n.tr("Cannot convert data collection item for %s to template item"), object.getObjectName());
+            return String.format(i18n.tr("Cannot convert data collection item for %s to template item"), getObjectName());
          }
       }.start();
    }
@@ -1004,7 +1009,7 @@ public class DataCollectionView extends BaseDataCollectionView
          addMessage(MessageArea.INFORMATION, i18n.tr("Changes in policies will be deployed to nodes the moment when the tab is closed"), true);
       }
    }
-   
+
    /**
     * Switch between "data collection configuration" and "last values" modes
     */
@@ -1014,8 +1019,11 @@ public class DataCollectionView extends BaseDataCollectionView
       {
          viewer.getControl().dispose();
          session.removeListener(clientListener);
-         dciConfig.setRemoteChangeListener(null);
-         dciConfig.setUserData(null);
+         if (dciConfig != null)
+         {
+            dciConfig.setRemoteChangeListener(null);
+            dciConfig.setUserData(null);
+         }
       }
 
       VisibilityValidator validator = new VisibilityValidator() { 
@@ -1025,10 +1033,11 @@ public class DataCollectionView extends BaseDataCollectionView
             return DataCollectionView.this.isActive();
          }
       };
+
       if (editMode)
       {
          createDataCollectionViewer(parent);  
-         if (object != null)
+         if (dciConfig != null)
          {
             dciConfig.setUserData(viewer);
             dciConfig.setRemoteChangeListener(changeListener);  
@@ -1038,10 +1047,12 @@ public class DataCollectionView extends BaseDataCollectionView
       {
          createLastValuesViewer(parent, validator);
       }
-      refresh();
-      
+
       viewer.getTable().layout();  
       parent.layout();       
+
+      updateToolBar();
+      updateMenu();
    }
 
    /**
@@ -1050,19 +1061,7 @@ public class DataCollectionView extends BaseDataCollectionView
    @Override
    public boolean isValidForContext(Object context)
    {
-      if (context == null)
-         return false;
-      
-      if (context instanceof DataCollectionTarget)
-         return true;
-      
-      if (context instanceof Template)
-      {
-         editMode = true;
-         return true;
-      }
-      
-      return false;
+      return (context != null) && ((context instanceof DataCollectionTarget) || (context instanceof Template));
    }
 
    /**
@@ -1071,15 +1070,11 @@ public class DataCollectionView extends BaseDataCollectionView
    @Override
    protected void onObjectChange(AbstractObject object)
    {
-      this.object = ((object != null) && ((object instanceof DataCollectionTarget) || (object instanceof Template))) ? object : null;
-      if (this.object == null)
+      if (!editMode && (object instanceof Template))
       {
-         actionToggleEditMode.setEnabled(false);
-         viewer.setInput(new Object[0]);
-         return;
+         editMode = true;
+         switchMode();
       }
-
-      actionToggleEditMode.setEnabled(!(object instanceof Template)); 
 
       // Request server to open data collection configuration
       new Job(String.format(i18n.tr("Open data collection configuration for %s"), object.getObjectName()), this) {
@@ -1106,8 +1101,8 @@ public class DataCollectionView extends BaseDataCollectionView
                   }
                });
             }
-            
-            //load all related objects
+
+            // load all related objects
             if (!session.areObjectsSynchronized())
             {
                List<Long> relatedOpbjects = new ArrayList<Long>();
@@ -1131,6 +1126,9 @@ public class DataCollectionView extends BaseDataCollectionView
                      dciConfig.setUserData(DataCollectionView.this);
                      dciConfig.setRemoteChangeListener(changeListener);  
                   }
+
+                  if (isActive())
+                     refresh();
                }
             });
          }
@@ -1141,9 +1139,6 @@ public class DataCollectionView extends BaseDataCollectionView
             return String.format(i18n.tr("Cannot open data collection configuration for "), object.getObjectName());
          }
       }.start(); 
-      
-      if (isActive())
-         refresh();
    }
 
    /**
@@ -1154,7 +1149,10 @@ public class DataCollectionView extends BaseDataCollectionView
    {
       manager.add(actionCreateItem);
       super.fillLocalToolbar(manager);
-      manager.add(actionToggleEditMode);
+      if (!(getObject() instanceof Template))
+      {
+         manager.add(actionToggleEditMode);
+      }
    }
 
    /**
@@ -1166,8 +1164,11 @@ public class DataCollectionView extends BaseDataCollectionView
       manager.add(actionCreateItem);
       manager.add(new Separator());
       super.fillLocalMenu(manager);
-      manager.add(new Separator());
-      manager.add(actionToggleEditMode);
+      if (!(getObject() instanceof Template))
+      {
+         manager.add(new Separator());
+         manager.add(actionToggleEditMode);
+      }
    }
 
    /**
@@ -1178,7 +1179,7 @@ public class DataCollectionView extends BaseDataCollectionView
    {
       if (dciConfig != null)
       {
-         new Job(String.format(i18n.tr("Unlock data collection configuration for %s"), object.getObjectName()), this) {
+         new Job(String.format(i18n.tr("Unlock data collection configuration for %s"), getObjectName()), this) {
             @Override
             protected void run(IProgressMonitor monitor) throws Exception
             {
@@ -1189,7 +1190,7 @@ public class DataCollectionView extends BaseDataCollectionView
             @Override
             protected String getErrorMessage()
             {
-               return String.format(i18n.tr("Cannot unlock data collection configuration for %s"), object.getObjectName());
+               return String.format(i18n.tr("Cannot unlock data collection configuration for %s"), getObjectName());
             }
          }.start();
       }  

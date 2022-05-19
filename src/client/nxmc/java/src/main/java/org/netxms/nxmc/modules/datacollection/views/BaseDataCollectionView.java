@@ -749,7 +749,7 @@ public abstract class BaseDataCollectionView extends ObjectView
 
       openView(new HistoricalGraphView(getObject(), items));
    }
-   
+
    /**
     * Get chart configuration form object
     * @param o object

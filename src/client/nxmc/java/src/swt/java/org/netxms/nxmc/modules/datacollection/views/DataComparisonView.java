@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,6 +19,7 @@
 package org.netxms.nxmc.modules.datacollection.views;
 
 import java.util.ArrayList;
+import org.apache.commons.lang3.SystemUtils;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
@@ -54,6 +55,7 @@ import org.netxms.nxmc.modules.charts.widgets.Chart;
 import org.netxms.nxmc.modules.objects.views.ObjectView;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
+import org.netxms.nxmc.tools.PngTransfer;
 import org.netxms.nxmc.tools.ViewRefreshController;
 import org.xnap.commons.i18n.I18n;
 
@@ -333,19 +335,16 @@ public class DataComparisonView extends ObjectView
 		actionVertical.setEnabled(chart.hasAxes());
 		actionVertical.setImageDescriptor(ResourceManager.getImageDescriptor("icons/bar_vertical.png")); 
 
-		if (!System.getProperty("os.name").toLowerCase().contains("linux"))
-   	{
-   		actionCopyImage = new Action(i18n.tr("Copy to clipboard"), SharedIcons.COPY) {
-   		   @Override
-   		   public void run()
-   		   {
-               Image image = chart.takeSnapshot();
-               ImageTransfer imageTransfer = ImageTransfer.getInstance();
-               final Clipboard clipboard = new Clipboard(getWindow().getShell().getDisplay());
-               clipboard.setContents(new Object[] { image.getImageData() }, new Transfer[] { imageTransfer });
-   		   }
-   		};
-   	}
+      actionCopyImage = new Action(i18n.tr("Copy to clipboard"), SharedIcons.COPY) {
+         @Override
+         public void run()
+         {
+            Image image = chart.takeSnapshot();
+            Transfer imageTransfer = SystemUtils.IS_OS_LINUX ? PngTransfer.getInstance() : ImageTransfer.getInstance();
+            final Clipboard clipboard = new Clipboard(getWindow().getShell().getDisplay());
+            clipboard.setContents(new Object[] { image.getImageData() }, new Transfer[] { imageTransfer });
+         }
+      };
 
 		actionSaveAsImage = new Action("Save as image", SharedIcons.SAVE_AS_IMAGE) {
 			@Override
@@ -383,8 +382,7 @@ public class DataComparisonView extends ObjectView
 		manager.add(new Separator());
 		manager.add(actionRefresh);
       manager.add(new Separator());
-      if (actionCopyImage != null)
-         manager.add(actionCopyImage);
+      manager.add(actionCopyImage);
       manager.add(actionSaveAsImage);  
 	}
 

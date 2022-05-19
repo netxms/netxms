@@ -24,6 +24,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import org.apache.commons.lang3.SystemUtils;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.draw2d.ManhattanConnectionRouter;
 import org.eclipse.draw2d.geometry.Dimension;
@@ -106,6 +107,7 @@ import org.netxms.nxmc.modules.objects.ObjectContextMenuManager;
 import org.netxms.nxmc.modules.objects.views.ObjectView;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
+import org.netxms.nxmc.tools.PngTransfer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
@@ -739,17 +741,17 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 			}
 		};
 
-      actionCopyImage = new Action(i18n.tr("Copy map image to clipboard"), SharedIcons.COPY) {
+      actionCopyImage = new Action(i18n.tr("&Copy map image to clipboard"), SharedIcons.COPY) {
          @Override
          public void run()
          {
             Image image = viewer.takeSnapshot();
-            ImageTransfer imageTransfer = ImageTransfer.getInstance();
+            Transfer imageTransfer = SystemUtils.IS_OS_LINUX ? PngTransfer.getInstance() : ImageTransfer.getInstance();
             final Clipboard clipboard = new Clipboard(viewer.getControl().getDisplay());
             clipboard.setContents(new Object[] { image.getImageData() }, new Transfer[] { imageTransfer });
          }
 		};
-		
+
       actionSaveImage = new Action(i18n.tr("Save map image to file")) {
          @Override
          public void run()
