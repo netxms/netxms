@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Driver for Mikrotik routers
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -150,7 +150,7 @@ bool MikrotikDriver::getHardwareInformation(SNMP_Transport *snmp, NObject *node,
       }
 
       v = response->getVariable(3);
-      if ((v != NULL) && (v->getType() == ASN_OCTET_STRING))
+      if ((v != nullptr) && (v->getType() == ASN_OCTET_STRING))
       {
          _tcslcpy(hwInfo->serialNumber, v->getValueAsString(buffer, 256), 32);
       }
@@ -170,8 +170,8 @@ InterfaceList *MikrotikDriver::getInterfaces(SNMP_Transport *snmp, NObject *node
 {
 	// Get interface list from standard MIB
 	InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(snmp, node, driverData, 0, false);
-	if (ifList == NULL)
-		return NULL;
+	if (ifList == nullptr)
+		return nullptr;
 
    for(int i = 0; i < ifList->size(); i++)
    {
@@ -213,9 +213,9 @@ bool MikrotikDriver::lldpNameToInterfaceId(SNMP_Transport *snmp, NObject *node, 
 /**
  * SNMP walker callback which just counts number of varbinds
  */
-static UINT32 CountingSnmpWalkerCallback(SNMP_Variable *var, SNMP_Transport *transport, void *arg)
+static uint32_t CountingSnmpWalkerCallback(SNMP_Variable *var, SNMP_Transport *transport, int *counter)
 {
-	(*((int *)arg))++;
+	(*counter)++;
 	return SNMP_ERR_SUCCESS;
 }
 
@@ -236,15 +236,13 @@ bool MikrotikDriver::isWirelessController(SNMP_Transport *snmp, NObject *node, D
 /**
  * Handler for access point enumeration - adopted
  */
-static UINT32 HandlerAccessPointList(SNMP_Variable *var, SNMP_Transport *snmp, void *arg)
+static uint32_t HandlerAccessPointList(SNMP_Variable *var, SNMP_Transport *snmp, ObjectArray<AccessPointInfo> *apList)
 {
-   ObjectArray<AccessPointInfo> *apList = (ObjectArray<AccessPointInfo> *)arg;
-
    const SNMP_ObjectId& name = var->getName();
    size_t nameLen = name.length();
-   UINT32 oid[MAX_OID_LEN];
-   memcpy(oid, name.value(), nameLen * sizeof(UINT32));
-   UINT32 apIndex = oid[nameLen - 1];
+   uint32_t oid[MAX_OID_LEN];
+   memcpy(oid, name.value(), nameLen * sizeof(uint32_t));
+   uint32_t apIndex = oid[nameLen - 1];
 
    SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
    
@@ -334,12 +332,10 @@ AccessPointState MikrotikDriver::getAccessPointState(SNMP_Transport *snmp, NObje
 /**
  * Handler for mobile units enumeration
  */
-static UINT32 HandlerWirelessStationList(SNMP_Variable *var, SNMP_Transport *snmp, void *arg)
+static uint32_t HandlerWirelessStationList(SNMP_Variable *var, SNMP_Transport *snmp, ObjectArray<WirelessStationInfo> *wsList)
 {
-   ObjectArray<WirelessStationInfo> *wsList = static_cast<ObjectArray<WirelessStationInfo>*>(arg);
-
    const SNMP_ObjectId& name = var->getName();
-   UINT32 apIndex = name.getElement(name.length() - 1);
+   uint32_t apIndex = name.getElement(name.length() - 1);
 
    WirelessStationInfo *info = new WirelessStationInfo;
    memset(info, 0, sizeof(WirelessStationInfo));
