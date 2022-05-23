@@ -1583,10 +1583,10 @@ public class NXCSession
             long startTime = System.currentTimeMillis();
             try
             {
-               if (syncObjects.tryAcquire(actualTimeout, TimeUnit.MILLISECONDS))
+               if (syncObject.tryAcquire(actualTimeout, TimeUnit.MILLISECONDS))
                {
                   success = true;
-                  syncObjects.release();
+                  syncObject.release();
                   break;
                }
             }
