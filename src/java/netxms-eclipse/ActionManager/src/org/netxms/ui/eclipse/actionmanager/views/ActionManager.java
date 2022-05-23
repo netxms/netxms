@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.Map;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
-import org.eclipse.jface.action.GroupMarker;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
@@ -50,7 +49,6 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IViewSite;
-import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.ViewPart;
@@ -75,37 +73,36 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
  * Action configuration view
- *
  */
 public class ActionManager extends ViewPart implements SessionListener
 {
 	public static final String ID = "org.netxms.ui.eclipse.actionmanager.views.ActionManager"; //$NON-NLS-1$
 	
 	private static final String TABLE_CONFIG_PREFIX = "ActionList"; //$NON-NLS-1$
-	
+
 	public static final int COLUMN_NAME = 0;
 	public static final int COLUMN_TYPE = 1;
 	public static final int COLUMN_RCPT = 2;
 	public static final int COLUMN_SUBJ = 3;
 	public static final int COLUMN_DATA = 4;
 	public static final int COLUMN_CHANNEL = 5;
-	
+
 	private SortableTableViewer viewer;
 	private NXCSession session;
 	private Map<Long, ServerAction> actions = new HashMap<Long, ServerAction>();
+   private ActionManagerFilter filter;
+   private FilterText filterText;
+   private IDialogSettings settings;
+   private Composite content;
 	private Action actionRefresh;
 	private Action actionNew;
 	private Action actionEdit;
 	private Action actionDelete;
    private Action actionShowFilter;
-	
-   private ActionManagerFilter filter;
-   private FilterText filterText;
-   private IDialogSettings settings;
-   private Composite content;
+   private Action actionEnable;
+   private Action actionDisable;
 
-     
-	/* (non-Javadoc)
+   /**
     * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
     */
    @Override
@@ -116,9 +113,9 @@ public class ActionManager extends ViewPart implements SessionListener
       settings = Activator.getDefault().getDialogSettings();
    }
 
-   /* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	public void createPartControl(Composite parent)
 	{      
@@ -134,8 +131,7 @@ public class ActionManager extends ViewPart implements SessionListener
             onFilterModify();
          }
       });
-		
-		
+
 		final String[] columnNames = { Messages.get().ActionManager_ColumnName, Messages.get().ActionManager_ColumnType, Messages.get().ActionManager_ColumnRcpt, Messages.get().ActionManager_ColumnSubj, Messages.get().ActionManager_ColumnData, "Channel name" };
 		final int[] columnWidths = { 150, 90, 100, 120, 200, 100 };
 		viewer = new SortableTableViewer(content, columnNames, columnWidths, COLUMN_NAME, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
@@ -146,8 +142,7 @@ public class ActionManager extends ViewPart implements SessionListener
 		viewer.setComparator(new ActionComparator());
 		filter = new ActionManagerFilter(labelProvider);
 		viewer.addFilter(filter);
-		viewer.addSelectionChangedListener(new ISelectionChangedListener()
-		{
+      viewer.addSelectionChangedListener(new ISelectionChangedListener() {
 			@Override
 			public void selectionChanged(SelectionChangedEvent event)
 			{
@@ -173,7 +168,7 @@ public class ActionManager extends ViewPart implements SessionListener
 				WidgetHelper.saveTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), TABLE_CONFIG_PREFIX);
 			}
 		});
-      
+
       // Setup layout
       FormData fd = new FormData();
       fd.left = new FormAttachment(0, 0);
@@ -190,7 +185,7 @@ public class ActionManager extends ViewPart implements SessionListener
 		
 		createActions();
 		contributeToActionBars();
-		createPopupMenu();
+		createContextMenu();
 
       filterText.setCloseAction(new Action() {
          @Override
@@ -211,18 +206,18 @@ public class ActionManager extends ViewPart implements SessionListener
 		refreshActionList();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
-	 */
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
+    */
 	@Override
 	public void setFocus()
 	{
 		viewer.getTable().setFocus();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#dispose()
-	 */
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#dispose()
+    */
 	@Override
 	public void dispose()
 	{
@@ -271,16 +266,13 @@ public class ActionManager extends ViewPart implements SessionListener
 	}
 
 	/**
-	 * Fill local pull-down menu
-	 * 
-	 * @param manager
-	 *           Menu manager for pull-down menu
-	 */
+    * Fill local pull-down menu
+    * 
+    * @param manager Menu manager for pull-down menu
+    */
 	private void fillLocalPullDown(IMenuManager manager)
 	{
 		manager.add(actionNew);
-		manager.add(actionDelete);
-		manager.add(actionEdit);
       manager.add(new Separator());
       manager.add(actionShowFilter);
 		manager.add(new Separator());
@@ -296,8 +288,6 @@ public class ActionManager extends ViewPart implements SessionListener
 	private void fillLocalToolBar(IToolBarManager manager)
 	{
 		manager.add(actionNew);
-		manager.add(actionDelete);
-		manager.add(actionEdit);
       manager.add(new Separator());
       manager.add(actionShowFilter);
 		manager.add(new Separator());
@@ -310,58 +300,40 @@ public class ActionManager extends ViewPart implements SessionListener
 	private void createActions()
 	{
       final IHandlerService handlerService = (IHandlerService)getSite().getService(IHandlerService.class);
-      
+
 		actionRefresh = new RefreshAction() {
-			/* (non-Javadoc)
-			 * @see org.eclipse.jface.action.Action#run()
-			 */
 			@Override
 			public void run()
 			{
 				refreshActionList();
 			}
 		};
-		
-		actionNew = new Action() {
-			/* (non-Javadoc)
-			 * @see org.eclipse.jface.action.Action#run()
-			 */
+
+      actionNew = new Action(Messages.get().ActionManager_ActionNew, SharedIcons.ADD_OBJECT) {
 			@Override
 			public void run()
 			{
 				createAction();
 			}
 		};
-		actionNew.setText(Messages.get().ActionManager_ActionNew);
-		actionNew.setImageDescriptor(SharedIcons.ADD_OBJECT);
 		
-		actionEdit = new Action() {
-			/* (non-Javadoc)
-			 * @see org.eclipse.jface.action.Action#run()
-			 */
+      actionEdit = new Action("&Edit...", SharedIcons.EDIT) {
 			@Override
 			public void run()
 			{
 				editAction();
 			}
 		};
-		actionEdit.setText(Messages.get().ActionManager_ActionProperties);
-		actionEdit.setImageDescriptor(SharedIcons.EDIT);
 		
-		actionDelete = new Action() {
-			/* (non-Javadoc)
-			 * @see org.eclipse.jface.action.Action#run()
-			 */
+      actionDelete = new Action(Messages.get().ActionManager_ActionDelete, SharedIcons.DELETE_OBJECT) {
 			@Override
 			public void run()
 			{
 				deleteActions();
 			}
 		};
-		actionDelete.setText(Messages.get().ActionManager_ActionDelete);
-		actionDelete.setImageDescriptor(SharedIcons.DELETE_OBJECT);
       
-      actionShowFilter = new Action("Show filter", Action.AS_CHECK_BOX) {
+      actionShowFilter = new Action("Show &filter", Action.AS_CHECK_BOX) {
          @Override
          public void run()
          {
@@ -372,48 +344,58 @@ public class ActionManager extends ViewPart implements SessionListener
       actionShowFilter.setChecked(getBooleanFromSettings("ActionManager.showFilter", true));
       actionShowFilter.setActionDefinitionId("org.netxms.ui.eclipse.datacollection.commands.show_dci_filter"); //$NON-NLS-1$
       handlerService.activateHandler(actionShowFilter.getActionDefinitionId(), new ActionHandler(actionShowFilter));
-	}
-	
-	/**
-	 * Create pop-up menu for user list
-	 */
-	private void createPopupMenu()
-	{
-		// Create menu manager
-		MenuManager menuMgr = new MenuManager();
-		menuMgr.setRemoveAllWhenShown(true);
-		menuMgr.addMenuListener(new IMenuListener()
-		{
-			public void menuAboutToShow(IMenuManager mgr)
-			{
-				fillContextMenu(mgr);
-			}
-		});
 
-		// Create menu
-		Menu menu = menuMgr.createContextMenu(viewer.getControl());
-		viewer.getControl().setMenu(menu);
+      actionEnable = new Action("En&able") {
+         @Override
+         public void run()
+         {
+            enableActions(true);
+         }
+      };
 
-		// Register menu for extension.
-      getSite().setSelectionProvider(viewer);
-		getSite().registerContextMenu(menuMgr, viewer);
-	}
+      actionDisable = new Action("D&isable") {
+         @Override
+         public void run()
+         {
+            enableActions(false);
+         }
+      };
+   }
 
-	/**
-	 * Fill context menu
-	 * 
-	 * @param mgr Menu manager
-	 */
-	protected void fillContextMenu(final IMenuManager mgr)
-	{
-		mgr.add(actionNew);
-		mgr.add(actionDelete);
-		mgr.add(new Separator());
-		mgr.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
-		mgr.add(new Separator());
-		mgr.add(actionEdit);
-	}
-	
+   /**
+    * Create context menu
+    */
+   private void createContextMenu()
+   {
+      // Create menu manager
+      MenuManager menuMgr = new MenuManager();
+      menuMgr.setRemoveAllWhenShown(true);
+      menuMgr.addMenuListener(new IMenuListener() {
+         public void menuAboutToShow(IMenuManager mgr)
+         {
+            fillContextMenu(mgr);
+         }
+      });
+
+      // Create menu
+      Menu menu = menuMgr.createContextMenu(viewer.getControl());
+      viewer.getControl().setMenu(menu);
+   }
+
+   /**
+    * Fill context menu
+    * 
+    * @param manager Menu manager
+    */
+   protected void fillContextMenu(final IMenuManager manager)
+   {
+      manager.add(actionNew);
+      manager.add(actionEdit);
+      manager.add(actionEnable);
+      manager.add(actionDisable);
+      manager.add(actionDelete);
+   }
+
 	/**
 	 * Create new action
 	 */
@@ -421,67 +403,67 @@ public class ActionManager extends ViewPart implements SessionListener
 	{
 		final ServerAction action = new ServerAction(0);
 		final EditActionDlg dlg = new EditActionDlg(getSite().getShell(), action, true);
-		if (dlg.open() == Window.OK)
-		{
-			new ConsoleJob(Messages.get().ActionManager_CreateJobName, this, Activator.PLUGIN_ID) {
-				@Override
-				protected String getErrorMessage()
-				{
-					return Messages.get().ActionManager_CreateJobError;
-				}
+      if (dlg.open() != Window.OK)
+         return;
 
-				@Override
-				protected void runInternal(IProgressMonitor monitor) throws Exception
-				{
-					long id = session.createAction(action.getName());
-					action.setId(id);
-					session.modifyAction(action);
-				}
-			}.start();
-		}
+      new ConsoleJob(Messages.get().ActionManager_CreateJobName, this, Activator.PLUGIN_ID) {
+         @Override
+         protected String getErrorMessage()
+         {
+            return Messages.get().ActionManager_CreateJobError;
+         }
+
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            long id = session.createAction(action.getName());
+            action.setId(id);
+            session.modifyAction(action);
+         }
+      }.start();
 	}
-	
+
 	/**
 	 * Edit currently selected action
 	 */
 	private void editAction()
 	{
-		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      IStructuredSelection selection = viewer.getStructuredSelection();
 		if (selection.size() != 1)
 			return;
-		
+
 		final ServerAction action = (ServerAction)selection.getFirstElement();
 		final EditActionDlg dlg = new EditActionDlg(getSite().getShell(), action, false);
-		if (dlg.open() == Window.OK)
-		{
-			new ConsoleJob(Messages.get().ActionManager_UpdateJobName, this, Activator.PLUGIN_ID) {
-				@Override
-				protected String getErrorMessage()
-				{
-					return Messages.get().ActionManager_UpdateJobError;
-				}
+      if (dlg.open() != Window.OK)
+         return;
 
-				@Override
-				protected void runInternal(IProgressMonitor monitor) throws Exception
-				{
-					session.modifyAction(action);
-				}
-			}.start();
-		}
+      new ConsoleJob(Messages.get().ActionManager_UpdateJobName, this, Activator.PLUGIN_ID) {
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            session.modifyAction(action);
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return Messages.get().ActionManager_UpdateJobError;
+         }
+      }.start();
 	}
-	
+
 	/**
 	 * Delete selected actions
 	 */
 	private void deleteActions()
 	{
-		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      IStructuredSelection selection = viewer.getStructuredSelection();
 		if (selection.isEmpty())
 			return;
 		
 		if (!MessageDialogHelper.openConfirm(getSite().getShell(), Messages.get().ActionManager_Confirmation, Messages.get().ActionManager_ConfirmDelete))
 			return;
-		
+
 		final Object[] objects = selection.toArray();
 		new ConsoleJob(Messages.get().ActionManager_DeleteJobName, this, Activator.PLUGIN_ID) {
 			@Override
@@ -500,6 +482,38 @@ public class ActionManager extends ViewPart implements SessionListener
 			}
 		}.start();
 	}
+
+   /**
+    * Enable/disable selected actions
+    * 
+    * @param enable true to enable
+    */
+   private void enableActions(final boolean enable)
+   {
+      IStructuredSelection selection = viewer.getStructuredSelection();
+      if (selection.isEmpty())
+         return;
+
+      final Object[] objects = selection.toArray();
+      new ConsoleJob("Updating action status", this, Activator.PLUGIN_ID) {
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            for(int i = 0; i < objects.length; i++)
+            {
+               ServerAction action = (ServerAction)objects[i];
+               action.setDisabled(!enable);
+               session.modifyAction(action);
+            }
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return "Cannot change action status";
+         }
+      }.start();
+   }
 
 	/**
 	 * Update actions list 

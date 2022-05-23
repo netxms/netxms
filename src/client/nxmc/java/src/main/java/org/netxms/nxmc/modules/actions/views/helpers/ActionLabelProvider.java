@@ -28,7 +28,7 @@ import org.xnap.commons.i18n.I18n;
 /**
  * Label provider for action list 
  */
-public class ActionLabelProvider extends BaseActionLabelProvider implements ITableLabelProvider
+public class ActionLabelProvider extends DecoratingActionLabelProvider implements ITableLabelProvider
 {
    private static final I18n i18n = LocalizationHelper.getI18n(ActionLabelProvider.class);
 

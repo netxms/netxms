@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Raden Solutions
+ * Copyright (C) 2003-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,6 +26,7 @@ import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
+import org.eclipse.jface.action.ToolBarManager;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
@@ -58,7 +59,7 @@ import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
- * Action manager view
+ * Action configuration view
  */
 public class ActionManager extends ConfigurationView
 {
@@ -79,9 +80,11 @@ public class ActionManager extends ConfigurationView
    private Action actionNew;
    private Action actionEdit;
    private Action actionDelete;
+   private Action actionEnable;
+   private Action actionDisable;
 
    /**
-    * Create action manager view
+    * Create action configuration view
     */
    public ActionManager()
    {
@@ -135,7 +138,7 @@ public class ActionManager extends ConfigurationView
       });
 
       createActions();
-      createPopupMenu();
+      createContextMenu();
 
       sessionListener = new SessionListener() {
          @Override
@@ -236,13 +239,14 @@ public class ActionManager extends ConfigurationView
     */
    private void createActions()
    {
-      actionNew = new Action(i18n.tr("&Create..."), SharedIcons.ADD_OBJECT) {
+      actionNew = new Action(i18n.tr("&New..."), SharedIcons.ADD_OBJECT) {
          @Override
          public void run()
          {
             createAction();
          }
       };
+      addKeyBinding("M1+N", actionNew);
 
       actionEdit = new Action(i18n.tr("&Edit..."), SharedIcons.EDIT) {
          @Override
@@ -251,6 +255,7 @@ public class ActionManager extends ConfigurationView
             editAction();
          }
       };
+      addKeyBinding("M3+ENTER", actionEdit);
 
       actionDelete = new Action(i18n.tr("&Delete"), SharedIcons.DELETE_OBJECT) {
          @Override
@@ -259,12 +264,31 @@ public class ActionManager extends ConfigurationView
             deleteActions();
          }
       };
+      addKeyBinding("M1+D", actionDelete);
+
+      actionEnable = new Action("En&able") {
+         @Override
+         public void run()
+         {
+            enableActions(true);
+         }
+      };
+      addKeyBinding("M1+E", actionEnable);
+
+      actionDisable = new Action("D&isable") {
+         @Override
+         public void run()
+         {
+            enableActions(false);
+         }
+      };
+      addKeyBinding("M1+I", actionDisable);
    }
 
    /**
-    * Create pop-up menu for user list
+    * Create context menu
     */
-   private void createPopupMenu()
+   private void createContextMenu()
    {
       // Create menu manager
       MenuManager menuMgr = new MenuManager();
@@ -284,13 +308,33 @@ public class ActionManager extends ConfigurationView
    /**
     * Fill context menu
     * 
-    * @param mgr Menu manager
+    * @param manager Menu manager
     */
-   protected void fillContextMenu(final IMenuManager mgr)
+   protected void fillContextMenu(final IMenuManager manager)
    {
-      mgr.add(actionNew);
-      mgr.add(actionEdit);
-      mgr.add(actionDelete);
+      manager.add(actionNew);
+      manager.add(actionEdit);
+      manager.add(actionEnable);
+      manager.add(actionDisable);
+      manager.add(actionDelete);
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#fillLocalToolbar(org.eclipse.jface.action.ToolBarManager)
+    */
+   @Override
+   protected void fillLocalToolbar(ToolBarManager manager)
+   {
+      manager.add(actionNew);
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#fillLocalMenu(org.eclipse.jface.action.MenuManager)
+    */
+   @Override
+   protected void fillLocalMenu(MenuManager manager)
+   {
+      manager.add(actionNew);
    }
 
    /**
@@ -300,24 +344,24 @@ public class ActionManager extends ConfigurationView
    {
       final ServerAction action = new ServerAction(0);
       final EditActionDlg dlg = new EditActionDlg(getWindow().getShell(), action, true);
-      if (dlg.open() == Window.OK)
-      {
-         new Job(i18n.tr("Create action"), this) {
-            @Override
-            protected void run(IProgressMonitor monitor) throws Exception
-            {
-               long id = session.createAction(action.getName());
-               action.setId(id);
-               session.modifyAction(action);
-            }
+      if (dlg.open() != Window.OK)
+         return;
 
-            @Override
-            protected String getErrorMessage()
-            {
-               return i18n.tr("Cannot create action");
-            }
-         }.start();
-      }
+      new Job(i18n.tr("Create action"), this) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            long id = session.createAction(action.getName());
+            action.setId(id);
+            session.modifyAction(action);
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return i18n.tr("Cannot create action");
+         }
+      }.start();
    }
 
    /**
@@ -331,22 +375,22 @@ public class ActionManager extends ConfigurationView
 
       final ServerAction action = (ServerAction)selection.getFirstElement();
       final EditActionDlg dlg = new EditActionDlg(getWindow().getShell(), action, false);
-      if (dlg.open() == Window.OK)
-      {
-         new Job(i18n.tr("Update action configuration"), this) {
-            @Override
-            protected void run(IProgressMonitor monitor) throws Exception
-            {
-               session.modifyAction(action);
-            }
+      if (dlg.open() != Window.OK)
+         return;
 
-            @Override
-            protected String getErrorMessage()
-            {
-               return i18n.tr("Cannot update action configuration");
-            }
-         }.start();
-      }
+      new Job(i18n.tr("Update action configuration"), this) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            session.modifyAction(action);
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return i18n.tr("Cannot update action configuration");
+         }
+      }.start();
    }
 
    /**
@@ -377,6 +421,38 @@ public class ActionManager extends ConfigurationView
          protected String getErrorMessage()
          {
             return i18n.tr("Cannot delete action");
+         }
+      }.start();
+   }
+
+   /**
+    * Enable/disable selected actions
+    * 
+    * @param enable true to enable
+    */
+   private void enableActions(final boolean enable)
+   {
+      IStructuredSelection selection = viewer.getStructuredSelection();
+      if (selection.isEmpty())
+         return;
+
+      final Object[] objects = selection.toArray();
+      new Job(i18n.tr("Updating action status"), this) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            for(int i = 0; i < objects.length; i++)
+            {
+               ServerAction action = (ServerAction)objects[i];
+               action.setDisabled(!enable);
+               session.modifyAction(action);
+            }
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return i18n.tr("Cannot change action status");
          }
       }.start();
    }

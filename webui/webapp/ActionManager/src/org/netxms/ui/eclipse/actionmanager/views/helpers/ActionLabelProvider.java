@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,18 +19,21 @@
 package org.netxms.ui.eclipse.actionmanager.views.helpers;
 
 import org.eclipse.jface.viewers.DecoratingLabelProvider;
+import org.eclipse.jface.viewers.ITableColorProvider;
 import org.eclipse.jface.viewers.ITableLabelProvider;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.client.ServerAction;
 import org.netxms.ui.eclipse.actionmanager.Messages;
 import org.netxms.ui.eclipse.actionmanager.views.ActionManager;
+import org.netxms.ui.eclipse.console.resources.ThemeEngine;
 
 /**
  * Label provider for action list 
  */
-public class ActionLabelProvider extends DecoratingLabelProvider implements ITableLabelProvider
+public class ActionLabelProvider extends DecoratingLabelProvider implements ITableLabelProvider, ITableColorProvider
 {
 	public final String[] ACTION_TYPE = { 
 			Messages.get().ActionLabelProvider_ActionTypeExecute,
@@ -41,6 +44,8 @@ public class ActionLabelProvider extends DecoratingLabelProvider implements ITab
 			Messages.get().ActionLabelProvider_ActionTypeNXSL
 	   };
 
+   private final Color disabledElementColor = ThemeEngine.getForegroundColor("List.DisabledItem");
+
 	/**
 	 * The constructor
 	 */
@@ -48,7 +53,7 @@ public class ActionLabelProvider extends DecoratingLabelProvider implements ITab
 	{
       super(new WorkbenchLabelProvider(), PlatformUI.getWorkbench().getDecoratorManager().getLabelDecorator());
 	}
-	
+
    /**
     * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
     */
@@ -91,4 +96,22 @@ public class ActionLabelProvider extends DecoratingLabelProvider implements ITab
 		}
 		return null;
 	}
+
+   /**
+    * @see org.eclipse.jface.viewers.ITableColorProvider#getForeground(java.lang.Object, int)
+    */
+   @Override
+   public Color getForeground(Object element, int columnIndex)
+   {
+      return ((ServerAction)element).isDisabled() ? disabledElementColor : null;
+   }
+
+   /**
+    * @see org.eclipse.jface.viewers.ITableColorProvider#getBackground(java.lang.Object, int)
+    */
+   @Override
+   public Color getBackground(Object element, int columnIndex)
+   {
+      return null;
+   }
 }

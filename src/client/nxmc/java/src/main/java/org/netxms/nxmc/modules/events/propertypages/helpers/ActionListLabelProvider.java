@@ -23,7 +23,7 @@ import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
 import org.netxms.client.ServerAction;
 import org.netxms.client.events.ActionExecutionConfiguration;
-import org.netxms.nxmc.modules.actions.views.helpers.BaseActionLabelProvider;
+import org.netxms.nxmc.modules.actions.views.helpers.DecoratingActionLabelProvider;
 import org.netxms.nxmc.modules.events.views.EventProcessingPolicyEditor;
 
 /**
@@ -32,7 +32,7 @@ import org.netxms.nxmc.modules.events.views.EventProcessingPolicyEditor;
 public class ActionListLabelProvider extends LabelProvider implements ITableLabelProvider
 {
    EventProcessingPolicyEditor policyEditor;
-   BaseActionLabelProvider actionLabelProvider;
+   DecoratingActionLabelProvider actionLabelProvider;
 
    /**
     * @param policyEditor
@@ -40,7 +40,7 @@ public class ActionListLabelProvider extends LabelProvider implements ITableLabe
    public ActionListLabelProvider(EventProcessingPolicyEditor policyEditor)
    {
       this.policyEditor = policyEditor;
-      this.actionLabelProvider = new BaseActionLabelProvider();
+      this.actionLabelProvider = new DecoratingActionLabelProvider();
    }
 
    /**

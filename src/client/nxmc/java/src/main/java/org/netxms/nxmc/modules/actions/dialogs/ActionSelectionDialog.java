@@ -35,7 +35,7 @@ import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.ServerAction;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
-import org.netxms.nxmc.modules.actions.views.helpers.BaseActionLabelProvider;
+import org.netxms.nxmc.modules.actions.views.helpers.DecoratingActionLabelProvider;
 import org.netxms.nxmc.tools.WidgetHelper;
 
 /**
@@ -92,7 +92,7 @@ public class ActionSelectionDialog extends Dialog
 
       viewer = new TableViewer(dialogArea, SWT.FULL_SELECTION | SWT.MULTI | SWT.BORDER);
       viewer.setContentProvider(new ArrayContentProvider());
-      viewer.setLabelProvider(new BaseActionLabelProvider());
+      viewer.setLabelProvider(new DecoratingActionLabelProvider());
       viewer.setComparator(new ViewerComparator() {
          @Override
          public int compare(Viewer viewer, Object e1, Object e2)
