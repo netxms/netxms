@@ -26,8 +26,8 @@
 /**
  * Constants
  */
-#define MAX_ERROR_NUMBER         38
-#define CONTROL_STACK_LIMIT      32768
+#define MAX_ERROR_NUMBER               39
+#define CONTROL_STACK_LIMIT            32768
 
 /**
  * Class registry
@@ -76,7 +76,8 @@ static const TCHAR *s_runtimeErrorMessage[MAX_ERROR_NUMBER] =
    _T("Hash map key is not a string"),
    _T("Selector not found"),
    _T("Object constructor not found"),
-   _T("Invalid number of object constructor's arguments")
+   _T("Invalid number of object constructor's arguments"),
+   _T("Too many nested function calls")
 };
 
 /**
@@ -201,6 +202,7 @@ NXSL_VM::NXSL_VM(NXSL_Environment *env, NXSL_Storage *storage) : NXSL_ValueManag
    m_pRetValue = nullptr;
 	m_userData = nullptr;
 	m_nBindPos = 0;
+	m_argvIndex = -1;
 	if (storage != nullptr)
 	{
       m_localStorage = nullptr;
@@ -648,7 +650,6 @@ void NXSL_VM::execute()
    const NXSL_ExtFunction *pFunc;
    char varName[MAX_IDENTIFIER_LENGTH];
    int i, nRet;
-   bool constructor;
    NXSL_VariableSystem *vs;
 
    uint32_t dwNext = m_cp + 1;
@@ -1145,7 +1146,7 @@ void NXSL_VM::execute()
             error(NXSL_ERR_DATA_STACK_UNDERFLOW);
          }
          break;
-		case OPCODE_ADD_TO_ARRAY:  // add element on stack top to array; stack should contain: array new_value (top)
+		case OPCODE_APPEND:  // append element on stack top to array; stack should contain: array new_value (top)
          pValue = m_dataStack.pop();
          if (pValue != nullptr)
          {
@@ -1155,8 +1156,7 @@ void NXSL_VM::execute()
                if (array->isArray())
                {
                   array->copyOnWrite();
-                  int index = array->getValueAsArray()->size();
-                  array->getValueAsArray()->set(index, pValue);
+                  array->getValueAsArray()->append(pValue);
                   pValue = nullptr;    // Prevent deletion
                }
                else
@@ -1167,6 +1167,44 @@ void NXSL_VM::execute()
             else
             {
                error(NXSL_ERR_DATA_STACK_UNDERFLOW);
+            }
+            destroyValue(pValue);
+         }
+         else
+         {
+            error(NXSL_ERR_DATA_STACK_UNDERFLOW);
+         }
+         break;
+      case OPCODE_APPEND_ALL:  // append all elements from array on stack top to array; stack should contain: array array_to_append (top)
+         pValue = m_dataStack.pop();
+         if (pValue != nullptr)
+         {
+            if (pValue->isArray())
+            {
+               NXSL_Value *array = m_dataStack.peek();
+               if (array != nullptr)
+               {
+                  if (array->isArray())
+                  {
+                     array->copyOnWrite();
+                     NXSL_Array *src = pValue->getValueAsArray();
+                     NXSL_Array *dst = array->getValueAsArray();
+                     for(int i = 0; i < src->size(); i++)
+                        dst->append(createValue(src->getByPosition(i)));
+                  }
+                  else
+                  {
+                     error(NXSL_ERR_NOT_ARRAY);
+                  }
+               }
+               else
+               {
+                  error(NXSL_ERR_DATA_STACK_UNDERFLOW);
+               }
+            }
+            else
+            {
+               error(NXSL_ERR_NOT_ARRAY);
             }
             destroyValue(pValue);
          }
@@ -1283,9 +1321,44 @@ void NXSL_VM::execute()
             error(NXSL_ERR_DATA_STACK_UNDERFLOW);
          }
          break;
+      case OPCODE_ARGV:
+         if (m_argvIndex < NESTED_FUNCTION_CALLS_LIMIT - 1)
+         {
+            m_argvIndex++;
+            m_spreadCounts[m_argvIndex] = 0;
+         }
+         else
+         {
+            error(NXSL_ERR_TOO_MANY_NESTED_CALLS);
+         }
+         break;
+      case OPCODE_SPREAD:
+         pValue = m_dataStack.pop();
+         if (pValue != nullptr)
+         {
+            if (pValue->isArray())
+            {
+               NXSL_Array *a = pValue->getValueAsArray();
+               for(int i = 0; i < a->size(); i++)
+                  m_dataStack.push(createValue(a->getByPosition(i)));
+               m_spreadCounts[m_argvIndex] += a->size() - 1; // Number of additional elements in stack
+            }
+            else
+            {
+               error(NXSL_ERR_NOT_ARRAY);
+            }
+            destroyValue(pValue);
+         }
+         else
+         {
+            error(NXSL_ERR_DATA_STACK_UNDERFLOW);
+         }
+         break;
       case OPCODE_CALL:
          dwNext = cp->m_operand.m_addr;
-         callFunction(cp->m_stackItems);
+         callFunction((cp->m_stackItems > 0) ? cp->m_stackItems + m_spreadCounts[m_argvIndex] : 0);
+         if (cp->m_stackItems > 0)
+            m_argvIndex--;
          break;
       case OPCODE_CALL_EXTERNAL:
          pFunc = m_env->findFunction(*cp->m_operand.m_identifier);
@@ -1296,7 +1369,7 @@ void NXSL_VM::execute()
             destroyIdentifier(cp->m_operand.m_identifier);
             cp->m_operand.m_function = pFunc;
 
-            if (callExternalFunction(pFunc, cp->m_stackItems))
+            if (callExternalFunction(pFunc, (cp->m_stackItems > 0) ? cp->m_stackItems + m_spreadCounts[m_argvIndex] : 0))
                dwNext = m_instructionSet.size();
          }
          else
@@ -1310,115 +1383,28 @@ void NXSL_VM::execute()
                cp->m_operand.m_addr = addr;
 
                dwNext = addr;
-               callFunction(cp->m_stackItems);
+               callFunction((cp->m_stackItems > 0) ? cp->m_stackItems + m_spreadCounts[m_argvIndex] : 0);
             }
             else
             {
-               constructor = !strncmp(cp->m_operand.m_identifier->value, "__new@", 6);
+               bool constructor = !strncmp(cp->m_operand.m_identifier->value, "__new@", 6);
                error(constructor ? NXSL_ERR_NO_OBJECT_CONSTRUCTOR : NXSL_ERR_NO_FUNCTION);
             }
          }
+         if (cp->m_stackItems > 0)
+            m_argvIndex--;
          break;
       case OPCODE_CALL_EXTPTR:
-         if (callExternalFunction(cp->m_operand.m_function, cp->m_stackItems))
+         if (callExternalFunction(cp->m_operand.m_function, (cp->m_stackItems > 0) ? cp->m_stackItems + m_spreadCounts[m_argvIndex] : 0))
             dwNext = m_instructionSet.size();
+         if (cp->m_stackItems > 0)
+            m_argvIndex--;
          break;
       case OPCODE_CALL_METHOD:
-         pValue = m_dataStack.peekAt(cp->m_stackItems + 1);
-         if (pValue != nullptr)
-         {
-            if (pValue->getDataType() == NXSL_DT_OBJECT)
-            {
-               NXSL_Object *object = pValue->getValueAsObject();
-               if (object != nullptr)
-               {
-                  NXSL_Value *pResult;
-                  nRet = object->getClass()->callMethod(*cp->m_operand.m_identifier, object, cp->m_stackItems,
-                                                        (NXSL_Value **)m_dataStack.peekList(cp->m_stackItems),
-                                                        &pResult, this);
-                  if (nRet == 0)
-                  {
-                     for(i = 0; i < cp->m_stackItems + 1; i++)
-                        destroyValue(m_dataStack.pop());
-                     m_dataStack.push(pResult);
-                  }
-                  else if (nRet == NXSL_STOP_SCRIPT_EXECUTION)
-					   {
-                     m_dataStack.push(pResult);
-		               dwNext = m_instructionSet.size();
-					   }
-					   else
-                  {
-                     // Execution error inside method
-                     error(nRet);
-                  }
-               }
-               else
-               {
-                  error(NXSL_ERR_INTERNAL);
-               }
-            }
-            else if (pValue->getDataType() == NXSL_DT_ARRAY)
-            {
-               pValue->copyOnWrite();  // All array methods can cause content change
-               NXSL_Array *array = pValue->getValueAsArray();
-               NXSL_Value *result;
-               nRet = array->callMethod(*cp->m_operand.m_identifier, cp->m_stackItems, (NXSL_Value **)m_dataStack.peekList(cp->m_stackItems), &result);
-               if (nRet == 0)
-               {
-                  for(i = 0; i < cp->m_stackItems + 1; i++)
-                     destroyValue(m_dataStack.pop());
-                  m_dataStack.push(result);
-               }
-               else
-               {
-                  // Execution error inside method
-                  error(nRet);
-               }
-            }
-            else if (pValue->getDataType() == NXSL_DT_HASHMAP)
-            {
-               pValue->copyOnWrite();  // Some methods can cause content change
-               NXSL_HashMap *hashMap = pValue->getValueAsHashMap();
-               NXSL_Value *result;
-               nRet = hashMap->callMethod(*cp->m_operand.m_identifier, cp->m_stackItems, (NXSL_Value **)m_dataStack.peekList(cp->m_stackItems), &result);
-               if (nRet == 0)
-               {
-                  for(i = 0; i < cp->m_stackItems + 1; i++)
-                     destroyValue(m_dataStack.pop());
-                  m_dataStack.push(result);
-               }
-               else
-               {
-                  // Execution error inside method
-                  error(nRet);
-               }
-            }
-            else if (pValue->isString())
-            {
-               NXSL_Value *result;
-               nRet = callStringMethod(pValue, *cp->m_operand.m_identifier, cp->m_stackItems, (NXSL_Value **)m_dataStack.peekList(cp->m_stackItems), &result);
-               if (nRet == 0)
-               {
-                  for(i = 0; i < cp->m_stackItems + 1; i++)
-                     destroyValue(m_dataStack.pop());
-                  m_dataStack.push(result);
-               }
-               else
-               {
-                  // Execution error inside method
-                  error(nRet);
-               }
-            }
-            else
-            {
-               error(NXSL_ERR_NOT_OBJECT);
-            }
-         }
-         else
-         {
-            error(NXSL_ERR_DATA_STACK_UNDERFLOW);
-         }
+         if (callMethod(*cp->m_operand.m_identifier, (cp->m_stackItems > 0) ? cp->m_stackItems + m_spreadCounts[m_argvIndex] : 0))
+            dwNext = m_instructionSet.size();
+         if (cp->m_stackItems > 0)
+            m_argvIndex--;
          break;
       case OPCODE_RET_NULL:
          m_dataStack.push(createValue());
@@ -2790,6 +2776,108 @@ cleanup:
    MemFreeLocal(valueList);
 
    return addr;
+}
+
+/**
+ * Call method
+ */
+bool NXSL_VM::callMethod(const NXSL_Identifier& name, int stackItems)
+{
+   bool stopExecution = false;
+   NXSL_Value *pValue = m_dataStack.peekAt(stackItems + 1);
+   if (pValue != nullptr)
+   {
+      if (pValue->getDataType() == NXSL_DT_OBJECT)
+      {
+         NXSL_Object *object = pValue->getValueAsObject();
+         if (object != nullptr)
+         {
+            NXSL_Value *result;
+            int rc = object->getClass()->callMethod(name, object, stackItems, (NXSL_Value **)m_dataStack.peekList(stackItems), &result, this);
+            if (rc == NXSL_ERR_SUCCESS)
+            {
+               for(int i = 0; i < stackItems + 1; i++)
+                  destroyValue(m_dataStack.pop());
+               m_dataStack.push(result);
+            }
+            else if (rc == NXSL_STOP_SCRIPT_EXECUTION)
+            {
+               m_dataStack.push(result);
+               stopExecution = true;
+            }
+            else
+            {
+               // Execution error inside method
+               error(rc);
+            }
+         }
+         else
+         {
+            error(NXSL_ERR_INTERNAL);
+         }
+      }
+      else if (pValue->getDataType() == NXSL_DT_ARRAY)
+      {
+         pValue->copyOnWrite();  // All array methods can cause content change
+         NXSL_Array *array = pValue->getValueAsArray();
+         NXSL_Value *result;
+         int rc = array->callMethod(name, stackItems, (NXSL_Value **)m_dataStack.peekList(stackItems), &result);
+         if (rc == NXSL_ERR_SUCCESS)
+         {
+            for(int i = 0; i < stackItems + 1; i++)
+               destroyValue(m_dataStack.pop());
+            m_dataStack.push(result);
+         }
+         else
+         {
+            // Execution error inside method
+            error(rc);
+         }
+      }
+      else if (pValue->getDataType() == NXSL_DT_HASHMAP)
+      {
+         pValue->copyOnWrite();  // Some methods can cause content change
+         NXSL_HashMap *hashMap = pValue->getValueAsHashMap();
+         NXSL_Value *result;
+         int rc = hashMap->callMethod(name, stackItems, (NXSL_Value **)m_dataStack.peekList(stackItems), &result);
+         if (rc == NXSL_ERR_SUCCESS)
+         {
+            for(int i = 0; i < stackItems + 1; i++)
+               destroyValue(m_dataStack.pop());
+            m_dataStack.push(result);
+         }
+         else
+         {
+            // Execution error inside method
+            error(rc);
+         }
+      }
+      else if (pValue->isString())
+      {
+         NXSL_Value *result;
+         int rc = callStringMethod(pValue, name, stackItems, (NXSL_Value **)m_dataStack.peekList(stackItems), &result);
+         if (rc == NXSL_ERR_SUCCESS)
+         {
+            for(int i = 0; i < stackItems + 1; i++)
+               destroyValue(m_dataStack.pop());
+            m_dataStack.push(result);
+         }
+         else
+         {
+            // Execution error inside method
+            error(rc);
+         }
+      }
+      else
+      {
+         error(NXSL_ERR_NOT_OBJECT);
+      }
+   }
+   else
+   {
+      error(NXSL_ERR_DATA_STACK_UNDERFLOW);
+   }
+   return stopExecution;
 }
 
 /**

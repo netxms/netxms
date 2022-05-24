@@ -101,7 +101,7 @@ typedef void *yyscan_t;
 #define OPCODE_GLOBAL_ARRAY   56
 #define OPCODE_JZ_PEEK        57
 #define OPCODE_JNZ_PEEK       58
-#define OPCODE_ADD_TO_ARRAY   59
+#define OPCODE_APPEND         59
 #define OPCODE_SAFE_GET_ATTR  60
 #define OPCODE_CALL_METHOD    61
 #define OPCODE_CASE_CONST     62
@@ -150,6 +150,9 @@ typedef void *yyscan_t;
 #define OPCODE_PUSH_TRUE      105
 #define OPCODE_PUSH_FALSE     106
 #define OPCODE_PUSH_NULL      107
+#define OPCODE_SPREAD         108
+#define OPCODE_ARGV           109
+#define OPCODE_APPEND_ALL     110
 
 class NXSL_Compiler;
 

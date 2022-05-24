@@ -47,7 +47,7 @@ static const char *s_nxslCommandMnemonic[] =
    "JNZ", "LIKE", "ILIKE", "MATCH",
    "IMATCH", "CASE", "ARRAY", "EGET",
 	"ESET", "ASET", "NAME", "FOREACH", "NEXT",
-	"GLOBAL", "GARRAY", "JZP", "JNZP", "ADDARR",
+	"GLOBAL", "GARRAY", "JZP", "JNZP", "APPEND",
 	"AGETS", "CALL", "CASE", "EINC", "EDEC",
    "EINCP", "EDECP", "ABORT", "CATCH", "PUSH",
    "SETHM", "NEWARR", "NEWHM", "CPOP",
@@ -58,7 +58,7 @@ static const char *s_nxslCommandMnemonic[] =
    "UPDATE", "CLREXPR", "RANGE", "CASELT",
    "CASELT", "CASEGT", "CASEGT", "PUSH",
    "PUSH", "PUSH", "PUSH", "PUSH", "PUSH",
-   "PUSH", "PUSH"
+   "PUSH", "PUSH", "SPREAD", "ARGV", "APPEND"
 };
 
 /**
@@ -404,6 +404,12 @@ void NXSL_ProgramBuilder::dump(FILE *fp, uint32_t addr, const NXSL_Instruction& 
          break;
       case OPCODE_PUSH_UINT64:
          _ftprintf(fp, UINT64_FMT _T("UL\n"), instruction.m_operand.m_valueUInt64);
+         break;
+      case OPCODE_APPEND:
+         _ftprintf(fp, _T("ELEMENT\n"));
+         break;
+      case OPCODE_APPEND_ALL:
+         _ftprintf(fp, _T("ALL\n"));
          break;
       default:
          _ftprintf(fp, _T("\n"));

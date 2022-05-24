@@ -533,9 +533,9 @@ Expression:
 {
 	builder->addInstruction(lexer->getCurrLine(), OPCODE_GET_ATTRIBUTE, $3);
 }
-|	Expression T_REF FunctionName ParameterList ')'
+|	Expression T_REF FunctionName { builder->addInstruction(lexer->getCurrLine(), OPCODE_ARGV); } ParameterList ')'
 {
-	builder->addInstruction(lexer->getCurrLine(), OPCODE_CALL_METHOD, $3, $4);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_CALL_METHOD, $3, $5);
 }
 |	Expression T_REF FunctionName ')'
 {
@@ -772,7 +772,7 @@ TypeCast:
 ;
 
 ArrayInitializer:
-	'%' '(' 
+	'%' '('
 {
 	builder->addInstruction(lexer->getCurrLine(), OPCODE_NEW_ARRAY);
 }
@@ -784,14 +784,18 @@ ArrayInitializer:
 ;
 
 ArrayElements:
+	ArrayElement ',' ArrayElements
+|	ArrayElement
+;
+
+ArrayElement:
 	Expression 
 {
-	builder->addInstruction(lexer->getCurrLine(), OPCODE_ADD_TO_ARRAY);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_APPEND);
 }
-	',' ArrayElements
-|	Expression
+|	T_RANGE Expression 
 {
-	builder->addInstruction(lexer->getCurrLine(), OPCODE_ADD_TO_ARRAY);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_APPEND_ALL);
 }
 ;
 
@@ -1252,11 +1256,11 @@ New:
 	snprintf(fname, 256, "__new@%s", $2.v); 
 	builder->addInstruction(lexer->getCurrLine(), OPCODE_CALL_EXTERNAL, fname, 0);
 }
-|	T_NEW T_IDENTIFIER '(' ParameterList ')'
+|	T_NEW T_IDENTIFIER '(' { builder->addInstruction(lexer->getCurrLine(), OPCODE_ARGV); } ParameterList ')'
 {
 	char fname[256];
-	snprintf(fname, 256, "__new@%s", $2.v); 
-	builder->addInstruction(lexer->getCurrLine(), OPCODE_CALL_EXTERNAL, fname, $4);
+	snprintf(fname, 256, "__new@%s", $2.v);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_CALL_EXTERNAL, fname, $5);
 }
 |	T_NEW T_IDENTIFIER '(' ')'
 {
@@ -1267,9 +1271,9 @@ New:
 ;
 
 FunctionCall:
-	FunctionName ParameterList ')'
+	FunctionName { builder->addInstruction(lexer->getCurrLine(), OPCODE_ARGV); } ParameterList ')'
 {
-	builder->addInstruction(lexer->getCurrLine(), OPCODE_CALL_EXTERNAL, $1, $2);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_CALL_EXTERNAL, $1, $3);
 }
 |	FunctionName ')'
 {
@@ -1287,6 +1291,10 @@ Parameter:
 |	T_IDENTIFIER ':' Expression
 {
 	builder->addInstruction(lexer->getCurrLine(), OPCODE_NAME, $1);
+}
+|	T_RANGE Expression
+{
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_SPREAD);
 }
 ;
 

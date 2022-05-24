@@ -28,12 +28,20 @@
 #include <nxcpapi.h>
 #include <geolocation.h>
 
-//
-// Constants
-//
+/**
+ * Meximum length of class name
+ */
+#define MAX_CLASS_NAME                 64
 
-#define MAX_CLASS_NAME     64
-#define INVALID_ADDRESS    ((uint32_t)0xFFFFFFFF)
+/**
+ * Invalid address value
+ */
+#define INVALID_ADDRESS                ((uint32_t)0xFFFFFFFF)
+
+/**
+ * Limit on nested function calls
+ */
+#define NESTED_FUNCTION_CALLS_LIMIT    1024
 
 /**
  * NXSL data types
@@ -1237,6 +1245,8 @@ protected:
    NXSL_ObjectStack<NXSL_Value> m_dataStack;
    NXSL_ObjectStack<NXSL_CatchPoint> m_catchStack;
    int m_nBindPos;
+   int m_argvIndex;  // Index of argument list currently being built
+   uint16_t m_spreadCounts[NESTED_FUNCTION_CALLS_LIMIT]; // Number of stack items produced by SPREAD instruction at current level
 
    NXSL_VariableSystem *m_constants;
    NXSL_VariableSystem *m_globalVariables;
@@ -1275,6 +1285,7 @@ protected:
    bool setHashMapElement(NXSL_Value *hashMap, NXSL_Value *key, NXSL_Value *value);
    void getHashMapAttribute(NXSL_HashMap *m, const NXSL_Identifier& attribute, bool safe);
    void getStringAttribute(NXSL_Value *v, const NXSL_Identifier& attribute, bool safe);
+   bool callMethod(const NXSL_Identifier& name, int stackItems);
    int callStringMethod(NXSL_Value *s, const NXSL_Identifier& name, int argc, NXSL_Value **argv, NXSL_Value **result);
    void error(int errorCode, int sourceLine = -1);
    NXSL_Value *matchRegexp(NXSL_Value *value, NXSL_Value *regexp, bool ignoreCase);
