@@ -6,7 +6,7 @@
 
 m4_ifdef([m4_esyscmd_s],
 	[AC_INIT([NetXMS], m4_esyscmd_s([git describe --always --long | sed 's/^Release-//' | sed 's/-g.*//' | sed 's/-/./;/^[0-9][0-9]*\.[0-9][0-9]*$/ s/$/.0/']), [bugs@netxms.org])],
-	[AC_INIT([NetXMS], [4.1.0], [bugs@netxms.org])])
+	[AC_INIT([NetXMS], [4.2.0], [bugs@netxms.org])])
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_HEADERS(config.h)
 AM_INIT_AUTOMAKE([tar-ustar subdir-objects])
