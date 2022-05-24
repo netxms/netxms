@@ -1356,6 +1356,70 @@ NXSL_METHOD_DEFINITION(Node, enableTopologyPolling)
 }
 
 /**
+ * Node::executeAgentCommand(command, ...) method
+ */
+NXSL_METHOD_DEFINITION(Node, executeAgentCommand)
+{
+   if (argc < 1)
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
+   for(int i = 0; i < argc; i++)
+      if (!argv[i]->isString())
+         return NXSL_ERR_NOT_STRING;
+
+   Node *node = static_cast<shared_ptr<Node>*>(object->getData())->get();
+   shared_ptr<AgentConnectionEx> conn = node->createAgentConnection();
+   if (conn != nullptr)
+   {
+      StringList list;
+      for(int i = 2; (i < argc) && (i < 128); i++)
+         list.add(argv[i]->getValueAsCString());
+      uint32_t rcc = conn->executeCommand(argv[1]->getValueAsCString(), list);
+      *result = vm->createValue(rcc == ERR_SUCCESS);
+      nxlog_debug(5, _T("NXSL: Node::executeAgentCommand: command \"%s\" on node %s [%u]: RCC=%u"), argv[1]->getValueAsCString(), node->getName(), node->getId(), rcc);
+   }
+   else
+   {
+      *result = vm->createValue(false);
+   }
+   return 0;
+}
+
+/**
+ * Node::executeAgentCommandWithOutput(command, ...) method
+ */
+NXSL_METHOD_DEFINITION(Node, executeAgentCommandWithOutput)
+{
+   if (argc < 1)
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
+   for(int i = 0; i < argc; i++)
+      if (!argv[i]->isString())
+         return NXSL_ERR_NOT_STRING;
+
+   Node *node = static_cast<shared_ptr<Node>*>(object->getData())->get();
+   shared_ptr<AgentConnectionEx> conn = node->createAgentConnection();
+   if (conn != nullptr)
+   {
+      StringList list;
+      for(int i = 2; (i < argc) && (i < 128); i++)
+         list.add(argv[i]->getValueAsCString());
+      StringBuffer output;
+      uint32_t rcc = conn->executeCommand(argv[1]->getValueAsCString(), list, true, [](ActionCallbackEvent event, const TCHAR *text, void *context) {
+         if (event == ACE_DATA)
+            static_cast<StringBuffer*>(context)->append(text);
+      }, &output);
+      *result = (rcc == ERR_SUCCESS) ? vm->createValue(output) : vm->createValue();
+      nxlog_debug(5, _T("NXSL: Node::executeAgentCommandWithOutput: command \"%s\" on node %s [%u]: RCC=%u"), argv[1]->getValueAsCString(), node->getName(), node->getId(), rcc);
+   }
+   else
+   {
+      *result = vm->createValue();
+   }
+   return 0;
+}
+
+/**
  * Node::executeSSHCommand(command) method
  */
 NXSL_METHOD_DEFINITION(Node, executeSSHCommand)
@@ -1653,6 +1717,8 @@ NXSL_NodeClass::NXSL_NodeClass() : NXSL_DCTargetClass()
    NXSL_REGISTER_METHOD(Node, enableSnmp, 1);
    NXSL_REGISTER_METHOD(Node, enableSsh, 1);
    NXSL_REGISTER_METHOD(Node, enableTopologyPolling, 1);
+   NXSL_REGISTER_METHOD(Node, executeAgentCommand, -1);
+   NXSL_REGISTER_METHOD(Node, executeAgentCommandWithOutput, -1);
    NXSL_REGISTER_METHOD(Node, executeSSHCommand, 1);
    NXSL_REGISTER_METHOD(Node, getInterface, 1);
    NXSL_REGISTER_METHOD(Node, getInterfaceByIndex, 1);

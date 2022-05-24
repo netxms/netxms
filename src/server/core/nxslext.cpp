@@ -1490,16 +1490,16 @@ static int F_SNMPWalk(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM 
 }
 
 /**
- * Execute agent action
+ * Execute agent command
  * Syntax:
- *    AgentExecuteAction(object, name, ...)
+ *    AgentExecuteCommand(object, command, ...)
  * where:
- *     object - NetXMS node object
- *     name   - name of the parameter
+ *     object    - NetXMS node object
+ *     command   - command to be executed
  * Return value:
  *     true on success
  */
-static int F_AgentExecuteAction(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+static int F_AgentExecuteCommand(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
    if (argc < 2)
       return NXSL_ERR_INVALID_ARGUMENT_COUNT;
@@ -1522,9 +1522,9 @@ static int F_AgentExecuteAction(int argc, NXSL_Value **argv, NXSL_Value **result
       StringList list;
       for(int i = 2; (i < argc) && (i < 128); i++)
          list.add(argv[i]->getValueAsCString());
-      uint32_t rcc = conn->executeCommand(argv[1]->getValueAsCString(), list, false, nullptr, nullptr);
+      uint32_t rcc = conn->executeCommand(argv[1]->getValueAsCString(), list);
       *result = vm->createValue(rcc == ERR_SUCCESS);
-      nxlog_debug(5, _T("NXSL: F_AgentExecuteAction: action %s on node %s [%d]: RCC=%u"), argv[1]->getValueAsCString(), node->getName(), node->getId(), rcc);
+      nxlog_debug(5, _T("NXSL: F_AgentExecuteCommand: command \"%s\" on node %s [%u]: RCC=%u"), argv[1]->getValueAsCString(), node->getName(), node->getId(), rcc);
    }
    else
    {
@@ -1534,25 +1534,16 @@ static int F_AgentExecuteAction(int argc, NXSL_Value **argv, NXSL_Value **result
 }
 
 /**
- * Agent action output handler
- */
-static void ActionOutputHandler(ActionCallbackEvent event, const TCHAR *text, void *userData)
-{
-   if (event == ACE_DATA)
-      static_cast<StringBuffer*>(userData)->append(text);
-}
-
-/**
  * Execute agent action
  * Syntax:
- *    AgentExecuteActionWithOutput(object, name, ...)
+ *    AgentExecuteCommandWithOutput(object, command, ...)
  * where:
- *     object - NetXMS node object
- *     name   - name of the parameter
+ *     object    - NetXMS node object
+ *     command   - command to be executed
  * Return value:
- *     action output on success and null on failure
+ *     command output on success and null on failure
  */
-static int F_AgentExecuteActionWithOutput(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+static int F_AgentExecuteCommandWithOutput(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
    if (argc < 2)
       return NXSL_ERR_INVALID_ARGUMENT_COUNT;
@@ -1576,13 +1567,16 @@ static int F_AgentExecuteActionWithOutput(int argc, NXSL_Value **argv, NXSL_Valu
       for(int i = 2; (i < argc) && (i < 128); i++)
          list.add(argv[i]->getValueAsCString());
       StringBuffer output;
-      uint32_t rcc = conn->executeCommand(argv[1]->getValueAsCString(), list, true, ActionOutputHandler, &output);
-      *ppResult = (rcc == ERR_SUCCESS) ? vm->createValue(output) : vm->createValue();
-      nxlog_debug(5, _T("NXSL: F_AgentExecuteActionWithOutput: action %s on node %s [%d]: RCC=%u"), argv[1]->getValueAsCString(), node->getName(), node->getId(), rcc);
+      uint32_t rcc = conn->executeCommand(argv[1]->getValueAsCString(), list, true, [](ActionCallbackEvent event, const TCHAR *text, void *context) {
+         if (event == ACE_DATA)
+            static_cast<StringBuffer*>(context)->append(text);
+      }, &output);
+      *result = (rcc == ERR_SUCCESS) ? vm->createValue(output) : vm->createValue();
+      nxlog_debug(5, _T("NXSL: F_AgentExecuteCommandWithOutput: command \"%s\" on node %s [%u]: RCC=%u"), argv[1]->getValueAsCString(), node->getName(), node->getId(), rcc);
    }
    else
    {
-      *ppResult = vm->createValue();
+      *result = vm->createValue();
    }
    return 0;
 }
@@ -2018,8 +2012,8 @@ static NXSL_ExtFunction m_nxslServerFunctions[] =
 {
 	{ "map", F_map, -1 },
    { "mapList", F_mapList, -1 },
-   { "AgentExecuteAction", F_AgentExecuteAction, -1 },
-   { "AgentExecuteActionWithOutput", F_AgentExecuteActionWithOutput, -1 },
+   { "AgentExecuteCommand", F_AgentExecuteCommand, -1 },
+   { "AgentExecuteCommandWithOutput", F_AgentExecuteCommandWithOutput, -1 },
 	{ "AgentReadList", F_AgentReadList, 2 },
 	{ "AgentReadParameter", F_AgentReadParameter, 2 },
 	{ "AgentReadTable", F_AgentReadTable, 2 },
