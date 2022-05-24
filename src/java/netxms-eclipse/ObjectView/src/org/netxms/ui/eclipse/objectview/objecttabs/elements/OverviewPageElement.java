@@ -103,7 +103,7 @@ public abstract class OverviewPageElement
 	{
 		return true;
 	}
-	
+
 	/**
 	 * Fix control placement
 	 */
@@ -121,7 +121,7 @@ public abstract class OverviewPageElement
 			}
 		}
 	}
-	
+
 	/**
 	 * @return
 	 */

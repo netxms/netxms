@@ -59,6 +59,7 @@ public class ObjectOverview extends ObjectTab
 	private Composite leftColumn;
 	private Composite rightColumn;
    private ViewRefreshController refreshController;
+   private boolean updateLayoutOnSelect = false;
 
 	/**
 	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#createTabContent(org.eclipse.swt.widgets.Composite)
@@ -120,7 +121,7 @@ public class ObjectOverview extends ObjectTab
 		e = new Connection(rightColumn, e, this);
 		elements.add(e);
 
-      VisibilityValidator validator = new VisibilityValidator() { // $NON-NLS-1$
+      VisibilityValidator validator = new VisibilityValidator() {
          @Override
          public boolean isVisible()
          {
@@ -150,7 +151,7 @@ public class ObjectOverview extends ObjectTab
          }
       });
 	}
-	
+
 	/**
 	 * Create layout for column
 	 * 
@@ -174,39 +175,66 @@ public class ObjectOverview extends ObjectTab
 		changeObject(object);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#objectChanged(org.netxms.client.objects.AbstractObject)
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#objectChanged(org.netxms.client.objects.AbstractObject)
+    */
 	@Override
 	public void objectChanged(AbstractObject object)
 	{
-		viewArea.setRedraw(false);
-		for(OverviewPageElement element : elements)
-		{
-			if ((object != null) && element.isApplicableForObject(object))
-			{
-				element.setObject(object);
-			}
-			else
-			{
-				element.dispose();
-			}
-		}
-		for(OverviewPageElement element : elements)
-			element.fixPlacement();
-		viewArea.layout(true, true);
-		viewArea.setRedraw(true);
-		
-		Rectangle r = scroller.getClientArea();
-		scroller.setMinSize(viewArea.computeSize(r.width, SWT.DEFAULT));
-		
-		Point s = viewArea.getSize();
-		viewArea.redraw(0, 0, s.x, s.y, true);
+	   if (isActive())
+         updateLayout();
+      else
+         updateLayoutOnSelect = true;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#refresh()
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#selected()
+    */
+   @Override
+   public void selected()
+   {
+      super.selected();
+      if (updateLayoutOnSelect)
+      {
+         updateLayout();
+         updateLayoutOnSelect = false;
+      }
+   }
+
+   /**
+    * Update tab layout
+    */
+   private void updateLayout()
+   {
+      AbstractObject object = getObject();
+
+      viewArea.setRedraw(false);
+      for(OverviewPageElement element : elements)
+      {
+         if ((object != null) && element.isApplicableForObject(object))
+         {
+            element.setObject(object);
+         }
+         else
+         {
+            element.dispose();
+         }
+      }
+      for(OverviewPageElement element : elements)
+         element.fixPlacement();
+      viewArea.layout(true, true);
+      viewArea.setRedraw(true);
+
+      Rectangle r = scroller.getClientArea();
+      scroller.setMinSize(viewArea.computeSize(r.width, SWT.DEFAULT));
+
+      Point s = viewArea.getSize();
+      viewArea.redraw(0, 0, s.x, s.y, true);
+   }
+
+   /**
+    * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#refresh()
+    */
 	@Override
 	public void refresh()
 	{

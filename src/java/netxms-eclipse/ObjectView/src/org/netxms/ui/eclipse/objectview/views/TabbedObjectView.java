@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -93,7 +93,7 @@ public class TabbedObjectView extends ViewPart
 	private SourceProvider sourceProvider = null;
 	private long objectId = 0; 
 	private NXCSession session;
-	
+
    /**
     * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
     */
@@ -117,15 +117,15 @@ public class TabbedObjectView extends ViewPart
 		layout.marginWidth = 0;
 		layout.verticalSpacing = 0;
 		parent.setLayout(layout);
-		
+
 		headerFont = FontTools.createFont(HEADER_FONTS, +3, SWT.BOLD);
-		
+
 		header = new CLabel(parent, SWT.BORDER);
 		header.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
 		header.setFont(headerFont);
       header.setBackground(ThemeEngine.getBackgroundColor("ObjectTab.Header"));
       header.setForeground(ThemeEngine.getForegroundColor("ObjectTab.Header"));
-		
+
 		tabFolder = new CTabFolder(parent, SWT.TOP | SWT.FLAT | SWT.MULTI);
 		tabFolder.setUnselectedImageVisible(true);
 		tabFolder.setSimple(true);
@@ -143,7 +143,7 @@ public class TabbedObjectView extends ViewPart
 				widgetSelected(e);
 			}
 		});
-		
+
 		tabs = new ArrayList<ObjectTab>();	
 		addTabs();
 
@@ -170,13 +170,13 @@ public class TabbedObjectView extends ViewPart
 			}
 		};
 		selectionService.addPostSelectionListener(selectionListener);
-		
+
 		createActions();
 		contributeToActionBars();
-		
+
 		selectionProvider = new IntermediateSelectionProvider();
 		getSite().setSelectionProvider(selectionProvider);
-		
+
 		sessionListener = new SessionListener() {
 			@Override
 			public void notificationHandler(SessionNotification n)
@@ -195,7 +195,7 @@ public class TabbedObjectView extends ViewPart
 			}
 		};
 		session.addListener(sessionListener);
-		
+
 		CommandBridge.getInstance().registerCommand("TabbedObjectView/selectTab", new Command() { //$NON-NLS-1$
 			@Override
 			public Object execute(String name, Object arg)
@@ -216,7 +216,7 @@ public class TabbedObjectView extends ViewPart
 			}
 		});
 	}
-	
+
 	/**
 	 * Create actions
 	 */
@@ -230,7 +230,7 @@ public class TabbedObjectView extends ViewPart
 			}
 		};
 	}
-	
+
 	/**
 	 * Fill action bars
 	 */
@@ -251,7 +251,7 @@ public class TabbedObjectView extends ViewPart
 		manager.add(new Separator());
 		manager.add(actionRefresh);
 	}
-	
+
 	/**
 	 * Fill local tool bar
 	 * @param manager
@@ -268,9 +268,8 @@ public class TabbedObjectView extends ViewPart
 	{
 	   if (objectId == 0)
 	      return;
-	   
-	   ConsoleJob job = new ConsoleJob(String.format("Refresh current object %d", objectId), this, Activator.PLUGIN_ID)
-      {
+
+      ConsoleJob job = new ConsoleJob(String.format("Synchronize object %d", objectId), this, Activator.PLUGIN_ID) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
@@ -287,12 +286,13 @@ public class TabbedObjectView extends ViewPart
          @Override
          protected String getErrorMessage()
          {
-            return "Error updating ";
+            return "Cannot synchronize object";
          }
       };
       job.setUser(false);
       job.start();	   
 	}
+
 	/**
 	 * Notify visible tabs about object update
 	 * 
@@ -321,7 +321,7 @@ public class TabbedObjectView extends ViewPart
 		if (objectId == getObjectId(object))
 			return;
 		objectId = getObjectId(object);
-		
+
 		// Current focus event may not be finished yet, so we have
 		// to wait for any outstanding events and only then start
 		// changing tabs. Otherwise runtime exception will be thrown.
@@ -403,9 +403,9 @@ public class TabbedObjectView extends ViewPart
 			focusControl.setFocus();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
-	 */
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
+    */
 	@Override
 	public void setFocus()
 	{
@@ -414,7 +414,7 @@ public class TabbedObjectView extends ViewPart
 		if (item != null)
 			((ObjectTab)item.getData()).selected();
 	}
-	
+
 	/**
 	 * Add all tabs
 	 */
@@ -436,7 +436,7 @@ public class TabbedObjectView extends ViewPart
 				Activator.log("Exception when instantiating object tab", e); //$NON-NLS-1$
 			}
 		}
-		
+
 		// Sort tabs by appearance order
 		Collections.sort(tabs, new Comparator<ObjectTab>() {
 			@Override
@@ -452,7 +452,7 @@ public class TabbedObjectView extends ViewPart
 			tab.create(tabFolder);
 		}
 	}
-	
+
 	/**
 	 * Select tab with given ID
 	 * 
@@ -475,7 +475,7 @@ public class TabbedObjectView extends ViewPart
    		}
 	   }
 	}
-	
+
 	/**
 	 * Handler for tab selection change
 	 * 
@@ -485,7 +485,7 @@ public class TabbedObjectView extends ViewPart
 	{
 	   if (activeTab == tab)
 	      return;
-	   
+
 	   if (activeTab != null)
 	      activeTab.unselected();
 
@@ -498,15 +498,15 @@ public class TabbedObjectView extends ViewPart
 	   {
 	      selectionProvider.setSelectionProviderDelegate(null);
 	   }
-	   
+
 	   activeTab = tab;
       if (sourceProvider != null)
          sourceProvider.updateProperty(SourceProvider.ACTIVE_TAB, tab);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#dispose()
-	 */
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#dispose()
+    */
 	@Override
 	public void dispose()
 	{

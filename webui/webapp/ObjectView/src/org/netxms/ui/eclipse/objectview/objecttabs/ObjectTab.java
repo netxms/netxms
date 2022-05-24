@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -41,7 +41,7 @@ public abstract class ObjectTab implements IPluginContribution
 {
 	protected String pluginId;
 	protected String id;
-	
+
 	private ViewPart viewPart;
 	private CTabFolder tabFolder;
 	private CTabItem tabItem;
@@ -62,18 +62,18 @@ public abstract class ObjectTab implements IPluginContribution
 	public void configure(IConfigurationElement ce, ViewPart viewPart)
 	{
 		this.viewPart = viewPart;
-		
+
 		pluginId = ce.getContributor().getName();
 		id = ce.getAttribute("id"); //$NON-NLS-1$
 		if (id == null)
 			id = "no_id"; //$NON-NLS-1$
-		
+
 		name = ce.getAttribute("name"); //$NON-NLS-1$
 		if (name == null)
 			name = "<noname>"; //$NON-NLS-1$
-		
-		contextId = ce.getAttribute("contextId");
-		
+
+		contextId = ce.getAttribute("contextId"); //$NON-NLS-1$
+
 		try
 		{
 			order = Integer.parseInt(ce.getAttribute("order"), 10); //$NON-NLS-1$
@@ -137,7 +137,7 @@ public abstract class ObjectTab implements IPluginContribution
          }
 		}
 	}
-	
+
    /**
     * Called by framework when tab is unselected.
     */
@@ -153,7 +153,7 @@ public abstract class ObjectTab implements IPluginContribution
          context = null;
       }
    }
-   
+
 	/**
 	 * Test if tab should be shown for given NetXMS object. Default implementation always returns true.
 	 * 
@@ -171,7 +171,7 @@ public abstract class ObjectTab implements IPluginContribution
 	 * @param object New object to display
 	 */
 	public abstract void objectChanged(AbstractObject object);
-	
+
 	/**
 	 * Change current object. Intended to be called only by parent view.
 	 * 
@@ -182,7 +182,7 @@ public abstract class ObjectTab implements IPluginContribution
 		this.object = object;
 		objectChanged(object);
 	}
-	
+
 	/**
 	 * Called by parent view to inform tab that update notification for
 	 * current object was received from server. Default implementation do nothing.
@@ -193,7 +193,7 @@ public abstract class ObjectTab implements IPluginContribution
 	public void currentObjectUpdated(AbstractObject object)
 	{
 	}
-	
+
 	/**
 	 * Show tab
 	 */
@@ -269,7 +269,7 @@ public abstract class ObjectTab implements IPluginContribution
 	{
 		return tabItem != null;
 	}
-	
+
 	/**
 	 * Check if this tab is currently active
 	 * 
@@ -353,18 +353,18 @@ public abstract class ObjectTab implements IPluginContribution
 		return null;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.IPluginContribution#getLocalId()
-	 */
+   /**
+    * @see org.eclipse.ui.IPluginContribution#getLocalId()
+    */
 	@Override
 	public String getLocalId()
 	{
 		return id;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.IPluginContribution#getPluginId()
-	 */
+   /**
+    * @see org.eclipse.ui.IPluginContribution#getPluginId()
+    */
 	@Override
 	public String getPluginId()
 	{
