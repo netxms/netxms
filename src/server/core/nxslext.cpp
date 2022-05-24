@@ -1499,7 +1499,7 @@ static int F_SNMPWalk(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM 
  * Return value:
  *     true on success
  */
-static int F_AgentExecuteAction(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+static int F_AgentExecuteAction(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
    if (argc < 2)
       return NXSL_ERR_INVALID_ARGUMENT_COUNT;
@@ -1523,12 +1523,12 @@ static int F_AgentExecuteAction(int argc, NXSL_Value **argv, NXSL_Value **ppResu
       for(int i = 2; (i < argc) && (i < 128); i++)
          list.add(argv[i]->getValueAsCString());
       uint32_t rcc = conn->executeCommand(argv[1]->getValueAsCString(), list, false, nullptr, nullptr);
-      *ppResult = vm->createValue(rcc == ERR_SUCCESS);
+      *result = vm->createValue(rcc == ERR_SUCCESS);
       nxlog_debug(5, _T("NXSL: F_AgentExecuteAction: action %s on node %s [%d]: RCC=%u"), argv[1]->getValueAsCString(), node->getName(), node->getId(), rcc);
    }
    else
    {
-      *ppResult = vm->createValue(0);
+      *result = vm->createValue(false);
    }
    return 0;
 }
