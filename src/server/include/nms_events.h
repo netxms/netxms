@@ -161,6 +161,7 @@ public:
    const Array *getParameterList() const { return &m_parameters; }
    const StringList *getParameterNames() const { return &m_parameterNames; }
 
+   void setLogWriteFlag(bool flag) { if (flag) m_flags |= EF_LOG; else m_flags &= ~EF_LOG; }
    void setSeverity(int severity) { m_severity = severity; }
    void setLastAlarmKey(const TCHAR *key) { m_lastAlarmKey = key; }
    void setLastAlarmMessage(const TCHAR *message) { m_lastAlarmMessage = message; }
