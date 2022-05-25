@@ -31,9 +31,13 @@ SSHSession::SSHSession(const InetAddress& addr, uint16_t port, int32_t id)
    m_port = port;
    m_session = nullptr;
    m_lastAccess = 0;
-   m_user[0] = 0;
    m_busy = false;
-   _sntprintf(m_name, MAX_SSH_SESSION_NAME_LEN, _T("nobody@%s:%d/%d"), m_addr.toString().cstr(), m_port, m_id);
+   m_name.append(_T("nobody@"));
+   m_name.append(m_addr.toString());
+   m_name.append(_T(':'));
+   m_name.append(m_port);
+   m_name.append(_T('/'));
+   m_name.append(m_id);
 }
 
 /**
@@ -47,9 +51,9 @@ SSHSession::~SSHSession()
 /**
  * Check if session match for given target
  */
-bool SSHSession::match(const InetAddress& addr, uint16_t port, const TCHAR *user) const
+bool SSHSession::match(const InetAddress& addr, uint16_t port, const TCHAR *login) const
 {
-   return addr.equals(m_addr) && (port == m_port) && !_tcscmp(m_user, user);
+   return addr.equals(m_addr) && (port == m_port) && !_tcscmp(m_login, login);
 }
 
 /**
@@ -160,20 +164,26 @@ bool SSHSession::connect(const TCHAR *user, const TCHAR *password, const shared_
          }
          else
          {
-            nxlog_debug_tag(DEBUG_TAG, 6, _T("SSHSession::connect: login with password as %s on %s:%d failed (%hs)"), user, (const TCHAR *)m_addr.toString(), m_port, ssh_get_error(m_session));
+            nxlog_debug_tag(DEBUG_TAG, 6, _T("SSHSession::connect: login with password as %s on %s:%d failed (%hs)"), user, m_addr.toString().cstr(), m_port, ssh_get_error(m_session));
          }
       }
    }
    else
    {
-      nxlog_debug_tag(DEBUG_TAG, 6, _T("SSHSession::connect: connect to %s:%d failed (%hs)"), (const TCHAR *)m_addr.toString(), m_port, ssh_get_error(m_session));
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("SSHSession::connect: connect to %s:%d failed (%hs)"), m_addr.toString().cstr(), m_port, ssh_get_error(m_session));
    }
 
    if (success)
    {
-      _tcslcpy(m_user, user, MAX_SSH_LOGIN_LEN);
-      _sntprintf(m_name, MAX_SSH_SESSION_NAME_LEN, _T("%s@%s:%d/%d"), m_user, (const TCHAR *)m_addr.toString(), m_port, m_id);
-      m_lastAccess = time(NULL);
+      m_login = user;
+      m_name = user;
+      m_name.append(_T('@'));
+      m_name.append(m_addr.toString());
+      m_name.append(_T(':'));
+      m_name.append(m_port);
+      m_name.append(_T('/'));
+      m_name.append(m_id);
+      m_lastAccess = time(nullptr);
    }
    else
    {
@@ -181,7 +191,7 @@ bool SSHSession::connect(const TCHAR *user, const TCHAR *password, const shared_
       if (ssh_is_connected(m_session))
          ssh_disconnect(m_session);
       ssh_free(m_session);
-      m_session = NULL;
+      m_session = nullptr;
    }
    return success;
 }

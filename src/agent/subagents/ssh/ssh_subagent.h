@@ -28,7 +28,6 @@
 #include <nms_agent.h>
 #include <libssh/libssh.h>
 
-#define MAX_SSH_SESSION_NAME_LEN (MAX_SSH_LOGIN_LEN + MAX_DNS_NAME + 16)
 #define DEBUG_TAG _T("ssh")
 
 /**
@@ -54,13 +53,13 @@ class SSHSession
 {
 private:
    int32_t m_id;
+   StringBuffer m_name;
    InetAddress m_addr;
    uint16_t m_port;
-   TCHAR m_user[MAX_SSH_LOGIN_LEN];
+   StringBuffer m_login;
    ssh_session m_session;
    time_t m_lastAccess;
    bool m_busy;
-   TCHAR m_name[MAX_SSH_SESSION_NAME_LEN];
 
    bool execute(const TCHAR *command, StringList* output, ActionExecutionContext* context);
 
@@ -72,11 +71,11 @@ public:
    void disconnect();
    bool isConnected() const { return (m_session != nullptr) && ssh_is_connected(m_session); }
 
-   const TCHAR *getName() const { return m_name; }
+   const TCHAR *getName() const { return m_name.cstr(); }
    time_t getLastAccessTime() const { return m_lastAccess; }
    bool isBusy() const { return m_busy; }
 
-   bool match(const InetAddress& addr, uint16_t port, const TCHAR *user) const;
+   bool match(const InetAddress& addr, uint16_t port, const TCHAR *login) const;
 
    bool acquire();
    void release();
