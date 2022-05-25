@@ -1173,8 +1173,8 @@ enum class ShutdownReason
  */
 struct SSHCredentials
 {
-   TCHAR login[MAX_SSH_LOGIN_LEN];
-   TCHAR password[MAX_SSH_PASSWORD_LEN];
+   TCHAR login[MAX_USER_NAME];
+   TCHAR password[MAX_PASSWORD];
    uint32_t keyId;
 };
 
