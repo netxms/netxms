@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -60,9 +60,9 @@ public class ObjectPolling extends PropertyPage
 	private List<Button> flagButtons = new ArrayList<Button>();
 	private List<Integer> flagValues = new ArrayList<Integer>();
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createContents(Composite parent)
 	{
@@ -133,7 +133,7 @@ public class ObjectPolling extends PropertyPage
 		{
    		addFlag(optionsGroup, AbstractNode.NF_DISABLE_SNMP, Messages.get().NodePolling_OptDisableSNMP);
    		addFlag(optionsGroup, AbstractNode.NF_DISABLE_ICMP, Messages.get().NodePolling_OptDisableICMP);
-         addFlag(optionsGroup, AbstractNode.NF_DISABLE_SSH, "Disable SSH state checking for all polls");
+         addFlag(optionsGroup, AbstractNode.NF_DISABLE_SSH, "Disable SS&H usage for all polls");
 		}
       if (object.canUseEtherNetIP())
          addFlag(optionsGroup, AbstractNode.NF_DISABLE_ETHERNET_IP, Messages.get().NodePolling_OptDisableEtherNetIP);
@@ -149,7 +149,7 @@ public class ObjectPolling extends PropertyPage
       }
 		addFlag(optionsGroup, AbstractNode.DCF_DISABLE_DATA_COLLECT, Messages.get().NodePolling_OptDisableDataCollection);
       if (object.canHaveAgent())
-         addFlag(optionsGroup, AbstractNode.NF_DISABLE_PERF_COUNT, "Disable reading of Windows performance counters metadata");
+         addFlag(optionsGroup, AbstractNode.NF_DISABLE_PERF_COUNT, "Disable reading of &Windows performance counters metadata");
 
 		/* use ifXTable */
       if (object.canHaveInterfaces())
