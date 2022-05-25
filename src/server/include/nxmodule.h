@@ -103,7 +103,7 @@ typedef struct
    int (*pfClientCommandHandler)(UINT32 dwCommand, NXCPMessage *pMsg, ClientSession *pSession);
    int (*pfMobileDeviceCommandHandler)(uint32_t dwCommand, NXCPMessage *pMsg, MobileDeviceSession *pSession);
    bool (*pfTrapHandler)(SNMP_PDU *pdu, const shared_ptr<Node>& node);
-   bool (*pfEventHandler)(Event *event);
+   void (*pfEventHandler)(Event *event);
    void (*pfAlarmChangeHook)(uint32_t changeCode, const Alarm *alarm);
 	void (*pfStatusPollHook)(Node *node, ClientSession *session, uint32_t rqId, PollerInfo *poller);
 	bool (*pfConfPollHook)(Node *node, ClientSession *session, uint32_t rqId, PollerInfo *poller);
