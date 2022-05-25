@@ -369,8 +369,8 @@ int main(int argc, char *argv[])
             break;
          case 'c':   // Configuration file
 #ifdef UNICODE
-				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, g_configFile, MAX_PATH);
-				g_configFile[MAX_PATH - 1] = 0;
+            MultiByteToWideCharSysLocale(optarg, g_configFile, MAX_PATH);
+            g_configFile[MAX_PATH - 1] = 0;
 #else
             strlcpy(g_configFile, optarg, MAX_PATH);
 #endif
@@ -378,8 +378,8 @@ int main(int argc, char *argv[])
 #if !defined(_WIN32)
          case 'p':   // PID file
 #ifdef UNICODE
-				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, g_pidFile, MAX_PATH);
-				g_pidFile[MAX_PATH - 1] = 0;
+            MultiByteToWideCharSysLocale(optarg, g_pidFile, MAX_PATH);
+            g_pidFile[MAX_PATH - 1] = 0;
 #else
             strlcpy(g_pidFile, optarg, MAX_PATH);
 #endif
