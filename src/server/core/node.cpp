@@ -178,8 +178,6 @@ Node::Node() : super(Pollable::STATUS | Pollable::CONFIGURATION | Pollable::DISC
    m_snmpTrapLastTotal = 0;
    m_snmpTrapStormLastCheckTime = 0;
    m_snmpTrapStormActualDuration = 0;
-   m_sshLogin[0] = 0;
-   m_sshPassword[0] = 0;
    m_sshKeyId = 0;
    m_sshPort = SSH_PORT;
    m_sshProxy = 0;
@@ -202,16 +200,16 @@ Node::Node() : super(Pollable::STATUS | Pollable::CONFIGURATION | Pollable::DISC
 /**
  * Create new node from new node data
  */
-Node::Node(const NewNodeData *newNodeData, UINT32 flags) : super(Pollable::STATUS | Pollable::CONFIGURATION | Pollable::DISCOVERY | Pollable::TOPOLOGY | Pollable::ROUTING_TABLE | Pollable::ICMP),
-         m_topologyMutex(MutexType::FAST), m_routingTableMutex(MutexType::FAST)
+Node::Node(const NewNodeData *newNodeData, uint32_t flags) : super(Pollable::STATUS | Pollable::CONFIGURATION | Pollable::DISCOVERY | Pollable::TOPOLOGY | Pollable::ROUTING_TABLE | Pollable::ICMP),
+         m_topologyMutex(MutexType::FAST), m_routingTableMutex(MutexType::FAST), m_primaryHostName(newNodeData->ipAddr.toString()), m_ipAddress(newNodeData->ipAddr),
+         m_sshLogin(newNodeData->sshLogin), m_sshPassword(newNodeData->sshPassword)
+
 {
    m_runtimeFlags |= ODF_CONFIGURATION_POLL_PENDING;
-   m_primaryHostName = newNodeData->ipAddr.toString();
    m_status = STATUS_UNKNOWN;
    m_type = NODE_TYPE_UNKNOWN;
    m_subType[0] = 0;
    m_hypervisorType[0] = 0;
-   m_ipAddress = newNodeData->ipAddr;
    m_capabilities = 0;
    m_flags = flags;
    m_zoneUIN = newNodeData->zoneUIN;
@@ -299,8 +297,6 @@ Node::Node(const NewNodeData *newNodeData, UINT32 flags) : super(Pollable::STATU
    m_snmpTrapLastTotal = 0;
    m_snmpTrapStormLastCheckTime = 0;
    m_snmpTrapStormActualDuration = 0;
-   _tcslcpy(m_sshLogin, newNodeData->sshLogin, MAX_SSH_LOGIN_LEN);
-   _tcslcpy(m_sshPassword, newNodeData->sshPassword, MAX_SSH_PASSWORD_LEN);
    m_sshKeyId = 0;
    m_sshPort = newNodeData->sshPort;
    m_sshProxy = newNodeData->sshProxyId;
@@ -494,8 +490,8 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    m_snmpTrapLastTotal = m_snmpTrapCount;
    m_type = (NodeType)DBGetFieldLong(hResult, 0, 36);
    DBGetField(hResult, 0, 37, m_subType, MAX_NODE_SUBTYPE_LENGTH);
-   DBGetField(hResult, 0, 38, m_sshLogin, MAX_SSH_LOGIN_LEN);
-   DBGetField(hResult, 0, 39, m_sshPassword, MAX_SSH_PASSWORD_LEN);
+   m_sshLogin = DBGetFieldAsSharedString(hResult, 0, 38);
+   m_sshPassword = DBGetFieldAsSharedString(hResult, 0, 39);
    m_sshProxy = DBGetFieldULong(hResult, 0, 40);
    m_portRowCount = DBGetFieldULong(hResult, 0, 41);
    m_portNumberingScheme = DBGetFieldULong(hResult, 0, 42);
@@ -943,8 +939,8 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
          DBBind(hStmt, 15, DB_SQLTYPE_INTEGER, m_agentProxy);
          DBBind(hStmt, 16, DB_SQLTYPE_INTEGER, m_snmpProxy);
          DBBind(hStmt, 17, DB_SQLTYPE_INTEGER, m_icmpProxy);
-         DBBind(hStmt, 18, DB_SQLTYPE_INTEGER, (LONG)m_requiredPollCount);
-         DBBind(hStmt, 19, DB_SQLTYPE_INTEGER, (LONG)m_nUseIfXTable);
+         DBBind(hStmt, 18, DB_SQLTYPE_INTEGER, static_cast<int32_t>(m_requiredPollCount));
+         DBBind(hStmt, 19, DB_SQLTYPE_INTEGER, static_cast<int32_t>(m_nUseIfXTable));
 #ifdef UNICODE
          DBBind(hStmt, 20, DB_SQLTYPE_VARCHAR, WideStringFromMBString(m_snmpSecurity->getAuthPassword()), DB_BIND_DYNAMIC);
          DBBind(hStmt, 21, DB_SQLTYPE_VARCHAR, WideStringFromMBString(m_snmpSecurity->getPrivPassword()), DB_BIND_DYNAMIC);
@@ -952,26 +948,26 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
          DBBind(hStmt, 20, DB_SQLTYPE_VARCHAR, m_snmpSecurity->getAuthPassword(), DB_BIND_STATIC);
          DBBind(hStmt, 21, DB_SQLTYPE_VARCHAR, m_snmpSecurity->getPrivPassword(), DB_BIND_STATIC);
 #endif
-         DBBind(hStmt, 22, DB_SQLTYPE_INTEGER, (LONG)snmpMethods);
+         DBBind(hStmt, 22, DB_SQLTYPE_INTEGER, static_cast<int32_t>(snmpMethods));
          DBBind(hStmt, 23, DB_SQLTYPE_VARCHAR, m_sysName, DB_BIND_STATIC, 127);
          DBBind(hStmt, 24, DB_SQLTYPE_VARCHAR, BinToStr(m_baseBridgeAddress, MAC_ADDR_LENGTH, baseAddress), DB_BIND_STATIC);
-         DBBind(hStmt, 25, DB_SQLTYPE_INTEGER, (LONG)m_downSince);
+         DBBind(hStmt, 25, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_downSince));
          DBBind(hStmt, 26, DB_SQLTYPE_VARCHAR, (m_driver != nullptr) ? m_driver->getName() : _T(""), DB_BIND_STATIC);
          DBBind(hStmt, 27, DB_SQLTYPE_VARCHAR, m_rackImageFront);   // rack image front
          DBBind(hStmt, 28, DB_SQLTYPE_INTEGER, m_rackPosition); // rack position
          DBBind(hStmt, 29, DB_SQLTYPE_INTEGER, m_rackHeight);   // device height in rack units
          DBBind(hStmt, 30, DB_SQLTYPE_INTEGER, m_physicalContainer);   // rack ID
-         DBBind(hStmt, 31, DB_SQLTYPE_INTEGER, (LONG)m_bootTime);
+         DBBind(hStmt, 31, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_bootTime));
          DBBind(hStmt, 32, DB_SQLTYPE_VARCHAR, _itot(m_agentCacheMode, cacheMode, 10), DB_BIND_STATIC, 1);
          DBBind(hStmt, 33, DB_SQLTYPE_VARCHAR, m_sysContact, DB_BIND_STATIC, 127);
          DBBind(hStmt, 34, DB_SQLTYPE_VARCHAR, m_sysLocation, DB_BIND_STATIC, 255);
-         DBBind(hStmt, 35, DB_SQLTYPE_INTEGER, (LONG)m_lastAgentCommTime);
+         DBBind(hStmt, 35, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_lastAgentCommTime));
          DBBind(hStmt, 36, DB_SQLTYPE_BIGINT, m_syslogMessageCount);
          DBBind(hStmt, 37, DB_SQLTYPE_BIGINT, m_snmpTrapCount);
-         DBBind(hStmt, 38, DB_SQLTYPE_INTEGER, (INT32)m_type);
+         DBBind(hStmt, 38, DB_SQLTYPE_INTEGER, static_cast<int32_t>(m_type));
          DBBind(hStmt, 39, DB_SQLTYPE_VARCHAR, m_subType, DB_BIND_STATIC);
-         DBBind(hStmt, 40, DB_SQLTYPE_VARCHAR, m_sshLogin, DB_BIND_STATIC);
-         DBBind(hStmt, 41, DB_SQLTYPE_VARCHAR, m_sshPassword, DB_BIND_STATIC);
+         DBBind(hStmt, 40, DB_SQLTYPE_VARCHAR, m_sshLogin, DB_BIND_STATIC, 63);
+         DBBind(hStmt, 41, DB_SQLTYPE_VARCHAR, m_sshPassword, DB_BIND_STATIC, 63);
          DBBind(hStmt, 42, DB_SQLTYPE_INTEGER, m_sshKeyId);
          DBBind(hStmt, 43, DB_SQLTYPE_INTEGER, static_cast<int32_t>(m_sshPort));
          DBBind(hStmt, 44, DB_SQLTYPE_INTEGER, m_sshProxy);
@@ -980,9 +976,9 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
          DBBind(hStmt, 47, DB_SQLTYPE_VARCHAR, _itot(m_agentCompressionMode, compressionMode, 10), DB_BIND_STATIC, 1);
          DBBind(hStmt, 48, DB_SQLTYPE_VARCHAR, m_tunnelId);
          DBBind(hStmt, 49, DB_SQLTYPE_VARCHAR, m_lldpNodeId, DB_BIND_STATIC);
-         DBBind(hStmt, 50, DB_SQLTYPE_INTEGER, (LONG)m_failTimeSNMP);
-         DBBind(hStmt, 51, DB_SQLTYPE_INTEGER, (LONG)m_failTimeAgent);
-         DBBind(hStmt, 52, DB_SQLTYPE_INTEGER, (LONG)m_failTimeSSH);
+         DBBind(hStmt, 50, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_failTimeSNMP));
+         DBBind(hStmt, 51, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_failTimeAgent));
+         DBBind(hStmt, 52, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_failTimeSSH));
          DBBind(hStmt, 53, DB_SQLTYPE_INTEGER, m_rackOrientation);
          DBBind(hStmt, 54, DB_SQLTYPE_VARCHAR, m_rackImageRear);
          DBBind(hStmt, 55, DB_SQLTYPE_VARCHAR, m_agentId);
@@ -5383,7 +5379,10 @@ bool Node::confPollSnmp(uint32_t requestId)
  */
 bool Node::checkSshConnection()
 {
-   return SSHCheckConnection(getEffectiveSshProxy(), m_ipAddress, m_sshPort, m_sshLogin, m_sshPassword, m_sshKeyId);
+   SharedString sshLogin = getSshLogin(); // Use getter instead of direct access because we need proper lock
+   if (sshLogin.isNull() || sshLogin.isEmpty())
+      return false;
+   return SSHCheckConnection(getEffectiveSshProxy(), m_ipAddress, m_sshPort, sshLogin, getSshPassword(), m_sshKeyId);
 }
 
 /**
@@ -5406,8 +5405,8 @@ bool Node::confPollSsh(uint32_t requestId)
       {
          lockProperties();
          m_sshPort = port;
-         _tcslcpy(m_sshLogin, credentials.login, MAX_SSH_LOGIN_LEN);
-         _tcslcpy(m_sshPassword, credentials.password, MAX_SSH_PASSWORD_LEN);
+         m_sshLogin = credentials.login;
+         m_sshPassword = credentials.password;
          m_sshKeyId = credentials.keyId;
          unlockProperties();
          modified = true;
@@ -5419,11 +5418,13 @@ bool Node::confPollSsh(uint32_t requestId)
    {
       sendPollerMsg(POLLER_INFO _T("   SSH connection is available\r\n"));
       nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 7, _T("ConfPoll(%s): SSH connected"), m_name);
+      lockProperties();
       if (!(m_capabilities & NC_IS_SSH))
       {
          m_capabilities |= NC_IS_SSH;
          modified = true;
       }
+      unlockProperties();
    }
    else
    {
@@ -7952,10 +7953,10 @@ uint32_t Node::modifyFromMessageInternal(const NXCPMessage& msg)
       m_sshProxy = msg.getFieldAsUInt32(VID_SSH_PROXY);
 
    if (msg.isFieldExist(VID_SSH_LOGIN))
-      msg.getFieldAsString(VID_SSH_LOGIN, m_sshLogin, MAX_SSH_LOGIN_LEN);
+      m_sshLogin = msg.getFieldAsSharedString(VID_SSH_LOGIN);
 
    if (msg.isFieldExist(VID_SSH_PASSWORD))
-      msg.getFieldAsString(VID_SSH_PASSWORD, m_sshPassword, MAX_SSH_PASSWORD_LEN);
+      m_sshPassword = msg.getFieldAsSharedString(VID_SSH_PASSWORD);
 
    if (msg.isFieldExist(VID_SSH_KEY_ID))
       m_sshKeyId = msg.getFieldAsUInt32(VID_SSH_KEY_ID);
@@ -10949,10 +10950,8 @@ const TCHAR *Node::typeName(NodeType type)
 void Node::setSshCredentials(const TCHAR *login, const TCHAR *password)
 {
    lockProperties();
-   if (login != nullptr)
-      _tcslcpy(m_sshLogin, login, MAX_SSH_LOGIN_LEN);
-   if (password != nullptr)
-      _tcslcpy(m_sshPassword, password, MAX_SSH_PASSWORD_LEN);
+   m_sshLogin = login;
+   m_sshPassword = password;
    setModified(MODIFY_NODE_PROPERTIES);
    unlockProperties();
 }

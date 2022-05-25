@@ -675,8 +675,8 @@ StructArray<SSHCredentials> GetSSHCredentials(int32_t zoneUIN)
          for (int i = 0; i < count; i++)
          {
             SSHCredentials *c = credentials.addPlaceholder();
-            DBGetField(hResult, i, 0, c->login, MAX_SSH_LOGIN_LEN);
-            DBGetField(hResult, i, 1, c->password, MAX_SSH_PASSWORD_LEN);
+            DBGetField(hResult, i, 0, c->login, MAX_USER_NAME);
+            DBGetField(hResult, i, 1, c->password, MAX_PASSWORD);
             c->keyId = DBGetFieldULong(hResult, i, 2);
          }
          DBFreeResult(hResult);
@@ -702,8 +702,8 @@ void ZoneSSHCredentialsListToMessage(int32_t zoneUIN, NXCPMessage *msg)
       DB_RESULT hResult = DBSelectPrepared(hStmt);
       if (hResult != nullptr)
       {
-         TCHAR loginBuff[MAX_SSH_LOGIN_LEN];
-         TCHAR passwordBuff[MAX_SSH_PASSWORD_LEN];
+         TCHAR loginBuff[MAX_USER_NAME];
+         TCHAR passwordBuff[MAX_PASSWORD];
 
          int count = DBGetNumRows(hResult);
          msg->setField(VID_NUM_ELEMENTS, count);
@@ -711,8 +711,8 @@ void ZoneSSHCredentialsListToMessage(int32_t zoneUIN, NXCPMessage *msg)
          uint32_t fieldId = VID_ELEMENT_LIST_BASE;
          for (int i = 0; i < count; i++, fieldId += 7)
          {
-            msg->setField(fieldId++, DBGetField(hResult, i, 0, loginBuff, MAX_SSH_LOGIN_LEN));
-            msg->setField(fieldId++, DBGetField(hResult, i, 1, passwordBuff, MAX_SSH_PASSWORD_LEN));
+            msg->setField(fieldId++, DBGetField(hResult, i, 0, loginBuff, MAX_USER_NAME));
+            msg->setField(fieldId++, DBGetField(hResult, i, 1, passwordBuff, MAX_PASSWORD));
             msg->setField(fieldId++, DBGetFieldLong(hResult, i, 2));
          }
 
@@ -741,8 +741,8 @@ void FullSSHCredentialsListToMessage(uint32_t userId, NXCPMessage *msg)
    DB_RESULT hResult = DBSelect(hdb, _T("SELECT zone_uin,login,password,key_id FROM ssh_credentials ORDER BY zone_uin,id"));
    if (hResult != nullptr)
    {
-      TCHAR loginBuff[MAX_SSH_LOGIN_LEN];
-      TCHAR passwordBuff[MAX_SSH_PASSWORD_LEN];
+      TCHAR loginBuff[MAX_USER_NAME];
+      TCHAR passwordBuff[MAX_PASSWORD];
 
       int dbRecordCount = DBGetNumRows(hResult);
       uint32_t elementCount = 0;
@@ -753,8 +753,8 @@ void FullSSHCredentialsListToMessage(uint32_t userId, NXCPMessage *msg)
          if (CheckZoneAccess(zoneUIN, userId))
          {
             msg->setField(fieldId++, zoneUIN);
-            msg->setField(fieldId++, DBGetField(hResult, i, 1, loginBuff, MAX_SSH_LOGIN_LEN));
-            msg->setField(fieldId++, DBGetField(hResult, i, 2, passwordBuff, MAX_SSH_PASSWORD_LEN));
+            msg->setField(fieldId++, DBGetField(hResult, i, 1, loginBuff, MAX_USER_NAME));
+            msg->setField(fieldId++, DBGetField(hResult, i, 2, passwordBuff, MAX_PASSWORD));
             msg->setField(fieldId++, DBGetFieldLong(hResult, i, 3));
             fieldId += 6;
             elementCount++;

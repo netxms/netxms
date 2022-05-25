@@ -739,8 +739,8 @@ struct NXCORE_EXPORTABLE NewNodeData
    uint32_t icmpProxyId;
    uint32_t sshProxyId;
    uint32_t webServiceProxyId;
-   TCHAR sshLogin[MAX_SSH_LOGIN_LEN];
-   TCHAR sshPassword[MAX_SSH_PASSWORD_LEN];
+   TCHAR sshLogin[MAX_USER_NAME];
+   TCHAR sshPassword[MAX_PASSWORD];
    uint16_t sshPort;
    shared_ptr<Cluster> cluster;
    int32_t zoneUIN;
@@ -2738,8 +2738,8 @@ protected:
    TCHAR *m_description; //brief description
    time_t m_lastConnectionTime;
    uint32_t m_frameCount; //zero when no info
-   INT32 m_signalStrenght; //+1 when no information(cannot be +)
-   INT32 m_signalNoise; //*10 from origin number //MAX_INT32 when no value
+   int32_t m_signalStrenght; //+1 when no information(cannot be +)
+   int32_t m_signalNoise; //*10 from origin number //MAX_INT32 when no value
    uint32_t m_frequency; //*10 from origin number // 0 when no value
    uint32_t m_proxyNodeId;
 
@@ -3137,8 +3137,8 @@ protected:
    int64_t m_snmpTrapLastTotal;
    time_t m_snmpTrapStormLastCheckTime;
    uint32_t m_snmpTrapStormActualDuration;
-   TCHAR m_sshLogin[MAX_SSH_LOGIN_LEN];
-   TCHAR m_sshPassword[MAX_SSH_PASSWORD_LEN];
+   SharedString m_sshLogin;
+   SharedString m_sshPassword;
    uint32_t m_sshKeyId;
    uint16_t m_sshPort;
    uint32_t m_sshProxy;
@@ -3243,7 +3243,7 @@ protected:
 
 public:
    Node();
-   Node(const NewNodeData *newNodeData, UINT32 flags);
+   Node(const NewNodeData *newNodeData, uint32_t flags);
    virtual ~Node();
 
    shared_ptr<Node> self() { return static_pointer_cast<Node>(NObject::self()); }
@@ -3359,8 +3359,8 @@ public:
    int16_t getRackPosition() const { return m_rackPosition; }
    bool hasFileUpdateConnection() const { lockProperties(); bool result = (m_fileUpdateConnection != nullptr); unlockProperties(); return result; }
    uint32_t getIcmpProxy() const { return m_icmpProxy; }
-   const TCHAR *getSshLogin() const { return m_sshLogin; }
-   const TCHAR *getSshPassword() const { return m_sshPassword; }
+   SharedString getSshLogin() const { return GetAttributeWithLock(m_sshLogin, m_mutexProperties); }
+   SharedString getSshPassword() const { return GetAttributeWithLock(m_sshPassword, m_mutexProperties); }
    uint16_t getSshPort() const { return m_sshPort; }
    uint32_t getSshKeyId() const { return m_sshKeyId; }
    uint32_t getSshProxy() const { return m_sshProxy; }
