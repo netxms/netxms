@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -172,6 +172,7 @@ public class Polling extends ObjectPropertyPage
 		{
    		addFlag(optionsGroup, AbstractNode.NF_DISABLE_SNMP, i18n.tr("Disable usage of &SNMP for all polls"));
    		addFlag(optionsGroup, AbstractNode.NF_DISABLE_ICMP, i18n.tr("Disable usage of &ICMP pings for status polling"));
+         addFlag(optionsGroup, AbstractNode.NF_DISABLE_SSH, i18n.tr("Disable SS&H usage for all polls"));
 		}
       if (pollingTarget.canUseEtherNetIP())
          addFlag(optionsGroup, AbstractNode.NF_DISABLE_ETHERNET_IP, i18n.tr("Disable usage of &EtherNet/IP for all polls"));
@@ -182,12 +183,12 @@ public class Polling extends ObjectPropertyPage
       if (pollingTarget.canHaveInterfaces())
       {
    		addFlag(optionsGroup, AbstractNode.NF_DISABLE_ROUTE_POLL, i18n.tr("Disable &routing table polling"));
-   		addFlag(optionsGroup, AbstractNode.NF_DISABLE_TOPOLOGY_POLL, i18n.tr("Disable &topology polling"));
+         addFlag(optionsGroup, AbstractNode.NF_DISABLE_TOPOLOGY_POLL, i18n.tr("Disable to&pology polling"));
    		addFlag(optionsGroup, AbstractNode.NF_DISABLE_DISCOVERY_POLL, i18n.tr("Disable network &discovery polling"));
       }
 		addFlag(optionsGroup, AbstractNode.DCF_DISABLE_DATA_COLLECT, i18n.tr("Disable data c&ollection"));
       if (pollingTarget.canHaveAgent())
-         addFlag(optionsGroup, AbstractNode.NF_DISABLE_PERF_COUNT, "Disable reading of Windows performance counters metadata");
+         addFlag(optionsGroup, AbstractNode.NF_DISABLE_PERF_COUNT, "Disable reading of &Windows performance counters metadata");
 
 		/* use ifXTable */
       if (pollingTarget.canHaveInterfaces())
