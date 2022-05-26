@@ -16031,8 +16031,8 @@ void ClientSession::executeSshCommand(const NXCPMessage& request)
                msg.setField(VID_RCC, AgentErrorToRCC(rcc));
                if (rcc == ERR_SUCCESS)
                {
-                  writeAuditLog(AUDIT_OBJECTS, true, node->getId(),  _T("Executed SSH command \"%s\", ip: %s:%u, login: %s"),
-                     command, node->getIpAddress().toString(ipAddr), node->getSshPort(), node->getSshLogin());
+                  writeAuditLog(AUDIT_OBJECTS, true, node->getId(),  _T("Executed SSH command \"%s\" on %s:%u as %s"),
+                        command, node->getIpAddress().toString(ipAddr), node->getSshPort(), node->getSshLogin().cstr());
                }
             }
             else
