@@ -77,6 +77,7 @@
 #define MAX_AGENT_MSG_SIZE (16 * 1024 * 1024)   // 16MB
 
 #define AF_DAEMON                   0x00000001
+#define AF_DISABLE_LOCAL_DATABASE   0x00000002
 #define AF_SUBAGENT_LOADER          0x00000004
 #define AF_REQUIRE_AUTH             0x00000008
 #define AF_ENABLE_ACTIONS           0x00000010

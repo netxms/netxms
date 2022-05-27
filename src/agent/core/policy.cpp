@@ -266,6 +266,12 @@ static uint32_t DeployPolicy(const uuid& guid, const BYTE *content, size_t size,
  */
 uint32_t DeployPolicy(NXCPMessage *request, uint64_t serverId, const TCHAR *serverInfo)
 {
+   if (g_dwFlags & AF_DISABLE_LOCAL_DATABASE)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 3, _T("Policy deployment: local database is disabled, reject policy deployment request"));
+      return ERR_AGENT_DB_FAILURE;
+   }
+
    if (!request->isFieldExist(VID_POLICY_TYPE))
    {
       nxlog_debug_tag(DEBUG_TAG, 3, _T("Policy deployment: missing VID_POLICY_TYPE in request message"));

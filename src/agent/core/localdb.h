@@ -34,9 +34,9 @@ void CloseLocalDatabase();
 DB_HANDLE GetLocalDatabaseHandle();
 
 TCHAR *ReadMetadata(const TCHAR *attr, TCHAR *buffer);
-INT32 ReadMetadataAsInt(const TCHAR *attr);
+int32_t ReadMetadataAsInt(const TCHAR *attr);
 bool WriteMetadata(const TCHAR *name, const TCHAR *value);
-bool WriteMetadata(const TCHAR *name, INT32 value);
+bool WriteMetadata(const TCHAR *name, int32_t value);
 
 bool UpgradeDatabase();
 

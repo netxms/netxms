@@ -890,6 +890,12 @@ AC_ARG_WITH(rpi-agent,
 	COMPONENTS="$COMPONENTS raspberrypi"
 ])
 
+AC_ARG_WITH(openwrt,
+[AS_HELP_STRING(--with-openwrt,build for OpenWrt platform)],
+[
+	AC_DEFINE(_OPENWRT, 1, Define to 1 when building for OpenWrt platform)
+])
+
 AC_ARG_ENABLE(ldap,
 [AS_HELP_STRING(--disable-ldap,disable LDAP support)],
 [
