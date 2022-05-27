@@ -191,7 +191,11 @@ enum class Command
  * Global variables
  */
 uuid g_agentId;
+#if _OPENWRT
+uint32_t g_dwFlags = AF_ENABLE_ACTIONS | AF_DISABLE_LOCAL_DATABASE;
+#else
 uint32_t g_dwFlags = AF_ENABLE_ACTIONS | AF_REQUIRE_ENCRYPTION;
+#endif
 uint32_t g_failFlags = 0;
 TCHAR g_szLogFile[MAX_PATH] = AGENT_DEFAULT_LOG;
 TCHAR g_szSharedSecret[MAX_SECRET_LENGTH] = _T("admin");
@@ -324,6 +328,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("DefaultExecutionTimeout"), CT_LONG, 0, 0, 0, 0, &s_defaultExecutionTimeout, nullptr },
    { _T("DisableIPv4"), CT_BOOLEAN_FLAG_32, 0, 0, AF_DISABLE_IPV4, 0, &g_dwFlags, nullptr },
    { _T("DisableIPv6"), CT_BOOLEAN_FLAG_32, 0, 0, AF_DISABLE_IPV6, 0, &g_dwFlags, nullptr },
+   { _T("DisableLocalDatabase"), CT_BOOLEAN_FLAG_32, 0, 0, AF_DISABLE_LOCAL_DATABASE, 0, &g_dwFlags, nullptr },
 #ifdef _WIN32
    { _T("DumpDirectory"), CT_STRING, 0, 0, MAX_PATH, 0, s_dumpDirectory, nullptr },
 #endif
@@ -1091,9 +1096,16 @@ BOOL Initialize()
 #endif
 
    DBInit();
-   if (!OpenLocalDatabase())
+   if (!(g_dwFlags & AF_DISABLE_LOCAL_DATABASE))
    {
-      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_LOCALDB, _T("Local database unavailable"));
+      if (!OpenLocalDatabase())
+      {
+         nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_LOCALDB, _T("Local database unavailable"));
+      }
+   }
+   else
+   {
+      nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_LOCALDB, _T("Local database is disabled"));
    }
 
    TCHAR agentIdText[MAX_DB_STRING];

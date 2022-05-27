@@ -1,6 +1,6 @@
 /*
 ** NetXMS subagent for GNU/Linux
-** Copyright (C) 2013-2021 Victor Kirhenshtein
+** Copyright (C) 2013-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -26,6 +26,9 @@
  */
 LONG H_InstalledProducts(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *session)
 {
+#if _OPENWRT
+   const char *command = "opkg | awk -e '{ print \"@@@ #\" $1 \"|\" $3 \"||||\" }'";
+#else
    const char *command;
    if (access("/bin/rpm", X_OK) == 0)
    {
@@ -39,6 +42,7 @@ LONG H_InstalledProducts(const TCHAR *cmd, const TCHAR *arg, Table *value, Abstr
 	{
 		return SYSINFO_RC_UNSUPPORTED;
 	}
+#endif
 
    struct utsname un;
    const char *arch;

@@ -37,14 +37,14 @@ static DB_HANDLE s_db = nullptr;
  */
 TCHAR *ReadMetadata(const TCHAR *attr, TCHAR *buffer)
 {
-   if (s_db == NULL)
-      return NULL;
+   if (s_db == nullptr)
+      return nullptr;
 
    TCHAR query[256], *value = nullptr;
    _sntprintf(query, 256, _T("SELECT value FROM metadata WHERE attribute='%s'"), attr);
 
    DB_RESULT hResult = DBSelect(s_db, query);
-   if (hResult != NULL)
+   if (hResult != nullptr)
    {
       if (DBGetNumRows(hResult) > 0)
          value = DBGetField(hResult, 0, 0, buffer, MAX_DB_STRING);
@@ -56,12 +56,12 @@ TCHAR *ReadMetadata(const TCHAR *attr, TCHAR *buffer)
 /**
  * Read integer from metadata
  */
-INT32 ReadMetadataAsInt(const TCHAR *attr)
+int32_t ReadMetadataAsInt(const TCHAR *attr)
 {
    TCHAR buffer[MAX_DB_STRING];
    if (ReadMetadata(attr, buffer) == nullptr)
       return 0;
-   return _tcstol(buffer, NULL, 0);
+   return _tcstol(buffer, nullptr, 0);
 }
 
 /**
@@ -81,7 +81,7 @@ bool WriteMetadata(const TCHAR *name, const TCHAR *value)
 /**
  * Set value in metadata from int
  */
-bool WriteMetadata(const TCHAR *name, INT32 value)
+bool WriteMetadata(const TCHAR *name, int32_t value)
 {
    TCHAR buffer[64];
    _sntprintf(buffer, 64, _T("%d"), value);
