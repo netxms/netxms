@@ -3193,7 +3193,7 @@ size_t LIBNETXMS_EXPORTABLE nx_wcsftime(WCHAR *buffer, size_t bufsize, const WCH
    char *mbuf = (char *)alloca(bufsize);
    size_t flen = wcslen(format) + 1;
    char *mfmt = (char *)alloca(flen);
-   WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, format, -1, mfmt, flen, NULL, NULL);
+   WideCharToMultiByteSysLocale(format, mfmt, flen);
 #else
    char *mbuf = (char *)MemAlloc(bufsize);
    char *mfmt = MBStringFromWideString(format);
@@ -3201,7 +3201,7 @@ size_t LIBNETXMS_EXPORTABLE nx_wcsftime(WCHAR *buffer, size_t bufsize, const WCH
    size_t rc = strftime(mbuf, bufsize, mfmt, t);
    if (rc > 0)
    {
-      MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, mbuf, -1, buffer, (int)bufsize);
+      MultiByteToWideCharSysLocale(mbuf, buffer, (int)bufsize);
       buffer[bufsize - 1] = 0;
    }
    else
@@ -4282,7 +4282,7 @@ bool LIBNETXMS_EXPORTABLE VerifyFileSignature(const TCHAR *file)
    fi.pcwszFilePath = file;
 #else
    WCHAR wfile[MAX_PATH];
-   MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, file, -1, wfile, MAX_PATH);
+   MultiByteToWideCharSysLocale(file, wfile, MAX_PATH);
    fi.pcwszFilePath = wfile;
 #endif
    fi.hFile = NULL;
