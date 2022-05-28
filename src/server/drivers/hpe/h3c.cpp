@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Driver for H3C (now HPE A-series) switches
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -116,9 +116,8 @@ void H3CDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, NObject *n
 /**
  * Handler for port walk
  */
-static UINT32 PortWalkHandler(SNMP_Variable *var, SNMP_Transport *snmp, void *arg)
+static uint32_t PortWalkHandler(SNMP_Variable *var, SNMP_Transport *snmp, InterfaceList *ifList)
 {
-   InterfaceList *ifList = static_cast<InterfaceList*>(arg);
    InterfaceInfo *iface = ifList->findByIfIndex(var->getValueAsUInt());
    if (iface != nullptr)
    {
@@ -134,16 +133,15 @@ static UINT32 PortWalkHandler(SNMP_Variable *var, SNMP_Transport *snmp, void *ar
 /**
  * Handler for IPv6 address walk
  */
-static UINT32 IPv6WalkHandler(SNMP_Variable *var, SNMP_Transport *snmp, void *arg)
+static uint32_t IPv6WalkHandler(SNMP_Variable *var, SNMP_Transport *snmp, InterfaceList *ifList)
 {
-   InterfaceList *ifList = static_cast<InterfaceList*>(arg);
    // Address type should be IPv6 and address length 16 bytes
    if ((var->getName().getElement(18) == 2) &&
        (var->getName().length() == 36) &&
        (var->getName().getElement(19) == 16))
    {
       InterfaceInfo *iface = ifList->findByIfIndex(var->getName().getElement(17));
-      if (iface != NULL)
+      if (iface != nullptr)
       {
          BYTE addrBytes[16];
          for(int i = 20; i < 36; i++)
@@ -180,10 +178,8 @@ InterfaceList *H3CDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, Dri
 /**
  * Handler for VLAN enumeration
  */
-static UINT32 HandlerVlanList(SNMP_Variable *var, SNMP_Transport *transport, void *arg)
+static uint32_t HandlerVlanList(SNMP_Variable *var, SNMP_Transport *transport, VlanList *vlanList)
 {
-   VlanList *vlanList = static_cast<VlanList*>(arg);
-
    VlanInfo *vlan = new VlanInfo(var->getName().getLastElement(), VLAN_PRM_BPORT);
 
    TCHAR buffer[256];
@@ -234,9 +230,8 @@ static void ParseVlanPorts(VlanList *vlanList, VlanInfo *vlan, BYTE map, int off
 /**
  * Handler for VLAN egress port enumeration
  */
-static UINT32 HandlerVlanEgressPorts(SNMP_Variable *var, SNMP_Transport *transport, void *arg)
+static uint32_t HandlerVlanEgressPorts(SNMP_Variable *var, SNMP_Transport *transport, VlanList *vlanList)
 {
-   VlanList *vlanList = static_cast<VlanList*>(arg);
    uint32_t vlanId = var->getName().getLastElement();
    VlanInfo *vlan = vlanList->findById(vlanId);
    if (vlan != nullptr)

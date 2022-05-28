@@ -630,7 +630,7 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, NObject 
          // MAC address
          _sntprintf(oid, 128, _T(".1.3.6.1.2.1.2.2.1.6.%d"), iface->index);
          memset(buffer, 0, MAC_ADDR_LENGTH);
-         if (SnmpGet(snmp->getSnmpVersion(), snmp, oid, NULL, 0, buffer, 256, SG_RAW_RESULT) == SNMP_ERR_SUCCESS)
+         if (SnmpGet(snmp->getSnmpVersion(), snmp, oid, nullptr, 0, buffer, 256, SG_RAW_RESULT) == SNMP_ERR_SUCCESS)
 			{
 	         memcpy(iface->macAddr, buffer, MAC_ADDR_LENGTH);
 			}
@@ -705,7 +705,7 @@ void NetworkDeviceDriver::getInterfaceState(SNMP_Transport *snmp, NObject *node,
       _sntprintf(oid, 256, _T(".1.3.6.1.2.1.2.2.1.7%s"), SNMPConvertOIDToText(ifTableSuffixLen, ifTableSuffix, suffix, 128)); // Interface administrative state
    else
       _sntprintf(oid, 256, _T(".1.3.6.1.2.1.2.2.1.7.%d"), (int)ifIndex); // Interface administrative state
-   SnmpGet(snmp->getSnmpVersion(), snmp, oid, NULL, 0, &state, sizeof(uint32_t), 0);
+   SnmpGet(snmp->getSnmpVersion(), snmp, oid, nullptr, 0, &state, sizeof(uint32_t), 0);
 
    switch(state)
    {
@@ -721,8 +721,8 @@ void NetworkDeviceDriver::getInterfaceState(SNMP_Transport *snmp, NObject *node,
          if (ifTableSuffixLen > 0)
             _sntprintf(oid, 256, _T(".1.3.6.1.2.1.2.2.1.8%s"), SNMPConvertOIDToText(ifTableSuffixLen, ifTableSuffix, suffix, 128));
          else
-            _sntprintf(oid, 256, _T(".1.3.6.1.2.1.2.2.1.8.%d"), (int)ifIndex);
-         SnmpGet(snmp->getSnmpVersion(), snmp, oid, NULL, 0, &state, sizeof(uint32_t), 0);
+            _sntprintf(oid, 256, _T(".1.3.6.1.2.1.2.2.1.8.%u"), ifIndex);
+         SnmpGet(snmp->getSnmpVersion(), snmp, oid, nullptr, 0, &state, sizeof(uint32_t), 0);
          switch(state)
          {
             case 1:

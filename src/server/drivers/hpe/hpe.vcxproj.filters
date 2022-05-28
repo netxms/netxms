@@ -24,6 +24,9 @@
     <ClCompile Include="hpsw.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ilo.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="procurve.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

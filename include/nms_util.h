@@ -4232,7 +4232,7 @@ static inline bool SocketCanWrite(SOCKET hSocket, uint32_t timeout)
 SOCKET LIBNETXMS_EXPORTABLE ConnectToHost(const InetAddress& addr, uint16_t port, uint32_t timeout);
 SOCKET LIBNETXMS_EXPORTABLE ConnectToHostUDP(const InetAddress& addr, uint16_t port);
 
-int LIBNETXMS_EXPORTABLE BitsInMask(UINT32 mask);
+int LIBNETXMS_EXPORTABLE BitsInMask(uint32_t mask);
 int LIBNETXMS_EXPORTABLE BitsInMask(const BYTE *mask, size_t size);
 
 TCHAR LIBNETXMS_EXPORTABLE *IpToStr(UINT32 dwAddr, TCHAR *szBuffer);
