@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Drivers for HPE (Hewlett Packard Enterprise) devices
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -29,6 +29,7 @@
 NDD_BEGIN_DRIVER_LIST
 NDD_DRIVER(H3CDriver)
 NDD_DRIVER(HPSwitchDriver)
+NDD_DRIVER(ILODriver)
 NDD_DRIVER(ProCurveDriver)
 NDD_END_DRIVER_LIST
 DECLARE_NDD_MODULE_ENTRY_POINT

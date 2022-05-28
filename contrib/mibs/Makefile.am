@@ -172,6 +172,7 @@ mibs_DATA = \
 	CPQHOST-MIB.txt \
 	CPQPOWER-MIB.txt \
 	CPQSINFO-MIB.txt \
+	CPQSM2-MIB.txt \
 	CPU-PROTECT-MIB.txt \
 	CYBEROAM-MIB.txt \
 	DDM-MGMT-MIB.txt \

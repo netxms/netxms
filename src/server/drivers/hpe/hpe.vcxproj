@@ -141,6 +141,7 @@
     <ClCompile Include="h3c.cpp" />
     <ClCompile Include="hpe.cpp" />
     <ClCompile Include="hpsw.cpp" />
+    <ClCompile Include="ilo.cpp" />
     <ClCompile Include="procurve.cpp" />
   </ItemGroup>
   <ItemGroup>

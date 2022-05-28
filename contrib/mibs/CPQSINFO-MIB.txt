@@ -4,9 +4,9 @@
 --         Management Information Base for SNMP Network Management
 --
 --
---      Copyright 1992,2008 Hewlett-Packard Development Company, L.P.
+--      Copyright 1992,2017 Hewlett Packard Enterprise Development LP.
 --
---      Hewlett-Packard Company shall not be liable for technical or
+--      Hewlett-Packard Enterprise Development LP shall not be liable for technical or
 --      editorial errors or omissions contained herein. The information in
 --      this document is provided "as is" without warranty of any kind and
 --      is subject to change without notice. The warranties for HP products
@@ -76,7 +76,7 @@ CPQSINFO-MIB DEFINITIONS ::= BEGIN
 --    supporting the System Information MIB.
 --
 --     An Agent conforming to this document will return a
---     cpqSiMibRevMajor of one (1) and a cpqSiMibRevMinor of thirty-four (34).
+--     cpqSiMibRevMajor of one (1) and a cpqSiMibRevMinor of forty (40).
 --
 --
 -- ****************************************************************************
@@ -145,7 +145,7 @@ CPQSINFO-MIB DEFINITIONS ::= BEGIN
         ACCESS  read-write
         STATUS  mandatory
         DESCRIPTION
-            "The Insight Agent's polling frequency.
+            "The Insight Agent`s polling frequency.
 
             The frequency, in seconds, at which the Insight Agent requests
             information from the device driver.  A frequency of zero (0)
@@ -299,7 +299,10 @@ CPQSINFO-MIB DEFINITIONS ::= BEGIN
             desktop(4),
             tower(5),
             mini-tower(6),
-            rack-mount(7)
+            rack-mount(7),
+            multiboard-chasis(8),
+            blade(9),
+            blade-enclosure(10)
             }
         ACCESS  read-write
         STATUS  mandatory
@@ -683,6 +686,43 @@ CPQSINFO-MIB DEFINITIONS ::= BEGIN
                External USB Ports are disabled."
         ::= { cpqSiSecurity 14 }
 
+    cpqSiVirtualSerialPortControl OBJECT-TYPE
+        SYNTAX  INTEGER {
+            other(1),
+            disabled(2),
+            enabled(3)
+            }
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION
+            "The state of the access control for the virtual serial port interface
+            embedded in the system board."
+        ::= { cpqSiSecurity 15 }
+
+	cpqSiChassisHoodStatus OBJECT-TYPE
+                SYNTAX  INTEGER {
+                    unknown(1),
+                    not-installed(2),
+                    hood-ok(3),
+                    hood-removed(4)
+                    }
+                ACCESS  read-only 
+                STATUS  mandatory
+                DESCRIPTION
+                    "The status of the chassis intrusion alert hardware and the hood presence.
+
+                    unknown (1)
+                       Unable to determine the system intrusion alert hardware presence.
+                    not-installed(2)
+                       System intrusion alert hardware is not installed.
+                    hood-ok (3)
+                       System intrusion alert hardware is installed and the hood cover is seated properly.
+                    hood-removed (4)
+                       System intrusion alert hardware is installed but the hood cover is removed."
+
+                ::= { cpqSiSecurity 16 }
+
+
 -- ****************************************************************************
 --   System Information System Board Group
 --   =====================================
@@ -871,7 +911,7 @@ CPQSINFO-MIB DEFINITIONS ::= BEGIN
         ACCESS  read-only
         STATUS  mandatory
         DESCRIPTION
-             "The memory module's manufacturer name.
+             "The memory module`s manufacturer name.
 
               This field will be a null (size 0) string if the manufacturer
               name is not available."
@@ -882,7 +922,7 @@ CPQSINFO-MIB DEFINITIONS ::= BEGIN
         ACCESS  read-only
         STATUS  mandatory
         DESCRIPTION
-             "The memory module's manufacturer part number.
+             "The memory module`s manufacturer part number.
 
               This field will be a null (size 0) string if the manufacturer
               part number is not available."
@@ -915,7 +955,7 @@ CPQSINFO-MIB DEFINITIONS ::= BEGIN
         ACCESS  read-write
         STATUS  mandatory
         DESCRIPTION
-             "The memory module's serial number.
+             "The memory module`s serial number.
 
               This field will be a null (size 0) string if the serial number
               is not available."
@@ -1009,7 +1049,7 @@ CPQSINFO-MIB DEFINITIONS ::= BEGIN
         ACCESS  read-only
         STATUS  optional
         DESCRIPTION
-             "The memory module's manufacturer's part number.
+             "The memory module`s manufacturer`s part number.
 
               This field will be a null (size 0) string if the manufacturer
               part number is not available."
@@ -1020,7 +1060,7 @@ CPQSINFO-MIB DEFINITIONS ::= BEGIN
         ACCESS  read-only
         STATUS  optional
         DESCRIPTION
-             "The memory module's manufacturer's serial number.
+             "The memory module`s manufacturer`s serial number.
 
               This field will be a null (size 0) string if the manufacturer
               serial number is not available."
@@ -1506,6 +1546,85 @@ CPQSINFO-MIB DEFINITIONS ::= BEGIN
                TPM module is present in the system and currently not enabled."
        ::= { cpqSiSystemBoard 24 }
 
+    cpqSiTrustedModuleType OBJECT-TYPE
+        SYNTAX  INTEGER  (0..255)
+        ACCESS  read-only
+        STATUS  optional
+        DESCRIPTION
+            "Bits[3:0] = Trusted Module Type:
+                    1h = Not Specified
+                    2h = TPM 1.2
+                    3h = TPM 2.0
+                    4h = TM  1.0
+                    5h - 0Fh = Reserved."
+
+       ::= { cpqSiSystemBoard 25 }
+
+    cpqSiSystemTelemetryMetric OBJECT-TYPE
+        SYNTAX INTEGER {
+            cpuUtilization(1),
+            memoryBusUtilization(2),
+            ioBusUtilization(3),
+            cpuInterconnectUtilization(4),
+            jitterCount(5),
+            cpu0PowerUtilization(6),
+            cpu1PowerUtilization(7),
+            cpu2PowerUtilization(8),
+            cpu3PowerUtilization(9),
+            cpu0AverageFrequency(10),
+            cpu1AverageFrequency(11),
+            cpu2AverageFrequency(12),
+            cpu3AverageFrequency(13)
+        }
+        ACCESS read-only
+        STATUS optional
+        DESCRIPTION
+              "This field specifies the system telemetry metric type.
+            CPU Utilization(1)
+               Overall CPU utilization of the system.
+            Memory Bus Utilization(2)
+               Memory Bus utilization of the system.
+            I/O Bus Utilization(3)
+               I/O Bus utilization of the system.
+            CPU Interconnect Utilization(4)
+               CPU Interconnect utilization of the system.
+            Jitter Count(5)
+               Jitter count of the system.
+            CPU0 Power Utilization(6)
+               CPU0 Power utilization of the system.
+            CPU1 Power Utilization(7)
+               CPU1 Power utilization of the system.
+            CPU2 Power Utilization(8)
+               CPU2 Power utilization of the system.
+            CPU3 Power Utilization(9)
+               CPU3 Power utilization of the system.
+            CPU0 Average Frequency(10)
+               CPU0 Average frequency of the system.
+            CPU1 Average Frequency(11)
+               CPU1 Average frequency of the system.
+            CPU2 Average Frequency(12)
+               CPU2 Average frequency of the system.
+            CPU3 Average Frequency(13)
+               CPU3 Average frequency of the system."
+
+        ::= { cpqSiSystemBoard 26 }
+
+    cpqSiSystemTelemetryThresholdStatus OBJECT-TYPE
+        SYNTAX INTEGER {
+            aboveUpperThreshold(1),
+            belowLowerThreshold(2)
+        }
+        ACCESS read-only
+        STATUS optional
+        DESCRIPTION
+              "This field corresponds to the threshold(upper/lower) breach condition of the metric.
+            Above Upper Threshold(1)
+               The value has exceeded upper threshold.
+            Below Lower Threshold(2)
+               The value is below lower threshold."
+
+        ::= { cpqSiSystemBoard 27 }
+       
 -- ****************************************************************************
 --   System Information Board Revision Group
 --   =======================================
@@ -1531,7 +1650,7 @@ CPQSINFO-MIB DEFINITIONS ::= BEGIN
             "The current board revision configuration date in MM/DD/YY
             format.  This is the date that the EISA Configuration Utility
             was used to define the current configuration.  This value will
-            contain 'N/A' if this system does not support this feature."
+            contain `N/A` if this system does not support this feature."
         ::= { cpqSiBoardRev 1 }
 
     cpqSiPrevRevDate OBJECT-TYPE
@@ -1542,7 +1661,7 @@ CPQSINFO-MIB DEFINITIONS ::= BEGIN
             "The previous board revision configuration date in MM/DD/YY
             format.  This is the date that the EISA Configuration Utility
             was used to define the previous configuration.  This value will
-            contain 'N/A' if this system does not support this feature."
+            contain `N/A` if this system does not support this feature."
         ::= { cpqSiBoardRev 2 }
 
 -- ****************************************************************************
@@ -1829,7 +1948,7 @@ CPQSINFO-MIB DEFINITIONS ::= BEGIN
         ACCESS  read-write
         STATUS  mandatory
         DESCRIPTION
-            "This entry describes this system's role in a rack-mounted
+            "This entry describes this system`s role in a rack-mounted
              uninterruptible power supply family. The master both
              communicates with the UPS and derives its power from the
              UPS.  The slave derives its power from the UPS, but does
@@ -1989,7 +2108,7 @@ CPQSINFO-MIB DEFINITIONS ::= BEGIN
         ACCESS  read-only
         STATUS  mandatory
         DESCRIPTION
-            "This value specifies the overall condition of the system's
+            "This value specifies the overall condition of the system`s
              monitor(s).
 
              The following conditions are supported:
@@ -2181,7 +2300,7 @@ CPQSINFO-MIB DEFINITIONS ::= BEGIN
         ACCESS  read-only
         STATUS  mandatory
         DESCRIPTION
-            "This provides the condition of the monitor's internal temperature.
+            "This provides the condition of the monitor`s internal temperature.
 
             This value will be one of the following:
 
@@ -2207,7 +2326,7 @@ CPQSINFO-MIB DEFINITIONS ::= BEGIN
         ACCESS  read-only
         STATUS  mandatory
         DESCRIPTION
-           "This provides the condition of the monitor's operational features.
+           "This provides the condition of the monitor`s operational features.
 
             This condition value will be one of the following:
 
@@ -2240,7 +2359,7 @@ CPQSINFO-MIB DEFINITIONS ::= BEGIN
         ACCESS  read-only
         STATUS  mandatory
         DESCRIPTION
-           "This provides the status of the monitor's fault reporting features.
+           "This provides the status of the monitor`s fault reporting features.
 
             This status value will be one of the following:
 
@@ -2257,7 +2376,7 @@ CPQSINFO-MIB DEFINITIONS ::= BEGIN
               The monitor is operating within normal limits.
 
             thermalDegraded(4)
-              The monitor's internal temperature is not functioning within
+              The monitor`s internal temperature is not functioning within
               normal operating limits.
 
             operationalFailure(5)
@@ -2652,7 +2771,7 @@ CPQSINFO-MIB DEFINITIONS ::= BEGIN
         STATUS  mandatory
         DESCRIPTION
             "This is the customer changeable battery identifier that is set
-            to this system battery's serial number at the time of
+            to this system battery`s serial number at the time of
             manufacture.
 
             The string will be empty if the battery does support
@@ -2664,7 +2783,7 @@ CPQSINFO-MIB DEFINITIONS ::= BEGIN
         ACCESS  read-only
         STATUS  mandatory
         DESCRIPTION
-           "The battery's manufacturer's name.
+           "The battery`s manufacturer`s name.
 
             The string will be empty if the battery does support
             this function."
@@ -2676,7 +2795,7 @@ CPQSINFO-MIB DEFINITIONS ::= BEGIN
         ACCESS  read-only
         STATUS  mandatory
         DESCRIPTION
-            "The battery's manufacture date.
+            "The battery`s manufacture date.
 
              field  octets  contents                  range
              =====  ======  =======                  =====
@@ -2819,7 +2938,7 @@ CPQSINFO-MIB DEFINITIONS ::= BEGIN
         ACCESS  read-only
         STATUS  mandatory
         DESCRIPTION
-           "This is a percentage of the battery's remaining capacity
+           "This is a percentage of the battery`s remaining capacity
             from its design capacity.
 
             If this attribute is not supported, 65535 is returned."
@@ -2850,7 +2969,7 @@ CPQSINFO-MIB DEFINITIONS ::= BEGIN
         ACCESS  read-only
         STATUS  mandatory
         DESCRIPTION
-           "This is the mWatt-Hours of the battery's Full capacity on
+           "This is the mWatt-Hours of the battery`s Full capacity on
             the current charge.
 
             If this attribute is not supported, 65535 is returned."
@@ -2861,7 +2980,7 @@ CPQSINFO-MIB DEFINITIONS ::= BEGIN
         ACCESS  read-only
         STATUS  mandatory
         DESCRIPTION
-          "This is the mWatt-Hours of the battery's design capacity as
+          "This is the mWatt-Hours of the battery`s design capacity as
            specified by the manufacturer.
 
             If this attribute is not supported, 65535 is returned."
@@ -3079,7 +3198,7 @@ CPQSINFO-MIB DEFINITIONS ::= BEGIN
          STATUS  mandatory
          DESCRIPTION
              "Version number of this unit. If artwork level is available, it will
-             appear as 'Artwork: XXX' following FRU version portion."
+             appear as `Artwork: XXX` following FRU version portion."
          ::= { cpqSiFruEntry 6 }
 
      cpqSiFruFirmwareRevision OBJECT-TYPE
@@ -3095,7 +3214,7 @@ CPQSINFO-MIB DEFINITIONS ::= BEGIN
          ACCESS  read-only
          STATUS  mandatory
          DESCRIPTION
-             "The serial number of this unit's instance."
+             "The serial number of this unit`s instance."
          ::= { cpqSiFruEntry 8 }
 
      cpqSiFruAssetNo OBJECT-TYPE
@@ -3278,8 +3397,10 @@ CPQSINFO-MIB DEFINITIONS ::= BEGIN
              cpqSiRackEnclosureMgrName                DisplayString,
              cpqSiRackEnclosureMgrFwRev               DisplayString,
              cpqSiRackEnclosureMgrProductID           DisplayString,
-             cpqSiRackEnclosureMgrUUID                DisplayString
-                  }
+             cpqSiRackEnclosureMgrUUID                DisplayString,
+             cpqSiRackEnclosureMgrMatrix              INTEGER,
+             cpqSiRackEnclosureMgrMatrixID            DisplayString
+             }
 
      cpqSiRackEnclosureMgrIndex  OBJECT-TYPE
          SYNTAX  INTEGER
@@ -3294,7 +3415,8 @@ CPQSINFO-MIB DEFINITIONS ::= BEGIN
             other(1),
             noEnclosureManagement(2),
             enclosureManagement(3),
-            onboardAdminManagement(4)
+            onboardAdminManagement(4),
+            multiboardchassis(5)
             }
         ACCESS  read-only
         STATUS  mandatory
@@ -3314,7 +3436,10 @@ CPQSINFO-MIB DEFINITIONS ::= BEGIN
               
             onboardAdminManagement(4)
                The server is part of a rack/enclosure managed system with a
-               onboard Administrator."
+               onboard Administrator.
+               
+            multiboardchassis(5)
+               The server is part of a nultiple board chassis. "
          ::= { cpqSiRackEnclosureMgrEntry 2 }
 
      cpqSiRackEnclosureMgrIpAddr OBJECT-TYPE
@@ -3436,6 +3561,28 @@ CPQSINFO-MIB DEFINITIONS ::= BEGIN
             "The Enclosure unique identifier. The string will be empty 
              if it could not be determined." 
          ::= { cpqSiRackEnclosureMgrEntry 11 }    
+
+     cpqSiRackEnclosureMgrMatrix   OBJECT-TYPE
+         SYNTAX  INTEGER
+         ACCESS  read-only
+         STATUS  mandatory
+         DESCRIPTION
+            " Value 0 not configured in a BladeSystem Matrix environment. 
+                    1 configured in a BladeSystem Matrix environment."
+         ::= { cpqSiRackEnclosureMgrEntry 12 }
+
+     cpqSiRackEnclosureMgrMatrixID   OBJECT-TYPE
+         SYNTAX  DisplayString
+         ACCESS  read-only
+         STATUS  optional
+         DESCRIPTION
+             " Value BladeSystem Matrix vX.Y.Z Where 
+               X major version.   
+               Y minor version.  
+               Z update version. 
+               Is only valid if cpqSiRackEnclosureMgrMatrix value is a 1.  
+               By default is NULL"
+         ::= { cpqSiRackEnclosureMgrEntry 13 }
 
 -- ****************************************************************************
 --   System Information Server Blade Group
@@ -3563,7 +3710,9 @@ CPQSINFO-MIB DEFINITIONS ::= BEGIN
              "The health status of the Management Processor." 
          ::= { cpqSiMP 2 }
 
+
 -- ****************************************************************************
+
 --  System Info MIB Trap Definitions
 --  ================================
 --
@@ -3580,22 +3729,20 @@ CPQSINFO-MIB DEFINITIONS ::= BEGIN
         VARIABLES  { sysName, cpqHoTrapFlags }
         DESCRIPTION
            "System hood is removed.
-
-            The hood status has been set to removed.  The
-            system's hood is not in a properly installed state. This
-            situation may result in improper cooling of the system due
-            to air flow changes caused by the missing hood.
-
-            User Action: Replace the cover (hood), ensure the system's cover
-            is properly installed. Verify the system is in working order."
-
+           The hood status has been detected as removed.  The
+           system`s hood is not in a properly installed state. This
+           situation may result in improper cooling of the system due
+           to air flow changes caused by the missing hood."
         --#TYPE "System hood is removed (2001)"
         --#SUMMARY "Hood is removed from unit."
         --#ARGUMENTS {}
         --#SEVERITY MAJOR
         --#TIMEINDEX 99
         --#STATE DEGRADED
-
+        --#SIMPLE_SEVERITY MAJOR
+        --#HWSTATUS_CATEGORY NONE
+        --#ACTION "Ensure that the server chassis hood is intentionally missing and the server is secure. Replace the cover, ensuring it is properly installed. Verify the system is in working order."
+        
         ::= 2001
 
     cpqSiMonitorConditionOK TRAP-TYPE
@@ -3604,7 +3751,7 @@ CPQSINFO-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "Fault reporting features have returned to within their normal
              operating range for the monitor indicated by cpqSiMonitorIndex.
-             The monitor's condition has been set to OK.
+             The monitor`s condition has been set to OK.
 
              User Action:  None."
 
@@ -3614,6 +3761,8 @@ CPQSINFO-MIB DEFINITIONS ::= BEGIN
         --#SEVERITY INFORMATIONAL
         --#TIMEINDEX 99
         --#STATE OPERATIONAL
+        --#SIMPLE_SEVERITY OK
+        --#HWSTATUS_CATEGORY NONE
         ::=  2002
 
 
@@ -3622,7 +3771,7 @@ CPQSINFO-MIB DEFINITIONS ::= BEGIN
         VARIABLES  { sysName, cpqHoTrapFlags, cpqSiMonitorIndex }
         DESCRIPTION
             "A fault reporting feature has exceeded normal limits for
-             the monitor indicated by the cpqSiMonitorIndex. The monitor's
+             the monitor indicated by the cpqSiMonitorIndex. The monitor`s
              condition is degraded due to the internal temperature exceeding
              normal operating limits.  The monitor is still useable, but
              action should be taken to return the condition to OK.
@@ -3640,7 +3789,9 @@ CPQSINFO-MIB DEFINITIONS ::= BEGIN
         --#SEVERITY MINOR
         --#TIMEINDEX 99
         --#STATE DEGRADED
-
+        --#SIMPLE_SEVERITY MAJOR
+        --#HWSTATUS_CATEGORY NONE
+        
        ::=  2003
 
      cpqSiMonitorConditionFailed TRAP-TYPE
@@ -3648,7 +3799,7 @@ CPQSINFO-MIB DEFINITIONS ::= BEGIN
         VARIABLES  { sysName, cpqHoTrapFlags, cpqSiMonitorIndex }
         DESCRIPTION
             "A fault reporting feature has exceeded normal limits in the
-             monitor indicated by the cpqSiMonitorIndex. The monitor's
+             monitor indicated by the cpqSiMonitorIndex. The monitor`s
              condition has been set to failed due to an operational feature
              exceeding normal operating limits.  The monitor will not be
              useable and should be replaced.
@@ -3665,7 +3816,10 @@ CPQSINFO-MIB DEFINITIONS ::= BEGIN
         --#SEVERITY CRITICAL
         --#TIMEINDEX 99
         --#STATE NONOPERATIONAL
-
+        --#SIMPLE_SEVERITY CRITICAL
+        --#HWSTATUS_CATEGORY NONE
+        --#ACTION "Replace the failed monitor."
+        
        ::=  2004
 
      cpqSiCorrMemErrStatusDegraded TRAP-TYPE
@@ -3673,7 +3827,7 @@ CPQSINFO-MIB DEFINITIONS ::= BEGIN
         VARIABLES  { sysName, cpqHoTrapFlags, cpqSiMemErrorIndex }
         DESCRIPTION
             "Correctable memory error count has exceeded the threshold for the
-             memory module indicated by the 'cpqSiMemErrorIndex' variable.
+             memory module indicated by the `cpqSiMemErrorIndex` variable.
              The appropriate cpqSiMemModuleECCStatus has been set to degraded.
 
              User Action: For Desktops, the System Administrator should run
@@ -3685,12 +3839,15 @@ CPQSINFO-MIB DEFINITIONS ::= BEGIN
              information on a component replacement."
 
         --#TYPE "Excessive Correctable Memory Errors (2005)"
-        --#SUMMARY "The Memory Module %d ECC status has been set to degraded."
+        --#SUMMARY "The memory module %d ECC status has been set to degraded."
         --#ARGUMENTS {3}
         --#SEVERITY MINOR
         --#TIMEINDEX 99
         --#STATE DEGRADED
-
+        --#SIMPLE_SEVERITY MAJOR
+        --#HWSTATUS_CATEGORY MEMORY
+        --#ACTION "Schedule maintenance for the system and replace the failing memory module."
+        
         ::=  2005
 
      cpqSiCorrMemErrStatusOk TRAP-TYPE
@@ -3698,18 +3855,20 @@ CPQSINFO-MIB DEFINITIONS ::= BEGIN
         VARIABLES  { sysName, cpqHoTrapFlags, cpqSiMemErrorIndex }
         DESCRIPTION
             "Correctable memory error count is now below the threshold for the
-             memory module indicated by the 'cpqSiMemErrorIndex' variable. The
+             memory module indicated by the `cpqSiMemErrorIndex` variable. The
              appropriate cpqSiMemModuleECCStatus has been set to ok.
 
              User Action: None."
 
         --#TYPE "Correctable Memory Errors Count OK (2006)"
-        --#SUMMARY "The Memory Module %d ECC status has been set to OK."
+        --#SUMMARY "The memory module %d ECC status has been set to ok."
         --#ARGUMENTS {3}
         --#SEVERITY INFORMATIONAL
         --#TIMEINDEX 99
         --#STATE OPERATIONAL
-
+        --#SIMPLE_SEVERITY OK
+        --#HWSTATUS_CATEGORY MEMORY
+        
        ::=  2006
 
      cpqSiMemConfigChange TRAP-TYPE
@@ -3730,6 +3889,8 @@ CPQSINFO-MIB DEFINITIONS ::= BEGIN
         --#SEVERITY INFORMATIONAL
         --#TIMEINDEX 99
         --#STATE OPERATIONAL
+        --#SIMPLE_SEVERITY OK
+        --#HWSTATUS_CATEGORY MEMORY         
        ::=  2007
 
     cpqSiHotPlugSlotBoardRemoved TRAP-TYPE
@@ -3745,12 +3906,15 @@ CPQSINFO-MIB DEFINITIONS ::= BEGIN
            User Action: None."
 
         --#TYPE "Hot Plug Slot Board Removed (2008)"
-        --#SUMMARY "Hot Plug Slot Board Removed from Chassis %d, Slot %d."
+        --#SUMMARY "Hot plug slot board removed from chassis %d, slot %d."
         --#ARGUMENTS {2, 3}
         --#SEVERITY INFORMATIONAL
         --#TIMEINDEX 99
         --#STATE OPERATIONAL
-
+        --#SIMPLE_SEVERITY OK
+        --#HWSTATUS_CATEGORY NONE
+        --#LIFECYCLE
+        
         ::= 2008
 
     cpqSiHotPlugSlotBoardInserted TRAP-TYPE
@@ -3766,12 +3930,15 @@ CPQSINFO-MIB DEFINITIONS ::= BEGIN
            User Action: None."
 
         --#TYPE "Hot Plug Slot Board Inserted (2009)"
-        --#SUMMARY "Hot Plug Slot Board Inserted into Chassis %d, Slot %d."
+        --#SUMMARY "Hot plug slot board inserted into chassis %d, slot %d."
         --#ARGUMENTS {2, 3}
         --#SEVERITY INFORMATIONAL
         --#TIMEINDEX 99
         --#STATE OPERATIONAL
-
+        --#SIMPLE_SEVERITY OK
+        --#HWSTATUS_CATEGORY NONE
+        --#LIFECYCLE
+        
         ::= 2009
 
     cpqSiHotPlugSlotPowerUpFailed TRAP-TYPE
@@ -3789,12 +3956,15 @@ CPQSINFO-MIB DEFINITIONS ::= BEGIN
            the replaced board."
 
         --#TYPE "Hot Plug Slot Board Failed (2010)"
-        --#SUMMARY "Hot Plug Slot Board Failed in Chassis %d, Slot %d, Error %d."
+        --#SUMMARY "Hot plug slot board failed in chassis %d, slot %d, error %d."
         --#ARGUMENTS {2, 3, 4}
         --#SEVERITY CRITICAL
         --#TIMEINDEX 99
         --#STATE FAILED
-
+        --#SIMPLE_SEVERITY CRITICAL
+        --#HWSTATUS_CATEGORY NONE
+        --#ACTION "Ensure the board and all cables are installed correctly and that the board type and revision are the same as the replaced board."
+        
         ::= 2010
 
     cpqSiSysBatteryFailure  TRAP-TYPE
@@ -3816,7 +3986,10 @@ CPQSINFO-MIB DEFINITIONS ::= BEGIN
         --#SEVERITY MAJOR
         --#TIMEINDEX 99
         --#STATE DEGRADED
-
+        --#SIMPLE_SEVERITY MAJOR
+        --#HWSTATUS_CATEGORY NONE
+        --#ACTION "Replace the failed battery."
+        
         ::= 2011
 
     cpqSiSysBatteryChargingDegraded TRAP-TYPE
@@ -3840,6 +4013,9 @@ CPQSINFO-MIB DEFINITIONS ::= BEGIN
         --#SEVERITY MAJOR
         --#TIMEINDEX 99
         --#STATE DEGRADED
+        --#SIMPLE_SEVERITY MAJOR
+        --#HWSTATUS_CATEGORY NONE        
+        --#ACTION "Replace the failing battery."        
         ::= 2012
 
 
@@ -3862,6 +4038,97 @@ CPQSINFO-MIB DEFINITIONS ::= BEGIN
         --#SEVERITY MAJOR
         --#TIMEINDEX 99
         --#STATE DEGRADED
+        --#SIMPLE_SEVERITY MAJOR
+        --#HWSTATUS_CATEGORY NONE
+        --#ACTION "Replace the failing battery."        
         ::= 2013
+
+
+
+    cpqSiIntrusionInstalled TRAP-TYPE
+        ENTERPRISE compaq
+        VARIABLES  { sysName, cpqHoTrapFlags  }
+        DESCRIPTION
+            "System intrusion alert hardware is installed."
+
+        --#TYPE "System intrusion hardware installed (2014)"
+        --#SUMMARY "System intrusion hardware installed."
+        --#ARGUMENTS {}
+        --#SEVERITY INFORMATIONAL
+        --#TIMEINDEX 99
+        --#STATE OPERATIONAL
+        --#SIMPLE_SEVERITY OK
+        --#HWSTATUS_CATEGORY NONE
+        ::= 2014
+
+
+    cpqSiIntrusionRemoved TRAP-TYPE
+        ENTERPRISE compaq
+        VARIABLES  { sysName, cpqHoTrapFlags  }
+        DESCRIPTION
+            "System intrusion alert hardware is removed."
+
+        --#TYPE "System intrusion hardware removed (2015)"
+        --#SUMMARY "System intrusion hardware removed."
+        --#ARGUMENTS {}
+        --#SEVERITY MAJOR
+        --#TIMEINDEX 99
+        --#STATE OPERATIONAL
+        --#SIMPLE_SEVERITY MAJOR
+        --#HWSTATUS_CATEGORY NONE
+        --#ACTION " There is no action required if the removal of the hardware is expected.  If the hardware has not intentionally been removed, please verify cable connection."
+        ::= 2015
+
+        cpqSiHoodReplaced TRAP-TYPE
+                ENTERPRISE compaq
+                VARIABLES  { sysName, cpqHoTrapFlags }
+                DESCRIPTION
+                   "System hood has been replaced."
+
+                --#TYPE "System hood is replaced (2016)"
+                --#SUMMARY "Hood is replaced."
+                --#ARGUMENTS {}
+                --#SEVERITY INFORMATIONAL
+                --#TIMEINDEX 99
+                --#STATE OPERATIONAL
+                --#SIMPLE_SEVERITY OK
+                --#HWSTATUS_CATEGORY NONE
+                --#ACTION " Ensure that the server chassis hood is intentionally replaced, and the server is secure."
+                
+                ::= 2016
+
+  cpqSiHoodRemovedOnPowerOff TRAP-TYPE
+        ENTERPRISE compaq
+        VARIABLES  { sysName, cpqHoTrapFlags }
+        DESCRIPTION
+           "BIOS detected a system hood removal when server power was off."
+        --#TYPE "System hood has been removed when power was off (2017)"
+        --#SUMMARY "Hood is removed from the unit when server power was off."
+        --#ARGUMENTS {}
+        --#SEVERITY MAJOR
+        --#TIMEINDEX 99
+        --#STATE DEGRADED
+        --#SIMPLE_SEVERITY MAJOR
+        --#HWSTATUS_CATEGORY NONE
+        --#ACTION "Ensure that the server chassis hood was intentionally removed and that the server is secure."
+        
+        ::= 2017
+
+  cpqSiSysTelemetryThresholdAlert TRAP-TYPE
+        ENTERPRISE compaq
+        VARIABLES { sysName, cpqHoTrapFlags, cpqSiSystemTelemetryMetric, cpqSiSystemTelemetryThresholdStatus}
+        DESCRIPTION
+           "The system telemetry metric value has either exceeded upper threshold or is below lower threshold."
+        --#TYPE "System telemetry threshold alert(2018)"
+        --#SUMMARY "System telemetry metric %d is %d."
+        --#ARGUMENTS {2,3}
+        --#SEVERITY INFORMATIONAL
+        --#TIMEINDEX 99
+        --#STATE OPERATIONAL
+        --#SIMPLE_SEVERITY INFORMATIONAL
+        --#HWSTATUS_CATEGORY NONE
+        --#ACTION "Please check the current configured server workload."
+
+        ::= 2018
 
 END

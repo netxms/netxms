@@ -4,9 +4,9 @@
 --         Management Information Base for SNMP Network Management
 --
 --
---      Copyright 1993,2008 Hewlett-Packard Development Company, L.P.
+--      Copyright 1993-2020 Hewlett Packard Enterprise Development, L.P.
 --
---      Hewlett-Packard Company shall not be liable for technical or
+--      Hewlett Packard Enterprise Development LP shall not be liable for technical or
 --      editorial errors or omissions contained herein. The information in
 --      this document is provided "as is" without warranty of any kind and
 --      is subject to change without notice. The warranties for HP products
@@ -77,7 +77,8 @@ CPQHOST-MIB DEFINITIONS ::= BEGIN
 --      supporting the Host OS MIB.
 --
 --      A Management Agent conforming to this document will return a
---      cpqHoMibRevMajor of one (1) and a cpqHoMibRevMinor of thirty-three (33).
+--      cpqHoMibRevMajor of one (1) and a cpqHoMibRevMinor of forty four (44).
+
 --
 -- ****************************************************************************
 
@@ -120,7 +121,7 @@ CPQHOST-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "The overall condition.
 
-             This object represents the overall status of the server's host
+             This object represents the overall status of the server`s host
              system represented by this MIB."
         ::= { cpqHoMibRev 3 }
 
@@ -145,7 +146,7 @@ CPQHOST-MIB DEFINITIONS ::= BEGIN
         ACCESS  read-write
         STATUS  mandatory
         DESCRIPTION
-            "The Insight Agent's polling frequency.
+            "The Insight Agent`s polling frequency.
 
             The frequency, in seconds, at which the Insight Agent requests
             information from the device driver.  A frequency of zero (0)
@@ -325,11 +326,49 @@ CPQHOST-MIB DEFINITIONS ::= BEGIN
             tru64UNIX(16),             -- Tru64 UNIX
             windows2003(17),           -- Microsoft Windows Server 2003
             windows2003-x64(18),       -- Microsoft Windows Server 2003 x64 Edition
-            solaris(19),               -- Sun Solaris 
+            solaris(19),               -- Sun Solaris
             windows2003-ia64(20),      -- Microsoft Windows Server 2003 for Itanium-based Systems
             windows2008(21),           -- Microsoft Windows Server 2008
             windows2008-x64(22),       -- Microsoft Windows Server 2008 x64 Edition
-            windows2008-ia64(23)       -- Microsoft Windows Server 2008 for Itanium-based Systems
+            windows2008-ia64(23),      -- Microsoft Windows Server 2008 for Itanium-based Systems
+            vmware-esx(24),            -- VMware ESX Classic
+            vmware-esxi(25),           -- VMware ESXi
+            windows2012(26),           -- Microsoft Windows 2012 Server
+            windows7(27),              -- Microsoft Windows 7
+            windows7-x64(28),          -- Microsoft Windows 7 64-bit
+            windows8(29),              -- Microsoft Windows 8
+            windows8-x64(30),          -- Microsoft Windows 8 64-bit
+            windows81(31),             -- Microsoft Windows 8.1
+            windows81-x64(32),         -- Microsoft Windows 8.1 64-bit
+            windowsxp(33),             -- Microsoft Windows XP
+            windowsxp-x64(34),         -- Microsoft Windows XP 64-Bit
+            windowsvista(35),          -- Microsoft Windows Vista
+            windowsvista-x64(36),      -- Microsoft Windows Vista 64-Bit
+            windows2008-r2(37),        -- Microsoft Windows Server 2008 R2
+            windows2012-r2(38),        -- Microsoft Windows Server 2012 R2
+            rhel(39),                  -- RedHat Enterprise Linux
+            rhel-64(40),               -- RedHat Enterprise Linux 64-Bit
+            solaris-64(41),            -- Solaris 64-Bit
+            sles(42),                  -- SUSE Linux Enterprise Server
+            sles-64(43),               -- SUSE Linux Enterprise Server 64-Bit
+            ubuntu(44),                -- Ubuntu
+            ubuntu-64(45),             -- Ubuntu 64-Bit
+            debian(46),                -- Debian
+            debian-64(47),             -- Debian 64-Bit
+            linux-64-bit(48),          -- Linux 64-Bit
+            other-64-bit(49),          -- Other 64-Bit
+            centos-32bit(50),          -- CentOS 32-bit
+            centos-64bit(51),          -- CentOS 64-bit
+            oracle-linux32(52),        -- Oracle Linux 32-bit
+            oracle-linux64(53),        -- Oracle Linux 64-bit
+            apple-osx(54),             -- Apple OS X
+            windows2016(55),           -- Microsoft Windows Server 2016
+            nanoserver(56),            -- Nano Server
+            windows2019(57),           -- Microsoft Windows Server 2019
+            windows10-x64(58),         -- Microsoft Windows 10 64-bit
+            windows2022(59),           -- Microsoft Windows Server 2022
+            azurestackhciOS-20h2(60),  -- Microsoft Azure Stack HCI OS 20H2
+            azurestackhciOS-21h2(61)   -- Microsoft Azure Stack HCI OS 21H2
             }
         ACCESS  read-only
         STATUS  mandatory
@@ -361,7 +400,7 @@ CPQHOST-MIB DEFINITIONS ::= BEGIN
             "The system role.
 
             This is a settable free form text field intended to be assigned
-            by a remote console briefly describing the system's function."
+            by a remote console briefly describing the system`s function."
         ::= { cpqHoInfo 6 }
 
     cpqHoSystemRoleDetail OBJECT-TYPE
@@ -386,16 +425,16 @@ CPQHOST-MIB DEFINITIONS ::= BEGIN
         STATUS  mandatory
         DESCRIPTION
             "Crash dump state.
-             Value of 'Unknown (-1)' is returned when crash dump state could 
+             Value of `Unknown (-1)` is returned when crash dump state could
              not be determined."
         ::= { cpqHoInfo 8 }
 
     cpqHoCrashDumpCondition OBJECT-TYPE
         SYNTAX INTEGER {
             other(1),           -- (Crash Dump settings unknown) or (Crash dump monitoring is disabled)
-            ok(2),		-- (Crash dump settings OK) and (paging file size >= minimum) and (free disk space >= minimum)
-            degraded(3),	-- (Crash dump settings none) or (paging file size < minimum) or (free disk space < minimum)
-            failed(4)		-- N/A
+            ok(2),      -- (Crash dump settings OK) and (paging file size >= minimum) and (free disk space >= minimum)
+            degraded(3),    -- (Crash dump settings none) or (paging file size < minimum) or (free disk space < minimum)
+            failed(4)       -- N/A
         }
         ACCESS  read-only
         STATUS  mandatory
@@ -412,10 +451,10 @@ CPQHOST-MIB DEFINITIONS ::= BEGIN
         STATUS  optional
         DESCRIPTION
             "Enable/disable crash dump monitoring.
-             If crash dump monitoring is enabled both crash dump TRAP's
+             If crash dump monitoring is enabled both crash dump TRAP`s
              are generated and crash dump condition is updated.
              If crash dump monitoring is disabled, no crash dump TRAP
-             is generated and the crash dump condition is set to 
+             is generated and the crash dump condition is set to
              other"
         ::= { cpqHoInfo 10 }
 
@@ -427,6 +466,26 @@ CPQHOST-MIB DEFINITIONS ::= BEGIN
             "Maximum number of logical CPUs supported by Operating System."
         ::= { cpqHoInfo 11 }
 
+     cpqHoSystemName OBJECT-TYPE
+        SYNTAX  DisplayString (SIZE (0..255))
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION
+            "Full computer name of the host"
+        ::= { cpqHoInfo 12 }
+
+     cpqHosysDescr OBJECT-TYPE
+        SYNTAX  DisplayString (SIZE (0..255))
+        ACCESS  read-only
+        STATUS  optional
+        DESCRIPTION
+            "The value that would be returned in the RFC-1213
+            sysDescr MIB element. It should include the full
+            name and version identification of the system`s
+            hardware type, software operating-system, and
+            networking software.  It is mandatory that this only
+            contain printable ASCII characters."
+       ::= { cpqHoInfo 13}
 
 -- ****************************************************************************
 --   Host OS CPU Utilization Table
@@ -461,7 +520,7 @@ CPQHOST-MIB DEFINITIONS ::= BEGIN
         ACCESS  not-accessible
         STATUS  mandatory
         DESCRIPTION
-            "A description of a CPU's utilization."
+            "A description of a CPU`s utilization."
         INDEX   { cpqHoCpuUtilUnitIndex }
         ::= { cpqHoCpuUtilTable 1 }
 
@@ -566,7 +625,7 @@ CPQHOST-MIB DEFINITIONS ::= BEGIN
         STATUS  mandatory
         DESCRIPTION
             "A table of file system descriptions."
-        ::= { cpqHoFileSys 1 }     
+        ::= { cpqHoFileSys 1 }
 
     cpqHoFileSysEntry OBJECT-TYPE
         SYNTAX  CpqHoFileSysEntry
@@ -585,7 +644,8 @@ CPQHOST-MIB DEFINITIONS ::= BEGIN
         cpqHoFileSysPercentSpaceUsed   INTEGER,
         cpqHoFileSysAllocUnitsTotal    INTEGER,
         cpqHoFileSysAllocUnitsUsed     INTEGER,
-        cpqHoFileSysStatus             INTEGER      
+        cpqHoFileSysStatus             INTEGER,
+        cpqHoFileSysShortDesc          DisplayString
     }
 
     cpqHoFileSysIndex OBJECT-TYPE
@@ -601,7 +661,7 @@ CPQHOST-MIB DEFINITIONS ::= BEGIN
         ACCESS  read-only
         STATUS  mandatory
         DESCRIPTION
-            "A description of the file system."
+            "A description of the file system include the GUID."
         ::= { cpqHoFileSysEntry 2 }
 
     cpqHoFileSysSpaceTotal OBJECT-TYPE
@@ -670,9 +730,17 @@ CPQHOST-MIB DEFINITIONS ::= BEGIN
         STATUS  mandatory
         DESCRIPTION
             "The Threshold Status.
-            
+
             This object represent the status of the Filesystem threshold."
         ::= { cpqHoFileSysEntry 8 }
+
+    cpqHoFileSysShortDesc OBJECT-TYPE
+        SYNTAX  DisplayString (SIZE (0..255))
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION
+            "A description of the file system."
+        ::= { cpqHoFileSysEntry 9 }
 
 -- ****************************************************************************
 --   Host OS File System Table
@@ -699,7 +767,7 @@ CPQHOST-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "The overall condition of File System Threshold.
 
-             This object represents the overall status of the server's 
+             This object represents the overall status of the server`s
              File System Threshold."
         ::= { cpqHoFileSys 2 }
 
@@ -1057,7 +1125,7 @@ CPQHOST-MIB DEFINITIONS ::= BEGIN
    cpqHoSWRunningStatus OBJECT-TYPE
         SYNTAX  INTEGER
         {
-            unknown(1),   
+            unknown(1),
             normal(2),
             warning(3),
             minor(4),
@@ -1074,9 +1142,9 @@ CPQHOST-MIB DEFINITIONS ::= BEGIN
    cpqHoSWRunningConfigStatus OBJECT-TYPE
         SYNTAX  INTEGER
         {
-            unknown(1),                       
+            unknown(1),
             starting(2),
-            initialized(3), 
+            initialized(3),
             configured(4),
             operational(5)
         }
@@ -1097,9 +1165,9 @@ CPQHOST-MIB DEFINITIONS ::= BEGIN
    cpqHoSWRunningRedundancyMode OBJECT-TYPE
         SYNTAX  INTEGER
         {
-            unknown(1),                       
+            unknown(1),
             master(2),
-            backup(3), 
+            backup(3),
             slave(4)
         }
         ACCESS  read-only
@@ -1220,7 +1288,8 @@ CPQHOST-MIB DEFINITIONS ::= BEGIN
             agent(3),
             sysutil(4),
             application(5),
-            keyfile(6)
+            keyfile(6),
+            firmware(7)
             }
         ACCESS  read-write
         STATUS  mandatory
@@ -1525,7 +1594,7 @@ CPQHOST-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "The globally unique identifier of this physical server.
              If the OS cannot determine a unique ID, it will default the
-             variable to contain all 0's.  The management station can then
+             variable to contain all 0`s.  The management station can then
              perform a SET to this variable to provide the unique ID.
              When the system is cellular, it will have its partition number
              appended at the end."
@@ -1556,10 +1625,60 @@ CPQHOST-MIB DEFINITIONS ::= BEGIN
         ACCESS  read-write
         STATUS  mandatory
         DESCRIPTION
-            "The globally unique identifier in canonical format of this 
-             physical server. If the OS cannot determine a unique ID, it will 
+            "The globally unique identifier in canonical format of this
+             physical server. If the OS cannot determine a unique ID, it will
              default the variable to blank."
        ::= { cpqHoSystemStatus 6 }
+
+    cpqHoMibHealthStatusArray OBJECT-TYPE
+        SYNTAX  OCTET STRING (SIZE (1..256))
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION
+           "The MIB Health Status Array is an array of status values representing an
+              overall status in element 0 follwed by server and storage status values as follows:
+
+             Octet   Element   Field
+            ======== ======= =========
+               0        0    Aggregated Status of array elements
+               1        1    Status of element 1
+               2        2    Status of element 2
+               .
+               .
+               .
+               n        n    Status of element n
+
+
+            Status         0 - Not available
+                           1 - Other
+                           2 - OK
+                           3 - Degraded
+                           4 - Failed
+               .
+               .
+      Mibs are assigned an array element as follows.  New items are added at the end.
+           0 -  System Health Status (overall status as reported by who is reporting (agents or iLO))
+           1 -  Total Aggregate (Includes IML Status)
+           2 -  Processors    (TBD 232.1.2.2.4:cpqSeCpuCondition)
+           3 -  Memory        (232.6.2.14.4:cpqHeResilientMemCondition)
+           4 -  Cooling       (232.6.2.6.4:cpqHeThermalSystemFanStatus)
+           5 -  Sensors       (232.6.2.6.3:cpqHeThermalTempStatus)
+           6 -  Power         (232.6.2.9.1:cpqHeFltTolPwrSupplyCondition)
+           7 -  ProLiant Logs (232.6.2.11.2:cpqHeEventLogCondition)
+           8 -  ASR           (232.6.2.5.17:cpqHeAsrCondition)
+           9 -  Drive Array   (232.3.1.3:cpqDaMibCondition)
+           10 - SCSI          (232.5.1.3:cpqScsiMibCondition)
+           11 - Storage Enclosures (232.8.1.3:cpqSsMibCondition)
+           12 - IDE           (232.14.1.3:cpqIdeMibCondition)
+           13 - FC            (232.16.1.3:cpqFcaMibCondition)
+           14 - Networks      (232.18.1.3:cpqNicMibCondition)
+           15 - MP            (232.9.1.3:cpqSm2MibCondition)
+           16 - HW/BIOS       (232.6.2.16.1:cpqHeHWBiosCondition)
+           17 - Battery       (232.6.2.17.1:cpqHeSysBackupBatteryCondition)
+           18 - iSCSI         (232.169.1.3:cpqiScsiMibCondition)"
+
+  ::= { cpqHoSystemStatus 7 }
+
 -- ****************************************************************************
 --   Trap Info Group
 --   ================
@@ -1640,7 +1759,7 @@ CPQHOST-MIB DEFINITIONS ::= BEGIN
                             (use 60 for leap-second)
 
 
-            This field will be set to all 0's if there are no entries to the
+            This field will be set to all 0`s if there are no entries to the
             client table.
 
             The year field will be set to 0xFFFF if the agent does not support
@@ -1813,8 +1932,8 @@ CPQHOST-MIB DEFINITIONS ::= BEGIN
         ACCESS  read-only
         STATUS  mandatory
         DESCRIPTION
-            "The paging file size of the boot volume in the format xxxMB or 
-            xxxGB, where xxx is the paging file size in that unit shown right 
+            "The paging file size of the boot volume in the format xxxMB or
+            xxxGB, where xxx is the paging file size in that unit shown right
             after it.
 
             NULL value will be returned if this value could not be determined."
@@ -1825,9 +1944,9 @@ CPQHOST-MIB DEFINITIONS ::= BEGIN
         ACCESS  read-only
         STATUS  mandatory
         DESCRIPTION
-	    "Minimum paging file size of the boot volume required to save the 
-            memory dump in the event of a system crash. The format is xxxMB or 
-            xxxGB, where xxx is the minimum paging file size in that unit shown 
+        "Minimum paging file size of the boot volume required to save the
+            memory dump in the event of a system crash. The format is xxxMB or
+            xxxGB, where xxx is the minimum paging file size in that unit shown
             right after it."
         ::= { cpqHoMemory 6 }
 
@@ -1836,7 +1955,7 @@ CPQHOST-MIB DEFINITIONS ::= BEGIN
         ACCESS  read-only
         STATUS  optional
         DESCRIPTION
-	    "Free space of the boot volume required to save the memory dump in the 
+        "Free space of the boot volume required to save the memory dump in the
             event of a system crash. The format is xxxMB or xxxGB, where xxx is
             the minimum paging file size in that unit shown right after it."
         ::= { cpqHoMemory 7 }
@@ -1938,7 +2057,16 @@ CPQHOST-MIB DEFINITIONS ::= BEGIN
             scsiEnclosureBackplaneRom-ra4x00(22),
             systemRom(23),
             networkInterfaceController(24),
-            remoteInsightBoard(25)
+            remoteInsightBoard(25),
+            sasDiskDrive-SasAttached(26),
+            sataDiskDrive-SataAttached(27),
+            usbController(28),
+	    sasControllerAdapter(29), 
+	    sataControllerAdapter(30), 
+            systemDevice(31),
+            fibreChannelHba(32),
+            convergedNetworkAdapter(33),
+            ideController(34)
             }
         ACCESS  read-only
         STATUS  mandatory
@@ -2044,12 +2172,12 @@ CPQHOST-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "Hardware platform type.
 
-             This object represents the platform type of the server's host
+             This object represents the platform type of the server`s host
              system represented by this MIB."
         ::= { cpqHoHWInfo 1 }
 
 -- ****************************************************************************
--- The cpqPwrThreshold group holds data for the 
+-- The cpqPwrThreshold group holds data for the
 --
 -- The compaq enterprise              (1.3.6.1.4.1.232)
 --      cpqHostOS Group               (1.3.6.1.4.1.232.11)
@@ -2163,8 +2291,10 @@ CPQHOST-MIB DEFINITIONS ::= BEGIN
               --#TYPE "Generic trap (11003)"
               --#SUMMARY "%s"
               --#ARGUMENTS {2}
-              --#SEVERITY MAJOR
+              --#SEVERITY INFORMATIONAL
               --#TIMEINDEX 99
+              --#SIMPLE_SEVERITY INFORMATIONAL
+              --#HWSTATUS_CATEGORY NONE
 
         ::= 11003
 
@@ -2181,6 +2311,8 @@ CPQHOST-MIB DEFINITIONS ::= BEGIN
               --#ARGUMENTS {2}
               --#SEVERITY MAJOR
               --#TIMEINDEX 99
+              --#SIMPLE_SEVERITY MAJOR
+              --#HWSTATUS_CATEGORY NONE
 
         ::= 11004
 
@@ -2236,10 +2368,13 @@ CPQHOST-MIB DEFINITIONS ::= BEGIN
             the OK condition."
 
              --#TYPE "Status Trap (11008)"
-             --#SUMMARY "NIC Status is OK for slot %s, port %s."
+             --#SUMMARY "NIC status is ok for slot %s, port %s."
              --#ARGUMENTS {2, 3}
              --#SEVERITY MAJOR
              --#TIMEINDEX 99
+             --#SIMPLE_SEVERITY OK
+             --#HWSTATUS_CATEGORY NETWORK
+
         ::= 11008
 
     cpqHo2NicStatusFailed2 TRAP-TYPE
@@ -2251,10 +2386,14 @@ CPQHOST-MIB DEFINITIONS ::= BEGIN
             the Failed condition."
 
              --#TYPE "Status Trap (11009)"
-             --#SUMMARY "NIC Status is Failed for slot %s, port %s."
+             --#SUMMARY "NIC status is failed for slot %s, port %s."
              --#ARGUMENTS {2, 3}
              --#SEVERITY MAJOR
              --#TIMEINDEX 99
+             --#SIMPLE_SEVERITY MAJOR
+             --#HWSTATUS_CATEGORY NETWORK
+             --#ACTION "Check the network cables. Replace the failed NIC."
+
         ::= 11009
 
     cpqHo2NicSwitchoverOccurred2 TRAP-TYPE
@@ -2271,6 +2410,9 @@ CPQHOST-MIB DEFINITIONS ::= BEGIN
              --#ARGUMENTS {2, 3, 4, 5}
              --#SEVERITY MAJOR
              --#TIMEINDEX 99
+             --#SIMPLE_SEVERITY MAJOR
+             --#HWSTATUS_CATEGORY NETWORK
+             --#ACTION "Examine the network connections and check for a NIC failure."
         ::= 11010
 
     cpqHoProcessEventTrap TRAP-TYPE
@@ -2284,6 +2426,8 @@ CPQHOST-MIB DEFINITIONS ::= BEGIN
               --#ARGUMENTS {2}
               --#SEVERITY MAJOR
               --#TIMEINDEX 99
+              --#SIMPLE_SEVERITY MAJOR
+              --#HWSTATUS_CATEGORY NONE
 
         ::= 11011
 
@@ -2301,6 +2445,8 @@ CPQHOST-MIB DEFINITIONS ::= BEGIN
               --#SEVERITY MAJOR
               --#TIMEINDEX 99
               --#STATE DEGRADED
+              --#SIMPLE_SEVERITY MAJOR
+              --#HWSTATUS_CATEGORY NONE
 
         ::= 11012
 
@@ -2318,6 +2464,8 @@ CPQHOST-MIB DEFINITIONS ::= BEGIN
               --#SEVERITY INFORMATIONAL
               --#TIMEINDEX 99
               --#STATE OPERATIONAL
+              --#SIMPLE_SEVERITY OK
+              --#HWSTATUS_CATEGORY NONE
 
         ::= 11013
 
@@ -2332,6 +2480,9 @@ CPQHOST-MIB DEFINITIONS ::= BEGIN
               --#ARGUMENTS {2}
               --#SEVERITY CRITICAL
               --#TIMEINDEX 99
+              --#SIMPLE_SEVERITY CRITICAL
+              --#HWSTATUS_CATEGORY NONE
+              --#ACTION "Install the required software updates."
 
         ::= 11014
 
@@ -2343,10 +2494,12 @@ CPQHOST-MIB DEFINITIONS ::= BEGIN
              This trap is not sent if cpqHoCrashDumpMonitoring is disabled."
 
               --#TYPE "Crash Dump not enabled Notification Trap (11015)"
-              --#SUMMARY "Crash Dump is not enabled."
+              --#SUMMARY "Crash dump is not enabled."
               --#ARGUMENTS {}
               --#SEVERITY WARNING
               --#TIMEINDEX 99
+              --#SIMPLE_SEVERITY MAJOR
+              --#HWSTATUS_CATEGORY NONE
 
         ::= 11015
 
@@ -2377,6 +2530,8 @@ CPQHOST-MIB DEFINITIONS ::= BEGIN
               --#ARGUMENTS {2, 4, 8}
               --#SEVERITY WARNING
               --#TIMEINDEX 99
+              --#SIMPLE_SEVERITY MAJOR
+              --#HWSTATUS_CATEGORY NONE
 
         ::= 11017
 
@@ -2388,10 +2543,12 @@ CPQHOST-MIB DEFINITIONS ::= BEGIN
             "Power threshold exceeded."
 
               --#TYPE "Power Threshold Exceeded (11018)"
-              --#SUMMARY "%s"
-              --#ARGUMENTS {6}
+              --#SUMMARY "Power threshold has been exceeded (Warning Type: %s, Threshold: %d watts, Duration: %d minutes)"
+              --#ARGUMENTS {2, 3, 4}
               --#SEVERITY MINOR
               --#TIMEINDEX 99
+              --#SIMPLE_SEVERITY MAJOR
+              --#HWSTATUS_CATEGORY POWER
 
         ::= 11018
 
@@ -2405,9 +2562,26 @@ CPQHOST-MIB DEFINITIONS ::= BEGIN
               --#ARGUMENTS {3, 4, 5}
               --#SEVERITY WARNING
               --#TIMEINDEX 99
+              --#SIMPLE_SEVERITY MAJOR
+              --#HWSTATUS_CATEGORY NONE
 
         ::= 11019
 
-  
+  cpqHoMibHealthStatusArrayChangeTrap TRAP-TYPE
+        ENTERPRISE compaq
+        VARIABLES { sysName, cpqHoTrapFlags, cpqHoMibHealthStatusArray }
+        DESCRIPTION
+        "A change in the cpqHoMibHealthStatusArray has occurred."
+              --#TYPE "Health Status Array Change occurred (11020)"
+              --#SUMMARY "A change in the health status of the server has occurred, the status is now %s"
+              --#ARGUMENTS {2}
+              --#SEVERITY INFORMATIONAL
+              --#TIMEINDEX 99
+              --#SIMPLE_SEVERITY OK
+              --#HWSTATUS_CATEGORY MANAGEMENTPROCESSOR
+
+        ::= 11020
+
+
   END
 

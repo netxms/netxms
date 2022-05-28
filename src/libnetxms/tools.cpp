@@ -270,7 +270,7 @@ bool LIBNETXMS_EXPORTABLE IsShutdownInProgress()
 /**
  * Calculate number of bits in IPv4 netmask (in host byte order)
  */
-int LIBNETXMS_EXPORTABLE BitsInMask(UINT32 mask)
+int LIBNETXMS_EXPORTABLE BitsInMask(uint32_t mask)
 {
    int bits;
    for(bits = 0; mask != 0; bits++, mask <<= 1);
