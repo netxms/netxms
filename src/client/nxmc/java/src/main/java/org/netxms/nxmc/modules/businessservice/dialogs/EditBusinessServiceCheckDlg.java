@@ -86,7 +86,7 @@ public class EditBusinessServiceCheckDlg extends Dialog
    protected Control createDialogArea(Composite parent)
    {
       dialogArea = (Composite)super.createDialogArea(parent);
-      
+
       GridLayout layout = new GridLayout();
       layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
       layout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
@@ -116,14 +116,14 @@ public class EditBusinessServiceCheckDlg extends Dialog
          {
             updateElementVisibility();
          }
-         
+
          @Override
          public void widgetDefaultSelected(SelectionEvent e)
          {
             widgetSelected(e);
          }
       });
-      
+
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
@@ -139,7 +139,7 @@ public class EditBusinessServiceCheckDlg extends Dialog
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalSpan = 2;
       selectorGroup.setLayoutData(gd);
-      
+
       if (check.getCheckType() == BusinessServiceCheckType.DCI)
       {
          objectOrDciSelector = new DciSelector(selectorGroup, SWT.NONE, false);
@@ -211,7 +211,7 @@ public class EditBusinessServiceCheckDlg extends Dialog
          ((ObjectSelector)objectOrDciSelector).setObjectClass(GenericObject.class);
          ((ObjectSelector)objectOrDciSelector).setObjectId(check.getObjectId()); 
       }
-      
+
       if (type == BusinessServiceCheckType.SCRIPT)
       {
          scriptEditor.setVisible(true);
@@ -229,10 +229,11 @@ public class EditBusinessServiceCheckDlg extends Dialog
 
       thresholdCombo.setEnabled(type == BusinessServiceCheckType.OBJECT || type == BusinessServiceCheckType.DCI);
       if (type == BusinessServiceCheckType.OBJECT)
-         objectOrDciSelector.setLabel(i18n.tr("Check object"));
+         objectOrDciSelector.setLabel(i18n.tr("Object to check"));
       else if (type == BusinessServiceCheckType.SCRIPT)
          objectOrDciSelector.setLabel(i18n.tr("Related object"));
 
+      getShell().layout(true, true);
       getShell().pack();
    }
 

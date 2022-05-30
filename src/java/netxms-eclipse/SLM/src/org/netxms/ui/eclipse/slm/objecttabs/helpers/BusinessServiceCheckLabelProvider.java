@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Raden Solutions
+ * Copyright (C) 2003-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -119,29 +119,27 @@ public class BusinessServiceCheckLabelProvider extends LabelProvider implements 
     */
 	public String getObjectName(BusinessServiceCheck check)
 	{
+	   if (check.getObjectId() == 0)
+         return "";
+
 	   StringBuilder name = new StringBuilder();
-      if (check.getCheckType() == BusinessServiceCheckType.OBJECT || check.getCheckType() == BusinessServiceCheckType.DCI ||
-            (check.getCheckType() == BusinessServiceCheckType.SCRIPT) && check.getObjectId() != 0)
+      AbstractObject object = session.findObjectById(check.getObjectId());
+      if (object != null)
       {
-         AbstractObject object = session.findObjectById(check.getObjectId());
-         if (object != null)
+         name.append(object.getObjectName());
+         if (object instanceof NodeChild)
          {
-            name.append(object.getObjectName());
-            if (object instanceof NodeChild)
-            {
-               name.append(" @ ");
-               AbstractNode node = ((NodeChild)object).getParentNode();
-               name.append(node.getObjectName());
-            }
-         }
-         else
-         {
-            name.append("[");
-            name.append(Long.toString(check.getObjectId()));
-            name.append("]");
+            name.append(" @ ");
+            AbstractNode node = ((NodeChild)object).getParentNode();
+            name.append(node.getObjectName());
          }
       }
-	   
+      else
+      {
+         name.append("[");
+         name.append(Long.toString(check.getObjectId()));
+         name.append("]");
+      }
 	   return name.toString();
 	}
 
@@ -155,7 +153,7 @@ public class BusinessServiceCheckLabelProvider extends LabelProvider implements 
    {
       if (check.getPrototypeServiceId() == 0)
          return "";
-      
+
       StringBuilder name = new StringBuilder();
       AbstractObject object = session.findObjectById(check.getPrototypeServiceId());
       if (object != null)
@@ -168,7 +166,7 @@ public class BusinessServiceCheckLabelProvider extends LabelProvider implements 
          name.append(Long.toString(check.getObjectId()));
          name.append("]");
       }
-      
+
       return name.toString();
    }
 
@@ -180,14 +178,11 @@ public class BusinessServiceCheckLabelProvider extends LabelProvider implements 
     */
    public String getDciName(BusinessServiceCheck check)
    {
-      String name = "";
-      if (check.getCheckType() == BusinessServiceCheckType.DCI)
-      {
-         name = dciNameCache.get(check.getDciId());
-         return (name != null) ? name : ("[" + Long.toString(check.getDciId()) + "]");
-      }
-      
-      return name;
+      if ((check.getCheckType() != BusinessServiceCheckType.DCI) || (check.getDciId() == 0))
+         return "";
+
+      String name = dciNameCache.get(check.getDciId());
+      return (name != null) ? name : ("[" + Long.toString(check.getDciId()) + "]");
    }
 
    /**
