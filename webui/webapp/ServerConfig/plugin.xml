@@ -30,7 +30,7 @@
       <view
             allowMultiple="false"
             class="org.netxms.ui.eclipse.serverconfig.views.ExportFileBuilder"
-            icon="icons/export.gif"
+            icon="icons/export.png"
             id="org.netxms.ui.eclipse.serverconfig.views.ExportFileBuilder"
             name="%view.name.ExportConfig"
             restorable="true">
@@ -334,7 +334,7 @@
 		   <action
            class="org.netxms.ui.eclipse.serverconfig.actions.ExportConfiguration"
            definitionId="org.netxms.ui.eclipse.serverconfig.commands.export_configuration"
-           icon="icons/export.gif"
+           icon="icons/export.png"
            id="org.netxms.ui.eclipse.serverconfig.actions.export_configuration"
            label="%action.label.ExportConfig"
            menubarPath="tools/additions"
@@ -343,7 +343,7 @@
      <action
            class="org.netxms.ui.eclipse.serverconfig.actions.ImportConfiguration"
            definitionId="org.netxms.ui.eclipse.serverconfig.commands.import_configuration"
-           icon="icons/import.gif"
+           icon="icons/import.png"
            id="org.netxms.ui.eclipse.serverconfig.actions.import_configuration"
            label="%action.label.ImportConfig"
            menubarPath="tools/additions"

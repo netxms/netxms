@@ -57,14 +57,14 @@ public class DciSelector extends AbstractSelector
 	 */
 	public DciSelector(Composite parent, int style, boolean useHyperlink)
 	{
-		super(parent, style, USE_TEXT | (useHyperlink ? USE_HYPERLINK : 0));
+      super(parent, style, useHyperlink ? USE_HYPERLINK : 0);
 		setText(emptySelectionName);
 		session = ConsoleSharedData.getSession();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.widgets.AbstractSelector#selectionButtonHandler()
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.widgets.AbstractSelector#selectionButtonHandler()
+    */
 	@Override
 	protected void selectionButtonHandler()
 	{
