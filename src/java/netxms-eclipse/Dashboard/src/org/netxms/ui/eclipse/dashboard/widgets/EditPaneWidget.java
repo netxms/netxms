@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,19 +18,22 @@
  */
 package org.netxms.ui.eclipse.dashboard.widgets;
 
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Menu;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
@@ -39,9 +42,9 @@ import org.netxms.ui.eclipse.dashboard.Messages;
 /**
  * Edit pane widget for dashboard elements
  */
-public class EditPaneWidget extends Canvas implements PaintListener
+public class EditPaneWidget extends Canvas
 {
-	private static final Color BACKGROUND_COLOR = new Color(Display.getCurrent(), 0, 0, 127);
+   private static final RGB BACKGROUND_COLOR = new RGB(0, 0, 127);
 
 	private DashboardControl dbc;
 	private DashboardElement element;
@@ -57,22 +60,39 @@ public class EditPaneWidget extends Canvas implements PaintListener
 		super(parent, SWT.TRANSPARENT | SWT.NO_BACKGROUND);
 		this.dbc = dbc;
 		this.element = element;
-		addPaintListener(this);
+
+      final Color color;
+      if (Platform.getOS().equals(Platform.OS_WIN32))
+      {
+         color = new Color(getDisplay(), BACKGROUND_COLOR);
+         addPaintListener(new PaintListener() {
+            @Override
+            public void paintControl(PaintEvent e)
+            {
+               final GC gc = e.gc;
+               final Point size = getSize();
+               gc.setBackground(color);
+               gc.setAlpha(20);
+               gc.fillRectangle(0, 0, size.x, size.y);
+            }
+         });
+
+      }
+      else
+      {
+         color = new Color(getDisplay(), BACKGROUND_COLOR, 20);
+         setBackground(color);
+      }
+      addDisposeListener(new DisposeListener() {
+         @Override
+         public void widgetDisposed(DisposeEvent e)
+         {
+            color.dispose();
+         }
+      });
+
 		createActions();
 		createPopupMenu();
-	}
-
-   /**
-    * @see org.eclipse.swt.events.PaintListener#paintControl(org.eclipse.swt.events.PaintEvent)
-    */
-	@Override
-	public void paintControl(PaintEvent e)
-	{
-		final GC gc = e.gc;
-		final Point size = getSize();
-		gc.setBackground(BACKGROUND_COLOR);
-		gc.setAlpha(20);
-		gc.fillRectangle(0, 0, size.x, size.y);
 	}
 
 	/**
