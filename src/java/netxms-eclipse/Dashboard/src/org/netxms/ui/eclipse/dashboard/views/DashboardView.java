@@ -57,12 +57,15 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
 import org.netxms.client.constants.UserAccessRights;
+import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.DciDataRow;
 import org.netxms.client.objects.Dashboard;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.console.resources.RegionalSettings;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.dashboard.Activator;
+import org.netxms.ui.eclipse.dashboard.ElementCreationHandler;
+import org.netxms.ui.eclipse.dashboard.ElementCreationMenuManager;
 import org.netxms.ui.eclipse.dashboard.Messages;
 import org.netxms.ui.eclipse.dashboard.widgets.DashboardControl;
 import org.netxms.ui.eclipse.dashboard.widgets.ElementWidget;
@@ -95,18 +98,6 @@ public class DashboardView extends ViewPart implements ISaveablePart
 	private Action actionEditMode;
 	private Action actionSave;
 	private Action actionExportValues;
-	private Action actionAddAlarmBrowser;
-	private Action actionAddLabel;
-	private Action actionAddBarChart;
-	private Action actionAddPieChart;
-	private Action actionAddTubeChart;
-	private Action actionAddLineChart;
-	private Action actionAddAvailabilityChart;
-	private Action actionAddDashboard;
-	private Action actionAddStatusIndicator;
-	private Action actionAddEventMonitor;
-	private Action actionAddSnmpTrapMonitor;
-	private Action actionAddSyslogMonitor;
 	private Action actionFullScreenDisplay;
    private Action actionSaveAsImage;
 
@@ -133,57 +124,9 @@ public class DashboardView extends ViewPart implements ISaveablePart
 	   selectionProvider = new IntermediateSelectionProvider();
 	   getSite().setSelectionProvider(selectionProvider);
 
-	   ConsoleJob job = new ConsoleJob(Messages.get().DashboardView_GetEffectiveRights, this, Activator.PLUGIN_ID, null) {
-         @Override
-         protected void runInternal(IProgressMonitor monitor) throws Exception
-         {
-            readOnly = ((dashboard.getEffectiveRights() & UserAccessRights.OBJECT_ACCESS_MODIFY) == 0);
-         }
+      parentComposite = parent;
 
-         @Override
-         protected String getErrorMessage()
-         {
-            return Messages.get().DashboardView_GetEffectiveRightsError;
-         }
-      };
-      job.start();
-
-      // FIXME: rewrite waiting
-      try
-      {
-         job.join();
-      }
-      catch(InterruptedException e)
-      {
-      }
-
-		parentComposite = parent;
-		dbc = new DashboardControl(parent, SWT.NONE, dashboard, this, selectionProvider, false);
-		if (!readOnly)
-		{
-   		dbcModifyListener = new DashboardModifyListener() {
-   			@Override
-   			public void save()
-   			{
-   				actionSave.setEnabled(false);
-   				firePropertyChange(PROP_DIRTY);
-   			}
-   			
-   			@Override
-   			public void modify()
-   			{
-   				actionSave.setEnabled(true);
-   				firePropertyChange(PROP_DIRTY);
-   			}
-   		};
-   		dbc.setModifyListener(dbcModifyListener);
-		}
-		
-		activateContext();
-		createActions();
-		contributeToActionBars();
-		
-	   clientListener = new SessionListener() {         
+      clientListener = new SessionListener() {         
          @Override
          public void notificationHandler(SessionNotification n)
          {
@@ -200,8 +143,56 @@ public class DashboardView extends ViewPart implements ISaveablePart
          }
       };
       
-      session.addListener(clientListener);
+      dbc = new DashboardControl(parent, SWT.NONE, dashboard, this, selectionProvider, false);
+
+      activateContext();
+      createActions();
       
+	   ConsoleJob job = new ConsoleJob(Messages.get().DashboardView_GetEffectiveRights, this, Activator.PLUGIN_ID) {
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            readOnly = ((dashboard.getEffectiveRights() & UserAccessRights.OBJECT_ACCESS_MODIFY) == 0);
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
+                  if (!readOnly)
+                  {
+                     dbcModifyListener = new DashboardModifyListener() {
+                        @Override
+                        public void save()
+                        {
+                           actionSave.setEnabled(false);
+                           firePropertyChange(PROP_DIRTY);
+                        }
+                        
+                        @Override
+                        public void modify()
+                        {
+                           actionSave.setEnabled(true);
+                           firePropertyChange(PROP_DIRTY);
+                        }
+                     };
+                     dbc.setModifyListener(dbcModifyListener);
+                  }
+
+                  contributeToActionBars();
+                  getViewSite().getActionBars().updateActionBars();
+
+                  session.addListener(clientListener);
+               }
+            });
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return Messages.get().DashboardView_GetEffectiveRightsError;
+         }
+      };
+      job.start();
+
       addPartPropertyListener(new IPropertyChangeListener() {
          @Override
          public void propertyChange(PropertyChangeEvent event)
@@ -306,102 +297,6 @@ public class DashboardView extends ViewPart implements ISaveablePart
 		};
 		actionEditMode.setImageDescriptor(SharedIcons.EDIT);
 		actionEditMode.setChecked(dbc.isEditMode());
-
-		actionAddSyslogMonitor = new Action("Add s&yslog monitor") {
-		   @Override
-		   public void run()
-		   {
-		      dbc.addSyslogMonitor();
-		   }
-		};
-		
-		actionAddSnmpTrapMonitor = new Action("Add S&NMP trap monitor") {
-		   @Override
-		   public void run()
-		   {
-		      dbc.addSnmpTrapMonitor();
-		   }
-		};
-		
-		actionAddEventMonitor = new Action("Add &event monitor") {
-         @Override
-         public void run()
-         {
-            dbc.addEventMonitor();
-         }
-      };
-		
-		actionAddAlarmBrowser = new Action(Messages.get().DashboardView_AddAlarmBrowser) {
-			@Override
-			public void run()
-			{
-				dbc.addAlarmBrowser();
-			}
-		};
-		
-		actionAddLabel = new Action(Messages.get().DashboardView_AddLabel) {
-			@Override
-			public void run()
-			{
-				dbc.addLabel();
-			}
-		};
-		
-		actionAddBarChart = new Action(Messages.get().DashboardView_AddBarChart) {
-			@Override
-			public void run()
-			{
-				dbc.addBarChart();
-			}
-		};
-
-		actionAddPieChart = new Action(Messages.get().DashboardView_AddPieChart) {
-			@Override
-			public void run()
-			{
-				dbc.addPieChart();
-			}
-		};
-
-		actionAddTubeChart = new Action(Messages.get().DashboardView_AddTubeChart) {
-			@Override
-			public void run()
-			{
-				dbc.addTubeChart();
-			}
-		};
-
-		actionAddLineChart = new Action(Messages.get().DashboardView_AddLineChart) {
-			@Override
-			public void run()
-			{
-				dbc.addLineChart();
-			}
-		};
-
-		actionAddAvailabilityChart = new Action(Messages.get().DashboardView_AddAvailChart) {
-			@Override
-			public void run()
-			{
-				dbc.addAvailabilityChart();
-			}
-		};
-
-		actionAddDashboard = new Action(Messages.get().DashboardView_AddDashboard) {
-			@Override
-			public void run()
-			{
-				dbc.addEmbeddedDashboard();
-			}
-		};
-
-		actionAddStatusIndicator = new Action(Messages.get().DashboardView_AddStatusIndicator) {
-			@Override
-			public void run()
-			{
-				dbc.addStatusIndicator();
-			}
-		};
 		
 		actionFullScreenDisplay = new Action("&Full screen display", Action.AS_CHECK_BOX) {
          @Override
@@ -414,7 +309,7 @@ public class DashboardView extends ViewPart implements ISaveablePart
 		actionFullScreenDisplay.setActionDefinitionId("org.netxms.ui.eclipse.dashboard.commands.full_screen"); //$NON-NLS-1$
       handlerService.activateHandler(actionFullScreenDisplay.getActionDefinitionId(), new ActionHandler(actionFullScreenDisplay));
 	}
-	
+
 	/**
 	 * Contribute actions to action bar
 	 */
@@ -438,18 +333,13 @@ public class DashboardView extends ViewPart implements ISaveablePart
    		manager.add(actionEditMode);
    		manager.add(actionSave);
    		manager.add(new Separator());
-   		manager.add(actionAddAlarmBrowser);
-   		manager.add(actionAddEventMonitor);
-   		manager.add(actionAddSnmpTrapMonitor);
-   		manager.add(actionAddSyslogMonitor);
-   		manager.add(actionAddLabel);
-   		manager.add(actionAddLineChart);
-   		manager.add(actionAddBarChart);
-   		manager.add(actionAddPieChart);
-   		manager.add(actionAddTubeChart);
-   		manager.add(actionAddStatusIndicator);
-   		manager.add(actionAddAvailabilityChart);
-   		manager.add(actionAddDashboard);
+         manager.add(new ElementCreationMenuManager("&Add", new ElementCreationHandler() {
+            @Override
+            public void elementCreated(DashboardElement element)
+            {
+               dbc.addElement(element);
+            }
+         }));
    		manager.add(new Separator());
 	   }
       manager.add(actionExportValues);
@@ -481,54 +371,54 @@ public class DashboardView extends ViewPart implements ISaveablePart
       manager.add(new Separator());
 		manager.add(actionRefresh);
 	}
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
-	 */
+
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
+    */
 	@Override
 	public void setFocus()
 	{
 		dbc.setFocus();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.ISaveablePart#doSave(org.eclipse.core.runtime.IProgressMonitor)
-	 */
+   /**
+    * @see org.eclipse.ui.ISaveablePart#doSave(org.eclipse.core.runtime.IProgressMonitor)
+    */
 	@Override
 	public void doSave(IProgressMonitor monitor)
 	{
 		dbc.saveDashboard(this);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.ISaveablePart#doSaveAs()
-	 */
+   /**
+    * @see org.eclipse.ui.ISaveablePart#doSaveAs()
+    */
 	@Override
 	public void doSaveAs()
 	{
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.ISaveablePart#isDirty()
-	 */
+   /**
+    * @see org.eclipse.ui.ISaveablePart#isDirty()
+    */
 	@Override
 	public boolean isDirty()
 	{
 		return dbc.isModified() && !readOnly;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.ISaveablePart#isSaveAsAllowed()
-	 */
+   /**
+    * @see org.eclipse.ui.ISaveablePart#isSaveAsAllowed()
+    */
 	@Override
 	public boolean isSaveAsAllowed()
 	{
 		return false;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.ISaveablePart#isSaveOnCloseNeeded()
-	 */
+   /**
+    * @see org.eclipse.ui.ISaveablePart#isSaveOnCloseNeeded()
+    */
 	@Override
 	public boolean isSaveOnCloseNeeded()
 	{

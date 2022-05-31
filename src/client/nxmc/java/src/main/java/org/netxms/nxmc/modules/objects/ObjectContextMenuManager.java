@@ -78,7 +78,7 @@ public class ObjectContextMenuManager extends MenuManager
    private Action actionExecuteScript;
 
    /**
-    * Create new obejct context menu manager.
+    * Create new object context menu manager.
     *
     * @param view owning view
     * @param selectionProvider selection provider

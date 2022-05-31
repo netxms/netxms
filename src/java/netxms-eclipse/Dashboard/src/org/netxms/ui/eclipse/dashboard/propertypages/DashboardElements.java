@@ -23,6 +23,7 @@ import java.util.Collections;
 import java.util.List;
 import org.eclipse.core.internal.runtime.AdapterManager;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
@@ -44,7 +45,6 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Menu;
-import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.eclipse.ui.internal.dialogs.PropertyDialog;
 import org.netxms.client.NXCObjectModificationData;
@@ -52,10 +52,11 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.objects.Dashboard;
 import org.netxms.ui.eclipse.dashboard.Activator;
+import org.netxms.ui.eclipse.dashboard.ElementCreationHandler;
+import org.netxms.ui.eclipse.dashboard.ElementCreationMenuManager;
 import org.netxms.ui.eclipse.dashboard.Messages;
 import org.netxms.ui.eclipse.dashboard.dialogs.EditElementXmlDlg;
 import org.netxms.ui.eclipse.dashboard.propertypages.helpers.DashboardElementsLabelProvider;
-import org.netxms.ui.eclipse.dashboard.widgets.DashboardControl;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementLayout;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -93,7 +94,7 @@ public class DashboardElements extends PropertyPage
 	protected Control createContents(Composite parent)
 	{
 		Composite dialogArea = new Composite(parent, SWT.NONE);
-		
+
 		object = (Dashboard)getElement().getAdapter(Dashboard.class);
 		if (object == null)	// Paranoid check
 			return dialogArea;
@@ -325,172 +326,19 @@ public class DashboardElements extends PropertyPage
       Rectangle rect = addButton.getBounds();
       Point pt = new Point(rect.x, rect.y + rect.height);
       pt = addButton.getParent().toDisplay(pt);
-      Menu m = buildElementTypeSelectionMenu(addButton);
-      m.setLocation(pt.x, pt.y);
-      m.setVisible(true);
-	}
-
-   /**
-    * Build menu for selecting dashboard element type.
-    *
-    * @param parent
-    * @return
-    */
-   private Menu buildElementTypeSelectionMenu(Control parent)
-   {
-      Menu menu = new Menu(parent);
-
-      /* charts */
-      Menu chartsMenu = new Menu(menu);
-      addTypeToSelectionMenu(chartsMenu, Messages.get().AddDashboardElementDlg_LineChart, DashboardElement.LINE_CHART);
-      addTypeToSelectionMenu(chartsMenu, Messages.get().AddDashboardElementDlg_BarChart, DashboardElement.BAR_CHART);
-      addTypeToSelectionMenu(chartsMenu, Messages.get().AddDashboardElementDlg_PieChart, DashboardElement.PIE_CHART);
-      addTypeToSelectionMenu(chartsMenu, Messages.get().AddDashboardElementDlg_TubeChart, DashboardElement.TUBE_CHART);
-      addTypeToSelectionMenu(chartsMenu, Messages.get().AddDashboardElementDlg_GaugeChart, DashboardElement.DIAL_CHART);
-      new MenuItem(chartsMenu, SWT.SEPARATOR);
-      addTypeToSelectionMenu(chartsMenu, Messages.get().AddDashboardElementDlg_BarChartForTable, DashboardElement.TABLE_BAR_CHART);
-      addTypeToSelectionMenu(chartsMenu, Messages.get().AddDashboardElementDlg_PieChartForTable, DashboardElement.TABLE_PIE_CHART);
-      addTypeToSelectionMenu(chartsMenu, Messages.get().AddDashboardElementDlg_TubeChartForTable, DashboardElement.TABLE_TUBE_CHART);
-      new MenuItem(chartsMenu, SWT.SEPARATOR);
-      addTypeToSelectionMenu(chartsMenu, "Scripted bar chart", DashboardElement.SCRIPTED_BAR_CHART);
-      addTypeToSelectionMenu(chartsMenu, "Scripted pie chart", DashboardElement.SCRIPTED_PIE_CHART);
-      new MenuItem(chartsMenu, SWT.SEPARATOR);
-      addTypeToSelectionMenu(chartsMenu, Messages.get().AddDashboardElementDlg_StatusChart, DashboardElement.STATUS_CHART);
-      addTypeToSelectionMenu(chartsMenu, Messages.get().AddDashboardElementDlg_AvailabilityChart, DashboardElement.AVAILABLITY_CHART);
-
-      MenuItem chartsMenuItem = new MenuItem(menu, SWT.CASCADE);
-      chartsMenuItem.setText("&Charts");
-      chartsMenuItem.setMenu(chartsMenu);
-
-      /* tables */
-      Menu tablesMenu = new Menu(menu);
-      addTypeToSelectionMenu(tablesMenu, Messages.get().AddDashboardElementDlg_AlarmViewer, DashboardElement.ALARM_VIEWER);
-      addTypeToSelectionMenu(tablesMenu, Messages.get().AddDashboardElementDlg_TableValue, DashboardElement.TABLE_VALUE);
-      addTypeToSelectionMenu(tablesMenu, Messages.get().AddDashboardElementDlg_DciSummaryTable, DashboardElement.DCI_SUMMARY_TABLE);
-      addTypeToSelectionMenu(tablesMenu, "Object query", DashboardElement.OBJECT_QUERY);
-
-      MenuItem tablesMenuItem = new MenuItem(menu, SWT.CASCADE);
-      tablesMenuItem.setText("&Tables");
-      tablesMenuItem.setMenu(tablesMenu);
-
-      /* maps */
-      Menu mapsMenu = new Menu(menu);
-      addTypeToSelectionMenu(mapsMenu, Messages.get().AddDashboardElementDlg_NetworkMap, DashboardElement.NETWORK_MAP);
-      addTypeToSelectionMenu(mapsMenu, "Service components map", DashboardElement.SERVICE_COMPONENTS);
-      addTypeToSelectionMenu(mapsMenu, Messages.get().AddDashboardElementDlg_StatusMap, DashboardElement.STATUS_MAP);
-      addTypeToSelectionMenu(mapsMenu, Messages.get().AddDashboardElementDlg_GeoMap, DashboardElement.GEO_MAP);
-
-      MenuItem mapsMenuItem = new MenuItem(menu, SWT.CASCADE);
-      mapsMenuItem.setText("&Maps");
-      mapsMenuItem.setMenu(mapsMenu);
-
-      /* monitors */
-      Menu monitorsMenu = new Menu(menu);
-      addTypeToSelectionMenu(monitorsMenu, "Event monitor", DashboardElement.EVENT_MONITOR);
-      addTypeToSelectionMenu(monitorsMenu, "SNMP trap monitor", DashboardElement.SNMP_TRAP_MONITOR);
-      addTypeToSelectionMenu(monitorsMenu, "Syslog monitor", DashboardElement.SYSLOG_MONITOR);
-
-      MenuItem monitorsMenuItem = new MenuItem(menu, SWT.CASCADE);
-      monitorsMenuItem.setText("M&onitors");
-      monitorsMenuItem.setMenu(monitorsMenu);
-
-      /* others */
-      Menu othersMenu = new Menu(menu);
-      addTypeToSelectionMenu(othersMenu, Messages.get().AddDashboardElementDlg_StatusIndicator, DashboardElement.STATUS_INDICATOR);
-      addTypeToSelectionMenu(othersMenu, "Port view", DashboardElement.PORT_VIEW);
-      addTypeToSelectionMenu(othersMenu, "Rack diagram", DashboardElement.RACK_DIAGRAM);
-      addTypeToSelectionMenu(othersMenu, "Object Tools", DashboardElement.OBJECT_TOOLS);
-      addTypeToSelectionMenu(othersMenu, Messages.get().AddDashboardElementDlg_CustomWidget, DashboardElement.CUSTOM);
-
-      MenuItem othersMenuItem = new MenuItem(menu, SWT.CASCADE);
-      othersMenuItem.setText("&Others");
-      othersMenuItem.setMenu(othersMenu);
-
-      /* other top level items */
-      new MenuItem(menu, SWT.SEPARATOR);
-      addTypeToSelectionMenu(menu, Messages.get().AddDashboardElementDlg_Dashboard, DashboardElement.DASHBOARD);
-      addTypeToSelectionMenu(menu, Messages.get().AddDashboardElementDlg_WebPage, DashboardElement.WEB_PAGE);
-      new MenuItem(menu, SWT.SEPARATOR);
-      addTypeToSelectionMenu(menu, Messages.get().AddDashboardElementDlg_Label, DashboardElement.LABEL);
-      addTypeToSelectionMenu(menu, Messages.get().AddDashboardElementDlg_Separator, DashboardElement.SEPARATOR);
-      return menu;
-   }
-
-   /**
-    * Add element type to selection menu.
-    *
-    * @param menu menu to add
-    * @param name type name
-    * @param type type code
-    */
-   private void addTypeToSelectionMenu(Menu menu, String name, int type)
-   {
-      MenuItem item = new MenuItem(menu, SWT.PUSH);
-      item.setText(name);
-      item.addSelectionListener(new SelectionAdapter() {
+      MenuManager menuManager = new ElementCreationMenuManager(new ElementCreationHandler() {
          @Override
-         public void widgetSelected(SelectionEvent e)
+         public void elementCreated(DashboardElement element)
          {
-            DashboardElement element = new DashboardElement(type, getDefaultElementConfig(type));
             elements.add(element);
             viewer.setInput(elements.toArray());
             viewer.setSelection(new StructuredSelection(element));
          }
       });
-   }
-
-   /**
-    * Get default configuration for given element type.
-    *
-    * @param type element type
-    * @return default configuration
-    */
-   private static String getDefaultElementConfig(int type)
-   {
-      switch(type)
-      {
-         case DashboardElement.BAR_CHART:
-         case DashboardElement.PIE_CHART:
-         case DashboardElement.TUBE_CHART:
-         case DashboardElement.SCRIPTED_BAR_CHART:
-         case DashboardElement.SCRIPTED_PIE_CHART:
-            return DashboardControl.DEFAULT_CHART_CONFIG;
-         case DashboardElement.LINE_CHART:
-            return DashboardControl.DEFAULT_LINE_CHART_CONFIG;
-         case DashboardElement.DIAL_CHART:
-            return DashboardControl.DEFAULT_DIAL_CHART_CONFIG;
-         case DashboardElement.AVAILABLITY_CHART:
-            return DashboardControl.DEFAULT_AVAILABILITY_CHART_CONFIG;
-         case DashboardElement.TABLE_BAR_CHART:
-         case DashboardElement.TABLE_PIE_CHART:
-         case DashboardElement.TABLE_TUBE_CHART:
-            return DashboardControl.DEFAULT_TABLE_CHART_CONFIG;
-         case DashboardElement.LABEL:
-            return DashboardControl.DEFAULT_LABEL_CONFIG;
-         case DashboardElement.ALARM_VIEWER:
-         case DashboardElement.EVENT_MONITOR:
-         case DashboardElement.SYSLOG_MONITOR:
-         case DashboardElement.SNMP_TRAP_MONITOR:
-         case DashboardElement.STATUS_INDICATOR:
-         case DashboardElement.STATUS_MAP:
-         case DashboardElement.DASHBOARD:
-         case DashboardElement.RACK_DIAGRAM:
-            return DashboardControl.DEFAULT_OBJECT_REFERENCE_CONFIG;
-         case DashboardElement.NETWORK_MAP:
-         case DashboardElement.SERVICE_COMPONENTS:
-            return DashboardControl.DEFAULT_NETWORK_MAP_CONFIG;
-         case DashboardElement.GEO_MAP:
-            return DashboardControl.DEFAULT_GEO_MAP_CONFIG;
-         case DashboardElement.WEB_PAGE:
-            return DashboardControl.DEFAULT_WEB_PAGE_CONFIG;
-         case DashboardElement.TABLE_VALUE:
-            return DashboardControl.DEFAULT_TABLE_VALUE_CONFIG;
-         case DashboardElement.DCI_SUMMARY_TABLE:
-            return DashboardControl.DEFAULT_SUMMARY_TABLE_CONFIG;
-         default:
-            return "<element>\n</element>"; //$NON-NLS-1$
-      }
-   }
+      Menu menu = menuManager.createContextMenu(addButton);
+      menu.setLocation(pt.x, pt.y);
+      menu.setVisible(true);
+	}
 
 	/**
 	 * Edit selected element
