@@ -383,11 +383,13 @@ public class DashboardControl extends Composite
 			w.moveAbove(next);
 		elementWidgets.put(element, w);
 	}
-	
+
 	/**
-	 * @param element
-	 */
-	private void addElement(DashboardElement element)
+    * Add new element.
+    *
+    * @param element new element
+    */
+   public void addElement(DashboardElement element)
 	{
 		DashboardElementConfig config = (DashboardElementConfig)AdapterManager.getDefault().getAdapter(element, DashboardElementConfig.class);
 		if (config != null)
@@ -416,105 +418,6 @@ public class DashboardControl extends Composite
 		{
 			MessageDialogHelper.openError(getShell(), Messages.get().DashboardControl_InternalError, Messages.get().DashboardControl_InternalErrorText2);
 		}
-	}
-	
-	public void addSyslogMonitor()
-	{
-	   DashboardElement e = new DashboardElement(DashboardElement.SYSLOG_MONITOR, DEFAULT_OBJECT_REFERENCE_CONFIG);
-	   addElement(e);
-	}
-	
-	public void addSnmpTrapMonitor()
-	{
-	   DashboardElement e = new DashboardElement(DashboardElement.SNMP_TRAP_MONITOR, DEFAULT_OBJECT_REFERENCE_CONFIG);
-      addElement(e);
-	}
-	
-	public void addEventMonitor()
-	{
-	   DashboardElement e = new DashboardElement(DashboardElement.EVENT_MONITOR, DEFAULT_OBJECT_REFERENCE_CONFIG);
-	   addElement(e);
-	}
-	
-	/**
-	 * Add alarm browser widget to dashboard
-	 */
-	public void addAlarmBrowser()
-	{
-		DashboardElement e = new DashboardElement(DashboardElement.ALARM_VIEWER, DEFAULT_OBJECT_REFERENCE_CONFIG);
-		addElement(e);
-	}
-	
-	/**
-	 * Add label widget to dashboard
-	 */
-	public void addLabel()
-	{
-		DashboardElement e = new DashboardElement(DashboardElement.LABEL, DEFAULT_LABEL_CONFIG);
-		addElement(e);
-	}
-	
-	/**
-	 * Add pie chart widget to dashboard
-	 */
-	public void addPieChart()
-	{
-		DashboardElement e = new DashboardElement(DashboardElement.PIE_CHART, DEFAULT_CHART_CONFIG);
-		addElement(e);
-	}
-
-	/**
-	 * Add bar chart widget to dashboard
-	 */
-	public void addBarChart()
-	{
-		DashboardElement e = new DashboardElement(DashboardElement.BAR_CHART, DEFAULT_CHART_CONFIG);
-		addElement(e);
-	}
-
-	/**
-	 * Add tube chart widget to dashboard
-	 */
-	public void addTubeChart()
-	{
-		DashboardElement e = new DashboardElement(DashboardElement.TUBE_CHART, DEFAULT_CHART_CONFIG);
-		addElement(e);
-	}
-
-	/**
-	 * Add availability chart widget to dashboard
-	 */
-	public void addAvailabilityChart()
-	{
-		DashboardElement e = new DashboardElement(DashboardElement.AVAILABLITY_CHART, DEFAULT_AVAILABILITY_CHART_CONFIG);
-		addElement(e);
-	}
-
-	/**
-	 * Add tube chart widget to dashboard
-	 */
-	public void addLineChart()
-	{
-		DashboardElement e = new DashboardElement(DashboardElement.LINE_CHART, DEFAULT_LINE_CHART_CONFIG);
-		addElement(e);
-	}
-
-	/**
-	 * Add embedded dashboard widget to dashboard
-	 */
-	public void addEmbeddedDashboard()
-	{
-		DashboardElement e = new DashboardElement(DashboardElement.DASHBOARD, DEFAULT_OBJECT_REFERENCE_CONFIG);
-		addElement(e);
-	}
-
-	/**
-	 * Add status indicator widget to dashboard
-	 */
-	public void addStatusIndicator()
-	{
-		DashboardElement e = new DashboardElement(DashboardElement.STATUS_INDICATOR, DEFAULT_OBJECT_REFERENCE_CONFIG);
-		addElement(e);
 	}
 
 	/**
