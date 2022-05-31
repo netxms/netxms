@@ -59,6 +59,13 @@ public class EditBusinessServiceCheckDlg extends Dialog
    private Composite selectorGroup;
    private Composite dialogArea;
 
+   /**
+    * Create dialog for business service check edit.
+    *
+    * @param parentShell parent shell
+    * @param check business service check object to edit
+    * @param createNew true if new check is being created
+    */
    public EditBusinessServiceCheckDlg(Shell parentShell, BusinessServiceCheck check, boolean createNew)
    {
       super(parentShell);
@@ -167,9 +174,9 @@ public class EditBusinessServiceCheckDlg extends Dialog
       gd.horizontalSpan = 2;
       scriptEditor.setLayoutData(gd);
 
-      //Set all values 
+      // Set all values
       descriptionText.setText(check.getDescription());
-      typeCombo.select(check.getCheckType().getValue() - 1);
+      typeCombo.select((check.getCheckType() == BusinessServiceCheckType.NONE) ? BusinessServiceCheckType.OBJECT.getValue() - 1 : check.getCheckType().getValue() - 1);
       thresholdCombo.select(check.getThreshold());
       scriptEditor.setText(check.getScript());  
 
