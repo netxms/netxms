@@ -30,7 +30,7 @@
  */
 LogParserRule::LogParserRule(LogParser *parser, const TCHAR *name, const TCHAR *regexp, bool ignoreCase,
       UINT32 eventCode, const TCHAR *eventName, const TCHAR *eventTag, int repeatInterval, int repeatCount,
-      bool resetRepeat, const TCHAR *source, UINT32 level, UINT32 idStart, UINT32 idEnd)
+      bool resetRepeat, const TCHAR *source, const TCHAR *pushParam, int pushGroup, UINT32 level, UINT32 idStart, UINT32 idEnd)
 {
 	StringBuffer expandedRegexp;
 
@@ -61,13 +61,15 @@ LogParserRule::LogParserRule(LogParser *parser, const TCHAR *name, const TCHAR *
 	m_checkCount = 0;
 	m_matchCount = 0;
 	m_agentAction = nullptr;
+	m_pushParam = MemCopyString(pushParam);
+	m_pushGroup = pushGroup;
 	m_logName = nullptr;
 	m_agentActionArgs = new StringList();
    m_objectCounters = new HashMap<uint32_t, ObjectRuleStats>(Ownership::True);
 
    const char *eptr;
    int eoffset;
-   m_preg = _pcre_compile_t(reinterpret_cast<const PCRE_TCHAR*>(m_regexp), 
+   m_preg = _pcre_compile_t(reinterpret_cast<const PCRE_TCHAR*>(m_regexp),
          m_ignoreCase ? PCRE_COMMON_FLAGS | PCRE_CASELESS : PCRE_COMMON_FLAGS, &eptr, &eoffset, nullptr);
    if (m_preg == nullptr)
    {
@@ -112,6 +114,7 @@ LogParserRule::LogParserRule(LogParserRule *src, LogParser *parser)
       m_matchArray = new IntegerArray<time_t>();
    }
    m_agentAction = MemCopyString(src->m_agentAction);
+   m_pushParam = MemCopyString(src->m_pushParam);
    m_logName = MemCopyString(src->m_logName);
    m_agentActionArgs = new StringList(src->m_agentActionArgs);
    m_objectCounters = new HashMap<uint32_t, ObjectRuleStats>(Ownership::True);
@@ -144,6 +147,7 @@ LogParserRule::~LogParserRule()
 	MemFree(m_context);
 	MemFree(m_contextToChange);
 	MemFree(m_agentAction);
+	MemFree(m_pushParam);
 	MemFree(m_logName);
 	delete m_agentActionArgs;
 	delete m_matchArray;
@@ -155,7 +159,7 @@ LogParserRule::~LogParserRule()
  */
 bool LogParserRule::matchInternal(bool extMode, const TCHAR *source, UINT32 eventId, UINT32 level, const TCHAR *line,
          StringList *variables, UINT64 recordId, UINT32 objectId, time_t timestamp, const TCHAR *logName, LogParserCallback cb,
-         LogParserActionCallback cbAction, void *userData)
+         LogParserDataPushCallback cbDataPush, LogParserActionCallback cbAction, void *userData)
 {
    incCheckCount(objectId);
    if (extMode)
@@ -225,9 +229,8 @@ bool LogParserRule::matchInternal(bool extMode, const TCHAR *source, UINT32 even
 		if ((cgcount >= 0) && matchRepeatCount())
 		{
 			m_parser->trace(7, _T("  matched"));
-			if ((cb != nullptr) && ((m_eventCode != 0) || (m_eventName != nullptr)))
-			{
-			   if (cgcount == 0)
+
+			if (cgcount == 0)
 			      cgcount = MAX_PARAM_COUNT;
             StringList captureGroups;
 				for(int i = 1; i < cgcount; i++)
@@ -242,10 +245,21 @@ bool LogParserRule::matchInternal(bool extMode, const TCHAR *source, UINT32 even
                captureGroups.addPreallocated(s);
 				}
 
+			if ((cb != nullptr) && ((m_eventCode != 0) || (m_eventName != nullptr)))
+			{
 				cb(m_eventCode, m_eventName, m_eventTag, line, source, eventId, level, &captureGroups, variables, recordId, objectId,
                ((m_repeatCount > 0) && (m_repeatInterval > 0)) ? m_matchArray->size() : 1, timestamp, userData);
             m_parser->trace(8, _T("  callback completed"));
-         }
+			}
+
+			if((cbDataPush != nullptr))
+			{
+				if((0 < m_pushGroup) && (captureGroups.size() >= m_pushGroup))
+				{
+					const TCHAR *value = captureGroups.get(m_pushGroup - 1);
+					cbDataPush(m_pushParam, value);
+				}
+			}
 			if ((cbAction != nullptr) && (m_agentAction != nullptr))
 			   cbAction(m_agentAction, *m_agentActionArgs, userData);
          incMatchCount(objectId);

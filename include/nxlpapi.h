@@ -96,6 +96,13 @@ typedef void (*LogParserCallback)(UINT32, const TCHAR*, const TCHAR*, const TCHA
 typedef void (*LogParserActionCallback)(const TCHAR*, const StringList&, void*);
 
 /**
+ * Log parser data push callback
+ * Parameters:
+ *    NetXMS agent data push parameter name, parameter value
+ */
+typedef bool (*LogParserDataPushCallback)(const TCHAR* parameter, const TCHAR *value);
+
+/**
  * Log parser copy callback
  * Parameters:
  *    record text, source, event ID (facility), severity, user data
@@ -161,13 +168,15 @@ private:
 	int m_checkCount;
 	int m_matchCount;
 	TCHAR *m_agentAction;
+   TCHAR *m_pushParam;
+   int m_pushGroup;
 	TCHAR *m_logName;
 	StringList *m_agentActionArgs;
 	HashMap<uint32_t, ObjectRuleStats> *m_objectCounters;
 
 	bool matchInternal(bool extMode, const TCHAR *source, UINT32 eventId, UINT32 level, const TCHAR *line,
 	         StringList *variables, UINT64 recordId, UINT32 objectId, time_t timestamp, const TCHAR *logName,
-	         LogParserCallback cb, LogParserActionCallback cbAction, void *userData);
+	         LogParserCallback cb, LogParserDataPushCallback cbDataPush, LogParserActionCallback cbAction, void *userData);
 	bool matchRepeatCount();
    void expandMacros(const TCHAR *regexp, StringBuffer &out);
    void incCheckCount(uint32_t objectId);
@@ -177,7 +186,7 @@ public:
 	LogParserRule(LogParser *parser, const TCHAR *name,
 	              const TCHAR *regexp, bool ignoreCase = true, UINT32 eventCode = 0, const TCHAR *eventName = NULL,
 					  const TCHAR *eventTag = NULL, int repeatInterval = 0, int repeatCount = 0,
-					  bool resetRepeat = true, const TCHAR *source = NULL, UINT32 level = 0xFFFFFFFF,
+					  bool resetRepeat = true, const TCHAR *source = NULL, const TCHAR *push = NULL, int pushGroup = 0, UINT32 level = 0xFFFFFFFF,
 					  UINT32 idStart = 0, UINT32 idEnd = 0xFFFFFFFF);
 	LogParserRule(LogParserRule *src, LogParser *parser);
 	~LogParserRule();
@@ -186,15 +195,15 @@ public:
 	bool isValid() const { return m_preg != nullptr; }
 	uint32_t getEventCode() const { return m_eventCode; }
 
-   bool match(const TCHAR *line, uint32_t objectId, LogParserCallback cb, LogParserActionCallback cbAction, void *userData)
+   bool match(const TCHAR *line, uint32_t objectId, LogParserCallback cb, LogParserDataPushCallback cbDataPush, LogParserActionCallback cbAction, void *userData)
    {
-      return matchInternal(false, nullptr, 0, 0, line, nullptr, 0, objectId, 0, nullptr, cb, cbAction, userData);
+      return matchInternal(false, nullptr, 0, 0, line, nullptr, 0, objectId, 0, nullptr, cb, cbDataPush, cbAction, userData);
    }
    bool matchEx(const TCHAR *source, uint32_t eventId, uint32_t level, const TCHAR *line, StringList *variables,
          uint64_t recordId, uint32_t objectId, time_t timestamp, const TCHAR *fileName, LogParserCallback cb,
-         LogParserActionCallback cbAction, void *userData)
+         LogParserDataPushCallback cbDataPush, LogParserActionCallback cbAction, void *userData)
    {
-      return matchInternal(true, source, eventId, level, line, variables, recordId, objectId, timestamp, fileName, cb, cbAction, userData);
+      return matchInternal(true, source, eventId, level, line, variables, recordId, objectId, timestamp, fileName, cb, cbDataPush, cbAction, userData);
    }
 
 	void setLogName(const TCHAR *logName) { MemFree(m_logName); m_logName = MemCopyString(logName); }
@@ -225,6 +234,9 @@ public:
 	void setSource(const TCHAR *source) { MemFree(m_source); m_source = MemCopyString(source); }
 	const TCHAR *getSource() const { return CHECK_NULL_EX(m_source); }
 
+	void setPushParam(const TCHAR *pushParam) { MemFree(m_pushParam); m_pushParam = MemCopyString(pushParam); }
+	const TCHAR *getPushParam() const { return CHECK_NULL_EX(m_pushParam); }
+
 	void setLevel(uint32_t level) { m_level = level; }
    uint32_t getLevel() const { return m_level; }
 
@@ -236,6 +248,9 @@ public:
 
    void setRepeatCount(int repeatCount) { m_repeatCount = repeatCount; }
    int getRepeatCount() const { return m_repeatCount; }
+
+   void setPushGroup(int pushGroup) { m_pushGroup = pushGroup; }
+   int getPushGroup() const { return m_pushGroup; }
 
    void setRepeatReset(bool resetRepeat) { m_resetRepeat = resetRepeat; }
    bool isRepeatReset() const { return m_resetRepeat; }
@@ -262,6 +277,7 @@ private:
 	StringMap m_contexts;
 	StringMap m_macros;
 	LogParserCallback m_cb;
+   LogParserDataPushCallback m_cbDataPush;
 	LogParserActionCallback m_cbAction;
    LogParserCopyCallback m_cbCopy;
 	void *m_userData;
@@ -359,6 +375,7 @@ public:
 	bool addRule(LogParserRule *rule);
 	void setCallback(LogParserCallback cb) { m_cb = cb; }
    void setActionCallback(LogParserActionCallback cb) { m_cbAction = cb; }
+   void setDataPushCallback(LogParserDataPushCallback cb) { m_cbDataPush = cb; }
    void setCopyCallback(LogParserCopyCallback cb) { m_cbCopy = cb; }
    void setUserData(void *userData) { m_userData = userData; }
 	void setEventNameList(CodeLookupElement *lookupTable) { m_eventNameList = lookupTable; }
