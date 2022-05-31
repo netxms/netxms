@@ -55,8 +55,8 @@ public class DCISummaryTableColumnSelector extends AbstractSelector
          fireModifyListeners();
       }
    }
-   
-   /* (non-Javadoc)
+
+   /**
     * @see org.netxms.ui.eclipse.widgets.AbstractSelector#clearButtonHandler()
     */
    @Override

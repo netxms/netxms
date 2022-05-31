@@ -47,7 +47,7 @@ public class LocalFileSelector extends AbstractSelector
 	 */
 	public LocalFileSelector(Composite parent, int style, boolean useHyperlink, int selectorType)
 	{
-		super(parent, style, USE_TEXT | (useHyperlink ? USE_HYPERLINK : 0));
+      super(parent, style, useHyperlink ? USE_HYPERLINK : 0);
 
 		this.selectorType = selectorType;
 

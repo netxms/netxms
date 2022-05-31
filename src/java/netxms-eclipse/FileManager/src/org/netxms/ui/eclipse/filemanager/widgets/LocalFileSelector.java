@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -43,16 +43,16 @@ public class LocalFileSelector extends AbstractSelector
 	 */
 	public LocalFileSelector(Composite parent, int style, boolean useHyperlink, int selectorType)
 	{
-		super(parent, style, USE_TEXT | (useHyperlink ? USE_HYPERLINK : 0));
+      super(parent, style, useHyperlink ? USE_HYPERLINK : 0);
 
 		this.selectorType = selectorType;
 
 		setText(Messages.get().LocalFileSelector_None);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.widgets.AbstractSelector#selectionButtonHandler()
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.widgets.AbstractSelector#selectionButtonHandler()
+    */
 	@Override
 	protected void selectionButtonHandler()
 	{

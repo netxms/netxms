@@ -44,7 +44,6 @@ import org.netxms.nxmc.modules.users.dialogs.helpers.AbstractMethodBindingConfig
 import org.netxms.nxmc.modules.users.dialogs.helpers.CustomMethodBindingConfigurator;
 import org.netxms.nxmc.modules.users.dialogs.helpers.MessageMethodBindingConfigurator;
 import org.netxms.nxmc.modules.users.dialogs.helpers.TOTPMethodBindingConfigurator;
-import org.netxms.nxmc.modules.users.propertypages.Authentication;
 import org.netxms.nxmc.tools.MessageDialogHelper;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;

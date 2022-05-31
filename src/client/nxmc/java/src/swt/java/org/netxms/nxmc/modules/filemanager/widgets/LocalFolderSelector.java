@@ -42,16 +42,16 @@ public class LocalFolderSelector extends AbstractSelector
 	 */
 	public LocalFolderSelector(Composite parent, int style, boolean useHyperlink, int selectorType)
 	{
-		super(parent, style, USE_TEXT | (useHyperlink ? USE_HYPERLINK : 0));
+      super(parent, style, useHyperlink ? USE_HYPERLINK : 0);
 
 		this.selectorType = selectorType;
 
 		setText(i18n.tr("<none>"));
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.widgets.AbstractSelector#selectionButtonHandler()
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.widgets.AbstractSelector#selectionButtonHandler()
+    */
 	@Override
 	protected void selectionButtonHandler()
 	{
@@ -64,9 +64,9 @@ public class LocalFolderSelector extends AbstractSelector
          setFile(null);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.widgets.AbstractSelector#getSelectionButtonToolTip()
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.widgets.AbstractSelector#getSelectionButtonToolTip()
+    */
 	@Override
 	protected String getSelectionButtonToolTip()
 	{

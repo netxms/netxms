@@ -21,9 +21,13 @@ package org.netxms.ui.eclipse.objectbrowser.widgets;
 import java.util.HashSet;
 import java.util.Set;
 import org.eclipse.jface.window.Window;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
+import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.objectbrowser.Messages;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -39,6 +43,7 @@ public class ObjectSelector extends AbstractSelector
 	private Set<Class<? extends AbstractObject>> objectClassSet = new HashSet<Class<? extends AbstractObject>>();
 	private Set<Integer> classFilter = null;
 	private String emptySelectionName = Messages.get().ObjectSelector_None;
+   private WorkbenchLabelProvider labelProvider = new WorkbenchLabelProvider();
 
 	/**
 	 * @param parent
@@ -49,6 +54,13 @@ public class ObjectSelector extends AbstractSelector
 		super(parent, style, showClearButton ? SHOW_CLEAR_BUTTON : 0);
 		setText(emptySelectionName);
 		objectClassSet.add(Node.class);
+      addDisposeListener(new DisposeListener() {
+         @Override
+         public void widgetDisposed(DisposeEvent e)
+         {
+            labelProvider.dispose();
+         }
+      });
 	}
 
    /**
@@ -67,12 +79,14 @@ public class ObjectSelector extends AbstractSelector
 				objectId = objects[0].getObjectId();
 				object = objects[0];
             setText(objects[0].getNameWithAlias());
+            setImage(labelProvider.getImage(object));
 			}
 			else
 			{
 				objectId = 0;
 				object = null;
 				setText(emptySelectionName);
+            setImage(null);
 			}
 			fireModifyListeners();
 		}
@@ -87,6 +101,7 @@ public class ObjectSelector extends AbstractSelector
 		objectId = 0;
       object = null;
 		setText(emptySelectionName);
+      setImage(null);
 		fireModifyListeners();
 	}
 
@@ -127,11 +142,13 @@ public class ObjectSelector extends AbstractSelector
 		if (objectId == 0)
 		{
          setText(emptySelectionName);
+         setImage(null);
 		}
 		else
 		{
 			object = ConsoleSharedData.getSession().findObjectById(objectId);
 			setText((object != null) ? object.getObjectName() : ("<" + Long.toString(objectId) + ">")); //$NON-NLS-1$ //$NON-NLS-2$
+         setImage((object != null) ? labelProvider.getImage(object) : SharedIcons.IMG_UNKNOWN_OBJECT);
 		}
 	}
 

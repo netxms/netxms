@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2019 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,7 +37,7 @@ public class ScriptSelector extends AbstractSelector
     */
    public ScriptSelector(Composite parent, int style, boolean useHyperlink, boolean showLabel)
    {
-      super(parent, style, USE_TEXT | (useHyperlink ? USE_HYPERLINK : 0) | (showLabel ? 0 : HIDE_LABEL));
+      super(parent, style, (useHyperlink ? USE_HYPERLINK : 0) | (showLabel ? 0 : HIDE_LABEL));
    }
 
    /** 

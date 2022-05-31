@@ -130,6 +130,9 @@ public class AlarmCategorySelector extends AbstractSelector
       fireModifyListeners();
    }
 
+   /**
+    * @see org.netxms.ui.eclipse.widgets.AbstractSelector#clearButtonHandler()
+    */
    @Override
    protected void clearButtonHandler()
    {
@@ -140,6 +143,9 @@ public class AlarmCategorySelector extends AbstractSelector
       fireModifyListeners();
    }
 
+   /**
+    * @see org.netxms.ui.eclipse.widgets.AbstractSelector#getSelectionButtonToolTip()
+    */
    @Override
    protected String getSelectionButtonToolTip()
    {

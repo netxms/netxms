@@ -26,7 +26,6 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.rap.rwt.RWT;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.custom.CLabel;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.ModifyEvent;
@@ -36,7 +35,6 @@ import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Rectangle;
-import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -45,7 +43,6 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Menu;
-import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.forms.events.HyperlinkAdapter;
 import org.eclipse.ui.forms.events.HyperlinkEvent;
 import org.eclipse.ui.forms.widgets.ImageHyperlink;
@@ -60,11 +57,10 @@ public class AbstractSelector extends Composite
 {
 	public static final int USE_HYPERLINK = 0x0001;
 	public static final int HIDE_LABEL = 0x0002;
-	public static final int USE_TEXT = 0x0004;
 	public static final int SHOW_CLEAR_BUTTON = 0x0008;
-	
+
 	private Label label;
-	private Control text;
+   private CText text;
 	private Button selectionButton;
 	private Button clearingButton;
 	private ImageHyperlink selectionLink;
@@ -102,26 +98,15 @@ public class AbstractSelector extends Composite
 			gd.horizontalSpan = layout.numColumns;
 			label.setLayoutData(gd);
 		}
-		
-      GridData gd = new GridData();
-      gd.horizontalAlignment = SWT.FILL;
-      gd.grabExcessHorizontalSpace = true;
-      gd.verticalAlignment = SWT.TOP;
-		if ((options & USE_TEXT) != 0)
-		{
-	      text = new Text(this, SWT.BORDER | SWT.READ_ONLY);
-	      text.setLayoutData(gd);
-		}
-		else
-		{
-		   // wrapper composite is needed because RAP ignores SWT.BORDER flag for CLabel
-		   Composite wrapper = new Composite(this, SWT.BORDER);
-		   wrapper.setLayout(new FillLayout());
-         wrapper.setLayoutData(gd);
-	      text = new CLabel(wrapper, SWT.NONE);
-		}
-		text.setData(RWT.CUSTOM_VARIANT, "SelectorWidget");
-		
+
+      text = new CText(this, SWT.BORDER);
+		GridData gd = new GridData();
+		gd.horizontalAlignment = SWT.FILL;
+		gd.grabExcessHorizontalSpace = true;
+      gd.verticalAlignment = SWT.FILL;
+		text.setLayoutData(gd);
+      text.setData(RWT.CUSTOM_VARIANT, "SelectorWidget");
+
 		if ((options & USE_HYPERLINK) != 0)
 		{
 			selectionLink = new ImageHyperlink(this, SWT.NONE);
@@ -137,7 +122,7 @@ public class AbstractSelector extends Composite
 					selectionButtonHandler();
 				}
 			});
-			
+
 			if ((options & SHOW_CLEAR_BUTTON) != 0)
 			{
 				clearingLink = new ImageHyperlink(this, SWT.NONE);
@@ -332,10 +317,7 @@ public class AbstractSelector extends Composite
 	 */
 	protected void setText(final String newText)
 	{
-		if (text instanceof CLabel)
-			((CLabel)text).setText(newText);
-		else
-			((Text)text).setText(newText);
+      text.setText(newText);
 	}
 
 	/**
@@ -345,10 +327,7 @@ public class AbstractSelector extends Composite
 	 */
 	protected String getText()
 	{
-		if (text instanceof CLabel)
-			return ((CLabel)text).getText();
-		else
-			return ((Text)text).getText();
+      return text.getText();
 	}
 
 	/**
@@ -358,9 +337,6 @@ public class AbstractSelector extends Composite
     */
 	protected void setImage(final Image image)
 	{
-		if (!(text instanceof CLabel))
-			return;
-		
 		if (scaledImage != null)
 		{
 			scaledImage.dispose();
@@ -373,16 +349,16 @@ public class AbstractSelector extends Composite
 			if ((size.width > 64) || (size.height > 64))
 			{
 				scaledImage = new Image(getDisplay(), image.getImageData().scaledTo(64, 64));
-				((CLabel)text).setImage(scaledImage);
+            text.setImage(scaledImage);
 			}
 			else
 			{
-				((CLabel)text).setImage(image);
+            text.setImage(image);
 			}
 		}
 		else
 		{
-			((CLabel)text).setImage(null);
+         text.setImage(null);
 		}
 	}
 
@@ -393,9 +369,7 @@ public class AbstractSelector extends Composite
     */
 	protected Image getImage()
 	{
-		if (text instanceof CLabel)
-			return ((CLabel)text).getImage();
-		return null;
+      return text.getImage();
 	}
 
    /**
