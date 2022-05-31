@@ -53,7 +53,8 @@ enum ParserState
    XML_STATE_EXCLUSION_SCHEDULES,
    XML_STATE_EXCLUSION_SCHEDULE,
    XML_STATE_AGENT_ACTION,
-   XML_STATE_LOG_NAME
+   XML_STATE_LOG_NAME,
+   XML_STATE_PUSH
 };
 
 /**
@@ -79,6 +80,8 @@ struct LogParser_XmlParserState
    StringBuffer id;
    StringBuffer level;
    StringBuffer source;
+   StringBuffer pushParam;
+   int pushGroup;
    StringBuffer context;
    StringBuffer description;
    StringBuffer ruleName;
@@ -121,6 +124,7 @@ LogParser::LogParser() : m_rules(0, 16, Ownership::True), m_stopCondition(true)
 {
 	m_cb = nullptr;
 	m_cbAction = nullptr;
+	m_cbDataPush = nullptr;
    m_cbCopy = nullptr;
 	m_userData = nullptr;
 	m_name = nullptr;
@@ -163,6 +167,7 @@ LogParser::LogParser(const LogParser *src) : m_rules(src->m_rules.size(), 16, Ow
 
 	m_cb = src->m_cb;
    m_cbAction = src->m_cbAction;
+   m_cbDataPush = src->m_cbDataPush;
    m_cbCopy = src->m_cbCopy;
    m_userData = src->m_userData;
 	m_name = MemCopyString(src->m_name);
@@ -299,8 +304,8 @@ bool LogParser::matchLogRecord(bool hasAttributes, const TCHAR *source, uint32_t
 		if ((state = checkContext(rule)) != nullptr)
 		{
 			bool ruleMatched = hasAttributes ?
-			   rule->matchEx(source, eventId, level, line, variables, recordId, objectId, timestamp, logName, m_cb, m_cbAction, m_userData) :
-				rule->match(line, objectId, m_cb, m_cbAction, m_userData);
+			   rule->matchEx(source, eventId, level, line, variables, recordId, objectId, timestamp, logName, m_cb, m_cbDataPush, m_cbAction, m_userData) :
+				rule->match(line, objectId, m_cb, m_cbDataPush, m_cbAction, m_userData);
 			if (ruleMatched)
 			{
 				trace(5, _T("rule %d \"%s\" matched"), i + 1, rule->getDescription());
@@ -530,6 +535,7 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 		ps->description = nullptr;
 		ps->id = nullptr;
 		ps->source = nullptr;
+		ps->pushParam = nullptr;
 		ps->level = nullptr;
 		ps->agentAction = nullptr;
       ps->logName = nullptr;
@@ -583,6 +589,11 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 	else if (!strcmp(name, "source") || !strcmp(name, "tag"))
 	{
 		ps->state = XML_STATE_SOURCE;
+	}
+	else if (!strcmp(name, "push"))
+	{
+		ps->state = XML_STATE_PUSH;
+		ps->pushGroup = XMLGetAttrInt(attrs, "group", 1);
 	}
 	else if (!strcmp(name, "event"))
 	{
@@ -714,7 +725,7 @@ static void EndElement(void *userData, const char *name)
 		if (ps->regexp.isEmpty())
 			ps->regexp = _T(".*");
 		LogParserRule *rule = new LogParserRule(ps->parser, ps->ruleName, ps->regexp, ps->ignoreCase,
-		         eventCode, eventName, ps->eventTag, ps->repeatInterval, ps->repeatCount, ps->resetRepeat);
+		         eventCode, eventName, ps->eventTag, ps->repeatInterval, ps->repeatCount, ps->resetRepeat, ps->source, ps->pushParam, ps->pushGroup);
 		if (!ps->agentAction.isEmpty())
 		   rule->setAgentAction(ps->agentAction);
 		if (!ps->agentActionArgs.isEmpty())
@@ -734,6 +745,9 @@ static void EndElement(void *userData, const char *name)
 
 		if (!ps->source.isEmpty())
 			rule->setSource(ps->source);
+
+		if (!ps->pushParam.isEmpty())
+			rule->setPushParam(ps->pushParam);
 
 		if (!ps->level.isEmpty())
 			rule->setLevel(_tcstoul(ps->level, nullptr, 0));
@@ -790,6 +804,10 @@ static void EndElement(void *userData, const char *name)
 	{
 		ps->state = XML_STATE_RULE;
 	}
+	else if (!strcmp(name, "push"))
+	{
+		ps->state = XML_STATE_RULE;
+	}
 	else if (!strcmp(name, "context"))
 	{
 		ps->state = XML_STATE_RULE;
@@ -837,6 +855,9 @@ static void CharData(void *userData, const XML_Char *s, int len)
 			break;
 		case XML_STATE_SOURCE:
 			ps->source.appendUtf8String(s, len);
+			break;
+		case XML_STATE_PUSH:
+			ps->pushParam.appendUtf8String(s, len);
 			break;
 		case XML_STATE_EVENT:
 			ps->event.appendUtf8String(s, len);

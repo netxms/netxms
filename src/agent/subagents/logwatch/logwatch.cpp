@@ -257,6 +257,7 @@ static void ParserThreadTemplate(LogParser *parser)
          _tcslcat(path, matchingFileList.get(i), MAX_PATH);
          p->setFileName(path);
          p->setCallback(LogParserMatch);
+         p->setDataPushCallback(AgentPushParameterData);
          p->setActionCallback(ExecuteAction);
          p->setThread(ThreadCreateEx(ParserThreadFile, p));
          currentWatchedFiles.set(matchingFileList.get(i), p);
@@ -310,6 +311,7 @@ static void AddParserFromConfig(const TCHAR *file, const uuid& guid)
                else
                {
                   parser->setCallback(LogParserMatch);
+                  parser->setDataPushCallback(AgentPushParameterData);
                   parser->setActionCallback(ExecuteAction);
                   parser->setGuid(guid);
                   s_parsers.add(parser);
@@ -346,7 +348,7 @@ static void AddLogwatchPolicyFiles()
 {
    const TCHAR *dataDir = AgentGetDataDirectory();
    TCHAR tail = dataDir[_tcslen(dataDir) - 1];
-   
+
    TCHAR policyFolder[MAX_PATH];
    _sntprintf(policyFolder, MAX_PATH, _T("%s%s%s"), dataDir,
 	           ((tail != '\\') && (tail != '/')) ? FS_PATH_SEPARATOR : _T(""),
