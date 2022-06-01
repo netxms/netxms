@@ -2193,6 +2193,29 @@ Label.CardHeader {
    font: bold 14px "Segoe UI", "Liberation Sans", Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
 }
 
+Button.DashboardEditorButton[PUSH] {
+  color: inherit;
+  background-color: transparent;
+  background-image: none;
+  border: none;
+  border-radius: 2px;
+  padding: 4px 4px;
+  spacing: 2px;
+  opacity: 1;
+  animation: none;
+  text-shadow: none;
+}
+
+Button.DashboardEditorButton[PUSH]:hover {
+  background-color: #f0f0f0;
+  border-radius: 2px;
+}
+
+Button.DashboardEditorButton[PUSH]:pressed {
+  border-radius: 2px;
+  padding: 3px 2px 1px 4px;
+  background-image: url( theme/classic.resources/toolbar/dotted_white.gif );
+}
 
 /* FileUpload */
 
