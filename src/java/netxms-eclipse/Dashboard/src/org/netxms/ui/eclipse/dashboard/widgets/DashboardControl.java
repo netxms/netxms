@@ -19,12 +19,14 @@
 package org.netxms.ui.eclipse.dashboard.widgets;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.eclipse.core.internal.runtime.AdapterManager;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.window.Window;
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.IViewPart;
@@ -116,10 +118,10 @@ public class DashboardControl extends Composite
 
 		DashboardLayout layout = new DashboardLayout();
 		layout.numColumns = dashboard.getNumColumns();
-		layout.marginWidth = embedded ? 0 : 15;
-		layout.marginHeight = embedded ? 0 : 15;
-		layout.horizontalSpacing = 10;
-		layout.verticalSpacing = 10;
+      layout.marginWidth = embedded ? 0 : 8;
+      layout.marginHeight = embedded ? 0 : 8;
+      layout.horizontalSpacing = 8;
+      layout.verticalSpacing = 8;
 		setLayout(layout);
 
 		for(final DashboardElement e : elements)
@@ -284,7 +286,77 @@ public class DashboardControl extends Composite
 			}
 		}
 	}
-	
+
+   /**
+    * Move dashboard element.
+    *
+    * @param element element to move
+    * @param direction either <code>SWT.LEFT</code> or <code>SWT.RIGHT</code>
+    */
+   void moveElement(DashboardElement element, int direction)
+   {
+      int index = elements.indexOf(element);
+      if (index == -1)
+         return;
+
+      ElementWidget w = elementWidgets.get(element);
+      if ((direction == SWT.LEFT) && (index > 0))
+      {
+         Collections.swap(elements, index, index - 1);
+         w.moveAbove(elementWidgets.get(elements.get(index)));
+      }
+      else if ((direction == SWT.RIGHT) && (index < elements.size() - 1))
+      {
+         Collections.swap(elements, index, index + 1);
+         w.moveBelow(elementWidgets.get(elements.get(index)));
+      }
+      else
+      {
+         return;
+      }
+
+      redoLayout();
+      setModified();
+   }
+
+   /**
+    * Change element's span.
+    *
+    * @param element element to update
+    * @param hSpanChange horizontal span change
+    * @param vSpanChange vertical span change
+    */
+   void changeElementSpan(DashboardElement element, int hSpanChange, int vSpanChange)
+   {
+      ElementWidget w = elementWidgets.get(element);
+      if (w == null)
+         return;
+
+      DashboardElementLayout el = w.getElementLayout();
+      int hSpan = el.horizontalSpan + hSpanChange;
+      int vSpan = el.verticalSpan + vSpanChange;
+      if ((hSpan < 1) || (vSpan < 1) || (hSpan > dashboard.getNumColumns()))
+         return;
+
+      el.horizontalSpan = hSpan;
+      el.verticalSpan = vSpan;
+      try
+      {
+         element.setLayout(el.createXml());
+      }
+      catch(Exception e)
+      {
+         Activator.logError("Error serializing updated dashboard element layout", e);
+      }
+
+      DashboardLayoutData gd = (DashboardLayoutData)w.getLayoutData();
+      gd.horizontalSpan = el.horizontalSpan;
+      gd.verticalSpan = el.verticalSpan;
+
+      redoLayout();
+      setModified();
+   }
+
 	/**
 	 * Delete element
 	 * 
@@ -302,7 +374,7 @@ public class DashboardControl extends Composite
 		}
 		setModified();
 	}
-	
+
 	/**
 	 * Get next widget in order for given widget
 	 * 

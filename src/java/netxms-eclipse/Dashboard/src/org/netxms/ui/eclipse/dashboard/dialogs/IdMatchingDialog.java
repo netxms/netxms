@@ -143,7 +143,7 @@ public class IdMatchingDialog extends Dialog
 	 */
 	private void createActions()
 	{
-		actionMap = new Action(Messages.get().IdMatchingDialog_MapTo, Activator.getImageDescriptor("icons/sync.gif")) { //$NON-NLS-1$
+		actionMap = new Action(Messages.get().IdMatchingDialog_MapTo, Activator.getImageDescriptor("icons/sync.png")) { //$NON-NLS-1$
 			@Override
 			public void run()
 			{
