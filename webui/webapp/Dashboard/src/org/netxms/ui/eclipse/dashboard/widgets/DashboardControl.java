@@ -392,11 +392,25 @@ public class DashboardControl extends Composite
       setModified();
    }
 
+   /**
+    * Duplicate element
+    * 
+    * @param src source element
+    */
+   void duplicateElement(DashboardElement src)
+   {
+      DashboardElement element = new DashboardElement(src);
+      elements.add(element);
+      createElementWidget(element);
+      redoLayout();
+      setModified();
+   }
+
 	/**
-	 * Delete element
-	 * 
-	 * @param element
-	 */
+    * Delete element
+    * 
+    * @param element element to delete
+    */
 	void deleteElement(DashboardElement element)
 	{
 		elements.remove(element);
