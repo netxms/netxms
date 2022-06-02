@@ -96,6 +96,8 @@ public class DashboardView extends ViewPart implements ISaveablePart
 	private DashboardModifyListener dbcModifyListener;
 	private Action actionRefresh;
 	private Action actionEditMode;
+   private Action actionAddColumn;
+   private Action actionRemoveColumn;
 	private Action actionSave;
 	private Action actionExportValues;
 	private Action actionFullScreenDisplay;
@@ -166,7 +168,7 @@ public class DashboardView extends ViewPart implements ISaveablePart
                            actionSave.setEnabled(false);
                            firePropertyChange(PROP_DIRTY);
                         }
-                        
+
                         @Override
                         public void modify()
                         {
@@ -298,6 +300,30 @@ public class DashboardView extends ViewPart implements ISaveablePart
 		actionEditMode.setImageDescriptor(SharedIcons.EDIT);
 		actionEditMode.setChecked(dbc.isEditMode());
 		
+      actionAddColumn = new Action("Add &column", Activator.getImageDescriptor("icons/add-column.png")) {
+         @Override
+         public void run()
+         {
+            dbc.addColumn();
+            if (dbc.getColumnCount() == 128)
+               actionAddColumn.setEnabled(false);
+            actionRemoveColumn.setEnabled(true);
+         }
+      };
+      actionAddColumn.setEnabled(dashboard.getNumColumns() < 128);
+
+      actionRemoveColumn = new Action("&Remove column", Activator.getImageDescriptor("icons/remove-column.png")) {
+         @Override
+         public void run()
+         {
+            dbc.removeColumn();
+            if (dbc.getColumnCount() == dbc.getMinimalColumnCount())
+               actionRemoveColumn.setEnabled(false);
+            actionAddColumn.setEnabled(true);
+         }
+      };
+      actionRemoveColumn.setEnabled(dashboard.getNumColumns() > dbc.getMinimalColumnCount());
+
 		actionFullScreenDisplay = new Action("&Full screen display", Action.AS_CHECK_BOX) {
          @Override
          public void run()
@@ -341,6 +367,9 @@ public class DashboardView extends ViewPart implements ISaveablePart
             }
          }));
    		manager.add(new Separator());
+         manager.add(actionAddColumn);
+         manager.add(actionRemoveColumn);
+         manager.add(new Separator());
 	   }
       manager.add(actionExportValues);
       manager.add(actionSaveAsImage);
@@ -363,6 +392,9 @@ public class DashboardView extends ViewPart implements ISaveablePart
    		manager.add(actionEditMode);
    		manager.add(actionSave);
    		manager.add(new Separator());
+         manager.add(actionAddColumn);
+         manager.add(actionRemoveColumn);
+         manager.add(new Separator());
 	   }
 	   manager.add(actionExportValues);
       manager.add(actionSaveAsImage);
@@ -435,13 +467,13 @@ public class DashboardView extends ViewPart implements ISaveablePart
 	{
 		if (dashboard == null)
 			return;
-		
+
 		if (dbc != null)
 			dbc.dispose();
-		
+
 		if (reload)
 		{
-			dashboard = (Dashboard)((NXCSession)ConsoleSharedData.getSession()).findObjectById(dashboard.getObjectId(), Dashboard.class);
+         dashboard = ConsoleSharedData.getSession().findObjectById(dashboard.getObjectId(), Dashboard.class);
 
 			if (dashboard != null)
 			{
@@ -460,7 +492,7 @@ public class DashboardView extends ViewPart implements ISaveablePart
 		}
 		else
 		{
-			dbc = new DashboardControl(fullScreenDisplay ? fullScreenDisplayShell : parentComposite, SWT.NONE, dashboard, dbc.getElements(), this, selectionProvider, dbc.isModified());
+         dbc = new DashboardControl(fullScreenDisplay ? fullScreenDisplayShell : parentComposite, SWT.NONE, dbc);
 			dbc.getParent().layout(true, true);
 			if (!readOnly)
 			{
@@ -469,9 +501,11 @@ public class DashboardView extends ViewPart implements ISaveablePart
 		}
 
 		actionSave.setEnabled((dbc != null) ? dbc.isModified() : false);
+      actionAddColumn.setEnabled(dbc.getColumnCount() < 128);
+      actionRemoveColumn.setEnabled(dbc.getColumnCount() > dbc.getMinimalColumnCount());
 		firePropertyChange(PROP_DIRTY);
 	}
-	
+
 	/**
 	 * Export all line chart values as CSV
 	 */

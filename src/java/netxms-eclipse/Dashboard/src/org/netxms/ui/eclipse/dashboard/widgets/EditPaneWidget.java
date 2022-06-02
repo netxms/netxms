@@ -67,6 +67,7 @@ public class EditPaneWidget extends Composite
    private Action actionMoveRight;
    private Action actionHSpanIncrease;
    private Action actionHSpanDecrease;
+   private Action actionHSpanFull;
    private Action actionVSpanIncrease;
    private Action actionVSpanDecrease;
 
@@ -178,6 +179,14 @@ public class EditPaneWidget extends Composite
          }
       };
 
+      actionHSpanFull = new Action("&Full horizontal span", Activator.getImageDescriptor("icons/full-width.png")) {
+         @Override
+         public void run()
+         {
+            dbc.setElementFullHSpan(element);
+         }
+      };
+
       actionVSpanIncrease = new Action("Increase vertical span", Activator.getImageDescriptor("icons/v-span-increase.png")) {
          @Override
          public void run()
@@ -227,6 +236,7 @@ public class EditPaneWidget extends Composite
       manager.add(new Separator());
       manager.add(actionHSpanIncrease);
       manager.add(actionHSpanDecrease);
+      manager.add(actionHSpanFull);
       manager.add(actionVSpanIncrease);
       manager.add(actionVSpanDecrease);
       manager.add(new Separator());
@@ -250,6 +260,7 @@ public class EditPaneWidget extends Composite
       new Label(buttonBar, SWT.NONE).setText("\u2003");
       new ControlButton(buttonBar, actionHSpanIncrease);
       new ControlButton(buttonBar, actionHSpanDecrease);
+      new ControlButton(buttonBar, actionHSpanFull);
       new ControlButton(buttonBar, actionVSpanIncrease);
       new ControlButton(buttonBar, actionVSpanDecrease);
       new Label(buttonBar, SWT.NONE).setText("\u2003");
