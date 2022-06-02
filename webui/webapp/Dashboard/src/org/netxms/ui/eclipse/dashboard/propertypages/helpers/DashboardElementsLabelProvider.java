@@ -24,6 +24,7 @@ import org.eclipse.swt.graphics.Image;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.ui.eclipse.dashboard.Messages;
 import org.netxms.ui.eclipse.dashboard.propertypages.DashboardElements;
+import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementLayout;
 
 /**
@@ -36,7 +37,7 @@ public class DashboardElementsLabelProvider extends LabelProvider implements ITa
 		Messages.get().DashboardElementsLabelProvider_TypeLineChart, 
 		Messages.get().DashboardElementsLabelProvider_TypeBarChart, 
 		Messages.get().DashboardElementsLabelProvider_TypePieChart, 
-		Messages.get().DashboardElementsLabelProvider_TypeTubeChart, 
+      Messages.get().DashboardElementsLabelProvider_TypeBarChart,
 		Messages.get().DashboardElementsLabelProvider_TypeStatusChart, 
 		Messages.get().DashboardElementsLabelProvider_TypeStatusIndicator, 
 		Messages.get().DashboardElementsLabelProvider_TypeDashboard, 
@@ -109,16 +110,26 @@ public class DashboardElementsLabelProvider extends LabelProvider implements ITa
 	            DashboardElementLayout layout = DashboardElementLayout.createFromXml(de.getLayout());
 	            if (layout.grabVerticalSpace)
 	               return "Fill";
-	            
+
 	            if (layout.heightHint > 0)
 	               return Integer.toString(layout.heightHint);
-	            
+
 	            return "Default";
 				}
 				catch(Exception e)
 				{
 					return "Fill";
 				}
+         case DashboardElements.COLUMN_TITLE:
+            try
+            {
+               DashboardElementConfig config = DashboardElementConfig.createFromXml(de.getData());
+               return config.getTitle();
+            }
+            catch(Exception e)
+            {
+               return "";
+            }
 		}
 		return null;
 	}
