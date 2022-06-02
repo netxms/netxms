@@ -71,6 +71,7 @@ public class DashboardControl extends Composite
 	private Dashboard dashboard;
 	private List<DashboardElement> elements;
 	private Map<DashboardElement, ElementWidget> elementWidgets = new HashMap<DashboardElement, ElementWidget>();
+   private int columnCount;
 	private boolean embedded = false;
 	private boolean editMode = false;
 	private boolean modified = false;
@@ -88,6 +89,7 @@ public class DashboardControl extends Composite
 		this.dashboard = dashboard;
 		this.embedded = embedded;
 		this.elements = new ArrayList<DashboardElement>(dashboard.getElements());
+      this.columnCount = dashboard.getNumColumns();
 		this.viewPart = viewPart;
 		this.selectionProvider = selectionProvider;
 		createContent();
@@ -97,15 +99,16 @@ public class DashboardControl extends Composite
 	 * @param parent
 	 * @param style
 	 */
-	public DashboardControl(Composite parent, int style, Dashboard dashboard, List<DashboardElement> elements, IViewPart viewPart, IntermediateSelectionProvider selectionProvider, boolean modified)
+   public DashboardControl(Composite parent, int style, DashboardControl originalControl)
 	{
 		super(parent, style);
-		this.dashboard = dashboard;
-		this.embedded = false;
-		this.modified = modified;
-		this.elements = new ArrayList<DashboardElement>(elements);
-		this.viewPart = viewPart;
-		this.selectionProvider = selectionProvider;
+      this.dashboard = originalControl.dashboard;
+      this.embedded = originalControl.embedded;
+      this.modified = originalControl.modified;
+      this.elements = new ArrayList<DashboardElement>(originalControl.elements);
+      this.columnCount = originalControl.columnCount;
+      this.viewPart = originalControl.viewPart;
+      this.selectionProvider = originalControl.selectionProvider;
 		createContent();
 	}
 
@@ -117,11 +120,11 @@ public class DashboardControl extends Composite
       setBackground(ThemeEngine.getBackgroundColor("Dashboard"));
 
 		DashboardLayout layout = new DashboardLayout();
-		layout.numColumns = dashboard.getNumColumns();
-		layout.marginWidth = embedded ? 0 : 8;
-		layout.marginHeight = embedded ? 0 : 8;
-		layout.horizontalSpacing = 8;
-		layout.verticalSpacing = 8;
+      layout.numColumns = columnCount;
+      layout.marginWidth = embedded ? 0 : 8;
+      layout.marginHeight = embedded ? 0 : 8;
+      layout.horizontalSpacing = 8;
+      layout.verticalSpacing = 8;
 		setLayout(layout);
 
 		for(final DashboardElement e : elements)
@@ -335,7 +338,7 @@ public class DashboardControl extends Composite
       DashboardElementLayout el = w.getElementLayout();
       int hSpan = el.horizontalSpan + hSpanChange;
       int vSpan = el.verticalSpan + vSpanChange;
-      if ((hSpan < 1) || (vSpan < 1) || (hSpan > dashboard.getNumColumns()))
+      if ((hSpan < 1) || (vSpan < 1) || (hSpan > columnCount))
          return;
 
       el.horizontalSpan = hSpan;
@@ -352,6 +355,38 @@ public class DashboardControl extends Composite
       DashboardLayoutData gd = (DashboardLayoutData)w.getLayoutData();
       gd.horizontalSpan = el.horizontalSpan;
       gd.verticalSpan = el.verticalSpan;
+
+      redoLayout();
+      setModified();
+   }
+
+   /**
+    * Change element's horizontal span to max possible value.
+    *
+    * @param element element to update
+    */
+   void setElementFullHSpan(DashboardElement element)
+   {
+      ElementWidget w = elementWidgets.get(element);
+      if (w == null)
+         return;
+
+      DashboardElementLayout el = w.getElementLayout();
+      if (el.horizontalSpan == columnCount)
+         return;
+
+      el.horizontalSpan = columnCount;
+      try
+      {
+         element.setLayout(el.createXml());
+      }
+      catch(Exception e)
+      {
+         Activator.logError("Error serializing updated dashboard element layout", e);
+      }
+
+      DashboardLayoutData gd = (DashboardLayoutData)w.getLayoutData();
+      gd.horizontalSpan = el.horizontalSpan;
 
       redoLayout();
       setModified();
@@ -469,11 +504,11 @@ public class DashboardControl extends Composite
 			try
 			{
 				config.setLayout(DashboardElementLayout.createFromXml(element.getLayout()));
-				
+
 				PropertyDialog dlg = PropertyDialog.createDialogOn(getShell(), null, config);
 				if (dlg.open() == Window.CANCEL)
 					return;	// element creation cancelled
-				
+
 				element.setData(config.createXml());
 				element.setLayout(config.getLayout().createXml());
 				elements.add(element);
@@ -492,16 +527,77 @@ public class DashboardControl extends Composite
 		}
 	}
 
+   /**
+    * Add column
+    */
+   public void addColumn()
+   {
+      if (columnCount == 128)
+         return;
+
+      columnCount++;
+      ((DashboardLayout)getLayout()).numColumns = columnCount;
+      layout(true, true);
+      setModified();
+   }
+
+   /**
+    * Remove column
+    */
+   public void removeColumn()
+   {
+      if (columnCount == getMinimalColumnCount())
+         return;
+
+      columnCount--;
+      ((DashboardLayout)getLayout()).numColumns = columnCount;
+      layout(true, true);
+      setModified();
+   }
+
 	/**
-	 * Save dashboard layout
-	 * 
-	 * @param viewPart
-	 */
+    * @return the columnCount
+    */
+   public int getColumnCount()
+   {
+      return columnCount;
+   }
+
+   /**
+    * Get minimal column count
+    *
+    * @return minimal column count
+    */
+   public int getMinimalColumnCount()
+   {
+      int count = 1;
+      for(DashboardElement element : elements)
+      {
+         try
+         {
+            DashboardElementLayout layout = DashboardElementLayout.createFromXml(element.getLayout());
+            if (layout.horizontalSpan > count)
+               count = layout.horizontalSpan;
+         }
+         catch(Exception e)
+         {
+            Activator.logError("Cannot parse dashboard element layout", e);
+         }
+      }
+      return count;
+   }
+
+   /**
+    * Save dashboard layout
+    * 
+    * @param viewPart
+    */
 	public void saveDashboard(IViewPart viewPart)
 	{
 		final NXCObjectModificationData md = new NXCObjectModificationData(dashboard.getObjectId());
 		md.setDashboardElements(new ArrayList<DashboardElement>(elements));
-		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+      md.setColumnCount(columnCount);
+      final NXCSession session = ConsoleSharedData.getSession();
 		new ConsoleJob(Messages.get().DashboardControl_SaveLayout, viewPart, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
@@ -520,7 +616,7 @@ public class DashboardControl extends Composite
 					}
 				});
 			}
-			
+
 			@Override
 			protected String getErrorMessage()
 			{
