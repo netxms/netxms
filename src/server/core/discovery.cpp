@@ -384,7 +384,10 @@ static bool AcceptNewNode(NewNodeData *newNodeData, const MacAddress& macAddr)
    ENUMERATE_MODULES(pfAcceptNewNode)
    {
       if (!CURRENT_MODULE.pfAcceptNewNode(newNodeData->ipAddr, newNodeData->zoneUIN, macAddr))
+      {
+         nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNode(%s): rejected by module %s"), szIpAddr, CURRENT_MODULE.szName);
          return false;  // filtered out by module
+      }
    }
 
    // Read filter configuration
@@ -432,8 +435,7 @@ static bool AcceptNewNode(NewNodeData *newNodeData, const MacAddress& macAddr)
       newNodeData->snmpSecurity = new SNMP_SecurityContext(snmpTransport->getSecurityContext());
 
       // Get SNMP OID
-      SnmpGet(data.snmpVersion, snmpTransport,
-              _T(".1.3.6.1.2.1.1.2.0"), nullptr, 0, data.snmpObjectId, MAX_OID_LEN * 4, 0);
+      SnmpGet(data.snmpVersion, snmpTransport, _T(".1.3.6.1.2.1.1.2.0"), nullptr, 0, data.snmpObjectId, MAX_OID_LEN * 4, 0);
 
       data.driver = FindDriverForNode(szIpAddr, data.snmpObjectId, nullptr, snmpTransport);
       nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNode(%s): selected device driver %s"), szIpAddr, data.driver->getName());
@@ -1096,8 +1098,7 @@ void CheckRange(const InetAddressListElement& range, void (*callback)(const Inet
 
       TCHAR ipAddr1[64], ipAddr2[64], rangeText[128];
       _sntprintf(rangeText, 128, _T("%s - %s"), IpToStr(from, ipAddr1), IpToStr(to, ipAddr2));
-      ConsoleDebugPrintf(console, DEBUG_TAG_DISCOVERY, 4, _T("Starting active discovery check on range %s via proxy %s [%u]"),
-               rangeText, proxy->getName(), proxy->getId());
+      ConsoleDebugPrintf(console, DEBUG_TAG_DISCOVERY, 4, _T("Starting active discovery check on range %s via proxy %s [%u]"), rangeText, proxy->getName(), proxy->getId());
       while((from <= to) && !IsShutdownInProgress())
       {
          if (interBlockDelay > 0)
@@ -1154,9 +1155,10 @@ void CheckRange(const InetAddressListElement& range, void (*callback)(const Inet
    }
    else
    {
-      TCHAR ipAddr1[16], ipAddr2[16];
-      ConsoleDebugPrintf(console, DEBUG_TAG_DISCOVERY, 4, _T("Starting active discovery check on range %s - %s (snmp=%s tcp=%s bs=%u delay=%u)"),
-            IpToStr(from, ipAddr1), IpToStr(to, ipAddr2), snmpScanEnabled ? _T("true") : _T("false"), tcpScanEnabled ? _T("true") : _T("false"), blockSize, interBlockDelay);
+      TCHAR ipAddr1[64], ipAddr2[64], rangeText[128];
+      _sntprintf(rangeText, 128, _T("%s - %s"), IpToStr(from, ipAddr1), IpToStr(to, ipAddr2));
+      ConsoleDebugPrintf(console, DEBUG_TAG_DISCOVERY, 4, _T("Starting active discovery check on range %s (snmp=%s tcp=%s bs=%u delay=%u)"),
+            rangeText, snmpScanEnabled ? _T("true") : _T("false"), tcpScanEnabled ? _T("true") : _T("false"), blockSize, interBlockDelay);
       while((from <= to) && !IsShutdownInProgress())
       {
          if (interBlockDelay > 0)
@@ -1201,7 +1203,7 @@ void CheckRange(const InetAddressListElement& range, void (*callback)(const Inet
 
          from += blockSize;
       }
-      ConsoleDebugPrintf(console, DEBUG_TAG_DISCOVERY, 4, _T("Finished active discovery check on range %s - %s"), IpToStr(from, ipAddr1), IpToStr(to, ipAddr2));
+      ConsoleDebugPrintf(console, DEBUG_TAG_DISCOVERY, 4, _T("Finished active discovery check on range %s"), rangeText);
    }
 }
 
