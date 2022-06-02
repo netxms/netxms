@@ -266,7 +266,7 @@ mibs_DATA = \
 	DULD-MIB.txt \
 	DVMRP-MIB.txt \
 	EdgeSwitch-INVENTORY-MIB.txt \
-	EdgeSwitch-LOGGING-MIB.txt \	
+	EdgeSwitch-LOGGING-MIB.txt \
 	EdgeSwitch-REF-MIB.txt \
 	EdgeSwitch-SWITCHING-MIB.txt \
 	EF-6000-MIB.txt \
