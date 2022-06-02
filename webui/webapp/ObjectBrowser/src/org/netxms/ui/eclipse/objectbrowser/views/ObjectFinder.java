@@ -739,7 +739,7 @@ public class ObjectFinder extends ViewPart
    {
       final IHandlerService handlerService = (IHandlerService)getSite().getService(IHandlerService.class);
 
-      actionStartSearch = new Action("&Search", Activator.getImageDescriptor("icons/find.gif")) {
+      actionStartSearch = new Action("&Search", Activator.getImageDescriptor("icons/find.png")) {
          @Override
          public void run()
          {

@@ -21,7 +21,7 @@
             allowMultiple="false"
             category="org.netxms.ui.eclipse.viewcategory.tools"
             class="org.netxms.ui.eclipse.objectbrowser.views.ObjectFinder"
-            icon="icons/find.gif"
+            icon="icons/find.png"
             id="org.netxms.ui.eclipse.objectbrowser.views.ObjectFinder"
             name="Find Object"
             restorable="true">
@@ -29,7 +29,7 @@
       <view
             category="org.netxms.ui.eclipse.viewcategory.config"
             class="org.netxms.ui.eclipse.objectbrowser.views.ObjectQueryManager"
-            icon="icons/find.gif"
+            icon="icons/find.png"
             id="org.netxms.ui.eclipse.objectbrowser.views.ObjectQueryManager"
             name="Object Queries"
             restorable="true">
@@ -104,7 +104,7 @@
        <action
              class="org.netxms.ui.eclipse.objectbrowser.actions.OpenObjectFinder"
              definitionId="org.netxms.ui.eclipse.objectbrowser.commands.open_object_finder"
-             icon="icons/find.gif"
+             icon="icons/find.png"
              id="org.netxms.ui.eclipse.objectbrowser.actions.openObjectFinder"
              label="&amp;Find object"
              menubarPath="tools/additions"
@@ -114,7 +114,7 @@
        <action
              class="org.netxms.ui.eclipse.objectbrowser.actions.OpenObjectQueryManager"
              definitionId="org.netxms.ui.eclipse.objectbrowser.commands.open_object_query_manager"
-             icon="icons/find.gif"
+             icon="icons/find.png"
              id="ObjectBrowser.action1"
              label="Object queries"
              menubarPath="config/additions"

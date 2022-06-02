@@ -45,7 +45,7 @@ public class BaseObjectLabelProvider extends LabelProvider
       images.put(AbstractObject.OBJECT_CLUSTER, ResourceManager.getImageDescriptor("icons/objects/cluster.png").createImage());
       images.put(AbstractObject.OBJECT_CONDITION, ResourceManager.getImageDescriptor("icons/objects/condition.gif").createImage());
       images.put(AbstractObject.OBJECT_CONTAINER, ResourceManager.getImageDescriptor("icons/objects/container.png").createImage());
-      images.put(AbstractObject.OBJECT_DASHBOARD, ResourceManager.getImageDescriptor("icons/objects/dashboard.gif").createImage());
+      images.put(AbstractObject.OBJECT_DASHBOARD, ResourceManager.getImageDescriptor("icons/objects/dashboard.png").createImage());
       images.put(AbstractObject.OBJECT_DASHBOARDGROUP, ResourceManager.getImageDescriptor("icons/objects/dashboard_group.png").createImage());
       images.put(AbstractObject.OBJECT_DASHBOARDROOT, ResourceManager.getImageDescriptor("icons/objects/dashboard_root.gif").createImage());
       images.put(AbstractObject.OBJECT_INTERFACE, ResourceManager.getImageDescriptor("icons/objects/interface.png").createImage());
