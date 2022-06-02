@@ -4530,7 +4530,7 @@ NXSL_METHOD_DEFINITION(SNMPTransport, set)
       uint32_t snmpResult = transport->doRequest(&request, &response, SnmpGetDefaultTimeout(), 3);
       if (snmpResult == SNMP_ERR_SUCCESS)
       {
-         if (response->getErrorCode() != 0)
+         if (response->getErrorCode() == SNMP_PDU_ERR_SUCCESS)
          {
             nxlog_debug_tag(_T("snmp.nxsl"), 6, _T("SNMPTransport::set: success"));
             success = true;
