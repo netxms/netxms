@@ -27,7 +27,7 @@
 LONG H_InstalledProducts(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *session)
 {
 #if _OPENWRT
-   const char *command = "opkg | awk -e '{ print \"@@@ #\" $1 \"|\" $3 \"||||\" }'";
+   const char *command = "opkg list-installed | awk -e '{ print \"@@@ #\" $1 \"|\" $3 \"||||\" }'";
 #else
    const char *command;
    if (access("/bin/rpm", X_OK) == 0)
