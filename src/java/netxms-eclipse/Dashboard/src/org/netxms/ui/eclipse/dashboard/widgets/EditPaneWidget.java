@@ -62,6 +62,7 @@ public class EditPaneWidget extends Composite
 	private DashboardElement element;
 	private Action actionEdit;
 	private Action actionEditXml;
+   private Action actionDuplicate;
 	private Action actionDelete;
    private Action actionMoveLeft;
    private Action actionMoveRight;
@@ -139,13 +140,21 @@ public class EditPaneWidget extends Composite
 			}
 		};
 
-      actionDelete = new Action(Messages.get().EditPaneWidget_Delete, SharedIcons.DELETE_OBJECT) {
+      actionDuplicate = new Action("Duplicate", Activator.getImageDescriptor("icons/duplicate.png")) {
 			@Override
 			public void run()
 			{
-				dbc.deleteElement(element);
+            dbc.duplicateElement(element);
 			}
 		};
+
+      actionDelete = new Action(Messages.get().EditPaneWidget_Delete, SharedIcons.DELETE_OBJECT) {
+         @Override
+         public void run()
+         {
+            dbc.deleteElement(element);
+         }
+      };
 
       actionMoveLeft = new Action("Move &left", Activator.getImageDescriptor("icons/move-left.png")) {
          @Override
@@ -242,6 +251,7 @@ public class EditPaneWidget extends Composite
       manager.add(new Separator());
       manager.add(actionEdit);
       manager.add(actionEditXml);
+      manager.add(actionDuplicate);
       manager.add(actionDelete);
 	}
 
@@ -266,6 +276,7 @@ public class EditPaneWidget extends Composite
       new Label(buttonBar, SWT.NONE).setText("\u2003");
       new ControlButton(buttonBar, actionEdit);
       new ControlButton(buttonBar, actionEditXml);
+      new ControlButton(buttonBar, actionDuplicate);
       new ControlButton(buttonBar, actionDelete);
 
       layout(true, true);

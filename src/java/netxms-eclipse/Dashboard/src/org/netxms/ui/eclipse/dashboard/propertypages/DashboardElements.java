@@ -83,6 +83,7 @@ public class DashboardElements extends PropertyPage
 	private Button addButton;
 	private Button editButton;
 	private Button editXmlButton;
+   private Button duplicateButton;
 	private Button deleteButton;
 	private Button upButton;
 	private Button downButton;
@@ -207,6 +208,16 @@ public class DashboardElements extends PropertyPage
 				editElementXml();
 			}
 		});
+
+      duplicateButton = new Button(rightButtons, SWT.PUSH);
+      duplicateButton.setText("Du&plicate");
+      duplicateButton.addSelectionListener(new SelectionAdapter() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            duplicateElements();
+         }
+      });
 
       deleteButton = new Button(rightButtons, SWT.PUSH);
       deleteButton.setText(Messages.get().DashboardElements_Delete);
@@ -395,6 +406,23 @@ public class DashboardElements extends PropertyPage
 		}
 	}
 	
+   /**
+    * Duplicate selected elements
+    */
+   private void duplicateElements()
+   {
+      IStructuredSelection selection = viewer.getStructuredSelection();
+      List<DashboardElement> newSelection = new ArrayList<>();
+      for(Object o : selection.toList())
+      {
+         DashboardElement e = new DashboardElement((DashboardElement)o);
+         elements.add(e);
+         newSelection.add(e);
+      }
+      viewer.setInput(elements.toArray());
+      viewer.setSelection(new StructuredSelection(newSelection));
+   }
+
 	/**
 	 * Delete selected elements
 	 */
