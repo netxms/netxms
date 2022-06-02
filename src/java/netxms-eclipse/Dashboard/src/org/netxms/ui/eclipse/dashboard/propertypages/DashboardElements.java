@@ -75,6 +75,7 @@ public class DashboardElements extends PropertyPage
 	public static final int COLUMN_TYPE = 0;
 	public static final int COLUMN_SPAN = 1;
 	public static final int COLUMN_HEIGHT = 2;
+   public static final int COLUMN_TITLE = 3;
 
 	private Dashboard object;
 	private LabeledSpinner columnCount;
@@ -115,8 +116,8 @@ public class DashboardElements extends PropertyPage
       gridData.horizontalSpan = 2;
       columnCount.setLayoutData(gridData);
 
-      final String[] columnNames = { Messages.get().DashboardElements_Type, Messages.get().DashboardElements_Span, "Height" };
-      final int[] columnWidths = { 150, 60, 90 };
+      final String[] columnNames = { Messages.get().DashboardElements_Type, Messages.get().DashboardElements_Span, "Height", "Title" };
+      final int[] columnWidths = { 150, 60, 90, 300 };
       viewer = new SortableTableViewer(dialogArea, columnNames, columnWidths, 0, SWT.UP, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setLabelProvider(new DashboardElementsLabelProvider());

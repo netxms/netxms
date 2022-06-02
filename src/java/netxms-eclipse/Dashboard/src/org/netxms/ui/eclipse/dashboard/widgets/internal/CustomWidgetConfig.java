@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,21 +33,21 @@ public class CustomWidgetConfig extends DashboardElementConfig
 	private String className = ""; //$NON-NLS-1$
 
 	/**
-	 * Create line chart settings object from XML document
-	 * 
-	 * @param xml XML document
-	 * @return deserialized object
-	 * @throws Exception if the object cannot be fully deserialized
-	 */
+    * Create custom widget settings object from XML document
+    * 
+    * @param xml XML document
+    * @return deserialized object
+    * @throws Exception if the object cannot be fully deserialized
+    */
 	public static CustomWidgetConfig createFromXml(final String xml) throws Exception
 	{
 		Serializer serializer = new Persister();
 		return serializer.read(CustomWidgetConfig.class, xml);
 	}
-	
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig#createXml()
-	 */
+
+   /**
+    * @see org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig#createXml()
+    */
 	@Override
 	public String createXml() throws Exception
 	{

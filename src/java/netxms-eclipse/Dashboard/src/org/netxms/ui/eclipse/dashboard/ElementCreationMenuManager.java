@@ -55,7 +55,6 @@ public class ElementCreationMenuManager extends MenuManager
       addTypeToSelectionMenu(chartsMenu, Messages.get().AddDashboardElementDlg_LineChart, DashboardElement.LINE_CHART);
       addTypeToSelectionMenu(chartsMenu, Messages.get().AddDashboardElementDlg_BarChart, DashboardElement.BAR_CHART);
       addTypeToSelectionMenu(chartsMenu, Messages.get().AddDashboardElementDlg_PieChart, DashboardElement.PIE_CHART);
-      addTypeToSelectionMenu(chartsMenu, Messages.get().AddDashboardElementDlg_TubeChart, DashboardElement.TUBE_CHART);
       addTypeToSelectionMenu(chartsMenu, Messages.get().AddDashboardElementDlg_GaugeChart, DashboardElement.DIAL_CHART);
       chartsMenu.add(new Separator());
       addTypeToSelectionMenu(chartsMenu, Messages.get().AddDashboardElementDlg_BarChartForTable, DashboardElement.TABLE_BAR_CHART);

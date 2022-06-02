@@ -35,7 +35,7 @@ import org.simpleframework.xml.core.Persister;
  * Abstract base class for all dashboard element configs
  */
 @Root(name="element", strict=false)
-public abstract class DashboardElementConfig
+public class DashboardElementConfig
 {
 	private DashboardElementLayout layout;
 
@@ -50,6 +50,19 @@ public abstract class DashboardElementConfig
 
    @Element(required = false)
    private int titleFontSize = 0; // Adjustment from standard size
+
+   /**
+    * Create generic element configuration object from XML document
+    * 
+    * @param xml XML document
+    * @return deserialized object
+    * @throws Exception if the object cannot be fully deserialized
+    */
+   public static DashboardElementConfig createFromXml(final String xml) throws Exception
+   {
+      Serializer serializer = new Persister();
+      return serializer.read(DashboardElementConfig.class, xml);
+   }
 
 	/**
 	 * Create XML from configuration.
