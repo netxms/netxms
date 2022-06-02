@@ -43,7 +43,7 @@ public class BaseFileLabelProvider extends LabelProvider
       images.put("ppt", ResourceManager.getImageDescriptor("icons/types/powerpoint.png").createImage());
       images.put("html", ResourceManager.getImageDescriptor("icons/types/html.png").createImage());
       images.put("txt", ResourceManager.getImageDescriptor("icons/types/text.png").createImage());
-      images.put("avi", ResourceManager.getImageDescriptor("icons/objects/dashboard.gif").createImage());
+      images.put("avi", ResourceManager.getImageDescriptor("icons/types/video.png").createImage());
       images.put("ac3", ResourceManager.getImageDescriptor("icons/types/audio.png").createImage());
       images.put("tar", ResourceManager.getImageDescriptor("icons/types/archive.png").createImage());
    }

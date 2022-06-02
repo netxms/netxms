@@ -79,7 +79,7 @@ public class ObjectAdapter implements IWorkbenchAdapter
          case AbstractObject.OBJECT_CONTAINER:
             return Activator.getImageDescriptor("icons/container.png"); //$NON-NLS-1$
          case AbstractObject.OBJECT_DASHBOARD:
-            return Activator.getImageDescriptor("icons/dashboard.gif"); //$NON-NLS-1$
+            return Activator.getImageDescriptor("icons/dashboard.png"); //$NON-NLS-1$
          case AbstractObject.OBJECT_DASHBOARDGROUP:
             return Activator.getImageDescriptor("icons/dashboard_group.png"); //$NON-NLS-1$
          case AbstractObject.OBJECT_DASHBOARDROOT:
