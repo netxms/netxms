@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -76,7 +76,7 @@ public class WidgetHelper
 	public static final int BUTTON_WIDTH_HINT = 90;
 	public static final int WIDE_BUTTON_WIDTH_HINT = 120;
 	public static final String DEFAULT_LAYOUT_DATA = "WidgetHelper::default_layout_data"; //$NON-NLS-1$
-	
+
 	private static final Pattern patternOnlyCharNum = Pattern.compile("[a-zA-Z0-9]+");
 	private static final Pattern patternAllDotsAtEnd = Pattern.compile("[.]*$");
 	private static final Pattern patternCharsAndNumbersAtEnd = Pattern.compile("[a-zA-Z0-9]*$");
@@ -88,9 +88,9 @@ public class WidgetHelper
     * @return character(s) to represent new line in text
     */
    public static String getNewLineCharacters()
-	{
+   {
       return "\r\n";
-	}
+   }
 
 	/**
     * Create pair of label and input field, with label above
@@ -103,8 +103,7 @@ public class WidgetHelper
 	 * @param layoutData Layout data for label/input pair. If null, default GridData will be assigned.
 	 * @return Created Text object
 	 */
-	public static Text createLabeledText(final Composite parent, int flags, int widthHint, final String labelText,
-	                                     final String initialText, Object layoutData)
+   public static Text createLabeledText(final Composite parent, int flags, int widthHint, final String labelText, final String initialText, Object layoutData)
 	{
 		Composite group = new Composite(parent, SWT.NONE);
 		GridLayout layout = new GridLayout();
@@ -137,6 +136,8 @@ public class WidgetHelper
 		GridData gridData = new GridData();
 		gridData.horizontalAlignment = GridData.FILL;
 		gridData.grabExcessHorizontalSpace = true;
+		gridData.verticalAlignment = GridData.FILL;
+		gridData.grabExcessVerticalSpace = true;
 		gridData.widthHint = widthHint;
 		text.setLayoutData(gridData);		
 		
@@ -285,7 +286,7 @@ public class WidgetHelper
 		
 		return spinner;
 	}
-	
+
 	/**
     * Create pair of label and color selector, with label above
 	 * 
@@ -325,10 +326,10 @@ public class WidgetHelper
 		gridData.horizontalAlignment = GridData.FILL;
 		gridData.grabExcessHorizontalSpace = true;
 		cs.getButton().setLayoutData(gridData);		
-		
+
 		return cs;
 	}
-	
+
 	/**
 	 * Create labeled control using factory.
 	 * 
@@ -362,19 +363,16 @@ public class WidgetHelper
 			gridData.grabExcessHorizontalSpace = true;
 			group.setLayoutData(gridData);
 		}
-		
+
 		Label label = new Label(group, SWT.NONE);
 		label.setText(labelText);
 
 		final Control widget = factory.createControl(group, flags);
-		GridData gridData = new GridData();
-		gridData.horizontalAlignment = GridData.FILL;
-		gridData.grabExcessHorizontalSpace = true;
-		widget.setLayoutData(gridData);		
+      widget.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 
 		return widget;
 	}
-	
+
 	/**
 	 * Save settings of table viewer columns
 	 * 
@@ -419,7 +417,7 @@ public class WidgetHelper
 			}
 		}
 	}
-	
+
 	/**
 	 * Save settings of tree viewer columns
 	 * 
@@ -542,7 +540,7 @@ public class WidgetHelper
 		{
 		}
 	}
-	
+
 	/**
 	 * Wrapper for saveTableViewerSettings/saveTreeViewerSettings
 	 * 
@@ -580,7 +578,7 @@ public class WidgetHelper
 			restoreTreeViewerSettings((SortableTreeViewer)viewer, settings, prefix);
 		}
 	}
-	
+
 	/**
 	 * Copy given text to clipboard
 	 * 
@@ -593,7 +591,7 @@ public class WidgetHelper
       cb.setContents(new Object[] { (text != null) ? text : "" }, new Transfer[] { transfer }); //$NON-NLS-1$
       cb.dispose();
    }
-   
+
    /**
     * Get best fitting font from given font list for given string and bounding rectangle.
     * String should fit using multiline.
@@ -616,7 +614,7 @@ public class WidgetHelper
       while(last > first)
       {
          gc.setFont(fonts[curr]);
-         if (fitToRect(gc, text, width, height, maxLineCount))
+         if (fitStringToRect(gc, text, width, height, maxLineCount))
          {
             font = curr;
             first = curr + 1;
@@ -640,59 +638,58 @@ public class WidgetHelper
     * @param width width of bounding rectangle
     * @param height height of bounding rectangle
     * @param maxLineCount maximum line count that should be used
-    * @return if string fits in the field
+    * @return true if string was cut
     */
-   public static boolean fitToRect(GC gc, String text, int width, int height, int maxLineCount)
+   public static boolean fitStringToRect(GC gc, String text, int width, int height, int maxLineCount)
    {
       Point ext = gc.textExtent(text);
       if (ext.y > height)
          return false;
       if (ext.x <= width)
-      {
          return true;
-      }
-      
-      SplitedString newString = splitStringToLines(gc, text, width, maxLineCount > 0 ? Math.min(maxLineCount, (int)(height / ext.y)) : (int)(height / ext.y));
-      return newString.fits(); 
+
+      FittedString newString = fitStringToArea(gc, text, width, maxLineCount > 0 ? Math.min(maxLineCount, (int)(height / ext.y)) : (int)(height / ext.y));
+      return newString.isCutted(); 
    }
-   
+
    /**
-    * Calculate substring for string to fit in the sector
+    * Calculate substring for string to fit into the given area defined by width in pixels and number of lines of text
     * 
     * @param gc gc object
     * @param text object name
-    * @param lineNum number of lines that can be used to display object name
-    * @return  formated string
+    * @param maxLineCount number of lines that can be used to display text
+    * @return formated string
     */
-   public static SplitedString splitStringToLines(GC gc, String text, int width, int lineNum)
+   public static FittedString fitStringToArea(GC gc, String text, int width, int maxLineCount)
    {
       StringBuilder name = new StringBuilder("");
       int start = 0;
       boolean fit = true;
       for(int i = 0; start < text.length(); i++)
-      {         
-         if(i >= lineNum)
+      {
+         if (i >= maxLineCount)
          {
             fit = false;
             break;
          }
-         
+
          String substr = text.substring(start);
          int nameL = gc.textExtent(substr).x;
-         int numOfCharToLeave = (int)((width - 6)/(nameL/substr.length())); //make best guess
-         if(numOfCharToLeave >= substr.length())
+         int numOfCharToLeave = (int)((width - 6) / (nameL / substr.length())); // make best guess
+         if (numOfCharToLeave >= substr.length())
             numOfCharToLeave = substr.length();
          String tmp = substr;
-         
-         while(gc.textExtent(tmp).x > width) {
+
+         while(gc.textExtent(tmp).x > width)
+         {
             numOfCharToLeave--;
             tmp = substr.substring(0, numOfCharToLeave);
             Matcher matcher = patternOnlyCharNum.matcher(tmp);
-            if(matcher.matches() || (i+1 == lineNum && numOfCharToLeave != substr.length()))
-            {               
+            if (matcher.matches() || (i + 1 == maxLineCount && numOfCharToLeave != substr.length()))
+            {
                Matcher matcherReplaceDot = patternAllDotsAtEnd.matcher(tmp);
                tmp = matcherReplaceDot.replaceAll("");
-               tmp += "...";     
+               tmp += "...";
                fit = false;
             }
             else
@@ -700,23 +697,24 @@ public class WidgetHelper
                Matcher matcherRemoveCharsAfterSeparator = patternCharsAndNumbersAtEnd.matcher(tmp);
                tmp = matcherRemoveCharsAfterSeparator.replaceAll("");
                numOfCharToLeave = tmp.length();
-            }               
-         } 
-         
+            }
+         }
+
          name.append(tmp);
-         if(i+1 < lineNum && numOfCharToLeave != substr.length())
+         if (i + 1 < maxLineCount && numOfCharToLeave != substr.length())
          {
             name.append("\n");
          }
-         
-         Matcher matcherRemoveLineEnd = patternCharsAndNumbersAtStart.matcher(substr.substring(numOfCharToLeave-1));
-         numOfCharToLeave = substr.length() - matcherRemoveLineEnd.replaceAll("").length(); //remove if something left after last word
-         start = start+numOfCharToLeave+1;
-      }           
-      
-      return new SplitedString(name.toString(), fit);    
+
+         Matcher matcherRemoveLineEnd = patternCharsAndNumbersAtStart.matcher(substr.substring(numOfCharToLeave - 1));
+         numOfCharToLeave = substr.length() - matcherRemoveLineEnd.replaceAll("").length(); // remove if something left after last
+                                                                                            // word
+         start = start + numOfCharToLeave + 1;
+      }
+
+      return new FittedString(name.toString(), fit);
    }
-		
+
 	/**
 	 * Get best fitting font from given font list for given string and bounding rectangle.
 	 * Fonts in the list must be ordered from smaller to larger.
@@ -772,7 +770,7 @@ public class WidgetHelper
 				return fonts[i];
 		return null;
 	}
-	
+
 	/**
 	 * Validate text input
 	 * 
@@ -801,7 +799,7 @@ public class WidgetHelper
 		}
 		return ok;
 	}
-	
+
 	/**
 	 * Validate text input
 	 * 

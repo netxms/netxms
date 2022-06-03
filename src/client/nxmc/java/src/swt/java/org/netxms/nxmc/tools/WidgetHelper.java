@@ -108,8 +108,7 @@ public class WidgetHelper
 	 * @param layoutData Layout data for label/input pair. If null, default GridData will be assigned.
 	 * @return Created Text object
 	 */
-	public static Text createLabeledText(final Composite parent, int flags, int widthHint, final String labelText,
-	                                     final String initialText, Object layoutData)
+   public static Text createLabeledText(final Composite parent, int flags, int widthHint, final String labelText, final String initialText, Object layoutData)
 	{
 		Composite group = new Composite(parent, SWT.NONE);
 		GridLayout layout = new GridLayout();
@@ -139,8 +138,14 @@ public class WidgetHelper
 		Text text = new Text(group, flags);
 		if (initialText != null)
 			text.setText(initialText);
-      text.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-
+		GridData gridData = new GridData();
+		gridData.horizontalAlignment = GridData.FILL;
+		gridData.grabExcessHorizontalSpace = true;
+		gridData.verticalAlignment = GridData.FILL;
+		gridData.grabExcessVerticalSpace = true;
+		gridData.widthHint = widthHint;
+		text.setLayoutData(gridData);		
+		
 		return text;
 	}
 
@@ -708,7 +713,7 @@ public class WidgetHelper
       while(last > first)
       {
          gc.setFont(fonts[curr]);
-         if (fitToRect(gc, text, width, height, maxLineCount))
+         if (fitStringToRect(gc, text, width, height, maxLineCount))
          {
             font = curr;
             first = curr + 1;
@@ -732,58 +737,58 @@ public class WidgetHelper
     * @param width width of bounding rectangle
     * @param height height of bounding rectangle
     * @param maxLineCount maximum line count that should be used
-    * @return if string fits in the field
+    * @return true if string was cut
     */
-   public static boolean fitToRect(GC gc, String text, int width, int height, int maxLineCount)
+   public static boolean fitStringToRect(GC gc, String text, int width, int height, int maxLineCount)
    {
       Point ext = gc.textExtent(text);
       if (ext.y > height)
          return false;
       if (ext.x <= width)
          return true;
-      
-      FittedString newString = fitStringToSector(gc, text, width, maxLineCount > 0 ? Math.min(maxLineCount, (int)(height / ext.y)) : (int)(height / ext.y));
+
+      FittedString newString = fitStringToArea(gc, text, width, maxLineCount > 0 ? Math.min(maxLineCount, (int)(height / ext.y)) : (int)(height / ext.y));
       return newString.isCutted(); 
    }
-   
+
    /**
-    * Calculate substring for string to fit in the sector
+    * Calculate substring for string to fit into the given area defined by width in pixels and number of lines of text
     * 
     * @param gc gc object
     * @param text object name
-    * @param maxLineCount number of lines that can be used to display object name
-    * @return  formated string
+    * @param maxLineCount number of lines that can be used to display text
+    * @return formated string
     */
-   public static FittedString fitStringToSector(GC gc, String text, int width, int maxLineCount)
+   public static FittedString fitStringToArea(GC gc, String text, int width, int maxLineCount)
    {
       StringBuilder name = new StringBuilder("");
       int start = 0;
       boolean fit = true;
       for(int i = 0; start < text.length(); i++)
-      {         
-         if(i >= maxLineCount)
+      {
+         if (i >= maxLineCount)
          {
             fit = false;
             break;
          }
-         
+
          String substr = text.substring(start);
-         int nameL = gc.textExtent(substr, SWT.DRAW_TRANSPARENT | SWT.DRAW_DELIMITER).x;
-         int numOfCharToLeave = (int)((width - 6)/(nameL/substr.length())); //make best guess
-         if(numOfCharToLeave >= substr.length())
+         int nameL = gc.textExtent(substr).x;
+         int numOfCharToLeave = (int)((width - 6) / (nameL / substr.length())); // make best guess
+         if (numOfCharToLeave >= substr.length())
             numOfCharToLeave = substr.length();
          String tmp = substr;
-         
-         while(gc.textExtent(tmp, SWT.DRAW_TRANSPARENT | SWT.DRAW_DELIMITER).x > width)
+
+         while(gc.textExtent(tmp).x > width)
          {
             numOfCharToLeave--;
             tmp = substr.substring(0, numOfCharToLeave);
             Matcher matcher = patternOnlyCharNum.matcher(tmp);
-            if(matcher.matches() || (i+1 == maxLineCount && numOfCharToLeave != substr.length()))
-            {               
+            if (matcher.matches() || (i + 1 == maxLineCount && numOfCharToLeave != substr.length()))
+            {
                Matcher matcherReplaceDot = patternAllDotsAtEnd.matcher(tmp);
                tmp = matcherReplaceDot.replaceAll("");
-               tmp += "...";     
+               tmp += "...";
                fit = false;
             }
             else
@@ -791,23 +796,23 @@ public class WidgetHelper
                Matcher matcherRemoveCharsAfterSeparator = patternCharsAndNumbersAtEnd.matcher(tmp);
                tmp = matcherRemoveCharsAfterSeparator.replaceAll("");
                numOfCharToLeave = tmp.length();
-            }               
-         } 
-         
+            }
+         }
+
          name.append(tmp);
-         if(i+1 < maxLineCount && numOfCharToLeave != substr.length())
+         if (i + 1 < maxLineCount && numOfCharToLeave != substr.length())
          {
             name.append("\n");
          }
-         
-         Matcher matcherRemoveLineEnd = patternCharsAndNumbersAtStart.matcher(substr.substring(numOfCharToLeave-1));
-         numOfCharToLeave = substr.length() - matcherRemoveLineEnd.replaceAll("").length(); //remove if something left after last word
-         start = start+numOfCharToLeave+1;
-      }           
-      
-      return new FittedString(name.toString(), fit);    
+
+         Matcher matcherRemoveLineEnd = patternCharsAndNumbersAtStart.matcher(substr.substring(numOfCharToLeave - 1));
+         numOfCharToLeave = substr.length() - matcherRemoveLineEnd.replaceAll("").length(); // remove if something left after last word
+         start = start + numOfCharToLeave + 1;
+      }
+
+      return new FittedString(name.toString(), fit);
    }
-		
+
 	/**
 	 * Get best fitting font from given font list for given string and bounding rectangle.
 	 * Fonts in the list must be ordered from smaller to larger.
@@ -841,7 +846,7 @@ public class WidgetHelper
 				curr = first + (last - first) / 2;
 			}
 		}
-		
+
 		// Use smallest font if no one fit
 		if (font == null)
 			font = fonts[0];
@@ -969,7 +974,7 @@ public class WidgetHelper
       gc.dispose();
       return e;
    }
-   
+
    /**
     *  Get column index by column ID
     *  

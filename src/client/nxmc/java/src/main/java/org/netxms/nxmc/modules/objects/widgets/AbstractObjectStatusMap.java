@@ -16,21 +16,12 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.objectview.widgets;
+package org.netxms.nxmc.modules.objects.widgets;
 
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
-import java.util.SortedMap;
-import java.util.TreeMap;
-import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IConfigurationElement;
-import org.eclipse.core.runtime.IExtensionRegistry;
-import org.eclipse.core.runtime.Platform;
-import org.eclipse.jface.action.Action;
-import org.eclipse.jface.action.IMenuListener;
-import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
@@ -42,16 +33,11 @@ import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
-import org.eclipse.swt.layout.FormAttachment;
-import org.eclipse.swt.layout.FormData;
-import org.eclipse.swt.layout.FormLayout;
+import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.ScrollBar;
-import org.eclipse.ui.IViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
@@ -63,30 +49,26 @@ import org.netxms.client.objects.MobileDevice;
 import org.netxms.client.objects.Node;
 import org.netxms.client.objects.Rack;
 import org.netxms.client.objects.Sensor;
-import org.netxms.ui.eclipse.objectbrowser.api.ObjectContextMenu;
-import org.netxms.ui.eclipse.objectview.api.ObjectDetailsProvider;
-import org.netxms.ui.eclipse.shared.ConsoleSharedData;
-import org.netxms.ui.eclipse.tools.RefreshTimer;
-import org.netxms.ui.eclipse.tools.WidgetHelper;
-import org.netxms.ui.eclipse.widgets.FilterText;
+import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.base.views.View;
+import org.netxms.nxmc.modules.objects.ObjectContextMenuManager;
+import org.netxms.nxmc.tools.RefreshTimer;
+import org.netxms.nxmc.tools.WidgetHelper;
 
 /**
  * Common parent class for status maps
  */
 public abstract class AbstractObjectStatusMap extends Composite implements ISelectionProvider
 {
-   protected IViewPart viewPart;
+   protected View view;
    protected long rootObjectId;
    protected NXCSession session;
-   protected FilterText filterTextControl;
    protected ISelection selection = null;
    protected Set<ISelectionChangedListener> selectionListeners = new HashSet<ISelectionChangedListener>();
    protected MenuManager menuManager;
-   protected boolean filterEnabled = true;
    protected int severityFilter = 0xFF;
    protected String textFilter = "";
    protected boolean hideObjectsInMaintenance = false;
-   protected SortedMap<Integer, ObjectDetailsProvider> detailsProviders = new TreeMap<Integer, ObjectDetailsProvider>();
    protected Set<Runnable> refreshListeners = new HashSet<Runnable>();
    protected RefreshTimer refreshTimer;
    protected boolean fitToScreen;
@@ -100,16 +82,13 @@ public abstract class AbstractObjectStatusMap extends Composite implements ISele
     * @param viewPart owning view part
     * @param parent parent composite
     * @param style widget's style
-    * @param allowFilterClose true to allow filter close
     */
-   public AbstractObjectStatusMap(IViewPart viewPart, Composite parent, int style, boolean allowFilterClose)
+   public AbstractObjectStatusMap(View view, Composite parent, int style)
    {
       super(parent, style);
 
-      initDetailsProviders();
-
-      this.viewPart = viewPart;
-      session = ConsoleSharedData.getSession();
+      this.view = view;
+      session = Registry.getSession();
       final SessionListener sessionListener = new SessionListener() {
          @Override
          public void notificationHandler(SessionNotification n)
@@ -128,28 +107,10 @@ public abstract class AbstractObjectStatusMap extends Composite implements ISele
             session.removeListener(sessionListener);
          }
       });
-
-      FormLayout formLayout = new FormLayout();
-      setLayout(formLayout);
+      
+      setLayout(new FillLayout());
 
       setBackground(getDisplay().getSystemColor(SWT.COLOR_LIST_BACKGROUND));
-
-      // Create filter area
-      filterTextControl = new FilterText(this, SWT.NONE, null, allowFilterClose);
-      filterTextControl.addModifyListener(new ModifyListener() {
-         @Override
-         public void modifyText(ModifyEvent e)
-         {
-            onFilterModify();
-         }
-      });
-      filterTextControl.setCloseAction(new Action() {
-         @Override
-         public void run()
-         {
-            enableFilter(false);
-         }
-      });
 
       scroller = new ScrolledComposite(this, SWT.V_SCROLL | SWT.H_SCROLL);
       scroller.setBackground(getBackground());
@@ -163,34 +124,7 @@ public abstract class AbstractObjectStatusMap extends Composite implements ISele
       });
       WidgetHelper.setScrollBarIncrement(scroller, SWT.VERTICAL, 30);
 
-      menuManager = new MenuManager();
-      menuManager.setRemoveAllWhenShown(true);
-      menuManager.addMenuListener(new IMenuListener() {
-         public void menuAboutToShow(IMenuManager manager)
-         {
-            fillContextMenu(manager);
-         }
-      });
-
-      // Setup layout
-      FormData fd = new FormData();
-      fd.left = new FormAttachment(0, 0);
-      fd.top = new FormAttachment(filterTextControl);
-      fd.right = new FormAttachment(100, 0);
-      fd.bottom = new FormAttachment(100, 0);
-      scroller.setLayoutData(fd);
-      
-      fd = new FormData();
-      fd.left = new FormAttachment(0, 0);
-      fd.top = new FormAttachment(0, 0);
-      fd.right = new FormAttachment(100, 0);
-      filterTextControl.setLayoutData(fd);
-
-      // Set initial focus to filter input line
-      if (filterEnabled)
-         filterTextControl.setFocus();
-      else
-         enableFilter(false); // Will hide filter area correctly
+      menuManager = new ObjectContextMenuManager(view, this);
 
       content = createContent(scroller); 
       scroller.setContent(content);
@@ -213,15 +147,6 @@ public abstract class AbstractObjectStatusMap extends Composite implements ISele
    protected abstract Composite createContent(Composite parent);
 
    /**
-    * Fill context menu
-    * @param mgr Menu manager
-    */
-   protected void fillContextMenu(IMenuManager manager)
-   {
-      ObjectContextMenu.fill(manager, (viewPart != null) ? viewPart.getSite() : null, this); 
-   }
-
-   /**
     * @param objectId
     */
    public void setRootObject(long objectId)
@@ -229,7 +154,7 @@ public abstract class AbstractObjectStatusMap extends Composite implements ISele
       rootObjectId = objectId;
       refresh();
    }
-   
+
    /**
     * Check if given object is accepted by filter
     * 
@@ -240,7 +165,7 @@ public abstract class AbstractObjectStatusMap extends Composite implements ISele
    {
       if (((1 << object.getStatus().getValue()) & severityFilter) == 0)
          return false;
-      
+
       if (hideObjectsInMaintenance && object.isInMaintenanceMode())
          return false;
 
@@ -261,7 +186,7 @@ public abstract class AbstractObjectStatusMap extends Composite implements ISele
       
       return true;
    }
-   
+
    /**
     * Filter given object collection
     * 
@@ -271,7 +196,7 @@ public abstract class AbstractObjectStatusMap extends Composite implements ISele
    {
       if (((severityFilter & 0x3F) == 0x3F) && !hideObjectsInMaintenance && textFilter.isEmpty())
          return;  // filter is not set
-      
+
       Iterator<AbstractObject> it = objects.iterator();
       while(it.hasNext())
       {
@@ -321,54 +246,31 @@ public abstract class AbstractObjectStatusMap extends Composite implements ISele
    }
 
    /**
-    * Initialize object details providers
+    * Show object details
+    * 
+    * @param object object to show details for
     */
-   private void initDetailsProviders()
+   protected void showObjectDetails(AbstractObject object)
    {
-      // Read all registered extensions and create tabs
-      final IExtensionRegistry reg = Platform.getExtensionRegistry();
-      IConfigurationElement[] elements = reg.getConfigurationElementsFor("org.netxms.ui.eclipse.objectview.objectDetailsProvider"); //$NON-NLS-1$
-      for(int i = 0; i < elements.length; i++)
-      {
-         try
-         {
-            final ObjectDetailsProvider provider = (ObjectDetailsProvider)elements[i].createExecutableExtension("class"); //$NON-NLS-1$
-            int priority;
-            try
-            {
-               priority = Integer.parseInt(elements[i].getAttribute("priority")); //$NON-NLS-1$
-            }
-            catch(NumberFormatException e)
-            {
-               priority = 65535;
-            }
-            detailsProviders.put(priority, provider);
-         }
-         catch(CoreException e)
-         {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-         }
-      }
+      // TODO: implement switch to object
+   }
+ 
+   /**
+    * @return the textFilter
+    */
+   public String getTextFilter()
+   {
+      return textFilter;
    }
 
    /**
-    * Call object details provider
-    * 
-    * @param node
+    * @param textFilter the textFilter to set
     */
-   protected void callDetailsProvider(AbstractObject object)
+   public void setTextFilter(String textFilter)
    {
-      for(ObjectDetailsProvider p : detailsProviders.values())
-      {
-         if (p.canProvideDetails(object))
-         {
-            p.provideDetails(object, viewPart);
-            break;
-         }
-      }
+      this.textFilter = (textFilter != null) ? textFilter.strip().toLowerCase() : "";
    }
- 
+
    /**
     * @return
     */
@@ -417,77 +319,6 @@ public abstract class AbstractObjectStatusMap extends Composite implements ISele
       refreshListeners.remove(listener);
    }
 
-   /**
-    * Enable or disable filter
-    * 
-    * @param enable New filter state
-    */
-   public void enableFilter(boolean enable)
-   {
-      filterEnabled = enable;
-      filterTextControl.setVisible(filterEnabled);
-      FormData fd = (FormData)scroller.getLayoutData();
-      fd.top = enable ? new FormAttachment(filterTextControl) : new FormAttachment(0, 0);
-      layout();
-      if (enable)
-         filterTextControl.setFocus();
-      else
-         setFilterText(""); //$NON-NLS-1$
-   }
-
-   /**
-    * @return the filterEnabled
-    */
-   public boolean isFilterEnabled()
-   {
-      return filterEnabled;
-   }
-   
-   /**
-    * Set action to be executed when user press "Close" button in object filter.
-    * Default implementation will hide filter area without notifying parent.
-    * 
-    * @param action
-    */
-   public void setFilterCloseAction(Action action)
-   {
-      filterTextControl.setCloseAction(action);
-   }
-   
-   /**
-    * Set filter text
-    * 
-    * @param text New filter text
-    */
-   public void setFilterText(final String text)
-   {
-      filterTextControl.setText(text);
-      onFilterModify();
-   }
-
-   /**
-    * Get filter text
-    * 
-    * @return Current filter text
-    */
-   public String getFilterText()
-   {
-      return filterTextControl.getText();
-   }
-
-   /**
-    * Handler for filter modification
-    */
-   private void onFilterModify()
-   {
-      String text = filterTextControl.getText().trim().toLowerCase();
-      if (!textFilter.equals(text))
-      {
-         textFilter = text;
-         refresh();
-      }
-   }
-   
    /**
     * Refresh view
     */

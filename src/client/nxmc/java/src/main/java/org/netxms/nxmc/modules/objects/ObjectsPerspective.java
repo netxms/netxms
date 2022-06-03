@@ -67,6 +67,7 @@ import org.netxms.nxmc.modules.objects.views.ProcessesView;
 import org.netxms.nxmc.modules.objects.views.RackView;
 import org.netxms.nxmc.modules.objects.views.ServicesView;
 import org.netxms.nxmc.modules.objects.views.SoftwareInventoryView;
+import org.netxms.nxmc.modules.objects.views.StatusMapView;
 import org.netxms.nxmc.modules.objects.views.SwitchForwardingDatabaseView;
 import org.netxms.nxmc.modules.snmp.views.MibExplorer;
 import org.netxms.nxmc.modules.worldmap.views.ObjectGeoLocationView;
@@ -151,6 +152,7 @@ public abstract class ObjectsPerspective extends Perspective
       addMainView(new RackView());
       addMainView(new ServicesView());
       addMainView(new SoftwareInventoryView());
+      addMainView(new StatusMapView());
       addMainView(new SummaryDataCollectionView());
       addMainView(new SwitchForwardingDatabaseView());
    }

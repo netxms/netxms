@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -105,7 +105,7 @@ public class AlarmList extends CompositeWithMessageArea
 	public static final int COLUMN_ACK_BY = 8;
 	public static final int COLUMN_CREATED = 9;
 	public static final int COLUMN_LASTCHANGE = 10;
-	
+
    private I18n i18n = LocalizationHelper.getI18n(AlarmList.class);
    private View view;
 	private NXCSession session = null;
@@ -172,7 +172,7 @@ public class AlarmList extends CompositeWithMessageArea
 		this.visibilityValidator = visibilityValidator;
 
       getContent().setLayout(new FillLayout());
-		
+
 		// Setup table columns
 		final String[] names = { 
 		      i18n.tr("Severity"), 
@@ -213,7 +213,7 @@ public class AlarmList extends CompositeWithMessageArea
       initShowfilter = ps.getAsBoolean("AlarmList.ShowFilter", true);
 		
 		createActions();
-		createPopupMenu();
+		createContextMenu();
 
       if ((visibilityValidator == null) || visibilityValidator.isVisible())
          refresh();
@@ -490,7 +490,7 @@ public class AlarmList extends CompositeWithMessageArea
       actionTerminate.setId("AlarmList.Terminate"); //$NON-NLS-1$
 		
       actionCreateIssue = new Action(i18n.tr("Create ticket in &helpdesk system"),
-            ResourceManager.getImageDescriptor("icons/helpdesk_ticket.png")) {
+            ResourceManager.getImageDescriptor("icons/alarms/create-issue.png")) {
          @Override
          public void run()
          {
@@ -612,9 +612,9 @@ public class AlarmList extends CompositeWithMessageArea
    }
 
    /**
-    * Create pop-up menu for alarm list
+    * Create context menu for alarm list
     */
-   private void createPopupMenu()
+   private void createContextMenu()
    {
       // Create menu manager.
       MenuManager menuMgr = new MenuManager();
@@ -1104,15 +1104,26 @@ public class AlarmList extends CompositeWithMessageArea
       IStructuredSelection selection = alarmSelectionProvider.getStructuredSelection();
       if (selection.size() != 1)
          return;
-      
+
       final long id = ((Alarm)selection.getFirstElement()).getId();
       new Job(i18n.tr("Create helpdesk ticket"), view) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            session.openHelpdeskIssue(id);
+            final String issueId = session.openHelpdeskIssue(id);
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
+                  String message = String.format(i18n.tr("Helpdesk issue created successfully (assigned ID is %s)"), issueId);
+                  if (view != null)
+                     view.addMessage(MessageArea.SUCCESS, message);
+                  else
+                     MessageDialogHelper.openInformation(getShell(), i18n.tr("Create Helpdesk Issue"), message);
+               }
+            });
          }
-         
+
          @Override
          protected String getErrorMessage()
          {
@@ -1129,7 +1140,7 @@ public class AlarmList extends CompositeWithMessageArea
       IStructuredSelection selection = alarmSelectionProvider.getStructuredSelection();
       if (selection.size() != 1)
          return;
-      
+
       final long id = ((Alarm)selection.getFirstElement()).getId();
       new Job(i18n.tr("Show helpdesk ticket"), view) {
          @Override

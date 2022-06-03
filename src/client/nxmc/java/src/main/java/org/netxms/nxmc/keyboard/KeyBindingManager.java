@@ -29,7 +29,7 @@ import org.eclipse.swt.widgets.Display;
  */
 public class KeyBindingManager
 {
-   private Map<KeyStroke, IAction> bindings = new HashMap<>();
+   private Map<KeyStroke, ActionBinding> bindings = new HashMap<>();
 
    /**
     * Add key binding to this manager.
@@ -39,7 +39,19 @@ public class KeyBindingManager
     */
    public void addBinding(KeyStroke keyStroke, IAction action)
    {
-      bindings.put(keyStroke, action);
+      addBinding(keyStroke, action, null);
+   }
+
+   /**
+    * Add key binding to this manager.
+    *
+    * @param keyStroke activation keystroke
+    * @param action action to execute
+    * @param radioGroup group of radio button actions this action belongs to
+    */
+   public void addBinding(KeyStroke keyStroke, IAction action, String radioGroup)
+   {
+      bindings.put(keyStroke, new ActionBinding(action, radioGroup));
       String text = action.getText();
       if ((text != null) && (text.indexOf('\t') == -1))
          action.setText(text + "\t" + keyStroke.toString());
@@ -53,9 +65,21 @@ public class KeyBindingManager
     */
    public void addBinding(String definition, IAction action)
    {
+      addBinding(definition, action, null);
+   }
+
+   /**
+    * Add key binding to this manager.
+    *
+    * @param definition activation keystroke definition
+    * @param action action to execute
+    * @param radioGroup group of radio button actions this action belongs to
+    */
+   public void addBinding(String definition, IAction action, String radioGroup)
+   {
       KeyStroke keyStroke = KeyStroke.parse(definition);
       if (keyStroke.isValid())
-         addBinding(keyStroke, action);
+         addBinding(keyStroke, action, radioGroup);
    }
 
    /**
@@ -67,7 +91,20 @@ public class KeyBindingManager
     */
    public void addBinding(int modifiers, int key, IAction action)
    {
-      addBinding(new KeyStroke(modifiers, key), action);
+      addBinding(new KeyStroke(modifiers, key), action, null);
+   }
+
+   /**
+    * Add key binding to this manager.
+    *
+    * @param modifiers modifier bits for keystroke definition
+    * @param key key code for keystroke definition
+    * @param action action to execute
+    * @param radioGroup group of radio button actions this action belongs to
+    */
+   public void addBinding(int modifiers, int key, IAction action, String radioGroup)
+   {
+      addBinding(new KeyStroke(modifiers, key), action, radioGroup);
    }
 
    /**
@@ -109,9 +146,9 @@ public class KeyBindingManager
    public void removeBinding(IAction action)
    {
       KeyStroke key = null;
-      for(Entry<KeyStroke, IAction> e : bindings.entrySet())
+      for(Entry<KeyStroke, ActionBinding> e : bindings.entrySet())
       {
-         if (action.equals(e.getValue()))
+         if (action.equals(e.getValue().action))
          {
             key = e.getKey();
             break;
@@ -129,19 +166,51 @@ public class KeyBindingManager
     */
    public boolean processKeyStroke(KeyStroke keyStroke)
    {
-      final IAction action = bindings.get(keyStroke);
-      if ((action == null) || !action.isEnabled())
+      final ActionBinding actionBinding = bindings.get(keyStroke);
+      if ((actionBinding == null) || !actionBinding.action.isEnabled())
          return false;
 
       Display.getCurrent().asyncExec(new Runnable() {
          @Override
          public void run()
          {
-            if ((action.getStyle() & IAction.AS_CHECK_BOX) != 0)
+            IAction action = actionBinding.action;
+            if ((action.getStyle() & IAction.AS_RADIO_BUTTON) != 0)
+            {
+               if (action.isChecked())
+                  return; // Already selected, nothing to do
+
+               if (actionBinding.radouGroup != null)
+               {
+                  for(ActionBinding b : bindings.values())
+                     if (actionBinding.radouGroup.equals(b.radouGroup))
+                        b.action.setChecked(false);
+               }
+
+               action.setChecked(true);
+            }
+            else if ((action.getStyle() & IAction.AS_CHECK_BOX) != 0)
+            {
                action.setChecked(!action.isChecked());
+            }
             action.run();
          }
       });
       return true;
+   }
+
+   /**
+    * Action binding information
+    */
+   private static class ActionBinding
+   {
+      IAction action;
+      String radouGroup;
+
+      public ActionBinding(IAction action, String radouGroup)
+      {
+         this.action = action;
+         this.radouGroup = radouGroup;
+      }
    }
 }
