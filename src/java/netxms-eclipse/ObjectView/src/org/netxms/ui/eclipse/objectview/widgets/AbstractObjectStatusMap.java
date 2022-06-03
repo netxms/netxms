@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2018 Raden Solutions
+ * Copyright (C) 2003-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -93,17 +93,21 @@ public abstract class AbstractObjectStatusMap extends Composite implements ISele
 
    private Composite content;
    private ScrolledComposite scroller;
-   
+
    /**
-    * @param parent
-    * @param style
+    * Create object status map.
+    *
+    * @param viewPart owning view part
+    * @param parent parent composite
+    * @param style widget's style
+    * @param allowFilterClose true to allow filter close
     */
    public AbstractObjectStatusMap(IViewPart viewPart, Composite parent, int style, boolean allowFilterClose)
    {
       super(parent, style);
 
       initDetailsProviders();
-      
+
       this.viewPart = viewPart;
       session = ConsoleSharedData.getSession();
       final SessionListener sessionListener = new SessionListener() {
@@ -124,10 +128,10 @@ public abstract class AbstractObjectStatusMap extends Composite implements ISele
             session.removeListener(sessionListener);
          }
       });
-      
+
       FormLayout formLayout = new FormLayout();
       setLayout(formLayout);
-      
+
       setBackground(getDisplay().getSystemColor(SWT.COLOR_LIST_BACKGROUND));
 
       // Create filter area
@@ -146,7 +150,7 @@ public abstract class AbstractObjectStatusMap extends Composite implements ISele
             enableFilter(false);
          }
       });
-      
+
       scroller = new ScrolledComposite(this, SWT.V_SCROLL | SWT.H_SCROLL);
       scroller.setBackground(getBackground());
       scroller.setExpandHorizontal(true);
@@ -158,7 +162,7 @@ public abstract class AbstractObjectStatusMap extends Composite implements ISele
          }
       });
       WidgetHelper.setScrollBarIncrement(scroller, SWT.VERTICAL, 30);
-      
+
       menuManager = new MenuManager();
       menuManager.setRemoveAllWhenShown(true);
       menuManager.addMenuListener(new IMenuListener() {
@@ -190,7 +194,7 @@ public abstract class AbstractObjectStatusMap extends Composite implements ISele
 
       content = createContent(scroller); 
       scroller.setContent(content);
-      
+
       refreshTimer = new RefreshTimer(10000, this, new Runnable() {
          @Override
          public void run()
@@ -199,7 +203,7 @@ public abstract class AbstractObjectStatusMap extends Composite implements ISele
          }
       });
    }
-   
+
    /**
     * Create status widget content
     * 
@@ -207,7 +211,7 @@ public abstract class AbstractObjectStatusMap extends Composite implements ISele
     * @return content for scroller
     */
    protected abstract Composite createContent(Composite parent);
-   
+
    /**
     * Fill context menu
     * @param mgr Menu manager
@@ -276,8 +280,8 @@ public abstract class AbstractObjectStatusMap extends Composite implements ISele
             it.remove();
       }
    }
-    
-   /* (non-Javadoc)
+
+   /**
     * @see org.eclipse.jface.viewers.ISelectionProvider#addSelectionChangedListener(org.eclipse.jface.viewers.ISelectionChangedListener)
     */
    @Override
@@ -286,7 +290,7 @@ public abstract class AbstractObjectStatusMap extends Composite implements ISele
       selectionListeners.add(listener);
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.viewers.ISelectionProvider#getSelection()
     */
    @Override
@@ -295,7 +299,7 @@ public abstract class AbstractObjectStatusMap extends Composite implements ISele
       return selection;
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.viewers.ISelectionProvider#removeSelectionChangedListener(org.eclipse.jface.viewers.ISelectionChangedListener)
     */
    @Override
@@ -304,7 +308,7 @@ public abstract class AbstractObjectStatusMap extends Composite implements ISele
       selectionListeners.remove(listener);
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.viewers.ISelectionProvider#setSelection(org.eclipse.jface.viewers.ISelection)
     */
    @Override
@@ -347,7 +351,7 @@ public abstract class AbstractObjectStatusMap extends Composite implements ISele
          }
       }
    }
-   
+
    /**
     * Call object details provider
     * 

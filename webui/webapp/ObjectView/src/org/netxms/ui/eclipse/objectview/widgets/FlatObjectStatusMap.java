@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2018 Raden Solutions
+ * Copyright (C) 2003-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -52,19 +52,19 @@ import org.netxms.client.objects.ServiceRoot;
 /**
  * Widget showing "heat" map of nodes under given root object
  */
-public class ObjectStatusMap extends AbstractObjectStatusMap
+public class FlatObjectStatusMap extends AbstractObjectStatusMap
 {
 	private List<Composite> sections = new ArrayList<Composite>();
 	private Map<Long, ObjectStatusWidget> statusWidgets = new HashMap<Long, ObjectStatusWidget>();
 	private Font titleFont;
 	private boolean groupObjects = true;
    protected Composite dataArea;
-	
+
 	/**
 	 * @param parent
 	 * @param style
 	 */
-	public ObjectStatusMap(IViewPart viewPart, Composite parent, int style, boolean allowFilterClose)
+	public FlatObjectStatusMap(IViewPart viewPart, Composite parent, int style, boolean allowFilterClose)
 	{
 		super(viewPart, parent, style, allowFilterClose);
 		
@@ -85,7 +85,7 @@ public class ObjectStatusMap extends AbstractObjectStatusMap
 		}     
 	}
 
-	/* (non-Javadoc)
+   /**
     * @see org.netxms.ui.eclipse.objectview.widgets.AbstractObjectStatusMap#createContent(org.eclipse.swt.widgets.Composite)
     */
    @Override
@@ -99,9 +99,9 @@ public class ObjectStatusMap extends AbstractObjectStatusMap
       return dataArea;
    }
 
-   /* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.objectview.widgets.AbstractObjectStatusMap#refresh()
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.objectview.widgets.AbstractObjectStatusMap#refresh()
+    */
 	@Override
 	public void refresh()
 	{
@@ -179,7 +179,7 @@ public class ObjectStatusMap extends AbstractObjectStatusMap
 		AbstractObject root = session.findObjectById(rootId);
 		if ((root == null) || !((root instanceof Container) || (root instanceof ServiceRoot) || (root instanceof Cluster)))
 			return;
-		
+
 		List<AbstractObject> objects = new ArrayList<AbstractObject>(Arrays.asList(root.getChildrenAsArray()));
 		Collections.sort(objects, new Comparator<AbstractObject>() {
 			@Override
@@ -188,19 +188,19 @@ public class ObjectStatusMap extends AbstractObjectStatusMap
             return o1.getNameWithAlias().compareToIgnoreCase(o2.getNameWithAlias());
 			}
 		});
-		
+
 		Composite section = null;
 		Composite clientArea = null;
-		
+
 		// Add nodes and clusters
 		for(AbstractObject o : objects)
 		{
 			if (!((o instanceof AbstractNode) || (o instanceof Cluster)))
 				continue;
-			
+
 			if (!isAcceptedByFilter(o))
 				continue;
-			
+
 			if (section == null)
 			{
 				section = new Composite(dataArea, SWT.NONE);
@@ -209,12 +209,12 @@ public class ObjectStatusMap extends AbstractObjectStatusMap
 				gd.grabExcessHorizontalSpace = true;
 				gd.horizontalAlignment = SWT.FILL;
 				section.setLayoutData(gd);
-				
+
 				GridLayout layout = new GridLayout();
 				layout.marginHeight = 0;
 				layout.marginWidth = 0;
 				section.setLayout(layout);
-				
+
 				final Label title = new Label(section, SWT.NONE);
 				title.setBackground(getBackground());
 				title.setFont(titleFont);
@@ -235,23 +235,23 @@ public class ObjectStatusMap extends AbstractObjectStatusMap
 				clayout.wrap = true;
 				clayout.pack = false;
 				clientArea.setLayout(clayout);
-				
+
 				sections.add(section);
 			}
-			
+
 			addObjectElement(clientArea, o);
 		}
-		
+
 		// Add subcontainers
 		for(AbstractObject o : objects)
 		{
 			if (!(o instanceof Container) && !(o instanceof ServiceRoot) && !(o instanceof Cluster))
 				continue;
-			
+
          buildSection(o.getObjectId(), namePrefix + root.getNameWithAlias() + " / "); //$NON-NLS-1$
 		}
 	}
-	
+
 	/**
 	 * @param object
 	 */
@@ -356,9 +356,9 @@ public class ObjectStatusMap extends AbstractObjectStatusMap
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.objectview.widgets.AbstractObjectStatusMap#onObjectDelete(long)
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.objectview.widgets.AbstractObjectStatusMap#onObjectDelete(long)
+    */
 	@Override
 	protected void onObjectDelete(final long objectId)
 	{
@@ -387,6 +387,9 @@ public class ObjectStatusMap extends AbstractObjectStatusMap
 		}
 	}
 
+   /**
+    * @see org.netxms.ui.eclipse.objectview.widgets.AbstractObjectStatusMap#computeSize()
+    */
    @Override
    protected Point computeSize()
    {

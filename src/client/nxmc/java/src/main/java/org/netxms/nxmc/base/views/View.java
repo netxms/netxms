@@ -26,6 +26,7 @@ import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.ToolBarManager;
 import org.eclipse.jface.fieldassist.IContentProposalProvider;
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.StructuredViewer;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
@@ -69,7 +70,7 @@ public abstract class View implements MessageAreaHolder
    private boolean showFilterLabel;
    private boolean filterEnabled;
    private AbstractViewerFilter filter;
-   private StructuredViewer viewer;
+   private ISelectionProvider viewer;
    private Set<ViewStateListener> stateListeners = new HashSet<ViewStateListener>();
    private KeyBindingManager keyBindingManager = new KeyBindingManager();
 
@@ -616,7 +617,7 @@ public abstract class View implements MessageAreaHolder
     * @param viewer viewer to refresh
     * @param filter filter to set filtering text
     */
-   protected void setFilterClient(StructuredViewer viewer, AbstractViewerFilter filter)
+   protected void setFilterClient(ISelectionProvider viewer, AbstractViewerFilter filter)
    {
       this.viewer = viewer;
       this.filter = filter;
@@ -629,7 +630,8 @@ public abstract class View implements MessageAreaHolder
    {
       final String text = filterText.getText();
       filter.setFilterString(text);
-      viewer.refresh(false);
+      if (viewer instanceof StructuredViewer)
+         ((StructuredViewer)viewer).refresh(false);
    }
 
    /**
@@ -748,7 +750,7 @@ public abstract class View implements MessageAreaHolder
     */
    public void addKeyBinding(KeyStroke keyStroke, IAction action)
    {
-      keyBindingManager.addBinding(keyStroke, action);
+      keyBindingManager.addBinding(keyStroke, action, null);
    }
 
    /**
@@ -759,7 +761,7 @@ public abstract class View implements MessageAreaHolder
     */
    public void addKeyBinding(String keyStroke, IAction action)
    {
-      keyBindingManager.addBinding(keyStroke, action);
+      keyBindingManager.addBinding(keyStroke, action, null);
    }
 
    /**
@@ -771,7 +773,44 @@ public abstract class View implements MessageAreaHolder
     */
    public void addKeyBinding(int modifiers, int key, IAction action)
    {
-      keyBindingManager.addBinding(modifiers, key, action);
+      keyBindingManager.addBinding(modifiers, key, action, null);
+   }
+
+   /**
+    * Add key binding.
+    *
+    * @param keyStroke keystroke to handle
+    * @param action action to execute
+    * @param radioGroup group of radio button actions this action belongs to
+    */
+   public void addKeyBinding(KeyStroke keyStroke, IAction action, String radioGroup)
+   {
+      keyBindingManager.addBinding(keyStroke, action, radioGroup);
+   }
+
+   /**
+    * Add key binding.
+    *
+    * @param keyStroke keystroke to handle
+    * @param action action to execute
+    * @param radioGroup group of radio button actions this action belongs to
+    */
+   public void addKeyBinding(String keyStroke, IAction action, String radioGroup)
+   {
+      keyBindingManager.addBinding(keyStroke, action, radioGroup);
+   }
+
+   /**
+    * Add key binding.
+    *
+    * @param modifiers modifier bits for keystroke to handle
+    * @param key key code for keystroke to handle
+    * @param action action to execute
+    * @param radioGroup group of radio button actions this action belongs to
+    */
+   public void addKeyBinding(int modifiers, int key, IAction action, String radioGroup)
+   {
+      keyBindingManager.addBinding(modifiers, key, action, radioGroup);
    }
 
    /**

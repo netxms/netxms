@@ -23,8 +23,8 @@ import org.eclipse.ui.IViewPart;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.StatusMapConfig;
 import org.netxms.ui.eclipse.objectview.widgets.AbstractObjectStatusMap;
-import org.netxms.ui.eclipse.objectview.widgets.ObjectStatusMap;
-import org.netxms.ui.eclipse.objectview.widgets.ObjectStatusMapRadial;
+import org.netxms.ui.eclipse.objectview.widgets.FlatObjectStatusMap;
+import org.netxms.ui.eclipse.objectview.widgets.RadialObjectStatusMap;
 
 /**
  * Status map element for dashboard
@@ -55,12 +55,12 @@ public class StatusMapElement extends ElementWidget
 		processCommonSettings(config);
 
       if (config.isShowRadial())
-         map = new ObjectStatusMapRadial(viewPart, getContentArea(), SWT.NONE, false);			   
+         map = new RadialObjectStatusMap(viewPart, getContentArea(), SWT.NONE, false);			   
 		else
-		   map = new ObjectStatusMap(viewPart, getContentArea(), SWT.NONE, false);
+		   map = new FlatObjectStatusMap(viewPart, getContentArea(), SWT.NONE, false);
       map.setFitToScreen(config.isFitToScreen());
       if (!config.isShowRadial())
-		   ((ObjectStatusMap)map).setGroupObjects(config.isGroupObjects());
+		   ((FlatObjectStatusMap)map).setGroupObjects(config.isGroupObjects());
       map.setHideObjectsInMaintenance(config.isHideObjectsInMaintenance());
 		map.setSeverityFilter(config.getSeverityFilter());
 		map.enableFilter(config.isShowTextFilter());

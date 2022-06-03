@@ -196,7 +196,11 @@ public class ObjectContextMenuManager extends MenuManager
     */
    protected void fillContextMenu()
    {
-      boolean singleObject = ((IStructuredSelection)selectionProvider.getSelection()).size() == 1;
+      IStructuredSelection selection = (IStructuredSelection)selectionProvider.getSelection();
+      if (selection.isEmpty())
+         return;
+
+      boolean singleObject = (selection.size() == 1);
 
       if (singleObject)
       {
@@ -208,7 +212,7 @@ public class ObjectContextMenuManager extends MenuManager
          }
       }
 
-      if (isMaintenanceMenuAllowed((IStructuredSelection)selectionProvider.getSelection()))
+      if (isMaintenanceMenuAllowed(selection))
       {
          MenuManager maintenanceMenu = new MenuManager(i18n.tr("&Maintenance"));
          maintenanceMenu.add(actionEnterMaintenance);
@@ -234,7 +238,7 @@ public class ObjectContextMenuManager extends MenuManager
       else
       {
          boolean nodesWithAgent = false;
-         for(Object o : ((IStructuredSelection)selectionProvider.getSelection()).toList())
+         for(Object o : selection.toList())
          {
             if (o instanceof Node)
             {
@@ -274,14 +278,14 @@ public class ObjectContextMenuManager extends MenuManager
          add(actionExecuteScript);
       }
 
-      final Menu toolsMenu = ObjectMenuFactory.createToolsMenu((IStructuredSelection)selectionProvider.getSelection(), getMenu(), null, new ViewPlacement(view));
+      final Menu toolsMenu = ObjectMenuFactory.createToolsMenu(selection, getMenu(), null, new ViewPlacement(view));
       if (toolsMenu != null)
       {
          add(new Separator());
          add(new MenuContributionItem(i18n.tr("&Tools"), toolsMenu));
       }
 
-      final Menu pollsMenu = ObjectMenuFactory.createPollMenu((IStructuredSelection)selectionProvider.getSelection(), getMenu(), null, new ViewPlacement(view));
+      final Menu pollsMenu = ObjectMenuFactory.createPollMenu(selection, getMenu(), null, new ViewPlacement(view));
       if (pollsMenu != null)
       {
          add(new Separator());

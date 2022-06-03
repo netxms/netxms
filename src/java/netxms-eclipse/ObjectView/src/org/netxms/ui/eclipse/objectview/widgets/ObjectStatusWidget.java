@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -80,7 +80,7 @@ public class ObjectStatusWidget extends Canvas implements PaintListener
 		rect.width -= 8;
 		rect.height -= 8;
 		e.gc.setClipping(rect);
-		int h = e.gc.textExtent(text, SWT.DRAW_TRANSPARENT | SWT.DRAW_DELIMITER).y;
+      int h = e.gc.textExtent(text).y;
 		e.gc.drawText(text, rect.x, rect.y + (rect.height - h) / 2, SWT.DRAW_TRANSPARENT | SWT.DRAW_DELIMITER);
 	}
 
@@ -101,11 +101,11 @@ public class ObjectStatusWidget extends Canvas implements PaintListener
 	public Point computeSize(int wHint, int hHint, boolean changed)
 	{
 		GC gc = new GC(getShell());
-		int h = gc.textExtent("MMM\nMMM", SWT.DRAW_TRANSPARENT | SWT.DRAW_DELIMITER).y; //$NON-NLS-1$
+      int h = gc.textExtent("MMM\nMMM").y; //$NON-NLS-1$
 		gc.dispose();
 		return new Point(160, h + 8);
 	}
-	
+
 	/**
 	 * @param node
 	 */

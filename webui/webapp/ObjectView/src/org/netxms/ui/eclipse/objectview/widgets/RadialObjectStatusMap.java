@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Raden Solutions
+ * Copyright (C) 2003-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,11 +35,11 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
- * Widget showing "heat" map of nodes under given root object
+ * Widget showing "heat" map of nodes under given root object as radial ("sunburst") diagram
  */
-public class ObjectStatusMapRadial extends AbstractObjectStatusMap
+public class RadialObjectStatusMap extends AbstractObjectStatusMap
 {
-	private ObjectStatusRadialWidget widget;
+	private ObjectStatusSunburstDiagram widget;
 	private AbstractObject tooltipObject = null;
    private ObjectPopupDialog tooltipDialog = null;
 
@@ -47,11 +47,11 @@ public class ObjectStatusMapRadial extends AbstractObjectStatusMap
 	 * @param parent
 	 * @param style
 	 */
-	public ObjectStatusMapRadial(IViewPart viewPart, Composite parent, int style, boolean allowFilterClose)
+	public RadialObjectStatusMap(IViewPart viewPart, Composite parent, int style, boolean allowFilterClose)
 	{
 		super(viewPart, parent, style, allowFilterClose);
 	}
-	
+
    /**
     * @param root
     * @param filterByTest
@@ -74,14 +74,14 @@ public class ObjectStatusMapRadial extends AbstractObjectStatusMap
    @Override
    protected Composite createContent(Composite parent)
    {
-      widget = new ObjectStatusRadialWidget(parent, null, null);
+      widget = new ObjectStatusSunburstDiagram(parent, null, null);
 
       widget.addMouseListener(new MouseListener() {
          @Override
          public void mouseUp(MouseEvent e)
          {
          }
-         
+
          @Override
          public void mouseDown(MouseEvent e)
          {
@@ -110,7 +110,7 @@ public class ObjectStatusMapRadial extends AbstractObjectStatusMap
          {
          }
       });
-      
+
       WidgetHelper.attachMouseTrackListener(widget, new MouseTrackListener() {
          @Override
          public void mouseHover(MouseEvent e)
@@ -196,12 +196,15 @@ public class ObjectStatusMapRadial extends AbstractObjectStatusMap
          refreshTimer.execute();
    }
 
+   /**
+    * @see org.netxms.ui.eclipse.objectview.widgets.AbstractObjectStatusMap#computeSize()
+    */
    @Override
    protected Point computeSize()
    {      
       if (!fitToScreen)
          return widget.computeSize(SWT.DEFAULT, SWT.DEFAULT);
-      
+
       Rectangle rect = getAvailableClientArea();
       return widget.computeSize(rect.width, rect.height);
    }

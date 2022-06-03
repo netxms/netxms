@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -110,7 +110,7 @@ public class AlarmList extends CompositeWithMessageArea
 	public static final int COLUMN_ACK_BY = 8;
 	public static final int COLUMN_CREATED = 9;
 	public static final int COLUMN_LASTCHANGE = 10;
-	
+
    private I18n i18n = LocalizationHelper.getI18n(AlarmList.class);
    private View view;
 	private NXCSession session = null;
@@ -254,7 +254,7 @@ public class AlarmList extends CompositeWithMessageArea
       initShowfilter = ps.getAsBoolean("AlarmList.ShowFilter", true);
 		
 		createActions();
-		createPopupMenu();
+		createContextMenu();
 
       if ((visibilityValidator == null) || visibilityValidator.isVisible())
          refresh();
@@ -653,9 +653,9 @@ public class AlarmList extends CompositeWithMessageArea
    }
 
    /**
-    * Create pop-up menu for alarm list
+    * Create context menu for alarm list
     */
-   private void createPopupMenu()
+   private void createContextMenu()
    {
       // Create menu manager.
       MenuManager menuMgr = new MenuManager();

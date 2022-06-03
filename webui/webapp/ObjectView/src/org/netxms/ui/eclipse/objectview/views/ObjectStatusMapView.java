@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2018 Raden Solutions
+ * Copyright (C) 2003-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,8 +36,8 @@ import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.objectview.Activator;
 import org.netxms.ui.eclipse.objectview.Messages;
 import org.netxms.ui.eclipse.objectview.widgets.AbstractObjectStatusMap;
-import org.netxms.ui.eclipse.objectview.widgets.ObjectStatusMap;
-import org.netxms.ui.eclipse.objectview.widgets.ObjectStatusMapRadial;
+import org.netxms.ui.eclipse.objectview.widgets.FlatObjectStatusMap;
+import org.netxms.ui.eclipse.objectview.widgets.RadialObjectStatusMap;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
@@ -46,7 +46,7 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 public class ObjectStatusMapView extends ViewPart
 {
 	public static final String ID = "org.netxms.ui.eclipse.objectview.views.ObjectStatusMapView"; //$NON-NLS-1$
-	
+
 	private static final String SETTINGS_DISPLAY_MODE = ID + ".DisplayMode"; 
    private static final String SETTINGS_SHOW_FILTER = ID + ".ShowFilter"; 
    private static final String SETTINGS_FIT_TO_SCREEN = ID + ".FitToScreen"; 
@@ -63,10 +63,10 @@ public class ObjectStatusMapView extends ViewPart
    private Action actionRadialView;
 	private Action actionShowFilter;
    private Action actionFitToScreen;
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
-	 */
+
+   /**
+    * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
+    */
 	@Override
 	public void init(IViewSite site) throws PartInitException
 	{
@@ -78,9 +78,9 @@ public class ObjectStatusMapView extends ViewPart
 		setPartName(String.format(Messages.get().ObjectStatusMapView_PartName, (object != null) ? object.getObjectName() : ("[" + rootObjectId + "]"))); //$NON-NLS-1$ //$NON-NLS-2$		
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	public void createPartControl(Composite parent)
 	{
@@ -93,12 +93,12 @@ public class ObjectStatusMapView extends ViewPart
       
       if (displayOption == 2)
       {
-         map = new ObjectStatusMapRadial(this, parent, SWT.NONE, true);
+         map = new RadialObjectStatusMap(this, parent, SWT.NONE, true);
       }
       else
       {
-         map = new ObjectStatusMap(this, parent, SWT.NONE, true);
-         ((ObjectStatusMap)map).setGroupObjects(displayOption == 1);
+         map = new FlatObjectStatusMap(this, parent, SWT.NONE, true);
+         ((FlatObjectStatusMap)map).setGroupObjects(displayOption == 1);
       }
       
 		map.setRootObject(rootObjectId);
@@ -120,10 +120,8 @@ public class ObjectStatusMapView extends ViewPart
 		
 		getSite().setSelectionProvider((ISelectionProvider)map);
 	}
-	
-	
 
-	/* (non-Javadoc)
+   /**
     * @see org.eclipse.ui.part.WorkbenchPart#dispose()
     */
    @Override
@@ -161,29 +159,29 @@ public class ObjectStatusMapView extends ViewPart
          @Override
          public void run()
          {
-            if (map instanceof ObjectStatusMap)
+            if (map instanceof FlatObjectStatusMap)
             {
-               ((ObjectStatusMap)map).setGroupObjects(false);
+               ((FlatObjectStatusMap)map).setGroupObjects(false);
                map.refresh();
             }
          }
       };
       actionFlatView.setChecked(displayOption == 0);
-      actionFlatView.setImageDescriptor(Activator.getImageDescriptor("icons/not_grouped_nodes.png"));
+      actionFlatView.setImageDescriptor(Activator.getImageDescriptor("icons/status-map-flat.png"));
 		
 		actionGroupView = new Action("&Group view", Action.AS_RADIO_BUTTON) {
 			@Override
 			public void run()
 			{
-			   if (map instanceof ObjectStatusMap)
+			   if (map instanceof FlatObjectStatusMap)
 			   {
-			      ((ObjectStatusMap)map).setGroupObjects(true);
+			      ((FlatObjectStatusMap)map).setGroupObjects(true);
 			      map.refresh();
 			   }
 			}
 		};
 		actionGroupView.setChecked(displayOption == 1);
-		actionGroupView.setImageDescriptor(Activator.getImageDescriptor("icons/grouped_nodes.png"));
+		actionGroupView.setImageDescriptor(Activator.getImageDescriptor("icons/status-map-grouped.png"));
       
       actionRadialView = new Action("&Radial view", Action.AS_RADIO_BUTTON) {
          @Override
@@ -193,7 +191,7 @@ public class ObjectStatusMapView extends ViewPart
          }
       };
       actionRadialView.setChecked(displayOption == 2);
-      actionRadialView.setImageDescriptor(Activator.getImageDescriptor("icons/radial.png"));
+      actionRadialView.setImageDescriptor(Activator.getImageDescriptor("icons/status-map-sunburst.png"));
       
       actionShowFilter = new Action(Messages.get().ObjectStatusMapView_ActionShowFilter, Action.AS_CHECK_BOX) {
          @Override
@@ -225,11 +223,11 @@ public class ObjectStatusMapView extends ViewPart
    private void redraw(boolean radial)
    {
       ((Composite)map).dispose();
-      
+
       if (radial)
-         map = new ObjectStatusMapRadial(this, clientArea, SWT.NONE, true);
+         map = new RadialObjectStatusMap(this, clientArea, SWT.NONE, true);
       else
-         map = new ObjectStatusMap(this, clientArea, SWT.NONE, true);  
+         map = new FlatObjectStatusMap(this, clientArea, SWT.NONE, true);  
 
       map.setRootObject(rootObjectId);
       map.enableFilter(showFilter);
@@ -292,9 +290,9 @@ public class ObjectStatusMapView extends ViewPart
       manager.add(actionRefresh);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
-	 */
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
+    */
 	@Override
 	public void setFocus()
 	{

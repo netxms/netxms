@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.objectview.widgets;
+package org.netxms.nxmc.modules.objects.widgets;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.PaintEvent;
@@ -28,8 +28,8 @@ import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
-import org.netxms.ui.eclipse.console.resources.ThemeEngine;
+import org.netxms.nxmc.resources.StatusDisplayInfo;
+import org.netxms.nxmc.resources.ThemeEngine;
 
 /**
  * Widget representing object status
