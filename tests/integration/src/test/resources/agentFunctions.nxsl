@@ -8,14 +8,14 @@ preCreatedNode = FindObject(preCreatedNodeId);
 actionName = $2;
 actionName2 = $3;
 
-assert(AgentExecuteAction(preCreatedNode, actionName));
-assert(AgentExecuteAction(preCreatedNode, actionName, "Param1", 2, 3.01));
-assert(!AgentExecuteAction(preCreatedNode, "nonexisting action")); 
+assert(AgentExecuteCommand(preCreatedNode, actionName));
+assert(AgentExecuteCommand(preCreatedNode, actionName, "Param1", 2, 3.01));
+assert(!AgentExecuteCommand(preCreatedNode, "nonexisting action")); 
 
 
-result = AgentExecuteActionWithOutput(preCreatedNode, actionName2, "Param1", 2, 3.01);
+result = AgentExecuteCommandWithOutput(preCreatedNode, actionName2, "Param1", 2, 3.01);
 assert(result == "Param1 2 3.010000\n");
-result = AgentExecuteActionWithOutput(preCreatedNode, actionName2, "Param1", 2, 3.01, 4);
+result = AgentExecuteCommandWithOutput(preCreatedNode, actionName2, "Param1", 2, 3.01, 4);
 assert(result == "Param1 2 3.010000 4\n");
 
 list = AgentReadList(preCreatedNode, "System.ProcessList");
