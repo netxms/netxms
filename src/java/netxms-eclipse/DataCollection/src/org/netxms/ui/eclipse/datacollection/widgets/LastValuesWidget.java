@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -164,12 +164,12 @@ public class LastValuesWidget extends CompositeWithMessageBar
 				enableFilter(false);
 			}
 		});
-		
+
 		// Setup table columns
 		final String[] names = { Messages.get().LastValuesWidget_ColID, Messages.get().LastValuesWidget_ColDescr, Messages.get().LastValuesWidget_ColValue, Messages.get().LastValuesWidget_ColTime, Messages.get().LastValuesWidget_ColThreshold };
 		final int[] widths = { 70, 250, 150, 120, 150 };
 		dataViewer = new SortableTableViewer(getContent(), names, widths, 0, SWT.DOWN, SortableTableViewer.DEFAULT_STYLE);
-	
+
 		labelProvider = new LastValuesLabelProvider();
 		comparator = new LastValuesComparator();
 		filter = new LastValuesFilter();
@@ -178,7 +178,7 @@ public class LastValuesWidget extends CompositeWithMessageBar
 		dataViewer.setComparator(comparator);
 		dataViewer.addFilter(filter);
 		WidgetHelper.restoreTableViewerSettings(dataViewer, ds, configPrefix);
-		
+
 		dataViewer.addDoubleClickListener(new IDoubleClickListener() {
 			@Override
 			public void doubleClick(DoubleClickEvent event)
@@ -190,7 +190,7 @@ public class LastValuesWidget extends CompositeWithMessageBar
 				}
 			}
 		});
-		
+
 		dataViewer.getTable().addDisposeListener(new DisposeListener() {
 			@Override
 			public void widgetDisposed(DisposeEvent e)
@@ -213,13 +213,13 @@ public class LastValuesWidget extends CompositeWithMessageBar
 		fd.right = new FormAttachment(100, 0);
 		fd.bottom = new FormAttachment(100, 0);
 		dataViewer.getTable().setLayoutData(fd);
-		
+
 		fd = new FormData();
 		fd.left = new FormAttachment(0, 0);
 		fd.top = new FormAttachment(0, 0);
 		fd.right = new FormAttachment(100, 0);
 		filterText.setLayoutData(fd);
-		
+
 		try
 		{
 			autoRefreshInterval = ds.getInt(configPrefix + ".autoRefreshInterval"); //$NON-NLS-1$

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -100,7 +100,7 @@ public class LastValuesLabelProvider extends LabelProvider implements ITableLabe
 				else if (selection == DciValue.MULTIPLIERS_YES)
 				   return ((DciValue)element).format("%*s");
 				else
-               return ((DciValue)element).getValue();				   
+               return ((DciValue)element).getValue();
 			case LastValuesWidget.COLUMN_TIMESTAMP:
 				if (((DciValue)element).getTimestamp().getTime() <= 1000)
 					return null;

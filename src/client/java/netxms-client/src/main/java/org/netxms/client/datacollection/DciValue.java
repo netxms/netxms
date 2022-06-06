@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -116,7 +116,7 @@ public abstract class DciValue
 	{
 	   return new DataFormatter(formatString, dataType).format(value);
 	}
-	
+
 	/**
 	 * @return the id
 	 */
@@ -255,5 +255,16 @@ public abstract class DciValue
    public Severity getMostCriticalSeverity()
    {
       return getThresholdSeverity();
+   }
+
+   /**
+    * @see java.lang.Object#toString()
+    */
+   @Override
+   public String toString()
+   {
+      return "DciValue [id=" + id + ", nodeId=" + nodeId + ", templateDciId=" + templateDciId + ", name=" + name + ", description=" + description + ", value=" + value + ", source=" + source +
+            ", dataType=" + dataType + ", status=" + status + ", errorCount=" + errorCount + ", dcObjectType=" + dcObjectType + ", timestamp=" + timestamp + ", activeThreshold=" + activeThreshold +
+            ", flags=" + flags + "]";
    }
 }
