@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Raden Solutions
+ * Copyright (C) 2003-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -59,11 +59,11 @@ import com.google.gson.JsonObject;
 public abstract class AbstractHandler extends ServerResource
 {
    protected static ApiProperties properties = new ApiProperties();
-   
+
    private Logger log = LoggerFactory.getLogger(AbstractHandler.class);
    private SessionToken sessionToken = null;
    private NXCSession session = null;
-   
+
    /**
     * Process GET requests
     * 
@@ -375,7 +375,7 @@ public abstract class AbstractHandler extends ServerResource
    {
       return createErrorResponse(RCC.INCOMPATIBLE_OPERATION);
    }
-   
+
    /**
     * Execute command.
     * 
@@ -388,7 +388,7 @@ public abstract class AbstractHandler extends ServerResource
    {
       return createErrorResponse(RCC.INCOMPATIBLE_OPERATION);
    }
-   
+
    /**
     * Login to NetXMS server
     * @param login
@@ -403,10 +403,18 @@ public abstract class AbstractHandler extends ServerResource
       session.setClientType(NXCSession.WEB_CLIENT);
       session.setClientAddress(clientAddress);
       session.connect();
-      session.login(login, (password == null) ? "" : password);
+      try
+      {
+         session.login(login, (password == null) ? "" : password);
+      }
+      catch(Exception e)
+      {
+         session.disconnect();
+         throw e;
+      }
       return SessionStore.getInstance(getServletContext()).registerSession(session);
    }
-   
+
    /**
     * Get set of field names specified in "fields" parameter
     * 
