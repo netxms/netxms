@@ -26,6 +26,7 @@ public class TestConstants
    //Server connection constants
    public static String serverAddress = "127.0.0.1";
    public static int serverPort = NXCSession.DEFAULT_CONN_PORT;
+   public static int serverPortMobileAgent = 4747;
    public static String loginName = "admin";
    public static String password = "";
    //Other constants
@@ -39,9 +40,10 @@ public class TestConstants
    public static int CONNECTION_POOL = 100;
    public static int USER_ID = 1;
    public static String IMAGE_CATEGORY = "Network Objects";
+   public static String MOBILE_DEVICE_ID = "0000000000";
    //Reinitialize variables from properties file
    public static TestConstants testConstants = new TestConstants();
-   
+
    public TestConstants()
    {
       try

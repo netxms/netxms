@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,9 +16,10 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.mobile.agent;
+package org.netxms.tests.mobileagent;
 
 import org.netxms.base.GeoLocation;
+import org.netxms.mobile.agent.Session;
 
 /**
  * Test basic device report functionality
@@ -31,7 +32,7 @@ public class DeviceReportTest extends SessionTest
 
 		session.reportDeviceSystemInfo("Raden Solutions", "Virtual Device", "JVM", System.getProperty("java.version"), "000000-000000-000000", null);
 		session.reportDeviceStatus(null, new GeoLocation(51.5171, 0.1062), 0, 70);
-		
+
 		session.disconnect();
 	}
 }

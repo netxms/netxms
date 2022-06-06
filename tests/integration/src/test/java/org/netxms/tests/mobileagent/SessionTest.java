@@ -16,8 +16,10 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.mobile.agent;
+package org.netxms.tests.mobileagent;
 
+import org.netxms.mobile.agent.Session;
+import org.netxms.tests.TestConstants;
 import junit.framework.TestCase;
 
 /**
@@ -31,7 +33,7 @@ public class SessionTest extends TestCase
 {
 	protected Session connect(boolean useEncryption) throws Exception
 	{
-		Session session = new Session(TestConstants.serverAddress, TestConstants.serverPort, TestConstants.DEVICE_ID, TestConstants.loginName, TestConstants.password, useEncryption);
+      Session session = new Session(TestConstants.serverAddress, TestConstants.serverPortMobileAgent, TestConstants.MOBILE_DEVICE_ID, TestConstants.loginName, TestConstants.password, useEncryption);
 		session.connect();
 		return session;
 	}
@@ -39,10 +41,5 @@ public class SessionTest extends TestCase
 	protected Session connect() throws Exception
 	{
 		return connect(false);
-	}
-	
-	public void testFake()
-	{
-	   assertTrue(true);
 	}
 }
