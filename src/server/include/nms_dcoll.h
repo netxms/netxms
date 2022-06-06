@@ -110,6 +110,13 @@ public:
    double getDouble() const { return m_double; }
    const TCHAR *getString() const { return m_string; }
 
+   void set(const TCHAR *stringValue);
+   void set(double value, const TCHAR *stringValue = nullptr);
+   void set(int32_t value, const TCHAR *stringValue = nullptr);
+   void set(int64_t value, const TCHAR *stringValue = nullptr);
+   void set(uint32_t value, const TCHAR *stringValue = nullptr);
+   void set(uint64_t value, const TCHAR *stringValue = nullptr);
+
    operator double() const { return m_double; }
    operator uint32_t() const { return static_cast<uint32_t>(m_uint64); }
    operator uint64_t() const { return m_uint64; }
@@ -118,14 +125,13 @@ public:
    operator const TCHAR*() const { return m_string; }
 
    const ItemValue& operator=(const ItemValue &src);
-   const ItemValue& operator=(const TCHAR *value);
-   const ItemValue& operator=(double value);
-   const ItemValue& operator=(int32_t value);
-   const ItemValue& operator=(int64_t value);
-   const ItemValue& operator=(uint32_t value);
-   const ItemValue& operator=(uint64_t value);
+   const ItemValue& operator=(const TCHAR *value) { set(value); return *this; }
+   const ItemValue& operator=(double value) { set(value); return *this; }
+   const ItemValue& operator=(int32_t value) { set(value); return *this; }
+   const ItemValue& operator=(int64_t value) { set(value); return *this; }
+   const ItemValue& operator=(uint32_t value) { set(value); return *this; }
+   const ItemValue& operator=(uint64_t value) { set(value); return *this; }
 };
-
 
 class DCItem;
 class DataCollectionTarget;

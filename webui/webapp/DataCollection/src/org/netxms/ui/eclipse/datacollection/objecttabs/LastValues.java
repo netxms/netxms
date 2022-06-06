@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -42,16 +42,16 @@ public class LastValues extends ObjectTab
 {
 	private LastValuesWidget dataView;
 	private boolean initShowFilter = true;
-	
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#createTabContent(org.eclipse.swt.widgets.Composite)
-	 */
+
+   /**
+    * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#createTabContent(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected void createTabContent(Composite parent)
 	{
 	   final IDialogSettings settings = Activator.getDefault().getDialogSettings();
       initShowFilter = safeCast(settings.get("LastValuesTab.showFilter"), settings.getBoolean("LastValuesTab.showFilter"), initShowFilter);
-	   
+
 		dataView = new LastValuesWidget(getViewPart(), parent, SWT.NONE, getObject(), "LastValuesTab", new VisibilityValidator() {  //$NON-NLS-1$
          @Override
          public boolean isVisible()
@@ -59,7 +59,7 @@ public class LastValues extends ObjectTab
             return isActive();
          }
       });
-		
+
 		dataView.addDisposeListener(new DisposeListener() {
 
          @Override
@@ -69,7 +69,7 @@ public class LastValues extends ObjectTab
          }
 		   
 		});
-		
+
 		dataView.setAutoRefreshEnabled(true);
 		dataView.setFilterCloseAction(new Action() {
 			@Override
@@ -83,7 +83,7 @@ public class LastValues extends ObjectTab
 				service.refreshElements(command.getId(), null);
 			}
 		});
-		
+
 		dataView.enableFilter(initShowFilter);
 	}
 	

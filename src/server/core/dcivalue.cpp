@@ -70,58 +70,67 @@ const ItemValue& ItemValue::operator=(const ItemValue &src)
    return *this;
 }
 
-const ItemValue& ItemValue::operator=(const TCHAR *value)
+void ItemValue::set(const TCHAR *value)
 {
    _tcslcpy(m_string, CHECK_NULL_EX(value), MAX_DB_STRING);
    m_int64 = _tcstoll(m_string, nullptr, 0);
    m_uint64 = _tcstoull(m_string, nullptr, 0);
    m_double = _tcstod(m_string, nullptr);
-   return *this;
 }
 
-const ItemValue& ItemValue::operator=(double value)
+void ItemValue::set(double value, const TCHAR *stringValue)
 {
    m_double = value;
-   _sntprintf(m_string, MAX_DB_STRING, _T("%f"), m_double);
+   if (stringValue != nullptr)
+      _tcslcpy(m_string, stringValue, MAX_DB_STRING);
+   else
+      _sntprintf(m_string, MAX_DB_STRING, _T("%f"), m_double);
    m_int64 = static_cast<int64_t>(m_double);
    m_uint64 = static_cast<uint64_t>(m_double);
-   return *this;
 }
 
-const ItemValue& ItemValue::operator=(int32_t value)
+void ItemValue::set(int32_t value, const TCHAR *stringValue)
 {
    m_int64 = value;
-   _sntprintf(m_string, MAX_DB_STRING, _T("%d"), value);
+   if (stringValue != nullptr)
+      _tcslcpy(m_string, stringValue, MAX_DB_STRING);
+   else
+      _sntprintf(m_string, MAX_DB_STRING, _T("%d"), value);
    m_double = value;
    m_uint64 = value;
-   return *this;
 }
 
-const ItemValue& ItemValue::operator=(int64_t value)
+void ItemValue::set(int64_t value, const TCHAR *stringValue)
 {
    m_int64 = value;
-   _sntprintf(m_string, MAX_DB_STRING, INT64_FMT, m_int64);
+   if (stringValue != nullptr)
+      _tcslcpy(m_string, stringValue, MAX_DB_STRING);
+   else
+      _sntprintf(m_string, MAX_DB_STRING, INT64_FMT, m_int64);
    m_double = static_cast<double>(m_int64);
    m_uint64 = static_cast<uint64_t>(m_int64);
-   return *this;
 }
 
-const ItemValue& ItemValue::operator=(uint32_t value)
+void ItemValue::set(uint32_t value, const TCHAR *stringValue)
 {
    m_uint64 = value;
-   _sntprintf(m_string, MAX_DB_STRING, _T("%u"), value);
+   if (stringValue != nullptr)
+      _tcslcpy(m_string, stringValue, MAX_DB_STRING);
+   else
+      _sntprintf(m_string, MAX_DB_STRING, _T("%u"), value);
    m_double = value;
    m_int64 = value;
-   return *this;
 }
 
-const ItemValue& ItemValue::operator=(uint64_t value)
+void ItemValue::set(uint64_t value, const TCHAR *stringValue)
 {
    m_uint64 = value;
-   _sntprintf(m_string, MAX_DB_STRING, UINT64_FMT, m_uint64);
+   if (stringValue != nullptr)
+      _tcslcpy(m_string, stringValue, MAX_DB_STRING);
+   else
+      _sntprintf(m_string, MAX_DB_STRING, UINT64_FMT, m_uint64);
    m_double = static_cast<double>(static_cast<int64_t>(m_uint64));
    m_int64 = static_cast<int64_t>(m_uint64);
-   return *this;
 }
 
 /**

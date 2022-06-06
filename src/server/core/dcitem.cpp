@@ -1004,24 +1004,24 @@ bool DCItem::transform(ItemValue &value, time_t nElapsedTime)
                switch(m_dataType)
                {
                   case DCI_DT_INT:
-                     value = nxslValue->getValueAsInt32();
+                     value.set(nxslValue->getValueAsInt32(), nxslValue->getValueAsCString());
                      break;
                   case DCI_DT_UINT:
                   case DCI_DT_COUNTER32:
-                     value = nxslValue->getValueAsUInt32();
+                     value.set(nxslValue->getValueAsUInt32(), nxslValue->getValueAsCString());
                      break;
                   case DCI_DT_INT64:
-                     value = nxslValue->getValueAsInt64();
+                     value.set(nxslValue->getValueAsInt64(), nxslValue->getValueAsCString());
                      break;
                   case DCI_DT_UINT64:
                   case DCI_DT_COUNTER64:
-                     value = nxslValue->getValueAsUInt64();
+                     value.set(nxslValue->getValueAsUInt64(), nxslValue->getValueAsCString());
                      break;
                   case DCI_DT_FLOAT:
-                     value = nxslValue->getValueAsReal();
+                     value.set(nxslValue->getValueAsReal(), nxslValue->getValueAsCString());
                      break;
                   case DCI_DT_STRING:
-                     value = CHECK_NULL_EX(nxslValue->getValueAsCString());
+                     value.set(nxslValue->getValueAsCString());
                      break;
                   default:
                      break;
@@ -1421,8 +1421,8 @@ void DCItem::fillLastValueSummaryMessage(NXCPMessage *msg, uint32_t baseId, cons
       msg->setField(baseId++, _T(""));
       msg->setField(baseId++, static_cast<uint32_t>(0));
    }
-   msg->setField(baseId++, (WORD)(matchClusterResource() ? m_status : ITEM_STATUS_DISABLED)); // show resource-bound DCIs as inactive if cluster resource is not on this node
-	msg->setField(baseId++, (WORD)getType());
+   msg->setField(baseId++, static_cast<uint16_t>(matchClusterResource() ? m_status : ITEM_STATUS_DISABLED)); // show resource-bound DCIs as inactive if cluster resource is not on this node
+	msg->setField(baseId++, static_cast<uint16_t>(getType()));
 	msg->setField(baseId++, m_errorCount);
 	msg->setField(baseId++, m_dwTemplateItemId);
 
