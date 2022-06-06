@@ -128,7 +128,7 @@ public class HistoricalDataView extends ViewWithContext
     */
    public HistoricalDataView(AbstractObject contextObject, long ownerId, long dciId, String tableName, String instance, String column)
    {
-      super(i18n.tr("Historical Data"), ResourceManager.getImageDescriptor("icons/object-views/data_history.gif"), 
+      super(i18n.tr("Historical Data"), ResourceManager.getImageDescriptor("icons/object-views/history-view.png"), 
             buildId(contextObject, dciId, tableName, instance, column), true);
 
       session = Registry.getSession();
@@ -169,7 +169,7 @@ public class HistoricalDataView extends ViewWithContext
     */
    public HistoricalDataView()
    {
-      super(i18n.tr("Historical Data"), ResourceManager.getImageDescriptor("icons/object-views/data_history.gif"), UUID.randomUUID().toString(), true);
+      super(i18n.tr("Historical Data"), ResourceManager.getImageDescriptor("icons/object-views/history-view.png"), UUID.randomUUID().toString(), true);
 
       session = Registry.getSession();
    }

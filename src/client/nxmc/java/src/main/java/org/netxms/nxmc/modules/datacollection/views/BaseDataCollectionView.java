@@ -346,7 +346,7 @@ public abstract class BaseDataCollectionView extends ObjectView
       };
       addKeyBinding("M1+M2+C", actionCopyDciName);
 
-      actionLineChart = new Action(i18n.tr("&Line chart"), ResourceManager.getImageDescriptor("icons/chart_line.png")) {
+      actionLineChart = new Action(i18n.tr("&Line chart"), ResourceManager.getImageDescriptor("icons/object-views/chart-line.png")) {
          @Override
          public void run()
          {
@@ -355,7 +355,7 @@ public abstract class BaseDataCollectionView extends ObjectView
       };
       addKeyBinding("M1+L", actionLineChart);
 
-      actionRawLineChart = new Action(i18n.tr("&Raw data line chart"), ResourceManager.getImageDescriptor("icons/chart_line.png")) {
+      actionRawLineChart = new Action(i18n.tr("&Raw data line chart"), ResourceManager.getImageDescriptor("icons/object-views/chart-line.png")) {
          @Override
          public void run()
          {
@@ -364,7 +364,7 @@ public abstract class BaseDataCollectionView extends ObjectView
       };
       addKeyBinding("M1+M2+L", actionRawLineChart);
 
-      actionShowHistoryData = new Action(i18n.tr("History"), ResourceManager.getImageDescriptor("icons/data_history.gif")) {
+      actionShowHistoryData = new Action(i18n.tr("History"), ResourceManager.getImageDescriptor("icons/object-views/history-view.png")) {
          @Override
          public void run()
          {

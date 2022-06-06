@@ -124,7 +124,7 @@ public class DataComparisonView extends ObjectView
    public DataComparisonView(ArrayList<GraphItem> items, ChartType chartType)
 	{      
       super(i18n.tr("Last Values Chart"),
-            ResourceManager.getImageDescriptor((chartType == ChartType.PIE) ? "icons/object-views/chart_pie.png" : "icons/chart_bar.png"), buildId(items, chartType), false);
+            ResourceManager.getImageDescriptor((chartType == ChartType.PIE) ? "icons/object-views/chart-pie.png" : "icons/object-views/chart-bar.png"), buildId(items, chartType), false);
 
       session = Registry.getSession();
       this.chartType = chartType;
@@ -297,7 +297,7 @@ public class DataComparisonView extends ObjectView
 			}
 		};
       actionShowBarChart.setChecked(chartType == ChartType.BAR);
-		actionShowBarChart.setImageDescriptor(ResourceManager.getImageDescriptor("icons/chart_bar.png")); 
+		actionShowBarChart.setImageDescriptor(ResourceManager.getImageDescriptor("icons/object-views/chart-bar.png")); 
 		
       actionShowPieChart = new Action(i18n.tr("&Pie chart"), Action.AS_RADIO_BUTTON) {
 			@Override
@@ -307,7 +307,7 @@ public class DataComparisonView extends ObjectView
 			}
 		};
       actionShowPieChart.setChecked(chartType == ChartType.PIE);
-		actionShowPieChart.setImageDescriptor(ResourceManager.getImageDescriptor("icons/chart_pie.png")); 
+		actionShowPieChart.setImageDescriptor(ResourceManager.getImageDescriptor("icons/object-views/chart-pie.png")); 
 
 		actionHorizontal = new Action(i18n.tr("Show &horizontally"), Action.AS_RADIO_BUTTON) {
 			@Override

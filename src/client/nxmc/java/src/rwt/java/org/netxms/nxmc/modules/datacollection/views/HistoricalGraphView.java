@@ -157,7 +157,7 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
     */
    public HistoricalGraphView(AbstractObject contextObject, List<ChartDciConfig> items)
    {
-      super(i18n.tr("Line Chart"), ResourceManager.getImageDescriptor("icons/object-views/performance.png"), buildId(contextObject, items), false);
+      super(i18n.tr("Line Chart"), ResourceManager.getImageDescriptor("icons/object-views/chart-line.png"), buildId(contextObject, items), false);
       objectId = contextObject.getObjectId();
       fullName = "Line Chart";
 
@@ -217,7 +217,7 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
     */
    public HistoricalGraphView()
    {
-      super(i18n.tr("Graph"), ResourceManager.getImageDescriptor("icons/object-views/performance.png"), UUID.randomUUID().toString(), false); //TODO: is random id ok?
+      super(i18n.tr("Graph"), ResourceManager.getImageDescriptor("icons/object-views/chart-line.png"), UUID.randomUUID().toString(), false); //TODO: is random id ok?
 
       refreshController = new ViewRefreshController(this, -1, new Runnable() {
          @Override

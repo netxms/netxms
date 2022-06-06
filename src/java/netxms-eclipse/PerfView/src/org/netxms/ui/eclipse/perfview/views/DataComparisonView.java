@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -71,7 +71,6 @@ import org.netxms.ui.eclipse.tools.ViewRefreshController;
 
 /**
  * View for comparing DCI values visually using charts.
- *
  */
 public class DataComparisonView extends ViewPart
 {
@@ -99,7 +98,7 @@ public class DataComparisonView extends ViewPart
 	private boolean showLegend = true;
 	private int legendPosition = ChartConfiguration.POSITION_BOTTOM;
 	private boolean translucent = false;
-   private Image[] titleImages = new Image[4];
+   private Image[] titleImages = new Image[3];
 
 	private RefreshAction actionRefresh;
 	private Action actionAutoRefresh;
@@ -125,12 +124,11 @@ public class DataComparisonView extends ViewPart
 	{
 		super.init(site);
 
-		session = (NXCSession)ConsoleSharedData.getSession();
+      session = ConsoleSharedData.getSession();
 
-		titleImages[0] = Activator.getImageDescriptor("icons/chart_bar.png").createImage(); //$NON-NLS-1$
-		titleImages[1] = Activator.getImageDescriptor("icons/chart_pie.png").createImage(); //$NON-NLS-1$
-		titleImages[2] = Activator.getImageDescriptor("icons/graph.png").createImage(); // TODO: add radar icon //$NON-NLS-1$
-      titleImages[3] = Activator.getImageDescriptor("icons/chart_dial.png").createImage(); //$NON-NLS-1$
+      titleImages[0] = Activator.getImageDescriptor("icons/chart-bar-vertical.png").createImage(); // $NON-NLS-1$
+      titleImages[1] = Activator.getImageDescriptor("icons/chart-pie.png").createImage(); // $NON-NLS-1$
+      titleImages[2] = Activator.getImageDescriptor("icons/chart-scatter.png").createImage(); // $NON-NLS-1$
 
 		// Extract information from view id
 		//   first field is unique ID
@@ -435,7 +433,7 @@ public class DataComparisonView extends ViewPart
 			}
 		};
       actionShowBarChart.setChecked(chartType == ChartType.BAR);
-		actionShowBarChart.setImageDescriptor(Activator.getImageDescriptor("icons/chart_bar.png")); //$NON-NLS-1$
+		actionShowBarChart.setImageDescriptor(Activator.getImageDescriptor("icons/chart-bar-vertical.png")); //$NON-NLS-1$
 		
 		actionShowPieChart = new Action(Messages.get().DataComparisonView_PieChart, Action.AS_RADIO_BUTTON) {
 			@Override
@@ -445,7 +443,7 @@ public class DataComparisonView extends ViewPart
 			}
 		};
       actionShowPieChart.setChecked(chartType == ChartType.PIE);
-		actionShowPieChart.setImageDescriptor(Activator.getImageDescriptor("icons/chart_pie.png")); //$NON-NLS-1$
+		actionShowPieChart.setImageDescriptor(Activator.getImageDescriptor("icons/chart-pie.png")); //$NON-NLS-1$
 
 		actionHorizontal = new Action(Messages.get().DataComparisonView_ShowHorizontally, Action.AS_RADIO_BUTTON) {
 			@Override
@@ -458,7 +456,7 @@ public class DataComparisonView extends ViewPart
 		};
 		actionHorizontal.setChecked(transposed);
 		actionHorizontal.setEnabled(chart.hasAxes());
-		actionHorizontal.setImageDescriptor(Activator.getImageDescriptor("icons/bar_horizontal.png")); //$NON-NLS-1$
+		actionHorizontal.setImageDescriptor(Activator.getImageDescriptor("icons/chart-bar-horizontal.png")); //$NON-NLS-1$
 		
 		actionVertical = new Action(Messages.get().DataComparisonView_ShowVertically, Action.AS_RADIO_BUTTON) {
 			@Override
@@ -471,7 +469,7 @@ public class DataComparisonView extends ViewPart
 		};
 		actionVertical.setChecked(!transposed);
 		actionVertical.setEnabled(chart.hasAxes());
-		actionVertical.setImageDescriptor(Activator.getImageDescriptor("icons/bar_vertical.png")); //$NON-NLS-1$
+		actionVertical.setImageDescriptor(Activator.getImageDescriptor("icons/chart-bar-vertical.png")); //$NON-NLS-1$
 
 		if (!System.getProperty("os.name").toLowerCase().contains("linux"))
    	{
@@ -741,8 +739,6 @@ public class DataComparisonView extends ViewPart
             return titleImages[0];
          case PIE:
             return titleImages[1];
-         case DIAL:
-            return titleImages[3];
          default:
             return titleImages[2];
       }

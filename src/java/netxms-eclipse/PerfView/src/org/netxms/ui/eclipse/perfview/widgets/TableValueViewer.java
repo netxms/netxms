@@ -89,7 +89,7 @@ public class TableValueViewer extends BaseTableValueViewer
    {
       super.createActions();
       
-      actionShowHistory = new Action("History", Activator.getImageDescriptor("icons/data_history.gif")) { //$NON-NLS-1$
+      actionShowHistory = new Action("History", Activator.getImageDescriptor("icons/history-view.png")) { //$NON-NLS-1$
          @Override
          public void run()
          {
@@ -97,7 +97,7 @@ public class TableValueViewer extends BaseTableValueViewer
          }
       };
       
-      actionShowLineChart = new Action(Messages.get().TableValue_LineChart, Activator.getImageDescriptor("icons/chart_line.png")) { //$NON-NLS-1$
+      actionShowLineChart = new Action(Messages.get().TableValue_LineChart, Activator.getImageDescriptor("icons/chart-line.png")) { //$NON-NLS-1$
          @Override
          public void run()
          {
@@ -105,7 +105,7 @@ public class TableValueViewer extends BaseTableValueViewer
          }
       };
 
-      actionShowBarChart = new Action(Messages.get().TableValue_BarChart, Activator.getImageDescriptor("icons/chart_bar.png")) { //$NON-NLS-1$
+      actionShowBarChart = new Action(Messages.get().TableValue_BarChart, Activator.getImageDescriptor("icons/chart-bar-vertical.png")) { //$NON-NLS-1$
          @Override
          public void run()
          {
@@ -113,7 +113,7 @@ public class TableValueViewer extends BaseTableValueViewer
          }
       };
 
-      actionShowPieChart = new Action(Messages.get().TableValue_PieChart, Activator.getImageDescriptor("icons/chart_pie.png")) { //$NON-NLS-1$
+      actionShowPieChart = new Action(Messages.get().TableValue_PieChart, Activator.getImageDescriptor("icons/chart-pie.png")) { //$NON-NLS-1$
          @Override
          public void run()
          {

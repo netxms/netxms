@@ -72,8 +72,7 @@ public class AgentFileViewer extends AdHocObjectView
     */
    public AgentFileViewer(long objectId, AgentFileData file, boolean followChanges)
    {
-      super(i18n.tr("Historical Data"), ResourceManager.getImageDescriptor("icons/object-views/data_history.gif"), 
-            file.getRemoteName(), objectId, false);
+      super(i18n.tr("Remote File"), ResourceManager.getImageDescriptor("icons/object-views/file-view.png"), file.getRemoteName(), objectId, false);
       remoteFileName = file.getRemoteName();
       this.followChanges = followChanges;
       setName(remoteFileName);

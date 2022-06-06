@@ -92,7 +92,7 @@ public class TableValueViewer extends BaseTableValueViewer
    {
       super.createActions();
       
-      actionShowHistory = new Action("History", ResourceManager.getImageDescriptor("icons/object-views/data_history.gif")) { 
+      actionShowHistory = new Action("History", ResourceManager.getImageDescriptor("icons/object-views/history-view.png")) { 
          @Override
          public void run()
          {
@@ -100,7 +100,7 @@ public class TableValueViewer extends BaseTableValueViewer
          }
       };
       
-      actionShowLineChart = new Action(i18n.tr("&Line chart"), ResourceManager.getImageDescriptor("icons/chart_line.png")) { 
+      actionShowLineChart = new Action(i18n.tr("&Line chart"), ResourceManager.getImageDescriptor("icons/object-views/chart-line.png")) { 
          @Override
          public void run()
          {
@@ -108,7 +108,7 @@ public class TableValueViewer extends BaseTableValueViewer
          }
       };
 
-      actionShowBarChart = new Action(i18n.tr("&Bar chart"), ResourceManager.getImageDescriptor("icons/chart_bar.png")) { 
+      actionShowBarChart = new Action(i18n.tr("&Bar chart"), ResourceManager.getImageDescriptor("icons/object-views/chart-bar.png")) { 
          @Override
          public void run()
          {
@@ -116,7 +116,7 @@ public class TableValueViewer extends BaseTableValueViewer
          }
       };
 
-      actionShowPieChart = new Action(i18n.tr("&Pie chart"), ResourceManager.getImageDescriptor("icons/chart_pie.png")) { 
+      actionShowPieChart = new Action(i18n.tr("&Pie chart"), ResourceManager.getImageDescriptor("icons/object-views/chart-pie.png")) { 
          @Override
          public void run()
          {
