@@ -16,7 +16,9 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.mobile.agent;
+package org.netxms.tests.mobileagent;
+
+import org.netxms.mobile.agent.Session;
 
 /**
  * Basic connection tests
