@@ -530,7 +530,7 @@ StringMap *Sensor::getInstanceList(DCObject *dco)
 /**
  * Perform configuration poll on node
  */
-void Sensor::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId)
+void Sensor::configurationPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId)
 {
    lockProperties();
    if (m_isDeleteInitiated || IsShutdownInProgress())
@@ -613,7 +613,7 @@ void Sensor::checkDlmsConverterAccessibility()
 /**
  * Perform status poll on sensor
  */
-void Sensor::statusPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId)
+void Sensor::statusPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId)
 {
    lockProperties();
    if (m_isDeleteInitiated || IsShutdownInProgress())

@@ -291,7 +291,7 @@ uint32_t NetworkService::modifyFromMessageInternal(const NXCPMessage& msg)
 /**
  * Perform status poll on network service
  */
-void NetworkService::statusPoll(ClientSession *session, UINT32 rqId, const shared_ptr<Node>& pollerNode, ObjectQueue<Event> *eventQueue)
+void NetworkService::statusPoll(ClientSession *session, uint32_t rqId, const shared_ptr<Node>& pollerNode, ObjectQueue<Event> *eventQueue)
 {
    m_pollRequestor = session;
    m_pollRequestId = rqId;

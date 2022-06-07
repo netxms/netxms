@@ -425,8 +425,7 @@ void AccessPoint::updateState(AccessPointState state)
 /**
  * Do status poll
  */
-void AccessPoint::statusPollFromController(ClientSession *session, UINT32 rqId, ObjectQueue<Event> *eventQueue,
-         Node *controller, SNMP_Transport *snmpTransport)
+void AccessPoint::statusPollFromController(ClientSession *session, uint32_t rqId, ObjectQueue<Event> *eventQueue, Node *controller, SNMP_Transport *snmpTransport)
 {
    m_pollRequestor = session;
    m_pollRequestId = rqId;
@@ -531,7 +530,7 @@ void AccessPoint::statusPollFromController(ClientSession *session, UINT32 rqId, 
 /**
  * Perform configuration poll on this access point.
  */
-void AccessPoint::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId)
+void AccessPoint::configurationPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId)
 {
    lockProperties();
    if (m_isDeleteInitiated || IsShutdownInProgress())

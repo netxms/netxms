@@ -728,6 +728,7 @@ template class NXCORE_EXPORTABLE shared_ptr<Cluster>;
 struct NXCORE_EXPORTABLE NewNodeData
 {
    InetAddress ipAddr;
+   MacAddress macAddr;
    uint32_t creationFlags;
    uint16_t agentPort;
    uint16_t snmpPort;
@@ -749,8 +750,9 @@ struct NXCORE_EXPORTABLE NewNodeData
    SNMP_SecurityContext *snmpSecurity;
    uuid agentId;
 
-   NewNodeData(const InetAddress& ipAddr);
-   NewNodeData(const NXCPMessage& msg, const InetAddress& ipAddr);
+   NewNodeData(const InetAddress& ipAddress);
+   NewNodeData(const InetAddress& ipAddress, const MacAddress& macAddress);
+   NewNodeData(const NXCPMessage& msg, const InetAddress& ipAddress);
    ~NewNodeData();
 };
 
@@ -1431,11 +1433,11 @@ protected:
 
    Mutex m_pollerMutex;
 
-   virtual void statusPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) {}
-   virtual void configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) {}
-   virtual void instanceDiscoveryPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) {}
-   virtual void topologyPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) {}
-   virtual void routingTablePoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) {}
+   virtual void statusPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId) {}
+   virtual void configurationPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId) {}
+   virtual void instanceDiscoveryPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId) {}
+   virtual void topologyPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId) {}
+   virtual void routingTablePoll(PollerInfo *poller, ClientSession *session, uint32_t rqId) {}
    virtual void icmpPoll(PollerInfo *poller) {}
    virtual void autobindPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId) {}
 
@@ -1948,7 +1950,7 @@ protected:
    int16_t m_lastKnownOperState;
    int16_t m_lastKnownAdminState;
 
-   void icmpStatusPoll(UINT32 rqId, UINT32 nodeIcmpProxy, Cluster *cluster, InterfaceAdminState *adminState, InterfaceOperState *operState);
+   void icmpStatusPoll(uint32_t rqId, uint32_t nodeIcmpProxy, Cluster *cluster, InterfaceAdminState *adminState, InterfaceOperState *operState);
    void paeStatusPoll(uint32_t rqId, SNMP_Transport *transport, Node *node);
 
 protected:
@@ -2181,7 +2183,7 @@ public:
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
    virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
 
-   void statusPoll(ClientSession *session, UINT32 rqId, const shared_ptr<Node>& pollerNode, ObjectQueue<Event> *eventQueue);
+   void statusPoll(ClientSession *session, uint32_t rqId, const shared_ptr<Node>& pollerNode, ObjectQueue<Event> *eventQueue);
 
    uint32_t getResponseTime() const { return m_responseTime; }
 };
@@ -2298,10 +2300,10 @@ protected:
 
    virtual int getAdditionalMostCriticalStatus() override;
 
-   virtual void instanceDiscoveryPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) override;
+   virtual void instanceDiscoveryPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId) override;
    virtual StringMap *getInstanceList(DCObject *dco);
-   void doInstanceDiscovery(UINT32 requestId);
-   bool updateInstances(DCObject *root, StringObjectMap<InstanceDiscoveryData> *instances, UINT32 requestId);
+   void doInstanceDiscovery(uint32_t requestId);
+   bool updateInstances(DCObject *root, StringObjectMap<InstanceDiscoveryData> *instances, uint32_t requestId);
 
    void updateDataCollectionTimeIntervals();
 
@@ -2313,10 +2315,10 @@ protected:
 
    DataCollectionError queryWebService(const TCHAR *param, WebServiceRequestType queryType, TCHAR *buffer, size_t bufSize, StringList *list);
 
-   void getItemDciValuesSummary(SummaryTable *tableDefinition, Table *tableData, UINT32 userId);
-   void getTableDciValuesSummary(SummaryTable *tableDefinition, Table *tableData, UINT32 userId);
+   void getItemDciValuesSummary(SummaryTable *tableDefinition, Table *tableData, uint32_t userId);
+   void getTableDciValuesSummary(SummaryTable *tableDefinition, Table *tableData, uint32_t userId);
 
-   void addProxyDataCollectionElement(ProxyInfo *info, const DCObject *dco, UINT32 primaryProxyId);
+   void addProxyDataCollectionElement(ProxyInfo *info, const DCObject *dco, uint32_t primaryProxyId);
    void addProxySnmpTarget(ProxyInfo *info, const Node *node);
    void calculateProxyLoad();
 
@@ -2524,7 +2526,7 @@ protected:
    virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId) override;
    virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg) override;
 
-   virtual void configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) override;
+   virtual void configurationPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId) override;
 
 public:
    AccessPoint();
@@ -2547,7 +2549,7 @@ public:
 
    virtual json_t *toJson() override;
 
-   void statusPollFromController(ClientSession *session, UINT32 rqId, ObjectQueue<Event> *eventQueue, Node *controller, SNMP_Transport *snmpTransport);
+   void statusPollFromController(ClientSession *session, uint32_t rqId, ObjectQueue<Event> *eventQueue, Node *controller, SNMP_Transport *snmpTransport);
 
    uint32_t getIndex() const { return m_index; }
    const MacAddress& getMacAddr() const { return m_macAddr; }
@@ -2592,8 +2594,8 @@ protected:
    virtual void onDataCollectionChange() override;
    uint32_t getResourceOwnerInternal(uint32_t id, const TCHAR *name);
 
-   virtual void statusPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) override;
-   virtual void configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) override;
+   virtual void statusPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId) override;
+   virtual void configurationPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId) override;
    virtual void autobindPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId) override;
 
 public:
@@ -2746,8 +2748,8 @@ protected:
    virtual void fillMessageInternal(NXCPMessage *msg, UINT32 userId) override;
    virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg) override;
 
-   virtual void statusPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) override;
-   virtual void configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) override;
+   virtual void statusPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId) override;
+   virtual void configurationPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId) override;
 
    virtual StringMap *getInstanceList(DCObject *dco) override;
 
@@ -3221,7 +3223,7 @@ protected:
 
    void syncDataCollectionWithAgent(AgentConnectionEx *conn);
 
-   bool updateInterfaceConfiguration(uint32_t requestId, int maskBits);
+   bool updateInterfaceConfiguration(uint32_t requestId);
    bool deleteDuplicateInterfaces(uint32_t requestId);
    void executeInterfaceUpdateHook(Interface *iface);
    void updatePhysicalContainerBinding(uint32_t containerId);
@@ -3235,10 +3237,10 @@ protected:
    void buildInternalCommunicationTopologyInternal(NetworkMapObjectList *topology, uint32_t seedNode, bool agentConnectionOnly, bool checkAllProxies);
    bool checkProxyAndLink(NetworkMapObjectList *topology, uint32_t seedNode, uint32_t proxyId, uint32_t linkType, const TCHAR *linkName, bool checkAllProxies);
 
-   virtual void statusPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) override;
-   virtual void configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) override;
-   virtual void topologyPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) override;
-   virtual void routingTablePoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) override;
+   virtual void statusPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId) override;
+   virtual void configurationPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId) override;
+   virtual void topologyPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId) override;
+   virtual void routingTablePoll(PollerInfo *poller, ClientSession *session, uint32_t rqId) override;
    virtual void icmpPoll(PollerInfo *poller) override;
 
 public:
@@ -4459,7 +4461,7 @@ protected:
    virtual void fillMessageInternal(NXCPMessage *msg, UINT32 userId) override;
    virtual uint32_t modifyFromMessageInternalStage2(const NXCPMessage& msg) override;
 
-   virtual void instanceDiscoveryPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) override;
+   virtual void instanceDiscoveryPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId) override;
 
    virtual void onCheckModify(const shared_ptr<BusinessServiceCheck>& check) override;
    virtual void onCheckDelete(uint32_t checkId) override;
@@ -4503,8 +4505,8 @@ protected:
 
    virtual void fillMessageInternal(NXCPMessage *msg, UINT32 userId) override;
 
-   virtual void configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) override;
-   virtual void statusPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) override;
+   virtual void configurationPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId) override;
+   virtual void statusPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId) override;
 
    virtual int getAdditionalMostCriticalStatus() override;
 

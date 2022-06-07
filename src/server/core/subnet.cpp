@@ -259,8 +259,8 @@ MacAddress Subnet::findMacAddress(const InetAddress& ipAddr)
          const ArpEntry *e = arpCache->findByIP(ipAddr);
          if (e != nullptr)
          {
-            nxlog_debug_tag(DEBUG_TAG_TOPO_ARP, 6, _T("Subnet[%s]::findMacAddress: found MAC address for IP address %s"), m_name, ipAddr.toString(buffer));
             macAddr = e->macAddr;
+            nxlog_debug_tag(DEBUG_TAG_TOPO_ARP, 6, _T("Subnet[%s]::findMacAddress: found MAC address %s for IP address %s"), m_name, macAddr.toString().cstr(), ipAddr.toString(buffer));
             success = true;
          }
 		}

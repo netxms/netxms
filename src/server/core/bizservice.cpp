@@ -305,7 +305,7 @@ int BusinessService::getAdditionalMostCriticalStatus()
 /**
  * Status poll
  */
-void BusinessService::statusPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId)
+void BusinessService::statusPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId)
 {
    m_pollRequestor = session;
    m_pollRequestId = rqId;
@@ -462,7 +462,7 @@ void BusinessService::addChildTicket(DB_STATEMENT hStmt, const shared_ptr<Busine
 /**
  * Configuration poll
  */
-void BusinessService::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId)
+void BusinessService::configurationPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId)
 {
    m_pollRequestor = session;
    m_pollRequestId = rqId;

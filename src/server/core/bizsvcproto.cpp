@@ -454,7 +454,7 @@ unique_ptr<SharedObjectArray<BusinessService>> BusinessServicePrototype::getServ
 /**
  * Instance discovery poll. Used for automatic creation and deletion of business services
  */
-void BusinessServicePrototype::instanceDiscoveryPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId)
+void BusinessServicePrototype::instanceDiscoveryPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId)
 {
    lockProperties();
    if (m_isDeleteInitiated || IsShutdownInProgress())
