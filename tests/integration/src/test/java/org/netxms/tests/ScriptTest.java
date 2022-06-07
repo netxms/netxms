@@ -67,16 +67,16 @@ public class ScriptTest extends AbstractSessionTest implements TextOutputListene
       assertTrue(r.success);
       assertNull(r.code);
       assertNull(r.errorMessage);
-      
+
       r = session.compileScript("a = 1*; b = 2; return a / b;", false);
       assertFalse(r.success);
       assertNull(r.code);
       assertNotNull(r.errorMessage);
       System.out.println("Compilation error message: \"" + r.errorMessage + "\"");
-      
+
       session.disconnect();
    }
-   
+
    private void executeScript(String resourceName, List<String> params) throws Exception
    {
       currentScriptName = resourceName;
@@ -87,7 +87,7 @@ public class ScriptTest extends AbstractSessionTest implements TextOutputListene
       assertTrue(r.success);
       assertNotNull(r.code);
       assertNull(r.errorMessage);
-      
+
       scriptFailed = false;
       session.executeScript(2, script, params, ScriptTest.this);
       assertFalse(scriptFailed);         
@@ -101,13 +101,13 @@ public class ScriptTest extends AbstractSessionTest implements TextOutputListene
       session.syncObjects();
       AbstractObject object = session.findObjectById(2);
       assertNotNull(object);
-      
+
       NXCObjectCreationData cd = new NXCObjectCreationData(AbstractObject.OBJECT_NODE, "TestNode", 2);
       cd.setCreationFlags(NXCObjectCreationData.CF_CREATE_UNMANAGED);
-      cd.setIpAddress(new InetAddressEx(InetAddress.getByName("192.168.10.1"), 0));
+      cd.setIpAddress(new InetAddressEx(InetAddress.getByName("0.0.0.0"), 0));
       long nodeId = session.createObject(cd);
       assertFalse(nodeId == 0);
-      
+
       long templateId = 0;
       try
       {
@@ -154,8 +154,18 @@ public class ScriptTest extends AbstractSessionTest implements TextOutputListene
       {
          if (nodeId != 0)
             session.deleteObject(nodeId);
+
          if (templateId != 0)
             session.deleteObject(templateId);
+
+         AbstractObject o = session.findObjectByName("Integration Test node");
+         if (o != null)
+            session.deleteObject(o.getObjectId());
+
+         o = session.findObjectByName("Integration Test Container");
+         if (o != null)
+            session.deleteObject(o.getObjectId());
+
          session.disconnect();
       }
    }
