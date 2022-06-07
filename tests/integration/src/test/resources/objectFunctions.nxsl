@@ -1,7 +1,7 @@
 /*
 * This script requires:
 *     node with 2 interfaces 
-*     tempate that is parent for this node  
+*     template that is parent for this node  
 */
 
 //Constants
@@ -57,7 +57,7 @@ assert((node->status & Status::UNMANAGED) == Status::UNMANAGED);
 ManageObject(node);
 assert((node->status & Status::UNMANAGED) != Status::UNMANAGED);
 
-//Mintenance
+//Maintenance
 assert(node->isInMaintenanceMode == false);
 EnterMaintenance(node);
 assert(node->isInMaintenanceMode);
@@ -77,7 +77,7 @@ assert(GetCustomAttribute(node, "CustomAttribute") == null);
 nodeFound = false;
 for (n : GetAllNodes()) 
 {
-   if(n->id == nodeId)
+   if (n->id == nodeId)
    {
    	nodeFound = true;
    	break;
@@ -134,9 +134,7 @@ for (n : GetObjectChildren(infrastructureService))
 assert(nodeFound);
 assert(preCreatedNodeFound);
 
-
 infrastractureServiceFound = false;
-templateFound = false;
 for (n : GetObjectParents(preCreatedNode)) 
 {
    if (n->id == infrastructureService->id)
@@ -144,19 +142,8 @@ for (n : GetObjectParents(preCreatedNode))
    	infrastractureServiceFound = true;
    	break;
    }   
-   /* check if teplate should be returend as one of parents
-   if (n->id == templateId)
-   {
-   	templateFound = true;
-   }
-   if (infrastractureServiceFound && templateFound)
-   {
-      break;
-   }
-   */
 }
 assert(infrastractureServiceFound);
-//assert(templateFound);
 
 RenameObject(container, "Test2");
 assert(container->name == "Test2");
