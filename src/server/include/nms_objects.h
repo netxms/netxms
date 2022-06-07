@@ -4502,6 +4502,7 @@ protected:
    int m_serviceState; // State of service - operational/degraded/failed
    uint32_t m_prototypeId;
    TCHAR *m_instance;
+   Mutex m_stateChangeMutex;
 
    virtual void fillMessageInternal(NXCPMessage *msg, UINT32 userId) override;
 
@@ -4509,6 +4510,9 @@ protected:
    virtual void statusPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId) override;
 
    virtual int getAdditionalMostCriticalStatus() override;
+
+   void changeState(int newState);
+   void onChildStateChange();
 
    int getMostCriticalCheckState();
 
@@ -4541,6 +4545,7 @@ public:
    int getServiceState() const { return m_serviceState; }
    uint32_t getPrototypeId() const { return m_prototypeId; }
    const TCHAR* getInstance() const { return m_instance; }
+   shared_ptr<BusinessService> getParentService() const;
 
    void updateFromPrototype(const BusinessServicePrototype& prototype);
    void updateCheckFromPrototype(const BusinessServiceCheck& prototype);
