@@ -2120,7 +2120,7 @@ bool Node::lockForIcmpPoll()
 /**
  * Perform status poll on node
  */
-void Node::statusPoll(PollerInfo *poller, ClientSession *pSession, UINT32 rqId)
+void Node::statusPoll(PollerInfo *poller, ClientSession *pSession, uint32_t rqId)
 {
    lockProperties();
    if (m_isDeleteInitiated || IsShutdownInProgress())
@@ -3872,7 +3872,7 @@ void Node::startForcedConfigurationPoll()
 /**
  * Perform configuration poll on node
  */
-void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId)
+void Node::configurationPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId)
 {
    lockProperties();
    if (m_isDeleteInitiated || IsShutdownInProgress())
@@ -4068,7 +4068,7 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
       poller->setStatus(_T("interface check"));
       sendPollerMsg(_T("Capability check finished\r\n"));
 
-      if (updateInterfaceConfiguration(rqId, 0)) // maskBits
+      if (updateInterfaceConfiguration(rqId))
          modified |= MODIFY_NODE_PROPERTIES;
 
       POLL_CANCELLATION_CHECKPOINT();
@@ -5595,7 +5595,7 @@ bool Node::deleteDuplicateInterfaces(uint32_t requestId)
 /**
  * Update interface configuration
  */
-bool Node::updateInterfaceConfiguration(uint32_t requestId, int maskBits)
+bool Node::updateInterfaceConfiguration(uint32_t requestId)
 {
    sendPollerMsg(_T("Checking interface configuration...\r\n"));
 
@@ -5889,7 +5889,7 @@ bool Node::updateInterfaceConfiguration(uint32_t requestId, int maskBits)
                   macAddr.toString(szMac);
                   nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("Node::updateInterfaceConfiguration(%s [%u]): got MAC for unknown interface: %s"), m_name, m_id, szMac);
                   InetAddress ifaceAddr = m_ipAddress;
-                  ifaceAddr.setMaskBits(maskBits);
+                  ifaceAddr.setMaskBits(0);  // autodetect
                   createNewInterface(ifaceAddr, macAddr, true);
                }
             }
@@ -5932,10 +5932,9 @@ bool Node::updateInterfaceConfiguration(uint32_t requestId, int maskBits)
             }
             TCHAR szMac[32];
             macAddr.toString(szMac);
-            nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5,
-                     _T("Node::updateInterfaceConfiguration(%s [%u]): got MAC for unknown interface: %s"), m_name, m_id, szMac);
+            nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("Node::updateInterfaceConfiguration(%s [%u]): got MAC for unknown interface: %s"), m_name, m_id, szMac);
             InetAddress ifaceAddr = m_ipAddress;
-            ifaceAddr.setMaskBits(maskBits);
+            ifaceAddr.setMaskBits(0);  // autodetect
             createNewInterface(ifaceAddr, macAddr, true);
          }
       }
@@ -8839,7 +8838,7 @@ bool Node::getNextHop(const InetAddress& srcAddr, const InetAddress& destAddr, I
 /**
  * Routing table poll
  */
-void Node::routingTablePoll(PollerInfo *poller, ClientSession *session, UINT32 rqId)
+void Node::routingTablePoll(PollerInfo *poller, ClientSession *session, uint32_t rqId)
 {
    lockProperties();
    if (m_isDeleteInitiated || IsShutdownInProgress())
@@ -9345,7 +9344,7 @@ shared_ptr<NetworkMapObjectList> Node::buildL2Topology(uint32_t *status, int rad
 /**
  * Topology poll
  */
-void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, UINT32 rqId)
+void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, uint32_t rqId)
 {
    lockProperties();
    if (m_isDeleteInitiated || IsShutdownInProgress())

@@ -28,9 +28,33 @@
 /**
  * Constructor for NewNodeData
  */
-NewNodeData::NewNodeData(const InetAddress& ipAddr)
+NewNodeData::NewNodeData(const InetAddress& ipAddress) : ipAddr(ipAddress)
 {
-   this->ipAddr = ipAddr;
+   creationFlags = 0;
+   agentPort = AGENT_LISTEN_PORT;
+   snmpPort = SNMP_DEFAULT_PORT;
+   eipPort = ETHERNET_IP_DEFAULT_PORT;
+   name[0] = 0;
+   agentProxyId = 0;
+   snmpProxyId = 0;
+   eipProxyId = 0;
+   icmpProxyId = 0;
+   sshProxyId = 0;
+   sshLogin[0] = 0;
+   sshPassword[0] = 0;
+   sshPort = SSH_PORT;
+   zoneUIN = 0;
+   doConfPoll = false;
+   origin = NODE_ORIGIN_MANUAL;
+   snmpSecurity = nullptr;
+   webServiceProxyId = 0;
+}
+
+/**
+ * Constructor for NewNodeData
+ */
+NewNodeData::NewNodeData(const InetAddress& ipAddress, const MacAddress& macAddress) : ipAddr(ipAddress), macAddr(macAddress)
+{
    creationFlags = 0;
    agentPort = AGENT_LISTEN_PORT;
    snmpPort = SNMP_DEFAULT_PORT;
@@ -54,10 +78,9 @@ NewNodeData::NewNodeData(const InetAddress& ipAddr)
 /**
  * Create NewNodeData from NXCPMessage
  */
-NewNodeData::NewNodeData(const NXCPMessage& msg, const InetAddress& ipAddr)
+NewNodeData::NewNodeData(const NXCPMessage& msg, const InetAddress& ipAddress) : ipAddr(ipAddress)
 {
-   this->ipAddr = ipAddr;
-   this->ipAddr.setMaskBits(msg.getFieldAsInt32(VID_IP_NETMASK));
+   ipAddr.setMaskBits(msg.getFieldAsInt32(VID_IP_NETMASK));
    creationFlags = msg.getFieldAsUInt32(VID_CREATION_FLAGS);
    agentPort = msg.getFieldAsUInt16(VID_AGENT_PORT);
    snmpPort = msg.getFieldAsUInt16(VID_SNMP_PORT);
@@ -166,6 +189,10 @@ shared_ptr<Node> NXCORE_EXPORTABLE PollNewNode(NewNodeData *newNodeData)
    {
       node->setMgmtStatus(FALSE);
       node->checkSubnetBinding();
+      if (newNodeData->ipAddr.isValidUnicast())
+      {
+         node->createNewInterface(newNodeData->ipAddr, newNodeData->macAddr, true);
+      }
    }
 
    if (IsZoningEnabled() && (newNodeData->creationFlags & NXC_NCF_AS_ZONE_PROXY) && (newNodeData->zoneUIN != 0))
@@ -178,7 +205,7 @@ shared_ptr<Node> NXCORE_EXPORTABLE PollNewNode(NewNodeData *newNodeData)
    }
 
 	if (newNodeData->doConfPoll)
-   {
+	{
       static_cast<Pollable&>(*node).doForcedConfigurationPoll(RegisterPoller(PollerType::CONFIGURATION, node));
    }
 

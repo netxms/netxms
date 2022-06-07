@@ -465,7 +465,7 @@ bool Cluster::isVirtualAddr(const InetAddress& addr)
 /**
  * Configuration poll
  */
-void Cluster::configurationPoll(PollerInfo *poller, ClientSession *pSession, UINT32 dwRqId)
+void Cluster::configurationPoll(PollerInfo *poller, ClientSession *pSession, uint32_t requestId)
 {
    lockProperties();
    if (m_isDeleteInitiated || IsShutdownInProgress())
@@ -486,10 +486,10 @@ void Cluster::configurationPoll(PollerInfo *poller, ClientSession *pSession, UIN
    }
 
    m_pollRequestor = pSession;
-   m_pollRequestId = dwRqId;
+   m_pollRequestId = requestId;
 
    poller->setStatus(_T("hook"));
-   executeHookScript(_T("ConfigurationPoll"), dwRqId);
+   executeHookScript(_T("ConfigurationPoll"), requestId);
 
    sendPollerMsg(_T("Configuration poll finished\r\n"));
    nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("ClusterConfPoll(%s): finished"), m_name);
@@ -505,7 +505,7 @@ void Cluster::configurationPoll(PollerInfo *poller, ClientSession *pSession, UIN
 /**
  * Status poll
  */
-void Cluster::statusPoll(PollerInfo *poller, ClientSession *pSession, UINT32 dwRqId)
+void Cluster::statusPoll(PollerInfo *poller, ClientSession *pSession, uint32_t requestId)
 {
    lockProperties();
    if (m_isDeleteInitiated || IsShutdownInProgress())
@@ -544,7 +544,7 @@ void Cluster::statusPoll(PollerInfo *poller, ClientSession *pSession, UINT32 dwR
 
 	// Perform status poll on all member nodes
    m_pollRequestor = pSession;
-   m_pollRequestId = dwRqId;
+   m_pollRequestId = requestId;
 
    sendPollerMsg(_T("Polling member nodes\r\n"));
    nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ClusterStatusPoll(%s): Polling member nodes"), m_name);
@@ -553,7 +553,7 @@ void Cluster::statusPoll(PollerInfo *poller, ClientSession *pSession, UINT32 dwR
 	{
 		NetObj *object = pollList.get(i);
 		poller->setStatus(_T("child poll"));
-		object->getAsPollable()->doStatusPoll(poller, pSession, dwRqId);
+		object->getAsPollable()->doStatusPoll(poller, pSession, requestId);
 		if ((object->getObjectClass() == OBJECT_NODE) && !static_cast<Node*>(object)->isDown())
 			allDown = false;
 	}
@@ -663,7 +663,7 @@ void Cluster::statusPoll(PollerInfo *poller, ClientSession *pSession, UINT32 dwR
 
    // Execute hook script
    poller->setStatus(_T("hook"));
-   executeHookScript(_T("StatusPoll"), dwRqId);
+   executeHookScript(_T("StatusPoll"), requestId);
 
    calculateCompoundStatus(true);
    poller->setStatus(_T("cleanup"));

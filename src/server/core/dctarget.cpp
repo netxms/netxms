@@ -1553,7 +1553,7 @@ static inline bool MatchDCItem(SummaryTableColumn *tc, DCObject *dci)
 /**
  * Get last (current) DCI values for summary table using single-value DCIs
  */
-void DataCollectionTarget::getItemDciValuesSummary(SummaryTable *tableDefinition, Table *tableData, UINT32 userId)
+void DataCollectionTarget::getItemDciValuesSummary(SummaryTable *tableDefinition, Table *tableData, uint32_t userId)
 {
    int offset = tableDefinition->isMultiInstance() ? 2 : 1;
    int baseRow = tableData->getNumRows();
@@ -1645,7 +1645,7 @@ void DataCollectionTarget::getItemDciValuesSummary(SummaryTable *tableDefinition
 /**
  * Get last (current) DCI values for summary table using table DCIs
  */
-void DataCollectionTarget::getTableDciValuesSummary(SummaryTable *tableDefinition, Table *tableData, UINT32 userId)
+void DataCollectionTarget::getTableDciValuesSummary(SummaryTable *tableDefinition, Table *tableData, uint32_t userId)
 {
    readLockDciAccess();
    for(int i = 0; i < m_dcObjects.size(); i++)
@@ -1823,7 +1823,7 @@ bool DataCollectionTarget::isDataCollectionTarget() const
 /**
  * Add data collection element to proxy info structure
  */
-void DataCollectionTarget::addProxyDataCollectionElement(ProxyInfo *info, const DCObject *dco, UINT32 primaryProxyId)
+void DataCollectionTarget::addProxyDataCollectionElement(ProxyInfo *info, const DCObject *dco, uint32_t primaryProxyId)
 {
    info->msg->setField(info->baseInfoFieldId++, dco->getId());
    info->msg->setField(info->baseInfoFieldId++, static_cast<int16_t>(dco->getType()));
@@ -1997,7 +1997,7 @@ bool DataCollectionTarget::lockForInstanceDiscoveryPoll()
 /**
  * Perform instance discovery poll on data collection target
  */
-void DataCollectionTarget::instanceDiscoveryPoll(PollerInfo *poller, ClientSession *session, UINT32 requestId)
+void DataCollectionTarget::instanceDiscoveryPoll(PollerInfo *poller, ClientSession *session, uint32_t requestId)
 {
    lockProperties();
    if (m_isDeleteInitiated || IsShutdownInProgress())
@@ -2081,7 +2081,7 @@ if (g_flags & AF_SHUTDOWN) \
 /**
  * Do instance discovery
  */
-void DataCollectionTarget::doInstanceDiscovery(UINT32 requestId)
+void DataCollectionTarget::doInstanceDiscovery(uint32_t requestId)
 {
    sendPollerMsg(_T("Running DCI instance discovery\r\n"));
 
@@ -2197,7 +2197,7 @@ static EnumerationCallbackResult CreateInstanceDCI(const TCHAR *key, const Insta
 /**
  * Update instance DCIs created from instance discovery DCI
  */
-bool DataCollectionTarget::updateInstances(DCObject *root, StringObjectMap<InstanceDiscoveryData> *instances, UINT32 requestId)
+bool DataCollectionTarget::updateInstances(DCObject *root, StringObjectMap<InstanceDiscoveryData> *instances, uint32_t requestId)
 {
    bool changed = false;
 
