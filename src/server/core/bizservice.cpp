@@ -44,7 +44,7 @@ void UpdateBusinessServiceClassFilter(const TCHAR *filter)
 /**
  * Constructor for new service object
  */
-BusinessService::BusinessService() : super(), Pollable(this, Pollable::STATUS | Pollable::CONFIGURATION)
+BusinessService::BusinessService() : super(), Pollable(this, Pollable::STATUS | Pollable::CONFIGURATION), m_stateChangeMutex(MutexType::FAST)
 {
    m_serviceState = STATUS_NORMAL;
    m_prototypeId = 0;
@@ -54,7 +54,7 @@ BusinessService::BusinessService() : super(), Pollable(this, Pollable::STATUS | 
 /**
  * Constructor for new service object
  */
-BusinessService::BusinessService(const TCHAR *name) : super(name), Pollable(this, Pollable::STATUS | Pollable::CONFIGURATION)
+BusinessService::BusinessService(const TCHAR *name) : super(name), Pollable(this, Pollable::STATUS | Pollable::CONFIGURATION), m_stateChangeMutex(MutexType::FAST)
 {
    m_serviceState = STATUS_NORMAL;
    m_prototypeId = 0;
@@ -64,7 +64,8 @@ BusinessService::BusinessService(const TCHAR *name) : super(name), Pollable(this
 /**
  * Create new business service from prototype
  */
-BusinessService::BusinessService(const BaseBusinessService& prototype, const TCHAR *name, const TCHAR *instance) : super(prototype, name), Pollable(this, Pollable::STATUS | Pollable::CONFIGURATION)
+BusinessService::BusinessService(const BaseBusinessService& prototype, const TCHAR *name, const TCHAR *instance) : super(prototype, name),
+         Pollable(this, Pollable::STATUS | Pollable::CONFIGURATION), m_stateChangeMutex(MutexType::FAST)
 {
    m_serviceState = STATUS_NORMAL;
    m_prototypeId = prototype.getId();
@@ -303,6 +304,93 @@ int BusinessService::getAdditionalMostCriticalStatus()
 }
 
 /**
+ * Change business service state
+ */
+void BusinessService::changeState(int newState)
+{
+   m_stateChangeMutex.lock();
+   if (newState == m_serviceState)
+   {
+      m_stateChangeMutex.unlock();
+      return;
+   }
+   int prevState = m_serviceState;
+   m_serviceState = newState;
+
+   sendPollerMsg(_T("State of business service changed from %s to %s\r\n"), GetStatusAsText(prevState, true), GetStatusAsText(m_serviceState, true));
+   nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("BusinessService::statusPoll(%s [%u]): state of business service changed from %s to %s"),
+         m_name, m_id, GetStatusAsText(prevState, true), GetStatusAsText(m_serviceState, true));
+   if (m_serviceState > prevState)
+   {
+      if  (m_serviceState == STATUS_CRITICAL)
+      {
+         DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+         DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO business_service_downtime (record_id,service_id,from_timestamp,to_timestamp) VALUES (?,?,?,0)"));
+         if (hStmt != nullptr)
+         {
+            DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, CreateUniqueId(IDG_BUSINESS_SERVICE_RECORD));
+            DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_id);
+            DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(time(nullptr)));
+            DBExecute(hStmt);
+            DBFreeStatement(hStmt);
+         }
+         DBConnectionPoolReleaseConnection(hdb);
+         PostSystemEvent(EVENT_BUSINESS_SERVICE_FAILED, m_id, nullptr);
+      }
+      else
+      {
+         PostSystemEvent(EVENT_BUSINESS_SERVICE_DEGRADED, m_id, nullptr);
+      }
+   }
+   else if (m_serviceState < prevState)
+   {
+      if (prevState == STATUS_CRITICAL)
+      {
+         DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+         DB_STATEMENT hStmt = DBPrepare(hdb, _T("UPDATE business_service_downtime SET to_timestamp=? WHERE service_id=? AND to_timestamp=0"));
+         if (hStmt != nullptr)
+         {
+            DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(time(nullptr)));
+            DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_id);
+            DBExecute(hStmt);
+            DBFreeStatement(hStmt);
+         }
+         DBConnectionPoolReleaseConnection(hdb);
+      }
+      PostSystemEvent((m_serviceState == STATUS_NORMAL) ? EVENT_BUSINESS_SERVICE_OPERATIONAL : EVENT_BUSINESS_SERVICE_DEGRADED, m_id, nullptr);
+   }
+
+   shared_ptr<BusinessService> parentService = getParentService();
+   if (parentService != nullptr)
+      ThreadPoolExecute(g_mainThreadPool, parentService, &BusinessService::onChildStateChange);
+
+   m_stateChangeMutex.unlock();
+   setModified(MODIFY_RUNTIME);
+}
+
+/**
+ * Process state change of child service
+ */
+void BusinessService::onChildStateChange()
+{
+   readLockChildList();
+   int mostCriticalState = STATUS_NORMAL;
+   for(int i = 0; (i < getChildList().size()) && (mostCriticalState != STATUS_CRITICAL); i++)
+   {
+      NetObj *o = getChildList().get(i);
+      if (o->getObjectClass() != OBJECT_BUSINESS_SERVICE)
+         continue;
+
+      int state = static_cast<BusinessService*>(o)->getServiceState();
+      if (state > mostCriticalState)
+         mostCriticalState = state;
+   }
+   unlockChildList();
+
+   changeState(mostCriticalState);
+}
+
+/**
  * Status poll
  */
 void BusinessService::statusPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId)
@@ -326,7 +414,7 @@ void BusinessService::statusPoll(PollerInfo *poller, ClientSession *session, uin
    poller->setStatus(_T("executing checks"));
    sendPollerMsg(_T("Executing business service checks\r\n"));
 
-   int mostCriticalCheckState = STATUS_NORMAL;
+   int mostCriticalState = STATUS_NORMAL;
    unique_ptr<SharedObjectArray<BusinessServiceCheck>> checks = getChecks();
    for (const shared_ptr<BusinessServiceCheck>& check : *checks)
    {
@@ -349,61 +437,31 @@ void BusinessService::statusPoll(PollerInfo *poller, ClientSession *session, uin
          sendPollerMsg(_T("   State of business service check \"%s\" changed from %s to %s\r\n"), checkDescription.cstr(), GetStatusAsText(oldCheckState, true), GetStatusAsText(newCheckState, true));
          NotifyClientsOnBusinessServiceCheckUpdate(*this, check);
       }
-      if (newCheckState > mostCriticalCheckState)
+      if (newCheckState > mostCriticalState)
       {
-         mostCriticalCheckState = newCheckState;
+         mostCriticalState = newCheckState;
       }
    }
-   m_serviceState = mostCriticalCheckState;
    sendPollerMsg(_T("All business service checks executed\r\n"));
 
-   if (prevState != m_serviceState)
+   // Include state of child services into calculation
+   if (mostCriticalState != STATUS_CRITICAL)
    {
-      sendPollerMsg(_T("State of business service changed from %s to %s\r\n"), GetStatusAsText(prevState, true), GetStatusAsText(m_serviceState, true));
-      nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("BusinessService::statusPoll(%s [%u]): state of business service changed from %s to %s"),
-            m_name, m_id, GetStatusAsText(prevState, true), GetStatusAsText(m_serviceState, true));
-      if (m_serviceState > prevState)
+      readLockChildList();
+      for(int i = 0; (i < getChildList().size()) && (mostCriticalState != STATUS_CRITICAL); i++)
       {
-         if  (m_serviceState == STATUS_CRITICAL)
-         {
-            DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-            DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO business_service_downtime (record_id,service_id,from_timestamp,to_timestamp) VALUES (?,?,?,0)"));
-            if (hStmt != nullptr)
-            {
-               DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, CreateUniqueId(IDG_BUSINESS_SERVICE_RECORD));
-               DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_id);
-               DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(time(nullptr)));
-               DBExecute(hStmt);
-               DBFreeStatement(hStmt);
-            }
-            DBConnectionPoolReleaseConnection(hdb);
-            PostSystemEvent(EVENT_BUSINESS_SERVICE_FAILED, m_id, nullptr);
-         }
-         else
-         {
-            PostSystemEvent(EVENT_BUSINESS_SERVICE_DEGRADED, m_id, nullptr);
-         }
+         NetObj *o = getChildList().get(i);
+         if (o->getObjectClass() != OBJECT_BUSINESS_SERVICE)
+            continue;
+
+         int state = static_cast<BusinessService*>(o)->getServiceState();
+         if (state > mostCriticalState)
+            mostCriticalState = state;
       }
-      else if (m_serviceState < prevState)
-      {
-         if (prevState == STATUS_CRITICAL)
-         {
-            DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-            DB_STATEMENT hStmt = DBPrepare(hdb, _T("UPDATE business_service_downtime SET to_timestamp=? WHERE service_id=? AND to_timestamp=0"));
-            if (hStmt != nullptr)
-            {
-               DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(time(nullptr)));
-               DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_id);
-               DBExecute(hStmt);
-               DBFreeStatement(hStmt);
-            }
-            DBConnectionPoolReleaseConnection(hdb);
-         }
-         PostSystemEvent((m_serviceState == STATUS_NORMAL) ? EVENT_BUSINESS_SERVICE_OPERATIONAL : EVENT_BUSINESS_SERVICE_DEGRADED, m_id, nullptr);
-      }
-      setModified(MODIFY_RUNTIME);
+      unlockChildList();
    }
 
+   changeState(mostCriticalState);
    calculateCompoundStatus();
 
    lockProperties();
@@ -671,6 +729,24 @@ bool BusinessService::lockForConfigurationPoll()
    }
    unlockProperties();
    return success;
+}
+
+/**
+ * Get interface's parent node
+ */
+shared_ptr<BusinessService> BusinessService::getParentService() const
+{
+   shared_ptr<BusinessService> service;
+
+   readLockParentList();
+   for(int i = 0; i < getParentList().size(); i++)
+      if (getParentList().get(i)->getObjectClass() == OBJECT_BUSINESS_SERVICE)
+      {
+         service = static_pointer_cast<BusinessService>(getParentList().getShared(i));
+         break;
+      }
+   unlockParentList();
+   return service;
 }
 
 /**
