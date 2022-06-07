@@ -50,7 +50,7 @@ public class DataCollectionTest extends AbstractSessionTest
 	{
 		final NXCSession session = connect();
 		
-		DciValue[] list = session.getLastValues(TestConstants.NODE_ID);
+		DciValue[] list = session.getLastValues(TestConstants.TEST_NODE_ID);
 		assertEquals(true, list.length > 0);
 
 		boolean statusFound = false;
@@ -89,7 +89,7 @@ public class DataCollectionTest extends AbstractSessionTest
 		final NXCSession session = connect();
 
 		final Object condition = new Object();
-		DataCollectionConfiguration dc = session.openDataCollectionConfiguration(TestConstants.NODE_ID, 
+		DataCollectionConfiguration dc = session.openDataCollectionConfiguration(TestConstants.TEST_NODE_ID, 
 		      new RemoteChangeListener() {
                @Override
                public void onUpdate(DataCollectionObject object)
@@ -130,7 +130,7 @@ public class DataCollectionTest extends AbstractSessionTest
 		dci.getThresholds().add(new Threshold());
 		dc.modifyObject(dciId);
 
-		Threshold[] thresholds = session.getThresholds(TestConstants.NODE_ID, dciId);
+		Threshold[] thresholds = session.getThresholds(TestConstants.TEST_NODE_ID, dciId);
 		assertNotNull(thresholds);
 		assertEquals(1, thresholds.length);
 
@@ -170,7 +170,7 @@ public class DataCollectionTest extends AbstractSessionTest
 	{
 		final NXCSession session = connect();
 
-      List<PerfTabDci> list = session.getPerfTabItems(TestConstants.NODE_ID);
+      List<PerfTabDci> list = session.getPerfTabItems(TestConstants.TEST_NODE_ID);
 		assertNotNull(list);
       assertFalse(list.isEmpty());
 

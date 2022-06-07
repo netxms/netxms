@@ -16,7 +16,7 @@ public class ExpansionTest extends AbstractSessionTest
       final NXCSession session = connect();      
       session.syncObjects();
       
-      final AbstractNode object = (AbstractNode)session.findObjectById(TestConstants.NODE_ID);
+      final AbstractNode object = (AbstractNode)session.findObjectById(TestConstants.TEST_NODE_ID);
       final Map<Long, Alarm> alarms = session.getAlarms();
       final Map<String, String> inputValues = new HashMap<String, String>();
       final Alarm alarm = alarms.values().iterator().next();

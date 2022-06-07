@@ -33,10 +33,10 @@ public abstract class AbstractSessionTest extends TestCase
 {
     protected NXCSession connect(boolean useEncryption) throws Exception
     {
-        NXCSession session = new NXCSession(TestConstants.serverAddress, TestConstants.serverPort, useEncryption);
+        NXCSession session = new NXCSession(TestConstants.SERVER_ADDRESS, TestConstants.SERVER_PORT_CLIENT, useEncryption);
         session.setRecvBufferSize(65536, 33554432);
         session.connect(new int[]{ProtocolVersion.INDEX_FULL});
-        session.login(TestConstants.loginName, TestConstants.password);
+        session.login(TestConstants.SERVER_LOGIN, TestConstants.SERVER_PASSWORD);
         return session;
     }
 
