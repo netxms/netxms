@@ -83,6 +83,7 @@ import org.netxms.nxmc.modules.alarms.widgets.helpers.AlarmTreeContentProvider;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
 import org.netxms.nxmc.tools.ExternalWebBrowser;
+import org.netxms.nxmc.tools.MessageDialogHelper;
 import org.netxms.nxmc.tools.RefreshTimer;
 import org.netxms.nxmc.tools.VisibilityValidator;
 import org.netxms.nxmc.tools.WidgetHelper;
