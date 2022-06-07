@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,7 +29,7 @@ import junit.framework.TestCase;
  * on local machine, with user admin and no password.
  * Change appropriate constants if needed.
  */
-public class SessionTest extends TestCase
+public abstract class SessionTest extends TestCase
 {
 	protected Session connect(boolean useEncryption) throws Exception
 	{
