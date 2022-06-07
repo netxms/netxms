@@ -48,7 +48,7 @@ public class TopologyTest extends AbstractSessionTest
    {
       final NXCSession session = connect();
 
-      NetworkMapPage page = session.queryLayer2Topology(TestConstants.NODE_ID);
+      NetworkMapPage page = session.queryLayer2Topology(TestConstants.TEST_NODE_ID);
       for(NetworkMapElement e : page.getElements())
          System.out.println(e.toString());
       for(NetworkMapLink l : page.getLinks())
@@ -61,7 +61,7 @@ public class TopologyTest extends AbstractSessionTest
    {
       final NXCSession session = connect();
 
-      List<Route> rt = session.getRoutingTable(TestConstants.NODE_ID);
+      List<Route> rt = session.getRoutingTable(TestConstants.TEST_NODE_ID);
       for(Route r : rt)
          System.out.println(r.toString());
       
@@ -72,7 +72,7 @@ public class TopologyTest extends AbstractSessionTest
    {
       final NXCSession session = connect();
 
-      List<FdbEntry> fdb = session.getSwitchForwardingDatabase(TestConstants.NODE_ID);
+      List<FdbEntry> fdb = session.getSwitchForwardingDatabase(TestConstants.TEST_NODE_ID);
       for(FdbEntry e : fdb)
          System.out.println(e.toString());
       

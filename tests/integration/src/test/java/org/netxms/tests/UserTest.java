@@ -32,7 +32,7 @@ public class UserTest extends AbstractSessionTest
    {
       final NXCSession session = connect();
       
-      assertTrue(session.validateUserPassword(TestConstants.password));
+      assertTrue(session.validateUserPassword(TestConstants.SERVER_PASSWORD));
       
       session.disconnect();
    }

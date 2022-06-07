@@ -73,7 +73,7 @@ public class ObjectTest extends AbstractSessionTest
 		AbstractObject object = session.findObjectById(2);
 		assertFalse(object.isChildOf(1));
 		
-		object = session.findObjectById(TestConstants.NODE_ID);
+		object = session.findObjectById(TestConstants.TEST_NODE_ID);
 		assertTrue(object.isChildOf(1));
 		
 		session.disconnect();
