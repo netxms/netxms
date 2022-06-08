@@ -1162,7 +1162,7 @@ protected:
    bool executeQueryOnObject(DB_HANDLE hdb, const TCHAR *query) { return ExecuteQueryOnObject(hdb, m_id, query); }
 
    virtual void prepareForDeletion();
-   virtual void onObjectDelete(UINT32 objectId);
+   virtual void onObjectDelete(const NetObj& object);
 
    virtual int getAdditionalMostCriticalStatus();
 
@@ -1954,7 +1954,7 @@ protected:
    void paeStatusPoll(uint32_t rqId, SNMP_Transport *transport, Node *node);
 
 protected:
-   virtual void onObjectDelete(UINT32 objectId) override;
+   virtual void onObjectDelete(const NetObj& object) override;
    virtual void prepareForDeletion() override;
 
    virtual void fillMessageInternal(NXCPMessage *msg, UINT32 userId) override;
@@ -2163,7 +2163,7 @@ protected:
    uint32_t m_requiredPollCount;
    uint32_t m_responseTime;  // Response time from last poll
 
-   virtual void onObjectDelete(UINT32 objectId) override;
+   virtual void onObjectDelete(const NetObj& object) override;
 
    virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId) override;
    virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg) override;
@@ -3163,7 +3163,7 @@ protected:
    virtual void collectProxyInfo(ProxyInfo *info) override;
 
    virtual void prepareForDeletion() override;
-   virtual void onObjectDelete(UINT32 objectId) override;
+   virtual void onObjectDelete(const NetObj& object) override;
 
    virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId) override;
    virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg) override;
@@ -4165,7 +4165,7 @@ public:
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
    virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
 
-   virtual void onObjectDelete(UINT32 objectId) override;
+   virtual void onObjectDelete(const NetObj& object) override;
 
    virtual json_t *toJson() override;
 
@@ -4510,6 +4510,8 @@ protected:
    virtual void statusPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId) override;
 
    virtual int getAdditionalMostCriticalStatus() override;
+
+   virtual void prepareForDeletion() override;
 
    void changeState(int newState);
    void onChildStateChange();

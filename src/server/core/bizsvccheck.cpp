@@ -455,7 +455,6 @@ static void CloseTicketInDB(uint32_t ticketId, time_t timestamp)
       DBExecute(hStmt);
       DBFreeStatement(hStmt);
    }
-
    DBConnectionPoolReleaseConnection(hdb);
 }
 

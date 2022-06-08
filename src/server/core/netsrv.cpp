@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,6 +21,8 @@
 **/
 
 #include "nxcore.h"
+
+#define DEBUG_TAG_NETSVC   _T("netsvc")
 
 /**
  * Default constructor
@@ -160,7 +162,7 @@ bool NetworkService::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
          }
          else
          {
-            nxlog_write(NXLOG_ERROR, _T("Inconsistent database: network service %s [%u] linked to non-existent node [%u]"), m_name, m_id, dwHostNodeId);
+            nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_NETSVC, _T("Inconsistent database: network service %s [%u] linked to non-existent node [%u]"), m_name, m_id, dwHostNodeId);
          }
 
          // Check that polling node ID is valid
@@ -168,7 +170,7 @@ bool NetworkService::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
          {
             if (FindObjectById(m_pollerNode, OBJECT_NODE) == nullptr)
             {
-               nxlog_write(NXLOG_ERROR, _T("Inconsistent database: network service %s [%u] use non-existent poller node [%u]"), m_name, m_id, m_pollerNode);
+               nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_NETSVC, _T("Inconsistent database: network service %s [%u] use non-existent poller node [%u]"), m_name, m_id, m_pollerNode);
                bResult = false;
             }
          }
@@ -323,10 +325,9 @@ void NetworkService::statusPoll(ClientSession *session, uint32_t rqId, const sha
    if (node != nullptr)
    {
       TCHAR szBuffer[64];
-      UINT32 dwStatus;
+      uint32_t dwStatus;
 
-      sendPollerMsg(_T("      Polling service from node %s [%s]\r\n"),
-               node->getName(), node->getIpAddress().toString(szBuffer));
+      sendPollerMsg(_T("      Polling service from node %s [%s]\r\n"), node->getName(), node->getIpAddress().toString(szBuffer));
       if (node->checkNetworkService(&dwStatus,
                                      m_ipAddress.isValidUnicast() ? m_ipAddress : hostNode->getIpAddress(),
                                      m_serviceType, m_port, m_proto,
@@ -351,7 +352,7 @@ void NetworkService::statusPoll(ClientSession *session, uint32_t rqId, const sha
 	if ((newStatus == STATUS_CRITICAL) && (node != nullptr) && (node->getState() & DCSF_NETWORK_PATH_PROBLEM))
 	{
 		newStatus = STATUS_UNKNOWN;
-		DbgPrintf(6, _T("StatusPoll(%s): Status for network service %s reset to UNKNOWN"), node->getName(), m_name);
+		nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): Status for network service %s reset to UNKNOWN"), node->getName(), m_name);
 	}
 
    if (newStatus != oldStatus)
@@ -385,19 +386,19 @@ void NetworkService::statusPoll(ClientSession *session, uint32_t rqId, const sha
 /**
  * Handler for object deletion
  */
-void NetworkService::onObjectDelete(UINT32 objectId)
+void NetworkService::onObjectDelete(const NetObj& object)
 {
 	lockProperties();
-   if (objectId == m_pollerNode)
+   if (object.getId() == m_pollerNode)
    {
       // If deleted object is our poller node, change it to default
       m_pollerNode = 0;
       setModified(MODIFY_OTHER);
-      DbgPrintf(3, _T("NetworkService::onObjectDelete(%s [%u]): poller node %u deleted"), m_name, m_id, objectId);
+      nxlog_debug_tag(DEBUG_TAG_NETSVC, 3, _T("NetworkService::onObjectDelete(%s [%u]): poller node %s [%u] deleted"), m_name, m_id, object.getName(), object.getId());
    }
 	unlockProperties();
 
-	super::onObjectDelete(objectId);
+	super::onObjectDelete(object);
 }
 
 /**

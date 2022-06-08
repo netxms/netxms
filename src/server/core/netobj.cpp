@@ -793,9 +793,8 @@ void NetObj::deleteParent(const NetObj& object)
  */
 void NetObj::onObjectDeleteCallback(NetObj *object, NetObj *context)
 {
-	uint32_t currId = context->getId();
-	if ((object->getId() != currId) && !object->isDeleted())
-		object->onObjectDelete(currId);
+	if ((object->getId() != context->getId()) && !object->isDeleted())
+		object->onObjectDelete(*context);
 }
 
 /**
@@ -931,15 +930,15 @@ void NetObj::deleteObject(NetObj *initiator)
 /**
  * Default handler for object deletion notification
  */
-void NetObj::onObjectDelete(UINT32 objectId)
+void NetObj::onObjectDelete(const NetObj& object)
 {
    lockProperties();
    if (m_trustedNodes != nullptr)
    {
-      int index = m_trustedNodes->indexOf(objectId);
+      int index = m_trustedNodes->indexOf(object.getId());
       if (index != -1)
       {
-         nxlog_debug_tag(DEBUG_TAG_OBJECT_RELATIONS, 5, _T("NetObj::onObjectDelete(%s [%u]): deleted object %u was listed as trusted node"), m_name, m_id, objectId);
+         nxlog_debug_tag(DEBUG_TAG_OBJECT_RELATIONS, 5, _T("NetObj::onObjectDelete(%s [%u]): deleted object %s [%u] was listed as trusted node"), m_name, m_id, object.getName(), object.getId());
          m_trustedNodes->remove(index);
          setModified(MODIFY_COMMON_PROPERTIES);
       }
