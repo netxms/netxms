@@ -8285,19 +8285,19 @@ UINT32 Node::checkNetworkService(UINT32 *pdwStatus, const InetAddress& ipAddr, i
 /**
  * Handler for object deletion
  */
-void Node::onObjectDelete(UINT32 objectId)
+void Node::onObjectDelete(const NetObj& object)
 {
    lockProperties();
-   if (objectId == m_pollerNode)
+   if (object.getId() == m_pollerNode)
    {
       // If deleted object is our poller node, change it to default
       m_pollerNode = 0;
       setModified(MODIFY_NODE_PROPERTIES);
-      DbgPrintf(3, _T("Node::onObjectDelete(%s [%u]): poller node %u deleted"), m_name, m_id, objectId);
+      DbgPrintf(3, _T("Node::onObjectDelete(%s [%u]): poller node %s [%u] deleted"), m_name, m_id, object.getName(), object.getId());
    }
    unlockProperties();
 
-   super::onObjectDelete(objectId);
+   super::onObjectDelete(object);
 }
 
 /**

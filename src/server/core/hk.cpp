@@ -376,7 +376,7 @@ static void HouseKeeper()
             break;
 		}
 
-      // Remove outdated business service history records
+      // Remove expired business service history records
       retentionTime = ConfigReadULong(_T("BusinessServices.History.RetentionTime"), 90);
       if (retentionTime > 0)
       {

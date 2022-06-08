@@ -1254,11 +1254,11 @@ bool NetworkMap::isAllowedOnMap(const shared_ptr<NetObj>& object)
 /**
 *  Delete object from the map if it's deleted in session
 */
-void NetworkMap::onObjectDelete(UINT32 objectId)
+void NetworkMap::onObjectDelete(const NetObj& object)
 {
    lockProperties();
 
-   uint32_t elementId = elementIdFromObjectId(objectId);
+   uint32_t elementId = elementIdFromObjectId(object.getId());
 
    int i = 0;
    while(i < m_links.size())
@@ -1278,7 +1278,7 @@ void NetworkMap::onObjectDelete(UINT32 objectId)
    while(i < m_elements.size())
    {
       NetworkMapElement *element = m_elements.get(i);
-      if ((element->getType() == MAP_ELEMENT_OBJECT) && (static_cast<NetworkMapObject*>(element)->getObjectId() == objectId))
+      if ((element->getType() == MAP_ELEMENT_OBJECT) && (static_cast<NetworkMapObject*>(element)->getObjectId() == object.getId()))
       {
          m_elements.remove(i);
          break;
@@ -1293,7 +1293,7 @@ void NetworkMap::onObjectDelete(UINT32 objectId)
 
    unlockProperties();
 
-   super::onObjectDelete(objectId);
+   super::onObjectDelete(object);
 }
 
 /**

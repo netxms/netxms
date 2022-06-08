@@ -1121,17 +1121,18 @@ void Interface::updateZoneUIN()
 /**
  * Handler for object deletion notification
  */
-void Interface::onObjectDelete(UINT32 dwObjectId)
+void Interface::onObjectDelete(const NetObj& object)
 {
-	if ((m_peerNodeId == dwObjectId) || (m_peerInterfaceId == dwObjectId))
+   uint32_t objectId = object.getId();
+   lockProperties();
+	if ((m_peerNodeId == objectId) || (m_peerInterfaceId == objectId))
 	{
-		lockProperties();
 		m_peerNodeId = 0;
 		m_peerInterfaceId = 0;
 		setModified(MODIFY_INTERFACE_PROPERTIES);
-		unlockProperties();
 	}
-	super::onObjectDelete(dwObjectId);
+   unlockProperties();
+	super::onObjectDelete(object);
 }
 
 /**

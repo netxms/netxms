@@ -265,7 +265,37 @@ bool BusinessService::deleteFromDatabase(DB_HANDLE hdb)
    bool success = super::deleteFromDatabase(hdb);
    if (success)
       success = executeQueryOnObject(hdb, _T("DELETE FROM business_services WHERE id=?"));
+   if (success)
+      success = executeQueryOnObject(hdb, _T("DELETE FROM business_service_tickets WHERE service_id=?"));
+   if (success)
+      success = executeQueryOnObject(hdb, _T("DELETE FROM business_service_downtime WHERE service_id=?"));
    return success;
+}
+
+/**
+ * Close all tickets created for parent services in database
+ */
+static void CloseAllServiceTicketsInDB(uint32_t serviceId, time_t timestamp)
+{
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("UPDATE business_service_tickets SET close_timestamp=? WHERE original_service_id=?"));
+   if (hStmt != nullptr)
+   {
+      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(timestamp));
+      DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, serviceId);
+      DBExecute(hStmt);
+      DBFreeStatement(hStmt);
+   }
+   DBConnectionPoolReleaseConnection(hdb);
+}
+
+/**
+ * Handle deletion of other objects
+ */
+void BusinessService::prepareForDeletion()
+{
+   ThreadPoolExecuteSerialized(g_mainThreadPool, _T("BizSvcTicketUpdate"), CloseAllServiceTicketsInDB, m_id, time(nullptr));
+   super::prepareForDeletion();
 }
 
 /**

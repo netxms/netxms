@@ -23,6 +23,40 @@
 #include "nxdbmgr.h"
 
 /**
+ * Check data tables for given object class
+ */
+static void CollectObjectIdentifiers(const TCHAR *className, IntegerArray<uint32_t> *list)
+{
+   TCHAR query[1024];
+   _sntprintf(query, 256, _T("SELECT id FROM %s"), className);
+   DB_RESULT hResult = SQLSelect(query);
+   if (hResult != NULL)
+   {
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
+      {
+         list->add(DBGetFieldULong(hResult, i, 0));
+      }
+      DBFreeResult(hResult);
+   }
+}
+
+/**
+ * Get all data collection targets
+ */
+IntegerArray<uint32_t> *GetDataCollectionTargets()
+{
+   IntegerArray<uint32_t> *list = new IntegerArray<uint32_t>(128, 128);
+   CollectObjectIdentifiers(_T("nodes"), list);
+   CollectObjectIdentifiers(_T("clusters"), list);
+   CollectObjectIdentifiers(_T("mobile_devices"), list);
+   CollectObjectIdentifiers(_T("access_points"), list);
+   CollectObjectIdentifiers(_T("chassis"), list);
+   CollectObjectIdentifiers(_T("sensors"), list);
+   return list;
+}
+
+/**
  * Check business service checks
  */
 static void CheckBusinessServiceCheck()
@@ -62,43 +96,47 @@ static void CheckBusinessServiceCheck()
 static void CheckBusinessServiceTickets()
 {
    StartStage(_T("Business service tickets"));
-   DB_RESULT businessServices = SQLSelect(_T("SELECT id FROM business_services"));
-   DB_RESULT tickets = SQLSelect(_T("SELECT ticket_id,service_id FROM business_service_tickets"));
-   if (businessServices != nullptr && tickets != nullptr)
-   {
-      int numServices = DBGetNumRows(businessServices);
-      int numTickets = DBGetNumRows(tickets);
-      bool match = false;
-      TCHAR query[1024];
 
+   IntegerArray<uint32_t> businessServices(64, 64);
+   CollectObjectIdentifiers(_T("business_services"), &businessServices);
+
+   DB_RESULT hResult = SQLSelect(_T("SELECT ticket_id,service_id,original_service_id,close_timestamp FROM business_service_tickets"));
+   if (hResult != nullptr)
+   {
+      int numTickets = DBGetNumRows(hResult);
       SetStageWorkTotal(numTickets);
       for(int i = 0; i < numTickets; i++)
       {
-         for(int n = 0; n < numServices; n++)
-         {
-            if (DBGetFieldULong(tickets, i, 1) == DBGetFieldULong(businessServices, n, 0))
-            {
-               match = true;
-               break;
-            }
-         }
-         if (!match)
+         uint32_t serviceId = DBGetFieldULong(hResult, i, 1);
+         if (!businessServices.contains(serviceId))
          {
             g_dbCheckErrors++;
-            if (GetYesNoEx(_T("Business service ticket %u refers to non-existing business service %u. Fix it?"),
-                           DBGetFieldULong(tickets, i, 0), DBGetFieldULong(tickets, i, 1)))
+            uint32_t ticketId = DBGetFieldULong(hResult, i, 0);
+            if (GetYesNoEx(_T("Business service ticket %u refers to non-existing business service %u. Fix it?"), ticketId, serviceId))
             {
-               _sntprintf(query, 1024, _T("DELETE FROM business_service_tickets WHERE ticket_id=%u"),
-                           DBGetFieldULong(tickets, i, 0));
-               if (SQLQuery(query))
+               if (DBMgrExecuteQueryOnObject(ticketId, _T("DELETE FROM business_service_tickets WHERE ticket_id=?")))
                   g_dbCheckFixes++;
             }
          }
-         match = false;
+         else
+         {
+            uint32_t originalServiceId = DBGetFieldULong(hResult, i, 2);
+            if (!businessServices.contains(originalServiceId) && (DBGetFieldULong(hResult, i, 3) == 0))
+            {
+               g_dbCheckErrors++;
+               uint32_t ticketId = DBGetFieldULong(hResult, i, 0);
+               if (GetYesNoEx(_T("Business service ticket %u refers to non-existing business service %u. Fix it?"), ticketId, serviceId))
+               {
+                  TCHAR query[256];
+                  _sntprintf(query, 256, _T("UPDATE business_service_tickets SET close_timestamp=%u WHERE ticket_id=%u"), static_cast<uint32_t>(time(nullptr)), ticketId);
+                  if (SQLQuery(query))
+                     g_dbCheckFixes++;
+               }
+            }
+         }
          UpdateStageProgress(1);
       }
-      DBFreeResult(businessServices);
-      DBFreeResult(tickets);
+      DBFreeResult(hResult);
    }
    EndStage();
 }
@@ -121,7 +159,7 @@ static void CheckBusinessServiceDowntime()
          uint32_t serviceId = DBGetFieldULong(businessServices, i, 0);
          _sntprintf(query, 1024, _T("SELECT count(*) FROM business_service_tickets WHERE service_id=%u AND close_timestamp=0"), serviceId);
          DB_RESULT result = SQLSelect(query);
-         if (result != NULL)
+         if (result != nullptr)
          {
             if (DBGetFieldLong(result, 0, 0) == 0)
             {
@@ -176,39 +214,38 @@ static bool NodeInContainer(uint32_t id)
 /**
  * Find subnet for unlinked node
  */
-static BOOL FindSubnetForNode(DWORD id, const TCHAR *name)
+static bool FindSubnetForNode(uint32_t id, const TCHAR *name)
 {
-	DB_RESULT hResult, hResult2;
-	TCHAR query[256], buffer[32];
-	int i, count;
-	BOOL success = FALSE;
+	bool success = false;
 
 	// Read list of interfaces of given node
-	_sntprintf(query, 256, _T("SELECT l.ip_addr,l.ip_netmask FROM interfaces i INNER JOIN interface_address_list l ON l.iface_id = i.id WHERE node_id=%d"), id);
-	hResult = SQLSelect(query);
-	if (hResult != NULL)
+   TCHAR query[256];
+	_sntprintf(query, 256, _T("SELECT l.ip_addr,l.ip_netmask FROM interfaces i INNER JOIN interface_address_list l ON l.iface_id = i.id WHERE node_id=%u"), id);
+	DB_RESULT hResult = SQLSelect(query);
+	if (hResult != nullptr)
 	{
-		count = DBGetNumRows(hResult);
-		for(i = 0; i < count; i++)
+		int count = DBGetNumRows(hResult);
+		for(int i = 0; i < count; i++)
 		{
 			InetAddress addr = DBGetFieldInetAddr(hResult, i, 0);
          addr.setMaskBits(DBGetFieldLong(hResult, i, 1));
          InetAddress subnet = addr.getSubnetAddress();
 
+         TCHAR buffer[32];
          _sntprintf(query, 256, _T("SELECT id FROM subnets WHERE ip_addr='%s'"), subnet.toString(buffer));
-			hResult2 = SQLSelect(query);
-			if (hResult2 != NULL)
+			DB_RESULT hResult2 = SQLSelect(query);
+			if (hResult2 != nullptr)
 			{
 				if (DBGetNumRows(hResult2) > 0)
 				{
-					UINT32 subnetId = DBGetFieldULong(hResult2, 0, 0);
+					uint32_t subnetId = DBGetFieldULong(hResult2, 0, 0);
 					g_dbCheckErrors++;
 					if (GetYesNoEx(_T("Unlinked node object %d (\"%s\") can be linked to subnet %d (%s). Link?"), id, name, subnetId, buffer))
 					{
 						_sntprintf(query, 256, _T("INSERT INTO nsmap (subnet_id,node_id) VALUES (%d,%d)"), subnetId, id);
 						if (SQLQuery(query))
 						{
-							success = TRUE;
+							success = true;
 							g_dbCheckFixes++;
 							break;
 						}
@@ -304,12 +341,12 @@ static void CheckNodes()
    SetStageWorkTotal(count);
    for(int i = 0; i < count; i++)
    {
-      UINT32 nodeId = DBGetFieldULong(hResult, i, 0);
+      uint32_t nodeId = DBGetFieldULong(hResult, i, 0);
 
       TCHAR query[1024];
       _sntprintf(query, 1024, _T("SELECT subnet_id FROM nsmap WHERE node_id=%d"), nodeId);
       DB_RESULT hResult2 = SQLSelect(query);
-      if (hResult2 != NULL)
+      if (hResult2 != nullptr)
       {
          if ((DBGetNumRows(hResult2) == 0) && (!NodeInContainer(nodeId)))
          {
@@ -616,40 +653,6 @@ static void CheckEPP()
 }
 
 /**
- * Check data tables for given object class
- */
-static void CollectObjectIdentifiers(const TCHAR *className, IntegerArray<uint32_t> *list)
-{
-   TCHAR query[1024];
-   _sntprintf(query, 256, _T("SELECT id FROM %s"), className);
-   DB_RESULT hResult = SQLSelect(query);
-   if (hResult != NULL)
-   {
-      int count = DBGetNumRows(hResult);
-      for(int i = 0; i < count; i++)
-      {
-         list->add(DBGetFieldULong(hResult, i, 0));
-      }
-      DBFreeResult(hResult);
-   }
-}
-
-/**
- * Get all data collection targets
- */
-IntegerArray<uint32_t> *GetDataCollectionTargets()
-{
-   IntegerArray<uint32_t> *list = new IntegerArray<uint32_t>(128, 128);
-   CollectObjectIdentifiers(_T("nodes"), list);
-   CollectObjectIdentifiers(_T("clusters"), list);
-   CollectObjectIdentifiers(_T("mobile_devices"), list);
-   CollectObjectIdentifiers(_T("access_points"), list);
-   CollectObjectIdentifiers(_T("chassis"), list);
-   CollectObjectIdentifiers(_T("sensors"), list);
-   return list;
-}
-
-/**
  * Create idata_xx table
  */
 BOOL CreateIDataTable(DWORD nodeId)
@@ -879,12 +882,12 @@ static void CheckCollectedDataSingleTable(bool isTable)
 {
    StartStage(isTable ? _T("Table DCI history records") : _T("DCI history records"), 2);
 
-   time_t now = time(NULL);
+   time_t now = time(nullptr);
    TCHAR query[1024];
    _sntprintf(query, 1024, _T("SELECT count(*) FROM %s WHERE %s_timestamp>") TIME_T_FMT,
             isTable ? _T("tdata") : _T("idata"), isTable ? _T("tdata") : _T("idata"), TIME_T_FCAST(now));
    DB_RESULT hResult = SQLSelect(query);
-   if (hResult != NULL)
+   if (hResult != nullptr)
    {
       if (DBGetFieldLong(hResult, 0, 0) > 0)
       {
@@ -905,7 +908,7 @@ static void CheckCollectedDataSingleTable(bool isTable)
 
    _sntprintf(query, 1024, _T("SELECT distinct(item_id) FROM %s"), isTable ? _T("tdata") : _T("idata"));
    hResult = SQLSelect(query);
-   if (hResult != NULL)
+   if (hResult != nullptr)
    {
       int count = DBGetNumRows(hResult);
       for(int i = 0; i < count; i++)
