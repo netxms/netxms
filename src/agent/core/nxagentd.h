@@ -304,6 +304,7 @@ private:
    uint32_t m_id;
    uint32_t m_index;
    TCHAR m_key[32];  // key for serialized background tasks
+   TCHAR m_debugTag[16];
    shared_ptr<AbstractCommChannel> m_channel;
    int m_protocolVersion;
    ObjectQueue<NXCPMessage> *m_processingQueue;
@@ -345,8 +346,6 @@ private:
    void action(NXCPMessage *pRequest, NXCPMessage *pMsg);
    void recvFile(NXCPMessage *pRequest, NXCPMessage *pMsg);
    void mergeFiles(NXCPMessage *pRequest, NXCPMessage *pMsg);
-   void getLocalFile(NXCPMessage *pRequest, NXCPMessage *pMsg);
-   void cancelFileMonitoring(NXCPMessage *pRequest, NXCPMessage *pMsg);
    uint32_t installPackage(NXCPMessage *request);
    uint32_t upgrade(NXCPMessage *request);
    uint32_t setupProxyConnection(NXCPMessage *pRequest);
@@ -398,6 +397,8 @@ public:
    virtual bool isBulkReconciliationSupported() override { return m_bulkReconciliationSupported; }
    virtual bool isIPv6Aware() override { return m_ipv6Aware; }
 
+   virtual const TCHAR *getDebugTag() const override { return m_debugTag; }
+
    virtual uint32_t openFile(TCHAR *nameOfFile, uint32_t requestId, time_t fileModTime = 0) override;
 
    virtual void debugPrintf(int level, const TCHAR *format, ...) override;
@@ -423,6 +424,7 @@ class VirtualSession : public AbstractCommSession
 private:
    uint32_t m_id;
    uint64_t m_serverId;
+   TCHAR m_debugTag[16];
 
 public:
    VirtualSession(uint64_t serverId);
@@ -440,6 +442,8 @@ public:
    virtual bool canAcceptFileUpdates() override { return false; }
    virtual bool isBulkReconciliationSupported() override { return false; }
    virtual bool isIPv6Aware() override { return true; }
+
+   virtual const TCHAR *getDebugTag() const override { return m_debugTag; }
 
    virtual bool sendMessage(const NXCPMessage *pMsg) override { return false; }
    virtual void postMessage(const NXCPMessage *pMsg) override { }
@@ -474,6 +478,7 @@ private:
    bool m_canAcceptTraps;
    bool m_canAcceptFileUpdates;
    bool m_ipv6Aware;
+   TCHAR m_debugTag[16];
 
 public:
    ProxySession(NXCPMessage *msg);
@@ -491,6 +496,8 @@ public:
    virtual bool canAcceptFileUpdates() override { return m_canAcceptFileUpdates; }
    virtual bool isBulkReconciliationSupported() override { return false; }
    virtual bool isIPv6Aware() override { return m_ipv6Aware; }
+
+   virtual const TCHAR *getDebugTag() const override { return m_debugTag; }
 
    virtual bool sendMessage(const NXCPMessage *pMsg) override;
    virtual void postMessage(const NXCPMessage *pMsg) override;
@@ -696,14 +703,14 @@ public:
 class DataCollectionProxy
 {
 private:
-   UINT64 m_serverId;
-   UINT32 m_proxyId;
+   uint64_t m_serverId;
+   uint32_t m_proxyId;
    InetAddress m_address;
    bool m_connected;
    bool m_inUse;
 
 public:
-   DataCollectionProxy(UINT64 serverId, UINT32 proxyId, const InetAddress& address);
+   DataCollectionProxy(uint64_t serverId, uint32_t proxyId, const InetAddress& address);
    DataCollectionProxy(const DataCollectionProxy *src);
 
    void checkConnection();
@@ -714,8 +721,8 @@ public:
    bool isConnected() const { return m_connected; }
    bool isInUse() const { return m_inUse; }
    const InetAddress &getAddress() const { return m_address; }
-   UINT64 getServerId() const { return m_serverId; }
-   UINT32 getProxyId() const { return m_proxyId; }
+   uint64_t getServerId() const { return m_serverId; }
+   uint32_t getProxyId() const { return m_proxyId; }
 };
 
 /**

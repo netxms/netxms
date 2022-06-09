@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -971,7 +971,7 @@ int Table::findRow(void *key, bool (*comparator)(const TableRow *, void *))
 /**
  * Display table on terminal
  */
-void Table::writeToTerminal()
+void Table::writeToTerminal() const
 {
    // calculate column widths and print headers
    int *widths = MemAllocArray<int>(m_columns->size());
@@ -1007,7 +1007,7 @@ void Table::writeToTerminal()
 /**
  * Dump table using given output stream
  */
-void Table::dump(FILE *out, bool withHeader, TCHAR delimiter)
+void Table::dump(FILE *out, bool withHeader, TCHAR delimiter) const
 {
    if (m_columns->isEmpty())
       return;
@@ -1032,6 +1032,39 @@ void Table::dump(FILE *out, bool withHeader, TCHAR delimiter)
          _fputts(getAsString(i, j, _T("")), out);
       }
       _fputtc(_T('\n'), out);
+   }
+}
+
+/**
+ * Dump table to log
+ */
+void Table::dump(const TCHAR *tag, int level, const TCHAR *prefix, bool withHeader, TCHAR delimiter) const
+{
+   if (m_columns->isEmpty())
+      return;
+
+   StringBuffer sb;
+   if (withHeader)
+   {
+      sb.append(getColumnName(0));
+      for (int c = 1; c < m_columns->size(); c++)
+      {
+         sb.append(delimiter);
+         sb.append(getColumnName(c));
+      }
+      nxlog_debug_tag(tag, level, _T("%s%s"), prefix, sb.cstr());
+   }
+
+   for (int i = 0; i < m_data->size(); i++)
+   {
+      sb.clear();
+      sb.append(getAsString(i, 0, _T("")));
+      for (int j = 1; j < m_columns->size(); j++)
+      {
+         sb.append(delimiter);
+         sb.append(getAsString(i, j, _T("")));
+      }
+      nxlog_debug_tag(tag, level, _T("%s%s"), prefix, sb.cstr());
    }
 }
 

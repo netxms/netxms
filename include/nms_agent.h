@@ -783,6 +783,8 @@ public:
    virtual bool isBulkReconciliationSupported() = 0;
    virtual bool isIPv6Aware() = 0;
 
+   virtual const TCHAR *getDebugTag() const = 0;
+
    virtual bool sendMessage(const NXCPMessage *msg) = 0;
    virtual void postMessage(const NXCPMessage *msg) = 0;
    virtual bool sendRawMessage(const NXCP_MESSAGE *msg) = 0;
