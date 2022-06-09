@@ -3350,8 +3350,9 @@ public:
    void setBaseRow(int baseRow) { setBaseRowAt(getNumRows() - 1, baseRow); }
    int getBaseRow(int row) const { const TableRow *r = m_data->get(row); return (r != nullptr) ? r->getBaseRow() : 0; }
 
-   void writeToTerminal();
-   void dump(FILE *out, bool withHeader = true, TCHAR delimiter = _T(','));
+   void writeToTerminal() const;
+   void dump(FILE *out, bool withHeader = true, TCHAR delimiter = _T(',')) const;
+   void dump(const TCHAR *tag, int level, const TCHAR *prefix = _T(""), bool withHeader = true, TCHAR delimiter = _T(',')) const;
 
    static Table *createFromXML(const char *xml);
    TCHAR *createXML() const;

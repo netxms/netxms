@@ -1143,7 +1143,15 @@ uint32_t GetTableValue(const TCHAR *param, Table *value, AbstractCommSession *se
 		}
    }
 
-	session->debugPrintf(7, _T("GetTableValue(): result is %u (%s)"), errorCode, GetErrorCodeSymbolicName(errorCode));
+   if (errorCode == ERR_SUCCESS)
+   {
+      session->debugPrintf(7, _T("GetTableValue(): result is SUCCESS, value contains %d rows"), value->getNumRows());
+      value->dump(session->getDebugTag(), 7, _T("   "), true, _T('|'));
+   }
+   else
+   {
+	   session->debugPrintf(7, _T("GetTableValue(): result is %u (%s)"), errorCode, GetErrorCodeSymbolicName(errorCode));
+   }
    return errorCode;
 }
 
