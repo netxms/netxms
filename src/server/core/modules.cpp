@@ -41,13 +41,13 @@ StructArray<NXMODULE> g_moduleList(0, 8);
 static bool LoadNetXMSModule(const TCHAR *name)
 {
 	bool success = false;
-   TCHAR errorText[256], fullName[MAX_PATH];
 
+   TCHAR fullName[MAX_PATH];
 #ifdef _WIN32
+   _tcslcpy(fullName, name, MAX_PATH);
    size_t len = _tcslen(fullName);
    if ((len < 4) || (_tcsicmp(&fullName[len - 4], _T(".nxm")) && _tcsicmp(&fullName[len - 4], _T(".dll"))))
       _tcslcat(fullName, _T(".nxm"), MAX_PATH);
-   HMODULE hModule = DLOpen(fullName, errorText);
 #else
    if (_tcschr(name, _T('/')) == nullptr)
    {
@@ -65,10 +65,10 @@ static bool LoadNetXMSModule(const TCHAR *name)
    size_t len = _tcslen(fullName);
    if ((len < 4) || (_tcsicmp(&fullName[len - 4], _T(".nxm")) && _tcsicmp(&fullName[len - _tcslen(SHLIB_SUFFIX)], SHLIB_SUFFIX)))
       _tcslcat(fullName, _T(".nxm"), MAX_PATH);
-
-   HMODULE hModule = DLOpen(fullName, errorText);
 #endif
 
+   TCHAR errorText[256];
+   HMODULE hModule = DLOpen(fullName, errorText);
    if (hModule != nullptr)
    {
       auto RegisterModule = DLGetFunctionAddr<bool (*)(NXMODULE*)>(hModule, "NXM_Register", errorText);

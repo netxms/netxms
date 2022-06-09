@@ -55,13 +55,13 @@ static ObjectArray<Module> s_modules(8, 8, Ownership::True);
 static bool LoadServerModule(const TCHAR *name, bool mandatory, bool quiet)
 {
    bool success = false;
-   TCHAR fullName[MAX_PATH], errorText[256];
 
+   TCHAR fullName[MAX_PATH];
 #ifdef _WIN32
+   _tcslcpy(fullName, name, MAX_PATH);
    size_t len = _tcslen(fullName);
    if ((len < 4) || (_tcsicmp(&fullName[len - 4], _T(".nxm")) && _tcsicmp(&fullName[len - 4], _T(".dll"))))
       _tcslcat(fullName, _T(".nxm"), MAX_PATH);
-   HMODULE hModule = DLOpen(fullName, errorText);
 #else
    if (_tcschr(name, _T('/')) == nullptr)
    {
@@ -79,13 +79,13 @@ static bool LoadServerModule(const TCHAR *name, bool mandatory, bool quiet)
    size_t len = _tcslen(fullName);
    if ((len < 4) || (_tcsicmp(&fullName[len - 4], _T(".nxm")) && _tcsicmp(&fullName[len - _tcslen(SHLIB_SUFFIX)], SHLIB_SUFFIX)))
       _tcslcat(fullName, _T(".nxm"), MAX_PATH);
-
-   HMODULE hModule = DLOpen(fullName, errorText);
 #endif
 
+   TCHAR errorText[256];
+   HMODULE hModule = DLOpen(fullName, errorText);
    if (hModule != nullptr)
    {
-      Module *m = new Module();
+      auto m = new Module();
       m->handle = hModule;
       auto metadata = static_cast<NXMODULE_METADATA*>(DLGetSymbolAddr(hModule, "NXM_metadata", errorText));
       if (metadata != nullptr)
