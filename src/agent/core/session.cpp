@@ -96,6 +96,7 @@ CommSession::CommSession(const shared_ptr<AbstractCommChannel>& channel, const I
    m_id = InterlockedIncrement(&s_sessionId);
    m_index = INVALID_INDEX;
    _sntprintf(m_key, 32, _T("CommSession-%u"), m_id);
+   _sntprintf(m_debugTag, 16, _T("comm.cs.%u"), m_id);
    m_processingQueue = new ObjectQueue<NXCPMessage>(64, Ownership::True);
    m_protocolVersion = NXCP_VERSION;
    m_hProxySocket = INVALID_SOCKET;
@@ -161,7 +162,7 @@ void CommSession::debugPrintf(int level, const TCHAR *format, ...)
 {
    va_list args;
    va_start(args, format);
-   nxlog_debug_tag_object2(_T("comm.cs"), m_id, level, format, args);
+   nxlog_debug_tag2(m_debugTag, level, format, args);
    va_end(args);
 }
 
@@ -170,11 +171,9 @@ void CommSession::debugPrintf(int level, const TCHAR *format, ...)
  */
 void CommSession::writeLog(int16_t severity, const TCHAR *format, ...)
 {
-   TCHAR tag[32];
-   _sntprintf(tag, 32, _T("comm.cs.%u"), m_id);
    va_list args;
    va_start(args, format);
-   nxlog_write_tag2(severity, tag, format, args);
+   nxlog_write_tag2(severity, m_debugTag, format, args);
    va_end(args);
 }
 
@@ -1664,6 +1663,7 @@ VirtualSession::VirtualSession(uint64_t serverId)
 {
    m_id = InterlockedIncrement(&s_sessionId);
    m_serverId = serverId;
+   _sntprintf(m_debugTag, 16, _T("comm.vs.%u"), m_id);
 }
 
 /**
@@ -1680,7 +1680,7 @@ void VirtualSession::debugPrintf(int level, const TCHAR *format, ...)
 {
    va_list args;
    va_start(args, format);
-   nxlog_debug_tag_object2(_T("comm.vs"), m_id, level, format, args);
+   nxlog_debug_tag2(m_debugTag, level, format, args);
    va_end(args);
 }
 
@@ -1689,11 +1689,9 @@ void VirtualSession::debugPrintf(int level, const TCHAR *format, ...)
  */
 void VirtualSession::writeLog(int16_t severity, const TCHAR *format, ...)
 {
-   TCHAR tag[32];
-   _sntprintf(tag, 32, _T("comm.vs.%u"), m_id);
    va_list args;
    va_start(args, format);
-   nxlog_write_tag2(severity, tag, format, args);
+   nxlog_write_tag2(severity, m_debugTag, format, args);
    va_end(args);
 }
 
@@ -1705,6 +1703,7 @@ ProxySession::ProxySession(NXCPMessage *msg)
    m_id = msg->getFieldAsUInt32(VID_SESSION_ID);
    m_serverId = msg->getFieldAsUInt64(VID_SERVER_ID);
    m_serverAddress = msg->getFieldAsInetAddress(VID_IP_ADDRESS);
+   _sntprintf(m_debugTag, 16, _T("comm.ps.%u"), m_id);
 
    uint32_t flags = msg->getFieldAsUInt32(VID_FLAGS);
    m_masterServer = ((flags & 0x01) != 0);
@@ -1729,7 +1728,7 @@ void ProxySession::debugPrintf(int level, const TCHAR *format, ...)
 {
    va_list args;
    va_start(args, format);
-   nxlog_debug_tag_object2(_T("comm.ps"), m_id, level, format, args);
+   nxlog_debug_tag2(m_debugTag, level, format, args);
    va_end(args);
 }
 
@@ -1738,11 +1737,9 @@ void ProxySession::debugPrintf(int level, const TCHAR *format, ...)
  */
 void ProxySession::writeLog(int16_t severity, const TCHAR *format, ...)
 {
-   TCHAR tag[32];
-   _sntprintf(tag, 32, _T("comm.ps.%u"), m_id);
    va_list args;
    va_start(args, format);
-   nxlog_write_tag2(severity, tag, format, args);
+   nxlog_write_tag2(severity, m_debugTag, format, args);
    va_end(args);
 }
 

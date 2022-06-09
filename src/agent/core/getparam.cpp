@@ -1059,8 +1059,15 @@ uint32_t GetTableValue(const TCHAR *param, Table *value, AbstractCommSession *se
 		}
    }
 
-	session->debugPrintf(7, _T("GetTableValue(): result is %d (%s)"), (int)dwErrorCode,
-		dwErrorCode == ERR_SUCCESS ? _T("SUCCESS") : (dwErrorCode == ERR_UNKNOWN_PARAMETER ? _T("UNKNOWN_PARAMETER") : _T("INTERNAL_ERROR")));
+   if (dwErrorCode == ERR_SUCCESS)
+   {
+      session->debugPrintf(7, _T("GetTableValue(): result is SUCCESS, value contains %d rows"), value->getNumRows());
+      value->dump(session->getDebugTag(), 7, _T("   "), true, _T('|'));
+   }
+   else
+   {
+      session->debugPrintf(7, _T("GetTableValue(): result is %d (%s)"), (int)dwErrorCode, dwErrorCode == ERR_UNKNOWN_PARAMETER ? _T("UNKNOWN_PARAMETER") : _T("INTERNAL_ERROR"));
+   }
    return dwErrorCode;
 }
 

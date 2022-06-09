@@ -175,7 +175,7 @@ void LoadProxyConfiguration()
 /**
  * Create new data collection proxy object
  */
-DataCollectionProxy::DataCollectionProxy(UINT64 serverId, UINT32 proxyId, const InetAddress& address)
+DataCollectionProxy::DataCollectionProxy(uint64_t serverId, uint32_t proxyId, const InetAddress& address)
 {
    m_serverId = serverId;
    m_proxyId = proxyId;

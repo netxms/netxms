@@ -286,7 +286,7 @@ static bool UsesSeconds(const TCHAR *schedule)
 /**
  * Create data collection item from NXCP mesage
  */
-DataCollectionItem::DataCollectionItem(uint64_t serverId, const NXCPMessage& msg, UINT32 baseId, uint32_t extBaseId, bool hasExtraData) : RefCountObject()
+DataCollectionItem::DataCollectionItem(uint64_t serverId, const NXCPMessage& msg, uint32_t baseId, uint32_t extBaseId, bool hasExtraData) : RefCountObject()
 {
    m_serverId = serverId;
    m_id = msg.getFieldAsInt32(baseId);
