@@ -568,8 +568,8 @@ int SmtpDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCHAR* 
 {
    int result = -1;
 
-   MAIL_ENVELOPE* pEnvelope = prepareMail(recipient, subject, body);
-   nxlog_debug(6, _T("SMTP(%p): new envelope, rcpt=%hs"), pEnvelope, pEnvelope->rcptAddr);
+   MAIL_ENVELOPE *pEnvelope = prepareMail(recipient, subject, body);
+   nxlog_debug_tag(DEBUG_TAG, 6, _T("SMTP(%p): new envelope, rcpt=%hs"), pEnvelope, pEnvelope->rcptAddr);
 
    uint32_t smtpErr = sendMail(pEnvelope->rcptAddr, pEnvelope->subject, pEnvelope->text, pEnvelope->encoding, pEnvelope->isHtml, pEnvelope->isUtf8);
    if (smtpErr == SMTP_ERR_SUCCESS)

@@ -755,10 +755,29 @@ static SNMP_Transport *CreateTransport(SOCKET hSocket)
  */
 void SNMPTrapReceiver()
 {
-   static BYTE engineId[] = { 0x80, 0x00, 0x00, 0x00, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01, 0x00 };
-   SNMP_Engine localEngine(engineId, 12);
-
    ThreadSetName("SNMPTrapRecv");
+
+   static BYTE defaultEngineId[] = { 0x80, 0x00, 0xDF, 0x4B, 0x05, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01, 0x00 };
+   BYTE engineId[32];
+   size_t engineIdLen;
+   TCHAR engineIdText[96];
+   if (ConfigReadStr(_T("SNMP.EngineId"), engineIdText, 96, _T("")))
+   {
+      TranslateStr(engineIdText, _T(":"), _T(""));
+      engineIdLen = StrToBin(engineIdText, engineId, sizeof(engineId));
+      if (engineIdLen < 1)
+      {
+         memcpy(engineId, defaultEngineId, 12);
+         engineIdLen = 12;
+      }
+   }
+   else
+   {
+      memcpy(engineId, defaultEngineId, 12);
+      engineIdLen = 12;
+   }
+   SNMP_Engine localEngine(engineId, engineIdLen);
+   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Local SNMP engine ID set to %s"), localEngine.toString().cstr());
 
    SOCKET hSocket = CreateSocket(AF_INET, SOCK_DGRAM, 0);
 #ifdef WITH_IPV6
@@ -772,7 +791,7 @@ void SNMPTrapReceiver()
 #endif
    {
       TCHAR buffer[1024];
-      nxlog_write(NXLOG_ERROR, _T("Unable to create socket for SNMP trap receiver (%s)"), GetLastSocketErrorText(buffer, 1024));
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Unable to create socket for SNMP trap receiver (%s)"), GetLastSocketErrorText(buffer, 1024));
       return;
    }
 
@@ -847,7 +866,7 @@ void SNMPTrapReceiver()
    if (bind(hSocket, (struct sockaddr *)&servAddr, sizeof(struct sockaddr_in)) != 0)
    {
       TCHAR buffer[1024];
-      nxlog_write(NXLOG_ERROR, _T("Unable to bind IPv4 socket for SNMP trap receiver (%s)"), GetLastSocketErrorText(buffer, 1024));
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Unable to bind IPv4 socket for SNMP trap receiver (%s)"), GetLastSocketErrorText(buffer, 1024));
       bindFailures++;
       closesocket(hSocket);
       hSocket = INVALID_SOCKET;
@@ -858,7 +877,7 @@ void SNMPTrapReceiver()
    if (bind(hSocket6, (struct sockaddr *)&servAddr6, sizeof(struct sockaddr_in6)) != 0)
    {
       TCHAR buffer[1024];
-      nxlog_write(NXLOG_ERROR, _T("Unable to bind IPv6 socket for SNMP trap receiver (%s)"), GetLastSocketErrorText(buffer, 1024));
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Unable to bind IPv6 socket for SNMP trap receiver (%s)"), GetLastSocketErrorText(buffer, 1024));
       bindFailures++;
       closesocket(hSocket6);
       hSocket6 = INVALID_SOCKET;
@@ -877,13 +896,13 @@ void SNMPTrapReceiver()
    if (hSocket != INVALID_SOCKET)
    {
       TCHAR ipAddrText[64];
-	   nxlog_write(NXLOG_INFO, _T("Listening for SNMP traps on UDP socket %s:%u"), InetAddress(ntohl(servAddr.sin_addr.s_addr)).toString(ipAddrText), s_trapListenerPort);
+	   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Listening for SNMP traps on UDP socket %s:%u"), InetAddress(ntohl(servAddr.sin_addr.s_addr)).toString(ipAddrText), s_trapListenerPort);
    }
 #ifdef WITH_IPV6
    if (hSocket6 != INVALID_SOCKET)
    {
       TCHAR ipAddrText[64];
-      nxlog_write(NXLOG_INFO, _T("Listening for SNMP traps on UDP socket %s:%u"), InetAddress(servAddr6.sin6_addr.s6_addr).toString(ipAddrText), s_trapListenerPort);
+      nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Listening for SNMP traps on UDP socket %s:%u"), InetAddress(servAddr6.sin6_addr.s6_addr).toString(ipAddrText), s_trapListenerPort);
    }
 #endif
 
@@ -892,11 +911,10 @@ void SNMPTrapReceiver()
    SNMP_Transport *snmp6 = CreateTransport(hSocket6);
 #endif
 
-   SocketPoller sp;
-
-   nxlog_debug_tag(DEBUG_TAG, 1, _T("SNMP Trap Receiver started on port %u"), s_trapListenerPort);
+   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("SNMP Trap Receiver started on port %u"), s_trapListenerPort);
 
    // Wait for packets
+   SocketPoller sp;
    while(!IsShutdownInProgress())
    {
       sp.reset();

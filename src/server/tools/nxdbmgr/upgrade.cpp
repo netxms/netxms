@@ -1,6 +1,6 @@
 /*
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004-2021 Victor Kirhenshtein
+** Copyright (C) 2004-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -41,6 +41,7 @@ bool MajorSchemaUpgrade_V38();
 bool MajorSchemaUpgrade_V39();
 bool MajorSchemaUpgrade_V40();
 bool MajorSchemaUpgrade_V41();
+bool MajorSchemaUpgrade_V42();
 
 /**
  * Move to next major version of DB schema
@@ -155,6 +156,7 @@ static struct
    { 39, MajorSchemaUpgrade_V39 },
    { 40, MajorSchemaUpgrade_V40 },
    { 41, MajorSchemaUpgrade_V41 },
+   { 42, MajorSchemaUpgrade_V42 },
    { 0, nullptr }
 };
 
@@ -192,7 +194,7 @@ void UpgradeDatabase()
    // Check if database is locked
    bool locked = false;
    DB_RESULT hResult = DBSelect(g_dbHandle, _T("SELECT var_value FROM config WHERE var_name='DBLockStatus'"));
-   if (hResult != NULL)
+   if (hResult != nullptr)
    {
       if (DBGetNumRows(hResult) > 0)
       {
@@ -211,10 +213,10 @@ void UpgradeDatabase()
    {
       // Find upgrade procedure
       int i;
-      for(i = 0; s_dbUpgradeMap[i].upgradeProc != NULL; i++)
+      for(i = 0; s_dbUpgradeMap[i].upgradeProc != nullptr; i++)
          if (s_dbUpgradeMap[i].majorVersion == major)
             break;
-      if (s_dbUpgradeMap[i].upgradeProc == NULL)
+      if (s_dbUpgradeMap[i].upgradeProc == nullptr)
       {
          _tprintf(_T("Unable to find upgrade procedure for major version %d\n"), major);
          break;
@@ -232,10 +234,10 @@ void UpgradeDatabase()
    {
       // Find upgrade procedure
       int i;
-      for(i = 0; s_dbUpgradeMap[i].upgradeProc != NULL; i++)
+      for(i = 0; s_dbUpgradeMap[i].upgradeProc != nullptr; i++)
          if (s_dbUpgradeMap[i].majorVersion == major)
             break;
-      if (s_dbUpgradeMap[i].upgradeProc != NULL)
+      if (s_dbUpgradeMap[i].upgradeProc != nullptr)
       {
          s_dbUpgradeMap[i].upgradeProc();
          if (!DBGetSchemaVersion(g_dbHandle, &major, &minor))

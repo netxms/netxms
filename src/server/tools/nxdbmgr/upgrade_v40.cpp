@@ -3322,7 +3322,7 @@ bool MajorSchemaUpgrade_V40()
    if (!DBGetSchemaVersion(g_dbHandle, &major, &minor))
       return false;
 
-   while ((major == 40))
+   while (major == 40)
    {
       // Find upgrade procedure
       int i;
