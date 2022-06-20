@@ -330,6 +330,7 @@ public class NotificationChannels extends ViewPart
          return;
 
       final NotificationChannel channel = (NotificationChannel)selection.getFirstElement();
+      final String oldChannelName = channel.getName();
       final NotificationChannelEditDialog dlg = new NotificationChannelEditDialog(getSite().getShell(), channel);
       if (dlg.open() != Window.OK)
          return;
@@ -338,11 +339,11 @@ public class NotificationChannels extends ViewPart
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            session.updateNotificationChannel(channel);
-            if (dlg.isNameChanged())
+            if (!channel.getName().equals(oldChannelName))
             {
-               session.renameNotificationChannel(channel.getName(), dlg.getNewName());
+               session.renameNotificationChannel(oldChannelName, channel.getName());
             }
+            session.updateNotificationChannel(channel);
          }
 
          @Override
