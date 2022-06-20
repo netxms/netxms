@@ -22,6 +22,7 @@ import java.util.Collections;
 import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.dialogs.Dialog;
+import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
@@ -49,8 +50,7 @@ public class NotificationChannelEditDialog extends Dialog
    private LabeledText textDescription;
    private LabeledText textConfiguraiton;
    private Combo comboDriverName;
-   private boolean isNameChangeds;
-   private String newName;
+   private boolean customName;
 
    /**
     * Create notification channel edit dialog.
@@ -71,22 +71,51 @@ public class NotificationChannelEditDialog extends Dialog
    protected Control createDialogArea(Composite parent)
    {
       Composite dialogArea = (Composite)super.createDialogArea(parent);
-      
+
       GridLayout layout = new GridLayout();
       layout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
       layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
       layout.verticalSpacing = WidgetHelper.DIALOG_SPACING;
       dialogArea.setLayout(layout);
-      
+
+      GridData gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      comboDriverName = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, "Driver", gd);
+      comboDriverName.addModifyListener(listener -> {
+         final int selectionIndex = comboDriverName.getSelectionIndex();
+         if (selectionIndex != -1 && !customName)
+         {
+            textName.setText(comboDriverName.getItem(selectionIndex));
+            textName.getTextControl().selectAll();
+         }
+      });
+
       textName = new LabeledText(dialogArea, SWT.NONE);
       textName.setLabel("Name");
       textName.getTextControl().setTextLimit(63);
-      GridData gd = new GridData();
+      gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       gd.widthHint = 300;
       textName.setLayoutData(gd);
-      
+      textName.getTextControl().addModifyListener(listener -> {
+         final String name = textName.getText();
+
+         final int selectionIndex = comboDriverName.getSelectionIndex();
+         if (selectionIndex != -1)
+         {
+            final String driver = comboDriverName.getItem(selectionIndex);
+            customName = !name.equals(driver);
+         }
+
+         Control button = getButton(IDialogConstants.OK_ID);
+         if (button != null)
+         {
+            button.setEnabled(!name.trim().isBlank());
+         }
+      });
+
       textDescription = new LabeledText(dialogArea, SWT.NONE);
       textDescription.setLabel("Description");
       textDescription.getTextControl().setTextLimit(255);
@@ -94,11 +123,6 @@ public class NotificationChannelEditDialog extends Dialog
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       textDescription.setLayoutData(gd);
-
-      gd = new GridData();
-      gd.horizontalAlignment = SWT.FILL;
-      gd.grabExcessHorizontalSpace = true;
-      comboDriverName = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, "Driver name", gd);
       
       textConfiguraiton = new LabeledText(dialogArea, SWT.NONE, SWT.MULTI | SWT.BORDER);
       textConfiguraiton.setLabel("Driver Configuration");
@@ -145,11 +169,19 @@ public class NotificationChannelEditDialog extends Dialog
 
    private void updateUI(List<String> ncList)
    {
-      for(int i = 0; i < ncList.size(); i++)
-      {
-         comboDriverName.add(ncList.get(i));
-         if (channel != null && ncList.get(i).equals(channel.getDriverName()))
-            comboDriverName.select(i);
+      int index = 0;
+      if (!ncList.isEmpty()) {
+         for(int i = 0; i < ncList.size(); i++)
+         {
+            String item = ncList.get(i);
+            comboDriverName.add(item);
+            
+            if (channel != null && item.equals(channel.getDriverName())) {
+               customName = !textName.getText().equals(channel.getDriverName());
+               index = i;
+            }
+         }
+         comboDriverName.select(index);
       }
    }
 
@@ -184,13 +216,9 @@ public class NotificationChannelEditDialog extends Dialog
       if (channel == null)
       {
          channel = new NotificationChannel();
-         channel.setName(textName.getText());
       }
-      else if (!channel.getName().equals(textName.getText()))
-      {
-         isNameChangeds = true;
-         newName = textName.getText();
-      }
+      
+      channel.setName(textName.getText());
       channel.setDescription(textDescription.getText());
       channel.setDriverName(comboDriverName.getItem(comboDriverName.getSelectionIndex()));
       channel.setConfiguration(textConfiguraiton.getText());
@@ -203,21 +231,5 @@ public class NotificationChannelEditDialog extends Dialog
    public NotificationChannel getChannel()
    {
       return channel;
-   }
-
-   /**
-    * Returns if name is changed
-    */
-   public boolean isNameChanged()
-   {
-      return isNameChangeds;
-   }
-
-   /**
-    * Get new name
-    */
-   public String getNewName()
-   {
-      return newName;
    }
 }
