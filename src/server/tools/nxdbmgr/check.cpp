@@ -121,7 +121,7 @@ static void CheckBusinessServiceTickets()
          else
          {
             uint32_t originalServiceId = DBGetFieldULong(hResult, i, 2);
-            if (!businessServices.contains(originalServiceId) && (DBGetFieldULong(hResult, i, 3) == 0))
+            if (originalServiceId != 0 && !businessServices.contains(originalServiceId) && (DBGetFieldULong(hResult, i, 3) == 0))
             {
                g_dbCheckErrors++;
                uint32_t ticketId = DBGetFieldULong(hResult, i, 0);
