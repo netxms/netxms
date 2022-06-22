@@ -482,7 +482,26 @@ static bool SQLiteAlterTable(DB_HANDLE hdb, SQLileAlterOp operation, const TCHAR
                   s++;
                   *s = 0;
                   createList.append(_T(','));
-                  createList.append(p);
+                  //Replace old primary key name if it is renamed
+                  if (operation == RENAME_COLUMN)
+                  {
+                     *(--s) = 0;
+                     StringList *columnList = String::split(p+12, _tcslen(p+12), _T(","));
+                     for (int i = 0; i < columnList->size(); i++)
+                     {
+                        if (!_tcsicmp(columnList->get(i), column))
+                        {
+                           columnList->replace(i, operationData);
+                           break;
+                        }
+                     }
+                     createList.append(_T("PRIMARY KEY("));
+                     createList.appendPreallocated(columnList->join(_T(",")));
+                     createList.append(_T(')'));
+                     delete columnList;
+                  }
+                  else
+                     createList.append(p);
                }
             }
             MemFree(sql);
