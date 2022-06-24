@@ -46,10 +46,10 @@ void LoadHelpDeskLink()
 
    TCHAR fullName[MAX_PATH];
 #ifdef _WIN32
+   _tcslcpy(fullName, name, MAX_PATH);
    size_t len = _tcslen(fullName);
    if ((len < 7) || (_tcsicmp(&fullName[len - 7], _T(".hdlink")) && _tcsicmp(&fullName[len - 4], _T(".dll"))))
       _tcslcat(fullName, _T(".hdlink"), MAX_PATH);
-   HMODULE hModule = DLOpen(fullName, errorText);
 #else
    if (_tcschr(name, _T('/')) == nullptr)
    {
@@ -67,10 +67,9 @@ void LoadHelpDeskLink()
    size_t len = _tcslen(fullName);
    if ((len < 7) || (_tcsicmp(&fullName[len - 7], _T(".hdlink")) && _tcsicmp(&fullName[len - _tcslen(SHLIB_SUFFIX)], SHLIB_SUFFIX)))
       _tcslcat(fullName, _T(".hdlink"), MAX_PATH);
-
-   HMODULE hModule = DLOpen(fullName, errorText);
 #endif
 
+   HMODULE hModule = DLOpen(fullName, errorText);
    if (hModule != nullptr)
    {
       auto apiVersion = static_cast<int*>(DLGetSymbolAddr(hModule, "hdlinkAPIVersion", errorText));
