@@ -317,6 +317,7 @@ public class NotificationChannels extends ConfigurationView
          return;
 
       final NotificationChannel channel = (NotificationChannel)selection.getFirstElement();
+      final String oldChannelName = channel.getName();
       final NotificationChannelPropertiesDialog dlg = new NotificationChannelPropertiesDialog(getWindow().getShell(), channel);
       if (dlg.open() != Window.OK)
          return;
@@ -325,11 +326,11 @@ public class NotificationChannels extends ConfigurationView
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            session.updateNotificationChannel(channel);
-            if (dlg.isNameChanged())
+            if (!channel.getName().equals(oldChannelName))
             {
-               session.renameNotificationChannel(channel.getName(), dlg.getNewName());
+               session.renameNotificationChannel(oldChannelName, channel.getName());
             }
+            session.updateNotificationChannel(channel);
          }
 
          @Override
