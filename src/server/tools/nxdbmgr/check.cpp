@@ -30,7 +30,7 @@ static void CollectObjectIdentifiers(const TCHAR *className, IntegerArray<uint32
    TCHAR query[1024];
    _sntprintf(query, 256, _T("SELECT id FROM %s"), className);
    DB_RESULT hResult = SQLSelect(query);
-   if (hResult != NULL)
+   if (hResult != nullptr)
    {
       int count = DBGetNumRows(hResult);
       for(int i = 0; i < count; i++)
@@ -59,33 +59,32 @@ IntegerArray<uint32_t> *GetDataCollectionTargets()
 /**
  * Check business service checks
  */
-static void CheckBusinessServiceCheck()
+static void CheckBusinessServiceCheckBindings()
 {
-   StartStage(_T("Business service checks"));
-   DB_RESULT unattachedChecks = SQLSelect(_T("SELECT c.id, c.service_id FROM business_service_checks c ")
+   StartStage(_T("Business service checks - service bindings"));
+   DB_RESULT hResult = SQLSelect(_T("SELECT c.id, c.service_id FROM business_service_checks c ")
                            _T("LEFT OUTER JOIN business_services s ON s.id = c.service_id ")
                            _T("LEFT OUTER JOIN business_service_prototypes p ON p.id = c.service_id ")
                            _T("WHERE s.id IS NULL AND p.id IS NULL"));
-   if (unattachedChecks != nullptr)
+   if (hResult != nullptr)
    {
-      int numChecks = DBGetNumRows(unattachedChecks);
-      TCHAR query[1024];
-
+      int numChecks = DBGetNumRows(hResult);
       SetStageWorkTotal(numChecks);
       for(int i = 0; i < numChecks; i++)
       {
          g_dbCheckErrors++;
+         uint32_t checkId = DBGetFieldULong(hResult, i, 0);
          if (GetYesNoEx(_T("Business service check %u refers to non-existing business service %u. Fix it?"),
-                        DBGetFieldULong(unattachedChecks, i, 0), DBGetFieldULong(unattachedChecks, i, 1)))
+                        checkId, DBGetFieldULong(hResult, i, 1)))
          {
-            _sntprintf(query, 1024, _T("DELETE FROM business_service_checks WHERE id=%u"),
-                        DBGetFieldULong(unattachedChecks, i, 0));
+            TCHAR query[1024];
+            _sntprintf(query, 1024, _T("DELETE FROM business_service_checks WHERE id=%u"), checkId);
             if (SQLQuery(query))
                g_dbCheckFixes++;
          }
          UpdateStageProgress(1);
       }
-      DBFreeResult(unattachedChecks);
+      DBFreeResult(hResult);
    }
    EndStage();
 }
@@ -93,9 +92,9 @@ static void CheckBusinessServiceCheck()
 /**
  * Check business service tickets
  */
-static void CheckBusinessServiceTickets()
+static void CheckBusinessServiceTicketServiceBindings()
 {
-   StartStage(_T("Business service tickets"));
+   StartStage(_T("Business service tickets - service bindings"));
 
    IntegerArray<uint32_t> businessServices(64, 64);
    CollectObjectIdentifiers(_T("business_services"), &businessServices);
@@ -137,6 +136,137 @@ static void CheckBusinessServiceTickets()
          UpdateStageProgress(1);
       }
       DBFreeResult(hResult);
+   }
+   EndStage();
+}
+
+/**
+ * Check business service tickets
+ */
+static void CheckBusinessServiceTicketCheckBindings()
+{
+   StartStage(_T("Business service tickets - check bindings"));
+
+   IntegerArray<uint32_t> businessServiceChecks(64, 64);
+   CollectObjectIdentifiers(_T("business_service_checks"), &businessServiceChecks);
+
+   DB_RESULT hResult = SQLSelect(_T("SELECT ticket_id,check_id FROM business_service_tickets"));
+   if (hResult != nullptr)
+   {
+      int numTickets = DBGetNumRows(hResult);
+      SetStageWorkTotal(numTickets);
+      for(int i = 0; i < numTickets; i++)
+      {
+         uint32_t checkId = DBGetFieldULong(hResult, i, 1);
+         if (!businessServiceChecks.contains(checkId))
+         {
+            g_dbCheckErrors++;
+            uint32_t ticketId = DBGetFieldULong(hResult, i, 0);
+            if (GetYesNoEx(_T("Business service ticket %u refers to non-existing business service check %u. Fix it?"), ticketId, checkId))
+            {
+               if (DBMgrExecuteQueryOnObject(ticketId, _T("DELETE FROM business_service_tickets WHERE ticket_id=?")))
+                  g_dbCheckFixes++;
+            }
+         }
+         UpdateStageProgress(1);
+      }
+      DBFreeResult(hResult);
+   }
+   EndStage();
+}
+
+/**
+ * Check business service tickets
+ */
+static void CheckBusinessServiceTicketHierarchy()
+{
+   StartStage(_T("Business service tickets - hierarchy"));
+
+   DB_RESULT hResult = SQLSelect(_T("SELECT ticket_id,original_ticket_id,close_timestamp FROM business_service_tickets"));
+   if (hResult != nullptr)
+   {
+      int numTickets = DBGetNumRows(hResult);
+      SetStageWorkTotal(numTickets);
+      for(int i = 0; i < numTickets; i++)
+      {
+         uint32_t originalTicketId = DBGetFieldULong(hResult, i, 1);
+         if (originalTicketId == 0)
+         {
+            UpdateStageProgress(1);
+            continue;
+         }
+
+         TCHAR query[512];
+         _sntprintf(query, 512, _T("SELECT close_timestamp FROM business_service_tickets WHERE ticket_id=%u"), originalTicketId);
+         DB_RESULT originalTicketResult = SQLSelect(query);
+         if (originalTicketResult != nullptr)
+         {
+            if (DBGetNumRows(originalTicketResult) == 0)
+            {
+               g_dbCheckErrors++;
+               uint32_t ticketId = DBGetFieldULong(hResult, i, 0);
+               if (GetYesNoEx(_T("Business service ticket %u refers to non-existing parent business service ticket %u as original ticket. Fix it?"), ticketId, originalTicketId))
+               {
+                  if (DBMgrExecuteQueryOnObject(ticketId, _T("DELETE FROM business_service_tickets WHERE ticket_id=?")))
+                     g_dbCheckFixes++;
+               }
+            }
+            else if (DBGetFieldULong(hResult, i, 2) == 0 && DBGetFieldULong(originalTicketResult, 0, 0) != 0)
+            {
+               g_dbCheckErrors++;
+               uint32_t ticketId = DBGetFieldULong(hResult, i, 0);
+               if (GetYesNoEx(_T("Opened business service ticket %u refers to closed parent business service ticket %u. Fix it?"), ticketId, originalTicketId))
+               {
+                  _sntprintf(query, 512, _T("UPDATE business_service_tickets SET close_timestamp=%d WHERE ticket_id=%d"), DBGetFieldULong(originalTicketResult, 0, 0), ticketId);
+                  if (SQLQuery(query))
+                     g_dbCheckFixes++;
+               }
+            }
+
+            DBFreeResult(originalTicketResult);
+         }
+         UpdateStageProgress(1);
+      }
+      DBFreeResult(hResult);
+   }
+   EndStage();
+}
+
+/**
+ * Update business service check status
+ */
+static void CheckBusinessServiceCheckState()
+{
+   StartStage(_T("Business service checks - state"));
+
+   DB_RESULT ticketResult = SQLSelect(_T("SELECT ticket_id FROM business_service_tickets WHERE close_timestamp<>0"));
+   if (ticketResult != nullptr)
+   {
+      int numTickets = DBGetNumRows(ticketResult);
+      SetStageWorkTotal(numTickets);
+      for(int i = 0; i < numTickets; i++)
+      {
+         uint32_t ticketId = DBGetFieldULong(ticketResult, i, 0);
+         TCHAR query[512];
+         _sntprintf(query, 512, _T("SELECT id FROM business_service_checks WHERE current_ticket=%u"), ticketId);
+         DB_RESULT checkResult = SQLSelect(query);
+         if (checkResult != nullptr)
+         {
+            if (DBGetNumRows(checkResult) > 0)
+            {
+               g_dbCheckErrors++;
+               uint32_t checkId = DBGetFieldULong(checkResult, 0, 0);
+               if (GetYesNoEx(_T("Business service check %u refers to closed business service ticket %u. Fix it?"), checkId, ticketId))
+               {
+                  if (DBMgrExecuteQueryOnObject(checkId, _T("UPDATE business_service_checks SET current_ticket=0,status=0 WHERE id=?")))
+                     g_dbCheckFixes++;
+               }
+            }
+            DBFreeResult(checkResult);
+         }
+         UpdateStageProgress(1);
+      }
+      DBFreeResult(ticketResult);
    }
    EndStage();
 }
@@ -1515,8 +1645,11 @@ void CheckDatabase()
          CheckRawDciValues();
          CheckThresholds();
          CheckTableThresholds();
-         CheckBusinessServiceCheck();
-         CheckBusinessServiceTickets();
+         CheckBusinessServiceCheckBindings();
+         CheckBusinessServiceTicketServiceBindings();
+         CheckBusinessServiceTicketCheckBindings();
+         CheckBusinessServiceTicketHierarchy();
+         CheckBusinessServiceCheckState();
          CheckBusinessServiceDowntime();
          if (g_checkData)
          {

@@ -374,7 +374,7 @@ int BusinessServiceCheck::execute(const shared_ptr<BusinessServiceTicketData>& t
 		{
 			insertTicket(ticket);
 		}
-		else
+		else if (oldState == STATUS_CRITICAL)
 		{
 			closeTicket();
 			if (m_state == STATUS_NORMAL)
@@ -406,7 +406,7 @@ static void InsertTicketIntoDB(const shared_ptr<BusinessServiceTicketData>& tick
          DBFreeStatement(hStmt);
       }
 
-      hStmt = DBPrepare(hdb, _T("UPDATE business_service_checks SET current_ticket=? WHERE id=?"));
+      hStmt = DBPrepare(hdb, _T("UPDATE business_service_checks SET current_ticket=?,status=4 WHERE id=?"));
       if (hStmt != nullptr)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, ticket->ticketId);
@@ -443,7 +443,7 @@ void BusinessServiceCheck::insertTicket(const shared_ptr<BusinessServiceTicketDa
 /**
  * Close ticket in database
  */
-static void CloseTicketInDB(uint32_t ticketId, time_t timestamp)
+static void CloseTicketInDB(uint32_t checkId, int state, time_t timestamp, uint32_t ticketId)
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("UPDATE business_service_tickets SET close_timestamp=? WHERE ticket_id=? OR original_ticket_id=?"));
@@ -455,6 +455,17 @@ static void CloseTicketInDB(uint32_t ticketId, time_t timestamp)
       DBExecute(hStmt);
       DBFreeStatement(hStmt);
    }
+
+   hStmt = DBPrepare(hdb, _T("UPDATE business_service_checks SET current_ticket=0,status=? WHERE id=?"));
+   if (hStmt != nullptr)
+   {
+      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, state);
+      DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, checkId);
+      DBExecute(hStmt);
+      DBFreeStatement(hStmt);
+   }
+
+   DBCommit(hdb);
    DBConnectionPoolReleaseConnection(hdb);
 }
 
@@ -463,7 +474,7 @@ static void CloseTicketInDB(uint32_t ticketId, time_t timestamp)
  */
 void BusinessServiceCheck::closeTicket()
 {
-   ThreadPoolExecuteSerialized(g_mainThreadPool, _T("BizSvcTicketUpdate"), CloseTicketInDB, m_currentTicket, time(nullptr));
+   ThreadPoolExecuteSerialized(g_mainThreadPool, _T("BizSvcTicketUpdate"), CloseTicketInDB, m_id, m_state, time(nullptr), m_currentTicket);
 	m_currentTicket = 0;
 	m_reason[0] = 0;
 }
