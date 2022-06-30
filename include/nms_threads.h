@@ -1413,6 +1413,96 @@ template <typename R1, typename R2, typename R3> inline void ThreadPoolScheduleR
 }
 
 /**
+ * Wrapper data for ThreadPoolExecute (four arguments)
+ */
+template <typename T, typename R1, typename R2, typename R3, typename R4> class __ThreadPoolExecute_WrapperData_4
+{
+public:
+   T *m_object;
+   void (T::*m_func)(R1, R2, R3, R4);
+   R1 m_arg1;
+   R2 m_arg2;
+   R3 m_arg3;
+   R4 m_arg4;
+
+   __ThreadPoolExecute_WrapperData_4(T *object, void (T::*func)(R1, R2, R3, R4), R1 arg1, R2 arg2, R3 arg3, R4 arg4) : m_arg1(arg1), m_arg2(arg2), m_arg3(arg3), m_arg4(arg4)
+   {
+      m_object = object;
+      m_func = func;
+   }
+};
+
+/**
+ * Wrapper for ThreadPoolExecute (four arguments)
+ */
+template <typename T, typename R1, typename R2, typename R3, typename R4> void __ThreadPoolExecute_Wrapper_4(void *arg)
+{
+   auto wd = static_cast<__ThreadPoolExecute_WrapperData_4<T, R1, R2, R3, R4>*>(arg);
+   ((*wd->m_object).*(wd->m_func))(wd->m_arg1, wd->m_arg2, wd->m_arg3, wd->m_arg4);
+   delete wd;
+}
+
+/**
+ * Execute task as soon as possible (use class member with four arguments)
+ */
+template <typename T, typename B, typename R1, typename R2, typename R3, typename R4> inline void ThreadPoolExecute(ThreadPool *p, T *object, void (B::*f)(R1, R2, R3, R4), R1 arg1, R2 arg2, R3 arg3, R4 arg4)
+{
+   ThreadPoolExecute(p, __ThreadPoolExecute_Wrapper_4<B, R1, R2, R3, R4>, new __ThreadPoolExecute_WrapperData_4<B, R1, R2, R3, R4>(object, f, arg1, arg2, arg3, arg4));
+}
+
+/**
+ * Wrapper data for ThreadPoolExecute (four arguments)
+ */
+template <typename R1, typename R2, typename R3, typename R4> class __ThreadPoolExecute_WrapperData_4F
+{
+public:
+   void (*m_func)(R1, R2, R3, R4);
+   R1 m_arg1;
+   R2 m_arg2;
+   R3 m_arg3;
+   R4 m_arg4;
+
+   __ThreadPoolExecute_WrapperData_4F(void (*func)(R1, R2, R3, R4), R1 arg1, R2 arg2, R3 arg3, R4 arg4) : m_arg1(arg1), m_arg2(arg2), m_arg3(arg3), m_arg4(arg4)
+   {
+      m_func = func;
+   }
+};
+
+/**
+ * Wrapper for ThreadPoolExecute (three arguments)
+ */
+template <typename R1, typename R2, typename R3, typename R4> void __ThreadPoolExecute_Wrapper_4F(void *arg)
+{
+   auto wd = static_cast<__ThreadPoolExecute_WrapperData_4F<R1, R2, R3, R4>*>(arg);
+   wd->m_func(wd->m_arg1, wd->m_arg2, wd->m_arg3, wd->m_arg4);
+   delete wd;
+}
+
+/**
+ * Execute task as soon as possible (use function with four arguments)
+ */
+template <typename R1, typename R2, typename R3, typename R4> inline void ThreadPoolExecute(ThreadPool *p, void (*f)(R1, R2, R3, R4), R1 arg1, R2 arg2, R3 arg3, R4 arg4)
+{
+   ThreadPoolExecute(p, __ThreadPoolExecute_Wrapper_4F<R1, R2, R3, R4>, new __ThreadPoolExecute_WrapperData_4F<R1, R2, R3, R4>(f, arg1, arg2, arg3, arg4));
+}
+
+/**
+ * Execute serialized task as soon as possible (use function with four arguments)
+ */
+template <typename R1, typename R2, typename R3, typename R4> inline void ThreadPoolExecuteSerialized(ThreadPool *p, const TCHAR *key, void (*f)(R1, R2, R3, R4), R1 arg1, R2 arg2, R3 arg3, R4 arg4)
+{
+   ThreadPoolExecuteSerialized(p, key, __ThreadPoolExecute_Wrapper_4F<R1, R2, R3, R4>, new __ThreadPoolExecute_WrapperData_4F<R1, R2, R3, R4>(f, arg1, arg2, arg3, arg4));
+}
+
+/**
+ * Execute task with delay (use function with four arguments)
+ */
+template <typename R1, typename R2, typename R3, typename R4> inline void ThreadPoolScheduleRelative(ThreadPool *p, uint32_t delay, void (*f)(R1, R2, R3, R4), R1 arg1, R2 arg2, R3 arg3, R4 arg4)
+{
+   ThreadPoolScheduleRelative(p, delay, __ThreadPoolExecute_Wrapper_4F<R1, R2, R3, R4>, new __ThreadPoolExecute_WrapperData_4F<R1, R2, R3, R4>(f, arg1, arg2, arg3, arg4));
+}
+
+/**
  * Set default thread stack size
  */
 void LIBNETXMS_EXPORTABLE ThreadSetDefaultStackSize(int size);
