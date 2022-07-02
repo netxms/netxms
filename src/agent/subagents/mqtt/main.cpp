@@ -136,22 +136,22 @@ static bool CommandHandler(UINT32 command, NXCPMessage *request, NXCPMessage *re
  */
 static NETXMS_SUBAGENT_TABLE s_tables[] =
 {
-   { _T("MQTT.Brokers"), H_BrokersTable, NULL, _T("GUID"), _T("MQTT: configured brokers") }
+   { _T("MQTT.Brokers"), H_BrokersTable, nullptr, _T("GUID"), _T("MQTT: configured brokers") }
 };
 
 /**
  * Subagent information
  */
-static NETXMS_SUBAGENT_INFO m_info =
+static NETXMS_SUBAGENT_INFO s_info =
 {
 	NETXMS_SUBAGENT_INFO_MAGIC,
 	_T("MQTT"), NETXMS_VERSION_STRING,
-	SubAgentInit, SubAgentShutdown, CommandHandler, NULL,
-	0, NULL,    // parameters
-	0, NULL,		// lists
+	SubAgentInit, SubAgentShutdown, CommandHandler, nullptr,
+	0, nullptr,    // parameters
+	0, nullptr,		// lists
 	sizeof(s_tables) / sizeof(NETXMS_SUBAGENT_TABLE), s_tables,
-	0, NULL,		// actions
-	0, NULL		// push parameters
+	0, nullptr,		// actions
+	0, nullptr		// push parameters
 };
 
 /**
@@ -163,10 +163,10 @@ DECLARE_SUBAGENT_ENTRY_POINT(MQTT)
 
    RegisterBrokers(&parameters, config);
 
-   m_info.numParameters = parameters.size();
-   m_info.parameters = MemCopyArray(parameters.getBuffer(), parameters.size());
+   s_info.numParameters = parameters.size();
+   s_info.parameters = MemCopyArray(parameters.getBuffer(), parameters.size());
 
-	*ppInfo = &m_info;
+	*ppInfo = &s_info;
 	return true;
 }
 

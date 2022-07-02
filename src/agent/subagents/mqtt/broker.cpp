@@ -43,10 +43,10 @@ MqttBroker::MqttBroker(const uuid& guid) : m_topics(16, 16, Ownership::True)
 {
    m_guid = guid;
    m_locallyConfigured = true;
-   m_hostname = NULL;
+   m_hostname = nullptr;
    m_port = 0;
-   m_login = NULL;
-   m_password = NULL;
+   m_login = nullptr;
+   m_password = nullptr;
    m_loopThread = INVALID_THREAD_HANDLE;
    m_connected = false;
 
@@ -54,7 +54,7 @@ MqttBroker::MqttBroker(const uuid& guid) : m_topics(16, 16, Ownership::True)
    strcpy(clientId, "nxagentd/");
    _uuid_to_stringA(m_guid, &clientId[9]);
    m_handle = mosquitto_new(clientId, true, this);
-   if (m_handle != NULL)
+   if (m_handle != nullptr)
    {
 #if HAVE_MOSQUITTO_THREADED_SET
       mosquitto_threaded_set(m_handle, true);
@@ -72,7 +72,7 @@ MqttBroker::~MqttBroker()
 {
    if (m_loopThread != INVALID_THREAD_HANDLE)
       ThreadJoin(m_loopThread);
-   if (m_handle != NULL)
+   if (m_handle != nullptr)
       mosquitto_destroy(m_handle);
    MemFree(m_hostname);
    MemFree(m_login);
@@ -85,11 +85,11 @@ MqttBroker::~MqttBroker()
 MqttBroker *MqttBroker::createFromConfig(const ConfigEntry *config, StructArray<NETXMS_SUBAGENT_PARAM> *parameters)
 {
    MqttBroker *broker = new MqttBroker(uuid::generate());
-   if (broker->m_handle == NULL)
+   if (broker->m_handle == nullptr)
    {
       nxlog_debug(3, _T("MQTT: cannot create client instance"));
       delete broker;
-      return NULL;
+      return nullptr;
    }
 
 #ifdef UNICODE
@@ -97,7 +97,7 @@ MqttBroker *MqttBroker::createFromConfig(const ConfigEntry *config, StructArray<
 #else
    broker->m_hostname = MemCopyStringA(config->getSubEntryValue("Hostname", 0, "127.0.0.1"));
 #endif
-   broker->m_port = (UINT16)config->getSubEntryValueAsUInt(_T("Port"), 0, 1883);
+   broker->m_port = static_cast<uint16_t>(config->getSubEntryValueAsUInt(_T("Port"), 0, 1883));
 #ifdef UNICODE
    broker->m_login = UTF8StringFromWideStringEx(config->getSubEntryValue(_T("Login")));
    broker->m_password = UTF8StringFromWideStringEx(config->getSubEntryValue(_T("Password")));
@@ -107,7 +107,7 @@ MqttBroker *MqttBroker::createFromConfig(const ConfigEntry *config, StructArray<
 #endif
 
    const ConfigEntry *metricRoot = config->findEntry(_T("Metrics"));
-   if (metricRoot != NULL)
+   if (metricRoot != nullptr)
    {
       unique_ptr<ObjectArray<ConfigEntry>> metrics = metricRoot->getSubEntries(_T("*"));
       for(int i = 0; i < metrics->size(); i++)
@@ -128,7 +128,7 @@ MqttBroker *MqttBroker::createFromConfig(const ConfigEntry *config, StructArray<
    }
 
    const ConfigEntry *eventRoot = config->findEntry(_T("Events"));
-   if (eventRoot != NULL)
+   if (eventRoot != nullptr)
    {
       unique_ptr<ObjectArray<ConfigEntry>> events = eventRoot->getSubEntries(_T("*"));
       for(int i = 0; i < events->size(); i++)
@@ -151,17 +151,17 @@ MqttBroker *MqttBroker::createFromMessage(const NXCPMessage *msg)
       guid = uuid::generate();
 
    MqttBroker *broker = new MqttBroker(guid);
-   if (broker->m_handle == NULL)
+   if (broker->m_handle == nullptr)
    {
       nxlog_debug(3, _T("MQTT: cannot create client instance"));
       delete broker;
-      return NULL;
+      return nullptr;
    }
 
    broker->m_hostname = msg->getFieldAsUtf8String(VID_HOSTNAME);
    broker->m_port = msg->getFieldAsUInt16(VID_PORT);
    broker->m_login = msg->getFieldAsUtf8String(VID_LOGIN_NAME);
-   if ((broker->m_login != NULL) && (broker->m_login[0] != 0))
+   if ((broker->m_login != nullptr) && (broker->m_login[0] != 0))
    {
       broker->m_password = msg->getFieldAsUtf8String(VID_PASSWORD);
    }
@@ -186,13 +186,13 @@ void MqttBroker::networkLoop()
          return;  // Agent shutdown
    }
 
-   nxlog_debug(3, _T("MQTT: connected to broker %hs:%d as %hs"), m_hostname, (int)m_port, (m_login != NULL) ? m_login : "anonymous");
+   nxlog_debug(3, _T("MQTT: connected to broker %hs:%d as %hs"), m_hostname, (int)m_port, (m_login != nullptr) ? m_login : "anonymous");
    m_connected = true;
 
    for(int i = 0; i < m_topics.size(); i++)
    {
       Topic *t = m_topics.get(i);
-      if (mosquitto_subscribe(m_handle, NULL, t->getPattern(), 0) == MOSQ_ERR_SUCCESS)
+      if (mosquitto_subscribe(m_handle, nullptr, t->getPattern(), 0) == MOSQ_ERR_SUCCESS)
          nxlog_debug(4, _T("MQTT: subscribed to topic %hs on broker %hs:%d"), t->getPattern(), m_hostname, (int)m_port);
       else
          AgentWriteDebugLog(NXLOG_WARNING, _T("MQTT: cannot subscribe to topic %hs on broker %hs:%d"), t->getPattern(), m_hostname, (int)m_port);
@@ -204,20 +204,11 @@ void MqttBroker::networkLoop()
 }
 
 /**
- * Broker network loop starter
- */
-THREAD_RESULT THREAD_CALL MqttBroker::networkLoopStarter(void *arg)
-{
-   static_cast<MqttBroker*>(arg)->networkLoop();
-   return THREAD_OK;
-}
-
-/**
  * Start broker network loop
  */
 void MqttBroker::startNetworkLoop()
 {
-   m_loopThread = ThreadCreateEx(MqttBroker::networkLoopStarter, 0, this);
+   m_loopThread = ThreadCreateEx(this, &MqttBroker::networkLoop);
 }
 
 /**
@@ -246,9 +237,9 @@ void MqttBroker::processMessage(const struct mosquitto_message *msg)
    if (msg->payloadlen <= 0)
       return;  // NULL message
 
-   nxlog_debug(6, _T("MQTT: message received: %hs=\"%hs\""), msg->topic, (const char *)msg->payload);
+   nxlog_debug(6, _T("MQTT: message received: %hs=\"%hs\""), msg->topic, static_cast<const char*>(msg->payload));
    for(int i = 0; i < m_topics.size(); i++)
    {
-      m_topics.get(i)->processMessage(msg->topic, (const char *)msg->payload);
+      m_topics.get(i)->processMessage(msg->topic, static_cast<const char*>(msg->payload));
    }
 }

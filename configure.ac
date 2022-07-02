@@ -973,7 +973,7 @@ AC_ARG_WITH(dist,
 	TOOLS="nxlptest"
 	SUBAGENT_DIRS="linux ds18x20 freebsd openbsd minix mqtt mysql pgsql netbsd sunos aix hpux informix oracle lmsensors darwin rpi java jmx opcua ubntlw bind9 netsvc db2 tuxedo mongodb ssh vmgr xen lorawan asterisk python"
 	AGENT_DIRS="libnxappc libnxtux"
-	NCDRV_MODULES="anysms googlechat kannel msteams mymobile nexmo nxagent slack smseagle telegram text2reach twilio websms xmpp"
+	NCDRV_MODULES="anysms googlechat kannel mqtt msteams mymobile nexmo nxagent slack smseagle telegram text2reach twilio websms xmpp"
    HDLINK_DIRS="jira redmine"
    PDSDRV_DIRS="influxdb rrdtool"
 	TOP_LEVEL_MODULES="include sql images tests"
@@ -4387,25 +4387,26 @@ if test "x$DISABLE_MQTT" != "xyes" -a "x$DIST_BUILD" != "xyes"; then
 		CPPFLAGS="$CPPFLAGS $MQTT_CPPFLAGS"
 		LDFLAGS="$LDFLAGS $MQTT_LDFLAGS"
 	fi
-	
-	AC_CHECK_HEADER(mosquitto.h,[
-      AC_CHECK_LIB(mosquitto, mosquitto_lib_init, [
-         MQTT_LIBS="-lmosquitto"
-         MQTT_SUPPORT="yes"
-         AC_DEFINE(WITH_MQTT, 1, Define to 1 if MQTT is supported)
-         SUBAGENT_DIRS="$SUBAGENT_DIRS mqtt"
 
-         LIBS="$LIBS $MQTT_LIBS"
-         AC_CHECK_FUNCS([mosquitto_threaded_set])
-      ],[
-         if test "x$REQUIRE_MQTT" = "xyes"; then
-            AC_MSG_ERROR([*** libmosquitto is missing - check your libmosquitto installation ***])
-         fi
-	])
-   ],[
-      if test "x$REQUIRE_MQTT" = "xyes"; then
-		   AC_MSG_ERROR([*** Cannot find mosquitto.h - check your libmosquitto installation ***])
-      fi
+	AC_CHECK_HEADER(mosquitto.h,[
+		AC_CHECK_LIB(mosquitto, mosquitto_lib_init, [
+			MQTT_LIBS="-lmosquitto"
+			MQTT_SUPPORT="yes"
+			AC_DEFINE(WITH_MQTT, 1, Define to 1 if MQTT is supported)
+			SUBAGENT_DIRS="$SUBAGENT_DIRS mqtt"
+			NCDRV_MODULES="$NCDRV_MODULES mqtt"
+
+			LIBS="$LIBS $MQTT_LIBS"
+			AC_CHECK_FUNCS([mosquitto_threaded_set])
+		],[
+			if test "x$REQUIRE_MQTT" = "xyes"; then
+				AC_MSG_ERROR([*** libmosquitto is missing - check your libmosquitto installation ***])
+			fi
+		])
+	],[
+		if test "x$REQUIRE_MQTT" = "xyes"; then
+			AC_MSG_ERROR([*** Cannot find mosquitto.h - check your libmosquitto installation ***])
+		fi
 	])
 
 	CPPFLAGS="$OLD_CPPFLAGS"
@@ -5040,6 +5041,7 @@ AC_CONFIG_FILES([
 	src/ncdrivers/gsm/Makefile
 	src/ncdrivers/googlechat/Makefile
 	src/ncdrivers/kannel/Makefile
+	src/ncdrivers/mqtt/Makefile
 	src/ncdrivers/msteams/Makefile
 	src/ncdrivers/mymobile/Makefile
 	src/ncdrivers/nexmo/Makefile

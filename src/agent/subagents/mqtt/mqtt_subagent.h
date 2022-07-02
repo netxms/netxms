@@ -61,7 +61,7 @@ private:
    uuid m_guid;
    bool m_locallyConfigured;
    char *m_hostname;
-   UINT16 m_port;
+   uint16_t m_port;
    char *m_login;
    char *m_password;
    ObjectArray<Topic> m_topics;
@@ -75,7 +75,6 @@ private:
    void processMessage(const struct mosquitto_message *msg);
 
    void networkLoop();
-   static THREAD_RESULT THREAD_CALL networkLoopStarter(void *arg);
 
 public:
    ~MqttBroker();
