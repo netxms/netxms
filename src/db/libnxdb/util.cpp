@@ -479,14 +479,12 @@ static bool SQLiteAlterTable(DB_HANDLE hdb, SQLileAlterOp operation, const TCHAR
                TCHAR *s = _tcschr(p, _T(')'));
                if (s != nullptr)
                {
-                  s++;
-                  *s = 0;
                   createList.append(_T(','));
-                  //Replace old primary key name if it is renamed
+                  // Replace old primary key name if it is renamed
                   if (operation == RENAME_COLUMN)
                   {
-                     *(--s) = 0;
-                     StringList *columnList = String::split(p+12, _tcslen(p+12), _T(","));
+                     *s = 0;
+                     StringList *columnList = String::split(p + 12, _tcslen(p + 12), _T(","));
                      for (int i = 0; i < columnList->size(); i++)
                      {
                         if (!_tcsicmp(columnList->get(i), column))
@@ -501,7 +499,11 @@ static bool SQLiteAlterTable(DB_HANDLE hdb, SQLileAlterOp operation, const TCHAR
                      delete columnList;
                   }
                   else
+                  {
+                     s++;
+                     *s = 0;
                      createList.append(p);
+                  }
                }
             }
             MemFree(sql);
