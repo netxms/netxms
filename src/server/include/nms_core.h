@@ -1526,7 +1526,7 @@ public:
    bool isDuplicate(MONITORED_FILE *file);
    bool removeFile(MONITORED_FILE *file);
    void removeDisconnectedNode(uint32_t nodeId);
-   ObjectArray<ClientSession> *findClientByFNameAndNodeID(const TCHAR *fileName, uint32_t nodeID);
+   unique_ptr<ObjectArray<ClientSession>> findClientByFNameAndNodeID(const TCHAR *fileName, uint32_t nodeID);
 };
 
 /**
