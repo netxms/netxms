@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2020 Raden Solutions
+** Copyright (C) 2003-2022 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,6 +21,8 @@
 **/
 
 #include "nms_core.h"
+
+#define DEBUG_TAG _T("filemonitor")
 
 /**
  * Global instance of file monitoring list
@@ -44,12 +46,12 @@ void FileMonitoringList::addFile(MONITORED_FILE *file, Node *node, const shared_
    file->session->incRefCount();
    m_monitoredFiles.add(file);
    node->setFileUpdateConnection(conn);
-   nxlog_debug(5, _T("File tracker registered: node=%s [%u], file=\"%s\""), node->getName(), node->getId(), file->fileName);
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("File tracker registered: node=%s [%u], file=\"%s\""), node->getName(), node->getId(), file->fileName);
    unlock();
 }
 
 /**
- * Check if given fiel is a duplicate
+ * Check if given file is a duplicate
  */
 bool FileMonitoringList::isDuplicate(MONITORED_FILE *file)
 {
@@ -58,9 +60,7 @@ bool FileMonitoringList::isDuplicate(MONITORED_FILE *file)
    for(int i = 0; i < m_monitoredFiles.size(); i++)
    {
       MONITORED_FILE *curr = m_monitoredFiles.get(i);
-      if(_tcscmp(curr->fileName, file->fileName) == 0
-         && curr->nodeID == file->nodeID
-         && curr->session->getUserId() == file->session->getUserId())
+      if (!_tcscmp(curr->fileName, file->fileName) && (curr->nodeID == file->nodeID) && (curr->session->getUserId() == file->session->getUserId()))
       {
          result = true;
          break;
@@ -73,21 +73,22 @@ bool FileMonitoringList::isDuplicate(MONITORED_FILE *file)
 /**
  * Find client sessions
  */
-ObjectArray<ClientSession> *FileMonitoringList::findClientByFNameAndNodeID(const TCHAR *fileName, UINT32 nodeID)
+unique_ptr<ObjectArray<ClientSession>> FileMonitoringList::findClientByFNameAndNodeID(const TCHAR *fileName, uint32_t nodeID)
 {
+   auto result = new ObjectArray<ClientSession>(0, 16);
    lock();
-   ObjectArray<ClientSession> *result = new ObjectArray<ClientSession>;
    for(int i = 0; i < m_monitoredFiles.size(); i++)
    {
       MONITORED_FILE *curr = m_monitoredFiles.get(i);
-      DbgPrintf(9, _T("FileMonitoringList::findClientByFNameAndNodeID: %s is %s should"), curr->fileName, fileName);
-      if(_tcscmp(curr->fileName, fileName) == 0 && curr->nodeID == nodeID)
+      nxlog_debug_tag(DEBUG_TAG, 9, _T("FileMonitoringList::findClientByFNameAndNodeID: current=%s requested=%s"), curr->fileName, fileName);
+      if (!_tcscmp(curr->fileName, fileName) && (curr->nodeID == nodeID))
       {
          result->add(curr->session);
+         nxlog_debug_tag(DEBUG_TAG, 9, _T("FileMonitoringList::findClientByFNameAndNodeID: added session %d"), curr->session->getId());
       }
    }
    unlock();
-   return result;
+   return unique_ptr<ObjectArray<ClientSession>>(result);
 }
 
 /**
@@ -120,7 +121,7 @@ bool FileMonitoringList::removeFile(MONITORED_FILE *file)
       shared_ptr<Node> node = static_pointer_cast<Node>(FindObjectById(file->nodeID, OBJECT_NODE));
       if (node != nullptr)
       {
-         nxlog_debug(5, _T("File tracker unregistered: node=%s [%u], file=\"%s\""), node->getName(), node->getId(), file->fileName);
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("File tracker unregistered: node=%s [%u], file=\"%s\""), node->getName(), node->getId(), file->fileName);
          if (nodeConnectionCount == 1)
             node->clearFileUpdateConnection();
       }
@@ -152,6 +153,6 @@ void FileMonitoringList::removeDisconnectedNode(uint32_t nodeId)
    if (node != nullptr)
    {
       node->clearFileUpdateConnection();
-      nxlog_debug(5, _T("All file trackers for node %s [%u] unregistered"), node->getName(), node->getId());
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("All file trackers for node %s [%u] unregistered"), node->getName(), node->getId());
    }
 }

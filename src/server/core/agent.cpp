@@ -267,7 +267,7 @@ void AgentConnectionEx::onDataPush(NXCPMessage *msg)
 		if (acceptRequest)
 		{
          shared_ptr<Node> target;
-         UINT32 objectId = msg->getFieldAsUInt32(VID_OBJECT_ID);
+         uint32_t objectId = msg->getFieldAsUInt32(VID_OBJECT_ID);
          if (objectId != 0)
          {
             // push on behalf of other node
@@ -276,11 +276,11 @@ void AgentConnectionEx::onDataPush(NXCPMessage *msg)
             {
                if (target->isTrustedNode(sender->getId()))
                {
-                  DbgPrintf(5, _T("%s: agent data push: target set to %s [%d]"), sender->getName(), target->getName(), target->getId());
+                  debugPrintf(5, _T("%s: agent data push: target set to %s [%d]"), sender->getName(), target->getName(), target->getId());
                }
                else
                {
-                  DbgPrintf(5, _T("%s: agent data push: not in trusted node list for target %s [%d]"), sender->getName(), target->getName(), target->getId());
+                  debugPrintf(5, _T("%s: agent data push: not in trusted node list for target %s [%d]"), sender->getName(), target->getName(), target->getId());
                   target.reset();
                }
             }
@@ -292,11 +292,11 @@ void AgentConnectionEx::onDataPush(NXCPMessage *msg)
 
          if (target != nullptr)
          {
-		      DbgPrintf(5, _T("%s: agent data push: %s=%s"), target->getName(), name, value);
+            debugPrintf(5, _T("%s: agent data push: %s=%s"), target->getName(), name, value);
 		      shared_ptr<DCObject> dci = target->getDCObjectByName(name, 0);
 		      if ((dci != nullptr) && (dci->getType() == DCO_TYPE_ITEM) && (dci->getDataSource() == DS_PUSH_AGENT) && (dci->getStatus() == ITEM_STATUS_ACTIVE))
 		      {
-			      DbgPrintf(5, _T("%s: agent data push: found DCI %d"), target->getName(), dci->getId());
+		         debugPrintf(5, _T("%s: agent data push: found DCI %d"), target->getName(), dci->getId());
                time_t t = msg->getFieldAsTime(VID_TIMESTAMP);
                if (t == 0)
 			         t = time(nullptr);
@@ -351,8 +351,8 @@ void AgentConnectionEx::onFileMonitoringData(NXCPMessage *pMsg)
 	{
 	   TCHAR remoteFile[MAX_PATH];
       pMsg->getFieldAsString(VID_FILE_NAME, remoteFile, MAX_PATH);
-      ObjectArray<ClientSession> *result = g_monitoringList.findClientByFNameAndNodeID(remoteFile, object->getId());
-      debugPrintf(6, _T("AgentConnectionEx::onFileMonitoringData: found %d sessions for remote file %s on node %s [%d]"), result->size(), remoteFile, object->getName(), object->getId());
+      unique_ptr<ObjectArray<ClientSession>> result = g_monitoringList.findClientByFNameAndNodeID(remoteFile, object->getId());
+      debugPrintf(6, _T("AgentConnectionEx::onFileMonitoringData: found %d sessions for remote file %s on node %s [%u]"), result->size(), remoteFile, object->getName(), object->getId());
       int validSessionCount = result->size();
       for(int i = 0; i < result->size(); i++)
       {
@@ -369,11 +369,10 @@ void AgentConnectionEx::onFileMonitoringData(NXCPMessage *pMsg)
                CancelUnknownFileMonitoring(object.get(), remoteFile);
          }
       }
-      if (result->size() == 0)
+      if (result->isEmpty())
       {
          CancelUnknownFileMonitoring(object.get(), remoteFile);
       }
-      delete result;
 	}
 	else
 	{
@@ -391,8 +390,7 @@ bool AgentConnectionEx::processCustomMessage(NXCPMessage *msg)
       return false;
 
    TCHAR buffer[128];
-   DbgPrintf(6, _T("AgentConnectionEx::processCustomMessage: processing message %s ID %d"),
-      NXCPMessageCodeName(msg->getCode(), buffer), msg->getId());
+   debugPrintf(6, _T("AgentConnectionEx::processCustomMessage: processing message %s ID %u"), NXCPMessageCodeName(msg->getCode(), buffer), msg->getId());
 
    ENUMERATE_MODULES(pfOnAgentMessage)
    {
@@ -474,7 +472,7 @@ void AgentConnectionEx::onSnmpTrap(NXCPMessage *msg)
          SNMP_SecurityContext *sctx = (originNode != nullptr) ? originNode->getSnmpSecurityContext() : nullptr;
          if (pdu.parse(pduBytes, pduLenght, sctx, true))
          {
-            nxlog_debug(6, _T("SNMPTrapReceiver: received PDU of type %d"), pdu.getCommand());
+            debugPrintf(6, _T("AgentConnectionEx::onSnmpTrap(): received PDU of type %d"), pdu.getCommand());
             if ((pdu.getCommand() == SNMP_TRAP) || (pdu.getCommand() == SNMP_INFORM_REQUEST))
             {
                bool isInformRequest = (pdu.getCommand() == SNMP_INFORM_REQUEST);
@@ -492,7 +490,7 @@ void AgentConnectionEx::onSnmpTrap(NXCPMessage *msg)
             else if ((pdu.getVersion() == SNMP_VERSION_3) && (pdu.getCommand() == SNMP_GET_REQUEST) && (pdu.getAuthoritativeEngine().getIdLen() == 0))
             {
                // Engine ID discovery
-               nxlog_debug(6, _T("SNMPTrapReceiver: EngineId discovery"));
+               debugPrintf(6, _T("AgentConnectionEx::onSnmpTrap(): EngineId discovery"));
 
                SNMP_ProxyTransport *snmpTransport = CreateSNMPProxyTransport(self(), originNode.get(), originSenderIP, msg->getFieldAsUInt16(VID_PORT));
 
