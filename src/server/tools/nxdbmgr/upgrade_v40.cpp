@@ -1296,6 +1296,14 @@ static bool H_UpgradeFromV69()
    CHK_EXEC(DBRenameTable(g_dbHandle, _T("slm_checks"), _T("business_service_checks")));
    CHK_EXEC(DBRenameTable(g_dbHandle, _T("slm_tickets"), _T("business_service_tickets")));
 
+   //Close all tickets and all downtime
+   uint32_t now = static_cast<uint32_t>(time(nullptr));
+   _sntprintf(query, 256, _T("UPDATE business_service_tickets SET close_timestamp=%u WHERE close_timestamp=0"), now);
+   CHK_EXEC(SQLQuery(query));
+   CHK_EXEC(SQLQuery(_T("UPDATE business_service_checks SET current_ticket=0")));
+   _sntprintf(query, 256, _T("UPDATE business_service_downtime SET to_timestamp=%u WHERE to_timestamp=0"), now);
+   CHK_EXEC(SQLQuery(query));
+
    CHK_EXEC(SetMinorSchemaVersion(70));
    return true;
 }
