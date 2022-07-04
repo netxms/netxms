@@ -277,6 +277,137 @@ static bool H_UpgradeFromV9()
 }
 
 /**
+ * Convert network map links to new format
+ */
+static bool ConvertMapLinks()
+{
+   DB_HANDLE hdb = ConnectToDatabase();
+   if (hdb == nullptr)
+      return false;
+
+   DB_UNBUFFERED_RESULT hResult = DBSelectUnbuffered(hdb, _T("SELECT map_id,element1,element2,link_type,link_name,connector_name1,connector_name2,flags,element_data FROM network_map_links"));
+   if (hResult == nullptr)
+   {
+      DBDisconnect(hdb);
+      return false;
+   }
+
+   DB_STATEMENT hStmt = DBPrepare(g_dbHandle, _T("INSERT INTO new_network_map_links (map_id,link_id,element1,element2,link_type,link_name,connector_name1,connector_name2,flags,color_source,color,element_data) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)"), true);
+   if (hStmt != nullptr)
+   {
+      uint32_t id = 1;
+      while(DBFetch(hResult))
+      {
+         int32_t color = 0, colorSource = 0;
+         char *xml = DBGetFieldUTF8(hResult, 8, nullptr, 0);
+         if (xml != nullptr)
+         {
+            Config config;
+            if (config.loadXmlConfigFromMemory(xml, strlen(xml), nullptr, "config", false))
+            {
+               color = config.getValueAsInt(_T("/color"), 0);
+               colorSource = config.getValueAsInt(_T("/colorSource"), 0);
+            }
+            MemFree(xml);
+         }
+
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, DBGetFieldULong(hResult, 0));
+         DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, id++);
+         DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, DBGetFieldULong(hResult, 1));
+         DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, DBGetFieldULong(hResult, 2));
+         DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, DBGetFieldULong(hResult, 3));
+         DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, DBGetField(hResult, 4, nullptr, 0), DB_BIND_DYNAMIC);
+         DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, DBGetField(hResult, 5, nullptr, 0), DB_BIND_DYNAMIC);
+         DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, DBGetField(hResult, 6, nullptr, 0), DB_BIND_DYNAMIC);
+         DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, DBGetFieldULong(hResult, 7));
+         DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, colorSource);
+         DBBind(hStmt, 11, DB_SQLTYPE_INTEGER, color);
+         DBBind(hStmt, 12, DB_SQLTYPE_VARCHAR, DBGetField(hResult, 8, nullptr, 0), DB_BIND_DYNAMIC);
+
+         if (!DBExecute(hStmt) && !g_ignoreErrors)
+         {
+            DBFreeStatement(hStmt);
+            DBFreeResult(hResult);
+            DBDisconnect(hdb);
+            return false;
+         }
+      }
+      DBFreeStatement(hStmt);
+   }
+   else
+   {
+      DBFreeResult(hResult);
+      DBDisconnect(hdb);
+      return false;
+   }
+   DBFreeResult(hResult);
+
+   DBDisconnect(hdb);
+   return true;
+}
+
+/**
+ * Convert network map links to new format (SQLite version)
+ */
+static bool ConvertMapLinks_SQLite()
+{
+   DB_RESULT hResult = SQLSelect(_T("SELECT map_id,element1,element2,link_type,link_name,connector_name1,connector_name2,flags,element_data FROM network_map_links"));
+   if (hResult == nullptr)
+      return false;
+
+   DB_STATEMENT hStmt = DBPrepare(g_dbHandle, _T("INSERT INTO new_network_map_links (map_id,link_id,element1,element2,link_type,link_name,connector_name1,connector_name2,flags,color_source,color,element_data) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)"), true);
+   if (hStmt != nullptr)
+   {
+      uint32_t id = 1;
+      int count = DBGetNumRows(hResult);
+      for(int row = 0; row < count; row++)
+      {
+         int32_t color = 0, colorSource = 0;
+         char *xml = DBGetFieldUTF8(hResult, row, 8, nullptr, 0);
+         if (xml != nullptr)
+         {
+            Config config;
+            if (config.loadXmlConfigFromMemory(xml, strlen(xml), nullptr, "config", false))
+            {
+               color = config.getValueAsInt(_T("/color"), 0);
+               colorSource = config.getValueAsInt(_T("/colorSource"), 0);
+            }
+            MemFree(xml);
+         }
+
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, DBGetFieldULong(hResult, row, 0));
+         DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, id++);
+         DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, DBGetFieldULong(hResult, row, 1));
+         DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, DBGetFieldULong(hResult, row, 2));
+         DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, DBGetFieldULong(hResult, row, 3));
+         DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, DBGetField(hResult, row, 4, nullptr, 0), DB_BIND_DYNAMIC);
+         DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, DBGetField(hResult, row, 5, nullptr, 0), DB_BIND_DYNAMIC);
+         DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, DBGetField(hResult, row, 6, nullptr, 0), DB_BIND_DYNAMIC);
+         DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, DBGetFieldULong(hResult, row, 7));
+         DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, colorSource);
+         DBBind(hStmt, 11, DB_SQLTYPE_INTEGER, color);
+         DBBind(hStmt, 12, DB_SQLTYPE_VARCHAR, DBGetField(hResult, row, 8, nullptr, 0), DB_BIND_DYNAMIC);
+
+         if (!DBExecute(hStmt) && !g_ignoreErrors)
+         {
+            DBFreeStatement(hStmt);
+            DBFreeResult(hResult);
+            return false;
+         }
+      }
+      DBFreeStatement(hStmt);
+   }
+   else
+   {
+      DBFreeResult(hResult);
+      return false;
+   }
+   DBFreeResult(hResult);
+
+   return true;
+}
+
+/**
  * Upgrade from 39.8 to 39.9
  */
 static bool H_UpgradeFromV8()
@@ -298,78 +429,10 @@ static bool H_UpgradeFromV8()
       _T("   color_provider varchar(255) null,")
       _T("   PRIMARY KEY(map_id,link_id))")));
 
-   // Open second connection to database to allow unbuffered query in parallel with inserts
-   DB_HANDLE hdb = ConnectToDatabase();
-   if (hdb != nullptr)
-   {
-      DB_UNBUFFERED_RESULT hResult = DBSelectUnbuffered(hdb, _T("SELECT map_id,element1,element2,link_type,link_name,connector_name1,connector_name2,flags,element_data FROM network_map_links"));
-      if (hResult != nullptr)
-      {
-         DB_STATEMENT hStmt = DBPrepare(g_dbHandle, _T("INSERT INTO new_network_map_links (map_id,link_id,element1,element2,link_type,link_name,connector_name1,connector_name2,flags,color_source,color,element_data) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)"), true);
-         if (hStmt != nullptr)
-         {
-            uint32_t id = 1;
-            while(DBFetch(hResult))
-            {
-               int32_t color = 0, colorSource = 0;
-               char *xml = DBGetFieldUTF8(hResult, 8, nullptr, 0);
-               if (xml != nullptr)
-               {
-                  Config config;
-                  if (config.loadXmlConfigFromMemory(xml, strlen(xml), nullptr, "config", false))
-                  {
-                     color = config.getValueAsInt(_T("/color"), 0);
-                     colorSource = config.getValueAsInt(_T("/colorSource"), 0);
-                  }
-                  MemFree(xml);
-               }
-
-               DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, DBGetFieldULong(hResult, 0));
-               DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, id++);
-               DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, DBGetFieldULong(hResult, 1));
-               DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, DBGetFieldULong(hResult, 2));
-               DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, DBGetFieldULong(hResult, 3));
-               DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, DBGetField(hResult, 4, nullptr, 0), DB_BIND_DYNAMIC);
-               DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, DBGetField(hResult, 5, nullptr, 0), DB_BIND_DYNAMIC);
-               DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, DBGetField(hResult, 6, nullptr, 0), DB_BIND_DYNAMIC);
-               DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, DBGetFieldULong(hResult, 7));
-               DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, colorSource);
-               DBBind(hStmt, 11, DB_SQLTYPE_INTEGER, color);
-               DBBind(hStmt, 12, DB_SQLTYPE_VARCHAR, DBGetField(hResult, 8, nullptr, 0), DB_BIND_DYNAMIC);
-
-               if (!DBExecute(hStmt) && !g_ignoreErrors)
-               {
-                  DBFreeStatement(hStmt);
-                  DBFreeResult(hResult);
-                  DBDisconnect(hdb);
-                  return false;
-               }
-            }
-            DBFreeStatement(hStmt);
-         }
-         else if (!g_ignoreErrors)
-         {
-            DBFreeResult(hResult);
-            DBDisconnect(hdb);
-            return false;
-         }
-         DBFreeResult(hResult);
-      }
-      else if (!g_ignoreErrors)
-      {
-         DBDisconnect(hdb);
-         return false;
-      }
-      DBDisconnect(hdb);
-
-      CHK_EXEC(SQLQuery(_T("DROP TABLE network_map_links")));
-      CHK_EXEC(DBRenameTable(g_dbHandle, _T("new_network_map_links"), _T("network_map_links")));
-      CHK_EXEC(SQLQuery(_T("CREATE INDEX idx_network_map_links_map_id ON network_map_links(map_id)")));
-   }
-   else if (!g_ignoreErrors)
-   {
-      return false;
-   }
+   CHK_EXEC((g_dbSyntax == DB_SYNTAX_SQLITE) ? ConvertMapLinks_SQLite() : ConvertMapLinks());
+   CHK_EXEC(SQLQuery(_T("DROP TABLE network_map_links")));
+   CHK_EXEC(DBRenameTable(g_dbHandle, _T("new_network_map_links"), _T("network_map_links")));
+   CHK_EXEC(SQLQuery(_T("CREATE INDEX idx_network_map_links_map_id ON network_map_links(map_id)")));
 
    CHK_EXEC(SetMinorSchemaVersion(9));
    return true;
