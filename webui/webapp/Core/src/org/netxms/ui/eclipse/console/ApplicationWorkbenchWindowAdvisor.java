@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -163,8 +163,8 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
     */
    private void showDashboard(String dashboardId, boolean fullScreen)
    {
-      NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-      
+      NXCSession session = ConsoleSharedData.getSession();
+
       long objectId;
       try
       {
@@ -186,14 +186,14 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
          }
          objectId = object.getObjectId();
       }
-      
-      Dashboard dashboard = (Dashboard)session.findObjectById(objectId, Dashboard.class);
+
+      Dashboard dashboard = session.findObjectById(objectId, Dashboard.class);
       if (dashboard == null)
       {
          MessageDialogHelper.openError(null, Messages.get().ApplicationWorkbenchWindowAdvisor_Error, String.format(Messages.get().ApplicationWorkbenchWindowAdvisor_CannotOpenDashboard, dashboardId));
          return;
       }
-      
+
       IWorkbenchPage page = getWindowConfigurer().getWindow().getActivePage();
       try
       {
@@ -213,7 +213,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
       }
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.ui.application.WorkbenchWindowAdvisor#postWindowClose()
     */
    @Override

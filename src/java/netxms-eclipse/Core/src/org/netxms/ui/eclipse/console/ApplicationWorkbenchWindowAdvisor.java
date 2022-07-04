@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -290,8 +290,8 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor im
     */
    private void showDashboard(String dashboardId, boolean fullScreen)
    {
-      NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-      
+      NXCSession session = ConsoleSharedData.getSession();
+
       long objectId;
       try
       {
@@ -313,14 +313,14 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor im
          }
          objectId = object.getObjectId();
       }
-      
-      Dashboard dashboard = (Dashboard)session.findObjectById(objectId, Dashboard.class);
+
+      Dashboard dashboard = session.findObjectById(objectId, Dashboard.class);
       if (dashboard == null)
       {
          MessageDialogHelper.openError(null, Messages.get().ApplicationWorkbenchWindowAdvisor_Error, String.format(Messages.get().ApplicationWorkbenchWindowAdvisor_CannotOpenDashboard, dashboardId));
          return;
       }
-      
+
       IWorkbenchPage page = getWindowConfigurer().getWindow().getActivePage();
       try
       {
@@ -328,6 +328,14 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor im
          if (fullScreen)
          {
             ((ViewPart)view).setPartProperty("FullScreen", "true");
+            new UIJob("Minimize main window") {
+               @Override
+               public IStatus runInUIThread(IProgressMonitor monitor)
+               {
+                  PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell().setMinimized(true);
+                  return Status.OK_STATUS;
+               }
+            }.schedule(100);
          }
          else
          {
@@ -339,7 +347,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor im
          MessageDialogHelper.openError(null, Messages.get().ApplicationWorkbenchWindowAdvisor_Error, String.format(Messages.get().ApplicationWorkbenchWindowAdvisor_CannotOpenDashboardType2, dashboardId, e.getLocalizedMessage()));
       }
    }
-	
+
 	/**
     * Show login dialog and perform login
     */
@@ -559,7 +567,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor im
       }
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.certificate.request.KeyStoreLocationRequestListener#keyStoreLocationRequested()
     */
    @Override
@@ -607,8 +615,8 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor im
       PasswordRequestDialog dialog = new PasswordRequestDialog(shell);
       dialog.setTitle(title);
       dialog.setMessage(message);
-      
-      if(dialog.open() == Window.OK)
+
+      if (dialog.open() == Window.OK)
       {
          return dialog.getPassword();
       }

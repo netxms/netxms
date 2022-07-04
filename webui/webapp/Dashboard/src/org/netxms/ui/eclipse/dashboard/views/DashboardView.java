@@ -143,7 +143,7 @@ public class DashboardView extends ViewPart implements ISaveablePart
 
       activateContext();
       createActions();
-      
+
 	   ConsoleJob job = new ConsoleJob(Messages.get().DashboardView_GetEffectiveRights, this, Activator.PLUGIN_ID) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
@@ -209,7 +209,7 @@ public class DashboardView extends ViewPart implements ISaveablePart
    @Override
    public void dispose()
    {
-      if (fullScreenDisplayShell != null)
+      if ((fullScreenDisplayShell != null) && !fullScreenDisplayShell.isDisposed())
       {
          fullScreenDisplayShell.close();
          fullScreenDisplayShell.dispose();
@@ -392,7 +392,8 @@ public class DashboardView extends ViewPart implements ISaveablePart
 	@Override
 	public void setFocus()
 	{
-		dbc.setFocus();
+      if (!dbc.isDisposed())
+         dbc.setFocus();
 	}
 
    /**
@@ -652,7 +653,7 @@ public class DashboardView extends ViewPart implements ISaveablePart
                public void keyReleased(KeyEvent e)
                {
                }
-               
+
                @Override
                public void keyPressed(KeyEvent e)
                {
@@ -669,8 +670,11 @@ public class DashboardView extends ViewPart implements ISaveablePart
       {
          if (fullScreenDisplayShell != null)
          {
-            fullScreenDisplayShell.close();
-            fullScreenDisplayShell.dispose();
+            if (!fullScreenDisplayShell.isDisposed())
+            {
+               fullScreenDisplayShell.close();
+               fullScreenDisplayShell.dispose();
+            }
             fullScreenDisplayShell = null;
          }
       }
