@@ -581,9 +581,7 @@ static void CreateDiscoveredNode(NewNodeData *newNodeData)
    }
    else
    {
-      TCHAR ipAddr[64];
-      newNodeData->ipAddr.toString(ipAddr);
-      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("CreateDiscoveredNode(%s): node already exist in database"), ipAddr);
+      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("CreateDiscoveredNode(%s): node already exist in database"), newNodeData->ipAddr.toString().cstr());
    }
    delete newNodeData;
 }
@@ -595,7 +593,7 @@ static void ProcessDiscoveredAddress(DiscoveredAddress *address)
 {
    if (!IsShutdownInProgress())
    {
-      NewNodeData *newNodeData = new NewNodeData(address->ipAddr, address->macAddr);
+      auto newNodeData = new NewNodeData(address->ipAddr, address->macAddr);
       newNodeData->zoneUIN = address->zoneUIN;
       newNodeData->origin = NODE_ORIGIN_NETWORK_DISCOVERY;
       newNodeData->doConfPoll = true;
@@ -605,7 +603,7 @@ static void ProcessDiscoveredAddress(DiscoveredAddress *address)
          if (g_discoveryThreadPool != nullptr)
          {
             TCHAR key[32];
-            _sntprintf(key, 32, _T("Zone%u"), address->zoneUIN);
+            _sntprintf(key, 32, _T("CREATE/%u"), address->zoneUIN);
             ThreadPoolExecuteSerialized(g_discoveryThreadPool, key, CreateDiscoveredNode, newNodeData);
          }
          else
@@ -657,7 +655,7 @@ void NodePoller()
          else
          {
             TCHAR key[32];
-            _sntprintf(key, 32, _T("Zone%u"), address->zoneUIN);
+            _sntprintf(key, 32, _T("PROC/%u"), address->zoneUIN);
             ThreadPoolExecuteSerialized(g_discoveryThreadPool, key, ProcessDiscoveredAddress, address);
          }
       }

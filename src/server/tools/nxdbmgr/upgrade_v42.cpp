@@ -23,6 +23,21 @@
 #include "nxdbmgr.h"
 
 /**
+ * Upgrade from 42.1 to 42.2
+ */
+static bool H_UpgradeFromV1()
+{
+   if (GetSchemaLevelForMajorVersion(41) < 18)
+   {
+      CHK_EXEC(SQLQuery(_T("UPDATE config SET default_value='8' WHERE var_name='ThreadPool.Discovery.BaseSize'")));
+      CHK_EXEC(SQLQuery(_T("UPDATE config SET default_value='64' WHERE var_name='ThreadPool.Discovery.MaxSize'")));
+      CHK_EXEC(SetSchemaLevelForMajorVersion(41, 18));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(2));
+   return true;
+}
+
+/**
  * Upgrade from 42.0 to 42.1
  */
 static bool H_UpgradeFromV0()
@@ -45,6 +60,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 1,  42, 2,  H_UpgradeFromV1  },
    { 0,  42, 1,  H_UpgradeFromV0  },
    { 0,  0,  0,  nullptr }
 };

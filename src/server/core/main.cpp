@@ -1244,10 +1244,10 @@ retry_db_lock:
    }
 
    // Create network discovery thread pool
-   maxSize = ConfigReadInt(_T("ThreadPool.Discovery.MaxSize"), 16);
+   maxSize = ConfigReadInt(_T("ThreadPool.Discovery.MaxSize"), 64);
    if (maxSize > 1)
    {
-      g_discoveryThreadPool = ThreadPoolCreate(_T("DISCOVERY"), ConfigReadInt(_T("ThreadPool.Discovery.BaseSize"), 1), maxSize);
+      g_discoveryThreadPool = ThreadPoolCreate(_T("DISCOVERY"), std::max(4, ConfigReadInt(_T("ThreadPool.Discovery.BaseSize"), 8)), maxSize);
    }
 
    // Start threads

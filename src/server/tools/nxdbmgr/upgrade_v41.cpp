@@ -24,11 +24,22 @@
 #include <nxevent.h>
 
 /**
- * Upgrade from 41.17 to 42.0
+ * Upgrade from 41.18 to 42.0
+ */
+static bool H_UpgradeFromV18()
+{
+   CHK_EXEC(SetMajorSchemaVersion(42, 0));
+   return true;
+}
+
+/**
+ * Upgrade from 41.17 to 41.18
  */
 static bool H_UpgradeFromV17()
 {
-   CHK_EXEC(SetMajorSchemaVersion(42, 0));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET default_value='8' WHERE var_name='ThreadPool.Discovery.BaseSize'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET default_value='64' WHERE var_name='ThreadPool.Discovery.MaxSize'")));
+   CHK_EXEC(SetMinorSchemaVersion(18));
    return true;
 }
 
@@ -512,7 +523,8 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
-   { 17, 42, 0,  H_UpgradeFromV17 },
+   { 18, 42, 0,  H_UpgradeFromV18 },
+   { 17, 41, 18, H_UpgradeFromV17 },
    { 16, 41, 17, H_UpgradeFromV16 },
    { 15, 41, 16, H_UpgradeFromV15 },
    { 14, 41, 15, H_UpgradeFromV14 },
