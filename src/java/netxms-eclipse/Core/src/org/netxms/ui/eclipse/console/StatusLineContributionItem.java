@@ -1,5 +1,20 @@
 /**
- * 
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2022 Raden Solutions
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 package org.netxms.ui.eclipse.console;
 
@@ -7,6 +22,7 @@ import org.eclipse.jface.action.ContributionItem;
 import org.eclipse.jface.action.IContributionManager;
 import org.eclipse.jface.action.LegacyActionTools;
 import org.eclipse.jface.action.StatusLineLayoutData;
+import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.util.Util;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CLabel;
@@ -74,9 +90,9 @@ public class StatusLineContributionItem extends ContributionItem
 		setVisible(false); // no text to start with
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.action.ContributionItem#fill(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.jface.action.ContributionItem#fill(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	public void fill(Composite parent)
 	{
@@ -156,16 +172,18 @@ public class StatusLineContributionItem extends ContributionItem
 			}
 		}
 	}
-	
+
 	/**
 	 * @param image
 	 */
-	public void setImage(Image image)
+   public void setImage(ImageDescriptor image)
 	{
-		this.image = image;
+      if (this.image != null)
+         this.image.dispose();
+      this.image = image.createImage();
 		if (label != null && !label.isDisposed())
 		{
-			label.setImage(image);
+         label.setImage(this.image);
 			IContributionManager contributionManager = getParent();
 			if (contributionManager != null)
 			{
@@ -173,4 +191,15 @@ public class StatusLineContributionItem extends ContributionItem
 			}
 		}
 	}
+
+   /**
+    * @see org.eclipse.jface.action.ContributionItem#dispose()
+    */
+   @Override
+   public void dispose()
+   {
+      if (this.image != null)
+         this.image.dispose();
+      super.dispose();
+   }
 }

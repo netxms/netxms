@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Raden Solutions
+ * Copyright (C) 2003-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -71,11 +71,11 @@ public class AlarmListLabelProvider extends LabelProvider implements ITableLabel
       session = Registry.getSession();
       objectLabelProvider = new BaseObjectLabelProvider();
 
-      stateImages[0] = ResourceManager.getImageDescriptor("icons/alarms/outstanding.png").createImage(); //$NON-NLS-1$
-      stateImages[1] = ResourceManager.getImageDescriptor("icons/alarms/acknowledged.png").createImage(); //$NON-NLS-1$
-      stateImages[2] = ResourceManager.getImageDescriptor("icons/alarms/resolved.png").createImage(); //$NON-NLS-1$
-      stateImages[3] = ResourceManager.getImageDescriptor("icons/alarms/terminated.png").createImage(); //$NON-NLS-1$
-      stateImages[4] = ResourceManager.getImageDescriptor("icons/alarms/acknowledged_sticky.png").createImage(); //$NON-NLS-1$
+      stateImages[0] = ResourceManager.getImageDescriptor("icons/alarms/outstanding.png").createImage();
+      stateImages[1] = ResourceManager.getImageDescriptor("icons/alarms/acknowledged.png").createImage();
+      stateImages[2] = ResourceManager.getImageDescriptor("icons/alarms/resolved.png").createImage();
+      stateImages[3] = ResourceManager.getImageDescriptor("icons/alarms/terminated.png").createImage();
+      stateImages[4] = ResourceManager.getImageDescriptor("icons/alarms/acknowledged_sticky.png").createImage();
 	}
 
    /**
