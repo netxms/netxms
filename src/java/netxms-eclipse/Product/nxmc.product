@@ -49,7 +49,6 @@ Copyright (c) 2003-2022 Raden Solutions
    </license>
 
    <plugins>
-      <plugin id="biz.aQute.bndlib"/>
       <plugin id="ch.qos.logback.classic"/>
       <plugin id="ch.qos.logback.core"/>
       <plugin id="ch.qos.logback.slf4j" fragment="true"/>
@@ -69,8 +68,6 @@ Copyright (c) 2003-2022 Raden Solutions
       <plugin id="org.apache.commons.jxpath"/>
       <plugin id="org.apache.commons.logging"/>
       <plugin id="org.apache.felix.scr"/>
-      <plugin id="org.apache.xerces"/>
-      <plugin id="org.apache.xml.resolver"/>
       <plugin id="org.apache.xmlgraphics"/>
       <plugin id="org.bouncycastle.bcpg"/>
       <plugin id="org.bouncycastle.bcprov"/>
@@ -397,16 +394,6 @@ Copyright (c) 2003-2022 Raden Solutions
       <plugin id="org.eclipse.e4.ui.dialogs.nl_pt" fragment="true"/>
       <plugin id="org.eclipse.e4.ui.dialogs.nl_pt_BR" fragment="true"/>
       <plugin id="org.eclipse.e4.ui.dialogs.nl_ru" fragment="true"/>
-      <plugin id="org.eclipse.e4.ui.ide"/>
-      <plugin id="org.eclipse.e4.ui.ide.nl_ar" fragment="true"/>
-      <plugin id="org.eclipse.e4.ui.ide.nl_cs" fragment="true"/>
-      <plugin id="org.eclipse.e4.ui.ide.nl_de" fragment="true"/>
-      <plugin id="org.eclipse.e4.ui.ide.nl_es" fragment="true"/>
-      <plugin id="org.eclipse.e4.ui.ide.nl_fr" fragment="true"/>
-      <plugin id="org.eclipse.e4.ui.ide.nl_iw" fragment="true"/>
-      <plugin id="org.eclipse.e4.ui.ide.nl_pt" fragment="true"/>
-      <plugin id="org.eclipse.e4.ui.ide.nl_pt_BR" fragment="true"/>
-      <plugin id="org.eclipse.e4.ui.ide.nl_ru" fragment="true"/>
       <plugin id="org.eclipse.e4.ui.model.workbench"/>
       <plugin id="org.eclipse.e4.ui.model.workbench.nl_ar" fragment="true"/>
       <plugin id="org.eclipse.e4.ui.model.workbench.nl_cs" fragment="true"/>
@@ -728,25 +715,6 @@ Copyright (c) 2003-2022 Raden Solutions
       <plugin id="org.eclipse.jface.text.nl_pt" fragment="true"/>
       <plugin id="org.eclipse.jface.text.nl_pt_BR" fragment="true"/>
       <plugin id="org.eclipse.jface.text.nl_ru" fragment="true"/>
-      <plugin id="org.eclipse.ltk.core.refactoring"/>
-      <plugin id="org.eclipse.ltk.core.refactoring.nl_ar" fragment="true"/>
-      <plugin id="org.eclipse.ltk.core.refactoring.nl_cs" fragment="true"/>
-      <plugin id="org.eclipse.ltk.core.refactoring.nl_de" fragment="true"/>
-      <plugin id="org.eclipse.ltk.core.refactoring.nl_es" fragment="true"/>
-      <plugin id="org.eclipse.ltk.core.refactoring.nl_fr" fragment="true"/>
-      <plugin id="org.eclipse.ltk.core.refactoring.nl_iw" fragment="true"/>
-      <plugin id="org.eclipse.ltk.core.refactoring.nl_pt" fragment="true"/>
-      <plugin id="org.eclipse.ltk.core.refactoring.nl_pt_BR" fragment="true"/>
-      <plugin id="org.eclipse.ltk.core.refactoring.nl_ru" fragment="true"/>
-      <plugin id="org.eclipse.m2e.archetype.common"/>
-      <plugin id="org.eclipse.m2e.core"/>
-      <plugin id="org.eclipse.m2e.core.ui"/>
-      <plugin id="org.eclipse.m2e.logback.appender" fragment="true"/>
-      <plugin id="org.eclipse.m2e.maven.indexer"/>
-      <plugin id="org.eclipse.m2e.maven.runtime"/>
-      <plugin id="org.eclipse.m2e.maven.runtime.slf4j.simple"/>
-      <plugin id="org.eclipse.m2e.model.edit"/>
-      <plugin id="org.eclipse.m2e.workspace.cli"/>
       <plugin id="org.eclipse.osgi"/>
       <plugin id="org.eclipse.osgi.compatibility.state" fragment="true"/>
       <plugin id="org.eclipse.osgi.nl_ar" fragment="true"/>
@@ -846,26 +814,6 @@ Copyright (c) 2003-2022 Raden Solutions
       <plugin id="org.eclipse.ui.forms.nl_pt" fragment="true"/>
       <plugin id="org.eclipse.ui.forms.nl_pt_BR" fragment="true"/>
       <plugin id="org.eclipse.ui.forms.nl_ru" fragment="true"/>
-      <plugin id="org.eclipse.ui.ide"/>
-      <plugin id="org.eclipse.ui.ide.nl_ar" fragment="true"/>
-      <plugin id="org.eclipse.ui.ide.nl_cs" fragment="true"/>
-      <plugin id="org.eclipse.ui.ide.nl_de" fragment="true"/>
-      <plugin id="org.eclipse.ui.ide.nl_es" fragment="true"/>
-      <plugin id="org.eclipse.ui.ide.nl_fr" fragment="true"/>
-      <plugin id="org.eclipse.ui.ide.nl_iw" fragment="true"/>
-      <plugin id="org.eclipse.ui.ide.nl_pt" fragment="true"/>
-      <plugin id="org.eclipse.ui.ide.nl_pt_BR" fragment="true"/>
-      <plugin id="org.eclipse.ui.ide.nl_ru" fragment="true"/>
-      <plugin id="org.eclipse.ui.navigator"/>
-      <plugin id="org.eclipse.ui.navigator.nl_ar" fragment="true"/>
-      <plugin id="org.eclipse.ui.navigator.nl_cs" fragment="true"/>
-      <plugin id="org.eclipse.ui.navigator.nl_de" fragment="true"/>
-      <plugin id="org.eclipse.ui.navigator.nl_es" fragment="true"/>
-      <plugin id="org.eclipse.ui.navigator.nl_fr" fragment="true"/>
-      <plugin id="org.eclipse.ui.navigator.nl_iw" fragment="true"/>
-      <plugin id="org.eclipse.ui.navigator.nl_pt" fragment="true"/>
-      <plugin id="org.eclipse.ui.navigator.nl_pt_BR" fragment="true"/>
-      <plugin id="org.eclipse.ui.navigator.nl_ru" fragment="true"/>
       <plugin id="org.eclipse.ui.nl_ar" fragment="true"/>
       <plugin id="org.eclipse.ui.nl_cs" fragment="true"/>
       <plugin id="org.eclipse.ui.nl_de" fragment="true"/>
@@ -911,7 +859,6 @@ Copyright (c) 2003-2022 Raden Solutions
       <plugin id="org.eclipse.wst.common.frameworks"/>
       <plugin id="org.eclipse.wst.common.uriresolver"/>
       <plugin id="org.eclipse.wst.sse.core"/>
-      <plugin id="org.eclipse.wst.xml.core"/>
       <plugin id="org.netxms.gef4.zest.core"/>
       <plugin id="org.netxms.gef4.zest.jface"/>
       <plugin id="org.netxms.gef4.zest.layouts"/>
