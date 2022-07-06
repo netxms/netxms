@@ -574,14 +574,19 @@ static bool AcceptNewNode(NewNodeData *newNodeData)
  */
 static void CreateDiscoveredNode(NewNodeData *newNodeData)
 {
+   TCHAR ipAddrText[64];
+   newNodeData->ipAddr.toString(ipAddrText);
+   nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("CreateDiscoveredNode(%s): processing creation request"), ipAddrText);
+
    // Double check IP address because parallel discovery may already create that node
    if ((FindNodeByIP(newNodeData->zoneUIN, newNodeData->ipAddr) == nullptr) && (FindSubnetByIP(newNodeData->zoneUIN, newNodeData->ipAddr) == nullptr))
    {
       PollNewNode(newNodeData);
+      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("CreateDiscoveredNode(%s): initial poll completed"), ipAddrText);
    }
    else
    {
-      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("CreateDiscoveredNode(%s): node already exist in database"), newNodeData->ipAddr.toString().cstr());
+      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("CreateDiscoveredNode(%s): node already exist in database"), ipAddrText);
    }
    delete newNodeData;
 }
