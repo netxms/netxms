@@ -255,13 +255,13 @@ public class MapOptions extends PropertyPage
 			flags |= NetworkMap.MF_CALCULATE_STATUS;
 		if (checkShowLinkDirection.getSelection())
 		   flags |= NetworkMap.MF_SHOW_LINK_DIRECTION;
-      if (checkUseL1Topology.getSelection())
+      if ((checkUseL1Topology != null) && checkUseL1Topology.getSelection())
          flags |= NetworkMap.MF_USE_L1_TOPOLOGY;
-		md.setObjectFlags(flags, 0xDF);
-		
+      md.setObjectFlags(flags, 0xDF);
+
 		md.setMapObjectDisplayMode(MapObjectDisplayMode.getByValue(objectDisplayMode.getSelectionIndex()));
 		md.setConnectionRouting(routingAlgorithm.getSelectionIndex() + 1);
-		
+
 		if (radioColorCustom.getSelection())
 		{
 			md.setLinkColor(ColorConverter.rgbToInt(linkColor.getColorValue()));
@@ -278,7 +278,7 @@ public class MapOptions extends PropertyPage
 			else
 				md.setDiscoveryRadius(-1);
 		}
-		
+
 		if (isApply)
 			setValid(false);
 
