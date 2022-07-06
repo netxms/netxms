@@ -127,7 +127,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor im
       final Activator activator = Activator.getDefault();
       StatusLineContributionItem statusItemConnection = (StatusLineContributionItem)activator.getStatusLine().find("ConnectionStatus");
       statusItemConnection.setImage(Activator.getImageDescriptor(
-            session.isEncrypted() ? "icons/conn_encrypted.png" : "icons/conn_unencrypted.png").createImage()); //$NON-NLS-1$ //$NON-NLS-2$
+            session.isEncrypted() ? "icons/conn_encrypted.png" : "icons/conn_unencrypted.png")); //$NON-NLS-1$ //$NON-NLS-2$
       statusItemConnection.setText(session.getUserName()
             + "@" + session.getServerAddress() + " (" + session.getServerVersion() + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 

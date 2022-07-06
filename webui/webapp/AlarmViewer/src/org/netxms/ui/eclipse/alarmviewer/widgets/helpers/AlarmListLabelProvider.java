@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Raden Solutions
+ * Copyright (C) 2003-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -167,6 +167,8 @@ public class AlarmListLabelProvider extends LabelProvider implements ITableLabel
 	{
 		for(int i = 0; i < stateImages.length; i++)
 			stateImages[i].dispose();
+      commentsImage.dispose();
+      wbLabelProvider.dispose();
 		super.dispose();
 	}
 
