@@ -596,7 +596,11 @@ static void CreateDiscoveredNode(NewNodeData *newNodeData)
  */
 static void ProcessDiscoveredAddress(DiscoveredAddress *address)
 {
-   if (!IsShutdownInProgress())
+   s_processingListLock.lock();
+   bool addressInList = s_processingList.contains(address);
+   s_processingListLock.unlock();
+
+   if (!IsShutdownInProgress() && addressInList)//no shutdown process and address is in list
    {
       auto newNodeData = new NewNodeData(address->ipAddr, address->macAddr);
       newNodeData->zoneUIN = address->zoneUIN;
@@ -621,6 +625,11 @@ static void ProcessDiscoveredAddress(DiscoveredAddress *address)
          delete newNodeData;
       }
    }
+   else
+   {
+      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("ProcessDiscoveredAddress(%s): address discarded."), address->ipAddr.toString().cstr());
+   }
+
    s_processingListLock.lock();
    s_processingList.remove(address);
    s_processingListLock.unlock();
@@ -1285,6 +1294,10 @@ static void ClearDiscoveryPollerQueue()
       if (addressInfo != INVALID_POINTER_VALUE)
          delete addressInfo;
    }
+
+   s_processingListLock.lock();
+   s_processingList.clear();
+   s_processingListLock.unlock();
 }
 
 /**
