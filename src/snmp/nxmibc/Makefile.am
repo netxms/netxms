@@ -14,6 +14,12 @@ nxmibc_CPPFLAGS = -I@top_srcdir@/include -I@top_srcdir@/build
 nxmibc_LDFLAGS = @EXEC_LDFLAGS@
 nxmibc_LDADD = ../../libnetxms/libnetxms.la ../libnxsnmp/libnxsnmp.la @EXEC_LIBS@
 
+if USE_INTERNAL_JANSSON
+nxmibc_LDADD += @top_srcdir@/src/jansson/libnxjansson.la
+else
+nxmibc_LDADD += -ljansson
+endif
+
 EXTRA_DIST = nxmibc.vcxproj nxmibc.vcxproj.filters nxmibc.h mibparse.h parser.l parser.y parser.tab.hpp
 
 lex.parser.cpp: parser.l parser.tab.cpp parser.tab.hpp
