@@ -66,7 +66,7 @@ endif
 nxhwid_nxhwid_SOURCES = nxhwid/nxhwid.cpp
 nxhwid_nxhwid_CPPFLAGS = -I@top_srcdir@/include -I@top_srcdir@/build
 nxhwid_nxhwid_LDFLAGS = @EXEC_LDFLAGS@
-nxhwid_nxhwid_LDADD = @top_srcdir@/src/agent/libnxagent/libnxagent.la @top_srcdir@/src/libnetxms/libnetxms.la @EXEC_LIBS@
+nxhwid_nxhwid_LDADD = @top_srcdir@/src/agent/libnxagent/libnxagent.la @top_srcdir@/src/db/libnxdb/libnxdb.la @top_srcdir@/src/libnetxms/libnetxms.la @EXEC_LIBS@
 if USE_INTERNAL_JANSSON
 nxhwid_nxhwid_LDADD += @top_srcdir@/src/jansson/libnxjansson.la
 else

@@ -19,10 +19,10 @@ nxagentd_LDFLAGS += -static
 endif
 endif
 
-if USE_INTERNAL_EXPAT
-nxagentd_LDADD = ../../appagent/libappagent.la ../libnxagent/libnxagent.la @top_srcdir@/src/db/libnxdb/libnxdb.la @top_srcdir@/src/libnetxms/libnetxms.la @top_srcdir@/src/snmp/libnxsnmp/libnxsnmp.la @top_srcdir@/src/libexpat/libexpat/libnxexpat.la @AGENT_LIBS@ @SUBAGENT_LIBS@ @EXEC_LIBS@
-else
 nxagentd_LDADD = ../../appagent/libappagent.la ../libnxagent/libnxagent.la @top_srcdir@/src/db/libnxdb/libnxdb.la @top_srcdir@/src/libnetxms/libnetxms.la @top_srcdir@/src/snmp/libnxsnmp/libnxsnmp.la @AGENT_LIBS@ @SUBAGENT_LIBS@ @EXEC_LIBS@
+
+if USE_INTERNAL_EXPAT
+nxagentd_LDADD += @top_srcdir@/src/libexpat/libexpat/libnxexpat.la
 endif
 
 if USE_INTERNAL_JANSSON
