@@ -14,4 +14,10 @@ nxlptest_CPPFLAGS = -I@top_srcdir@/include -I@top_srcdir@/build
 nxlptest_LDFLAGS = @EXEC_LDFLAGS@
 nxlptest_LDADD = ../../libnxlp/libnxlp.la ../../libnetxms/libnetxms.la @EXEC_LIBS@
 
+if USE_INTERNAL_JANSSON
+nxlptest_LDADD += @top_srcdir@/src/jansson/libnxjansson.la
+else
+nxlptest_LDADD += -ljansson
+endif
+
 EXTRA_DIST = nxlptest.h nxlptest.vcxproj nxlptest.vcxproj.filters
