@@ -4491,9 +4491,7 @@ bool Node::confPollAgent(UINT32 rqId)
       sendPollerMsg(_T("   NetXMS agent polling is %s\r\n"), (m_flags & NF_DISABLE_NXCP) ? _T("disabled") : _T("not possible"));
       return false;
    }
-
    bool hasChanges = false;
-
    sendPollerMsg(_T("   Checking NetXMS agent...\r\n"));
    shared_ptr<AgentConnectionEx> pAgentConn;
    shared_ptr<AgentTunnel> tunnel = GetTunnelForNode(m_id);
@@ -4515,7 +4513,7 @@ bool Node::confPollAgent(UINT32 rqId)
          nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): node primary IP is invalid and there are no active tunnels"), m_name);
          return false;
       }
-      pAgentConn = make_shared<AgentConnectionEx>(m_id, m_ipAddress, m_agentPort, m_agentSecret, isAgentCompressionAllowed());
+      pAgentConn = make_shared<AgentConnectionEx>(m_id, m_ipAddress, m_agentPort, m_agentSecret, isAgentCompressionAllowed());//direct connection to agent without tunnel
       setAgentProxy(pAgentConn.get());
    }
    pAgentConn->setCommandTimeout(g_agentCommandTimeout);
@@ -4525,6 +4523,32 @@ bool Node::confPollAgent(UINT32 rqId)
    uint32_t rcc;
    if (!pAgentConn->connect(g_pServerKey, &rcc))
    {
+      //if given port is wrong, try to check all port list
+      if (rcc == ERR_CONNECT_FAILED)
+      {
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPollAgent(%s): NetXMS agent not connected on port %i"), m_name, m_agentPort);
+         IntegerArray<uint16_t> knownPorts = GetWellKnownPorts(_T("agent"), m_zoneUIN);
+         for (int i = 0; i < knownPorts.size(); i++)
+         {
+            uint16_t port = knownPorts.get(i);
+            nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("ConfPollAgent(%s): re-checking connection on port %d"), m_name, port);
+            pAgentConn->setPort(port);
+            bool portSuccess = pAgentConn->connect(g_pServerKey, &rcc);
+            if (portSuccess || (rcc == ERR_AUTH_REQUIRED) || (rcc == ERR_AUTH_FAILED))
+            {
+               m_agentPort = port;
+               hasChanges = true;
+               sendPollerMsg(_T("   NetXMS agent detected on port %d\r\n"), port);
+               nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("ConfPollAgent(%s): NetXMS agent connected on port %d"), m_name, m_agentPort);
+               break;
+            }
+            else
+            {
+               nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("ConfPollAgent(%s): NetXMS agent couldn't connect on port %d"), m_name, port);
+            }
+         }
+      }
+
       // If there are authentication problem, try default shared secret
       if ((rcc == ERR_AUTH_REQUIRED) || (rcc == ERR_AUTH_FAILED))
       {
@@ -4564,6 +4588,7 @@ bool Node::confPollAgent(UINT32 rqId)
          }
       }
    }
+
 
    if (rcc == ERR_SUCCESS)
    {
