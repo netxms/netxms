@@ -1,6 +1,6 @@
 /* 
 ** nxsnmpset - command line tool used to set parameters on SNMP agent
-** Copyright (C) 2004-2020 Victor Kirhenshtein
+** Copyright (C) 2004-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -48,37 +48,26 @@ static uint32_t m_type = ASN_OCTET_STRING;
  */
 static int SetVariables(int argc, TCHAR *argv[])
 {
-   int iExit = 0;
-
-   // Initialize WinSock
-#ifdef _WIN32
-   WSADATA wsaData;
-   WSAStartup(2, &wsaData);
-#endif
+   int exitCode = 0;
 
    // Create SNMP transport
-   auto pTransport = new SNMP_UDPTransport;
-   uint32_t dwResult = pTransport->createUDPTransport(argv[0], m_port);
-   if (dwResult != SNMP_ERR_SUCCESS)
+   auto transport = new SNMP_UDPTransport;
+   uint32_t snmpResult = transport->createUDPTransport(argv[0], m_port);
+   if (snmpResult == SNMP_ERR_SUCCESS)
    {
-      _tprintf(_T("Unable to create UDP transport: %s\n"), SNMPGetErrorText(dwResult));
-      iExit = 2;
-   }
-   else
-   {
-      pTransport->setSnmpVersion(m_snmpVersion);
+      transport->setSnmpVersion(m_snmpVersion);
 		if (m_snmpVersion == SNMP_VERSION_3)
-			pTransport->setSecurityContext(new SNMP_SecurityContext(m_user, m_authPassword, m_encryptionPassword, m_authMethod, m_encryptionMethod));
+			transport->setSecurityContext(new SNMP_SecurityContext(m_user, m_authPassword, m_encryptionPassword, m_authMethod, m_encryptionMethod));
 		else
-			pTransport->setSecurityContext(new SNMP_SecurityContext(m_community));
+			transport->setSecurityContext(new SNMP_SecurityContext(m_community));
 
 		// Create request
       auto request = new SNMP_PDU(SNMP_SET_REQUEST, GetCurrentProcessId(), m_snmpVersion);
       for(int i = 1; i < argc; i += 2)
       {
          TCHAR *p = _tcschr(argv[i], _T('@'));
-         UINT32 type = m_type;
-         if (p != NULL)
+         uint32_t type = m_type;
+         if (p != nullptr)
          {
             *p = 0;
             p++;
@@ -86,27 +75,27 @@ static int SetVariables(int argc, TCHAR *argv[])
             if (type == ASN_NULL)
             {
                _tprintf(_T("Invalid data type: %s\n"), p);
-               iExit = 5;
+               exitCode = 5;
             }
          }
          if (SNMPIsCorrectOID(argv[i]))
          {
-            auto pVar = new SNMP_Variable(argv[i]);
-            pVar->setValueFromString(type, argv[i + 1]);
-            request->bindVariable(pVar);
+            auto varbind = new SNMP_Variable(argv[i]);
+            varbind->setValueFromString(type, argv[i + 1]);
+            request->bindVariable(varbind);
          }
          else
          {
             _tprintf(_T("Invalid OID: %s\n"), argv[i]);
-            iExit = 4;
+            exitCode = 4;
          }
       }
 
       // Send request and process response
-      if (iExit == 0)
+      if (exitCode == 0)
       {
          SNMP_PDU *response;
-         if ((dwResult = pTransport->doRequest(request, &response, m_timeout, 3)) == SNMP_ERR_SUCCESS)
+         if ((snmpResult = transport->doRequest(request, &response, m_timeout, 3)) == SNMP_ERR_SUCCESS)
          {
             if (response->getErrorCode() != 0)
             {
@@ -116,16 +105,21 @@ static int SetVariables(int argc, TCHAR *argv[])
          }
          else
          {
-            _tprintf(_T("%s\n"), SNMPGetErrorText(dwResult));
-            iExit = 3;
+            _tprintf(_T("%s\n"), SNMPGetErrorText(snmpResult));
+            exitCode = 3;
          }
       }
 
       delete request;
    }
+   else
+   {
+      _tprintf(_T("Unable to create UDP transport: %s\n"), SNMPGetErrorText(snmpResult));
+      exitCode = 2;
+   }
 
-   delete pTransport;
-   return iExit;
+   delete transport;
+   return exitCode;
 }
 
 /**
@@ -133,10 +127,10 @@ static int SetVariables(int argc, TCHAR *argv[])
  */
 int main(int argc, char *argv[])
 {
-   int ch, iExit = 1;
+   int ch, exitCode = 1;
    uint32_t value;
    char *eptr;
-   BOOL bStart = TRUE;
+   bool start = true;
 
    InitNetXMSProcess(true);
 
@@ -165,8 +159,8 @@ int main(int argc, char *argv[])
                      _T("         INTEGER, STRING, OID, IPADDR, COUNTER32, GAUGE32,\n")
                      _T("         TIMETICKS, COUNTER64, UINT32.\n")
                      _T("\n"));
-            iExit = 0;
-            bStart = FALSE;
+            exitCode = 0;
+            start = false;
             break;
          case 't':
             // First, check for numeric representation
@@ -184,7 +178,7 @@ int main(int argc, char *argv[])
                if (value == ASN_NULL)
                {
                   _tprintf(_T("Invalid data type %hs\n"), optarg);
-                  bStart = FALSE;
+                  start = false;
                }
                else
                {
@@ -234,7 +228,7 @@ int main(int argc, char *argv[])
 				else
 				{
                _tprintf(_T("Invalid authentication method %hs\n"), optarg);
-					bStart = FALSE;
+					start = false;
 				}
 				break;
          case 'A':   // authentication password
@@ -242,7 +236,7 @@ int main(int argc, char *argv[])
 				if (strlen(m_authPassword) < 8)
 				{
                _tprintf(_T("Authentication password should be at least 8 characters long\n"));
-					bStart = FALSE;
+					start = false;
 				}
             break;
 			case 'e':   // encryption method
@@ -261,7 +255,7 @@ int main(int argc, char *argv[])
 				else
 				{
                _tprintf(_T("Invalid encryption method %hs\n"), optarg);
-					bStart = FALSE;
+					start = false;
 				}
 				break;
          case 'E':   // encription password
@@ -269,7 +263,7 @@ int main(int argc, char *argv[])
 				if (strlen(m_encryptionPassword) < 8)
 				{
                _tprintf(_T("Encryption password should be at least 8 characters long\n"));
-					bStart = FALSE;
+					start = false;
 				}
             break;
          case 'p':   // Port number
@@ -277,7 +271,7 @@ int main(int argc, char *argv[])
             if ((*eptr != 0) || (value > 65535) || (value == 0))
             {
                _tprintf(_T("Invalid port number %hs\n"), optarg);
-               bStart = FALSE;
+               start = false;
             }
             else
             {
@@ -300,7 +294,7 @@ int main(int argc, char *argv[])
             else
             {
                _tprintf(_T("Invalid SNMP version %hs\n"), optarg);
-               bStart = FALSE;
+               start = false;
             }
             break;
          case 'w':   // Timeout
@@ -308,7 +302,7 @@ int main(int argc, char *argv[])
             if ((*eptr != 0) || (value > 60) || (value == 0))
             {
                _tprintf(_T("Invalid timeout value %hs\n"), optarg);
-               bStart = FALSE;
+               start = false;
             }
             else
             {
@@ -316,14 +310,14 @@ int main(int argc, char *argv[])
             }
             break;
          case '?':
-            bStart = FALSE;
+            start = false;
             break;
          default:
             break;
       }
    }
 
-   if (bStart)
+   if (start)
    {
       if (argc - optind < 3)
       {
@@ -335,18 +329,24 @@ int main(int argc, char *argv[])
       }
       else
       {
+         // Initialize WinSock
+#ifdef _WIN32
+         WSADATA wsaData;
+         WSAStartup(2, &wsaData);
+#endif
+
 #ifdef UNICODE
 			WCHAR *wargv[256];
 			for(int i = optind; i < argc; i++)
 				wargv[i - optind] = WideStringFromMBStringSysLocale(argv[i]);
-         iExit = SetVariables(argc - optind, wargv);
+         exitCode = SetVariables(argc - optind, wargv);
 			for(int i = 0; i < argc - optind; i++)
 				MemFree(wargv[i]);
 #else
-         iExit = SetVariables(argc - optind, &argv[optind]);
+         exitCode = SetVariables(argc - optind, &argv[optind]);
 #endif
       }
    }
 
-   return iExit;
+   return exitCode;
 }
