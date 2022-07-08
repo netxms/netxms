@@ -27,6 +27,7 @@ public class CustomAttribute
 {
    public static final long INHERITABLE = 1;
    public static final long REDEFINED = 2;
+   public static final long CONFLICT = 4;
    
    protected String value;
    protected long flags;
@@ -120,5 +121,14 @@ public class CustomAttribute
    public boolean isInheritable()
    {
       return (flags & INHERITABLE) > 0;
+   } 
+
+   /**
+    * If attribute is inheritable
+    * @return true if inheritable flag
+    */
+   public boolean isConflict()
+   {
+      return (flags & CONFLICT) > 0;
    } 
 }

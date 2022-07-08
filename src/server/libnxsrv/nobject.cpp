@@ -142,7 +142,7 @@ void NObject::deleteParent(uint32_t objectId)
       while(it.hasNext())
       {
          KeyValuePair<CustomAttribute> *pair = it.next();
-         if (pair->value->isInherited() && !isParent(pair->value->sourceObject))
+         if (pair->value->isConflict() && pair->value->isInherited() && !isParent(pair->value->sourceObject))
             removeList.add(pair->key);
       }
       unlockCustomAttributes();
@@ -195,7 +195,7 @@ bool NObject::isDirectChild(uint32_t id) const
 }
 
 /**
- * Check if given object is an our child (possibly indirect, i.e child of child)
+ * Check if given object is an our parent (possibly indirect, i.e parent of parent)
  *
  * @param id object ID to test
  */
@@ -268,12 +268,37 @@ std::pair<uint32_t, SharedString> NObject::getCustomAttributeFromParent(const TC
       value = m_parentList.get(i)->getInheritableCustomAttribute(name);
       if (!value.isNull())
       {
-         sourceId = m_parentList.get(i)->getId();
+         sourceId = m_parentList.get(i)->getInheritableCustomAttributeParent(name);
          break;
       }
    }
    unlockParentList();
    return std::pair<uint32_t, SharedString>(sourceId, value);
+}
+
+/**
+ * Get inheritable custom attribute value from parent by name
+ */
+bool NObject::checkCustomAttributeInConflict(const TCHAR *name, uint32_t newParent)
+{
+   uint32_t sourceId = newParent;
+   bool inConflict = false;
+   readLockParentList();
+   for(int i = 0; i < m_parentList.size(); i++)
+   {
+      uint32_t tmp = m_parentList.get(i)->getInheritableCustomAttributeParent(name);
+      if (tmp != 0)
+      {
+         if (sourceId != 0 && sourceId != tmp)
+         {
+            inConflict = true;
+            break;
+         }
+         sourceId = tmp;
+      }
+   }
+   unlockParentList();
+   return inConflict;
 }
 
 /**
@@ -372,6 +397,19 @@ void NObject::setCustomAttribute(const TCHAR *name, SharedString value, uint32_t
 
    CustomAttribute *curr = m_customAttributes.get(name);
    bool callPopulate = true;
+
+   if (curr != nullptr && !curr->isRedefined())
+   {
+      if ((curr->sourceObject != 0) && checkCustomAttributeInConflict(name, parent))
+      {
+         curr->flags |= CAF_CONFLICT;
+      }
+      else if (curr->isConflict())
+      {
+         curr->flags &= ~CAF_CONFLICT;
+      }
+   }
+
    if (curr == nullptr)
    {
       curr = new CustomAttribute(value, CAF_INHERITABLE, parent);
@@ -649,9 +687,18 @@ void NObject::updateOrDeleteCustomAttributeOnParentRemove(const TCHAR *name)
          ca->sourceObject = 0;
          ca->flags &= ~CAF_REDEFINED;
       }
-      else
+      else if (ca->isInheritable())
       {
          m_customAttributes.remove(name);
+      }
+
+      if (ca->isConflict())
+      {
+         if (!checkCustomAttributeInConflict(name, 0))
+         {
+            ca->flags &= ~CAF_CONFLICT;
+            populate = true;
+         }
       }
 
       onCustomAttributeChange();
@@ -677,7 +724,7 @@ void NObject::deletePopulatedCustomAttribute(const TCHAR *name)
          m_customAttributes.remove(name);
          populate = true;
       }
-      else
+      else if (ca->isRedefined())
       {
          std::pair<uint32_t, SharedString> value = getCustomAttributeFromParent(name);
          if (!value.second.isNull()) //Redefine may come from different node
@@ -688,6 +735,15 @@ void NObject::deletePopulatedCustomAttribute(const TCHAR *name)
          {
             ca->sourceObject = 0;
             ca->flags &= ~CAF_REDEFINED;
+         }
+      }
+
+      if (ca->isConflict())
+      {
+         if (!checkCustomAttributeInConflict(name, 0))
+         {
+            ca->flags &= ~CAF_CONFLICT;
+            populate = true;
          }
       }
 
@@ -765,6 +821,25 @@ SharedString NObject::getCustomAttribute(const TCHAR *name) const
    }
 
    return SharedString();
+}
+
+/**
+ * Get custom attribute into buffer
+ */
+uint32_t NObject::getInheritableCustomAttributeParent(const TCHAR *name) const
+{
+   uint32_t parent = 0;
+   lockCustomAttributes();
+   const CustomAttribute *attr = m_customAttributes.get(name);
+   if (attr != nullptr && attr->isInheritable())
+   {
+      if (attr->sourceObject == 0 || attr->isRedefined())
+         parent = m_id;
+      else
+         parent = attr->sourceObject;
+   }
+   unlockCustomAttributes();
+   return parent;
 }
 
 /**

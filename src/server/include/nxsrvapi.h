@@ -467,6 +467,7 @@ public:
  */
 #define CAF_INHERITABLE 0x01
 #define CAF_REDEFINED   0x02
+#define CAF_CONFLICT    0x04
 
 /**
  * Custom attribute
@@ -493,6 +494,12 @@ struct CustomAttribute
    {
       return (flags & CAF_REDEFINED) > 0;
    }
+
+   bool isConflict() const
+   {
+      return (flags & CAF_CONFLICT) > 0;
+   }
+
 
    bool isInherited() const
    {
@@ -540,6 +547,7 @@ private:
    void deletePopulatedCustomAttribute(const TCHAR *name);
    void populate(const TCHAR *name, SharedString value, uint32_t parentId);
    void populateRemove(const TCHAR *name);
+   bool checkCustomAttributeInConflict(const TCHAR *name, uint32_t newParent);
 
 protected:
    uint32_t m_id;
@@ -611,6 +619,7 @@ public:
 
    TCHAR *getCustomAttribute(const TCHAR *name, TCHAR *buffer, size_t size) const;
    SharedString getInheritableCustomAttribute(const TCHAR *name) const;
+   uint32_t getInheritableCustomAttributeParent(const TCHAR *name) const;
    SharedString getCustomAttribute(const TCHAR *name) const;
    TCHAR *getCustomAttributeCopy(const TCHAR *name) const;
    int32_t getCustomAttributeAsInt32(const TCHAR *key, int32_t defaultValue) const;

@@ -114,7 +114,7 @@ public class CustomAttributes extends ObjectPropertyPage
       final int[] columnWidths = { 150, 250, 80, 250 };
       viewer = new SortableTableViewer(dialogArea, columnNames, columnWidths, 0, SWT.UP, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
       viewer.setContentProvider(new ArrayContentProvider());
-      AttrListLabelProvider labelProvider = new AttrListLabelProvider();
+      AttrListLabelProvider labelProvider = new AttrListLabelProvider(object);
       viewer.setLabelProvider(labelProvider);
       viewer.setComparator(new ElementLabelComparator(labelProvider));
 

@@ -18,7 +18,9 @@
  */
 package org.netxms.nxmc.modules.objects.propertypages.helpers;
 
+import java.util.HashSet;
 import java.util.Map.Entry;
+import java.util.Set;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.jface.viewers.IColorProvider;
 import org.eclipse.jface.viewers.ITableFontProvider;
@@ -47,15 +49,19 @@ public class AttrListLabelProvider extends LabelProvider implements ITableLabelP
    private NXCSession session = Registry.getSession();
    private Font inheritedObjectFont;
    private Color inheritedElementColor = ThemeEngine.getForegroundColor("List.DisabledItem");
+   private Color confilctObjectForegroundColor = ThemeEngine.getForegroundColor("List.Error");
+   private Color confilctObjectBackgroundColor = ThemeEngine.getBackgroundColor("List.Error");
+   private AbstractObject parent;
 
    /**
     * Constructor
     */
-   public AttrListLabelProvider()
+   public AttrListLabelProvider(AbstractObject parent)
    {
       FontData fd = JFaceResources.getDefaultFont().getFontData()[0];
       fd.setStyle(SWT.ITALIC);
       inheritedObjectFont = new Font(Display.getCurrent(), fd);
+      this.parent = parent;
    }
 
    /**
@@ -68,7 +74,7 @@ public class AttrListLabelProvider extends LabelProvider implements ITableLabelP
 	   if (columnIndex == CustomAttributes.COLUMN_INHERETED_FROM)
 	   {
          CustomAttribute attr = (CustomAttribute)((Entry)element).getValue();
-         if (attr.getSourceObject() == 0 || attr.isRedefined())
+         if (attr.getSourceObject() == 0 || attr.isRedefined() || attr.isConflict())
             return null;
          AbstractObject object = session.findObjectById(attr.getSourceObject());
 	      return (object != null) ? wbLabelProvider.getImage(object) : null;
@@ -101,6 +107,46 @@ public class AttrListLabelProvider extends LabelProvider implements ITableLabelP
             return (attr.getFlags() & CustomAttribute.INHERITABLE) > 0 ? "Yes" : "No";
          case CustomAttributes.COLUMN_INHERETED_FROM:
             attr = (CustomAttribute)((Entry)element).getValue();
+            if (attr.isConflict())
+            {
+               StringBuilder parentList = new StringBuilder();
+               Set<Long> objectSet = new HashSet<Long>();
+               for(AbstractObject obj : parent.getParentsAsArray())
+               {
+                  CustomAttribute ca = obj.getCustomAttribute((String)((Entry)element).getKey());
+                  if (ca != null && ca.isInheritable())
+                  { 
+                     long id = 0;
+                     if (ca.getSourceObject() == 0 || ca.isRedefined())
+                        id = obj.getObjectId();
+                     else
+                        id = ca.getSourceObject();
+                     
+                     if (objectSet.contains(id))
+                        continue;
+                     
+                     objectSet.add(id);
+                     
+                     if (parentList.length() == 0)
+                     {
+                        parentList.append("In conflict: ");
+                     }
+                     else
+                     {
+                        parentList.append(", ");                        
+                     }                     
+
+                     AbstractObject object = session.findObjectById(id);
+                     
+                     if (object != null)
+                        parentList.append(object.getObjectName());
+                     else
+                        parentList.append(("[" + Long.toString(ca.getSourceObject()) + "]"));
+                  }
+               }
+               return parentList.toString();
+            }
+            
             if (attr.getSourceObject() == 0 || attr.isRedefined())
                return null;
             AbstractObject object = session.findObjectById(attr.getSourceObject());
@@ -115,6 +161,9 @@ public class AttrListLabelProvider extends LabelProvider implements ITableLabelP
    @Override
    public Color getForeground(Object element)
    {
+      CustomAttribute attr = (CustomAttribute)((Entry)element).getValue();
+      if (attr.isConflict())
+         return confilctObjectForegroundColor;
       return null;
    }
 
@@ -126,6 +175,8 @@ public class AttrListLabelProvider extends LabelProvider implements ITableLabelP
    public Color getBackground(Object element)
    {
       CustomAttribute attr = (CustomAttribute)((Entry)element).getValue();
+      if (attr.isConflict())
+         return confilctObjectBackgroundColor;
       if (attr.getSourceObject() != 0 && (attr.getFlags() & CustomAttribute.REDEFINED) == 0)
          return inheritedElementColor;
       return null;
