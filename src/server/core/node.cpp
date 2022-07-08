@@ -9780,6 +9780,9 @@ static Mutex s_subnetCreationMutex;
 shared_ptr<Subnet> Node::createSubnet(InetAddress& baseAddr, bool syntheticMask)
 {
    InetAddress addr = baseAddr.getSubnetAddress();
+   if ((addr.getFamily() == AF_INET) && ((addr.getAddressV4() & 0xFF000000) == 0))
+      return shared_ptr<Subnet>();  // Do not create subnet from 0.0.0.0/8
+
    if (syntheticMask)
    {
       if (!AdjustSubnetBaseAddress(addr, m_zoneUIN))
