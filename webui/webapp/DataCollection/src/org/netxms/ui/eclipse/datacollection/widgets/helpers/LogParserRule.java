@@ -75,6 +75,9 @@ public class LogParserRule
 
 	@Element(required=false)
 	private String description = null;
+
+   @Element(name="push", required=false)
+   private LogParserPushDci pushDci = null;	
 	
 	@Element(name="context", required=false)
 	private LogParserContext contextDefinition = null;
@@ -381,5 +384,21 @@ public class LogParserRule
          tag = null;
          severity = null;
       }
+   }
+   
+   /**
+    * @return the pushDci
+    */
+   public LogParserPushDci getPushDci()
+   {
+      return pushDci;
+   }
+
+   /**
+    * @param pushDci the pushDci to set
+    */
+   public void setPushDci(LogParserPushDci pushDci)
+   {
+      this.pushDci = pushDci;
    }
 }

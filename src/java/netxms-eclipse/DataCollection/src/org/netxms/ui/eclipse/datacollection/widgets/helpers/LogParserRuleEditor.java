@@ -76,6 +76,8 @@ public class LogParserRuleEditor extends DashboardComposite
    private LabeledText activeContext;
    private LabeledText description;
    private LabeledText agentAction;
+   private LabeledText pushDciName;
+   private Spinner pushGroup;
    private EventSelector event;
    private LabeledText eventTag;
    private LabeledText context;
@@ -288,6 +290,7 @@ public class LogParserRuleEditor extends DashboardComposite
          gd.horizontalAlignment = SWT.FILL;
          gd.grabExcessHorizontalSpace = true;
          repeatCount.setLayoutData(gd);
+         
          Composite timeBackGroup = new Composite(matcherRepeatConf, SWT.NONE);
          toolkit.adapt(timeBackGroup);
          layout = new GridLayout();
@@ -605,6 +608,40 @@ public class LogParserRuleEditor extends DashboardComposite
                editor.fireModifyListeners();
             }
          });
+         
+         pushDciName = new LabeledText(area, SWT.NONE);
+         toolkit.adapt(pushDciName);
+         pushDciName.setLabel("Push DCI name");
+         pushDciName.setText((rule.getPushDci() != null) ? rule.getPushDci().getData() : ""); //$NON-NLS-1$
+         gd = new GridData();
+         gd.horizontalAlignment = SWT.FILL;
+         gd.grabExcessHorizontalSpace = true;
+         pushDciName.setLayoutData(gd);
+         pushDciName.getTextControl().addModifyListener(new ModifyListener() {
+            @Override
+            public void modifyText(ModifyEvent e)
+            {
+               boolean pushDciSet = !pushDciName.getText().trim().isEmpty();
+               pushGroup.setEnabled(pushDciSet);
+               editor.fireModifyListeners();
+            }
+         });
+
+         gd = new GridData();
+         gd.horizontalAlignment = SWT.FILL;
+         gd.grabExcessHorizontalSpace = true;
+         pushGroup = (Spinner)WidgetHelper.createLabeledSpinner(area, SWT.BORDER, "Push group", 1, 500, gd);
+         toolkit.adapt(pushGroup);
+         pushGroup.setMinimum(0);
+         pushGroup.setSelection((rule.getPushDci() != null) ? rule.getPushDci().getGroup() : 1);
+         pushGroup.addModifyListener(new ModifyListener() {
+            @Override
+            public void modifyText(ModifyEvent e)
+            {
+               editor.fireModifyListeners();
+            }
+         });
+         pushGroup.setEnabled(rule.getPushDci() != null);
       }
 
       checkboxBreak = toolkit.createButton(area, "Break", SWT.CHECK);
@@ -716,6 +753,16 @@ public class LogParserRuleEditor extends DashboardComposite
       }
       else
          rule.setAgentAction("");
+      
+      if (editor.getParserType() == LogParserType.POLICY)
+      {
+         LogParserPushDci pushDci = new LogParserPushDci();
+         pushDci.setData(pushDciName.getText());
+         pushDci.setGroup(intOrNull(pushGroup.getText()));
+         rule.setPushDci(pushDci);
+      }
+      else
+         rule.setPushDci(null);
 
       if (editor.getParserType() != LogParserType.POLICY)
          rule.setDoNotSaveToDatabase(checkboxDoNotSaveToDB.getSelection());
