@@ -49,8 +49,8 @@ public class AttrListLabelProvider extends LabelProvider implements ITableLabelP
    private NXCSession session;
    private Font inheritedObjectFont;
    private Color inheritedElementColor = ThemeEngine.getForegroundColor("List.DisabledItem");
-   private Color confilctObjectForegroundColor = ThemeEngine.getForegroundColor("List.Error");
-   private Color confilctObjectBackgroundColor = ThemeEngine.getBackgroundColor("List.Error");
+   private Color conflictObjectForegroundColor = ThemeEngine.getForegroundColor("List.Error");
+   private Color conflictObjectBackgroundColor = ThemeEngine.getBackgroundColor("List.Error");
    private AbstractObject parent;
 
    /**
@@ -164,7 +164,7 @@ public class AttrListLabelProvider extends LabelProvider implements ITableLabelP
    {
       CustomAttribute attr = (CustomAttribute)((Entry)element).getValue();
       if (attr.isConflict())
-         return confilctObjectForegroundColor;
+         return conflictObjectForegroundColor;
       return null;
    }
 
@@ -177,7 +177,7 @@ public class AttrListLabelProvider extends LabelProvider implements ITableLabelP
    {
       CustomAttribute attr = (CustomAttribute)((Entry)element).getValue();
       if (attr.isConflict())
-         return confilctObjectBackgroundColor;
+         return conflictObjectBackgroundColor;
       if (attr.getSourceObject() != 0 && (attr.getFlags() & CustomAttribute.REDEFINED) == 0)
          return inheritedElementColor;
       return null;
