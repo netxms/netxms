@@ -692,7 +692,8 @@ void SNMP_Variable::setValueFromString(uint32_t type, const TCHAR *value, const 
             codepage = m_codepage;
          }
          reallocValueBuffer(length);
-         m_valueLength = wchar_to_mbcp(value, -1, reinterpret_cast<char*>(m_value), length, codepage);
+         // wchar_to_mbcp returns number of characters in converted string including terminating \0 which should be excluded from value being sent
+         m_valueLength = wchar_to_mbcp(value, -1, reinterpret_cast<char*>(m_value), length, codepage) - 1;
 #else
          length = strlen(value);
          reallocValueBuffer(length);
