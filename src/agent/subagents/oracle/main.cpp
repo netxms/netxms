@@ -186,7 +186,7 @@ static TableDescriptor s_tqDataFiles =
 /**
  * Database instances
  */
-static ObjectArray<DatabaseInstance> *s_instances = NULL;
+static ObjectArray<DatabaseInstance> *s_instances = nullptr;
 
 /**
  * Find instance by ID
@@ -212,7 +212,7 @@ static LONG H_GlobalParameter(const TCHAR *param, const TCHAR *arg, TCHAR *value
       return SYSINFO_RC_UNSUPPORTED;
 
    DatabaseInstance *db = FindInstance(id);
-   if (db == NULL)
+   if (db == nullptr)
       return SYSINFO_RC_UNSUPPORTED;
 
    return db->getData(arg, value) ? SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR;
@@ -331,13 +331,13 @@ static DatabaseInfo s_dbInfo;
 static NX_CFG_TEMPLATE s_configTemplate[] =
 {
    { _T("ConnectionTTL"),     CT_LONG,   0, 0, 0,             0, &s_dbInfo.connectionTTL },
-	{ _T("Id"),					   CT_STRING, 0, 0, MAX_STR,       0, s_dbInfo.id },
+   { _T("Id"),                CT_STRING, 0, 0, MAX_STR,       0, s_dbInfo.id },
 	{ _T("Name"),				   CT_STRING, 0, 0, MAX_STR,       0, s_dbInfo.name },
 	{ _T("TnsName"),			   CT_STRING, 0, 0, MAX_STR,       0, s_dbInfo.name },
 	{ _T("UserName"),			   CT_STRING, 0, 0, MAX_USERNAME,  0, s_dbInfo.username },
 	{ _T("Password"),			   CT_STRING, 0, 0, MAX_PASSWORD,  0, s_dbInfo.password },
    { _T("EncryptedPassword"), CT_STRING, 0, 0, MAX_PASSWORD,  0, s_dbInfo.password },
-	{ _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
+	{ _T(""), CT_END_OF_LIST, 0, 0, 0, 0, nullptr }
 };
 
 /*
@@ -346,10 +346,10 @@ static NX_CFG_TEMPLATE s_configTemplate[] =
 static bool SubAgentInit(Config *config)
 {
 	// Init db driver
-   g_oracleDriver = DBLoadDriver(_T("oracle.ddr"), nullptr, nullptr, nullptr);
+   g_oracleDriver = DBLoadDriver(_T("oracle.ddr"), config->getValue(_T("/ORACLE/DriverOptions")), nullptr, nullptr);
 	if (g_oracleDriver == nullptr)
 	{
-		AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("%s: failed to load database driver"), MYNAMESTR);
+		nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_ORACLE, _T("Cannot load Oracle database driver"));
 		return false;
 	}
 
@@ -381,7 +381,7 @@ static bool SubAgentInit(Config *config)
 
 		if (!config->parseTemplate(section, s_configTemplate))
 		{
-			AgentWriteLog(NXLOG_WARNING, _T("ORACLE: error parsing configuration template %d"), i);
+			nxlog_write(NXLOG_WARNING, DEBUG_TAG_ORACLE, _T("Error parsing Oracle subagent configuration template #%d"), i);
          continue;
 		}
 
@@ -394,9 +394,9 @@ static bool SubAgentInit(Config *config)
 	}
 
 	// Exit if no usable configuration found
-   if (s_instances->size() == 0)
+   if (s_instances->isEmpty())
 	{
-      AgentWriteLog(NXLOG_WARNING, _T("ORACLE: no databases to monitor, exiting"));
+      nxlog_write(NXLOG_WARNING, DEBUG_TAG_ORACLE, _T("No Oracle databases to monitor"));
       delete s_instances;
       return false;
 	}
@@ -413,12 +413,12 @@ static bool SubAgentInit(Config *config)
  */
 static void SubAgentShutdown()
 {
-	AgentWriteDebugLog(1, _T("ORACLE: stopping pollers"));
+	nxlog_debug_tag(DEBUG_TAG_ORACLE, 1, _T("Stopping Oracle database pollers"));
    for(int i = 0; i < s_instances->size(); i++)
       s_instances->get(i)->stop();
    delete s_instances;
    DBUnloadDriver(g_oracleDriver);
-	AgentWriteDebugLog(1, _T("ORACLE: stopped"));
+	nxlog_debug_tag(DEBUG_TAG_ORACLE, 1, _T("Oracle subagent stopped"));
 }
 
 /**
@@ -527,12 +527,12 @@ static NETXMS_SUBAGENT_INFO s_info =
 {
 	NETXMS_SUBAGENT_INFO_MAGIC,
 	_T("ORACLE"), NETXMS_VERSION_STRING,
-	SubAgentInit, SubAgentShutdown, NULL, NULL,
+	SubAgentInit, SubAgentShutdown, nullptr, nullptr,
 	sizeof(s_parameters) / sizeof(NETXMS_SUBAGENT_PARAM), s_parameters,
 	sizeof(s_lists) / sizeof(NETXMS_SUBAGENT_LIST), s_lists,
 	sizeof(s_tables) / sizeof(NETXMS_SUBAGENT_TABLE), s_tables,
-	0,	NULL,    // actions
-	0,	NULL     // push parameters
+	0,	nullptr,    // actions
+	0,	nullptr     // push parameters
 };
 
 /**

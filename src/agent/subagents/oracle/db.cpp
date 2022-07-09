@@ -1,7 +1,7 @@
 /*
  ** NetXMS - Network Management System
  ** Subagent for Oracle monitoring
- ** Copyright (C) 2009-2019 Raden Solutions
+ ** Copyright (C) 2009-2022 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU Lesser General Public License as published
@@ -48,7 +48,7 @@ DatabaseInstance::~DatabaseInstance()
  */
 void DatabaseInstance::run()
 {
-   m_pollerThread = ThreadCreateEx(DatabaseInstance::pollerThreadStarter, 0, this);
+   m_pollerThread = ThreadCreateEx(this, &DatabaseInstance::pollerThread);
 }
 
 /**
@@ -73,9 +73,7 @@ int DatabaseInstance::getOracleVersion()
 {
 	DB_RESULT hResult = DBSelect(m_session, _T("SELECT version FROM v$instance"));
 	if (hResult == nullptr)
-	{
 		return 700;		// assume Oracle 7.0 by default
-	}
 
 	TCHAR versionString[32];
 	DBGetField(hResult, 0, 0, versionString, 32);
@@ -87,39 +85,30 @@ int DatabaseInstance::getOracleVersion()
 }
 
 /**
- * Poller thread starter
- */
-THREAD_RESULT THREAD_CALL DatabaseInstance::pollerThreadStarter(void *arg)
-{
-   ((DatabaseInstance *)arg)->pollerThread();
-   return THREAD_OK;
-}
-
-/**
  * Poller thread
  */
 void DatabaseInstance::pollerThread()
 {
-   AgentWriteDebugLog(3, _T("ORACLE: poller thread for database %s started"), m_info.id);
-   INT64 connectionTTL = (INT64)m_info.connectionTTL * _LL(1000);
+   nxlog_debug_tag(DEBUG_TAG_ORACLE, 3, _T("ORACLE: poller thread for database %s started"), m_info.id);
+   int64_t connectionTTL = static_cast<int64_t>(m_info.connectionTTL) * _LL(1000);
    do
    {
 reconnect:
       m_sessionLock.lock();
 
       TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
-      m_session = DBConnect(g_oracleDriver, m_info.name, NULL, m_info.username, m_info.password, NULL, errorText);
-      if (m_session == NULL)
+      m_session = DBConnect(g_oracleDriver, m_info.name, nullptr, m_info.username, m_info.password, nullptr, errorText);
+      if (m_session == nullptr)
       {
          m_sessionLock.unlock();
-         AgentWriteDebugLog(6, _T("ORACLE: cannot connect to database %s: %s"), m_info.id, errorText);
+         nxlog_debug_tag(DEBUG_TAG_ORACLE, 6, _T("Cannot connect to database %s: %s"), m_info.id, errorText);
          continue;
       }
 
       m_connected = true;
 		DBEnableReconnect(m_session, false);
       m_version = getOracleVersion();
-      AgentWriteLog(NXLOG_INFO, _T("ORACLE: connection with database %s restored (version %d.%d, connection TTL %d)"),
+      nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_ORACLE, _T("Connection with database %s restored (version %d.%d, connection TTL %d)"),
          m_info.id, m_version >> 8, m_version &0xFF, m_info.connectionTTL);
 
       m_sessionLock.unlock();
@@ -131,13 +120,13 @@ reconnect:
          int64_t startTime = GetCurrentTimeMs();
          if (!poll())
          {
-            AgentWriteLog(NXLOG_WARNING, _T("ORACLE: connection with database %s lost"), m_info.id);
+            AgentWriteLog(NXLOG_WARNING, _T("Connection with database %s lost"), m_info.id);
             break;
          }
          int64_t currTime = GetCurrentTimeMs();
          if (currTime - pollerLoopStartTime > connectionTTL)
          {
-            AgentWriteDebugLog(4, _T("ORACLE: planned connection reset"));
+            nxlog_debug_tag(DEBUG_TAG_ORACLE, 4, _T("Planned connection reset"));
             m_sessionLock.lock();
             m_connected = false;
             DBDisconnect(m_session);
@@ -146,7 +135,7 @@ reconnect:
             goto reconnect;
          }
          int64_t elapsedTime = currTime - startTime;
-         sleepTime = (UINT32)((elapsedTime >= 60000) ? 60000 : (60000 - elapsedTime));
+         sleepTime = static_cast<uint32_t>((elapsedTime >= 60000) ? 60000 : (60000 - elapsedTime));
       }
       while(!m_stopCondition.wait(sleepTime));
 
@@ -157,7 +146,7 @@ reconnect:
       m_sessionLock.unlock();
    }
    while(!m_stopCondition.wait(60000));   // reconnect every 60 seconds
-   AgentWriteDebugLog(3, _T("ORACLE: poller thread for database %s stopped"), m_info.id);
+   nxlog_debug_tag(DEBUG_TAG_ORACLE, 3, _T("Poller thread for database %s stopped"), m_info.id);
 }
 
 /**
@@ -201,7 +190,7 @@ bool DatabaseInstance::poll()
             instance[0] = 0;
             for(col = 0; (col < g_queries[i].instanceColumns) && (col < numColumns); col++)
             {
-               int len = (int)_tcslen(instance);
+               size_t len = _tcslen(instance);
                if (len > 0)
                   instance[len++] = _T('|');
                DBGetField(hResult, row, col, &instance[len], 128 - len);
@@ -213,7 +202,7 @@ bool DatabaseInstance::poll()
                size_t tagLen = _tcslen(tag);
                tag[tagLen++] = _T('@');
                _tcslcpy(&tag[tagLen], instance, 256 - tagLen);
-               data->setPreallocated(_tcsdup(tag), DBGetField(hResult, row, col, NULL, 0));
+               data->setPreallocated(MemCopyString(tag), DBGetField(hResult, row, col, nullptr, 0));
             }
          }
       }
@@ -222,7 +211,7 @@ bool DatabaseInstance::poll()
          for(int col = 0; col < numColumns; col++)
          {
             DBGetColumnName(hResult, col, &tag[tagBaseLen], 256 - tagBaseLen);
-            data->setPreallocated(_tcsdup(tag), DBGetField(hResult, 0, col, NULL, 0));
+            data->setPreallocated(MemCopyString(tag), DBGetField(hResult, 0, col, nullptr, 0));
          }
       }
 

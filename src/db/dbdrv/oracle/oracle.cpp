@@ -120,6 +120,11 @@ static OCIEnv *s_handleEnv = nullptr;
 static int s_ociVersionMajor = 0;
 
 /**
+ * Global option to disable statement caching
+ */
+static bool s_disableStatementCaching = false;
+
+/**
  * Prepare string for using in SQL query - enclose in quotes and escape as needed
  */
 static WCHAR *PrepareStringW(const WCHAR *str)
@@ -202,11 +207,14 @@ static bool Initialize(const char *options)
    s_ociVersionMajor = (int)major;
 
    if (OCIEnvNlsCreate(&s_handleEnv, OCI_THREADED | OCI_NCHAR_LITERAL_REPLACE_OFF,
-                       NULL, NULL, NULL, NULL, 0, NULL, OCI_UTF16ID, OCI_UTF16ID) != OCI_SUCCESS)
+         nullptr, nullptr, nullptr, nullptr, 0, nullptr, OCI_UTF16ID, OCI_UTF16ID) != OCI_SUCCESS)
    {
-      nxlog_debug_tag(DEBUG_TAG, 1, _T("Cannot allocate environment handle"));
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Cannot allocate Oracle environment handle"));
       return false;
    }
+
+   s_disableStatementCaching = ExtractNamedOptionValueAsBoolA(options, "disableStatementCaching", false);
+   nxlog_debug_tag(DEBUG_TAG, 1, _T("OCI statement caching is %s"), s_disableStatementCaching ? _T("DISABLED") : _T("ENABLED"));
 	return true;
 }
 
@@ -247,28 +255,27 @@ static DBDRV_CONNECTION Connect(const char *host, const char *login, const char 
 	{
       OCIHandleAlloc(s_handleEnv, (void **)&pConn->handleError, OCI_HTYPE_ERROR, 0, nullptr);
 		OCIHandleAlloc(s_handleEnv, (void **)&pConn->handleServer, OCI_HTYPE_SERVER, 0, nullptr);
-		UCS2CHAR *pwszStr = UCS2StringFromUTF8String(host);
+		UCS2CHAR *ucs2String = UCS2StringFromUTF8String(host);
 		if (IsSuccess(OCIServerAttach(pConn->handleServer, pConn->handleError,
-		                    (text *)pwszStr, (sb4)ucs2_strlen(pwszStr) * sizeof(UCS2CHAR), OCI_DEFAULT)))
+		                    (text *)ucs2String, (sb4)ucs2_strlen(ucs2String) * sizeof(UCS2CHAR), OCI_DEFAULT)))
 		{
-			MemFree(pwszStr);
+			MemFree(ucs2String);
 
 			// Initialize service handle
 			OCIHandleAlloc(s_handleEnv, (void **)&pConn->handleService, OCI_HTYPE_SVCCTX, 0, nullptr);
 			OCIAttrSet(pConn->handleService, OCI_HTYPE_SVCCTX, pConn->handleServer, 0, OCI_ATTR_SERVER, pConn->handleError);
-			
+
 			// Initialize session handle
 			OCIHandleAlloc(s_handleEnv, (void **)&pConn->handleSession, OCI_HTYPE_SESSION, 0, nullptr);
-			pwszStr = UCS2StringFromUTF8String(login);
-			OCIAttrSet(pConn->handleSession, OCI_HTYPE_SESSION, pwszStr,
-			           (ub4)ucs2_strlen(pwszStr) * sizeof(UCS2CHAR), OCI_ATTR_USERNAME, pConn->handleError);
-			MemFree(pwszStr);
-			pwszStr = UCS2StringFromUTF8String(password);
-			OCIAttrSet(pConn->handleSession, OCI_HTYPE_SESSION, pwszStr, (ub4)ucs2_strlen(pwszStr) * sizeof(UCS2CHAR), OCI_ATTR_PASSWORD, pConn->handleError);
+			ucs2String = UCS2StringFromUTF8String(login);
+			OCIAttrSet(pConn->handleSession, OCI_HTYPE_SESSION, ucs2String, (ub4)ucs2_strlen(ucs2String) * sizeof(UCS2CHAR), OCI_ATTR_USERNAME, pConn->handleError);
+			MemFree(ucs2String);
+			ucs2String = UCS2StringFromUTF8String(password);
+			OCIAttrSet(pConn->handleSession, OCI_HTYPE_SESSION, ucs2String, (ub4)ucs2_strlen(ucs2String) * sizeof(UCS2CHAR), OCI_ATTR_PASSWORD, pConn->handleError);
 
 			// Authenticate
 			if (IsSuccess(OCISessionBegin(pConn->handleService, pConn->handleError, pConn->handleSession,
-			         OCI_CRED_RDBMS, OCI_STMT_CACHE), pConn, _T("Connected to database with warning (%s)")))
+			         OCI_CRED_RDBMS, s_disableStatementCaching ? OCI_DEFAULT : OCI_STMT_CACHE), pConn, _T("Connected to database with warning (%s)")))
 			{
 				OCIAttrSet(pConn->handleService, OCI_HTYPE_SVCCTX, pConn->handleSession, 0, OCI_ATTR_SESSION, pConn->handleError);
 				pConn->mutexQueryLock = new Mutex();
@@ -279,10 +286,10 @@ static DBDRV_CONNECTION Connect(const char *host, const char *login, const char 
 
 				if ((schema != nullptr) && (schema[0] != 0))
 				{
-					MemFree(pwszStr);
-					pwszStr = UCS2StringFromUTF8String(schema);
-					OCIAttrSet(pConn->handleSession, OCI_HTYPE_SESSION, pwszStr,
-								  (ub4)ucs2_strlen(pwszStr) * sizeof(UCS2CHAR), OCI_ATTR_CURRENT_SCHEMA, pConn->handleError);
+					MemFree(ucs2String);
+					ucs2String = UCS2StringFromUTF8String(schema);
+					OCIAttrSet(pConn->handleSession, OCI_HTYPE_SESSION, ucs2String,
+								  (ub4)ucs2_strlen(ucs2String) * sizeof(UCS2CHAR), OCI_ATTR_CURRENT_SCHEMA, pConn->handleError);
 				}
 
             // LOB prefetch
@@ -327,7 +334,7 @@ static DBDRV_CONNECTION Connect(const char *host, const char *login, const char 
 			OCIHandleFree(pConn->handleError, OCI_HTYPE_ERROR);
          MemFreeAndNull(pConn);
 		}
-		MemFree(pwszStr);
+		MemFree(ucs2String);
 	}
 	else
 	{
