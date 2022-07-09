@@ -1,7 +1,7 @@
 /*
  ** NetXMS - Network Management System
  ** Subagent for Oracle monitoring
- ** Copyright (C) 2009-2014 Raden Solutions
+ ** Copyright (C) 2009-2022 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU Lesser General Public License as published
@@ -30,6 +30,7 @@
 // Misc defines
 //
 
+#define DEBUG_TAG_ORACLE   _T("oracle")
 #define MAX_STR				(255)
 #define MAX_QUERY			(8192)
 #define MYNAMESTR			_T("oracle")
@@ -79,8 +80,6 @@ private:
 	Mutex m_dataLock;
 	Mutex m_sessionLock;
    Condition m_stopCondition;
-
-   static THREAD_RESULT THREAD_CALL pollerThreadStarter(void *arg);
 
    void pollerThread();
    bool poll();
