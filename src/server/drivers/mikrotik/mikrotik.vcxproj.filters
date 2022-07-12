@@ -15,6 +15,9 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="data.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="mikrotik.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

@@ -58,7 +58,7 @@ const TCHAR *MikrotikDriver::getVersion()
  */
 int MikrotikDriver::isPotentialDevice(const TCHAR *oid)
 {
-	return !_tcscmp(oid, _T(".1.3.6.1.4.1.14988.1")) ? 254 : 0;
+    return !_tcscmp(oid, _T(".1.3.6.1.4.1.14988.1")) ? 254 : 0;
 }
 
 /**
@@ -69,7 +69,7 @@ int MikrotikDriver::isPotentialDevice(const TCHAR *oid)
  */
 bool MikrotikDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
 {
-	return true;
+    return true;
 }
 
 /**
@@ -86,8 +86,14 @@ bool MikrotikDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
  */
 void MikrotikDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, NObject *node, DriverData **driverData)
 {
+   if (*driverData == NULL)
+   {
+      *driverData = new MikrotikDriverData();
+      nxlog_debug_tag(MIKROTIK_DEBUG_TAG, 8, _T("MikrotikDriver::analyzeDevice: new Mikrotik Driver Data object created."));
+   }
+   static_cast<MikrotikDriverData*>(*driverData)->updateDeviceInfo(snmp);
    node->setCustomAttribute(_T(".mikrotik.fdbUsesIfIndex"),
-         (SnmpWalkCount(snmp, _T(".1.3.6.1.2.1.17.1.4.1.2")) == 0) ? _T("true") : _T("false"), StateChange::IGNORE);
+      (SnmpWalkCount(snmp, _T(".1.3.6.1.2.1.17.1.4.1.2")) == 0) ? _T("true") : _T("false"), StateChange::IGNORE);
 }
 
 /**
@@ -168,10 +174,10 @@ bool MikrotikDriver::getHardwareInformation(SNMP_Transport *snmp, NObject *node,
  */
 InterfaceList *MikrotikDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, int useAliases, bool useIfXTable)
 {
-	// Get interface list from standard MIB
-	InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(snmp, node, driverData, 0, false);
-	if (ifList == nullptr)
-		return nullptr;
+    // Get interface list from standard MIB
+    InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(snmp, node, driverData, 0, false);
+    if (ifList == nullptr)
+        return nullptr;
 
    for(int i = 0; i < ifList->size(); i++)
    {
@@ -184,7 +190,7 @@ InterfaceList *MikrotikDriver::getInterfaces(SNMP_Transport *snmp, NObject *node
          iface->bridgePort = iface->index;
       }
    }
-	return ifList;
+    return ifList;
 }
 
 /**
@@ -215,8 +221,8 @@ bool MikrotikDriver::lldpNameToInterfaceId(SNMP_Transport *snmp, NObject *node, 
  */
 static uint32_t CountingSnmpWalkerCallback(SNMP_Variable *var, SNMP_Transport *transport, int *counter)
 {
-	(*counter)++;
-	return SNMP_ERR_SUCCESS;
+    (*counter)++;
+    return SNMP_ERR_SUCCESS;
 }
 
 /**
@@ -245,7 +251,7 @@ static uint32_t HandlerAccessPointList(SNMP_Variable *var, SNMP_Transport *snmp,
    uint32_t apIndex = oid[nameLen - 1];
 
    SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
-   
+
    oid[nameLen - 2] = 5;   // mtxrWlApBssid
    request.bindVariable(new SNMP_Variable(oid, nameLen));
 
@@ -323,8 +329,8 @@ ObjectArray<AccessPointInfo> *MikrotikDriver::getAccessPoints(SNMP_Transport *sn
  * @return state of access point or AP_UNKNOWN if it cannot be determined
  */
 AccessPointState MikrotikDriver::getAccessPointState(SNMP_Transport *snmp, NObject *node, DriverData *driverData,
-                                                     UINT32 apIndex, const MacAddress& macAddr, const InetAddress& ipAddr,
-						     const ObjectArray<RadioInterfaceInfo> *radioInterfaces)
+                                                     UINT32 apIndex, const MacAddress &macAddr, const InetAddress &ipAddr,
+                               const ObjectArray<RadioInterfaceInfo> *radioInterfaces)
 {
    return AP_ADOPTED;
 }
@@ -366,13 +372,67 @@ static uint32_t HandlerWirelessStationList(SNMP_Variable *var, SNMP_Transport *s
 ObjectArray<WirelessStationInfo> *MikrotikDriver::getWirelessStations(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
 {
    ObjectArray<WirelessStationInfo> *wsList = new ObjectArray<WirelessStationInfo>(0, 16, Ownership::True);
-   if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.14988.1.1.1.2.1.1"), // mtxrWlRtabAddr
+   if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.14988.1.1.1.2.1.1"),// mtxrWlRtabAddr
                 HandlerWirelessStationList, wsList) != SNMP_ERR_SUCCESS)
    {
       delete wsList;
       wsList = nullptr;
    }
    return wsList;
+}
+
+/**
+ * Get list of metrics supported by driver
+ *
+ * @param snmp SNMP transport
+ * @param node Node
+ * @param driverData driver-specific data previously created in analyzeDevice
+ * @return list of metrics supported by driver or NULL on error
+ */
+
+ObjectArray<AgentParameterDefinition> *MikrotikDriver::getAvailableMetrics(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
+{
+   ObjectArray<AgentParameterDefinition> *metrics = new ObjectArray<AgentParameterDefinition>(16, 16, Ownership::True);
+   registerHostMibMetrics(metrics);
+   static_cast<MikrotikDriverData*>(driverData)->registerMetrics(metrics);
+   return metrics;
+}
+
+/**
+ * Get value of given metric
+ *
+ * @param snmp SNMP transport
+ * @param node Node
+ * @param driverData driver-specific data previously created in analyzeDevice
+ * @param name metric name
+ * @param value buffer for metric value (size at least MAX_RESULT_LENGTH)
+ * @param size buffer size
+ * @return data collection error code
+ */
+DataCollectionError MikrotikDriver::getMetric(SNMP_Transport *snmp, NObject *node, DriverData *driverData, const TCHAR *name, TCHAR *value, size_t size)
+{
+   if (driverData == NULL)
+      return DCE_COLLECTION_ERROR;
+
+   nxlog_debug_tag(MIKROTIK_DEBUG_TAG, 7, _T("MikrotikDriver::getMetric(%s [%u]): Requested metric \"%s\""), driverData->getNodeName(), driverData->getNodeId(), name);
+   MikrotikDriverData *d = static_cast<MikrotikDriverData*>(driverData);
+
+   StringBuffer oid;
+   if (!d->getMetric(name, snmp, &oid))
+   {
+      nxlog_debug_tag(MIKROTIK_DEBUG_TAG, 7, _T("MikrotikDriver::getMetric(%s [%u]): data collection error, OID=\"%s\""), driverData->getNodeName(), driverData->getNodeId(), oid);
+      return DCE_NOT_SUPPORTED;
+   }
+   nxlog_debug_tag(MIKROTIK_DEBUG_TAG, 7, _T("MikrotikDriver::getMetric(%s [%u]): metric object \"%s\" found "), driverData->getNodeName(), driverData->getNodeId(), name);
+   return (SnmpGetEx(snmp, oid, nullptr, 0, value, size * sizeof(TCHAR), SG_STRING_RESULT, NULL) == SNMP_ERR_SUCCESS) ? DCE_SUCCESS : DCE_COMM_ERROR;
+}
+
+/**
+ * Check if driver can provide additional metrics
+ */
+bool MikrotikDriver::hasMetrics()
+{
+   return true;
 }
 
 /**
