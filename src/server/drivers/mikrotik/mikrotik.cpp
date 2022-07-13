@@ -420,7 +420,7 @@ DataCollectionError MikrotikDriver::getMetric(SNMP_Transport *snmp, NObject *nod
    StringBuffer oid;
    if (!d->getMetric(name, snmp, &oid))
    {
-      nxlog_debug_tag(MIKROTIK_DEBUG_TAG, 7, _T("MikrotikDriver::getMetric(%s [%u]): data collection error, OID=\"%s\""), driverData->getNodeName(), driverData->getNodeId(), oid);
+      nxlog_debug_tag(MIKROTIK_DEBUG_TAG, 7, _T("MikrotikDriver::getMetric(%s [%u]): data collection error"), driverData->getNodeName(), driverData->getNodeId());
       return DCE_NOT_SUPPORTED;
    }
    nxlog_debug_tag(MIKROTIK_DEBUG_TAG, 7, _T("MikrotikDriver::getMetric(%s [%u]): metric object \"%s\" found "), driverData->getNodeName(), driverData->getNodeId(), name);
