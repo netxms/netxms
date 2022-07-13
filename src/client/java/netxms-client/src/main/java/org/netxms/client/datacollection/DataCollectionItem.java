@@ -36,6 +36,7 @@ public class DataCollectionItem extends DataCollectionObject
    public static final int DCF_CALCULATE_NODE_STATUS   = 0x00400;
    public static final int DCF_SHOW_IN_OBJECT_OVERVIEW = 0x00800;
    public static final int DCF_MULTIPLIERS_MASK        = 0x30000;
+   public static final int DCF_STORE_CHANGES_ONLY      = 0x40000;
 	
 	// Aggregation functions
 	public static final int DCF_FUNCTION_SUM = 0;
@@ -466,4 +467,25 @@ public class DataCollectionItem extends DataCollectionObject
    {
       flags = (flags & ~DCF_MULTIPLIERS_MASK) | ((mode & 0x03) << 16);
    }
+   
+   /**
+    * @return the StoreChangesOnly.
+    */
+   public boolean isStoreChangesOnly()
+   {
+      return (flags & DCF_STORE_CHANGES_ONLY) != 0;
+   }
+   
+   /**
+    * @param processAllThresholds the processAllThresholds to set
+    */
+   public void setStoreChangesOnly(boolean storeChangesOnly)
+   {
+      if (storeChangesOnly)
+         flags |= DCF_STORE_CHANGES_ONLY;
+      else
+         flags &= ~DCF_STORE_CHANGES_ONLY;
+   }
+   
+   
 }

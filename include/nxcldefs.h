@@ -937,6 +937,7 @@ enum HistoricalDataType
 #define DCF_AGGREGATE_WITH_ERRORS    ((uint32_t)0x04000)
 #define DCF_HIDE_ON_LAST_VALUES_PAGE ((uint32_t)0x08000)
 #define DCF_MULTIPLIERS_MASK         ((uint32_t)0x30000)
+#define DCF_STORE_CHANGES_ONLY       ((uint32_t)0x40000)
 
 /**
  * DCI state flags

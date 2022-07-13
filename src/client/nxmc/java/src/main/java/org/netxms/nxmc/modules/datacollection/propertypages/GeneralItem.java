@@ -100,7 +100,8 @@ public class GeneralItem extends AbstractDCIPropertyPage
 	private LabeledText pollingInterval;
 	private LabeledText retentionTime;
 	private LabeledSpinner sampleCount;
-	
+	private Button checkSaveOnlyChangedValues;
+
 	/**
 	 * Constructor
 	 * 
@@ -467,6 +468,10 @@ public class GeneralItem extends AbstractDCIPropertyPage
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       retentionTime.setLayoutData(gd);
+
+      checkSaveOnlyChangedValues = new Button(groupStorage, SWT.CHECK);
+      checkSaveOnlyChangedValues.setText(i18n.tr("Save only changed values"));
+      checkSaveOnlyChangedValues.setSelection(dci.isStoreChangesOnly());
       
       onOriginChange();
       return dialogArea;
@@ -627,6 +632,7 @@ public class GeneralItem extends AbstractDCIPropertyPage
 		dci.setRetentionTime((retentionMode.getSelectionIndex() == 1) ? retentionTime.getText() : null);
 		dci.setSnmpRawValueInOctetString(checkInterpretRawSnmpValue.getSelection());
 		dci.setSnmpRawValueType(snmpRawType.getSelectionIndex());
+      dci.setStoreChangesOnly(checkSaveOnlyChangedValues.getSelection());
 		if (checkUseCustomSnmpPort.getSelection())
 		{
 			dci.setSnmpPort(customSnmpPort.getSelection());

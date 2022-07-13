@@ -703,11 +703,16 @@ bool DCItem::processNewValue(time_t tmTimeStamp, const TCHAR *originalValue, boo
       QueueRawDciDataUpdate(tmTimeStamp, m_id, originalValue, pValue->getString(), (m_bCacheLoaded  && (m_cacheSize > 0)) ? m_ppValueCache[m_cacheSize - 1]->getTimeStamp() : 0);
    }
 
-	// Save transformed value to database
-   if (m_retentionType != DC_RETENTION_NONE)
-	   QueueIDataInsert(tmTimeStamp, owner->getId(), m_id, originalValue, pValue->getString(), getStorageClass());
-   if (g_flags & AF_PERFDATA_STORAGE_DRIVER_LOADED)
-      PerfDataStorageRequest(this, tmTimeStamp, pValue->getString());
+	// Check if user wants to collect all values or only changed values.
+   if (!isStoreChangesOnly() || _tcscmp(pValue->getString() , m_ppValueCache[0]->getString()))
+   {
+      //Save transformed value to database
+      if (m_retentionType != DC_RETENTION_NONE)
+           QueueIDataInsert(tmTimeStamp, owner->getId(), m_id, originalValue, pValue->getString(), getStorageClass());
+
+      if (g_flags & AF_PERFDATA_STORAGE_DRIVER_LOADED)
+           PerfDataStorageRequest(this, tmTimeStamp, pValue->getString());
+   }
 
    // Update prediction engine
    if (m_predictionEngine[0] != 0)
