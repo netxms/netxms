@@ -605,6 +605,8 @@ public class ObjectStatusSunburstDiagram extends Canvas implements PaintListener
     */
    protected boolean containsChangedObject(AbstractObject object)
    {
+      if (rootObject == null)
+         return false;
       if (rootObject.getObjectId() == object.getObjectId())
          return true;
       ObjectData d = objects.get(object.getObjectId());
