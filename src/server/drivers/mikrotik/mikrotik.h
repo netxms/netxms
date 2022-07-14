@@ -67,7 +67,7 @@ private:
    uint32_t metricInfoWalkCallback(SNMP_Variable *v, SNMP_Transport *snmp);
 
 public:
-   bool getMetric(const TCHAR *name, SNMP_Transport *snmp, StringBuffer *metric); //receives name, returns value
+   bool getMetric(const TCHAR *name, SNMP_Transport *snmp, TCHAR *metric); //receives name, writes value into *metric
    void updateDeviceInfo(SNMP_Transport *snmp); //function to renew mapping
    void registerMetrics(ObjectArray<AgentParameterDefinition> *metrics);
 

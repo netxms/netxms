@@ -417,13 +417,13 @@ DataCollectionError MikrotikDriver::getMetric(SNMP_Transport *snmp, NObject *nod
    nxlog_debug_tag(MIKROTIK_DEBUG_TAG, 7, _T("MikrotikDriver::getMetric(%s [%u]): Requested metric \"%s\""), driverData->getNodeName(), driverData->getNodeId(), name);
    MikrotikDriverData *d = static_cast<MikrotikDriverData*>(driverData);
 
-   StringBuffer oid;
-   if (!d->getMetric(name, snmp, &oid))
+   TCHAR oid[64];
+   if (!d->getMetric(name, snmp, oid))
    {
-      nxlog_debug_tag(MIKROTIK_DEBUG_TAG, 7, _T("MikrotikDriver::getMetric(%s [%u]): data collection error"), driverData->getNodeName(), driverData->getNodeId());
+      nxlog_debug_tag(MIKROTIK_DEBUG_TAG, 7, _T("MikrotikDriver::getMetric(%s [%u]): data collection error, oid= \"%s\""), driverData->getNodeName(), driverData->getNodeId(), oid);
       return DCE_NOT_SUPPORTED;
    }
-   nxlog_debug_tag(MIKROTIK_DEBUG_TAG, 7, _T("MikrotikDriver::getMetric(%s [%u]): metric object \"%s\" found "), driverData->getNodeName(), driverData->getNodeId(), name);
+   nxlog_debug_tag(MIKROTIK_DEBUG_TAG, 7, _T("MikrotikDriver::getMetric(%s [%u]): metric object \"%s\" found, oid= \"%s\""), driverData->getNodeName(), driverData->getNodeId(), name, oid);
    return (SnmpGetEx(snmp, oid, nullptr, 0, value, size * sizeof(TCHAR), SG_STRING_RESULT, NULL) == SNMP_ERR_SUCCESS) ? DCE_SUCCESS : DCE_COMM_ERROR;
 }
 

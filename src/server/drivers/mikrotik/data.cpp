@@ -86,7 +86,7 @@ void MikrotikDriverData::registerMetrics(ObjectArray<AgentParameterDefinition> *
  * Get metric information by name
  * Metric name expected in form bus/position/variable
  */
-bool MikrotikDriverData::getMetric(const TCHAR *name, SNMP_Transport *snmp, StringBuffer *metric)
+bool MikrotikDriverData::getMetric(const TCHAR *name, SNMP_Transport *snmp, TCHAR *metric)
 {
    m_cacheLock.lock();
    if ((m_cacheTimestamp == 0) || (time(nullptr) - m_cacheTimestamp > 3600))
@@ -100,7 +100,7 @@ bool MikrotikDriverData::getMetric(const TCHAR *name, SNMP_Transport *snmp, Stri
       m_cacheLock.unlock();
       return false;
    }
-   metric->append(oid);
+   _tcscpy(metric,oid);
    m_cacheLock.unlock();
    return true;
 }
