@@ -469,7 +469,7 @@ public class DataCollectionItem extends DataCollectionObject
    }
    
    /**
-    * @return the StoreChangesOnly.
+    * @return the storeChangesOnly.
     */
    public boolean isStoreChangesOnly()
    {
@@ -477,7 +477,7 @@ public class DataCollectionItem extends DataCollectionObject
    }
    
    /**
-    * @param processAllThresholds the processAllThresholds to set
+    * @param storeChangesOnly the storeChangesOnly to set
     */
    public void setStoreChangesOnly(boolean storeChangesOnly)
    {
