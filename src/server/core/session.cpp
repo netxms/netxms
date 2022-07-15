@@ -2992,7 +2992,7 @@ void ClientSession::getConfigurationVariables(const NXCPMessage& request)
  */
 void ClientSession::getPublicConfigurationVariable(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
@@ -3009,29 +3009,29 @@ void ClientSession::getPublicConfigurationVariable(const NXCPMessage& request)
          if (DBGetNumRows(hResult) > 0)
          {
             TCHAR value[MAX_CONFIG_VALUE];
-            msg.setField(VID_VALUE, DBGetField(hResult, 0, 0, value, MAX_CONFIG_VALUE));
-            msg.setField(VID_RCC, RCC_SUCCESS);
+            response.setField(VID_VALUE, DBGetField(hResult, 0, 0, value, MAX_CONFIG_VALUE));
+            response.setField(VID_RCC, RCC_SUCCESS);
          }
          else
          {
-            msg.setField(VID_RCC, RCC_UNKNOWN_CONFIG_VARIABLE);
+            response.setField(VID_RCC, RCC_UNKNOWN_CONFIG_VARIABLE);
          }
          DBFreeResult(hResult);
       }
       else
       {
-         msg.setField(VID_RCC, RCC_DB_FAILURE);
+         response.setField(VID_RCC, RCC_DB_FAILURE);
       }
       DBFreeStatement(hStmt);
    }
    else
    {
-      msg.setField(VID_RCC, RCC_DB_FAILURE);
+      response.setField(VID_RCC, RCC_DB_FAILURE);
    }
 
    DBConnectionPoolReleaseConnection(hdb);
 
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
@@ -3039,7 +3039,7 @@ void ClientSession::getPublicConfigurationVariable(const NXCPMessage& request)
  */
 void ClientSession::setConfigurationVariable(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    TCHAR name[MAX_OBJECT_NAME];
    request.getFieldAsString(VID_NAME, name, MAX_OBJECT_NAME);
@@ -3051,23 +3051,22 @@ void ClientSession::setConfigurationVariable(const NXCPMessage& request)
       ConfigReadStr(name, oldValue, MAX_CONFIG_VALUE, _T(""));
       if (ConfigWriteStr(name, newValue, true))
       {
-         msg.setField(VID_RCC, RCC_SUCCESS);
+         response.setField(VID_RCC, RCC_SUCCESS);
          writeAuditLogWithValues(AUDIT_SYSCFG, true, 0, oldValue, newValue, 'T',
                                  _T("Server configuration variable \"%s\" changed from \"%s\" to \"%s\""), name, oldValue, newValue);
       }
       else
       {
-         msg.setField(VID_RCC, RCC_DB_FAILURE);
+         response.setField(VID_RCC, RCC_DB_FAILURE);
       }
    }
    else
    {
       writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on setting server configuration variable \"%s\""), name);
-      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
 
-   // Send response
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
@@ -3075,9 +3074,7 @@ void ClientSession::setConfigurationVariable(const NXCPMessage& request)
  */
 void ClientSession::setDefaultConfigurationVariableValues(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
-   UINT32 rcc = RCC_SUCCESS;
-
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
    if (checkSysAccessRights(SYSTEM_ACCESS_SERVER_CONFIG))
    {
       DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
@@ -3097,10 +3094,11 @@ void ClientSession::setDefaultConfigurationVariableValues(const NXCPMessage& req
             {
                DBGetField(result, 0, 0, defValue, MAX_CONFIG_VALUE);
                ConfigWriteStr(varName, defValue, false);
+               response.setField(VID_RCC, RCC_SUCCESS);
             }
             else
             {
-               rcc = RCC_DB_FAILURE;
+               response.setField(VID_RCC, RCC_DB_FAILURE);
                break;
             }
          }
@@ -3108,18 +3106,16 @@ void ClientSession::setDefaultConfigurationVariableValues(const NXCPMessage& req
       }
       else
       {
-         rcc = RCC_DB_FAILURE;
+         response.setField(VID_RCC, RCC_DB_FAILURE);
       }
       DBConnectionPoolReleaseConnection(hdb);
    }
    else
    {
       writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied for setting server configuration variables to default"));
-      rcc = RCC_ACCESS_DENIED;
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
-   // Send response
-   msg.setField(VID_RCC, rcc);
-   sendMessage(&msg);
+   sendMessage(&response);
 
 }
 
@@ -3128,7 +3124,7 @@ void ClientSession::setDefaultConfigurationVariableValues(const NXCPMessage& req
  */
 void ClientSession::deleteConfigurationVariable(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    TCHAR name[MAX_OBJECT_NAME];
    request.getFieldAsString(VID_NAME, name, MAX_OBJECT_NAME);
@@ -3137,22 +3133,21 @@ void ClientSession::deleteConfigurationVariable(const NXCPMessage& request)
    {
       if (ConfigDelete(name))
 		{
-         msg.setField(VID_RCC, RCC_SUCCESS);
+         response.setField(VID_RCC, RCC_SUCCESS);
 			writeAuditLog(AUDIT_SYSCFG, true, 0, _T("Server configuration variable \"%s\" deleted"), name);
 		}
       else
 		{
-         msg.setField(VID_RCC, RCC_DB_FAILURE);
+         response.setField(VID_RCC, RCC_DB_FAILURE);
 		}
    }
    else
    {
       writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on delete server configuration variable \"%s\""), name);
-      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
 
-   // Send response
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
@@ -6368,22 +6363,20 @@ void ClientSession::acknowledgeAlarm(const NXCPMessage& request)
  */
 void ClientSession::bulkResolveAlarms(const NXCPMessage& request, bool terminate)
 {
-   NXCPMessage msg;
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
-   IntegerArray<UINT32> alarmIds, failIds, failCodes;
+   IntegerArray<uint32_t> alarmIds, failIds, failCodes;
    request.getFieldAsInt32Array(VID_ALARM_ID_LIST, &alarmIds);
 
-   ResolveAlarmsById(&alarmIds, &failIds, &failCodes, this, terminate, false);
-   msg.setField(VID_RCC, RCC_SUCCESS);
-
+   ResolveAlarmsById(alarmIds, &failIds, &failCodes, this, terminate, false);
+   response.setField(VID_RCC, RCC_SUCCESS);
    if (failIds.size() > 0)
    {
-      msg.setFieldFromInt32Array(VID_ALARM_ID_LIST, &failIds);
-      msg.setFieldFromInt32Array(VID_FAIL_CODE_LIST, &failCodes);
+      response.setFieldFromInt32Array(VID_ALARM_ID_LIST, &failIds);
+      response.setFieldFromInt32Array(VID_FAIL_CODE_LIST, &failCodes);
    }
-   sendMessage(&msg);
+
+   sendMessage(response);
 }
 
 /**
@@ -6391,13 +6384,10 @@ void ClientSession::bulkResolveAlarms(const NXCPMessage& request, bool terminate
  */
 void ClientSession::resolveAlarm(const NXCPMessage& request, bool terminate)
 {
-   NXCPMessage msg;
-   // Prepare response message
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    // Get alarm id and its source object
-   UINT32 alarmId;
+   uint32_t alarmId;
    TCHAR hdref[MAX_HELPDESK_REF_LEN];
    shared_ptr<NetObj> object;
    bool byHelpdeskRef;
@@ -6418,14 +6408,14 @@ void ClientSession::resolveAlarm(const NXCPMessage& request, bool terminate)
       // User should have "terminate alarm" right to the object
       if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_TERM_ALARMS))
       {
-         msg.setField(VID_RCC,
+         response.setField(VID_RCC,
             byHelpdeskRef ?
             ResolveAlarmByHDRef(hdref, this, terminate) :
             ResolveAlarmById(alarmId, this, terminate, false));
       }
       else
       {
-         msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
 			WriteAuditLog(AUDIT_OBJECTS, FALSE, m_dwUserId, m_workstation, m_id, object->getId(),
             _T("Access denied on %s alarm on object %s"), terminate ? _T("terminate") : _T("resolve"), object->getName());
       }
@@ -6434,11 +6424,10 @@ void ClientSession::resolveAlarm(const NXCPMessage& request, bool terminate)
    {
       // Normally, for existing alarms object will not be nullptr,
       // so we assume that alarm id is invalid
-      msg.setField(VID_RCC, RCC_INVALID_ALARM_ID);
+      response.setField(VID_RCC, RCC_INVALID_ALARM_ID);
    }
 
-   // Send response
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
@@ -6446,14 +6435,10 @@ void ClientSession::resolveAlarm(const NXCPMessage& request, bool terminate)
  */
 void ClientSession::deleteAlarm(const NXCPMessage& request)
 {
-   NXCPMessage msg;
-
-   // Prepare response message
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    // Get alarm id and it's source object
-   UINT32 alarmId = request.getFieldAsUInt32(VID_ALARM_ID);
+   uint32_t alarmId = request.getFieldAsUInt32(VID_ALARM_ID);
    shared_ptr<NetObj> object = GetAlarmSourceObject(alarmId);
    if (object != nullptr)
    {
@@ -6463,11 +6448,11 @@ void ClientSession::deleteAlarm(const NXCPMessage& request)
           (m_systemAccessRights & SYSTEM_ACCESS_DELETE_ALARMS))
       {
          DeleteAlarm(alarmId, false);
-         msg.setField(VID_RCC, RCC_SUCCESS);
+         response.setField(VID_RCC, RCC_SUCCESS);
       }
       else
       {
-         msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
 			WriteAuditLog(AUDIT_OBJECTS, FALSE, m_dwUserId, m_workstation, m_id, object->getId(), _T("Access denied on delete alarm on object %s"), object->getName());
       }
    }
@@ -6475,11 +6460,10 @@ void ClientSession::deleteAlarm(const NXCPMessage& request)
    {
       // Normally, for existing alarms object will not be nullptr,
       // so we assume that alarm id is invalid
-      msg.setField(VID_RCC, RCC_INVALID_ALARM_ID);
+      response.setField(VID_RCC, RCC_INVALID_ALARM_ID);
    }
 
-   // Send response
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
@@ -6487,28 +6471,24 @@ void ClientSession::deleteAlarm(const NXCPMessage& request)
  */
 void ClientSession::openHelpdeskIssue(const NXCPMessage& request)
 {
-   NXCPMessage msg;
-
-   // Prepare response message
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    // Get alarm id and it's source object
-   UINT32 alarmId = request.getFieldAsUInt32(VID_ALARM_ID);
+   uint32_t alarmId = request.getFieldAsUInt32(VID_ALARM_ID);
    shared_ptr<NetObj> object = GetAlarmSourceObject(alarmId);
    if (object != nullptr)
    {
       if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_CREATE_ISSUE))
       {
          TCHAR hdref[MAX_HELPDESK_REF_LEN];
-         msg.setField(VID_RCC, OpenHelpdeskIssue(alarmId, this, hdref));
-         msg.setField(VID_HELPDESK_REF, hdref);
+         response.setField(VID_RCC, OpenHelpdeskIssue(alarmId, this, hdref));
+         response.setField(VID_HELPDESK_REF, hdref);
          WriteAuditLog(AUDIT_OBJECTS, TRUE, m_dwUserId, m_workstation, m_id, object->getId(),
             _T("Helpdesk issue created successfully from alarm on object %s"), object->getName());
       }
       else
       {
-         msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
 			WriteAuditLog(AUDIT_OBJECTS, FALSE, m_dwUserId, m_workstation, m_id, object->getId(),
             _T("Access denied on creating issue from alarm on object %s"), object->getName());
       }
@@ -6517,11 +6497,10 @@ void ClientSession::openHelpdeskIssue(const NXCPMessage& request)
    {
       // Normally, for existing alarms object will not be nullptr,
       // so we assume that alarm id is invalid
-      msg.setField(VID_RCC, RCC_INVALID_ALARM_ID);
+      response.setField(VID_RCC, RCC_INVALID_ALARM_ID);
    }
 
-   // Send response
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
@@ -6529,26 +6508,22 @@ void ClientSession::openHelpdeskIssue(const NXCPMessage& request)
  */
 void ClientSession::getHelpdeskUrl(const NXCPMessage& request)
 {
-   NXCPMessage msg;
-
-   // Prepare response message
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    // Get alarm id and it's source object
-   UINT32 alarmId = request.getFieldAsUInt32(VID_ALARM_ID);
+   uint32_t alarmId = request.getFieldAsUInt32(VID_ALARM_ID);
    shared_ptr<NetObj> object = GetAlarmSourceObject(alarmId);
    if (object != nullptr)
    {
       if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ_ALARMS))
       {
          TCHAR url[MAX_PATH];
-         msg.setField(VID_RCC, GetHelpdeskIssueUrlFromAlarm(alarmId, m_dwUserId, url, MAX_PATH, this));
-         msg.setField(VID_URL, url);
+         response.setField(VID_RCC, GetHelpdeskIssueUrlFromAlarm(alarmId, m_dwUserId, url, MAX_PATH, this));
+         response.setField(VID_URL, url);
       }
       else
       {
-         msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
 			WriteAuditLog(AUDIT_OBJECTS, FALSE, m_dwUserId, m_workstation, m_id, object->getId(),
             _T("Access denied on getting helpdesk URL for alarm on object %s"), object->getName());
       }
@@ -6557,11 +6532,10 @@ void ClientSession::getHelpdeskUrl(const NXCPMessage& request)
    {
       // Normally, for existing alarms object will not be nullptr,
       // so we assume that alarm id is invalid
-      msg.setField(VID_RCC, RCC_INVALID_ALARM_ID);
+      response.setField(VID_RCC, RCC_INVALID_ALARM_ID);
    }
 
-   // Send response
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
@@ -6569,10 +6543,10 @@ void ClientSession::getHelpdeskUrl(const NXCPMessage& request)
  */
 void ClientSession::unlinkHelpdeskIssue(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    // Get alarm id and it's source object
-   UINT32 alarmId;
+   uint32_t alarmId;
    TCHAR hdref[MAX_HELPDESK_REF_LEN];
    shared_ptr<NetObj> object;
    bool byHelpdeskRef;
@@ -6593,14 +6567,14 @@ void ClientSession::unlinkHelpdeskIssue(const NXCPMessage& request)
       // User should have "update alarms" right to the object and "unlink issues" global right
       if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_UPDATE_ALARMS) && checkSysAccessRights(SYSTEM_ACCESS_UNLINK_ISSUES))
       {
-         msg.setField(VID_RCC,
+         response.setField(VID_RCC,
             byHelpdeskRef ?
             UnlinkHelpdeskIssueByHDRef(hdref, this) :
             UnlinkHelpdeskIssueById(alarmId, this));
       }
       else
       {
-         msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
 			WriteAuditLog(AUDIT_OBJECTS, FALSE, m_dwUserId, m_workstation, m_id, object->getId(),
             _T("Access denied on unlinking helpdesk issue from alarm on object %s"), object->getName());
       }
@@ -6609,11 +6583,10 @@ void ClientSession::unlinkHelpdeskIssue(const NXCPMessage& request)
    {
       // Normally, for existing alarms object will not be nullptr,
       // so we assume that alarm id is invalid
-      msg.setField(VID_RCC, RCC_INVALID_ALARM_ID);
+      response.setField(VID_RCC, RCC_INVALID_ALARM_ID);
    }
 
-   // Send response
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
@@ -6621,36 +6594,31 @@ void ClientSession::unlinkHelpdeskIssue(const NXCPMessage& request)
  */
 void ClientSession::getAlarmComments(const NXCPMessage& request)
 {
-   NXCPMessage msg;
-
-   // Prepare response message
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    // Get alarm id and it's source object
-   UINT32 alarmId = request.getFieldAsUInt32(VID_ALARM_ID);
+   uint32_t alarmId = request.getFieldAsUInt32(VID_ALARM_ID);
    shared_ptr<NetObj> object = GetAlarmSourceObject(alarmId);
    if (object != nullptr)
    {
       // User should have "view alarms" right to the object
 		if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ_ALARMS))
       {
-			msg.setField(VID_RCC, GetAlarmComments(alarmId, &msg));
+			response.setField(VID_RCC, GetAlarmComments(alarmId, &response));
       }
       else
       {
-         msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
       }
    }
    else
    {
       // Normally, for existing alarms object will not be nullptr,
       // so we assume that alarm id is invalid
-      msg.setField(VID_RCC, RCC_INVALID_ALARM_ID);
+      response.setField(VID_RCC, RCC_INVALID_ALARM_ID);
    }
 
-   // Send response
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
@@ -6658,10 +6626,10 @@ void ClientSession::getAlarmComments(const NXCPMessage& request)
  */
 void ClientSession::updateAlarmComment(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    // Get alarm id and it's source object
-   UINT32 alarmId;
+   uint32_t alarmId;
    TCHAR hdref[MAX_HELPDESK_REF_LEN];
    shared_ptr<NetObj> object;
    bool byHelpdeskRef;
@@ -6684,7 +6652,7 @@ void ClientSession::updateAlarmComment(const NXCPMessage& request)
       {
 			UINT32 commentId = request.getFieldAsUInt32(VID_COMMENT_ID);
 			TCHAR *text = request.getFieldAsString(VID_COMMENTS);
-			msg.setField(VID_RCC,
+			response.setField(VID_RCC,
             byHelpdeskRef ?
             AddAlarmComment(hdref, CHECK_NULL(text), m_dwUserId) :
             UpdateAlarmComment(alarmId, &commentId, CHECK_NULL(text), m_dwUserId));
@@ -6692,18 +6660,17 @@ void ClientSession::updateAlarmComment(const NXCPMessage& request)
       }
       else
       {
-         msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
       }
    }
    else
    {
       // Normally, for existing alarms object will not be nullptr,
       // so we assume that alarm id is invalid
-      msg.setField(VID_RCC, RCC_INVALID_ALARM_ID);
+      response.setField(VID_RCC, RCC_INVALID_ALARM_ID);
    }
 
-   // Send response
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
@@ -6711,10 +6678,10 @@ void ClientSession::updateAlarmComment(const NXCPMessage& request)
  */
 void ClientSession::deleteAlarmComment(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    // Get alarm id and it's source object
-   UINT32 alarmId = request.getFieldAsUInt32(VID_ALARM_ID);
+   uint32_t alarmId = request.getFieldAsUInt32(VID_ALARM_ID);
    shared_ptr<NetObj> object = GetAlarmSourceObject(alarmId);
    if (object != nullptr)
    {
@@ -6722,22 +6689,21 @@ void ClientSession::deleteAlarmComment(const NXCPMessage& request)
 		if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_UPDATE_ALARMS))
       {
 			UINT32 commentId = request.getFieldAsUInt32(VID_COMMENT_ID);
-			msg.setField(VID_RCC, DeleteAlarmCommentByID(alarmId, commentId));
+			response.setField(VID_RCC, DeleteAlarmCommentByID(alarmId, commentId));
       }
       else
       {
-         msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
       }
    }
    else
    {
       // Normally, for existing alarms object will not be nullptr,
       // so we assume that alarm id is invalid
-      msg.setField(VID_RCC, RCC_INVALID_ALARM_ID);
+      response.setField(VID_RCC, RCC_INVALID_ALARM_ID);
    }
 
-   // Send response
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
@@ -7182,41 +7148,39 @@ void ClientSession::queryAgentTable(const NXCPMessage& request)
  */
 void ClientSession::editTrap(const NXCPMessage& request, int operation)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
-
-   UINT32 dwTrapId, dwResult;
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    // Check access rights
    if (checkSysAccessRights(SYSTEM_ACCESS_CONFIGURE_TRAPS))
    {
+      uint32_t trapId, rcc;
       switch(operation)
       {
          case TRAP_CREATE:
-            dwResult = CreateNewTrap(&dwTrapId);
-            msg.setField(VID_RCC, dwResult);
-            if (dwResult == RCC_SUCCESS)
-               msg.setField(VID_TRAP_ID, dwTrapId);   // Send id of new trap to client
+            rcc = CreateNewTrap(&trapId);
+            response.setField(VID_RCC, rcc);
+            if (rcc == RCC_SUCCESS)
+               response.setField(VID_TRAP_ID, trapId);   // Send id of new trap to client
             break;
          case TRAP_UPDATE:
-            msg.setField(VID_RCC, UpdateTrapFromMsg(request));
+            response.setField(VID_RCC, UpdateTrapFromMsg(request));
             break;
          case TRAP_DELETE:
-            dwTrapId = request.getFieldAsUInt32(VID_TRAP_ID);
-            msg.setField(VID_RCC, DeleteTrap(dwTrapId));
+            trapId = request.getFieldAsUInt32(VID_TRAP_ID);
+            response.setField(VID_RCC, DeleteTrap(trapId));
             break;
          default:
-				msg.setField(VID_RCC, RCC_INVALID_ARGUMENT);
+				response.setField(VID_RCC, RCC_INVALID_ARGUMENT);
             break;
       }
    }
    else
    {
       // Current user has no rights for trap management
-      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
 
-   // Send response
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
@@ -7224,27 +7188,19 @@ void ClientSession::editTrap(const NXCPMessage& request, int operation)
  */
 void ClientSession::sendAllTraps(const NXCPMessage& request)
 {
-   BOOL bSuccess = FALSE;
-
-   // Prepare response message
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
-
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 	if (checkSysAccessRights(SYSTEM_ACCESS_CONFIGURE_TRAPS))
    {
-      msg.setField(VID_RCC, RCC_SUCCESS);
-      sendMessage(msg);
-      bSuccess = TRUE;
+      response.setField(VID_RCC, RCC_SUCCESS);
+      sendMessage(response);
       SendTrapsToClient(this, request.getId());
    }
    else
    {
       // Current user has no rights for trap management
-      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
+      sendMessage(response);
    }
-
-   // Send response
-   if (!bSuccess)
-      sendMessage(msg);
 }
 
 /**
@@ -7272,58 +7228,56 @@ void ClientSession::sendAllTraps2(const NXCPMessage& request)
  */
 void ClientSession::getInstalledPackages(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
-   BOOL bSuccess = FALSE;
-   TCHAR szBuffer[MAX_DB_STRING];
-
+   bool success = false;
    if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_PACKAGES)
    {
       DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
       DB_UNBUFFERED_RESULT hResult = DBSelectUnbuffered(hdb, _T("SELECT pkg_id,version,platform,pkg_file,pkg_type,pkg_name,description,command FROM agent_pkg"));
       if (hResult != nullptr)
       {
-         msg.setField(VID_RCC, RCC_SUCCESS);
-         sendMessage(&msg);
-         bSuccess = TRUE;
+         response.setField(VID_RCC, RCC_SUCCESS);
+         sendMessage(response);
+         success = true;
 
-         msg.setCode(CMD_PACKAGE_INFO);
-         msg.deleteAllFields();
+         response.setCode(CMD_PACKAGE_INFO);
+         response.deleteAllFields();
 
+         TCHAR buffer[MAX_DB_STRING];
          while(DBFetch(hResult))
          {
-            msg.setField(VID_PACKAGE_ID, DBGetFieldULong(hResult, 0));
-            msg.setField(VID_PACKAGE_VERSION, DBGetField(hResult, 1, szBuffer, MAX_DB_STRING));
-            msg.setField(VID_PLATFORM_NAME, DBGetField(hResult, 2, szBuffer, MAX_DB_STRING));
-            msg.setField(VID_FILE_NAME, DBGetField(hResult, 3, szBuffer, MAX_DB_STRING));
-            msg.setField(VID_PACKAGE_TYPE, DBGetField(hResult, 4, szBuffer, MAX_DB_STRING));
-            msg.setField(VID_PACKAGE_NAME, DBGetField(hResult, 5, szBuffer, MAX_DB_STRING));
-            msg.setField(VID_DESCRIPTION, DBGetField(hResult, 6, szBuffer, MAX_DB_STRING));
-            msg.setField(VID_COMMAND, DBGetField(hResult, 7, szBuffer, MAX_DB_STRING));
-            sendMessage(msg);
-            msg.deleteAllFields();
+            response.setField(VID_PACKAGE_ID, DBGetFieldULong(hResult, 0));
+            response.setField(VID_PACKAGE_VERSION, DBGetField(hResult, 1, buffer, MAX_DB_STRING));
+            response.setField(VID_PLATFORM_NAME, DBGetField(hResult, 2, buffer, MAX_DB_STRING));
+            response.setField(VID_FILE_NAME, DBGetField(hResult, 3, buffer, MAX_DB_STRING));
+            response.setField(VID_PACKAGE_TYPE, DBGetField(hResult, 4, buffer, MAX_DB_STRING));
+            response.setField(VID_PACKAGE_NAME, DBGetField(hResult, 5, buffer, MAX_DB_STRING));
+            response.setField(VID_DESCRIPTION, DBGetField(hResult, 6, buffer, MAX_DB_STRING));
+            response.setField(VID_COMMAND, DBGetField(hResult, 7, buffer, MAX_DB_STRING));
+            sendMessage(response);
+            response.deleteAllFields();
          }
 
-         msg.setField(VID_PACKAGE_ID, (UINT32)0);
-         sendMessage(msg);
+         response.setField(VID_PACKAGE_ID, (UINT32)0);
+         sendMessage(response);
 
          DBFreeResult(hResult);
       }
       else
       {
-         msg.setField(VID_RCC, RCC_DB_FAILURE);
+         response.setField(VID_RCC, RCC_DB_FAILURE);
       }
       DBConnectionPoolReleaseConnection(hdb);
    }
    else
    {
       // Current user has no rights for package management
-      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
 
-   // Send response
-   if (!bSuccess)
-      sendMessage(msg);
+   if (!success)
+      sendMessage(response);
 }
 
 /**
@@ -8975,32 +8929,32 @@ struct SNMP_WalkerThreadArgs
  */
 struct SNMP_WalkerContext
 {
-   NXCPMessage *pMsg;
-   uint32_t dwId;
-   uint32_t dwNumVars;
-   ClientSession *pSession;
+   NXCPMessage *msg;
+   uint32_t fieldId;
+   uint32_t varbindCount;
+   ClientSession *session;
 };
 
 /**
  * SNMP walker enumeration callback
  */
-static UINT32 WalkerCallback(SNMP_Variable *pVar, SNMP_Transport *transport, SNMP_WalkerContext *context)
+static uint32_t WalkerCallback(SNMP_Variable *pVar, SNMP_Transport *transport, SNMP_WalkerContext *context)
 {
-   NXCPMessage *msg = context->pMsg;
+   NXCPMessage *msg = context->msg;
    TCHAR buffer[4096];
 	bool convertToHex = true;
 
-   msg->setField(context->dwId++, pVar->getName().toString(buffer, 4096));
+   msg->setField(context->fieldId++, pVar->getName().toString(buffer, 4096));
    pVar->getValueAsPrintableString(buffer, 4096, &convertToHex);
-   msg->setField(context->dwId++, convertToHex ? (UINT32)0xFFFF : pVar->getType());
-   msg->setField(context->dwId++, buffer);
-   context->dwNumVars++;
-   if (context->dwNumVars == 50)
+   msg->setField(context->fieldId++, convertToHex ? (UINT32)0xFFFF : pVar->getType());
+   msg->setField(context->fieldId++, buffer);
+   context->varbindCount++;
+   if (context->varbindCount == 50)
    {
-      msg->setField(VID_NUM_VARIABLES, context->dwNumVars);
-      context->pSession->sendMessage(msg);
-      context->dwNumVars = 0;
-      context->dwId = VID_SNMP_WALKER_DATA_BASE;
+      msg->setField(VID_NUM_VARIABLES, context->varbindCount);
+      context->session->sendMessage(msg);
+      context->varbindCount = 0;
+      context->fieldId = VID_SNMP_WALKER_DATA_BASE;
       msg->deleteAllFields();
    }
    return SNMP_ERR_SUCCESS;
@@ -9014,12 +8968,12 @@ static void SNMP_WalkerThread(SNMP_WalkerThreadArgs *args)
    NXCPMessage msg(CMD_SNMP_WALK_DATA, args->requestId);
 
    SNMP_WalkerContext context;
-   context.pMsg = &msg;
-   context.dwId = VID_SNMP_WALKER_DATA_BASE;
-   context.dwNumVars = 0;
-   context.pSession = args->session;
+   context.msg = &msg;
+   context.fieldId = VID_SNMP_WALKER_DATA_BASE;
+   context.varbindCount = 0;
+   context.session = args->session;
    args->node->callSnmpEnumerate(args->baseOID, WalkerCallback, &context);
-   msg.setField(VID_NUM_VARIABLES, context.dwNumVars);
+   msg.setField(VID_NUM_VARIABLES, context.varbindCount);
    msg.setEndOfSequence();
    args->session->sendMessage(msg);
    delete args;

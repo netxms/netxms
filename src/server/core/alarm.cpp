@@ -21,6 +21,7 @@
 **/
 
 #include "nxcore.h"
+#include <netxms-regex.h>
 
 #define DEBUG_TAG _T("alarm")
 
@@ -208,8 +209,8 @@ struct AlarmBackgroundProcessingData
 static void ResolveAlarmsInBackground(AlarmBackgroundProcessingData *data)
 {
    nxlog_debug_tag(DEBUG_TAG, 5, _T("Processing background alarm %s"), data->terminate ? _T("termination") : _T("resolution"));
-   IntegerArray<UINT32> failIds, failCodes;
-   ResolveAlarmsById(data->alarms, &failIds, &failCodes, nullptr, data->terminate, data->includeSubordinates);
+   IntegerArray<uint32_t> failIds, failCodes;
+   ResolveAlarmsById(*data->alarms, &failIds, &failCodes, nullptr, data->terminate, data->includeSubordinates);
    delete data;
 }
 
@@ -1149,56 +1150,50 @@ void Alarm::resolve(uint32_t userId, Event *event, bool terminate, bool notify, 
  */
 uint32_t NXCORE_EXPORTABLE ResolveAlarmById(uint32_t alarmId, ClientSession *session, bool terminate, bool includeSubordinates)
 {
-   IntegerArray<UINT32> list(1), failIds, failCodes;
+   IntegerArray<uint32_t> list(1), failIds, failCodes;
    list.add(alarmId);
-   ResolveAlarmsById(&list, &failIds, &failCodes, session, terminate, includeSubordinates);
-
-   if (failCodes.size() > 0)
-   {
-      return failCodes.get(0);
-   }
-   else
-   {
-      return RCC_SUCCESS;
-   }
+   ResolveAlarmsById(list, &failIds, &failCodes, session, terminate, includeSubordinates);
+   return failCodes.isEmpty() ? RCC_SUCCESS : failCodes.get(0);
 }
 
 /**
  * Resolve and possibly terminate alarms with given ID
  * Should return RCC which can be sent to client
  */
-void NXCORE_EXPORTABLE ResolveAlarmsById(IntegerArray<UINT32> *alarmIds, IntegerArray<UINT32> *failIds,
-         IntegerArray<UINT32> *failCodes, ClientSession *session, bool terminate, bool includeSubordinates)
+void NXCORE_EXPORTABLE ResolveAlarmsById(const IntegerArray<uint32_t>& alarmIds, IntegerArray<uint32_t> *failIds,
+         IntegerArray<uint32_t> *failCodes, ClientSession *session, bool terminate, bool includeSubordinates)
 {
    IntegerArray<uint32_t> processedAlarms, updatedObjects;
 
    s_alarmList.lock();
    time_t changeTime = time(nullptr);
-   for(int i = 0; i < alarmIds->size(); i++)
+   for(int i = 0; i < alarmIds.size(); i++)
    {
+      uint32_t currentId = alarmIds.get(i);
+
       int n;
       for(n = 0; n < s_alarmList.size(); n++)
       {
          Alarm *alarm = s_alarmList.get(n);
-         if (alarm->getAlarmId() == alarmIds->get(i))
+         if (alarm->getAlarmId() == currentId)
          {
             // If alarm is open in helpdesk, it cannot be terminated
             if ((alarm->getHelpDeskState() != ALARM_HELPDESK_OPEN) || ConfigReadBoolean(_T("Alarms.IgnoreHelpdeskState"), false))
             {
                if (terminate || (alarm->getState() != ALARM_STATE_RESOLVED))
                {
-                  shared_ptr<NetObj> object = GetAlarmSourceObject(alarmIds->get(i), true);
+                  shared_ptr<NetObj> object = GetAlarmSourceObject(currentId, true);
                   if (session != nullptr)
                   {
                      // If user does not have the required object access rights, the alarm cannot be terminated
                      if (!object->checkAccessRights(session->getUserId(), terminate ? OBJECT_ACCESS_TERM_ALARMS : OBJECT_ACCESS_UPDATE_ALARMS))
                      {
-                        failIds->add(alarmIds->get(i));
+                        failIds->add(currentId);
                         failCodes->add(RCC_ACCESS_DENIED);
                         break;
                      }
 
-                     WriteAuditLog(AUDIT_OBJECTS, TRUE, session->getUserId(), session->getWorkstation(), session->getId(), object->getId(),
+                     WriteAuditLog(AUDIT_OBJECTS, true, session->getUserId(), session->getWorkstation(), session->getId(), object->getId(),
                         _T("%s alarm %d (%s) on object %s"), terminate ? _T("Terminated") : _T("Resolved"),
                         alarm->getAlarmId(), alarm->getMessage(), object->getName());
                   }
@@ -1221,7 +1216,7 @@ void NXCORE_EXPORTABLE ResolveAlarmsById(IntegerArray<UINT32> *alarmIds, Integer
             }
             else
             {
-               failIds->add(alarmIds->get(i));
+               failIds->add(currentId);
                failCodes->add(RCC_ALARM_OPEN_IN_HELPDESK);
             }
             break;
@@ -1229,7 +1224,7 @@ void NXCORE_EXPORTABLE ResolveAlarmsById(IntegerArray<UINT32> *alarmIds, Integer
       }
       if (n == s_alarmList.size())
       {
-         failIds->add(alarmIds->get(i));
+         failIds->add(currentId);
          failCodes->add(RCC_INVALID_ALARM_ID);
       }
    }
@@ -1248,18 +1243,24 @@ void NXCORE_EXPORTABLE ResolveAlarmsById(IntegerArray<UINT32> *alarmIds, Integer
 }
 
 /**
- * Resolve and possibly terminate all alarms with given key
+ * Resolve alarm(s) by matching alarm key with regular expression
  */
-void NXCORE_EXPORTABLE ResolveAlarmByKey(const TCHAR *pszKey, bool useRegexp, bool terminate, Event *event)
+static void ResolveAlarmByKeyRegexp(const TCHAR *keyPattern, bool terminate, Event *event)
 {
-   if (useRegexp)
+   const char *errptr;
+   int erroffset;
+   PCRE *preg = _pcre_compile_t(reinterpret_cast<const PCRE_TCHAR*>(keyPattern), PCRE_COMMON_FLAGS, &errptr, &erroffset, nullptr);
+   if (preg != nullptr)
    {
       IntegerArray<uint32_t> objectList;
+      int ovector[60];
+
       s_alarmList.lock();
       for(int i = 0; i < s_alarmList.size(); i++)
       {
          Alarm *alarm = s_alarmList.get(i);
-         if (RegexpMatch(alarm->getKey(), pszKey, true) &&
+         const TCHAR *key = alarm->getKey();
+         if ((_pcre_exec_t(preg, nullptr, reinterpret_cast<const PCRE_TCHAR*>(key), static_cast<int>(_tcslen(key)), 0, 0, ovector, 60) >= 0) &&
              ((alarm->getHelpDeskState() != ALARM_HELPDESK_OPEN) || ConfigReadBoolean(_T("Alarms.IgnoreHelpdeskState"), false)) &&
              (terminate || (alarm->getState() != ALARM_STATE_RESOLVED)))
          {
@@ -1281,31 +1282,52 @@ void NXCORE_EXPORTABLE ResolveAlarmByKey(const TCHAR *pszKey, bool useRegexp, bo
       // Update status of objects
       for(int i = 0; i < objectList.size(); i++)
          UpdateObjectStatus(objectList.get(i));
+
+      _pcre_free_t(preg);
    }
    else
    {
-      uint32_t objectId = 0;
-      s_alarmList.lock();
-      Alarm *alarm = s_alarmList.find(pszKey);
-      if ((alarm != nullptr) &&
-          ((alarm->getHelpDeskState() != ALARM_HELPDESK_OPEN) || ConfigReadBoolean(_T("Alarms.IgnoreHelpdeskState"), false)) &&
-          (terminate || (alarm->getState() != ALARM_STATE_RESOLVED)))
-      {
-         // Add alarm's source object to update list
-         objectId = alarm->getSourceObject();
-
-         // Resolve or terminate alarm
-         alarm->resolve(0, event, terminate, true, false);
-         if (terminate)
-         {
-            s_alarmList.remove(alarm);
-         }
-      }
-      s_alarmList.unlock();
-
-      if (objectId != 0)
-         UpdateObjectStatus(objectId);
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("ResolveAlarmByKey: cannot compile regular expression \"%s\" (%hs)"), keyPattern, errptr);
    }
+}
+
+/**
+ * Resolve alarm with specific key (exact match)
+ */
+static void ResolveAlarmByKeyExact(const TCHAR *key, bool terminate, Event *event)
+{
+   uint32_t objectId = 0;
+   s_alarmList.lock();
+   Alarm *alarm = s_alarmList.find(key);
+   if ((alarm != nullptr) &&
+       ((alarm->getHelpDeskState() != ALARM_HELPDESK_OPEN) || ConfigReadBoolean(_T("Alarms.IgnoreHelpdeskState"), false)) &&
+       (terminate || (alarm->getState() != ALARM_STATE_RESOLVED)))
+   {
+      // Add alarm's source object to update list
+      objectId = alarm->getSourceObject();
+
+      // Resolve or terminate alarm
+      alarm->resolve(0, event, terminate, true, false);
+      if (terminate)
+      {
+         s_alarmList.remove(alarm);
+      }
+   }
+   s_alarmList.unlock();
+
+   if (objectId != 0)
+      UpdateObjectStatus(objectId);
+}
+
+/**
+ * Resolve and possibly terminate all alarms with given key
+ */
+void NXCORE_EXPORTABLE ResolveAlarmByKey(const TCHAR *key, bool useRegexp, bool terminate, Event *event)
+{
+   if (useRegexp)
+      ResolveAlarmByKeyRegexp(key, terminate, event);
+   else
+      ResolveAlarmByKeyExact(key, terminate, event);
 }
 
 /**
