@@ -2146,8 +2146,8 @@ bool IsEventSource(int objectClass)
  */
 bool NXCORE_EXPORTABLE IsParentObject(uint32_t object1, uint32_t object2)
 {
-   shared_ptr<NetObj> p = FindObjectById(object1);
-   return (p != nullptr) ? p->isChild(object2) : false;
+   shared_ptr<NetObj> p = FindObjectById(object2);
+   return (p != nullptr) ? p->isParent(object1) : false;
 }
 
 /**
