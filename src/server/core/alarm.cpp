@@ -1260,7 +1260,7 @@ static void ResolveAlarmByKeyRegexp(const TCHAR *keyPattern, bool terminate, Eve
       {
          Alarm *alarm = s_alarmList.get(i);
          const TCHAR *key = alarm->getKey();
-         if ((_pcre_exec_t(preg, nullptr, reinterpret_cast<const PCRE_TCHAR*>(key), static_cast<int>(wcslen(key)), 0, 0, ovector, 60) >= 0) &&
+         if ((_pcre_exec_t(preg, nullptr, reinterpret_cast<const PCRE_TCHAR*>(key), static_cast<int>(_tcslen(key)), 0, 0, ovector, 60) >= 0) &&
              ((alarm->getHelpDeskState() != ALARM_HELPDESK_OPEN) || ConfigReadBoolean(_T("Alarms.IgnoreHelpdeskState"), false)) &&
              (terminate || (alarm->getState() != ALARM_STATE_RESOLVED)))
          {
