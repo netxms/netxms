@@ -472,6 +472,7 @@ public class NXCPCodes
 	public static final int CMD_UPDATE_MAINTENANCE_JOURNAL = 0x01C6;
    public static final int CMD_GET_SSH_CREDENTIALS = 0x01C7;
    public static final int CMD_UPDATE_SSH_CREDENTIALS = 0x01C8;
+   public static final int CMD_DCI_INFO = 0x01C9;
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;
@@ -805,7 +806,7 @@ public class NXCPCodes
 	public static final long VID_AUTOBIND_FILTER = 321;
 	public static final long VID_BASE_UNITS = 322;
 	public static final long VID_MULTIPLIER = 323;
-	public static final long VID_CUSTOM_UNITS_NAME = 324;
+	public static final long VID_UNITS_NAME = 324;
 	public static final long VID_PERFTAB_SETTINGS = 325;
 	public static final long VID_EXECUTION_STATUS = 326;
 	public static final long VID_EXECUTION_RESULT = 327;

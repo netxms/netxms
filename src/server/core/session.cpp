@@ -1877,6 +1877,9 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_UPDATE_MAINTENANCE_JOURNAL:
          updateMaintenanceJournal(*request);
          break;
+      case CMD_DCI_INFO:
+         getDciInfo(*request);
+         break;
       default:
          if ((code >> 8) == 0x11)
          {
@@ -16162,7 +16165,7 @@ void ClientSession::readMaintenanceJournal(const NXCPMessage& request)
    else
    {
       response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
-      debugPrintf(6, _T("Maintenance journal read for object [%u] failed: invalid object ID"), object->getId());
+      debugPrintf(6, _T("Maintenance journal read for object [%u] failed: invalid object ID"), request.getFieldAsUInt32(VID_OBJECT_ID));
    }
 
    sendMessage(response);
@@ -16210,7 +16213,7 @@ void ClientSession::writeMaintenanceJournal(const NXCPMessage& request)
    else
    {
       response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
-      debugPrintf(6, _T("New maintenance journal entry create for object %d failed: invalid object ID"), object->getId());
+      debugPrintf(6, _T("New maintenance journal entry create for object %d failed: invalid object ID"), request.getFieldAsUInt32(VID_OBJECT_ID));
    }
 
    sendMessage(response);
@@ -16260,8 +16263,73 @@ void ClientSession::updateMaintenanceJournal(const NXCPMessage& request)
    else
    {
       response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
-      debugPrintf(6, _T("Maintenance journal entry %u edit failed: invalid object ID %u"), entryId, object->getId());
+      debugPrintf(6, _T("Maintenance journal entry %u edit failed: invalid object ID %u"), entryId, request.getFieldAsUInt32(VID_OBJECT_ID));
    }
 
+   sendMessage(response);
+}
+
+/**
+ * Get DCI info
+ */
+void ClientSession::getDciInfo(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   uint32_t count = request.getFieldAsUInt32(VID_NUM_ITEMS);
+   uint32_t *nodeList = MemAllocArray<uint32_t>(count);
+   uint32_t *dciList = MemAllocArray<uint32_t>(count);
+   request.getFieldAsInt32Array(VID_NODE_LIST, count, nodeList);
+   request.getFieldAsInt32Array(VID_DCI_LIST, count, dciList);
+
+   uint32_t returnCount = 0;
+   uint32_t fieldId = VID_DCI_LIST_BASE;
+   for(int i = 0; i < count; i++)
+   {
+      shared_ptr<NetObj> object = FindObjectById(nodeList[i]);
+      if (object != nullptr && object->isDataCollectionTarget())
+      {
+         if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_WRITE_MJOURNAL))
+         {
+            shared_ptr<DCObject> dci = static_cast<DataCollectionTarget&>(*object).getDCObjectById(dciList[i], m_dwUserId);
+            if (dci != nullptr)
+            {
+               if (dci->getType() == DCO_TYPE_ITEM)
+               {
+                  response.setField(fieldId++, dciList[i]);
+                  response.setField(fieldId++, static_cast<DCItem&>(*dci).getUnitName());
+                  response.setField(fieldId++, static_cast<DCItem&>(*dci).getMultiplier());
+                  returnCount++;
+               }
+               else
+               {
+                  debugPrintf(4, _T("getDciInfo: invalid DCI %d type at target %s [%d] not found"), dciList[i], object->getName(), object->getId());
+               }
+            }
+            else
+            {
+               response.setField(VID_RCC, RCC_INVALID_DCI_ID);
+               debugPrintf(4, _T("getDciInfo: DCI %d at target %s [%d] not found"), dciList[i], object->getName(), object->getId());
+            }
+         }
+         else
+         {
+            writeAuditLog(AUDIT_OBJECTS, false, object->getId(), _T("Access denied on getting DCI info"));
+         }
+      }
+      else
+      {
+         if (object == nullptr)
+            debugPrintf(6, _T("getDciInfo: invalid object id %u"), nodeList[i]);
+         else
+            debugPrintf(6, _T("getDciInfo: object %u is not data collection target"), nodeList[i]);
+      }
+   }
+   response.setField(VID_NUM_ITEMS, returnCount);
+
+   MemFree(nodeList);
+   MemFree(dciList);
+
+   response.setField(VID_RCC, RCC_SUCCESS);
    sendMessage(response);
 }

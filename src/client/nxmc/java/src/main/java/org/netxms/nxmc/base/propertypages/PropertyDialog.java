@@ -22,6 +22,7 @@ import org.eclipse.jface.preference.IPreferenceNode;
 import org.eclipse.jface.preference.IPreferencePage;
 import org.eclipse.jface.preference.PreferenceDialog;
 import org.eclipse.jface.preference.PreferenceManager;
+import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Shell;
 
@@ -74,5 +75,22 @@ public class PropertyDialog extends PreferenceDialog
          }
       }
       return result;
+   }
+
+   /**
+    * Show property page by path.
+    *
+    * @param path path to property page (usually dot separated if not overriden by preference manager)
+    */
+   public void showPage(String path)
+   {
+      IPreferenceNode n = getPreferenceManager().find(path);
+      if (n != null)
+      {
+         if (showPage(n))
+         {
+            getTreeViewer().setSelection(new StructuredSelection(n));
+         }
+      }
    }
 }

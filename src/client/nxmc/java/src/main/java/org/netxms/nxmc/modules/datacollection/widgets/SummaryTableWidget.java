@@ -311,7 +311,7 @@ public class SummaryTableWidget extends Composite
          viewer.setComparator(new SummaryTableItemComparator(table));
       }
 
-      labelProvider.setColumnDataTypes(table.getColumnDataTypes());
+      labelProvider.setColumnDataTypes(table.getColumns());
       if ((sortingColumnList != null) && !sortingColumnList.isEmpty())
       {
          List<SortItem> sortItem = new ArrayList<SortItem>();

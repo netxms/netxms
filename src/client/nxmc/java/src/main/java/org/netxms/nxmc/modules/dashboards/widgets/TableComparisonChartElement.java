@@ -216,7 +216,7 @@ public abstract class TableComparisonChartElement extends ElementWidget
             if ((instanceMap.size() >= ChartConfiguration.MAX_GRAPH_ITEM_COUNT) ||
 				    ((value == 0) && config.isIgnoreZeroValues()))
 					continue;
-            index = chart.addParameter(new GraphItem(config.getNodeId(), config.getDciId(), DataOrigin.INTERNAL, DataType.INT32, Long.toString(config.getDciId()), instance, "%s", ChartDciConfig.DEFAULT, -1)); //$NON-NLS-1$
+            index = chart.addParameter(new GraphItem(config.getNodeId(), config.getDciId(), DataOrigin.INTERNAL, DataType.INT32, Long.toString(config.getDciId()), instance, null, ChartDciConfig.DEFAULT, -1)); //$NON-NLS-1$
 				instanceMap.put(instance, index);
 				rebuild = true;
 			}

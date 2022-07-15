@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Raden Solutions
+ * Copyright (C) 2003-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,14 +19,12 @@
 package org.netxms.ui.eclipse.datacollection.propertypages;
 
 import org.eclipse.jface.dialogs.Dialog;
+import org.eclipse.jface.preference.IPreferencePageContainer;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
-import org.eclipse.swt.layout.FillLayout;
-import org.eclipse.swt.layout.FormAttachment;
-import org.eclipse.swt.layout.FormData;
-import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -34,18 +32,21 @@ import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Group;
-import org.eclipse.swt.widgets.Spinner;
+import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
+import org.eclipse.ui.forms.events.HyperlinkAdapter;
+import org.eclipse.ui.forms.events.HyperlinkEvent;
+import org.eclipse.ui.forms.widgets.Hyperlink;
+import org.eclipse.ui.internal.dialogs.FilteredPreferenceDialog;
 import org.netxms.client.NXCSession;
-import org.netxms.client.constants.AgentCacheMode;
 import org.netxms.client.constants.DataOrigin;
 import org.netxms.client.constants.DataType;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.DataCollectionObject;
+import org.netxms.client.datacollection.DataCollectionTable;
 import org.netxms.client.objects.Node;
 import org.netxms.client.snmp.SnmpObjectId;
 import org.netxms.client.snmp.SnmpObjectIdFormatException;
-import org.netxms.client.snmp.SnmpVersion;
 import org.netxms.ui.eclipse.console.resources.DataCollectionDisplayInfo;
 import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.dialogs.IParameterSelectionDialog;
@@ -59,45 +60,64 @@ import org.netxms.ui.eclipse.datacollection.propertypages.helpers.AbstractDCIPro
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
-import org.netxms.ui.eclipse.widgets.LabeledSpinner;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
 /**
- * "General" property page for DCI
+ * "General" property page for DCO
  */
 public class General extends AbstractDCIPropertyPage
-{
-	private static final String[] snmpRawTypes = 
-	{ 
-		Messages.get().General_SNMP_DT_None, 
-		Messages.get().General_SNMP_DT_int32, 
-		Messages.get().General_SNMP_DT_uint32,
-		Messages.get().General_SNMP_DT_int64, 
-		Messages.get().General_SNMP_DT_uint64,
-		Messages.get().General_SNMP_DT_float, 
-		Messages.get().General_SNMP_DT_ipAddr,
-		Messages.get().General_SNMP_DT_macAddr
-	};
-	
-	private DataCollectionItem dci;
-	private Text description;
-	private LabeledText parameter;
+{		
+   private static final String[] dataUnits = 
+   {
+      "B/s",
+      "b/s",
+      "B (Metric)",
+      "B (IEC)",
+      "b (Metric)",
+      "b (IEC)",
+      "Uptime", //special
+      "Epoch time", //special
+      "sr",
+      "Hz",
+      "N",
+      "Pa",
+      "J",
+      "W",
+      "V",
+      "Ω",
+      "Wb",
+      "T",
+      "°C",
+      "°F",
+      "lm",
+      "lx",
+      "%"
+   };
+   private static final int SUB_ELEMENT_INDENT = 20;
+   
+	private DataCollectionObject dco;
+   private Combo origin;
+   private Text parameter;
+	private LabeledText description;
 	private Button selectButton;
-	private Combo origin;
-	private Combo dataType;
-	private Button checkInterpretRawSnmpValue;
-	private Combo snmpRawType;
-	private Button checkUseCustomSnmpPort;
-	private Spinner customSnmpPort;
-   private Button checkUseCustomSnmpVersion;
-   private Combo customSnmpVersion;
 	private ObjectSelector sourceNode;
-	private Combo agentCacheMode;
-	private Combo schedulingMode;
-	private Combo retentionMode;
-	private LabeledText pollingInterval;
-	private LabeledText retentionTime;
-	private LabeledSpinner sampleCount;
+   private Combo dataType;
+   private Combo useMultipliers;
+   private Combo dataUnit;
+	private Button scheduleDefault;
+   private Button scheduleFixed;
+   private Button scheduleAdvanced;
+   private Label serverDefaultIntervalLabel;
+   private Composite pollingIntervalComposite;
+   private Label pollingIntervalLabel;
+   private Hyperlink scheduleLink;
+   private Button storageDefault;
+   private Button storageFixed;
+   private Button storageNoStorage;
+   private Composite retentionTimeComposite;
+   private Label serverDefaultRetentionLabel;
+	private Text pollingInterval;
+	private Text retentionTime;
 	private Button checkSaveOnlyChangedValues;
 	
    /**
@@ -107,82 +127,29 @@ public class General extends AbstractDCIPropertyPage
 	protected Control createContents(Composite parent)
 	{		
 	   Composite dialogArea = (Composite)super.createContents(parent);
-		dci = editor.getObjectAsItem();
-		
+		dco = editor.getObject();
+
 		GridLayout layout = new GridLayout();
 		layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
 		layout.marginWidth = 0;
+		layout.marginRight = WidgetHelper.OUTER_SPACING;
 		layout.marginHeight = 0;
-		layout.numColumns = 2;
       dialogArea.setLayout(layout);
       
-      /** description area **/
-      Group groupDescription = new Group(dialogArea, SWT.NONE);
-      groupDescription.setText(Messages.get().General_Description);
-      FillLayout descriptionLayout = new FillLayout();
-      descriptionLayout.marginWidth = WidgetHelper.OUTER_SPACING;
-      descriptionLayout.marginHeight = WidgetHelper.OUTER_SPACING;
-      groupDescription.setLayout(descriptionLayout);
-      description = new Text(groupDescription, SWT.BORDER);
-      description.setTextLimit(255);
-      description.setText(dci.getDescription());
+      Group groupMetricConfig = new Group(dialogArea, SWT.NONE);
+      groupMetricConfig.setText("Metric to collect");
+      layout = new GridLayout();
+      layout.marginHeight = WidgetHelper.OUTER_SPACING;
+      layout.marginWidth = WidgetHelper.OUTER_SPACING;
+      layout.numColumns = 3;
+      groupMetricConfig.setLayout(layout);
       GridData gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
-      gd.horizontalSpan = 2;
-      groupDescription.setLayoutData(gd);
+      gd.verticalAlignment = SWT.FILL;
+      groupMetricConfig.setLayoutData(gd);
       
-      /** data area **/
-      Group groupData = new Group(dialogArea, SWT.NONE);
-      groupData.setText(Messages.get().General_Data);
-      FormLayout dataLayout = new FormLayout();
-      dataLayout.marginHeight = WidgetHelper.OUTER_SPACING;
-      dataLayout.marginWidth = WidgetHelper.OUTER_SPACING;
-      groupData.setLayout(dataLayout);
-      gd = new GridData();
-      gd.grabExcessHorizontalSpace = true;
-      gd.horizontalAlignment = SWT.FILL;
-      gd.horizontalSpan = 2;
-      groupData.setLayoutData(gd);
-      
-      parameter = new LabeledText(groupData, SWT.NONE);
-      parameter.setLabel(Messages.get().General_Parameter);
-      parameter.getTextControl().setTextLimit(255);
-      parameter.setText(dci.getName());
-      
-      selectButton = new Button(groupData, SWT.PUSH);
-      selectButton.setText(Messages.get().General_Select);
-      selectButton.addSelectionListener(new SelectionListener() {
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e)
-			{
-				widgetSelected(e);
-			}
-
-			@Override
-			public void widgetSelected(SelectionEvent e)
-			{
-				selectParameter();
-			}
-      });
-
-      FormData fd = new FormData();
-      fd.left = new FormAttachment(0, 0);
-      fd.top = new FormAttachment(0, 0);
-      fd.right = new FormAttachment(selectButton, -WidgetHelper.INNER_SPACING, SWT.LEFT);
-      parameter.setLayoutData(fd);
-
-      fd = new FormData();
-      fd.right = new FormAttachment(100, 0);
-      fd.bottom = new FormAttachment(parameter, 0, SWT.BOTTOM);
-      fd.width = WidgetHelper.BUTTON_WIDTH_HINT;
-      selectButton.setLayoutData(fd);
-      
-      fd = new FormData();
-      fd.left = new FormAttachment(0, 0);
-      fd.top = new FormAttachment(parameter, WidgetHelper.OUTER_SPACING, SWT.BOTTOM);
-      fd.right = new FormAttachment(50, -WidgetHelper.OUTER_SPACING / 2);
-      origin = WidgetHelper.createLabeledCombo(groupData, SWT.READ_ONLY, Messages.get().General_Origin, fd);
+      origin = new Combo(groupMetricConfig, SWT.READ_ONLY);
       origin.add(Messages.get().DciLabelProvider_SourceInternal);
       origin.add(Messages.get().DciLabelProvider_SourceAgent);
       origin.add(Messages.get().DciLabelProvider_SourceSNMP);
@@ -194,318 +161,306 @@ public class General extends AbstractDCIPropertyPage
       origin.add(Messages.get().DciLabelProvider_SourceSSH);
       origin.add(Messages.get().DciLabelProvider_SourceMQTT);
       origin.add(Messages.get().DciLabelProvider_SourceDeviceDriver);
-      origin.select(dci.getOrigin().getValue());
+      origin.select(dco.getOrigin().getValue());
       origin.addSelectionListener(new SelectionListener() {
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e)
-			{
-				widgetSelected(e);
-			}
-
-			@Override
-			public void widgetSelected(SelectionEvent e)
-			{
-				onOriginChange();
-			}
-      });
-      
-      fd = new FormData();
-      fd.left = new FormAttachment(50, WidgetHelper.OUTER_SPACING / 2);
-      fd.top = new FormAttachment(parameter, WidgetHelper.OUTER_SPACING, SWT.BOTTOM);
-      fd.right = new FormAttachment(100, 0);
-      dataType = WidgetHelper.createLabeledCombo(groupData, SWT.READ_ONLY, Messages.get().General_DataType, fd);
-      dataType.add(DataCollectionDisplayInfo.getDataTypeName(DataType.INT32));
-      dataType.add(DataCollectionDisplayInfo.getDataTypeName(DataType.UINT32));
-      dataType.add(DataCollectionDisplayInfo.getDataTypeName(DataType.COUNTER32));
-      dataType.add(DataCollectionDisplayInfo.getDataTypeName(DataType.INT64));
-      dataType.add(DataCollectionDisplayInfo.getDataTypeName(DataType.UINT64));
-      dataType.add(DataCollectionDisplayInfo.getDataTypeName(DataType.COUNTER64));
-      dataType.add(DataCollectionDisplayInfo.getDataTypeName(DataType.FLOAT));
-      dataType.add(DataCollectionDisplayInfo.getDataTypeName(DataType.STRING));
-      dataType.select(getDataTypePosition(dci.getDataType()));
-
-      checkInterpretRawSnmpValue = new Button(groupData, SWT.CHECK);
-      checkInterpretRawSnmpValue.setText(Messages.get().General_InterpretRawValue);
-      checkInterpretRawSnmpValue.setSelection(dci.isSnmpRawValueInOctetString());
-      checkInterpretRawSnmpValue.addSelectionListener(new SelectionListener() {
-			@Override
-			public void widgetSelected(SelectionEvent e)
-			{
-		      snmpRawType.setEnabled(checkInterpretRawSnmpValue.getSelection());
-			}
-			
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e)
-			{
-				widgetSelected(e);
-			}
-		});
-      fd = new FormData();
-      fd.left = new FormAttachment(0, 0);
-      fd.top = new FormAttachment(origin.getParent(), WidgetHelper.OUTER_SPACING, SWT.BOTTOM);
-      checkInterpretRawSnmpValue.setLayoutData(fd);
-      checkInterpretRawSnmpValue.setEnabled(dci.getOrigin() == DataOrigin.SNMP);
-
-      snmpRawType = new Combo(groupData, SWT.BORDER | SWT.READ_ONLY);
-      for(int i = 0; i < snmpRawTypes.length; i++)
-      	snmpRawType.add(snmpRawTypes[i]);
-      snmpRawType.select(dci.getSnmpRawValueType());
-      snmpRawType.setEnabled((dci.getOrigin() == DataOrigin.SNMP) && dci.isSnmpRawValueInOctetString());
-      fd = new FormData();
-      fd.left = new FormAttachment(0, 0);
-      fd.top = new FormAttachment(checkInterpretRawSnmpValue, WidgetHelper.OUTER_SPACING, SWT.BOTTOM);
-      fd.right = new FormAttachment(checkInterpretRawSnmpValue, 0, SWT.RIGHT);
-      snmpRawType.setLayoutData(fd);
-      
-      checkUseCustomSnmpPort = new Button(groupData, SWT.CHECK);
-      checkUseCustomSnmpPort.setText(Messages.get().General_UseCustomPort);
-      checkUseCustomSnmpPort.setSelection(dci.getSnmpPort() != 0);
-      checkUseCustomSnmpPort.addSelectionListener(new SelectionListener() {
-			@Override
-			public void widgetSelected(SelectionEvent e)
-			{
-		      customSnmpPort.setEnabled(checkUseCustomSnmpPort.getSelection());
-			}
-			
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e)
-			{
-				widgetSelected(e);
-			}
-		});
-      fd = new FormData();
-      fd.left = new FormAttachment(checkInterpretRawSnmpValue, WidgetHelper.OUTER_SPACING, SWT.RIGHT);
-      fd.top = new FormAttachment(dataType.getParent(), WidgetHelper.OUTER_SPACING, SWT.BOTTOM);
-      checkUseCustomSnmpPort.setLayoutData(fd);
-      checkUseCustomSnmpPort.setEnabled(dci.getOrigin() == DataOrigin.SNMP);
-
-      customSnmpPort = new Spinner(groupData, SWT.BORDER);
-      customSnmpPort.setMinimum(1);
-      customSnmpPort.setMaximum(65535);
-      if ((dci.getOrigin() == DataOrigin.SNMP) && (dci.getSnmpPort() != 0))
-      {
-      	customSnmpPort.setEnabled(true);
-      	customSnmpPort.setSelection(dci.getSnmpPort());
-      }
-      else
-      {
-      	customSnmpPort.setEnabled(false);
-      }
-      fd = new FormData();
-      fd.left = new FormAttachment(checkInterpretRawSnmpValue, WidgetHelper.OUTER_SPACING, SWT.RIGHT);
-      fd.top = new FormAttachment(checkUseCustomSnmpPort, WidgetHelper.OUTER_SPACING, SWT.BOTTOM);
-      fd.right = new FormAttachment(checkUseCustomSnmpPort, 0, SWT.RIGHT);
-      customSnmpPort.setLayoutData(fd);
-
-      checkUseCustomSnmpVersion = new Button(groupData, SWT.CHECK);
-      checkUseCustomSnmpVersion.setText("Use custom SNMP version:");
-      checkUseCustomSnmpVersion.setSelection(dci.getSnmpVersion() != SnmpVersion.DEFAULT);
-      checkUseCustomSnmpVersion.addSelectionListener(new SelectionListener() {
-         @Override
-         public void widgetSelected(SelectionEvent e)
-         {
-            customSnmpVersion.setEnabled(checkUseCustomSnmpVersion.getSelection());
-         }
-
          @Override
          public void widgetDefaultSelected(SelectionEvent e)
          {
             widgetSelected(e);
          }
+
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            onOriginChange();
+         }
       });
-      fd = new FormData();
-      fd.left = new FormAttachment(checkUseCustomSnmpPort, WidgetHelper.OUTER_SPACING, SWT.RIGHT);
-      fd.top = new FormAttachment(dataType.getParent(), WidgetHelper.OUTER_SPACING, SWT.BOTTOM);
-      fd.right = new FormAttachment(100, 0);
-      checkUseCustomSnmpVersion.setLayoutData(fd);
-      checkUseCustomSnmpVersion.setEnabled(dci.getOrigin() == DataOrigin.SNMP);
-
-      customSnmpVersion = new Combo(groupData, SWT.BORDER | SWT.READ_ONLY);
-      customSnmpVersion.add("1");
-      customSnmpVersion.add("2c");
-      customSnmpVersion.add("3");
-      customSnmpVersion.select(indexFromSnmpVersion(dci.getSnmpVersion()));
-      customSnmpVersion.setEnabled(dci.getSnmpVersion() != SnmpVersion.DEFAULT);
-      fd = new FormData();
-      fd.left = new FormAttachment(checkUseCustomSnmpPort, WidgetHelper.OUTER_SPACING, SWT.RIGHT);
-      fd.top = new FormAttachment(checkUseCustomSnmpVersion, WidgetHelper.OUTER_SPACING, SWT.BOTTOM);
-      fd.right = new FormAttachment(100, 0);
-      customSnmpVersion.setLayoutData(fd);
-
-      sampleCount = new LabeledSpinner(groupData, SWT.NONE);
-      sampleCount.setLabel(Messages.get().General_SampleCountForAvg);
-      sampleCount.setRange(0, 65535);
-      sampleCount.setSelection(dci.getSampleCount());
-      sampleCount.setEnabled(dci.getOrigin() == DataOrigin.WINPERF);
-      fd = new FormData();
-      fd.left = new FormAttachment(0, 0);
-      fd.top = new FormAttachment(snmpRawType, WidgetHelper.OUTER_SPACING, SWT.BOTTOM);
-      fd.right = new FormAttachment(100, 0);
-      sampleCount.setLayoutData(fd);
       
-      sourceNode = new ObjectSelector(groupData, SWT.NONE, true);
+      parameter = new Text(groupMetricConfig, SWT.BORDER);
+      parameter.setTextLimit(255);
+      parameter.setText(dco.getName());
+      gd = new GridData();
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalAlignment = SWT.FILL;    
+      parameter.setLayoutData(gd);
+      
+      selectButton = new Button(groupMetricConfig, SWT.PUSH);
+      selectButton.setText("Lookup");
+      selectButton.addSelectionListener(new SelectionListener() {
+         @Override
+         public void widgetDefaultSelected(SelectionEvent e)
+         {
+            widgetSelected(e);
+         }
+
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            selectParameter();
+         }
+      });
+      gd = new GridData();
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalAlignment = SWT.FILL;
+      gd.verticalAlignment = SWT.END;
+      selectButton.setLayoutData(gd);      
+
+      description = new LabeledText(groupMetricConfig, SWT.NONE);
+      description.setLabel("Display name");
+      description.getTextControl().setTextLimit(255);
+      description.setText(dco.getDescription());
+      gd = new GridData();
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalAlignment = SWT.FILL;
+      gd.horizontalSpan = 3;
+      description.setLayoutData(gd);
+
+      sourceNode = new ObjectSelector(groupMetricConfig, SWT.NONE, true);
       sourceNode.setLabel(Messages.get().General_ProxyNode);
       sourceNode.setObjectClass(Node.class);
-      sourceNode.setObjectId(dci.getSourceNode());
-      sourceNode.setEnabled(dci.getOrigin() != DataOrigin.PUSH);
+      sourceNode.setObjectId(dco.getSourceNode());
+      sourceNode.setEnabled(dco.getOrigin() != DataOrigin.PUSH);
+      gd = new GridData();
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalAlignment = SWT.FILL;
+      gd.verticalAlignment = SWT.FILL;
+      gd.horizontalSpan = 3;
+      sourceNode.setLayoutData(gd);
       
-      fd = new FormData();
-      fd.top = new FormAttachment(sampleCount, WidgetHelper.OUTER_SPACING, SWT.BOTTOM);
-      fd.right = new FormAttachment(100, 0);
-      agentCacheMode = WidgetHelper.createLabeledCombo(groupData, SWT.READ_ONLY, Messages.get().General_AgentCacheMode, fd);
-      agentCacheMode.add(Messages.get().General_Default);
-      agentCacheMode.add(Messages.get().General_On);
-      agentCacheMode.add(Messages.get().General_Off);
-      agentCacheMode.select(dci.getCacheMode().getValue());
-      agentCacheMode.setEnabled((dci.getOrigin() == DataOrigin.AGENT) || (dci.getOrigin() == DataOrigin.SNMP));
-
-      fd = new FormData();
-      fd.left = new FormAttachment(0, 0);
-      fd.top = new FormAttachment(sampleCount, WidgetHelper.OUTER_SPACING, SWT.BOTTOM);
-      fd.right = new FormAttachment(agentCacheMode.getParent(), -WidgetHelper.OUTER_SPACING, SWT.LEFT);
-      sourceNode.setLayoutData(fd);
-      
-      /** polling area **/
+      if (dco instanceof DataCollectionItem)
+      {
+         DataCollectionItem dci = (DataCollectionItem)dco;
+         
+         Group groupProcessingAndVisualization = new Group(dialogArea, SWT.NONE);
+         groupProcessingAndVisualization.setText(Messages.get().General_Polling);
+         layout = new GridLayout();
+         layout.marginHeight = WidgetHelper.OUTER_SPACING;
+         layout.marginWidth = WidgetHelper.OUTER_SPACING;
+         layout.numColumns = 3;
+         groupProcessingAndVisualization.setLayout(layout);
+         gd = new GridData();
+         gd.grabExcessHorizontalSpace = true;
+         gd.horizontalAlignment = SWT.FILL;
+         gd.verticalAlignment = SWT.FILL;
+         groupProcessingAndVisualization.setLayoutData(gd);
+   
+         gd = new GridData();
+         gd.grabExcessHorizontalSpace = true;
+         gd.horizontalAlignment = SWT.FILL;
+         dataType = WidgetHelper.createLabeledCombo(groupProcessingAndVisualization, SWT.READ_ONLY, Messages.get().General_DataType, gd);
+         dataType.add(DataCollectionDisplayInfo.getDataTypeName(DataType.INT32));
+         dataType.add(DataCollectionDisplayInfo.getDataTypeName(DataType.UINT32));
+         dataType.add(DataCollectionDisplayInfo.getDataTypeName(DataType.COUNTER32));
+         dataType.add(DataCollectionDisplayInfo.getDataTypeName(DataType.INT64));
+         dataType.add(DataCollectionDisplayInfo.getDataTypeName(DataType.UINT64));
+         dataType.add(DataCollectionDisplayInfo.getDataTypeName(DataType.COUNTER64));
+         dataType.add(DataCollectionDisplayInfo.getDataTypeName(DataType.FLOAT));
+         dataType.add(DataCollectionDisplayInfo.getDataTypeName(DataType.STRING));
+         dataType.select(getDataTypePosition(dci.getDataType()));
+         
+         gd = new GridData();
+         gd.grabExcessHorizontalSpace = true;
+         gd.horizontalAlignment = SWT.FILL;
+         dataUnit = WidgetHelper.createLabeledCombo(groupProcessingAndVisualization, SWT.NONE, "Units", gd);
+         int selection = -1;
+         int index = 0;
+         for (; index < dataUnits.length; index++)
+         {
+            dataUnit.add(dataUnits[index]);
+            if (dci.getUnitName() != null  && dci.getUnitName().equals(dataUnits[index]))
+            {
+               selection = index;
+            }
+         }
+         if (selection == -1 && dci.getUnitName() != null)
+         {
+            dataUnit.add(dci.getUnitName()); 
+            selection = index;
+         }
+         dataUnit.select(selection);
+         
+         useMultipliers = WidgetHelper.createLabeledCombo(groupProcessingAndVisualization, SWT.READ_ONLY, "Use multipliers", new GridData());
+         useMultipliers.add("Default");
+         useMultipliers.add("Yes");
+         useMultipliers.add("No");
+         useMultipliers.select(dci.getMultipliersSelection());
+      }
+         
       Group groupPolling = new Group(dialogArea, SWT.NONE);
-      groupPolling.setText(Messages.get().General_Polling);
-      FormLayout pollingLayout = new FormLayout();
-      pollingLayout.marginHeight = WidgetHelper.OUTER_SPACING;
-      pollingLayout.marginWidth = WidgetHelper.OUTER_SPACING;
-      groupPolling.setLayout(pollingLayout);
+      groupPolling.setText("Collection schedule");
+      layout = new GridLayout();
+      layout.marginTop = WidgetHelper.OUTER_SPACING;
+      layout.marginBottom = WidgetHelper.OUTER_SPACING * 2;
+      layout.marginWidth = WidgetHelper.OUTER_SPACING;
+      layout.numColumns = 3;
+      layout.makeColumnsEqualWidth = true;
+      groupPolling.setLayout(layout);
       gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
       gd.verticalAlignment = SWT.FILL;
       groupPolling.setLayoutData(gd);
       
-      fd = new FormData();
-      fd.left = new FormAttachment(0, 0);
-      fd.right = new FormAttachment(50, -WidgetHelper.OUTER_SPACING / 2);
-      fd.top = new FormAttachment(0, 0);
-      schedulingMode = WidgetHelper.createLabeledCombo(groupPolling, SWT.READ_ONLY, Messages.get().General_PollingMode, fd);
-      schedulingMode.add(Messages.get().General_FixedIntervalsDefault);
-      schedulingMode.add(Messages.get().General_FixedIntervalsCustom);
-      schedulingMode.add(Messages.get().General_CustomSchedule);
-      schedulingMode.select(dci.getPollingScheduleType());
-      schedulingMode.setEnabled(dci.getOrigin() != DataOrigin.PUSH);
-      schedulingMode.addSelectionListener(new SelectionListener() {
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e)
-			{
-				widgetSelected(e);
-			}
-
-			@Override
-			public void widgetSelected(SelectionEvent e)
-			{
-				pollingInterval.setEnabled(schedulingMode.getSelectionIndex() == 1);
-			}
-      });
-      
-      pollingInterval = new LabeledText(groupPolling, SWT.NONE);
-      pollingInterval.setLabel(Messages.get().General_PollingInterval);
-      pollingInterval.setText(dci.getPollingInterval());
-      pollingInterval.setEnabled((dci.getPollingScheduleType() == DataCollectionObject.POLLING_SCHEDULE_CUSTOM) && (dci.getOrigin() != DataOrigin.PUSH));
-      fd = new FormData();
-      fd.left = new FormAttachment(50, WidgetHelper.OUTER_SPACING / 2);
-      fd.right = new FormAttachment(100, 0);
-      fd.top = new FormAttachment(0, 0);
-      pollingInterval.setLayoutData(fd);
-      
-      /** storage **/
-      Group groupStorage = new Group(dialogArea, SWT.NONE);
-      groupStorage.setText(Messages.get().General_Storage);
-      gd = new GridData();
-      gd.horizontalAlignment = SWT.FILL;
-      gd.verticalAlignment = SWT.FILL;
-      gd.horizontalSpan = 2;
-      groupStorage.setLayoutData(gd);
-      GridLayout storageLayout = new GridLayout();
-      storageLayout.numColumns = 2;
-      storageLayout.horizontalSpacing = WidgetHelper.OUTER_SPACING;
-      groupStorage.setLayout(storageLayout);
-      
-      gd = new GridData();
-      gd.grabExcessHorizontalSpace = true;
-      gd.horizontalAlignment = SWT.FILL;
-      retentionMode = WidgetHelper.createLabeledCombo(groupStorage, SWT.READ_ONLY, Messages.get().General_RetentionMode, gd);
-      retentionMode.add(Messages.get().General_UseDefaultRetention);
-      retentionMode.add(Messages.get().General_UseCustomRetention);
-      retentionMode.add(Messages.get().General_NoStorage);
-      retentionMode.select(dci.getRetentionType());
-      retentionMode.addSelectionListener(new SelectionListener() {
-         @Override
-         public void widgetDefaultSelected(SelectionEvent e)
-         {
-            widgetSelected(e);
-         }
-
+      SelectionListener pollingButtons = new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
          {
-            int mode = retentionMode.getSelectionIndex();
-            retentionTime.setEnabled(mode == 1);
+            pollingInterval.setEnabled(scheduleFixed.getSelection());
+            if (scheduleFixed.getSelection())
+            {
+               pollingInterval.setFocus();
+            }
+            serverDefaultIntervalLabel.setVisible(scheduleDefault.getSelection());
+            pollingIntervalComposite.setVisible(scheduleFixed.getSelection());
+            scheduleLink.setVisible(scheduleAdvanced.getSelection());
          }
-      });
-      
-      retentionTime = new LabeledText(groupStorage, SWT.NONE);
-      retentionTime.setLabel(Messages.get().General_RetentionTime);
-      retentionTime.setText(dci.getRetentionTime());
-      retentionTime.setEnabled(dci.getRetentionType() == DataCollectionObject.RETENTION_CUSTOM);
-      gd = new GridData();
-      gd.horizontalAlignment = SWT.FILL;
-      gd.grabExcessHorizontalSpace = true;
-      retentionTime.setLayoutData(gd);
+      };
 
-      checkSaveOnlyChangedValues = new Button(groupStorage, SWT.CHECK);
-      checkSaveOnlyChangedValues.setText("Save only changed values");
-      checkSaveOnlyChangedValues.setSelection(dci.isStoreChangesOnly());
-      
+      final NXCSession session = ConsoleSharedData.getSession();
+      scheduleDefault = new Button(groupPolling, SWT.RADIO);
+      scheduleDefault.setText("Server default interval");
+      scheduleDefault.setSelection(dco.getPollingScheduleType() == DataCollectionObject.POLLING_SCHEDULE_DEFAULT);
+      scheduleDefault.addSelectionListener(pollingButtons);
+      scheduleDefault.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, true, false));
+
+      scheduleFixed = new Button(groupPolling, SWT.RADIO);
+      scheduleFixed.setText("Custom interval");
+      scheduleFixed.setSelection(dco.getPollingScheduleType() == DataCollectionObject.POLLING_SCHEDULE_CUSTOM);
+      scheduleFixed.addSelectionListener(pollingButtons);
+      scheduleFixed.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, true, false));
+
+      scheduleAdvanced = new Button(groupPolling, SWT.RADIO);
+      scheduleAdvanced.setText("Advanced schedule");
+      scheduleAdvanced.setSelection(dco.getPollingScheduleType() == DataCollectionObject.POLLING_SCHEDULE_ADVANCED);
+      scheduleAdvanced.addSelectionListener(pollingButtons);
+      scheduleAdvanced.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, true, false));
+
+      serverDefaultIntervalLabel = new Label(groupPolling, SWT.NONE);
+      serverDefaultIntervalLabel.setText(String.format("%d seconds", session.getDefaultDciPollingInterval()));
+      gd = new GridData(SWT.LEFT, SWT.CENTER, true, false);
+      gd.horizontalIndent = SUB_ELEMENT_INDENT;
+      serverDefaultIntervalLabel.setLayoutData(gd);
+
+      pollingIntervalComposite = new Composite(groupPolling, SWT.NONE);
+      layout = new GridLayout();
+      layout.marginHeight = 0;
+      layout.marginWidth = 0;
+      layout.horizontalSpacing = WidgetHelper.INNER_SPACING;
+      layout.numColumns = 2;
+      pollingIntervalComposite.setLayout(layout);
+      pollingInterval = new Text(pollingIntervalComposite, SWT.BORDER);
+      pollingInterval.setText(dco.getPollingInterval() != null ? dco.getPollingInterval() : "");
+      pollingInterval.setEnabled((dco.getPollingScheduleType() == DataCollectionObject.POLLING_SCHEDULE_CUSTOM) && (dco.getOrigin() != DataOrigin.PUSH));
+      pollingIntervalLabel = new Label(pollingIntervalComposite, SWT.NONE);
+      pollingIntervalLabel.setText("seconds");
+      gd = new GridData(SWT.LEFT, SWT.CENTER, true, false);
+      gd.horizontalIndent = SUB_ELEMENT_INDENT;
+      pollingIntervalComposite.setLayoutData(gd);
+
+      scheduleLink = new Hyperlink(groupPolling, SWT.NONE);
+      scheduleLink.setText("Configure");
+      scheduleLink.setUnderlined(true);
+      scheduleLink.addHyperlinkListener(new HyperlinkAdapter() {
+         @SuppressWarnings("restriction")
+         @Override
+         public void linkActivated(HyperlinkEvent e)
+         {
+            IPreferencePageContainer container = getContainer();
+            FilteredPreferenceDialog dialog = (FilteredPreferenceDialog)container;
+            dialog.setCurrentPageId("org.netxms.ui.eclipse.datacollection.propertypages.CustomSchedule#10");
+         }
+      });      
+      gd = new GridData(SWT.FILL, SWT.CENTER, true, false);
+      gd.horizontalIndent = SUB_ELEMENT_INDENT;
+      scheduleLink.setLayoutData(gd);
+
+      serverDefaultIntervalLabel.setVisible(scheduleDefault.getSelection());
+      pollingIntervalComposite.setVisible(scheduleFixed.getSelection());
+      scheduleLink.setVisible(scheduleAdvanced.getSelection());
+
+      Group groupRetention = new Group(dialogArea, SWT.NONE);
+      groupRetention.setText("Retention");
+      layout = new GridLayout();
+      layout.marginTop = WidgetHelper.OUTER_SPACING;
+      layout.marginBottom = WidgetHelper.OUTER_SPACING * 2;
+      layout.marginWidth = WidgetHelper.OUTER_SPACING;
+      layout.numColumns = 3;
+      layout.makeColumnsEqualWidth = true;
+      groupRetention.setLayout(layout);
+      gd = new GridData();
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalAlignment = SWT.FILL;
+      gd.verticalAlignment = SWT.FILL;
+      groupRetention.setLayoutData(gd);
+
+      SelectionListener storageButtons = new SelectionAdapter() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            retentionTime.setEnabled(storageFixed.getSelection());
+            if (storageFixed.getSelection())
+               retentionTime.setFocus();
+
+            serverDefaultRetentionLabel.setVisible(storageDefault.getSelection());
+            retentionTimeComposite.setVisible(storageFixed.getSelection());
+         }
+      };
+
+      storageDefault = new Button(groupRetention, SWT.RADIO);
+      storageDefault.setText("Server default");
+      storageDefault.setSelection(dco.getRetentionType() == DataCollectionObject.RETENTION_DEFAULT);
+      storageDefault.addSelectionListener(storageButtons);  
+
+      storageFixed = new Button(groupRetention, SWT.RADIO);
+      storageFixed.setText("Custom");
+      storageFixed.setSelection(dco.getRetentionType() == DataCollectionObject.RETENTION_CUSTOM);
+      storageFixed.addSelectionListener(storageButtons);
+
+      storageNoStorage = new Button(groupRetention, SWT.RADIO);
+      storageNoStorage.setText("Do not save to the database");
+      storageNoStorage.setSelection(dco.getRetentionType() == DataCollectionObject.RETENTION_NONE);
+      storageNoStorage.addSelectionListener(storageButtons);
+
+      serverDefaultRetentionLabel = new Label(groupRetention, SWT.NONE);
+      serverDefaultRetentionLabel.setText(String.format("%d days", session.getDefaultDciRetentionTime()));
+      gd = new GridData(SWT.LEFT, SWT.CENTER, true, false);
+      gd.horizontalIndent = SUB_ELEMENT_INDENT;
+      serverDefaultRetentionLabel.setLayoutData(gd);
+
+      retentionTimeComposite = new Composite(groupRetention, SWT.NONE);
+      layout = new GridLayout();
+      layout.marginHeight = 0;
+      layout.marginWidth = 0;
+      layout.horizontalSpacing = WidgetHelper.INNER_SPACING;
+      layout.numColumns = 2;
+      retentionTimeComposite.setLayout(layout);
+      retentionTime = new Text(retentionTimeComposite, SWT.BORDER);
+      retentionTime.setText(dco.getRetentionTime() != null ? dco.getRetentionTime() : "");
+      retentionTime.setEnabled(dco.getRetentionType() == DataCollectionObject.RETENTION_CUSTOM);
+      Label label = new Label(retentionTimeComposite, SWT.NONE);
+      label.setText("days");
+      gd = new GridData(SWT.LEFT, SWT.CENTER, true, false);
+      gd.horizontalIndent = SUB_ELEMENT_INDENT;
+      retentionTimeComposite.setLayoutData(gd);
+
+      serverDefaultRetentionLabel.setVisible(storageDefault.getSelection());
+      retentionTimeComposite.setVisible(storageFixed.getSelection());
+
+      if (dco instanceof DataCollectionItem)
+      {
+         DataCollectionItem dci = (DataCollectionItem)dco;
+
+         checkSaveOnlyChangedValues = new Button(groupRetention, SWT.CHECK);
+         checkSaveOnlyChangedValues.setText("Save only &changed values");
+         checkSaveOnlyChangedValues.setSelection(dci.isStoreChangesOnly());
+         gd = new GridData();
+         gd.horizontalSpan = 3;
+         checkSaveOnlyChangedValues.setLayoutData(gd); 
+      }
+
       onOriginChange();
       return dialogArea;
 	}
-
-   /**
-    * Calculate selection index from SNMP version
-    * 
-    * @param version
-    * @return
-    */
-   private static int indexFromSnmpVersion(SnmpVersion version)
-	{
-	   switch(version)
-	   {
-	      case V1:
-	         return 0;
-         case V2C:
-            return 1;
-         case V3:
-            return 2;
-         default:
-            return -1;
-	   }
-	}
-
-   /**
-    * Get SNMP version value from selection index
-    * 
-    * @param index
-    * @return
-    */
-   private static SnmpVersion indexToSnmpVersion(int index)
-   {
-      switch(index)
-      {
-         case 0:
-            return SnmpVersion.V1;
-         case 1:
-            return SnmpVersion.V2C;
-         case 2:
-            return SnmpVersion.V3;
-         default:
-            return SnmpVersion.DEFAULT;
-      }
-   }
 
 	/**
 	 * Handler for changing item origin
@@ -514,16 +469,16 @@ public class General extends AbstractDCIPropertyPage
 	{
       DataOrigin dataOrigin = DataOrigin.getByValue(origin.getSelectionIndex());
 		sourceNode.setEnabled(dataOrigin != DataOrigin.PUSH);
-		schedulingMode.setEnabled((dataOrigin != DataOrigin.PUSH) && (dataOrigin != DataOrigin.MQTT));
-		pollingInterval.setEnabled((dataOrigin != DataOrigin.PUSH) && (dataOrigin != DataOrigin.MQTT) && (schedulingMode.getSelectionIndex() == 1));
-		checkInterpretRawSnmpValue.setEnabled(dataOrigin == DataOrigin.SNMP);
-		snmpRawType.setEnabled((dataOrigin == DataOrigin.SNMP) && checkInterpretRawSnmpValue.getSelection());
-		checkUseCustomSnmpPort.setEnabled(dataOrigin == DataOrigin.SNMP);
-		customSnmpPort.setEnabled((dataOrigin == DataOrigin.SNMP) && checkUseCustomSnmpPort.getSelection());
-      checkUseCustomSnmpVersion.setEnabled(dataOrigin == DataOrigin.SNMP);
-      customSnmpVersion.setEnabled((dataOrigin == DataOrigin.SNMP) && checkUseCustomSnmpVersion.getSelection());
-		sampleCount.setEnabled(dataOrigin == DataOrigin.WINPERF);
-		agentCacheMode.setEnabled((dataOrigin == DataOrigin.AGENT) || (dataOrigin == DataOrigin.SNMP));
+		
+		boolean enableSchedule = (dataOrigin != DataOrigin.PUSH) && (dataOrigin != DataOrigin.MQTT);
+		scheduleDefault.setEnabled(enableSchedule);
+      scheduleFixed.setEnabled(enableSchedule);
+      scheduleAdvanced.setEnabled(enableSchedule);
+      serverDefaultIntervalLabel.setEnabled(enableSchedule);
+      pollingInterval.setEnabled(enableSchedule);
+      pollingIntervalLabel.setEnabled(enableSchedule);
+      scheduleLink.setEnabled(enableSchedule);
+      
 		selectButton.setEnabled(
 		      (dataOrigin == DataOrigin.AGENT) || 
 		      (dataOrigin == DataOrigin.SNMP) || 
@@ -539,54 +494,57 @@ public class General extends AbstractDCIPropertyPage
 	 */
 	private void selectParameter()
 	{
-		Dialog dlg;
+		Dialog dlg = null;
       DataOrigin dataOrigin = DataOrigin.getByValue(origin.getSelectionIndex());
+      boolean isTable = dco instanceof DataCollectionTable;
       switch(dataOrigin)
-		{
+      {
          case INTERNAL:
-			   if (sourceNode.getObjectId() != 0)
-			      dlg = new SelectInternalParamDlg(getShell(), sourceNode.getObjectId(), false);
-			   else
-			      dlg = new SelectInternalParamDlg(getShell(), dci.getNodeId(), false);
-				break;
+            if (sourceNode.getObjectId() != 0)
+               dlg = new SelectInternalParamDlg(getShell(), sourceNode.getObjectId(), isTable);
+            else
+               dlg = new SelectInternalParamDlg(getShell(), dco.getNodeId(), isTable);
+            break;
          case AGENT:
          case DEVICE_DRIVER:
-			   if (sourceNode.getObjectId() != 0)
-               dlg = new SelectAgentParamDlg(getShell(), sourceNode.getObjectId(), dataOrigin, false);
-			   else
-               dlg = new SelectAgentParamDlg(getShell(), dci.getNodeId(), dataOrigin, false);
-				break;
+            if (sourceNode.getObjectId() != 0)
+               dlg = new SelectAgentParamDlg(getShell(), sourceNode.getObjectId(), dataOrigin, isTable);
+            else
+               dlg = new SelectAgentParamDlg(getShell(), dco.getNodeId(), dataOrigin, isTable);
+            break;
          case SNMP:
-				SnmpObjectId oid;
-				try
-				{
-					oid = SnmpObjectId.parseSnmpObjectId(parameter.getText());
-				}
-				catch(SnmpObjectIdFormatException e)
-				{
-					oid = null;
-				}
-				if (sourceNode.getObjectId() != 0)
-				   dlg = new SelectSnmpParamDlg(getShell(), oid, sourceNode.getObjectId());
-				else
-				   dlg = new SelectSnmpParamDlg(getShell(), oid, dci.getNodeId());
-				break;
+            SnmpObjectId oid;
+            try
+            {
+               oid = SnmpObjectId.parseSnmpObjectId(parameter.getText());
+            }
+            catch(SnmpObjectIdFormatException e)
+            {
+               oid = null;
+            }
+            if (sourceNode.getObjectId() != 0)
+               dlg = new SelectSnmpParamDlg(getShell(), oid, sourceNode.getObjectId());
+            else
+               dlg = new SelectSnmpParamDlg(getShell(), oid, dco.getNodeId());
+            break;
          case WINPERF:
-			   if (sourceNode.getObjectId() != 0)
-			      dlg = new WinPerfCounterSelectionDialog(getShell(), sourceNode.getObjectId());
-			   else
-			      dlg = new WinPerfCounterSelectionDialog(getShell(), dci.getNodeId());
-				break;
+            if (!isTable)
+               if (sourceNode.getObjectId() != 0)
+                  dlg = new WinPerfCounterSelectionDialog(getShell(), sourceNode.getObjectId());
+               else
+                  dlg = new WinPerfCounterSelectionDialog(getShell(), dco.getNodeId());
+            break;
          case SCRIPT:
             dlg = new SelectParameterScriptDialog(getShell());
             break;
          case WEB_SERVICE:
-            dlg = new SelectWebServiceDlg(getShell(), false);
+            if (!isTable)
+               dlg = new SelectWebServiceDlg(getShell(), false);
             break;
-			default:
-				dlg = null;
-				break;
-		}
+         default:
+            dlg = null;
+            break;
+      }
 		
 		if ((dlg != null) && (dlg.open() == Window.OK))
 		{
@@ -606,40 +564,66 @@ public class General extends AbstractDCIPropertyPage
 	 */
 	protected boolean applyChanges(final boolean isApply)
 	{
-		dci.setDescription(description.getText().trim());
-		dci.setName(parameter.getText().trim());
-      dci.setOrigin(DataOrigin.getByValue(origin.getSelectionIndex()));
-		dci.setDataType(getDataTypeByPosition(dataType.getSelectionIndex()));
-		dci.setSampleCount(sampleCount.getSelection());
-		dci.setSourceNode(sourceNode.getObjectId());
-		dci.setCacheMode(AgentCacheMode.getByValue(agentCacheMode.getSelectionIndex()));
-		dci.setPollingScheduleType(schedulingMode.getSelectionIndex());
-		dci.setPollingInterval((schedulingMode.getSelectionIndex() == 1) ? pollingInterval.getText() : null);
-		dci.setRetentionType(retentionMode.getSelectionIndex());
-		dci.setRetentionTime((retentionMode.getSelectionIndex() == 1) ? retentionTime.getText() : null);
-		dci.setSnmpRawValueInOctetString(checkInterpretRawSnmpValue.getSelection());
-		dci.setSnmpRawValueType(snmpRawType.getSelectionIndex());
-      dci.setStoreChangesOnly(checkSaveOnlyChangedValues.getSelection());
-		if (checkUseCustomSnmpPort.getSelection())
-		{
-			dci.setSnmpPort(customSnmpPort.getSelection());
-		}
-		else
-		{
-			dci.setSnmpPort(0);
-		}
-      if (checkUseCustomSnmpVersion.getSelection())
+      dco.setOrigin(DataOrigin.getByValue(origin.getSelectionIndex()));
+      dco.setName(parameter.getText().trim());
+		dco.setDescription(description.getText().trim());
+      dco.setSourceNode(sourceNode.getObjectId());
+      dco.setPollingScheduleType(getScheduleType());
+      dco.setPollingInterval(scheduleFixed.getSelection() ? pollingInterval.getText() : null);
+      dco.setRetentionType(getRetentionType());
+      dco.setRetentionTime(storageFixed.getSelection() ? retentionTime.getText() : null);
+
+      if (dco instanceof DataCollectionItem)
       {
-         dci.setSnmpVersion(indexToSnmpVersion(customSnmpVersion.getSelectionIndex()));
+         DataCollectionItem dci = (DataCollectionItem)dco;
+         
+         dci.setDataType(getDataTypeByPosition(dataType.getSelectionIndex()));
+         dci.setUnitName(dataUnit.getText());      
+         dci.setMultiplierSelection(useMultipliers.getSelectionIndex());
+         
+         dci.setStoreChangesOnly(checkSaveOnlyChangedValues.getSelection());
       }
-      else
-      {
-         dci.setSnmpVersion(SnmpVersion.DEFAULT);
-      }
-		
 		editor.modify();
 		return true;
 	}
+	
+	/**
+	 * Get selected schedule type
+	 * 
+	 * @return int representation of schedule type
+	 */
+	private int getScheduleType()
+	{
+	   int type = 0;
+	   if (scheduleFixed.getSelection())
+	   {
+	      type = 1;
+	   }
+	   else if (scheduleAdvanced.getSelection())
+	   {
+         type = 2;	      
+	   }
+	   return type;
+	}
+   
+   /**
+    * Get selected retention type
+    * 
+    * @return int representation of retention type
+    */
+   private int getRetentionType()
+   {
+      int type = 0;
+      if (storageFixed.getSelection())
+      {
+         type = 1;
+      }
+      else if (storageNoStorage.getSelection())
+      {
+         type = 2;         
+      }
+      return type;
+   }
 
    /**
     * @see org.eclipse.jface.preference.PreferencePage#performOk()
@@ -669,13 +653,15 @@ public class General extends AbstractDCIPropertyPage
 		
 		NXCSession session = ConsoleSharedData.getSession();
 		
-		schedulingMode.select(0);
+		scheduleDefault.setSelection(true);
+		scheduleFixed.setSelection(false);
+		scheduleAdvanced.setSelection(false);
 		pollingInterval.setText(Integer.toString(session.getDefaultDciPollingInterval()));
-		retentionMode.select(0);
+      storageDefault.setSelection(true);
+      storageFixed.setSelection(false);
+      storageNoStorage.setSelection(false);
 		retentionTime.setText(Integer.toString(session.getDefaultDciRetentionTime()));
-		checkInterpretRawSnmpValue.setSelection(false);
-		checkUseCustomSnmpPort.setSelection(false);
-		customSnmpPort.setSelection(161);
+      useMultipliers.select(0);
 	}
 
 	/**

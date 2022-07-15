@@ -21,6 +21,7 @@ package org.netxms.nxmc.modules.datacollection.views;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import org.apache.commons.lang3.SystemUtils;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -57,6 +58,7 @@ import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.ChartConfigurationChangeListener;
 import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.DciData;
+import org.netxms.client.datacollection.DciInfo;
 import org.netxms.client.datacollection.GraphDefinition;
 import org.netxms.client.datacollection.GraphItem;
 import org.netxms.client.datacollection.Threshold;
@@ -354,6 +356,7 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
             item.setDescription(session.getObjectName(dci.nodeId) + " - " + dci.getLabel());
          chart.addParameter(item);
       }
+      updateDciInfo();
 
       // Check that all DCI's are form one node
       if (chart.getItemCount() > 1)
@@ -368,6 +371,61 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
       refreshMenuSelection();
       refreshController.setInterval(configuration.isAutoRefresh() ? configuration.getRefreshRate() : -1);
    }
+   
+ /**
+  * Get DCI info (unit name and multiplier)
+  */
+ private void updateDciInfo()
+ {
+    List<Long> nodeIds = new ArrayList<Long>();
+    List<Long> dciIds = new ArrayList<Long>();
+
+    for(ChartDciConfig dci : configuration.getDciList())
+    {
+       if (dci.getDisplayFormat() == null || dci.getDisplayFormat().isEmpty())
+       {
+          nodeIds.add(dci.nodeId);
+          dciIds.add(dci.dciId);
+       }
+    }
+
+    Job job = new Job("Get DCI info", null) {
+       @Override
+       protected void run(IProgressMonitor monitor) throws Exception
+       {
+          final Map<Long, DciInfo> result = session.getDciInfo(nodeIds, dciIds);
+          runInUIThread(new Runnable() {
+             @Override
+             public void run()
+             {
+                int i = 0;
+                for(ChartDciConfig dci : configuration.getDciList())
+                {
+                   GraphItem item = chart.getItem(i);
+                   DciInfo info = result.get(dci.getDciId());
+                   if (info != null)
+                   {
+                      item.setUnitName(info.getUnitName());
+                      item.setMultipierPower(info.getMultipierPower());
+                   }
+                   i++;
+                }
+                chart.rebuild();
+                chartParent.layout(true, true);
+                updateChart();  
+             }
+          });
+       }
+
+       @Override
+       protected String getErrorMessage()
+       {
+          return null;
+       }
+    };
+    job.setUser(false);
+    job.start();
+ }
 
    /**
     * @see org.netxms.nxmc.base.views.View#createContent(org.eclipse.swt.widgets.Composite)

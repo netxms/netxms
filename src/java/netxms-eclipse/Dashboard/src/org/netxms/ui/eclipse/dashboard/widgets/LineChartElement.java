@@ -21,6 +21,7 @@ package org.netxms.ui.eclipse.dashboard.widgets;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
@@ -44,6 +45,7 @@ import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.DciData;
+import org.netxms.client.datacollection.DciInfo;
 import org.netxms.client.datacollection.GraphItem;
 import org.netxms.client.datacollection.Threshold;
 import org.netxms.ui.eclipse.actions.RefreshAction;
@@ -130,6 +132,7 @@ public class LineChartElement extends ElementWidget implements HistoricalChartOw
 				refreshData();
 			}
 		});
+		updateDciInfo();
 		refreshData();
 
 		addDisposeListener(new DisposeListener() {
@@ -145,7 +148,59 @@ public class LineChartElement extends ElementWidget implements HistoricalChartOw
 		   createActions();
 		   createChartContextMenu();
 		}
-	}
+	}   
+	
+	/**
+	 * Get DCI info (unit name and multiplier)
+	 */
+   private void updateDciInfo()
+   {
+      List<Long> nodeIds = new ArrayList<Long>();
+      List<Long> dciIds = new ArrayList<Long>();
+      
+      for(ChartDciConfig dci : config.getDciList())
+      {
+         nodeIds.add(dci.nodeId);
+         dciIds.add(dci.dciId);
+      }
+      
+      ConsoleJob job = new ConsoleJob("Get DCI info", null, Activator.PLUGIN_ID, null) {
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            final Map<Long, DciInfo> result = session.getDciInfo(nodeIds, dciIds);
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
+                  int i = 0;
+                  for(ChartDciConfig dci : config.getDciList())
+                  {
+                     GraphItem item = chart.getItem(i);
+                     DciInfo info = result.get(dci.getDciId());
+                     if (info != null)
+                     {
+                        item.setUnitName(info.getUnitName());
+                        item.setMultipierPower(info.getMultipierPower());
+                     }
+                     i++;
+                  }
+                  chart.rebuild();
+                  layout(true, true);          
+               }
+            });
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return null;
+         }
+      };
+      job.setUser(false);
+      job.start();
+      
+   }
 
    /**
     * Create actions

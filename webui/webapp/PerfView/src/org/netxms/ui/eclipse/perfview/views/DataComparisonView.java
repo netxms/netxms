@@ -150,7 +150,7 @@ public class DataComparisonView extends ViewPart
 								DataType.getByValue(Integer.parseInt(subfields[3], 10)), // data type
 								URLDecoder.decode(subfields[4], "UTF-8"), // name //$NON-NLS-1$
 								URLDecoder.decode(subfields[5], "UTF-8"), // description //$NON-NLS-1$
-                        "%s", ChartDciConfig.DEFAULT, -1)); // format //$NON-NLS-1$
+								null, ChartDciConfig.DEFAULT, -1)); // format //$NON-NLS-1$
 					}
 					catch(NumberFormatException e)
 					{
@@ -173,7 +173,7 @@ public class DataComparisonView extends ViewPart
 								URLDecoder.decode(subfields[5], "UTF-8"), //$NON-NLS-1$
 								URLDecoder.decode(subfields[6], "UTF-8"), //$NON-NLS-1$
 								URLDecoder.decode(subfields[7], "UTF-8"), // description //$NON-NLS-1$
-								"%s"));  // format //$NON-NLS-1$
+								null));  // format //$NON-NLS-1$
 					}
 					catch(NumberFormatException e)
 					{
@@ -593,6 +593,7 @@ public class DataComparisonView extends ViewPart
 					DciData data = (item.getType() == DataCollectionObject.DCO_TYPE_ITEM) ? 
 							session.getCollectedData(item.getNodeId(), item.getDciId(), null, null, 1, HistoricalDataType.PROCESSED) :
 							session.getCollectedTableData(item.getNodeId(), item.getDciId(), item.getInstance(), item.getDataColumn(), null, null, 1);
+					
 					DciDataRow value = data.getLastValue();
 					values[i] = (value != null) ? value.getValueAsDouble() : 0.0;
 				}

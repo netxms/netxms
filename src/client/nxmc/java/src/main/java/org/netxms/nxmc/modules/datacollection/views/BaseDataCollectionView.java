@@ -27,7 +27,6 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.action.ToolBarManager;
-import org.eclipse.jface.preference.PreferenceDialog;
 import org.eclipse.jface.preference.PreferenceManager;
 import org.eclipse.jface.preference.PreferenceNode;
 import org.eclipse.jface.viewers.ArrayContentProvider;
@@ -41,7 +40,6 @@ import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
-import org.eclipse.swt.widgets.Shell;
 import org.netxms.base.Pair;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.ChartDciConfig;
@@ -54,6 +52,7 @@ import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.actions.ExportToCsvAction;
 import org.netxms.nxmc.base.jobs.Job;
+import org.netxms.nxmc.base.propertypages.PropertyDialog;
 import org.netxms.nxmc.base.views.AbstractViewerFilter;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -62,15 +61,16 @@ import org.netxms.nxmc.modules.datacollection.propertypages.AccessControl;
 import org.netxms.nxmc.modules.datacollection.propertypages.ClusterOptions;
 import org.netxms.nxmc.modules.datacollection.propertypages.Comments;
 import org.netxms.nxmc.modules.datacollection.propertypages.CustomSchedule;
-import org.netxms.nxmc.modules.datacollection.propertypages.GeneralItem;
-import org.netxms.nxmc.modules.datacollection.propertypages.GeneralTable;
+import org.netxms.nxmc.modules.datacollection.propertypages.General;
 import org.netxms.nxmc.modules.datacollection.propertypages.InstanceDiscovery;
 import org.netxms.nxmc.modules.datacollection.propertypages.OtherOptions;
 import org.netxms.nxmc.modules.datacollection.propertypages.OtherOptionsTable;
 import org.netxms.nxmc.modules.datacollection.propertypages.PerfTab;
+import org.netxms.nxmc.modules.datacollection.propertypages.SNMP;
 import org.netxms.nxmc.modules.datacollection.propertypages.TableColumns;
 import org.netxms.nxmc.modules.datacollection.propertypages.Thresholds;
 import org.netxms.nxmc.modules.datacollection.propertypages.Transformation;
+import org.netxms.nxmc.modules.datacollection.propertypages.WinPerf;
 import org.netxms.nxmc.modules.datacollection.views.helpers.LastValuesComparator;
 import org.netxms.nxmc.modules.datacollection.views.helpers.LastValuesFilter;
 import org.netxms.nxmc.modules.datacollection.views.helpers.LastValuesLabelProvider;
@@ -441,12 +441,9 @@ public abstract class BaseDataCollectionView extends ObjectView
    {
       DataCollectionObjectEditor dce = new DataCollectionObjectEditor(object);
       PreferenceManager pm = new PreferenceManager();  
-      if (dce.getObject() instanceof DataCollectionItem)
-         pm.addToRoot(new PreferenceNode("general", new GeneralItem(dce)));             
-      else
-         pm.addToRoot(new PreferenceNode("general", new GeneralTable(dce)));   
+      pm.addToRoot(new PreferenceNode("general", new General(dce)));          
       pm.addToRoot(new PreferenceNode("clisterOptions", new ClusterOptions(dce)));    
-      pm.addToRoot(new PreferenceNode("customSchedulte", new CustomSchedule(dce)));    
+      pm.addToRoot(new PreferenceNode("customSchedule", new CustomSchedule(dce)));
       if (dce.getObject() instanceof DataCollectionTable)
          pm.addToRoot(new PreferenceNode("columns", new TableColumns(dce)));    
       pm.addToRoot(new PreferenceNode("transformation", new Transformation(dce)));             
@@ -455,24 +452,20 @@ public abstract class BaseDataCollectionView extends ObjectView
       if (dce.getObject() instanceof DataCollectionItem)
          pm.addToRoot(new PreferenceNode("performanceTab", new PerfTab(dce)));
       pm.addToRoot(new PreferenceNode("accessControl", new AccessControl(dce)));
+      pm.addToRoot(new PreferenceNode("snmp", new SNMP(dce)));
+      if (dce.getObject() instanceof DataCollectionItem)
+         pm.addToRoot(new PreferenceNode("winperf", new WinPerf(dce)));
       if (dce.getObject() instanceof DataCollectionItem)
          pm.addToRoot(new PreferenceNode("otherOptions", new OtherOptions(dce)));             
       else
          pm.addToRoot(new PreferenceNode("otherOptions", new OtherOptionsTable(dce)));   
       pm.addToRoot(new PreferenceNode("comments", new Comments(dce)));  
 
-      PreferenceDialog dlg = new PreferenceDialog(getWindow().getShell(), pm) {
-         @Override
-         protected void configureShell(Shell newShell)
-         {
-            super.configureShell(newShell);
-            newShell.setText(String.format(i18n.tr("Properties for %s"), object.getName()));
-         }
-      };
+      PropertyDialog dlg = new PropertyDialog(getWindow().getShell(), pm, String.format(i18n.tr("Properties for %s"), object.getName()));
       dlg.setBlockOnOpen(true);
       return dlg.open() == Window.OK;
    }
-   
+
    /**
     * Create new filter for objects
     * @return

@@ -697,6 +697,7 @@ typedef struct
 #define CMD_UPDATE_MAINTENANCE_JOURNAL    0x01C6
 #define CMD_GET_SSH_CREDENTIALS           0x01C7
 #define CMD_UPDATE_SSH_CREDENTIALS        0x01C8
+#define CMD_DCI_INFO                      0x01C9
 
 #define CMD_RS_LIST_REPORTS               0x1100
 #define CMD_RS_GET_REPORT_DEFINITION      0x1101
@@ -1030,9 +1031,9 @@ typedef struct
 #define VID_USE_X509_KEY_FORMAT     ((UINT32)319)
 #define VID_STICKY_FLAG             ((UINT32)320)
 #define VID_AUTOBIND_FILTER         ((UINT32)321)
-#define VID_BASE_UNITS              ((UINT32)322)
+//#define VID_BASE_UNITS              ((UINT32)322)
 #define VID_MULTIPLIER              ((UINT32)323)
-#define VID_CUSTOM_UNITS_NAME       ((UINT32)324)
+#define VID_UNITS_NAME              ((UINT32)324)
 #define VID_PERFTAB_SETTINGS        ((UINT32)325)
 #define VID_EXECUTION_STATUS        ((UINT32)326)
 #define VID_EXECUTION_RESULT        ((UINT32)327)

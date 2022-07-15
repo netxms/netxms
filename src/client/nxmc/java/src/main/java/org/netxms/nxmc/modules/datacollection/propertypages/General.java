@@ -16,10 +16,9 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.datacollection.propertypages;
+package org.netxms.nxmc.modules.datacollection.propertypages;
 
 import org.eclipse.jface.dialogs.Dialog;
-import org.eclipse.jface.preference.IPreferencePageContainer;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -34,10 +33,6 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
-import org.eclipse.ui.forms.events.HyperlinkAdapter;
-import org.eclipse.ui.forms.events.HyperlinkEvent;
-import org.eclipse.ui.forms.widgets.Hyperlink;
-import org.eclipse.ui.internal.dialogs.FilteredPreferenceDialog;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.DataOrigin;
 import org.netxms.client.constants.DataType;
@@ -47,26 +42,33 @@ import org.netxms.client.datacollection.DataCollectionTable;
 import org.netxms.client.objects.Node;
 import org.netxms.client.snmp.SnmpObjectId;
 import org.netxms.client.snmp.SnmpObjectIdFormatException;
-import org.netxms.ui.eclipse.console.resources.DataCollectionDisplayInfo;
-import org.netxms.ui.eclipse.datacollection.Messages;
-import org.netxms.ui.eclipse.datacollection.dialogs.IParameterSelectionDialog;
-import org.netxms.ui.eclipse.datacollection.dialogs.SelectAgentParamDlg;
-import org.netxms.ui.eclipse.datacollection.dialogs.SelectInternalParamDlg;
-import org.netxms.ui.eclipse.datacollection.dialogs.SelectParameterScriptDialog;
-import org.netxms.ui.eclipse.datacollection.dialogs.SelectSnmpParamDlg;
-import org.netxms.ui.eclipse.datacollection.dialogs.SelectWebServiceDlg;
-import org.netxms.ui.eclipse.datacollection.dialogs.WinPerfCounterSelectionDialog;
-import org.netxms.ui.eclipse.datacollection.propertypages.helpers.AbstractDCIPropertyPage;
-import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
-import org.netxms.ui.eclipse.shared.ConsoleSharedData;
-import org.netxms.ui.eclipse.tools.WidgetHelper;
-import org.netxms.ui.eclipse.widgets.LabeledText;
+import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.base.propertypages.PropertyDialog;
+import org.netxms.nxmc.base.widgets.Hyperlink;
+import org.netxms.nxmc.base.widgets.LabeledText;
+import org.netxms.nxmc.base.widgets.events.HyperlinkAdapter;
+import org.netxms.nxmc.base.widgets.events.HyperlinkEvent;
+import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.datacollection.DataCollectionObjectEditor;
+import org.netxms.nxmc.modules.datacollection.dialogs.IParameterSelectionDialog;
+import org.netxms.nxmc.modules.datacollection.dialogs.SelectAgentParamDlg;
+import org.netxms.nxmc.modules.datacollection.dialogs.SelectInternalParamDlg;
+import org.netxms.nxmc.modules.datacollection.dialogs.SelectParameterScriptDialog;
+import org.netxms.nxmc.modules.datacollection.dialogs.SelectSnmpParamDlg;
+import org.netxms.nxmc.modules.datacollection.dialogs.SelectWebServiceDlg;
+import org.netxms.nxmc.modules.datacollection.dialogs.WinPerfCounterSelectionDialog;
+import org.netxms.nxmc.modules.datacollection.widgets.helpers.DataCollectionDisplayInfo;
+import org.netxms.nxmc.modules.objects.widgets.ObjectSelector;
+import org.netxms.nxmc.tools.WidgetHelper;
+import org.xnap.commons.i18n.I18n;
 
 /**
  * "General" property page for DCO
  */
 public class General extends AbstractDCIPropertyPage
-{		
+{	
+   private static final I18n i18n = LocalizationHelper.getI18n(General.class);
+   
    private static final String[] dataUnits = 
    {
       "B/s",
@@ -119,6 +121,11 @@ public class General extends AbstractDCIPropertyPage
 	private Text pollingInterval;
 	private Text retentionTime;
 	private Button checkSaveOnlyChangedValues;
+   
+   public General(DataCollectionObjectEditor editor)
+   {
+      super(i18n.tr("General"), editor);
+   }
 	
    /**
     * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
@@ -150,17 +157,17 @@ public class General extends AbstractDCIPropertyPage
       groupMetricConfig.setLayoutData(gd);
       
       origin = new Combo(groupMetricConfig, SWT.READ_ONLY);
-      origin.add(Messages.get().DciLabelProvider_SourceInternal);
-      origin.add(Messages.get().DciLabelProvider_SourceAgent);
-      origin.add(Messages.get().DciLabelProvider_SourceSNMP);
-      origin.add(Messages.get().DciLabelProvider_SourceWebService);
-      origin.add(Messages.get().DciLabelProvider_SourcePush);
-      origin.add(Messages.get().DciLabelProvider_SourceWinPerf);
-      origin.add(Messages.get().DciLabelProvider_SourceILO);
-      origin.add(Messages.get().DciLabelProvider_SourceScript);
-      origin.add(Messages.get().DciLabelProvider_SourceSSH);
-      origin.add(Messages.get().DciLabelProvider_SourceMQTT);
-      origin.add(Messages.get().DciLabelProvider_SourceDeviceDriver);
+      origin.add(i18n.tr("Internal"));
+      origin.add(i18n.tr("NetXMS Agent"));
+      origin.add(i18n.tr("SNMP"));
+      origin.add(i18n.tr("Web Service"));
+      origin.add(i18n.tr("Push"));
+      origin.add(i18n.tr("Windows Performance Counters"));
+      origin.add(i18n.tr("SM-CLP"));
+      origin.add(i18n.tr("Script"));
+      origin.add(i18n.tr("SSH"));
+      origin.add(i18n.tr("MQTT"));
+      origin.add(i18n.tr("Network Device Driver"));
       origin.select(dco.getOrigin().getValue());
       origin.addSelectionListener(new SelectionListener() {
          @Override
@@ -216,7 +223,7 @@ public class General extends AbstractDCIPropertyPage
       description.setLayoutData(gd);
 
       sourceNode = new ObjectSelector(groupMetricConfig, SWT.NONE, true);
-      sourceNode.setLabel(Messages.get().General_ProxyNode);
+      sourceNode.setLabel(i18n.tr("Source node"));
       sourceNode.setObjectClass(Node.class);
       sourceNode.setObjectId(dco.getSourceNode());
       sourceNode.setEnabled(dco.getOrigin() != DataOrigin.PUSH);
@@ -232,7 +239,7 @@ public class General extends AbstractDCIPropertyPage
          DataCollectionItem dci = (DataCollectionItem)dco;
          
          Group groupProcessingAndVisualization = new Group(dialogArea, SWT.NONE);
-         groupProcessingAndVisualization.setText(Messages.get().General_Polling);
+         groupProcessingAndVisualization.setText(i18n.tr("Polling"));
          layout = new GridLayout();
          layout.marginHeight = WidgetHelper.OUTER_SPACING;
          layout.marginWidth = WidgetHelper.OUTER_SPACING;
@@ -247,7 +254,7 @@ public class General extends AbstractDCIPropertyPage
          gd = new GridData();
          gd.grabExcessHorizontalSpace = true;
          gd.horizontalAlignment = SWT.FILL;
-         dataType = WidgetHelper.createLabeledCombo(groupProcessingAndVisualization, SWT.READ_ONLY, Messages.get().General_DataType, gd);
+         dataType = WidgetHelper.createLabeledCombo(groupProcessingAndVisualization, SWT.READ_ONLY, i18n.tr("Data Type"), gd);
          dataType.add(DataCollectionDisplayInfo.getDataTypeName(DataType.INT32));
          dataType.add(DataCollectionDisplayInfo.getDataTypeName(DataType.UINT32));
          dataType.add(DataCollectionDisplayInfo.getDataTypeName(DataType.COUNTER32));
@@ -316,7 +323,7 @@ public class General extends AbstractDCIPropertyPage
          }
       };
 
-      final NXCSession session = ConsoleSharedData.getSession();
+      final NXCSession session = Registry.getSession();
       scheduleDefault = new Button(groupPolling, SWT.RADIO);
       scheduleDefault.setText("Server default interval");
       scheduleDefault.setSelection(dco.getPollingScheduleType() == DataCollectionObject.POLLING_SCHEDULE_DEFAULT);
@@ -361,13 +368,10 @@ public class General extends AbstractDCIPropertyPage
       scheduleLink.setText("Configure");
       scheduleLink.setUnderlined(true);
       scheduleLink.addHyperlinkListener(new HyperlinkAdapter() {
-         @SuppressWarnings("restriction")
          @Override
          public void linkActivated(HyperlinkEvent e)
          {
-            IPreferencePageContainer container = getContainer();
-            FilteredPreferenceDialog dialog = (FilteredPreferenceDialog)container;
-            dialog.setCurrentPageId("org.netxms.ui.eclipse.datacollection.propertypages.CustomSchedule#10");
+            ((PropertyDialog)getContainer()).showPage("customSchedule");
          }
       });      
       gd = new GridData(SWT.FILL, SWT.CENTER, true, false);
@@ -498,42 +502,42 @@ public class General extends AbstractDCIPropertyPage
       DataOrigin dataOrigin = DataOrigin.getByValue(origin.getSelectionIndex());
       boolean isTable = dco instanceof DataCollectionTable;
       switch(dataOrigin)
-      {
+		{
          case INTERNAL:
-            if (sourceNode.getObjectId() != 0)
-               dlg = new SelectInternalParamDlg(getShell(), sourceNode.getObjectId(), isTable);
-            else
-               dlg = new SelectInternalParamDlg(getShell(), dco.getNodeId(), isTable);
-            break;
+			   if (sourceNode.getObjectId() != 0)
+			      dlg = new SelectInternalParamDlg(getShell(), sourceNode.getObjectId(), isTable);
+			   else
+			      dlg = new SelectInternalParamDlg(getShell(), dco.getNodeId(), isTable);
+				break;
          case AGENT:
          case DEVICE_DRIVER:
-            if (sourceNode.getObjectId() != 0)
+			   if (sourceNode.getObjectId() != 0)
                dlg = new SelectAgentParamDlg(getShell(), sourceNode.getObjectId(), dataOrigin, isTable);
-            else
+			   else
                dlg = new SelectAgentParamDlg(getShell(), dco.getNodeId(), dataOrigin, isTable);
-            break;
+				break;
          case SNMP:
-            SnmpObjectId oid;
-            try
-            {
-               oid = SnmpObjectId.parseSnmpObjectId(parameter.getText());
-            }
-            catch(SnmpObjectIdFormatException e)
-            {
-               oid = null;
-            }
-            if (sourceNode.getObjectId() != 0)
-               dlg = new SelectSnmpParamDlg(getShell(), oid, sourceNode.getObjectId());
-            else
-               dlg = new SelectSnmpParamDlg(getShell(), oid, dco.getNodeId());
-            break;
+				SnmpObjectId oid;
+				try
+				{
+					oid = SnmpObjectId.parseSnmpObjectId(parameter.getText());
+				}
+				catch(SnmpObjectIdFormatException e)
+				{
+					oid = null;
+				}
+				if (sourceNode.getObjectId() != 0)
+				   dlg = new SelectSnmpParamDlg(getShell(), oid, sourceNode.getObjectId());
+				else
+				   dlg = new SelectSnmpParamDlg(getShell(), oid, dco.getNodeId());
+				break;
          case WINPERF:
             if (!isTable)
-               if (sourceNode.getObjectId() != 0)
-                  dlg = new WinPerfCounterSelectionDialog(getShell(), sourceNode.getObjectId());
-               else
-                  dlg = new WinPerfCounterSelectionDialog(getShell(), dco.getNodeId());
-            break;
+   			   if (sourceNode.getObjectId() != 0)
+   			      dlg = new WinPerfCounterSelectionDialog(getShell(), sourceNode.getObjectId());
+   			   else
+   			      dlg = new WinPerfCounterSelectionDialog(getShell(), dco.getNodeId());
+				break;
          case SCRIPT:
             dlg = new SelectParameterScriptDialog(getShell());
             break;
@@ -541,10 +545,10 @@ public class General extends AbstractDCIPropertyPage
             if (!isTable)
                dlg = new SelectWebServiceDlg(getShell(), false);
             break;
-         default:
-            dlg = null;
-            break;
-      }
+			default:
+				dlg = null;
+				break;
+		}
 		
 		if ((dlg != null) && (dlg.open() == Window.OK))
 		{
@@ -556,14 +560,15 @@ public class General extends AbstractDCIPropertyPage
                pd.getParameterDescription(), pd.getParameterDataType());
 		}
 	}
-	
-	/**
-	 * Apply changes
-	 * 
-	 * @param isApply true if update operation caused by "Apply" button
-	 */
-	protected boolean applyChanges(final boolean isApply)
-	{
+   
+   /**
+    * Apply changes
+    * 
+    * @param isApply true if update operation caused by "Apply" button
+    */
+   @Override
+   protected boolean applyChanges(final boolean isApply)
+   {
       dco.setOrigin(DataOrigin.getByValue(origin.getSelectionIndex()));
       dco.setName(parameter.getText().trim());
 		dco.setDescription(description.getText().trim());
@@ -626,24 +631,6 @@ public class General extends AbstractDCIPropertyPage
    }
 
    /**
-    * @see org.eclipse.jface.preference.PreferencePage#performOk()
-    */
-	@Override
-	public boolean performOk()
-	{
-		return applyChanges(false);
-	}
-
-   /**
-    * @see org.eclipse.jface.preference.PreferencePage#performApply()
-    */
-	@Override
-	protected void performApply()
-	{
-		applyChanges(true);
-	}
-
-   /**
     * @see org.eclipse.jface.preference.PreferencePage#performDefaults()
     */
 	@Override
@@ -651,7 +638,7 @@ public class General extends AbstractDCIPropertyPage
 	{
 		super.performDefaults();
 		
-		NXCSession session = ConsoleSharedData.getSession();
+		NXCSession session = Registry.getSession();
 		
 		scheduleDefault.setSelection(true);
 		scheduleFixed.setSelection(false);

@@ -1058,6 +1058,8 @@ TableColumnDefinition::TableColumnDefinition(const TCHAR *name, const TCHAR *dis
    _tcslcpy(m_displayName, (displayName != nullptr) ? displayName : m_name, MAX_DB_STRING);
    m_dataType = dataType;
    m_instanceColumn = isInstance;
+   m_unitName[0] = 0;
+   m_multipier = 0;
 }
 
 /**
@@ -1071,6 +1073,8 @@ TableColumnDefinition::TableColumnDefinition(const NXCPMessage& msg, uint32_t ba
    if (m_displayName[0] == 0)
       _tcscpy(m_displayName, m_name);
    m_instanceColumn = msg.getFieldAsBoolean(baseId + 3);
+   m_unitName[0] = 0;
+   m_multipier = 0;
 }
 
 /**
@@ -1082,6 +1086,8 @@ void TableColumnDefinition::fillMessage(NXCPMessage *msg, uint32_t baseId) const
    msg->setField(baseId + 1, m_dataType);
    msg->setField(baseId + 2, m_displayName);
    msg->setField(baseId + 3, m_instanceColumn);
+   msg->setField(baseId + 4, m_unitName);
+   msg->setField(baseId + 5, m_multipier);
 }
 
 /**
@@ -1090,4 +1096,12 @@ void TableColumnDefinition::fillMessage(NXCPMessage *msg, uint32_t baseId) const
 void TableColumnDefinition::setDisplayName(const TCHAR *name)
 {
    _tcslcpy(m_displayName, CHECK_NULL_EX(name), MAX_DB_STRING);
+}
+
+/**
+ * Set display name for column
+ */
+void TableColumnDefinition::setUnitName(const TCHAR *name)
+{
+   _tcslcpy(m_unitName, CHECK_NULL_EX(name), MAX_DB_STRING);
 }

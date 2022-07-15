@@ -126,10 +126,12 @@ public class PerfTabGraph extends DashboardComposite implements HistoricalChartO
       final Date to = new Date(System.currentTimeMillis());
       chart.setTimeRange(from, to);
 
-      GraphItem item = new GraphItem(nodeId, dci.getId(), DataOrigin.INTERNAL, DataType.INT32, "", settings.getRuntimeName(), "%s", settings.getType(),
+      GraphItem item = new GraphItem(nodeId, dci.getId(), DataOrigin.INTERNAL, DataType.INT32, null, settings.getRuntimeName(), "", settings.getType(),
             settings.isAutomaticColor() ? -1 : settings.getColorAsInt());
       item.setInverted(settings.isInvertedValues());
       item.setShowThresholds(settings.isShowThresholds());
+      item.setUnitName(dci.getUnitName());
+      item.setMultipierPower(dci.getMultiplier());
       chart.addParameter(item);
 
 		addDisposeListener(new DisposeListener() {
@@ -231,10 +233,12 @@ public class PerfTabGraph extends DashboardComposite implements HistoricalChartO
 		synchronized(items)
 		{
 			items.add(dci);
-         GraphItem item = new GraphItem(nodeId, dci.getId(), DataOrigin.INTERNAL, DataType.INT32, "", settings.getRuntimeName(), "%s", settings.getType(),
+         GraphItem item = new GraphItem(nodeId, dci.getId(), DataOrigin.INTERNAL, DataType.INT32, null, settings.getRuntimeName(), "", settings.getType(),
                settings.isAutomaticColor() ? -1 : settings.getColorAsInt());
          item.setInverted(settings.isInvertedValues());
          item.setShowThresholds(settings.isShowThresholds());
+         item.setUnitName(dci.getUnitName());
+         item.setMultipierPower(dci.getMultiplier());
          chart.addParameter(item);
 		}
 	}
@@ -298,6 +302,7 @@ public class PerfTabGraph extends DashboardComposite implements HistoricalChartO
 								for(int i = 0; i < data.length; i++)
                            chart.updateParameter(i, data[i], false);
 						      chart.setThresholds(thresholds);
+						      
                         chart.refresh();
 							}
 							updateInProgress = false;

@@ -47,6 +47,8 @@ public abstract class DciValue
 	private Date timestamp;
 	private Threshold activeThreshold;
 	private int flags;
+	private String unitName;
+   private int multiplier;
 
 	/**
 	 * Factory method to create correct DciValue subclass from NXCP message.
@@ -99,23 +101,45 @@ public abstract class DciValue
 		dcObjectType = msg.getFieldAsInt32(fieldId++);
 		errorCount = msg.getFieldAsInt32(fieldId++);
 		templateDciId = msg.getFieldAsInt64(fieldId++);
+      unitName = msg.getFieldAsString(fieldId++);
+      multiplier = msg.getFieldAsInt32(fieldId++);
 		if (msg.getFieldAsBoolean(fieldId++))
 			activeThreshold = new Threshold(msg, fieldId);
 		else
 			activeThreshold = null;
-		
+				
 	}
 	
    /**
 	 * Returns formated DCI value or string with format error and correct type of DCI value;
 	 * 
 	 * @param formatString the string into which will be placed DCI value 
+	 * @param formatter date/time formatter
 	 * @return The format
 	 */
-	public String format(String formatString)
-	{
-	   return new DataFormatter(formatString, dataType).format(value);
+	public String format(String formatString, TimeFormatter formatter)
+	{     
+      return new DataFormatter(formatString, dataType, unitName, multiplier).format(value, formatter);
 	}
+   
+   /**
+    * Returns formated DCI value or string with format error and correct type of DCI value;
+    * 
+    * @param useMultipliers the string into which will be placed DCI value 
+    * @return The format
+    */
+   public String getFormattedValue(boolean useMultipliers, TimeFormatter formatter)
+   {     
+      int selection = getMultipliersSelection();
+      String format = null;
+      if (selection == DciValue.MULTIPLIERS_DEFAULT)
+         format = useMultipliers ? "%*s" : "%s";
+      else if (selection == DciValue.MULTIPLIERS_YES)
+         format = "%*s";
+      else
+         format = "%s";
+      return new DataFormatter(format, dataType, unitName, multiplier, true).format(value, formatter);
+   }
 
 	/**
 	 * @return the id
@@ -248,13 +272,29 @@ public abstract class DciValue
    {
       return (int)((flags & DataCollectionItem.DCF_MULTIPLIERS_MASK) >> 16);
    }
-
+   
    /**
     * @return the mostCriticalSeverity
     */
    public Severity getMostCriticalSeverity()
    {
       return getThresholdSeverity();
+   }
+   
+   /**
+    * @return the unitName
+    */
+   public String getUnitName()
+   {
+      return unitName;
+   }
+
+   /**
+    * @return the multiplier
+    */
+   public int getMultiplier()
+   {
+      return multiplier;
    }
 
    /**
@@ -265,6 +305,6 @@ public abstract class DciValue
    {
       return "DciValue [id=" + id + ", nodeId=" + nodeId + ", templateDciId=" + templateDciId + ", name=" + name + ", description=" + description + ", value=" + value + ", source=" + source +
             ", dataType=" + dataType + ", status=" + status + ", errorCount=" + errorCount + ", dcObjectType=" + dcObjectType + ", timestamp=" + timestamp + ", activeThreshold=" + activeThreshold +
-            ", flags=" + flags + "]";
+            ", flags=" + flags + ", unitName=" + unitName + ", multiplier=" + multiplier + "]";
    }
 }

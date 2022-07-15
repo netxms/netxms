@@ -182,8 +182,8 @@ public class BusinessServiceAvailability extends ObjectTab
 
       chart = new Chart(parent, SWT.NONE, ChartType.PIE, chartConfiguration);
       chart.setBackground(chart.getDisplay().getSystemColor(SWT.COLOR_WIDGET_BACKGROUND));
-      chart.addParameter(new GraphItem(DataType.FLOAT, "Uptime", "Uptime", "%s"));
-      chart.addParameter(new GraphItem(DataType.FLOAT, "Downtime", "Downtime", "%s"));
+      chart.addParameter(new GraphItem(DataType.FLOAT, "Uptime", "Uptime", null));
+      chart.addParameter(new GraphItem(DataType.FLOAT, "Downtime", "Downtime", null));
       chart.setPaletteEntry(0, new ChartColor(127, 154, 72));
       chart.setPaletteEntry(1, new ChartColor(158, 65, 62));
       chart.rebuild();

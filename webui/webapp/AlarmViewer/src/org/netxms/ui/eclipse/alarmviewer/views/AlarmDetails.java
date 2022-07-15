@@ -633,7 +633,7 @@ public class AlarmDetails extends ViewPart
          chartConfiguration.setTranslucent(true);
 
          chart = new Chart(dataArea, SWT.NONE, ChartType.LINE, chartConfiguration);
-         chart.addParameter(new GraphItem(dci, DataOrigin.INTERNAL, "%s", ChartDciConfig.AREA, ColorConverter.rgbToInt(new RGB(127, 154, 72))));
+         chart.addParameter(new GraphItem(dci, DataOrigin.INTERNAL, null, ChartDciConfig.AREA, ColorConverter.rgbToInt(new RGB(127, 154, 72))));
          chart.rebuild();
 
          dataViewControl = chart;

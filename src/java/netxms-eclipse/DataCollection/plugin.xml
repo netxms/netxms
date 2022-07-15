@@ -254,19 +254,9 @@
 	       class="org.netxms.ui.eclipse.datacollection.propertypages.General">
           <enabledWhen>
              <instanceof
-                  value="org.netxms.client.datacollection.DataCollectionItem">
+                  value="org.netxms.client.datacollection.DataCollectionObject">
              </instanceof>
           </enabledWhen>
-        </page>
-        <page
-              class="org.netxms.ui.eclipse.datacollection.propertypages.GeneralTable"
-              id="org.netxms.ui.eclipse.datacollection.propertypages.GeneralTable#1"
-              name="%page.name.General">
-            <enabledWhen>
-               <instanceof
-                    value="org.netxms.client.datacollection.DataCollectionTable">
-               </instanceof>
-            </enabledWhen>
         </page>
         <page
               class="org.netxms.ui.eclipse.datacollection.propertypages.Comments"
@@ -425,6 +415,26 @@
            <enabledWhen>
               <instanceof
                     value="org.netxms.client.datacollection.DataCollectionTable">
+              </instanceof>
+           </enabledWhen>
+        </page>
+        <page
+              class="org.netxms.ui.eclipse.datacollection.propertypages.SNMP"
+              id="org.netxms.ui.eclipse.datacollection.propertypages.SNMP#100"
+              name="SNMP">
+           <enabledWhen>
+              <instanceof
+                    value="org.netxms.client.datacollection.DataCollectionObject">
+              </instanceof>
+           </enabledWhen>
+        </page>
+        <page
+              class="org.netxms.ui.eclipse.datacollection.propertypages.WinPerf"
+              id="org.netxms.ui.eclipse.datacollection.propertypages.WinPerf#100"
+              name="Windows Performance Counters">
+           <enabledWhen>
+              <instanceof
+                    value="org.netxms.client.datacollection.DataCollectionItem">
               </instanceof>
            </enabledWhen>
         </page>

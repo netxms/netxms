@@ -83,30 +83,25 @@ public class LastValuesLabelProvider extends LabelProvider implements ITableLabe
 	@Override
 	public String getColumnText(Object element, int columnIndex)
 	{
+	   DciValue dciValue = ((DciValue)element);
 		switch(columnIndex)
 		{
 			case LastValuesWidget.COLUMN_ID:
-				return Long.toString(((DciValue)element).getId());
+				return Long.toString(dciValue.getId());
 			case LastValuesWidget.COLUMN_DESCRIPTION:
-				return ((DciValue)element).getDescription();
+				return dciValue.getDescription();
 			case LastValuesWidget.COLUMN_VALUE:
-				if (showErrors && ((DciValue)element).getErrorCount() > 0)
+				if (showErrors && dciValue.getErrorCount() > 0)
 					return Messages.get().LastValuesLabelProvider_Error;
-				if (((DciValue)element).getDcObjectType() == DataCollectionObject.DCO_TYPE_TABLE)
-					return Messages.get().LastValuesLabelProvider_Table;				
-				int selection = ((DciValue)element).getMultipliersSelection();
-				if (selection == DciValue.MULTIPLIERS_DEFAULT)
-				   return useMultipliers ? ((DciValue)element).format("%*s") : ((DciValue)element).getValue();
-				else if (selection == DciValue.MULTIPLIERS_YES)
-				   return ((DciValue)element).format("%*s");
-				else
-               return ((DciValue)element).getValue();
+				if (dciValue.getDcObjectType() == DataCollectionObject.DCO_TYPE_TABLE)
+					return Messages.get().LastValuesLabelProvider_Table;		
+				return dciValue.getFormattedValue(useMultipliers, RegionalSettings.TIME_FORMATTER);
 			case LastValuesWidget.COLUMN_TIMESTAMP:
-				if (((DciValue)element).getTimestamp().getTime() <= 1000)
+				if (dciValue.getTimestamp().getTime() <= 1000)
 					return null;
-				return RegionalSettings.getDateTimeFormat().format(((DciValue)element).getTimestamp());
+				return RegionalSettings.getDateTimeFormat().format(dciValue.getTimestamp());
 			case LastValuesWidget.COLUMN_THRESHOLD:
-            return formatThreshold((DciValue)element);
+            return formatThreshold(dciValue);
 		}
 		return null;
 	}

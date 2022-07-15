@@ -812,17 +812,29 @@ uint32_t DataCollectionTarget::getPerfTabDCIList(NXCPMessage *msg, uint32_t user
           object->matchClusterResource() &&
           object->hasAccess(userId))
 		{
-			msg->setField(fieldId++, object->getId());
-			msg->setField(fieldId++, object->getDescription());
-			msg->setField(fieldId++, static_cast<uint16_t>(object->getStatus()));
-			msg->setField(fieldId++, object->getPerfTabSettings());
-			msg->setField(fieldId++, static_cast<uint16_t>(object->getType()));
-			msg->setField(fieldId++, object->getTemplateItemId());
-         msg->setField(fieldId++, object->getInstanceDiscoveryData());
-         msg->setField(fieldId++, object->getInstanceName());
+			msg->setField(fieldId, object->getId());
+			msg->setField(fieldId+1, object->getDescription());
+			msg->setField(fieldId+2, static_cast<uint16_t>(object->getStatus()));
+			msg->setField(fieldId+3, object->getPerfTabSettings());
+			msg->setField(fieldId+4, static_cast<uint16_t>(object->getType()));
+			msg->setField(fieldId+5, object->getTemplateItemId());
+         msg->setField(fieldId+6, object->getInstanceDiscoveryData());
+         msg->setField(fieldId+7, object->getInstanceName());
          shared_ptr<DCObject> src = getDCObjectById(object->getTemplateItemId(), userId, false);
-         msg->setField(fieldId++, (src != nullptr) ? src->getTemplateItemId() : 0);
-         fieldId++;
+         msg->setField(fieldId+8, (src != nullptr) ? src->getTemplateItemId() : 0);
+         if (object->getType() == DCO_TYPE_ITEM)
+         {
+            msg->setField(fieldId+9, ((DCItem*)object)->getUnitName());
+            msg->setField(fieldId+10, ((DCItem*)object)->getMultiplier());
+         }
+         else
+         if (object->getType() == DCO_TYPE_ITEM)
+         {
+            msg->setField(fieldId+9, _T(""));
+            msg->setField(fieldId+10, 0);
+         }
+
+         fieldId+=50;
 			count++;
 		}
 	}
@@ -1601,6 +1613,8 @@ void DataCollectionTarget::getItemDciValuesSummary(SummaryTable *tableDefinition
             tableData->setStatusAt(row, i + offset, static_cast<DCItem*>(object)->getThresholdSeverity());
             tableData->setCellObjectIdAt(row, i + offset, object->getId());
             tableData->getColumnDefinitions().get(i + offset)->setDataType(static_cast<DCItem*>(object)->getDataType());
+            tableData->getColumnDefinitions().get(i + offset)->setUnitName(static_cast<DCItem*>(object)->getUnitName());
+            tableData->getColumnDefinitions().get(i + offset)->setMultiplier(static_cast<DCItem*>(object)->getMultiplier());
             if (tableDefinition->getAggregationFunction() == DCI_AGG_LAST)
             {
                if (tc->m_flags & COLUMN_DEFINITION_MULTIVALUED)

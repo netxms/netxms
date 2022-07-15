@@ -24,6 +24,7 @@ import java.util.Date;
 import java.util.TimeZone;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.netxms.client.NXCSession;
+import org.netxms.client.datacollection.TimeFormatter;
 import org.netxms.ui.eclipse.console.Activator;
 import org.netxms.ui.eclipse.console.Messages;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -36,6 +37,20 @@ public class RegionalSettings
 	public static final int DATETIME_FORMAT_SERVER = 0;
 	public static final int DATETIME_FORMAT_JVM = 1;
 	public static final int DATETIME_FORMAT_CUSTOM = 2;
+	public static final TimeFormatter TIME_FORMATTER = new TimeFormatter() {
+      
+      @Override
+      public String formatUptime(long seconds)
+      {
+         return formatTimeDifference(seconds, true);
+      }
+      
+      @Override
+      public String formatDateAndTime(long timestamp)
+      {
+         return getDateTimeFormat().format(new Date(timestamp * 1000));
+      }
+   };
 	
 	private int dateTimeFormat = DATETIME_FORMAT_SERVER;
 	private String dateFormatString;
@@ -223,18 +238,17 @@ public class RegionalSettings
    }
    
    /**
-    * Format time difference between current and give time as
+    * Format provided time difference as
     * [n days, ]hh:mm[:ss]
     * 
-    * @param start period start time
+    * @param seconds number of seconds
     * @param showSeconds true to show seconds
-    * @return formatted time difference
+    * @return formatted time 
     */
-   public static String formatTimeDifference(Date start, boolean showSeconds)
+   public static String formatTimeDifference(long seconds, boolean showSeconds)
    {
       StringBuilder sb = new StringBuilder();
-      int seconds = (int)((System.currentTimeMillis() - start.getTime()) / 1000);
-      int days = seconds / 86400;
+      long days = seconds / 86400;
       if (days > 0)
       {
          sb.append(days);
@@ -242,14 +256,14 @@ public class RegionalSettings
          seconds -= days * 86400;
       }
       
-      int hours = seconds / 3600;
+      long hours = seconds / 3600;
       if (hours < 10)
          sb.append('0');
       sb.append(hours);
       seconds -= hours * 3600;
       
       sb.append(':');
-      int minutes = seconds / 60;
+      long minutes = seconds / 60;
       if (minutes < 10)
          sb.append('0');
       sb.append(minutes);
@@ -264,5 +278,20 @@ public class RegionalSettings
       }
       
       return sb.toString();
+      
+   }
+   
+   /**
+    * Format time difference between current and give time as
+    * [n days, ]hh:mm[:ss]
+    * 
+    * @param start period start time
+    * @param showSeconds true to show seconds
+    * @return formatted time difference
+    */
+   public static String formatTimeDifference(Date start, boolean showSeconds)
+   {
+      long seconds = ((System.currentTimeMillis() - start.getTime()) / 1000);
+      return formatTimeDifference(seconds, showSeconds);
    }
 }

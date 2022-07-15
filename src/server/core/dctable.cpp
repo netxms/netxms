@@ -880,6 +880,8 @@ void DCTable::fillLastValueSummaryMessage(NXCPMessage *msg, uint32_t fieldId, co
    msg->setField(fieldId++, static_cast<uint16_t>(getType()));
    msg->setField(fieldId++, m_errorCount);
    msg->setField(fieldId++, m_dwTemplateItemId);
+   msg->setField(fieldId++, _T(""));
+   msg->setField(fieldId++, 0);
 
    if (m_thresholds != nullptr)
    {

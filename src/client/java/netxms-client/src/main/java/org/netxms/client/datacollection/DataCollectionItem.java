@@ -63,9 +63,8 @@ public class DataCollectionItem extends DataCollectionObject
 	private DataType dataType;
 	private int deltaCalculation;
 	private int sampleCount;
-	private int baseUnits;
 	private int multiplier;
-	private String customUnitName;
+	private String unitName;
 	private int snmpRawValueType;
 	private ArrayList<Threshold> thresholds;
 	private String predictionEngine;
@@ -83,9 +82,8 @@ public class DataCollectionItem extends DataCollectionObject
 		dataType = DataType.getByValue(msg.getFieldAsInt16(NXCPCodes.VID_DCI_DATA_TYPE));
 		deltaCalculation = msg.getFieldAsInt32(NXCPCodes.VID_DCI_DELTA_CALCULATION);
 		sampleCount = msg.getFieldAsInt32(NXCPCodes.VID_SAMPLE_COUNT);
-		baseUnits = msg.getFieldAsInt32(NXCPCodes.VID_BASE_UNITS);
 		multiplier = msg.getFieldAsInt32(NXCPCodes.VID_MULTIPLIER);
-		customUnitName = msg.getFieldAsString(NXCPCodes.VID_CUSTOM_UNITS_NAME);
+		unitName = msg.getFieldAsString(NXCPCodes.VID_UNITS_NAME);
 		snmpRawValueType = msg.getFieldAsInt32(NXCPCodes.VID_SNMP_RAW_VALUE_TYPE);
 		predictionEngine = msg.getFieldAsString(NXCPCodes.VID_NPE_NAME);
 		
@@ -111,9 +109,8 @@ public class DataCollectionItem extends DataCollectionObject
 		dataType = DataType.INT32;
 		deltaCalculation = DELTA_NONE;
 		sampleCount = 0;
-		baseUnits = 0;
 		multiplier = 0;
-		customUnitName = null;
+		unitName = null;
 		snmpRawValueType = SNMP_RAWTYPE_NONE;
 		predictionEngine = "";
 		thresholds = new ArrayList<Threshold>(0);
@@ -161,9 +158,8 @@ public class DataCollectionItem extends DataCollectionObject
       dataType = src.dataType;
       deltaCalculation = src.deltaCalculation;
       sampleCount = src.sampleCount;
-      baseUnits = src.baseUnits;
       multiplier = src.multiplier;
-      customUnitName = src.customUnitName;
+      unitName = src.unitName;
       snmpRawValueType = src.snmpRawValueType;
       thresholds = new ArrayList<Threshold>(src.thresholds);
       predictionEngine = src.predictionEngine;
@@ -184,10 +180,9 @@ public class DataCollectionItem extends DataCollectionObject
 		msg.setFieldInt16(NXCPCodes.VID_SAMPLE_COUNT, sampleCount);
 		msg.setFieldInt16(NXCPCodes.VID_SNMP_RAW_VALUE_TYPE, snmpRawValueType);
 		msg.setField(NXCPCodes.VID_NPE_NAME, predictionEngine);
-		msg.setFieldInt16(NXCPCodes.VID_BASE_UNITS, baseUnits);
 		msg.setFieldInt32(NXCPCodes.VID_MULTIPLIER, multiplier);
-		if (customUnitName != null)
-			msg.setField(NXCPCodes.VID_CUSTOM_UNITS_NAME, customUnitName);
+		if (unitName != null)
+			msg.setField(NXCPCodes.VID_UNITS_NAME, unitName);
 		
 		msg.setFieldInt32(NXCPCodes.VID_NUM_THRESHOLDS, thresholds.size());
 		long varId = NXCPCodes.VID_DCI_THRESHOLD_BASE;
@@ -324,22 +319,6 @@ public class DataCollectionItem extends DataCollectionObject
 	}
 
 	/**
-	 * @return the baseUnits
-	 */
-	public int getBaseUnits()
-	{
-		return baseUnits;
-	}
-
-	/**
-	 * @param baseUnits the baseUnits to set
-	 */
-	public void setBaseUnits(int baseUnits)
-	{
-		this.baseUnits = baseUnits;
-	}
-
-	/**
 	 * @return the multiplier
 	 */
 	public int getMultiplier()
@@ -358,17 +337,17 @@ public class DataCollectionItem extends DataCollectionObject
 	/**
 	 * @return the customUnitName
 	 */
-	public String getCustomUnitName()
+	public String getUnitName()
 	{
-		return customUnitName;
+		return unitName;
 	}
 
 	/**
-	 * @param customUnitName the customUnitName to set
+	 * @param unitName the customUnitName to set
 	 */
-	public void setCustomUnitName(String customUnitName)
+	public void setUnitName(String unitName)
 	{
-		this.customUnitName = customUnitName;
+		this.unitName = unitName;
 	}
 
 	/**

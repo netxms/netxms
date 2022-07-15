@@ -15,6 +15,8 @@ public class TableColumnDefinition
 	private String displayName;
 	private DataType dataType;
 	private boolean instanceColumn;
+	private String unitName;
+	private int multiplier;
 	
 	/**
 	 * @param name The name to set
@@ -28,6 +30,8 @@ public class TableColumnDefinition
 		this.displayName = (displayName != null) ? displayName : name;
 		this.dataType = dataType;
 		this.instanceColumn = instanceColumn;
+      this.unitName = "";
+      this.multiplier = 0;
 	}
 
 	/**
@@ -42,6 +46,8 @@ public class TableColumnDefinition
 		if (displayName == null)
 			displayName = name;
 		instanceColumn = msg.getFieldAsBoolean(baseId + 3);
+		unitName = msg.getFieldAsString(baseId + 4);
+		multiplier = msg.getFieldAsInt32(baseId + 5);
 	}
 	
 	/**
@@ -87,4 +93,20 @@ public class TableColumnDefinition
 	{
 		return instanceColumn;
 	}
+
+   /**
+    * @return the unitName
+    */
+   public String getUnitName()
+   {
+      return unitName;
+   }
+
+   /**
+    * @return the multiplier
+    */
+   public int getMultiplier()
+   {
+      return multiplier;
+   }
 }

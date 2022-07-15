@@ -487,9 +487,8 @@ protected:
    ItemValue m_prevRawValue;     // Previous raw value (used for delta calculation)
    time_t m_tPrevValueTimeStamp;
    bool m_bCacheLoaded;
-	int m_nBaseUnits;
-	int m_nMultiplier;
-	TCHAR *m_customUnitName;
+	int m_multiplier;
+	TCHAR *m_unitName;
 	uint16_t m_snmpRawValueType;		// Actual SNMP raw value type for input transformation
 	TCHAR m_predictionEngine[MAX_NPE_NAME_LEN];
 
@@ -539,6 +538,8 @@ public:
    int getThresholdSeverity() const;
 	int getSampleCount() const { return m_sampleCount; }
 	const TCHAR *getPredictionEngine() const { return m_predictionEngine; }
+	int getMultiplier() const { return m_multiplier; }
+	const TCHAR *getUnitName() const { return m_unitName; }
 
 	uint64_t getCacheMemoryUsage() const;
 

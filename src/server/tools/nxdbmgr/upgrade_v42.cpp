@@ -22,6 +22,94 @@
 
 #include "nxdbmgr.h"
 
+
+/**
+ * Upgrade from 42.13 to 42.14
+ */
+static bool H_UpgradeFromV13()
+{
+   CHK_EXEC(DBRenameColumn(g_dbHandle, _T("items"), _T("custom_units_name"), _T("units_name")));
+   CHK_EXEC(DBRenameColumn(g_dbHandle, _T("items"), _T("unit_multiplier"), _T("multiplier")));
+   CHK_EXEC(DBDropColumn(g_dbHandle, _T("items"), _T("base_units")));
+   CHK_EXEC(SQLQuery(_T("UPDATE items SET multiplier=0,units_name=''")));
+
+   DB_RESULT hResult = SQLSelect(_T("SELECT dashboard_id,element_id,element_data FROM dashboard_elements"));
+   if (hResult != nullptr)
+   {
+      int count = DBGetNumRows(hResult);
+      DB_STATEMENT hStmt = DBPrepare(g_dbHandle, _T("UPDATE dashboard_elements SET element_data=? WHERE dashboard_id=? AND element_id=?"), count > 1);
+
+      if (hStmt != nullptr)
+      {
+         for (int i = 0; i < count; i++)
+         {
+            StringBuffer sb = DBGetFieldAsSharedString(hResult, i, 2);
+            sb.replace(_T("<displayFormat>%s</displayFormat>"), _T("<displayFormat></displayFormat>"));
+            DBBind(hStmt, 1, DB_SQLTYPE_TEXT, sb, DB_BIND_STATIC);
+            DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, DBGetFieldULong(hResult, i, 0));
+            DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, DBGetFieldULong(hResult, i, 1));
+            if (!SQLExecute(hStmt) && !g_ignoreErrors)
+            {
+               DBFreeResult(hResult);
+               DBFreeStatement(hStmt);
+               return false;
+            }
+
+         }
+         DBFreeStatement(hStmt);
+      }
+      else if (!g_ignoreErrors)
+      {
+         DBFreeResult(hResult);
+         return false;
+      }
+      DBFreeResult(hResult);
+   }
+   else if (!g_ignoreErrors)
+   {
+      return false;
+   }
+
+   hResult = SQLSelect(_T("SELECT graph_id,config FROM graphs"));
+   if (hResult != nullptr)
+   {
+      int count = DBGetNumRows(hResult);
+      DB_STATEMENT hStmt = DBPrepare(g_dbHandle, _T("UPDATE graphs SET config=? WHERE graph_id=?"), count > 1);
+
+      if (hStmt != nullptr)
+      {
+         for (int i = 0; i < count && hStmt != nullptr; i++)
+         {
+            StringBuffer sb = DBGetFieldAsSharedString(hResult, i, 1);
+            sb.replace(_T("<displayFormat>%s</displayFormat>"), _T("<displayFormat></displayFormat>"));
+            DBBind(hStmt, 1, DB_SQLTYPE_TEXT, sb, DB_BIND_STATIC);
+            DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, DBGetFieldULong(hResult, i, 0));
+            if (!SQLExecute(hStmt) && !g_ignoreErrors)
+            {
+               DBFreeResult(hResult);
+               DBFreeStatement(hStmt);
+               return false;
+            }
+
+         }
+         DBFreeStatement(hStmt);
+      }
+      else if (!g_ignoreErrors)
+      {
+         DBFreeResult(hResult);
+         return false;
+      }
+      DBFreeResult(hResult);
+   }
+   else if (!g_ignoreErrors)
+   {
+      return false;
+   }
+
+   CHK_EXEC(SetMinorSchemaVersion(14));
+   return true;
+}
+
 /**
  * Upgrade from 42.12 to 42.13
  */
@@ -206,6 +294,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 13, 42, 14, H_UpgradeFromV13 },
    { 12, 42, 13, H_UpgradeFromV12 },
    { 11, 42, 12, H_UpgradeFromV11 },
    { 10, 42, 11, H_UpgradeFromV10 },

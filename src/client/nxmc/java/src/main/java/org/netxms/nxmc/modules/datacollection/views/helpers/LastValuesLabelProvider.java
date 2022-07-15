@@ -100,33 +100,28 @@ public class LastValuesLabelProvider extends LabelProvider implements ITableLabe
 	@Override
 	public String getColumnText(Object element, int columnIndex)
 	{
+	   DciValue dciValue = ((DciValue)element);
 		switch((Integer)viewer.getTable().getColumn(columnIndex).getData("ID"))
 		{
          case BaseDataCollectionView.LV_COLUMN_OWNER:
-            AbstractObject object = session.findObjectById(((DciValue)element).getNodeId());
-            return (object != null) ? object.getObjectName() : ("[" + Long.toString(((DciValue)element).getNodeId()) + "]");
+            AbstractObject object = session.findObjectById(dciValue.getNodeId());
+            return (object != null) ? object.getObjectName() : ("[" + Long.toString(dciValue.getNodeId()) + "]");
 			case BaseDataCollectionView.LV_COLUMN_ID:
-				return Long.toString(((DciValue)element).getId());
+				return Long.toString(dciValue.getId());
 			case BaseDataCollectionView.LV_COLUMN_DESCRIPTION:
-				return ((DciValue)element).getDescription();
+				return dciValue.getDescription();
 			case BaseDataCollectionView.LV_COLUMN_VALUE:
-				if (showErrors && ((DciValue)element).getErrorCount() > 0)
+				if (showErrors && dciValue.getErrorCount() > 0)
                return i18n.tr("<< ERROR >>");
-				if (((DciValue)element).getDcObjectType() == DataCollectionObject.DCO_TYPE_TABLE)
+				if (dciValue.getDcObjectType() == DataCollectionObject.DCO_TYPE_TABLE)
                return i18n.tr("<< TABLE >>");
-				int selection = ((DciValue)element).getMultipliersSelection();
-				if (selection == DciValue.MULTIPLIERS_DEFAULT)
-				   return useMultipliers ? ((DciValue)element).format("%*s") : ((DciValue)element).getValue();
-				else if (selection == DciValue.MULTIPLIERS_YES)
-				   return ((DciValue)element).format("%*s");
-				else
-               return ((DciValue)element).getValue();				   
+				return dciValue.getFormattedValue(useMultipliers, DateFormatFactory.TIME_FORMATTER);				   
 			case BaseDataCollectionView.LV_COLUMN_TIMESTAMP:
-				if (((DciValue)element).getTimestamp().getTime() <= 1000)
+				if (dciValue.getTimestamp().getTime() <= 1000)
 					return null;
-            return DateFormatFactory.getDateTimeFormat().format(((DciValue)element).getTimestamp());
+            return DateFormatFactory.getDateTimeFormat().format(dciValue.getTimestamp());
 			case BaseDataCollectionView.LV_COLUMN_THRESHOLD:
-            return formatThreshold((DciValue)element);
+            return formatThreshold(dciValue);
 		}
 		return null;
 	}

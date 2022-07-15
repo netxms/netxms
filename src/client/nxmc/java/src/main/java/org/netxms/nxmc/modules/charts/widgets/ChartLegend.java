@@ -39,9 +39,11 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
+import org.netxms.client.constants.DataType;
 import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.DataFormatter;
 import org.netxms.client.datacollection.GraphItem;
+import org.netxms.nxmc.localization.DateFormatFactory;
 import org.netxms.nxmc.modules.charts.api.ChartType;
 import org.netxms.nxmc.modules.charts.api.DataSeries;
 import org.netxms.nxmc.tools.ColorConverter;
@@ -304,12 +306,23 @@ public class ChartLegend extends Composite
       int row = 0;
       for(DataSeries s : chart.getDataSeries())
       {
-         dataLabels[row][0].setText(useMultipliers ? DataFormatter.roundDecimalValue(s.getCurrentValue(), 0.005, 3) : Double.toString(s.getCurrentValue()));
+         GraphItem item = chart.getItem(row);
+         String format = item.getDisplayFormat();
+         boolean useDciFormat = false;
+         if (format == null || format.isEmpty())
+         {
+            format = "%.3f";
+            if (useMultipliers)
+               format = "%*.3f";
+            useDciFormat = true;
+         }
+         DataFormatter formatter = new DataFormatter(format, DataType.FLOAT, item.getUnitName(), item.getMultiplierPower(), useDciFormat);
+         dataLabels[row][0].setText(formatter.format(s.getCurrentValueAsString(), DateFormatFactory.TIME_FORMATTER));
          if (chart.getType() == ChartType.LINE)
          {
-            dataLabels[row][1].setText(useMultipliers ? DataFormatter.roundDecimalValue(s.getMinValue(), 0.005, 3) : Double.toString(s.getMinValue()));
-            dataLabels[row][2].setText(useMultipliers ? DataFormatter.roundDecimalValue(s.getMaxValue(), 0.005, 3) : Double.toString(s.getMaxValue()));
-            dataLabels[row][3].setText(useMultipliers ? DataFormatter.roundDecimalValue(s.getAverageValue(), 0.005, 3) : Double.toString(s.getAverageValue()));
+            dataLabels[row][1].setText(formatter.format(Double.toString(s.getMinValue()), DateFormatFactory.TIME_FORMATTER));
+            dataLabels[row][2].setText(formatter.format(Double.toString(s.getMaxValue()), DateFormatFactory.TIME_FORMATTER));
+            dataLabels[row][3].setText(formatter.format(Double.toString(s.getAverageValue()), DateFormatFactory.TIME_FORMATTER));
          }
          else
          {

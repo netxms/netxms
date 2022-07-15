@@ -103,6 +103,16 @@ abstract public class Series implements ISeries
 
 	/** the list of dispose listeners */
 	private List<IDisposeListener> listeners;
+	
+	/** name of units **/
+	private String unitName;
+	
+	/** if units are binary **/
+	private boolean isBinary;
+	
+	/** power of multiplier **/
+   private int multiplierPower;
+	
 
 	/**
 	 * Constructor.
@@ -826,5 +836,53 @@ abstract public class Series implements ISeries
    public int getSize()
    {
       return xSeries.length;
+   }
+
+   /**
+    * @return the unitName
+    */
+   public String getUnitName()
+   {
+      return unitName;
+   }
+
+   /**
+    * @param unitName the unitName to set
+    */
+   public void setUnitName(String unitName)
+   {
+      this.unitName = unitName;
+   }
+
+   /**
+    * @return the isBinary
+    */
+   public boolean isBinary()
+   {
+      return isBinary;
+   }
+
+   /**
+    * @param isBinary the isBinary to set
+    */
+   public void setBinary(boolean isBinary)
+   {
+      this.isBinary = isBinary;
+   }
+
+   /**
+    * @return the multiplierPower
+    */
+   public int getMultiplierPower()
+   {
+      return multiplierPower;
+   }
+
+   /**
+    * @param multiplierPower the multiplierPower to set
+    */
+   public void setMultiplierPower(int multiplierPower)
+   {
+      this.multiplierPower = multiplierPower;
    }
 }

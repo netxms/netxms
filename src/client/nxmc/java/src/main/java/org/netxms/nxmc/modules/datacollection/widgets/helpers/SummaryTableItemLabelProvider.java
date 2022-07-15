@@ -25,9 +25,10 @@ import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.client.TableCell;
+import org.netxms.client.TableColumnDefinition;
 import org.netxms.client.TableRow;
-import org.netxms.client.constants.DataType;
 import org.netxms.client.datacollection.DataFormatter;
+import org.netxms.nxmc.localization.DateFormatFactory;
 import org.netxms.nxmc.resources.StatusDisplayInfo;
 
 /**
@@ -41,7 +42,7 @@ public class SummaryTableItemLabelProvider extends LabelProvider implements ITab
       { null, FOREGROUND_COLOR_DARK, FOREGROUND_COLOR_DARK, FOREGROUND_COLOR_LIGHT, FOREGROUND_COLOR_LIGHT };
    
    private boolean useMultipliers = false;
-   private DataType[] columnDataTypes = null;
+   private TableColumnDefinition[] columns = null;
 
    /**
     * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
@@ -62,8 +63,7 @@ public class SummaryTableItemLabelProvider extends LabelProvider implements ITab
 		
 		if (columnIndex >= row.size())
 			return null;
-      return useMultipliers ? new DataFormatter("%*s", columnDataTypes[columnIndex]).format(row.get(columnIndex).getValue())
-            : row.get(columnIndex).getValue();
+		return new DataFormatter(useMultipliers ? "%*s" : "%s", columns[columnIndex].getDataType(), columns[columnIndex].getUnitName(), columns[columnIndex].getMultiplier(), true).format(row.get(columnIndex).getValue(), DateFormatFactory.TIME_FORMATTER);
 	}
 
    /**
@@ -107,8 +107,8 @@ public class SummaryTableItemLabelProvider extends LabelProvider implements ITab
    /**
     * @param columnDataTypes
     */
-   public void setColumnDataTypes(DataType[] columnDataTypes)
+   public void setColumnDataTypes(TableColumnDefinition[] columns)
    {
-      this.columnDataTypes = columnDataTypes;
+      this.columns = columns;
    }
 }

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2017 Raden Solutions
+ * Copyright (C) 2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,28 +19,22 @@
 package org.netxms.ui.eclipse.datacollection.propertypages;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.netxms.client.constants.AgentCacheMode;
-import org.netxms.client.datacollection.DataCollectionTable;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.propertypages.helpers.AbstractDCIPropertyPage;
-import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.ui.eclipse.widgets.LabeledSpinner;
 
 /**
- * @author Victor
- *
+ * Windows performance counter specific configuration
  */
-public class OtherOptionsTable extends AbstractDCIPropertyPage
+public class WinPerf extends AbstractDCIPropertyPage
 {
-	private DataCollectionTable dci;
-   private Combo agentCacheMode;
-   private ObjectSelector relatedObject;
+	private DataCollectionItem dci;
+   private LabeledSpinner sampleCount;
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
@@ -48,31 +42,22 @@ public class OtherOptionsTable extends AbstractDCIPropertyPage
 	@Override
 	protected Control createContents(Composite parent)
 	{
-	   Composite dialogArea = (Composite)super.createContents(parent);
-		dci = editor.getObjectAsTable();
+	   Composite pageArea = (Composite)super.createContents(parent);
+		dci = editor.getObjectAsItem();
 		
 		GridLayout layout = new GridLayout();
 		layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
 		layout.marginWidth = 0;
 		layout.marginHeight = 0;
-      dialogArea.setLayout(layout);
+      pageArea.setLayout(layout);
+
+      sampleCount = new LabeledSpinner(pageArea, SWT.NONE);
+      sampleCount.setLabel(Messages.get().General_SampleCountForAvg);
+      sampleCount.setRange(0, 65535);
+      sampleCount.setSelection(dci.getSampleCount());
       
-      agentCacheMode = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, Messages.get().General_AgentCacheMode, new GridData());
-      agentCacheMode.add(Messages.get().General_Default);
-      agentCacheMode.add(Messages.get().General_On);
-      agentCacheMode.add(Messages.get().General_Off);
-      agentCacheMode.select(dci.getCacheMode().getValue());
       
-      relatedObject = new ObjectSelector(dialogArea, SWT.NONE, true);
-      relatedObject.setLabel("Related object");
-      relatedObject.setObjectClass(GenericObject.class);
-      relatedObject.setObjectId(dci.getRelatedObject());
-      GridData gd = new GridData();
-      gd.grabExcessHorizontalSpace = true;
-      gd.horizontalAlignment = SWT.FILL;
-      relatedObject.setLayoutData(gd);
-      
-		return dialogArea;
+		return pageArea;
 	}
 
 	/**
@@ -81,9 +66,8 @@ public class OtherOptionsTable extends AbstractDCIPropertyPage
 	 * @param isApply true if update operation caused by "Apply" button
 	 */
 	protected void applyChanges(final boolean isApply)
-	{
-      dci.setCacheMode(AgentCacheMode.getByValue(agentCacheMode.getSelectionIndex()));
-      dci.setRelatedObject(relatedObject.getObjectId());
+	{    
+      dci.setSampleCount(sampleCount.getSelection());
 		editor.modify();
 	}
 
@@ -112,8 +96,6 @@ public class OtherOptionsTable extends AbstractDCIPropertyPage
 	@Override
 	protected void performDefaults()
 	{
-		super.performDefaults();
-      agentCacheMode.select(0);
-		relatedObject.setObjectId(0);
+      sampleCount.setSelection(0);
 	}
 }

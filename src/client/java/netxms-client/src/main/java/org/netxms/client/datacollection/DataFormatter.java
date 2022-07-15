@@ -22,7 +22,6 @@ import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.Arrays;
 import java.util.IllegalFormatException;
-
 import org.netxms.client.constants.DataType;
 
 /**
@@ -33,20 +32,8 @@ public class DataFormatter
    private String formatString;
    private boolean useBinaryMultipliers;
    private DataType dataType;
-
-   /**
-    * Create new data formatter.
-    * 
-    * @param formatString format string
-    * @param dataType data type
-    * @param useBinaryMultipliers true if binary (Ki/Mi/Gi/...) multipliers should be used
-    */
-   public DataFormatter(String formatString, DataType dataType, boolean useBinaryMultipliers)
-   {
-      this.formatString = formatString;
-      this.dataType = dataType;
-      this.useBinaryMultipliers = useBinaryMultipliers;
-   }
+   private String unitName;
+   private int multiplyerPower;
 
    /**
     * Create new data formatter with binary multipliers option set to off.
@@ -56,7 +43,49 @@ public class DataFormatter
     */
    public DataFormatter(String formatString, DataType dataType)
    {
-      this(formatString, dataType, false);
+      this.formatString = formatString;
+      this.dataType = dataType;
+      this.useBinaryMultipliers = false;
+      this.unitName = null;
+      this.multiplyerPower = 0;
+   }
+
+   /**
+    * Create new data formatter.
+    * 
+    * @param formatString format string
+    * @param dataType data type
+    * @param useBinaryMultipliers true if binary (Ki/Mi/Gi/...) multipliers should be used
+    */
+   public DataFormatter(String formatString, DataType dataType, String unitName, int multiplyerPower)
+   {
+      this(formatString, dataType, unitName, multiplyerPower, false);
+   }
+
+   /**
+    * Create new data formatter.
+    * 
+    * @param formatString format string
+    * @param dataType data type
+    * @param useBinaryMultipliers true if binary (Ki/Mi/Gi/...) multipliers should be used
+    */
+   public DataFormatter(String formatString, DataType dataType, String unitName, int multiplyerPower, boolean usdeDciFormat)
+   {
+      this.formatString = formatString;
+      this.dataType = dataType;
+      if (unitName != null && (formatString == null || formatString.isEmpty() || usdeDciFormat))
+      {
+         this.useBinaryMultipliers = unitName.contains(" (IEC)");
+         this.unitName = unitName.replace(" (IEC)", "").replace(" (Metric)", "");
+         if (formatString == null || formatString.isEmpty())
+            this.formatString = "%s";
+      }
+      else
+      {
+         this.useBinaryMultipliers = false;
+         this.unitName = null;         
+      }
+      this.multiplyerPower = multiplyerPower;
    }
 
    /**
@@ -65,8 +94,23 @@ public class DataFormatter
     * @param value The value
     * @return The format
     */
-   public String format(String value)
+   public String format(String value, TimeFormatter formatter)
    {
+      if (value == null || value.isEmpty())
+         return "";
+      
+      if (unitName != null) 
+      {                  
+         if (unitName.equals("Uptime"))
+         {
+            return formatter.formatUptime((long)Double.parseDouble(value));
+         }
+         if (unitName.equals("Epoch time"))
+         {
+            return formatter.formatDateAndTime((long)Double.parseDouble(value));
+         }
+      }
+      
       StringBuilder sb = new StringBuilder();
       char[] format = formatString.toCharArray();
 
@@ -102,6 +146,14 @@ public class DataFormatter
                   Value v = getValueForFormat(value, useMultipliers, format[j] == 's' || format[j] == 'S', format[j] == 'd');
                   sb.append(String.format(f, v.value));
                   sb.append(v.suffix);
+                  if (unitName != null)
+                  {
+                     if (v.suffix.isEmpty())
+                     {
+                        sb.append(" ");
+                     }
+                     sb.append(unitName);
+                  }
                }
                catch(IndexOutOfBoundsException | IllegalFormatException e) // out of bound may occur if there is no letter after % sign. Like: %*3
                {
@@ -149,10 +201,17 @@ public class DataFormatter
             final long[] multipliers = useBinaryMultipliers ? BINARY_MULTIPLIERS : DECIMAL_MULTIPLIERS;
             Double d = Double.parseDouble(value);
             int i;
-            for(i = multipliers.length - 1; i >= 0; i--)
+            if (multiplyerPower != 0)
             {
-               if ((d >= multipliers[i]) || (d <= -multipliers[i]))
-                  break;
+               i = Integer.min(multiplyerPower, multipliers.length);
+            }
+            else
+            {
+               for(i = multipliers.length - 1; i >= 0; i--)
+               {
+                  if ((d >= multipliers[i]) || (d <= -multipliers[i]))
+                     break;
+               }
             }
             if (i >= 0)
             {

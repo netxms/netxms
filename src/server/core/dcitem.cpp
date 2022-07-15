@@ -51,9 +51,8 @@ DCItem::DCItem(const DCItem *src, bool shadowCopy) : DCObject(src, shadowCopy)
    }
    m_tPrevValueTimeStamp = shadowCopy ? src->m_tPrevValueTimeStamp : 0;
    m_bCacheLoaded = shadowCopy ? src->m_bCacheLoaded : false;
-	m_nBaseUnits = src->m_nBaseUnits;
-	m_nMultiplier = src->m_nMultiplier;
-	m_customUnitName = MemCopyString(src->m_customUnitName);
+	m_multiplier = src->m_multiplier;
+	m_unitName = MemCopyString(src->m_unitName);
 	m_snmpRawValueType = src->m_snmpRawValueType;
    _tcscpy(m_predictionEngine, src->m_predictionEngine);
 
@@ -78,8 +77,8 @@ DCItem::DCItem(const DCItem *src, bool shadowCopy) : DCObject(src, shadowCopy)
  * Assumes that fields in SELECT query are in following order:
  *    item_id,name,source,datatype,polling_interval,retention_time,status,
  *    delta_calculation,transformation,template_id,description,instance,
- *    template_item_id,flags,resource_id,proxy_node,base_units,unit_multiplier,
- *    custom_units_name,perftab_settings,system_tag,snmp_port,snmp_raw_value_type,
+ *    template_item_id,flags,resource_id,proxy_node,multiplier,
+ *    units_name,perftab_settings,system_tag,snmp_port,snmp_raw_value_type,
  *    instd_method,instd_data,instd_filter,samples,comments,guid,npe_name,
  *    instance_retention_time,grace_period_start,related_object,polling_schedule_type,
  *    retention_type,polling_interval_src,retention_time_src,snmp_version,state_flags
@@ -108,33 +107,32 @@ DCItem::DCItem(DB_HANDLE hdb, DB_RESULT hResult, int row, const shared_ptr<DataC
    m_flags = DBGetFieldLong(hResult, row, 13);
 	m_resourceId = DBGetFieldULong(hResult, row, 14);
 	m_sourceNode = DBGetFieldULong(hResult, row, 15);
-	m_nBaseUnits = DBGetFieldLong(hResult, row, 16);
-	m_nMultiplier = DBGetFieldLong(hResult, row, 17);
-	m_customUnitName = DBGetField(hResult, row, 18, nullptr, 0);
-	m_pszPerfTabSettings = DBGetField(hResult, row, 19, nullptr, 0);
-	m_systemTag = DBGetFieldAsSharedString(hResult, row, 20);
-	m_snmpPort = static_cast<UINT16>(DBGetFieldLong(hResult, row, 21));
-	m_snmpRawValueType = (WORD)DBGetFieldLong(hResult, row, 22);
-	m_instanceDiscoveryMethod = (WORD)DBGetFieldLong(hResult, row, 23);
-	m_instanceDiscoveryData = DBGetFieldAsSharedString(hResult, row, 24);
+	m_multiplier = DBGetFieldLong(hResult, row, 16);
+	m_unitName = DBGetField(hResult, row, 17, nullptr, 0);
+	m_pszPerfTabSettings = DBGetField(hResult, row, 18, nullptr, 0);
+	m_systemTag = DBGetFieldAsSharedString(hResult, row, 19);
+	m_snmpPort = static_cast<UINT16>(DBGetFieldLong(hResult, row, 20));
+	m_snmpRawValueType = (WORD)DBGetFieldLong(hResult, row, 21);
+	m_instanceDiscoveryMethod = (WORD)DBGetFieldLong(hResult, row, 22);
+	m_instanceDiscoveryData = DBGetFieldAsSharedString(hResult, row, 23);
 	m_instanceFilterSource = nullptr;
    m_instanceFilter = nullptr;
-   TCHAR *tmp = DBGetField(hResult, row, 25, nullptr, 0);
+   TCHAR *tmp = DBGetField(hResult, row, 24, nullptr, 0);
 	setInstanceFilter(tmp);
    MemFree(tmp);
-	m_sampleCount = DBGetFieldLong(hResult, row, 26);
-   m_comments = DBGetField(hResult, row, 27, nullptr, 0);
-   m_guid = DBGetFieldGUID(hResult, row, 28);
-   DBGetField(hResult, row, 29, m_predictionEngine, MAX_NPE_NAME_LEN);
-   m_instanceRetentionTime = DBGetFieldLong(hResult, row, 30);
-   m_instanceGracePeriodStart = DBGetFieldLong(hResult, row, 31);
-   m_relatedObject = DBGetFieldLong(hResult, row, 32);
-   m_pollingScheduleType = static_cast<BYTE>(DBGetFieldULong(hResult, row, 33));
-   m_retentionType = static_cast<BYTE>(DBGetFieldULong(hResult, row, 34));
-   m_pollingIntervalSrc = (m_pollingScheduleType == DC_POLLING_SCHEDULE_CUSTOM) ? DBGetField(hResult, row, 35, nullptr, 0) : nullptr;
-   m_retentionTimeSrc = (m_retentionType == DC_RETENTION_CUSTOM) ? DBGetField(hResult, row, 36, nullptr, 0) : nullptr;
-   m_snmpVersion = static_cast<SNMP_Version>(DBGetFieldLong(hResult, row, 37));
-   m_stateFlags = DBGetFieldLong(hResult, row, 38);
+	m_sampleCount = DBGetFieldLong(hResult, row, 25);
+   m_comments = DBGetField(hResult, row, 26, nullptr, 0);
+   m_guid = DBGetFieldGUID(hResult, row, 27);
+   DBGetField(hResult, row, 28, m_predictionEngine, MAX_NPE_NAME_LEN);
+   m_instanceRetentionTime = DBGetFieldLong(hResult, row, 29);
+   m_instanceGracePeriodStart = DBGetFieldLong(hResult, row, 30);
+   m_relatedObject = DBGetFieldLong(hResult, row, 31);
+   m_pollingScheduleType = static_cast<BYTE>(DBGetFieldULong(hResult, row, 32));
+   m_retentionType = static_cast<BYTE>(DBGetFieldULong(hResult, row, 33));
+   m_pollingIntervalSrc = (m_pollingScheduleType == DC_POLLING_SCHEDULE_CUSTOM) ? DBGetField(hResult, row, 34, nullptr, 0) : nullptr;
+   m_retentionTimeSrc = (m_retentionType == DC_RETENTION_CUSTOM) ? DBGetField(hResult, row, 35, nullptr, 0) : nullptr;
+   m_snmpVersion = static_cast<SNMP_Version>(DBGetFieldLong(hResult, row, 36));
+   m_stateFlags = DBGetFieldLong(hResult, row, 37);
 
    int effectivePollingInterval = getEffectivePollingInterval();
    m_startTime = (useStartupDelay && (effectivePollingInterval >= 10)) ? time(nullptr) + rand() % (effectivePollingInterval / 2) : 0;
@@ -179,9 +177,8 @@ DCItem::DCItem(UINT32 id, const TCHAR *name, int source, int dataType, BYTE sche
    m_ppValueCache = nullptr;
    m_tPrevValueTimeStamp = 0;
    m_bCacheLoaded = false;
-	m_nBaseUnits = DCI_BASEUNITS_OTHER;
-	m_nMultiplier = 1;
-	m_customUnitName = nullptr;
+	m_multiplier = 0;
+	m_unitName = nullptr;
 	m_snmpRawValueType = SNMP_RAWTYPE_NONE;
 	m_predictionEngine[0] = 0;
 
@@ -201,9 +198,8 @@ DCItem::DCItem(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& owner
    m_ppValueCache = nullptr;
    m_tPrevValueTimeStamp = 0;
    m_bCacheLoaded = false;
-	m_nBaseUnits = DCI_BASEUNITS_OTHER;
-	m_nMultiplier = 1;
-	m_customUnitName = nullptr;
+	m_multiplier = config->getSubEntryValueAsInt(_T("multiplier"));
+	m_unitName = MemCopyString(config->getSubEntryValue(_T("unitName"), 0, _T("")));
 	m_snmpRawValueType = (WORD)config->getSubEntryValueAsInt(_T("snmpRawValueType"));
    _tcslcpy(m_predictionEngine, config->getSubEntryValue(_T("predictionEngine"), 0, _T("")), MAX_NPE_NAME_LEN);
 
@@ -237,7 +233,7 @@ DCItem::DCItem(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& owner
 DCItem::~DCItem()
 {
 	delete m_thresholds;
-	MemFree(m_customUnitName);
+	MemFree(m_unitName);
    clearCache();
 }
 
@@ -306,7 +302,7 @@ bool DCItem::saveToDatabase(DB_HANDLE hdb)
    static const TCHAR *columns[] = {
       _T("node_id"), _T("template_id"), _T("name"), _T("source"), _T("datatype"), _T("polling_interval"), _T("retention_time"),
       _T("status"), _T("delta_calculation"), _T("transformation"), _T("description"), _T("instance"), _T("template_item_id"),
-      _T("flags"), _T("resource_id"), _T("proxy_node"), _T("base_units"), _T("unit_multiplier"), _T("custom_units_name"),
+      _T("flags"), _T("resource_id"), _T("proxy_node"), _T("multiplier"), _T("units_name"),
       _T("perftab_settings"), _T("system_tag"), _T("snmp_port"), _T("snmp_raw_value_type"), _T("instd_method"), _T("instd_data"),
       _T("instd_filter"), _T("samples"), _T("comments"), _T("guid"), _T("npe_name"), _T("instance_retention_time"),
       _T("grace_period_start"), _T("related_object"), _T("polling_interval_src"), _T("retention_time_src"),
@@ -336,35 +332,34 @@ bool DCItem::saveToDatabase(DB_HANDLE hdb)
 	DBBind(hStmt, 14, DB_SQLTYPE_INTEGER, m_flags);
 	DBBind(hStmt, 15, DB_SQLTYPE_INTEGER, m_resourceId);
 	DBBind(hStmt, 16, DB_SQLTYPE_INTEGER, m_sourceNode);
-	DBBind(hStmt, 17, DB_SQLTYPE_INTEGER, (INT32)m_nBaseUnits);
-	DBBind(hStmt, 18, DB_SQLTYPE_INTEGER, (INT32)m_nMultiplier);
-	DBBind(hStmt, 19, DB_SQLTYPE_VARCHAR, m_customUnitName, DB_BIND_STATIC);
-	DBBind(hStmt, 20, DB_SQLTYPE_TEXT, m_pszPerfTabSettings, DB_BIND_STATIC);
-	DBBind(hStmt, 21, DB_SQLTYPE_VARCHAR, m_systemTag, DB_BIND_STATIC, MAX_DB_STRING - 1);
-	DBBind(hStmt, 22, DB_SQLTYPE_INTEGER, (INT32)m_snmpPort);
-	DBBind(hStmt, 23, DB_SQLTYPE_INTEGER, (INT32)m_snmpRawValueType);
-	DBBind(hStmt, 24, DB_SQLTYPE_INTEGER, (INT32)m_instanceDiscoveryMethod);
-	DBBind(hStmt, 25, DB_SQLTYPE_VARCHAR, m_instanceDiscoveryData, DB_BIND_STATIC, MAX_INSTANCE_LEN - 1);
-	DBBind(hStmt, 26, DB_SQLTYPE_TEXT, m_instanceFilterSource, DB_BIND_STATIC);
-	DBBind(hStmt, 27, DB_SQLTYPE_INTEGER, (INT32)m_sampleCount);
-   DBBind(hStmt, 28, DB_SQLTYPE_TEXT, m_comments, DB_BIND_STATIC);
-   DBBind(hStmt, 29, DB_SQLTYPE_VARCHAR, m_guid);
-   DBBind(hStmt, 30, DB_SQLTYPE_VARCHAR, m_predictionEngine, DB_BIND_STATIC);
-   DBBind(hStmt, 31, DB_SQLTYPE_INTEGER, m_instanceRetentionTime);
-   DBBind(hStmt, 32, DB_SQLTYPE_INTEGER, (INT32)m_instanceGracePeriodStart);
-   DBBind(hStmt, 33, DB_SQLTYPE_INTEGER, m_relatedObject);
-   DBBind(hStmt, 34, DB_SQLTYPE_VARCHAR, m_pollingIntervalSrc, DB_BIND_STATIC, MAX_DB_STRING - 1);
-   DBBind(hStmt, 35, DB_SQLTYPE_VARCHAR, m_retentionTimeSrc, DB_BIND_STATIC, MAX_DB_STRING - 1);
+	DBBind(hStmt, 17, DB_SQLTYPE_INTEGER, (INT32)m_multiplier);
+	DBBind(hStmt, 18, DB_SQLTYPE_VARCHAR, m_unitName, DB_BIND_STATIC);
+	DBBind(hStmt, 19, DB_SQLTYPE_TEXT, m_pszPerfTabSettings, DB_BIND_STATIC);
+	DBBind(hStmt, 20, DB_SQLTYPE_VARCHAR, m_systemTag, DB_BIND_STATIC, MAX_DB_STRING - 1);
+	DBBind(hStmt, 21, DB_SQLTYPE_INTEGER, (INT32)m_snmpPort);
+	DBBind(hStmt, 22, DB_SQLTYPE_INTEGER, (INT32)m_snmpRawValueType);
+	DBBind(hStmt, 23, DB_SQLTYPE_INTEGER, (INT32)m_instanceDiscoveryMethod);
+	DBBind(hStmt, 24, DB_SQLTYPE_VARCHAR, m_instanceDiscoveryData, DB_BIND_STATIC, MAX_INSTANCE_LEN - 1);
+	DBBind(hStmt, 25, DB_SQLTYPE_TEXT, m_instanceFilterSource, DB_BIND_STATIC);
+	DBBind(hStmt, 26, DB_SQLTYPE_INTEGER, (INT32)m_sampleCount);
+   DBBind(hStmt, 27, DB_SQLTYPE_TEXT, m_comments, DB_BIND_STATIC);
+   DBBind(hStmt, 28, DB_SQLTYPE_VARCHAR, m_guid);
+   DBBind(hStmt, 29, DB_SQLTYPE_VARCHAR, m_predictionEngine, DB_BIND_STATIC);
+   DBBind(hStmt, 30, DB_SQLTYPE_INTEGER, m_instanceRetentionTime);
+   DBBind(hStmt, 31, DB_SQLTYPE_INTEGER, (INT32)m_instanceGracePeriodStart);
+   DBBind(hStmt, 32, DB_SQLTYPE_INTEGER, m_relatedObject);
+   DBBind(hStmt, 33, DB_SQLTYPE_VARCHAR, m_pollingIntervalSrc, DB_BIND_STATIC, MAX_DB_STRING - 1);
+   DBBind(hStmt, 34, DB_SQLTYPE_VARCHAR, m_retentionTimeSrc, DB_BIND_STATIC, MAX_DB_STRING - 1);
    TCHAR pt[2], rt[2];
    pt[0] = m_pollingScheduleType + '0';
    pt[1] = 0;
    rt[0] = m_retentionType + '0';
    rt[1] = 0;
-   DBBind(hStmt, 36, DB_SQLTYPE_VARCHAR, pt, DB_BIND_STATIC);
-   DBBind(hStmt, 37, DB_SQLTYPE_VARCHAR, rt, DB_BIND_STATIC);
-   DBBind(hStmt, 38, DB_SQLTYPE_INTEGER, m_snmpVersion);
-   DBBind(hStmt, 39, DB_SQLTYPE_INTEGER, m_stateFlags);
-   DBBind(hStmt, 40, DB_SQLTYPE_INTEGER, m_id);
+   DBBind(hStmt, 35, DB_SQLTYPE_VARCHAR, pt, DB_BIND_STATIC);
+   DBBind(hStmt, 36, DB_SQLTYPE_VARCHAR, rt, DB_BIND_STATIC);
+   DBBind(hStmt, 37, DB_SQLTYPE_INTEGER, m_snmpVersion);
+   DBBind(hStmt, 38, DB_SQLTYPE_INTEGER, m_stateFlags);
+   DBBind(hStmt, 39, DB_SQLTYPE_INTEGER, m_id);
 
    bool success = DBExecute(hStmt);
 	DBFreeStatement(hStmt);
@@ -507,12 +502,10 @@ void DCItem::createMessage(NXCPMessage *pMsg)
    pMsg->setField(VID_DCI_DATA_TYPE, (WORD)m_dataType);
    pMsg->setField(VID_DCI_DELTA_CALCULATION, (WORD)m_deltaCalculation);
    pMsg->setField(VID_SAMPLE_COUNT, (WORD)m_sampleCount);
-	pMsg->setField(VID_BASE_UNITS, (WORD)m_nBaseUnits);
-	pMsg->setField(VID_MULTIPLIER, (UINT32)m_nMultiplier);
+	pMsg->setField(VID_MULTIPLIER, (UINT32)m_multiplier);
 	pMsg->setField(VID_SNMP_RAW_VALUE_TYPE, m_snmpRawValueType);
 	pMsg->setField(VID_NPE_NAME, m_predictionEngine);
-	if (m_customUnitName != nullptr)
-		pMsg->setField(VID_CUSTOM_UNITS_NAME, m_customUnitName);
+   pMsg->setField(VID_UNITS_NAME, m_unitName);
 	if (m_thresholds != nullptr)
 	{
 		pMsg->setField(VID_NUM_THRESHOLDS, (UINT32)m_thresholds->size());
@@ -558,10 +551,9 @@ void DCItem::updateFromMessage(const NXCPMessage& msg, uint32_t *numMaps, uint32
    m_dataType = (BYTE)msg.getFieldAsUInt16(VID_DCI_DATA_TYPE);
    m_deltaCalculation = (BYTE)msg.getFieldAsUInt16(VID_DCI_DELTA_CALCULATION);
 	m_sampleCount = msg.getFieldAsInt16(VID_SAMPLE_COUNT);
-	m_nBaseUnits = msg.getFieldAsUInt16(VID_BASE_UNITS);
-	m_nMultiplier = msg.getFieldAsInt32(VID_MULTIPLIER);
-	MemFree(m_customUnitName);
-	m_customUnitName = msg.getFieldAsString(VID_CUSTOM_UNITS_NAME);
+	m_multiplier = msg.getFieldAsInt32(VID_MULTIPLIER);
+	MemFree(m_unitName);
+	m_unitName = msg.getFieldAsString(VID_UNITS_NAME);
 	m_snmpRawValueType = msg.getFieldAsUInt16(VID_SNMP_RAW_VALUE_TYPE);
    msg.getFieldAsString(VID_NPE_NAME, m_predictionEngine, MAX_NPE_NAME_LEN);
 
@@ -1433,6 +1425,8 @@ void DCItem::fillLastValueSummaryMessage(NXCPMessage *msg, uint32_t baseId, cons
 	msg->setField(baseId++, static_cast<uint16_t>(getType()));
 	msg->setField(baseId++, m_errorCount);
 	msg->setField(baseId++, m_dwTemplateItemId);
+   msg->setField(baseId++, m_unitName);
+   msg->setField(baseId++, m_multiplier);
 
 	if (m_thresholds != nullptr)
 	{
@@ -1787,10 +1781,9 @@ void DCItem::updateFromTemplate(DCObject *src)
    m_sampleCount = item->m_sampleCount;
    m_snmpRawValueType = item->m_snmpRawValueType;
 
-	m_nBaseUnits = item->m_nBaseUnits;
-	m_nMultiplier = item->m_nMultiplier;
-	MemFree(m_customUnitName);
-	m_customUnitName = MemCopyString(item->m_customUnitName);
+	m_multiplier = item->m_multiplier;
+	MemFree(m_unitName);
+	m_unitName = MemCopyString(item->m_unitName);
 
    // Copy thresholds
    // ***************************
@@ -1882,6 +1875,8 @@ void DCItem::createExportRecord(StringBuffer &xml) const
                           _T("\t\t\t\t\t<instanceRetentionTime>%d</instanceRetentionTime>\n")
                           _T("\t\t\t\t\t<comments>%s</comments>\n")
                           _T("\t\t\t\t\t<isDisabled>%s</isDisabled>\n"),
+                          _T("\t\t\t\t\t<unitName>%s</unitName>\n"),
+                          _T("\t\t\t\t\t<multiplier>%d</multiplier>\n"),
 								  (int)m_id, (const TCHAR *)m_guid.toString(),
 								  (const TCHAR *)EscapeStringForXML2(m_name),
                           (const TCHAR *)EscapeStringForXML2(m_description),
@@ -1895,7 +1890,8 @@ void DCItem::createExportRecord(StringBuffer &xml) const
 								  (int)m_snmpRawValueType, (int)m_snmpPort, (int)m_snmpVersion,
 								  (int)m_instanceDiscoveryMethod, m_instanceRetentionTime,
 								  (const TCHAR *)EscapeStringForXML2(m_comments),
-								  (m_status == ITEM_STATUS_DISABLED) ? _T("true") : _T("false"));
+								  (m_status == ITEM_STATUS_DISABLED) ? _T("true") : _T("false"),
+								  m_unitName, m_multiplier);
 
 	if (m_transformationScriptSource != nullptr)
 	{
@@ -2154,9 +2150,8 @@ json_t *DCItem::toJson()
    json_object_set_new(root, "thresholds", json_object_array(m_thresholds));
    json_object_set_new(root, "prevRawValue", json_string_t(m_prevRawValue));
    json_object_set_new(root, "prevValueTimeStamp", json_integer(m_tPrevValueTimeStamp));
-   json_object_set_new(root, "baseUnits", json_integer(m_nBaseUnits));
-   json_object_set_new(root, "multiplier", json_integer(m_nMultiplier));
-   json_object_set_new(root, "customUnitName", json_string_t(m_customUnitName));
+   json_object_set_new(root, "multiplier", json_integer(m_multiplier));
+   json_object_set_new(root, "unitName", json_string_t(m_unitName));
    json_object_set_new(root, "snmpRawValueType", json_integer(m_snmpRawValueType));
    json_object_set_new(root, "predictionEngine", json_string_t(m_predictionEngine));
    unlock();

@@ -30,6 +30,7 @@ import org.eclipse.swt.widgets.Display;
 import org.netxms.client.TableColumnDefinition;
 import org.netxms.client.TableRow;
 import org.netxms.client.datacollection.DataFormatter;
+import org.netxms.nxmc.localization.DateFormatFactory;
 
 /**
  * Label provider for NetXMS table
@@ -87,8 +88,7 @@ public class TableLabelProvider extends LabelProvider implements ITableLabelProv
 
       if (columnIndex >= row.size())
          return null;
-      return useMultipliers ? new DataFormatter("%*s", columns[columnIndex].getDataType()).format(row.get(columnIndex).getValue())
-            : row.get(columnIndex).getValue();
+      return new DataFormatter(useMultipliers ? "%*s" : "%s", columns[columnIndex].getDataType(), columns[columnIndex].getUnitName(), columns[columnIndex].getMultiplier(), true).format(row.get(columnIndex).getValue(), DateFormatFactory.TIME_FORMATTER);
 	}
 
 	/* (non-Javadoc)

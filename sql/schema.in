@@ -808,9 +808,8 @@ CREATE TABLE items
   system_tag varchar(255) null,         // System tag
   resource_id integer not null,   // associated cluster resource ID
   proxy_node integer not null,    // ID of proxy node (for SNMP and agent items)
-  base_units integer not null,    // bytes, seconds, etc.
-  unit_multiplier integer not null, // kilo, mega, milli, etc.
-  custom_units_name varchar(63) null, // units name of base_units = CUSTOM
+  multiplier integer not null, // kilo, mega, milli, etc.
+  units_name varchar(63) null, // units name 
   perftab_settings SQL_TEXT null,     // Settings for displaying graph on performance tab
   instd_method integer not null,
   instd_data varchar(1023) null,

@@ -25,6 +25,7 @@ import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
+import org.netxms.client.constants.DataType;
 import org.netxms.client.datacollection.DataFormatter;
 import org.swtchart.Chart;
 import org.swtchart.IBarSeries;
@@ -461,17 +462,21 @@ public class Legend extends Canvas implements ILegend, PaintListener
    {
       int shift = Util.getExtentInGC(getFont(), VALUE_PLACEHOLDER).x + EXT_COL_MARGIN;
       int x = r.x + extendedInfoOffset + MARGIN * 2;
-      
-      gc.drawText(chart.isUseMultipliers() ? DataFormatter.roundDecimalValue(series.getCurY(), 0.005, 3) : Double.toString(series.getCurY()), x, r.y, true);
+      String format = "%.3f";
+      if (chart.isUseMultipliers())
+         format = "%*.3f";
+      DataFormatter formatter = new DataFormatter(format, DataType.FLOAT, series.getUnitName(), series.getMultiplierPower());
+
+      gc.drawText(formatter.format(Double.toString(series.getCurY()), null), x, r.y, true);
       x += shift;
 
-      gc.drawText(chart.isUseMultipliers() ? DataFormatter.roundDecimalValue(series.getMinY(), 0.005, 3) : Double.toString(series.getMinY()), x, r.y, true);
+      gc.drawText(formatter.format(Double.toString(series.getMinY()), null), x, r.y, true);
       x += shift;
 
-      gc.drawText(chart.isUseMultipliers() ? DataFormatter.roundDecimalValue(series.getAvgY(), 0.005, 3) : Double.toString(series.getAvgY()), x, r.y, true);
+      gc.drawText(formatter.format(Double.toString(series.getAvgY()), null), x, r.y, true);
       x += shift;
 
-      gc.drawText(chart.isUseMultipliers() ? DataFormatter.roundDecimalValue(series.getMaxY(), 0.005, 3) : Double.toString(series.getMaxY()), x, r.y, true);
+      gc.drawText(formatter.format(Double.toString(series.getMaxY()), null), x, r.y, true);
    }
 
    /*

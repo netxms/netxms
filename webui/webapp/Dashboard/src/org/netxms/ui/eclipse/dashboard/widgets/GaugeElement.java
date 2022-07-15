@@ -18,6 +18,10 @@
  */
 package org.netxms.ui.eclipse.dashboard.widgets;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.SWT;
 import org.eclipse.ui.IViewPart;
 import org.netxms.client.constants.DataOrigin;
@@ -25,11 +29,14 @@ import org.netxms.client.constants.DataType;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.ChartDciConfig;
+import org.netxms.client.datacollection.DciInfo;
 import org.netxms.client.datacollection.GraphItem;
 import org.netxms.ui.eclipse.charts.api.ChartColor;
 import org.netxms.ui.eclipse.charts.api.ChartType;
 import org.netxms.ui.eclipse.charts.widgets.Chart;
+import org.netxms.ui.eclipse.dashboard.Activator;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.GaugeConfig;
+import org.netxms.ui.eclipse.jobs.ConsoleJob;
 
 /**
  * Dial chart element
@@ -99,8 +106,64 @@ public class GaugeElement extends ComparisonChartElement
       chart.setPaletteEntry(0, new ChartColor(elementConfig.getCustomColor()));
       chart.rebuild();
 
+      updateDciInfo();
 		startRefreshTimer();
 	}
+   
+   /**
+    * Get DCI info (unit name and multiplier)
+    */
+   private void updateDciInfo()
+   {
+      List<Long> nodeIds = new ArrayList<Long>();
+      List<Long> dciIds = new ArrayList<Long>();
+      
+      for(ChartDciConfig dci : elementConfig.getDciList())
+      {
+         if (dci.getDisplayFormat() == null || dci.getDisplayFormat().isEmpty())
+         {
+            nodeIds.add(dci.nodeId);
+            dciIds.add(dci.dciId);
+         }
+      }
+      
+      ConsoleJob job = new ConsoleJob("Get DCI info", null, Activator.PLUGIN_ID, null) {
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            final Map<Long, DciInfo> result = session.getDciInfo(nodeIds, dciIds);
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
+                  int i = 0;
+                  for(ChartDciConfig dci : elementConfig.getDciList())
+                  {
+                     GraphItem item = chart.getItem(i);
+                     DciInfo info = result.get(dci.getDciId());
+                     if (info != null)
+                     {
+                        item.setUnitName(info.getUnitName());
+                        item.setMultipierPower(info.getMultipierPower());
+                     }
+                     i++;
+                  }
+                  chart.rebuild();
+                  layout(true, true);          
+               }
+            });
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return null;
+         }
+      };
+      job.setUser(false);
+      job.start();
+      
+   }
 
    /**
     * @see org.netxms.ui.eclipse.dashboard.widgets.ComparisonChartElement#getDciList()

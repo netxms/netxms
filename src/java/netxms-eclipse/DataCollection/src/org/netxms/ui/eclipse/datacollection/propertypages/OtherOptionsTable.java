@@ -21,10 +21,13 @@ package org.netxms.ui.eclipse.datacollection.propertypages;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.netxms.client.constants.AgentCacheMode;
 import org.netxms.client.datacollection.DataCollectionTable;
 import org.netxms.client.objects.GenericObject;
+import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.propertypages.helpers.AbstractDCIPropertyPage;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -36,6 +39,7 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
 public class OtherOptionsTable extends AbstractDCIPropertyPage
 {
 	private DataCollectionTable dci;
+   private Combo agentCacheMode;
    private ObjectSelector relatedObject;
 
 	/* (non-Javadoc)
@@ -52,6 +56,12 @@ public class OtherOptionsTable extends AbstractDCIPropertyPage
 		layout.marginWidth = 0;
 		layout.marginHeight = 0;
       dialogArea.setLayout(layout);
+      
+      agentCacheMode = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, Messages.get().General_AgentCacheMode, new GridData());
+      agentCacheMode.add(Messages.get().General_Default);
+      agentCacheMode.add(Messages.get().General_On);
+      agentCacheMode.add(Messages.get().General_Off);
+      agentCacheMode.select(dci.getCacheMode().getValue());
       
       relatedObject = new ObjectSelector(dialogArea, SWT.NONE, true);
       relatedObject.setLabel("Related object");
@@ -72,6 +82,7 @@ public class OtherOptionsTable extends AbstractDCIPropertyPage
 	 */
 	protected void applyChanges(final boolean isApply)
 	{
+      dci.setCacheMode(AgentCacheMode.getByValue(agentCacheMode.getSelectionIndex()));
       dci.setRelatedObject(relatedObject.getObjectId());
 		editor.modify();
 	}
@@ -102,6 +113,7 @@ public class OtherOptionsTable extends AbstractDCIPropertyPage
 	protected void performDefaults()
 	{
 		super.performDefaults();
+      agentCacheMode.select(0);
 		relatedObject.setObjectId(0);
 	}
 }

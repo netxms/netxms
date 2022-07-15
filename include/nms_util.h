@@ -3251,6 +3251,8 @@ private:
    TCHAR m_displayName[MAX_DB_STRING];
    int32_t m_dataType;
    bool m_instanceColumn;
+   TCHAR m_unitName[63];
+   int m_multipier;
 
 public:
    TableColumnDefinition(const TCHAR *name, const TCHAR *displayName, int32_t dataType, bool isInstance);
@@ -3263,10 +3265,14 @@ public:
    const TCHAR *getDisplayName() const { return m_displayName; }
    int32_t getDataType() const { return m_dataType; }
    bool isInstanceColumn() const { return m_instanceColumn; }
+   const TCHAR *getUnitName() const { return m_unitName; }
+   int getMultiplier() const { return m_multipier; }
 
    void setDataType(int32_t type) { m_dataType = type; }
    void setInstanceColumn(bool isInstance) { m_instanceColumn = isInstance; }
    void setDisplayName(const TCHAR *name);
+   void setUnitName(const TCHAR *name);
+   void setMultiplier(int multiplier) { m_multipier = multiplier; }
 };
 
 /**

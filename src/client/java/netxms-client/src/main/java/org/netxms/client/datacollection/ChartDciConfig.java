@@ -113,7 +113,7 @@ public class ChartDciConfig implements NodeItemPair
 		multiMatch = false;
       instance = "";
       column = "";
-      displayFormat = "%s";
+      displayFormat = "";
 	}
 
 	/**
@@ -165,7 +165,7 @@ public class ChartDciConfig implements NodeItemPair
 		multiMatch = false;
       instance = "";
       column = "";
-      displayFormat = "%s";
+      displayFormat = "";
 	}
 
    /**
@@ -191,7 +191,7 @@ public class ChartDciConfig implements NodeItemPair
       multiMatch = false;
       instance = "";
       column = "";
-      displayFormat = "%s";
+      displayFormat = "";
    }
 
 	/**
@@ -230,15 +230,15 @@ public class ChartDciConfig implements NodeItemPair
       return "[" + Long.toString(dciId) + "]";
 	}
 
-	/**
-	 * Get display format
-	 * 
-	 * @return The display format
-	 */
-	public String getDisplayFormat()
-	{
-      return ((displayFormat != null) && !displayFormat.isEmpty()) ? displayFormat : "%s";
-	}
+   /**
+    * Get display format
+    * 
+    * @return The display format
+    */
+   public String getDisplayFormat()
+   {
+      return displayFormat;
+   }
 
 	/**
     * Get line chart type

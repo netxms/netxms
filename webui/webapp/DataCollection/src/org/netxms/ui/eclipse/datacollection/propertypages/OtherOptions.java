@@ -25,6 +25,7 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.netxms.client.constants.AgentCacheMode;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.datacollection.Messages;
@@ -43,7 +44,8 @@ public class OtherOptions extends AbstractDCIPropertyPage
 	private Button checkShowInOverview;
    private Button checkCalculateStatus;
    private Button checkHideOnLastValues;
-   private Combo useMultipliers;
+   private Combo multiplierDegree;   
+   private Combo agentCacheMode;
    private ObjectSelector relatedObject;
 
 	/* (non-Javadoc)
@@ -77,11 +79,20 @@ public class OtherOptions extends AbstractDCIPropertyPage
       checkHideOnLastValues.setText("Hide value on \"Last Values\" page");
       checkHideOnLastValues.setSelection(dci.isHideOnLastValuesView());      
       
-      useMultipliers = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, "Use multipliers", new GridData());
-      useMultipliers.add("Default");
-      useMultipliers.add("Yes");
-      useMultipliers.add("No");
-      useMultipliers.select(dci.getMultipliersSelection());
+      agentCacheMode = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, Messages.get().General_AgentCacheMode, new GridData());
+      agentCacheMode.add(Messages.get().General_Default);
+      agentCacheMode.add(Messages.get().General_On);
+      agentCacheMode.add(Messages.get().General_Off);
+      agentCacheMode.select(dci.getCacheMode().getValue());
+      
+      multiplierDegree = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, "Multiplier degree", new GridData());
+      multiplierDegree.add("Default");
+      multiplierDegree.add("Fixed to K");
+      multiplierDegree.add("Fixed to M");
+      multiplierDegree.add("Fixed to G");
+      multiplierDegree.add("Fixed to T");
+      multiplierDegree.add("Fixed to P");
+      multiplierDegree.select(dci.getMultiplier());
 
       relatedObject = new ObjectSelector(dialogArea, SWT.NONE, true);
       relatedObject.setLabel("Related object");
@@ -106,7 +117,8 @@ public class OtherOptions extends AbstractDCIPropertyPage
 		dci.setShowInObjectOverview(checkShowInOverview.getSelection());
       dci.setUsedForNodeStatusCalculation(checkCalculateStatus.getSelection());
       dci.setHideOnLastValuesView(checkHideOnLastValues.getSelection());
-      dci.setMultiplierSelection(useMultipliers.getSelectionIndex());
+      dci.setCacheMode(AgentCacheMode.getByValue(agentCacheMode.getSelectionIndex()));
+      dci.setMultiplier(multiplierDegree.getSelectionIndex());
       dci.setRelatedObject(relatedObject.getObjectId());
 		editor.modify();
 	}
@@ -141,7 +153,8 @@ public class OtherOptions extends AbstractDCIPropertyPage
 		checkShowInOverview.setSelection(false);
 		checkCalculateStatus.setSelection(false);
 		checkHideOnLastValues.setSelection(false);
-		useMultipliers.select(0);
+		agentCacheMode.select(0);
+		multiplierDegree.select(0);
 		relatedObject.setObjectId(0);
 	}
 }

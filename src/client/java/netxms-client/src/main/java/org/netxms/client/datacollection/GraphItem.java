@@ -41,6 +41,8 @@ public class GraphItem
    private int lineWidth;
    private boolean showThresholds;
    private boolean inverted;
+   private String unitName;
+   private int multipierPower;
 
 	/**
 	 * Create graph item object with default values
@@ -54,7 +56,7 @@ public class GraphItem
 		dataType = DataType.STRING;
 		name = "<noname>";
 		description = "<noname>";
-      displayFormat = "%s";
+      displayFormat = "";
 		dataColumn = "";
 		instance = "";
       lineChartType = ChartDciConfig.DEFAULT;
@@ -62,6 +64,8 @@ public class GraphItem
       lineWidth = 0;
       showThresholds = false;
       inverted = false;
+      unitName = null;
+      multipierPower = 0;
 	}
 
 	/**
@@ -94,6 +98,8 @@ public class GraphItem
       this.lineWidth = 0;
       this.showThresholds = false;
       this.inverted = false;
+      unitName = null;
+      multipierPower = 0;
 	}
 
    /**
@@ -133,6 +139,8 @@ public class GraphItem
    public GraphItem(DciValue dciValue, DataOrigin source, String displayFormat, int lineChartType, int color)
    {
       this(dciValue.getNodeId(), dciValue.getId(), source, dciValue.getDataType(), dciValue.getName(), dciValue.getDescription(), displayFormat, lineChartType, color);
+      unitName = dciValue.getUnitName();
+      multipierPower = dciValue.getMultiplier();
    }
 
    /**
@@ -160,12 +168,12 @@ public class GraphItem
     * @param dataType DCI data type
     * @param name The name
     * @param description The description
-    * @param displayFormat The display format
     * @param instance The instance
     * @param dataColumn The data column
+    * @param displayFormat The display format
 	 */
    public GraphItem(long nodeId, long dciId, DataOrigin source, DataType dataType, String name, String description,
-         String displayFormat, String instance, String dataColumn)
+        String instance, String dataColumn, String displayFormat)
 	{
 		this.nodeId = nodeId;
 		this.dciId = dciId;
@@ -436,6 +444,38 @@ public class GraphItem
    }
 
    /**
+    * @return the unitName
+    */
+   public String getUnitName()
+   {
+      return unitName;
+   }
+
+   /**
+    * @param unitName the unitName to set
+    */
+   public void setUnitName(String unitName)
+   {
+      this.unitName = unitName;
+   }
+
+   /**
+    * @return the multipierPower
+    */
+   public int getMultiplierPower()
+   {
+      return multipierPower;
+   }
+
+   /**
+    * @param multipierPower the multipierPower to set
+    */
+   public void setMultipierPower(int multipierPower)
+   {
+      this.multipierPower = multipierPower;
+   }
+
+   /**
     * @see java.lang.Object#toString()
     */
    @Override
@@ -443,6 +483,6 @@ public class GraphItem
    {
       return "GraphItem [nodeId=" + nodeId + ", dciId=" + dciId + ", type=" + type + ", source=" + source + ", dataType=" + dataType + ", name=" + name + ", description=" + description +
             ", displayFormat=" + displayFormat + ", dataColumn=" + dataColumn + ", instance=" + instance + ", lineChartType=" + lineChartType + ", color=" + color + ", lineWidth=" + lineWidth +
-            ", showThresholds=" + showThresholds + ", inverted=" + inverted + "]";
+            ", showThresholds=" + showThresholds + ", inverted=" + inverted + ", binaryUnit=" + ", unitName=" + unitName + ", multipierPower=" + multipierPower + "]";
    }
 }

@@ -33,6 +33,7 @@ import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.NetworkMapPage;
 import org.netxms.client.maps.configs.SingleDciConfig;
 import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.localization.DateFormatFactory;
 
 /**
  * DCI last value provider for map links
@@ -239,8 +240,7 @@ public class LinkDciValueProvider
          DciValue v = getDciLastValue(dciList[i].dciId);
          if (v != null)
          {
-            String formatString = dciList[i].getFormatString();
-            result += v.format(formatString.isEmpty() ? "%s" : formatString); //$NON-NLS-1$
+            result += v.format(dciList[i].getFormatString(), DateFormatFactory.TIME_FORMATTER); 
          }
          if(++i != dciList.length)
             result += "\n"; //$NON-NLS-1$
@@ -260,8 +260,7 @@ public class LinkDciValueProvider
          DciValue v = getDciLastValue(DCIList.get(i).dciId); 
          if (v != null)
          {
-            String formatString = DCIList.get(i).getFormatString();
-            result += v.format(formatString.isEmpty() ? "%s" : formatString); //$NON-NLS-1$
+            result += v.format(DCIList.get(i).getFormatString(), DateFormatFactory.TIME_FORMATTER);
          }
          if(++i != DCIList.size())
             result += "\n"; //$NON-NLS-1$

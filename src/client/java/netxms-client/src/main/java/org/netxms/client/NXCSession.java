@@ -90,6 +90,7 @@ import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DataCollectionTable;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.DciDataRow;
+import org.netxms.client.datacollection.DciInfo;
 import org.netxms.client.datacollection.DciLastValue;
 import org.netxms.client.datacollection.DciPushData;
 import org.netxms.client.datacollection.DciSummaryTable;
@@ -5199,7 +5200,7 @@ public class NXCSession
       int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_ITEMS);
       List<PerfTabDci> list = new ArrayList<PerfTabDci>(count);
       long baseId = NXCPCodes.VID_SYSDCI_LIST_BASE;
-      for(int i = 0; i < count; i++, baseId += 10)
+      for(int i = 0; i < count; i++, baseId += 50)
          list.add(new PerfTabDci(response, baseId));
 
       return list;
@@ -13399,5 +13400,37 @@ public class NXCSession
       msg.setField(NXCPCodes.VID_DESCRIPTION, description);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
+   }
+
+   /**
+    * Get info for given DCI list
+    *
+    * @param nodeIds node identifiers
+    * @param dciIds  DCI identifiers (length must match length of node identifiers list)
+    * @return array of resolved DCI names
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public Map<Long, DciInfo> getDciInfo(List<Long> nodeIds, List<Long> dciIds) throws IOException, NXCException
+   {
+      if (nodeIds.size() == 0)
+         return new HashMap<Long, DciInfo>();
+   
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_DCI_INFO);
+      msg.setFieldInt32(NXCPCodes.VID_NUM_ITEMS, nodeIds.size());
+      msg.setField(NXCPCodes.VID_NODE_LIST, nodeIds);
+      msg.setField(NXCPCodes.VID_DCI_LIST, dciIds);
+      sendMessage(msg);
+
+      final NXCPMessage response = waitForRCC(msg.getMessageId());
+      Map<Long, DciInfo> result = new HashMap<Long, DciInfo>();
+      int size = response.getFieldAsInt32(NXCPCodes.VID_NUM_ITEMS);
+      long varId = NXCPCodes.VID_DCI_LIST_BASE;
+      for(int i = 0; i < size; i++)
+      {
+         result.put(response.getFieldAsInt64(varId++), new DciInfo(response, varId));         
+         varId+=2;
+      }
+      return result;
    }
 }
